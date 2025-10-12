@@ -20,11 +20,16 @@ export const handler: ScheduledHandler = async () => {
 			},
 		});
 
+		if (citizenWithRoles.length <= 0) {
+			log.info("No citizens with roles found");
+			return;
+		}
+
 		const accounts = await prisma.account.findMany({
 			where: {
 				provider: "discord",
 				providerAccountId: {
-					in: citizenWithRoles.map((citizen) => citizen.discordId),
+					in: citizenWithRoles.map((citizen) => citizen.discordId!),
 				},
 			},
 			select: {
@@ -82,41 +87,51 @@ export const handler: ScheduledHandler = async () => {
 			}
 		}
 
-		await prisma.$transaction([
-			prisma.entityLog.createMany({
+		if (changes.length <= 0) {
+			log.info("No expired roles found");
+			return;
+		}
+
+		await prisma.$transaction(async (tx) => {
+			const createdEntityLogs = await tx.entityLog.createManyAndReturn({
 				data: changes.map((change) => ({
 					type: "role-removed",
 					content: change.roleId,
 					entityId: change.citizenId,
-					attributes: {
-						create: {
-							data: {
-								key: "confirmed",
-								value: "confirmed",
-							},
-						},
-					},
 				})),
-			}),
+				select: { id: true },
+			});
 
-			...changes.map((change) => {
+			await tx.entityLogAttribute.createMany({
+				data: createdEntityLogs.map((log) => ({
+					entityLogId: log.id,
+					key: "confirmed",
+					value: "confirmed",
+				})),
+			});
+
+			for (const change of changes) {
+				const citizen = citizenWithRoles.find(
+					(citizen) => citizen.id === change.citizenId,
+				);
+				if (!citizen?.roles) continue;
+
 				const roles =
-					citizenWithRoles
-						.find((citizen) => citizen.id === change.citizenId)!
-						.roles!.split(",")
+					citizen.roles
+						.split(",")
 						.filter((roleId) => roleId !== change.roleId)
 						.join(",") || null;
 
-				return prisma.entity.update({
+				await tx.entity.update({
 					where: { id: change.citizenId },
 					data: {
-						roles: {
-							set: roles,
-						},
+						roles,
 					},
 				});
-			}),
-		]);
+			}
+		});
+
+		log.info("Removed expired roles", { count: changes.length });
 	} catch (error) {
 		log.error("Failed to run midnight automations", error);
 		throw error;
