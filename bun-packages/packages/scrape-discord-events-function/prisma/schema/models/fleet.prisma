@@ -1,0 +1,61 @@
+model Manufacturer {
+  id      String   @id @default(cuid())
+  name    String   @unique
+  imageId String?
+  image   Upload?  @relation(fields: [imageId], references: [id], onDelete: SetNull)
+  series  Series[]
+}
+
+model Series {
+  id             String       @id @default(cuid())
+  name           String       @unique
+  manufacturerId String
+  manufacturer   Manufacturer @relation(fields: [manufacturerId], references: [id], onDelete: Cascade)
+  variants       Variant[]
+
+  @@unique([name, manufacturerId])
+}
+
+model Variant {
+  id                            String                         @id @default(cuid())
+  name                          String
+  seriesId                      String
+  series                        Series                         @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  ships                         Ship[]
+  status                        VariantStatus?
+  tags                          VariantTag[]
+  eventPositionRequiredVariants EventPositionRequiredVariant[]
+
+  @@unique([name, seriesId])
+}
+
+model VariantTag {
+  id       String    @id @default(cuid())
+  key      String
+  value    String
+  variants Variant[]
+
+  createdAt   DateTime @default(now())
+  createdById String
+  createdBy   User     @relation("createdBy", fields: [createdById], references: [id])
+  updatedAt   DateTime @updatedAt
+  updatedById String?
+  updatedBy   User?    @relation("updatedBy", fields: [updatedById], references: [id])
+
+  @@unique([key, value])
+}
+
+enum VariantStatus {
+  FLIGHT_READY
+  NOT_FLIGHT_READY
+}
+
+model Ship {
+  id         String            @id @default(cuid())
+  ownerId    String
+  owner      User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  variantId  String
+  variant    Variant           @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  name       String?
+  operations OperationMember[]
+}

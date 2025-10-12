@@ -1,0 +1,56 @@
+enum TaskRewardType {
+  SILC
+  NEW_SILC
+  TEXT
+}
+
+enum TaskVisibility {
+  PUBLIC
+  PERSONALIZED
+  GROUP
+}
+
+model Task {
+  id                     String           @id @default(cuid())
+  title                  String
+  description            String?
+  createdAt              DateTime         @default(now())
+  createdById            String?
+  createdBy              Entity?          @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
+  rewardType             TaskRewardType
+  rewardTypeSilcValue    Int?
+  rewardTypeNewSilcValue Int?
+  rewardTypeTextValue    String?
+  expiresAt              DateTime?
+  cancelledAt            DateTime?
+  cancelledById          String?
+  cancelledBy            Entity?          @relation("cancelledBy", fields: [cancelledById], references: [id], onDelete: SetNull)
+  deletedAt              DateTime?
+  deletedById            String?
+  deletedBy              Entity?          @relation("deletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
+  visibility             TaskVisibility
+  assignmentLimit        Int?
+  completedAt            DateTime?
+  completedById          String?
+  completedBy            Entity?          @relation("completedBy", fields: [completedById], references: [id], onDelete: SetNull)
+  completionists         Entity[]         @relation("completionists")
+  repeatable             Int              @default(1)
+  requiredRoles          Role[]           @relation("requiredRoles")
+  hiddenForOtherRoles    Boolean?
+  assignments            TaskAssignment[]
+  canSelfComplete        Boolean?
+}
+
+model TaskAssignment {
+  id          String   @id @default(cuid())
+  taskId      String
+  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  citizenId   String
+  citizen     Entity   @relation("citizen", fields: [citizenId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  createdById String?
+  createdBy   Entity?  @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@unique([taskId, citizenId])
+  @@index([citizenId])
+}

@@ -1,0 +1,35 @@
+model Operation {
+  id      String            @id @default(cuid())
+  title   String
+  units   OperationUnit[]
+  members OperationMember[]
+}
+
+model OperationMember {
+  operationId String
+  operation   Operation @relation(fields: [operationId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status      String    @default("pending") // pending, confirmed
+
+  operationUnitId String?
+  operationUnit   OperationUnit? @relation(fields: [operationUnitId], references: [id])
+  title           String? // E.g. Squadron Leader, Alpha-1 Flight Leader, Alpha-1 Wingman, ...
+  shipId          String?
+  ship            Ship?          @relation(fields: [shipId], references: [id], onDelete: Cascade)
+
+  @@id([operationId, userId])
+}
+
+model OperationUnit {
+  id          String            @id @default(cuid())
+  operationId String
+  operation   Operation         @relation(fields: [operationId], references: [id], onDelete: Cascade)
+  title       String // E.g. Squadron 1, Squad 2, Freighters, ...
+  type        String // squadron, flight, squad, fireteam, flight-other
+  members     OperationMember[]
+
+  parentUnitId String?
+  parentUnit   OperationUnit?  @relation("ChildUnits", fields: [parentUnitId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  childUnits   OperationUnit[] @relation("ChildUnits")
+}

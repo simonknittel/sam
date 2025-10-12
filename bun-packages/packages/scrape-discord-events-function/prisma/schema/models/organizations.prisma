@@ -1,0 +1,86 @@
+model Organization {
+  id                       String                               @id @default(cuid())
+  name                     String
+  spectrumId               String                               @unique
+  description              String?
+  logo                     String?
+  activeMemberships        ActiveOrganizationMembership[]
+  membershipHistoryEntries OrganizationMembershipHistoryEntry[]
+  attributeHistoryEntries  OrganizationAttributeHistoryEntry[]
+  createdAt                DateTime                             @default(now())
+  createdById              String
+  createdBy                Entity                               @relation(name: "CreatedOrganizations", fields: [createdById], references: [id], onDelete: Cascade)
+}
+
+model OrganizationAttributeHistoryEntry {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  attributeKey String
+  oldValue     String?
+  newValue     String
+
+  createdAt   DateTime @default(now())
+  createdById String
+  createdBy   Entity   @relation(name: "CreatedOrganizationAttributeHistoryEntries", fields: [createdById], references: [id], onDelete: Cascade)
+
+  confirmed     ConfirmationStatus?
+  confirmedAt   DateTime?
+  confirmedById String?
+  confirmedBy   Entity?             @relation(name: "ConfirmedOrganizationAttributeHistoryEntries", fields: [confirmedById], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+}
+
+model ActiveOrganizationMembership {
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  citizenId      String
+  citizen        Entity       @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+
+  type       OrganizationMembershipType
+  visibility OrganizationMembershipVisibility
+
+  @@id([organizationId, citizenId])
+  @@index([organizationId])
+}
+
+enum OrganizationMembershipType {
+  MAIN
+  AFFILIATE
+  LEFT
+}
+
+enum OrganizationMembershipVisibility {
+  PUBLIC
+  REDACTED
+}
+
+model OrganizationMembershipHistoryEntry {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  citizenId      String
+  citizen        Entity       @relation(name: "OrganizationMembershipHistoryEntry", fields: [citizenId], references: [id], onDelete: Cascade)
+
+  type       OrganizationMembershipType
+  visibility OrganizationMembershipVisibility
+
+  createdAt   DateTime @default(now())
+  createdById String
+  createdBy   Entity   @relation(name: "CreatedOrganizationMemberHistoryEntries", fields: [createdById], references: [id], onDelete: Cascade)
+
+  confirmed     ConfirmationStatus?
+  confirmedAt   DateTime?
+  confirmedById String?
+  confirmedBy   Entity?             @relation(name: "ConfirmedOrganizationMemberHistoryEntries", fields: [confirmedById], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([citizenId])
+}
+
+enum ConfirmationStatus {
+  CONFIRMED
+  FALSE_REPORT
+}
