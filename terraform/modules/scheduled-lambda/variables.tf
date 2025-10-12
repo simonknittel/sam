@@ -15,3 +15,7 @@ variable "timeout" {
   type    = number
   default = 15
 }
+
+variable "schedule_expression" {
+  type    = string
+}
