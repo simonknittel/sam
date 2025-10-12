@@ -79,6 +79,9 @@ model Role {
   eventPositions    EventPosition[]
   tasksRequiredIn   Task[]             @relation("requiredRoles")
   silcSalaries      SilcRoleSalary[]
+  maxAgeDays        Int?
+
+  @@index([maxAgeDays])
 }
 
 model PermissionString {

@@ -49,6 +49,8 @@ model Entity {
   eventPositions            EventPosition[]            @relation("citizen")
   silcBalance               Int                        @default(0)
   totalEarnedSilc           Int                        @default(0)
+
+  @@index([roles])
 }
 
 model EntityLog {
@@ -59,8 +61,8 @@ model EntityLog {
   updatedAt     DateTime             @updatedAt
   type          String // TODO: types.ts
   content       String?              @db.Text
-  submittedById String
-  submittedBy   User                 @relation("submittedBy", fields: [submittedById], references: [id], onDelete: Cascade)
+  submittedById String?
+  submittedBy   User?                @relation("submittedBy", fields: [submittedById], references: [id], onDelete: Cascade)
   attributes    EntityLogAttribute[]
 
   @@index([type]) // `type: Hash` isn't supported on MySQL
@@ -73,8 +75,8 @@ model EntityLogAttribute {
   key         String // TODO: types.ts
   value       String
   createdAt   DateTime  @default(now())
-  createdById String
-  createdBy   User      @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdById String?
+  createdBy   User?     @relation(fields: [createdById], references: [id], onDelete: Cascade)
 
   @@index([key]) // `type: Hash` isn't supported on MySQL
 }

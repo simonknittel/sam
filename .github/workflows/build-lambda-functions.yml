@@ -50,7 +50,7 @@ jobs:
           SHA=$(git log -1 '--format=format:%H')
           # bun run build --define:process.env.COMMIT_SHA=\\\"$SHA\\\"
           bun run build
-        working-directory: bun-packages/packages/midnight-automations-function
+        working-directory: bun-packages/packages/midnight-automations
 
       - name: Store artifact
         uses: actions/upload-artifact@v4.6.2
@@ -70,7 +70,7 @@ jobs:
       - name: Store artifact
         uses: actions/upload-artifact@v4.6.2
         with:
-          name: midnight-automations-function-dist
-          path: bun-packages/packages/midnight-automations-function/dist/
+          name: midnight-automations-dist
+          path: bun-packages/packages/midnight-automations/dist/
           retention-days: 1
           include-hidden-files: true # Required for the .prisma folder within node_modules
