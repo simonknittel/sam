@@ -2,6 +2,7 @@
 	"recommendations": [
 		"biomejs.biome",
 		"streetsidesoftware.code-spell-checker-german",
-		"prisma.prisma"
+		"prisma.prisma",
+		"oven.bun-vscode"
 	]
 }

@@ -1,0 +1,26 @@
+generator client {
+    provider        = "prisma-client-js"
+    previewFeatures = ["prismaSchemaFolder"]
+    binaryTargets   = ["linux-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+//
+// Uploads
+//
+
+model Upload {
+    id             String         @id @default(cuid())
+    fileName       String
+    mimeType       String
+    createdAt      DateTime       @default(now())
+    createdById    String
+    createdBy      User           @relation(fields: [createdById], references: [id], onDelete: Cascade)
+    roleIcons      Role[]         @relation("icon")
+    roleThumbnails Role[]         @relation("thumbnail")
+    manufacturers  Manufacturer[]
+}

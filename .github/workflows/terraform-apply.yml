@@ -69,3 +69,4 @@ jobs:
           TF_VAR_api_subdomain: ${{ vars.API_SUBDOMAIN }}
           TF_VAR_email_function_parameters: ${{ secrets.EMAIL_FUNCTION_PARAMETERS }}
           TF_VAR_scrape_discord_events_function_environment_variables: ${{ secrets.SCRAPE_DISCORD_EVENTS_FUNCTION_ENVIRONMENT_VARIABLES }}
+          TF_VAR_midnight_automations_environment_variables: ${{ secrets.MIDNIGHT_AUTOMATIONS_ENVIRONMENT_VARIABLES }}

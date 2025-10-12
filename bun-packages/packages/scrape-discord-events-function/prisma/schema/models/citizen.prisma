@@ -17,6 +17,22 @@ model Entity {
   updatedSilcTransactions                      SilcTransaction[]                    @relation("updatedBy")
   deletedSilcTransactions                      SilcTransaction[]                    @relation("deletedBy")
   updatedSilcSettings                          SilcSetting[]                        @relation("updatedBy")
+  eventManagers                                Event[]                              @relation("eventManagers")
+  createdTasks                                 Task[]                               @relation("createdBy")
+  cancelledTasks                               Task[]                               @relation("cancelledBy")
+  deletedTasks                                 Task[]                               @relation("deletedBy")
+  assignedTasks                                TaskAssignment[]                     @relation("citizen")
+  completedTasks                               Task[]                               @relation("completedBy")
+  createdTaskAssignments                       TaskAssignment[]                     @relation("createdBy")
+  completionistsTask                           Task[]                               @relation("completionists")
+  participatedProfitDistributionCycles         ProfitDistributionCycleParticipant[] @relation("citizen")
+  cededProfitDistributionCycles                ProfitDistributionCycleParticipant[] @relation("cededBy")
+  acceptedProfitDistributionCycles             ProfitDistributionCycleParticipant[] @relation("acceptedBy")
+  disbursedProfitDistributionCycles            ProfitDistributionCycleParticipant[] @relation("disbursedBy")
+  createdProfitDistributionCycles              ProfitDistributionCycle[]            @relation("createdBy")
+  collectionEndedProfitDistributionCycles      ProfitDistributionCycle[]            @relation("collectionEndedBy")
+  payoutStartedProfitDistributionCycles        ProfitDistributionCycle[]            @relation("payoutStartedBy")
+  payoutEndedProfitDistributionCycles          ProfitDistributionCycle[]            @relation("payoutEndedBy")
 
   // Holds the latest confirmed values
   spectrumId                String?
@@ -52,8 +68,8 @@ model EntityLog {
 
 model EntityLogAttribute {
   id          String    @id @default(cuid())
-  eneityLogId String
-  entityLog   EntityLog @relation(fields: [eneityLogId], references: [id], onDelete: Cascade)
+  entityLogId String    @map("eneityLogId")
+  entityLog   EntityLog @relation(fields: [entityLogId], references: [id], onDelete: Cascade)
   key         String // TODO: types.ts
   value       String
   createdAt   DateTime  @default(now())

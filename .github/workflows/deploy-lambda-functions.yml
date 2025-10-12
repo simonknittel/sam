@@ -43,6 +43,13 @@ jobs:
 
     environment: lambda-functions-${{ inputs.environment || 'test' }}
 
+    strategy:
+      matrix:
+        function:
+          - email-function
+          - scrape-discord-events-function
+          - midnight-automations
+
     steps:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v5.0.0
@@ -50,30 +57,16 @@ jobs:
           role-to-assume: ${{ vars.IAM_ROLE_ARN }}
           aws-region: eu-central-1
 
-      - name: Retrieve email-function artifact
+      - name: Retrieve ${{ matrix.function }} artifact
         uses: actions/download-artifact@v5.0.0
         with:
-          name: email-function-dist
-          path: bun-packages/packages/email-function/dist
+          name: ${{ matrix.function }}-dist
+          path: bun-packages/packages/${{ matrix.function }}/dist
 
-      - name: Retrieve scrape-discord-events-function artifact
-        uses: actions/download-artifact@v5.0.0
-        with:
-          name: scrape-discord-events-function-dist
-          path: bun-packages/packages/scrape-discord-events-function/dist
-
-      - name: Prepare ZIP
+      - name: Prepare ZIP for ${{ matrix.function }}
         run: zip -r ../dist.zip .
-        working-directory: bun-packages/packages/email-function/dist/
+        working-directory: bun-packages/packages/${{ matrix.function }}/dist/
 
-      - name: Prepare ZIP
-        run: zip -r ../dist.zip .
-        working-directory: bun-packages/packages/scrape-discord-events-function/dist/
-
-      - name: Deploy
-        run: aws lambda update-function-code --function-name email-function --zip-file fileb://dist.zip
-        working-directory: bun-packages/packages/email-function/
-
-      - name: Deploy
-        run: aws lambda update-function-code --function-name scrape-discord-events-function --zip-file fileb://dist.zip
-        working-directory: bun-packages/packages/scrape-discord-events-function/
+      - name: Deploy ${{ matrix.function }}
+        run: aws lambda update-function-code --function-name ${{ matrix.function }} --zip-file fileb://dist.zip
+        working-directory: bun-packages/packages/${{ matrix.function }}/

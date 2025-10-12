@@ -27,7 +27,7 @@ provider "aws" {
   default_tags {
     tags = {
       ManagedBy  = "Terraform"
-      Repository = "simonknittel/sinister-incorporated"
+      Repository = "simonknittel/sam"
     }
   }
 }

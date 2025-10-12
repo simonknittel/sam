@@ -2,11 +2,13 @@
 
 import { useAction } from "@/modules/actions/utils/useAction";
 import { Button2 } from "@/modules/common/components/Button2";
+import { NumberInput } from "@/modules/common/components/form/NumberInput";
+import { TextInput } from "@/modules/common/components/form/TextInput";
 import { ImageUpload } from "@/modules/common/components/ImageUpload";
 import Note from "@/modules/common/components/Note";
 import type { Role, Upload } from "@prisma/client";
 import clsx from "clsx";
-import { useActionState, useId } from "react";
+import { useActionState } from "react";
 import { FaSave, FaSpinner, FaTrash } from "react-icons/fa";
 import { deleteRole } from "../actions/deleteRole";
 import { updateRoleName } from "../actions/updateRoleName";
@@ -26,7 +28,6 @@ export const OverviewTab = ({ className, role }: Props) => {
     formAction: deleteFormAction,
     isPending: deleteIsPending,
   } = useAction(deleteRole);
-  const nameInputId = useId();
 
   return (
     <div className={clsx("flex flex-col gap-2", className)}>
@@ -36,13 +37,18 @@ export const OverviewTab = ({ className, role }: Props) => {
       >
         <input type="hidden" name="id" value={role.id} />
 
-        <label className="font-bold">Name</label>
-        <input
-          name="name"
-          defaultValue={role.name}
-          id={nameInputId}
-          className="p-2 rounded-secondary bg-neutral-900 w-full mt-2"
+        <TextInput label="Name" name="name" defaultValue={role.name} />
+
+        <NumberInput
+          label="Verfallsdatum (in Tagen)"
+          name="maxAgeDays"
+          defaultValue={role.maxAgeDays ?? undefined}
+          min={1}
+          step={1}
+          hint="(Optional) Citizen, die sich innerhalb dieses Zeitraums nicht einloggen, wird automatisch diese Rolle entfernt"
+          labelClassName="mt-4"
         />
+
         <Button2
           type="submit"
           disabled={updateNameIsPending}

@@ -1,0 +1,39 @@
+model ProfitDistributionCycle {
+  id                  String                               @id @default(cuid(2))
+  title               String
+  collectionEndedAt   DateTime
+  collectionEndedById String?
+  collectionEndedBy   Entity?                              @relation("collectionEndedBy", fields: [collectionEndedById], references: [id], onDelete: SetNull)
+  payoutStartedAt     DateTime?
+  payoutStartedBy     Entity?                              @relation("payoutStartedBy", fields: [payoutStartedById], references: [id], onDelete: SetNull)
+  payoutStartedById   String?
+  payoutEndedAt       DateTime?
+  payoutEndedById     String?
+  payoutEndedBy       Entity?                              @relation("payoutEndedBy", fields: [payoutEndedById], references: [id], onDelete: SetNull)
+  auecProfit          Int?
+  participants        ProfitDistributionCycleParticipant[]
+  createdAt           DateTime                             @default(now())
+  createdById         String?
+  createdBy           Entity?                              @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
+}
+
+model ProfitDistributionCycleParticipant {
+  id                  String                  @id @default(cuid(2))
+  cycleId             String
+  cycle               ProfitDistributionCycle @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+  citizenId           String
+  citizen             Entity                  @relation("citizen", fields: [citizenId], references: [id], onDelete: Cascade)
+  silcBalanceSnapshot Int?
+  createdAt           DateTime                @default(now())
+  cededAt             DateTime?
+  cededById           String?
+  cededBy             Entity?                 @relation("cededBy", fields: [cededById], references: [id], onDelete: SetNull)
+  acceptedAt          DateTime?
+  acceptedById        String?
+  acceptedBy          Entity?                 @relation("acceptedBy", fields: [acceptedById], references: [id], onDelete: SetNull)
+  disbursedAt         DateTime?
+  disbursedById       String?
+  disbursedBy         Entity?                 @relation("disbursedBy", fields: [disbursedById], references: [id], onDelete: SetNull)
+
+  @@unique([cycleId, citizenId])
+}

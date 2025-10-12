@@ -28,3 +28,11 @@ model SilcSetting {
 enum SilcSettingKey {
   AUEC_CONVERSION_RATE
 }
+
+model SilcRoleSalary {
+  id         String @id @default(cuid(2))
+  roleId     String
+  role       Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  value      Int
+  dayOfMonth Int
+}

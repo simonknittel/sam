@@ -6,21 +6,24 @@ model Flow {
 }
 
 model FlowNode {
-  id                     String                    @id @default(cuid())
+  id                     String                         @id @default(cuid())
   flowId                 String
-  flow                   Flow                      @relation(fields: [flowId], references: [id], onDelete: Cascade)
+  flow                   Flow                           @relation(fields: [flowId], references: [id], onDelete: Cascade)
   positionX              Float
   positionY              Float
   width                  Float
   height                 Float
-  sources                FlowEdge[]                @relation("sources")
-  targets                FlowEdge[]                @relation("targets")
+  sources                FlowEdge[]                     @relation("sources")
+  targets                FlowEdge[]                     @relation("targets")
   type                   FlowNodeType
   roleId                 String?
-  role                   Role?                     @relation("flowNodes", fields: [roleId], references: [id], onDelete: Cascade)
+  role                   Role?                          @relation("flowNodes", fields: [roleId], references: [id], onDelete: Cascade)
   roleImage              FlowNodeRoleImage?
   markdown               String?
   markdownPosition       FlowNodeMarkdownPosition?
+  roleCitizensAlignment  FlowNodeRoleCitizensAlignment?
+  roleCitizensHideRole   Boolean?
+  showUnlocked           Boolean?
   backgroundColor        String?
   backgroundTransparency Float?
 }
@@ -28,6 +31,7 @@ model FlowNode {
 enum FlowNodeType {
   ROLE
   MARKDOWN
+  ROLE_CITIZENS
 }
 
 enum FlowNodeRoleImage {
@@ -39,6 +43,12 @@ enum FlowNodeMarkdownPosition {
   LEFT
   RIGHT
   CENTER
+}
+
+enum FlowNodeRoleCitizensAlignment {
+  LEFT
+  CENTER
+  RIGHT
 }
 
 model FlowEdge {

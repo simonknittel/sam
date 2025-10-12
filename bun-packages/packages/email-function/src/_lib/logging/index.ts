@@ -1,5 +1,5 @@
 import { logToConsole } from "./console";
-import { type LogEntry } from "./types";
+import type { LogEntry } from "./types";
 
 const info = (message: string, args: Record<string, unknown> = {}) => {
 	const logEntry: LogEntry = {

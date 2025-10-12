@@ -3,12 +3,12 @@
 <p align="center">Monorepo of the ERP/CRM for my Star Citizen organization</p>
 
 <p align="center">
-  <a href="https://github.com/simonknittel/sinister-incorporated/blob/develop/docs/screenshot-dashboard.png" style="display: block;">
-    <img src="https://github.com/simonknittel/sinister-incorporated/blob/develop/docs/screenshot-dashboard.png?raw=true" height="200" width="361">
+  <a href="https://github.com/simonknittel/sam/blob/develop/docs/screenshot-dashboard.png" style="display: block;">
+    <img src="https://github.com/simonknittel/sam/blob/develop/docs/screenshot-dashboard.png?raw=true" height="200" width="361">
   </a>
 
-  <a href="https://github.com/simonknittel/sinister-incorporated/blob/develop/docs/screenshot-spynet-citizen.png" style="display: block;">
-    <img src="https://github.com/simonknittel/sinister-incorporated/blob/develop/docs/screenshot-spynet-citizen.png?raw=true" height="200" width="361">
+  <a href="https://github.com/simonknittel/sam/blob/develop/docs/screenshot-spynet-citizen.png" style="display: block;">
+    <img src="https://github.com/simonknittel/sam/blob/develop/docs/screenshot-spynet-citizen.png?raw=true" height="200" width="361">
   </a>
 </p>
 

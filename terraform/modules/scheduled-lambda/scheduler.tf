@@ -5,7 +5,9 @@ resource "aws_scheduler_schedule" "schedule" {
     mode = "OFF"
   }
 
-  schedule_expression = "rate(4 minutes)"
+  schedule_expression          = var.schedule_expression
+  schedule_expression_timezone = "Europe/Berlin"
+  state                        = var.scheduler_state
 
   target {
     arn      = aws_lambda_function.main.arn

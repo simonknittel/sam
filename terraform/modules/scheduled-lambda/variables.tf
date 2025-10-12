@@ -5,6 +5,7 @@ variable "function_name" {
 variable "environment_variables" {
   type      = map(string)
   sensitive = true
+  default = {}
 }
 
 variable "account_id" {
@@ -14,4 +15,13 @@ variable "account_id" {
 variable "timeout" {
   type    = number
   default = 15
+}
+
+variable "schedule_expression" {
+  type    = string
+}
+
+variable "scheduler_state" {
+  type    = string
+  default = "ENABLED"
 }

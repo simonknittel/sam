@@ -29,26 +29,26 @@
 
 1. Create AWS accounts
 
-   1. `sinister-incorporated-test`
-   2. `sinister-incorporated-prod`
+   1. `sam-test`
+   2. `sam-prod`
 
 2. Prepare AWS CLI
 
    ```ini
    # ~/.aws/config
 
-   # Sinister Incorporated
-   [profile sinister-incorporated-test]
-   sso_session = sinister-incorporated-sso
+   # S.A.M.
+   [profile sam-test]
+   sso_session = sam-sso
    sso_account_id = 220746603587
    sso_role_name = AdministratorAccess
 
-   [profile sinister-incorporated-prod]
-   sso_session = sinister-incorporated-sso
+   [profile sam-prod]
+   sso_session = sam-sso
    sso_account_id =
    sso_role_name = AdministratorAccess
 
-   [sso-session sinister-incorporated-sso]
+   [sso-session sam-sso]
    sso_region = eu-central-1
    sso_start_url = https://simonknittel.awsapps.com/start
    ```
@@ -56,8 +56,8 @@
 3. Create and deploy setup stack with AWS CloudFormation
 
    1. Create and populate `test-parameters.json` and `prod-parameters.json`
-   1. `AWS_PROFILE=sinister-incorporated-test aws sso login`
-   2. `AWS_PROFILE=sinister-incorporated-test aws --region eu-central-1 cloudformation deploy --template-file setup.yaml --stack-name setup --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM --tags ManagedBy=CloudFormation Repository=simonknittel/sinister-incorporated --parameter-override file://test-parameters.json`
+   1. `AWS_PROFILE=sam-test aws sso login`
+   2. `AWS_PROFILE=sam-test aws --region eu-central-1 cloudformation deploy --template-file setup.yaml --stack-name setup --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM --tags ManagedBy=CloudFormation Repository=simonknittel/sam --parameter-override file://test-parameters.json`
 
 4. Manually set up AWS User Notifications through the console
 
@@ -89,7 +89,7 @@
 - https://stackoverflow.com/questions/51273227/whats-the-most-efficient-way-to-determine-the-minimum-aws-permissions-necessary
 - https://github.com/iann0036/iamlive
   - `iamlive --mode proxy --force-wildcard-resource --output-file policy.json --sort-alphabetical`
-  - `HTTP_PROXY=http://127.0.0.1:10080 HTTPS_PROXY=http://127.0.0.1:10080 AWS_CA_BUNDLE=~/.iamlive/ca.pem AWS_CSM_ENABLED=true AWS_PROFILE=sinister-incorporated-test terraform plan -var-file="test.tfvars"`
+  - `HTTP_PROXY=http://127.0.0.1:10080 HTTPS_PROXY=http://127.0.0.1:10080 AWS_CA_BUNDLE=~/.iamlive/ca.pem AWS_CSM_ENABLED=true AWS_PROFILE=sam-test terraform plan -var-file="test.tfvars"`
 
 ## 6. Prepare certificates for Mutual TLS (mTLS)
 
@@ -116,9 +116,9 @@
 1. Create and populate `test.s3.tfbackend`, `prod.s3.tfbackend`, `test.tfvars` and `prod.tfvars`
 2. Create Terraform resources
 
-   1. `AWS_PROFILE=sinister-incorporated-test aws sso login`
-   2. `AWS_PROFILE=sinister-incorporated-test terraform init -backend-config=test.s3.tfbackend`
-   3. `AWS_PROFILE=sinister-incorporated-test terraform apply -var-file="test.tfvars"`
+   1. `AWS_PROFILE=sam-test aws sso login`
+   2. `AWS_PROFILE=sam-test terraform init -backend-config=test.s3.tfbackend`
+   3. `AWS_PROFILE=sam-test terraform apply -var-file="test.tfvars"`
 
 ## 8. Set up Vercel
 
