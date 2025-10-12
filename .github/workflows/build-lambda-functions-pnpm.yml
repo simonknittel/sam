@@ -1,0 +1,42 @@
+name: Build Lambda functions (pnpm)
+
+on:
+  workflow_call:
+    inputs:
+      git_ref:
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v5.0.0
+        with:
+          ref: ${{ inputs.git_ref }}
+
+      - uses: pnpm/action-setup@v4.2.0
+        with:
+          version: 10.18.2
+
+      - uses: actions/setup-node@v5.0.0
+        with:
+          node-version-file: "pnpm-monorepo/.nvmrc"
+          cache: "pnpm"
+          cache-dependency-path: "pnpm-monorepo/pnpm-lock.yaml"
+
+      - name: Install dependencies
+        run: pnpm install
+        working-directory: pnpm-monorepo
+
+      - name: Build
+        run: pnpm run build:lambda
+        working-directory: pnpm-monorepo
+
+      - name: Store artifact
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: midnight-automations-dist
+          path: pnpm-monorepo/apps/lambda/build/midnight-automations.zip
+          retention-days: 1

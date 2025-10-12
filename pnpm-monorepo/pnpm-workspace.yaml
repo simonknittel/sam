@@ -1,0 +1,7 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+linkWorkspacePackages: true
+injectWorkspacePackages: true
+preferFrozenLockfile: true

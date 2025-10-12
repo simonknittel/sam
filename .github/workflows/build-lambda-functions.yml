@@ -45,13 +45,6 @@ jobs:
           bun run build
         working-directory: bun-packages/packages/scrape-discord-events-function
 
-      - name: Build
-        run: |
-          SHA=$(git log -1 '--format=format:%H')
-          # bun run build --define:process.env.COMMIT_SHA=\\\"$SHA\\\"
-          bun run build
-        working-directory: bun-packages/packages/midnight-automations
-
       - name: Store artifact
         uses: actions/upload-artifact@v4.6.2
         with:
@@ -64,13 +57,5 @@ jobs:
         with:
           name: scrape-discord-events-function-dist
           path: bun-packages/packages/scrape-discord-events-function/dist/
-          retention-days: 1
-          include-hidden-files: true # Required for the .prisma folder within node_modules
-
-      - name: Store artifact
-        uses: actions/upload-artifact@v4.6.2
-        with:
-          name: midnight-automations-dist
-          path: bun-packages/packages/midnight-automations/dist/
           retention-days: 1
           include-hidden-files: true # Required for the .prisma folder within node_modules

@@ -1,0 +1,6 @@
+{
+	"recommendations": [
+		"dotenv.dotenv-vscode",
+		"prisma.prisma"
+	]
+}
