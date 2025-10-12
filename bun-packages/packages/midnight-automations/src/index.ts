@@ -9,6 +9,9 @@ export const handler: ScheduledHandler = async () => {
 				roles: {
 					not: null,
 				},
+				discordId: {
+					not: null,
+				},
 			},
 			select: {
 				id: true,
