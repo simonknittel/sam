@@ -46,6 +46,22 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col gap-4">
+      <Day heading="12. Oktober 2025">
+        <DayItem heading="Verfallsdatum für Rollen" badges={["Neu"]}>
+          <p>
+            Einer Rolle kann nun ein optionales Verfallsdatum gegeben werden.
+            Dieses Datum wird in Anzahl an Tagen angegeben. Sollte sich ein
+            Citizen mit dieser Rolle innerhalb dieses Datums nicht einmal im
+            S.A.M. angemeldet haben, wird die Rolle automatisch entfernt.
+          </p>
+
+          <p>
+            Hierüber kann bspw. die Login-Berechtigung für inaktiven Member
+            automatisch entfernt werden.
+          </p>
+        </DayItem>
+      </Day>
+
       <Day heading="7. Oktober 2025">
         <DayItem heading="SINcome" badges={["Neu"]}>
           <p>Die neue SINcome-App ist nun live.</p>

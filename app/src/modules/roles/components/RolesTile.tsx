@@ -4,7 +4,7 @@ import clsx from "clsx";
 import Image from "next/image";
 import { getRoles } from "../queries";
 
-const GRID_COLS = "grid-cols-[1fr_128px]";
+const GRID_COLS = "grid-cols-[1fr_128px_128px]";
 
 interface Props {
   readonly className?: string;
@@ -30,6 +30,7 @@ export const RolesTile = async ({ className }: Props) => {
           >
             <th className="px-2">Rolle</th>
             <th className="px-2">Vererbungen</th>
+            <th className="px-2">Verfallsdatum</th>
           </tr>
         </thead>
 
@@ -72,11 +73,15 @@ export const RolesTile = async ({ className }: Props) => {
               <td className="h-14">
                 <Link
                   href={`/app/roles/${role.id}/inheritance`}
-                  className="flex items-center gap-2 hover:bg-neutral-800 px-2 rounded-secondary h-full"
+                  className="flex items-center justify-center gap-2 hover:bg-neutral-800 px-2 rounded-secondary h-full"
                   prefetch={false}
                 >
                   {role.inherits.length > 0 ? role.inherits.length : "-"}
                 </Link>
+              </td>
+
+              <td className="flex items-center justify-center h-14">
+                {role.maxAgeDays || "-"}
               </td>
             </tr>
           ))}

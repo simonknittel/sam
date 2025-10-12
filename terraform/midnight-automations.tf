@@ -6,5 +6,5 @@ module "midnight_automations" {
   timeout               = 180
   environment_variables = var.midnight_automations_environment_variables
   schedule_expression   = "cron(0 0 * * ? *)"
-  scheduler_state       = "DISABLED"
+  scheduler_state       = "ENABLED"
 }

@@ -12,6 +12,7 @@ import { z } from "zod";
 const schema = z.object({
   id: z.cuid(),
   name: z.string().min(1).max(255),
+  maxAgeDays: z.coerce.number().min(1).nullish(),
 });
 
 export const updateRoleName = async (
@@ -33,6 +34,9 @@ export const updateRoleName = async (
     const result = schema.safeParse({
       id: formData.get("id"),
       name: formData.get("name"),
+      maxAgeDays: formData.get("maxAgeDays")
+        ? Number(formData.get("maxAgeDays"))
+        : null,
     });
     if (!result.success) {
       void log.warn("Bad Request", { error: serializeError(result.error) });
@@ -51,6 +55,7 @@ export const updateRoleName = async (
       },
       data: {
         name: result.data.name,
+        maxAgeDays: result.data.maxAgeDays,
       },
     });
 
