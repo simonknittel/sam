@@ -4,6 +4,8 @@
 		"cuid",
 		"esbuild",
 		"nvmrc",
+		"postgres",
+		"postgresql",
 		"silc"
 	]
 }

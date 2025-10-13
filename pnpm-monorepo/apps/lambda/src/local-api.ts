@@ -10,6 +10,7 @@ import { log } from "./common/logger";
 import { midnightAutomationsHandler } from "./functions/midnight-automations/handler";
 import { initializeRequestContext } from "./common/requestContext";
 import { cors } from "hono/cors";
+import { scrapeDiscordEventsHandler } from "./functions/scrape-discord-events/handler";
 
 const app = new Hono();
 
@@ -34,7 +35,24 @@ app.post("/midnight-automations", async (c) => {
 	}
 });
 
-const port = 3000;
+app.post("/scrape-discord-events", async (c) => {
+	try {
+		await scrapeDiscordEventsHandler();
+		return c.json({}, 200);
+	} catch (error) {
+		log.error("Internal Server Error", { error });
+		return c.json(
+			{
+				error: {
+					message: "Internal Server Error",
+				},
+			},
+			500,
+		);
+	}
+});
+
+const port = 3001;
 
 log.info("Local API started", { port });
 

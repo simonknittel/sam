@@ -1,12 +1,11 @@
 import { setTimeout } from "node:timers/promises";
-import { cache } from "react";
 import { z } from "zod";
-import { env } from "../../env";
-import { log } from "../../logging";
 import { checkResponseForError } from "./checkResponseForError";
 import { memberSchema, userSchema } from "./schemas";
+import { log } from "../../../../common/logger";
+import { env } from "../../env";
 
-export const getEventUsers = cache(async (discordId: string) => {
+export const getEventUsers = async (discordId: string) => {
 	let response;
 
 	for (let attempt = 0; attempt < 5; attempt++) {
@@ -16,7 +15,6 @@ export const getEventUsers = cache(async (discordId: string) => {
 				headers: new Headers({
 					Authorization: `Bot ${env.DISCORD_TOKEN}`,
 				}),
-				cache: "no-store",
 			},
 		);
 		if (response.status !== 429) break;
@@ -39,7 +37,7 @@ export const getEventUsers = cache(async (discordId: string) => {
 	checkResponseForError(data);
 
 	return data as z.infer<typeof successSchema>;
-});
+};
 
 const successSchema = z.array(
 	z.object({

@@ -47,6 +47,7 @@ jobs:
       matrix:
         function:
           - midnight-automations
+          - scrape-discord-events-function
 
     steps:
       - name: Configure AWS Credentials

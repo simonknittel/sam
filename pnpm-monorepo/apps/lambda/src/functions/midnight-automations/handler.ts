@@ -1,3 +1,4 @@
+import "./env";
 import { removeExpiredRoles } from "./removeExpiredRoles";
 
 export const midnightAutomationsHandler = async () => {

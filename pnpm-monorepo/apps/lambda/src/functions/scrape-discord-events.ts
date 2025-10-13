@@ -1,7 +1,7 @@
 import type { ScheduledHandler } from "aws-lambda";
-import { midnightAutomationsHandler } from "./midnight-automations/handler";
+import { scrapeDiscordEventsHandler } from "./scrape-discord-events/handler";
 import { initializeRequestContext } from "../common/requestContext";
 
 export const handler: ScheduledHandler = async (event, context) => {
-	return initializeRequestContext(context.awsRequestId, () => midnightAutomationsHandler());
+	return initializeRequestContext(context.awsRequestId, () => scrapeDiscordEventsHandler());
 };

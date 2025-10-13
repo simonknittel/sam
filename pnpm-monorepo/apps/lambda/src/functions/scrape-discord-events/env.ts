@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 const schema = z.object({
-	COMMIT_SHA: z.string().optional(),
 	NODE_ENV: z.enum(["development", "production"]).default("development"),
 	DATABASE_URL: z
 		.string()

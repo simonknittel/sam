@@ -47,7 +47,6 @@ jobs:
       matrix:
         function:
           - email-function
-          - scrape-discord-events-function
 
     steps:
       - name: Configure AWS Credentials

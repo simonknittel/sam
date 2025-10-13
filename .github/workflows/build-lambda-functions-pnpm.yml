@@ -34,9 +34,17 @@ jobs:
         run: pnpm run build:lambda
         working-directory: pnpm-monorepo
 
-      - name: Store artifact
+      - name: Store artifact (midnight-automations)
         uses: actions/upload-artifact@v4.6.2
         with:
           name: midnight-automations-dist
           path: pnpm-monorepo/apps/lambda/build/midnight-automations.zip
+          retention-days: 1
+
+      - run: mv pnpm-monorepo/apps/lambda/build/scrape-discord-events.zip pnpm-monorepo/apps/lambda/build/scrape-discord-events-function.zip
+      - name: Store artifact (scrape-discord-events)
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: scrape-discord-events-function-dist
+          path: pnpm-monorepo/apps/lambda/build/scrape-discord-events-function.zip
           retention-days: 1
