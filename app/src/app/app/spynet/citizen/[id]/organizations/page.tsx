@@ -1,7 +1,6 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { OrganizationMembershipHistory } from "@/modules/citizen/components/OrganizationMembershipHistory";
 import { OrganizationMembershipsTile } from "@/modules/citizen/components/OrganizationMembershipsTile";
-import { Template } from "@/modules/citizen/components/Template";
 import { getCitizenById } from "@/modules/citizen/queries";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
@@ -19,35 +18,31 @@ export const generateMetadata = generateMetadataWithTryCatch(
     if (!entity) return {};
 
     return {
-      title: `Organisationen - ${entity.handle || entity.id} - Spynet`,
+      title: `Organisationen - ${entity.handle || entity.id}`,
     };
   },
 );
 
-interface Props {
-  readonly params: Params;
-}
-
-export default async function Page(props: Props) {
+export default async function Page({
+  params,
+}: PageProps<"/app/spynet/citizen/[id]/organizations">) {
   const authentication = await requireAuthenticationPage(
     "/app/spynet/citizen/[id]/organizations",
   );
   await authentication.authorizePage("organizationMembership", "read");
 
-  const entity = await getCitizenById((await props.params).id);
+  const entity = await getCitizenById((await params).id);
   if (!entity) notFound();
 
   return (
-    <Template citizen={entity}>
-      <div className="flex flex-col gap-4">
-        <SuspenseWithErrorBoundaryTile>
-          <OrganizationMembershipsTile id={entity.id} />
-        </SuspenseWithErrorBoundaryTile>
+    <div className="flex flex-col gap-4">
+      <SuspenseWithErrorBoundaryTile>
+        <OrganizationMembershipsTile id={entity.id} />
+      </SuspenseWithErrorBoundaryTile>
 
-        <SuspenseWithErrorBoundaryTile>
-          <OrganizationMembershipHistory id={entity.id} />
-        </SuspenseWithErrorBoundaryTile>
-      </div>
-    </Template>
+      <SuspenseWithErrorBoundaryTile>
+        <OrganizationMembershipHistory id={entity.id} />
+      </SuspenseWithErrorBoundaryTile>
+    </div>
   );
 }

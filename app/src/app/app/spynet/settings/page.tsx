@@ -7,7 +7,7 @@ import { type Metadata } from "next";
 import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
-  title: "Einstellungen - Spynet",
+  title: "Einstellungen",
 };
 
 export default async function Page() {

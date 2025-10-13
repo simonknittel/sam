@@ -7,7 +7,7 @@ import { type Metadata } from "next";
 export const revalidate = 0; // TODO: Revert to 60
 
 export const metadata: Metadata = {
-  title: "Notizen - Spynet",
+  title: "Notizen",
 };
 
 export default async function Page({

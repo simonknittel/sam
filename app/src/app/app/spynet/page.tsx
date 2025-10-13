@@ -5,11 +5,6 @@ import { getUnleashFlag } from "@/modules/common/utils/getUnleashFlag";
 import { UNLEASH_FLAG } from "@/modules/common/utils/UNLEASH_FLAG";
 import { CreateOrganizationButton } from "@/modules/spynet/components/CreateOrganization/CreateOrganizationButton";
 import { SpynetSearchTile } from "@/modules/spynet/components/SpynetSearchTile/SpynetSearchTile";
-import { type Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Spynet",
-};
 
 export default async function Page() {
   const authentication = await requireAuthenticationPage("/app/spynet");

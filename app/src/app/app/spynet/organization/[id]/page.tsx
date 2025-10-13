@@ -33,7 +33,7 @@ export const generateMetadata = generateMetadataWithTryCatch(
     if (!organization) return {};
 
     return {
-      title: `${organization.name} - Spynet`,
+      title: `${organization.name}`,
     };
   },
 );

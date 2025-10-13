@@ -5,7 +5,7 @@ import { ActivityTile } from "@/modules/spynet/components/ActivityTile/ActivityT
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Aktivität - Spynet",
+  title: "Aktivität",
 };
 
 export default async function Page() {

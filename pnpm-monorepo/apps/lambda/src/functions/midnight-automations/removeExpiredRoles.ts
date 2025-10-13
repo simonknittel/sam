@@ -92,21 +92,13 @@ export const removeExpiredRoles = async () => {
 	}
 
 	await captureAsyncFunc("remove expired roles", () => prisma.$transaction(async (tx) => {
-		const createdEntityLogs = await tx.entityLog.createManyAndReturn({
+		await tx.entityLog.createManyAndReturn({
 			data: changes.map((change) => ({
 				type: "role-removed",
 				content: change.roleId,
 				entityId: change.citizenId,
 			})),
 			select: { id: true },
-		});
-
-		await tx.entityLogAttribute.createMany({
-			data: createdEntityLogs.map((log) => ({
-				entityLogId: log.id,
-				key: "confirmed",
-				value: "confirmed",
-			})),
 		});
 
 		for (const change of changes) {

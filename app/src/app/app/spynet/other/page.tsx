@@ -7,7 +7,7 @@ import OtherTableTile from "../../../../modules/citizen/components/OtherTableTil
 export const revalidate = 0; // TODO: Revert to 60
 
 export const metadata: Metadata = {
-  title: "Sonstige - Spynet",
+  title: "Sonstige",
 };
 
 export default async function Page({

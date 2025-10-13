@@ -22,6 +22,7 @@ import image20250609Uncollapsed from "@/modules/changelog/assets/2025-06-09-unco
 import image20250614CmdK from "@/modules/changelog/assets/2025-06-14-cmdk.png";
 import image20250906NewLayout from "@/modules/changelog/assets/2025-09-06-new-layout.png";
 import image20251007sincome from "@/modules/changelog/assets/2025-10-07-sincome.png";
+import image20251013rolesHistory from "@/modules/changelog/assets/2025-10-13-roles-history.png";
 import { Link } from "@/modules/common/components/Link";
 import { SmallBadge } from "@/modules/common/components/SmallBadge";
 import { random } from "lodash";
@@ -46,6 +47,26 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col gap-4">
+      <Day heading="13. Oktober 2025">
+        <DayItem heading="Änderungsverlauf für Rollen" badges={["Neu"]}>
+          <p>
+            Auf der Citizen-Detailseite im Spynet gibt es nun den neuen Reiter
+            &ldquo;Rollen&rdquo;. Von hier aus können nun dem Citizen Rollen
+            hinzugefügt und entfernt werden. Zudem gibt es hier nun einen
+            Verlauf aller Änderungen an den Rollen dieses Citizen.
+          </p>
+
+          <Link href={image20251013rolesHistory.src}>
+            <Image
+              quality={100}
+              src={image20251013rolesHistory}
+              alt=""
+              loading="lazy"
+            />
+          </Link>
+        </DayItem>
+      </Day>
+
       <Day heading="12. Oktober 2025">
         <DayItem heading="Verfallsdatum für Rollen" badges={["Neu"]}>
           <p>
