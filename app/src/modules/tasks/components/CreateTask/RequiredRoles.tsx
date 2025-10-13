@@ -50,7 +50,6 @@ export const RequiredRoles = ({ className, defaultValue }: Props) => {
           </Button2>
         </Popover.Trigger>
 
-        {}
         <Popover.Portal container={popoverPortalRef.current}>
           <Popover.Content sideOffset={4} side="top">
             <div className="flex flex-col gap-2 p-4 rounded-secondary bg-neutral-800 border border-brand-red-500 max-h-96 overflow-auto">
