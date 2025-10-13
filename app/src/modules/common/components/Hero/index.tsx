@@ -21,7 +21,7 @@ export const Hero = ({
       <span
         className={clsx(
           className,
-          "inline-block uppercase font-extrabold bg-clip-text text-transparent bg-sinister-text-gradient relative z-[1] whitespace-nowrap",
+          "inline-block uppercase font-extrabold bg-clip-text text-transparent bg-brand-text-gradient relative z-[1] whitespace-nowrap",
           {
             "text-5xl lg:text-6xl": size === "lg",
             [styles.layers]: withGlitch,
@@ -40,7 +40,7 @@ export const Hero = ({
     <h1
       className={clsx(
         className,
-        "inline-block uppercase font-extrabold bg-clip-text text-transparent bg-sinister-text-gradient relative z-[1] whitespace-nowrap",
+        "inline-block uppercase font-extrabold bg-clip-text text-transparent bg-brand-text-gradient relative z-[1] whitespace-nowrap",
         {
           "text-5xl lg:text-6xl": size === "lg",
           [styles.layers]: withGlitch,

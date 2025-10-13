@@ -23,8 +23,7 @@ export default {
         "rsi-blue-300": "#0e2635",
       },
       backgroundImage: {
-        "sinister-text-gradient":
-          "radial-gradient(#BB2222, hsl(0 69% 30% / 1))",
+        "brand-text-gradient": "radial-gradient(#BB2222, hsl(0 69% 30% / 1))",
       },
       borderRadius: {
         primary: "var(--radius-primary)",
