@@ -53,14 +53,14 @@ export const mapOrganizationMembershipHistoryEntries = async (
                 Citizen{" "}
                 <Link
                   href={`/app/spynet/citizen/${entry.citizen.id}`}
-                  className="inline-flex gap-1 items-center text-sinister-red-500 hover:text-sinister-red-300"
+                  className="inline-flex gap-1 items-center text-brand-red-500 hover:text-brand-red-300"
                 >
                   {entry.citizen.handle}
                 </Link>{" "}
                 wurde der Organisation{" "}
                 <Link
                   href={`/app/spynet/organization/${entry.organization.id}`}
-                  className="text-sinister-red-500 hover:text-sinister-red-300"
+                  className="text-brand-red-500 hover:text-brand-red-300"
                 >
                   {entry.organization.logo && (
                     <span className="inline-block rounded-secondary bg-black mr-1 align-bottom">
@@ -88,14 +88,14 @@ export const mapOrganizationMembershipHistoryEntries = async (
                 Citizen{" "}
                 <Link
                   href={`/app/spynet/citizen/${entry.citizen.id}`}
-                  className="inline-flex gap-1 items-center text-sinister-red-500 hover:text-sinister-red-300"
+                  className="inline-flex gap-1 items-center text-brand-red-500 hover:text-brand-red-300"
                 >
                   {entry.citizen.handle}
                 </Link>{" "}
                 wurde der Organisation{" "}
                 <Link
                   href={`/app/spynet/organization/${entry.organization.id}`}
-                  className="inline-flex gap-1 items-center text-sinister-red-500 hover:text-sinister-red-300"
+                  className="inline-flex gap-1 items-center text-brand-red-500 hover:text-brand-red-300"
                 >
                   {entry.organization.name}
                 </Link>{" "}
@@ -113,14 +113,14 @@ export const mapOrganizationMembershipHistoryEntries = async (
                 Citizen{" "}
                 <Link
                   href={`/app/spynet/citizen/${entry.citizen.id}`}
-                  className="inline-flex gap-1 items-center text-sinister-red-500 hover:text-sinister-red-300"
+                  className="inline-flex gap-1 items-center text-brand-red-500 hover:text-brand-red-300"
                 >
                   {entry.citizen.handle}
                 </Link>{" "}
                 wurde aus der Organisation{" "}
                 <Link
                   href={`/app/spynet/organization/${entry.organization.id}`}
-                  className="inline-flex gap-1 items-center text-sinister-red-500 hover:text-sinister-red-300"
+                  className="inline-flex gap-1 items-center text-brand-red-500 hover:text-brand-red-300"
                 >
                   {entry.organization.name}
                 </Link>{" "}

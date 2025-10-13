@@ -42,7 +42,7 @@ export const SilcBalancesTableClient = ({ className, rows }: Props) => {
           return (
             <Link
               href={`/app/spynet/citizen/${id}/silc`}
-              className="hover:bg-neutral-800 flex items-center rounded-secondary px-2 h-8 text-sinister-red-500 overflow-hidden text-ellipsis"
+              className="hover:bg-neutral-800 flex items-center rounded-secondary px-2 h-8 text-brand-red-500 overflow-hidden text-ellipsis"
               prefetch={false}
               title={handle || id}
             >

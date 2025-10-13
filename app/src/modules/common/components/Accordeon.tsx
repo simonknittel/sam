@@ -20,9 +20,9 @@ export const AccordeonToggle = (props: AccordeonToggleProps) => {
       {...rest}
     >
       {isOpen ? (
-        <FaChevronUp className="text-sinister-red-500" />
+        <FaChevronUp className="text-brand-red-500" />
       ) : (
-        <FaChevronDown className="text-sinister-red-500" />
+        <FaChevronDown className="text-brand-red-500" />
       )}
     </button>
   );
@@ -42,7 +42,7 @@ export const AccordeonLink = (props: AccordeonLinkProps) => {
       )}
       {...rest}
     >
-      <FaChevronRight className="text-sinister-red-500" />
+      <FaChevronRight className="text-brand-red-500" />
     </div>
   );
 };

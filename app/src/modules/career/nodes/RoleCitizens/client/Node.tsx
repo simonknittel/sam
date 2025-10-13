@@ -163,7 +163,7 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
             onClick={onEdit}
             type="button"
             title="Bearbeiten"
-            className="bg-neutral-800 rounded-secondary p-2 text-sinister-red-500 hover:bg-neutral-700"
+            className="bg-neutral-800 rounded-secondary p-2 text-brand-red-500 hover:bg-neutral-700"
           >
             <FaPen />
           </button>
@@ -189,7 +189,7 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
             onClick={onDelete}
             type="button"
             title="Löschen"
-            className="bg-neutral-800 rounded-secondary p-2 text-sinister-red-500 hover:bg-neutral-700"
+            className="bg-neutral-800 rounded-secondary p-2 text-brand-red-500 hover:bg-neutral-700"
           >
             <FaTrash />
           </button>
@@ -269,7 +269,7 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
         )}
 
         {"redacted" in props.data && (
-          <p className="text-sinister-red-500 font-bold border border-sinister-red-500 rounded-secondary px-2 py-1 inline-block text-xs">
+          <p className="text-brand-red-500 font-bold border border-brand-red-500 rounded-secondary px-2 py-1 inline-block text-xs">
             Redacted
           </p>
         )}

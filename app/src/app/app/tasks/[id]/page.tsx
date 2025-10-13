@@ -19,7 +19,7 @@ export const generateMetadata = generateMetadataWithTryCatch(
     if (!task) notFound();
 
     return {
-      title: `${task.title} - Task | S.A.M. - Sinister Incorporated`,
+      title: `${task.title} - Task`,
     };
   },
 );

@@ -3,7 +3,7 @@ import { Hero } from "@/modules/common/components/Hero";
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Forbidden | S.A.M. - Sinister Incorporated",
+  title: "Forbidden",
 };
 
 export default async function Forbidden() {

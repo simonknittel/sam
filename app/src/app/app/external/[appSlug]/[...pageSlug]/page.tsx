@@ -33,7 +33,7 @@ export const generateMetadata = generateMetadataWithTryCatch(
     if (!page) notFound();
 
     return {
-      title: `${page.title} - ${app.name} | S.A.M. - Sinister Incorporated`,
+      title: `${page.title} - ${app.name}`,
       description: app.description || undefined,
     };
   },

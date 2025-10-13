@@ -1,0 +1,9 @@
+{
+	"name": "sam-monorepo",
+	"private": true,
+	"packageManager": "pnpm@10.18.2",
+	"scripts": {
+		"dev:lambda": "pnpm run --filter \"./packages/database\" build && pnpm run --filter \"./apps/lambda\" dev",
+		"build:lambda": "pnpm run --filter \"./packages/database\" build && pnpm run --filter \"./apps/lambda\" build"
+	}
+}

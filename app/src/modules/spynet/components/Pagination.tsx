@@ -23,7 +23,7 @@ const Pagination = ({
       {currentPage > 1 ? (
         <Link
           href={`?${prevSearchParams.toString()}`}
-          className="rounded-l border border-sinister-red-500 hover:border-sinister-red-300 text-sinister-red-500 hover:text-sinister-red-300 flex items-center w-11 justify-center"
+          className="rounded-l border border-brand-red-500 hover:border-brand-red-300 text-brand-red-500 hover:text-brand-red-300 flex items-center w-11 justify-center"
         >
           <FaChevronLeft />
         </Link>
@@ -40,7 +40,7 @@ const Pagination = ({
       {currentPage + 1 <= totalPages ? (
         <Link
           href={`?${nextSearchparams.toString()}`}
-          className="rounded-r border border-sinister-red-500 hover:border-sinister-red-300 text-sinister-red-500 hover:text-sinister-red-300 flex items-center w-11 justify-center"
+          className="rounded-r border border-brand-red-500 hover:border-brand-red-300 text-brand-red-500 hover:text-brand-red-300 flex items-center w-11 justify-center"
         >
           <FaChevronRight />
         </Link>

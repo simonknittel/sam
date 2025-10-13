@@ -6,7 +6,7 @@ import { TasksTile } from "@/modules/tasks/components/TasksTile";
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Tasks | S.A.M. - Sinister Incorporated",
+  title: "Tasks",
 };
 
 export default async function Page({ searchParams }: PageProps<"/app/tasks">) {

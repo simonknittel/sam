@@ -64,7 +64,7 @@ export const Event = async ({ className, event, index }: Props) => {
       )}
 
       {isToday && !isHappeningNow && (
-        <div className="bg-sinister-red-500/50 text-text-primary font-bold text-center p-2">
+        <div className="bg-brand-red-500/50 text-text-primary font-bold text-center p-2">
           <RelativeDate date={event.startTime} />
         </div>
       )}

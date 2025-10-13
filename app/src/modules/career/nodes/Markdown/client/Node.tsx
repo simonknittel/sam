@@ -126,7 +126,7 @@ export const Node: ComponentType<NodeProps<Markdown>> = (props) => {
             onClick={onEdit}
             type="button"
             title="Bearbeiten"
-            className="bg-neutral-800 rounded-secondary p-2 text-sinister-red-500 hover:bg-neutral-700"
+            className="bg-neutral-800 rounded-secondary p-2 text-brand-red-500 hover:bg-neutral-700"
           >
             <FaPen />
           </button>
@@ -150,7 +150,7 @@ export const Node: ComponentType<NodeProps<Markdown>> = (props) => {
             onClick={onDelete}
             type="button"
             title="Löschen"
-            className="bg-neutral-800 rounded-secondary p-2 text-sinister-red-500 hover:bg-neutral-700"
+            className="bg-neutral-800 rounded-secondary p-2 text-brand-red-500 hover:bg-neutral-700"
           >
             <FaTrash />
           </button>

@@ -1,0 +1,36 @@
+generator client {
+    provider     = "prisma-client"
+    engineType   = "client"
+    output       = "../src/generated/prisma"
+    moduleFormat = "esm"
+
+    // native is for local development
+    //
+    // linux-arm64-openssl-3.0.x is for AWS Lambda
+    //
+    // Sources:
+    // - https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html
+    // - https://www.prisma.io/docs/orm/reference/prisma-schema-reference#binarytargets-options
+    binaryTargets = ["native", "linux-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+//
+// Uploads
+//
+
+model Upload {
+    id             String         @id @default(cuid())
+    fileName       String
+    mimeType       String
+    createdAt      DateTime       @default(now())
+    createdById    String
+    createdBy      User           @relation(fields: [createdById], references: [id], onDelete: Cascade)
+    roleIcons      Role[]         @relation("icon")
+    roleThumbnails Role[]         @relation("thumbnail")
+    manufacturers  Manufacturer[]
+}

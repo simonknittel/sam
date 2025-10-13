@@ -233,7 +233,7 @@ export const CitizenTable = ({
                 <Actions>
                   <Link
                     href={`/app/spynet/citizen/${row.entity.id}`}
-                    className="text-sinister-red-500 hover:text-sinister-red-300 flex gap-2 items-center text-sm whitespace-nowrap h-8"
+                    className="text-brand-red-500 hover:text-brand-red-300 flex gap-2 items-center text-sm whitespace-nowrap h-8"
                   >
                     <FaExternalLinkAlt />
                     Vollständiger Eintrag

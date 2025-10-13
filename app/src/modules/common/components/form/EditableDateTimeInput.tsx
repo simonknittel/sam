@@ -116,9 +116,9 @@ export const EditableDateTimeInput = ({
 
           <button disabled={isPending} className="group" title="Speichern">
             {isPending ? (
-              <FaSpinner className="text-sinister-red-500 animate-spin" />
+              <FaSpinner className="text-brand-red-500 animate-spin" />
             ) : (
-              <FaSave className="text-sinister-red-500 group-hover:text-sinister-red-300" />
+              <FaSave className="text-brand-red-500 group-hover:text-brand-red-300" />
             )}
           </button>
         </form>
@@ -130,7 +130,7 @@ export const EditableDateTimeInput = ({
           title="Klicken, um zu bearbeiten"
         >
           {formatDate(value) || "-"}
-          <FaPen className="flex-1 text-sinister-red-500 group-hover:text-sinister-red-300 text-sm" />
+          <FaPen className="flex-1 text-brand-red-500 group-hover:text-brand-red-300 text-sm" />
         </button>
       )}
     </span>

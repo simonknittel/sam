@@ -8,7 +8,7 @@ import { RoleSalaries } from "@/modules/silc/components/RoleSalaries";
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Einstellungen - SILC | S.A.M. - Sinister Incorporated",
+  title: "Einstellungen - SILC",
 };
 
 export default async function Page() {

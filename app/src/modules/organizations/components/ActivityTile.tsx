@@ -128,7 +128,7 @@ export const ActivityTile = async ({ className, id }: Props) => {
               <p>
                 <Link
                   href={`/app/spynet/citizen/${entry.citizen.id}`}
-                  className="text-sinister-red-500 hover:text-sinister-red-300"
+                  className="text-brand-red-500 hover:text-brand-red-300"
                 >
                   {entry.citizen.handle}
                 </Link>{" "}
@@ -147,7 +147,7 @@ export const ActivityTile = async ({ className, id }: Props) => {
               <p>
                 <Link
                   href={`/app/spynet/citizen/${entry.citizen.id}`}
-                  className="text-sinister-red-500 hover:text-sinister-red-300 mr-1"
+                  className="text-brand-red-500 hover:text-brand-red-300 mr-1"
                 >
                   {entry.citizen.handle}
                 </Link>{" "}
@@ -166,7 +166,7 @@ export const ActivityTile = async ({ className, id }: Props) => {
               <p>
                 <Link
                   href={`/app/spynet/citizen/${entry.citizen.id}`}
-                  className="text-sinister-red-500 hover:text-sinister-red-300"
+                  className="text-brand-red-500 hover:text-brand-red-300"
                 >
                   {entry.citizen.handle}
                 </Link>{" "}

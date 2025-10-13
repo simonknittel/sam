@@ -16,7 +16,7 @@ export const generateMetadata = generateMetadataWithTryCatch(
     if (!event) notFound();
 
     return {
-      title: `Flotte - ${event.name} - Event | S.A.M. - Sinister Incorporated`,
+      title: `Flotte - ${event.name} - Event`,
     };
   },
 );

@@ -5,7 +5,7 @@ import { OrgFleetTile } from "@/modules/fleet/components/OrgFleetTile";
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Sinister Incorporated - Flotte | S.A.M. - Sinister Incorporated",
+  title: "Sinister Incorporated - Flotte",
 };
 
 export default async function Page({

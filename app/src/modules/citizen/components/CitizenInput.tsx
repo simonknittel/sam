@@ -119,7 +119,7 @@ const ComboboxOptionItem = ({ result }: ComboboxOptionProps) => {
       value={citizen}
       className="group flex cursor-pointer items-center gap-2 rounded-secondary py-1 px-2 select-none data-[focus]:bg-white/20"
     >
-      <FaCheck className="invisible group-data-[selected]:visible text-sm text-sinister-red-500" />
+      <FaCheck className="invisible group-data-[selected]:visible text-sm text-brand-red-500" />
 
       <div className="text-white text-sm">
         {underlineCharacters(citizen.handle!, matches?.[0].indices)}
@@ -171,7 +171,7 @@ const Single = ({
 
         <ComboboxOptions
           anchor="bottom"
-          className="w-[var(--input-width)] rounded-b border border-sinister-red-500 bg-black p-1 [--anchor-gap:var(--spacing-1)] empty:invisible transition duration-100 ease-in data-[leave]:data-[closed]:opacity-0 z-50"
+          className="w-[var(--input-width)] rounded-b border border-brand-red-500 bg-black p-1 [--anchor-gap:var(--spacing-1)] empty:invisible transition duration-100 ease-in data-[leave]:data-[closed]:opacity-0 z-50"
         >
           {filterResult.map((result) => (
             <ComboboxOptionItem key={result.item.id} result={result} />
@@ -246,7 +246,7 @@ const Multiple = ({
 
           <ComboboxOptions
             anchor="bottom"
-            className="w-[var(--input-width)] rounded-b border border-sinister-red-500 bg-black p-1 [--anchor-gap:var(--spacing-1)] empty:invisible transition duration-100 ease-in data-[leave]:data-[closed]:opacity-0 z-50"
+            className="w-[var(--input-width)] rounded-b border border-brand-red-500 bg-black p-1 [--anchor-gap:var(--spacing-1)] empty:invisible transition duration-100 ease-in data-[leave]:data-[closed]:opacity-0 z-50"
           >
             {filterResult.map((result) => (
               <ComboboxOptionItem key={result.item.id} result={result} />
@@ -268,10 +268,9 @@ const Multiple = ({
             </Button>
           </Popover.Trigger>
 
-          {/* eslint-disable-next-line react-compiler/react-compiler */}
           <Popover.Portal container={popoverPortalRef.current}>
             <Popover.Content sideOffset={4} side="top">
-              <div className="flex flex-col gap-2 p-4 rounded-secondary bg-neutral-800 border border-sinister-red-500 max-h-96 overflow-auto">
+              <div className="flex flex-col gap-2 p-4 rounded-secondary bg-neutral-800 border border-brand-red-500 max-h-96 overflow-auto">
                 {dataCitizensGroupedByVisibleRoles
                   ? Array.from(dataCitizensGroupedByVisibleRoles.values())
                       .toSorted((a, b) =>
@@ -318,7 +317,7 @@ const Multiple = ({
                   )
                 }
                 title="Entfernen"
-                className="text-sinister-red-500 hover:text-sinister-red-300 focus-visible:text-sinister-red-300"
+                className="text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300"
               >
                 <FaTrash className="text-xs" />
               </button>

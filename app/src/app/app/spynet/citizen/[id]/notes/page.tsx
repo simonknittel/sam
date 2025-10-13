@@ -1,6 +1,5 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { Notes } from "@/modules/citizen/components/notes/Notes";
-import { Template } from "@/modules/citizen/components/Template";
 import { getCitizenById } from "@/modules/citizen/queries";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
@@ -18,29 +17,25 @@ export const generateMetadata = generateMetadataWithTryCatch(
     if (!entity) return {};
 
     return {
-      title: `Notizen - ${entity.handle || entity.id} - Spynet | S.A.M. - Sinister Incorporated`,
+      title: `Notizen - ${entity.handle || entity.id}`,
     };
   },
 );
 
-interface Props {
-  readonly params: Params;
-}
-
-export default async function Page(props: Props) {
+export default async function Page({
+  params,
+}: PageProps<"/app/spynet/citizen/[id]/notes">) {
   const authentication = await requireAuthenticationPage(
     "/app/spynet/citizen/[id]/notes",
   );
   await authentication.authorizePage("citizen", "read");
 
-  const entity = await getCitizenById((await props.params).id);
+  const entity = await getCitizenById((await params).id);
   if (!entity) notFound();
 
   return (
-    <Template citizen={entity}>
-      <SuspenseWithErrorBoundaryTile>
-        <Notes entity={entity} />
-      </SuspenseWithErrorBoundaryTile>
-    </Template>
+    <SuspenseWithErrorBoundaryTile>
+      <Notes entity={entity} />
+    </SuspenseWithErrorBoundaryTile>
   );
 }

@@ -4,7 +4,7 @@ import { NotificationSettings } from "@/modules/notifications/components/Notific
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Benachrichtigungen - Account | S.A.M. - Sinister Incorporated",
+  title: "Benachrichtigungen - Account",
 };
 
 export default async function Page() {

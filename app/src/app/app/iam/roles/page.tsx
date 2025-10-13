@@ -5,7 +5,7 @@ import { RolesTile } from "@/modules/roles/components/RolesTile";
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Rollen - IAM | S.A.M. - Sinister Incorporated",
+  title: "Rollen - IAM",
 };
 
 export default async function Page() {

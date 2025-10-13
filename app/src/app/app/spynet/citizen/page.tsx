@@ -7,7 +7,7 @@ import { CitizenTableTile } from "../../../../modules/citizen/components/Citizen
 export const revalidate = 0; // TODO: Revert to 60
 
 export const metadata: Metadata = {
-  title: "Citizen - Spynet | S.A.M. - Sinister Incorporated",
+  title: "Citizen",
 };
 
 export default async function Page({

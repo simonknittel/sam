@@ -5,7 +5,7 @@ import { type Metadata } from "next";
 export const revalidate = 86400; // 24 hours
 
 export const metadata: Metadata = {
-  title: "Dogfight Trainer | S.A.M. - Sinister Incorporated",
+  title: "Dogfight Trainer",
 };
 
 export default async function Page() {

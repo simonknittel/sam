@@ -21,7 +21,7 @@ export const generateMetadata = generateMetadataWithTryCatch(
     if (!event) notFound();
 
     return {
-      title: `Aufstellung - ${event.name} - Event | S.A.M. - Sinister Incorporated`,
+      title: `Aufstellung - ${event.name} - Event`,
     };
   },
 );

@@ -35,7 +35,7 @@ export const PenaltyEntry = ({ className, entry, showDelete }: Props) => {
           Von:{" "}
           <Link
             href={`/app/spynet/citizen/${entry.createdById}`}
-            className="text-sinister-red-500 hover:underline"
+            className="text-brand-red-500 hover:underline"
             prefetch={false}
           >
             {entry.createdBy.handle}

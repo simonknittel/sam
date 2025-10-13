@@ -1,0 +1,65 @@
+name: Deploy Lambda functions (pnpm)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/deploy-lambda-functions-pnpm.yml
+      - .github/workflows/build-lambda-functions-pnpm.yml
+      - pnpm-monorepo/**
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        default: "test"
+        type: choice
+        options:
+          - test
+      git_ref:
+        description: "Git ref (SHA, tag, branch, ...) to deploy (if empty, defaults to the latest commit)"
+        type: string
+        default: "develop"
+        required: true
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-lambda-functions-pnpm.yml
+    with:
+      git_ref: ${{ github.event.inputs.git_ref || 'develop' }}
+
+  deploy:
+    runs-on: ubuntu-24.04
+
+    # Related
+    # - https://docs.github.com/en/actions/using-jobs/assigning-permissions-to-jobs
+    # - https://docs.github.com/en/rest/authentication/permissions-required-for-github-apps
+    permissions:
+      id-token: write # Required for aws-actions/configure-aws-credentials
+      contents: read # Required for aws-actions/configure-aws-credentials
+
+    needs: [build]
+
+    environment: lambda-functions-${{ inputs.environment || 'test' }}
+
+    strategy:
+      matrix:
+        function:
+          - midnight-automations
+          - scrape-discord-events-function
+
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v5.0.0
+        with:
+          role-to-assume: ${{ vars.IAM_ROLE_ARN }}
+          aws-region: eu-central-1
+
+      - name: Retrieve ${{ matrix.function }} artifact
+        uses: actions/download-artifact@v5.0.0
+        with:
+          name: ${{ matrix.function }}-dist
+
+      - name: Deploy ${{ matrix.function }}
+        run: aws lambda update-function-code --function-name ${{ matrix.function }} --zip-file fileb://${{ matrix.function }}.zip

@@ -43,7 +43,7 @@ export const SectionHeading = ({
       <a
         href={url}
         className={clsx(
-          "group relative bottom-[2px] px-2 inline-block cursor-pointer text-sinister-red-500 hover:text-sinister-red-300 active:text-sinister-red-700",
+          "group relative bottom-[2px] px-2 inline-block cursor-pointer text-brand-red-500 hover:text-brand-red-300 active:text-brand-red-700",
           {
             "text-4xl": level === 1,
             "text-3xl": level === 2,

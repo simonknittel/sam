@@ -10,7 +10,7 @@ export default function Layout({ children }: Props) {
     <>
       <Link
         href="/app/fleet/settings/manufacturer"
-        className="text-sinister-red-500 hover:text-sinister-red-300 transition-colors"
+        className="text-brand-red-500 hover:text-brand-red-300 transition-colors"
       >
         Alle Hersteller
       </Link>

@@ -40,13 +40,11 @@ export const OrganizationMembershipHistory = async ({
     (a, b) => b.date.getTime() - a.date.getTime(),
   );
 
-  const limitedEntries = sortedEntries.slice(0, 15);
-
   return (
     <Tile heading="Verlauf" className={clsx(className)}>
-      {entries.length > 0 ? (
+      {sortedEntries.length > 0 ? (
         <ul className="flex flex-col gap-8">
-          {limitedEntries.map((entry) => (
+          {sortedEntries.map((entry) => (
             <li key={entry.key}>
               <div className="text-sm flex gap-2 border-b pb-2 mb-2 items-center border-neutral-800/50 flex-wrap text-neutral-500">
                 <p>

@@ -39,7 +39,7 @@ export const UpdateTaskRepeatable = ({ className, task }: Props) => {
         type="button"
         title="Bearbeiten"
         className={clsx(
-          "text-sinister-red-500 hover:text-sinister-red-300",
+          "text-brand-red-500 hover:text-brand-red-300",
           className,
         )}
       >

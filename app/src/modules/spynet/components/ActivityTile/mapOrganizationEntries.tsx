@@ -17,7 +17,7 @@ export const mapOrganizationEntries = async (
         Organisation{" "}
         <Link
           href={`/app/spynet/organization/${entry.id}`}
-          className="text-sinister-red-500 hover:text-sinister-red-300"
+          className="text-brand-red-500 hover:text-brand-red-300"
         >
           {entry.logo && (
             <span className="inline-block rounded-secondary bg-black mr-1 align-bottom">

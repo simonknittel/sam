@@ -3,7 +3,7 @@ import { Footer } from "@/modules/shell/components/Footer";
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "404 - Page not found | S.A.M. - Sinister Incorporated",
+  title: "404 - Page not found",
 };
 
 export default function NotFound() {

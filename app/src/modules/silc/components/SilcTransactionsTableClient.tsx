@@ -66,7 +66,7 @@ export const SilcTransactionsTableClient = ({
           return (
             <Link
               href={`/app/spynet/citizen/${receiver.id}/silc`}
-              className="hover:bg-neutral-800 flex items-center rounded-secondary px-2 h-full text-sinister-red-500 overflow-hidden whitespace-nowrap text-ellipsis"
+              className="hover:bg-neutral-800 flex items-center rounded-secondary px-2 h-full text-brand-red-500 overflow-hidden whitespace-nowrap text-ellipsis"
               prefetch={false}
               title={receiver.handle || receiver.id}
             >
@@ -117,7 +117,7 @@ export const SilcTransactionsTableClient = ({
           return (
             <Link
               href={`/app/spynet/citizen/${citizen.id}`}
-              className="hover:bg-neutral-800 flex items-center rounded-secondary px-2 h-full text-sinister-red-500 overflow-hidden whitespace-nowrap text-ellipsis"
+              className="hover:bg-neutral-800 flex items-center rounded-secondary px-2 h-full text-brand-red-500 overflow-hidden whitespace-nowrap text-ellipsis"
               prefetch={false}
               title={citizen.handle || citizen.id}
             >

@@ -11,7 +11,7 @@ import { type Metadata } from "next";
 import { Suspense } from "react";
 
 export const metadata: Metadata = {
-  title: "Dashboard | S.A.M. - Sinister Incorporated",
+  title: "Dashboard",
 };
 
 export default async function Page() {

@@ -13,7 +13,7 @@ export const underlineCharacters = (
     if (lastIndex < start) result.push(text.slice(lastIndex, start));
 
     result.push(
-      <span key={i} className="text-sinister-red-300">
+      <span key={i} className="text-brand-red-300">
         {text.slice(start, end + 1)}
       </span>,
     );

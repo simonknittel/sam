@@ -4,7 +4,7 @@ import { Footer } from "@/modules/shell/components/Footer";
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Datenschutzerklärung | S.A.M. - Sinister Incorporated",
+  title: "Datenschutzerklärung",
 };
 
 export default function Page() {

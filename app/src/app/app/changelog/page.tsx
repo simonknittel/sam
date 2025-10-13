@@ -22,6 +22,7 @@ import image20250609Uncollapsed from "@/modules/changelog/assets/2025-06-09-unco
 import image20250614CmdK from "@/modules/changelog/assets/2025-06-14-cmdk.png";
 import image20250906NewLayout from "@/modules/changelog/assets/2025-09-06-new-layout.png";
 import image20251007sincome from "@/modules/changelog/assets/2025-10-07-sincome.png";
+import image20251013rolesHistory from "@/modules/changelog/assets/2025-10-13-roles-history.png";
 import { Link } from "@/modules/common/components/Link";
 import { SmallBadge } from "@/modules/common/components/SmallBadge";
 import { random } from "lodash";
@@ -33,7 +34,7 @@ import { AiFillAppstore } from "react-icons/ai";
 import { FaCalendar } from "react-icons/fa";
 
 export const metadata: Metadata = {
-  title: "Changelog | S.A.M. - Sinister Incorporated",
+  title: "Changelog",
 };
 
 export default async function Page() {
@@ -46,6 +47,26 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col gap-4">
+      <Day heading="13. Oktober 2025">
+        <DayItem heading="Änderungsverlauf für Rollen" badges={["Neu"]}>
+          <p>
+            Auf der Citizen-Detailseite im Spynet gibt es nun den neuen Reiter
+            &ldquo;Rollen&rdquo;. Von hier aus können nun dem Citizen Rollen
+            hinzugefügt und entfernt werden. Zudem gibt es hier nun einen
+            Verlauf aller Änderungen an den Rollen dieses Citizen.
+          </p>
+
+          <Link href={image20251013rolesHistory.src}>
+            <Image
+              quality={100}
+              src={image20251013rolesHistory}
+              alt=""
+              loading="lazy"
+            />
+          </Link>
+        </DayItem>
+      </Day>
+
       <Day heading="12. Oktober 2025">
         <DayItem heading="Verfallsdatum für Rollen" badges={["Neu"]}>
           <p>
@@ -285,7 +306,7 @@ export default async function Page() {
 
           <p>
             Diese Übersicht ist in der Hauptnavigation hinter dem Icon{" "}
-            <AiFillAppstore className="inline-block text-sinister-red-500 align-middle" />{" "}
+            <AiFillAppstore className="inline-block text-brand-red-500 align-middle" />{" "}
             zu finden.
           </p>
 
@@ -573,7 +594,7 @@ export default async function Page() {
             <Link
               href="https://github.github.com/gfm/"
               target="_blank"
-              className="text-sinister-red-500 hover:text-sinister-red-300 focus-visible:text-sinister-red-300"
+              className="text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300"
             >
               GitHub Flavored Markdown
             </Link>
@@ -596,7 +617,7 @@ export default async function Page() {
             Unter dem Navigationspunkt{" "}
             <Link
               href="/app/tools"
-              className="text-sinister-red-500 hover:text-sinister-red-300 focus-visible:text-sinister-red-300"
+              className="text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300"
             >
               Tools
             </Link>{" "}
@@ -1520,7 +1541,7 @@ const RedactedDayItem = () => {
 
       <div className="absolute inset-0 flex items-center justify-center backdrop-blur">
         <p
-          className="text-sinister-red-500 font-bold border-2 border-sinister-red-500 rounded-secondary px-2 py-1 text-lg relative"
+          className="text-brand-red-500 font-bold border-2 border-brand-red-500 rounded-secondary px-2 py-1 text-lg relative"
           style={{
             transform: `rotate(${random(-15, 15)}deg)`,
             left: `${random(-100, 100)}px`,

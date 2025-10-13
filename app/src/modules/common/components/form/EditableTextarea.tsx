@@ -126,9 +126,9 @@ export const EditableTextarea = ({
             title="Speichern"
           >
             {isPending ? (
-              <FaSpinner className="text-sinister-red-500 animate-spin" />
+              <FaSpinner className="text-brand-red-500 animate-spin" />
             ) : (
-              <FaSave className="text-sinister-red-500 group-hover:text-sinister-red-300" />
+              <FaSave className="text-brand-red-500 group-hover:text-brand-red-300" />
             )}
           </button>
         </form>
@@ -142,7 +142,7 @@ export const EditableTextarea = ({
           <Markdown ref={markdownRef} className="flex-1">
             {value || "-"}
           </Markdown>
-          <FaPen className="flex-none text-sinister-red-500 group-hover:text-sinister-red-300 text-sm" />
+          <FaPen className="flex-none text-brand-red-500 group-hover:text-brand-red-300 text-sm" />
         </button>
       )}
     </span>

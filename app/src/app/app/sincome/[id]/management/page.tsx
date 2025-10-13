@@ -25,7 +25,7 @@ export const generateMetadata = generateMetadataWithTryCatch(
     if (!cycleData) notFound();
 
     return {
-      title: `${cycleData.cycle.title} - SINcome - SILC | S.A.M. - Sinister Incorporated`,
+      title: `${cycleData.cycle.title} - SINcome - SILC`,
     };
   },
 );

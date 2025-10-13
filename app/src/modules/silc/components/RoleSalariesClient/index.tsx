@@ -178,7 +178,7 @@ export const RoleSalariesClient = ({
           </Button2>
         </>
       ) : (
-        <div className="flex items-center gap-2 justify-center text-sinister-red-500 mt-2">
+        <div className="flex items-center gap-2 justify-center text-brand-red-500 mt-2">
           <FaSpinner className="animate-spin" />
           Lädt...
         </div>

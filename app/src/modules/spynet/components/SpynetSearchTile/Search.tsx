@@ -93,10 +93,9 @@ export const Search = () => {
           panel: "!bg-neutral-800 [&>.aa-GradientBottom]:!hidden",
           panelLayout: "!p-0",
           item: "!text-white !p-2 aria-selected:!bg-neutral-700",
-          submitButton: "[&>svg]:!text-sinister-red-500",
-          clearButton:
-            "hover:!text-sinister-red-500 focus:!text-sinister-red-500",
-          loadingIndicator: "[&>svg]:!text-sinister-red-500",
+          submitButton: "[&>svg]:!text-brand-red-500",
+          clearButton: "hover:!text-brand-red-500 focus:!text-brand-red-500",
+          loadingIndicator: "[&>svg]:!text-brand-red-500",
           detachedSearchButton: "!static",
         }}
         placeholder="Suche"

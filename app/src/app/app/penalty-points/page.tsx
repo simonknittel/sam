@@ -5,7 +5,7 @@ import { AllEntriesTable } from "@/modules/penalty-points/components/AllEntriesT
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Strafpunkte | S.A.M. - Sinister Incorporated",
+  title: "Strafpunkte",
 };
 
 export default async function Page() {

@@ -49,7 +49,7 @@ export default function Modal({
 
           <button
             title="Schließen"
-            className="px-2 text-2xl text-sinister-red-500 hover:text-sinister-red-300 active:text-sinister-red-300 flex-initial"
+            className="px-2 text-2xl text-brand-red-500 hover:text-brand-red-300 active:text-brand-red-300 flex-initial"
             onClick={onRequestClose || (() => router.back())}
           >
             <FaRegTimesCircle />

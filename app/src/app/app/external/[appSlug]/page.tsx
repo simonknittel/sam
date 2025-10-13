@@ -15,7 +15,7 @@ export const generateMetadata = generateMetadataWithTryCatch(
     if (!app) notFound();
 
     return {
-      title: `${app.name} | S.A.M. - Sinister Incorporated`,
+      title: `${app.name}`,
       description: app.description || undefined,
     };
   },

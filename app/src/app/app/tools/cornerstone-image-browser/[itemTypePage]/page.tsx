@@ -33,7 +33,7 @@ export const generateMetadata = generateMetadataWithTryCatch(
     if (!itemTypeConfig) notFound();
 
     return {
-      title: `${itemTypeConfig.title} - Cornerstone Image Browser | S.A.M. - Sinister Incorporated`,
+      title: `${itemTypeConfig.title} - Cornerstone Image Browser`,
     };
   },
 );
@@ -67,7 +67,7 @@ export default async function Page({
       <>
         <Link
           href="/app/tools"
-          className="text-sinister-red-500 hover:text-sinister-red-300 focus-visible:text-sinister-red-300 inline-flex items-center gap-2"
+          className="text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300 inline-flex items-center gap-2"
         >
           <FaChevronLeft />
           Alle Tools

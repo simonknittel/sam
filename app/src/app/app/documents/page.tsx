@@ -7,7 +7,7 @@ import { type Metadata } from "next";
 import Image from "next/image";
 
 export const metadata: Metadata = {
-  title: "Dokumente | S.A.M. - Sinister Incorporated",
+  title: "Dokumente",
 };
 
 export default async function Page() {

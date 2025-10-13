@@ -1,5 +1,4 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
-import { Template } from "@/modules/citizen/components/Template";
 import { getCitizenById } from "@/modules/citizen/queries";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
@@ -18,22 +17,20 @@ export const generateMetadata = generateMetadataWithTryCatch(
     if (!entity) return {};
 
     return {
-      title: `SILC - ${entity.handle || entity.id} - Spynet | S.A.M. - Sinister Incorporated`,
+      title: `SILC - ${entity.handle || entity.id}`,
     };
   },
 );
 
-interface Props {
-  readonly params: Params;
-}
-
-export default async function Page(props: Props) {
+export default async function Page({
+  params,
+}: PageProps<"/app/spynet/citizen/[id]/silc">) {
   const authentication = await requireAuthenticationPage(
     "/app/spynet/citizen/[id]/silc",
   );
   if (!authentication.session.entity) forbidden();
 
-  const entity = await getCitizenById((await props.params).id);
+  const entity = await getCitizenById((await params).id);
   if (!entity) notFound();
 
   if (entity.id === authentication.session.entity.id) {
@@ -46,10 +43,8 @@ export default async function Page(props: Props) {
   }
 
   return (
-    <Template citizen={entity}>
-      <SuspenseWithErrorBoundaryTile>
-        <SilcTransactionsTable citizenId={entity.id} />
-      </SuspenseWithErrorBoundaryTile>
-    </Template>
+    <SuspenseWithErrorBoundaryTile>
+      <SilcTransactionsTable citizenId={entity.id} />
+    </SuspenseWithErrorBoundaryTile>
   );
 }

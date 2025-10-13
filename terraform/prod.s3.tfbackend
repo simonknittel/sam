@@ -1,4 +1,4 @@
 region = "eu-central-1"
-profile = "sinister-incorporated-prod"
+profile = "sam-prod"
 bucket = "terraform-backend-awvb4oa8tv7nao48"
 key = "state"

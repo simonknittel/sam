@@ -23,7 +23,7 @@ export const generateMetadataWithTryCatch = <T>(
       }
 
       return {
-        title: `Error | S.A.M. - Sinister Incorporated`,
+        title: `Error`,
       };
     }
   };

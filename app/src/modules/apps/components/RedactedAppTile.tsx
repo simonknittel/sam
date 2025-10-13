@@ -18,7 +18,7 @@ export const RedactedAppTile = ({ className, variant = "default" }: Props) => {
         Redacted
         <div className="absolute inset-0 flex items-center justify-center backdrop-blur">
           <p
-            className="text-sinister-red-700 border border-sinister-red-700 rounded-secondary px-2 py-1 text-xs relative"
+            className="text-brand-red-700 border border-brand-red-700 rounded-secondary px-2 py-1 text-xs relative"
             style={{
               transform: `rotate(${random(-8, 8)}deg)`,
             }}
@@ -48,7 +48,7 @@ export const RedactedAppTile = ({ className, variant = "default" }: Props) => {
 
         <div className="absolute inset-0 flex items-center justify-center backdrop-blur">
           <p
-            className="text-sinister-red-500 font-bold border-2 border-sinister-red-500 rounded-secondary px-2 py-1 text-lg relative"
+            className="text-brand-red-500 font-bold border-2 border-brand-red-500 rounded-secondary px-2 py-1 text-lg relative"
             style={{
               transform: `rotate(${random(-15, 15)}deg)`,
             }}

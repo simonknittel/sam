@@ -90,9 +90,9 @@ export const EditableText = ({ className, action, initialValue }: Props) => {
 
           <button disabled={isPending} className="group" title="Speichern">
             {isPending ? (
-              <FaSpinner className="text-sinister-red-500 animate-spin" />
+              <FaSpinner className="text-brand-red-500 animate-spin" />
             ) : (
-              <FaSave className="text-sinister-red-500 group-hover:text-sinister-red-300" />
+              <FaSave className="text-brand-red-500 group-hover:text-brand-red-300" />
             )}
           </button>
         </form>
@@ -104,7 +104,7 @@ export const EditableText = ({ className, action, initialValue }: Props) => {
           title="Klicken, um zu bearbeiten"
         >
           {value}{" "}
-          <FaPen className="text-sinister-red-500 group-hover:text-sinister-red-300" />
+          <FaPen className="text-brand-red-500 group-hover:text-brand-red-300" />
         </button>
       )}
     </span>

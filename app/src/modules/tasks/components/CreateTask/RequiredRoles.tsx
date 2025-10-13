@@ -50,10 +50,9 @@ export const RequiredRoles = ({ className, defaultValue }: Props) => {
           </Button2>
         </Popover.Trigger>
 
-        {/* eslint-disable-next-line react-compiler/react-compiler */}
         <Popover.Portal container={popoverPortalRef.current}>
           <Popover.Content sideOffset={4} side="top">
-            <div className="flex flex-col gap-2 p-4 rounded-secondary bg-neutral-800 border border-sinister-red-500 max-h-96 overflow-auto">
+            <div className="flex flex-col gap-2 p-4 rounded-secondary bg-neutral-800 border border-brand-red-500 max-h-96 overflow-auto">
               {data
                 ? data
                     .toSorted((a, b) => a.name.localeCompare(b.name))
@@ -109,7 +108,7 @@ export const RequiredRoles = ({ className, defaultValue }: Props) => {
                     role={role!}
                     showPlaceholder
                   />
-                  <FaTrash className="text-sinister-red-500 hover:text-sinister-red-300 focus-visible:text-sinister-red-300 flex-none" />
+                  <FaTrash className="text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300 flex-none" />
                 </button>
 
                 <input type="hidden" name="requiredRole[]" value={role!.id} />

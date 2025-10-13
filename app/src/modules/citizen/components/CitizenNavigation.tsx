@@ -48,6 +48,11 @@ export const CitizenNavigation = async ({ className, citizenId }: Props) => {
         ]
       : []),
 
+    {
+      name: "Rollen",
+      path: `/app/spynet/citizen/${citizenId}/roles`,
+    },
+
     ...(showSilcTransactions
       ? [
           {

@@ -10,9 +10,8 @@ import { redirect } from "next/navigation";
 import { authOptions } from "../modules/auth/server/auth";
 
 export const metadata: Metadata = {
-  title: "S.A.M. - Sinister Incorporated",
   description:
-    "Sinister Administration Module (S.A.M.) of the Star Citizen organization Sinister Incorporated",
+    "Sinister Administration Module (S.A.M.) for the Star Citizen organization Sinister Incorporated",
 };
 
 export default async function Page({ searchParams }: PageProps<"/">) {

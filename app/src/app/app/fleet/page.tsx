@@ -4,7 +4,7 @@ import { type Metadata } from "next";
 import { forbidden, redirect } from "next/navigation";
 
 export const metadata: Metadata = {
-  title: "Flotte | S.A.M. - Sinister Incorporated",
+  title: "Flotte",
 };
 
 export default async function Page() {
