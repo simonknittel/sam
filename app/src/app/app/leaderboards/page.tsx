@@ -50,7 +50,7 @@ export default async function Page() {
                   {/* <Link
                     href={`/app/spynet/citizen/${}`}
                     prefetch={false}
-                    className="flex items-center gap-2 text-sinister-red-500 hover:bg-neutral-800 px-2 rounded-secondary h-full overflow-hidden text-ellipsis whitespace-nowrap"
+                    className="flex items-center gap-2 text-brand-red-500 hover:bg-neutral-800 px-2 rounded-secondary h-full overflow-hidden text-ellipsis whitespace-nowrap"
                   > */}
                   {citizen.displayname}
                   {/* </Link> */}

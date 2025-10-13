@@ -116,7 +116,7 @@ export const ToggleEventPositionApplicationForCurrentUser = ({
 
               <Tooltip.Portal>
                 <Tooltip.Content
-                  className="p-2 text-sm max-w-[320px] select-none rounded-secondary bg-neutral-950 border border-sinister-red-500 text-white font-normal"
+                  className="p-2 text-sm max-w-[320px] select-none rounded-secondary bg-neutral-950 border border-brand-red-500 text-white font-normal"
                   sideOffset={5}
                 >
                   <div>
@@ -145,7 +145,7 @@ export const ToggleEventPositionApplicationForCurrentUser = ({
                     )}
                   </div>
 
-                  <Tooltip.Arrow className="fill-sinister-red-500" />
+                  <Tooltip.Arrow className="fill-brand-red-500" />
                 </Tooltip.Content>
               </Tooltip.Portal>
             </Tooltip.Root>
@@ -167,7 +167,7 @@ export const ToggleEventPositionApplicationForCurrentUser = ({
 
             <Tooltip.Portal>
               <Tooltip.Content
-                className="p-2 text-sm max-w-[320px] select-none rounded-secondary bg-neutral-950 border border-sinister-red-500 text-white font-normal"
+                className="p-2 text-sm max-w-[320px] select-none rounded-secondary bg-neutral-950 border border-brand-red-500 text-white font-normal"
                 sideOffset={5}
               >
                 <div>
@@ -177,7 +177,7 @@ export const ToggleEventPositionApplicationForCurrentUser = ({
                   </p>
                 </div>
 
-                <Tooltip.Arrow className="fill-sinister-red-500" />
+                <Tooltip.Arrow className="fill-brand-red-500" />
               </Tooltip.Content>
             </Tooltip.Portal>
           </Tooltip.Root>

@@ -29,7 +29,7 @@ export const mapOrganizationAttributeHistoryEntries = async (
                 Organisation unbenannt in{" "}
                 <Link
                   href={`/app/spynet/organization/${entry.organizationId}`}
-                  className=" text-sinister-red-500 hover:text-sinister-red-300"
+                  className=" text-brand-red-500 hover:text-brand-red-300"
                 >
                   {entry.newValue}{" "}
                 </Link>

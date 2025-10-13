@@ -21,7 +21,7 @@ export const DragHandle = ({ className, position }: Props) => {
       title="Posten verschieben"
       onMouseDown={(e) => handleDragStart(e, position)}
     >
-      <MdDragIndicator className="text-sinister-red-500" />
+      <MdDragIndicator className="text-brand-red-500" />
     </button>
   );
 };

@@ -106,7 +106,7 @@ export const ToggleAssignmentForCurrentUser = ({
             <Tooltip.Trigger asChild>{button}</Tooltip.Trigger>
 
             <Tooltip.Content
-              className="p-4 max-w-[320px] select-none rounded-secondary bg-neutral-950 border border-sinister-red-500 text-white font-normal"
+              className="p-4 max-w-[320px] select-none rounded-secondary bg-neutral-950 border border-brand-red-500 text-white font-normal"
               sideOffset={5}
             >
               <div className="flex flex-col gap-4">
@@ -154,7 +154,7 @@ export const ToggleAssignmentForCurrentUser = ({
                     </div>
                   )}
               </div>
-              <Tooltip.Arrow className="fill-sinister-red-500" />
+              <Tooltip.Arrow className="fill-brand-red-500" />
             </Tooltip.Content>
           </Tooltip.Root>
         </Tooltip.Provider>

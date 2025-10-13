@@ -285,7 +285,7 @@ export default async function Page() {
 
           <p>
             Diese Übersicht ist in der Hauptnavigation hinter dem Icon{" "}
-            <AiFillAppstore className="inline-block text-sinister-red-500 align-middle" />{" "}
+            <AiFillAppstore className="inline-block text-brand-red-500 align-middle" />{" "}
             zu finden.
           </p>
 
@@ -573,7 +573,7 @@ export default async function Page() {
             <Link
               href="https://github.github.com/gfm/"
               target="_blank"
-              className="text-sinister-red-500 hover:text-sinister-red-300 focus-visible:text-sinister-red-300"
+              className="text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300"
             >
               GitHub Flavored Markdown
             </Link>
@@ -596,7 +596,7 @@ export default async function Page() {
             Unter dem Navigationspunkt{" "}
             <Link
               href="/app/tools"
-              className="text-sinister-red-500 hover:text-sinister-red-300 focus-visible:text-sinister-red-300"
+              className="text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300"
             >
               Tools
             </Link>{" "}
@@ -1520,7 +1520,7 @@ const RedactedDayItem = () => {
 
       <div className="absolute inset-0 flex items-center justify-center backdrop-blur">
         <p
-          className="text-sinister-red-500 font-bold border-2 border-sinister-red-500 rounded-secondary px-2 py-1 text-lg relative"
+          className="text-brand-red-500 font-bold border-2 border-brand-red-500 rounded-secondary px-2 py-1 text-lg relative"
           style={{
             transform: `rotate(${random(-15, 15)}deg)`,
             left: `${random(-100, 100)}px`,

@@ -65,7 +65,7 @@ export const ContainerCalculator = ({ className }: Props) => {
           onChange={handleChangeContainer}
           className="flex flex-col gap-4"
         >
-          <h3 className="text-xl font-semibold text-sinister-red-500 text-center">
+          <h3 className="text-xl font-semibold text-brand-red-500 text-center">
             Angaben
           </h3>
 
@@ -98,7 +98,7 @@ export const ContainerCalculator = ({ className }: Props) => {
         <hr className="border-neutral-800" />
 
         <div className="flex flex-col gap-4">
-          <h3 className="text-xl font-semibold text-sinister-red-500 text-center">
+          <h3 className="text-xl font-semibold text-brand-red-500 text-center">
             Ergebnis
           </h3>
 

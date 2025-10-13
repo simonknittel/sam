@@ -86,10 +86,10 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
           type="button"
           onClick={() => setStep(Step.Description)}
           className={clsx(
-            "first:rounded-l border-[1px] border-sinister-red-700 last:rounded-r h-12 flex items-center justify-center px-3 gap-2 uppercase",
+            "first:rounded-l border-[1px] border-brand-red-700 last:rounded-r h-12 flex items-center justify-center px-3 gap-2 uppercase",
             {
-              "bg-sinister-red-500 text-white": step === Step.Description,
-              "text-sinister-red-500 hover:text-sinister-red-300 hover:border-sinister-red-300":
+              "bg-brand-red-500 text-white": step === Step.Description,
+              "text-brand-red-500 hover:text-brand-red-300 hover:border-brand-red-300":
                 step !== Step.Description,
             },
           )}
@@ -101,10 +101,10 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
           type="button"
           onClick={() => setStep(Step.Visibility)}
           className={clsx(
-            "first:rounded-l border-[1px] border-sinister-red-700 last:rounded-r h-12 flex items-center justify-center px-3 gap-2 uppercase",
+            "first:rounded-l border-[1px] border-brand-red-700 last:rounded-r h-12 flex items-center justify-center px-3 gap-2 uppercase",
             {
-              "bg-sinister-red-500 text-white": step === Step.Visibility,
-              "text-sinister-red-500 hover:text-sinister-red-300 hover:border-sinister-red-300":
+              "bg-brand-red-500 text-white": step === Step.Visibility,
+              "text-brand-red-500 hover:text-brand-red-300 hover:border-brand-red-300":
                 step !== Step.Visibility,
             },
           )}
@@ -116,10 +116,10 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
           type="button"
           onClick={() => setStep(Step.Reward)}
           className={clsx(
-            "first:rounded-l border-[1px] border-sinister-red-700 last:rounded-r h-12 flex items-center justify-center px-3 gap-2 uppercase",
+            "first:rounded-l border-[1px] border-brand-red-700 last:rounded-r h-12 flex items-center justify-center px-3 gap-2 uppercase",
             {
-              "bg-sinister-red-500 text-white": step === Step.Reward,
-              "text-sinister-red-500 hover:text-sinister-red-300 hover:border-sinister-red-300":
+              "bg-brand-red-500 text-white": step === Step.Reward,
+              "text-brand-red-500 hover:text-brand-red-300 hover:border-brand-red-300":
                 step !== Step.Reward,
             },
           )}
@@ -131,10 +131,10 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
           type="button"
           onClick={() => setStep(Step.Other)}
           className={clsx(
-            "first:rounded-l border-[1px] border-sinister-red-700 last:rounded-r h-12 flex items-center justify-center px-3 gap-2 uppercase",
+            "first:rounded-l border-[1px] border-brand-red-700 last:rounded-r h-12 flex items-center justify-center px-3 gap-2 uppercase",
             {
-              "bg-sinister-red-500 text-white": step === Step.Other,
-              "text-sinister-red-500 hover:text-sinister-red-300 hover:border-sinister-red-300":
+              "bg-brand-red-500 text-white": step === Step.Other,
+              "text-brand-red-500 hover:text-brand-red-300 hover:border-brand-red-300":
                 step !== Step.Other,
             },
           )}
@@ -171,7 +171,7 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
               <Link
                 href="https://github.github.com/gfm/"
                 target="_blank"
-                className="text-sinister-red-500 hover:text-sinister-red-300 focus-visible:text-sinister-red-300"
+                className="text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300"
               >
                 GitHub Flavored Markdown-Support
               </Link>
@@ -360,7 +360,7 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
                 <Link
                   href="https://github.github.com/gfm/"
                   target="_blank"
-                  className="text-sinister-red-500 hover:text-sinister-red-300 focus-visible:text-sinister-red-300"
+                  className="text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300"
                 >
                   GitHub Flavored Markdown-Support
                 </Link>

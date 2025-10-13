@@ -93,7 +93,7 @@ export const FleetTable = ({ className, fleet }: Props) => {
             return (
               <FaRegCircleXmark
                 title="Nicht flight ready"
-                className="text-sinister-red-500"
+                className="text-brand-red-500"
               />
             );
           return null;

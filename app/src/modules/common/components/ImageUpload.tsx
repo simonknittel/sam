@@ -94,7 +94,7 @@ export const ImageUpload = ({
         <div
           className={clsx(pendingClassName, "flex items-center justify-center")}
         >
-          <FaSpinner className="animate-spin text-sinister-red-500" />
+          <FaSpinner className="animate-spin text-brand-red-500" />
         </div>
       )}
 

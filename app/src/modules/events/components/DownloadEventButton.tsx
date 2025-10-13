@@ -37,7 +37,7 @@ export const DownloadEventButton = ({ className, event }: Props) => {
           <DropdownMenu.Item asChild>
             <Link
               href={googleCalendarUrl}
-              className="text-sinister-red-500 hover:underline px-3 py-1 flex gap-2 items-center"
+              className="text-brand-red-500 hover:underline px-3 py-1 flex gap-2 items-center"
               rel="noreferrer"
             >
               <FaExternalLinkAlt className="text-xs" />
@@ -48,7 +48,7 @@ export const DownloadEventButton = ({ className, event }: Props) => {
           <DropdownMenu.Item asChild>
             <Link
               href={microsoftOutlookUrl}
-              className="text-sinister-red-500 hover:underline px-3 py-1 flex gap-2 items-center"
+              className="text-brand-red-500 hover:underline px-3 py-1 flex gap-2 items-center"
               rel="noreferrer"
             >
               <FaExternalLinkAlt className="text-xs" />
@@ -59,7 +59,7 @@ export const DownloadEventButton = ({ className, event }: Props) => {
           <DropdownMenu.Item asChild>
             <Link
               href={icsFile}
-              className="text-sinister-red-500 hover:underline px-3 py-1 flex gap-2 items-center"
+              className="text-brand-red-500 hover:underline px-3 py-1 flex gap-2 items-center"
               rel="noreferrer"
             >
               <FaDownload className="text-xs" />

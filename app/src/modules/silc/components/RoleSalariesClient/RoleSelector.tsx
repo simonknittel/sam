@@ -52,7 +52,7 @@ export const RoleSelector = ({ style, defaultValue, onChange }: Props) => {
                   }
                   showPlaceholder
                 />
-                <FaPen className="text-sinister-red-500 flex-none" />
+                <FaPen className="text-brand-red-500 flex-none" />
               </button>
             ) : (
               <Button
@@ -78,10 +78,10 @@ export const RoleSelector = ({ style, defaultValue, onChange }: Props) => {
           )}
         </Popover.Trigger>
 
-        {/* eslint-disable-next-line react-compiler/react-compiler */}
+        {}
         <Popover.Portal>
           <Popover.Content sideOffset={4} side="top">
-            <div className="flex flex-col gap-2 p-4 rounded-secondary bg-neutral-800 border border-sinister-red-500 max-h-96 overflow-auto">
+            <div className="flex flex-col gap-2 p-4 rounded-secondary bg-neutral-800 border border-brand-red-500 max-h-96 overflow-auto">
               {data
                 ? data
                     .toSorted((a, b) => a.role.name.localeCompare(b.role.name))

@@ -57,7 +57,7 @@ export const VerifyEmailButton = ({ className, userId }: Props) => {
         <AlertDialogTrigger asChild>
           <button
             disabled={isPending}
-            className="py-2 text-sinister-red-500 hover:underline flex gap-2 items-center"
+            className="py-2 text-brand-red-500 hover:underline flex gap-2 items-center"
             title="Datenschutzerklärung bestätigen"
           >
             {isPending && <FaSpinner className="animate-spin" />}
@@ -74,7 +74,7 @@ export const VerifyEmailButton = ({ className, userId }: Props) => {
               Bitte stelle sicher, dass der Benutzer die{" "}
               <Link
                 href="/privacy"
-                className="text-sinister-red-500 hover:underline"
+                className="text-brand-red-500 hover:underline"
               >
                 Datenschutzerklärung
               </Link>{" "}

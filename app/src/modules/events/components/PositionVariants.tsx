@@ -27,14 +27,14 @@ export const PositionVariants = ({ className, position }: Props) => {
             size={32}
           />
 
-          <span className="rounded-full bg-neutral-900 size-6 flex items-center justify-center text-xs border border-sinister-red-500">
+          <span className="rounded-full bg-neutral-900 size-6 flex items-center justify-center text-xs border border-brand-red-500">
             +{position.requiredVariants.length - 1}
           </span>
         </Tooltip.Trigger>
 
         <Tooltip.Portal>
           <Tooltip.Content
-            className="px-4 py-2 max-w-[320px] select-none rounded-secondary bg-neutral-950 border border-sinister-red-500 text-white font-normal"
+            className="px-4 py-2 max-w-[320px] select-none rounded-secondary bg-neutral-950 border border-brand-red-500 text-white font-normal"
             sideOffset={5}
           >
             <p className="text-sm text-gray-500">Alternativen</p>
@@ -47,7 +47,7 @@ export const PositionVariants = ({ className, position }: Props) => {
                 size={32}
               />
             ))}
-            <Tooltip.Arrow className="fill-sinister-red-500" />
+            <Tooltip.Arrow className="fill-brand-red-500" />
           </Tooltip.Content>
         </Tooltip.Portal>
       </Tooltip.Root>

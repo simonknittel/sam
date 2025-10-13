@@ -128,7 +128,7 @@ export const ParticipantsTab = async ({
                         className={clsx("hover:underline px-2 py-1", {
                           "text-green-500":
                             manager.id === authentication.session.entity!.id,
-                          "text-sinister-red-500":
+                          "text-brand-red-500":
                             manager.id !== authentication.session.entity!.id,
                         })}
                         prefetch={false}
@@ -246,7 +246,7 @@ export const ParticipantsTab = async ({
                             "text-green-500":
                               resolvedParticipant.citizen.id ===
                               authentication.session.entity!.id,
-                            "text-sinister-red-500":
+                            "text-brand-red-500":
                               resolvedParticipant.citizen.id !==
                               authentication.session.entity!.id,
                           },

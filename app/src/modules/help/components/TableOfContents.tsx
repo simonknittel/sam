@@ -28,7 +28,7 @@ export const TableOfContents = ({ className, items }: Props) => {
           <li key={item.href} className="mt-2">
             <a
               href={item.href}
-              className="text-sinister-red-500 hover:text-sinister-red-300 hover:underline active:text-sinister-red-700"
+              className="text-brand-red-500 hover:text-brand-red-300 hover:underline active:text-brand-red-700"
             >
               {item.title}
             </a>
@@ -39,7 +39,7 @@ export const TableOfContents = ({ className, items }: Props) => {
                   <li key={subItem.href} className="mt-2">
                     <a
                       href={subItem.href}
-                      className="text-sinister-red-500 hover:text-sinister-red-300 hover:underline active:text-sinister-red-700"
+                      className="text-brand-red-500 hover:text-brand-red-300 hover:underline active:text-brand-red-700"
                     >
                       {subItem.title}
                     </a>

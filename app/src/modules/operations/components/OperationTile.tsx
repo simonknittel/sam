@@ -31,7 +31,7 @@ const OperationTile = ({ className, operation }: Readonly<Props>) => {
         <div className="flex flex-col gap-2">
           <Link
             href={`/app/operations/${operation.id}`}
-            className="flex items-center justify-center gap-4 rounded-secondary uppercase h-11 border text-base border-sinister-red-500 text-sinister-red-500 hover:border-sinister-red-300 active:border-sinister-red-300 hover:text-sinister-red-300 active:text-sinister-red-300 px-6"
+            className="flex items-center justify-center gap-4 rounded-secondary uppercase h-11 border text-base border-brand-red-500 text-brand-red-500 hover:border-brand-red-300 active:border-brand-red-300 hover:text-brand-red-300 active:text-brand-red-300 px-6"
           >
             Öffnen <FaArrowRight />
           </Link>

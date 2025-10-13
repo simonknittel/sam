@@ -26,7 +26,7 @@ export default async function Page(props: Props) {
     <>
       <Link
         href={`/app/fleet/settings/manufacturer/${manufacturer.id}`}
-        className="text-sinister-red-500 hover:text-sinister-red-300 transition-colors"
+        className="text-brand-red-500 hover:text-brand-red-300 transition-colors"
       >
         {manufacturer.name}
       </Link>

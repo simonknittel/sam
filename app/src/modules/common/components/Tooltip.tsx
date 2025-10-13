@@ -21,7 +21,7 @@ export const Tooltip = ({
         <RadixUiTooltip.Trigger
           type="button"
           className={clsx(
-            "text-sinister-red-500 hover:text-sinister-red-300 cursor-help",
+            "text-brand-red-500 hover:text-brand-red-300 cursor-help",
             className,
           )}
         >

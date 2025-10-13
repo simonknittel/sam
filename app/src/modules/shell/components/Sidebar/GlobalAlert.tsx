@@ -9,17 +9,17 @@ export const GlobalAlert = ({ className }: Props) => {
     <div
       className={clsx(
         className,
-        "bg-sinister-red-900/50 lg:mb-4 text-center backdrop-blur",
+        "bg-brand-red-900/50 lg:mb-4 text-center backdrop-blur",
       )}
     >
-      <div className="border-y-2 border-sinister-red-500 text-sinister-red-500 uppercase">
+      <div className="border-y-2 border-brand-red-500 text-brand-red-500 uppercase">
         <span className="opacity-50">✱✱✱</span> Alert{" "}
         <span className="opacity-50">✱✱✱</span>
       </div>
 
       <p className="p-4">Angriff auf unser Zentrallager</p>
 
-      <div className="border-y-2 border-sinister-red-500 text-sinister-red-500 uppercase">
+      <div className="border-y-2 border-brand-red-500 text-brand-red-500 uppercase">
         <span className="opacity-50">✱✱✱</span> Alert{" "}
         <span className="opacity-50">✱✱✱</span>
       </div>

@@ -54,7 +54,7 @@ export const RadioGroup = ({
             <label
               htmlFor={`${idPrefix}_${item.value}`}
               className={clsx(
-                "border border-sinister-red-500 min-h-8 py-1 px-2 flex items-center justify-center gap-2 cursor-pointer text-sinister-red-500 hover:text-sinister-red-300 hover:border-sinister-red-300 peer-focus-visible:outline peer-focus-visible:outline-1 peer-focus-visible:outline-offset-1 peer-aria-checked:bg-sinister-red-500 peer-aria-checked:text-white text-sm",
+                "border border-brand-red-500 min-h-8 py-1 px-2 flex items-center justify-center gap-2 cursor-pointer text-brand-red-500 hover:text-brand-red-300 hover:border-brand-red-300 peer-focus-visible:outline peer-focus-visible:outline-1 peer-focus-visible:outline-offset-1 peer-aria-checked:bg-brand-red-500 peer-aria-checked:text-white text-sm",
                 {
                   "rounded-l": index === 0,
                   "rounded-r": index === items.length - 1,

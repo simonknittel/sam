@@ -103,7 +103,7 @@ export const OrganizationMembershipsTile = async ({ className, id }: Props) => {
 
                   <span className="inline-flex gap-2 px-2 py-1 items-center">
                     {membership.organization.name}
-                    <FaExternalLinkAlt className="text-sinister-red-500 hover:text-sinister-red-300 text-xs" />
+                    <FaExternalLinkAlt className="text-brand-red-500 hover:text-brand-red-300 text-xs" />
                   </span>
                 </Link>
 

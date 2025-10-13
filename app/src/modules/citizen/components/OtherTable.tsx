@@ -103,7 +103,7 @@ export const OtherTable = ({ rows, searchParams }: Props) => {
               <td>
                 <Link
                   href={`/app/spynet/citizen/${row.entity.id}`}
-                  className="text-sinister-red-500 hover:bg-neutral-800 block rounded-secondary px-2 h-full"
+                  className="text-brand-red-500 hover:bg-neutral-800 block rounded-secondary px-2 h-full"
                 >
                   <span className="flex items-center h-14">
                     <span className="overflow-hidden text-ellipsis">

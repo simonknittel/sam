@@ -93,7 +93,7 @@ export const VariantsTile = async ({
                   ) : row.status === VariantStatus.NOT_FLIGHT_READY ? (
                     <FaRegCircleXmark
                       title="Nicht flight ready"
-                      className="text-sinister-red-500"
+                      className="text-brand-red-500"
                     />
                   ) : null}
                 </td>

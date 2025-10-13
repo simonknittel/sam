@@ -19,7 +19,7 @@ export default async function Page() {
         <Link
           key={item.page}
           href={`/app/tools/cornerstone-image-browser/${item.page}`}
-          className="text-sinister-red-500 hover:text-sinister-red-300 focus-visible:text-sinister-red-300 hover:underline focus-visible:underline"
+          className="text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300 hover:underline focus-visible:underline"
           prefetch={false}
         >
           {item.title}

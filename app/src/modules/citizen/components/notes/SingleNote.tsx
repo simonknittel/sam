@@ -117,7 +117,7 @@ export const SingleNote = async ({ note }: Props) => {
           return (
             <Link
               href={`/app/spynet/citizen/${citizen.id}`}
-              className="text-sinister-red-500 hover:text-sinister-red-300"
+              className="text-brand-red-500 hover:text-brand-red-300"
               key={index}
             >
               {citizen.handle || citizen.spectrumId}
@@ -132,7 +132,7 @@ export const SingleNote = async ({ note }: Props) => {
           return (
             <Link
               href={`/app/spynet/organization/${organization.id}`}
-              className="text-sinister-red-500 hover:text-sinister-red-300"
+              className="text-brand-red-500 hover:text-brand-red-300"
               key={index}
             >
               {organization.logo && (

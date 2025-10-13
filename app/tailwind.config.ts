@@ -14,10 +14,10 @@ export default {
         me: "var(--color-me)",
 
         // Old:
-        "sinister-red-900": "hsl(0 69% 10% / 1)",
-        "sinister-red-700": "hsl(0 69% 30% / 1)",
-        "sinister-red-500": "hsl(0 69% 43% / 1)",
-        "sinister-red-300": "#CC4444",
+        "brand-red-900": "hsl(0 69% 10% / 1)",
+        "brand-red-700": "hsl(0 69% 30% / 1)",
+        "brand-red-500": "hsl(0 69% 43% / 1)",
+        "brand-red-300": "#CC4444",
         "rsi-blue-100": "#7ef8ff",
         "rsi-blue-200": "#56a6b6",
         "rsi-blue-300": "#0e2635",
