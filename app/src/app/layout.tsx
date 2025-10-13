@@ -10,6 +10,10 @@ import "../styles/globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(env.BASE_URL),
+  title: {
+    default: "S.A.M. - Sinister Incorporated",
+    template: "%s | S.A.M. - Sinister Incorporated",
+  },
 };
 
 interface Props {

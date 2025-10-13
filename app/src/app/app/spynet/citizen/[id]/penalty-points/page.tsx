@@ -18,7 +18,7 @@ export const generateMetadata = generateMetadataWithTryCatch(
     if (!entity) return {};
 
     return {
-      title: `Strafpunkte - ${entity.handle || entity.id} - Spynet | S.A.M. - Sinister Incorporated`,
+      title: `Strafpunkte - ${entity.handle || entity.id} - Spynet`,
     };
   },
 );

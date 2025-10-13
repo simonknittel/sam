@@ -24,7 +24,7 @@ export const generateMetadata = generateMetadataWithTryCatch(
     if (!operation) return {};
 
     return {
-      title: `${operation.title} - Operation | S.A.M. - Sinister Incorporated`,
+      title: `${operation.title} - Operation`,
     };
   },
 );

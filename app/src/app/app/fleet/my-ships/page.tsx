@@ -4,7 +4,7 @@ import { MyFleetTile } from "@/modules/fleet/components/MyFleetTile";
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Meine Schiffe - Flotte | S.A.M. - Sinister Incorporated",
+  title: "Meine Schiffe - Flotte",
 };
 
 export default async function Page() {

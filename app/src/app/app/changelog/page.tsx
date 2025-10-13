@@ -33,7 +33,7 @@ import { AiFillAppstore } from "react-icons/ai";
 import { FaCalendar } from "react-icons/fa";
 
 export const metadata: Metadata = {
-  title: "Changelog | S.A.M. - Sinister Incorporated",
+  title: "Changelog",
 };
 
 export default async function Page() {

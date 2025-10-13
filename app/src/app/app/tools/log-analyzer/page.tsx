@@ -6,7 +6,7 @@ import { BundleLoader } from "@/modules/log-analyzer/components/BundleLoader";
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Log Analyzer | S.A.M. - Sinister Incorporated",
+  title: "Log Analyzer",
 };
 
 export default async function Page() {

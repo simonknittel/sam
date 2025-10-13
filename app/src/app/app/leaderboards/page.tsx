@@ -7,7 +7,7 @@ import { type Metadata } from "next";
 const GRID_COLS = "grid-cols-[68px_1fr]";
 
 export const metadata: Metadata = {
-  title: "Leaderboards | S.A.M. - Sinister Incorporated",
+  title: "Leaderboards",
 };
 
 export default async function Page() {

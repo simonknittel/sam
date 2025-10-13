@@ -4,7 +4,7 @@ import { schedule } from "@/modules/preview-channel/utils/schedule";
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Preview Channel | S.A.M. - Sinister Incorporated",
+  title: "Preview Channel",
 };
 
 export default function Page() {

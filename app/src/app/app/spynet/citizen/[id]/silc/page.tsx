@@ -18,7 +18,7 @@ export const generateMetadata = generateMetadataWithTryCatch(
     if (!entity) return {};
 
     return {
-      title: `SILC - ${entity.handle || entity.id} - Spynet | S.A.M. - Sinister Incorporated`,
+      title: `SILC - ${entity.handle || entity.id} - Spynet`,
     };
   },
 );

@@ -9,7 +9,7 @@ import { type Metadata } from "next";
 import { notFound } from "next/navigation";
 
 export const metadata: Metadata = {
-  title: "Operationen | S.A.M. - Sinister Incorporated",
+  title: "Operationen",
 };
 
 export default async function Page() {

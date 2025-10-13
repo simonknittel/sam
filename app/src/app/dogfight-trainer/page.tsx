@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 export const metadata: Metadata = {
-  title: "Dogfight Trainer | S.A.M. - Sinister Incorporated",
+  title: "Dogfight Trainer",
 };
 
 export default async function Page() {

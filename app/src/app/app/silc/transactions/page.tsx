@@ -4,7 +4,7 @@ import { AllSilcTransactionsTable } from "@/modules/silc/components/AllSilcTrans
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Transaktionen - SILC | S.A.M. - Sinister Incorporated",
+  title: "Transaktionen - SILC",
 };
 
 export default async function Page() {

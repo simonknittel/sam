@@ -5,7 +5,7 @@ import { Tile } from "@/modules/users/components/Tile";
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Benutzer - IAM | S.A.M. - Sinister Incorporated",
+  title: "Benutzer - IAM",
 };
 
 export default async function Page() {

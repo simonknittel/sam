@@ -14,7 +14,7 @@ export const generateMetadata = generateMetadataWithTryCatch(
     const role = await getRoleById((await props.params).id);
 
     return {
-      title: `${role?.name} - Rollen | S.A.M. - Sinister Incorporated`,
+      title: `${role?.name} - Rollen`,
     };
   },
 );

@@ -9,7 +9,7 @@ import { TableOfContents } from "@/modules/help/components/TableOfContents";
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Support - Hilfe | S.A.M. - Sinister Incorporated",
+  title: "Support - Hilfe",
 };
 
 export default async function Page() {

@@ -15,7 +15,7 @@ export const generateMetadata = generateMetadataWithTryCatch(
     const role = await getRoleById((await props.params).id);
 
     return {
-      title: `${role?.name} - Vererbungen | S.A.M. - Sinister Incorporated`,
+      title: `${role?.name} - Vererbungen`,
     };
   },
 );

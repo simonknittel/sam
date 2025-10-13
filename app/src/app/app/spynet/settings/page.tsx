@@ -7,7 +7,7 @@ import { type Metadata } from "next";
 import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
-  title: "Einstellungen - Spynet | S.A.M. - Sinister Incorporated",
+  title: "Einstellungen - Spynet",
 };
 
 export default async function Page() {

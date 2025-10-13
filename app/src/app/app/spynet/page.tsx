@@ -8,7 +8,7 @@ import { SpynetSearchTile } from "@/modules/spynet/components/SpynetSearchTile/S
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Spynet | S.A.M. - Sinister Incorporated",
+  title: "Spynet",
 };
 
 export default async function Page() {

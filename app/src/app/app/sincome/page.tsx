@@ -11,7 +11,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 
 export const metadata: Metadata = {
-  title: "SINcome - SILC | S.A.M. - Sinister Incorporated",
+  title: "SINcome - SILC",
 };
 
 export default async function Page({

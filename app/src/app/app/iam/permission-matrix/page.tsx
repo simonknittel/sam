@@ -4,7 +4,7 @@ import { PermissionMatrix } from "@/modules/roles/components/PermissionMatrix";
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Berechtigungsmatrix - IAM | S.A.M. - Sinister Incorporated",
+  title: "Berechtigungsmatrix - IAM",
 };
 
 export default async function Page() {

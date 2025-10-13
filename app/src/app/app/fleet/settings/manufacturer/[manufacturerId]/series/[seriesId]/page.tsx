@@ -23,7 +23,7 @@ export const generateMetadata = generateMetadataWithTryCatch(
     if (!series) return {};
 
     return {
-      title: `${series.name} - Schiffe | S.A.M. - Sinister Incorporated`,
+      title: `${series.name} - Schiffe`,
     };
   },
 );

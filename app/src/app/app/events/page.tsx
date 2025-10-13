@@ -6,7 +6,7 @@ import { Filters } from "@/modules/events/components/Filters";
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Events | S.A.M. - Sinister Incorporated",
+  title: "Events",
 };
 
 export default async function Page({ searchParams }: PageProps<"/app/events">) {

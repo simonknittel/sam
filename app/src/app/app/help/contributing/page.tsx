@@ -10,7 +10,7 @@ import { TableOfContents } from "@/modules/help/components/TableOfContents";
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Mithilfe - Hilfe | S.A.M. - Sinister Incorporated",
+  title: "Mithilfe - Hilfe",
 };
 
 export default async function Page() {
@@ -266,9 +266,9 @@ export default async function Page() {
             <p>
               Das S.A.M. kann für deine externe App die
               Benutzerauthentifizierung übernehmen. Hierbei übernimmt das S.A.M.
-              die Rolle des Identity Provider. Die Benutzer deiner App melden sich hierbei
-              über S.A.M. an und werden im Anschluss im authentifizierten
-              Zustand zu deiner App weitergeleitet.
+              die Rolle des Identity Provider. Die Benutzer deiner App melden
+              sich hierbei über S.A.M. an und werden im Anschluss im
+              authentifizierten Zustand zu deiner App weitergeleitet.
             </p>
 
             <p>
@@ -280,8 +280,8 @@ export default async function Page() {
               Zusätzlich bietet das S.A.M. eine SCIM-Schnittstelle an. Hierüber
               können Benutzer in deiner App automatisiert provisioniert und
               deprovisioniert werden. Beispiel: Sollte ein Benutzer im S.A.M.
-              gelöscht werden, dann kann diese Information über SCIM an deine App
-              weitergeleitet werden, so dass der Benutzer auch in deiner App
+              gelöscht werden, dann kann diese Information über SCIM an deine
+              App weitergeleitet werden, so dass der Benutzer auch in deiner App
               gelöscht wird.
             </p>
           </RichText>

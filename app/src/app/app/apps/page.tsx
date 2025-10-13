@@ -6,7 +6,7 @@ import { type Metadata } from "next";
 export const revalidate = 86400; // 24 hours
 
 export const metadata: Metadata = {
-  title: "Apps | S.A.M. - Sinister Incorporated",
+  title: "Apps",
 };
 
 export default async function Page() {

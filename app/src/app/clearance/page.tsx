@@ -9,7 +9,7 @@ import { redirect } from "next/navigation";
 import { FaRegCheckCircle } from "react-icons/fa";
 
 export const metadata: Metadata = {
-  title: "Freigabe | S.A.M. - Sinister Incorporated",
+  title: "Freigabe",
 };
 
 export default async function Page() {

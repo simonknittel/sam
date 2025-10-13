@@ -7,7 +7,7 @@ import { type Metadata } from "next";
 export const revalidate = 86400; // 24 hours
 
 export const metadata: Metadata = {
-  title: "Cornerstone Image Browser | S.A.M. - Sinister Incorporated",
+  title: "Cornerstone Image Browser",
 };
 
 export default async function Page() {

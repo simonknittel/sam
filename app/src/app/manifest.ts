@@ -12,7 +12,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "S.A.M. - Sinister Incorporated",
     short_name: "S.A.M.",
     description:
-      "Sinister Administration Module (S.A.M.) of the Star Citizen organization Sinister Incorporated",
+      "Sinister Administration Module (S.A.M.) for the Star Citizen organization Sinister Incorporated",
     categories: ["entertainment", "games"], // https://github.com/w3c/manifest/wiki/Categories
     scope: env.BASE_URL, // Will open links outside the app in the browser
     start_url: `${env.BASE_URL}/app`,

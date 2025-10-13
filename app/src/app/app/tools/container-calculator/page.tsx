@@ -2,7 +2,7 @@ import { ContainerCalculator } from "@/modules/container-calculator/components/C
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Container Calculator | S.A.M. - Sinister Incorporated",
+  title: "Container Calculator",
 };
 
 export default function Page() {

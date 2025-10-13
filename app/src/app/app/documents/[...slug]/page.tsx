@@ -7,7 +7,7 @@ import { notFound } from "next/navigation";
 export const revalidate = 86400; // 24 hours
 
 export const metadata: Metadata = {
-  title: "Onboarding | S.A.M. - Sinister Incorporated",
+  title: "Onboarding",
 };
 
 export default async function Page({

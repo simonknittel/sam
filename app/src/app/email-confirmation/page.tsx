@@ -17,8 +17,7 @@ import { redirect } from "next/navigation";
 import { RiInformationLine } from "react-icons/ri";
 
 export const metadata: Metadata = {
-  title:
-    "E-Mail-Adresse und Datenschutzerklärung bestätigen | S.A.M. - Sinister Incorporated",
+  title: "E-Mail-Adresse und Datenschutzerklärung bestätigen",
 };
 
 interface Props {

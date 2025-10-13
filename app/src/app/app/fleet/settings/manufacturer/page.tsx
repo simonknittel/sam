@@ -4,7 +4,7 @@ import { ManufacturersTile } from "@/modules/fleet/components/ManufacturersTile"
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Einstellungen - Flotte | S.A.M. - Sinister Incorporated",
+  title: "Einstellungen - Flotte",
 };
 
 export default async function Page() {

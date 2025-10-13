@@ -63,7 +63,7 @@ export const getLeaderboard = (mode: "SB", season: string, pages: number) => {
         ranks.push(...result.data.resultset);
       }
 
-      // Get entities from all Sinister members
+      // Get entities from all org members
       const discordIds = await prisma.user.findMany({
         select: {
           accounts: {

@@ -3,7 +3,7 @@ import { Footer } from "@/modules/shell/components/Footer";
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Impressum | S.A.M. - Sinister Incorporated",
+  title: "Impressum",
 };
 
 export default function Page() {
