@@ -5,7 +5,6 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { type Metadata } from "next";
 import { getLocale } from "next-intl/server";
 import NextTopLoader from "nextjs-toploader";
-import { type ReactNode } from "react";
 import "../styles/globals.css";
 
 export const metadata: Metadata = {
@@ -16,11 +15,7 @@ export const metadata: Metadata = {
   },
 };
 
-interface Props {
-  children: ReactNode;
-}
-
-export default async function RootLayout({ children }: Readonly<Props>) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
   const locale = await getLocale();
 
   return (

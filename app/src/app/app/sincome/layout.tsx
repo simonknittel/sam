@@ -4,7 +4,6 @@ import { MaxWidthContent } from "@/modules/common/components/layouts/MaxWidthCon
 import { CreateProfitDistributionCycleButton } from "@/modules/profit-distribution/components/CreateProfitDistributionCycleButton";
 import { getNavigationItems } from "@/modules/profit-distribution/utils/getNavigationItems";
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
   title: {
@@ -13,11 +12,9 @@ export const metadata: Metadata = {
   },
 };
 
-interface Props {
-  readonly children?: ReactNode;
-}
-
-export default async function Layout({ children }: Props) {
+export default async function Layout({
+  children,
+}: LayoutProps<"/app/sincome">) {
   const [pages, authentication] = await Promise.all([
     getNavigationItems(),
     authenticate(),

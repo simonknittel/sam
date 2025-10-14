@@ -3,7 +3,6 @@ import { DefaultLayout } from "@/modules/common/components/layouts/DefaultLayout
 import { getNavigationItems } from "@/modules/iam/utils/getNavigationItems";
 import { CreateRoleButton } from "@/modules/roles/components/CreateRole/CreateRoleButton";
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
   title: {
@@ -12,11 +11,7 @@ export const metadata: Metadata = {
   },
 };
 
-interface Props {
-  readonly children?: ReactNode;
-}
-
-export default async function Layout({ children }: Props) {
+export default async function Layout({ children }: LayoutProps<"/app/iam">) {
   const [pages, authentication] = await Promise.all([
     getNavigationItems(),
     authenticate(),

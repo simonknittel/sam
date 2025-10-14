@@ -2,7 +2,6 @@ import { DefaultLayout } from "@/modules/common/components/layouts/DefaultLayout
 import { MaxWidthContent } from "@/modules/common/components/layouts/MaxWidthContent";
 import { getNavigationItems } from "@/modules/cornerstone-image-browser/utils/getNavigationItems";
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
   title: {
@@ -11,11 +10,9 @@ export const metadata: Metadata = {
   },
 };
 
-interface Props {
-  readonly children?: ReactNode;
-}
-
-export default async function Layout({ children }: Props) {
+export default async function Layout({
+  children,
+}: LayoutProps<"/app/tools/cornerstone-image-browser">) {
   const pages = await getNavigationItems();
 
   return (

@@ -1,7 +1,6 @@
 import { DefaultLayout } from "@/modules/common/components/layouts/DefaultLayout";
 import type { Page } from "@/modules/common/components/layouts/DefaultLayout/Navigation";
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
 import { FaExternalLinkAlt } from "react-icons/fa";
 
 export const metadata: Metadata = {
@@ -11,11 +10,9 @@ export const metadata: Metadata = {
   },
 };
 
-interface Props {
-  readonly children?: ReactNode;
-}
-
-export default function Layout({ children }: Props) {
+export default function Layout({
+  children,
+}: LayoutProps<"/app/dogfight-trainer">) {
   const pages: Page[] = [
     {
       icon: <FaExternalLinkAlt />,
