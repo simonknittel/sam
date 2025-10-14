@@ -13,11 +13,6 @@ terraform {
       source  = "hashicorp/external"
       version = "2.3.5"
     }
-
-    cloudflare = {
-      source  = "cloudflare/cloudflare"
-      version = "4.52.5"
-    }
   }
 }
 
@@ -33,14 +28,3 @@ provider "aws" {
 }
 
 data "aws_caller_identity" "current" {}
-
-provider "cloudflare" {
-  api_token = var.cloudflare_api_token
-}
-
-data "cloudflare_zones" "main" {
-  filter {
-    name        = "simonknittel.de"
-    lookup_type = "exact"
-  }
-}

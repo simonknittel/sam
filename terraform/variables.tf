@@ -1,8 +1,3 @@
-variable "cloudflare_api_token" {
-  type      = string
-  sensitive = true
-}
-
 variable "email_function_parameters" {
   type = list(object({
     name  = string
