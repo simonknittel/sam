@@ -17,6 +17,10 @@ resource "aws_lambda_function" "main" {
     mode = "Active"
   }
 
+  layers = [
+     "arn:aws:lambda:eu-central-1:580247275435:layer:LambdaInsightsExtension-Arm64:25" # https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Lambda-Insights-extension-versionsARM.html
+   ]
+
   lifecycle {
     # Changes to the function's source code are deployed using `.github/workflows/deploy-email-function.yml`
     ignore_changes = [
