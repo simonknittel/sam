@@ -81,7 +81,6 @@ export const env = createEnv({
     ENABLE_INSTRUMENTATION: z.string().optional(),
     OTEL_EXPORTER_OTLP_PROTOCOL: z.string().optional(),
     OTEL_EXPORTER_OTLP_ENDPOINT: z.string().optional(),
-    CRON_SECRET: z.string().optional(),
     PUSHER_CHANNELS_APP_SECRET: z.string().optional(),
   },
 
@@ -153,7 +152,6 @@ export const env = createEnv({
     NEXT_PUBLIC_DOWNLOADS_BASE_URL: process.env.NEXT_PUBLIC_DOWNLOADS_BASE_URL,
     NEXT_PUBLIC_DOWNLOADS_BASE_URL_2:
       process.env.NEXT_PUBLIC_DOWNLOADS_BASE_URL_2,
-    CRON_SECRET: process.env.CRON_SECRET,
     NEXT_PUBLIC_PUSHER_CHANNELS_APP_ID:
       process.env.NEXT_PUBLIC_PUSHER_CHANNELS_APP_ID,
     NEXT_PUBLIC_PUSHER_CHANNELS_APP_KEY:
