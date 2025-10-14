@@ -6,7 +6,7 @@ resource "aws_lambda_function" "main" {
   source_code_hash = filebase64sha256("${path.module}/placeholder.zip")
   runtime          = "nodejs22.x"
   timeout          = var.timeout
-  memory_size      = 192
+  memory_size      = var.memory_size
   architectures    = ["arm64"]
 
   # https://docs.aws.amazon.com/lambda/latest/dg/configuration-concurrency.html
