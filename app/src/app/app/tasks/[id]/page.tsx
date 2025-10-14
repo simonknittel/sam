@@ -19,7 +19,7 @@ export const generateMetadata = generateMetadataWithTryCatch(
     if (!task) notFound();
 
     return {
-      title: `${task.title} - Task`,
+      title: task.title,
     };
   },
 );

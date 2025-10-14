@@ -4,7 +4,7 @@ import { NotificationSettings } from "@/modules/notifications/components/Notific
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Benachrichtigungen - Account",
+  title: "Benachrichtigungen",
 };
 
 export default async function Page() {

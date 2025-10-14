@@ -33,7 +33,7 @@ export const generateMetadata = generateMetadataWithTryCatch(
     if (!itemTypeConfig) notFound();
 
     return {
-      title: `${itemTypeConfig.title} - Cornerstone Image Browser`,
+      title: itemTypeConfig.title,
     };
   },
 );

@@ -2,13 +2,8 @@ import { requireAuthenticationPage } from "@/modules/auth/server";
 import { Link } from "@/modules/common/components/Link";
 import { Tile } from "@/modules/common/components/Tile";
 import { cornerstoneImageBrowserItemTypes } from "@/modules/cornerstone-image-browser/utils/config";
-import { type Metadata } from "next";
 
 export const revalidate = 86400; // 24 hours
-
-export const metadata: Metadata = {
-  title: "Cornerstone Image Browser",
-};
 
 export default async function Page() {
   await requireAuthenticationPage("/app/tools/cornerstone-image-browser");

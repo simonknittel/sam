@@ -5,7 +5,7 @@ import { SilcStatistics } from "@/modules/silc/components/SilcStatistics";
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "SILC",
+  title: "Dashboard",
 };
 
 export default async function Page() {

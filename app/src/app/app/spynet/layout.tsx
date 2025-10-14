@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 export const metadata: Metadata = {
   title: {
     default: "Spynet",
-    template: "%s - Spynet", // TODO: Add parent
+    template: "%s - Spynet",
   },
 };
 

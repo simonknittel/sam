@@ -13,7 +13,7 @@ import { notFound } from "next/navigation";
  */
 
 export const metadata: Metadata = {
-  title: "404 - Page not found",
+  title: "404 Not Found",
 };
 
 export default function Page() {

@@ -6,13 +6,8 @@ import { UNLEASH_FLAG } from "@/modules/common/utils/UNLEASH_FLAG";
 import diagramSvg from "@/modules/profit-distribution/assets/diagram.svg";
 import { ProfitDistributionCycleExcerptList } from "@/modules/profit-distribution/components/ProfitDistributionCycleExcerptList";
 import { ProfitDistributionCycleSidebar } from "@/modules/profit-distribution/components/ProfitDistributionCycleSidebar";
-import { type Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-
-export const metadata: Metadata = {
-  title: "SINcome - SILC",
-};
 
 export default async function Page({
   searchParams,

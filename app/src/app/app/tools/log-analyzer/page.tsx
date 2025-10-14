@@ -3,11 +3,6 @@ import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/Suspe
 import { getUnleashFlag } from "@/modules/common/utils/getUnleashFlag";
 import { UNLEASH_FLAG } from "@/modules/common/utils/UNLEASH_FLAG";
 import { BundleLoader } from "@/modules/log-analyzer/components/BundleLoader";
-import { type Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Log Analyzer",
-};
 
 export default async function Page() {
   const authentication = await requireAuthenticationPage(

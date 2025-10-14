@@ -3,7 +3,15 @@ import { DefaultLayout } from "@/modules/common/components/layouts/DefaultLayout
 import { MaxWidthContent } from "@/modules/common/components/layouts/MaxWidthContent";
 import { CreateTaskButton } from "@/modules/tasks/components/CreateTask/CreateTaskButton";
 import { getNavigationItems } from "@/modules/tasks/utils/getNavigationItems";
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
+
+export const metadata: Metadata = {
+  title: {
+    template: "%s - Tasks",
+    default: "Tasks",
+  },
+};
 
 interface Props {
   readonly children?: ReactNode;

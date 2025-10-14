@@ -1,6 +1,14 @@
 import { DefaultLayout } from "@/modules/common/components/layouts/DefaultLayout";
 import { MaxWidthContent } from "@/modules/common/components/layouts/MaxWidthContent";
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
+
+export const metadata: Metadata = {
+  title: {
+    template: "%s - Changelog",
+    default: "Changelog",
+  },
+};
 
 interface Props {
   readonly children?: ReactNode;

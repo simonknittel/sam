@@ -23,7 +23,7 @@ export const generateMetadata = generateMetadataWithTryCatch(
     if (!series) return {};
 
     return {
-      title: `${series.name} - Schiffe`,
+      title: `${series.name}`,
     };
   },
 );

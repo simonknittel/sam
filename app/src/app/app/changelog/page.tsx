@@ -27,15 +27,10 @@ import { Link } from "@/modules/common/components/Link";
 import { SmallBadge } from "@/modules/common/components/SmallBadge";
 import { random } from "lodash";
 import { LoremIpsum } from "lorem-ipsum";
-import { type Metadata } from "next";
 import Image from "next/image";
 import { type ReactNode } from "react";
 import { AiFillAppstore } from "react-icons/ai";
 import { FaCalendar } from "react-icons/fa";
-
-export const metadata: Metadata = {
-  title: "Changelog",
-};
 
 export default async function Page() {
   const authentication = await requireAuthenticationPage("/app/changelog");

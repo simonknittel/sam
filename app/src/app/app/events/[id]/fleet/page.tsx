@@ -2,7 +2,6 @@ import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
 import { FleetTab } from "@/modules/events/components/FleetTab";
-import { Template } from "@/modules/events/components/Template";
 import { getEventById } from "@/modules/events/queries";
 import { notFound } from "next/navigation";
 
@@ -16,7 +15,7 @@ export const generateMetadata = generateMetadataWithTryCatch(
     if (!event) notFound();
 
     return {
-      title: `Flotte - ${event.name} - Event`,
+      title: `Flotte - ${event.name}`,
     };
   },
 );
@@ -33,10 +32,8 @@ export default async function Page({
   if (!event) notFound();
 
   return (
-    <Template event={event}>
-      <SuspenseWithErrorBoundaryTile>
-        <FleetTab event={event} />
-      </SuspenseWithErrorBoundaryTile>
-    </Template>
+    <SuspenseWithErrorBoundaryTile>
+      <FleetTab event={event} />
+    </SuspenseWithErrorBoundaryTile>
   );
 }
