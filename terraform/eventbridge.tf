@@ -1,37 +1,7 @@
-resource "aws_cloudwatch_event_bus" "api_gateway" {
-  name = "api-gateway"
+data "aws_cloudwatch_event_bus" "default" {
+  name = "default"
 }
 
-resource "aws_schemas_discoverer" "test" {
-  source_arn = aws_cloudwatch_event_bus.api_gateway.arn
-}
-
-resource "aws_iam_role" "api_gateway_eventbridge" {
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "apigateway.amazonaws.com"
-        }
-      },
-    ]
-  })
-
-  inline_policy {
-    name = "api-gateway-eventbridge"
-
-    policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Effect   = "Allow"
-          Action   = "events:PutEvents"
-          Resource = aws_cloudwatch_event_bus.api_gateway.arn
-        }
-      ]
-    })
-  }
+resource "aws_schemas_discoverer" "default" {
+  source_arn = data.aws_cloudwatch_event_bus.default.arn
 }

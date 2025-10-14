@@ -72,7 +72,6 @@ export const env = createEnv({
     AWS_ACCESS_KEY_ID: z.string().optional(),
     AWS_SECRET_ACCESS_KEY: z.string().optional(),
     AWS_EVENT_BUS_ARN: z.string().optional(),
-    EMAIL_FUNCTION_ENDPOINT: z.url().optional(),
     API_CLIENT_KEY: z.string().transform((str) => str.replace(/\\n/g, "\n")),
     API_CLIENT_CERT: z.string().transform((str) => str.replace(/\\n/g, "\n")),
     OPENAI_API_KEY: z.string().optional(),
@@ -134,7 +133,6 @@ export const env = createEnv({
     LOKI_AUTH_PASSWORD: process.env.LOKI_AUTH_PASSWORD,
     HOST: process.env.HOST,
     COMMIT_SHA: process.env.COMMIT_SHA,
-    EMAIL_FUNCTION_ENDPOINT: process.env.EMAIL_FUNCTION_ENDPOINT,
     NEXT_PUBLIC_CARE_BEAR_SHOOTER_BUILD_URL:
       process.env.NEXT_PUBLIC_CARE_BEAR_SHOOTER_BUILD_URL,
     BASE_URL: process.env.BASE_URL,

@@ -35,7 +35,7 @@ resource "aws_sqs_queue_policy" "main" {
   })
 }
 
-resource "aws_lambda_permission" "api_gateway" {
+resource "aws_lambda_permission" "sqs" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.main.function_name
   principal     = "sqs.amazonaws.com"

@@ -6,8 +6,6 @@
 
 #     # https://docs.aws.amazon.com/config/latest/developerguide/resource-config-reference.html
 #     resource_types = [
-#       "AWS::ApiGateway::RestApi",
-#       "AWS::ApiGateway::Stage",
 #       "AWS::CloudFormation::Stack",
 #       "AWS::KMS::Key",
 #       "AWS::KMS::Alias",

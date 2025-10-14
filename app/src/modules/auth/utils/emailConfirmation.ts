@@ -8,7 +8,7 @@ import { type Session } from "next-auth";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getUnleashFlag } from "../../common/utils/getUnleashFlag";
-import { sendEmailV2 } from "../../common/utils/sendEmail";
+import { sendEmail } from "../../common/utils/sendEmail";
 
 export const requestEmailConfirmation = async (
   userId: string,
@@ -27,7 +27,7 @@ export const requestEmailConfirmation = async (
     },
   });
 
-  await sendEmailV2("emailConfirmation", [
+  await sendEmail("emailConfirmation", [
     {
       to: userEmail,
       templateProps: {

@@ -67,7 +67,7 @@ const requestBodySchema = z.object({
 
 const isRequestProcessed = async (requestId: string) => {
 	const getCommand = new GetItemCommand({
-		TableName: "ApiGatewayProcessedRequests",
+		TableName: "SqsProcessedRequests",
 		Key: {
 			RequestId: { S: requestId },
 		},
@@ -80,7 +80,7 @@ const isRequestProcessed = async (requestId: string) => {
 
 const setRequestProcessed = async (requestId: string) => {
 	const putCommand = new PutItemCommand({
-		TableName: "ApiGatewayProcessedRequests",
+		TableName: "SqsProcessedRequests",
 		Item: {
 			RequestId: { S: requestId },
 			ExpiresAt: { N: (Date.now() / 1000 + 60 * 60 * 24 * 31).toString() },
