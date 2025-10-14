@@ -4,7 +4,7 @@ import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { cache } from "react";
 import { externalApps } from "./externalApps";
 import { INTEGRATED_APPS } from "./INTEGRATED_APPS";
-import type { AppList } from "./types";
+import type { App, RedactedApp } from "./types";
 
 /**
  * Retrieves all apps from static configuration and database. Then marks apps
@@ -17,7 +17,7 @@ export const getAppLinks = cache(
 
     // TODO: Implement fetching apps from database
 
-    const apps: AppList = await Promise.all([
+    const apps: App[] = await Promise.all([
       ...INTEGRATED_APPS.map(async (app) => {
         let redacted = false;
 
@@ -44,7 +44,7 @@ export const getAppLinks = cache(
             name: app.name,
             tags: app.tags,
             redacted: true,
-          };
+          } satisfies RedactedApp;
         }
 
         return {
@@ -56,27 +56,12 @@ export const getAppLinks = cache(
       // eslint-disable-next-line @typescript-eslint/await-thenable
       ...externalApps.map((externalApp) => {
         return {
-          name: externalApp.name,
-          description: externalApp.description,
-          imageSrc: externalApp.imageSrc,
-          href: `/app/external/${externalApp.slug}`,
-          tags: externalApp.tags,
+          ...externalApp,
         };
       }),
     ]);
 
     return apps;
-  }),
-);
-
-export const getExternalApps = cache(
-  // eslint-disable-next-line @typescript-eslint/require-await
-  withTrace("getExternalApps", async () => {
-    // TODO: Implement fetching apps from database
-
-    // TODO: Implement permission check
-
-    return externalApps;
   }),
 );
 

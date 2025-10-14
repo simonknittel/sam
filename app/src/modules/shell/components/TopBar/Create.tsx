@@ -1,6 +1,7 @@
 "use client";
 
 import { useAppsContext } from "@/modules/apps/components/AppsContext";
+import type { ExternalApp } from "@/modules/apps/utils/types";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { Button2 } from "@/modules/common/components/Button2";
 import {
@@ -99,7 +100,7 @@ const PopoverChildren = ({
 }: PopoverChildrenProps) => {
   const { closePopover } = usePopover();
   const { openCreateModal } = useCreateContext();
-  const { externalApps } = useAppsContext();
+  const { apps } = useAppsContext();
 
   const handleClick = (modalId: keyof typeof createForms) => {
     openCreateModal(modalId);
@@ -119,15 +120,19 @@ const PopoverChildren = ({
         href: string;
       }
   )[] = [
-    ...externalApps
-      .filter((app) => app.createLinks && app.createLinks.length > 0)
+    ...(apps
+      ?.filter((app): app is ExternalApp =>
+        Boolean(
+          "createLinks" in app && app.createLinks && app.createLinks.length > 0,
+        ),
+      )
       .flatMap((app) => {
         return app.createLinks!.map((link) => ({
           label: link.title,
           type: "link",
           href: `/app/external/${app.slug}/${link.slug}`,
         }));
-      }),
+      }) || []),
   ];
 
   if (showCreateCitizen)

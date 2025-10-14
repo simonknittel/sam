@@ -72,7 +72,6 @@ export const env = createEnv({
     AWS_ACCESS_KEY_ID: z.string().optional(),
     AWS_SECRET_ACCESS_KEY: z.string().optional(),
     AWS_EVENT_BUS_ARN: z.string().optional(),
-    EMAIL_FUNCTION_ENDPOINT: z.url().optional(),
     API_CLIENT_KEY: z.string().transform((str) => str.replace(/\\n/g, "\n")),
     API_CLIENT_CERT: z.string().transform((str) => str.replace(/\\n/g, "\n")),
     OPENAI_API_KEY: z.string().optional(),
@@ -81,7 +80,6 @@ export const env = createEnv({
     ENABLE_INSTRUMENTATION: z.string().optional(),
     OTEL_EXPORTER_OTLP_PROTOCOL: z.string().optional(),
     OTEL_EXPORTER_OTLP_ENDPOINT: z.string().optional(),
-    CRON_SECRET: z.string().optional(),
     PUSHER_CHANNELS_APP_SECRET: z.string().optional(),
   },
 
@@ -135,7 +133,6 @@ export const env = createEnv({
     LOKI_AUTH_PASSWORD: process.env.LOKI_AUTH_PASSWORD,
     HOST: process.env.HOST,
     COMMIT_SHA: process.env.COMMIT_SHA,
-    EMAIL_FUNCTION_ENDPOINT: process.env.EMAIL_FUNCTION_ENDPOINT,
     NEXT_PUBLIC_CARE_BEAR_SHOOTER_BUILD_URL:
       process.env.NEXT_PUBLIC_CARE_BEAR_SHOOTER_BUILD_URL,
     BASE_URL: process.env.BASE_URL,
@@ -153,7 +150,6 @@ export const env = createEnv({
     NEXT_PUBLIC_DOWNLOADS_BASE_URL: process.env.NEXT_PUBLIC_DOWNLOADS_BASE_URL,
     NEXT_PUBLIC_DOWNLOADS_BASE_URL_2:
       process.env.NEXT_PUBLIC_DOWNLOADS_BASE_URL_2,
-    CRON_SECRET: process.env.CRON_SECRET,
     NEXT_PUBLIC_PUSHER_CHANNELS_APP_ID:
       process.env.NEXT_PUBLIC_PUSHER_CHANNELS_APP_ID,
     NEXT_PUBLIC_PUSHER_CHANNELS_APP_KEY:

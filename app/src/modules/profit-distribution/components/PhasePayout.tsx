@@ -111,7 +111,7 @@ export const PhasePayout = ({ cycleData }: Props) => {
         </div>
       )}
 
-      <div className="flex justify-center border-t border-white/5 mt-4 pt-4">
+      <div className="flex flex-col justify-center gap-4 border-t border-white/5 mt-4 pt-4">
         <div className="flex flex-col justify-center items-center text-sm">
           <h3 className="text-neutral-500">Endet am</h3>
 
@@ -121,6 +121,11 @@ export const PhasePayout = ({ cycleData }: Props) => {
             <p className="text-neutral-500">-</p>
           )}
         </div>
+
+        <p className="text-center text-sm">
+          Nachdem deine Auszahlung getätigt wurde, ist dieser SINcome-Zeitraum
+          für dich abgeschlossen.
+        </p>
       </div>
     </Phase>
   );

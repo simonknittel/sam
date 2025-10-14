@@ -42,7 +42,6 @@ resource "aws_cloudwatch_metric_alarm" "deadletter_message_count" {
   namespace   = "AWS/SQS"
   metric_name = "ApproximateNumberOfMessagesVisible"
 
-  # Related: https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-metrics-and-dimensions.html
   dimensions = {
     QueueName = aws_sqs_queue.main_deadletter.name
   }

@@ -1,0 +1,88 @@
+import { prisma, type Entity, type Role } from "@sam-monorepo/database";
+import { log } from "../../common/logger";
+import { updateCitizensSilcBalances } from "./updateCitizensSilcBalances";
+import { getRoleSalaries } from "./getRoleSalaries";
+import { captureAsyncFunc } from "../../common/xray";
+
+export const disburseRoleSalaries = async () => {
+	await captureAsyncFunc("disburseRoleSalaries", async () => {
+		const salaries = await getRoleSalaries();
+		const now = new Date();
+
+		const todaysSalaries = salaries.filter(
+			(salary) => salary.dayOfMonth === now.getDate(),
+		);
+
+		const allCitizens = await prisma.entity.findMany({
+			where: {
+				roles: {
+					not: null,
+				},
+			},
+			orderBy: {
+				handle: "asc",
+			},
+		});
+
+		if (allCitizens.length <= 0) {
+			log.info("No citizens with roles found");
+			return;
+		}
+
+		const citizensGroupedByRole = new Map<
+			string,
+			{
+				role: Role;
+				citizens: Entity[];
+			}
+		>();
+
+		const allRoles = await prisma.role.findMany();
+
+		if (allRoles.length <= 0) {
+			log.info("No roles found");
+			return;
+		}
+
+		for (const citizen of allCitizens) {
+			const citizenRoleIds = citizen.roles?.split(",") ?? [];
+			for (const citizenRoleId of citizenRoleIds) {
+				const role = allRoles.find((r) => r.id === citizenRoleId);
+
+				if (role) {
+					if (!citizensGroupedByRole.has(role.id)) {
+						citizensGroupedByRole.set(role.id, { role, citizens: [] });
+					}
+
+					citizensGroupedByRole.get(role.id)?.citizens.push(citizen);
+				}
+			}
+		}
+
+		for (const salary of todaysSalaries) {
+			const group = citizensGroupedByRole.get(salary.roleId);
+			if (!group) continue;
+
+			await prisma.silcTransaction.createMany({
+				data: group.citizens.map((citizen) => ({
+					receiverId: citizen.id,
+					value: salary.value,
+					description: `Gehalt: ${group.role.name}`,
+				})),
+			});
+		}
+
+		/**
+		 * Update citizens' balances
+		 */
+		const citizenIds = todaysSalaries.flatMap(
+			(salary) =>
+				citizensGroupedByRole
+					.get(salary.roleId)
+					?.citizens.map((citizen) => citizen.id) || [],
+		);
+		await updateCitizensSilcBalances(citizenIds);
+
+		log.info("Disbursed role salaries");
+	});
+}

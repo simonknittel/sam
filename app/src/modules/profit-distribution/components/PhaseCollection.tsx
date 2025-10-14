@@ -54,12 +54,19 @@ export const PhaseCollection = ({ cycleData }: Props) => {
         )}
       </div>
 
-      <div className="flex justify-center border-t border-white/5 mt-4 pt-4">
+      <div className="flex flex-col justify-center gap-4 border-t border-white/5 mt-4 pt-4">
         <div className="flex flex-col justify-center items-center text-sm">
           <h3 className="text-neutral-500">Endet am</h3>
 
           <p>{formatDate(cycleData.cycle.collectionEndedAt, "short")}</p>
         </div>
+
+        <p className="text-center text-sm">
+          Nach Ende der Sammelphase wird von Economics die Auszahlung
+          vorbereitet. Sobald die Auszahlung beginnt, musst du dieser
+          selbstständig zustimmen. Details hierzu folgen sobald die
+          Auszahlungsphase beginnt.
+        </p>
       </div>
     </Phase>
   );

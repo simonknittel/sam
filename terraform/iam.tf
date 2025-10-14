@@ -11,7 +11,7 @@ resource "aws_iam_user_policy" "app_vercel" {
       {
         Effect   = "Allow"
         Action   = "events:PutEvents"
-        Resource = aws_cloudwatch_event_bus.api_gateway.arn
+        Resource = data.aws_cloudwatch_event_bus.default.arn
       },
     ]
   })

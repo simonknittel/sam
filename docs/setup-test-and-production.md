@@ -17,11 +17,9 @@
    1. `terraform-test`
    2. `terraform-prod`
 2. Create environment secrets
-   - `CLOUDFLARE_API_TOKEN`
    - `EMAIL_FUNCTION_PARAMETERS`
       - `[{"name":"...","value":"..."}]`
 3. Create environment variables
-   - `API_SUBDOMAIN`
    - `IAM_ROLE`
 4. Enable "Allow GitHub Actions to create and approve pull requests" in Settings/Actions/General/Workflow permissions
 
