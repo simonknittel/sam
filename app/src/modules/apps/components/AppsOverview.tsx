@@ -2,14 +2,14 @@
 
 import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs";
 import { groupByFeatured } from "../utils/groupByFeatured";
-import type { App, AppList } from "../utils/types";
+import type { App, RedactedApp } from "../utils/types";
 import { AppTile } from "./AppTile";
 import { AppTileGrid } from "./AppTileGrid";
 import { Filters } from "./Filters";
 import { RedactedAppTile } from "./RedactedAppTile";
 
 interface Props {
-  readonly allApps: AppList | null;
+  readonly allApps: App[] | null;
 }
 
 export const AppsOverview = ({ allApps }: Props) => {
@@ -45,7 +45,10 @@ export const AppsOverview = ({ allApps }: Props) => {
               "redacted" in app && app.redacted ? (
                 <RedactedAppTile key={app.name} />
               ) : (
-                <AppTile key={app.name} app={app as App} />
+                <AppTile
+                  key={app.name}
+                  app={app as Exclude<App, RedactedApp>}
+                />
               ),
             )}
           </AppTileGrid>
@@ -55,7 +58,10 @@ export const AppsOverview = ({ allApps }: Props) => {
               "redacted" in app && app.redacted ? (
                 <RedactedAppTile key={app.name} />
               ) : (
-                <AppTile key={app.name} app={app as App} />
+                <AppTile
+                  key={app.name}
+                  app={app as Exclude<App, RedactedApp>}
+                />
               ),
             )}
           </AppTileGrid>
@@ -68,7 +74,10 @@ export const AppsOverview = ({ allApps }: Props) => {
               "redacted" in app && app.redacted ? (
                 <RedactedAppTile key={app.name} />
               ) : (
-                <AppTile key={app.name} app={app as App} />
+                <AppTile
+                  key={app.name}
+                  app={app as Exclude<App, RedactedApp>}
+                />
               ),
             )}
         </AppTileGrid>

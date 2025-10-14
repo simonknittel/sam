@@ -38,6 +38,8 @@
     "Notizart",
     "npcs",
     "nuqs",
+    "odoo",
+    "Odoo",
     "openai",
     "OPENAI",
     "polaris",
@@ -59,10 +61,8 @@
     "VCALENDAR",
     "vercel",
     "VEVENT",
-    "Waffelkeks",
     "wicg",
-    "xyflow",
-    "Zettman"
+    "xyflow"
   ],
   "dotenv.enableAutocloaking": false,
   "typescript.tsdk": "node_modules/typescript/lib",

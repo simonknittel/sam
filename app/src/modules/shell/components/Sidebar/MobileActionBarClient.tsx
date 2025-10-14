@@ -2,6 +2,7 @@
 
 import { useAppsContext } from "@/modules/apps/components/AppsContext";
 import { groupByFeatured } from "@/modules/apps/utils/groupByFeatured";
+import type { App, RedactedApp } from "@/modules/apps/utils/types";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { Link } from "@/modules/common/components/Link";
 import { FaHome } from "react-icons/fa";
@@ -125,17 +126,25 @@ export const MobileActionBarClient = () => {
 
                 <ul className="mt-1">
                   {featured
-                    .filter((app) => !("redacted" in app) || !app.redacted)
-                    .map((app) => (
-                      <li key={app.name}>
-                        <Link
-                          href={app.href}
-                          className="block p-2 active:bg-neutral-700 rounded-secondary"
-                        >
-                          {app.name}
-                        </Link>
-                      </li>
-                    ))}
+                    .filter(
+                      (app): app is Exclude<App, RedactedApp> =>
+                        !("redacted" in app) || !app.redacted,
+                    )
+                    .map((app) => {
+                      const href =
+                        "href" in app ? app.href : `/app/external/${app.slug}`;
+
+                      return (
+                        <li key={app.name}>
+                          <Link
+                            href={href}
+                            className="block p-2 active:bg-neutral-700 rounded-secondary"
+                          >
+                            {app.name}
+                          </Link>
+                        </li>
+                      );
+                    })}
                 </ul>
               </div>
             )}
@@ -146,17 +155,25 @@ export const MobileActionBarClient = () => {
 
                 <ul className="mt-2">
                   {other
-                    .filter((app) => !("redacted" in app) || !app.redacted)
-                    .map((app) => (
-                      <li key={app.name}>
-                        <Link
-                          href={app.href}
-                          className="block p-2 active:bg-neutral-700 rounded-secondary"
-                        >
-                          {app.name}
-                        </Link>
-                      </li>
-                    ))}
+                    .filter(
+                      (app): app is Exclude<App, RedactedApp> =>
+                        !("redacted" in app) || !app.redacted,
+                    )
+                    .map((app) => {
+                      const href =
+                        "href" in app ? app.href : `/app/external/${app.slug}`;
+
+                      return (
+                        <li key={app.name}>
+                          <Link
+                            href={href}
+                            className="block p-2 active:bg-neutral-700 rounded-secondary"
+                          >
+                            {app.name}
+                          </Link>
+                        </li>
+                      );
+                    })}
                 </ul>
               </div>
             )}

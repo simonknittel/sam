@@ -5,7 +5,7 @@ import { AppTile } from "@/modules/apps/components/AppTile";
 import { AppTileGrid } from "@/modules/apps/components/AppTileGrid";
 import { RedactedAppTile } from "@/modules/apps/components/RedactedAppTile";
 import { groupByFeatured } from "@/modules/apps/utils/groupByFeatured";
-import type { App, AppList } from "@/modules/apps/utils/types";
+import type { App, RedactedApp } from "@/modules/apps/utils/types";
 import { Link } from "@/modules/common/components/Link";
 import { Popover, usePopover } from "@/modules/common/components/Popover";
 import clsx from "clsx";
@@ -33,7 +33,7 @@ export const Apps = ({ className }: Props) => {
         </button>
       }
       enableHover
-      childrenClassName="w-92"
+      childrenClassName="w-96"
     >
       <PopoverChildren apps={apps} />
     </Popover>
@@ -41,7 +41,7 @@ export const Apps = ({ className }: Props) => {
 };
 
 interface PopoverChildrenProps {
-  apps: AppList;
+  apps: App[];
 }
 
 const PopoverChildren = ({ apps }: PopoverChildrenProps) => {
@@ -62,7 +62,7 @@ const PopoverChildren = ({ apps }: PopoverChildrenProps) => {
               ) : (
                 <AppTile
                   key={app.name}
-                  app={app as App}
+                  app={app as Exclude<App, RedactedApp>}
                   variant="compact"
                   onClick={closePopover}
                 />
@@ -83,7 +83,7 @@ const PopoverChildren = ({ apps }: PopoverChildrenProps) => {
               ) : (
                 <AppTile
                   key={app.name}
-                  app={app as App}
+                  app={app as Exclude<App, RedactedApp>}
                   variant="compact"
                   onClick={closePopover}
                 />

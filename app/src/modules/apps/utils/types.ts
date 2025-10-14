@@ -1,13 +1,13 @@
 import type { StaticImageData } from "next/image";
 
-export interface App {
+export interface BaseApp {
   name: string;
   description: string;
   imageSrc: StaticImageData;
   tags?: string[];
 }
 
-export interface IntegratedApp extends App {
+export interface IntegratedApp extends BaseApp {
   href: string;
   /**
    * Either of these permission strings must be permitted in order to access the app.
@@ -15,12 +15,27 @@ export interface IntegratedApp extends App {
   permissionStrings?: string[];
 }
 
-export interface ExternalApp extends App {
+interface DefaultPageIframe {
+  iframeUrl: string;
+}
+
+interface DefaultPageExternal {
+  externalUrl: string;
+}
+
+interface CreateLink {
+  title: string;
+  slug: string;
+}
+
+interface TeamMember {
+  handle: string;
+}
+
+export interface ExternalApp extends BaseApp {
   id: string;
   slug: string;
-  defaultPage: {
-    iframeUrl: string;
-  };
+  defaultPage: DefaultPageIframe | DefaultPageExternal;
   pages?: (
     | {
         title: string;
@@ -36,20 +51,13 @@ export interface ExternalApp extends App {
         slug: string;
       }
   )[];
-  createLinks?: {
-    title: string;
-    slug: string;
-  }[];
+  createLinks?: CreateLink[];
 
-  team: {
-    handle: string;
-  }[];
+  team: TeamMember[];
 }
 
-export interface RedactedApp {
-  name: string;
-  featured?: boolean;
+export type RedactedApp = Pick<BaseApp, "name" | "tags"> & {
   redacted: boolean;
-}
+};
 
-export type AppList = (App | RedactedApp)[];
+export type App = IntegratedApp | ExternalApp | RedactedApp;

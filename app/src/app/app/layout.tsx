@@ -1,6 +1,6 @@
 import { env } from "@/env";
 import { AppsContextProvider } from "@/modules/apps/components/AppsContext";
-import { getAppLinks, getExternalApps } from "@/modules/apps/utils/queries";
+import { getAppLinks } from "@/modules/apps/utils/queries";
 import { AdminEnabler } from "@/modules/auth/components/AdminEnabler";
 import { SessionProviderContainer } from "@/modules/auth/components/SessionProviderContainer";
 import { requireAuthenticationPage } from "@/modules/auth/server";
@@ -25,13 +25,11 @@ interface Props {
 }
 
 export default async function AppLayout({ children }: Readonly<Props>) {
-  const [authentication, disableAlgolia, apps, externalApps] =
-    await Promise.all([
-      requireAuthenticationPage(),
-      getUnleashFlag(UNLEASH_FLAG.DisableAlgolia),
-      getAppLinks(),
-      getExternalApps(),
-    ]);
+  const [authentication, disableAlgolia, apps] = await Promise.all([
+    requireAuthenticationPage(),
+    getUnleashFlag(UNLEASH_FLAG.DisableAlgolia),
+    getAppLinks(),
+  ]);
 
   return (
     <SessionProviderContainer session={authentication.session}>
@@ -45,10 +43,7 @@ export default async function AppLayout({ children }: Readonly<Props>) {
               >
                 <NextIntlClientProvider>
                   <div className="min-h-dvh background-primary">
-                    <AppsContextProvider
-                      apps={apps}
-                      externalApps={externalApps}
-                    >
+                    <AppsContextProvider apps={apps}>
                       <CreateContextProvider>
                         <CmdKProvider disableAlgolia={disableAlgolia}>
                           <TopBar />

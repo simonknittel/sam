@@ -2,7 +2,7 @@ import { getExternalAppBySlug } from "@/modules/apps/utils/queries";
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { IframeLayout } from "@/modules/common/components/layouts/IframeLayout";
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 type Params = Promise<{
   appSlug: string;
@@ -29,6 +29,8 @@ export default async function Page({
   const { appSlug } = await params;
   const app = await getExternalAppBySlug(appSlug);
   if (!app) notFound();
+
+  if ("externalUrl" in app.defaultPage) redirect(app.defaultPage.externalUrl);
 
   return <IframeLayout src={app.defaultPage.iframeUrl} />;
 }

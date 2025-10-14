@@ -2,11 +2,12 @@ import { Badge } from "@/modules/common/components/Badge";
 import clsx from "clsx";
 import Image from "next/image";
 import NextLink from "next/link";
-import type { App } from "../utils/types";
+import { FaExternalLinkAlt } from "react-icons/fa";
+import type { App, RedactedApp } from "../utils/types";
 
 interface Props {
   readonly className?: string;
-  readonly app: App;
+  readonly app: Exclude<App, RedactedApp>;
   readonly variant?: "default" | "compact";
   readonly onClick?: () => void;
 }
@@ -17,24 +18,38 @@ export const AppTile = ({
   variant = "default",
   onClick,
 }: Props) => {
+  const href =
+    "href" in app
+      ? app.href
+      : "defaultPage" in app && "externalUrl" in app.defaultPage
+        ? app.defaultPage.externalUrl
+        : `/app/external/${app.slug}`;
+
+  const isExternal = "defaultPage" in app && "externalUrl" in app.defaultPage;
+
   if (variant === "compact") {
     return (
       <NextLink
-        href={app.href}
+        href={href}
         className={clsx(
-          "block hover:outline-interaction-700 focus-visible:outline-interaction-700 active:outline-interaction-500 outline outline-offset-4 outline-1 outline-transparent transition-colors rounded-primary overflow-hidden background-secondary group p-2 text-xs",
+          "flex items-center justify-between gap-2 hover:outline-interaction-700 focus-visible:outline-interaction-700 active:outline-interaction-500 outline outline-offset-4 outline-1 outline-transparent transition-colors rounded-primary overflow-hidden background-secondary group p-2 text-xs",
           className,
         )}
         onClick={onClick}
       >
-        {app.name}
+        <span title={app.name} className="flex-1 truncate">
+          {app.name}
+        </span>
+        {isExternal && (
+          <FaExternalLinkAlt className="flex-none text-neutral-500" />
+        )}
       </NextLink>
     );
   }
 
   return (
     <NextLink
-      href={app.href}
+      href={href}
       className={clsx(
         "flex flex-col hover:outline-interaction-700 focus-visible:outline-interaction-700 active:outline-interaction-500 outline outline-offset-4 outline-1 outline-transparent transition-colors rounded-primary overflow-hidden background-secondary group",
         className,
@@ -48,9 +63,16 @@ export const AppTile = ({
       />
 
       <div className="p-2 sm:p-4 flex flex-col gap-2 flex-1">
-        <h2 className="font-bold">{app.name}</h2>
+        <div className="flex gap-2 items-center">
+          <h2 title={app.name} className="font-bold truncate">
+            {app.name}
+          </h2>
+          {isExternal && (
+            <FaExternalLinkAlt className="flex-none text-neutral-500 text-sm" />
+          )}
+        </div>
 
-        {app.description && (
+        {"description" in app && app.description && (
           <p className="text-xs text-neutral-400 flex-1">{app.description}</p>
         )}
 
