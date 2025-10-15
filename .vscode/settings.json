@@ -1,7 +1,9 @@
 {
 	"cSpell.words": [
+		"APGL",
 		"biomejs",
 		"dbname",
+		"dccache",
 		"esbuild",
 		"fileb",
 		"hashicorp",
@@ -12,6 +14,7 @@
 		"postgresql",
 		"prisma",
 		"psql",
+		"simonknittel",
 		"soketi",
 		"tfbackend",
 		"tfvars",

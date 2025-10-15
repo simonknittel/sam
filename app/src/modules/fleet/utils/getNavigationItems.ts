@@ -15,7 +15,7 @@ export const getNavigationItems = async () => {
 
   if (permissions[0]) {
     pages.push({
-      title: "Sinister Incorporated",
+      title: "Organisation",
       url: "/app/fleet/org",
     });
   }

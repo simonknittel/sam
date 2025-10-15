@@ -21,7 +21,7 @@ export const Organization = ({ hit }: Readonly<Props>) => {
       <span className="block text-sm text-neutral-500 mt-2">
         <p>Spectrum ID: {hit.spectrumId}</p>
 
-        <p>Sinister ID: {hit.objectID}</p>
+        <p>Internal ID: {hit.objectID}</p>
       </span>
     </Link>
   );

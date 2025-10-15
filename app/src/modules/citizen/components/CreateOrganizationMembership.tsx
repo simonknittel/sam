@@ -104,7 +104,7 @@ export const CreateOrganizationMembership = ({
       >
         <form onSubmit={handleSubmit(onSubmit)}>
           <label className="block" htmlFor={organizationIdInputId}>
-            Organisation (Sinister ID)
+            Organisation (Internal ID)
           </label>
 
           <input

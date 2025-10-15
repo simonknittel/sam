@@ -33,7 +33,7 @@ export const Citizen = ({ hit }: Props) => {
           <p>Citizen IDs: {hit.citizenIds.join(", ")}</p>
         )}
 
-        <p>Sinister ID: {hit.objectID}</p>
+        <p>Internal ID: {hit.objectID}</p>
       </span>
     </Link>
   );

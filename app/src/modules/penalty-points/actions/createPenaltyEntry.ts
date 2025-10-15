@@ -10,7 +10,7 @@ import { serializeError } from "serialize-error";
 import { z } from "zod";
 
 const schema = z.object({
-  sinisterId: z.cuid(),
+  citizenId: z.cuid(),
   points: z.coerce.number().int().min(1),
   reason: z.string().trim().max(512).optional(),
   expiresAt: z.coerce.date().optional(),
@@ -36,7 +36,7 @@ export const createPenaltyEntry = async (formData: FormData) => {
      * Validate the request
      */
     const result = schema.safeParse({
-      sinisterId: formData.get("sinisterId"),
+      citizenId: formData.get("citizenId"),
       points: formData.get("points"),
       reason: formData.has("reason") ? formData.get("reason") : undefined,
       expiresAt:
@@ -63,7 +63,7 @@ export const createPenaltyEntry = async (formData: FormData) => {
         },
         citizen: {
           connect: {
-            id: result.data.sinisterId,
+            id: result.data.citizenId,
           },
         },
         points: result.data.points,

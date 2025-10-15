@@ -12,6 +12,8 @@
   </a>
 </p>
 
+<p align="center"><small>(outdated screenshots)</small></p>
+
 ## Features
 
 - Spynet: ERP- and CRM-like citizen and organization management

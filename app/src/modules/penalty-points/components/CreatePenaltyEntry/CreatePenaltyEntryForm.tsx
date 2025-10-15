@@ -49,7 +49,7 @@ export const CreatePenaltyEntryForm = ({ className, onSuccess }: Props) => {
 
   return (
     <form action={formAction} className={clsx(className)}>
-      <CitizenInput name="sinisterId" autoFocus />
+      <CitizenInput name="citizenId" autoFocus />
 
       <NumberInput
         name="points"

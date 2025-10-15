@@ -845,11 +845,11 @@ export default async function Page() {
       </Day>
 
       <Day heading="29. März 2025">
-        <DayItem heading="Suche nach Handle anstatt Sinister ID">
+        <DayItem heading="Suche nach Handle anstatt Internal ID">
           <p>
             In diversen Formularen (Strafpunkteeintrag, Eventmanager, SILC
             Transaktion) kann nun ein Citizen durch seinen Handle gesucht und
-            hinzugefügt werden anstatt der Sinister ID.
+            hinzugefügt werden anstatt der Internal ID.
           </p>
 
           <Image
@@ -1062,8 +1062,8 @@ export default async function Page() {
 
         <DayItem heading="SILC-Transaktion erstellen">
           <p>
-            Das Eingabefeld für die Sinister IDs ist nun ein Mehrzeilen-Feld um
-            die Eingabe zu vereinfachen. Pro Zeile muss eine Sinister ID
+            Das Eingabefeld für die Internal IDs ist nun ein Mehrzeilen-Feld um
+            die Eingabe zu vereinfachen. Pro Zeile muss eine Internal ID
             angegeben werden.
           </p>
         </DayItem>
