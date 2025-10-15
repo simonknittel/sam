@@ -252,6 +252,21 @@ export default async function Page() {
               Dadurch bleibt der Benutzer im bekannten Interface des S.A.M. und
               kann nahtlos zwischen den integrierten und externen Apps wechseln.
             </p>
+
+            <p>
+              <strong>Hinweis zum sandbox-Attribut:</strong> Bei der
+              Iframe-Integration ist das <code>sandbox</code>-Attribut eine
+              wichtige Sicherheitsfunktion. Es schränkt die Fähigkeiten der
+              eingebetteten Seite ein und schützt vor potenziellen
+              Sicherheitsrisiken. Je nach Anforderungen deiner App können
+              bestimmte Berechtigungen über das sandbox-Attribut gewährt werden
+              (z.B. <code>allow-scripts</code>, <code>allow-forms</code>,{" "}
+              <code>allow-same-origin</code>). Bitte beachte, dass die
+              Kombination <code>allow-scripts</code> und{" "}
+              <code>allow-same-origin</code> das sandbox-Attribut praktisch
+              unwirksam macht und vermieden werden sollte, es sei denn, es ist
+              absolut notwendig.
+            </p>
           </RichText>
 
           <SectionHeading
