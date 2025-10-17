@@ -4,6 +4,7 @@ const PREFIXES = [
   "RotationSimple-",
   "Kopion_",
   "Hazard_Pit",
+  "yormandi_",
 ];
 
 export const isNpc = (handle: string) =>
