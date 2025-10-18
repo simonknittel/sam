@@ -3,7 +3,7 @@ import type { StaticImageData } from "next/image";
 export interface BaseApp {
   name: string;
   description: string;
-  imageSrc: StaticImageData;
+  imageSrc?: StaticImageData;
   tags?: string[];
 }
 

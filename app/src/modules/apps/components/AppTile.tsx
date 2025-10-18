@@ -55,12 +55,16 @@ export const AppTile = ({
         className,
       )}
     >
-      <Image
-        src={app.imageSrc}
-        alt={`Screenshot der ${app.name} App`}
-        priority
-        className="aspect-video object-cover object-top grayscale group-hover:grayscale-0 group-focus-visible:grayscale-0 transition flex-initial"
-      />
+      {app.imageSrc ? (
+        <Image
+          src={app.imageSrc}
+          alt={`Screenshot der ${app.name} App`}
+          priority
+          className="aspect-video object-cover object-top grayscale group-hover:grayscale-0 group-focus-visible:grayscale-0 transition flex-initial"
+        />
+      ) : (
+        <div className="aspect-video bg-black" />
+      )}
 
       <div className="p-2 sm:p-4 flex flex-col gap-2 flex-1">
         <div className="flex gap-2 items-center">
