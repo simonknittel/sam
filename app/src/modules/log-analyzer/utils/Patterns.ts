@@ -1,7 +1,5 @@
 import {
   EntryType,
-  type IAsdElevatorEntry,
-  type IContestedZoneElevatorEntry,
   type ICorpseEntry,
   type IEntry,
   type IJoinPuEntry,
@@ -73,37 +71,37 @@ export const Patterns: Pattern[] = [
     },
   },
 
-  {
-    id: "contestedZoneElevator",
-    // <2025-09-25T18:10:58.240Z> [Notice] <TransitCarriageStartTransit> [TRANSITDEBUG] [TRANSIT CARRIAGE] [ECarriageGeneral] : Carriage 0 (Id: 6282799725663) for manager TransitManager_TransitDungeonRewardRoom_A_6136502412541 starting transit in zone rs_cz_rewards_001 at position x: -0.000001, y: 135.000002, z: 0.249999 [Team_CGP2][TransitSystem]
-    regex:
-      /^<(?<isoDate>[\d\-T:.Z]+)>.*TransitManager_(?<elevatorName>[a-zA-Z]*Dungeon[a-zA-Z_]*)_\d+.*starting.*$/gm,
-    matchMapping: (
-      date,
-      groups,
-    ): Omit<IContestedZoneElevatorEntry, "isoDate"> => {
-      const key = `${date.getTime()}_${groups.elevatorName}`;
+  // {
+  //   id: "contestedZoneElevator",
+  //   // <2025-09-25T18:10:58.240Z> [Notice] <TransitCarriageStartTransit> [TRANSITDEBUG] [TRANSIT CARRIAGE] [ECarriageGeneral] : Carriage 0 (Id: 6282799725663) for manager TransitManager_TransitDungeonRewardRoom_A_6136502412541 starting transit in zone rs_cz_rewards_001 at position x: -0.000001, y: 135.000002, z: 0.249999 [Team_CGP2][TransitSystem]
+  //   regex:
+  //     /^<(?<isoDate>[\d\-T:.Z]+)>.*TransitManager_(?<elevatorName>[a-zA-Z]*Dungeon[a-zA-Z_]*)_\d+.*starting.*$/gm,
+  //   matchMapping: (
+  //     date,
+  //     groups,
+  //   ): Omit<IContestedZoneElevatorEntry, "isoDate"> => {
+  //     const key = `${date.getTime()}_${groups.elevatorName}`;
 
-      return {
-        key,
-        type: EntryType.ContestedZoneElevator,
-        elevatorName: groups.elevatorName,
-      };
-    },
-  },
+  //     return {
+  //       key,
+  //       type: EntryType.ContestedZoneElevator,
+  //       elevatorName: groups.elevatorName,
+  //     };
+  //   },
+  // },
 
-  {
-    id: "asdElevator",
-    regex:
-      /^<(?<isoDate>[\d\-T:.Z]+)>.*TransitManager_(?<elevatorName>ASD_[a-zA-Z_]*)_\d+.*starting.*$/gm,
-    matchMapping: (date, groups): Omit<IAsdElevatorEntry, "isoDate"> => {
-      const key = `${date.getTime()}_${groups.elevatorName}`;
+  // {
+  //   id: "asdElevator",
+  //   regex:
+  //     /^<(?<isoDate>[\d\-T:.Z]+)>.*TransitManager_(?<elevatorName>ASD_[a-zA-Z_]*)_\d+.*starting.*$/gm,
+  //   matchMapping: (date, groups): Omit<IAsdElevatorEntry, "isoDate"> => {
+  //     const key = `${date.getTime()}_${groups.elevatorName}`;
 
-      return {
-        key,
-        type: EntryType.AsdElevator,
-        elevatorName: groups.elevatorName,
-      };
-    },
-  },
+  //     return {
+  //       key,
+  //       type: EntryType.AsdElevator,
+  //       elevatorName: groups.elevatorName,
+  //     };
+  //   },
+  // },
 ];
