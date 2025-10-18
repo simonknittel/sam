@@ -39,4 +39,25 @@ export const externalApps: ExternalApp[] = [
       },
     ],
   },
+
+  {
+    id: "mwibr68eokqvhw23c3r7msih",
+    name: "Schwarzmarkt-Ankauf",
+    slug: "schwarzmarkt-ankauf",
+    description:
+      "Verkaufe einfach und schnell deinen Loot gewinnbringend über den Schwarzmarkt der Org",
+    tags: ["featured", "economics"],
+    defaultPage: {
+      iframeUrl:
+        "https://docs.google.com/spreadsheets/d/1E3F__tz9GuqV8kCtQHpGKmqkjf5Ust7JObf1LwFLhqs",
+    },
+    team: [
+      {
+        handle: "Salbei",
+      },
+      {
+        handle: "Waffelkeks",
+      },
+    ],
+  },
 ];
