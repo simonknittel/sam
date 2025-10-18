@@ -32,7 +32,7 @@ export const Button = (props: Props) => {
             variant === "primary" && colorScheme === "interaction",
           "border-interaction-500 text-interaction-500 enabled:hover:border-interaction-300 enabled:active:border-interaction-300 enabled:hover:text-interaction-300 enabled:active:text-interaction-300":
             variant === "secondary" && colorScheme === "interaction",
-          "text-interaction-500 enabled:hover:bg-interaction-300 border-interaction-300 enabled:hover:text-interaction-300 enabled:active:text-interaction-300":
+          "text-interaction-500 border-interaction-300 enabled:hover:text-interaction-300 enabled:active:text-interaction-300":
             variant === "tertiary" && colorScheme === "interaction",
           "w-11": iconOnly && ["primary", "secondary"].includes(variant || ""),
           "w-6": iconOnly && ["tertiary"].includes(variant || ""),

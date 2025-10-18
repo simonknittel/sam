@@ -62,7 +62,8 @@
     "vercel",
     "VEVENT",
     "wicg",
-    "xyflow"
+    "xyflow",
+    "yormandi"
   ],
   "dotenv.enableAutocloaking": false,
   "typescript.tsdk": "node_modules/typescript/lib",

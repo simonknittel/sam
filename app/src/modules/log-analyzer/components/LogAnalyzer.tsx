@@ -21,8 +21,8 @@ import { FaInfoCircle, FaSpinner } from "react-icons/fa";
 import { FaFileArrowUp } from "react-icons/fa6";
 import { TfiReload } from "react-icons/tfi";
 import { getFilesRecursively } from "../utils/getFilesRecursively";
-import { LOG_ANALYZER_PATTERNS } from "../utils/LOG_ANALYZER_PATTERNS";
-import { Entry, EntryType, type IEntry } from "./Entry";
+import { Patterns } from "../utils/Patterns";
+import { Entry, type IEntry } from "./Entry";
 import { useEntryFilterContext } from "./EntryFilterContext";
 import { EntryFilters } from "./EntryFilters";
 import { Introduction } from "./Introduction";
@@ -81,112 +81,22 @@ export const LogAnalyzer = ({ className }: Props) => {
           const newEntries = new Map<string, IEntry>(previousEntries);
 
           for (const fileContent of fileContents) {
-            const killMatches = fileContent.matchAll(
-              LOG_ANALYZER_PATTERNS.kill,
-            );
-            for (const match of killMatches) {
-              if (!match.groups) continue;
+            for (const pattern of Patterns) {
+              const matches = fileContent.matchAll(pattern.regex);
+              for (const match of matches) {
+                if (!match.groups) continue;
 
-              const { isoDate, target, zone, killer, weapon, damageType } =
-                match.groups;
-              const date = new Date(isoDate);
-              const key = `${date.getTime()}_${target}`;
+                const date = new Date(match.groups.isoDate);
+                const entry = pattern.matchMapping(date, match.groups);
+                if (newEntries.has(entry.key)) continue;
 
-              if (newEntries.has(key)) continue;
-
-              newEntries.set(key, {
-                key,
-                isoDate: date,
-                isNew,
-                type: EntryType.Kill,
-                target,
-                zone,
-                killer,
-                weapon,
-                damageType,
-              });
-            }
-
-            const corpseMatches = fileContent.matchAll(
-              LOG_ANALYZER_PATTERNS.corpse,
-            );
-            for (const match of corpseMatches) {
-              if (!match.groups) continue;
-
-              const { isoDate, target } = match.groups;
-              const date = new Date(isoDate);
-              const key = `${date.getTime()}_${target}`;
-
-              if (newEntries.has(key)) continue;
-
-              newEntries.set(key, {
-                key,
-                isoDate: date,
-                isNew,
-                type: EntryType.Corpse,
-                target,
-              });
-            }
-
-            const joinPu = fileContent.matchAll(LOG_ANALYZER_PATTERNS.joinPu);
-            for (const match of joinPu) {
-              if (!match.groups) continue;
-
-              const { isoDate, shard } = match.groups;
-              const date = new Date(isoDate);
-              const key = `${date.getTime()}_${shard}`;
-
-              if (newEntries.has(key)) continue;
-
-              newEntries.set(key, {
-                key,
-                isoDate: date,
-                isNew,
-                type: EntryType.JoinPu,
-                shard,
-              });
-            }
-
-            const contestedZoneElevatorMatches = fileContent.matchAll(
-              LOG_ANALYZER_PATTERNS.contestedZoneElevator,
-            );
-            for (const match of contestedZoneElevatorMatches) {
-              if (!match.groups) continue;
-
-              const { isoDate, elevatorName } = match.groups;
-              const date = new Date(isoDate);
-              const key = `${date.getTime()}_${elevatorName}`;
-
-              if (newEntries.has(key)) continue;
-
-              newEntries.set(key, {
-                key,
-                isoDate: date,
-                isNew,
-                type: EntryType.ContestedZoneElevator,
-                elevatorName,
-              });
-            }
-
-            const asdElevatorMatches = fileContent.matchAll(
-              LOG_ANALYZER_PATTERNS.asdElevator,
-            );
-            for (const match of asdElevatorMatches) {
-              if (!match.groups) continue;
-
-              const { isoDate, elevatorName } = match.groups;
-              const date = new Date(isoDate);
-              const key = `${date.getTime()}_${elevatorName}`;
-
-              if (newEntries.has(key)) continue;
-
-              newEntries.set(key, {
-                key,
-                isoDate: date,
-                isNew,
-                type: EntryType.AsdElevator,
-                elevatorName,
-              });
+                // @ts-expect-error Don't know how to improve this
+                newEntries.set(entry.key, {
+                  ...entry,
+                  isoDate: date,
+                  isNew,
+                });
+              }
             }
           }
 
