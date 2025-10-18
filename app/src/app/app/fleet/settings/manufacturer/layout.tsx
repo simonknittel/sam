@@ -1,4 +1,12 @@
+import type { Metadata } from "next";
 import { type ReactNode } from "react";
+
+export const metadata: Metadata = {
+  title: {
+    template: "%s - Einstellungen",
+    default: "Einstellungen",
+  },
+};
 
 interface Props {
   readonly children?: ReactNode;

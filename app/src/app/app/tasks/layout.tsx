@@ -3,13 +3,16 @@ import { DefaultLayout } from "@/modules/common/components/layouts/DefaultLayout
 import { MaxWidthContent } from "@/modules/common/components/layouts/MaxWidthContent";
 import { CreateTaskButton } from "@/modules/tasks/components/CreateTask/CreateTaskButton";
 import { getNavigationItems } from "@/modules/tasks/utils/getNavigationItems";
-import type { ReactNode } from "react";
+import type { Metadata } from "next";
 
-interface Props {
-  readonly children?: ReactNode;
-}
+export const metadata: Metadata = {
+  title: {
+    template: "%s - Tasks",
+    default: "Tasks",
+  },
+};
 
-export default async function Layout({ children }: Props) {
+export default async function Layout({ children }: LayoutProps<"/app/tasks">) {
   const [pages, authentication] = await Promise.all([
     getNavigationItems(),
     authenticate(),

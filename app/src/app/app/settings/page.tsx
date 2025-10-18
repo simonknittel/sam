@@ -2,12 +2,7 @@ import { Algolia } from "@/modules/algolia/components/Algolia";
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { Tile } from "@/modules/common/components/Tile";
 import { log } from "@/modules/logging";
-import { type Metadata } from "next";
 import { redirect } from "next/navigation";
-
-export const metadata: Metadata = {
-  title: "Einstellungen",
-};
 
 export default async function Page() {
   const authentication = await requireAuthenticationPage("/app/settings");

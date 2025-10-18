@@ -5,7 +5,7 @@ import { RolesTile } from "@/modules/roles/components/RolesTile";
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Rollen - IAM",
+  title: "Rollen",
 };
 
 export default async function Page() {

@@ -18,13 +18,9 @@ import { TRPCReactProvider } from "@/trpc/react";
 import { NextIntlClientProvider } from "next-intl";
 import { cookies } from "next/headers";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
-import { Suspense, type ReactNode } from "react";
+import { Suspense } from "react";
 
-interface Props {
-  children: ReactNode;
-}
-
-export default async function AppLayout({ children }: Readonly<Props>) {
+export default async function AppLayout({ children }: LayoutProps<"/app">) {
   const [authentication, disableAlgolia, apps] = await Promise.all([
     requireAuthenticationPage(),
     getUnleashFlag(UNLEASH_FLAG.DisableAlgolia),

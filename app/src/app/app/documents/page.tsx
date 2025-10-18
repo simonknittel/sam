@@ -3,12 +3,7 @@ import { MaxWidthContent } from "@/modules/common/components/layouts/MaxWidthCon
 import { Link } from "@/modules/common/components/Link";
 import { Tile } from "@/modules/common/components/Tile";
 import { getDocuments } from "@/modules/documents/utils/queries";
-import { type Metadata } from "next";
 import Image from "next/image";
-
-export const metadata: Metadata = {
-  title: "Dokumente",
-};
 
 export default async function Page() {
   await requireAuthenticationPage("/app/documents");

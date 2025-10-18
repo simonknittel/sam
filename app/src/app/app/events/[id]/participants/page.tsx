@@ -3,7 +3,6 @@ import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/Suspe
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
 import { searchParamsNextjsToURLSearchParams } from "@/modules/common/utils/searchParamsNextjsToURLSearchParams";
 import { ParticipantsTab } from "@/modules/events/components/ParticipantsTab";
-import { Template } from "@/modules/events/components/Template";
 import { getEventById } from "@/modules/events/queries";
 import { notFound } from "next/navigation";
 
@@ -17,7 +16,7 @@ export const generateMetadata = generateMetadataWithTryCatch(
     if (!event) notFound();
 
     return {
-      title: `Teilnehmer - ${event.name} - Event`,
+      title: `Teilnehmer - ${event.name}`,
     };
   },
 );
@@ -37,10 +36,8 @@ export default async function Page({
     await searchParamsNextjsToURLSearchParams(searchParams);
 
   return (
-    <Template event={event}>
-      <SuspenseWithErrorBoundaryTile>
-        <ParticipantsTab event={event} urlSearchParams={urlSearchParams} />
-      </SuspenseWithErrorBoundaryTile>
-    </Template>
+    <SuspenseWithErrorBoundaryTile>
+      <ParticipantsTab event={event} urlSearchParams={urlSearchParams} />
+    </SuspenseWithErrorBoundaryTile>
   );
 }

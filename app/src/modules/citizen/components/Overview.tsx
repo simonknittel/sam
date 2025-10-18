@@ -30,7 +30,7 @@ export const Overview = async ({ className, entity }: Props) => {
     <div className={clsx(className)}>
       <Tile heading="Übersicht">
         <dl>
-          <dt className="text-neutral-500">Sinister ID</dt>
+          <dt className="text-neutral-500">Internal ID</dt>
           <dd className="flex items-center gap-2">
             {entity.id}
             <CopyToClipboard value={entity.id} />

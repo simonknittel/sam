@@ -27,15 +27,10 @@ import { Link } from "@/modules/common/components/Link";
 import { SmallBadge } from "@/modules/common/components/SmallBadge";
 import { random } from "lodash";
 import { LoremIpsum } from "lorem-ipsum";
-import { type Metadata } from "next";
 import Image from "next/image";
 import { type ReactNode } from "react";
 import { AiFillAppstore } from "react-icons/ai";
 import { FaCalendar } from "react-icons/fa";
-
-export const metadata: Metadata = {
-  title: "Changelog",
-};
 
 export default async function Page() {
   const authentication = await requireAuthenticationPage("/app/changelog");
@@ -850,11 +845,11 @@ export default async function Page() {
       </Day>
 
       <Day heading="29. März 2025">
-        <DayItem heading="Suche nach Handle anstatt Sinister ID">
+        <DayItem heading="Suche nach Handle anstatt Internal ID">
           <p>
             In diversen Formularen (Strafpunkteeintrag, Eventmanager, SILC
             Transaktion) kann nun ein Citizen durch seinen Handle gesucht und
-            hinzugefügt werden anstatt der Sinister ID.
+            hinzugefügt werden anstatt der Internal ID.
           </p>
 
           <Image
@@ -1067,8 +1062,8 @@ export default async function Page() {
 
         <DayItem heading="SILC-Transaktion erstellen">
           <p>
-            Das Eingabefeld für die Sinister IDs ist nun ein Mehrzeilen-Feld um
-            die Eingabe zu vereinfachen. Pro Zeile muss eine Sinister ID
+            Das Eingabefeld für die Internal IDs ist nun ein Mehrzeilen-Feld um
+            die Eingabe zu vereinfachen. Pro Zeile muss eine Internal ID
             angegeben werden.
           </p>
         </DayItem>

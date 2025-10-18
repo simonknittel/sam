@@ -17,6 +17,11 @@ variable "timeout" {
   default = 15
 }
 
+variable "memory_size" {
+  type    = number
+  default = 192
+}
+
 variable "schedule_expression" {
   type    = string
 }

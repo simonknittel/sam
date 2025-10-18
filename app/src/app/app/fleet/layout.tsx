@@ -1,13 +1,16 @@
 import { DefaultLayout } from "@/modules/common/components/layouts/DefaultLayout";
 import { MaxWidthContent } from "@/modules/common/components/layouts/MaxWidthContent";
 import { getNavigationItems } from "@/modules/fleet/utils/getNavigationItems";
-import type { ReactNode } from "react";
+import type { Metadata } from "next";
 
-interface Props {
-  readonly children?: ReactNode;
-}
+export const metadata: Metadata = {
+  title: {
+    template: "%s - Flotte",
+    default: "Flotte",
+  },
+};
 
-export default async function Layout({ children }: Props) {
+export default async function Layout({ children }: LayoutProps<"/app/fleet">) {
   const pages = await getNavigationItems();
 
   return (

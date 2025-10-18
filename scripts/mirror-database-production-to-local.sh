@@ -11,7 +11,7 @@ CONNECTION_STRING=$1
 docker compose rm --stop --force psql
 docker compose up --detach psql
 
-docker container exec --interactive sinister-incorporated-psql-1 /bin/bash <<EOF
+docker container exec --interactive sam-psql-1 /bin/bash <<EOF
 	pg_dump --dbname=$CONNECTION_STRING --no-owner --no-privileges --no-acl --no-tablespaces --format=custom --file dump && \
 		pg_restore --dbname=postgresql://postgres:admin@localhost:5432/db --no-owner --clean --if-exists dump
 EOF

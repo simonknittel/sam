@@ -5,7 +5,7 @@ import { type Metadata } from "next";
 import { forbidden } from "next/navigation";
 
 export const metadata: Metadata = {
-  title: "Analytics - Account",
+  title: "Analytics",
 };
 
 export default async function Page() {

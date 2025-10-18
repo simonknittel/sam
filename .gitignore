@@ -1,5 +1,3 @@
 .git
 .dccache
 .DS_Store
-certificates/*
-!certificates/truststore.pem

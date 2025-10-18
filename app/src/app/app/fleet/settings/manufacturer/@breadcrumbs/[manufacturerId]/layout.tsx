@@ -1,11 +1,8 @@
 import { Link } from "@/modules/common/components/Link";
-import { type ReactNode } from "react";
 
-interface Props {
-  readonly children?: ReactNode;
-}
-
-export default function Layout({ children }: Props) {
+export default function Layout({
+  children,
+}: LayoutProps<"/app/fleet/settings/manufacturer/[manufacturerId]">) {
   return (
     <>
       <Link

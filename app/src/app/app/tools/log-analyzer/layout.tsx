@@ -1,12 +1,17 @@
 import { DefaultLayout } from "@/modules/common/components/layouts/DefaultLayout";
 import { MaxWidthContent } from "@/modules/common/components/layouts/MaxWidthContent";
-import type { ReactNode } from "react";
+import type { Metadata } from "next";
 
-interface Props {
-  readonly children?: ReactNode;
-}
+export const metadata: Metadata = {
+  title: {
+    template: "%s - Log Analyzer",
+    default: "Log Analyzer",
+  },
+};
 
-export default function Layout({ children }: Props) {
+export default function Layout({
+  children,
+}: LayoutProps<"/app/tools/log-analyzer">) {
   return (
     <DefaultLayout title="Log Analyzer" slug="tools/log-analyzer">
       <MaxWidthContent>{children}</MaxWidthContent>

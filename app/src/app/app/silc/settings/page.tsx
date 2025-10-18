@@ -8,7 +8,7 @@ import { RoleSalaries } from "@/modules/silc/components/RoleSalaries";
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Einstellungen - SILC",
+  title: "Einstellungen",
 };
 
 export default async function Page() {

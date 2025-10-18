@@ -1,12 +1,15 @@
 import { DefaultLayout } from "@/modules/common/components/layouts/DefaultLayout";
 import { MaxWidthContent } from "@/modules/common/components/layouts/MaxWidthContent";
-import type { ReactNode } from "react";
+import type { Metadata } from "next";
 
-interface Props {
-  readonly children?: ReactNode;
-}
+export const metadata: Metadata = {
+  title: {
+    template: "%s - Einstellungen",
+    default: "Einstellungen",
+  },
+};
 
-export default function Layout({ children }: Props) {
+export default function Layout({ children }: LayoutProps<"/app/settings">) {
   return (
     <DefaultLayout title="Einstellungen" slug="settings">
       <MaxWidthContent>{children}</MaxWidthContent>

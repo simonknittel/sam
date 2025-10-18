@@ -5,16 +5,5 @@
   "ignore": [
     "node_modules",
     ".git"
-  ],
-  "clientCertificates": {
-    "enabled": true,
-    "certs": [
-      {
-        "domain": "sinister-api-test.simonknittel.de",
-        "certFilePath": "../certificates/localhost.pem",
-        "keyFilePath": "../certificates/localhost.key",
-        "passphrase": ""
-      }
-    ]
-  }
+  ]
 }

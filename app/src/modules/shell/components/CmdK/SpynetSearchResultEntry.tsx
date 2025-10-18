@@ -44,7 +44,7 @@ export const SpynetSearchResultEntry = ({ hit, onSelect }: Props) => {
             <p>Citizen IDs: {hit.citizenIds.join(", ")}</p>
           )}
 
-          <p>Sinister ID: {hit.objectID}</p>
+          <p>Internal ID: {hit.objectID}</p>
         </span>
       </Command.Item>
     );
@@ -70,7 +70,7 @@ export const SpynetSearchResultEntry = ({ hit, onSelect }: Props) => {
         <span className="block text-sm text-neutral-500 w-full">
           <p>Spectrum ID: {hit.spectrumId}</p>
 
-          <p>Sinister ID: {hit.objectID}</p>
+          <p>Internal ID: {hit.objectID}</p>
         </span>
       </Command.Item>
     );

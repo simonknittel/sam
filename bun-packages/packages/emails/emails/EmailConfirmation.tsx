@@ -35,7 +35,7 @@ export default function Email({
           theme: {
             extend: {
               colors: {
-                "sinister-red-500": "#BB2222",
+                "brand-red-500": "#BB2222",
               },
             },
           },
@@ -43,12 +43,12 @@ export default function Email({
       >
         <Body className="bg-neutral-800 text-neutral-50 font-sans px-6 pt-2 pb-6">
           <Container className="mx-auto w-[480px]">
-            <Text className="text-center text-5xl text-sinister-red-500 font-extrabold uppercase">
+            <Text className="text-center text-5xl text-brand-red-500 font-extrabold uppercase">
               S.A.M.
             </Text>
             <Text className="font-bold">
-              Deine E-Mail-Adresse und die <Link href={`${baseUrl}/api/confirm-email?token=${token}`} className="text-sinister-red-500">Datenschutzerklärung</Link> müssen bestätigt werden bevor du{" "}
-              <Link href={baseUrl} className="text-sinister-red-500">
+              Deine E-Mail-Adresse und die <Link href={`${baseUrl}/api/confirm-email?token=${token}`} className="text-brand-red-500">Datenschutzerklärung</Link> müssen bestätigt werden bevor du{" "}
+              <Link href={baseUrl} className="text-brand-red-500">
                 {host}
               </Link>{" "}
               nutzen kannst.
@@ -56,7 +56,7 @@ export default function Email({
             <Container className="text-center">
               <Button
                 href={`${baseUrl}/api/confirm-email?token=${token}`}
-                className="rounded uppercase gap-4 text-base font-bold bg-sinister-red-500 text-neutral-50 px-6 py-4"
+                className="rounded uppercase gap-4 text-base font-bold bg-brand-red-500 text-neutral-50 px-6 py-4"
               >
                 Bestätigen
               </Button>
@@ -66,7 +66,7 @@ export default function Email({
               deinem Browser:{" "}
               <Link
                 href={`${baseUrl}/api/confirm-email?token=${token}`}
-                className="text-sinister-red-500"
+                className="text-brand-red-500"
               >
                 {baseUrl}/api/confirm-email?token={token}
               </Link>
@@ -75,7 +75,7 @@ export default function Email({
               Falls du diese E-Mail nicht erwartet hast, melde dich bei{" "}
               <Link
                 href="mailto:info@sinister-incorporated.de"
-                className="text-sinister-red-500"
+                className="text-brand-red-500"
               >
                 info@sinister-incorporated.de
               </Link>
@@ -85,14 +85,14 @@ export default function Email({
               <Container>
                 <Link
                   href={`${baseUrl}/imprint`}
-                  className="text-sinister-red-500"
+                  className="text-brand-red-500"
                 >
                   Impressum
                 </Link>{" "}
                 •{" "}
                 <Link
                   href={`${baseUrl}/privacy`}
-                  className="text-sinister-red-500"
+                  className="text-brand-red-500"
                 >
                   Datenschutzerklärung
                 </Link>

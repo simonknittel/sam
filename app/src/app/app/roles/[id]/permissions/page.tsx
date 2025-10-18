@@ -1,30 +1,19 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { getAllFlows } from "@/modules/career/queries";
-import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
 import { getUnleashFlag } from "@/modules/common/utils/getUnleashFlag";
 import { UNLEASH_FLAG } from "@/modules/common/utils/UNLEASH_FLAG";
 import { PermissionsTab } from "@/modules/roles/components/PermissionsTab";
-import { RoleDetailsTemplate } from "@/modules/roles/components/RoleDetailsTemplate";
 import { getRoleById, getRoles } from "@/modules/roles/queries";
 import {
   getAllClassificationLevels,
   getAllNoteTypes,
 } from "@/modules/spynet/queries";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-type Params = Promise<{
-  id: string;
-}>;
-
-export const generateMetadata = generateMetadataWithTryCatch(
-  async (props: { params: Params }) => {
-    const role = await getRoleById((await props.params).id);
-
-    return {
-      title: `${role?.name} - Rollen`,
-    };
-  },
-);
+export const metadata: Metadata = {
+  title: "Berechtigungen",
+};
 
 export default async function Page({
   params,
@@ -55,16 +44,14 @@ export default async function Page({
   ]);
 
   return (
-    <RoleDetailsTemplate role={role}>
-      <PermissionsTab
-        role={role}
-        allRoles={allRoles}
-        noteTypes={noteTypes}
-        classificationLevels={classificationLevels}
-        enableOperations={Boolean(enableOperations)}
-        flows={flows}
-        enableProfitDistribution={Boolean(EnableProfitDistribution)}
-      />
-    </RoleDetailsTemplate>
+    <PermissionsTab
+      role={role}
+      allRoles={allRoles}
+      noteTypes={noteTypes}
+      classificationLevels={classificationLevels}
+      enableOperations={Boolean(enableOperations)}
+      flows={flows}
+      enableProfitDistribution={Boolean(EnableProfitDistribution)}
+    />
   );
 }

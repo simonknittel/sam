@@ -105,7 +105,7 @@ export const CreateMembership = ({
       >
         <form onSubmit={handleSubmit(onSubmit)}>
           <label className="block" htmlFor={citizenIdInputId}>
-            Citizen (Sinister ID)
+            Citizen (Internal ID)
           </label>
 
           <input

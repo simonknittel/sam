@@ -89,27 +89,7 @@
   - `iamlive --mode proxy --force-wildcard-resource --output-file policy.json --sort-alphabetical`
   - `HTTP_PROXY=http://127.0.0.1:10080 HTTPS_PROXY=http://127.0.0.1:10080 AWS_CA_BUNDLE=~/.iamlive/ca.pem AWS_CSM_ENABLED=true AWS_PROFILE=sam-test terraform plan -var-file="test.tfvars"`
 
-## 6. Prepare certificates for Mutual TLS (mTLS)
-
-1. `mkdir certificates && cd certificates/`
-2. Create private certificate authority (CA): `openssl genrsa -out RootCA.key 4096`
-3. Create private and public keys: `openssl req -new -x509 -days 3650 -key RootCA.key -out RootCA.pem`
-   - Country Name: `DE`
-   - State or Province Name: `Lower Saxony`
-   - Locality Name: `Delmenhorst`
-   - Organization Name: `Sinister Incorporated`
-   - Organizational Unit Name: `-`
-   - Common Name: `sinister-api.simonknittel.de`
-   - Email Address: `-`
-4. Create client certificate private key and certificate signing request (CSR). Leave _A challenge password_ empty.
-   1. `openssl req -newkey rsa:2048 -nodes -keyout localhost.key -out localhost.csr`
-   2. `openssl req -newkey rsa:2048 -nodes -keyout vercel.key -out vercel.csr`
-5. Sign client certificates with root CA
-   1. `openssl x509 -req -in localhost.csr -CA RootCA.pem -CAkey RootCA.key -set_serial 01 -out localhost.pem -days 3650 -sha256`
-   2. `openssl x509 -req -in vercel.csr -CA RootCA.pem -CAkey RootCA.key -set_serial 01 -out vercel.pem -days 3650 -sha256`
-6. Create trust store: `cp RootCA.pem truststore.pem`
-
-## 7. Set up Terraform
+## 6. Set up Terraform
 
 1. Create and populate `test.s3.tfbackend`, `prod.s3.tfbackend`, `test.tfvars` and `prod.tfvars`
 2. Create Terraform resources
@@ -118,11 +98,11 @@
    2. `AWS_PROFILE=sam-test terraform init -backend-config=test.s3.tfbackend`
    3. `AWS_PROFILE=sam-test terraform apply -var-file="test.tfvars"`
 
-## 8. Set up Vercel
+## 7. Set up Vercel
 
 1. Set `Ignored Build Step` to `Run my Bash script: bash ../.vercel/ignore-step.sh`
 
-## 9. Left over
+## 8. Left over
 
 1. Manually enable we monthly budget report on AWS
    - Budget report name: `Total monthly costs`

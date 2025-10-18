@@ -35,7 +35,7 @@ export const OverviewTile = async ({ className, id }: Props) => {
           <dt className="text-neutral-500 mt-4">Spectrum ID</dt>
           <dd>{organization.spectrumId}</dd>
 
-          <dt className="text-neutral-500 mt-4">Sinister ID</dt>
+          <dt className="text-neutral-500 mt-4">Internal ID</dt>
           <dd>{organization.id}</dd>
         </dl>
 

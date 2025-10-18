@@ -1,13 +1,16 @@
 import { DefaultLayout } from "@/modules/common/components/layouts/DefaultLayout";
 import { MaxWidthContent } from "@/modules/common/components/layouts/MaxWidthContent";
 import { getNavigationItems } from "@/modules/iam/utils/getNavigationItems";
-import type { ReactNode } from "react";
+import type { Metadata } from "next";
 
-interface Props {
-  readonly children?: ReactNode;
-}
+export const metadata: Metadata = {
+  title: {
+    template: "%s - Rollen",
+    default: "Rollen",
+  },
+};
 
-export default async function Layout({ children }: Props) {
+export default async function Layout({ children }: LayoutProps<"/app/roles">) {
   const pages = await getNavigationItems();
 
   return (

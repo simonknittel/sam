@@ -1,13 +1,18 @@
 import { DefaultLayout } from "@/modules/common/components/layouts/DefaultLayout";
 import type { Page } from "@/modules/common/components/layouts/DefaultLayout/Navigation";
-import type { ReactNode } from "react";
+import type { Metadata } from "next";
 import { FaExternalLinkAlt } from "react-icons/fa";
 
-interface Props {
-  readonly children?: ReactNode;
-}
+export const metadata: Metadata = {
+  title: {
+    template: "%s - Dogfight Trainer",
+    default: "Dogfight Trainer",
+  },
+};
 
-export default function Layout({ children }: Props) {
+export default function Layout({
+  children,
+}: LayoutProps<"/app/dogfight-trainer">) {
   const pages: Page[] = [
     {
       icon: <FaExternalLinkAlt />,

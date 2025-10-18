@@ -2,7 +2,6 @@ import { prisma } from "@/db";
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
 import { LineupTab } from "@/modules/events/components/LineupTab";
-import { Template } from "@/modules/events/components/Template";
 import { getEventById } from "@/modules/events/queries";
 import { getEventCitizens } from "@/modules/events/utils/getEventCitizens";
 import { isAllowedToManagePositions } from "@/modules/events/utils/isAllowedToManagePositions";
@@ -21,7 +20,7 @@ export const generateMetadata = generateMetadataWithTryCatch(
     if (!event) notFound();
 
     return {
-      title: `Aufstellung - ${event.name} - Event`,
+      title: `Aufstellung - ${event.name}`,
     };
   },
 );
@@ -61,15 +60,13 @@ export default async function Page({
   ]);
 
   return (
-    <Template event={event}>
-      <LineupTab
-        event={event}
-        canManagePositions={showManagePositions}
-        variants={variants}
-        myShips={myShips}
-        allEventCitizens={allEventCitizens}
-        showActions={showActions}
-      />
-    </Template>
+    <LineupTab
+      event={event}
+      canManagePositions={showManagePositions}
+      variants={variants}
+      myShips={myShips}
+      allEventCitizens={allEventCitizens}
+      showActions={showActions}
+    />
   );
 }

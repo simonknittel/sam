@@ -26,7 +26,7 @@ export const generateMetadata = generateMetadataWithTryCatch(
     if (!flow) notFound();
 
     return {
-      title: `${flow.name} - Karriere`,
+      title: `${flow.name}`,
     };
   },
 );

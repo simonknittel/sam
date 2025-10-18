@@ -21,7 +21,7 @@ export const generateMetadata = generateMetadataWithTryCatch(
     if (!manufacturer) return {};
 
     return {
-      title: `${manufacturer.name} - Schiffe`,
+      title: `${manufacturer.name}`,
     };
   },
 );

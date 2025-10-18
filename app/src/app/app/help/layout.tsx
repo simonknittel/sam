@@ -1,12 +1,15 @@
 import { DefaultLayout } from "@/modules/common/components/layouts/DefaultLayout";
 import { getNavigationItems } from "@/modules/help/utils/getNavigationItems";
-import type { ReactNode } from "react";
+import type { Metadata } from "next";
 
-interface Props {
-  readonly children?: ReactNode;
-}
+export const metadata: Metadata = {
+  title: {
+    template: "%s - Hilfe",
+    default: "Hilfe",
+  },
+};
 
-export default async function Layout({ children }: Props) {
+export default async function Layout({ children }: LayoutProps<"/app/help">) {
   const pages = await getNavigationItems();
 
   return (

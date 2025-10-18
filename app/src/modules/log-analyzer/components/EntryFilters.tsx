@@ -23,7 +23,7 @@ export const EntryFilters = ({ className }: Props) => {
       childrenClassName="flex flex-col gap-1 w-80"
       enableHover
     >
-      <YesNoCheckbox
+      {/* <YesNoCheckbox
         yesLabel="Aufzüge (Contested Zone)"
         noLabel="Aufzüge (Contested Zone)"
         labelClassName="text-sm flex-1"
@@ -44,7 +44,7 @@ export const EntryFilters = ({ className }: Props) => {
         onChange={(e) =>
           setEntryFilters(EntryFilterKey.HideAsdElevator, !e.target.checked)
         }
-      />
+      /> */}
 
       <YesNoCheckbox
         yesLabel="Kills (NPCs)"

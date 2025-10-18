@@ -1,7 +1,7 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
+import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
 import { OverviewTab } from "@/modules/events/components/OverviewTab";
-import { Template } from "@/modules/events/components/Template";
 import { getEventById } from "@/modules/events/queries";
 import { notFound } from "next/navigation";
 
@@ -15,7 +15,7 @@ export const generateMetadata = generateMetadataWithTryCatch(
     if (!event) notFound();
 
     return {
-      title: `${event.name} - Event`,
+      title: `${event.name}`,
     };
   },
 );
@@ -28,8 +28,8 @@ export default async function Page({ params }: PageProps<"/app/events/[id]">) {
   if (!event) notFound();
 
   return (
-    <Template event={event}>
+    <SuspenseWithErrorBoundaryTile>
       <OverviewTab event={event} />
-    </Template>
+    </SuspenseWithErrorBoundaryTile>
   );
 }

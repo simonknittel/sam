@@ -1,13 +1,16 @@
 import { DefaultLayout } from "@/modules/common/components/layouts/DefaultLayout";
 import { MaxWidthContent } from "@/modules/common/components/layouts/MaxWidthContent";
 import { getNavigationItems } from "@/modules/silc/utils/getNavigationItems";
-import type { ReactNode } from "react";
+import type { Metadata } from "next";
 
-interface Props {
-  readonly children?: ReactNode;
-}
+export const metadata: Metadata = {
+  title: {
+    template: "%s - SILC",
+    default: "SILC",
+  },
+};
 
-export default async function Layout({ children }: Props) {
+export default async function Layout({ children }: LayoutProps<"/app/silc">) {
   const pages = await getNavigationItems();
 
   return (
