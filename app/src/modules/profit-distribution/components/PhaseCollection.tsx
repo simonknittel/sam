@@ -36,7 +36,7 @@ export const PhaseCollection = ({ cycleData }: Props) => {
 
       <div className="flex flex-col justify-center items-center gap-2 mt-4">
         <p className="text-center text-sm">
-          Du kannst deinen Anteil für diesen Phase freiwillig abtreten. Dieser
+          Du kannst deinen Anteil für diesen Zeitraum freiwillig abtreten. Dieser
           wird dann auf die anderen Member verteilt.
         </p>
 
