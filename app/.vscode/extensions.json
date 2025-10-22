@@ -10,7 +10,6 @@
     "vitest.explorer",
     "clinyong.vscode-css-modules",
     "ms-vscode-remote.remote-containers",
-    "ms-azuretools.vscode-docker",
     "lokalise.i18n-ally"
   ]
 }
