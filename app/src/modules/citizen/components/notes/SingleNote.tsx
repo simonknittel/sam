@@ -41,7 +41,7 @@ export const SingleNote = async ({ note }: Props) => {
     ...(classificationLevelId
       ? [{ key: "classificationLevelId", value: classificationLevelId.value }]
       : []),
-    ...(!confirmed || confirmed.value !== "confirmed"
+    ...(confirmed?.value !== "confirmed"
       ? [{ key: "alsoUnconfirmed", value: true }]
       : []),
   ];

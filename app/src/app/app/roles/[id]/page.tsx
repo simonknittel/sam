@@ -3,10 +3,6 @@ import { OverviewTab } from "@/modules/roles/components/OverviewTab";
 import { getRoleById } from "@/modules/roles/queries";
 import { notFound } from "next/navigation";
 
-type Params = Promise<{
-  id: string;
-}>;
-
 export default async function Page({ params }: PageProps<"/app/roles/[id]">) {
   const authentication = await requireAuthenticationPage("/app/roles/[id]");
   await authentication.authorizePage("role", "manage");

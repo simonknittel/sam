@@ -8,7 +8,6 @@ interface Props extends ComponentProps<"textarea"> {
 }
 
 export const Textarea = (props: Props) => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { className, classNameTextarea, label, hint, ...rest } = props;
 
   const _id = useId();

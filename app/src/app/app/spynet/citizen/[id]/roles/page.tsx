@@ -6,15 +6,15 @@ import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/Suspe
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
 import { notFound } from "next/navigation";
 
-type Params = Promise<
-  Readonly<{
+interface Props {
+  params: Promise<{
     id: string;
-  }>
->;
+  }>;
+}
 
 export const generateMetadata = generateMetadataWithTryCatch(
-  async (props: { params: Params }) => {
-    const entity = await getCitizenById((await props.params).id);
+  async ({ params }: Props) => {
+    const entity = await getCitizenById((await params).id);
     if (!entity) return {};
 
     return {

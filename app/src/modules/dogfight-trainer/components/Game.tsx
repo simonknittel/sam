@@ -16,6 +16,7 @@ const config = {
   companyName: "Simon Knittel",
   productName: "Dogfight Trainer",
   productVersion: "3",
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   showBanner: () => {},
 };
 
