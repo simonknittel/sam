@@ -1,5 +1,6 @@
 "use client";
 
+import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import type { Entity, SilcTransaction } from "@prisma/client";
 import {
@@ -11,7 +12,6 @@ import {
   type SortingState,
 } from "@tanstack/react-table";
 import clsx from "clsx";
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import { FaSortAlphaDown, FaSortAlphaUpAlt } from "react-icons/fa";
 import { CreateOrUpdateSilcTransaction } from "./CreateOrUpdateSilcTransaction";
