@@ -1,8 +1,8 @@
 import { AccordeonLink } from "@/modules/common/components/Accordeon";
 import { Badge } from "@/modules/common/components/Badge";
+import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import clsx from "clsx";
-import Link from "next/link";
 import type { getProfitDistributionCycles } from "../queries";
 import { CyclePhase } from "../utils/getCurrentPhase";
 import { PayoutState } from "../utils/getMyPayoutStatus";
