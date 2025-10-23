@@ -33,8 +33,6 @@ jobs:
         run: npm ci
         working-directory: app
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
-        env:
-          SKIP_VALIDATION: "1"
 
       - name: Lint
         run: npm run lint
@@ -63,8 +61,6 @@ jobs:
         run: npm ci
         working-directory: app
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
-        env:
-          SKIP_VALIDATION: "1"
 
       - name: Prettier
         run: npx prettier --check .
@@ -91,8 +87,6 @@ jobs:
         run: npm ci
         working-directory: app
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
-        env:
-          SKIP_VALIDATION: "1"
 
       - name: Test
         run: npm run test

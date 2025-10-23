@@ -4,7 +4,7 @@
   "scripts": {
     "build": "next build",
     "dev": "next dev --turbopack",
-    "postinstall": "prisma generate && next typegen",
+    "postinstall": "prisma generate",
     "lint": "eslint .",
     "start": "next start",
     "test": "vitest run --coverage"
