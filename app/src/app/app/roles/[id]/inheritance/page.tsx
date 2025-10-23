@@ -5,10 +5,6 @@ import { getRoleById, getRoles } from "@/modules/roles/queries";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-type Params = Promise<{
-  id: string;
-}>;
-
 export const metadata: Metadata = {
   title: "Vererbungen",
 };

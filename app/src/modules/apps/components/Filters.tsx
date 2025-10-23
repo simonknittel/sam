@@ -4,11 +4,11 @@ import { Button2 } from "@/modules/common/components/Button2";
 import { Link } from "@/modules/common/components/Link";
 import clsx from "clsx";
 import { useCallback, type MouseEvent } from "react";
-import type { AppList } from "../utils/types";
+import type { App } from "../utils/types";
 
 interface Props {
   readonly className?: string;
-  readonly appLinks?: AppList | null;
+  readonly appLinks?: App[] | null;
   readonly selectedTags?: string[];
   readonly setSelectedTags?: (tags: string[]) => void;
 }

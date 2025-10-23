@@ -31,7 +31,19 @@ import srcTradeAndTransport from "@/modules/documents/assets/tradeAndTransport.s
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { cache } from "react";
 
-const categories = [
+interface Document {
+  name: string;
+  slug: string;
+  src: string;
+  href: string;
+}
+
+interface Category {
+  name: string;
+  documents: Document[];
+}
+
+const categories: Category[] = [
   {
     name: "Basics",
     documents: [

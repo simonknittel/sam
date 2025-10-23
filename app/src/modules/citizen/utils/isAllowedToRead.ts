@@ -21,7 +21,7 @@ export default async function isAllowedToRead(
     (attribute) => attribute.key === "confirmed",
   );
 
-  if (!confirmed || confirmed.value !== "confirmed") {
+  if (confirmed?.value !== "confirmed") {
     // @ts-expect-error
     return authentication.authorize(entityLog.type, "confirm");
   }
