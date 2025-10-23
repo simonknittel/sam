@@ -31,6 +31,11 @@ export const RolesHistory = async ({ className, entity }: Props) => {
         type: true,
         createdAt: true,
         content: true,
+        submittedBy: {
+          select: {
+            name: true,
+          },
+        },
       },
     }),
     getVisibleRoles(),
@@ -67,6 +72,7 @@ export const RolesHistory = async ({ className, entity }: Props) => {
         id: log.id,
         date: log.createdAt,
         message,
+        author: log.submittedBy?.name,
       };
     });
 
@@ -81,6 +87,8 @@ export const RolesHistory = async ({ className, entity }: Props) => {
                   <time dateTime={entry.date.toISOString()}>
                     {formatDate(entry.date)}
                   </time>
+
+                  {entry.author ? <> • {entry.author}</> : null}
                 </p>
               </div>
 
