@@ -72,6 +72,32 @@ const eslintConfig = [
           },
         },
       ],
+
+      "no-restricted-imports": [
+        "error",
+        {
+          name: "next/link",
+          message: "Please use @/modules/common/components/Link instead.",
+        },
+        {
+          name: "@radix-ui/react-popover",
+          message: "Please use @/modules/common/components/Popover instead.",
+        },
+        {
+          name: "@radix-ui/react-tooltip",
+          message: "Please use @/modules/common/components/Tooltip instead.",
+        },
+        {
+          name: "@headlessui/react",
+          importNames: ["Popover"],
+          message: "Please use @/modules/common/components/Popover instead.",
+        },
+        {
+          name: "@headlessui/react",
+          importNames: ["Tab", "TabList"],
+          message: "Please use @/modules/common/components/tabs instead.",
+        },
+      ],
     },
   }),
 
