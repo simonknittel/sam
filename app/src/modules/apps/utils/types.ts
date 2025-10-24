@@ -54,6 +54,7 @@ export interface ExternalApp extends BaseApp {
   createLinks?: CreateLink[];
 
   team: TeamMember[];
+  iframeSandbox?: string;
 }
 
 export type RedactedApp = Pick<BaseApp, "name" | "tags"> & {

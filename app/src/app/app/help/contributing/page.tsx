@@ -252,6 +252,34 @@ export default async function Page() {
               Dadurch bleibt der Benutzer im bekannten Interface des S.A.M. und
               kann nahtlos zwischen den integrierten und externen Apps wechseln.
             </p>
+
+            <p>
+              Damit das Iframe durch Browser nicht blockiert wird, müssen
+              folgende Header angepasst werden:
+            </p>
+
+            <ul>
+              <li>
+                <strong>Content-Security-Policy:</strong> Die{" "}
+                <code>frame-ancestors</code>-Direktive muss die Domain des
+                S.A.M. enthalten (Beispiel:{" "}
+                <code>frame-ancestors &apos;self&apos; {env.HOST}</code>).
+              </li>
+              <li>
+                <strong>X-Frame-Options:</strong> Dieser Header muss entweder
+                entfernt werden. Dieser Header wird durch den CSP-Header
+                überflüssig.
+              </li>
+            </ul>
+
+            <p>
+              Die Iframes werden standardmäßig mit dem <code>sandbox</code>
+              -Attribut eingebunden, welches folgende Werte enthält:{" "}
+              <code>
+                allow-scripts allow-same-origin allow-forms allow-downloads
+              </code>
+              . App-spezifische Anpassungen sind möglich.
+            </p>
           </RichText>
 
           <SectionHeading
