@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "postinstall": "prisma generate",
     "lint": "eslint .",
     "start": "next start",
@@ -54,12 +54,13 @@
     "cmdk": "1.1.1",
     "date-fns": "4.1.0",
     "date-fns-tz": "3.2.0",
+    "eslint-config-prettier": "10.1.8",
     "fuse.js": "7.1.0",
     "ics": "3.8.1",
     "idb-keyval": "6.2.2",
     "lodash": "4.17.21",
     "lorem-ipsum": "2.0.8",
-    "next": "15.5.5",
+    "next": "16.0.0",
     "next-auth": "4.24.11",
     "next-intl": "4.3.12",
     "nextjs-toploader": "3.9.17",
@@ -104,7 +105,7 @@
     "autoprefixer": "10.4.21",
     "csv": "6.4.1",
     "eslint": "9.37.0",
-    "eslint-config-next": "15.5.5",
+    "eslint-config-next": "16.0.0",
     "eslint-plugin-react-compiler": "latest",
     "eslint-plugin-react-you-might-not-need-an-effect": "0.5.6",
     "postcss": "8.5.6",
@@ -120,5 +121,9 @@
   "prisma": {
     "schema": "./prisma/schema"
   },
-  "packageManager": "npm@10.9.4"
+  "packageManager": "npm@10.9.4",
+  "overrides": {
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2"
+  }
 }

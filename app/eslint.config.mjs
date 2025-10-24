@@ -1,44 +1,51 @@
-import { FlatCompat } from "@eslint/eslintrc";
+import tanstackQuery from "@tanstack/eslint-plugin-query";
+import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
+import nextTypescript from "eslint-config-next/typescript";
+import prettier from "eslint-config-prettier/flat";
+import reactCompiler from "eslint-plugin-react-compiler";
 import reactYouMightNotNeedAnEffect from "eslint-plugin-react-you-might-not-need-an-effect";
+import { defineConfig, globalIgnores } from "eslint/config";
 import { dirname } from "path";
+import tseslint from "typescript-eslint";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
+const eslintConfig = defineConfig([
+  ...nextCoreWebVitals,
+  ...nextTypescript,
+  ...tseslint.configs.recommendedTypeChecked,
+  ...tseslint.configs.stylisticTypeChecked,
+  ...tanstackQuery.configs["flat/recommended"],
+  reactYouMightNotNeedAnEffect.configs.recommended,
+  prettier,
 
-const eslintConfig = [
-  ...compat.extends(
-    "next/core-web-vitals",
-    "next/typescript",
-    "plugin:@typescript-eslint/recommended-type-checked",
-    "plugin:@typescript-eslint/stylistic-type-checked",
-    "plugin:@tanstack/query/recommended",
-  ),
+  globalIgnores([
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+    "scripts/",
+    "eslint.config.mjs",
+    "postcss.config.cjs",
+    "prettier.config.mjs",
+    "tailwind.config.ts",
+    "vitest.config.ts",
+    "**/service-worker.js",
+  ]),
 
   {
-    ignores: [
-      ".next/**",
-      "scripts/**",
-      "build/**",
-      "node_modules/**",
-      "out/**",
-      "tailwind.config.ts",
-      "vitest.config.ts",
-      "next-env.d.ts",
-      "postcss.config.cjs",
-      "prettier.config.mjs",
-    ],
-  },
-
-  ...compat.config({
-    plugins: ["@typescript-eslint", "react-compiler"],
-    parser: "@typescript-eslint/parser",
-    parserOptions: {
-      project: true,
+    name: "custom-rules",
+    plugins: {
+      "@typescript-eslint": tseslint.plugin,
+      "react-compiler": reactCompiler,
+    },
+    languageOptions: {
+      parserOptions: {
+        project: true,
+        tsconfigRootDir: __dirname,
+      },
     },
     rules: {
       "@typescript-eslint/consistent-type-imports": [
@@ -99,9 +106,7 @@ const eslintConfig = [
         },
       ],
     },
-  }),
-
-  reactYouMightNotNeedAnEffect.configs.recommended,
-];
+  },
+]);
 
 export default eslintConfig;

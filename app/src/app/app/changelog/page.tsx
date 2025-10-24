@@ -56,7 +56,7 @@ export default async function Page() {
               quality={100}
               src={image20251013rolesHistory}
               alt=""
-              loading="lazy"
+              loading="eager"
             />
           </Link>
         </DayItem>
@@ -669,7 +669,7 @@ export default async function Page() {
       <Day heading="13. Mai 2025">
         <DayItem heading="Tasks">
           <p>
-            Die Beschreibung und der Belohungstext unterstützen nun
+            Die Beschreibung und der Belohnungstext unterstützen nun
             Markdown-Formatierung.
           </p>
         </DayItem>
