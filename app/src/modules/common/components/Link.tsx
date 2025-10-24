@@ -1,6 +1,6 @@
 "use client";
 
-import NextLink from "next/link";
+import NextLink from "next/link"; // eslint-disable-line no-restricted-imports
 import { useState, type ComponentProps } from "react";
 
 type Props = ComponentProps<typeof NextLink>;

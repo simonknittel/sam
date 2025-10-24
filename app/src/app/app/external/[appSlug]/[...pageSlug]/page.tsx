@@ -60,5 +60,14 @@ export default async function Page({
   )
     notFound();
 
-  return <IframeLayout src={page.iframeUrl} />;
+  return (
+    <IframeLayout
+      src={page.iframeUrl}
+      iframeProps={{
+        sandbox:
+          app.iframeSandbox ||
+          "allow-scripts allow-same-origin allow-forms allow-downloads",
+      }}
+    />
+  );
 }

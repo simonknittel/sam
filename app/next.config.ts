@@ -9,10 +9,6 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
 
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-
   cleanDistDir: true,
 
   images: {
@@ -33,7 +29,8 @@ const nextConfig: NextConfig = {
     dangerouslyAllowSVG: true,
     contentDispositionType: "attachment",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    minimumCacheTTL: 60 * 60 * 24 * 30,
+    minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
+    qualities: [75, 100],
   },
 
   poweredByHeader: false,
@@ -88,6 +85,8 @@ const nextConfig: NextConfig = {
 
   experimental: {
     authInterrupts: true,
+
+    turbopackFileSystemCacheForDev: true,
   },
 };
 

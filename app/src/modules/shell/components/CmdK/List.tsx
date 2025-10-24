@@ -4,7 +4,14 @@ import { Command } from "cmdk";
 import type { Session } from "next-auth";
 import { signOut } from "next-auth/react";
 import { AiFillAppstore, AiOutlineForm } from "react-icons/ai";
-import { FaHome, FaLock, FaPiggyBank, FaTools, FaUser } from "react-icons/fa";
+import {
+  FaHome,
+  FaLock,
+  FaPiggyBank,
+  FaShoppingBasket,
+  FaTools,
+  FaUser,
+} from "react-icons/fa";
 import { FaCodePullRequest, FaScaleBalanced } from "react-icons/fa6";
 import { IoIosHelpCircleOutline } from "react-icons/io";
 import { IoDocuments } from "react-icons/io5";
@@ -272,6 +279,14 @@ export const List = () => {
               setSearch={setSearch}
             />
           )}
+
+          <LinkItem
+            label="Schwarzmarkt-Ankauf"
+            icon={<FaShoppingBasket />}
+            href="/app/external/schwarzmarkt-ankauf"
+            setOpen={setOpen}
+            setSearch={setSearch}
+          />
 
           {taskRead && (
             <LinkItem

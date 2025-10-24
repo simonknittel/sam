@@ -1,6 +1,6 @@
 "use client";
 
-import * as RadixPopover from "@radix-ui/react-popover";
+import * as RadixPopover from "@radix-ui/react-popover"; // eslint-disable-line no-restricted-imports
 import clsx from "clsx";
 import {
   createContext,

@@ -1,4 +1,4 @@
-import * as RadixUiTooltip from "@radix-ui/react-tooltip";
+import * as RadixUiTooltip from "@radix-ui/react-tooltip"; // eslint-disable-line no-restricted-imports
 import clsx from "clsx";
 import type { ReactNode } from "react";
 
