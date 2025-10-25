@@ -79,6 +79,10 @@ export const env = createEnv({
     OTEL_EXPORTER_OTLP_PROTOCOL: z.string().optional(),
     OTEL_EXPORTER_OTLP_ENDPOINT: z.string().optional(),
     PUSHER_CHANNELS_APP_SECRET: z.string().optional(),
+    NOVA_APPLICATION_IDENTIFIER: z.string().optional(),
+    NOVA_SECRET_KEY: z.string().optional(),
+    NOVA_SERVER_URL: z.url().optional().default("https://eu.api.novu.co"),
+    NOVA_SOCKET_URL: z.url().optional().default("wss://eu.ws.novu.co"),
   },
 
   /*
@@ -157,6 +161,10 @@ export const env = createEnv({
       process.env.NEXT_PUBLIC_PUSHER_CHANNELS_PORT,
     NEXT_PUBLIC_PUSHER_CHANNELS_SECURE_PORT:
       process.env.NEXT_PUBLIC_PUSHER_CHANNELS_SECURE_PORT,
+    NOVA_APPLICATION_IDENTIFIER: process.env.NOVA_APPLICATION_IDENTIFIER,
+    NOVA_SECRET_KEY: process.env.NOVA_SECRET_KEY,
+    NOVA_SERVER_URL: process.env.NOVA_SERVER_URL,
+    NOVA_SOCKET_URL: process.env.NOVA_SOCKET_URL,
   },
 
   emptyStringAsUndefined: true,

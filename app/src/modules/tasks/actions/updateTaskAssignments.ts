@@ -3,7 +3,7 @@
 import { prisma } from "@/db";
 import { requireAuthenticationAction } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
-import { publishNotification } from "@/modules/pusher/utils/publishNotification";
+import { triggerNotification } from "@/modules/notifications/components/utils/triggerNotification";
 import { getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
 import { unstable_rethrow } from "next/navigation";
@@ -87,7 +87,7 @@ export const updateTaskAssignments = async (formData: FormData) => {
             .map((assignment) => assignment.citizenId)
             .includes(assignedToId),
       ) || [];
-    const updatedTask = await prisma.task.update({
+    await prisma.task.update({
       where: { id: result.data.id },
       data: {
         assignmentLimit: result.data.assignmentLimit,
@@ -104,41 +104,14 @@ export const updateTaskAssignments = async (formData: FormData) => {
           },
         },
       },
-      select: {
-        id: true,
-        title: true,
-        assignments: {
-          select: {
-            citizenId: true,
-          },
-        },
-      },
     });
 
     /**
-     * Publish notifications
+     * Trigger notifications
      */
-    const notifications = [];
-    for (const assignment of updatedTask.assignments) {
-      notifications.push({
-        interests: [`task_assigned;citizen_id=${assignment.citizenId}`],
-        message: "Dir wurde ein Task zugewiesen",
-        title: updatedTask.title,
-        url: `/app/tasks/${updatedTask.id}`,
-      });
-    }
-    if (notifications.length > 0) {
-      await Promise.all(
-        notifications.map((notification) =>
-          publishNotification(
-            notification.interests,
-            notification.message,
-            notification.title,
-            notification.url,
-          ),
-        ),
-      );
-    }
+    await triggerNotification("task_assignment_updated", {
+      taskId: result.data.id,
+    });
 
     /**
      * Revalidate cache(s)

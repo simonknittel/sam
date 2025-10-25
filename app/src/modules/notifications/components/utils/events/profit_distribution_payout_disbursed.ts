@@ -1,0 +1,82 @@
+import { prisma } from "@/db";
+import { novu } from "@/modules/novu/utils";
+import type { Change } from "@/modules/profit-distribution/actions/updateParticipantAttribute";
+import { getAuecPerSilc } from "@/modules/profit-distribution/utils/getAuecPerSilc";
+import { getTotalSilc } from "@/modules/profit-distribution/utils/getTotalSilc";
+
+interface Payload {
+  cycleId: string;
+  changes: Change[];
+}
+
+const handler = async (payload: Payload) => {
+  // TODO: Filter out citizens without login permission
+
+  const cycle = await prisma.profitDistributionCycle.findUnique({
+    where: {
+      id: payload.cycleId,
+    },
+    select: {
+      title: true,
+      auecProfit: true,
+      participants: {
+        select: {
+          citizenId: true,
+          silcBalanceSnapshot: true,
+          cededAt: true,
+        },
+      },
+    },
+  });
+  if (!cycle || cycle.participants.length === 0) return;
+
+  // Filter participants who have gotten the 'disbursed' attribute enabled in the changes
+  const changesWithDisbursedEnabled = payload.changes.filter(
+    (change) => change.attribute === "disbursed" && change.enabled,
+  );
+  const participantsWithDisbursedEnabled = cycle.participants.filter(
+    (participant) =>
+      changesWithDisbursedEnabled.some(
+        (change) => change.citizenId === participant.citizenId,
+      ),
+  );
+
+  // Split participants into chunks of 100 to avoid limit of Novu SDK/API
+  const chunks = [];
+  const chunkSize = 100;
+  for (let i = 0; i < participantsWithDisbursedEnabled.length; i += chunkSize) {
+    chunks.push(participantsWithDisbursedEnabled.slice(i, i + chunkSize));
+  }
+
+  // Send notifications in bulk for each chunk
+  for (const chunk of chunks) {
+    await novu?.triggerBulk({
+      events: chunk.map((participant) => {
+        const aUEC =
+          (participant.silcBalanceSnapshot || 0) *
+          getAuecPerSilc(
+            cycle.auecProfit || 0,
+            getTotalSilc(cycle.participants),
+          );
+
+        return {
+          to: {
+            subscriberId: participant.citizenId,
+          },
+          workflowId: "sincome-payout-received",
+          payload: {
+            title: cycle.title,
+            aUEC: aUEC.toLocaleString("de-DE"),
+          },
+        };
+      }),
+    });
+  }
+};
+
+const event = {
+  key: "profit_distribution_payout_disbursed",
+  handler,
+} as const;
+
+export default event;

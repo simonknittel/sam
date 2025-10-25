@@ -3,8 +3,8 @@
 import { prisma } from "@/db";
 import { requireAuthenticationAction } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
-import { publishNotification } from "@/modules/pusher/utils/publishNotification";
-import { TaskRewardType, TaskVisibility } from "@prisma/client";
+import { triggerNotification } from "@/modules/notifications/components/utils/triggerNotification";
+import { TaskRewardType, TaskVisibility, type Task } from "@prisma/client";
 import { getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
 import { unstable_rethrow } from "next/navigation";
@@ -119,143 +119,117 @@ export const createTask = async (formData: FormData) => {
         requestPayload: formData,
       };
 
-    const notifications = [];
-
     /**
      * Create task
      */
+    const createdTasks: Pick<Task, "id">[] = [];
     switch (result.data.visibility) {
       case TaskVisibility.PUBLIC:
-        await prisma.task.create({
-          data: {
-            visibility: result.data.visibility,
-            assignmentLimit: result.data.assignmentLimit,
-            title: result.data.title,
-            description: result.data.description,
-            createdBy: {
-              connect: {
-                id: authentication.session.entity.id,
+        createdTasks.push(
+          await prisma.task.create({
+            data: {
+              visibility: result.data.visibility,
+              assignmentLimit: result.data.assignmentLimit,
+              title: result.data.title,
+              description: result.data.description,
+              createdBy: {
+                connect: {
+                  id: authentication.session.entity.id,
+                },
               },
+              expiresAt: result.data.expiresAt,
+              rewardType: result.data.rewardType,
+              rewardTypeTextValue: result.data.rewardTypeTextValue,
+              rewardTypeSilcValue: result.data.rewardTypeSilcValue,
+              rewardTypeNewSilcValue: result.data.rewardTypeNewSilcValue,
+              repeatable: result.data.repeatable,
+              requiredRoles: {
+                connect: result.data.requiredRoles
+                  ? result.data.requiredRoles.map((roleId) => ({
+                      id: roleId,
+                    }))
+                  : [],
+              },
+              hiddenForOtherRoles: result.data.hiddenForOtherRoles,
             },
-            expiresAt: result.data.expiresAt,
-            rewardType: result.data.rewardType,
-            rewardTypeTextValue: result.data.rewardTypeTextValue,
-            rewardTypeSilcValue: result.data.rewardTypeSilcValue,
-            rewardTypeNewSilcValue: result.data.rewardTypeNewSilcValue,
-            repeatable: result.data.repeatable,
-            requiredRoles: {
-              connect: result.data.requiredRoles
-                ? result.data.requiredRoles.map((roleId) => ({
-                    id: roleId,
-                  }))
-                : [],
+            select: {
+              id: true,
             },
-            hiddenForOtherRoles: result.data.hiddenForOtherRoles,
-          },
-        });
+          }),
+        );
         break;
 
       case TaskVisibility.GROUP:
-        const createdTask = await prisma.task.create({
-          data: {
-            visibility: result.data.visibility,
-            assignmentLimit: result.data.assignmentLimit,
-            title: result.data.title,
-            description: result.data.description,
-            createdBy: {
-              connect: {
-                id: authentication.session.entity.id,
+        createdTasks.push(
+          await prisma.task.create({
+            data: {
+              visibility: result.data.visibility,
+              assignmentLimit: result.data.assignmentLimit,
+              title: result.data.title,
+              description: result.data.description,
+              createdBy: {
+                connect: {
+                  id: authentication.session.entity.id,
+                },
               },
-            },
-            expiresAt: result.data.expiresAt,
-            rewardType: result.data.rewardType,
-            rewardTypeTextValue: result.data.rewardTypeTextValue,
-            rewardTypeSilcValue: result.data.rewardTypeSilcValue,
-            rewardTypeNewSilcValue: result.data.rewardTypeNewSilcValue,
-            assignments: {
-              createMany: {
-                data:
-                  result.data.assignedToIds!.map((id) => ({
-                    citizenId: id,
-                    createdById: authentication.session.entity!.id,
-                  })) || [],
+              expiresAt: result.data.expiresAt,
+              rewardType: result.data.rewardType,
+              rewardTypeTextValue: result.data.rewardTypeTextValue,
+              rewardTypeSilcValue: result.data.rewardTypeSilcValue,
+              rewardTypeNewSilcValue: result.data.rewardTypeNewSilcValue,
+              assignments: {
+                createMany: {
+                  data:
+                    result.data.assignedToIds!.map((id) => ({
+                      citizenId: id,
+                      createdById: authentication.session.entity!.id,
+                    })) || [],
+                },
               },
+              repeatable: result.data.repeatable,
+              canSelfComplete: result.data.canSelfComplete,
             },
-            repeatable: result.data.repeatable,
-            canSelfComplete: result.data.canSelfComplete,
-          },
-          select: {
-            id: true,
-            title: true,
-            assignments: {
-              select: {
-                citizenId: true,
-              },
+            select: {
+              id: true,
             },
-          },
-        });
-
-        for (const assignment of createdTask.assignments) {
-          notifications.push({
-            interests: [`task_assigned;citizen_id=${assignment.citizenId}`],
-            message: "Dir wurde ein Task zugewiesen",
-            title: createdTask.title,
-            url: `/app/tasks/${createdTask.id}`,
-          });
-        }
-
+          }),
+        );
         break;
 
       case TaskVisibility.PERSONALIZED:
-        const createdTasks = await prisma.$transaction([
-          ...result.data.assignedToIds!.flatMap((assignedToId) => {
-            return [
-              prisma.task.create({
-                data: {
-                  visibility: result.data.visibility,
-                  assignmentLimit: result.data.assignmentLimit,
-                  title: result.data.title,
-                  description: result.data.description,
-                  createdById: authentication.session.entity!.id,
-                  expiresAt: result.data.expiresAt,
-                  rewardType: result.data.rewardType,
-                  rewardTypeTextValue: result.data.rewardTypeTextValue,
-                  rewardTypeSilcValue: result.data.rewardTypeSilcValue,
-                  rewardTypeNewSilcValue: result.data.rewardTypeNewSilcValue,
-                  repeatable: result.data.repeatable,
-                  assignments: {
-                    create: {
-                      citizenId: assignedToId,
-                      createdById: authentication.session.entity!.id,
+        createdTasks.push(
+          ...(await prisma.$transaction([
+            ...result.data.assignedToIds!.flatMap((assignedToId) => {
+              return [
+                prisma.task.create({
+                  data: {
+                    visibility: result.data.visibility,
+                    assignmentLimit: result.data.assignmentLimit,
+                    title: result.data.title,
+                    description: result.data.description,
+                    createdById: authentication.session.entity!.id,
+                    expiresAt: result.data.expiresAt,
+                    rewardType: result.data.rewardType,
+                    rewardTypeTextValue: result.data.rewardTypeTextValue,
+                    rewardTypeSilcValue: result.data.rewardTypeSilcValue,
+                    rewardTypeNewSilcValue: result.data.rewardTypeNewSilcValue,
+                    repeatable: result.data.repeatable,
+                    assignments: {
+                      create: {
+                        citizenId: assignedToId,
+                        createdById: authentication.session.entity!.id,
+                      },
                     },
+                    canSelfComplete: result.data.canSelfComplete,
                   },
-                  canSelfComplete: result.data.canSelfComplete,
-                },
-                select: {
-                  id: true,
-                  title: true,
-                  assignments: {
-                    select: {
-                      citizenId: true,
-                    },
+                  select: {
+                    id: true,
                   },
-                },
-              }),
-            ];
-          }),
-        ]);
-
-        for (const createdTask of createdTasks) {
-          for (const assignment of createdTask.assignments) {
-            notifications.push({
-              interests: [`task_assigned;citizen_id=${assignment.citizenId}`],
-              message: "Dir wurde ein Task zugewiesen",
-              title: createdTask.title,
-              url: `/app/tasks/${createdTask.id}`,
-            });
-          }
-        }
-
+                }),
+              ];
+            }),
+          ])),
+        );
         break;
 
       default:
@@ -266,20 +240,11 @@ export const createTask = async (formData: FormData) => {
     }
 
     /**
-     * Publish notifications
+     * Trigger notifications
      */
-    if (notifications.length > 0) {
-      await Promise.all(
-        notifications.map((notification) =>
-          publishNotification(
-            notification.interests,
-            notification.message,
-            notification.title,
-            notification.url,
-          ),
-        ),
-      );
-    }
+    await triggerNotification("task_created", {
+      taskIds: createdTasks.map((task) => task.id),
+    });
 
     /**
      * Revalidate cache(s)

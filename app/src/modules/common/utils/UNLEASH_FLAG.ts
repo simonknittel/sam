@@ -6,4 +6,5 @@ export enum UNLEASH_FLAG {
   EnableOperations = "EnableOperations",
   CrashLogAnalyzer = "CrashLogAnalyzer",
   EnableProfitDistribution = "EnableProfitDistribution",
+  EnableNotificationsRework = "EnableNotificationsRework",
 }

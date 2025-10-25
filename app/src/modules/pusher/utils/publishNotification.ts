@@ -2,7 +2,7 @@ import { env } from "@/env";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { beamsClient } from "./beamsClient";
 
-export const publishNotification = withTrace(
+export const publishPusherNotification = withTrace(
   "publishNotification",
   async (
     interests: string[],

@@ -1,7 +1,10 @@
 import type { ProfitDistributionCycleParticipant } from "@prisma/client";
 
 export const getTotalSilc = (
-  participants: ProfitDistributionCycleParticipant[],
+  participants: Pick<
+    ProfitDistributionCycleParticipant,
+    "silcBalanceSnapshot" | "cededAt"
+  >[],
 ) => {
   return participants
     .filter(
