@@ -8,17 +8,17 @@ export const isNovuEnabled = cache(
   async () =>
     (await getUnleashFlag(UNLEASH_FLAG.EnableNotificationsRework)) &&
     Boolean(
-      env.NOVA_APPLICATION_IDENTIFIER &&
-        env.NOVA_SECRET_KEY &&
-        env.NOVA_SERVER_URL &&
-        env.NOVA_SOCKET_URL,
+      env.NOVU_APPLICATION_IDENTIFIER &&
+        env.NOVU_SECRET_KEY &&
+        env.NOVU_SERVER_URL &&
+        env.NOVU_SOCKET_URL,
     ),
 );
 
 export const novu =
-  env.NOVA_SECRET_KEY && env.NOVA_SERVER_URL
+  env.NOVU_SECRET_KEY && env.NOVU_SERVER_URL
     ? new Novu({
-        secretKey: env.NOVA_SECRET_KEY,
-        serverURL: env.NOVA_SERVER_URL,
+        secretKey: env.NOVU_SECRET_KEY,
+        serverURL: env.NOVU_SERVER_URL,
       })
     : null;

@@ -45,7 +45,7 @@ export default async function Page() {
     );
   }
 
-  const hmacHash = createHmac("sha256", env.NOVA_SECRET_KEY!)
+  const hmacHash = createHmac("sha256", env.NOVU_SECRET_KEY!)
     .update(authentication.session.entity.id)
     .digest("hex");
 
@@ -53,11 +53,11 @@ export default async function Page() {
     <div className="flex flex-col gap-2">
       <div className="background-secondary rounded-primary overflow-hidden">
         <Inbox
-          applicationIdentifier={env.NOVA_APPLICATION_IDENTIFIER!}
+          applicationIdentifier={env.NOVU_APPLICATION_IDENTIFIER!}
           subscriberId={authentication.session.entity.id}
           subscriberHash={hmacHash}
-          backendUrl={env.NOVA_SERVER_URL}
-          socketUrl={env.NOVA_SOCKET_URL}
+          backendUrl={env.NOVU_SERVER_URL}
+          socketUrl={env.NOVU_SOCKET_URL}
           appearance={{
             baseTheme: dark,
             variables: {
