@@ -1,5 +1,5 @@
 import { prisma } from "@/db";
-import { novu } from "@/modules/novu/utils";
+import { isNovuEnabled, novu } from "@/modules/novu/utils";
 
 interface Payload {
   cycleId: string;
@@ -7,6 +7,8 @@ interface Payload {
 
 const handler = async (payload: Payload) => {
   // TODO: Filter out citizens without login permission
+
+  if (!(await isNovuEnabled())) return;
 
   const cycle = await prisma.profitDistributionCycle.findUnique({
     where: {
