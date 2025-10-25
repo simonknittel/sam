@@ -1,5 +1,6 @@
 import { authenticate } from "@/modules/auth/server";
 import type { Page } from "@/modules/common/components/layouts/DefaultLayout/Navigation";
+import { isNovuEnabled } from "@/modules/novu/utils";
 
 export const getNavigationItems = async () => {
   const authentication = await authenticate();
@@ -11,10 +12,12 @@ export const getNavigationItems = async () => {
 
   const pages: Page[] = [];
 
-  pages.push({
-    title: "Benachrichtigungen",
-    url: "/app/account/notifications",
-  });
+  if (await isNovuEnabled()) {
+    pages.push({
+      title: "Benachrichtigungen",
+      url: "/app/account/notifications",
+    });
+  }
 
   if (permissions[0]) {
     pages.push({

@@ -1,15 +1,14 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { SpanStatusCode } from "@opentelemetry/api";
 import { getTracer } from "./getTracer";
 
-export const withTrace = <T extends (...args: any[]) => Promise<any>>(
+export const withTrace = <TArgs extends unknown[], TResult>(
   name: string,
-  fn: T,
+  fn: (...args: TArgs) => Promise<TResult>,
 ) => {
-  return (...args: Parameters<T>) => {
-    return getTracer().startActiveSpan(name, async (span) => {
+  return (...args: TArgs): Promise<TResult> => {
+    return getTracer().startActiveSpan(name, async (span): Promise<TResult> => {
       try {
-        return (await fn(...args)) as Promise<ReturnType<T>>;
+        return await fn(...args);
       } catch (error) {
         span.setStatus({
           code: SpanStatusCode.ERROR,

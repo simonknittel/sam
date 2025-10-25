@@ -13,7 +13,7 @@ importers:
     dependencies:
       '@hono/node-server':
         specifier: 1.19.5
-        version: 1.19.5(hono@4.10.2)
+        version: 1.19.5(hono@4.10.3)
       '@pusher/push-notifications-server':
         specifier: 1.2.7
         version: 1.2.7
@@ -24,8 +24,8 @@ importers:
         specifier: 3.11.0
         version: 3.11.0
       hono:
-        specifier: 4.10.2
-        version: 4.10.2
+        specifier: 4.10.3
+        version: 4.10.3
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -406,8 +406,8 @@ packages:
     resolution: {integrity: sha512-L5bGsVkxJbJgdnwyuheIunkGatUF/zssUoxxjACCseZYAVbaqdh9Tsmmlkl8vYan09H7sbvKt4pS8GqKLBrEzA==}
     hasBin: true
 
-  hono@4.10.2:
-    resolution: {integrity: sha512-p6fyzl+mQo6uhESLxbF5WlBOAJMDh36PljwlKtP5V1v09NxlqGru3ShK+4wKhSuhuYf8qxMmrivHOa/M7q0sMg==}
+  hono@4.10.3:
+    resolution: {integrity: sha512-2LOYWUbnhdxdL8MNbNg9XZig6k+cZXm5IjHn2Aviv7honhBMOHb+jxrKIeJRZJRmn+htUCKhaicxwXuUDlchRA==}
     engines: {node: '>=16.9.0'}
 
   jiti@2.6.1:
@@ -691,9 +691,9 @@ snapshots:
   '@esbuild/win32-x64@0.25.11':
     optional: true
 
-  '@hono/node-server@1.19.5(hono@4.10.2)':
+  '@hono/node-server@1.19.5(hono@4.10.3)':
     dependencies:
-      hono: 4.10.2
+      hono: 4.10.3
 
   '@prisma/adapter-pg@6.17.1':
     dependencies:
@@ -897,7 +897,7 @@ snapshots:
       nypm: 0.6.2
       pathe: 2.0.3
 
-  hono@4.10.2: {}
+  hono@4.10.3: {}
 
   jiti@2.6.1: {}
 

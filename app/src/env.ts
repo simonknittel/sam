@@ -79,6 +79,10 @@ export const env = createEnv({
     OTEL_EXPORTER_OTLP_PROTOCOL: z.string().optional(),
     OTEL_EXPORTER_OTLP_ENDPOINT: z.string().optional(),
     PUSHER_CHANNELS_APP_SECRET: z.string().optional(),
+    NOVU_APPLICATION_IDENTIFIER: z.string().optional(),
+    NOVU_SECRET_KEY: z.string().optional(),
+    NOVU_SERVER_URL: z.url().optional().default("https://eu.api.novu.co"),
+    NOVU_SOCKET_URL: z.url().optional().default("wss://eu.ws.novu.co"),
   },
 
   /*
@@ -157,6 +161,10 @@ export const env = createEnv({
       process.env.NEXT_PUBLIC_PUSHER_CHANNELS_PORT,
     NEXT_PUBLIC_PUSHER_CHANNELS_SECURE_PORT:
       process.env.NEXT_PUBLIC_PUSHER_CHANNELS_SECURE_PORT,
+    NOVU_APPLICATION_IDENTIFIER: process.env.NOVU_APPLICATION_IDENTIFIER,
+    NOVU_SECRET_KEY: process.env.NOVU_SECRET_KEY,
+    NOVU_SERVER_URL: process.env.NOVU_SERVER_URL,
+    NOVU_SOCKET_URL: process.env.NOVU_SOCKET_URL,
   },
 
   emptyStringAsUndefined: true,

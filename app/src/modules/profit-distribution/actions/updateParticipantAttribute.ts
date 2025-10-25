@@ -4,10 +4,17 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { getUnleashFlag } from "@/modules/common/utils/getUnleashFlag";
 import { UNLEASH_FLAG } from "@/modules/common/utils/UNLEASH_FLAG";
+import { triggerNotification } from "@/modules/notifications/components/utils/triggerNotification";
 import { revalidatePath } from "next/cache";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { CyclePhase, getCurrentPhase } from "../utils/getCurrentPhase";
+
+export interface Change {
+  citizenId: string;
+  attribute: string;
+  enabled: boolean;
+}
 
 const schema = z.record(z.string(), z.string());
 
@@ -44,6 +51,7 @@ export const updateParticipantAttribute = createAuthenticatedAction(
             cededAt: true,
             acceptedAt: true,
             disbursedAt: true,
+            silcBalanceSnapshot: true,
           },
         },
       },
@@ -65,7 +73,7 @@ export const updateParticipantAttribute = createAuthenticatedAction(
     if (currentPhase === CyclePhase.Payout)
       validAttributes.push("accepted", "disbursed");
 
-    const changes = [];
+    const changes: Change[] = [];
     for (const participant of cycle.participants) {
       const enabledAttributes = Array.from(formData.keys())
         .filter((key) => {
@@ -142,6 +150,14 @@ export const updateParticipantAttribute = createAuthenticatedAction(
         }),
       ),
     );
+
+    /**
+     * Trigger notifications
+     */
+    await triggerNotification("profit_distribution_payout_disbursed", {
+      cycleId: data.cycleId,
+      changes,
+    });
 
     /**
      * Revalidate cache(s)
