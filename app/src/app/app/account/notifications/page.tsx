@@ -51,26 +51,6 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col gap-2">
-      {/* <NotificationSettings />
-
-      <Note
-        type="info"
-        message={
-          <div className="flex flex-col gap-2">
-            <p>
-              Browser-Benachrichtigungen werden nur von Google Chrome (Desktop
-              und Android), Microsoft Edge (Desktop und Android) sowie Firefox
-              (nur, wenn geöffnet) unterstützt. Safari wird nicht unterstützt.
-            </p>
-
-            <p>
-              Browser-Benachrichtigungen werden pro Browser und Gerät
-              gespeichert.
-            </p>
-          </div>
-        }
-      /> */}
-
       <div className="background-secondary rounded-primary overflow-hidden">
         <Inbox
           applicationIdentifier={env.NOVA_APPLICATION_IDENTIFIER!}
