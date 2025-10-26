@@ -5,6 +5,7 @@ import type { Session } from "next-auth";
 import { signOut } from "next-auth/react";
 import { AiFillAppstore, AiOutlineForm } from "react-icons/ai";
 import {
+  FaCamera,
   FaHome,
   FaLock,
   FaPiggyBank,
@@ -122,6 +123,14 @@ export const List = () => {
             label="Apps"
             icon={<AiFillAppstore />}
             href="/app/apps"
+            setOpen={setOpen}
+            setSearch={setSearch}
+          />
+
+          <LinkItem
+            label="Avatar Creator"
+            icon={<FaCamera />}
+            href="/app/avatar-creator"
             setOpen={setOpen}
             setSearch={setSearch}
           />

@@ -42,6 +42,33 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col gap-4">
+      <Day heading="26. Oktober 2025">
+        <DayItem heading="Avatar Creator" badges={["Neu"]}>
+          <p>
+            Der neue Avatar Creator hilft dir dabei, dein Profilbild schnell in
+            den offiziellen Rahmen zu setzen. Lade einfach dein Bild hoch, passe
+            Position und Größe an und exportiere das Ergebnis direkt aus dem
+            Browser.
+          </p>
+
+          <p>
+            Du findest das Tool unter{" "}
+            <Link
+              href="/app/avatar-creator"
+              className="text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300"
+            >
+              Apps &gt; Avatar Creator
+            </Link>
+            .
+          </p>
+
+          <p>
+            Hintergründe können optional eingefärbt werden, und du kannst
+            entscheiden, ob der Rahmen vor oder hinter deinem Bild liegen soll.
+          </p>
+        </DayItem>
+      </Day>
+
       <Day heading="13. Oktober 2025">
         <DayItem heading="Änderungsverlauf für Rollen" badges={["Neu"]}>
           <p>

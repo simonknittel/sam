@@ -1,4 +1,5 @@
 import accountScreenshot from "@/modules/account/assets/screenshot.png";
+import avatarCreatorScreenshot from "@/modules/avatar-creator/assets/screenshot.png";
 import careerScreenshot from "@/modules/career/assets/screenshot.png";
 import changelogScreenshot from "@/modules/changelog/assets/screenshot.png";
 import cornerstoneImageBrowserScreenshot from "@/modules/cornerstone-image-browser/assets/screenshot.png";
@@ -23,6 +24,13 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
     href: "/app/account",
     imageSrc: accountScreenshot,
     description: "Einstellungen zu deinem Account",
+  },
+  {
+    name: "Avatar Creator",
+    href: "/app/avatar-creator",
+    imageSrc: avatarCreatorScreenshot,
+    description:
+      "Verziere deinen Avatar mit dem offiziellen Sinister Incorporated-Rahmen",
   },
   {
     name: "Changelog",
