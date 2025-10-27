@@ -10,7 +10,7 @@ interface Payload {
 }
 
 const handler = async (payload: Payload) => {
-  // TODO: Filter out citizens without login permission
+  // TODO: Only send notifications to citizens which have the `login;manage` and `profitDistributionCycle;read` permission
 
   if (!(await isNovuEnabled())) return;
 
