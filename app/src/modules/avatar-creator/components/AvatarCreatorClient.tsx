@@ -6,7 +6,8 @@ import clsx from "clsx";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const DEFAULT_SCALING_MULTIPLIER = 0.65;
-const CANVAS_SIZE = 512;
+const CANVAS_WIDTH = avatarFrame.width / 3;
+const CANVAS_HEIGHT = avatarFrame.height / 3;
 const CENTER_Y_OFFSET = 25;
 const CLIP_MASK_RADIUS = 0.32;
 
@@ -163,9 +164,9 @@ export const AvatarCreatorClient = ({ className }: Props) => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const width = canvasSize?.width ?? frameImage?.naturalWidth ?? CANVAS_SIZE;
+    const width = canvasSize?.width ?? frameImage?.naturalWidth ?? CANVAS_WIDTH;
     const height =
-      canvasSize?.height ?? frameImage?.naturalHeight ?? CANVAS_SIZE;
+      canvasSize?.height ?? frameImage?.naturalHeight ?? CANVAS_HEIGHT;
 
     if (canvas.width !== width || canvas.height !== height) {
       canvas.width = width;
@@ -508,14 +509,19 @@ export const AvatarCreatorClient = ({ className }: Props) => {
         </div>
       </div>
 
-      <div className="w-80">
+      <div
+        style={{
+          width: CANVAS_WIDTH,
+          height: CANVAS_HEIGHT,
+        }}
+      >
         <canvas
           ref={canvasRef}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={endPointerInteraction}
           onPointerLeave={endPointerInteraction}
-          className="size-80 touch-none rounded-primary border border-neutral-700/40"
+          className="size-full touch-none rounded-primary border border-neutral-700/40"
         />
 
         <div className="mt-2 flex items-center justify-end gap-2">
