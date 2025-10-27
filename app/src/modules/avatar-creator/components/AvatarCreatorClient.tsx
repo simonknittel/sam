@@ -329,6 +329,34 @@ export const AvatarCreatorClient = ({ className }: Props) => {
     pointerStateRef.current = { isDragging: false, lastX: 0, lastY: 0 };
   };
 
+  const handleDownload = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      return;
+    }
+
+    const triggerDownload = (dataUrl: string) => {
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = "avatar.png";
+      link.click();
+    };
+
+    if (canvas.toBlob) {
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          return;
+        }
+        const url = URL.createObjectURL(blob);
+        triggerDownload(url);
+        URL.revokeObjectURL(url);
+      }, "image/png");
+      return;
+    }
+
+    triggerDownload(canvas.toDataURL("image/png"));
+  }, []);
+
   return (
     <div
       className={clsx(
@@ -490,9 +518,11 @@ export const AvatarCreatorClient = ({ className }: Props) => {
           className="size-80 touch-none rounded-primary border border-neutral-700/40"
         />
 
-        <p className="text-xs text-neutral-500 mt-2">
-          Rechtsklick um das Bild herunterzuladen oder zu kopieren.
-        </p>
+        <div className="mt-2 flex items-center justify-end gap-2">
+          <Button2 type="button" variant="primary" onClick={handleDownload}>
+            Herunterladen
+          </Button2>
+        </div>
       </div>
     </div>
   );
