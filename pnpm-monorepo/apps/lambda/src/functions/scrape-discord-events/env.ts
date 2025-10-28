@@ -11,8 +11,8 @@ const schema = z.object({
 	PUSHER_BEAMS_KEY: z.string().optional(),
 	DISCORD_GUILD_ID: z.string(),
 	DISCORD_TOKEN: z.string(),
+	NOVU_SECRET_KEY: z.string().optional(),
 	NOVU_SERVER_URL: z.string().url().optional().default("https://eu.api.novu.co"),
-	NOVU_SOCKET_URL: z.string().url().optional().default("wss://eu.ws.novu.co"),
 });
 
 export const env = schema.parse(process.env);
