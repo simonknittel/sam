@@ -14,12 +14,12 @@ importers:
       '@hono/node-server':
         specifier: 1.19.5
         version: 1.19.5(hono@4.10.3)
-      '@pusher/push-notifications-server':
-        specifier: 1.2.7
-        version: 1.2.7
       '@sam-monorepo/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@sam-monorepo/notifications':
+        specifier: workspace:*
+        version: link:../../packages/notifications
       aws-xray-sdk-core:
         specifier: 3.11.0
         version: 3.11.0
@@ -73,6 +73,28 @@ importers:
       prisma:
         specifier: 6.17.1
         version: 6.17.1(typescript@5.9.3)
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
+  packages/notifications:
+    dependencies:
+      '@novu/api':
+        specifier: 1.7.1
+        version: 1.7.1
+      '@pusher/push-notifications-server':
+        specifier: 1.2.7
+        version: 1.2.7
+      '@sam-monorepo/database':
+        specifier: workspace:*
+        version: link:../database
+      zod:
+        specifier: 3.25.76
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: 22.18.12
+        version: 22.18.12
       typescript:
         specifier: 5.9.3
         version: 5.9.3
@@ -248,6 +270,15 @@ packages:
     engines: {node: '>=18.14.1'}
     peerDependencies:
       hono: ^4
+
+  '@novu/api@1.7.1':
+    resolution: {integrity: sha512-jROuSbzuP4kXeixIZdub1OMrV6l/RiHvTtx8RIcA5UH3CV6RYdsZHrbWfosh6QPmvrUmskGEeLfzdKZdYaZMHw==}
+    hasBin: true
+    peerDependencies:
+      '@modelcontextprotocol/sdk': '>=1.5.0 <1.10.0'
+    peerDependenciesMeta:
+      '@modelcontextprotocol/sdk':
+        optional: true
 
   '@prisma/adapter-pg@6.17.1':
     resolution: {integrity: sha512-iy5aL2HHzW2sAGspgeUGXgM+JDiXm31R4iONSnAWdpFSc/SWgsR+z8muS0HAZnzclAUwqXrWFJh4RbneCM2ktA==}
@@ -694,6 +725,10 @@ snapshots:
   '@hono/node-server@1.19.5(hono@4.10.3)':
     dependencies:
       hono: 4.10.3
+
+  '@novu/api@1.7.1':
+    dependencies:
+      zod: 3.25.76
 
   '@prisma/adapter-pg@6.17.1':
     dependencies:

@@ -1,6 +1,6 @@
 import { prisma } from "@sam-monorepo/database";
 import type { getEvents } from "./discord/utils/getEvents";
-import { publishNotification } from "./pusher/utils/publishNotification";
+import { triggerNotification } from "@sam-monorepo/notifications";
 
 export const deleteCancelledEvents = async (
 	futureEventsFromDiscord: Awaited<ReturnType<typeof getEvents>>["data"]
@@ -30,10 +30,6 @@ export const deleteCancelledEvents = async (
 	}
 
 	for (const cancelledEvent of cancelledEvents) {
-		await publishNotification(
-			["deletedDiscordEvent"],
-			"Event abgesagt",
-			cancelledEvent.name
-		);
+		await triggerNotification("event_deleted", { eventId: cancelledEvent.id });
 	}
 };
