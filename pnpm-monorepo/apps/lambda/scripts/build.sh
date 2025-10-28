@@ -36,7 +36,7 @@ for file in "src/functions"/*.ts; do
 		--outfile=$OUTPUT_DIRECTORY/$FUNCTION_NAME/index.mjs \
 		--format=esm \
 		--platform=node \
-		--target=node22 \
+		--target=node24 \
 		--minify \
 		--metafile=$OUTPUT_DIRECTORY/$FUNCTION_NAME/meta.json \
 		--external:@aws-sdk \

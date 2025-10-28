@@ -1,5 +1,5 @@
 import { prisma } from "@/db";
-import { isNovuEnabled, novu } from "@/modules/novu/utils";
+import { isNovuEnabled, publishNovuNotifications } from "@/modules/novu/utils";
 import type { Change } from "@/modules/profit-distribution/actions/updateParticipantAttribute";
 import { getAuecPerSilc } from "@/modules/profit-distribution/utils/getAuecPerSilc";
 import { getTotalSilc } from "@/modules/profit-distribution/utils/getTotalSilc";
@@ -43,37 +43,24 @@ const handler = async (payload: Payload) => {
       ),
   );
 
-  // Split participants into chunks of 100 to avoid limit of Novu SDK/API
-  const chunks = [];
-  const chunkSize = 100;
-  for (let i = 0; i < participantsWithDisbursedEnabled.length; i += chunkSize) {
-    chunks.push(participantsWithDisbursedEnabled.slice(i, i + chunkSize));
-  }
+  await publishNovuNotifications(
+    participantsWithDisbursedEnabled.map((participant) => {
+      const aUEC =
+        (participant.silcBalanceSnapshot || 0) *
+        getAuecPerSilc(cycle.auecProfit || 0, getTotalSilc(cycle.participants));
 
-  // Send notifications in bulk for each chunk
-  for (const chunk of chunks) {
-    await novu?.triggerBulk({
-      events: chunk.map((participant) => {
-        const aUEC =
-          (participant.silcBalanceSnapshot || 0) *
-          getAuecPerSilc(
-            cycle.auecProfit || 0,
-            getTotalSilc(cycle.participants),
-          );
-
-        return {
-          to: {
-            subscriberId: participant.citizenId,
-          },
-          workflowId: "sincome-payout-received",
-          payload: {
-            title: cycle.title,
-            aUEC: aUEC.toLocaleString("de-DE"),
-          },
-        };
-      }),
-    });
-  }
+      return {
+        to: {
+          subscriberId: participant.citizenId,
+        },
+        workflowId: "sincome-payout-received",
+        payload: {
+          title: cycle.title,
+          aUEC: aUEC.toLocaleString("de-DE"),
+        },
+      };
+    }),
+  );
 };
 
 const event = {
