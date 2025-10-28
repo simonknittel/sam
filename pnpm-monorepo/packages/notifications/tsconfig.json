@@ -25,11 +25,7 @@
     "composite": true,
     "declarationMap": true,
     /* If your code doesn't run in the DOM: */
-    "lib": [
-      "es2024"
-    ]
+    "lib": ["es2024"]
   },
-  "include": [
-    "src/**/*.ts"
-  ]
+  "include": ["src/**/*.ts"]
 }

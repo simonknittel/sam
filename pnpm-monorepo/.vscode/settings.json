@@ -1,13 +1,18 @@
 {
-	"cSpell.words": [
-		"auec",
-		"cuid",
-		"esbuild",
-		"novu",
-		"nvmrc",
-		"postgres",
-		"postgresql",
-		"silc",
-		"triggereventrequestdto"
-	]
+  "cSpell.words": [
+    "auec",
+    "cuid",
+    "esbuild",
+    "novu",
+    "nvmrc",
+    "postgres",
+    "postgresql",
+    "silc",
+    "triggereventrequestdto"
+  ],
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[prisma]": {
+    "editor.defaultFormatter": "Prisma.prisma"
+  }
 }
