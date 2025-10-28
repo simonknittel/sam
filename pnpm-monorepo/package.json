@@ -1,9 +1,13 @@
 {
-	"name": "sam-monorepo",
-	"private": true,
-	"packageManager": "pnpm@10.18.3",
-	"scripts": {
-		"dev:lambda": "pnpm run --filter \"./packages/database\" build && pnpm run --filter \"./packages/notifications\" build && pnpm run --filter \"./apps/lambda\" dev",
-		"build:lambda": "pnpm run --filter \"./packages/database\" build && pnpm run --filter \"./packages/notifications\" build && pnpm run --filter \"./apps/lambda\" build"
-	}
+  "name": "sam-monorepo",
+  "private": true,
+  "packageManager": "pnpm@10.18.3",
+  "scripts": {
+    "dev:lambda": "pnpm run --filter \"./packages/database\" build && pnpm run --filter \"./packages/notifications\" build && pnpm run --filter \"./apps/lambda\" dev",
+    "build:lambda": "pnpm run --filter \"./packages/database\" build && pnpm run --filter \"./packages/notifications\" build && pnpm run --filter \"./apps/lambda\" build"
+  },
+  "devDependencies": {
+    "prettier": "3.6.2",
+    "prettier-plugin-organize-imports": "4.3.0"
+  }
 }

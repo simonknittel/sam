@@ -1,6 +1,6 @@
 import EventCreated from "./events/event_created.js";
-import EventUpdated from "./events/event_updated.js";
 import EventDeleted from "./events/event_deleted.js";
+import EventUpdated from "./events/event_updated.js";
 
 export const Events = {
   [EventCreated.key]: EventCreated.handler,
@@ -13,4 +13,4 @@ export const triggerNotification = async <T extends keyof typeof Events>(
   payload: Parameters<(typeof Events)[T]>[0],
 ) => {
   await Events[key](payload);
-}
+};

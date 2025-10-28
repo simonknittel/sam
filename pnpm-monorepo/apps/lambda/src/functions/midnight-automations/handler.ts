@@ -3,8 +3,8 @@ import "./env";
 import { removeExpiredRoles } from "./removeExpiredRoles";
 
 export const midnightAutomationsHandler = async () => {
-	// TODO: Add profit distribution cycle automation here
+  // TODO: Add profit distribution cycle automation here
 
-	await removeExpiredRoles();
-	await disburseRoleSalaries();
+  await removeExpiredRoles();
+  await disburseRoleSalaries();
 };
