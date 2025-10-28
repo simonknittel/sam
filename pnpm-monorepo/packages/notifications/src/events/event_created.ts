@@ -1,5 +1,6 @@
 import { prisma, type Event } from "@sam-monorepo/database";
 import { publishPusherNotification } from "../pusher.js";
+import { novu, publishNovuNotifications } from "../novu.js";
 
 export type Payload = {
 	eventId: Event["id"];
@@ -8,6 +9,41 @@ export type Payload = {
 const handler = async (payload: Payload) => {
 	// TODO: Migrate to Novu
 	// TODO: Only send notifications to citizens which have the `login;manage` and `event;read` permission
+	const permissionStrings = await prisma.permissionString.findMany({
+		where: {
+			OR: [{
+				permissionString: "login;manage"
+			}, {
+				permissionString: "event;read"
+			}]
+		},
+		select: {
+			roleId: true,
+			permissionString: true,
+		}
+	})
+	const { loginManageRoleIds, eventReadRoleIds } = Object.groupBy(permissionStrings, item => item.permissionString === "login;manage" ? "loginManageRoleIds" : "eventReadRoleIds");
+	if (!loginManageRoleIds || loginManageRoleIds.length <= 0 || !eventReadRoleIds || eventReadRoleIds.length <= 0) return;
+
+	const citizensWithRoles = await prisma.entity.findMany({
+		where: {
+			roles: {
+				not: null,
+			}
+		},
+		select: {
+			id: true,
+			roles: true,
+		}
+	})
+
+	const citizensWithMatchingRoles = citizensWithRoles.filter(citizen => {
+		const citizenRoleIds = citizen.roles!.split(",");
+		const hasLoginManage = loginManageRoleIds.some(role => citizenRoleIds.includes(role.roleId));
+		const hasEventRead = eventReadRoleIds.some(role => citizenRoleIds.includes(role.roleId));
+		return hasLoginManage && hasEventRead;
+	});
+	if (citizensWithMatchingRoles.length === 0) return;
 
 	const event = await prisma.event.findUnique({
 		where: {
@@ -26,6 +62,17 @@ const handler = async (payload: Payload) => {
 		event.name,
 		`/app/events/${event.id}`,
 	);
+
+	await publishNovuNotifications(citizensWithMatchingRoles.map(citizen => ({
+		to: {
+			subscriberId: citizen.id,
+		},
+		workflowId: "event-created",
+		payload: {
+			eventName: event.name,
+			eventId: event.id,
+		},
+	})));
 };
 
 const event = {

@@ -1,0 +1,21 @@
+meta {
+  name: Create DM
+  type: http
+  seq: 8
+}
+
+post {
+  url: https://discord.com/api/v10/users/@me/channels
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: Bot {{DISCORD_TOKEN}}
+}
+
+body:json {
+  {
+    "recipient_id": "117890449187930113"
+  }
+}

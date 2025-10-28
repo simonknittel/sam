@@ -1,5 +1,5 @@
 import { prisma } from "@/db";
-import { isNovuEnabled, novu } from "@/modules/novu/utils";
+import { isNovuEnabled, publishNovuNotifications } from "@/modules/novu/utils";
 
 interface Payload {
   cycleId: string;
@@ -26,28 +26,18 @@ const handler = async (payload: Payload) => {
   });
   if (!cycle || cycle.participants.length === 0) return;
 
-  // Split participants into chunks of 100 to avoid limit of Novu SDK/API
-  const chunks = [];
-  const chunkSize = 100;
-  for (let i = 0; i < cycle.participants.length; i += chunkSize) {
-    chunks.push(cycle.participants.slice(i, i + chunkSize));
-  }
-
-  // Send notifications in bulk for each chunk
-  for (const chunk of chunks) {
-    await novu?.triggerBulk({
-      events: chunk.map((participant) => ({
-        to: {
-          subscriberId: participant.citizenId,
-        },
-        workflowId: "si-ncome-payout-started",
-        payload: {
-          id: cycle.id,
-          title: cycle.title,
-        },
-      })),
-    });
-  }
+  await publishNovuNotifications(
+    cycle.participants.map((participant) => ({
+      to: {
+        subscriberId: participant.citizenId,
+      },
+      workflowId: "si-ncome-payout-started",
+      payload: {
+        id: cycle.id,
+        title: cycle.title,
+      },
+    })),
+  );
 };
 
 const event = {

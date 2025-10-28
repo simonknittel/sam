@@ -1,0 +1,21 @@
+meta {
+  name: Create Message
+  type: http
+  seq: 9
+}
+
+post {
+  url: https://discord.com/api/v10/channels/1432691080863944705/messages
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: Bot {{DISCORD_TOKEN}}
+}
+
+body:json {
+  {
+    "content": "Foo **bar**"
+  }
+}

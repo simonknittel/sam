@@ -2,10 +2,10 @@ import { prisma } from "@/db";
 import { env } from "@/env";
 import type { PermissionSet } from "@/modules/auth/common";
 import { getPermissionSetsByRoles } from "@/modules/auth/server";
-import { requestEmailConfirmation } from "@/modules/auth/utils/emailConfirmation";
 import { getDiscordAvatar } from "@/modules/discord/utils/getDiscordAvatar";
 import { getGuildMember } from "@/modules/discord/utils/getGuildMember";
 import { log } from "@/modules/logging";
+import { triggerNotification } from "@/modules/notifications/components/utils/triggerNotification";
 import { getUserById } from "@/modules/users/queries";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import type { Entity } from "@prisma/client";
@@ -258,7 +258,10 @@ export const authOptions: NextAuthOptions = {
       const createdUser = await adapter.createUser!(user);
 
       try {
-        await requestEmailConfirmation(createdUser.id, user.email);
+        await triggerNotification("email_confirmation", {
+          userId: createdUser.id,
+          userEmail: user.email!,
+        });
       } catch (error) {
         void log.error(
           "Failed to request email confirmation for created user",
