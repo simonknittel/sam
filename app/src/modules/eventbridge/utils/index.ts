@@ -52,7 +52,7 @@ export const emitEvents = withTrace(
     const response = await client.send(command);
 
     if (response.FailedEntryCount) {
-      throw new CustomError("Failed send events to EventBridge", {
+      throw new CustomError("Failed to send events to EventBridge", {
         response,
       });
     }
