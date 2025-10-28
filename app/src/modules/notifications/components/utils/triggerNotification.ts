@@ -1,4 +1,5 @@
 import { withTrace } from "@/modules/tracing/utils/withTrace";
+import EmailConfirmation from "./events/email_confirmation";
 import ProfitDistributionPayoutDisbursed from "./events/profit_distribution_payout_disbursed";
 import ProfitDistributionPayoutStarted from "./events/profit_distribution_payout_started";
 import TaskAssignmentUpdated from "./events/task_assignment_updated";
@@ -11,6 +12,7 @@ export const Events = {
     ProfitDistributionPayoutDisbursed.handler,
   [TaskAssignmentUpdated.key]: TaskAssignmentUpdated.handler,
   [TaskCreated.key]: TaskCreated.handler,
+  [EmailConfirmation.key]: EmailConfirmation.handler,
 } as const;
 
 export const triggerNotification = withTrace(
