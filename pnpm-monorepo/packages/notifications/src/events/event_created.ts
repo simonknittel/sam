@@ -7,8 +7,20 @@ export type Payload = {
 };
 
 const handler = async (payload: Payload) => {
-	// TODO: Migrate to Novu
-	// TODO: Only send notifications to citizens which have the `login;manage` and `event;read` permission
+	/**
+	 * Calculate recipients
+	 */
+	const event = await prisma.event.findUnique({
+		where: {
+			id: payload.eventId,
+		},
+		select: {
+			id: true,
+			name: true,
+		}
+	});
+	if (!event) return;
+
 	const permissionStrings = await prisma.permissionString.findMany({
 		where: {
 			OR: [{
@@ -22,6 +34,8 @@ const handler = async (payload: Payload) => {
 			permissionString: true,
 		}
 	})
+	if (permissionStrings.length <= 0) return;
+
 	const { loginManageRoleIds, eventReadRoleIds } = Object.groupBy(permissionStrings, item => item.permissionString === "login;manage" ? "loginManageRoleIds" : "eventReadRoleIds");
 	if (!loginManageRoleIds || loginManageRoleIds.length <= 0 || !eventReadRoleIds || eventReadRoleIds.length <= 0) return;
 
@@ -36,7 +50,6 @@ const handler = async (payload: Payload) => {
 			roles: true,
 		}
 	})
-
 	const citizensWithMatchingRoles = citizensWithRoles.filter(citizen => {
 		const citizenRoleIds = citizen.roles!.split(",");
 		const hasLoginManage = loginManageRoleIds.some(role => citizenRoleIds.includes(role.roleId));
@@ -45,24 +58,9 @@ const handler = async (payload: Payload) => {
 	});
 	if (citizensWithMatchingRoles.length === 0) return;
 
-	const event = await prisma.event.findUnique({
-		where: {
-			id: payload.eventId,
-		},
-		select: {
-			id: true,
-			name: true,
-		}
-	});
-	if (!event) return;
-
-	await publishPusherNotification(
-		["newDiscordEvent"],
-		"Neues Event",
-		event.name,
-		`/app/events/${event.id}`,
-	);
-
+	/**
+	 * Trigger notifications
+	 */
 	await publishNovuNotifications(citizensWithMatchingRoles.map(citizen => ({
 		to: {
 			subscriberId: citizen.id,
@@ -73,6 +71,13 @@ const handler = async (payload: Payload) => {
 			eventId: event.id,
 		},
 	})));
+
+	await publishPusherNotification(
+		["newDiscordEvent"],
+		"Neues Event",
+		event.name,
+		`/app/events/${event.id}`,
+	);
 };
 
 const event = {

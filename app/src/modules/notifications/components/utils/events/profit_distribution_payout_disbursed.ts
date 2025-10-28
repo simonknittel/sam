@@ -43,6 +43,9 @@ const handler = async (payload: Payload) => {
       ),
   );
 
+  /**
+   * Trigger notifications
+   */
   await publishNovuNotifications(
     participantsWithDisbursedEnabled.map((participant) => {
       const aUEC =
