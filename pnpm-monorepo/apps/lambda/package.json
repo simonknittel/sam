@@ -7,8 +7,8 @@
   },
   "dependencies": {
     "@hono/node-server": "1.19.5",
-    "@pusher/push-notifications-server": "1.2.7",
     "@sam-monorepo/database": "workspace:*",
+    "@sam-monorepo/notifications": "workspace:*",
     "aws-xray-sdk-core": "3.11.0",
     "hono": "4.10.3",
     "lodash": "4.17.21",

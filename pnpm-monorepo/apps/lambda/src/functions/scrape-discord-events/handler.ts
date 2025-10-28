@@ -2,9 +2,9 @@ import { prisma } from "@sam-monorepo/database";
 import { deleteCancelledEvents } from "./deleteCancelledEvents";
 import { getEvents } from "./discord/utils/getEvents";
 import shuffle from "lodash/shuffle";
-import { publishNotification } from "./pusher/utils/publishNotification";
 import { updateParticipants } from "./updateParticipants";
 import { log } from "../../common/logger";
+import { triggerNotification } from "@sam-monorepo/notifications";
 
 export const scrapeDiscordEventsHandler = async () => {
 	try {
@@ -73,12 +73,7 @@ export const scrapeDiscordEventsHandler = async () => {
 					futureEventFromDiscord.entity_metadata.location;
 
 				if (hasChangesForNotification) {
-					await publishNotification(
-						["updatedDiscordEvent"],
-						"Event aktualisiert",
-						futureEventFromDiscord.name,
-						`/app/events/${existingEventFromDatabase.id}`,
-					);
+					await triggerNotification("event_updated", { eventId: existingEventFromDatabase.id });
 				}
 			} else {
 				const newEvent = await prisma.event.create({
@@ -93,14 +88,12 @@ export const scrapeDiscordEventsHandler = async () => {
 						discordImage: futureEventFromDiscord.image,
 						discordGuildId: futureEventFromDiscord.guild_id,
 					},
+					select: {
+						id: true,
+					}
 				});
 
-				await publishNotification(
-					["newDiscordEvent"],
-					"Neues Event",
-					newEvent.name,
-					`/app/events/${newEvent.id}`,
-				);
+				await triggerNotification("event_created", { eventId: newEvent.id });
 			}
 
 			await updateParticipants(futureEventFromDiscord);

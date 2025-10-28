@@ -1,7 +1,12 @@
-import { env } from "../../env";
-import { beamsClient } from "./beamsClient";
+import PushNotifications from "@pusher/push-notifications-server";
+import { env } from "./env.js";
 
-export const publishNotification = async (
+const beamsClient = env.PUSHER_BEAMS_INSTANCE_ID && env.PUSHER_BEAMS_KEY ? new PushNotifications({
+	instanceId: env.PUSHER_BEAMS_INSTANCE_ID,
+	secretKey: env.PUSHER_BEAMS_KEY,
+}) : null;
+
+export const publishPusherNotification = async (
 	interests: string[],
 	title: string,
 	body: string,
