@@ -36,6 +36,38 @@ export const Notifications = async () => {
       localization={{
         locale: "de-DE",
       }}
+      preferenceGroups={[
+        {
+          name: "Changelog",
+          filter: { tags: ["Changelog"] },
+        },
+        {
+          name: "Events",
+          filter: { tags: ["Events"] },
+        },
+        {
+          name: "SINcome",
+          filter: { tags: ["SINcome"] },
+        },
+      ]}
+      tabs={[
+        {
+          label: "Alle",
+          filter: { tags: [] },
+        },
+        {
+          label: "Changelog",
+          filter: { tags: ["Changelog"] },
+        },
+        {
+          label: "Events",
+          filter: { tags: ["Events"] },
+        },
+        {
+          label: "SINcome",
+          filter: { tags: ["SINcome"] },
+        },
+      ]}
     />
   );
 };
