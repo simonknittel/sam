@@ -26,6 +26,9 @@ const handler = async (payload: Payload) => {
   });
   if (!cycle || cycle.participants.length === 0) return;
 
+  /**
+   * Trigger notifications
+   */
   await publishNovuNotifications(
     cycle.participants.map((participant) => ({
       to: {
