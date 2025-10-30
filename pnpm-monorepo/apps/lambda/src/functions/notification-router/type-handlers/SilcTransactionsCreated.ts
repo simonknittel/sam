@@ -96,7 +96,7 @@ export const silcTransactionsCreatedHandler = async (payload: Payload) => {
         },
         workflowId: "silc-transaction-created",
         payload: {
-          value: `${transaction.value >= 0 ? "+" : "-"}${transaction.value.toLocaleString("de")}`,
+          value: `${transaction.value >= 0 ? "+" : "-"}${Math.abs(transaction.value).toLocaleString("de")}`,
           description: transaction.description,
         },
       })),
