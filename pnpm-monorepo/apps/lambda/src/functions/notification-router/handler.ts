@@ -3,6 +3,7 @@ import "./env";
 import { EventCreatedHandler } from "./type-handlers/EventCreated";
 import { EventDeletedHandler } from "./type-handlers/EventDeleted";
 import { EventUpdatedHandler } from "./type-handlers/EventUpdated";
+import { PenaltyEntryCreatedHandler } from "./type-handlers/PenaltyEntryCreated";
 import { ProfitDistributionPayoutDisbursedHandler } from "./type-handlers/ProfitDistributionPayoutDisbursed";
 import { ProfitDistributionPayoutStartedHandler } from "./type-handlers/ProfitDistributionPayoutStarted";
 import { RoleAddedHandler } from "./type-handlers/RoleAdded";
@@ -40,6 +41,9 @@ export const notificationRouterHandler = async (
       break;
     case "RoleAdded":
       await RoleAddedHandler(body.payload);
+      break;
+    case "PenaltyEntryCreated":
+      await PenaltyEntryCreatedHandler(body.payload);
       break;
   }
 };
@@ -121,6 +125,14 @@ export const bodySchema = z.discriminatedUnion("type", [
     payload: z.object({
       citizenId: z.cuid(),
       roleId: z.cuid(),
+    }),
+    requestId: z.cuid2(),
+  }),
+
+  z.object({
+    type: z.literal("PenaltyEntryCreated"),
+    payload: z.object({
+      penaltyEntryId: z.cuid(),
     }),
     requestId: z.cuid2(),
   }),

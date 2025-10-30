@@ -94,6 +94,10 @@ export default async function Page() {
               name: "SILC",
               filter: { tags: ["SILC"] },
             },
+            {
+              name: "Strafpunkte",
+              filter: { tags: ["Strafpunkte"] },
+            },
           ]}
           tabs={[
             {
@@ -119,6 +123,10 @@ export default async function Page() {
             {
               label: "SILC",
               filter: { tags: ["SILC"] },
+            },
+            {
+              label: "Strafpunkte",
+              filter: { tags: ["Strafpunkte"] },
             },
           ]}
         >

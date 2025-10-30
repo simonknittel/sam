@@ -59,6 +59,10 @@ export const Notifications = async () => {
           name: "SILC",
           filter: { tags: ["SILC"] },
         },
+        {
+          name: "Strafpunkte",
+          filter: { tags: ["Strafpunkte"] },
+        },
       ]}
       tabs={[
         {
@@ -84,6 +88,10 @@ export const Notifications = async () => {
         {
           label: "SILC",
           filter: { tags: ["SILC"] },
+        },
+        {
+          label: "Strafpunkte",
+          filter: { tags: ["Strafpunkte"] },
         },
       ]}
     />
