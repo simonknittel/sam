@@ -17,3 +17,9 @@ variable "midnight_automations_environment_variables" {
   type      = map(string)
   sensitive = true
 }
+
+# TF_VAR_notification_router_environment_variables = {"VAR_1":"value","VAR_2":"value"}
+variable "notification_router_environment_variables" {
+  type      = map(string)
+  sensitive = true
+}
