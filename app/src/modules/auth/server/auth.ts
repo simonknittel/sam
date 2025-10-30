@@ -5,7 +5,7 @@ import { getPermissionSetsByRoles } from "@/modules/auth/server";
 import { getDiscordAvatar } from "@/modules/discord/utils/getDiscordAvatar";
 import { getGuildMember } from "@/modules/discord/utils/getGuildMember";
 import { log } from "@/modules/logging";
-import { triggerNotification } from "@/modules/notifications/utils/triggerNotification";
+import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { getUserById } from "@/modules/users/queries";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import type { Entity } from "@prisma/client";
@@ -258,7 +258,7 @@ export const authOptions: NextAuthOptions = {
       const createdUser = await adapter.createUser!(user);
 
       try {
-        await triggerNotification([
+        await triggerNotifications([
           {
             type: "EmailConfirmation",
             payload: {

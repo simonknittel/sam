@@ -8,16 +8,16 @@ interface Notification {
   payload: any;
 }
 
-export const triggerNotification = withTrace(
-  "triggerNotification",
+export const triggerNotifications = withTrace(
+  "triggerNotifications",
   async (notifications: Notification[]) => {
     if (notifications[0].type === "EmailConfirmation") {
       // TODO: Migrate to "NotificationRequested" event type handler
-      emailConfirmationHandler(notifications[0].payload);
+      await emailConfirmationHandler(notifications[0].payload);
     } else {
       await emitEvents(
         notifications.map((notification) => ({
-          Source: "scrape-discord-events",
+          Source: "App",
           DetailType: "NotificationRequested",
           Detail: JSON.stringify({
             type: notification.type,

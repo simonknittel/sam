@@ -2,7 +2,7 @@
 
 import { authenticate } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
-import { triggerNotification } from "@/modules/notifications/utils/triggerNotification";
+import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { redirect } from "next/navigation";
 import { serializeError } from "serialize-error";
 
@@ -20,7 +20,7 @@ export const requestEmailConfirmationAction = async () => {
   if (authentication.session.user.emailVerified) redirect("/clearance");
 
   try {
-    await triggerNotification([
+    await triggerNotifications([
       {
         type: "EmailConfirmation",
         payload: {

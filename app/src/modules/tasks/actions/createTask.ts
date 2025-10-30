@@ -3,7 +3,7 @@
 import { prisma } from "@/db";
 import { requireAuthenticationAction } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
-import { triggerNotification } from "@/modules/notifications/utils/triggerNotification";
+import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { TaskRewardType, TaskVisibility, type Task } from "@prisma/client";
 import { getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
@@ -50,7 +50,7 @@ export const createTask = async (formData: FormData) => {
       visibility: formData.get("visibility"),
       assignmentLimit:
         formData.has("assignmentLimit") &&
-        formData.get("assignmentLimit") !== ""
+          formData.get("assignmentLimit") !== ""
           ? formData.get("assignmentLimit")
           : null,
       assignedToIds: formData.getAll("assignedToId[]"),
@@ -146,8 +146,8 @@ export const createTask = async (formData: FormData) => {
               requiredRoles: {
                 connect: result.data.requiredRoles
                   ? result.data.requiredRoles.map((roleId) => ({
-                      id: roleId,
-                    }))
+                    id: roleId,
+                  }))
                   : [],
               },
               hiddenForOtherRoles: result.data.hiddenForOtherRoles,
@@ -242,7 +242,7 @@ export const createTask = async (formData: FormData) => {
     /**
      * Trigger notifications
      */
-    await triggerNotification([
+    await triggerNotifications([
       {
         type: "TaskCreated",
         payload: {
