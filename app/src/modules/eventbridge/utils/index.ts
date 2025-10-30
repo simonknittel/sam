@@ -8,8 +8,6 @@ import {
   type PutEventsCommandInput,
 } from "@aws-sdk/client-eventbridge";
 
-// Reference: https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/eventbridge/
-
 const client =
   env.AWS_ACCESS_KEY_ID && env.AWS_SECRET_ACCESS_KEY && env.AWS_EVENT_BUS_ARN
     ? new EventBridgeClient({

@@ -2,11 +2,11 @@ import { prisma, type Event } from "@sam-monorepo/database";
 import { publishNovuNotifications } from "../novu.js";
 import { publishPusherNotification } from "../pusher.js";
 
-export type Payload = {
+type Payload = {
   eventId: Event["id"];
 };
 
-const handler = async (payload: Payload) => {
+export const eventCreatedHandler = async (payload: Payload) => {
   /**
    * Calculate recipients
    */
@@ -17,14 +17,9 @@ const handler = async (payload: Payload) => {
     select: {
       id: true,
       name: true,
-      discordParticipants: {
-        select: {
-          discordUserId: true,
-        },
-      },
     },
   });
-  if (!event || event.discordParticipants.length <= 0) return;
+  if (!event) return;
 
   const permissionStrings = await prisma.permissionString.findMany({
     where: {
@@ -61,11 +56,6 @@ const handler = async (payload: Payload) => {
 
   const citizensWithRoles = await prisma.entity.findMany({
     where: {
-      discordId: {
-        in: event.discordParticipants.map(
-          (participant) => participant.discordUserId,
-        ),
-      },
       roles: {
         not: null,
       },
@@ -95,7 +85,7 @@ const handler = async (payload: Payload) => {
       to: {
         subscriberId: citizen.id,
       },
-      workflowId: "event-deleted",
+      workflowId: "event-created",
       payload: {
         eventName: event.name,
         eventId: event.id,
@@ -104,15 +94,9 @@ const handler = async (payload: Payload) => {
   );
 
   await publishPusherNotification(
-    ["deletedDiscordEvent"],
-    "Event abgesagt",
+    ["newDiscordEvent"],
+    "Neues Event",
     event.name,
+    `/app/events/${event.id}`,
   );
 };
-
-const event = {
-  key: "event_deleted",
-  handler,
-} as const;
-
-export default event;

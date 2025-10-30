@@ -1,12 +1,11 @@
-import { prisma } from "@/db";
-import { publishPusherNotification } from "@/modules/pusher/utils/publishNotification";
-import type { Task } from "@prisma/client";
+import { prisma, type Task } from "@sam-monorepo/database";
+import { publishPusherNotification } from "../pusher";
 
 interface Payload {
   taskIds: Task["id"][];
 }
 
-const handler = async (payload: Payload) => {
+export const taskCreatedHandler = async (payload: Payload) => {
   // TODO: Migrate to Novu
   // TODO: Only send notifications to citizens which have the `login;manage` and `task;read` permission
 
@@ -53,10 +52,3 @@ const handler = async (payload: Payload) => {
     );
   }
 };
-
-const event = {
-  key: "task_created",
-  handler,
-} as const;
-
-export default event;

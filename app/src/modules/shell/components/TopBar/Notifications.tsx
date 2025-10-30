@@ -1,12 +1,13 @@
 import { env } from "@/env";
 import { authenticate } from "@/modules/auth/server";
-import { isNovuEnabled } from "@/modules/novu/utils";
+import { getUnleashFlag } from "@/modules/common/utils/getUnleashFlag";
+import { UNLEASH_FLAG } from "@/modules/common/utils/UNLEASH_FLAG";
 import { Inbox } from "@novu/nextjs";
 import { dark } from "@novu/react/themes";
 import { createHmac } from "node:crypto";
 
 export const Notifications = async () => {
-  if (!(await isNovuEnabled())) return null;
+  if (!(await getUnleashFlag(UNLEASH_FLAG.EnableNotificationsRework))) return null;
 
   const authentication = await authenticate();
   if (!authentication || !authentication.session.entity) return null;

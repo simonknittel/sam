@@ -48,6 +48,7 @@ jobs:
         function:
           - midnight-automations
           - scrape-discord-events-function
+          - notification-router
 
     steps:
       - name: Configure AWS Credentials

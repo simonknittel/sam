@@ -3,7 +3,7 @@
 import { prisma } from "@/db";
 import { requireAuthenticationAction } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
-import { triggerNotification } from "@/modules/notifications/components/utils/triggerNotification";
+import { triggerNotification } from "@/modules/notifications/utils/triggerNotification";
 import { getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
 import { unstable_rethrow } from "next/navigation";
@@ -42,7 +42,7 @@ export const updateTaskAssignments = async (formData: FormData) => {
       id: formData.get("id"),
       assignmentLimit:
         formData.has("assignmentLimit") &&
-        formData.get("assignmentLimit") !== ""
+          formData.get("assignmentLimit") !== ""
           ? formData.get("assignmentLimit")
           : null,
       assignedToIds: formData.has("assignedToId[]")
@@ -109,9 +109,14 @@ export const updateTaskAssignments = async (formData: FormData) => {
     /**
      * Trigger notifications
      */
-    await triggerNotification("task_assignment_updated", {
-      taskId: result.data.id,
-    });
+    await triggerNotification([
+      {
+        type: "TaskAssignmentUpdated",
+        payload: {
+          taskId: result.data.id,
+        },
+      }
+    ])
 
     /**
      * Revalidate cache(s)

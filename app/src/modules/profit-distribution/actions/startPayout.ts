@@ -4,7 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { getUnleashFlag } from "@/modules/common/utils/getUnleashFlag";
 import { UNLEASH_FLAG } from "@/modules/common/utils/UNLEASH_FLAG";
-import { triggerNotification } from "@/modules/notifications/components/utils/triggerNotification";
+import { triggerNotification } from "@/modules/notifications/utils/triggerNotification";
 import { revalidatePath } from "next/cache";
 import { notFound } from "next/navigation";
 import { z } from "zod";
@@ -84,9 +84,14 @@ export const startPayout = createAuthenticatedAction(
     /**
      * Trigger notifications
      */
-    await triggerNotification("profit_distribution_payout_started", {
-      cycleId: data.id,
-    });
+    await triggerNotification([
+      {
+        type: "ProfitDistributionPayoutStarted",
+        payload: {
+          cycleId: data.id,
+        },
+      }
+    ])
 
     /**
      * Revalidate cache(s)
