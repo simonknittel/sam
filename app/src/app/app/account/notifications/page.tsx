@@ -86,6 +86,10 @@ export default async function Page() {
               name: "SINcome",
               filter: { tags: ["SINcome"] },
             },
+            {
+              name: "SILC",
+              filter: { tags: ["SILC"] },
+            },
           ]}
           tabs={[
             {
@@ -103,6 +107,10 @@ export default async function Page() {
             {
               label: "SINcome",
               filter: { tags: ["SINcome"] },
+            },
+            {
+              label: "SILC",
+              filter: { tags: ["SILC"] },
             },
           ]}
         >

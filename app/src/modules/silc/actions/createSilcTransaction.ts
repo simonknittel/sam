@@ -3,6 +3,7 @@
 import { prisma } from "@/db";
 import { requireAuthenticationAction } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
+import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
 import { unstable_rethrow } from "next/navigation";
@@ -56,19 +57,37 @@ export const createSilcTransaction = async (formData: FormData) => {
     /**
      * Create transaction
      */
-    await prisma.silcTransaction.createMany({
-      data: result.data.receiverIds.map((receiverId) => ({
-        receiverId,
-        value: result.data.value,
-        description: result.data.description,
-        createdById: authentication.session.entity!.id,
-      })),
-    });
+    const createdSilcTransactions =
+      await prisma.silcTransaction.createManyAndReturn({
+        data: result.data.receiverIds.map((receiverId) => ({
+          receiverId,
+          value: result.data.value,
+          description: result.data.description,
+          createdById: authentication.session.entity!.id,
+        })),
+        select: {
+          id: true,
+        },
+      });
 
     /**
      * Update citizens' balances
      */
     await updateCitizensSilcBalances(result.data.receiverIds);
+
+    /**
+     * Trigger notifications
+     */
+    await triggerNotifications([
+      {
+        type: "SilcTransactionsCreated",
+        payload: {
+          transactionIds: createdSilcTransactions.map(
+            (transaction) => transaction.id,
+          ),
+        },
+      },
+    ]);
 
     /**
      * Revalidate cache(s)
