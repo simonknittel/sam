@@ -5,7 +5,7 @@ interface Payload {
   taskId: Task["id"];
 }
 
-export const taskAssignmentUpdatedHandler = async (payload: Payload) => {
+export const TaskAssignmentUpdatedHandler = async (payload: Payload) => {
   // TODO: Migrate to Novu
   // TODO: Only notify newly assigned citizens
   // TODO: Only send notifications to citizens which have the `login;manage` and `task;read` permission
@@ -22,28 +22,23 @@ export const taskAssignmentUpdatedHandler = async (payload: Payload) => {
       },
     },
   });
-  if (!task) return;
+  if (!task || task.assignments.length <= 0) return;
 
+  /**
+   * Publish notifications
+   */
   const notifications = [];
   for (const assignment of task.assignments) {
-    notifications.push({
-      interests: [`task_assigned;citizen_id=${assignment.citizenId}`],
-      message: "Dir wurde ein Task zugewiesen",
-      title: task.title,
-      url: `/app/tasks/${task.id}`,
-    });
-  }
-
-  if (notifications.length > 0) {
-    await Promise.all(
-      notifications.map((notification) =>
-        publishPusherNotification(
-          notification.interests,
-          notification.message,
-          notification.title,
-          notification.url,
-        ),
+    notifications.push(
+      publishPusherNotification(
+        [`task_assigned;citizen_id=${assignment.citizenId}`],
+        "Dir wurde ein Task zugewiesen",
+        task.title,
+        `/app/tasks/${task.id}`,
       ),
     );
   }
+  if (notifications.length <= 0) return;
+
+  await Promise.all(notifications);
 };

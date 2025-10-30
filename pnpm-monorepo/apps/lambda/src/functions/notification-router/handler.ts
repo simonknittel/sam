@@ -1,41 +1,45 @@
 import { z } from "zod";
 import "./env";
-import { eventCreatedHandler } from "./type-handlers/EventCreated";
-import { eventDeletedHandler } from "./type-handlers/EventDeleted";
-import { eventUpdatedHandler } from "./type-handlers/EventUpdated";
-import { profitDistributionPayoutDisbursedHandler } from "./type-handlers/ProfitDistributionPayoutDisbursed";
-import { profitDistributionPayoutStartedHandler } from "./type-handlers/ProfitDistributionPayoutStarted";
-import { silcTransactionsCreatedHandler } from "./type-handlers/SilcTransactionsCreated";
-import { taskAssignmentUpdatedHandler } from "./type-handlers/TaskAssignmentUpdated";
-import { taskCreatedHandler } from "./type-handlers/TaskCreated";
+import { EventCreatedHandler } from "./type-handlers/EventCreated";
+import { EventDeletedHandler } from "./type-handlers/EventDeleted";
+import { EventUpdatedHandler } from "./type-handlers/EventUpdated";
+import { ProfitDistributionPayoutDisbursedHandler } from "./type-handlers/ProfitDistributionPayoutDisbursed";
+import { ProfitDistributionPayoutStartedHandler } from "./type-handlers/ProfitDistributionPayoutStarted";
+import { RoleAddedHandler } from "./type-handlers/RoleAdded";
+import { SilcTransactionsCreatedHandler } from "./type-handlers/SilcTransactionsCreated";
+import { TaskAssignmentUpdatedHandler } from "./type-handlers/TaskAssignmentUpdated";
+import { TaskCreatedHandler } from "./type-handlers/TaskCreated";
 
 export const notificationRouterHandler = async (
   body: z.infer<typeof bodySchema>,
 ) => {
   switch (body.type) {
     case "EventCreated":
-      await eventCreatedHandler(body.payload);
+      await EventCreatedHandler(body.payload);
       break;
     case "EventUpdated":
-      await eventUpdatedHandler(body.payload);
+      await EventUpdatedHandler(body.payload);
       break;
     case "EventDeleted":
-      await eventDeletedHandler(body.payload);
+      await EventDeletedHandler(body.payload);
       break;
     case "TaskCreated":
-      await taskCreatedHandler(body.payload);
+      await TaskCreatedHandler(body.payload);
       break;
     case "TaskAssignmentUpdated":
-      await taskAssignmentUpdatedHandler(body.payload);
+      await TaskAssignmentUpdatedHandler(body.payload);
       break;
     case "ProfitDistributionPayoutStarted":
-      await profitDistributionPayoutStartedHandler(body.payload);
+      await ProfitDistributionPayoutStartedHandler(body.payload);
       break;
     case "ProfitDistributionPayoutDisbursed":
-      await profitDistributionPayoutDisbursedHandler(body.payload);
+      await ProfitDistributionPayoutDisbursedHandler(body.payload);
       break;
     case "SilcTransactionsCreated":
-      await silcTransactionsCreatedHandler(body.payload);
+      await SilcTransactionsCreatedHandler(body.payload);
+      break;
+    case "RoleAdded":
+      await RoleAddedHandler(body.payload);
       break;
   }
 };
@@ -44,7 +48,7 @@ export const bodySchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("EventCreated"),
     payload: z.object({
-      eventId: z.cuid2(),
+      eventId: z.cuid(),
     }),
     requestId: z.cuid2(),
   }),
@@ -52,7 +56,7 @@ export const bodySchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("EventUpdated"),
     payload: z.object({
-      eventId: z.cuid2(),
+      eventId: z.cuid(),
     }),
     requestId: z.cuid2(),
   }),
@@ -60,7 +64,7 @@ export const bodySchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("EventDeleted"),
     payload: z.object({
-      eventId: z.cuid2(),
+      eventId: z.cuid(),
     }),
     requestId: z.cuid2(),
   }),
@@ -68,7 +72,7 @@ export const bodySchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("TaskCreated"),
     payload: z.object({
-      taskIds: z.array(z.cuid2()),
+      taskIds: z.array(z.cuid()),
     }),
     requestId: z.cuid2(),
   }),
@@ -76,7 +80,7 @@ export const bodySchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("TaskAssignmentUpdated"),
     payload: z.object({
-      taskId: z.cuid2(),
+      taskId: z.cuid(),
     }),
     requestId: z.cuid2(),
   }),
@@ -84,7 +88,7 @@ export const bodySchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("ProfitDistributionPayoutStarted"),
     payload: z.object({
-      cycleId: z.string(),
+      cycleId: z.cuid2(),
     }),
     requestId: z.cuid2(),
   }),
@@ -107,7 +111,16 @@ export const bodySchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("SilcTransactionsCreated"),
     payload: z.object({
-      transactionIds: z.array(z.cuid2()),
+      transactionIds: z.array(z.cuid()),
+    }),
+    requestId: z.cuid2(),
+  }),
+
+  z.object({
+    type: z.literal("RoleAdded"),
+    payload: z.object({
+      citizenId: z.cuid(),
+      roleId: z.cuid(),
     }),
     requestId: z.cuid2(),
   }),

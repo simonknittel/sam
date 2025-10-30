@@ -83,6 +83,10 @@ export default async function Page() {
               filter: { tags: ["Events"] },
             },
             {
+              name: "Karriere",
+              filter: { tags: ["Karriere"] },
+            },
+            {
               name: "SINcome",
               filter: { tags: ["SINcome"] },
             },
@@ -103,6 +107,10 @@ export default async function Page() {
             {
               label: "Events",
               filter: { tags: ["Events"] },
+            },
+            {
+              label: "Karriere",
+              filter: { tags: ["Karriere"] },
             },
             {
               label: "SINcome",

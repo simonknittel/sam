@@ -2,6 +2,7 @@ import { prisma } from "@/db";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import { confirmLog } from "@/modules/citizen/utils/confirmLog";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
+import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { updateEntityRolesCache } from "./_lib/updateEntityRolesCache";
@@ -175,8 +176,21 @@ export async function POST(request: Request, props: { params: Params }) {
 
     if (data.confirmed) await confirmLog(item, "confirmed");
 
-    if (["role-added", "role-removed"].includes(data.type))
+    if (["role-added", "role-removed"].includes(data.type)) {
       await updateEntityRolesCache(entity.id);
+    }
+
+    if (data.type === "role-added") {
+      await triggerNotifications([
+        {
+          type: "RoleAdded",
+          payload: {
+            citizenId: entity.id,
+            roleId: data.content,
+          },
+        },
+      ]);
+    }
 
     /**
      * Respond with the result

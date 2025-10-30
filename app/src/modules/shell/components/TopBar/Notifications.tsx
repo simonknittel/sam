@@ -48,6 +48,10 @@ export const Notifications = async () => {
           filter: { tags: ["Events"] },
         },
         {
+          name: "Karriere",
+          filter: { tags: ["Karriere"] },
+        },
+        {
           name: "SINcome",
           filter: { tags: ["SINcome"] },
         },
@@ -68,6 +72,10 @@ export const Notifications = async () => {
         {
           label: "Events",
           filter: { tags: ["Events"] },
+        },
+        {
+          label: "Karriere",
+          filter: { tags: ["Karriere"] },
         },
         {
           label: "SINcome",

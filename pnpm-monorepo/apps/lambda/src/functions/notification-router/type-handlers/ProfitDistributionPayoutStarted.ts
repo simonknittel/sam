@@ -5,7 +5,7 @@ interface Payload {
   cycleId: string;
 }
 
-export const profitDistributionPayoutStartedHandler = async (
+export const ProfitDistributionPayoutStartedHandler = async (
   payload: Payload,
 ) => {
   // TODO: Only send notifications to citizens which have the `login;manage` and `profitDistributionCycle;read` permission
@@ -29,7 +29,7 @@ export const profitDistributionPayoutStartedHandler = async (
   if (!cycle || cycle.participants.length === 0) return;
 
   /**
-   * Trigger notifications
+   * Publish notifications
    */
   await publishNovuNotifications(
     cycle.participants.map((participant) => ({
