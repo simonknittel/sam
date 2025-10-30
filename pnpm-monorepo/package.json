@@ -4,7 +4,8 @@
   "packageManager": "pnpm@10.18.3",
   "scripts": {
     "dev:lambda": "pnpm run --filter \"./packages/database\" build && pnpm run --filter \"./packages/notifications\" build && pnpm run --filter \"./apps/lambda\" dev",
-    "build:lambda": "pnpm run --filter \"./packages/database\" build && pnpm run --filter \"./packages/notifications\" build && pnpm run --filter \"./apps/lambda\" build"
+    "build:lambda": "pnpm run --filter \"./packages/database\" build && pnpm run --filter \"./packages/notifications\" build && pnpm run --filter \"./apps/lambda\" build",
+    "format": "prettier --write ."
   },
   "devDependencies": {
     "prettier": "3.6.2",
