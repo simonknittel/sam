@@ -45,3 +45,7 @@ variable "dynamodb" {
     arn = string
   })
 }
+
+variable "runtime" {
+  type    = string
+}

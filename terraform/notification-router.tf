@@ -8,4 +8,5 @@ module "notification_router" {
   event_bus                      = data.aws_cloudwatch_event_bus.default
   event_bus_detail_type          = "NotificationRequested"
   dynamodb                       = aws_dynamodb_table.sqs_processed_requests
+  runtime                        = "nodejs22.x"
 }

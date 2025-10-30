@@ -4,7 +4,7 @@ resource "aws_lambda_function" "main" {
   role             = aws_iam_role.main.arn
   handler          = "index.handler"
   source_code_hash = filebase64sha256("${path.module}/placeholder.zip")
-  runtime          = "nodejs20.x"
+  runtime          = var.runtime
   timeout          = var.timeout
   memory_size      = 256
   architectures    = ["arm64"]
