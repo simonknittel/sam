@@ -3,6 +3,7 @@
 import { prisma } from "@/db";
 import { requireAuthenticationAction } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
+import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
 import { unstable_rethrow } from "next/navigation";
@@ -70,7 +71,23 @@ export const createPenaltyEntry = async (formData: FormData) => {
         reason: result.data.reason,
         expiresAt: result.data.expiresAt,
       },
+      select: {
+        id: true,
+        citizenId: true,
+      },
     });
+
+    /**
+     * Trigger notifications
+     */
+    await triggerNotifications([
+      {
+        type: "PenaltyEntryCreated",
+        payload: {
+          penaltyEntryId: createdEntry.id,
+        },
+      },
+    ]);
 
     /**
      * Revalidate cache(s)

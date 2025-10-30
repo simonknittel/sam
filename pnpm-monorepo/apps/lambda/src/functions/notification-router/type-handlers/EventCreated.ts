@@ -6,7 +6,7 @@ type Payload = {
   eventId: Event["id"];
 };
 
-export const eventCreatedHandler = async (payload: Payload) => {
+export const EventCreatedHandler = async (payload: Payload) => {
   /**
    * Calculate recipients
    */
@@ -78,7 +78,7 @@ export const eventCreatedHandler = async (payload: Payload) => {
   if (citizensWithMatchingRoles.length === 0) return;
 
   /**
-   * Trigger notifications
+   * Publish notifications
    */
   await publishNovuNotifications(
     citizensWithMatchingRoles.map((citizen) => ({

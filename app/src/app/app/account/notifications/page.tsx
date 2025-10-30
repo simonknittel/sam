@@ -83,12 +83,20 @@ export default async function Page() {
               filter: { tags: ["Events"] },
             },
             {
+              name: "Karriere",
+              filter: { tags: ["Career"] },
+            },
+            {
               name: "SINcome",
               filter: { tags: ["SINcome"] },
             },
             {
               name: "SILC",
               filter: { tags: ["SILC"] },
+            },
+            {
+              name: "Strafpunkte",
+              filter: { tags: ["Penalty Points"] },
             },
           ]}
           tabs={[
@@ -105,12 +113,20 @@ export default async function Page() {
               filter: { tags: ["Events"] },
             },
             {
+              label: "Karriere",
+              filter: { tags: ["Career"] },
+            },
+            {
               label: "SINcome",
               filter: { tags: ["SINcome"] },
             },
             {
               label: "SILC",
               filter: { tags: ["SILC"] },
+            },
+            {
+              label: "Strafpunkte",
+              filter: { tags: ["Penalty Points"] },
             },
           ]}
         >

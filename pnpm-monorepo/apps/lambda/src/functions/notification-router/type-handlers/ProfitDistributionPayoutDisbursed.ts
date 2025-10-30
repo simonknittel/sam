@@ -14,7 +14,7 @@ interface Payload {
   changes: Change[];
 }
 
-export const profitDistributionPayoutDisbursedHandler = async (
+export const ProfitDistributionPayoutDisbursedHandler = async (
   payload: Payload,
 ) => {
   // TODO: Only send notifications to citizens which have the `login;manage` and `profitDistributionCycle;read` permission
@@ -51,7 +51,7 @@ export const profitDistributionPayoutDisbursedHandler = async (
   );
 
   /**
-   * Trigger notifications
+   * Publish notifications
    */
   await publishNovuNotifications(
     participantsWithDisbursedEnabled.map((participant) => {

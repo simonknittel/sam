@@ -5,7 +5,7 @@ interface Payload {
   transactionIds: SilcTransaction["id"][];
 }
 
-export const silcTransactionsCreatedHandler = async (payload: Payload) => {
+export const SilcTransactionsCreatedHandler = async (payload: Payload) => {
   /**
    * Calculate recipients
    */
@@ -83,6 +83,9 @@ export const silcTransactionsCreatedHandler = async (payload: Payload) => {
   });
   if (citizensWithMatchingRoles.length === 0) return;
 
+  /**
+   * Publish notifications
+   */
   await publishNovuNotifications(
     transactions
       .filter((transaction) =>

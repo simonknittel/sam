@@ -48,12 +48,20 @@ export const Notifications = async () => {
           filter: { tags: ["Events"] },
         },
         {
+          name: "Karriere",
+          filter: { tags: ["Career"] },
+        },
+        {
           name: "SINcome",
           filter: { tags: ["SINcome"] },
         },
         {
           name: "SILC",
           filter: { tags: ["SILC"] },
+        },
+        {
+          name: "Strafpunkte",
+          filter: { tags: ["Penalty Points"] },
         },
       ]}
       tabs={[
@@ -70,12 +78,20 @@ export const Notifications = async () => {
           filter: { tags: ["Events"] },
         },
         {
+          label: "Karriere",
+          filter: { tags: ["Career"] },
+        },
+        {
           label: "SINcome",
           filter: { tags: ["SINcome"] },
         },
         {
           label: "SILC",
           filter: { tags: ["SILC"] },
+        },
+        {
+          label: "Strafpunkte",
+          filter: { tags: ["Penalty Points"] },
         },
       ]}
     />
