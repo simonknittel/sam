@@ -56,13 +56,8 @@ export const PenaltyEntryCreatedHandler = async (payload: Payload) => {
       return "unknown";
     },
   );
-  if (
-    !rolesWithLoginManage ||
-    rolesWithLoginManage.length <= 0 ||
-    !rolesWithOwnPenaltyEntryRead ||
-    rolesWithOwnPenaltyEntryRead.length <= 0
-  )
-    return;
+  if (!rolesWithLoginManage?.length) return;
+  if (!rolesWithOwnPenaltyEntryRead?.length) return;
 
   if (!penaltyEntry.citizen.roles) return;
   const roleIdsOfCitizen = penaltyEntry.citizen.roles.split(",");
@@ -72,7 +67,8 @@ export const PenaltyEntryCreatedHandler = async (payload: Payload) => {
   const hasCitizenOtherRoleRead = rolesWithOwnPenaltyEntryRead.some((role) =>
     roleIdsOfCitizen.includes(role.roleId),
   );
-  if (!hasCitizenLoginManage || !hasCitizenOtherRoleRead) return;
+  if (!hasCitizenLoginManage) return;
+  if (!hasCitizenOtherRoleRead) return;
 
   /**
    * Publish notifications

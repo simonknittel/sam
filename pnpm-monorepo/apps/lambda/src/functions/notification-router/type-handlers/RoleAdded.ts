@@ -63,14 +63,8 @@ export const RoleAddedHandler = async (payload: Payload) => {
 
     return "unknown";
   });
-  if (
-    !rolesWithLoginManage ||
-    rolesWithLoginManage.length <= 0 ||
-    !rolesWithOtherRoleRead ||
-    rolesWithOtherRoleRead.length <= 0 ||
-    !rolesWithOtherRoleManage ||
-    rolesWithOtherRoleManage.length <= 0
-  )
+  if (!rolesWithLoginManage?.length) return;
+  if (!rolesWithOtherRoleRead?.length && !rolesWithOtherRoleManage?.length)
     return;
 
   if (!citizen.roles) return;
@@ -78,17 +72,14 @@ export const RoleAddedHandler = async (payload: Payload) => {
   const hasCitizenLoginManage = rolesWithLoginManage.some((role) =>
     roleIdsOfCitizen.includes(role.roleId),
   );
-  const hasCitizenOtherRoleRead = rolesWithOtherRoleRead.some((role) =>
+  const hasCitizenOtherRoleRead = rolesWithOtherRoleRead?.some((role) =>
     roleIdsOfCitizen.includes(role.roleId),
   );
-  const hasCitizenOtherRoleManage = rolesWithOtherRoleManage.some((role) =>
+  const hasCitizenOtherRoleManage = rolesWithOtherRoleManage?.some((role) =>
     roleIdsOfCitizen.includes(role.roleId),
   );
-  if (
-    !hasCitizenLoginManage ||
-    !(hasCitizenOtherRoleRead && hasCitizenOtherRoleManage)
-  )
-    return;
+  if (!hasCitizenLoginManage) return;
+  if (!hasCitizenOtherRoleRead && !hasCitizenOtherRoleManage) return;
 
   /**
    * Publish notifications
