@@ -1,18 +1,25 @@
-import { prisma } from "@/db";
-import { isNovuEnabled, publishNovuNotifications } from "@/modules/novu/utils";
-import type { Change } from "@/modules/profit-distribution/actions/updateParticipantAttribute";
-import { getAuecPerSilc } from "@/modules/profit-distribution/utils/getAuecPerSilc";
-import { getTotalSilc } from "@/modules/profit-distribution/utils/getTotalSilc";
+import { prisma } from "@sam-monorepo/database";
+import { getAuecPerSilc } from "../../../common/profit-distribution/utils/getAuecPerSilc";
+import { getTotalSilc } from "../../../common/profit-distribution/utils/getTotalSilc";
+import { novu, publishNovuNotifications } from "../novu";
+
+interface Change {
+  citizenId: string;
+  attribute: string;
+  enabled: boolean;
+}
 
 interface Payload {
   cycleId: string;
   changes: Change[];
 }
 
-const handler = async (payload: Payload) => {
+export const profitDistributionPayoutDisbursedHandler = async (
+  payload: Payload,
+) => {
   // TODO: Only send notifications to citizens which have the `login;manage` and `profitDistributionCycle;read` permission
 
-  if (!(await isNovuEnabled())) return;
+  if (!novu) return;
 
   const cycle = await prisma.profitDistributionCycle.findUnique({
     where: {
@@ -65,10 +72,3 @@ const handler = async (payload: Payload) => {
     }),
   );
 };
-
-const event = {
-  key: "profit_distribution_payout_disbursed",
-  handler,
-} as const;
-
-export default event;

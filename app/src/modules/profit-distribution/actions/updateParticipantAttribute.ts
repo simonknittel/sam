@@ -4,7 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { getUnleashFlag } from "@/modules/common/utils/getUnleashFlag";
 import { UNLEASH_FLAG } from "@/modules/common/utils/UNLEASH_FLAG";
-import { triggerNotification } from "@/modules/notifications/components/utils/triggerNotification";
+import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { revalidatePath } from "next/cache";
 import { notFound } from "next/navigation";
 import { z } from "zod";
@@ -154,10 +154,15 @@ export const updateParticipantAttribute = createAuthenticatedAction(
     /**
      * Trigger notifications
      */
-    await triggerNotification("profit_distribution_payout_disbursed", {
-      cycleId: data.cycleId,
-      changes,
-    });
+    await triggerNotifications([
+      {
+        type: "ProfitDistributionPayoutDisbursed",
+        payload: {
+          cycleId: cycle.id,
+          changes,
+        },
+      },
+    ]);
 
     /**
      * Revalidate cache(s)

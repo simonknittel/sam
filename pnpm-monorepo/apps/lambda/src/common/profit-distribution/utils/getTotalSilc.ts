@@ -1,6 +1,6 @@
-// Make sure to mirror this file with pnpm-monorepo/apps/lambda/src/functions/notification-router/utils/getTotalSilc.ts
+// Make sure to mirror this file with app/src/modules/profit-distribution/utils/getTotalSilc.ts
 
-import type { ProfitDistributionCycleParticipant } from "@prisma/client";
+import type { ProfitDistributionCycleParticipant } from "@sam-monorepo/database";
 
 export const getTotalSilc = (
   participants: Pick<

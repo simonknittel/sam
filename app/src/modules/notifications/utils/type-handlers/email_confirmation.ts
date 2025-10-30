@@ -1,7 +1,5 @@
 import { prisma } from "@/db";
 import { env } from "@/env";
-import { getUnleashFlag } from "@/modules/common/utils/getUnleashFlag";
-import { UNLEASH_FLAG } from "@/modules/common/utils/UNLEASH_FLAG";
 import { emitEvents } from "@/modules/eventbridge/utils";
 import { createId } from "@paralleldrive/cuid2";
 
@@ -10,9 +8,7 @@ interface Payload {
   userId: string;
 }
 
-const handler = async (payload: Payload) => {
-  if (await getUnleashFlag(UNLEASH_FLAG.DisableConfirmationEmail)) return;
-
+export const emailConfirmationHandler = async (payload: Payload) => {
   const emailConfirmationToken = createId();
 
   await prisma.emailConfirmationToken.create({
@@ -29,7 +25,6 @@ const handler = async (payload: Payload) => {
       Source: "App",
       DetailType: "EmailRequested",
       Detail: JSON.stringify({
-        requestId: createId(),
         template: "emailConfirmation",
         messages: [
           {
@@ -41,14 +36,8 @@ const handler = async (payload: Payload) => {
             },
           },
         ],
+        requestId: createId(),
       }),
     },
   ]);
 };
-
-const event = {
-  key: "email_confirmation",
-  handler,
-} as const;
-
-export default event;

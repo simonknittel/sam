@@ -1,14 +1,16 @@
-import { prisma } from "@/db";
-import { isNovuEnabled, publishNovuNotifications } from "@/modules/novu/utils";
+import { prisma } from "@sam-monorepo/database";
+import { novu, publishNovuNotifications } from "../novu";
 
 interface Payload {
   cycleId: string;
 }
 
-const handler = async (payload: Payload) => {
+export const profitDistributionPayoutStartedHandler = async (
+  payload: Payload,
+) => {
   // TODO: Only send notifications to citizens which have the `login;manage` and `profitDistributionCycle;read` permission
 
-  if (!(await isNovuEnabled())) return;
+  if (!novu) return;
 
   const cycle = await prisma.profitDistributionCycle.findUnique({
     where: {
@@ -42,10 +44,3 @@ const handler = async (payload: Payload) => {
     })),
   );
 };
-
-const event = {
-  key: "profit_distribution_payout_started",
-  handler,
-} as const;
-
-export default event;

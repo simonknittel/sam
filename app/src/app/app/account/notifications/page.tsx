@@ -1,8 +1,9 @@
 import { env } from "@/env";
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { Note } from "@/modules/common/components/Note";
+import { getUnleashFlag } from "@/modules/common/utils/getUnleashFlag";
+import { UNLEASH_FLAG } from "@/modules/common/utils/UNLEASH_FLAG";
 import { NotificationSettings } from "@/modules/notifications/components/NotificationSettings";
-import { isNovuEnabled } from "@/modules/novu/utils";
 import { Inbox, Preferences } from "@novu/nextjs";
 import { dark } from "@novu/react/themes";
 import { type Metadata } from "next";
@@ -19,7 +20,7 @@ export default async function Page() {
   );
   if (!authentication.session.entity) notFound();
 
-  if (!(await isNovuEnabled())) {
+  if (!(await getUnleashFlag(UNLEASH_FLAG.EnableNotificationsRework))) {
     return (
       <div className="flex flex-col gap-2">
         <NotificationSettings />

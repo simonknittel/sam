@@ -9,4 +9,5 @@ module "email_function" {
   event_bus_detail_type          = "EmailRequested"
   dynamodb                       = aws_dynamodb_table.sqs_processed_requests
   parameters                     = var.email_function_parameters
+  runtime                        = "nodejs20.x"
 }

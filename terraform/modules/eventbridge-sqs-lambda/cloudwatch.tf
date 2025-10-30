@@ -36,6 +36,25 @@ resource "aws_cloudwatch_metric_alarm" "lambda_errors" {
   alarm_description   = "This alarm detects a high number of errors for this Lambda function."
 }
 
+resource "aws_cloudwatch_metric_alarm" "memory_utilization" {
+  alarm_name = "${var.function_name}-memory-utilization"
+
+  namespace   = "LambdaInsights"
+  metric_name = "memory_utilization"
+  dimensions = {
+    function_name = var.function_name
+  }
+
+  statistic           = "Maximum"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  threshold           = 90
+  evaluation_periods  = 1
+  datapoints_to_alarm = 1
+  period              = 60
+  alarm_description   = "This alarm detects when this Lambda function is using a high amount of memory."
+}
+
+
 resource "aws_cloudwatch_metric_alarm" "deadletter_message_count" {
   alarm_name = "deadletter-message-count-${var.function_name}"
 

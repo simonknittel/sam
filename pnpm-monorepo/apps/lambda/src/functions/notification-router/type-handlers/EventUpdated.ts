@@ -2,11 +2,11 @@ import { prisma, type Event } from "@sam-monorepo/database";
 import { publishNovuNotifications } from "../novu.js";
 import { publishPusherNotification } from "../pusher.js";
 
-export type Payload = {
+type Payload = {
   eventId: Event["id"];
 };
 
-const handler = async (payload: Payload) => {
+export const eventUpdatedHandler = async (payload: Payload) => {
   /**
    * Calculate recipients
    */
@@ -110,10 +110,3 @@ const handler = async (payload: Payload) => {
     `/app/events/${event.id}`,
   );
 };
-
-const event = {
-  key: "event_updated",
-  handler,
-} as const;
-
-export default event;

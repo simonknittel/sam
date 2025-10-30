@@ -75,6 +75,15 @@ resource "aws_iam_role_policy" "main_parameter_store" {
           var.dynamodb.arn
         ]
       },
+      {
+        Action = [
+          "events:PutEvents"
+        ]
+        Effect = "Allow"
+        Resource = [
+          var.event_bus.arn
+        ]
+      }
     ]
   })
 }
