@@ -84,7 +84,7 @@ export default async function Page() {
             },
             {
               name: "Karriere",
-              filter: { tags: ["Karriere"] },
+              filter: { tags: ["Career"] },
             },
             {
               name: "SINcome",
@@ -96,7 +96,7 @@ export default async function Page() {
             },
             {
               name: "Strafpunkte",
-              filter: { tags: ["Strafpunkte"] },
+              filter: { tags: ["Penalty Points"] },
             },
           ]}
           tabs={[
@@ -114,7 +114,7 @@ export default async function Page() {
             },
             {
               label: "Karriere",
-              filter: { tags: ["Karriere"] },
+              filter: { tags: ["Career"] },
             },
             {
               label: "SINcome",
@@ -126,7 +126,7 @@ export default async function Page() {
             },
             {
               label: "Strafpunkte",
-              filter: { tags: ["Strafpunkte"] },
+              filter: { tags: ["Penalty Points"] },
             },
           ]}
         >

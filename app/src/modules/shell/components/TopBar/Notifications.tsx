@@ -49,7 +49,7 @@ export const Notifications = async () => {
         },
         {
           name: "Karriere",
-          filter: { tags: ["Karriere"] },
+          filter: { tags: ["Career"] },
         },
         {
           name: "SINcome",
@@ -61,7 +61,7 @@ export const Notifications = async () => {
         },
         {
           name: "Strafpunkte",
-          filter: { tags: ["Strafpunkte"] },
+          filter: { tags: ["Penalty Points"] },
         },
       ]}
       tabs={[
@@ -79,7 +79,7 @@ export const Notifications = async () => {
         },
         {
           label: "Karriere",
-          filter: { tags: ["Karriere"] },
+          filter: { tags: ["Career"] },
         },
         {
           label: "SINcome",
@@ -91,7 +91,7 @@ export const Notifications = async () => {
         },
         {
           label: "Strafpunkte",
-          filter: { tags: ["Strafpunkte"] },
+          filter: { tags: ["Penalty Points"] },
         },
       ]}
     />
