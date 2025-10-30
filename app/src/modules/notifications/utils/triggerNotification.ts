@@ -1,7 +1,7 @@
-import { withTrace } from "@/modules/tracing/utils/withTrace";
-import { emailConfirmationHandler } from "./type-handlers/email_confirmation";
 import { emitEvents } from "@/modules/eventbridge/utils";
+import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { createId } from "@paralleldrive/cuid2";
+import { emailConfirmationHandler } from "./type-handlers/email_confirmation";
 
 interface Notification {
   type: string;
@@ -10,9 +10,7 @@ interface Notification {
 
 export const triggerNotification = withTrace(
   "triggerNotification",
-  async (
-    notifications: Notification[]
-  ) => {
+  async (notifications: Notification[]) => {
     if (notifications[0].type === "EmailConfirmation") {
       // TODO: Migrate to "NotificationRequested" event type handler
       emailConfirmationHandler(notifications[0].payload);

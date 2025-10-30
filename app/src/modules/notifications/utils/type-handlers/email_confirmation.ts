@@ -1,7 +1,5 @@
 import { prisma } from "@/db";
 import { env } from "@/env";
-import { getUnleashFlag } from "@/modules/common/utils/getUnleashFlag";
-import { UNLEASH_FLAG } from "@/modules/common/utils/UNLEASH_FLAG";
 import { emitEvents } from "@/modules/eventbridge/utils";
 import { createId } from "@paralleldrive/cuid2";
 

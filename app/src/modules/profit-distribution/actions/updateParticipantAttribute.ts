@@ -156,13 +156,13 @@ export const updateParticipantAttribute = createAuthenticatedAction(
      */
     await triggerNotification([
       {
-        type: "ProfitDistributionPayoutStarted",
+        type: "ProfitDistributionPayoutDisbursed",
         payload: {
           cycleId: data.id,
           changes,
         },
-      }
-    ])
+      },
+    ]);
 
     /**
      * Revalidate cache(s)

@@ -1,10 +1,10 @@
 import { z } from "zod";
 import "./env";
-import { eventCreatedHandler } from "./type-handlers/event_created";
-import { eventDeletedHandler } from "./type-handlers/event_deleted";
-import { eventUpdatedHandler } from "./type-handlers/event_updated";
-import { profitDistributionPayoutDisbursedHandler } from "./type-handlers/profit_distribution_payout_disbursed";
-import { profitDistributionPayoutStartedHandler } from "./type-handlers/profit_distribution_payout_started";
+import { eventCreatedHandler } from "./type-handlers/EventCreated";
+import { eventDeletedHandler } from "./type-handlers/EventDeleted";
+import { eventUpdatedHandler } from "./type-handlers/EventUpdated";
+import { profitDistributionPayoutDisbursedHandler } from "./type-handlers/ProfitDistributionPayoutDisbursed";
+import { profitDistributionPayoutStartedHandler } from "./type-handlers/ProfitDistributionPayoutStarted";
 import { taskAssignmentUpdatedHandler } from "./type-handlers/task_assignment_updated";
 import { taskCreatedHandler } from "./type-handlers/task_created";
 
@@ -13,25 +13,25 @@ export const notificationRouterHandler = async (
 ) => {
   switch (body.type) {
     case "EventCreated":
-      eventCreatedHandler(body.payload);
+      await eventCreatedHandler(body.payload);
       break;
     case "EventUpdated":
-      eventUpdatedHandler(body.payload);
+      await eventUpdatedHandler(body.payload);
       break;
     case "EventDeleted":
-      eventDeletedHandler(body.payload);
+      await eventDeletedHandler(body.payload);
       break;
     case "TaskCreated":
-      taskCreatedHandler(body.payload);
+      await taskCreatedHandler(body.payload);
       break;
     case "TaskAssignmentUpdated":
-      taskAssignmentUpdatedHandler(body.payload);
+      await taskAssignmentUpdatedHandler(body.payload);
       break;
     case "ProfitDistributionPayoutStarted":
-      profitDistributionPayoutStartedHandler(body.payload);
+      await profitDistributionPayoutStartedHandler(body.payload);
       break;
     case "ProfitDistributionPayoutDisbursed":
-      profitDistributionPayoutDisbursedHandler(body.payload);
+      await profitDistributionPayoutDisbursedHandler(body.payload);
       break;
   }
 };

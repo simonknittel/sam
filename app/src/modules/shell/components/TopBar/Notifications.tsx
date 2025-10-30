@@ -7,7 +7,8 @@ import { dark } from "@novu/react/themes";
 import { createHmac } from "node:crypto";
 
 export const Notifications = async () => {
-  if (!(await getUnleashFlag(UNLEASH_FLAG.EnableNotificationsRework))) return null;
+  if (!(await getUnleashFlag(UNLEASH_FLAG.EnableNotificationsRework)))
+    return null;
 
   const authentication = await authenticate();
   if (!authentication || !authentication.session.entity) return null;

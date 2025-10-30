@@ -50,7 +50,7 @@ export const createTask = async (formData: FormData) => {
       visibility: formData.get("visibility"),
       assignmentLimit:
         formData.has("assignmentLimit") &&
-          formData.get("assignmentLimit") !== ""
+        formData.get("assignmentLimit") !== ""
           ? formData.get("assignmentLimit")
           : null,
       assignedToIds: formData.getAll("assignedToId[]"),
@@ -146,8 +146,8 @@ export const createTask = async (formData: FormData) => {
               requiredRoles: {
                 connect: result.data.requiredRoles
                   ? result.data.requiredRoles.map((roleId) => ({
-                    id: roleId,
-                  }))
+                      id: roleId,
+                    }))
                   : [],
               },
               hiddenForOtherRoles: result.data.hiddenForOtherRoles,
@@ -248,8 +248,8 @@ export const createTask = async (formData: FormData) => {
         payload: {
           taskIds: createdTasks.map((task) => task.id),
         },
-      }
-    ])
+      },
+    ]);
 
     /**
      * Revalidate cache(s)

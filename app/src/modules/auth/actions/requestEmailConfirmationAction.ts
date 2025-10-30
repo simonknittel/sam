@@ -27,8 +27,8 @@ export const requestEmailConfirmationAction = async () => {
           userId: authentication.session.user.id,
           userEmail: authentication.session.user.email!,
         },
-      }
-    ])
+      },
+    ]);
   } catch (error) {
     void log.error("Error while requesting email confirmation", {
       path: "/email-confirmation",

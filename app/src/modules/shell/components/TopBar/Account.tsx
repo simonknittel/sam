@@ -47,7 +47,10 @@ export const Account = async ({ className }: Props) => {
       </div>
 
       {authentication.session.entity?.id && (
-        <SpynetProfileLink className="w-full mt-4" entityId={authentication.session.entity.id} />
+        <SpynetProfileLink
+          className="w-full mt-4"
+          entityId={authentication.session.entity.id}
+        />
       )}
 
       <AccountSettings className="w-full mt-2" />

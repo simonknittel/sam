@@ -265,8 +265,8 @@ export const authOptions: NextAuthOptions = {
               userId: createdUser.id,
               userEmail: user.email!,
             },
-          }
-        ])
+          },
+        ]);
       } catch (error) {
         void log.error(
           "Failed to request email confirmation for created user",

@@ -42,7 +42,7 @@ export const updateTaskAssignments = async (formData: FormData) => {
       id: formData.get("id"),
       assignmentLimit:
         formData.has("assignmentLimit") &&
-          formData.get("assignmentLimit") !== ""
+        formData.get("assignmentLimit") !== ""
           ? formData.get("assignmentLimit")
           : null,
       assignedToIds: formData.has("assignedToId[]")
@@ -115,8 +115,8 @@ export const updateTaskAssignments = async (formData: FormData) => {
         payload: {
           taskId: result.data.id,
         },
-      }
-    ])
+      },
+    ]);
 
     /**
      * Revalidate cache(s)

@@ -23,7 +23,7 @@ export const handler: SQSHandler = async (event, context) => {
 
         await notificationRouterHandler(body);
 
-        setRequestProcessed(body.requestId);
+        await setRequestProcessed(body.requestId);
       } catch (error) {
         log.error("An error occurred while processing an SQS message", {
           error,

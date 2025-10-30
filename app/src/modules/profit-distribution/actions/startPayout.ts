@@ -90,8 +90,8 @@ export const startPayout = createAuthenticatedAction(
         payload: {
           cycleId: data.id,
         },
-      }
-    ])
+      },
+    ]);
 
     /**
      * Revalidate cache(s)
