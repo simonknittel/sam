@@ -5,8 +5,9 @@ import { eventDeletedHandler } from "./type-handlers/EventDeleted";
 import { eventUpdatedHandler } from "./type-handlers/EventUpdated";
 import { profitDistributionPayoutDisbursedHandler } from "./type-handlers/ProfitDistributionPayoutDisbursed";
 import { profitDistributionPayoutStartedHandler } from "./type-handlers/ProfitDistributionPayoutStarted";
-import { taskAssignmentUpdatedHandler } from "./type-handlers/task_assignment_updated";
-import { taskCreatedHandler } from "./type-handlers/task_created";
+import { silcTransactionsCreatedHandler } from "./type-handlers/SilcTransactionsCreated";
+import { taskAssignmentUpdatedHandler } from "./type-handlers/TaskAssignmentUpdated";
+import { taskCreatedHandler } from "./type-handlers/TaskCreated";
 
 export const notificationRouterHandler = async (
   body: z.infer<typeof bodySchema>,
@@ -32,6 +33,9 @@ export const notificationRouterHandler = async (
       break;
     case "ProfitDistributionPayoutDisbursed":
       await profitDistributionPayoutDisbursedHandler(body.payload);
+      break;
+    case "SilcTransactionsCreated":
+      await silcTransactionsCreatedHandler(body.payload);
       break;
   }
 };
@@ -96,6 +100,14 @@ export const bodySchema = z.discriminatedUnion("type", [
           enabled: z.boolean(),
         }),
       ),
+    }),
+    requestId: z.cuid2(),
+  }),
+
+  z.object({
+    type: z.literal("SilcTransactionsCreated"),
+    payload: z.object({
+      transactionIds: z.array(z.cuid2()),
     }),
     requestId: z.cuid2(),
   }),

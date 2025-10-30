@@ -29,6 +29,10 @@ resource "aws_lambda_function" "main" {
       source_code_hash
     ]
   }
+
+  environment {
+    variables = var.environment_variables
+  }
 }
 
 resource "aws_lambda_provisioned_concurrency_config" "main" {

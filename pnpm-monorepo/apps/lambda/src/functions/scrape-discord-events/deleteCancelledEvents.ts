@@ -20,15 +20,15 @@ export const deleteCancelledEvents = async (
       ),
   );
 
-  if (cancelledEvents.length > 0) {
-    await prisma.event.deleteMany({
-      where: {
-        id: {
-          in: cancelledEvents.map((event) => event.id),
-        },
+  if (cancelledEvents.length <= 0) return;
+
+  await prisma.event.deleteMany({
+    where: {
+      id: {
+        in: cancelledEvents.map((event) => event.id),
       },
-    });
-  }
+    },
+  });
 
   await triggerNotifications(
     cancelledEvents.map((event) => ({

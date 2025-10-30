@@ -9,4 +9,5 @@ module "notification_router" {
   event_bus_detail_type          = "NotificationRequested"
   dynamodb                       = aws_dynamodb_table.sqs_processed_requests
   runtime                        = "nodejs22.x"
+  environment_variables          = var.notification_router_environment_variables
 }

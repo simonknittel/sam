@@ -51,6 +51,10 @@ export const Notifications = async () => {
           name: "SINcome",
           filter: { tags: ["SINcome"] },
         },
+        {
+          name: "SILC",
+          filter: { tags: ["SILC"] },
+        },
       ]}
       tabs={[
         {
@@ -68,6 +72,10 @@ export const Notifications = async () => {
         {
           label: "SINcome",
           filter: { tags: ["SINcome"] },
+        },
+        {
+          label: "SILC",
+          filter: { tags: ["SILC"] },
         },
       ]}
     />

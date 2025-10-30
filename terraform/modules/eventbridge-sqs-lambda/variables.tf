@@ -49,3 +49,9 @@ variable "dynamodb" {
 variable "runtime" {
   type    = string
 }
+
+variable "environment_variables" {
+  type      = map(string)
+  sensitive = true
+  default = {}
+}
