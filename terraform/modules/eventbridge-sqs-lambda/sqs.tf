@@ -46,4 +46,10 @@ resource "aws_lambda_event_source_mapping" "main" {
   event_source_arn        = aws_sqs_queue.main.arn
   function_name           = aws_lambda_function.main.arn
   function_response_types = ["ReportBatchItemFailures"] # https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#services-sqs-batchfailurereporting
+  batch_size              = var.batch_size
+  maximum_batching_window_in_seconds = var.batch_window
+
+  scaling_config {
+    maximum_concurrency = var.reserved_concurrent_executions
+  }
 }
