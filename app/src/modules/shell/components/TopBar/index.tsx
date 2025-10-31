@@ -3,6 +3,7 @@ import { CmdKLoader } from "../CmdK/CmdKLoader";
 import { Account } from "./Account";
 import { Apps } from "./Apps";
 import { Create } from "./Create";
+import { Notifications } from "./Notifications";
 
 interface Props {
   readonly className?: string;
@@ -25,7 +26,7 @@ export const TopBar = ({ className }: Props) => {
         <CmdKLoader className="flex-initial w-96" />
 
         <div className="flex-1 flex justify-end">
-          {/* <Notifications /> */}
+          <Notifications />
           <Account />
         </div>
       </div>
