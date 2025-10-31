@@ -37,9 +37,11 @@ export const updateMyNotificationSettings = createAuthenticatedAction(
 
     const newlyEnabledSettings = Array.from(formData.keys()).filter(
       (inputName) => {
-        const [channel] = inputName.split("_", 2);
-        if (!Object.keys(NotificationChannel).includes(channel)) return false;
-        return true;
+        for (const channelKey of Object.keys(NotificationChannel)) {
+          const channel = channelKey as NotificationChannel;
+          if (inputName.startsWith(`${channel}_`)) return true;
+        }
+        return false;
       },
     );
 
