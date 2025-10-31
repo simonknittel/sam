@@ -7,4 +7,5 @@ module "scrape_discord_events_function" {
   memory_size           = 256
   environment_variables = var.scrape_discord_events_function_environment_variables
   schedule_expression   = "rate(4 minutes)"
+  event_bus             = data.aws_cloudwatch_event_bus.default
 }

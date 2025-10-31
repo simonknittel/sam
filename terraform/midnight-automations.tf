@@ -7,4 +7,5 @@ module "midnight_automations" {
   environment_variables = var.midnight_automations_environment_variables
   schedule_expression   = "cron(0 0 * * ? *)"
   scheduler_state       = "ENABLED"
+  event_bus             = data.aws_cloudwatch_event_bus.default
 }

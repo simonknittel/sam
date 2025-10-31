@@ -30,3 +30,9 @@ variable "scheduler_state" {
   type    = string
   default = "ENABLED"
 }
+
+variable "event_bus" {
+  type = object({
+    arn = string
+  })
+}
