@@ -2,8 +2,6 @@ import { requireAuthenticationPage } from "@/modules/auth/server";
 import { Button2 } from "@/modules/common/components/Button2";
 import { Link } from "@/modules/common/components/Link";
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
-import { getUnleashFlag } from "@/modules/common/utils/getUnleashFlag";
-import { UNLEASH_FLAG } from "@/modules/common/utils/UNLEASH_FLAG";
 import { PhaseManagementCollection } from "@/modules/profit-distribution/components/PhaseManagementCollection";
 import { PhaseManagementCompleted } from "@/modules/profit-distribution/components/PhaseManagementCompleted";
 import { PhaseManagementPayout } from "@/modules/profit-distribution/components/PhaseManagementPayout";
@@ -31,9 +29,6 @@ export const generateMetadata = generateMetadataWithTryCatch(
 );
 
 export default async function Page({ params }: PageProps<"/app/sincome/[id]">) {
-  if (!(await getUnleashFlag(UNLEASH_FLAG.EnableProfitDistribution)))
-    notFound();
-
   const authentication = await requireAuthenticationPage("/app/sincome/[id]");
   await authentication.authorizePage("profitDistributionCycle", "manage");
 

@@ -1,4 +1,3 @@
-import { env } from "@/env";
 import { AppsContextProvider } from "@/modules/apps/components/AppsContext";
 import { getAppLinks } from "@/modules/apps/utils/queries";
 import { AdminEnabler } from "@/modules/auth/components/AdminEnabler";
@@ -9,7 +8,6 @@ import ImpersonationBannerContainer from "@/modules/common/components/Impersonat
 import QueryClientProviderContainer from "@/modules/common/components/QueryClientProviderContainer";
 import { getUnleashFlag } from "@/modules/common/utils/getUnleashFlag";
 import { UNLEASH_FLAG } from "@/modules/common/utils/UNLEASH_FLAG";
-import { BeamsProvider } from "@/modules/pusher/components/BeamsContext";
 import { ChannelsProvider } from "@/modules/pusher/components/ChannelsContext";
 import { CmdKProvider } from "@/modules/shell/components/CmdK/CmdKContext";
 import { MobileActionBarLoader } from "@/modules/shell/components/Sidebar/MobileActionBarLoader";
@@ -33,39 +31,34 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
         <QueryClientProviderContainer>
           <TRPCReactProvider>
             <ChannelsProvider userId={authentication.session.user.id}>
-              <BeamsProvider
-                instanceId={env.PUSHER_BEAMS_INSTANCE_ID}
-                userId={authentication.session.user.id}
-              >
-                <NextIntlClientProvider>
-                  <div className="min-h-dvh background-primary">
-                    <AppsContextProvider apps={apps}>
-                      <CreateContextProvider>
-                        <CmdKProvider disableAlgolia={disableAlgolia}>
-                          <TopBar />
-                          <MobileActionBarLoader />
-                        </CmdKProvider>
+              <NextIntlClientProvider>
+                <div className="min-h-dvh background-primary">
+                  <AppsContextProvider apps={apps}>
+                    <CreateContextProvider>
+                      <CmdKProvider disableAlgolia={disableAlgolia}>
+                        <TopBar />
+                        <MobileActionBarLoader />
+                      </CmdKProvider>
 
-                        <div className="pt-12 lg:pt-[104px] pb-[64px] lg:pb-0 min-h-dvh">
-                          {children}
-                        </div>
-                      </CreateContextProvider>
-                    </AppsContextProvider>
-                  </div>
+                      <div className="pt-12 lg:pt-[104px] pb-[64px] lg:pb-0 min-h-dvh">
+                        {children}
+                      </div>
+                    </CreateContextProvider>
+                  </AppsContextProvider>
+                </div>
 
-                  <Suspense>
-                    <ImpersonationBannerContainer />
-                  </Suspense>
+                <Suspense>
+                  <ImpersonationBannerContainer />
+                </Suspense>
 
-                  {authentication.session.user.role === "admin" && (
-                    <AdminEnabler
-                      enabled={
-                        (await cookies()).get("enable_admin")?.value === "1"
-                      }
-                    />
-                  )}
-                </NextIntlClientProvider>
-              </BeamsProvider>
+                {authentication.session.user.role === "admin" && (
+                  <AdminEnabler
+                    enabled={
+                      (await cookies()).get("enable_admin")?.value === "1"
+                    }
+                  />
+                )}
+              </NextIntlClientProvider>
             </ChannelsProvider>
           </TRPCReactProvider>
         </QueryClientProviderContainer>

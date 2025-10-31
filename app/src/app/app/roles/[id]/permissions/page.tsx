@@ -27,21 +27,14 @@ export default async function Page({
   const role = await getRoleById(roleId);
   if (!role) notFound();
 
-  const [
-    allRoles,
-    noteTypes,
-    classificationLevels,
-    flows,
-    enableOperations,
-    EnableProfitDistribution,
-  ] = await Promise.all([
-    getRoles(true),
-    getAllNoteTypes(),
-    getAllClassificationLevels(),
-    getAllFlows(),
-    getUnleashFlag(UNLEASH_FLAG.EnableOperations),
-    getUnleashFlag(UNLEASH_FLAG.EnableProfitDistribution),
-  ]);
+  const [allRoles, noteTypes, classificationLevels, flows, enableOperations] =
+    await Promise.all([
+      getRoles(true),
+      getAllNoteTypes(),
+      getAllClassificationLevels(),
+      getAllFlows(),
+      getUnleashFlag(UNLEASH_FLAG.EnableOperations),
+    ]);
 
   return (
     <PermissionsTab
@@ -51,7 +44,6 @@ export default async function Page({
       classificationLevels={classificationLevels}
       enableOperations={Boolean(enableOperations)}
       flows={flows}
-      enableProfitDistribution={Boolean(EnableProfitDistribution)}
     />
   );
 }

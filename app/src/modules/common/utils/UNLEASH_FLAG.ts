@@ -4,6 +4,4 @@ export enum UNLEASH_FLAG {
   DisableRoleNameSuggestions = "DisableRoleNameSuggestions",
   EnableOperations = "EnableOperations",
   CrashLogAnalyzer = "CrashLogAnalyzer",
-  EnableProfitDistribution = "EnableProfitDistribution",
-  EnableNotificationsRework = "EnableNotificationsRework",
 }

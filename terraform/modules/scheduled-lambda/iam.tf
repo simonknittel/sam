@@ -50,3 +50,23 @@ resource "aws_iam_role_policy_attachment" "main_aws_lambda_role" {
   role       = aws_iam_role.main.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaRole"
 }
+
+resource "aws_iam_role_policy" "main_eventbridge" {
+  role = aws_iam_role.main.id
+  name = "eventbridge"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "events:PutEvents"
+        ]
+        Effect = "Allow"
+        Resource = [
+          var.event_bus.arn
+        ]
+      }
+    ]
+  })
+}

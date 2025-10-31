@@ -4,11 +4,7 @@ import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
 import TabPanel from "@/modules/common/components/tabs/TabPanel";
 import { usePermissionsContext } from "../PermissionsContext";
 
-interface Props {
-  readonly enableProfitDistribution?: boolean;
-}
-
-export const SilcTab = ({ enableProfitDistribution }: Props) => {
+export const SilcTab = () => {
   const { register } = usePermissionsContext();
 
   return (
@@ -37,45 +33,39 @@ export const SilcTab = ({ enableProfitDistribution }: Props) => {
         <YesNoCheckbox {...register("silcBalanceOfOtherCitizen;read")} />
       </div>
 
-      {enableProfitDistribution && (
-        <>
-          <div className="py-2 flex justify-between items-center gap-2 mt-2">
-            <div>
-              <h4 className="font-bold">SINcome einsehen</h4>
-              <p className="text-sm">
-                Citizen mit dieser Berechtigung können die SINcome einsehen.
-              </p>
-            </div>
+      <div className="py-2 flex justify-between items-center gap-2 mt-2">
+        <div>
+          <h4 className="font-bold">SINcome einsehen</h4>
+          <p className="text-sm">
+            Citizen mit dieser Berechtigung können die SINcome einsehen.
+          </p>
+        </div>
 
-            <YesNoCheckbox {...register("profitDistributionCycle;read")} />
-          </div>
+        <YesNoCheckbox {...register("profitDistributionCycle;read")} />
+      </div>
 
-          <div className="py-2 flex justify-between items-center gap-2 mt-2">
-            <div>
-              <h4 className="font-bold">SINcome verwalten</h4>
-              <p className="text-sm">
-                Citizen mit dieser Berechtigung können die SINcome verwalten.
-              </p>
-            </div>
+      <div className="py-2 flex justify-between items-center gap-2 mt-2">
+        <div>
+          <h4 className="font-bold">SINcome verwalten</h4>
+          <p className="text-sm">
+            Citizen mit dieser Berechtigung können die SINcome verwalten.
+          </p>
+        </div>
 
-            <YesNoCheckbox {...register("profitDistributionCycle;manage")} />
-          </div>
+        <YesNoCheckbox {...register("profitDistributionCycle;manage")} />
+      </div>
 
-          <div className="py-2 flex justify-between items-center gap-2 mt-2">
-            <div>
-              <h4 className="font-bold">Eigene Transaktionen einsehen</h4>
-              <p className="text-sm">
-                Citizen mit dieser Berechtigung können die SILC-Transaktionen
-                zum eigenen Konto einsehen.
-              </p>
-            </div>
+      <div className="py-2 flex justify-between items-center gap-2 mt-2">
+        <div>
+          <h4 className="font-bold">Eigene Transaktionen einsehen</h4>
+          <p className="text-sm">
+            Citizen mit dieser Berechtigung können die SILC-Transaktionen zum
+            eigenen Konto einsehen.
+          </p>
+        </div>
 
-            <YesNoCheckbox
-              {...register("silcTransactionOfCurrentCitizen;read")}
-            />
-          </div>
-        </>
-      )}
+        <YesNoCheckbox {...register("silcTransactionOfCurrentCitizen;read")} />
+      </div>
 
       <div className="py-2 flex justify-between items-center gap-2 mt-2">
         <div>

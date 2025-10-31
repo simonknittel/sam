@@ -1,5 +1,5 @@
 import { prisma, type PenaltyEntry } from "@sam-monorepo/database";
-import { publishNovuNotifications } from "../novu";
+import { publishWebPushNotifications } from "../web-push";
 
 interface Payload {
   penaltyEntryId: PenaltyEntry["id"];
@@ -73,16 +73,12 @@ export const PenaltyEntryCreatedHandler = async (payload: Payload) => {
   /**
    * Publish notifications
    */
-  await publishNovuNotifications([
+  await publishWebPushNotifications([
     {
-      to: {
-        subscriberId: penaltyEntry.citizenId,
-      },
-      workflowId: "penalty-entry-created",
-      payload: {
-        points: penaltyEntry.points,
-        reason: penaltyEntry.reason,
-      },
+      receiverId: penaltyEntry.citizenId,
+      notificationType: "penalty_entry_created",
+      title: "Strafpunkte erhalten",
+      body: `Du hast ${penaltyEntry.points} Strafpunkte erhalten für ${penaltyEntry.reason}`,
     },
   ]);
 };

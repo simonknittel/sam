@@ -4,7 +4,12 @@ variable "function_name" {
 
 variable "reserved_concurrent_executions" {
   type    = number
-  default = -1
+  default = 2
+
+  validation {
+    condition = var.reserved_concurrent_executions >= 2
+    error_message = "Must be greater than or equal to 2"
+  }
 }
 
 variable "provisioned_concurrent_executions" {
@@ -54,4 +59,12 @@ variable "environment_variables" {
   type      = map(string)
   sensitive = true
   default = {}
+}
+
+variable "batch_size" {
+  type    = number
+}
+
+variable "batch_window" {
+  type    = number
 }

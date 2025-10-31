@@ -74,7 +74,18 @@ resource "aws_iam_role_policy" "main_parameter_store" {
         Resource = [
           var.dynamodb.arn
         ]
-      },
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "main_eventbridge" {
+  role = aws_iam_role.main.id
+  name = "eventbridge"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
       {
         Action = [
           "events:PutEvents"

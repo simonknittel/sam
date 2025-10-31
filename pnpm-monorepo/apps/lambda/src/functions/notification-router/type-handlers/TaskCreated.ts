@@ -1,12 +1,11 @@
 import { prisma, type Task } from "@sam-monorepo/database";
-import { publishPusherNotification } from "../pusher";
+import { publishWebPushNotifications } from "../web-push";
 
 interface Payload {
   taskIds: Task["id"][];
 }
 
 export const TaskCreatedHandler = async (payload: Payload) => {
-  // TODO: Migrate to Novu
   // TODO: Only send notifications to citizens which have the `login;manage` and `task;read` permission
 
   const tasks = await prisma.task.findMany({
@@ -30,20 +29,15 @@ export const TaskCreatedHandler = async (payload: Payload) => {
   /**
    * Publish notifications
    */
-  const notifications = [];
-  for (const task of tasks) {
-    for (const assignment of task.assignments) {
-      notifications.push(
-        publishPusherNotification(
-          [`task_assigned;citizen_id=${assignment.citizenId}`],
-          "Dir wurde ein Task zugewiesen",
-          task.title,
-          `/app/tasks/${task.id}`,
-        ),
-      );
-    }
-  }
-  if (notifications.length <= 0) return;
-
-  await Promise.all(notifications);
+  await publishWebPushNotifications(
+    tasks.flatMap((task) =>
+      task.assignments.map((assignment) => ({
+        receiverId: assignment.citizenId,
+        notificationType: "task_assignment_updated",
+        title: "Neuer Task",
+        body: `Dir wurde ein Task zugewiesen: ${task.title}`,
+        url: `/app/tasks/${task.id}`,
+      })),
+    ),
+  );
 };

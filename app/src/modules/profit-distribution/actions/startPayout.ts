@@ -2,11 +2,8 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
-import { getUnleashFlag } from "@/modules/common/utils/getUnleashFlag";
-import { UNLEASH_FLAG } from "@/modules/common/utils/UNLEASH_FLAG";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { revalidatePath } from "next/cache";
-import { notFound } from "next/navigation";
 import { z } from "zod";
 import { CyclePhase, getCurrentPhase } from "../utils/getCurrentPhase";
 
@@ -24,9 +21,6 @@ export const startPayout = createAuthenticatedAction(
   "startPayout",
   schema,
   async (formData, authentication, data, t) => {
-    if (!(await getUnleashFlag(UNLEASH_FLAG.EnableProfitDistribution)))
-      notFound();
-
     /**
      * Authorize the request
      */
