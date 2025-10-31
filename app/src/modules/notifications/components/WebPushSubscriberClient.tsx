@@ -91,7 +91,12 @@ export const WebPushSubscriberClient = ({ className }: Props) => {
       </Button2>
 
       <p className="text-neutral-500 text-sm mt-2">
-        Dies muss pro Browser und Gerät genehmigt werden.
+        Auf iOS-Geräten musst du das S.A.M. zu deinem Home-Bildschirm
+        hinzufügen, bevor du die Genehmigung anfordern kannst.
+      </p>
+
+      <p className="text-neutral-500 text-sm mt-2">
+        Die Genehmigung muss pro Browser und Gerät angefordert werden.
       </p>
     </Tile>
   );
