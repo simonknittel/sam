@@ -17,9 +17,17 @@ export default async function Page() {
 
   const myNotificationSettings = await getMyNotificationSettings();
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-4">
       <WebPushSubscriberClient />
+
       <NotificationSettings settings={myNotificationSettings} />
+
+      <section className="flex justify-center">
+        <p className="max-w-prose text-center text-xs text-neutral-500">
+          Hättest du gerne für weitere Aktionen Benachrichtigungen? Melde dich
+          bei uns und wir binden zusätzliche Benachrichtigungen ein.
+        </p>
+      </section>
     </div>
   );
 }

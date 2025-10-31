@@ -74,30 +74,32 @@ export const WebPushSubscriberClient = ({ className }: Props) => {
 
   return (
     <Tile heading="Browser-Benachrichtigungen" className={clsx(className)}>
-      <p>
-        Um Benachrichtigungen über diesen Browser zu erhalten, musst du dies
-        erst genehmigen.
-      </p>
+      <div className="max-w-prose">
+        <p>
+          Um Benachrichtigungen über diesen Browser zu erhalten, musst du dies
+          erst genehmigen.
+        </p>
 
-      <Button2
-        type="button"
-        onClick={handleClick}
-        disabled={isPending}
-        variant="secondary"
-        className="mt-2"
-      >
-        {isPending && <FaSpinner className="animate-spin" />}
-        Genehmigung anfordern
-      </Button2>
+        <Button2
+          type="button"
+          onClick={handleClick}
+          disabled={isPending}
+          variant="secondary"
+          className="mt-2"
+        >
+          {isPending && <FaSpinner className="animate-spin" />}
+          Genehmigung anfordern
+        </Button2>
 
-      <p className="text-neutral-500 text-sm mt-2">
-        Auf iOS-Geräten musst du das S.A.M. zu deinem Home-Bildschirm
-        hinzufügen, bevor du die Genehmigung anfordern kannst.
-      </p>
+        <p className="text-neutral-500 text-sm mt-2">
+          Auf iOS-Geräten musst du das S.A.M. zuerst zu deinem Home-Bildschirm
+          hinzufügen, bevor du die Genehmigung anfordern kannst.
+        </p>
 
-      <p className="text-neutral-500 text-sm mt-2">
-        Die Genehmigung muss pro Browser und Gerät angefordert werden.
-      </p>
+        <p className="text-neutral-500 text-sm mt-2">
+          Die Genehmigung muss pro Browser und Gerät angefordert werden.
+        </p>
+      </div>
     </Tile>
   );
 };
