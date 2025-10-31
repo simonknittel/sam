@@ -1,6 +1,5 @@
 import { prisma, type Event } from "@sam-monorepo/database";
-import { publishNovuNotifications } from "../novu.js";
-import { publishPusherNotification } from "../pusher.js";
+import { publishWebPushNotifications } from "../web-push.js";
 
 type Payload = {
   eventId: Event["id"];
@@ -90,22 +89,12 @@ export const EventDeletedHandler = async (payload: Payload) => {
   /**
    * Publish notifications
    */
-  await publishNovuNotifications(
+  await publishWebPushNotifications(
     citizensWithMatchingRoles.map((citizen) => ({
-      to: {
-        subscriberId: citizen.id,
-      },
-      workflowId: "event-deleted",
-      payload: {
-        eventName: event.name,
-        eventId: event.id,
-      },
+      receiverId: citizen.id,
+      notificationType: "event_deleted",
+      title: "Event gelöscht",
+      body: event.name,
     })),
-  );
-
-  await publishPusherNotification(
-    ["deletedDiscordEvent"],
-    "Event abgesagt",
-    event.name,
   );
 };

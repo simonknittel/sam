@@ -1,7 +1,7 @@
 import { prisma } from "@sam-monorepo/database";
 import { getAuecPerSilc } from "../../../common/profit-distribution/utils/getAuecPerSilc";
 import { getTotalSilc } from "../../../common/profit-distribution/utils/getTotalSilc";
-import { novu, publishNovuNotifications } from "../novu";
+import { publishWebPushNotifications } from "../web-push";
 
 interface Change {
   citizenId: string;
@@ -19,13 +19,12 @@ export const ProfitDistributionPayoutDisbursedHandler = async (
 ) => {
   // TODO: Only send notifications to citizens which have the `login;manage` and `profitDistributionCycle;read` permission
 
-  if (!novu) return;
-
   const cycle = await prisma.profitDistributionCycle.findUnique({
     where: {
       id: payload.cycleId,
     },
     select: {
+      id: true,
       title: true,
       auecProfit: true,
       participants: {
@@ -53,21 +52,18 @@ export const ProfitDistributionPayoutDisbursedHandler = async (
   /**
    * Publish notifications
    */
-  await publishNovuNotifications(
+  await publishWebPushNotifications(
     participantsWithDisbursedEnabled.map((participant) => {
       const aUEC =
         (participant.silcBalanceSnapshot || 0) *
         getAuecPerSilc(cycle.auecProfit || 0, getTotalSilc(cycle.participants));
 
       return {
-        to: {
-          subscriberId: participant.citizenId,
-        },
-        workflowId: "sincome-payout-received",
-        payload: {
-          title: cycle.title,
-          aUEC: aUEC.toLocaleString("de-DE"),
-        },
+        receiverId: participant.citizenId,
+        notificationType: "sincome_payout_disbursed",
+        title: "SINcome-Auszahlung erhalten",
+        body: `Für den Zeitraum ${cycle.title} hast du eine Auszahlung in Höhe von ${aUEC.toLocaleString("de-DE")} aUEC erhalten.`,
+        url: `/app/sincome/${cycle.id}`,
       };
     }),
   );

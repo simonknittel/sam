@@ -1,0 +1,41 @@
+enum NotificationChannel {
+  WEB_PUSH
+}
+
+model NotificationSetting {
+  id               String              @id @default(cuid(2))
+  citizenId        String
+  citizen          Entity              @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  notificationType String
+  channel          NotificationChannel
+  enabledAt        DateTime            @default(now())
+
+  @@unique([citizenId, notificationType, channel])
+  @@index([citizenId])
+}
+
+// model OnSiteNotification {
+//   id         String   @id @default(cuid(2))
+//   receiverId String
+//   receiver   Entity   @relation(fields: [receiverId], references: [id], onDelete: Cascade)
+//   title      String
+//   body       String
+//   createdAt  DateTime @default(now())
+//   category   String
+
+//   @@index([receiverId])
+// }
+
+model WebPushSubscription {
+  id        String   @id @default(cuid(2))
+  citizenId String
+  citizen   Entity   @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  // Subscription details
+  endpoint String @unique
+  p256dh   String
+  auth     String
+
+  @@index([citizenId])
+}

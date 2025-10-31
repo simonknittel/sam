@@ -33,6 +33,9 @@ model Entity {
   collectionEndedProfitDistributionCycles      ProfitDistributionCycle[]            @relation("collectionEndedBy")
   payoutStartedProfitDistributionCycles        ProfitDistributionCycle[]            @relation("payoutStartedBy")
   payoutEndedProfitDistributionCycles          ProfitDistributionCycle[]            @relation("payoutEndedBy")
+  notificationSettings                         NotificationSetting[]
+  // receivedOnSiteNotifications                  OnSiteNotification[]
+  webPushSubscriptions                         WebPushSubscription[]
 
   // Holds the latest confirmed values
   spectrumId                String?

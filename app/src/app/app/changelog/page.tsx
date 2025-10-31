@@ -42,6 +42,36 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col gap-4">
+      <Day heading="31. Oktober 2025">
+        <DayItem
+          heading="Überarbeitung der Benachrichtigungen"
+          badges={["Änderung"]}
+        >
+          <p>
+            Das Benachrichtigungssystem wurde grundlegend überarbeitet. Mit der
+            Überarbeitung wurden zusätzliche Benachrichtigungen implementiert.
+            Außerdem können Browser-Benachrichtigungen nun auf mehr Geräten und
+            Browsern empfangen werden. Zudem bietet die Überarbeitung, dass
+            zukünftig zusätzliche Empfangskanäle wie On-Site, Discord und E-Mail
+            unterstützt werden.
+          </p>
+
+          <p>
+            Hier kannst du deine Benachrichtigungseinstellungen anpassen:{" "}
+            <Link
+              href="/app/account/notifications"
+              className="text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300"
+            >
+              Apps &gt; Account &gt; Benachrichtigungen
+            </Link>
+          </p>
+
+          <p className="text-neutral-500">
+            Die bisherigen Einstellungen konnten nicht übernommen werden.
+          </p>
+        </DayItem>
+      </Day>
+
       <Day heading="26. Oktober 2025">
         <DayItem heading="Avatar Creator" badges={["Neu"]}>
           <p>

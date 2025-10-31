@@ -73,15 +73,10 @@ export const env = createEnv({
     AWS_SECRET_ACCESS_KEY: z.string().optional(),
     AWS_EVENT_BUS_ARN: z.string().optional(),
     OPENAI_API_KEY: z.string().optional(),
-    PUSHER_BEAMS_INSTANCE_ID: z.string().optional(),
     ENABLE_INSTRUMENTATION: z.string().optional(),
     OTEL_EXPORTER_OTLP_PROTOCOL: z.string().optional(),
     OTEL_EXPORTER_OTLP_ENDPOINT: z.string().optional(),
     PUSHER_CHANNELS_APP_SECRET: z.string().optional(),
-    NOVU_APPLICATION_IDENTIFIER: z.string().optional(),
-    NOVU_SECRET_KEY: z.string().optional(),
-    NOVU_SERVER_URL: z.url().optional().default("https://eu.api.novu.co"),
-    NOVU_SOCKET_URL: z.url().optional().default("wss://eu.ws.novu.co"),
   },
 
   /*
@@ -101,6 +96,7 @@ export const env = createEnv({
     NEXT_PUBLIC_PUSHER_CHANNELS_HOST: z.string().optional(),
     NEXT_PUBLIC_PUSHER_CHANNELS_PORT: z.coerce.number().optional(),
     NEXT_PUBLIC_PUSHER_CHANNELS_SECURE_PORT: z.coerce.number().optional(),
+    NEXT_PUBLIC_VAPID_KEY: z.string().optional(),
   },
 
   /*
@@ -141,7 +137,6 @@ export const env = createEnv({
     AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
     AWS_EVENT_BUS_ARN: process.env.AWS_EVENT_BUS_ARN,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
-    PUSHER_BEAMS_INSTANCE_ID: process.env.PUSHER_BEAMS_INSTANCE_ID,
     ENABLE_INSTRUMENTATION: process.env.ENABLE_INSTRUMENTATION,
     OTEL_EXPORTER_OTLP_PROTOCOL: process.env.OTEL_EXPORTER_OTLP_PROTOCOL,
     OTEL_EXPORTER_OTLP_ENDPOINT: process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
@@ -159,10 +154,7 @@ export const env = createEnv({
       process.env.NEXT_PUBLIC_PUSHER_CHANNELS_PORT,
     NEXT_PUBLIC_PUSHER_CHANNELS_SECURE_PORT:
       process.env.NEXT_PUBLIC_PUSHER_CHANNELS_SECURE_PORT,
-    NOVU_APPLICATION_IDENTIFIER: process.env.NOVU_APPLICATION_IDENTIFIER,
-    NOVU_SECRET_KEY: process.env.NOVU_SECRET_KEY,
-    NOVU_SERVER_URL: process.env.NOVU_SERVER_URL,
-    NOVU_SOCKET_URL: process.env.NOVU_SOCKET_URL,
+    NEXT_PUBLIC_VAPID_KEY: process.env.NEXT_PUBLIC_VAPID_KEY,
   },
 
   emptyStringAsUndefined: true,

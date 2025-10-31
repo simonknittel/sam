@@ -15,18 +15,16 @@ import { FaPlus } from "react-icons/fa";
 
 interface Props {
   readonly className?: string;
-  readonly enableProfitDistribution?: boolean;
 }
 
-export const Create = ({ className, enableProfitDistribution }: Props) => {
+export const Create = ({ className }: Props) => {
   const authentication = useAuthentication();
 
   const showCreateCitizen = Boolean(
     authentication && authentication.authorize("citizen", "create"),
   );
   const showCreateDistributionCycle = Boolean(
-    enableProfitDistribution &&
-      authentication &&
+    authentication &&
       authentication.authorize("profitDistributionCycle", "create"),
   );
   const showCreateOrganization = Boolean(

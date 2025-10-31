@@ -1,6 +1,5 @@
 import { prisma, type Event } from "@sam-monorepo/database";
-import { publishNovuNotifications } from "../novu.js";
-import { publishPusherNotification } from "../pusher.js";
+import { publishWebPushNotifications } from "../web-push.js";
 
 type Payload = {
   eventId: Event["id"];
@@ -80,23 +79,13 @@ export const EventCreatedHandler = async (payload: Payload) => {
   /**
    * Publish notifications
    */
-  await publishNovuNotifications(
+  await publishWebPushNotifications(
     citizensWithMatchingRoles.map((citizen) => ({
-      to: {
-        subscriberId: citizen.id,
-      },
-      workflowId: "event-created",
-      payload: {
-        eventName: event.name,
-        eventId: event.id,
-      },
+      receiverId: citizen.id,
+      notificationType: "event_created",
+      title: "Neues Event",
+      body: event.name,
+      url: `/app/events/${event.id}`,
     })),
-  );
-
-  await publishPusherNotification(
-    ["newDiscordEvent"],
-    "Neues Event",
-    event.name,
-    `/app/events/${event.id}`,
   );
 };

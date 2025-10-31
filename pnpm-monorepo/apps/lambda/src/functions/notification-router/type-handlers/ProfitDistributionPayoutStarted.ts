@@ -1,5 +1,5 @@
 import { prisma } from "@sam-monorepo/database";
-import { novu, publishNovuNotifications } from "../novu";
+import { publishWebPushNotifications } from "../web-push";
 
 interface Payload {
   cycleId: string;
@@ -9,8 +9,6 @@ export const ProfitDistributionPayoutStartedHandler = async (
   payload: Payload,
 ) => {
   // TODO: Only send notifications to citizens which have the `login;manage` and `profitDistributionCycle;read` permission
-
-  if (!novu) return;
 
   const cycle = await prisma.profitDistributionCycle.findUnique({
     where: {
@@ -31,16 +29,13 @@ export const ProfitDistributionPayoutStartedHandler = async (
   /**
    * Publish notifications
    */
-  await publishNovuNotifications(
+  await publishWebPushNotifications(
     cycle.participants.map((participant) => ({
-      to: {
-        subscriberId: participant.citizenId,
-      },
-      workflowId: "si-ncome-payout-started",
-      payload: {
-        id: cycle.id,
-        title: cycle.title,
-      },
+      receiverId: participant.citizenId,
+      notificationType: "sincome_payout_started",
+      title: "SINcome-Auszahlung gestartet",
+      body: `Die Auszahlungsphase für den Zeitraum ${cycle.title} wurde gestartet. Bitte stimme der Auszahlung zu.`,
+      url: `/app/sincome/${cycle.id}`,
     })),
   );
 };

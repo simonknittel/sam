@@ -1,22 +1,14 @@
-import { getUnleashFlag } from "@/modules/common/utils/getUnleashFlag";
-import { UNLEASH_FLAG } from "@/modules/common/utils/UNLEASH_FLAG";
 import clsx from "clsx";
-import { Suspense } from "react";
 import { CmdKLoader } from "../CmdK/CmdKLoader";
 import { Account } from "./Account";
 import { Apps } from "./Apps";
 import { Create } from "./Create";
-import { Notifications } from "./Notifications";
 
 interface Props {
   readonly className?: string;
 }
 
-export const TopBar = async ({ className }: Props) => {
-  const EnableProfitDistribution = await getUnleashFlag(
-    UNLEASH_FLAG.EnableProfitDistribution,
-  );
-
+export const TopBar = ({ className }: Props) => {
   return (
     <div className="bg-black hidden lg:block fixed left-0 right-0 top-0 z-30 px-2 pt-2">
       <div
@@ -27,15 +19,13 @@ export const TopBar = async ({ className }: Props) => {
       >
         <div className="flex-1 flex items-center">
           <Apps />
-          <Create enableProfitDistribution={EnableProfitDistribution} />
+          <Create />
         </div>
 
         <CmdKLoader className="flex-initial w-96" />
 
         <div className="flex-1 flex justify-end">
-          <Suspense>
-            <Notifications />
-          </Suspense>
+          {/* <Notifications /> */}
           <Account />
         </div>
       </div>
