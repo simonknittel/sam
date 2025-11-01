@@ -42,6 +42,28 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col gap-4">
+      <Day heading="1. November 2025">
+        <DayItem
+          heading="Benachrichtigung bei Veröffentlichung der Aufstellung"
+          badges={["Neu"]}
+        >
+          <p>
+            Es gibt nun die Möglichkeit, sich benachrichtigen zu lassen, wenn
+            die Aufstellung eines Events veröffentlicht wird.
+          </p>
+
+          <p>
+            Die neue Benachrichtigung kann aktiviert werden unter:{" "}
+            <Link
+              href="/app/account/notifications"
+              className="text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300"
+            >
+              Apps &gt; Account &gt; Benachrichtigungen
+            </Link>
+          </p>
+        </DayItem>
+      </Day>
+
       <Day heading="31. Oktober 2025">
         <DayItem
           heading="Überarbeitung der Benachrichtigungen"
