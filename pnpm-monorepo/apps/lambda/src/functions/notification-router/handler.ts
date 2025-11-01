@@ -10,10 +10,15 @@ import { RoleAddedHandler } from "./type-handlers/RoleAdded";
 import { SilcTransactionsCreatedHandler } from "./type-handlers/SilcTransactionsCreated";
 import { TaskAssignmentUpdatedHandler } from "./type-handlers/TaskAssignmentUpdated";
 import { TaskCreatedHandler } from "./type-handlers/TaskCreated";
+import { log } from "../../common/logger";
 
 export const notificationRouterHandler = async (
   body: z.infer<typeof bodySchema>,
 ) => {
+  log.info("Routing notification", {
+    type: body.type,
+    requestId: body.requestId,
+  })
   switch (body.type) {
     case "EventCreated":
       await EventCreatedHandler(body.payload);

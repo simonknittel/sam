@@ -15,6 +15,9 @@ export const handler: SQSHandler = async (event, context) => {
     // https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#services-sqs-batchfailurereporting
     const batchItemFailures: SQSBatchItemFailure[] = [];
 
+    log.info("Processing SQS messages", {
+      count: event.Records.length,
+    })
     for (const record of event.Records) {
       try {
         const body = bodySchema.parse(JSON.parse(record.body));

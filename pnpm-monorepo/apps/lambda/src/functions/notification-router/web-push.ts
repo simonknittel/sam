@@ -62,6 +62,10 @@ export const publishWebPushNotifications = async (
   });
   if (citizens.length <= 0) return;
 
+  log.info("Sending Web Push notifications (before filter)", {
+    count: notifications.length,
+  });
+
   const filteredNotifications = notifications
     .filter((notification) => {
       const citizen = citizens.find((c) => c.id === notification.receiverId);
@@ -97,6 +101,10 @@ export const publishWebPushNotifications = async (
       }));
     });
   if (filteredNotifications.length <= 0) return;
+
+  log.info("Sending Web Push notifications (after filter)", {
+    count: filteredNotifications.length,
+  });
 
   const subscriptionsToRemove: string[] = [];
   for (const { subscription, payload } of filteredNotifications) {
@@ -151,6 +159,9 @@ export const publishWebPushNotifications = async (
     }
   }
   if (subscriptionsToRemove.length <= 0) return;
+  log.info("Deleting Web Push subscriptions", {
+    count: subscriptionsToRemove.length,
+  })
   await prisma.webPushSubscription.deleteMany({
     where: {
       endpoint: {
