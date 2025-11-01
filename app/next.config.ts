@@ -66,6 +66,24 @@ const nextConfig: NextConfig = {
         },
       ],
     },
+    {
+      source: "/service-worker.js",
+      headers: [
+        {
+          key: "Cache-Control",
+          value: "no-store, no-cache, must-revalidate, max-age=0",
+        },
+      ],
+    },
+    {
+      source: "/manifest.webmanifest",
+      headers: [
+        {
+          key: "Cache-Control",
+          value: "no-store, no-cache, must-revalidate, max-age=0",
+        },
+      ],
+    },
   ],
 
   logging: {
