@@ -42,6 +42,11 @@ export const NOTIFICATIONS_APPS: NotificationApp[] = [
         title: "Absagen",
         category: "Events",
       },
+      {
+        id: "event_lineup_enabled",
+        title: "Aufstellung veröffentlicht",
+        category: "Events",
+      },
     ],
   },
 

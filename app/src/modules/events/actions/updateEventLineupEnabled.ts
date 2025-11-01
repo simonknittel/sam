@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { isAllowedToManagePositions } from "../utils/isAllowedToManagePositions";
@@ -51,6 +52,20 @@ export const updateEventLineupEnabled = createAuthenticatedAction(
         lineupEnabled: data.value,
       },
     });
+
+    /**
+     * Trigger notifications
+     */
+    if (data.value) {
+      await triggerNotifications([
+        {
+          type: "EventLineupEnabled",
+          payload: {
+            eventId: event.id,
+          },
+        },
+      ]);
+    }
 
     /**
      * Revalidate cache(s)

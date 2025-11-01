@@ -1,7 +1,9 @@
 import { z } from "zod";
+import { log } from "../../common/logger";
 import "./env";
 import { EventCreatedHandler } from "./type-handlers/EventCreated";
 import { EventDeletedHandler } from "./type-handlers/EventDeleted";
+import { EventLineupEnabledHandler } from "./type-handlers/EventLineupEnabled";
 import { EventUpdatedHandler } from "./type-handlers/EventUpdated";
 import { PenaltyEntryCreatedHandler } from "./type-handlers/PenaltyEntryCreated";
 import { ProfitDistributionPayoutDisbursedHandler } from "./type-handlers/ProfitDistributionPayoutDisbursed";
@@ -14,6 +16,10 @@ import { TaskCreatedHandler } from "./type-handlers/TaskCreated";
 export const notificationRouterHandler = async (
   body: z.infer<typeof bodySchema>,
 ) => {
+  log.info("Routing notification", {
+    type: body.type,
+    requestId: body.requestId,
+  });
   switch (body.type) {
     case "EventCreated":
       await EventCreatedHandler(body.payload);
@@ -23,6 +29,9 @@ export const notificationRouterHandler = async (
       break;
     case "EventDeleted":
       await EventDeletedHandler(body.payload);
+      break;
+    case "EventLineupEnabled":
+      await EventLineupEnabledHandler(body.payload);
       break;
     case "TaskCreated":
       await TaskCreatedHandler(body.payload);
@@ -67,6 +76,14 @@ export const bodySchema = z.discriminatedUnion("type", [
 
   z.object({
     type: z.literal("EventDeleted"),
+    payload: z.object({
+      eventId: z.cuid(),
+    }),
+    requestId: z.cuid2(),
+  }),
+
+  z.object({
+    type: z.literal("EventLineupEnabled"),
     payload: z.object({
       eventId: z.cuid(),
     }),
