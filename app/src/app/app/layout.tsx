@@ -6,6 +6,7 @@ import { requireAuthenticationPage } from "@/modules/auth/server";
 import { CreateContextProvider } from "@/modules/common/components/CreateContext";
 import ImpersonationBannerContainer from "@/modules/common/components/ImpersonationBannerContainer";
 import QueryClientProviderContainer from "@/modules/common/components/QueryClientProviderContainer";
+import { ServiceWorkerLoader } from "@/modules/common/components/ServiceWorkerLoader";
 import { getUnleashFlag } from "@/modules/common/utils/getUnleashFlag";
 import { UNLEASH_FLAG } from "@/modules/common/utils/UNLEASH_FLAG";
 import { ChannelsProvider } from "@/modules/pusher/components/ChannelsContext";
@@ -26,43 +27,47 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
   ]);
 
   return (
-    <SessionProviderContainer session={authentication.session}>
-      <NuqsAdapter>
-        <QueryClientProviderContainer>
-          <TRPCReactProvider>
-            <ChannelsProvider userId={authentication.session.user.id}>
-              <NextIntlClientProvider>
-                <div className="min-h-dvh background-primary">
-                  <AppsContextProvider apps={apps}>
-                    <CreateContextProvider>
-                      <CmdKProvider disableAlgolia={disableAlgolia}>
-                        <TopBar />
-                        <MobileActionBarLoader />
-                      </CmdKProvider>
+    <>
+      <SessionProviderContainer session={authentication.session}>
+        <NuqsAdapter>
+          <QueryClientProviderContainer>
+            <TRPCReactProvider>
+              <ChannelsProvider userId={authentication.session.user.id}>
+                <NextIntlClientProvider>
+                  <div className="min-h-dvh background-primary">
+                    <AppsContextProvider apps={apps}>
+                      <CreateContextProvider>
+                        <CmdKProvider disableAlgolia={disableAlgolia}>
+                          <TopBar />
+                          <MobileActionBarLoader />
+                        </CmdKProvider>
 
-                      <div className="pt-12 lg:pt-[104px] pb-[64px] lg:pb-0 min-h-dvh">
-                        {children}
-                      </div>
-                    </CreateContextProvider>
-                  </AppsContextProvider>
-                </div>
+                        <div className="pt-12 lg:pt-[104px] pb-[64px] lg:pb-0 min-h-dvh">
+                          {children}
+                        </div>
+                      </CreateContextProvider>
+                    </AppsContextProvider>
+                  </div>
 
-                <Suspense>
-                  <ImpersonationBannerContainer />
-                </Suspense>
+                  <Suspense>
+                    <ImpersonationBannerContainer />
+                  </Suspense>
 
-                {authentication.session.user.role === "admin" && (
-                  <AdminEnabler
-                    enabled={
-                      (await cookies()).get("enable_admin")?.value === "1"
-                    }
-                  />
-                )}
-              </NextIntlClientProvider>
-            </ChannelsProvider>
-          </TRPCReactProvider>
-        </QueryClientProviderContainer>
-      </NuqsAdapter>
-    </SessionProviderContainer>
+                  {authentication.session.user.role === "admin" && (
+                    <AdminEnabler
+                      enabled={
+                        (await cookies()).get("enable_admin")?.value === "1"
+                      }
+                    />
+                  )}
+                </NextIntlClientProvider>
+              </ChannelsProvider>
+            </TRPCReactProvider>
+          </QueryClientProviderContainer>
+        </NuqsAdapter>
+      </SessionProviderContainer>
+
+      <ServiceWorkerLoader />
+    </>
   );
 }
