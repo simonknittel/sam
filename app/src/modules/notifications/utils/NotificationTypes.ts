@@ -34,17 +34,19 @@ export const NOTIFICATIONS_APPS: NotificationApp[] = [
         id: "event_updated",
         title: "Aktualisierung",
         description:
-          "Bei Änderung des Titel, der Beschreibung, des Datums und des Ortes",
+          "Nur bei eigener Teilnahme. Bei Änderung des Titel, der Beschreibung, des Datums und des Ortes.",
         category: "Events",
       },
       {
         id: "event_deleted",
         title: "Absagen",
+        description: "Nur bei eigener Teilnahme",
         category: "Events",
       },
       {
         id: "event_lineup_enabled",
         title: "Aufstellung veröffentlicht",
+        description: "Nur bei eigener Teilnahme",
         category: "Events",
       },
     ],
