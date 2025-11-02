@@ -15,7 +15,7 @@ const schema = z.object({
   maxAgeDays: z.coerce.number().min(1).nullish(),
 });
 
-export const updateRoleName = async (
+export const updateRole = async (
   previousState: unknown,
   formData: FormData,
 ) => {
@@ -25,7 +25,7 @@ export const updateRoleName = async (
     /**
      * Authenticate and authorize the request
      */
-    const authentication = await requireAuthenticationAction("updateRoleName");
+    const authentication = await requireAuthenticationAction("updateRole");
     await authentication.authorizeAction("role", "manage");
 
     /**
