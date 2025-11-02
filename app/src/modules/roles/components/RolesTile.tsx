@@ -16,7 +16,7 @@ export const RolesTile = async ({ className }: Props) => {
   return (
     <section
       className={clsx(
-        "p-4 rounded-primary bg-neutral-800/50 overflow-hidden",
+        "p-4 background-secondary rounded-primary overflow-auto",
         className,
       )}
     >
@@ -64,9 +64,7 @@ export const RolesTile = async ({ className }: Props) => {
                     <div className="size-8 flex-none" />
                   )}
 
-                  <p className="font-bold overflow-hidden text-ellipsis whitespace-nowrap">
-                    {role.name}
-                  </p>
+                  <p className="font-bold truncate">{role.name}</p>
                 </Link>
               </td>
 
@@ -76,12 +74,12 @@ export const RolesTile = async ({ className }: Props) => {
                   className="flex items-center justify-center gap-2 hover:bg-neutral-800 px-2 rounded-secondary h-full"
                   prefetch={false}
                 >
-                  {role.inherits.length > 0 ? role.inherits.length : "-"}
+                  {role.inherits.length > 0 ? role.inherits.length : null}
                 </Link>
               </td>
 
               <td className="flex items-center justify-center h-14">
-                {role.maxAgeDays || "-"}
+                {role.maxAgeDays}
               </td>
             </tr>
           ))}

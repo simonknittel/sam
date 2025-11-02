@@ -1,6 +1,5 @@
 "use client";
 
-import { useAction } from "@/modules/actions/utils/useAction";
 import { Button2 } from "@/modules/common/components/Button2";
 import { NumberInput } from "@/modules/common/components/form/NumberInput";
 import { TextInput } from "@/modules/common/components/form/TextInput";
@@ -9,9 +8,9 @@ import Note from "@/modules/common/components/Note";
 import type { Role, Upload } from "@prisma/client";
 import clsx from "clsx";
 import { useActionState } from "react";
-import { FaSave, FaSpinner, FaTrash } from "react-icons/fa";
-import { deleteRole } from "../actions/deleteRole";
-import { updateRoleName } from "../actions/updateRoleName";
+import { FaSave, FaSpinner } from "react-icons/fa";
+import { updateRole } from "../actions/updateRole";
+import { DeleteRole } from "./DeleteRole";
 
 interface Props {
   readonly className?: string;
@@ -21,26 +20,23 @@ interface Props {
 }
 
 export const OverviewTab = ({ className, role }: Props) => {
-  const [updateNameState, updateNameFormAction, updateNameIsPending] =
-    useActionState(updateRoleName, null);
-  const {
-    state: deleteState,
-    formAction: deleteFormAction,
-    isPending: deleteIsPending,
-  } = useAction(deleteRole);
+  const [updateState, updateFormAction, updateIsPending] = useActionState(
+    updateRole,
+    null,
+  );
 
   return (
     <div className={clsx("flex flex-col gap-2", className)}>
       <form
-        action={updateNameFormAction}
-        className={clsx("rounded-primary bg-neutral-800/50 p-4", className)}
+        action={updateFormAction}
+        className={clsx("background-secondary rounded-primary p-4", className)}
       >
         <input type="hidden" name="id" value={role.id} />
 
         <TextInput label="Name" name="name" defaultValue={role.name} />
 
         <NumberInput
-          label="Verfallsdatum (in Tagen)"
+          label="Entfernt nach (in Tagen)"
           name="maxAgeDays"
           defaultValue={role.maxAgeDays ?? undefined}
           min={1}
@@ -51,10 +47,10 @@ export const OverviewTab = ({ className, role }: Props) => {
 
         <Button2
           type="submit"
-          disabled={updateNameIsPending}
+          disabled={updateIsPending}
           className="ml-auto mt-4"
         >
-          {updateNameIsPending ? (
+          {updateIsPending ? (
             <FaSpinner className="animate-spin" />
           ) : (
             <FaSave />
@@ -62,23 +58,21 @@ export const OverviewTab = ({ className, role }: Props) => {
           Speichern
         </Button2>
 
-        {updateNameState && (
+        {updateState && (
           <Note
-            type={updateNameState.success ? "success" : "error"}
+            type={updateState.success ? "success" : "error"}
             message={
-              updateNameState.success
-                ? updateNameState.success
-                : updateNameState.error
+              updateState.success ? updateState.success : updateState.error
             }
             className={clsx("mt-4", {
-              "animate-pulse": updateNameIsPending,
+              "animate-pulse": updateIsPending,
             })}
           />
         )}
       </form>
 
       <section
-        className={clsx("rounded-primary bg-neutral-800/50 p-4", className)}
+        className={clsx("background-secondary rounded-primary p-4", className)}
       >
         <h2 className="font-bold">Bilder</h2>
 
@@ -136,31 +130,7 @@ export const OverviewTab = ({ className, role }: Props) => {
         </div>
       </section>
 
-      <section
-        className={clsx("rounded-primary bg-neutral-800/50 p-4", className)}
-      >
-        <form action={deleteFormAction}>
-          <input type="hidden" name="id" value={role.id} />
-          <Button2 type="submit" disabled={deleteIsPending}>
-            {deleteIsPending ? (
-              <FaSpinner className="animate-spin" />
-            ) : (
-              <FaTrash />
-            )}
-            Löschen
-          </Button2>
-
-          {deleteState && "error" in deleteState && (
-            <Note
-              type="error"
-              message={deleteState.error}
-              className={clsx("mt-4", {
-                "animate-pulse": updateNameIsPending,
-              })}
-            />
-          )}
-        </form>
-      </section>
+      <DeleteRole role={role} />
     </div>
   );
 };
