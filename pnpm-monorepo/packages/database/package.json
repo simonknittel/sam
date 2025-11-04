@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@prisma/client": "6.17.1",
-    "@prisma/adapter-pg": "6.17.1",
+    "@prisma/adapter-pg": "6.18.0",
     "zod": "4.1.12"
   },
   "devDependencies": {
