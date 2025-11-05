@@ -75,7 +75,7 @@ export const authOptions: NextAuthOptions = {
               role: {
                 include: {
                   permissionStrings: true,
-                  inheritedBy: {
+                  inherits: {
                     include: {
                       permissionStrings: true,
                     },
@@ -91,7 +91,7 @@ export const authOptions: NextAuthOptions = {
       if (entity) {
         const roles = entity.roleAssignments.flatMap((roleAssignment) => [
           roleAssignment.role,
-          ...roleAssignment.role.inheritedBy,
+          ...roleAssignment.role.inherits,
         ]);
 
         givenPermissionSets = getPermissionSetsByRoles(roles);
@@ -102,14 +102,21 @@ export const authOptions: NextAuthOptions = {
         !user.lastSeenAt ||
         user.lastSeenAt.toDateString() !== new Date().toDateString()
       ) {
-        await prisma.user.update({
-          where: {
-            id: user.id,
-          },
-          data: {
-            lastSeenAt: new Date(),
-          },
-        });
+        try {
+          await prisma.user.update({
+            where: {
+              id: user.id,
+            },
+            data: {
+              lastSeenAt: new Date(),
+            },
+          });
+        } catch (error) {
+          void log.warn("Failed to update user's lastSeenAt", {
+            userId: user.id,
+            error,
+          });
+        }
       }
 
       return {
