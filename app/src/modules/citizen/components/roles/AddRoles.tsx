@@ -66,7 +66,7 @@ export const AddRoles = ({
             {allRoles.map((role) => (
               <div
                 key={role.id}
-                className="py-2 flex justify-between items-center"
+                className="py-2 flex justify-between items-center break-inside-avoid-column"
               >
                 <span className="flex gap-2 items-center overflow-hidden">
                   {role.icon && (
