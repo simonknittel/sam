@@ -278,9 +278,10 @@ export const getDocuments = cache(
       authentication.authorize("documentPolaris", "read"),
     ]);
 
-    if (authorizations.every((authorization) => !authorization)) return [];
+    if (authorizations.every((authorization) => authorization === false))
+      return [];
 
-    const categoriesWithAuthorizedDocuments = [];
+    const categoriesWithAuthorizedDocuments: Category[] = [];
     let counter = 0;
     for (const category of categories) {
       const documents = [];
@@ -292,6 +293,6 @@ export const getDocuments = cache(
         categoriesWithAuthorizedDocuments.push({ ...category, documents });
     }
 
-    return categories;
+    return categoriesWithAuthorizedDocuments;
   }),
 );
