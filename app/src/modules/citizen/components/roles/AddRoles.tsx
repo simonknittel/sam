@@ -51,7 +51,7 @@ export const AddRoles = ({
       <Modal
         isOpen={isOpen}
         onRequestClose={handleRequestClose}
-        className="w-full"
+        className="w-[1280px]"
         heading={<h2>Bearbeiten</h2>}
       >
         <UpdateRolesForm>
