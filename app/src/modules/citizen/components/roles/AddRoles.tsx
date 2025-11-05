@@ -51,7 +51,7 @@ export const AddRoles = ({
       <Modal
         isOpen={isOpen}
         onRequestClose={handleRequestClose}
-        className="w-full"
+        className="w-[1280px]"
         heading={<h2>Bearbeiten</h2>}
       >
         <UpdateRolesForm>
@@ -66,7 +66,7 @@ export const AddRoles = ({
             {allRoles.map((role) => (
               <div
                 key={role.id}
-                className="py-2 flex justify-between items-center"
+                className="py-2 flex justify-between items-center break-inside-avoid-column"
               >
                 <span className="flex gap-2 items-center overflow-hidden">
                   {role.icon && (

@@ -73,8 +73,31 @@ export const updateRoleAssignments = createAuthenticatedAction(
       }
     }
 
+    // Filter changes based on the current user's permissions
+    const authorizationPromises = changes.map((change) => {
+      if (change.enabled) {
+        return authentication.authorize("otherRole", "assign", [
+          {
+            key: "roleId",
+            value: change.roleId,
+          },
+        ]);
+      } else {
+        return authentication.authorize("otherRole", "dismiss", [
+          {
+            key: "roleId",
+            value: change.roleId,
+          },
+        ]);
+      }
+    });
+    const authorizationResults = await Promise.all(authorizationPromises);
+    const filteredChanges: Change[] = changes.filter(
+      (_, idx) => authorizationResults[idx],
+    );
+
     await prisma.$transaction(
-      changes.flatMap((change) => {
+      filteredChanges.flatMap((change) => {
         if (change.enabled === false) {
           return [
             prisma.roleAssignment.delete({
@@ -121,7 +144,7 @@ export const updateRoleAssignments = createAuthenticatedAction(
      * Trigger notifications
      */
     await triggerNotifications(
-      changes
+      filteredChanges
         .filter((change) => change.enabled)
         .map((change) => ({
           type: "RoleAdded",
