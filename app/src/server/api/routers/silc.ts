@@ -11,8 +11,8 @@ export const silcRouter = createTRPCRouter({
     try {
       const allCitizens = await prisma.entity.findMany({
         where: {
-          roles: {
-            not: null,
+          roleAssignments: {
+            some: {},
           },
         },
         include: {

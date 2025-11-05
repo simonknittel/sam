@@ -39,8 +39,8 @@ export const getCitizensGroupedByVisibleRoles = cache(
   withTrace("getCitizensGroupedByVisibleRoles", async () => {
     const citizens = await prisma.entity.findMany({
       where: {
-        roles: {
-          not: null,
+        roleAssignments: {
+          some: {},
         },
       },
       orderBy: {
