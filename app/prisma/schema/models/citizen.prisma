@@ -54,7 +54,6 @@ model Entity {
   teamspeakId               String?
   citizenId                 String?
   communityMoniker          String?
-  roles                     String?                    @db.Text // TODO: Delete after migrating to RoleAssignment
   createdPenaltyEntries     PenaltyEntry[]             @relation("createdBy")
   deletedPenaltyEntries     PenaltyEntry[]             @relation("deletedBy")
   penaltyEntries            PenaltyEntry[]             @relation("citizen")
@@ -62,8 +61,6 @@ model Entity {
   eventPositions            EventPosition[]            @relation("citizen")
   silcBalance               Int                        @default(0)
   totalEarnedSilc           Int                        @default(0)
-
-  @@index([roles])
 }
 
 model EntityLog {
