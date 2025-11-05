@@ -51,7 +51,7 @@ export const ProfileTile = async ({ className }: Props) => {
       <section
         className={clsx(
           className,
-          "rounded-primary p-4 background-secondary flex flex-col gap-4 items-center",
+          "rounded-primary p-4 background-secondary flex flex-col gap-4 items-center w-full",
         )}
       >
         <Avatar name={name} image={image} size={128} />
@@ -73,7 +73,7 @@ export const ProfileTile = async ({ className }: Props) => {
             <Link
               href={`/app/spynet/citizen/${authentication.session.entity.id}/silc`}
               title="Übersicht öffnen"
-              className="flex-1 rounded-primary background-secondary hover:bg-neutral-600/50 focus-visible:bg-neutral-600/50 flex flex-col justify-center items-center p-4"
+              className="flex-initial w-1/2 rounded-primary background-secondary hover:bg-neutral-600/50 focus-visible:bg-neutral-600/50 flex flex-col justify-center items-center p-4"
             >
               <span
                 className={clsx("font-black text-4xl", {
@@ -102,7 +102,7 @@ export const ProfileTile = async ({ className }: Props) => {
             <Link
               href={`/app/spynet/citizen/${authentication.session.entity.id}/penalty-points`}
               title="Übersicht öffnen"
-              className="flex-1 rounded-primary background-secondary hover:bg-neutral-600/50 focus-visible:bg-neutral-600/50 flex flex-col justify-center items-center p-4"
+              className="flex-initial w-1/2 rounded-primary background-secondary hover:bg-neutral-600/50 focus-visible:bg-neutral-600/50 flex flex-col justify-center items-center p-4"
             >
               <span
                 className={clsx("font-black text-4xl", {

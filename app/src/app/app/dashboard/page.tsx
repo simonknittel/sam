@@ -29,14 +29,14 @@ export default async function Page() {
       {showCalendar && (
         <Suspense
           fallback={
-            <TileSkeleton className="flex-none @7xl:flex-1 max-w-[400px] @7xl:max-w-none" />
+            <TileSkeleton className="flex-none @7xl:flex-1 w-[400px] @7xl:max-w-none" />
           }
         >
-          <CalendarTile className="flex-none @7xl:flex-1 max-w-[400px] @7xl:max-w-none" />
+          <CalendarTile className="flex-none @7xl:flex-1 w-[400px] @7xl:max-w-none" />
         </Suspense>
       )}
 
-      <div className="flex flex-col gap-6 max-w-[400px] flex-none">
+      <div className="flex flex-col gap-6 w-[400px] flex-none">
         <TasksDashboardTile />
 
         <section className="flex flex-col gap-[2px] flex-none">
