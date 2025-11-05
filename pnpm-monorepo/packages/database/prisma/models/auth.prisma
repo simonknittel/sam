@@ -66,20 +66,33 @@ model EmailConfirmationToken {
 }
 
 model Role {
-  id                String             @id @default(cuid())
-  name              String             @unique
-  iconId            String?            @map("imageId")
-  icon              Upload?            @relation(name: "icon", fields: [iconId], references: [id], onDelete: SetNull)
-  thumbnailId       String?            @map("thumbnailId")
-  thumbnail         Upload?            @relation(name: "thumbnail", fields: [thumbnailId], references: [id], onDelete: SetNull)
+  id                String                 @id @default(cuid())
+  name              String                 @unique
+  iconId            String?                @map("imageId")
+  icon              Upload?                @relation(name: "icon", fields: [iconId], references: [id], onDelete: SetNull)
+  thumbnailId       String?                @map("thumbnailId")
+  thumbnail         Upload?                @relation(name: "thumbnail", fields: [thumbnailId], references: [id], onDelete: SetNull)
   permissionStrings PermissionString[]
-  flowNodes         FlowNode[]         @relation("flowNodes")
-  inherits          Role[]             @relation("inheritance")
-  inheritedBy       Role[]             @relation("inheritance")
+  flowNodes         FlowNode[]             @relation("flowNodes")
+  inherits          Role[]                 @relation("inheritance")
+  inheritedBy       Role[]                 @relation("inheritance")
   eventPositions    EventPosition[]
-  tasksRequiredIn   Task[]             @relation("requiredRoles")
+  tasksRequiredIn   Task[]                 @relation("requiredRoles")
   silcSalaries      SilcRoleSalary[]
+  /// Number of days after which this role gets removed from a citizen due to
+  /// their inactivity. NULL if inactivity is not tracked for this role. This
+  /// is handled by application logic.
   maxAgeDays        Int?
+  assignments       RoleAssignment[]       @relation("role")
+  assignmentChanges RoleAssignmentChange[] @relation("role")
+  /// Number of levels this role has. NULL if the role does not have levels.
+  // maxLevel               Int?
+  // assignmentLevelChanges RoleAssignmentLevelChange[] @relation("role")
+  /// Number of days after which the role is considered inactive for a citizen.
+  /// The inactivity is bound to the changes to their role level. NULL if
+  /// inactivity is not tracked for this role. Inactive roles don't give the
+  /// citizen any permissions. This is handled by application logic.
+  // inactivityThreshold    Int?
 
   @@index([maxAgeDays])
 }

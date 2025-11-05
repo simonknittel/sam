@@ -13,6 +13,7 @@ setContextMissingStrategy(
 
 export * from "aws-xray-sdk-core";
 
+// @ts-expect-error
 export const captureAsyncFunc: typeof _captureAsyncFunc = (name, fcn) => {
   return _captureAsyncFunc(name, async (subsegment) => {
     try {
@@ -23,6 +24,7 @@ export const captureAsyncFunc: typeof _captureAsyncFunc = (name, fcn) => {
 
       return rtn;
     } catch (error) {
+      // @ts-expect-error
       subsegment?.close(error);
       subsegment?.flush();
 

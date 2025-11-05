@@ -113,6 +113,7 @@ export const scrapeDiscordEventsHandler = async () => {
       await updateParticipants(futureEventFromDiscord);
     }
   } catch (error) {
+    // @ts-expect-error
     log.error("Failed to scrape Discord events", error);
     throw error;
   }

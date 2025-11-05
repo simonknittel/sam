@@ -15,12 +15,15 @@ export const disburseRoleSalaries = async () => {
 
     const allCitizens = await prisma.entity.findMany({
       where: {
-        roles: {
-          not: null,
+        roleAssignments: {
+          some: {},
         },
       },
       orderBy: {
         handle: "asc",
+      },
+      include: {
+        roleAssignments: true,
       },
     });
 
@@ -45,9 +48,8 @@ export const disburseRoleSalaries = async () => {
     }
 
     for (const citizen of allCitizens) {
-      const citizenRoleIds = citizen.roles?.split(",") ?? [];
-      for (const citizenRoleId of citizenRoleIds) {
-        const role = allRoles.find((r) => r.id === citizenRoleId);
+      for (const roleAssignment of citizen.roleAssignments) {
+        const role = allRoles.find((r) => r.id === roleAssignment.roleId);
 
         if (role) {
           if (!citizensGroupedByRole.has(role.id)) {
