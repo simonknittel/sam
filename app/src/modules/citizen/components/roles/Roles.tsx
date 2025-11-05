@@ -5,13 +5,15 @@ import {
   getAssignableRoles,
   getAssignedRoles,
 } from "@/modules/roles/utils/getRoles";
-import { type Entity } from "@prisma/client";
+import { type Entity, type RoleAssignment } from "@prisma/client";
 import clsx from "clsx";
 import { AddRoles } from "./AddRoles";
 
 interface Props {
   readonly className?: string;
-  readonly entity: Entity;
+  readonly entity: Entity & {
+    roleAssignments: RoleAssignment[];
+  };
 }
 
 export const Roles = async ({ className, entity }: Props) => {

@@ -1,10 +1,11 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
+import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { Tile } from "@/modules/common/components/Tile";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { SingleRole } from "@/modules/roles/components/SingleRole";
 import { getVisibleRoles } from "@/modules/roles/utils/getRoles";
-import { type Entity } from "@prisma/client";
+import { RoleAssignmentChangeType, type Entity } from "@prisma/client";
 import clsx from "clsx";
 
 interface Props {
@@ -15,43 +16,41 @@ interface Props {
 export const RolesHistory = async ({ className, entity }: Props) => {
   await requireAuthentication();
 
-  const [logs, visibleRoles] = await Promise.all([
-    prisma.entityLog.findMany({
+  const [roleAssignmentChanges, visibleRoles] = await Promise.all([
+    prisma.roleAssignmentChange.findMany({
       where: {
-        entityId: entity.id,
-        type: {
-          in: ["role-added", "role-removed"],
-        },
+        citizenId: entity.id,
       },
       orderBy: {
         createdAt: "desc",
       },
       select: {
         id: true,
+        roleId: true,
         type: true,
         createdAt: true,
-        content: true,
-        submittedBy: {
+        createdBy: {
           select: {
-            name: true,
+            id: true,
+            handle: true,
           },
         },
       },
     }),
+
     getVisibleRoles(),
   ]);
 
-  const entries = logs
-    .filter((log) => {
-      if (!log.content) return false;
-      return visibleRoles.some((visibleRole) => visibleRole.id === log.content);
-    })
-    .map((log) => {
-      const role = visibleRoles.find((role) => role.id === log.content)!;
+  const entries = roleAssignmentChanges
+    .filter((change) =>
+      visibleRoles.some((visibleRole) => visibleRole.id === change.roleId),
+    )
+    .map((change) => {
+      const role = visibleRoles.find((role) => role.id === change.roleId)!;
 
       let message;
-      switch (log.type) {
-        case "role-added":
+      switch (change.type) {
+        case RoleAssignmentChangeType.ADD:
           message = (
             <>
               Die Rolle <SingleRole key={role.id} role={role} /> wurde
@@ -59,7 +58,7 @@ export const RolesHistory = async ({ className, entity }: Props) => {
             </>
           );
           break;
-        case "role-removed":
+        case RoleAssignmentChangeType.REMOVE:
           message = (
             <>
               Die Rolle <SingleRole key={role.id} role={role} /> wurde entfernt.
@@ -69,10 +68,10 @@ export const RolesHistory = async ({ className, entity }: Props) => {
       }
 
       return {
-        id: log.id,
-        date: log.createdAt,
+        id: change.id,
+        date: change.createdAt,
         message,
-        author: log.submittedBy?.name,
+        author: change.createdBy,
       };
     });
 
@@ -88,7 +87,12 @@ export const RolesHistory = async ({ className, entity }: Props) => {
                     {formatDate(entry.date)}
                   </time>
 
-                  {entry.author ? <> • {entry.author}</> : null}
+                  {entry.author ? (
+                    <>
+                      {" "}
+                      • <CitizenLink citizen={entry.author} />
+                    </>
+                  ) : null}
                 </p>
               </div>
 

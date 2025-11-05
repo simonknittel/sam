@@ -2,34 +2,20 @@
 
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
-import { type Entity, type Role } from "@prisma/client";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import toast from "react-hot-toast";
+import { type Role } from "@prisma/client";
 
 interface Props {
-  entity: Entity;
-  role: Role;
-  checked?: boolean;
+  readonly role: Role;
+  readonly isChecked?: boolean;
 }
 
-interface FormValues {
-  checked: boolean;
-}
-
-const RoleCheckbox = ({ entity, role, checked = false }: Readonly<Props>) => {
-  const { register, watch } = useForm<FormValues>({
-    defaultValues: {
-      checked,
-    },
-  });
-  const [isLoading, setIsLoading] = useState(false);
+export const RoleCheckbox = ({ role, isChecked = false }: Readonly<Props>) => {
   const authentication = useAuthentication();
 
   let disabled = false;
 
   if (
-    checked &&
+    isChecked &&
     (!authentication ||
       !authentication.authorize("otherRole", "dismiss", [
         {
@@ -41,7 +27,7 @@ const RoleCheckbox = ({ entity, role, checked = false }: Readonly<Props>) => {
     disabled = true;
 
   if (
-    !checked &&
+    !isChecked &&
     (!authentication ||
       !authentication.authorize("otherRole", "assign", [
         {
@@ -52,45 +38,12 @@ const RoleCheckbox = ({ entity, role, checked = false }: Readonly<Props>) => {
   )
     disabled = true;
 
-  useEffect(() => {
-    const subscription = watch((value) => {
-      if (disabled) return;
-
-      setIsLoading(true);
-
-      fetch(`/api/spynet/citizen/${entity.id}/log`, {
-        method: "POST",
-        body: JSON.stringify({
-          type: value.checked ? "role-added" : "role-removed",
-          content: role.id,
-        }),
-      })
-        .then((response) => {
-          if (response.ok) {
-            toast.success("Erfolgreich gespeichert");
-          } else {
-            toast.error("Beim Speichern ist ein Fehler aufgetreten.");
-          }
-        })
-        .catch((error) => {
-          toast.error("Beim Speichern ist ein Fehler aufgetreten.");
-          console.error(error);
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
-    });
-
-    return () => subscription.unsubscribe();
-  }, [watch("checked"), role.id, disabled]);
-
   return (
     <YesNoCheckbox
-      {...register("checked", {
-        disabled: isLoading || disabled,
-      })}
+      name={`role_${role.id}`}
+      disabled={disabled}
+      hideLabel
+      defaultChecked={isChecked}
     />
   );
 };
-
-export default RoleCheckbox;

@@ -4,7 +4,8 @@ import clsx from "clsx";
 import Image from "next/image";
 import { getRoles } from "../queries";
 
-const GRID_COLS = "grid-cols-[1fr_128px_128px]";
+// const GRID_COLS = "grid-cols-[1fr_128px_128px_128px_72px_80px]";
+const GRID_COLS = "grid-cols-[1fr_128px_128px_80px]";
 
 interface Props {
   readonly className?: string;
@@ -20,7 +21,7 @@ export const RolesTile = async ({ className }: Props) => {
         className,
       )}
     >
-      <table className="w-full">
+      <table className="w-full min-w-[850px]">
         <thead>
           <tr
             className={clsx(
@@ -29,8 +30,11 @@ export const RolesTile = async ({ className }: Props) => {
             )}
           >
             <th className="px-2">Rolle</th>
-            <th className="px-2">Vererbungen</th>
-            <th className="px-2">Verfallsdatum</th>
+            <th className="px-2 text-center">Vererbungen</th>
+            <th className="px-2 text-center">Entfernt nach</th>
+            {/* <th className="px-2 text-center">Inaktiv nach</th>
+            <th className="px-2 text-center">Level</th> */}
+            <th className="px-2 text-center">Citizen</th>
           </tr>
         </thead>
 
@@ -80,6 +84,24 @@ export const RolesTile = async ({ className }: Props) => {
 
               <td className="flex items-center justify-center h-14">
                 {role.maxAgeDays}
+              </td>
+
+              {/* <td className="flex items-center justify-center h-14">
+                {role.inactivityThreshold}
+              </td>
+
+              <td className="flex items-center justify-center h-14">
+                {role.maxLevel}
+              </td> */}
+
+              <td className="h-14">
+                <Link
+                  href={`/app/spynet/citizen?filters=role-${role.id}`}
+                  className="flex items-center justify-center gap-2 hover:bg-neutral-800 px-2 rounded-secondary h-full"
+                  prefetch={false}
+                >
+                  {role.assignments.length > 0 ? role.assignments.length : null}
+                </Link>
               </td>
             </tr>
           ))}

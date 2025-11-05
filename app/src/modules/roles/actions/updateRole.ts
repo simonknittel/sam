@@ -13,6 +13,8 @@ const schema = z.object({
   id: z.cuid(),
   name: z.string().min(1).max(255),
   maxAgeDays: z.coerce.number().min(1).nullish(),
+  inactivityThreshold: z.coerce.number().min(1).nullish(),
+  maxLevel: z.coerce.number().min(1).nullish(),
 });
 
 export const updateRole = async (
@@ -37,6 +39,12 @@ export const updateRole = async (
       maxAgeDays: formData.get("maxAgeDays")
         ? Number(formData.get("maxAgeDays"))
         : null,
+      inactivityThreshold: formData.get("inactivityThreshold")
+        ? Number(formData.get("inactivityThreshold"))
+        : null,
+      maxLevel: formData.get("maxLevel")
+        ? Number(formData.get("maxLevel"))
+        : null,
     });
     if (!result.success) {
       void log.warn("Bad Request", { error: serializeError(result.error) });
@@ -56,6 +64,8 @@ export const updateRole = async (
       data: {
         name: result.data.name,
         maxAgeDays: result.data.maxAgeDays,
+        inactivityThreshold: result.data.inactivityThreshold,
+        maxLevel: result.data.maxLevel,
       },
     });
 

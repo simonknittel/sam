@@ -36,6 +36,11 @@ export const getRoles = cache(
         inherits: true,
         icon: true,
         thumbnail: true,
+        assignments: {
+          select: {
+            id: true,
+          },
+        },
       },
     });
   }),

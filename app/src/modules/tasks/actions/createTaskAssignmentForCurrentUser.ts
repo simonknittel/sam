@@ -50,7 +50,9 @@ export const createTaskAssignmentForCurrentUser = createAuthenticatedAction(
     if (
       task.requiredRoles.length > 0 &&
       !task.requiredRoles.some((role) =>
-        authentication.session.entity!.roles?.split(",").includes(role.id),
+        authentication.session.entity!.roleAssignments.some(
+          (assignment) => assignment.roleId === role.id,
+        ),
       )
     )
       return {

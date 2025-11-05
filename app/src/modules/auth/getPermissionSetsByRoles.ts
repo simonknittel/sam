@@ -6,17 +6,11 @@ type Roles = (Role & {
   permissionStrings: PermissionString[];
 })[];
 
-export const getPermissionSetsByRoles = (roles: Roles): PermissionSet[] => {
-  const permissionSets = [];
-
-  for (const role of roles) {
-    for (const permissionString of role.permissionStrings) {
-      const permissionSet = transformPermissionStringToPermissionSet(
+export const getPermissionSetsByRoles = (roles: Roles): PermissionSet[] =>
+  roles.flatMap((role) =>
+    role.permissionStrings.map((permissionString) =>
+      transformPermissionStringToPermissionSet(
         permissionString.permissionString,
-      );
-      permissionSets.push(permissionSet);
-    }
-  }
-
-  return permissionSets;
-};
+      ),
+    ),
+  );

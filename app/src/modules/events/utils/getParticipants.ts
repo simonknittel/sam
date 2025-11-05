@@ -20,6 +20,9 @@ export const getParticipants = cache(
           in: Array.from(discordUserIds),
         },
       },
+      include: {
+        roleAssignments: true,
+      },
     });
 
     const resolvedParticipants = citizens.map((citizen) => {

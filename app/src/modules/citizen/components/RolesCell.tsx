@@ -2,12 +2,19 @@ import { requireAuthentication } from "@/modules/auth/server";
 import { AddRoles } from "@/modules/citizen/components/roles/AddRoles";
 import { SingleRole } from "@/modules/roles/components/SingleRole";
 import { getAssignedRoles } from "@/modules/roles/utils/getRoles";
-import { type Entity, type Role, type Upload } from "@prisma/client";
+import {
+  type Entity,
+  type Role,
+  type RoleAssignment,
+  type Upload,
+} from "@prisma/client";
 import clsx from "clsx";
 
 interface Props {
   readonly className?: string;
-  readonly entity: Entity;
+  readonly entity: Entity & {
+    readonly roleAssignments: RoleAssignment[];
+  };
   readonly assignableRoles: (Role & {
     icon: Upload | null;
   })[];
