@@ -102,14 +102,21 @@ export const authOptions: NextAuthOptions = {
         !user.lastSeenAt ||
         user.lastSeenAt.toDateString() !== new Date().toDateString()
       ) {
-        await prisma.user.update({
-          where: {
-            id: user.id,
-          },
-          data: {
-            lastSeenAt: new Date(),
-          },
-        });
+        try {
+          await prisma.user.update({
+            where: {
+              id: user.id,
+            },
+            data: {
+              lastSeenAt: new Date(),
+            },
+          });
+        } catch (error) {
+          void log.warn("Failed to update user's lastSeenAt", {
+            userId: user.id,
+            error,
+          });
+        }
       }
 
       return {
