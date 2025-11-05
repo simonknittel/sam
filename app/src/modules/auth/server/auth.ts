@@ -75,7 +75,7 @@ export const authOptions: NextAuthOptions = {
               role: {
                 include: {
                   permissionStrings: true,
-                  inheritedBy: {
+                  inherits: {
                     include: {
                       permissionStrings: true,
                     },
@@ -91,7 +91,7 @@ export const authOptions: NextAuthOptions = {
       if (entity) {
         const roles = entity.roleAssignments.flatMap((roleAssignment) => [
           roleAssignment.role,
-          ...roleAssignment.role.inheritedBy,
+          ...roleAssignment.role.inherits,
         ]);
 
         givenPermissionSets = getPermissionSetsByRoles(roles);
