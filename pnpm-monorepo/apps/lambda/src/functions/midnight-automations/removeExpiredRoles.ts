@@ -1,4 +1,4 @@
-import { prisma } from "@sam-monorepo/database";
+import { prisma, RoleAssignmentChangeType } from "@sam-monorepo/database";
 import { log } from "../../common/logger";
 import { captureAsyncFunc } from "../../common/xray";
 
@@ -9,8 +9,8 @@ export const removeExpiredRoles = async () => {
       () =>
         prisma.entity.findMany({
           where: {
-            roles: {
-              not: null,
+            roleAssignments: {
+              some: {},
             },
             discordId: {
               not: null,
@@ -19,7 +19,11 @@ export const removeExpiredRoles = async () => {
           select: {
             id: true,
             discordId: true,
-            roles: true,
+            roleAssignments: {
+              select: {
+                roleId: true,
+              },
+            },
           },
         }),
     );
@@ -74,15 +78,14 @@ export const removeExpiredRoles = async () => {
 
     const changes: { citizenId: string; roleId: string }[] = [];
     for (const citizenWithRole of citizenWithRoles) {
-      const citizenRoles = citizenWithRole.roles?.split(",");
-      if (!citizenRoles) continue;
+      if (citizenWithRole.roleAssignments.length <= 0) continue;
 
       const account = accounts.find(
         (account) => account.providerAccountId === citizenWithRole.discordId,
       );
 
-      for (const citizenRole of citizenRoles) {
-        const roleExpirationDate = expirationMap.get(citizenRole);
+      for (const roleAssignment of citizenWithRole.roleAssignments) {
+        const roleExpirationDate = expirationMap.get(roleAssignment.roleId);
         if (!roleExpirationDate) continue;
 
         if (
@@ -91,7 +94,7 @@ export const removeExpiredRoles = async () => {
         ) {
           changes.push({
             citizenId: citizenWithRole.id,
-            roleId: citizenRole,
+            roleId: roleAssignment.roleId,
           });
         }
       }
@@ -103,36 +106,26 @@ export const removeExpiredRoles = async () => {
     }
 
     await captureAsyncFunc("remove expired roles", () =>
-      prisma.$transaction(async (tx) => {
-        await tx.entityLog.createManyAndReturn({
+      prisma.$transaction([
+        prisma.roleAssignmentChange.createMany({
           data: changes.map((change) => ({
-            type: "role-removed",
-            content: change.roleId,
-            entityId: change.citizenId,
+            type: RoleAssignmentChangeType.REMOVE,
+            roleId: change.roleId,
+            citizenId: change.citizenId,
           })),
-          select: { id: true },
-        });
+        }),
 
-        for (const change of changes) {
-          const citizen = citizenWithRoles.find(
-            (citizen) => citizen.id === change.citizenId,
-          );
-          if (!citizen?.roles) continue;
-
-          const roles =
-            citizen.roles
-              .split(",")
-              .filter((roleId) => roleId !== change.roleId)
-              .join(",") || null;
-
-          await tx.entity.update({
-            where: { id: change.citizenId },
-            data: {
-              roles,
+        ...changes.map((change) =>
+          prisma.roleAssignment.delete({
+            where: {
+              citizenId_roleId: {
+                citizenId: change.citizenId,
+                roleId: change.roleId,
+              },
             },
-          });
-        }
-      }),
+          }),
+        ),
+      ]),
     );
 
     log.info("Removed expired roles", { count: changes.length });

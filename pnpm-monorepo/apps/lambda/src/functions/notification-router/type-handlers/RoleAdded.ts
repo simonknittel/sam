@@ -14,7 +14,11 @@ export const RoleAddedHandler = async (payload: Payload) => {
     prisma.entity.findUnique({
       where: { id: payload.citizenId },
       select: {
-        roles: true,
+        roleAssignments: {
+          select: {
+            roleId: true,
+          },
+        },
       },
     }),
     prisma.role.findUnique({
@@ -67,8 +71,8 @@ export const RoleAddedHandler = async (payload: Payload) => {
   if (!rolesWithOtherRoleRead?.length && !rolesWithOtherRoleManage?.length)
     return;
 
-  if (!citizen.roles) return;
-  const roleIdsOfCitizen = citizen.roles.split(",");
+  if (!citizen.roleAssignments.length) return;
+  const roleIdsOfCitizen = citizen.roleAssignments.map((ra) => ra.roleId);
   const hasCitizenLoginManage = rolesWithLoginManage.some((role) =>
     roleIdsOfCitizen.includes(role.roleId),
   );

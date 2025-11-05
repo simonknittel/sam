@@ -20,7 +20,11 @@ export const PenaltyEntryCreatedHandler = async (payload: Payload) => {
       citizenId: true,
       citizen: {
         select: {
-          roles: true,
+          roleAssignments: {
+            select: {
+              roleId: true,
+            },
+          },
         },
       },
     },
@@ -59,8 +63,10 @@ export const PenaltyEntryCreatedHandler = async (payload: Payload) => {
   if (!rolesWithLoginManage?.length) return;
   if (!rolesWithOwnPenaltyEntryRead?.length) return;
 
-  if (!penaltyEntry.citizen.roles) return;
-  const roleIdsOfCitizen = penaltyEntry.citizen.roles.split(",");
+  if (!penaltyEntry.citizen.roleAssignments.length) return;
+  const roleIdsOfCitizen = penaltyEntry.citizen.roleAssignments.map(
+    (ra) => ra.roleId,
+  );
   const hasCitizenLoginManage = rolesWithLoginManage.some((role) =>
     roleIdsOfCitizen.includes(role.roleId),
   );

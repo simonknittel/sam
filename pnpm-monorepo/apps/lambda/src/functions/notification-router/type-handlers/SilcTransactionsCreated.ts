@@ -61,17 +61,21 @@ export const SilcTransactionsCreatedHandler = async (payload: Payload) => {
       id: {
         in: transactions.map((transaction) => transaction.receiverId),
       },
-      roles: {
-        not: null,
+      roleAssignments: {
+        some: {},
       },
     },
     select: {
       id: true,
-      roles: true,
+      roleAssignments: {
+        select: {
+          roleId: true,
+        },
+      },
     },
   });
   const citizensWithMatchingRoles = citizensWithRoles.filter((citizen) => {
-    const citizenRoleIds = citizen.roles!.split(",");
+    const citizenRoleIds = citizen.roleAssignments.map((ra) => ra.roleId);
     const hasLoginManage = loginManageRoleIds.some((role) =>
       citizenRoleIds.includes(role.roleId),
     );
