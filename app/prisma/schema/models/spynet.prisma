@@ -1,0 +1,9 @@
+model NoteType {
+  id   String @id @default(cuid())
+  name String @unique
+}
+
+model ClassificationLevel {
+  id   String @id @default(cuid())
+  name String @unique
+}

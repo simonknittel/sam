@@ -181,7 +181,9 @@ export const getMonthlySalaryOfCurrentCitizen = cache(
     const roleSalaries = await prisma.silcRoleSalary.findMany({
       where: {
         roleId: {
-          in: authentication.session.entity.roles?.split(",") || [],
+          in: authentication.session.entity.roleAssignments.map(
+            (assignment) => assignment.roleId,
+          ),
         },
       },
     });

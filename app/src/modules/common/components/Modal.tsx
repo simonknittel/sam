@@ -33,7 +33,7 @@ export default function Modal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-30 flex cursor-pointer items-start lg:items-center justify-center bg-neutral-800/50 p-4 backdrop-blur"
+      className="fixed inset-0 z-30 flex cursor-pointer items-start lg:items-center justify-center bg-neutral-800/50 px-4 pt-4 pb-20 lg:pb-4 backdrop-blur"
       onMouseDown={onRequestClose || (() => router.back())}
     >
       <div

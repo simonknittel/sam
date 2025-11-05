@@ -1,6 +1,6 @@
 import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import type { Entity } from "@prisma/client";
+import type { Entity, RoleAssignment } from "@prisma/client";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
 import { getRoles } from "../queries";
@@ -34,16 +34,23 @@ export const getVisibleRoles = cache(
   }),
 );
 
-export const getAssignedRoles = cache(async (entity: Entity) => {
-  const visibleRoles = await getVisibleRoles();
+export const getAssignedRoles = cache(
+  async (
+    entity: Entity & {
+      roleAssignments: RoleAssignment[];
+    },
+  ) => {
+    const visibleRoles = await getVisibleRoles();
 
-  const assignedRoleIds = entity.roles?.split(",") ?? [];
-  const assignedRoles = visibleRoles.filter((role) =>
-    assignedRoleIds.includes(role.id),
-  );
+    const assignedRoles = visibleRoles.filter((role) =>
+      entity.roleAssignments.some(
+        (assignment) => assignment.roleId === role.id,
+      ),
+    );
 
-  return assignedRoles;
-});
+    return assignedRoles;
+  },
+);
 
 export const getMyAssignedRoles = cache(
   withTrace("getMyAssignedRoles", async () => {

@@ -2,10 +2,8 @@ import { prisma } from "@/db";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import { confirmLog } from "@/modules/citizen/utils/confirmLog";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
-import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { updateEntityRolesCache } from "./_lib/updateEntityRolesCache";
 
 type Params = Promise<{
   id: string;
@@ -44,16 +42,6 @@ const postBodySchema = z.union([
   z.object({
     type: z.literal("community-moniker"),
     content: z.string().trim().min(1).max(255),
-    confirmed: z.literal("confirmed").optional(),
-  }),
-  z.object({
-    type: z.literal("role-added"),
-    content: z.string().trim().cuid(),
-    confirmed: z.literal("confirmed").optional(),
-  }),
-  z.object({
-    type: z.literal("role-removed"),
-    content: z.string().trim().cuid(),
     confirmed: z.literal("confirmed").optional(),
   }),
 ]);
@@ -105,22 +93,6 @@ export async function POST(request: Request, props: { params: Params }) {
         break;
       case "community-moniker":
         await authentication.authorizeApi("community-moniker", "create");
-        break;
-      case "role-added":
-        await authentication.authorizeApi("otherRole", "assign", [
-          {
-            key: "roleId",
-            value: data.content,
-          },
-        ]);
-        break;
-      case "role-removed":
-        await authentication.authorizeApi("otherRole", "dismiss", [
-          {
-            key: "roleId",
-            value: data.content,
-          },
-        ]);
         break;
     }
 
@@ -175,22 +147,6 @@ export async function POST(request: Request, props: { params: Params }) {
     });
 
     if (data.confirmed) await confirmLog(item, "confirmed");
-
-    if (["role-added", "role-removed"].includes(data.type)) {
-      await updateEntityRolesCache(entity.id);
-    }
-
-    if (data.type === "role-added") {
-      await triggerNotifications([
-        {
-          type: "RoleAdded",
-          payload: {
-            citizenId: entity.id,
-            roleId: data.content,
-          },
-        },
-      ]);
-    }
 
     /**
      * Respond with the result

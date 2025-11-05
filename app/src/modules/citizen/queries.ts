@@ -5,7 +5,11 @@ import type { Entity, Role, Upload } from "@prisma/client";
 import { cache } from "react";
 
 export const getCitizens = withTrace("getCitizens", async () => {
-  return prisma.entity.findMany();
+  return prisma.entity.findMany({
+    include: {
+      roleAssignments: true,
+    },
+  });
 });
 
 export const getCitizenById = cache(
@@ -13,6 +17,9 @@ export const getCitizenById = cache(
     return prisma.entity.findUnique({
       where: {
         id,
+      },
+      include: {
+        roleAssignments: true,
       },
     });
   }),
@@ -39,6 +46,9 @@ export const getCitizensGroupedByVisibleRoles = cache(
       orderBy: {
         handle: "asc",
       },
+      include: {
+        roleAssignments: true,
+      },
     });
 
     const visibleRoles = await getVisibleRoles();
@@ -54,8 +64,9 @@ export const getCitizensGroupedByVisibleRoles = cache(
     >();
 
     for (const citizen of citizens) {
-      const citizenRoleIds = citizen.roles?.split(",") ?? [];
-      for (const citizenRoleId of citizenRoleIds) {
+      for (const citizenRoleId of citizen.roleAssignments.map(
+        (assignment) => assignment.roleId,
+      )) {
         const role = visibleRoles.find((r) => r.id === citizenRoleId);
 
         if (role) {

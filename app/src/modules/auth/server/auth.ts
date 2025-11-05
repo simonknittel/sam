@@ -8,7 +8,7 @@ import { log } from "@/modules/logging";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { getUserById } from "@/modules/users/queries";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import type { Entity } from "@prisma/client";
+import type { Entity, RoleAssignment } from "@prisma/client";
 import {
   getServerSession,
   type DefaultSession,
@@ -34,7 +34,11 @@ declare module "next-auth" {
     } & DefaultSession["user"];
     discordId: string;
     givenPermissionSets: PermissionSet[];
-    entity: Entity | null;
+    entity:
+      | (Entity & {
+          roleAssignments: RoleAssignment[];
+        })
+      | null;
   }
 
   interface User {
@@ -65,36 +69,30 @@ export const authOptions: NextAuthOptions = {
         where: {
           discordId: discordAccount!.providerAccountId,
         },
-      });
-
-      let givenPermissionSets: PermissionSet[] = [];
-
-      if (entity) {
-        const assignedRoles = entity.roles?.split(",") ?? [];
-
-        const roles = await prisma.role.findMany({
-          where: {
-            OR: [
-              {
-                id: {
-                  in: assignedRoles,
-                },
-              },
-              {
-                inheritedBy: {
-                  some: {
-                    id: {
-                      in: assignedRoles,
+        include: {
+          roleAssignments: {
+            include: {
+              role: {
+                include: {
+                  permissionStrings: true,
+                  inheritedBy: {
+                    include: {
+                      permissionStrings: true,
                     },
                   },
                 },
               },
-            ],
+            },
           },
-          include: {
-            permissionStrings: true,
-          },
-        });
+        },
+      });
+
+      let givenPermissionSets: PermissionSet[] = [];
+      if (entity) {
+        const roles = entity.roleAssignments.flatMap((roleAssignment) => [
+          roleAssignment.role,
+          ...roleAssignment.role.inheritedBy,
+        ]);
 
         givenPermissionSets = getPermissionSetsByRoles(roles);
       }

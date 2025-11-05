@@ -10,8 +10,8 @@ interface Notification {
 
 export const triggerNotifications = withTrace(
   "triggerNotifications",
-  async (notifications: Notification[]) => {
-    if (notifications[0].type === "EmailConfirmation") {
+  async (notifications: Notification[] = []) => {
+    if (notifications[0]?.type === "EmailConfirmation") {
       // TODO: Migrate to "NotificationRequested" event type handler
       await emailConfirmationHandler(notifications[0].payload);
     } else {

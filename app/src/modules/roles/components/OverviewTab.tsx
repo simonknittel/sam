@@ -45,6 +45,26 @@ export const OverviewTab = ({ className, role }: Props) => {
           labelClassName="mt-4"
         />
 
+        {/* <NumberInput
+          label="Inaktiv nach (in Tagen)"
+          name="inactivityThreshold"
+          defaultValue={role.inactivityThreshold ?? undefined}
+          min={1}
+          step={1}
+          hint="(Optional) Für Citizen, dessen Level für diese Rolle sich innerhalb dieses Zeitraums nicht ändert, gilt diese Rolle als inaktiv und die Berechtigungen dieser Rolle werden deaktiviert"
+          labelClassName="mt-4"
+        />
+
+        <NumberInput
+          label="Level"
+          name="maxLevel"
+          defaultValue={role.maxLevel ?? undefined}
+          min={1}
+          step={1}
+          hint="(Optional) Die Anzahl an Level, die ein Citizen erreichen muss, um die Berechtigungen dieser Rolle zu erhalten"
+          labelClassName="mt-4"
+        /> */}
+
         <Button2
           type="submit"
           disabled={updateIsPending}

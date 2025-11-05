@@ -1,3 +1,4 @@
+/// Citizen
 model Entity {
   id                                           String                               @id @default(cuid())
   createdAt                                    DateTime                             @default(now())
@@ -36,6 +37,15 @@ model Entity {
   notificationSettings                         NotificationSetting[]
   // receivedOnSiteNotifications                  OnSiteNotification[]
   webPushSubscriptions                         WebPushSubscription[]
+  roleAssignments                              RoleAssignment[]                     @relation("citizen")
+  /// Changes made by others to the roles of this citizen
+  roleAssignmentChanges                        RoleAssignmentChange[]               @relation("citizen")
+  /// Changes made by this citizen to the roles of other citizens
+  createdRoleAssignmentChanges                 RoleAssignmentChange[]               @relation("createdBy")
+  /// Changes made by others to the role level of this citizen
+  // roleAssignmentLevelChanges                   RoleAssignmentLevelChange[]          @relation("citizen")
+  /// Changes made by this citizen to the role level of other citizens
+  // createdRoleAssignmentLevelChanges            RoleAssignmentLevelChange[]          @relation("createdBy")
 
   // Holds the latest confirmed values
   spectrumId                String?
@@ -44,7 +54,7 @@ model Entity {
   teamspeakId               String?
   citizenId                 String?
   communityMoniker          String?
-  roles                     String?                    @db.Text
+  roles                     String?                    @db.Text // TODO: Delete after migrating to RoleAssignment
   createdPenaltyEntries     PenaltyEntry[]             @relation("createdBy")
   deletedPenaltyEntries     PenaltyEntry[]             @relation("deletedBy")
   penaltyEntries            PenaltyEntry[]             @relation("citizen")
@@ -84,12 +94,65 @@ model EntityLogAttribute {
   @@index([key]) // `type: Hash` isn't supported on MySQL
 }
 
-model NoteType {
-  id   String @id @default(cuid())
-  name String @unique
+/// Materialized/denormalized view of currently assigned roles to citizens.
+/// This model is derived from the change history in `RoleAssignmentChange` and
+/// `RoleAssignmentLevelChange`. Fields like `currentLevel` and
+/// `currentLevelUpdatedAt` require aggregation logic. Synchronization of this
+/// table with change history is handled by application logic.
+model RoleAssignment {
+  id        String   @id @default(cuid(2))
+  citizenId String
+  citizen   Entity   @relation("citizen", fields: [citizenId], references: [id], onDelete: Cascade)
+  roleId    String
+  role      Role     @relation("role", fields: [roleId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  /// The current level of the citizen for this role. NULL if the role does not
+  /// have levels. The citizen receives the permissions of this role only when
+  /// their currentLevel equals the maximum level defined in Role.maxLevel.
+  /// This be handled by application logic.
+  // currentLevel          Int?
+  /// Last time the current level was updated. NULL if the role does not have
+  /// levels.
+  // currentLevelUpdatedAt DateTime?
+
+  @@unique([citizenId, roleId])
 }
 
-model ClassificationLevel {
-  id   String @id @default(cuid())
-  name String @unique
+enum RoleAssignmentChangeType {
+  ADD
+  REMOVE
 }
+
+/// History of changes to a citizen's roles
+model RoleAssignmentChange {
+  id          String                   @id @default(cuid(2))
+  citizenId   String
+  citizen     Entity                   @relation("citizen", fields: [citizenId], references: [id], onDelete: Cascade)
+  roleId      String
+  role        Role                     @relation("role", fields: [roleId], references: [id], onDelete: Cascade)
+  type        RoleAssignmentChangeType
+  createdAt   DateTime                 @default(now())
+  createdById String?
+  createdBy   Entity?                  @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([citizenId])
+}
+
+// enum RoleAssignmentLevelChangeType {
+//   UP
+//   DOWN
+// }
+
+// model RoleAssignmentLevelChange {
+//   id          String                        @id @default(cuid(2))
+//   citizenId   String
+//   citizen     Entity                        @relation("citizen", fields: [citizenId], references: [id], onDelete: Cascade)
+//   roleId      String
+//   role        Role                          @relation("role", fields: [roleId], references: [id], onDelete: Cascade)
+//   type        RoleAssignmentLevelChangeType
+//   createdAt   DateTime                      @default(now())
+//   createdById String?
+//   createdBy   Entity?                       @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+//   @@index([citizenId])
+// }

@@ -15,6 +15,9 @@ export const silcRouter = createTRPCRouter({
             not: null,
           },
         },
+        include: {
+          roleAssignments: true,
+        },
       });
 
       const citizensGroupedByRole = new Map<
@@ -37,7 +40,9 @@ export const silcRouter = createTRPCRouter({
       }
 
       for (const citizen of allCitizens) {
-        const citizenRoleIds = citizen.roles?.split(",") ?? [];
+        const citizenRoleIds = citizen.roleAssignments.map(
+          (assignment) => assignment.roleId,
+        );
         for (const citizenRoleId of citizenRoleIds) {
           const role = allRoles.find((r) => r.id === citizenRoleId);
           if (!role) continue;
