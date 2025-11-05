@@ -74,30 +74,27 @@ export const updateRoleAssignments = createAuthenticatedAction(
     }
 
     // Filter changes based on the current user's permissions
-    const filteredChanges: Change[] = [];
-    for (const change of changes) {
-      let isAuthorized = false;
-
+    const authorizationPromises = changes.map((change) => {
       if (change.enabled) {
-        isAuthorized = await authentication.authorize("otherRole", "assign", [
+        return authentication.authorize("otherRole", "assign", [
           {
             key: "roleId",
             value: change.roleId,
           },
         ]);
       } else {
-        isAuthorized = await authentication.authorize("otherRole", "dismiss", [
+        return authentication.authorize("otherRole", "dismiss", [
           {
             key: "roleId",
             value: change.roleId,
           },
         ]);
       }
-
-      if (!isAuthorized) continue;
-
-      filteredChanges.push(change);
-    }
+    });
+    const authorizationResults = await Promise.all(authorizationPromises);
+    const filteredChanges: Change[] = changes.filter(
+      (_, idx) => authorizationResults[idx],
+    );
 
     await prisma.$transaction(
       filteredChanges.flatMap((change) => {
