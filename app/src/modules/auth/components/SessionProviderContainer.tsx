@@ -10,5 +10,9 @@ interface Props {
 }
 
 export const SessionProviderContainer = ({ children, session }: Props) => {
-  return <SessionProvider session={session}>{children}</SessionProvider>;
+  return (
+    <SessionProvider session={session} refetchOnWindowFocus={false}>
+      {children}
+    </SessionProvider>
+  );
 };
