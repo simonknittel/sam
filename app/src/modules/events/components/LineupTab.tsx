@@ -11,6 +11,7 @@ import {
 } from "@prisma/client";
 import clsx from "clsx";
 import dynamic from "next/dynamic";
+import { CopyLineupFromEventButton } from "./CopyLineupFromEventButton";
 import { CreateOrUpdateEventPosition } from "./CreateOrUpdateEventPosition";
 import { DiscordWarning } from "./DiscordWarning";
 import type { PositionType } from "./Position";
@@ -68,6 +69,8 @@ export const LineupTab = ({
               eventId={event.id}
               variants={variants}
             />
+
+            <CopyLineupFromEventButton targetEvent={event} />
           </div>
         )}
       </div>
