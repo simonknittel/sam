@@ -196,6 +196,7 @@ export const CreateOrUpdateEventPosition = (props: Props) => {
               ("position" in props && props.position.description) || ""
             }
             id={descriptionInputId}
+            className="mt-4"
           />
 
           <RequiredVariants

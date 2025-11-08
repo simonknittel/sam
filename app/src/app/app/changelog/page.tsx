@@ -30,7 +30,7 @@ import { LoremIpsum } from "lorem-ipsum";
 import Image from "next/image";
 import { type ReactNode } from "react";
 import { AiFillAppstore } from "react-icons/ai";
-import { FaCalendar } from "react-icons/fa";
+import { FaCalendar, FaCopy } from "react-icons/fa";
 
 export default async function Page() {
   const authentication = await requireAuthenticationPage("/app/changelog");
@@ -42,6 +42,28 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col gap-4">
+      <Day heading="8. November 2025">
+        <DayItem heading="Aufstellung kopieren" badges={["Neu", "Events"]}>
+          <p>
+            Für die Aufstellung eines Events gibt es nun die Möglichkeit die
+            Aufstellung eines anderen Events zu kopieren.
+          </p>
+
+          <p>
+            Klick dazu einfach bei deiner Event-Aufstellung neben den Button
+            &ldquo;Hinzufügen&rdquo; auf das{" "}
+            <FaCopy className="text-interaction-500 inline" />
+            -Symbol und wähle das Event aus von welchem du die Aufstellung
+            kopieren möchtest.
+          </p>
+
+          <p>
+            Die kopierten Posten und Gruppen werden dann in deine aktuelle
+            Aufstellung übernommen.
+          </p>
+        </DayItem>
+      </Day>
+
       <Day heading="1. November 2025">
         <DayItem
           heading="Benachrichtigung bei Veröffentlichung der Aufstellung"

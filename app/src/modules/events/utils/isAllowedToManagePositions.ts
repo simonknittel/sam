@@ -3,7 +3,7 @@ import type { Entity, Event } from "@prisma/client";
 
 export const isAllowedToManagePositions = async (
   event: Pick<Event, "discordCreatorId"> & {
-    managers: Entity[];
+    managers: Pick<Entity, "discordId">[];
   },
 ) => {
   const authentication = await requireAuthentication();
@@ -12,7 +12,7 @@ export const isAllowedToManagePositions = async (
 
   if (
     event.managers.some(
-      (organizer) => organizer.discordId === authentication.session.discordId,
+      (manager) => manager.discordId === authentication.session.discordId,
     )
   )
     return true;

@@ -1,6 +1,7 @@
 import { aiRouter } from "./routers/ai";
 import { citizensRouter } from "./routers/citizens";
 import { entityLogRouter } from "./routers/entityLog";
+import { eventsRouter } from "./routers/events";
 import { manufacturerRouter } from "./routers/manufacturer";
 import { rolesRouter } from "./routers/roles";
 import { silcRouter } from "./routers/silc";
@@ -16,6 +17,7 @@ export const appRouter = createTRPCRouter({
   ai: aiRouter,
   citizens: citizensRouter,
   entityLog: entityLogRouter,
+  events: eventsRouter,
   manufacturer: manufacturerRouter,
   roles: rolesRouter,
   silc: silcRouter,

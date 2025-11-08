@@ -1,6 +1,8 @@
 import type { Event } from "@prisma/client";
 
-export const isEventUpdatable = (event: Event) => {
+export const isEventUpdatable = (
+  event: Pick<Event, "startTime" | "endTime">,
+) => {
   const now = new Date();
 
   if (!event.endTime) {

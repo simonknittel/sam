@@ -158,71 +158,98 @@ export const getEventById = cache(
 );
 
 export const getEvents = cache(
-  withTrace("getEvents", async (status = "open", participating = "all") => {
-    const authentication = await requireAuthentication();
-    if (!(await authentication.authorize("event", "read"))) forbidden();
+  withTrace(
+    "getEvents",
+    async (
+      status: "open" | "closed" | "all" = "open",
+      participating: "me" | "all" = "all",
+    ) => {
+      const authentication = await requireAuthentication();
+      if (!(await authentication.authorize("event", "read"))) forbidden();
 
-    const now = new Date();
+      const now = new Date();
 
-    let rows;
+      let rows;
 
-    if (status === "closed") {
-      rows = prisma.event.findMany({
-        where: {
-          startTime: {
-            lt: now,
+      if (status === "closed") {
+        rows = prisma.event.findMany({
+          where: {
+            startTime: {
+              lt: now,
+            },
+            discordParticipants:
+              participating === "me"
+                ? {
+                    some: {
+                      discordUserId: authentication.session.discordId,
+                    },
+                  }
+                : undefined,
           },
-          discordParticipants:
-            participating === "me"
-              ? {
-                  some: {
-                    discordUserId: authentication.session.discordId,
-                  },
-                }
-              : undefined,
-        },
-        include: {
-          discordParticipants: true,
-          managers: true,
-        },
-        orderBy: {
-          startTime: "desc",
-        },
-      });
-    } else {
-      rows = prisma.event.findMany({
-        where: {
-          OR: [
-            {
-              startTime: {
-                gte: now,
+          include: {
+            discordParticipants: true,
+            managers: true,
+          },
+          orderBy: {
+            startTime: "desc",
+          },
+        });
+      } else if (status === "open") {
+        rows = prisma.event.findMany({
+          where: {
+            OR: [
+              {
+                startTime: {
+                  gte: now,
+                },
               },
-            },
-            {
-              endTime: {
-                gte: now,
+              {
+                endTime: {
+                  gte: now,
+                },
               },
-            },
-          ],
-          discordParticipants:
-            participating === "me"
-              ? {
-                  some: {
-                    discordUserId: authentication.session.discordId,
-                  },
-                }
-              : undefined,
-        },
-        include: {
-          discordParticipants: true,
-          managers: true,
-        },
-        orderBy: {
-          startTime: "asc",
-        },
-      });
-    }
+            ],
+            discordParticipants:
+              participating === "me"
+                ? {
+                    some: {
+                      discordUserId: authentication.session.discordId,
+                    },
+                  }
+                : undefined,
+          },
+          include: {
+            discordParticipants: true,
+            managers: true,
+          },
+          orderBy: {
+            startTime: "asc",
+          },
+        });
+      } else {
+        // All
+        rows = prisma.event.findMany({
+          where: {
+            discordParticipants:
+              participating === "me"
+                ? {
+                    some: {
+                      discordUserId: authentication.session.discordId,
+                    },
+                  }
+                : undefined,
+          },
+          include: {
+            discordParticipants: true,
+            managers: true,
+          },
+          orderBy: {
+            startTime: "desc",
+          },
+        });
+      }
 
-    return rows;
-  }),
+      return rows;
+    },
+  ),
 );
