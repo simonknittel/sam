@@ -38,7 +38,7 @@ export const subscribeWebPush = createAuthenticatedAction(
     /**
      *
      */
-    await prisma.webPushSubscription.upsert({
+    const subscription = await prisma.webPushSubscription.upsert({
       where: {
         endpoint: data.subscription.endpoint,
       },
@@ -52,6 +52,9 @@ export const subscribeWebPush = createAuthenticatedAction(
         p256dh: data.subscription.keys.p256dh,
         auth: data.subscription.keys.auth,
       },
+      select: {
+        id: true,
+      },
     });
 
     /**
@@ -61,8 +64,7 @@ export const subscribeWebPush = createAuthenticatedAction(
       {
         type: "WebPushSubscribed",
         payload: {
-          citizenId: authentication.session.entity.id,
-          subscription: data.subscription,
+          subscriptionId: subscription.id,
         },
       },
     ]);

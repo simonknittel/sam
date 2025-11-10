@@ -161,14 +161,7 @@ export const bodySchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("WebPushSubscribed"),
     payload: z.object({
-      citizenId: z.cuid(),
-      subscription: z.object({
-        endpoint: z.string(),
-        keys: z.object({
-          p256dh: z.string(),
-          auth: z.string(),
-        }),
-      }),
+      subscriptionId: z.cuid2(),
     }),
     requestId: z.cuid2(),
   }),

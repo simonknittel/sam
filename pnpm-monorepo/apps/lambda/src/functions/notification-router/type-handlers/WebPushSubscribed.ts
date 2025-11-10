@@ -1,4 +1,4 @@
-import { prisma, type Entity } from "@sam-monorepo/database";
+import { prisma, type WebPushSubscription } from "@sam-monorepo/database";
 import { sendNotification, setVapidDetails, WebPushError } from "web-push";
 import { log } from "../../../common/logger";
 import { env } from "../env";
@@ -6,17 +6,33 @@ import { env } from "../env";
 setVapidDetails(env.BASE_URL, env.PUBLIC_VAPID_KEY, env.PRIVATE_VAPID_KEY);
 
 interface Payload {
-  citizenId: Entity["id"];
-  subscription: {
-    endpoint: string;
-    keys: {
-      p256dh: string;
-      auth: string;
-    };
-  };
+  subscriptionId: WebPushSubscription["id"];
 }
 
 export const WebPushSubscribedHandler = async (payload: Payload) => {
+  /**
+   * Fetch subscription from database
+   */
+  const subscription = await prisma.webPushSubscription.findUnique({
+    where: {
+      id: payload.subscriptionId,
+    },
+    select: {
+      id: true,
+      citizenId: true,
+      endpoint: true,
+      p256dh: true,
+      auth: true,
+    },
+  });
+
+  if (!subscription) {
+    log.warn("Subscription not found", {
+      subscriptionId: payload.subscriptionId,
+    });
+    return;
+  }
+
   /**
    * Send a test notification directly to the newly subscribed device
    * This bypasses the notification settings check since it's a confirmation notification
@@ -27,13 +43,24 @@ export const WebPushSubscribedHandler = async (payload: Payload) => {
   });
 
   try {
-    await sendNotification(payload.subscription, notificationPayload, {
-      TTL: 60 * 60 * 24, // 1 day
-    });
+    await sendNotification(
+      {
+        endpoint: subscription.endpoint,
+        keys: {
+          p256dh: subscription.p256dh,
+          auth: subscription.auth,
+        },
+      },
+      notificationPayload,
+      {
+        TTL: 60 * 60 * 24, // 1 day
+      },
+    );
 
     log.info("Test notification sent successfully", {
-      citizenId: payload.citizenId,
-      endpoint: payload.subscription.endpoint,
+      subscriptionId: subscription.id,
+      citizenId: subscription.citizenId,
+      endpoint: subscription.endpoint,
     });
   } catch (error) {
     if (
@@ -41,21 +68,23 @@ export const WebPushSubscribedHandler = async (payload: Payload) => {
       (error.statusCode === 410 || error.statusCode === 404)
     ) {
       log.warn("Subscription is no longer valid, removing from database", {
-        citizenId: payload.citizenId,
-        endpoint: payload.subscription.endpoint,
+        subscriptionId: subscription.id,
+        citizenId: subscription.citizenId,
+        endpoint: subscription.endpoint,
         statusCode: error.statusCode,
       });
 
-      await prisma.webPushSubscription.deleteMany({
+      await prisma.webPushSubscription.delete({
         where: {
-          endpoint: payload.subscription.endpoint,
+          id: subscription.id,
         },
       });
     } else {
       log.error("Error sending test notification", {
         error,
-        citizenId: payload.citizenId,
-        endpoint: payload.subscription.endpoint,
+        subscriptionId: subscription.id,
+        citizenId: subscription.citizenId,
+        endpoint: subscription.endpoint,
       });
     }
   }
