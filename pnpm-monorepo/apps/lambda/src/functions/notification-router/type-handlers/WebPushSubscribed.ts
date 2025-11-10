@@ -38,7 +38,7 @@ export const WebPushSubscribedHandler = async (payload: Payload) => {
    * This bypasses the notification settings check since it's a confirmation notification
    */
   const notificationPayload = JSON.stringify({
-    title: "Web Push aktiviert | S.A.M.",
+    title: "Browser-Benachrichtigungen aktiviert | S.A.M.",
     body: "Du erhältst ab sofort Benachrichtigungen auf diesem Gerät.",
   });
 
@@ -59,8 +59,6 @@ export const WebPushSubscribedHandler = async (payload: Payload) => {
 
     log.info("Test notification sent successfully", {
       subscriptionId: subscription.id,
-      citizenId: subscription.citizenId,
-      endpoint: subscription.endpoint,
     });
   } catch (error) {
     if (
@@ -69,8 +67,6 @@ export const WebPushSubscribedHandler = async (payload: Payload) => {
     ) {
       log.warn("Subscription is no longer valid, removing from database", {
         subscriptionId: subscription.id,
-        citizenId: subscription.citizenId,
-        endpoint: subscription.endpoint,
         statusCode: error.statusCode,
       });
 
@@ -83,8 +79,6 @@ export const WebPushSubscribedHandler = async (payload: Payload) => {
       log.error("Error sending test notification", {
         error,
         subscriptionId: subscription.id,
-        citizenId: subscription.citizenId,
-        endpoint: subscription.endpoint,
       });
     }
   }
