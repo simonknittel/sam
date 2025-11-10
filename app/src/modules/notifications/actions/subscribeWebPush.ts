@@ -2,6 +2,7 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -52,6 +53,19 @@ export const subscribeWebPush = createAuthenticatedAction(
         auth: data.subscription.keys.auth,
       },
     });
+
+    /**
+     * Trigger test notification
+     */
+    await triggerNotifications([
+      {
+        type: "WebPushSubscribed",
+        payload: {
+          citizenId: authentication.session.entity.id,
+          subscription: data.subscription,
+        },
+      },
+    ]);
 
     /**
      * Revalidate cache(s)
