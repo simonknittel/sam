@@ -12,6 +12,7 @@ import { RoleAddedHandler } from "./type-handlers/RoleAdded";
 import { SilcTransactionsCreatedHandler } from "./type-handlers/SilcTransactionsCreated";
 import { TaskAssignmentUpdatedHandler } from "./type-handlers/TaskAssignmentUpdated";
 import { TaskCreatedHandler } from "./type-handlers/TaskCreated";
+import { WebPushSubscribedHandler } from "./type-handlers/WebPushSubscribed";
 
 export const notificationRouterHandler = async (
   body: z.infer<typeof bodySchema>,
@@ -53,6 +54,9 @@ export const notificationRouterHandler = async (
       break;
     case "PenaltyEntryCreated":
       await PenaltyEntryCreatedHandler(body.payload);
+      break;
+    case "WebPushSubscribed":
+      await WebPushSubscribedHandler(body.payload);
       break;
   }
 };
@@ -150,6 +154,14 @@ export const bodySchema = z.discriminatedUnion("type", [
     type: z.literal("PenaltyEntryCreated"),
     payload: z.object({
       penaltyEntryId: z.cuid(),
+    }),
+    requestId: z.cuid2(),
+  }),
+
+  z.object({
+    type: z.literal("WebPushSubscribed"),
+    payload: z.object({
+      subscriptionId: z.cuid2(),
     }),
     requestId: z.cuid2(),
   }),
