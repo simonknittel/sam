@@ -1,4 +1,4 @@
-import { type Entity } from "@sam-monorepo/database";
+import { prisma, type Entity } from "@sam-monorepo/database";
 import { sendNotification, setVapidDetails, WebPushError } from "web-push";
 import { log } from "../../../common/logger";
 import { env } from "../env";
@@ -40,10 +40,16 @@ export const WebPushSubscribedHandler = async (payload: Payload) => {
       error instanceof WebPushError &&
       (error.statusCode === 410 || error.statusCode === 404)
     ) {
-      log.warn("Subscription is no longer valid", {
+      log.warn("Subscription is no longer valid, removing from database", {
         citizenId: payload.citizenId,
         endpoint: payload.subscription.endpoint,
         statusCode: error.statusCode,
+      });
+
+      await prisma.webPushSubscription.deleteMany({
+        where: {
+          endpoint: payload.subscription.endpoint,
+        },
       });
     } else {
       log.error("Error sending test notification", {
