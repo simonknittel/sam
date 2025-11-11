@@ -2,6 +2,7 @@
 
 import clsx from "clsx";
 import { type InputHTMLAttributes, type ReactNode } from "react";
+import { FaCheck } from "react-icons/fa";
 
 interface Props extends InputHTMLAttributes<HTMLInputElement> {
   hideLabel?: boolean;
@@ -33,12 +34,12 @@ export const YesNoCheckbox = (props: Props) => {
     >
       <input type="checkbox" className="hidden peer" {...rest} />
 
-      <span className="flex-none size-8 bg-neutral-700 rounded-secondary block relative peer-checked:hidden">
-        <span className="absolute inset-1 rounded-secondary bg-green-500/50 hidden group-hover:block" />
+      <span className="flex-none size-8 bg-neutral-700 rounded-secondary relative items-center justify-center flex peer-checked:hidden">
+        <FaCheck className="text-green-500/50 size-6 hidden group-hover:block group-focus:block" />
       </span>
 
-      <span className="flex-none size-8 bg-neutral-700 rounded-secondary hidden relative peer-checked:block">
-        <span className="absolute inset-1 rounded-secondary bg-green-500" />
+      <span className="flex-none size-8 bg-neutral-700 rounded-secondary relative items-center justify-center hidden peer-checked:flex">
+        <FaCheck className="text-green-500 size-6" />
       </span>
 
       {!hideLabel && (

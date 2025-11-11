@@ -42,6 +42,36 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col gap-4">
+      <Day heading="11. November 2025">
+        <DayItem
+          heading="Rollen-Änderungen in der Aktivität"
+          badges={["Neu", "Spynet"]}
+        >
+          <p>
+            Die Aktivitätsseite im Spynet zeigt nun auch Änderungen an
+            Rollen-Zuweisungen von Citizens an. Neben den bisherigen
+            Änderungen an Organisationen werden jetzt auch hinzugefügte und
+            entfernte Rollen angezeigt.
+          </p>
+
+          <p>
+            Die Einträge werden automatisch basierend auf deinen Berechtigungen
+            gefiltert, sodass du nur Änderungen an Rollen siehst, für die du
+            Leserechte hast.
+          </p>
+
+          <p>
+            Du findest die Aktivität unter:{" "}
+            <Link
+              href="/app/spynet/activity"
+              className="text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300"
+            >
+              Apps &gt; Spynet &gt; Aktivität
+            </Link>
+          </p>
+        </DayItem>
+      </Day>
+
       <Day heading="8. November 2025">
         <DayItem heading="Aufstellung kopieren" badges={["Neu", "Events"]}>
           <p>

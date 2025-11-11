@@ -7,7 +7,7 @@ import { Link } from "./Link";
 
 interface Props {
   readonly className?: string;
-  readonly citizen?: { id: Entity["id"]; handle: Entity["handle"] } | null;
+  readonly citizen?: Pick<Entity, "id" | "handle"> | null;
   readonly page?: string;
 }
 
