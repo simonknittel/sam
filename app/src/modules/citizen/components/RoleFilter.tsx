@@ -72,6 +72,7 @@ export const RoleFilter = ({ roles }: Props) => {
             value={`role-${role.id}`}
             onChange={handleChange}
             defaultChecked={defaultValues.includes(`role-${role.id}`)}
+            hideLabel
           />
         </div>
       ))}

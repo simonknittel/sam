@@ -53,6 +53,7 @@ export const UnknownsFilter = ({
           value="unknown-handle"
           onChange={handleChange}
           defaultChecked={defaultValues.includes(`unknown-handle`)}
+          hideLabel
         />
       </div>
 
@@ -69,6 +70,7 @@ export const UnknownsFilter = ({
             value="unknown-discord-id"
             onChange={handleChange}
             defaultChecked={defaultValues.includes(`unknown-discord-id`)}
+            hideLabel
           />
         </div>
       )}
@@ -86,6 +88,7 @@ export const UnknownsFilter = ({
             value="unknown-teamspeak-id"
             onChange={handleChange}
             defaultChecked={defaultValues.includes(`unknown-teamspeak-id`)}
+            hideLabel
           />
         </div>
       )}

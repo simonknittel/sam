@@ -54,6 +54,7 @@ export const EntityLogTypeFilter = ({ entityLogTypes }: Props) => {
               value={`type-${type}`}
               onChange={handleChange}
               defaultChecked={defaultValues.includes(`type-${type}`)}
+              hideLabel
             />
           </div>
         ))}
