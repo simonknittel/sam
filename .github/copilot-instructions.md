@@ -1,2 +1,3 @@
 - Don't attempt to run the Next.js application. You won't be able to do anything since pretty much the whole application is protected behind a login.
 - Use Conventional Commits for your commit messages
+- Add a changelog entry to `app/src/app/app/changelog/page.tsx` for any user-facing changes you make
