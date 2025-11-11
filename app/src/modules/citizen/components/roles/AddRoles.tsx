@@ -1,26 +1,24 @@
 "use client";
 
-import { env } from "@/env";
 import Button from "@/modules/common/components/Button";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import Modal from "@/modules/common/components/Modal";
-import { underlineCharacters } from "@/modules/common/utils/underlineCharacters";
 import { type Entity, type Role, type Upload } from "@prisma/client";
 import clsx from "clsx";
 import Fuse, { type FuseResult } from "fuse.js";
-import Image from "next/image";
+
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { FaPen } from "react-icons/fa";
 import { RoleCheckbox } from "./RoleCheckbox";
 import { UpdateRolesForm } from "./UpdateRolesForm";
 
+type RoleWithIcon = Role & { icon: Upload | null };
+
 interface Props {
   readonly className?: string;
   readonly entity: Entity;
-  readonly allRoles: (Role & {
-    icon: Upload | null;
-  })[];
+  readonly allRoles: RoleWithIcon[];
   readonly assignedRoleIds: Role["id"][];
   readonly iconOnly?: boolean;
 }
@@ -42,14 +40,28 @@ export const AddRoles = ({
     router.refresh();
   };
 
-  const fuse = new Fuse(allRoles, {
-    keys: ["name"],
-    includeMatches: true,
-  });
+  const fuse = useMemo(
+    () =>
+      new Fuse<RoleWithIcon>(allRoles, {
+        keys: ["name"],
+        includeMatches: true,
+        threshold: 0.2,
+      }),
+    [allRoles],
+  );
 
-  const filteredRoles = query
-    ? fuse.search(query).map((result) => result)
-    : allRoles.map((role) => ({ item: role, matches: [] as FuseResult<typeof role>["matches"] }));
+  const searchResults = useMemo(
+    () => (query ? fuse.search(query) : []),
+    [fuse, query],
+  );
+
+  const resultsById = useMemo(
+    () =>
+      new Map<Role["id"], FuseResult<RoleWithIcon>>(
+        searchResults.map((result) => [result.item.id, result] as const),
+      ),
+    [searchResults],
+  );
 
   return (
     <>
@@ -57,7 +69,7 @@ export const AddRoles = ({
         variant="tertiary"
         onClick={() => setIsOpen(true)}
         className={clsx(className)}
-        title="Bearbeiten"
+        title="Rollen hinzufügen oder entfernen"
       >
         <FaPen /> {!iconOnly && <>Bearbeiten</>}
       </Button>
@@ -66,16 +78,17 @@ export const AddRoles = ({
         isOpen={isOpen}
         onRequestClose={handleRequestClose}
         className="w-[1280px]"
-        heading={<h2>Bearbeiten</h2>}
+        heading={<h2>Rollen hinzufügen oder entfernen</h2>}
       >
-        <div className="mb-4 flex justify-center">
-          <div className="w-full max-w-md">
+        <div className="mb-4 flex justify-center border-b border-b-neutral-700 px-4 pb-4">
+          <div className="w-full max-w-md text-center">
             <TextInput
               label="Suche"
-              placeholder="Rollenname eingeben..."
+              placeholder="Rolle suchen..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               autoFocus
+              className="hidden"
             />
           </div>
         </div>
@@ -89,42 +102,18 @@ export const AddRoles = ({
               columnRule: "1px solid #404040", // neutral-700
             }}
           >
-            {filteredRoles.map((result) => {
-              const role = result.item;
+            {allRoles.map((role) => {
+              const result = resultsById.get(role.id);
+
               return (
-                <div
+                <RoleCheckbox
                   key={role.id}
-                  className="py-2 flex justify-between items-center break-inside-avoid-column"
-                >
-                  <span className="flex gap-2 items-center overflow-hidden">
-                    {role.icon && (
-                      <div className="flex-none aspect-square w-6 h-6 flex items-center justify-center rounded-secondary overflow-hidden">
-                        <Image
-                          src={`https://${env.NEXT_PUBLIC_R2_PUBLIC_URL}/${role.icon.id}`}
-                          alt=""
-                          width={24}
-                          height={24}
-                          className="max-w-full max-h-full"
-                          unoptimized={["image/svg+xml", "image/gif"].includes(
-                            role.icon.mimeType,
-                          )}
-                          loading="lazy"
-                        />
-                      </div>
-                    )}
-
-                    <span className="truncate">
-                      {query && result.matches?.[0]
-                        ? underlineCharacters(role.name, result.matches[0].indices)
-                        : role.name}
-                    </span>
-                  </span>
-
-                  <RoleCheckbox
-                    role={role}
-                    isChecked={assignedRoleIds.includes(role.id)}
-                  />
-                </div>
+                  role={role}
+                  isChecked={assignedRoleIds.includes(role.id)}
+                  isVisible={query ? result !== undefined : true}
+                  match={result?.matches?.[0]}
+                  query={query}
+                />
               );
             })}
           </div>

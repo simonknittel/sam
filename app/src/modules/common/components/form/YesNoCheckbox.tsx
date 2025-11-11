@@ -9,6 +9,7 @@ interface Props extends InputHTMLAttributes<HTMLInputElement> {
   yesLabel?: ReactNode;
   noLabel?: ReactNode;
   labelClassName?: string;
+  id?: string;
 }
 
 export const YesNoCheckbox = (props: Props) => {
@@ -18,6 +19,7 @@ export const YesNoCheckbox = (props: Props) => {
     yesLabel = "Ja",
     noLabel = "Nein",
     labelClassName,
+    id,
     ...rest
   } = props;
 
@@ -31,11 +33,12 @@ export const YesNoCheckbox = (props: Props) => {
         },
         className,
       )}
+      htmlFor={id}
     >
-      <input type="checkbox" className="hidden peer" {...rest} />
+      <input type="checkbox" className="sr-only peer" id={id} {...rest} />
 
       <span className="flex-none size-8 bg-neutral-700 rounded-secondary relative items-center justify-center flex peer-checked:hidden">
-        <FaCheck className="text-green-500/50 size-6 hidden group-hover:block group-focus:block" />
+        <FaCheck className="text-green-500/50 size-6 hidden group-hover:block group-focus-within:block" />
       </span>
 
       <span className="flex-none size-8 bg-neutral-700 rounded-secondary relative items-center justify-center hidden peer-checked:flex">
