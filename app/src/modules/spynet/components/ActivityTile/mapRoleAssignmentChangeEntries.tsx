@@ -9,7 +9,10 @@ import {
 } from "@prisma/client";
 
 export const mapRoleAssignmentChangeEntries = async (
-  entries: (Pick<RoleAssignmentChange, "id" | "createdAt" | "type" | "roleId"> & {
+  entries: (Pick<
+    RoleAssignmentChange,
+    "id" | "createdAt" | "type" | "roleId"
+  > & {
     citizen: Pick<Entity, "id" | "handle">;
     createdBy: Pick<Entity, "id" | "handle"> | null;
   })[],
@@ -31,28 +34,16 @@ export const mapRoleAssignmentChangeEntries = async (
         case RoleAssignmentChangeType.ADD:
           message = (
             <p>
-              Die Rolle <SingleRole key={role.id} role={role} /> wurde{" "}
-              <CitizenLink citizen={change.citizen} /> hinzugefügt
-              {change.createdBy && (
-                <>
-                  {" "}
-                  von <CitizenLink citizen={change.createdBy} />
-                </>
-              )}
+              Citizen <CitizenLink citizen={change.citizen} /> wurde die Rolle{" "}
+              <SingleRole key={role.id} role={role} /> hinzugefügt
             </p>
           );
           break;
         case RoleAssignmentChangeType.REMOVE:
           message = (
             <p>
-              Die Rolle <SingleRole key={role.id} role={role} /> wurde von{" "}
-              <CitizenLink citizen={change.citizen} /> entfernt
-              {change.createdBy && (
-                <>
-                  {" "}
-                  von <CitizenLink citizen={change.createdBy} />
-                </>
-              )}
+              Citizen <CitizenLink citizen={change.citizen} /> wurde die Rolle{" "}
+              <SingleRole key={role.id} role={role} /> entfernt
             </p>
           );
           break;
@@ -62,6 +53,7 @@ export const mapRoleAssignmentChangeEntries = async (
         key: change.id,
         date: change.createdAt,
         message,
+        author: change.createdBy,
       };
     });
 };

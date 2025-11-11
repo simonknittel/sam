@@ -1,13 +1,21 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
+import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { formatDate } from "@/modules/common/utils/formatDate";
-import { ConfirmationStatus } from "@prisma/client";
+import { ConfirmationStatus, type Entity } from "@prisma/client";
 import clsx from "clsx";
-import { TbCircleDot } from "react-icons/tb";
+import type { ReactNode } from "react";
 import { mapOrganizationAttributeHistoryEntries } from "./mapOrganizationAttributeHistoryEntries";
 import { mapOrganizationEntries } from "./mapOrganizationEntries";
 import { mapOrganizationMembershipHistoryEntries } from "./mapOrganizationMembershipHistoryEntries";
 import { mapRoleAssignmentChangeEntries } from "./mapRoleAssignmentChangeEntries";
+
+interface Entry {
+  readonly key: string;
+  readonly date: Date;
+  readonly message: ReactNode;
+  readonly author?: Pick<Entity, "id" | "handle"> | null;
+}
 
 interface Props {
   readonly className?: string;
@@ -84,7 +92,7 @@ export const ActivityTile = async ({ className }: Props) => {
     }),
   ]);
 
-  const entries = [
+  const entries: Entry[] = [
     ...(await mapOrganizationEntries(result[0])),
     ...(await mapOrganizationAttributeHistoryEntries(result[1])),
     ...(await mapOrganizationMembershipHistoryEntries(result[2])),
@@ -108,22 +116,22 @@ export const ActivityTile = async ({ className }: Props) => {
         {entries.length > 0 ? (
           <ul className="flex flex-col gap-8">
             {limitedEntries.map((entry) => (
-              <li key={entry.key} className="flex gap-2">
-                <div className="h-[20px] flex items-center">
-                  <TbCircleDot />
+              <li key={entry.key}>
+                <div className="text-sm flex gap-2 border-b pb-2 mb-2 items-center border-neutral-800/50 flex-wrap text-neutral-500">
+                  <p>
+                    <time dateTime={entry.date.toISOString()}>
+                      {formatDate(entry.date)}
+                    </time>
+
+                    {"author" in entry && (
+                      <>
+                        • <CitizenLink citizen={entry.author} />
+                      </>
+                    )}
+                  </p>
                 </div>
 
-                <div className="flex-1">
-                  <div className="text-sm flex gap-2 border-b pb-2 mb-2 items-center border-neutral-800/50 flex-wrap text-neutral-500">
-                    <p>
-                      <time dateTime={entry.date.toISOString()}>
-                        {formatDate(entry.date)}
-                      </time>
-                    </p>
-                  </div>
-
-                  <div>{entry.message}</div>
-                </div>
+                <div>{entry.message}</div>
               </li>
             ))}
           </ul>
