@@ -68,10 +68,8 @@ export const AddRoles = ({
         className="w-[1280px]"
         heading={<h2>Bearbeiten</h2>}
       >
-        <UpdateRolesForm>
-          <input type="hidden" name="citizenId" value={entity.id} />
-
-          <div className="mb-4">
+        <div className="mb-4 flex justify-center">
+          <div className="w-full max-w-md">
             <TextInput
               label="Suche"
               placeholder="Rollenname eingeben..."
@@ -80,6 +78,10 @@ export const AddRoles = ({
               autoFocus
             />
           </div>
+        </div>
+
+        <UpdateRolesForm>
+          <input type="hidden" name="citizenId" value={entity.id} />
 
           <div
             className="columns-3xs gap-8"
