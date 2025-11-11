@@ -52,6 +52,7 @@ export const NoteTypeFilter = ({ noteTypes }: Props) => {
             value={`note-type-${noteType.id}`}
             onChange={handleChange}
             defaultChecked={defaultValues.includes(`note-type-${noteType.id}`)}
+            hideLabel
           />
         </div>
       ))}

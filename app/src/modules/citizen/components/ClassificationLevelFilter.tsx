@@ -54,6 +54,7 @@ export const ClassificationLevelFilter = ({ classificationLevels }: Props) => {
             defaultChecked={defaultValues.includes(
               `classification-level-${noteType.id}`,
             )}
+            hideLabel
           />
         </div>
       ))}

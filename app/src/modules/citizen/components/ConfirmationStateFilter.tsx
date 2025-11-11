@@ -50,6 +50,7 @@ export const ConfirmationStateFilter = ({ confirmationStates }: Props) => {
             value="confirmation-unconfirmed"
             onChange={handleChange}
             defaultChecked={defaultValues.includes(`confirmation-unconfirmed`)}
+            hideLabel
           />
         </div>
       )}
@@ -67,6 +68,7 @@ export const ConfirmationStateFilter = ({ confirmationStates }: Props) => {
             value="confirmation-confirmed"
             onChange={handleChange}
             defaultChecked={defaultValues.includes(`confirmation-confirmed`)}
+            hideLabel
           />
         </div>
       )}
@@ -84,6 +86,7 @@ export const ConfirmationStateFilter = ({ confirmationStates }: Props) => {
             value="confirmation-false-report"
             onChange={handleChange}
             defaultChecked={defaultValues.includes(`confirmation-false-report`)}
+            hideLabel
           />
         </div>
       )}
