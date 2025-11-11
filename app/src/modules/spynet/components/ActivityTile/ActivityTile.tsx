@@ -125,6 +125,7 @@ export const ActivityTile = async ({ className }: Props) => {
 
                     {"author" in entry && (
                       <>
+                        {" "}
                         • <CitizenLink citizen={entry.author} />
                       </>
                     )}

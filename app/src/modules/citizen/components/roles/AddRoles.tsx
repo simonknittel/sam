@@ -1,23 +1,24 @@
 "use client";
 
-import { env } from "@/env";
 import Button from "@/modules/common/components/Button";
+import { TextInput } from "@/modules/common/components/form/TextInput";
 import Modal from "@/modules/common/components/Modal";
 import { type Entity, type Role, type Upload } from "@prisma/client";
 import clsx from "clsx";
-import Image from "next/image";
+import Fuse, { type FuseResult } from "fuse.js";
+
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { FaPen } from "react-icons/fa";
 import { RoleCheckbox } from "./RoleCheckbox";
 import { UpdateRolesForm } from "./UpdateRolesForm";
 
+type RoleWithIcon = Role & { icon: Upload | null };
+
 interface Props {
   readonly className?: string;
   readonly entity: Entity;
-  readonly allRoles: (Role & {
-    icon: Upload | null;
-  })[];
+  readonly allRoles: RoleWithIcon[];
   readonly assignedRoleIds: Role["id"][];
   readonly iconOnly?: boolean;
 }
@@ -30,12 +31,37 @@ export const AddRoles = ({
   iconOnly = false,
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [query, setQuery] = useState("");
   const router = useRouter();
 
   const handleRequestClose = () => {
     setIsOpen(false);
+    setQuery("");
     router.refresh();
   };
+
+  const fuse = useMemo(
+    () =>
+      new Fuse<RoleWithIcon>(allRoles, {
+        keys: ["name"],
+        includeMatches: true,
+        threshold: 0.2,
+      }),
+    [allRoles],
+  );
+
+  const searchResults = useMemo(
+    () => (query ? fuse.search(query) : []),
+    [fuse, query],
+  );
+
+  const resultsById = useMemo(
+    () =>
+      new Map<Role["id"], FuseResult<RoleWithIcon>>(
+        searchResults.map((result) => [result.item.id, result] as const),
+      ),
+    [searchResults],
+  );
 
   return (
     <>
@@ -43,7 +69,7 @@ export const AddRoles = ({
         variant="tertiary"
         onClick={() => setIsOpen(true)}
         className={clsx(className)}
-        title="Bearbeiten"
+        title="Rollen hinzufügen oder entfernen"
       >
         <FaPen /> {!iconOnly && <>Bearbeiten</>}
       </Button>
@@ -52,8 +78,21 @@ export const AddRoles = ({
         isOpen={isOpen}
         onRequestClose={handleRequestClose}
         className="w-[1280px]"
-        heading={<h2>Bearbeiten</h2>}
+        heading={<h2>Rollen hinzufügen oder entfernen</h2>}
       >
+        <div className="mb-4 flex justify-center border-b border-b-neutral-700 px-4 pb-4">
+          <div className="w-full max-w-md text-center">
+            <TextInput
+              label="Suche"
+              placeholder="Rolle suchen..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              autoFocus
+              className="hidden"
+            />
+          </div>
+        </div>
+
         <UpdateRolesForm>
           <input type="hidden" name="citizenId" value={entity.id} />
 
@@ -63,37 +102,20 @@ export const AddRoles = ({
               columnRule: "1px solid #404040", // neutral-700
             }}
           >
-            {allRoles.map((role) => (
-              <div
-                key={role.id}
-                className="py-2 flex justify-between items-center break-inside-avoid-column"
-              >
-                <span className="flex gap-2 items-center overflow-hidden">
-                  {role.icon && (
-                    <div className="flex-none aspect-square w-6 h-6 flex items-center justify-center rounded-secondary overflow-hidden">
-                      <Image
-                        src={`https://${env.NEXT_PUBLIC_R2_PUBLIC_URL}/${role.icon.id}`}
-                        alt=""
-                        width={24}
-                        height={24}
-                        className="max-w-full max-h-full"
-                        unoptimized={["image/svg+xml", "image/gif"].includes(
-                          role.icon.mimeType,
-                        )}
-                        loading="lazy"
-                      />
-                    </div>
-                  )}
+            {allRoles.map((role) => {
+              const result = resultsById.get(role.id);
 
-                  <span className="truncate">{role.name}</span>
-                </span>
-
+              return (
                 <RoleCheckbox
+                  key={role.id}
                   role={role}
                   isChecked={assignedRoleIds.includes(role.id)}
+                  isVisible={query ? result !== undefined : true}
+                  match={result?.matches?.[0]}
+                  query={query}
                 />
-              </div>
-            ))}
+              );
+            })}
           </div>
         </UpdateRolesForm>
       </Modal>
