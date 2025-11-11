@@ -7,6 +7,7 @@ import { TbCircleDot } from "react-icons/tb";
 import { mapOrganizationAttributeHistoryEntries } from "./mapOrganizationAttributeHistoryEntries";
 import { mapOrganizationEntries } from "./mapOrganizationEntries";
 import { mapOrganizationMembershipHistoryEntries } from "./mapOrganizationMembershipHistoryEntries";
+import { mapRoleAssignmentChangeEntries } from "./mapRoleAssignmentChangeEntries";
 
 interface Props {
   readonly className?: string;
@@ -56,12 +57,38 @@ export const ActivityTile = async ({ className }: Props) => {
         citizen: true,
       },
     }),
+
+    prisma.roleAssignmentChange.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 15,
+      select: {
+        id: true,
+        roleId: true,
+        type: true,
+        createdAt: true,
+        citizen: {
+          select: {
+            id: true,
+            handle: true,
+          },
+        },
+        createdBy: {
+          select: {
+            id: true,
+            handle: true,
+          },
+        },
+      },
+    }),
   ]);
 
   const entries = [
     ...(await mapOrganizationEntries(result[0])),
     ...(await mapOrganizationAttributeHistoryEntries(result[1])),
     ...(await mapOrganizationMembershipHistoryEntries(result[2])),
+    ...(await mapRoleAssignmentChangeEntries(result[3])),
   ];
 
   const sortedEntries = entries.toSorted(
@@ -73,8 +100,8 @@ export const ActivityTile = async ({ className }: Props) => {
   return (
     <section className={clsx(className)}>
       <small className="text-neutral-500 italic">
-        Aktuell werden hier nur Änderungen an Organisationen aufgelistet.
-        Änderungen an Citizens folgen später.
+        Aktuell werden hier Änderungen an Organisationen und Rollen-Zuweisungen
+        von Citizens aufgelistet.
       </small>
 
       <div className="rounded-primary p-4 lg:p-8 bg-neutral-800/50 mt-4">
