@@ -42,8 +42,8 @@ export const externalApps: ExternalApp[] = [
 
   {
     id: "mwibr68eokqvhw23c3r7msih",
-    name: "Schwarzmarkt-Ankauf",
-    slug: "schwarzmarkt-ankauf",
+    name: "Scrapper's Codex",
+    slug: "scrappers-codex",
     description:
       "Verkaufe einfach und schnell deinen Loot gewinnbringend über den Schwarzmarkt der Org",
     tags: ["featured", "economics"],
