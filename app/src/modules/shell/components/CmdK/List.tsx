@@ -290,9 +290,10 @@ export const List = () => {
           )}
 
           <LinkItem
-            label="Schwarzmarkt-Ankauf"
+            label="Scrapper's Codex"
+            keywords={["Schwarzmarkt-Ankauf"]}
             icon={<FaShoppingBasket />}
-            href="/app/external/schwarzmarkt-ankauf"
+            href="/app/external/scrappers-codex"
             setOpen={setOpen}
             setSearch={setSearch}
           />
