@@ -42,6 +42,29 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col gap-4">
+      <Day heading="25. November 2025">
+        <DayItem
+          heading="Schwarzmarkt-Ankauf umbenannt"
+          badges={["Änderung", "Apps"]}
+        >
+          <p>
+            Die App &ldquo;Schwarzmarkt-Ankauf&rdquo; wurde in
+            &ldquo;Scrapper&apos;s Codex&rdquo; umbenannt. Bisherige Links
+            werden automatisch auf die neue URL weitergeleitet.
+          </p>
+
+          <p>
+            Die App ist zu finden unter{" "}
+            <Link
+              href="/app/external/scrappers-codex"
+              className="text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300"
+            >
+              Apps &gt; Scrapper&apos;s Codex
+            </Link>
+          </p>
+        </DayItem>
+      </Day>
+
       <Day heading="11. November 2025">
         <DayItem
           heading="Rollen-Änderungen in der Aktivität"
