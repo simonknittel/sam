@@ -4,7 +4,6 @@ import clsx from "clsx";
 import { memo } from "react";
 import styles from "./Entry.module.css";
 import { gridTemplateColumns } from "./LogAnalyzer";
-import { RSILink } from "./RSILink";
 import { TargetCell } from "./TargetCell";
 
 export enum EntryType {
@@ -13,6 +12,7 @@ export enum EntryType {
   JoinPu,
   ContestedZoneElevator,
   AsdElevator,
+  OwnDeath,
 }
 
 interface IBaseEntry {
@@ -50,12 +50,17 @@ export interface IAsdElevatorEntry extends IBaseEntry {
   readonly elevatorName: string;
 }
 
+export interface IOwnDeathEntry extends IBaseEntry {
+  readonly type: EntryType.OwnDeath;
+}
+
 export type IEntry =
   | IKillEntry
   | ICorpseEntry
   | IJoinPuEntry
   | IContestedZoneElevatorEntry
-  | IAsdElevatorEntry;
+  | IAsdElevatorEntry
+  | IOwnDeathEntry;
 
 interface Props {
   readonly className?: string;
@@ -106,15 +111,15 @@ export const Entry = memo(
         <TargetCell entry={entry} />
 
         <td className="overflow-hidden">
-          {entry.type === EntryType.Kill && <RSILink handle={entry.killer} />}
+          {/* {entry.type === EntryType.Kill && <RSILink handle={entry.killer} />} */}
 
-          {entry.type === EntryType.Corpse && (
+          {/* {entry.type === EntryType.Corpse && (
             <div className="text-neutral-500 p-2 h-full flex items-center">
               <span className="truncate" title="Leiche entdeckt">
                 Leiche entdeckt
               </span>
             </div>
-          )}
+          )} */}
 
           {entry.type === EntryType.JoinPu && (
             <div className="text-neutral-500 p-2 h-full flex items-center">
@@ -124,7 +129,7 @@ export const Entry = memo(
             </div>
           )}
 
-          {entry.type === EntryType.ContestedZoneElevator && (
+          {/* {entry.type === EntryType.ContestedZoneElevator && (
             <div className="text-neutral-500 p-2 h-full flex items-center">
               <span
                 className="truncate"
@@ -133,39 +138,47 @@ export const Entry = memo(
                 Aufzug (Contested Zone) benutzt
               </span>
             </div>
-          )}
+          )} */}
 
-          {entry.type === EntryType.AsdElevator && (
+          {/* {entry.type === EntryType.AsdElevator && (
             <div className="text-neutral-500 p-2 h-full flex items-center">
               <span className="truncate" title="Aufzug (ASD) benutzt">
                 Aufzug (ASD) benutzt
+              </span>
+            </div>
+          )} */}
+
+          {entry.type === EntryType.OwnDeath && (
+            <div className="text-neutral-500 p-2 h-full flex items-center">
+              <span className="truncate" title="Gestorben">
+                Gestorben
               </span>
             </div>
           )}
         </td>
 
         <td className="p-2 flex items-center truncate">
-          {entry.type === EntryType.Kill && (
+          {/* {entry.type === EntryType.Kill && (
             <span className="truncate" title={entry.weapon}>
               {entry.weapon}
             </span>
-          )}
+          )} */}
         </td>
 
         <td className="p-2 flex items-center truncate">
-          {entry.type === EntryType.Kill && (
+          {/* {entry.type === EntryType.Kill && (
             <span className="truncate" title={entry.damageType}>
               {entry.damageType}
             </span>
-          )}
+          )} */}
         </td>
 
         <td className="p-2 flex items-center truncate">
-          {entry.type === EntryType.Kill && (
+          {/* {entry.type === EntryType.Kill && (
             <span className="truncate" title={entry.zone}>
               {entry.zone}
             </span>
-          )}
+          )} */}
         </td>
       </tr>
     );

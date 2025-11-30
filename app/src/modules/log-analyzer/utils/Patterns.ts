@@ -1,9 +1,8 @@
 import {
   EntryType,
-  type ICorpseEntry,
   type IEntry,
   type IJoinPuEntry,
-  type IKillEntry,
+  type IOwnDeathEntry,
 } from "../components/Entry";
 
 interface Pattern {
@@ -16,39 +15,39 @@ interface Pattern {
 }
 
 export const Patterns: Pattern[] = [
-  {
-    id: "kill",
-    regex:
-      /^<(?<isoDate>[\d\-T:.Z]+)>.+CActor::Kill.+'(?<target>.*)'.+'(?<zone>.*)'.+'(?<killer>.*)'.+'(?<weapon>.*)'.+'(?<damageType>.*)'.+$/gm,
-    matchMapping: (date, groups): Omit<IKillEntry, "isoDate"> => {
-      const key = `${date.getTime()}_${groups.target}`;
+  // {
+  //   id: "kill",
+  //   regex:
+  //     /^<(?<isoDate>[\d\-T:.Z]+)>.+CActor::Kill.+'(?<target>.*)'.+'(?<zone>.*)'.+'(?<killer>.*)'.+'(?<weapon>.*)'.+'(?<damageType>.*)'.+$/gm,
+  //   matchMapping: (date, groups): Omit<IKillEntry, "isoDate"> => {
+  //     const key = `${date.getTime()}_${groups.target}`;
 
-      return {
-        key,
-        type: EntryType.Kill,
-        target: groups.target,
-        zone: groups.zone,
-        killer: groups.killer,
-        weapon: groups.weapon,
-        damageType: groups.damageType,
-      };
-    },
-  },
+  //     return {
+  //       key,
+  //       type: EntryType.Kill,
+  //       target: groups.target,
+  //       zone: groups.zone,
+  //       killer: groups.killer,
+  //       weapon: groups.weapon,
+  //       damageType: groups.damageType,
+  //     };
+  //   },
+  // },
 
-  {
-    id: "corpse",
-    // <2025-05-28T22:14:04.694Z> [Notice] <[ActorState] Corpse> [ACTOR STATE][SSCActorStateCVars::LogCorpse] Player 'Test' <remote client>: Running corpsify for corpse. [Team_ActorFeatures][Actor]
-    regex: /^<(?<isoDate>[\d\-T:.Z]+)>.+'(?<target>.*)'.+Running corpsify.+$/gm,
-    matchMapping: (date, groups): Omit<ICorpseEntry, "isoDate"> => {
-      const key = `${date.getTime()}_${groups.target}`;
+  // {
+  //   id: "corpse",
+  //   // <2025-05-28T22:14:04.694Z> [Notice] <[ActorState] Corpse> [ACTOR STATE][SSCActorStateCVars::LogCorpse] Player 'Test' <remote client>: Running corpsify for corpse. [Team_ActorFeatures][Actor]
+  //   regex: /^<(?<isoDate>[\d\-T:.Z]+)>.+'(?<target>.*)'.+Running corpsify.+$/gm,
+  //   matchMapping: (date, groups): Omit<ICorpseEntry, "isoDate"> => {
+  //     const key = `${date.getTime()}_${groups.target}`;
 
-      return {
-        key,
-        type: EntryType.Corpse,
-        target: groups.target,
-      };
-    },
-  },
+  //     return {
+  //       key,
+  //       type: EntryType.Corpse,
+  //       target: groups.target,
+  //     };
+  //   },
+  // },
 
   // {
   //   id: "corpse2",
@@ -104,4 +103,18 @@ export const Patterns: Pattern[] = [
   //     };
   //   },
   // },
+
+  {
+    id: "ownDeath",
+    // <2025-11-30T13:13:55.134Z> [Notice] <[ActorState] Dead> [ACTOR STATE][CSCActorControlStateDead::PrePhysicsUpdate] Actor 'ind3x' [202028778295] ejected from zone 'RSI_Zeus_CL_7838674991315' [7838674991315] to zone 'pyro4' [7610665712799] due to previous zone being in a destroyed vehicle with detached interior. [Team_ActorFeatures][Actor]
+    regex: /^<(?<isoDate>[\d\-T:.Z]+)>.*\<\[ActorState\] Dead\>.*$/gm,
+    matchMapping: (date, groups): Omit<IOwnDeathEntry, "isoDate"> => {
+      const key = `${date.getTime()}_${groups.elevatorName}`;
+
+      return {
+        key,
+        type: EntryType.OwnDeath,
+      };
+    },
+  },
 ];

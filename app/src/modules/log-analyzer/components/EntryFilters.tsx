@@ -34,9 +34,9 @@ export const EntryFilters = ({ className }: Props) => {
             !e.target.checked,
           )
         }
-      />
+      /> */}
 
-      <YesNoCheckbox
+      {/* <YesNoCheckbox
         yesLabel="Aufzüge (ASD)"
         noLabel="Aufzüge (ASD)"
         labelClassName="text-sm flex-1"
@@ -46,7 +46,7 @@ export const EntryFilters = ({ className }: Props) => {
         }
       /> */}
 
-      <YesNoCheckbox
+      {/* <YesNoCheckbox
         yesLabel="Kills (NPCs)"
         noLabel="Kills (NPCs)"
         labelClassName="text-xs flex-1"
@@ -54,9 +54,9 @@ export const EntryFilters = ({ className }: Props) => {
         onChange={(e) =>
           setEntryFilters(EntryFilterKey.HideNpcKill, !e.target.checked)
         }
-      />
+      /> */}
 
-      <YesNoCheckbox
+      {/* <YesNoCheckbox
         yesLabel="Kills (Spieler)"
         noLabel="Kills (Spieler)"
         labelClassName="text-xs flex-1"
@@ -64,9 +64,9 @@ export const EntryFilters = ({ className }: Props) => {
         onChange={(e) =>
           setEntryFilters(EntryFilterKey.HidePlayerKill, !e.target.checked)
         }
-      />
+      /> */}
 
-      <YesNoCheckbox
+      {/* <YesNoCheckbox
         yesLabel="Leichen"
         noLabel="Leichen"
         labelClassName="text-sm flex-1"
@@ -74,7 +74,7 @@ export const EntryFilters = ({ className }: Props) => {
         onChange={(e) =>
           setEntryFilters(EntryFilterKey.HideCorpse, !e.target.checked)
         }
-      />
+      /> */}
 
       <YesNoCheckbox
         yesLabel="Shard-Beitritte"
@@ -83,6 +83,16 @@ export const EntryFilters = ({ className }: Props) => {
         checked={!entryFilters[EntryFilterKey.HideJoinPu]}
         onChange={(e) =>
           setEntryFilters(EntryFilterKey.HideJoinPu, !e.target.checked)
+        }
+      />
+
+      <YesNoCheckbox
+        yesLabel="Eigene Tode"
+        noLabel="Eigene Tode"
+        labelClassName="text-sm flex-1"
+        checked={!entryFilters[EntryFilterKey.OwnDeath]}
+        onChange={(e) =>
+          setEntryFilters(EntryFilterKey.OwnDeath, !e.target.checked)
         }
       />
     </Popover>
