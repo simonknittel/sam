@@ -45,12 +45,32 @@ export default async function Page() {
   return (
     <div className="flex flex-col gap-4">
       <Day heading="2. Dezember 2025">
+        <DayItem
+          heading="Schusswaffen und Messer"
+          badges={["Neu", "Cornerstone Image Browser"]}
+        >
+          <p>
+            Der Cornerstone Image Browser enthält nun auch Schusswaffen und
+            Messer von Cornerstone.
+          </p>
+
+          <p>
+            Dieser ist verfügbar unter{" "}
+            <Link
+              href="/app/tools/cornerstone-image-browser"
+              className="text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300"
+            >
+              Apps &gt; Cornerstone Image Browser
+            </Link>
+          </p>
+        </DayItem>
+
         {showGlobalStatistics ? (
           <DayItem heading="Statistiken" badges={["Neu", "Statistiken"]}>
             <p>
-              Es werden nun täglich Statistiken zur Nutzung des S.A.M.
-              erfasst. Zu Beginn werden Schiffsvarianten, Rollen, Logins und
-              Events gezählt.
+              Es werden nun täglich Statistiken zur Nutzung des S.A.M. erfasst.
+              Zu Beginn werden Schiffsvarianten, Rollen, Logins und Events
+              gezählt.
             </p>
 
             <p>
