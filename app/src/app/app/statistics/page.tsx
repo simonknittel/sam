@@ -45,7 +45,7 @@ export default async function Page() {
 
         <StatisticSection
           title="Logins"
-          description="Tägliche Aufzeichnung der eindeutigen Logins."
+          description="Tägliche Aufzeichnung der unique Logins."
           chart={loginChart}
           className="flex-1"
         />
