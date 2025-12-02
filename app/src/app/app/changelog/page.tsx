@@ -34,23 +34,30 @@ import { FaCalendar, FaCopy } from "react-icons/fa";
 
 export default async function Page() {
   const authentication = await requireAuthenticationPage("/app/changelog");
-  const [showLogAnalyzer, showManageRoles, showUserRead] = await Promise.all([
-    authentication.authorize("logAnalyzer", "read"),
-    authentication.authorize("role", "manage"),
-    authentication.authorize("user", "read"),
-  ]);
+  const [showLogAnalyzer, showManageRoles, showUserRead, showGlobalStatistics] =
+    await Promise.all([
+      authentication.authorize("logAnalyzer", "read"),
+      authentication.authorize("role", "manage"),
+      authentication.authorize("user", "read"),
+      authentication.authorize("globalStatistics", "read"),
+    ]);
 
   return (
     <div className="flex flex-col gap-4">
-      <Day heading="2. Dezember 2025">
-        <DayItem heading="Schiffsanzahl-Statistik" badges={["Neu", "Backend"]}>
-          <p>
-            Es wird nun täglich eine Statistik über die Gesamtanzahl der Schiffe
-            im System erfasst. Diese Daten werden für zukünftige Auswertungen
-            und Analysen gespeichert.
-          </p>
-        </DayItem>
-      </Day>
+      {showGlobalStatistics && (
+        <Day heading="2. Dezember 2025">
+          <DayItem
+            heading="Schiffsanzahl-Statistik"
+            badges={["Neu", "Backend"]}
+          >
+            <p>
+              Es wird nun täglich eine Statistik über die Gesamtanzahl der
+              Schiffe im System erfasst. Diese Daten werden für zukünftige
+              Auswertungen und Analysen gespeichert.
+            </p>
+          </DayItem>
+        </Day>
+      )}
 
       <Day heading="25. November 2025">
         <DayItem
