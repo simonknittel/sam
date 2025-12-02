@@ -18,6 +18,11 @@ export const emitEvents = async (
   >[],
 ) => {
   await captureAsyncFunc("emitEvents", async () => {
+    if (!env.AWS_EVENT_BUS_ARN) {
+      void log.info("Event bus ARN not configured, skipping emitting events.");
+      return;
+    }
+
     if (entries.length <= 0) {
       void log.info("No entries provided to send to EventBridge.");
       return;

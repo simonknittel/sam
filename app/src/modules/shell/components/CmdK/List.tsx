@@ -6,6 +6,7 @@ import { signOut } from "next-auth/react";
 import { AiFillAppstore, AiOutlineForm } from "react-icons/ai";
 import {
   FaCamera,
+  FaChartLine,
   FaHome,
   FaLock,
   FaPiggyBank,
@@ -47,6 +48,7 @@ export const List = () => {
     careerEconomicRead,
     careerManagementRead,
     careerTeamRead,
+    globalStatisticsRead,
   ] = [
     authentication.authorize("citizen", "read"),
     authentication.authorize("organization", "read"),
@@ -84,6 +86,7 @@ export const List = () => {
         value: "team",
       },
     ]),
+    authentication.authorize("globalStatistics", "read"),
   ];
   const careerRead =
     careerSecurityRead ||
@@ -274,6 +277,17 @@ export const List = () => {
               label="Spynet"
               icon={<RiSpyFill />}
               setPages={() => setPages((pages) => [...pages, "spynet"])}
+              setSearch={setSearch}
+            />
+          )}
+
+          {globalStatisticsRead && (
+            <LinkItem
+              label="Statistiken"
+              keywords={["Charts", "Analytics"]}
+              icon={<FaChartLine />}
+              href="/app/statistics"
+              setOpen={setOpen}
               setSearch={setSearch}
             />
           )}

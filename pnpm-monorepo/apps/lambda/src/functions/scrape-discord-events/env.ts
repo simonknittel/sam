@@ -7,7 +7,7 @@ const schema = z.object({
     .default("postgresql://postgres:admin@localhost:5432/db"),
   DISCORD_GUILD_ID: z.string(),
   DISCORD_TOKEN: z.string(),
-  AWS_EVENT_BUS_ARN: z.string(),
+  AWS_EVENT_BUS_ARN: z.string().nullish(),
 });
 
 export const env = schema.parse(process.env);
