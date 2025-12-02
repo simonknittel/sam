@@ -42,6 +42,16 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col gap-4">
+      <Day heading="2. Dezember 2025">
+        <DayItem heading="Schiffsanzahl-Statistik" badges={["Neu", "Backend"]}>
+          <p>
+            Es wird nun täglich eine Statistik über die Gesamtanzahl der Schiffe
+            im System erfasst. Diese Daten werden für zukünftige Auswertungen
+            und Analysen gespeichert.
+          </p>
+        </DayItem>
+      </Day>
+
       <Day heading="25. November 2025">
         <DayItem
           heading="Schwarzmarkt-Ankauf umbenannt"
