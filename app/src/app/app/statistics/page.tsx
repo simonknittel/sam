@@ -3,6 +3,7 @@ import Note from "@/modules/common/components/Note";
 import { StatisticSection } from "@/modules/statistics/components/StatisticSection";
 import {
   getDailyLoginStatisticChart,
+  getEventsPerDayStatisticChart,
   getRoleCitizenStatisticChart,
   getVariantShipStatisticChart,
 } from "@/modules/statistics/queries";
@@ -16,10 +17,11 @@ export default async function Page() {
   const authentication = await requireAuthenticationPage("/app/statistics");
   await authentication.authorizePage("globalStatistics", "read");
 
-  const [roleChart, variantChart, loginChart] = await Promise.all([
+  const [roleChart, variantChart, loginChart, eventsChart] = await Promise.all([
     getRoleCitizenStatisticChart(),
     getVariantShipStatisticChart(),
     getDailyLoginStatisticChart(),
+    getEventsPerDayStatisticChart(),
   ]);
 
   return (
@@ -47,6 +49,13 @@ export default async function Page() {
           title="Logins"
           description="Tägliche Aufzeichnung der unique Logins."
           chart={loginChart}
+          className="flex-initial w-full lg:flex-[0_0_calc(50%-0.5rem)]"
+        />
+
+        <StatisticSection
+          title="Events"
+          description="Anzahl der Events pro Tag."
+          chart={eventsChart}
           className="flex-initial w-full lg:flex-[0_0_calc(50%-0.5rem)]"
         />
       </div>
