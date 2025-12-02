@@ -7,6 +7,9 @@ jobs:
   migrate:
     runs-on: ubuntu-24.04
 
+    permissions:
+      contents: read
+
     environment: Production
 
     steps:
