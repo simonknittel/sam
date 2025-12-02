@@ -1,0 +1,37 @@
+name: Production database migrations
+
+on:
+  workflow_dispatch:
+
+jobs:
+  migrate:
+    runs-on: ubuntu-24.04
+
+    permissions:
+      contents: read
+
+    environment: Production
+
+    steps:
+      - uses: actions/checkout@v5.0.1
+
+      - uses: actions/setup-node@v6.0.0
+        with:
+          node-version-file: "app/.nvmrc"
+
+      - uses: actions/cache@v4.3.0
+        id: node-modules-cache
+        with:
+          path: app/node_modules
+          key: ${{ runner.os }}-${{ hashFiles('app/.nvmrc', 'app/package-lock.json', 'app/prisma/prisma.schema') }}
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: app
+        if: steps.node-modules-cache.outputs.cache-hit != 'true'
+
+      - name: Run database migrations
+        run: npx prisma migrate deploy
+        working-directory: app
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
