@@ -33,21 +33,21 @@ export default async function Page() {
           title="Flotte"
           description="Tägliche Aufzeichnung der Schiffe pro Variante."
           chart={variantChart}
-          className="flex-1"
+          className="flex-initial w-full lg:flex-[0_0_calc(50%-0.5rem)]"
         />
 
         <StatisticSection
           title="Rollen"
           description="Tägliche Aufzeichnung der Citizen pro Rolle."
           chart={roleChart}
-          className="flex-1"
+          className="flex-initial w-full lg:flex-[0_0_calc(50%-0.5rem)]"
         />
 
         <StatisticSection
           title="Logins"
           description="Tägliche Aufzeichnung der unique Logins."
           chart={loginChart}
-          className="flex-1"
+          className="flex-initial w-full lg:flex-[0_0_calc(50%-0.5rem)]"
         />
       </div>
 
