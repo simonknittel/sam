@@ -16,3 +16,6 @@ CREATE INDEX "Statistic_type_idx" ON "Statistic"("type");
 
 -- CreateIndex
 CREATE INDEX "Statistic_createdAt_idx" ON "Statistic"("createdAt");
+
+-- CreateIndex
+CREATE INDEX "Statistic_type_createdAt_idx" ON "Statistic"("type", "createdAt");

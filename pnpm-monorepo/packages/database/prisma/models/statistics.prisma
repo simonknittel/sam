@@ -6,6 +6,7 @@ model Statistic {
 
   @@index([type])
   @@index([createdAt])
+  @@index([type, createdAt])
 }
 
 enum StatisticType {
