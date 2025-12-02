@@ -48,7 +48,7 @@ export default async function Page() {
         {showGlobalStatistics ? (
           <DayItem
             heading="Schiffsanzahl-Statistik"
-            badges={["Neu", "Backend"]}
+            badges={["Neu", "Statistiken"]}
           >
             <p>
               Es wird nun täglich eine Statistik über die Gesamtanzahl der
