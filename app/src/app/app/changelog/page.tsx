@@ -46,29 +46,27 @@ export default async function Page() {
     <div className="flex flex-col gap-4">
       <Day heading="2. Dezember 2025">
         {showGlobalStatistics ? (
-          <>
-            <DayItem heading="Statistiken" badges={["Neu", "Statistiken"]}>
-              <p>
-                Es werden nun täglich Statistiken zur Nutzung des S.A.M.
-                erfasst. Zu Beginn werden Schiffsvarianten und Rollen gezählt.
-              </p>
+          <DayItem heading="Statistiken" badges={["Neu", "Statistiken"]}>
+            <p>
+              Es werden nun täglich Statistiken zur Nutzung des S.A.M.
+              erfasst. Zu Beginn werden Schiffsvarianten, Rollen und Logins gezählt.
+            </p>
 
-              <p>
-                Diese sind einsehbar unter{" "}
-                <Link
-                  href="/app/statistics"
-                  className="text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300"
-                >
-                  Apps &gt; Statistiken
-                </Link>
-              </p>
+            <p>
+              Diese sind einsehbar unter{" "}
+              <Link
+                href="/app/statistics"
+                className="text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300"
+              >
+                Apps &gt; Statistiken
+              </Link>
+            </p>
 
-              <p>
-                Es gibt eine neue Berechtigung unter &ldquo;Sonstiges&rdquo; um
-                den Zugriff auf diese Statistiken zu limitieren.
-              </p>
-            </DayItem>
-          </>
+            <p>
+              Es gibt eine neue Berechtigung unter &ldquo;Sonstiges&rdquo; um
+              den Zugriff auf diese Statistiken zu limitieren.
+            </p>
+          </DayItem>
         ) : (
           <RedactedDayItem />
         )}

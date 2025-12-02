@@ -220,3 +220,26 @@ export const getVariantShipStatisticChart = cache(
     return buildChartData(records);
   }),
 );
+
+export const getDailyLoginStatisticChart = cache(
+  withTrace("getDailyLoginStatisticChart", async () => {
+    const authentication = await requireAuthentication();
+    if (!(await authentication.authorize("globalStatistics", "read")))
+      forbidden();
+
+    const rows = await prisma.dailyLoginCount.findMany({
+      orderBy: {
+        date: "asc",
+      },
+    });
+
+    const records: MultiLineRecord[] = rows.map((row) => ({
+      id: "logins",
+      name: "Logins",
+      createdAt: row.date,
+      count: row.count,
+    }));
+
+    return buildChartData(records);
+  }),
+);
