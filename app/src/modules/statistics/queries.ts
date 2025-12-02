@@ -285,8 +285,10 @@ export const getEventsPerDayStatisticChart = cache(
       }),
     );
 
-    records.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+    const sortedRecords = records.toSorted(
+      (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
+    );
 
-    return buildChartData(records);
+    return buildChartData(sortedRecords);
   }),
 );
