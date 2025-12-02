@@ -33,28 +33,28 @@ export default async function Page() {
       <div className="flex flex-wrap gap-4 mt-4">
         <StatisticSection
           title="Flotte"
-          description="Tägliche Aufzeichnung der Schiffe pro Variante."
+          description="Anzahl eingetragener Schiffe pro Variante"
           chart={variantChart}
           className="flex-initial w-full lg:flex-[0_0_calc(50%-0.5rem)]"
         />
 
         <StatisticSection
           title="Rollen"
-          description="Tägliche Aufzeichnung der Citizen pro Rolle."
+          description="Anzahl Citizens pro Rolle"
           chart={roleChart}
           className="flex-initial w-full lg:flex-[0_0_calc(50%-0.5rem)]"
         />
 
         <StatisticSection
           title="Logins"
-          description="Tägliche Aufzeichnung der unique Logins."
+          description="Anzahl unique Logins pro Tag"
           chart={loginChart}
           className="flex-initial w-full lg:flex-[0_0_calc(50%-0.5rem)]"
         />
 
         <StatisticSection
           title="Events"
-          description="Anzahl der Events pro Tag."
+          description="Anzahl Events pro Tag"
           chart={eventsChart}
           className="flex-initial w-full lg:flex-[0_0_calc(50%-0.5rem)]"
         />
