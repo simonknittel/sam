@@ -1,5 +1,4 @@
 import { DefaultLayout } from "@/modules/common/components/layouts/DefaultLayout";
-import { MaxWidthContent } from "@/modules/common/components/layouts/MaxWidthContent";
 import { getNavigationItems } from "@/modules/cornerstone-image-browser/utils/getNavigationItems";
 import type { Metadata } from "next";
 
@@ -21,7 +20,7 @@ export default async function Layout({
       pages={pages}
       slug="tools/cornerstone-image-browser"
     >
-      <MaxWidthContent>{children}</MaxWidthContent>
+      {children}
     </DefaultLayout>
   );
 }
