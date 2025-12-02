@@ -264,20 +264,26 @@ export const getEventsPerDayStatisticChart = cache(
       },
     });
 
-    const countsByDate = new Map<string, number>();
+    const countsByDate = new Map<string, { date: Date; count: number }>();
     for (const event of events) {
-      const dateKey = formatDateKey(startOfDay(event.startTime));
-      countsByDate.set(dateKey, (countsByDate.get(dateKey) ?? 0) + 1);
+      const dayStart = startOfDay(event.startTime);
+      const dateKey = formatDateKey(dayStart);
+      const existing = countsByDate.get(dateKey);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        countsByDate.set(dateKey, { date: dayStart, count: 1 });
+      }
     }
 
-    const records: MultiLineRecord[] = Array.from(
-      countsByDate.entries(),
-    ).map(([dateKey, count]) => ({
-      id: "events",
-      name: "Events",
-      createdAt: new Date(dateKey),
-      count,
-    }));
+    const records: MultiLineRecord[] = Array.from(countsByDate.values()).map(
+      ({ date, count }) => ({
+        id: "events",
+        name: "Events",
+        createdAt: date,
+        count,
+      }),
+    );
 
     records.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
 
