@@ -27,7 +27,7 @@ export default async function Page() {
   return (
     <>
       <p className="text-right text-neutral-500 text-sm">
-        <strong>Zeitraum:</strong> 03.12.2025 - jetzt
+        <strong>Zeitraum:</strong> 02.12.2025 - jetzt
       </p>
 
       <div className="flex flex-wrap gap-4 mt-4">
