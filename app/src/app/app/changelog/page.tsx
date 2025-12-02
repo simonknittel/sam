@@ -44,8 +44,8 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col gap-4">
-      {showGlobalStatistics && (
-        <Day heading="2. Dezember 2025">
+      <Day heading="2. Dezember 2025">
+        {showGlobalStatistics ? (
           <DayItem
             heading="Schiffsanzahl-Statistik"
             badges={["Neu", "Backend"]}
@@ -55,9 +55,16 @@ export default async function Page() {
               Schiffe im System erfasst. Diese Daten werden für zukünftige
               Auswertungen und Analysen gespeichert.
             </p>
+
+            <p className="text-neutral-500">
+              Hinweis: Aktuell gibt es noch keine Benutzeroberfläche zur
+              Anzeige dieser Statistiken.
+            </p>
           </DayItem>
-        </Day>
-      )}
+        ) : (
+          <RedactedDayItem />
+        )}
+      </Day>
 
       <Day heading="25. November 2025">
         <DayItem
