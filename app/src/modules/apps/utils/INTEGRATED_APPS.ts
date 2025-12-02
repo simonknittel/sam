@@ -138,6 +138,12 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
     permissionStrings: ["silcBalanceOfOtherCitizen;read"],
   },
   {
+    name: "Statistiken",
+    href: "/app/statistics",
+    description: "Diverse Statistiken zur Nutzung vom S.A.M.",
+    permissionStrings: ["globalStatistics;read"],
+  },
+  {
     name: "Spynet",
     href: "/app/spynet",
     imageSrc: spynetScreenshot,

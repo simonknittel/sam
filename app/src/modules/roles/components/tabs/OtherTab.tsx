@@ -58,7 +58,14 @@ const OtherTab = ({ roles, flows }: Readonly<Props>) => {
       </div>
 
       <div className="py-2 flex justify-between items-center">
-        <h4 className="font-bold">Globale Statistiken lesen</h4>
+        <div>
+          <h4 className="font-bold">Globale Statistiken lesen</h4>
+          <p className="text-sm">
+            Diese Darstellung der Statistiken kann nicht die Rollen des
+            aktuellen Benutzers berücksichtigen. Daher werden bspw. die
+            Berechtigungen für die Sichtbarkeit von Rollen hier ausgehebelt.
+          </p>
+        </div>
 
         <YesNoCheckbox {...register("globalStatistics;read")} />
       </div>

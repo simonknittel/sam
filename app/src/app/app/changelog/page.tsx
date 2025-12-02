@@ -47,35 +47,25 @@ export default async function Page() {
       <Day heading="2. Dezember 2025">
         {showGlobalStatistics ? (
           <>
-            <DayItem
-              heading="Schiffe pro Variante-Statistik"
-              badges={["Neu", "Statistiken"]}
-            >
+            <DayItem heading="Statistiken" badges={["Neu", "Statistiken"]}>
               <p>
-                Es wird nun täglich eine Statistik erfasst, wie viele Schiffe es
-                pro Schiffsvariante gibt. Diese Daten werden für zukünftige
-                Auswertungen und Analysen gespeichert.
+                Es werden nun täglich Statistiken zur Nutzung des S.A.M.
+                erfasst. Zu Beginn werden Schiffsvarianten und Rollen gezählt.
               </p>
 
-              <p className="text-neutral-500">
-                Hinweis: Aktuell gibt es noch keine Benutzeroberfläche zur
-                Anzeige dieser Statistiken.
-              </p>
-            </DayItem>
-
-            <DayItem
-              heading="Citizen pro Rolle-Statistik"
-              badges={["Neu", "Statistiken"]}
-            >
               <p>
-                Es wird nun täglich eine Statistik erfasst, wie viele Citizen
-                jeder Rolle zugewiesen sind. Diese Daten werden für zukünftige
-                Auswertungen und Analysen gespeichert.
+                Diese sind einsehbar unter{" "}
+                <Link
+                  href="/app/statistics"
+                  className="text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300"
+                >
+                  Apps &gt; Statistiken
+                </Link>
               </p>
 
-              <p className="text-neutral-500">
-                Hinweis: Aktuell gibt es noch keine Benutzeroberfläche zur
-                Anzeige dieser Statistiken.
+              <p>
+                Es gibt eine neue Berechtigung unter &ldquo;Sonstiges&rdquo; um
+                den Zugriff auf diese Statistiken zu limitieren.
               </p>
             </DayItem>
           </>
@@ -114,9 +104,9 @@ export default async function Page() {
         >
           <p>
             Die Aktivitätsseite im Spynet zeigt nun auch Änderungen an
-            Rollen-Zuweisungen von Citizens an. Neben den bisherigen
-            Änderungen an Organisationen werden jetzt auch hinzugefügte und
-            entfernte Rollen angezeigt.
+            Rollen-Zuweisungen von Citizens an. Neben den bisherigen Änderungen
+            an Organisationen werden jetzt auch hinzugefügte und entfernte
+            Rollen angezeigt.
           </p>
 
           <p>
