@@ -46,21 +46,39 @@ export default async function Page() {
     <div className="flex flex-col gap-4">
       <Day heading="2. Dezember 2025">
         {showGlobalStatistics ? (
-          <DayItem
-            heading="Schiffsanzahl-Statistik"
-            badges={["Neu", "Statistiken"]}
-          >
-            <p>
-              Es wird nun täglich eine Statistik über die Gesamtanzahl der
-              Schiffe im System erfasst. Diese Daten werden für zukünftige
-              Auswertungen und Analysen gespeichert.
-            </p>
+          <>
+            <DayItem
+              heading="Schiffsanzahl-Statistik"
+              badges={["Neu", "Statistiken"]}
+            >
+              <p>
+                Es wird nun täglich eine Statistik über die Gesamtanzahl der
+                Schiffe im System erfasst. Diese Daten werden für zukünftige
+                Auswertungen und Analysen gespeichert.
+              </p>
 
-            <p className="text-neutral-500">
-              Hinweis: Aktuell gibt es noch keine Benutzeroberfläche zur
-              Anzeige dieser Statistiken.
-            </p>
-          </DayItem>
+              <p className="text-neutral-500">
+                Hinweis: Aktuell gibt es noch keine Benutzeroberfläche zur
+                Anzeige dieser Statistiken.
+              </p>
+            </DayItem>
+
+            <DayItem
+              heading="Citizen pro Rolle-Statistik"
+              badges={["Neu", "Statistiken"]}
+            >
+              <p>
+                Es wird nun täglich eine Statistik erfasst, wie viele Citizen
+                jeder Rolle zugewiesen sind. Diese Daten werden für zukünftige
+                Auswertungen und Analysen gespeichert.
+              </p>
+
+              <p className="text-neutral-500">
+                Hinweis: Aktuell gibt es noch keine Benutzeroberfläche zur
+                Anzeige dieser Statistiken.
+              </p>
+            </DayItem>
+          </>
         ) : (
           <RedactedDayItem />
         )}

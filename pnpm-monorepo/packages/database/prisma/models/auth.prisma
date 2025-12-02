@@ -85,6 +85,7 @@ model Role {
   maxAgeDays        Int?
   assignments       RoleAssignment[]       @relation("role")
   assignmentChanges RoleAssignmentChange[] @relation("role")
+  citizenCounts     RoleCitizenCount[]
   /// Number of levels this role has. NULL if the role does not have levels.
   // maxLevel               Int?
   // assignmentLevelChanges RoleAssignmentLevelChange[] @relation("role")

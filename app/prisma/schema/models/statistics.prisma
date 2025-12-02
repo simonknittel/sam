@@ -12,3 +12,15 @@ model Statistic {
 enum StatisticType {
   SHIP_COUNT
 }
+
+model RoleCitizenCount {
+  id        String   @id @default(cuid())
+  roleId    String
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  count     Int
+  createdAt DateTime @default(now())
+
+  @@index([roleId])
+  @@index([createdAt])
+  @@index([roleId, createdAt])
+}
