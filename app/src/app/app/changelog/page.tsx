@@ -48,12 +48,12 @@ export default async function Page() {
         {showGlobalStatistics ? (
           <>
             <DayItem
-              heading="Schiffsanzahl-Statistik"
+              heading="Schiffe pro Variante-Statistik"
               badges={["Neu", "Statistiken"]}
             >
               <p>
-                Es wird nun täglich eine Statistik über die Gesamtanzahl der
-                Schiffe im System erfasst. Diese Daten werden für zukünftige
+                Es wird nun täglich eine Statistik erfasst, wie viele Schiffe es
+                pro Schiffsvariante gibt. Diese Daten werden für zukünftige
                 Auswertungen und Analysen gespeichert.
               </p>
 
