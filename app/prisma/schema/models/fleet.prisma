@@ -25,6 +25,7 @@ model Variant {
   status                        VariantStatus?
   tags                          VariantTag[]
   eventPositionRequiredVariants EventPositionRequiredVariant[]
+  shipCounts                    VariantShipCount[]
 
   @@unique([name, seriesId])
 }
