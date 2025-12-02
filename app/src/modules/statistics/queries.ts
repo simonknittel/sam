@@ -48,7 +48,7 @@ interface ChartOptions {
 }
 
 const DEFAULT_DAYS = 365;
-const MIN_AXIS_DATE = startOfDay(new Date("2025-12-03"));
+const MIN_AXIS_DATE = startOfDay(new Date("2025-12-02"));
 
 const formatDateKey = (date: Date) => format(date, "yyyy-MM-dd");
 
