@@ -1,0 +1,14 @@
+model Statistic {
+  id        String        @id @default(cuid())
+  type      StatisticType
+  value     Int
+  createdAt DateTime      @default(now())
+
+  @@index([type])
+  @@index([createdAt])
+  @@index([type, createdAt])
+}
+
+enum StatisticType {
+  SHIP_COUNT
+}
