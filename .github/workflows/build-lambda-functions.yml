@@ -24,7 +24,7 @@ jobs:
         id: node-modules-cache
         with:
           path: bun-packages/node_modules
-          key: ${{ runner.os }}-${{ hashFiles('bun-packages/bun.lockb') }}
+          key: ${{ runner.os }}-${{ hashFiles('bun-packages/bun.lock') }}
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
