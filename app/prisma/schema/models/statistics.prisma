@@ -21,3 +21,14 @@ model VariantShipCount {
   @@index([createdAt])
   @@index([variantId, createdAt])
 }
+
+model DailyLoginCount {
+  id        String   @id @default(cuid())
+  date      DateTime @db.Date
+  count     Int
+  createdAt DateTime @default(now())
+
+  @@unique([date])
+  @@index([date])
+  @@index([createdAt])
+}

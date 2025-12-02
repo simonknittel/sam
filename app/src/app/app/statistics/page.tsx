@@ -2,6 +2,7 @@ import { requireAuthenticationPage } from "@/modules/auth/server";
 import Note from "@/modules/common/components/Note";
 import { StatisticSection } from "@/modules/statistics/components/StatisticSection";
 import {
+  getDailyLoginStatisticChart,
   getRoleCitizenStatisticChart,
   getVariantShipStatisticChart,
 } from "@/modules/statistics/queries";
@@ -15,9 +16,10 @@ export default async function Page() {
   const authentication = await requireAuthenticationPage("/app/statistics");
   await authentication.authorizePage("globalStatistics", "read");
 
-  const [roleChart, variantChart] = await Promise.all([
+  const [roleChart, variantChart, loginChart] = await Promise.all([
     getRoleCitizenStatisticChart(),
     getVariantShipStatisticChart(),
+    getDailyLoginStatisticChart(),
   ]);
 
   return (
@@ -38,6 +40,13 @@ export default async function Page() {
           title="Rollen"
           description="Tägliche Aufzeichnung der Citizen pro Rolle."
           chart={roleChart}
+          className="flex-1"
+        />
+
+        <StatisticSection
+          title="Logins"
+          description="Tägliche Aufzeichnung der unique Logins."
+          chart={loginChart}
           className="flex-1"
         />
       </div>

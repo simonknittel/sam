@@ -1,5 +1,6 @@
 import { countCitizensPerRole } from "./countCitizensPerRole";
 import { countShips } from "./countShips";
+import { countUniqueLogins } from "./countUniqueLogins";
 import { disburseRoleSalaries } from "./disburseRoleSalaries";
 import "./env";
 import { removeExpiredRoles } from "./removeExpiredRoles";
@@ -11,4 +12,5 @@ export const midnightAutomationsHandler = async () => {
   await countCitizensPerRole();
   await disburseRoleSalaries();
   await countShips();
+  await countUniqueLogins();
 };
