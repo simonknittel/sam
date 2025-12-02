@@ -49,7 +49,8 @@ export default async function Page() {
           <DayItem heading="Statistiken" badges={["Neu", "Statistiken"]}>
             <p>
               Es werden nun täglich Statistiken zur Nutzung des S.A.M.
-              erfasst. Zu Beginn werden Schiffsvarianten, Rollen und Logins gezählt.
+              erfasst. Zu Beginn werden Schiffsvarianten, Rollen, Logins und
+              Events gezählt.
             </p>
 
             <p>

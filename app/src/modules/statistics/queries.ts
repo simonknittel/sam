@@ -243,3 +243,52 @@ export const getDailyLoginStatisticChart = cache(
     return buildChartData(records);
   }),
 );
+
+export const getEventsPerDayStatisticChart = cache(
+  withTrace("getEventsPerDayStatisticChart", async () => {
+    const authentication = await requireAuthentication();
+    if (!(await authentication.authorize("globalStatistics", "read")))
+      forbidden();
+
+    const options = normalizeOptions();
+
+    const events = await prisma.event.findMany({
+      where: {
+        startTime: {
+          gte: options.fromDate,
+          lt: options.toDateExclusive,
+        },
+      },
+      select: {
+        startTime: true,
+      },
+    });
+
+    const countsByDate = new Map<string, { date: Date; count: number }>();
+    for (const event of events) {
+      const dayStart = startOfDay(event.startTime);
+      const dateKey = formatDateKey(dayStart);
+      const existing = countsByDate.get(dateKey);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        countsByDate.set(dateKey, { date: dayStart, count: 1 });
+      }
+    }
+
+    const records: MultiLineRecord[] = Array.from(countsByDate.values()).map(
+      ({ date, count }) => ({
+        id: "events",
+        name: "Events",
+        createdAt: date,
+        count,
+      }),
+    );
+
+    const sortedRecords = records.toSorted(
+      (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
+    );
+
+    return buildChartData(sortedRecords);
+  }),
+);
