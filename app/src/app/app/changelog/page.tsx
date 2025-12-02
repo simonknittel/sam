@@ -68,6 +68,16 @@ export default async function Page() {
                 den Zugriff auf diese Statistiken zu limitieren.
               </p>
             </DayItem>
+
+            <DayItem
+              heading="Eindeutige Logins pro Tag"
+              badges={["Neu", "Statistiken"]}
+            >
+              <p>
+                Es wird nun täglich die Anzahl der eindeutigen Logins pro Tag
+                erfasst und in den Statistiken visualisiert.
+              </p>
+            </DayItem>
           </>
         ) : (
           <RedactedDayItem />
