@@ -14,14 +14,10 @@ import * as echarts from "echarts/core";
 import { CanvasRenderer } from "echarts/renderers";
 import type { CallbackDataParams } from "echarts/types/dist/shared";
 import { useEffect, useRef } from "react";
+import type { StatisticChartData } from "../queries";
 
 interface Props {
-  readonly axis: number[];
-  readonly series: {
-    name: string;
-    data: (number | null)[];
-  }[];
-  readonly height?: number;
+  readonly chart: StatisticChartData;
 }
 
 echarts.use([
@@ -44,7 +40,7 @@ const PALETTE = [
   "#fb7185",
 ];
 
-export const StatisticChart = ({ axis, series, height = 360 }: Props) => {
+export const StatisticChart = ({ chart }: Props) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<EChartsType | null>(null);
 
@@ -83,7 +79,7 @@ export const StatisticChart = ({ axis, series, height = 360 }: Props) => {
       },
       tooltip: {
         trigger: "axis",
-        className: "!bg-neutral-950 border !border-neutral-700",
+        className: "!bg-neutral-950 border !border-neutral-700 !text-white",
         formatter: (params: CallbackDataParams | CallbackDataParams[]) => {
           const items = Array.isArray(params) ? params : [params];
 
@@ -96,18 +92,20 @@ export const StatisticChart = ({ axis, series, height = 360 }: Props) => {
               ? formatDate(new Date(axisTimestamp), "short")
               : "";
 
-          const rows = items
-            .slice()
-            .sort((a, b) => {
-              const aValueRaw = Array.isArray(a.value) ? a.value[1] : a.value;
-              const bValueRaw = Array.isArray(b.value) ? b.value[1] : b.value;
-              const aValue =
-                typeof aValueRaw === "number" ? aValueRaw : -Infinity;
-              const bValue =
-                typeof bValueRaw === "number" ? bValueRaw : -Infinity;
-              return bValue - aValue;
-            })
-            .slice(0, 10)
+          let rows = items.slice().toSorted((a, b) => {
+            const aValueRaw = Array.isArray(a.value) ? a.value[1] : a.value;
+            const bValueRaw = Array.isArray(b.value) ? b.value[1] : b.value;
+            const aValue =
+              typeof aValueRaw === "number" ? aValueRaw : -Infinity;
+            const bValue =
+              typeof bValueRaw === "number" ? bValueRaw : -Infinity;
+            return bValue - aValue;
+          });
+
+          if (chart.configuration?.top)
+            rows = rows.slice(0, chart.configuration.top);
+
+          rows = rows
             .map((item) => {
               const color =
                 typeof item.color === "string" ? item.color : "#ffffff";
@@ -128,9 +126,11 @@ export const StatisticChart = ({ axis, series, height = 360 }: Props) => {
 
           return `
             <div>
-              <div class="text-neutral-500 text-xs mb-2">
+              <p class="mb-2">
                 ${dateLabel}
-              </div>
+              </p>
+
+              ${chart.configuration?.top ? `<p class="text-neutral-500 text-xs">Top ${chart.configuration.top}</p>` : ""}
 
               ${rows}
             </div>
@@ -176,21 +176,22 @@ export const StatisticChart = ({ axis, series, height = 360 }: Props) => {
           zoomOnMouseWheel: false,
         },
       ],
-      series: series.map((serie) => ({
+      series: chart.series.map((serie) => ({
         name: serie.name,
         type: "line",
         smooth: true,
-        showSymbol: false,
         emphasis: {
           focus: "series",
         },
         lineStyle: {
           width: 2,
         },
-        data: axis.map((timestamp, index) => [
+        data: chart.axisTimestamps.map((timestamp, index) => [
           timestamp,
           serie.data[index] ?? null,
         ]),
+        symbol: "circle",
+        symbolSize: 4,
       })),
     } satisfies EChartsCoreOption;
 
@@ -200,7 +201,7 @@ export const StatisticChart = ({ axis, series, height = 360 }: Props) => {
     };
 
     chartRef.current.setOption(option, replaceOptions);
-  }, [axis, series]);
+  }, [chart]);
 
-  return <div ref={containerRef} style={{ height }} />;
+  return <div ref={containerRef} style={{ height: 360 }} />;
 };

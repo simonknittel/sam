@@ -1,5 +1,6 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import Note from "@/modules/common/components/Note";
+import { formatDate } from "@/modules/common/utils/formatDate";
 import { StatisticSection } from "@/modules/statistics/components/StatisticSection";
 import {
   getDailyLoginStatisticChart,
@@ -27,41 +28,44 @@ export default async function Page() {
   return (
     <>
       <p className="text-right text-neutral-500 text-sm">
-        <strong>Zeitraum:</strong> 02.12.2025 - jetzt
+        <strong>Zeitraum:</strong>{" "}
+        {formatDate(roleChart.dateRange.from, "short")} - jetzt
       </p>
 
-      <div className="flex flex-wrap gap-4 mt-4">
+      <div className="flex flex-col lg:flex-row gap-4 mt-4">
         <StatisticSection
           title="Flotte"
           description="Anzahl eingetragener Schiffe pro Variante"
           chart={variantChart}
-          className="flex-initial w-full lg:flex-[0_0_calc(50%-0.5rem)]"
+          className="flex-1"
         />
 
         <StatisticSection
           title="Rollen"
           description="Anzahl Citizens pro Rolle"
           chart={roleChart}
-          className="flex-initial w-full lg:flex-[0_0_calc(50%-0.5rem)]"
+          className="flex-1"
         />
+      </div>
 
+      <div className="flex gap-4 mt-4">
         <StatisticSection
           title="Logins"
           description="Anzahl unique Logins pro Tag"
           chart={loginChart}
-          className="flex-initial w-full lg:flex-[0_0_calc(50%-0.5rem)]"
+          className="flex-1"
         />
 
         <StatisticSection
           title="Events"
           description="Anzahl Events pro Tag"
           chart={eventsChart}
-          className="flex-initial w-full lg:flex-[0_0_calc(50%-0.5rem)]"
+          className="flex-1"
         />
       </div>
 
       <Note
-        type="warning"
+        type="info"
         message="Diese Darstellung der Statistiken kann nicht die Rollen des aktuellen Benutzers berücksichtigen. Daher werden bspw. die Berechtigungen für die Sichtbarkeit von Rollen hier ausgehebelt."
         className="mt-4"
       />
