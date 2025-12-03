@@ -32,7 +32,7 @@ export default async function Page() {
         {formatDate(roleChart.dateRange.from, "short")} - jetzt
       </p>
 
-      <div className="flex flex-col lg:flex-row gap-4 mt-4">
+      <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
         <StatisticSection
           title="Flotte"
           description="Anzahl eingetragener Schiffe pro Variante"
@@ -46,9 +46,7 @@ export default async function Page() {
           chart={roleChart}
           className="flex-1"
         />
-      </div>
 
-      <div className="flex gap-4 mt-4">
         <StatisticSection
           title="Logins"
           description="Anzahl unique Logins pro Tag"
