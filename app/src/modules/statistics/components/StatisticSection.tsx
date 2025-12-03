@@ -24,7 +24,7 @@ export const StatisticSection = ({
         </p>
 
         {chart.hasData ? (
-          <StatisticChart axis={chart.axisTimestamps} series={chart.series} />
+          <StatisticChart chart={chart} />
         ) : (
           <div className="border border-dashed border-white/10 rounded-primary p-8 text-center text-sm text-neutral-500">
             Keine Daten für den ausgewählten Zeitraum vorhanden.
