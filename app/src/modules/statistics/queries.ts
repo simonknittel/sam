@@ -1,5 +1,6 @@
 import { prisma } from "@/db";
-import { addDays, format, startOfDay, subDays } from "date-fns";
+import { addDays, startOfDay, subDays } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
 import { requireAuthentication } from "../auth/server";
@@ -53,7 +54,8 @@ interface ChartOptions {
 const DEFAULT_DAYS = 365;
 const MIN_AXIS_DATE = startOfDay(new Date("2025-12-02"));
 
-const formatDateKey = (date: Date) => format(date, "yyyy-MM-dd");
+const formatDateKey = (date: Date) =>
+  formatInTimeZone(date, "Europe/Berlin", "yyyy-MM-dd");
 
 const buildAxisPoints = (fromDate: Date, toDate: Date) => {
   const points: AxisPoint[] = [];
