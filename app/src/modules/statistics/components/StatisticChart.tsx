@@ -1,5 +1,7 @@
 "use client";
 
+// @refresh reset
+
 import { formatDate } from "@/modules/common/utils/formatDate";
 import type { SetOptionOpts } from "echarts";
 import { LineChart } from "echarts/charts";
@@ -139,14 +141,8 @@ export const StatisticChart = ({ chart }: Props) => {
       },
       xAxis: {
         type: "time",
-        boundaryGap: false,
-        axisLine: {
-          lineStyle: {
-            color: "rgba(226,232,240,0.15)",
-          },
-        },
         axisLabel: {
-          color: "#9ca3af",
+          color: "#737373",
           formatter: (value: number | string) =>
             formatDate(new Date(Number(value)), "short"),
         },
@@ -156,26 +152,15 @@ export const StatisticChart = ({ chart }: Props) => {
       },
       yAxis: {
         type: "value",
-        axisLine: {
-          show: false,
-        },
         axisLabel: {
-          color: "#9ca3af",
+          color: "#737373",
         },
         splitLine: {
           lineStyle: {
-            color: "rgba(226,232,240,0.1)",
+            color: "rgba(255, 255, 255, 0.05)",
           },
         },
       },
-      dataZoom: [
-        {
-          type: "inside",
-          brushSelect: false,
-          moveOnMouseWheel: true,
-          zoomOnMouseWheel: false,
-        },
-      ],
       series: chart.series.map((serie) => ({
         name: serie.name,
         type: "line",
@@ -192,7 +177,9 @@ export const StatisticChart = ({ chart }: Props) => {
         ]),
         symbol: "circle",
         symbolSize: 4,
+        showSymbol: false,
       })),
+      animationDuration: 300,
     } satisfies EChartsCoreOption;
 
     const replaceOptions: SetOptionOpts = {
