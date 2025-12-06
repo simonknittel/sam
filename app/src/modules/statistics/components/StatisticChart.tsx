@@ -89,10 +89,14 @@ export const StatisticChart = ({ chart }: Props) => {
         formatter: (params: CallbackDataParams | CallbackDataParams[]) => {
           const items = Array.isArray(params) ? params : [params];
 
-          const axisValue = items[0]?.value;
-          const axisTimestamp = Array.isArray(axisValue)
-            ? axisValue[0]
-            : axisValue;
+          const axisValueRaw =
+            items[0] && "axisValue" in items[0]
+              ? (items[0] as { axisValue?: number | string }).axisValue
+              : items[0]?.value;
+          const axisTimestamp =
+            typeof axisValueRaw === "number" || typeof axisValueRaw === "string"
+              ? Number(axisValueRaw)
+              : undefined;
           const dateLabel =
             typeof axisTimestamp === "number"
               ? formatDate(new Date(axisTimestamp), "short")
@@ -145,11 +149,18 @@ export const StatisticChart = ({ chart }: Props) => {
         },
       },
       xAxis: {
-        type: "time",
+        // Use a category axis so each data point renders exactly one label.
+        type: "category",
+        boundaryGap: false,
+        data: chart.axisTimestamps,
         axisLabel: {
           color: "#737373",
+          interval: 0,
           formatter: (value: number | string) =>
             formatDate(new Date(Number(value)), "short"),
+        },
+        axisTick: {
+          alignWithLabel: true,
         },
         splitLine: {
           show: false,
@@ -192,10 +203,7 @@ export const StatisticChart = ({ chart }: Props) => {
           width: 2,
         },
         yAxisIndex: serie.yAxisIndex ?? 0,
-        data: chart.axisTimestamps.map((timestamp, index) => [
-          timestamp,
-          serie.data[index] ?? null,
-        ]),
+        data: chart.axisTimestamps.map((_, index) => serie.data[index] ?? null),
         symbol: "circle",
         symbolSize: 4,
         showSymbol: false,
