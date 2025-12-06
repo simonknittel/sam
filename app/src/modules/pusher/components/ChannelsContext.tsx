@@ -3,11 +3,11 @@
 import { env } from "@/env";
 import type { User } from "@prisma/client";
 import Pusher from "pusher-js";
-import type { ReactNode, RefObject } from "react";
-import { createContext, useContext, useEffect, useMemo, useRef } from "react";
+import type { ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 interface ChannelsContext {
-  clientRef: RefObject<Pusher | null>;
+  client: Pusher | null;
 }
 
 const ChannelsContext = createContext<ChannelsContext | undefined>(undefined);
@@ -18,51 +18,55 @@ interface Props {
 }
 
 export const ChannelsProvider = ({ children, userId }: Props) => {
-  const clientRef = useRef<Pusher | null>(null);
+  const [client, setClient] = useState<Pusher | null>(null);
 
   useEffect(() => {
-    if (
-      !env.NEXT_PUBLIC_PUSHER_CHANNELS_APP_ID ||
-      !env.NEXT_PUBLIC_PUSHER_CHANNELS_APP_KEY
-    ) {
-      console.info(
-        "[Pusher] Channels client not initialized, missing environment variables.",
-      );
-      return;
+    if (!client) {
+      if (
+        !env.NEXT_PUBLIC_PUSHER_CHANNELS_APP_ID ||
+        !env.NEXT_PUBLIC_PUSHER_CHANNELS_APP_KEY
+      ) {
+        console.info(
+          "[Pusher] Channels client not initialized, missing environment variables.",
+        );
+        return;
+      }
+
+      const pusher = new Pusher(env.NEXT_PUBLIC_PUSHER_CHANNELS_APP_KEY, {
+        cluster: "eu",
+        wsHost: env.NEXT_PUBLIC_PUSHER_CHANNELS_HOST,
+        wsPort: env.NEXT_PUBLIC_PUSHER_CHANNELS_PORT,
+        wssPort: env.NEXT_PUBLIC_PUSHER_CHANNELS_SECURE_PORT,
+        httpHost: env.NEXT_PUBLIC_PUSHER_CHANNELS_HOST,
+        httpPort: env.NEXT_PUBLIC_PUSHER_CHANNELS_PORT,
+        httpsPort: env.NEXT_PUBLIC_PUSHER_CHANNELS_SECURE_PORT,
+        forceTLS: env.NEXT_PUBLIC_PUSHER_CHANNELS_SECURE_PORT ? true : false,
+        userAuthentication: {
+          endpoint: "/api/pusher/user-auth",
+          transport: "ajax",
+        },
+        channelAuthorization: {
+          endpoint: "/api/pusher/channel-auth",
+          transport: "ajax",
+        },
+      });
+      console.info("[Pusher] Channels client initialized.");
+
+      setClient(pusher);
+
+      pusher.signin();
     }
 
-    clientRef.current = new Pusher(env.NEXT_PUBLIC_PUSHER_CHANNELS_APP_KEY, {
-      cluster: "eu",
-      wsHost: env.NEXT_PUBLIC_PUSHER_CHANNELS_HOST,
-      wsPort: env.NEXT_PUBLIC_PUSHER_CHANNELS_PORT,
-      wssPort: env.NEXT_PUBLIC_PUSHER_CHANNELS_SECURE_PORT,
-      httpHost: env.NEXT_PUBLIC_PUSHER_CHANNELS_HOST,
-      httpPort: env.NEXT_PUBLIC_PUSHER_CHANNELS_PORT,
-      httpsPort: env.NEXT_PUBLIC_PUSHER_CHANNELS_SECURE_PORT,
-      forceTLS: env.NEXT_PUBLIC_PUSHER_CHANNELS_SECURE_PORT ? true : false,
-      userAuthentication: {
-        endpoint: "/api/pusher/user-auth",
-        transport: "ajax",
-      },
-      channelAuthorization: {
-        endpoint: "/api/pusher/channel-auth",
-        transport: "ajax",
-      },
-    });
-    console.info("[Pusher] Channels client initialized.");
-
-    clientRef.current.signin();
-
     return () => {
-      if (clientRef.current) {
-        clientRef.current.disconnect();
-        clientRef.current = null;
+      if (client) {
+        client.disconnect();
+        setClient(null);
         console.info("[Pusher] Channels client disconnected.");
       }
     };
-  }, [userId]);
+  }, [userId, client]);
 
-  const value = useMemo(() => ({ clientRef }), []);
+  const value = useMemo(() => ({ client }), [client]);
 
   return (
     <ChannelsContext.Provider value={value}>
