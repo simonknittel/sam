@@ -57,7 +57,7 @@ export default async function Page() {
             </p>
 
             <p>
-              Alle Diagramme enthalten einen direkten Vergleich zum
+              Alle Diagramme enthalten nun einen direkten Vergleich zum
               Vortag.
             </p>
 
