@@ -315,13 +315,19 @@ export const getTotalShipStatisticChart = cache(
       }),
     );
 
-    const deltaRecords: MultiLineRecord[] = orderedTotals.map(
-      ({ createdAt, count }, index) => ({
-        id: "total-ships-delta",
-        name: "Veränderung zum Vortag",
-        createdAt,
-        count: index === 0 ? 0 : count - orderedTotals[index - 1].count,
-      }),
+    const deltaRecords: MultiLineRecord[] = orderedTotals.flatMap(
+      ({ createdAt, count }, index) => {
+        if (index === 0) return [];
+
+        return [
+          {
+            id: "total-ships-delta",
+            name: "Veränderung zum Vortag",
+            createdAt,
+            count: count - orderedTotals[index - 1].count,
+          },
+        ];
+      },
     );
 
     const chartData = buildChartData(
@@ -370,22 +376,67 @@ export const getDailyLoginStatisticChart = cache(
       },
     });
 
-    const records: MultiLineRecord[] = rows.map((row) => {
+    const orderedLogins = rows.map((row) => {
       const createdAt = new Date(row.date);
       createdAt.setDate(createdAt.getDate() + 1); // Workaround: Offset due to timezone
 
       return {
-        id: "logins",
-        name: "Logins",
         createdAt,
         count: row.count,
       };
     });
 
-    return {
-      ...buildChartData(records, configuration),
+    const totalRecords: MultiLineRecord[] = orderedLogins.map((entry) => ({
+      id: "logins",
+      name: "Logins",
+      createdAt: entry.createdAt,
+      count: entry.count,
+    }));
+
+    const deltaRecords: MultiLineRecord[] = orderedLogins.flatMap(
+      (entry, index) => {
+        if (index === 0) return [];
+
+        return [
+          {
+            id: "logins-delta",
+            name: "Veränderung zum Vortag",
+            createdAt: entry.createdAt,
+            count: entry.count - orderedLogins[index - 1].count,
+          },
+        ];
+      },
+    );
+
+    const chartData = buildChartData(
+      [...totalRecords, ...deltaRecords],
       configuration,
-    };
+    );
+
+    const series = chartData.series.map((serie) =>
+      serie.name === "Veränderung zum Vortag"
+        ? {
+            ...serie,
+            yAxisIndex: 1,
+          }
+        : serie,
+    );
+
+    return {
+      ...chartData,
+      series,
+      configuration,
+      yAxes: [
+        {
+          name: "Logins",
+          position: "left",
+        },
+        {
+          name: "Δ Vortag",
+          position: "right",
+        },
+      ],
+    } satisfies StatisticChartData;
   }),
 );
 
@@ -418,22 +469,65 @@ export const getEventsPerDayStatisticChart = cache(
       countsByDate.set(dateKey, existing + 1);
     }
 
-    const records: MultiLineRecord[] = options.axisPoints.map(
-      ({ key, timestamp }) => {
-        const createdAt = new Date(timestamp);
+    const orderedEvents = options.axisPoints.map(({ key, timestamp }) => {
+      const createdAt = new Date(timestamp);
 
-        return {
-          id: "events",
-          name: "Events",
-          createdAt,
-          count: countsByDate.get(key) ?? 0,
-        };
+      return {
+        createdAt,
+        count: countsByDate.get(key) ?? 0,
+      };
+    });
+
+    const totalRecords: MultiLineRecord[] = orderedEvents.map((entry) => ({
+      id: "events",
+      name: "Events",
+      createdAt: entry.createdAt,
+      count: entry.count,
+    }));
+
+    const deltaRecords: MultiLineRecord[] = orderedEvents.flatMap(
+      (entry, index) => {
+        if (index === 0) return [];
+
+        return [
+          {
+            id: "events-delta",
+            name: "Veränderung zum Vortag",
+            createdAt: entry.createdAt,
+            count: entry.count - orderedEvents[index - 1].count,
+          },
+        ];
       },
     );
 
-    return {
-      ...buildChartData(records, configuration),
+    const chartData = buildChartData(
+      [...totalRecords, ...deltaRecords],
       configuration,
-    };
+    );
+
+    const series = chartData.series.map((serie) =>
+      serie.name === "Veränderung zum Vortag"
+        ? {
+            ...serie,
+            yAxisIndex: 1,
+          }
+        : serie,
+    );
+
+    return {
+      ...chartData,
+      series,
+      configuration,
+      yAxes: [
+        {
+          name: "Events",
+          position: "left",
+        },
+        {
+          name: "Δ Vortag",
+          position: "right",
+        },
+      ],
+    } satisfies StatisticChartData;
   }),
 );
