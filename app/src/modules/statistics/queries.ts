@@ -338,9 +338,9 @@ export const getTotalShipStatisticChart = cache(
     const series = chartData.series.map((serie) =>
       serie.name === "Veränderung zum Vortag"
         ? {
-            ...serie,
-            yAxisIndex: 1,
-          }
+          ...serie,
+          yAxisIndex: 1,
+        }
         : serie,
     );
 
@@ -416,9 +416,9 @@ export const getDailyLoginStatisticChart = cache(
     const series = chartData.series.map((serie) =>
       serie.name === "Veränderung zum Vortag"
         ? {
-            ...serie,
-            yAxisIndex: 1,
-          }
+          ...serie,
+          yAxisIndex: 1,
+        }
         : serie,
     );
 
@@ -508,9 +508,9 @@ export const getEventsPerDayStatisticChart = cache(
     const series = chartData.series.map((serie) =>
       serie.name === "Veränderung zum Vortag"
         ? {
-            ...serie,
-            yAxisIndex: 1,
-          }
+          ...serie,
+          yAxisIndex: 1,
+        }
         : serie,
     );
 
@@ -521,6 +521,107 @@ export const getEventsPerDayStatisticChart = cache(
       yAxes: [
         {
           name: "Events",
+          position: "left",
+        },
+        {
+          name: "Δ Vortag",
+          position: "right",
+        },
+      ],
+    } satisfies StatisticChartData;
+  }),
+);
+
+export const getDailySilcStatisticChart = cache(
+  withTrace("getDailySilcStatisticChart", async () => {
+    const authentication = await requireAuthentication();
+    if (!(await authentication.authorize("globalStatistics", "read")))
+      forbidden();
+
+    const configuration: ChartConfiguration = {};
+    const options = normalizeOptions();
+
+    const transactions = await prisma.silcTransaction.findMany({
+      where: {
+        deletedAt: null,
+        value: {
+          gt: 0,
+        },
+        createdAt: {
+          gte: options.fromDate,
+          lt: options.toDateExclusive,
+        },
+      },
+      select: {
+        createdAt: true,
+        value: true,
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
+
+    const totalsByDate = new Map<string, number>();
+
+    for (const transaction of transactions) {
+      const createdAt = startOfDay(transaction.createdAt);
+      const key = formatDateKey(createdAt);
+      const current = totalsByDate.get(key) ?? 0;
+      totalsByDate.set(key, current + transaction.value);
+    }
+
+    const orderedTotals = options.axisPoints.map(({ key, timestamp }) => {
+      const createdAt = new Date(timestamp);
+
+      return {
+        createdAt,
+        count: totalsByDate.get(key) ?? 0,
+      };
+    });
+
+    const totalRecords: MultiLineRecord[] = orderedTotals.map((entry) => ({
+      id: "silc",
+      name: "SILC",
+      createdAt: entry.createdAt,
+      count: entry.count,
+    }));
+
+    const deltaRecords: MultiLineRecord[] = orderedTotals.flatMap(
+      (entry, index) => {
+        if (index === 0) return [];
+
+        return [
+          {
+            id: "silc-delta",
+            name: "Veränderung zum Vortag",
+            createdAt: entry.createdAt,
+            count: entry.count - orderedTotals[index - 1].count,
+          },
+        ];
+      },
+    );
+
+    const chartData = buildChartData(
+      [...totalRecords, ...deltaRecords],
+      configuration,
+    );
+
+    const series = chartData.series.map((serie) =>
+      serie.name === "Veränderung zum Vortag"
+        ? {
+          ...serie,
+          yAxisIndex: 1,
+        }
+        : serie,
+    );
+
+    return {
+      ...chartData,
+      series,
+      configuration,
+      yAxes: [
+        {
+          name: "SILC",
           position: "left",
         },
         {

@@ -4,6 +4,7 @@ import { formatDate } from "@/modules/common/utils/formatDate";
 import { StatisticSection } from "@/modules/statistics/components/StatisticSection";
 import {
   getDailyLoginStatisticChart,
+  getDailySilcStatisticChart,
   getEventsPerDayStatisticChart,
   getRoleCitizenStatisticChart,
   getTotalShipStatisticChart,
@@ -19,14 +20,21 @@ export default async function Page() {
   const authentication = await requireAuthenticationPage("/app/statistics");
   await authentication.authorizePage("globalStatistics", "read");
 
-  const [roleChart, variantChart, totalShipsChart, loginChart, eventsChart] =
-    await Promise.all([
-      getRoleCitizenStatisticChart(),
-      getVariantShipStatisticChart(),
-      getTotalShipStatisticChart(),
-      getDailyLoginStatisticChart(),
-      getEventsPerDayStatisticChart(),
-    ]);
+  const [
+    roleChart,
+    variantChart,
+    totalShipsChart,
+    loginChart,
+    eventsChart,
+    silcChart,
+  ] = await Promise.all([
+    getRoleCitizenStatisticChart(),
+    getVariantShipStatisticChart(),
+    getTotalShipStatisticChart(),
+    getDailyLoginStatisticChart(),
+    getEventsPerDayStatisticChart(),
+    getDailySilcStatisticChart(),
+  ]);
 
   return (
     <>
@@ -68,6 +76,13 @@ export default async function Page() {
           title="Events"
           description="Anzahl Events pro Tag"
           chart={eventsChart}
+          className="flex-1"
+        />
+
+        <StatisticSection
+          title="SILC"
+          description="Neu generierte SILC-Menge pro Tag"
+          chart={silcChart}
           className="flex-1"
         />
       </div>

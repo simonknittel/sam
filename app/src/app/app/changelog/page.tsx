@@ -44,6 +44,34 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col gap-4">
+      <Day heading="6. Dezember 2025">
+        {showGlobalStatistics ? (
+          <DayItem
+            heading="SILC Tagesstatistik"
+            badges={["Neu", "Statistiken"]}
+          >
+            <p>
+              Die Statistiken zeigen nun auch, wie viel neues SILC an jedem Tag
+              erstellt wurde. Die Anzeige enthält ebenso den Vergleich zum
+              Vortag.
+            </p>
+
+            <p>
+              Du findest die Ansicht unter{" "}
+              <Link
+                href="/app/statistics"
+                className="text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300"
+              >
+                Apps &gt; Statistiken
+              </Link>
+              .
+            </p>
+          </DayItem>
+        ) : (
+          <RedactedDayItem />
+        )}
+      </Day>
+
       <Day heading="2. Dezember 2025">
         <DayItem
           heading="Schusswaffen und Messer"
