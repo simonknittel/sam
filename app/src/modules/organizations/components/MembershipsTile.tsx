@@ -1,11 +1,10 @@
-import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import { Link } from "@/modules/common/components/Link";
 import { DeleteOrganizationMembership } from "@/modules/spynet/components/DeleteOrganizationMembership";
-import { OrganizationMembershipVisibility } from "@prisma/client";
 import clsx from "clsx";
 import { forbidden } from "next/navigation";
 import { FaExternalLinkAlt, FaUsers } from "react-icons/fa";
+import { getActiveOrganizationMemberships } from "../queries";
 import { CreateMembership } from "./CreateMembership";
 
 interface Props {
@@ -18,39 +17,8 @@ export const MembershipsTile = async ({ className, id }: Props) => {
   if (!(await authentication.authorize("organizationMembership", "read")))
     forbidden();
 
-  const alsoVisibilityRedacted = await authentication.authorize(
-    "organizationMembership",
-    "read",
-    [
-      {
-        key: "alsoVisibilityRedacted",
-        value: true,
-      },
-    ],
-  );
-
   const activeOrganizationMemberships =
-    await prisma.activeOrganizationMembership.findMany({
-      where: {
-        organizationId: id,
-        visibility: {
-          in: alsoVisibilityRedacted
-            ? [
-                OrganizationMembershipVisibility.PUBLIC,
-                OrganizationMembershipVisibility.REDACTED,
-              ]
-            : [OrganizationMembershipVisibility.PUBLIC],
-        },
-      },
-      select: {
-        citizen: {
-          select: {
-            id: true,
-            handle: true,
-          },
-        },
-      },
-    });
+    await getActiveOrganizationMemberships(id);
 
   const showDeleteButton = await authentication.authorize(
     "organizationMembership",
@@ -67,13 +35,10 @@ export const MembershipsTile = async ({ className, id }: Props) => {
 
   return (
     <section
-      className={clsx(
-        className,
-        "rounded-primary p-4 lg:p-8 bg-neutral-800/50",
-      )}
+      className={clsx(className, "rounded-primary p-4 background-secondary")}
     >
       <h2 className="font-bold flex gap-2 items-center">
-        <FaUsers /> Mitglieder
+        <FaUsers /> Mitglieder ({activeOrganizationMemberships.length})
       </h2>
 
       {activeOrganizationMemberships.length > 0 ? (
