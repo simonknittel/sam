@@ -25,6 +25,7 @@ export const NewReleaseToast = () => {
         {
           duration: Infinity,
           icon: <FaRocket className="flex-none" />,
+          className: "gap-2 [&>div[role='status']]:m-0",
         },
       );
     });
