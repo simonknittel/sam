@@ -33,6 +33,13 @@ interface NormalizedOptions {
 export interface StatisticSeries {
   name: string;
   data: (number | null)[];
+  yAxisIndex?: number;
+}
+
+export interface StatisticYAxis {
+  name?: string;
+  position?: "left" | "right";
+  axisLabelColor?: string;
 }
 
 export interface StatisticChartData {
@@ -44,6 +51,7 @@ export interface StatisticChartData {
   };
   hasData: boolean;
   configuration?: ChartConfiguration;
+  yAxes?: StatisticYAxis[];
 }
 
 interface ChartOptions {
@@ -251,6 +259,109 @@ export const getVariantShipStatisticChart = cache(
   }),
 );
 
+export const getTotalShipStatisticChart = cache(
+  withTrace("getTotalShipStatisticChart", async () => {
+    const authentication = await requireAuthentication();
+    if (!(await authentication.authorize("globalStatistics", "read")))
+      forbidden();
+
+    const rows = await prisma.variantShipCount.findMany({
+      select: {
+        createdAt: true,
+        count: true,
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
+
+    const totalsByDate = new Map<
+      string,
+      {
+        createdAt: Date;
+        count: number;
+      }
+    >();
+
+    for (const row of rows) {
+      const createdAt = new Date(row.createdAt);
+      createdAt.setDate(createdAt.getDate() - 1); // Workaround: Offset due to timezone
+
+      const key = formatDateKey(createdAt);
+      const existing = totalsByDate.get(key);
+
+      if (existing) {
+        existing.count += row.count;
+      } else {
+        totalsByDate.set(key, {
+          createdAt,
+          count: row.count,
+        });
+      }
+    }
+
+    const orderedTotals = Array.from(totalsByDate.values()).sort(
+      (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
+    );
+
+    const configuration: ChartConfiguration = {};
+
+    const totalRecords: MultiLineRecord[] = orderedTotals.map(
+      ({ createdAt, count }) => ({
+        id: "total-ships",
+        name: "Gesamt",
+        createdAt,
+        count,
+      }),
+    );
+
+    const deltaRecords: MultiLineRecord[] = orderedTotals.flatMap(
+      ({ createdAt, count }, index) => {
+        if (index === 0) return [];
+
+        return [
+          {
+            id: "total-ships-delta",
+            name: "Veränderung zum Vortag",
+            createdAt,
+            count: count - orderedTotals[index - 1].count,
+          },
+        ];
+      },
+    );
+
+    const chartData = buildChartData(
+      [...totalRecords, ...deltaRecords],
+      configuration,
+    );
+
+    const series = chartData.series.map((serie) =>
+      serie.name === "Veränderung zum Vortag"
+        ? {
+            ...serie,
+            yAxisIndex: 1,
+          }
+        : serie,
+    );
+
+    return {
+      ...chartData,
+      series,
+      configuration,
+      yAxes: [
+        {
+          name: "Gesamt",
+          position: "left",
+        },
+        {
+          name: "Δ Vortag",
+          position: "right",
+        },
+      ],
+    } satisfies StatisticChartData;
+  }),
+);
+
 export const getDailyLoginStatisticChart = cache(
   withTrace("getDailyLoginStatisticChart", async () => {
     const authentication = await requireAuthentication();
@@ -265,22 +376,67 @@ export const getDailyLoginStatisticChart = cache(
       },
     });
 
-    const records: MultiLineRecord[] = rows.map((row) => {
+    const orderedLogins = rows.map((row) => {
       const createdAt = new Date(row.date);
       createdAt.setDate(createdAt.getDate() + 1); // Workaround: Offset due to timezone
 
       return {
-        id: "logins",
-        name: "Logins",
         createdAt,
         count: row.count,
       };
     });
 
-    return {
-      ...buildChartData(records, configuration),
+    const totalRecords: MultiLineRecord[] = orderedLogins.map((entry) => ({
+      id: "logins",
+      name: "Logins",
+      createdAt: entry.createdAt,
+      count: entry.count,
+    }));
+
+    const deltaRecords: MultiLineRecord[] = orderedLogins.flatMap(
+      (entry, index) => {
+        if (index === 0) return [];
+
+        return [
+          {
+            id: "logins-delta",
+            name: "Veränderung zum Vortag",
+            createdAt: entry.createdAt,
+            count: entry.count - orderedLogins[index - 1].count,
+          },
+        ];
+      },
+    );
+
+    const chartData = buildChartData(
+      [...totalRecords, ...deltaRecords],
       configuration,
-    };
+    );
+
+    const series = chartData.series.map((serie) =>
+      serie.name === "Veränderung zum Vortag"
+        ? {
+            ...serie,
+            yAxisIndex: 1,
+          }
+        : serie,
+    );
+
+    return {
+      ...chartData,
+      series,
+      configuration,
+      yAxes: [
+        {
+          name: "Logins",
+          position: "left",
+        },
+        {
+          name: "Δ Vortag",
+          position: "right",
+        },
+      ],
+    } satisfies StatisticChartData;
   }),
 );
 
@@ -313,22 +469,65 @@ export const getEventsPerDayStatisticChart = cache(
       countsByDate.set(dateKey, existing + 1);
     }
 
-    const records: MultiLineRecord[] = options.axisPoints.map(
-      ({ key, timestamp }) => {
-        const createdAt = new Date(timestamp);
+    const orderedEvents = options.axisPoints.map(({ key, timestamp }) => {
+      const createdAt = new Date(timestamp);
 
-        return {
-          id: "events",
-          name: "Events",
-          createdAt,
-          count: countsByDate.get(key) ?? 0,
-        };
+      return {
+        createdAt,
+        count: countsByDate.get(key) ?? 0,
+      };
+    });
+
+    const totalRecords: MultiLineRecord[] = orderedEvents.map((entry) => ({
+      id: "events",
+      name: "Events",
+      createdAt: entry.createdAt,
+      count: entry.count,
+    }));
+
+    const deltaRecords: MultiLineRecord[] = orderedEvents.flatMap(
+      (entry, index) => {
+        if (index === 0) return [];
+
+        return [
+          {
+            id: "events-delta",
+            name: "Veränderung zum Vortag",
+            createdAt: entry.createdAt,
+            count: entry.count - orderedEvents[index - 1].count,
+          },
+        ];
       },
     );
 
-    return {
-      ...buildChartData(records, configuration),
+    const chartData = buildChartData(
+      [...totalRecords, ...deltaRecords],
       configuration,
-    };
+    );
+
+    const series = chartData.series.map((serie) =>
+      serie.name === "Veränderung zum Vortag"
+        ? {
+            ...serie,
+            yAxisIndex: 1,
+          }
+        : serie,
+    );
+
+    return {
+      ...chartData,
+      series,
+      configuration,
+      yAxes: [
+        {
+          name: "Events",
+          position: "left",
+        },
+        {
+          name: "Δ Vortag",
+          position: "right",
+        },
+      ],
+    } satisfies StatisticChartData;
   }),
 );

@@ -67,6 +67,10 @@ export const StatisticChart = ({ chart }: Props) => {
   useEffect(() => {
     if (!chartRef.current) return;
 
+    const resolvedYAxes = chart.yAxes?.length
+      ? chart.yAxes
+      : [{ position: "left" as const }];
+
     const option = {
       backgroundColor: "transparent",
       color: PALETTE,
@@ -85,16 +89,20 @@ export const StatisticChart = ({ chart }: Props) => {
         formatter: (params: CallbackDataParams | CallbackDataParams[]) => {
           const items = Array.isArray(params) ? params : [params];
 
-          const axisValue = items[0]?.value;
-          const axisTimestamp = Array.isArray(axisValue)
-            ? axisValue[0]
-            : axisValue;
+          const axisValueRaw =
+            items[0] && "axisValue" in items[0]
+              ? (items[0] as { axisValue?: number | string }).axisValue
+              : items[0]?.value;
+          const axisTimestamp =
+            typeof axisValueRaw === "number" || typeof axisValueRaw === "string"
+              ? Number(axisValueRaw)
+              : undefined;
           const dateLabel =
             typeof axisTimestamp === "number"
               ? formatDate(new Date(axisTimestamp), "short")
               : "";
 
-          let rows = items.slice().toSorted((a, b) => {
+          const sortedItems = items.slice().toSorted((a, b) => {
             const aValueRaw = Array.isArray(a.value) ? a.value[1] : a.value;
             const bValueRaw = Array.isArray(b.value) ? b.value[1] : b.value;
             const aValue =
@@ -104,10 +112,11 @@ export const StatisticChart = ({ chart }: Props) => {
             return bValue - aValue;
           });
 
-          if (chart.configuration?.top)
-            rows = rows.slice(0, chart.configuration.top);
+          const limitedItems = chart.configuration?.top
+            ? sortedItems.slice(0, chart.configuration.top)
+            : sortedItems;
 
-          rows = rows
+          const rowsHtml = limitedItems
             .map((item) => {
               const color =
                 typeof item.color === "string" ? item.color : "#ffffff";
@@ -134,33 +143,55 @@ export const StatisticChart = ({ chart }: Props) => {
 
               ${chart.configuration?.top ? `<p class="text-neutral-500 text-xs">Top ${chart.configuration.top}</p>` : ""}
 
-              ${rows}
+              ${rowsHtml}
             </div>
           `;
         },
       },
       xAxis: {
-        type: "time",
+        // Use a category axis so each data point renders exactly one label.
+        type: "category",
+        boundaryGap: false,
+        data: chart.axisTimestamps,
         axisLabel: {
           color: "#737373",
+          interval: 0,
           formatter: (value: number | string) =>
             formatDate(new Date(Number(value)), "short"),
+        },
+        axisTick: {
+          alignWithLabel: true,
         },
         splitLine: {
           show: false,
         },
       },
-      yAxis: {
-        type: "value",
-        axisLabel: {
-          color: "#737373",
-        },
-        splitLine: {
-          lineStyle: {
-            color: "rgba(255, 255, 255, 0.05)",
+      yAxis: resolvedYAxes.map((axis, index) => {
+        const axisLabelColor = axis.axisLabelColor ?? "#737373";
+
+        return {
+          type: "value",
+          position: axis.position ?? (index === 0 ? "left" : "right"),
+          name: axis.name,
+          axisLabel: {
+            color: axisLabelColor,
           },
-        },
-      },
+          nameTextStyle: {
+            color: axisLabelColor,
+          },
+          axisLine: {
+            lineStyle: {
+              color: axisLabelColor,
+            },
+          },
+          splitLine: {
+            show: index === 0,
+            lineStyle: {
+              color: "rgba(255, 255, 255, 0.05)",
+            },
+          },
+        };
+      }),
       series: chart.series.map((serie) => ({
         name: serie.name,
         type: "line",
@@ -171,10 +202,8 @@ export const StatisticChart = ({ chart }: Props) => {
         lineStyle: {
           width: 2,
         },
-        data: chart.axisTimestamps.map((timestamp, index) => [
-          timestamp,
-          serie.data[index] ?? null,
-        ]),
+        yAxisIndex: serie.yAxisIndex ?? 0,
+        data: chart.axisTimestamps.map((_, index) => serie.data[index] ?? null),
         symbol: "circle",
         symbolSize: 4,
         showSymbol: false,
