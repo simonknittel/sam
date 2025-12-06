@@ -1,4 +1,7 @@
-export const formatDate = (date?: Date | null, style?: "short" | "long") => {
+export const formatDate = (
+  date?: Date | null,
+  style?: "extra_short" | "short" | "long",
+) => {
   if (style === "long")
     return (
       date?.toLocaleDateString("de-DE", {
@@ -16,6 +19,15 @@ export const formatDate = (date?: Date | null, style?: "short" | "long") => {
       date?.toLocaleDateString("de-DE", {
         timeZone: "Europe/Berlin",
         year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }) || null
+    );
+
+  if (style === "extra_short")
+    return (
+      date?.toLocaleDateString("de-DE", {
+        timeZone: "Europe/Berlin",
         month: "2-digit",
         day: "2-digit",
       }) || null
