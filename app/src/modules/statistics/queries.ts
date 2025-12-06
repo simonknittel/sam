@@ -251,6 +251,65 @@ export const getVariantShipStatisticChart = cache(
   }),
 );
 
+export const getTotalShipStatisticChart = cache(
+  withTrace("getTotalShipStatisticChart", async () => {
+    const authentication = await requireAuthentication();
+    if (!(await authentication.authorize("globalStatistics", "read")))
+      forbidden();
+
+    const rows = await prisma.variantShipCount.findMany({
+      select: {
+        createdAt: true,
+        count: true,
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
+
+    const totalsByDate = new Map<
+      string,
+      {
+        createdAt: Date;
+        count: number;
+      }
+    >();
+
+    for (const row of rows) {
+      const createdAt = new Date(row.createdAt);
+      createdAt.setDate(createdAt.getDate() - 1); // Workaround: Offset due to timezone
+
+      const key = formatDateKey(createdAt);
+      const existing = totalsByDate.get(key);
+
+      if (existing) {
+        existing.count += row.count;
+      } else {
+        totalsByDate.set(key, {
+          createdAt,
+          count: row.count,
+        });
+      }
+    }
+
+    const configuration: ChartConfiguration = {};
+
+    const records: MultiLineRecord[] = Array.from(totalsByDate.values()).map(
+      ({ createdAt, count }) => ({
+        id: "total-ships",
+        name: "Gesamt",
+        createdAt,
+        count,
+      }),
+    );
+
+    return {
+      ...buildChartData(records, configuration),
+      configuration,
+    };
+  }),
+);
+
 export const getDailyLoginStatisticChart = cache(
   withTrace("getDailyLoginStatisticChart", async () => {
     const authentication = await requireAuthentication();

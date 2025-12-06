@@ -6,6 +6,7 @@ import {
   getDailyLoginStatisticChart,
   getEventsPerDayStatisticChart,
   getRoleCitizenStatisticChart,
+  getTotalShipStatisticChart,
   getVariantShipStatisticChart,
 } from "@/modules/statistics/queries";
 import { type Metadata } from "next";
@@ -18,12 +19,14 @@ export default async function Page() {
   const authentication = await requireAuthenticationPage("/app/statistics");
   await authentication.authorizePage("globalStatistics", "read");
 
-  const [roleChart, variantChart, loginChart, eventsChart] = await Promise.all([
-    getRoleCitizenStatisticChart(),
-    getVariantShipStatisticChart(),
-    getDailyLoginStatisticChart(),
-    getEventsPerDayStatisticChart(),
-  ]);
+  const [roleChart, variantChart, totalShipsChart, loginChart, eventsChart] =
+    await Promise.all([
+      getRoleCitizenStatisticChart(),
+      getVariantShipStatisticChart(),
+      getTotalShipStatisticChart(),
+      getDailyLoginStatisticChart(),
+      getEventsPerDayStatisticChart(),
+    ]);
 
   return (
     <>
@@ -32,7 +35,14 @@ export default async function Page() {
         {formatDate(roleChart.dateRange.from, "short")} - jetzt
       </p>
 
-      <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <StatisticSection
+          title="Flotte gesamt"
+          description="Gesamtanzahl eingetragener Schiffe"
+          chart={totalShipsChart}
+          className="flex-1"
+        />
+
         <StatisticSection
           title="Flotte"
           description="Anzahl eingetragener Schiffe pro Variante"
