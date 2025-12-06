@@ -47,7 +47,7 @@ export default async function Page() {
       <Day heading="6. Dezember 2025">
         {showGlobalStatistics ? (
           <DayItem
-            heading="SILC Tagesstatistik"
+            heading="Neue Statistiken"
             badges={["Neu", "Statistiken"]}
           >
             <p>
