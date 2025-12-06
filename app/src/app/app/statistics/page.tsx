@@ -6,7 +6,10 @@ import {
   getDailyLoginStatisticChart,
   getDailySilcStatisticChart,
   getEventsPerDayStatisticChart,
+  getRegisteredUserStatisticChart,
   getRoleCitizenStatisticChart,
+  getTotalCitizenStatisticChart,
+  getTotalOrganizationStatisticChart,
   getTotalShipStatisticChart,
   getVariantShipStatisticChart,
 } from "@/modules/statistics/queries";
@@ -24,6 +27,9 @@ export default async function Page() {
     roleChart,
     variantChart,
     totalShipsChart,
+    totalCitizensChart,
+    totalOrganizationsChart,
+    registeredUsersChart,
     loginChart,
     eventsChart,
     silcChart,
@@ -31,6 +37,9 @@ export default async function Page() {
     getRoleCitizenStatisticChart(),
     getVariantShipStatisticChart(),
     getTotalShipStatisticChart(),
+    getTotalCitizenStatisticChart(),
+    getTotalOrganizationStatisticChart(),
+    getRegisteredUserStatisticChart(),
     getDailyLoginStatisticChart(),
     getEventsPerDayStatisticChart(),
     getDailySilcStatisticChart(),
@@ -59,16 +68,37 @@ export default async function Page() {
         />
 
         <StatisticSection
-          title="Rollen"
-          description="Anzahl Citizens pro Rolle"
-          chart={roleChart}
+          title="Logins"
+          description="Anzahl unique Logins pro Tag"
+          chart={loginChart}
           className="flex-1"
         />
 
         <StatisticSection
-          title="Logins"
-          description="Anzahl unique Logins pro Tag"
-          chart={loginChart}
+          title="Citizens"
+          description="Gesamtanzahl erfasster Citizens"
+          chart={totalCitizensChart}
+          className="flex-1"
+        />
+
+        <StatisticSection
+          title="Organisationen"
+          description="Gesamtanzahl erfasster Organisationen"
+          chart={totalOrganizationsChart}
+          className="flex-1"
+        />
+
+        <StatisticSection
+          title="Registrierte Benutzer"
+          description="Gesamtanzahl registrierter Benutzer"
+          chart={registeredUsersChart}
+          className="flex-1"
+        />
+
+        <StatisticSection
+          title="Rollen"
+          description="Anzahl Citizens pro Rolle"
+          chart={roleChart}
           className="flex-1"
         />
 

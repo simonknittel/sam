@@ -51,8 +51,13 @@ export default async function Page() {
             badges={["Neu", "Statistiken"]}
           >
             <p>
-              Die Statistiken zeigen nun auch, wie viel neues SILC an jedem Tag
-              erstellt wurde. Die Anzeige enthält ebenso den Vergleich zum
+              Die Statistiken zeigen nun auch, wie viel neue SILC an jedem Tag
+              verteilt wurden. Zusätzlich gibt es Verläufe für die Anzahl an
+              registrierten Nutzern, Citizens und Organisationen.
+            </p>
+
+            <p>
+              Alle Diagramme enthalten einen direkten Vergleich zum
               Vortag.
             </p>
 
