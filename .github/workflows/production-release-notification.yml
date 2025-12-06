@@ -14,9 +14,9 @@ jobs:
     steps:
       - name: Send release event
         env:
-          HOST: ${{ env.SOKETI_HOST }}
-          APP_ID: ${{ env.SOKETI_APP_ID }}
-          APP_KEY: ${{ env.SOKETI_APP_KEY }}
+          HOST: ${{ vars.SOKETI_HOST }}
+          APP_ID: ${{ vars.SOKETI_APP_ID }}
+          APP_KEY: ${{ vars.SOKETI_APP_KEY }}
           APP_SECRET: ${{ secrets.SOKETI_APP_SECRET }}
         shell: bash
         run: |
