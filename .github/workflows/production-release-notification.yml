@@ -1,0 +1,41 @@
+name: Production release notification
+
+on:
+  deployment_status:
+
+jobs:
+  notify_soketi:
+    name: Notify Soketi
+    if: >-
+      github.event.deployment.environment == 'Production' &&
+      github.event.deployment_status.state == 'success'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Send release event
+        env:
+          HOST: ${{ env.SOKETI_HOST }}
+          APP_ID: ${{ env.SOKETI_APP_ID }}
+          APP_KEY: ${{ env.SOKETI_APP_KEY }}
+          APP_SECRET: ${{ secrets.SOKETI_APP_SECRET }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          for var in HOST APP_ID APP_KEY APP_SECRET; do
+            if [ -z "${!var:-}" ]; then
+              echo "Missing required environment variable: $var" >&2
+              exit 1
+            fi
+          done
+
+          BODY='{"name":"new","channels":["releases"],"data":"{}"}'
+          BODY_MD5=$(printf '%s' "$BODY" | md5sum | awk '{print $1}')
+          TIMESTAMP=$(date -u +%s)
+
+          QUERY_BASE="auth_key=${APP_KEY}&auth_timestamp=${TIMESTAMP}&auth_version=1.0&body_md5=${BODY_MD5}"
+          STRING_TO_SIGN=$'POST\n/apps/'"${APP_ID}"$'/events\n'"${QUERY_BASE}"
+          SIGNATURE=$(printf '%s' "$STRING_TO_SIGN" | openssl dgst -sha256 -hmac "$APP_SECRET" -binary | xxd -p -c 256)
+
+          curl -X POST "${HOST}/apps/${APP_ID}/events?${QUERY_BASE}&auth_signature=${SIGNATURE}" \
+            -H "Content-Type: application/json" \
+            -d "$BODY"
