@@ -4,6 +4,9 @@ import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { VariantStatus, type Manufacturer, type Series } from "@prisma/client";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
+import { getActiveOrganizationMemberships } from "../organizations/queries";
+
+const ORG_ID = "cm4wm57sw0001opxo2c8oq0o0"; // TODO: Implement UI for configuring org ID
 
 export const getOrgFleet = cache(
   withTrace(
@@ -12,29 +15,55 @@ export const getOrgFleet = cache(
       const authentication = await requireAuthentication();
       if (!(await authentication.authorize("orgFleet", "read"))) forbidden();
 
-      return prisma.ship.findMany({
+      // Get discord IDs of all citizens with an active membership in the org
+      const memberships = await getActiveOrganizationMemberships(ORG_ID);
+      const discordIds = memberships
+        .map((membership) => membership.citizen.discordId)
+        .filter(Boolean) as string[];
+      if (discordIds.length === 0) return [];
+
+      // Get ships for all those citizens
+      const accounts = await prisma.account.findMany({
         where: {
-          variant: {
-            status: onlyFlightReady ? VariantStatus.FLIGHT_READY : undefined,
+          providerAccountId: {
+            in: discordIds,
           },
         },
-        include: {
-          variant: {
-            include: {
-              series: {
+        select: {
+          user: {
+            select: {
+              id: true,
+              ships: {
+                where: {
+                  variant: {
+                    status: onlyFlightReady
+                      ? VariantStatus.FLIGHT_READY
+                      : undefined,
+                  },
+                },
                 include: {
-                  manufacturer: {
+                  variant: {
                     include: {
-                      image: true,
+                      series: {
+                        include: {
+                          manufacturer: {
+                            include: {
+                              image: true,
+                            },
+                          },
+                        },
+                      },
+                      tags: true,
                     },
                   },
                 },
               },
-              tags: true,
             },
           },
         },
       });
+
+      return accounts.flatMap((account) => account.user.ships);
     },
   ),
 );

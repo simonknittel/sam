@@ -185,10 +185,7 @@ export const ActivityTile = async ({ className, id }: Props) => {
 
   return (
     <section
-      className={clsx(
-        className,
-        "rounded-primary p-4 lg:p-8 bg-neutral-800/50",
-      )}
+      className={clsx(className, "rounded-primary p-4 background-secondary")}
     >
       <h2 className="font-bold flex gap-2 items-center">
         <FaListAlt /> Aktivität
