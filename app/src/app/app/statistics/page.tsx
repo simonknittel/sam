@@ -6,6 +6,7 @@ import {
   getDailyLoginStatisticChart,
   getDailySilcStatisticChart,
   getEventsPerDayStatisticChart,
+  getRegisteredUserStatisticChart,
   getRoleCitizenStatisticChart,
   getTotalShipStatisticChart,
   getVariantShipStatisticChart,
@@ -24,6 +25,7 @@ export default async function Page() {
     roleChart,
     variantChart,
     totalShipsChart,
+    registeredUsersChart,
     loginChart,
     eventsChart,
     silcChart,
@@ -31,6 +33,7 @@ export default async function Page() {
     getRoleCitizenStatisticChart(),
     getVariantShipStatisticChart(),
     getTotalShipStatisticChart(),
+    getRegisteredUserStatisticChart(),
     getDailyLoginStatisticChart(),
     getEventsPerDayStatisticChart(),
     getDailySilcStatisticChart(),
@@ -59,16 +62,16 @@ export default async function Page() {
         />
 
         <StatisticSection
-          title="Rollen"
-          description="Anzahl Citizens pro Rolle"
-          chart={roleChart}
+          title="Logins"
+          description="Anzahl unique Logins pro Tag"
+          chart={loginChart}
           className="flex-1"
         />
 
         <StatisticSection
-          title="Logins"
-          description="Anzahl unique Logins pro Tag"
-          chart={loginChart}
+          title="Registrierte Benutzer"
+          description="Gesamtanzahl registrierter Benutzer"
+          chart={registeredUsersChart}
           className="flex-1"
         />
 
@@ -83,6 +86,13 @@ export default async function Page() {
           title="SILC"
           description="Neu generierte SILC-Menge pro Tag"
           chart={silcChart}
+          className="flex-1"
+        />
+
+        <StatisticSection
+          title="Rollen"
+          description="Anzahl Citizens pro Rolle"
+          chart={roleChart}
           className="flex-1"
         />
       </div>

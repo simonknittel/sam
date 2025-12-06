@@ -52,8 +52,9 @@ export default async function Page() {
           >
             <p>
               Die Statistiken zeigen nun auch, wie viel neues SILC an jedem Tag
-              erstellt wurde. Die Anzeige enthält ebenso den Vergleich zum
-              Vortag.
+              verteilt wurde. Auch gibt es nun einen Verlauf für die Anzahl an
+              registrierten Nutzern. Die Grafiken erhalten zudem einen Vergleich
+              zum Vortag.
             </p>
 
             <p>
