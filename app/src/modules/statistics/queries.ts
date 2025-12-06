@@ -33,6 +33,13 @@ interface NormalizedOptions {
 export interface StatisticSeries {
   name: string;
   data: (number | null)[];
+  yAxisIndex?: number;
+}
+
+export interface StatisticYAxis {
+  name?: string;
+  position?: "left" | "right";
+  axisLabelColor?: string;
 }
 
 export interface StatisticChartData {
@@ -44,6 +51,7 @@ export interface StatisticChartData {
   };
   hasData: boolean;
   configuration?: ChartConfiguration;
+  yAxes?: StatisticYAxis[];
 }
 
 interface ChartOptions {
@@ -292,9 +300,13 @@ export const getTotalShipStatisticChart = cache(
       }
     }
 
+    const orderedTotals = Array.from(totalsByDate.values()).sort(
+      (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
+    );
+
     const configuration: ChartConfiguration = {};
 
-    const records: MultiLineRecord[] = Array.from(totalsByDate.values()).map(
+    const totalRecords: MultiLineRecord[] = orderedTotals.map(
       ({ createdAt, count }) => ({
         id: "total-ships",
         name: "Gesamt",
@@ -303,10 +315,44 @@ export const getTotalShipStatisticChart = cache(
       }),
     );
 
-    return {
-      ...buildChartData(records, configuration),
+    const deltaRecords: MultiLineRecord[] = orderedTotals.map(
+      ({ createdAt, count }, index) => ({
+        id: "total-ships-delta",
+        name: "Veränderung zum Vortag",
+        createdAt,
+        count: index === 0 ? 0 : count - orderedTotals[index - 1].count,
+      }),
+    );
+
+    const chartData = buildChartData(
+      [...totalRecords, ...deltaRecords],
       configuration,
-    };
+    );
+
+    const series = chartData.series.map((serie) =>
+      serie.name === "Veränderung zum Vortag"
+        ? {
+            ...serie,
+            yAxisIndex: 1,
+          }
+        : serie,
+    );
+
+    return {
+      ...chartData,
+      series,
+      configuration,
+      yAxes: [
+        {
+          name: "Gesamt",
+          position: "left",
+        },
+        {
+          name: "Δ Vortag",
+          position: "right",
+        },
+      ],
+    } satisfies StatisticChartData;
   }),
 );
 
