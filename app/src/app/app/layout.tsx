@@ -5,6 +5,7 @@ import { SessionProviderContainer } from "@/modules/auth/components/SessionProvi
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { CreateContextProvider } from "@/modules/common/components/CreateContext";
 import ImpersonationBannerContainer from "@/modules/common/components/ImpersonationBannerContainer";
+import { NewReleaseToast } from "@/modules/common/components/NewReleaseToast";
 import QueryClientProviderContainer from "@/modules/common/components/QueryClientProviderContainer";
 import { ServiceWorkerLoader } from "@/modules/common/components/ServiceWorkerLoader";
 import { getUnleashFlag } from "@/modules/common/utils/getUnleashFlag";
@@ -60,6 +61,8 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
                       }
                     />
                   )}
+
+                  <NewReleaseToast />
                 </NextIntlClientProvider>
               </ChannelsProvider>
             </TRPCReactProvider>
