@@ -157,7 +157,7 @@ export const StatisticChart = ({ chart }: Props) => {
           color: "#737373",
           interval: 0,
           formatter: (value: number | string) =>
-            formatDate(new Date(Number(value)), "short"),
+            formatDate(new Date(Number(value)), "extra_short"),
         },
         axisTick: {
           alignWithLabel: true,
