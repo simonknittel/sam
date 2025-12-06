@@ -8,6 +8,8 @@ import {
   getEventsPerDayStatisticChart,
   getRegisteredUserStatisticChart,
   getRoleCitizenStatisticChart,
+  getTotalCitizenStatisticChart,
+  getTotalOrganizationStatisticChart,
   getTotalShipStatisticChart,
   getVariantShipStatisticChart,
 } from "@/modules/statistics/queries";
@@ -25,6 +27,8 @@ export default async function Page() {
     roleChart,
     variantChart,
     totalShipsChart,
+    totalCitizensChart,
+    totalOrganizationsChart,
     registeredUsersChart,
     loginChart,
     eventsChart,
@@ -33,6 +37,8 @@ export default async function Page() {
     getRoleCitizenStatisticChart(),
     getVariantShipStatisticChart(),
     getTotalShipStatisticChart(),
+    getTotalCitizenStatisticChart(),
+    getTotalOrganizationStatisticChart(),
     getRegisteredUserStatisticChart(),
     getDailyLoginStatisticChart(),
     getEventsPerDayStatisticChart(),
@@ -69,9 +75,30 @@ export default async function Page() {
         />
 
         <StatisticSection
+          title="Citizens"
+          description="Gesamtanzahl erfasster Citizens"
+          chart={totalCitizensChart}
+          className="flex-1"
+        />
+
+        <StatisticSection
+          title="Organisationen"
+          description="Gesamtanzahl erfasster Organisationen"
+          chart={totalOrganizationsChart}
+          className="flex-1"
+        />
+
+        <StatisticSection
           title="Registrierte Benutzer"
           description="Gesamtanzahl registrierter Benutzer"
           chart={registeredUsersChart}
+          className="flex-1"
+        />
+
+        <StatisticSection
+          title="Rollen"
+          description="Anzahl Citizens pro Rolle"
+          chart={roleChart}
           className="flex-1"
         />
 
@@ -86,13 +113,6 @@ export default async function Page() {
           title="SILC"
           description="Neu generierte SILC-Menge pro Tag"
           chart={silcChart}
-          className="flex-1"
-        />
-
-        <StatisticSection
-          title="Rollen"
-          description="Anzahl Citizens pro Rolle"
-          chart={roleChart}
           className="flex-1"
         />
       </div>
