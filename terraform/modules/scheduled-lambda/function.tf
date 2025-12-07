@@ -18,7 +18,6 @@ resource "aws_lambda_function" "main" {
   }
 
   layers = [
-    "arn:aws:lambda:eu-central-1:187925254637:layer:AWS-Parameters-and-Secrets-Lambda-Extension-Arm64:21", # https://docs.aws.amazon.com/systems-manager/latest/userguide/ps-integration-lambda-extensions.html#ps-integration-lambda-extensions-add
     "arn:aws:lambda:eu-central-1:580247275435:layer:LambdaInsightsExtension-Arm64:25" # https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Lambda-Insights-extension-versionsARM.html
   ]
 

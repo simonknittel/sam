@@ -1,47 +1,49 @@
-import { z } from "zod";
+import { GetParametersCommand, SSMClient } from "@aws-sdk/client-ssm";
 import { log } from "./logger";
+
+const ssmClient = new SSMClient({});
 
 export const fetchParameters = async <T extends Record<string, string>>(
 	parameters: T,
 ): Promise<T> => {
-	if (!process.env.AWS_SESSION_TOKEN)
-		throw new Error("Missing AWS_SESSION_TOKEN for fetching parameter store");
+	const entries = Object.entries(parameters);
 
-	const responses = await Promise.all(
-		Object.entries(parameters).map(async ([key, name]) => {
-			const uriEncodedParameterName = encodeURIComponent(name);
+	if (entries.length === 0) {
+		return {} as T;
+	}
 
-			const response = await fetch(
-				`http://localhost:2773/systemsmanager/parameters/get?name=${uriEncodedParameterName}&withDecryption=true`,
-				{
-					headers: {
-						// biome-ignore lint/style/noNonNullAssertion: <explanation>
-						"X-Aws-Parameters-Secrets-Token": process.env.AWS_SESSION_TOKEN!,
-					},
-				},
-			);
+	try {
+		const names = entries.map(([, name]) => name);
+		const command = new GetParametersCommand({
+			Names: names,
+			WithDecryption: true,
+		});
+		const response = await ssmClient.send(command);
 
-			if (!response.ok) {
-				void log.error("Failed to fetch parameter", {
-					name,
-					status: response.status,
-					body: await response.text(),
-				});
-				throw new Error("Failed to fetch parameter");
+		const valueMap = new Map<string, string>();
+		for (const parameter of response.Parameters ?? []) {
+			if (parameter?.Name && typeof parameter.Value === "string") {
+				valueMap.set(parameter.Name, parameter.Value);
 			}
+		}
 
-			const body = await response.json();
-			const parameter = parameterSchema.parse(body);
+		const invalidParameters = response.InvalidParameters ?? [];
+		const missingParameters = names.filter((name) => !valueMap.has(name));
 
-			return [key, parameter.Parameter.Value];
-		}),
-	);
+		if (invalidParameters.length > 0 || missingParameters.length > 0) {
+			void log.error("Failed to fetch parameter", {
+				invalidParameters,
+				missingParameters,
+			});
+			throw new Error("Failed to fetch parameter");
+		}
 
-	return Object.fromEntries(responses);
+		const resolvedEntries = entries.map(([key, name]) => [key, valueMap.get(name)!]);
+		return Object.fromEntries(resolvedEntries);
+	} catch (error) {
+		void log.error("Failed to fetch parameter", { error });
+		throw error instanceof Error
+			? error
+			: new Error("Failed to fetch parameter");
+	}
 };
-
-const parameterSchema = z.object({
-	Parameter: z.object({
-		Value: z.string(),
-	}),
-});
