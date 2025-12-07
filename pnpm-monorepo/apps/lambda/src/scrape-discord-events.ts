@@ -14,6 +14,10 @@ export const handler: ScheduledHandler = async (event, context) => {
   return initializeRequestContext(context.awsRequestId, async () => {
     try {
       const { data: _futureEventsFromDiscord } = await getEvents();
+      void log.info("Fetched events from Discord", {
+        count: _futureEventsFromDiscord.length,
+        eventIds: _futureEventsFromDiscord.map((event) => event.id),
+      });
 
       // Shuffle array so rate limits not always hitting the same events
       const futureEventsFromDiscord = shuffle(_futureEventsFromDiscord);
