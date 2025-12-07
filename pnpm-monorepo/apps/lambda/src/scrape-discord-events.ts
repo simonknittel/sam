@@ -62,6 +62,11 @@ export const handler: ScheduledHandler = async (event, context) => {
                 discordImage: futureEventFromDiscord.image,
               },
             });
+
+            void log.info("Updated event from Discord", {
+              eventId: existingEventFromDatabase.id,
+              discordEventId: futureEventFromDiscord.id,
+            });
           }
 
           const hasChangesForNotification =
@@ -106,6 +111,11 @@ export const handler: ScheduledHandler = async (event, context) => {
             },
           });
 
+          void log.info("Created new event from Discord", {
+            eventId: newEvent.id,
+            discordEventId: futureEventFromDiscord.id,
+          });
+
           await triggerNotifications([
             {
               type: "EventCreated",
@@ -118,6 +128,8 @@ export const handler: ScheduledHandler = async (event, context) => {
 
         await updateParticipants(futureEventFromDiscord);
       }
+
+      void log.info("Finished scraping Discord events");
     } catch (error) {
       // @ts-expect-error
       void log.error("Failed to scrape Discord events", error);
