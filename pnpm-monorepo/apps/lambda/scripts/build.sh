@@ -37,6 +37,7 @@ for file in "src"/*.ts; do
 		--format=esm \
 		--platform=node \
 		--target=node24 \
+		--sourcemap \
 		--minify \
 		--metafile=$OUTPUT_DIRECTORY/$FUNCTION_NAME/meta.json \
 		--external:@aws-sdk \

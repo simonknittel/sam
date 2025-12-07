@@ -33,7 +33,8 @@ resource "aws_lambda_function" "main" {
     variables = merge(
       {
         TZ = "Europe/Berlin",
-        NODE_ENV = "production"
+        NODE_ENV = "production",
+        NODE_OPTIONS = "--enable-source-maps"
       },
       var.environment_variables
     )
