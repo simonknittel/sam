@@ -44,6 +44,7 @@ resource "aws_iam_role_policy" "main_parameter_store" {
         Action = [
           "kms:Decrypt",
           "ssm:GetParameter",
+          "ssm:GetParameters",
         ]
         Effect = "Allow"
         Resource = concat(
