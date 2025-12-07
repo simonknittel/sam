@@ -50,9 +50,20 @@ resource "aws_iam_role_policy" "main_parameter_store" {
           [
             data.aws_kms_alias.ssm.target_key_arn,
           ],
-          tolist(aws_ssm_parameter.custom[*].arn),
+          [for param in var.parameters : "arn:aws:ssm:eu-central-1:${var.account_id}:parameter${param}"]
         )
-      },
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "main_sqs" {
+  role = aws_iam_role.main.id
+  name = "sqs"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
       {
         # https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-configure-lambda-function-trigger.html#configure-lambda-function-trigger-prerequisites
         Action = [
@@ -64,7 +75,18 @@ resource "aws_iam_role_policy" "main_parameter_store" {
         Resource = [
           aws_sqs_queue.main.arn
         ]
-      },
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "main_dynamodb" {
+  role = aws_iam_role.main.id
+  name = "dynamodb"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
       {
         Action = [
           "dynamodb:GetItem",
@@ -101,11 +123,4 @@ resource "aws_iam_role_policy" "main_eventbridge" {
 
 data "aws_kms_alias" "ssm" {
   name = "alias/aws/ssm"
-}
-
-resource "aws_ssm_parameter" "custom" {
-  count = length(var.parameters)
-  type  = "SecureString"
-  name  = "/${var.function_name}/${var.parameters[count.index].name}"
-  value = var.parameters[count.index].value
 }

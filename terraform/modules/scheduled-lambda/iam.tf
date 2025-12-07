@@ -51,6 +51,30 @@ resource "aws_iam_role_policy_attachment" "main_aws_lambda_role" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaRole"
 }
 
+resource "aws_iam_role_policy" "main_parameter_store" {
+  role = aws_iam_role.main.id
+  name = "parameter-store"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "kms:Decrypt",
+          "ssm:GetParameter",
+        ]
+        Effect = "Allow"
+        Resource = concat(
+          [
+            data.aws_kms_alias.ssm.target_key_arn,
+          ],
+          [for param in var.parameters : "arn:aws:ssm:eu-central-1:${var.account_id}:parameter${param}"]
+        )
+      }
+    ]
+  })
+}
+
 resource "aws_iam_role_policy" "main_eventbridge" {
   role = aws_iam_role.main.id
   name = "eventbridge"
@@ -69,4 +93,8 @@ resource "aws_iam_role_policy" "main_eventbridge" {
       }
     ]
   })
+}
+
+data "aws_kms_alias" "ssm" {
+  name = "alias/aws/ssm"
 }

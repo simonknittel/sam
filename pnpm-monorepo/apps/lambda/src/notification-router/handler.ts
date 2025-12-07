@@ -1,6 +1,5 @@
 import { z } from "zod";
-import { log } from "../../common/logger";
-import "./env";
+import { log } from "../common/logger";
 import { EventCreatedHandler } from "./type-handlers/EventCreated";
 import { EventDeletedHandler } from "./type-handlers/EventDeleted";
 import { EventLineupEnabledHandler } from "./type-handlers/EventLineupEnabled";

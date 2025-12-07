@@ -1,6 +1,6 @@
 import { prisma, type Entity, type Role } from "@sam-monorepo/database";
-import { log } from "../../common/logger";
-import { captureAsyncFunc } from "../../common/xray";
+import { log } from "../common/logger";
+import { captureAsyncFunc } from "../common/xray";
 import { getRoleSalaries } from "./getRoleSalaries";
 import { updateCitizensSilcBalances } from "./updateCitizensSilcBalances";
 

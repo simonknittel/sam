@@ -16,12 +16,9 @@
 1. Create environments
    1. `terraform-test`
    2. `terraform-prod`
-2. Create environment secrets
-   - `EMAIL_FUNCTION_PARAMETERS`
-      - `[{"name":"...","value":"..."}]`
-3. Create environment variables
+2. Create environment variables
    - `IAM_ROLE`
-4. Enable "Allow GitHub Actions to create and approve pull requests" in Settings/Actions/General/Workflow permissions
+3. Enable "Allow GitHub Actions to create and approve pull requests" in Settings/Actions/General/Workflow permissions
 
 ## 5. Set up AWS
 

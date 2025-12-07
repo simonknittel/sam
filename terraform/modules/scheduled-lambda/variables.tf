@@ -2,6 +2,10 @@ variable "function_name" {
   type = string
 }
 
+variable "runtime" {
+  type    = string
+}
+
 variable "environment_variables" {
   type      = map(string)
   sensitive = true
@@ -35,4 +39,9 @@ variable "event_bus" {
   type = object({
     arn = string
   })
+}
+
+variable "parameters" {
+  type = list(string)
+  default = []
 }

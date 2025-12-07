@@ -1,6 +1,6 @@
 import { prisma } from "@sam-monorepo/database";
-import { log } from "../../common/logger";
-import { captureAsyncFunc } from "../../common/xray";
+import { log } from "../common/logger";
+import { captureAsyncFunc } from "../common/xray";
 
 export const countCitizensPerRole = async () => {
   await captureAsyncFunc("countCitizensPerRole", async () => {

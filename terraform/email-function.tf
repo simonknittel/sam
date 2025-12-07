@@ -9,7 +9,9 @@ module "email_function" {
   event_bus_detail_type          = "EmailRequested"
   dynamodb                       = aws_dynamodb_table.sqs_processed_requests
   runtime                        = "nodejs20.x"
-  parameters                     = var.email_function_parameters
   batch_size                     = 10
   batch_window                   = 30
+  parameters = [
+    "/mailgun/api_key",
+  ]
 }
