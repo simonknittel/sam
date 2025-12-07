@@ -19,9 +19,9 @@ echo "Cleaning up old build..."
 rm -rf $OUTPUT_DIRECTORY $OUTPUT_DIRECTORY.zip
 
 # Get all functions
-FUNCTION_FILES=$(find src/functions -maxdepth 1 -type f -name "*.ts")
+FUNCTION_FILES=$(find src -maxdepth 1 -type f -name "*.ts")
 
-for file in "src/functions"/*.ts; do
+for file in "src"/*.ts; do
 	FUNCTION_FILENAME=$(basename "$file")
 	FUNCTION_NAME="${FUNCTION_FILENAME%.ts}"
 
@@ -31,7 +31,7 @@ for file in "src/functions"/*.ts; do
 	# - `--external:@aws-sdk` excludes any imported AWS SDKs from the bundle since they are already provided by the AWS Lambda runtime.
 	# - The banner is needed to allow usage of `require` in ESM modules (see https://github.com/aws/aws-sam-cli/issues/4827)
 	echo "Bundling $FUNCTION_NAME..."
-	esbuild src/functions/$FUNCTION_NAME.ts \
+	esbuild src/$FUNCTION_NAME.ts \
 		--bundle \
 		--outfile=$OUTPUT_DIRECTORY/$FUNCTION_NAME/index.mjs \
 		--format=esm \

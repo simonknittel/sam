@@ -1,6 +1,6 @@
 import { prisma } from "@sam-monorepo/database";
-import { getAuecPerSilc } from "../../../common/profit-distribution/utils/getAuecPerSilc";
-import { getTotalSilc } from "../../../common/profit-distribution/utils/getTotalSilc";
+import { getAuecPerSilc } from "../getAuecPerSilc";
+import { getTotalSilc } from "../getTotalSilc";
 import { publishWebPushNotifications } from "../web-push";
 
 interface Change {

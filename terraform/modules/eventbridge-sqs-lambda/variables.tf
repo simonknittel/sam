@@ -18,12 +18,8 @@ variable "provisioned_concurrent_executions" {
 }
 
 variable "parameters" {
-  type = list(object({
-    name  = string
-    value = string
-  }))
-  default   = []
-  sensitive = true
+  type = list(string)
+  default = []
 }
 
 variable "account_id" {

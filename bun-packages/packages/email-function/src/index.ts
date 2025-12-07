@@ -30,8 +30,7 @@ export const handler: SQSHandler = async (event) => {
 			}
 
 			const parameters = await fetchParameters({
-				// deepcode ignore HardcodedNonCryptoSecret: This is not the actual secret but a reference to the secret in the parameters store
-				mailgunApiKey: "/email-function/mailgun-api-key",
+				mailgunApiKey: "/mailgun/api_key",
 			});
 
 			await main({

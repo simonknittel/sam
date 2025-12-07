@@ -1,6 +1,6 @@
 import { prisma } from "@sam-monorepo/database";
-import { log } from "../../common/logger";
-import { captureAsyncFunc } from "../../common/xray";
+import { log } from "../common/logger";
+import { captureAsyncFunc } from "../common/xray";
 
 export const countUniqueLogins = async () => {
   await captureAsyncFunc("countUniqueLogins", async () => {
@@ -17,17 +17,15 @@ export const countUniqueLogins = async () => {
     const endOfDay = new Date(previousDay);
     endOfDay.setHours(23, 59, 59, 999);
 
-    const uniqueLoginCount = await captureAsyncFunc(
-      "count unique logins",
-      () =>
-        prisma.user.count({
-          where: {
-            lastSeenAt: {
-              gte: startOfDay,
-              lte: endOfDay,
-            },
+    const uniqueLoginCount = await captureAsyncFunc("count unique logins", () =>
+      prisma.user.count({
+        where: {
+          lastSeenAt: {
+            gte: startOfDay,
+            lte: endOfDay,
           },
-        }),
+        },
+      }),
     );
 
     await captureAsyncFunc("save daily login count", () =>

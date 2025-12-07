@@ -4,7 +4,7 @@ resource "aws_lambda_function" "main" {
   role             = aws_iam_role.main.arn
   handler          = "index.handler"
   source_code_hash = filebase64sha256("${path.module}/placeholder.zip")
-  runtime          = "nodejs22.x"
+  runtime          = var.runtime
   timeout          = var.timeout
   memory_size      = var.memory_size
   architectures    = ["arm64"]
@@ -18,8 +18,9 @@ resource "aws_lambda_function" "main" {
   }
 
   layers = [
-     "arn:aws:lambda:eu-central-1:580247275435:layer:LambdaInsightsExtension-Arm64:25" # https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Lambda-Insights-extension-versionsARM.html
-   ]
+    "arn:aws:lambda:eu-central-1:187925254637:layer:AWS-Parameters-and-Secrets-Lambda-Extension-Arm64:21", # https://docs.aws.amazon.com/systems-manager/latest/userguide/ps-integration-lambda-extensions.html#ps-integration-lambda-extensions-add
+    "arn:aws:lambda:eu-central-1:580247275435:layer:LambdaInsightsExtension-Arm64:25" # https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Lambda-Insights-extension-versionsARM.html
+  ]
 
   lifecycle {
     # Changes to the function's source code are deployed using `.github/workflows/deploy-email-function.yml`
@@ -30,6 +31,12 @@ resource "aws_lambda_function" "main" {
   }
 
   environment {
-    variables = var.environment_variables
+    variables = merge(
+      {
+        TZ = "Europe/Berlin",
+        NODE_ENV = "production"
+      },
+      var.environment_variables
+    )
   }
 }

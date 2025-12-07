@@ -70,10 +70,9 @@ jobs:
         id: plan
         continue-on-error: true
         env:
-          TF_VAR_email_function_parameters: ${{ secrets.EMAIL_FUNCTION_PARAMETERS }}
-          TF_VAR_scrape_discord_events_function_environment_variables: ${{ secrets.SCRAPE_DISCORD_EVENTS_FUNCTION_ENVIRONMENT_VARIABLES }}
-          TF_VAR_midnight_automations_environment_variables: ${{ secrets.MIDNIGHT_AUTOMATIONS_ENVIRONMENT_VARIABLES }}
-          TF_VAR_notification_router_environment_variables: ${{ secrets.NOTIFICATION_ROUTER_ENVIRONMENT_VARIABLES }}
+          TF_VAR_scrape_discord_events_function_environment_variables: ${{ vars.SCRAPE_DISCORD_EVENTS_FUNCTION_ENVIRONMENT_VARIABLES }}
+          TF_VAR_midnight_automations_environment_variables: ${{ vars.MIDNIGHT_AUTOMATIONS_ENVIRONMENT_VARIABLES }}
+          TF_VAR_notification_router_environment_variables: ${{ vars.NOTIFICATION_ROUTER_ENVIRONMENT_VARIABLES }}
 
       - uses: actions/github-script@v8.0.0
         if: github.event_name == 'pull_request'

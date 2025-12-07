@@ -1,9 +1,12 @@
 import { prisma, type WebPushSubscription } from "@sam-monorepo/database";
 import { sendNotification, setVapidDetails, WebPushError } from "web-push";
-import { log } from "../../../common/logger";
-import { env } from "../env";
+import { log } from "../../common/logger";
 
-setVapidDetails(env.BASE_URL, env.PUBLIC_VAPID_KEY, env.PRIVATE_VAPID_KEY);
+setVapidDetails(
+  process.env.BASE_URL,
+  process.env.PUBLIC_VAPID_KEY,
+  process.env.PRIVATE_VAPID_KEY,
+);
 
 interface Payload {
   subscriptionId: WebPushSubscription["id"];

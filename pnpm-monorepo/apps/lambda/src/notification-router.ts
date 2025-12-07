@@ -1,6 +1,8 @@
+import "./notification-router/setup"; // must be first
+
 import type { SQSBatchItemFailure, SQSHandler } from "aws-lambda";
-import { log } from "../common/logger";
-import { initializeRequestContext } from "../common/requestContext";
+import { log } from "./common/logger";
+import { initializeRequestContext } from "./common/requestContext";
 import {
   isRequestProcessed,
   setRequestProcessed,
@@ -17,7 +19,7 @@ export const handler: SQSHandler = async (event, context) => {
 
     log.info("Processing SQS messages", {
       count: event.Records.length,
-    })
+    });
     for (const record of event.Records) {
       try {
         const body = bodySchema.parse(JSON.parse(record.body));
