@@ -1,7 +1,6 @@
 import { setTimeout } from "node:timers/promises";
 import { z } from "zod";
-import { log } from "../../../../common/logger";
-import { env } from "../../env";
+import { log } from "../../../common/logger";
 import { checkResponseForError } from "./checkResponseForError";
 import { memberSchema, userSchema } from "./schemas";
 
@@ -10,10 +9,10 @@ export const getEventUsers = async (discordId: string) => {
 
   for (let attempt = 0; attempt < 5; attempt++) {
     response = await fetch(
-      `https://discord.com/api/v10/guilds/${env.DISCORD_GUILD_ID}/scheduled-events/${discordId}/users?with_member=true`,
+      `https://discord.com/api/v10/guilds/${process.env.DISCORD_GUILD_ID}/scheduled-events/${discordId}/users?with_member=true`,
       {
         headers: new Headers({
-          Authorization: `Bot ${env.DISCORD_TOKEN}`,
+          Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}`,
         }),
       },
     );

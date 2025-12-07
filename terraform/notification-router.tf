@@ -12,4 +12,9 @@ module "notification_router" {
   environment_variables          = var.notification_router_environment_variables
   batch_size                     = 10
   batch_window                   = 30
+  parameters = [
+    "/database/connection_string",
+    "/web_push/private_vapid_key",
+    "/web_push/public_vapid_key",
+  ]
 }

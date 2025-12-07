@@ -3,9 +3,8 @@ import {
   PutEventsCommand,
   type PutEventsCommandInput,
 } from "@aws-sdk/client-eventbridge";
-import { log } from "../../common/logger";
-import { captureAsyncFunc } from "../../common/xray";
-import { env } from "./env";
+import { log } from "../common/logger";
+import { captureAsyncFunc } from "../common/xray";
 
 const client = new EventBridgeClient({
   region: "eu-central-1",
@@ -18,7 +17,7 @@ export const emitEvents = async (
   >[],
 ) => {
   await captureAsyncFunc("emitEvents", async () => {
-    if (!env.AWS_EVENT_BUS_ARN) {
+    if (!process.env.AWS_EVENT_BUS_ARN) {
       void log.info("Event bus ARN not configured, skipping emitting events.");
       return;
     }
@@ -31,7 +30,7 @@ export const emitEvents = async (
     const input: PutEventsCommandInput = {
       Entries: entries.map((entry) => ({
         ...entry,
-        EventBusName: env.AWS_EVENT_BUS_ARN,
+        EventBusName: process.env.AWS_EVENT_BUS_ARN,
       })),
     };
 

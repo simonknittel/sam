@@ -1,5 +1,5 @@
 import { prisma, type Entity } from "@sam-monorepo/database";
-import { captureAsyncFunc } from "../../common/xray";
+import { captureAsyncFunc } from "../common/xray";
 import { getSilcTransactionsOfAllCitizensWithoutAuthorization } from "./getSilcTransactionsOfAllCitizensWithoutAuthorization";
 
 export const updateCitizensSilcBalances = async (

@@ -1,6 +1,6 @@
 import { prisma, type Organization } from "@sam-monorepo/database";
-import { log } from "../../common/logger";
-import { captureAsyncFunc } from "../../common/xray";
+import { log } from "../common/logger";
+import { captureAsyncFunc } from "../common/xray";
 
 const ORG_ID = "cm4wm57sw0001opxo2c8oq0o0"; // TODO: Implement UI for configuring org ID
 

@@ -1,6 +1,6 @@
 import { prisma, RoleAssignmentChangeType } from "@sam-monorepo/database";
-import { log } from "../../common/logger";
-import { captureAsyncFunc } from "../../common/xray";
+import { log } from "../common/logger";
+import { captureAsyncFunc } from "../common/xray";
 
 export const removeExpiredRoles = async () => {
   await captureAsyncFunc("removeExpiredRoles", async () => {
