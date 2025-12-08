@@ -4,7 +4,7 @@ module "scrape_discord_events_function" {
   function_name         = "scrape-discord-events-function"
   account_id            = data.aws_caller_identity.current.account_id
   timeout               = 180
-  memory_size           = 256
+  memory_size           = 320
   environment_variables = merge(
     {
       AWS_EVENT_BUS_ARN = data.aws_cloudwatch_event_bus.default.arn
