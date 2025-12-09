@@ -5,9 +5,9 @@
     "build": "./scripts/build.sh"
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "3.939.0",
-    "@aws-sdk/client-eventbridge": "3.939.0",
-    "@aws-sdk/client-ssm": "3.939.0",
+    "@aws-sdk/client-dynamodb": "3.940.0",
+    "@aws-sdk/client-eventbridge": "3.940.0",
+    "@aws-sdk/client-ssm": "3.940.0",
     "@paralleldrive/cuid2": "3.0.4",
     "@sam-monorepo/database": "workspace:*",
     "aws-xray-sdk-core": "3.12.0",
