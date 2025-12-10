@@ -13,13 +13,13 @@
     "build": "prisma generate && tsc"
   },
   "dependencies": {
-    "@prisma/client": "6.17.1",
+    "@prisma/client": "6.19.1",
     "@prisma/adapter-pg": "6.19.0",
     "zod": "4.1.13"
   },
   "devDependencies": {
     "@types/node": "22.19.1",
-    "prisma": "6.17.1",
+    "prisma": "6.19.1",
     "typescript": "5.9.3"
   }
 }
