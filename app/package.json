@@ -40,7 +40,7 @@
     "@trpc/client": "11.7.2",
     "@trpc/next": "11.7.2",
     "@trpc/react-query": "11.7.2",
-    "@trpc/server": "11.7.2",
+    "@trpc/server": "11.8.0",
     "@uidotdev/usehooks": "2.4.1",
     "@unleash/nextjs": "1.6.2",
     "@vercel/analytics": "1.6.1",
