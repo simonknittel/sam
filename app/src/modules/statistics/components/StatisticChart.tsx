@@ -71,6 +71,12 @@ export const StatisticChart = ({ chart }: Props) => {
       ? chart.yAxes
       : [{ position: "left" as const }];
 
+    const xAxisLabelSkipInterval = Math.max(
+      0,
+      Math.ceil(chart.axisTimestamps.length / 5) - 1,
+    );
+    const xAxisLabelInterval = xAxisLabelSkipInterval;
+
     const option = {
       backgroundColor: "transparent",
       color: PALETTE,
@@ -155,7 +161,7 @@ export const StatisticChart = ({ chart }: Props) => {
         data: chart.axisTimestamps,
         axisLabel: {
           color: "#737373",
-          interval: 0,
+          interval: xAxisLabelInterval,
           formatter: (value: number | string) =>
             formatDate(new Date(Number(value)), "extra_short"),
         },
@@ -173,6 +179,8 @@ export const StatisticChart = ({ chart }: Props) => {
           type: "value",
           position: axis.position ?? (index === 0 ? "left" : "right"),
           name: axis.name,
+          // Keep the Y axis readable by limiting tick count.
+          splitNumber: 5,
           axisLabel: {
             color: axisLabelColor,
           },
@@ -201,6 +209,7 @@ export const StatisticChart = ({ chart }: Props) => {
         },
         lineStyle: {
           width: 2,
+          ...serie.lineStyle,
         },
         yAxisIndex: serie.yAxisIndex ?? 0,
         data: chart.axisTimestamps.map((_, index) => serie.data[index] ?? null),

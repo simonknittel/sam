@@ -34,6 +34,10 @@ export interface StatisticSeries {
   name: string;
   data: (number | null)[];
   yAxisIndex?: number;
+  lineStyle?: {
+    type?: "solid" | "dashed" | "dotted";
+    width?: number;
+  };
 }
 
 export interface StatisticYAxis {
@@ -338,9 +342,13 @@ export const getTotalShipStatisticChart = cache(
     const series = chartData.series.map((serie) =>
       serie.name === "Veränderung zum Vortag"
         ? {
-          ...serie,
-          yAxisIndex: 1,
-        }
+            ...serie,
+            yAxisIndex: 1,
+            lineStyle: {
+              type: "dashed" as const,
+              width: 1,
+            },
+          }
         : serie,
     );
 
@@ -447,9 +455,13 @@ export const getTotalCitizenStatisticChart = cache(
     const series = chartData.series.map((serie) =>
       serie.name === "Veränderung zum Vortag"
         ? {
-          ...serie,
-          yAxisIndex: 1,
-        }
+            ...serie,
+            yAxisIndex: 1,
+            lineStyle: {
+              type: "dashed" as const,
+              width: 1,
+            },
+          }
         : serie,
     );
 
@@ -559,9 +571,13 @@ export const getTotalOrganizationStatisticChart = cache(
     const series = chartData.series.map((serie) =>
       serie.name === "Veränderung zum Vortag"
         ? {
-          ...serie,
-          yAxisIndex: 1,
-        }
+            ...serie,
+            yAxisIndex: 1,
+            lineStyle: {
+              type: "dashed" as const,
+              width: 1,
+            },
+          }
         : serie,
     );
 
@@ -673,9 +689,13 @@ export const getRegisteredUserStatisticChart = cache(
     const series = chartData.series.map((serie) =>
       serie.name === "Veränderung zum Vortag"
         ? {
-          ...serie,
-          yAxisIndex: 1,
-        }
+            ...serie,
+            yAxisIndex: 1,
+            lineStyle: {
+              type: "dashed" as const,
+              width: 1,
+            },
+          }
         : serie,
     );
 
@@ -751,9 +771,13 @@ export const getDailyLoginStatisticChart = cache(
     const series = chartData.series.map((serie) =>
       serie.name === "Veränderung zum Vortag"
         ? {
-          ...serie,
-          yAxisIndex: 1,
-        }
+            ...serie,
+            yAxisIndex: 1,
+            lineStyle: {
+              type: "dashed" as const,
+              width: 1,
+            },
+          }
         : serie,
     );
 
@@ -843,9 +867,13 @@ export const getEventsPerDayStatisticChart = cache(
     const series = chartData.series.map((serie) =>
       serie.name === "Veränderung zum Vortag"
         ? {
-          ...serie,
-          yAxisIndex: 1,
-        }
+            ...serie,
+            yAxisIndex: 1,
+            lineStyle: {
+              type: "dashed" as const,
+              width: 1,
+            },
+          }
         : serie,
     );
 
@@ -944,9 +972,13 @@ export const getDailySilcStatisticChart = cache(
     const series = chartData.series.map((serie) =>
       serie.name === "Veränderung zum Vortag"
         ? {
-          ...serie,
-          yAxisIndex: 1,
-        }
+            ...serie,
+            yAxisIndex: 1,
+            lineStyle: {
+              type: "dashed" as const,
+              width: 1,
+            },
+          }
         : serie,
     );
 
