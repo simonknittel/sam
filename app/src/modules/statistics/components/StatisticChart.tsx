@@ -201,6 +201,7 @@ export const StatisticChart = ({ chart }: Props) => {
         },
         lineStyle: {
           width: 2,
+          ...serie.lineStyle,
         },
         yAxisIndex: serie.yAxisIndex ?? 0,
         data: chart.axisTimestamps.map((_, index) => serie.data[index] ?? null),
