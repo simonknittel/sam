@@ -14,11 +14,11 @@
   },
   "dependencies": {
     "@prisma/client": "6.17.1",
-    "@prisma/adapter-pg": "6.19.0",
-    "zod": "4.1.13"
+    "@prisma/adapter-pg": "6.19.1",
+    "zod": "4.2.1"
   },
   "devDependencies": {
-    "@types/node": "22.19.2",
+    "@types/node": "22.19.3",
     "prisma": "6.17.1",
     "typescript": "5.9.3"
   }
