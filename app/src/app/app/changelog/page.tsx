@@ -44,12 +44,32 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col gap-4">
+      <Day heading="2. Januar 2026">
+        <DayItem
+          heading="Neuer Avatar-Rahmen"
+          badges={["Änderung", "Avatar Creator"]}
+        >
+          <p>
+            Der Rahmen im Avatar Creator wurde durch ein neues Design
+            ausgetauscht.
+          </p>
+
+          <p>
+            Du findest den Avatar Creator unter{" "}
+            <Link
+              href="/app/avatar-creator"
+              className="text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300"
+            >
+              Apps &gt; Avatar Creator
+            </Link>
+            .
+          </p>
+        </DayItem>
+      </Day>
+
       <Day heading="6. Dezember 2025">
         {showGlobalStatistics ? (
-          <DayItem
-            heading="Neue Statistiken"
-            badges={["Neu", "Statistiken"]}
-          >
+          <DayItem heading="Neue Statistiken" badges={["Neu", "Statistiken"]}>
             <p>
               Die Statistiken zeigen nun auch, wie viel neue SILC an einem Tag
               verteilt wurden. Zusätzlich gibt es Verläufe für die Anzahl an
@@ -57,8 +77,7 @@ export default async function Page() {
             </p>
 
             <p>
-              Alle Diagramme enthalten nun einen direkten Vergleich zum
-              Vortag.
+              Alle Diagramme enthalten nun einen direkten Vergleich zum Vortag.
             </p>
 
             <p>
