@@ -5,11 +5,11 @@ import { Button2 } from "@/modules/common/components/Button2";
 import clsx from "clsx";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-const DEFAULT_SCALING_MULTIPLIER = 0.65;
+const DEFAULT_SCALING_MULTIPLIER = 0.73;
 const CANVAS_WIDTH = avatarFrame.width / 3;
 const CANVAS_HEIGHT = avatarFrame.height / 3;
-const CENTER_Y_OFFSET = 25;
-const CLIP_MASK_RADIUS = 0.32;
+const CENTER_Y_OFFSET = 0;
+const CLIP_MASK_RADIUS = 0.37;
 
 const getFrameCircle = (width: number, height: number) => {
   const radius = Math.min(width, height) * CLIP_MASK_RADIUS;
