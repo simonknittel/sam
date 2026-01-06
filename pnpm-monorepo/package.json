@@ -1,7 +1,7 @@
 {
   "name": "sam-monorepo",
   "private": true,
-  "packageManager": "pnpm@10.26.1",
+  "packageManager": "pnpm@10.26.2",
   "scripts": {
     "build:lambda": "pnpm run --filter \"./packages/database\" build && pnpm run --filter \"./packages/notifications\" build && pnpm run --filter \"./apps/lambda\" build",
     "format": "prettier --write ."
