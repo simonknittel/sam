@@ -34,7 +34,9 @@ interface Props {
 export const PhaseManagementPayoutPreparation = ({ cycleData }: Props) => {
   const { formAction, isPending } = useAction(startPayout);
   const id = useId();
-  const [auecProfit, setAuecProfit] = useState(cycleData.cycle.auecProfit || 0);
+  const [auecProfit, setAuecProfit] = useState(
+    Number(cycleData.cycle.auecProfit) || 0,
+  );
   const [isAlertOpen, setIsAlertOpen] = useState(false);
 
   const auecPerSilc = getAuecPerSilc(auecProfit, cycleData.totalSilc);
