@@ -10,7 +10,7 @@ model ProfitDistributionCycle {
   payoutEndedAt       DateTime?
   payoutEndedById     String?
   payoutEndedBy       Entity?                              @relation("payoutEndedBy", fields: [payoutEndedById], references: [id], onDelete: SetNull)
-  auecProfit          Int?
+  auecProfit          BigInt?
   participants        ProfitDistributionCycleParticipant[]
   createdAt           DateTime                             @default(now())
   createdById         String?
