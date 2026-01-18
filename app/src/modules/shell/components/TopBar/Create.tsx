@@ -39,6 +39,10 @@ export const Create = ({ className }: Props) => {
   const showCreateTask = Boolean(
     authentication && authentication.authorize("task", "create"),
   );
+  const showCreateSilcTransaction = Boolean(
+    authentication &&
+      authentication.authorize("silcTransactionOfOtherCitizen", "create"),
+  );
 
   if (
     !showCreateCitizen &&
@@ -46,7 +50,8 @@ export const Create = ({ className }: Props) => {
     !showCreateOrganization &&
     !showCreateRole &&
     !showCreatePenaltyEntry &&
-    !showCreateTask
+    !showCreateTask &&
+    !showCreateSilcTransaction
   )
     return null;
 
@@ -73,6 +78,7 @@ export const Create = ({ className }: Props) => {
           showCreateRole={showCreateRole}
           showCreatePenaltyEntry={showCreatePenaltyEntry}
           showCreateTask={showCreateTask}
+          showCreateSilcTransaction={showCreateSilcTransaction}
         />
       </Popover>
     </div>
@@ -86,6 +92,7 @@ interface PopoverChildrenProps {
   readonly showCreateRole: boolean;
   readonly showCreatePenaltyEntry: boolean;
   readonly showCreateTask: boolean;
+  readonly showCreateSilcTransaction: boolean;
 }
 
 const PopoverChildren = ({
@@ -95,6 +102,7 @@ const PopoverChildren = ({
   showCreateRole,
   showCreatePenaltyEntry,
   showCreateTask,
+  showCreateSilcTransaction,
 }: PopoverChildrenProps) => {
   const { closePopover } = usePopover();
   const { openCreateModal } = useCreateContext();
@@ -157,6 +165,12 @@ const PopoverChildren = ({
     });
   if (showCreateTask)
     items.push({ label: "Task", type: "button", modalId: "task" });
+  if (showCreateSilcTransaction)
+    items.push({
+      label: "Transaktion",
+      type: "button",
+      modalId: "silcTransaction",
+    });
 
   items = items.toSorted((a, b) => a.label.localeCompare(b.label));
 

@@ -49,6 +49,12 @@ const CreateProfitDistributionCycleForm = dynamic(() =>
   ).then((mod) => mod.CreateProfitDistributionCycleForm),
 );
 
+const CreateSilcTransactionForm = dynamic(() =>
+  import(
+    "@/modules/silc/components/CreateSilcTransactionForm"
+  ).then((mod) => mod.CreateSilcTransactionForm),
+);
+
 export const createForms = {
   citizen: {
     formComponent: CreateCitizenForm,
@@ -79,6 +85,11 @@ export const createForms = {
     formComponent: CreateTaskForm,
     modalHeading: "Neuer Task",
     modalWidth: "w-[768px]",
+  },
+  silcTransaction: {
+    formComponent: CreateSilcTransactionForm,
+    modalHeading: "Neue Transaktion",
+    modalWidth: "w-[480px]",
   },
 };
 
