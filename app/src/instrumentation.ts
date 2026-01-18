@@ -1,5 +1,11 @@
 import { PrismaInstrumentation } from "@prisma/instrumentation";
-import { registerOTel } from "@vercel/otel";
+import { NodeSDK } from "@opentelemetry/sdk-node";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+import { Resource } from "@opentelemetry/resources";
+import {
+  ATTR_SERVICE_NAME,
+  ATTR_SERVICE_VERSION,
+} from "@opentelemetry/semantic-conventions";
 import { env } from "./env";
 import {
   LoggerProvider,
@@ -13,14 +19,30 @@ export const register = () => {
   if (!env.OTEL_EXPORTER_OTLP_PROTOCOL || !env.OTEL_EXPORTER_OTLP_ENDPOINT)
     return;
 
-  // Register traces and other instrumentation
-  registerOTel({
-    serviceName: "sam",
+  // Set up trace exporter
+  const traceExporter = new OTLPTraceExporter({
+    url: `${env.OTEL_EXPORTER_OTLP_ENDPOINT}/v1/traces`,
+  });
+
+  // Initialize NodeSDK for traces and instrumentation
+  const sdk = new NodeSDK({
+    resource: new Resource({
+      [ATTR_SERVICE_NAME]: "sam",
+      [ATTR_SERVICE_VERSION]: "1.0.0",
+    }),
+    traceExporter,
     instrumentations: [new PrismaInstrumentation()],
   });
 
-  // Manually set up the logger provider for logs
-  const loggerProvider = new LoggerProvider();
+  sdk.start();
+
+  // Set up the logger provider for logs
+  const loggerProvider = new LoggerProvider({
+    resource: new Resource({
+      [ATTR_SERVICE_NAME]: "sam",
+      [ATTR_SERVICE_VERSION]: "1.0.0",
+    }),
+  });
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   loggerProvider.addLogRecordProcessor(
     new BatchLogRecordProcessor(
