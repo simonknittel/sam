@@ -19,6 +19,12 @@ export const register = () => {
   if (!env.OTEL_EXPORTER_OTLP_PROTOCOL || !env.OTEL_EXPORTER_OTLP_ENDPOINT)
     return;
 
+  // Shared resource configuration for service identification
+  const resource = new Resource({
+    [ATTR_SERVICE_NAME]: "sam",
+    [ATTR_SERVICE_VERSION]: "1.0.0",
+  });
+
   // Set up trace exporter
   const traceExporter = new OTLPTraceExporter({
     url: `${env.OTEL_EXPORTER_OTLP_ENDPOINT}/v1/traces`,
@@ -26,10 +32,7 @@ export const register = () => {
 
   // Initialize NodeSDK for traces and instrumentation
   const sdk = new NodeSDK({
-    resource: new Resource({
-      [ATTR_SERVICE_NAME]: "sam",
-      [ATTR_SERVICE_VERSION]: "1.0.0",
-    }),
+    resource,
     traceExporter,
     instrumentations: [new PrismaInstrumentation()],
   });
@@ -38,10 +41,7 @@ export const register = () => {
 
   // Set up the logger provider for logs
   const loggerProvider = new LoggerProvider({
-    resource: new Resource({
-      [ATTR_SERVICE_NAME]: "sam",
-      [ATTR_SERVICE_VERSION]: "1.0.0",
-    }),
+    resource,
   });
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   loggerProvider.addLogRecordProcessor(
