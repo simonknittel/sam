@@ -44,6 +44,18 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col gap-4">
+      <Day heading="18. Januar 2026">
+        <DayItem
+          heading="Transaktion erstellen über TopBar"
+          badges={["Neu", "SILC"]}
+        >
+          <p>
+            Du kannst jetzt SILC-Transaktionen direkt über den &ldquo;Neu&rdquo;-Button in der
+            TopBar erstellen.
+          </p>
+        </DayItem>
+      </Day>
+
       <Day heading="2. Januar 2026">
         <DayItem
           heading="Neuer Avatar-Rahmen"
