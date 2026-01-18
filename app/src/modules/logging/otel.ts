@@ -21,7 +21,7 @@ export const logToOTel: LogOutput = (logEntry) => {
 
   try {
     const loggerProvider = logs.getLoggerProvider();
-    const logger = loggerProvider.getLogger("sam-app", "1.0.0");
+    const logger = loggerProvider.getLogger("sam", "1.0.0");
 
     // Extract message and other attributes
     const { timestamp, level, message, host, commitSha, stack, ...attributes } =
