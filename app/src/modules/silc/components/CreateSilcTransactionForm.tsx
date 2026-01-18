@@ -1,6 +1,7 @@
 "use client";
 
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
+import Button from "@/modules/common/components/Button";
 import { Button2 } from "@/modules/common/components/Button2";
 import { NumberInput } from "@/modules/common/components/form/NumberInput";
 import { Textarea } from "@/modules/common/components/form/Textarea";
@@ -28,6 +29,10 @@ export const CreateSilcTransactionForm = ({ onSuccess }: Props) => {
         }
 
         toast.success(response.success!);
+        if (formData.has("createAnother")) {
+          return response;
+        }
+
         onSuccess?.();
         return response;
       } catch (error) {
@@ -76,10 +81,22 @@ export const CreateSilcTransactionForm = ({ onSuccess }: Props) => {
         className="mt-4"
       />
 
-      <Button2 type="submit" disabled={isPending} className="mt-4">
-        {isPending ? <FaSpinner className="animate-spin" /> : <FaSave />}
-        Speichern
-      </Button2>
+      <div className="flex flex-col gap-2 mt-4">
+        <Button2 type="submit" disabled={isPending}>
+          {isPending ? <FaSpinner className="animate-spin" /> : <FaSave />}
+          Speichern
+        </Button2>
+
+        <Button
+          type="submit"
+          disabled={isPending}
+          variant="tertiary"
+          name="createAnother"
+        >
+          {isPending ? <FaSpinner className="animate-spin" /> : <FaSave />}
+          Speichern und weitere Transaktion erstellen
+        </Button>
+      </div>
 
       {state?.error && (
         <Note type="error" message={state.error} className="mt-4" />

@@ -88,7 +88,7 @@ export const createForms = {
   },
   silcTransaction: {
     formComponent: CreateSilcTransactionForm,
-    modalHeading: "Neue Transaktion",
+    modalHeading: "Neue SILC-Transaktion",
     modalWidth: "w-[480px]",
   },
 };

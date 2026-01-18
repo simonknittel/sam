@@ -167,7 +167,7 @@ const PopoverChildren = ({
     items.push({ label: "Task", type: "button", modalId: "task" });
   if (showCreateSilcTransaction)
     items.push({
-      label: "Transaktion",
+      label: "SILC-Transaktion",
       type: "button",
       modalId: "silcTransaction",
     });
