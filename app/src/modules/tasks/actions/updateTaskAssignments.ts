@@ -42,7 +42,7 @@ export const updateTaskAssignments = async (formData: FormData) => {
       id: formData.get("id"),
       assignmentLimit:
         formData.has("assignmentLimit") &&
-          formData.get("assignmentLimit") !== ""
+        formData.get("assignmentLimit") !== ""
           ? formData.get("assignmentLimit")
           : null,
       assignedToIds: formData.has("assignedToId[]")
@@ -132,7 +132,7 @@ export const updateTaskAssignments = async (formData: FormData) => {
     };
   } catch (error) {
     unstable_rethrow(error);
-    void log.error("Internal Server Error", { error: serializeError(error) });
+    log.error("Internal Server Error", { error: serializeError(error) });
     return {
       error: t("Common.internalServerError"),
       requestPayload: formData,

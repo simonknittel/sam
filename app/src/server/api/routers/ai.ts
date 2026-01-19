@@ -42,7 +42,7 @@ export const aiRouter = createTRPCRouter({
       },
     });
 
-    void log.info("Role name suggestions", {
+    log.info("Role name suggestions", {
       messages,
       usage: chatCompletion.usage,
     });
@@ -72,7 +72,7 @@ export const aiRouter = createTRPCRouter({
         roleNames: response.roleNames,
       };
     } catch (error) {
-      void log.error("Failed to parse role names", {
+      log.error("Failed to parse role names", {
         error: serializeError(error),
       });
 

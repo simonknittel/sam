@@ -12,7 +12,7 @@ export default async function Page() {
   ]);
 
   if (!showAlgolia) {
-    void log.info("Forbidden request to page", {
+    log.info("Forbidden request to page", {
       userId: authentication.session.user.id,
       reason: "Insufficient permissions",
     });

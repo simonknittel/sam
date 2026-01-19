@@ -28,14 +28,14 @@ export const emitEvents = withTrace(
     >[],
   ) => {
     if (!client) {
-      void log.warn(
+      log.warn(
         "EventBridge client has not been initialized. Skipping sending events.",
       );
       return;
     }
 
     if (entries.length <= 0) {
-      void log.info("No entries provided to send to EventBridge.");
+      log.info("No entries provided to send to EventBridge.");
       return;
     }
 

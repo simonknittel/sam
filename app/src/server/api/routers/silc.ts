@@ -52,7 +52,7 @@ export const silcRouter = createTRPCRouter({
 
       return Array.from(citizensGroupedByRole.values());
     } catch (error) {
-      void log.error("Failed to fetch roles", {
+      log.error("Failed to fetch roles", {
         error: serializeError(error),
       });
 

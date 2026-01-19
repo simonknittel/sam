@@ -62,7 +62,7 @@ export default function apiErrorHandler(
     );
   }
 
-  void log.error("errorHandler", {
+  log.error("errorHandler", {
     error: serializeError(error),
   });
 

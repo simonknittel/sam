@@ -90,7 +90,7 @@ export const updateIndices = async () => {
     };
   } catch (error) {
     unstable_rethrow(error);
-    void log.error("Failed to update Algolia indices", {
+    log.error("Failed to update Algolia indices", {
       error: serializeError(error),
     });
     return {

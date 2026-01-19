@@ -29,7 +29,7 @@ export default async function Page(props: Readonly<Props>) {
   const authentication = await authenticate();
 
   if (!authentication) {
-    void log.info("Unauthenticated request to page", {
+    log.info("Unauthenticated request to page", {
       requestPath: "/email-confirmation",
       reason: "No session",
     });

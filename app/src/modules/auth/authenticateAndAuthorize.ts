@@ -33,7 +33,7 @@ export async function requireAuthenticationPage(requestPath?: string) {
   const authentication = await authenticate();
 
   if (!authentication) {
-    void log.info("Unauthorized request to page", {
+    log.info("Unauthorized request to page", {
       requestPath,
       reason: "No session",
     });
@@ -60,7 +60,7 @@ export async function requireAuthenticationPage(requestPath?: string) {
       );
 
       if (!result) {
-        void log.info("Forbidden request to page", {
+        log.info("Forbidden request to page", {
           requestPath,
           userId: authentication.session.user.id,
           reason: "Insufficient permissions",
@@ -81,7 +81,7 @@ export async function requireAuthenticationApi(
   const authentication = await authenticate();
 
   if (!authentication) {
-    void log.info("Unauthorized request to API", {
+    log.info("Unauthorized request to API", {
       requestPath,
       requestMethod,
       reason: "No session",
@@ -109,7 +109,7 @@ export async function requireAuthenticationApi(
       );
 
       if (!result) {
-        void log.info("Forbidden request to API", {
+        log.info("Forbidden request to API", {
           requestPath,
           requestMethod,
           userId: authentication.session.user.id,
@@ -128,7 +128,7 @@ export async function requireAuthenticationAction(actionName?: string) {
   const authentication = await authenticate();
 
   if (!authentication) {
-    void log.info("Unauthorized request to action", {
+    log.info("Unauthorized request to action", {
       actionName,
       reason: "No session",
     });
@@ -155,7 +155,7 @@ export async function requireAuthenticationAction(actionName?: string) {
       );
 
       if (!result) {
-        void log.info("Unauthorized request to action", {
+        log.info("Unauthorized request to action", {
           actionName,
           userId: authentication.session.user.id,
           reason: "Insufficient permissions",

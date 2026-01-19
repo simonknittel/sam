@@ -9,7 +9,7 @@ export const eventsRouter = createTRPCRouter({
     try {
       return await getEvents("all");
     } catch (error) {
-      void log.error("Failed to fetch all events", {
+      log.error("Failed to fetch all events", {
         error: serializeError(error),
       });
 

@@ -9,7 +9,7 @@ export const rolesRouter = createTRPCRouter({
     try {
       return await getVisibleRoles();
     } catch (error) {
-      void log.error("Failed to fetch visible roles", {
+      log.error("Failed to fetch visible roles", {
         error: serializeError(error),
       });
 

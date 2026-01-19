@@ -58,7 +58,7 @@ export const serverActionErrorHandler = (
     };
   }
 
-  void log.error("errorHandler", {
+  log.error("errorHandler", {
     error: serializeError(error),
   });
 

@@ -117,7 +117,7 @@ export const createEventPosition = async (formData: FormData) => {
     };
   } catch (error) {
     unstable_rethrow(error);
-    void log.error("Internal Server Error", {
+    log.error("Internal Server Error", {
       error: serializeError(error),
     });
     return {

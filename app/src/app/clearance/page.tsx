@@ -16,7 +16,7 @@ export default async function Page() {
   const authentication = await authenticate();
 
   if (!authentication) {
-    void log.info("Unauthenticated request to page", {
+    log.info("Unauthenticated request to page", {
       requestPath: "/clearance",
       reason: "No session",
     });

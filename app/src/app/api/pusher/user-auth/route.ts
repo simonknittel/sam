@@ -31,7 +31,7 @@ export async function POST(request: Request) {
      * Do the thing
      */
     if (!channelsClient) {
-      void log.warn("[Pusher] Channels client not initialized.");
+      log.warn("[Pusher] Channels client not initialized.");
       return NextResponse.json(
         { error: "Internal Server Error" },
         { status: 500 },

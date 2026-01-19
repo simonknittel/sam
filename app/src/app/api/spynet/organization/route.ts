@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     try {
       logo = await scrapeOrganizationLogo(data.spectrumId);
     } catch (error) {
-      void log.error("Failed to scrape organization logo", {
+      log.error("Failed to scrape organization logo", {
         spectrumId: data.spectrumId,
         error: serializeError(error),
       });

@@ -39,7 +39,7 @@ export const refreshSilcBalances = async () => {
     };
   } catch (error) {
     unstable_rethrow(error);
-    void log.error("Internal Server Error", { error: serializeError(error) });
+    log.error("Internal Server Error", { error: serializeError(error) });
     return {
       error:
         "Ein unbekannter Fehler ist aufgetreten. Bitte versuche es später erneut.",

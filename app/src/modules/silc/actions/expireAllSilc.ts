@@ -15,7 +15,7 @@ export const expireAllSilc = async () => {
      */
     const authentication = await requireAuthenticationAction("expireAllSilc");
     if (!authentication.session.entity) {
-      void log.info("Unauthorized request to action", {
+      log.info("Unauthorized request to action", {
         actionName: "expireAllSilc",
         userId: authentication.session.user.id,
         reason: "Insufficient permissions",
@@ -59,7 +59,7 @@ export const expireAllSilc = async () => {
     };
   } catch (error) {
     unstable_rethrow(error);
-    void log.error("Internal Server Error", { error: serializeError(error) });
+    log.error("Internal Server Error", { error: serializeError(error) });
     return {
       error:
         "Ein unbekannter Fehler ist aufgetreten. Bitte versuche es später erneut.",

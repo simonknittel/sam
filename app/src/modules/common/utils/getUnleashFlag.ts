@@ -27,7 +27,7 @@ export const getUnleashFlag = cache(
       return flags.isEnabled(name);
     } catch (error) {
       unstable_rethrow(error);
-      void log.error("Error fetching feature flag", {
+      log.error("Error fetching feature flag", {
         error: serializeError(error),
       });
     }

@@ -13,11 +13,11 @@ export const generateMetadataWithTryCatch = <T>(
       unstable_rethrow(error);
 
       if (error instanceof Error && error.message === "Unauthorized") {
-        void log.info("Unauthorized while generating metadata", {
+        log.info("Unauthorized while generating metadata", {
           error: serializeError(error),
         });
       } else {
-        void log.error("Error while generating metadata", {
+        log.error("Error while generating metadata", {
           error: serializeError(error),
         });
       }
