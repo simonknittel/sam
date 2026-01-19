@@ -8,21 +8,29 @@ import {
   LoggerProvider,
 } from "@opentelemetry/sdk-logs";
 import { NodeSDK } from "@opentelemetry/sdk-node";
+import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-node";
 import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
 import { PrismaInstrumentation } from "@prisma/instrumentation";
 import { env } from "./env";
+
+// API reference: https://open-telemetry.github.io/opentelemetry-js/
 
 const resource = resourceFromAttributes({
   [ATTR_SERVICE_NAME]: "sam",
 });
 
-const traceExporter = new OTLPTraceExporter({
-  url: `${env.OTEL_EXPORTER_OTLP_ENDPOINT}/v1/traces`,
-});
-
 const sdk = new NodeSDK({
   resource,
-  traceExporter,
+  spanProcessors: [
+    new BatchSpanProcessor(
+      new OTLPTraceExporter({
+        url: `${env.OTEL_EXPORTER_OTLP_ENDPOINT}/v1/traces`,
+      }),
+      {
+        scheduledDelayMillis: 1000,
+      },
+    ),
+  ],
   instrumentations: [
     getNodeAutoInstrumentations(),
     new PrismaInstrumentation(),
@@ -38,6 +46,9 @@ const loggerProvider = new LoggerProvider({
       new OTLPLogExporter({
         url: `${env.OTEL_EXPORTER_OTLP_ENDPOINT}/v1/logs`,
       }),
+      {
+        scheduledDelayMillis: 1000,
+      },
     ),
   ],
 });
