@@ -28,6 +28,7 @@ export const logToOTel: LogOutput = (logEntry) => {
     const { timestamp, level, message, host, commitSha, stack, ...attributes } =
       logEntry;
 
+    console.log("emit", logger);
     logger.emit({
       severityNumber: getSeverityNumber(level),
       severityText: level,
