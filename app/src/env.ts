@@ -33,9 +33,6 @@ export const env = createEnv({
     R2_BUCKET_NAME: z.string(),
     UNLEASH_SERVER_API_URL: z.url(),
     UNLEASH_SERVER_API_TOKEN: z.string(),
-    LOKI_HOST: z.url().optional(),
-    LOKI_AUTH_USER: z.string().optional(),
-    LOKI_AUTH_PASSWORD: z.string().optional(),
     BASE_URL: z.preprocess(
       // Uses VERCEL_URL if BASE_URL is not set, e.g. on Vercel's preview deployments
       (str) => {
@@ -125,9 +122,6 @@ export const env = createEnv({
     NEXT_PUBLIC_R2_PUBLIC_URL: process.env.NEXT_PUBLIC_R2_PUBLIC_URL,
     UNLEASH_SERVER_API_URL: process.env.UNLEASH_SERVER_API_URL,
     UNLEASH_SERVER_API_TOKEN: process.env.UNLEASH_SERVER_API_TOKEN,
-    LOKI_HOST: process.env.LOKI_HOST,
-    LOKI_AUTH_USER: process.env.LOKI_AUTH_USER,
-    LOKI_AUTH_PASSWORD: process.env.LOKI_AUTH_PASSWORD,
     HOST: process.env.HOST,
     COMMIT_SHA: process.env.COMMIT_SHA,
     NEXT_PUBLIC_CARE_BEAR_SHOOTER_BUILD_URL:
