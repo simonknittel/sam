@@ -32,7 +32,7 @@ export const logToOTel: LogOutput = (logEntry) => {
       severityNumber: getSeverityNumber(level),
       severityText: level,
       body: message,
-      timestamp: new Date(timestamp).getTime(),
+      timestamp: new Date(timestamp).getTime() * 1_000_000, // convert to nanoseconds
       attributes: {
         host,
         ...(commitSha && { commitSha }),
