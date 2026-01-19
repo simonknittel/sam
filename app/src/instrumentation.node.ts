@@ -8,7 +8,10 @@ import {
   SimpleLogRecordProcessor,
 } from "@opentelemetry/sdk-logs";
 import { NodeSDK } from "@opentelemetry/sdk-node";
-import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-node";
+import {
+  AlwaysOnSampler,
+  BatchSpanProcessor,
+} from "@opentelemetry/sdk-trace-node";
 import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
 import { PrismaInstrumentation } from "@prisma/instrumentation";
 import { env } from "./env";
@@ -31,17 +34,7 @@ const sdk = new NodeSDK({
       },
     ),
   ],
-  instrumentations: [
-    getNodeAutoInstrumentations(),
-    new PrismaInstrumentation(),
-  ],
-});
-
-sdk.start();
-
-const loggerProvider = new LoggerProvider({
-  resource,
-  processors: [
+  logRecordProcessors: [
     // new BatchLogRecordProcessor(
     //   new OTLPLogExporter({
     //     url: `${env.OTEL_EXPORTER_OTLP_ENDPOINT}/v1/logs`,
@@ -56,6 +49,15 @@ const loggerProvider = new LoggerProvider({
       }),
     ),
   ],
+  instrumentations: [
+    getNodeAutoInstrumentations(),
+    new PrismaInstrumentation(),
+  ],
+  sampler: new AlwaysOnSampler(),
 });
+
+sdk.start();
+
+const loggerProvider = new LoggerProvider();
 
 logs.setGlobalLoggerProvider(loggerProvider);
