@@ -51,7 +51,7 @@ export const createAuthenticatedAction = <T extends z.ZodTypeAny>(
             Object.fromEntries(formData.entries()),
           );
           if (!result.success) {
-            void log.warn("Invalid Zod schema", {
+            log.warn("Invalid Zod schema", {
               error: serializeError(result.error),
             });
 
@@ -79,7 +79,7 @@ export const createAuthenticatedAction = <T extends z.ZodTypeAny>(
       });
     } catch (error) {
       unstable_rethrow(error);
-      void log.error("Internal Server Error", { error: serializeError(error) });
+      log.error("Internal Server Error", { error: serializeError(error) });
       return {
         error: t("Common.internalServerError"),
         requestPayload: formData,

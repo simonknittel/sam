@@ -112,7 +112,7 @@ export const authOptions: NextAuthOptions = {
             },
           });
         } catch (error) {
-          void log.warn("Failed to update user's lastSeenAt", {
+          log.warn("Failed to update user's lastSeenAt", {
             userId: user.id,
             error,
           });
@@ -146,7 +146,7 @@ export const authOptions: NextAuthOptions = {
        * if we can update an existing user or not.
        */
 
-      void log.info("Login attempt", {
+      log.info("Login attempt", {
         accountProvider: account?.provider,
         accountProviderAccountId: account?.providerAccountId,
         profileEmail: profile.email,
@@ -158,7 +158,7 @@ export const authOptions: NextAuthOptions = {
         const guildMember = await getGuildMember(account.access_token);
 
         if ("message" in guildMember) {
-          void log.info("User not member of the Discord guild", {
+          log.info("User not member of the Discord guild", {
             userId: user.id,
           });
           throw new Error(guildMember.message);
@@ -199,7 +199,7 @@ export const authOptions: NextAuthOptions = {
         const guildMember = await getGuildMember(account.access_token);
 
         if ("message" in guildMember) {
-          void log.info("User not member of the Discord guild", {
+          log.info("User not member of the Discord guild", {
             userId: user.id,
           });
           throw new Error(guildMember.message);
@@ -273,13 +273,10 @@ export const authOptions: NextAuthOptions = {
           },
         ]);
       } catch (error) {
-        void log.error(
-          "Failed to request email confirmation for created user",
-          {
-            userId: createdUser.id,
-            error: serializeError(error),
-          },
-        );
+        log.error("Failed to request email confirmation for created user", {
+          userId: createdUser.id,
+          error: serializeError(error),
+        });
       }
 
       return createdUser;

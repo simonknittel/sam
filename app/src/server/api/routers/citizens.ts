@@ -21,7 +21,7 @@ export const citizensRouter = createTRPCRouter({
 
       return citizens;
     } catch (error) {
-      void log.error("Failed to fetch citizens", {
+      log.error("Failed to fetch citizens", {
         error: serializeError(error),
       });
 
@@ -36,7 +36,7 @@ export const citizensRouter = createTRPCRouter({
     try {
       return await getCitizensGroupedByVisibleRoles();
     } catch (error) {
-      void log.error("Failed to fetch citizens", {
+      log.error("Failed to fetch citizens", {
         error: serializeError(error),
       });
 

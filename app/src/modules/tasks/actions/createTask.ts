@@ -50,7 +50,7 @@ export const createTask = async (formData: FormData) => {
       visibility: formData.get("visibility"),
       assignmentLimit:
         formData.has("assignmentLimit") &&
-          formData.get("assignmentLimit") !== ""
+        formData.get("assignmentLimit") !== ""
           ? formData.get("assignmentLimit")
           : null,
       assignedToIds: formData.getAll("assignedToId[]"),
@@ -146,8 +146,8 @@ export const createTask = async (formData: FormData) => {
               requiredRoles: {
                 connect: result.data.requiredRoles
                   ? result.data.requiredRoles.map((roleId) => ({
-                    id: roleId,
-                  }))
+                      id: roleId,
+                    }))
                   : [],
               },
               hiddenForOtherRoles: result.data.hiddenForOtherRoles,
@@ -264,7 +264,7 @@ export const createTask = async (formData: FormData) => {
     };
   } catch (error) {
     unstable_rethrow(error);
-    void log.error("Internal Server Error", { error: serializeError(error) });
+    log.error("Internal Server Error", { error: serializeError(error) });
     return {
       error: t("Common.internalServerError"),
       requestPayload: formData,

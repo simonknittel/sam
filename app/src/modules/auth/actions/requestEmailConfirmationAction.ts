@@ -9,7 +9,7 @@ import { serializeError } from "serialize-error";
 export const requestEmailConfirmationAction = async () => {
   const authentication = await authenticate();
   if (!authentication) {
-    void log.info("Unauthorized request to action", {
+    log.info("Unauthorized request to action", {
       actionName: "requestEmailConfirmationAction",
       reason: "No session",
     });
@@ -30,7 +30,7 @@ export const requestEmailConfirmationAction = async () => {
       },
     ]);
   } catch (error) {
-    void log.error("Error while requesting email confirmation", {
+    log.error("Error while requesting email confirmation", {
       path: "/email-confirmation",
       error: serializeError(error),
     });

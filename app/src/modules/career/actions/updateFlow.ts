@@ -54,7 +54,7 @@ export const updateFlow = async (formData: FormData) => {
     const nodes = formData.get("nodes");
     const edges = formData.get("edges");
     if (!nodes || !edges) {
-      void log.warn("Bad Request", { error: "Missing nodes or edges" });
+      log.warn("Bad Request", { error: "Missing nodes or edges" });
       return {
         error: t("Common.badRequest"),
         requestPayload: formData,
@@ -66,7 +66,7 @@ export const updateFlow = async (formData: FormData) => {
       edges: JSON.parse(edges as string) as unknown,
     });
     if (!result.success) {
-      void log.warn("Bad Request", { error: serializeError(result.error) });
+      log.warn("Bad Request", { error: serializeError(result.error) });
       return {
         error: t("Common.badRequest"),
         requestPayload: formData,
@@ -102,7 +102,7 @@ export const updateFlow = async (formData: FormData) => {
           );
 
           if (!matchingNodeDefnition) {
-            void log.warn("Bad Request", { error: "Unknown node type", node });
+            log.warn("Bad Request", { error: "Unknown node type", node });
             return;
           }
 
@@ -139,7 +139,7 @@ export const updateFlow = async (formData: FormData) => {
     };
   } catch (error) {
     unstable_rethrow(error);
-    void log.error("Internal Server Error", { error: serializeError(error) });
+    log.error("Internal Server Error", { error: serializeError(error) });
     return {
       error: t("Common.internalServerError"),
       requestPayload: formData,

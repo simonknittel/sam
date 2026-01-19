@@ -37,7 +37,7 @@ export const updateRoleInheritance = async (
       roles: formData.getAll("roles"),
     });
     if (!result.success) {
-      void log.warn("Bad Request", { error: serializeError(result.error) });
+      log.warn("Bad Request", { error: serializeError(result.error) });
       return {
         error: t("Common.badRequest"),
         requestPayload: formData,
@@ -71,7 +71,7 @@ export const updateRoleInheritance = async (
     };
   } catch (error) {
     unstable_rethrow(error);
-    void log.error("Internal Server Error", { error: serializeError(error) });
+    log.error("Internal Server Error", { error: serializeError(error) });
     return {
       error: t("Common.internalServerError"),
       requestPayload: formData,

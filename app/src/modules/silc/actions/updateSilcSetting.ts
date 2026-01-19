@@ -45,7 +45,7 @@ export const updateSilcSetting = async (
       value: formData.get("value"),
     });
     if (!result.success) {
-      void log.warn("Invalid Zod schema", {
+      log.warn("Invalid Zod schema", {
         error: serializeError(result.error),
       });
       return {
@@ -95,7 +95,7 @@ export const updateSilcSetting = async (
     };
   } catch (error) {
     unstable_rethrow(error);
-    void log.error("Internal Server Error", { error: serializeError(error) });
+    log.error("Internal Server Error", { error: serializeError(error) });
     return {
       error: t("Common.internalServerError"),
       requestPayload: formData,

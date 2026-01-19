@@ -89,7 +89,7 @@ export const createManagers = async (formData: FormData) => {
     };
   } catch (error) {
     unstable_rethrow(error);
-    void log.error("Internal Server Error", { error: serializeError(error) });
+    log.error("Internal Server Error", { error: serializeError(error) });
     return {
       error: t("Common.internalServerError"),
       requestPayload: formData,

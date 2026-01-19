@@ -18,7 +18,7 @@ export const requireConfirmedEmailForPage = async (session: Session) => {
   if (!(await requiresEmailConfirmation(session))) return;
 
   if (!session.user.emailVerified) {
-    void log.info("Forbidden request to page", {
+    log.info("Forbidden request to page", {
       // TODO: Add request path
       userId: session.user.id,
       reason: "Unconfirmed email",
@@ -32,7 +32,7 @@ export const requireConfirmedEmailForApi = async (session: Session) => {
   if (!(await requiresEmailConfirmation(session))) return;
 
   if (!session.user.emailVerified) {
-    void log.info("Forbidden request to API", {
+    log.info("Forbidden request to API", {
       // TODO: Add request path
       userId: session.user.id,
       reason: "Unconfirmed email",
@@ -46,7 +46,7 @@ export const requireConfirmedEmailForAction = async (session: Session) => {
   if (!(await requiresEmailConfirmation(session))) return;
 
   if (!session.user.emailVerified) {
-    void log.info("Forbidden request to action", {
+    log.info("Forbidden request to action", {
       // TODO: Add action name
       userId: session.user.id,
       reason: "Unconfirmed email",
@@ -60,7 +60,7 @@ export const requireConfirmedEmailForTrpc = async (session: Session) => {
   if (!(await requiresEmailConfirmation(session))) return;
 
   if (!session.user.emailVerified) {
-    void log.info("Forbidden request to tRPC", {
+    log.info("Forbidden request to tRPC", {
       userId: session.user.id,
       reason: "Unconfirmed email",
     });
