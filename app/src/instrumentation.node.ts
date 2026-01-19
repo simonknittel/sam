@@ -4,8 +4,8 @@ import { OTLPLogExporter } from "@opentelemetry/exporter-logs-otlp-http";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import { resourceFromAttributes } from "@opentelemetry/resources";
 import {
-  BatchLogRecordProcessor,
   LoggerProvider,
+  SimpleLogRecordProcessor,
 } from "@opentelemetry/sdk-logs";
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-node";
@@ -42,13 +42,18 @@ sdk.start();
 const loggerProvider = new LoggerProvider({
   resource,
   processors: [
-    new BatchLogRecordProcessor(
+    // new BatchLogRecordProcessor(
+    //   new OTLPLogExporter({
+    //     url: `${env.OTEL_EXPORTER_OTLP_ENDPOINT}/v1/logs`,
+    //   }),
+    //   {
+    //     scheduledDelayMillis: 1000,
+    //   },
+    // ),
+    new SimpleLogRecordProcessor(
       new OTLPLogExporter({
         url: `${env.OTEL_EXPORTER_OTLP_ENDPOINT}/v1/logs`,
       }),
-      {
-        scheduledDelayMillis: 1000,
-      },
     ),
   ],
 });
