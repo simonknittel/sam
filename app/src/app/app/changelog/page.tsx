@@ -44,6 +44,14 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col gap-4">
+      <Day heading="26. Januar 2026">
+        <DayItem heading="Favicon aktualisiert" badges={["Änderung"]}>
+          <p>
+            Das Favicon zeigt jetzt das S.A.M.-Logo auf schwarzem Hintergrund.
+          </p>
+        </DayItem>
+      </Day>
+
       <Day heading="18. Januar 2026">
         <DayItem
           heading="Transaktion erstellen über TopBar"
