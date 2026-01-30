@@ -1,4 +1,4 @@
-name: Production release notification
+name: After production release
 
 on:
   deployment_status:
@@ -75,7 +75,7 @@ jobs:
         run: pnpm --filter @sam-monorepo/playwright test
         working-directory: pnpm-monorepo
         env:
-          PLAYWRIGHT_TEST_BASE_URL: ${{ vars.PRODUCTION_URL }}
+          PLAYWRIGHT_TEST_BASE_URL: ${{ vars.PLAYWRIGHT_TEST_BASE_URL }}
 
       - name: Upload test report
         uses: actions/upload-artifact@v4.6.2
