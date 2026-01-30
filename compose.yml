@@ -1,7 +1,7 @@
 services:
 
   psql:
-    image: postgres:15.6-alpine3.19
+    image: postgres:16.1-alpine3.19
     restart: no
     environment:
       POSTGRES_PASSWORD: admin
