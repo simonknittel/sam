@@ -4,6 +4,7 @@
 		"dotenv.dotenv-vscode",
 		"hashicorp.terraform",
 		"bruno-api-client.bruno",
-		"ms-azuretools.vscode-containers"
+		"ms-azuretools.vscode-containers",
+		"ms-playwright.playwright"
 	]
 }
