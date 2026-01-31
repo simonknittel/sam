@@ -14,6 +14,8 @@ jobs:
       github.event.deployment_status.state == 'success')
     runs-on: ubuntu-24.04
     environment: Production
+    permissions:
+      contents: read
     container:
       image: mcr.microsoft.com/playwright:v1.58.0-noble
       options: --user 1001
