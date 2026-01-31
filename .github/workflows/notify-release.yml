@@ -1,4 +1,4 @@
-name: After production release
+name: Notify release
 
 on:
   deployment_status:
