@@ -1,0 +1,52 @@
+name: Playwright tests
+
+on:
+  deployment_status:
+  schedule:
+    - cron: '0 6 * * *' # Daily at 6:00 AM UTC
+
+jobs:
+  smoke_test:
+    name: Playwright tests
+    if: >-
+      (github.event_name == 'schedule') ||
+      (github.event.deployment.environment == 'Production' &&
+      github.event.deployment_status.state == 'success')
+    runs-on: ubuntu-24.04
+    environment: Production
+    container:
+      image: mcr.microsoft.com/playwright:v1.58.0-noble
+      options: --user 1001
+    defaults:
+      run:
+        working-directory: pnpm-monorepo
+    steps:
+      - uses: actions/checkout@v5.0.1
+
+      - uses: pnpm/action-setup@v4.2.0
+        with:
+          version: 10.28.2
+
+      - uses: actions/setup-node@v6.2.0
+        with:
+          node-version-file: pnpm-monorepo/.nvmrc
+          cache: pnpm
+          cache-dependency-path: pnpm-monorepo/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --filter @sam-monorepo/playwright
+        working-directory: pnpm-monorepo
+
+      - name: Run tests
+        run: pnpm --filter @sam-monorepo/playwright test
+        working-directory: pnpm-monorepo
+        env:
+          BASE_URL: ${{ vars.BASE_URL }}
+
+      - name: Upload test report
+        uses: actions/upload-artifact@v4.6.2
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: pnpm-monorepo/apps/playwright/playwright-report/
+          retention-days: 7
