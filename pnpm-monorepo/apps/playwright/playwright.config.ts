@@ -25,5 +25,7 @@ export default defineConfig({
 		baseURL: process.env.BASE_URL,
 		trace: "on-first-retry",
 		...(Object.keys(extraHTTPHeaders).length > 0 && { extraHTTPHeaders }),
+		viewport: { width: 1280, height: 720 },
+		reducedMotion: "reduce",
 	},
 });
