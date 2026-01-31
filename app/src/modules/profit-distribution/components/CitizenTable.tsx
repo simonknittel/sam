@@ -1,6 +1,7 @@
 "use client";
 
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
+import { formatDate } from "@/modules/common/utils/formatDate";
 import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
 import type { Entity } from "@prisma/client";
 import {
@@ -169,7 +170,11 @@ export const CitizenTable = ({ className, cycleData }: Props) => {
 
             case PayoutState.AWAITING_PAYOUT:
               return (
-                <span className="text-blue-500">Auszahlung ausstehend</span>
+                <span className="text-blue-500">
+                  Auszahlung ausstehend
+                  {row.row.original.acceptedAt &&
+                    ` (${formatDate(row.row.original.acceptedAt)})`}
+                </span>
               );
 
             case PayoutState.DISBURSED:
