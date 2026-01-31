@@ -44,6 +44,19 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col gap-4">
+      <Day heading="31. Januar 2026">
+        <DayItem
+          heading="Akzeptanzdatum bei Auszahlungsstatus anzeigen"
+          badges={["Änderung", "Gewinnausschüttung"]}
+        >
+          <p>
+            Bei ausstehenden Auszahlungen wird nun das Datum der Zustimmung
+            angezeigt, damit besser nachvollzogen werden kann, wann die
+            Zustimmung erfolgt ist.
+          </p>
+        </DayItem>
+      </Day>
+
       <Day heading="26. Januar 2026">
         <DayItem heading="Favicon aktualisiert" badges={["Änderung"]}>
           <p>
