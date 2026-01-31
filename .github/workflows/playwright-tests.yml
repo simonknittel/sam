@@ -35,11 +35,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --filter @sam-monorepo/playwright
-        working-directory: pnpm-monorepo
 
       - name: Run tests
         run: pnpm --filter @sam-monorepo/playwright test
-        working-directory: pnpm-monorepo
         env:
           BASE_URL: ${{ vars.BASE_URL }}
 
