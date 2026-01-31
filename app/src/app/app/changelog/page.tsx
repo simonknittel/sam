@@ -44,18 +44,6 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Day heading="31. Januar 2026">
-        <DayItem
-          heading="Manueller Trigger für Playwright-Tests"
-          badges={["Änderung"]}
-        >
-          <p>
-            Der Playwright-Test-Workflow kann jetzt manuell über die GitHub
-            Actions-Oberfläche ausgelöst werden.
-          </p>
-        </DayItem>
-      </Day>
-
       <Day heading="26. Januar 2026">
         <DayItem heading="Favicon aktualisiert" badges={["Änderung"]}>
           <p>
