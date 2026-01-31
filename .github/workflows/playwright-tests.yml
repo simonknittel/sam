@@ -44,6 +44,8 @@ jobs:
         run: pnpm --filter @sam-monorepo/playwright test
         env:
           BASE_URL: ${{ vars.BASE_URL }}
+          PLAYWRIGHT_CUSTOM_HEADER_NAME: ${{ vars.PLAYWRIGHT_CUSTOM_HEADER_NAME }}
+          PLAYWRIGHT_CUSTOM_HEADER_VALUE: ${{ secrets.PLAYWRIGHT_CUSTOM_HEADER_VALUE }}
 
       - name: Upload test report
         uses: actions/upload-artifact@v4.6.2
