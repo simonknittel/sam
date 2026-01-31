@@ -4,12 +4,14 @@ on:
   deployment_status:
   schedule:
     - cron: '0 6 * * *' # Daily at 6:00 AM UTC
+  workflow_dispatch:
 
 jobs:
   smoke_test:
     name: Playwright tests
     if: >-
       (github.event_name == 'schedule') ||
+      (github.event_name == 'workflow_dispatch') ||
       (github.event.deployment.environment == 'Production' &&
       github.event.deployment_status.state == 'success')
     runs-on: ubuntu-24.04
