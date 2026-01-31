@@ -1,4 +1,4 @@
-import { defineConfig } from "@playwright/test";
+import { defineConfig, devices } from "@playwright/test";
 import "dotenv/config";
 
 // Build custom HTTP headers object if both name and value are provided
@@ -28,4 +28,17 @@ export default defineConfig({
 		viewport: { width: 1280, height: 720 },
 		reducedMotion: "reduce",
 	},
+
+	projects: [
+		{ name: 'setup', testMatch: /.*\.setup\.ts/ },
+
+		{
+			name: 'chromium',
+			use: {
+				...devices['Desktop Chrome'],
+				storageState: '.auth/user.json',
+			},
+			dependencies: ['setup'],
+		},
+	]
 });
