@@ -4,6 +4,15 @@ on:
   deployment_status:
 
 jobs:
+  logging:
+    name: Log Deployment Status Event
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Log event payload
+        run: |
+          echo "Deployment Status Event Payload:"
+          echo "${{ toJson(github.event) }}"
+
   notify_soketi:
     name: Notify Soketi
     if: >-
