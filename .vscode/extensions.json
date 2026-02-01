@@ -1,7 +1,6 @@
 {
 	"recommendations": [
 		"github.vscode-github-actions",
-		"dotenv.dotenv-vscode",
 		"hashicorp.terraform",
 		"bruno-api-client.bruno",
 		"ms-azuretools.vscode-containers",

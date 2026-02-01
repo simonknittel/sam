@@ -4,13 +4,10 @@
 // - https://code.visualstudio.com/docs/editor/variables-reference
 {
   "name": "app / S.A.M.",
-
   "dockerComposeFile": "docker-compose.yml",
   "service": "devcontainer",
-
   // We mount the whole project directory but only want to work on the current subdirectory (see docker-compose.yml)
   "workspaceFolder": "/workspace/${localWorkspaceFolderBasename}",
-
   "customizations": {
     "vscode": {
       "extensions": [
@@ -19,7 +16,6 @@
         "esbenp.prettier-vscode",
         "bradlc.vscode-tailwindcss",
         "dbaeumer.vscode-eslint",
-        "dotenv.dotenv-vscode",
         "streetsidesoftware.code-spell-checker-german",
         "vitest.explorer",
         "clinyong.vscode-css-modules",
@@ -27,10 +23,10 @@
       ]
     }
   },
-
-  "forwardPorts": [3000, "db:5432"],
-
+  "forwardPorts": [
+    3000,
+    "db:5432"
+  ],
   "postCreateCommand": "./.devcontainer/postCreateCommand.sh",
-
   "remoteUser": "node"
 }
