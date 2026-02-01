@@ -3,7 +3,11 @@
 import { useAppsContext } from "@/modules/apps/components/AppsContext";
 import type { ExternalApp } from "@/modules/apps/utils/types";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
-import { Button2, Button2Variant } from "@/modules/common/components/Button2";
+import {
+  Button2,
+  Button2ColorSchema,
+  Button2Variant,
+} from "@/modules/common/components/Button2";
 import {
   useCreateContext,
   type createForms,
@@ -61,7 +65,7 @@ export const Create = ({ className }: Props) => {
         trigger={
           <Button2
             variant={Button2Variant.Secondary}
-            colorSchema="interactionMuted"
+            colorSchema={Button2ColorSchema.InteractionMuted}
             className="h-full px-6"
           >
             <FaPlus />
