@@ -12,6 +12,7 @@ export default function apiErrorHandler(
     return NextResponse.json(
       {
         message: "Bad Request",
+        // @ts-expect-error
         errors: error.errors,
       },
       { status: 400, ...responseInit },

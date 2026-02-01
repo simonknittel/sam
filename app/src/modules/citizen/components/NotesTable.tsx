@@ -24,7 +24,7 @@ export type Row = Readonly<{
   confirmedBy?: User;
   entityLog: EntityLog & {
     attributes: EntityLogAttribute[];
-    submittedBy: User;
+    submittedBy?: User | null;
   };
 }>;
 
@@ -176,9 +176,9 @@ export const NotesTable = ({ rows, searchParams }: Props) => {
 
               <td
                 className="overflow-hidden text-ellipsis"
-                title={row.entityLog.submittedBy.name || undefined}
+                title={row.entityLog.submittedBy?.name || "Unbekannt"}
               >
-                {row.entityLog.submittedBy.name}
+                {row.entityLog.submittedBy?.name || "Unbekannt"}
               </td>
 
               <td>

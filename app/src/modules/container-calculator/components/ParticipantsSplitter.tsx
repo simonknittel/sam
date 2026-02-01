@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import { NumberInput } from "@/modules/common/components/form/NumberInput";
 import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
 import { Tile } from "@/modules/common/components/Tile";

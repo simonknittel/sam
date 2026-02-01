@@ -16,8 +16,8 @@ import { DeleteLog } from "../DeleteLog";
 
 interface Props {
   log: EntityLog & {
-    attributes: (EntityLogAttribute & { createdBy: User })[];
-    submittedBy: User;
+    attributes: (EntityLogAttribute & { createdBy?: User | null })[];
+    submittedBy?: User | null;
   };
   showDelete?: boolean;
   showConfirm?: boolean;
@@ -81,13 +81,13 @@ export const HistoryEntry = ({
             </p>
 
             <span className="text-neutral-500">&bull;</span>
-            <p>Eingereicht von {log.submittedBy.name}</p>
+            <p>Eingereicht von {log.submittedBy?.name || "Unbekannt"}</p>
 
             {confirmed && (
               <>
                 <span className="text-neutral-500">&bull;</span>
 
-                <p>Bestätigt von {confirmed.createdBy.name}</p>
+                <p>Bestätigt von {confirmed.createdBy?.name || "Unbekannt"}</p>
               </>
             )}
 

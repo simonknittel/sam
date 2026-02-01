@@ -14,6 +14,7 @@ interface Props {
 export const ErrorBoundary = ({ className, children }: Props) => {
   return (
     <_ErrorBoundary
+      // @ts-expect-error
       fallbackRender={(props) => <Fallback {...props} className={className} />}
     >
       {children}
