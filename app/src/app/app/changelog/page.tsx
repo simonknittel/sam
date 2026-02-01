@@ -1756,7 +1756,7 @@ export default async function Page() {
       </Day>
 
       <small className="self-center italic">
-        Ältere Einträge werden nicht nachgetragen
+        Ältere Einträge werden nicht nachgetragen.
       </small>
     </div>
   );
