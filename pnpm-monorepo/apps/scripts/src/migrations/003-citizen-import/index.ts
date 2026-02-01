@@ -1,18 +1,7 @@
-/**
- * Usage:
- * ```bashrc
- * npm install --global ts-node
- *
- * ts-node --esm --skipProject ./migrations/003-citizen-import/index.ts
- *
- * DATABASE_URL='mysql://************@/:************@aws.connect.psdb.cloud/db?sslaccept=strict' ts-node --esm --skipProject ./migrations/003-citizen-import/index.ts
- * ```
- */
-
+import { prisma } from "@sam-monorepo/database";
 import { parse } from "csv";
 import { createReadStream } from "node:fs";
 import path from "node:path";
-import { prisma } from "../../prisma";
 
 const prod = true;
 

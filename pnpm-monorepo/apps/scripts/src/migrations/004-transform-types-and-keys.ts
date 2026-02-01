@@ -1,15 +1,4 @@
-/**
- * Usage:
- * ```bashrc
- * npm install --global ts-node
- *
- * ts-node --esm --skipProject ./migrations/004-transform-types-and-keys.ts
- *
- * DATABASE_URL='mysql://************@/:************@aws.connect.psdb.cloud/db?sslaccept=strict' ts-node --esm --skipProject ./migrations/004-transform-types-and-keys.ts
- * ```
- */
-
-import { prisma } from "../prisma";
+import { prisma } from "@sam-monorepo/database";
 
 async function main() {
   await prisma.$transaction([

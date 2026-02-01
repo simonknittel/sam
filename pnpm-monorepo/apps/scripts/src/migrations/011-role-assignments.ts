@@ -1,13 +1,5 @@
-/**
- * Usage:
- * ```bashrc
- * DATABASE_URL="postgresql://postgres:admin@localhost:5432/db" node ./scripts/migrations/011-role-assignments.ts
- * ```
- */
-
-import type { Entity, EntityLog, Role } from "@prisma/client";
-// @ts-expect-error
-import { prisma } from "../prisma.ts";
+import type { Entity, EntityLog, Role } from "@sam-monorepo/database";
+import { prisma } from "@sam-monorepo/database";
 
 async function main() {
   const [roles, citizens, users, accounts, logs] = await prisma.$transaction([

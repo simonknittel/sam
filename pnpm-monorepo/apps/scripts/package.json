@@ -1,0 +1,16 @@
+{
+  "name": "@sam-monorepo/scripts",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@sam-monorepo/database": "workspace:*",
+    "algoliasearch": "4.25.3",
+    "csv": "6.4.1",
+    "date-fns": "4.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.7",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3"
+  }
+}
