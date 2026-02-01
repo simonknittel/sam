@@ -2,8 +2,7 @@
 
 /**
  * ```bashrc
- * pscale connect db development
- * node 002-permission-value-to-string.js
+ * DATABASE_URL="postgresql://postgres:admin@localhost:5432/db" npx tsx ./scripts/migrations/002-permssion-value-to-string.ts
  * ```
  */
 

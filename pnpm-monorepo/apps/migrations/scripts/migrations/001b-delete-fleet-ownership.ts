@@ -1,5 +1,3 @@
-// @ts-check
-
 import { prisma } from "@sam-monorepo/database";
 
 async function main() {

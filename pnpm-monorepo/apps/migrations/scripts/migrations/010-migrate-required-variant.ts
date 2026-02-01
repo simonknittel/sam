@@ -1,11 +1,10 @@
 /**
  * Usage:
  * ```bashrc
- * DATABASE_URL="postgresql://postgres:admin@localhost:5432/db" node --experimental-strip-types ./scripts/migrations/010-migrate-required-variant.ts
+ * DATABASE_URL="postgresql://postgres:admin@localhost:5432/db" npx tsx ./scripts/migrations/010-migrate-required-variant.ts
  * ```
  */
 
-// @ts-expect-error
 import { prisma } from "@sam-monorepo/database";
 
 async function main() {

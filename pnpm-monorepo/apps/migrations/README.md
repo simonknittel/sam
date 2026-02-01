@@ -52,7 +52,7 @@ The migration scripts are located in `scripts/migrations/`. Each script is a one
 
 - `001a-fleet-ownership-to-ship.ts` - Convert fleet ownership to ships
 - `001b-delete-fleet-ownership.ts` - Delete fleet ownership records
-- `002-permssion-value-to-string.ts` - Convert permission values to strings
+- `002-permission-value-to-string.ts` - Convert permission values to strings
 - `003-citizen-import/` - Import citizen data from CSV
 - `004-transform-types-and-keys.ts` - Transform entity types and keys
 - `005-populate-citizen-caches.ts` - Populate citizen cache data

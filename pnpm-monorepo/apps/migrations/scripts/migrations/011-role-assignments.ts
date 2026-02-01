@@ -1,7 +1,7 @@
 /**
  * Usage:
  * ```bashrc
- * DATABASE_URL="postgresql://postgres:admin@localhost:5432/db" node ./scripts/migrations/011-role-assignments.ts
+ * DATABASE_URL="postgresql://postgres:admin@localhost:5432/db" npx tsx ./scripts/migrations/011-role-assignments.ts
  * ```
  */
 
