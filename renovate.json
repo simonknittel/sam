@@ -17,6 +17,7 @@
       ],
       "automerge": true,
       "minimumReleaseAge": "7 days",
+      "minimumReleaseAgeBehaviour": "timestamp-optional",
       "internalChecksFilter": "strict",
       "schedule": [
         "before 7am on Tuesday"
