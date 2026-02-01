@@ -1,11 +1,7 @@
 /**
  * Usage:
  * ```bashrc
- * npm install --global ts-node
- *
- * ts-node --esm --skipProject ./migrations/006-populate-citizen-roles-cache.ts
- *
- * DATABASE_URL='mysql://************@/:************@aws.connect.psdb.cloud/db?sslaccept=strict' ts-node --esm --skipProject ./migrations/006-populate-citizen-roles-cache.ts
+ * DATABASE_URL='postgresql://user:pass@host:5432/db' npx tsx ./scripts/migrations/006-populate-citizen-roles-cache.ts
  * ```
  */
 

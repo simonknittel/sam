@@ -1,5 +1,3 @@
-// @ts-check
-
 /**
  * ```bashrc
  * DATABASE_URL="postgresql://postgres:admin@localhost:5432/db" npx tsx ./scripts/migrations/002-permssion-value-to-string.ts
