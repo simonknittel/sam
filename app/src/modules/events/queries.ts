@@ -160,10 +160,7 @@ export const getEventById = cache(
 export const getEvents = cache(
   withTrace(
     "getEvents",
-    async (
-      status: "open" | "closed" | "all" = "open",
-      participating: "me" | "all" = "all",
-    ) => {
+    async (status = "open", participating: "me" | "all" = "all") => {
       const authentication = await requireAuthentication();
       if (!(await authentication.authorize("event", "read"))) forbidden();
 

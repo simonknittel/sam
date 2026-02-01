@@ -5,10 +5,6 @@ import { env } from "./src/env";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
 
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-
   cleanDistDir: true,
 
   images: {

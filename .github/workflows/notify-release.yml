@@ -8,7 +8,8 @@ jobs:
     name: Notify Soketi
     if: >-
       github.event.deployment.environment == 'Production' &&
-      github.event.deployment_status.state == 'success'
+      github.event.deployment_status.state == 'success' &&
+      github.event.deployment.deployment.url != ''
     runs-on: ubuntu-24.04
     environment: Production
     permissions:

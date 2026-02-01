@@ -17,10 +17,10 @@ export interface Row {
   readonly entity: Entity;
   readonly confirmationState?: EntityLogConfirmationState;
   readonly confirmedAt?: Date;
-  readonly confirmedBy?: User;
+  readonly confirmedBy?: User | null;
   readonly entityLog: EntityLog & {
     attributes: EntityLogAttribute[];
-    submittedBy: User;
+    submittedBy?: User | null;
   };
 }
 
@@ -157,9 +157,9 @@ export const OtherTable = ({ rows, searchParams }: Props) => {
 
               <td
                 className="overflow-hidden text-ellipsis"
-                title={row.entityLog.submittedBy.name || undefined}
+                title={row.entityLog.submittedBy?.name || "Unbekannt"}
               >
-                {row.entityLog.submittedBy.name}
+                {row.entityLog.submittedBy?.name || "Unbekannt"}
               </td>
 
               <td>

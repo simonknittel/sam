@@ -88,7 +88,8 @@ export const getProfitDistributionCycles = cache(
           const totalSilc = getTotalSilc(cycle.participants);
           const auecPerSilc =
             cycle.auecProfit !== null
-              ? getAuecPerSilc(cycle.auecProfit, totalSilc)
+              ? // @ts-expect-error
+                getAuecPerSilc(cycle.auecProfit, totalSilc)
               : 0;
           const myShare = getMyShare(mySilcBalance, auecPerSilc);
           const myPayoutState = getPayoutState(cycle, myParticipant);
@@ -158,7 +159,8 @@ export const getProfitDistributionCycleById = cache(
       const totalSilc = getTotalSilc(cycle.participants);
       const auecPerSilc =
         cycle.auecProfit !== null
-          ? getAuecPerSilc(cycle.auecProfit, totalSilc)
+          ? // @ts-expect-error
+            getAuecPerSilc(cycle.auecProfit, totalSilc)
           : null;
       const myShare =
         auecPerSilc !== null ? getMyShare(mySilcBalance, auecPerSilc) : null;

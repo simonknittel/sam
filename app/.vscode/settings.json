@@ -58,6 +58,7 @@
     "psdb",
     "psql",
     "rgba",
+    "robertsspaceindustries",
     "S1NISTER",
     "serie",
     "silc",
@@ -79,6 +80,7 @@
   "dotenv.enableAutocloaking": false,
   "typescript.tsdk": "node_modules/typescript/lib",
   "typescript.enablePromptUseWorkspaceTsdk": true,
+  "typescript.tsserver.experimental.enableProjectDiagnostics": true,
   "typescript.preferences.autoImportFileExcludePatterns": ["auth/*.ts"], // We only want imports from the `index.ts` files in `auth`
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -89,6 +91,5 @@
   "i18n-ally.localesPaths": ["messages"],
   "i18n-ally.keystyle": "nested",
   "typescript.experimental.useTsgo": false,
-  "typescript.tsserver.experimental.enableProjectDiagnostics": true,
   "typescript.native-preview.trace.server": "messages"
 }

@@ -15,7 +15,9 @@ import {
   type NextAuthOptions,
   type User,
 } from "next-auth";
-import DiscordProvider from "next-auth/providers/discord";
+import DiscordProvider, {
+  type DiscordProfile,
+} from "next-auth/providers/discord";
 import { serializeError } from "serialize-error";
 import { type UserRole } from "../../../types";
 
@@ -154,6 +156,10 @@ export const authOptions: NextAuthOptions = {
 
       const existingUser = await getUserById(user.id);
 
+      if (!account) throw new Error("account is missing");
+      if (!account.access_token)
+        throw new Error("account.access_token is missing");
+
       if (existingUser) {
         const guildMember = await getGuildMember(account.access_token);
 
@@ -164,21 +170,21 @@ export const authOptions: NextAuthOptions = {
           throw new Error(guildMember.message);
         }
 
-        const avatar = getDiscordAvatar(profile, guildMember);
+        const avatar = getDiscordAvatar(profile as DiscordProfile, guildMember);
 
         await prisma.$transaction([
           prisma.account.update({
             where: {
               provider_providerAccountId: {
-                provider: account!.provider,
-                providerAccountId: account!.providerAccountId,
+                provider: account.provider,
+                providerAccountId: account.providerAccountId,
               },
             },
             data: {
-              refresh_token: account!.refresh_token,
-              access_token: account!.access_token,
-              expires_at: account!.expires_at,
-              scope: account!.scope,
+              refresh_token: account.refresh_token,
+              access_token: account.access_token,
+              expires_at: account.expires_at,
+              scope: account.scope,
               updatedAt: new Date(),
             },
           }),
@@ -207,10 +213,13 @@ export const authOptions: NextAuthOptions = {
 
         user.email = profile.email!.toLocaleLowerCase();
 
-        const avatar = getDiscordAvatar(profile, guildMember);
+        const avatar = getDiscordAvatar(profile as DiscordProfile, guildMember);
         user.image = avatar;
 
         user.name = null;
+
+        if (!("id" in profile) || !profile.id)
+          throw new Error("profile.id is missing");
 
         const latestConfirmedDiscordIdEntityLog =
           await prisma.entityLog.findFirst({

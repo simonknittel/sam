@@ -1,7 +1,9 @@
 {
 	"cSpell.words": [
+		"algoliasearch",
 		"APGL",
 		"biomejs",
+		"cmdk",
 		"dbname",
 		"dccache",
 		"dgst",
@@ -11,9 +13,12 @@
 		"hmac",
 		"keyup",
 		"mouseup",
+		"nuqs",
 		"nvmrc",
 		"oidc",
 		"OIDC",
+		"openai",
+		"otlp",
 		"postgres",
 		"postgresql",
 		"prisma",
@@ -22,7 +27,10 @@
 		"soketi",
 		"tfbackend",
 		"tfvars",
-		"VERCEL"
+		"uidotdev",
+		"VERCEL",
+		"wicg",
+		"xyflow"
 	],
 	"[terraform]": {
 		"editor.formatOnSave": true,
