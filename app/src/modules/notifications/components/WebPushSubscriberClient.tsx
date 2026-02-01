@@ -1,7 +1,7 @@
 "use client";
 
 import { env } from "@/env";
-import { Button2 } from "@/modules/common/components/Button2";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Tile } from "@/modules/common/components/Tile";
 import clsx from "clsx";
 import { useState } from "react";
@@ -84,7 +84,7 @@ export const WebPushSubscriberClient = ({ className }: Props) => {
           type="button"
           onClick={handleClick}
           disabled={isPending}
-          variant="secondary"
+          variant={Button2Variant.Secondary}
           className="mt-2"
         >
           {isPending && <FaSpinner className="animate-spin" />}

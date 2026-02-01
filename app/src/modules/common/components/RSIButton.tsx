@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import { FaExternalLinkAlt } from "react-icons/fa";
-import { Button2 } from "./Button2";
+import { Button2, Button2Variant } from "./Button2";
 import { Link } from "./Link";
 
 interface Props {
@@ -15,7 +15,7 @@ export const RSIButton = ({ className, href }: Props) => {
       href={href}
       className={clsx("inline-flex", className)}
       rel="noreferrer"
-      variant="secondary"
+      variant={Button2Variant.Secondary}
       colorSchema="rsi"
     >
       RSI <FaExternalLinkAlt />

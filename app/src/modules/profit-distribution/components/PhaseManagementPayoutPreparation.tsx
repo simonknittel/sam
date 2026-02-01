@@ -12,7 +12,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/modules/common/components/AlertDialog";
-import { Button2 } from "@/modules/common/components/Button2";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { DateInput } from "@/modules/common/components/form/DateInput";
 import { NumberInputFormatted } from "@/modules/common/components/form/NumberInput";
 import { StatisticTile } from "@/modules/common/components/StatisticTile";
@@ -125,7 +125,7 @@ export const PhaseManagementPayoutPreparation = ({ cycleData }: Props) => {
                 cycleData.currentPhase !== CyclePhase.PayoutPreparation ||
                 isPending
               }
-              variant="secondary"
+              variant={Button2Variant.Secondary}
               className="mx-auto mt-4"
             >
               {isPending && <FaSpinner className="animate-spin" />}

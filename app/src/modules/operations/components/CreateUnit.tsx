@@ -1,6 +1,6 @@
 "use client";
 
-import { Button2 } from "@/modules/common/components/Button2";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { type Operation } from "@prisma/client";
 import { useState } from "react";
 import { FaPlus } from "react-icons/fa";
@@ -15,7 +15,10 @@ const CreateUnit = ({ operation }: Readonly<Props>) => {
 
   return (
     <>
-      <Button2 variant="secondary" onClick={() => setIsOpen(true)}>
+      <Button2
+        variant={Button2Variant.Secondary}
+        onClick={() => setIsOpen(true)}
+      >
         Unit hinzufügen <FaPlus />
       </Button2>
 

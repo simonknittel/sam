@@ -12,7 +12,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/modules/common/components/AlertDialog";
-import { Button2 } from "@/modules/common/components/Button2";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import type { getProfitDistributionCycleById } from "@/modules/profit-distribution/queries";
 import clsx from "clsx";
 import { useId } from "react";
@@ -41,7 +41,7 @@ export const EndCollectionPhaseButton = ({ className, cycleData }: Props) => {
             disabled={
               cycleData.currentPhase !== CyclePhase.Collection || isPending
             }
-            variant="secondary"
+            variant={Button2Variant.Secondary}
           >
             {isPending && <FaSpinner className="animate-spin" />}
             Phase beenden

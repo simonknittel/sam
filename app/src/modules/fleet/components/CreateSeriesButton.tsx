@@ -1,6 +1,6 @@
 "use client";
 
-import { Button2 } from "@/modules/common/components/Button2";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { type Manufacturer } from "@prisma/client";
 import dynamic from "next/dynamic";
 import { Suspense, useState } from "react";
@@ -22,7 +22,7 @@ export const CreateSeriesButton = ({ className, manufacturerId }: Props) => {
     <>
       <Button2
         className={className}
-        variant="secondary"
+        variant={Button2Variant.Secondary}
         onClick={() => setIsOpen(true)}
         title="Serie anlegen"
       >

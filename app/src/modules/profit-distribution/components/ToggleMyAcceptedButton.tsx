@@ -1,7 +1,7 @@
 "use client";
 
 import { useAction } from "@/modules/actions/utils/useAction";
-import { Button2 } from "@/modules/common/components/Button2";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import type { getProfitDistributionCycleById } from "@/modules/profit-distribution/queries";
 import clsx from "clsx";
 import { useId } from "react";
@@ -28,7 +28,7 @@ export const ToggleMyAcceptedButton = ({ className, cycleData }: Props) => {
         <>
           <input type="hidden" name="value" value="false" />
           <Button2
-            variant="secondary"
+            variant={Button2Variant.Secondary}
             disabled={cycleData.currentPhase !== CyclePhase.Payout}
             type="submit"
           >
@@ -40,7 +40,7 @@ export const ToggleMyAcceptedButton = ({ className, cycleData }: Props) => {
         <>
           <input type="hidden" name="value" value="true" />
           <Button2
-            variant="secondary"
+            variant={Button2Variant.Secondary}
             disabled={cycleData.currentPhase !== CyclePhase.Payout}
             type="submit"
             name="value"

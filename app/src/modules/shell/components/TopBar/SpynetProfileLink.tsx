@@ -1,6 +1,6 @@
 "use client";
 
-import { Button2 } from "@/modules/common/components/Button2";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Link } from "@/modules/common/components/Link";
 import { usePopover } from "@/modules/common/components/Popover";
 import clsx from "clsx";
@@ -20,7 +20,7 @@ export const SpynetProfileLink = ({ className, entityId }: Props) => {
       href={`/app/spynet/citizen/${entityId}`}
       className={clsx(className)}
       onClick={closePopover}
-      variant="primary"
+      variant={Button2Variant.Primary}
     >
       <FaUserSecret />
       Spynet Profil

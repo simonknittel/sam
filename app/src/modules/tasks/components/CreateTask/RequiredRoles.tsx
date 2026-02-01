@@ -1,4 +1,4 @@
-import { Button2 } from "@/modules/common/components/Button2";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { api } from "@/modules/common/utils/api";
 import { SingleRole } from "@/modules/roles/components/SingleRole";
 import type { Role } from "@prisma/client";
@@ -42,7 +42,7 @@ export const RequiredRoles = ({ className, defaultValue }: Props) => {
           <Button2
             type="button"
             title="Rolle auswählen"
-            variant="secondary"
+            variant={Button2Variant.Secondary}
             className="flex-none"
             disabled={isPending}
           >

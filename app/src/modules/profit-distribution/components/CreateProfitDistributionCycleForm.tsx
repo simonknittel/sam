@@ -1,5 +1,5 @@
 import { useAction } from "@/modules/actions/utils/useAction";
-import { Button2 } from "@/modules/common/components/Button2";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { DateInput } from "@/modules/common/components/form/DateInput";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import { Note } from "@/modules/common/components/Note";
@@ -32,7 +32,7 @@ export const CreateProfitDistributionCycleForm = ({
     <form action={formAction} className={clsx(className)}>
       <Button2
         type="button"
-        variant="secondary"
+        variant={Button2Variant.Secondary}
         onClick={() => setShowInstructions((s) => !s)}
       >
         <FaChevronDown

@@ -1,5 +1,5 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
-import { Button2 } from "@/modules/common/components/Button2";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Link } from "@/modules/common/components/Link";
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
 import { PhaseCollection } from "@/modules/profit-distribution/components/PhaseCollection";
@@ -52,7 +52,7 @@ export default async function Page({ params }: PageProps<"/app/sincome/[id]">) {
           <Button2
             as={Link}
             href={`/app/sincome/${cycleData.cycle.id}/management`}
-            variant="secondary"
+            variant={Button2Variant.Secondary}
             className="w-9 flex-initial"
             title="Verwalten"
           >

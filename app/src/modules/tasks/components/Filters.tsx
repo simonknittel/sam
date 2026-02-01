@@ -1,6 +1,6 @@
 "use client";
 
-import { Button2 } from "@/modules/common/components/Button2";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { RadioFilter } from "@/modules/common/components/SidebarFilters/RadioFilter";
 import clsx from "clsx";
 import { useState } from "react";
@@ -18,7 +18,7 @@ export const Filters = ({ className }: Props) => {
       <Button2
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        variant="secondary"
+        variant={Button2Variant.Secondary}
         className="w-full md:hidden"
       >
         <FaFilter />

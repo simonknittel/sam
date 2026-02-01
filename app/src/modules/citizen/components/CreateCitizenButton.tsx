@@ -1,6 +1,6 @@
 "use client";
 
-import { Button2 } from "@/modules/common/components/Button2";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { useCreateContext } from "@/modules/common/components/CreateContext";
 import { FaPlus } from "react-icons/fa";
 
@@ -9,7 +9,7 @@ export const CreateCitizenButton = () => {
 
   return (
     <Button2
-      variant="secondary"
+      variant={Button2Variant.Secondary}
       onClick={() => openCreateModal("citizen")}
       title="Neuen Citizen erstellen"
     >

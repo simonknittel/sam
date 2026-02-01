@@ -1,6 +1,6 @@
 "use client";
 
-import { Button2 } from "@/modules/common/components/Button2";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { signOut } from "next-auth/react";
 import { useState } from "react";
 import { FaSpinner } from "react-icons/fa";
@@ -23,7 +23,7 @@ export const LogoutButton = ({ className }: Props) => {
   return (
     <Button2
       onClick={() => void handleClick()}
-      variant="secondary"
+      variant={Button2Variant.Secondary}
       title="Abmelden"
       disabled={isLoggingOut}
       className={className}

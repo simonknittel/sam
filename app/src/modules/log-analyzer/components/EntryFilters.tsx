@@ -1,4 +1,4 @@
-import { Button2 } from "@/modules/common/components/Button2";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
 import { Popover } from "@/modules/common/components/Popover";
 import clsx from "clsx";
@@ -15,7 +15,7 @@ export const EntryFilters = ({ className }: Props) => {
   return (
     <Popover
       trigger={
-        <Button2 variant="secondary" className={clsx(className)}>
+        <Button2 variant={Button2Variant.Secondary} className={clsx(className)}>
           <FaFilter />
           Filter
         </Button2>

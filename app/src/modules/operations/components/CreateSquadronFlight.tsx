@@ -1,6 +1,6 @@
 "use client";
 
-import { Button2 } from "@/modules/common/components/Button2";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { type OperationUnit } from "@prisma/client";
 import { useState } from "react";
 import { FaPlus } from "react-icons/fa";
@@ -15,7 +15,10 @@ const CreateSquadronFlight = ({ parentUnit }: Readonly<Props>) => {
 
   return (
     <div className="flex items-center">
-      <Button2 variant="secondary" onClick={() => setIsOpen(true)}>
+      <Button2
+        variant={Button2Variant.Secondary}
+        onClick={() => setIsOpen(true)}
+      >
         Flight hinzufügen <FaPlus />
       </Button2>
 

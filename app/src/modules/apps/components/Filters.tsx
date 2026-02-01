@@ -1,6 +1,6 @@
 "use client";
 
-import { Button2 } from "@/modules/common/components/Button2";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Link } from "@/modules/common/components/Link";
 import clsx from "clsx";
 import { useCallback, type MouseEvent } from "react";
@@ -43,7 +43,11 @@ export const Filters = ({
         <Button2
           as={Link}
           href={`/app/apps?tag=${key}`}
-          variant={selectedTags?.includes(key) ? "primary" : "secondary"}
+          variant={
+            selectedTags?.includes(key)
+              ? Button2Variant.Primary
+              : Button2Variant.Secondary
+          }
           key={key}
           replace
           onClick={(e) => handleClick(e, key)}

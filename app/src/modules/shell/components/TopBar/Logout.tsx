@@ -1,6 +1,6 @@
 "use client";
 
-import { Button2 } from "@/modules/common/components/Button2";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import clsx from "clsx";
 import { signOut } from "next-auth/react";
 import { useState } from "react";
@@ -24,7 +24,7 @@ export const Logout = ({ className }: Props) => {
   return (
     <Button2
       type="button"
-      variant="secondary"
+      variant={Button2Variant.Secondary}
       onClick={() => void handleClick()}
       title="Abmelden"
       disabled={isLoggingOut}

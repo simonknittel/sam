@@ -2,7 +2,7 @@
 
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
 import Button from "@/modules/common/components/Button";
-import { Button2 } from "@/modules/common/components/Button2";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { NumberInput } from "@/modules/common/components/form/NumberInput";
 import { Textarea } from "@/modules/common/components/form/Textarea";
 import Modal from "@/modules/common/components/Modal";
@@ -85,7 +85,7 @@ export const CreateOrUpdateSilcTransaction = (props: Props) => {
       ) : (
         <Button2
           onClick={() => setIsOpen(true)}
-          variant="secondary"
+          variant={Button2Variant.Secondary}
           className={clsx(props.className)}
           title="Transaktion erstellen"
         >

@@ -1,7 +1,7 @@
 "use client";
 
 import avatarFrame from "@/modules/avatar-creator/assets/avatar-frame.png";
-import { Button2 } from "@/modules/common/components/Button2";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import clsx from "clsx";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -481,7 +481,7 @@ export const AvatarCreatorClient = ({ className }: Props) => {
 
             <Button2
               type="button"
-              variant="secondary"
+              variant={Button2Variant.Secondary}
               onClick={handleResetTransform}
               className="rounded border border-neutral-700/60 px-2 py-1 text-xs transition hover:border-neutral-500 hover:text-neutral-100 disabled:cursor-not-allowed disabled:opacity-50"
               disabled={!userImage}
@@ -525,7 +525,11 @@ export const AvatarCreatorClient = ({ className }: Props) => {
         />
 
         <div className="mt-2 flex items-center justify-end gap-2">
-          <Button2 type="button" variant="primary" onClick={handleDownload}>
+          <Button2
+            type="button"
+            variant={Button2Variant.Primary}
+            onClick={handleDownload}
+          >
             Herunterladen
           </Button2>
         </div>

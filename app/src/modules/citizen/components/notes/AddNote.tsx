@@ -1,6 +1,6 @@
 "use client";
 
-import { Button2 } from "@/modules/common/components/Button2";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Select } from "@/modules/common/components/form/Select";
 import {
   type ClassificationLevel,
@@ -133,7 +133,7 @@ export const AddNote = ({
             type="submit"
             disabled={isLoading}
             title="Speichern"
-            variant="secondary"
+            variant={Button2Variant.Secondary}
           >
             {isLoading ? <FaSpinner className="animate-spin" /> : <FaSave />}
             Speichern
