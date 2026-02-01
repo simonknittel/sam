@@ -68,6 +68,28 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
 
+  apps/migrations:
+    dependencies:
+      '@sam-monorepo/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      csv:
+        specifier: 6.4.1
+        version: 6.4.1
+      date-fns:
+        specifier: 4.1.0
+        version: 4.1.0
+    devDependencies:
+      '@types/node':
+        specifier: 22.19.7
+        version: 22.19.7
+      tsx:
+        specifier: 4.21.0
+        version: 4.21.0
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
   apps/playwright:
     devDependencies:
       '@playwright/test':
@@ -732,6 +754,22 @@ packages:
     resolution: {integrity: sha512-5IKcdX0nnYavi6G7TtOhwkYzyjfJlatbjMjuLSfE2kYT5pMDOilZ4OvMhi637CcDICTmz3wARPoyhqyX1Y+XvA==}
     engines: {node: ^14.18.0 || >=16.10.0}
 
+  csv-generate@4.5.0:
+    resolution: {integrity: sha512-aQr/vmOKyBSBHNwYhAoXw1+kUsPnMSwmYgpNoo36rIXoG1ecWILnvPGZeQ6oUjzrWknZAD3+jfpqYOBAl4x15A==}
+
+  csv-parse@6.1.0:
+    resolution: {integrity: sha512-CEE+jwpgLn+MmtCpVcPtiCZpVtB6Z2OKPTr34pycYYoL7sxdOkXDdQ4lRiw6ioC0q6BLqhc6cKweCVvral8yhw==}
+
+  csv-stringify@6.6.0:
+    resolution: {integrity: sha512-YW32lKOmIBgbxtu3g5SaiqWNwa/9ISQt2EcgOq0+RAIFufFp9is6tqNnKahqE5kuKvrnYAzs28r+s6pXJR8Vcw==}
+
+  csv@6.4.1:
+    resolution: {integrity: sha512-ajGosmTGnTwYyGl8STqZDu7R6LkDf3xL39XiOmliV/GufQeVUxHzTKIm4NOBCwmEuujK7B6isxs4Uqt9GcRCvA==}
+    engines: {node: '>= 0.1.90'}
+
+  date-fns@4.1.0:
+    resolution: {integrity: sha512-Ukq0owbQXxa/U3EGtsdVBkR1w7KOQ5gIBqdH2hkvknzZPYvBxb/aa6E8L7tmjFtkwZBu3UXBbjIgPo/Ez4xaNg==}
+
   debug@4.4.3:
     resolution: {integrity: sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA==}
     engines: {node: '>=6.0'}
@@ -795,6 +833,14 @@ packages:
     resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
+
+  fsevents@2.3.3:
+    resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
+    engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
+    os: [darwin]
+
+  get-tsconfig@4.13.1:
+    resolution: {integrity: sha512-EoY1N2xCn44xU6750Sx7OjOIT59FkmstNc3X6y5xpz7D5cBtZRe/3pSlTkDJgqsOk3WwZPkWfonhhUJfttQo3w==}
 
   giget@2.0.0:
     resolution: {integrity: sha512-L5bGsVkxJbJgdnwyuheIunkGatUF/zssUoxxjACCseZYAVbaqdh9Tsmmlkl8vYan09H7sbvKt4pS8GqKLBrEzA==}
@@ -958,6 +1004,9 @@ packages:
     resolution: {integrity: sha512-GDhwkLfywWL2s6vEjyhri+eXmfH6j1L7JE27WhqLeYzoh/A3DBaYGEj2H/HFZCn/kMfim73FXxEJTw06WtxQwg==}
     engines: {node: '>= 14.18.0'}
 
+  resolve-pkg-maps@1.0.0:
+    resolution: {integrity: sha512-seS2Tj26TBVOC2NIc2rOe2y2ZO7efxITtLZcGSOnHHNOQ7CkiUBfw0Iw2ck6xkIhPwLhKNLS8BO+hEpngQlqzw==}
+
   safe-buffer@5.2.1:
     resolution: {integrity: sha512-rp3So07KcdmmKbGvgaNxQSJr7bGVSVk5S9Eq1F+ppbRo70+YeaDxkw5Dd8NPN+GD6bjnYm2VuPuCXmpuYvmCXQ==}
 
@@ -987,6 +1036,9 @@ packages:
   stack-chain@1.3.7:
     resolution: {integrity: sha512-D8cWtWVdIe/jBA7v5p5Hwl5yOSOrmZPWDPe2KxQ5UAGD+nxbxU0lKXA4h85Ta6+qgdKVL3vUxsbIZjc1kBG7ug==}
 
+  stream-transform@3.4.0:
+    resolution: {integrity: sha512-QO3OGhKyeIV8p6eRQdG+W6WounFw519zk690hHCNfhgfP9bylVS+NTXsuBc7n+RsGn31UgFPGrWYIgoAbArKEw==}
+
   strnum@2.1.1:
     resolution: {integrity: sha512-7ZvoFTiCnGxBtDqJ//Cu6fWtZtc7Y3x+QOirG15wztbdngGSkht27o2pyGWrVy0b4WAy3jbKmnoK6g5VlVNUUw==}
 
@@ -995,6 +1047,11 @@ packages:
 
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
+
+  tsx@4.21.0:
+    resolution: {integrity: sha512-5C1sg4USs1lfG0GFb2RLXsdpXqBSEhAaA/0kPL01wxzpMqLILNxIxIOKiILz+cdg/pLnOUxFYOR5yhHU666wbw==}
+    engines: {node: '>=18.0.0'}
+    hasBin: true
 
   type-fest@4.41.0:
     resolution: {integrity: sha512-TeTSQ6H5YHvpqVwBRcnLDCBnDOHWYu7IvGbHT6N8AOymcr9PJGjc1GTtiWZTYg0NCgYwvnYWEkVChQAr9bjfwA==}
@@ -2055,6 +2112,21 @@ snapshots:
 
   consola@3.4.2: {}
 
+  csv-generate@4.5.0: {}
+
+  csv-parse@6.1.0: {}
+
+  csv-stringify@6.6.0: {}
+
+  csv@6.4.1:
+    dependencies:
+      csv-generate: 4.5.0
+      csv-parse: 6.1.0
+      csv-stringify: 6.6.0
+      stream-transform: 3.4.0
+
+  date-fns@4.1.0: {}
+
   debug@4.4.3:
     dependencies:
       ms: 2.1.3
@@ -2127,6 +2199,13 @@ snapshots:
 
   fsevents@2.3.2:
     optional: true
+
+  fsevents@2.3.3:
+    optional: true
+
+  get-tsconfig@4.13.1:
+    dependencies:
+      resolve-pkg-maps: 1.0.0
 
   giget@2.0.0:
     dependencies:
@@ -2277,6 +2356,8 @@ snapshots:
 
   readdirp@4.1.2: {}
 
+  resolve-pkg-maps@1.0.0: {}
+
   safe-buffer@5.2.1: {}
 
   safer-buffer@2.1.2: {}
@@ -2295,11 +2376,20 @@ snapshots:
 
   stack-chain@1.3.7: {}
 
+  stream-transform@3.4.0: {}
+
   strnum@2.1.1: {}
 
   tinyexec@1.0.1: {}
 
   tslib@2.8.1: {}
+
+  tsx@4.21.0:
+    dependencies:
+      esbuild: 0.27.2
+      get-tsconfig: 4.13.1
+    optionalDependencies:
+      fsevents: 2.3.3
 
   type-fest@4.41.0: {}
 
