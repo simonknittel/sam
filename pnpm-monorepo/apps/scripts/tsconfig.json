@@ -20,6 +20,6 @@
     /* If your code doesn't run in the DOM: */
     "lib": ["es2024"]
   },
-  "include": ["scripts/**/*"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules"]
 }

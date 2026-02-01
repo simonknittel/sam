@@ -1,16 +1,8 @@
-/**
- * Test data: see mirror-database.md
- *
- * Usage:
- * ```bashrc
- * DATABASE_URL="postgresql://postgres:admin@localhost:5432/db" npx tsx ./migrations/008-import-organizations/index.ts
- * ```
- */
-
 import {
   ConfirmationStatus,
   OrganizationMembershipType,
   OrganizationMembershipVisibility,
+  prisma,
   type Entity,
   type Organization,
   type OrganizationMembershipHistoryEntry,
@@ -19,7 +11,6 @@ import { parse } from "csv";
 import { parse as dateParse } from "date-fns/parse";
 import { createReadStream } from "node:fs";
 import path from "node:path";
-import { prisma } from "../../prisma.js";
 
 type Row = [
   string, // Spectrum ID

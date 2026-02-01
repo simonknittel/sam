@@ -1,10 +1,3 @@
-/**
- * Usage:
- * ```bashrc
- * DATABASE_URL="postgresql://user:pass@host:5432/db" npx tsx ./scripts/migrations/007-migrate-permissions.ts
- * ```
- */
-
 import { prisma } from "@sam-monorepo/database";
 
 async function main() {

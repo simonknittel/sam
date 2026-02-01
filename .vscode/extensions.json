@@ -5,6 +5,7 @@
 		"hashicorp.terraform",
 		"bruno-api-client.bruno",
 		"ms-azuretools.vscode-containers",
-		"ms-playwright.playwright"
+		"ms-playwright.playwright",
+		"prisma.prisma"
 	]
 }

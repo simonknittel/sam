@@ -1,10 +1,3 @@
-/**
- * Usage:
- * ```bashrc
- * DATABASE_URL="postgresql://postgres:admin@localhost:5432/db" npx tsx ./scripts/migrations/011-role-assignments.ts
- * ```
- */
-
 import type { Entity, EntityLog, Role } from "@sam-monorepo/database";
 import { prisma } from "@sam-monorepo/database";
 

@@ -1,14 +1,7 @@
-/**
- * Usage:
- * ```bashrc
- * DATABASE_URL='postgresql://user:pass@host:5432/db' npx tsx ./scripts/migrations/003-citizen-import/index.ts
- * ```
- */
-
+import { prisma } from "@sam-monorepo/database";
 import { parse } from "csv";
 import { createReadStream } from "node:fs";
 import path from "node:path";
-import { prisma } from "../../prisma.js";
 
 const prod = true;
 
