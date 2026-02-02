@@ -34,7 +34,7 @@ jobs:
     environment: "terraform-${{ inputs.environment }}"
 
     steps:
-      - uses: actions/checkout@v5.0.1
+      - uses: actions/checkout@v6.0.2
 
       - name: Read .terraform-version
         id: terraform_version
