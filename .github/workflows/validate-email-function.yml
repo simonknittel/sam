@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - uses: actions/checkout@v5.0.1
+      - uses: actions/checkout@v6.0.2
 
       - name: Set up Biome
         uses: biomejs/setup-biome@v2
