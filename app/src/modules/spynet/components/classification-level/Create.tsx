@@ -1,6 +1,6 @@
 "use client";
 
-import { Button2 } from "@/modules/common/components/Button2";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
@@ -55,7 +55,7 @@ const Create = ({ className }: Readonly<Props>) => {
   return (
     <>
       <Button2
-        variant="secondary"
+        variant={Button2Variant.Secondary}
         onClick={() => setIsOpen(true)}
         className={clsx(className)}
       >

@@ -2,7 +2,7 @@
 
 import { useAction } from "@/modules/actions/utils/useAction";
 import Button from "@/modules/common/components/Button";
-import { Button2 } from "@/modules/common/components/Button2";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Note from "@/modules/common/components/Note";
 import { api } from "@/trpc/react";
 import { createId } from "@paralleldrive/cuid2";
@@ -169,7 +169,7 @@ export const RoleSalariesClient = ({
 
           <Button2
             type="button"
-            variant="secondary"
+            variant={Button2Variant.Secondary}
             onClick={handleCreate}
             className="mx-auto mt-2"
           >

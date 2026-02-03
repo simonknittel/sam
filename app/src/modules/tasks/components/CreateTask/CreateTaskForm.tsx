@@ -1,6 +1,6 @@
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
-import { Button2 } from "@/modules/common/components/Button2";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { DateTimeInput } from "@/modules/common/components/form/DateTimeInput";
 import { NumberInput } from "@/modules/common/components/form/NumberInput";
 import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
@@ -189,7 +189,7 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
 
         <Button2
           type="button"
-          variant="secondary"
+          variant={Button2Variant.Secondary}
           onClick={() => setStep(Step.Visibility)}
           className="mt-4 ml-auto"
         >
@@ -271,7 +271,7 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
 
         <Button2
           type="button"
-          variant="secondary"
+          variant={Button2Variant.Secondary}
           onClick={() => setStep(Step.Reward)}
           className="mt-4 ml-auto"
         >
@@ -379,7 +379,7 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
 
         <Button2
           type="button"
-          variant="secondary"
+          variant={Button2Variant.Secondary}
           onClick={() => setStep(Step.Other)}
           className="mt-4 ml-auto"
         >

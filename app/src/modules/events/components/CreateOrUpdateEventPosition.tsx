@@ -1,7 +1,7 @@
 "use client";
 
 import Button from "@/modules/common/components/Button";
-import { Button2 } from "@/modules/common/components/Button2";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Textarea } from "@/modules/common/components/form/Textarea";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import Modal from "@/modules/common/components/Modal";
@@ -400,7 +400,7 @@ const RequiredVariants = ({
       <Button2
         onClick={handleCreate}
         type="button"
-        variant="secondary"
+        variant={Button2Variant.Secondary}
         className={clsx("mt-2", {
           "grayscale pointer-events-none": items.some((item) => item === "-"),
         })}

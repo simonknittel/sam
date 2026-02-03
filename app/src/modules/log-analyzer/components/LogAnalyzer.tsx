@@ -3,7 +3,7 @@
 "use client";
 
 import Button from "@/modules/common/components/Button";
-import { Button2 } from "@/modules/common/components/Button2";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
 import { Tooltip } from "@/modules/common/components/Tooltip";
 import { useLocalStorage } from "@uidotdev/usehooks";
@@ -216,7 +216,7 @@ export const LogAnalyzer = ({ className }: Props) => {
           <div className="mt-1 background-secondary rounded-primary p-2 flex items-center gap-4">
             <Button2
               type="button"
-              variant="secondary"
+              variant={Button2Variant.Secondary}
               disabled={isPending}
               onClick={() => parseLogs(true)}
             >

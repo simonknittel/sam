@@ -1,5 +1,5 @@
 import { useAction } from "@/modules/actions/utils/useAction";
-import { Button2 } from "@/modules/common/components/Button2";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
 import { type Event } from "@prisma/client";
 import clsx from "clsx";
@@ -30,7 +30,7 @@ export const CopyLineupFromEventButton = ({
         type="button"
         onClick={() => setIsOpen(true)}
         title="Aufstellung aus einem anderen Event kopieren"
-        variant="secondary"
+        variant={Button2Variant.Secondary}
         className={clsx(className)}
       >
         <FaCopy />

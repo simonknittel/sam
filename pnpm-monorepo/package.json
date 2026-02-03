@@ -4,10 +4,11 @@
   "packageManager": "pnpm@10.28.2",
   "scripts": {
     "build:lambda": "pnpm run --filter \"./packages/database\" build && pnpm run --filter \"./packages/notifications\" build && pnpm run --filter \"./apps/lambda\" build",
+    "build:scripts": "pnpm run --filter \"./packages/database\" build",
     "format": "prettier --write ."
   },
   "devDependencies": {
-    "prettier": "3.8.0",
+    "prettier": "3.8.1",
     "prettier-plugin-organize-imports": "4.3.0"
   }
 }

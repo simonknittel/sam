@@ -1,15 +1,4 @@
-/**
- * Usage:
- * ```bashrc
- * npm install --global ts-node
- *
- * ts-node --skipProject ./migrations/007-migrate-permissions.ts
- *
- * DATABASE_URL="..." ts-node --skipProject ./migrations/007-migrate-permissions.ts
- * ```
- */
-
-import { prisma } from "../prisma";
+import { prisma } from "@sam-monorepo/database";
 
 async function main() {
   const roles = await prisma.role.findMany({

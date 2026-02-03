@@ -14,19 +14,19 @@ jobs:
       (github.event_name == 'workflow_dispatch') ||
       (github.event.deployment.environment == 'Production' &&
       github.event.deployment_status.state == 'success' &&
-      github.event.deployment.deployment.url != '')
+      github.event.deployment.creator.login == 'vercel[bot]')
     runs-on: ubuntu-24.04
     environment: Production
     permissions:
       contents: read
     container:
-      image: mcr.microsoft.com/playwright:v1.58.0-noble
+      image: mcr.microsoft.com/playwright:v1.58.1-noble
       options: --user 1001
     defaults:
       run:
         working-directory: pnpm-monorepo
     steps:
-      - uses: actions/checkout@v5.0.1
+      - uses: actions/checkout@v6.0.2
 
       - uses: pnpm/action-setup@v4.2.0
         with:
@@ -49,7 +49,7 @@ jobs:
           PLAYWRIGHT_CUSTOM_HEADER_VALUE: ${{ secrets.PLAYWRIGHT_CUSTOM_HEADER_VALUE }}
 
       - name: Upload test report
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@v6.0.0
         if: ${{ !cancelled() }}
         with:
           name: playwright-report

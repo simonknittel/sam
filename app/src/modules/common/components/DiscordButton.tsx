@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import { FaDiscord } from "react-icons/fa";
-import { Button2 } from "./Button2";
+import { Button2, Button2ColorSchema, Button2Variant } from "./Button2";
 import { Link } from "./Link";
 
 interface Props {
@@ -18,8 +18,8 @@ export const DiscordButton = ({ className, path }: Props) => {
       href={href}
       className={clsx(className)}
       rel="noreferrer"
-      colorSchema="discord"
-      variant="secondary"
+      colorSchema={Button2ColorSchema.Discord}
+      variant={Button2Variant.Secondary}
     >
       <FaDiscord />
       Discord

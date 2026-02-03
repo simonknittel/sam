@@ -1,7 +1,7 @@
 "use client";
 
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
-import { Button2 } from "@/modules/common/components/Button2";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
 import Note from "@/modules/common/components/Note";
 import { TaskRewardType, type Task, type TaskAssignment } from "@prisma/client";
@@ -62,7 +62,7 @@ export const CompleteTask = ({ className, task }: Props) => {
   return (
     <>
       <Button2
-        variant="secondary"
+        variant={Button2Variant.Secondary}
         onClick={handleClick}
         title="Task abschließen"
         className={clsx(className)}

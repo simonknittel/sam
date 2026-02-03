@@ -1,15 +1,4 @@
-/**
- * Usage:
- * ```bashrc
- * npm install --global ts-node
- *
- * ts-node --esm --skipProject ./migrations/006-populate-citizen-roles-cache.ts
- *
- * DATABASE_URL='mysql://************@/:************@aws.connect.psdb.cloud/db?sslaccept=strict' ts-node --esm --skipProject ./migrations/006-populate-citizen-roles-cache.ts
- * ```
- */
-
-import { prisma } from "../prisma";
+import { prisma } from "@sam-monorepo/database";
 
 async function main() {
   const entities = await prisma.entity.findMany({

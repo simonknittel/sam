@@ -1,6 +1,6 @@
 "use client";
 
-import { Button2 } from "@/modules/common/components/Button2";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { type Manufacturer, type Series } from "@prisma/client";
 import clsx from "clsx";
 import dynamic from "next/dynamic";
@@ -27,7 +27,7 @@ export const CreateVariantButton = ({
   return (
     <div className={clsx(className, "flex justify-center")}>
       <Button2
-        variant="secondary"
+        variant={Button2Variant.Secondary}
         onClick={() => setIsOpen(true)}
         title="Variante anlegen"
       >

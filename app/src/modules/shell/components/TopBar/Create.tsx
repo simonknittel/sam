@@ -3,7 +3,11 @@
 import { useAppsContext } from "@/modules/apps/components/AppsContext";
 import type { ExternalApp } from "@/modules/apps/utils/types";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
-import { Button2 } from "@/modules/common/components/Button2";
+import {
+  Button2,
+  Button2ColorSchema,
+  Button2Variant,
+} from "@/modules/common/components/Button2";
 import {
   useCreateContext,
   type createForms,
@@ -25,7 +29,7 @@ export const Create = ({ className }: Props) => {
   );
   const showCreateDistributionCycle = Boolean(
     authentication &&
-      authentication.authorize("profitDistributionCycle", "create"),
+    authentication.authorize("profitDistributionCycle", "create"),
   );
   const showCreateOrganization = Boolean(
     authentication && authentication.authorize("organization", "create"),
@@ -41,7 +45,7 @@ export const Create = ({ className }: Props) => {
   );
   const showCreateSilcTransaction = Boolean(
     authentication &&
-      authentication.authorize("silcTransactionOfOtherCitizen", "create"),
+    authentication.authorize("silcTransactionOfOtherCitizen", "create"),
   );
 
   if (
@@ -60,8 +64,8 @@ export const Create = ({ className }: Props) => {
       <Popover
         trigger={
           <Button2
-            variant="secondary"
-            colorSchema="interactionMuted"
+            variant={Button2Variant.Secondary}
+            colorSchema={Button2ColorSchema.InteractionMuted}
             className="h-full px-6"
           >
             <FaPlus />

@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - uses: actions/checkout@v5.0.1
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ inputs.git_ref }}
 
@@ -35,14 +35,14 @@ jobs:
         working-directory: pnpm-monorepo
 
       - name: Store artifact (midnight-automations)
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@v6.0.0
         with:
           name: midnight-automations-dist
           path: pnpm-monorepo/apps/lambda/build/midnight-automations.zip
           retention-days: 1
 
       - name: Store artifact (notification-router)
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@v6.0.0
         with:
           name: notification-router-dist
           path: pnpm-monorepo/apps/lambda/build/notification-router.zip
@@ -50,7 +50,7 @@ jobs:
 
       - run: mv pnpm-monorepo/apps/lambda/build/scrape-discord-events.zip pnpm-monorepo/apps/lambda/build/scrape-discord-events-function.zip
       - name: Store artifact (scrape-discord-events)
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@v6.0.0
         with:
           name: scrape-discord-events-function-dist
           path: pnpm-monorepo/apps/lambda/build/scrape-discord-events-function.zip

@@ -1,6 +1,6 @@
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import Avatar from "@/modules/common/components/Avatar";
-import { Button2 } from "@/modules/common/components/Button2";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Link } from "@/modules/common/components/Link";
 import clsx from "clsx";
 import { FaBell, FaUser } from "react-icons/fa";
@@ -36,7 +36,7 @@ export const Account = () => {
           as={Link}
           href="/app/account/notifications"
           title="Benachrichtigungen"
-          variant="secondary"
+          variant={Button2Variant.Secondary}
         >
           <FaBell />
         </Button2>

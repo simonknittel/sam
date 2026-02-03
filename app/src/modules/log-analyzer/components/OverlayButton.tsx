@@ -1,6 +1,6 @@
 "use client";
 
-import { Button2 } from "@/modules/common/components/Button2";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import clsx from "clsx";
 import { useEffect, type MouseEventHandler } from "react";
 import { FaRegWindowRestore } from "react-icons/fa";
@@ -43,7 +43,7 @@ export const OverlayButton = ({ className, entries }: Props) => {
     <>
       <Button2
         type="button"
-        variant="secondary"
+        variant={Button2Variant.Secondary}
         onClick={handleToggleOverlay}
         className={className}
       >
@@ -137,9 +137,7 @@ const OverlayEntry = ({ entry }: OverlayEntryProps) => {
         )} */}
 
         {entry.type === EntryType.OwnDeath && (
-          <div className="px-2">
-            Gestorben
-          </div>
+          <div className="px-2">Gestorben</div>
         )}
       </div>
 

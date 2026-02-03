@@ -58,7 +58,7 @@ jobs:
           aws-region: eu-central-1
 
       - name: Retrieve ${{ matrix.function }} artifact
-        uses: actions/download-artifact@v5.0.0
+        uses: actions/download-artifact@v7.0.0
         with:
           name: ${{ matrix.function }}-dist
 

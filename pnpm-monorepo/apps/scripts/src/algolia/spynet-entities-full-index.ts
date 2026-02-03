@@ -1,14 +1,5 @@
-/**
- * Usage:
- * ```bashrc
- * npm install --global ts-node
- *
- * DATABASE_URL='mysql://************@/:************@aws.connect.psdb.cloud/db?sslaccept=strict' ALGOLIA_APP_ID='' ALGOLIA_ADMIN_API_KEY='' ts-node --esm --skipProject ./algolia/spynet-entities-full-index.ts
- * ```
- */
-
+import { prisma } from "@sam-monorepo/database";
 import algoliasearch from "algoliasearch";
-import { prisma } from "../prisma";
 
 const client = algoliasearch(
   process.env.ALGOLIA_APP_ID!,

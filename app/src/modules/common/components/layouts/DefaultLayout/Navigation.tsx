@@ -1,6 +1,6 @@
 "use client";
 
-import { Button2 } from "@/modules/common/components/Button2";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Link } from "@/modules/common/components/Link";
 import clsx from "clsx";
 import { usePathname } from "next/navigation";
@@ -27,7 +27,7 @@ export const Navigation = ({ pages }: Props) => {
         <Button2
           type="button"
           onClick={() => setIsOpen((prev) => !prev)}
-          variant="secondary"
+          variant={Button2Variant.Secondary}
         >
           <FaBars />
           <span className="hidden sm:inline">Navigation</span>

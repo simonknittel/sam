@@ -1,4 +1,3 @@
-/* Reference: https://www.totaltypescript.com/tsconfig-cheat-sheet */
 {
   "compilerOptions": {
     /* Base Options: */
@@ -15,9 +14,12 @@
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
     /* If NOT transpiling with TypeScript: */
-    "module": "preserve",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "noEmit": true,
-    /* If your code runs in the DOM: */
-    "lib": ["es2024", "dom", "dom.iterable"]
-  }
+    /* If your code doesn't run in the DOM: */
+    "lib": ["es2024"]
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
 }

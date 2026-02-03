@@ -1,13 +1,4 @@
-// @ts-check
-
-const { PrismaClient } = require("@prisma/client");
-
-const prisma = new PrismaClient({
-  log:
-    process.env.NODE_ENV === "development"
-      ? ["query", "error", "warn"]
-      : ["error"],
-});
+import { prisma } from "@sam-monorepo/database";
 
 async function main() {
   const ownerships = await prisma.fleetOwnership.findMany();
