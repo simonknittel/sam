@@ -128,7 +128,7 @@
   "prisma": {
     "schema": "./prisma/schema"
   },
-  "packageManager": "npm@10.9.4",
+  "packageManager": "npm@11.9.0",
   "overrides": {
     "@types/react-dom": "19.2.3",
     "@types/react": "19.2.9"
