@@ -38,7 +38,7 @@ export const mapOrganizationAttributeHistoryEntries = async (
           };
 
         default:
-          throw new Error(`Unknown attribute key: ${entry.attributeKey}`);
+          throw new Error(`Unknown entry.attributeKey: ${entry.attributeKey}`);
       }
     });
 };

@@ -1,15 +1,17 @@
 import { env } from "@/env";
 import { logs, SeverityNumber } from "@opentelemetry/api-logs";
-import { type LogEntry, type LogOutput } from "./types";
+import { LogLevel, type LogEntry, type LogOutput } from "./types";
 
 const getSeverityNumber = (level: LogEntry["level"]): SeverityNumber => {
   switch (level) {
-    case "info":
+    case LogLevel.Info:
       return SeverityNumber.INFO;
-    case "warn":
+    case LogLevel.Warn:
       return SeverityNumber.WARN;
-    case "error":
+    case LogLevel.Error:
       return SeverityNumber.ERROR;
+    default:
+      throw new Error(`Unknown level: ${level satisfies never}`);
   }
 };
 

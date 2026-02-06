@@ -2,14 +2,14 @@ import { env } from "@/env";
 import { after } from "next/server";
 import { logToConsole } from "./console";
 import { logToOTel } from "./otel";
-import { type LogEntry } from "./types";
+import { LogLevel, type LogEntry } from "./types";
 
 const info = (message: string, args: Record<string, unknown> = {}) => {
   after(async () => {
     const logEntry: LogEntry = {
       ...args,
       timestamp: new Date().toISOString(),
-      level: "info",
+      level: LogLevel.Info,
       message,
       host: env.HOST,
       stack: new Error().stack,
@@ -25,7 +25,7 @@ const warn = (message: string, args: Record<string, unknown> = {}) => {
     const logEntry: LogEntry = {
       ...args,
       timestamp: new Date().toISOString(),
-      level: "warn",
+      level: LogLevel.Warn,
       message,
       host: env.HOST,
       stack: new Error().stack,
@@ -41,7 +41,7 @@ const error = (message: string, args: Record<string, unknown> = {}) => {
     const logEntry: LogEntry = {
       ...args,
       timestamp: new Date().toISOString(),
-      level: "error",
+      level: LogLevel.Error,
       message,
       host: env.HOST,
       stack: new Error().stack,

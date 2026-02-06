@@ -94,6 +94,8 @@ export async function POST(request: Request, props: { params: Params }) {
       case "community-moniker":
         await authentication.authorizeApi("community-moniker", "create");
         break;
+      default:
+        throw new Error(`Unknown data.type: ${data satisfies never}`);
     }
 
     /**
