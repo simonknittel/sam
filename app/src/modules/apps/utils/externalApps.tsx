@@ -63,8 +63,8 @@ export const externalApps: ExternalApp[] = [
 
   {
     id: "dicld2d3ciqvi3fs6i5jxw60",
-    name: "SINthesis",
-    slug: "sinthesis",
+    name: "Projekte",
+    slug: "projects",
     description: "Verfolge den Fortschritt unserer Org-internen Projekte",
     tags: ["economics"],
     defaultPage: {

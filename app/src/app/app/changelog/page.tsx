@@ -45,9 +45,9 @@ export default async function Page() {
   return (
     <div className="flex flex-col gap-4">
       <Day heading="6. Februar 2026">
-        <DayItem heading="SINthesis" badges={["Neu", "Apps"]}>
+        <DayItem heading="Projekte" badges={["Neu", "Apps"]}>
           <p>
-            Mit der neuen App &ldquo;SINthesis&rdquo; kannst du nun den
+            Mit der neuen App &ldquo;Projekte&rdquo; kannst du nun den
             Fortschritt unserer Org-internen Projekte verfolgen.
           </p>
 
@@ -56,10 +56,10 @@ export default async function Page() {
           <p>
             Die App ist zu finden unter{" "}
             <Link
-              href="/app/external/sinthesis"
+              href="/app/external/projects"
               className="text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300"
             >
-              Apps &gt; SINthesis
+              Apps &gt; Projekte
             </Link>
           </p>
         </DayItem>

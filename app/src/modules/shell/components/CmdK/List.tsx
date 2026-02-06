@@ -277,9 +277,9 @@ export const List = () => {
           />
 
           <LinkItem
-            label="SINthesis"
+            label="Projekte"
             icon={<FaBarsProgress />}
-            href="/app/external/sinthesis"
+            href="/app/external/projects"
             setOpen={setOpen}
             setSearch={setSearch}
           />
