@@ -105,6 +105,14 @@ const eslintConfig = defineConfig([
           message: "Please use @/modules/common/components/tabs instead.",
         },
       ],
+
+      "@typescript-eslint/restrict-template-expressions": [
+        "error",
+        {
+          // This needs to be set to true to make use of the `satisfies never` type guard for `switch` statements exhaustive checks.
+          allowNever: true,
+        },
+      ],
     },
   },
 ]);

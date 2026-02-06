@@ -1,24 +1,22 @@
+import { externalApps } from "@/modules/apps/utils/externalApps";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { cornerstoneImageBrowserItemTypes } from "@/modules/cornerstone-image-browser/utils/config";
 import { Command } from "cmdk";
 import type { Session } from "next-auth";
 import { signOut } from "next-auth/react";
-import { AiFillAppstore, AiOutlineForm } from "react-icons/ai";
+import type { ReactElement } from "react";
+import { useMemo } from "react";
+import { AiFillAppstore } from "react-icons/ai";
 import {
   FaCamera,
   FaChartLine,
   FaHome,
   FaLock,
   FaPiggyBank,
-  FaShoppingBasket,
   FaTools,
   FaUser,
 } from "react-icons/fa";
-import {
-  FaBarsProgress,
-  FaCodePullRequest,
-  FaScaleBalanced,
-} from "react-icons/fa6";
+import { FaCodePullRequest, FaScaleBalanced } from "react-icons/fa6";
 import { IoIosHelpCircleOutline } from "react-icons/io";
 import { IoDocuments } from "react-icons/io5";
 import { MdEvent, MdTaskAlt, MdWorkspaces } from "react-icons/md";
@@ -27,6 +25,38 @@ import { TbMilitaryRank } from "react-icons/tb";
 import { useCmdKContext } from "./CmdKContext";
 import { CommandItem, LinkItem, PageItem } from "./Item";
 import { SpynetSearchPage } from "./SpynetSearchPage";
+
+enum MenuItemType {
+  Link = "link",
+  Page = "page",
+  Command = "command",
+}
+
+interface BaseMenuItem {
+  id: string;
+  label: string;
+  keywords?: string[];
+  icon?: ReactElement;
+  type: MenuItemType;
+  authKey?: string;
+}
+
+interface LinkMenuItem extends BaseMenuItem {
+  type: MenuItemType.Link;
+  href: string;
+}
+
+interface PageMenuItem extends BaseMenuItem {
+  type: MenuItemType.Page;
+  page: string;
+}
+
+interface CommandMenuItem extends BaseMenuItem {
+  type: MenuItemType.Command;
+  onSelect: () => void | Promise<void>;
+}
+
+type MenuItem = LinkMenuItem | PageMenuItem | CommandMenuItem;
 
 export const List = () => {
   const authentication = useAuthentication();
@@ -101,241 +131,260 @@ export const List = () => {
   const iamRead = userRead || roleManage;
   const spynetRead = citizenRead || organizationRead;
 
+  const authMap: Record<string, boolean | Session> = {
+    eventRead,
+    fleetRead,
+    profitDistributionCycleRead,
+    iamRead,
+    careerRead,
+    logAnalyzerRead,
+    silcRead,
+    spynetRead,
+    globalStatisticsRead,
+    penaltyEntryCreate,
+    taskRead,
+  };
+
+  const menuItems: MenuItem[] = useMemo(
+    () => [
+      {
+        id: "logout",
+        label: "Abmelden",
+        keywords: ["Log out"],
+        icon: <RiLogoutCircleRLine />,
+        type: MenuItemType.Command,
+        onSelect: async () => {
+          await signOut({ callbackUrl: "/" });
+        },
+      },
+      {
+        id: "account",
+        label: "Account",
+        icon: <FaUser />,
+        type: MenuItemType.Link,
+        href: "/app/account",
+      },
+      {
+        id: "apps",
+        label: "Apps",
+        icon: <AiFillAppstore />,
+        type: MenuItemType.Link,
+        href: "/app/apps",
+      },
+      {
+        id: "avatar-creator",
+        label: "Avatar Creator",
+        icon: <FaCamera />,
+        type: MenuItemType.Link,
+        href: "/app/avatar-creator",
+      },
+      {
+        id: "changelog",
+        label: "Changelog",
+        keywords: ["Changelog", "Updates"],
+        icon: <FaCodePullRequest />,
+        type: MenuItemType.Link,
+        href: "/app/changelog",
+      },
+      {
+        id: "cornerstone-image-browser",
+        label: "Cornerstone Image Browser",
+        icon: <FaTools />,
+        type: MenuItemType.Page,
+        page: "cornerstone-image-browser",
+      },
+      {
+        id: "dashboard",
+        label: "Dashboard",
+        keywords: ["Dashboard", "Startseite", "Homepage"],
+        icon: <FaHome />,
+        type: MenuItemType.Link,
+        href: "/app",
+      },
+      {
+        id: "dogfight-trainer",
+        label: "Dogfight Trainer",
+        keywords: ["Dogfight Trainer", "Asteroids"],
+        icon: <FaTools />,
+        type: MenuItemType.Link,
+        href: "/app/dogfight-trainer",
+      },
+      {
+        id: "documents",
+        label: "Dokumente",
+        keywords: ["Dokumente", "Documents", "Dateien"],
+        icon: <IoDocuments />,
+        type: MenuItemType.Link,
+        href: "/app/documents",
+      },
+      {
+        id: "events",
+        label: "Events",
+        keywords: ["Events", "Veranstaltungen"],
+        icon: <MdEvent />,
+        type: MenuItemType.Link,
+        href: "/app/events",
+        authKey: "eventRead",
+      },
+      {
+        id: "fleet",
+        label: "Flotte",
+        keywords: ["Flotte", "Fleet", "Schiffe", "Ships", "Overview"],
+        icon: <MdWorkspaces />,
+        type: MenuItemType.Link,
+        href: "/app/fleet",
+        authKey: "fleetRead",
+      },
+      {
+        id: "sincome",
+        label: "SINcome",
+        icon: <FaPiggyBank />,
+        type: MenuItemType.Link,
+        href: "/app/sincome",
+        authKey: "profitDistributionCycleRead",
+      },
+      {
+        id: "help",
+        label: "Hilfe",
+        keywords: ["Hilfe", "Help", "Support"],
+        icon: <IoIosHelpCircleOutline />,
+        type: MenuItemType.Link,
+        href: "/app/help",
+      },
+      {
+        id: "iam",
+        label: "IAM",
+        icon: <FaLock />,
+        type: MenuItemType.Page,
+        page: "iam",
+        authKey: "iamRead",
+      },
+      {
+        id: "career",
+        label: "Karriere",
+        keywords: ["Karriere", "Career", "Laufbahn"],
+        icon: <TbMilitaryRank />,
+        type: MenuItemType.Link,
+        href: "/app/career",
+        authKey: "careerRead",
+      },
+      {
+        id: "log-analyzer",
+        label: "Log Analyzer",
+        icon: <FaTools />,
+        type: MenuItemType.Link,
+        href: "/app/tools/log-analyzer",
+        authKey: "logAnalyzerRead",
+      },
+      {
+        id: "silc",
+        label: "SILC",
+        icon: <FaPiggyBank />,
+        type: MenuItemType.Link,
+        href: "/app/silc",
+        authKey: "silcRead",
+      },
+      {
+        id: "spynet",
+        label: "Spynet",
+        icon: <RiSpyFill />,
+        type: MenuItemType.Page,
+        page: "spynet",
+        authKey: "spynetRead",
+      },
+      {
+        id: "statistics",
+        label: "Statistiken",
+        keywords: ["Charts", "Analytics"],
+        icon: <FaChartLine />,
+        type: MenuItemType.Link,
+        href: "/app/statistics",
+        authKey: "globalStatisticsRead",
+      },
+      {
+        id: "penalty-points",
+        label: "Strafpunkte",
+        keywords: ["Strafpunkte", "Penalty Points"],
+        icon: <FaScaleBalanced />,
+        type: MenuItemType.Link,
+        href: "/app/penalty-points",
+        authKey: "penaltyEntryCreate",
+      },
+      {
+        id: "tasks",
+        label: "Tasks",
+        keywords: ["Tasks", "Aufgaben", "Quests"],
+        icon: <MdTaskAlt />,
+        type: MenuItemType.Link,
+        href: "/app/tasks",
+        authKey: "taskRead",
+      },
+
+      ...externalApps.map(
+        (app): LinkMenuItem => ({
+          id: `external-${app.slug}`,
+          label: app.name,
+          icon: app.icon,
+          type: MenuItemType.Link,
+          href: `/app/external/${app.slug}`,
+        }),
+      ),
+    ],
+    [],
+  );
+
+  const filteredAndSortedItems = menuItems
+    .filter((item) => {
+      if (!item.authKey) return true;
+      return Boolean(authMap[item.authKey]);
+    })
+    .sort((a, b) => a.label.localeCompare(b.label, "de"));
+
   const page = pages[pages.length - 1];
+
+  const renderMenuItem = (item: MenuItem) => {
+    switch (item.type) {
+      case MenuItemType.Link:
+        return (
+          <LinkItem
+            key={item.id}
+            label={item.label}
+            keywords={item.keywords}
+            icon={item.icon}
+            href={item.href}
+            setOpen={setOpen}
+            setSearch={setSearch}
+          />
+        );
+      case MenuItemType.Page:
+        return (
+          <PageItem
+            key={item.id}
+            label={item.label}
+            keywords={item.keywords}
+            icon={item.icon}
+            setPages={() => setPages((pages) => [...pages, item.page])}
+            setSearch={setSearch}
+          />
+        );
+      case MenuItemType.Command:
+        return (
+          <CommandItem
+            key={item.id}
+            label={item.label}
+            keywords={item.keywords}
+            icon={item.icon}
+            onSelect={item.onSelect}
+          />
+        );
+      default:
+        throw new Error(`Unknown item.type: ${item satisfies never}`);
+    }
+  };
 
   return (
     <Command.List>
-      {!page && (
-        <>
-          <CommandItem
-            label="Abmelden"
-            keywords={["Log out"]}
-            icon={<RiLogoutCircleRLine />}
-            onSelect={async () => {
-              await signOut({
-                callbackUrl: "/",
-              });
-            }}
-          />
-
-          <LinkItem
-            label="Account"
-            icon={<FaUser />}
-            href="/app/account"
-            setOpen={setOpen}
-            setSearch={setSearch}
-          />
-
-          <LinkItem
-            label="Apps"
-            icon={<AiFillAppstore />}
-            href="/app/apps"
-            setOpen={setOpen}
-            setSearch={setSearch}
-          />
-
-          <LinkItem
-            label="Avatar Creator"
-            icon={<FaCamera />}
-            href="/app/avatar-creator"
-            setOpen={setOpen}
-            setSearch={setSearch}
-          />
-
-          <LinkItem
-            label="Changelog"
-            keywords={["Changelog", "Updates"]}
-            icon={<FaCodePullRequest />}
-            href="/app/changelog"
-            setOpen={setOpen}
-            setSearch={setSearch}
-          />
-
-          <PageItem
-            label="Cornerstone Image Browser"
-            icon={<FaTools />}
-            setPages={() =>
-              setPages((pages) => [...pages, "cornerstone-image-browser"])
-            }
-            setSearch={setSearch}
-          />
-
-          <LinkItem
-            label="Dashboard"
-            keywords={["Dashboard", "Startseite", "Homepage"]}
-            icon={<FaHome />}
-            href="/app"
-            setOpen={setOpen}
-            setSearch={setSearch}
-          />
-
-          <LinkItem
-            label="Dogfight Trainer"
-            keywords={["Dogfight Trainer", "Asteroids"]}
-            icon={<FaTools />}
-            href="/app/dogfight-trainer"
-            setOpen={setOpen}
-            setSearch={setSearch}
-          />
-
-          <LinkItem
-            label="Dokumente"
-            keywords={["Dokumente", "Documents", "Dateien"]}
-            icon={<IoDocuments />}
-            href="/app/documents"
-            setOpen={setOpen}
-            setSearch={setSearch}
-          />
-
-          {eventRead && (
-            <LinkItem
-              label="Events"
-              keywords={["Events", "Veranstaltungen"]}
-              icon={<MdEvent />}
-              href="/app/events"
-              setOpen={setOpen}
-              setSearch={setSearch}
-            />
-          )}
-
-          {fleetRead && (
-            <LinkItem
-              label="Flotte"
-              keywords={["Flotte", "Fleet", "Schiffe", "Ships", "Overview"]}
-              icon={<MdWorkspaces />}
-              href="/app/fleet"
-              setOpen={setOpen}
-              setSearch={setSearch}
-            />
-          )}
-
-          {profitDistributionCycleRead && (
-            <LinkItem
-              label="SINcome"
-              icon={<FaPiggyBank />}
-              href="/app/sincome"
-              setOpen={setOpen}
-              setSearch={setSearch}
-            />
-          )}
-
-          <LinkItem
-            label="Hilfe"
-            keywords={["Hilfe", "Help", "Support"]}
-            icon={<IoIosHelpCircleOutline />}
-            href="/app/help"
-            setOpen={setOpen}
-            setSearch={setSearch}
-          />
-
-          {iamRead && (
-            <PageItem
-              label="IAM"
-              icon={<FaLock />}
-              setPages={() => setPages((pages) => [...pages, "iam"])}
-              setSearch={setSearch}
-            />
-          )}
-
-          {careerRead && (
-            <LinkItem
-              label="Karriere"
-              keywords={["Karriere", "Career", "Laufbahn"]}
-              icon={<TbMilitaryRank />}
-              href="/app/career"
-              setOpen={setOpen}
-              setSearch={setSearch}
-            />
-          )}
-
-          {logAnalyzerRead && (
-            <LinkItem
-              label="Log Analyzer"
-              icon={<FaTools />}
-              href="/app/tools/log-analyzer"
-              setOpen={setOpen}
-              setSearch={setSearch}
-            />
-          )}
-
-          {silcRead && (
-            <LinkItem
-              label="SILC"
-              icon={<FaPiggyBank />}
-              href="/app/silc"
-              setOpen={setOpen}
-              setSearch={setSearch}
-            />
-          )}
-
-          <LinkItem
-            label="SILO-Anfrage"
-            icon={<AiOutlineForm />}
-            href="/app/external/silo-request"
-            setOpen={setOpen}
-            setSearch={setSearch}
-          />
-
-          <LinkItem
-            label="Projekte"
-            icon={<FaBarsProgress />}
-            href="/app/external/projects"
-            setOpen={setOpen}
-            setSearch={setSearch}
-          />
-
-          {spynetRead && (
-            <PageItem
-              label="Spynet"
-              icon={<RiSpyFill />}
-              setPages={() => setPages((pages) => [...pages, "spynet"])}
-              setSearch={setSearch}
-            />
-          )}
-
-          {globalStatisticsRead && (
-            <LinkItem
-              label="Statistiken"
-              keywords={["Charts", "Analytics"]}
-              icon={<FaChartLine />}
-              href="/app/statistics"
-              setOpen={setOpen}
-              setSearch={setSearch}
-            />
-          )}
-
-          {penaltyEntryCreate && (
-            <LinkItem
-              label="Strafpunkte"
-              keywords={["Strafpunkte", "Penalty Points"]}
-              icon={<FaScaleBalanced />}
-              href="/app/penalty-points"
-              setOpen={setOpen}
-              setSearch={setSearch}
-            />
-          )}
-
-          <LinkItem
-            label="Scrapper's Codex"
-            keywords={["Schwarzmarkt-Ankauf"]}
-            icon={<FaShoppingBasket />}
-            href="/app/external/scrappers-codex"
-            setOpen={setOpen}
-            setSearch={setSearch}
-          />
-
-          {taskRead && (
-            <LinkItem
-              label="Tasks"
-              keywords={["Tasks", "Aufgaben", "Quests"]}
-              icon={<MdTaskAlt />}
-              href="/app/tasks"
-              setOpen={setOpen}
-              setSearch={setSearch}
-            />
-          )}
-        </>
-      )}
+      {!page && <>{filteredAndSortedItems.map(renderMenuItem)}</>}
 
       {page === "cornerstone-image-browser" && <CornerstoneImageBrowserPage />}
 
