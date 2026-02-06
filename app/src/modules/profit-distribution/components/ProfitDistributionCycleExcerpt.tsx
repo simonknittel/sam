@@ -71,11 +71,25 @@ export const ProfitDistributionCycleExcerpt = ({
       break;
 
     case PayoutState.UNKNOWN:
-    default:
       myPayoutStateBadge = (
         <Badge label="Status deiner Auszahlung" showLabel value="Unbekannt" />
       );
       break;
+
+    case PayoutState.PAYOUT_NOT_YET_STARTED:
+      myPayoutStateBadge = (
+        <Badge
+          label="Status deiner Auszahlung"
+          showLabel
+          value="Auszahlung noch nicht gestartet"
+        />
+      );
+      break;
+
+    default:
+      throw new Error(
+        `Unknown cycleData.myPayoutState: ${cycleData.myPayoutState satisfies never}`,
+      );
   }
 
   return (

@@ -153,7 +153,9 @@ export const CitizenTable = ({ className, cycleData }: Props) => {
       columnHelper.accessor("payoutState", {
         header: "Status",
         cell: (row) => {
-          switch (row.getValue()) {
+          const payoutState = row.getValue();
+
+          switch (payoutState) {
             case PayoutState.NOT_PARTICIPATING:
               return <span>-</span>;
 
@@ -188,8 +190,12 @@ export const CitizenTable = ({ className, cycleData }: Props) => {
               return <span className="text-red-500">Überfällig</span>;
 
             case PayoutState.UNKNOWN:
-            default:
               return <span className="text-red-500">Unbekannt</span>;
+
+            default:
+              throw new Error(
+                `Unknown payoutState: ${payoutState satisfies never}`,
+              );
           }
         },
       }),

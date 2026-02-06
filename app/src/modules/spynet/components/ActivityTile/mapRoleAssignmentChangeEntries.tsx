@@ -47,6 +47,10 @@ export const mapRoleAssignmentChangeEntries = async (
             </p>
           );
           break;
+        default:
+          throw new Error(
+            `Unknown change.type: ${change.type satisfies never}`,
+          );
       }
 
       return {

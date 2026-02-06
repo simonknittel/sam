@@ -128,6 +128,9 @@ export const mapOrganizationMembershipHistoryEntries = async (
               </p>
             ),
           };
+
+        default:
+          throw new Error(`Unknown entry.type: ${entry.type satisfies never}`);
       }
     });
 };
