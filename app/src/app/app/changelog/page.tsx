@@ -44,6 +44,27 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col gap-4">
+      <Day heading="6. Februar 2026">
+        <DayItem heading="SINthesis" badges={["Neu", "Apps"]}>
+          <p>
+            Mit der neuen App &ldquo;SINthesis&rdquo; kannst du nun den
+            Fortschritt unserer Org-internen Projekte verfolgen.
+          </p>
+
+          <p>Diese App wird bereitgestellt von GeronBraginson und Redilian.</p>
+
+          <p>
+            Die App ist zu finden unter{" "}
+            <Link
+              href="/app/external/sinthesis"
+              className="text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300"
+            >
+              Apps &gt; SINthesis
+            </Link>
+          </p>
+        </DayItem>
+      </Day>
+
       <Day heading="31. Januar 2026">
         <DayItem
           heading="Akzeptanzdatum bei Auszahlungsstatus anzeigen"
@@ -71,8 +92,8 @@ export default async function Page() {
           badges={["Neu", "SILC"]}
         >
           <p>
-            Du kannst jetzt SILC-Transaktionen direkt über den &ldquo;Neu&rdquo;-Button in der
-            TopBar erstellen.
+            Du kannst jetzt SILC-Transaktionen direkt über den
+            &ldquo;Neu&rdquo;-Button in der TopBar erstellen.
           </p>
         </DayItem>
       </Day>

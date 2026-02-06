@@ -60,4 +60,24 @@ export const externalApps: ExternalApp[] = [
       },
     ],
   },
+
+  {
+    id: "dicld2d3ciqvi3fs6i5jxw60",
+    name: "SINthesis",
+    slug: "sinthesis",
+    description: "Verfolge den Fortschritt unserer Org-internen Projekte",
+    tags: ["economics"],
+    defaultPage: {
+      iframeUrl:
+        "https://script.google.com/macros/s/AKfycbwDnz0ooW3_sTLz-y7zSJsNJMyEbzpm-2BdJnmSNCdr9Rxk8171Z60Xj5ACgqNCnlEjrg/exec",
+    },
+    team: [
+      {
+        handle: "GeronBraginson",
+      },
+      {
+        handle: "Redilian",
+      },
+    ],
+  },
 ];
