@@ -14,7 +14,11 @@ import {
   FaTools,
   FaUser,
 } from "react-icons/fa";
-import { FaCodePullRequest, FaScaleBalanced } from "react-icons/fa6";
+import {
+  FaBarsProgress,
+  FaCodePullRequest,
+  FaScaleBalanced,
+} from "react-icons/fa6";
 import { IoIosHelpCircleOutline } from "react-icons/io";
 import { IoDocuments } from "react-icons/io5";
 import { MdEvent, MdTaskAlt, MdWorkspaces } from "react-icons/md";
@@ -268,6 +272,14 @@ export const List = () => {
             label="SILO-Anfrage"
             icon={<AiOutlineForm />}
             href="/app/external/silo-request"
+            setOpen={setOpen}
+            setSearch={setSearch}
+          />
+
+          <LinkItem
+            label="SINthesis"
+            icon={<FaBarsProgress />}
+            href="/app/external/sinthesis"
             setOpen={setOpen}
             setSearch={setSearch}
           />
