@@ -12,6 +12,10 @@ on:
   push:
     branches:
       - develop
+    paths:
+      - .github/workflows/validate-email-function.yml
+      - bun-packages/packages/email-function/**
+      - bun-packages/biome.json
 
 jobs:
   biome:

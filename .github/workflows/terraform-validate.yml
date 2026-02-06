@@ -11,6 +11,9 @@ on:
   push:
     branches:
       - develop
+    paths:
+      - .github/workflows/terraform-validate.yml
+      - terraform/**
 
 jobs:
   validate:
