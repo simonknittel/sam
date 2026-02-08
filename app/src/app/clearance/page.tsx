@@ -48,7 +48,7 @@ export default async function Page() {
 
         <details>
           <summary className="mt-4 text-center text-neutral-500 text-xs hover:text-interaction-500 focus-visible:text-interaction-500 active:text-interaction-300 hover:underline focus-visible:underline active:underline cursor-pointer">
-            Details anzeigen
+            Benutzerdetails anzeigen
           </summary>
 
           <div className="mt-4 flex flex-col gap-4 items-center px-4">
