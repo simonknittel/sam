@@ -1,9 +1,9 @@
 import { env } from "@/env";
-import { type LogOutput } from "./types";
+import { LogLevel, type LogOutput } from "./types";
 
 export const logToConsole: LogOutput = (logEntry) => {
   switch (logEntry.level) {
-    case "info":
+    case LogLevel.Info:
       if (env.NODE_ENV === "production") {
         console.info(JSON.stringify(logEntry));
       } else {
@@ -11,7 +11,7 @@ export const logToConsole: LogOutput = (logEntry) => {
       }
       break;
 
-    case "warn":
+    case LogLevel.Warn:
       if (env.NODE_ENV === "production") {
         console.warn(JSON.stringify(logEntry));
       } else {
@@ -19,12 +19,17 @@ export const logToConsole: LogOutput = (logEntry) => {
       }
       break;
 
-    case "error":
+    case LogLevel.Error:
       if (env.NODE_ENV === "production") {
         console.error(JSON.stringify(logEntry));
       } else {
         console.error(logEntry);
       }
       break;
+
+    default:
+      throw new Error(
+        `Unknown logEntry.level: ${logEntry.level satisfies never}`,
+      );
   }
 };

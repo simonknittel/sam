@@ -1,6 +1,7 @@
 import { AdminEnabler } from "@/modules/auth/components/AdminEnabler";
 import { authenticate } from "@/modules/auth/server";
 import { requireConfirmedEmailForPage } from "@/modules/auth/utils/emailConfirmation";
+import { ClearanceLogout } from "@/modules/iam/components/ClearanceLogout";
 import { log } from "@/modules/logging";
 import { Footer } from "@/modules/shell/components/Footer";
 import { type Metadata } from "next";
@@ -38,13 +39,84 @@ export default async function Page() {
           Anmeldung erfolgreich
         </h1>
 
-        <div className="flex flex-col gap-2 rounded-primary bg-neutral-800/50 p-8 mx-8">
+        <div className="flex flex-col gap-2 rounded-primary bg-neutral-800/50 p-4 mx-4">
           <p>
             Bitte melde dich bei Human Resources oder der Leitung um deinen
             Account freischalten zu lassen.
           </p>
         </div>
+
+        <details>
+          <summary className="mt-4 text-center text-neutral-500 text-xs hover:text-interaction-500 focus-visible:text-interaction-500 active:text-interaction-300 hover:underline focus-visible:underline active:underline cursor-pointer">
+            Benutzerdetails anzeigen
+          </summary>
+
+          <div className="mt-4 flex flex-col gap-4 items-center px-4">
+            <section className="flex flex-col gap-2 text-neutral-500 text-xs max-w-full">
+              <div>
+                <p className="font-bold mb-1">Discord</p>
+
+                <div className="flex gap-1">
+                  <p className="flex-none w-28">ID:</p>
+                  <p
+                    className="flex-1 truncate"
+                    title={authentication.session.discordId}
+                  >
+                    {authentication.session.discordId}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <p className="font-bold mb-1">Benutzer</p>
+
+                <div className="flex gap-1">
+                  <p className="flex-none w-28">User ID:</p>
+
+                  <p
+                    className="flex-1 truncate"
+                    title={authentication.session.user.id}
+                  >
+                    {authentication.session.user.id}
+                  </p>
+                </div>
+
+                <div className="flex gap-1">
+                  <p className="flex-none w-28">E-Mail-Adresse:</p>
+                  <p
+                    className="flex-1 truncate"
+                    title={authentication.session.user.email || undefined}
+                  >
+                    {authentication.session.user.email}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <p className="font-bold mb-1">Citizen</p>
+
+                {authentication.session.entity ? (
+                  <div className="flex gap-1">
+                    <p className="flex-none w-28">Internal ID:</p>
+                    <p
+                      className="flex-1 truncate"
+                      title={authentication.session.entity.id}
+                    >
+                      {authentication.session.entity.id}
+                    </p>
+                  </div>
+                ) : (
+                  "-"
+                )}
+              </div>
+            </section>
+
+            <ClearanceLogout />
+          </div>
+        </details>
       </main>
+
+      <div className="h-[1px] bg-neutral-700 mt-4 w-2" />
 
       <Footer className="mt-4" />
 

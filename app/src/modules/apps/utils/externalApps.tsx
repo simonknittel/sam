@@ -1,4 +1,7 @@
 import siloAnfrageScreenshot from "@/assets/silo-anfrage-screenshot.png";
+import { AiOutlineForm } from "react-icons/ai";
+import { FaShoppingBasket } from "react-icons/fa";
+import { FaBarsProgress } from "react-icons/fa6";
 import type { ExternalApp } from "./types";
 
 export const externalApps: ExternalApp[] = [
@@ -6,6 +9,7 @@ export const externalApps: ExternalApp[] = [
     id: "cmfavc1fu0000eo9v2ff6bfh2",
     name: "SILO-Anfrage",
     slug: "silo-request",
+    icon: <AiOutlineForm />,
     imageSrc: siloAnfrageScreenshot,
     description:
       "Hier kannst du Materialeinträge anmelden, aktuelle Angebote und Preislisten anfordern.",
@@ -44,6 +48,7 @@ export const externalApps: ExternalApp[] = [
     id: "mwibr68eokqvhw23c3r7msih",
     name: "Scrapper's Codex",
     slug: "scrappers-codex",
+    icon: <FaShoppingBasket />,
     description:
       "Verkaufe einfach und schnell deinen Loot gewinnbringend über den Schwarzmarkt der Org",
     tags: ["featured", "economics"],
@@ -65,6 +70,7 @@ export const externalApps: ExternalApp[] = [
     id: "dicld2d3ciqvi3fs6i5jxw60",
     name: "Projekte",
     slug: "projects",
+    icon: <FaBarsProgress />,
     description: "Verfolge den Fortschritt unserer Org-internen Projekte",
     tags: ["economics"],
     defaultPage: {

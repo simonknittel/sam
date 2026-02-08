@@ -65,6 +65,10 @@ export const RolesHistory = async ({ className, entity }: Props) => {
             </>
           );
           break;
+        default:
+          throw new Error(
+            `Unknown change.type: ${change.type satisfies never}`,
+          );
       }
 
       return {

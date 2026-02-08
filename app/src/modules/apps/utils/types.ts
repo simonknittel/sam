@@ -1,4 +1,5 @@
 import type { StaticImageData } from "next/image";
+import type { ReactElement } from "react";
 
 export interface BaseApp {
   name: string;
@@ -55,6 +56,7 @@ export interface ExternalApp extends BaseApp {
 
   team: TeamMember[];
   iframeSandbox?: string;
+  icon: ReactElement;
 }
 
 export type RedactedApp = Pick<BaseApp, "name" | "tags"> & {

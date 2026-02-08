@@ -174,6 +174,9 @@ export const ActivityTile = async ({ className, id }: Props) => {
               </p>
             ),
           };
+
+        default:
+          throw new Error(`Unknown entry.type: ${entry.type satisfies never}`);
       }
     }),
   ];

@@ -78,6 +78,19 @@ export const Table = ({ users }: Props) => {
           );
         },
       }),
+      columnHelper.accessor("user.createdAt", {
+        header: "Registriert am",
+        cell: (props) => {
+          return (
+            <span
+              title={formatDate(props.getValue()) || undefined}
+              className="text-ellipsis block overflow-hidden whitespace-nowrap"
+            >
+              {formatDate(props.getValue())}
+            </span>
+          );
+        },
+      }),
       columnHelper.accessor("user.emailVerified", {
         header: "Datenschutzerklärung",
         cell: (props) => {
@@ -147,7 +160,7 @@ export const Table = ({ users }: Props) => {
         {table.getHeaderGroups().map((headerGroup) => (
           <tr
             key={headerGroup.id}
-            className="grid grid-cols-[1fr_1fr_minmax(80px,1fr)_1fr_24px] sm:grid-cols-[1fr_1fr_minmax(80px,1fr)_1fr_128px] items-center gap-4"
+            className="grid grid-cols-[1fr_1fr_minmax(80px,1fr)_minmax(80px,1fr)_1fr_24px] sm:grid-cols-[1fr_1fr_minmax(80px,1fr)_minmax(80px,1fr)_1fr_128px] items-center gap-4"
           >
             {headerGroup.headers.map((header) => (
               <th
@@ -183,7 +196,7 @@ export const Table = ({ users }: Props) => {
         {table.getRowModel().rows.map((row) => (
           <tr
             key={row.id}
-            className="grid grid-cols-[1fr_1fr_minmax(80px,1fr)_1fr_24px] sm:grid-cols-[1fr_1fr_minmax(80px,1fr)_1fr_128px] items-center gap-4 px-2 h-14 rounded-secondary -mx-2 first:mt-2"
+            className="grid grid-cols-[1fr_1fr_minmax(80px,1fr)_minmax(80px,1fr)_1fr_24px] sm:grid-cols-[1fr_1fr_minmax(80px,1fr)_minmax(80px,1fr)_1fr_128px] items-center gap-4 px-2 h-14 rounded-secondary -mx-2 first:mt-2"
           >
             {row.getVisibleCells().map((cell) => (
               <td key={cell.id} className="overflow-hidden">
