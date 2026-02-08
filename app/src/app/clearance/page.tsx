@@ -1,6 +1,7 @@
 import { AdminEnabler } from "@/modules/auth/components/AdminEnabler";
 import { authenticate } from "@/modules/auth/server";
 import { requireConfirmedEmailForPage } from "@/modules/auth/utils/emailConfirmation";
+import { ClearanceLogout } from "@/modules/iam/components/ClearanceLogout";
 import { log } from "@/modules/logging";
 import { Footer } from "@/modules/shell/components/Footer";
 import { type Metadata } from "next";
@@ -38,13 +39,54 @@ export default async function Page() {
           Anmeldung erfolgreich
         </h1>
 
-        <div className="flex flex-col gap-2 rounded-primary bg-neutral-800/50 p-8 mx-8">
+        <div className="flex flex-col gap-2 rounded-primary bg-neutral-800/50 p-4 mx-4">
           <p>
             Bitte melde dich bei Human Resources oder der Leitung um deinen
             Account freischalten zu lassen.
           </p>
         </div>
+
+        <div className="h-[1px] bg-neutral-700 mt-4 w-2 ml-auto mr-auto" />
+
+        <div className="mt-4 flex flex-col gap-4 items-center px-4">
+          <div className="flex flex-col gap-1 text-neutral-500 text-xs max-w-full">
+            <div className="flex gap-1">
+              <p className="font-bold flex-none w-28">Discord-ID:</p>
+              <p
+                className="flex-1 truncate"
+                title={authentication.session.discordId}
+              >
+                {authentication.session.discordId}
+              </p>
+            </div>
+
+            <div className="flex gap-1">
+              <p className="font-bold flex-none w-28">E-Mail-Adresse:</p>
+              <p
+                className="flex-1 truncate"
+                title={authentication.session.user.email || undefined}
+              >
+                {authentication.session.user.email}
+              </p>
+            </div>
+
+            <div className="flex gap-1">
+              <p className="font-bold flex-none w-28">Benutzer-ID:</p>
+
+              <p
+                className="flex-1 truncate"
+                title={authentication.session.user.id}
+              >
+                {authentication.session.user.id}
+              </p>
+            </div>
+          </div>
+
+          <ClearanceLogout />
+        </div>
       </main>
+
+      <div className="h-[1px] bg-neutral-700 mt-4 w-2" />
 
       <Footer className="mt-4" />
 
