@@ -21,7 +21,7 @@ jobs:
     permissions:
       contents: read
     container:
-      image: mcr.microsoft.com/playwright:v1.58.1-noble
+      image: mcr.microsoft.com/playwright:v1.58.2-noble
       options: --user 1001
     defaults:
       run:
