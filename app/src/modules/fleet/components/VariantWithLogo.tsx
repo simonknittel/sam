@@ -45,10 +45,7 @@ export const VariantWithLogo = ({
         ></div>
       )}
 
-      <div
-        className="whitespace-nowrap text-ellipsis overflow-hidden"
-        title={variant.name}
-      >
+      <div className="truncate" title={variant.name}>
         {variant.name}
       </div>
     </div>

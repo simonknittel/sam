@@ -1,6 +1,6 @@
 import { requireAuthentication } from "@/modules/auth/server";
 import { Tile } from "@/modules/common/components/Tile";
-import { SingleRole } from "@/modules/roles/components/SingleRole";
+import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import {
   getAssignableRoles,
   getAssignedRoles,
@@ -53,7 +53,11 @@ export const Roles = async ({ className, entity }: Props) => {
       {assignedAndVisibleRoles.length > 0 ? (
         <div className="flex gap-1 flex-wrap">
           {assignedAndVisibleRoles.map((role) => (
-            <SingleRole key={role.id} role={role} />
+            <SingleRoleBadge
+              key={role.id}
+              roleId={role.id}
+              citizenId={entity.id}
+            />
           ))}
         </div>
       ) : (

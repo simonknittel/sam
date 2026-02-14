@@ -1,6 +1,6 @@
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { api } from "@/modules/common/utils/api";
-import { SingleRole } from "@/modules/roles/components/SingleRole";
+import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import type { Role } from "@prisma/client";
 import * as Popover from "@radix-ui/react-popover";
 import clsx from "clsx";
@@ -63,8 +63,8 @@ export const RequiredRoles = ({ className, defaultValue }: Props) => {
                         onClick={() => handleSelectRole(role.id)}
                         className="group"
                       >
-                        <SingleRole
-                          role={role}
+                        <SingleRoleBadge
+                          roleId={role.id}
                           showPlaceholder
                           className="bg-transparent group-hover:bg-neutral-700/50 group-focus-visible:bg-neutral-700/50"
                         />
@@ -103,9 +103,9 @@ export const RequiredRoles = ({ className, defaultValue }: Props) => {
                   }
                   className="flex items-center gap-1 bg-neutral-700/50 pr-2 rounded-secondary"
                 >
-                  <SingleRole
+                  <SingleRoleBadge
                     className="bg-transparent"
-                    role={role!}
+                    roleId={role!.id}
                     showPlaceholder
                   />
                   <FaTrash className="text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300 flex-none" />

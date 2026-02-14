@@ -64,9 +64,10 @@ export const Popover = ({
         <RadixPopover.Portal>
           <RadixPopover.Content
             collisionPadding={{ left: 8, right: 8 }}
-            className="z-30"
+            className="z-30 outline-none"
             onMouseEnter={enableHover ? handleMouseEnter : undefined}
             onMouseLeave={enableHover ? handleMouseLeave : undefined}
+            side="top"
           >
             <div
               className={clsx(
@@ -82,7 +83,10 @@ export const Popover = ({
             </div>
 
             {enableHover && (
-              <div className="h-2 absolute left-0 right-0 bottom-full" />
+              <>
+                <div className="h-2 absolute left-0 right-0 bottom-full" />
+                <div className="h-2 absolute left-0 right-0 top-full" />
+              </>
             )}
 
             <RadixPopover.Arrow className="fill-neutral-700" />

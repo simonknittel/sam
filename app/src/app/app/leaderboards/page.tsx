@@ -46,11 +46,11 @@ export default async function Page() {
                   {citizen.rank}
                 </td>
 
-                <td className="h-14 flex items-center px-2 overflow-hidden text-ellipsis whitespace-nowrap">
+                <td className="h-14 flex items-center px-2 truncate">
                   {/* <Link
                     href={`/app/spynet/citizen/${}`}
                     prefetch={false}
-                    className="flex items-center gap-2 text-brand-red-500 hover:bg-neutral-800 px-2 rounded-secondary h-full overflow-hidden text-ellipsis whitespace-nowrap"
+                    className="flex items-center gap-2 text-brand-red-500 hover:bg-neutral-800 px-2 rounded-secondary h-full truncate"
                   > */}
                   {citizen.displayname}
                   {/* </Link> */}

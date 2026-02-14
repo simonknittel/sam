@@ -171,7 +171,7 @@ export const Table = ({ users }: Props) => {
                   <div
                     {...{
                       className: header.column.getCanSort()
-                        ? "cursor-pointer select-none flex items-center gap-2 hover:text-neutral-50 overflow-hidden text-ellipsis whitespace-nowrap"
+                        ? "cursor-pointer select-none flex items-center gap-2 hover:text-neutral-50 truncate"
                         : "",
                       onClick: header.column.getToggleSortingHandler(),
                     }}

@@ -11,6 +11,8 @@ import { ServiceWorkerLoader } from "@/modules/common/components/ServiceWorkerLo
 import { getUnleashFlag } from "@/modules/common/utils/getUnleashFlag";
 import { UNLEASH_FLAG } from "@/modules/common/utils/UNLEASH_FLAG";
 import { ChannelsProvider } from "@/modules/pusher/components/ChannelsContext";
+import { RolesContextProvider } from "@/modules/roles/components/RolesContext";
+import { getVisibleRoles } from "@/modules/roles/utils/getRoles";
 import { CmdKProvider } from "@/modules/shell/components/CmdK/CmdKContext";
 import { MobileActionBarLoader } from "@/modules/shell/components/Sidebar/MobileActionBarLoader";
 import { TopBar } from "@/modules/shell/components/TopBar";
@@ -21,11 +23,13 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Suspense } from "react";
 
 export default async function AppLayout({ children }: LayoutProps<"/app">) {
-  const [authentication, disableAlgolia, apps] = await Promise.all([
-    requireAuthenticationPage(),
-    getUnleashFlag(UNLEASH_FLAG.DisableAlgolia),
-    getAppLinks(),
-  ]);
+  const [authentication, disableAlgolia, apps, visibleRoles] =
+    await Promise.all([
+      requireAuthenticationPage(),
+      getUnleashFlag(UNLEASH_FLAG.DisableAlgolia),
+      getAppLinks(),
+      getVisibleRoles(),
+    ]);
 
   return (
     <>
@@ -35,34 +39,36 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
             <TRPCReactProvider>
               <ChannelsProvider userId={authentication.session.user.id}>
                 <NextIntlClientProvider>
-                  <div className="min-h-dvh background-primary">
-                    <AppsContextProvider apps={apps}>
-                      <CreateContextProvider>
-                        <CmdKProvider disableAlgolia={disableAlgolia}>
-                          <TopBar />
-                          <MobileActionBarLoader />
-                        </CmdKProvider>
+                  <RolesContextProvider roles={visibleRoles}>
+                    <div className="min-h-dvh background-primary">
+                      <AppsContextProvider apps={apps}>
+                        <CreateContextProvider>
+                          <CmdKProvider disableAlgolia={disableAlgolia}>
+                            <TopBar />
+                            <MobileActionBarLoader />
+                          </CmdKProvider>
 
-                        <div className="pt-12 lg:pt-[104px] pb-[64px] lg:pb-0 min-h-dvh">
-                          {children}
-                        </div>
-                      </CreateContextProvider>
-                    </AppsContextProvider>
-                  </div>
+                          <div className="pt-12 lg:pt-[104px] pb-[64px] lg:pb-0 min-h-dvh">
+                            {children}
+                          </div>
+                        </CreateContextProvider>
+                      </AppsContextProvider>
+                    </div>
 
-                  <Suspense>
-                    <ImpersonationBannerContainer />
-                  </Suspense>
+                    <Suspense>
+                      <ImpersonationBannerContainer />
+                    </Suspense>
 
-                  {authentication.session.user.role === "admin" && (
-                    <AdminEnabler
-                      enabled={
-                        (await cookies()).get("enable_admin")?.value === "1"
-                      }
-                    />
-                  )}
+                    {authentication.session.user.role === "admin" && (
+                      <AdminEnabler
+                        enabled={
+                          (await cookies()).get("enable_admin")?.value === "1"
+                        }
+                      />
+                    )}
 
-                  <NewReleaseToast />
+                    <NewReleaseToast />
+                  </RolesContextProvider>
                 </NextIntlClientProvider>
               </ChannelsProvider>
             </TRPCReactProvider>

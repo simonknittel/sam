@@ -1,6 +1,6 @@
 import { requireAuthentication } from "@/modules/auth/server";
 import { AddRoles } from "@/modules/citizen/components/roles/AddRoles";
-import { SingleRole } from "@/modules/roles/components/SingleRole";
+import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import { getAssignedRoles } from "@/modules/roles/utils/getRoles";
 import {
   type Entity,
@@ -48,7 +48,11 @@ export const RolesCell = async ({
       {roles.length > 0 ? (
         <div className={clsx("flex gap-1", className)}>
           {roles.map((role) => (
-            <SingleRole key={role.id} role={role} />
+            <SingleRoleBadge
+              key={role.id}
+              roleId={role.id}
+              citizenId={entity.id}
+            />
           ))}
         </div>
       ) : (

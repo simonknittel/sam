@@ -1,6 +1,6 @@
 import Button from "@/modules/common/components/Button";
 import { api } from "@/modules/common/utils/api";
-import { SingleRole } from "@/modules/roles/components/SingleRole";
+import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import type { Role } from "@prisma/client";
 import * as Popover from "@radix-ui/react-popover";
 import { useState, type CSSProperties } from "react";
@@ -45,10 +45,10 @@ export const RoleSelector = ({ style, defaultValue, onChange }: Props) => {
                 className="flex items-center justify-between gap-1 bg-neutral-700/50 hover:bg-neutral-600/50 pr-3 rounded-secondary"
                 style={style}
               >
-                <SingleRole
+                <SingleRoleBadge
                   className="bg-transparent"
-                  role={
-                    data.find((role) => role.role.id === selectedRole)!.role
+                  roleId={
+                    data.find((role) => role.role.id === selectedRole)!.role.id
                   }
                   showPlaceholder
                 />
@@ -91,8 +91,8 @@ export const RoleSelector = ({ style, defaultValue, onChange }: Props) => {
                         onClick={() => handleSelectRole(role.role.id)}
                         className="group"
                       >
-                        <SingleRole
-                          role={role.role}
+                        <SingleRoleBadge
+                          roleId={role.role.id}
                           showPlaceholder
                           className="bg-transparent group-hover:bg-neutral-700/50 group-focus-visible:bg-neutral-700/50"
                         />

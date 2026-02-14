@@ -10,7 +10,7 @@ import { Markdown } from "@/modules/common/components/Markdown";
 import { Tile } from "@/modules/common/components/Tile";
 import { Tooltip } from "@/modules/common/components/Tooltip";
 import { formatDate } from "@/modules/common/utils/formatDate";
-import { SingleRole } from "@/modules/roles/components/SingleRole";
+import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import {
   TaskRewardType,
   TaskVisibility,
@@ -164,7 +164,11 @@ export const Overview = ({
                 {task.requiredRoles.length > 0 ? (
                   <div className="flex flex-wrap gap-1 mt-1">
                     {task.requiredRoles.map((role) => (
-                      <SingleRole key={role.id} role={role} showPlaceholder />
+                      <SingleRoleBadge
+                        key={role.id}
+                        roleId={role.id}
+                        showPlaceholder
+                      />
                     ))}
                   </div>
                 ) : (

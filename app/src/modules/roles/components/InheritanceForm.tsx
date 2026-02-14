@@ -2,7 +2,7 @@
 
 import { Button2 } from "@/modules/common/components/Button2";
 import Note from "@/modules/common/components/Note";
-import { SingleRole } from "@/modules/roles/components/SingleRole";
+import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import type { Role, Upload } from "@prisma/client";
 import clsx from "clsx";
 import { useActionState } from "react";
@@ -53,8 +53,8 @@ export const InheritanceForm = ({ className, currentRole, roles }: Props) => {
               <span className="absolute inset-1 rounded-secondary bg-green-500" />
             </span>
 
-            <SingleRole
-              role={role}
+            <SingleRoleBadge
+              roleId={role.id}
               showPlaceholder
               className="bg-transparent"
             />

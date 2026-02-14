@@ -2,7 +2,7 @@
 
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { Button2 } from "@/modules/common/components/Button2";
-import { SingleRole } from "@/modules/roles/components/SingleRole";
+import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import {
   TaskVisibility,
   type Role,
@@ -148,7 +148,7 @@ export const ToggleAssignmentForCurrentUser = ({
                           </p>
                           <div className="flex flex-col items-start gap-1 mt-1">
                             {task.requiredRoles.map((role) => (
-                              <SingleRole key={role.id} role={role} />
+                              <SingleRoleBadge key={role.id} roleId={role.id} />
                             ))}
                           </div>
                         </div>

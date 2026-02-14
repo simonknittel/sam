@@ -114,17 +114,11 @@ const SquadronFlightPositionEmpty = ({ type, unit }: Readonly<Props>) => {
         onClick={() => setIsOpen(true)}
         title="Position besetzen"
       >
-        <p
-          className="whitespace-nowrap text-ellipsis overflow-hidden"
-          title={`${unit.title}-${positions[type]}`}
-        >
+        <p className="truncate" title={`${unit.title}-${positions[type]}`}>
           {unit.title}-{positions[type]}
         </p>
 
-        <p
-          className="text-neutral-500 text-sm whitespace-nowrap text-ellipsis overflow-hidden"
-          title="Unbesetzt"
-        >
+        <p className="text-neutral-500 text-sm truncate" title="Unbesetzt">
           Unbesetzt
         </p>
 
