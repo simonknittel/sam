@@ -45,9 +45,7 @@ export const BooleanFilter = ({ className, identifier, children }: Props) => {
         className="flex gap-2 items-center cursor-pointer overflow-hidden"
         htmlFor={id}
       >
-        <span className="overflow-hidden whitespace-nowrap text-ellipsis">
-          {children}
-        </span>
+        <span className="truncate">{children}</span>
       </label>
     </div>
   );

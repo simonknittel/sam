@@ -120,14 +120,14 @@ export const OtherTable = ({ rows, searchParams }: Props) => {
               </td>
 
               <td
-                className="overflow-hidden text-ellipsis whitespace-nowrap"
+                className="truncate"
                 title={entityLogTypeTranslations[row.entityLog.type]}
               >
                 {entityLogTypeTranslations[row.entityLog.type]}
               </td>
 
               <td
-                className="overflow-hidden text-ellipsis whitespace-nowrap"
+                className="truncate"
                 title={row.entityLog.content || undefined}
               >
                 {row.entityLog.content}

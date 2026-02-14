@@ -1,6 +1,6 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { InheritanceForm } from "@/modules/roles/components/InheritanceForm";
-import { SingleRole } from "@/modules/roles/components/SingleRole";
+import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import { getRoleById, getRoles } from "@/modules/roles/queries";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -30,7 +30,8 @@ export default async function Page({
     <section className="rounded-primary bg-neutral-800/50 p-4">
       <h2 className="text-xl font-bold mb-2">Vererbungen</h2>
       <p className="max-w-prose">
-        Die Rolle <SingleRole role={role} className="inline-flex align-sub" />{" "}
+        Die Rolle{" "}
+        <SingleRoleBadge roleId={roleId} className="inline-flex align-sub" />{" "}
         erhält alle Berechtigungen von den folgenden ausgewählten Rollen. Im
         Karrieresystem gelten die folgenden Rollen ebenfalls als freigeschaltet.
         Verschachtelte Vererbungen werden nicht berücksichtigt.

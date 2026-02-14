@@ -5,7 +5,6 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { getRoles } from "@/modules/roles/queries";
 import { RoleAssignmentChangeType } from "@prisma/client";
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 export interface Change {
@@ -154,11 +153,6 @@ export const updateRoleAssignments = createAuthenticatedAction(
           },
         })),
     );
-
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath("/app/account/notifications");
 
     return {
       success: t("Common.successfullySaved"),

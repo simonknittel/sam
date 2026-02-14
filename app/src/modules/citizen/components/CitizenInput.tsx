@@ -3,7 +3,7 @@
 import Button from "@/modules/common/components/Button";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { underlineCharacters } from "@/modules/common/utils/underlineCharacters";
-import { SingleRole } from "@/modules/roles/components/SingleRole";
+import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import { api } from "@/trpc/react";
 import {
   Combobox,
@@ -283,8 +283,8 @@ const Multiple = ({
                           onClick={() => handleSelectRole(role.id)}
                           className="group"
                         >
-                          <SingleRole
-                            role={role}
+                          <SingleRoleBadge
+                            roleId={role.id}
                             showPlaceholder
                             className="bg-transparent group-hover:bg-neutral-700/50 group-focus-visible:bg-neutral-700/50"
                           />

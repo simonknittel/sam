@@ -2,7 +2,7 @@ import { requireAuthentication } from "@/modules/auth/server";
 import Avatar from "@/modules/common/components/Avatar";
 import { Link } from "@/modules/common/components/Link";
 import { getPenaltyEntriesOfCurrentUser } from "@/modules/penalty-points/queries";
-import { SingleRole } from "@/modules/roles/components/SingleRole";
+import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import { getMyAssignedRoles } from "@/modules/roles/utils/getRoles";
 import {
   getMonthlySalaryOfCurrentCitizen,
@@ -61,7 +61,11 @@ export const ProfileTile = async ({ className }: Props) => {
         {roles.length > 0 && (
           <div className="flex gap-1 flex-wrap justify-center">
             {roles.map((role) => (
-              <SingleRole key={role.id} role={role} />
+              <SingleRoleBadge
+                key={role.id}
+                roleId={role.id}
+                citizenId={authentication.session.entity?.id}
+              />
             ))}
           </div>
         )}

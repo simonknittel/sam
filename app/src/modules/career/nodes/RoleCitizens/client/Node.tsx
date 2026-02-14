@@ -2,7 +2,7 @@
 
 import { Handles } from "@/modules/career/components/Handles";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
-import { SingleRole } from "@/modules/roles/components/SingleRole";
+import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import {
   FlowNodeRoleCitizensAlignment,
   FlowNodeType,
@@ -231,8 +231,8 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
             })}
           >
             {!props.data.roleCitizensHideRole && (
-              <SingleRole
-                role={props.data.role}
+              <SingleRoleBadge
+                roleId={props.data.role.id}
                 className="text-white flex-none"
               />
             )}

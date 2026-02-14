@@ -63,10 +63,7 @@ export const VariantsTile = async ({
                   GRID_COLS,
                 )}
               >
-                <td
-                  className="overflow-hidden text-ellipsis whitespace-nowrap"
-                  title={row.name}
-                >
+                <td className="truncate" title={row.name}>
                   {row.name}
                 </td>
 
@@ -79,7 +76,7 @@ export const VariantsTile = async ({
                 </td>
 
                 <td
-                  className="overflow-hidden text-ellipsis whitespace-nowrap"
+                  className="truncate"
                   title={
                     row.status === VariantStatus.FLIGHT_READY
                       ? "Flight ready"

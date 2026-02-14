@@ -152,9 +152,7 @@ export const Position = ({
                 className="font-bold"
               />
             ) : (
-              <p className="overflow-hidden whitespace-nowrap text-ellipsis font-bold">
-                {position.name}
-              </p>
+              <p className="truncate font-bold">{position.name}</p>
             )}
           </div>
 

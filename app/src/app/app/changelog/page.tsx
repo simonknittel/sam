@@ -23,6 +23,7 @@ import image20250614CmdK from "@/modules/changelog/assets/2025-06-14-cmdk.png";
 import image20250906NewLayout from "@/modules/changelog/assets/2025-09-06-new-layout.png";
 import image20251007sincome from "@/modules/changelog/assets/2025-10-07-sincome.png";
 import image20251013rolesHistory from "@/modules/changelog/assets/2025-10-13-roles-history.png";
+import image20260214RoleTooltip from "@/modules/changelog/assets/2026-02-14-role-tooltip.png";
 import { Link } from "@/modules/common/components/Link";
 import { SmallBadge } from "@/modules/common/components/SmallBadge";
 import { random } from "lodash";
@@ -44,6 +45,30 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col gap-4">
+      <Day heading="14. Februar 2026">
+        <DayItem heading="Tooltip für Rollen" badges={["Neu", "Citizen"]}>
+          <p>
+            Rollen haben nun ein Tooltip in welchem alle Details zu der
+            jeweiligen Rolle angezeigt werden. Auch kann direkt hier die
+            jeweilige Rolle von einem Citizen entfernt werden.
+          </p>
+
+          <p>
+            Zukünftig wird hier das aktuelle Level von levelbaren Rollen
+            gezeigt. Auch kann direkt hier das Level angepasst werden.
+          </p>
+
+          <Link href={image20260214RoleTooltip.src}>
+            <Image
+              quality={100}
+              src={image20260214RoleTooltip}
+              alt=""
+              loading="eager"
+            />
+          </Link>
+        </DayItem>
+      </Day>
+
       <Day heading="6. Februar 2026">
         <DayItem heading="Projekte" badges={["Neu", "Apps"]}>
           <p>
@@ -367,7 +392,7 @@ export default async function Page() {
               quality={100}
               src={image20251013rolesHistory}
               alt=""
-              loading="eager"
+              loading="lazy"
             />
           </Link>
         </DayItem>

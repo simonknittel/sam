@@ -1,6 +1,6 @@
 import { requireAuthentication } from "@/modules/auth/server";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
-import { SingleRole } from "@/modules/roles/components/SingleRole";
+import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import { getVisibleRoles } from "@/modules/roles/utils/getRoles";
 import {
   RoleAssignmentChangeType,
@@ -27,15 +27,14 @@ export const mapRoleAssignmentChangeEntries = async (
       visibleRoles.some((visibleRole) => visibleRole.id === change.roleId),
     )
     .map((change) => {
-      const role = visibleRoles.find((role) => role.id === change.roleId)!;
-
       let message;
       switch (change.type) {
         case RoleAssignmentChangeType.ADD:
           message = (
             <p>
               Citizen <CitizenLink citizen={change.citizen} /> wurde die Rolle{" "}
-              <SingleRole key={role.id} role={role} /> hinzugefügt
+              <SingleRoleBadge key={change.roleId} roleId={change.roleId} />{" "}
+              hinzugefügt
             </p>
           );
           break;
@@ -43,7 +42,8 @@ export const mapRoleAssignmentChangeEntries = async (
           message = (
             <p>
               Citizen <CitizenLink citizen={change.citizen} /> wurde die Rolle{" "}
-              <SingleRole key={role.id} role={role} /> entfernt
+              <SingleRoleBadge key={change.roleId} roleId={change.roleId} />{" "}
+              entfernt
             </p>
           );
           break;

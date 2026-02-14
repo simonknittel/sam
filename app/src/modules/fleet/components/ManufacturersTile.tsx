@@ -60,10 +60,7 @@ export const ManufacturersTile = async () => {
                   )}
                 </td>
 
-                <td
-                  className="overflow-hidden text-ellipsis whitespace-nowrap"
-                  title={row.name}
-                >
+                <td className="truncate" title={row.name}>
                   <Link
                     href={`/app/fleet/settings/manufacturer/${row.id}`}
                     className="text-brand-red-500 hover:underline"

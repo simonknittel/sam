@@ -639,9 +639,7 @@ const Row = ({ role, permissions, gridTemplateColumns }: RowProps) => {
             <div className="size-4 flex-none" />
           )}
 
-          <p className="overflow-hidden text-ellipsis whitespace-nowrap text-sm">
-            {role.name}
-          </p>
+          <p className="truncate text-sm">{role.name}</p>
         </Link>
       </td>
 

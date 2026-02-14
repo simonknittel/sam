@@ -66,7 +66,7 @@ export const SilcTransactionsTableClient = ({
           return (
             <Link
               href={`/app/spynet/citizen/${receiver.id}/silc`}
-              className="hover:bg-neutral-800 flex items-center rounded-secondary px-2 h-full text-brand-red-500 overflow-hidden whitespace-nowrap text-ellipsis"
+              className="hover:bg-neutral-800 flex items-center rounded-secondary px-2 h-full text-brand-red-500 truncate"
               prefetch={false}
               title={receiver.handle || receiver.id}
             >
@@ -97,10 +97,7 @@ export const SilcTransactionsTableClient = ({
         id: "description",
         enableSorting: false,
         cell: (row) => (
-          <span
-            title={row.getValue() || undefined}
-            className="overflow-hidden text-ellipsis whitespace-nowrap"
-          >
+          <span title={row.getValue() || undefined} className="truncate">
             {row.getValue()}
           </span>
         ),
@@ -117,7 +114,7 @@ export const SilcTransactionsTableClient = ({
           return (
             <Link
               href={`/app/spynet/citizen/${citizen.id}`}
-              className="hover:bg-neutral-800 flex items-center rounded-secondary px-2 h-full text-brand-red-500 overflow-hidden whitespace-nowrap text-ellipsis"
+              className="hover:bg-neutral-800 flex items-center rounded-secondary px-2 h-full text-brand-red-500 truncate"
               prefetch={false}
               title={citizen.handle || citizen.id}
             >

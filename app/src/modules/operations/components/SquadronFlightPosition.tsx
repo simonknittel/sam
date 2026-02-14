@@ -40,15 +40,12 @@ const SquadronFlightPosition = ({
 }: Readonly<Props>) => {
   return (
     <li className="text-center">
-      <p
-        className="whitespace-nowrap text-ellipsis overflow-hidden"
-        title={`${unit.title}-${positions[type]}`}
-      >
+      <p className="truncate" title={`${unit.title}-${positions[type]}`}>
         {unit.title}-{positions[type]}
       </p>
 
       <p
-        className="text-neutral-500 text-sm whitespace-nowrap text-ellipsis overflow-hidden"
+        className="text-neutral-500 text-sm truncate"
         title={member.user.name || member.userId}
       >
         {member.user.name}
@@ -67,7 +64,7 @@ const SquadronFlightPosition = ({
       </div>
 
       <p
-        className="text-neutral-500 text-sm whitespace-nowrap text-ellipsis overflow-hidden mt-2"
+        className="text-neutral-500 text-sm truncate mt-2"
         title={member.ship.variant.name}
       >
         {member.ship.variant.name}

@@ -32,19 +32,14 @@ export const Badge = ({
 
       <div className="flex flex-col">
         <span
-          className={clsx(
-            "text-xs opacity-30 overflow-hidden text-ellipsis whitespace-nowrap",
-            {
-              "sr-only": !showLabel,
-            },
-          )}
+          className={clsx("text-xs opacity-30 truncate", {
+            "sr-only": !showLabel,
+          })}
         >
           {label}
         </span>
 
-        <span className="overflow-hidden whitespace-nowrap text-ellipsis">
-          {valueNode || value}
-        </span>
+        <span className="truncate">{valueNode || value}</span>
       </div>
 
       {cta && <span className="text-xs">{cta}</span>}

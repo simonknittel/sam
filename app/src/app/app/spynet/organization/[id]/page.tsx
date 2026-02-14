@@ -71,9 +71,7 @@ export default async function Page(props: Props) {
 
         <span className="text-neutral-500">/</span>
 
-        <h1 className="overflow-hidden text-ellipsis whitespace-nowrap">
-          {organization.name}
-        </h1>
+        <h1 className="truncate">{organization.name}</h1>
 
         {/* {authentication.authorize("organization", "delete") && <DeleteEntity entity={organization} />} */}
       </div>

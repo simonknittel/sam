@@ -48,10 +48,7 @@ export const SeriesTile = async ({ className, manufacturerId }: Props) => {
                   GRID_COLS,
                 )}
               >
-                <td
-                  className="overflow-hidden text-ellipsis whitespace-nowrap"
-                  title={row.name}
-                >
+                <td className="truncate" title={row.name}>
                   <Link
                     href={`/app/fleet/settings/manufacturer/${manufacturerId}/series/${row.id}`}
                     className="text-brand-red-500 hover:text-brand-red-300"

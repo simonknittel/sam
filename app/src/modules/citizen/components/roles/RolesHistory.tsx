@@ -3,7 +3,7 @@ import { requireAuthentication } from "@/modules/auth/server";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { Tile } from "@/modules/common/components/Tile";
 import { formatDate } from "@/modules/common/utils/formatDate";
-import { SingleRole } from "@/modules/roles/components/SingleRole";
+import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import { getVisibleRoles } from "@/modules/roles/utils/getRoles";
 import { RoleAssignmentChangeType, type Entity } from "@prisma/client";
 import clsx from "clsx";
@@ -46,22 +46,23 @@ export const RolesHistory = async ({ className, entity }: Props) => {
       visibleRoles.some((visibleRole) => visibleRole.id === change.roleId),
     )
     .map((change) => {
-      const role = visibleRoles.find((role) => role.id === change.roleId)!;
-
       let message;
       switch (change.type) {
         case RoleAssignmentChangeType.ADD:
           message = (
             <>
-              Die Rolle <SingleRole key={role.id} role={role} /> wurde
-              hinzugefügt.
+              Die Rolle{" "}
+              <SingleRoleBadge key={change.roleId} roleId={change.roleId} />{" "}
+              wurde hinzugefügt.
             </>
           );
           break;
         case RoleAssignmentChangeType.REMOVE:
           message = (
             <>
-              Die Rolle <SingleRole key={role.id} role={role} /> wurde entfernt.
+              Die Rolle{" "}
+              <SingleRoleBadge key={change.roleId} roleId={change.roleId} />{" "}
+              wurde entfernt.
             </>
           );
           break;

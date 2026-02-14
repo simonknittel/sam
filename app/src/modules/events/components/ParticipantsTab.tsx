@@ -218,10 +218,7 @@ export const ParticipantsTab = async ({
                   </Tooltip>
                 </th>
 
-                <th
-                  className="overflow-hidden text-ellipsis whitespace-nowrap"
-                  title="Rollen/Zertifikate"
-                >
+                <th className="truncate" title="Rollen/Zertifikate">
                   Rollen/Zertifikate
                 </th>
               </tr>

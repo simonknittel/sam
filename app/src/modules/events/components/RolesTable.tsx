@@ -1,6 +1,6 @@
 "use client";
 
-import { SingleRole } from "@/modules/roles/components/SingleRole";
+import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import type { Role, Upload } from "@prisma/client";
 import {
   createColumnHelper,
@@ -43,7 +43,7 @@ export const RolesTable = ({ className, rows }: Props) => {
         id: "name",
         cell: (row) => {
           const { role } = row.row.original;
-          return <SingleRole role={role} className="inline-flex" />;
+          return <SingleRoleBadge roleId={role.id} className="inline-flex" />;
         },
       }),
       columnHelper.accessor("count", {

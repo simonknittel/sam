@@ -36,7 +36,7 @@ export const DeleteRole = ({ className, role }: Props) => {
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button2 disabled={isPending}>
-              {isPending ? <FaSpinner className="animate-spin" /> : <FaTrash />}{" "}
+              {isPending ? <FaSpinner className="animate-spin" /> : <FaTrash />}
               Löschen
             </Button2>
           </AlertDialogTrigger>
