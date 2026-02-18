@@ -12,7 +12,17 @@ import type { z } from "zod";
 
 type Return = Promise<
   | { success: string }
-  | { error: string; errorDetails?: unknown; requestPayload: FormData }
+  | {
+      error: string;
+      errorDetails?: unknown;
+      /**
+       * Since Next.js resets a form after submission, we include the original
+       * request payload in the response for the respective client component
+       * being able to repopulate the form with the previous values. See
+       * `useAction()` for more details.
+       */
+      requestPayload: FormData;
+    }
 >;
 
 export const createAuthenticatedAction = <T extends z.ZodTypeAny>(

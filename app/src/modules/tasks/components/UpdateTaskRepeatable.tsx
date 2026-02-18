@@ -20,9 +20,10 @@ interface Props {
 
 export const UpdateTaskRepeatable = ({ className, task }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { state, formAction, isPending } = useAction(updateTaskRepeatable, {
-    onSuccess: () => setIsOpen(false),
-  });
+  const { state, formAction, isPending, getDefaultValueWithFallback } =
+    useAction(updateTaskRepeatable, {
+      onSuccess: () => setIsOpen(false),
+    });
 
   const handleClick = () => {
     setIsOpen(true);
@@ -58,13 +59,10 @@ export const UpdateTaskRepeatable = ({ className, task }: Props) => {
           <NumberInput
             name="repeatable"
             label="Wie häufig kann dieser Task abgeschlossen werden?"
-            defaultValue={
-              state &&
-              "requestPayload" in state &&
-              state.requestPayload.has("repeatable")
-                ? (state.requestPayload.get("repeatable") as string)
-                : task.repeatable || 1
-            }
+            defaultValue={getDefaultValueWithFallback(
+              "repeatable",
+              task.repeatable || 1,
+            )}
             required
             min={1}
           />
