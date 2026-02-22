@@ -55,7 +55,10 @@ export const Event = async ({ className, event, index }: Props) => {
 
   return (
     <article
-      className={clsx("rounded-primary overflow-hidden w-full", className)}
+      className={clsx(
+        "rounded-primary rounded-br-none overflow-hidden w-full beveled-br",
+        className,
+      )}
     >
       {isHappeningNow && (
         <div className="bg-green-500/50 text-text-primary font-bold text-center p-2">

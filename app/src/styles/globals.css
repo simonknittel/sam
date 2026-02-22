@@ -77,4 +77,17 @@
   .prose a:focus-visible {
     color: var(--color-interaction-300);
   }
+
+  .beveled-br {
+    --bevel-size: 32px;
+    clip-path: shape(
+      from 0% 0%,
+      line to 100% 0%,
+      line to 100% calc(100% - var(--bevel-size)),
+      line to calc(100% - var(--bevel-size)) 100%,
+      line to 0% 100%,
+      line to 0% 0%,
+      close
+    );
+  }
 }

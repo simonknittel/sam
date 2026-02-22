@@ -24,10 +24,10 @@ export const TasksDashboardTile = async ({ className }: Props) => {
         ))}
       </div>
 
-      <div className="flex justify-center mt-1">
+      <div className="flex justify-center mt-2">
         <Link
           href="/app/tasks"
-          className="text-interaction-500 hover:underline focus-visible:underline"
+          className="text-interaction-500 hover:underline focus-visible:underline font-mono uppercase text-sm"
         >
           Alle Tasks
         </Link>

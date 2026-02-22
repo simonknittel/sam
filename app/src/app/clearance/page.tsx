@@ -34,12 +34,17 @@ export default async function Page() {
   return (
     <div className="min-h-dvh flex justify-center items-center flex-col py-8 background-primary">
       <main className="w-full max-w-lg">
-        <h1 className="mb-4 text-center text-xl text-sinister-red font-bold mx-8">
+        <h1 className="mb-4 text-center text-xl text-sinister-red font-bold mx-8 font-mono uppercase">
           <FaRegCheckCircle className="text-green-500 inline relative top-[-2px]" />{" "}
           Anmeldung erfolgreich
         </h1>
 
-        <div className="flex flex-col gap-2 rounded-primary bg-neutral-800/50 p-4 mx-4">
+        <div
+          className="flex flex-col gap-2 rounded-primary bg-neutral-800/50 p-4 mx-4 beveled-br"
+          style={{
+            "--bevel-size": "16px",
+          }}
+        >
           <p>
             Bitte melde dich bei Human Resources oder der Leitung um deinen
             Account freischalten zu lassen.

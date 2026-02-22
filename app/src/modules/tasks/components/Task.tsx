@@ -125,9 +125,10 @@ export const Task = ({ className, task }: Props) => {
     <Link
       href={`/app/tasks/${task.id}`}
       className={clsx(
-        "flex background-secondary rounded-secondary overflow-hidden hover:bg-neutral-800",
+        "flex background-secondary rounded-secondary overflow-hidden hover:bg-neutral-800 beveled-br",
         className,
       )}
+      style={{ "--bevel-size": "16px" }}
     >
       {isTaskAssignedToCurrentCitizen && (
         <div
