@@ -40,7 +40,9 @@ export default async function Page() {
         <TasksDashboardTile />
 
         <section className="flex flex-col gap-[2px] flex-none">
-          <h2 className="font-thin text-2xl self-start mb-2">Spynet</h2>
+          <h2 className="font-thin text-2xl self-start mb-2 font-mono uppercase">
+            Spynet
+          </h2>
 
           {showSpynetSearchTile && <SpynetSearchTile />}
 

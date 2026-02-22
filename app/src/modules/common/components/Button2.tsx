@@ -39,7 +39,7 @@ export const Button2 = <E extends ElementType = "button">({
   return (
     <Component
       className={clsx(
-        "flex items-center justify-center rounded-secondary disabled:grayscale disabled:opacity-50 gap-1 min-h-8 py-1 px-2 text-sm font-normal [&>svg]:text-xs",
+        "flex items-center justify-center rounded-secondary disabled:grayscale disabled:opacity-50 gap-1 min-h-8 py-1 px-2 text-sm font-normal [&>svg]:text-xs uppercase font-mono",
         {
           "bg-interaction-500 text-neutral-50 enabled:hover:bg-interaction-300 [&[href]]:hover:bg-interaction-300 enabled:focus-visible:outline [&[href]]:focus-visible:outline outline-2 outline-offset-4 outline-interaction-700 enabled:active:scale-95 [&[href]]:active:scale-95 transition-colors":
             variant === Button2Variant.Primary &&

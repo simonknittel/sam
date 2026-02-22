@@ -99,7 +99,9 @@ export const ParticipantsTab = async ({
   return (
     <div className={clsx("flex flex-col gap-2", className)}>
       <section className="rounded-primary bg-neutral-800/50 p-4">
-        <h2 className="font-bold mb-2 text-lg">Organisator</h2>
+        <h2 className="font-bold mb-2 text-lg font-mono uppercase">
+          Organisator
+        </h2>
         {resolvedCreatorCitizen ? (
           <CitizenLink citizen={resolvedCreatorCitizen} />
         ) : (
@@ -107,7 +109,7 @@ export const ParticipantsTab = async ({
         )}
 
         <div className="flex items-center gap-2 mt-4 mb-2">
-          <h2 className="font-bold text-lg">Manager</h2>
+          <h2 className="font-bold text-lg font-mono uppercase">Manager</h2>
           {isAllowedToManageEvent && <CreateManagers event={event} />}
         </div>
         {event.managers.length > 0 ? (
@@ -154,7 +156,9 @@ export const ParticipantsTab = async ({
 
       {showCreateSilcTransactionButton && (
         <section className="rounded-primary bg-neutral-800/50 p-4">
-          <h2 className="font-bold text-lg">SILC-Belohnung</h2>
+          <h2 className="font-bold text-lg font-mono uppercase">
+            SILC-Belohnung
+          </h2>
           <CreateOrUpdateSilcTransaction
             initialReceiverIds={resolvedParticipants.map(
               (participant) => participant.citizen.id,
@@ -167,7 +171,9 @@ export const ParticipantsTab = async ({
 
       <section className="rounded-primary bg-neutral-800/50 p-4 overflow-auto">
         <h2 className="font-bold mb-4 flex items-center gap-2 text-lg">
-          Teilnehmer ({sortedResolvedParticipants.length})
+          <span className="font-mono uppercase">
+            Teilnehmer ({sortedResolvedParticipants.length})
+          </span>
           <Tooltip triggerChildren={<FaInfoCircle />}>
             Es werden nur Discord-Anmeldungen mit einem Spynet-Eintrag
             angezeigt.

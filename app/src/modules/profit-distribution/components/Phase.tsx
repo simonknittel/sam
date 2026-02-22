@@ -33,7 +33,7 @@ export const Phase = ({
       >
         <div
           className={clsx(
-            "flex-none w-8 text-xs whitespace-nowrap flex items-center justify-center py-2",
+            "flex-none w-8 text-xs whitespace-nowrap flex items-center justify-center py-2 font-mono uppercase",
             {
               "bg-green-500 text-black": isCurrentPhase,
               "bg-neutral-700 text-white": !isCurrentPhase,

@@ -126,7 +126,10 @@ export const FleetTable = ({ className, fleet }: Props) => {
             className={clsx("grid items-center gap-4", GRID_COLS)}
           >
             {headerGroup.headers.map((header) => (
-              <th key={header.id} className="text-left text-neutral-500 p-0">
+              <th
+                key={header.id}
+                className="text-left text-neutral-500 p-0 font-mono uppercase"
+              >
                 {header.isPlaceholder ? null : (
                   <div
                     {...{

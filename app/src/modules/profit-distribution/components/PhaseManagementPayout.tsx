@@ -21,7 +21,7 @@ export const PhaseManagementPayout = ({ cycleData }: Props) => {
       currentPhase={cycleData.currentPhase}
       innerClassName="overflow-hidden"
     >
-      <h2 className="font-bold text-center">Auszahlung</h2>
+      <h2 className="font-bold text-center font-mono uppercase">Auszahlung</h2>
 
       <div className="flex gap-[2px] border-t border-white/5 mt-4 pt-4">
         <StatisticTile label="aUEC noch auszubezahlen" className="flex-1">

@@ -70,7 +70,7 @@ const AppSettings = ({
 }: AppSettingsProp) => {
   return (
     <article className="background-secondary rounded-primary p-4">
-      <h2 className="text-xl font-bold border-b border-white/5 pb-2">
+      <h2 className="text-xl font-bold border-b border-white/5 pb-2 font-mono uppercase">
         {title}
       </h2>
 

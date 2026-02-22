@@ -36,7 +36,7 @@ export const OverviewTile = ({ className, event }: Props) => {
       )}
 
       <div className="p-4">
-        <h1 className="font-bold">{event.name}</h1>
+        <h1 className="font-bold font-mono uppercase">{event.name}</h1>
 
         {event.description && (
           <Markdown className="mt-4">{event.description}</Markdown>

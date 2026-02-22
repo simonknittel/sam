@@ -68,7 +68,10 @@ export const AppTile = ({
 
       <div className="p-2 sm:p-4 flex flex-col gap-2 flex-1">
         <div className="flex gap-2 items-center">
-          <h2 title={app.name} className="font-bold truncate">
+          <h2
+            title={app.name}
+            className="font-bold truncate font-mono uppercase"
+          >
             {app.name}
           </h2>
           {isExternal && (

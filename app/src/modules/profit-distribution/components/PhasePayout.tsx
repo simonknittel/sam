@@ -18,7 +18,7 @@ interface Props {
 export const PhasePayout = ({ cycleData }: Props) => {
   return (
     <Phase phase={CyclePhase.Payout} currentPhase={cycleData.currentPhase}>
-      <h2 className="font-bold text-center">Auszahlung</h2>
+      <h2 className="font-bold text-center font-mono uppercase">Auszahlung</h2>
 
       <div className="flex gap-[2px] border-t border-white/5 mt-4 pt-4">
         <StatisticTile label="Gesamter aUEC-Überschuss" className="flex-1">

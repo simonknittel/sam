@@ -28,7 +28,7 @@ export const CmdKLoader = ({ className }: Props) => {
           onClick={() => setOpen(true)}
         >
           Suche ...
-          <span className="px-1 py-0.5 rounded-secondary border border-neutral-700 group-hover:border-neutral-600 group-active:border-neutral-500 text-xs">
+          <span className="px-1 py-0.5 rounded-secondary border border-neutral-700 group-hover:border-neutral-600 group-active:border-neutral-500 text-xs font-mono uppercase">
             Strg + K
           </span>
         </button>
