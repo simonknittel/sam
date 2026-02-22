@@ -18,10 +18,8 @@ export const CreateProfitDistributionCycleForm = ({
   className,
   onSuccess,
 }: Props) => {
-  const { state, formAction, isPending } = useAction(
-    createProfitDistributionCycle,
-    { onSuccess },
-  );
+  const { state, formAction, isPending, getDefaultValueWithFallback } =
+    useAction(createProfitDistributionCycle, { onSuccess });
   const [end, setEnd] = useState("");
   const [showInstructions, setShowInstructions] = useState(false);
 
@@ -101,13 +99,7 @@ export const CreateProfitDistributionCycleForm = ({
         className="mt-4"
         required
         autoFocus
-        defaultValue={
-          state &&
-          "requestPayload" in state &&
-          state.requestPayload.has("title")
-            ? (state.requestPayload.get("title") as string)
-            : ""
-        }
+        defaultValue={getDefaultValueWithFallback("title", "")}
       />
 
       <DateInput

@@ -32,7 +32,7 @@ export const Badge = ({
 
       <div className="flex flex-col">
         <span
-          className={clsx("text-xs opacity-30 truncate", {
+          className={clsx("text-xs opacity-30 truncate font-mono uppercase", {
             "sr-only": !showLabel,
           })}
         >

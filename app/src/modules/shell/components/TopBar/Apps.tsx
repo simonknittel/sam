@@ -29,7 +29,9 @@ export const Apps = ({ className }: Props) => {
           )}
         >
           <AiFillAppstore className="text-xl" />
-          <span className="text-xs">Apps</span>
+          <span className="text-xs font-mono uppercase relative top-[1px]">
+            Apps
+          </span>
         </button>
       }
       enableHover
@@ -53,7 +55,9 @@ const PopoverChildren = ({ apps }: PopoverChildrenProps) => {
     <>
       {featured && (
         <>
-          <p className="font-bold text-sm text-center">Featured</p>
+          <p className="font-bold text-sm text-center font-mono uppercase">
+            Featured
+          </p>
 
           <AppTileGrid variant="compact" className="mt-2">
             {featured.map((app) =>
@@ -74,7 +78,9 @@ const PopoverChildren = ({ apps }: PopoverChildrenProps) => {
 
       {other && (
         <>
-          <p className="font-bold text-sm text-center mt-4">Weitere</p>
+          <p className="font-bold text-sm text-center mt-4 font-mono uppercase">
+            Weitere
+          </p>
 
           <AppTileGrid variant="compact" className="mt-2">
             {other.map((app) =>
@@ -96,7 +102,7 @@ const PopoverChildren = ({ apps }: PopoverChildrenProps) => {
       <div className="flex justify-center">
         <Link
           href="/app/apps"
-          className="text-interaction-500 hover:underline focus-visible:underline text-sm p-4 -mb-4"
+          className="text-interaction-500 hover:underline focus-visible:underline text-sm p-4 -mb-4 font-mono uppercase"
           onClick={closePopover}
         >
           Alle Apps

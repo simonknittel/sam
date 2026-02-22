@@ -32,7 +32,13 @@ export const RadioFilter = ({ name, label, items, className }: Props) => {
 
   return (
     <div
-      className={clsx("background-secondary rounded-primary p-2", className)}
+      className={clsx(
+        "background-secondary rounded-primary p-2 beveled-br",
+        className,
+      )}
+      style={{
+        "--bevel-size": 16,
+      }}
     >
       <p className="text-sm text-neutral-500">{label}</p>
 

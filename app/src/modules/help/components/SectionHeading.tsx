@@ -65,17 +65,26 @@ export const SectionHeading = ({
       </a>
 
       {level === 1 && (
-        <h1 id={anchorId} className="text-3xl font-bold max-w-[55ch]">
+        <h1
+          id={anchorId}
+          className="text-3xl font-bold font-mono uppercase max-w-[55ch]"
+        >
           {children}
         </h1>
       )}
       {level === 2 && (
-        <h2 id={anchorId} className="text-2xl font-bold max-w-[55ch]">
+        <h2
+          id={anchorId}
+          className="text-2xl font-bold font-mono uppercase max-w-[55ch]"
+        >
           {children}
         </h2>
       )}
       {level === 3 && (
-        <h3 id={anchorId} className="text-xl font-bold max-w-[55ch]">
+        <h3
+          id={anchorId}
+          className="text-xl font-bold font-mono uppercase max-w-[55ch]"
+        >
           {children}
         </h3>
       )}

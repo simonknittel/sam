@@ -44,7 +44,7 @@ export default async function Page({ params }: PageProps<"/app/sincome/[id]">) {
       <div className="flex">
         <div className="w-9 flex-initial" />
 
-        <h1 className="text-2xl font-bold text-center flex-1">
+        <h1 className="text-2xl font-bold text-center flex-1 font-mono uppercase">
           {cycleData.cycle.title}
         </h1>
 

@@ -17,7 +17,7 @@ const Tab = ({ children, id }: Readonly<Props>) => {
       onClick={() => setActiveTab(id)}
       type="button"
       className={clsx(
-        "first:rounded-l border-[1px] border-brand-red-700 last:rounded-r h-8 flex items-center justify-center px-3 gap-2 uppercase",
+        "first:rounded-l border-[1px] border-brand-red-700 last:rounded-r h-8 flex items-center justify-center px-3 gap-2 font-mono uppercase",
         {
           "bg-brand-red-500 text-white": activeTab === id,
           "text-brand-red-500": activeTab !== id,

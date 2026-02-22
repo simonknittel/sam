@@ -17,7 +17,9 @@ export const CalendarTile = async ({ className }: Props) => {
         className,
       )}
     >
-      <h2 className="font-thin text-2xl mb-2 w-full">Discord-Events</h2>
+      <h2 className="font-thin text-2xl mb-2 w-full font-mono uppercase">
+        Discord-Events
+      </h2>
 
       {events.length > 0 ? (
         events.map((event, index) => (
@@ -31,7 +33,7 @@ export const CalendarTile = async ({ className }: Props) => {
 
       <Link
         href="/app/events"
-        className="text-interaction-500 hover:underline focus-visible:underline"
+        className="text-interaction-500 hover:underline focus-visible:underline font-mono uppercase text-sm mt-2"
       >
         Alle Events
       </Link>

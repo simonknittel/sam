@@ -21,7 +21,7 @@ export const PhaseManagementCollection = ({ cycleData }: Props) => {
       currentPhase={cycleData.currentPhase}
       innerClassName="overflow-hidden"
     >
-      <h2 className="text-center font-bold">Sammelphase</h2>
+      <h2 className="text-center font-bold font-mono uppercase">Sammelphase</h2>
 
       <div className="flex gap-[2px] border-t border-white/5 mt-4 pt-4">
         <StatisticTile label="Anzahl Teilnehmer bisher" className="flex-1">

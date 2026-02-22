@@ -55,7 +55,10 @@ export const Event = async ({ className, event, index }: Props) => {
 
   return (
     <article
-      className={clsx("rounded-primary overflow-hidden w-full", className)}
+      className={clsx(
+        "rounded-primary rounded-br-none overflow-hidden w-full beveled-br",
+        className,
+      )}
     >
       {isHappeningNow && (
         <div className="bg-green-500/50 text-text-primary font-bold text-center p-2">
@@ -116,7 +119,7 @@ export const Event = async ({ className, event, index }: Props) => {
           <div className="flex flex-wrap">
             <Link
               href={`/app/events/${event.id}`}
-              className="first:rounded-l-secondary border-[1px] border-interaction-700 last:rounded-r-secondary h-8 flex items-center justify-center px-3 gap-2 uppercase text-interaction-500 hover:text-interaction-300 hover:border-interaction-300"
+              className="first:rounded-l-secondary border-[1px] border-interaction-700 last:rounded-r-secondary h-8 flex items-center justify-center px-3 gap-2 uppercase text-interaction-500 hover:text-interaction-300 hover:border-interaction-300 font-mono"
             >
               Details
             </Link>
@@ -124,7 +127,7 @@ export const Event = async ({ className, event, index }: Props) => {
             {showLineupButton && (
               <Link
                 href={`/app/events/${event.id}/lineup`}
-                className="first:rounded-l-secondary border-[1px] border-interaction-700 last:rounded-r-secondary h-8 flex items-center justify-center px-3 gap-2 uppercase text-interaction-500 hover:text-interaction-300 hover:border-interaction-300"
+                className="first:rounded-l-secondary border-[1px] border-interaction-700 last:rounded-r-secondary h-8 flex items-center justify-center px-3 gap-2 uppercase text-interaction-500 hover:text-interaction-300 hover:border-interaction-300 font-mono"
               >
                 <MdWorkspaces />
                 Aufstellung

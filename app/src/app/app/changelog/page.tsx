@@ -1816,7 +1816,7 @@ type DayProps = Readonly<{
 const Day = ({ heading, children }: DayProps) => {
   return (
     <article className="bg-neutral-800/50 rounded-primary p-4 lg:p-8">
-      <h2 className="font-thin text-2xl flex gap-3 items-center">
+      <h2 className="font-thin text-2xl flex gap-3 items-center font-mono uppercase">
         <FaCalendar className="text-neutral-500 text-base" />
         {heading}
       </h2>
@@ -1835,7 +1835,7 @@ type DayItemProps = Readonly<{
 const DayItem = ({ heading, badges = [], children }: DayItemProps) => {
   return (
     <li className="border-l-2 border-neutral-800/80 pl-5">
-      <strong className="block font-bold">{heading}</strong>
+      <strong className="block font-bold font-mono uppercase">{heading}</strong>
 
       {badges.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-1">
@@ -1864,7 +1864,9 @@ const lorem = new LoremIpsum({
 const RedactedDayItem = () => {
   return (
     <li className="border-l-2 border-neutral-800/80 pl-5 relative py-3 pr-3">
-      <strong className="block font-bold">Lorem ipsum</strong>
+      <strong className="block font-bold font-mono uppercase">
+        Lorem ipsum
+      </strong>
 
       <div className="mt-1 flex flex-col gap-2">
         <p>{lorem.generateParagraphs(1)}</p>

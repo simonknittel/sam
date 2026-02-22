@@ -24,7 +24,7 @@ export const AdminEnabler = ({ className, enabled = false }: Props) => {
   return (
     <button
       className={clsx(
-        "fixed top-2 left-1/2 -translate-x-1/2 backdrop-blur z-50 max-w-xs px-2 py-1 rounded-secondary gap-4 justify-between transition-colors whitespace-nowrap text-xs",
+        "fixed top-2 left-1/2 -translate-x-1/2 backdrop-blur z-50 max-w-xs px-2 py-1 rounded-secondary gap-4 justify-between transition-colors whitespace-nowrap text-xs font-mono uppercase",
         {
           "bg-green-500/50 hover:bg-green-500/100": !enabled,
           "bg-red-500/50 hover:bg-red-500/100": enabled,

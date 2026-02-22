@@ -96,9 +96,10 @@ export const ProfitDistributionCycleExcerpt = ({
     <Link
       href={`/app/sincome/${cycleData.cycle.id}`}
       className={clsx(
-        "background-secondary hover:bg-neutral-800 active:bg-neutral-900 rounded-secondary flex",
+        "background-secondary hover:bg-neutral-800 active:bg-neutral-900 rounded-secondary flex beveled-br",
         className,
       )}
+      style={{ "--bevel-size": 16 }}
     >
       <div className="flex-1 p-2 flex flex-col gap-1">
         <h2 className="font-bold">{cycleData.cycle.title}</h2>

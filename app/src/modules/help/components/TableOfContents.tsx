@@ -20,7 +20,7 @@ export const TableOfContents = ({ className, items }: Props) => {
       )}
     >
       <div className="border-b border-neutral-700 pb-4 mb-4">
-        <h2 className="font-bold">Inhaltsverzeichnis</h2>
+        <h2 className="font-bold font-mono uppercase">Inhaltsverzeichnis</h2>
       </div>
 
       <ol className="ml-4 list-decimal">

@@ -2,10 +2,17 @@ import { env } from "@/env";
 import { AnalyticsLoader } from "@/modules/common/components/AnalyticsLoader";
 import ToasterContainer from "@/modules/common/components/ToasterContainer";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import clsx from "clsx";
 import { type Metadata } from "next";
 import { getLocale } from "next-intl/server";
+import { Roboto_Mono } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
 import "../styles/globals.css";
+
+const robotMono = Roboto_Mono({
+  subsets: ["latin"],
+  variable: "--font-roboto-mono",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(env.BASE_URL),
@@ -20,7 +27,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
 
   return (
     <html lang={locale} style={{ scrollPaddingTop: "122px" }}>
-      <body className="bg-neutral-800 text-text-primary">
+      <body
+        className={clsx("bg-neutral-800 text-text-primary", robotMono.variable)}
+      >
         {children}
         <NextTopLoader color="#c22424" showSpinner={false} />
         <ToasterContainer />

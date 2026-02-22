@@ -22,7 +22,9 @@ export const StatisticTile = ({
       )}
     >
       <p className="text-neutral-500">{preLabel}</p>
-      <span className="font-black text-4xl">{children}</span>
+      <span className="font-black text-4xl font-mono uppercase">
+        {children}
+      </span>
       <p className="text-neutral-500">{label}</p>
     </div>
   );

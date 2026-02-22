@@ -32,6 +32,9 @@ export default {
       screens: {
         "3xl": "1920px",
       },
+      fontFamily: {
+        mono: "var(--font-roboto-mono), monospace",
+      },
     },
   },
   plugins: [

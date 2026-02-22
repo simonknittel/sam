@@ -10,7 +10,7 @@ import {
 } from "@/modules/silc/queries";
 import clsx from "clsx";
 import { forbidden } from "next/navigation";
-import { FaExternalLinkAlt, FaPiggyBank } from "react-icons/fa";
+import { FaPiggyBank } from "react-icons/fa";
 import { FaScaleBalanced } from "react-icons/fa6";
 
 interface Props {
@@ -51,7 +51,7 @@ export const ProfileTile = async ({ className }: Props) => {
       <section
         className={clsx(
           className,
-          "rounded-primary p-4 background-secondary flex flex-col gap-4 items-center w-full",
+          "rounded-primary p-4 background-secondary flex flex-col gap-4 items-center w-full beveled-br",
         )}
       >
         <Avatar name={name} image={image} size={128} />
@@ -77,10 +77,10 @@ export const ProfileTile = async ({ className }: Props) => {
             <Link
               href={`/app/spynet/citizen/${authentication.session.entity.id}/silc`}
               title="Übersicht öffnen"
-              className="flex-initial w-1/2 rounded-primary background-secondary hover:bg-neutral-600/50 focus-visible:bg-neutral-600/50 flex flex-col justify-center items-center p-4"
+              className="flex-initial w-1/2 rounded-primary background-secondary hover:bg-neutral-600/50 focus-visible:bg-neutral-600/50 flex flex-col justify-center items-center p-4 beveled-br"
             >
               <span
-                className={clsx("font-black text-4xl", {
+                className={clsx("font-black text-4xl font-mono uppercase", {
                   "text-green-500": silcBalance && silcBalance > 0,
                   "text-red-500": silcBalance && silcBalance < 0,
                 })}
@@ -106,10 +106,10 @@ export const ProfileTile = async ({ className }: Props) => {
             <Link
               href={`/app/spynet/citizen/${authentication.session.entity.id}/penalty-points`}
               title="Übersicht öffnen"
-              className="flex-initial w-1/2 rounded-primary background-secondary hover:bg-neutral-600/50 focus-visible:bg-neutral-600/50 flex flex-col justify-center items-center p-4"
+              className="flex-initial w-1/2 rounded-primary background-secondary hover:bg-neutral-600/50 focus-visible:bg-neutral-600/50 flex flex-col justify-center items-center p-4 beveled-br"
             >
               <span
-                className={clsx("font-black text-4xl", {
+                className={clsx("font-black text-4xl font-mono uppercase", {
                   "text-red-500": penaltyPoints && penaltyPoints > 0,
                 })}
               >
@@ -127,10 +127,9 @@ export const ProfileTile = async ({ className }: Props) => {
       {showSpynetLink && (
         <Link
           href={`/app/spynet/citizen/${authentication.session.entity.id}`}
-          className="text-interaction-500 hover:text-interaction-300 flex gap-2 items-center"
+          className="text-interaction-500 hover:underline focus-visible:underline font-mono uppercase text-sm mt-2"
         >
           Vollständiges Profil
-          <FaExternalLinkAlt />
         </Link>
       )}
     </div>

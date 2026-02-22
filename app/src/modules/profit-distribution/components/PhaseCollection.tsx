@@ -17,7 +17,7 @@ interface Props {
 export const PhaseCollection = ({ cycleData }: Props) => {
   return (
     <Phase phase={CyclePhase.Collection} currentPhase={cycleData.currentPhase}>
-      <h2 className="font-bold text-center">Sammelphase</h2>
+      <h2 className="font-bold text-center font-mono uppercase">Sammelphase</h2>
 
       <div className="border-t border-white/5 mt-4 pt-4">
         <StatisticTile label="Bisher von dir verdiente SILC">

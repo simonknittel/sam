@@ -56,7 +56,9 @@ export const PhaseManagementPayoutPreparation = ({ cycleData }: Props) => {
       <form action={formAction} id={id}>
         <input type="hidden" name="id" value={cycleData.cycle.id} />
 
-        <h2 className="text-center font-bold">Vorbereitung der Auszahlung</h2>
+        <h2 className="text-center font-bold font-mono uppercase">
+          Vorbereitung der Auszahlung
+        </h2>
 
         <div
           className="flex border-t border-white/5 mt-4 pt-4"

@@ -4,11 +4,13 @@
 
 @layer base {
   html {
-    --background-primary: radial-gradient(
-      circle farthest-side at bottom center,
-      hsl(0 69% 10% / 1),
-      #000
-    );
+    --background-primary:
+      radial-gradient(hsla(0, 0%, 100%, 0.03) 1px, transparent 0),
+      radial-gradient(
+        circle farthest-side at bottom center,
+        hsl(0 69% 10% / 1),
+        #000
+      );
     --background-secondary: hsla(0, 0%, 15%, 0.5);
     --background-secondary-opaque: hsla(0, 0%, 8%, 1);
     --background-tertiary: hsla(0, 0%, 25%, 0.5);
@@ -50,6 +52,9 @@
 @layer utilities {
   .background-primary {
     background: var(--background-primary);
+    background-size:
+      15px 15px,
+      100% 100%;
   }
 
   .background-secondary {
@@ -71,5 +76,18 @@
   .prose a:hover,
   .prose a:focus-visible {
     color: var(--color-interaction-300);
+  }
+
+  .beveled-br {
+    --bevel-size: 32px;
+    clip-path: shape(
+      from 0% 0%,
+      line to 100% 0%,
+      line to 100% calc(100% - var(--bevel-size)),
+      line to calc(100% - var(--bevel-size)) 100%,
+      line to 0% 100%,
+      line to 0% 0%,
+      close
+    );
   }
 }

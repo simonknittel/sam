@@ -56,7 +56,9 @@ export const Unassigned = ({
       type="info"
       message={
         <div className="flex flex-col">
-          <p className="font-bold">Keinem Posten zugeordnet</p>
+          <p className="font-bold font-mono uppercase">
+            Keinem Posten zugeordnet
+          </p>
 
           <ul className="mt-1 flex gap-x-3 gap-y-1 flex-wrap">
             {unassignedCitizen.map((citizen) => (

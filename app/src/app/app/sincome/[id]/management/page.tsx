@@ -40,7 +40,7 @@ export default async function Page({ params }: PageProps<"/app/sincome/[id]">) {
       <div className="flex">
         <div className="w-9 flex-initial" />
 
-        <h1 className="flex-1 text-2xl font-bold text-center">
+        <h1 className="flex-1 text-2xl font-bold text-center font-mono uppercase">
           {cycleData.cycle.title}
         </h1>
         {/* TODO: Implement edit button */}

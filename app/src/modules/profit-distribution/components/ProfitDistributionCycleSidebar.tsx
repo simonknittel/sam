@@ -39,7 +39,10 @@ export const ProfitDistributionCycleSidebar = ({ className }: Props) => {
           ]}
         />
 
-        <div className="background-secondary rounded-primary p-2">
+        <div
+          className="background-secondary rounded-primary p-2 beveled-br"
+          style={{ "--bevel-size": 16 }}
+        >
           <p className="text-sm text-neutral-500">Sortierung</p>
 
           <p className="text-sm">Ende der Sammelphase (absteigend)</p>

@@ -16,10 +16,10 @@ export default async function Layout({
 
   return (
     <>
-      <div className="flex gap-2 font-bold text-xl">
-        <span className="text-neutral-500">Event /</span>
-        <p>{event.name}</p>
-      </div>
+      <p className="font-bold text-xl font-mono uppercase">
+        <span className="text-neutral-500">Event //</span>{" "}
+        <span>{event.name}</span>
+      </p>
 
       <Navigation event={event} className="my-4" />
 

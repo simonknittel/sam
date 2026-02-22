@@ -16,7 +16,9 @@ export const PhasePayoutPreparation = ({ cycleData }: Props) => {
       phase={CyclePhase.PayoutPreparation}
       currentPhase={cycleData.currentPhase}
     >
-      <h2 className="font-bold text-center">Vorbereitung der Auszahlung</h2>
+      <h2 className="font-bold text-center font-mono uppercase">
+        Vorbereitung der Auszahlung
+      </h2>
 
       <div className="border-t border-white/5 mt-4 pt-8 pb-4">
         <p className="text-center text-sm flex flex-col justify-center">

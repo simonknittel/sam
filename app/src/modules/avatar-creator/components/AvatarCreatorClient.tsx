@@ -368,7 +368,7 @@ export const AvatarCreatorClient = ({ className }: Props) => {
       <div className="w-80 background-secondary rounded-primary p-4 flex flex-col gap-6">
         <div className="overflow-hidden">
           <label
-            className="block text-sm font-bold mb-2"
+            className="block text-sm font-bold mb-2 font-mono uppercase"
             htmlFor="avatar-upload"
           >
             Dein Avatar
@@ -384,7 +384,9 @@ export const AvatarCreatorClient = ({ className }: Props) => {
         </div>
 
         <fieldset>
-          <legend className="text-sm font-bold mb-2">Hintergrundfarbe</legend>
+          <legend className="text-sm font-bold mb-2 font-mono uppercase">
+            Hintergrundfarbe
+          </legend>
 
           <div className="flex flex-col gap-2 text-sm text-neutral-300">
             <div className="flex gap-4">
@@ -446,7 +448,9 @@ export const AvatarCreatorClient = ({ className }: Props) => {
         </fieldset>
 
         <fieldset>
-          <legend className="text-sm font-bold mb-2">Reihenfolge</legend>
+          <legend className="text-sm font-bold mb-2 font-mono uppercase">
+            Reihenfolge
+          </legend>
 
           <div className="flex flex-wrap gap-4 text-sm text-neutral-300">
             <label className="flex items-center gap-2">
@@ -475,7 +479,10 @@ export const AvatarCreatorClient = ({ className }: Props) => {
 
         <div>
           <div className="flex items-center justify-between text-sm">
-            <label className="font-bold" htmlFor="avatar-scale">
+            <label
+              className="font-bold font-mono uppercase"
+              htmlFor="avatar-scale"
+            >
               Skalierung
             </label>
 
