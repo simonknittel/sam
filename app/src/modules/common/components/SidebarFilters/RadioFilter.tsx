@@ -37,7 +37,7 @@ export const RadioFilter = ({ name, label, items, className }: Props) => {
         className,
       )}
       style={{
-        "--bevel-size": 16,
+        "--bevel-size": "16px",
       }}
     >
       <p className="text-sm text-neutral-500">{label}</p>
