@@ -42,7 +42,7 @@ export default async function Page() {
         <div
           className="flex flex-col gap-2 rounded-primary bg-neutral-800/50 p-4 mx-4 beveled-br"
           style={{
-            "--bevel-size": "16px",
+            "--bevel-size": 16,
           }}
         >
           <p>

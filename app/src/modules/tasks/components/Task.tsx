@@ -128,7 +128,7 @@ export const Task = ({ className, task }: Props) => {
         "flex background-secondary rounded-secondary overflow-hidden hover:bg-neutral-800 beveled-br",
         className,
       )}
-      style={{ "--bevel-size": "16px" }}
+      style={{ "--bevel-size": 16 }}
     >
       {isTaskAssignedToCurrentCitizen && (
         <div
