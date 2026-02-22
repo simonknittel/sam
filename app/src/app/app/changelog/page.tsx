@@ -1815,7 +1815,7 @@ type DayProps = Readonly<{
 
 const Day = ({ heading, children }: DayProps) => {
   return (
-    <article className="bg-neutral-800/50 rounded-primary p-4 lg:p-8">
+    <article className="bg-neutral-800/50 rounded-primary p-4 lg:p-8 beveled-br">
       <h2 className="font-thin text-2xl flex gap-3 items-center font-mono uppercase">
         <FaCalendar className="text-neutral-500 text-base" />
         {heading}
