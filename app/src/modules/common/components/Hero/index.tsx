@@ -1,4 +1,5 @@
 import clsx from "clsx";
+import { ScrambleIn } from "../ScrambleIn";
 import styles from "./Hero.module.css";
 
 interface Props {
@@ -51,7 +52,9 @@ export const Hero = ({
       )}
       data-text={text}
     >
-      <span>{text}</span>
+      <span>
+        <ScrambleIn text={text} />
+      </span>
     </h1>
   );
 };

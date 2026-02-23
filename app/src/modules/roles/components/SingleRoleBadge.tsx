@@ -83,7 +83,7 @@ export const SingleRoleBadge = ({
 
           {!role.iconId && showPlaceholder && <span className="size-6" />}
 
-          <span className="truncate">{role.name}</span>
+          <span className="truncate font-mono text-sm">{role.name}</span>
         </span>
       }
     >

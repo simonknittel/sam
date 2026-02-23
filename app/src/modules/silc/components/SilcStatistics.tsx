@@ -1,3 +1,4 @@
+import { ScrambleIn } from "@/modules/common/components/ScrambleIn";
 import { StatisticTile } from "@/modules/common/components/StatisticTile";
 import { SilcSettingKey } from "@prisma/client";
 import clsx from "clsx";
@@ -23,11 +24,17 @@ export const SilcStatistics = async ({ className }: Props) => {
   return (
     <section className={clsx("flex flex-wrap gap-[2px]", className)}>
       <StatisticTile label="SILC im Umlauf" className="flex-1">
-        {totalSilc}
+        <ScrambleIn
+          text={totalSilc.toLocaleString("de-de")}
+          characters="1234567890."
+        />
       </StatisticTile>
 
       <StatisticTile label="aUEC im Umlauf" className="flex-1">
-        {totalAuec.toLocaleString("de-de")}
+        <ScrambleIn
+          text={totalAuec.toLocaleString("de-de")}
+          characters="1234567890."
+        />
       </StatisticTile>
     </section>
   );
