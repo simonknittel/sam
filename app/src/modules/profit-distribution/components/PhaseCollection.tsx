@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrambleIn } from "@/modules/common/components/ScrambleIn";
 import { StatisticTile } from "@/modules/common/components/StatisticTile";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import clsx from "clsx";
@@ -29,7 +30,10 @@ export const PhaseCollection = ({ cycleData }: Props) => {
                 cycleData.mySilcBalance && cycleData.mySilcBalance < 0,
             })}
           >
-            {cycleData.mySilcBalance || 0}
+            <ScrambleIn
+              text={cycleData.mySilcBalance?.toLocaleString("de-de") || "0"}
+              characters="1234567890."
+            />
           </span>
         </StatisticTile>
       </div>

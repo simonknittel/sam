@@ -1,6 +1,7 @@
 import { AdminEnabler } from "@/modules/auth/components/AdminEnabler";
 import { authenticate } from "@/modules/auth/server";
 import { requireConfirmedEmailForPage } from "@/modules/auth/utils/emailConfirmation";
+import { ScrambleIn } from "@/modules/common/components/ScrambleIn";
 import { ClearanceLogout } from "@/modules/iam/components/ClearanceLogout";
 import { log } from "@/modules/logging";
 import { Footer } from "@/modules/shell/components/Footer";
@@ -36,7 +37,7 @@ export default async function Page() {
       <main className="w-full max-w-lg">
         <h1 className="mb-4 text-center text-xl text-sinister-red font-bold mx-8 font-mono uppercase">
           <FaRegCheckCircle className="text-green-500 inline relative top-[-2px]" />{" "}
-          Anmeldung erfolgreich
+          <ScrambleIn text="Anmeldung erfolgreich" />
         </h1>
 
         <div

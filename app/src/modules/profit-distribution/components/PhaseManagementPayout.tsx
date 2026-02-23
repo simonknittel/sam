@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrambleIn } from "@/modules/common/components/ScrambleIn";
 import { StatisticTile } from "@/modules/common/components/StatisticTile";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import type { getProfitDistributionCycleById } from "../queries";
@@ -25,15 +26,22 @@ export const PhaseManagementPayout = ({ cycleData }: Props) => {
 
       <div className="flex gap-[2px] border-t border-white/5 mt-4 pt-4">
         <StatisticTile label="aUEC noch auszubezahlen" className="flex-1">
-          {cycleData.openAuecPayout?.toLocaleString("de") ?? "-"}
+          <ScrambleIn
+            text={cycleData.openAuecPayout?.toLocaleString("de") ?? "-"}
+            characters="1234567890."
+          />
         </StatisticTile>
 
         <StatisticTile label="fehlende Zustimmungen" className="flex-1">
-          {cycleData.cycle.participants
-            .filter(
-              (participant) => !participant.acceptedAt && !participant.cededAt,
-            )
-            .length.toLocaleString("de")}
+          <ScrambleIn
+            text={cycleData.cycle.participants
+              .filter(
+                (participant) =>
+                  !participant.acceptedAt && !participant.cededAt,
+              )
+              .length.toLocaleString("de")}
+            characters="1234567890."
+          />
         </StatisticTile>
       </div>
 

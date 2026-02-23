@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrambleIn } from "@/modules/common/components/ScrambleIn";
 import { StatisticTile } from "@/modules/common/components/StatisticTile";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import type { getProfitDistributionCycleById } from "../queries";
@@ -25,23 +26,33 @@ export const PhaseManagementCollection = ({ cycleData }: Props) => {
 
       <div className="flex gap-[2px] border-t border-white/5 mt-4 pt-4">
         <StatisticTile label="Anzahl Teilnehmer bisher" className="flex-1">
-          {cycleData.currentPhase === CyclePhase.Collection
-            ? cycleData.allSilcBalances.length.toLocaleString("de")
-            : cycleData.cycle.participants.length.toLocaleString("de")}
+          <ScrambleIn
+            text={
+              cycleData.currentPhase === CyclePhase.Collection
+                ? cycleData.allSilcBalances.length.toLocaleString("de")
+                : cycleData.cycle.participants.length.toLocaleString("de")
+            }
+            characters="1234567890."
+          />
         </StatisticTile>
 
         <StatisticTile label="Gesamt verdiente SILC bisher" className="flex-1">
-          {cycleData.currentPhase === CyclePhase.Collection
-            ? cycleData.allSilcBalances
-                .reduce((total, citizen) => total + citizen.silcBalance, 0)
-                .toLocaleString("de")
-            : cycleData.cycle.participants
-                .reduce(
-                  (total, participant) =>
-                    total + (participant.silcBalanceSnapshot || 0),
-                  0,
-                )
-                .toLocaleString("de")}
+          <ScrambleIn
+            text={
+              cycleData.currentPhase === CyclePhase.Collection
+                ? cycleData.allSilcBalances
+                    .reduce((total, citizen) => total + citizen.silcBalance, 0)
+                    .toLocaleString("de")
+                : cycleData.cycle.participants
+                    .reduce(
+                      (total, participant) =>
+                        total + (participant.silcBalanceSnapshot || 0),
+                      0,
+                    )
+                    .toLocaleString("de")
+            }
+            characters="1234567890."
+          />
         </StatisticTile>
       </div>
 

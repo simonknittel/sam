@@ -1,6 +1,7 @@
 import { requireAuthentication } from "@/modules/auth/server";
 import Avatar from "@/modules/common/components/Avatar";
 import { Link } from "@/modules/common/components/Link";
+import { ScrambleIn } from "@/modules/common/components/ScrambleIn";
 import { getPenaltyEntriesOfCurrentUser } from "@/modules/penalty-points/queries";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import { getMyAssignedRoles } from "@/modules/roles/utils/getRoles";
@@ -77,15 +78,18 @@ export const ProfileTile = async ({ className }: Props) => {
             <Link
               href={`/app/spynet/citizen/${authentication.session.entity.id}/silc`}
               title="Übersicht öffnen"
-              className="flex-initial w-1/2 rounded-primary background-secondary hover:bg-neutral-600/50 focus-visible:bg-neutral-600/50 flex flex-col justify-center items-center p-4 beveled-br"
+              className="flex-initial w-1/2 rounded-primary background-secondary hover:bg-neutral-600/50 focus-visible:bg-neutral-600/50 flex flex-col justify-center items-center p-4 beveled-br font-mono"
             >
               <span
-                className={clsx("font-black text-4xl font-mono uppercase", {
+                className={clsx("font-black text-4xl", {
                   "text-green-500": silcBalance && silcBalance > 0,
                   "text-red-500": silcBalance && silcBalance < 0,
                 })}
               >
-                {silcBalance}
+                <ScrambleIn
+                  text={silcBalance?.toLocaleString("de-de") || "0"}
+                  characters="1234567890."
+                />
               </span>
 
               {monthlySalary ? (
@@ -106,14 +110,17 @@ export const ProfileTile = async ({ className }: Props) => {
             <Link
               href={`/app/spynet/citizen/${authentication.session.entity.id}/penalty-points`}
               title="Übersicht öffnen"
-              className="flex-initial w-1/2 rounded-primary background-secondary hover:bg-neutral-600/50 focus-visible:bg-neutral-600/50 flex flex-col justify-center items-center p-4 beveled-br"
+              className="flex-initial w-1/2 rounded-primary background-secondary hover:bg-neutral-600/50 focus-visible:bg-neutral-600/50 flex flex-col justify-center items-center p-4 beveled-br font-mono"
             >
               <span
-                className={clsx("font-black text-4xl font-mono uppercase", {
+                className={clsx("font-black text-4xl", {
                   "text-red-500": penaltyPoints && penaltyPoints > 0,
                 })}
               >
-                {penaltyPoints}
+                <ScrambleIn
+                  text={penaltyPoints?.toLocaleString("de-de") || "0"}
+                  characters="1234567890."
+                />
               </span>
               <p className="text-neutral-500 flex gap-2 items-center">
                 <FaScaleBalanced className="text-neutral-500" />

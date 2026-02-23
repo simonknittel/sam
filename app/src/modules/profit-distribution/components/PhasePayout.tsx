@@ -1,6 +1,7 @@
 "use client";
 
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
+import { ScrambleIn } from "@/modules/common/components/ScrambleIn";
 import { StatisticTile } from "@/modules/common/components/StatisticTile";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import type { getProfitDistributionCycleById } from "../queries";
@@ -22,11 +23,17 @@ export const PhasePayout = ({ cycleData }: Props) => {
 
       <div className="flex gap-[2px] border-t border-white/5 mt-4 pt-4">
         <StatisticTile label="Gesamter aUEC-Überschuss" className="flex-1">
-          {cycleData.cycle.auecProfit?.toLocaleString("de") ?? "-"}
+          <ScrambleIn
+            text={cycleData.cycle.auecProfit?.toLocaleString("de") ?? "-"}
+            characters="1234567890."
+          />
         </StatisticTile>
 
         <StatisticTile label="Dein Anteil" className="flex-1">
-          {cycleData.myShare?.toLocaleString("de") ?? "-"}
+          <ScrambleIn
+            text={cycleData.myShare?.toLocaleString("de") ?? "-"}
+            characters="1234567890."
+          />
         </StatisticTile>
       </div>
 

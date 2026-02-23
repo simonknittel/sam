@@ -15,6 +15,7 @@ import {
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { DateInput } from "@/modules/common/components/form/DateInput";
 import { NumberInputFormatted } from "@/modules/common/components/form/NumberInput";
+import { ScrambleIn } from "@/modules/common/components/ScrambleIn";
 import { StatisticTile } from "@/modules/common/components/StatisticTile";
 import { useId, useState, type KeyboardEventHandler } from "react";
 import { FaSpinner } from "react-icons/fa";
@@ -103,7 +104,10 @@ export const PhaseManagementPayoutPreparation = ({ cycleData }: Props) => {
             }
             className="flex-1"
           >
-            {auecPerSilc.toLocaleString("de")}
+            <ScrambleIn
+              text={auecPerSilc.toLocaleString("de")}
+              characters="1234567890."
+            />
           </StatisticTile>
 
           <StatisticTile
@@ -116,7 +120,10 @@ export const PhaseManagementPayoutPreparation = ({ cycleData }: Props) => {
             }
             className="flex-1"
           >
-            {(auecPerSilc * cycleData.totalSilc).toLocaleString("de")}
+            <ScrambleIn
+              text={(auecPerSilc * cycleData.totalSilc).toLocaleString("de")}
+              characters="1234567890."
+            />
           </StatisticTile>
         </div>
 
