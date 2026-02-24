@@ -266,7 +266,7 @@ export default async function Page() {
                 <code>frame-ancestors &apos;self&apos; {env.HOST}</code>).
               </li>
               <li>
-                <strong>X-Frame-Options:</strong> Dieser Header muss entweder
+                <strong>X-Frame-Options:</strong> Dieser Header muss{" "}
                 entfernt werden. Dieser Header wird durch den CSP-Header
                 überflüssig.
               </li>
