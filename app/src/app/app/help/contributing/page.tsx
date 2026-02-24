@@ -280,6 +280,18 @@ export default async function Page() {
               </code>
               . App-spezifische Anpassungen sind möglich.
             </p>
+
+            <p>
+              Bei internen Verlinkungen (bspw.{" "}
+              <code>&lt;a href=&quot;/my-page&quot;&gt;/my-page&lt;/a&gt;</code>
+              ) darf das <code>target</code>-Attribut nicht den Wert{" "}
+              <code>_top</code> oder <code>_parent</code> haben.
+            </p>
+
+            <p>
+              Cookies benötigen das <code>SameSite=None</code>-Attribut sowie
+              das <code>Secure</code>-Attribut.
+            </p>
           </RichText>
 
           <SectionHeading
