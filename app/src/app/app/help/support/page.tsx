@@ -44,7 +44,7 @@ export default async function Page() {
 
           <RichText className="ml-9">
             <p>
-              Du hast Fragen oder Probleme mit dem S.A.M.? Melde dich am besten
+              Du hast Fragen oder Probleme mit dem SAM? Melde dich am besten
               bei <CitizenLink citizen={ind3x} />. Ich bin am schnellsten über
               Discord erreichbar.
             </p>

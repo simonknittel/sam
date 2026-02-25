@@ -18,7 +18,7 @@ export const NewReleaseToast = () => {
       toast.success(
         () => (
           <div className="flex gap-2">
-            <p>Eine neue Version vom S.A.M. wurde veröffentlicht.</p>
+            <p>Eine neue Version vom SAM wurde veröffentlicht.</p>
             <Button2 onClick={() => window.location.reload()}>Neuladen</Button2>
           </div>
         ),

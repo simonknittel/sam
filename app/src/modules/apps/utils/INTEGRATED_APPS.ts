@@ -36,7 +36,7 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
     name: "Changelog",
     href: "/app/changelog",
     imageSrc: changelogScreenshot,
-    description: "Übersicht der letzten Änderungen im S.A.M.",
+    description: "Übersicht der letzten Änderungen im SAM",
   },
   {
     name: "Cornerstone Image Browser",
@@ -97,7 +97,7 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
     name: "Hilfe",
     href: "/app/help",
     imageSrc: helpScreenshot,
-    description: "Hilfe und Anleitungen zur Nutzung des S.A.M.",
+    description: "Hilfe und Anleitungen zur Nutzung des SAM",
   },
   {
     name: "IAM",
@@ -140,7 +140,7 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
   {
     name: "Statistiken",
     href: "/app/statistics",
-    description: "Diverse Statistiken zur Nutzung vom S.A.M.",
+    description: "Diverse Statistiken zur Nutzung vom SAM",
     permissionStrings: ["globalStatistics;read"],
   },
   {

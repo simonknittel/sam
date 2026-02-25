@@ -41,7 +41,7 @@ export const WebPushSubscribedHandler = async (payload: Payload) => {
    * This bypasses the notification settings check since it's a confirmation notification
    */
   const notificationPayload = JSON.stringify({
-    title: "Browser-Benachrichtigungen aktiviert | S.A.M.",
+    title: "Browser-Benachrichtigungen aktiviert | SAM",
     body: "Du erhältst ab sofort Benachrichtigungen auf diesem Gerät.",
   });
 

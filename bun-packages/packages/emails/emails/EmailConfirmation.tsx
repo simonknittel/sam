@@ -44,7 +44,7 @@ export default function Email({
         <Body className="bg-neutral-800 text-neutral-50 font-sans px-6 pt-2 pb-6">
           <Container className="mx-auto w-[480px]">
             <Text className="text-center text-5xl text-brand-red-500 font-extrabold uppercase">
-              S.A.M.
+              SAM
             </Text>
             <Text className="font-bold">
               Deine E-Mail-Adresse und die <Link href={`${baseUrl}/api/confirm-email?token=${token}`} className="text-brand-red-500">Datenschutzerklärung</Link> müssen bestätigt werden bevor du{" "}

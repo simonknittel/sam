@@ -1,4 +1,4 @@
-<h1 align="center">Sinister Administration Module (S.A.M.)</h1>
+<h1 align="center">Sinister Administration Module (SAM)</h1>
 
 <p align="center">Monorepo of the ERP/CRM for my Star Citizen organization</p>
 

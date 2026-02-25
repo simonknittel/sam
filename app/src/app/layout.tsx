@@ -17,8 +17,8 @@ const robotMono = Roboto_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(env.BASE_URL),
   title: {
-    default: "S.A.M. - Sinister Incorporated",
-    template: "%s | S.A.M. - Sinister Incorporated",
+    default: "SAM - Sinister Incorporated",
+    template: "%s | SAM - Sinister Incorporated",
   },
 };
 
