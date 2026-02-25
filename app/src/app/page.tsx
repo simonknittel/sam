@@ -11,7 +11,7 @@ import { authOptions } from "../modules/auth/server/auth";
 
 export const metadata: Metadata = {
   description:
-    "Sinister Administration Module (S.A.M.) for the Star Citizen organization Sinister Incorporated",
+    "Sinister Administration Module (SAM) for the Star Citizen organization Sinister Incorporated",
 };
 
 export default async function Page({ searchParams }: PageProps<"/">) {
@@ -27,7 +27,7 @@ export default async function Page({ searchParams }: PageProps<"/">) {
   return (
     <div className="min-h-dvh flex-col flex justify-center items-center background-primary">
       <main className="w-full max-w-md py-8 flex flex-col justify-center items-center gap-4 flex-1">
-        {showUwuHero ? <UwuHero /> : <Hero text="S.A.M." withGlitch />}
+        {showUwuHero ? <UwuHero /> : <Hero text="SAM" withGlitch />}
 
         <div className="flex flex-col gap-2 max-w-xs">
           <LoginButtons activeProviders={activeProviders} />

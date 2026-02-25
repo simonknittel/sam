@@ -106,7 +106,7 @@ export default async function Page() {
       <Day heading="26. Januar 2026">
         <DayItem heading="Favicon aktualisiert" badges={["Änderung"]}>
           <p>
-            Das Favicon zeigt jetzt das S.A.M.-Logo auf schwarzem Hintergrund.
+            Das Favicon zeigt jetzt das SAM-Logo auf schwarzem Hintergrund.
           </p>
         </DayItem>
       </Day>
@@ -199,7 +199,7 @@ export default async function Page() {
         {showGlobalStatistics ? (
           <DayItem heading="Statistiken" badges={["Neu", "Statistiken"]}>
             <p>
-              Es werden nun täglich Statistiken zur Nutzung des S.A.M. erfasst.
+              Es werden nun täglich Statistiken zur Nutzung des SAM erfasst.
               Zu Beginn werden Schiffsvarianten, Rollen, Logins und Events
               gezählt.
             </p>
@@ -404,7 +404,7 @@ export default async function Page() {
             Einer Rolle kann nun ein optionales Verfallsdatum gegeben werden.
             Dieses Datum wird in Anzahl an Tagen angegeben. Sollte sich ein
             Citizen mit dieser Rolle innerhalb dieses Datums nicht einmal im
-            S.A.M. angemeldet haben, wird die Rolle automatisch entfernt.
+            SAM angemeldet haben, wird die Rolle automatisch entfernt.
           </p>
 
           <p>
@@ -455,8 +455,8 @@ export default async function Page() {
         <DayItem heading="Mithilfe" badges={["Ankündigung"]}>
           <p>
             Du hast eine Idee, einen Verbesserungsvorschlag oder einen Wunsch
-            f&uuml;r&apos;s S.A.M.? Oder, du m&ouml;chtest sogar selbst an der
-            Entwicklung des S.A.M. mitwirken?
+            f&uuml;r&apos;s SAM? Oder, du m&ouml;chtest sogar selbst an der
+            Entwicklung des SAM mitwirken?
           </p>
 
           <p>
@@ -468,7 +468,7 @@ export default async function Page() {
               Hilfe &gt; Mithilfe
             </Link>{" "}
             bekommst du nun eine Übersicht dar&uuml;ber, wie du uns bei der
-            Entwicklung des S.A.M. unterstützen kannst.
+            Entwicklung des SAM unterstützen kannst.
           </p>
         </DayItem>
       </Day>
@@ -624,7 +624,7 @@ export default async function Page() {
       <Day heading="16. August 2025">
         <DayItem heading="Tools -> Apps" badges={["Änderung"]}>
           <p>
-            Um der wachsenden Anzahl von Funktionen im S.A.M. gerecht zu werden,
+            Um der wachsenden Anzahl von Funktionen im SAM gerecht zu werden,
             gibt es nun unter{" "}
             <Link
               href="/app/apps"
@@ -1582,8 +1582,8 @@ export default async function Page() {
         <DayItem heading="Abgesagte Events">
           <p>
             Wenn in Discord ein Event abgesagt wird, wird dieses nun auch ins
-            S.A.M. synchronisiert. Hier gibt es nun die Möglichkeit sich vom
-            S.A.M. eine Benachrichtigung zuschicken zu lassen. Hierzu einfach
+            SAM synchronisiert. Hier gibt es nun die Möglichkeit sich vom
+            SAM eine Benachrichtigung zuschicken zu lassen. Hierzu einfach
             auf die rote Glocke im Dashboard klicken.
           </p>
         </DayItem>
@@ -1609,7 +1609,7 @@ export default async function Page() {
         <DayItem heading="Changelog">
           <p>
             Es wurde ein Changelog implementiert. Hier werden zukünftig alle
-            großen und kleinen Änderungen vom S.A.M. kommuniziert.
+            großen und kleinen Änderungen vom SAM kommuniziert.
           </p>
         </DayItem>
       </Day>
@@ -1617,7 +1617,7 @@ export default async function Page() {
       <Day heading="24. Februar 2025">
         <DayItem heading="Discord-Synchronisierung">
           <p>
-            Die Synchronisation der Events zwischen Discord und S.A.M. wurde
+            Die Synchronisation der Events zwischen Discord und SAM wurde
             überarbeitet. Die Synchronisierung läuft alle zwei Minuten. Es
             werden nur noch Teilnehmer angezeigt, welche einen Spynet-Eintrag
             haben. Die Überarbeitung behebt Probleme mit dem Rate Limiting von

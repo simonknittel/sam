@@ -92,7 +92,7 @@ export const WebPushSubscriberClient = ({ className }: Props) => {
         </Button2>
 
         <p className="text-neutral-500 text-sm mt-2">
-          Auf iOS-Geräten musst du das S.A.M. zuerst zu deinem Home-Bildschirm
+          Auf iOS-Geräten musst du das SAM zuerst zu deinem Home-Bildschirm
           hinzufügen, bevor du die Genehmigung anfordern kannst.
         </p>
 

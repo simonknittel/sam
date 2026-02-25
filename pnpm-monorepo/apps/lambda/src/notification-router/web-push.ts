@@ -97,7 +97,7 @@ export const publishWebPushNotifications = async (
           },
         },
         payload: JSON.stringify({
-          title: `${notification.title} | S.A.M.`,
+          title: `${notification.title} | SAM`,
           body: notification.body,
           url: notification.url,
         }),

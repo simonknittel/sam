@@ -78,7 +78,7 @@ export default async function Page() {
               },
               {
                 title:
-                  "Ich habe eine (externe) App entwickelt. Wie kann ich diese Hosten, damit sie im S.A.M. integriert werden kann?",
+                  "Ich habe eine (externe) App entwickelt. Wie kann ich diese Hosten, damit sie im SAM integriert werden kann?",
                 href: "#wie-hoste-ich-meine-app",
               },
               {
@@ -104,13 +104,13 @@ export default async function Page() {
           <RichText className="ml-9">
             <p>
               Du hast eine Idee, einen Verbesserungsvorschlag oder einen Wunsch
-              f&uuml;r&apos;s S.A.M.? Oder, du m&ouml;chtest sogar selbst an der
-              Entwicklung des S.A.M. mitwirken?
+              f&uuml;r&apos;s SAM? Oder, du m&ouml;chtest sogar selbst an der
+              Entwicklung des SAM mitwirken?
             </p>
 
             <p>
               Hier bekommst du eine Übersicht dar&uuml;ber, wie du uns bei der
-              Entwicklung des S.A.M. unterstützen kannst.
+              Entwicklung des SAM unterstützen kannst.
             </p>
           </RichText>
         </section>
@@ -126,7 +126,7 @@ export default async function Page() {
           <RichText className="ml-9">
             <p>
               Solltest du einen Fehler entdecken oder hast sonst irgendwelche
-              Probleme mit dem S.A.M., melde dich einfach bei uns und wir
+              Probleme mit dem SAM, melde dich einfach bei uns und wir
               versuchen das Problem schnellstmöglich zu beheben.
             </p>
 
@@ -139,7 +139,7 @@ export default async function Page() {
 
             <p>
               Solltest du selber entwickeln können, gibt es grundsätzlich zwei
-              Möglichkeiten um neue Funktionen in das S.A.M. zu integrieren:
+              Möglichkeiten um neue Funktionen in das SAM zu integrieren:
             </p>
           </RichText>
 
@@ -164,10 +164,10 @@ export default async function Page() {
 
           <RichText className="ml-9">
             <p>
-              Integrierte Apps werden direkt in der Codebase des S.A.M. mit
+              Integrierte Apps werden direkt in der Codebase des SAM mit
               aufgenommen. Sie haben hierdurch vollen Zugriff auf alle Inhalte
-              und Funktionen des restlichen S.A.M. Zusätzlich ist das User
-              Interface an die Gestaltung des S.A.M. angepasst.
+              und Funktionen des restlichen SAM Zusätzlich ist das User
+              Interface an die Gestaltung des SAM angepasst.
             </p>
 
             <p>
@@ -188,14 +188,14 @@ export default async function Page() {
 
           <RichText className="ml-9">
             <p>
-              Externe Apps leben außerhalb der Codebase des S.A.M. Sie verwenden
+              Externe Apps leben außerhalb der Codebase des SAM Sie verwenden
               einen eigenen Tech Stack und werden auf eigenen Servern gehostet.
               Auch folgen sie ihrem eigenen Projektmanagement.
             </p>
 
             <p>
               Durch diese Separation verlieren sie die Möglichkeit des direkten
-              Zugriffs auf die Funktionen und Inhalte des S.A.M., haben
+              Zugriffs auf die Funktionen und Inhalte des SAM, haben
               allerdings freie Flexibilität im Projektmanagement und
               Entwicklung.
             </p>
@@ -214,8 +214,8 @@ export default async function Page() {
 
           <RichText className="ml-9 mt-4">
             <p>
-              Damit trotzdem eine teilweise Integration ins S.A.M. und Zugriff
-              auf Funktionen und Daten des S.A.M. möglich ist, bieten wir diesen
+              Damit trotzdem eine teilweise Integration ins SAM und Zugriff
+              auf Funktionen und Daten des SAM möglich ist, bieten wir diesen
               externen Apps folgende Funktionen an:
             </p>
           </RichText>
@@ -248,8 +248,8 @@ export default async function Page() {
 
           <RichText className="ml-9">
             <p>
-              Externe Apps können per Iframe in das S.A.M. integriert werden.
-              Dadurch bleibt der Benutzer im bekannten Interface des S.A.M. und
+              Externe Apps können per Iframe in das SAM integriert werden.
+              Dadurch bleibt der Benutzer im bekannten Interface des SAM und
               kann nahtlos zwischen den integrierten und externen Apps wechseln.
             </p>
 
@@ -262,11 +262,11 @@ export default async function Page() {
               <li>
                 <strong>Content-Security-Policy:</strong> Die{" "}
                 <code>frame-ancestors</code>-Direktive muss die Domain des
-                S.A.M. enthalten (Beispiel:{" "}
+                SAM enthalten (Beispiel:{" "}
                 <code>frame-ancestors &apos;self&apos; {env.HOST}</code>).
               </li>
               <li>
-                <strong>X-Frame-Options:</strong> Dieser Header muss entweder
+                <strong>X-Frame-Options:</strong> Dieser Header muss{" "}
                 entfernt werden. Dieser Header wird durch den CSP-Header
                 überflüssig.
               </li>
@@ -304,22 +304,22 @@ export default async function Page() {
 
           <RichText className="ml-9">
             <p>
-              Das S.A.M. kann für deine externe App die
-              Benutzerauthentifizierung übernehmen. Hierbei übernimmt das S.A.M.
+              Das SAM kann für deine externe App die
+              Benutzerauthentifizierung übernehmen. Hierbei übernimmt das SAM
               die Rolle des Identity Provider. Die Benutzer deiner App melden
-              sich hierbei über S.A.M. an und werden im Anschluss im
+              sich hierbei über SAM an und werden im Anschluss im
               authentifizierten Zustand zu deiner App weitergeleitet.
             </p>
 
             <p>
-              Als Protokoll wird OAuth2 verwendet. S.A.M. ist der Server und
+              Als Protokoll wird OAuth2 verwendet. SAM ist der Server und
               deine App ist der Client.
             </p>
 
             <p>
-              Zusätzlich bietet das S.A.M. eine SCIM-Schnittstelle an. Hierüber
+              Zusätzlich bietet das SAM eine SCIM-Schnittstelle an. Hierüber
               können Benutzer in deiner App automatisiert provisioniert und
-              deprovisioniert werden. Beispiel: Sollte ein Benutzer im S.A.M.
+              deprovisioniert werden. Beispiel: Sollte ein Benutzer im SAM
               gelöscht werden, dann kann diese Information über SCIM an deine
               App weitergeleitet werden, so dass der Benutzer auch in deiner App
               gelöscht wird.
@@ -343,7 +343,7 @@ export default async function Page() {
 
           <RichText className="ml-9">
             <p>
-              Über REST-Schnittstellen stehen Daten aus dem S.A.M. für den Abruf
+              Über REST-Schnittstellen stehen Daten aus dem SAM für den Abruf
               durch externe Apps zu Verfügung. Einige Daten werden allerdings
               aufgrund ihrer Sicherheitseinstufung nicht für externe Apps zur
               Verfügung stehen.
@@ -373,7 +373,7 @@ export default async function Page() {
           <RichText className="ml-9">
             <p>
               Externe Apps haben die Möglichkeit mithilfe von Webhooks auf
-              diverse Ereignisse im S.A.M. zu reagieren.
+              diverse Ereignisse im SAM zu reagieren.
             </p>
           </RichText>
 
@@ -428,7 +428,7 @@ export default async function Page() {
               Wenn du an einer externen App arbeiten möchtest, kannst du direkt
               mit dem Tech Stack deiner Wahl beginnen. Wenn du soweit bist,
               kannst du dich gerne bei uns melden und wir schauen gemeinsam, wie
-              wir deine App in das S.A.M. integrieren können.
+              wir deine App in das SAM integrieren können.
             </p>
           </RichText>
 
@@ -438,7 +438,7 @@ export default async function Page() {
             className="mt-8 mb-4"
           >
             Ich habe eine (externe) App entwickelt. Wie kann ich diese Hosten,
-            damit sie im S.A.M. integriert werden kann?
+            damit sie im SAM integriert werden kann?
           </SectionHeading>
 
           <RichText className="ml-9">
@@ -460,7 +460,7 @@ export default async function Page() {
 
           <RichText className="ml-9">
             <p>
-              Die Entwicklung des S.A.M. erfolgt in der Freizeit von uns. Daher
+              Die Entwicklung des SAM erfolgt in der Freizeit von uns. Daher
               können wir keinen genauen Zeitpunkt für die Fertigstellung von
               Funktionen nennen.
             </p>

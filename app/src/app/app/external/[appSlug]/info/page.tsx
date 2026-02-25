@@ -45,7 +45,7 @@ export default async function Page({
           </p>
           <p>
             Wenn das verantwortliche Team nicht weiterhelfen kann, melde dich im
-            Zweifel beim Support des S.A.M. (siehe{" "}
+            Zweifel beim Support des SAM (siehe{" "}
             <Link href="/app/help/support">Hilfe &gt; Support</Link>).
           </p>
 

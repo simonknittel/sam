@@ -62,7 +62,7 @@ export const emailConfirmation = async (
 };
 
 const subject =
-	"E-Mail-Adresse und Datenschutzerklärung bestätigen | S.A.M. - Sinister Incorporated";
+	"E-Mail-Adresse und Datenschutzerklärung bestätigen | SAM - Sinister Incorporated";
 
 const renderHtmlEmail = (templateProps: EmailConfirmationProps) => {
 	return render(Email(templateProps));
@@ -71,7 +71,7 @@ const renderHtmlEmail = (templateProps: EmailConfirmationProps) => {
 const renderTextEmail = (templateProps: EmailConfirmationProps) => {
 	const { baseUrl, host, token } = templateProps;
 
-	return `E-Mail-Adresse und Datenschutzerklärung bestätigen - S.A.M.
+	return `E-Mail-Adresse und Datenschutzerklärung bestätigen - SAM
 
 Deine E-Mail-Adresse und die Datenschutzerklärung müssen bestätigt werden bevor du ${host} nutzen kannst.
 

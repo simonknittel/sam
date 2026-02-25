@@ -33,7 +33,9 @@ export const Hero = ({
         )}
         data-text={text}
       >
-        <span>{text}</span>
+        <span>
+          <ScrambleIn text={text} repeatInterval={5000} />
+        </span>
       </span>
     );
 
@@ -53,7 +55,7 @@ export const Hero = ({
       data-text={text}
     >
       <span>
-        <ScrambleIn text={text} />
+        <ScrambleIn text={text} repeatInterval={5000} />
       </span>
     </h1>
   );

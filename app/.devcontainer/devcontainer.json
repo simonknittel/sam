@@ -3,7 +3,7 @@
 // - https://code.visualstudio.com/docs/devcontainers/containers
 // - https://code.visualstudio.com/docs/editor/variables-reference
 {
-  "name": "app / S.A.M.",
+  "name": "app / SAM",
   "dockerComposeFile": "docker-compose.yml",
   "service": "devcontainer",
   // We mount the whole project directory but only want to work on the current subdirectory (see docker-compose.yml)

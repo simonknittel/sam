@@ -9,7 +9,7 @@ interface Props {
 export const UwuHero = ({ className }: Props) => {
   return (
     <div className={clsx(className)}>
-      <Image src={image} alt="S.A.M. - Sinister Incorporated" width={256} />
+      <Image src={image} alt="SAM - Sinister Incorporated" width={256} />
     </div>
   );
 };

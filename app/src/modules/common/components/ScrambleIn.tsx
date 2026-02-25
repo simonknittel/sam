@@ -15,6 +15,8 @@ interface Props {
   readonly duration?: number;
   /** How often (in ms) the scrambled letters refresh */
   readonly scrambleInterval?: number;
+  /** Automatically retrigger the scramble effect every N milliseconds after completion */
+  readonly repeatInterval?: number;
   readonly characters?: string;
   readonly className?: string;
   readonly scrambledClassName?: string;
@@ -33,6 +35,7 @@ export const ScrambleIn = ({
   text,
   duration = 1000,
   scrambleInterval = 75,
+  repeatInterval,
   characters = "abcdefghijklmnopqrstuvwxyz!@#$%^&*()_+",
   className = "",
   scrambledClassName = "",
@@ -46,6 +49,7 @@ export const ScrambleIn = ({
   const [isDone, setIsDone] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const endTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const repeatTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const generateScrambled = useCallback(
     (length: number) => {
@@ -70,6 +74,7 @@ export const ScrambleIn = ({
     setDisplayText("");
     if (timerRef.current) clearInterval(timerRef.current);
     if (endTimerRef.current) clearTimeout(endTimerRef.current);
+    if (repeatTimerRef.current) clearInterval(repeatTimerRef.current);
   }, []);
 
   useImperativeHandle(ref, () => ({
@@ -113,6 +118,18 @@ export const ScrambleIn = ({
     generateScrambled,
     onComplete,
   ]);
+
+  useEffect(() => {
+    if (!repeatInterval || !isDone) return;
+
+    repeatTimerRef.current = setInterval(() => {
+      startAnimation();
+    }, repeatInterval);
+
+    return () => {
+      if (repeatTimerRef.current) clearInterval(repeatTimerRef.current);
+    };
+  }, [repeatInterval, isDone, startAnimation]);
 
   return (
     <>

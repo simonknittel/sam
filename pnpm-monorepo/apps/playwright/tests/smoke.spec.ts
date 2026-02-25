@@ -10,7 +10,7 @@ test("404 page returns 404", async ({ request }) => {
   expect(response.status()).toBe(404);
 });
 
-test("homepage h1 contains S.A.M.", async ({ page }) => {
+test("homepage h1 contains SAM", async ({ page }) => {
   await page.goto("/");
-  await expect(page.locator("h1")).toContainText("S.A.M.");
+  await expect(page.locator("h1")).toContainText("SAM");
 });

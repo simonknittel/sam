@@ -32,7 +32,7 @@
    ```ini
    # ~/.aws/config
 
-   # S.A.M.
+   # SAM
    [profile sam-test]
    sso_session = sam-sso
    sso_account_id = 220746603587
