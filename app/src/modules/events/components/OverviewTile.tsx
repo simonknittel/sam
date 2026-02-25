@@ -43,7 +43,9 @@ export const OverviewTile = ({ className, event }: Props) => {
         )}
 
         <dl className="mt-4">
-          <dt className="text-neutral-500">Start</dt>
+          <dt className="text-neutral-500 font-mono uppercase text-xs">
+            Start
+          </dt>
           <dd>
             {event.startTime.toLocaleString("de-DE", {
               timeZone: "Europe/Berlin",
@@ -56,7 +58,9 @@ export const OverviewTile = ({ className, event }: Props) => {
             })}
           </dd>
 
-          <dt className="text-neutral-500 mt-4">Ende</dt>
+          <dt className="text-neutral-500 font-mono uppercase text-xs mt-4">
+            Ende
+          </dt>
           <dd>
             {event.endTime?.toLocaleString("de-DE", {
               timeZone: "Europe/Berlin",
@@ -69,7 +73,9 @@ export const OverviewTile = ({ className, event }: Props) => {
             }) || "-"}
           </dd>
 
-          <dt className="text-neutral-500 mt-4">Ort</dt>
+          <dt className="text-neutral-500 font-mono uppercase text-xs mt-4">
+            Ort
+          </dt>
           <dd>{event.location || "-"}</dd>
         </dl>
 

@@ -61,13 +61,13 @@ export const Event = async ({ className, event, index }: Props) => {
       )}
     >
       {isHappeningNow && (
-        <div className="bg-green-500/50 text-text-primary font-bold text-center p-2">
+        <div className="bg-green-500/50 text-text-primary font-bold text-center p-2 font-mono uppercase text-sm">
           Event läuft
         </div>
       )}
 
       {isToday && !isHappeningNow && (
-        <div className="bg-brand-red-500/50 text-text-primary font-bold text-center p-2">
+        <div className="bg-brand-red-500/50 text-text-primary font-bold text-center p-2 font-mono uppercase text-sm">
           <RelativeDate date={event.startTime} />
         </div>
       )}
@@ -87,7 +87,7 @@ export const Event = async ({ className, event, index }: Props) => {
 
         <div className="flex-1 flex flex-col gap-3 justify-center p-4 @7xl:overflow-hidden">
           <h2
-            className="font-bold text-xl @7xl:text-ellipsis @7xl:whitespace-nowrap @7xl:overflow-hidden"
+            className="font-bold text-xl @7xl:text-ellipsis @7xl:whitespace-nowrap @7xl:overflow-hidden font-mono uppercase"
             title={event.name}
           >
             {event.name}
