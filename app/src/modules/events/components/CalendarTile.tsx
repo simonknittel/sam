@@ -18,7 +18,7 @@ export const CalendarTile = async ({ className }: Props) => {
       )}
     >
       <h2 className="font-thin text-2xl mb-2 w-full font-mono uppercase">
-        Discord-Events
+        Events
       </h2>
 
       {events.length > 0 ? (
