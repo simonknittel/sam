@@ -136,9 +136,12 @@ export const Position = ({
         <div className="flex-1 flex flex-col @3xl:grid @3xl:grid-cols-[1fr_256px_256px] gap-2">
           <div className="flex flex-col justify-center overflow-hidden pl-2">
             <h3
-              className={clsx("text-sm text-gray-500", {
-                "sr-only": !isOpen,
-              })}
+              className={clsx(
+                "text-sm text-gray-500 font-mono uppercase text-xs",
+                {
+                  "sr-only": !isOpen,
+                },
+              )}
             >
               Name
             </h3>
@@ -158,9 +161,12 @@ export const Position = ({
 
           <div className="flex flex-col justify-center py-1">
             <h3
-              className={clsx("text-sm text-gray-500", {
-                "sr-only": !isOpen,
-              })}
+              className={clsx(
+                "text-sm text-gray-500 font-mono uppercase text-xs",
+                {
+                  "sr-only": !isOpen,
+                },
+              )}
             >
               Erforderliches Schiff
             </h3>
@@ -184,9 +190,12 @@ export const Position = ({
 
           <div className="flex flex-col justify-center py-1">
             <h3
-              className={clsx("text-sm text-gray-500", {
-                "sr-only": !isOpen,
-              })}
+              className={clsx(
+                "text-sm text-gray-500 font-mono uppercase text-xs",
+                {
+                  "sr-only": !isOpen,
+                },
+              )}
             >
               Citizen
             </h3>
@@ -221,7 +230,9 @@ export const Position = ({
         <div className="bg-neutral-800/50 border-t border-white/10 rounded-b">
           <div className="p-4 flex gap-2">
             <div className="flex-1 flex flex-col">
-              <h3 className="text-sm text-gray-500">Beschreibung</h3>
+              <h3 className="text-sm text-gray-500 font-mono uppercase text-xs">
+                Beschreibung
+              </h3>
               {position.description ? (
                 <p>{position.description}</p>
               ) : (

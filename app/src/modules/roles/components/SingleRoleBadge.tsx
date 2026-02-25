@@ -107,7 +107,9 @@ export const SingleRoleBadge = ({
             <span className="size-12 border border-neutral-700 rounded-secondary" />
           )}
 
-          <span className="text-lg font-bold">{role.name}</span>
+          <span className="text-lg font-bold font-mono uppercase">
+            {role.name}
+          </span>
         </div>
 
         {citizenId && canDismiss && (

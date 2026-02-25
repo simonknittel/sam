@@ -33,7 +33,7 @@ export const NotificationSettings = ({ className, settings }: Props) => {
             <FaInfoCircle />
           </span>
 
-          <p className="w-full text-sm">On-site</p>
+          <p className="w-full text-xs font-mono uppercase">On-site</p>
         </div>
 
         <div className="flex-none w-16 flex flex-col justify-center items-center text-center">
@@ -41,7 +41,7 @@ export const NotificationSettings = ({ className, settings }: Props) => {
             <FaMobile /> / <FaDesktop />
           </span>
 
-          <p className="w-full text-sm">Browser</p>
+          <p className="w-full text-xs font-mono uppercase">Browser</p>
         </div>
       </div>
 
