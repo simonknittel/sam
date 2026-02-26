@@ -8,7 +8,7 @@ interface Props {
 }
 
 export const CalendarTile = async ({ className }: Props) => {
-  const events = await getEvents("open");
+  const { events } = await getEvents("open");
 
   return (
     <section

@@ -37,6 +37,7 @@ export const Filters = ({ className }: Props) => {
             { value: "open", label: "Offen", default: true },
             { value: "closed", label: "Geschlossen" },
           ]}
+          resetCursorPagination
         />
 
         <RadioFilter
@@ -46,6 +47,7 @@ export const Filters = ({ className }: Props) => {
             { value: "all", label: "Alle", default: true },
             { value: "me", label: "Mir" },
           ]}
+          resetCursorPagination
         />
       </div>
     </div>
