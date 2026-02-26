@@ -11,9 +11,9 @@ export default async function Page({ searchParams }: PageProps<"/app/events">) {
   return (
     <SidebarLayout
       sidebar={<Filters />}
-      childrenContainerClassName="@container"
+      childrenContainerClassName="@container/main"
     >
-      <div className="@7xl:flex-1 max-w-[400px] @7xl:max-w-none">
+      <div className="@4xl/main:flex-1 max-w-[400px] @4xl/main:max-w-none @container/events">
         <SuspenseWithErrorBoundaryTile>
           <EventsTile searchParams={searchParams} />
         </SuspenseWithErrorBoundaryTile>

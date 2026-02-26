@@ -16,6 +16,7 @@ model Event {
   discordGuildId      String?
   managers            Entity[]                  @relation("eventManagers")
 
+  @@index([startTime])
   @@map("DiscordEvent")
 }
 

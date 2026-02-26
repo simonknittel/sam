@@ -7,7 +7,8 @@ import { createTRPCRouter, protectedProcedure } from "../trpc";
 export const eventsRouter = createTRPCRouter({
   getAllEvents: protectedProcedure.query(async () => {
     try {
-      return await getEvents("all");
+      const { events } = await getEvents("all");
+      return events;
     } catch (error) {
       log.error("Failed to fetch all events", {
         error: serializeError(error),

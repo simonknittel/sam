@@ -56,7 +56,7 @@ export const Event = async ({ className, event, index }: Props) => {
   return (
     <article
       className={clsx(
-        "rounded-primary rounded-br-none overflow-hidden w-full beveled-br",
+        "rounded-primary rounded-br-none overflow-hidden beveled-br w-[400px] @4xl/events:w-full",
         className,
       )}
     >
@@ -72,9 +72,9 @@ export const Event = async ({ className, event, index }: Props) => {
         </div>
       )}
 
-      <div className="flex flex-col @7xl:flex-row background-secondary">
+      <div className="flex flex-col @4xl/events:flex-row background-secondary">
         {event.discordImage && (
-          <div className="@7xl:flex-grow-0 @7xl:flex-shrink-0 @7xl:basis-[400px] max-h-[160px] flex justify-center rounded-r-primary rounded-b-primary overflow-hidden">
+          <div className="@4xl/events:flex-grow-0 @4xl/events:flex-shrink-0 @4xl/events:basis-[400px] max-h-[160px] flex justify-center rounded-r-primary rounded-b-primary overflow-hidden">
             <Image
               src={`https://cdn.discordapp.com/guild-events/${event.discordId}/${event.discordImage}.webp?size=1024`}
               alt=""
@@ -85,9 +85,9 @@ export const Event = async ({ className, event, index }: Props) => {
           </div>
         )}
 
-        <div className="flex-1 flex flex-col gap-3 justify-center p-4 @7xl:overflow-hidden">
+        <div className="flex-1 flex flex-col gap-3 justify-center p-4 @4xl/events:overflow-hidden">
           <h2
-            className="font-bold text-xl @7xl:text-ellipsis @7xl:whitespace-nowrap @7xl:overflow-hidden font-mono uppercase"
+            className="font-bold text-xl @4xl/events:text-ellipsis @4xl/events:whitespace-nowrap @4xl/events:overflow-hidden font-mono uppercase"
             title={event.name}
           >
             {event.name}

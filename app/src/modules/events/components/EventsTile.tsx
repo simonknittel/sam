@@ -1,3 +1,5 @@
+import { CursorPaginationControls } from "@/modules/common/CursorPagination/CursorPaginationControls";
+import { cursorPaginationParsers } from "@/modules/common/CursorPagination/cursorPaginationParsers";
 import clsx from "clsx";
 import {
   createLoader,
@@ -11,6 +13,7 @@ import { Event } from "./Event";
 const loadSearchParams = createLoader({
   status: parseAsString.withDefault("open"),
   participating: parseAsStringLiteral(["all", "me"]).withDefault("all"),
+  ...cursorPaginationParsers,
 });
 
 interface Props {
@@ -19,9 +22,15 @@ interface Props {
 }
 
 export const EventsTile = async ({ className, searchParams }: Props) => {
-  const { status, participating } = await loadSearchParams(searchParams);
+  const { status, participating, cursor, direction } =
+    await loadSearchParams(searchParams);
 
-  const events = await getEvents(status, participating);
+  const { events, nextCursor, prevCursor } = await getEvents(
+    status,
+    participating,
+    cursor,
+    direction,
+  );
 
   if (events.length <= 0)
     return (
@@ -37,6 +46,12 @@ export const EventsTile = async ({ className, searchParams }: Props) => {
       {events.map((event, index) => (
         <Event key={event.id} event={event} index={index} />
       ))}
+
+      <CursorPaginationControls
+        nextCursor={nextCursor}
+        prevCursor={prevCursor}
+        className="mt-4"
+      />
     </section>
   );
 };

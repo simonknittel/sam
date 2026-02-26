@@ -8,12 +8,12 @@ interface Props {
 }
 
 export const CalendarTile = async ({ className }: Props) => {
-  const events = await getEvents("open");
+  const { events } = await getEvents("open");
 
   return (
     <section
       className={clsx(
-        "flex flex-col gap-[2px] items-center @7xl:overflow-hidden",
+        "flex flex-col gap-[2px] items-center @4xl/events:overflow-hidden",
         className,
       )}
     >
