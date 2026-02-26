@@ -25,14 +25,14 @@ export default async function Page() {
     !disableAlgolia && (canCitizenRead || canOrgRead);
 
   return (
-    <div className="flex gap-6 flex-row flex-wrap justify-center @container">
+    <div className="flex gap-6 flex-row flex-wrap justify-center @container/main">
       {showCalendar && (
         <Suspense
           fallback={
-            <TileSkeleton className="flex-none @7xl:flex-1 w-[400px] @7xl:max-w-none" />
+            <TileSkeleton className="flex-none @7xl/main:flex-1 w-[400px] @7xl/main:max-w-none" />
           }
         >
-          <CalendarTile className="flex-none @7xl:flex-1 w-[400px] @7xl:max-w-none" />
+          <CalendarTile className="flex-none @7xl/main:flex-1 w-[400px] @7xl/main:max-w-none @container/events" />
         </Suspense>
       )}
 
