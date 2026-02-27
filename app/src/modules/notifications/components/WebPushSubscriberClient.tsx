@@ -17,6 +17,14 @@ export const WebPushSubscriberClient = ({ className }: Props) => {
   const [isPending, setIsPending] = useState(false);
 
   const handleClick = () => {
+    if (!env.NEXT_PUBLIC_VAPID_KEY) {
+      console.info("Missing environment variables for Web Push");
+      toast.error(
+        "Die Benachrichtigungen können derzeit nicht aktiviert werden. Bitte probiere es später erneut.",
+      );
+      return;
+    }
+
     setIsPending(true);
 
     if (!("Notification" in window) || !("PushManager" in window)) {
