@@ -72,8 +72,11 @@ export const env = createEnv({
       (str) => str || process.env.VERCEL_GIT_COMMIT_SHA,
       z.string().optional(),
     ),
+    /* AWS_PROFILE=sam-test terraform output access_key_app_vercel */
     AWS_ACCESS_KEY_ID: z.string().optional(),
+    /* AWS_PROFILE=sam-test terraform output secret_key_app_vercel */
     AWS_SECRET_ACCESS_KEY: z.string().optional(),
+    /* AWS_PROFILE=sam-test terraform output event_bus_arn */
     AWS_EVENT_BUS_ARN: z.string().optional(),
     OPENAI_API_KEY: z.string().optional(),
     ENABLE_INSTRUMENTATION: z.string().optional(),

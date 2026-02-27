@@ -13,7 +13,7 @@ export const getUnleashFlag = cache(
     try {
       if (!env.UNLEASH_SERVER_API_URL || !env.UNLEASH_SERVER_API_TOKEN) {
         log.info(
-          "Missing environment variables for Unleash, returning false for all flags",
+          "Missing environment variables for Unleash. Returning false for all flags.",
         );
         return false;
       }
