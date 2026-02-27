@@ -17,6 +17,7 @@ model Event {
   managers            Entity[]                  @relation("eventManagers")
 
   @@index([startTime])
+  @@index([endTime])
   @@map("DiscordEvent")
 }
 
@@ -28,6 +29,7 @@ model EventDiscordParticipant {
   createdAt     DateTime @default(now())
 
   @@unique([eventId, discordUserId])
+  @@index([discordUserId])
   @@map("DiscordEventParticipant")
 }
 
