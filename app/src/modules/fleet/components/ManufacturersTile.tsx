@@ -48,7 +48,7 @@ export const ManufacturersTile = async () => {
                 <td>
                   {row.image && (
                     <Image
-                      src={`https://${env.NEXT_PUBLIC_R2_PUBLIC_URL}/${row.image.id}`}
+                      src={`https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${row.image.id}`}
                       width={48}
                       height={48}
                       alt={`Logo of ${row.name}`}

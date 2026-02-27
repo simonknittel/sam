@@ -51,7 +51,7 @@ export const RoleFilter = ({ roles }: Props) => {
             {role.icon && (
               <div className="aspect-square w-6 h-6 flex items-center justify-center rounded-secondary overflow-hidden">
                 <Image
-                  src={`https://${env.NEXT_PUBLIC_R2_PUBLIC_URL}/${role.icon.id}`}
+                  src={`https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${role.icon.id}`}
                   alt=""
                   width={24}
                   height={24}

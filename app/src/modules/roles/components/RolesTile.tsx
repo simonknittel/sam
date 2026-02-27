@@ -53,7 +53,7 @@ export const RolesTile = async ({ className }: Props) => {
                   {role.icon ? (
                     <div className="aspect-square size-8 flex items-center justify-center rounded-secondary overflow-hidden flex-none">
                       <Image
-                        src={`https://${env.NEXT_PUBLIC_R2_PUBLIC_URL}/${role.icon.id}`}
+                        src={`https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${role.icon.id}`}
                         alt=""
                         width={32}
                         height={32}

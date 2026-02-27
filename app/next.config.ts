@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: env.NEXT_PUBLIC_R2_PUBLIC_URL,
+        hostname: env.NEXT_PUBLIC_S3_PUBLIC_URL,
       },
       {
         protocol: "https",

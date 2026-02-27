@@ -61,16 +61,16 @@ export async function POST(request: Request) {
 async function getPresignedUploadUrl(key: string) {
   const S3 = new S3Client({
     region: "auto",
-    endpoint: `https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+    endpoint: `https://${env.S3_ACCOUNT_ID}.r2.cloudflarestorage.com`,
     credentials: {
-      accessKeyId: env.R2_ACCESS_KEY_ID,
-      secretAccessKey: env.R2_SECRET_ACCESS_KEY,
+      accessKeyId: env.S3_ACCESS_KEY_ID,
+      secretAccessKey: env.S3_SECRET_ACCESS_KEY,
     },
   });
 
   return await getSignedUrl(
     S3,
-    new PutObjectCommand({ Bucket: env.R2_BUCKET_NAME, Key: key }),
+    new PutObjectCommand({ Bucket: env.S3_BUCKET_NAME, Key: key }),
     {
       expiresIn: 60 * 60, // 1 hour
     },

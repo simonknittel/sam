@@ -221,7 +221,7 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
             <Tooltip.Root>
               <Tooltip.Trigger className="cursor-help w-full h-full">
                 <Image
-                  src={`https://${env.NEXT_PUBLIC_R2_PUBLIC_URL}/${image?.id}`}
+                  src={`https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${image?.id}`}
                   alt={props.data.role.name}
                   title={props.data.role.name}
                   width={100}
