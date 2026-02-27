@@ -85,7 +85,7 @@ export const env = createEnv({
     NEXT_PUBLIC_ALGOLIA_APP_ID: z.string(),
     NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY: z.string(),
     NEXT_PUBLIC_S3_PUBLIC_URL: z.string(),
-    NEXT_PUBLIC_CARE_BEAR_SHOOTER_BUILD_URL: z.string().url(),
+    NEXT_PUBLIC_CARE_BEAR_SHOOTER_BUILD_URL: z.url().optional(),
     NEXT_PUBLIC_DOWNLOADS_BASE_URL: z.url().optional(),
     NEXT_PUBLIC_DOWNLOADS_BASE_URL_2: z.url().optional(),
     NEXT_PUBLIC_PUSHER_CHANNELS_APP_ID: z.string().optional(),
