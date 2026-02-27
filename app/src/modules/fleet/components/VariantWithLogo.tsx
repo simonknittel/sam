@@ -22,7 +22,7 @@ export const VariantWithLogo = ({
     <div className={clsx("flex items-center gap-2", className)}>
       {manufacturer.image ? (
         <Image
-          src={`https://${env.NEXT_PUBLIC_R2_PUBLIC_URL}/${manufacturer.image.id}`}
+          src={`https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${manufacturer.image.id}`}
           alt={`Logo of ${manufacturer.name}`}
           width={size}
           height={size}

@@ -27,12 +27,18 @@ export const env = createEnv({
     DISCORD_GUILD_ID: z.string(),
     DISCORD_TOKEN: z.string(),
     ALGOLIA_ADMIN_API_KEY: z.string(),
-    R2_ACCOUNT_ID: z.string(),
-    R2_ACCESS_KEY_ID: z.string(),
-    R2_SECRET_ACCESS_KEY: z.string(),
-    R2_BUCKET_NAME: z.string(),
-    UNLEASH_SERVER_API_URL: z.url(),
-    UNLEASH_SERVER_API_TOKEN: z.string(),
+    /** Amazon S3 (or any other S3-compatible provider like Cloudflare R2) */
+    S3_ACCOUNT_ID: z.string(),
+    /** Amazon S3 (or any other S3-compatible provider like Cloudflare R2) */
+    S3_ACCESS_KEY_ID: z.string(),
+    /** Amazon S3 (or any other S3-compatible provider like Cloudflare R2) */
+    S3_SECRET_ACCESS_KEY: z.string(),
+    /** Amazon S3 (or any other S3-compatible provider like Cloudflare R2) */
+    S3_BUCKET_NAME: z.string(),
+    /** Unleash (or any other Unleash-compatible feature flag provider like GitLab) */
+    UNLEASH_SERVER_API_URL: z.url().optional(),
+    /** Unleash (or any other Unleash-compatible feature flag provider like GitLab) */
+    UNLEASH_SERVER_API_TOKEN: z.string().optional(),
     BASE_URL: z.preprocess(
       // Uses VERCEL_URL if BASE_URL is not set, e.g. on Vercel's preview deployments
       (str) => {
@@ -73,7 +79,8 @@ export const env = createEnv({
     ENABLE_INSTRUMENTATION: z.string().optional(),
     OTEL_EXPORTER_OTLP_PROTOCOL: z.string().optional(),
     OTEL_EXPORTER_OTLP_ENDPOINT: z.string().optional(),
-    PUSHER_CHANNELS_APP_SECRET: z.string().optional(),
+    /* Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
+    PUSHER_CHANNELS_APP_SECRET: z.string().default("app-secret"),
   },
 
   /*
@@ -84,14 +91,19 @@ export const env = createEnv({
   client: {
     NEXT_PUBLIC_ALGOLIA_APP_ID: z.string(),
     NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY: z.string(),
-    NEXT_PUBLIC_R2_PUBLIC_URL: z.string(),
-    NEXT_PUBLIC_CARE_BEAR_SHOOTER_BUILD_URL: z.string().url(),
+    NEXT_PUBLIC_S3_PUBLIC_URL: z.string(),
+    NEXT_PUBLIC_CARE_BEAR_SHOOTER_BUILD_URL: z.url().optional(),
     NEXT_PUBLIC_DOWNLOADS_BASE_URL: z.url().optional(),
     NEXT_PUBLIC_DOWNLOADS_BASE_URL_2: z.url().optional(),
-    NEXT_PUBLIC_PUSHER_CHANNELS_APP_ID: z.string().optional(),
-    NEXT_PUBLIC_PUSHER_CHANNELS_APP_KEY: z.string().optional(),
-    NEXT_PUBLIC_PUSHER_CHANNELS_HOST: z.string().optional(),
-    NEXT_PUBLIC_PUSHER_CHANNELS_PORT: z.coerce.number().optional(),
+    /* Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
+    NEXT_PUBLIC_PUSHER_CHANNELS_APP_ID: z.string().default("app-id"),
+    /* Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
+    NEXT_PUBLIC_PUSHER_CHANNELS_APP_KEY: z.string().default("app-key"),
+    /* Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
+    NEXT_PUBLIC_PUSHER_CHANNELS_HOST: z.string().default("localhost"),
+    /* Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
+    NEXT_PUBLIC_PUSHER_CHANNELS_PORT: z.coerce.number().default(6001),
+    /* Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
     NEXT_PUBLIC_PUSHER_CHANNELS_SECURE_PORT: z.coerce.number().optional(),
     NEXT_PUBLIC_VAPID_KEY: z.string().optional(),
   },
@@ -115,11 +127,11 @@ export const env = createEnv({
     ALGOLIA_ADMIN_API_KEY: process.env.ALGOLIA_ADMIN_API_KEY,
     NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY:
       process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY,
-    R2_ACCOUNT_ID: process.env.R2_ACCOUNT_ID,
-    R2_ACCESS_KEY_ID: process.env.R2_ACCESS_KEY_ID,
-    R2_SECRET_ACCESS_KEY: process.env.R2_SECRET_ACCESS_KEY,
-    R2_BUCKET_NAME: process.env.R2_BUCKET_NAME,
-    NEXT_PUBLIC_R2_PUBLIC_URL: process.env.NEXT_PUBLIC_R2_PUBLIC_URL,
+    S3_ACCOUNT_ID: process.env.S3_ACCOUNT_ID,
+    S3_ACCESS_KEY_ID: process.env.S3_ACCESS_KEY_ID,
+    S3_SECRET_ACCESS_KEY: process.env.S3_SECRET_ACCESS_KEY,
+    S3_BUCKET_NAME: process.env.S3_BUCKET_NAME,
+    NEXT_PUBLIC_S3_PUBLIC_URL: process.env.NEXT_PUBLIC_S3_PUBLIC_URL,
     UNLEASH_SERVER_API_URL: process.env.UNLEASH_SERVER_API_URL,
     UNLEASH_SERVER_API_TOKEN: process.env.UNLEASH_SERVER_API_TOKEN,
     HOST: process.env.HOST,

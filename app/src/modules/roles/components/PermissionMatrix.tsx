@@ -624,7 +624,7 @@ const Row = ({ role, permissions, gridTemplateColumns }: RowProps) => {
           {role.icon ? (
             <div className="aspect-square size-4 flex items-center justify-center rounded-secondary overflow-hidden flex-none">
               <Image
-                src={`https://${env.NEXT_PUBLIC_R2_PUBLIC_URL}/${role.icon.id}`}
+                src={`https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${role.icon.id}`}
                 alt=""
                 width={16}
                 height={16}

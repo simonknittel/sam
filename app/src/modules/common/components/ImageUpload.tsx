@@ -77,7 +77,7 @@ export const ImageUpload = ({
     <div className={clsx(className, "relative")}>
       {imageId && !isPending && (
         <Image
-          src={`https://${env.NEXT_PUBLIC_R2_PUBLIC_URL}/${imageId}`}
+          src={`https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${imageId}`}
           alt=""
           width={width}
           height={height}

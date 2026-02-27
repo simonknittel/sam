@@ -68,7 +68,7 @@ export const SingleRoleBadge = ({
           {role.icon && (
             <span className="aspect-square size-6 flex items-center justify-center">
               <Image
-                src={`https://${env.NEXT_PUBLIC_R2_PUBLIC_URL}/${role.icon.id}`}
+                src={`https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${role.icon.id}`}
                 alt=""
                 width={24}
                 height={24}
@@ -92,7 +92,7 @@ export const SingleRoleBadge = ({
           {role.icon ? (
             <span className="aspect-square size-12 flex items-center justify-center">
               <Image
-                src={`https://${env.NEXT_PUBLIC_R2_PUBLIC_URL}/${role.icon.id}`}
+                src={`https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${role.icon.id}`}
                 alt=""
                 width={48}
                 height={48}
