@@ -27,12 +27,18 @@ export const env = createEnv({
     DISCORD_GUILD_ID: z.string(),
     DISCORD_TOKEN: z.string(),
     ALGOLIA_ADMIN_API_KEY: z.string(),
+    /** Amazon S3 (or any other S3-compatible provider like Cloudflare R2) */
     S3_ACCOUNT_ID: z.string(),
+    /** Amazon S3 (or any other S3-compatible provider like Cloudflare R2) */
     S3_ACCESS_KEY_ID: z.string(),
+    /** Amazon S3 (or any other S3-compatible provider like Cloudflare R2) */
     S3_SECRET_ACCESS_KEY: z.string(),
+    /** Amazon S3 (or any other S3-compatible provider like Cloudflare R2) */
     S3_BUCKET_NAME: z.string(),
-    UNLEASH_SERVER_API_URL: z.url(),
-    UNLEASH_SERVER_API_TOKEN: z.string(),
+    /** Unleash (or any other Unleash-compatible feature flag provider like GitLab) */
+    UNLEASH_SERVER_API_URL: z.url().optional(),
+    /** Unleash (or any other Unleash-compatible feature flag provider like GitLab) */
+    UNLEASH_SERVER_API_TOKEN: z.string().optional(),
     BASE_URL: z.preprocess(
       // Uses VERCEL_URL if BASE_URL is not set, e.g. on Vercel's preview deployments
       (str) => {

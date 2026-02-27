@@ -1,3 +1,4 @@
+import { env } from "@/env";
 import { authenticate } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
@@ -10,6 +11,13 @@ import type { UNLEASH_FLAG } from "./UNLEASH_FLAG";
 export const getUnleashFlag = cache(
   withTrace("getUnleashFlag", async (name: UNLEASH_FLAG) => {
     try {
+      if (!env.UNLEASH_SERVER_API_URL || !env.UNLEASH_SERVER_API_TOKEN) {
+        log.info(
+          "Missing environment variables for Unleash, returning false for all flags",
+        );
+        return false;
+      }
+
       const authentication = await authenticate();
 
       const definitions = await getDefinitions({

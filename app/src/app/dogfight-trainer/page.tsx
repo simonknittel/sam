@@ -16,10 +16,7 @@ export default async function Page() {
     redirect("/");
 
   if (!env.NEXT_PUBLIC_CARE_BEAR_SHOOTER_BUILD_URL) {
-    log.info("Missing environment variable", {
-      requestPath: "/dogfight-trainer",
-      variable: "NEXT_PUBLIC_CARE_BEAR_SHOOTER_BUILD_URL",
-    });
+    log.info("Missing environment variables for Care Bear Shooter");
     notFound();
   }
 
