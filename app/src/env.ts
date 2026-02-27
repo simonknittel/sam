@@ -79,7 +79,8 @@ export const env = createEnv({
     ENABLE_INSTRUMENTATION: z.string().optional(),
     OTEL_EXPORTER_OTLP_PROTOCOL: z.string().optional(),
     OTEL_EXPORTER_OTLP_ENDPOINT: z.string().optional(),
-    PUSHER_CHANNELS_APP_SECRET: z.string().optional(),
+    /* Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
+    PUSHER_CHANNELS_APP_SECRET: z.string().default("app-secret"),
   },
 
   /*
@@ -94,10 +95,15 @@ export const env = createEnv({
     NEXT_PUBLIC_CARE_BEAR_SHOOTER_BUILD_URL: z.url().optional(),
     NEXT_PUBLIC_DOWNLOADS_BASE_URL: z.url().optional(),
     NEXT_PUBLIC_DOWNLOADS_BASE_URL_2: z.url().optional(),
-    NEXT_PUBLIC_PUSHER_CHANNELS_APP_ID: z.string().optional(),
-    NEXT_PUBLIC_PUSHER_CHANNELS_APP_KEY: z.string().optional(),
-    NEXT_PUBLIC_PUSHER_CHANNELS_HOST: z.string().optional(),
-    NEXT_PUBLIC_PUSHER_CHANNELS_PORT: z.coerce.number().optional(),
+    /* Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
+    NEXT_PUBLIC_PUSHER_CHANNELS_APP_ID: z.string().default("app-id"),
+    /* Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
+    NEXT_PUBLIC_PUSHER_CHANNELS_APP_KEY: z.string().default("app-key"),
+    /* Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
+    NEXT_PUBLIC_PUSHER_CHANNELS_HOST: z.string().default("localhost"),
+    /* Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
+    NEXT_PUBLIC_PUSHER_CHANNELS_PORT: z.coerce.number().default(6001),
+    /* Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
     NEXT_PUBLIC_PUSHER_CHANNELS_SECURE_PORT: z.coerce.number().optional(),
     NEXT_PUBLIC_VAPID_KEY: z.string().optional(),
   },
