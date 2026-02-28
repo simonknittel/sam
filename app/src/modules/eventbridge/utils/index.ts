@@ -28,8 +28,8 @@ export const emitEvents = withTrace(
     >[],
   ) => {
     if (!client) {
-      log.warn(
-        "EventBridge client has not been initialized. Skipping sending events.",
+      log.info(
+        "Missing environment variables for AWS. EventBridge client has not been initialized. Skipping sending events.",
       );
       return;
     }

@@ -56,23 +56,37 @@ export const Event = async ({ className, event, index }: Props) => {
   return (
     <article
       className={clsx(
-        "rounded-primary rounded-br-none overflow-hidden beveled-br w-[400px] @4xl/events:w-full",
+        "overflow-hidden beveled-br w-[400px] @4xl/events:w-full",
         className,
       )}
     >
       {isHappeningNow && (
-        <div className="bg-green-500/50 text-text-primary font-bold text-center p-2 font-mono uppercase text-sm">
-          Event läuft
+        <div className="bg-green-500/20 border-t border-x border-green-500 text-text-primary text-center p-2 font-mono uppercase text-xs rounded-t-primary">
+          <span className="opacity-25">//</span> Event läuft{" "}
+          <span className="opacity-25">//</span>
         </div>
       )}
 
       {isToday && !isHappeningNow && (
-        <div className="bg-brand-red-500/50 text-text-primary font-bold text-center p-2 font-mono uppercase text-sm">
-          <RelativeDate date={event.startTime} />
+        <div className="bg-blue-500/20 border-t border-x border-blue-500 text-text-primary text-center p-2 font-mono uppercase text-xs rounded-t-primary">
+          <span className="opacity-25">//</span>{" "}
+          <RelativeDate date={event.startTime} />{" "}
+          <span className="opacity-25">//</span>
         </div>
       )}
 
-      <div className="flex flex-col @4xl/events:flex-row background-secondary">
+      <div
+        className={clsx(
+          "flex flex-col @4xl/events:flex-row background-secondary rounded-bl-primary",
+          {
+            "rounded-t-primary": !isHappeningNow && !isToday,
+            "border-x border-green-500 [border-image:linear-gradient(to_bottom,theme(colors.green.500),transparent)_1] [background:linear-gradient(to_bottom,theme(colors.green.950),var(--background-secondary))]":
+              isHappeningNow,
+            "border-x border-blue-500 [border-image:linear-gradient(to_bottom,theme(colors.blue.500),transparent)_1] [background:linear-gradient(to_bottom,theme(colors.blue.950),var(--background-secondary))]":
+              isToday && !isHappeningNow,
+          },
+        )}
+      >
         {event.discordImage && (
           <div className="@4xl/events:flex-grow-0 @4xl/events:flex-shrink-0 @4xl/events:basis-[400px] max-h-[160px] flex justify-center rounded-r-primary rounded-b-primary overflow-hidden">
             <Image

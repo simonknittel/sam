@@ -72,14 +72,17 @@ export const env = createEnv({
       (str) => str || process.env.VERCEL_GIT_COMMIT_SHA,
       z.string().optional(),
     ),
+    /** AWS_PROFILE=sam-test terraform output access_key_app_vercel */
     AWS_ACCESS_KEY_ID: z.string().optional(),
+    /** AWS_PROFILE=sam-test terraform output secret_key_app_vercel */
     AWS_SECRET_ACCESS_KEY: z.string().optional(),
+    /** AWS_PROFILE=sam-test terraform output event_bus_arn */
     AWS_EVENT_BUS_ARN: z.string().optional(),
     OPENAI_API_KEY: z.string().optional(),
     ENABLE_INSTRUMENTATION: z.string().optional(),
     OTEL_EXPORTER_OTLP_PROTOCOL: z.string().optional(),
     OTEL_EXPORTER_OTLP_ENDPOINT: z.string().optional(),
-    /* Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
+    /** Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
     PUSHER_CHANNELS_APP_SECRET: z.string().default("app-secret"),
   },
 
@@ -95,16 +98,17 @@ export const env = createEnv({
     NEXT_PUBLIC_CARE_BEAR_SHOOTER_BUILD_URL: z.url().optional(),
     NEXT_PUBLIC_DOWNLOADS_BASE_URL: z.url().optional(),
     NEXT_PUBLIC_DOWNLOADS_BASE_URL_2: z.url().optional(),
-    /* Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
+    /** Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
     NEXT_PUBLIC_PUSHER_CHANNELS_APP_ID: z.string().default("app-id"),
-    /* Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
+    /** Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
     NEXT_PUBLIC_PUSHER_CHANNELS_APP_KEY: z.string().default("app-key"),
-    /* Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
+    /** Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
     NEXT_PUBLIC_PUSHER_CHANNELS_HOST: z.string().default("localhost"),
-    /* Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
+    /** Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
     NEXT_PUBLIC_PUSHER_CHANNELS_PORT: z.coerce.number().default(6001),
-    /* Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
+    /** Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
     NEXT_PUBLIC_PUSHER_CHANNELS_SECURE_PORT: z.coerce.number().optional(),
+    /** npx web-push generate-vapid-keys */
     NEXT_PUBLIC_VAPID_KEY: z.string().optional(),
   },
 
