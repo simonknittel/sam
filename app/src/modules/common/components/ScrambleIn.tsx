@@ -44,9 +44,15 @@ export const ScrambleIn = ({
   onComplete,
   ref,
 }: Props) => {
-  const [displayText, setDisplayText] = useState("");
+  const prefersReducedMotion =
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const [displayText, setDisplayText] = useState(
+    prefersReducedMotion ? text : "",
+  );
   const [isAnimating, setIsAnimating] = useState(false);
-  const [isDone, setIsDone] = useState(false);
+  const [isDone, setIsDone] = useState(prefersReducedMotion);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const endTimerRef = useRef<NodeJS.Timeout | null>(null);
   const repeatTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -62,11 +68,19 @@ export const ScrambleIn = ({
   );
 
   const startAnimation = useCallback(() => {
+    if (prefersReducedMotion) {
+      setDisplayText(text);
+      setIsDone(true);
+      onStart?.();
+      onComplete?.();
+      return;
+    }
+
     setIsAnimating(true);
     setIsDone(false);
     setDisplayText(generateScrambled(text.length));
     onStart?.();
-  }, [onStart, generateScrambled, text.length]);
+  }, [prefersReducedMotion, text, onStart, onComplete, generateScrambled]);
 
   const reset = useCallback(() => {
     setIsAnimating(false);
