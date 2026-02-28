@@ -6,6 +6,7 @@ import { useChannelsContext } from "@/modules/pusher/components/ChannelsContext"
 import { useEffect } from "react";
 import toast from "react-hot-toast";
 import { FaRocket } from "react-icons/fa";
+import { bumpDocumentTitle } from "../utils/title";
 import { Button2 } from "./Button2";
 
 export const NewReleaseToast = () => {
@@ -28,6 +29,8 @@ export const NewReleaseToast = () => {
           className: "gap-2 [&>div[role='status']]:m-0",
         },
       );
+
+      bumpDocumentTitle();
     });
 
     return () => {
