@@ -1,8 +1,12 @@
 import { prisma } from "@/db";
-import { getVisibleRoles } from "@/modules/roles/utils/getRoles";
+import {
+  getAssignableRoles,
+  getVisibleRoles,
+} from "@/modules/roles/utils/getRoles";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import type { Entity, Role, Upload } from "@prisma/client";
 import { cache } from "react";
+import { requireAuthentication } from "../auth/server";
 
 export const getCitizens = withTrace("getCitizens", async () => {
   return prisma.entity.findMany({
@@ -80,5 +84,40 @@ export const getCitizensGroupedByVisibleRoles = cache(
     }
 
     return groupedCitizens;
+  }),
+);
+
+export const getCitizenPopoverById = cache(
+  withTrace("getCitizenPopoverById", async (id: Entity["id"]) => {
+    const authentication = await requireAuthentication();
+    await authentication.authorize("citizen", "read");
+
+    const [citizen, assignableRoles] = await Promise.all([
+      prisma.entity.findUnique({
+        where: {
+          id,
+        },
+        select: {
+          id: true,
+          handle: true,
+          roleAssignments: {
+            select: {
+              roleId: true,
+            },
+          },
+        },
+      }),
+
+      getAssignableRoles(),
+    ]);
+
+    if (!citizen) return null;
+
+    const canUpdateAnyRoleAssignment = Boolean(assignableRoles.length);
+
+    return {
+      citizen,
+      canUpdateAnyRoleAssignment,
+    };
   }),
 );

@@ -11,6 +11,7 @@ import {
   type User,
 } from "@prisma/client";
 import { FaSortDown, FaSortUp } from "react-icons/fa";
+import { CitizenPopover } from "./CitizenPopover";
 import { ConfirmationState } from "./ConfirmationState";
 import { DeleteLog } from "./DeleteLog";
 import { UpdateNote } from "./UpdateNote";
@@ -107,22 +108,24 @@ export const NotesTable = ({ rows, searchParams }: Props) => {
               className="grid items-center gap-4 h-14 rounded-secondary -mx-2 first:mt-2 grid-cols-[1fr_3fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_44px]"
             >
               <td>
-                <Link
-                  href={`/app/spynet/citizen/${row.entity.id}/notes`}
-                  className="text-brand-red-500 hover:bg-neutral-800 block rounded-secondary px-2 h-full"
-                >
-                  <span className="flex items-center h-14">
-                    <span className="overflow-hidden text-ellipsis">
-                      {row.entity.handle ? (
-                        <span title={row.entity.handle}>
-                          {row.entity.handle}
-                        </span>
-                      ) : (
-                        <span className="text-neutral-500 italic">-</span>
-                      )}
+                <CitizenPopover citizenId={row.entity.id}>
+                  <Link
+                    href={`/app/spynet/citizen/${row.entity.id}/notes`}
+                    className="text-brand-red-500 hover:bg-neutral-800 block rounded-secondary px-2 h-full"
+                  >
+                    <span className="flex items-center h-14">
+                      <span className="overflow-hidden text-ellipsis">
+                        {row.entity.handle ? (
+                          <span title={row.entity.handle}>
+                            {row.entity.handle}
+                          </span>
+                        ) : (
+                          <span className="text-neutral-500 italic">-</span>
+                        )}
+                      </span>
                     </span>
-                  </span>
-                </Link>
+                  </Link>
+                </CitizenPopover>
               </td>
 
               <td

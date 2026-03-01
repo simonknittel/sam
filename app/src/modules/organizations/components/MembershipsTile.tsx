@@ -1,4 +1,5 @@
 import { requireAuthentication } from "@/modules/auth/server";
+import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
 import { Link } from "@/modules/common/components/Link";
 import { DeleteOrganizationMembership } from "@/modules/spynet/components/DeleteOrganizationMembership";
 import clsx from "clsx";
@@ -54,13 +55,15 @@ export const MembershipsTile = async ({ className, id }: Props) => {
                 key={membership.citizen.id}
                 className="rounded-secondary bg-neutral-700/50 flex"
               >
-                <Link
-                  href={`/app/spynet/citizen/${membership.citizen.id}`}
-                  className="inline-flex gap-2 px-2 py-1 items-center"
-                >
-                  {membership.citizen.handle || membership.citizen.id}
-                  <FaExternalLinkAlt className="text-brand-red-500 hover:text-brand-red-300 text-xs" />
-                </Link>
+                <CitizenPopover citizenId={membership.citizen.id}>
+                  <Link
+                    href={`/app/spynet/citizen/${membership.citizen.id}`}
+                    className="inline-flex gap-2 px-2 py-1 items-center"
+                  >
+                    {membership.citizen.handle || membership.citizen.id}
+                    <FaExternalLinkAlt className="text-brand-red-500 hover:text-brand-red-300 text-xs" />
+                  </Link>
+                </CitizenPopover>
 
                 {showDeleteButton && (
                   <div className="border-l border-neutral-700 flex items-center">

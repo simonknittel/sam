@@ -1,5 +1,6 @@
 "use client";
 
+import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import type { Entity, SilcTransaction } from "@prisma/client";
@@ -112,14 +113,16 @@ export const SilcTransactionsTableClient = ({
           const citizen = updatedBy || createdBy;
           if (!citizen) return null;
           return (
-            <Link
-              href={`/app/spynet/citizen/${citizen.id}`}
-              className="hover:bg-neutral-800 flex items-center rounded-secondary px-2 h-full text-brand-red-500 truncate"
-              prefetch={false}
-              title={citizen.handle || citizen.id}
-            >
-              {citizen.handle || citizen.id}
-            </Link>
+            <CitizenPopover citizenId={citizen.id}>
+              <Link
+                href={`/app/spynet/citizen/${citizen.id}`}
+                className="hover:bg-neutral-800 flex items-center rounded-secondary px-2 h-full text-brand-red-500 truncate"
+                prefetch={false}
+                title={citizen.handle || citizen.id}
+              >
+                {citizen.handle || citizen.id}
+              </Link>
+            </CitizenPopover>
           );
         },
       }),

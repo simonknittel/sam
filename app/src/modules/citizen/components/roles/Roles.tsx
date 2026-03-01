@@ -1,4 +1,3 @@
-import { requireAuthentication } from "@/modules/auth/server";
 import { Tile } from "@/modules/common/components/Tile";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import {
@@ -17,36 +16,13 @@ interface Props {
 }
 
 export const Roles = async ({ className, entity }: Props) => {
-  const authentication = await requireAuthentication();
-
   const assignedAndVisibleRoles = await getAssignedRoles(entity);
   const assignedAndVisibleRoleIds = assignedAndVisibleRoles.map(
     (role) => role.id,
   );
 
   const assignableRoles = await getAssignableRoles();
-
-  let showAddRoles = false;
-  for (const role of assignableRoles) {
-    if (
-      !(await authentication.authorize("otherRole", "assign", [
-        {
-          key: "roleId",
-          value: role.id,
-        },
-      ])) &&
-      !(await authentication.authorize("otherRole", "dismiss", [
-        {
-          key: "roleId",
-          value: role.id,
-        },
-      ]))
-    )
-      continue;
-
-    showAddRoles = true;
-    break;
-  }
+  const canUpdateAnyRoleAssignment = Boolean(assignableRoles.length);
 
   return (
     <Tile heading="Rollen" className={clsx(className)}>
@@ -64,11 +40,10 @@ export const Roles = async ({ className, entity }: Props) => {
         <p className="text-neutral-500 italic">Keine Rollen</p>
       )}
 
-      {showAddRoles && (
+      {canUpdateAnyRoleAssignment && (
         <div className="flex gap-4 mt-2">
           <AddRoles
-            entity={entity}
-            allRoles={assignableRoles}
+            citizenId={entity.id}
             assignedRoleIds={assignedAndVisibleRoleIds}
           />
 

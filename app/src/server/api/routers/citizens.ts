@@ -1,8 +1,12 @@
 import { prisma } from "@/db";
-import { getCitizensGroupedByVisibleRoles } from "@/modules/citizen/queries";
+import {
+  getCitizenPopoverById,
+  getCitizensGroupedByVisibleRoles,
+} from "@/modules/citizen/queries";
 import { log } from "@/modules/logging";
 import { TRPCError } from "@trpc/server";
 import { serializeError } from "serialize-error";
+import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 export const citizensRouter = createTRPCRouter({
@@ -46,4 +50,31 @@ export const citizensRouter = createTRPCRouter({
       });
     }
   }),
+
+  getCitizenById: protectedProcedure
+    .input(z.object({ id: z.cuid() }))
+    .query(async ({ input }) => {
+      try {
+        const citizen = await getCitizenPopoverById(input.id);
+
+        if (!citizen) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Citizen not found",
+          });
+        }
+
+        return citizen;
+      } catch (error) {
+        log.error("Failed to fetch citizen by ID", {
+          error: serializeError(error),
+          citizenId: input.id,
+        });
+
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch citizen by ID",
+        });
+      }
+    }),
 });

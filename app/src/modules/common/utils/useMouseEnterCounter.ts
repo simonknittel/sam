@@ -14,6 +14,7 @@ export const useMouseEnterCounter = (
   const handleMouseLeave = () => {
     mouseEnterCounter.current = Math.max(0, mouseEnterCounter.current - 1);
     if (mouseEnterCounter.current > 0) return;
+
     onLeave();
   };
 

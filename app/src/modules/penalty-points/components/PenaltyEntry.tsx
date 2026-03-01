@@ -1,3 +1,4 @@
+import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import type { Entity, PenaltyEntry as PenaltyEntryType } from "@prisma/client";
@@ -33,13 +34,15 @@ export const PenaltyEntry = ({ className, entry, showDelete }: Props) => {
 
         <p>
           Von:{" "}
-          <Link
-            href={`/app/spynet/citizen/${entry.createdById}`}
-            className="text-brand-red-500 hover:underline"
-            prefetch={false}
-          >
-            {entry.createdBy.handle}
-          </Link>
+          <CitizenPopover citizenId={entry.createdById}>
+            <Link
+              href={`/app/spynet/citizen/${entry.createdById}`}
+              className="text-brand-red-500 hover:underline"
+              prefetch={false}
+            >
+              {entry.createdBy.handle}
+            </Link>
+          </CitizenPopover>
         </p>
 
         <span>&bull;</span>
