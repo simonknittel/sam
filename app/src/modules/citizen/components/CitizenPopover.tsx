@@ -3,11 +3,11 @@
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { CopyToClipboard } from "@/modules/common/components/CopyToClipboard";
 import { Link } from "@/modules/common/components/Link";
-import { Popover } from "@/modules/common/components/Popover";
+import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import { api } from "@/trpc/react";
 import type { Entity } from "@prisma/client";
-import { useState, type ReactNode } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import { BsExclamationOctagonFill } from "react-icons/bs";
 import { FaSpinner } from "react-icons/fa";
 import { AddRoles } from "./roles/AddRoles";
@@ -33,17 +33,15 @@ export const CitizenPopover = ({ children, citizenId }: Props) => {
       ? citizenId === authentication.session.entity.id
       : false;
 
-  const handleOpenChange = (open: boolean) => {
+  const handleOpenChange = useCallback((open: boolean) => {
     setIsEnabled(open);
-  };
+  }, []);
 
   return (
-    <Popover
-      enableHover
+    <PopoverBaseUI
       trigger={children}
       onOpenChange={handleOpenChange}
       childrenClassName="w-[400px]"
-      hoverDelay={500}
     >
       {isPending && (
         <p className="font-mono uppercase flex gap-2 justify-center items-center animate-pulse">
@@ -117,6 +115,6 @@ export const CitizenPopover = ({ children, citizenId }: Props) => {
           {/* <div className="border-t border-neutral-700 pt-2">Organisationen</div> */}
         </>
       )}
-    </Popover>
+    </PopoverBaseUI>
   );
 };

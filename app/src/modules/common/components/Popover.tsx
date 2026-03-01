@@ -6,7 +6,9 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -38,17 +40,23 @@ export const Popover = ({
 }: PopoverContextProviderProps) => {
   const [isOpen, _setIsOpen] = useState(false);
 
-  const setIsOpen = useCallback(
-    (open: boolean) => {
-      _setIsOpen(open);
-      onOpenChange?.(open);
-    },
-    [onOpenChange],
-  );
+  const onOpenChangeRef = useRef(onOpenChange);
+
+  useEffect(() => {
+    onOpenChangeRef.current = onOpenChange;
+  }, [onOpenChange]);
+
+  const setIsOpen = useCallback((open: boolean) => {
+    _setIsOpen(open);
+    onOpenChangeRef.current?.(open);
+  }, []);
+
+  const onEnter = useCallback(() => setIsOpen(true), [setIsOpen]);
+  const onLeave = useCallback(() => setIsOpen(false), [setIsOpen]);
 
   const { handleMouseEnter, handleMouseLeave, reset } = useMouseEnterCounter(
-    setIsOpen.bind(null, true),
-    setIsOpen.bind(null, false),
+    onEnter,
+    onLeave,
     hoverDelay,
   );
 

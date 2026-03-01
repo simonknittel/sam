@@ -17,7 +17,7 @@ import {
 } from "@/modules/common/components/AlertDialog";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Note } from "@/modules/common/components/Note";
-import { Popover } from "@/modules/common/components/Popover";
+import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
 import { type Role } from "@prisma/client";
 import clsx from "clsx";
 import Image from "next/image";
@@ -30,6 +30,7 @@ interface Props {
   readonly roleId: Role["id"];
   readonly showPlaceholder?: boolean;
   readonly citizenId?: string;
+  readonly disablePopover?: boolean;
 }
 
 export const SingleRoleBadge = ({
@@ -56,8 +57,7 @@ export const SingleRoleBadge = ({
     ]);
 
   return (
-    <Popover
-      enableHover
+    <PopoverBaseUI
       trigger={
         <span
           className={clsx(
@@ -87,7 +87,6 @@ export const SingleRoleBadge = ({
         </span>
       }
       childrenClassName="w-[400px]"
-      hoverDelay={500}
     >
       <div>
         <div className="inline-flex align-middle gap-4 items-center">
@@ -169,6 +168,6 @@ export const SingleRoleBadge = ({
           </div>
         )}
       </div>
-    </Popover>
+    </PopoverBaseUI>
   );
 };

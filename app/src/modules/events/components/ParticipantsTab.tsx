@@ -129,12 +129,17 @@ export const ParticipantsTab = async ({
                       <CitizenPopover citizenId={manager.id}>
                         <Link
                           href={`/app/spynet/citizen/${manager.id}`}
-                          className={clsx("hover:underline px-2 py-1", {
-                            "text-green-500":
-                              manager.id === authentication.session.entity!.id,
-                            "text-brand-red-500":
-                              manager.id !== authentication.session.entity!.id,
-                          })}
+                          className={clsx(
+                            "hover:underline px-2 py-1 inline-block",
+                            {
+                              "text-green-500":
+                                manager.id ===
+                                authentication.session.entity!.id,
+                              "text-brand-red-500":
+                                manager.id !==
+                                authentication.session.entity!.id,
+                            },
+                          )}
                           prefetch={false}
                         >
                           {manager.handle || manager.id}

@@ -91,6 +91,11 @@ const eslintConfig = defineConfig([
           message: "Please use @/modules/common/components/Popover instead.",
         },
         {
+          name: "@base-ui/react/popover",
+          message:
+            "Please use @/modules/common/components/PopoverBaseUI instead.",
+        },
+        {
           name: "@radix-ui/react-tooltip",
           message: "Please use @/modules/common/components/Tooltip instead.",
         },
