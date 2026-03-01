@@ -30,7 +30,6 @@ interface Props {
   readonly roleId: Role["id"];
   readonly showPlaceholder?: boolean;
   readonly citizenId?: string;
-  readonly disablePopover?: boolean;
 }
 
 export const SingleRoleBadge = ({
