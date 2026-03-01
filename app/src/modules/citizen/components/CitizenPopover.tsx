@@ -97,7 +97,7 @@ export const CitizenPopover = ({ children, citizenId }: Props) => {
                 <SingleRoleBadge
                   key={roleAssignment.roleId}
                   roleId={roleAssignment.roleId}
-                  citizenId={data.citizen!.id}
+                  citizenId={data.citizen.id}
                 />
               ))}
             </div>

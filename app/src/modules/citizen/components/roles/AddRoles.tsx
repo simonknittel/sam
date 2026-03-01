@@ -98,7 +98,7 @@ export const AddRoles = ({
         {error && (
           <p className="font-mono uppercase flex gap-2 justify-center items-center text-red-500">
             <BsExclamationOctagonFill className="text-red-800" />
-            Fehler beim Laden des Citizens
+            Fehler beim Laden der Rollen
           </p>
         )}
 

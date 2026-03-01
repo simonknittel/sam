@@ -46,7 +46,7 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Day heading="14. Februar 2026">
+      <Day heading="1. März 2026">
         <DayItem heading="Tooltip für Citizen" badges={["Neu", "Citizen"]}>
           <p>
             Citizen haben nun ein Tooltip in welchem die wichtigsten Details zum

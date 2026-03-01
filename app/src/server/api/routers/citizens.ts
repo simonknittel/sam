@@ -68,7 +68,7 @@ export const citizensRouter = createTRPCRouter({
       } catch (error) {
         log.error("Failed to fetch citizen by ID", {
           error: serializeError(error),
-          citizenId: input,
+          citizenId: input.id,
         });
 
         throw new TRPCError({

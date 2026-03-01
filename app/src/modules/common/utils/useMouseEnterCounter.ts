@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 export const useMouseEnterCounter = (
   onEnter: () => void,
@@ -7,6 +7,15 @@ export const useMouseEnterCounter = (
 ) => {
   const mouseEnterCounter = useRef(0);
   const delayTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (delayTimer.current) {
+        clearTimeout(delayTimer.current);
+        delayTimer.current = null;
+      }
+    };
+  });
 
   const handleMouseEnter = () => {
     mouseEnterCounter.current += 1;

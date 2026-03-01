@@ -111,6 +111,8 @@ export const getCitizenPopoverById = cache(
       getAssignableRoles(),
     ]);
 
+    if (!citizen) return null;
+
     const canUpdateAnyRoleAssignment = Boolean(assignableRoles.length);
 
     return {
