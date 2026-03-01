@@ -24,6 +24,7 @@ interface PopoverContextProviderProps {
   readonly children: ReactNode;
   readonly childrenClassName?: string;
   readonly enableHover?: boolean;
+  readonly onOpenChange?: (open: boolean) => void;
 }
 
 export const Popover = ({
@@ -31,8 +32,18 @@ export const Popover = ({
   children,
   childrenClassName,
   enableHover,
+  onOpenChange,
 }: PopoverContextProviderProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, _setIsOpen] = useState(false);
+
+  const setIsOpen = useCallback(
+    (open: boolean) => {
+      _setIsOpen(open);
+      onOpenChange?.(open);
+    },
+    [onOpenChange],
+  );
+
   const { handleMouseEnter, handleMouseLeave, reset } = useMouseEnterCounter(
     setIsOpen.bind(null, true),
     setIsOpen.bind(null, false),
@@ -41,7 +52,7 @@ export const Popover = ({
   const closePopover = useCallback(() => {
     setIsOpen(false);
     reset();
-  }, [reset]);
+  }, [setIsOpen, reset]);
 
   const value = useMemo(
     () => ({
