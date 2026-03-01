@@ -7,9 +7,10 @@ import { type Entity, type Role, type Upload } from "@prisma/client";
 import clsx from "clsx";
 import Fuse, { type FuseResult } from "fuse.js";
 
+import { api } from "@/trpc/react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { FaPen } from "react-icons/fa";
+import { FaPen, FaSpinner } from "react-icons/fa";
 import { RoleCheckbox } from "./RoleCheckbox";
 import { UpdateRolesForm } from "./UpdateRolesForm";
 
@@ -17,22 +18,26 @@ type RoleWithIcon = Role & { icon: Upload | null };
 
 interface Props {
   readonly className?: string;
-  readonly entity: Entity;
-  readonly allRoles: RoleWithIcon[];
+  readonly citizenId: Entity["id"];
   readonly assignedRoleIds: Role["id"][];
   readonly iconOnly?: boolean;
 }
 
 export const AddRoles = ({
   className,
-  entity,
-  allRoles,
+  citizenId,
   assignedRoleIds,
   iconOnly = false,
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const router = useRouter();
+  const { isPending, data: assignableRoles } =
+    api.roles.getAssignableRoles.useQuery(undefined, {
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      enabled: isOpen,
+    });
 
   const handleRequestClose = () => {
     setIsOpen(false);
@@ -40,18 +45,17 @@ export const AddRoles = ({
     router.refresh();
   };
 
-  const fuse = useMemo(
-    () =>
-      new Fuse<RoleWithIcon>(allRoles, {
-        keys: ["name"],
-        includeMatches: true,
-        threshold: 0.2,
-      }),
-    [allRoles],
-  );
+  const fuse = useMemo(() => {
+    if (!assignableRoles) return null;
+    return new Fuse<RoleWithIcon>(assignableRoles, {
+      keys: ["name"],
+      includeMatches: true,
+      threshold: 0.2,
+    });
+  }, [assignableRoles]);
 
   const searchResults = useMemo(
-    () => (query ? fuse.search(query) : []),
+    () => (query && fuse ? fuse.search(query) : []),
     [fuse, query],
   );
 
@@ -80,44 +84,53 @@ export const AddRoles = ({
         className="w-[1280px]"
         heading={<h2>Rollen hinzufügen oder entfernen</h2>}
       >
-        <div className="mb-4 flex justify-center border-b border-b-neutral-700 px-4 pb-4">
-          <div className="w-full max-w-md text-center">
-            <TextInput
-              label="Suche"
-              placeholder="Rolle suchen..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              autoFocus
-              className="hidden"
-            />
-          </div>
-        </div>
-
-        <UpdateRolesForm>
-          <input type="hidden" name="citizenId" value={entity.id} />
-
-          <div
-            className="columns-3xs gap-8"
-            style={{
-              columnRule: "1px solid #404040", // neutral-700
-            }}
-          >
-            {allRoles.map((role) => {
-              const result = resultsById.get(role.id);
-
-              return (
-                <RoleCheckbox
-                  key={role.id}
-                  role={role}
-                  isChecked={assignedRoleIds.includes(role.id)}
-                  isVisible={query ? result !== undefined : true}
-                  match={result?.matches?.[0]}
-                  query={query}
+        {isPending ? (
+          <p className="font-mono uppercase flex gap-2 justify-center items-center animate-pulse">
+            <FaSpinner className="animate-spin" />
+            Rollen werden geladen...
+          </p>
+        ) : (
+          <>
+            <div className="mb-4 flex justify-center border-b border-b-neutral-700 px-4 pb-4">
+              <div className="w-full max-w-md text-center">
+                <TextInput
+                  label="Suche"
+                  placeholder="Rolle suchen..."
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  autoFocus
+                  className="hidden"
                 />
-              );
-            })}
-          </div>
-        </UpdateRolesForm>
+              </div>
+            </div>
+
+            <UpdateRolesForm>
+              <input type="hidden" name="citizenId" value={citizenId} />
+
+              <div
+                className="columns-3xs gap-8"
+                style={{
+                  columnRule: "1px solid #404040", // neutral-700
+                }}
+              >
+                {assignableRoles?.map((role) => {
+                  const result = resultsById.get(role.id);
+
+                  return (
+                    <RoleCheckbox
+                      key={role.id}
+                      role={role}
+                      isChecked={assignedRoleIds.includes(role.id)}
+                      isVisible={query ? result !== undefined : true}
+                      match={result?.matches?.[0]}
+                      query={query}
+                    />
+                  );
+                })}
+              </div>
+            </UpdateRolesForm>
+          </>
+        )}
       </Modal>
     </>
   );

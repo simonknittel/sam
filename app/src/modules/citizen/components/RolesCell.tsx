@@ -61,8 +61,7 @@ export const RolesCell = async ({
 
       {showUpdateRolesButton && assignableRoles.length > 0 && (
         <AddRoles
-          entity={entity}
-          allRoles={assignableRoles}
+          citizenId={entity.id}
           assignedRoleIds={roles.map((role) => role.id)}
           iconOnly={true}
         />

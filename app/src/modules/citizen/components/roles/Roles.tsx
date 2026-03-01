@@ -67,8 +67,7 @@ export const Roles = async ({ className, entity }: Props) => {
       {showAddRoles && (
         <div className="flex gap-4 mt-2">
           <AddRoles
-            entity={entity}
-            allRoles={assignableRoles}
+            citizenId={entity.id}
             assignedRoleIds={assignedAndVisibleRoleIds}
           />
 

@@ -63,14 +63,14 @@ export const getMyAssignedRoles = cache(
 
 export const getAssignableRoles = cache(
   withTrace("getAssignableRoles", async () => {
-    const [authentication, allRoles] = await Promise.all([
+    const [authentication, visibleRoles] = await Promise.all([
       requireAuthentication(),
       getVisibleRoles(),
     ]);
 
     const assignableRoles = (
       await Promise.all(
-        allRoles.map(async (role) => {
+        visibleRoles.map(async (role) => {
           const include =
             (await authentication.authorize("otherRole", "assign", [
               {
