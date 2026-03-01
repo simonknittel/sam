@@ -86,6 +86,7 @@ export const SingleRoleBadge = ({
           <span className="truncate font-mono text-sm">{role.name}</span>
         </span>
       }
+      childrenClassName="w-[400px]"
     >
       <div>
         <div className="inline-flex align-middle gap-4 items-center">

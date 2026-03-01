@@ -1,4 +1,5 @@
 import { requireAuthentication } from "@/modules/auth/server";
+import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
 import { Link } from "@/modules/common/components/Link";
 import {
   OrganizationMembershipType,
@@ -51,12 +52,14 @@ export const mapOrganizationMembershipHistoryEntries = async (
             message: (
               <p>
                 Citizen{" "}
-                <Link
-                  href={`/app/spynet/citizen/${entry.citizen.id}`}
-                  className="inline-flex gap-1 items-center text-brand-red-500 hover:text-brand-red-300"
-                >
-                  {entry.citizen.handle}
-                </Link>{" "}
+                <CitizenPopover citizenId={entry.citizen.id}>
+                  <Link
+                    href={`/app/spynet/citizen/${entry.citizen.id}`}
+                    className="inline-flex gap-1 items-center text-brand-red-500 hover:text-brand-red-300"
+                  >
+                    {entry.citizen.handle}
+                  </Link>
+                </CitizenPopover>{" "}
                 wurde der Organisation{" "}
                 <Link
                   href={`/app/spynet/organization/${entry.organization.id}`}
@@ -86,12 +89,14 @@ export const mapOrganizationMembershipHistoryEntries = async (
             message: (
               <p>
                 Citizen{" "}
-                <Link
-                  href={`/app/spynet/citizen/${entry.citizen.id}`}
-                  className="inline-flex gap-1 items-center text-brand-red-500 hover:text-brand-red-300"
-                >
-                  {entry.citizen.handle}
-                </Link>{" "}
+                <CitizenPopover citizenId={entry.citizen.id}>
+                  <Link
+                    href={`/app/spynet/citizen/${entry.citizen.id}`}
+                    className="inline-flex gap-1 items-center text-brand-red-500 hover:text-brand-red-300"
+                  >
+                    {entry.citizen.handle}
+                  </Link>
+                </CitizenPopover>{" "}
                 wurde der Organisation{" "}
                 <Link
                   href={`/app/spynet/organization/${entry.organization.id}`}
@@ -111,12 +116,14 @@ export const mapOrganizationMembershipHistoryEntries = async (
             message: (
               <p>
                 Citizen{" "}
-                <Link
-                  href={`/app/spynet/citizen/${entry.citizen.id}`}
-                  className="inline-flex gap-1 items-center text-brand-red-500 hover:text-brand-red-300"
-                >
-                  {entry.citizen.handle}
-                </Link>{" "}
+                <CitizenPopover citizenId={entry.citizen.id}>
+                  <Link
+                    href={`/app/spynet/citizen/${entry.citizen.id}`}
+                    className="inline-flex gap-1 items-center text-brand-red-500 hover:text-brand-red-300"
+                  >
+                    {entry.citizen.handle}
+                  </Link>
+                </CitizenPopover>{" "}
                 wurde aus der Organisation{" "}
                 <Link
                   href={`/app/spynet/organization/${entry.organization.id}`}

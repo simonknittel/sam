@@ -1,5 +1,6 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
+import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
 import styles from "@/modules/common/components/ConfirmationGradient.module.css";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
@@ -126,12 +127,14 @@ export const ActivityTile = async ({ className, id }: Props) => {
             originalEntry: entry,
             message: (
               <p>
-                <Link
-                  href={`/app/spynet/citizen/${entry.citizen.id}`}
-                  className="text-brand-red-500 hover:text-brand-red-300"
-                >
-                  {entry.citizen.handle}
-                </Link>{" "}
+                <CitizenPopover citizenId={entry.citizen.id}>
+                  <Link
+                    href={`/app/spynet/citizen/${entry.citizen.id}`}
+                    className="text-brand-red-500 hover:text-brand-red-300"
+                  >
+                    {entry.citizen.handle}
+                  </Link>
+                </CitizenPopover>{" "}
                 wurde als <em>Main</em> hinzugefügt
               </p>
             ),
@@ -145,12 +148,14 @@ export const ActivityTile = async ({ className, id }: Props) => {
             originalEntry: entry,
             message: (
               <p>
-                <Link
-                  href={`/app/spynet/citizen/${entry.citizen.id}`}
-                  className="text-brand-red-500 hover:text-brand-red-300 mr-1"
-                >
-                  {entry.citizen.handle}
-                </Link>{" "}
+                <CitizenPopover citizenId={entry.citizen.id}>
+                  <Link
+                    href={`/app/spynet/citizen/${entry.citizen.id}`}
+                    className="text-brand-red-500 hover:text-brand-red-300 mr-1"
+                  >
+                    {entry.citizen.handle}
+                  </Link>
+                </CitizenPopover>{" "}
                 wurde als <em>Affiliate</em> hinzugefügt
               </p>
             ),
@@ -164,12 +169,14 @@ export const ActivityTile = async ({ className, id }: Props) => {
             originalEntry: entry,
             message: (
               <p>
-                <Link
-                  href={`/app/spynet/citizen/${entry.citizen.id}`}
-                  className="text-brand-red-500 hover:text-brand-red-300"
-                >
-                  {entry.citizen.handle}
-                </Link>{" "}
+                <CitizenPopover citizenId={entry.citizen.id}>
+                  <Link
+                    href={`/app/spynet/citizen/${entry.citizen.id}`}
+                    className="text-brand-red-500 hover:text-brand-red-300"
+                  >
+                    {entry.citizen.handle}
+                  </Link>
+                </CitizenPopover>{" "}
                 wurde entfernt
               </p>
             ),

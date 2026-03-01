@@ -1,5 +1,6 @@
 "use client";
 
+import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
 import Avatar from "@/modules/common/components/Avatar";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
@@ -129,13 +130,15 @@ export const Table = ({ users }: Props) => {
           if (!entityId) return null;
 
           return (
-            <Link
-              href={`/app/spynet/citizen/${entityId}`}
-              className="text-brand-red-500 hover:text-brand-red-300 flex gap-2 items-center"
-            >
-              <span className="hidden sm:inline">Spynet</span>{" "}
-              <FaExternalLinkAlt />
-            </Link>
+            <CitizenPopover citizenId={entityId}>
+              <Link
+                href={`/app/spynet/citizen/${entityId}`}
+                className="text-brand-red-500 hover:text-brand-red-300 flex gap-2 items-center"
+              >
+                <span className="hidden sm:inline">Spynet</span>{" "}
+                <FaExternalLinkAlt />
+              </Link>
+            </CitizenPopover>
           );
         },
       }),

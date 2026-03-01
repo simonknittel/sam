@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
+import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
 import type { Entity } from "@prisma/client";
 import clsx from "clsx";
 import { Link } from "./Link";
@@ -21,19 +22,21 @@ export const CitizenLink = ({ className, citizen, page = "" }: Props) => {
   if (!citizen) return <span className="text-neutral-500">Unbekannt</span>;
 
   return (
-    <Link
-      href={`/app/spynet/citizen/${citizen.id}${page}`}
-      className={clsx(
-        "hover:underline",
-        {
-          "text-me": isCitizenCurrentUser,
-          "text-interaction-500": !isCitizenCurrentUser,
-        },
-        className,
-      )}
-      prefetch={false}
-    >
-      {citizen.handle || citizen.id}
-    </Link>
+    <CitizenPopover citizenId={citizen.id}>
+      <Link
+        href={`/app/spynet/citizen/${citizen.id}${page}`}
+        className={clsx(
+          "hover:underline",
+          {
+            "text-me": isCitizenCurrentUser,
+            "text-interaction-500": !isCitizenCurrentUser,
+          },
+          className,
+        )}
+        prefetch={false}
+      >
+        {citizen.handle || citizen.id}
+      </Link>
+    </CitizenPopover>
   );
 };

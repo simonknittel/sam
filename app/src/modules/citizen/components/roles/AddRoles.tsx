@@ -10,6 +10,7 @@ import Fuse, { type FuseResult } from "fuse.js";
 import { api } from "@/trpc/react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { BsExclamationOctagonFill } from "react-icons/bs";
 import { FaPen, FaSpinner } from "react-icons/fa";
 import { RoleCheckbox } from "./RoleCheckbox";
 import { UpdateRolesForm } from "./UpdateRolesForm";
@@ -32,12 +33,15 @@ export const AddRoles = ({
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const router = useRouter();
-  const { isPending, data: assignableRoles } =
-    api.roles.getAssignableRoles.useQuery(undefined, {
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: false,
-      enabled: isOpen,
-    });
+  const {
+    isPending,
+    data: assignableRoles,
+    error,
+  } = api.roles.getAssignableRoles.useQuery(undefined, {
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    enabled: isOpen,
+  });
 
   const handleRequestClose = () => {
     setIsOpen(false);
@@ -84,12 +88,21 @@ export const AddRoles = ({
         className="w-[1280px]"
         heading={<h2>Rollen hinzufügen oder entfernen</h2>}
       >
-        {isPending ? (
+        {isPending && (
           <p className="font-mono uppercase flex gap-2 justify-center items-center animate-pulse">
             <FaSpinner className="animate-spin" />
             Rollen werden geladen...
           </p>
-        ) : (
+        )}
+
+        {error && (
+          <p className="font-mono uppercase flex gap-2 justify-center items-center text-red-500">
+            <BsExclamationOctagonFill className="text-red-800" />
+            Fehler beim Laden des Citizens
+          </p>
+        )}
+
+        {assignableRoles && (
           <>
             <div className="mb-4 flex justify-center border-b border-b-neutral-700 px-4 pb-4">
               <div className="w-full max-w-md text-center">

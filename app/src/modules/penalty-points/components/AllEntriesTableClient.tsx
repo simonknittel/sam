@@ -1,5 +1,6 @@
 "use client";
 
+import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
 import { Link } from "@/modules/common/components/Link";
 import type { Entity, PenaltyEntry as PenaltyEntryType } from "@prisma/client";
 import {
@@ -51,14 +52,16 @@ export const AllEntriesTableClient = ({
         cell: (row) => {
           const { citizen } = row.row.original;
           return (
-            <Link
-              href={`/app/spynet/citizen/${citizen.id}/penalty-points`}
-              className="hover:bg-neutral-800 flex items-center rounded-secondary px-2 h-10 text-brand-red-500 overflow-hidden text-ellipsis"
-              prefetch={false}
-              title={citizen.handle || ""}
-            >
-              {citizen.handle}
-            </Link>
+            <CitizenPopover citizenId={citizen.id}>
+              <Link
+                href={`/app/spynet/citizen/${citizen.id}/penalty-points`}
+                className="hover:bg-neutral-800 flex items-center rounded-secondary px-2 h-10 text-brand-red-500 overflow-hidden text-ellipsis"
+                prefetch={false}
+                title={citizen.handle || ""}
+              >
+                {citizen.handle}
+              </Link>
+            </CitizenPopover>
           );
         },
       }),
