@@ -24,6 +24,7 @@ interface PopoverContextProviderProps {
   readonly children: ReactNode;
   readonly childrenClassName?: string;
   readonly enableHover?: boolean;
+  readonly hoverDelay?: number;
   readonly onOpenChange?: (open: boolean) => void;
 }
 
@@ -32,6 +33,7 @@ export const Popover = ({
   children,
   childrenClassName,
   enableHover,
+  hoverDelay,
   onOpenChange,
 }: PopoverContextProviderProps) => {
   const [isOpen, _setIsOpen] = useState(false);
@@ -47,6 +49,7 @@ export const Popover = ({
   const { handleMouseEnter, handleMouseLeave, reset } = useMouseEnterCounter(
     setIsOpen.bind(null, true),
     setIsOpen.bind(null, false),
+    hoverDelay,
   );
 
   const closePopover = useCallback(() => {

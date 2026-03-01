@@ -43,6 +43,7 @@ export const CitizenPopover = ({ children, citizenId }: Props) => {
       trigger={children}
       onOpenChange={handleOpenChange}
       childrenClassName="w-[400px]"
+      hoverDelay={500}
     >
       {isPending && (
         <p className="font-mono uppercase flex gap-2 justify-center items-center animate-pulse">

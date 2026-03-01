@@ -87,6 +87,7 @@ export const SingleRoleBadge = ({
         </span>
       }
       childrenClassName="w-[400px]"
+      hoverDelay={500}
     >
       <div>
         <div className="inline-flex align-middle gap-4 items-center">
