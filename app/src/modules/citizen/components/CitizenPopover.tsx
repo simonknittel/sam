@@ -19,14 +19,15 @@ interface Props {
 
 export const CitizenPopover = ({ children, citizenId }: Props) => {
   const [isEnabled, setIsEnabled] = useState(false);
-  const { isPending, data, error } = api.citizens.getCitizenById.useQuery(
-    { id: citizenId },
-    {
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: false,
-      enabled: isEnabled,
-    },
-  );
+  const { isPending, data, error, refetch } =
+    api.citizens.getCitizenById.useQuery(
+      { id: citizenId },
+      {
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
+        enabled: isEnabled,
+      },
+    );
   const authentication = useAuthentication();
   const isCitizenCurrentUser =
     authentication && authentication.session.entity
@@ -97,6 +98,7 @@ export const CitizenPopover = ({ children, citizenId }: Props) => {
                   key={roleAssignment.roleId}
                   roleId={roleAssignment.roleId}
                   citizenId={data.citizen.id}
+                  onSuccess={refetch}
                 />
               ))}
             </div>
@@ -108,6 +110,7 @@ export const CitizenPopover = ({ children, citizenId }: Props) => {
                   (role) => role.roleId,
                 )}
                 className="mt-1"
+                onRequestClose={refetch}
               />
             )}
           </div>

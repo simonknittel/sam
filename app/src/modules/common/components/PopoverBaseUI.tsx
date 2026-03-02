@@ -48,7 +48,7 @@ export const PopoverBaseUI = ({
       if (hoverOnly && open && eventDetails.reason !== "trigger-hover") return;
 
       setIsOpen(open);
-      if (onOpenChange) onOpenChange(open);
+      onOpenChange?.(open);
     },
     [onOpenChange, hoverOnly],
   );

@@ -22,6 +22,7 @@ interface Props {
   readonly citizenId: Entity["id"];
   readonly assignedRoleIds: Role["id"][];
   readonly iconOnly?: boolean;
+  readonly onRequestClose?: () => void;
 }
 
 export const AddRoles = ({
@@ -29,6 +30,7 @@ export const AddRoles = ({
   citizenId,
   assignedRoleIds,
   iconOnly = false,
+  onRequestClose,
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -47,6 +49,7 @@ export const AddRoles = ({
     setIsOpen(false);
     setQuery("");
     router.refresh();
+    onRequestClose?.();
   };
 
   const fuse = useMemo(() => {
