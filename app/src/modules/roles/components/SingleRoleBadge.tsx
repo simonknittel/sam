@@ -30,6 +30,7 @@ interface Props {
   readonly roleId: Role["id"];
   readonly showPlaceholder?: boolean;
   readonly citizenId?: string;
+  readonly onSuccess?: () => void;
 }
 
 export const SingleRoleBadge = ({
@@ -37,10 +38,13 @@ export const SingleRoleBadge = ({
   roleId,
   showPlaceholder = false,
   citizenId,
+  onSuccess,
 }: Props) => {
   const { roles } = useRolesContext();
   const authentication = useAuthentication();
-  const { state, formAction, isPending } = useAction(deleteRoleAssignment);
+  const { state, formAction, isPending } = useAction(deleteRoleAssignment, {
+    onSuccess,
+  });
   const formId = useId();
 
   const role = roles.find((role) => role.id === roleId);
@@ -60,7 +64,7 @@ export const SingleRoleBadge = ({
       trigger={
         <span
           className={clsx(
-            "px-2 py-1 rounded-secondary bg-neutral-700/50 inline-flex align-middle gap-2 items-center overflow-hidden",
+            "px-2 h-8 rounded-secondary bg-neutral-700/50 inline-flex align-middle gap-2 items-center overflow-hidden",
             className,
           )}
         >
