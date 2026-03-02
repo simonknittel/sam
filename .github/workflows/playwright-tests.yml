@@ -39,6 +39,10 @@ jobs:
           cache: pnpm
           cache-dependency-path: pnpm-monorepo/pnpm-lock.yaml
 
+      - name: pnpm audit guard
+        run: pnpm audit --audit-level critical
+        working-directory: pnpm-monorepo
+
       - name: Install dependencies
         run: pnpm install --filter @sam-monorepo/playwright
 
