@@ -1,5 +1,6 @@
 "use client";
 
+import type { PopoverRoot } from "@base-ui/react/popover"; // eslint-disable-line no-restricted-imports
 import { Popover } from "@base-ui/react/popover"; // eslint-disable-line no-restricted-imports
 import clsx from "clsx";
 import {
@@ -26,6 +27,11 @@ interface PopoverBaseUIContextProviderProps {
   readonly children: ReactNode;
   readonly childrenClassName?: string;
   readonly onOpenChange?: (open: boolean) => void;
+  /**
+   * When true, the popover only opens on mouse hover.
+   * Click and touch interactions are ignored.
+   */
+  readonly hoverOnly?: boolean;
 }
 
 export const PopoverBaseUI = ({
@@ -33,15 +39,18 @@ export const PopoverBaseUI = ({
   children,
   childrenClassName,
   onOpenChange,
+  hoverOnly = false,
 }: PopoverBaseUIContextProviderProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleOpenChange = useCallback(
-    (open: boolean) => {
+    (open: boolean, eventDetails: PopoverRoot.ChangeEventDetails) => {
+      if (hoverOnly && open && eventDetails.reason !== "trigger-hover") return;
+
       setIsOpen(open);
       if (onOpenChange) onOpenChange(open);
     },
-    [onOpenChange],
+    [onOpenChange, hoverOnly],
   );
 
   const closePopover = useCallback(() => {
