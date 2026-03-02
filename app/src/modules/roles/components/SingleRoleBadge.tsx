@@ -60,7 +60,7 @@ export const SingleRoleBadge = ({
       trigger={
         <span
           className={clsx(
-            "px-2 py-1 rounded-secondary bg-neutral-700/50 inline-flex align-middle gap-2 items-center overflow-hidden",
+            "px-2 h-8 rounded-secondary bg-neutral-700/50 inline-flex align-middle gap-2 items-center overflow-hidden",
             className,
           )}
         >
