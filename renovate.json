@@ -24,7 +24,6 @@
       ],
       "matchPackageNames": [
         "*",
-        "!postgres",
         "!eslint-plugin-react-compiler",
         "!@biomejs/biome",
         "!prisma",
