@@ -19,6 +19,10 @@ jobs:
         with:
           node-version-file: "app/.nvmrc"
 
+      - name: npm audit guard
+        run: npm audit --audit-level critical
+        working-directory: app
+
       - uses: actions/cache@v5.0.3
         id: node-modules-cache
         with:
