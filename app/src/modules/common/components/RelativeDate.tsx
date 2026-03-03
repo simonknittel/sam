@@ -6,10 +6,11 @@ import { formatDate } from "../utils/formatDate";
 interface Props {
   readonly date: Date;
   readonly updateInterval?: number;
+  readonly now?: Date;
 }
 
-export const RelativeDate = ({ date, updateInterval = 60_000 }: Props) => {
-  const now = useNow({
+export const RelativeDate = ({ date, updateInterval = 60_000, now }: Props) => {
+  const _now = useNow({
     updateInterval,
   });
   const format = useFormatter();
@@ -19,7 +20,7 @@ export const RelativeDate = ({ date, updateInterval = 60_000 }: Props) => {
       dateTime={new Date(date).toISOString()}
       title={formatDate(date) || undefined}
     >
-      {format.relativeTime(new Date(date), now)}
+      {format.relativeTime(new Date(date), now || _now)}
     </time>
   );
 };
