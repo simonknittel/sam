@@ -1,7 +1,14 @@
 packages:
-  - "apps/*"
-  - "packages/*"
+  - apps/*
+  - packages/*
+
+injectWorkspacePackages: true
 
 linkWorkspacePackages: true
-injectWorkspacePackages: true
+
+overrides:
+  bn.js@<4.12.3: '>=4.12.3'
+  fast-xml-parser@>=5.0.0 <5.3.8: '>=5.3.8'
+  jws@=4.0.0: '>=4.0.1'
+
 preferFrozenLockfile: true
