@@ -7,9 +7,15 @@ interface Props {
   readonly date: Date;
   readonly updateInterval?: number;
   readonly now?: Date;
+  readonly className?: string;
 }
 
-export const RelativeDate = ({ date, updateInterval = 60_000, now }: Props) => {
+export const RelativeDate = ({
+  date,
+  updateInterval = 60_000,
+  now,
+  className,
+}: Props) => {
   const _now = useNow({
     updateInterval,
   });
@@ -19,6 +25,7 @@ export const RelativeDate = ({ date, updateInterval = 60_000, now }: Props) => {
     <time
       dateTime={new Date(date).toISOString()}
       title={formatDate(date) || undefined}
+      className={className}
     >
       {format.relativeTime(new Date(date), now || _now)}
     </time>

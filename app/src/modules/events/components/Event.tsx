@@ -26,8 +26,6 @@ interface Props {
 export const Event = async ({ className, event, index }: Props) => {
   const showLineupButton = await isLineupVisible(event);
 
-  event.startTime = new Date("2026-03-03T17:18:00.000Z");
-
   return (
     <EventClient
       className={className}

@@ -16,6 +16,7 @@ import { useNow } from "next-intl";
 import Image from "next/image";
 import { FaCheck, FaClock, FaUser } from "react-icons/fa";
 import { MdWorkspaces } from "react-icons/md";
+import styles from "./EventClient.module.css";
 
 /**
  * Image size:
@@ -72,8 +73,10 @@ export const EventClient = ({
     >
       {isHappeningNow && (
         <div className="bg-green-500/20 border-t border-x border-green-500 text-text-primary text-center p-2 font-mono uppercase text-xs rounded-t-primary">
-          <span className="opacity-25">//</span> Event läuft{" "}
-          <span className="opacity-25">//</span>
+          <span className="motion-safe:animate-pulse">
+            <span className="opacity-25">//</span> Event läuft{" "}
+            <span className="opacity-25">//</span>
+          </span>
         </div>
       )}
 
@@ -90,8 +93,9 @@ export const EventClient = ({
           "flex flex-col @4xl/events:flex-row background-secondary rounded-bl-primary",
           {
             "rounded-t-primary": !isHappeningNow && !isToday,
-            "border-x border-green-500 [border-image:linear-gradient(to_bottom,theme(colors.green.500),transparent)_1] [background:linear-gradient(to_bottom,theme(colors.green.950),var(--background-secondary))]":
+            "border-x border-green-500 [border-image:linear-gradient(to_bottom,theme(colors.green.500),transparent)_1]":
               isHappeningNow,
+            [styles.happeningNow]: isHappeningNow,
             "border-x border-blue-500 [border-image:linear-gradient(to_bottom,theme(colors.blue.500),transparent)_1] [background:linear-gradient(to_bottom,theme(colors.blue.950),var(--background-secondary))]":
               isToday && !isHappeningNow,
           },
