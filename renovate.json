@@ -24,7 +24,6 @@
       ],
       "matchPackageNames": [
         "*",
-        "!postgres",
         "!eslint-plugin-react-compiler",
         "!@biomejs/biome",
         "!prisma",
@@ -48,5 +47,11 @@
   "automergeStrategy": "squash",
   "ignorePaths": [
     "bun-packages/**"
-  ]
+  ],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": [
+      "before 7am on Wednesday"
+    ]
+  }
 }
