@@ -47,5 +47,11 @@
   "automergeStrategy": "squash",
   "ignorePaths": [
     "bun-packages/**"
-  ]
+  ],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": [
+      "before 7am on Wednesday"
+    ]
+  }
 }
