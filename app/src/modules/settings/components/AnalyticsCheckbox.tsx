@@ -3,32 +3,61 @@
 import { useState, type ChangeEventHandler } from "react";
 
 export const AnalyticsCheckbox = () => {
-  const [value, setValue] = useState(
+  const [valueVercelAnalytics, setValueVercelAnalytics] = useState(
     localStorage.getItem("va-disable") === "true",
   );
+  const [valuePlausible, setValuePlausible] = useState(
+    localStorage.getItem("plausible_ignore") === "true",
+  );
 
-  const handleChange: ChangeEventHandler<HTMLInputElement> = (e) => {
+  const handleChangeVercelAnalytics: ChangeEventHandler<HTMLInputElement> = (
+    e,
+  ) => {
     if (e.target.checked) {
       localStorage.setItem("va-disable", "true");
     } else {
       localStorage.removeItem("va-disable");
     }
 
-    setValue(e.target.checked);
+    setValueVercelAnalytics(e.target.checked);
+  };
+
+  const handleChangePlausible: ChangeEventHandler<HTMLInputElement> = (e) => {
+    if (e.target.checked) {
+      localStorage.setItem("plausible_ignore", "true");
+    } else {
+      localStorage.removeItem("plausible_ignore");
+    }
+
+    setValuePlausible(e.target.checked);
   };
 
   return (
-    <div className="flex gap-2 items-center">
-      <input
-        type="checkbox"
-        id="va-disable"
-        name="va-disable"
-        onChange={handleChange}
-        defaultChecked={value}
-      />
+    <>
+      <div className="flex gap-2 items-center">
+        <input
+          type="checkbox"
+          id="va-disable"
+          name="va-disable"
+          onChange={handleChangeVercelAnalytics}
+          defaultChecked={valueVercelAnalytics}
+        />
 
-      <label htmlFor="va-disable">Disable</label>
-    </div>
+        <label htmlFor="va-disable">Vercel Analytics</label>
+      </div>
+
+      <div className="flex gap-2 items-center">
+        <input
+          type="checkbox"
+          id="plausible-ignore"
+          name="plausible-ignore"
+          onChange={handleChangePlausible}
+          defaultChecked={valuePlausible}
+        />
+
+        <label htmlFor="plausible-ignore">Plausible</label>
+      </div>
+    </>
   );
 };
 
