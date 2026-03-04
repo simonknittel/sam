@@ -17,7 +17,7 @@ export default async function Page() {
   return (
     <div className="flex flex-col gap-2">
       <Tile heading="Disable analytics">
-        <p className="mb-4">Disables Vercel Analytics for this browser.</p>
+        <p className="mb-4">Disables analytics for this browser.</p>
 
         <AnalyticsCheckboxLoader />
       </Tile>

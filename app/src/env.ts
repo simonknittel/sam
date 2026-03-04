@@ -52,21 +52,6 @@ export const env = createEnv({
       },
       z.string().url(),
     ),
-    HOST: z.preprocess(
-      // Uses VERCEL_URL if HOST and BASE_URL are not set, e.g. on Vercel's preview deployments
-      (str) => {
-        if (str) {
-          return str;
-        } else if (process.env.BASE_URL) {
-          return process.env.BASE_URL.replace(/https?:\/\//, "");
-        } else if (process.env.VERCEL_URL) {
-          return process.env.VERCEL_URL;
-        }
-
-        return "localhost:3000";
-      },
-      z.string(),
-    ),
     COMMIT_SHA: z.preprocess(
       // Uses VERCEL_GIT_COMMIT_SHA if COMMIT_SHA is not set
       (str) => str || process.env.VERCEL_GIT_COMMIT_SHA,
@@ -110,6 +95,22 @@ export const env = createEnv({
     NEXT_PUBLIC_PUSHER_CHANNELS_SECURE_PORT: z.coerce.number().optional(),
     /** npx web-push generate-vapid-keys */
     NEXT_PUBLIC_VAPID_KEY: z.string().optional(),
+    NEXT_PUBLIC_PLAUSIBLE_ENDPOINT: z.url().optional(),
+    NEXT_PUBLIC_HOST: z.preprocess(
+      // Uses VERCEL_URL if HOST and BASE_URL are not set, e.g. on Vercel's preview deployments
+      (str) => {
+        if (str) {
+          return str;
+        } else if (process.env.BASE_URL) {
+          return process.env.BASE_URL.replace(/https?:\/\//, "");
+        } else if (process.env.VERCEL_URL) {
+          return process.env.VERCEL_URL;
+        }
+
+        return "localhost:3000";
+      },
+      z.string(),
+    ),
   },
 
   /*
@@ -138,7 +139,7 @@ export const env = createEnv({
     NEXT_PUBLIC_S3_PUBLIC_URL: process.env.NEXT_PUBLIC_S3_PUBLIC_URL,
     UNLEASH_SERVER_API_URL: process.env.UNLEASH_SERVER_API_URL,
     UNLEASH_SERVER_API_TOKEN: process.env.UNLEASH_SERVER_API_TOKEN,
-    HOST: process.env.HOST,
+    NEXT_PUBLIC_HOST: process.env.NEXT_PUBLIC_HOST,
     COMMIT_SHA: process.env.COMMIT_SHA,
     NEXT_PUBLIC_CARE_BEAR_SHOOTER_BUILD_URL:
       process.env.NEXT_PUBLIC_CARE_BEAR_SHOOTER_BUILD_URL,
@@ -165,6 +166,7 @@ export const env = createEnv({
     NEXT_PUBLIC_PUSHER_CHANNELS_SECURE_PORT:
       process.env.NEXT_PUBLIC_PUSHER_CHANNELS_SECURE_PORT,
     NEXT_PUBLIC_VAPID_KEY: process.env.NEXT_PUBLIC_VAPID_KEY,
+    NEXT_PUBLIC_PLAUSIBLE_ENDPOINT: process.env.NEXT_PUBLIC_PLAUSIBLE_ENDPOINT,
   },
 
   emptyStringAsUndefined: true,

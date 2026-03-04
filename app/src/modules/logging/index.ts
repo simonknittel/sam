@@ -11,7 +11,7 @@ const info = (message: string, args: Record<string, unknown> = {}) => {
       timestamp: new Date().toISOString(),
       level: LogLevel.Info,
       message,
-      host: env.HOST,
+      host: env.NEXT_PUBLIC_HOST,
       stack: new Error().stack,
       ...(env.COMMIT_SHA && { commitSha: env.COMMIT_SHA }),
     };
@@ -27,7 +27,7 @@ const warn = (message: string, args: Record<string, unknown> = {}) => {
       timestamp: new Date().toISOString(),
       level: LogLevel.Warn,
       message,
-      host: env.HOST,
+      host: env.NEXT_PUBLIC_HOST,
       stack: new Error().stack,
       ...(env.COMMIT_SHA && { commitSha: env.COMMIT_SHA }),
     };
@@ -43,7 +43,7 @@ const error = (message: string, args: Record<string, unknown> = {}) => {
       timestamp: new Date().toISOString(),
       level: LogLevel.Error,
       message,
-      host: env.HOST,
+      host: env.NEXT_PUBLIC_HOST,
       stack: new Error().stack,
       ...(env.COMMIT_SHA && { commitSha: env.COMMIT_SHA }),
     };
