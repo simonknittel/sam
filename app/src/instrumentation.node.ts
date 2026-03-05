@@ -10,8 +10,8 @@ import {
 } from "@opentelemetry/sdk-logs";
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import {
-  BatchSpanProcessor,
   SamplingDecision,
+  SimpleSpanProcessor,
   type Sampler,
   type SamplingResult,
 } from "@opentelemetry/sdk-trace-node";
@@ -49,13 +49,18 @@ class MySampler implements Sampler {
 const sdk = new NodeSDK({
   resource,
   spanProcessors: [
-    new BatchSpanProcessor(
+    // new BatchSpanProcessor(
+    //   new OTLPTraceExporter({
+    //     url: `${env.OTEL_EXPORTER_OTLP_ENDPOINT}/v1/traces`,
+    //   }),
+    //   {
+    //     scheduledDelayMillis: 1000,
+    //   },
+    // ),
+    new SimpleSpanProcessor(
       new OTLPTraceExporter({
         url: `${env.OTEL_EXPORTER_OTLP_ENDPOINT}/v1/traces`,
       }),
-      {
-        scheduledDelayMillis: 1000,
-      },
     ),
   ],
   logRecordProcessors: [
