@@ -1,5 +1,4 @@
 import { env } from "@/env";
-import { AnalyticsLoader } from "@/modules/common/components/AnalyticsLoader";
 import ToasterContainer from "@/modules/common/components/ToasterContainer";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import clsx from "clsx";
@@ -33,7 +32,6 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         {children}
         <NextTopLoader color="#c22424" showSpinner={false} />
         <ToasterContainer />
-        <AnalyticsLoader />
         <SpeedInsights sampleRate={0.5} />
       </body>
     </html>
