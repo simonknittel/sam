@@ -13,7 +13,7 @@ export const CalendarTile = async ({ className }: Props) => {
   return (
     <section
       className={clsx(
-        "flex flex-col gap-[2px] items-center @4xl/events:overflow-hidden",
+        "flex flex-col gap-0.5 items-center @4xl/events:overflow-hidden",
         className,
       )}
     >
