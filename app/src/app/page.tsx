@@ -16,7 +16,8 @@ export const metadata: Metadata = {
 
 export default async function Page({ searchParams }: PageProps<"/">) {
   const authentication = await authenticate();
-  if (authentication) redirect("/app");
+  // TODO: Instead of the static /dashboard, get redirect target from user settings once implemented
+  if (authentication) redirect("/app/dashboard");
 
   const activeProviders = authOptions.providers.map((provider) => provider.id);
 
