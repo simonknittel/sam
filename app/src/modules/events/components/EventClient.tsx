@@ -74,17 +74,17 @@ export const EventClient = ({
       {isHappeningNow && (
         <div className="bg-green-500/20 border-t border-x border-green-500 text-text-primary text-center p-2 font-mono uppercase text-xs rounded-t-primary">
           <span className="motion-safe:animate-pulse">
-            <span className="opacity-25">//</span> Event läuft{" "}
-            <span className="opacity-25">//</span>
+            <span className="opacity-25">{"//"}</span> Event läuft{" "}
+            <span className="opacity-25">{"//"}</span>
           </span>
         </div>
       )}
 
       {isToday && !isHappeningNow && (
         <div className="bg-blue-500/20 border-t border-x border-blue-500 text-text-primary text-center p-2 font-mono uppercase text-xs rounded-t-primary">
-          <span className="opacity-25">//</span>{" "}
+          <span className="opacity-25">{"//"}</span>{" "}
           <RelativeDate date={event.startTime} now={now} />{" "}
-          <span className="opacity-25">//</span>
+          <span className="opacity-25">{"//"}</span>
         </div>
       )}
 
