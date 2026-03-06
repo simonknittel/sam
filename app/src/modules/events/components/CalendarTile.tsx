@@ -26,7 +26,7 @@ export const CalendarTile = async ({ className }: Props) => {
           <Event key={event.id} event={event} index={index} />
         ))
       ) : (
-        <div className="background-secondary rounded-primary p-4 w-full">
+        <div className="bg-secondary p-4 w-full corners-secondary">
           <p>Aktuell sind keine Events geplant.</p>
         </div>
       )}

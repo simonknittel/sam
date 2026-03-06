@@ -13,7 +13,7 @@ export const Handles = ({ isUpdating }: Props) => {
         type="source"
         position={Position.Left}
         className={clsx("opacity-0 group-hover/node:opacity-100", {
-          "!opacity-0": !isUpdating,
+          "opacity-0!": !isUpdating,
         })}
       />
 
@@ -22,7 +22,7 @@ export const Handles = ({ isUpdating }: Props) => {
         type="source"
         position={Position.Right}
         className={clsx("opacity-0 group-hover/node:opacity-100", {
-          "!opacity-0": !isUpdating,
+          "opacity-0!": !isUpdating,
         })}
       />
 
@@ -31,7 +31,7 @@ export const Handles = ({ isUpdating }: Props) => {
         type="target"
         position={Position.Top}
         className={clsx("opacity-0 group-hover/node:opacity-100", {
-          "!opacity-0": !isUpdating,
+          "opacity-0!": !isUpdating,
         })}
       />
 
@@ -40,7 +40,7 @@ export const Handles = ({ isUpdating }: Props) => {
         type="source"
         position={Position.Bottom}
         className={clsx("opacity-0 group-hover/node:opacity-100", {
-          "!opacity-0": !isUpdating,
+          "opacity-0!": !isUpdating,
         })}
       />
     </>

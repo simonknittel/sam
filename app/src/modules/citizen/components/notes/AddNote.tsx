@@ -92,7 +92,7 @@ export const AddNote = ({
           <Select
             id={classificationLevelSelectId}
             {...register("classificationLevelId", { required: true })}
-            className="!bg-neutral-800"
+            className="bg-neutral-800!"
           >
             {classificationLevels.map((classificationLevel) => (
               <option

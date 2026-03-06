@@ -56,9 +56,9 @@ const SquadronFlightPosition = ({
 
         <div
           className={clsx("absolute inset-0 backdrop-saturate-[1]", {
-            "backdrop-hue-rotate-[60deg]": status === "green",
-            "backdrop-hue-rotate-[30deg]": status === "yellow",
-            "backdrop-hue-rotate-[0deg]": status === "red",
+            "backdrop-hue-rotate-60": status === "green",
+            "backdrop-hue-rotate-30": status === "yellow",
+            "backdrop-hue-rotate-0": status === "red",
           })}
         />
       </div>

@@ -23,7 +23,7 @@ export const DateInput = (props: Props) => {
       <input
         type="date"
         className={clsx(
-          "p-2 rounded-secondary bg-neutral-900 border border-solid border-neutral-800 w-full mt-2 focus-visible:outline outline-2 outline-interaction-700 outline-offset-4",
+          "p-2 rounded-secondary bg-neutral-900 border border-neutral-800 w-full mt-2 focus-visible:outline-2 outline-interaction-700 outline-offset-4",
           className,
         )}
         id={id}

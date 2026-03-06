@@ -8,7 +8,7 @@ export const Introduction = ({ className }: Props) => {
   return (
     <div
       className={clsx(
-        "p-4 background-secondary rounded-primary overflow-auto flex flex-col gap-2",
+        "p-4 bg-secondary rounded-primary overflow-auto flex flex-col gap-2",
         className,
       )}
     >

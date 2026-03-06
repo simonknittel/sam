@@ -298,7 +298,7 @@ export const Position = ({
       )}
 
       {position.childPositions && position.childPositions.length > 0 && (
-        <div className="flex flex-col gap-[1px] pl-4 lg:pl-8 mt-[1px]">
+        <div className="flex flex-col gap-px pl-4 lg:pl-8 mt-px">
           {position.childPositions.map((position) => (
             <Position
               key={position.id}

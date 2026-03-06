@@ -1,93 +1,78 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-@layer base {
-  html {
-    --background-primary:
-      radial-gradient(hsla(0, 0%, 100%, 0.03) 1px, transparent 0),
-      radial-gradient(
-        circle farthest-side at bottom center,
-        hsl(0 69% 10% / 1),
-        #000
-      );
-    --background-secondary: hsla(0, 0%, 15%, 0.5);
-    --background-secondary-opaque: hsla(0, 0%, 8%, 1);
-    --background-tertiary: hsla(0, 0%, 25%, 0.5);
+@plugin "@tailwindcss/typography";
 
-    --color-text-primary: hsl(0, 0%, 95%);
+@theme {
+  --color-text-primary: hsl(0, 0%, 95%);
 
-    --color-interaction-300: hsl(0, 69%, 60%);
-    --color-interaction-500: hsl(0, 69%, 45%);
-    --color-interaction-700: hsl(0, 69%, 30%);
-    --color-interaction-900: hsl(0, 69%, 10%);
+  --color-interaction-300: hsl(0, 69%, 60%);
+  --color-interaction-500: hsl(0, 69%, 45%);
+  --color-interaction-700: hsl(0, 69%, 30%);
+  --color-interaction-900: hsl(0, 69%, 10%);
 
-    --color-me: hsl(142, 71%, 45%);
+  --color-me: hsl(142, 71%, 45%);
 
-    --radius-primary: 0.5rem;
-    --radius-secondary: 0.25rem;
-  }
+  --radius-primary: 0.5rem;
+  --radius-secondary: 0.25rem;
 
-  html[data-theme="halloween"] {
-    --background: radial-gradient(
-      circle farthest-side at bottom center,
-      hsl(14 69% 10% / 1),
-      #000
-    );
-    --background-secondary: hsla(0, 0%, 15%, 0.5);
-    --background-tertiary: hsla(0, 0%, 25%, 0.5);
+  --color-brand-red-900: hsl(0 69% 10% / 1);
+  --color-brand-red-700: hsl(0 69% 30% / 1);
+  --color-brand-red-500: hsl(0 69% 43% / 1);
+  --color-brand-red-300: #cc4444;
+  --color-rsi-blue-100: #7ef8ff;
+  --color-rsi-blue-200: #56a6b6;
+  --color-rsi-blue-300: #0e2635;
 
-    --text-primary: white;
+  --background-image-brand-text-gradient: radial-gradient(
+    #bb2222,
+    hsl(0 69% 30% / 1)
+  );
+  --background-color-secondary: hsla(0, 0%, 15%, 0.5);
+  --background-color-secondary-opaque: hsla(0, 0%, 8%, 1);
+  --background-color-tertiary: hsla(0, 0%, 25%, 0.5);
 
-    --color-interaction-300: hsl(14, 69%, 60%);
-    --color-interaction-500: hsl(14, 69%, 45%);
-    --color-interaction-700: hsl(14, 69%, 30%);
-    --color-interaction-900: hsl(14, 69%, 10%);
-
-    --radius-primary: 1rem;
-    --radius-secondary: 0.25rem;
-  }
+  --breakpoint-3xl: 1920px;
 }
 
-@layer utilities {
-  .background-primary {
-    background: var(--background-primary);
-    background-size:
-      15px 15px,
-      100% 100%;
-  }
+@theme inline {
+  --font-mono: var(--font-roboto-mono), monospace;
+}
 
-  .background-secondary {
-    background: var(--background-secondary);
-  }
+@utility background-primary {
+  background:
+    radial-gradient(hsla(0, 0%, 100%, 0.03) 1px, transparent 0),
+    radial-gradient(
+      circle farthest-side at bottom center,
+      hsl(0 69% 10% / 1),
+      #000
+    );
+  background-size:
+    15px 15px,
+    100% 100%;
+}
 
-  .background-secondary-opaque {
-    background: var(--background-secondary-opaque);
-  }
+@utility corners-primary {
+  corner-shape: round round bevel round;
+  border-radius: var(--radius-primary) var(--radius-primary) 2rem
+    var(--radius-primary);
+}
 
-  .background-tertiary {
-    background: var(--background-tertiary);
-  }
+@utility corners-secondary {
+  corner-shape: round round bevel round;
+  border-radius: var(--radius-primary) var(--radius-primary) 1rem
+    var(--radius-primary);
+}
 
-  .prose a {
+@utility prose {
+  & a {
     color: var(--color-interaction-500);
   }
 
-  .prose a:hover,
-  .prose a:focus-visible {
+  & a:hover {
     color: var(--color-interaction-300);
   }
 
-  .beveled-br {
-    --bevel-size: 32px;
-    clip-path: shape(
-      from 0% 0%,
-      line to 100% 0%,
-      line to 100% calc(100% - var(--bevel-size)),
-      line to calc(100% - var(--bevel-size)) 100%,
-      line to 0% 100%,
-      line to 0% 0%,
-      close
-    );
+  & a:focus-visible {
+    color: var(--color-interaction-300);
   }
 }

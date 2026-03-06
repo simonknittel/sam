@@ -85,11 +85,11 @@ export const Suggestions = ({ className, onClick }: Props) => {
           </>
         ) : (
           <>
-            <div className="w-[8rem] h-8 rounded-secondary bg-neutral-700 animate-pulse" />
-            <div className="w-[12rem] h-8 rounded-secondary bg-neutral-700 animate-pulse" />
-            <div className="w-[6rem] h-8 rounded-secondary bg-neutral-700 animate-pulse" />
-            <div className="w-[6rem] h-8 rounded-secondary bg-neutral-700 animate-pulse" />
-            <div className="w-[8rem] h-8 rounded-secondary bg-neutral-700 animate-pulse" />
+            <div className="w-32 h-8 rounded-secondary bg-neutral-700 animate-pulse" />
+            <div className="w-48 h-8 rounded-secondary bg-neutral-700 animate-pulse" />
+            <div className="w-24 h-8 rounded-secondary bg-neutral-700 animate-pulse" />
+            <div className="w-24 h-8 rounded-secondary bg-neutral-700 animate-pulse" />
+            <div className="w-32 h-8 rounded-secondary bg-neutral-700 animate-pulse" />
           </>
         )}
       </div>

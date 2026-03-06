@@ -26,7 +26,7 @@ export const ProfitDistributionCycleSidebar = ({ className }: Props) => {
       </Button2>
 
       <div
-        className={clsx("flex flex-col gap-[2px]", {
+        className={clsx("flex flex-col gap-0.5", {
           "hidden md:flex": !isOpen,
         })}
       >
@@ -39,10 +39,7 @@ export const ProfitDistributionCycleSidebar = ({ className }: Props) => {
           ]}
         />
 
-        <div
-          className="background-secondary rounded-primary p-2 beveled-br"
-          style={{ "--bevel-size": "16px" }}
-        >
+        <div className="bg-secondary p-2 corners-secondary">
           <p className="text-sm text-neutral-500">Sortierung</p>
 
           <p className="text-sm">Ende der Sammelphase (absteigend)</p>

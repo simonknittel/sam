@@ -16,7 +16,7 @@ const ImpersonationBanner = ({ roles }: Readonly<Props>) => {
   };
 
   return (
-    <div className="fixed top-2 left-1/2 -translate-x-1/2 bg-red-500/50 backdrop-blur z-50 flex w-[calc(100%-2rem)] max-w-xl p-4 rounded-secondary gap-4 justify-between">
+    <div className="fixed top-2 left-1/2 -translate-x-1/2 bg-red-500/50 backdrop-blur-sm z-50 flex w-[calc(100%-2rem)] max-w-xl p-4 rounded-secondary gap-4 justify-between">
       <p>
         Du siehst die Seite aus der Sicht der Rolle{roles.length > 1 ? "n" : ""}{" "}
         {roles.map((role) => role.name).join(", ")}.

@@ -35,9 +35,7 @@ export const MembershipsTile = async ({ className, id }: Props) => {
   );
 
   return (
-    <section
-      className={clsx(className, "rounded-primary p-4 background-secondary")}
-    >
+    <section className={clsx(className, "rounded-primary p-4 bg-secondary")}>
       <h2 className="font-bold flex gap-2 items-center">
         <FaUsers /> Mitglieder ({activeOrganizationMemberships.length})
       </h2>

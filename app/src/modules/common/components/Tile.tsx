@@ -17,12 +17,7 @@ export const Tile = ({
   childrenClassName,
 }: Props) => {
   return (
-    <section
-      className={clsx(
-        "rounded-primary background-secondary beveled-br",
-        className,
-      )}
-    >
+    <section className={clsx("bg-secondary corners-primary", className)}>
       <div className="flex justify-between items-center border-b border-white/5">
         <h2 className="font-thin text-2xl p-4 flex-1 font-mono uppercase">
           {heading}

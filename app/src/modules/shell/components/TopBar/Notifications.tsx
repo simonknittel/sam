@@ -7,7 +7,7 @@ export const Notifications = () => {
   return (
     <Link
       href="/app/account/notifications"
-      className="h-full px-4 flex items-center hover:background-tertiary focus-visible:background-tertiary"
+      className="h-full px-4 flex items-center hover:bg-tertiary focus-visible:bg-tertiary"
       title="Benachrichtigungen"
     >
       <FaBell />

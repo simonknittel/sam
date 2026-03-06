@@ -105,7 +105,7 @@ export const RolesTable = ({ className, rows }: Props) => {
             className={clsx("grid items-center gap-4", GRID_COLS)}
           >
             {row.getVisibleCells().map((cell) => (
-              <td key={cell.id} className="overflow-hidden">
+              <td key={cell.id} className="overflow-hidden p-px">
                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
               </td>
             ))}

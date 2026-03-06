@@ -17,7 +17,7 @@ export const SpynetSearchResultEntry = ({ hit, onSelect }: Props) => {
           router.push(`/app/spynet/citizen/${hit.objectID}`);
           onSelect?.();
         }}
-        className="flex flex-col !gap-0"
+        className="flex flex-col gap-0!"
       >
         {hit.handles && hit.handles.length > 0 ? (
           <span className="flex gap-2 items-baseline w-full">
@@ -55,7 +55,7 @@ export const SpynetSearchResultEntry = ({ hit, onSelect }: Props) => {
           router.push(`/app/spynet/organization/${hit.objectID}`);
           onSelect?.();
         }}
-        className="flex flex-col !gap-0"
+        className="flex flex-col gap-0!"
       >
         <span className="flex gap-2 items-baseline w-full">
           <p>{hit.names[0]}</p>

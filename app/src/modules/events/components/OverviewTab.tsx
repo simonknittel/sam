@@ -32,7 +32,7 @@ export const OverviewTab = async ({ className, event }: Props) => {
         className,
       )}
     >
-      <OverviewTile event={event} className="w-full max-w-[480px] flex-none" />
+      <OverviewTile event={event} className="w-full max-w-120 flex-none" />
 
       <div className="flex-1 w-full flex-col md:flex-row lg:flex-col xl:flex-row 2xl:flex-col 3xl:flex-row flex gap-2">
         {showFleetSummary && (

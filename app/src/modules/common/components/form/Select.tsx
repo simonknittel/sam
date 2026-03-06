@@ -12,7 +12,7 @@ export const Select = (props: Props) => {
     <select
       className={clsx(
         className,
-        "bg-neutral-900 rounded-secondary px-4 h-11 w-full focus-visible:outline outline-2 outline-interaction-700 outline-offset-4",
+        "bg-neutral-900 rounded-secondary px-4 h-11 w-full focus-visible:outline-2 outline-interaction-700 outline-offset-4",
       )}
       {...rest}
     >

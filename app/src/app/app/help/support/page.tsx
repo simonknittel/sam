@@ -33,7 +33,7 @@ export default async function Page() {
       />
 
       <div className="flex-1 flex flex-col gap-2">
-        <section className="background-secondary rounded-primary p-4">
+        <section className="bg-secondary rounded-primary p-4">
           <SectionHeading
             url={`${env.BASE_URL}/app/help/support#support`}
             level={1}
@@ -44,8 +44,8 @@ export default async function Page() {
 
           <RichText className="ml-9">
             <p>
-              Du hast Fragen oder Probleme mit dem SAM? Melde dich am besten
-              bei <CitizenLink citizen={ind3x} />. Ich bin am schnellsten über
+              Du hast Fragen oder Probleme mit dem SAM? Melde dich am besten bei{" "}
+              <CitizenLink citizen={ind3x} />. Ich bin am schnellsten über
               Discord erreichbar.
             </p>
           </RichText>

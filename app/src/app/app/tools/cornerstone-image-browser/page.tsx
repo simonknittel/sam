@@ -12,7 +12,7 @@ export default async function Page() {
 
   return (
     <MaxWidthContent maxWidth="prose">
-      <RichText className="background-secondary rounded-primary p-4">
+      <RichText className="bg-secondary rounded-primary p-4">
         <p>
           Du bist auf der Suche nach einem bestimmten Rüstungsteil, weißt aber
           nicht den Namen? Cornerstone bietet eine umfangreiche Datenbank mit

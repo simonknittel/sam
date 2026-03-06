@@ -128,7 +128,7 @@ export default async function Page({
               target="_blank"
               rel="noreferrer"
             >
-              <div className="flex-1 background-secondary group-hover:background-tertiary relative flex flex-col justify-center">
+              <div className="flex-1 bg-secondary group-hover:bg-tertiary relative flex flex-col justify-center">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={`https://cstone.space/uifimages/${item.ItemId}.png`}
@@ -143,7 +143,7 @@ export default async function Page({
                 </p>
               </div>
 
-              <div className="p-2 group-hover:background-tertiary flex-1 flex flex-col gap-1 justify-end leading-tight">
+              <div className="p-2 group-hover:bg-tertiary flex-1 flex flex-col gap-1 justify-end leading-tight">
                 {item.Manu && (
                   <p className="text-xs text-gray-500">{item.Manu}</p>
                 )}

@@ -15,7 +15,7 @@ export const MaxWidthContent = ({
   return (
     <div
       className={clsx("mx-auto p-4", className, {
-        "max-w-screen-3xl": maxWidth === "screen-3xl",
+        "max-w-(--breakpoint-3xl)": maxWidth === "screen-3xl",
         "max-w-prose": maxWidth === "prose",
       })}
     >

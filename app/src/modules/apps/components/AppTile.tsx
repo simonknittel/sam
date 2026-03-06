@@ -32,7 +32,7 @@ export const AppTile = ({
       <Link
         href={href}
         className={clsx(
-          "flex items-center justify-between gap-2 hover:outline-interaction-700 focus-visible:outline-interaction-700 active:outline-interaction-500 outline outline-offset-4 outline-1 outline-transparent transition-colors rounded-primary overflow-hidden background-secondary group p-2 text-xs",
+          "flex items-center justify-between gap-2 hover:outline-interaction-700 focus-visible:outline-interaction-700 active:outline-interaction-500 outline-offset-4 outline outline-transparent transition-colors rounded-primary overflow-hidden bg-secondary group p-2 text-xs",
           className,
         )}
         onClick={onClick}
@@ -51,7 +51,7 @@ export const AppTile = ({
     <Link
       href={href}
       className={clsx(
-        "flex flex-col hover:outline-interaction-700 focus-visible:outline-interaction-700 active:outline-interaction-500 outline outline-offset-4 outline-1 outline-transparent transition-colors rounded-primary overflow-hidden background-secondary group",
+        "flex flex-col hover:outline-interaction-700 focus-visible:outline-interaction-700 active:outline-interaction-500 outline-offset-4 outline outline-transparent transition-colors rounded-primary overflow-hidden bg-secondary group",
         className,
       )}
     >

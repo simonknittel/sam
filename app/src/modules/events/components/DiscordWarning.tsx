@@ -15,7 +15,7 @@ export const DiscordWarning = ({ className }: Props) => {
           hier in der Aufstellung anmelden kannst.
         </p>
       }
-      className={clsx("!max-w-none", className)}
+      className={clsx("max-w-none!", className)}
     />
   );
 };

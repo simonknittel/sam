@@ -175,7 +175,7 @@ export const SingleNote = async ({ note }: Props) => {
     <article className="mt-4 lg:mt-8 relative rounded-secondary overflow-hidden">
       <div
         className={clsx({
-          "absolute w-full h-24 border-t-2 border-x-2 bg-gradient-to-t from-neutral-900/0":
+          "absolute w-full h-24 border-t-2 border-x-2 bg-linear-to-t from-neutral-900/0":
             !confirmed || confirmed?.value === "false-report",
           [`${styles.blueBorder} to-blue-500/10`]: !confirmed,
           [`${styles.redBorder} to-red-500/10`]:
@@ -185,7 +185,7 @@ export const SingleNote = async ({ note }: Props) => {
 
       {!confirmed && (
         <div className="px-4 pt-4 flex gap-2 relative z-10 items-start">
-          <FaInfoCircle className="text-blue-500 grow-1 shrink-0 mt-[2px]" />
+          <FaInfoCircle className="text-blue-500 shrink-0 mt-0.5" />
           <div className="flex gap-2 lg:gap-4 flex-wrap">
             <p className="font-bold text-sm">Unbestätigt</p>
 
@@ -196,7 +196,7 @@ export const SingleNote = async ({ note }: Props) => {
 
       {confirmed?.value === "false-report" && (
         <div className="px-4 pt-4 flex items-start gap-2 relative z-10">
-          <BsExclamationOctagonFill className="text-red-500 grow-1 shrink-0 mt-1" />
+          <BsExclamationOctagonFill className="text-red-500 shrink-0 mt-1" />
           <p className="font-bold">Falschmeldung</p>
         </div>
       )}
@@ -207,7 +207,7 @@ export const SingleNote = async ({ note }: Props) => {
             !confirmed || confirmed.value === "false-report",
         })}
       >
-        <div className="h-[20px] flex items-center">
+        <div className="h-5 flex items-center">
           <TbCircleDot />
         </div>
 

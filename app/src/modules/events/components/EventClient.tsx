@@ -67,7 +67,7 @@ export const EventClient = ({
   return (
     <article
       className={clsx(
-        "overflow-hidden beveled-br w-[400px] @4xl/events:w-full",
+        "overflow-hidden w-100 @4xl/events:w-full corners-primary",
         className,
       )}
     >
@@ -90,19 +90,19 @@ export const EventClient = ({
 
       <div
         className={clsx(
-          "flex flex-col @4xl/events:flex-row background-secondary rounded-bl-primary",
+          "flex flex-col @4xl/events:flex-row bg-secondary rounded-bl-primary",
           {
             "rounded-t-primary": !isHappeningNow && !isToday,
-            "border-x border-green-500 [border-image:linear-gradient(to_bottom,theme(colors.green.500),transparent)_1]":
+            "border-x border-green-500 [border-image:linear-gradient(to_bottom,var(--color-green-500),transparent)_1]":
               isHappeningNow,
             [styles.happeningNow]: isHappeningNow,
-            "border-x border-blue-500 [border-image:linear-gradient(to_bottom,theme(colors.blue.500),transparent)_1] [background:linear-gradient(to_bottom,theme(colors.blue.950),var(--background-secondary))]":
+            "border-x border-blue-500 [border-image:linear-gradient(to_bottom,var(--color-blue-500),transparent)_1] [background:linear-gradient(to_bottom,var(--color-blue-950),var(--bg-secondary))]":
               isToday && !isHappeningNow,
           },
         )}
       >
         {event.discordImage && (
-          <div className="@4xl/events:flex-grow-0 @4xl/events:flex-shrink-0 @4xl/events:basis-[400px] max-h-[160px] flex justify-center rounded-r-primary rounded-b-primary overflow-hidden">
+          <div className="@4xl/events:grow-0 @4xl/events:shrink-0 @4xl/events:basis-100 max-h-40 flex justify-center rounded-r-primary rounded-b-primary overflow-hidden">
             <Image
               src={`https://cdn.discordapp.com/guild-events/${event.discordId}/${event.discordImage}.webp?size=1024`}
               alt=""
@@ -147,7 +147,7 @@ export const EventClient = ({
           <div className="flex flex-wrap">
             <Link
               href={`/app/events/${event.id}`}
-              className="first:rounded-l-secondary border-[1px] border-interaction-700 last:rounded-r-secondary h-8 flex items-center justify-center px-3 gap-2 uppercase text-interaction-500 hover:text-interaction-300 hover:border-interaction-300 font-mono"
+              className="first:rounded-l-secondary border border-interaction-700 last:rounded-r-secondary h-8 flex items-center justify-center px-3 gap-2 uppercase text-interaction-500 hover:text-interaction-300 hover:border-interaction-300 font-mono"
             >
               Details
             </Link>
@@ -155,7 +155,7 @@ export const EventClient = ({
             {showLineupButton && (
               <Link
                 href={`/app/events/${event.id}/lineup`}
-                className="first:rounded-l-secondary border-[1px] border-interaction-700 last:rounded-r-secondary h-8 flex items-center justify-center px-3 gap-2 uppercase text-interaction-500 hover:text-interaction-300 hover:border-interaction-300 font-mono"
+                className="first:rounded-l-secondary border border-interaction-700 last:rounded-r-secondary h-8 flex items-center justify-center px-3 gap-2 uppercase text-interaction-500 hover:text-interaction-300 hover:border-interaction-300 font-mono"
               >
                 <MdWorkspaces />
                 Aufstellung

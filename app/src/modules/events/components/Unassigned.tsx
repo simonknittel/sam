@@ -69,7 +69,7 @@ export const Unassigned = ({
           </ul>
         </div>
       }
-      className={clsx("!max-w-none", className)}
+      className={clsx("max-w-none!", className)}
     />
   );
 };

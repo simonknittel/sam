@@ -48,11 +48,11 @@ export const ProfileTile = async ({ className }: Props) => {
     : undefined;
 
   return (
-    <div className="flex flex-col gap-[2px] items-center">
+    <div className="flex flex-col gap-0.5 items-center">
       <section
         className={clsx(
           className,
-          "rounded-primary p-4 background-secondary flex flex-col gap-4 items-center w-full beveled-br",
+          "p-4 bg-secondary flex flex-col gap-4 items-center w-full corners-primary",
         )}
       >
         <Avatar name={name} image={image} size={128} />
@@ -73,12 +73,12 @@ export const ProfileTile = async ({ className }: Props) => {
       </section>
 
       {(showSilcBalance || showPenaltyPoints) && (
-        <div className="flex gap-[2px] w-full">
+        <div className="flex gap-0.5 w-full">
           {showSilcBalance && (
             <Link
               href={`/app/spynet/citizen/${authentication.session.entity.id}/silc`}
               title="Übersicht öffnen"
-              className="flex-initial w-1/2 rounded-primary background-secondary hover:bg-neutral-600/50 focus-visible:bg-neutral-600/50 flex flex-col justify-center items-center p-4 beveled-br font-mono"
+              className="flex-initial w-1/2 bg-secondary hover:bg-neutral-600/50 focus-visible:bg-neutral-600/50 flex flex-col justify-center items-center p-4 corners-primary font-mono"
             >
               <span
                 className={clsx("font-black text-4xl", {
@@ -110,7 +110,7 @@ export const ProfileTile = async ({ className }: Props) => {
             <Link
               href={`/app/spynet/citizen/${authentication.session.entity.id}/penalty-points`}
               title="Übersicht öffnen"
-              className="flex-initial w-1/2 rounded-primary background-secondary hover:bg-neutral-600/50 focus-visible:bg-neutral-600/50 flex flex-col justify-center items-center p-4 beveled-br font-mono"
+              className="flex-initial w-1/2 bg-secondary hover:bg-neutral-600/50 focus-visible:bg-neutral-600/50 flex flex-col justify-center items-center p-4 corners-primary font-mono"
             >
               <span
                 className={clsx("font-black text-4xl", {

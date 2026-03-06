@@ -29,7 +29,7 @@ export const OverviewTab = ({ className, role }: Props) => {
     <div className={clsx("flex flex-col gap-2", className)}>
       <form
         action={updateFormAction}
-        className={clsx("background-secondary rounded-primary p-4", className)}
+        className={clsx("bg-secondary rounded-primary p-4", className)}
       >
         <input type="hidden" name="id" value={role.id} />
 
@@ -91,9 +91,7 @@ export const OverviewTab = ({ className, role }: Props) => {
         )}
       </form>
 
-      <section
-        className={clsx("background-secondary rounded-primary p-4", className)}
-      >
+      <section className={clsx("bg-secondary rounded-primary p-4", className)}>
         <h2 className="font-bold">Bilder</h2>
 
         <div className="flex flex-col md:flex-row gap-4 mt-4">
