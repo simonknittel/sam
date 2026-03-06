@@ -96,7 +96,7 @@ export const EventClient = ({
             "border-x border-green-500 [border-image:linear-gradient(to_bottom,var(--color-green-500),transparent)_1]":
               isHappeningNow,
             [styles.happeningNow]: isHappeningNow,
-            "border-x border-blue-500 [border-image:linear-gradient(to_bottom,var(--color-blue-500),transparent)_1] [background:linear-gradient(to_bottom,var(--color-blue-950),var(--bg-secondary))]":
+            "border-x border-blue-500 [border-image:linear-gradient(to_bottom,var(--color-blue-500),transparent)_1] [background:linear-gradient(to_bottom,var(--color-blue-950),var(--backgorund-color-secondary))]":
               isToday && !isHappeningNow,
           },
         )}

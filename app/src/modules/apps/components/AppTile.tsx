@@ -84,7 +84,7 @@ export const AppTile = ({
         )}
 
         {app.tags?.length && (
-          <div className="flex flex-wrap gap-[2px]">
+          <div className="flex flex-wrap gap-0.5">
             {app.tags.map((tag) => (
               <Badge
                 key={tag}
