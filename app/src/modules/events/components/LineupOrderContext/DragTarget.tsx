@@ -29,8 +29,8 @@ export const DragTarget = ({
         className={clsx(
           "h-8 hover:border-green-500 hover:from-green-900 absolute left-0 right-0",
           {
-            "hover:border-t-[2px] top-0 bg-gradient-to-b": order === "before",
-            "hover:border-b-[2px] bottom-0 bg-gradient-to-t": order === "after",
+            "hover:border-t-2 top-0 bg-linear-to-b": order === "before",
+            "hover:border-b-2 bottom-0 bg-linear-to-t": order === "after",
             "right-0":
               order === "before" || (order === "after" && groupLevel >= 4),
             "right-1/2": order === "after" && groupLevel < 4,
@@ -41,7 +41,7 @@ export const DragTarget = ({
 
       {order === "after" && groupLevel < 4 && (
         <div
-          className="h-8 hover:border-green-500 hover:from-green-900 absolute left-[calc(50%+1px)] right-0 hover:border-b-[2px] bottom-0 bg-gradient-to-t"
+          className="h-8 hover:border-green-500 hover:from-green-900 absolute left-[calc(50%+1px)] right-0 hover:border-b-2 bottom-0 bg-linear-to-t"
           onMouseUp={(e) => handleDragEnd(e, position, "inside")}
         />
       )}

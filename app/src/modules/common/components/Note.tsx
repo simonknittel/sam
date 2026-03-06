@@ -26,19 +26,19 @@ export const Note = ({ className, message, type = "info", error }: Props) => {
       )}
     >
       {type === "info" && (
-        <FaInfoCircle className="text-blue-500 grow-1 shrink-0 mt-1" />
+        <FaInfoCircle className="text-blue-500 shrink-0 mt-1" />
       )}
       {type === "success" && (
-        <FaCheckSquare className="text-green-500 grow-1 shrink-0 mt-1" />
+        <FaCheckSquare className="text-green-500 shrink-0 mt-1" />
       )}
       {type === "error" && (
-        <BsExclamationOctagonFill className="text-brand-red-500 grow-1 shrink-0 mt-1" />
+        <BsExclamationOctagonFill className="text-brand-red-500 shrink-0 mt-1" />
       )}
       {type === "warning" && (
-        <IoIosWarning className="text-yellow-500 grow-1 shrink-0 mt-1" />
+        <IoIosWarning className="text-yellow-500 shrink-0 mt-1" />
       )}
 
-      <div>
+      <div className="grow">
         <div className="flex gap-2 items-center">{message}</div>
 
         {error && (

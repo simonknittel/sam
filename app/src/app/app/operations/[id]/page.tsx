@@ -116,7 +116,7 @@ export default async function Page(props: Readonly<Props>) {
                             name={member.user.name}
                             image={member.user.image}
                             size={32}
-                            className="grow-1 shrink-0"
+                            className="grow shrink-0"
                           />
 
                           {member.user.name}
@@ -149,7 +149,7 @@ export default async function Page(props: Readonly<Props>) {
                             name={member.user.name}
                             image={member.user.image}
                             size={32}
-                            className="grow-1 shrink-0"
+                            className="grow shrink-0"
                           />
 
                           {member.user.name}

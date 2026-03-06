@@ -15,7 +15,7 @@ export const TableOfContents = ({ className, items }: Props) => {
   return (
     <section
       className={clsx(
-        "background-secondary rounded-primary p-4 lg:w-96 flex-none lg:sticky top-[calc(104px+16px)]",
+        "bg-secondary rounded-primary p-4 lg:w-96 flex-none lg:sticky top-[calc(104px+16px)]",
         className,
       )}
     >

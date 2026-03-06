@@ -17,7 +17,7 @@ export const StatisticTile = ({
   return (
     <div
       className={clsx(
-        "rounded-primary background-secondary p-4 flex flex-col items-center text-center",
+        "rounded-primary bg-secondary p-4 flex flex-col items-center text-center",
         className,
       )}
     >

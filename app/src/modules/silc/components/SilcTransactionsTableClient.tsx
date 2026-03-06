@@ -27,7 +27,7 @@ type Row = SilcTransaction & {
 const columnHelper = createColumnHelper<Row>();
 
 const TABLE_MIN_WIDTH = "min-w-[640px]";
-const GRID_COLS = "grid-cols-[128px_160px_88px_1fr_160px_64px]";
+const GRID_COLS = "grid-cols-[144px_160px_88px_1fr_160px_64px]";
 
 interface Props {
   readonly className?: string;

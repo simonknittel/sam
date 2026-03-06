@@ -34,7 +34,7 @@ export const RSILink = ({ handle }: Props) => {
   return (
     <Link
       href={`https://robertsspaceindustries.com/citizens/${handle}`}
-      className="hover:background-secondary focus-visible:background-secondary rounded-secondary flex items-center gap-2 h-full px-2 py-1 text-rsi-blue-200"
+      className="hover:bg-secondary focus-visible:bg-secondary rounded-secondary flex items-center gap-2 h-full px-2 py-1 text-rsi-blue-200"
       rel="noreferrer"
       target="_blank"
       title={handle}

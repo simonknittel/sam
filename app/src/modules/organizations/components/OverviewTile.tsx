@@ -25,7 +25,7 @@ export const OverviewTile = async ({ className, id }: Props) => {
         </div>
       )}
 
-      <div className={clsx("p-4 background-secondary")}>
+      <div className={clsx("p-4 bg-secondary")}>
         <h2 className="font-bold">Übersicht</h2>
 
         <dl className="mt-4">

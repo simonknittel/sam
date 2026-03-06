@@ -10,9 +10,7 @@ export const Tile = async ({ className }: Props) => {
   const users = await getUsersWithEntities();
 
   return (
-    <section
-      className={clsx("p-4 background-secondary rounded-primary", className)}
-    >
+    <section className={clsx("p-4 bg-secondary rounded-primary", className)}>
       <Table users={users} />
     </section>
   );

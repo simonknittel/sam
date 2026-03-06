@@ -17,7 +17,7 @@ export const RolesTile = async ({ className }: Props) => {
   return (
     <section
       className={clsx(
-        "p-4 background-secondary rounded-primary overflow-auto",
+        "p-4 bg-secondary rounded-primary overflow-auto",
         className,
       )}
     >

@@ -53,7 +53,7 @@ export const Table = ({ users }: Props) => {
                 name={props.getValue()}
                 image={props.row.original.user.image}
                 size={32}
-                className="grow-1 shrink-0"
+                className="shrink-0"
               />
 
               <span

@@ -36,7 +36,7 @@ export default async function Page({ searchParams }: PageProps<"/">) {
 
         {urlSearchParams.has("error") && (
           <Note
-            className="max-w-xs lg:!p-4"
+            className="max-w-xs lg:p-4!"
             message="Beim Anmelden ist ein Fehler aufgetreten."
           />
         )}

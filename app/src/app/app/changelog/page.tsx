@@ -1837,7 +1837,7 @@ type DayProps = Readonly<{
 
 const Day = ({ heading, children }: DayProps) => {
   return (
-    <article className="bg-neutral-800/50 rounded-primary p-4 lg:p-8 beveled-br">
+    <article className="bg-neutral-800/50 p-4 lg:p-8 corners-primary">
       <h2 className="font-thin text-2xl flex gap-3 items-center font-mono uppercase">
         <FaCalendar className="text-neutral-500 text-base" />
         {heading}
@@ -1894,7 +1894,7 @@ const RedactedDayItem = () => {
         <p>{lorem.generateParagraphs(1)}</p>
       </div>
 
-      <div className="absolute inset-0 flex items-center justify-center backdrop-blur">
+      <div className="absolute inset-0 flex items-center justify-center backdrop-blur-sm">
         <p
           className="text-brand-red-500 font-bold border-2 border-brand-red-500 rounded-secondary px-2 py-1 text-lg relative"
           style={{

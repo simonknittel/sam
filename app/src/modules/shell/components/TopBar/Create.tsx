@@ -72,7 +72,7 @@ export const Create = ({ className }: Props) => {
             Neu
           </Button2>
         }
-        childrenClassName="flex flex-col gap-[1px] w-52"
+        childrenClassName="flex flex-col gap-px w-52"
         enableHover
       >
         <PopoverChildren
@@ -179,10 +179,10 @@ const PopoverChildren = ({
   items = items.toSorted((a, b) => a.label.localeCompare(b.label));
 
   const className =
-    "block hover:outline-interaction-700 focus-visible:outline-interaction-700 active:outline-interaction-500 outline outline-offset-4 outline-1 outline-transparent transition-colors rounded-primary overflow-hidden background-secondary group p-2 text-xs text-left";
+    "block hover:outline-interaction-700 focus-visible:outline-interaction-700 active:outline-interaction-500 outline-offset-4 outline outline-transparent transition-colors rounded-primary overflow-hidden bg-secondary group p-2 text-xs text-left";
 
   return (
-    <div className="flex flex-col gap-[2px]">
+    <div className="flex flex-col gap-0.5">
       {items.map((item) => {
         if (item.type === "link")
           return (

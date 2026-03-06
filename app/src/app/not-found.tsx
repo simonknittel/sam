@@ -14,7 +14,7 @@ export default function NotFound() {
           <Hero text="404" className="text-center mx-auto" withGlitch />
         </div>
 
-        <div className="flex flex-col gap-2 rounded-primary background-secondary p-8 mx-8 items-center">
+        <div className="flex flex-col gap-2 rounded-primary bg-secondary p-8 mx-8 items-center">
           <p>Page not found</p>
         </div>
       </main>

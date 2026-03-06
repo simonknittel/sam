@@ -91,7 +91,7 @@ export const StatisticChart = ({ chart }: Props) => {
       },
       tooltip: {
         trigger: "axis",
-        className: "!bg-neutral-950 border !border-neutral-700 !text-white",
+        className: "bg-neutral-950! border border-neutral-700! text-white!",
         formatter: (params: CallbackDataParams | CallbackDataParams[]) => {
           const items = Array.isArray(params) ? params : [params];
 

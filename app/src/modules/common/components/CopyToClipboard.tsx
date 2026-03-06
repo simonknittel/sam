@@ -34,7 +34,7 @@ export const CopyToClipboard = ({ className, value }: Props) => {
       onClick={handleClick}
       title="Kopieren"
       className={clsx(
-        "text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300 relative text-sm",
+        "text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300 relative text-sm enabled:cursor-pointer",
         className,
       )}
     >

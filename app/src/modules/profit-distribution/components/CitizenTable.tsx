@@ -312,7 +312,7 @@ export const CitizenTable = ({ className, cycleData }: Props) => {
           {table.getRowModel().rows.map((row) => (
             <tr
               key={row.id}
-              className={clsx("grid items-center gap-4", GRID_COLS)}
+              className={clsx("grid items-center gap-4 py-px", GRID_COLS)}
             >
               {row.getVisibleCells().map((cell) => (
                 <td key={cell.id} className="overflow-hidden">

@@ -78,7 +78,7 @@ export const PopoverBaseUI = ({
             side="top"
             className="z-30"
           >
-            <Popover.Popup className="z-30 outline-none" initialFocus={false}>
+            <Popover.Popup className="z-30 outline-hidden" initialFocus={false}>
               <Popover.Arrow className="data-[side=bottom]:top-[-15px] data-[side=left]:right-[-13px] data-[side=left]:rotate-90 data-[side=right]:left-[-13px] data-[side=right]:-rotate-90 data-[side=top]:bottom-[-15px] data-[side=top]:rotate-180">
                 <IoMdArrowDropup className="fill-neutral-700 size-6" />
               </Popover.Arrow>

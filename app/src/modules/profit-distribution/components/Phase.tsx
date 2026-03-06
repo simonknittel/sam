@@ -48,9 +48,7 @@ export const Phase = ({
           {phase > currentPhase && "Nächste Phase"}
         </div>
 
-        <div
-          className={clsx("flex-1 p-4 background-secondary", innerClassName)}
-        >
+        <div className={clsx("flex-1 p-4 bg-secondary", innerClassName)}>
           {children}
         </div>
       </section>

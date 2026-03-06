@@ -24,7 +24,7 @@ export const Account = async ({ className }: Props) => {
         <button
           type="button"
           className={clsx(
-            "p-2 rounded-r-primary hover:background-tertiary focus-visible:background-tertiary",
+            "p-2 rounded-r-primary hover:bg-tertiary focus-visible:bg-tertiary",
             className,
           )}
         >

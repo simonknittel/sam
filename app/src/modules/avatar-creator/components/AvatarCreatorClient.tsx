@@ -365,7 +365,7 @@ export const AvatarCreatorClient = ({ className }: Props) => {
         className,
       )}
     >
-      <div className="w-80 background-secondary rounded-primary p-4 flex flex-col gap-6">
+      <div className="w-80 bg-secondary rounded-primary p-4 flex flex-col gap-6">
         <div className="overflow-hidden">
           <label
             className="block text-sm font-bold mb-2 font-mono uppercase"
@@ -441,7 +441,7 @@ export const AvatarCreatorClient = ({ className }: Props) => {
                 value={customBackground}
                 onChange={(event) => setCustomBackground(event.target.value)}
                 disabled={backgroundOption !== "custom"}
-                className="h-8 w-12 cursor-pointer rounded border border-neutral-700 bg-neutral-900 disabled:cursor-not-allowed disabled:opacity-50"
+                className="h-8 w-12 cursor-pointer rounded-sm border border-neutral-700 bg-neutral-900 disabled:cursor-not-allowed disabled:opacity-50"
               />
             </div>
           </div>
@@ -490,7 +490,7 @@ export const AvatarCreatorClient = ({ className }: Props) => {
               type="button"
               variant={Button2Variant.Secondary}
               onClick={handleResetTransform}
-              className="rounded border border-neutral-700/60 px-2 py-1 text-xs transition hover:border-neutral-500 hover:text-neutral-100 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-sm border border-neutral-700/60 px-2 py-1 text-xs transition hover:border-neutral-500 hover:text-neutral-100 disabled:cursor-not-allowed disabled:opacity-50"
               disabled={!userImage}
             >
               Zurücksetzen

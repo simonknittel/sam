@@ -14,7 +14,7 @@ export const TopBar = ({ className }: Props) => {
     <div className="bg-black hidden lg:block fixed left-0 right-0 top-0 z-30 px-2 pt-2">
       <div
         className={clsx(
-          "flex background-secondary-opaque rounded-primary h-12",
+          "flex bg-secondary-opaque rounded-primary h-12",
           className,
         )}
       >

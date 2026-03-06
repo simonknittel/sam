@@ -36,7 +36,7 @@ export const HistoryEntry = ({
     <li className="relative rounded-secondary overflow-hidden">
       <div
         className={clsx({
-          "absolute w-full h-20 border-t-2 border-x-2 bg-gradient-to-t from-neutral-800":
+          "absolute w-full h-20 border-t-2 border-x-2 bg-linear-to-t from-neutral-800":
             !confirmed || confirmed?.value === "false-report",
           [`${styles.blueBorder} to-blue-500/10`]: !confirmed,
           [`${styles.redBorder} to-red-500/10`]:
@@ -46,7 +46,7 @@ export const HistoryEntry = ({
 
       {!confirmed && (
         <div className="px-4 pt-4 flex items-start gap-2 relative z-10">
-          <FaInfoCircle className="text-blue-500 grow-1 shrink-0 mt-1" />
+          <FaInfoCircle className="text-blue-500 shrink-0 mt-1" />
           <div className="flex gap-4">
             <p className="font-bold">Unbestätigt</p>
 
@@ -57,7 +57,7 @@ export const HistoryEntry = ({
 
       {confirmed?.value === "false-report" && (
         <div className="px-4 pt-4 flex items-start gap-2 relative z-10">
-          <BsExclamationOctagonFill className="text-red-500 grow-1 shrink-0 mt-1" />
+          <BsExclamationOctagonFill className="text-red-500 shrink-0 mt-1" />
           <p className="font-bold">Falschmeldung</p>
         </div>
       )}
@@ -68,7 +68,7 @@ export const HistoryEntry = ({
             !confirmed || confirmed.value === "false-report",
         })}
       >
-        <div className="h-[20px] flex items-center">
+        <div className="h-5 flex items-center">
           <TbCircleDot />
         </div>
 

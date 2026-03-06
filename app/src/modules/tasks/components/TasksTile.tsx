@@ -27,7 +27,7 @@ export const TasksTile = async ({ className, searchParams }: Props) => {
   if (tasks.length <= 0)
     return (
       <section className={clsx(className)}>
-        <div className="rounded-primary background-secondary p-4 text-center">
+        <div className="rounded-primary bg-secondary p-4 text-center">
           <p>Keine Tasks gefunden</p>
         </div>
       </section>
@@ -62,7 +62,7 @@ export const TasksTile = async ({ className, searchParams }: Props) => {
   }
 
   return (
-    <section className={clsx("flex flex-col gap-[1px]", className)}>
+    <section className={clsx("flex flex-col gap-px", className)}>
       {tasks.map((task) => (
         <Task key={task.id} task={task} />
       ))}

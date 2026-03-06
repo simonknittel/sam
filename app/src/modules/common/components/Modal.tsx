@@ -33,7 +33,7 @@ export default function Modal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-30 flex cursor-pointer items-start lg:items-center justify-center bg-neutral-800/50 px-4 pt-4 pb-20 lg:pb-4 backdrop-blur"
+      className="fixed inset-0 z-30 flex cursor-pointer items-start lg:items-center justify-center bg-neutral-800/50 px-4 pt-4 pb-20 lg:pb-4 backdrop-blur-sm"
       onMouseDown={onRequestClose || (() => router.back())}
     >
       <div
@@ -45,11 +45,13 @@ export default function Modal({
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div className="px-4 py-4 lg:py-4 border-b border-white/5 flex justify-between items-center">
-          <span className="text-xl font-bold text-balance">{heading}</span>
+          <span className="text-xl font-bold text-balance font-mono uppercase">
+            {heading}
+          </span>
 
           <button
             title="Schließen"
-            className="px-2 text-2xl text-brand-red-500 hover:text-brand-red-300 active:text-brand-red-300 flex-initial self-baseline relative top-1"
+            className="px-2 text-2xl text-brand-red-500 hover:text-brand-red-300 active:text-brand-red-300 flex-initial self-baseline relative top-1 enabled:cursor-pointer"
             onClick={onRequestClose || (() => router.back())}
           >
             <FaRegTimesCircle />

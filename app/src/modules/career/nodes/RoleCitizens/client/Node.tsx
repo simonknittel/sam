@@ -261,7 +261,7 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
                   <CitizenLink
                     key={citizen.id}
                     citizen={citizen}
-                    className="py-[0.125rem]"
+                    className="py-0.5"
                   />
                 ))}
             </div>

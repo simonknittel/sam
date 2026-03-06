@@ -117,9 +117,9 @@ const ComboboxOptionItem = ({ result }: ComboboxOptionProps) => {
   return (
     <ComboboxOption
       value={citizen}
-      className="group flex cursor-pointer items-center gap-2 rounded-secondary py-1 px-2 select-none data-[focus]:bg-white/20"
+      className="group flex cursor-pointer items-center gap-2 rounded-secondary py-1 px-2 select-none data-focus:bg-white/20"
     >
-      <FaCheck className="invisible group-data-[selected]:visible text-sm text-brand-red-500" />
+      <FaCheck className="invisible group-data-selected:visible text-sm text-brand-red-500" />
 
       <div className="text-white text-sm">
         {underlineCharacters(citizen.handle!, matches?.[0].indices)}
@@ -165,13 +165,13 @@ const Single = ({
           aria-label="Citizen"
           displayValue={(citizen: Entity) => citizen?.handle || ""}
           onChange={(event) => setQuery(event.target.value)}
-          className="w-full rounded-secondary bg-neutral-900 py-2 pr-8 pl-2 focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25 disabled:opacity-50"
+          className="w-full rounded-secondary bg-neutral-900 py-2 pr-8 pl-2 focus:outline-hidden data-focus:outline-2 data-focus:-outline-offset-2 data-focus:outline-white/25 disabled:opacity-50"
           disabled={disabled}
         />
 
         <ComboboxOptions
           anchor="bottom"
-          className="w-[var(--input-width)] rounded-b border border-brand-red-500 bg-black p-1 [--anchor-gap:var(--spacing-1)] empty:invisible transition duration-100 ease-in data-[leave]:data-[closed]:opacity-0 z-50"
+          className="w-(--input-width) rounded-b border border-brand-red-500 bg-black p-1 [--anchor-gap:var(--spacing-1)] empty:invisible transition duration-100 ease-in data-leave:data-closed:opacity-0 z-50"
         >
           {filterResult.map((result) => (
             <ComboboxOptionItem key={result.item.id} result={result} />
@@ -241,12 +241,12 @@ const Multiple = ({
             aria-label="Citizens"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            className="w-full rounded-secondary bg-neutral-900 py-2 pr-8 pl-2 focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25"
+            className="w-full rounded-secondary bg-neutral-900 py-2 pr-8 pl-2 focus:outline-hidden data-focus:outline-2 data-focus:-outline-offset-2 data-focus:outline-white/25"
           />
 
           <ComboboxOptions
             anchor="bottom"
-            className="w-[var(--input-width)] rounded-b border border-brand-red-500 bg-black p-1 [--anchor-gap:var(--spacing-1)] empty:invisible transition duration-100 ease-in data-[leave]:data-[closed]:opacity-0 z-50"
+            className="w-(--input-width) rounded-b border border-brand-red-500 bg-black p-1 [--anchor-gap:var(--spacing-1)] empty:invisible transition duration-100 ease-in data-leave:data-closed:opacity-0 z-50"
           >
             {filterResult.map((result) => (
               <ComboboxOptionItem key={result.item.id} result={result} />
@@ -317,7 +317,7 @@ const Multiple = ({
                   )
                 }
                 title="Entfernen"
-                className="text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300"
+                className="text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300 enabled:cursor-pointer"
               >
                 <FaTrash className="text-xs" />
               </button>

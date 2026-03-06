@@ -116,9 +116,7 @@ export const Notes = async ({ className, entity }: Props) => {
   if (filteredNoteTypes.length <= 0) return null;
 
   return (
-    <section
-      className={clsx(className, "rounded-primary p-4 background-secondary")}
-    >
+    <section className={clsx(className, "rounded-primary p-4 bg-secondary")}>
       <TabsProvider initialActiveTab={filteredNoteTypes[0].id}>
         <TabList>
           {filteredNoteTypes.map((noteType) => (

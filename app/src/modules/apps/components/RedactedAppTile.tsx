@@ -11,12 +11,12 @@ export const RedactedAppTile = ({ className, variant = "default" }: Props) => {
     return (
       <div
         className={clsx(
-          "background-secondary rounded-primary overflow-hidden relative p-2 text-xs",
+          "bg-secondary rounded-primary overflow-hidden relative p-2 text-xs",
           className,
         )}
       >
         Redacted
-        <div className="absolute inset-0 flex items-center justify-center backdrop-blur">
+        <div className="absolute inset-0 flex items-center justify-center backdrop-blur-sm">
           <p
             className="text-brand-red-700 border border-brand-red-700 rounded-secondary px-2 py-1 text-xs relative"
             style={{
@@ -33,7 +33,7 @@ export const RedactedAppTile = ({ className, variant = "default" }: Props) => {
   return (
     <div
       className={clsx(
-        "background-secondary rounded-primary overflow-hidden",
+        "bg-secondary rounded-primary overflow-hidden",
         className,
       )}
     >
@@ -46,7 +46,7 @@ export const RedactedAppTile = ({ className, variant = "default" }: Props) => {
           Lorem ipsum dolor sit amet consectetur adipisicing elit.
         </p>
 
-        <div className="absolute inset-0 flex items-center justify-center backdrop-blur">
+        <div className="absolute inset-0 flex items-center justify-center backdrop-blur-sm">
           <p
             className="text-brand-red-500 font-bold border-2 border-brand-red-500 rounded-secondary px-2 py-1 text-lg relative"
             style={{

@@ -3,7 +3,7 @@
     background: linear-gradient(
       to bottom,
       hsl(145, 80%, 10%),
-      var(--background-secondary)
+      var(--bg-secondary)
     );
   }
 
@@ -15,11 +15,7 @@
         hsla(143, 64%, 24%, 0.3) 50%,
         hsla(0, 0%, 100%, 0) 100%
       ),
-      linear-gradient(
-        to bottom,
-        hsl(145, 80%, 10%),
-        var(--background-secondary)
-      );
+      linear-gradient(to bottom, hsl(145, 80%, 10%), var(--bg-secondary));
     background-size:
       200% 100%,
       100% 100%;

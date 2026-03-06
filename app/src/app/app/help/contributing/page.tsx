@@ -92,7 +92,7 @@ export default async function Page() {
       />
 
       <div className="flex-1 flex flex-col gap-2">
-        <section className="background-secondary rounded-primary p-4">
+        <section className="bg-secondary rounded-primary p-4">
           <SectionHeading
             url={`${env.BASE_URL}/app/help/contributing#mithilfe`}
             level={1}
@@ -115,7 +115,7 @@ export default async function Page() {
           </RichText>
         </section>
 
-        <section className="background-secondary rounded-primary p-4">
+        <section className="bg-secondary rounded-primary p-4">
           <SectionHeading
             url={`${env.BASE_URL}/app/help/contributing#arten-der-mithilfe`}
             className="mb-4"
@@ -144,17 +144,17 @@ export default async function Page() {
           </RichText>
 
           <ul className="grid grid-cols-2 gap-2 font-bold mt-4 hyphens-auto ml-9">
-            <li className="background-secondary rounded-secondary p-8 flex text-center justify-center items-center">
+            <li className="bg-secondary rounded-secondary p-8 flex text-center justify-center items-center">
               Integrierte Apps
             </li>
 
-            <li className="background-secondary rounded-secondary p-8 flex text-center justify-center items-center">
+            <li className="bg-secondary rounded-secondary p-8 flex text-center justify-center items-center">
               Externe Apps
             </li>
           </ul>
         </section>
 
-        <section className="mt-[2px] background-secondary rounded-primary p-4">
+        <section className="mt-[2px] bg-secondary rounded-primary p-4">
           <SectionHeading
             url={`${env.BASE_URL}/app/help/contributing#integrierte-apps`}
             className="mb-4"
@@ -178,7 +178,7 @@ export default async function Page() {
           </RichText>
         </section>
 
-        <section className="mt-[2px] background-secondary rounded-primary p-4">
+        <section className="mt-[2px] bg-secondary rounded-primary p-4">
           <SectionHeading
             url={`${env.BASE_URL}/app/help/contributing#externe-apps`}
             className="mb-4"
@@ -220,19 +220,19 @@ export default async function Page() {
           </RichText>
 
           <ul className="grid grid-cols-2 lg:grid-cols-4 gap-2 font-bold my-4 hyphens-auto ml-9">
-            <li className="background-secondary rounded-secondary p-8 flex text-center justify-center items-center">
+            <li className="bg-secondary rounded-secondary p-8 flex text-center justify-center items-center">
               Iframe-Integration
             </li>
 
-            <li className="background-secondary rounded-secondary p-8 flex text-center justify-center items-center">
+            <li className="bg-secondary rounded-secondary p-8 flex text-center justify-center items-center">
               Benutzerauthentifizierung / Single Sign-on (SSO)
             </li>
 
-            <li className="background-secondary rounded-secondary p-8 flex text-center justify-center items-center">
+            <li className="bg-secondary rounded-secondary p-8 flex text-center justify-center items-center">
               REST-Schnittstellen
             </li>
 
-            <li className="background-secondary rounded-secondary p-8 flex text-center justify-center items-center">
+            <li className="bg-secondary rounded-secondary p-8 flex text-center justify-center items-center">
               Webhooks
             </li>
           </ul>
@@ -386,7 +386,7 @@ export default async function Page() {
           </RoadmapNote>
         </section>
 
-        <section className="mt-[2px] background-secondary rounded-primary p-4">
+        <section className="mt-[2px] bg-secondary rounded-primary p-4">
           <SectionHeading
             url={`${env.BASE_URL}/app/help/contributing#frequently-asked-questions-faq`}
             className="mb-4"

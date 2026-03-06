@@ -88,15 +88,15 @@ export const Search = () => {
           ]);
         }}
         classNames={{
-          form: "!bg-neutral-800 !border-transparent !shadow-none !outline-none focus-within:!border-white !rounded-secondary",
-          input: "!text-white placeholder:!text-neutral-500",
-          panel: "!bg-neutral-800 [&>.aa-GradientBottom]:!hidden",
-          panelLayout: "!p-0",
-          item: "!text-white !p-2 aria-selected:!bg-neutral-700",
-          submitButton: "[&>svg]:!text-brand-red-500",
-          clearButton: "hover:!text-brand-red-500 focus:!text-brand-red-500",
-          loadingIndicator: "[&>svg]:!text-brand-red-500",
-          detachedSearchButton: "!static",
+          form: "bg-neutral-800! border-transparent! shadow-none! outline-hidden! focus-within:border-white! rounded-secondary!",
+          input: "text-white! placeholder:text-neutral-500!",
+          panel: "bg-neutral-800! [&>.aa-GradientBottom]:hidden!",
+          panelLayout: "p-0!",
+          item: "text-white! p-2! aria-selected:bg-neutral-700!",
+          submitButton: "[&>svg]:text-brand-red-500!",
+          clearButton: "hover:text-brand-red-500! focus:text-brand-red-500!",
+          loadingIndicator: "[&>svg]:text-brand-red-500!",
+          detachedSearchButton: "static!",
         }}
         placeholder="Suche"
         // renderNoResults={() => "Kein Ergebnisse"} // TODO

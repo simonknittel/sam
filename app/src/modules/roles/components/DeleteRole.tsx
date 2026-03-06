@@ -28,9 +28,7 @@ export const DeleteRole = ({ className, role }: Props) => {
   const formId = useId();
 
   return (
-    <section
-      className={clsx("background-secondary rounded-primary p-4", className)}
-    >
+    <section className={clsx("bg-secondary rounded-primary p-4", className)}>
       <form action={formAction} id={formId}>
         <input type="hidden" name="id" value={role.id} />
         <AlertDialog>

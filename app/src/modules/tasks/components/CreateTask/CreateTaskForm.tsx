@@ -86,7 +86,7 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
           type="button"
           onClick={() => setStep(Step.Description)}
           className={clsx(
-            "first:rounded-l border-[1px] border-brand-red-700 last:rounded-r h-12 flex items-center justify-center px-3 gap-2 uppercase",
+            "first:rounded-l border border-brand-red-700 last:rounded-r h-12 flex items-center justify-center px-3 gap-2 uppercase",
             {
               "bg-brand-red-500 text-white": step === Step.Description,
               "text-brand-red-500 hover:text-brand-red-300 hover:border-brand-red-300":
@@ -101,7 +101,7 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
           type="button"
           onClick={() => setStep(Step.Visibility)}
           className={clsx(
-            "first:rounded-l border-[1px] border-brand-red-700 last:rounded-r h-12 flex items-center justify-center px-3 gap-2 uppercase",
+            "first:rounded-l border border-brand-red-700 last:rounded-r h-12 flex items-center justify-center px-3 gap-2 uppercase",
             {
               "bg-brand-red-500 text-white": step === Step.Visibility,
               "text-brand-red-500 hover:text-brand-red-300 hover:border-brand-red-300":
@@ -116,7 +116,7 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
           type="button"
           onClick={() => setStep(Step.Reward)}
           className={clsx(
-            "first:rounded-l border-[1px] border-brand-red-700 last:rounded-r h-12 flex items-center justify-center px-3 gap-2 uppercase",
+            "first:rounded-l border border-brand-red-700 last:rounded-r h-12 flex items-center justify-center px-3 gap-2 uppercase",
             {
               "bg-brand-red-500 text-white": step === Step.Reward,
               "text-brand-red-500 hover:text-brand-red-300 hover:border-brand-red-300":
@@ -131,7 +131,7 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
           type="button"
           onClick={() => setStep(Step.Other)}
           className={clsx(
-            "first:rounded-l border-[1px] border-brand-red-700 last:rounded-r h-12 flex items-center justify-center px-3 gap-2 uppercase",
+            "first:rounded-l border border-brand-red-700 last:rounded-r h-12 flex items-center justify-center px-3 gap-2 uppercase",
             {
               "bg-brand-red-500 text-white": step === Step.Other,
               "text-brand-red-500 hover:text-brand-red-300 hover:border-brand-red-300":

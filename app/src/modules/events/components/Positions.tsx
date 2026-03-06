@@ -28,7 +28,7 @@ export const Positions = ({
         myShips={myShips}
         allEventCitizens={allEventCitizens}
         showActions={showActions}
-        className="flex flex-col gap-[1px]"
+        className="flex flex-col gap-px"
       />
     </LineupVisibilityProvider>
   );
