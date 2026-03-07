@@ -20,9 +20,9 @@ const CreateCitizenForm = dynamic(() =>
 );
 
 const CreateOrganizationForm = dynamic(() =>
-  import(
-    "@/modules/spynet/components/CreateOrganization/CreateOrganizationForm"
-  ).then((mod) => mod.CreateOrganizationForm),
+  import("@/modules/spynet/components/CreateOrganization/CreateOrganizationForm").then(
+    (mod) => mod.CreateOrganizationForm,
+  ),
 );
 
 const CreateRoleForm = dynamic(() =>
@@ -32,9 +32,9 @@ const CreateRoleForm = dynamic(() =>
 );
 
 const CreatePenaltyEntryForm = dynamic(() =>
-  import(
-    "@/modules/penalty-points/components/CreatePenaltyEntry/CreatePenaltyEntryForm"
-  ).then((mod) => mod.CreatePenaltyEntryForm),
+  import("@/modules/penalty-points/components/CreatePenaltyEntry/CreatePenaltyEntryForm").then(
+    (mod) => mod.CreatePenaltyEntryForm,
+  ),
 );
 
 const CreateTaskForm = dynamic(() =>
@@ -44,15 +44,15 @@ const CreateTaskForm = dynamic(() =>
 );
 
 const CreateProfitDistributionCycleForm = dynamic(() =>
-  import(
-    "@/modules/profit-distribution/components/CreateProfitDistributionCycleForm"
-  ).then((mod) => mod.CreateProfitDistributionCycleForm),
+  import("@/modules/profit-distribution/components/CreateProfitDistributionCycleForm").then(
+    (mod) => mod.CreateProfitDistributionCycleForm,
+  ),
 );
 
 const CreateSilcTransactionForm = dynamic(() =>
-  import(
-    "@/modules/silc/components/CreateSilcTransactionForm"
-  ).then((mod) => mod.CreateSilcTransactionForm),
+  import("@/modules/silc/components/CreateSilcTransactionForm").then(
+    (mod) => mod.CreateSilcTransactionForm,
+  ),
 );
 
 export const createForms = {

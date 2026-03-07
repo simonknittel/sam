@@ -20,6 +20,7 @@ const eslintConfig = defineConfig([
   ...tanstackQuery.configs["flat/recommended"],
   reactYouMightNotNeedAnEffect.configs.recommended,
   prettier,
+  reactCompiler.configs.recommended,
 
   globalIgnores([
     ".next/**",
@@ -39,7 +40,6 @@ const eslintConfig = defineConfig([
     name: "custom-rules",
     plugins: {
       "@typescript-eslint": tseslint.plugin,
-      "react-compiler": reactCompiler,
     },
     languageOptions: {
       parserOptions: {

@@ -29,6 +29,15 @@ export const updateRoleAssignments = createAuthenticatedAction(
       };
 
     /**
+     * Further validate the request
+     */
+    if (Array.from(formData.keys()).length > 500)
+      return {
+        error: t("Common.badRequest"),
+        requestPayload: formData,
+      };
+
+    /**
      *
      */
     const [allRoles, currentRoleAssignments] = await Promise.all([

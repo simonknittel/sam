@@ -34,6 +34,15 @@ export const updateParticipantAttribute = createAuthenticatedAction(
       };
 
     /**
+     * Further validate the request
+     */
+    if (Array.from(formData.keys()).length > 100)
+      return {
+        error: t("Common.badRequest"),
+        requestPayload: formData,
+      };
+
+    /**
      *
      */
     const cycle = await prisma.profitDistributionCycle.findUnique({

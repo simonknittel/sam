@@ -35,7 +35,7 @@ export default async function Page() {
       <div className="flex-1 flex flex-col gap-2">
         <section className="bg-secondary rounded-primary p-4">
           <SectionHeading
-            url={`${env.BASE_URL}/app/help/support#support`}
+            url={`${env.NEXT_PUBLIC_BASE_URL}/app/help/support#support`}
             level={1}
             className="mb-4"
           >
