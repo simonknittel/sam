@@ -23,10 +23,7 @@
       ]
     }
   },
-  "forwardPorts": [
-    3000,
-    "db:5432"
-  ],
+  "forwardPorts": [3000, "db:5432"],
   "postCreateCommand": "./.devcontainer/postCreateCommand.sh",
   "remoteUser": "node"
 }

@@ -1,10 +1,10 @@
 import { env } from "@/env";
 import { type MetadataRoute } from "next";
 import faviconSrc from "../assets/favicon.svg";
-import screenshotDashboardMobileSrc from "../assets/screenshots/screenshot-dashboard-mobile.avif";
-import screenshotDashboardSrc from "../assets/screenshots/screenshot-dashboard.avif";
 import screenshotAppsMobileSrc from "../assets/screenshots/screenshot-apps-mobile.avif";
 import screenshotAppsSrc from "../assets/screenshots/screenshot-apps.avif";
+import screenshotDashboardMobileSrc from "../assets/screenshots/screenshot-dashboard-mobile.avif";
+import screenshotDashboardSrc from "../assets/screenshots/screenshot-dashboard.avif";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
