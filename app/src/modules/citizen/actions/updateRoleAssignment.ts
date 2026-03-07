@@ -31,7 +31,7 @@ export const updateRoleAssignments = createAuthenticatedAction(
     /**
      * Further validate the request
      */
-    if (formData.keys.length > 500)
+    if (Array.from(formData.keys()).length > 500)
       return {
         error: t("Common.badRequest"),
         requestPayload: formData,

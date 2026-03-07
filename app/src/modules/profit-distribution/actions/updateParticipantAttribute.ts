@@ -36,7 +36,7 @@ export const updateParticipantAttribute = createAuthenticatedAction(
     /**
      * Further validate the request
      */
-    if (formData.keys.length > 100)
+    if (Array.from(formData.keys()).length > 100)
       return {
         error: t("Common.badRequest"),
         requestPayload: formData,
