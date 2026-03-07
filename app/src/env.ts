@@ -88,8 +88,8 @@ export const env = createEnv({
       (str) => {
         if (str) {
           return str;
-        } else if (process.env.BASE_URL) {
-          return process.env.BASE_URL.replace(/https?:\/\//, "");
+        } else if (process.env.NEXT_PUBLIC_BASE_URL) {
+          return process.env.NEXT_PUBLIC_BASE_URL.replace(/https?:\/\//, "");
         } else if (process.env.VERCEL_URL) {
           return process.env.VERCEL_URL;
         }
