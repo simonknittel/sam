@@ -13,9 +13,9 @@ export const AdminEnabler = ({ className, enabled = false }: Props) => {
 
   const handleClick = () => {
     if (enabled) {
-      document.cookie = `enable_admin=; path=/; max-age=0;`;
+      document.cookie = `enable_admin=; path=/; samesite=lax; max-age=0;`;
     } else {
-      document.cookie = `enable_admin=1; path=/; max-age=${60 * 60 * 24 * 7};`;
+      document.cookie = `enable_admin=1; path=/; samesite=lax; max-age=${60 * 60 * 24 * 7};`;
     }
 
     router.refresh();
