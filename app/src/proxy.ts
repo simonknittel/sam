@@ -7,7 +7,11 @@ export function proxy(request: NextRequest) {
     request.cookies.get("next-auth.session-token") ||
     request.cookies.get("__Secure-next-auth.session-token");
 
-  // Early return. Make sure to use `authenticatePage()` on individual pages in order to fully authenticate the user.
+  /**
+   * This is only an early return. Actual verification of the session is done
+   * on the individual pages. Use `authenticatePage()` on in order to fully
+   * authenticate the user.
+   */
   if (pathname.startsWith("/app") && !sessionCookie) {
     return NextResponse.redirect(new URL(`/`, request.url));
   }
