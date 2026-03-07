@@ -123,7 +123,8 @@
     "tailwindcss": "4.2.1",
     "typescript": "5.9.3",
     "vercel": "50.22.1",
-    "vitest": "3.2.4"
+    "vitest": "3.2.4",
+    "zod-validation-error": "4.0.2"
   },
   "prisma": {
     "schema": "./prisma/schema"
@@ -131,6 +132,7 @@
   "packageManager": "npm@10.9.4",
   "overrides": {
     "@types/react-dom": "19.2.3",
-    "@types/react": "19.2.14"
+    "@types/react": "19.2.14",
+    "zod-validation-error": "4.0.2"
   }
 }
