@@ -1,11 +1,12 @@
 "use client";
+
 import { FlowNodeMarkdownPosition } from "@prisma/client";
 import z from "zod";
 
 export const schema = z.object({
   id: z.cuid2(),
-  markdown: z.string(),
+  markdown: z.string().max(5000),
   markdownPosition: z.enum(FlowNodeMarkdownPosition),
-  backgroundColor: z.string(),
+  backgroundColor: z.string().optional(),
   backgroundTransparency: z.coerce.number().min(0).max(1),
 });

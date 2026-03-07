@@ -11,7 +11,7 @@ export const updateFlowSchema = z.object({
   width: z.number(),
   height: z.number(),
   data: z.object({
-    markdown: z.string(),
+    markdown: z.string().max(5000),
     markdownPosition: z.enum(FlowNodeMarkdownPosition),
     backgroundColor: z.string().optional(),
     backgroundTransparency: z.number().min(0).max(1).optional(),
