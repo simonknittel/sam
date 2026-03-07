@@ -9,7 +9,7 @@ export function proxy(request: NextRequest) {
 
   /**
    * This is only an early return. Actual verification of the session is done
-   * on the individual pages. Use `authenticatePage()` on in order to fully
+   * on the individual pages. Use `authenticatePage()` in order to fully
    * authenticate the user.
    */
   if (pathname.startsWith("/app") && !sessionCookie) {
