@@ -13,8 +13,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description:
       "Sinister Administration Module (SAM) for the Star Citizen organization Sinister Incorporated",
     categories: ["entertainment", "games"], // https://github.com/w3c/manifest/wiki/Categories
-    scope: env.BASE_URL, // Will open links outside the app in the browser
-    start_url: `${env.BASE_URL}/app`,
+    scope: env.NEXT_PUBLIC_BASE_URL, // Will open links outside the app in the browser
+    start_url: `${env.NEXT_PUBLIC_BASE_URL}/app`,
     shortcuts: [
       // Can't be individualized based on permissions
       {

@@ -39,19 +39,6 @@ export const env = createEnv({
     UNLEASH_SERVER_API_URL: z.url().optional(),
     /** Unleash (or any other Unleash-compatible feature flag provider like GitLab) */
     UNLEASH_SERVER_API_TOKEN: z.string().optional(),
-    BASE_URL: z.preprocess(
-      // Uses VERCEL_URL if BASE_URL is not set, e.g. on Vercel's preview deployments
-      (str) => {
-        if (str) {
-          return str;
-        } else if (process.env.VERCEL_URL) {
-          return `https://${process.env.VERCEL_URL}`;
-        }
-
-        return "http://localhost:3000";
-      },
-      z.url(),
-    ),
     COMMIT_SHA: z.preprocess(
       // Uses VERCEL_GIT_COMMIT_SHA if COMMIT_SHA is not set
       (str) => str || process.env.VERCEL_GIT_COMMIT_SHA,
@@ -111,6 +98,19 @@ export const env = createEnv({
       },
       z.string(),
     ),
+    NEXT_PUBLIC_BASE_URL: z.preprocess(
+      // Uses VERCEL_URL if BASE_URL is not set, e.g. on Vercel's preview deployments
+      (str) => {
+        if (str) {
+          return str;
+        } else if (process.env.VERCEL_URL) {
+          return `https://${process.env.VERCEL_URL}`;
+        }
+
+        return "http://localhost:3000";
+      },
+      z.url(),
+    ),
   },
 
   /*
@@ -143,7 +143,7 @@ export const env = createEnv({
     COMMIT_SHA: process.env.COMMIT_SHA,
     NEXT_PUBLIC_CARE_BEAR_SHOOTER_BUILD_URL:
       process.env.NEXT_PUBLIC_CARE_BEAR_SHOOTER_BUILD_URL,
-    BASE_URL: process.env.BASE_URL,
+    NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
     AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
     AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
     AWS_EVENT_BUS_ARN: process.env.AWS_EVENT_BUS_ARN,

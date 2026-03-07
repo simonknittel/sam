@@ -13,7 +13,7 @@ import superjson from "superjson";
 
 const getBaseUrl = () => {
   if (typeof window !== "undefined") return ""; // browser should use relative url
-  return env.BASE_URL;
+  return env.NEXT_PUBLIC_BASE_URL; // SSR should use the provided BASE_URL
 };
 
 /** A set of type-safe react-query hooks for your tRPC API. */

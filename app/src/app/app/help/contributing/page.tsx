@@ -94,7 +94,7 @@ export default async function Page() {
       <div className="flex-1 flex flex-col gap-2">
         <section className="bg-secondary rounded-primary p-4">
           <SectionHeading
-            url={`${env.BASE_URL}/app/help/contributing#mithilfe`}
+            url={`${env.NEXT_PUBLIC_BASE_URL}/app/help/contributing#mithilfe`}
             level={1}
             className="mb-4"
           >
@@ -117,7 +117,7 @@ export default async function Page() {
 
         <section className="bg-secondary rounded-primary p-4">
           <SectionHeading
-            url={`${env.BASE_URL}/app/help/contributing#arten-der-mithilfe`}
+            url={`${env.NEXT_PUBLIC_BASE_URL}/app/help/contributing#arten-der-mithilfe`}
             className="mb-4"
           >
             Arten der Mithilfe
@@ -156,7 +156,7 @@ export default async function Page() {
 
         <section className="mt-[2px] bg-secondary rounded-primary p-4">
           <SectionHeading
-            url={`${env.BASE_URL}/app/help/contributing#integrierte-apps`}
+            url={`${env.NEXT_PUBLIC_BASE_URL}/app/help/contributing#integrierte-apps`}
             className="mb-4"
           >
             Integrierte Apps
@@ -180,7 +180,7 @@ export default async function Page() {
 
         <section className="mt-[2px] bg-secondary rounded-primary p-4">
           <SectionHeading
-            url={`${env.BASE_URL}/app/help/contributing#externe-apps`}
+            url={`${env.NEXT_PUBLIC_BASE_URL}/app/help/contributing#externe-apps`}
             className="mb-4"
           >
             Externe Apps
@@ -238,7 +238,7 @@ export default async function Page() {
           </ul>
 
           <SectionHeading
-            url={`${env.BASE_URL}/app/help/contributing#iframe-integration`}
+            url={`${env.NEXT_PUBLIC_BASE_URL}/app/help/contributing#iframe-integration`}
             level={3}
             className="mt-8 mb-4"
           >
@@ -296,7 +296,7 @@ export default async function Page() {
           </RichText>
 
           <SectionHeading
-            url={`${env.BASE_URL}/app/help/contributing#benutzerauthentifizierung-single-sign-on-sso`}
+            url={`${env.NEXT_PUBLIC_BASE_URL}/app/help/contributing#benutzerauthentifizierung-single-sign-on-sso`}
             level={3}
             className="mt-8 mb-4"
           >
@@ -335,7 +335,7 @@ export default async function Page() {
           </RoadmapNote>
 
           <SectionHeading
-            url={`${env.BASE_URL}/app/help/contributing#rest-schnittstellen`}
+            url={`${env.NEXT_PUBLIC_BASE_URL}/app/help/contributing#rest-schnittstellen`}
             level={3}
             className="mt-8 mb-4"
           >
@@ -364,7 +364,7 @@ export default async function Page() {
           </RoadmapNote>
 
           <SectionHeading
-            url={`${env.BASE_URL}/app/help/contributing#webhooks`}
+            url={`${env.NEXT_PUBLIC_BASE_URL}/app/help/contributing#webhooks`}
             level={3}
             className="mt-8 mb-4"
           >
@@ -388,14 +388,14 @@ export default async function Page() {
 
         <section className="mt-[2px] bg-secondary rounded-primary p-4">
           <SectionHeading
-            url={`${env.BASE_URL}/app/help/contributing#frequently-asked-questions-faq`}
+            url={`${env.NEXT_PUBLIC_BASE_URL}/app/help/contributing#frequently-asked-questions-faq`}
             className="mb-4"
           >
             Frequently Asked Questions (FAQ)
           </SectionHeading>
 
           <SectionHeading
-            url={`${env.BASE_URL}/app/help/contributing#bei-wem-melde-ich-mich`}
+            url={`${env.NEXT_PUBLIC_BASE_URL}/app/help/contributing#bei-wem-melde-ich-mich`}
             level={3}
             className="mt-8 mb-4"
           >
@@ -411,7 +411,7 @@ export default async function Page() {
           </RichText>
 
           <SectionHeading
-            url={`${env.BASE_URL}/app/help/contributing#wie-starte-ich`}
+            url={`${env.NEXT_PUBLIC_BASE_URL}/app/help/contributing#wie-starte-ich`}
             level={3}
             className="mt-8 mb-4"
           >
@@ -434,7 +434,7 @@ export default async function Page() {
           </RichText>
 
           <SectionHeading
-            url={`${env.BASE_URL}/app/help/contributing#wie-hoste-ich-meine-app`}
+            url={`${env.NEXT_PUBLIC_BASE_URL}/app/help/contributing#wie-hoste-ich-meine-app`}
             level={3}
             className="mt-8 mb-4"
           >
@@ -452,7 +452,7 @@ export default async function Page() {
           </RichText>
 
           <SectionHeading
-            url={`${env.BASE_URL}/app/help/contributing#wann-verfügbar`}
+            url={`${env.NEXT_PUBLIC_BASE_URL}/app/help/contributing#wann-verfügbar`}
             level={3}
             className="mt-8 mb-4"
           >
