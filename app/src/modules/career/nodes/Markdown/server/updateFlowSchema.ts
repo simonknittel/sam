@@ -12,7 +12,7 @@ export const updateFlowSchema = z.object({
   height: z.number(),
   data: z.object({
     markdown: z.string(),
-    markdownPosition: z.nativeEnum(FlowNodeMarkdownPosition),
+    markdownPosition: z.enum(FlowNodeMarkdownPosition),
     backgroundColor: z.string().optional(),
     backgroundTransparency: z.number().min(0).max(1).optional(),
   }),

@@ -14,7 +14,7 @@ export const updateFlowSchema = z.object({
     role: z.object({
       id: z.cuid(),
     }),
-    roleImage: z.nativeEnum(FlowNodeRoleImage),
+    roleImage: z.enum(FlowNodeRoleImage),
     backgroundColor: z.string().optional(),
     backgroundTransparency: z.number().min(0).max(1).optional(),
     showUnlocked: z.boolean().nullish(),

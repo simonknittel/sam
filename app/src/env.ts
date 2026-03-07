@@ -50,7 +50,7 @@ export const env = createEnv({
 
         return "http://localhost:3000";
       },
-      z.string().url(),
+      z.url(),
     ),
     COMMIT_SHA: z.preprocess(
       // Uses VERCEL_GIT_COMMIT_SHA if COMMIT_SHA is not set
