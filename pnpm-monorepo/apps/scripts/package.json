@@ -4,12 +4,12 @@
   "type": "module",
   "dependencies": {
     "@sam-monorepo/database": "workspace:*",
-    "algoliasearch": "4.26.0",
+    "algoliasearch": "4.27.0",
     "csv": "6.4.1",
     "date-fns": "4.1.0"
   },
   "devDependencies": {
-    "@types/node": "22.19.11",
+    "@types/node": "22.19.13",
     "tsx": "4.21.0",
     "typescript": "5.9.3"
   }
