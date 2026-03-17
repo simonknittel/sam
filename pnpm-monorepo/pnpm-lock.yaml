@@ -24,14 +24,14 @@ importers:
   apps/lambda:
     dependencies:
       '@aws-sdk/client-dynamodb':
-        specifier: 3.1000.0
-        version: 3.1000.0
+        specifier: 3.1005.0
+        version: 3.1005.0
       '@aws-sdk/client-eventbridge':
-        specifier: 3.1000.0
-        version: 3.1000.0
+        specifier: 3.1005.0
+        version: 3.1005.0
       '@aws-sdk/client-ssm':
-        specifier: 3.1000.0
-        version: 3.1000.0
+        specifier: 3.1005.0
+        version: 3.1005.0
       '@paralleldrive/cuid2':
         specifier: 3.3.0
         version: 3.3.0
@@ -61,8 +61,8 @@ importers:
         specifier: 4.17.24
         version: 4.17.24
       '@types/node':
-        specifier: 22.19.13
-        version: 22.19.13
+        specifier: 22.19.15
+        version: 22.19.15
       '@types/web-push':
         specifier: 3.6.4
         version: 3.6.4
@@ -79,8 +79,8 @@ importers:
         specifier: 1.58.2
         version: 1.58.2
       '@types/node':
-        specifier: 22.19.13
-        version: 22.19.13
+        specifier: 22.19.15
+        version: 22.19.15
       dotenv:
         specifier: 17.3.1
         version: 17.3.1
@@ -104,8 +104,8 @@ importers:
         version: 4.1.0
     devDependencies:
       '@types/node':
-        specifier: 22.19.13
-        version: 22.19.13
+        specifier: 22.19.15
+        version: 22.19.15
       tsx:
         specifier: 4.21.0
         version: 4.21.0
@@ -126,8 +126,8 @@ importers:
         version: 4.3.6
     devDependencies:
       '@types/node':
-        specifier: 22.19.13
-        version: 22.19.13
+        specifier: 22.19.15
+        version: 22.19.15
       prisma:
         specifier: 6.17.1
         version: 6.17.1(typescript@5.9.3)
@@ -195,16 +195,16 @@ packages:
   '@aws-crypto/util@5.2.0':
     resolution: {integrity: sha512-4RkU9EsI6ZpBve5fseQlGNUWKMa1RLPQ1dnjnQoe07ldfIzcsGb5hC5W0Dm7u423KWzawlrpbjXBrXCEv9zazQ==}
 
-  '@aws-sdk/client-dynamodb@3.1000.0':
-    resolution: {integrity: sha512-S0M9ndVgGiupQEX9M6yLIKx2Iw1Z/lnZR1j5guuR76sqteQM6jsQseTJepq0hJ9SGGpzSwMucYJxETQDHsgFhQ==}
+  '@aws-sdk/client-dynamodb@3.1005.0':
+    resolution: {integrity: sha512-lPkeRwkXhXEjyO3YENmxseFMfAQQAjecT9BjohoZqurvceLrqTml94Dt84OYtJpAvAVQua5SK7rOrjk2vEeU5A==}
     engines: {node: '>=20.0.0'}
 
-  '@aws-sdk/client-eventbridge@3.1000.0':
-    resolution: {integrity: sha512-1Nf9rP9pi0Y/oyEIr9t5lEYLWaeaC/9FdmcmjD9dPY6ZGzLZFlXhPMOrwXyqy+1UEtAnhyRrsiFIVaXRZOa/CA==}
+  '@aws-sdk/client-eventbridge@3.1005.0':
+    resolution: {integrity: sha512-7q5VlfqOONhUqvWlL3SHr/mr8qABvVZKU+qd7BWRF7YOkgSAh7jZiyt9u3w5tQin1MZBsWPwI3J7eD2RJnfTaA==}
     engines: {node: '>=20.0.0'}
 
-  '@aws-sdk/client-ssm@3.1000.0':
-    resolution: {integrity: sha512-pqxpsNEs2UTcyyzDdSXl9oTmLeiFQVQq7N2UEEGP5ItBdBnULrBN++9t/DhNfOZNENddDNJcuCslvoYKJ7wVcQ==}
+  '@aws-sdk/client-ssm@3.1005.0':
+    resolution: {integrity: sha512-4+fEslOguhf9Oc4CDOk1OAJFFoNTWyXYUwFxPwaBMp6xpEhBjztYBImYYve++2OC4Zqg7o8uK+G8MYb5090ncg==}
     engines: {node: '>=20.0.0'}
 
   '@aws-sdk/core@3.973.19':
@@ -731,8 +731,8 @@ packages:
   '@types/lodash@4.17.24':
     resolution: {integrity: sha512-gIW7lQLZbue7lRSWEFql49QJJWThrTFFeIMJdp3eH4tKoxm1OvEPg02rm4wCCSHS0cL3/Fizimb35b7k8atwsQ==}
 
-  '@types/node@22.19.13':
-    resolution: {integrity: sha512-akNQMv0wW5uyRpD2v2IEyRSZiR+BeGuoB6L310EgGObO44HSMNT8z1xzio28V8qOrgYaopIDNA18YgdXd+qTiw==}
+  '@types/node@22.19.15':
+    resolution: {integrity: sha512-F0R/h2+dsy5wJAUe3tAU6oqa2qbWY5TpNfL/RGmo1y38hiyO1w3x2jPtt76wmuaJI4DQnOBu21cNXQ2STIUUWg==}
 
   '@types/web-push@3.6.4':
     resolution: {integrity: sha512-GnJmSr40H3RAnj0s34FNTcJi1hmWFV5KXugE0mYWnYhgTAHLJ/dJKAwDmvPJYMke0RplY2XE9LnM4hqSqKIjhQ==}
@@ -1234,7 +1234,7 @@ snapshots:
       '@smithy/util-utf8': 2.3.0
       tslib: 2.8.1
 
-  '@aws-sdk/client-dynamodb@3.1000.0':
+  '@aws-sdk/client-dynamodb@3.1005.0':
     dependencies:
       '@aws-crypto/sha256-browser': 5.2.0
       '@aws-crypto/sha256-js': 5.2.0
@@ -1281,7 +1281,7 @@ snapshots:
     transitivePeerDependencies:
       - aws-crt
 
-  '@aws-sdk/client-eventbridge@3.1000.0':
+  '@aws-sdk/client-eventbridge@3.1005.0':
     dependencies:
       '@aws-crypto/sha256-browser': 5.2.0
       '@aws-crypto/sha256-js': 5.2.0
@@ -1326,7 +1326,7 @@ snapshots:
     transitivePeerDependencies:
       - aws-crt
 
-  '@aws-sdk/client-ssm@3.1000.0':
+  '@aws-sdk/client-ssm@3.1005.0':
     dependencies:
       '@aws-crypto/sha256-browser': 5.2.0
       '@aws-crypto/sha256-js': 5.2.0
@@ -2112,17 +2112,17 @@ snapshots:
 
   '@types/cls-hooked@4.3.9':
     dependencies:
-      '@types/node': 22.19.13
+      '@types/node': 22.19.15
 
   '@types/lodash@4.17.24': {}
 
-  '@types/node@22.19.13':
+  '@types/node@22.19.15':
     dependencies:
       undici-types: 6.21.0
 
   '@types/web-push@3.6.4':
     dependencies:
-      '@types/node': 22.19.13
+      '@types/node': 22.19.15
 
   agent-base@7.1.4: {}
 
