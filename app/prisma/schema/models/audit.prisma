@@ -1,3 +1,4 @@
+// TODO: Add createdBy field. Use null for system events. Migrate existing events to populate createdBy if possible. Add an index on createdBy.
 model AuditEvent {
   id        String   @id @default(cuid(2))
   createdAt DateTime @default(now())
