@@ -119,6 +119,7 @@ export const authOptions: NextAuthOptions = {
               data: {
                 userId: user.id,
               },
+              createdById: user.id,
             },
           ]);
         } catch (error) {
@@ -327,6 +328,7 @@ export const authOptions: NextAuthOptions = {
           data: {
             userId: message.user.id,
           },
+          createdById: message.user.id,
         },
       ]);
     },
@@ -341,6 +343,8 @@ export const authOptions: NextAuthOptions = {
             // @ts-expect-error The `id` DOES exist. However, I'm not going to fix the type for any auth related things due to the pending migration off of NextAuth.js
             userId: message.session.userId,
           },
+          // @ts-expect-error The `id` DOES exist. However, I'm not going to fix the type for any auth related things due to the pending migration off of NextAuth.js
+          createdById: message.session.userId,
         },
       ]);
     },
