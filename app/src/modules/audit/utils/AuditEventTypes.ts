@@ -3,6 +3,7 @@ export enum AuditEventType {
   USER_LOGIN_V2 = "USER_LOGIN_V2",
   USER_LOGOUT = "USER_LOGOUT",
   USER_FIRST_VISIT_OF_THE_DAY = "USER_FIRST_VISIT_OF_THE_DAY",
+  USER_FIRST_VISIT_OF_THE_DAY_V2 = "USER_FIRST_VISIT_OF_THE_DAY_V2",
   SHIP_CREATED = "SHIP_CREATED",
   SHIP_UPDATED = "SHIP_UPDATED",
   SHIP_DELETED = "SHIP_DELETED",
@@ -103,6 +104,12 @@ export interface AuditEventDataByType {
 
   [AuditEventType.USER_FIRST_VISIT_OF_THE_DAY]: {
     userId: string;
+  };
+
+  [AuditEventType.USER_FIRST_VISIT_OF_THE_DAY_V2]: {
+    userId: string;
+    userEmail?: string | null;
+    userName?: string | null;
   };
 
   [AuditEventType.SHIP_CREATED]: {
@@ -610,6 +617,15 @@ export const AuditEventDefinitions: {
     type: AuditEventType.USER_FIRST_VISIT_OF_THE_DAY,
     data: {
       userId: "string",
+    },
+  },
+
+  [AuditEventType.USER_FIRST_VISIT_OF_THE_DAY_V2]: {
+    type: AuditEventType.USER_FIRST_VISIT_OF_THE_DAY_V2,
+    data: {
+      userId: "string",
+      userEmail: "string",
+      userName: "string",
     },
   },
 

@@ -115,9 +115,11 @@ export const authOptions: NextAuthOptions = {
 
           await createAuditEvents([
             {
-              type: AuditEventType.USER_FIRST_VISIT_OF_THE_DAY,
+              type: AuditEventType.USER_FIRST_VISIT_OF_THE_DAY_V2,
               data: {
                 userId: user.id,
+                userEmail: user.email,
+                userName: user.name,
               },
               createdById: user.id,
             },
