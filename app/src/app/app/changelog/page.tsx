@@ -34,8 +34,6 @@ import { type ReactNode } from "react";
 import { AiFillAppstore } from "react-icons/ai";
 import { FaCalendar, FaCopy } from "react-icons/fa";
 
-// Lorem ipsum
-
 export default async function Page() {
   const authentication = await requireAuthenticationPage("/app/changelog");
   const [showLogAnalyzer, showManageRoles, showUserRead, showGlobalStatistics] =
