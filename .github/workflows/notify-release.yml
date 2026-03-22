@@ -12,7 +12,9 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Log event
-        run: echo "${{ toJson(github.event) }}"
+        run: |
+          echo "Event name: ${{ github.event_name }}"
+          echo "Event payload:${{ toJson(github.event) }}"
 
   preannounce_release:
     name: Pre-announce Release
