@@ -29,7 +29,9 @@ export const NewReleaseToast = () => {
         {
           id: releaseToastId,
           duration: Infinity,
-          icon: <FaSpinner className="flex-none animate-spin text-brand-red-500" />,
+          icon: (
+            <FaSpinner className="flex-none animate-spin text-brand-red-500" />
+          ),
           className: "gap-2 [&>div[role='status']]:m-0! pointer-events-none",
         },
       );
