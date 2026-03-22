@@ -12,6 +12,7 @@ export interface AuditEventDataByType {
   };
 
   [AuditEventType.USER_LOGOUT]: {
+    sessionId: string;
     userId: string;
   };
 
@@ -49,6 +50,7 @@ export const AuditEventDefinitions: {
   [AuditEventType.USER_LOGOUT]: {
     type: AuditEventType.USER_LOGOUT,
     data: {
+      sessionId: "string",
       userId: "string",
     },
   },
