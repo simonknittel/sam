@@ -1,9 +1,6 @@
 name: Notify release
 
 on:
-  push:
-    branches:
-      - main
   deployment_status:
 
 jobs:
@@ -16,49 +13,9 @@ jobs:
           echo "Event name: ${{ github.event_name }}"
           echo "Event payload:${{ toJson(github.event) }}"
 
-  preannounce_release:
-    name: Pre-announce Release
+  send_event:
+    name: Send event
     if: >-
-      github.event_name == 'push' &&
-      github.ref == 'refs/heads/main'
-    runs-on: ubuntu-24.04
-    environment: Production
-    permissions:
-      contents: read
-    steps:
-      - name: Send event
-        env:
-          HOST: ${{ vars.SOKETI_HOST }}
-          APP_ID: ${{ vars.SOKETI_APP_ID }}
-          APP_KEY: ${{ vars.SOKETI_APP_KEY }}
-          APP_SECRET: ${{ secrets.SOKETI_APP_SECRET }}
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          for var in HOST APP_ID APP_KEY APP_SECRET; do
-            if [ -z "${!var:-}" ]; then
-              echo "Missing required environment variable: $var" >&2
-              exit 1
-            fi
-          done
-
-          BODY='{"name":"deploying","channels":["releases"],"data":"{}"}'
-          BODY_MD5=$(printf '%s' "$BODY" | md5sum | awk '{print $1}')
-          TIMESTAMP=$(date -u +%s)
-
-          QUERY_BASE="auth_key=${APP_KEY}&auth_timestamp=${TIMESTAMP}&auth_version=1.0&body_md5=${BODY_MD5}"
-          STRING_TO_SIGN=$'POST\n/apps/'"${APP_ID}"$'/events\n'"${QUERY_BASE}"
-          SIGNATURE=$(printf '%s' "$STRING_TO_SIGN" | openssl dgst -sha256 -hmac "$APP_SECRET" -binary | xxd -p -c 256)
-
-          curl -X POST "${HOST}/apps/${APP_ID}/events?${QUERY_BASE}&auth_signature=${SIGNATURE}" \
-            -H "Content-Type: application/json" \
-            -d "$BODY"
-
-  announce_release:
-    name: Announce Release
-    if: >-
-      github.event_name == 'deployment_status' &&
       github.event.deployment.environment == 'Production' &&
       github.event.deployment_status.state == 'success' &&
       github.event.deployment.creator.login == 'vercel[bot]' &&
