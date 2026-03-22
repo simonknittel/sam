@@ -21,7 +21,9 @@ export const NewReleaseToast = () => {
       toast.loading(
         () => (
           <div className="flex gap-2">
-            <p>In wenigen Minuten wird eine neue Version vom SAM veröffentlicht.</p>
+            <p>
+              In wenigen Minuten wird eine neue Version vom SAM veröffentlicht.
+            </p>
           </div>
         ),
         {
