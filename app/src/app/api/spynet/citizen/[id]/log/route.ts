@@ -1,4 +1,6 @@
 import { prisma } from "@/db";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import { confirmLog } from "@/modules/citizen/utils/confirmLog";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
@@ -147,6 +149,18 @@ export async function POST(request: Request, props: { params: Params }) {
         attributes: true,
       },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.ENTITY_LOG_CREATED,
+        data: {
+          entityId: item.entityId,
+          logId: item.id,
+          logType: item.type,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     if (data.confirmed) await confirmLog(item, "confirmed");
 

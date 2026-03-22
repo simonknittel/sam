@@ -1,4 +1,6 @@
 import { prisma } from "@/db";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import { updateActiveMembership } from "@/modules/organizations/utils/updateActiveMembership";
@@ -81,6 +83,17 @@ export async function DELETE(request: Request, props: { params: Params }) {
         },
       },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.ORGANIZATION_MEMBERSHIP_REMOVED,
+        data: {
+          organizationId: paramsData.organizationId,
+          citizenId: paramsData.citizenId,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Update ActiveOrganizationMembership

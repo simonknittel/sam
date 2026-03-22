@@ -1,6 +1,8 @@
 "use server";
 
 import { prisma } from "@/db";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationAction } from "@/modules/auth/server";
 import { serverActionErrorHandler } from "@/modules/common/actions/serverActionErrorHandler";
 import type { ServerAction } from "@/modules/common/actions/types";
@@ -53,6 +55,17 @@ export const updateVariant: ServerAction = async (formData) => {
       data.tagValues,
     );
 
+    const existingVariant = await prisma.variant.findUnique({
+      where: {
+        id,
+      },
+      select: {
+        name: true,
+        status: true,
+      },
+    });
+    if (!existingVariant) throw new Error("Not found");
+
     const updatedItem = await prisma.variant.update({
       where: {
         id,
@@ -68,6 +81,21 @@ export const updateVariant: ServerAction = async (formData) => {
         series: true,
       },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.VARIANT_UPDATED,
+        data: {
+          variantId: updatedItem.id,
+          seriesId: updatedItem.seriesId,
+          previousName: existingVariant.name,
+          newName: updatedItem.name,
+          previousStatus: existingVariant.status,
+          newStatus: updatedItem.status,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Revalidate cache(s)

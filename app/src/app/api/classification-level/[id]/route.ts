@@ -1,4 +1,6 @@
 import { prisma } from "@/db";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import { NextResponse } from "next/server";
@@ -35,12 +37,34 @@ export async function PATCH(request: Request, props: { params: Params }) {
     /**
      * Do the thing
      */
+    const existingItem = await prisma.classificationLevel.findUnique({
+      where: {
+        id: paramsData.id,
+      },
+      select: {
+        name: true,
+      },
+    });
+    if (!existingItem) throw new Error("Not found");
+
     const item = await prisma.classificationLevel.update({
       where: {
         id: paramsData.id,
       },
       data,
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.CLASSIFICATION_LEVEL_UPDATED,
+        data: {
+          classificationLevelId: item.id,
+          previousName: existingItem.name,
+          newName: item.name,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Respond with the result
@@ -73,11 +97,22 @@ export async function DELETE(request: Request, props: { params: Params }) {
     /**
      * Do the thing
      */
-    await prisma.classificationLevel.delete({
+    const deletedItem = await prisma.classificationLevel.delete({
       where: {
         id: paramsData.id,
       },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.CLASSIFICATION_LEVEL_DELETED,
+        data: {
+          classificationLevelId: deletedItem.id,
+          name: deletedItem.name,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Respond with the result

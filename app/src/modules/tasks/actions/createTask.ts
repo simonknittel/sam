@@ -1,6 +1,8 @@
 "use server";
 
 import { prisma } from "@/db";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationAction } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
@@ -238,6 +240,18 @@ export const createTask = async (formData: FormData) => {
           requestPayload: formData,
         };
     }
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.TASK_CREATED,
+        data: {
+          taskIds: createdTasks.map((task) => task.id),
+          visibility: result.data.visibility,
+          rewardType: result.data.rewardType,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Trigger notifications

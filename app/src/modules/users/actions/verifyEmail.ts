@@ -2,6 +2,8 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -37,6 +39,16 @@ export const verifyEmailAction = createAuthenticatedAction(
           emailVerified: new Date(),
         },
       }),
+    ]);
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.EMAIL_VERIFIED,
+        data: {
+          userId: data.userId,
+        },
+        createdById: authentication.session.user.id,
+      },
     ]);
 
     /**

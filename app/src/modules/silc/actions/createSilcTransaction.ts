@@ -1,6 +1,8 @@
 "use server";
 
 import { prisma } from "@/db";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationAction } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
@@ -69,6 +71,21 @@ export const createSilcTransaction = async (formData: FormData) => {
           id: true,
         },
       });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.SILC_TRANSACTION_CREATED,
+        data: {
+          transactionIds: createdSilcTransactions.map(
+            (transaction) => transaction.id,
+          ),
+          receiverIds: result.data.receiverIds,
+          value: result.data.value,
+          description: result.data.description,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Update citizens' balances

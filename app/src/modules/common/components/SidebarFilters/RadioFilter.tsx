@@ -32,11 +32,11 @@ export const RadioFilter = ({
   });
 
   const setValueAndResetPagination = useCallback(
-    (newValue: string) => {
-      setValue(newValue);
+    async (newValue: string) => {
+      await setValue(newValue);
 
       if (resetCursorPagination) {
-        setPagination({
+        await setPagination({
           cursor: null,
           direction: null,
         });

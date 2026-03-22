@@ -1,6 +1,8 @@
 "use server";
 
 import { prisma } from "@/db";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationAction } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
 import { getTranslations } from "next-intl/server";
@@ -47,6 +49,12 @@ export const updateRoleInheritance = async (
     /**
      * Update role
      */
+    await prisma.role.findUnique({
+      where: {
+        id: result.data.id,
+      },
+    });
+
     await prisma.role.update({
       where: {
         id: result.data.id,
@@ -57,6 +65,16 @@ export const updateRoleInheritance = async (
         },
       },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.ROLE_INHERITANCE_UPDATED,
+        data: {
+          roleId: result.data.id,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Revalidate cache(s)

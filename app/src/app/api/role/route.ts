@@ -1,4 +1,6 @@
 import { prisma } from "@/db";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import { NextResponse } from "next/server";
@@ -28,6 +30,17 @@ export async function POST(request: Request) {
     const item = await prisma.role.create({
       data,
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.ROLE_CREATED,
+        data: {
+          roleId: item.id,
+          name: item.name,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Respond with the result

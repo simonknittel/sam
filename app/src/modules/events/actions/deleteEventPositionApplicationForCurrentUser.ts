@@ -2,6 +2,8 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
@@ -55,6 +57,19 @@ export const deleteEventPositionApplicationForCurrentUser =
           },
         },
       });
+
+      await createAuditEvents([
+        {
+          type: AuditEventType.EVENT_POSITION_APPLICATION_DELETED,
+          data: {
+            eventId: deletedApplication.position.event.id,
+            positionId: deletedApplication.positionId,
+            citizenId: deletedApplication.citizenId,
+            applicationId: deletedApplication.id,
+          },
+          createdById: authentication.session.user.id,
+        },
+      ]);
 
       /**
        * Revalidate cache(s)

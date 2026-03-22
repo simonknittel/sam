@@ -1,5 +1,7 @@
 import { prisma } from "@/db";
 import { saveObject } from "@/modules/algolia";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import { scrapeOrganizationLogo } from "@/modules/common/utils/scrapeOrganizationLogo";
@@ -93,6 +95,18 @@ export async function POST(request: Request) {
         name: true,
       },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.ORGANIZATION_CREATED,
+        data: {
+          organizationId: createdOrganization.id,
+          spectrumId: createdOrganization.spectrumId,
+          name: createdOrganization.name,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Add new organization to Algolia

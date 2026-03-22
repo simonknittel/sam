@@ -117,7 +117,7 @@ export const AlertDialogAction = (props: AlertDialogActionProps) => {
   return (
     <AlertDialogPrimitive.Action
       className={clsx(
-        "flex items-center justify-center rounded-secondary uppercase gap-4 min-h-11 py-2 text-base font-bold bg-brand-red-500 text-neutral-50 px-6",
+        "flex items-center justify-center rounded-secondary uppercase gap-4 min-h-11 py-2 text-base font-bold bg-brand-red-500 text-neutral-50 px-6 enabled:cursor-pointer",
         {
           "enabled:hover:bg-brand-red-300 enabled:active:bg-brand-red-300":
             !disabled,
@@ -152,7 +152,7 @@ export const AlertDialogCancel = ({
 }: AlertDialogCancelProps) => (
   <AlertDialogPrimitive.Cancel
     className={clsx(
-      "flex items-center justify-center rounded-secondary uppercase gap-4 min-h-11 py-2 border text-base border-brand-red-500 text-brand-red-500 enabled:hover:border-brand-red-300 enabled:active:border-brand-red-300 enabled:hover:text-brand-red-300 enabled:active:text-brand-red-300 px-6 mt-2 sm:mt-0",
+      "flex items-center justify-center rounded-secondary uppercase gap-4 min-h-11 py-2 border text-base border-brand-red-500 text-brand-red-500 enabled:hover:border-brand-red-300 enabled:active:border-brand-red-300 enabled:hover:text-brand-red-300 enabled:active:text-brand-red-300 px-6 mt-2 sm:mt-0 enabled:cursor-pointer",
       className,
     )}
     {...props}

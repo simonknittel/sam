@@ -2,6 +2,8 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { RoleAssignmentChangeType } from "@prisma/client";
 import { refresh } from "next/cache";
 import { z } from "zod";
@@ -57,6 +59,17 @@ export const deleteRoleAssignment = createAuthenticatedAction(
           createdById: authentication.session.entity.id,
         },
       }),
+    ]);
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.ROLE_ASSIGNMENT_DELETED,
+        data: {
+          citizenId: data.citizenId,
+          roleId: data.roleId,
+        },
+        createdById: authentication.session.user.id,
+      },
     ]);
 
     refresh();

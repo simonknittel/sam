@@ -1,4 +1,6 @@
 import { prisma } from "@/db";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import { updateActiveMembership } from "@/modules/organizations/utils/updateActiveMembership";
@@ -57,6 +59,18 @@ export async function PATCH(request: Request) {
         },
       },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.ORGANIZATION_MEMBERSHIP_CONFIRMED,
+        data: {
+          historyEntryId: membership.id,
+          citizenId: membership.citizenId,
+          confirmed: data.confirmed,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Update ActiveOrganizationMembership

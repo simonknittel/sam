@@ -2,6 +2,8 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { isAllowedToManageEvent } from "../utils/isAllowedToManageEvent";
@@ -55,6 +57,17 @@ export const deleteManager = createAuthenticatedAction(
         },
       },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.EVENT_MANAGER_REMOVED,
+        data: {
+          eventId: event.id,
+          managerId: data.managerId,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Revalidate cache(s)

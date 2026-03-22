@@ -2,6 +2,8 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { getRoles } from "@/modules/roles/queries";
 import { RoleAssignmentChangeType } from "@prisma/client";
@@ -147,6 +149,22 @@ export const updateRoleAssignments = createAuthenticatedAction(
         ];
       }),
     );
+
+    if (filteredChanges.length > 0) {
+      await createAuditEvents([
+        {
+          type: AuditEventType.ROLE_ASSIGNMENTS_UPDATED,
+          data: {
+            citizenId: data.citizenId,
+            changes: filteredChanges.map((change) => ({
+              roleId: change.roleId,
+              enabled: change.enabled,
+            })),
+          },
+          createdById: authentication.session.user.id,
+        },
+      ]);
+    }
 
     /**
      * Trigger notifications

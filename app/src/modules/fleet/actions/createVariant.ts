@@ -1,6 +1,8 @@
 "use server";
 
 import { prisma } from "@/db";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationAction } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
 import { VariantStatus } from "@prisma/client";
@@ -79,6 +81,19 @@ export const createVariant = async (formData: FormData) => {
         series: true,
       },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.VARIANT_CREATED,
+        data: {
+          variantId: createdVariant.id,
+          seriesId: createdVariant.seriesId,
+          name: createdVariant.name,
+          status: createdVariant.status,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Revalidate cache(s)

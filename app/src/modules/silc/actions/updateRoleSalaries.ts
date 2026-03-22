@@ -1,6 +1,8 @@
 "use server";
 
 import { prisma } from "@/db";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationAction } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
 import { getTranslations } from "next-intl/server";
@@ -59,6 +61,16 @@ export const updateRoleSalaries = async (formData: FormData) => {
           value: result.data.values[index],
         })),
       }),
+    ]);
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.SALARY_CONFIG_UPDATED,
+        data: {
+          roleIds: result.data.roleIds,
+        },
+        createdById: authentication.session.user.id,
+      },
     ]);
 
     /**

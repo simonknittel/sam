@@ -1,6 +1,8 @@
 "use server";
 
 import { prisma } from "@/db";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationAction } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
 import { getTranslations } from "next-intl/server";
@@ -24,7 +26,9 @@ export const updateTaskExpiresAt = async (formData: FormData) => {
     /**
      * Authenticate and authorize the request
      */
-    await requireAuthenticationAction("updateTaskExpiresAt");
+    const authentication = await requireAuthenticationAction(
+      "updateTaskExpiresAt",
+    );
 
     /**
      * Validate the request
@@ -69,6 +73,18 @@ export const updateTaskExpiresAt = async (formData: FormData) => {
         expiresAt: result.data.expiresAt,
       },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.TASK_EXPIRES_AT_UPDATED,
+        data: {
+          taskId: task.id,
+          previousExpiresAt: task.expiresAt,
+          newExpiresAt: result.data.expiresAt,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Revalidate cache(s)

@@ -2,6 +2,8 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { CyclePhase, getCurrentPhase } from "../utils/getCurrentPhase";
@@ -53,6 +55,16 @@ export const endPayout = createAuthenticatedAction(
         payoutEndedById: authentication.session.entity?.id,
       },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.PROFIT_CYCLE_PAYOUT_ENDED,
+        data: {
+          cycleId: data.id,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Revalidate cache(s)

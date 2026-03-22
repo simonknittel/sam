@@ -2,6 +2,8 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { TaskRewardType } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -56,6 +58,18 @@ export const updateTaskRewardTypeNewSilcValue = createAuthenticatedAction(
         rewardTypeNewSilcValue: data.rewardTypeNewSilcValue,
       },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.TASK_REWARD_NEW_SILC_UPDATED,
+        data: {
+          taskId: task.id,
+          previousValue: task.rewardTypeNewSilcValue,
+          newValue: data.rewardTypeNewSilcValue,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Revalidate cache(s)

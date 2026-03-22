@@ -1,6 +1,8 @@
 "use server";
 
 import { prisma } from "@/db";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationAction } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
 import { getTranslations } from "next-intl/server";
@@ -64,7 +66,9 @@ export const updateEventLineupOrder = async (formData: FormData) => {
     /**
      * Authenticate
      */
-    await requireAuthenticationAction("updateEventLineupOrder");
+    const authentication = await requireAuthenticationAction(
+      "updateEventLineupOrder",
+    );
 
     /**
      * Validate the request
@@ -131,6 +135,16 @@ export const updateEventLineupOrder = async (formData: FormData) => {
     };
     loop(result.data.order);
     await prisma.$transaction(transactions);
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.EVENT_LINEUP_ORDER_CHANGED,
+        data: {
+          eventId: event.id,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Revalidate cache(s)

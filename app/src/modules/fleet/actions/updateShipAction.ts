@@ -1,5 +1,7 @@
 "use server";
 import { prisma } from "@/db";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationAction } from "@/modules/auth/server";
 import { serverActionErrorHandler } from "@/modules/common/actions/serverActionErrorHandler";
 import type { ServerAction } from "@/modules/common/actions/types";
@@ -30,13 +32,44 @@ export const updateShipAction: ServerAction = async (formData) => {
     /**
      * Update
      */
-    await prisma.ship.update({
+    const existingShip = await prisma.ship.findUnique({
+      where: {
+        id,
+        ownerId: authentication.session.user.id,
+      },
+      select: {
+        id: true,
+        ownerId: true,
+        name: true,
+      },
+    });
+    if (!existingShip) throw new Error("Not found");
+
+    const updatedShip = await prisma.ship.update({
       where: {
         id,
         ownerId: authentication.session.user.id,
       },
       data,
+      select: {
+        id: true,
+        ownerId: true,
+        name: true,
+      },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.SHIP_UPDATED,
+        data: {
+          shipId: updatedShip.id,
+          ownerId: updatedShip.ownerId,
+          previousName: existingShip.name,
+          newName: updatedShip.name,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Respond with the result

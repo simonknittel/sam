@@ -1,4 +1,6 @@
 import { prisma } from "@/db";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { getEmailConfirmationToken } from "@/modules/auth/queries";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import { NextResponse, type NextRequest } from "next/server";
@@ -48,6 +50,16 @@ export async function GET(request: NextRequest) {
           emailVerified: new Date(),
         },
       }),
+    ]);
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.EMAIL_VERIFIED_VIA_TOKEN,
+        data: {
+          userId: result.userId,
+        },
+        createdById: result.userId,
+      },
     ]);
 
     return NextResponse.redirect(new URL("/clearance", request.url), {

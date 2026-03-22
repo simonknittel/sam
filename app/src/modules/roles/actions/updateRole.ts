@@ -1,6 +1,8 @@
 "use server";
 
 import { prisma } from "@/db";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationAction } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
 import { getTranslations } from "next-intl/server";
@@ -57,6 +59,21 @@ export const updateRole = async (
     /**
      * Update role
      */
+    const existingRole = await prisma.role.findUnique({
+      where: {
+        id: result.data.id,
+      },
+      select: {
+        name: true,
+        maxAgeDays: true,
+      },
+    });
+    if (!existingRole)
+      return {
+        error: t("Common.notFound"),
+        requestPayload: formData,
+      };
+
     const updatedRole = await prisma.role.update({
       where: {
         id: result.data.id,
@@ -68,6 +85,20 @@ export const updateRole = async (
         // maxLevel: result.data.maxLevel,
       },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.ROLE_UPDATED,
+        data: {
+          roleId: updatedRole.id,
+          previousName: existingRole.name,
+          newName: updatedRole.name,
+          previousMaxAgeDays: existingRole.maxAgeDays ?? null,
+          newMaxAgeDays: updatedRole.maxAgeDays,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Revalidate cache(s)

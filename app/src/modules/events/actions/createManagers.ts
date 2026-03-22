@@ -1,6 +1,8 @@
 "use server";
 
 import { prisma } from "@/db";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationAction } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
 import { getTranslations } from "next-intl/server";
@@ -23,7 +25,7 @@ export const createManagers = async (formData: FormData) => {
     /**
      * Authenticate and authorize the request
      */
-    await requireAuthenticationAction("createManagers");
+    const authentication = await requireAuthenticationAction("createManagers");
 
     /**
      * Validate the request
@@ -75,6 +77,17 @@ export const createManagers = async (formData: FormData) => {
         },
       },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.EVENT_MANAGERS_ASSIGNED,
+        data: {
+          eventId: event.id,
+          managerIds: result.data.managerIds,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Revalidate cache(s)

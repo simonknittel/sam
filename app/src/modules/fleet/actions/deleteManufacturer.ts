@@ -2,6 +2,8 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -27,11 +29,26 @@ export const deleteManufacturer = createAuthenticatedAction(
     /**
      * Delete
      */
-    await prisma.manufacturer.delete({
+    const deletedManufacturer = await prisma.manufacturer.delete({
       where: {
         id: data.id,
       },
+      select: {
+        id: true,
+        name: true,
+      },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.MANUFACTURER_DELETED,
+        data: {
+          manufacturerId: deletedManufacturer.id,
+          name: deletedManufacturer.name,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Revalidate cache(s)
