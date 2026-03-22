@@ -345,7 +345,7 @@ export interface AuditEventDataByType {
 
   [AuditEventType.TASK_DESCRIPTION_UPDATED]: {
     taskId: string;
-    previousDescription: string;
+    previousDescription: string | null;
     newDescription: string;
   };
 
@@ -367,19 +367,19 @@ export interface AuditEventDataByType {
 
   [AuditEventType.TASK_REWARD_TEXT_UPDATED]: {
     taskId: string;
-    previousValue: string;
+    previousValue: string | null;
     newValue: string;
   };
 
   [AuditEventType.TASK_REWARD_SILC_UPDATED]: {
     taskId: string;
-    previousValue: number;
+    previousValue: number | null;
     newValue: number;
   };
 
   [AuditEventType.TASK_REWARD_NEW_SILC_UPDATED]: {
     taskId: string;
-    previousValue: number;
+    previousValue: number | null;
     newValue: number;
   };
 
