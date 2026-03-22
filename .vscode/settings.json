@@ -7,6 +7,7 @@
 		"dbname",
 		"dccache",
 		"dgst",
+		"esac",
 		"esbuild",
 		"fileb",
 		"hashicorp",
