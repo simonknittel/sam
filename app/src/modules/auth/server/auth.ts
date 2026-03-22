@@ -1,5 +1,7 @@
 import { prisma } from "@/db";
 import { env } from "@/env";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import type { PermissionSet } from "@/modules/auth/common";
 import { getPermissionSetsByRoles } from "@/modules/auth/server";
 import { getDiscordAvatar } from "@/modules/discord/utils/getDiscordAvatar";
@@ -100,10 +102,7 @@ export const authOptions: NextAuthOptions = {
       }
 
       // Only update lastSeenAt once a day
-      if (
-        !user.lastSeenAt ||
-        user.lastSeenAt.toDateString() !== new Date().toDateString()
-      ) {
+      if (user.lastSeenAt?.toDateString() !== new Date().toDateString()) {
         try {
           await prisma.user.update({
             where: {
@@ -113,6 +112,15 @@ export const authOptions: NextAuthOptions = {
               lastSeenAt: new Date(),
             },
           });
+
+          await createAuditEvents([
+            {
+              type: AuditEventType.USER_FIRST_VISIT_OF_THE_DAY,
+              data: {
+                userId: user.id,
+              },
+            },
+          ]);
         } catch (error) {
           log.warn("Failed to update user's lastSeenAt", {
             userId: user.id,
@@ -309,6 +317,31 @@ export const authOptions: NextAuthOptions = {
   session: {
     maxAge,
     updateAge: maxAge * 2, // Make sure `updateAge` is bigger than `maxAge` so that the session actually expires at some point and then a refreshed authentication with the identity provider is forced
+  },
+
+  events: {
+    signIn: async (message) => {
+      await createAuditEvents([
+        {
+          type: AuditEventType.USER_LOGIN,
+          data: {
+            userId: message.user.id,
+          },
+        },
+      ]);
+    },
+
+    signOut: async (message) => {
+      await createAuditEvents([
+        {
+          type: AuditEventType.USER_LOGOUT,
+          data: {
+            sessionId: message.session.id,
+            userId: message.session.userId,
+          },
+        },
+      ]);
+    },
   },
 };
 

@@ -51,6 +51,7 @@
     "openai",
     "OPENAI",
     "otlp",
+    "pkey",
     "polaris",
     "postgres",
     "postgresql",

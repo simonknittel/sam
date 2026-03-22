@@ -1,0 +1,8 @@
+model AuditEvent {
+  id        String   @id @default(cuid(2))
+  createdAt DateTime @default(now())
+  type      String
+  data      Json
+
+  @@index([type])
+}

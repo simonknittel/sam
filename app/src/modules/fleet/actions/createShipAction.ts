@@ -1,6 +1,8 @@
 "use server";
 
 import { prisma } from "@/db";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationAction } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
 import { getTranslations } from "next-intl/server";
@@ -42,12 +44,25 @@ export const createShipAction = async (formData: FormData) => {
     /**
      * Assign the ship to the user
      */
-    await prisma.ship.create({
+    const ship = await prisma.ship.create({
       data: {
         ownerId: authentication.session.user.id,
         ...result.data,
       },
+      select: {
+        id: true,
+      },
     });
+    await createAuditEvents([
+      {
+        type: AuditEventType.SHIP_CREATED,
+        data: {
+          shipId: ship.id,
+          ownerId: authentication.session.user.id,
+          variantId: result.data.variantId,
+        },
+      },
+    ]);
 
     /**
      * Revalidate cache(s)

@@ -2,6 +2,8 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -54,8 +56,18 @@ export const subscribeWebPush = createAuthenticatedAction(
       },
       select: {
         id: true,
+        citizenId: true,
       },
     });
+    await createAuditEvents([
+      {
+        type: AuditEventType.WEB_PUSH_SUBSCRIBED,
+        data: {
+          subscriptionId: subscription.id,
+          citizenId: subscription.citizenId,
+        },
+      },
+    ]);
 
     /**
      * Trigger test notification
