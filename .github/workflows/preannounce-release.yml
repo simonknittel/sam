@@ -1,4 +1,4 @@
-name: Notify release
+name: Preannounce release
 
 on:
   push:
