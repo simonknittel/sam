@@ -66,6 +66,7 @@ export const subscribeWebPush = createAuthenticatedAction(
           subscriptionId: subscription.id,
           citizenId: subscription.citizenId,
         },
+        createdById: authentication.session.user.id,
       },
     ]);
 

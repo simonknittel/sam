@@ -61,6 +61,7 @@ export const createShipAction = async (formData: FormData) => {
           ownerId: authentication.session.user.id,
           variantId: result.data.variantId,
         },
+        createdById: authentication.session.user.id,
       },
     ]);
 

@@ -48,6 +48,7 @@ model User {
   emailConfirmationTokens    EmailConfirmationToken[]
   createdVariantTags         VariantTag[]             @relation("createdBy")
   updatedVariantTags         VariantTag[]             @relation("updatedBy")
+  createdAuditEvents         AuditEvent[]             @relation("createdBy")
 }
 
 model VerificationToken {

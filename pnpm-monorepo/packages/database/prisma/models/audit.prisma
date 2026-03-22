@@ -1,8 +1,11 @@
 model AuditEvent {
-  id        String   @id @default(cuid(2))
-  createdAt DateTime @default(now())
-  type      String
-  data      Json
+  id          String   @id @default(cuid(2))
+  createdAt   DateTime @default(now())
+  createdBy   User?    @relation("createdBy", fields: [createdById], references: [id])
+  createdById String?
+  type        String
+  data        Json
 
   @@index([type])
+  @@index([createdById])
 }
