@@ -1,6 +1,8 @@
 "use server";
 
 import { prisma } from "@/db";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationAction } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
 import { getTranslations } from "next-intl/server";
@@ -56,6 +58,23 @@ export const updateSilcTransaction = async (formData: FormData) => {
     /**
      * Update transaction
      */
+    const existingTransaction = await prisma.silcTransaction.findUnique({
+      where: {
+        id: result.data.transactionId,
+      },
+      select: {
+        id: true,
+        value: true,
+        description: true,
+        receiverId: true,
+      },
+    });
+    if (!existingTransaction)
+      return {
+        error: t("Common.notFound"),
+        requestPayload: formData,
+      };
+
     const updatedTransaction = await prisma.silcTransaction.update({
       where: {
         id: result.data.transactionId,
@@ -71,6 +90,22 @@ export const updateSilcTransaction = async (formData: FormData) => {
         },
       },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.SILC_TRANSACTION_UPDATED,
+        data: {
+          transactionId: updatedTransaction.id,
+          previousValue: existingTransaction.value ?? updatedTransaction.value,
+          newValue: updatedTransaction.value,
+          previousDescription:
+            existingTransaction.description ?? updatedTransaction.description,
+          newDescription: updatedTransaction.description,
+          receiverId: updatedTransaction.receiverId,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Update citizens' balances

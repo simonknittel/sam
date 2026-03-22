@@ -324,9 +324,11 @@ export const authOptions: NextAuthOptions = {
     signIn: async (message) => {
       await createAuditEvents([
         {
-          type: AuditEventType.USER_LOGIN,
+          type: AuditEventType.USER_LOGIN_V2,
           data: {
             userId: message.user.id,
+            userEmail: message.user.email,
+            userName: message.user.name,
           },
           createdById: message.user.id,
         },

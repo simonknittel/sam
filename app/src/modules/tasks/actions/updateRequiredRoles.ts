@@ -1,6 +1,8 @@
 "use server";
 
 import { prisma } from "@/db";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationAction } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
 import { getTranslations } from "next-intl/server";
@@ -25,7 +27,9 @@ export const updateRequiredRoles = async (formData: FormData) => {
     /**
      * Authenticate and authorize the request
      */
-    await requireAuthenticationAction("updateRequiredRoles");
+    const authentication = await requireAuthenticationAction(
+      "updateRequiredRoles",
+    );
 
     /**
      * Validate the request
@@ -75,6 +79,16 @@ export const updateRequiredRoles = async (formData: FormData) => {
         hiddenForOtherRoles: result.data.hiddenForOtherRoles,
       },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.TASK_REQUIRED_ROLES_UPDATED,
+        data: {
+          taskId: task.id,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Revalidate cache(s)

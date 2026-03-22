@@ -2,6 +2,8 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -40,6 +42,19 @@ export const deletePenaltyEntry = createAuthenticatedAction(
         },
       },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.PENALTY_ENTRY_DELETED,
+        data: {
+          penaltyEntryId: deletedEntry.id,
+          citizenId: deletedEntry.citizenId,
+          points: deletedEntry.points,
+          reason: deletedEntry.reason,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Revalidate cache(s)

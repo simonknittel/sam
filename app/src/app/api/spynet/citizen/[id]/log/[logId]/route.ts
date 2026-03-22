@@ -1,4 +1,6 @@
 import { prisma } from "@/db";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import getLatestNoteAttributes from "@/modules/common/utils/getLatestNoteAttributes";
@@ -109,6 +111,18 @@ export async function PATCH(request: Request, props: { params: Params }) {
       ],
     });
 
+    await createAuditEvents([
+      {
+        type: AuditEventType.ENTITY_LOG_UPDATED,
+        data: {
+          entityId: entityLog.entityId,
+          logId: entityLog.id,
+          logType: entityLog.type,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
+
     /**
      * Respond with the result
      */
@@ -197,6 +211,18 @@ export async function DELETE(request: Request, props: { params: Params }) {
         id: paramsData.logId,
       },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.ENTITY_LOG_DELETED,
+        data: {
+          entityId: entityLog.entityId,
+          logId: entityLog.id,
+          logType: entityLog.type,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Update name field of user corresponding use entry

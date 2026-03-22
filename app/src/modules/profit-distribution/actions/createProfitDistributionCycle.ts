@@ -2,6 +2,8 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -52,6 +54,18 @@ export const createProfitDistributionCycle = createAuthenticatedAction(
         createdById: authentication.session.entity.id,
       },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.PROFIT_CYCLE_CREATED,
+        data: {
+          cycleId: created.id,
+          title: created.title,
+          collectionEndedAt: created.collectionEndedAt,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Revalidate cache(s)

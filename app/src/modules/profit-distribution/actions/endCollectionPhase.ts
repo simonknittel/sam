@@ -2,6 +2,8 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { updateCitizensSilcBalances } from "@/modules/silc/utils/updateCitizensSilcBalances";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -96,6 +98,16 @@ export const endCollectionPhase = createAuthenticatedAction(
     await updateCitizensSilcBalances(
       allSilcBalances.map((citizen) => citizen.id),
     );
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.PROFIT_CYCLE_COLLECTION_ENDED,
+        data: {
+          cycleId: data.id,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Revalidate cache(s)

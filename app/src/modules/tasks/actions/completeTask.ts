@@ -1,6 +1,8 @@
 "use server";
 
 import { prisma } from "@/db";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationAction } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
 import { updateCitizensSilcBalances } from "@/modules/silc/utils/updateCitizensSilcBalances";
@@ -286,6 +288,18 @@ export const completeTask = async (formData: FormData) => {
           };
       }
     }
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.TASK_COMPLETED,
+        data: {
+          taskId: task.id,
+          completionistIds: result.data.completionistIds,
+          rewardType: task.rewardType,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Revalidate cache(s)

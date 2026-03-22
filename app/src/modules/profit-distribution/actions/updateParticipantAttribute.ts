@@ -2,6 +2,8 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -153,6 +155,19 @@ export const updateParticipantAttribute = createAuthenticatedAction(
         }),
       ),
     );
+
+    if (changes.length > 0) {
+      await createAuditEvents([
+        {
+          type: AuditEventType.PROFIT_CYCLE_PARTICIPANT_UPDATED,
+          data: {
+            cycleId: data.cycleId,
+            changes,
+          },
+          createdById: authentication.session.user.id,
+        },
+      ]);
+    }
 
     /**
      * Trigger notifications

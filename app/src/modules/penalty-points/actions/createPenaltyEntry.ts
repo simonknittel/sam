@@ -1,6 +1,8 @@
 "use server";
 
 import { prisma } from "@/db";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationAction } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
@@ -76,6 +78,20 @@ export const createPenaltyEntry = async (formData: FormData) => {
         citizenId: true,
       },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.PENALTY_ENTRY_CREATED,
+        data: {
+          penaltyEntryId: createdEntry.id,
+          citizenId: createdEntry.citizenId,
+          points: result.data.points,
+          reason: result.data.reason || null,
+          expiresAt: result.data.expiresAt || null,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Trigger notifications

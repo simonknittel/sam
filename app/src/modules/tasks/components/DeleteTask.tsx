@@ -34,7 +34,7 @@ export const DeleteTask = ({ className, task }: Props) => {
         <AlertDialogTrigger asChild>
           <button
             disabled={isPending}
-            className="text-brand-red-500 hover:text-brand-red-300 flex items-center px-2 h-full"
+            className="text-brand-red-500 hover:text-brand-red-300 flex items-center px-2 h-full enabled:cursor-pointer"
             title="Task löschen"
           >
             <FaTrash />

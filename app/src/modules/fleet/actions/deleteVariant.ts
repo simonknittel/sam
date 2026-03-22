@@ -2,6 +2,8 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -35,6 +37,18 @@ export const deleteVariant = createAuthenticatedAction(
         series: true,
       },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.VARIANT_DELETED,
+        data: {
+          variantId: deletedItem.id,
+          seriesId: deletedItem.seriesId,
+          name: deletedItem.name,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Revalidate cache(s)

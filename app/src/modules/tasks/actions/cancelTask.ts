@@ -2,6 +2,8 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getTaskById } from "../queries";
@@ -55,6 +57,17 @@ export const cancelTask = createAuthenticatedAction(
         },
       },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.TASK_CANCELLED,
+        data: {
+          taskId: task.id,
+          title: task.title,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Revalidate cache(s)

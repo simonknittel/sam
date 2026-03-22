@@ -2,6 +2,8 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -43,6 +45,18 @@ export const updateSingleRolePermission = createAuthenticatedAction(
         },
       });
     }
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.ROLE_PERMISSION_TOGGLED,
+        data: {
+          roleId: data.roleId,
+          permissionString: data.permissionString,
+          enabled: data.checked,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Revalidate cache(s)

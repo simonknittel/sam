@@ -1,5 +1,7 @@
 import { prisma } from "@/db";
 import { deleteObject } from "@/modules/algolia";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import { NextResponse } from "next/server";
@@ -30,11 +32,22 @@ export async function DELETE(request: Request, props: { params: Params }) {
     /**
      * Delete
      */
-    await prisma.entity.delete({
+    const deletedEntity = await prisma.entity.delete({
       where: {
         id: paramsData,
       },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.CITIZEN_DELETED,
+        data: {
+          citizenId: deletedEntity.id,
+          spectrumId: deletedEntity.spectrumId || "",
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     // TODO: Update name field of user corresponding use entry
 

@@ -1,6 +1,8 @@
 "use server";
 
 import { prisma } from "@/db";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationAction } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
 import { getTranslations } from "next-intl/server";
@@ -26,7 +28,9 @@ export const createEventPosition = async (formData: FormData) => {
     /**
      * Authenticate
      */
-    await requireAuthenticationAction("createEventPosition");
+    const authentication = await requireAuthenticationAction(
+      "createEventPosition",
+    );
 
     /**
      * Validate the request
@@ -74,7 +78,7 @@ export const createEventPosition = async (formData: FormData) => {
     /**
      * Create entry
      */
-    await prisma.eventPosition.create({
+    const createdPosition = await prisma.eventPosition.create({
       data: {
         event: {
           connect: {
@@ -102,7 +106,24 @@ export const createEventPosition = async (formData: FormData) => {
             }
           : {}),
       },
+      select: {
+        id: true,
+      },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.EVENT_POSITION_CREATED,
+        data: {
+          eventId: event.id,
+          positionId: createdPosition.id,
+          name: result.data.name,
+          variantIds: result.data.variantIds,
+          parentPositionId: result.data.parentPositionId,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Revalidate cache(s)

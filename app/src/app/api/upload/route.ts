@@ -1,5 +1,7 @@
 import { prisma } from "@/db";
 import { env } from "@/env";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
@@ -43,6 +45,18 @@ export async function POST(request: Request) {
         },
       },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.UPLOAD_CREATED,
+        data: {
+          uploadId: item.id,
+          fileName: item.fileName,
+          mimeType: item.mimeType,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     const presignedUploadUrl = await getPresignedUploadUrl(item.id);
 

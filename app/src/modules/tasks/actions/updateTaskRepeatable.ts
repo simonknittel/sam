@@ -2,6 +2,8 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getTaskById } from "../queries";
@@ -43,6 +45,18 @@ export const updateTaskRepeatable = createAuthenticatedAction(
         repeatable: data.repeatable,
       },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.TASK_REPEATABLE_UPDATED,
+        data: {
+          taskId: task.id,
+          previousRepeatable: task.repeatable,
+          newRepeatable: data.repeatable,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Revalidate cache(s)

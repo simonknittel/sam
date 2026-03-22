@@ -2,6 +2,8 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getTaskById } from "../queries";
@@ -43,6 +45,18 @@ export const updateTaskRewardTypeTextValue = createAuthenticatedAction(
         rewardTypeTextValue: data.rewardTypeTextValue,
       },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.TASK_REWARD_TEXT_UPDATED,
+        data: {
+          taskId: task.id,
+          previousValue: task.rewardTypeTextValue,
+          newValue: data.rewardTypeTextValue,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Revalidate cache(s)

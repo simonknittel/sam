@@ -1,6 +1,8 @@
 "use server";
 
 import { prisma } from "@/db";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationAction } from "@/modules/auth/server";
 import { serverActionErrorHandler } from "@/modules/common/actions/serverActionErrorHandler";
 import type { ServerAction } from "@/modules/common/actions/types";
@@ -38,12 +40,37 @@ export const updateManufacturerAction: ServerAction = async (formData) => {
     /**
      * Update
      */
-    await prisma.manufacturer.update({
+    const existingManufacturer = await prisma.manufacturer.findUnique({
+      where: {
+        id,
+      },
+      select: {
+        name: true,
+        imageId: true,
+      },
+    });
+    if (!existingManufacturer) throw new Error("Not found");
+
+    const updatedManufacturer = await prisma.manufacturer.update({
       where: {
         id,
       },
       data,
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.MANUFACTURER_UPDATED,
+        data: {
+          manufacturerId: updatedManufacturer.id,
+          previousName: existingManufacturer.name,
+          newName: updatedManufacturer.name,
+          previousImageId: existingManufacturer.imageId || null,
+          newImageId: updatedManufacturer.imageId,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Revalidate cache(s)

@@ -2,6 +2,8 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -52,6 +54,17 @@ export const updateEventLineupEnabled = createAuthenticatedAction(
         lineupEnabled: data.value,
       },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.EVENT_LINEUP_STATUS_CHANGED,
+        data: {
+          eventId: event.id,
+          enabled: data.value,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Trigger notifications

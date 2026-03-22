@@ -2,6 +2,8 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
@@ -25,6 +27,21 @@ export const deleteRole = createAuthenticatedAction(
     /**
      * Update role
      */
+    const roleToDelete = await prisma.role.findUnique({
+      where: {
+        id: data.id,
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+    if (!roleToDelete)
+      return {
+        error: t("Common.notFound"),
+        requestPayload: formData,
+      };
+
     await prisma.$transaction([
       prisma.role.delete({
         where: {
@@ -39,6 +56,17 @@ export const deleteRole = createAuthenticatedAction(
           },
         },
       }),
+    ]);
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.ROLE_DELETED,
+        data: {
+          roleId: data.id,
+          name: roleToDelete.name,
+        },
+        createdById: authentication.session.user.id,
+      },
     ]);
 
     /**

@@ -2,6 +2,8 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getTaskById } from "../queries";
@@ -52,6 +54,17 @@ export const deleteTask = createAuthenticatedAction(
         },
       },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.TASK_DELETED,
+        data: {
+          taskId: task.id,
+          title: task.title,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Revalidate cache(s)

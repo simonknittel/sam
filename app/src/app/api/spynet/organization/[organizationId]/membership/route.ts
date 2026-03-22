@@ -1,4 +1,6 @@
 import { prisma } from "@/db";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import {
@@ -145,6 +147,18 @@ export async function POST(request: Request, props: { params: Params }) {
         },
       });
     }
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.ORGANIZATION_MEMBERSHIP_CREATED,
+        data: {
+          organizationId: paramsData.organizationId,
+          citizenId: data.citizenId,
+          type: data.type,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Respond

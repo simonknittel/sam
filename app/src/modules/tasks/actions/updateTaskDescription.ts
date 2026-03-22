@@ -2,6 +2,8 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getTaskById } from "../queries";
@@ -43,6 +45,18 @@ export const updateTaskDescription = createAuthenticatedAction(
         description: data.description,
       },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.TASK_DESCRIPTION_UPDATED,
+        data: {
+          taskId: task.id,
+          previousDescription: task.description,
+          newDescription: data.description,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Revalidate cache(s)

@@ -1,5 +1,7 @@
 import { prisma } from "@/db";
 import { saveObject } from "@/modules/algolia";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import { NextResponse } from "next/server";
@@ -66,6 +68,26 @@ export async function POST(request: Request) {
         entity: true,
       },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.CITIZEN_CREATED,
+        data: {
+          citizenId: item.entityId,
+          spectrumId: data.spectrumId,
+        },
+        createdById: authentication.session.user.id,
+      },
+      {
+        type: AuditEventType.ENTITY_LOG_CREATED,
+        data: {
+          entityId: item.entityId,
+          logId: item.id,
+          logType: item.type,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Add new citizen to Algolia

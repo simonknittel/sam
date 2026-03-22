@@ -2,6 +2,8 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { isAllowedToManagePositions } from "../utils/isAllowedToManagePositions";
@@ -56,6 +58,20 @@ export const resetEventPositionCitizenId = createAuthenticatedAction(
         },
       },
     });
+
+    if (position.citizenId) {
+      await createAuditEvents([
+        {
+          type: AuditEventType.EVENT_POSITION_CITIZEN_REMOVED,
+          data: {
+            eventId: position.event.id,
+            positionId: position.id,
+            previousCitizenId: position.citizenId,
+          },
+          createdById: authentication.session.user.id,
+        },
+      ]);
+    }
 
     /**
      * Revalidate cache(s)

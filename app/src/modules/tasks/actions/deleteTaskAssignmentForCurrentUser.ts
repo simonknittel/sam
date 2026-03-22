@@ -2,6 +2,8 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { TaskVisibility } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -52,6 +54,17 @@ export const deleteTaskAssignmentForCurrentUser = createAuthenticatedAction(
         },
       },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.TASK_SELF_ASSIGNMENT_DELETED,
+        data: {
+          taskId: task.id,
+          citizenId: authentication.session.entity.id,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Revalidate cache(s)

@@ -1,6 +1,8 @@
 "use server";
 
 import { prisma } from "@/db";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationAction } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
 import { getTranslations } from "next-intl/server";
@@ -72,6 +74,16 @@ export const updateRolePermissions = async (
           },
         });
       }),
+    ]);
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.ROLE_PERMISSIONS_UPDATED,
+        data: {
+          roleId: result.data.id,
+        },
+        createdById: authentication.session.user.id,
+      },
     ]);
 
     /**
