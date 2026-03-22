@@ -336,7 +336,9 @@ export const authOptions: NextAuthOptions = {
         {
           type: AuditEventType.USER_LOGOUT,
           data: {
+            // @ts-expect-error The `id` DOES exist. However, I'm not going to fix the type for any auth related things due to the pending migration off of NextAuth.js
             sessionId: message.session.id,
+            // @ts-expect-error The `id` DOES exist. However, I'm not going to fix the type for any auth related things due to the pending migration off of NextAuth.js
             userId: message.session.userId,
           },
         },
