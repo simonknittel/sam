@@ -68,7 +68,8 @@ export interface PermissionSet {
     | "task"
     | "logAnalyzer"
     | "profitDistributionCycle"
-    | "globalStatistics";
+    | "globalStatistics"
+    | "systemLog";
   // TODO: Use ENUM (https://www.prisma.io/docs/concepts/components/prisma-schema/data-model#defining-enums)
   operation:
     | "create"

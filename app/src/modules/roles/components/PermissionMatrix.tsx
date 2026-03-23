@@ -513,6 +513,11 @@ export const STATIC_PERMISSIONS = [
     title: "Globale Statistiken lesen",
     string: "globalStatistics;read",
   },
+  {
+    section: "Sonstiges",
+    title: "System Log lesen",
+    string: "systemLog;read",
+  },
 ];
 
 interface Props {
