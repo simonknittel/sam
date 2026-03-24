@@ -63,8 +63,8 @@ const OtherTab = ({ roles, flows }: Readonly<Props>) => {
           <p className="text-sm text-yellow-500">
             ⚠️ Benutzer mit dieser Berechtigung können vertrauliche
             Informationen und personenbezogene Daten (PII) einsehen. Diese
-            Berechtigung sollte nur einem sehr begrenzten Personenkreis
-            gewährt werden.
+            Berechtigung sollte nur einem sehr begrenzten Personenkreis gewährt
+            werden.
           </p>
         </div>
 
