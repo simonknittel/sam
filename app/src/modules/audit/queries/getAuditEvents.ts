@@ -10,8 +10,8 @@ export const getAuditEvents = cache(
   withTrace(
     "getAuditEvents",
     async (
-      type?: string | null,
-      createdById?: string | null,
+      type?: string[] | null,
+      createdById?: string[] | null,
       cursor?: string | null,
       direction: "next" | "prev" = "next",
     ) => {
@@ -19,8 +19,10 @@ export const getAuditEvents = cache(
       if (!(await authentication.authorize("systemLog", "read"))) forbidden();
 
       const where = {
-        ...(type ? { type } : {}),
-        ...(createdById ? { createdById } : {}),
+        ...(type && type.length > 0 ? { type: { in: type } } : {}),
+        ...(createdById && createdById.length > 0
+          ? { createdById: { in: createdById } }
+          : {}),
       };
 
       const take =

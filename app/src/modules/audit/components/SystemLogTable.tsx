@@ -2,7 +2,12 @@ import { CursorPaginationControls } from "@/modules/common/CursorPagination/Curs
 import { cursorPaginationParsers } from "@/modules/common/CursorPagination/cursorPaginationParsers";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import clsx from "clsx";
-import { createLoader, parseAsString, type SearchParams } from "nuqs/server";
+import {
+  createLoader,
+  parseAsArrayOf,
+  parseAsString,
+  type SearchParams,
+} from "nuqs/server";
 import { getAuditEvents } from "../queries/getAuditEvents";
 import {
   AuditEventDefinitions,
@@ -12,8 +17,8 @@ import {
 const GRID_CLASSES = "grid-cols-[150px_250px_150px_1fr]";
 
 const loadSearchParams = createLoader({
-  type: parseAsString,
-  createdById: parseAsString,
+  type: parseAsArrayOf(parseAsString),
+  createdById: parseAsArrayOf(parseAsString),
   ...cursorPaginationParsers,
 });
 
@@ -65,7 +70,12 @@ export const SystemLogTable = async ({ className, searchParams }: Props) => {
               {events.map((event) => {
                 const definition =
                   AuditEventDefinitions[event.type as AuditEventType];
-                const message = definition.message(JSON.parse(event.data));
+                // TODO: Improve types
+                const message = (
+                  definition as {
+                    message: (data: unknown) => string;
+                  }
+                ).message(event.data as unknown);
 
                 const createdBy = event.createdBy?.name || event.createdBy?.id;
 

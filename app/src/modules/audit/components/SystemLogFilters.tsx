@@ -1,7 +1,7 @@
 "use client";
 
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
-import { RadioFilter } from "@/modules/common/components/SidebarFilters/RadioFilter";
+import { MultiSelectComboboxFilter } from "@/modules/common/components/SidebarFilters/MultiSelectComboboxFilter";
 import clsx from "clsx";
 import { useState } from "react";
 import { FaFilter } from "react-icons/fa";
@@ -21,7 +21,6 @@ export const SystemLogFilters = ({ className, creators }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const typeItems = [
-    { value: "", label: "Alle", default: true },
     ...Object.values(AuditEventType).map((type) => ({
       value: type,
       label: type,
@@ -29,7 +28,6 @@ export const SystemLogFilters = ({ className, creators }: Props) => {
   ];
 
   const creatorItems = [
-    { value: "", label: "Alle", default: true },
     ...creators.map((creator) => ({
       value: creator.id,
       label: creator.name ?? creator.id,
@@ -53,17 +51,19 @@ export const SystemLogFilters = ({ className, creators }: Props) => {
           "hidden md:flex": !isOpen,
         })}
       >
-        <RadioFilter
+        <MultiSelectComboboxFilter
           name="type"
           label="Typ"
           items={typeItems}
+          placeholder="Alle Typen"
           resetCursorPagination
         />
 
-        <RadioFilter
+        <MultiSelectComboboxFilter
           name="createdById"
           label="Erstellt von"
           items={creatorItems}
+          placeholder="Alle Ersteller"
           resetCursorPagination
         />
       </div>
