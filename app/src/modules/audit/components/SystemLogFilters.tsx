@@ -55,7 +55,7 @@ export const SystemLogFilters = ({ className, creators }: Props) => {
           name="type"
           label="Typ"
           items={typeItems}
-          placeholder="Alle Typen"
+          placeholder="Alle"
           resetCursorPagination
         />
 
@@ -63,7 +63,7 @@ export const SystemLogFilters = ({ className, creators }: Props) => {
           name="createdById"
           label="Erstellt von"
           items={creatorItems}
-          placeholder="Alle Ersteller"
+          placeholder="Alle"
           resetCursorPagination
         />
       </div>
