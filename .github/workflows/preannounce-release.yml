@@ -6,15 +6,6 @@ on:
       - main
 
 jobs:
-  logging:
-    name: Log event playload
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Log event
-        run: |
-          echo "Event name: ${{ github.event_name }}"
-          echo "Event payload:${{ toJson(github.event) }}"
-
   send_event:
     name: Send event
     runs-on: ubuntu-24.04
