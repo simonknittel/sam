@@ -16,7 +16,11 @@ import {
   FaTools,
   FaUser,
 } from "react-icons/fa";
-import { FaCodePullRequest, FaScaleBalanced } from "react-icons/fa6";
+import {
+  FaCodePullRequest,
+  FaScaleBalanced,
+  FaTableList,
+} from "react-icons/fa6";
 import { IoIosHelpCircleOutline } from "react-icons/io";
 import { IoDocuments } from "react-icons/io5";
 import { MdEvent, MdTaskAlt, MdWorkspaces } from "react-icons/md";
@@ -83,6 +87,7 @@ export const List = () => {
     careerManagementRead,
     careerTeamRead,
     globalStatisticsRead,
+    systemLogRead,
   ] = [
     authentication.authorize("citizen", "read"),
     authentication.authorize("organization", "read"),
@@ -121,6 +126,7 @@ export const List = () => {
       },
     ]),
     authentication.authorize("globalStatistics", "read"),
+    authentication.authorize("systemLog", "read"),
   ];
   const careerRead =
     careerSecurityRead ||
@@ -143,6 +149,7 @@ export const List = () => {
     globalStatisticsRead,
     penaltyEntryCreate,
     taskRead,
+    systemLogRead,
   };
 
   const menuItems: MenuItem[] = useMemo(
@@ -309,6 +316,14 @@ export const List = () => {
         type: MenuItemType.Link,
         href: "/app/penalty-points",
         authKey: "penaltyEntryCreate",
+      },
+      {
+        id: "system-log",
+        label: "System Log",
+        icon: <FaTableList />,
+        type: MenuItemType.Link,
+        href: "/app/system-log",
+        authKey: "systemLogRead",
       },
       {
         id: "tasks",
