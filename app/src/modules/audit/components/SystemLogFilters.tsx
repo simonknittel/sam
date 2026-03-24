@@ -53,17 +53,17 @@ export const SystemLogFilters = ({ className, creators }: Props) => {
       >
         <MultiSelectComboboxFilter
           name="type"
-          label="Typ"
+          label="TYPE"
           items={typeItems}
-          placeholder="Alle Typen"
+          placeholder="Alle"
           resetCursorPagination
         />
 
         <MultiSelectComboboxFilter
           name="createdById"
-          label="Erstellt von"
+          label="USER"
           items={creatorItems}
-          placeholder="Alle Ersteller"
+          placeholder="Alle"
           resetCursorPagination
         />
       </div>
