@@ -23,7 +23,7 @@ export const SidebarLayout = ({
     <div className={clsx("flex flex-col md:flex-row gap-4", className)}>
       {_sidebar}
 
-      <div className={clsx("md:flex-1", childrenContainerClassName)}>
+      <div className={clsx("md:flex-1 md:min-w-0", childrenContainerClassName)}>
         {children}
       </div>
     </div>

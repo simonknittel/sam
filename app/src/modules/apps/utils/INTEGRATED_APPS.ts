@@ -1,5 +1,4 @@
 import accountScreenshot from "@/modules/account/assets/screenshot.png";
-import auditScreenshot from "@/modules/audit/assets/screenshot.png";
 import avatarCreatorScreenshot from "@/modules/avatar-creator/assets/screenshot.png";
 import careerScreenshot from "@/modules/career/assets/screenshot.png";
 import changelogScreenshot from "@/modules/changelog/assets/screenshot.png";
@@ -162,7 +161,6 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
   {
     name: "System Log",
     href: "/app/system-log",
-    imageSrc: auditScreenshot,
     description: "Systemprotokoll aller Ereignisse",
     permissionStrings: ["systemLog;read"],
   },

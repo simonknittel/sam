@@ -81,7 +81,7 @@ export const CitizenTable = ({
     .join(" ");
 
   return (
-    <table className="w-full min-w-[1200px]">
+    <table className="w-full min-w-300">
       <thead>
         <tr
           className="grid items-center gap-4 text-left text-neutral-500"

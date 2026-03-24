@@ -4,7 +4,7 @@ import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
 
-const AUDIT_EVENTS_PAGE_SIZE = 30;
+const AUDIT_EVENTS_PAGE_SIZE = 50;
 
 export const getAuditEvents = cache(
   withTrace(
@@ -74,8 +74,7 @@ export const getAuditEvents = cache(
           hasNextPage && events.length > 0
             ? events[events.length - 1].id
             : null,
-        prevCursor:
-          hasPrevPage && events.length > 0 ? events[0].id : null,
+        prevCursor: hasPrevPage && events.length > 0 ? events[0].id : null,
       };
     },
   ),

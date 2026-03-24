@@ -49,7 +49,7 @@ export const SystemLogFilters = ({ className, creators }: Props) => {
       </Button2>
 
       <div
-        className={clsx("flex flex-col gap-[2px]", {
+        className={clsx("flex flex-col gap-0.5", {
           "hidden md:flex": !isOpen,
         })}
       >

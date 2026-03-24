@@ -1,11 +1,15 @@
 import { CursorPaginationControls } from "@/modules/common/CursorPagination/CursorPaginationControls";
 import { cursorPaginationParsers } from "@/modules/common/CursorPagination/cursorPaginationParsers";
 import { formatDate } from "@/modules/common/utils/formatDate";
-import { AuditEventDefinitions, type AuditEventType } from "../utils/AuditEventTypes";
-import { getAuditEvents } from "../queries/getAuditEvents";
-import Note from "@/modules/common/components/Note";
-import { createLoader, parseAsString, type SearchParams } from "nuqs/server";
 import clsx from "clsx";
+import { createLoader, parseAsString, type SearchParams } from "nuqs/server";
+import { getAuditEvents } from "../queries/getAuditEvents";
+import {
+  AuditEventDefinitions,
+  type AuditEventType,
+} from "../utils/AuditEventTypes";
+
+const GRID_CLASSES = "grid-cols-[150px_250px_150px_1fr]";
 
 const loadSearchParams = createLoader({
   type: parseAsString,
@@ -33,61 +37,60 @@ export const SystemLogTable = async ({ className, searchParams }: Props) => {
 
   return (
     <div className={clsx("flex flex-col gap-4", className)}>
-      <Note
-        type="info"
-        message="Die Logs werden mit der Zeit detaillierter und besser."
-      />
-
       {events.length === 0 ? (
-        <div className="rounded-primary bg-neutral-800/50 p-4 flex flex-col items-center gap-4">
-          <p>Keine Einträge gefunden</p>
+        <div className="rounded-primary bg-secondary p-4 grid place-content-center">
+          <p>Bisher wurden keine Ereignisse aufgezeichnet.</p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto bg-secondary rounded-primary p-4">
+          <table className="w-full min-w-200 text-sm">
             <thead>
-              <tr className="border-b border-neutral-700 text-left">
-                <th className="pb-2 pr-4 font-medium text-neutral-400 whitespace-nowrap">
-                  Datum &amp; Uhrzeit
-                </th>
-                <th className="pb-2 pr-4 font-medium text-neutral-400 whitespace-nowrap">
-                  Typ
-                </th>
-                <th className="pb-2 pr-4 font-medium text-neutral-400 whitespace-nowrap">
-                  Erstellt von
-                </th>
-                <th className="pb-2 font-medium text-neutral-400">Nachricht</th>
+              <tr
+                className={clsx(
+                  "border-b border-neutral-700 text-left grid gap-2 uppercase font-mono font-bold text-neutral-400 whitespace-nowrap pb-2",
+                  GRID_CLASSES,
+                )}
+              >
+                <th>Date</th>
+
+                <th>Type</th>
+
+                <th>User</th>
+
+                <th>Message</th>
               </tr>
             </thead>
+
             <tbody>
               {events.map((event) => {
                 const definition =
                   AuditEventDefinitions[event.type as AuditEventType];
-                const messageFn = definition?.message as ((d: unknown) => string) | undefined;
-                const message = messageFn ? messageFn(event.data) : null;
+                const message = definition.message(JSON.parse(event.data));
+
+                const createdBy = event.createdBy?.name || event.createdBy?.id;
 
                 return (
                   <tr
                     key={event.id}
-                    className="border-b border-neutral-800 hover:bg-neutral-800/30"
+                    className={clsx(
+                      "border-b border-neutral-800 hover:bg-neutral-800/30 grid gap-2 py-2",
+                      GRID_CLASSES,
+                    )}
                   >
-                    <td className="py-2 pr-4 text-neutral-300 whitespace-nowrap align-top">
+                    <td className="truncate align-top">
                       {formatDate(event.createdAt)}
                     </td>
-                    <td className="py-2 pr-4 font-mono text-xs text-neutral-400 whitespace-nowrap align-top">
+
+                    <td className="truncate align-top font-mono text-xs text-neutral-400">
                       {event.type}
                     </td>
-                    <td className="py-2 pr-4 text-neutral-300 whitespace-nowrap align-top">
-                      {event.createdBy?.name ?? (
-                        <span className="text-neutral-500">–</span>
-                      )}
+
+                    <td title={createdBy} className="align-top truncate">
+                      {createdBy}
                     </td>
-                    <td className="py-2 text-neutral-300 align-top">
-                      {message ?? (
-                        <span className="text-neutral-500 text-xs font-mono">
-                          {JSON.stringify(event.data)}
-                        </span>
-                      )}
+
+                    <td title={message} className="align-top truncate">
+                      {message}
                     </td>
                   </tr>
                 );
@@ -97,11 +100,14 @@ export const SystemLogTable = async ({ className, searchParams }: Props) => {
         </div>
       )}
 
-      <CursorPaginationControls nextCursor={nextCursor} prevCursor={prevCursor} />
+      <CursorPaginationControls
+        nextCursor={nextCursor}
+        prevCursor={prevCursor}
+      />
 
       {isLastPage && events.length > 0 && (
-        <p className="text-center text-sm text-neutral-500 italic">
-          Nur Ereignisse ab dem 22. März 2026 sind verfügbar.
+        <p className="text-center text-sm text-neutral-500">
+          Es werden nur Ereignisse ab dem 22. März 2026 angezeigt.
         </p>
       )}
     </div>

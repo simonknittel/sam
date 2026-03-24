@@ -584,7 +584,7 @@ export interface AuditEventDataByType {
 interface AuditEventDefinition<Type extends AuditEventType> {
   type: Type;
   data: AuditEventDataByType[Type];
-  message?: (data: AuditEventDataByType[Type]) => string;
+  message: (data: AuditEventDataByType[Type]) => string;
 }
 
 export const AuditEventDefinitions: {
@@ -595,7 +595,7 @@ export const AuditEventDefinitions: {
     data: {
       userId: "string",
     },
-    message: (d) => `User ${d.userId} logged in`,
+    message: (data) => `User ${data.userId} logged in`,
   },
 
   [AuditEventType.USER_LOGIN_V2]: {
@@ -605,7 +605,8 @@ export const AuditEventDefinitions: {
       userEmail: "string",
       userName: "string",
     },
-    message: (d) => `User ${d.userName ?? d.userId} (${d.userEmail ?? "unknown email"}) logged in`,
+    message: (data) =>
+      `User ${data.userName ?? data.userId} (${data.userEmail ?? "unknown email"}) logged in`,
   },
 
   [AuditEventType.USER_LOGOUT]: {
@@ -614,7 +615,7 @@ export const AuditEventDefinitions: {
       sessionId: "string",
       userId: "string",
     },
-    message: (d) => `User ${d.userId} logged out`,
+    message: (data) => `User ${data.userId} logged out`,
   },
 
   [AuditEventType.USER_FIRST_VISIT_OF_THE_DAY]: {
@@ -622,7 +623,7 @@ export const AuditEventDefinitions: {
     data: {
       userId: "string",
     },
-    message: (d) => `User ${d.userId} - first visit of the day`,
+    message: (data) => `User ${data.userId} - first visit of the day`,
   },
 
   [AuditEventType.USER_FIRST_VISIT_OF_THE_DAY_V2]: {
@@ -632,7 +633,8 @@ export const AuditEventDefinitions: {
       userEmail: "string",
       userName: "string",
     },
-    message: (d) => `User ${d.userName ?? d.userId} - first visit of the day`,
+    message: (data) =>
+      `First visit of the day by user ${data.userName} (${data.userId}, ${data.userEmail})`,
   },
 
   [AuditEventType.SHIP_CREATED]: {
@@ -642,7 +644,8 @@ export const AuditEventDefinitions: {
       ownerId: "string",
       variantId: "string",
     },
-    message: (d) => `Ship created (owner: ${d.ownerId}, variant: ${d.variantId})`,
+    message: (data) =>
+      `Ship created (owner: ${data.ownerId}, variant: ${data.variantId})`,
   },
 
   [AuditEventType.SHIP_UPDATED]: {
@@ -653,7 +656,8 @@ export const AuditEventDefinitions: {
       previousName: "string",
       newName: "string",
     },
-    message: (d) => `Ship updated: "${d.previousName}" → "${d.newName}"`,
+    message: (data) =>
+      `Ship updated: "${data.previousName}" → "${data.newName}"`,
   },
 
   [AuditEventType.SHIP_DELETED]: {
@@ -664,7 +668,7 @@ export const AuditEventDefinitions: {
       name: "string",
       variantId: "string",
     },
-    message: (d) => `Ship deleted: "${d.name}" (owner: ${d.ownerId})`,
+    message: (data) => `Ship deleted: "${data.name}" (owner: ${data.ownerId})`,
   },
 
   [AuditEventType.VARIANT_CREATED]: {
@@ -675,7 +679,8 @@ export const AuditEventDefinitions: {
       name: "string",
       status: "FLIGHT_READY",
     },
-    message: (d) => `Variant created: "${d.name}" (series: ${d.seriesId})`,
+    message: (data) =>
+      `Variant created: "${data.name}" (series: ${data.seriesId})`,
   },
 
   [AuditEventType.VARIANT_UPDATED]: {
@@ -688,7 +693,8 @@ export const AuditEventDefinitions: {
       previousStatus: "FLIGHT_READY",
       newStatus: "NOT_FLIGHT_READY",
     },
-    message: (d) => `Variant updated: "${d.previousName}" → "${d.newName}"`,
+    message: (data) =>
+      `Variant updated: "${data.previousName}" → "${data.newName}"`,
   },
 
   [AuditEventType.VARIANT_DELETED]: {
@@ -698,7 +704,8 @@ export const AuditEventDefinitions: {
       seriesId: "string",
       name: "string",
     },
-    message: (d) => `Variant deleted: "${d.name}" (series: ${d.seriesId})`,
+    message: (data) =>
+      `Variant deleted: "${data.name}" (series: ${data.seriesId})`,
   },
 
   [AuditEventType.SERIES_UPDATED]: {
@@ -709,7 +716,8 @@ export const AuditEventDefinitions: {
       previousName: "string",
       newName: "string",
     },
-    message: (d) => `Series updated: "${d.previousName}" → "${d.newName}"`,
+    message: (data) =>
+      `Series updated: "${data.previousName}" → "${data.newName}"`,
   },
 
   [AuditEventType.SERIES_DELETED]: {
@@ -719,7 +727,8 @@ export const AuditEventDefinitions: {
       manufacturerId: "string",
       name: "string",
     },
-    message: (d) => `Series deleted: "${d.name}" (manufacturer: ${d.manufacturerId})`,
+    message: (data) =>
+      `Series deleted: "${data.name}" (manufacturer: ${data.manufacturerId})`,
   },
 
   [AuditEventType.MANUFACTURER_UPDATED]: {
@@ -731,7 +740,8 @@ export const AuditEventDefinitions: {
       previousImageId: "string",
       newImageId: "string",
     },
-    message: (d) => `Manufacturer updated: "${d.previousName}" → "${d.newName}"`,
+    message: (data) =>
+      `Manufacturer updated: "${data.previousName}" → "${data.newName}"`,
   },
 
   [AuditEventType.MANUFACTURER_DELETED]: {
@@ -740,7 +750,7 @@ export const AuditEventDefinitions: {
       manufacturerId: "string",
       name: "string",
     },
-    message: (d) => `Manufacturer deleted: "${d.name}"`,
+    message: (data) => `Manufacturer deleted: "${data.name}"`,
   },
 
   [AuditEventType.WEB_PUSH_SUBSCRIBED]: {
@@ -749,7 +759,8 @@ export const AuditEventDefinitions: {
       subscriptionId: "string",
       citizenId: "string",
     },
-    message: (d) => `Web push subscription created for citizen ${d.citizenId}`,
+    message: (data) =>
+      `Web push subscription created for citizen ${data.citizenId}`,
   },
 
   [AuditEventType.ROLE_CREATED]: {
@@ -758,7 +769,7 @@ export const AuditEventDefinitions: {
       roleId: "string",
       name: "string",
     },
-    message: (d) => `Role created: "${d.name}" (${d.roleId})`,
+    message: (data) => `Role created: "${data.name}" (${data.roleId})`,
   },
 
   [AuditEventType.ROLE_UPDATED]: {
@@ -770,7 +781,8 @@ export const AuditEventDefinitions: {
       previousMaxAgeDays: 0,
       newMaxAgeDays: 0,
     },
-    message: (d) => `Role updated: "${d.previousName}" → "${d.newName}"`,
+    message: (data) =>
+      `Role updated: "${data.previousName}" → "${data.newName}"`,
   },
 
   [AuditEventType.ROLE_DELETED]: {
@@ -779,7 +791,7 @@ export const AuditEventDefinitions: {
       roleId: "string",
       name: "string",
     },
-    message: (d) => `Role deleted: "${d.name}" (${d.roleId})`,
+    message: (data) => `Role deleted: "${data.name}" (${data.roleId})`,
   },
 
   [AuditEventType.ROLE_PERMISSIONS_UPDATED]: {
@@ -787,7 +799,7 @@ export const AuditEventDefinitions: {
     data: {
       roleId: "string",
     },
-    message: (d) => `Permissions updated for role ${d.roleId}`,
+    message: (data) => `Permissions updated for role ${data.roleId}`,
   },
 
   [AuditEventType.ROLE_PERMISSION_TOGGLED]: {
@@ -797,7 +809,8 @@ export const AuditEventDefinitions: {
       permissionString: "string",
       enabled: true,
     },
-    message: (d) => `Permission "${d.permissionString}" ${d.enabled ? "enabled" : "disabled"} for role ${d.roleId}`,
+    message: (data) =>
+      `Permission "${data.permissionString}" ${data.enabled ? "enabled" : "disabled"} for role ${data.roleId}`,
   },
 
   [AuditEventType.ROLE_INHERITANCE_UPDATED]: {
@@ -805,7 +818,7 @@ export const AuditEventDefinitions: {
     data: {
       roleId: "string",
     },
-    message: (d) => `Role inheritance updated for role ${d.roleId}`,
+    message: (data) => `Role inheritance updated for role ${data.roleId}`,
   },
 
   [AuditEventType.ROLE_ASSIGNMENTS_UPDATED]: {
@@ -819,7 +832,7 @@ export const AuditEventDefinitions: {
         },
       ],
     },
-    message: (d) => `Role assignments updated for citizen ${d.citizenId}`,
+    message: (data) => `Role assignments updated for citizen ${data.citizenId}`,
   },
 
   [AuditEventType.ROLE_ASSIGNMENT_DELETED]: {
@@ -828,7 +841,8 @@ export const AuditEventDefinitions: {
       citizenId: "string",
       roleId: "string",
     },
-    message: (d) => `Role assignment deleted for citizen ${d.citizenId} (role: ${d.roleId})`,
+    message: (data) =>
+      `Role assignment deleted for citizen ${data.citizenId} (role: ${data.roleId})`,
   },
 
   [AuditEventType.SILC_TRANSACTION_CREATED]: {
@@ -839,7 +853,7 @@ export const AuditEventDefinitions: {
       value: 0,
       description: "string",
     },
-    message: (d) => `SILC transaction created: ${d.value} SILC`,
+    message: (data) => `SILC transaction created: ${data.value} SILC`,
   },
 
   [AuditEventType.SILC_TRANSACTION_UPDATED]: {
@@ -852,7 +866,8 @@ export const AuditEventDefinitions: {
       newDescription: "string",
       receiverId: "string",
     },
-    message: (d) => `SILC transaction updated: ${d.previousValue} → ${d.newValue} SILC`,
+    message: (data) =>
+      `SILC transaction updated: ${data.previousValue} → ${data.newValue} SILC`,
   },
 
   [AuditEventType.SILC_TRANSACTION_DELETED]: {
@@ -863,7 +878,7 @@ export const AuditEventDefinitions: {
       value: 0,
       description: "string",
     },
-    message: (d) => `SILC transaction deleted (${d.transactionId})`,
+    message: (data) => `SILC transaction deleted (${data.transactionId})`,
   },
 
   [AuditEventType.SALARY_CONFIG_UPDATED]: {
@@ -883,7 +898,8 @@ export const AuditEventDefinitions: {
       reason: "string",
       expiresAt: new Date(),
     },
-    message: (d) => `Penalty entry created for citizen ${d.citizenId} (${d.points} points)`,
+    message: (data) =>
+      `Penalty entry created for citizen ${data.citizenId} (${data.points} points)`,
   },
 
   [AuditEventType.PENALTY_ENTRY_DELETED]: {
@@ -894,7 +910,8 @@ export const AuditEventDefinitions: {
       points: 0,
       reason: "string",
     },
-    message: (d) => `Penalty entry deleted for citizen ${d.citizenId} (${d.points} points)`,
+    message: (data) =>
+      `Penalty entry deleted for citizen ${data.citizenId} (${data.points} points)`,
   },
 
   [AuditEventType.PROFIT_CYCLE_CREATED]: {
@@ -904,7 +921,8 @@ export const AuditEventDefinitions: {
       title: "string",
       collectionEndedAt: new Date(),
     },
-    message: (d) => `Profit distribution cycle created: "${d.title}" (${d.cycleId})`,
+    message: (data) =>
+      `Profit distribution cycle created: "${data.title}" (${data.cycleId})`,
   },
 
   [AuditEventType.PROFIT_CYCLE_COLLECTION_ENDED]: {
@@ -912,7 +930,8 @@ export const AuditEventDefinitions: {
     data: {
       cycleId: "string",
     },
-    message: (d) => `Profit distribution cycle collection ended (${d.cycleId})`,
+    message: (data) =>
+      `Profit distribution cycle collection ended (${data.cycleId})`,
   },
 
   [AuditEventType.PROFIT_CYCLE_PAYOUT_STARTED]: {
@@ -920,7 +939,8 @@ export const AuditEventDefinitions: {
     data: {
       cycleId: "string",
     },
-    message: (d) => `Profit distribution cycle payout started (${d.cycleId})`,
+    message: (data) =>
+      `Profit distribution cycle payout started (${data.cycleId})`,
   },
 
   [AuditEventType.PROFIT_CYCLE_PAYOUT_ENDED]: {
@@ -928,7 +948,8 @@ export const AuditEventDefinitions: {
     data: {
       cycleId: "string",
     },
-    message: (d) => `Profit distribution cycle payout ended (${d.cycleId})`,
+    message: (data) =>
+      `Profit distribution cycle payout ended (${data.cycleId})`,
   },
 
   [AuditEventType.PROFIT_CYCLE_PARTICIPANT_UPDATED]: {
@@ -943,7 +964,8 @@ export const AuditEventDefinitions: {
         },
       ],
     },
-    message: (d) => `Profit cycle participant updated (cycle: ${d.cycleId})`,
+    message: (data) =>
+      `Profit cycle participant updated (cycle: ${data.cycleId})`,
   },
 
   [AuditEventType.PROFIT_DISTRIBUTION_MY_ACCEPTED_TOGGLED]: {
@@ -953,7 +975,8 @@ export const AuditEventDefinitions: {
       citizenId: "string",
       value: true,
     },
-    message: (d) => `Profit distribution accepted toggled to ${d.value} (cycle: ${d.cycleId})`,
+    message: (data) =>
+      `Profit distribution accepted toggled to ${data.value} (cycle: ${data.cycleId})`,
   },
 
   [AuditEventType.PROFIT_DISTRIBUTION_MY_CEDED_TOGGLED]: {
@@ -963,7 +986,8 @@ export const AuditEventDefinitions: {
       citizenId: "string",
       value: true,
     },
-    message: (d) => `Profit distribution ceded toggled to ${d.value} (cycle: ${d.cycleId})`,
+    message: (data) =>
+      `Profit distribution ceded toggled to ${data.value} (cycle: ${data.cycleId})`,
   },
 
   [AuditEventType.TASK_CREATED]: {
@@ -983,7 +1007,7 @@ export const AuditEventDefinitions: {
       completionistIds: ["string"],
       rewardType: "TEXT",
     },
-    message: (d) => `Task completed (${d.taskId})`,
+    message: (data) => `Task completed (${data.taskId})`,
   },
 
   [AuditEventType.TASK_DELETED]: {
@@ -992,7 +1016,7 @@ export const AuditEventDefinitions: {
       taskId: "string",
       title: "string",
     },
-    message: (d) => `Task deleted: "${d.title}" (${d.taskId})`,
+    message: (data) => `Task deleted: "${data.title}" (${data.taskId})`,
   },
 
   [AuditEventType.TASK_CANCELLED]: {
@@ -1001,7 +1025,7 @@ export const AuditEventDefinitions: {
       taskId: "string",
       title: "string",
     },
-    message: (d) => `Task cancelled: "${d.title}" (${d.taskId})`,
+    message: (data) => `Task cancelled: "${data.title}" (${data.taskId})`,
   },
 
   [AuditEventType.TASK_ASSIGNMENTS_UPDATED]: {
@@ -1009,7 +1033,7 @@ export const AuditEventDefinitions: {
     data: {
       taskId: "string",
     },
-    message: (d) => `Task assignments updated (${d.taskId})`,
+    message: (data) => `Task assignments updated (${data.taskId})`,
   },
 
   [AuditEventType.TASK_TITLE_UPDATED]: {
@@ -1019,7 +1043,8 @@ export const AuditEventDefinitions: {
       previousTitle: "Old title",
       newTitle: "New title",
     },
-    message: (d) => `Task title updated: "${d.previousTitle}" → "${d.newTitle}"`,
+    message: (data) =>
+      `Task title updated: "${data.previousTitle}" → "${data.newTitle}"`,
   },
 
   [AuditEventType.TASK_DESCRIPTION_UPDATED]: {
@@ -1029,7 +1054,7 @@ export const AuditEventDefinitions: {
       previousDescription: "Old description",
       newDescription: "New description",
     },
-    message: (d) => `Task description updated (${d.taskId})`,
+    message: (data) => `Task description updated (${data.taskId})`,
   },
 
   [AuditEventType.TASK_EXPIRES_AT_UPDATED]: {
@@ -1039,7 +1064,7 @@ export const AuditEventDefinitions: {
       previousExpiresAt: null,
       newExpiresAt: new Date(),
     },
-    message: (d) => `Task expiry updated (${d.taskId})`,
+    message: (data) => `Task expiry updated (${data.taskId})`,
   },
 
   [AuditEventType.TASK_REPEATABLE_UPDATED]: {
@@ -1049,7 +1074,7 @@ export const AuditEventDefinitions: {
       previousRepeatable: 1,
       newRepeatable: 2,
     },
-    message: (d) => `Task repeatable updated (${d.taskId})`,
+    message: (data) => `Task repeatable updated (${data.taskId})`,
   },
 
   [AuditEventType.TASK_REQUIRED_ROLES_UPDATED]: {
@@ -1057,7 +1082,7 @@ export const AuditEventDefinitions: {
     data: {
       taskId: "string",
     },
-    message: (d) => `Task required roles updated (${d.taskId})`,
+    message: (data) => `Task required roles updated (${data.taskId})`,
   },
 
   [AuditEventType.TASK_REWARD_TEXT_UPDATED]: {
@@ -1067,7 +1092,7 @@ export const AuditEventDefinitions: {
       previousValue: "Old reward",
       newValue: "New reward",
     },
-    message: (d) => `Task reward text updated (${d.taskId})`,
+    message: (data) => `Task reward text updated (${data.taskId})`,
   },
 
   [AuditEventType.TASK_REWARD_SILC_UPDATED]: {
@@ -1077,7 +1102,7 @@ export const AuditEventDefinitions: {
       previousValue: 10,
       newValue: 20,
     },
-    message: (d) => `Task SILC reward updated (${d.taskId})`,
+    message: (data) => `Task SILC reward updated (${data.taskId})`,
   },
 
   [AuditEventType.TASK_REWARD_NEW_SILC_UPDATED]: {
@@ -1087,7 +1112,7 @@ export const AuditEventDefinitions: {
       previousValue: 100,
       newValue: 200,
     },
-    message: (d) => `Task new SILC reward updated (${d.taskId})`,
+    message: (data) => `Task new SILC reward updated (${data.taskId})`,
   },
 
   [AuditEventType.TASK_SELF_ASSIGNMENT_CREATED]: {
@@ -1096,7 +1121,8 @@ export const AuditEventDefinitions: {
       taskId: "string",
       citizenId: "string",
     },
-    message: (d) => `Task self-assignment created (task: ${d.taskId}, citizen: ${d.citizenId})`,
+    message: (data) =>
+      `Task self-assignment created (task: ${data.taskId}, citizen: ${data.citizenId})`,
   },
 
   [AuditEventType.TASK_SELF_ASSIGNMENT_DELETED]: {
@@ -1105,7 +1131,8 @@ export const AuditEventDefinitions: {
       taskId: "string",
       citizenId: "string",
     },
-    message: (d) => `Task self-assignment deleted (task: ${d.taskId}, citizen: ${d.citizenId})`,
+    message: (data) =>
+      `Task self-assignment deleted (task: ${data.taskId}, citizen: ${data.citizenId})`,
   },
 
   [AuditEventType.EVENT_POSITION_CREATED]: {
@@ -1117,7 +1144,8 @@ export const AuditEventDefinitions: {
       variantIds: ["string"],
       parentPositionId: "string",
     },
-    message: (d) => `Event position "${d.name}" created (event: ${d.eventId})`,
+    message: (data) =>
+      `Event position "${data.name}" created (event: ${data.eventId})`,
   },
 
   [AuditEventType.EVENT_POSITION_UPDATED]: {
@@ -1128,7 +1156,8 @@ export const AuditEventDefinitions: {
       previousName: "string",
       newName: "string",
     },
-    message: (d) => `Event position updated (event: ${d.eventId}, position: ${d.positionId})`,
+    message: (data) =>
+      `Event position updated (event: ${data.eventId}, position: ${data.positionId})`,
   },
 
   [AuditEventType.EVENT_POSITION_DELETED]: {
@@ -1138,7 +1167,8 @@ export const AuditEventDefinitions: {
       positionId: "string",
       name: "string",
     },
-    message: (d) => `Event position deleted (event: ${d.eventId}, position: ${d.positionId})`,
+    message: (data) =>
+      `Event position deleted (event: ${data.eventId}, position: ${data.positionId})`,
   },
 
   [AuditEventType.EVENT_MANAGERS_ASSIGNED]: {
@@ -1147,7 +1177,7 @@ export const AuditEventDefinitions: {
       eventId: "string",
       managerIds: ["string"],
     },
-    message: (d) => `Event managers assigned (event: ${d.eventId})`,
+    message: (data) => `Event managers assigned (event: ${data.eventId})`,
   },
 
   [AuditEventType.EVENT_MANAGER_REMOVED]: {
@@ -1156,7 +1186,8 @@ export const AuditEventDefinitions: {
       eventId: "string",
       managerId: "string",
     },
-    message: (d) => `Event manager removed (event: ${d.eventId}, manager: ${d.managerId})`,
+    message: (data) =>
+      `Event manager removed (event: ${data.eventId}, manager: ${data.managerId})`,
   },
 
   [AuditEventType.EVENT_LINEUP_STATUS_CHANGED]: {
@@ -1165,7 +1196,8 @@ export const AuditEventDefinitions: {
       eventId: "string",
       enabled: true,
     },
-    message: (d) => `Event lineup ${d.enabled ? "enabled" : "disabled"} (event: ${d.eventId})`,
+    message: (data) =>
+      `Event lineup ${data.enabled ? "enabled" : "disabled"} (event: ${data.eventId})`,
   },
 
   [AuditEventType.EVENT_LINEUP_ORDER_CHANGED]: {
@@ -1173,7 +1205,7 @@ export const AuditEventDefinitions: {
     data: {
       eventId: "string",
     },
-    message: (d) => `Event lineup order changed (event: ${d.eventId})`,
+    message: (data) => `Event lineup order changed (event: ${data.eventId})`,
   },
 
   [AuditEventType.EVENT_POSITION_CITIZEN_ASSIGNED]: {
@@ -1183,7 +1215,8 @@ export const AuditEventDefinitions: {
       positionId: "string",
       citizenId: "string",
     },
-    message: (d) => `Citizen assigned to event position (event: ${d.eventId}, citizen: ${d.citizenId})`,
+    message: (data) =>
+      `Citizen assigned to event position (event: ${data.eventId}, citizen: ${data.citizenId})`,
   },
 
   [AuditEventType.EVENT_POSITION_CITIZEN_REMOVED]: {
@@ -1193,7 +1226,8 @@ export const AuditEventDefinitions: {
       positionId: "string",
       previousCitizenId: "string",
     },
-    message: (d) => `Citizen removed from event position (event: ${d.eventId}, previousCitizen: ${d.previousCitizenId})`,
+    message: (data) =>
+      `Citizen removed from event position (event: ${data.eventId}, previousCitizen: ${data.previousCitizenId})`,
   },
 
   [AuditEventType.EVENT_POSITION_NAME_UPDATED]: {
@@ -1204,7 +1238,8 @@ export const AuditEventDefinitions: {
       previousName: "string",
       newName: "string",
     },
-    message: (d) => `Event position name updated: "${d.previousName}" → "${d.newName}"`,
+    message: (data) =>
+      `Event position name updated: "${data.previousName}" → "${data.newName}"`,
   },
 
   [AuditEventType.EVENT_POSITION_APPLICATION_CREATED]: {
@@ -1215,7 +1250,8 @@ export const AuditEventDefinitions: {
       citizenId: "string",
       applicationId: "string",
     },
-    message: (d) => `Application created for event position (event: ${d.eventId}, citizen: ${d.citizenId})`,
+    message: (data) =>
+      `Application created for event position (event: ${data.eventId}, citizen: ${data.citizenId})`,
   },
 
   [AuditEventType.EVENT_POSITION_APPLICATION_DELETED]: {
@@ -1226,7 +1262,8 @@ export const AuditEventDefinitions: {
       citizenId: "string",
       applicationId: "string",
     },
-    message: (d) => `Application deleted for event position (event: ${d.eventId}, citizen: ${d.citizenId})`,
+    message: (data) =>
+      `Application deleted for event position (event: ${data.eventId}, citizen: ${data.citizenId})`,
   },
 
   [AuditEventType.EVENT_LINEUP_COPIED]: {
@@ -1235,7 +1272,8 @@ export const AuditEventDefinitions: {
       sourceEventId: "string",
       targetEventId: "string",
     },
-    message: (d) => `Event lineup copied from ${d.sourceEventId} to ${d.targetEventId}`,
+    message: (data) =>
+      `Event lineup copied from ${data.sourceEventId} to ${data.targetEventId}`,
   },
 
   [AuditEventType.CITIZEN_CREATED]: {
@@ -1244,7 +1282,8 @@ export const AuditEventDefinitions: {
       citizenId: "string",
       spectrumId: "string",
     },
-    message: (d) => `Citizen created: ${d.spectrumId} (${d.citizenId})`,
+    message: (data) =>
+      `Citizen created: ${data.spectrumId} (${data.citizenId})`,
   },
 
   [AuditEventType.CITIZEN_DELETED]: {
@@ -1253,7 +1292,8 @@ export const AuditEventDefinitions: {
       citizenId: "string",
       spectrumId: "string",
     },
-    message: (d) => `Citizen deleted: ${d.spectrumId} (${d.citizenId})`,
+    message: (data) =>
+      `Citizen deleted: ${data.spectrumId} (${data.citizenId})`,
   },
 
   [AuditEventType.ENTITY_LOG_CREATED]: {
@@ -1263,7 +1303,8 @@ export const AuditEventDefinitions: {
       logId: "string",
       logType: "string",
     },
-    message: (d) => `Entity log created (entity: ${d.entityId}, type: ${d.logType})`,
+    message: (data) =>
+      `Entity log created (entity: ${data.entityId}, type: ${data.logType})`,
   },
 
   [AuditEventType.ENTITY_LOG_UPDATED]: {
@@ -1273,7 +1314,8 @@ export const AuditEventDefinitions: {
       logId: "string",
       logType: "string",
     },
-    message: (d) => `Entity log updated (entity: ${d.entityId}, log: ${d.logId})`,
+    message: (data) =>
+      `Entity log updated (entity: ${data.entityId}, log: ${data.logId})`,
   },
 
   [AuditEventType.ENTITY_LOG_DELETED]: {
@@ -1283,7 +1325,8 @@ export const AuditEventDefinitions: {
       logId: "string",
       logType: "string",
     },
-    message: (d) => `Entity log deleted (entity: ${d.entityId}, log: ${d.logId})`,
+    message: (data) =>
+      `Entity log deleted (entity: ${data.entityId}, log: ${data.logId})`,
   },
 
   [AuditEventType.ORGANIZATION_CREATED]: {
@@ -1293,7 +1336,8 @@ export const AuditEventDefinitions: {
       spectrumId: "string",
       name: "string",
     },
-    message: (d) => `Organization created: "${d.name}" (${d.spectrumId})`,
+    message: (data) =>
+      `Organization created: "${data.name}" (${data.spectrumId})`,
   },
 
   [AuditEventType.ORGANIZATION_MEMBERSHIP_CREATED]: {
@@ -1303,7 +1347,8 @@ export const AuditEventDefinitions: {
       citizenId: "string",
       type: "MAIN",
     },
-    message: (d) => `Organization membership created (org: ${d.organizationId}, citizen: ${d.citizenId})`,
+    message: (data) =>
+      `Organization membership created (org: ${data.organizationId}, citizen: ${data.citizenId})`,
   },
 
   [AuditEventType.ORGANIZATION_MEMBERSHIP_REMOVED]: {
@@ -1312,7 +1357,8 @@ export const AuditEventDefinitions: {
       organizationId: "string",
       citizenId: "string",
     },
-    message: (d) => `Organization membership removed (org: ${d.organizationId}, citizen: ${d.citizenId})`,
+    message: (data) =>
+      `Organization membership removed (org: ${data.organizationId}, citizen: ${data.citizenId})`,
   },
 
   [AuditEventType.ORGANIZATION_MEMBERSHIP_CONFIRMED]: {
@@ -1322,7 +1368,8 @@ export const AuditEventDefinitions: {
       citizenId: "string",
       confirmed: "CONFIRMED",
     },
-    message: (d) => `Organization membership confirmation updated (citizen: ${d.citizenId})`,
+    message: (data) =>
+      `Organization membership confirmation updated (citizen: ${data.citizenId})`,
   },
 
   [AuditEventType.CLASSIFICATION_LEVEL_CREATED]: {
@@ -1331,7 +1378,7 @@ export const AuditEventDefinitions: {
       classificationLevelId: "string",
       name: "string",
     },
-    message: (d) => `Classification level created: "${d.name}"`,
+    message: (data) => `Classification level created: "${data.name}"`,
   },
 
   [AuditEventType.CLASSIFICATION_LEVEL_UPDATED]: {
@@ -1341,7 +1388,8 @@ export const AuditEventDefinitions: {
       previousName: "string",
       newName: "string",
     },
-    message: (d) => `Classification level updated: "${d.previousName}" → "${d.newName}"`,
+    message: (data) =>
+      `Classification level updated: "${data.previousName}" → "${data.newName}"`,
   },
 
   [AuditEventType.CLASSIFICATION_LEVEL_DELETED]: {
@@ -1350,7 +1398,7 @@ export const AuditEventDefinitions: {
       classificationLevelId: "string",
       name: "string",
     },
-    message: (d) => `Classification level deleted: "${d.name}"`,
+    message: (data) => `Classification level deleted: "${data.name}"`,
   },
 
   [AuditEventType.NOTE_TYPE_CREATED]: {
@@ -1359,7 +1407,7 @@ export const AuditEventDefinitions: {
       noteTypeId: "string",
       name: "string",
     },
-    message: (d) => `Note type created: "${d.name}"`,
+    message: (data) => `Note type created: "${data.name}"`,
   },
 
   [AuditEventType.NOTE_TYPE_UPDATED]: {
@@ -1369,7 +1417,8 @@ export const AuditEventDefinitions: {
       previousName: "string",
       newName: "string",
     },
-    message: (d) => `Note type updated: "${d.previousName}" → "${d.newName}"`,
+    message: (data) =>
+      `Note type updated: "${data.previousName}" → "${data.newName}"`,
   },
 
   [AuditEventType.NOTE_TYPE_DELETED]: {
@@ -1378,7 +1427,7 @@ export const AuditEventDefinitions: {
       noteTypeId: "string",
       name: "string",
     },
-    message: (d) => `Note type deleted: "${d.name}"`,
+    message: (data) => `Note type deleted: "${data.name}"`,
   },
 
   [AuditEventType.UPLOAD_CREATED]: {
@@ -1388,7 +1437,7 @@ export const AuditEventDefinitions: {
       fileName: "file.png",
       mimeType: "image/png",
     },
-    message: (d) => `File uploaded: "${d.fileName}" (${d.mimeType})`,
+    message: (data) => `File uploaded: "${data.fileName}" (${data.mimeType})`,
   },
 
   [AuditEventType.RESOURCE_IMAGE_ASSIGNED]: {
@@ -1399,7 +1448,8 @@ export const AuditEventDefinitions: {
       resourceAttribute: "imageId",
       imageId: "string",
     },
-    message: (d) => `Image assigned to ${d.resourceType} ${d.resourceId}`,
+    message: (data) =>
+      `Image assigned to ${data.resourceType} ${data.resourceId}`,
   },
 
   [AuditEventType.EMAIL_VERIFIED]: {
@@ -1407,7 +1457,7 @@ export const AuditEventDefinitions: {
     data: {
       userId: "string",
     },
-    message: (d) => `Email verified for user ${d.userId}`,
+    message: (data) => `Email verified for user ${data.userId}`,
   },
 
   [AuditEventType.EMAIL_CONFIRMATION_REQUESTED]: {
@@ -1416,7 +1466,8 @@ export const AuditEventDefinitions: {
       userId: "string",
       email: "user@example.com",
     },
-    message: (d) => `Email confirmation requested for user ${d.userId} (${d.email})`,
+    message: (data) =>
+      `Email confirmation requested for user ${data.userId} (${data.email})`,
   },
 
   [AuditEventType.EMAIL_VERIFIED_VIA_TOKEN]: {
@@ -1424,6 +1475,6 @@ export const AuditEventDefinitions: {
     data: {
       userId: "string",
     },
-    message: (d) => `Email verified via token for user ${d.userId}`,
+    message: (data) => `Email verified via token for user ${data.userId}`,
   },
 };

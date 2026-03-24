@@ -1,7 +1,7 @@
-import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SystemLogFilters } from "@/modules/audit/components/SystemLogFilters";
 import { SystemLogTable } from "@/modules/audit/components/SystemLogTable";
 import { getAuditEventCreators } from "@/modules/audit/queries/getAuditEventCreators";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import type { Metadata } from "next";

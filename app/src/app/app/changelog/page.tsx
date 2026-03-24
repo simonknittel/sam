@@ -36,24 +36,29 @@ import { FaCalendar, FaCopy } from "react-icons/fa";
 
 export default async function Page() {
   const authentication = await requireAuthenticationPage("/app/changelog");
-  const [showLogAnalyzer, showManageRoles, showUserRead, showGlobalStatistics, showSystemLog] =
-    await Promise.all([
-      authentication.authorize("logAnalyzer", "read"),
-      authentication.authorize("role", "manage"),
-      authentication.authorize("user", "read"),
-      authentication.authorize("globalStatistics", "read"),
-      authentication.authorize("systemLog", "read"),
-    ]);
+  const [
+    showLogAnalyzer,
+    showManageRoles,
+    showUserRead,
+    showGlobalStatistics,
+    showSystemLog,
+  ] = await Promise.all([
+    authentication.authorize("logAnalyzer", "read"),
+    authentication.authorize("role", "manage"),
+    authentication.authorize("user", "read"),
+    authentication.authorize("globalStatistics", "read"),
+    authentication.authorize("systemLog", "read"),
+  ]);
 
   return (
     <div className="flex flex-col gap-4">
-      <Day heading="23. März 2026">
+      <Day heading="24. März 2026">
         {showSystemLog ? (
           <DayItem heading="System Log" badges={["Neu", "Apps"]}>
             <p>
-              Es gibt eine neue App &ldquo;System Log&rdquo; welche das
-              Systemprotokoll aller Ereignisse anzeigt. Die Logs werden mit der
-              Zeit detaillierter und besser.
+              Es gibt eine neue App &ldquo;System Log&rdquo; welche eine
+              Auflistung aller Ereignisse im SAM anzeigt. Die Logs werden mit
+              der Zeit detaillierter und besser.
             </p>
 
             <p>
