@@ -159,6 +159,12 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
     permissionStrings: ["penaltyEntry;create"],
   },
   {
+    name: "System Log",
+    href: "/app/system-log",
+    description: "Systemprotokoll aller Ereignisse",
+    permissionStrings: ["systemLog;read"],
+  },
+  {
     name: "Tasks",
     href: "/app/tasks",
     imageSrc: tasksScreenshot,
