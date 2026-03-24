@@ -59,6 +59,20 @@ const OtherTab = ({ roles, flows }: Readonly<Props>) => {
 
       <div className="py-2 flex justify-between items-center">
         <div>
+          <h4 className="font-bold">System Log lesen</h4>
+          <p className="text-sm text-yellow-500">
+            ⚠️ Benutzer mit dieser Berechtigung können vertrauliche
+            Informationen und personenbezogene Daten (PII) einsehen. Diese
+            Berechtigung sollte nur einem sehr begrenzten Personenkreis
+            gewährt werden.
+          </p>
+        </div>
+
+        <YesNoCheckbox {...register("systemLog;read")} />
+      </div>
+
+      <div className="py-2 flex justify-between items-center">
+        <div>
           <h4 className="font-bold">Globale Statistiken lesen</h4>
           <p className="text-sm">
             Diese Darstellung der Statistiken kann nicht die Rollen des
