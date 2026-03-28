@@ -21,7 +21,7 @@ export const ProfitDistributionCycleExcerptList = async ({
   const profitDistributionCycles = await getProfitDistributionCycles(status);
 
   return (
-    <div className={clsx("flex flex-col gap-[2px]", className)}>
+    <div className={clsx("flex flex-col gap-0.5", className)}>
       {profitDistributionCycles.length > 0 ? (
         profitDistributionCycles.map((cycleData) => (
           <ProfitDistributionCycleExcerpt
