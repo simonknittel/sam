@@ -252,3 +252,16 @@ export const getEvents = cache(
     },
   ),
 );
+
+export const getAllEvents = cache(
+  withTrace("getAllEvents", async () => {
+    const authentication = await requireAuthentication();
+    if (!(await authentication.authorize("event", "read"))) forbidden();
+
+    return prisma.event.findMany({
+      orderBy: {
+        name: "asc",
+      },
+    });
+  }),
+);
