@@ -40,7 +40,7 @@ export const CopyLineupFromEventButton = ({
         <Modal
           isOpen={true}
           onRequestClose={() => setIsOpen(false)}
-          className="w-[480px]"
+          className="w-120"
           heading={<h2>Aufstellung aus einem anderen Event kopieren</h2>}
         >
           <form action={formAction} className="flex flex-col gap-4">
