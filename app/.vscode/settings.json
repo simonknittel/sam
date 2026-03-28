@@ -93,7 +93,7 @@
     "editor.defaultFormatter": "Prisma.prisma"
   },
   "eslint.useFlatConfig": true,
-  "i18n-ally.localesPaths": ["messages"],
+  "i18n-ally.localesPaths": ["messages", "src/i18n"],
   "i18n-ally.keystyle": "nested",
   "typescript.experimental.useTsgo": false,
   "typescript.native-preview.trace.server": "messages"

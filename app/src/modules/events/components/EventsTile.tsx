@@ -3,7 +3,6 @@ import { cursorPaginationParsers } from "@/modules/common/CursorPagination/curso
 import clsx from "clsx";
 import {
   createLoader,
-  parseAsString,
   parseAsStringLiteral,
   type SearchParams,
 } from "nuqs/server";
@@ -11,7 +10,7 @@ import { getEvents } from "../queries";
 import { Event } from "./Event";
 
 const loadSearchParams = createLoader({
-  status: parseAsString.withDefault("open"),
+  status: parseAsStringLiteral(["open", "closed", "all"]).withDefault("open"),
   participating: parseAsStringLiteral(["all", "me"]).withDefault("all"),
   ...cursorPaginationParsers,
 });
