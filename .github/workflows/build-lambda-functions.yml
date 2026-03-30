@@ -43,7 +43,7 @@ jobs:
         working-directory: bun-packages/packages/email-function
 
       - name: Store artifact
-        uses: actions/upload-artifact@v6.0.0
+        uses: actions/upload-artifact@v7.0.0
         with:
           name: email-function-dist
           path: bun-packages/packages/email-function/dist/

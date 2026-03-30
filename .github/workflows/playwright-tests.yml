@@ -54,7 +54,7 @@ jobs:
           PLAYWRIGHT_CUSTOM_HEADER_VALUE: ${{ secrets.PLAYWRIGHT_CUSTOM_HEADER_VALUE }}
 
       - name: Upload test report
-        uses: actions/upload-artifact@v6.0.0
+        uses: actions/upload-artifact@v7.0.0
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
