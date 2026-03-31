@@ -24,14 +24,14 @@ importers:
   apps/lambda:
     dependencies:
       '@aws-sdk/client-dynamodb':
-        specifier: 3.1010.0
-        version: 3.1010.0
+        specifier: 3.1015.0
+        version: 3.1015.0
       '@aws-sdk/client-eventbridge':
-        specifier: 3.1010.0
-        version: 3.1010.0
+        specifier: 3.1015.0
+        version: 3.1015.0
       '@aws-sdk/client-ssm':
-        specifier: 3.1010.0
-        version: 3.1010.0
+        specifier: 3.1015.0
+        version: 3.1015.0
       '@paralleldrive/cuid2':
         specifier: 3.3.0
         version: 3.3.0
@@ -97,8 +97,8 @@ importers:
         specifier: 4.27.0
         version: 4.27.0
       csv:
-        specifier: 6.4.1
-        version: 6.4.1
+        specifier: 6.5.1
+        version: 6.5.1
       date-fns:
         specifier: 4.1.0
         version: 4.1.0
@@ -195,16 +195,16 @@ packages:
   '@aws-crypto/util@5.2.0':
     resolution: {integrity: sha512-4RkU9EsI6ZpBve5fseQlGNUWKMa1RLPQ1dnjnQoe07ldfIzcsGb5hC5W0Dm7u423KWzawlrpbjXBrXCEv9zazQ==}
 
-  '@aws-sdk/client-dynamodb@3.1010.0':
-    resolution: {integrity: sha512-iVgfou3tQ6lIsaWh4Ke4Ki5zc8p0Gu/fOrTnpbqwaTFPxjMgYv56wZ5RsRdvmpenWarsi6YyAUeNODLkzi1DWw==}
+  '@aws-sdk/client-dynamodb@3.1015.0':
+    resolution: {integrity: sha512-jbGXLmsl9jNRHtUrP9bj4c+3h5EyDF/Zs84ynqsntA/0n+GjqNeSpALAQzcvO/6FKMOS8igfCF/T6SzDXchRGA==}
     engines: {node: '>=20.0.0'}
 
-  '@aws-sdk/client-eventbridge@3.1010.0':
-    resolution: {integrity: sha512-7ez5Jrwc9OKWT00gPi4A223nwuWrZqoAG99LBgdjGbJBxrJoGxq8Tuv6oh8oojcAPrbmLu6s1saE9qUNTV1+4w==}
+  '@aws-sdk/client-eventbridge@3.1015.0':
+    resolution: {integrity: sha512-Aoc3Eo+N2GQ2aie9J1gTfXU7elfYvsdGxNEimRCsVnvc1TawgCMXxK1RoHWFUZQcq/kqPVi2A092ae7jvBv9DA==}
     engines: {node: '>=20.0.0'}
 
-  '@aws-sdk/client-ssm@3.1010.0':
-    resolution: {integrity: sha512-8YCdGdTG68SBEV5/CMWsZxYrwMqMbzpM5WBZfakdELbu3cp9v2z5Akq9o7dfThuLIF4kW+y11kPsTZPud4y6uQ==}
+  '@aws-sdk/client-ssm@3.1015.0':
+    resolution: {integrity: sha512-eGWsXMHJE+cTNGCpRprWOL0n5jfDuejsPQ9luzvAkIU4ZcoA5+yfr93Sh/ZoHiAh2Hc4yFkEFQCwwiXQjFiqng==}
     engines: {node: '>=20.0.0'}
 
   '@aws-sdk/core@3.973.24':
@@ -808,8 +808,8 @@ packages:
   csv-stringify@6.7.0:
     resolution: {integrity: sha512-UdtziYp5HuTz7e5j8Nvq+a/3HQo+2/aJZ9xntNTpmRRIg/3YYqDVgiS9fvAhtNbnyfbv2ZBe0bqCHqzhE7FqWQ==}
 
-  csv@6.4.1:
-    resolution: {integrity: sha512-ajGosmTGnTwYyGl8STqZDu7R6LkDf3xL39XiOmliV/GufQeVUxHzTKIm4NOBCwmEuujK7B6isxs4Uqt9GcRCvA==}
+  csv@6.5.1:
+    resolution: {integrity: sha512-oZwQSayvtn3nGrLUl8epnbfSCsvhOmCKeMHEOVmZ/3YCTG+x26nhgrP1vB3Kjs4lUJF6jcsjjIEn2gYbbq5+Gw==}
     engines: {node: '>= 0.1.90'}
 
   date-fns@4.1.0:
@@ -1234,7 +1234,7 @@ snapshots:
       '@smithy/util-utf8': 2.3.0
       tslib: 2.8.1
 
-  '@aws-sdk/client-dynamodb@3.1010.0':
+  '@aws-sdk/client-dynamodb@3.1015.0':
     dependencies:
       '@aws-crypto/sha256-browser': 5.2.0
       '@aws-crypto/sha256-js': 5.2.0
@@ -1281,7 +1281,7 @@ snapshots:
     transitivePeerDependencies:
       - aws-crt
 
-  '@aws-sdk/client-eventbridge@3.1010.0':
+  '@aws-sdk/client-eventbridge@3.1015.0':
     dependencies:
       '@aws-crypto/sha256-browser': 5.2.0
       '@aws-crypto/sha256-js': 5.2.0
@@ -1326,7 +1326,7 @@ snapshots:
     transitivePeerDependencies:
       - aws-crt
 
-  '@aws-sdk/client-ssm@3.1010.0':
+  '@aws-sdk/client-ssm@3.1015.0':
     dependencies:
       '@aws-crypto/sha256-browser': 5.2.0
       '@aws-crypto/sha256-js': 5.2.0
@@ -2217,7 +2217,7 @@ snapshots:
 
   csv-stringify@6.7.0: {}
 
-  csv@6.4.1:
+  csv@6.5.1:
     dependencies:
       csv-generate: 4.5.1
       csv-parse: 6.2.1

@@ -30,7 +30,7 @@ jobs:
         run: npm audit --audit-level critical
         working-directory: app
 
-      - uses: actions/cache@v5.0.3
+      - uses: actions/cache@v5.0.4
         id: node-modules-cache
         with:
           path: app/node_modules
@@ -62,7 +62,7 @@ jobs:
         run: npm audit --audit-level critical
         working-directory: app
 
-      - uses: actions/cache@v5.0.3
+      - uses: actions/cache@v5.0.4
         id: node-modules-cache
         with:
           path: app/node_modules
@@ -91,7 +91,7 @@ jobs:
         run: npm audit --audit-level critical
         working-directory: app
 
-      - uses: actions/cache@v5.0.3
+      - uses: actions/cache@v5.0.4
         id: node-modules-cache
         with:
           path: app/node_modules

@@ -55,7 +55,7 @@ jobs:
           terraform_version: "${{ steps.terraform_version.outputs.value }}"
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v5.1.1
+        uses: aws-actions/configure-aws-credentials@v6.0.0
         with:
           role-to-assume: ${{ vars.IAM_ROLE_ARN }}
           aws-region: eu-central-1
@@ -125,7 +125,7 @@ jobs:
         run: exit 1
 
       - name: Store artifact
-        uses: actions/upload-artifact@v6.0.0
+        uses: actions/upload-artifact@v7.0.0
         if: inputs.store_plan || false
         with:
           name: tfplan
