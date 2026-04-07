@@ -24,14 +24,14 @@ importers:
   apps/lambda:
     dependencies:
       '@aws-sdk/client-dynamodb':
-        specifier: 3.1015.0
-        version: 3.1015.0
+        specifier: 3.1020.0
+        version: 3.1020.0
       '@aws-sdk/client-eventbridge':
-        specifier: 3.1015.0
-        version: 3.1015.0
+        specifier: 3.1020.0
+        version: 3.1020.0
       '@aws-sdk/client-ssm':
-        specifier: 3.1015.0
-        version: 3.1015.0
+        specifier: 3.1020.0
+        version: 3.1020.0
       '@paralleldrive/cuid2':
         specifier: 3.3.0
         version: 3.3.0
@@ -195,16 +195,16 @@ packages:
   '@aws-crypto/util@5.2.0':
     resolution: {integrity: sha512-4RkU9EsI6ZpBve5fseQlGNUWKMa1RLPQ1dnjnQoe07ldfIzcsGb5hC5W0Dm7u423KWzawlrpbjXBrXCEv9zazQ==}
 
-  '@aws-sdk/client-dynamodb@3.1015.0':
-    resolution: {integrity: sha512-jbGXLmsl9jNRHtUrP9bj4c+3h5EyDF/Zs84ynqsntA/0n+GjqNeSpALAQzcvO/6FKMOS8igfCF/T6SzDXchRGA==}
+  '@aws-sdk/client-dynamodb@3.1020.0':
+    resolution: {integrity: sha512-VMrCgPMB5NWA5z5SaGbVVE3rHI7QD0w8357E0hnjPkiJZp6jmfMjNk2fmOmmOnTbZUXStqRK5zvC8c4bUXwMFw==}
     engines: {node: '>=20.0.0'}
 
-  '@aws-sdk/client-eventbridge@3.1015.0':
-    resolution: {integrity: sha512-Aoc3Eo+N2GQ2aie9J1gTfXU7elfYvsdGxNEimRCsVnvc1TawgCMXxK1RoHWFUZQcq/kqPVi2A092ae7jvBv9DA==}
+  '@aws-sdk/client-eventbridge@3.1020.0':
+    resolution: {integrity: sha512-vWV3W2hHvDrwWpTQgyDHzgNqp66XvQWxF0Fvv6UHe23ZzPcz9ZzUtwBRDE2g8ddqcrMc+uX7tn4+GqUpcWj43w==}
     engines: {node: '>=20.0.0'}
 
-  '@aws-sdk/client-ssm@3.1015.0':
-    resolution: {integrity: sha512-eGWsXMHJE+cTNGCpRprWOL0n5jfDuejsPQ9luzvAkIU4ZcoA5+yfr93Sh/ZoHiAh2Hc4yFkEFQCwwiXQjFiqng==}
+  '@aws-sdk/client-ssm@3.1020.0':
+    resolution: {integrity: sha512-QmcTP3WJNfyqSexgYnDmvlZVUQrnoiawwTILFdCHVAnrggxYsSQKwXHrXIxSDJfnhNDTOFxog1cbBhbcHPhU2g==}
     engines: {node: '>=20.0.0'}
 
   '@aws-sdk/core@3.973.26':
@@ -1230,7 +1230,7 @@ snapshots:
       '@smithy/util-utf8': 2.3.0
       tslib: 2.8.1
 
-  '@aws-sdk/client-dynamodb@3.1015.0':
+  '@aws-sdk/client-dynamodb@3.1020.0':
     dependencies:
       '@aws-crypto/sha256-browser': 5.2.0
       '@aws-crypto/sha256-js': 5.2.0
@@ -1277,7 +1277,7 @@ snapshots:
     transitivePeerDependencies:
       - aws-crt
 
-  '@aws-sdk/client-eventbridge@3.1015.0':
+  '@aws-sdk/client-eventbridge@3.1020.0':
     dependencies:
       '@aws-crypto/sha256-browser': 5.2.0
       '@aws-crypto/sha256-js': 5.2.0
@@ -1322,7 +1322,7 @@ snapshots:
     transitivePeerDependencies:
       - aws-crt
 
-  '@aws-sdk/client-ssm@3.1015.0':
+  '@aws-sdk/client-ssm@3.1020.0':
     dependencies:
       '@aws-crypto/sha256-browser': 5.2.0
       '@aws-crypto/sha256-js': 5.2.0
