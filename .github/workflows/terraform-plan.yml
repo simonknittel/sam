@@ -125,7 +125,7 @@ jobs:
         run: exit 1
 
       - name: Store artifact
-        uses: actions/upload-artifact@v7.0.0
+        uses: actions/upload-artifact@v7.0.1
         if: inputs.store_plan || false
         with:
           name: tfplan
