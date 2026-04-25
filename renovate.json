@@ -53,6 +53,7 @@
       "before 7am on Wednesday"
     ]
   },
+  "pinDigests": true,
   "minimumReleaseAge": "7 days",
   "minimumReleaseAgeBehaviour": "timestamp-optional",
   "internalChecksFilter": "strict"
