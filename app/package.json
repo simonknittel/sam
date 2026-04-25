@@ -124,7 +124,7 @@
     "typescript": "5.9.3",
     "vercel": "50.44.0",
     "vitest": "3.2.4",
-    "zod-validation-error": "4.0.2"
+    "zod-validation-error": "5.0.0"
   },
   "prisma": {
     "schema": "./prisma/schema"
@@ -133,6 +133,6 @@
   "overrides": {
     "@types/react-dom": "19.2.3",
     "@types/react": "19.2.14",
-    "zod-validation-error": "4.0.2"
+    "zod-validation-error": "5.0.0"
   }
 }
