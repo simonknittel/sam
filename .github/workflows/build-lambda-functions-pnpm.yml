@@ -16,7 +16,7 @@ jobs:
         with:
           ref: ${{ inputs.git_ref }}
 
-      - uses: pnpm/action-setup@v5.0.0
+      - uses: pnpm/action-setup@v6.0.3
         with:
           version: 10.33.0
 
