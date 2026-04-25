@@ -1,5 +1,6 @@
 import { DiscordButton } from "@/modules/common/components/DiscordButton";
 import { Markdown } from "@/modules/common/components/Markdown";
+import { formatDate } from "@/modules/common/utils/formatDate";
 import type { Event } from "@prisma/client";
 import clsx from "clsx";
 import Image from "next/image";
@@ -77,6 +78,11 @@ export const OverviewTile = ({ className, event }: Props) => {
             Ort
           </dt>
           <dd>{event.location || "-"}</dd>
+
+          <dt className="text-neutral-500 font-mono uppercase text-xs mt-4">
+            Erstellt am
+          </dt>
+          <dd>{formatDate(event.createdAt) || "-"}</dd>
         </dl>
 
         {showActions && (
