@@ -43,19 +43,19 @@ jobs:
     environment: terraform-${{ inputs.environment || 'test' }}
 
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Read .terraform-version
         id: terraform_version
         run: echo "value=$(cat .terraform-version)" >> $GITHUB_OUTPUT
         working-directory: terraform
 
-      - uses: hashicorp/setup-terraform@v3.1.2
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
         with:
           terraform_version: "${{ steps.terraform_version.outputs.value }}"
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v6.1.0
+        uses: aws-actions/configure-aws-credentials@ec61189d14ec14c8efccab744f656cffd0e33f37 # v6.1.0
         with:
           role-to-assume: ${{ vars.IAM_ROLE_ARN }}
           aws-region: eu-central-1
@@ -74,7 +74,7 @@ jobs:
           TF_VAR_midnight_automations_environment_variables: ${{ vars.MIDNIGHT_AUTOMATIONS_ENVIRONMENT_VARIABLES }}
           TF_VAR_notification_router_environment_variables: ${{ vars.NOTIFICATION_ROUTER_ENVIRONMENT_VARIABLES }}
 
-      - uses: actions/github-script@v9.0.0
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         if: github.event_name == 'pull_request'
         env:
           PLAN: ${{ steps.plan.outputs.stdout }}
@@ -125,7 +125,7 @@ jobs:
         run: exit 1
 
       - name: Store artifact
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: inputs.store_plan || false
         with:
           name: tfplan

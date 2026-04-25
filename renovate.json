@@ -16,9 +16,6 @@
         "digest"
       ],
       "automerge": true,
-      "minimumReleaseAge": "7 days",
-      "minimumReleaseAgeBehaviour": "timestamp-optional",
-      "internalChecksFilter": "strict",
       "schedule": [
         "before 7am on Tuesday"
       ],
@@ -55,5 +52,9 @@
     "schedule": [
       "before 7am on Wednesday"
     ]
-  }
+  },
+  "pinDigests": true,
+  "minimumReleaseAge": "7 days",
+  "minimumReleaseAgeBehaviour": "timestamp-optional",
+  "internalChecksFilter": "strict"
 }
