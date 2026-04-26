@@ -17,6 +17,7 @@ export const Suggestions = ({ className, onClick }: Props) => {
   const suggestions = api.ai.getRoleNameSuggestions.useQuery(undefined, {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    retry: 2,
   });
 
   return (

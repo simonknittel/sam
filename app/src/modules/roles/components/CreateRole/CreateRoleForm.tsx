@@ -20,7 +20,7 @@ interface Props {
 
 export const CreateRoleForm = ({
   className,
-  enableSuggestions,
+  enableSuggestions = true,
   onSuccess,
 }: Props) => {
   // TODO: Re-add "enableSuggestions" -> Unleash: "RoleNameSuggestions"

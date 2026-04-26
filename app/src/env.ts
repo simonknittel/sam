@@ -50,6 +50,7 @@ export const env = createEnv({
     AWS_SECRET_ACCESS_KEY: z.string().optional(),
     /** AWS_PROFILE=sam-test terraform output event_bus_arn */
     AWS_EVENT_BUS_ARN: z.string().optional(),
+    OPENAI_BASE_URL: z.url().optional(),
     OPENAI_API_KEY: z.string().optional(),
     ENABLE_INSTRUMENTATION: z.string().optional(),
     OTEL_EXPORTER_OTLP_PROTOCOL: z.string().optional(),
@@ -147,6 +148,7 @@ export const env = createEnv({
     AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
     AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
     AWS_EVENT_BUS_ARN: process.env.AWS_EVENT_BUS_ARN,
+    OPENAI_BASE_URL: process.env.OPENAI_BASE_URL,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     ENABLE_INSTRUMENTATION: process.env.ENABLE_INSTRUMENTATION,
     OTEL_EXPORTER_OTLP_PROTOCOL: process.env.OTEL_EXPORTER_OTLP_PROTOCOL,
