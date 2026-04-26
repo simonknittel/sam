@@ -20,9 +20,16 @@ export const aiRouter = createTRPCRouter({
     const existingRoles = await getRoles();
     const existingRoleNames = existingRoles.map((role) => role.name);
 
+    const defaultHeaders = new Headers();
+    if (env.OPENAI_EXTRA_API_KEY)
+      defaultHeaders.set("X-Api-Key", env.OPENAI_EXTRA_API_KEY);
+
     const openai = new OpenAI({
       baseURL: env.OPENAI_BASE_URL,
       apiKey: env.OPENAI_API_KEY,
+      defaultHeaders: {
+        ...Object.fromEntries(defaultHeaders.entries()),
+      },
     });
 
     const messages = [
