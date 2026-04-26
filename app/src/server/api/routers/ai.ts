@@ -21,6 +21,7 @@ export const aiRouter = createTRPCRouter({
     const existingRoleNames = existingRoles.map((role) => role.name);
 
     const openai = new OpenAI({
+      baseURL: env.OPENAI_BASE_URL,
       apiKey: env.OPENAI_API_KEY,
     });
 
@@ -35,7 +36,7 @@ export const aiRouter = createTRPCRouter({
 
     const chatCompletion = await openai.chat.completions.create({
       messages,
-      model: "gpt-4o-mini",
+      model: "openai/gpt-5.4-mini",
       max_tokens: 1024,
       response_format: {
         type: "json_object",
