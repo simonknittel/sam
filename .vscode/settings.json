@@ -1,4 +1,7 @@
 {
+	"git.worktreeIncludeFiles": [
+		"**/.env",
+	],
 	"cSpell.words": [
 		"algoliasearch",
 		"APGL",
