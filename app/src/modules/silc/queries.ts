@@ -113,7 +113,10 @@ export const getSilcTransactionsPaginated = cache(
     ) => {
       const authentication = await requireAuthentication();
       if (
-        !(await authentication.authorize("silcTransactionOfOtherCitizen", "read"))
+        !(await authentication.authorize(
+          "silcTransactionOfOtherCitizen",
+          "read",
+        ))
       )
         forbidden();
 
@@ -182,9 +185,8 @@ export const getSilcTransactionsPaginated = cache(
           hasNextPage && transactions.length > 0
             ? transactions[transactions.length - 1].id
             : null,
-        prevCursor: hasPrevPage && transactions.length > 0
-          ? transactions[0].id
-          : null,
+        prevCursor:
+          hasPrevPage && transactions.length > 0 ? transactions[0].id : null,
       };
     },
   ),

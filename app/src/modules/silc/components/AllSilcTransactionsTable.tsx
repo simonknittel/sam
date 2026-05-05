@@ -1,12 +1,9 @@
-import { CursorPaginationControls } from "@/modules/common/CursorPagination/CursorPaginationControls";
-import { cursorPaginationParsers } from "@/modules/common/CursorPagination/cursorPaginationParsers";
 import { requireAuthentication } from "@/modules/auth/server";
 import { Tile } from "@/modules/common/components/Tile";
-import {
-  createLoader,
-  type SearchParams,
-} from "nuqs/server";
+import { CursorPaginationControls } from "@/modules/common/CursorPagination/CursorPaginationControls";
+import { cursorPaginationParsers } from "@/modules/common/CursorPagination/cursorPaginationParsers";
 import clsx from "clsx";
+import { createLoader, type SearchParams } from "nuqs/server";
 import { getSilcTransactionsPaginated } from "../queries";
 import { SilcTransactionsTableClient } from "./SilcTransactionsTableClient";
 
