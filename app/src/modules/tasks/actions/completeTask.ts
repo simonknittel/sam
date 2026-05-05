@@ -128,32 +128,28 @@ export const completeTask = async (formData: FormData) => {
 
           ...(task.createdById
             ? [
-              prisma.silcTransaction.create({
-                data: {
-                  receiverId: task.createdById,
-                  value: -(
-                    task.rewardTypeSilcValue! *
-                    result.data.completionistIds.length
-                  ),
-                  description: `Task abgeschlossen: ${task.title}`,
-                  createdById: authentication.session.entity.id,
-                },
-              }),
-            ]
+                prisma.silcTransaction.create({
+                  data: {
+                    receiverId: task.createdById,
+                    value: -(
+                      task.rewardTypeSilcValue! *
+                      result.data.completionistIds.length
+                    ),
+                    description: `Task abgeschlossen: ${task.title}`,
+                    createdById: authentication.session.entity.id,
+                  },
+                }),
+              ]
             : []),
         ]);
 
         const completionistTransactions = transactions[0];
         silcTransactionIds.push(
-          ...(completionistTransactions as { id: string }[]).map(
-            (t) => t.id,
-          ),
+          ...(completionistTransactions as { id: string }[]).map((t) => t.id),
         );
 
         if (task.createdById && transactions[1]) {
-          silcTransactionIds.push(
-            (transactions[1] as { id: string }).id,
-          );
+          silcTransactionIds.push((transactions[1] as { id: string }).id);
         }
 
         /**
@@ -175,9 +171,7 @@ export const completeTask = async (formData: FormData) => {
             },
           });
 
-        silcTransactionIds.push(
-          ...createdTransactions.map((t) => t.id),
-        );
+        silcTransactionIds.push(...createdTransactions.map((t) => t.id));
       }
 
       /**
