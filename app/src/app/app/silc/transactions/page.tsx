@@ -7,7 +7,9 @@ export const metadata: Metadata = {
   title: "Transaktionen",
 };
 
-export default async function Page() {
+export default async function Page({
+  searchParams,
+}: PageProps<"/app/silc/transactions">) {
   const authentication = await requireAuthenticationPage(
     "/app/silc/transactions",
   );
@@ -15,7 +17,7 @@ export default async function Page() {
 
   return (
     <SuspenseWithErrorBoundaryTile>
-      <AllSilcTransactionsTable />
+      <AllSilcTransactionsTable searchParams={searchParams} />
     </SuspenseWithErrorBoundaryTile>
   );
 }

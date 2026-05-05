@@ -8,13 +8,10 @@ import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
-  getSortedRowModel,
   useReactTable,
-  type SortingState,
 } from "@tanstack/react-table";
 import clsx from "clsx";
-import { useMemo, useState } from "react";
-import { FaSortAlphaDown, FaSortAlphaUpAlt } from "react-icons/fa";
+import { useMemo } from "react";
 import { CreateOrUpdateSilcTransaction } from "./CreateOrUpdateSilcTransaction";
 import { DeleteSilcTransaction } from "./DeleteSilcTransaction";
 
@@ -42,15 +39,12 @@ export const SilcTransactionsTableClient = ({
   showEdit,
   showDelete,
 }: Props) => {
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: "createdAt", desc: true },
-  ]);
-
   const columns = useMemo(() => {
     return [
       columnHelper.accessor("createdAt", {
         header: "Datum",
         id: "createdAt",
+        enableSorting: false,
         cell: (row) => (
           <span className="flex items-center h-8 whitespace-nowrap">
             {formatDate(row.getValue())}
@@ -158,12 +152,7 @@ export const SilcTransactionsTableClient = ({
   const table = useReactTable({
     data: rows,
     columns,
-    state: {
-      sorting,
-    },
-    onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
   });
 
   return (
@@ -178,22 +167,11 @@ export const SilcTransactionsTableClient = ({
               {headerGroup.headers.map((header) => (
                 <th key={header.id} className="text-left text-neutral-500 p-0">
                   {header.isPlaceholder ? null : (
-                    <div
-                      {...{
-                        className: header.column.getCanSort()
-                          ? "cursor-pointer select-none flex items-center gap-2 hover:text-neutral-300"
-                          : "",
-                        onClick: header.column.getToggleSortingHandler(),
-                      }}
-                    >
+                    <div>
                       {flexRender(
                         header.column.columnDef.header,
                         header.getContext(),
                       )}
-                      {{
-                        asc: <FaSortAlphaDown />,
-                        desc: <FaSortAlphaUpAlt />,
-                      }[header.column.getIsSorted() as string] ?? null}
                     </div>
                   )}
                 </th>

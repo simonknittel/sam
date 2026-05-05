@@ -29,17 +29,17 @@ export default async function Page() {
       {showCalendar && (
         <Suspense
           fallback={
-            <TileSkeleton className="flex-none @7xl/main:flex-1 w-[400px] @7xl/main:max-w-none" />
+            <TileSkeleton className="flex-none @7xl/main:flex-1 w-100 @7xl/main:max-w-none" />
           }
         >
-          <CalendarTile className="flex-none @7xl/main:flex-1 w-[400px] @7xl/main:max-w-none @container/events" />
+          <CalendarTile className="flex-none @7xl/main:flex-1 w-100 @7xl/main:max-w-none @container/events" />
         </Suspense>
       )}
 
-      <div className="flex flex-col gap-6 w-[400px] flex-none">
+      <div className="flex flex-col gap-6 w-100 flex-none">
         <TasksDashboardTile />
 
-        <section className="flex flex-col gap-[2px] flex-none">
+        <section className="flex flex-col gap-0.5 flex-none">
           <h2 className="font-thin text-2xl self-start mb-2 font-mono uppercase">
             Spynet
           </h2>

@@ -52,6 +52,18 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col gap-4">
+      <Day heading="5. Mai 2026">
+        <DayItem
+          heading="Pagination für SILC-Transaktionen"
+          badges={["Neu", "SILC"]}
+        >
+          <p>
+            Die SILC-Transaktionen werden nun paginiert angezeigt (100 pro
+            Seite). Dies verbessert die performance bei vielen Transaktionen.
+          </p>
+        </DayItem>
+      </Day>
+
       <Day heading="24. März 2026">
         {showSystemLog ? (
           <DayItem heading="System Log" badges={["Neu", "Apps"]}>

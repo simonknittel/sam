@@ -1,18 +1,32 @@
 import { requireAuthentication } from "@/modules/auth/server";
 import { Tile } from "@/modules/common/components/Tile";
+import { CursorPaginationControls } from "@/modules/common/CursorPagination/CursorPaginationControls";
+import { cursorPaginationParsers } from "@/modules/common/CursorPagination/cursorPaginationParsers";
 import clsx from "clsx";
-import { getSilcTransactionsOfAllCitizens } from "../queries";
+import { createLoader, type SearchParams } from "nuqs/server";
+import { getSilcTransactionsPaginated } from "../queries";
 import { SilcTransactionsTableClient } from "./SilcTransactionsTableClient";
+
+const loadSearchParams = createLoader({
+  ...cursorPaginationParsers,
+});
 
 interface Props {
   readonly className?: string;
+  readonly searchParams: Promise<SearchParams>;
 }
 
-export const AllSilcTransactionsTable = async ({ className }: Props) => {
+export const AllSilcTransactionsTable = async ({
+  className,
+  searchParams,
+}: Props) => {
   const authentication = await requireAuthentication();
+  const { cursor, direction } = await loadSearchParams(searchParams);
 
-  const entries = await getSilcTransactionsOfAllCitizens();
-  const hasEntries = entries.length > 0;
+  const { transactions, nextCursor, prevCursor } =
+    await getSilcTransactionsPaginated(cursor, direction);
+
+  const hasEntries = transactions.length > 0;
 
   const [showEdit, showDelete] = await Promise.all([
     authentication.authorize("silcTransactionOfOtherCitizen", "update"),
@@ -22,11 +36,17 @@ export const AllSilcTransactionsTable = async ({ className }: Props) => {
   return (
     <Tile heading="Transaktionen" className={clsx(className)}>
       {hasEntries ? (
-        <SilcTransactionsTableClient
-          rows={entries}
-          showEdit={showEdit}
-          showDelete={showDelete}
-        />
+        <div className="flex flex-col gap-4">
+          <SilcTransactionsTableClient
+            rows={transactions}
+            showEdit={showEdit}
+            showDelete={showDelete}
+          />
+          <CursorPaginationControls
+            nextCursor={nextCursor}
+            prevCursor={prevCursor}
+          />
+        </div>
       ) : (
         <p className="italic">Bisher wurden keine SILC verteilt.</p>
       )}
