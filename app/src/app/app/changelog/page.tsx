@@ -54,6 +54,23 @@ export default async function Page() {
     <div className="flex flex-col gap-4">
       <Day heading="5. Mai 2026">
         <DayItem
+          heading="Strafpunkte - Neues Layout"
+          badges={["Änderung", "Strafpunkte"]}
+        >
+          <p>
+            Die Strafpunkte-Übersicht wurde neu gestaltet und entspricht nun dem
+            Layout der anderen Apps wie Events und Tasks. Die Einträge werden
+            nun als flache Liste mit Pagination angezeigt (50 pro Seite).
+          </p>
+
+          <p>
+            Ein neuer Filter ermöglicht es, abgelaufene Strafpunkte ein- oder
+            auszublenden. Der Filter ist auch auf der Detailseite pro Citizen
+            verfügbar.
+          </p>
+        </DayItem>
+
+        <DayItem
           heading="Pagination für SILC-Transaktionen"
           badges={["Neu", "SILC"]}
         >

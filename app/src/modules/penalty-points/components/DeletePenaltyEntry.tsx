@@ -34,7 +34,7 @@ export const DeletePenaltyEntry = ({ className, entry }: Props) => {
         <AlertDialogTrigger asChild>
           <button
             disabled={isPending}
-            className="text-brand-red-500 hover:text-brand-red-300 flex items-center"
+            className="text-brand-red-500 hover:text-brand-red-300 flex items-center hover:cursor-pointer"
             title="Löschen"
           >
             {isPending ? <FaSpinner className="animate-spin" /> : <FaTrash />}

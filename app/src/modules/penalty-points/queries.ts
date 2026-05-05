@@ -1,69 +1,102 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import { type Entity, type PenaltyEntry } from "@prisma/client";
+import { type Entity } from "@prisma/client";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
 
-export const getEntriesGroupedByCitizen = withTrace(
-  "getEntriesGroupedByCitizen",
-  async () => {
-    const authentication = await requireAuthentication();
-    if (!(await authentication.authorize("penaltyEntry", "read"))) forbidden();
+const PENALTY_ENTRIES_PAGE_SIZE = 50;
 
+const buildExpiredWhereClause = (expired: "active" | "all") => {
+  if (expired === "active") {
     const now = new Date();
-
-    const entries = await prisma.penaltyEntry.findMany({
-      where: {
-        deletedAt: null,
-        OR: [
-          {
-            expiresAt: {
-              gte: now,
-            },
+    return {
+      OR: [
+        {
+          expiresAt: {
+            gte: now,
           },
-          {
-            expiresAt: null,
-          },
-        ],
-      },
-      include: {
-        citizen: true,
-        createdBy: true,
-      },
-    });
+        },
+        {
+          expiresAt: null,
+        },
+      ],
+    };
+  }
+  return {};
+};
 
-    const groupedEntries = new Map<
-      Entity["id"],
-      {
-        citizen: Entity;
-        totalPoints: number;
-        entries: (PenaltyEntry & { createdBy: Entity })[];
+export const getPenaltyEntriesPaginated = cache(
+  withTrace(
+    "getPenaltyEntriesPaginated",
+    async (
+      expired: "active" | "all" = "active",
+      cursor: string | null = null,
+      direction: "next" | "prev" = "next",
+    ) => {
+      const authentication = await requireAuthentication();
+      if (!(await authentication.authorize("penaltyEntry", "read")))
+        forbidden();
+
+      const take =
+        direction === "prev"
+          ? -(PENALTY_ENTRIES_PAGE_SIZE + 1)
+          : PENALTY_ENTRIES_PAGE_SIZE + 1;
+
+      const rows = await prisma.penaltyEntry.findMany({
+        where: {
+          deletedAt: null,
+          ...buildExpiredWhereClause(expired),
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        include: {
+          citizen: true,
+          createdBy: true,
+        },
+        ...(cursor
+          ? {
+              cursor: {
+                id: cursor,
+              },
+              skip: 1,
+            }
+          : {}),
+        take,
+      });
+
+      const hasMore = rows.length > PENALTY_ENTRIES_PAGE_SIZE;
+
+      let entries;
+      if (hasMore) {
+        if (direction === "prev") {
+          entries = rows.slice(1);
+        } else {
+          entries = rows.slice(0, PENALTY_ENTRIES_PAGE_SIZE);
+        }
+      } else {
+        entries = rows;
       }
-    >();
 
-    for (const entry of entries) {
-      if (!groupedEntries.has(entry.citizenId)) {
-        groupedEntries.set(entry.citizenId, {
-          citizen: entry.citizen,
-          totalPoints: 0,
-          entries: [],
-        });
-      }
+      const hasNextPage = direction === "next" ? hasMore : !!cursor;
+      const hasPrevPage = direction === "prev" ? hasMore : !!cursor;
 
-      const mapEntry = groupedEntries.get(entry.citizenId)!;
-      mapEntry.entries.push(entry);
-
-      mapEntry.totalPoints += entry.points;
-    }
-
-    return groupedEntries;
-  },
+      return {
+        entries,
+        nextCursor:
+          hasNextPage && entries.length > 0
+            ? entries[entries.length - 1].id
+            : null,
+        prevCursor: hasPrevPage && entries.length > 0 ? entries[0].id : null,
+      };
+    },
+  ),
 );
 
 export const getEntriesOfCitizen = withTrace(
   "getEntriesOfCitizen",
-  async (citizenId: Entity["id"]) => {
+  async (citizenId: Entity["id"], expired: "active" | "all" = "active") => {
     const authentication = await requireAuthentication();
     if (!authentication.session.entity) throw new Error("Forbidden");
     if (
@@ -75,54 +108,20 @@ export const getEntriesOfCitizen = withTrace(
     )
       throw new Error("Forbidden");
 
-    const now = new Date();
-
-    const entries = await prisma.penaltyEntry.findMany({
+    return prisma.penaltyEntry.findMany({
       where: {
         citizenId,
         deletedAt: null,
-        OR: [
-          {
-            expiresAt: {
-              gte: now,
-            },
-          },
-          {
-            expiresAt: null,
-          },
-        ],
+        ...buildExpiredWhereClause(expired),
+      },
+      orderBy: {
+        createdAt: "desc",
       },
       include: {
         citizen: true,
         createdBy: true,
       },
     });
-
-    const groupedEntries = new Map<
-      Entity["id"],
-      {
-        citizen: Entity;
-        totalPoints: number;
-        entries: (PenaltyEntry & { createdBy: Entity })[];
-      }
-    >();
-
-    for (const entry of entries) {
-      if (!groupedEntries.has(entry.citizenId)) {
-        groupedEntries.set(entry.citizenId, {
-          citizen: entry.citizen,
-          totalPoints: 0,
-          entries: [],
-        });
-      }
-
-      const mapEntry = groupedEntries.get(entry.citizenId)!;
-      mapEntry.entries.push(entry);
-
-      mapEntry.totalPoints += entry.points;
-    }
-
-    return groupedEntries;
   },
 );
 

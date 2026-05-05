@@ -1,4 +1,5 @@
 import { DefaultLayout } from "@/modules/common/components/layouts/DefaultLayout";
+import { MaxWidthContent } from "@/modules/common/components/layouts/MaxWidthContent";
 import { getNavigationItems } from "@/modules/penalty-points/utils/getNavigationItems";
 import type { Metadata } from "next";
 
@@ -16,7 +17,7 @@ export default async function Layout({
 
   return (
     <DefaultLayout title="Strafpunkte" pages={pages} slug="penalty-points">
-      {children}
+      <MaxWidthContent>{children}</MaxWidthContent>
     </DefaultLayout>
   );
 }

@@ -48,7 +48,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
                             <MobileActionBarLoader />
                           </CmdKProvider>
 
-                          <div className="pt-12 lg:pt-[104px] pb-[64px] lg:pb-0 min-h-dvh">
+                          <div className="pt-12 lg:pt-28 pb-16 lg:pb-0 min-h-dvh">
                             {children}
                           </div>
                         </CreateContextProvider>
