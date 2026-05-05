@@ -1,5 +1,5 @@
 import { createId } from "@paralleldrive/cuid2";
-import { emitEvents } from "./eventbridge";
+import { emitEvents } from "../common/eventbridge";
 
 interface Notification {
   type: string;

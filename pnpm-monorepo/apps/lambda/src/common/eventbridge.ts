@@ -3,8 +3,8 @@ import {
   PutEventsCommand,
   type PutEventsCommandInput,
 } from "@aws-sdk/client-eventbridge";
-import { log } from "../common/logger";
-import { captureAsyncFunc } from "../common/xray";
+import { log } from "./logger";
+import { captureAsyncFunc } from "./xray";
 
 const client = new EventBridgeClient({
   region: "eu-central-1",

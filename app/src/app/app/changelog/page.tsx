@@ -79,6 +79,16 @@ export default async function Page() {
             Seite). Dies verbessert die performance bei vielen Transaktionen.
           </p>
         </DayItem>
+
+        <DayItem
+          heading="SILC-Benachrichtigung bei Gehalt und Task-Erledigung"
+          badges={["Neu", "SILC", "Benachrichtigungen"]}
+        >
+          <p>
+            Du wirst nun auch benachrichtigt, wenn du SILC durch dein Gehalt
+            erhältst oder wenn du einen Task mit SILC-Belohnung erfüllst.
+          </p>
+        </DayItem>
       </Day>
 
       <Day heading="24. März 2026">
