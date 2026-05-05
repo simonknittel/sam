@@ -5,6 +5,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationAction } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
+import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { updateCitizensSilcBalances } from "@/modules/silc/utils/updateCitizensSilcBalances";
 import { createId } from "@paralleldrive/cuid2";
 import { TaskRewardType, TaskVisibility } from "@prisma/client";
@@ -109,33 +110,51 @@ export const completeTask = async (formData: FormData) => {
       task.rewardType === TaskRewardType.SILC ||
       task.rewardType === TaskRewardType.NEW_SILC
     ) {
+      const silcTransactionIds: string[] = [];
+
       if (task.rewardType === TaskRewardType.SILC) {
-        await prisma.$transaction([
-          prisma.silcTransaction.createMany({
+        const transactions = await prisma.$transaction([
+          prisma.silcTransaction.createManyAndReturn({
             data: result.data.completionistIds.map((receiverId) => ({
               receiverId,
               value: task.rewardTypeSilcValue!,
               description: `Task erfüllt: ${task.title}`,
               createdById: authentication.session.entity!.id,
             })),
+            select: {
+              id: true,
+            },
           }),
 
           ...(task.createdById
             ? [
-                prisma.silcTransaction.create({
-                  data: {
-                    receiverId: task.createdById,
-                    value: -(
-                      task.rewardTypeSilcValue! *
-                      result.data.completionistIds.length
-                    ),
-                    description: `Task abgeschlossen: ${task.title}`,
-                    createdById: authentication.session.entity.id,
-                  },
-                }),
-              ]
+              prisma.silcTransaction.create({
+                data: {
+                  receiverId: task.createdById,
+                  value: -(
+                    task.rewardTypeSilcValue! *
+                    result.data.completionistIds.length
+                  ),
+                  description: `Task abgeschlossen: ${task.title}`,
+                  createdById: authentication.session.entity.id,
+                },
+              }),
+            ]
             : []),
         ]);
+
+        const completionistTransactions = transactions[0];
+        silcTransactionIds.push(
+          ...(completionistTransactions as { id: string }[]).map(
+            (t) => t.id,
+          ),
+        );
+
+        if (task.createdById && transactions[1]) {
+          silcTransactionIds.push(
+            (transactions[1] as { id: string }).id,
+          );
+        }
 
         /**
          * Update citizens' balances
@@ -143,20 +162,42 @@ export const completeTask = async (formData: FormData) => {
         if (task.createdById)
           await updateCitizensSilcBalances([task.createdById]);
       } else if (task.rewardType === TaskRewardType.NEW_SILC) {
-        await prisma.silcTransaction.createMany({
-          data: result.data.completionistIds.map((receiverId) => ({
-            receiverId,
-            value: task.rewardTypeNewSilcValue!,
-            description: `Task erfüllt: ${task.title}`,
-            createdById: authentication.session.entity!.id,
-          })),
-        });
+        const createdTransactions =
+          await prisma.silcTransaction.createManyAndReturn({
+            data: result.data.completionistIds.map((receiverId) => ({
+              receiverId,
+              value: task.rewardTypeNewSilcValue!,
+              description: `Task erfüllt: ${task.title}`,
+              createdById: authentication.session.entity!.id,
+            })),
+            select: {
+              id: true,
+            },
+          });
+
+        silcTransactionIds.push(
+          ...createdTransactions.map((t) => t.id),
+        );
       }
 
       /**
        * Update citizens' balances
        */
       await updateCitizensSilcBalances(result.data.completionistIds);
+
+      /**
+       * Trigger notifications
+       */
+      if (silcTransactionIds.length > 0) {
+        await triggerNotifications([
+          {
+            type: "SilcTransactionsCreated",
+            payload: {
+              transactionIds: silcTransactionIds,
+            },
+          },
+        ]);
+      }
 
       /**
        * Revalidate cache(s)

@@ -1,4 +1,6 @@
+import { createId } from "@paralleldrive/cuid2";
 import { prisma, type Entity, type Role } from "@sam-monorepo/database";
+import { emitEvents } from "../common/eventbridge";
 import { log } from "../common/logger";
 import { captureAsyncFunc } from "../common/xray";
 import { getRoleSalaries } from "./getRoleSalaries";
@@ -61,17 +63,24 @@ export const disburseRoleSalaries = async () => {
       }
     }
 
+    const allTransactionIds: string[] = [];
+
     for (const salary of todaysSalaries) {
       const group = citizensGroupedByRole.get(salary.roleId);
       if (!group) continue;
 
-      await prisma.silcTransaction.createMany({
+      const createdTransactions = await prisma.silcTransaction.createManyAndReturn({
         data: group.citizens.map((citizen) => ({
           receiverId: citizen.id,
           value: salary.value,
           description: `Gehalt: ${group.role.name}`,
         })),
+        select: {
+          id: true,
+        },
       });
+
+      allTransactionIds.push(...createdTransactions.map((t) => t.id));
     }
 
     /**
@@ -84,6 +93,25 @@ export const disburseRoleSalaries = async () => {
           ?.citizens.map((citizen) => citizen.id) || [],
     );
     await updateCitizensSilcBalances(citizenIds);
+
+    /**
+     * Trigger notifications
+     */
+    if (allTransactionIds.length > 0) {
+      await emitEvents([
+        {
+          Source: "MidnightAutomations",
+          DetailType: "NotificationRequested",
+          Detail: JSON.stringify({
+            type: "SilcTransactionsCreated",
+            payload: {
+              transactionIds: allTransactionIds,
+            },
+            requestId: createId(),
+          }),
+        },
+      ]);
+    }
 
     log.info("Disbursed role salaries");
   });
