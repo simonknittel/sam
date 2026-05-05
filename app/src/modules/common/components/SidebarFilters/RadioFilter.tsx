@@ -26,6 +26,7 @@ export const RadioFilter = ({
     shallow: false,
     startTransition,
   });
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_, setPagination] = useQueryStates(cursorPaginationParsers, {
     shallow: false,
     startTransition,

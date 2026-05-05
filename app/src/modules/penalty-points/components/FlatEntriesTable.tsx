@@ -1,40 +1,43 @@
 import { requireAuthentication } from "@/modules/auth/server";
 import { Tile } from "@/modules/common/components/Tile";
-import type { Entity } from "@prisma/client";
+import { CursorPaginationControls } from "@/modules/common/CursorPagination/CursorPaginationControls";
+import { cursorPaginationParsers } from "@/modules/common/CursorPagination/cursorPaginationParsers";
 import clsx from "clsx";
 import {
   createLoader,
   parseAsStringLiteral,
   type SearchParams,
 } from "nuqs/server";
-import { getEntriesOfCitizen } from "../queries";
+import { getPenaltyEntriesPaginated } from "../queries";
 import { CreatePenaltyEntryButton } from "./CreatePenaltyEntry/CreatePenaltyEntryButton";
 import { FlatEntriesTableClient } from "./FlatEntriesTableClient";
 
 const loadSearchParams = createLoader({
   expired: parseAsStringLiteral(["active", "all"]).withDefault("active"),
+  ...cursorPaginationParsers,
 });
 
 interface Props {
   readonly className?: string;
-  readonly citizenId: Entity["id"];
   readonly searchParams: Promise<SearchParams>;
 }
 
-export const EntriesOfCitizenTable = async ({
-  className,
-  citizenId,
-  searchParams,
-}: Props) => {
+export const FlatEntriesTable = async ({ className, searchParams }: Props) => {
   const authentication = await requireAuthentication();
-  const { expired } = await loadSearchParams(searchParams);
+  const { expired, cursor, direction } = await loadSearchParams(searchParams);
+
+  const { entries, nextCursor, prevCursor } = await getPenaltyEntriesPaginated(
+    expired,
+    cursor,
+    direction,
+  );
+
+  const hasEntries = entries.length > 0;
+
   const [showCreate, showDelete] = await Promise.all([
     authentication.authorize("penaltyEntry", "create"),
     authentication.authorize("penaltyEntry", "delete"),
   ]);
-
-  const entries = await getEntriesOfCitizen(citizenId, expired);
-  const hasEntries = entries.length > 0;
 
   return (
     <Tile
@@ -43,13 +46,15 @@ export const EntriesOfCitizenTable = async ({
       className={clsx(className)}
     >
       {hasEntries ? (
-        <FlatEntriesTableClient
-          rows={entries}
-          showDelete={showDelete}
-          hideCitizenColumn
-        />
+        <div className="flex flex-col gap-4">
+          <FlatEntriesTableClient rows={entries} showDelete={showDelete} />
+          <CursorPaginationControls
+            nextCursor={nextCursor}
+            prevCursor={prevCursor}
+          />
+        </div>
       ) : (
-        <p className="italic">Keine Strafpunkte vorhanden.</p>
+        <p className="italic">Keine Strafpunkte gefunden.</p>
       )}
     </Tile>
   );

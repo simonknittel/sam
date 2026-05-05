@@ -11,7 +11,7 @@ export const IframeLayout = ({ src, iframeProps }: Props) => {
     <div className="relative">
       <iframe
         src={src}
-        className="w-full h-[calc(100dvh-64px-48px)] lg:h-[calc(100dvh-104px)] relative z-10"
+        className="w-full h-[calc(100dvh-64px-48px)] lg:h-[calc(100dvh-112px)] relative z-10"
         title="Formular für eine SILO-Anfrage"
         {...iframeProps}
       />

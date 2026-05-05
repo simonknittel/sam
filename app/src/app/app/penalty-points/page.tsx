@@ -1,17 +1,20 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
-import { MaxWidthContent } from "@/modules/common/components/layouts/MaxWidthContent";
+import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
-import { AllEntriesTable } from "@/modules/penalty-points/components/AllEntriesTable";
+import { Filters } from "@/modules/penalty-points/components/Filters";
+import { FlatEntriesTable } from "@/modules/penalty-points/components/FlatEntriesTable";
 
-export default async function Page() {
+export default async function Page({
+  searchParams,
+}: PageProps<"/app/penalty-points">) {
   const authentication = await requireAuthenticationPage("/app/penalty-points");
   await authentication.authorizePage("penaltyEntry", "read");
 
   return (
-    <MaxWidthContent>
+    <SidebarLayout sidebar={<Filters />}>
       <SuspenseWithErrorBoundaryTile>
-        <AllEntriesTable />
+        <FlatEntriesTable searchParams={searchParams} />
       </SuspenseWithErrorBoundaryTile>
-    </MaxWidthContent>
+    </SidebarLayout>
   );
 }
