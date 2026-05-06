@@ -19,6 +19,9 @@ const schema = z.object({
   description: z.string().trim().max(512).optional(),
   variantIds: z.array(z.cuid()).max(250), // Arbitrary (untested) limit to prevent DDoS
   parentPositionId: z.cuid().optional(),
+  fontSize: z.enum(["", "large"]).optional().nullish(),
+  backgroundColor: z.string().max(7).optional().nullish(),
+  textColor: z.string().max(7).optional().nullish(),
 });
 
 export const createEventPosition = async (formData: FormData) => {
@@ -45,6 +48,11 @@ export const createEventPosition = async (formData: FormData) => {
       parentPositionId: formData.has("parentPositionId")
         ? formData.get("parentPositionId")
         : undefined,
+      fontSize: formData.has("fontSize") ? formData.get("fontSize") : null,
+      backgroundColor: formData.has("backgroundColor")
+        ? formData.get("backgroundColor")
+        : null,
+      textColor: formData.has("textColor") ? formData.get("textColor") : null,
     });
     if (!result.success)
       return {
@@ -87,6 +95,9 @@ export const createEventPosition = async (formData: FormData) => {
         },
         name: result.data.name,
         description: result.data.description,
+        fontSize: result.data.fontSize,
+        backgroundColor: result.data.backgroundColor,
+        textColor: result.data.textColor,
         order: event.positions.length,
         requiredVariants: {
           createMany: {

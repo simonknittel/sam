@@ -154,7 +154,7 @@ export const CreateOrUpdateEventPosition = (props: Props) => {
       <Modal
         isOpen={isOpen}
         onRequestClose={handleRequestClose}
-        className="w-[480px]"
+        className="w-120"
         heading={
           <h2>
             Posten oder Gruppe{" "}
@@ -207,6 +207,19 @@ export const CreateOrUpdateEventPosition = (props: Props) => {
                     (requiredVariant) => requiredVariant.variantId,
                   )
                 : undefined
+            }
+            className="mt-4"
+          />
+
+          <PositionFormatting
+            defaultFontSize={
+              "position" in props ? props.position.fontSize : undefined
+            }
+            defaultBackgroundColor={
+              "position" in props ? props.position.backgroundColor : undefined
+            }
+            defaultTextColor={
+              "position" in props ? props.position.textColor : undefined
             }
             className="mt-4"
           />
@@ -416,5 +429,98 @@ const RequiredVariants = ({
           <input type="hidden" name="variantId[]" value={item} key={item} />
         ))}
     </>
+  );
+};
+
+interface PositionFormattingProps {
+  readonly className?: string;
+  readonly defaultFontSize?: string | null;
+  readonly defaultBackgroundColor?: string | null;
+  readonly defaultTextColor?: string | null;
+}
+
+const PositionFormatting = ({
+  className,
+  defaultFontSize,
+  defaultBackgroundColor,
+  defaultTextColor,
+}: PositionFormattingProps) => {
+  const [backgroundColor, setBackgroundColor] = useState<
+    string | null | undefined
+  >(defaultBackgroundColor);
+  const [textColor, setTextColor] = useState<string | null | undefined>(
+    defaultTextColor,
+  );
+
+  return (
+    <div className={clsx("space-y-3", className)}>
+      <h3 className="text-gray-500 font-mono uppercase text-xs">
+        Formatierung
+      </h3>
+
+      <div>
+        <label className="block text-sm mb-1">Schriftgröße</label>
+        <select
+          name="fontSize"
+          className="p-2 rounded-secondary bg-neutral-900 w-full"
+          defaultValue={defaultFontSize || ""}
+        >
+          <option value="">Standard</option>
+          <option value="large">Groß</option>
+        </select>
+      </div>
+
+      <div className="flex gap-4">
+        <div className="flex-1">
+          <label className="block text-sm mb-1">Hintergrundfarbe</label>
+          <div className="flex gap-2 items-center">
+            <input
+              type="color"
+              className="w-10 h-10 rounded cursor-pointer bg-neutral-900 border border-white/10 p-0"
+              value={backgroundColor || "#262626"}
+              onChange={(e) => setBackgroundColor(e.target.value)}
+            />
+            <button
+              type="button"
+              className="p-2 rounded-secondary bg-neutral-900 flex-1 text-left font-mono text-sm text-neutral-400 hover:text-white"
+              onClick={() =>
+                setBackgroundColor(backgroundColor ? null : "#262626")
+              }
+            >
+              {backgroundColor || "Keine"}
+            </button>
+          </div>
+          {backgroundColor && (
+            <input
+              type="hidden"
+              name="backgroundColor"
+              value={backgroundColor}
+            />
+          )}
+        </div>
+
+        <div className="flex-1">
+          <label className="block text-sm mb-1">Textfarbe</label>
+          <div className="flex gap-2 items-center">
+            <input
+              type="color"
+              className="w-10 h-10 rounded cursor-pointer bg-neutral-900 border border-white/10 p-0"
+              value={textColor || "#e5e5e5"}
+              onChange={(e) => setTextColor(e.target.value)}
+            />
+            <button
+              type="button"
+              className="p-2 rounded-secondary bg-neutral-900 flex-1 text-left font-mono text-sm text-neutral-400 hover:text-white"
+              onClick={() => setTextColor(textColor ? null : "#e5e5e5")}
+            >
+              {textColor || "Keine"}
+            </button>
+          </div>
+          {textColor && (
+            <input type="hidden" name="textColor" value={textColor} />
+          )}
+        </div>
+      </div>
+    </div>
   );
 };

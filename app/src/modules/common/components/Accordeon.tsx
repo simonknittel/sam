@@ -14,7 +14,7 @@ export const AccordeonToggle = (props: AccordeonToggleProps) => {
       type="button"
       title={isOpen ? "Details schließen" : "Details öffnen"}
       className={clsx(
-        "flex-none p-3 flex items-center justify-center border-l border-white/10 hover:bg-neutral-800 rounded-secondary",
+        "flex-none p-3 flex items-center justify-center border-l border-white/10 hover:bg-white/5 hover:cursor-pointer rounded-secondary",
         className,
       )}
       {...rest}

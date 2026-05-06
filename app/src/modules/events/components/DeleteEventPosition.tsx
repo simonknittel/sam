@@ -34,7 +34,7 @@ export const DeleteEventPosition = ({ className, position }: Props) => {
         <AlertDialogTrigger asChild>
           <button
             disabled={isPending}
-            className="text-brand-red-500 hover:text-brand-red-300 flex items-center px-2"
+            className="text-brand-red-500 hover:text-brand-red-300 hover:cursor-pointer flex items-center px-2"
             title="Posten löschen"
           >
             <FaTrash />

@@ -101,6 +101,18 @@ export default async function Page() {
             Nachverfolgung der Änderungen.
           </p>
         </DayItem>
+
+        <DayItem
+          heading="Formatierung von Posten in der Aufstellung"
+          badges={["Neu", "Events"]}
+        >
+          <p>
+            Posten in der Event-Aufstellung können nun individuell formatiert
+            werden. Bei der Bearbeitung eines Posten lassen sich die
+            Schriftgröße (Normal und Groß), die Hintergrundfarbe und die
+            Textfarbe konfigurieren.
+          </p>
+        </DayItem>
       </Day>
 
       <Day heading="5. Mai 2026">

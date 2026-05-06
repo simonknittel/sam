@@ -18,6 +18,9 @@ const schema = z.object({
   name: z.string().trim().max(256),
   description: z.string().trim().max(512).optional(),
   variantIds: z.array(z.cuid()).max(250), // Arbitrary (untested) limit to prevent DDoS
+  fontSize: z.enum(["", "large"]).optional().nullable(),
+  backgroundColor: z.string().max(7).optional().nullable(),
+  textColor: z.string().max(7).optional().nullable(),
 });
 
 export const updateEventPosition = async (formData: FormData) => {
@@ -41,6 +44,11 @@ export const updateEventPosition = async (formData: FormData) => {
         ? formData.get("description")
         : undefined,
       variantIds: formData.getAll("variantId[]") || [],
+      fontSize: formData.has("fontSize") ? formData.get("fontSize") : null,
+      backgroundColor: formData.has("backgroundColor")
+        ? formData.get("backgroundColor")
+        : null,
+      textColor: formData.has("textColor") ? formData.get("textColor") : null,
     });
     if (!result.success)
       return {
@@ -92,6 +100,9 @@ export const updateEventPosition = async (formData: FormData) => {
         data: {
           name: result.data.name,
           description: result.data.description,
+          fontSize: result.data.fontSize,
+          backgroundColor: result.data.backgroundColor,
+          textColor: result.data.textColor,
           requiredVariants: {
             createMany: {
               data: result.data.variantIds.map((id, index) => ({
@@ -106,12 +117,18 @@ export const updateEventPosition = async (formData: FormData) => {
 
     await createAuditEvents([
       {
-        type: AuditEventType.EVENT_POSITION_UPDATED,
+        type: AuditEventType.EVENT_POSITION_UPDATED_V2,
         data: {
           eventId: position.event.id,
           positionId: position.id,
           previousName: position.name,
           newName: result.data.name,
+          previousFontSize: position.fontSize || null,
+          newFontSize: result.data.fontSize || null,
+          previousBackgroundColor: position.backgroundColor || null,
+          newBackgroundColor: result.data.backgroundColor || null,
+          previousTextColor: position.textColor || null,
+          newTextColor: result.data.textColor || null,
         },
         createdById: authentication.session.user.id,
       },
