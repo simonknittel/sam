@@ -1,16 +1,13 @@
-import "./event-starting-soon/setup";
-
 import { prisma } from "@sam-monorepo/database";
-import type { ScheduledHandler } from "aws-lambda";
 import { createId } from "@paralleldrive/cuid2";
-import { emitEvents } from "./common/eventbridge";
-import { log } from "./common/logger";
-import { initializeRequestContext } from "./common/requestContext";
+import { emitEvents } from "../common/eventbridge";
+import { log } from "../common/logger";
+import { captureAsyncFunc } from "../common/xray";
 
 const NOTIFICATION_MINUTES_BEFORE = 15;
 
-export const handler: ScheduledHandler = async (event, context) => {
-  return initializeRequestContext(context.awsRequestId, async () => {
+export const eventStartingSoon = async () => {
+  await captureAsyncFunc("eventStartingSoon", async () => {
     void log.info("Checking for events starting soon");
 
     const now = new Date();
@@ -41,7 +38,7 @@ export const handler: ScheduledHandler = async (event, context) => {
 
     await emitEvents(
       events.map((evt) => ({
-        Source: "event-starting-soon",
+        Source: "frequent-automations",
         DetailType: "NotificationRequested",
         Detail: JSON.stringify({
           type: "EventStarting",

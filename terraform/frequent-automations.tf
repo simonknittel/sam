@@ -1,7 +1,7 @@
-module "event_starting_soon_function" {
+module "frequent_automations" {
   source = "./modules/scheduled-lambda"
 
-  function_name = "event-starting-soon-function"
+  function_name = "frequent-automations"
   account_id    = data.aws_caller_identity.current.account_id
   timeout       = 90
   memory_size   = 256
@@ -9,7 +9,7 @@ module "event_starting_soon_function" {
     {
       AWS_EVENT_BUS_ARN = data.aws_cloudwatch_event_bus.default.arn
     },
-    var.event_starting_soon_function_environment_variables
+    var.frequent_automations_environment_variables
   )
   schedule_expression = "rate(15 minutes)"
   event_bus           = data.aws_cloudwatch_event_bus.default
