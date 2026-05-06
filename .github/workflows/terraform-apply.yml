@@ -59,15 +59,14 @@ jobs:
           name: tfplan
           path: terraform/
 
+      - name: Create tfvars file
+        working-directory: terraform
+        run: echo "${{ vars.TFVARS }}" > ${ { inputs.environment || 'test' }}.tfvars
+
       - name: terraform init
         run: terraform init -backend-config=${{ inputs.environment }}.s3.tfbackend
         working-directory: terraform
 
       - name: terraform apply
-        run: terraform apply tfplan
+        run: terraform apply tfplan -var-file=${{ inputs.environment || 'test' }}.tfvars
         working-directory: terraform
-        env:
-          TF_VAR_scrape_discord_events_function_environment_variables: ${{ vars.SCRAPE_DISCORD_EVENTS_FUNCTION_ENVIRONMENT_VARIABLES }}
-          TF_VAR_midnight_automations_environment_variables: ${{ vars.MIDNIGHT_AUTOMATIONS_ENVIRONMENT_VARIABLES }}
-          TF_VAR_frequent_automations_environment_variables: ${{ vars.FREQUENT_AUTOMATIONS_ENVIRONMENT_VARIABLES }}
-          TF_VAR_notification_router_environment_variables: ${{ vars.NOTIFICATION_ROUTER_ENVIRONMENT_VARIABLES }}
