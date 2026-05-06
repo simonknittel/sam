@@ -45,6 +45,13 @@ jobs:
           path: pnpm-monorepo/apps/lambda/build/midnight-automations.zip
           retention-days: 1
 
+      - name: Store artifact (event-starting-soon)
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: event-starting-soon-dist
+          path: pnpm-monorepo/apps/lambda/build/event-starting-soon.zip
+          retention-days: 1
+
       - name: Store artifact (notification-router)
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
