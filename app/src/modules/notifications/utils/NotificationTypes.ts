@@ -49,6 +49,12 @@ export const NOTIFICATIONS_APPS: NotificationApp[] = [
         description: "Nur bei eigener Teilnahme",
         category: "Events",
       },
+      {
+        id: "event_starting",
+        title: "Event beginnt bald",
+        description: "Nur bei eigener Teilnahme. 15 Minuten vor Event-Start.",
+        category: "Events",
+      },
     ],
   },
 

@@ -6,15 +6,15 @@ type Payload = {
   eventId: Event["id"];
 };
 
-export const EventUpdatedHandler = async (payload: Payload) => {
+export const EventStartingHandler = async (payload: Payload) => {
   const result = await getEventParticipants(payload.eventId);
   if (!result) return;
 
   await publishWebPushNotifications(
     result.participants.map((citizen) => ({
       receiverId: citizen.id,
-      notificationType: "event_updated",
-      title: "Event aktualisiert",
+      notificationType: "event_starting",
+      title: "Event beginnt in 15 Minuten",
       body: result.event.name,
       url: `/app/events/${result.event.id}`,
     })),
