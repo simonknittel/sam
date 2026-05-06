@@ -15,23 +15,23 @@ importers:
   .:
     devDependencies:
       prettier:
-        specifier: 3.8.2
-        version: 3.8.2
+        specifier: 3.8.3
+        version: 3.8.3
       prettier-plugin-organize-imports:
         specifier: 4.3.0
-        version: 4.3.0(prettier@3.8.2)(typescript@5.9.3)
+        version: 4.3.0(prettier@3.8.3)(typescript@5.9.3)
 
   apps/lambda:
     dependencies:
       '@aws-sdk/client-dynamodb':
-        specifier: 3.1030.0
-        version: 3.1030.0
+        specifier: 3.1038.0
+        version: 3.1038.0
       '@aws-sdk/client-eventbridge':
-        specifier: 3.1030.0
-        version: 3.1030.0
+        specifier: 3.1038.0
+        version: 3.1038.0
       '@aws-sdk/client-ssm':
-        specifier: 3.1030.0
-        version: 3.1030.0
+        specifier: 3.1038.0
+        version: 3.1038.0
       '@paralleldrive/cuid2':
         specifier: 3.3.0
         version: 3.3.0
@@ -195,16 +195,16 @@ packages:
   '@aws-crypto/util@5.2.0':
     resolution: {integrity: sha512-4RkU9EsI6ZpBve5fseQlGNUWKMa1RLPQ1dnjnQoe07ldfIzcsGb5hC5W0Dm7u423KWzawlrpbjXBrXCEv9zazQ==}
 
-  '@aws-sdk/client-dynamodb@3.1030.0':
-    resolution: {integrity: sha512-mJlCunrAcjOvRyjDiOSNNFEJWwGkfHChqNHZI36oZwnbWyVBkMa43Qhc54sWIhZVXzYONeQ+hviF6zLbFBTUAw==}
+  '@aws-sdk/client-dynamodb@3.1038.0':
+    resolution: {integrity: sha512-avw92N9zBKbU0QxXlag8XqVOwZH2doJuWOLO5eCC2DthBy5DufOv5KY5HTlYhNU4KUxzif+c/npNesqVfs2dSw==}
     engines: {node: '>=20.0.0'}
 
-  '@aws-sdk/client-eventbridge@3.1030.0':
-    resolution: {integrity: sha512-dIGSaiBvj6ltU2Gz5cO/gs73dQTdexl4gJjg2CziCZsmav+8X87fm9DAH9vWXK+RNUidGV4vCWb+Bxmsd3AxEA==}
+  '@aws-sdk/client-eventbridge@3.1038.0':
+    resolution: {integrity: sha512-dWbkRSuZEBLlISgQPE1uLjaARSQK35RQvSgck89ObwmcBwwsr4gfig8WLRppYRYXHAEpiCPdbqZomdCb3QIGWg==}
     engines: {node: '>=20.0.0'}
 
-  '@aws-sdk/client-ssm@3.1030.0':
-    resolution: {integrity: sha512-FKu4tINBafrEp6FfoJDaM+KvTqwwK5gnVTrc0ZYbAQ5L7oMuCx02MEQvRI6VLaNhuIqXMKijKo2lodyLY+00WA==}
+  '@aws-sdk/client-ssm@3.1038.0':
+    resolution: {integrity: sha512-xP6CqJkTOvX06+IghNmohu1qvzYQBmdszPHPCkCTJi3FKFQXdKpkSsaeAedBLExLW49GnHg0kVPblMGFFhirXg==}
     engines: {node: '>=20.0.0'}
 
   '@aws-sdk/core@3.974.8':
@@ -1191,8 +1191,8 @@ packages:
       vue-tsc:
         optional: true
 
-  prettier@3.8.2:
-    resolution: {integrity: sha512-8c3mgTe0ASwWAJK+78dpviD+A8EqhndQPUBpNUIPt6+xWlIigCwfN01lWr9MAede4uqXGTEKeQWTvzb3vjia0Q==}
+  prettier@3.8.3:
+    resolution: {integrity: sha512-7igPTM53cGHMW8xWuVTydi2KO233VFiTNyF5hLJqpilHfmn8C8gPf+PS7dUT64YcXFbiMGZxS9pCSxL/Dxm/Jw==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -1394,7 +1394,7 @@ snapshots:
       '@smithy/util-utf8': 2.3.0
       tslib: 2.8.1
 
-  '@aws-sdk/client-dynamodb@3.1030.0':
+  '@aws-sdk/client-dynamodb@3.1038.0':
     dependencies:
       '@aws-crypto/sha256-browser': 5.2.0
       '@aws-crypto/sha256-js': 5.2.0
@@ -1441,7 +1441,7 @@ snapshots:
     transitivePeerDependencies:
       - aws-crt
 
-  '@aws-sdk/client-eventbridge@3.1030.0':
+  '@aws-sdk/client-eventbridge@3.1038.0':
     dependencies:
       '@aws-crypto/sha256-browser': 5.2.0
       '@aws-crypto/sha256-js': 5.2.0
@@ -1486,7 +1486,7 @@ snapshots:
     transitivePeerDependencies:
       - aws-crt
 
-  '@aws-sdk/client-ssm@3.1030.0':
+  '@aws-sdk/client-ssm@3.1038.0':
     dependencies:
       '@aws-crypto/sha256-browser': 5.2.0
       '@aws-crypto/sha256-js': 5.2.0
@@ -2702,12 +2702,12 @@ snapshots:
     dependencies:
       xtend: 4.0.2
 
-  prettier-plugin-organize-imports@4.3.0(prettier@3.8.2)(typescript@5.9.3):
+  prettier-plugin-organize-imports@4.3.0(prettier@3.8.3)(typescript@5.9.3):
     dependencies:
-      prettier: 3.8.2
+      prettier: 3.8.3
       typescript: 5.9.3
 
-  prettier@3.8.2: {}
+  prettier@3.8.3: {}
 
   prisma@6.17.1(typescript@5.9.3):
     dependencies:

@@ -92,7 +92,7 @@
 2. Create Terraform resources
 
    1. `AWS_PROFILE=sam-test aws sso login`
-   2. `AWS_PROFILE=sam-test terraform init -backend-config=test.s3.tfbackend`
+   2. `AWS_PROFILE=sam-test terraform init -backend-config=test.s3.tfbackend -reconfigure`
    3. `AWS_PROFILE=sam-test terraform apply -var-file="test.tfvars"`
 
 ## 7. Set up Vercel

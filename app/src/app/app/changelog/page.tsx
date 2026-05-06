@@ -72,6 +72,26 @@ export default async function Page() {
         </DayItem>
 
         <DayItem
+          heading="Benachrichtigung wenn Event bald beginnt"
+          badges={["Neu", "Benachrichtigungen"]}
+        >
+          <p>
+            Du kannst nun 15 Minuten vor Beginn eines Events benachrichtigt
+            werden, wenn du Teilnehmer bist.
+          </p>
+
+          <p>
+            Die neue Benachrichtigung kann aktiviert werden unter:{" "}
+            <Link
+              href="/app/account/notifications"
+              className="text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300"
+            >
+              Apps &gt; Account &gt; Benachrichtigungen
+            </Link>
+          </p>
+        </DayItem>
+
+        <DayItem
           heading="System-Protokoll für automatische Rollen-Änderungen"
           badges={["Neu", "System Log"]}
         >

@@ -42,6 +42,8 @@ jobs:
 
     environment: terraform-${{ inputs.environment || 'test' }}
 
+    timeout-minutes: 5
+
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
@@ -72,6 +74,7 @@ jobs:
         env:
           TF_VAR_scrape_discord_events_function_environment_variables: ${{ vars.SCRAPE_DISCORD_EVENTS_FUNCTION_ENVIRONMENT_VARIABLES }}
           TF_VAR_midnight_automations_environment_variables: ${{ vars.MIDNIGHT_AUTOMATIONS_ENVIRONMENT_VARIABLES }}
+          TF_VAR_event_starting_soon_environment_variables: ${{ vars.EVENT_STARTING_SOON_ENVIRONMENT_VARIABLES }}
           TF_VAR_notification_router_environment_variables: ${{ vars.NOTIFICATION_ROUTER_ENVIRONMENT_VARIABLES }}
 
       - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
