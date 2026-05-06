@@ -94,7 +94,7 @@ export const updateRole = async (
 
     await createAuditEvents([
       {
-        type: AuditEventType.ROLE_UPDATED,
+        type: AuditEventType.ROLE_UPDATED_V2,
         data: {
           roleId: updatedRole.id,
           previousName: existingRole.name,

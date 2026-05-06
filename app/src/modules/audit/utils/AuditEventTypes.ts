@@ -17,6 +17,7 @@ export enum AuditEventType {
   WEB_PUSH_SUBSCRIBED = "WEB_PUSH_SUBSCRIBED",
   ROLE_CREATED = "ROLE_CREATED",
   ROLE_UPDATED = "ROLE_UPDATED",
+  ROLE_UPDATED_V2 = "ROLE_UPDATED_V2",
   ROLE_DELETED = "ROLE_DELETED",
   ROLE_PERMISSIONS_UPDATED = "ROLE_PERMISSIONS_UPDATED",
   ROLE_PERMISSION_TOGGLED = "ROLE_PERMISSION_TOGGLED",
@@ -198,6 +199,16 @@ export interface AuditEventDataByType {
     newName: string;
     previousMaxAgeDays: number | null;
     newMaxAgeDays: number | null;
+  };
+
+  [AuditEventType.ROLE_UPDATED_V2]: {
+    roleId: string;
+    previousName: string;
+    newName: string;
+    previousMaxAgeDays: number | null;
+    newMaxAgeDays: number | null;
+    previousAssignAfterInactiveDays: number | null;
+    newAssignAfterInactiveDays: number | null;
   };
 
   [AuditEventType.ROLE_DELETED]: {
@@ -796,6 +807,21 @@ export const AuditEventDefinitions: {
       newName: "string",
       previousMaxAgeDays: 0,
       newMaxAgeDays: 0,
+    },
+    message: (data) =>
+      `Role updated: "${data.previousName}" → "${data.newName}"`,
+  },
+
+  [AuditEventType.ROLE_UPDATED_V2]: {
+    type: AuditEventType.ROLE_UPDATED_V2,
+    data: {
+      roleId: "string",
+      previousName: "string",
+      newName: "string",
+      previousMaxAgeDays: 0,
+      newMaxAgeDays: 0,
+      previousAssignAfterInactiveDays: 0,
+      newAssignAfterInactiveDays: 0,
     },
     message: (data) =>
       `Role updated: "${data.previousName}" → "${data.newName}"`,
