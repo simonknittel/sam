@@ -56,6 +56,7 @@ export enum AuditEventType {
   TASK_SELF_ASSIGNMENT_DELETED = "TASK_SELF_ASSIGNMENT_DELETED",
   EVENT_POSITION_CREATED = "EVENT_POSITION_CREATED",
   EVENT_POSITION_UPDATED = "EVENT_POSITION_UPDATED",
+  EVENT_POSITION_UPDATED_V2 = "EVENT_POSITION_UPDATED_V2",
   EVENT_POSITION_DELETED = "EVENT_POSITION_DELETED",
   EVENT_MANAGERS_ASSIGNED = "EVENT_MANAGERS_ASSIGNED",
   EVENT_MANAGER_REMOVED = "EVENT_MANAGER_REMOVED",
@@ -433,6 +434,19 @@ export interface AuditEventDataByType {
     positionId: string;
     previousName: string;
     newName: string;
+  };
+
+  [AuditEventType.EVENT_POSITION_UPDATED_V2]: {
+    eventId: string;
+    positionId: string;
+    previousName: string;
+    newName: string;
+    previousFontSize: string | null;
+    newFontSize: string | null;
+    previousBackgroundColor: string | null;
+    newBackgroundColor: string | null;
+    previousTextColor: string | null;
+    newTextColor: string | null;
   };
 
   [AuditEventType.EVENT_POSITION_DELETED]: {
@@ -1221,6 +1235,24 @@ export const AuditEventDefinitions: {
       positionId: "string",
       previousName: "string",
       newName: "string",
+    },
+    message: (data) =>
+      `Event position updated (event: ${data.eventId}, position: ${data.positionId})`,
+  },
+
+  [AuditEventType.EVENT_POSITION_UPDATED_V2]: {
+    type: AuditEventType.EVENT_POSITION_UPDATED_V2,
+    data: {
+      eventId: "string",
+      positionId: "string",
+      previousName: "string",
+      newName: "string",
+      previousFontSize: "string",
+      newFontSize: "string",
+      previousBackgroundColor: "string",
+      newBackgroundColor: "string",
+      previousTextColor: "string",
+      newTextColor: "string",
     },
     message: (data) =>
       `Event position updated (event: ${data.eventId}, position: ${data.positionId})`,

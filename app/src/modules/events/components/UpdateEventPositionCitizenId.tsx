@@ -73,7 +73,7 @@ export const UpdateEventPositionCitizenId = ({
       <input type="hidden" name="positionId" value={position.id} />
       <select
         name="citizenId"
-        className="block w-full p-2 bg-neutral-900 text-neutral-100 rounded-secondary cursor-pointer"
+        className="block w-full p-2 bg-white/10 text-neutral-100 rounded-secondary cursor-pointer"
         onChange={handleChange}
         disabled={isPending}
         defaultValue={position.citizenId || "-"}

@@ -89,6 +89,9 @@ export const copyLineupFromEvent = createAuthenticatedAction(
         description: true,
         order: true,
         parentPositionId: true,
+        fontSize: true,
+        backgroundColor: true,
+        textColor: true,
         requiredRoles: {
           select: {
             id: true,
@@ -113,6 +116,9 @@ export const copyLineupFromEvent = createAuthenticatedAction(
             eventId: targetEvent.id,
             name: position.name,
             description: position.description,
+            fontSize: position.fontSize,
+            backgroundColor: position.backgroundColor,
+            textColor: position.textColor,
             order: position.order + orderOffset,
             ...(position.requiredRoles.length
               ? {

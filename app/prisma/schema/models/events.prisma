@@ -48,6 +48,9 @@ model EventPosition {
   parentPosition   EventPosition?                 @relation("parentPosition", fields: [parentPositionId], references: [id], onDelete: Cascade)
   childPositions   EventPosition[]                @relation("parentPosition")
   order            Int                            @default(0)
+  fontSize         String?
+  backgroundColor  String?
+  textColor        String?
 }
 
 model EventPositionRequiredVariant {

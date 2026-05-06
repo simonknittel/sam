@@ -112,7 +112,11 @@ export const EditableInput = ({
             ref={inputRef}
           />
 
-          <button disabled={isPending} className="group" title="Speichern">
+          <button
+            disabled={isPending}
+            className="group hover:cursor-pointer"
+            title="Speichern"
+          >
             {isPending ? (
               <FaSpinner className="text-brand-red-500 animate-spin" />
             ) : (
@@ -124,7 +128,7 @@ export const EditableInput = ({
         <button
           type="button"
           onClick={handleClick}
-          className="flex gap-2 items-center group text-left"
+          className="flex gap-2 items-center group text-left hover:cursor-pointer"
           title="Klicken, um zu bearbeiten"
         >
           {value || "-"}

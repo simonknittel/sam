@@ -101,6 +101,18 @@ export default async function Page() {
             Nachverfolgung der Änderungen.
           </p>
         </DayItem>
+
+        <DayItem
+          heading="Formatierung von Posten in der Aufstellung"
+          badges={["Neu", "Events"]}
+        >
+          <p>
+            Posten in der Event-Aufstellung können nun individuell formatiert
+            werden. Bei der Bearbeitung eines Posten lassen sich die
+            Schriftgröße (Normal und Groß), die Hintergrundfarbe und die
+            Textfarbe konfigurieren.
+          </p>
+        </DayItem>
       </Day>
 
       <Day heading="5. Mai 2026">
@@ -138,24 +150,6 @@ export default async function Page() {
           <p>
             Du wirst nun auch benachrichtigt, wenn du SILC durch dein Gehalt
             erhältst oder wenn du einen Task mit SILC-Belohnung erfüllst.
-          </p>
-        </DayItem>
-
-        <DayItem
-          heading="Automatische Rollen-Zuweisung"
-          badges={["Neu", "Rollen"]}
-        >
-          <p>
-            Einer Rolle kann nun eine automatische Zuweisung nach einer
-            bestimmten Anzahl an Tagen der Inaktivität konfiguriert werden.
-            Citizen, die sich innerhalb dieses Zeitraums nicht angemeldet haben,
-            erhalten die Rolle automatisch.
-          </p>
-
-          <p>
-            Hierüber kann bspw. die &ldquo;Gesperrt&rdquo;-Rolle automatisch an
-            inaktive Member zugewiesen werden, um deren Login-Berechtigung zu
-            entziehen.
           </p>
         </DayItem>
       </Day>
