@@ -17,12 +17,15 @@ export enum AuditEventType {
   WEB_PUSH_SUBSCRIBED = "WEB_PUSH_SUBSCRIBED",
   ROLE_CREATED = "ROLE_CREATED",
   ROLE_UPDATED = "ROLE_UPDATED",
+  ROLE_UPDATED_V2 = "ROLE_UPDATED_V2",
   ROLE_DELETED = "ROLE_DELETED",
   ROLE_PERMISSIONS_UPDATED = "ROLE_PERMISSIONS_UPDATED",
   ROLE_PERMISSION_TOGGLED = "ROLE_PERMISSION_TOGGLED",
   ROLE_INHERITANCE_UPDATED = "ROLE_INHERITANCE_UPDATED",
   ROLE_ASSIGNMENTS_UPDATED = "ROLE_ASSIGNMENTS_UPDATED",
   ROLE_ASSIGNMENT_DELETED = "ROLE_ASSIGNMENT_DELETED",
+  ROLE_AUTO_ASSIGNED = "ROLE_AUTO_ASSIGNED",
+  ROLE_AUTO_REMOVED = "ROLE_AUTO_REMOVED",
   SILC_TRANSACTION_CREATED = "SILC_TRANSACTION_CREATED",
   SILC_TRANSACTION_UPDATED = "SILC_TRANSACTION_UPDATED",
   SILC_TRANSACTION_DELETED = "SILC_TRANSACTION_DELETED",
@@ -198,6 +201,16 @@ export interface AuditEventDataByType {
     newMaxAgeDays: number | null;
   };
 
+  [AuditEventType.ROLE_UPDATED_V2]: {
+    roleId: string;
+    previousName: string;
+    newName: string;
+    previousMaxAgeDays: number | null;
+    newMaxAgeDays: number | null;
+    previousAssignAfterInactiveDays: number | null;
+    newAssignAfterInactiveDays: number | null;
+  };
+
   [AuditEventType.ROLE_DELETED]: {
     roleId: string;
     name: string;
@@ -228,6 +241,20 @@ export interface AuditEventDataByType {
   [AuditEventType.ROLE_ASSIGNMENT_DELETED]: {
     citizenId: string;
     roleId: string;
+  };
+
+  [AuditEventType.ROLE_AUTO_ASSIGNED]: {
+    citizenId: string;
+    citizenHandle: string | null;
+    roleId: string;
+    roleName: string;
+  };
+
+  [AuditEventType.ROLE_AUTO_REMOVED]: {
+    citizenId: string;
+    citizenHandle: string | null;
+    roleId: string;
+    roleName: string;
   };
 
   [AuditEventType.SILC_TRANSACTION_CREATED]: {
@@ -785,6 +812,21 @@ export const AuditEventDefinitions: {
       `Role updated: "${data.previousName}" → "${data.newName}"`,
   },
 
+  [AuditEventType.ROLE_UPDATED_V2]: {
+    type: AuditEventType.ROLE_UPDATED_V2,
+    data: {
+      roleId: "string",
+      previousName: "string",
+      newName: "string",
+      previousMaxAgeDays: 0,
+      newMaxAgeDays: 0,
+      previousAssignAfterInactiveDays: 0,
+      newAssignAfterInactiveDays: 0,
+    },
+    message: (data) =>
+      `Role updated: "${data.previousName}" → "${data.newName}"`,
+  },
+
   [AuditEventType.ROLE_DELETED]: {
     type: AuditEventType.ROLE_DELETED,
     data: {
@@ -843,6 +885,30 @@ export const AuditEventDefinitions: {
     },
     message: (data) =>
       `Role assignment deleted for citizen ${data.citizenId} (role: ${data.roleId})`,
+  },
+
+  [AuditEventType.ROLE_AUTO_ASSIGNED]: {
+    type: AuditEventType.ROLE_AUTO_ASSIGNED,
+    data: {
+      citizenId: "string",
+      citizenHandle: "string",
+      roleId: "string",
+      roleName: "string",
+    },
+    message: (data) =>
+      `Role "${data.roleName}" (${data.roleId}) auto-assigned to "${data.citizenHandle}" (${data.citizenId})`,
+  },
+
+  [AuditEventType.ROLE_AUTO_REMOVED]: {
+    type: AuditEventType.ROLE_AUTO_REMOVED,
+    data: {
+      citizenId: "string",
+      citizenHandle: "string",
+      roleId: "string",
+      roleName: "string",
+    },
+    message: (data) =>
+      `Role "${data.roleName}" (${data.roleId}) auto-removed from "${data.citizenHandle}" (${data.citizenId})`,
   },
 
   [AuditEventType.SILC_TRANSACTION_CREATED]: {

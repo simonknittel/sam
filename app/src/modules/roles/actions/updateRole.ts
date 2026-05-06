@@ -15,6 +15,7 @@ const schema = z.object({
   id: z.cuid(),
   name: z.string().min(1).max(255),
   maxAgeDays: z.coerce.number().min(1).nullish(),
+  assignAfterInactiveDays: z.coerce.number().min(1).nullish(),
   // inactivityThreshold: z.coerce.number().min(1).nullish(),
   // maxLevel: z.coerce.number().min(1).nullish(),
 });
@@ -41,6 +42,9 @@ export const updateRole = async (
       maxAgeDays: formData.get("maxAgeDays")
         ? Number(formData.get("maxAgeDays"))
         : null,
+      assignAfterInactiveDays: formData.get("assignAfterInactiveDays")
+        ? Number(formData.get("assignAfterInactiveDays"))
+        : null,
       // inactivityThreshold: formData.get("inactivityThreshold")
       //   ? Number(formData.get("inactivityThreshold"))
       //   : null,
@@ -66,6 +70,7 @@ export const updateRole = async (
       select: {
         name: true,
         maxAgeDays: true,
+        assignAfterInactiveDays: true,
       },
     });
     if (!existingRole)
@@ -81,6 +86,7 @@ export const updateRole = async (
       data: {
         name: result.data.name,
         maxAgeDays: result.data.maxAgeDays,
+        assignAfterInactiveDays: result.data.assignAfterInactiveDays,
         // inactivityThreshold: result.data.inactivityThreshold,
         // maxLevel: result.data.maxLevel,
       },
@@ -88,13 +94,16 @@ export const updateRole = async (
 
     await createAuditEvents([
       {
-        type: AuditEventType.ROLE_UPDATED,
+        type: AuditEventType.ROLE_UPDATED_V2,
         data: {
           roleId: updatedRole.id,
           previousName: existingRole.name,
           newName: updatedRole.name,
           previousMaxAgeDays: existingRole.maxAgeDays ?? null,
           newMaxAgeDays: updatedRole.maxAgeDays,
+          previousAssignAfterInactiveDays:
+            existingRole.assignAfterInactiveDays ?? null,
+          newAssignAfterInactiveDays: updatedRole.assignAfterInactiveDays,
         },
         createdById: authentication.session.user.id,
       },

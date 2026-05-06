@@ -18,6 +18,7 @@ export const removeExpiredRoles = async () => {
           },
           select: {
             id: true,
+            handle: true,
             discordId: true,
             roleAssignments: {
               select: {
@@ -64,19 +65,27 @@ export const removeExpiredRoles = async () => {
           },
           select: {
             id: true,
+            name: true,
             maxAgeDays: true,
           },
         }),
     );
 
     const expirationMap = new Map<string, Date>();
+    const roleNameMap = new Map<string, string>();
     for (const role of rolesWithMaxAge) {
       const date = new Date();
       date.setDate(date.getDate() - role.maxAgeDays!);
       expirationMap.set(role.id, date);
+      roleNameMap.set(role.id, role.name);
     }
 
-    const changes: { citizenId: string; roleId: string }[] = [];
+    const changes: {
+      citizenId: string;
+      citizenHandle: string | null;
+      roleId: string;
+      roleName: string;
+    }[] = [];
     for (const citizenWithRole of citizenWithRoles) {
       if (citizenWithRole.roleAssignments.length <= 0) continue;
 
@@ -94,7 +103,9 @@ export const removeExpiredRoles = async () => {
         ) {
           changes.push({
             citizenId: citizenWithRole.id,
+            citizenHandle: citizenWithRole.handle,
             roleId: roleAssignment.roleId,
+            roleName: roleNameMap.get(roleAssignment.roleId)!,
           });
         }
       }
@@ -126,6 +137,20 @@ export const removeExpiredRoles = async () => {
           }),
         ),
       ]),
+    );
+
+    await captureAsyncFunc("create audit events", () =>
+      prisma.auditEvent.createMany({
+        data: changes.map((change) => ({
+          type: "ROLE_AUTO_REMOVED",
+          data: {
+            citizenId: change.citizenId,
+            citizenHandle: change.citizenHandle,
+            roleId: change.roleId,
+            roleName: change.roleName,
+          },
+        })),
+      }),
     );
 
     log.info("Removed expired roles", { count: changes.length });

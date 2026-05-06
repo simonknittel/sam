@@ -84,8 +84,12 @@ model Role {
   /// Number of days after which this role gets removed from a citizen due to
   /// their inactivity. NULL if inactivity is not tracked for this role. This
   /// is handled by application logic.
-  maxAgeDays        Int?
-  assignments       RoleAssignment[]       @relation("role")
+  maxAgeDays                Int?
+  /// Number of days of inactivity after which this role is automatically
+  /// assigned to a citizen. NULL if auto-assignment is not configured. This
+  /// is handled by application logic.
+  assignAfterInactiveDays   Int?
+  assignments               RoleAssignment[]       @relation("role")
   assignmentChanges RoleAssignmentChange[] @relation("role")
   citizenCounts     RoleCitizenCount[]
   /// Number of levels this role has. NULL if the role does not have levels.
@@ -98,6 +102,7 @@ model Role {
   // inactivityThreshold    Int?
 
   @@index([maxAgeDays])
+  @@index([assignAfterInactiveDays])
 }
 
 model PermissionString {

@@ -5,7 +5,7 @@ import Image from "next/image";
 import { getRoles } from "../queries";
 
 // const GRID_COLS = "grid-cols-[1fr_128px_128px_128px_72px_80px]";
-const GRID_COLS = "grid-cols-[1fr_128px_128px_80px]";
+const GRID_COLS = "grid-cols-[1fr_128px_128px_128px_80px]";
 
 interface Props {
   readonly className?: string;
@@ -32,6 +32,7 @@ export const RolesTile = async ({ className }: Props) => {
             <th className="px-2">Rolle</th>
             <th className="px-2 text-center">Vererbungen</th>
             <th className="px-2 text-center">Entfernt nach</th>
+            <th className="px-2 text-center">Zuweisung nach</th>
             {/* <th className="px-2 text-center">Inaktiv nach</th>
             <th className="px-2 text-center">Level</th> */}
             <th className="px-2 text-center">Citizen</th>
@@ -84,6 +85,10 @@ export const RolesTile = async ({ className }: Props) => {
 
               <td className="flex items-center justify-center h-14">
                 {role.maxAgeDays}
+              </td>
+
+              <td className="flex items-center justify-center h-14">
+                {role.assignAfterInactiveDays}
               </td>
 
               {/* <td className="flex items-center justify-center h-14">
