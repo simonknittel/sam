@@ -76,8 +76,8 @@ export default async function Page() {
           badges={["Neu", "Benachrichtigungen"]}
         >
           <p>
-            Du kannst nun 15 Minuten vor Beginn eines Events benachrichtigt werden,
-            wenn du Teilnehmer bist.
+            Du kannst nun 15 Minuten vor Beginn eines Events benachrichtigt
+            werden, wenn du Teilnehmer bist.
           </p>
 
           <p>
