@@ -23,6 +23,8 @@ export enum AuditEventType {
   ROLE_INHERITANCE_UPDATED = "ROLE_INHERITANCE_UPDATED",
   ROLE_ASSIGNMENTS_UPDATED = "ROLE_ASSIGNMENTS_UPDATED",
   ROLE_ASSIGNMENT_DELETED = "ROLE_ASSIGNMENT_DELETED",
+  ROLE_AUTO_ASSIGNED = "ROLE_AUTO_ASSIGNED",
+  ROLE_AUTO_REMOVED = "ROLE_AUTO_REMOVED",
   SILC_TRANSACTION_CREATED = "SILC_TRANSACTION_CREATED",
   SILC_TRANSACTION_UPDATED = "SILC_TRANSACTION_UPDATED",
   SILC_TRANSACTION_DELETED = "SILC_TRANSACTION_DELETED",
@@ -228,6 +230,20 @@ export interface AuditEventDataByType {
   [AuditEventType.ROLE_ASSIGNMENT_DELETED]: {
     citizenId: string;
     roleId: string;
+  };
+
+  [AuditEventType.ROLE_AUTO_ASSIGNED]: {
+    citizenId: string;
+    citizenHandle: string | null;
+    roleId: string;
+    roleName: string;
+  };
+
+  [AuditEventType.ROLE_AUTO_REMOVED]: {
+    citizenId: string;
+    citizenHandle: string | null;
+    roleId: string;
+    roleName: string;
   };
 
   [AuditEventType.SILC_TRANSACTION_CREATED]: {
@@ -843,6 +859,30 @@ export const AuditEventDefinitions: {
     },
     message: (data) =>
       `Role assignment deleted for citizen ${data.citizenId} (role: ${data.roleId})`,
+  },
+
+  [AuditEventType.ROLE_AUTO_ASSIGNED]: {
+    type: AuditEventType.ROLE_AUTO_ASSIGNED,
+    data: {
+      citizenId: "string",
+      citizenHandle: "string",
+      roleId: "string",
+      roleName: "string",
+    },
+    message: (data) =>
+      `Role "${data.roleName}" (${data.roleId}) auto-assigned to "${data.citizenHandle}" (${data.citizenId})`,
+  },
+
+  [AuditEventType.ROLE_AUTO_REMOVED]: {
+    type: AuditEventType.ROLE_AUTO_REMOVED,
+    data: {
+      citizenId: "string",
+      citizenHandle: "string",
+      roleId: "string",
+      roleName: "string",
+    },
+    message: (data) =>
+      `Role "${data.roleName}" (${data.roleId}) auto-removed from "${data.citizenHandle}" (${data.citizenId})`,
   },
 
   [AuditEventType.SILC_TRANSACTION_CREATED]: {

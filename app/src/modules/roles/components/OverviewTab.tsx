@@ -45,6 +45,16 @@ export const OverviewTab = ({ className, role }: Props) => {
           labelClassName="mt-4"
         />
 
+        <NumberInput
+          label="Zuweisung nach (in Tagen)"
+          name="assignAfterInactiveDays"
+          defaultValue={role.assignAfterInactiveDays ?? undefined}
+          min={1}
+          step={1}
+          hint="(Optional) Citizen, die sich innerhalb dieses Zeitraums nicht einloggen, wird automatisch diese Rolle zugewiesen"
+          labelClassName="mt-4"
+        />
+
         {/* <NumberInput
           label="Inaktiv nach (in Tagen)"
           name="inactivityThreshold"
