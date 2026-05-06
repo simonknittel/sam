@@ -160,7 +160,9 @@ export const Position = ({
 
             {showManage ? (
               <span
-                className={clsx(position.fontSize === "large" && "text-2xl")}
+                className={clsx({
+                  "text-2xl": position.fontSize === "large",
+                })}
                 style={{
                   color: position.textColor || undefined,
                 }}
@@ -175,10 +177,9 @@ export const Position = ({
               </span>
             ) : (
               <p
-                className={clsx(
-                  "truncate font-bold",
-                  position.fontSize === "large" && "text-2xl",
-                )}
+                className={clsx("truncate font-bold", {
+                  "text-2xl": position.fontSize === "large",
+                })}
                 style={{
                   color: position.textColor || undefined,
                 }}
@@ -316,6 +317,7 @@ export const Position = ({
           )}
         </div>
       )}
+
       {showActions && showManage && (
         <DragTarget
           position={position}
@@ -324,6 +326,7 @@ export const Position = ({
           groupLevel={groupLevel}
         />
       )}
+
       {position.childPositions && position.childPositions.length > 0 && (
         <div className="flex flex-col gap-px pl-4 lg:pl-8 mt-px">
           {position.childPositions.map((position) => (
