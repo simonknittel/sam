@@ -140,24 +140,6 @@ export default async function Page() {
             erhältst oder wenn du einen Task mit SILC-Belohnung erfüllst.
           </p>
         </DayItem>
-
-        <DayItem
-          heading="Automatische Rollen-Zuweisung"
-          badges={["Neu", "Rollen"]}
-        >
-          <p>
-            Einer Rolle kann nun eine automatische Zuweisung nach einer
-            bestimmten Anzahl an Tagen der Inaktivität konfiguriert werden.
-            Citizen, die sich innerhalb dieses Zeitraums nicht angemeldet haben,
-            erhalten die Rolle automatisch.
-          </p>
-
-          <p>
-            Hierüber kann bspw. die &ldquo;Gesperrt&rdquo;-Rolle automatisch an
-            inaktive Member zugewiesen werden, um deren Login-Berechtigung zu
-            entziehen.
-          </p>
-        </DayItem>
       </Day>
 
       <Day heading="24. März 2026">
