@@ -61,7 +61,7 @@ jobs:
 
       - name: Create tfvars file
         working-directory: terraform
-        run: echo "${{ vars.TFVARS }}" > ${ { inputs.environment || 'test' }}.tfvars
+        run: echo "${{ vars.TFVARS }}" > ${{ inputs.environment || 'test' }}.tfvars
 
       - name: terraform init
         run: terraform init -backend-config=${{ inputs.environment }}.s3.tfbackend
