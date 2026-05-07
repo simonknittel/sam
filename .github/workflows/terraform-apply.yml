@@ -71,5 +71,5 @@ jobs:
         working-directory: terraform
 
       - name: terraform apply
-        run: terraform apply tfplan -var-file=${{ inputs.environment || 'test' }}.tfvars
+        run: terraform apply -var-file=${{ inputs.environment || 'test' }}.tfvars tfplan
         working-directory: terraform
