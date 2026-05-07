@@ -57,6 +57,7 @@ export const WebPushSubscribedHandler = async (payload: Payload) => {
       notificationPayload,
       {
         TTL: 60 * 60 * 24, // 1 day
+        urgency: "high",
       },
     );
 
