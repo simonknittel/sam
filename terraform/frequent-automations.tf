@@ -11,7 +11,7 @@ module "frequent_automations" {
     },
     var.frequent_automations_environment_variables
   )
-  schedule_expression = "rate(15 minutes)"
+  schedule_expression = "cron(*/15 * * * ? *)"
   event_bus           = data.aws_cloudwatch_event_bus.default
   runtime             = "nodejs22.x"
   parameters = [
