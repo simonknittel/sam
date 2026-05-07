@@ -1,6 +1,6 @@
 import { type Event } from "@sam-monorepo/database";
-import { publishWebPushNotifications } from "../web-push.js";
 import { getEventParticipants } from "../getEventParticipants.js";
+import { publishWebPushNotifications } from "../web-push.js";
 
 type Payload = {
   eventId: Event["id"];
@@ -18,5 +18,9 @@ export const EventStartingHandler = async (payload: Payload) => {
       body: result.event.name,
       url: `/app/events/${result.event.id}`,
     })),
+    {
+      TTL: 15 * 60, // 15 minutes in seconds
+      urgency: "high",
+    },
   );
 };

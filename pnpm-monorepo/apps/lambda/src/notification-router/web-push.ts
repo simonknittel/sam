@@ -3,13 +3,18 @@ import {
   prisma,
   type Entity,
 } from "@sam-monorepo/database";
-import { sendNotification, setVapidDetails, WebPushError } from "web-push";
+import {
+  sendNotification,
+  setVapidDetails,
+  WebPushError,
+  type RequestOptions,
+} from "web-push";
 import { log } from "../common/logger";
 
 setVapidDetails(
-  process.env.BASE_URL,
-  process.env.PUBLIC_VAPID_KEY,
-  process.env.PRIVATE_VAPID_KEY,
+  process.env.BASE_URL!,
+  process.env.PUBLIC_VAPID_KEY!,
+  process.env.PRIVATE_VAPID_KEY!,
 );
 
 interface Notification {
@@ -50,6 +55,7 @@ const getRetryAfterDelayMs = (error: WebPushError) => {
 
 export const publishWebPushNotifications = async (
   notifications: Notification[],
+  options?: RequestOptions,
 ) => {
   const citizens = await prisma.entity.findMany({
     where: {
@@ -114,7 +120,8 @@ export const publishWebPushNotifications = async (
     for (let attempt = 0; attempt <= RATE_LIMIT_MAX_RETRIES; attempt += 1) {
       try {
         await sendNotification(subscription, payload, {
-          TTL: 60 * 60 * 24, // 1 day
+          TTL: options?.TTL ?? 60 * 60 * 24, // 1 day
+          urgency: options?.urgency,
         });
         break;
       } catch (error) {
