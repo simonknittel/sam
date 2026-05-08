@@ -3,7 +3,7 @@ import Avatar from "@/modules/common/components/Avatar";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Link } from "@/modules/common/components/Link";
 import clsx from "clsx";
-import { FaBell, FaUser } from "react-icons/fa";
+import { FaBell, FaQuestionCircle, FaUser } from "react-icons/fa";
 import { LogoutButton } from "../LogoutButton";
 
 export const Account = () => {
@@ -32,6 +32,15 @@ export const Account = () => {
       </div>
 
       <div className="flex gap-1">
+        <Button2
+          as={Link}
+          href="/app/help/support"
+          title="Support"
+          variant={Button2Variant.Secondary}
+        >
+          <FaQuestionCircle />
+        </Button2>
+
         <Button2
           as={Link}
           href="/app/account/notifications"

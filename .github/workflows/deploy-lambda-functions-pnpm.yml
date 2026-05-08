@@ -47,6 +47,7 @@ jobs:
       matrix:
         function:
           - midnight-automations
+          - frequent-automations
           - scrape-discord-events-function
           - notification-router
 
