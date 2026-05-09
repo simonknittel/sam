@@ -31,11 +31,12 @@ export const Filters = ({ className }: Props) => {
         })}
       >
         <RadioFilter
-          name="expired"
+          name="status"
           label="Status"
           items={[
             { value: "active", label: "Aktiv", default: true },
-            { value: "all", label: "Alle" },
+            { value: "inactive", label: "Inaktiv" },
+            { value: "deleted", label: "Gelöscht" },
           ]}
           resetCursorPagination
         />

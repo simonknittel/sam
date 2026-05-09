@@ -7,6 +7,28 @@ import { cache } from "react";
 
 const PENALTY_ENTRIES_PAGE_SIZE = 50;
 
+const buildStatusWhereClause = (
+  status: "active" | "inactive" | "deleted",
+) => {
+  const now = new Date();
+  if (status === "deleted") {
+    return { deletedAt: { not: null } };
+  }
+  if (status === "active") {
+    return {
+      deletedAt: null,
+      OR: [
+        { expiresAt: { gte: now } },
+        { expiresAt: null },
+      ],
+    };
+  }
+  return {
+    deletedAt: null,
+    expiresAt: { lt: now },
+  };
+};
+
 const buildExpiredWhereClause = (expired: "active" | "all") => {
   if (expired === "active") {
     const now = new Date();
@@ -30,7 +52,7 @@ export const getPenaltyEntriesPaginated = cache(
   withTrace(
     "getPenaltyEntriesPaginated",
     async (
-      expired: "active" | "all" = "active",
+      status: "active" | "inactive" | "deleted" = "active",
       cursor: string | null = null,
       direction: "next" | "prev" = "next",
     ) => {
@@ -44,10 +66,7 @@ export const getPenaltyEntriesPaginated = cache(
           : PENALTY_ENTRIES_PAGE_SIZE + 1;
 
       const rows = await prisma.penaltyEntry.findMany({
-        where: {
-          deletedAt: null,
-          ...buildExpiredWhereClause(expired),
-        },
+        where: buildStatusWhereClause(status),
         orderBy: {
           createdAt: "desc",
         },

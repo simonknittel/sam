@@ -142,7 +142,8 @@ export const FlatEntriesTableClient = ({
           const entry = row.row.original;
           return (
             <span className="flex items-center h-full">
-              {showDelete && <DeletePenaltyEntry entry={entry} />}
+              {showDelete &&
+                !entry.deletedAt && <DeletePenaltyEntry entry={entry} />}
             </span>
           );
         },
