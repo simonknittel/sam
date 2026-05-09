@@ -12,6 +12,7 @@ import { useTransition, type ChangeEventHandler } from "react";
 import toast from "react-hot-toast";
 import { resetEventPositionCitizenId } from "../actions/resetEventPositionCitizenId";
 import { updateEventPositionCitizenId } from "../actions/updateEventPositionCitizenId";
+import styles from "./UpdateEventPositionCitizenId.module.css";
 
 interface Props {
   readonly className?: string;
@@ -73,7 +74,10 @@ export const UpdateEventPositionCitizenId = ({
       <input type="hidden" name="positionId" value={position.id} />
       <select
         name="citizenId"
-        className="block w-full p-2 bg-white/10 text-neutral-100 rounded-secondary cursor-pointer"
+        className={clsx(
+          "block w-full p-2 bg-white/10 text-neutral-100 rounded-secondary cursor-pointer",
+          styles.select,
+        )}
         onChange={handleChange}
         disabled={isPending}
         defaultValue={position.citizenId || "-"}
