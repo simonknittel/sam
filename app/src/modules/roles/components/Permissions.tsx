@@ -41,7 +41,6 @@ interface Props {
   readonly noteTypes: NoteType[];
   readonly classificationLevels: ClassificationLevel[];
   readonly allRoles: Role[];
-  readonly enableOperations: boolean;
   readonly flows: Flow[];
 }
 
@@ -50,7 +49,6 @@ export const Permissions = ({
   noteTypes,
   classificationLevels,
   allRoles,
-  enableOperations,
   flows,
 }: Props) => {
   const [state, formAction, isPending] = useActionState(
@@ -107,7 +105,7 @@ export const Permissions = ({
         />
         <OrganizationsTab />
         <FleetTab />
-        <EventsTab enableOperations={enableOperations} />
+        <EventsTab />
         <DocumentsTab />
         <SilcTab />
         <PenaltyPointsTab />

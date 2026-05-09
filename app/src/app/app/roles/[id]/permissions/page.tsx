@@ -27,13 +27,12 @@ export default async function Page({
   const role = await getRoleById(roleId);
   if (!role) notFound();
 
-  const [allRoles, noteTypes, classificationLevels, flows, enableOperations] =
+  const [allRoles, noteTypes, classificationLevels, flows] =
     await Promise.all([
       getRoles(true),
       getAllNoteTypes(),
       getAllClassificationLevels(),
       getAllFlows(),
-      getUnleashFlag(UNLEASH_FLAG.EnableOperations),
     ]);
 
   return (
@@ -42,7 +41,6 @@ export default async function Page({
       allRoles={allRoles}
       noteTypes={noteTypes}
       classificationLevels={classificationLevels}
-      enableOperations={Boolean(enableOperations)}
       flows={flows}
     />
   );

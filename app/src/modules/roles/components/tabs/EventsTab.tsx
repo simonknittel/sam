@@ -4,11 +4,7 @@ import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
 import TabPanel from "@/modules/common/components/tabs/TabPanel";
 import { usePermissionsContext } from "../PermissionsContext";
 
-interface Props {
-  readonly enableOperations: boolean;
-}
-
-const EventsTab = ({ enableOperations }: Props) => {
+const EventsTab = () => {
   const { register } = usePermissionsContext();
 
   return (
@@ -43,14 +39,6 @@ const EventsTab = ({ enableOperations }: Props) => {
 
         <YesNoCheckbox {...register("othersEventPosition;manage")} />
       </div>
-
-      {enableOperations && (
-        <div className="py-2 flex justify-between items-center">
-          <h4 className="font-bold">Operationen verwalten</h4>
-
-          <YesNoCheckbox {...register("operation;manage")} />
-        </div>
-      )}
     </TabPanel>
   );
 };

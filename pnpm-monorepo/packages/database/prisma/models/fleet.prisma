@@ -52,11 +52,10 @@ enum VariantStatus {
 }
 
 model Ship {
-  id         String            @id @default(cuid())
-  ownerId    String
-  owner      User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  variantId  String
-  variant    Variant           @relation(fields: [variantId], references: [id], onDelete: Cascade)
-  name       String?
-  operations OperationMember[]
+  id        String  @id @default(cuid())
+  ownerId   String
+  owner     User    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  variantId String
+  variant   Variant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  name      String?
 }

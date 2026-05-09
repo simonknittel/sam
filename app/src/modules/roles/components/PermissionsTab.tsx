@@ -19,7 +19,6 @@ interface Props {
   readonly noteTypes: NoteType[];
   readonly classificationLevels: ClassificationLevel[];
   readonly allRoles: Role[];
-  readonly enableOperations: boolean;
   readonly flows: Flow[];
 }
 
@@ -29,7 +28,6 @@ export const PermissionsTab = ({
   noteTypes,
   classificationLevels,
   allRoles,
-  enableOperations,
   flows,
 }: Props) => {
   return (
@@ -40,7 +38,6 @@ export const PermissionsTab = ({
           noteTypes={noteTypes}
           classificationLevels={classificationLevels}
           allRoles={allRoles}
-          enableOperations={Boolean(enableOperations)}
           flows={flows}
         />
       </PermissionsProvider>
