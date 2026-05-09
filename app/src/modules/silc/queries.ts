@@ -108,6 +108,7 @@ export const getSilcTransactionsPaginated = cache(
   withTrace(
     "getSilcTransactionsPaginated",
     async (
+      showDeleted: "alle" | "deleted" = "alle",
       cursor: string | null = null,
       direction: "next" | "prev" = "next",
     ) => {
@@ -126,9 +127,14 @@ export const getSilcTransactionsPaginated = cache(
           : SILC_TRANSACTIONS_PAGE_SIZE + 1;
 
       const rows = await prisma.silcTransaction.findMany({
-        where: {
-          deletedAt: null,
-        },
+        where:
+          showDeleted === "alle"
+            ? {
+                deletedAt: null,
+              }
+            : {
+                deletedAt: { not: null },
+              },
         orderBy: {
           createdAt: "desc",
         },

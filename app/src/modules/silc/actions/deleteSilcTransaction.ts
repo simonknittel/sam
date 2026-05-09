@@ -33,6 +33,24 @@ export const deleteSilcTransaction = createAuthenticatedAction(
       };
 
     /**
+     * Check if transaction exists and is not already deleted
+     */
+    const existingTransaction = await prisma.silcTransaction.findUnique({
+      where: {
+        id: data.id,
+      },
+      select: {
+        id: true,
+        deletedAt: true,
+      },
+    });
+    if (!existingTransaction || existingTransaction.deletedAt)
+      return {
+        error: t("Common.notFound"),
+        requestPayload: formData,
+      };
+
+    /**
      * (Soft-)delete transaction
      */
     const deletedEntry = await prisma.silcTransaction.update({
