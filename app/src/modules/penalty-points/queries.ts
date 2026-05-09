@@ -7,9 +7,7 @@ import { cache } from "react";
 
 const PENALTY_ENTRIES_PAGE_SIZE = 50;
 
-const buildStatusWhereClause = (
-  status: "active" | "inactive" | "deleted",
-) => {
+const buildStatusWhereClause = (status: "active" | "inactive" | "deleted") => {
   const now = new Date();
   if (status === "deleted") {
     return { deletedAt: { not: null } };
@@ -17,10 +15,7 @@ const buildStatusWhereClause = (
   if (status === "active") {
     return {
       deletedAt: null,
-      OR: [
-        { expiresAt: { gte: now } },
-        { expiresAt: null },
-      ],
+      OR: [{ expiresAt: { gte: now } }, { expiresAt: null }],
     };
   }
   return {
