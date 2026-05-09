@@ -1,20 +1,22 @@
 model ProfitDistributionCycle {
-  id                  String                               @id @default(cuid(2))
-  title               String
-  collectionEndedAt   DateTime
-  collectionEndedById String?
-  collectionEndedBy   Entity?                              @relation("collectionEndedBy", fields: [collectionEndedById], references: [id], onDelete: SetNull)
-  payoutStartedAt     DateTime?
-  payoutStartedBy     Entity?                              @relation("payoutStartedBy", fields: [payoutStartedById], references: [id], onDelete: SetNull)
-  payoutStartedById   String?
-  payoutEndedAt       DateTime?
-  payoutEndedById     String?
-  payoutEndedBy       Entity?                              @relation("payoutEndedBy", fields: [payoutEndedById], references: [id], onDelete: SetNull)
-  auecProfit          BigInt?
-  participants        ProfitDistributionCycleParticipant[]
-  createdAt           DateTime                             @default(now())
-  createdById         String?
-  createdBy           Entity?                              @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
+  id                          String                               @id @default(cuid(2))
+  title                       String
+  collectionEndedAt           DateTime
+  collectionEndedById         String?
+  collectionEndedBy           Entity?                              @relation("collectionEndedBy", fields: [collectionEndedById], references: [id], onDelete: SetNull)
+  collectionEndedByAutomation DateTime?
+  payoutStartedAt             DateTime?
+  payoutStartedBy             Entity?                              @relation("payoutStartedBy", fields: [payoutStartedById], references: [id], onDelete: SetNull)
+  payoutStartedById           String?
+  payoutEndedAt               DateTime?
+  payoutEndedById             String?
+  payoutEndedBy               Entity?                              @relation("payoutEndedBy", fields: [payoutEndedById], references: [id], onDelete: SetNull)
+  payoutEndedByAutomation     DateTime?
+  auecProfit                  BigInt?
+  participants                ProfitDistributionCycleParticipant[]
+  createdAt                   DateTime                             @default(now())
+  createdById                 String?
+  createdBy                   Entity?                              @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
 }
 
 model ProfitDistributionCycleParticipant {
