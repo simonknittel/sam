@@ -35,5 +35,5 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <SpeedInsights sampleRate={0.5} />
       </body>
     </html>
-  )
+  );
 }
