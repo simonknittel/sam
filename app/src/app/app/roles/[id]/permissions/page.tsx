@@ -1,7 +1,5 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { getAllFlows } from "@/modules/career/queries";
-import { getUnleashFlag } from "@/modules/common/utils/getUnleashFlag";
-import { UNLEASH_FLAG } from "@/modules/common/utils/UNLEASH_FLAG";
 import { PermissionsTab } from "@/modules/roles/components/PermissionsTab";
 import { getRoleById, getRoles } from "@/modules/roles/queries";
 import {
@@ -27,13 +25,12 @@ export default async function Page({
   const role = await getRoleById(roleId);
   if (!role) notFound();
 
-  const [allRoles, noteTypes, classificationLevels, flows] =
-    await Promise.all([
-      getRoles(true),
-      getAllNoteTypes(),
-      getAllClassificationLevels(),
-      getAllFlows(),
-    ]);
+  const [allRoles, noteTypes, classificationLevels, flows] = await Promise.all([
+    getRoles(true),
+    getAllNoteTypes(),
+    getAllClassificationLevels(),
+    getAllFlows(),
+  ]);
 
   return (
     <PermissionsTab

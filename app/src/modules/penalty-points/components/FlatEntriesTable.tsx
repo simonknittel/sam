@@ -13,7 +13,9 @@ import { CreatePenaltyEntryButton } from "./CreatePenaltyEntry/CreatePenaltyEntr
 import { FlatEntriesTableClient } from "./FlatEntriesTableClient";
 
 const loadSearchParams = createLoader({
-  expired: parseAsStringLiteral(["active", "all"]).withDefault("active"),
+  status: parseAsStringLiteral(["active", "inactive", "deleted"]).withDefault(
+    "active",
+  ),
   ...cursorPaginationParsers,
 });
 
@@ -24,10 +26,10 @@ interface Props {
 
 export const FlatEntriesTable = async ({ className, searchParams }: Props) => {
   const authentication = await requireAuthentication();
-  const { expired, cursor, direction } = await loadSearchParams(searchParams);
+  const { status, cursor, direction } = await loadSearchParams(searchParams);
 
   const { entries, nextCursor, prevCursor } = await getPenaltyEntriesPaginated(
-    expired,
+    status,
     cursor,
     direction,
   );

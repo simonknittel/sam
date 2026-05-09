@@ -27,6 +27,19 @@ export const deletePenaltyEntry = createAuthenticatedAction(
       };
 
     /**
+     * Check if entry is already deleted
+     */
+    const existingEntry = await prisma.penaltyEntry.findUnique({
+      where: { id: data.id },
+      select: { deletedAt: true },
+    });
+    if (existingEntry?.deletedAt)
+      return {
+        error: t("Common.notFound"),
+        requestPayload: formData,
+      };
+
+    /**
      * (Soft-)delete entry
      */
     const deletedEntry = await prisma.penaltyEntry.update({

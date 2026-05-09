@@ -34,7 +34,7 @@ export const DeleteSilcTransaction = ({ className, id }: Props) => {
         <AlertDialogTrigger asChild>
           <button
             disabled={isPending}
-            className="text-brand-red-500 hover:text-brand-red-300 flex items-center text-xs"
+            className="text-brand-red-500 hover:text-brand-red-300 hover:cursor-pointer flex items-center text-xs"
             title="Löschen"
           >
             <FaTrash />

@@ -26,16 +26,15 @@ export const Filters = ({ className }: Props) => {
       </Button2>
 
       <div
-        className={clsx("flex flex-col gap-0.5", {
+        className={clsx("flex flex-col gap-[2px]", {
           "hidden md:flex": !isOpen,
         })}
       >
         <RadioFilter
-          name="status"
-          label="Status"
+          name="showDeleted"
+          label="Transaktionen"
           items={[
-            { value: "active", label: "Aktiv", default: true },
-            { value: "inactive", label: "Inaktiv" },
+            { value: "alle", label: "Alle", default: true },
             { value: "deleted", label: "Gelöscht" },
           ]}
           resetCursorPagination

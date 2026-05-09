@@ -67,9 +67,10 @@ export const updateSilcTransaction = async (formData: FormData) => {
         value: true,
         description: true,
         receiverId: true,
+        deletedAt: true,
       },
     });
-    if (!existingTransaction)
+    if (!existingTransaction || existingTransaction.deletedAt)
       return {
         error: t("Common.notFound"),
         requestPayload: formData,

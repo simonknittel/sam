@@ -3,11 +3,16 @@ import { Tile } from "@/modules/common/components/Tile";
 import { CursorPaginationControls } from "@/modules/common/CursorPagination/CursorPaginationControls";
 import { cursorPaginationParsers } from "@/modules/common/CursorPagination/cursorPaginationParsers";
 import clsx from "clsx";
-import { createLoader, type SearchParams } from "nuqs/server";
+import {
+  createLoader,
+  parseAsStringLiteral,
+  type SearchParams,
+} from "nuqs/server";
 import { getSilcTransactionsPaginated } from "../queries";
 import { SilcTransactionsTableClient } from "./SilcTransactionsTableClient";
 
 const loadSearchParams = createLoader({
+  showDeleted: parseAsStringLiteral(["alle", "deleted"]).withDefault("alle"),
   ...cursorPaginationParsers,
 });
 
@@ -21,10 +26,11 @@ export const AllSilcTransactionsTable = async ({
   searchParams,
 }: Props) => {
   const authentication = await requireAuthentication();
-  const { cursor, direction } = await loadSearchParams(searchParams);
+  const { showDeleted, cursor, direction } =
+    await loadSearchParams(searchParams);
 
   const { transactions, nextCursor, prevCursor } =
-    await getSilcTransactionsPaginated(cursor, direction);
+    await getSilcTransactionsPaginated(showDeleted, cursor, direction);
 
   const hasEntries = transactions.length > 0;
 
@@ -42,9 +48,11 @@ export const AllSilcTransactionsTable = async ({
             showEdit={showEdit}
             showDelete={showDelete}
           />
+
           <CursorPaginationControls
             nextCursor={nextCursor}
             prevCursor={prevCursor}
+            className="mt-4"
           />
         </div>
       ) : (

@@ -1,6 +1,8 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
+import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { AllSilcTransactionsTable } from "@/modules/silc/components/AllSilcTransactionsTable";
+import { Filters } from "@/modules/silc/components/Filters";
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -16,8 +18,10 @@ export default async function Page({
   await authentication.authorizePage("silcTransactionOfOtherCitizen", "read");
 
   return (
-    <SuspenseWithErrorBoundaryTile>
-      <AllSilcTransactionsTable searchParams={searchParams} />
-    </SuspenseWithErrorBoundaryTile>
+    <SidebarLayout sidebar={<Filters />}>
+      <SuspenseWithErrorBoundaryTile>
+        <AllSilcTransactionsTable searchParams={searchParams} />
+      </SuspenseWithErrorBoundaryTile>
+    </SidebarLayout>
   );
 }
