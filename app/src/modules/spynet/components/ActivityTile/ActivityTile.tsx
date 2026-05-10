@@ -90,6 +90,31 @@ export const ActivityTile = async ({ className }: Props) => {
         },
       },
     }),
+
+    prisma.roleAssignmentLevelChange.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 15,
+      select: {
+        id: true,
+        roleId: true,
+        type: true,
+        createdAt: true,
+        citizen: {
+          select: {
+            id: true,
+            handle: true,
+          },
+        },
+        createdBy: {
+          select: {
+            id: true,
+            handle: true,
+          },
+        },
+      },
+    }),
   ]);
 
   const entries: Entry[] = [
@@ -97,6 +122,7 @@ export const ActivityTile = async ({ className }: Props) => {
     ...(await mapOrganizationAttributeHistoryEntries(result[1])),
     ...(await mapOrganizationMembershipHistoryEntries(result[2])),
     ...(await mapRoleAssignmentChangeEntries(result[3])),
+    ...(await mapRoleAssignmentLevelChangeEntries(result[4])),
   ];
 
   const sortedEntries = entries.toSorted(
