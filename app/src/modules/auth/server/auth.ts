@@ -97,7 +97,8 @@ export const authOptions: NextAuthOptions = {
           .filter(
             (roleAssignment) =>
               !roleAssignment.role.maxLevel ||
-              roleAssignment.currentLevel >= roleAssignment.role.maxLevel,
+              (roleAssignment.currentLevel ?? 0) >=
+                roleAssignment.role.maxLevel,
           )
           .flatMap((roleAssignment) => [
             roleAssignment.role,
