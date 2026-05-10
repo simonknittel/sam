@@ -151,12 +151,13 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
       : null;
 
   const currentLevel = role
-    ? (authentication.session.entity.roleAssignments.find(
+    ? authentication.session.entity.roleAssignments.find(
         (roleAssignment) => roleAssignment.roleId === role.id,
-      )?.currentLevel ?? 0)
+      )?.currentLevel
     : null;
-  const showLevelProgress =
-    role && currentLevel && role.maxLevel && currentLevel < role.maxLevel;
+  const showLevelProgress = Boolean(
+    role?.maxLevel && (currentLevel ?? 0) < role.maxLevel,
+  );
 
   const unlocked =
     ("showUnlocked" in props.data && props.data.showUnlocked) ||
@@ -236,14 +237,14 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
           backgroundColor,
         }}
       >
-        {"role" in props.data && (
+        {role && (
           <Tooltip.Provider delayDuration={0}>
             <Tooltip.Root>
               <Tooltip.Trigger className="cursor-help w-full h-full pb-1">
                 <Image
                   src={`https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${image?.id}`}
-                  alt={props.data.role.name}
-                  title={props.data.role.name}
+                  alt={role.name}
+                  title={role.name}
                   width={100}
                   height={100}
                   className="object-contain object-center w-full h-full"
@@ -257,16 +258,16 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
                   loading="lazy"
                 />
 
-                {showLevelProgress && (
-                  <span className="block absolute left-0 bottom-0 right-0 h-1 bg-white/30">
+                {showLevelProgress ? (
+                  <span className="block absolute left-0 bottom-0 right-0 h-1 bg-white/30 rounded-b-secondary">
                     <span
                       className="block h-full bg-me"
                       style={{
-                        width: `${(currentLevel / role.maxLevel!) * 100}%`,
+                        width: `${((currentLevel ?? 0) / role.maxLevel!) * 100}%`,
                       }}
                     />
                   </span>
-                )}
+                ) : null}
               </Tooltip.Trigger>
 
               <Tooltip.Content
@@ -277,7 +278,7 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
                 side="top"
                 sideOffset={20}
               >
-                {props.data.role.name}
+                {role.name}
                 <Tooltip.Arrow className="fill-brand-red-500" />
               </Tooltip.Content>
             </Tooltip.Root>
