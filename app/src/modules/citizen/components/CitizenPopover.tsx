@@ -98,6 +98,7 @@ export const CitizenPopover = ({ children, citizenId }: Props) => {
                   key={roleAssignment.roleId}
                   roleId={roleAssignment.roleId}
                   citizenId={data.citizen.id}
+                  citizenLevel={roleAssignment.currentLevel}
                   onSuccess={refetch}
                 />
               ))}

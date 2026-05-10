@@ -36,7 +36,7 @@ export const Navigation = ({ pages }: Props) => {
 
       <nav
         className={clsx(
-          "flex-col lg:flex-row gap-[2px] bg-black lg:bg-transparent px-2 lg:px-0 pb-2 lg:pb-0 border-b lg:border-b-0 border-neutral-800",
+          "flex-col lg:flex-row gap-0.5 bg-black lg:bg-transparent px-2 lg:px-0 pb-2 lg:pb-0 border-b lg:border-b-0 border-neutral-800",
           {
             "flex fixed lg:static top-12 left-0 right-0": isOpen,
             "hidden lg:flex": !isOpen,
@@ -66,9 +66,9 @@ const Item = ({ className, page }: ItemProps) => {
       key={page.url}
       href={page.url}
       className={clsx(
-        "rounded-secondary hover:bg-neutral-800 active:bg-neutral-700 py-1 px-2 flex gap-2 items-center [&>svg]:text-xs [&>svg]:opacity-50",
+        "rounded-secondary hover:bg-white/20 active:bg-white/30 py-1 px-2 flex gap-2 items-center [&>svg]:text-xs [&>svg]:opacity-50",
         {
-          "bg-neutral-800": isActive,
+          "bg-white/20": isActive,
         },
         className,
       )}

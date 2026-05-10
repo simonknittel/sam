@@ -93,10 +93,15 @@ export const authOptions: NextAuthOptions = {
 
       let givenPermissionSets: PermissionSet[] = [];
       if (entity) {
-        const roles = entity.roleAssignments.flatMap((roleAssignment) => [
-          roleAssignment.role,
-          ...roleAssignment.role.inherits,
-        ]);
+        const roles = entity.roleAssignments
+          .filter(
+            (roleAssignment) =>
+              roleAssignment.currentLevel === roleAssignment.role.maxLevel,
+          )
+          .flatMap((roleAssignment) => [
+            roleAssignment.role,
+            ...roleAssignment.role.inherits,
+          ]);
 
         givenPermissionSets = getPermissionSetsByRoles(roles);
       }

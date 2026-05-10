@@ -14,10 +14,10 @@ import { z } from "zod";
 const schema = z.object({
   id: z.cuid(),
   name: z.string().min(1).max(255),
-  maxAgeDays: z.coerce.number().min(1).nullish(),
-  assignAfterInactiveDays: z.coerce.number().min(1).nullish(),
-  // inactivityThreshold: z.coerce.number().min(1).nullish(),
-  // maxLevel: z.coerce.number().min(1).nullish(),
+  maxAgeDays: z.coerce.number().min(1).max(10_000).nullish(),
+  assignAfterInactiveDays: z.coerce.number().min(1).max(10_000).nullish(),
+  // inactivityThreshold: z.coerce.number().min(1).max(10_000).nullish(),
+  maxLevel: z.coerce.number().min(1).max(100).nullish(),
 });
 
 export const updateRole = async (
@@ -48,9 +48,9 @@ export const updateRole = async (
       // inactivityThreshold: formData.get("inactivityThreshold")
       //   ? Number(formData.get("inactivityThreshold"))
       //   : null,
-      // maxLevel: formData.get("maxLevel")
-      //   ? Number(formData.get("maxLevel"))
-      //   : null,
+      maxLevel: formData.get("maxLevel")
+        ? Number(formData.get("maxLevel"))
+        : null,
     });
     if (!result.success) {
       log.warn("Bad Request", { error: serializeError(result.error) });
@@ -88,7 +88,7 @@ export const updateRole = async (
         maxAgeDays: result.data.maxAgeDays,
         assignAfterInactiveDays: result.data.assignAfterInactiveDays,
         // inactivityThreshold: result.data.inactivityThreshold,
-        // maxLevel: result.data.maxLevel,
+        maxLevel: result.data.maxLevel,
       },
     });
 

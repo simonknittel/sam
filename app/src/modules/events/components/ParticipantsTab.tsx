@@ -189,7 +189,7 @@ export const ParticipantsTab = async ({
         </h2>
 
         {sortedResolvedParticipants.length > 0 ? (
-          <table className="w-full min-w-[720px]">
+          <table className="w-full min-w-180">
             <thead>
               <tr
                 className={clsx(
@@ -255,7 +255,7 @@ export const ParticipantsTab = async ({
                         <Link
                           href={`/app/spynet/citizen/${resolvedParticipant.citizen.id}`}
                           className={clsx(
-                            "hover:bg-neutral-800 rounded-secondary px-2 h-8 flex items-center",
+                            "hover:bg-white/10 rounded-secondary px-2 h-8 flex items-center",
                             {
                               "text-green-500":
                                 resolvedParticipant.citizen.id ===

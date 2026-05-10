@@ -67,7 +67,7 @@ export const PopoverBaseUI = ({
   return (
     <PopoverBaseUIContext.Provider value={value}>
       <Popover.Root open={isOpen} onOpenChange={handleOpenChange}>
-        <Popover.Trigger openOnHover className="text-left">
+        <Popover.Trigger openOnHover className="text-left" delay={50}>
           {trigger}
         </Popover.Trigger>
 

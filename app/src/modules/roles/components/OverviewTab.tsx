@@ -35,35 +35,45 @@ export const OverviewTab = ({ className, role }: Props) => {
 
         <TextInput label="Name" name="name" defaultValue={role.name} />
 
-        <NumberInput
-          label="Entfernt nach (in Tagen)"
-          name="maxAgeDays"
-          defaultValue={role.maxAgeDays ?? undefined}
-          min={1}
-          step={1}
-          hint="(Optional) Citizen, die sich innerhalb dieses Zeitraums nicht einloggen, wird automatisch diese Rolle entfernt"
-          labelClassName="mt-4"
-        />
+        <div className="grid grid-cols-2 gap-8">
+          <div>
+            <NumberInput
+              label="Entfernung nach (in Tagen)"
+              name="maxAgeDays"
+              defaultValue={role.maxAgeDays ?? undefined}
+              min={1}
+              step={1}
+              hint="(Optional) Citizen, die sich innerhalb dieses Zeitraums nicht einloggen, wird automatisch diese Rolle entfernt"
+              labelClassName="mt-4"
+            />
+          </div>
 
-        <NumberInput
-          label="Zuweisung nach (in Tagen)"
-          name="assignAfterInactiveDays"
-          defaultValue={role.assignAfterInactiveDays ?? undefined}
-          min={1}
-          step={1}
-          hint="(Optional) Citizen, die sich innerhalb dieses Zeitraums nicht einloggen, wird automatisch diese Rolle zugewiesen"
-          labelClassName="mt-4"
-        />
+          <div>
+            <NumberInput
+              label="Zuweisung nach (in Tagen)"
+              name="assignAfterInactiveDays"
+              defaultValue={role.assignAfterInactiveDays ?? undefined}
+              min={1}
+              step={1}
+              hint="(Optional) Citizen, die sich innerhalb dieses Zeitraums nicht einloggen, wird automatisch diese Rolle zugewiesen"
+              labelClassName="mt-4"
+            />
+          </div>
+        </div>
 
-        {/* <NumberInput
-          label="Inaktiv nach (in Tagen)"
-          name="inactivityThreshold"
-          defaultValue={role.inactivityThreshold ?? undefined}
-          min={1}
-          step={1}
-          hint="(Optional) Für Citizen, dessen Level für diese Rolle sich innerhalb dieses Zeitraums nicht ändert, gilt diese Rolle als inaktiv und die Berechtigungen dieser Rolle werden deaktiviert"
-          labelClassName="mt-4"
-        />
+        {/* <div className="grid grid-cols-2 gap-8">
+          <div>
+            <NumberInput
+              label="Inaktiv nach (in Tagen)"
+              name="inactivityThreshold"
+              defaultValue={role.inactivityThreshold ?? undefined}
+              min={1}
+              step={1}
+              hint="(Optional) Für Citizen, dessen Level für diese Rolle sich innerhalb dieses Zeitraums nicht ändert, gilt diese Rolle als inaktiv und die Berechtigungen dieser Rolle werden deaktiviert"
+              labelClassName="mt-4"
+            />
+          </div>
+        </div> */}
 
         <NumberInput
           label="Level"
@@ -73,7 +83,7 @@ export const OverviewTab = ({ className, role }: Props) => {
           step={1}
           hint="(Optional) Die Anzahl an Level, die ein Citizen erreichen muss, um die Berechtigungen dieser Rolle zu erhalten"
           labelClassName="mt-4"
-        /> */}
+        />
 
         <Button2
           type="submit"
@@ -141,7 +151,7 @@ export const OverviewTab = ({ className, role }: Props) => {
               width={228}
               height={128}
               className={clsx(
-                "mt-2 w-[228px] h-32 border border-neutral-700 hover:border-neutral-500 text-neutral-500 hover:text-neutral-300 transition-colors group rounded-secondary",
+                "mt-2 w-57 h-32 border border-neutral-700 hover:border-neutral-500 text-neutral-500 hover:text-neutral-300 transition-colors group rounded-secondary",
                 {
                   "after:content-['Bild_hochladen'] flex items-center justify-center":
                     !role.thumbnailId,
