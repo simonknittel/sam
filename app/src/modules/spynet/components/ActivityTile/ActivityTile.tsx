@@ -9,6 +9,7 @@ import { mapOrganizationAttributeHistoryEntries } from "./mapOrganizationAttribu
 import { mapOrganizationEntries } from "./mapOrganizationEntries";
 import { mapOrganizationMembershipHistoryEntries } from "./mapOrganizationMembershipHistoryEntries";
 import { mapRoleAssignmentChangeEntries } from "./mapRoleAssignmentChangeEntries";
+import { mapRoleAssignmentLevelChangeEntries } from "./mapRoleAssignmentLevelChangeEntries";
 
 interface Entry {
   readonly key: string;
