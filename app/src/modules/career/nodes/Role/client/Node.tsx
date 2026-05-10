@@ -144,14 +144,19 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
     );
   }, [nodeId, setNodes, setEdges]);
 
-  // @ts-expect-error - We know that role will be there (this whole component will get refactored)
-  const role = roles.find((role) => role.id === props.data.role.id)!; // eslint-disable-line @typescript-eslint/no-unsafe-member-access
+  const role =
+    "role" in props.data && props.data.role
+      ? // @ts-expect-error
+        roles.find((role) => role.id === props.data.role.id) // eslint-disable-line @typescript-eslint/no-unsafe-member-access
+      : null;
 
-  const currentLevel =
-    authentication.session.entity.roleAssignments.find(
-      (roleAssignment) => roleAssignment.roleId === role.id,
-    )?.currentLevel ?? 0;
-  const showLevelProgress = role.maxLevel && currentLevel < role.maxLevel;
+  const currentLevel = role
+    ? (authentication.session.entity.roleAssignments.find(
+        (roleAssignment) => roleAssignment.roleId === role.id,
+      )?.currentLevel ?? 0)
+    : null;
+  const showLevelProgress =
+    role && currentLevel && role.maxLevel && currentLevel < role.maxLevel;
 
   const unlocked =
     ("showUnlocked" in props.data && props.data.showUnlocked) ||
@@ -169,8 +174,8 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
     "redacted" in props.data
       ? null
       : props.data.roleImage === FlowNodeRoleImage.THUMBNAIL
-        ? role.thumbnail
-        : role.icon;
+        ? role?.thumbnail
+        : role?.icon;
 
   return (
     <div className="group/node size-full">
