@@ -116,6 +116,16 @@ export default async function Page() {
             </Link>
           </div>
         </DayItem>
+
+        <DayItem
+          heading="Flotte - Neues Layout"
+          badges={["Änderung", "Flotte"]}
+        >
+          <p>
+            Die Übersicht der Organisationsflotte wurde neu gestaltet und
+            entspricht nun dem Layout der anderen Apps wie Events und Tasks.
+          </p>
+        </DayItem>
       </Day>
 
       <Day heading="6. Mai 2026">

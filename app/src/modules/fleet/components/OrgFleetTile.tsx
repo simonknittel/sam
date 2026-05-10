@@ -1,40 +1,66 @@
-import { groupBy } from "lodash";
+import { CursorPaginationControls } from "@/modules/common/CursorPagination/CursorPaginationControls";
+import { cursorPaginationParsers } from "@/modules/common/CursorPagination/cursorPaginationParsers";
+import {
+  createLoader,
+  parseAsArrayOf,
+  parseAsString,
+  parseAsStringLiteral,
+  type SearchParams,
+} from "nuqs/server";
 import { getOrgFleet } from "../queries";
-import { Filters } from "./Filters";
 import { FleetTable } from "./FleetTable";
+
+const loadSearchParams = createLoader({
+  flight_ready: parseAsStringLiteral(["all", "flight_ready"]).withDefault(
+    "all",
+  ),
+  sort: parseAsStringLiteral([
+    "name-asc",
+    "name-desc",
+    "count-asc",
+    "count-desc",
+  ]).withDefault("name-asc"),
+  variantTags: parseAsArrayOf(parseAsString),
+  ...cursorPaginationParsers,
+});
 
 interface Props {
   readonly className?: string;
-  readonly urlSearchParams: URLSearchParams;
+  readonly searchParams: Promise<SearchParams>;
 }
 
-export const OrgFleetTile = async ({ className, urlSearchParams }: Props) => {
-  const fleet = await getOrgFleet({
-    onlyFlightReady: urlSearchParams.get("flight_ready") === "true",
+export const OrgFleetTile = async ({ className, searchParams }: Props) => {
+  const { flight_ready, sort, variantTags, cursor, direction } =
+    await loadSearchParams(searchParams);
+
+  const { fleet, totalUsers, nextCursor, prevCursor } = await getOrgFleet({
+    flightReady: flight_ready,
+    variantTagIds: variantTags?.length ? variantTags : [],
+    sort,
+    cursor,
+    direction,
   });
-
-  const groupedFleet = groupBy(fleet, (ship) => ship.variant.id);
-  const countedFleet = Object.values(groupedFleet).map((ships) => {
-    const ship = ships[0];
-
-    return {
-      ...ship,
-      count: ships.length,
-    };
-  });
-
-  const groupedByUser = Object.groupBy(fleet, (ship) => ship.ownerId);
 
   return (
     <section className={className}>
-      <p className="text-neutral-500 text-sm mb-1">
-        Schiffe von {Object.keys(groupedByUser).length} Citizen
-      </p>
+      <p className="text-neutral-500 text-sm mb-1">{totalUsers} Citizen</p>
 
       <div className="rounded-primary bg-neutral-800/50 p-4 overflow-x-auto">
-        <Filters />
+        {fleet.length === 0 ? (
+          <div className="grid place-content-center">
+            <p className="text-white/90">Keine Schiffe gefunden</p>
+          </div>
+        ) : (
+          <>
+            <FleetTable fleet={fleet} />
 
-        <FleetTable fleet={countedFleet} className="mt-6" />
+            <CursorPaginationControls
+              nextCursor={nextCursor}
+              prevCursor={prevCursor}
+              className="mt-4"
+            />
+          </>
+        )}
       </div>
     </section>
   );
