@@ -16,6 +16,7 @@ import { cursorPaginationParsers } from "../../CursorPagination/cursorPagination
 interface Item {
   readonly value: string;
   readonly label: string;
+  readonly group?: string;
 }
 
 interface Props {
@@ -78,6 +79,20 @@ export const MultiSelectComboboxFilter = ({
       loader.start();
     }
   }, [loader, isLoading]);
+
+  const hasGroups = items.some((item) => item.group !== undefined);
+
+  const groupedItems = useMemo(() => {
+    if (!hasGroups) return null;
+
+    const groups = new Map<string, Item[]>();
+    for (const item of items) {
+      const group = item.group ?? "";
+      if (!groups.has(group)) groups.set(group, []);
+      groups.get(group)!.push(item);
+    }
+    return Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b));
+  }, [items, hasGroups]);
 
   return (
     <div className={clsx("bg-secondary p-2 corners-secondary", className)}>
@@ -145,23 +160,54 @@ export const MultiSelectComboboxFilter = ({
                 </div>
               </Combobox.Empty>
 
-              <Combobox.List>
-                {(item: Item) => (
-                  <Combobox.Item
-                    key={item.value}
-                    value={item}
-                    className="grid grid-cols-[0.75rem_1fr] items-center gap-2 px-3 py-1.5 text-sm outline-none data-highlighted:bg-neutral-800 cursor-pointer"
-                  >
-                    <Combobox.ItemIndicator className="col-start-1 text-brand-red-300">
-                      <FaCheck className="size-2.5" />
-                    </Combobox.ItemIndicator>
-
-                    <div title={item.label} className="col-start-2 truncate">
-                      {item.label}
+              {hasGroups && groupedItems ? (
+                groupedItems.map(([group, groupItems]) => (
+                  <div key={group}>
+                    <div className="px-3 py-1 text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                      {group}
                     </div>
-                  </Combobox.Item>
-                )}
-              </Combobox.List>
+
+                    {groupItems
+                      .sort((a, b) => a.label.localeCompare(b.label))
+                      .map((item) => (
+                        <Combobox.Item
+                          key={item.value}
+                          value={item}
+                          className="grid grid-cols-[0.75rem_1fr] items-center gap-2 pl-8 pr-3 py-1.5 text-sm outline-none data-highlighted:bg-neutral-800 cursor-pointer"
+                        >
+                          <Combobox.ItemIndicator className="col-start-1 text-brand-red-300">
+                            <FaCheck className="size-2.5" />
+                          </Combobox.ItemIndicator>
+
+                          <div
+                            title={item.label}
+                            className="col-start-2 truncate"
+                          >
+                            {item.label}
+                          </div>
+                        </Combobox.Item>
+                      ))}
+                  </div>
+                ))
+              ) : (
+                <Combobox.List>
+                  {(item: Item) => (
+                    <Combobox.Item
+                      key={item.value}
+                      value={item}
+                      className="grid grid-cols-[0.75rem_1fr] items-center gap-2 px-3 py-1.5 text-sm outline-none data-highlighted:bg-neutral-800 cursor-pointer"
+                    >
+                      <Combobox.ItemIndicator className="col-start-1 text-brand-red-300">
+                        <FaCheck className="size-2.5" />
+                      </Combobox.ItemIndicator>
+
+                      <div title={item.label} className="col-start-2 truncate">
+                        {item.label}
+                      </div>
+                    </Combobox.Item>
+                  )}
+                </Combobox.List>
+              )}
             </Combobox.Popup>
           </Combobox.Positioner>
         </Combobox.Portal>
