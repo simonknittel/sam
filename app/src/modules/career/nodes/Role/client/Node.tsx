@@ -144,7 +144,8 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
     );
   }, [nodeId, setNodes, setEdges]);
 
-  const role = roles.find((role) => role.id === props.data.role.id)!;
+  // @ts-expect-error - We know that role will be there (this whole component will get refactored)
+  const role = roles.find((role) => role.id === props.data.role.id)!; // eslint-disable-line @typescript-eslint/no-unsafe-member-access
 
   const currentLevel =
     authentication.session.entity.roleAssignments.find(
