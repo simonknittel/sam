@@ -40,11 +40,11 @@ export const RolesTile = async ({ className }: Props) => {
               <br />
               nach
             </th>
-            <th className="px-2 text-center">
+            {/* <th className="px-2 text-center">
               Inaktiv
               <br />
               nach
-            </th>
+            </th> */}
             <th className="px-2 text-center">Level</th>
             <th className="px-2 text-center">Citizen</th>
           </tr>

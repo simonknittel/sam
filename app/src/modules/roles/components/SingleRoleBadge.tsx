@@ -168,7 +168,7 @@ export const SingleRoleBadge = ({
 
             <div
               className="flex gap-px h-4 flex-1"
-              title={`${citizenLevel} von ${role.maxLevel} Level erreicht`}
+              title={`${citizenLevel ?? 0} von ${role.maxLevel} Level erreicht`}
             >
               {Array.from({ length: role.maxLevel }, (_, idx) => {
                 const level = idx + 1;

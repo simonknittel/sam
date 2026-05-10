@@ -8,12 +8,10 @@ import { RoleAssignmentLevelChangeType } from "@prisma/client";
 import { refresh } from "next/cache";
 import { z } from "zod";
 
-export interface Change {
-  citizenId: string;
-  roleId: string;
-}
-
-const schema = z.record(z.string(), z.string());
+const schema = z.object({
+  citizenId: z.cuid(),
+  roleId: z.cuid(),
+});
 
 export const increaseRoleAssignmentLevel = createAuthenticatedAction(
   "increaseRoleAssignmentLevel",
