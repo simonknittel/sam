@@ -35,25 +35,31 @@ export const OverviewTab = ({ className, role }: Props) => {
 
         <TextInput label="Name" name="name" defaultValue={role.name} />
 
-        <NumberInput
-          label="Entfernt nach (in Tagen)"
-          name="maxAgeDays"
-          defaultValue={role.maxAgeDays ?? undefined}
-          min={1}
-          step={1}
-          hint="(Optional) Citizen, die sich innerhalb dieses Zeitraums nicht einloggen, wird automatisch diese Rolle entfernt"
-          labelClassName="mt-4"
-        />
+        <div className="flex gap-8">
+          <div className="flex-1">
+            <NumberInput
+              label="Entfernt nach (in Tagen)"
+              name="maxAgeDays"
+              defaultValue={role.maxAgeDays ?? undefined}
+              min={1}
+              step={1}
+              hint="(Optional) Citizen, die sich innerhalb dieses Zeitraums nicht einloggen, wird automatisch diese Rolle entfernt"
+              labelClassName="mt-4"
+            />
+          </div>
 
-        <NumberInput
-          label="Zuweisung nach (in Tagen)"
-          name="assignAfterInactiveDays"
-          defaultValue={role.assignAfterInactiveDays ?? undefined}
-          min={1}
-          step={1}
-          hint="(Optional) Citizen, die sich innerhalb dieses Zeitraums nicht einloggen, wird automatisch diese Rolle zugewiesen"
-          labelClassName="mt-4"
-        />
+          <div className="flex-1">
+            <NumberInput
+              label="Zuweisung nach (in Tagen)"
+              name="assignAfterInactiveDays"
+              defaultValue={role.assignAfterInactiveDays ?? undefined}
+              min={1}
+              step={1}
+              hint="(Optional) Citizen, die sich innerhalb dieses Zeitraums nicht einloggen, wird automatisch diese Rolle zugewiesen"
+              labelClassName="mt-4"
+            />
+          </div>
+        </div>
 
         {/* <NumberInput
           label="Inaktiv nach (in Tagen)"
