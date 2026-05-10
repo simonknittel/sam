@@ -39,6 +39,8 @@ export const getRoles = cache(
         assignments: {
           select: {
             id: true,
+            citizenId: true,
+            currentLevel: true,
           },
         },
       },

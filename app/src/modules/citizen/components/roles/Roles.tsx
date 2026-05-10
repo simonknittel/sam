@@ -33,6 +33,11 @@ export const Roles = async ({ className, entity }: Props) => {
               key={role.id}
               roleId={role.id}
               citizenId={entity.id}
+              citizenLevel={
+                role.assignments.find(
+                  (assignment) => assignment.citizenId === entity.id,
+                )!.currentLevel
+              }
             />
           ))}
         </div>

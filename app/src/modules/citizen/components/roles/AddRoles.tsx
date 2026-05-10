@@ -88,7 +88,7 @@ export const AddRoles = ({
       <Modal
         isOpen={isOpen}
         onRequestClose={handleRequestClose}
-        className="w-[1280px]"
+        className="w-7xl"
         heading={<h2>Rollen hinzufügen oder entfernen</h2>}
       >
         {isPending && (

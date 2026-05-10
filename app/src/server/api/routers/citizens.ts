@@ -12,6 +12,8 @@ import { createTRPCRouter, protectedProcedure } from "../trpc";
 export const citizensRouter = createTRPCRouter({
   getAllCitizens: protectedProcedure.query(async () => {
     try {
+      // TODO: Implement authorization
+
       const citizens = await prisma.entity.findMany({
         where: {
           handle: {

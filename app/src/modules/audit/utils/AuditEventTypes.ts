@@ -24,6 +24,8 @@ export enum AuditEventType {
   ROLE_INHERITANCE_UPDATED = "ROLE_INHERITANCE_UPDATED",
   ROLE_ASSIGNMENTS_UPDATED = "ROLE_ASSIGNMENTS_UPDATED",
   ROLE_ASSIGNMENT_DELETED = "ROLE_ASSIGNMENT_DELETED",
+  ROLE_ASSIGNMENT_LEVEL_INCREASED = "ROLE_ASSIGNMENT_LEVEL_INCREASED",
+  ROLE_ASSIGNMENT_LEVEL_DECREASED = "ROLE_ASSIGNMENT_LEVEL_DECREASED",
   ROLE_AUTO_ASSIGNED = "ROLE_AUTO_ASSIGNED",
   ROLE_AUTO_REMOVED = "ROLE_AUTO_REMOVED",
   SILC_TRANSACTION_CREATED = "SILC_TRANSACTION_CREATED",
@@ -240,6 +242,16 @@ export interface AuditEventDataByType {
   };
 
   [AuditEventType.ROLE_ASSIGNMENT_DELETED]: {
+    citizenId: string;
+    roleId: string;
+  };
+
+  [AuditEventType.ROLE_ASSIGNMENT_LEVEL_INCREASED]: {
+    citizenId: string;
+    roleId: string;
+  };
+
+  [AuditEventType.ROLE_ASSIGNMENT_LEVEL_DECREASED]: {
     citizenId: string;
     roleId: string;
   };
@@ -899,6 +911,26 @@ export const AuditEventDefinitions: {
     },
     message: (data) =>
       `Role assignment deleted for citizen ${data.citizenId} (role: ${data.roleId})`,
+  },
+
+  [AuditEventType.ROLE_ASSIGNMENT_LEVEL_INCREASED]: {
+    type: AuditEventType.ROLE_ASSIGNMENT_LEVEL_INCREASED,
+    data: {
+      citizenId: "string",
+      roleId: "string",
+    },
+    message: (data) =>
+      `Role assignment level increased for citizen ${data.citizenId} (role: ${data.roleId})`,
+  },
+
+  [AuditEventType.ROLE_ASSIGNMENT_LEVEL_DECREASED]: {
+    type: AuditEventType.ROLE_ASSIGNMENT_LEVEL_DECREASED,
+    data: {
+      citizenId: "string",
+      roleId: "string",
+    },
+    message: (data) =>
+      `Role assignment level decreased for citizen ${data.citizenId} (role: ${data.roleId})`,
   },
 
   [AuditEventType.ROLE_AUTO_ASSIGNED]: {

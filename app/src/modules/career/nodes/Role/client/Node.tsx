@@ -1,7 +1,9 @@
 "use client";
 
 import { env } from "@/env";
+import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { Handles } from "@/modules/career/components/Handles";
+import { useRolesContext } from "@/modules/roles/components/RolesContext";
 import {
   FlowNodeRoleImage,
   FlowNodeType,
@@ -60,6 +62,10 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
   const nodeId = useNodeId();
   const { setNodes, setEdges } = useReactFlow();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const { roles } = useRolesContext();
+  const authentication = useAuthentication();
+  if (!authentication || !authentication.session.entity)
+    throw new Error("Unauthorized");
 
   const onEdit = useCallback(() => {
     setIsEditModalOpen((currentValue) => !currentValue);
@@ -138,9 +144,17 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
     );
   }, [nodeId, setNodes, setEdges]);
 
+  const role = roles.find((role) => role.id === props.data.role.id)!;
+
+  const currentLevel =
+    authentication.session.entity.roleAssignments.find(
+      (roleAssignment) => roleAssignment.roleId === role.id,
+    )?.currentLevel ?? 0;
+  const showLevelProgress = role.maxLevel && currentLevel < role.maxLevel;
+
   const unlocked =
     ("showUnlocked" in props.data && props.data.showUnlocked) ||
-    ("unlocked" in props.data && props.data.unlocked);
+    ("unlocked" in props.data && props.data.unlocked && !showLevelProgress);
 
   const backgroundColor =
     "redacted" in props.data
@@ -154,8 +168,8 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
     "redacted" in props.data
       ? null
       : props.data.roleImage === FlowNodeRoleImage.THUMBNAIL
-        ? props.data.role.thumbnail
-        : props.data.role.icon;
+        ? role.thumbnail
+        : role.icon;
 
   return (
     <div className="group/node size-full">
@@ -205,7 +219,7 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
 
       <div
         className={clsx(
-          "bg-neutral-800 rounded-secondary h-full p-4 flex justify-center items-center",
+          "bg-neutral-800 rounded-secondary h-full p-4 flex justify-center items-center relative",
           {
             "grayscale opacity-40 hover:grayscale-0 hover:opacity-100":
               !unlocked,
@@ -219,7 +233,7 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
         {"role" in props.data && (
           <Tooltip.Provider delayDuration={0}>
             <Tooltip.Root>
-              <Tooltip.Trigger className="cursor-help w-full h-full">
+              <Tooltip.Trigger className="cursor-help w-full h-full pb-1">
                 <Image
                   src={`https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${image?.id}`}
                   alt={props.data.role.name}
@@ -236,6 +250,17 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
                   }
                   loading="lazy"
                 />
+
+                {showLevelProgress && (
+                  <span className="block absolute left-0 bottom-0 right-0 h-1 bg-white/30">
+                    <span
+                      className="block h-full bg-me"
+                      style={{
+                        width: `${(currentLevel / role.maxLevel!) * 100}%`,
+                      }}
+                    />
+                  </span>
+                )}
               </Tooltip.Trigger>
 
               <Tooltip.Content

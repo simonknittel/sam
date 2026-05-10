@@ -25,6 +25,10 @@ import image20251007sincome from "@/modules/changelog/assets/2025-10-07-sincome.
 import image20251013rolesHistory from "@/modules/changelog/assets/2025-10-13-roles-history.png";
 import image20260214RoleTooltip from "@/modules/changelog/assets/2026-02-14-role-tooltip.png";
 import image20260301CitizenPopover from "@/modules/changelog/assets/2026-03-01-citizen-popover.png";
+import image20260510Career from "@/modules/changelog/assets/2026-05-10-career.png";
+import image20260510CitizenPopover from "@/modules/changelog/assets/2026-05-10-citizen-popover.png";
+import image20260510OverviewTab from "@/modules/changelog/assets/2026-05-10-overview-tab.png";
+import image20260510ProfileTile from "@/modules/changelog/assets/2026-05-10-profile-tile.png";
 import { Link } from "@/modules/common/components/Link";
 import { SmallBadge } from "@/modules/common/components/SmallBadge";
 import { random } from "lodash";
@@ -52,6 +56,68 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col gap-4">
+      <Day heading="10. Mai 2026">
+        <DayItem
+          heading="Levelbare Rollen"
+          badges={["Neu", "Rollen", "Karriere"]}
+        >
+          <p>
+            Eine Rolle kann nun levelbar geschaltet werden. Levelbare Rollen
+            haben ein maximales Level. Erst wenn dieses Level erreicht ist, gilt
+            diese Rolle als freigeschaltet für den jeweiligen Citizen. Erst ab
+            diesem Moment greifen Berechtigungen und die Rolle erscheint visuell
+            (z.B. in Karriere) als aktiv.
+          </p>
+
+          <p>
+            Die Level können von Citizen mit der Berechtigung Rollen zu vergeben
+            und nehmen angepasst werden.
+          </p>
+
+          <div className="grid grid-cols-2 grid-rows-[128px_128px] gap-2">
+            <Link href={image20260510CitizenPopover.src}>
+              <Image
+                quality={100}
+                src={image20260510CitizenPopover}
+                alt=""
+                loading="eager"
+                className="max-h-full w-auto"
+              />
+            </Link>
+
+            <Link href={image20260510ProfileTile.src}>
+              <Image
+                quality={100}
+                src={image20260510ProfileTile}
+                alt=""
+                loading="eager"
+                className="max-h-full w-auto"
+              />
+            </Link>
+
+            <Link href={image20260510Career.src}>
+              <Image
+                quality={100}
+                src={image20260510Career}
+                alt=""
+                loading="eager"
+                className="max-h-full w-auto"
+              />
+            </Link>
+
+            <Link href={image20260510OverviewTab.src}>
+              <Image
+                quality={100}
+                src={image20260510OverviewTab}
+                alt=""
+                loading="eager"
+                className="max-h-full w-auto"
+              />
+            </Link>
+          </div>
+        </DayItem>
+      </Day>
+
       <Day heading="6. Mai 2026">
         <DayItem
           heading="Automatische Rollen-Zuweisung"
@@ -189,12 +255,7 @@ export default async function Page() {
           </p>
 
           <Link href={image20260301CitizenPopover.src}>
-            <Image
-              quality={100}
-              src={image20260301CitizenPopover}
-              alt=""
-              loading="eager"
-            />
+            <Image quality={100} src={image20260301CitizenPopover} alt="" />
           </Link>
         </DayItem>
       </Day>

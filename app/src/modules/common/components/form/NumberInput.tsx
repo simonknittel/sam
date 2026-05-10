@@ -18,7 +18,10 @@ export const NumberInput = (props: Props) => {
   return (
     <>
       {label && (
-        <label className={clsx("block mb-2", labelClassName)} htmlFor={id}>
+        <label
+          className={clsx("block mb-2 text-white/90", labelClassName)}
+          htmlFor={id}
+        >
           {label}
         </label>
       )}
@@ -33,7 +36,7 @@ export const NumberInput = (props: Props) => {
         {...rest}
       />
 
-      {hint && <p className="text-xs mt-1 text-gray-400">{hint}</p>}
+      {hint && <p className="text-xs mt-1 text-white/40">{hint}</p>}
     </>
   );
 };
@@ -54,7 +57,10 @@ export const NumberInputFormatted = (props: PropsFormatted) => {
   return (
     <>
       {label && (
-        <label className={clsx("block mb-2", labelClassName)} htmlFor={id}>
+        <label
+          className={clsx("block mb-2 text-white/50", labelClassName)}
+          htmlFor={id}
+        >
           {label}
         </label>
       )}
@@ -71,7 +77,7 @@ export const NumberInputFormatted = (props: PropsFormatted) => {
         {...rest}
       />
 
-      {hint && <p className="text-xs mt-1 text-gray-400">{hint}</p>}
+      {hint && <p className="text-xs mt-1 text-white/40">{hint}</p>}
     </>
   );
 };

@@ -103,6 +103,8 @@ export const getCitizenPopoverById = cache(
           roleAssignments: {
             select: {
               roleId: true,
+              citizenId: true,
+              currentLevel: true,
             },
           },
         },
