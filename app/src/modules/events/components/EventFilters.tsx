@@ -10,7 +10,7 @@ interface Props {
   readonly className?: string;
 }
 
-export const Filters = ({ className }: Props) => {
+export const EventFilters = ({ className }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -26,7 +26,7 @@ export const Filters = ({ className }: Props) => {
       </Button2>
 
       <div
-        className={clsx("flex flex-col gap-[2px]", {
+        className={clsx("flex flex-col gap-0.5", {
           "hidden md:flex": !isOpen,
         })}
       >

@@ -9,7 +9,7 @@ import {
 } from "nuqs/server";
 import { getEntriesOfCitizen } from "../queries";
 import { CreatePenaltyEntryButton } from "./CreatePenaltyEntry/CreatePenaltyEntryButton";
-import { FlatEntriesTableClient } from "./FlatEntriesTableClient";
+import { PenaltyEntriesTable } from "./PenaltyEntriesTable";
 
 const loadSearchParams = createLoader({
   expired: parseAsStringLiteral(["active", "all"]).withDefault("active"),
@@ -43,7 +43,7 @@ export const EntriesOfCitizenTable = async ({
       className={clsx(className)}
     >
       {hasEntries ? (
-        <FlatEntriesTableClient
+        <PenaltyEntriesTable
           rows={entries}
           showDelete={showDelete}
           hideCitizenColumn

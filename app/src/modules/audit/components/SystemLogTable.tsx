@@ -1,4 +1,4 @@
-import { THead, TRow } from "@/modules/common/components/Table";
+import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
 import { CursorPaginationControls } from "@/modules/common/CursorPagination/CursorPaginationControls";
 import { cursorPaginationParsers } from "@/modules/common/CursorPagination/cursorPaginationParsers";
 import { formatDate } from "@/modules/common/utils/formatDate";
@@ -15,6 +15,7 @@ import {
   type AuditEventType,
 } from "../utils/AuditEventTypes";
 
+const TABLE_MIN_WIDTH = "min-w-200";
 const GRID_CLASSES = "grid-cols-[150px_250px_150px_1fr]";
 
 const loadSearchParams = createLoader({
@@ -48,45 +49,45 @@ export const SystemLogTable = async ({ className, searchParams }: Props) => {
           <p>Bisher wurden keine Ereignisse aufgezeichnet.</p>
         </div>
       ) : (
-        <div className="overflow-x-auto bg-secondary rounded-primary p-4">
-          <table className="w-full min-w-200">
-            <THead className={GRID_CLASSES}>
-              <th>Date</th>
-              <th>Type</th>
-              <th>User</th>
-              <th>Message</th>
-            </THead>
+        <Table
+          className={clsx(TABLE_MIN_WIDTH, "bg-secondary rounded-primary p-4")}
+        >
+          <THead className={GRID_CLASSES}>
+            <th>Date</th>
+            <th>Type</th>
+            <th>User</th>
+            <th>Message</th>
+          </THead>
 
-            <tbody className="text-sm">
-              {events.map((event) => {
-                const definition =
-                  AuditEventDefinitions[event.type as AuditEventType];
-                // @ts-expect-error Improve types
-                const message = definition.message(JSON.parse(event.data));
+          <TBody className="text-sm">
+            {events.map((event) => {
+              const definition =
+                AuditEventDefinitions[event.type as AuditEventType];
+              // @ts-expect-error Improve types
+              const message = definition.message(JSON.parse(event.data));
 
-                const createdBy = event.createdBy?.name || event.createdBy?.id;
+              const createdBy = event.createdBy?.name || event.createdBy?.id;
 
-                return (
-                  <TRow key={event.id} className={clsx("h-8", GRID_CLASSES)}>
-                    <td className="truncate">{formatDate(event.createdAt)}</td>
+              return (
+                <TRow key={event.id} className={clsx("h-8", GRID_CLASSES)}>
+                  <td className="truncate">{formatDate(event.createdAt)}</td>
 
-                    <td className="truncate font-mono text-xs text-neutral-400">
-                      {event.type}
-                    </td>
+                  <td className="truncate font-mono text-neutral-400">
+                    {event.type}
+                  </td>
 
-                    <td title={createdBy} className="truncate">
-                      {createdBy}
-                    </td>
+                  <td title={createdBy} className="truncate">
+                    {createdBy}
+                  </td>
 
-                    <td title={message} className="truncate">
-                      {message}
-                    </td>
-                  </TRow>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                  <td title={message} className="truncate">
+                    {message}
+                  </td>
+                </TRow>
+              );
+            })}
+          </TBody>
+        </Table>
       )}
 
       <CursorPaginationControls

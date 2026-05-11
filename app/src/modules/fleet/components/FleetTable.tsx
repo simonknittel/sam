@@ -1,4 +1,4 @@
-import { THead, TRow } from "@/modules/common/components/Table";
+import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
 import {
   VariantStatus,
   type Manufacturer,
@@ -25,16 +25,17 @@ export interface FleetRow {
   count: number;
 }
 
+const TABLE_MIN_WIDTH = "min-w-140";
+const GRID_COLS = "grid-cols-[256px_1fr_80px_80px]";
+
 interface Props {
   readonly className?: string;
   readonly fleet: FleetRow[];
 }
 
-const GRID_COLS = "grid-cols-[256px_1fr_80px_80px]";
-
 export const FleetTable = ({ className, fleet }: Props) => {
   return (
-    <table className={clsx("w-full min-w-140", className)}>
+    <Table className={clsx(TABLE_MIN_WIDTH, className)}>
       <THead className={GRID_COLS}>
         <th>Schiff</th>
         <th>Tags</th>
@@ -42,7 +43,7 @@ export const FleetTable = ({ className, fleet }: Props) => {
         <th className="text-right">Anzahl</th>
       </THead>
 
-      <tbody>
+      <TBody>
         {fleet.map((row) => (
           <TRow key={row.variant.id} className={GRID_COLS}>
             <td className="overflow-hidden">
@@ -77,7 +78,7 @@ export const FleetTable = ({ className, fleet }: Props) => {
             <td className="overflow-hidden text-right">{row.count}</td>
           </TRow>
         ))}
-      </tbody>
-    </table>
+      </TBody>
+    </Table>
   );
 };

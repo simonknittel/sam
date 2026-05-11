@@ -3,7 +3,7 @@ import { MaxWidthContent } from "@/modules/common/components/layouts/MaxWidthCon
 import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { RolesFilters } from "@/modules/roles/components/RolesFilters";
-import { RolesTile } from "@/modules/roles/components/RolesTile";
+import { RolesTable } from "@/modules/roles/components/RolesTable";
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -20,7 +20,7 @@ export default async function Page({
     <MaxWidthContent>
       <SidebarLayout sidebar={<RolesFilters />}>
         <SuspenseWithErrorBoundaryTile>
-          <RolesTile searchParams={searchParams} />
+          <RolesTable searchParams={searchParams} />
         </SuspenseWithErrorBoundaryTile>
       </SidebarLayout>
     </MaxWidthContent>

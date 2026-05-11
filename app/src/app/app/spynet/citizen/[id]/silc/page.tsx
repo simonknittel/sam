@@ -2,7 +2,7 @@ import { requireAuthenticationPage } from "@/modules/auth/server";
 import { getCitizenById } from "@/modules/citizen/queries";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
-import { SilcTransactionsTable } from "@/modules/silc/components/SilcTransactionsTable";
+import { SilcTransactions } from "@/modules/silc/components/SilcTransactions";
 import { forbidden, notFound } from "next/navigation";
 
 type Params = Promise<
@@ -44,7 +44,7 @@ export default async function Page({
 
   return (
     <SuspenseWithErrorBoundaryTile>
-      <SilcTransactionsTable citizenId={entity.id} />
+      <SilcTransactions citizenId={entity.id} />
     </SuspenseWithErrorBoundaryTile>
   );
 }

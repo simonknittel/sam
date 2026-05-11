@@ -59,7 +59,7 @@ export const RadioFilter = ({
 
   return (
     <div className={clsx("bg-secondary p-2 corners-secondary", className)}>
-      <p className="text-sm text-neutral-500">{label}</p>
+      <p className="text-sm text-neutral-500 font-mono uppercase">{label}</p>
 
       <RadioGroup
         name={name}
