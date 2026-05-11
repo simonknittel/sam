@@ -36,7 +36,7 @@ export const SilcTransactionsTableClient = ({
       <table className={clsx("w-full", TABLE_MIN_WIDTH)}>
         <THead className={GRID_COLS}>
           <th>Datum</th>
-          <th>Empfaenger</th>
+          <th>Empfänger</th>
           <th>Wert</th>
           <th>Beschreibung</th>
           <th>Von</th>
