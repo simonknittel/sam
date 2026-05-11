@@ -1,3 +1,4 @@
+import { THead, TRow } from "@/modules/common/components/Table";
 import {
   VariantStatus,
   type Manufacturer,
@@ -34,29 +35,16 @@ const GRID_COLS = "grid-cols-[256px_1fr_80px_80px]";
 export const FleetTable = ({ className, fleet }: Props) => {
   return (
     <table className={clsx("w-full min-w-140", className)}>
-      <thead>
-        <tr
-          className={clsx(
-            "grid items-center gap-4 [&>th]:text-white/40 [&>th]:p-0 [&>th]:font-mono [&>th]:uppercase",
-            GRID_COLS,
-          )}
-        >
-          <th className="text-left">Schiff</th>
-          <th className="text-left">Tags</th>
-          <th className="text-center">Status</th>
-          <th className="text-right">Anzahl</th>
-        </tr>
-      </thead>
+      <THead className={GRID_COLS}>
+        <th>Schiff</th>
+        <th>Tags</th>
+        <th className="text-center">Status</th>
+        <th className="text-right">Anzahl</th>
+      </THead>
 
       <tbody>
         {fleet.map((row) => (
-          <tr
-            key={row.variant.id}
-            className={clsx(
-              "grid items-center gap-4 px-2 py-1 rounded-secondary -mx-2 first:mt-2",
-              GRID_COLS,
-            )}
-          >
+          <TRow key={row.variant.id} className={GRID_COLS}>
             <td className="overflow-hidden">
               <VariantWithLogo
                 variant={row.variant}
@@ -87,7 +75,7 @@ export const FleetTable = ({ className, fleet }: Props) => {
             </td>
 
             <td className="overflow-hidden text-right">{row.count}</td>
-          </tr>
+          </TRow>
         ))}
       </tbody>
     </table>

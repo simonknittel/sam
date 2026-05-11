@@ -1,5 +1,6 @@
 import { env } from "@/env";
 import { Link } from "@/modules/common/components/Link";
+import { THead, TRow } from "@/modules/common/components/Table";
 import {
   sortAscWithAndNullLast,
   sortDescAndNullLast,
@@ -87,50 +88,40 @@ export const RolesTile = async ({ className, searchParams }: Props) => {
         className,
       )}
     >
-      <table className="w-full min-w-300">
-        <thead>
-          <tr
-            className={clsx(
-              "grid items-center gap-4 text-left text-neutral-500 -mx-2 leading-none",
-              GRID_COLS,
-            )}
-          >
-            <th className="px-2">Rolle</th>
-            <th className="px-2 text-center">Vererbungen</th>
-            <th className="px-2 text-center">
-              Entfernung
-              <br />
-              nach
-            </th>
-            <th className="px-2 text-center">
-              Zuweisung
-              <br />
-              nach
-            </th>
-            <th className="px-2 text-center">Level</th>
-            <th className="px-2 text-center">Citizen</th>
-          </tr>
-        </thead>
+      <table className="w-full min-w-210">
+        <THead className={GRID_COLS}>
+          <th>Rolle</th>
+          <th className="text-center">Vererbungen</th>
+          <th className="text-center">
+            Entfernung
+            <br />
+            nach
+          </th>
+          <th className="text-center">
+            Zuweisung
+            <br />
+            nach
+          </th>
+          <th className="text-center">Level</th>
+          <th className="text-center">Citizen</th>
+        </THead>
 
         <tbody>
           {sortedRoles.map((role) => (
-            <tr
-              key={role.id}
-              className={clsx("grid items-center gap-4 -mx-2", GRID_COLS)}
-            >
-              <td className="h-14 overflow-hidden">
+            <TRow key={role.id} className={clsx("h-10", GRID_COLS)}>
+              <td className="overflow-hidden">
                 <Link
                   href={`/app/roles/${role.id}`}
-                  className="flex items-center gap-2 hover:bg-white/10 px-2 rounded-secondary h-full"
+                  className="flex items-center gap-2 hover:bg-white/10 px-2 rounded-secondary h-8"
                   prefetch={false}
                 >
                   {role.icon ? (
-                    <div className="aspect-square size-8 flex items-center justify-center rounded-secondary overflow-hidden flex-none">
+                    <div className="aspect-square size-6 flex items-center justify-center rounded-secondary overflow-hidden flex-none">
                       <Image
                         src={`https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${role.icon.id}`}
                         alt=""
-                        width={32}
-                        height={32}
+                        width={24}
+                        height={24}
                         className="max-w-full max-h-full"
                         unoptimized={["image/svg+xml", "image/gif"].includes(
                           role.icon.mimeType,
@@ -139,45 +130,39 @@ export const RolesTile = async ({ className, searchParams }: Props) => {
                       />
                     </div>
                   ) : (
-                    <div className="size-8 flex-none" />
+                    <div className="size-6 flex-none" />
                   )}
 
                   <p className="font-bold truncate">{role.name}</p>
                 </Link>
               </td>
 
-              <td className="h-14">
+              <td>
                 <Link
                   href={`/app/roles/${role.id}/inheritance`}
-                  className="flex items-center justify-center gap-2 hover:bg-white/10 px-2 rounded-secondary h-full"
+                  className="flex items-center justify-center gap-2 hover:bg-white/10 px-2 rounded-secondary h-8"
                   prefetch={false}
                 >
                   {role.inherits.length > 0 ? role.inherits.length : null}
                 </Link>
               </td>
 
-              <td className="flex items-center justify-center h-14">
-                {role.maxAgeDays}
-              </td>
+              <td className="text-center">{role.maxAgeDays}</td>
 
-              <td className="flex items-center justify-center h-14">
-                {role.assignAfterInactiveDays}
-              </td>
+              <td className="text-center">{role.assignAfterInactiveDays}</td>
 
-              <td className="flex items-center justify-center h-14">
-                {role.maxLevel}
-              </td>
+              <td className="text-center">{role.maxLevel}</td>
 
-              <td className="h-14">
+              <td>
                 <Link
                   href={`/app/spynet/citizen?filters=role-${role.id}`}
-                  className="flex items-center justify-center gap-2 hover:bg-white/10 px-2 rounded-secondary h-full"
+                  className="flex items-center justify-center gap-2 hover:bg-white/10 px-2 rounded-secondary h-8"
                   prefetch={false}
                 >
                   {role.assignments.length > 0 ? role.assignments.length : null}
                 </Link>
               </td>
-            </tr>
+            </TRow>
           ))}
         </tbody>
       </table>

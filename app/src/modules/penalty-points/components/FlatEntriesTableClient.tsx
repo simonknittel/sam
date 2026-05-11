@@ -1,25 +1,15 @@
-"use client";
-
 import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
 import { Link } from "@/modules/common/components/Link";
+import { THead, TRow } from "@/modules/common/components/Table";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import type { Entity, PenaltyEntry } from "@prisma/client";
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
 import clsx from "clsx";
-import { useMemo } from "react";
 import { DeletePenaltyEntry } from "./DeletePenaltyEntry";
 
 type Row = PenaltyEntry & {
   citizen: Entity;
   createdBy: Entity;
 };
-
-const columnHelper = createColumnHelper<Row>();
 
 const TABLE_MIN_WIDTH = "min-w-[624px]";
 const GRID_COLS_WITH_CITIZEN =
@@ -39,172 +29,90 @@ export const FlatEntriesTableClient = ({
   showDelete,
   hideCitizenColumn,
 }: Props) => {
-  const columns = useMemo(() => {
-    return [
-      !hideCitizenColumn
-        ? columnHelper.accessor("citizen", {
-            header: "Citizen",
-            id: "citizen",
-            enableSorting: false,
-            cell: (row) => {
-              const citizen = row.getValue();
-              return (
-                <CitizenPopover citizenId={citizen.id}>
-                  <Link
-                    href={`/app/spynet/citizen/${citizen.id}/penalty-points`}
-                    className="hover:bg-neutral-800 flex items-center rounded-secondary px-2 h-8 text-brand-red-500 truncate"
-                    prefetch={false}
-                    title={citizen.handle || citizen.id}
-                  >
-                    {citizen.handle || citizen.id}
-                  </Link>
-                </CitizenPopover>
-              );
-            },
-          })
-        : null,
-
-      columnHelper.accessor("points", {
-        header: "Punkte",
-        id: "points",
-        enableSorting: false,
-        cell: (row) => (
-          <span className="flex items-center h-8 font-bold">
-            {row.getValue()}
-          </span>
-        ),
-      }),
-
-      columnHelper.accessor("createdAt", {
-        header: "Erstellt",
-        id: "createdAt",
-        enableSorting: false,
-        cell: (row) => (
-          <span className="flex items-center h-8 whitespace-nowrap">
-            {formatDate(row.getValue())}
-          </span>
-        ),
-      }),
-
-      columnHelper.accessor("createdBy", {
-        header: "Von",
-        id: "createdBy",
-        enableSorting: false,
-        cell: (row) => {
-          const createdBy = row.getValue();
-          return (
-            <CitizenPopover citizenId={createdBy.id}>
-              <Link
-                href={`/app/spynet/citizen/${createdBy.id}`}
-                className="hover:bg-neutral-800 flex items-center rounded-secondary px-2 h-8 text-brand-red-500 truncate"
-                prefetch={false}
-                title={createdBy.handle || createdBy.id}
-              >
-                {createdBy.handle || createdBy.id}
-              </Link>
-            </CitizenPopover>
-          );
-        },
-      }),
-
-      columnHelper.accessor("expiresAt", {
-        header: "Verfällt",
-        id: "expiresAt",
-        enableSorting: false,
-        cell: (row) => (
-          <span className="flex items-center h-8 whitespace-nowrap">
-            {row.getValue() ? formatDate(row.getValue()) : "-"}
-          </span>
-        ),
-      }),
-
-      columnHelper.accessor("reason", {
-        header: "Begründung",
-        id: "reason",
-        enableSorting: false,
-        cell: (row) => (
-          <span
-            className="block truncate"
-            title={row.getValue() || "Keine Begründung"}
-          >
-            {row.getValue() || (
-              <span className="italic text-neutral-500">Keine Begründung</span>
-            )}
-          </span>
-        ),
-      }),
-
-      columnHelper.accessor("id", {
-        header: "",
-        id: "actions",
-        enableSorting: false,
-        cell: (row) => {
-          const entry = row.row.original;
-          return (
-            <span className="flex items-center h-full">
-              {showDelete && !entry.deletedAt && (
-                <DeletePenaltyEntry entry={entry} />
-              )}
-            </span>
-          );
-        },
-      }),
-    ].filter(Boolean) as ReturnType<typeof columnHelper.accessor>[];
-  }, [hideCitizenColumn, showDelete]);
-
-  const table = useReactTable({
-    data: rows,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  });
-
   return (
     <div className={clsx("w-full overflow-x-auto", className)}>
       <table className={clsx("w-full", TABLE_MIN_WIDTH)}>
-        <thead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr
-              key={headerGroup.id}
-              className={clsx(
-                "grid items-center gap-4 pb-2",
-                hideCitizenColumn
-                  ? GRID_COLS_WITHOUT_CITIZEN
-                  : GRID_COLS_WITH_CITIZEN,
-              )}
-            >
-              {headerGroup.headers.map((header) => (
-                <th key={header.id} className="text-left text-neutral-500 p-0">
-                  {header.isPlaceholder ? null : (
-                    <div>
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
-                    </div>
-                  )}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
+        <THead
+          className={clsx({
+            [GRID_COLS_WITHOUT_CITIZEN]: hideCitizenColumn,
+            [GRID_COLS_WITH_CITIZEN]: !hideCitizenColumn,
+          })}
+        >
+          {!hideCitizenColumn && <th>Citizen</th>}
+          <th>Punkte</th>
+          <th>Erstellt</th>
+          <th>Von</th>
+          <th>Verfällt</th>
+          <th>Begründung</th>
+          <th>
+            <span className="sr-only">Aktionen</span>
+          </th>
+        </THead>
 
         <tbody>
-          {table.getRowModel().rows.map((row) => (
-            <tr
-              key={row.id}
-              className={clsx(
-                "grid items-center gap-4 border-t border-white/5 py-1",
-                hideCitizenColumn
-                  ? GRID_COLS_WITHOUT_CITIZEN
-                  : GRID_COLS_WITH_CITIZEN,
-              )}
+          {rows.map((entry) => (
+            <TRow
+              key={entry.id}
+              className={clsx({
+                [GRID_COLS_WITHOUT_CITIZEN]: hideCitizenColumn,
+                [GRID_COLS_WITH_CITIZEN]: !hideCitizenColumn,
+              })}
             >
-              {row.getVisibleCells().map((cell) => (
-                <td key={cell.id} className="overflow-hidden">
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+              {!hideCitizenColumn && (
+                <td className="overflow-hidden">
+                  <CitizenPopover citizenId={entry.citizen.id}>
+                    <Link
+                      href={`/app/spynet/citizen/${entry.citizen.id}/penalty-points`}
+                      className="hover:bg-white/10 flex items-center rounded-secondary px-2 h-8 text-brand-red-500 truncate"
+                      prefetch={false}
+                      title={entry.citizen.handle || entry.citizen.id}
+                    >
+                      {entry.citizen.handle || entry.citizen.id}
+                    </Link>
+                  </CitizenPopover>
                 </td>
-              ))}
-            </tr>
+              )}
+
+              <td className="font-bold">{entry.points}</td>
+
+              <td>{formatDate(entry.createdAt)}</td>
+
+              <td className="overflow-hidden">
+                <CitizenPopover citizenId={entry.createdBy.id}>
+                  <Link
+                    href={`/app/spynet/citizen/${entry.createdBy.id}`}
+                    className="hover:bg-white/10 flex items-center rounded-secondary px-2 h-8 text-brand-red-500 truncate"
+                    prefetch={false}
+                    title={entry.createdBy.handle || entry.createdBy.id}
+                  >
+                    {entry.createdBy.handle || entry.createdBy.id}
+                  </Link>
+                </CitizenPopover>
+              </td>
+
+              <td>{entry.expiresAt ? formatDate(entry.expiresAt) : "-"}</td>
+
+              <td className="overflow-hidden">
+                <span
+                  className="block truncate"
+                  title={entry.reason || "Keine Begründung"}
+                >
+                  {entry.reason || (
+                    <span className="italic text-neutral-500">
+                      Keine Begründung
+                    </span>
+                  )}
+                </span>
+              </td>
+
+              <td className="overflow-hidden">
+                <span className="flex items-center h-full">
+                  {showDelete && !entry.deletedAt && (
+                    <DeletePenaltyEntry entry={entry} />
+                  )}
+                </span>
+              </td>
+            </TRow>
           ))}
         </tbody>
       </table>
