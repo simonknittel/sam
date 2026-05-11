@@ -81,9 +81,9 @@ export const endCollectionPhases = async () => {
       await prisma.auditEvent.create({
         data: {
           type: "PROFIT_CYCLE_COLLECTION_ENDED",
-          data: {
+          data: JSON.stringify({
             cycleId: cycle.id,
-          },
+          }),
         },
       });
 
