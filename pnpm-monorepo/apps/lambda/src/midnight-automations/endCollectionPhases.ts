@@ -14,7 +14,7 @@ export const endCollectionPhases = async () => {
         collectionEndedAt: {
           lte: now,
         },
-        collectionEndedBy: null,
+        collectionEndedById: null,
         collectionEndedByAutomation: null,
       },
     });
@@ -81,9 +81,9 @@ export const endCollectionPhases = async () => {
       await prisma.auditEvent.create({
         data: {
           type: "PROFIT_CYCLE_COLLECTION_ENDED",
-          data: {
+          data: JSON.stringify({
             cycleId: cycle.id,
-          },
+          }),
         },
       });
 

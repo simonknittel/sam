@@ -53,25 +53,23 @@ export const autoAssignInactiveRoles = async () => {
       return;
     }
 
-    const accounts = await captureAsyncFunc(
-      "find accounts for citizens",
-      () =>
-        prisma.account.findMany({
-          where: {
-            provider: "discord",
-            providerAccountId: {
-              in: citizensWithDiscord.map((citizen) => citizen.discordId!),
+    const accounts = await captureAsyncFunc("find accounts for citizens", () =>
+      prisma.account.findMany({
+        where: {
+          provider: "discord",
+          providerAccountId: {
+            in: citizensWithDiscord.map((citizen) => citizen.discordId!),
+          },
+        },
+        select: {
+          providerAccountId: true,
+          user: {
+            select: {
+              lastSeenAt: true,
             },
           },
-          select: {
-            providerAccountId: true,
-            user: {
-              select: {
-                lastSeenAt: true,
-              },
-            },
-          },
-        }),
+        },
+      }),
     );
 
     const assignmentsToCreate: {
@@ -140,12 +138,12 @@ export const autoAssignInactiveRoles = async () => {
       prisma.auditEvent.createMany({
         data: assignmentsToCreate.map((assignment) => ({
           type: "ROLE_AUTO_ASSIGNED",
-          data: {
+          data: JSON.stringify({
             citizenId: assignment.citizenId,
             citizenHandle: assignment.citizenHandle,
             roleId: assignment.roleId,
             roleName: assignment.roleName,
-          },
+          }),
         })),
       }),
     );
