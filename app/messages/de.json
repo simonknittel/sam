@@ -2,7 +2,7 @@
   "Common": {
     "notFound": "Die gesuchte Ressource wurde nicht gefunden.",
     "forbidden": "Du bist nicht berechtigt diese Aktion auszuführen.",
-    "internalServerError": "Ein unerwarteter Fehler ist aufgetreten. Bitte probiere es später erneut. Wenn der Fehler weiterhin auftritt, wende dich an den Support (ind3x).",
+    "internalServerError": "Ein unerwarteter Fehler ist aufgetreten. Bitte probiere es später erneut. Wenn der Fehler weiterhin auftritt, wende dich an den <link>Support</link>.",
     "badRequest": "Ungültige Anfrage",
     "successfullySaved": "Erfolgreich gespeichert",
     "successfullyDeleted": "Erfolgreich gelöscht"

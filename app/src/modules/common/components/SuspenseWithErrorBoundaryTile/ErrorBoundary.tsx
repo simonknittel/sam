@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { type ReactNode } from "react";
 import { ErrorBoundary as _ErrorBoundary } from "react-error-boundary";
 import { BsExclamationOctagonFill } from "react-icons/bs";
+import { Link } from "../Link";
 
 interface Props {
   readonly className?: string;
@@ -46,7 +47,18 @@ export const Fallback = ({ className, error }: FallbackProps) => {
       </div>
 
       <div className="p-4 lg:p-4">
-        <div>{t("Common.internalServerError")}</div>
+        <div>
+          {t.rich("Common.internalServerError", {
+            link: (chunks) => (
+              <Link
+                href="/app/help/support"
+                className="underline text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300"
+              >
+                {chunks}
+              </Link>
+            ),
+          })}
+        </div>
 
         <p className="text-neutral-500 text-sm mt-2">
           Digest: {error.digest ? error.digest : "unknown"}
