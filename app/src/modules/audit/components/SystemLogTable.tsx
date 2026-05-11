@@ -1,3 +1,4 @@
+import { THead, TRow } from "@/modules/common/components/Table";
 import { CursorPaginationControls } from "@/modules/common/CursorPagination/CursorPaginationControls";
 import { cursorPaginationParsers } from "@/modules/common/CursorPagination/cursorPaginationParsers";
 import { formatDate } from "@/modules/common/utils/formatDate";
@@ -48,25 +49,15 @@ export const SystemLogTable = async ({ className, searchParams }: Props) => {
         </div>
       ) : (
         <div className="overflow-x-auto bg-secondary rounded-primary p-4">
-          <table className="w-full min-w-200 text-sm">
-            <thead>
-              <tr
-                className={clsx(
-                  "border-b border-neutral-700 text-left grid gap-2 uppercase font-mono font-bold text-neutral-400 whitespace-nowrap pb-2",
-                  GRID_CLASSES,
-                )}
-              >
-                <th>Date</th>
+          <table className="w-full min-w-200">
+            <THead className={GRID_CLASSES}>
+              <th>Date</th>
+              <th>Type</th>
+              <th>User</th>
+              <th>Message</th>
+            </THead>
 
-                <th>Type</th>
-
-                <th>User</th>
-
-                <th>Message</th>
-              </tr>
-            </thead>
-
-            <tbody>
+            <tbody className="text-sm">
               {events.map((event) => {
                 const definition =
                   AuditEventDefinitions[event.type as AuditEventType];
@@ -76,29 +67,21 @@ export const SystemLogTable = async ({ className, searchParams }: Props) => {
                 const createdBy = event.createdBy?.name || event.createdBy?.id;
 
                 return (
-                  <tr
-                    key={event.id}
-                    className={clsx(
-                      "border-b border-neutral-800 hover:bg-neutral-800/30 grid gap-2 py-2",
-                      GRID_CLASSES,
-                    )}
-                  >
-                    <td className="truncate align-top">
-                      {formatDate(event.createdAt)}
-                    </td>
+                  <TRow key={event.id} className={clsx("h-8", GRID_CLASSES)}>
+                    <td className="truncate">{formatDate(event.createdAt)}</td>
 
-                    <td className="truncate align-top font-mono text-xs text-neutral-400">
+                    <td className="truncate font-mono text-xs text-neutral-400">
                       {event.type}
                     </td>
 
-                    <td title={createdBy} className="align-top truncate">
+                    <td title={createdBy} className="truncate">
                       {createdBy}
                     </td>
 
-                    <td title={message} className="align-top truncate">
+                    <td title={message} className="truncate">
                       {message}
                     </td>
-                  </tr>
+                  </TRow>
                 );
               })}
             </tbody>

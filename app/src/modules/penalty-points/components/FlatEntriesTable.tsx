@@ -50,6 +50,7 @@ export const FlatEntriesTable = async ({ className, searchParams }: Props) => {
       {hasEntries ? (
         <div className="flex flex-col gap-4">
           <FlatEntriesTableClient rows={entries} showDelete={showDelete} />
+
           <CursorPaginationControls
             nextCursor={nextCursor}
             prevCursor={prevCursor}

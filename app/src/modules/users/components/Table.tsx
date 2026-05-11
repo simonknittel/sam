@@ -3,6 +3,7 @@
 import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
 import Avatar from "@/modules/common/components/Avatar";
 import { Link } from "@/modules/common/components/Link";
+import { THead, TRow } from "@/modules/common/components/Table";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { VerifyEmailButton } from "@/modules/users/components/VerifyEmailButton";
 import { type Entity, type User } from "@prisma/client";
@@ -17,38 +18,27 @@ interface Props {
   }[];
 }
 
-const GRID_COLS =
-  "grid-cols-[200px_240px_150px_200px_150px_24px] sm:grid-cols-[200px_240px_150px_200px_150px_128px]";
+export const GRID_COLS =
+  "grid-cols-[240px_240px_150px_200px_150px_24px] sm:grid-cols-[240px_240px_150px_200px_150px_128px]";
 
 export const Table = ({ users }: Props) => {
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-200">
-        <thead>
-          <tr
-            className={clsx(
-              "grid items-center gap-4 text-left [&>th]:text-white/40 [&>th]:font-mono [&>th]:uppercase",
-              GRID_COLS,
-            )}
-          >
-            <th>Discord ID</th>
-            <th>User ID</th>
-            <th>Registriert am</th>
-            <th>Datenschutzerklärung</th>
-            <th>Handle</th>
-            <th />
-          </tr>
-        </thead>
+        <THead className={GRID_COLS}>
+          <th>Discord ID</th>
+          <th>User ID</th>
+          <th>Registriert am</th>
+          <th>Datenschutzerklärung</th>
+          <th>Handle</th>
+          <th>
+            <span className="sr-only">Spynet</span>
+          </th>
+        </THead>
 
         <tbody>
           {users.map(({ user, discordId, entity }) => (
-            <tr
-              key={user.id}
-              className={clsx(
-                "grid items-center gap-4 px-2 h-14 rounded-secondary -mx-2 first:mt-2",
-                GRID_COLS,
-              )}
-            >
+            <TRow key={user.id} className={clsx("h-14", GRID_COLS)}>
               <td className="overflow-hidden">
                 <div className="flex gap-2 items-center">
                   <Avatar
@@ -123,7 +113,7 @@ export const Table = ({ users }: Props) => {
                   </CitizenPopover>
                 ) : null}
               </td>
-            </tr>
+            </TRow>
           ))}
         </tbody>
       </table>
