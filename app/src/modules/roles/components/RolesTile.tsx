@@ -1,17 +1,84 @@
 import { env } from "@/env";
 import { Link } from "@/modules/common/components/Link";
+import {
+  sortAscWithAndNullLast,
+  sortDescAndNullLast,
+} from "@/modules/common/utils/sorting";
 import clsx from "clsx";
 import Image from "next/image";
+import {
+  createLoader,
+  parseAsStringLiteral,
+  type SearchParams,
+} from "nuqs/server";
 import { getRoles } from "../queries";
 
 const GRID_COLS = "grid-cols-[1fr_128px_128px_128px_80px_80px]";
 
+const loadSearchParams = createLoader({
+  filter: parseAsStringLiteral([
+    "all",
+    "has-inheritance",
+    "has-level",
+    "has-citizen",
+    "no-citizen",
+  ]).withDefault("all"),
+  sort: parseAsStringLiteral([
+    "name-asc",
+    "name-desc",
+    "inherits-desc",
+    "inherits-asc",
+    "citizen-desc",
+    "citizen-asc",
+  ]).withDefault("name-asc"),
+});
+
 interface Props {
   readonly className?: string;
+  readonly searchParams: Promise<SearchParams>;
 }
 
-export const RolesTile = async ({ className }: Props) => {
+export const RolesTile = async ({ className, searchParams }: Props) => {
+  const { filter, sort } = await loadSearchParams(searchParams);
+
   const roles = await getRoles(true);
+
+  const filteredRoles = roles.filter((role) => {
+    switch (filter) {
+      case "has-inheritance":
+        return role.inherits.length > 0;
+      case "has-level":
+        return role.maxLevel != null;
+      case "has-citizen":
+        return role.assignments.length > 0;
+      case "no-citizen":
+        return role.assignments.length === 0;
+      default:
+        return true;
+    }
+  });
+
+  const sortedRoles = filteredRoles.toSorted((a, b) => {
+    switch (sort) {
+      case "name-asc":
+        return sortAscWithAndNullLast(a.name, b.name);
+      case "name-desc":
+        return sortDescAndNullLast(a.name, b.name);
+      case "inherits-desc":
+        return sortDescAndNullLast(a.inherits.length, b.inherits.length);
+      case "inherits-asc":
+        return sortAscWithAndNullLast(a.inherits.length, b.inherits.length);
+      case "citizen-desc":
+        return sortDescAndNullLast(a.assignments.length, b.assignments.length);
+      case "citizen-asc":
+        return sortAscWithAndNullLast(
+          a.assignments.length,
+          b.assignments.length,
+        );
+      default:
+        throw new Error(`Unknown sort: ${sort satisfies never}`);
+    }
+  });
 
   return (
     <section
@@ -40,18 +107,13 @@ export const RolesTile = async ({ className }: Props) => {
               <br />
               nach
             </th>
-            {/* <th className="px-2 text-center">
-              Inaktiv
-              <br />
-              nach
-            </th> */}
             <th className="px-2 text-center">Level</th>
             <th className="px-2 text-center">Citizen</th>
           </tr>
         </thead>
 
         <tbody>
-          {roles.map((role) => (
+          {sortedRoles.map((role) => (
             <tr
               key={role.id}
               className={clsx("grid items-center gap-4 -mx-2", GRID_COLS)}
@@ -102,10 +164,6 @@ export const RolesTile = async ({ className }: Props) => {
                 {role.assignAfterInactiveDays}
               </td>
 
-              {/* <td className="flex items-center justify-center h-14">
-                {role.inactivityThreshold}
-              </td> */}
-
               <td className="flex items-center justify-center h-14">
                 {role.maxLevel}
               </td>
@@ -124,7 +182,7 @@ export const RolesTile = async ({ className }: Props) => {
         </tbody>
       </table>
 
-      {roles.length <= 0 && (
+      {sortedRoles.length <= 0 && (
         <p className="text-neutral-500 italic">Keine Rollen vorhanden</p>
       )}
     </section>

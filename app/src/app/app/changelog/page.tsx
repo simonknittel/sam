@@ -56,6 +56,22 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col gap-4">
+      <Day heading="11. Mai 2026">
+        <DayItem heading="Rollen - Neues Layout" badges={["Änderung", "IAM"]}>
+          <p>
+            Die Übersicht der Rollen wurde neu gestaltet und entspricht nun dem
+            Layout der anderen Apps wie Events und Tasks.
+          </p>
+        </DayItem>
+
+        <DayItem heading="Benutzer - Neues Layout" badges={["Änderung", "IAM"]}>
+          <p>
+            Die Übersicht der Benutzer wurde neu gestaltet und entspricht nun
+            dem Layout der anderen Apps wie Events und Tasks.
+          </p>
+        </DayItem>
+      </Day>
+
       <Day heading="10. Mai 2026">
         <DayItem
           heading="Levelbare Rollen"
