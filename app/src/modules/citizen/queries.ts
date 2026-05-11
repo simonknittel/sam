@@ -9,6 +9,9 @@ import { cache } from "react";
 import { requireAuthentication } from "../auth/server";
 
 export const getCitizens = withTrace("getCitizens", async () => {
+  const authentication = await requireAuthentication();
+  await authentication.authorize("citizen", "read");
+
   return prisma.entity.findMany({
     include: {
       roleAssignments: true,

@@ -1,6 +1,6 @@
-import { prisma } from "@/db";
 import {
   getCitizenPopoverById,
+  getCitizens,
   getCitizensGroupedByVisibleRoles,
 } from "@/modules/citizen/queries";
 import { log } from "@/modules/logging";
@@ -12,20 +12,7 @@ import { createTRPCRouter, protectedProcedure } from "../trpc";
 export const citizensRouter = createTRPCRouter({
   getAllCitizens: protectedProcedure.query(async () => {
     try {
-      // TODO: Implement authorization
-
-      const citizens = await prisma.entity.findMany({
-        where: {
-          handle: {
-            not: null,
-          },
-        },
-        orderBy: {
-          handle: "asc",
-        },
-      });
-
-      return citizens;
+      return await getCitizens();
     } catch (error) {
       log.error("Failed to fetch citizens", {
         error: serializeError(error),
