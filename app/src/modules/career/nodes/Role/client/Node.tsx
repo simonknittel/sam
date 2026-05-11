@@ -150,18 +150,23 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
         roles.find((role) => role.id === props.data.role.id) // eslint-disable-line @typescript-eslint/no-unsafe-member-access
       : null;
 
+  const unlocked =
+    ("showUnlocked" in props.data && props.data.showUnlocked) ||
+    ("unlocked" in props.data && props.data.unlocked);
+
   const currentLevel = role
     ? authentication.session.entity.roleAssignments.find(
         (roleAssignment) => roleAssignment.roleId === role.id,
       )?.currentLevel
     : null;
   const showLevelProgress = Boolean(
-    role?.maxLevel && (currentLevel ?? 0) < role.maxLevel,
+    role?.maxLevel &&
+    (currentLevel ?? 0) < role.maxLevel &&
+    unlocked &&
+    authentication.session.entity.roleAssignments.some(
+      (roleAssignment) => roleAssignment.roleId === role?.id,
+    ),
   );
-
-  const unlocked =
-    ("showUnlocked" in props.data && props.data.showUnlocked) ||
-    ("unlocked" in props.data && props.data.unlocked && !showLevelProgress);
 
   const backgroundColor =
     "redacted" in props.data
