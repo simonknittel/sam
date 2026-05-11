@@ -105,9 +105,9 @@ export const MultiSelectComboboxFilter = ({
         onValueChange={setValueAndResetPagination}
       >
         <div className="mt-1">
-          <div className="p-1 rounded-secondary bg-neutral-900 border border-neutral-800 focus-visible:outline-2 outline-interaction-700 outline-offset-4">
+          <div className="p-1 rounded-secondary bg-neutral-900 border border-neutral-800 focus-visible:outline-2 outline-interaction-700 outline-offset-4 relative">
             <Combobox.InputGroup>
-              <Combobox.Chips className="flex w-full flex-wrap items-center gap-1 relative pr-6">
+              <Combobox.Chips className="flex w-full flex-wrap items-center gap-1 pr-6">
                 <Combobox.Value>
                   {(value: Item[]) => (
                     <>
@@ -140,7 +140,7 @@ export const MultiSelectComboboxFilter = ({
                         data-lpignore="true"
                       />
 
-                      <Combobox.Trigger className="absolute right-0 top-0 inline-flex h-6 w-6 items-center justify-center rounded text-brand-red-500 hover:text-brand-red-300 cursor-pointer">
+                      <Combobox.Trigger className="absolute right-0 top-0 inline-flex h-8 w-6 items-center justify-center rounded text-brand-red-500 hover:text-brand-red-300 cursor-pointer">
                         <FaChevronDown className="size-3" />
                       </Combobox.Trigger>
                     </>

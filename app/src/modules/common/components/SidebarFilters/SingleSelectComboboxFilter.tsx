@@ -81,7 +81,7 @@ export const SingleSelectComboboxFilter = ({
         onValueChange={setValueAndResetPagination}
       >
         <div className="mt-1">
-          <div className="p-1 rounded-secondary bg-neutral-900 border border-neutral-800 focus-visible:outline-2 outline-interaction-700 outline-offset-4">
+          <div className="p-1 rounded-secondary bg-neutral-900 border border-neutral-800 focus-visible:outline-2 outline-interaction-700 outline-offset-4 relative">
             <Combobox.InputGroup>
               <Combobox.Input
                 id={id}
@@ -96,7 +96,7 @@ export const SingleSelectComboboxFilter = ({
                 data-lpignore="true"
               />
 
-              <Combobox.Trigger className="absolute right-0 top-0 inline-flex h-6 w-6 items-center justify-center rounded text-brand-red-500 hover:text-brand-red-300 cursor-pointer">
+              <Combobox.Trigger className="absolute right-0 top-0 inline-flex h-8 w-6 items-center justify-center rounded text-brand-red-500 hover:text-brand-red-300 cursor-pointer">
                 <FaChevronDown className="size-3" />
               </Combobox.Trigger>
             </Combobox.InputGroup>
