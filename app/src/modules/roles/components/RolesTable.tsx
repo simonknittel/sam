@@ -1,6 +1,6 @@
 import { env } from "@/env";
 import { Link } from "@/modules/common/components/Link";
-import { THead, TRow } from "@/modules/common/components/Table";
+import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
 import {
   sortAscWithAndNullLast,
   sortDescAndNullLast,
@@ -14,6 +14,7 @@ import {
 } from "nuqs/server";
 import { getRoles } from "../queries";
 
+const TABLE_MIN_WIDTH = "min-w-210";
 const GRID_COLS = "grid-cols-[1fr_128px_128px_128px_80px_80px]";
 
 const loadSearchParams = createLoader({
@@ -39,7 +40,7 @@ interface Props {
   readonly searchParams: Promise<SearchParams>;
 }
 
-export const RolesTile = async ({ className, searchParams }: Props) => {
+export const RolesTable = async ({ className, searchParams }: Props) => {
   const { filter, sort } = await loadSearchParams(searchParams);
 
   const roles = await getRoles(true);
@@ -82,13 +83,8 @@ export const RolesTile = async ({ className, searchParams }: Props) => {
   });
 
   return (
-    <section
-      className={clsx(
-        "p-4 bg-secondary rounded-primary overflow-auto",
-        className,
-      )}
-    >
-      <table className="w-full min-w-210">
+    <section className={clsx("p-4 bg-secondary rounded-primary", className)}>
+      <Table className={clsx(TABLE_MIN_WIDTH)}>
         <THead className={GRID_COLS}>
           <th>Rolle</th>
           <th className="text-center">Vererbungen</th>
@@ -106,7 +102,7 @@ export const RolesTile = async ({ className, searchParams }: Props) => {
           <th className="text-center">Citizen</th>
         </THead>
 
-        <tbody>
+        <TBody>
           {sortedRoles.map((role) => (
             <TRow key={role.id} className={clsx("h-10", GRID_COLS)}>
               <td className="overflow-hidden">
@@ -164,8 +160,8 @@ export const RolesTile = async ({ className, searchParams }: Props) => {
               </td>
             </TRow>
           ))}
-        </tbody>
-      </table>
+        </TBody>
+      </Table>
 
       {sortedRoles.length <= 0 && (
         <p className="text-neutral-500 italic">Keine Rollen vorhanden</p>

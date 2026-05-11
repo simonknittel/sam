@@ -9,7 +9,7 @@ import {
   type SearchParams,
 } from "nuqs/server";
 import { getSilcTransactionsPaginated } from "../queries";
-import { SilcTransactionsTableClient } from "./SilcTransactionsTableClient";
+import { SilcTransactionsTable } from "./SilcTransactionsTable";
 
 const loadSearchParams = createLoader({
   showDeleted: parseAsStringLiteral(["alle", "deleted"]).withDefault("alle"),
@@ -43,7 +43,7 @@ export const AllSilcTransactionsTable = async ({
     <Tile heading="Transaktionen" className={clsx(className)}>
       {hasEntries ? (
         <div className="flex flex-col gap-4">
-          <SilcTransactionsTableClient
+          <SilcTransactionsTable
             rows={transactions}
             showEdit={showEdit}
             showDelete={showDelete}

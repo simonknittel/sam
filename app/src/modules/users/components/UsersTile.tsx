@@ -9,7 +9,7 @@ import {
   type SearchParams,
 } from "nuqs/server";
 import { getUsersWithEntities } from "../queries";
-import { Table } from "./Table";
+import { UsersTable } from "./UsersTable";
 
 const loadSearchParams = createLoader({
   sortingBy: parseAsStringLiteral([
@@ -56,7 +56,7 @@ export const UsersTile = async ({ className, searchParams }: Props) => {
 
   return (
     <section className={clsx("p-4 bg-secondary rounded-primary", className)}>
-      <Table users={sortedUsers} />
+      <UsersTable users={sortedUsers} />
     </section>
   );
 };

@@ -2,7 +2,7 @@ import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { Filters } from "@/modules/penalty-points/components/Filters";
-import { FlatEntriesTable } from "@/modules/penalty-points/components/FlatEntriesTable";
+import { PenaltyEntries } from "@/modules/penalty-points/components/PenaltyEntries";
 
 export default async function Page({
   searchParams,
@@ -13,7 +13,7 @@ export default async function Page({
   return (
     <SidebarLayout sidebar={<Filters />}>
       <SuspenseWithErrorBoundaryTile>
-        <FlatEntriesTable searchParams={searchParams} />
+        <PenaltyEntries searchParams={searchParams} />
       </SuspenseWithErrorBoundaryTile>
     </SidebarLayout>
   );

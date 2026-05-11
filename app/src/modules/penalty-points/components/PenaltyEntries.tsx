@@ -10,7 +10,7 @@ import {
 } from "nuqs/server";
 import { getPenaltyEntriesPaginated } from "../queries";
 import { CreatePenaltyEntryButton } from "./CreatePenaltyEntry/CreatePenaltyEntryButton";
-import { FlatEntriesTableClient } from "./FlatEntriesTableClient";
+import { PenaltyEntriesTable } from "./PenaltyEntriesTable";
 
 const loadSearchParams = createLoader({
   status: parseAsStringLiteral(["active", "inactive", "deleted"]).withDefault(
@@ -24,7 +24,7 @@ interface Props {
   readonly searchParams: Promise<SearchParams>;
 }
 
-export const FlatEntriesTable = async ({ className, searchParams }: Props) => {
+export const PenaltyEntries = async ({ className, searchParams }: Props) => {
   const authentication = await requireAuthentication();
   const { status, cursor, direction } = await loadSearchParams(searchParams);
 
@@ -49,7 +49,7 @@ export const FlatEntriesTable = async ({ className, searchParams }: Props) => {
     >
       {hasEntries ? (
         <div className="flex flex-col gap-4">
-          <FlatEntriesTableClient rows={entries} showDelete={showDelete} />
+          <PenaltyEntriesTable rows={entries} showDelete={showDelete} />
 
           <CursorPaginationControls
             nextCursor={nextCursor}
