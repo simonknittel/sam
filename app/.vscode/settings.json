@@ -96,5 +96,6 @@
   "i18n-ally.localesPaths": ["messages", "src/i18n"],
   "i18n-ally.keystyle": "nested",
   "typescript.experimental.useTsgo": false,
-  "typescript.native-preview.trace.server": "messages"
+  "typescript.native-preview.trace.server": "messages",
+  "prisma.pinToPrisma6": true
 }
