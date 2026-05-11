@@ -23,7 +23,6 @@ export async function POST(request: Request) {
       "/api/upload",
       "POST",
     );
-    await authentication.authorizeApi("role", "manage");
 
     /**
      * Validate the request body

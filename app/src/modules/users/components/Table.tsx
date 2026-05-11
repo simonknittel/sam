@@ -6,20 +6,8 @@ import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { VerifyEmailButton } from "@/modules/users/components/VerifyEmailButton";
 import { type Entity, type User } from "@prisma/client";
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  getSortedRowModel,
-  useReactTable,
-  type SortingState,
-} from "@tanstack/react-table";
-import { useMemo, useState } from "react";
-import {
-  FaExternalLinkAlt,
-  FaSortAlphaDown,
-  FaSortAlphaUpAlt,
-} from "react-icons/fa";
+import clsx from "clsx";
+import { FaExternalLinkAlt } from "react-icons/fa";
 
 interface Props {
   readonly users: {
@@ -29,186 +17,116 @@ interface Props {
   }[];
 }
 
-type Row = Readonly<{
-  user: User;
-  discordId: string;
-  entity?: Entity;
-}>;
-
-const columnHelper = createColumnHelper<Row>();
+const GRID_COLS =
+  "grid-cols-[200px_240px_150px_200px_150px_24px] sm:grid-cols-[200px_240px_150px_200px_150px_128px]";
 
 export const Table = ({ users }: Props) => {
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: "user_name", desc: false },
-  ]);
-
-  const columns = useMemo(
-    () => [
-      columnHelper.accessor("discordId", {
-        header: "Discord ID",
-        cell: (props) => {
-          return (
-            <div className="flex gap-2 items-center">
-              <Avatar
-                name={props.getValue()}
-                image={props.row.original.user.image}
-                size={32}
-                className="shrink-0"
-              />
-
-              <span
-                title={props.getValue()}
-                className="text-ellipsis overflow-hidden whitespace-nowrap"
-              >
-                {props.getValue()}
-              </span>
-            </div>
-          );
-        },
-      }),
-      columnHelper.accessor("user.id", {
-        header: "User ID",
-        cell: (props) => {
-          return (
-            <span
-              title={props.getValue()}
-              className="text-ellipsis block overflow-hidden whitespace-nowrap"
-            >
-              {props.getValue()}
-            </span>
-          );
-        },
-      }),
-      columnHelper.accessor("user.createdAt", {
-        header: "Registriert am",
-        cell: (props) => {
-          return (
-            <span
-              title={formatDate(props.getValue()) || undefined}
-              className="text-ellipsis block overflow-hidden whitespace-nowrap"
-            >
-              {formatDate(props.getValue())}
-            </span>
-          );
-        },
-      }),
-      columnHelper.accessor("user.emailVerified", {
-        header: "Datenschutzerklärung",
-        cell: (props) => {
-          if (!props.getValue())
-            return <VerifyEmailButton userId={props.row.original.user.id} />;
-
-          return (
-            <span
-              title={formatDate(props.getValue()) || undefined}
-              className="text-ellipsis block overflow-hidden whitespace-nowrap"
-            >
-              {formatDate(props.getValue())}
-            </span>
-          );
-        },
-      }),
-      columnHelper.accessor("user.name", {
-        header: "Handle",
-        cell: (props) => {
-          if (!props.getValue())
-            return <span className="italic text-neutral-500">-</span>;
-          return (
-            <span
-              title={props.getValue() || undefined}
-              className="block text-ellipsis overflow-hidden whitespace-nowrap"
-            >
-              {props.getValue()}
-            </span>
-          );
-        },
-      }),
-      columnHelper.accessor("entity", {
-        header: "",
-        cell: (props) => {
-          const entityId = props.getValue()?.id;
-          if (!entityId) return null;
-
-          return (
-            <CitizenPopover citizenId={entityId}>
-              <Link
-                href={`/app/spynet/citizen/${entityId}`}
-                className="text-brand-red-500 hover:text-brand-red-300 flex gap-2 items-center"
-              >
-                <span className="hidden sm:inline">Spynet</span>{" "}
-                <FaExternalLinkAlt />
-              </Link>
-            </CitizenPopover>
-          );
-        },
-      }),
-    ],
-    [],
-  );
-
-  const table = useReactTable({
-    data: users,
-    columns,
-    state: {
-      sorting,
-    },
-    onSortingChange: setSorting,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-  });
-
   return (
-    <table className="w-full">
-      <thead>
-        {table.getHeaderGroups().map((headerGroup) => (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-200">
+        <thead>
           <tr
-            key={headerGroup.id}
-            className="grid grid-cols-[1fr_1fr_minmax(80px,1fr)_minmax(80px,1fr)_1fr_24px] sm:grid-cols-[1fr_1fr_minmax(80px,1fr)_minmax(80px,1fr)_1fr_128px] items-center gap-4"
+            className={clsx(
+              "grid items-center gap-4 text-left [&>th]:text-white/40 [&>th]:font-mono [&>th]:uppercase",
+              GRID_COLS,
+            )}
           >
-            {headerGroup.headers.map((header) => (
-              <th
-                key={header.id}
-                className="text-left text-neutral-400 overflow-hidden"
-              >
-                {header.isPlaceholder ? null : (
-                  <div
-                    {...{
-                      className: header.column.getCanSort()
-                        ? "cursor-pointer select-none flex items-center gap-2 hover:text-neutral-50 truncate"
-                        : "",
-                      onClick: header.column.getToggleSortingHandler(),
-                    }}
-                  >
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext(),
-                    )}
-                    {{
-                      asc: <FaSortAlphaDown />,
-                      desc: <FaSortAlphaUpAlt />,
-                    }[header.column.getIsSorted() as string] ?? null}
-                  </div>
-                )}
-              </th>
-            ))}
+            <th>Discord ID</th>
+            <th>User ID</th>
+            <th>Registriert am</th>
+            <th>Datenschutzerklärung</th>
+            <th>Handle</th>
+            <th />
           </tr>
-        ))}
-      </thead>
+        </thead>
 
-      <tbody>
-        {table.getRowModel().rows.map((row) => (
-          <tr
-            key={row.id}
-            className="grid grid-cols-[1fr_1fr_minmax(80px,1fr)_minmax(80px,1fr)_1fr_24px] sm:grid-cols-[1fr_1fr_minmax(80px,1fr)_minmax(80px,1fr)_1fr_128px] items-center gap-4 px-2 h-14 rounded-secondary -mx-2 first:mt-2"
-          >
-            {row.getVisibleCells().map((cell) => (
-              <td key={cell.id} className="overflow-hidden">
-                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+        <tbody>
+          {users.map(({ user, discordId, entity }) => (
+            <tr
+              key={user.id}
+              className={clsx(
+                "grid items-center gap-4 px-2 h-14 rounded-secondary -mx-2 first:mt-2",
+                GRID_COLS,
+              )}
+            >
+              <td className="overflow-hidden">
+                <div className="flex gap-2 items-center">
+                  <Avatar
+                    name={discordId}
+                    image={user.image}
+                    size={32}
+                    className="shrink-0"
+                  />
+                  <span
+                    title={discordId}
+                    className="text-ellipsis overflow-hidden whitespace-nowrap"
+                  >
+                    {discordId}
+                  </span>
+                </div>
               </td>
-            ))}
-          </tr>
-        ))}
-      </tbody>
-    </table>
+
+              <td className="overflow-hidden">
+                <span
+                  title={user.id}
+                  className="text-ellipsis block overflow-hidden whitespace-nowrap"
+                >
+                  {user.id}
+                </span>
+              </td>
+
+              <td className="overflow-hidden">
+                <span
+                  title={formatDate(user.createdAt) || undefined}
+                  className="text-ellipsis block overflow-hidden whitespace-nowrap"
+                >
+                  {formatDate(user.createdAt)}
+                </span>
+              </td>
+
+              <td className="overflow-hidden">
+                {user.emailVerified ? (
+                  <span
+                    title={formatDate(user.emailVerified) || undefined}
+                    className="text-ellipsis block overflow-hidden whitespace-nowrap"
+                  >
+                    {formatDate(user.emailVerified)}
+                  </span>
+                ) : (
+                  <VerifyEmailButton userId={user.id} />
+                )}
+              </td>
+
+              <td className="overflow-hidden">
+                {user.name ? (
+                  <span
+                    title={user.name || undefined}
+                    className="block text-ellipsis overflow-hidden whitespace-nowrap"
+                  >
+                    {user.name}
+                  </span>
+                ) : (
+                  <span className="italic text-neutral-500">-</span>
+                )}
+              </td>
+
+              <td className="overflow-hidden">
+                {entity?.id ? (
+                  <CitizenPopover citizenId={entity.id}>
+                    <Link
+                      href={`/app/spynet/citizen/${entity.id}`}
+                      className="text-brand-red-500 hover:text-brand-red-300 flex gap-2 items-center"
+                    >
+                      <span className="hidden sm:inline">Spynet</span>{" "}
+                      <FaExternalLinkAlt />
+                    </Link>
+                  </CitizenPopover>
+                ) : null}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 };

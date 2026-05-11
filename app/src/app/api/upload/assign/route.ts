@@ -30,10 +30,6 @@ export async function PATCH(request: Request) {
       "/api/upload/assign",
       "PATCH",
     );
-    await authentication.authorizeApi(
-      "manufacturersSeriesAndVariants",
-      "manage",
-    );
 
     /**
      * Validate the request params and body
