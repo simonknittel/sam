@@ -18,6 +18,7 @@ interface Props {
   readonly roles: (Role & {
     icon: Upload | null;
     thumbnail: Upload | null;
+    inherits: Role[];
   })[];
 }
 
