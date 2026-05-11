@@ -17,7 +17,7 @@ export const endPayoutPhases = async () => {
         payoutStartedAt: {
           not: null,
         },
-        payoutEndedBy: null,
+        payoutEndedById: null,
         payoutEndedByAutomation: null,
       },
     });

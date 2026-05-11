@@ -14,7 +14,7 @@ export const endCollectionPhases = async () => {
         collectionEndedAt: {
           lte: now,
         },
-        collectionEndedBy: null,
+        collectionEndedById: null,
         collectionEndedByAutomation: null,
       },
     });
