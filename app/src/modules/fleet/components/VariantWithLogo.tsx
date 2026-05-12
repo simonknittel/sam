@@ -27,8 +27,8 @@ export const VariantWithLogo = ({
           width={size}
           height={size}
           className={clsx("flex-none object-contain object-center", {
-            "size-[32px]": size === 32,
-            "size-[48px]": size === 48,
+            "size-8": size === 32,
+            "size-12": size === 48,
           })}
           title={`Logo of ${manufacturer.name}`}
           unoptimized={["image/svg+xml", "image/gif"].includes(
@@ -39,8 +39,8 @@ export const VariantWithLogo = ({
       ) : (
         <div
           className={clsx("flex-none", {
-            "size-[32px]": size === 32,
-            "size-[48px]": size === 48,
+            "size-8": size === 32,
+            "size-12": size === 48,
           })}
         ></div>
       )}

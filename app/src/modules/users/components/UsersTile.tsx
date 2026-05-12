@@ -12,7 +12,7 @@ import { getUsersWithEntities } from "../queries";
 import { UsersTable } from "./UsersTable";
 
 const loadSearchParams = createLoader({
-  sortingBy: parseAsStringLiteral([
+  sort: parseAsStringLiteral([
     "createdAt-desc",
     "createdAt-asc",
     "emailVerified-desc",
@@ -28,12 +28,12 @@ interface Props {
 }
 
 export const UsersTile = async ({ className, searchParams }: Props) => {
-  const { sortingBy } = await loadSearchParams(searchParams);
+  const { sort } = await loadSearchParams(searchParams);
 
   const users = await getUsersWithEntities();
 
   const sortedUsers = users.toSorted((a, b) => {
-    switch (sortingBy) {
+    switch (sort) {
       case "createdAt-desc":
         return sortDescAndNullLast(a.user.createdAt, b.user.createdAt);
       case "createdAt-asc":
@@ -50,7 +50,7 @@ export const UsersTile = async ({ className, searchParams }: Props) => {
       case "name-desc":
         return sortDescAndNullLast(a.user.name, b.user.name);
       default:
-        throw new Error(`Unknown sort: ${sortingBy satisfies never}`);
+        throw new Error(`Unknown sort: ${sort satisfies never}`);
     }
   });
 

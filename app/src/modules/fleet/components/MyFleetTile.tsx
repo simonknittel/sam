@@ -1,48 +1,85 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
-import clsx from "clsx";
+import { CursorPaginationControls } from "@/modules/common/CursorPagination/CursorPaginationControls";
+import { cursorPaginationParsers } from "@/modules/common/CursorPagination/cursorPaginationParsers";
 import { forbidden } from "next/navigation";
+import {
+  createLoader,
+  parseAsArrayOf,
+  parseAsString,
+  parseAsStringLiteral,
+  type SearchParams,
+} from "nuqs/server";
 import { getMyFleet } from "../queries";
 import { AssignShip } from "./AssignShip";
-import { MyShipTile } from "./MyShipTile";
+import { MyFleetTable } from "./MyFleetTable";
+
+const loadSearchParams = createLoader({
+  flight_ready: parseAsStringLiteral(["all", "flight_ready"]).withDefault(
+    "all",
+  ),
+  sort: parseAsStringLiteral(["name-asc", "name-desc"]).withDefault("name-asc"),
+  variantTags: parseAsArrayOf(parseAsString),
+  ...cursorPaginationParsers,
+});
 
 interface Props {
   readonly className?: string;
+  readonly searchParams: Promise<SearchParams>;
 }
 
-export const MyFleetTile = async ({ className }: Props) => {
+export const MyFleetTile = async ({ className, searchParams }: Props) => {
   const authentication = await requireAuthentication();
   if (!(await authentication.authorize("ship", "manage"))) forbidden();
 
-  const [myShips, allVariants] = await Promise.all([
-    getMyFleet(),
+  const { flight_ready, sort, variantTags, cursor, direction } =
+    await loadSearchParams(searchParams);
 
-    prisma.manufacturer.findMany({
-      include: {
-        series: {
-          include: {
-            variants: true,
+  const [{ ships, total, nextCursor, prevCursor }, allVariants] =
+    await Promise.all([
+      getMyFleet({
+        flightReady: flight_ready,
+        variantTagIds: variantTags?.length ? variantTags : [],
+        sort,
+        cursor,
+        direction,
+      }),
+      prisma.manufacturer.findMany({
+        include: {
+          series: {
+            include: {
+              variants: true,
+            },
           },
         },
-      },
-    }),
-  ]);
+      }),
+    ]);
 
   return (
-    <section className={clsx("flex flex-col gap-[2px]", className)}>
-      <p className="text-neutral-500 text-sm mb-1">Anzahl: {myShips.length}</p>
+    <section className={className}>
+      <div className="flex mb-1 items-center gap-4">
+        <p className="text-neutral-500 text-sm">Anzahl: {total}</p>
 
-      {myShips
-        .toSorted((a, b) => {
-          return (a.name || a.variant.name).localeCompare(
-            b.name || b.variant.name,
-          );
-        })
-        .map((ship) => (
-          <MyShipTile key={ship.id} ship={ship} className="w-full" />
-        ))}
+        <AssignShip data={allVariants} />
+      </div>
 
-      <AssignShip data={allVariants} />
+      <div className="rounded-primary bg-neutral-800/50 p-4 overflow-x-auto mt-2">
+        {ships.length === 0 ? (
+          <div className="grid place-content-center">
+            <p className="text-white/90">Keine Schiffe gefunden</p>
+          </div>
+        ) : (
+          <>
+            <MyFleetTable ships={ships} />
+
+            <CursorPaginationControls
+              nextCursor={nextCursor}
+              prevCursor={prevCursor}
+              className="mt-4"
+            />
+          </>
+        )}
+      </div>
     </section>
   );
 };

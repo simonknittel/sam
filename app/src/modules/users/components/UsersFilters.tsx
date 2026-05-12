@@ -31,7 +31,7 @@ export const UsersFilters = ({ className }: Props) => {
         })}
       >
         <SingleSelectComboboxFilter
-          name="sortingBy"
+          name="sort"
           label="Sortierung"
           items={[
             { value: "createdAt-desc", label: "Registriert am ↓" },

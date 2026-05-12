@@ -54,7 +54,7 @@ export default async function Page({
       },
     }),
 
-    getMyFleet(),
+    getMyFleet().then((result) => result.ships),
 
     getEventCitizens(event.id),
   ]);
