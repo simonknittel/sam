@@ -1,12 +1,12 @@
-name: Deploy Lambda functions (pnpm)
+name: Deploy Lambda functions
 
 on:
   push:
     branches:
       - main
     paths:
-      - .github/workflows/deploy-lambda-functions-pnpm.yml
-      - .github/workflows/build-lambda-functions-pnpm.yml
+      - .github/workflows/deploy-lambda-functions.yml
+      - .github/workflows/build-lambda-functions.yml
       - pnpm-monorepo/**
   workflow_dispatch:
     inputs:
@@ -25,7 +25,7 @@ on:
 
 jobs:
   build:
-    uses: ./.github/workflows/build-lambda-functions-pnpm.yml
+    uses: ./.github/workflows/build-lambda-functions.yml
     with:
       git_ref: ${{ github.event.inputs.git_ref || 'develop' }}
 
