@@ -13,7 +13,7 @@ module "frequent_automations" {
   )
   schedule_expression = "cron(*/15 * * * ? *)"
   event_bus           = data.aws_cloudwatch_event_bus.default
-  runtime             = "nodejs24.x"
+  runtime             = "nodejs22.x"
   parameters = [
     "/database/connection_string",
   ]
