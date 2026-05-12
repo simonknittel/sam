@@ -13,7 +13,7 @@ module "scrape_discord_events_function" {
   )
   schedule_expression = "rate(4 minutes)"
   event_bus           = data.aws_cloudwatch_event_bus.default
-  runtime             = "nodejs22.x"
+  runtime             = "nodejs24.x"
   parameters = [
     "/database/connection_string",
     "/discord/bot_token",

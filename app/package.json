@@ -101,7 +101,7 @@
     "@tanstack/eslint-plugin-query": "5.100.9",
     "@types/eslint": "9.6.1",
     "@types/lodash": "4.17.24",
-    "@types/node": "22.19.17",
+    "@types/node": "24.12.2",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "@types/slug": "5.0.9",

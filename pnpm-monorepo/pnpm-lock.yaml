@@ -34,7 +34,7 @@ importers:
         version: 3.1042.0
       '@openpgp/web-stream-tools':
         specifier: 0.3.1
-        version: 0.3.1(@types/node@22.19.17)(typescript@5.9.3)
+        version: 0.3.1(@types/node@24.12.2)(typescript@5.9.3)
       '@paralleldrive/cuid2':
         specifier: 3.3.0
         version: 3.3.0
@@ -85,8 +85,8 @@ importers:
         specifier: 4.17.24
         version: 4.17.24
       '@types/node':
-        specifier: 22.19.17
-        version: 22.19.17
+        specifier: 24.12.2
+        version: 24.12.2
       '@types/web-push':
         specifier: 3.6.4
         version: 3.6.4
@@ -103,8 +103,8 @@ importers:
         specifier: 1.59.1
         version: 1.59.1
       '@types/node':
-        specifier: 22.19.17
-        version: 22.19.17
+        specifier: 24.12.2
+        version: 24.12.2
       dotenv:
         specifier: 17.4.2
         version: 17.4.2
@@ -128,8 +128,8 @@ importers:
         version: 4.1.0
     devDependencies:
       '@types/node':
-        specifier: 22.19.17
-        version: 22.19.17
+        specifier: 24.12.2
+        version: 24.12.2
       tsx:
         specifier: 4.21.0
         version: 4.21.0
@@ -150,8 +150,8 @@ importers:
         version: 4.4.3
     devDependencies:
       '@types/node':
-        specifier: 22.19.17
-        version: 22.19.17
+        specifier: 24.12.2
+        version: 24.12.2
       prisma:
         specifier: 6.17.1
         version: 6.17.1(typescript@5.9.3)
@@ -1228,6 +1228,9 @@ packages:
   '@types/node@22.19.17':
     resolution: {integrity: sha512-wGdMcf+vPYM6jikpS/qhg6WiqSV/OhG+jeeHT/KlVqxYfD40iYJf9/AE1uQxVWFvU7MipKRkRv8NSHiCGgPr8Q==}
 
+  '@types/node@24.12.2':
+    resolution: {integrity: sha512-A1sre26ke7HDIuY/M23nd9gfB+nrmhtYyMINbjI1zHJxYteKR6qSMX56FsmjMcDb3SMcjJg5BiRRgOCC/yBD0g==}
+
   '@types/react@19.2.14':
     resolution: {integrity: sha512-ilcTH/UniCkMdtexkoCN0bI7pMcJDvmQFPvuPvmEaYA/NSfFTAgdUSLAoVjaRJm7+6PvcM+q1zYOwS4wTYMF9w==}
 
@@ -2098,6 +2101,9 @@ packages:
 
   undici-types@6.21.0:
     resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
+
+  undici-types@7.16.0:
+    resolution: {integrity: sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw==}
 
   url-join@4.0.1:
     resolution: {integrity: sha512-jk1+QP6ZJqyOiuEI9AEWQfju/nB2Pw466kbA0LEZljHwKeMgd9WrAEgEGxjPDD2+TNbbb37rTyhEfrCXfuKXnA==}
@@ -3044,9 +3050,9 @@ snapshots:
 
   '@nodable/entities@2.1.0': {}
 
-  '@openpgp/web-stream-tools@0.3.1(@types/node@22.19.17)(typescript@5.9.3)':
+  '@openpgp/web-stream-tools@0.3.1(@types/node@24.12.2)(typescript@5.9.3)':
     optionalDependencies:
-      '@types/node': 22.19.17
+      '@types/node': 24.12.2
       typescript: 5.9.3
 
   '@paralleldrive/cuid2@3.3.0':
@@ -3440,6 +3446,10 @@ snapshots:
   '@types/node@22.19.17':
     dependencies:
       undici-types: 6.21.0
+
+  '@types/node@24.12.2':
+    dependencies:
+      undici-types: 7.16.0
 
   '@types/react@19.2.14':
     dependencies:
@@ -4361,6 +4371,8 @@ snapshots:
   uint8array-extras@1.5.0: {}
 
   undici-types@6.21.0: {}
+
+  undici-types@7.16.0: {}
 
   url-join@4.0.1: {}
 
