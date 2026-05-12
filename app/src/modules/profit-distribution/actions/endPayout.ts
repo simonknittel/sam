@@ -19,6 +19,11 @@ export const endPayout = createAuthenticatedAction(
     /**
      * Authorize the request
      */
+    if (!authentication.session.entity)
+      return {
+        error: t("Common.forbidden"),
+        requestPayload: formData,
+      };
     if (!(await authentication.authorize("profitDistributionCycle", "update")))
       return {
         error: t("Common.forbidden"),
@@ -52,7 +57,7 @@ export const endPayout = createAuthenticatedAction(
       },
       data: {
         payoutEndedAt: new Date(),
-        payoutEndedById: authentication.session.entity?.id,
+        payoutEndedById: authentication.session.entity.id,
       },
     });
 
