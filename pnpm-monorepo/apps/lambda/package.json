@@ -17,7 +17,9 @@
     "lodash": "4.18.1",
     "mailgun.js": "12.0.1",
     "openpgp": "6.3.0",
+    "react-dom": "19.2.6",
     "react-email": "6.1.1",
+    "react": "19.2.6",
     "serialize-error": "12.0.0",
     "web-push": "3.6.7",
     "zod": "4.3.6"

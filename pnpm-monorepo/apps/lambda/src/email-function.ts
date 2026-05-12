@@ -1,7 +1,7 @@
 import "./email-function/setup";
 
 import type { SQSBatchItemFailure, SQSHandler } from "aws-lambda";
-import z from "zod";
+import { z } from "zod";
 import { log } from "./common/logger";
 import { initializeRequestContext } from "./common/requestContext";
 import {

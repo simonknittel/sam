@@ -2,7 +2,7 @@ import formData from "form-data";
 import Mailgun from "mailgun.js";
 import { z } from "zod";
 import { log } from "../common/logger";
-import type { requestBodySchema } from "../email-function";
+import { requestBodySchema } from "../email-function";
 import { emailConfirmation } from "./templates/emailConfirmation";
 
 export const emailFunctionHandler = async (
