@@ -1,8 +1,8 @@
 "use client";
 
+import { type Variant, type VariantTag } from "@/generated/prisma/browser";
 import { useAction } from "@/modules/common/components/Actions";
 import Button from "@/modules/common/components/Button";
-import { type Variant, type VariantTag } from "@prisma/client";
 import clsx from "clsx";
 import dynamic from "next/dynamic";
 import { Suspense, useState } from "react";

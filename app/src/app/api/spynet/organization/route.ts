@@ -1,4 +1,5 @@
 import { prisma } from "@/db";
+import { ConfirmationStatus } from "@/generated/prisma/client";
 import { saveObject } from "@/modules/algolia";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
@@ -7,7 +8,6 @@ import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import { scrapeOrganizationLogo } from "@/modules/common/utils/scrapeOrganizationLogo";
 import { log } from "@/modules/logging";
 import { getOrganizationBySpectrumId } from "@/modules/organizations/queries";
-import { ConfirmationStatus } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { serializeError } from "serialize-error";
 import { z } from "zod";

@@ -1,7 +1,7 @@
+import { type Event } from "@/generated/prisma/client";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
-import { type Event } from "@prisma/client";
 import clsx from "clsx";
 import { useState } from "react";
 import { FaCopy, FaSpinner } from "react-icons/fa";

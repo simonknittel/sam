@@ -1,6 +1,6 @@
 "use client";
 
-import { type Role } from "@prisma/client";
+import { type Role } from "@/generated/prisma/browser";
 import { useRouter } from "next/navigation";
 
 interface Props {

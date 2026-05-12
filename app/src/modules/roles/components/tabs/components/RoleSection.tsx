@@ -1,5 +1,5 @@
+import { type Role } from "@/generated/prisma/client";
 import Button from "@/modules/common/components/Button";
-import { type Role } from "@prisma/client";
 import clsx from "clsx";
 import { useState } from "react";
 import { FaPlus, FaTrash } from "react-icons/fa";

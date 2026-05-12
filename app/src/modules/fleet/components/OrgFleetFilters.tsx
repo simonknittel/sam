@@ -1,10 +1,10 @@
 "use client";
 
+import type { VariantTag } from "@/generated/prisma/browser";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { MultiSelectComboboxFilter } from "@/modules/common/components/SidebarFilters/MultiSelectComboboxFilter";
 import { RadioFilter } from "@/modules/common/components/SidebarFilters/RadioFilter";
 import { SingleSelectComboboxFilter } from "@/modules/common/components/SidebarFilters/SingleSelectComboboxFilter";
-import type { VariantTag } from "@prisma/client";
 import clsx from "clsx";
 import { useState } from "react";
 import { FaFilter } from "react-icons/fa";

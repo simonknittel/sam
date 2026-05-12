@@ -1,9 +1,9 @@
 import { prisma } from "@/db";
+import { OrganizationMembershipVisibility } from "@/generated/prisma/client";
 import { requireAuthentication } from "@/modules/auth/server";
 import { Link } from "@/modules/common/components/Link";
 import { Tile } from "@/modules/common/components/Tile";
 import { DeleteOrganizationMembership } from "@/modules/spynet/components/DeleteOrganizationMembership";
-import { OrganizationMembershipVisibility } from "@prisma/client";
 import clsx from "clsx";
 import Image from "next/image";
 import { FaExternalLinkAlt } from "react-icons/fa";

@@ -1,5 +1,5 @@
+import type { VariantTag } from "@/generated/prisma/client";
 import { Badge } from "@/modules/common/components/Badge";
-import type { VariantTag } from "@prisma/client";
 
 interface Props {
   readonly className?: string;

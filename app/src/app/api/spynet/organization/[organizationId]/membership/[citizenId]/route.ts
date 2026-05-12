@@ -1,10 +1,13 @@
 import { prisma } from "@/db";
+import {
+  ConfirmationStatus,
+  OrganizationMembershipType,
+} from "@/generated/prisma/client";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import { updateActiveMembership } from "@/modules/organizations/utils/updateActiveMembership";
-import { ConfirmationStatus, OrganizationMembershipType } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 

@@ -1,6 +1,6 @@
+import type { Entity, Event } from "@/generated/prisma/client";
 import { requireAuthentication } from "@/modules/auth/server";
 import { SubNavigation } from "@/modules/common/components/SubNavigation";
-import type { Entity, Event } from "@prisma/client";
 import clsx from "clsx";
 import { FaHome, FaUsers } from "react-icons/fa";
 import { MdWorkspaces } from "react-icons/md";

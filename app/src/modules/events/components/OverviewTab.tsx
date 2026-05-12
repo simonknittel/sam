@@ -1,12 +1,12 @@
-import { requireAuthentication } from "@/modules/auth/server";
-import { getAssignedRoles } from "@/modules/roles/utils/getRoles";
 import type {
   Event,
   EventDiscordParticipant,
   Role,
   Upload,
   VariantTag,
-} from "@prisma/client";
+} from "@/generated/prisma/client";
+import { requireAuthentication } from "@/modules/auth/server";
+import { getAssignedRoles } from "@/modules/roles/utils/getRoles";
 import clsx from "clsx";
 import { getEventFleet } from "../utils/getEventFleet";
 import { getParticipants } from "../utils/getParticipants";

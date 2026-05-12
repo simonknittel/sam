@@ -1,7 +1,7 @@
 "use client";
 
+import { type Manufacturer } from "@/generated/prisma/browser";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
-import { type Manufacturer } from "@prisma/client";
 import dynamic from "next/dynamic";
 import { Suspense, useState } from "react";
 import { FaPlus, FaSpinner } from "react-icons/fa";

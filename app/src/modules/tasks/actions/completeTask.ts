@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/db";
+import { TaskRewardType, TaskVisibility } from "@/generated/prisma/client";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationAction } from "@/modules/auth/server";
@@ -8,7 +9,6 @@ import { log } from "@/modules/logging";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { updateCitizensSilcBalances } from "@/modules/silc/utils/updateCitizensSilcBalances";
 import { createId } from "@paralleldrive/cuid2";
-import { TaskRewardType, TaskVisibility } from "@prisma/client";
 import { getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
 import { unstable_rethrow } from "next/navigation";

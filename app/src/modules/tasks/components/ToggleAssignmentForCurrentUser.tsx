@@ -1,15 +1,15 @@
 "use client";
 
-import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
-import { Button2 } from "@/modules/common/components/Button2";
-import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import {
   TaskVisibility,
   type Role,
   type Task,
   type TaskAssignment,
   type Upload,
-} from "@prisma/client";
+} from "@/generated/prisma/browser";
+import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
+import { Button2 } from "@/modules/common/components/Button2";
+import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import * as Tooltip from "@radix-ui/react-tooltip";
 import clsx from "clsx";
 import { unstable_rethrow } from "next/navigation";

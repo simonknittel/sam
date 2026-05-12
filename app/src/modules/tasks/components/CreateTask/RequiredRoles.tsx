@@ -1,7 +1,7 @@
+import type { Role } from "@/generated/prisma/client";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { api } from "@/modules/common/utils/api";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
-import type { Role } from "@prisma/client";
 import * as Popover from "@radix-ui/react-popover";
 import clsx from "clsx";
 import { useRef, useState } from "react";

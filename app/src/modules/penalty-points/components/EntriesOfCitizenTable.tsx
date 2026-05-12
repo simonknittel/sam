@@ -1,6 +1,6 @@
+import type { Entity } from "@/generated/prisma/client";
 import { requireAuthentication } from "@/modules/auth/server";
 import { Tile } from "@/modules/common/components/Tile";
-import type { Entity } from "@prisma/client";
 import clsx from "clsx";
 import {
   createLoader,

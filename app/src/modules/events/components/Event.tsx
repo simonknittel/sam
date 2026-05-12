@@ -2,7 +2,7 @@ import type {
   Entity,
   EventDiscordParticipant,
   Event as PrismaEvent,
-} from "@prisma/client";
+} from "@/generated/prisma/client";
 import { isLineupVisible } from "../utils/isLineupVisible";
 import { EventClient } from "./EventClient";
 

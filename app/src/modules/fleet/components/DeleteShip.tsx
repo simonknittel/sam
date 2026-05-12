@@ -1,5 +1,6 @@
 "use client";
 
+import { type Ship, type Variant } from "@/generated/prisma/browser";
 import { useAction } from "@/modules/actions/utils/useAction";
 import {
   AlertDialog,
@@ -12,7 +13,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/modules/common/components/AlertDialog";
-import { type Ship, type Variant } from "@prisma/client";
 import { useId } from "react";
 import { FaSpinner, FaTrash } from "react-icons/fa";
 import { deleteShipAction } from "../actions/deleteShipAction";

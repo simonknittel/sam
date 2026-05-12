@@ -1,12 +1,12 @@
-import { requireAuthentication } from "@/modules/auth/server";
-import { CitizenLink } from "@/modules/common/components/CitizenLink";
-import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
-import { getVisibleRoles } from "@/modules/roles/utils/getRoles";
 import {
   RoleAssignmentChangeType,
   type Entity,
   type RoleAssignmentChange,
-} from "@prisma/client";
+} from "@/generated/prisma/client";
+import { requireAuthentication } from "@/modules/auth/server";
+import { CitizenLink } from "@/modules/common/components/CitizenLink";
+import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
+import { getVisibleRoles } from "@/modules/roles/utils/getRoles";
 
 export const mapRoleAssignmentChangeEntries = async (
   entries: (Pick<

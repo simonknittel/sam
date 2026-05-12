@@ -1,8 +1,8 @@
 import { prisma } from "@/db";
+import { ConfirmationStatus } from "@/generated/prisma/client";
 import { Tile } from "@/modules/common/components/Tile";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { mapOrganizationMembershipHistoryEntries } from "@/modules/spynet/components/ActivityTile/mapOrganizationMembershipHistoryEntries";
-import { ConfirmationStatus } from "@prisma/client";
 import clsx from "clsx";
 
 interface Props {

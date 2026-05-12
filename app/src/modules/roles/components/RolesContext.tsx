@@ -1,6 +1,6 @@
 "use client";
 
-import type { Role, Upload } from "@prisma/client";
+import type { Role, Upload } from "@/generated/prisma/browser";
 import type { ReactNode } from "react";
 import { createContext, useContext, useMemo } from "react";
 

@@ -1,11 +1,11 @@
 "use client";
 
+import { type Task, type TaskAssignment } from "@/generated/prisma/browser";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { Button2 } from "@/modules/common/components/Button2";
 import { NumberInput } from "@/modules/common/components/form/NumberInput";
 import Modal from "@/modules/common/components/Modal";
 import Note from "@/modules/common/components/Note";
-import { type Task, type TaskAssignment } from "@prisma/client";
 import clsx from "clsx";
 import { useState } from "react";
 import { FaPen, FaSave, FaSpinner } from "react-icons/fa";

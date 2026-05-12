@@ -1,6 +1,6 @@
 "use client";
 
-import { FlowNodeRoleCitizensAlignment } from "@prisma/client";
+import { FlowNodeRoleCitizensAlignment } from "@/generated/prisma/browser";
 import z from "zod";
 
 export const schema = z.object({

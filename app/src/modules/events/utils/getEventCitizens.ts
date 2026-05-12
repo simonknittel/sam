@@ -1,5 +1,5 @@
 import { prisma } from "@/db";
-import type { Event } from "@prisma/client";
+import type { Event } from "@/generated/prisma/client";
 import { cache } from "react";
 
 export const getEventCitizens = cache(async (eventId: Event["id"]) => {

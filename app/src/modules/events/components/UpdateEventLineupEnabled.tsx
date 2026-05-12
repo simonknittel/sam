@@ -1,8 +1,8 @@
 "use client";
 
+import type { Event } from "@/generated/prisma/browser";
 import { useAction } from "@/modules/actions/utils/useAction";
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
-import type { Event } from "@prisma/client";
 import clsx from "clsx";
 import { updateEventLineupEnabled } from "../actions/updateEventLineupEnabled";
 

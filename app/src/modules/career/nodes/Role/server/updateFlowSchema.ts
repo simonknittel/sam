@@ -1,4 +1,4 @@
-import { FlowNodeRoleImage, FlowNodeType } from "@prisma/client";
+import { FlowNodeRoleImage, FlowNodeType } from "@/generated/prisma/client";
 import z from "zod";
 
 export const updateFlowSchema = z.object({

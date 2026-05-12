@@ -1,7 +1,7 @@
+import type { Event } from "@/generated/prisma/client";
 import { DiscordButton } from "@/modules/common/components/DiscordButton";
 import { Markdown } from "@/modules/common/components/Markdown";
 import { formatDate } from "@/modules/common/utils/formatDate";
-import type { Event } from "@prisma/client";
 import clsx from "clsx";
 import Image from "next/image";
 import { DownloadEventButton } from "./DownloadEventButton";

@@ -1,14 +1,14 @@
-import { Actions } from "@/modules/common/components/Actions";
-import { Link } from "@/modules/common/components/Link";
-import { entityLogTypeTranslations } from "@/modules/common/utils/entityLogTypeTranslations";
-import { formatDate } from "@/modules/common/utils/formatDate";
-import type { EntityLogConfirmationState } from "@/types";
 import {
   type Entity,
   type EntityLog,
   type EntityLogAttribute,
   type User,
-} from "@prisma/client";
+} from "@/generated/prisma/client";
+import { Actions } from "@/modules/common/components/Actions";
+import { Link } from "@/modules/common/components/Link";
+import { entityLogTypeTranslations } from "@/modules/common/utils/entityLogTypeTranslations";
+import { formatDate } from "@/modules/common/utils/formatDate";
+import type { EntityLogConfirmationState } from "@/types";
 import { FaSortDown, FaSortUp } from "react-icons/fa";
 import { ConfirmationState } from "./ConfirmationState";
 import { OtherTableDelete } from "./OtherTableDelete";

@@ -1,8 +1,8 @@
 "use server";
 
 import { prisma } from "@/db";
+import { NotificationChannel } from "@/generated/prisma/client";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
-import { NotificationChannel } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { NOTIFICATION_TYPES } from "../utils/NotificationTypes";

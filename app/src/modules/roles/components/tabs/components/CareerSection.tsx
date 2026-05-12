@@ -1,6 +1,6 @@
+import type { Flow } from "@/generated/prisma/client";
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
 import { Tooltip } from "@/modules/common/components/Tooltip";
-import type { Flow } from "@prisma/client";
 import clsx from "clsx";
 import { Fragment } from "react";
 import { FaInfoCircle } from "react-icons/fa";

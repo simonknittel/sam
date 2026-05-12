@@ -1,5 +1,5 @@
 import { env } from "@/env";
-import { type Entity } from "@prisma/client";
+import { type Entity } from "@/generated/prisma/client";
 import algoliasearch from "algoliasearch";
 
 export function getIndex() {

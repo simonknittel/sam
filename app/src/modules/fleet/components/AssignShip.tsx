@@ -1,11 +1,15 @@
 "use client";
 
+import {
+  type Manufacturer,
+  type Series,
+  type Variant,
+} from "@/generated/prisma/browser";
 import Button from "@/modules/common/components/Button";
 import { Button2 } from "@/modules/common/components/Button2";
 import { Select } from "@/modules/common/components/form/Select";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import Modal from "@/modules/common/components/Modal";
-import { type Manufacturer, type Series, type Variant } from "@prisma/client";
 import { flatten } from "lodash";
 import { useId, useState, useTransition } from "react";
 import toast from "react-hot-toast";

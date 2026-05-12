@@ -1,9 +1,13 @@
 import { env } from "@/env";
+import {
+  FlowNodeRoleImage,
+  FlowNodeType,
+  type Role,
+} from "@/generated/prisma/browser";
 import { Button2 } from "@/modules/common/components/Button2";
 import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
 import { Select } from "@/modules/common/components/form/Select";
 import { createId } from "@paralleldrive/cuid2";
-import { FlowNodeRoleImage, FlowNodeType, type Role } from "@prisma/client";
 import { applyNodeChanges } from "@xyflow/react";
 import Image from "next/image";
 import { useId, useState, type FormEventHandler } from "react";

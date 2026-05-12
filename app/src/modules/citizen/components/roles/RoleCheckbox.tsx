@@ -1,10 +1,10 @@
 "use client";
 
 import { env } from "@/env";
+import { type Role, type Upload } from "@/generated/prisma/browser";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
 import { underlineCharacters } from "@/modules/common/utils/underlineCharacters";
-import { type Role, type Upload } from "@prisma/client";
 import { clsx } from "clsx";
 import type { FuseResultMatch } from "fuse.js";
 import Image from "next/image";

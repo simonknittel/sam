@@ -1,14 +1,14 @@
 "use client";
 
-import { Handles } from "@/modules/career/components/Handles";
-import { CitizenLink } from "@/modules/common/components/CitizenLink";
-import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import {
   FlowNodeRoleCitizensAlignment,
   FlowNodeType,
   type Role,
   type Upload,
-} from "@prisma/client";
+} from "@/generated/prisma/browser";
+import { Handles } from "@/modules/career/components/Handles";
+import { CitizenLink } from "@/modules/common/components/CitizenLink";
+import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import {
   applyNodeChanges,
   NodeResizer,

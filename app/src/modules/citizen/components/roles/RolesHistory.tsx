@@ -1,15 +1,15 @@
 import { prisma } from "@/db";
+import {
+  RoleAssignmentChangeType,
+  RoleAssignmentLevelChangeType,
+  type Entity,
+} from "@/generated/prisma/client";
 import { requireAuthentication } from "@/modules/auth/server";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { Tile } from "@/modules/common/components/Tile";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import { getVisibleRoles } from "@/modules/roles/utils/getRoles";
-import {
-  RoleAssignmentChangeType,
-  RoleAssignmentLevelChangeType,
-  type Entity,
-} from "@prisma/client";
 import clsx from "clsx";
 
 interface Props {

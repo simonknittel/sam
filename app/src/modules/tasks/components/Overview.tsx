@@ -1,5 +1,14 @@
 "use client";
 
+import {
+  TaskRewardType,
+  TaskVisibility,
+  type Entity,
+  type Role,
+  type Task,
+  type TaskAssignment,
+  type Upload,
+} from "@/generated/prisma/browser";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { Badge } from "@/modules/common/components/Badge";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
@@ -11,15 +20,6 @@ import { Tile } from "@/modules/common/components/Tile";
 import { Tooltip } from "@/modules/common/components/Tooltip";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
-import {
-  TaskRewardType,
-  TaskVisibility,
-  type Entity,
-  type Role,
-  type Task,
-  type TaskAssignment,
-  type Upload,
-} from "@prisma/client";
 import clsx from "clsx";
 import { forbidden } from "next/navigation";
 import { FaEye, FaInfoCircle } from "react-icons/fa";

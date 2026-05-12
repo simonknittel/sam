@@ -1,4 +1,4 @@
-import type { Event } from "@prisma/client";
+import type { Event } from "@/generated/prisma/client";
 import { format } from "date-fns";
 import { createEvent, type DateTime } from "ics";
 

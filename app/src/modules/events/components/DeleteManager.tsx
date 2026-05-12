@@ -1,5 +1,6 @@
 "use client";
 
+import { type Entity, type Event } from "@/generated/prisma/browser";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,7 +12,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/modules/common/components/AlertDialog";
-import { type Entity, type Event } from "@prisma/client";
 import clsx from "clsx";
 import { unstable_rethrow } from "next/navigation";
 import { useId, useTransition } from "react";

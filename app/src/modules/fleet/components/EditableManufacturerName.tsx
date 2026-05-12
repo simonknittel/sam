@@ -1,7 +1,7 @@
 "use client";
 
+import { type Manufacturer } from "@/generated/prisma/browser";
 import { EditableText } from "@/modules/common/components/form/EditableText";
-import { type Manufacturer } from "@prisma/client";
 import { updateManufacturerAction } from "../actions/updateManufacturer";
 
 interface Props {

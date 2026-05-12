@@ -1,7 +1,7 @@
 "use client";
 
+import { type Role } from "@/generated/prisma/browser";
 import Button from "@/modules/common/components/Button";
-import { type Role } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { RiSpyFill } from "react-icons/ri";
 

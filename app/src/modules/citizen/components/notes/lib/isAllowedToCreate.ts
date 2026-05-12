@@ -1,5 +1,8 @@
+import {
+  type ClassificationLevel,
+  type NoteType,
+} from "@/generated/prisma/client";
 import { type requireAuthentication } from "@/modules/auth/server";
-import { type ClassificationLevel, type NoteType } from "@prisma/client";
 
 export default function isAllowedToCreate(
   classificationLevelId: ClassificationLevel["id"],

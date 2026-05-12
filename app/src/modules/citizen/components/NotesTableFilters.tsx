@@ -1,5 +1,5 @@
+import { type NoteType } from "@/generated/prisma/client";
 import { Filter } from "@/modules/spynet/components/Filter";
-import { type NoteType } from "@prisma/client";
 import { ClassificationLevelFilter } from "./ClassificationLevelFilter";
 import { ConfirmationStateFilter } from "./ConfirmationStateFilter";
 import { NoteTypeFilter } from "./NoteTypeFilter";

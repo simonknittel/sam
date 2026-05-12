@@ -1,13 +1,13 @@
 import { prisma } from "@/db";
-import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
-import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { requireAuthenticationApi } from "@/modules/auth/server";
-import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import {
   ConfirmationStatus,
   OrganizationMembershipType,
   OrganizationMembershipVisibility,
-} from "@prisma/client";
+} from "@/generated/prisma/client";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { requireAuthenticationApi } from "@/modules/auth/server";
+import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 

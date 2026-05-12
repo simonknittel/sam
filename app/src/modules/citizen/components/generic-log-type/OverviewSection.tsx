@@ -1,6 +1,6 @@
+import { type Entity } from "@/generated/prisma/client";
 import { requireAuthentication } from "@/modules/auth/server";
 import type { GenericEntityLogType } from "@/types";
-import { type Entity } from "@prisma/client";
 import { camelCase } from "change-case";
 import { type ReactNode } from "react";
 import { HistoryModal } from "./HistoryModal";

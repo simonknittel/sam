@@ -1,8 +1,8 @@
 "use client";
 
 import { env } from "@/env";
+import { type Role, type Upload } from "@/generated/prisma/browser";
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
-import { type Role, type Upload } from "@prisma/client";
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { ChangeEventHandler } from "react";

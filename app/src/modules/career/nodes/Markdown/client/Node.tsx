@@ -1,7 +1,10 @@
 "use client";
 
+import {
+  FlowNodeMarkdownPosition,
+  FlowNodeType,
+} from "@/generated/prisma/browser";
 import { Handles } from "@/modules/career/components/Handles";
-import { FlowNodeMarkdownPosition, FlowNodeType } from "@prisma/client";
 import {
   applyNodeChanges,
   NodeResizer,

@@ -1,4 +1,4 @@
-import { type FlowNodeType } from "@prisma/client";
+import { type FlowNodeType } from "@/generated/prisma/client";
 import type { NodeProps } from "@xyflow/react";
 import type { ComponentType } from "react";
 import { nodeDefinitions } from "../nodes/client";

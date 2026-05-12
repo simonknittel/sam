@@ -1,4 +1,4 @@
-import type { ProfitDistributionCycle } from "@prisma/client";
+import type { ProfitDistributionCycle } from "@/generated/prisma/client";
 
 export enum CyclePhase {
   Collection,

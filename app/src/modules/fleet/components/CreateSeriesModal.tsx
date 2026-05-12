@@ -1,7 +1,7 @@
+import { type Manufacturer, type Series } from "@/generated/prisma/client";
 import Button from "@/modules/common/components/Button";
 import Modal from "@/modules/common/components/Modal";
 import { api } from "@/trpc/react";
-import { type Manufacturer, type Series } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";

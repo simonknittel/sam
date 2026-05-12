@@ -1,5 +1,5 @@
 "use client";
-import type { Role } from "@prisma/client";
+import type { Role } from "@/generated/prisma/browser";
 
 export const isUnlocked = (
   role: Pick<Role, "id">,

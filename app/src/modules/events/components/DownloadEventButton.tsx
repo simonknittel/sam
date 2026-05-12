@@ -1,6 +1,6 @@
+import type { Event } from "@/generated/prisma/client";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Link } from "@/modules/common/components/Link";
-import type { Event } from "@prisma/client";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import clsx from "clsx";
 import { FaDownload, FaExternalLinkAlt } from "react-icons/fa";

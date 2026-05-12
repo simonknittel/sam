@@ -1,5 +1,6 @@
 "use client";
 
+import type { Entity, SilcTransaction } from "@/generated/prisma/browser";
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
 import Button from "@/modules/common/components/Button";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
@@ -7,7 +8,6 @@ import { NumberInput } from "@/modules/common/components/form/NumberInput";
 import { Textarea } from "@/modules/common/components/form/Textarea";
 import Modal from "@/modules/common/components/Modal";
 import Note from "@/modules/common/components/Note";
-import type { Entity, SilcTransaction } from "@prisma/client";
 import clsx from "clsx";
 import { unstable_rethrow } from "next/navigation";
 import { useActionState, useState } from "react";

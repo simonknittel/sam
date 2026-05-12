@@ -1,12 +1,12 @@
 "use client";
 
-import { Button2, Button2Variant } from "@/modules/common/components/Button2";
-import { Select } from "@/modules/common/components/form/Select";
 import {
   type ClassificationLevel,
   type Entity,
   type NoteType,
-} from "@prisma/client";
+} from "@/generated/prisma/browser";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
+import { Select } from "@/modules/common/components/form/Select";
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";

@@ -1,8 +1,8 @@
+import { type Manufacturer, type Series } from "@/generated/prisma/client";
 import Button from "@/modules/common/components/Button";
 import Modal from "@/modules/common/components/Modal";
 import { api } from "@/trpc/react";
 import { createId } from "@paralleldrive/cuid2";
-import { type Manufacturer, type Series } from "@prisma/client";
 import { unstable_rethrow } from "next/navigation";
 import { useId, useState, useTransition } from "react";
 import { toast } from "react-hot-toast";

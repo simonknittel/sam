@@ -1,9 +1,9 @@
 "use client";
 
+import type { Role, Upload } from "@/generated/prisma/browser";
 import { Button2 } from "@/modules/common/components/Button2";
 import Note from "@/modules/common/components/Note";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
-import type { Role, Upload } from "@prisma/client";
 import clsx from "clsx";
 import { useActionState } from "react";
 import { FaSave, FaSpinner } from "react-icons/fa";

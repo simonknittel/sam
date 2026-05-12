@@ -1,15 +1,15 @@
 "use client";
 
+import {
+  type Entity,
+  type TaskAssignment,
+  type Task as TaskType,
+} from "@/generated/prisma/browser";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { AccordeonLink } from "@/modules/common/components/Accordeon";
 import { Badge } from "@/modules/common/components/Badge";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
-import {
-  type Entity,
-  type TaskAssignment,
-  type Task as TaskType,
-} from "@prisma/client";
 import clsx from "clsx";
 import type { ReactNode } from "react";
 import { BsExclamationOctagonFill } from "react-icons/bs";

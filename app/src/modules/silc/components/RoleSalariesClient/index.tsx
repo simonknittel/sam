@@ -1,12 +1,12 @@
 "use client";
 
+import { type SilcRoleSalary } from "@/generated/prisma/browser";
 import { useAction } from "@/modules/actions/utils/useAction";
 import Button from "@/modules/common/components/Button";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Note from "@/modules/common/components/Note";
 import { api } from "@/trpc/react";
 import { createId } from "@paralleldrive/cuid2";
-import { type SilcRoleSalary } from "@prisma/client";
 import clsx from "clsx";
 import { useState } from "react";
 import { FaPlus, FaSave, FaSpinner, FaTrash } from "react-icons/fa";

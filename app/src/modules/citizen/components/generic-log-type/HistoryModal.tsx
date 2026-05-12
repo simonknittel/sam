@@ -1,9 +1,9 @@
 "use client";
 
+import { type Entity } from "@/generated/prisma/browser";
 import Button from "@/modules/common/components/Button";
 import Modal from "@/modules/common/components/Modal";
 import type { GenericEntityLogType } from "@/types";
-import { type Entity } from "@prisma/client";
 import { useState } from "react";
 import { FaHistory } from "react-icons/fa";
 import { ModalContent } from "./ModalContent";

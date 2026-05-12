@@ -1,7 +1,7 @@
 "use client";
 
+import { type Manufacturer, type Series } from "@/generated/prisma/browser";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
-import { type Manufacturer, type Series } from "@prisma/client";
 import clsx from "clsx";
 import dynamic from "next/dynamic";
 import { Suspense, useState } from "react";

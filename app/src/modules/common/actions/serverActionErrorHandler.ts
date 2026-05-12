@@ -1,5 +1,5 @@
+import { Prisma } from "@/generated/prisma/client";
 import { log } from "@/modules/logging";
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { unstable_rethrow } from "next/navigation";
 import { serializeError } from "serialize-error";
 import { ZodError } from "zod";
@@ -42,7 +42,8 @@ export const serverActionErrorHandler = (
     };
   } else if (
     (error instanceof Error && error.message === "Not found") ||
-    (error instanceof PrismaClientKnownRequestError && error.code === "P2001")
+    (error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2001")
   ) {
     return {
       status: 404,
@@ -50,7 +51,8 @@ export const serverActionErrorHandler = (
     };
   } else if (
     (error instanceof Error && error.message === "Duplicate") ||
-    (error instanceof PrismaClientKnownRequestError && error.code === "P2002")
+    (error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002")
   ) {
     return {
       status: 409,

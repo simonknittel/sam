@@ -1,8 +1,8 @@
+import { type Entity } from "@/generated/prisma/client";
 import { requireAuthentication } from "@/modules/auth/server";
 import { CopyToClipboard } from "@/modules/common/components/CopyToClipboard";
 import { RSIButton } from "@/modules/common/components/RSIButton";
 import { Tile } from "@/modules/common/components/Tile";
-import { type Entity } from "@prisma/client";
 import clsx from "clsx";
 import { Suspense } from "react";
 import { FaDiscord, FaTeamspeak } from "react-icons/fa";

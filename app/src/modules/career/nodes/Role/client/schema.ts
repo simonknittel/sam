@@ -1,6 +1,6 @@
 "use client";
 
-import { FlowNodeRoleImage } from "@prisma/client";
+import { FlowNodeRoleImage } from "@/generated/prisma/browser";
 import z from "zod";
 
 export const schema = z.object({

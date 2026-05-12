@@ -1,7 +1,7 @@
+import type { NoteType } from "@/generated/prisma/client";
 import { requireAuthentication } from "@/modules/auth/server";
 import isAllowedToCreate from "@/modules/citizen/components/notes/lib/isAllowedToCreate";
 import { getAllClassificationLevels } from "@/modules/spynet/queries";
-import type { NoteType } from "@prisma/client";
 import { cache } from "react";
 
 export const getCreatableClassificationLevelsDeduped = cache(

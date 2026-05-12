@@ -1,5 +1,5 @@
+import type { Task } from "@/generated/prisma/client";
 import { requireAuthentication } from "@/modules/auth/server";
-import type { Task } from "@prisma/client";
 
 export const isAllowedToManageTask = async (
   task: Pick<Task, "createdById">,

@@ -1,7 +1,7 @@
 "use client";
 
+import { type Entity } from "@/generated/prisma/browser";
 import Button from "@/modules/common/components/Button";
-import { type Entity } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";

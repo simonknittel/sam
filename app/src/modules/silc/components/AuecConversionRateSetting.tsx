@@ -1,5 +1,5 @@
+import { SilcSettingKey } from "@/generated/prisma/client";
 import { Tile } from "@/modules/common/components/Tile";
-import { SilcSettingKey } from "@prisma/client";
 import clsx from "clsx";
 import { getSilcBalanceOfAllCitizens, getSilcSetting } from "../queries";
 import { AuecConversionRateSettingClient } from "./AuecConversionRateSettingClient";

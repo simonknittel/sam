@@ -1,13 +1,13 @@
 "use client";
 
-import { Tile } from "@/modules/common/components/Tile";
 import type {
   ClassificationLevel,
   Flow,
   NoteType,
   PermissionString,
   Role,
-} from "@prisma/client";
+} from "@/generated/prisma/browser";
+import { Tile } from "@/modules/common/components/Tile";
 import { Permissions } from "./Permissions";
 import { PermissionsProvider } from "./PermissionsContext";
 

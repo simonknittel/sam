@@ -1,6 +1,10 @@
+import {
+  VariantStatus,
+  type Manufacturer,
+  type Series,
+} from "@/generated/prisma/client";
 import { Actions } from "@/modules/common/components/Actions";
 import { Tile } from "@/modules/common/components/Tile";
-import { VariantStatus, type Manufacturer, type Series } from "@prisma/client";
 import clsx from "clsx";
 import { FaRegCheckCircle } from "react-icons/fa";
 import { FaRegCircleXmark } from "react-icons/fa6";

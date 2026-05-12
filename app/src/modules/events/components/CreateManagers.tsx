@@ -1,10 +1,10 @@
 "use client";
 
+import type { Event } from "@/generated/prisma/browser";
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
 import Button from "@/modules/common/components/Button";
 import { Button2 } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
-import type { Event } from "@prisma/client";
 import clsx from "clsx";
 import { unstable_rethrow } from "next/navigation";
 import { useState, useTransition } from "react";

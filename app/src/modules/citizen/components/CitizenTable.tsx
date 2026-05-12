@@ -1,7 +1,7 @@
+import { type Entity } from "@/generated/prisma/client";
 import { Actions } from "@/modules/common/components/Actions";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
-import { type Entity } from "@prisma/client";
 import { Suspense } from "react";
 import { FaExternalLinkAlt, FaSortDown, FaSortUp } from "react-icons/fa";
 import { CitizenTableDelete } from "./CitizenTableDelete";

@@ -1,15 +1,15 @@
 "use client";
 
 import { env } from "@/env";
-import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
-import { Handles } from "@/modules/career/components/Handles";
-import { useRolesContext } from "@/modules/roles/components/RolesContext";
 import {
   FlowNodeRoleImage,
   FlowNodeType,
   type Role,
   type Upload,
-} from "@prisma/client";
+} from "@/generated/prisma/browser";
+import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
+import { Handles } from "@/modules/career/components/Handles";
+import { useRolesContext } from "@/modules/roles/components/RolesContext";
 import * as Tooltip from "@radix-ui/react-tooltip";
 import {
   applyNodeChanges,

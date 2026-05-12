@@ -1,6 +1,6 @@
 import { prisma } from "@/db";
+import type { Role } from "@/generated/prisma/client";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import type { Role } from "@prisma/client";
 import { cache } from "react";
 
 /**

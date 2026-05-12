@@ -1,4 +1,4 @@
-import type { Task } from "@prisma/client";
+import type { Task } from "@/generated/prisma/client";
 
 export const isTaskUpdatable = (task: Task) => {
   if (task.completedAt) return false;

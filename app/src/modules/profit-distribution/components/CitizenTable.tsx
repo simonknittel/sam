@@ -1,9 +1,9 @@
 "use client";
 
+import type { Entity } from "@/generated/prisma/browser";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
 import { formatDate } from "@/modules/common/utils/formatDate";
-import type { Entity } from "@prisma/client";
 import {
   createColumnHelper,
   flexRender,

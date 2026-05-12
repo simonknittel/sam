@@ -1,4 +1,4 @@
-import type { Event } from "@prisma/client";
+import type { Event } from "@/generated/prisma/client";
 
 export const isEventUpdatable = (
   event: Pick<Event, "startTime" | "endTime">,

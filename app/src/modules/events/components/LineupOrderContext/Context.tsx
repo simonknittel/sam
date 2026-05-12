@@ -1,16 +1,16 @@
 "use client";
 
-import {
-  updateEventLineupOrder,
-  type MappedPosition,
-} from "@/modules/events/actions/updateEventLineupOrder";
 import type {
   Entity,
   Manufacturer,
   Series,
   Ship,
   Variant,
-} from "@prisma/client";
+} from "@/generated/prisma/browser";
+import {
+  updateEventLineupOrder,
+  type MappedPosition,
+} from "@/modules/events/actions/updateEventLineupOrder";
 import clsx from "clsx";
 import { unstable_rethrow } from "next/navigation";
 import type { MouseEvent } from "react";

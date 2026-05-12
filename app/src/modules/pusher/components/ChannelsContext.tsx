@@ -1,7 +1,7 @@
 "use client";
 
 import { env } from "@/env";
-import type { User } from "@prisma/client";
+import type { User } from "@/generated/prisma/browser";
 import Pusher from "pusher-js";
 import type { ReactNode } from "react";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";

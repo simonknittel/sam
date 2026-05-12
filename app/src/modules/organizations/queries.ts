@@ -1,10 +1,10 @@
 import { prisma } from "@/db";
-import { requireAuthentication } from "@/modules/auth/server";
-import { withTrace } from "@/modules/tracing/utils/withTrace";
 import {
   OrganizationMembershipVisibility,
   type Organization,
-} from "@prisma/client";
+} from "@/generated/prisma/client";
+import { requireAuthentication } from "@/modules/auth/server";
+import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
 

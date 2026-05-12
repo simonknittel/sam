@@ -1,11 +1,11 @@
 import { prisma } from "@/db";
+import type { ProfitDistributionCycle } from "@/generated/prisma/client";
 import { requireAuthentication } from "@/modules/auth/server";
 import {
   getSilcBalanceOfAllCitizens,
   getSilcBalanceOfCurrentCitizen,
 } from "@/modules/silc/queries";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import type { ProfitDistributionCycle } from "@prisma/client";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
 import { getAuecPerSilc } from "./utils/getAuecPerSilc";

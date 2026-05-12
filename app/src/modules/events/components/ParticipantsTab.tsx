@@ -1,3 +1,8 @@
+import type {
+  Entity,
+  Event,
+  EventDiscordParticipant,
+} from "@/generated/prisma/client";
 import { requireAuthentication } from "@/modules/auth/server";
 import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
 import { RolesCell } from "@/modules/citizen/components/RolesCell";
@@ -11,7 +16,6 @@ import {
   sortDescAndNullLast,
 } from "@/modules/common/utils/sorting";
 import { CreateOrUpdateSilcTransaction } from "@/modules/silc/components/CreateOrUpdateSilcTransaction";
-import type { Entity, Event, EventDiscordParticipant } from "@prisma/client";
 import clsx from "clsx";
 import { forbidden } from "next/navigation";
 import { Suspense } from "react";

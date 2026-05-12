@@ -1,9 +1,9 @@
 "use server";
 
 import { prisma } from "@/db";
+import { SilcSettingKey } from "@/generated/prisma/client";
 import { requireAuthenticationAction } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
-import { SilcSettingKey } from "@prisma/client";
 import { getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
 import { unstable_rethrow } from "next/navigation";

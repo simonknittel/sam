@@ -1,6 +1,7 @@
 "use client";
 
 import { env } from "@/env";
+import { type Role } from "@/generated/prisma/browser";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { decreaseRoleAssignmentLevel } from "@/modules/citizen/actions/decreaseRoleAssignmentLevel";
@@ -20,7 +21,6 @@ import {
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Note } from "@/modules/common/components/Note";
 import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
-import { type Role } from "@prisma/client";
 import clsx from "clsx";
 import Image from "next/image";
 import { useId } from "react";

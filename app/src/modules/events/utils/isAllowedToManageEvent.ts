@@ -1,5 +1,5 @@
+import type { Entity, Event } from "@/generated/prisma/client";
 import { requireAuthentication } from "@/modules/auth/server";
-import type { Entity, Event } from "@prisma/client";
 
 export const isAllowedToManageEvent = async (
   event: Pick<Event, "discordCreatorId"> & {
