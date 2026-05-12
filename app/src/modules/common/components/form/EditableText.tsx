@@ -88,7 +88,11 @@ export const EditableText = ({ className, action, initialValue }: Props) => {
             ref={inputRef}
           />
 
-          <button disabled={isPending} className="group" title="Speichern">
+          <button
+            disabled={isPending}
+            className="group hover:cursor-pointer"
+            title="Speichern"
+          >
             {isPending ? (
               <FaSpinner className="text-brand-red-500 animate-spin" />
             ) : (
@@ -100,7 +104,7 @@ export const EditableText = ({ className, action, initialValue }: Props) => {
         <button
           type="button"
           onClick={handleClick}
-          className="flex gap-2 items-center group"
+          className="flex gap-2 items-center group hover:cursor-pointer"
           title="Klicken, um zu bearbeiten"
         >
           {value}{" "}
