@@ -1,6 +1,0 @@
-# Biome ignores .gitignore files which are located in subdirectories. Therefore, we need to merge those into this one.
-dist
-node_modules
-.env
-dist.zip
-meta.json

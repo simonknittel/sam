@@ -1,6 +1,6 @@
 import { type Event } from "@sam-monorepo/database";
-import { publishWebPushNotifications } from "../web-push.js";
 import { getEventParticipants } from "../getEventParticipants.js";
+import { publishWebPushNotifications } from "../web-push.js";
 
 type Payload = {
   eventId: Event["id"];

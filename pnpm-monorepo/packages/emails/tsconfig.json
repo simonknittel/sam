@@ -1,7 +1,5 @@
-/* Reference: https://www.totaltypescript.com/tsconfig-cheat-sheet */
 {
   "compilerOptions": {
-    /* Base Options: */
     "esModuleInterop": true,
     "skipLibCheck": true,
     "target": "es2024",
@@ -10,16 +8,12 @@
     "moduleDetection": "force",
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
-    /* Strictness */
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
-    /* If NOT transpiling with TypeScript: */
     "module": "preserve",
     "noEmit": true,
-    /* If your code doesn't run in the DOM: */
-    "lib": ["es2024"],
-
-    "jsx": "react-jsx"
+    "jsx": "preserve",
+    "lib": ["es2024"]
   }
 }

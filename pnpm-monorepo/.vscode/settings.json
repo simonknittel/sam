@@ -5,6 +5,7 @@
     "cuid",
     "esbuild",
     "nvmrc",
+    "openpgp",
     "postgres",
     "postgresql",
     "prisma",

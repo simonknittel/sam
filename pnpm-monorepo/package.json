@@ -3,7 +3,7 @@
   "private": true,
   "packageManager": "pnpm@11.0.9",
   "scripts": {
-    "build:lambda": "pnpm run --filter \"./packages/database\" build && pnpm run --filter \"./packages/notifications\" build && pnpm run --filter \"./apps/lambda\" build",
+    "build:lambda": "pnpm run --filter \"./packages/database\" build && pnpm run --filter \"./apps/lambda\" build",
     "build:scripts": "pnpm run --filter \"./packages/database\" build",
     "format": "prettier --write ."
   },

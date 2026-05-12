@@ -8,7 +8,8 @@ module "email_function" {
   event_bus                      = data.aws_cloudwatch_event_bus.default
   event_bus_detail_type          = "EmailRequested"
   dynamodb                       = aws_dynamodb_table.sqs_processed_requests
-  runtime                        = "nodejs20.x"
+  runtime                        = "nodejs22.x"
+  environment_variables          = var.email_function_environment_variables
   batch_size                     = 10
   batch_window                   = 30
   parameters = [

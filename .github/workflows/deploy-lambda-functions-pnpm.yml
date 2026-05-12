@@ -50,6 +50,7 @@ jobs:
           - frequent-automations
           - scrape-discord-events-function
           - notification-router
+          - email-function
 
     steps:
       - name: Configure AWS Credentials
