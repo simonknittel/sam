@@ -66,3 +66,10 @@ jobs:
           name: scrape-discord-events-function-dist
           path: pnpm-monorepo/apps/lambda/build/scrape-discord-events-function.zip
           retention-days: 1
+
+      - name: Store artifact (email-function)
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: email-function-dist
+          path: pnpm-monorepo/apps/lambda/build/email-function.zip
+          retention-days: 1

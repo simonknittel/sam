@@ -1,0 +1,19 @@
+{
+  "name": "@sam-monorepo/emails",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "email dev"
+  },
+  "exports": {
+    "./emails/EmailConfirmation": "./emails/EmailConfirmation.tsx"
+  },
+  "dependencies": {
+    "react-email": "6.1.1"
+  },
+  "devDependencies": {
+    "@react-email/ui": "6.1.1",
+    "@types/react": "19.2.14",
+    "react": "19.2.6"
+  }
+}

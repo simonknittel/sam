@@ -9,8 +9,7 @@ import {
   Preview,
   Tailwind,
   Text,
-} from "@react-email/components";
-import * as React from "react";
+} from "react-email";
 
 export interface EmailConfirmationProps {
   baseUrl: string;
@@ -27,8 +26,8 @@ export default function Email({
     <Html>
       <Head />
       <Preview>
-        Deine E-Mail-Adresse und die Datenschutzerklärung müssen bestätigt werden bevor du {host} nutzen
-        kannst.
+        Deine E-Mail-Adresse und die Datenschutzerklärung müssen bestätigt
+        werden bevor du {host} nutzen kannst.
       </Preview>
       <Tailwind
         config={{
@@ -47,7 +46,14 @@ export default function Email({
               SAM
             </Text>
             <Text className="font-bold">
-              Deine E-Mail-Adresse und die <Link href={`${baseUrl}/api/confirm-email?token=${token}`} className="text-brand-red-500">Datenschutzerklärung</Link> müssen bestätigt werden bevor du{" "}
+              Deine E-Mail-Adresse und die{" "}
+              <Link
+                href={`${baseUrl}/api/confirm-email?token=${token}`}
+                className="text-brand-red-500"
+              >
+                Datenschutzerklärung
+              </Link>{" "}
+              müssen bestätigt werden bevor du{" "}
               <Link href={baseUrl} className="text-brand-red-500">
                 {host}
               </Link>{" "}
