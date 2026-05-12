@@ -13,7 +13,7 @@ module "midnight_automations" {
   schedule_expression = "cron(0 0 * * ? *)"
   scheduler_state     = "ENABLED"
   event_bus           = data.aws_cloudwatch_event_bus.default
-  runtime             = "nodejs24.x"
+  runtime             = "nodejs22.x"
   memory_size         = 256
   parameters = [
     "/database/connection_string",
