@@ -44,9 +44,6 @@
   "branchConcurrentLimit": 5,
   "platformAutomerge": false,
   "automergeStrategy": "squash",
-  "ignorePaths": [
-    "bun-packages/**"
-  ],
   "lockFileMaintenance": {
     "enabled": true,
     "schedule": [

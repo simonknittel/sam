@@ -69,16 +69,17 @@ export const disburseRoleSalaries = async () => {
       const group = citizensGroupedByRole.get(salary.roleId);
       if (!group) continue;
 
-      const createdTransactions = await prisma.silcTransaction.createManyAndReturn({
-        data: group.citizens.map((citizen) => ({
-          receiverId: citizen.id,
-          value: salary.value,
-          description: `Gehalt: ${group.role.name}`,
-        })),
-        select: {
-          id: true,
-        },
-      });
+      const createdTransactions =
+        await prisma.silcTransaction.createManyAndReturn({
+          data: group.citizens.map((citizen) => ({
+            receiverId: citizen.id,
+            value: salary.value,
+            description: `Gehalt: ${group.role.name}`,
+          })),
+          select: {
+            id: true,
+          },
+        });
 
       allTransactionIds.push(...createdTransactions.map((t) => t.id));
     }
