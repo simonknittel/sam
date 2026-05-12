@@ -71,16 +71,14 @@ export const getOrgFleet = cache(
       if (discordIds.length === 0)
         return { fleet: [], totalUsers: 0, nextCursor: null, prevCursor: null };
 
-      // Build where clause for ships
-      const shipWhere: Record<string, unknown> = {
-        variant: {
-          ...(flightReady === "flight_ready"
-            ? { status: VariantStatus.FLIGHT_READY }
-            : {}),
-          ...(variantTagIds.length > 0
-            ? { tags: { some: { id: { in: variantTagIds } } } }
-            : {}),
-        },
+      // Build where clause for variants (shared between ship subquery and all-variants query)
+      const variantWhere: Record<string, unknown> = {
+        ...(flightReady === "flight_ready"
+          ? { status: VariantStatus.FLIGHT_READY }
+          : {}),
+        ...(variantTagIds.length > 0
+          ? { tags: { some: { id: { in: variantTagIds } } } }
+          : {}),
       };
 
       // Get ships for all those citizens
@@ -95,7 +93,9 @@ export const getOrgFleet = cache(
             select: {
               id: true,
               ships: {
-                where: shipWhere,
+                where: {
+                  variant: variantWhere,
+                },
                 include: {
                   variant: {
                     include: {
@@ -122,16 +122,52 @@ export const getOrgFleet = cache(
         (account) => account.user.ships,
       ) as OrgFleetShip[];
 
-      // Group by variant
-      const groupedFleet = groupBy(allShips, (ship) => ship.variant.id);
-      const countedFleet = Object.values(groupedFleet).map((ships) => {
-        const ship = ships[0];
+      // Group owned ships by variant ID
+      const groupedShips = groupBy(allShips, (ship) => ship.variant.id);
+      const ownedVariants = new Map<string, OrgFleetShip & { count: number }>(
+        Object.entries(groupedShips).map(([variantId, ships]) => [
+          variantId,
+          { ...ships[0], count: ships.length },
+        ]),
+      );
+
+      // Fetch ALL variants matching the same filters
+      const allVariants = await prisma.variant.findMany({
+        where: variantWhere,
+        include: {
+          series: {
+            include: {
+              manufacturer: {
+                include: { image: true },
+              },
+            },
+          },
+          tags: true,
+        },
+      });
+
+      // Merge: owned variants with count + unowned variants with count 0
+      const countedFleet = allVariants.map((variant) => {
+        const owned = ownedVariants.get(variant.id);
+        if (owned) return owned;
 
         return {
-          ...ship,
-          count: ships.length,
-        };
-      }) as (OrgFleetShip & { count: number })[];
+          id: "",
+          ownerId: "",
+          variantId: variant.id,
+          variant: {
+            ...variant,
+            series: {
+              ...variant.series,
+              manufacturer: {
+                ...variant.series.manufacturer,
+                image: variant.series.manufacturer.image ?? null,
+              },
+            },
+          },
+          count: 0,
+        } as OrgFleetShip & { count: number };
+      });
 
       // Apply sorting
       const [sortField, sortDirection] = sort.split("-") as [
@@ -216,56 +252,10 @@ export const getOrgFleetVariantTags = cache(
     const authentication = await requireAuthentication();
     if (!(await authentication.authorize("orgFleet", "read"))) forbidden();
 
-    const memberships = await getActiveOrganizationMemberships(ORG_ID);
-    const discordIds = memberships
-      .map((membership) => membership.citizen.discordId)
-      .filter(Boolean) as string[];
-    if (discordIds.length === 0) return [];
-
-    const accounts = await prisma.account.findMany({
-      where: {
-        providerAccountId: {
-          in: discordIds,
-        },
-      },
-      select: {
-        user: {
-          select: {
-            ships: {
-              select: {
-                variantId: true,
-              },
-            },
-          },
-        },
-      },
-    });
-
-    const variantIds = [
-      ...new Set(
-        accounts.flatMap((account) =>
-          account.user.ships.map((s) => s.variantId),
-        ),
-      ),
-    ];
-
-    if (variantIds.length === 0) return [];
-
-    const tags = await prisma.variantTag.findMany({
-      where: {
-        variants: {
-          some: {
-            id: {
-              in: variantIds,
-            },
-          },
-        },
-      },
+    return prisma.variantTag.findMany({
       distinct: ["id"],
       orderBy: [{ key: "asc" }, { value: "asc" }],
     });
-
-    return tags;
   }),
 );
 

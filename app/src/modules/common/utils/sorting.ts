@@ -5,11 +5,11 @@ export function sortAscWithAndNullLast(
   a?: string | number | Date | null,
   b?: string | number | Date | null,
 ) {
-  if (!a && !b) {
+  if (a == null && b == null) {
     return 0;
-  } else if (!a) {
+  } else if (a == null) {
     return 1;
-  } else if (!b) {
+  } else if (b == null) {
     return -1;
   } else {
     if (typeof a === "number" && typeof b === "number") {
@@ -31,11 +31,11 @@ export function sortDescAndNullLast(
   a?: string | number | Date | null,
   b?: string | number | Date | null,
 ) {
-  if (!a && !b) {
+  if (a == null && b == null) {
     return 0;
-  } else if (!a) {
+  } else if (a == null) {
     return 1;
-  } else if (!b) {
+  } else if (b == null) {
     return -1;
   } else {
     if (typeof a === "number" && typeof b === "number") {

@@ -58,12 +58,23 @@ export default async function Page() {
     <div className="flex flex-col gap-4">
       <Day heading="12. Mai 2026">
         <DayItem
-          heading="Meine Schiffe - Neues Layout"
-          badges={["Änderung", "Fleet"]}
+          heading="Org-Flotte - Alle Varianten anzeigen"
+          badges={["Änderung", "Flotte"]}
         >
           <p>
-            Die Übersicht "Meine Schiffe" wurde neu gestaltet und entspricht nun
-            dem Layout der anderen Apps wie Events und Tasks.
+            Die Org-Flotte zeigt nun alle verfügbaren Varianten an, auch wenn
+            kein Org-Mitglied eine besitzt. Diese Varianten werden mit 0 in der
+            &ldquo;Anzahl&rdquo;-Spalte dargestellt.
+          </p>
+        </DayItem>
+
+        <DayItem
+          heading="Meine Schiffe - Neues Layout"
+          badges={["Änderung", "Flotte"]}
+        >
+          <p>
+            Die Übersicht &ldquo;Meine Schiffe&rdquo; wurde neu gestaltet und
+            entspricht nun dem Layout der anderen Apps wie Events und Tasks.
           </p>
         </DayItem>
       </Day>
