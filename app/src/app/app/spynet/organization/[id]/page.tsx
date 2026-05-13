@@ -77,7 +77,7 @@ export default async function Page(props: Props) {
       </div>
 
       <div className="mt-4 flex flex-col 3xl:flex-row-reverse gap-8">
-        <div className="flex flex-col gap-4 md:flex-row 3xl:w-[720px]">
+        <div className="flex flex-col gap-4 md:flex-row 3xl:w-180">
           <SuspenseWithErrorBoundaryTile className="md:w-1/2 3xl:self-start">
             <OverviewTile className="md:w-1/2 3xl:self-start" id={params.id} />
           </SuspenseWithErrorBoundaryTile>
