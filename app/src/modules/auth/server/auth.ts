@@ -109,7 +109,14 @@ export const authOptions: NextAuthOptions = {
       }
 
       // Only update lastSeenAt once a day
-      if (user.lastSeenAt?.toDateString() !== new Date().toDateString()) {
+      if (
+        user.lastSeenAt?.toLocaleDateString("de-DE", {
+          timeZone: "Europe/Berlin",
+        }) !==
+        new Date().toLocaleDateString("de-DE", {
+          timeZone: "Europe/Berlin",
+        })
+      ) {
         try {
           await prisma.user.update({
             where: {
