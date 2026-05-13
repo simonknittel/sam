@@ -1,7 +1,6 @@
 import type { GenericEntityLogType } from "@/types";
 
 export interface PermissionSet {
-  // TODO: Use ENUM (https://www.prisma.io/docs/concepts/components/prisma-schema/data-model#defining-enums)
   resource:
     | GenericEntityLogType
     | "login"
@@ -69,7 +68,6 @@ export interface PermissionSet {
     | "profitDistributionCycle"
     | "globalStatistics"
     | "systemLog";
-  // TODO: Use ENUM (https://www.prisma.io/docs/concepts/components/prisma-schema/data-model#defining-enums)
   operation:
     | "create"
     | "read"
@@ -85,7 +83,6 @@ export interface PermissionSet {
 }
 
 export interface PermissionSetAttribute {
-  // TODO: Use ENUM (https://www.prisma.io/docs/concepts/components/prisma-schema/data-model#defining-enums)
   key:
     | "confirmed"
     | "noteTypeId"
