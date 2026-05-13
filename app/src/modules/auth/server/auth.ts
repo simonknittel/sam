@@ -15,8 +15,8 @@ import {
   getServerSession,
   type DefaultSession,
   type NextAuthOptions,
-  type User,
 } from "next-auth";
+import type { AdapterUser } from "next-auth/adapters";
 import DiscordProvider, {
   type DiscordProfile,
 } from "next-auth/providers/discord";
@@ -293,7 +293,7 @@ export const authOptions: NextAuthOptions = {
 
   adapter: {
     ...adapter,
-    createUser: async (user: User) => {
+    createUser: async (user: AdapterUser) => {
       const createdUser = await adapter.createUser!(user);
 
       try {
@@ -302,7 +302,7 @@ export const authOptions: NextAuthOptions = {
             type: "EmailConfirmation",
             payload: {
               userId: createdUser.id,
-              userEmail: user.email!,
+              userEmail: user.email,
             },
           },
         ]);
