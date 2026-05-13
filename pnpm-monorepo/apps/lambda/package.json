@@ -27,7 +27,7 @@
   "devDependencies": {
     "@types/aws-lambda": "8.10.161",
     "@types/lodash": "4.17.24",
-    "@types/node": "22.19.17",
+    "@types/node": "24.12.2",
     "@types/web-push": "3.6.4",
     "esbuild": "0.28.0",
     "typescript": "5.9.3"

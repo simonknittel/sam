@@ -1,7 +1,7 @@
 "use client";
 
+import { type ClassificationLevel } from "@/generated/prisma/browser";
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
-import { type ClassificationLevel } from "@prisma/client";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { ChangeEventHandler } from "react";
 

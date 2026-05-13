@@ -1,9 +1,9 @@
 import { updateAlgoliaWithGenericLogType } from "@/app/api/spynet/citizen/[id]/log/[logId]/_lib/updateAlgoliaWithGenericLogType";
 import { updateEntityCaches } from "@/app/api/spynet/citizen/[id]/log/[logId]/_lib/updateEntityCaches";
 import { prisma } from "@/db";
+import type { EntityLog, EntityLogAttribute } from "@/generated/prisma/client";
 import { requireAuthentication } from "@/modules/auth/server";
 import getLatestNoteAttributes from "@/modules/common/utils/getLatestNoteAttributes";
-import type { EntityLog, EntityLogAttribute } from "@prisma/client";
 
 export const confirmLog = async (
   log: EntityLog & {

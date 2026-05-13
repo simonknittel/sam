@@ -1,13 +1,13 @@
-import { requireAuthentication } from "@/modules/auth/server";
-import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
-import { Link } from "@/modules/common/components/Link";
 import {
   OrganizationMembershipType,
   OrganizationMembershipVisibility,
   type Entity,
   type Organization,
   type OrganizationMembershipHistoryEntry,
-} from "@prisma/client";
+} from "@/generated/prisma/client";
+import { requireAuthentication } from "@/modules/auth/server";
+import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
+import { Link } from "@/modules/common/components/Link";
 import Image from "next/image";
 
 export const mapOrganizationMembershipHistoryEntries = async (

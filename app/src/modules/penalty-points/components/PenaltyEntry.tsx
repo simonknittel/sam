@@ -1,7 +1,10 @@
+import type {
+  Entity,
+  PenaltyEntry as PenaltyEntryType,
+} from "@/generated/prisma/client";
 import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
-import type { Entity, PenaltyEntry as PenaltyEntryType } from "@prisma/client";
 import clsx from "clsx";
 import { DeletePenaltyEntry } from "./DeletePenaltyEntry";
 

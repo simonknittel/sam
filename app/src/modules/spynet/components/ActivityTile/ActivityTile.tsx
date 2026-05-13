@@ -1,8 +1,8 @@
 import { prisma } from "@/db";
+import { ConfirmationStatus, type Entity } from "@/generated/prisma/client";
 import { requireAuthentication } from "@/modules/auth/server";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { formatDate } from "@/modules/common/utils/formatDate";
-import { ConfirmationStatus, type Entity } from "@prisma/client";
 import clsx from "clsx";
 import type { ReactNode } from "react";
 import { mapOrganizationAttributeHistoryEntries } from "./mapOrganizationAttributeHistoryEntries";

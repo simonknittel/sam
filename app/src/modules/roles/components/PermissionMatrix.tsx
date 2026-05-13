@@ -1,13 +1,13 @@
 import { env } from "@/env";
-import { getAllFlows } from "@/modules/career/queries";
-import { Link } from "@/modules/common/components/Link";
 import {
   TaskRewardType,
   TaskVisibility,
   type PermissionString,
   type Role,
   type Upload,
-} from "@prisma/client";
+} from "@/generated/prisma/client";
+import { getAllFlows } from "@/modules/career/queries";
+import { Link } from "@/modules/common/components/Link";
 import clsx from "clsx";
 import Image from "next/image";
 import { getRoles } from "../queries";

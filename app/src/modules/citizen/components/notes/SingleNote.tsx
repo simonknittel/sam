@@ -1,16 +1,16 @@
 import { prisma } from "@/db";
+import {
+  type Entity,
+  type EntityLog,
+  type EntityLogAttribute,
+  type Organization,
+} from "@/generated/prisma/client";
 import { type PermissionSet } from "@/modules/auth/PermissionSet";
 import { requireAuthentication } from "@/modules/auth/server";
 import styles from "@/modules/common/components/ConfirmationGradient.module.css";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import getLatestNoteAttributes from "@/modules/common/utils/getLatestNoteAttributes";
-import {
-  type Entity,
-  type EntityLog,
-  type EntityLogAttribute,
-  type Organization,
-} from "@prisma/client";
 import clsx from "clsx";
 import Image from "next/image";
 import { Suspense, type ReactNode } from "react";

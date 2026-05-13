@@ -46,3 +46,6 @@ yarn-error.log*
 
 # next-agents-md
 .next-docs/
+
+# Prisma
+src/generated/

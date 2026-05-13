@@ -1,12 +1,12 @@
-import { requireAuthentication } from "@/modules/auth/server";
-import TabPanel from "@/modules/common/components/tabs/TabPanel";
-import { getCreatableClassificationLevelsDeduped } from "@/modules/spynet/utils/getAllClassificationLevels";
 import {
   type Entity,
   type EntityLog,
   type EntityLogAttribute,
   type NoteType,
-} from "@prisma/client";
+} from "@/generated/prisma/client";
+import { requireAuthentication } from "@/modules/auth/server";
+import TabPanel from "@/modules/common/components/tabs/TabPanel";
+import { getCreatableClassificationLevelsDeduped } from "@/modules/spynet/utils/getAllClassificationLevels";
 import { AddNote } from "./AddNote";
 import { SingleNote } from "./SingleNote";
 import SingleNoteRedacted from "./SingleNoteRedacted";

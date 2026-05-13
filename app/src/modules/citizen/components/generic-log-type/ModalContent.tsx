@@ -1,8 +1,8 @@
 "use client";
 
+import { type Entity } from "@/generated/prisma/browser";
 import { api } from "@/trpc/react";
 import type { GenericEntityLogType } from "@/types";
-import { type Entity } from "@prisma/client";
 import { Create } from "./Create";
 import { HistoryEntry } from "./HistoryEntry";
 import { HistoryEntrySkelton } from "./HistoryEntrySkeleton";

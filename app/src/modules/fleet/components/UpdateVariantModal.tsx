@@ -1,9 +1,9 @@
+import { type Variant, type VariantTag } from "@/generated/prisma/client";
 import Button from "@/modules/common/components/Button";
 import { Button2 } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
 import { api } from "@/trpc/react";
 import { createId } from "@paralleldrive/cuid2";
-import { type Variant, type VariantTag } from "@prisma/client";
 import { unstable_rethrow } from "next/navigation";
 import { useId, useState, useTransition } from "react";
 import { toast } from "react-hot-toast";

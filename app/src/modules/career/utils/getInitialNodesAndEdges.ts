@@ -1,4 +1,8 @@
-import { type Flow, type FlowEdge, type FlowNode } from "@prisma/client";
+import {
+  type Flow,
+  type FlowEdge,
+  type FlowNode,
+} from "@/generated/prisma/browser";
 import { nodeDefinitions } from "../nodes/client";
 
 export const getInitialNodesAndEdges = (

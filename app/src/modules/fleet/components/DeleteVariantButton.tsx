@@ -1,5 +1,6 @@
 "use client";
 
+import { type Variant } from "@/generated/prisma/browser";
 import { useAction } from "@/modules/actions/utils/useAction";
 import {
   AlertDialog,
@@ -14,7 +15,6 @@ import {
 } from "@/modules/common/components/AlertDialog";
 import Button from "@/modules/common/components/Button";
 import Note from "@/modules/common/components/Note";
-import { type Variant } from "@prisma/client";
 import { useId } from "react";
 import { FaSpinner, FaTrash } from "react-icons/fa";
 import { deleteVariant } from "../actions/deleteVariant";

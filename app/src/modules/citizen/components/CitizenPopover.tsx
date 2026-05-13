@@ -1,12 +1,12 @@
 "use client";
 
+import type { Entity } from "@/generated/prisma/browser";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { CopyToClipboard } from "@/modules/common/components/CopyToClipboard";
 import { Link } from "@/modules/common/components/Link";
 import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import { api } from "@/trpc/react";
-import type { Entity } from "@prisma/client";
 import { useCallback, useState, type ReactNode } from "react";
 import { BsExclamationOctagonFill } from "react-icons/bs";
 import { FaSpinner } from "react-icons/fa";

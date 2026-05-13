@@ -1,9 +1,13 @@
 "use client";
 
+import {
+  type Entity,
+  type Role,
+  type Upload,
+} from "@/generated/prisma/browser";
 import Button from "@/modules/common/components/Button";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import Modal from "@/modules/common/components/Modal";
-import { type Entity, type Role, type Upload } from "@prisma/client";
 import clsx from "clsx";
 import Fuse, { type FuseResult } from "fuse.js";
 

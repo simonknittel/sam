@@ -1,12 +1,12 @@
 "use server";
 
 import { prisma } from "@/db";
+import { VariantStatus } from "@/generated/prisma/client";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationAction } from "@/modules/auth/server";
 import { serverActionErrorHandler } from "@/modules/common/actions/serverActionErrorHandler";
 import type { ServerAction } from "@/modules/common/actions/types";
-import { VariantStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createAndReturnTags } from "../utils/createAndReturnTags";

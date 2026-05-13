@@ -5,7 +5,7 @@ import {
   type Entity,
   type Organization,
   type OrganizationMembershipHistoryEntry,
-} from "@prisma/client";
+} from "@/generated/prisma/client";
 
 export const updateActiveMembership = async (citizenId: Entity["id"]) => {
   /**

@@ -1,12 +1,12 @@
-import { Button2 } from "@/modules/common/components/Button2";
-import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
-import { Select } from "@/modules/common/components/form/Select";
-import { createId } from "@paralleldrive/cuid2";
 import {
   FlowNodeRoleCitizensAlignment,
   FlowNodeType,
   type Role,
-} from "@prisma/client";
+} from "@/generated/prisma/browser";
+import { Button2 } from "@/modules/common/components/Button2";
+import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
+import { Select } from "@/modules/common/components/form/Select";
+import { createId } from "@paralleldrive/cuid2";
 import { applyNodeChanges } from "@xyflow/react";
 import { useId, useState, type FormEventHandler } from "react";
 import toast from "react-hot-toast";

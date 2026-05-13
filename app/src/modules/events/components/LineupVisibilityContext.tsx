@@ -1,6 +1,6 @@
 "use client";
 
-import type { EventPosition } from "@prisma/client";
+import type { EventPosition } from "@/generated/prisma/browser";
 import { useLocalStorage } from "@uidotdev/usehooks";
 import clsx from "clsx";
 import type { ReactNode } from "react";

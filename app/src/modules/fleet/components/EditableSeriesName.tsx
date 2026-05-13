@@ -1,7 +1,7 @@
 "use client";
 
+import { type Series } from "@/generated/prisma/browser";
 import { EditableText } from "@/modules/common/components/form/EditableText";
-import { type Series } from "@prisma/client";
 import { updateSeries } from "../actions/updateSeries";
 
 interface Props {

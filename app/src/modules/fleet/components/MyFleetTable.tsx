@@ -1,4 +1,3 @@
-import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
 import {
   VariantStatus,
   type Manufacturer,
@@ -7,7 +6,8 @@ import {
   type Upload,
   type Variant,
   type VariantTag,
-} from "@prisma/client";
+} from "@/generated/prisma/client";
+import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
 import clsx from "clsx";
 import { FaRegCheckCircle } from "react-icons/fa";
 import { FaRegCircleXmark } from "react-icons/fa6";

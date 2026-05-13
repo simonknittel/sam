@@ -1,6 +1,5 @@
 "use client";
 
-import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import {
   type Entity,
   type Event,
@@ -8,7 +7,8 @@ import {
   type Series,
   type Ship,
   type Variant,
-} from "@prisma/client";
+} from "@/generated/prisma/browser";
+import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import clsx from "clsx";
 import dynamic from "next/dynamic";
 import { CopyLineupFromEventButton } from "./CopyLineupFromEventButton";

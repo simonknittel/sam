@@ -1,6 +1,6 @@
+import type { Entity } from "@/generated/prisma/client";
 import { requireAuthentication } from "@/modules/auth/server";
 import { SubNavigation } from "@/modules/common/components/SubNavigation";
-import type { Entity } from "@prisma/client";
 import clsx from "clsx";
 import { forbidden } from "next/navigation";
 

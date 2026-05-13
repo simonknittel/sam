@@ -1,17 +1,17 @@
 import { prisma } from "@/db";
-import { requireAuthentication } from "@/modules/auth/server";
-import {
-  sortAscWithAndNullLast,
-  sortDescAndNullLast,
-} from "@/modules/common/utils/sorting";
-import { withTrace } from "@/modules/tracing/utils/withTrace";
 import {
   VariantStatus,
   type Manufacturer,
   type Series,
   type Upload,
   type VariantTag,
-} from "@prisma/client";
+} from "@/generated/prisma/client";
+import { requireAuthentication } from "@/modules/auth/server";
+import {
+  sortAscWithAndNullLast,
+  sortDescAndNullLast,
+} from "@/modules/common/utils/sorting";
+import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { groupBy } from "lodash";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
@@ -166,7 +166,7 @@ export const getOrgFleet = cache(
             },
           },
           count: 0,
-        } as OrgFleetShip & { count: number };
+        };
       });
 
       // Apply sorting

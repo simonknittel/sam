@@ -1,7 +1,7 @@
 "use client";
 
+import { type Entity, type Organization } from "@/generated/prisma/browser";
 import Button from "@/modules/common/components/Button";
-import { type Entity, type Organization } from "@prisma/client";
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
 import { useState } from "react";

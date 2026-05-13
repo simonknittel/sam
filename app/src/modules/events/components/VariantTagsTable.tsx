@@ -1,7 +1,7 @@
 "use client";
 
+import type { VariantTag } from "@/generated/prisma/browser";
 import { VariantTagBadge } from "@/modules/fleet/components/VariantTagBadge";
-import type { VariantTag } from "@prisma/client";
 import {
   createColumnHelper,
   flexRender,

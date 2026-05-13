@@ -1,6 +1,6 @@
+import { type Organization } from "@/generated/prisma/client";
 import { requireAuthentication } from "@/modules/auth/server";
 import { Link } from "@/modules/common/components/Link";
-import { type Organization } from "@prisma/client";
 import Image from "next/image";
 
 export const mapOrganizationEntries = async (

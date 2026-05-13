@@ -1,4 +1,7 @@
-import { FlowNodeMarkdownPosition, FlowNodeType } from "@prisma/client";
+import {
+  FlowNodeMarkdownPosition,
+  FlowNodeType,
+} from "@/generated/prisma/client";
 import z from "zod";
 
 export const updateFlowSchema = z.object({

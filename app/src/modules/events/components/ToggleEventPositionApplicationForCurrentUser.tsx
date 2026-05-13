@@ -1,7 +1,5 @@
 "use client";
 
-import { Button2 } from "@/modules/common/components/Button2";
-import { VariantWithLogo } from "@/modules/fleet/components/VariantWithLogo";
 import type {
   EventPosition,
   EventPositionRequiredVariant,
@@ -9,7 +7,9 @@ import type {
   Series,
   Upload,
   Variant,
-} from "@prisma/client";
+} from "@/generated/prisma/browser";
+import { Button2 } from "@/modules/common/components/Button2";
+import { VariantWithLogo } from "@/modules/fleet/components/VariantWithLogo";
 import * as Tooltip from "@radix-ui/react-tooltip";
 import clsx from "clsx";
 import { unstable_rethrow } from "next/navigation";

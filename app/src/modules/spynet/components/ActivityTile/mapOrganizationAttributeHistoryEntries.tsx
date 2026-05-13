@@ -1,6 +1,6 @@
+import { type OrganizationAttributeHistoryEntry } from "@/generated/prisma/client";
 import { requireAuthentication } from "@/modules/auth/server";
 import { Link } from "@/modules/common/components/Link";
-import { type OrganizationAttributeHistoryEntry } from "@prisma/client";
 
 export const mapOrganizationAttributeHistoryEntries = async (
   entries: Pick<

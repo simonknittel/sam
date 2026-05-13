@@ -1,6 +1,6 @@
 import { prisma } from "@/db";
+import type { EmailConfirmationToken } from "@/generated/prisma/client";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import type { EmailConfirmationToken } from "@prisma/client";
 
 export const getEmailConfirmationToken = withTrace(
   "getEmailConfirmationToken",

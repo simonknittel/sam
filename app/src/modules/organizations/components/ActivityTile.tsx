@@ -1,14 +1,14 @@
 import { prisma } from "@/db";
+import {
+  ConfirmationStatus,
+  OrganizationMembershipType,
+  OrganizationMembershipVisibility,
+} from "@/generated/prisma/client";
 import { requireAuthentication } from "@/modules/auth/server";
 import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
 import styles from "@/modules/common/components/ConfirmationGradient.module.css";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
-import {
-  ConfirmationStatus,
-  OrganizationMembershipType,
-  OrganizationMembershipVisibility,
-} from "@prisma/client";
 import clsx from "clsx";
 import { forbidden } from "next/navigation";
 import { BsExclamationOctagonFill } from "react-icons/bs";

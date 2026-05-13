@@ -1,6 +1,7 @@
 "use client";
 
 import { autocomplete } from "@algolia/autocomplete-js";
+// @ts-expect-error - No types available for this package. It will get removed later on, anyway.
 import "@algolia/autocomplete-theme-classic";
 import { createElement, Fragment, useEffect, useRef } from "react";
 import { createRoot, type Root } from "react-dom/client";

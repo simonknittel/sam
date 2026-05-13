@@ -3,7 +3,7 @@ import {
   VariantStatus,
   type Event,
   type EventDiscordParticipant,
-} from "@prisma/client";
+} from "@/generated/prisma/client";
 import { groupBy } from "lodash";
 import { cache } from "react";
 

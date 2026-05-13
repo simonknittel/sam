@@ -1,10 +1,10 @@
 "use client";
 
+import type { Entity, SilcTransaction } from "@/generated/prisma/browser";
 import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
 import { Link } from "@/modules/common/components/Link";
 import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
 import { formatDate } from "@/modules/common/utils/formatDate";
-import type { Entity, SilcTransaction } from "@prisma/client";
 import clsx from "clsx";
 import { CreateOrUpdateSilcTransaction } from "./CreateOrUpdateSilcTransaction";
 import { DeleteSilcTransaction } from "./DeleteSilcTransaction";

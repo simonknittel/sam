@@ -1,5 +1,6 @@
 "use client";
 
+import type { Event } from "@/generated/prisma/browser";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { underlineCharacters } from "@/modules/common/utils/underlineCharacters";
 import { api } from "@/trpc/react";
@@ -9,7 +10,6 @@ import {
   ComboboxOption,
   ComboboxOptions,
 } from "@headlessui/react";
-import type { Event } from "@prisma/client";
 import clsx from "clsx";
 import Fuse, { type FuseResult } from "fuse.js";
 import { useRef, useState } from "react";

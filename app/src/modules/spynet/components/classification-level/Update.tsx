@@ -1,9 +1,9 @@
 "use client";
 
+import { type ClassificationLevel } from "@/generated/prisma/browser";
 import Button from "@/modules/common/components/Button";
 import { Button2 } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
-import { type ClassificationLevel } from "@prisma/client";
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";

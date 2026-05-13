@@ -1,16 +1,16 @@
 "use client";
 
-import { Button2 } from "@/modules/common/components/Button2";
-import Note from "@/modules/common/components/Note";
-import Tab from "@/modules/common/components/tabs/Tab";
-import TabList from "@/modules/common/components/tabs/TabList";
-import { TabsProvider } from "@/modules/common/components/tabs/TabsContext";
 import {
   type ClassificationLevel,
   type Flow,
   type NoteType,
   type Role,
-} from "@prisma/client";
+} from "@/generated/prisma/browser";
+import { Button2 } from "@/modules/common/components/Button2";
+import Note from "@/modules/common/components/Note";
+import Tab from "@/modules/common/components/tabs/Tab";
+import TabList from "@/modules/common/components/tabs/TabList";
+import { TabsProvider } from "@/modules/common/components/tabs/TabsContext";
 import clsx from "clsx";
 import { useActionState } from "react";
 import {

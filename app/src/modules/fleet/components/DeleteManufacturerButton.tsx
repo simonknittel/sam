@@ -1,5 +1,6 @@
 "use client";
 
+import { type Manufacturer } from "@/generated/prisma/browser";
 import { useAction } from "@/modules/actions/utils/useAction";
 import {
   AlertDialog,
@@ -13,7 +14,6 @@ import {
   AlertDialogTrigger,
 } from "@/modules/common/components/AlertDialog";
 import Button from "@/modules/common/components/Button";
-import { type Manufacturer } from "@prisma/client";
 import { useId } from "react";
 import { FaSpinner, FaTrash } from "react-icons/fa";
 import { deleteManufacturer } from "../actions/deleteManufacturer";

@@ -59,7 +59,7 @@ export default async function Page({
     },
   });
   if (!response.ok) {
-    await log.error("Failed to load data from Cornerstone", {
+    log.error("Failed to load data from Cornerstone", {
       status: response.status,
       responseBody: await response.text(),
     });
@@ -88,7 +88,7 @@ export default async function Page({
   const data = (await response.json()) as unknown;
   const parsedData = schema.safeParse(data);
   if (!parsedData.success) {
-    await log.error("Failed to parse data from Cornerstone", {
+    log.error("Failed to parse data from Cornerstone", {
       error: serializeError(parsedData.error),
     });
     return (

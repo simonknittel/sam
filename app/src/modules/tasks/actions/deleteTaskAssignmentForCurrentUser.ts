@@ -1,10 +1,10 @@
 "use server";
 
 import { prisma } from "@/db";
+import { TaskVisibility } from "@/generated/prisma/client";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { TaskVisibility } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getTaskById } from "../queries";

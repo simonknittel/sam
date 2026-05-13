@@ -1,16 +1,16 @@
 "use client";
 
+import type {
+  Entity,
+  EventDiscordParticipant,
+  Event as PrismaEvent,
+} from "@/generated/prisma/browser";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { Badge } from "@/modules/common/components/Badge";
 import { DiscordNavigationButton } from "@/modules/common/components/DiscordNavigationButton";
 import { Link } from "@/modules/common/components/Link";
 import { RelativeDate } from "@/modules/common/components/RelativeDate";
 import { formatDate } from "@/modules/common/utils/formatDate";
-import type {
-  Entity,
-  EventDiscordParticipant,
-  Event as PrismaEvent,
-} from "@prisma/client";
 import clsx from "clsx";
 import { useNow } from "next-intl";
 import Image from "next/image";

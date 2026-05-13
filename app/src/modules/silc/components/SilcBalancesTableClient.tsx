@@ -1,7 +1,7 @@
 "use client";
 
+import type { Entity } from "@/generated/prisma/browser";
 import { Link } from "@/modules/common/components/Link";
-import type { Entity } from "@prisma/client";
 import {
   createColumnHelper,
   flexRender,

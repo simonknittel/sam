@@ -1,10 +1,10 @@
 import { prisma } from "@/db";
+import type { Entity, Role, Upload } from "@/generated/prisma/client";
 import {
   getAssignableRoles,
   getVisibleRoles,
 } from "@/modules/roles/utils/getRoles";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import type { Entity, Role, Upload } from "@prisma/client";
 import { cache } from "react";
 import { requireAuthentication } from "../auth/server";
 

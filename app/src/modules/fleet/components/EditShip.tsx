@@ -5,7 +5,7 @@ import {
   type Series,
   type Ship,
   type Variant,
-} from "@prisma/client";
+} from "@/generated/prisma/browser";
 import { useState } from "react";
 import { FaPen } from "react-icons/fa";
 import EditShipModal from "./EditShipModal";

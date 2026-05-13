@@ -1,11 +1,11 @@
 "use client";
 
-import Note from "@/modules/common/components/Note";
 import {
   type FlowEdge,
   type FlowNode,
   type Flow as FlowPrisma,
-} from "@prisma/client";
+} from "@/generated/prisma/browser";
+import Note from "@/modules/common/components/Note";
 import {
   addEdge,
   applyEdgeChanges,

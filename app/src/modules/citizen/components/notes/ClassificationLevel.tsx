@@ -1,6 +1,9 @@
+import {
+  type EntityLog,
+  type EntityLogAttribute,
+} from "@/generated/prisma/client";
 import getLatestNoteAttributes from "@/modules/common/utils/getLatestNoteAttributes";
 import { getAllClassificationLevels } from "@/modules/spynet/queries";
-import { type EntityLog, type EntityLogAttribute } from "@prisma/client";
 import clsx from "clsx";
 
 interface Props {

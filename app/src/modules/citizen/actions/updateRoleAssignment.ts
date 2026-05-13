@@ -1,12 +1,12 @@
 "use server";
 
 import { prisma } from "@/db";
+import { RoleAssignmentChangeType } from "@/generated/prisma/client";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { getRoles } from "@/modules/roles/queries";
-import { RoleAssignmentChangeType } from "@prisma/client";
 import { z } from "zod";
 
 export interface Change {

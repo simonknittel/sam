@@ -1,7 +1,10 @@
+import {
+  type EntityLog,
+  type EntityLogAttribute,
+} from "@/generated/prisma/client";
 import getLatestNoteAttributes from "@/modules/common/utils/getLatestNoteAttributes";
 import { getAllNoteTypes } from "@/modules/spynet/queries";
 import { getCreatableClassificationLevelsDeduped } from "@/modules/spynet/utils/getAllClassificationLevels";
-import { type EntityLog, type EntityLogAttribute } from "@prisma/client";
 import { UpdateNoteModal } from "./UpdateNoteModal";
 
 interface Props {

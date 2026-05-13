@@ -1,5 +1,6 @@
 import { prisma } from "@/db";
 import { env } from "@/env";
+import type { Entity, RoleAssignment } from "@/generated/prisma/client";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import type { PermissionSet } from "@/modules/auth/common";
@@ -9,14 +10,13 @@ import { getGuildMember } from "@/modules/discord/utils/getGuildMember";
 import { log } from "@/modules/logging";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { getUserById } from "@/modules/users/queries";
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import type { Entity, RoleAssignment } from "@prisma/client";
+import { PrismaAdapter } from "@auth/prisma-adapter";
 import {
   getServerSession,
   type DefaultSession,
   type NextAuthOptions,
-  type User,
 } from "next-auth";
+import type { AdapterUser } from "next-auth/adapters";
 import DiscordProvider, {
   type DiscordProfile,
 } from "next-auth/providers/discord";
@@ -109,7 +109,14 @@ export const authOptions: NextAuthOptions = {
       }
 
       // Only update lastSeenAt once a day
-      if (user.lastSeenAt?.toDateString() !== new Date().toDateString()) {
+      if (
+        user.lastSeenAt?.toLocaleDateString("de-DE", {
+          timeZone: "Europe/Berlin",
+        }) !==
+        new Date().toLocaleDateString("de-DE", {
+          timeZone: "Europe/Berlin",
+        })
+      ) {
         try {
           await prisma.user.update({
             where: {
@@ -286,7 +293,7 @@ export const authOptions: NextAuthOptions = {
 
   adapter: {
     ...adapter,
-    createUser: async (user: User) => {
+    createUser: async (user: AdapterUser) => {
       const createdUser = await adapter.createUser!(user);
 
       try {
@@ -295,7 +302,7 @@ export const authOptions: NextAuthOptions = {
             type: "EmailConfirmation",
             payload: {
               userId: createdUser.id,
-              userEmail: user.email!,
+              userEmail: user.email,
             },
           },
         ]);

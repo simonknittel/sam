@@ -1,6 +1,6 @@
 "use client";
 
-import { FlowNodeType } from "@prisma/client";
+import { FlowNodeType } from "@/generated/prisma/browser";
 import { CreateOrUpdateForm } from "./CreateOrUpdateForm";
 import { getNodeType } from "./getNodeType";
 import { Node } from "./Node";

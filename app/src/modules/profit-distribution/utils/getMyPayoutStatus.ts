@@ -1,7 +1,7 @@
 import type {
   ProfitDistributionCycle,
   ProfitDistributionCycleParticipant,
-} from "@prisma/client";
+} from "@/generated/prisma/client";
 
 export enum PayoutState {
   NOT_PARTICIPATING,

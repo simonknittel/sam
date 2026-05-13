@@ -1,6 +1,6 @@
+import type { Entity, RoleAssignment } from "@/generated/prisma/client";
 import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import type { Entity, RoleAssignment } from "@prisma/client";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
 import { getRoles } from "../queries";

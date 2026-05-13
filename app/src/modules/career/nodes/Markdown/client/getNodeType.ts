@@ -1,6 +1,6 @@
 "use client";
 
-import { type FlowNode, FlowNodeType } from "@prisma/client";
+import { type FlowNode, FlowNodeType } from "@/generated/prisma/browser";
 
 export const getNodeType = (node: FlowNode) => {
   const data = {

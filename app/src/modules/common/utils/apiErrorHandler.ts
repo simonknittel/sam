@@ -1,5 +1,5 @@
+import { Prisma } from "@/generated/prisma/client";
 import { log } from "@/modules/logging";
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { NextResponse } from "next/server";
 import { serializeError } from "serialize-error";
 import { ZodError } from "zod";
@@ -33,7 +33,8 @@ export default function apiErrorHandler(
     );
   } else if (
     (error instanceof Error && error.message === "Not found") ||
-    (error instanceof PrismaClientKnownRequestError && error.code === "P2001")
+    (error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2001")
   ) {
     return NextResponse.json(
       {
@@ -43,7 +44,8 @@ export default function apiErrorHandler(
     );
   } else if (
     (error instanceof Error && error.message === "Duplicate") ||
-    (error instanceof PrismaClientKnownRequestError && error.code === "P2002")
+    (error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002")
   ) {
     return NextResponse.json(
       {

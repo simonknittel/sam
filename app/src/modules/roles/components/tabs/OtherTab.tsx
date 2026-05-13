@@ -1,8 +1,8 @@
 "use client";
 
+import { type Flow, type Role } from "@/generated/prisma/browser";
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
 import TabPanel from "@/modules/common/components/tabs/TabPanel";
-import { type Flow, type Role } from "@prisma/client";
 import { usePermissionsContext } from "../PermissionsContext";
 import { CareerSection } from "./components/CareerSection";
 import { RoleSection } from "./components/RoleSection";

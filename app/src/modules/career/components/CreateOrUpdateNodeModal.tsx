@@ -1,6 +1,6 @@
+import { FlowNodeType } from "@/generated/prisma/browser";
 import Modal from "@/modules/common/components/Modal";
 import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
-import { FlowNodeType } from "@prisma/client";
 import clsx from "clsx";
 import { useState, type FormEventHandler } from "react";
 import { nodeDefinitions } from "../nodes/client";

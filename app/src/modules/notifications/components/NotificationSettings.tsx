@@ -1,8 +1,11 @@
 "use client";
 
+import {
+  NotificationChannel,
+  type NotificationSetting,
+} from "@/generated/prisma/browser";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
-import { NotificationChannel, type NotificationSetting } from "@prisma/client";
 import clsx from "clsx";
 import { FaDesktop, FaInfoCircle, FaMobile } from "react-icons/fa";
 import {

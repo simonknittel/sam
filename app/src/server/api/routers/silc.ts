@@ -1,7 +1,7 @@
 import { prisma } from "@/db";
+import type { Role, Upload } from "@/generated/prisma/client";
 import { log } from "@/modules/logging";
 import { getRoles } from "@/modules/roles/queries";
-import type { Role, Upload } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { serializeError } from "serialize-error";
 import { createTRPCRouter, protectedProcedure } from "../trpc";

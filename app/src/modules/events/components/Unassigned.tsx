@@ -1,7 +1,7 @@
+import type { Entity, EventPosition, Ship } from "@/generated/prisma/client";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import Note from "@/modules/common/components/Note";
-import type { Entity, EventPosition, Ship } from "@prisma/client";
 import clsx from "clsx";
 
 type Position = EventPosition & {

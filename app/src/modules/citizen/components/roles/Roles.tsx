@@ -1,10 +1,10 @@
+import { type Entity, type RoleAssignment } from "@/generated/prisma/client";
 import { Tile } from "@/modules/common/components/Tile";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import {
   getAssignableRoles,
   getAssignedRoles,
 } from "@/modules/roles/utils/getRoles";
-import { type Entity, type RoleAssignment } from "@prisma/client";
 import clsx from "clsx";
 import { AddRoles } from "./AddRoles";
 

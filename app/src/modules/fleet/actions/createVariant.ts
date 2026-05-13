@@ -1,11 +1,11 @@
 "use server";
 
 import { prisma } from "@/db";
+import { VariantStatus } from "@/generated/prisma/client";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationAction } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
-import { VariantStatus } from "@prisma/client";
 import { getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
 import { unstable_rethrow } from "next/navigation";

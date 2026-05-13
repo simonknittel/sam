@@ -1,7 +1,7 @@
 import { prisma } from "@/db";
+import type { Event, Prisma } from "@/generated/prisma/client";
 import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import type { Event, Prisma } from "@prisma/client";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
 

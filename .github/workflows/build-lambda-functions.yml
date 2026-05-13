@@ -1,4 +1,4 @@
-name: Build Lambda functions (pnpm)
+name: Build Lambda functions
 
 on:
   workflow_call:

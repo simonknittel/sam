@@ -1,11 +1,11 @@
 "use client";
 
+import { type Role, type Task } from "@/generated/prisma/browser";
 import Button from "@/modules/common/components/Button";
 import { Button2 } from "@/modules/common/components/Button2";
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
 import Modal from "@/modules/common/components/Modal";
 import Note from "@/modules/common/components/Note";
-import { type Role, type Task } from "@prisma/client";
 import clsx from "clsx";
 import { unstable_rethrow } from "next/navigation";
 import { useActionState, useState } from "react";

@@ -1,13 +1,13 @@
 import { prisma } from "@/db";
-import { requireAuthentication } from "@/modules/auth/server";
-import { withTrace } from "@/modules/tracing/utils/withTrace";
 import {
   TaskVisibility,
   type Entity,
   type Role,
   type Task,
   type TaskAssignment,
-} from "@prisma/client";
+} from "@/generated/prisma/client";
+import { requireAuthentication } from "@/modules/auth/server";
+import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
 

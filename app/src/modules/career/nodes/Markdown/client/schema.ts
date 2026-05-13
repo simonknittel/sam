@@ -1,6 +1,6 @@
 "use client";
 
-import { FlowNodeMarkdownPosition } from "@prisma/client";
+import { FlowNodeMarkdownPosition } from "@/generated/prisma/browser";
 import z from "zod";
 
 export const schema = z.object({

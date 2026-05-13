@@ -1,7 +1,7 @@
 "use client";
 
+import type { Role, Upload } from "@/generated/prisma/browser";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
-import type { Role, Upload } from "@prisma/client";
 import {
   createColumnHelper,
   flexRender,

@@ -1,10 +1,14 @@
 "use client";
 
+import {
+  TaskRewardType,
+  type Task,
+  type TaskAssignment,
+} from "@/generated/prisma/browser";
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
 import Note from "@/modules/common/components/Note";
-import { TaskRewardType, type Task, type TaskAssignment } from "@prisma/client";
 import clsx from "clsx";
 import { unstable_rethrow } from "next/navigation";
 import { useActionState, useState } from "react";

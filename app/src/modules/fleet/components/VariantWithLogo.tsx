@@ -1,5 +1,5 @@
 import { env } from "@/env";
-import type { Manufacturer, Upload, Variant } from "@prisma/client";
+import type { Manufacturer, Upload, Variant } from "@/generated/prisma/client";
 import clsx from "clsx";
 import Image from "next/image";
 

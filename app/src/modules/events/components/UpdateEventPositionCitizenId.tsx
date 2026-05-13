@@ -5,7 +5,7 @@ import type {
   EventPosition,
   EventPositionApplication,
   Ship,
-} from "@prisma/client";
+} from "@/generated/prisma/browser";
 import clsx from "clsx";
 import { unstable_rethrow } from "next/navigation";
 import { useTransition, type ChangeEventHandler } from "react";

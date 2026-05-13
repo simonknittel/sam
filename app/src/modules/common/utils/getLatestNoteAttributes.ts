@@ -1,4 +1,7 @@
-import { type EntityLog, type EntityLogAttribute } from "@prisma/client";
+import {
+  type EntityLog,
+  type EntityLogAttribute,
+} from "@/generated/prisma/client";
 
 export default function getLatestNoteAttributes(
   note: EntityLog & {

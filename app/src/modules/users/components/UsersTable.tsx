@@ -1,12 +1,12 @@
 "use client";
 
+import { type Entity, type User } from "@/generated/prisma/browser";
 import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
 import Avatar from "@/modules/common/components/Avatar";
 import { Link } from "@/modules/common/components/Link";
 import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { VerifyEmailButton } from "@/modules/users/components/VerifyEmailButton";
-import { type Entity, type User } from "@prisma/client";
 import clsx from "clsx";
 import { FaExternalLinkAlt } from "react-icons/fa";
 
