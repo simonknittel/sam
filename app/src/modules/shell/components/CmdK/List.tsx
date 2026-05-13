@@ -10,6 +10,7 @@ import { AiFillAppstore } from "react-icons/ai";
 import {
   FaCamera,
   FaChartLine,
+  FaGlobe,
   FaHome,
   FaLock,
   FaPiggyBank,
@@ -282,6 +283,14 @@ export const List = () => {
         type: MenuItemType.Link,
         href: "/app/tools/log-analyzer",
         authKey: "logAnalyzerRead",
+      },
+      {
+        id: "sc-translations",
+        label: "SC Translations",
+        keywords: ["Translations", "Übersetzung", "StarStrings"],
+        icon: <FaGlobe />,
+        type: MenuItemType.Link,
+        href: "/app/sc-translations",
       },
       {
         id: "silc",

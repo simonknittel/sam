@@ -13,6 +13,7 @@ import iamScreenshot from "@/modules/iam/assets/screenshot.png";
 import logAnalyzerScreenshot from "@/modules/log-analyzer/assets/screenshot.png";
 import penaltyPointsScreenshot from "@/modules/penalty-points/assets/screenshot.png";
 import profitDistributionScreenshot from "@/modules/profit-distribution/assets/screenshot.png";
+import scTranslationsScreenshot from "@/modules/sc-translations/assets/screenshot.png";
 import silcScreenshot from "@/modules/silc/assets/screenshot.png";
 import spynetScreenshot from "@/modules/spynet/assets/screenshot.png";
 import tasksScreenshot from "@/modules/tasks/assets/screenshot.png";
@@ -128,6 +129,13 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
       "Wertet die Game Logs von Star Citizen aus um nach Kills zu filtern.",
     tags: ["security"],
     permissionStrings: ["logAnalyzer;read"],
+  },
+  {
+    name: "SC Translations",
+    href: "/app/sc-translations",
+    imageSrc: scTranslationsScreenshot,
+    description:
+      "Community-Übersetzung mit Informationen über Blueprint Rewards bei Contracts",
   },
   {
     name: "SILC",

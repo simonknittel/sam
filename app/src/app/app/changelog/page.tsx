@@ -56,6 +56,30 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col gap-4">
+      <Day heading="??. Mai 2026">
+        <DayItem heading="SC Translations" badges={["Neu"]}>
+          <p>
+            Die neue App &ldquo;SC Translations&rdquo; bietet
+            Community-Übersetzung für Star Citizen, die Informationen über
+            Blueprint Rewards zu Contracts hinzufügt. Contracts mit Blueprint
+            Reward werden mit <code>[BP]</code> im Titel markiert und listen die
+            möglichen Rewards in der Beschreibung auf. Zusätzlich werden
+            Komponenten-Typ/Größe/Stufe vorangestellt und der Mining-Guide im
+            Journal nach Seltenheit sortiert.
+          </p>
+
+          <p>
+            Die App ist zu finden unter{" "}
+            <Link
+              href="/app/sc-translations"
+              className="text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300"
+            >
+              Apps &gt; SC Translations
+            </Link>
+          </p>
+        </DayItem>
+      </Day>
+
       <Day heading="12. Mai 2026">
         <DayItem
           heading="Org-Flotte - Alle Varianten anzeigen"
