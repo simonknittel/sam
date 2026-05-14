@@ -27,6 +27,7 @@ export const CitizenNavigation = async ({ className, citizenId }: Props) => {
     citizenId === authentication.session.entity.id
       ? await authentication.authorize("ownPenaltyEntry", "read")
       : await authentication.authorize("penaltyEntry", "read");
+  const showFleet = await authentication.authorize("otherShips", "read");
 
   const pages = [
     {
@@ -52,6 +53,15 @@ export const CitizenNavigation = async ({ className, citizenId }: Props) => {
       name: "Rollen",
       path: `/app/spynet/citizen/${citizenId}/roles`,
     },
+
+    ...(showFleet
+      ? [
+          {
+            name: "Flotte",
+            path: `/app/spynet/citizen/${citizenId}/fleet`,
+          },
+        ]
+      : []),
 
     ...(showSilcTransactions
       ? [
