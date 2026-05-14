@@ -56,6 +56,15 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col gap-4">
+      <Day heading="14. Mai 2026">
+        <DayItem heading="Rollen - Beschreibungsfeld" badges={["Neu", "IAM"]}>
+          <p>
+            Rollen können nun eine Beschreibung erhalten. Die Beschreibung wird
+            in der Rollenübersicht und im Rollen-Badge angezeigt.
+          </p>
+        </DayItem>
+      </Day>
+
       <Day heading="12. Mai 2026">
         <DayItem
           heading="Org-Flotte - Alle Varianten anzeigen"

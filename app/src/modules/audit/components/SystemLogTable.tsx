@@ -70,9 +70,12 @@ export const SystemLogTable = async ({ className, searchParams }: Props) => {
 
               return (
                 <TRow key={event.id} className={clsx("h-8", GRID_CLASSES)}>
-                  <td className="truncate">{formatDate(event.createdAt)}</td>
+                  <td>{formatDate(event.createdAt)}</td>
 
-                  <td className="truncate font-mono text-neutral-400">
+                  <td
+                    title={event.type}
+                    className="truncate font-mono text-neutral-400"
+                  >
                     {event.type}
                   </td>
 

@@ -16,7 +16,7 @@ export default async function Page() {
 
   return (
     <MaxWidthContent>
-      <div className="max-w-[400px] mx-auto">
+      <div className="max-w-100 mx-auto">
         {!(await getUnleashFlag(UNLEASH_FLAG.DisableAlgolia)) && (
           <SpynetSearchTile />
         )}
