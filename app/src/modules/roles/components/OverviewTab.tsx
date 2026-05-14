@@ -36,6 +36,15 @@ export const OverviewTab = ({ className, role }: Props) => {
 
         <TextInput label="Name" name="name" defaultValue={role.name} />
 
+        <Textarea
+          label="Beschreibung"
+          name="description"
+          defaultValue={role.description ?? undefined}
+          maxLength={2048}
+          hint="(Optional) Markdown wird unterstützt"
+          className="mt-4"
+        />
+
         <div className="grid grid-cols-2 gap-8">
           <div>
             <NumberInput
@@ -84,15 +93,6 @@ export const OverviewTab = ({ className, role }: Props) => {
           step={1}
           hint="(Optional) Die Anzahl an Level, die ein Citizen erreichen muss, um die Berechtigungen dieser Rolle zu erhalten"
           labelClassName="mt-4"
-        />
-
-        <Textarea
-          label="Beschreibung"
-          name="description"
-          defaultValue={role.description ?? undefined}
-          maxLength={2048}
-          hint="(Optional) Markdown wird unterstützt"
-          className="mt-4"
         />
 
         <Button2
