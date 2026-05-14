@@ -300,6 +300,11 @@ export const STATIC_PERMISSIONS = [
   },
   {
     section: "Fleet",
+    title: "Schiffe anderer Citizen einsehen",
+    string: "otherShips;read",
+  },
+  {
+    section: "Fleet",
     title: "Eigene Schiffe verwalten",
     string: "ship;manage",
   },

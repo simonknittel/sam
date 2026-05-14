@@ -7,6 +7,7 @@ export interface PermissionSet {
     | "event"
     | "orgFleet"
     | "ship"
+    | "otherShips"
     | "manufacturersSeriesAndVariants"
     | "citizen"
     | "organization"

@@ -4,6 +4,7 @@ import {
   type Manufacturer,
   type Series,
   type Upload,
+  type Variant,
   type VariantTag,
 } from "@/generated/prisma/client";
 import { requireAuthentication } from "@/modules/auth/server";
@@ -505,4 +506,425 @@ export const getManufacturerById = withTrace(
       },
     });
   },
+);
+
+type CitizenFleetSort = "name-asc" | "name-desc";
+
+export const getCitizenFleet = cache(
+  withTrace(
+    "getCitizenFleet",
+    async (
+      citizenId: string,
+      {
+        flightReady = "all",
+        variantTagIds = [],
+        sort = "name-asc",
+        cursor,
+        direction = "next",
+      }: {
+        flightReady?: "all" | "flight_ready";
+        variantTagIds?: string[];
+        sort?: CitizenFleetSort;
+        cursor?: string | null;
+        direction?: "next" | "prev";
+      } = {},
+    ) => {
+      const authentication = await requireAuthentication();
+      if (!(await authentication.authorize("otherShips", "read"))) forbidden();
+
+      // Resolve citizen's Discord ID -> Account -> User
+      const citizen = await prisma.entity.findUnique({
+        where: { id: citizenId },
+        select: { discordId: true },
+      });
+      if (!citizen?.discordId) {
+        return {
+          ships: [],
+          total: 0,
+          nextCursor: null,
+          prevCursor: null,
+        };
+      }
+
+      const accounts = await prisma.account.findMany({
+        where: { providerAccountId: citizen.discordId },
+        select: { userId: true },
+      });
+      const userIds = accounts.map((a) => a.userId);
+      if (userIds.length === 0) {
+        return {
+          ships: [],
+          total: 0,
+          nextCursor: null,
+          prevCursor: null,
+        };
+      }
+
+      const shipWhere: Record<string, unknown> = {
+        ownerId: { in: userIds },
+        variant: {
+          ...(flightReady === "flight_ready"
+            ? { status: VariantStatus.FLIGHT_READY }
+            : {}),
+          ...(variantTagIds.length > 0
+            ? { tags: { some: { id: { in: variantTagIds } } } }
+            : {}),
+        },
+      };
+
+      const allShips = await prisma.ship.findMany({
+        where: shipWhere,
+        include: {
+          variant: {
+            include: {
+              series: {
+                include: {
+                  manufacturer: {
+                    include: { image: true },
+                  },
+                },
+              },
+              tags: true,
+            },
+          },
+        },
+      });
+
+      const [, sortDirection] = sort.split("-") as [string, "asc" | "desc"];
+      const sortedShips = allShips.toSorted((a, b) =>
+        sortDirection === "asc"
+          ? sortAscWithAndNullLast(a.variant.name, b.variant.name)
+          : sortDescAndNullLast(a.variant.name, b.variant.name),
+      );
+
+      let pageItems: typeof sortedShips;
+
+      if (!cursor) {
+        pageItems = sortedShips.slice(0, MY_FLEET_PAGE_SIZE + 1);
+      } else if (direction === "next") {
+        const cursorIndex = sortedShips.findIndex((s) => s.id === cursor);
+        const fromIndex = cursorIndex !== -1 ? cursorIndex + 1 : 0;
+        pageItems = sortedShips.slice(
+          fromIndex,
+          fromIndex + MY_FLEET_PAGE_SIZE + 1,
+        );
+      } else {
+        const cursorIndex = sortedShips.findIndex((s) => s.id === cursor);
+        const toIndex = cursorIndex !== -1 ? cursorIndex : sortedShips.length;
+        const fromIndex = Math.max(0, toIndex - MY_FLEET_PAGE_SIZE - 1);
+        pageItems = sortedShips.slice(fromIndex, toIndex);
+      }
+
+      const hasMore = pageItems.length > MY_FLEET_PAGE_SIZE;
+
+      let ships: typeof sortedShips;
+      if (hasMore) {
+        ships =
+          direction === "next"
+            ? pageItems.slice(0, MY_FLEET_PAGE_SIZE)
+            : pageItems.slice(1);
+      } else {
+        ships = pageItems;
+      }
+
+      const hasNextPage = direction === "next" ? hasMore : !!cursor;
+      const hasPrevPage = direction === "prev" ? hasMore : !!cursor;
+
+      return {
+        ships,
+        total: allShips.length,
+        nextCursor:
+          hasNextPage && ships.length > 0 ? ships[ships.length - 1].id : null,
+        prevCursor: hasPrevPage && ships.length > 0 ? ships[0].id : null,
+      };
+    },
+  ),
+);
+
+export const getCitizenFleetVariantTags = cache(
+  withTrace("getCitizenFleetVariantTags", async (citizenId: string) => {
+    const authentication = await requireAuthentication();
+    if (!(await authentication.authorize("otherShips", "read"))) forbidden();
+
+    // Resolve citizen's Discord ID -> Account -> User
+    const citizen = await prisma.entity.findUnique({
+      where: { id: citizenId },
+      select: { discordId: true },
+    });
+    if (!citizen?.discordId) return [];
+
+    const accounts = await prisma.account.findMany({
+      where: { providerAccountId: citizen.discordId },
+      select: { userId: true },
+    });
+    const userIds = accounts.map((a) => a.userId);
+    if (userIds.length === 0) return [];
+
+    const ships = await prisma.ship.findMany({
+      where: { ownerId: { in: userIds } },
+      select: { variantId: true },
+    });
+
+    const variantIds = [...new Set(ships.map((s) => s.variantId))];
+    if (variantIds.length === 0) return [];
+
+    const tags = await prisma.variantTag.findMany({
+      where: {
+        variants: {
+          some: {
+            id: { in: variantIds },
+          },
+        },
+      },
+      distinct: ["id"],
+      orderBy: [{ key: "asc" }, { value: "asc" }],
+    });
+
+    return tags;
+  }),
+);
+
+interface VariantShipRow {
+  id: string;
+  ownerId: string;
+  variantId: string;
+  name: string | null;
+  owner: {
+    accounts: { providerAccountId: string }[];
+  };
+  variant: {
+    id: string;
+    name: string;
+    seriesId: string;
+    status: VariantStatus | null;
+    series: {
+      id: string;
+      name: string;
+      manufacturerId: string;
+      manufacturer: Manufacturer & { image: Upload | null };
+    };
+    tags: VariantTag[];
+  };
+  citizenHandle: string | null;
+  citizenId: string | null;
+}
+
+export const getVariantShips = cache(
+  withTrace(
+    "getVariantShips",
+    async (
+      variantId: string,
+      {
+        flightReady = "all",
+        variantTagIds = [],
+        sort = "name-asc",
+        cursor,
+        direction = "next",
+      }: {
+        flightReady?: "all" | "flight_ready";
+        variantTagIds?: string[];
+        sort?: CitizenFleetSort;
+        cursor?: string | null;
+        direction?: "next" | "prev";
+      } = {},
+    ) => {
+      const authentication = await requireAuthentication();
+      if (!(await authentication.authorize("otherShips", "read"))) forbidden();
+
+      // Verify variant exists
+      const variant = await prisma.variant.findUnique({
+        where: { id: variantId },
+        select: { id: true },
+      });
+      if (!variant) {
+        return {
+          ships: [],
+          total: 0,
+          nextCursor: null,
+          prevCursor: null,
+          variantName: null as string | null,
+        };
+      }
+
+      // Get org members' Discord IDs -> Account -> User IDs
+      const memberships = await getActiveOrganizationMemberships(ORG_ID);
+      const discordIds = memberships
+        .map((m) => m.citizen.discordId)
+        .filter(Boolean) as string[];
+
+      if (discordIds.length === 0) {
+        return {
+          ships: [],
+          total: 0,
+          nextCursor: null,
+          prevCursor: null,
+          variantName: null,
+        };
+      }
+
+      const accounts = await prisma.account.findMany({
+        where: { providerAccountId: { in: discordIds } },
+        select: { userId: true, providerAccountId: true },
+      });
+      const userIds = accounts.map((a) => a.userId);
+
+      // Build a Discord ID -> citizen mapping
+      const discordToCitizen = new Map<
+        string,
+        { id: string; handle: string | null }
+      >();
+      for (const membership of memberships) {
+        if (membership.citizen.discordId) {
+          discordToCitizen.set(membership.citizen.discordId, {
+            id: membership.citizen.id,
+            handle: membership.citizen.handle,
+          });
+        }
+      }
+
+      const variantWhere: Record<string, unknown> = {
+        id: variantId,
+        ...(flightReady === "flight_ready"
+          ? { status: VariantStatus.FLIGHT_READY }
+          : {}),
+        ...(variantTagIds.length > 0
+          ? { tags: { some: { id: { in: variantTagIds } } } }
+          : {}),
+      };
+
+      // If variant doesn't match filters, return empty
+      const matchingVariant = await prisma.variant.findFirst({
+        where: variantWhere,
+        select: { id: true, name: true },
+      });
+      if (!matchingVariant) {
+        return {
+          ships: [],
+          total: 0,
+          nextCursor: null,
+          prevCursor: null,
+          variantName: null,
+        };
+      }
+
+      const allShips = await prisma.ship.findMany({
+        where: {
+          ownerId: { in: userIds },
+          variantId,
+        },
+        include: {
+          owner: {
+            select: {
+              accounts: {
+                select: { providerAccountId: true },
+              },
+            },
+          },
+          variant: {
+            include: {
+              series: {
+                include: {
+                  manufacturer: {
+                    include: { image: true },
+                  },
+                },
+              },
+              tags: true,
+            },
+          },
+        },
+      });
+
+      // Resolve citizen info for each ship
+      const shipsWithCitizen: VariantShipRow[] = allShips.map((ship) => {
+        const accountDiscordId = ship.owner.accounts[0]?.providerAccountId;
+        const citizen = accountDiscordId
+          ? discordToCitizen.get(accountDiscordId)
+          : null;
+        return {
+          ...ship,
+          citizenHandle: citizen?.handle ?? null,
+          citizenId: citizen?.id ?? null,
+        };
+      });
+
+      const [, sortDirection] = sort.split("-") as [string, "asc" | "desc"];
+      const sortedShips = shipsWithCitizen.toSorted((a, b) =>
+        sortDirection === "asc"
+          ? sortAscWithAndNullLast(
+              a.citizenHandle || a.ownerId,
+              b.citizenHandle || b.ownerId,
+            )
+          : sortDescAndNullLast(
+              a.citizenHandle || a.ownerId,
+              b.citizenHandle || b.ownerId,
+            ),
+      );
+
+      let pageItems: typeof sortedShips;
+
+      if (!cursor) {
+        pageItems = sortedShips.slice(0, MY_FLEET_PAGE_SIZE + 1);
+      } else if (direction === "next") {
+        const cursorIndex = sortedShips.findIndex((s) => s.id === cursor);
+        const fromIndex = cursorIndex !== -1 ? cursorIndex + 1 : 0;
+        pageItems = sortedShips.slice(
+          fromIndex,
+          fromIndex + MY_FLEET_PAGE_SIZE + 1,
+        );
+      } else {
+        const cursorIndex = sortedShips.findIndex((s) => s.id === cursor);
+        const toIndex = cursorIndex !== -1 ? cursorIndex : sortedShips.length;
+        const fromIndex = Math.max(0, toIndex - MY_FLEET_PAGE_SIZE - 1);
+        pageItems = sortedShips.slice(fromIndex, toIndex);
+      }
+
+      const hasMore = pageItems.length > MY_FLEET_PAGE_SIZE;
+
+      let ships: typeof sortedShips;
+      if (hasMore) {
+        ships =
+          direction === "next"
+            ? pageItems.slice(0, MY_FLEET_PAGE_SIZE)
+            : pageItems.slice(1);
+      } else {
+        ships = pageItems;
+      }
+
+      const hasNextPage = direction === "next" ? hasMore : !!cursor;
+      const hasPrevPage = direction === "prev" ? hasMore : !!cursor;
+
+      return {
+        ships,
+        total: shipsWithCitizen.length,
+        nextCursor:
+          hasNextPage && ships.length > 0 ? ships[ships.length - 1].id : null,
+        prevCursor: hasPrevPage && ships.length > 0 ? ships[0].id : null,
+        variantName: matchingVariant.name,
+      };
+    },
+  ),
+);
+
+export const getVariantShipsVariantTags = cache(
+  withTrace("getVariantShipsVariantTags", async () => {
+    const authentication = await requireAuthentication();
+    if (!(await authentication.authorize("otherShips", "read"))) forbidden();
+
+    return prisma.variantTag.findMany({
+      distinct: ["id"],
+      orderBy: [{ key: "asc" }, { value: "asc" }],
+    });
+  }),
+);
+
+export const getVariantById = cache(
+  withTrace("getVariantById", async (id: Variant["id"]) => {
+    await requireAuthentication();
+
+    return prisma.variant.findUnique({
+      where: { id },
+      select: { id: true, name: true },
+    });
+  }),
 );

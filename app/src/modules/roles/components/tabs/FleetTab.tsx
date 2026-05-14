@@ -16,6 +16,12 @@ const FleetTab = () => {
       </div>
 
       <div className="py-2 flex justify-between items-center">
+        <h4 className="font-bold">Schiffe anderer Citizen einsehen</h4>
+
+        <YesNoCheckbox {...register("otherShips;read")} />
+      </div>
+
+      <div className="py-2 flex justify-between items-center">
         <h4 className="font-bold">Eigene Schiffe verwalten</h4>
 
         <YesNoCheckbox {...register("ship;manage")} />
