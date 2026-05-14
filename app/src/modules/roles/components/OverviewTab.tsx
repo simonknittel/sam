@@ -3,6 +3,7 @@
 import type { Role, Upload } from "@/generated/prisma/browser";
 import { Button2 } from "@/modules/common/components/Button2";
 import { NumberInput } from "@/modules/common/components/form/NumberInput";
+import { Textarea } from "@/modules/common/components/form/Textarea";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import { ImageUpload } from "@/modules/common/components/ImageUpload";
 import Note from "@/modules/common/components/Note";
@@ -83,6 +84,15 @@ export const OverviewTab = ({ className, role }: Props) => {
           step={1}
           hint="(Optional) Die Anzahl an Level, die ein Citizen erreichen muss, um die Berechtigungen dieser Rolle zu erhalten"
           labelClassName="mt-4"
+        />
+
+        <Textarea
+          label="Beschreibung"
+          name="description"
+          defaultValue={role.description ?? undefined}
+          maxLength={2048}
+          hint="(Optional) Markdown wird unterstützt"
+          className="mt-4"
         />
 
         <Button2

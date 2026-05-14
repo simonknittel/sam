@@ -85,7 +85,7 @@ export const PopoverBaseUI = ({
 
               <div
                 className={clsx(
-                  "bg-neutral-950 border border-neutral-700 p-4 rounded-secondary",
+                  "bg-black border border-white/20 p-4 rounded-secondary",
                   styles.popover,
                   childrenClassName,
                 )}

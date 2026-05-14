@@ -15,7 +15,8 @@ import {
 import { getRoles } from "../queries";
 
 const TABLE_MIN_WIDTH = "min-w-210";
-const GRID_COLS = "grid-cols-[1fr_128px_128px_128px_80px_80px]";
+const GRID_COLS =
+  "grid-cols-[300px_minmax(200px,_1fr)_128px_128px_128px_80px_80px]";
 
 const loadSearchParams = createLoader({
   filter: parseAsStringLiteral([
@@ -87,18 +88,25 @@ export const RolesTable = async ({ className, searchParams }: Props) => {
       <Table className={clsx(TABLE_MIN_WIDTH)}>
         <THead className={GRID_COLS}>
           <th>Rolle</th>
+
+          <th>Beschreibung</th>
+
           <th className="text-center">Vererbungen</th>
+
           <th className="text-center">
             Entfernung
             <br />
             nach
           </th>
+
           <th className="text-center">
             Zuweisung
             <br />
             nach
           </th>
+
           <th className="text-center">Level</th>
+
           <th className="text-center">Citizen</th>
         </THead>
 
@@ -131,6 +139,13 @@ export const RolesTable = async ({ className, searchParams }: Props) => {
 
                   <p className="font-bold truncate">{role.name}</p>
                 </Link>
+              </td>
+
+              <td
+                title={role.description || ""}
+                className="text-sm truncate text-white/40"
+              >
+                {role.description || null}
               </td>
 
               <td>

@@ -19,6 +19,7 @@ import {
   AlertDialogTrigger,
 } from "@/modules/common/components/AlertDialog";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
+import { Markdown } from "@/modules/common/components/Markdown";
 import { Note } from "@/modules/common/components/Note";
 import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
 import clsx from "clsx";
@@ -153,7 +154,7 @@ export const SingleRoleBadge = ({
               />
             </span>
           ) : (
-            <span className="size-12 border border-neutral-700 rounded-secondary" />
+            <span className="size-12 border border-white/10 rounded-secondary" />
           )}
 
           <div>
@@ -162,8 +163,14 @@ export const SingleRoleBadge = ({
           </div>
         </div>
 
+        {role.description && (
+          <div className="border-t border-white/10 mt-4 pt-4 max-h-60 overflow-y-auto">
+            <Markdown>{role.description}</Markdown>
+          </div>
+        )}
+
         {citizenId && role.maxLevel && (
-          <div className="border-t border-neutral-700 mt-4 pt-4 flex gap-4 items-center">
+          <div className="border-t border-white/10 mt-4 pt-4 flex gap-4 items-center">
             <p className="text-white/40">Level</p>
 
             <div
@@ -227,7 +234,7 @@ export const SingleRoleBadge = ({
         )}
 
         {citizenId && canDismiss && (
-          <div className="border-t border-neutral-700 mt-4 pt-4">
+          <div className="border-t border-white/10 mt-4 pt-4">
             <form
               action={deleteRoleAssignmentFormAction}
               id={deleteRoleAssignmentFormId}
