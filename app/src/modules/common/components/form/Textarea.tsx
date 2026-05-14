@@ -15,7 +15,7 @@ export const Textarea = (props: Props) => {
 
   return (
     <>
-      <label className={clsx("block", className)} htmlFor={id}>
+      <label className={clsx("block text-white/90", className)} htmlFor={id}>
         {label}
       </label>
 
@@ -28,7 +28,7 @@ export const Textarea = (props: Props) => {
         {...rest}
       />
 
-      {hint && <p className="text-xs mt-1 text-gray-400">{hint}</p>}
+      {hint && <p className="text-xs mt-1 text-white/40">{hint}</p>}
     </>
   );
 };
