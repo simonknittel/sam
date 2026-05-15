@@ -9,7 +9,6 @@ import {
 import { authenticate } from "@/modules/auth/server";
 import { Link } from "@/modules/common/components/Link";
 import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
-import clsx from "clsx";
 import { FaRegCheckCircle } from "react-icons/fa";
 import { FaRegCircleXmark } from "react-icons/fa6";
 import { VariantTagBadge } from "./VariantTagBadge";
@@ -41,7 +40,7 @@ export const FleetTable = async ({ className, fleet }: Props) => {
     authentication && (await authentication.authorize("otherShips", "read"));
 
   return (
-    <Table className={clsx(TABLE_MIN_WIDTH, className)}>
+    <Table className={className} tableClassName={TABLE_MIN_WIDTH}>
       <THead className={GRID_COLS}>
         <th>Schiff</th>
         <th>Tags</th>

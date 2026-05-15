@@ -30,7 +30,7 @@ export const PenaltyEntriesTable = ({
   hideCitizenColumn,
 }: Props) => {
   return (
-    <Table className={clsx(TABLE_MIN_WIDTH, className)}>
+    <Table className={className} tableClassName={TABLE_MIN_WIDTH}>
       <THead
         className={clsx({
           [GRID_COLS_WITHOUT_CITIZEN]: hideCitizenColumn,
