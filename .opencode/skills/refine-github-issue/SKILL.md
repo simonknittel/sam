@@ -61,6 +61,7 @@ Question quality rules:
 - Identify missing scope boundaries and out-of-scope items.
 - Add dependencies, migration implications, permissions, observability, and rollback considerations when relevant.
 - Call out risks and assumptions explicitly.
+- Suggest splitting into multiple tickets if the scope is too large or contains distinct phases.
 
 Assessment checklist:
 
@@ -72,9 +73,11 @@ Assessment checklist:
 - Monitoring/alerts/logging considered (if applicable)
 - Security/privacy/performance considerations included (if applicable)
 
-### 4) Produce refined ticket and post as issue comment
+### 4) Produce refined ticket(s) and post as issue comment
 
 Prepare a refined ticket body using the template below, then add it as a comment on the GitHub issue.
+
+If refinement leads to multiple tickets, update the current one to a parent issue with a clear summary and description, then create child issues for each sub-ticket and link them in the parent.
 
 If posting is not possible due to missing auth/tooling, return the exact comment body and a one-line command the user can run.
 
@@ -134,11 +137,17 @@ so that <value/outcome>.
 	- Mitigation: <mitigation>
 ```
 
-## Comment Posting
+## Communication with GitHub
 
-Preferred method (GitHub CLI):
+Preferred method: GitHub CLI
+
+Examples:
 
 ```sh
+# View issue details (incl. comments):
+gh issue view <issue-number> --repo <owner/repo> --json title,body,labels,number,url,comments
+
+# Post comment:
 gh issue comment <issue-number> --repo <owner/repo> --body-file <refined-ticket.md>
 ```
 
