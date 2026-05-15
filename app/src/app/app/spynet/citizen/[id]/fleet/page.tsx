@@ -12,12 +12,6 @@ export const metadata: Metadata = {
   title: "Flotte",
 };
 
-type Params = Promise<
-  Readonly<{
-    id: string;
-  }>
->;
-
 export default async function Page({
   params,
   searchParams,

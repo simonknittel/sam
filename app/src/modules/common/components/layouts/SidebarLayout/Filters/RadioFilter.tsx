@@ -1,9 +1,11 @@
+"use client";
+
+import { cursorPaginationParsers } from "@/modules/common/CursorPagination/cursorPaginationParsers";
 import clsx from "clsx";
 import { useTopLoader } from "nextjs-toploader";
 import { useQueryState, useQueryStates } from "nuqs";
 import { useCallback, useEffect, useTransition } from "react";
-import { cursorPaginationParsers } from "../../CursorPagination/cursorPaginationParsers";
-import { RadioGroup } from "../form/RadioGroup";
+import { RadioGroup } from "../../../form/RadioGroup";
 
 interface Props {
   readonly name: string;

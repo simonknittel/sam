@@ -1,5 +1,6 @@
 import clsx from "clsx";
-import { cloneElement, type ReactElement, type ReactNode } from "react";
+import { type ReactElement, type ReactNode } from "react";
+import { SidebarContainer } from "./SidebarContainer";
 
 interface Props {
   readonly className?: string;
@@ -14,14 +15,11 @@ export const SidebarLayout = ({
   childrenContainerClassName,
   children,
 }: Props) => {
-  const _sidebar = cloneElement(sidebar, {
-    // @ts-expect-error
-    className: "md:w-64 md:flex-none",
-  });
-
   return (
     <div className={clsx("flex flex-col md:flex-row gap-4", className)}>
-      {_sidebar}
+      <SidebarContainer className="md:w-64 md:flex-none">
+        {sidebar}
+      </SidebarContainer>
 
       <div className={clsx("md:flex-1 md:min-w-0", childrenContainerClassName)}>
         {children}

@@ -1,50 +1,22 @@
-"use client";
+import { RadioFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/RadioFilter";
 
-import { Button2, Button2Variant } from "@/modules/common/components/Button2";
-import { RadioFilter } from "@/modules/common/components/SidebarFilters/RadioFilter";
-import clsx from "clsx";
-import { useState } from "react";
-import { FaFilter } from "react-icons/fa";
-
-interface Props {
-  readonly className?: string;
-}
-
-export const ProfitDistributionCycleSidebar = ({ className }: Props) => {
-  const [isOpen, setIsOpen] = useState(false);
-
+export const ProfitDistributionCycleSidebar = () => {
   return (
-    <div className={clsx(className)}>
-      <Button2
-        type="button"
-        onClick={() => setIsOpen((prev) => !prev)}
-        variant={Button2Variant.Secondary}
-        className="w-full md:hidden"
-      >
-        <FaFilter />
-        Filter
-      </Button2>
+    <>
+      <RadioFilter
+        name="status"
+        label="Status"
+        items={[
+          { value: "open", label: "Offen", default: true },
+          { value: "closed", label: "Geschlossen" },
+        ]}
+      />
 
-      <div
-        className={clsx("flex flex-col gap-0.5", {
-          "hidden md:flex": !isOpen,
-        })}
-      >
-        <RadioFilter
-          name="status"
-          label="Status"
-          items={[
-            { value: "open", label: "Offen", default: true },
-            { value: "closed", label: "Geschlossen" },
-          ]}
-        />
+      <div className="bg-secondary p-2 corners-secondary">
+        <p className="text-sm text-neutral-500">Sortierung</p>
 
-        <div className="bg-secondary p-2 corners-secondary">
-          <p className="text-sm text-neutral-500">Sortierung</p>
-
-          <p className="text-sm">Ende der Sammelphase (absteigend)</p>
-        </div>
+        <p className="text-sm">Ende der Sammelphase (absteigend)</p>
       </div>
-    </div>
+    </>
   );
 };
