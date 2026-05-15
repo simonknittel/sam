@@ -32,9 +32,7 @@ export const UsersTable = ({ className, users }: Props) => {
         <th>Registriert am</th>
         <th>Datenschutzerklärung</th>
         <th>Handle</th>
-        <th>
-          <span className="sr-only">Spynet</span>
-        </th>
+        <th className="sr-only">Spynet</th>
       </THead>
 
       <TBody>

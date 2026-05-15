@@ -39,9 +39,7 @@ export const SilcTransactionsTable = ({
         <th>Wert</th>
         <th>Beschreibung</th>
         <th>Von</th>
-        <th>
-          <span className="sr-only">Aktionen</span>
-        </th>
+        <th className="sr-only">Aktionen</th>
       </THead>
 
       <TBody>
@@ -50,11 +48,7 @@ export const SilcTransactionsTable = ({
 
           return (
             <TRow key={transaction.id} className={GRID_COLS}>
-              <td className="overflow-hidden flex items-center h-8">
-                <span className="whitespace-nowrap">
-                  {formatDate(transaction.createdAt)}
-                </span>
-              </td>
+              <td>{formatDate(transaction.createdAt)}</td>
 
               <td className="overflow-hidden flex items-center h-8">
                 <Link
@@ -67,24 +61,20 @@ export const SilcTransactionsTable = ({
                 </Link>
               </td>
 
-              <td className="overflow-hidden flex items-center h-8">
-                <span
-                  className={clsx("font-bold", {
-                    "text-green-500": transaction.value > 0,
-                    "text-red-500": transaction.value < 0,
-                  })}
-                >
-                  {transaction.value}
-                </span>
+              <td
+                className={clsx("font-bold", {
+                  "text-green-500": transaction.value > 0,
+                  "text-red-500": transaction.value < 0,
+                })}
+              >
+                {transaction.value}
               </td>
 
-              <td className="overflow-hidden flex items-center h-8">
-                <span
-                  title={transaction.description || undefined}
-                  className="truncate"
-                >
-                  {transaction.description}
-                </span>
+              <td
+                title={transaction.description || undefined}
+                className="truncate"
+              >
+                {transaction.description}
               </td>
 
               <td className="overflow-hidden flex items-center h-8">
