@@ -19,7 +19,7 @@ import { deleteShipAction } from "../actions/deleteShipAction";
 
 interface Props {
   readonly className?: string;
-  readonly ship: Ship & {
+  readonly ship: Pick<Ship, "id" | "ownerId" | "variantId" | "name"> & {
     variant: Variant;
   };
 }
