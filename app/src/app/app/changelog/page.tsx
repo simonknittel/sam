@@ -57,6 +57,23 @@ export default async function Page() {
   return (
     <div className="flex flex-col gap-4">
       <Day heading="15. Mai 2026">
+        <DayItem heading="Flotte - Schiffe löschen" badges={["Neu", "Flotte"]}>
+          <p>
+            Gelöschte Schiffe werden nicht mehr endgültig aus der Datenbank
+            entfernt, sondern nur als gelöscht markiert. Sie können auf der
+            Seite &ldquo;Meine Schiffe&rdquo; über den Filter
+            &ldquo;Gelöscht&rdquo; wieder angezeigt und berücksichtigt werden.
+          </p>
+
+          <p>
+            Zusätzlich werden nun alle Änderungen an Schiffen mit Zeitstempeln
+            und dem verantwortlichen Benutzer protokolliert (&ldquo;erstellt
+            am&rdquo;, &ldquo;erstellt von&rdquo;, &ldquo;aktualisiert
+            am&rdquo;, &ldquo;aktualisiert von&rdquo;, &ldquo;gelöscht
+            am&rdquo;, &ldquo;gelöscht von&rdquo;).
+          </p>
+        </DayItem>
+
         <DayItem heading="Flotte - Detailseiten" badges={["Neu", "Flotte"]}>
           <p>
             Es gibt nun eine Detailseite für jedes Schiff. Die Seite zeigt den
@@ -67,6 +84,20 @@ export default async function Page() {
           <p>
             Der Zugriff ist für Benutzer mit der Berechtigung &ldquo;Schiffe
             verwalten&rdquo; oder &ldquo;Org-Flotte lesen&rdquo; möglich.
+          </p>
+        </DayItem>
+
+        <DayItem heading="Flotte - Änderungen" badges={["Neu", "Flotte"]}>
+          <p>
+            Eine neue Seite &ldquo;Änderungen&rdquo; zeigt alle Erstellungen und
+            Löschungen von Schiffen in einer tabellarischen Übersicht. Die
+            Änderungen können nach Variant, Eigentümer, Akteur und Typ gefiltert
+            werden.
+          </p>
+
+          <p>
+            Der Zugriff erfordert die Berechtigung &ldquo;Andere Schiffe
+            lesen&rdquo;.
           </p>
         </DayItem>
       </Day>

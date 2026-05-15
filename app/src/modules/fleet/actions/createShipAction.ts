@@ -26,6 +26,7 @@ export const createShipAction = async (formData: FormData) => {
     const authentication =
       await requireAuthenticationAction("createShipAction");
     await authentication.authorizeAction("ship", "manage");
+    if (!authentication.session.entity) throw new Error("Forbidden");
 
     /**
      * Validate the request
@@ -47,6 +48,7 @@ export const createShipAction = async (formData: FormData) => {
     const ship = await prisma.ship.create({
       data: {
         ownerId: authentication.session.user.id,
+        createdById: authentication.session.entity.id,
         ...result.data,
       },
       select: {

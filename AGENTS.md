@@ -8,3 +8,4 @@
 	- When making changes to files in the `app` directory, change the current working directory to `app` and run `npm run format` after making your changes.
 	- When making changes to files in the `pnpm-monorepo` directory, change the current working directory to `pnpm-monorepo` and run `pnpm run format`.
 - Follow the [coding guidelines](./docs/coding-guidelines.md) for any new code you write or review.
+- Use the GitHub CLI when communicating with GitHub. Example (for viewing issue details incl. comments): `gh issue view <issue-number> --repo <owner/repo> --json title,body,labels,number,url,comments`.

@@ -23,6 +23,7 @@ export const getEventCitizens = cache(async (eventId: Event["id"]) => {
 
   const ships = await prisma.ship.findMany({
     where: {
+      deletedAt: null,
       owner: {
         accounts: {
           some: {

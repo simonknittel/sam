@@ -108,8 +108,8 @@ export default async function Page({
       </div>
 
       {hasOtherShipsRead && (
-        <SuspenseWithErrorBoundaryTile>
-          <VariantShipsTile variantId={variantId} />
+        <SuspenseWithErrorBoundaryTile className="mt-2">
+          <VariantShipsTile variantId={variantId} className="mt-2" />
         </SuspenseWithErrorBoundaryTile>
       )}
     </div>

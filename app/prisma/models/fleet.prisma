@@ -76,4 +76,14 @@ model Ship {
   variantId String
   variant   Variant @relation(fields: [variantId], references: [id], onDelete: Cascade)
   name      String?
+
+  createdAt   DateTime? @default(now())
+  createdById String?
+  createdBy   Entity?   @relation("createdBy", fields: [createdById], references: [id])
+  updatedAt   DateTime? @updatedAt
+  updatedById String?
+  updatedBy   Entity?   @relation("updatedBy", fields: [updatedById], references: [id])
+  deletedAt   DateTime?
+  deletedById String?
+  deletedBy   Entity?   @relation("deletedBy", fields: [deletedById], references: [id])
 }

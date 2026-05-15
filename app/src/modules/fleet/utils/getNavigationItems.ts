@@ -9,6 +9,7 @@ export const getNavigationItems = async () => {
     authentication.authorize("orgFleet", "read"),
     authentication.authorize("ship", "manage"),
     authentication.authorize("manufacturersSeriesAndVariants", "manage"),
+    authentication.authorize("otherShips", "read"),
   ]);
 
   const pages: Page[] = [];
@@ -24,6 +25,13 @@ export const getNavigationItems = async () => {
     pages.push({
       title: "Meine Schiffe",
       url: "/app/fleet/my-ships",
+    });
+  }
+
+  if (permissions[3]) {
+    pages.push({
+      title: "Änderungen",
+      url: "/app/fleet/changes",
     });
   }
 

@@ -15,19 +15,42 @@ export const deleteShipAction = createAuthenticatedAction(
   "deleteShip",
   schema,
   async (formData, authentication, data, t) => {
-    if (!(await authentication.authorize("ship", "manage")))
+    if (
+      !(await authentication.authorize("ship", "manage")) ||
+      !authentication.session.entity
+    )
       return {
         error: t("Common.forbidden"),
         requestPayload: formData,
       };
 
     /**
-     * Delete
+     * Find existing ship and verify ownership
      */
-    const deletedShip = await prisma.ship.delete({
+    const existingShip = await prisma.ship.findFirst({
       where: {
         id: data.id,
         ownerId: authentication.session.user.id,
+      },
+    });
+    if (existingShip?.deletedAt !== null) {
+      return {
+        error: t("Common.notFound"),
+        requestPayload: formData,
+      };
+    }
+
+    /**
+     * Soft delete
+     */
+    const deletedShip = await prisma.ship.update({
+      where: {
+        id: data.id,
+        ownerId: authentication.session.user.id,
+      },
+      data: {
+        deletedAt: new Date(),
+        deletedById: authentication.session.entity.id,
       },
     });
 
