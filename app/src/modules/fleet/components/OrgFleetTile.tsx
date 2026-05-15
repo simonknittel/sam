@@ -19,7 +19,7 @@ const loadSearchParams = createLoader({
     "name-desc",
     "count-asc",
     "count-desc",
-  ]).withDefault("name-asc"),
+  ]).withDefault("count-desc"),
   variantTags: parseAsArrayOf(parseAsString),
   ...cursorPaginationParsers,
 });

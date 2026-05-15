@@ -51,7 +51,7 @@ export const getOrgFleet = cache(
     async ({
       flightReady = "all",
       variantTagIds = [],
-      sort = "name-asc",
+      sort = "count-desc",
       cursor,
       direction = "next",
     }: {
