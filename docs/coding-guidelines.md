@@ -112,6 +112,7 @@
 
 - Interactive elements should always have a hover, focus, and active state.
 - If an element truncates text (e.g. using `text-overflow: ellipsis`), the element should have a `title` attribute which shows the full text on hover.
+- Any animation or transition should be disabled when the user's browser has `prefers-reduced-motion` enabled.
 - Look out for any other visual design, CSS, UI/UX and accessibility-related best practices.
 
 ## Code style
