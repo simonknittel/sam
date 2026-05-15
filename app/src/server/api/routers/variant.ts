@@ -13,6 +13,9 @@ export const variantRouter = createTRPCRouter({
         where: {
           id: input.id,
         },
+        include: {
+          externalLinks: true,
+        },
       });
 
       return variant;

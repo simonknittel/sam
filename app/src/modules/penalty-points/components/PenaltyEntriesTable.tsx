@@ -13,8 +13,9 @@ type Row = PenaltyEntry & {
 
 const TABLE_MIN_WIDTH = "min-w-[624px]";
 const GRID_COLS_WITH_CITIZEN =
-  "grid-cols-[140px_64px_140px_140px_140px_1fr_32px]";
-const GRID_COLS_WITHOUT_CITIZEN = "grid-cols-[64px_140px_140px_140px_1fr_32px]";
+  "grid-cols-[140px_64px_140px_140px_140px_minmax(300px,1fr)_32px]";
+const GRID_COLS_WITHOUT_CITIZEN =
+  "grid-cols-[64px_140px_140px_140px_minmax(300px,1fr)_32px]";
 
 interface Props {
   readonly className?: string;
@@ -43,9 +44,7 @@ export const PenaltyEntriesTable = ({
         <th>Von</th>
         <th>Verfällt</th>
         <th>Begründung</th>
-        <th>
-          <span className="sr-only">Aktionen</span>
-        </th>
+        <th className="sr-only">Aktionen</th>
       </THead>
 
       <TBody>
@@ -89,27 +88,27 @@ export const PenaltyEntriesTable = ({
               </CitizenPopover>
             </td>
 
-            <td>{entry.expiresAt ? formatDate(entry.expiresAt) : "-"}</td>
-
-            <td className="overflow-hidden">
-              <span
-                className="block truncate"
-                title={entry.reason || "Keine Begründung"}
-              >
-                {entry.reason || (
-                  <span className="italic text-neutral-500">
-                    Keine Begründung
-                  </span>
-                )}
-              </span>
+            <td
+              className={clsx({
+                "text-neutral-500 italic": !entry.expiresAt,
+              })}
+            >
+              {entry.expiresAt ? formatDate(entry.expiresAt) : "-"}
             </td>
 
-            <td className="overflow-hidden">
-              <span className="flex items-center h-full">
-                {showDelete && !entry.deletedAt && (
-                  <DeletePenaltyEntry entry={entry} />
-                )}
-              </span>
+            <td
+              title={entry.reason || "Keine Begründung"}
+              className={clsx("truncate", {
+                "text-neutral-500 italic": !entry.reason,
+              })}
+            >
+              {entry.reason || "Keine Begründung"}
+            </td>
+
+            <td className="flex items-center">
+              {showDelete && !entry.deletedAt && (
+                <DeletePenaltyEntry entry={entry} />
+              )}
             </td>
           </TRow>
         ))}

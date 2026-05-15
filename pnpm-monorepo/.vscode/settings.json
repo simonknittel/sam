@@ -4,6 +4,7 @@
     "auec",
     "cuid",
     "esbuild",
+    "linux",
     "nvmrc",
     "openpgp",
     "postgres",

@@ -56,6 +56,21 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col gap-4">
+      <Day heading="15. Mai 2026">
+        <DayItem heading="Flotte - Detailseiten" badges={["Neu", "Flotte"]}>
+          <p>
+            Es gibt nun eine Detailseite für jedes Schiff. Die Seite zeigt den
+            Namen, die Serien- und Herstellerzuordnung, Tags, den
+            Flight-ready-Status, externe Links zu anderen Diensten.
+          </p>
+
+          <p>
+            Der Zugriff ist für Benutzer mit der Berechtigung &ldquo;Schiffe
+            verwalten&rdquo; oder &ldquo;Org-Flotte lesen&rdquo; möglich.
+          </p>
+        </DayItem>
+      </Day>
+
       <Day heading="14. Mai 2026">
         <DayItem heading="Rollen - Beschreibungsfeld" badges={["Neu", "IAM"]}>
           <p>

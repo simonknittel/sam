@@ -1,4 +1,10 @@
-import { type Variant, type VariantTag } from "@/generated/prisma/client";
+"use client";
+
+import {
+  type Variant,
+  type VariantExternalLink,
+  type VariantTag,
+} from "@/generated/prisma/browser";
 import Button from "@/modules/common/components/Button";
 import { Button2 } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
@@ -9,10 +15,14 @@ import { useId, useState, useTransition } from "react";
 import { toast } from "react-hot-toast";
 import { FaPlus, FaSave, FaSpinner, FaTrash } from "react-icons/fa";
 import { updateVariant } from "../actions/updateVariant";
+import { ExternalService, ExternalServiceDisplayNames } from "../types";
 
 interface Props {
   readonly onRequestClose: () => void;
-  readonly variant: Pick<Variant & { tags: VariantTag[] }, "id" | "tags">;
+  readonly variant: Pick<
+    Variant & { tags: VariantTag[]; externalLinks: VariantExternalLink[] },
+    "id" | "tags" | "externalLinks"
+  >;
 }
 
 export const UpdateVariantModal = ({ onRequestClose, variant }: Props) => {
@@ -33,6 +43,15 @@ export const UpdateVariantModal = ({ onRequestClose, variant }: Props) => {
       id: tag.id,
       key: tag.key,
       value: tag.value,
+    })),
+  );
+  const [externalLinks, setExternalLinks] = useState<
+    Pick<VariantExternalLink, "id" | "serviceName" | "url">[]
+  >(
+    variant.externalLinks.map((link) => ({
+      id: link.id,
+      serviceName: link.serviceName,
+      url: link.url,
     })),
   );
 
@@ -62,7 +81,7 @@ export const UpdateVariantModal = ({ onRequestClose, variant }: Props) => {
     <Modal
       isOpen={true}
       onRequestClose={onRequestClose}
-      className="w-[480px]"
+      className="w-120"
       heading={<h2>Variante bearbeiten</h2>}
     >
       <form action={_action}>
@@ -102,10 +121,10 @@ export const UpdateVariantModal = ({ onRequestClose, variant }: Props) => {
             <option value="NOT_FLIGHT_READY">Nicht flight ready</option>
           </select>
         )}
-        <small className="text-neutral-500">optional</small>
+        <small className="text-white/40">optional</small>
 
         <p className="mt-6">
-          Tags <small className="text-neutral-500">optional</small>
+          Tags <small className="text-white/40">optional</small>
         </p>
         <div className="flex flex-col gap-2 mt-2">
           {tags.map((tag) => (
@@ -143,6 +162,68 @@ export const UpdateVariantModal = ({ onRequestClose, variant }: Props) => {
         <Button
           onClick={() =>
             setTags((prev) => [...prev, { id: createId(), key: "", value: "" }])
+          }
+          type="button"
+          variant="tertiary"
+          className="mx-auto"
+        >
+          <FaPlus />
+          Hinzufügen
+        </Button>
+
+        <p className="mt-6">
+          Externe Links <small className="text-white/40">optional</small>
+        </p>
+        <div className="flex flex-col gap-2 mt-2">
+          {externalLinks.map((link) => (
+            <div key={link.id} className="flex gap-1 items-stretch">
+              <select
+                className="p-2 rounded-secondary bg-neutral-900 flex-none min-w-0"
+                name="linkServiceNames[]"
+                defaultValue={link.serviceName}
+              >
+                {Object.entries(ExternalServiceDisplayNames).map(
+                  ([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ),
+                )}
+              </select>
+              <input
+                type="url"
+                className="p-2 rounded-secondary bg-neutral-900 flex-1 min-w-0"
+                name="linkUrls[]"
+                placeholder="https://..."
+                defaultValue={link.url}
+              />
+              <Button
+                onClick={() =>
+                  setExternalLinks((prev) =>
+                    prev.filter(({ id }) => id !== link.id),
+                  )
+                }
+                type="button"
+                variant="tertiary"
+                title="Löschen"
+                iconOnly
+                className="h-auto flex-none w-6"
+              >
+                <FaTrash />
+              </Button>
+            </div>
+          ))}
+        </div>
+        <Button
+          onClick={() =>
+            setExternalLinks((prev) => [
+              ...prev,
+              {
+                id: createId(),
+                serviceName: ExternalService.SPVIEWER,
+                url: "",
+              },
+            ])
           }
           type="button"
           variant="tertiary"

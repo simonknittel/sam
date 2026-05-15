@@ -9,7 +9,12 @@ import { serverActionErrorHandler } from "@/modules/common/actions/serverActionE
 import type { ServerAction } from "@/modules/common/actions/types";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { ExternalService } from "../types";
 import { createAndReturnTags } from "../utils/createAndReturnTags";
+import {
+  syncVariantExternalLinks,
+  type IncomingLink,
+} from "../utils/syncVariantExternalLinks";
 
 const schema = z.object({
   id: z.cuid(),
@@ -17,8 +22,19 @@ const schema = z.object({
   status: z
     .enum([VariantStatus.FLIGHT_READY, VariantStatus.NOT_FLIGHT_READY])
     .optional(),
-  tagKeys: z.array(z.string().trim()).max(50).optional(), // Arbitrary (untested) limit to prevent DDoS
-  tagValues: z.array(z.string().trim()).max(50).optional(), // Arbitrary (untested) limit to prevent DDoS
+  tagKeys: z.array(z.string().trim()).max(50).optional(),
+  tagValues: z.array(z.string().trim()).max(50).optional(),
+  linkServiceNames: z
+    .array(
+      z.enum([
+        ExternalService.SPVIEWER,
+        ExternalService.RSI,
+        ExternalService.FLEETYARDS,
+      ]),
+    )
+    .max(50)
+    .nullish(),
+  linkUrls: z.array(z.string().url()).max(50).nullish(),
 });
 
 export const updateVariant: ServerAction = async (formData) => {
@@ -45,6 +61,12 @@ export const updateVariant: ServerAction = async (formData) => {
       tagValues: formData.has("tagValues[]")
         ? formData.getAll("tagValues[]")
         : undefined,
+      linkServiceNames: formData.has("linkServiceNames[]")
+        ? formData.getAll("linkServiceNames[]")
+        : undefined,
+      linkUrls: formData.has("linkUrls[]")
+        ? formData.getAll("linkUrls[]")
+        : undefined,
     });
 
     /**
@@ -62,6 +84,12 @@ export const updateVariant: ServerAction = async (formData) => {
       select: {
         name: true,
         status: true,
+        externalLinks: {
+          select: {
+            serviceName: true,
+            url: true,
+          },
+        },
       },
     });
     if (!existingVariant) throw new Error("Not found");
@@ -82,9 +110,19 @@ export const updateVariant: ServerAction = async (formData) => {
       },
     });
 
+    const incomingLinks = data.linkServiceNames
+      ?.map((serviceName, index) => ({
+        serviceName,
+        url: data.linkUrls?.[index],
+      }))
+      .filter((link) => Boolean(link.serviceName && link.url)) as
+      | IncomingLink[]
+      | undefined;
+    await syncVariantExternalLinks(updatedItem.id, incomingLinks);
+
     await createAuditEvents([
       {
-        type: AuditEventType.VARIANT_UPDATED,
+        type: AuditEventType.VARIANT_UPDATED_V2,
         data: {
           variantId: updatedItem.id,
           seriesId: updatedItem.seriesId,
@@ -92,6 +130,8 @@ export const updateVariant: ServerAction = async (formData) => {
           newName: updatedItem.name,
           previousStatus: existingVariant.status,
           newStatus: updatedItem.status,
+          previousLinks: existingVariant.externalLinks,
+          newLinks: incomingLinks ?? [],
         },
         createdById: authentication.session.user.id,
       },

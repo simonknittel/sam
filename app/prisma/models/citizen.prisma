@@ -46,6 +46,8 @@ model Entity {
   roleAssignmentLevelChanges                   RoleAssignmentLevelChange[]          @relation("citizen")
   /// Changes made by this citizen to the role level of other citizens
   createdRoleAssignmentLevelChanges            RoleAssignmentLevelChange[]          @relation("createdBy")
+  createdVariantExternalLinks                  VariantExternalLink[]                @relation("createdBy")
+  updatedVariantExternalLinks                  VariantExternalLink[]                @relation("updatedBy")
 
   // Holds the latest confirmed values
   spectrumId                String?

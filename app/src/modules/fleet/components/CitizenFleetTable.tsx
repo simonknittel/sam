@@ -52,7 +52,7 @@ export const CitizenFleetTable = ({ className, ships }: Props) => {
           <TRow key={ship.id} className={GRID_COLS}>
             <td className="overflow-hidden">
               <Link
-                href={`/app/fleet/org/${ship.variant.id}`}
+                href={`/app/fleet/variant/${ship.variant.id}`}
                 className="hover:bg-white/10 focus-visible:bg-white/10 rounded-secondary block"
                 prefetch={false}
               >

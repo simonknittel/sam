@@ -1,4 +1,10 @@
-import { type Manufacturer, type Series } from "@/generated/prisma/client";
+"use client";
+
+import {
+  type Manufacturer,
+  type Series,
+  type VariantExternalLink,
+} from "@/generated/prisma/browser";
 import Button from "@/modules/common/components/Button";
 import Modal from "@/modules/common/components/Modal";
 import { api } from "@/trpc/react";
@@ -8,6 +14,7 @@ import { useId, useState, useTransition } from "react";
 import { toast } from "react-hot-toast";
 import { FaPlus, FaSave, FaSpinner, FaTrash } from "react-icons/fa";
 import { createVariant } from "../actions/createVariant";
+import { ExternalService, ExternalServiceDisplayNames } from "../types";
 
 interface Props {
   readonly onRequestClose: () => void;
@@ -24,6 +31,9 @@ export const CreateVariantModal = ({
   const nameField = useId();
   const [tags, setTags] = useState<
     { id: string; key: string; value: string }[]
+  >([]);
+  const [externalLinks, setExternalLinks] = useState<
+    Pick<VariantExternalLink, "id" | "serviceName" | "url">[]
   >([]);
 
   const manufacturer = api.manufacturer.getById.useQuery(
@@ -71,7 +81,7 @@ export const CreateVariantModal = ({
     <Modal
       isOpen={true}
       onRequestClose={onRequestClose}
-      className="w-[480px]"
+      className="w-120"
       heading={<h2>Variante anlegen</h2>}
     >
       <form action={formAction}>
@@ -135,10 +145,10 @@ export const CreateVariantModal = ({
           <option value="FLIGHT_READY">Flight ready</option>
           <option value="NOT_FLIGHT_READY">Nicht flight ready</option>
         </select>
-        <small className="text-neutral-500">optional</small>
+        <small className="text-white/40">optional</small>
 
         <p className="mt-6">
-          Tags <small className="text-neutral-500">optional</small>
+          Tags <small className="text-white/40">optional</small>
         </p>
         <div className="flex flex-col gap-2 mt-2">
           {tags.map((tag) => (
@@ -176,6 +186,68 @@ export const CreateVariantModal = ({
         <Button
           onClick={() =>
             setTags((prev) => [...prev, { id: createId(), key: "", value: "" }])
+          }
+          type="button"
+          variant="tertiary"
+          className="mx-auto"
+        >
+          <FaPlus />
+          Hinzufügen
+        </Button>
+
+        <p className="mt-6">
+          Externe Links <small className="text-white/40">optional</small>
+        </p>
+        <div className="flex flex-col gap-2 mt-2">
+          {externalLinks.map((link) => (
+            <div key={link.id} className="flex gap-1 items-stretch">
+              <select
+                className="p-2 rounded-secondary bg-neutral-900 flex-none min-w-0"
+                name="linkServiceNames[]"
+                defaultValue={link.serviceName}
+              >
+                {Object.entries(ExternalServiceDisplayNames).map(
+                  ([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ),
+                )}
+              </select>
+              <input
+                type="url"
+                className="p-2 rounded-secondary bg-neutral-900 flex-1 min-w-0"
+                name="linkUrls[]"
+                placeholder="https://..."
+                defaultValue={link.url}
+              />
+              <Button
+                onClick={() =>
+                  setExternalLinks((prev) =>
+                    prev.filter(({ id }) => id !== link.id),
+                  )
+                }
+                type="button"
+                variant="tertiary"
+                title="Löschen"
+                iconOnly
+                className="h-auto flex-none w-6"
+              >
+                <FaTrash />
+              </Button>
+            </div>
+          ))}
+        </div>
+        <Button
+          onClick={() =>
+            setExternalLinks((prev) => [
+              ...prev,
+              {
+                id: createId(),
+                serviceName: ExternalService.SPVIEWER,
+                url: "",
+              },
+            ])
           }
           type="button"
           variant="tertiary"
