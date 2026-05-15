@@ -17,15 +17,15 @@ export const StatisticTile = ({
   return (
     <div
       className={clsx(
-        "rounded-primary bg-secondary p-4 flex flex-col items-center text-center",
+        "rounded-primary bg-secondary p-4 flex flex-col items-center justify-center text-center",
         className,
       )}
     >
-      <p className="text-neutral-500">{preLabel}</p>
+      <p className="text-white/20">{preLabel}</p>
       <span className="font-black text-4xl font-mono uppercase">
         {children}
       </span>
-      <p className="text-neutral-500">{label}</p>
+      <p className="text-white/20">{label}</p>
     </div>
   );
 };
