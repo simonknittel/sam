@@ -86,6 +86,20 @@ export default async function Page() {
             verwalten&rdquo; oder &ldquo;Org-Flotte lesen&rdquo; möglich.
           </p>
         </DayItem>
+
+        <DayItem heading="Flotte - Änderungen" badges={["Neu", "Flotte"]}>
+          <p>
+            Eine neue Seite &ldquo;Änderungen&rdquo; zeigt alle Erstellungen und
+            Löschungen von Schiffen in einer tabellarischen Übersicht. Die
+            Änderungen können nach Variant, Eigentümer, Akteur und Typ gefiltert
+            werden.
+          </p>
+
+          <p>
+            Der Zugriff erfordert die Berechtigung &ldquo;Andere Schiffe
+            lesen&rdquo;.
+          </p>
+        </DayItem>
       </Day>
 
       <Day heading="14. Mai 2026">
