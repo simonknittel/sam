@@ -1059,7 +1059,7 @@ export const getShipChanges = cache(
 
       const changes: ShipChangeRow[] = [
         ...createdShips.map((ship) => ({
-          changeDate: ship.createdAt,
+          changeDate: ship.createdAt!,
           changeType: "creation" as const,
           ship,
           actorId: ship.createdById,
