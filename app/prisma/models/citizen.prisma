@@ -48,6 +48,9 @@ model Entity {
   createdRoleAssignmentLevelChanges            RoleAssignmentLevelChange[]          @relation("createdBy")
   createdVariantExternalLinks                  VariantExternalLink[]                @relation("createdBy")
   updatedVariantExternalLinks                  VariantExternalLink[]                @relation("updatedBy")
+  createdShips                                 Ship[]                               @relation("createdBy")
+  updatedShips                                 Ship[]                               @relation("updatedBy")
+  deletedShips                                 Ship[]                               @relation("deletedBy")
 
   // Holds the latest confirmed values
   spectrumId                String?

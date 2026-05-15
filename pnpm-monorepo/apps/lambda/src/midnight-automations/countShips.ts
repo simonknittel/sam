@@ -30,6 +30,7 @@ const getVariantCounts = async (discordIds: string[]) => {
   return await captureAsyncFunc("getVariantCounts", async () => {
     const variantCounts = await prisma.ship.groupBy({
       where: {
+        deletedAt: null,
         owner: {
           accounts: {
             some: {

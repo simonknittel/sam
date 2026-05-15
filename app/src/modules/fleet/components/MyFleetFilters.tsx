@@ -50,6 +50,16 @@ export const MyFleetFilters = ({ className, variantTags }: Props) => {
           resetCursorPagination
         />
 
+        <RadioFilter
+          name="showDeleted"
+          label="Status"
+          items={[
+            { value: "all", label: "Alle", default: true },
+            { value: "deleted", label: "Gelöscht" },
+          ]}
+          resetCursorPagination
+        />
+
         <MultiSelectComboboxFilter
           name="variantTags"
           label="Tags"

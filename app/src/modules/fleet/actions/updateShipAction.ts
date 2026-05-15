@@ -20,6 +20,7 @@ export const updateShipAction: ServerAction = async (formData) => {
     const authentication =
       await requireAuthenticationAction("updateShipAction");
     await authentication.authorizeAction("ship", "manage");
+    if (!authentication.session.entity) throw new Error("Forbidden");
 
     /**
      * Validate the request
@@ -41,16 +42,20 @@ export const updateShipAction: ServerAction = async (formData) => {
         id: true,
         ownerId: true,
         name: true,
+        deletedAt: true,
       },
     });
-    if (!existingShip) throw new Error("Not found");
+    if (existingShip?.deletedAt !== null) throw new Error("Not found");
 
     const updatedShip = await prisma.ship.update({
       where: {
         id,
         ownerId: authentication.session.user.id,
       },
-      data,
+      data: {
+        ...data,
+        updatedById: authentication.session.entity.id,
+      },
       select: {
         id: true,
         ownerId: true,

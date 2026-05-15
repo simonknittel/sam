@@ -101,6 +101,7 @@ export const getOrgFleet = cache(
               id: true,
               ships: {
                 where: {
+                  deletedAt: null,
                   variant: variantWhere,
                 },
                 include: {
@@ -279,12 +280,14 @@ export const getMyFleet = cache(
       flightReady = "all",
       variantTagIds = [],
       sort = "name-asc",
+      showDeleted = "all",
       cursor,
       direction = "next",
     }: {
       flightReady?: "all" | "flight_ready";
       variantTagIds?: string[];
       sort?: MyFleetSort;
+      showDeleted?: "all" | "deleted";
       cursor?: string | null;
       direction?: "next" | "prev";
     } = {}) => {
@@ -293,6 +296,9 @@ export const getMyFleet = cache(
 
       const shipWhere: Record<string, unknown> = {
         ownerId: authentication.session.user.id,
+        ...(showDeleted === "all"
+          ? { deletedAt: null }
+          : { deletedAt: { not: null } }),
         variant: {
           ...(flightReady === "flight_ready"
             ? { status: VariantStatus.FLIGHT_READY }
@@ -382,6 +388,7 @@ export const getMyFleetVariantTags = cache(
     const ships = await prisma.ship.findMany({
       where: {
         ownerId: authentication.session.user.id,
+        deletedAt: null,
       },
       select: {
         variantId: true,
@@ -420,7 +427,11 @@ export const getVariantsBySeriesId = withTrace(
       include: {
         _count: {
           select: {
-            ships: true,
+            ships: {
+              where: {
+                deletedAt: null,
+              },
+            },
           },
         },
         tags: true,
@@ -528,12 +539,14 @@ export const getCitizenFleet = cache(
         flightReady = "all",
         variantTagIds = [],
         sort = "name-asc",
+        showDeleted = "all",
         cursor,
         direction = "next",
       }: {
         flightReady?: "all" | "flight_ready";
         variantTagIds?: string[];
         sort?: CitizenFleetSort;
+        showDeleted?: "all" | "deleted";
         cursor?: string | null;
         direction?: "next" | "prev";
       } = {},
@@ -571,6 +584,9 @@ export const getCitizenFleet = cache(
 
       const shipWhere: Record<string, unknown> = {
         ownerId: { in: userIds },
+        ...(showDeleted === "all"
+          ? { deletedAt: null }
+          : { deletedAt: { not: null } }),
         variant: {
           ...(flightReady === "flight_ready"
             ? { status: VariantStatus.FLIGHT_READY }
@@ -670,7 +686,7 @@ export const getCitizenFleetVariantTags = cache(
     if (userIds.length === 0) return [];
 
     const ships = await prisma.ship.findMany({
-      where: { ownerId: { in: userIds } },
+      where: { ownerId: { in: userIds }, deletedAt: null },
       select: { variantId: true },
     });
 
@@ -820,6 +836,7 @@ export const getVariantShips = cache(
         where: {
           ownerId: { in: userIds },
           variantId,
+          deletedAt: null,
         },
         include: {
           owner: {

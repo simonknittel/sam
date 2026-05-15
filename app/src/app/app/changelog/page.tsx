@@ -57,6 +57,23 @@ export default async function Page() {
   return (
     <div className="flex flex-col gap-4">
       <Day heading="15. Mai 2026">
+        <DayItem heading="Flotte - Schiffe löschen" badges={["Neu", "Flotte"]}>
+          <p>
+            Gelöschte Schiffe werden nicht mehr endgültig aus der Datenbank
+            entfernt, sondern nur als gelöscht markiert. Sie können auf der
+            Seite &ldquo;Meine Schiffe&rdquo; über den Filter
+            &ldquo;Gelöscht&rdquo; wieder angezeigt und berücksichtigt werden.
+          </p>
+
+          <p>
+            Zusätzlich werden nun alle Änderungen an Schiffen mit Zeitstempeln
+            und dem verantwortlichen Benutzer protokolliert (&ldquo;erstellt
+            am&rdquo;, &ldquo;erstellt von&rdquo;, &ldquo;aktualisiert
+            am&rdquo;, &ldquo;aktualisiert von&rdquo;, &ldquo;gelöscht
+            am&rdquo;, &ldquo;gelöscht von&rdquo;).
+          </p>
+        </DayItem>
+
         <DayItem heading="Flotte - Detailseiten" badges={["Neu", "Flotte"]}>
           <p>
             Es gibt nun eine Detailseite für jedes Schiff. Die Seite zeigt den

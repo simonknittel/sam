@@ -21,6 +21,7 @@ export interface MyFleetRow {
   ownerId: Ship["ownerId"];
   variantId: Ship["variantId"];
   name: Ship["name"];
+  deletedAt: Date | null;
   variant: Variant & {
     series: Series & {
       manufacturer: Manufacturer & {
@@ -67,12 +68,16 @@ export const MyFleetTable = ({ className, ships }: Props) => {
             </td>
 
             <td className="overflow-hidden">
-              <EditableShipName
-                key={ship.id}
-                shipId={ship.id}
-                name={ship.name || ""}
-                className="[&>button]:text-left"
-              />
+              {ship.deletedAt ? (
+                ship.name
+              ) : (
+                <EditableShipName
+                  key={ship.id}
+                  shipId={ship.id}
+                  name={ship.name || ""}
+                  className="[&>button]:text-left"
+                />
+              )}
             </td>
 
             <td className="overflow-hidden">
@@ -98,15 +103,17 @@ export const MyFleetTable = ({ className, ships }: Props) => {
             </td>
 
             <td className="overflow-hidden flex justify-center">
-              <DeleteShip
-                ship={{
-                  id: ship.id,
-                  ownerId: ship.ownerId,
-                  variantId: ship.variantId,
-                  name: ship.name,
-                  variant: ship.variant,
-                }}
-              />
+              {!ship.deletedAt && (
+                <DeleteShip
+                  ship={{
+                    id: ship.id,
+                    ownerId: ship.ownerId,
+                    variantId: ship.variantId,
+                    name: ship.name,
+                    variant: ship.variant,
+                  }}
+                />
+              )}
             </td>
           </TRow>
         ))}

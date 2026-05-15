@@ -20,6 +20,7 @@ const loadSearchParams = createLoader({
   ),
   sort: parseAsStringLiteral(["name-asc", "name-desc"]).withDefault("name-asc"),
   variantTags: parseAsArrayOf(parseAsString),
+  showDeleted: parseAsStringLiteral(["all", "deleted"]).withDefault("all"),
   ...cursorPaginationParsers,
 });
 
@@ -32,7 +33,7 @@ export const MyFleetTile = async ({ className, searchParams }: Props) => {
   const authentication = await requireAuthentication();
   if (!(await authentication.authorize("ship", "manage"))) forbidden();
 
-  const { flight_ready, sort, variantTags, cursor, direction } =
+  const { flight_ready, sort, variantTags, showDeleted, cursor, direction } =
     await loadSearchParams(searchParams);
 
   const [{ ships, total, nextCursor, prevCursor }, allVariants] =
@@ -41,6 +42,7 @@ export const MyFleetTile = async ({ className, searchParams }: Props) => {
         flightReady: flight_ready,
         variantTagIds: variantTags?.length ? variantTags : [],
         sort,
+        showDeleted,
         cursor,
         direction,
       }),
