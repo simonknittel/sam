@@ -424,6 +424,7 @@ export const getVariantsBySeriesId = withTrace(
           },
         },
         tags: true,
+        externalLinks: true,
       },
       orderBy: {
         name: "asc",

@@ -26,8 +26,26 @@ model Variant {
   tags                          VariantTag[]
   eventPositionRequiredVariants EventPositionRequiredVariant[]
   shipCounts                    VariantShipCount[]
+  externalLinks                 VariantExternalLink[]
 
   @@unique([name, seriesId])
+}
+
+model VariantExternalLink {
+  id          String  @id @default(cuid(2))
+  variantId   String
+  variant     Variant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  serviceName String
+  url         String
+
+  createdAt   DateTime @default(now())
+  createdById String
+  createdBy   Entity   @relation("createdBy", fields: [createdById], references: [id])
+  updatedAt   DateTime @updatedAt
+  updatedById String
+  updatedBy   Entity   @relation("updatedBy", fields: [updatedById], references: [id])
+
+  @@unique([variantId, serviceName])
 }
 
 model VariantTag {

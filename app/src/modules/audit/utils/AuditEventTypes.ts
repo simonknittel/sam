@@ -8,7 +8,9 @@ export enum AuditEventType {
   SHIP_UPDATED = "SHIP_UPDATED",
   SHIP_DELETED = "SHIP_DELETED",
   VARIANT_CREATED = "VARIANT_CREATED",
+  VARIANT_CREATED_V2 = "VARIANT_CREATED_V2",
   VARIANT_UPDATED = "VARIANT_UPDATED",
+  VARIANT_UPDATED_V2 = "VARIANT_UPDATED_V2",
   VARIANT_DELETED = "VARIANT_DELETED",
   SERIES_UPDATED = "SERIES_UPDATED",
   SERIES_DELETED = "SERIES_DELETED",
@@ -146,6 +148,14 @@ export interface AuditEventDataByType {
     status: string | null;
   };
 
+  [AuditEventType.VARIANT_CREATED_V2]: {
+    variantId: string;
+    seriesId: string;
+    name: string;
+    status: string | null;
+    links: { serviceName: string; url: string }[];
+  };
+
   [AuditEventType.VARIANT_UPDATED]: {
     variantId: string;
     seriesId: string;
@@ -153,6 +163,17 @@ export interface AuditEventDataByType {
     newName: string;
     previousStatus: string | null;
     newStatus: string | null;
+  };
+
+  [AuditEventType.VARIANT_UPDATED_V2]: {
+    variantId: string;
+    seriesId: string;
+    previousName: string;
+    newName: string;
+    previousStatus: string | null;
+    newStatus: string | null;
+    previousLinks: { serviceName: string; url: string }[];
+    newLinks: { serviceName: string; url: string }[];
   };
 
   [AuditEventType.VARIANT_DELETED]: {
@@ -749,6 +770,24 @@ export const AuditEventDefinitions: {
       `Variant created: "${data.name}" (series: ${data.seriesId})`,
   },
 
+  [AuditEventType.VARIANT_CREATED_V2]: {
+    type: AuditEventType.VARIANT_CREATED_V2,
+    data: {
+      variantId: "string",
+      seriesId: "string",
+      name: "string",
+      status: "FLIGHT_READY",
+      links: [
+        {
+          serviceName: "SPVIEWER",
+          url: "https://example.com",
+        },
+      ],
+    },
+    message: (data) =>
+      `Variant created: "${data.name}" (series: ${data.seriesId}, links: ${data.links.length})`,
+  },
+
   [AuditEventType.VARIANT_UPDATED]: {
     type: AuditEventType.VARIANT_UPDATED,
     data: {
@@ -761,6 +800,32 @@ export const AuditEventDefinitions: {
     },
     message: (data) =>
       `Variant updated: "${data.previousName}" → "${data.newName}"`,
+  },
+
+  [AuditEventType.VARIANT_UPDATED_V2]: {
+    type: AuditEventType.VARIANT_UPDATED_V2,
+    data: {
+      variantId: "string",
+      seriesId: "string",
+      previousName: "string",
+      newName: "string",
+      previousStatus: "FLIGHT_READY",
+      newStatus: "NOT_FLIGHT_READY",
+      previousLinks: [
+        {
+          serviceName: "SPVIEWER",
+          url: "https://example.com",
+        },
+      ],
+      newLinks: [
+        {
+          serviceName: "SPVIEWER",
+          url: "https://example.com",
+        },
+      ],
+    },
+    message: (data) =>
+      `Variant updated: "${data.previousName}" → "${data.newName}" (links: ${data.previousLinks.length} → ${data.newLinks.length})`,
   },
 
   [AuditEventType.VARIANT_DELETED]: {

@@ -1,6 +1,10 @@
 "use client";
 
-import { type Variant, type VariantTag } from "@/generated/prisma/browser";
+import {
+  type Variant,
+  type VariantExternalLink,
+  type VariantTag,
+} from "@/generated/prisma/browser";
 import { useAction } from "@/modules/common/components/Actions";
 import Button from "@/modules/common/components/Button";
 import clsx from "clsx";
@@ -14,7 +18,10 @@ const UpdateVariantModal = dynamic(() =>
 
 interface Props {
   readonly className?: string;
-  readonly variant: Pick<Variant & { tags: VariantTag[] }, "id" | "tags">;
+  readonly variant: Pick<
+    Variant & { tags: VariantTag[]; externalLinks: VariantExternalLink[] },
+    "id" | "tags" | "externalLinks"
+  >;
 }
 
 export const UpdateVariantButton = ({ className, variant }: Props) => {
