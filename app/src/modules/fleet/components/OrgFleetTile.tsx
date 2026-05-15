@@ -1,5 +1,7 @@
 import { CursorPaginationControls } from "@/modules/common/CursorPagination/CursorPaginationControls";
 import { cursorPaginationParsers } from "@/modules/common/CursorPagination/cursorPaginationParsers";
+import { ScrambleIn } from "@/modules/common/components/ScrambleIn";
+import { StatisticTile } from "@/modules/common/components/StatisticTile";
 import {
   createLoader,
   parseAsArrayOf,
@@ -19,7 +21,7 @@ const loadSearchParams = createLoader({
     "name-desc",
     "count-asc",
     "count-desc",
-  ]).withDefault("name-asc"),
+  ]).withDefault("count-desc"),
   variantTags: parseAsArrayOf(parseAsString),
   ...cursorPaginationParsers,
 });
@@ -33,17 +35,32 @@ export const OrgFleetTile = async ({ className, searchParams }: Props) => {
   const { flight_ready, sort, variantTags, cursor, direction } =
     await loadSearchParams(searchParams);
 
-  const { fleet, totalUsers, nextCursor, prevCursor } = await getOrgFleet({
-    flightReady: flight_ready,
-    variantTagIds: variantTags?.length ? variantTags : [],
-    sort,
-    cursor,
-    direction,
-  });
+  const { fleet, totalUsers, totalShips, nextCursor, prevCursor } =
+    await getOrgFleet({
+      flightReady: flight_ready,
+      variantTagIds: variantTags?.length ? variantTags : [],
+      sort,
+      cursor,
+      direction,
+    });
 
   return (
     <section className={className}>
-      <p className="text-neutral-500 text-sm mb-1">{totalUsers} Citizen</p>
+      <section className="flex flex-wrap gap-0.5 mb-0.5">
+        <StatisticTile label="Schiffe" className="flex-1">
+          <ScrambleIn
+            text={totalShips.toLocaleString("de-de")}
+            characters="1234567890."
+          />
+        </StatisticTile>
+
+        <StatisticTile label="Citizen" className="flex-1">
+          <ScrambleIn
+            text={totalUsers.toLocaleString("de-de")}
+            characters="1234567890."
+          />
+        </StatisticTile>
+      </section>
 
       <div className="rounded-primary bg-neutral-800/50 p-4 overflow-x-auto">
         {fleet.length === 0 ? (

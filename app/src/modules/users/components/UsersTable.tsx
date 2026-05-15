@@ -25,7 +25,7 @@ interface Props {
 
 export const UsersTable = ({ className, users }: Props) => {
   return (
-    <Table className={clsx(TABLE_MIN_WIDTH, className)}>
+    <Table className={className} tableClassName={TABLE_MIN_WIDTH}>
       <THead className={GRID_COLS}>
         <th>Discord ID</th>
         <th>User ID</th>

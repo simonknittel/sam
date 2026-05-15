@@ -50,7 +50,8 @@ export const SystemLogTable = async ({ className, searchParams }: Props) => {
         </div>
       ) : (
         <Table
-          className={clsx(TABLE_MIN_WIDTH, "bg-secondary rounded-primary p-4")}
+          className="bg-secondary rounded-primary p-4"
+          tableClassName={TABLE_MIN_WIDTH}
         >
           <THead className={GRID_CLASSES}>
             <th>Date</th>

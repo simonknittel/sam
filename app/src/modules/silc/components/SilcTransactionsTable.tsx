@@ -32,7 +32,7 @@ export const SilcTransactionsTable = ({
   showDelete,
 }: Props) => {
   return (
-    <Table className={clsx(TABLE_MIN_WIDTH, className)}>
+    <Table className={className} tableClassName={TABLE_MIN_WIDTH}>
       <THead className={GRID_COLS}>
         <th>Datum</th>
         <th>Empfänger</th>

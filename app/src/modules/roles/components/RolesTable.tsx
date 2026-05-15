@@ -85,7 +85,7 @@ export const RolesTable = async ({ className, searchParams }: Props) => {
 
   return (
     <section className={clsx("p-4 bg-secondary rounded-primary", className)}>
-      <Table className={clsx(TABLE_MIN_WIDTH)}>
+      <Table tableClassName={TABLE_MIN_WIDTH}>
         <THead className={GRID_COLS}>
           <th>Rolle</th>
 

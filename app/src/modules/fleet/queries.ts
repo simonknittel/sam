@@ -51,7 +51,7 @@ export const getOrgFleet = cache(
     async ({
       flightReady = "all",
       variantTagIds = [],
-      sort = "name-asc",
+      sort = "count-desc",
       cursor,
       direction = "next",
     }: {
@@ -70,7 +70,13 @@ export const getOrgFleet = cache(
         .map((membership) => membership.citizen.discordId)
         .filter(Boolean) as string[];
       if (discordIds.length === 0)
-        return { fleet: [], totalUsers: 0, nextCursor: null, prevCursor: null };
+        return {
+          fleet: [],
+          totalUsers: 0,
+          totalShips: 0,
+          nextCursor: null,
+          prevCursor: null,
+        };
 
       // Build where clause for variants (shared between ship subquery and all-variants query)
       const variantWhere: Record<string, unknown> = {
@@ -233,10 +239,12 @@ export const getOrgFleet = cache(
       const hasPrevPage = direction === "prev" ? hasMore : !!cursor;
 
       const totalUsers = new Set(allShips.map((ship) => ship.ownerId)).size;
+      const totalShips = allShips.length;
 
       return {
         fleet,
         totalUsers,
+        totalShips,
         nextCursor:
           hasNextPage && fleet.length > 0
             ? fleet[fleet.length - 1].variant.id
