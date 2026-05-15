@@ -1,14 +1,13 @@
 import { RadioFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/RadioFilter";
 
-export const Filters = () => {
+export const SilcTransactionsFilters = () => {
   return (
     <>
       <RadioFilter
-        name="status"
-        label="Status"
+        name="showDeleted"
+        label="Transaktionen"
         items={[
-          { value: "active", label: "Aktiv", default: true },
-          { value: "inactive", label: "Inaktiv" },
+          { value: "alle", label: "Alle", default: true },
           { value: "deleted", label: "Gelöscht" },
         ]}
         resetCursorPagination

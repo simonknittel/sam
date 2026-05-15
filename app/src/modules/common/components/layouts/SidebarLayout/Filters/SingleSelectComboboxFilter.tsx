@@ -1,12 +1,12 @@
 "use client";
 
+import { cursorPaginationParsers } from "@/modules/common/CursorPagination/cursorPaginationParsers";
 import { Combobox } from "@base-ui/react/combobox";
 import clsx from "clsx";
 import { useTopLoader } from "nextjs-toploader";
 import { parseAsString, useQueryState, useQueryStates } from "nuqs";
 import { useCallback, useEffect, useId, useTransition } from "react";
 import { FaCheck, FaChevronDown } from "react-icons/fa";
-import { cursorPaginationParsers } from "../../CursorPagination/cursorPaginationParsers";
 
 interface Item {
   readonly value: string;
