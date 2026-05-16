@@ -50,12 +50,14 @@ export const getOrgFleet = cache(
       flightReady = "all",
       variantTagIds = [],
       sort = "count-desc",
+      searchQuery,
       cursor,
       direction = "next",
     }: {
       flightReady?: "all" | "flight_ready";
       variantTagIds?: string[];
       sort?: OrgFleetSort;
+      searchQuery?: string | null;
       cursor?: string | null;
       direction?: "next" | "prev";
     }) => {
@@ -83,6 +85,9 @@ export const getOrgFleet = cache(
           : {}),
         ...(variantTagIds.length > 0
           ? { tags: { some: { id: { in: variantTagIds } } } }
+          : {}),
+        ...(searchQuery
+          ? { name: { contains: searchQuery, mode: "insensitive" } }
           : {}),
       };
 

@@ -5,6 +5,7 @@ import {
 import clsx from "clsx";
 import {
   createLoader,
+  parseAsString,
   parseAsStringLiteral,
   type SearchParams,
 } from "nuqs/server";
@@ -20,6 +21,7 @@ const loadSearchParams = createLoader({
     "name-asc",
     "name-desc",
   ]).withDefault("createdAt-desc"),
+  q: parseAsString,
 });
 
 interface Props {
@@ -28,11 +30,18 @@ interface Props {
 }
 
 export const UsersTile = async ({ className, searchParams }: Props) => {
-  const { sort } = await loadSearchParams(searchParams);
+  const { sort, q } = await loadSearchParams(searchParams);
 
   const users = await getUsersWithEntities();
 
-  const sortedUsers = users.toSorted((a, b) => {
+  const filteredUsers = q
+    ? users.filter((user) => {
+        const searchQuery = q.toLowerCase();
+        return user.entity?.handle?.toLowerCase().includes(searchQuery);
+      })
+    : users;
+
+  const sortedUsers = filteredUsers.toSorted((a, b) => {
     switch (sort) {
       case "createdAt-desc":
         return sortDescAndNullLast(a.user.createdAt, b.user.createdAt);

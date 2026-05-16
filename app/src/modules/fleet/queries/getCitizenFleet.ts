@@ -23,6 +23,7 @@ export const getCitizenFleet = cache(
         variantTagIds = [],
         sort = "name-asc",
         showDeleted = "all",
+        searchQuery,
         cursor,
         direction = "next",
       }: {
@@ -30,6 +31,7 @@ export const getCitizenFleet = cache(
         variantTagIds?: string[];
         sort?: CitizenFleetSort;
         showDeleted?: "all" | "deleted";
+        searchQuery?: string | null;
         cursor?: string | null;
         direction?: "next" | "prev";
       } = {},
@@ -76,6 +78,9 @@ export const getCitizenFleet = cache(
             : {}),
           ...(variantTagIds.length > 0
             ? { tags: { some: { id: { in: variantTagIds } } } }
+            : {}),
+          ...(searchQuery
+            ? { name: { contains: searchQuery, mode: "insensitive" } }
             : {}),
         },
       };

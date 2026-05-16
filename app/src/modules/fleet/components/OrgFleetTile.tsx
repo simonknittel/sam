@@ -23,6 +23,7 @@ const loadSearchParams = createLoader({
     "count-desc",
   ]).withDefault("count-desc"),
   variantTags: parseAsArrayOf(parseAsString),
+  q: parseAsString,
   ...cursorPaginationParsers,
 });
 
@@ -32,7 +33,7 @@ interface Props {
 }
 
 export const OrgFleetTile = async ({ className, searchParams }: Props) => {
-  const { flight_ready, sort, variantTags, cursor, direction } =
+  const { flight_ready, sort, variantTags, q, cursor, direction } =
     await loadSearchParams(searchParams);
 
   const { fleet, totalUsers, totalShips, nextCursor, prevCursor } =
@@ -40,6 +41,7 @@ export const OrgFleetTile = async ({ className, searchParams }: Props) => {
       flightReady: flight_ready,
       variantTagIds: variantTags?.length ? variantTags : [],
       sort,
+      searchQuery: q,
       cursor,
       direction,
     });

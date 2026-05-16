@@ -21,6 +21,7 @@ export const getMyFleet = cache(
       variantTagIds = [],
       sort = "name-asc",
       showDeleted = "all",
+      searchQuery,
       cursor,
       direction = "next",
     }: {
@@ -28,6 +29,7 @@ export const getMyFleet = cache(
       variantTagIds?: string[];
       sort?: MyFleetSort;
       showDeleted?: "all" | "deleted";
+      searchQuery?: string | null;
       cursor?: string | null;
       direction?: "next" | "prev";
     } = {}) => {
@@ -45,6 +47,9 @@ export const getMyFleet = cache(
             : {}),
           ...(variantTagIds.length > 0
             ? { tags: { some: { id: { in: variantTagIds } } } }
+            : {}),
+          ...(searchQuery
+            ? { name: { contains: searchQuery, mode: "insensitive" } }
             : {}),
         },
       };

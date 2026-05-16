@@ -2,6 +2,7 @@ import type { VariantTag } from "@/generated/prisma/browser";
 import { MultiSelectComboboxFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/MultiSelectComboboxFilter";
 import { RadioFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/RadioFilter";
 import { SingleSelectComboboxFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/SingleSelectComboboxFilter";
+import { TextSearchFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/TextSearchFilter";
 
 interface Props {
   readonly variantTags: VariantTag[];
@@ -16,6 +17,8 @@ export const OrgFleetFilters = ({ variantTags }: Props) => {
 
   return (
     <>
+      <TextSearchFilter label="Name" resetCursorPagination />
+
       <RadioFilter
         name="flight_ready"
         label="Flight ready"
@@ -38,8 +41,8 @@ export const OrgFleetFilters = ({ variantTags }: Props) => {
         name="sort"
         label="Sortierung"
         items={[
-          { value: "name-asc", label: "Name A – Z" },
-          { value: "name-desc", label: "Name Z – A" },
+          { value: "name-asc", label: "Name A - Z" },
+          { value: "name-desc", label: "Name Z - A" },
           { value: "count-desc", label: "Anzahl ↓" },
           { value: "count-asc", label: "Anzahl ↑" },
         ]}

@@ -96,7 +96,7 @@ export const MultiSelectComboboxFilter = ({
 
   return (
     <div className={clsx("bg-secondary p-2 corners-secondary", className)}>
-      <p className="text-sm text-neutral-500 font-mono uppercase">{label}</p>
+      <p className="text-sm text-white/40 font-mono uppercase">{label}</p>
 
       <Combobox.Root
         items={items.sort((a, b) => a.label.localeCompare(b.label))}
