@@ -6,7 +6,8 @@
     "@sam-monorepo/database": "workspace:*",
     "algoliasearch": "4.27.0",
     "csv": "6.5.1",
-    "date-fns": "4.1.0"
+    "date-fns": "4.1.0",
+    "fast-xml-parser": "5.8.0"
   },
   "devDependencies": {
     "@types/node": "24.12.2",

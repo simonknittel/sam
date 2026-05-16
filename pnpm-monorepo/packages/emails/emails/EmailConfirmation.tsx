@@ -10,7 +10,6 @@ import {
   Tailwind,
   Text,
 } from "react-email";
-import * as React from "react";
 
 export interface EmailConfirmationProps {
   baseUrl: string;
