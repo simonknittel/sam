@@ -63,7 +63,7 @@
   };
   ```
 
-- Use `clsx` when combining CSS classes. Don't use string concatenation or similar.
+- Always use `clsx` when combining CSS classes. Don't use string concatenation or similar. Also, don't use ternary operators for this.
 - Look out for any other Next.js and React-related best practices.
 
 ## TypeScript
