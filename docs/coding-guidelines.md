@@ -101,11 +101,12 @@
 
 - Look out for any other TypeScript-related best practices.
 
-## Database design
+## Database design / Prisma ORM Client
 
 - Prefer using a timestamp over a simple boolean
 - Add `created_by`, `created_at`, `updated_by`, `updated_at`, `deleted_by` and `deleted_at` if possible
 - Add an id column to tables which even could work only using a combination of two columns as unique identifier
+- Always import TypeScript types for Prisma schema models from the generated Prisma client instead of redefining them
 - Look out for any other database design-related best practices.
 
 ## Visual design / CSS / UI / UX / accessibility
