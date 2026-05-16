@@ -37,7 +37,7 @@ export default async function Page() {
           </p>
         </DayItem>
 
-        <DayItem heading="Suchen-Filter" badges={["Neu", "Changelog"]}>
+        <DayItem heading="Changelog - Jahr" badges={["Neu", "Changelog"]}>
           <p>Der Changelog ist nun nach Jahr aufgeteilt.</p>
         </DayItem>
       </Day>
