@@ -1,5 +1,5 @@
 import { AppsContextProvider } from "@/modules/apps/components/AppsContext";
-import { getAppLinks } from "@/modules/apps/utils/queries";
+import { getAppLinks } from "@/modules/apps/utils/queries/getAppLinks";
 import { AdminEnabler } from "@/modules/auth/components/AdminEnabler";
 import { SessionProviderContainer } from "@/modules/auth/components/SessionProviderContainer";
 import { requireAuthenticationPage } from "@/modules/auth/server";

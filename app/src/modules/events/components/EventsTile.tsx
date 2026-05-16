@@ -6,7 +6,7 @@ import {
   parseAsStringLiteral,
   type SearchParams,
 } from "nuqs/server";
-import { getEvents } from "../queries";
+import { getEvents } from "../queries/getEvents";
 import { Event } from "./Event";
 
 const loadSearchParams = createLoader({

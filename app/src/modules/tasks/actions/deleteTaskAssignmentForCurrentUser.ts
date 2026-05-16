@@ -7,7 +7,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { getTaskById } from "../queries";
+import { getTaskById } from "../queries/getTaskById";
 import { isTaskUpdatable } from "../utils/isTaskUpdatable";
 
 const schema = z.object({

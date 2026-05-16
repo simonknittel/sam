@@ -2,7 +2,7 @@ import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { Link } from "@/modules/common/components/Link";
 import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
 import { formatDate } from "@/modules/common/utils/formatDate";
-import type { ShipChangeRow } from "@/modules/fleet/queries";
+import type { ShipChangeRow } from "@/modules/fleet/queries/getShipChanges";
 import { clsx } from "clsx";
 import { VariantWithLogo } from "./VariantWithLogo";
 

@@ -1,5 +1,5 @@
 import { Tile } from "@/modules/common/components/Tile";
-import type { StatisticChartData } from "@/modules/statistics/queries";
+import type { StatisticChartData } from "@/modules/statistics/utils/chartData";
 import clsx from "clsx";
 import { StatisticChart } from "./StatisticChart";
 

@@ -6,7 +6,7 @@ import { PhaseCollection } from "@/modules/profit-distribution/components/PhaseC
 import { PhaseCompleted } from "@/modules/profit-distribution/components/PhaseCompleted";
 import { PhasePayout } from "@/modules/profit-distribution/components/PhasePayout";
 import { PhasePayoutPreparation } from "@/modules/profit-distribution/components/PhasePayoutPreparation";
-import { getProfitDistributionCycleById } from "@/modules/profit-distribution/queries";
+import { getProfitDistributionCycleById } from "@/modules/profit-distribution/queries/getProfitDistributionCycleById";
 import { CyclePhase } from "@/modules/profit-distribution/utils/getCurrentPhase";
 import { notFound } from "next/navigation";
 import { FaCog } from "react-icons/fa";

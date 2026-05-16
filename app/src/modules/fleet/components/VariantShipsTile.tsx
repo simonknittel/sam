@@ -1,6 +1,6 @@
 import { Tile } from "@/modules/common/components/Tile";
 import { CursorPaginationControls } from "@/modules/common/CursorPagination/CursorPaginationControls";
-import { getVariantShips } from "../queries";
+import { getVariantShips } from "../queries/getVariantShips";
 import { VariantShipsTable } from "./VariantShipsTable";
 
 interface Props {

@@ -1,10 +1,10 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { Flow } from "@/modules/career/components/Flow";
-import { getMyReadableFlows } from "@/modules/career/queries";
-import { getCitizensGroupedByVisibleRoles } from "@/modules/citizen/queries";
+import { getMyReadableFlows } from "@/modules/career/queries/getMyReadableFlows";
+import { getCitizensGroupedByVisibleRoles } from "@/modules/citizen/queries/getCitizensGroupedByVisibleRoles";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
-import { getRoles } from "@/modules/roles/queries";
+import { getRoles } from "@/modules/roles/queries/getRoles";
 import {
   getMyAssignedRoles,
   getVisibleRoles,

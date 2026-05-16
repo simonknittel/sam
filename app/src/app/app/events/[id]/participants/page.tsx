@@ -3,7 +3,7 @@ import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/Suspe
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
 import { searchParamsNextjsToURLSearchParams } from "@/modules/common/utils/searchParamsNextjsToURLSearchParams";
 import { ParticipantsTab } from "@/modules/events/components/ParticipantsTab";
-import { getEventById } from "@/modules/events/queries";
+import { getEventById } from "@/modules/events/queries/getEventById";
 import { notFound } from "next/navigation";
 
 type Params = Promise<{

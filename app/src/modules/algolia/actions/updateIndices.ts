@@ -2,7 +2,7 @@
 
 import { prisma } from "@/db";
 import { log } from "@/modules/logging";
-import { getOrganizations } from "@/modules/organizations/queries";
+import { getOrganizations } from "@/modules/organizations/queries/getOrganizations";
 import { getTracer } from "@/modules/tracing/utils/getTracer";
 import { SpanStatusCode } from "@opentelemetry/api";
 import { unstable_rethrow } from "next/navigation";

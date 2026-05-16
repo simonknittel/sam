@@ -9,7 +9,7 @@ import { getDiscordAvatar } from "@/modules/discord/utils/getDiscordAvatar";
 import { getGuildMember } from "@/modules/discord/utils/getGuildMember";
 import { log } from "@/modules/logging";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
-import { getUserById } from "@/modules/users/queries";
+import { getUserById } from "@/modules/users/queries/getUserById";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import {
   getServerSession,

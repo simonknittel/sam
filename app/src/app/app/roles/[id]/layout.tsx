@@ -1,7 +1,7 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SubNavigation } from "@/modules/common/components/SubNavigation";
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
-import { getRoleById } from "@/modules/roles/queries";
+import { getRoleById } from "@/modules/roles/queries/getRoleById";
 import { notFound } from "next/navigation";
 import { FaHome, FaLock, FaUsers } from "react-icons/fa";
 import { TbHierarchy3 } from "react-icons/tb";

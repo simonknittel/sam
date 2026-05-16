@@ -2,7 +2,8 @@ import { SilcSettingKey } from "@/generated/prisma/client";
 import { ScrambleIn } from "@/modules/common/components/ScrambleIn";
 import { StatisticTile } from "@/modules/common/components/StatisticTile";
 import clsx from "clsx";
-import { getSilcBalanceOfAllCitizens, getSilcSetting } from "../queries";
+import { getSilcBalanceOfAllCitizens } from "../queries/getSilcBalanceOfAllCitizens";
+import { getSilcSetting } from "../queries/getSilcSetting";
 
 interface Props {
   readonly className?: string;

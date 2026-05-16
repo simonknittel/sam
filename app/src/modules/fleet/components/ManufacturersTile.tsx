@@ -4,7 +4,7 @@ import { Link } from "@/modules/common/components/Link";
 import { Tile } from "@/modules/common/components/Tile";
 import clsx from "clsx";
 import Image from "next/image";
-import { getManufacturers } from "../queries";
+import { getManufacturers } from "../queries/getManufacturers";
 import { CreateManufacturereButton } from "./CreateManufacturerButton";
 import { DeleteManufacturerButton } from "./DeleteManufacturerButton";
 

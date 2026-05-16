@@ -1,7 +1,7 @@
 import { prisma } from "@/db";
 import type { Entity } from "@/generated/prisma/client";
 import { revalidatePath } from "next/cache";
-import { getSilcTransactionsOfAllCitizensWithoutAuthorization } from "../queries";
+import { getSilcTransactionsOfAllCitizensWithoutAuthorization } from "../queries/getSilcTransactionsOfAllCitizensWithoutAuthorization";
 
 export const updateCitizensSilcBalances = async (
   citizenIds: Entity["id"][],

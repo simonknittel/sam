@@ -1,4 +1,4 @@
-import { getExternalAppBySlug } from "@/modules/apps/utils/queries";
+import { getExternalAppBySlug } from "@/modules/apps/utils/queries/getExternalAppBySlug";
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { MaxWidthContent } from "@/modules/common/components/layouts/MaxWidthContent";
 import { Link } from "@/modules/common/components/Link";

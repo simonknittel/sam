@@ -3,7 +3,7 @@ import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/Suspe
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
 import { EditableManufacturerName } from "@/modules/fleet/components/EditableManufacturerName";
 import { SeriesTile } from "@/modules/fleet/components/SeriesTile";
-import { getManufacturerById } from "@/modules/fleet/queries";
+import { getManufacturerById } from "@/modules/fleet/queries/getManufacturerById";
 import clsx from "clsx";
 import { notFound } from "next/navigation";
 

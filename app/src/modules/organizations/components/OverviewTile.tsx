@@ -1,5 +1,5 @@
 import { RSIButton } from "@/modules/common/components/RSIButton";
-import { getOrganizationById } from "@/modules/organizations/queries";
+import { getOrganizationById } from "@/modules/organizations/queries/getOrganizationById";
 import clsx from "clsx";
 import Image from "next/image";
 

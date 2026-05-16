@@ -2,7 +2,7 @@ import { requireAuthenticationPage } from "@/modules/auth/server";
 import { MaxWidthContent } from "@/modules/common/components/layouts/MaxWidthContent";
 import { Link } from "@/modules/common/components/Link";
 import { Tile } from "@/modules/common/components/Tile";
-import { getDocuments } from "@/modules/documents/utils/queries";
+import { getDocuments } from "@/modules/documents/utils/queries/getDocuments";
 import Image from "next/image";
 
 export default async function Page() {

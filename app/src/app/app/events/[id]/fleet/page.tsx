@@ -2,7 +2,7 @@ import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
 import { FleetTab } from "@/modules/events/components/FleetTab";
-import { getEventById } from "@/modules/events/queries";
+import { getEventById } from "@/modules/events/queries/getEventById";
 import { notFound } from "next/navigation";
 
 type Params = Promise<{

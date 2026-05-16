@@ -3,7 +3,7 @@ import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { OrgFleetFilters } from "@/modules/fleet/components/OrgFleetFilters";
 import { OrgFleetTile } from "@/modules/fleet/components/OrgFleetTile";
-import { getOrgFleetVariantTags } from "@/modules/fleet/queries";
+import { getOrgFleetVariantTags } from "@/modules/fleet/queries/getOrgFleetVariantTags";
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {

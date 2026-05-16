@@ -1,6 +1,6 @@
 "use client";
 
-import type { getProfitDistributionCycleById } from "../queries";
+import type { getProfitDistributionCycleById } from "../queries/getProfitDistributionCycleById";
 import { CyclePhase } from "../utils/getCurrentPhase";
 import { Phase } from "./Phase";
 

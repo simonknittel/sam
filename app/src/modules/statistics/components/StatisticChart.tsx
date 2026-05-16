@@ -16,7 +16,7 @@ import * as echarts from "echarts/core";
 import { CanvasRenderer } from "echarts/renderers";
 import type { CallbackDataParams } from "echarts/types/dist/shared";
 import { useEffect, useRef } from "react";
-import type { StatisticChartData } from "../queries";
+import type { StatisticChartData } from "../utils/chartData";
 
 interface Props {
   readonly chart: StatisticChartData;

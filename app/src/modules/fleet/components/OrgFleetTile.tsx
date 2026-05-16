@@ -9,7 +9,7 @@ import {
   parseAsStringLiteral,
   type SearchParams,
 } from "nuqs/server";
-import { getOrgFleet } from "../queries";
+import { getOrgFleet } from "../queries/getOrgFleet";
 import { FleetTable } from "./FleetTable";
 
 const loadSearchParams = createLoader({

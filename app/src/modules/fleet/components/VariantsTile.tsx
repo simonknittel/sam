@@ -8,7 +8,7 @@ import { Tile } from "@/modules/common/components/Tile";
 import clsx from "clsx";
 import { FaRegCheckCircle } from "react-icons/fa";
 import { FaRegCircleXmark } from "react-icons/fa6";
-import { getVariantsBySeriesId } from "../queries";
+import { getVariantsBySeriesId } from "../queries/getVariantsBySeriesId";
 import { CreateVariantButton } from "./CreateVariantButton";
 import { DeleteVariantButton } from "./DeleteVariantButton";
 import { UpdateVariantButton } from "./UpdateVariantButton";

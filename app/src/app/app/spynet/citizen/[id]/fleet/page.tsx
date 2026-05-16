@@ -1,10 +1,10 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
-import { getCitizenById } from "@/modules/citizen/queries";
+import { getCitizenById } from "@/modules/citizen/queries/getCitizenById";
 import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { CitizenFleetTile } from "@/modules/fleet/components/CitizenFleetTile";
 import { MyFleetFilters } from "@/modules/fleet/components/MyFleetFilters";
-import { getCitizenFleetVariantTags } from "@/modules/fleet/queries";
+import { getCitizenFleetVariantTags } from "@/modules/fleet/queries/getCitizenFleetVariantTags";
 import { type Metadata } from "next";
 import { notFound } from "next/navigation";
 

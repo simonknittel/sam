@@ -10,7 +10,7 @@ import {
   parseAsStringLiteral,
   type SearchParams,
 } from "nuqs/server";
-import { getMyFleet } from "../queries";
+import { getMyFleet } from "../queries/getMyFleet";
 import { AssignShip } from "./AssignShip";
 import { MyFleetTable } from "./MyFleetTable";
 

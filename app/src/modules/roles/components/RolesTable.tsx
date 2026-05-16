@@ -12,7 +12,7 @@ import {
   parseAsStringLiteral,
   type SearchParams,
 } from "nuqs/server";
-import { getRoles } from "../queries";
+import { getRoles } from "../queries/getRoles";
 
 const TABLE_MIN_WIDTH = "min-w-210";
 const GRID_COLS =

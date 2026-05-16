@@ -3,7 +3,7 @@ import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { MyFleetFilters } from "@/modules/fleet/components/MyFleetFilters";
 import { MyFleetTile } from "@/modules/fleet/components/MyFleetTile";
-import { getMyFleetVariantTags } from "@/modules/fleet/queries";
+import { getMyFleetVariantTags } from "@/modules/fleet/queries/getMyFleetVariantTags";
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {

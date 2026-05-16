@@ -1,5 +1,5 @@
 import { requireAuthentication } from "@/modules/auth/server";
-import { getCitizens } from "@/modules/citizen/queries";
+import { getCitizens } from "@/modules/citizen/queries/getCitizens";
 import { getLastSeenAt } from "@/modules/common/utils/getLastSeenAt";
 import {
   getCurrentPageFromSearchParams,

@@ -8,7 +8,7 @@ import {
   parseAsStringLiteral,
   type SearchParams,
 } from "nuqs/server";
-import { getUsersWithEntities } from "../queries";
+import { getUsersWithEntities } from "../queries/getUsersWithEntities";
 import { UsersTable } from "./UsersTable";
 
 const loadSearchParams = createLoader({

@@ -1,6 +1,6 @@
 import { Link } from "@/modules/common/components/Link";
 import clsx from "clsx";
-import { getMyAssignedTasks } from "../queries";
+import { getMyAssignedTasks } from "../queries/getMyAssignedTasks";
 import { Task } from "./Task";
 
 interface Props {

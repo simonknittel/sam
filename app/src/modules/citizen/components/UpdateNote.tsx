@@ -4,7 +4,7 @@ import {
 } from "@/generated/prisma/client";
 import { UpdateNoteModal } from "@/modules/citizen/components/notes/UpdateNoteModal";
 import getLatestNoteAttributes from "@/modules/common/utils/getLatestNoteAttributes";
-import { getAllNoteTypes } from "@/modules/spynet/queries";
+import { getAllNoteTypes } from "@/modules/spynet/queries/getAllNoteTypes";
 import { getCreatableClassificationLevelsDeduped } from "@/modules/spynet/utils/getAllClassificationLevels";
 
 interface Props {

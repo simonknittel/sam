@@ -1,5 +1,5 @@
 import { Link } from "@/modules/common/components/Link";
-import { getEvents } from "@/modules/events/queries";
+import { getEvents } from "@/modules/events/queries/getEvents";
 import clsx from "clsx";
 import { Event } from "./Event";
 

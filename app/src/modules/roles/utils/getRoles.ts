@@ -3,7 +3,7 @@ import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
-import { getRoles } from "../queries";
+import { getRoles } from "../queries/getRoles";
 
 export const getVisibleRoles = cache(
   withTrace("getVisibleRoles", async () => {

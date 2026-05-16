@@ -1,6 +1,6 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { CitizenNavigation } from "@/modules/citizen/components/CitizenNavigation";
-import { getCitizenById } from "@/modules/citizen/queries";
+import { getCitizenById } from "@/modules/citizen/queries/getCitizenById";
 import { MaxWidthContent } from "@/modules/common/components/layouts/MaxWidthContent";
 import { Link } from "@/modules/common/components/Link";
 import { notFound } from "next/navigation";

@@ -4,7 +4,7 @@ import { ScrambleIn } from "@/modules/common/components/ScrambleIn";
 import { StatisticTile } from "@/modules/common/components/StatisticTile";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import clsx from "clsx";
-import type { getProfitDistributionCycleById } from "../queries";
+import type { getProfitDistributionCycleById } from "../queries/getProfitDistributionCycleById";
 import { CyclePhase } from "../utils/getCurrentPhase";
 import { Phase } from "./Phase";
 import { ToggleMyCededButton } from "./ToggleMyCededButton";

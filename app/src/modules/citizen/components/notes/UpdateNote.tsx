@@ -3,7 +3,7 @@ import {
   type EntityLogAttribute,
 } from "@/generated/prisma/client";
 import getLatestNoteAttributes from "@/modules/common/utils/getLatestNoteAttributes";
-import { getAllNoteTypes } from "@/modules/spynet/queries";
+import { getAllNoteTypes } from "@/modules/spynet/queries/getAllNoteTypes";
 import { getCreatableClassificationLevelsDeduped } from "@/modules/spynet/utils/getAllClassificationLevels";
 import { UpdateNoteModal } from "./UpdateNoteModal";
 

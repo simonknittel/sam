@@ -2,13 +2,11 @@ import { requireAuthentication } from "@/modules/auth/server";
 import Avatar from "@/modules/common/components/Avatar";
 import { Link } from "@/modules/common/components/Link";
 import { ScrambleIn } from "@/modules/common/components/ScrambleIn";
-import { getPenaltyEntriesOfCurrentUser } from "@/modules/penalty-points/queries";
+import { getPenaltyEntriesOfCurrentUser } from "@/modules/penalty-points/queries/getPenaltyEntriesOfCurrentUser";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import { getMyAssignedRoles } from "@/modules/roles/utils/getRoles";
-import {
-  getMonthlySalaryOfCurrentCitizen,
-  getSilcBalanceOfCurrentCitizen,
-} from "@/modules/silc/queries";
+import { getMonthlySalaryOfCurrentCitizen } from "@/modules/silc/queries/getMonthlySalaryOfCurrentCitizen";
+import { getSilcBalanceOfCurrentCitizen } from "@/modules/silc/queries/getSilcBalanceOfCurrentCitizen";
 import clsx from "clsx";
 import { forbidden } from "next/navigation";
 import { FaPiggyBank } from "react-icons/fa";

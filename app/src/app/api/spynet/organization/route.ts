@@ -7,7 +7,7 @@ import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import { scrapeOrganizationLogo } from "@/modules/common/utils/scrapeOrganizationLogo";
 import { log } from "@/modules/logging";
-import { getOrganizationBySpectrumId } from "@/modules/organizations/queries";
+import { getOrganizationBySpectrumId } from "@/modules/organizations/queries/getOrganizationBySpectrumId";
 import { NextResponse } from "next/server";
 import { serializeError } from "serialize-error";
 import { z } from "zod";

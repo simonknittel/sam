@@ -2,12 +2,12 @@ import { prisma } from "@/db";
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
 import { LineupTab } from "@/modules/events/components/LineupTab";
-import { getEventById } from "@/modules/events/queries";
+import { getEventById } from "@/modules/events/queries/getEventById";
 import { getEventCitizens } from "@/modules/events/utils/getEventCitizens";
 import { isAllowedToManagePositions } from "@/modules/events/utils/isAllowedToManagePositions";
 import { isEventUpdatable } from "@/modules/events/utils/isEventUpdatable";
 import { isLineupVisible } from "@/modules/events/utils/isLineupVisible";
-import { getMyFleet } from "@/modules/fleet/queries";
+import { getMyFleet } from "@/modules/fleet/queries/getMyFleet";
 import { forbidden, notFound } from "next/navigation";
 
 type Params = Promise<{

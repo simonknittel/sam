@@ -1,5 +1,5 @@
 import { AppsOverview } from "@/modules/apps/components/AppsOverview";
-import { getAppLinks } from "@/modules/apps/utils/queries";
+import { getAppLinks } from "@/modules/apps/utils/queries/getAppLinks";
 import { requireAuthenticationPage } from "@/modules/auth/server";
 
 export const revalidate = 86400; // 24 hours
