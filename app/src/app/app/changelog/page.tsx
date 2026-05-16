@@ -57,6 +57,26 @@ export default async function Page() {
   return (
     <div className="flex flex-col gap-4">
       <Day heading="15. Mai 2026">
+        <DayItem heading="Blaupausen" badges={["Neu", "Blaupausen"]}>
+          <p>
+            Eine neue App &ldquo;Blaupausen&rdquo; ermöglicht es, alle
+            herstellbaren Blaupausen nach Spielversion einzusehen und den
+            eigenen Freischaltstatus pro Blaupause anzuzeigen. Jeder Citizen
+            kann seine eigenen Blaupausen freischalten und sperren.
+          </p>
+
+          <p>
+            Die Blaupausen können nach Spielversion, Freischaltstatus und Name
+            gefiltert sowie sortiert werden. Auf der Detailseite wird eine Liste
+            aller Citizens angezeigt, die die Blaupause freigeschaltet haben.
+          </p>
+
+          <p>
+            Der Zugriff erfordert die Berechtigung &ldquo;Blaupausen
+            lesen&rdquo;.
+          </p>
+        </DayItem>
+
         <DayItem heading="Flotte - Schiffe löschen" badges={["Neu", "Flotte"]}>
           <p>
             Gelöschte Schiffe werden nicht mehr endgültig aus der Datenbank

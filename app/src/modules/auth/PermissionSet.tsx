@@ -68,7 +68,10 @@ export interface PermissionSet {
     | "logAnalyzer"
     | "profitDistributionCycle"
     | "globalStatistics"
-    | "systemLog";
+    | "systemLog"
+    | "blueprint"
+    | "myBlueprint"
+    | "otherBlueprint";
   operation:
     | "create"
     | "read"

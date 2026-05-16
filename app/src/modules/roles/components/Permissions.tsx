@@ -16,6 +16,7 @@ import { useActionState } from "react";
 import {
   FaCalendarDay,
   FaCog,
+  FaHammer,
   FaPiggyBank,
   FaSave,
   FaSpinner,
@@ -25,6 +26,7 @@ import { IoDocuments } from "react-icons/io5";
 import { MdTaskAlt, MdWorkspaces } from "react-icons/md";
 import { RiSpyFill } from "react-icons/ri";
 import { updateRolePermissions } from "../actions/updateRolePermissions";
+import { BlueprintsTab } from "./tabs/BlueprintsTab";
 import { CitizenTab } from "./tabs/CitizenTab";
 import { DocumentsTab } from "./tabs/DocumentsTab";
 import EventsTab from "./tabs/EventsTab";
@@ -62,6 +64,10 @@ export const Permissions = ({
 
       <TabsProvider initialActiveTab="citizen">
         <TabList>
+          <Tab id="blueprints">
+            <FaHammer /> Blueprints
+          </Tab>
+
           <Tab id="citizen">
             <RiSpyFill /> Citizen
           </Tab>
@@ -99,6 +105,7 @@ export const Permissions = ({
           </Tab>
         </TabList>
 
+        <BlueprintsTab />
         <CitizenTab
           noteTypes={noteTypes}
           classificationLevels={classificationLevels}

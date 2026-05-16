@@ -33,6 +33,13 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
       "Verziere deinen Avatar mit dem offiziellen Sinister Incorporated-Rahmen",
   },
   {
+    name: "Blueprints",
+    href: "/app/blueprints",
+    description:
+      "Übersicht aller verfügbaren Blaupausen und dein Freischaltstatus",
+    permissionStrings: ["blueprint;read"],
+  },
+  {
     name: "Changelog",
     href: "/app/changelog",
     imageSrc: changelogScreenshot,

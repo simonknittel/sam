@@ -19,12 +19,12 @@ import {
   AlertDialogTrigger,
 } from "@/modules/common/components/AlertDialog";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
+import { Link } from "@/modules/common/components/Link";
 import { Markdown } from "@/modules/common/components/Markdown";
 import { Note } from "@/modules/common/components/Note";
 import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
 import clsx from "clsx";
 import Image from "next/image";
-import Link from "next/link";
 import { useId } from "react";
 import { FaCog, FaMinus, FaPlus, FaSpinner, FaTrash } from "react-icons/fa";
 import { useRolesContext } from "./RolesContext";

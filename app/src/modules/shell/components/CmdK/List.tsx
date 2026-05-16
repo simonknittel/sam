@@ -10,6 +10,7 @@ import { AiFillAppstore } from "react-icons/ai";
 import {
   FaCamera,
   FaChartLine,
+  FaHammer,
   FaHome,
   FaLock,
   FaPiggyBank,
@@ -88,6 +89,7 @@ export const List = () => {
     careerTeamRead,
     globalStatisticsRead,
     systemLogRead,
+    blueprintRead,
   ] = [
     authentication.authorize("citizen", "read"),
     authentication.authorize("organization", "read"),
@@ -127,6 +129,7 @@ export const List = () => {
     ]),
     authentication.authorize("globalStatistics", "read"),
     authentication.authorize("systemLog", "read"),
+    authentication.authorize("blueprint", "read"),
   ];
   const careerRead =
     careerSecurityRead ||
@@ -150,6 +153,7 @@ export const List = () => {
     penaltyEntryCreate,
     taskRead,
     systemLogRead,
+    blueprintRead,
   };
 
   const menuItems: MenuItem[] = useMemo(
@@ -184,6 +188,14 @@ export const List = () => {
         icon: <FaCamera />,
         type: MenuItemType.Link,
         href: "/app/avatar-creator",
+      },
+      {
+        id: "blueprints",
+        label: "Blueprints",
+        icon: <FaHammer />,
+        type: MenuItemType.Link,
+        href: "/app/blueprints",
+        authKey: "blueprintRead",
       },
       {
         id: "changelog",

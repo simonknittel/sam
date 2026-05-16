@@ -93,6 +93,8 @@ export enum AuditEventType {
   EMAIL_VERIFIED = "EMAIL_VERIFIED",
   EMAIL_CONFIRMATION_REQUESTED = "EMAIL_CONFIRMATION_REQUESTED",
   EMAIL_VERIFIED_VIA_TOKEN = "EMAIL_VERIFIED_VIA_TOKEN",
+  BLUEPRINT_UNLOCKED = "BLUEPRINT_UNLOCKED",
+  BLUEPRINT_LOCKED = "BLUEPRINT_LOCKED",
 }
 
 export interface AuditEventDataByType {
@@ -665,6 +667,18 @@ export interface AuditEventDataByType {
 
   [AuditEventType.EMAIL_VERIFIED_VIA_TOKEN]: {
     userId: string;
+  };
+
+  [AuditEventType.BLUEPRINT_UNLOCKED]: {
+    blueprintId: string;
+    citizenId: string;
+    itemName: string;
+  };
+
+  [AuditEventType.BLUEPRINT_LOCKED]: {
+    blueprintId: string;
+    citizenId: string;
+    itemName: string;
   };
 }
 
@@ -1701,5 +1715,27 @@ export const AuditEventDefinitions: {
       userId: "string",
     },
     message: (data) => `Email verified via token for user ${data.userId}`,
+  },
+
+  [AuditEventType.BLUEPRINT_UNLOCKED]: {
+    type: AuditEventType.BLUEPRINT_UNLOCKED,
+    data: {
+      blueprintId: "string",
+      citizenId: "string",
+      itemName: "string",
+    },
+    message: (data) =>
+      `Blueprint unlocked: "${data.itemName}" (blueprint: ${data.blueprintId}, citizen: ${data.citizenId})`,
+  },
+
+  [AuditEventType.BLUEPRINT_LOCKED]: {
+    type: AuditEventType.BLUEPRINT_LOCKED,
+    data: {
+      blueprintId: "string",
+      citizenId: "string",
+      itemName: "string",
+    },
+    message: (data) =>
+      `Blueprint locked: "${data.itemName}" (blueprint: ${data.blueprintId}, citizen: ${data.citizenId})`,
   },
 };

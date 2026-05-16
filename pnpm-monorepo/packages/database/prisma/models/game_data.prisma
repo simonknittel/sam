@@ -42,4 +42,6 @@ model BlueprintUnlock {
   blueprintId String
   blueprint   Blueprint @relation(fields: [blueprintId], references: [id], onDelete: Cascade)
   createdAt   DateTime  @default(now())
+
+  @@unique([citizenId, blueprintId])
 }
