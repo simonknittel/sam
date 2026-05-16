@@ -24,8 +24,9 @@ import { Note } from "@/modules/common/components/Note";
 import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
 import clsx from "clsx";
 import Image from "next/image";
+import Link from "next/link";
 import { useId } from "react";
-import { FaMinus, FaPlus, FaSpinner, FaTrash } from "react-icons/fa";
+import { FaCog, FaMinus, FaPlus, FaSpinner, FaTrash } from "react-icons/fa";
 import { useRolesContext } from "./RolesContext";
 
 interface Props {
@@ -87,6 +88,8 @@ export const SingleRoleBadge = ({
         value: role.id,
       },
     ]);
+  const canManage =
+    authentication && authentication.authorize("role", "manage");
 
   const showLevelProgress =
     role.maxLevel && citizenId && (citizenLevel ?? 0) < role.maxLevel;
@@ -159,7 +162,22 @@ export const SingleRoleBadge = ({
 
           <div>
             <p className="text-white/40 font-mono uppercase text-xs">Rolle</p>
-            <p className="text-lg font-bold font-mono uppercase">{role.name}</p>
+
+            <div className="flex gap-2 items-center">
+              <p className="text-lg font-bold font-mono uppercase">
+                {role.name}
+              </p>
+
+              {canManage && (
+                <Link
+                  href={`/app/roles/${role.id}`}
+                  title="Einstellungen"
+                  className="text-sm text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300"
+                >
+                  <FaCog />
+                </Link>
+              )}
+            </div>
           </div>
         </div>
 
