@@ -1,4 +1,4 @@
-import { getExternalAppBySlug } from "@/modules/apps/utils/queries";
+import { getExternalAppBySlug } from "@/modules/apps/utils/queries/getExternalAppBySlug";
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { IframeLayout } from "@/modules/common/components/layouts/IframeLayout";
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";

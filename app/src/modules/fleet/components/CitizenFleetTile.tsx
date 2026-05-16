@@ -9,7 +9,7 @@ import {
   parseAsStringLiteral,
   type SearchParams,
 } from "nuqs/server";
-import { getCitizenFleet } from "../queries";
+import { getCitizenFleet } from "../queries/getCitizenFleet";
 import { CitizenFleetTable } from "./CitizenFleetTable";
 
 const loadSearchParams = createLoader({
@@ -18,7 +18,9 @@ const loadSearchParams = createLoader({
   ),
   sort: parseAsStringLiteral(["name-asc", "name-desc"]).withDefault("name-asc"),
   variantTags: parseAsArrayOf(parseAsString),
+  manufacturerIds: parseAsArrayOf(parseAsString),
   showDeleted: parseAsStringLiteral(["all", "deleted"]).withDefault("all"),
+  q: parseAsString,
   ...cursorPaginationParsers,
 });
 
@@ -33,16 +35,26 @@ export const CitizenFleetTile = async ({
   citizenId,
   searchParams,
 }: Props) => {
-  const { flight_ready, sort, variantTags, showDeleted, cursor, direction } =
-    await loadSearchParams(searchParams);
+  const {
+    flight_ready,
+    sort,
+    variantTags,
+    manufacturerIds,
+    showDeleted,
+    q,
+    cursor,
+    direction,
+  } = await loadSearchParams(searchParams);
 
   const { ships, total, nextCursor, prevCursor } = await getCitizenFleet(
     citizenId,
     {
       flightReady: flight_ready,
       variantTagIds: variantTags?.length ? variantTags : [],
+      manufacturerIds: manufacturerIds?.length ? manufacturerIds : [],
       sort,
       showDeleted,
+      searchQuery: q,
       cursor,
       direction,
     },

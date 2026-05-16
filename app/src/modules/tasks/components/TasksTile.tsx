@@ -5,7 +5,7 @@ import {
   parseAsStringLiteral,
   type SearchParams,
 } from "nuqs/server";
-import { getTasks } from "../queries";
+import { getTasks } from "../queries/getTasks";
 import { Task } from "./Task";
 
 const loadSearchParams = createLoader({

@@ -10,7 +10,7 @@ import {
   parseAsStringLiteral,
   type SearchParams,
 } from "nuqs/server";
-import { getMyFleet } from "../queries";
+import { getMyFleet } from "../queries/getMyFleet";
 import { AssignShip } from "./AssignShip";
 import { MyFleetTable } from "./MyFleetTable";
 
@@ -20,7 +20,9 @@ const loadSearchParams = createLoader({
   ),
   sort: parseAsStringLiteral(["name-asc", "name-desc"]).withDefault("name-asc"),
   variantTags: parseAsArrayOf(parseAsString),
+  manufacturerIds: parseAsArrayOf(parseAsString),
   showDeleted: parseAsStringLiteral(["all", "deleted"]).withDefault("all"),
+  q: parseAsString,
   ...cursorPaginationParsers,
 });
 
@@ -33,16 +35,26 @@ export const MyFleetTile = async ({ className, searchParams }: Props) => {
   const authentication = await requireAuthentication();
   if (!(await authentication.authorize("ship", "manage"))) forbidden();
 
-  const { flight_ready, sort, variantTags, showDeleted, cursor, direction } =
-    await loadSearchParams(searchParams);
+  const {
+    flight_ready,
+    sort,
+    variantTags,
+    manufacturerIds,
+    showDeleted,
+    q,
+    cursor,
+    direction,
+  } = await loadSearchParams(searchParams);
 
   const [{ ships, total, nextCursor, prevCursor }, allVariants] =
     await Promise.all([
       getMyFleet({
         flightReady: flight_ready,
         variantTagIds: variantTags?.length ? variantTags : [],
+        manufacturerIds: manufacturerIds?.length ? manufacturerIds : [],
         sort,
         showDeleted,
+        searchQuery: q,
         cursor,
         direction,
       }),

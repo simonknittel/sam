@@ -2,7 +2,7 @@
 
 import { ScrambleIn } from "@/modules/common/components/ScrambleIn";
 import { StatisticTile } from "@/modules/common/components/StatisticTile";
-import type { getProfitDistributionCycleById } from "../queries";
+import type { getProfitDistributionCycleById } from "../queries/getProfitDistributionCycleById";
 import { CyclePhase } from "../utils/getCurrentPhase";
 import { Phase } from "./Phase";
 

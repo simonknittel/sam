@@ -8,7 +8,7 @@ import {
   parseAsStringLiteral,
   type SearchParams,
 } from "nuqs/server";
-import { getPenaltyEntriesPaginated } from "../queries";
+import { getPenaltyEntriesPaginated } from "../queries/getPenaltyEntriesPaginated";
 import { CreatePenaltyEntryButton } from "./CreatePenaltyEntry/CreatePenaltyEntryButton";
 import { PenaltyEntriesTable } from "./PenaltyEntriesTable";
 

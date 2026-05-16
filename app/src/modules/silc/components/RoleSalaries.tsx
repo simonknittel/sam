@@ -1,7 +1,8 @@
 import { SilcSettingKey } from "@/generated/prisma/client";
 import { Tile } from "@/modules/common/components/Tile";
 import clsx from "clsx";
-import { getRoleSalaries, getSilcSetting } from "../queries";
+import { getRoleSalaries } from "../queries/getRoleSalaries";
+import { getSilcSetting } from "../queries/getSilcSetting";
 import { RoleSalariesClient } from "./RoleSalariesClient";
 
 interface Props {

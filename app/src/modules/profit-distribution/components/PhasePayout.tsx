@@ -4,7 +4,7 @@ import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { ScrambleIn } from "@/modules/common/components/ScrambleIn";
 import { StatisticTile } from "@/modules/common/components/StatisticTile";
 import { formatDate } from "@/modules/common/utils/formatDate";
-import type { getProfitDistributionCycleById } from "../queries";
+import type { getProfitDistributionCycleById } from "../queries/getProfitDistributionCycleById";
 import { CyclePhase } from "../utils/getCurrentPhase";
 import { PayoutState } from "../utils/getMyPayoutStatus";
 import { Phase } from "./Phase";

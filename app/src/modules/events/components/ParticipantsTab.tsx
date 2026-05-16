@@ -6,7 +6,7 @@ import type {
 import { requireAuthentication } from "@/modules/auth/server";
 import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
 import { RolesCell } from "@/modules/citizen/components/RolesCell";
-import { getCitizenByDiscordId } from "@/modules/citizen/queries";
+import { getCitizenByDiscordId } from "@/modules/citizen/queries/getCitizenByDiscordId";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { Link } from "@/modules/common/components/Link";
 import { Tooltip } from "@/modules/common/components/Tooltip";

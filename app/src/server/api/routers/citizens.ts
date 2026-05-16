@@ -1,8 +1,6 @@
-import {
-  getCitizenPopoverById,
-  getCitizens,
-  getCitizensGroupedByVisibleRoles,
-} from "@/modules/citizen/queries";
+import { getCitizenPopoverById } from "@/modules/citizen/queries/getCitizenPopoverById";
+import { getCitizens } from "@/modules/citizen/queries/getCitizens";
+import { getCitizensGroupedByVisibleRoles } from "@/modules/citizen/queries/getCitizensGroupedByVisibleRoles";
 import { log } from "@/modules/logging";
 import { TRPCError } from "@trpc/server";
 import { serializeError } from "serialize-error";

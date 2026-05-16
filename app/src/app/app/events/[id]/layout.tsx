@@ -1,6 +1,6 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { Navigation } from "@/modules/events/components/Navigation";
-import { getEventById } from "@/modules/events/queries";
+import { getEventById } from "@/modules/events/queries/getEventById";
 import { notFound } from "next/navigation";
 
 export default async function Layout({

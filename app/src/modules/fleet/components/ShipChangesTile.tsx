@@ -7,7 +7,7 @@ import {
   parseAsStringLiteral,
   type SearchParams,
 } from "nuqs/server";
-import { getShipChanges } from "../queries";
+import { getShipChanges } from "../queries/getShipChanges";
 import { ShipChangesTable } from "./ShipChangesTable";
 
 const loadSearchParams = createLoader({

@@ -1,6 +1,6 @@
 import { Actions } from "@/modules/common/components/Actions";
 import { Tile } from "@/modules/common/components/Tile";
-import { getAllNoteTypes } from "@/modules/spynet/queries";
+import { getAllNoteTypes } from "@/modules/spynet/queries/getAllNoteTypes";
 import Create from "./Create";
 import Delete from "./Delete";
 import Update from "./Update";

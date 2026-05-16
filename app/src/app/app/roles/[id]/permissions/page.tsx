@@ -1,11 +1,10 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
-import { getAllFlows } from "@/modules/career/queries";
+import { getAllFlows } from "@/modules/career/queries/getAllFlows";
 import { PermissionsTab } from "@/modules/roles/components/PermissionsTab";
-import { getRoleById, getRoles } from "@/modules/roles/queries";
-import {
-  getAllClassificationLevels,
-  getAllNoteTypes,
-} from "@/modules/spynet/queries";
+import { getRoleById } from "@/modules/roles/queries/getRoleById";
+import { getRoles } from "@/modules/roles/queries/getRoles";
+import { getAllClassificationLevels } from "@/modules/spynet/queries/getAllClassificationLevels";
+import { getAllNoteTypes } from "@/modules/spynet/queries/getAllNoteTypes";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 

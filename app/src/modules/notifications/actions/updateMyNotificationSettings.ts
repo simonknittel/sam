@@ -6,7 +6,7 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { NOTIFICATION_TYPES } from "../utils/NotificationTypes";
-import { getMyNotificationSettings } from "../utils/queries";
+import { getMyNotificationSettings } from "../utils/queries/getMyNotificationSettings";
 
 export interface Change {
   citizenId: string;

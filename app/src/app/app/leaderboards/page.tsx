@@ -1,6 +1,6 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { Hero } from "@/modules/common/components/Hero";
-import { getLeaderboard } from "@/modules/leaderboards/queries";
+import { getLeaderboard } from "@/modules/leaderboards/queries/getLeaderboard";
 import clsx from "clsx";
 import { type Metadata } from "next";
 

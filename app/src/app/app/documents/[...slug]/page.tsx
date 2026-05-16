@@ -1,7 +1,7 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { IframeLayout } from "@/modules/common/components/layouts/IframeLayout";
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
-import { getDocuments } from "@/modules/documents/utils/queries";
+import { getDocuments } from "@/modules/documents/utils/queries/getDocuments";
 import { notFound } from "next/navigation";
 
 export const revalidate = 86400; // 24 hours

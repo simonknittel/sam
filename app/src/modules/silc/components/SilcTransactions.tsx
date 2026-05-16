@@ -2,7 +2,7 @@ import type { Entity } from "@/generated/prisma/client";
 import { requireAuthentication } from "@/modules/auth/server";
 import { Tile } from "@/modules/common/components/Tile";
 import clsx from "clsx";
-import { getSilcTransactionsOfCitizen } from "../queries";
+import { getSilcTransactionsOfCitizen } from "../queries/getSilcTransactionsOfCitizen";
 import { SilcTransactionsTable } from "./SilcTransactionsTable";
 
 interface Props {

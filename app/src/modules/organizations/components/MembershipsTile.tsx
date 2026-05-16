@@ -5,7 +5,7 @@ import { DeleteOrganizationMembership } from "@/modules/spynet/components/Delete
 import clsx from "clsx";
 import { forbidden } from "next/navigation";
 import { FaExternalLinkAlt, FaUsers } from "react-icons/fa";
-import { getActiveOrganizationMemberships } from "../queries";
+import { getActiveOrganizationMemberships } from "../queries/getActiveOrganizationMemberships";
 import { CreateMembership } from "./CreateMembership";
 
 interface Props {

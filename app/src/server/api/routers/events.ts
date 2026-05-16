@@ -1,4 +1,4 @@
-import { getAllEvents } from "@/modules/events/queries";
+import { getAllEvents } from "@/modules/events/queries/getAllEvents";
 import { log } from "@/modules/logging";
 import { TRPCError } from "@trpc/server";
 import { serializeError } from "serialize-error";

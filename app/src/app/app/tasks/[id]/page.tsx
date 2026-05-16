@@ -1,7 +1,7 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
 import { Overview } from "@/modules/tasks/components/Overview";
-import { getTaskById } from "@/modules/tasks/queries";
+import { getTaskById } from "@/modules/tasks/queries/getTaskById";
 import {
   isAllowedToDeleteTask,
   isAllowedToManageTask,

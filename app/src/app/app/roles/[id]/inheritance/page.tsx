@@ -1,7 +1,8 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { InheritanceForm } from "@/modules/roles/components/InheritanceForm";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
-import { getRoleById, getRoles } from "@/modules/roles/queries";
+import { getRoleById } from "@/modules/roles/queries/getRoleById";
+import { getRoles } from "@/modules/roles/queries/getRoles";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 

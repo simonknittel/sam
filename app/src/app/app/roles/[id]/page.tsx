@@ -1,6 +1,6 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { OverviewTab } from "@/modules/roles/components/OverviewTab";
-import { getRoleById } from "@/modules/roles/queries";
+import { getRoleById } from "@/modules/roles/queries/getRoleById";
 import { notFound } from "next/navigation";
 
 export default async function Page({ params }: PageProps<"/app/roles/[id]">) {

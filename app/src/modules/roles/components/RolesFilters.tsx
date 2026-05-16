@@ -1,8 +1,11 @@
 import { SingleSelectComboboxFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/SingleSelectComboboxFilter";
+import { TextSearchFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/TextSearchFilter";
 
 export const RolesFilters = () => {
   return (
     <>
+      <TextSearchFilter label="Name" />
+
       <SingleSelectComboboxFilter
         name="filter"
         label="Filter"
@@ -19,8 +22,8 @@ export const RolesFilters = () => {
         name="sort"
         label="Sortierung"
         items={[
-          { value: "name-asc", label: "Name A – Z" },
-          { value: "name-desc", label: "Name Z – A" },
+          { value: "name-asc", label: "Name A - Z" },
+          { value: "name-desc", label: "Name Z - A" },
           { value: "inherits-desc", label: "Anzahl Vererbungen ↓" },
           { value: "inherits-asc", label: "Anzahl Vererbungen ↑" },
           { value: "citizen-desc", label: "Anzahl Citizen ↓" },

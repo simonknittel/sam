@@ -3,7 +3,7 @@ import { Actions } from "@/modules/common/components/Actions";
 import { Link } from "@/modules/common/components/Link";
 import { Tile } from "@/modules/common/components/Tile";
 import clsx from "clsx";
-import { getSeriesByManufacturerId } from "../queries";
+import { getSeriesByManufacturerId } from "../queries/getSeriesByManufacturerId";
 import { CreateSeriesButton } from "./CreateSeriesButton";
 import { DeleteSeriesButton } from "./DeleteSeriesButton";
 

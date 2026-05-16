@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import { createLoader, parseAsString, type SearchParams } from "nuqs/server";
-import { getProfitDistributionCycles } from "../queries";
+import { getProfitDistributionCycles } from "../queries/getProfitDistributionCycles";
 import { ProfitDistributionCycleExcerpt } from "./ProfitDistributionCycleExcerpt";
 
 const loadSearchParams = createLoader({

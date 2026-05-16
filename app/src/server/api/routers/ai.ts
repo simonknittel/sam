@@ -1,7 +1,7 @@
 import { env } from "@/env";
 import { isOpenAIEnabled } from "@/modules/common/utils/isOpenAIEnabled";
 import { log } from "@/modules/logging";
-import { getRoles } from "@/modules/roles/queries";
+import { getRoles } from "@/modules/roles/queries/getRoles";
 import { TRPCError } from "@trpc/server";
 import OpenAI from "openai";
 import { type ChatCompletionMessageParam } from "openai/resources/index.mjs";

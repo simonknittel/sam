@@ -6,11 +6,11 @@ import {
   type Role,
   type Upload,
 } from "@/generated/prisma/client";
-import { getAllFlows } from "@/modules/career/queries";
+import { getAllFlows } from "@/modules/career/queries/getAllFlows";
 import { Link } from "@/modules/common/components/Link";
 import clsx from "clsx";
 import Image from "next/image";
-import { getRoles } from "../queries";
+import { getRoles } from "../queries/getRoles";
 import { PermissionCheckbox } from "./PermissionCheckbox";
 import { PermissionMatrixForm } from "./PermissionMatrixForm";
 import { PermissionsProvider } from "./PermissionsContext";

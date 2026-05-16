@@ -1,6 +1,6 @@
 import { Actions } from "@/modules/common/components/Actions";
 import { Tile } from "@/modules/common/components/Tile";
-import { getAllClassificationLevels } from "@/modules/spynet/queries";
+import { getAllClassificationLevels } from "@/modules/spynet/queries/getAllClassificationLevels";
 import Create from "./Create";
 import Delete from "./Delete";
 import Update from "./Update";

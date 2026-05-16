@@ -13,7 +13,7 @@ import {
   AlertDialogTrigger,
 } from "@/modules/common/components/AlertDialog";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
-import type { getProfitDistributionCycleById } from "@/modules/profit-distribution/queries";
+import type { getProfitDistributionCycleById } from "@/modules/profit-distribution/queries/getProfitDistributionCycleById";
 import clsx from "clsx";
 import { useId } from "react";
 import { FaSpinner } from "react-icons/fa";

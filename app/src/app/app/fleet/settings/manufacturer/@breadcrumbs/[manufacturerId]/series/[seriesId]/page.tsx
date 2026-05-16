@@ -1,5 +1,5 @@
 import { Link } from "@/modules/common/components/Link";
-import { getSeriesAndManufacturerById } from "@/modules/fleet/queries";
+import { getSeriesAndManufacturerById } from "@/modules/fleet/queries/getSeriesAndManufacturerById";
 import { notFound } from "next/navigation";
 
 type Params = Promise<

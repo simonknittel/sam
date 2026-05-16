@@ -1,7 +1,7 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { NotificationSettings } from "@/modules/notifications/components/NotificationSettings";
 import { WebPushSubscriberClient } from "@/modules/notifications/components/WebPushSubscriberClient";
-import { getMyNotificationSettings } from "@/modules/notifications/utils/queries";
+import { getMyNotificationSettings } from "@/modules/notifications/utils/queries/getMyNotificationSettings";
 import { type Metadata } from "next";
 import { notFound } from "next/navigation";
 

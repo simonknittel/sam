@@ -20,7 +20,7 @@ import { StatisticTile } from "@/modules/common/components/StatisticTile";
 import { useId, useState, type KeyboardEventHandler } from "react";
 import { FaSpinner } from "react-icons/fa";
 import { startPayout } from "../actions/startPayout";
-import type { getProfitDistributionCycleById } from "../queries";
+import type { getProfitDistributionCycleById } from "../queries/getProfitDistributionCycleById";
 import { getAuecPerSilc } from "../utils/getAuecPerSilc";
 import { CyclePhase } from "../utils/getCurrentPhase";
 import { CitizenTable } from "./CitizenTable";

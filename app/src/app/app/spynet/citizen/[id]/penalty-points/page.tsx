@@ -1,5 +1,5 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
-import { getCitizenById } from "@/modules/citizen/queries";
+import { getCitizenById } from "@/modules/citizen/queries/getCitizenById";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
 import { EntriesOfCitizenTable } from "@/modules/penalty-points/components/EntriesOfCitizenTable";

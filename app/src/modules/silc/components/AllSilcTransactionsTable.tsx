@@ -8,7 +8,7 @@ import {
   parseAsStringLiteral,
   type SearchParams,
 } from "nuqs/server";
-import { getSilcTransactionsPaginated } from "../queries";
+import { getSilcTransactionsPaginated } from "../queries/getSilcTransactionsPaginated";
 import { SilcTransactionsTable } from "./SilcTransactionsTable";
 
 const loadSearchParams = createLoader({

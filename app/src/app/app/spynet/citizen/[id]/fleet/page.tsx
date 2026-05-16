@@ -1,10 +1,11 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
-import { getCitizenById } from "@/modules/citizen/queries";
+import { getCitizenById } from "@/modules/citizen/queries/getCitizenById";
 import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { CitizenFleetTile } from "@/modules/fleet/components/CitizenFleetTile";
 import { MyFleetFilters } from "@/modules/fleet/components/MyFleetFilters";
-import { getCitizenFleetVariantTags } from "@/modules/fleet/queries";
+import { getCitizenFleetVariantTags } from "@/modules/fleet/queries/getCitizenFleetVariantTags";
+import { getManufacturers } from "@/modules/fleet/queries/getManufacturers";
 import { type Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -25,10 +26,20 @@ export default async function Page({
   const citizen = await getCitizenById(citizenId);
   if (!citizen) notFound();
 
-  const variantTags = await getCitizenFleetVariantTags(citizenId);
+  const [variantTags, manufacturers] = await Promise.all([
+    getCitizenFleetVariantTags(citizenId),
+    getManufacturers(),
+  ]);
 
   return (
-    <SidebarLayout sidebar={<MyFleetFilters variantTags={variantTags} />}>
+    <SidebarLayout
+      sidebar={
+        <MyFleetFilters
+          variantTags={variantTags}
+          manufacturers={manufacturers}
+        />
+      }
+    >
       <SuspenseWithErrorBoundaryTile>
         <CitizenFleetTile citizenId={citizenId} searchParams={searchParams} />
       </SuspenseWithErrorBoundaryTile>

@@ -7,7 +7,7 @@ import {
   parseAsStringLiteral,
   type SearchParams,
 } from "nuqs/server";
-import { getEntriesOfCitizen } from "../queries";
+import { getEntriesOfCitizen } from "../queries/getEntriesOfCitizen";
 import { CreatePenaltyEntryButton } from "./CreatePenaltyEntry/CreatePenaltyEntryButton";
 import { PenaltyEntriesTable } from "./PenaltyEntriesTable";
 

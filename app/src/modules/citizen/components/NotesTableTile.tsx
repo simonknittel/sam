@@ -11,10 +11,8 @@ import {
   sortDescAndNullLast,
 } from "@/modules/common/utils/sorting";
 import Pagination from "@/modules/spynet/components/Pagination";
-import {
-  getAllClassificationLevels,
-  getAllNoteTypes,
-} from "@/modules/spynet/queries";
+import { getAllClassificationLevels } from "@/modules/spynet/queries/getAllClassificationLevels";
+import { getAllNoteTypes } from "@/modules/spynet/queries/getAllNoteTypes";
 import type { EntityLogConfirmationState } from "@/types";
 import clsx from "clsx";
 import isAllowedToRead from "../utils/isAllowedToRead";

@@ -6,7 +6,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { getTaskById } from "../queries";
+import { getTaskById } from "../queries/getTaskById";
 import {
   isAllowedToDeleteTask,
   isAllowedToManageTask,

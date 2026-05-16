@@ -1,0 +1,45 @@
+model GameVersion {
+  id            String   @id @default(cuid(2))
+  /// Example: 4.8.0
+  version       String
+  /// Example: LIVE
+  channel       String
+  createdAt     DateTime @default(now())
+  dataUpdatedAt DateTime
+  items         Item[]
+
+  @@unique([channel, version])
+}
+
+model Item {
+  id            String      @id @default(cuid(2))
+  gameVersionId String
+  gameVersion   GameVersion @relation(fields: [gameVersionId], references: [id], onDelete: Cascade)
+  /// Example: behr_lmg_ballistic_01_mag
+  key           String
+  /// Example: FS-9 Magazine (75 cap)
+  name          String?
+  /// Example: Item Type: Magazine\nCapacity: 75\n\nThis magazine for the Behring FS-9 LMG holds seventy five 5mm rounds.
+  description   String?
+  blueprints    Blueprint[]
+
+  @@unique([gameVersionId, key])
+}
+
+model Blueprint {
+  id          String            @id @default(cuid(2))
+  /// Example: BP_CRAFT_behr_lmg_ballistic_01_mag
+  originalKey String
+  itemId      String
+  item        Item              @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  unlocks     BlueprintUnlock[]
+}
+
+model BlueprintUnlock {
+  id          String    @id @default(cuid(2))
+  citizenId   String
+  citizen     Entity    @relation("citizen", fields: [citizenId], references: [id], onDelete: Cascade)
+  blueprintId String
+  blueprint   Blueprint @relation(fields: [blueprintId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+}

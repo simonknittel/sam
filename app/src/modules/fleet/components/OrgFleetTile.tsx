@@ -9,7 +9,7 @@ import {
   parseAsStringLiteral,
   type SearchParams,
 } from "nuqs/server";
-import { getOrgFleet } from "../queries";
+import { getOrgFleet } from "../queries/getOrgFleet";
 import { FleetTable } from "./FleetTable";
 
 const loadSearchParams = createLoader({
@@ -23,6 +23,8 @@ const loadSearchParams = createLoader({
     "count-desc",
   ]).withDefault("count-desc"),
   variantTags: parseAsArrayOf(parseAsString),
+  manufacturerIds: parseAsArrayOf(parseAsString),
+  q: parseAsString,
   ...cursorPaginationParsers,
 });
 
@@ -32,14 +34,23 @@ interface Props {
 }
 
 export const OrgFleetTile = async ({ className, searchParams }: Props) => {
-  const { flight_ready, sort, variantTags, cursor, direction } =
-    await loadSearchParams(searchParams);
+  const {
+    flight_ready,
+    sort,
+    variantTags,
+    manufacturerIds,
+    q,
+    cursor,
+    direction,
+  } = await loadSearchParams(searchParams);
 
   const { fleet, totalUsers, totalShips, nextCursor, prevCursor } =
     await getOrgFleet({
       flightReady: flight_ready,
       variantTagIds: variantTags?.length ? variantTags : [],
+      manufacturerIds: manufacturerIds?.length ? manufacturerIds : [],
       sort,
+      searchQuery: q,
       cursor,
       direction,
     });

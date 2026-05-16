@@ -1,7 +1,7 @@
 import { requireAuthentication } from "@/modules/auth/server";
 import { Tile } from "@/modules/common/components/Tile";
 import clsx from "clsx";
-import { getSilcBalanceOfAllCitizens } from "../queries";
+import { getSilcBalanceOfAllCitizens } from "../queries/getSilcBalanceOfAllCitizens";
 import { CreateOrUpdateSilcTransaction } from "./CreateOrUpdateSilcTransaction";
 import { SilcBalancesTableClient } from "./SilcBalancesTableClient";
 

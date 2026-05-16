@@ -1,4 +1,4 @@
-import type { getCitizensGroupedByVisibleRoles } from "@/modules/citizen/queries";
+import type { getCitizensGroupedByVisibleRoles } from "@/modules/citizen/queries/getCitizensGroupedByVisibleRoles";
 import type {
   getMyAssignedRoles,
   getVisibleRoles,

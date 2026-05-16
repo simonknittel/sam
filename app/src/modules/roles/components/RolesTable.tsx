@@ -9,10 +9,11 @@ import clsx from "clsx";
 import Image from "next/image";
 import {
   createLoader,
+  parseAsString,
   parseAsStringLiteral,
   type SearchParams,
 } from "nuqs/server";
-import { getRoles } from "../queries";
+import { getRoles } from "../queries/getRoles";
 
 const TABLE_MIN_WIDTH = "min-w-210";
 const GRID_COLS =
@@ -34,6 +35,7 @@ const loadSearchParams = createLoader({
     "citizen-desc",
     "citizen-asc",
   ]).withDefault("name-asc"),
+  q: parseAsString,
 });
 
 interface Props {
@@ -42,11 +44,17 @@ interface Props {
 }
 
 export const RolesTable = async ({ className, searchParams }: Props) => {
-  const { filter, sort } = await loadSearchParams(searchParams);
+  const { filter, sort, q } = await loadSearchParams(searchParams);
 
   const roles = await getRoles(true);
 
   const filteredRoles = roles.filter((role) => {
+    if (q) {
+      const searchQuery = q.toLowerCase();
+      if (!role.name.toLowerCase().includes(searchQuery)) {
+        return false;
+      }
+    }
     switch (filter) {
       case "has-inheritance":
         return role.inherits.length > 0;

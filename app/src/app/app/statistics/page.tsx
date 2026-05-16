@@ -2,17 +2,15 @@ import { requireAuthenticationPage } from "@/modules/auth/server";
 import Note from "@/modules/common/components/Note";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { StatisticSection } from "@/modules/statistics/components/StatisticSection";
-import {
-  getDailyLoginStatisticChart,
-  getDailySilcStatisticChart,
-  getEventsPerDayStatisticChart,
-  getRegisteredUserStatisticChart,
-  getRoleCitizenStatisticChart,
-  getTotalCitizenStatisticChart,
-  getTotalOrganizationStatisticChart,
-  getTotalShipStatisticChart,
-  getVariantShipStatisticChart,
-} from "@/modules/statistics/queries";
+import { getDailyLoginStatisticChart } from "@/modules/statistics/queries/getDailyLoginStatisticChart";
+import { getDailySilcStatisticChart } from "@/modules/statistics/queries/getDailySilcStatisticChart";
+import { getEventsPerDayStatisticChart } from "@/modules/statistics/queries/getEventsPerDayStatisticChart";
+import { getRegisteredUserStatisticChart } from "@/modules/statistics/queries/getRegisteredUserStatisticChart";
+import { getRoleCitizenStatisticChart } from "@/modules/statistics/queries/getRoleCitizenStatisticChart";
+import { getTotalCitizenStatisticChart } from "@/modules/statistics/queries/getTotalCitizenStatisticChart";
+import { getTotalOrganizationStatisticChart } from "@/modules/statistics/queries/getTotalOrganizationStatisticChart";
+import { getTotalShipStatisticChart } from "@/modules/statistics/queries/getTotalShipStatisticChart";
+import { getVariantShipStatisticChart } from "@/modules/statistics/queries/getVariantShipStatisticChart";
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {

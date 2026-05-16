@@ -2,7 +2,7 @@ import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/Suspe
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
 import { EditableSeriesName } from "@/modules/fleet/components/EditableSeriesName";
 import { VariantsTile } from "@/modules/fleet/components/VariantsTile";
-import { getSeriesAndManufacturerById } from "@/modules/fleet/queries";
+import { getSeriesAndManufacturerById } from "@/modules/fleet/queries/getSeriesAndManufacturerById";
 import { notFound } from "next/navigation";
 
 type Params = Promise<

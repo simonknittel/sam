@@ -15,7 +15,7 @@ import {
 import clsx from "clsx";
 import { useMemo, useState } from "react";
 import { FaSortAlphaDown, FaSortAlphaUp } from "react-icons/fa";
-import type { getProfitDistributionCycleById } from "../queries";
+import type { getProfitDistributionCycleById } from "../queries/getProfitDistributionCycleById";
 import { CyclePhase } from "../utils/getCurrentPhase";
 import { getPayoutState, PayoutState } from "../utils/getMyPayoutStatus";
 import { CitizenTableForm } from "./CitizenTableForm";

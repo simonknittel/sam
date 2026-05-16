@@ -1,6 +1,6 @@
 import { authenticate } from "@/modules/auth/server";
 import type { Page } from "@/modules/common/components/layouts/DefaultLayout/Navigation";
-import { getMyReadableFlows } from "../queries";
+import { getMyReadableFlows } from "../queries/getMyReadableFlows";
 
 export const getNavigationItems = async () => {
   const authentication = await authenticate();
