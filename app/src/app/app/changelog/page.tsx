@@ -56,6 +56,15 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col gap-4">
+      <Day heading="16. Mai 2026">
+        <DayItem heading="Suchen-Filter" badges={["Neu"]}>
+          <p>
+            Die Filter von diversen Apps (bspw. Flotte) wurde um eine Suche
+            erweitert.
+          </p>
+        </DayItem>
+      </Day>
+
       <Day heading="15. Mai 2026">
         <DayItem heading="Flotte - Schiffe löschen" badges={["Neu", "Flotte"]}>
           <p>
