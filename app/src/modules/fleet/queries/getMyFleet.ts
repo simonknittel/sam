@@ -19,6 +19,7 @@ export const getMyFleet = cache(
     async ({
       flightReady = "all",
       variantTagIds = [],
+      manufacturerIds = [],
       sort = "name-asc",
       showDeleted = "all",
       searchQuery,
@@ -27,6 +28,7 @@ export const getMyFleet = cache(
     }: {
       flightReady?: "all" | "flight_ready";
       variantTagIds?: string[];
+      manufacturerIds?: string[];
       sort?: MyFleetSort;
       showDeleted?: "all" | "deleted";
       searchQuery?: string | null;
@@ -47,6 +49,9 @@ export const getMyFleet = cache(
             : {}),
           ...(variantTagIds.length > 0
             ? { tags: { some: { id: { in: variantTagIds } } } }
+            : {}),
+          ...(manufacturerIds.length > 0
+            ? { series: { manufacturerId: { in: manufacturerIds } } }
             : {}),
           ...(searchQuery
             ? { name: { contains: searchQuery, mode: "insensitive" } }

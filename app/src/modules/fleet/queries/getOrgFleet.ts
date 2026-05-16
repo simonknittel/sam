@@ -49,6 +49,7 @@ export const getOrgFleet = cache(
     async ({
       flightReady = "all",
       variantTagIds = [],
+      manufacturerIds = [],
       sort = "count-desc",
       searchQuery,
       cursor,
@@ -56,6 +57,7 @@ export const getOrgFleet = cache(
     }: {
       flightReady?: "all" | "flight_ready";
       variantTagIds?: string[];
+      manufacturerIds?: string[];
       sort?: OrgFleetSort;
       searchQuery?: string | null;
       cursor?: string | null;
@@ -85,6 +87,9 @@ export const getOrgFleet = cache(
           : {}),
         ...(variantTagIds.length > 0
           ? { tags: { some: { id: { in: variantTagIds } } } }
+          : {}),
+        ...(manufacturerIds.length > 0
+          ? { series: { manufacturerId: { in: manufacturerIds } } }
           : {}),
         ...(searchQuery
           ? { name: { contains: searchQuery, mode: "insensitive" } }

@@ -1,4 +1,4 @@
-import type { VariantTag } from "@/generated/prisma/browser";
+import type { Manufacturer, VariantTag } from "@/generated/prisma/browser";
 import { MultiSelectComboboxFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/MultiSelectComboboxFilter";
 import { RadioFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/RadioFilter";
 import { SingleSelectComboboxFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/SingleSelectComboboxFilter";
@@ -6,13 +6,19 @@ import { TextSearchFilter } from "@/modules/common/components/layouts/SidebarLay
 
 interface Props {
   readonly variantTags: VariantTag[];
+  readonly manufacturers: Manufacturer[];
 }
 
-export const MyFleetFilters = ({ variantTags }: Props) => {
+export const MyFleetFilters = ({ variantTags, manufacturers }: Props) => {
   const tagItems = variantTags.map((tag) => ({
     value: tag.id,
     label: tag.value,
     group: tag.key,
+  }));
+
+  const manufacturerItems = manufacturers.map((m) => ({
+    value: m.id,
+    label: m.name,
   }));
 
   return (
@@ -43,6 +49,14 @@ export const MyFleetFilters = ({ variantTags }: Props) => {
         name="variantTags"
         label="Tags"
         items={tagItems}
+        placeholder="Alle"
+        resetCursorPagination
+      />
+
+      <MultiSelectComboboxFilter
+        name="manufacturerIds"
+        label="Hersteller"
+        items={manufacturerItems}
         placeholder="Alle"
         resetCursorPagination
       />

@@ -21,6 +21,7 @@ export const getCitizenFleet = cache(
       {
         flightReady = "all",
         variantTagIds = [],
+        manufacturerIds = [],
         sort = "name-asc",
         showDeleted = "all",
         searchQuery,
@@ -29,6 +30,7 @@ export const getCitizenFleet = cache(
       }: {
         flightReady?: "all" | "flight_ready";
         variantTagIds?: string[];
+        manufacturerIds?: string[];
         sort?: CitizenFleetSort;
         showDeleted?: "all" | "deleted";
         searchQuery?: string | null;
@@ -78,6 +80,9 @@ export const getCitizenFleet = cache(
             : {}),
           ...(variantTagIds.length > 0
             ? { tags: { some: { id: { in: variantTagIds } } } }
+            : {}),
+          ...(manufacturerIds.length > 0
+            ? { series: { manufacturerId: { in: manufacturerIds } } }
             : {}),
           ...(searchQuery
             ? { name: { contains: searchQuery, mode: "insensitive" } }

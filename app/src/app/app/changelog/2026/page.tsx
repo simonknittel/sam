@@ -30,6 +30,13 @@ export default async function Page() {
           </p>
         </DayItem>
 
+        <DayItem heading="Suchen-Filter" badges={["Neu", "Flotte"]}>
+          <p>
+            Die Filter der Flotten- und Schiffstabellen wurden um einen Filter
+            für Hersteller erweitert.
+          </p>
+        </DayItem>
+
         <DayItem heading="Suchen-Filter" badges={["Neu", "Changelog"]}>
           <p>Der Changelog ist nun nach Jahr aufgeteilt.</p>
         </DayItem>
