@@ -11,15 +11,9 @@
       "request": "launch",
       "cwd": "${workspaceFolder}",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": [
-        "run",
-        "dev:lambda"
-      ],
+      "runtimeArgs": ["run", "dev:lambda"],
       "runtimeVersion": "24.15.0",
-      "skipFiles": [
-        "<node_internals>/**",
-        "**/node_modules/**"
-      ],
+      "skipFiles": ["<node_internals>/**", "**/node_modules/**"],
       "envFile": "${workspaceFolder}/apps/lambda/.env"
     }
   ]

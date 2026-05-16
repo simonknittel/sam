@@ -6,7 +6,7 @@ resource "aws_lambda_function" "main" {
   source_code_hash = filebase64sha256("${path.module}/placeholder.zip")
   runtime          = var.runtime
   timeout          = var.timeout
-  memory_size      = 256
+  memory_size      = 512
   architectures    = ["arm64"]
 
   # https://docs.aws.amazon.com/lambda/latest/dg/configuration-concurrency.html
