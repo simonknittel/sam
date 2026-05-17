@@ -54,7 +54,7 @@ export const externalApps: ExternalApp[] = [
     tags: ["featured", "economics"],
     defaultPage: {
       iframeUrl:
-        "https://docs.google.com/spreadsheets/d/1E3F__tz9GuqV8kCtQHpGKmqkjf5Ust7JObf1LwFLhqs",
+        "https://docs.google.com/spreadsheets/d/1W0vy49cM3f6v-OeDrvxB79fd-EUmAxHttJHqOurezvg",
     },
     team: [
       {
