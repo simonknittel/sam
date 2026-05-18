@@ -15,7 +15,7 @@
     "aws-xray-sdk-core": "3.12.0",
     "form-data": "4.0.5",
     "lodash": "4.18.1",
-    "mailgun.js": "12.9.0",
+    "mailgun.js": "13.0.1",
     "openpgp": "6.3.0",
     "react-dom": "19.2.6",
     "react-email": "6.1.1",
