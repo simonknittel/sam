@@ -56,6 +56,7 @@ export default async function Page({
             manufacturer={variant.series.manufacturer}
             size={80}
             variantNameClassName="text-2xl font-bold"
+            disableLink
           />
 
           <div className="border-l border-white/10 pl-8 flex flex-col gap-2">

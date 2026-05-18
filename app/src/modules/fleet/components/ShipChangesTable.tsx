@@ -1,5 +1,4 @@
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
-import { Link } from "@/modules/common/components/Link";
 import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import type { ShipChangeRow } from "@/modules/fleet/queries/getShipChanges";
@@ -43,16 +42,10 @@ export const ShipChangesTable = ({ className, changes }: Props) => {
             </td>
 
             <td className="overflow-hidden">
-              <Link
-                href={`/app/fleet/variant/${change.ship.variantId}`}
-                className="hover:bg-white/10 focus-visible:bg-white/10 rounded-secondary block"
-                prefetch={false}
-              >
-                <VariantWithLogo
-                  variant={change.ship.variant}
-                  manufacturer={change.ship.variant.series.manufacturer}
-                />
-              </Link>
+              <VariantWithLogo
+                variant={change.ship.variant}
+                manufacturer={change.ship.variant.series.manufacturer}
+              />
             </td>
 
             <td title={change.ship.name || undefined} className="truncate">
