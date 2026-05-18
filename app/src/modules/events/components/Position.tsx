@@ -113,17 +113,9 @@ export const Position = ({
     (citizen) => citizen.citizen.id === authentication.session.entity?.id,
   );
 
-  // const backgroundColor = position.backgroundColor
-  //   ? isOpen
-  //     ? hexToRgba(position.backgroundColor, 0.7)
-  //     : hexToRgba(position.backgroundColor, 0.5)
-  //   : isOpen
-  //     ? "rgba(38, 38, 38, 0.7)"
-  //     : "rgba(38, 38, 38, 0.5)";
   const background = position.backgroundColor
     ? `linear-gradient(180deg, ${hexToRgba(position.backgroundColor, 0.2)} 0%, rgba(38, 38, 38, 0.5) 100%)`
     : "rgba(38, 38, 38, 0.5)";
-
   const borderColor = position.backgroundColor || undefined;
   const borderImage = borderColor
     ? `linear-gradient(to bottom, ${borderColor}, transparent) 1`
@@ -266,9 +258,6 @@ export const Position = ({
         <div
           className="border-t border-white/10"
           style={{
-            // backgroundColor: position.backgroundColor
-            //   ? hexToRgba(position.backgroundColor, 0.5)
-            //   : "rgba(38, 38, 38, 0.5)",
             backgroundColor: "rgba(38, 38, 38, 0.5)",
           }}
         >
