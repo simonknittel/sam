@@ -25,6 +25,7 @@ export const PositionVariants = ({ className, position }: Props) => {
               position.requiredVariants[0].variant.series.manufacturer
             }
             size={32}
+            disableLink
           />
 
           <span className="rounded-full bg-neutral-900 size-6 flex items-center justify-center text-xs border border-brand-red-500">

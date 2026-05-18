@@ -7,7 +7,6 @@ import {
   type Variant,
   type VariantTag,
 } from "@/generated/prisma/client";
-import { Link } from "@/modules/common/components/Link";
 import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
 import { FaRegCheckCircle } from "react-icons/fa";
 import { FaRegCircleXmark } from "react-icons/fa6";
@@ -55,16 +54,10 @@ export const MyFleetTable = ({ className, ships }: Props) => {
         {ships.map((ship) => (
           <TRow key={ship.id} className={GRID_COLS}>
             <td className="overflow-hidden">
-              <Link
-                href={`/app/fleet/variant/${ship.variant.id}`}
-                className="hover:bg-white/10 focus-visible:bg-white/10 rounded-secondary block"
-                prefetch={false}
-              >
-                <VariantWithLogo
-                  variant={ship.variant}
-                  manufacturer={ship.variant.series.manufacturer}
-                />
-              </Link>
+              <VariantWithLogo
+                variant={ship.variant}
+                manufacturer={ship.variant.series.manufacturer}
+              />
             </td>
 
             <td className="overflow-hidden">

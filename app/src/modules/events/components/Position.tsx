@@ -113,6 +113,22 @@ export const Position = ({
     (citizen) => citizen.citizen.id === authentication.session.entity?.id,
   );
 
+  // const backgroundColor = position.backgroundColor
+  //   ? isOpen
+  //     ? hexToRgba(position.backgroundColor, 0.7)
+  //     : hexToRgba(position.backgroundColor, 0.5)
+  //   : isOpen
+  //     ? "rgba(38, 38, 38, 0.7)"
+  //     : "rgba(38, 38, 38, 0.5)";
+  const background = position.backgroundColor
+    ? `linear-gradient(180deg, ${hexToRgba(position.backgroundColor, 0.2)} 0%, rgba(38, 38, 38, 0.5) 100%)`
+    : "rgba(38, 38, 38, 0.5)";
+
+  const borderColor = position.backgroundColor || undefined;
+  const borderImage = borderColor
+    ? `linear-gradient(to bottom, ${borderColor}, transparent) 1`
+    : undefined;
+
   return (
     <div
       className={clsx(
@@ -131,19 +147,15 @@ export const Position = ({
           groupLevel={groupLevel}
         />
       )}
+
       <div
         className={clsx("flex items-stretch gap-2", {
-          "rounded-t": isOpen,
-          "rounded-b": !isOpen,
+          "border-t border-x": borderColor,
         })}
         style={{
-          backgroundColor: position.backgroundColor
-            ? isOpen
-              ? hexToRgba(position.backgroundColor, 0.7)
-              : hexToRgba(position.backgroundColor, 0.5)
-            : isOpen
-              ? "rgba(38, 38, 38, 0.7)"
-              : "rgba(38, 38, 38, 0.5)",
+          background,
+          borderColor,
+          borderImage,
         }}
       >
         {showActions && showManage && <DragHandle position={position} />}
@@ -249,13 +261,15 @@ export const Position = ({
 
         <AccordeonToggle onClick={handleToggleOpen} isOpen={isOpen} />
       </div>
+
       {isOpen && (
         <div
-          className="border-t border-white/10 rounded-b"
+          className="border-t border-white/10"
           style={{
-            backgroundColor: position.backgroundColor
-              ? hexToRgba(position.backgroundColor, 0.5)
-              : "rgba(38, 38, 38, 0.5)",
+            // backgroundColor: position.backgroundColor
+            //   ? hexToRgba(position.backgroundColor, 0.5)
+            //   : "rgba(38, 38, 38, 0.5)",
+            backgroundColor: "rgba(38, 38, 38, 0.5)",
           }}
         >
           <div className="p-4 flex gap-2">
