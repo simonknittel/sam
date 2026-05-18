@@ -114,7 +114,7 @@ export const Position = ({
   );
 
   const background = position.backgroundColor
-    ? `linear-gradient(180deg, ${hexToRgba(position.backgroundColor, 0.2)} 0%, rgba(38, 38, 38, 0.5) 100%)`
+    ? `linear-gradient(180deg, ${hexToRgba(position.backgroundColor, 0.2)} 0%, rgba(38, 38, 38, 0.5) 200%)`
     : "rgba(38, 38, 38, 0.5)";
   const borderColor = position.backgroundColor || undefined;
   const borderImage = borderColor
