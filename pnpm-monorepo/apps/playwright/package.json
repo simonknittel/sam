@@ -5,8 +5,8 @@
     "test": "playwright test"
   },
   "devDependencies": {
-    "@playwright/test": "1.59.1",
-    "@types/node": "24.12.2",
+    "@playwright/test": "1.60.0",
+    "@types/node": "24.12.4",
     "dotenv": "17.4.2",
     "typescript": "5.9.3"
   }
