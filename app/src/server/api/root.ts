@@ -1,11 +1,16 @@
-import { aiRouter } from "./routers/ai";
-import { citizensRouter } from "./routers/citizens";
-import { entityLogRouter } from "./routers/entityLog";
-import { eventsRouter } from "./routers/events";
-import { manufacturerRouter } from "./routers/manufacturer";
-import { rolesRouter } from "./routers/roles";
-import { silcRouter } from "./routers/silc";
-import { variantRouter } from "./routers/variant";
+import { getRoleNameSuggestions } from "./routers/ai/getRoleNameSuggestions";
+import { getAllCitizens } from "./routers/citizens/getAllCitizens";
+import { getCitizenById } from "./routers/citizens/getCitizenById";
+import { getCitizensGroupedByVisibleRoles } from "./routers/citizens/getCitizensGroupedByVisibleRoles";
+import { getHistory } from "./routers/entityLog/getHistory";
+import { getAllEvents } from "./routers/events/getAllEvents";
+import { getAllManufacturers } from "./routers/manufacturer/getAll";
+import { getManufacturerById } from "./routers/manufacturer/getById";
+import { getSeriesByManufacturerId } from "./routers/manufacturer/getSeriesByManufacturerId";
+import { getAssignableRoles } from "./routers/roles/getAssignableRoles";
+import { getVisibleRoles } from "./routers/roles/getVisibleRoles";
+import { getRolesForSalaries } from "./routers/silc/getRolesForSalaries";
+import { getById as getVariantById } from "./routers/variant/getById";
 import { createCallerFactory, createTRPCRouter } from "./trpc";
 
 /**
@@ -14,14 +19,35 @@ import { createCallerFactory, createTRPCRouter } from "./trpc";
  * All routers added in /api/routers should be manually added here.
  */
 export const appRouter = createTRPCRouter({
-  ai: aiRouter,
-  citizens: citizensRouter,
-  entityLog: entityLogRouter,
-  events: eventsRouter,
-  manufacturer: manufacturerRouter,
-  roles: rolesRouter,
-  silc: silcRouter,
-  variant: variantRouter,
+  ai: createTRPCRouter({
+    getRoleNameSuggestions,
+  }),
+  citizens: createTRPCRouter({
+    getAllCitizens,
+    getCitizenById,
+    getCitizensGroupedByVisibleRoles,
+  }),
+  entityLog: createTRPCRouter({
+    getHistory,
+  }),
+  events: createTRPCRouter({
+    getAllEvents,
+  }),
+  manufacturer: createTRPCRouter({
+    getAll: getAllManufacturers,
+    getById: getManufacturerById,
+    getSeriesByManufacturerId,
+  }),
+  roles: createTRPCRouter({
+    getVisibleRoles,
+    getAssignableRoles,
+  }),
+  silc: createTRPCRouter({
+    getRolesForSalaries,
+  }),
+  variant: createTRPCRouter({
+    getById: getVariantById,
+  }),
 });
 
 // export type definition of API
