@@ -5,9 +5,9 @@
     "build": "./scripts/build.sh"
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "3.1042.0",
-    "@aws-sdk/client-eventbridge": "3.1042.0",
-    "@aws-sdk/client-ssm": "3.1042.0",
+    "@aws-sdk/client-dynamodb": "3.1045.0",
+    "@aws-sdk/client-eventbridge": "3.1045.0",
+    "@aws-sdk/client-ssm": "3.1045.0",
     "@openpgp/web-stream-tools": "0.3.1",
     "@paralleldrive/cuid2": "3.3.0",
     "@sam-monorepo/database": "workspace:*",
@@ -27,7 +27,7 @@
   "devDependencies": {
     "@types/aws-lambda": "8.10.161",
     "@types/lodash": "4.17.24",
-    "@types/node": "24.12.2",
+    "@types/node": "24.12.4",
     "@types/web-push": "3.6.4",
     "esbuild": "0.28.0",
     "typescript": "5.9.3"
