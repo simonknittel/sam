@@ -5,6 +5,7 @@ import image20260510Career from "@/modules/changelog/assets/2026-05-10-career.pn
 import image20260510CitizenPopover from "@/modules/changelog/assets/2026-05-10-citizen-popover.png";
 import image20260510OverviewTab from "@/modules/changelog/assets/2026-05-10-overview-tab.png";
 import image20260510ProfileTile from "@/modules/changelog/assets/2026-05-10-profile-tile.png";
+import image20260521Timezones from "@/modules/changelog/assets/2026-05-21-timezones.png";
 import { Day } from "@/modules/changelog/components/Day";
 import { DayItem } from "@/modules/changelog/components/DayItem";
 import { Navigation } from "@/modules/changelog/components/Navigation";
@@ -21,6 +22,33 @@ export default async function Page() {
   return (
     <div className="flex flex-col gap-4">
       <Navigation activeYear="2026" />
+
+      <Day heading="21. Mai 2026">
+        <DayItem heading="Neue Timezones App" badges={["Neu", "Timezones"]}>
+          <p>
+            Unter{" "}
+            <Link
+              href="/app/timezones"
+              className="text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300"
+            >
+              Apps &gt; Timezones
+            </Link>{" "}
+            gibt es eine neue App, die dir bei der Umrechnung von Zeiten
+            zwischen verschiedenen Zeitzonen hilft. Das ist besonders nützlich,
+            um Ankündigungen von CIG in der eigenen Zeitzone zu verstehen.
+          </p>
+
+          <Link href={image20260521Timezones.src}>
+            <Image
+              quality={100}
+              src={image20260521Timezones}
+              alt=""
+              loading="eager"
+              className="max-h-full w-auto"
+            />
+          </Link>
+        </DayItem>
+      </Day>
 
       <Day heading="16. Mai 2026">
         <DayItem heading="Suchen-Filter" badges={["Neu"]}>
@@ -160,7 +188,6 @@ export default async function Page() {
                 quality={100}
                 src={image20260510CitizenPopover}
                 alt=""
-                loading="eager"
                 className="max-h-full w-auto"
               />
             </Link>
@@ -170,7 +197,6 @@ export default async function Page() {
                 quality={100}
                 src={image20260510ProfileTile}
                 alt=""
-                loading="eager"
                 className="max-h-full w-auto"
               />
             </Link>
@@ -180,7 +206,6 @@ export default async function Page() {
                 quality={100}
                 src={image20260510Career}
                 alt=""
-                loading="eager"
                 className="max-h-full w-auto"
               />
             </Link>
@@ -190,7 +215,6 @@ export default async function Page() {
                 quality={100}
                 src={image20260510OverviewTab}
                 alt=""
-                loading="eager"
                 className="max-h-full w-auto"
               />
             </Link>

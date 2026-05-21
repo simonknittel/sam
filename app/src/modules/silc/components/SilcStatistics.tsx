@@ -23,7 +23,7 @@ export const SilcStatistics = async ({ className }: Props) => {
     totalSilc * Number.parseInt(auecConversionRateSetting?.value || "1", 10);
 
   return (
-    <section className={clsx("flex flex-wrap gap-[2px]", className)}>
+    <section className={clsx("flex flex-wrap gap-0.5", className)}>
       <StatisticTile label="SILC im Umlauf" className="flex-1">
         <ScrambleIn
           text={totalSilc.toLocaleString("de-de")}
