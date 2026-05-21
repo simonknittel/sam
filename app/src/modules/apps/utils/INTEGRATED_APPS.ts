@@ -16,6 +16,7 @@ import profitDistributionScreenshot from "@/modules/profit-distribution/assets/s
 import silcScreenshot from "@/modules/silc/assets/screenshot.png";
 import spynetScreenshot from "@/modules/spynet/assets/screenshot.png";
 import tasksScreenshot from "@/modules/tasks/assets/screenshot.png";
+import timezonesScreenshot from "@/modules/timezones/assets/screenshot.png";
 import type { IntegratedApp } from "./types";
 
 export const INTEGRATED_APPS: IntegratedApp[] = [
@@ -171,5 +172,12 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
     description: "Org-internes Quest System",
     tags: ["featured"],
     permissionStrings: ["task;read"],
+  },
+  {
+    name: "Timezones",
+    href: "/app/timezones",
+    imageSrc: timezonesScreenshot,
+    description:
+      "Helfer für die Umrechnung von Zeiten zwischen verschiedenen Zeitzonen",
   },
 ];

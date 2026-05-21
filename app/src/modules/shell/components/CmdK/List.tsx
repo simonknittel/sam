@@ -10,6 +10,7 @@ import { AiFillAppstore } from "react-icons/ai";
 import {
   FaCamera,
   FaChartLine,
+  FaClock,
   FaHome,
   FaLock,
   FaPiggyBank,
@@ -333,6 +334,14 @@ export const List = () => {
         type: MenuItemType.Link,
         href: "/app/tasks",
         authKey: "taskRead",
+      },
+      {
+        id: "timezones",
+        label: "Timezones",
+        keywords: ["Timezones", "Zeitzonen"],
+        icon: <FaClock />,
+        type: MenuItemType.Link,
+        href: "/app/timezones",
       },
 
       ...externalApps.map(
