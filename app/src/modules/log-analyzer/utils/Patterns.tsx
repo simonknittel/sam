@@ -173,11 +173,7 @@ export const PATTERNS: Patterns = {
       return {
         key,
         type: EntryType.Disconnection,
-        message: (
-          <span className="truncate" title="Verbindung getrennt">
-            Verbindung getrennt
-          </span>
-        ),
+        message: null,
       };
     },
   },
