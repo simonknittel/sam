@@ -3,7 +3,7 @@ import { TRow } from "@/modules/common/components/Table";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import clsx from "clsx";
 import { memo } from "react";
-import { PATTERNS, type IEntry } from "../utils/Patterns";
+import { PATTERNS, type IEntry } from "../utils/PATTERNS";
 import styles from "./Entry.module.css";
 import { GRID_COLS } from "./LogAnalyzer";
 

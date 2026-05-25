@@ -4,7 +4,7 @@ import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import clsx from "clsx";
 import { useEffect, type MouseEventHandler } from "react";
 import { FaRegWindowRestore } from "react-icons/fa";
-import { PATTERNS, type IEntry } from "../utils/Patterns";
+import { PATTERNS, type IEntry } from "../utils/PATTERNS";
 import styles from "./Entry.module.css";
 import { useOverlay } from "./OverlayContext";
 import { OverlayWindow } from "./OverlayWindow";

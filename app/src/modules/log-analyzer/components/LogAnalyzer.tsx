@@ -22,7 +22,7 @@ import { FaInfoCircle, FaSpinner } from "react-icons/fa";
 import { FaFileArrowUp } from "react-icons/fa6";
 import { TfiReload } from "react-icons/tfi";
 import { getFilesRecursively } from "../utils/getFilesRecursively";
-import { PATTERNS, type IEntry } from "../utils/Patterns";
+import { PATTERNS, type IEntry } from "../utils/PATTERNS";
 import { Entry } from "./Entry";
 import { useEntryFilterContext } from "./EntryFilterContext";
 import { EntryFilters } from "./EntryFilters";
@@ -83,7 +83,7 @@ export const LogAnalyzer = ({ className }: Props) => {
           const newEntries = new Map<string, IEntry>(previousEntries);
 
           for (const fileContent of fileContents) {
-            for (const [patternKey, pattern] of Object.entries(PATTERNS)) {
+            for (const [, pattern] of Object.entries(PATTERNS)) {
               const matches = fileContent.matchAll(pattern.regex);
               for (const match of matches) {
                 if (!match.groups) continue;
