@@ -4,7 +4,7 @@ import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import clsx from "clsx";
 import { useEffect, type MouseEventHandler } from "react";
 import { FaRegWindowRestore } from "react-icons/fa";
-import { type IEntry } from "../utils/Patterns";
+import { PATTERNS, type IEntry } from "../utils/Patterns";
 import styles from "./Entry.module.css";
 import { useOverlay } from "./OverlayContext";
 import { OverlayWindow } from "./OverlayWindow";
@@ -77,7 +77,10 @@ interface OverlayEntryProps {
 const OverlayEntry = ({ entry }: OverlayEntryProps) => {
   return (
     <div className={clsx("relative", styles.Row)}>
-      <div className="truncate text-sm">{entry.message}</div>
+      <div className="truncate text-sm">
+        <span className="text-white/40">{PATTERNS[entry.type].title}:</span>{" "}
+        {entry.message}
+      </div>
 
       <div
         className={clsx(

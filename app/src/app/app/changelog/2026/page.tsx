@@ -31,7 +31,7 @@ export default async function Page() {
           <p>
             Für den Log Analyzer wurde überarbeitet, wie die Logs ausgewertet
             werden. Dies ermöglicht ein einfacheres und schnelleres Hinzufügen
-            von neuen Typen.
+            von neuen Log-Einträgen.
           </p>
 
           <p>
