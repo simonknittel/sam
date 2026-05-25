@@ -4,7 +4,7 @@ import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import clsx from "clsx";
 import { useEffect, type MouseEventHandler } from "react";
 import { FaRegWindowRestore } from "react-icons/fa";
-import { EntryType, type IEntry } from "./Entry";
+import { type IEntry } from "../utils/Patterns";
 import styles from "./Entry.module.css";
 import { useOverlay } from "./OverlayContext";
 import { OverlayWindow } from "./OverlayWindow";
@@ -60,7 +60,7 @@ export const OverlayButton = ({ className, entries }: Props) => {
               ))
             ) : (
               <div className="text-center text-neutral-500 p-2 text-sm">
-                Neue Kills aus dieser Session werden hier angezeigt.
+                Neue Logs aus der aktuellen Session werden hier angezeigt.
               </div>
             )}
           </section>
@@ -77,18 +77,7 @@ interface OverlayEntryProps {
 const OverlayEntry = ({ entry }: OverlayEntryProps) => {
   return (
     <div className={clsx("relative", styles.Row)}>
-      <div className="whitespace-nowrap overflow-hidden">
-        {entry.type === EntryType.JoinPu && (
-          <div className="px-2">
-            Shard <span className="text-neutral-500">{entry.shard}</span>{" "}
-            beigetreten
-          </div>
-        )}
-
-        {entry.type === EntryType.OwnDeath && (
-          <div className="px-2">Gestorben</div>
-        )}
-      </div>
+      <div className="truncate text-sm">{entry.message}</div>
 
       <div
         className={clsx(

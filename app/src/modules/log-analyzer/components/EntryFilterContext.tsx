@@ -3,15 +3,10 @@
 import { useLocalStorage } from "@uidotdev/usehooks";
 import type { ReactNode } from "react";
 import { createContext, useCallback, useContext, useMemo } from "react";
-import { EntryType, type IEntry } from "./Entry";
-
-export enum EntryFilterKey {
-  HideJoinPu = "hideJoinPu",
-  OwnDeath = "ownDeath",
-}
+import { EntryType, type IEntry } from "../utils/Patterns";
 
 interface EntryFilterContext {
-  readonly entryFilters: Record<EntryFilterKey, boolean>;
+  readonly entryFilters: Record<EntryType, boolean>;
   readonly setEntryFilters: (
     key: keyof EntryFilterContext["entryFilters"],
     value: boolean,
@@ -28,10 +23,12 @@ interface ProviderProps {
 }
 
 export const EntryFilterContextProvider = ({ children }: ProviderProps) => {
-  const [entryFilters, _setEntryFilters] = useLocalStorage("entry_filters", {
-    [EntryFilterKey.HideJoinPu]: false,
-    [EntryFilterKey.OwnDeath]: false,
-  });
+  const [entryFilters, _setEntryFilters] = useLocalStorage(
+    "entry_filters",
+    Object.fromEntries(
+      Object.values(EntryType).map((type) => [type, false]),
+    ) as Record<EntryType, boolean>,
+  );
 
   const setEntryFilters = useCallback(
     (key: keyof typeof entryFilters, value: boolean) => {
@@ -44,21 +41,7 @@ export const EntryFilterContextProvider = ({ children }: ProviderProps) => {
   );
 
   const entryFilterFn = useCallback(
-    (entry: IEntry) => {
-      if (
-        entryFilters[EntryFilterKey.HideJoinPu] &&
-        entry.type === EntryType.JoinPu
-      )
-        return false;
-
-      if (
-        entryFilters[EntryFilterKey.OwnDeath] &&
-        entry.type === EntryType.OwnDeath
-      )
-        return false;
-
-      return true;
-    },
+    (entry: IEntry) => !entryFilters[entry.type],
     [entryFilters],
   );
 
