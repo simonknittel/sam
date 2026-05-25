@@ -1,4 +1,6 @@
+import { RichText } from "@/modules/common/components/RichText";
 import clsx from "clsx";
+import { PATTERNS } from "../utils/Patterns";
 
 interface Props {
   readonly className?: string;
@@ -12,35 +14,45 @@ export const Introduction = ({ className }: Props) => {
         className,
       )}
     >
-      <p className="text-white/40">Anleitung</p>
-      <p>Wähle den Ordner mit deiner Star Citizen-Installation aus.</p>
+      <RichText>
+        <h3>Anleitung</h3>
+        <p>Wähle den Ordner mit deiner Star Citizen-Installation aus.</p>
 
-      <p className="text-white/40 mt-4">Info</p>
-      <p>
-        Keine Dateien werden auf den Server hochgeladen. Die Logs werden
-        ausschließlich client-seitig im Browser ausgewertet.
-      </p>
+        <h3>Info</h3>
+        <p>
+          Keine Dateien werden auf den Server hochgeladen. Die Logs werden
+          ausschließlich client-seitig im Browser ausgewertet.
+        </p>
 
-      <p>Es werden die Logs der letzten 7 Tage ausgewertet.</p>
+        <p>Es werden die Logs der letzten 7 Tage ausgewertet.</p>
 
-      <p className="text-white/40 mt-4">Voraussetzungen</p>
-      <p>
-        Aktuell werden nur Google Chrome, Microsoft Edge und Opera GX
-        unterstützt. Mozilla Firefox, Safari und Brave werden aktuell nicht
-        unterstützt.
-      </p>
+        <h3>Voraussetzungen</h3>
+        <p>
+          Aktuell werden nur Google Chrome, Microsoft Edge und Opera GX
+          unterstützt. Mozilla Firefox, Safari und Brave werden aktuell nicht
+          unterstützt.
+        </p>
 
-      <p>
-        Die Star Citizen-Installation darf nicht unter{" "}
-        <span className="italic font-mono">C:\Program Files</span> liegen.
-      </p>
+        <p>
+          Die Star Citizen-Installation darf nicht unter{" "}
+          <span className="italic font-mono">C:\Program Files</span> liegen.
+        </p>
 
-      <p>
-        Für das Overlay muss der Star Citizen Window Mode auf entweder
-        Borderless oder Windowed gestellt sein.
-      </p>
+        <p>
+          Für das Overlay muss der Star Citizen Window Mode auf entweder
+          Borderless oder Windowed gestellt sein.
+        </p>
 
-      <p>Nein, das Overlay kann nicht transparent gemacht werden.</p>
+        <p>Nein, das Overlay kann nicht transparent gemacht werden.</p>
+
+        <h3>Filter</h3>
+        <p>Zur Zeit werden folgende Log-Einträge erkannt:</p>
+        <ul>
+          {Object.entries(PATTERNS).map(([key, { title }]) => (
+            <li key={key}>{title}</li>
+          ))}
+        </ul>
+      </RichText>
     </div>
   );
 };
