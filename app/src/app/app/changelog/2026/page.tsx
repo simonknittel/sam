@@ -66,6 +66,13 @@ export default async function Page() {
             wird.
           </p>
         </DayItem>
+
+        <DayItem heading="Verbindung getrennt" badges={["Neu", "Log Analyzer"]}>
+          <p>
+            Im Log Analyzer wird nun angezeigt, wenn die Verbindung getrennt
+            wird.
+          </p>
+        </DayItem>
       </Day>
 
       <Day heading="21. Mai 2026">
