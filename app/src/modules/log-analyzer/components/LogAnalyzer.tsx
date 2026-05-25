@@ -31,7 +31,7 @@ import { OverlayButton } from "./OverlayButton";
 import { OverlayProvider } from "./OverlayContext";
 
 const TABLE_MIN_WIDTH = "min-w-80";
-export const GRID_COLS = "grid-cols-[160px_1fr]";
+export const GRID_COLS = "grid-cols-[160px_160px_1fr]";
 
 interface Props {
   readonly className?: string;
@@ -270,6 +270,7 @@ export const LogAnalyzer = ({ className }: Props) => {
             <Table tableClassName={TABLE_MIN_WIDTH}>
               <THead className={GRID_COLS}>
                 <th>Datum</th>
+                <th>Typ</th>
                 <th>Nachricht</th>
               </THead>
 

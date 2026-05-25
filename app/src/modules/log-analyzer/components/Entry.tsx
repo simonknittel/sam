@@ -3,7 +3,7 @@ import { TRow } from "@/modules/common/components/Table";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import clsx from "clsx";
 import { memo } from "react";
-import { type IEntry } from "../utils/Patterns";
+import { PATTERNS, type IEntry } from "../utils/Patterns";
 import styles from "./Entry.module.css";
 import { GRID_COLS } from "./LogAnalyzer";
 
@@ -42,6 +42,8 @@ export const Entry = memo(
             </div>
           )}
         </td>
+
+        <td className="truncate text-white/40">{PATTERNS[entry.type].title}</td>
 
         <td className="overflow-hidden">{entry.message}</td>
       </TRow>

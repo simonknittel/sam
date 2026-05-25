@@ -31,7 +31,7 @@ interface Pattern {
 
 export const PATTERNS: Patterns = {
   joinPu: {
-    title: "Shard-Beitritte",
+    title: "Shard-Beitritt",
     // <2025-06-22T09:59:12.293Z> [Notice] <Join PU> address[35.187.166.216] port[64336] shard[pub_euw1b_9873572_100] locationId[-281470681677823] [Team_GameServices][GIM][Matchmaking]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>.+<Join PU>.+shard\[(?<shard>[\d\w_]+)\].+$/gm,
@@ -41,11 +41,7 @@ export const PATTERNS: Patterns = {
       const match = shardRegex.exec(groups.shard);
       if (!match?.groups) {
         const message = (
-          <span
-            className="truncate"
-            title={`Shard beigetreten: ${groups.shard}`}
-          >
-            <span className="text-white/40">Shard beigetreten:</span>{" "}
+          <span className="truncate" title={groups.shard}>
             {groups.shard}
           </span>
         );
@@ -69,10 +65,10 @@ export const PATTERNS: Patterns = {
       const message = (
         <span
           className="truncate"
-          title={`Shard beigetreten: ${region} ${number} (${groups.shard})`}
+          title={`${region} ${number} (${groups.shard})`}
         >
-          <span className="text-white/40">Shard beigetreten:</span> {region}{" "}
-          {number} <span className="text-white/40">({groups.shard})</span>
+          {region} {number}{" "}
+          <span className="text-white/40">({groups.shard})</span>
         </span>
       );
 
@@ -85,7 +81,7 @@ export const PATTERNS: Patterns = {
   },
 
   ownDeath: {
-    title: "Eigene Tode",
+    title: "Gestorben",
     // <2025-11-30T13:13:55.134Z> [Notice] <[ActorState] Dead> [ACTOR STATE][CSCActorControlStateDead::PrePhysicsUpdate] Actor 'ind3x' [202028778295] ejected from zone 'RSI_Zeus_CL_7838674991315' [7838674991315] to zone 'pyro4' [7610665712799] due to previous zone being in a destroyed vehicle with detached interior. [Team_ActorFeatures][Actor]
     regex: /^<(?<isoDate>[\d\-T:.Z]+)>.*\<\[ActorState\] Dead\>.*$/gm,
     matchMapping: (date, groups): Omit<IEntry, "isoDate"> => {
@@ -94,11 +90,7 @@ export const PATTERNS: Patterns = {
       return {
         key,
         type: EntryType.OwnDeath,
-        message: (
-          <span className="truncate" title="Gestorben">
-            Gestorben
-          </span>
-        ),
+        message: null,
       };
     },
   },
@@ -117,11 +109,7 @@ export const PATTERNS: Patterns = {
         key,
         type: EntryType.BlueprintReceivedNotification,
         message: (
-          <span
-            className="truncate"
-            title={`Blueprint erhalten: ${blueprintName}`}
-          >
-            <span className="text-white/40">Blueprint erhalten:</span>{" "}
+          <span className="truncate" title={blueprintName}>
             {blueprintName}
           </span>
         ),
@@ -143,11 +131,7 @@ export const PATTERNS: Patterns = {
         key,
         type: EntryType.ContractAcceptedNotification,
         message: (
-          <span
-            className="truncate"
-            title={`Contract angenommen: ${contractName}`}
-          >
-            <span className="text-white/40">Contract angenommen:</span>{" "}
+          <span className="truncate" title={contractName}>
             {contractName}
           </span>
         ),
@@ -169,11 +153,7 @@ export const PATTERNS: Patterns = {
         key,
         type: EntryType.ContractCompleteNotification,
         message: (
-          <span
-            className="truncate"
-            title={`Contract abgeschlossen: ${contractName}`}
-          >
-            <span className="text-white/40">Contract abgeschlossen:</span>{" "}
+          <span className="truncate" title={contractName}>
             {contractName}
           </span>
         ),
