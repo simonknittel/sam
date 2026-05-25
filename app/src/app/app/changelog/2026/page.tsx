@@ -90,6 +90,17 @@ export default async function Page() {
         </DayItem>
 
         <DayItem
+          heading="Contract fehlgeschlagen"
+          badges={["Neu", "Log Analyzer"]}
+          isNew={isUnseen("2026-05-25-contract-fehlgeschlagen")}
+        >
+          <p>
+            Im Log Analyzer wird nun angezeigt, wenn ein Contract fehlgeschlagen
+            wird.
+          </p>
+        </DayItem>
+
+        <DayItem
           heading="Verbindung getrennt"
           badges={["Neu", "Log Analyzer"]}
           isNew={isUnseen("2026-05-25-verbindung-getrennt")}

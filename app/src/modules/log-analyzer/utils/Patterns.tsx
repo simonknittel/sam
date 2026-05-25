@@ -6,6 +6,7 @@ export enum EntryType {
   BlueprintReceivedNotification = "blueprintReceivedNotification",
   ContractAcceptedNotification = "contractAcceptedNotification",
   ContractCompleteNotification = "contractCompleteNotification",
+  ContractFailedNotification = "contractFailedNotification",
   Disconnection = "disconnection",
 }
 
@@ -145,6 +146,28 @@ export const PATTERNS: Patterns = {
     // <2026-06-01T10:15:20.123Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Complete:  Wikelo Arrive to System: " [5] to queue. New queue size: 2, MissionId: [bf7d2465-cf1e-480b-ae5c-25040d716e5f], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>.*\<SHUDEvent_OnNotification\> Added notification "Contract Complete: (?<contract>.+): " \[\d+\] to queue.*$/gm,
+    matchMapping: (date, groups): Omit<IEntry, "isoDate"> => {
+      const key = `${date.getTime()}_${groups.contract}`;
+
+      const contractName = groups.contract.replaceAll(/<.+?>/g, "");
+
+      return {
+        key,
+        type: EntryType.ContractCompleteNotification,
+        message: (
+          <span className="truncate" title={contractName}>
+            {contractName}
+          </span>
+        ),
+      };
+    },
+  },
+
+  contractFailedNotification: {
+    title: "Contract fehlgeschlagen",
+    // <2026-06-01T10:15:20.123Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Failed:  Wikelo Arrive to System: " [5] to queue. New queue size: 2, MissionId: [bf7d2465-cf1e-480b-ae5c-25040d716e5f], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+    regex:
+      /^<(?<isoDate>[\d\-T:.Z]+)>.*\<SHUDEvent_OnNotification\> Added notification "Contract Failed: (?<contract>.+): " \[\d+\] to queue.*$/gm,
     matchMapping: (date, groups): Omit<IEntry, "isoDate"> => {
       const key = `${date.getTime()}_${groups.contract}`;
 
