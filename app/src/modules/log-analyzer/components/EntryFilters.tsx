@@ -24,16 +24,20 @@ export const EntryFilters = ({ className }: Props) => {
       childrenClassName="flex flex-col gap-1 w-80"
       enableHover
     >
-      {Object.entries(PATTERNS).map(([key, pattern]) => (
-        <YesNoCheckbox
-          key={pattern.title}
-          yesLabel={pattern.title}
-          noLabel={pattern.title}
-          labelClassName="text-sm flex-1"
-          checked={!entryFilters[key as EntryType]}
-          onChange={(e) => setEntryFilters(key as EntryType, !e.target.checked)}
-        />
-      ))}
+      {Object.entries(PATTERNS)
+        .toSorted((a, b) => a[1].title.localeCompare(b[1].title))
+        .map(([key, pattern]) => (
+          <YesNoCheckbox
+            key={pattern.title}
+            yesLabel={pattern.title}
+            noLabel={pattern.title}
+            labelClassName="text-sm flex-1"
+            checked={!entryFilters[key as EntryType]}
+            onChange={(e) =>
+              setEntryFilters(key as EntryType, !e.target.checked)
+            }
+          />
+        ))}
     </Popover>
   );
 };

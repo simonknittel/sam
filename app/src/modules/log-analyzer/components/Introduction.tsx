@@ -48,9 +48,11 @@ export const Introduction = ({ className }: Props) => {
         <h3>Filter</h3>
         <p>Zur Zeit werden folgende Log-Einträge erkannt:</p>
         <ul>
-          {Object.entries(PATTERNS).map(([key, { title }]) => (
-            <li key={key}>{title}</li>
-          ))}
+          {Object.entries(PATTERNS)
+            .toSorted((a, b) => a[1].title.localeCompare(b[1].title))
+            .map(([key, { title }]) => (
+              <li key={key}>{title}</li>
+            ))}
         </ul>
       </RichText>
     </div>
