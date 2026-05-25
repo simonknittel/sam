@@ -35,7 +35,7 @@ export default async function Page() {
           </p>
 
           <p>
-            Zudem wurde die Darstellung an neuen Standard-Tabellen-Layout
+            Zudem wurde die Darstellung an das neue Standard-Tabellen-Layout
             angepasst.
           </p>
         </DayItem>
