@@ -23,6 +23,26 @@ export default async function Page() {
     <div className="flex flex-col gap-4">
       <Navigation activeYear="2026" />
 
+      <Day heading="25. Mai 2026">
+        <DayItem
+          heading="Log Analyzer refreshed"
+          badges={["Änderung", "Log Analyzer"]}
+        >
+          <p>
+            Für den Log Analyzer wurde überarbeitet, wie die Logs ausgewertet
+            werden. Dies ermöglicht ein einfacheres und schnelleres Hinzufügen
+            von neuen Typen.
+          </p>
+
+          <p>Es wird nun angezeigt, wenn ein Blueprint freigeschaltet wird.</p>
+
+          <p>
+            Zudem wurde die Darstellung an neuen Standard-Tabellen-Layout
+            angepasst.
+          </p>
+        </DayItem>
+      </Day>
+
       <Day heading="21. Mai 2026">
         <DayItem heading="Neue Timezones App" badges={["Neu", "Timezones"]}>
           <p>

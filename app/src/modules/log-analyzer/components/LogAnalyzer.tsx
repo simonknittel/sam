@@ -5,6 +5,7 @@
 import Button from "@/modules/common/components/Button";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
+import { Table, TBody, THead } from "@/modules/common/components/Table";
 import { Tooltip } from "@/modules/common/components/Tooltip";
 import { useLocalStorage } from "@uidotdev/usehooks";
 import clsx from "clsx";
@@ -21,15 +22,16 @@ import { FaInfoCircle, FaSpinner } from "react-icons/fa";
 import { FaFileArrowUp } from "react-icons/fa6";
 import { TfiReload } from "react-icons/tfi";
 import { getFilesRecursively } from "../utils/getFilesRecursively";
-import { Patterns } from "../utils/Patterns";
-import { Entry, type IEntry } from "./Entry";
+import { PATTERNS, type IEntry } from "../utils/Patterns";
+import { Entry } from "./Entry";
 import { useEntryFilterContext } from "./EntryFilterContext";
 import { EntryFilters } from "./EntryFilters";
 import { Introduction } from "./Introduction";
 import { OverlayButton } from "./OverlayButton";
 import { OverlayProvider } from "./OverlayContext";
 
-export const gridTemplateColumns = "144px 1fr 1fr 1fr 1fr 1fr";
+const TABLE_MIN_WIDTH = "min-w-80";
+export const GRID_COLS = "grid-cols-[160px_1fr]";
 
 interface Props {
   readonly className?: string;
@@ -81,7 +83,7 @@ export const LogAnalyzer = ({ className }: Props) => {
           const newEntries = new Map<string, IEntry>(previousEntries);
 
           for (const fileContent of fileContents) {
-            for (const pattern of Patterns) {
+            for (const [patternKey, pattern] of Object.entries(PATTERNS)) {
               const matches = fileContent.matchAll(pattern.regex);
               for (const match of matches) {
                 if (!match.groups) continue;
@@ -90,7 +92,6 @@ export const LogAnalyzer = ({ className }: Props) => {
                 const entry = pattern.matchMapping(date, match.groups);
                 if (newEntries.has(entry.key)) continue;
 
-                // @ts-expect-error Don't know how to improve this
                 newEntries.set(entry.key, {
                   ...entry,
                   isoDate: date,
@@ -265,33 +266,22 @@ export const LogAnalyzer = ({ className }: Props) => {
             <EntryFilters />
           </div>
 
-          <div className="mt-[2px] p-4 bg-secondary rounded-primary overflow-auto">
-            <table className="w-full min-w-[1200px]">
-              <thead>
-                <tr
-                  className="grid items-center gap-4 text-left text-neutral-500"
-                  style={{
-                    gridTemplateColumns,
-                  }}
-                >
-                  <th className="whitespace-nowrap">Datum</th>
-                  <th className="whitespace-nowrap">Ziel</th>
-                  <th className="whitespace-nowrap">Killer</th>
-                  <th className="whitespace-nowrap">Waffe</th>
-                  <th className="whitespace-nowrap">Schadensart</th>
-                  <th className="whitespace-nowrap">Ort</th>
-                </tr>
-              </thead>
+          <div className="mt-0.5 p-4 bg-secondary rounded-primary overflow-auto">
+            <Table tableClassName={TABLE_MIN_WIDTH}>
+              <THead className={GRID_COLS}>
+                <th>Datum</th>
+                <th>Nachricht</th>
+              </THead>
 
-              <tbody>
+              <TBody className="text-sm">
                 {Array.from(entries.values())
                   .toSorted((a, b) => b.isoDate.getTime() - a.isoDate.getTime())
                   .filter(entryFilterFn)
                   .map((entry) => (
                     <Entry key={entry.key} entry={entry} />
                   ))}
-              </tbody>
-            </table>
+              </TBody>
+            </Table>
           </div>
         </>
       ) : (

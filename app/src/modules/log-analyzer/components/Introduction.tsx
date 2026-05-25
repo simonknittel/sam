@@ -12,10 +12,10 @@ export const Introduction = ({ className }: Props) => {
         className,
       )}
     >
-      <p className="text-neutral-500">Anleitung</p>
+      <p className="text-white/40">Anleitung</p>
       <p>Wähle den Ordner mit deiner Star Citizen-Installation aus.</p>
 
-      <p className="text-neutral-500 mt-4">Info</p>
+      <p className="text-white/40 mt-4">Info</p>
       <p>
         Keine Dateien werden auf den Server hochgeladen. Die Logs werden
         ausschließlich client-seitig im Browser ausgewertet.
@@ -23,7 +23,7 @@ export const Introduction = ({ className }: Props) => {
 
       <p>Es werden die Logs der letzten 7 Tage ausgewertet.</p>
 
-      <p className="text-neutral-500 mt-4">Voraussetzungen</p>
+      <p className="text-white/40 mt-4">Voraussetzungen</p>
       <p>
         Aktuell werden nur Google Chrome, Microsoft Edge und Opera GX
         unterstützt. Mozilla Firefox, Safari und Brave werden aktuell nicht
