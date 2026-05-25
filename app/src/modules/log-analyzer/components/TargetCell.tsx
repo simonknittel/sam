@@ -10,27 +10,7 @@ interface Props {
 export const TargetCell = ({ className, entry }: Props) => {
   return (
     <td className={clsx("overflow-hidden", className)}>
-      {/* {entry.type === EntryType.Kill && <RSILink handle={entry.target} />} */}
-
-      {/* {entry.type === EntryType.Corpse && <RSILink handle={entry.target} />} */}
-
       {entry.type === EntryType.JoinPu && <JoinPuCell entry={entry} />}
-
-      {/* {entry.type === EntryType.ContestedZoneElevator && (
-        <div className="px-2 h-full flex items-center">
-          <span title={entry.elevatorName} className="truncate">
-            {entry.elevatorName}
-          </span>
-        </div>
-      )} */}
-
-      {/* {entry.type === EntryType.AsdElevator && (
-        <div className="px-2 h-full flex items-center">
-          <span title={entry.elevatorName} className="truncate">
-            {entry.elevatorName}
-          </span>
-        </div>
-      )} */}
     </td>
   );
 };

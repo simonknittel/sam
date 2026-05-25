@@ -78,63 +78,12 @@ const OverlayEntry = ({ entry }: OverlayEntryProps) => {
   return (
     <div className={clsx("relative", styles.Row)}>
       <div className="whitespace-nowrap overflow-hidden">
-        {/* {entry.type === EntryType.Kill && (
-          <>
-            <div
-              className="max-w-32 truncate inline-block align-middle"
-              title={entry.killer}
-            >
-              <RSILink handle={entry.killer} />
-            </div>
-
-            <div className="inline-block align-middle">killed</div>
-
-            <div
-              className="max-w-32 truncate inline-block align-middle"
-              title={entry.target}
-            >
-              <RSILink handle={entry.target} />
-            </div>
-          </>
-        )} */}
-
-        {/* {entry.type === EntryType.Corpse && (
-          <>
-            <div className="inline-block align-middle pl-2">Leiche von</div>
-
-            <div
-              className="max-w-32 truncate inline-block align-middle"
-              title={entry.target}
-            >
-              <RSILink handle={entry.target} />
-            </div>
-
-            <div className="inline-block align-middle">entdeckt</div>
-          </>
-        )} */}
-
         {entry.type === EntryType.JoinPu && (
           <div className="px-2">
             Shard <span className="text-neutral-500">{entry.shard}</span>{" "}
             beigetreten
           </div>
         )}
-
-        {/* {entry.type === EntryType.ContestedZoneElevator && (
-          <div className="px-2">
-            Aufzug (Contested Zone){" "}
-            <span className="text-neutral-500">{entry.elevatorName}</span>{" "}
-            benutzt
-          </div>
-        )} */}
-
-        {/* {entry.type === EntryType.AsdElevator && (
-          <div className="px-2">
-            Aufzug (ASD){" "}
-            <span className="text-neutral-500">{entry.elevatorName}</span>{" "}
-            benutzt
-          </div>
-        )} */}
 
         {entry.type === EntryType.OwnDeath && (
           <div className="px-2">Gestorben</div>

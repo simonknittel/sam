@@ -111,16 +111,6 @@ export const Entry = memo(
         <TargetCell entry={entry} />
 
         <td className="overflow-hidden">
-          {/* {entry.type === EntryType.Kill && <RSILink handle={entry.killer} />} */}
-
-          {/* {entry.type === EntryType.Corpse && (
-            <div className="text-neutral-500 p-2 h-full flex items-center">
-              <span className="truncate" title="Leiche entdeckt">
-                Leiche entdeckt
-              </span>
-            </div>
-          )} */}
-
           {entry.type === EntryType.JoinPu && (
             <div className="text-neutral-500 p-2 h-full flex items-center">
               <span className="truncate" title="Shard beigetreten">
@@ -128,25 +118,6 @@ export const Entry = memo(
               </span>
             </div>
           )}
-
-          {/* {entry.type === EntryType.ContestedZoneElevator && (
-            <div className="text-neutral-500 p-2 h-full flex items-center">
-              <span
-                className="truncate"
-                title="Aufzug (Contested Zone) benutzt"
-              >
-                Aufzug (Contested Zone) benutzt
-              </span>
-            </div>
-          )} */}
-
-          {/* {entry.type === EntryType.AsdElevator && (
-            <div className="text-neutral-500 p-2 h-full flex items-center">
-              <span className="truncate" title="Aufzug (ASD) benutzt">
-                Aufzug (ASD) benutzt
-              </span>
-            </div>
-          )} */}
 
           {entry.type === EntryType.OwnDeath && (
             <div className="text-neutral-500 p-2 h-full flex items-center">
@@ -157,29 +128,11 @@ export const Entry = memo(
           )}
         </td>
 
-        <td className="p-2 flex items-center truncate">
-          {/* {entry.type === EntryType.Kill && (
-            <span className="truncate" title={entry.weapon}>
-              {entry.weapon}
-            </span>
-          )} */}
-        </td>
+        <td className="p-2 flex items-center truncate"></td>
 
-        <td className="p-2 flex items-center truncate">
-          {/* {entry.type === EntryType.Kill && (
-            <span className="truncate" title={entry.damageType}>
-              {entry.damageType}
-            </span>
-          )} */}
-        </td>
+        <td className="p-2 flex items-center truncate"></td>
 
-        <td className="p-2 flex items-center truncate">
-          {/* {entry.type === EntryType.Kill && (
-            <span className="truncate" title={entry.zone}>
-              {entry.zone}
-            </span>
-          )} */}
-        </td>
+        <td className="p-2 flex items-center truncate"></td>
       </tr>
     );
   },

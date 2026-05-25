@@ -23,59 +23,6 @@ export const EntryFilters = ({ className }: Props) => {
       childrenClassName="flex flex-col gap-1 w-80"
       enableHover
     >
-      {/* <YesNoCheckbox
-        yesLabel="Aufzüge (Contested Zone)"
-        noLabel="Aufzüge (Contested Zone)"
-        labelClassName="text-sm flex-1"
-        checked={!entryFilters[EntryFilterKey.HideContestedZoneElevator]}
-        onChange={(e) =>
-          setEntryFilters(
-            EntryFilterKey.HideContestedZoneElevator,
-            !e.target.checked,
-          )
-        }
-      /> */}
-
-      {/* <YesNoCheckbox
-        yesLabel="Aufzüge (ASD)"
-        noLabel="Aufzüge (ASD)"
-        labelClassName="text-sm flex-1"
-        checked={!entryFilters[EntryFilterKey.HideAsdElevator]}
-        onChange={(e) =>
-          setEntryFilters(EntryFilterKey.HideAsdElevator, !e.target.checked)
-        }
-      /> */}
-
-      {/* <YesNoCheckbox
-        yesLabel="Kills (NPCs)"
-        noLabel="Kills (NPCs)"
-        labelClassName="text-xs flex-1"
-        checked={!entryFilters[EntryFilterKey.HideNpcKill]}
-        onChange={(e) =>
-          setEntryFilters(EntryFilterKey.HideNpcKill, !e.target.checked)
-        }
-      /> */}
-
-      {/* <YesNoCheckbox
-        yesLabel="Kills (Spieler)"
-        noLabel="Kills (Spieler)"
-        labelClassName="text-xs flex-1"
-        checked={!entryFilters[EntryFilterKey.HidePlayerKill]}
-        onChange={(e) =>
-          setEntryFilters(EntryFilterKey.HidePlayerKill, !e.target.checked)
-        }
-      /> */}
-
-      {/* <YesNoCheckbox
-        yesLabel="Leichen"
-        noLabel="Leichen"
-        labelClassName="text-sm flex-1"
-        checked={!entryFilters[EntryFilterKey.HideCorpse]}
-        onChange={(e) =>
-          setEntryFilters(EntryFilterKey.HideCorpse, !e.target.checked)
-        }
-      /> */}
-
       <YesNoCheckbox
         yesLabel="Shard-Beitritte"
         noLabel="Shard-Beitritte"
