@@ -34,11 +34,36 @@ export default async function Page() {
             von neuen Typen.
           </p>
 
-          <p>Es wird nun angezeigt, wenn ein Blueprint freigeschaltet wird.</p>
-
           <p>
             Zudem wurde die Darstellung an neuen Standard-Tabellen-Layout
             angepasst.
+          </p>
+        </DayItem>
+
+        <DayItem
+          heading="Blueprint-Freischaltungen"
+          badges={["Neu", "Log Analyzer"]}
+        >
+          <p>
+            Im Log Analyzer wird nun angezeigt, wenn ein Blueprint
+            freigeschaltet wird.
+          </p>
+        </DayItem>
+
+        <DayItem heading="Contract angenommen" badges={["Neu", "Log Analyzer"]}>
+          <p>
+            Im Log Analyzer wird nun angezeigt, wenn ein Contract angenommen
+            wird.
+          </p>
+        </DayItem>
+
+        <DayItem
+          heading="Contract abgeschlossen"
+          badges={["Neu", "Log Analyzer"]}
+        >
+          <p>
+            Im Log Analyzer wird nun angezeigt, wenn ein Contract abgeschlossen
+            wird.
           </p>
         </DayItem>
       </Day>

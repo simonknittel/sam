@@ -4,6 +4,8 @@ export enum EntryType {
   JoinPu = "joinPu",
   OwnDeath = "ownDeath",
   BlueprintReceivedNotification = "blueprintReceivedNotification",
+  ContractAcceptedNotification = "contractAcceptedNotification",
+  ContractCompleteNotification = "contractCompleteNotification",
 }
 
 export interface IEntry {
@@ -119,6 +121,54 @@ export const PATTERNS: Patterns = {
           >
             <span className="text-white/40">Blueprint erhalten:</span>{" "}
             {groups.blueprint}
+          </span>
+        ),
+      };
+    },
+  },
+
+  contractAcceptedNotification: {
+    title: "Contract angenommen",
+    // <2026-05-25T07:45:33.982Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Accepted:  Wikelo Arrive to System: " [4] to queue. New queue size: 1, MissionId: [bf7d2465-cf1e-480b-ae5c-25040d716e5f], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+    regex:
+      /^<(?<isoDate>[\d\-T:.Z]+)>.*\<SHUDEvent_OnNotification\> Added notification "Contract Accepted: (?<contract>.+): " \[\d+\] to queue.*$/gm,
+    matchMapping: (date, groups): Omit<IEntry, "isoDate"> => {
+      const key = `${date.getTime()}_${groups.contract}`;
+
+      return {
+        key,
+        type: EntryType.ContractAcceptedNotification,
+        message: (
+          <span
+            className="truncate"
+            title={`Contract angenommen: ${groups.contract}`}
+          >
+            <span className="text-white/40">Contract angenommen:</span>{" "}
+            {groups.contract}
+          </span>
+        ),
+      };
+    },
+  },
+
+  contractCompleteNotification: {
+    title: "Contract abgeschlossen",
+    // <2026-06-01T10:15:20.123Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Complete:  Wikelo Arrive to System: " [5] to queue. New queue size: 2, MissionId: [bf7d2465-cf1e-480b-ae5c-25040d716e5f], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+    regex:
+      /^<(?<isoDate>[\d\-T:.Z]+)>.*\<SHUDEvent_OnNotification\> Added notification "Contract Complete: (?<contract>.+): " \[\d+\] to queue.*$/gm,
+    matchMapping: (date, groups): Omit<IEntry, "isoDate"> => {
+      const key = `${date.getTime()}_${groups.contract}`;
+
+      return {
+        key,
+        type: EntryType.ContractCompleteNotification,
+        message: (
+          <span
+            className="truncate"
+            title={`Contract abgeschlossen: ${groups.contract}`}
+          >
+            <span className="text-white/40">Contract abgeschlossen:</span>{" "}
+            {groups.contract}
           </span>
         ),
       };
