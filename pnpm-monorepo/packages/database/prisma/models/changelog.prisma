@@ -1,0 +1,10 @@
+/// Tracks which changelog entries a citizen has seen.
+model ChangelogEntrySeen {
+  id        String @id @default(cuid(2))
+  citizenId String
+  citizen   Entity @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  key       String
+
+  @@unique([citizenId, key])
+  @@index([citizenId])
+}

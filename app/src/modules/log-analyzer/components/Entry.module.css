@@ -1,5 +1,7 @@
 .Row {
-  border: 1px solid transparent;
+  border-width: 1px;
+  border-style: solid;
+  border-color: transparent;
   border-radius: 0.25rem;
   transition: border-color 60s;
 }

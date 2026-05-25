@@ -3,6 +3,7 @@ import { getAppLinks } from "@/modules/apps/utils/queries/getAppLinks";
 import { AdminEnabler } from "@/modules/auth/components/AdminEnabler";
 import { SessionProviderContainer } from "@/modules/auth/components/SessionProviderContainer";
 import { requireAuthenticationPage } from "@/modules/auth/server";
+import { getUnseenChangelogEntryKeys } from "@/modules/changelog/queries/getUnseenChangelogEntryKeys";
 import { CreateContextProvider } from "@/modules/common/components/CreateContext";
 import ImpersonationBannerContainer from "@/modules/common/components/ImpersonationBannerContainer";
 import { NewReleaseToast } from "@/modules/common/components/NewReleaseToast";
@@ -23,13 +24,19 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Suspense } from "react";
 
 export default async function AppLayout({ children }: LayoutProps<"/app">) {
-  const [authentication, disableAlgolia, apps, visibleRoles] =
-    await Promise.all([
-      requireAuthenticationPage(),
-      getUnleashFlag(UNLEASH_FLAG.DisableAlgolia),
-      getAppLinks(),
-      getVisibleRoles(),
-    ]);
+  const [
+    authentication,
+    disableAlgolia,
+    apps,
+    visibleRoles,
+    changelogUnseenKeys,
+  ] = await Promise.all([
+    requireAuthenticationPage(),
+    getUnleashFlag(UNLEASH_FLAG.DisableAlgolia),
+    getAppLinks(),
+    getVisibleRoles(),
+    getUnseenChangelogEntryKeys(),
+  ]);
 
   return (
     <>
@@ -41,7 +48,12 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
                 <NextIntlClientProvider>
                   <RolesContextProvider roles={visibleRoles}>
                     <div className="min-h-dvh background-primary">
-                      <AppsContextProvider apps={apps}>
+                      <AppsContextProvider
+                        apps={apps}
+                        appDotBadgeCounts={{
+                          changelog: changelogUnseenKeys.size,
+                        }}
+                      >
                         <CreateContextProvider>
                           <CmdKProvider disableAlgolia={disableAlgolia}>
                             <TopBar />

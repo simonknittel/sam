@@ -10,14 +10,18 @@ import { Day } from "@/modules/changelog/components/Day";
 import { DayItem } from "@/modules/changelog/components/DayItem";
 import { Navigation } from "@/modules/changelog/components/Navigation";
 import { RedactedDayItem } from "@/modules/changelog/components/RedactedDayItem";
+import { updateUnseenChangelogEntries } from "@/modules/changelog/queries/updateUnseenChangelogEntries.ts";
 import { Link } from "@/modules/common/components/Link";
 import Image from "next/image";
 
 export default async function Page() {
   const authentication = await requireAuthenticationPage("/app/changelog");
-  const [showSystemLog] = await Promise.all([
+  const [showSystemLog, unseenKeys] = await Promise.all([
     authentication.authorize("systemLog", "read"),
+    updateUnseenChangelogEntries(),
   ]);
+
+  const isUnseen = (key: string) => unseenKeys.has(key);
 
   return (
     <div className="flex flex-col gap-4">
@@ -25,8 +29,20 @@ export default async function Page() {
 
       <Day heading="25. Mai 2026">
         <DayItem
+          heading="Hervorhebung neuer Changelog-Einträge"
+          badges={["Neu", "Changelog"]}
+          isNew={isUnseen("2026-05-25-hervorhebung-neuer-changelog-einträge")}
+        >
+          <p>
+            Es gibt nun eine Hervorhebung wenn es im Changelog neue Einträge
+            gibt.
+          </p>
+        </DayItem>
+
+        <DayItem
           heading="Log Analyzer refreshed"
           badges={["Änderung", "Log Analyzer"]}
+          isNew={isUnseen("2026-05-25-log-analyzer-refreshed")}
         >
           <p>
             Für den Log Analyzer wurde überarbeitet, wie die Logs ausgewertet
@@ -35,7 +51,7 @@ export default async function Page() {
           </p>
 
           <p>
-            Zudem wurde die Darstellung an neuen Standard-Tabellen-Layout
+            Zudem wurde die Darstellung an das neue Standard-Tabellen-Layout
             angepasst.
           </p>
         </DayItem>
@@ -43,6 +59,7 @@ export default async function Page() {
         <DayItem
           heading="Blueprint-Freischaltungen"
           badges={["Neu", "Log Analyzer"]}
+          isNew={isUnseen("2026-05-25-blueprint-freischaltungen")}
         >
           <p>
             Im Log Analyzer wird nun angezeigt, wenn ein Blueprint
@@ -50,7 +67,11 @@ export default async function Page() {
           </p>
         </DayItem>
 
-        <DayItem heading="Contract angenommen" badges={["Neu", "Log Analyzer"]}>
+        <DayItem
+          heading="Contract angenommen"
+          badges={["Neu", "Log Analyzer"]}
+          isNew={isUnseen("2026-05-25-contract-angenommen")}
+        >
           <p>
             Im Log Analyzer wird nun angezeigt, wenn ein Contract angenommen
             wird.
@@ -60,6 +81,7 @@ export default async function Page() {
         <DayItem
           heading="Contract abgeschlossen"
           badges={["Neu", "Log Analyzer"]}
+          isNew={isUnseen("2026-05-25-contract-abgeschlossen")}
         >
           <p>
             Im Log Analyzer wird nun angezeigt, wenn ein Contract abgeschlossen
@@ -67,7 +89,11 @@ export default async function Page() {
           </p>
         </DayItem>
 
-        <DayItem heading="Verbindung getrennt" badges={["Neu", "Log Analyzer"]}>
+        <DayItem
+          heading="Verbindung getrennt"
+          badges={["Neu", "Log Analyzer"]}
+          isNew={isUnseen("2026-05-25-verbindung-getrennt")}
+        >
           <p>
             Im Log Analyzer wird nun angezeigt, wenn die Verbindung getrennt
             wird.

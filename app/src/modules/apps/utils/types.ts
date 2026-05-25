@@ -10,6 +10,7 @@ export interface BaseApp {
 
 export interface IntegratedApp extends BaseApp {
   href: string;
+  slug: string;
   /**
    * Either of these permission strings must be permitted in order to access the app.
    */
