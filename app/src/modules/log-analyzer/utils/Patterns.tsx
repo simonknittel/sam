@@ -165,7 +165,7 @@ export const PATTERNS: Patterns = {
 
   contractFailedNotification: {
     title: "Contract fehlgeschlagen",
-    // <2026-06-01T10:15:20.123Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Failed:  Wikelo Arrive to System: " [5] to queue. New queue size: 2, MissionId: [bf7d2465-cf1e-480b-ae5c-25040d716e5f], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+    // <2026-05-25T18:03:03.012Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Failed: CRITICAL REFUEL REQUEST: Crusader Ares Star Fighter Ion <EM4>[200 Rep] [BP]*</EM4>: " [189] to queue. New queue size: 2, MissionId: [c54aa278-06e1-4c83-86d2-9e795f7691f3], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>.*\<SHUDEvent_OnNotification\> Added notification "Contract Failed: (?<contract>.+): " \[\d+\] to queue.*$/gm,
     matchMapping: (date, groups): Omit<IEntry, "isoDate"> => {
@@ -175,7 +175,7 @@ export const PATTERNS: Patterns = {
 
       return {
         key,
-        type: EntryType.ContractCompleteNotification,
+        type: EntryType.ContractFailedNotification,
         message: (
           <span className="truncate" title={contractName}>
             {contractName}

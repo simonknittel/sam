@@ -37,6 +37,7 @@
     "Eventteilnehmer",
     "fkey",
     "gehostet",
+    "GEID",
     "gejoint",
     "gltf",
     "headlessui",
