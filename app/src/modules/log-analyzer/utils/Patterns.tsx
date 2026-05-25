@@ -6,6 +6,7 @@ export enum EntryType {
   BlueprintReceivedNotification = "blueprintReceivedNotification",
   ContractAcceptedNotification = "contractAcceptedNotification",
   ContractCompleteNotification = "contractCompleteNotification",
+  Disconnection = "disconnection",
 }
 
 export interface IEntry {
@@ -82,7 +83,7 @@ export const PATTERNS: Patterns = {
 
   ownDeath: {
     title: "Gestorben",
-    // <2025-11-30T13:13:55.134Z> [Notice] <[ActorState] Dead> [ACTOR STATE][CSCActorControlStateDead::PrePhysicsUpdate] Actor 'ind3x' [202028778295] ejected from zone 'RSI_Zeus_CL_7838674991315' [7838674991315] to zone 'pyro4' [7610665712799] due to previous zone being in a destroyed vehicle with detached interior. [Team_ActorFeatures][Actor]
+    // <2025-11-30T13:13:55.134Z> [Notice] <[ActorState] Dead> [ACTOR STATE][CSCActorControlStateDead::PrePhysicsUpdate] Actor '...' [...] ejected from zone 'RSI_Zeus_CL_...' [...] to zone 'pyro4' [7610665712799] due to previous zone being in a destroyed vehicle with detached interior. [Team_ActorFeatures][Actor]
     regex: /^<(?<isoDate>[\d\-T:.Z]+)>.*\<\[ActorState\] Dead\>.*$/gm,
     matchMapping: (date, groups): Omit<IEntry, "isoDate"> => {
       const key = `${date.getTime()}_${groups.elevatorName}`;
@@ -155,6 +156,26 @@ export const PATTERNS: Patterns = {
         message: (
           <span className="truncate" title={contractName}>
             {contractName}
+          </span>
+        ),
+      };
+    },
+  },
+
+  disconnection: {
+    title: "Verbindung getrennt",
+    // <2026-05-25T08:40:17.864Z> [Notice] <Channel Disconnected> cause=30016 reason="Remote Disconnect - Player requested disconnect" frame=220001 isRemote=1 map="megamap" gamerules="SC_Default" hostType="Replicant" remoteAddr=... localAddr=0.0.0.0:64090 connection={4, 0} session=... node_id=bc4da5d3-3f05-e19e-4aa0-702432234095 nickname="..." playerGEID=... uptime_secs=3636.990234 [Team_Network][Network][Gateway][Disconnection]
+    regex:
+      /^<(?<isoDate>[\d\-T:.Z]+)> \[Notice\] \<Channel Disconnected\>.*reason="Remote Disconnect - Player requested disconnect".*$/gm,
+    matchMapping: (date, groups): Omit<IEntry, "isoDate"> => {
+      const key = `${date.getTime()}_${groups.contract}`;
+
+      return {
+        key,
+        type: EntryType.Disconnection,
+        message: (
+          <span className="truncate" title="Verbindung getrennt">
+            Verbindung getrennt
           </span>
         ),
       };
