@@ -111,16 +111,18 @@ export const PATTERNS: Patterns = {
     matchMapping: (date, groups): Omit<IEntry, "isoDate"> => {
       const key = `${date.getTime()}_${groups.blueprint}`;
 
+      const blueprintName = groups.blueprint.replaceAll(/<.+?>/g, "");
+
       return {
         key,
         type: EntryType.BlueprintReceivedNotification,
         message: (
           <span
             className="truncate"
-            title={`Blueprint erhalten: ${groups.blueprint}`}
+            title={`Blueprint erhalten: ${blueprintName}`}
           >
             <span className="text-white/40">Blueprint erhalten:</span>{" "}
-            {groups.blueprint}
+            {blueprintName}
           </span>
         ),
       };
@@ -135,16 +137,18 @@ export const PATTERNS: Patterns = {
     matchMapping: (date, groups): Omit<IEntry, "isoDate"> => {
       const key = `${date.getTime()}_${groups.contract}`;
 
+      const contractName = groups.contract.replaceAll(/<.+?>/g, "");
+
       return {
         key,
         type: EntryType.ContractAcceptedNotification,
         message: (
           <span
             className="truncate"
-            title={`Contract angenommen: ${groups.contract}`}
+            title={`Contract angenommen: ${contractName}`}
           >
             <span className="text-white/40">Contract angenommen:</span>{" "}
-            {groups.contract}
+            {contractName}
           </span>
         ),
       };
@@ -159,16 +163,18 @@ export const PATTERNS: Patterns = {
     matchMapping: (date, groups): Omit<IEntry, "isoDate"> => {
       const key = `${date.getTime()}_${groups.contract}`;
 
+      const contractName = groups.contract.replaceAll(/<.+?>/g, "");
+
       return {
         key,
         type: EntryType.ContractCompleteNotification,
         message: (
           <span
             className="truncate"
-            title={`Contract abgeschlossen: ${groups.contract}`}
+            title={`Contract abgeschlossen: ${contractName}`}
           >
             <span className="text-white/40">Contract abgeschlossen:</span>{" "}
-            {groups.contract}
+            {contractName}
           </span>
         ),
       };
