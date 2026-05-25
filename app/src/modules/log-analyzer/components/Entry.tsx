@@ -18,8 +18,13 @@ export const Entry = memo(
       entry.isoDate.getTime() > now.getTime() - 1000 * 60 * 60 * 24;
 
     return (
-      <TRow className={clsx({ [styles.Row]: entry.isNew }, GRID_COLS)}>
-        <td className="relative">
+      <TRow
+        className={clsx(
+          { [styles.Row]: entry.isNew, relative: entry.isNew },
+          GRID_COLS,
+        )}
+      >
+        <td>
           {showRelativeDate ? (
             <RelativeDate date={entry.isoDate} updateInterval={10_000} />
           ) : (

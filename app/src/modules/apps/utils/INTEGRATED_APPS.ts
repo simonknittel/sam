@@ -22,12 +22,14 @@ import type { IntegratedApp } from "./types";
 export const INTEGRATED_APPS: IntegratedApp[] = [
   {
     name: "Account",
+    slug: "account",
     href: "/app/account",
     imageSrc: accountScreenshot,
     description: "Einstellungen zu deinem Account",
   },
   {
     name: "Avatar Creator",
+    slug: "avatar-creator",
     href: "/app/avatar-creator",
     imageSrc: avatarCreatorScreenshot,
     description:
@@ -35,12 +37,14 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
   },
   {
     name: "Changelog",
+    slug: "changelog",
     href: "/app/changelog",
     imageSrc: changelogScreenshot,
     description: "Übersicht der letzten Änderungen im SAM",
   },
   {
     name: "Cornerstone Image Browser",
+    slug: "cornerstone-image-browser",
     href: "/app/tools/cornerstone-image-browser",
     imageSrc: cornerstoneImageBrowserScreenshot,
     description:
@@ -49,6 +53,7 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
   },
   {
     name: "Dashboard",
+    slug: "dashboard",
     href: "/app/dashboard",
     imageSrc: dashboardScreenshot,
     description: "Übersicht mit aktuellen Informationen",
@@ -56,6 +61,7 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
   },
   {
     name: "Dogfight Trainer",
+    slug: "dogfight-trainer",
     href: "/app/dogfight-trainer",
     imageSrc: dogfightTrainerScreenshot,
     description:
@@ -64,6 +70,7 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
   },
   {
     name: "Dokumente",
+    slug: "documents",
     href: "/app/documents",
     imageSrc: documentsScreenshot,
     description: "Alles was du zu deinem nächsten Zertifikat wissen möchtest",
@@ -71,6 +78,7 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
   },
   {
     name: "Events",
+    slug: "events",
     href: "/app/events",
     imageSrc: eventsScreenshot,
     description: "Übersicht aller anstehenden und vergangenen Events",
@@ -79,6 +87,7 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
   },
   {
     name: "Flotte",
+    slug: "fleet",
     href: "/app/fleet",
     imageSrc: fleetScreenshot,
     description:
@@ -88,6 +97,7 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
   },
   {
     name: "SINcome",
+    slug: "sincome",
     href: "/app/sincome",
     imageSrc: profitDistributionScreenshot,
     description: "Mit SINcome machst du deine SILC zu Geld",
@@ -96,12 +106,14 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
   },
   {
     name: "Hilfe",
+    slug: "help",
     href: "/app/help",
     imageSrc: helpScreenshot,
     description: "Hilfe und Anleitungen zur Nutzung des SAM",
   },
   {
     name: "IAM",
+    slug: "iam",
     href: "/app/iam",
     imageSrc: iamScreenshot,
     description: "Übersicht und Verwaltung der Rollen und Benutzer.",
@@ -109,6 +121,7 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
   },
   {
     name: "Karriere",
+    slug: "career",
     href: "/app/career",
     imageSrc: careerScreenshot,
     description:
@@ -123,6 +136,7 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
   },
   {
     name: "Log Analyzer",
+    slug: "log-analyzer",
     href: "/app/tools/log-analyzer",
     imageSrc: logAnalyzerScreenshot,
     description:
@@ -132,6 +146,7 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
   },
   {
     name: "SILC",
+    slug: "silc",
     href: "/app/silc",
     imageSrc: silcScreenshot,
     description: "Übersicht und Verwaltung von SILC",
@@ -140,12 +155,14 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
   },
   {
     name: "Statistiken",
+    slug: "statistics",
     href: "/app/statistics",
     description: "Diverse Statistiken zur Nutzung vom SAM",
     permissionStrings: ["globalStatistics;read"],
   },
   {
     name: "Spynet",
+    slug: "spynet",
     href: "/app/spynet",
     imageSrc: spynetScreenshot,
     description: "Übersicht und Verwaltung von Citizen und Organisations",
@@ -154,6 +171,7 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
   },
   {
     name: "Strafpunkte",
+    slug: "penalty-points",
     href: "/app/penalty-points",
     imageSrc: penaltyPointsScreenshot,
     description: "Übersicht und Verwaltung von Strafpunkten",
@@ -161,12 +179,14 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
   },
   {
     name: "System Log",
+    slug: "system-log",
     href: "/app/system-log",
     description: "Systemprotokoll aller Ereignisse",
     permissionStrings: ["systemLog;read"],
   },
   {
     name: "Tasks",
+    slug: "tasks",
     href: "/app/tasks",
     imageSrc: tasksScreenshot,
     description: "Org-internes Quest System",
@@ -175,6 +195,7 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
   },
   {
     name: "Timezones",
+    slug: "timezones",
     href: "/app/timezones",
     imageSrc: timezonesScreenshot,
     description:

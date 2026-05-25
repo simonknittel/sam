@@ -16,8 +16,12 @@ interface Props {
 }
 
 export const Apps = ({ className }: Props) => {
-  const { apps } = useAppsContext();
+  const { apps, appDotBadgeCounts } = useAppsContext();
   if (!apps) return null;
+
+  const hasDotBadge = Object.values(appDotBadgeCounts).some(
+    (count) => count > 0,
+  );
 
   return (
     <Popover
@@ -29,24 +33,32 @@ export const Apps = ({ className }: Props) => {
           )}
         >
           <AiFillAppstore className="text-xl" />
-          <span className="text-xs font-mono uppercase relative top-px">
+
+          <span className="text-xs font-mono uppercase relative top-px leading-px">
             Apps
           </span>
+
+          {hasDotBadge && (
+            <span className="inline-block rounded-full size-2 bg-amber-500 relative ml-1">
+              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 inline-block rounded-full size-3 bg-amber-500 animate-ping motion-reduce:hidden" />
+            </span>
+          )}
         </button>
       }
       enableHover
       childrenClassName="w-96"
     >
-      <PopoverChildren apps={apps} />
+      <PopoverChildren apps={apps} appDotBadgeCounts={appDotBadgeCounts} />
     </Popover>
   );
 };
 
 interface PopoverChildrenProps {
   apps: App[];
+  appDotBadgeCounts: Record<string, number>;
 }
 
-const PopoverChildren = ({ apps }: PopoverChildrenProps) => {
+const PopoverChildren = ({ apps, appDotBadgeCounts }: PopoverChildrenProps) => {
   const { closePopover } = usePopover();
 
   const { featured, other } = groupByFeatured(apps);
@@ -69,6 +81,9 @@ const PopoverChildren = ({ apps }: PopoverChildrenProps) => {
                   app={app as Exclude<App, RedactedApp>}
                   variant="compact"
                   onClick={closePopover}
+                  dotBadgeCount={
+                    ("slug" in app && appDotBadgeCounts[app.slug]) || undefined
+                  }
                 />
               ),
             )}
@@ -92,6 +107,9 @@ const PopoverChildren = ({ apps }: PopoverChildrenProps) => {
                   app={app as Exclude<App, RedactedApp>}
                   variant="compact"
                   onClick={closePopover}
+                  dotBadgeCount={
+                    ("slug" in app && appDotBadgeCounts[app.slug]) || undefined
+                  }
                 />
               ),
             )}

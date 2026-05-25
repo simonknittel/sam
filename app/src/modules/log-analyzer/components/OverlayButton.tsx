@@ -84,7 +84,7 @@ const OverlayEntry = ({ entry }: OverlayEntryProps) => {
 
       <div
         className={clsx(
-          "absolute left-0 top-0 bg-amber-500 text-black uppercase text-xs px-1 rounded-br-secondary",
+          "absolute left-0 top-0 bg-amber-500 text-black font-mono uppercase text-xs px-1 rounded-br-secondary",
           styles.New,
         )}
       >

@@ -10,6 +10,7 @@ interface Props {
   readonly app: Exclude<App, RedactedApp>;
   readonly variant?: "default" | "compact";
   readonly onClick?: () => void;
+  readonly dotBadgeCount?: number;
 }
 
 export const AppTile = ({
@@ -17,6 +18,7 @@ export const AppTile = ({
   app,
   variant = "default",
   onClick,
+  dotBadgeCount = 0,
 }: Props) => {
   const href =
     "href" in app
@@ -40,6 +42,13 @@ export const AppTile = ({
         <span title={app.name} className="flex-1 truncate">
           {app.name}
         </span>
+
+        {dotBadgeCount > 0 && (
+          <span className="inline-block rounded-full size-2 bg-amber-500 relative ml-1">
+            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 inline-block rounded-full size-3 bg-amber-500 animate-ping motion-reduce:hidden" />
+          </span>
+        )}
+
         {isExternal && (
           <FaExternalLinkAlt className="flex-none text-neutral-500" />
         )}
@@ -74,6 +83,12 @@ export const AppTile = ({
           >
             {app.name}
           </h2>
+          {dotBadgeCount > 0 && (
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-interaction-700 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-interaction-500" />
+            </span>
+          )}
           {isExternal && (
             <FaExternalLinkAlt className="flex-none text-neutral-500 text-sm" />
           )}

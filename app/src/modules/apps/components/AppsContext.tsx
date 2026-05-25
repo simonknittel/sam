@@ -6,6 +6,7 @@ import type { App } from "../utils/types";
 
 interface AppsContext {
   readonly apps: App[] | null;
+  readonly appDotBadgeCounts: Record<string, number>;
 }
 
 const AppsContext = createContext<AppsContext | undefined>(undefined);
@@ -13,14 +14,20 @@ const AppsContext = createContext<AppsContext | undefined>(undefined);
 interface Props {
   readonly apps: App[] | null;
   readonly children: ReactNode;
+  readonly appDotBadgeCounts?: Record<string, number>;
 }
 
-export const AppsContextProvider = ({ apps, children }: Props) => {
+export const AppsContextProvider = ({
+  apps,
+  children,
+  appDotBadgeCounts = {},
+}: Props) => {
   const value = useMemo(
     () => ({
       apps,
+      appDotBadgeCounts,
     }),
-    [apps],
+    [apps, appDotBadgeCounts],
   );
 
   return <AppsContext.Provider value={value}>{children}</AppsContext.Provider>;
