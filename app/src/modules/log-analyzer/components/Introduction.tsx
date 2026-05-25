@@ -1,6 +1,6 @@
 import { RichText } from "@/modules/common/components/RichText";
 import clsx from "clsx";
-import { PATTERNS } from "../utils/Patterns";
+import { PATTERNS } from "../utils/PATTERNS";
 
 interface Props {
   readonly className?: string;

@@ -3,7 +3,7 @@ import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
 import { Popover } from "@/modules/common/components/Popover";
 import clsx from "clsx";
 import { FaFilter } from "react-icons/fa";
-import { EntryType, PATTERNS } from "../utils/Patterns";
+import { type EntryType, PATTERNS } from "../utils/PATTERNS";
 import { useEntryFilterContext } from "./EntryFilterContext";
 
 interface Props {

@@ -3,7 +3,7 @@
 import { useLocalStorage } from "@uidotdev/usehooks";
 import type { ReactNode } from "react";
 import { createContext, useCallback, useContext, useMemo } from "react";
-import { EntryType, type IEntry } from "../utils/Patterns";
+import { EntryType, type IEntry } from "../utils/PATTERNS";
 
 interface EntryFilterContext {
   readonly entryFilters: Record<EntryType, boolean>;

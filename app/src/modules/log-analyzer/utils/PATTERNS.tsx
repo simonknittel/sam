@@ -100,8 +100,9 @@ export const PATTERNS: Patterns = {
   blueprintReceivedNotification: {
     title: "Blueprint erhalten",
     // <2026-05-14T14:45:40.207Z> [Notice] <SHUDEvent_OnNotification> Added notification "Received Blueprint: Morozov-SH Helmet Thule: " [25] to queue. New queue size: 3, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+    // <2026-05-25T17:28:05.820Z> [Notice] <SHUDEvent_OnNotification> Added notification "<EM4>Received Blueprint: Arbor MH1 Mining Laser [BP]</EM4>: " [15] to queue. New queue size: 2, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
-      /^<(?<isoDate>[\d\-T:.Z]+)>.*\<SHUDEvent_OnNotification\> Added notification "Received Blueprint: (?<blueprint>.+): " \[\d+\] to queue.*$/gm,
+      /^<(?<isoDate>[\d\-T:.Z]+)>.*\<SHUDEvent_OnNotification\> Added notification ".*Received Blueprint: (?<blueprint>.+): ".*$/gm,
     matchMapping: (date, groups): Omit<IEntry, "isoDate"> => {
       const key = `${date.getTime()}_${groups.blueprint}`;
 
@@ -123,7 +124,7 @@ export const PATTERNS: Patterns = {
     title: "Contract angenommen",
     // <2026-05-25T07:45:33.982Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Accepted:  Wikelo Arrive to System: " [4] to queue. New queue size: 1, MissionId: [bf7d2465-cf1e-480b-ae5c-25040d716e5f], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
-      /^<(?<isoDate>[\d\-T:.Z]+)>.*\<SHUDEvent_OnNotification\> Added notification "Contract Accepted: (?<contract>.+): " \[\d+\] to queue.*$/gm,
+      /^<(?<isoDate>[\d\-T:.Z]+)>.*\<SHUDEvent_OnNotification\> Added notification ".*Contract Accepted: (?<contract>.+): ".*$/gm,
     matchMapping: (date, groups): Omit<IEntry, "isoDate"> => {
       const key = `${date.getTime()}_${groups.contract}`;
 
@@ -145,7 +146,7 @@ export const PATTERNS: Patterns = {
     title: "Contract abgeschlossen",
     // <2026-06-01T10:15:20.123Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Complete:  Wikelo Arrive to System: " [5] to queue. New queue size: 2, MissionId: [bf7d2465-cf1e-480b-ae5c-25040d716e5f], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
-      /^<(?<isoDate>[\d\-T:.Z]+)>.*\<SHUDEvent_OnNotification\> Added notification "Contract Complete: (?<contract>.+): " \[\d+\] to queue.*$/gm,
+      /^<(?<isoDate>[\d\-T:.Z]+)>.*\<SHUDEvent_OnNotification\> Added notification ".*Contract Complete: (?<contract>.+): ".*$/gm,
     matchMapping: (date, groups): Omit<IEntry, "isoDate"> => {
       const key = `${date.getTime()}_${groups.contract}`;
 
@@ -167,7 +168,7 @@ export const PATTERNS: Patterns = {
     title: "Contract fehlgeschlagen",
     // <2026-05-25T18:03:03.012Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Failed: CRITICAL REFUEL REQUEST: Crusader Ares Star Fighter Ion <EM4>[200 Rep] [BP]*</EM4>: " [189] to queue. New queue size: 2, MissionId: [c54aa278-06e1-4c83-86d2-9e795f7691f3], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
-      /^<(?<isoDate>[\d\-T:.Z]+)>.*\<SHUDEvent_OnNotification\> Added notification "Contract Failed: (?<contract>.+): " \[\d+\] to queue.*$/gm,
+      /^<(?<isoDate>[\d\-T:.Z]+)>.*\<SHUDEvent_OnNotification\> Added notification ".*Contract Failed: (?<contract>.+): ".*$/gm,
     matchMapping: (date, groups): Omit<IEntry, "isoDate"> => {
       const key = `${date.getTime()}_${groups.contract}`;
 
