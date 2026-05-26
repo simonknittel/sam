@@ -83,20 +83,20 @@ For each ticket, prepare a refined ticket body using the template below.
 Use this format and adapt sections to issue type.
 
 ```md
-## Summary
+## Goal
 
-<1-3 sentence summary of the problem and desired outcome>
+<1-3 sentence summary of the goal>
 
-## User Story
+## Problem
 
-As a <type of user>,
-I want <goal>,
-so that <value/outcome>.
+<1-3 sentence summary of the current problem and user impact>
+
+## Solution
+
+<1-3 sentence summary of the proposed solution>
 
 ## Context
 
-- Current behavior: <what happens today>
-- Expected behavior: <what should happen>
 - Notes from codebase: <relevant findings>
 - Parent issue: <link to original issue if applicable>
 - Links to related issues incl. implementation order: <links to other new issues created from the same idea>
