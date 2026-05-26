@@ -1,34 +1,30 @@
 ---
-name: refine-github-issue
-description: Refine a rough GitHub issue into an actionable engineering ticket with user story, functional acceptance criteria, non-functional acceptance criteria, and a posted issue comment.
+name: refine-idea
+description: Refine a rough idea into actionable engineering ticket(s) with user story, functional acceptance criteria, non-functional acceptance criteria.
 ---
 
-# Refine GitHub Issue
+# Refine Idea
 
-Use this skill when you receive a GitHub issue that is incomplete, vague, or not implementation-ready.
+Use this skill when you receive an idea that is incomplete, vague, or not implementation-ready.
 
 The skill supports feature requests, tasks, bugs, and other technical improvements.
 
 ## Goal
 
-Transform a rough issue into a clear, buildable ticket and post the refined version as a comment on the issue.
+Transform a rough idea into a clear, buildable ticket(s) and create GitHub issues for them.
 
-## Required Inputs
+## Inputs
 
-- GitHub repository (`owner/repo`)
-- Issue number or URL
-- Original issue title/body
-- Access to the local codebase (for discovery)
-- Permission/authentication to comment on the issue (for final step)
+The idea will be given in the form of either an existing GitHub issue or a free-form description.
 
 ## Process
 
 Follow these steps in order.
 
-### 1) Understand the issue and inspect the codebase
+### 1) Understand the idea and inspect the codebase
 
-- Classify issue type: `feature`, `bug`, `task`, `tech-debt`, or `investigation`.
-- Restate the issue in one sentence to confirm understanding.
+- Classify idea type: `feature`, `bug`, `task` or `investigation`.
+- Restate the idea in one sentence to confirm understanding.
 - Search for relevant code paths, modules, APIs, UI screens, event handlers, and data models.
 - Identify existing behavior and nearby patterns already used in the codebase.
 - Capture concrete references (file paths, symbols, services, tables, endpoints).
@@ -39,14 +35,16 @@ Minimum output from this step:
 - `Where it likely changes`
 - `Known constraints`
 
-### 2) Ask clarifying questions
+### 2) Interview me
 
-Before continuing with the refinement, use the `question` tool to ask clarifying questions.
+Before continuing with the refinement, use the `question` tool to ask clarifying questions. Do a thorough interview with me to extract all necessary details before moving on to the next step. Multiple rounds of questioning may be needed.
 
 - Ask only high-value questions that unblock implementation.
 - Prefer grouped questions by topic (product, UX, data, security, rollout, testing).
 - Highlight vague phrases from the issue and ask for explicit decisions.
+- Ask for clarification on terms and wording that could be interpreted in multiple ways.
 - If the issue is a bug, ask for reproduction details, expected behavior, and environment.
+- Ask one question at a time. Bad example: "Should we do X or Y? Also, do we need to consider Z?"
 
 Question quality rules:
 
@@ -61,7 +59,6 @@ Question quality rules:
 - Identify missing scope boundaries and out-of-scope items.
 - Add dependencies, migration implications, permissions, observability, and rollback considerations when relevant.
 - Call out risks and assumptions explicitly.
-- Suggest splitting into multiple tickets if the scope is too large or contains distinct phases.
 
 Assessment checklist:
 
@@ -73,51 +70,49 @@ Assessment checklist:
 - Monitoring/alerts/logging considered (if applicable)
 - Security/privacy/performance considerations included (if applicable)
 
-### 4) Produce refined ticket(s) and post as issue comment
+### 4) Produce refined GitHub issues
 
-Prepare a refined ticket body using the template below, then add it as a comment on the GitHub issue.
+Split the idea into one or more actionable GitHub issues (common splits: backend vs frontend). Add the label "AI-candidate" to each new issue. Each new issue should link to each other. Also, they should link to the original parent idea/issue if applicable. The links should be added to the "Context" section of the ticket template (see below). You can update the issue description later on if you don't have created the other issues yet. Add a comment to the original issue with links to the new refined issue(s) and close it afterwards.
 
-If refinement leads to multiple tickets, update the current one to a parent issue with a clear summary and description, then create child issues for each sub-ticket and link them in the parent.
+For each ticket, prepare a refined ticket body using the template below.
 
-If posting is not possible due to missing auth/tooling, return the exact comment body and a one-line command the user can run.
-
-## Refined Ticket Template
+## Refined ticket template
 
 Use this format and adapt sections to issue type.
 
 ```md
-## Refined Ticket
-
-### Summary
+## Summary
 
 <1-3 sentence summary of the problem and desired outcome>
 
-### User Story
+## User Story
 
 As a <type of user>,
 I want <goal>,
 so that <value/outcome>.
 
-### Context
+## Context
 
 - Current behavior: <what happens today>
 - Expected behavior: <what should happen>
 - Notes from codebase: <relevant findings>
+- Parent issue: <link to original issue if applicable>
+- Links to related issues: <links to other new issues created from the same idea>
 
-### Scope
+## Scope
 
 - In scope:
 	- <item>
 - Out of scope:
 	- <item>
 
-### Acceptance Criteria (Functional)
+## Acceptance Criteria (Functional)
 
 - [ ] <observable behavior 1>
 - [ ] <observable behavior 2>
 - [ ] <error/edge case behavior>
 
-### Acceptance Criteria (Non-Functional)
+## Acceptance Criteria (Non-Functional)
 
 - [ ] Performance: <latency/throughput target or no regression statement>
 - [ ] Security/Privacy: <constraints>
@@ -125,13 +120,13 @@ so that <value/outcome>.
 - [ ] Observability: <logs/metrics/traces/alerts>
 - [ ] Accessibility (if UI): <a11y expectations>
 
-### Technical Notes
+## Technical Notes
 
 - Likely areas to change: <files/modules/services>
 - Dependencies: <internal/external dependencies>
 - Data/migration impact: <yes/no + details>
 
-### Risks and Mitigations
+## Risks and Mitigations
 
 - Risk: <risk>
 	- Mitigation: <mitigation>
@@ -173,4 +168,4 @@ When using this skill, always return:
 - Prefer explicit assumptions over implicit guesswork.
 - Don't include code snippets.
 
-## The issue in question:
+## The idea in question:
