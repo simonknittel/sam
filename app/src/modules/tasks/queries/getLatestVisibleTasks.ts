@@ -5,18 +5,27 @@ import { forbidden } from "next/navigation";
 import { cache } from "react";
 import { isVisibleForCurrentUser } from "../utils/isVisibleForCurrentUser";
 
-export const getMyAssignedTasks = cache(
-  withTrace("getMyAssignedTasks", async () => {
+export const getLatestVisibleTasks = cache(
+  withTrace("getLatestVisibleTasks", async () => {
     const authentication = await requireAuthentication();
     if (!authentication.session.entity) forbidden();
     if (!(await authentication.authorize("task", "read"))) forbidden();
 
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
     let tasks = await prisma.task.findMany({
       where: {
+        createdById: {
+          not: authentication.session.entity.id,
+        },
         assignments: {
-          some: {
+          none: {
             citizenId: authentication.session.entity.id,
           },
+        },
+        createdAt: {
+          gte: sevenDaysAgo,
         },
         cancelledAt: null,
         deletedAt: null,
@@ -55,6 +64,10 @@ export const getMyAssignedTasks = cache(
           },
         },
       },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 5,
     });
 
     tasks = (

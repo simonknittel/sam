@@ -3,7 +3,7 @@ name: refine-idea
 description: Refine a rough idea into actionable engineering ticket(s) with user story, functional acceptance criteria, non-functional acceptance criteria.
 ---
 
-# Refine Idea
+# Refine idea
 
 Use this skill when you receive an idea that is incomplete, vague, or not implementation-ready.
 
@@ -85,7 +85,7 @@ Use this format and adapt sections to issue type.
 ```md
 ## Goal
 
-<1-3 sentence summary of the goal>
+<1-3 sentence summary of the goal without describing the solution>
 
 ## Problem
 

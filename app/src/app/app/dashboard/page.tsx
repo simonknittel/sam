@@ -7,6 +7,7 @@ import { TileSkeleton } from "@/modules/dashboard/components/TileSkeleton";
 import { CalendarTile } from "@/modules/events/components/CalendarTile";
 import { SpynetSearchTile } from "@/modules/spynet/components/SpynetSearchTile/SpynetSearchTile";
 import { TasksDashboardTile } from "@/modules/tasks/components/DashboardTile";
+import { LatestTasksDashboardTile } from "@/modules/tasks/components/LatestTasksDashboardTile";
 import { Suspense } from "react";
 
 export default async function Page() {
@@ -38,6 +39,7 @@ export default async function Page() {
 
       <div className="flex flex-col gap-6 w-100 flex-none">
         <TasksDashboardTile />
+        <LatestTasksDashboardTile />
 
         <section className="flex flex-col gap-0.5 flex-none">
           <h2 className="font-thin text-2xl self-start mb-2 font-mono uppercase">

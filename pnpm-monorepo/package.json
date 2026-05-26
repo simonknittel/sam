@@ -5,7 +5,7 @@
   "scripts": {
     "build:lambda": "pnpm run --filter \"./packages/database\" build && pnpm run --filter \"./apps/lambda\" build",
     "build:scripts": "pnpm run --filter \"./packages/database\" build",
-    "format": "prettier --write ."
+    "format": "prettier --write . && pnpm run --filter \"*\" format"
   },
   "devDependencies": {
     "prettier": "3.8.3",
