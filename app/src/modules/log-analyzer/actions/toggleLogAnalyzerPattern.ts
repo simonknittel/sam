@@ -77,9 +77,7 @@ export const toggleLogAnalyzerPattern = createAuthenticatedAction(
     ]);
 
     return {
-      success: isCurrentlyDisabled
-        ? t("Common.successfullySaved")
-        : t("Common.successfullyDeleted"),
+      success: t("Common.successfullySaved"),
     };
   },
 );
