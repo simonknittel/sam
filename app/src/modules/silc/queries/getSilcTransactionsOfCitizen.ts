@@ -30,7 +30,7 @@ export const getSilcTransactionsOfCitizen = cache(
         deletedAt: null,
       },
       orderBy: {
-        createdAt: "asc",
+        createdAt: "desc",
       },
       include: {
         receiver: {
