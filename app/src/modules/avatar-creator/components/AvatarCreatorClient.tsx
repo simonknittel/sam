@@ -93,7 +93,6 @@ const drawUserImageToCanvas = (
 };
 
 type BackgroundOption = "transparent" | "black" | "white" | "custom";
-type LayeringOption = "frameFront" | "frameBehind";
 
 interface Props {
   readonly className?: string;
@@ -110,7 +109,6 @@ export const AvatarCreatorClient = ({ className }: Props) => {
   const [backgroundOption, setBackgroundOption] =
     useState<BackgroundOption>("transparent");
   const [customBackground, setCustomBackground] = useState<string>("#000000");
-  const [layering, setLayering] = useState<LayeringOption>("frameFront");
   const [scaleMultiplier, setScaleMultiplier] = useState<number>(
     DEFAULT_SCALING_MULTIPLIER,
   );
@@ -185,28 +183,18 @@ export const AvatarCreatorClient = ({ className }: Props) => {
       ctx.restore();
     }
 
-    if (layering === "frameBehind") {
-      drawFrameToCanvas(ctx, frameImage, width, height);
-      drawUserImageToCanvas(ctx, userImage, width, height, {
-        fitScale: userImage ? baseFitScale : null,
-        scaleMultiplier,
-        offset: imageOffset,
-      });
-    } else {
-      drawUserImageToCanvas(ctx, userImage, width, height, {
-        fitScale: userImage ? baseFitScale : null,
-        scaleMultiplier,
-        offset: imageOffset,
-      });
-      drawFrameToCanvas(ctx, frameImage, width, height);
-    }
+    drawUserImageToCanvas(ctx, userImage, width, height, {
+      fitScale: userImage ? baseFitScale : null,
+      scaleMultiplier,
+      offset: imageOffset,
+    });
+    drawFrameToCanvas(ctx, frameImage, width, height);
   }, [
     backgroundColor,
     canvasSize,
     frameImage,
     baseFitScale,
     imageOffset,
-    layering,
     scaleMultiplier,
     userImage,
   ]);
@@ -444,36 +432,6 @@ export const AvatarCreatorClient = ({ className }: Props) => {
                 className="h-8 w-12 cursor-pointer rounded-sm border border-neutral-700 bg-neutral-900 disabled:cursor-not-allowed disabled:opacity-50"
               />
             </div>
-          </div>
-        </fieldset>
-
-        <fieldset>
-          <legend className="text-sm font-bold mb-2 font-mono uppercase">
-            Reihenfolge
-          </legend>
-
-          <div className="flex flex-wrap gap-4 text-sm text-neutral-300">
-            <label className="flex items-center gap-2">
-              <input
-                type="radio"
-                name="layering"
-                value="frameFront"
-                checked={layering === "frameFront"}
-                onChange={() => setLayering("frameFront")}
-              />
-              Rahmen vorne
-            </label>
-
-            <label className="flex items-center gap-2">
-              <input
-                type="radio"
-                name="layering"
-                value="frameBehind"
-                checked={layering === "frameBehind"}
-                onChange={() => setLayering("frameBehind")}
-              />
-              Rahmen hinten
-            </label>
           </div>
         </fieldset>
 
