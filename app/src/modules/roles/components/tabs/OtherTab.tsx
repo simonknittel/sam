@@ -58,6 +58,12 @@ const OtherTab = ({ roles, flows }: Readonly<Props>) => {
       </div>
 
       <div className="py-2 flex justify-between items-center">
+        <h4 className="font-bold">Log Analyzer Patterns verwalten</h4>
+
+        <YesNoCheckbox {...register("logAnalyzerPattern;manage")} />
+      </div>
+
+      <div className="py-2 flex justify-between items-center">
         <div>
           <h4 className="font-bold">System Log lesen</h4>
           <p className="text-sm text-yellow-500">

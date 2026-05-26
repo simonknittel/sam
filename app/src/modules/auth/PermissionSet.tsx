@@ -66,6 +66,7 @@ export interface PermissionSet {
     | "silcSetting"
     | "task"
     | "logAnalyzer"
+    | "logAnalyzerPattern"
     | "profitDistributionCycle"
     | "globalStatistics"
     | "systemLog";

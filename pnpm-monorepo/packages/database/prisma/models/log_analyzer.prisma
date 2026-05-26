@@ -1,0 +1,21 @@
+model LogAnalyzerPattern {
+  id              String    @id @default(cuid(2))
+  title           String
+  regExp          String
+  messageTemplate String
+  createdAt       DateTime  @default(now())
+  createdById     String?
+  createdBy       Entity?   @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedAt       DateTime? @updatedAt
+  updatedById     String?
+  updatedBy       Entity?   @relation("updatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  disabledAt      DateTime?
+  disabledById    String?
+  disabledBy      Entity?   @relation("disabledBy", fields: [disabledById], references: [id], onDelete: SetNull)
+  deletedAt       DateTime?
+  deletedById     String?
+  deletedBy       Entity?   @relation("deletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
+
+  @@index([disabledAt])
+  @@index([deletedAt])
+}

@@ -93,6 +93,10 @@ export enum AuditEventType {
   EMAIL_VERIFIED = "EMAIL_VERIFIED",
   EMAIL_CONFIRMATION_REQUESTED = "EMAIL_CONFIRMATION_REQUESTED",
   EMAIL_VERIFIED_VIA_TOKEN = "EMAIL_VERIFIED_VIA_TOKEN",
+  LOG_ANALYZER_PATTERN_CREATED = "LOG_ANALYZER_PATTERN_CREATED",
+  LOG_ANALYZER_PATTERN_UPDATED = "LOG_ANALYZER_PATTERN_UPDATED",
+  LOG_ANALYZER_PATTERN_TOGGLED = "LOG_ANALYZER_PATTERN_TOGGLED",
+  LOG_ANALYZER_PATTERN_DELETED = "LOG_ANALYZER_PATTERN_DELETED",
 }
 
 export interface AuditEventDataByType {
@@ -665,6 +669,28 @@ export interface AuditEventDataByType {
 
   [AuditEventType.EMAIL_VERIFIED_VIA_TOKEN]: {
     userId: string;
+  };
+
+  [AuditEventType.LOG_ANALYZER_PATTERN_CREATED]: {
+    patternId: string;
+    title: string;
+  };
+
+  [AuditEventType.LOG_ANALYZER_PATTERN_UPDATED]: {
+    patternId: string;
+    previousTitle: string;
+    newTitle: string;
+  };
+
+  [AuditEventType.LOG_ANALYZER_PATTERN_TOGGLED]: {
+    patternId: string;
+    title: string;
+    disabled: boolean;
+  };
+
+  [AuditEventType.LOG_ANALYZER_PATTERN_DELETED]: {
+    patternId: string;
+    title: string;
   };
 }
 
@@ -1701,5 +1727,47 @@ export const AuditEventDefinitions: {
       userId: "string",
     },
     message: (data) => `Email verified via token for user ${data.userId}`,
+  },
+
+  [AuditEventType.LOG_ANALYZER_PATTERN_CREATED]: {
+    type: AuditEventType.LOG_ANALYZER_PATTERN_CREATED,
+    data: {
+      patternId: "string",
+      title: "string",
+    },
+    message: (data) =>
+      `Log analyzer pattern created: "${data.title}" (${data.patternId})`,
+  },
+
+  [AuditEventType.LOG_ANALYZER_PATTERN_UPDATED]: {
+    type: AuditEventType.LOG_ANALYZER_PATTERN_UPDATED,
+    data: {
+      patternId: "string",
+      previousTitle: "string",
+      newTitle: "string",
+    },
+    message: (data) =>
+      `Log analyzer pattern updated: "${data.previousTitle}" → "${data.newTitle}" (${data.patternId})`,
+  },
+
+  [AuditEventType.LOG_ANALYZER_PATTERN_TOGGLED]: {
+    type: AuditEventType.LOG_ANALYZER_PATTERN_TOGGLED,
+    data: {
+      patternId: "string",
+      title: "string",
+      disabled: true,
+    },
+    message: (data) =>
+      `Log analyzer pattern ${data.disabled ? "disabled" : "enabled"}: "${data.title}" (${data.patternId})`,
+  },
+
+  [AuditEventType.LOG_ANALYZER_PATTERN_DELETED]: {
+    type: AuditEventType.LOG_ANALYZER_PATTERN_DELETED,
+    data: {
+      patternId: "string",
+      title: "string",
+    },
+    message: (data) =>
+      `Log analyzer pattern deleted: "${data.title}" (${data.patternId})`,
   },
 };

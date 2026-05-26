@@ -55,19 +55,23 @@ model Entity {
   changelogEntrySeens                          ChangelogEntrySeen[]
 
   // Holds the latest confirmed values
-  spectrumId                String?
-  handle                    String?
-  discordId                 String?                    @unique
-  teamspeakId               String?
-  citizenId                 String?
-  communityMoniker          String?
-  createdPenaltyEntries     PenaltyEntry[]             @relation("createdBy")
-  deletedPenaltyEntries     PenaltyEntry[]             @relation("deletedBy")
-  penaltyEntries            PenaltyEntry[]             @relation("citizen")
-  eventPositionApplications EventPositionApplication[] @relation("citizen")
-  eventPositions            EventPosition[]            @relation("citizen")
-  silcBalance               Int                        @default(0)
-  totalEarnedSilc           Int                        @default(0)
+  spectrumId                  String?
+  handle                      String?
+  discordId                   String?                    @unique
+  teamspeakId                 String?
+  citizenId                   String?
+  communityMoniker            String?
+  createdPenaltyEntries       PenaltyEntry[]             @relation("createdBy")
+  deletedPenaltyEntries       PenaltyEntry[]             @relation("deletedBy")
+  penaltyEntries              PenaltyEntry[]             @relation("citizen")
+  createdLogAnalyzerPatterns  LogAnalyzerPattern[]       @relation("createdBy")
+  updatedLogAnalyzerPatterns  LogAnalyzerPattern[]       @relation("updatedBy")
+  disabledLogAnalyzerPatterns LogAnalyzerPattern[]       @relation("disabledBy")
+  deletedLogAnalyzerPatterns  LogAnalyzerPattern[]       @relation("deletedBy")
+  eventPositionApplications   EventPositionApplication[] @relation("citizen")
+  eventPositions              EventPosition[]            @relation("citizen")
+  silcBalance                 Int                        @default(0)
+  totalEarnedSilc             Int                        @default(0)
 }
 
 model EntityLog {
