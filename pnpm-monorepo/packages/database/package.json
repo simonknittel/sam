@@ -10,7 +10,8 @@
   },
   "scripts": {
     "postinstall": "prisma generate",
-    "build": "prisma generate && tsc"
+    "build": "prisma generate && tsc",
+    "format": "prisma format"
   },
   "dependencies": {
     "@prisma/client": "6.17.1",
