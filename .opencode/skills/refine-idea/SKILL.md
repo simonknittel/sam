@@ -85,7 +85,7 @@ Use this format and adapt sections to issue type.
 ```md
 ## Goal
 
-<1-3 sentence summary of the goal>
+<1-3 sentence summary of the goal without describing the solution>
 
 ## Problem
 
