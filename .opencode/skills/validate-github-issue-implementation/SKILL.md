@@ -13,6 +13,8 @@ Use this skill to validate the implementation of a GitHub issue. This includes c
 
 ### 2) Review the implementation against the issue details and acceptance criteria
 
+The implementation can be found in the currently staged or unstaged changes of the local git repository.
+
 ### 3) Review the implementation against this project's coding guidelines
 
 The coding guidelines can be found in [docs/coding-guidelines.md](../../../docs/coding-guidelines.md).
