@@ -11,4 +11,5 @@
 - Follow the [coding guidelines](./docs/coding-guidelines.md) for any new code you write or review.
 - Use the GitHub CLI when communicating with GitHub. Example (for viewing issue details incl. comments): `gh issue view <issue-number> --repo <owner/repo> --json title,body,labels,number,url,comments`.
 - Reuse code (especially components) from the `common` when possible.
+- Use `createAction` (server-side) and `useAction` (in client components) from the `actions` module for any server action in Next.js/React.
 - Don't attempt to run the Next.js application. You won't be able to do anything since pretty much the whole application is protected behind a login.
