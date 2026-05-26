@@ -27,6 +27,19 @@ export default async function Page() {
     <div className="flex flex-col gap-4">
       <Navigation activeYear="2026" />
 
+      <Day heading="26. Mai 2026">
+        <DayItem
+          heading="Neueste Tasks auf dem Dashboard"
+          badges={["Neu", "Tasks"]}
+        >
+          <p>
+            Auf dem Dashboard werden nun die 5 neuesten Tasks der letzten Woche
+            angezeigt, die von Anderen erstellt wurden und für dich sichtbar
+            sind. So findest du schneller Tasks, die du übernehmen kannst.
+          </p>
+        </DayItem>
+      </Day>
+
       <Day heading="25. Mai 2026">
         <DayItem
           heading="Hervorhebung neuer Changelog-Einträge"
