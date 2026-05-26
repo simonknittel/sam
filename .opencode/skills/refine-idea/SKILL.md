@@ -72,7 +72,9 @@ Assessment checklist:
 
 ### 4) Produce refined GitHub issues
 
-Split the idea into one or more actionable GitHub issues (common splits: backend vs frontend). Add the label "AI-candidate" to each new issue. Each new issue should link to each other. Also, they should link to the original parent idea/issue if applicable. The links should be added to the "Context" section of the ticket template (see below). You can update the issue description later on if you don't have created the other issues yet. Add a comment to the original issue with links to the new refined issue(s) and close it afterwards.
+Split the idea into one or more actionable GitHub issues (common splits: backend vs frontend). Add the label "AI-candidate" to each new issue. Each new issue should link to each other. Add an implementation order if applicable. Also, they should link to the original parent idea/issue if applicable. The links should be added to the "Context" section of the ticket template (see below). You can update the issue description later on if you don't have created the other issues yet.
+
+Add a comment to the original issue with links to the new refined issue(s) and close it afterwards.
 
 For each ticket, prepare a refined ticket body using the template below.
 
@@ -97,7 +99,7 @@ so that <value/outcome>.
 - Expected behavior: <what should happen>
 - Notes from codebase: <relevant findings>
 - Parent issue: <link to original issue if applicable>
-- Links to related issues: <links to other new issues created from the same idea>
+- Links to related issues incl. implementation order: <links to other new issues created from the same idea>
 
 ## Scope
 
