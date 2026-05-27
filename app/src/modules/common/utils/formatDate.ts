@@ -3,6 +3,7 @@ export const formatDate = (
   style?: "extra_short" | "short" | "long",
 ) => {
   if (style === "long")
+    // Example: "Do, 4. September 2024, 14:30"
     return (
       date?.toLocaleDateString("de-DE", {
         timeZone: "Europe/Berlin",
@@ -15,6 +16,7 @@ export const formatDate = (
     );
 
   if (style === "short")
+    // Example: "04.09.2024"
     return (
       date?.toLocaleDateString("de-DE", {
         timeZone: "Europe/Berlin",
@@ -25,6 +27,7 @@ export const formatDate = (
     );
 
   if (style === "extra_short")
+    // Example: "04.09."
     return (
       date?.toLocaleDateString("de-DE", {
         timeZone: "Europe/Berlin",
@@ -34,6 +37,7 @@ export const formatDate = (
     );
 
   return (
+    // Example: "04.09.2024, 14:30"
     date?.toLocaleDateString("de-DE", {
       timeZone: "Europe/Berlin",
       year: "numeric",

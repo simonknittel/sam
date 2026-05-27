@@ -1,20 +1,26 @@
+import { authenticate } from "@/modules/auth/server";
 import { SmallBadge } from "@/modules/common/components/SmallBadge";
 import clsx from "clsx";
-import type { ReactNode } from "react";
+import type { ChangelogEntry } from "../types";
+import { RedactedDayItem } from "./RedactedDayItem";
 
 interface Props {
-  readonly heading: ReactNode;
-  readonly children: ReactNode;
-  readonly badges?: string[];
+  readonly entry: ChangelogEntry;
   readonly isNew?: boolean;
 }
 
-export const DayItem = ({
-  heading,
-  badges = [],
-  children,
-  isNew = false,
-}: Props) => {
+export const DayItem = async ({ entry, isNew = false }: Props) => {
+  if (entry.requiresAuth) {
+    const authentication = await authenticate();
+    if (!authentication) return <RedactedDayItem />;
+
+    const authorized = await authentication.authorize(
+      entry.requiresAuth.resource,
+      entry.requiresAuth.action,
+    );
+    if (!authorized) return <RedactedDayItem />;
+  }
+
   return (
     <li
       className={clsx("border-l pl-5 relative", {
@@ -33,7 +39,7 @@ export const DayItem = ({
 
       <div className="flex items-center gap-2">
         <strong className="block font-bold font-mono uppercase">
-          {heading}
+          {entry.title}
         </strong>
 
         {isNew && (
@@ -43,15 +49,15 @@ export const DayItem = ({
         )}
       </div>
 
-      {badges.length > 0 && (
+      {entry.tags && entry.tags.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-1">
-          {badges.map((badge, index) => (
-            <SmallBadge key={index} value={badge} />
+          {entry.tags.map((tag, index) => (
+            <SmallBadge key={index} value={tag} />
           ))}
         </div>
       )}
 
-      <div className="mt-1 flex flex-col gap-2">{children}</div>
+      <div className="mt-1 flex flex-col gap-2">{entry.body()}</div>
     </li>
   );
 };

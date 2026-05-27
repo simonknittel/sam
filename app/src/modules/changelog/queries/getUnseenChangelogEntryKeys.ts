@@ -2,7 +2,7 @@ import { prisma } from "@/db";
 import { authenticate } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { cache } from "react";
-import { ALL_TRACKABLE_ENTRIES } from "../ALL_TRACKABLE_ENTRIES";
+import { getChangelogTrackedKeys } from "./getChangelogTrackedKeys";
 
 export const getUnseenChangelogEntryKeys = cache(
   withTrace("getUnseenChangelogEntryKeys", async () => {
@@ -10,13 +10,15 @@ export const getUnseenChangelogEntryKeys = cache(
     if (!authentication || !authentication?.session?.entity)
       return new Set<string>();
 
-    if (ALL_TRACKABLE_ENTRIES.length <= 0) return new Set<string>();
+    const trackedKeys = await getChangelogTrackedKeys();
+
+    if (trackedKeys.length <= 0) return new Set<string>();
 
     const seenEntries = await prisma.changelogEntrySeen.findMany({
       where: {
         citizenId: authentication.session.entity.id,
         key: {
-          in: ALL_TRACKABLE_ENTRIES as unknown as string[],
+          in: trackedKeys,
         },
       },
       select: {
@@ -25,6 +27,6 @@ export const getUnseenChangelogEntryKeys = cache(
     });
 
     const seenKeys = new Set(seenEntries.map((seenEntry) => seenEntry.key));
-    return new Set(ALL_TRACKABLE_ENTRIES.filter((key) => !seenKeys.has(key)));
+    return new Set(trackedKeys.filter((key) => !seenKeys.has(key)));
   }),
 );

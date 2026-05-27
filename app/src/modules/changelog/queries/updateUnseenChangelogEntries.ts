@@ -3,10 +3,6 @@ import { authenticate } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { getUnseenChangelogEntryKeys } from "./getUnseenChangelogEntryKeys";
 
-export interface TrackableEntry {
-  key: string;
-}
-
 export const updateUnseenChangelogEntries = withTrace(
   "updateUnseenChangelogEntries",
   async () => {
@@ -25,6 +21,8 @@ export const updateUnseenChangelogEntries = withTrace(
         })),
         skipDuplicates: true,
       });
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       /** Graceful degradation - entries may show as new again on next load */
     }
