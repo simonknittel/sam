@@ -85,15 +85,15 @@ Use this format and adapt sections to issue type.
 ```md
 ## Goal
 
-<1-3 sentence summary of the goal without describing the solution>
+<Describe in one concise sentence what you want to achieve with the task or the improvement. Make sure not to describe a solution already but the outcome.>
 
 ## Problem
 
-<1-3 sentence summary of the current problem and user impact>
+<Share the context and describe the problem in more detail.>
 
 ## Solution
 
-<1-3 sentence summary of the proposed solution>
+<This section can outline a proposal.>
 
 ## Context
 
