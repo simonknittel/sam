@@ -66,7 +66,7 @@ export const CreateSeriesModal = ({
     <Modal
       isOpen={true}
       onRequestClose={onRequestClose}
-      className="w-[480px]"
+      className="w-120"
       heading={<h2>Serie anlegen</h2>}
     >
       <form onSubmit={handleSubmit(onSubmit)}>

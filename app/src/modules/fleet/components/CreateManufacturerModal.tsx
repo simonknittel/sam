@@ -51,7 +51,7 @@ export const CreateManufacturerModal = ({ onRequestClose }: Props) => {
     <Modal
       isOpen={true}
       onRequestClose={onRequestClose}
-      className="w-[480px]"
+      className="w-120"
       heading={<h2>Hersteller anlegen</h2>}
     >
       <form onSubmit={handleSubmit(onSubmit)}>

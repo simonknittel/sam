@@ -19,7 +19,7 @@ export const AppTileGrid = ({
         {
           "grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-4":
             variant === "default",
-          "grid-cols-2 gap-[2px]": variant === "compact",
+          "grid-cols-2 gap-0.5": variant === "compact",
         },
         className,
       )}

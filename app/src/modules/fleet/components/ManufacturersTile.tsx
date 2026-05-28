@@ -52,7 +52,7 @@ export const ManufacturersTile = async () => {
                       width={48}
                       height={48}
                       alt={`Logo of ${row.name}`}
-                      className="w-[48px] h-[48px] object-contain object-center"
+                      className="size-12 object-contain object-center"
                       unoptimized={["image/svg+xml", "image/gif"].includes(
                         row.image.mimeType,
                       )}

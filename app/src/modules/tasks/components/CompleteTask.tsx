@@ -77,7 +77,7 @@ export const CompleteTask = ({ className, task }: Props) => {
       <Modal
         isOpen={isOpen}
         onRequestClose={handleRequestClose}
-        className="w-[480px]"
+        className="w-120"
         heading={<h2>Task abschließen</h2>}
       >
         <form action={formAction}>

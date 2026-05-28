@@ -66,7 +66,7 @@ export const CreateManagers = (props: Props) => {
       <Modal
         isOpen={isOpen}
         onRequestClose={handleRequestClose}
-        className="w-[480px]"
+        className="w-120"
         heading={<h2>Manager hinzufügen</h2>}
       >
         <form action={formAction}>

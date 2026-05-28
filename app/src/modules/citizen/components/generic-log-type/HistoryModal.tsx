@@ -40,7 +40,7 @@ export const HistoryModal = ({
       <Modal
         isOpen={isOpen}
         onRequestClose={() => setIsOpen(false)}
-        className="w-[768px]"
+        className="w-3xl"
         heading={<h2>History</h2>}
       >
         <ModalContent

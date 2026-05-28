@@ -38,7 +38,7 @@ export default async function Page(props: Props) {
 
   return (
     <main className="flex gap-8 items-start flex-col xl:flex-row">
-      <section className="rounded-primary overflow-hidden w-full xl:w-[400px]">
+      <section className="rounded-primary overflow-hidden w-full xl:w-100">
         <ImageUpload
           resourceType="manufacturer"
           resourceId={manufacturer.id}

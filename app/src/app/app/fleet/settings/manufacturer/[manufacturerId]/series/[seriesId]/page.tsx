@@ -43,7 +43,7 @@ export default async function Page(props: Props) {
 
   return (
     <main className="flex gap-8 items-start flex-col xl:flex-row">
-      <section className="p-8 bg-neutral-800/50 rounded-primary w-full xl:w-[400px]">
+      <section className="p-8 bg-neutral-800/50 rounded-primary w-full xl:w-100">
         <p className="font-bold mb-4">Serie</p>
 
         <dl>

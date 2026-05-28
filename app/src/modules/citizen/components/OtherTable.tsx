@@ -48,7 +48,7 @@ export const OtherTable = ({ rows, searchParams }: Props) => {
   }
 
   return (
-    <table className="w-full min-w-[1600px]">
+    <table className="w-full min-w-400">
       <thead>
         <tr className="grid items-center gap-4 text-left text-neutral-500 grid-cols-[1fr_1fr_2fr_1fr_1fr_1fr_1fr_1fr_44px] -mx-2">
           <th className="px-2">Citizen</th>

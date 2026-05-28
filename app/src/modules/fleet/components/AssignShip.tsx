@@ -84,7 +84,7 @@ export const AssignShip = ({ className, data = [] }: Props) => {
       <Modal
         isOpen={isOpen}
         onRequestClose={() => setIsOpen(false)}
-        className="w-[480px]"
+        className="w-120"
         heading={<h2>Schiff hinzufügen</h2>}
       >
         <form action={formAction}>

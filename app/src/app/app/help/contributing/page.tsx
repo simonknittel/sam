@@ -178,7 +178,7 @@ export default async function Page() {
           </RichText>
         </section>
 
-        <section className="mt-[2px] bg-secondary rounded-primary p-4">
+        <section className="mt-0.5 bg-secondary rounded-primary p-4">
           <SectionHeading
             url={`${env.NEXT_PUBLIC_BASE_URL}/app/help/contributing#externe-apps`}
             className="mb-4"
@@ -386,7 +386,7 @@ export default async function Page() {
           </RoadmapNote>
         </section>
 
-        <section className="mt-[2px] bg-secondary rounded-primary p-4">
+        <section className="mt-0.5 bg-secondary rounded-primary p-4">
           <SectionHeading
             url={`${env.NEXT_PUBLIC_BASE_URL}/app/help/contributing#frequently-asked-questions-faq`}
             className="mb-4"
