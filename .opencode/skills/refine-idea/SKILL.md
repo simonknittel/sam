@@ -150,7 +150,7 @@ gh issue comment <issue-number> --repo <owner/repo> --body-file <refined-ticket.
 
 ## Output
 
-When using this skill, always return the link(s) to the created GitHub issue(s).
+Only return the link(s) to the created GitHub issue(s).
 
 ## Quality bar
 
