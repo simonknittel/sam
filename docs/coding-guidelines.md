@@ -4,7 +4,7 @@
 
 - When reviewing code, don't list any positive things. Only list things which need fixing.
 - When you think a change may causes issues, go and check that. For example: when a function signature changes, go and find all references to this function and check if they got adapted accordingly.
-- When suggesting changes, don't prematurely optimize. For example: if a abstraction to reduce code duplication is possible, only suggest it if actually saves significant amount of code or improves maintainability.
+- When suggesting changes, avoid premature optimization. For example, if an abstraction could reduce code duplication, only suggest it if it saves a significant amount of code or meaningfully improves maintainability.
 
 ## Security
 
