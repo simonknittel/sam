@@ -148,21 +148,11 @@ gh issue view <issue-number> --repo <owner/repo> --json title,body,labels,number
 gh issue comment <issue-number> --repo <owner/repo> --body-file <refined-ticket.md>
 ```
 
-Fallback:
+## Output
 
-- Provide the full markdown comment body for manual paste.
+When using this skill, always return the link(s) to the created GitHub issue(s).
 
-## Output Contract
-
-When using this skill, always return:
-
-1. `Understanding Summary` (short)
-2. `Clarifying Questions` (if needed)
-3. `Assessment` (feasibility, alternatives, risks)
-4. `Refined Ticket` (template completed)
-5. `Comment Status` (`posted` or `ready-to-post` + command)
-
-## Quality Bar
+## Quality bar
 
 - Do not invent codebase facts.
 - Keep acceptance criteria testable and observable.
