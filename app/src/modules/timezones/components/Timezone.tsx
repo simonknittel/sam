@@ -32,7 +32,7 @@ export const Timezone = ({
   return (
     <article
       className={clsx(
-        "text-center bg-secondary p-4 rounded-primary flex-1",
+        "text-center bg-secondary p-4 rounded-primary flex-1 flex flex-col justify-center",
         className,
       )}
     >
