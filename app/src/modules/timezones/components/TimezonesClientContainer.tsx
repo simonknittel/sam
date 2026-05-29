@@ -1,12 +1,19 @@
 "use client";
 
 import clsx from "clsx";
+import dynamic from "next/dynamic";
+import { ErrorBoundary } from "react-error-boundary";
 import { Calculator } from "./Calculator";
 import { CETCESTPopover } from "./CETCESTPopover";
 import { GMTBSTPopover } from "./GMTBSTPopover";
 import { PacificTimePopover } from "./PacificTimePopover";
 import { Timezone } from "./Timezone";
 import { UTCPopover } from "./UTCPopover";
+
+const GlobeLazy = dynamic(() => import("./Globe").then((m) => m.Globe), {
+  ssr: false,
+  loading: () => <div className="w-1/4 max-h-60" />,
+});
 
 interface Props {
   readonly className?: string;
@@ -17,14 +24,21 @@ export const TimezonesClientContainer = ({ className }: Props) => {
 
   return (
     <div className={clsx(className)}>
-      <section>
-        <Timezone
-          heading="Deine lokale Zeit"
-          headingClassName="text-me"
-          timeZone={localTimeZone}
-        />
+      <section className="flex flex-col gap-0.5">
+        <div className="hidden md:flex">
+          <ErrorBoundary fallback={null}>
+            <GlobeLazy className="w-1/4 max-h-60" />
+          </ErrorBoundary>
 
-        <div className="flex flex-col md:flex-row gap-0.5 mt-0.5">
+          <Timezone
+            heading="Deine lokale Zeit"
+            headingClassName="text-me"
+            timeZone={localTimeZone}
+            className="w-3/4"
+          />
+        </div>
+
+        <div className="flex flex-col md:flex-row gap-0.5">
           <Timezone
             heading="CIG Los Angeles"
             subheading="Vereinigte Staaten von Amerika"
