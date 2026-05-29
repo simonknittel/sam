@@ -37,7 +37,7 @@ Minimum output from this step:
 
 ### 2) Interview me
 
-Before continuing with the refinement, use the `question` tool to ask clarifying questions. Do a thorough interview with me to extract all necessary details before moving on to the next step. Multiple rounds of questioning may be needed.
+Before continuing with the refinement, use the `question`/`vscode_askQuestions` tool to ask clarifying questions. Do a thorough interview with me to extract all necessary details before moving on to the next step. Multiple rounds of questioning may be needed.
 
 - Ask only high-value questions that unblock implementation.
 - Prefer grouped questions by topic (product, UX, data, security, rollout, testing).
