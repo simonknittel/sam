@@ -24,14 +24,14 @@ importers:
   apps/lambda:
     dependencies:
       '@aws-sdk/client-dynamodb':
-        specifier: 3.1052.0
-        version: 3.1052.0
+        specifier: 3.1053.0
+        version: 3.1053.0
       '@aws-sdk/client-eventbridge':
-        specifier: 3.1052.0
-        version: 3.1052.0
+        specifier: 3.1053.0
+        version: 3.1053.0
       '@aws-sdk/client-ssm':
-        specifier: 3.1052.0
-        version: 3.1052.0
+        specifier: 3.1053.0
+        version: 3.1053.0
       '@openpgp/web-stream-tools':
         specifier: 0.3.1
         version: 0.3.1(@types/node@24.12.4)(typescript@5.9.3)
@@ -66,8 +66,8 @@ importers:
         specifier: 19.2.6
         version: 19.2.6(react@19.2.6)
       react-email:
-        specifier: 6.3.0
-        version: 6.3.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+        specifier: 6.3.3
+        version: 6.3.3(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       serialize-error:
         specifier: 12.0.0
         version: 12.0.0
@@ -124,8 +124,8 @@ importers:
         specifier: 6.5.1
         version: 6.5.1
       date-fns:
-        specifier: 4.2.1
-        version: 4.2.1
+        specifier: 4.3.0
+        version: 4.3.0
       fast-xml-parser:
         specifier: 5.8.0
         version: 5.8.0
@@ -165,12 +165,12 @@ importers:
   packages/emails:
     dependencies:
       react-email:
-        specifier: 6.3.0
-        version: 6.3.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+        specifier: 6.3.3
+        version: 6.3.3(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
     devDependencies:
       '@react-email/ui':
-        specifier: 6.3.0
-        version: 6.3.0(@playwright/test@1.60.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+        specifier: 6.3.3
+        version: 6.3.3(@playwright/test@1.60.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@types/react':
         specifier: 19.2.15
         version: 19.2.15
@@ -245,16 +245,16 @@ packages:
   '@aws-crypto/util@5.2.0':
     resolution: {integrity: sha512-4RkU9EsI6ZpBve5fseQlGNUWKMa1RLPQ1dnjnQoe07ldfIzcsGb5hC5W0Dm7u423KWzawlrpbjXBrXCEv9zazQ==}
 
-  '@aws-sdk/client-dynamodb@3.1052.0':
-    resolution: {integrity: sha512-KfAfnURP5EoODMOqf5kCdidmOipc557TJCNuwazU1UY3DcWbaDkKT/iT6pPq0o+C3pE5DJdLOLGBjXWTTbzDIQ==}
+  '@aws-sdk/client-dynamodb@3.1053.0':
+    resolution: {integrity: sha512-tZKxImLQIF4xbNHYWI7kZjZguM7Ne3k0U4dGH0iglauzKjGS1hr2/M5ec5xiZ0KP+B2d+zQlQQqwz3gec23p4Q==}
     engines: {node: '>=20.0.0'}
 
-  '@aws-sdk/client-eventbridge@3.1052.0':
-    resolution: {integrity: sha512-yPGNyRO9krpb5+lcZb7cdH+GzPsqCctDedv+dTlNjZ7XUchfr2u57LX8XPJAdO5dICaDdXtMxxWaVMbJLCVXAg==}
+  '@aws-sdk/client-eventbridge@3.1053.0':
+    resolution: {integrity: sha512-0ziD09G2HTSd+z0khUhPphk5tkG21j4+AhnY2ADq0QuSXYRZlpzEHqCiyYOuyJtqW284NJaJH+6DSK4xOwe9mA==}
     engines: {node: '>=20.0.0'}
 
-  '@aws-sdk/client-ssm@3.1052.0':
-    resolution: {integrity: sha512-/W29l5voX4B245C5TRVOBtkXdClUTxMphuQLfOtQ7iFoSrw3FvtH7pZWRY5NI7Ukp7V5UnJQaRQfgbD0QwzeIQ==}
+  '@aws-sdk/client-ssm@3.1053.0':
+    resolution: {integrity: sha512-LxfEs7UWnGwRMZWtCWhqyUej6eJkszy4rBPjlLrMe/nrZm3RrpDRqCcZkkg4DcIkU6z4kcutX78tePitUhiPtA==}
     engines: {node: '>=20.0.0'}
 
   '@aws-sdk/core@3.974.14':
@@ -829,8 +829,8 @@ packages:
       react: ^18.0 || ^19.0 || ^19.0.0-rc
       react-dom: ^18.0 || ^19.0 || ^19.0.0-rc
 
-  '@react-email/ui@6.3.0':
-    resolution: {integrity: sha512-wc/J0labxFTFDBBUgVDf2NruOLa5lZo7TKXLl0WR/bdY73Dp0Sao6w/nD61/8hzIUM8Yg3zDi7Ekn3IR9PW01w==}
+  '@react-email/ui@6.3.3':
+    resolution: {integrity: sha512-ur1zabkODwYZ1KxQ4ho//xDnCXycLXFar6Nxa0XhjKOo3HFY5csSYt1kjADyY+uHy948JobtARjeDUefuw04Ww==}
 
   '@selderee/plugin-htmlparser2@0.11.0':
     resolution: {integrity: sha512-P33hHGdldxGabLFjPPpaTxVolMrzrcegejx+0GxjrIb9Zv48D8yAIA/QTDR2dFl7Uz7urX8aX6+5bCZslr+gWQ==}
@@ -1072,8 +1072,8 @@ packages:
     resolution: {integrity: sha512-oZwQSayvtn3nGrLUl8epnbfSCsvhOmCKeMHEOVmZ/3YCTG+x26nhgrP1vB3Kjs4lUJF6jcsjjIEn2gYbbq5+Gw==}
     engines: {node: '>= 0.1.90'}
 
-  date-fns@4.2.1:
-    resolution: {integrity: sha512-37RhSdxaG1suen6VDCza6rNrQfooyQh57HFVPwQGEq2QWliVLzPQZ8Oa017weOu+HZCnzI7N3Pf/wyoBKfEqrA==}
+  date-fns@4.3.0:
+    resolution: {integrity: sha512-OYcL+3N/jyWbYdFGqoMAhytDgxP9pbYPUUiRCOgn4Fewaadk9l/Wam4Avciiyp2BgkpfQyBV9B+ehnVJych+eQ==}
 
   debounce-fn@6.0.0:
     resolution: {integrity: sha512-rBMW+F2TXryBwB54Q0d8drNEI+TfoS9JpNTAoVpukbWEhjXQq4rySFYLaqXMFXwdv61Zb2OHtj5bviSoimqxRQ==}
@@ -1617,8 +1617,8 @@ packages:
     peerDependencies:
       react: ^19.2.6
 
-  react-email@6.3.0:
-    resolution: {integrity: sha512-IIwl63lWo91104T8zlwFhBQvFQgfIc/NCruacE4uI1e8hkzpxKwk0d6abMzTK1qniQDK7STbn5YB+Tkhsnjz9Q==}
+  react-email@6.3.3:
+    resolution: {integrity: sha512-mkHgVfuoDLM1To/u0ZcdJy/3q1Z3SdOe1A5/GtsUqApP68RQOztBe+AOk3BIJC1POexnqwDZZwV+Pw+srVlH7Q==}
     engines: {node: '>=20.0.0'}
     hasBin: true
     peerDependencies:
@@ -1889,7 +1889,7 @@ snapshots:
   '@aws-crypto/crc32@5.2.0':
     dependencies:
       '@aws-crypto/util': 5.2.0
-      '@aws-sdk/types': 3.973.8
+      '@aws-sdk/types': 3.973.9
       tslib: 2.8.1
 
   '@aws-crypto/sha256-browser@5.2.0':
@@ -1897,7 +1897,7 @@ snapshots:
       '@aws-crypto/sha256-js': 5.2.0
       '@aws-crypto/supports-web-crypto': 5.2.0
       '@aws-crypto/util': 5.2.0
-      '@aws-sdk/types': 3.973.8
+      '@aws-sdk/types': 3.973.9
       '@aws-sdk/util-locate-window': 3.965.5
       '@smithy/util-utf8': 2.3.0
       tslib: 2.8.1
@@ -1905,7 +1905,7 @@ snapshots:
   '@aws-crypto/sha256-js@5.2.0':
     dependencies:
       '@aws-crypto/util': 5.2.0
-      '@aws-sdk/types': 3.973.8
+      '@aws-sdk/types': 3.973.9
       tslib: 2.8.1
 
   '@aws-crypto/supports-web-crypto@5.2.0':
@@ -1914,11 +1914,11 @@ snapshots:
 
   '@aws-crypto/util@5.2.0':
     dependencies:
-      '@aws-sdk/types': 3.973.8
+      '@aws-sdk/types': 3.973.9
       '@smithy/util-utf8': 2.3.0
       tslib: 2.8.1
 
-  '@aws-sdk/client-dynamodb@3.1052.0':
+  '@aws-sdk/client-dynamodb@3.1053.0':
     dependencies:
       '@aws-crypto/sha256-browser': 5.2.0
       '@aws-crypto/sha256-js': 5.2.0
@@ -1933,7 +1933,7 @@ snapshots:
       '@smithy/types': 4.14.2
       tslib: 2.8.1
 
-  '@aws-sdk/client-eventbridge@3.1052.0':
+  '@aws-sdk/client-eventbridge@3.1053.0':
     dependencies:
       '@aws-crypto/sha256-browser': 5.2.0
       '@aws-crypto/sha256-js': 5.2.0
@@ -1947,7 +1947,7 @@ snapshots:
       '@smithy/types': 4.14.2
       tslib: 2.8.1
 
-  '@aws-sdk/client-ssm@3.1052.0':
+  '@aws-sdk/client-ssm@3.1053.0':
     dependencies:
       '@aws-crypto/sha256-browser': 5.2.0
       '@aws-crypto/sha256-js': 5.2.0
@@ -2470,7 +2470,7 @@ snapshots:
       react: 19.2.6
       react-dom: 19.2.6(react@19.2.6)
 
-  '@react-email/ui@6.3.0(@playwright/test@1.60.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)':
+  '@react-email/ui@6.3.3(@playwright/test@1.60.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)':
     dependencies:
       esbuild: 0.28.0
       next: 16.2.6(@playwright/test@1.60.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -2771,7 +2771,7 @@ snapshots:
       csv-stringify: 6.7.0
       stream-transform: 3.4.1
 
-  date-fns@4.2.1: {}
+  date-fns@4.3.0: {}
 
   debounce-fn@6.0.0:
     dependencies:
@@ -3298,7 +3298,7 @@ snapshots:
       react: 19.2.6
       scheduler: 0.27.0
 
-  react-email@6.3.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6):
+  react-email@6.3.3(react-dom@19.2.6(react@19.2.6))(react@19.2.6):
     dependencies:
       '@babel/parser': 7.27.0
       '@babel/traverse': 7.27.0
