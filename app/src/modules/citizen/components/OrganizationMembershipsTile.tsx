@@ -90,7 +90,7 @@ export const OrganizationMembershipsTile = async ({ className, id }: Props) => {
                   className="inline-flex"
                 >
                   {membership.organization.logo && (
-                    <span className="bg-black align-bottom flex w-[32px] items-center justify-center">
+                    <span className="bg-black align-bottom flex w-8 items-center justify-center">
                       <Image
                         src={`https://robertsspaceindustries.com${membership.organization.logo}`}
                         alt=""

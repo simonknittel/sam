@@ -71,7 +71,7 @@ const EditShipModal = ({ isOpen, onRequestClose, ship }: Readonly<Props>) => {
     <Modal
       isOpen={isOpen}
       onRequestClose={onRequestClose}
-      className="w-[480px]"
+      className="w-120"
       heading={<h2>Schiff bearbeiten</h2>}
     >
       <form onSubmit={handleSubmit(onSubmit)}>

@@ -1,3 +1,4 @@
+import { getChangelogYears } from "@/modules/changelog/queries/getChangelogYears";
 import { Link } from "@/modules/common/components/Link";
 import clsx from "clsx";
 
@@ -6,23 +7,21 @@ interface Props {
   readonly activeYear?: string;
 }
 
-export const Navigation = ({ className, activeYear }: Props) => {
+export const Navigation = async ({ className, activeYear }: Props) => {
+  const years = await getChangelogYears();
+
   return (
-    <div
-      className={clsx("flex gap-2", className)}
-      role="group"
-      aria-label="Filter by year"
-    >
-      {["2026", "2025"].map((year) => (
+    <div className={clsx("flex gap-2", className)}>
+      {years.map((year) => (
         <Link
-          key={year}
-          href={`/app/changelog/${year}`}
-          className={`px-3 py-1.5 rounded-secondary font-mono uppercase text-sm font-bold transition-colors ${
+          className={clsx(
+            "px-3 py-1.5 rounded-secondary font-mono uppercase text-sm font-bold transition-colors",
             activeYear === year
               ? "bg-brand-red-500 text-white"
-              : "bg-neutral-800/50 text-neutral-400 hover:text-white hover:bg-neutral-700"
-          }`}
-          aria-pressed={activeYear === year}
+              : "bg-neutral-800/50 text-white/400 hover:text-white hover:bg-neutral-700",
+          )}
+          href={`/app/changelog/${year}`}
+          key={year}
         >
           {year}
         </Link>

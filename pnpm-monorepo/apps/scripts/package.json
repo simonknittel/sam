@@ -6,12 +6,12 @@
     "@sam-monorepo/database": "workspace:*",
     "algoliasearch": "4.27.0",
     "csv": "6.5.1",
-    "date-fns": "4.1.0",
+    "date-fns": "4.3.0",
     "fast-xml-parser": "5.8.0"
   },
   "devDependencies": {
     "@types/node": "24.12.4",
-    "tsx": "4.21.0",
+    "tsx": "4.22.3",
     "typescript": "5.9.3"
   }
 }

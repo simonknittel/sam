@@ -100,11 +100,6 @@ const nextConfig: NextConfig = {
       destination: "/app/external/scrappers-codex",
       permanent: true,
     },
-    {
-      source: "/app/changelog",
-      destination: "/app/changelog/2026",
-      permanent: true,
-    },
   ],
 
   experimental: {

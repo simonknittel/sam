@@ -59,37 +59,37 @@ export const createForms = {
   citizen: {
     formComponent: CreateCitizenForm,
     modalHeading: "Neuer Citizen",
-    modalWidth: "w-[480px]",
+    modalWidth: "w-120",
   },
   profitDistributionCycle: {
     formComponent: CreateProfitDistributionCycleForm,
     modalHeading: "Neuer SINcome-Zeitraum",
-    modalWidth: "w-[480px]",
+    modalWidth: "w-120",
   },
   organization: {
     formComponent: CreateOrganizationForm,
     modalHeading: "Neue Organisation",
-    modalWidth: "w-[480px]",
+    modalWidth: "w-120",
   },
   role: {
     formComponent: CreateRoleForm,
     modalHeading: "Neue Rolle",
-    modalWidth: "w-[480px]",
+    modalWidth: "w-120",
   },
   penaltyEntry: {
     formComponent: CreatePenaltyEntryForm,
     modalHeading: "Neue Strafpunkte",
-    modalWidth: "w-[480px]",
+    modalWidth: "w-120",
   },
   task: {
     formComponent: CreateTaskForm,
     modalHeading: "Neuer Task",
-    modalWidth: "w-[768px]",
+    modalWidth: "w-3xl",
   },
   silcTransaction: {
     formComponent: CreateSilcTransactionForm,
     modalHeading: "Neue SILC-Transaktion",
-    modalWidth: "w-[480px]",
+    modalWidth: "w-120",
   },
 };
 

@@ -95,7 +95,7 @@ export const UpdateNoteModal = ({
       <Modal
         isOpen={isOpen}
         onRequestClose={() => setIsOpen(false)}
-        className="w-[480px]"
+        className="w-120"
         heading={<h2>Bearbeiten</h2>}
       >
         <form onSubmit={handleSubmit(onSubmit)}>

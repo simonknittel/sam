@@ -34,7 +34,7 @@ export const CreateOrUpdateNodeModal = ({
     <Modal
       isOpen={true}
       onRequestClose={onRequestClose}
-      className={clsx("w-[480px]", className)}
+      className={clsx("w-120", className)}
       heading={<h2>Element {initialData ? "bearbeiten" : "hinzufügen"}</h2>}
     >
       <p>Typ</p>

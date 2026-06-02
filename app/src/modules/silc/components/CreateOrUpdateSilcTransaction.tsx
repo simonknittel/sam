@@ -97,7 +97,7 @@ export const CreateOrUpdateSilcTransaction = (props: Props) => {
       <Modal
         isOpen={isOpen}
         onRequestClose={() => setIsOpen(false)}
-        className="w-[480px]"
+        className="w-120"
         heading={
           <h2>
             {"transaction" in props

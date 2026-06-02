@@ -37,7 +37,7 @@ Minimum output from this step:
 
 ### 2) Interview me
 
-Before continuing with the refinement, use the `question` tool to ask clarifying questions. Do a thorough interview with me to extract all necessary details before moving on to the next step. Multiple rounds of questioning may be needed.
+Before continuing with the refinement, use the `question`/`vscode_askQuestions` tool to ask clarifying questions. Do a thorough interview with me to extract all necessary details before moving on to the next step. Multiple rounds of questioning may be needed.
 
 - Ask only high-value questions that unblock implementation.
 - Prefer grouped questions by topic (product, UX, data, security, rollout, testing).
@@ -85,15 +85,15 @@ Use this format and adapt sections to issue type.
 ```md
 ## Goal
 
-<1-3 sentence summary of the goal without describing the solution>
+<Describe in one concise sentence what you want to achieve with the task or the improvement. Make sure not to describe a solution already but the outcome.>
 
 ## Problem
 
-<1-3 sentence summary of the current problem and user impact>
+<Share the context and describe the problem in more detail.>
 
 ## Solution
 
-<1-3 sentence summary of the proposed solution>
+<This section can outline a proposal.>
 
 ## Context
 
@@ -148,21 +148,11 @@ gh issue view <issue-number> --repo <owner/repo> --json title,body,labels,number
 gh issue comment <issue-number> --repo <owner/repo> --body-file <refined-ticket.md>
 ```
 
-Fallback:
+## Output
 
-- Provide the full markdown comment body for manual paste.
+Only return the link(s) to the created GitHub issue(s).
 
-## Output Contract
-
-When using this skill, always return:
-
-1. `Understanding Summary` (short)
-2. `Clarifying Questions` (if needed)
-3. `Assessment` (feasibility, alternatives, risks)
-4. `Refined Ticket` (template completed)
-5. `Comment Status` (`posted` or `ready-to-post` + command)
-
-## Quality Bar
+## Quality bar
 
 - Do not invent codebase facts.
 - Keep acceptance criteria testable and observable.

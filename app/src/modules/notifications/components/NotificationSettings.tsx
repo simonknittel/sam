@@ -26,7 +26,7 @@ export const NotificationSettings = ({ className, settings }: Props) => {
 
   return (
     <NotificationSettingsForm
-      className={clsx("flex flex-col gap-[2px]", className)}
+      className={clsx("flex flex-col gap-0.5", className)}
     >
       <div className="flex gap-2 text-neutral-500 px-4">
         <div className="flex-1" />
