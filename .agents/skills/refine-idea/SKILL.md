@@ -28,6 +28,7 @@ Follow these steps in order.
 - Search for relevant code paths, modules, APIs, UI screens, event handlers, and data models.
 - Identify existing behavior and nearby patterns already used in the codebase.
 - Capture concrete references (file paths, symbols, services, tables, endpoints).
+- Do not invent codebase facts.
 
 Minimum output from this step:
 
@@ -37,14 +38,14 @@ Minimum output from this step:
 
 ### 2) Interview me
 
-Before continuing with the refinement, use the `question`/`vscode_askQuestions` tool to ask clarifying questions. Do a thorough interview with me to extract all necessary details before moving on to the next step. Multiple rounds of questioning may be needed.
+Before continuing with the refinement, use the `question`/`vscode_askQuestions` tool to ask clarifying questions. Do a thorough interview with me to extract all necessary details before moving on to the next step. Continue asking clarifying questions until everything can be answered without guessing. Then explicitly state: "I have enough information to proceed" before moving to the next step.
 
 - Ask only high-value questions that unblock implementation.
 - Prefer grouped questions by topic (product, UX, data, security, rollout, testing).
 - Highlight vague phrases from the issue and ask for explicit decisions.
 - Ask for clarification on terms and wording that could be interpreted in multiple ways.
 - If the issue is a bug, ask for reproduction details, expected behavior, and environment.
-- Ask one question at a time. Bad example: "Should we do X or Y? Also, do we need to consider Z?"
+- Do not combine questions. Bad example: "Should we do X or Y? Also, do we need to consider Z?"
 
 Question quality rules:
 
@@ -54,6 +55,7 @@ Question quality rules:
 
 ### 3) Assess and improve the proposed direction
 
+- Reconcile any Step 1 findings that were superseded by interview answers. Update the known constraints and likely change areas accordingly before producing the ticket.
 - Check if the request is coherent and technically feasible with the current architecture.
 - Suggest better/common alternatives if they reduce risk or complexity.
 - Identify missing scope boundaries and out-of-scope items.
@@ -72,11 +74,15 @@ Assessment checklist:
 
 ### 4) Produce refined GitHub issues
 
-Split the idea into one or more actionable GitHub issues (common splits: backend vs frontend). Add the label "AI-candidate" to each new issue. Each new issue should link to each other. Add an implementation order if applicable. Also, they should link to the original parent idea/issue if applicable. The links should be added to the "Context" section of the ticket template (see below). You can update the issue description later on if you don't have created the other issues yet.
+Split the idea into one or more actionable GitHub issues (common splits: backend vs frontend). Create separate issues when: (a) the work can be assigned to different teams/disciplines independently, (b) one part could ship without the other, or (c) the combined scope exceeds roughly 3-5 days of work. Otherwise keep as one issue. Add the label "AI-candidate" to each new issue. Each new issue should link to each other. Add an implementation order if applicable. Also, they should link to the original parent idea/issue if applicable. The links should be added to the "Context" section of the ticket template (see below). You can update the issue description later on if you don't have created the other issues yet.
 
-Add a comment to the original issue with links to the new refined issue(s) and close it afterwards.
+Add a comment to the original issue with links to the new refined issue(s) and close it afterwards. If the input is a free-form description with no associated GitHub issue number, skip the comment and close steps.
 
 For each ticket, prepare a refined ticket body using the template below.
+
+- Keep acceptance criteria testable and observable.
+- Keep scope tight enough for one implementation cycle.
+- Don't include code snippets.
 
 ## Refined ticket template
 
@@ -136,7 +142,7 @@ Use this format and adapt sections to issue type.
 
 ## Communication with GitHub
 
-Preferred method: GitHub CLI
+MUST use method: GitHub CLI
 
 Examples:
 
@@ -148,16 +154,11 @@ gh issue view <issue-number> --repo <owner/repo> --json title,body,labels,number
 gh issue comment <issue-number> --repo <owner/repo> --body-file <refined-ticket.md>
 ```
 
-## Output
+- If `gh` is not available or returns an authentication error, stop and notify the user rather than falling back to another method.
+- Before executing any `gh` command, confirm the target repo by running `gh repo view --json nameWithOwner` in the current directory. If the result is ambiguous or the working directory is not a git repo, ask the user to specify `<owner/repo>` explicitly.
+
+## Final output
 
 Only return the link(s) to the created GitHub issue(s).
 
-## Quality bar
-
-- Do not invent codebase facts.
-- Keep acceptance criteria testable and observable.
-- Keep scope tight enough for one implementation cycle.
-- Prefer explicit assumptions over implicit guesswork.
-- Don't include code snippets.
-
-## The idea in question:
+## The idea:
