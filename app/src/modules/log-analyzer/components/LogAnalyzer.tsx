@@ -3,10 +3,7 @@
 "use client";
 
 import Button from "@/modules/common/components/Button";
-import { Button2, Button2Variant } from "@/modules/common/components/Button2";
-import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
-import { Table, TBody, THead } from "@/modules/common/components/Table";
-import { Tooltip } from "@/modules/common/components/Tooltip";
+import { Button2 } from "@/modules/common/components/Button2";
 import { useLocalStorage } from "@uidotdev/usehooks";
 import clsx from "clsx";
 import { get, set } from "idb-keyval";
@@ -18,21 +15,15 @@ import {
   useTransition,
   type MouseEvent,
 } from "react";
-import { FaInfoCircle, FaSpinner } from "react-icons/fa";
+import { FaSpinner } from "react-icons/fa";
 import { FaFileArrowUp } from "react-icons/fa6";
-import { TfiReload } from "react-icons/tfi";
 import { getFilesRecursively } from "../utils/getFilesRecursively";
 import { PATTERNS, type IEntry } from "../utils/PATTERNS";
 import type { RawMatch, ResultMessage } from "../utils/types";
-import { Entry } from "./Entry";
 import { useEntryFilterContext } from "./EntryFilterContext";
-import { EntryFilters } from "./EntryFilters";
 import { Introduction } from "./Introduction";
-import { OverlayButton } from "./OverlayButton";
-import { OverlayProvider } from "./OverlayContext";
-
-const TABLE_MIN_WIDTH = "min-w-80";
-export const GRID_COLS = "grid-cols-[160px_160px_1fr]";
+import { LogAnalyzerTable } from "./LogAnalyzerTable";
+import { Toolbar } from "./Toolbar";
 
 interface Props {
   readonly className?: string;
@@ -274,124 +265,22 @@ export const LogAnalyzer = ({ className }: Props) => {
 
       {entries.size > 0 ? (
         <>
-          <div className="mt-1 bg-secondary rounded-primary p-2 flex items-center gap-4">
-            <Button2
-              type="button"
-              variant={Button2Variant.Secondary}
-              disabled={isPending}
-              onClick={() => parseLogs(true)}
-            >
-              {isPending ? (
-                <FaSpinner className="animate-spin" />
-              ) : (
-                <TfiReload />
-              )}
-              Aktualisieren
-            </Button2>
+          <Toolbar
+            isPending={isPending}
+            isLiveModeEnabled={isLiveModeEnabled}
+            onToggleLiveMode={setIsLiveModeEnabled}
+            isAutostartEnabled={isAutostartEnabled}
+            onToggleAutostart={setIsAutostartEnabled}
+            onRefresh={() => parseLogs(true)}
+            filteredEntries={Array.from(entries.values().filter(entryFilterFn))}
+            className="mt-1"
+          />
 
-            {/* <Select
-              value={daysToLoad}
-              onChange={(e) => {
-                const value = Number(e.target.value);
-                setDaysToLoad(value);
-                if (entries.size > 0) {
-                  setEntries(new Map());
-                  parseLogs();
-                }
-              }}
-              className="h-8! text-xs w-24! pl-1"
-            >
-              <option value={7}>7 Tage</option>
-              <option value={14}>14 Tage</option>
-              <option value={30}>30 Tage</option>
-              <option value={90}>90 Tage</option>
-              <option value={365}>365 Tage</option>
-              <option value={0}>Alle</option>
-            </Select> */}
-
-            <YesNoCheckbox
-              yesLabel={
-                <span className="flex items-center gap-2 text-sm">
-                  Automatisch aktualisieren
-                  <Tooltip triggerChildren={<FaInfoCircle />}>
-                    <p>Aktualisiert die Logs alle 10 Sekunden.</p>
-                    <p className="mt-1">
-                      Neue Einträge werden für 60 Sekunden hervorgehoben.
-                    </p>
-                  </Tooltip>
-                </span>
-              }
-              noLabel={
-                <span className="flex items-center gap-2 text-sm">
-                  Automatisch aktualisieren
-                  <Tooltip triggerChildren={<FaInfoCircle />}>
-                    <p>Aktualisiert die Logs alle 10 Sekunden.</p>
-                    <p className="mt-1">
-                      Neue Einträge werden für 30 Sekunden hervorgehoben.
-                    </p>
-                  </Tooltip>
-                </span>
-              }
-              labelClassName="w-auto"
-              checked={isLiveModeEnabled}
-              onChange={(e) => setIsLiveModeEnabled(e.target.checked)}
-            />
-
-            <YesNoCheckbox
-              yesLabel={
-                <span className="flex items-center gap-2 text-sm">
-                  Autostart
-                  <Tooltip triggerChildren={<FaInfoCircle />}>
-                    <p>
-                      Startet den Log Analyzer beim Aufruf der App automatisch
-                      mit dem zuletzt verwendeten Ordner.
-                    </p>
-                  </Tooltip>
-                </span>
-              }
-              noLabel={
-                <span className="flex items-center gap-2 text-sm">
-                  Autostart
-                  <Tooltip triggerChildren={<FaInfoCircle />}>
-                    <p>
-                      Startet den Log Analyzer beim Aufruf der App automatisch
-                      mit dem zuletzt verwendeten Ordner.
-                    </p>
-                  </Tooltip>
-                </span>
-              }
-              labelClassName="w-auto"
-              checked={isAutostartEnabled}
-              onChange={(e) => setIsAutostartEnabled(e.target.checked)}
-            />
-
-            <OverlayProvider>
-              <OverlayButton
-                entries={Array.from(entries.values().filter(entryFilterFn))}
-              />
-            </OverlayProvider>
-
-            <EntryFilters />
-          </div>
-
-          <div className="mt-0.5 p-4 bg-secondary rounded-primary overflow-auto">
-            <Table tableClassName={TABLE_MIN_WIDTH}>
-              <THead className={GRID_COLS}>
-                <th>Datum</th>
-                <th>Typ</th>
-                <th>Nachricht</th>
-              </THead>
-
-              <TBody className="text-sm">
-                {Array.from(entries.values())
-                  .toSorted((a, b) => b.isoDate.getTime() - a.isoDate.getTime())
-                  .filter(entryFilterFn)
-                  .map((entry) => (
-                    <Entry key={entry.key} entry={entry} />
-                  ))}
-              </TBody>
-            </Table>
-          </div>
+          <LogAnalyzerTable
+            entries={entries}
+            entryFilterFn={entryFilterFn}
+            className="mt-0.5"
+          />
         </>
       ) : (
         <Introduction className="mt-1" />

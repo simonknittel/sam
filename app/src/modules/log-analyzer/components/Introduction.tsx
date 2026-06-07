@@ -20,7 +20,7 @@ export const Introduction = ({ className }: Props) => {
         </RichText>
       </div>
 
-      <ul className="mt-0.5 grid grid-cols-4 gap-0.5">
+      <ul className="mt-0.5 grid grid-cols-2 md:grid-cols-4 gap-0.5">
         {Object.entries(PATTERNS)
           .toSorted((a, b) => a[1].title.localeCompare(b[1].title))
           .map(([key, { title }]) => (
