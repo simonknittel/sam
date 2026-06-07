@@ -1,22 +1,18 @@
 import { Table, TBody, THead } from "@/modules/common/components/Table";
 import clsx from "clsx";
-import type { IEntry } from "../utils/PATTERNS";
 import { Entry } from "./Entry";
+import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 
 export const GRID_COLS = "grid-cols-[160px_160px_1fr]";
 const TABLE_MIN_WIDTH = "min-w-160";
 
 interface Props {
   readonly className?: string;
-  readonly entries: ReadonlyMap<string, IEntry>;
-  readonly entryFilterFn: (entry: IEntry) => boolean;
 }
 
-export const LogAnalyzerTable = ({
-  className,
-  entries,
-  entryFilterFn,
-}: Props) => {
+export const LogAnalyzerTable = ({ className }: Props) => {
+  const { entryFilterFn, entries } = useLogAnalyzerContext();
+
   const sortedFilteredEntries = Array.from(entries.values())
     .toSorted((a, b) => b.isoDate.getTime() - a.isoDate.getTime())
     .filter(entryFilterFn);

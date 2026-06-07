@@ -1,13 +1,13 @@
 import type { ComponentProps } from "react";
-import { EntryFilterContextProvider } from "./EntryFilterContext";
 import { LogAnalyzer } from "./LogAnalyzer";
+import { LogAnalyzerContext } from "./LogAnalyzerContext";
 
 type Props = ComponentProps<typeof LogAnalyzer>;
 
 export const Bundle = (props: Props) => {
   return (
-    <EntryFilterContextProvider>
+    <LogAnalyzerContext>
       <LogAnalyzer {...props} />
-    </EntryFilterContextProvider>
+    </LogAnalyzerContext>
   );
 };
