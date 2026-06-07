@@ -17,11 +17,11 @@ The implementation can be found in the currently staged or unstaged changes of t
 
 ### 3) Review the implementation against this project's coding guidelines
 
-The coding guidelines can be found in [docs/coding-guidelines.md](../../../docs/coding-guidelines.md).
+The coding guidelines can be found in `docs/coding-guidelines.md`.
 
 ## Communication with GitHub
 
-Preferred method: GitHub CLI
+MUST use method: GitHub CLI
 
 Examples:
 
@@ -32,5 +32,7 @@ gh issue view <issue-number> --repo <owner/repo> --json title,body,labels,number
 # Post comment:
 gh issue comment <issue-number> --repo <owner/repo> --body-file <refined-ticket.md>
 ```
+
+If `gh` is not available or returns an authentication error, stop and notify the user rather than falling back to another method.
 
 ## The GitHub issue in question:

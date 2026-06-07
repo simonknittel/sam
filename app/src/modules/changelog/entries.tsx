@@ -37,6 +37,35 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-06-07-autostart-log-analyzer",
+    date: "2026-06-07",
+    title: "Autostart vom Log Analyzer",
+    tags: ["Neu", "Log Analyzer"],
+    isTracked: true,
+    body: () => (
+      <>
+        <p>
+          Für den{" "}
+          <Link
+            href="/app/tools/log-analyzer"
+            className="text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300"
+          >
+            Log Analyzer
+          </Link>{" "}
+          gibt es nun eine Autostart-Funktion. Wenn diese aktiviert ist, wird
+          der Log Analyzer automatisch gestartet, wenn die App geöffnet wird
+          (bspw. über einen Browser-Lesezeichen).
+        </p>
+
+        <p>
+          Als Ordner für die Star Citizen Installation wird der zuletzt
+          verwendete Ordner verwendet.
+        </p>
+      </>
+    ),
+  },
+
+  {
     key: "2026-05-26-neueste-tasks-auf-dem-dashboard",
     date: "2026-05-26",
     title: "Neueste Tasks auf dem Dashboard",

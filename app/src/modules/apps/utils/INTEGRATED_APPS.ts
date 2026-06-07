@@ -140,7 +140,7 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
     href: "/app/tools/log-analyzer",
     imageSrc: logAnalyzerScreenshot,
     description:
-      "Wertet die Game Logs von Star Citizen aus um nach Kills zu filtern.",
+      "Wertet die Game Logs von Star Citizen aus um wichtige Ereignisse zu erkennen.",
     tags: ["security"],
     permissionStrings: ["logAnalyzer;read"],
   },
