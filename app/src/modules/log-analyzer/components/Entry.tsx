@@ -5,7 +5,7 @@ import clsx from "clsx";
 import { memo } from "react";
 import { PATTERNS, type IEntry } from "../utils/PATTERNS";
 import styles from "./Entry.module.css";
-import { GRID_COLS } from "./LogAnalyzer";
+import { GRID_COLS } from "./LogAnalyzerTable";
 
 interface Props {
   readonly entry: IEntry;
@@ -50,7 +50,7 @@ export const Entry = memo(
 
         <td className="truncate text-white/40">{PATTERNS[entry.type].title}</td>
 
-        <td className="overflow-hidden">{entry.message}</td>
+        <td className="truncate">{entry.message}</td>
       </TRow>
     );
   },

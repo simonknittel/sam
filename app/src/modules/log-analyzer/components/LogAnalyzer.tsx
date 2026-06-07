@@ -4,7 +4,6 @@
 
 import Button from "@/modules/common/components/Button";
 import { Button2 } from "@/modules/common/components/Button2";
-import { Table, TBody, THead } from "@/modules/common/components/Table";
 import { useLocalStorage } from "@uidotdev/usehooks";
 import clsx from "clsx";
 import { get, set } from "idb-keyval";
@@ -21,13 +20,10 @@ import { FaFileArrowUp } from "react-icons/fa6";
 import { getFilesRecursively } from "../utils/getFilesRecursively";
 import { PATTERNS, type IEntry } from "../utils/PATTERNS";
 import type { RawMatch, ResultMessage } from "../utils/types";
-import { Entry } from "./Entry";
 import { useEntryFilterContext } from "./EntryFilterContext";
 import { Introduction } from "./Introduction";
+import { LogAnalyzerTable } from "./LogAnalyzerTable";
 import { Toolbar } from "./Toolbar";
-
-const TABLE_MIN_WIDTH = "min-w-80";
-export const GRID_COLS = "grid-cols-[160px_160px_1fr]";
 
 interface Props {
   readonly className?: string;
@@ -280,24 +276,11 @@ export const LogAnalyzer = ({ className }: Props) => {
             className="mt-1"
           />
 
-          <div className="mt-0.5 p-4 bg-secondary rounded-primary overflow-auto">
-            <Table tableClassName={TABLE_MIN_WIDTH}>
-              <THead className={GRID_COLS}>
-                <th>Datum</th>
-                <th>Typ</th>
-                <th>Nachricht</th>
-              </THead>
-
-              <TBody className="text-sm">
-                {Array.from(entries.values())
-                  .toSorted((a, b) => b.isoDate.getTime() - a.isoDate.getTime())
-                  .filter(entryFilterFn)
-                  .map((entry) => (
-                    <Entry key={entry.key} entry={entry} />
-                  ))}
-              </TBody>
-            </Table>
-          </div>
+          <LogAnalyzerTable
+            entries={entries}
+            entryFilterFn={entryFilterFn}
+            className="mt-0.5"
+          />
         </>
       ) : (
         <Introduction className="mt-1" />
