@@ -16,7 +16,7 @@ import {
   useRef,
   useState,
   useTransition,
-  type MouseEventHandler,
+  type MouseEvent,
 } from "react";
 import { FaInfoCircle, FaSpinner } from "react-icons/fa";
 import { FaFileArrowUp } from "react-icons/fa6";
@@ -45,6 +45,10 @@ export const LogAnalyzer = ({ className }: Props) => {
   const liveModeIntervalRef = useRef<number | null>(null);
   const [isLiveModeEnabled, setIsLiveModeEnabled] = useLocalStorage(
     "is_live_mode_enabled",
+    false,
+  );
+  const [isAutostartEnabled, setIsAutostartEnabled] = useLocalStorage(
+    "is_autostart_enabled",
     false,
   );
   const { entryFilterFn } = useEntryFilterContext();
@@ -129,10 +133,10 @@ export const LogAnalyzer = ({ className }: Props) => {
     };
   }, [isLiveModeEnabled, parseLogs]);
 
-  const handlePreviousDirectorySelect: MouseEventHandler<HTMLButtonElement> = (
-    event,
+  const handlePreviousDirectorySelect = (
+    event?: MouseEvent<HTMLButtonElement>,
   ) => {
-    event.preventDefault();
+    event?.preventDefault();
 
     get("directory_handle")
       .then(
@@ -164,10 +168,8 @@ export const LogAnalyzer = ({ className }: Props) => {
       });
   };
 
-  const handleNewDirectorySelect: MouseEventHandler<HTMLButtonElement> = (
-    event,
-  ) => {
-    event.preventDefault();
+  const handleNewDirectorySelect = (event?: MouseEvent<HTMLButtonElement>) => {
+    event?.preventDefault();
 
     window
       .showDirectoryPicker()
@@ -181,6 +183,13 @@ export const LogAnalyzer = ({ className }: Props) => {
         console.error("[Log Analyzer] Error selecting directory:", error);
       });
   };
+
+  useEffect(() => {
+    if (isAutostartEnabled) {
+      handlePreviousDirectorySelect();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAutostartEnabled]);
 
   return (
     <div className={clsx(className)}>
@@ -255,6 +264,34 @@ export const LogAnalyzer = ({ className }: Props) => {
               labelClassName="w-auto"
               checked={isLiveModeEnabled}
               onChange={(e) => setIsLiveModeEnabled(e.target.checked)}
+            />
+
+            <YesNoCheckbox
+              yesLabel={
+                <span className="flex items-center gap-2">
+                  Autostart
+                  <Tooltip triggerChildren={<FaInfoCircle />}>
+                    <p>
+                      Startet den Log Analyzer beim Aufruf der App automatisch
+                      mit dem zuletzt verwendeten Ordner.
+                    </p>
+                  </Tooltip>
+                </span>
+              }
+              noLabel={
+                <span className="flex items-center gap-2">
+                  Autostart
+                  <Tooltip triggerChildren={<FaInfoCircle />}>
+                    <p>
+                      Startet den Log Analyzer beim Aufruf der App automatisch
+                      mit dem zuletzt verwendeten Ordner.
+                    </p>
+                  </Tooltip>
+                </span>
+              }
+              labelClassName="w-auto"
+              checked={isAutostartEnabled}
+              onChange={(e) => setIsAutostartEnabled(e.target.checked)}
             />
 
             <OverlayProvider>
