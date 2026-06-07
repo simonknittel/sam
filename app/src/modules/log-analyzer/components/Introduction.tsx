@@ -65,7 +65,7 @@ export const Introduction = ({ className }: Props) => {
           </p>
 
           <p>
-            Es können aktuell nur die Logs der letzten 7 Tage ausgewertet
+            Es können aktuell nur die Logs der letzten 14 Tage ausgewertet
             werden.
           </p>
 

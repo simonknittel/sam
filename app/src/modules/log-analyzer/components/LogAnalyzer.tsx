@@ -23,6 +23,7 @@ import { FaFileArrowUp } from "react-icons/fa6";
 import { TfiReload } from "react-icons/tfi";
 import { getFilesRecursively } from "../utils/getFilesRecursively";
 import { PATTERNS, type IEntry } from "../utils/PATTERNS";
+import type { RawMatch, ResultMessage } from "../utils/types";
 import { Entry } from "./Entry";
 import { useEntryFilterContext } from "./EntryFilterContext";
 import { EntryFilters } from "./EntryFilters";
@@ -51,67 +52,117 @@ export const LogAnalyzer = ({ className }: Props) => {
     "is_autostart_enabled",
     false,
   );
+  const [daysToLoad] = useLocalStorage<number>("log_analyzer_days_to_load", 14);
   const { entryFilterFn } = useEntryFilterContext();
 
-  const parseLogs = useCallback((isNew = false) => {
-    startTransition(async () => {
-      if (!directoryHandleRef.current) return;
+  // Reusable Web Worker for background log parsing
+  const workerRef = useRef<Worker | null>(null);
 
-      const files = [];
-
-      for await (const fileHandle of getFilesRecursively(
-        directoryHandleRef.current,
-      )) {
-        if (!fileHandle) continue;
-        if (!fileHandle.name.endsWith(".log")) continue;
-        files.push(fileHandle);
-      }
-
-      const cutoffDateEnd = new Date();
-      cutoffDateEnd.setHours(23, 59, 59, 999);
-      const cutoffDateStart = new Date(cutoffDateEnd);
-      cutoffDateStart.setDate(cutoffDateStart.getDate() - 7); // 7 days ago
-      cutoffDateStart.setHours(0, 0, 0, 0);
-
-      const slicedFiles = files.filter((file) => {
-        const lastModified = new Date(file.lastModified);
-        return lastModified >= cutoffDateStart && lastModified <= cutoffDateEnd;
-      });
-
-      try {
-        const fileContents = await Promise.all(
-          slicedFiles.map((file) => file.text()),
-        );
-
-        setEntries((previousEntries) => {
-          const newEntries = new Map<string, IEntry>(previousEntries);
-
-          for (const fileContent of fileContents) {
-            for (const [, pattern] of Object.entries(PATTERNS)) {
-              const matches = fileContent.matchAll(pattern.regex);
-              for (const match of matches) {
-                if (!match.groups) continue;
-
-                const date = new Date(match.groups.isoDate);
-                const entry = pattern.matchMapping(date, match.groups);
-                if (newEntries.has(entry.key)) continue;
-
-                newEntries.set(entry.key, {
-                  ...entry,
-                  isoDate: date,
-                  isNew,
-                });
-              }
-            }
-          }
-
-          return newEntries;
-        });
-      } catch (error) {
-        console.error("[Log Analyzer] Error reading files:", error);
-      }
-    });
+  useEffect(() => {
+    workerRef.current = new Worker(
+      new URL("../utils/logParser.worker.ts", import.meta.url),
+      { type: "module" },
+    );
+    return () => {
+      workerRef.current?.terminate();
+      workerRef.current = null;
+    };
   }, []);
+
+  const parseLogs = useCallback(
+    (isNew = false) => {
+      startTransition(async () => {
+        if (!directoryHandleRef.current) return;
+        if (!workerRef.current) return;
+
+        const files: File[] = [];
+
+        for await (const fileHandle of getFilesRecursively(
+          directoryHandleRef.current,
+        )) {
+          if (!fileHandle) continue;
+          if (!fileHandle.name.endsWith(".log")) continue;
+          files.push(fileHandle);
+        }
+
+        const cutoffDateEnd = new Date();
+        cutoffDateEnd.setHours(23, 59, 59, 999);
+
+        const slicedFiles =
+          daysToLoad === 0
+            ? files
+            : files.filter((file) => {
+                const cutoffDateStart = new Date(cutoffDateEnd);
+                cutoffDateStart.setDate(cutoffDateStart.getDate() - daysToLoad);
+                cutoffDateStart.setHours(0, 0, 0, 0);
+                const lastModified = new Date(file.lastModified);
+                return (
+                  lastModified >= cutoffDateStart &&
+                  lastModified <= cutoffDateEnd
+                );
+              });
+
+        try {
+          const fileContents = await Promise.all(
+            slicedFiles.map((file: File) => file.text()),
+          );
+
+          /**
+           * Offload RegEx matching to Web Worker
+           */
+          const rawMatches = await new Promise<RawMatch[]>(
+            (resolve, reject) => {
+              const worker = workerRef.current!;
+
+              const handleMessage = (e: MessageEvent<ResultMessage>) => {
+                worker.removeEventListener("message", handleMessage);
+                resolve(e.data.matches);
+              };
+              worker.addEventListener("message", handleMessage);
+
+              worker.addEventListener("error", (e: ErrorEvent) => {
+                worker.removeEventListener("message", handleMessage);
+                reject(new Error(e.message));
+              });
+
+              worker.postMessage({
+                id: Date.now(),
+                fileContents,
+              });
+            },
+          );
+
+          /**
+           * Map raw matches to `IEntry` on the main thread (needed for JSX rendering)
+           */
+          setEntries((previousEntries) => {
+            const newEntries = new Map<string, IEntry>(previousEntries);
+
+            for (const rawMatch of rawMatches) {
+              const pattern =
+                PATTERNS[rawMatch.patternKey as keyof typeof PATTERNS];
+              if (!pattern) continue;
+
+              const date = new Date(rawMatch.isoDate);
+              const entry = pattern.matchMapping(date, rawMatch.groups);
+              if (newEntries.has(entry.key)) continue;
+
+              newEntries.set(entry.key, {
+                ...entry,
+                isoDate: date,
+                isNew,
+              });
+            }
+
+            return newEntries;
+          });
+        } catch (error) {
+          console.error("[Log Analyzer] Error reading files:", error);
+        }
+      });
+    },
+    [daysToLoad],
+  );
 
   useEffect(() => {
     if (isLiveModeEnabled) {
@@ -238,9 +289,29 @@ export const LogAnalyzer = ({ className }: Props) => {
               Aktualisieren
             </Button2>
 
+            {/* <Select
+              value={daysToLoad}
+              onChange={(e) => {
+                const value = Number(e.target.value);
+                setDaysToLoad(value);
+                if (entries.size > 0) {
+                  setEntries(new Map());
+                  parseLogs();
+                }
+              }}
+              className="h-8! text-xs w-24! pl-1"
+            >
+              <option value={7}>7 Tage</option>
+              <option value={14}>14 Tage</option>
+              <option value={30}>30 Tage</option>
+              <option value={90}>90 Tage</option>
+              <option value={365}>365 Tage</option>
+              <option value={0}>Alle</option>
+            </Select> */}
+
             <YesNoCheckbox
               yesLabel={
-                <span className="flex items-center gap-2">
+                <span className="flex items-center gap-2 text-sm">
                   Automatisch aktualisieren
                   <Tooltip triggerChildren={<FaInfoCircle />}>
                     <p>Aktualisiert die Logs alle 10 Sekunden.</p>
@@ -251,7 +322,7 @@ export const LogAnalyzer = ({ className }: Props) => {
                 </span>
               }
               noLabel={
-                <span className="flex items-center gap-2">
+                <span className="flex items-center gap-2 text-sm">
                   Automatisch aktualisieren
                   <Tooltip triggerChildren={<FaInfoCircle />}>
                     <p>Aktualisiert die Logs alle 10 Sekunden.</p>
@@ -268,7 +339,7 @@ export const LogAnalyzer = ({ className }: Props) => {
 
             <YesNoCheckbox
               yesLabel={
-                <span className="flex items-center gap-2">
+                <span className="flex items-center gap-2 text-sm">
                   Autostart
                   <Tooltip triggerChildren={<FaInfoCircle />}>
                     <p>
@@ -279,7 +350,7 @@ export const LogAnalyzer = ({ className }: Props) => {
                 </span>
               }
               noLabel={
-                <span className="flex items-center gap-2">
+                <span className="flex items-center gap-2 text-sm">
                   Autostart
                   <Tooltip triggerChildren={<FaInfoCircle />}>
                     <p>
