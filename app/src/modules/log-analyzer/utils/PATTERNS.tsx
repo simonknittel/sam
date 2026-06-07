@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { PatternConfig } from "./types";
 
 export enum EntryType {
   JoinPu = "joinPu",
@@ -202,3 +203,14 @@ export const PATTERNS: Patterns = {
     },
   },
 };
+
+/**
+ * Serializable pattern configs for Web Worker (regex source + flags, without matchMapping which contains JSX)
+ */
+export const PATTERN_CONFIGS: PatternConfig[] = Object.entries(PATTERNS).map(
+  ([key, pattern]) => ({
+    key,
+    regexSource: pattern.regex.source,
+    regexFlags: pattern.regex.flags,
+  }),
+);
