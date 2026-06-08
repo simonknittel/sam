@@ -1,22 +1,22 @@
 "use client";
 
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
-import clsx from "clsx";
 import { useEffect, type MouseEventHandler } from "react";
 import { FaRegWindowRestore } from "react-icons/fa";
-import { PATTERNS, type IEntry } from "../utils/PATTERNS";
-import styles from "./Entry.module.css";
+import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 import { useOverlay } from "./OverlayContext";
+import { OverlayEntry } from "./OverlayEntry";
 import { OverlayWindow } from "./OverlayWindow";
 
 interface Props {
   readonly className?: string;
-  readonly entries: IEntry[];
 }
 
-export const OverlayButton = ({ className, entries }: Props) => {
+export const OverlayButton = ({ className }: Props) => {
   const { isSupported, requestPipWindow, pipWindow, closePipWindow } =
     useOverlay();
+
+  const { entries, entryFilterFn } = useLogAnalyzerContext();
 
   useEffect(() => {
     return () => {
@@ -35,7 +35,7 @@ export const OverlayButton = ({ className, entries }: Props) => {
     }
   };
 
-  const newEntries = entries
+  const newEntries = Array.from(entries.values().filter(entryFilterFn))
     .filter((entry) => entry.isNew)
     .toSorted((a, b) => b.isoDate.getTime() - a.isoDate.getTime());
 
@@ -67,29 +67,5 @@ export const OverlayButton = ({ className, entries }: Props) => {
         </OverlayWindow>
       )}
     </>
-  );
-};
-
-interface OverlayEntryProps {
-  readonly entry: IEntry;
-}
-
-const OverlayEntry = ({ entry }: OverlayEntryProps) => {
-  return (
-    <div className={clsx("relative", styles.Row)}>
-      <div className="truncate text-sm">
-        <span className="text-white/40">{PATTERNS[entry.type].title}:</span>{" "}
-        {entry.message}
-      </div>
-
-      <div
-        className={clsx(
-          "absolute left-0 top-0 bg-amber-500 text-black font-mono uppercase text-xs px-1 rounded-br-secondary",
-          styles.New,
-        )}
-      >
-        Neu
-      </div>
-    </div>
   );
 };

@@ -2,27 +2,22 @@
 
 "use client";
 
+import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import Button from "@/modules/common/components/Button";
 import { Button2 } from "@/modules/common/components/Button2";
-import { useLocalStorage } from "@uidotdev/usehooks";
+import { track } from "@plausible-analytics/tracker";
 import clsx from "clsx";
 import { get, set } from "idb-keyval";
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  useTransition,
-  type MouseEvent,
-} from "react";
+import { useCallback, useEffect, useRef, type MouseEvent } from "react";
 import { FaSpinner } from "react-icons/fa";
 import { FaFileArrowUp } from "react-icons/fa6";
 import { getFilesRecursively } from "../utils/getFilesRecursively";
-import { PATTERNS, type IEntry } from "../utils/PATTERNS";
+import { EntryType, PATTERNS, type IEntry } from "../utils/PATTERNS";
 import type { RawMatch, ResultMessage } from "../utils/types";
-import { useEntryFilterContext } from "./EntryFilterContext";
 import { Introduction } from "./Introduction";
+import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 import { LogAnalyzerTable } from "./LogAnalyzerTable";
+import { useOverlay } from "./OverlayContext";
 import { Toolbar } from "./Toolbar";
 
 interface Props {
@@ -31,20 +26,22 @@ interface Props {
 }
 
 export const LogAnalyzer = ({ className }: Props) => {
-  const [isPending, startTransition] = useTransition();
-  const [entries, setEntries] = useState<Map<string, IEntry>>(new Map());
   const directoryHandleRef = useRef<FileSystemDirectoryHandle | null>(null);
   const liveModeIntervalRef = useRef<number | null>(null);
-  const [isLiveModeEnabled, setIsLiveModeEnabled] = useLocalStorage(
-    "is_live_mode_enabled",
-    false,
-  );
-  const [isAutostartEnabled, setIsAutostartEnabled] = useLocalStorage(
-    "is_autostart_enabled",
-    false,
-  );
-  const [daysToLoad] = useLocalStorage<number>("log_analyzer_days_to_load", 14);
-  const { entryFilterFn } = useEntryFilterContext();
+
+  const {
+    isPending,
+    startTransition,
+    isAutostartEnabled,
+    isLiveModeEnabled,
+    daysToLoad,
+    entryFilters,
+    entries,
+    setEntries,
+  } = useLogAnalyzerContext();
+
+  const authentication = useAuthentication();
+  const { pipWindow } = useOverlay();
 
   // Reusable Web Worker for background log parsing
   const workerRef = useRef<Worker | null>(null);
@@ -65,6 +62,28 @@ export const LogAnalyzer = ({ className }: Props) => {
       startTransition(async () => {
         if (!directoryHandleRef.current) return;
         if (!workerRef.current) return;
+
+        try {
+          const visibleFilters = Object.values(EntryType)
+            .filter((type) => !entryFilters[type])
+            .join(",");
+
+          track("log_analyzer_parse", {
+            props: {
+              userId: authentication
+                ? authentication?.session.user.id
+                : "unknown",
+              visible_filters: visibleFilters,
+              days_to_load: String(daysToLoad),
+              live_mode: String(isLiveModeEnabled),
+              autostart: String(isAutostartEnabled),
+              overlay: String(!!pipWindow),
+            },
+            interactive: false,
+          });
+        } catch {
+          // Tracking failure should not affect log parsing
+        }
 
         const files: File[] = [];
 
@@ -152,7 +171,15 @@ export const LogAnalyzer = ({ className }: Props) => {
         }
       });
     },
-    [daysToLoad],
+    [
+      authentication,
+      daysToLoad,
+      entryFilters,
+      isAutostartEnabled,
+      isLiveModeEnabled,
+      pipWindow,
+      startTransition,
+    ],
   );
 
   useEffect(() => {
@@ -265,22 +292,8 @@ export const LogAnalyzer = ({ className }: Props) => {
 
       {entries.size > 0 ? (
         <>
-          <Toolbar
-            isPending={isPending}
-            isLiveModeEnabled={isLiveModeEnabled}
-            onToggleLiveMode={setIsLiveModeEnabled}
-            isAutostartEnabled={isAutostartEnabled}
-            onToggleAutostart={setIsAutostartEnabled}
-            onRefresh={() => parseLogs(true)}
-            filteredEntries={Array.from(entries.values().filter(entryFilterFn))}
-            className="mt-1"
-          />
-
-          <LogAnalyzerTable
-            entries={entries}
-            entryFilterFn={entryFilterFn}
-            className="mt-0.5"
-          />
+          <Toolbar onRefresh={() => parseLogs(true)} className="mt-1" />
+          <LogAnalyzerTable className="mt-0.5" />
         </>
       ) : (
         <Introduction className="mt-1" />

@@ -4,14 +4,14 @@ import { Popover } from "@/modules/common/components/Popover";
 import clsx from "clsx";
 import { FaFilter } from "react-icons/fa";
 import { type EntryType, PATTERNS } from "../utils/PATTERNS";
-import { useEntryFilterContext } from "./EntryFilterContext";
+import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 
 interface Props {
   readonly className?: string;
 }
 
 export const EntryFilters = ({ className }: Props) => {
-  const { entryFilters, setEntryFilters } = useEntryFilterContext();
+  const { entryFilters, setEntryFilters } = useLogAnalyzerContext();
 
   return (
     <Popover
