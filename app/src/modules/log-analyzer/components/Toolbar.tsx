@@ -7,7 +7,6 @@ import { TfiReload } from "react-icons/tfi";
 import { EntryFilters } from "./EntryFilters";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 import { OverlayButton } from "./OverlayButton";
-import { OverlayProvider } from "./OverlayContext";
 
 interface Props {
   readonly className?: string;
@@ -96,9 +95,7 @@ export const Toolbar = ({ className, onRefresh }: Props) => {
         onChange={(e) => setIsAutostartEnabled(e.target.checked)}
       />
 
-      <OverlayProvider>
-        <OverlayButton />
-      </OverlayProvider>
+      <OverlayButton />
 
       <EntryFilters />
     </div>

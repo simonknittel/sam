@@ -2,19 +2,22 @@
 
 "use client";
 
+import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import Button from "@/modules/common/components/Button";
 import { Button2 } from "@/modules/common/components/Button2";
+import { track } from "@plausible-analytics/tracker";
 import clsx from "clsx";
 import { get, set } from "idb-keyval";
 import { useCallback, useEffect, useRef, type MouseEvent } from "react";
 import { FaSpinner } from "react-icons/fa";
 import { FaFileArrowUp } from "react-icons/fa6";
 import { getFilesRecursively } from "../utils/getFilesRecursively";
-import { PATTERNS, type IEntry } from "../utils/PATTERNS";
+import { EntryType, PATTERNS, type IEntry } from "../utils/PATTERNS";
 import type { RawMatch, ResultMessage } from "../utils/types";
 import { Introduction } from "./Introduction";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 import { LogAnalyzerTable } from "./LogAnalyzerTable";
+import { useOverlay } from "./OverlayContext";
 import { Toolbar } from "./Toolbar";
 
 interface Props {
@@ -32,9 +35,13 @@ export const LogAnalyzer = ({ className }: Props) => {
     isAutostartEnabled,
     isLiveModeEnabled,
     daysToLoad,
+    entryFilters,
     entries,
     setEntries,
   } = useLogAnalyzerContext();
+
+  const authentication = useAuthentication();
+  const { pipWindow } = useOverlay();
 
   // Reusable Web Worker for background log parsing
   const workerRef = useRef<Worker | null>(null);
@@ -55,6 +62,28 @@ export const LogAnalyzer = ({ className }: Props) => {
       startTransition(async () => {
         if (!directoryHandleRef.current) return;
         if (!workerRef.current) return;
+
+        try {
+          const visibleFilters = Object.values(EntryType)
+            .filter((type) => !entryFilters[type])
+            .join(",");
+
+          track("log_analyzer_parse", {
+            props: {
+              userId: authentication
+                ? authentication?.session.user.id
+                : "unknown",
+              visible_filters: visibleFilters,
+              days_to_load: String(daysToLoad),
+              live_mode: String(isLiveModeEnabled),
+              autostart: String(isAutostartEnabled),
+              overlay: String(!!pipWindow),
+            },
+            interactive: false,
+          });
+        } catch {
+          // Tracking failure should not affect log parsing
+        }
 
         const files: File[] = [];
 
@@ -142,7 +171,15 @@ export const LogAnalyzer = ({ className }: Props) => {
         }
       });
     },
-    [daysToLoad],
+    [
+      authentication,
+      daysToLoad,
+      entryFilters,
+      isAutostartEnabled,
+      isLiveModeEnabled,
+      pipWindow,
+      startTransition,
+    ],
   );
 
   useEffect(() => {
