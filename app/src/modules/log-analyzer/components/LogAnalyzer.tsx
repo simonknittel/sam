@@ -64,20 +64,23 @@ export const LogAnalyzer = ({ className }: Props) => {
         if (!workerRef.current) return;
 
         try {
-          const visibleFilters = Object.values(EntryType)
-            .filter((type) => !entryFilters[type])
-            .join(",");
+          const filterProps = Object.fromEntries(
+            Object.values(EntryType).map((type) => [
+              `log_analyzer_filter_${type}`,
+              !entryFilters[type],
+            ]),
+          );
 
           track("log_analyzer_parse", {
             props: {
-              userId: authentication
+              user_id: authentication
                 ? authentication?.session.user.id
                 : "unknown",
-              visible_filters: visibleFilters,
-              days_to_load: String(daysToLoad),
-              live_mode: String(isLiveModeEnabled),
-              autostart: String(isAutostartEnabled),
-              overlay: String(!!pipWindow),
+              log_analyzer_days_to_load: String(daysToLoad),
+              log_analyzer_live_mode: String(isLiveModeEnabled),
+              log_analyzer_autostart: String(isAutostartEnabled),
+              log_analyzer_overlay: String(!!pipWindow),
+              ...filterProps,
             },
             interactive: false,
           });
