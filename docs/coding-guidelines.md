@@ -5,6 +5,7 @@
 - When reviewing code, don't list any positive things. Only list things which need fixing.
 - When you think a change may causes issues, go and check that. For example: when a function signature changes, go and find all references to this function and check if they got adapted accordingly.
 - When suggesting changes, avoid premature optimization. For example, if an abstraction could reduce code duplication, only suggest it if it saves a significant amount of code or meaningfully improves maintainability.
+- When implementing tests, primarily focus on end-to-end tests of the respective feature. Don't add tests just for the sake of increasing code coverage.
 
 ## Security
 
