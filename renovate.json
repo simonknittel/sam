@@ -20,7 +20,6 @@
         "before 7am on Tuesday"
       ],
       "matchPackageNames": [
-        "*",
         "!eslint-plugin-react-compiler",
         "!@biomejs/biome",
         "!prisma",
