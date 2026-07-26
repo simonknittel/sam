@@ -15,7 +15,9 @@ preferFrozenLockfile: true
 legacyPeerDeps: true
 saveExact: true
 allowBuilds:
-  "@prisma/client": true
+  # Since Prisma 7 the client no longer has a postinstall script (generation
+  # happens explicitly via `prisma generate` in packages/database).
+  "@prisma/client": false
   "@prisma/engines": true
   esbuild: true
   prisma: true
