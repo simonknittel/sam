@@ -1,8 +1,8 @@
 # References:
-# - https://github.com/nodejs/docker-node/blob/main/20/bookworm/Dockerfile
+# - https://github.com/nodejs/docker-node/blob/main/24/bookworm/Dockerfile
 # - https://github.com/devcontainers/images
 
-FROM node:22.23.1-bookworm@sha256:5647be709086c696ff32edaaf1c70cd26d1da6ab2b39c32f3c7b4c4a31957e37
+FROM node:24.18.0-bookworm@sha256:5711a0d445a1af54af9589066c646df387d1831a608226f4cd694fc59e745059
 
 # Give the node user passwordless sudo. This is required to change the ownership of the node_modules directory (see devcontainer.json).
 RUN apt-get update \
