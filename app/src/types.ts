@@ -10,16 +10,10 @@ declare module "react" {
 export type UserRole = null | "confirmed" | "admin";
 
 export type EntityLogConfirmationState =
-  | "confirmed"
-  | "false-report"
-  | undefined;
+  "confirmed" | "false-report" | undefined;
 
 export type GenericEntityLogType =
-  | "handle"
-  | "discord-id"
-  | "teamspeak-id"
-  | "citizen-id"
-  | "community-moniker";
+  "handle" | "discord-id" | "teamspeak-id" | "citizen-id" | "community-moniker";
 
 // TODO: Use ENUM (https://www.prisma.io/docs/concepts/components/prisma-schema/data-model#defining-enums)
 export type EntityLogType =
@@ -29,6 +23,4 @@ export type EntityLogType =
 
 // TODO: Use ENUM (https://www.prisma.io/docs/concepts/components/prisma-schema/data-model#defining-enums)
 export type EntityLogAttributeKey =
-  | "confirmed"
-  | "classificationLevelId"
-  | "noteTypeId";
+  "confirmed" | "classificationLevelId" | "noteTypeId";
