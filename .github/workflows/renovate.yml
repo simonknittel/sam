@@ -13,6 +13,10 @@ on:
       - .github/workflows/renovate.yml
       - .github/renovate-config.js
 
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
 jobs:
   renovate:
     runs-on: ubuntu-latest
