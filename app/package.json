@@ -88,7 +88,7 @@
     "react": "19.2.7",
     "remark-breaks": "4.0.0",
     "remark-gfm": "4.0.1",
-    "serialize-error": "12.0.0",
+    "serialize-error": "13.0.1",
     "server-only": "0.0.1",
     "sharp": "0.35.0",
     "slug": "11.0.1",
