@@ -9,8 +9,6 @@ const client = algoliasearch(
 const indexName = "spynet_entities";
 
 async function main() {
-  await client.clearObjects({ indexName });
-
   const entities = await prisma.entity.findMany({
     include: {
       logs: {
@@ -69,7 +67,7 @@ async function main() {
     };
   });
 
-  await client.saveObjects({ indexName, objects });
+  await client.replaceAllObjects({ indexName, objects, batchSize: 1000 });
 }
 
 void main();

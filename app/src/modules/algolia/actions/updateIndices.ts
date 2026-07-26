@@ -37,56 +37,47 @@ export const updateIndices = async () => {
     ]);
 
     const client = getClient();
-    await getTracer().startActiveSpan("clearAlgoliaObjects", async (span) => {
-      try {
-        await client.clearObjects({ indexName });
-      } catch (error) {
-        span.setStatus({
-          code: SpanStatusCode.ERROR,
-        });
-        throw error;
-      } finally {
-        span.end();
-      }
-    });
+    await getTracer().startActiveSpan(
+      "replaceAllAlgoliaObjects",
+      async (span) => {
+        try {
+          await client.replaceAllObjects({
+            indexName,
+            objects: [
+              ...organizations.map((organization) => ({
+                objectID: organization.id,
+                spectrumId: organization.spectrumId,
+                type: "organization",
+                names: [organization.name],
+              })),
 
-    await getTracer().startActiveSpan("saveAlgoliaObjects", async (span) => {
-      try {
-        await client.saveObjects({
-          indexName,
-          objects: [
-            ...organizations.map((organization) => ({
-              objectID: organization.id,
-              spectrumId: organization.spectrumId,
-              type: "organization",
-              names: [organization.name],
-            })),
-
-            ...citizen.map((citizen) => ({
-              objectID: citizen.id,
-              spectrumId: citizen.spectrumId,
-              type: "citizen",
-              handles: citizen.logs
-                .filter((log) => log.type === "handle")
-                .map((log) => log.content),
-              communityMonikers: citizen.logs
-                .filter((log) => log.type === "community-moniker")
-                .map((log) => log.content),
-              citizenIds: citizen.logs
-                .filter((log) => log.type === "citizen-id")
-                .map((log) => log.content),
-            })),
-          ],
-        });
-      } catch (error) {
-        span.setStatus({
-          code: SpanStatusCode.ERROR,
-        });
-        throw error;
-      } finally {
-        span.end();
-      }
-    });
+              ...citizen.map((citizen) => ({
+                objectID: citizen.id,
+                spectrumId: citizen.spectrumId,
+                type: "citizen",
+                handles: citizen.logs
+                  .filter((log) => log.type === "handle")
+                  .map((log) => log.content),
+                communityMonikers: citizen.logs
+                  .filter((log) => log.type === "community-moniker")
+                  .map((log) => log.content),
+                citizenIds: citizen.logs
+                  .filter((log) => log.type === "citizen-id")
+                  .map((log) => log.content),
+              })),
+            ],
+            batchSize: 1000,
+          });
+        } catch (error) {
+          span.setStatus({
+            code: SpanStatusCode.ERROR,
+          });
+          throw error;
+        } finally {
+          span.end();
+        }
+      },
+    );
 
     return {
       success: "Successfully updated Algolia indices",
