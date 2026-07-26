@@ -9,8 +9,8 @@
     ".": "./dist/index.js"
   },
   "scripts": {
-    "postinstall": "prisma generate",
-    "build": "prisma generate && tsc",
+    "postinstall": "prisma generate && node ./scripts/patch-generated-client.mjs",
+    "build": "prisma generate && node ./scripts/patch-generated-client.mjs && tsc",
     "format": "prisma format"
   },
   "dependencies": {
@@ -21,6 +21,6 @@
   "devDependencies": {
     "@types/node": "24.13.3",
     "prisma": "6.17.1",
-    "typescript": "5.9.3"
+    "typescript": "7.0.2"
   }
 }

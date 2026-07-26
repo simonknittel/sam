@@ -30,6 +30,6 @@
     "@types/node": "24.13.3",
     "@types/web-push": "3.6.4",
     "esbuild": "0.28.1",
-    "typescript": "5.9.3"
+    "typescript": "7.0.2"
   }
 }
