@@ -64,19 +64,17 @@ const sdk = new NodeSDK({
     ),
   ],
   logRecordProcessors: [
-    // new BatchLogRecordProcessor(
-    //   new OTLPLogExporter({
+    // new BatchLogRecordProcessor({
+    //   exporter: new OTLPLogExporter({
     //     url: `${env.OTEL_EXPORTER_OTLP_ENDPOINT}/v1/logs`,
     //   }),
-    //   {
-    //     scheduledDelayMillis: 1000,
-    //   },
-    // ),
-    new SimpleLogRecordProcessor(
-      new OTLPLogExporter({
+    //   scheduledDelayMillis: 1000,
+    // }),
+    new SimpleLogRecordProcessor({
+      exporter: new OTLPLogExporter({
         url: `${env.OTEL_EXPORTER_OTLP_ENDPOINT}/v1/logs`,
       }),
-    ),
+    }),
   ],
   instrumentations: [
     getNodeAutoInstrumentations(),
