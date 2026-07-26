@@ -108,7 +108,6 @@
     "@types/wicg-file-system-access": "2023.10.7",
     "@typescript-eslint/eslint-plugin": "8.64.0",
     "@typescript-eslint/parser": "8.64.0",
-    "@typescript/native-preview": "7.0.0-dev.20260707.2",
     "@vitest/coverage-v8": "4.1.10",
     "csv": "6.6.1",
     "eslint": "9.39.5",
