@@ -27,7 +27,7 @@ jobs:
         id: node-modules-cache
         with:
           path: app/node_modules
-          key: ${{ runner.os }}-${{ hashFiles('app/.nvmrc', 'app/package-lock.json', 'app/prisma/prisma.schema') }}
+          key: ${{ runner.os }}-${{ hashFiles('app/.nvmrc', 'app/package-lock.json', 'app/prisma/**/*.prisma') }}
 
       - name: Install dependencies
         run: npm ci
