@@ -7,7 +7,7 @@ import { getTracer } from "@/modules/tracing/utils/getTracer";
 import { SpanStatusCode } from "@opentelemetry/api";
 import { unstable_rethrow } from "next/navigation";
 import { serializeError } from "serialize-error";
-import { getIndex } from "..";
+import { getClient, indexName } from "..";
 
 export const updateIndices = async () => {
   try {
@@ -36,10 +36,10 @@ export const updateIndices = async () => {
       }),
     ]);
 
-    const index = getIndex();
+    const client = getClient();
     await getTracer().startActiveSpan("clearAlgoliaObjects", async (span) => {
       try {
-        await index.clearObjects();
+        await client.clearObjects({ indexName });
       } catch (error) {
         span.setStatus({
           code: SpanStatusCode.ERROR,
@@ -52,29 +52,32 @@ export const updateIndices = async () => {
 
     await getTracer().startActiveSpan("saveAlgoliaObjects", async (span) => {
       try {
-        await index.saveObjects([
-          ...organizations.map((organization) => ({
-            objectID: organization.id,
-            spectrumId: organization.spectrumId,
-            type: "organization",
-            names: [organization.name],
-          })),
+        await client.saveObjects({
+          indexName,
+          objects: [
+            ...organizations.map((organization) => ({
+              objectID: organization.id,
+              spectrumId: organization.spectrumId,
+              type: "organization",
+              names: [organization.name],
+            })),
 
-          ...citizen.map((citizen) => ({
-            objectID: citizen.id,
-            spectrumId: citizen.spectrumId,
-            type: "citizen",
-            handles: citizen.logs
-              .filter((log) => log.type === "handle")
-              .map((log) => log.content),
-            communityMonikers: citizen.logs
-              .filter((log) => log.type === "community-moniker")
-              .map((log) => log.content),
-            citizenIds: citizen.logs
-              .filter((log) => log.type === "citizen-id")
-              .map((log) => log.content),
-          })),
-        ]);
+            ...citizen.map((citizen) => ({
+              objectID: citizen.id,
+              spectrumId: citizen.spectrumId,
+              type: "citizen",
+              handles: citizen.logs
+                .filter((log) => log.type === "handle")
+                .map((log) => log.content),
+              communityMonikers: citizen.logs
+                .filter((log) => log.type === "community-moniker")
+                .map((log) => log.content),
+              citizenIds: citizen.logs
+                .filter((log) => log.type === "citizen-id")
+                .map((log) => log.content),
+            })),
+          ],
+        });
       } catch (error) {
         span.setStatus({
           code: SpanStatusCode.ERROR,

@@ -2,7 +2,7 @@
 
 import { env } from "@/env";
 import { getAlgoliaResults } from "@algolia/autocomplete-js";
-import algoliasearch from "algoliasearch";
+import { liteClient as algoliasearch } from "algoliasearch/lite";
 import { Autocomplete } from "./Autocomplete";
 import { Citizen } from "./Citizen";
 import { Organization } from "./Organization";
@@ -67,7 +67,9 @@ export const Search = () => {
                   queries: [
                     {
                       indexName: "spynet_entities",
-                      query,
+                      params: {
+                        query,
+                      },
                     },
                   ],
                 });

@@ -1,25 +1,28 @@
 import { env } from "@/env";
 import { type Entity } from "@/generated/prisma/client";
-import algoliasearch from "algoliasearch";
+import { algoliasearch } from "algoliasearch";
 
-export function getIndex() {
-  const client = algoliasearch(
+export const indexName = "spynet_entities";
+
+export function getClient() {
+  return algoliasearch(
     env.NEXT_PUBLIC_ALGOLIA_APP_ID,
     env.ALGOLIA_ADMIN_API_KEY,
   );
-
-  return client.initIndex("spynet_entities");
 }
 
 export function saveObject(
   entityId: Entity["id"],
   attributes: Record<string, any>,
 ) {
-  const index = getIndex();
+  const client = getClient();
 
-  return index.saveObject({
-    objectID: entityId,
-    ...attributes,
+  return client.saveObject({
+    indexName,
+    body: {
+      objectID: entityId,
+      ...attributes,
+    },
   });
 }
 
@@ -27,16 +30,23 @@ export function updateObject(
   entityId: Entity["id"],
   attributes: Record<string, any>,
 ) {
-  const index = getIndex();
+  const client = getClient();
 
-  return index.partialUpdateObject({
+  return client.partialUpdateObject({
+    indexName,
     objectID: entityId,
-    ...attributes,
+    attributesToUpdate: attributes,
+    // algoliasearch v4's `partialUpdateObject` defaulted to not creating
+    // missing objects. Keep that behavior since the v5 default is `true`.
+    createIfNotExists: false,
   });
 }
 
 export function deleteObject(entityId: Entity["id"]) {
-  const index = getIndex();
+  const client = getClient();
 
-  return index.deleteObject(entityId);
+  return client.deleteObject({
+    indexName,
+    objectID: entityId,
+  });
 }

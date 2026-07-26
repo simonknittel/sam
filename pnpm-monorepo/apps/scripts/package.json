@@ -4,7 +4,7 @@
   "type": "module",
   "dependencies": {
     "@sam-monorepo/database": "workspace:*",
-    "algoliasearch": "4.27.0",
+    "algoliasearch": "5.56.0",
     "csv": "6.6.1",
     "date-fns": "4.4.0",
     "fast-xml-parser": "5.10.1"

@@ -55,7 +55,7 @@
     "@unleash/nextjs": "1.6.7",
     "@vercel/speed-insights": "2.0.0",
     "@xyflow/react": "12.11.2",
-    "algoliasearch": "4.27.0",
+    "algoliasearch": "5.56.0",
     "change-case": "5.4.4",
     "clsx": "2.1.1",
     "cmdk": "1.1.1",
