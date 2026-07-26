@@ -3,6 +3,7 @@ name: Renovate
 on:
   schedule:
     - cron: "0 0,6,12,18 * * *"
+      timezone: "Europe/Berlin"
   workflow_dispatch: # Manually run the workflow
   push: # Run the workflow on changes to the configuration
     branches:
