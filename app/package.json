@@ -114,7 +114,7 @@
     "eslint": "9.39.5",
     "eslint-config-next": "16.2.10",
     "eslint-plugin-react-compiler": "19.1.0-rc.2",
-    "eslint-plugin-react-you-might-not-need-an-effect": "0.11.1",
+    "eslint-plugin-react-you-might-not-need-an-effect": "1.0.1",
     "postcss": "8.5.18",
     "prettier": "3.9.5",
     "prettier-plugin-organize-imports": "4.3.0",
