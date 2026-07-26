@@ -91,7 +91,6 @@
     "serialize-error": "13.0.1",
     "server-only": "0.0.1",
     "sharp": "0.35.0",
-    "slug": "11.0.1",
     "superjson": "2.2.6",
     "swr": "2.4.2",
     "zod": "4.4.3"
@@ -106,7 +105,6 @@
     "@types/node": "24.13.3",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
-    "@types/slug": "5.0.9",
     "@types/wicg-file-system-access": "2023.10.7",
     "@typescript-eslint/eslint-plugin": "8.64.0",
     "@typescript-eslint/parser": "8.64.0",
