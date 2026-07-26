@@ -127,6 +127,16 @@
     "zod-validation-error": "5.0.0"
   },
   "packageManager": "npm@12.0.1",
+  "allowScripts": {
+    "@parcel/watcher": true,
+    "@prisma/engines": true,
+    "@swc/core": true,
+    "esbuild": true,
+    "prisma": true,
+    "protobufjs": true,
+    "sharp": true,
+    "unrs-resolver": true
+  },
   "overrides": {
     "@types/react-dom": "19.2.3",
     "@types/react": "19.2.17",
