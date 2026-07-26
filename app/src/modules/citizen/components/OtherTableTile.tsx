@@ -60,8 +60,7 @@ const OtherTableTile = async ({ className, searchParams }: Props) => {
     return {
       entity: entityLog.entity,
       confirmationState: confirmed?.value as
-        | EntityLogConfirmationState
-        | undefined,
+        EntityLogConfirmationState | undefined,
       confirmedAt: confirmed?.createdAt,
       confirmedBy: confirmed?.createdBy,
       entityLog,

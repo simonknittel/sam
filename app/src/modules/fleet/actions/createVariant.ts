@@ -110,8 +110,7 @@ export const createVariant = async (formData: FormData) => {
         url: result.data.linkUrls?.[index],
       }))
       .filter((link) => Boolean(link.serviceName && link.url)) as
-      | IncomingLink[]
-      | undefined;
+      IncomingLink[] | undefined;
     await syncVariantExternalLinks(createdVariant.id, incomingLinks);
 
     await createAuditEvents([

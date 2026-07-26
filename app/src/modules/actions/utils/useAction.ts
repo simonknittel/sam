@@ -53,10 +53,7 @@ export const useAction = (
   ) => {
     if (state && "requestPayload" in state) {
       const value = state.requestPayload.get(formFieldName) as
-        | string
-        | number
-        | readonly string[]
-        | undefined; // TODO: What about File?
+        string | number | readonly string[] | undefined; // TODO: What about File?
 
       if (!value) return value;
     }

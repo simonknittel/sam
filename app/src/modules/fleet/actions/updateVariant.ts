@@ -116,8 +116,7 @@ export const updateVariant: ServerAction = async (formData) => {
         url: data.linkUrls?.[index],
       }))
       .filter((link) => Boolean(link.serviceName && link.url)) as
-      | IncomingLink[]
-      | undefined;
+      IncomingLink[] | undefined;
     await syncVariantExternalLinks(updatedItem.id, incomingLinks);
 
     await createAuditEvents([

@@ -344,15 +344,13 @@ export const List = () => {
         href: "/app/timezones",
       },
 
-      ...externalApps.map(
-        (app): LinkMenuItem => ({
-          id: `external-${app.slug}`,
-          label: app.name,
-          icon: app.icon,
-          type: MenuItemType.Link,
-          href: `/app/external/${app.slug}`,
-        }),
-      ),
+      ...externalApps.map((app): LinkMenuItem => ({
+        id: `external-${app.slug}`,
+        label: app.name,
+        icon: app.icon,
+        type: MenuItemType.Link,
+        href: `/app/external/${app.slug}`,
+      })),
     ],
     [],
   );
