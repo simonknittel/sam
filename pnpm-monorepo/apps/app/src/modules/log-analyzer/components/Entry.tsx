@@ -13,6 +13,7 @@ interface Props {
 
 export const Entry = memo(
   function Entry({ entry }: Props) {
+    const { title, icon: Icon } = PATTERNS[entry.type];
     const now = new Date();
     const showRelativeDate =
       entry.isoDate.getTime() > now.getTime() - 1000 * 60 * 60 * 24;
@@ -48,7 +49,10 @@ export const Entry = memo(
           )}
         </td>
 
-        <td className="truncate text-white/40">{PATTERNS[entry.type].title}</td>
+        <td className="flex items-center gap-2 text-white/40">
+          <Icon className="shrink-0" />
+          <span className="truncate">{title}</span>
+        </td>
 
         <td className="truncate">{entry.message}</td>
       </TRow>

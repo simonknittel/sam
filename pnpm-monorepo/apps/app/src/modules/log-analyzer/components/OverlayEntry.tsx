@@ -7,10 +7,14 @@ interface Props {
 }
 
 export const OverlayEntry = ({ entry }: Props) => {
+  const { title, icon: Icon } = PATTERNS[entry.type];
+
   return (
     <div className={clsx("relative", styles.Row)}>
       <div className="truncate text-sm">
-        <span className="text-white/40">{PATTERNS[entry.type].title}:</span>{" "}
+        <span className="text-white/40">
+          <Icon className="inline-block align-[-0.125em]" /> {title}:
+        </span>{" "}
         {entry.message}
       </div>
 

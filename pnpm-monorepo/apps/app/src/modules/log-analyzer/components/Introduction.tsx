@@ -23,11 +23,12 @@ export const Introduction = ({ className }: Props) => {
       <ul className="mt-0.5 grid grid-cols-2 md:grid-cols-4 gap-0.5">
         {Object.entries(PATTERNS)
           .toSorted((a, b) => a[1].title.localeCompare(b[1].title))
-          .map(([key, { title }]) => (
+          .map(([key, { title, icon: Icon }]) => (
             <li
               key={key}
               className="flex items-center text-center justify-center gap-2 bg-tertiary rounded-secondary p-4 font-mono uppercase font-bold"
             >
+              <Icon className="shrink-0" />
               {title}
             </li>
           ))}
