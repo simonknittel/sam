@@ -120,30 +120,30 @@ const PopoverChildren = ({
   // @ts-expect-error Doesn't make any sense
   let items: (
     | {
-        label: string;
-        type: "button";
-        modalId: keyof typeof createForms;
-      }
+      label: string;
+      type: "button";
+      modalId: keyof typeof createForms;
+    }
     | {
-        label: string;
-        type: "link";
-        href: string;
-      }
+      label: string;
+      type: "link";
+      href: string;
+    }
   )[] = [
-    ...(apps
-      ?.filter((app): app is ExternalApp =>
-        Boolean(
-          "createLinks" in app && app.createLinks && app.createLinks.length > 0,
-        ),
-      )
-      .flatMap((app) => {
-        return app.createLinks!.map((link) => ({
-          label: link.title,
-          type: "link",
-          href: `/app/external/${app.slug}/${link.slug}`,
-        }));
-      }) || []),
-  ];
+      ...(apps
+        ?.filter((app): app is ExternalApp =>
+          Boolean(
+            "createLinks" in app && app.createLinks && app.createLinks.length > 0,
+          ),
+        )
+        .flatMap((app) => {
+          return app.createLinks!.map((link) => ({
+            label: link.title,
+            type: "link",
+            href: `/app/external/${app.slug}/${link.slug}`,
+          }));
+        }) || []),
+    ];
 
   if (showCreateCitizen)
     items.push({ label: "Citizen", type: "button", modalId: "citizen" });
@@ -179,7 +179,7 @@ const PopoverChildren = ({
   items = items.toSorted((a, b) => a.label.localeCompare(b.label));
 
   const className =
-    "block hover:outline-interaction-700 focus-visible:outline-interaction-700 active:outline-interaction-500 outline-offset-4 outline outline-transparent transition-colors rounded-primary overflow-hidden bg-secondary group p-2 text-xs text-left";
+    "block cursor-pointer hover:outline-interaction-700 focus-visible:outline-interaction-700 active:outline-interaction-500 outline-offset-4 outline outline-transparent transition-colors rounded-primary overflow-hidden bg-secondary group p-2 text-xs text-left";
 
   return (
     <div className="flex flex-col gap-0.5">
