@@ -1,5 +1,6 @@
 "use client";
 
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import { NumberInput } from "@/modules/common/components/form/NumberInput";
 import { Textarea } from "@/modules/common/components/form/Textarea";
@@ -9,7 +10,7 @@ import Note from "@/modules/common/components/Note";
 import type { Role, Upload } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useActionState } from "react";
-import { FaSave, FaSpinner } from "react-icons/fa";
+import { FaSave } from "react-icons/fa";
 import { updateRole } from "../actions/updateRole";
 import { DeleteRole } from "./DeleteRole";
 
@@ -100,11 +101,7 @@ export const OverviewTab = ({ className, role }: Props) => {
           disabled={updateIsPending}
           className="ml-auto mt-4"
         >
-          {updateIsPending ? (
-            <FaSpinner className="animate-spin" />
-          ) : (
-            <FaSave />
-          )}
+          {updateIsPending ? <AsciiSpinner /> : <FaSave />}
           Speichern
         </Button2>
 

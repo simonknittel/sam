@@ -1,11 +1,12 @@
 "use client";
 
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { type EntityLog } from "@sam-monorepo/database/browser";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { FaSpinner, FaTrash } from "react-icons/fa";
+import { FaTrash } from "react-icons/fa";
 
 interface Props {
   readonly log: EntityLog;
@@ -55,7 +56,7 @@ export const OtherTableDelete = ({ log }: Props) => {
       variant="tertiary"
       type="button"
     >
-      {isLoading ? <FaSpinner className="animate-spin" /> : <FaTrash />} Löschen
+      {isLoading ? <AsciiSpinner /> : <FaTrash />} Löschen
     </Button>
   );
 };

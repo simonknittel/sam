@@ -1,3 +1,4 @@
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import Modal from "@/modules/common/components/Modal";
 import { api } from "@/trpc/react";
@@ -6,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { toast } from "react-hot-toast";
-import { FaSave, FaSpinner } from "react-icons/fa";
+import { FaSave } from "react-icons/fa";
 
 interface Props {
   readonly onRequestClose: () => void;
@@ -110,7 +111,7 @@ export const CreateSeriesModal = ({
             type="submit"
             disabled={isLoading || manufacturers.isFetching}
           >
-            {isLoading ? <FaSpinner className="animate-spin" /> : <FaSave />}
+            {isLoading ? <AsciiSpinner /> : <FaSave />}
             Speichern
           </Button>
         </div>

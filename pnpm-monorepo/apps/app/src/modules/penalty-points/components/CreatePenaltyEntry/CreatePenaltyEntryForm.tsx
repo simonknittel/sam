@@ -1,4 +1,5 @@
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import { DateTimeInput } from "@/modules/common/components/form/DateTimeInput";
 import { NumberInput } from "@/modules/common/components/form/NumberInput";
@@ -9,7 +10,7 @@ import clsx from "clsx";
 import { unstable_rethrow } from "next/navigation";
 import { useActionState } from "react";
 import toast from "react-hot-toast";
-import { FaSave, FaSpinner } from "react-icons/fa";
+import { FaSave } from "react-icons/fa";
 
 interface Props {
   readonly className?: string;
@@ -88,7 +89,7 @@ export const CreatePenaltyEntryForm = ({ className, onSuccess }: Props) => {
       />
 
       <Button2 type="submit" disabled={isPending} className="ml-auto mt-4">
-        {isPending ? <FaSpinner className="animate-spin" /> : <FaSave />}
+        {isPending ? <AsciiSpinner /> : <FaSave />}
         Speichern
       </Button2>
 

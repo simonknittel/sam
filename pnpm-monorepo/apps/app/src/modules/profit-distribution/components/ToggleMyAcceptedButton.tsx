@@ -1,11 +1,11 @@
 "use client";
 
 import { useAction } from "@/modules/actions/utils/useAction";
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import type { getProfitDistributionCycleById } from "@/modules/profit-distribution/queries/getProfitDistributionCycleById";
 import clsx from "clsx";
 import { useId } from "react";
-import { FaSpinner } from "react-icons/fa";
 import { toggleMyAccepted } from "../actions/toggleMyAccepted";
 import { CyclePhase } from "../utils/getCurrentPhase";
 
@@ -32,7 +32,7 @@ export const ToggleMyAcceptedButton = ({ className, cycleData }: Props) => {
             disabled={cycleData.currentPhase !== CyclePhase.Payout}
             type="submit"
           >
-            {isPending && <FaSpinner className="animate-spin" />}
+            {isPending && <AsciiSpinner />}
             Widerrufen
           </Button2>
         </>
@@ -46,7 +46,7 @@ export const ToggleMyAcceptedButton = ({ className, cycleData }: Props) => {
             name="value"
             value={1}
           >
-            {isPending && <FaSpinner className="animate-spin" />}
+            {isPending && <AsciiSpinner />}
             Auszahlung zustimmen
           </Button2>
         </>

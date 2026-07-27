@@ -1,5 +1,6 @@
 "use client";
 
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { Button2 } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
@@ -9,7 +10,7 @@ import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import toast from "react-hot-toast";
-import { FaPen, FaSave, FaSpinner } from "react-icons/fa";
+import { FaPen, FaSave } from "react-icons/fa";
 
 interface FormValues {
   name: string;
@@ -92,7 +93,7 @@ const Update = ({ className, classificationLevel }: Readonly<Props>) => {
 
           <div className="flex justify-end mt-8">
             <Button2 type="submit" disabled={isLoading}>
-              {isLoading ? <FaSpinner className="animate-spin" /> : <FaSave />}
+              {isLoading ? <AsciiSpinner /> : <FaSave />}
               Speichern
             </Button2>
           </div>

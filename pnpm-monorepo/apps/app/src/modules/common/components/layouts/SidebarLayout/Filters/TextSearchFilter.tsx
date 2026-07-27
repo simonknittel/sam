@@ -1,5 +1,6 @@
 "use client";
 
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { cursorPaginationParsers } from "@/modules/common/CursorPagination/cursorPaginationParsers";
 import clsx from "clsx";
 import { parseAsString, useQueryState, useQueryStates } from "nuqs";
@@ -9,7 +10,7 @@ import {
   type ChangeEventHandler,
   type FocusEventHandler,
 } from "react";
-import { FaSearch, FaSpinner, FaTimes } from "react-icons/fa";
+import { FaSearch, FaTimes } from "react-icons/fa";
 
 interface Props {
   readonly name?: string;
@@ -75,7 +76,7 @@ export const TextSearchFilter = ({
     <div className={clsx("bg-secondary p-2 corners-secondary", className)}>
       <p className="text-sm text-white/40 font-mono uppercase flex gap-1 items-center">
         {label}
-        {isLoading && <FaSpinner className="animate-spin text-xs" />}
+        {isLoading && <AsciiSpinner className="text-xs" />}
       </p>
 
       <div className="mt-1 relative">

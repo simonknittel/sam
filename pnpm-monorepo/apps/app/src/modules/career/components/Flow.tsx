@@ -1,5 +1,6 @@
 "use client";
 
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Note from "@/modules/common/components/Note";
 import {
   type FlowEdge,
@@ -31,7 +32,7 @@ import {
   type MouseEventHandler,
 } from "react";
 import toast from "react-hot-toast";
-import { FaPen, FaSave, FaSpinner } from "react-icons/fa";
+import { FaPen, FaSave } from "react-icons/fa";
 import { FaPlus } from "react-icons/fa6";
 import { updateFlow } from "../actions/updateFlow";
 import { getInitialNodesAndEdges } from "../utils/getInitialNodesAndEdges";
@@ -191,11 +192,7 @@ export const Flow = ({
                   </ControlButton>
 
                   <ControlButton onClick={onSave} title="Speichern">
-                    {isPending ? (
-                      <FaSpinner className="animate-spin" />
-                    ) : (
-                      <FaSave />
-                    )}
+                    {isPending ? <AsciiSpinner /> : <FaSave />}
                   </ControlButton>
                 </>
               )}

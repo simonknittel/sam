@@ -1,5 +1,6 @@
 "use client";
 
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Select } from "@/modules/common/components/form/Select";
 import {
@@ -11,7 +12,7 @@ import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import toast from "react-hot-toast";
-import { FaSave, FaSpinner } from "react-icons/fa";
+import { FaSave } from "react-icons/fa";
 import { Formatting } from "./Formatting";
 
 interface Props {
@@ -123,7 +124,7 @@ export const AddNote = ({
             name="confirmed"
             className="whitespace-nowrap text-left hidden sm:inline-flex"
           >
-            {isLoading ? <FaSpinner className="animate-spin" /> : <FaSave />}
+            {isLoading ? <AsciiSpinner /> : <FaSave />}
             Speichern und
             <br />
             bestätigen
@@ -135,7 +136,7 @@ export const AddNote = ({
             title="Speichern"
             variant={Button2Variant.Secondary}
           >
-            {isLoading ? <FaSpinner className="animate-spin" /> : <FaSave />}
+            {isLoading ? <AsciiSpinner /> : <FaSave />}
             Speichern
           </Button2>
         </div>

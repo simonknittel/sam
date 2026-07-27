@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import * as Tooltip from "@radix-ui/react-tooltip";
@@ -15,7 +16,7 @@ import clsx from "clsx";
 import { unstable_rethrow } from "next/navigation";
 import { useId, useTransition } from "react";
 import toast from "react-hot-toast";
-import { FaMinus, FaPlus, FaSpinner } from "react-icons/fa";
+import { FaMinus, FaPlus } from "react-icons/fa";
 import { createTaskAssignmentForCurrentUser } from "../actions/createTaskAssignmentForCurrentUser";
 import { deleteTaskAssignmentForCurrentUser } from "../actions/deleteTaskAssignmentForCurrentUser";
 
@@ -89,7 +90,7 @@ export const ToggleAssignmentForCurrentUser = ({
     <Button2 disabled={disabled}>
       {isCurrentUserAssigned ? "Aufgeben" : "Annehmen"}
       {isPending ? (
-        <FaSpinner className="animate-spin" />
+        <AsciiSpinner />
       ) : isCurrentUserAssigned ? (
         <FaMinus />
       ) : (

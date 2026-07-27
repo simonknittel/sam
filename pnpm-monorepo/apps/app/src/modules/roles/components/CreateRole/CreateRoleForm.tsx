@@ -1,3 +1,4 @@
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import clsx from "clsx";
@@ -5,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import toast from "react-hot-toast";
-import { FaSave, FaSpinner } from "react-icons/fa";
+import { FaSave } from "react-icons/fa";
 import { Suggestions } from "../Suggestions";
 
 interface FormValues {
@@ -74,7 +75,7 @@ export const CreateRoleForm = ({
 
       <div className="flex justify-end mt-8">
         <Button2 type="submit" disabled={isLoading}>
-          {isLoading ? <FaSpinner className="animate-spin" /> : <FaSave />}
+          {isLoading ? <AsciiSpinner /> : <FaSave />}
           Speichern
         </Button2>
       </div>

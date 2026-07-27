@@ -1,12 +1,13 @@
 "use client";
 
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { type Entity } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { FaSpinner, FaTrash } from "react-icons/fa";
+import { FaTrash } from "react-icons/fa";
 
 interface Props {
   readonly className?: string;
@@ -55,7 +56,7 @@ export const DeleteCitizen = ({ className, entity }: Props) => {
       variant="tertiary"
       className={clsx(className)}
     >
-      {isLoading ? <FaSpinner className="animate-spin" /> : <FaTrash />}
+      {isLoading ? <AsciiSpinner /> : <FaTrash />}
       Löschen
     </Button>
   );

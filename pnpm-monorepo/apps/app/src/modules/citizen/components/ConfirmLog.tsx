@@ -1,12 +1,13 @@
 "use client";
 
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { api } from "@/trpc/react";
 import { type EntityLog } from "@sam-monorepo/database/browser";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { FaCheck, FaSpinner, FaTimes } from "react-icons/fa";
+import { FaCheck, FaTimes } from "react-icons/fa";
 
 interface Props {
   readonly log: EntityLog;
@@ -61,11 +62,7 @@ const ConfirmLog = ({ log, compact }: Props) => {
           disabled={isLoading === "confirmed"}
           title="Bestätigen"
         >
-          {isLoading === "confirmed" ? (
-            <FaSpinner className="animate-spin" />
-          ) : (
-            <FaCheck />
-          )}
+          {isLoading === "confirmed" ? <AsciiSpinner /> : <FaCheck />}
         </Button>
         /
         <Button
@@ -75,11 +72,7 @@ const ConfirmLog = ({ log, compact }: Props) => {
           disabled={isLoading === "false-report"}
           title="Falschmeldung"
         >
-          {isLoading === "false-report" ? (
-            <FaSpinner className="animate-spin" />
-          ) : (
-            <FaTimes />
-          )}
+          {isLoading === "false-report" ? <AsciiSpinner /> : <FaTimes />}
         </Button>
       </>
     );
@@ -93,11 +86,7 @@ const ConfirmLog = ({ log, compact }: Props) => {
         onClick={() => void handleConfirm("confirmed")}
         disabled={isLoading === "confirmed"}
       >
-        {isLoading === "confirmed" ? (
-          <FaSpinner className="animate-spin" />
-        ) : (
-          <FaCheck />
-        )}
+        {isLoading === "confirmed" ? <AsciiSpinner /> : <FaCheck />}
         Bestätigen
       </Button>
 
@@ -107,11 +96,7 @@ const ConfirmLog = ({ log, compact }: Props) => {
         onClick={() => void handleConfirm("false-report")}
         disabled={isLoading === "false-report"}
       >
-        {isLoading === "false-report" ? (
-          <FaSpinner className="animate-spin" />
-        ) : (
-          <FaTimes />
-        )}
+        {isLoading === "false-report" ? <AsciiSpinner /> : <FaTimes />}
         Falschmeldung
       </Button>
     </>

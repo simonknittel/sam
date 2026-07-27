@@ -1,5 +1,6 @@
 "use client";
 
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import {
   Button2,
   Button2ColorSchema,
@@ -8,7 +9,6 @@ import {
 import clsx from "clsx";
 import { signOut } from "next-auth/react";
 import { useState } from "react";
-import { FaSpinner } from "react-icons/fa";
 import { RiLogoutCircleRLine } from "react-icons/ri";
 
 interface Props {
@@ -35,11 +35,7 @@ export const ClearanceLogout = ({ className }: Props) => {
       className={clsx(className)}
       colorSchema={Button2ColorSchema.InteractionMuted}
     >
-      {isLoggingOut ? (
-        <FaSpinner className="animate-spin" />
-      ) : (
-        <RiLogoutCircleRLine />
-      )}
+      {isLoggingOut ? <AsciiSpinner /> : <RiLogoutCircleRLine />}
       Abmelden
     </Button2>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { Button2 } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
@@ -9,7 +10,7 @@ import clsx from "clsx";
 import { unstable_rethrow } from "next/navigation";
 import { useState, useTransition } from "react";
 import toast from "react-hot-toast";
-import { FaPlus, FaSave, FaSpinner } from "react-icons/fa";
+import { FaPlus, FaSave } from "react-icons/fa";
 import { createManagers } from "../actions/createManagers";
 
 interface Props {
@@ -76,11 +77,7 @@ export const CreateManagers = (props: Props) => {
 
           <div className="flex flex-col gap-2 mt-4">
             <Button2 type="submit" disabled={submitIsPending}>
-              {submitIsPending ? (
-                <FaSpinner className="animate-spin" />
-              ) : (
-                <FaSave />
-              )}
+              {submitIsPending ? <AsciiSpinner /> : <FaSave />}
               Speichern
             </Button2>
           </div>

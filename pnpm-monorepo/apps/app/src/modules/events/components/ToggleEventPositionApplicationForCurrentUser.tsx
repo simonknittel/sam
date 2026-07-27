@@ -1,5 +1,6 @@
 "use client";
 
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import { VariantWithLogo } from "@/modules/fleet/components/VariantWithLogo";
 import * as Tooltip from "@radix-ui/react-tooltip";
@@ -15,7 +16,7 @@ import clsx from "clsx";
 import { unstable_rethrow } from "next/navigation";
 import { useId, useTransition } from "react";
 import toast from "react-hot-toast";
-import { FaMinus, FaPlus, FaSpinner } from "react-icons/fa";
+import { FaMinus, FaPlus } from "react-icons/fa";
 import { createEventPositionApplicationForCurrentUser } from "../actions/createEventPositionApplicationForCurrentUser";
 import { deleteEventPositionApplicationForCurrentUser } from "../actions/deleteEventPositionApplicationForCurrentUser";
 
@@ -78,7 +79,7 @@ export const ToggleEventPositionApplicationForCurrentUser = ({
       {hasCurrentUserAlreadyApplied && (
         <Button2 type="submit" title="Abmelden" disabled={isPending}>
           Abmelden
-          {isPending ? <FaSpinner className="animate-spin" /> : <FaMinus />}
+          {isPending ? <AsciiSpinner /> : <FaMinus />}
         </Button2>
       )}
 
@@ -91,7 +92,7 @@ export const ToggleEventPositionApplicationForCurrentUser = ({
             disabled={isPending}
           >
             Interesse anmelden
-            {isPending ? <FaSpinner className="animate-spin" /> : <FaPlus />}
+            {isPending ? <AsciiSpinner /> : <FaPlus />}
           </Button2>
         )}
 
@@ -106,11 +107,7 @@ export const ToggleEventPositionApplicationForCurrentUser = ({
                   disabled={isPending}
                 >
                   Interesse anmelden
-                  {isPending ? (
-                    <FaSpinner className="animate-spin" />
-                  ) : (
-                    <FaPlus />
-                  )}
+                  {isPending ? <AsciiSpinner /> : <FaPlus />}
                 </Button2>
               </Tooltip.Trigger>
 

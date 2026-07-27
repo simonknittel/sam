@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { CopyToClipboard } from "@/modules/common/components/CopyToClipboard";
 import { Link } from "@/modules/common/components/Link";
 import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
@@ -9,7 +10,6 @@ import { api } from "@/trpc/react";
 import type { Entity } from "@sam-monorepo/database/browser";
 import { useCallback, useState, type ReactNode } from "react";
 import { BsExclamationOctagonFill } from "react-icons/bs";
-import { FaSpinner } from "react-icons/fa";
 import { AddRoles } from "./roles/AddRoles";
 
 interface Props {
@@ -47,7 +47,7 @@ export const CitizenPopover = ({ children, citizenId }: Props) => {
     >
       {isPending && (
         <p className="font-mono uppercase flex gap-2 justify-center items-center animate-pulse">
-          <FaSpinner className="animate-spin" />
+          <AsciiSpinner />
           Citizen wird geladen...
         </p>
       )}

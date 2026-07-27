@@ -10,12 +10,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/modules/common/components/AlertDialog";
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import { Note } from "@/modules/common/components/Note";
 import type { Role } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import { useId } from "react";
-import { FaSpinner, FaTrash } from "react-icons/fa";
+import { FaTrash } from "react-icons/fa";
 import { deleteRole } from "../actions/deleteRole";
 
 interface Props {
@@ -34,7 +35,7 @@ export const DeleteRole = ({ className, role }: Props) => {
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button2 disabled={isPending}>
-              {isPending ? <FaSpinner className="animate-spin" /> : <FaTrash />}
+              {isPending ? <AsciiSpinner /> : <FaTrash />}
               Löschen
             </Button2>
           </AlertDialogTrigger>

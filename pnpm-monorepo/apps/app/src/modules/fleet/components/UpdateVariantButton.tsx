@@ -1,6 +1,7 @@
 "use client";
 
 import { useAction } from "@/modules/common/components/Actions";
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import {
   type Variant,
@@ -10,7 +11,7 @@ import {
 import clsx from "clsx";
 import dynamic from "next/dynamic";
 import { Suspense, useState } from "react";
-import { FaPen, FaSpinner } from "react-icons/fa";
+import { FaPen } from "react-icons/fa";
 
 const UpdateVariantModal = dynamic(() =>
   import("./UpdateVariantModal").then((mod) => mod.UpdateVariantModal),
@@ -31,7 +32,7 @@ export const UpdateVariantButton = ({ className, variant }: Props) => {
   return (
     <div className={clsx(className, "flex justify-center")}>
       <Button variant="tertiary" onClick={() => setIsOpen(true)}>
-        {isOpen ? <FaSpinner className="animate-spin" /> : <FaPen />} Bearbeiten
+        {isOpen ? <AsciiSpinner /> : <FaPen />} Bearbeiten
       </Button>
 
       {isOpen && (

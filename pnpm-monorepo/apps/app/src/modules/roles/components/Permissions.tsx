@@ -1,5 +1,6 @@
 "use client";
 
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import Note from "@/modules/common/components/Note";
 import Tab from "@/modules/common/components/tabs/Tab";
@@ -13,13 +14,7 @@ import {
 } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useActionState } from "react";
-import {
-  FaCalendarDay,
-  FaCog,
-  FaPiggyBank,
-  FaSave,
-  FaSpinner,
-} from "react-icons/fa";
+import { FaCalendarDay, FaCog, FaPiggyBank, FaSave } from "react-icons/fa";
 import { FaScaleBalanced } from "react-icons/fa6";
 import { IoDocuments } from "react-icons/io5";
 import { MdTaskAlt, MdWorkspaces } from "react-icons/md";
@@ -114,7 +109,7 @@ export const Permissions = ({
       </TabsProvider>
 
       <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
-        {isPending ? <FaSpinner className="animate-spin" /> : <FaSave />}
+        {isPending ? <AsciiSpinner /> : <FaSave />}
         Speichern
       </Button2>
 

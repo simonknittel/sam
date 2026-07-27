@@ -1,5 +1,6 @@
 "use client";
 
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
 import {
@@ -12,7 +13,7 @@ import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { toast } from "react-hot-toast";
-import { FaSave, FaSpinner } from "react-icons/fa";
+import { FaSave } from "react-icons/fa";
 
 interface Props {
   isOpen: boolean;
@@ -102,7 +103,7 @@ const EditShipModal = ({ isOpen, onRequestClose, ship }: Readonly<Props>) => {
 
         <div className="flex justify-end mt-8">
           <Button2 type="submit" disabled={isLoading}>
-            {isLoading ? <FaSpinner className="animate-spin" /> : <FaSave />}
+            {isLoading ? <AsciiSpinner /> : <FaSave />}
             Speichern
           </Button2>
         </div>

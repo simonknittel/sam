@@ -1,12 +1,13 @@
 "use client";
 
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { type Entity } from "@sam-monorepo/database/browser";
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import toast from "react-hot-toast";
-import { FaSave, FaSpinner } from "react-icons/fa";
+import { FaSave } from "react-icons/fa";
 import { api } from "../../../../trpc/react";
 import { type GenericEntityLogType } from "../../../../types";
 
@@ -73,7 +74,7 @@ export const Create = ({ type, entity }: Readonly<Props>) => {
         className="rounded-l-none"
         title="Speichern"
       >
-        {isLoading ? <FaSpinner className="animate-spin" /> : <FaSave />}
+        {isLoading ? <AsciiSpinner /> : <FaSave />}
       </Button>
     </form>
   );

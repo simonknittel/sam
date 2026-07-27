@@ -1,10 +1,11 @@
 "use client";
 
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { type Manufacturer } from "@sam-monorepo/database/browser";
 import dynamic from "next/dynamic";
 import { Suspense, useState } from "react";
-import { FaPlus, FaSpinner } from "react-icons/fa";
+import { FaPlus } from "react-icons/fa";
 
 const CreateSeriesModal = dynamic(() =>
   import("./CreateSeriesModal").then((mod) => mod.CreateSeriesModal),
@@ -26,7 +27,7 @@ export const CreateSeriesButton = ({ className, manufacturerId }: Props) => {
         onClick={() => setIsOpen(true)}
         title="Serie anlegen"
       >
-        Anlegen {isOpen ? <FaSpinner className="animate-spin" /> : <FaPlus />}
+        Anlegen {isOpen ? <AsciiSpinner /> : <FaPlus />}
       </Button2>
 
       {isOpen && (

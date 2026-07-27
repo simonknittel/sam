@@ -12,9 +12,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/modules/common/components/AlertDialog";
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { type Task } from "@sam-monorepo/database/browser";
 import { useId } from "react";
-import { FaSpinner } from "react-icons/fa";
 import { TbCancel } from "react-icons/tb";
 import { cancelTask } from "../actions/cancelTask";
 
@@ -55,7 +55,7 @@ export const CancelTask = ({ className, task }: Props) => {
             <AlertDialogCancel>Abbrechen</AlertDialogCancel>
 
             <AlertDialogAction type="submit" form={formId}>
-              {isPending && <FaSpinner className="animate-spin" />}
+              {isPending && <AsciiSpinner />}
               Speichern
             </AlertDialogAction>
           </AlertDialogFooter>

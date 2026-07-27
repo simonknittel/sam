@@ -1,6 +1,7 @@
 "use client";
 
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { Button2 } from "@/modules/common/components/Button2";
 import { NumberInput } from "@/modules/common/components/form/NumberInput";
@@ -11,7 +12,7 @@ import clsx from "clsx";
 import { unstable_rethrow } from "next/navigation";
 import { useActionState, useState } from "react";
 import toast from "react-hot-toast";
-import { FaPen, FaSave, FaSpinner } from "react-icons/fa";
+import { FaPen, FaSave } from "react-icons/fa";
 import { updateTaskAssignments } from "../actions/updateTaskAssignments";
 
 interface Props {
@@ -96,7 +97,7 @@ export const UpdateTaskAssignments = ({ className, task }: Props) => {
           />
 
           <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
-            {isPending ? <FaSpinner className="animate-spin" /> : <FaSave />}
+            {isPending ? <AsciiSpinner /> : <FaSave />}
             Speichern
           </Button2>
 

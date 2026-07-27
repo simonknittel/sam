@@ -1,8 +1,8 @@
 "use client";
 
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
-import { FaSpinner } from "react-icons/fa";
 import { RiLoginCircleLine } from "react-icons/ri";
 import Button from "./Button";
 
@@ -29,7 +29,7 @@ export const LoginButtons = ({ activeProviders }: Props) => {
           variant="secondary"
         >
           {isLoggingIn === "discord" ? (
-            <FaSpinner className="animate-spin" />
+            <AsciiSpinner />
           ) : (
             <>
               Login

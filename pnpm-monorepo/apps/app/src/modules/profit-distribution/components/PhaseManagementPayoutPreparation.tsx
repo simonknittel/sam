@@ -12,13 +12,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/modules/common/components/AlertDialog";
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { DateInput } from "@/modules/common/components/form/DateInput";
 import { NumberInputFormatted } from "@/modules/common/components/form/NumberInput";
 import { ScrambleIn } from "@/modules/common/components/ScrambleIn";
 import { StatisticTile } from "@/modules/common/components/StatisticTile";
 import { useId, useState, type KeyboardEventHandler } from "react";
-import { FaSpinner } from "react-icons/fa";
 import { startPayout } from "../actions/startPayout";
 import type { getProfitDistributionCycleById } from "../queries/getProfitDistributionCycleById";
 import { getAuecPerSilc } from "../utils/getAuecPerSilc";
@@ -137,7 +137,7 @@ export const PhaseManagementPayoutPreparation = ({ cycleData }: Props) => {
               variant={Button2Variant.Secondary}
               className="mx-auto mt-4"
             >
-              {isPending && <FaSpinner className="animate-spin" />}
+              {isPending && <AsciiSpinner />}
               Auszahlungsphase starten
             </Button2>
           </AlertDialogTrigger>

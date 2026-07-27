@@ -11,12 +11,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/modules/common/components/AlertDialog";
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { type Entity, type Event } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { unstable_rethrow } from "next/navigation";
 import { useId, useTransition } from "react";
 import toast from "react-hot-toast";
-import { FaSpinner, FaTrash } from "react-icons/fa";
+import { FaTrash } from "react-icons/fa";
 import { deleteManager } from "../actions/deleteManager";
 
 interface Props {
@@ -63,7 +64,7 @@ export const DeleteManager = ({ className, eventId, managerId }: Props) => {
             className="text-brand-red-500 hover:text-brand-red-300 flex items-center px-2 h-full"
             title="Manager entfernen"
           >
-            {isPending ? <FaSpinner className="animate-spin" /> : <FaTrash />}
+            {isPending ? <AsciiSpinner /> : <FaTrash />}
           </button>
         </AlertDialogTrigger>
 

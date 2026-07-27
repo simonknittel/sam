@@ -1,11 +1,12 @@
 "use client";
 
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { type Manufacturer, type Series } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import dynamic from "next/dynamic";
 import { Suspense, useState } from "react";
-import { FaPlus, FaSpinner } from "react-icons/fa";
+import { FaPlus } from "react-icons/fa";
 
 const CreateVariantModal = dynamic(() =>
   import("./CreateVariantModal").then((mod) => mod.CreateVariantModal),
@@ -31,7 +32,7 @@ export const CreateVariantButton = ({
         onClick={() => setIsOpen(true)}
         title="Variante anlegen"
       >
-        Anlegen {isOpen ? <FaSpinner className="animate-spin" /> : <FaPlus />}
+        Anlegen {isOpen ? <AsciiSpinner /> : <FaPlus />}
       </Button2>
 
       {isOpen && (

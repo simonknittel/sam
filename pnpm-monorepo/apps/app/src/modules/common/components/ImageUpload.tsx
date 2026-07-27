@@ -1,12 +1,12 @@
 "use client";
 
 import { env } from "@/env";
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import clsx from "clsx";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type ChangeEventHandler } from "react";
 import toast from "react-hot-toast";
-import { FaSpinner } from "react-icons/fa";
 import useUpload from "../utils/useUpload";
 
 interface Props {
@@ -94,7 +94,7 @@ export const ImageUpload = ({
         <div
           className={clsx(pendingClassName, "flex items-center justify-center")}
         >
-          <FaSpinner className="animate-spin text-brand-red-500" />
+          <AsciiSpinner className="text-brand-red-500" />
         </div>
       )}
 

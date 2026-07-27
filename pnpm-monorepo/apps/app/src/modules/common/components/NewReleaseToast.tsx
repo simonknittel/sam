@@ -2,10 +2,11 @@
 
 // @refresh reset
 
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { useChannelsContext } from "@/modules/pusher/components/ChannelsContext";
 import { useEffect } from "react";
 import toast from "react-hot-toast";
-import { FaRocket, FaSpinner } from "react-icons/fa";
+import { FaRocket } from "react-icons/fa";
 import { bumpDocumentTitle } from "../utils/title";
 import { Button2 } from "./Button2";
 
@@ -29,9 +30,7 @@ export const NewReleaseToast = () => {
         {
           id: releaseToastId,
           duration: Infinity,
-          icon: (
-            <FaSpinner className="flex-none animate-spin text-brand-red-500" />
-          ),
+          icon: <AsciiSpinner className="flex-none text-brand-red-500" />,
           className: "gap-2 [&>div[role='status']]:m-0! pointer-events-none",
         },
       );

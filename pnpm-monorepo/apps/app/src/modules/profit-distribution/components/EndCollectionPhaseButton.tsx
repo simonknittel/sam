@@ -12,11 +12,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/modules/common/components/AlertDialog";
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import type { getProfitDistributionCycleById } from "@/modules/profit-distribution/queries/getProfitDistributionCycleById";
 import clsx from "clsx";
 import { useId } from "react";
-import { FaSpinner } from "react-icons/fa";
 import { endCollectionPhase } from "../actions/endCollectionPhase";
 import { CyclePhase } from "../utils/getCurrentPhase";
 
@@ -43,7 +43,7 @@ export const EndCollectionPhaseButton = ({ className, cycleData }: Props) => {
             }
             variant={Button2Variant.Secondary}
           >
-            {isPending && <FaSpinner className="animate-spin" />}
+            {isPending && <AsciiSpinner />}
             Phase beenden
           </Button2>
         </AlertDialogTrigger>

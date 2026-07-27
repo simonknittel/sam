@@ -1,6 +1,7 @@
 "use client";
 
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { Button2 } from "@/modules/common/components/Button2";
 import { NumberInput } from "@/modules/common/components/form/NumberInput";
@@ -9,7 +10,7 @@ import Note from "@/modules/common/components/Note";
 import { unstable_rethrow } from "next/navigation";
 import { useActionState } from "react";
 import toast from "react-hot-toast";
-import { FaSave, FaSpinner } from "react-icons/fa";
+import { FaSave } from "react-icons/fa";
 import { createSilcTransaction } from "../actions/createSilcTransaction";
 
 interface Props {
@@ -83,7 +84,7 @@ export const CreateSilcTransactionForm = ({ onSuccess }: Props) => {
 
       <div className="flex flex-col gap-2 mt-4">
         <Button2 type="submit" disabled={isPending}>
-          {isPending ? <FaSpinner className="animate-spin" /> : <FaSave />}
+          {isPending ? <AsciiSpinner /> : <FaSave />}
           Speichern
         </Button2>
 
@@ -93,7 +94,7 @@ export const CreateSilcTransactionForm = ({ onSuccess }: Props) => {
           variant="tertiary"
           name="createAnother"
         >
-          {isPending ? <FaSpinner className="animate-spin" /> : <FaSave />}
+          {isPending ? <AsciiSpinner /> : <FaSave />}
           Speichern und weitere Transaktion erstellen
         </Button>
       </div>

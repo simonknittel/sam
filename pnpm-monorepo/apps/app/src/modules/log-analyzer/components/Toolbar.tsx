@@ -1,8 +1,9 @@
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
 import { Tooltip } from "@/modules/common/components/Tooltip";
 import clsx from "clsx";
-import { FaInfoCircle, FaSpinner } from "react-icons/fa";
+import { FaInfoCircle } from "react-icons/fa";
 import { TfiReload } from "react-icons/tfi";
 import { EntryFilters } from "./EntryFilters";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
@@ -35,7 +36,7 @@ export const Toolbar = ({ className, onRefresh }: Props) => {
         disabled={isPending}
         onClick={onRefresh}
       >
-        {isPending ? <FaSpinner className="animate-spin" /> : <TfiReload />}
+        {isPending ? <AsciiSpinner /> : <TfiReload />}
         Aktualisieren
       </Button2>
 

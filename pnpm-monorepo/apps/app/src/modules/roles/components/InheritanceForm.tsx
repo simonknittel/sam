@@ -1,12 +1,13 @@
 "use client";
 
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import Note from "@/modules/common/components/Note";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import type { Role, Upload } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useActionState } from "react";
-import { FaSave, FaSpinner } from "react-icons/fa";
+import { FaSave } from "react-icons/fa";
 import { updateRoleInheritance } from "../actions/updateRoleInheritance";
 
 interface Props {
@@ -63,7 +64,7 @@ export const InheritanceForm = ({ className, currentRole, roles }: Props) => {
       </div>
 
       <Button2 type="submit" disabled={isPending} className="mt-4">
-        {isPending ? <FaSpinner className="animate-spin" /> : <FaSave />}
+        {isPending ? <AsciiSpinner /> : <FaSave />}
         Speichern
       </Button2>
 

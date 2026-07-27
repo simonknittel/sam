@@ -1,5 +1,6 @@
 "use client";
 
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import Modal from "@/modules/common/components/Modal";
 import { api } from "@/trpc/react";
@@ -12,7 +13,7 @@ import {
 import { unstable_rethrow } from "next/navigation";
 import { useId, useState, useTransition } from "react";
 import { toast } from "react-hot-toast";
-import { FaPlus, FaSave, FaSpinner, FaTrash } from "react-icons/fa";
+import { FaPlus, FaSave, FaTrash } from "react-icons/fa";
 import { createVariant } from "../actions/createVariant";
 import { ExternalService, ExternalServiceDisplayNames } from "../types";
 
@@ -262,7 +263,7 @@ export const CreateVariantModal = ({
             type="submit"
             disabled={isPending || manufacturer.isFetching || series.isFetching}
           >
-            {isPending ? <FaSpinner className="animate-spin" /> : <FaSave />}
+            {isPending ? <AsciiSpinner /> : <FaSave />}
             Speichern
           </Button>
         </div>

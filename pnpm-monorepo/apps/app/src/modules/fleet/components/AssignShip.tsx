@@ -1,5 +1,6 @@
 "use client";
 
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { Button2 } from "@/modules/common/components/Button2";
 import { Select } from "@/modules/common/components/form/Select";
@@ -13,7 +14,7 @@ import {
 import { flatten } from "lodash";
 import { useId, useState, useTransition } from "react";
 import toast from "react-hot-toast";
-import { FaPlus, FaSave, FaSpinner } from "react-icons/fa";
+import { FaPlus, FaSave } from "react-icons/fa";
 import { createShipAction } from "../actions/createShipAction";
 
 interface Props {
@@ -116,7 +117,7 @@ export const AssignShip = ({ className, data = [] }: Props) => {
 
           <div className="flex justify-end mt-8">
             <Button2 type="submit" disabled={isPending}>
-              {isPending ? <FaSpinner className="animate-spin" /> : <FaSave />}
+              {isPending ? <AsciiSpinner /> : <FaSave />}
               Hinzufügen
             </Button2>
           </div>

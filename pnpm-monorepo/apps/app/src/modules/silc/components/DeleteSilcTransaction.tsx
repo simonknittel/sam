@@ -12,9 +12,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/modules/common/components/AlertDialog";
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { type SilcTransaction } from "@sam-monorepo/database/browser";
 import { useId } from "react";
-import { FaSpinner, FaTrash } from "react-icons/fa";
+import { FaTrash } from "react-icons/fa";
 import { deleteSilcTransaction } from "../actions/deleteSilcTransaction";
 
 interface Props {
@@ -53,7 +54,7 @@ export const DeleteSilcTransaction = ({ className, id }: Props) => {
             <AlertDialogCancel>Abbrechen</AlertDialogCancel>
 
             <AlertDialogAction type="submit" form={formId}>
-              {isPending && <FaSpinner className="animate-spin" />}
+              {isPending && <AsciiSpinner />}
               Löschen
             </AlertDialogAction>
           </AlertDialogFooter>

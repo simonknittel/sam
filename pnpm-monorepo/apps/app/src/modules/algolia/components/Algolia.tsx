@@ -1,11 +1,11 @@
 "use client";
 
 import { updateIndices } from "@/modules/algolia/actions/updateIndices";
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import Note from "@/modules/common/components/Note";
 import clsx from "clsx";
 import { useActionState } from "react";
-import { FaSpinner } from "react-icons/fa";
 import { TbRestore } from "react-icons/tb";
 
 interface Props {
@@ -18,7 +18,7 @@ export const Algolia = ({ className }: Props) => {
   return (
     <form action={formAction} className={clsx(className)}>
       <Button2 type="submit">
-        {isPending ? <FaSpinner className="animate-spin" /> : <TbRestore />}
+        {isPending ? <AsciiSpinner /> : <TbRestore />}
         Update Algolia indices
       </Button2>
 

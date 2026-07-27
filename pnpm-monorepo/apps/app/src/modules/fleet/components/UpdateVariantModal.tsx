@@ -1,5 +1,6 @@
 "use client";
 
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { Button2 } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
@@ -13,7 +14,7 @@ import {
 import { unstable_rethrow } from "next/navigation";
 import { useId, useState, useTransition } from "react";
 import { toast } from "react-hot-toast";
-import { FaPlus, FaSave, FaSpinner, FaTrash } from "react-icons/fa";
+import { FaPlus, FaSave, FaTrash } from "react-icons/fa";
 import { updateVariant } from "../actions/updateVariant";
 import { ExternalService, ExternalServiceDisplayNames } from "../types";
 
@@ -235,7 +236,7 @@ export const UpdateVariantModal = ({ onRequestClose, variant }: Props) => {
 
         <div className="flex justify-end mt-8">
           <Button2 disabled={isPending || _variant.isFetching} type="submit">
-            {isPending ? <FaSpinner className="animate-spin" /> : <FaSave />}
+            {isPending ? <AsciiSpinner /> : <FaSave />}
             Speichern
           </Button2>
         </div>

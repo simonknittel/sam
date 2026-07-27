@@ -1,5 +1,6 @@
 "use client";
 
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { Button2 } from "@/modules/common/components/Button2";
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
@@ -10,7 +11,7 @@ import clsx from "clsx";
 import { unstable_rethrow } from "next/navigation";
 import { useActionState, useState } from "react";
 import toast from "react-hot-toast";
-import { FaPen, FaSave, FaSpinner } from "react-icons/fa";
+import { FaPen, FaSave } from "react-icons/fa";
 import { updateRequiredRoles } from "../actions/updateRequiredRoles";
 import { RequiredRoles } from "./CreateTask/RequiredRoles";
 
@@ -86,7 +87,7 @@ export const UpdateRequiredRoles = ({ className, task }: Props) => {
           />
 
           <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
-            {isPending ? <FaSpinner className="animate-spin" /> : <FaSave />}
+            {isPending ? <AsciiSpinner /> : <FaSave />}
             Speichern
           </Button2>
 

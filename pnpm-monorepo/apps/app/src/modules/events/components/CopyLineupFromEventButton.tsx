@@ -1,10 +1,11 @@
 import { useAction } from "@/modules/actions/utils/useAction";
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
 import { type Event } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import { useState } from "react";
-import { FaCopy, FaSpinner } from "react-icons/fa";
+import { FaCopy } from "react-icons/fa";
 import { copyLineupFromEvent } from "../actions/copyLineupFromEvent";
 import { EventSelectionInput } from "./EventSelectionInput";
 
@@ -49,7 +50,7 @@ export const CopyLineupFromEventButton = ({
             <EventSelectionInput name="sourceEventId" autoFocus />
 
             <Button2 type="submit" disabled={isPending} className="self-end">
-              {isPending ? <FaSpinner className="animate-spin" /> : null}
+              {isPending ? <AsciiSpinner /> : null}
               Kopieren
             </Button2>
           </form>

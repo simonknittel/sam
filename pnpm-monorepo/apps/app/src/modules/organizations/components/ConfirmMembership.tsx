@@ -1,5 +1,6 @@
 "use client";
 
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import {
   ConfirmationStatus,
@@ -8,7 +9,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { FaCheck, FaSpinner, FaTimes } from "react-icons/fa";
+import { FaCheck, FaTimes } from "react-icons/fa";
 
 interface Props {
   readonly entry: OrganizationMembershipHistoryEntry;
@@ -59,7 +60,7 @@ export const ConfirmMembership = ({ entry, compact }: Props) => {
           title="Bestätigen"
         >
           {isLoading === ConfirmationStatus.CONFIRMED ? (
-            <FaSpinner className="animate-spin" />
+            <AsciiSpinner />
           ) : (
             <FaCheck />
           )}
@@ -73,7 +74,7 @@ export const ConfirmMembership = ({ entry, compact }: Props) => {
           title="Falschmeldung"
         >
           {isLoading === ConfirmationStatus.FALSE_REPORT ? (
-            <FaSpinner className="animate-spin" />
+            <AsciiSpinner />
           ) : (
             <FaTimes />
           )}
@@ -91,7 +92,7 @@ export const ConfirmMembership = ({ entry, compact }: Props) => {
         disabled={isLoading === ConfirmationStatus.CONFIRMED}
       >
         {isLoading === ConfirmationStatus.CONFIRMED ? (
-          <FaSpinner className="animate-spin" />
+          <AsciiSpinner />
         ) : (
           <FaCheck />
         )}
@@ -105,7 +106,7 @@ export const ConfirmMembership = ({ entry, compact }: Props) => {
         disabled={isLoading === ConfirmationStatus.FALSE_REPORT}
       >
         {isLoading === ConfirmationStatus.FALSE_REPORT ? (
-          <FaSpinner className="animate-spin" />
+          <AsciiSpinner />
         ) : (
           <FaTimes />
         )}

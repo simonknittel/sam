@@ -17,6 +17,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/modules/common/components/AlertDialog";
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Link } from "@/modules/common/components/Link";
 import { Markdown } from "@/modules/common/components/Markdown";
@@ -26,7 +27,7 @@ import { type Role } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import Image from "next/image";
 import { useId } from "react";
-import { FaCog, FaMinus, FaPlus, FaSpinner, FaTrash } from "react-icons/fa";
+import { FaCog, FaMinus, FaPlus, FaTrash } from "react-icons/fa";
 import { useRolesContext } from "./RolesContext";
 
 interface Props {
@@ -222,7 +223,7 @@ export const SingleRoleBadge = ({
                       disabled={isDecreaseRoleAssignmentLevelPending}
                     >
                       {isDecreaseRoleAssignmentLevelPending ? (
-                        <FaSpinner className="animate-spin" />
+                        <AsciiSpinner />
                       ) : (
                         <FaMinus />
                       )}
@@ -239,7 +240,7 @@ export const SingleRoleBadge = ({
                       disabled={isIncreaseRoleAssignmentLevelPending}
                     >
                       {isIncreaseRoleAssignmentLevelPending ? (
-                        <FaSpinner className="animate-spin" />
+                        <AsciiSpinner />
                       ) : (
                         <FaPlus />
                       )}
@@ -267,7 +268,7 @@ export const SingleRoleBadge = ({
                     disabled={isDeleteRoleAssignmentPending}
                   >
                     {isDeleteRoleAssignmentPending ? (
-                      <FaSpinner className="animate-spin" />
+                      <AsciiSpinner />
                     ) : (
                       <FaTrash />
                     )}

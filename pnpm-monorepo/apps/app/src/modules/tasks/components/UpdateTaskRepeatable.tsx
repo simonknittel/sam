@@ -1,6 +1,7 @@
 "use client";
 
 import { useAction } from "@/modules/actions/utils/useAction";
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import { NumberInput } from "@/modules/common/components/form/NumberInput";
 import Modal from "@/modules/common/components/Modal";
@@ -8,7 +9,7 @@ import Note from "@/modules/common/components/Note";
 import { type Task, type TaskAssignment } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useState } from "react";
-import { FaPen, FaSave, FaSpinner } from "react-icons/fa";
+import { FaPen, FaSave } from "react-icons/fa";
 import { updateTaskRepeatable } from "../actions/updateTaskRepeatable";
 
 interface Props {
@@ -68,7 +69,7 @@ export const UpdateTaskRepeatable = ({ className, task }: Props) => {
           />
 
           <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
-            {isPending ? <FaSpinner className="animate-spin" /> : <FaSave />}
+            {isPending ? <AsciiSpinner /> : <FaSave />}
             Speichern
           </Button2>
 

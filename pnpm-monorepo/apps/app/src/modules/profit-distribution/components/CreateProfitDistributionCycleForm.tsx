@@ -1,4 +1,5 @@
 import { useAction } from "@/modules/actions/utils/useAction";
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { DateInput } from "@/modules/common/components/form/DateInput";
 import { TextInput } from "@/modules/common/components/form/TextInput";
@@ -6,7 +7,7 @@ import { Note } from "@/modules/common/components/Note";
 import { RichText } from "@/modules/common/components/RichText";
 import clsx from "clsx";
 import { useState } from "react";
-import { FaChevronDown, FaSave, FaSpinner } from "react-icons/fa";
+import { FaChevronDown, FaSave } from "react-icons/fa";
 import { createProfitDistributionCycle } from "../actions/createProfitDistributionCycle";
 
 interface Props {
@@ -113,7 +114,7 @@ export const CreateProfitDistributionCycleForm = ({
       />
 
       <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
-        {isPending ? <FaSpinner className="animate-spin" /> : <FaSave />}
+        {isPending ? <AsciiSpinner /> : <FaSave />}
         Speichern
       </Button2>
 

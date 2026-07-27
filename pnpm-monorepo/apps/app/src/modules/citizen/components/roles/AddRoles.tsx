@@ -1,5 +1,6 @@
 "use client";
 
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import Modal from "@/modules/common/components/Modal";
@@ -15,7 +16,7 @@ import { api } from "@/trpc/react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { BsExclamationOctagonFill } from "react-icons/bs";
-import { FaPen, FaSpinner } from "react-icons/fa";
+import { FaPen } from "react-icons/fa";
 import { RoleCheckbox } from "./RoleCheckbox";
 import { UpdateRolesForm } from "./UpdateRolesForm";
 
@@ -97,7 +98,7 @@ export const AddRoles = ({
       >
         {isPending && (
           <p className="font-mono uppercase flex gap-2 justify-center items-center animate-pulse">
-            <FaSpinner className="animate-spin" />
+            <AsciiSpinner />
             Rollen werden geladen...
           </p>
         )}

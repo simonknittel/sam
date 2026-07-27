@@ -3,13 +3,13 @@
 "use client";
 
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { Button2 } from "@/modules/common/components/Button2";
 import { track } from "@plausible-analytics/tracker";
 import clsx from "clsx";
 import { get, set } from "idb-keyval";
 import { useCallback, useEffect, useRef, type MouseEvent } from "react";
-import { FaSpinner } from "react-icons/fa";
 import { FaFileArrowUp } from "react-icons/fa6";
 import { getFilesRecursively } from "../utils/getFilesRecursively";
 import { EntryType, PATTERNS, type IEntry } from "../utils/PATTERNS";
@@ -274,11 +274,7 @@ export const LogAnalyzer = ({ className }: Props) => {
             disabled={isPending}
             className="lg:ml-auto"
           >
-            {isPending ? (
-              <FaSpinner className="animate-spin" />
-            ) : (
-              <FaFileArrowUp />
-            )}
+            {isPending ? <AsciiSpinner /> : <FaFileArrowUp />}
             Ordner auswählen
           </Button2>
 

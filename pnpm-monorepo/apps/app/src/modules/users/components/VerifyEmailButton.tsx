@@ -11,12 +11,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/modules/common/components/AlertDialog";
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Link } from "@/modules/common/components/Link";
 import { type User } from "@sam-monorepo/database/browser";
 import { unstable_rethrow } from "next/navigation";
 import { useId, useTransition } from "react";
 import toast from "react-hot-toast";
-import { FaSpinner } from "react-icons/fa";
 import { verifyEmailAction } from "../actions/verifyEmail";
 
 interface Props {
@@ -60,7 +60,7 @@ export const VerifyEmailButton = ({ className, userId }: Props) => {
             className="py-2 text-brand-red-500 hover:underline flex gap-2 items-center"
             title="Datenschutzerklärung bestätigen"
           >
-            {isPending && <FaSpinner className="animate-spin" />}
+            {isPending && <AsciiSpinner />}
             Bestätigen
           </button>
         </AlertDialogTrigger>

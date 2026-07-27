@@ -1,5 +1,6 @@
 "use client";
 
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Modal from "@/modules/common/components/Modal";
 import dynamic from "next/dynamic";
 import type { ReactNode } from "react";
@@ -11,7 +12,6 @@ import {
   useMemo,
   useState,
 } from "react";
-import { FaSpinner } from "react-icons/fa";
 
 const CreateCitizenForm = dynamic(() =>
   import("@/modules/citizen/components/CreateCitizen/CreateCitizenForm").then(
@@ -153,7 +153,7 @@ const ModalWithFormComponent = ({
       <Suspense
         fallback={
           <div className="flex justify-center items-center p-8">
-            <FaSpinner className="animate-spin text-5xl text-neutral-500" />
+            <AsciiSpinner className="text-5xl text-neutral-500" />
           </div>
         }
       >

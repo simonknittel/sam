@@ -1,9 +1,10 @@
 "use client";
 
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import clsx from "clsx";
 import { useRef, useState, useTransition, type ComponentProps } from "react";
 import toast from "react-hot-toast";
-import { FaPen, FaSave, FaSpinner } from "react-icons/fa";
+import { FaPen, FaSave } from "react-icons/fa";
 import { useOutsideClick } from "../../utils/useOutsideClick";
 
 interface Props {
@@ -118,7 +119,7 @@ export const EditableInput = ({
             title="Speichern"
           >
             {isPending ? (
-              <FaSpinner className="text-brand-red-500 animate-spin" />
+              <AsciiSpinner className="text-brand-red-500" />
             ) : (
               <FaSave className="text-brand-red-500 group-hover:text-brand-red-300" />
             )}

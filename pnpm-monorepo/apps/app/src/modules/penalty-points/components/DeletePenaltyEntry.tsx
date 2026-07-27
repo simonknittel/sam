@@ -12,9 +12,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/modules/common/components/AlertDialog";
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { type PenaltyEntry } from "@sam-monorepo/database/browser";
 import { useId } from "react";
-import { FaSpinner, FaTrash } from "react-icons/fa";
+import { FaTrash } from "react-icons/fa";
 import { deletePenaltyEntry } from "../actions/deletePenaltyEntry";
 
 interface Props {
@@ -37,7 +38,7 @@ export const DeletePenaltyEntry = ({ className, entry }: Props) => {
             className="text-brand-red-500 hover:text-brand-red-300 flex items-center hover:cursor-pointer"
             title="Löschen"
           >
-            {isPending ? <FaSpinner className="animate-spin" /> : <FaTrash />}
+            {isPending ? <AsciiSpinner /> : <FaTrash />}
           </button>
         </AlertDialogTrigger>
 

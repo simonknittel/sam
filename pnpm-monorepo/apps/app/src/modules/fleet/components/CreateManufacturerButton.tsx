@@ -1,9 +1,10 @@
 "use client";
 
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import dynamic from "next/dynamic";
 import { Suspense, useState } from "react";
-import { FaPlus, FaSpinner } from "react-icons/fa";
+import { FaPlus } from "react-icons/fa";
 
 const CreateManufacturerModal = dynamic(() =>
   import("./CreateManufacturerModal").then(
@@ -20,7 +21,7 @@ export const CreateManufacturereButton = () => {
         variant={Button2Variant.Secondary}
         onClick={() => setIsOpen(true)}
       >
-        Neu {isOpen ? <FaSpinner className="animate-spin" /> : <FaPlus />}
+        Neu {isOpen ? <AsciiSpinner /> : <FaPlus />}
       </Button2>
 
       {isOpen && (

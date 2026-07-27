@@ -1,5 +1,6 @@
 "use client";
 
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import Note from "@/modules/common/components/Note";
 import {
@@ -8,7 +9,7 @@ import {
 } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useActionState, useId, useState } from "react";
-import { FaSave, FaSpinner } from "react-icons/fa";
+import { FaSave } from "react-icons/fa";
 import { updateSilcSetting } from "../actions/updateSilcSetting";
 
 interface Props {
@@ -79,7 +80,7 @@ export const AuecConversionRateSettingClient = ({
       </div>
 
       <Button2 type="submit" className="mt-4 ml-auto">
-        {isPending ? <FaSpinner className="animate-spin" /> : <FaSave />}
+        {isPending ? <AsciiSpinner /> : <FaSave />}
         Speichern
       </Button2>
 

@@ -1,5 +1,5 @@
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import type { ComponentProps } from "react";
-import { FaSpinner } from "react-icons/fa";
 
 interface Props {
   readonly src: string;
@@ -17,7 +17,7 @@ export const IframeLayout = ({ src, iframeProps }: Props) => {
       />
 
       <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-        <FaSpinner className="animate-spin text-5xl text-neutral-500" />
+        <AsciiSpinner className="text-5xl text-neutral-500" />
       </div>
     </div>
   );

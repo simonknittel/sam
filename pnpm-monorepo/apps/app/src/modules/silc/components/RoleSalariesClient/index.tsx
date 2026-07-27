@@ -1,6 +1,7 @@
 "use client";
 
 import { useAction } from "@/modules/actions/utils/useAction";
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Note from "@/modules/common/components/Note";
@@ -9,7 +10,7 @@ import { createId } from "@paralleldrive/cuid2";
 import { type SilcRoleSalary } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useState } from "react";
-import { FaPlus, FaSave, FaSpinner, FaTrash } from "react-icons/fa";
+import { FaPlus, FaSave, FaTrash } from "react-icons/fa";
 import { updateRoleSalaries } from "../../actions/updateRoleSalaries";
 import { RoleSelector } from "./RoleSelector";
 import styles from "./index.module.css";
@@ -179,13 +180,13 @@ export const RoleSalariesClient = ({
         </>
       ) : (
         <div className="flex items-center gap-2 justify-center text-brand-red-500 mt-2">
-          <FaSpinner className="animate-spin" />
+          <AsciiSpinner />
           Lädt...
         </div>
       )}
 
       <Button2 type="submit" className="mt-4 ml-auto">
-        {isPending ? <FaSpinner className="animate-spin" /> : <FaSave />}
+        {isPending ? <AsciiSpinner /> : <FaSave />}
         Speichern
       </Button2>
 

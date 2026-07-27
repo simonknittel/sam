@@ -12,10 +12,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/modules/common/components/AlertDialog";
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { type Manufacturer } from "@sam-monorepo/database/browser";
 import { useId } from "react";
-import { FaSpinner, FaTrash } from "react-icons/fa";
+import { FaTrash } from "react-icons/fa";
 import { deleteManufacturer } from "../actions/deleteManufacturer";
 
 interface Props {
@@ -37,8 +38,7 @@ export const DeleteManufacturerButton = ({
       <AlertDialog>
         <AlertDialogTrigger asChild>
           <Button variant="tertiary" disabled={isPending}>
-            {isPending ? <FaSpinner className="animate-spin" /> : <FaTrash />}{" "}
-            Löschen
+            {isPending ? <AsciiSpinner /> : <FaTrash />} Löschen
           </Button>
         </AlertDialogTrigger>
 

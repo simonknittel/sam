@@ -1,5 +1,6 @@
 "use client";
 
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Textarea } from "@/modules/common/components/form/Textarea";
@@ -32,7 +33,6 @@ import {
   FaPen,
   FaPlus,
   FaSave,
-  FaSpinner,
   FaTrash,
 } from "react-icons/fa";
 import { createEventPosition } from "../actions/createEventPosition";
@@ -115,7 +115,7 @@ export const CreateOrUpdateEventPosition = (props: Props) => {
           title="Posten oder Gruppe hinzufügen"
         >
           <span className="hidden md:inline">Hinzufügen</span>
-          {isOpen ? <FaSpinner className="animate-spin" /> : <FaPlus />}
+          {isOpen ? <AsciiSpinner /> : <FaPlus />}
         </Button2>
       )}
 
@@ -127,11 +127,7 @@ export const CreateOrUpdateEventPosition = (props: Props) => {
           title="Posten oder Gruppe hinzufügen"
           iconOnly
         >
-          {isOpen ? (
-            <FaSpinner className="animate-spin" />
-          ) : (
-            <FaPlus className="text-lg" />
-          )}
+          {isOpen ? <AsciiSpinner /> : <FaPlus className="text-lg" />}
         </Button>
       )}
 
@@ -143,11 +139,7 @@ export const CreateOrUpdateEventPosition = (props: Props) => {
           title="Posten bearbeiten"
           iconOnly
         >
-          {isOpen ? (
-            <FaSpinner className="animate-spin" />
-          ) : (
-            <FaPen className="text-lg" />
-          )}
+          {isOpen ? <AsciiSpinner /> : <FaPen className="text-lg" />}
         </Button>
       )}
 
@@ -226,7 +218,7 @@ export const CreateOrUpdateEventPosition = (props: Props) => {
 
           <div className="flex flex-col gap-2 mt-8">
             <Button2 type="submit" disabled={isPending}>
-              {isPending ? <FaSpinner className="animate-spin" /> : <FaSave />}
+              {isPending ? <AsciiSpinner /> : <FaSave />}
               Speichern
             </Button2>
 
@@ -237,11 +229,7 @@ export const CreateOrUpdateEventPosition = (props: Props) => {
                 variant="tertiary"
                 name="createAnother"
               >
-                {isPending ? (
-                  <FaSpinner className="animate-spin" />
-                ) : (
-                  <FaSave />
-                )}
+                {isPending ? <AsciiSpinner /> : <FaSave />}
                 Speichern und weiteren Posten erstellen
               </Button>
             )}

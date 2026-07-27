@@ -1,12 +1,12 @@
 "use client";
 
 import { env } from "@/env";
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Tile } from "@/modules/common/components/Tile";
 import clsx from "clsx";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { FaSpinner } from "react-icons/fa";
 import { subscribeWebPush } from "../actions/subscribeWebPush";
 
 interface Props {
@@ -95,7 +95,7 @@ export const WebPushSubscriberClient = ({ className }: Props) => {
           variant={Button2Variant.Secondary}
           className="mt-2"
         >
-          {isPending && <FaSpinner className="animate-spin" />}
+          {isPending && <AsciiSpinner />}
           Genehmigung anfordern
         </Button2>
 

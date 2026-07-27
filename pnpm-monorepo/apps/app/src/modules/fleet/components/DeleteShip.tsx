@@ -12,9 +12,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/modules/common/components/AlertDialog";
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { type Ship, type Variant } from "@sam-monorepo/database/browser";
 import { useId } from "react";
-import { FaSpinner, FaTrash } from "react-icons/fa";
+import { FaTrash } from "react-icons/fa";
 import { deleteShipAction } from "../actions/deleteShipAction";
 
 interface Props {
@@ -39,7 +40,7 @@ export const DeleteShip = ({ className, ship }: Props) => {
             className="px-2 py-2 text-neutral-500 hover:text-neutral-50 hover:cursor-pointer"
             title="Löschen"
           >
-            {isPending ? <FaSpinner className="animate-spin" /> : <FaTrash />}
+            {isPending ? <AsciiSpinner /> : <FaTrash />}
           </button>
         </AlertDialogTrigger>
 
