@@ -1,6 +1,6 @@
 import { prisma } from "@/db";
-import type { SilcSettingKey } from "@/generated/prisma/client";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
+import type { SilcSettingKey } from "@sam-monorepo/database/client";
 import { cache } from "react";
 
 export const getSilcSetting = cache(

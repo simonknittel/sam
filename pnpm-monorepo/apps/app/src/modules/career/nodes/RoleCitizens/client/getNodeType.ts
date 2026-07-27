@@ -1,6 +1,6 @@
 "use client";
 
-import { type FlowNode, FlowNodeType } from "@/generated/prisma/browser";
+import { type FlowNode, FlowNodeType } from "@sam-monorepo/database/browser";
 import type { AdditionalDataType } from "./additionalDataType";
 import { isUnlocked } from "./helpers";
 

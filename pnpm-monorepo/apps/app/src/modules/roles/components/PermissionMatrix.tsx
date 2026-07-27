@@ -1,13 +1,13 @@
 import { env } from "@/env";
+import { getAllFlows } from "@/modules/career/queries/getAllFlows";
+import { Link } from "@/modules/common/components/Link";
 import {
   TaskRewardType,
   TaskVisibility,
   type PermissionString,
   type Role,
   type Upload,
-} from "@/generated/prisma/client";
-import { getAllFlows } from "@/modules/career/queries/getAllFlows";
-import { Link } from "@/modules/common/components/Link";
+} from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import Image from "next/image";
 import { getRoles } from "../queries/getRoles";

@@ -1,13 +1,13 @@
 "use client";
 
+import { Button2 } from "@/modules/common/components/Button2";
+import Modal from "@/modules/common/components/Modal";
 import {
   type Manufacturer,
   type Series,
   type Ship,
   type Variant,
-} from "@/generated/prisma/browser";
-import { Button2 } from "@/modules/common/components/Button2";
-import Modal from "@/modules/common/components/Modal";
+} from "@sam-monorepo/database/browser";
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";

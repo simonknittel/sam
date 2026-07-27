@@ -1,13 +1,13 @@
+import { requireAuthentication } from "@/modules/auth/server";
+import { AddRoles } from "@/modules/citizen/components/roles/AddRoles";
+import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
+import { getAssignedRoles } from "@/modules/roles/utils/getRoles";
 import {
   type Entity,
   type Role,
   type RoleAssignment,
   type Upload,
-} from "@/generated/prisma/client";
-import { requireAuthentication } from "@/modules/auth/server";
-import { AddRoles } from "@/modules/citizen/components/roles/AddRoles";
-import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
-import { getAssignedRoles } from "@/modules/roles/utils/getRoles";
+} from "@sam-monorepo/database/client";
 import clsx from "clsx";
 
 interface Props {

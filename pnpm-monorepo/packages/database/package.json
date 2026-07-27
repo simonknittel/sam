@@ -6,11 +6,14 @@
     "./dist/*"
   ],
   "exports": {
-    ".": "./dist/index.js"
+    ".": "./dist/index.js",
+    "./client": "./dist/client.js",
+    "./browser": "./dist/browser.js"
   },
   "scripts": {
-    "postinstall": "prisma generate && node ./scripts/patch-generated-client.mjs",
+    "postinstall": "prisma generate && node ./scripts/patch-generated-client.mjs && tsc",
     "build": "prisma generate && node ./scripts/patch-generated-client.mjs && tsc",
+    "migrate:dev": "prisma migrate dev && node ./scripts/patch-generated-client.mjs && tsc",
     "format": "prisma format"
   },
   "dependencies": {

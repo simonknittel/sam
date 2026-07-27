@@ -1,7 +1,7 @@
 "use client";
 
-import { type Ship } from "@/generated/prisma/browser";
 import { EditableText } from "@/modules/common/components/form/EditableText";
+import { type Ship } from "@sam-monorepo/database/browser";
 import { updateShipAction } from "../actions/updateShipAction";
 
 interface Props {

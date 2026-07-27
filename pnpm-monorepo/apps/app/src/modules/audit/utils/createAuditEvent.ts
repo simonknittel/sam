@@ -1,5 +1,5 @@
 import { prisma } from "@/db";
-import type { User } from "@/generated/prisma/client";
+import type { User } from "@sam-monorepo/database/client";
 import type { AuditEventDataByType, AuditEventType } from "./AuditEventTypes";
 
 type AuditEventInput = {

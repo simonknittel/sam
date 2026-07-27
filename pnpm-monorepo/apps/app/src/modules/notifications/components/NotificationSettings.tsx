@@ -1,11 +1,11 @@
 "use client";
 
+import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
+import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
 import {
   NotificationChannel,
   type NotificationSetting,
-} from "@/generated/prisma/browser";
-import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
-import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
+} from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { FaDesktop, FaInfoCircle, FaMobile } from "react-icons/fa";
 import {

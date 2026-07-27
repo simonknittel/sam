@@ -4,11 +4,11 @@
   "scripts": {
     "build": "next build",
     "dev": "next dev",
-    "postinstall": "prisma generate && next typegen",
+    "postinstall": "next typegen",
     "lint": "eslint .",
     "start": "next start",
     "test": "vitest run --coverage",
-    "format": "prettier --write . && prisma format"
+    "format": "prettier --write ."
   },
   "dependencies": {
     "@algolia/autocomplete-js": "1.19.9",
@@ -32,7 +32,6 @@
     "@opentelemetry/semantic-conventions": "1.43.0",
     "@paralleldrive/cuid2": "3.3.0",
     "@plausible-analytics/tracker": "0.4.5",
-    "@prisma/adapter-pg": "7.9.0",
     "@prisma/client": "7.9.0",
     "@prisma/instrumentation": "7.9.0",
     "@radix-ui/react-accordion": "1.2.16",
@@ -43,6 +42,7 @@
     "@radix-ui/react-radio-group": "1.4.3",
     "@radix-ui/react-select": "2.3.3",
     "@radix-ui/react-tooltip": "1.2.12",
+    "@sam-monorepo/database": "workspace:*",
     "@t3-oss/env-nextjs": "0.13.11",
     "@tanstack/react-query": "5.101.2",
     "@tanstack/react-query-devtools": "5.101.2",
@@ -74,7 +74,6 @@
     "nextjs-toploader": "3.9.17",
     "nuqs": "2.9.1",
     "openai": "6.48.0",
-    "pg": "8.22.0",
     "pusher-js": "8.5.0",
     "pusher": "5.3.4",
     "react-dom": "19.2.7",
@@ -119,7 +118,6 @@
     "prettier": "3.9.5",
     "prettier-plugin-organize-imports": "4.3.0",
     "prettier-plugin-tailwindcss": "0.8.1",
-    "prisma": "7.9.0",
     "tailwindcss": "4.3.3",
     "typescript": "6.0.3",
     "typescript-eslint": "8.64.0",

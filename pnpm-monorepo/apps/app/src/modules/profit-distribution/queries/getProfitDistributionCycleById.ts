@@ -1,9 +1,9 @@
 import { prisma } from "@/db";
-import type { ProfitDistributionCycle } from "@/generated/prisma/client";
 import { requireAuthentication } from "@/modules/auth/server";
 import { getSilcBalanceOfAllCitizens } from "@/modules/silc/queries/getSilcBalanceOfAllCitizens";
 import { getSilcBalanceOfCurrentCitizen } from "@/modules/silc/queries/getSilcBalanceOfCurrentCitizen";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
+import type { ProfitDistributionCycle } from "@sam-monorepo/database/client";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
 import { getAuecPerSilc } from "../utils/getAuecPerSilc";

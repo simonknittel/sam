@@ -1,6 +1,9 @@
 "use client";
 
-import { type PermissionString, type Role } from "@/generated/prisma/browser";
+import {
+  type PermissionString,
+  type Role,
+} from "@sam-monorepo/database/browser";
 import type { ReactNode } from "react";
 import { createContext, useCallback, useContext, useMemo } from "react";
 

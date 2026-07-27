@@ -1,10 +1,4 @@
 import { prisma } from "@/db";
-import {
-  VariantStatus,
-  type Manufacturer,
-  type Upload,
-  type VariantTag,
-} from "@/generated/prisma/client";
 import { requireAuthentication } from "@/modules/auth/server";
 import {
   sortAscWithAndNullLast,
@@ -12,6 +6,12 @@ import {
 } from "@/modules/common/utils/sorting";
 import { getActiveOrganizationMemberships } from "@/modules/organizations/queries/getActiveOrganizationMemberships";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
+import {
+  VariantStatus,
+  type Manufacturer,
+  type Upload,
+  type VariantTag,
+} from "@sam-monorepo/database/client";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
 

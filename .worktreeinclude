@@ -12,9 +12,8 @@ pnpm-monorepo/apps/lambda/.env
 pnpm-monorepo/apps/playwright/.env
 pnpm-monorepo/packages/database/.env
 
-# Generated Prisma clients. Required for typecheck and build to resolve, and
-# regenerating them needs a reachable database URL.
-pnpm-monorepo/apps/app/src/generated/
+# Generated Prisma client. Required for typecheck and build to resolve until
+# `pnpm install` regenerates it.
 pnpm-monorepo/packages/database/src/generated/
 
 # Written by `next dev`/`next build` but gitignored; tsc needs it to resolve the

@@ -1,5 +1,11 @@
 "use client";
 
+import Button from "@/modules/common/components/Button";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
+import { Textarea } from "@/modules/common/components/form/Textarea";
+import { TextInput } from "@/modules/common/components/form/TextInput";
+import Modal from "@/modules/common/components/Modal";
+import { Tooltip } from "@/modules/common/components/Tooltip";
 import type {
   Event,
   EventPosition,
@@ -7,13 +13,7 @@ import type {
   Manufacturer,
   Series,
   Variant,
-} from "@/generated/prisma/browser";
-import Button from "@/modules/common/components/Button";
-import { Button2, Button2Variant } from "@/modules/common/components/Button2";
-import { Textarea } from "@/modules/common/components/form/Textarea";
-import { TextInput } from "@/modules/common/components/form/TextInput";
-import Modal from "@/modules/common/components/Modal";
-import { Tooltip } from "@/modules/common/components/Tooltip";
+} from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { flatten } from "lodash";
 import { unstable_rethrow } from "next/navigation";

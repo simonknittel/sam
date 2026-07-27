@@ -1,4 +1,4 @@
-import type { Event } from "@/generated/prisma/client";
+import type { Event } from "@sam-monorepo/database/client";
 import { formatInTimeZone } from "date-fns-tz";
 
 export const getOutlookUrl = (event: Event) => {

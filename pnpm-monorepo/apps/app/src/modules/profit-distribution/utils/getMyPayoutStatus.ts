@@ -1,7 +1,7 @@
 import type {
   ProfitDistributionCycle,
   ProfitDistributionCycleParticipant,
-} from "@/generated/prisma/client";
+} from "@sam-monorepo/database/client";
 
 export enum PayoutState {
   NOT_PARTICIPATING,

@@ -12,8 +12,8 @@ sudo corepack enable
 pnpm install
 
 # After a `git clone` the `.env` won't exist. When you start the container from an existing local project, the `.env` may already exist.
-if [ -e .env ]; then
-	pnpm exec prisma migrate dev
+if [ -e ../../packages/database/.env ]; then
+	pnpm --filter @sam-monorepo/database run migrate:dev
 else
-	echo "Skipping database migration due to missing .env file"
+	echo "Skipping database migration due to missing packages/database/.env file"
 fi

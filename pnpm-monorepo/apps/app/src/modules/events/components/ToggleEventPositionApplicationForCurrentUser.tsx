@@ -1,5 +1,8 @@
 "use client";
 
+import { Button2 } from "@/modules/common/components/Button2";
+import { VariantWithLogo } from "@/modules/fleet/components/VariantWithLogo";
+import * as Tooltip from "@radix-ui/react-tooltip";
 import type {
   EventPosition,
   EventPositionRequiredVariant,
@@ -7,10 +10,7 @@ import type {
   Series,
   Upload,
   Variant,
-} from "@/generated/prisma/browser";
-import { Button2 } from "@/modules/common/components/Button2";
-import { VariantWithLogo } from "@/modules/fleet/components/VariantWithLogo";
-import * as Tooltip from "@radix-ui/react-tooltip";
+} from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { unstable_rethrow } from "next/navigation";
 import { useId, useTransition } from "react";

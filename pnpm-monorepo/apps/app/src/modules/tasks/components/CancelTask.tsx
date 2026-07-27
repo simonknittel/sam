@@ -1,6 +1,5 @@
 "use client";
 
-import { type Task } from "@/generated/prisma/browser";
 import { useAction } from "@/modules/actions/utils/useAction";
 import {
   AlertDialog,
@@ -13,6 +12,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/modules/common/components/AlertDialog";
+import { type Task } from "@sam-monorepo/database/browser";
 import { useId } from "react";
 import { FaSpinner } from "react-icons/fa";
 import { TbCancel } from "react-icons/tb";

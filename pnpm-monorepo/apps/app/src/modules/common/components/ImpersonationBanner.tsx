@@ -1,6 +1,6 @@
 "use client";
 
-import { type Role } from "@/generated/prisma/browser";
+import { type Role } from "@sam-monorepo/database/browser";
 import { useRouter } from "next/navigation";
 
 interface Props {

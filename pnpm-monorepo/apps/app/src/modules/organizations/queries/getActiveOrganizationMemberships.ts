@@ -1,10 +1,10 @@
 import { prisma } from "@/db";
+import { requireAuthentication } from "@/modules/auth/server";
+import { withTrace } from "@/modules/tracing/utils/withTrace";
 import {
   OrganizationMembershipVisibility,
   type Organization,
-} from "@/generated/prisma/client";
-import { requireAuthentication } from "@/modules/auth/server";
-import { withTrace } from "@/modules/tracing/utils/withTrace";
+} from "@sam-monorepo/database/client";
 import { forbidden } from "next/navigation";
 
 export const getActiveOrganizationMemberships = withTrace(

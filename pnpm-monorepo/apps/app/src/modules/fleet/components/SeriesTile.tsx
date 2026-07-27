@@ -1,7 +1,7 @@
-import { type Manufacturer } from "@/generated/prisma/client";
 import { Actions } from "@/modules/common/components/Actions";
 import { Link } from "@/modules/common/components/Link";
 import { Tile } from "@/modules/common/components/Tile";
+import { type Manufacturer } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import { getSeriesByManufacturerId } from "../queries/getSeriesByManufacturerId";
 import { CreateSeriesButton } from "./CreateSeriesButton";

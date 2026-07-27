@@ -1,6 +1,5 @@
 "use client";
 
-import { TaskRewardType, TaskVisibility } from "@/generated/prisma/browser";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
@@ -13,6 +12,7 @@ import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
 import { Link } from "@/modules/common/components/Link";
 import { Note } from "@/modules/common/components/Note";
 import { createTask } from "@/modules/tasks/actions/createTask";
+import { TaskRewardType, TaskVisibility } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { unstable_rethrow } from "next/navigation";
 import { useActionState, useState } from "react";

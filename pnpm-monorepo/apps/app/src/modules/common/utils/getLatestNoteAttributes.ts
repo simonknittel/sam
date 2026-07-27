@@ -1,7 +1,7 @@
 import {
   type EntityLog,
   type EntityLogAttribute,
-} from "@/generated/prisma/client";
+} from "@sam-monorepo/database/client";
 
 export default function getLatestNoteAttributes(
   note: EntityLog & {

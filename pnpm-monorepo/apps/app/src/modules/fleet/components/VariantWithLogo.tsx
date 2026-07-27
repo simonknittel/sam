@@ -1,6 +1,10 @@
 import { env } from "@/env";
-import type { Manufacturer, Upload, Variant } from "@/generated/prisma/client";
 import { Link } from "@/modules/common/components/Link";
+import type {
+  Manufacturer,
+  Upload,
+  Variant,
+} from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import Image from "next/image";
 

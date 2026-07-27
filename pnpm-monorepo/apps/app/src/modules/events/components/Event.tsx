@@ -2,7 +2,7 @@ import type {
   Entity,
   EventDiscordParticipant,
   Event as PrismaEvent,
-} from "@/generated/prisma/client";
+} from "@sam-monorepo/database/client";
 import { isLineupVisible } from "../utils/isLineupVisible";
 import { EventClient } from "./EventClient";
 

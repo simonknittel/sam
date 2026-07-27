@@ -1,6 +1,6 @@
 import { prisma } from "@/db";
-import { type EntityLog } from "@/generated/prisma/client";
 import { updateObject } from "@/modules/algolia";
+import { type EntityLog } from "@sam-monorepo/database/client";
 
 export async function updateAlgoliaWithGenericLogType(
   log: EntityLog,

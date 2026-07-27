@@ -1,6 +1,6 @@
 "use client";
 
-import { FlowNodeRoleImage } from "@/generated/prisma/browser";
+import { FlowNodeRoleImage } from "@sam-monorepo/database/browser";
 import z from "zod";
 
 export const schema = z.object({

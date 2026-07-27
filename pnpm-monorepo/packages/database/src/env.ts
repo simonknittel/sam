@@ -2,9 +2,15 @@ import { z } from "zod";
 
 const schema = z.object({
   NODE_ENV: z
-    .union([z.literal("development"), z.literal("production")])
+    .union([
+      z.literal("development"),
+      z.literal("test"),
+      z.literal("production"),
+    ])
     .default("development"),
-  DATABASE_URL: z.string(),
+  DATABASE_URL: z
+    .string()
+    .default("postgresql://postgres:admin@localhost:5432/db"),
 });
 
 export const env =

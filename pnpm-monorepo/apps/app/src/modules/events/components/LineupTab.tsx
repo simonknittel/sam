@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import {
   type Entity,
   type Event,
@@ -7,8 +8,7 @@ import {
   type Series,
   type Ship,
   type Variant,
-} from "@/generated/prisma/browser";
-import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
+} from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import dynamic from "next/dynamic";
 import { CopyLineupFromEventButton } from "./CopyLineupFromEventButton";

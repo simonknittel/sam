@@ -1,14 +1,14 @@
 "use client";
 
+import { Handles } from "@/modules/career/components/Handles";
+import { CitizenLink } from "@/modules/common/components/CitizenLink";
+import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import {
   FlowNodeRoleCitizensAlignment,
   FlowNodeType,
   type Role,
   type Upload,
-} from "@/generated/prisma/browser";
-import { Handles } from "@/modules/career/components/Handles";
-import { CitizenLink } from "@/modules/common/components/CitizenLink";
-import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
+} from "@sam-monorepo/database/browser";
 import {
   applyNodeChanges,
   NodeResizer,

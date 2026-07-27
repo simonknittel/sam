@@ -1,4 +1,3 @@
-import type { Role } from "@/generated/prisma/client";
 import { useAction } from "@/modules/actions/utils/useAction";
 import {
   AlertDialog,
@@ -13,6 +12,7 @@ import {
 } from "@/modules/common/components/AlertDialog";
 import { Button2 } from "@/modules/common/components/Button2";
 import { Note } from "@/modules/common/components/Note";
+import type { Role } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import { useId } from "react";
 import { FaSpinner, FaTrash } from "react-icons/fa";

@@ -2,7 +2,7 @@ import {
   type Flow,
   type FlowEdge,
   type FlowNode,
-} from "@/generated/prisma/browser";
+} from "@sam-monorepo/database/browser";
 import { nodeDefinitions } from "../nodes/client";
 
 export const getInitialNodesAndEdges = (

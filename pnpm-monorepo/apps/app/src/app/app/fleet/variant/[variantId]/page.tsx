@@ -1,4 +1,3 @@
-import { VariantStatus } from "@/generated/prisma/client";
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { Link } from "@/modules/common/components/Link";
 import { ScrambleIn } from "@/modules/common/components/ScrambleIn";
@@ -8,6 +7,7 @@ import { VariantShipsTile } from "@/modules/fleet/components/VariantShipsTile";
 import { VariantTagBadge } from "@/modules/fleet/components/VariantTagBadge";
 import { VariantWithLogo } from "@/modules/fleet/components/VariantWithLogo";
 import { getVariantDetail } from "@/modules/fleet/queries/variantDetail";
+import { VariantStatus } from "@sam-monorepo/database/client";
 import { type Metadata } from "next";
 import { notFound } from "next/navigation";
 import { FaExternalLinkAlt, FaRegCheckCircle } from "react-icons/fa";

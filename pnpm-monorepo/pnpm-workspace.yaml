@@ -6,6 +6,14 @@ injectWorkspacePackages: true
 
 linkWorkspacePackages: true
 
+# Refresh injected workspace copies after these scripts run (belt-and-braces;
+# in practice the packages resolve as symlinks and dist freshness comes from
+# packages/database's postinstall/build running tsc).
+syncInjectedDepsAfterScripts:
+  - build
+  - postinstall
+  - migrate:dev
+
 overrides:
   bn.js@<4.12.3: ">=4.12.3"
   fast-xml-parser@>=5.0.0 <5.3.8: ">=5.3.8"
@@ -95,4 +103,8 @@ allowBuilds:
   protobufjs: true
   sharp: true
   unrs-resolver: true
+  # The database package's postinstall (generate + patch + tsc) already runs as
+  # a workspace project lifecycle; no need to run it again as a dependency
+  # build of apps/app.
+  "@sam-monorepo/database@file:packages/database": false
 auditLevel: critical

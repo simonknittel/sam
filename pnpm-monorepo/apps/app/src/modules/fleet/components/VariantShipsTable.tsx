@@ -1,3 +1,5 @@
+import { CitizenLink } from "@/modules/common/components/CitizenLink";
+import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
 import {
   type Entity,
   type Manufacturer,
@@ -5,9 +7,7 @@ import {
   type Ship,
   type Upload,
   type Variant,
-} from "@/generated/prisma/client";
-import { CitizenLink } from "@/modules/common/components/CitizenLink";
-import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
+} from "@sam-monorepo/database/client";
 
 export interface VariantShipRow {
   id: Ship["id"];

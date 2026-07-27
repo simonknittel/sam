@@ -1,4 +1,7 @@
-import { type PermissionString, type Role } from "@/generated/prisma/client";
+import {
+  type PermissionString,
+  type Role,
+} from "@sam-monorepo/database/client";
 import { type PermissionSet } from "./PermissionSet";
 import { transformPermissionStringToPermissionSet } from "./transformPermissionStringToPermissionSet";
 

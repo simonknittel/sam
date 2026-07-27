@@ -1,9 +1,9 @@
 # Changing database schema
 
-1. Update `schema.prisma` as required (both `pnpm-monorepo/apps/app/prisma/schema.prisma` and `pnpm-monorepo/packages/database/prisma/schema.prisma` must stay in sync)
-2. Change to the app directory: `cd pnpm-monorepo/apps/app`
+1. Update the schema in `pnpm-monorepo/packages/database/prisma/` as required
+2. Change to the database package: `cd pnpm-monorepo/packages/database`
 3. Run `pnpm exec prisma db push`
-4. Create migration `pnpm exec prisma migrate dev --name my-migration`
+4. Create migration: `pnpm run migrate:dev` (wraps `prisma migrate dev` and rebuilds the package so all consumers see the new client)
 5. Commit
-6. Apply to other developer databases: `pnpm exec prisma migrate dev`
-7. Apply to production databases: `DATABASE_URL="..." pnpm exec prisma migrate deploy`
+6. Apply to other developer databases: `pnpm run migrate:dev`
+7. Apply to production databases: run the "Production database migrations" GitHub workflow, or `DATABASE_URL="..." pnpm exec prisma migrate deploy`

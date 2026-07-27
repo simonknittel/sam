@@ -1,8 +1,8 @@
+import { type requireAuthentication } from "@/modules/auth/server";
 import {
   type EntityLog,
   type EntityLogAttribute,
-} from "@/generated/prisma/client";
-import { type requireAuthentication } from "@/modules/auth/server";
+} from "@sam-monorepo/database/client";
 
 export default async function isAllowedToRead(
   entityLog: EntityLog & {

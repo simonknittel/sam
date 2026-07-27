@@ -1,6 +1,6 @@
-import type { Entity } from "@/generated/prisma/client";
 import { requireAuthentication } from "@/modules/auth/server";
 import { Tile } from "@/modules/common/components/Tile";
+import type { Entity } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import { getSilcTransactionsOfCitizen } from "../queries/getSilcTransactionsOfCitizen";
 import { SilcTransactionsTable } from "./SilcTransactionsTable";

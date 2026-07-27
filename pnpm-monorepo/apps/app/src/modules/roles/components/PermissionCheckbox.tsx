@@ -1,7 +1,7 @@
 "use client";
 
-import type { Role } from "@/generated/prisma/browser";
 import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
+import type { Role } from "@sam-monorepo/database/browser";
 import { memo } from "react";
 import { usePermissionsContext } from "./PermissionsContext";
 

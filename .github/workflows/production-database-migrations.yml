@@ -30,11 +30,11 @@ jobs:
         working-directory: pnpm-monorepo
 
       - name: Install dependencies
-        run: pnpm install --filter @sam-monorepo/app
+        run: pnpm install --filter @sam-monorepo/database
         working-directory: pnpm-monorepo
 
       - name: Run database migrations
         run: pnpm exec prisma migrate deploy
-        working-directory: pnpm-monorepo/apps/app
+        working-directory: pnpm-monorepo/packages/database
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

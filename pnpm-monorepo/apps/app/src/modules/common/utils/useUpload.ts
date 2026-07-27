@@ -1,6 +1,6 @@
 "use client";
 
-import { type Upload } from "@/generated/prisma/browser";
+import { type Upload } from "@sam-monorepo/database/browser";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 

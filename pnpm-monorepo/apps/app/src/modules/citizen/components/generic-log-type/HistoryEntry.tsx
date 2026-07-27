@@ -1,12 +1,12 @@
 "use client";
 
+import styles from "@/modules/common/components/ConfirmationGradient.module.css";
+import { formatDate } from "@/modules/common/utils/formatDate";
 import {
   type EntityLog,
   type EntityLogAttribute,
   type User,
-} from "@/generated/prisma/browser";
-import styles from "@/modules/common/components/ConfirmationGradient.module.css";
-import { formatDate } from "@/modules/common/utils/formatDate";
+} from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { BsExclamationOctagonFill } from "react-icons/bs";
 import { FaInfoCircle } from "react-icons/fa";

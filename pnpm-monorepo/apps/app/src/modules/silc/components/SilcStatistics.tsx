@@ -1,6 +1,6 @@
-import { SilcSettingKey } from "@/generated/prisma/client";
 import { ScrambleIn } from "@/modules/common/components/ScrambleIn";
 import { StatisticTile } from "@/modules/common/components/StatisticTile";
+import { SilcSettingKey } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import { getSilcBalanceOfAllCitizens } from "../queries/getSilcBalanceOfAllCitizens";
 import { getSilcSetting } from "../queries/getSilcSetting";

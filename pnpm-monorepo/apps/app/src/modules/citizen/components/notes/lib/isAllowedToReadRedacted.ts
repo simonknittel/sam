@@ -1,9 +1,9 @@
+import { type requireAuthentication } from "@/modules/auth/server";
+import getLatestNoteAttributes from "@/modules/common/utils/getLatestNoteAttributes";
 import {
   type EntityLog,
   type EntityLogAttribute,
-} from "@/generated/prisma/client";
-import { type requireAuthentication } from "@/modules/auth/server";
-import getLatestNoteAttributes from "@/modules/common/utils/getLatestNoteAttributes";
+} from "@sam-monorepo/database/client";
 
 export default function isAllowedToReadRedacted(
   note: EntityLog & {

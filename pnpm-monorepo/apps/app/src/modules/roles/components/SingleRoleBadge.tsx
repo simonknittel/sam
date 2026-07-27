@@ -1,7 +1,6 @@
 "use client";
 
 import { env } from "@/env";
-import { type Role } from "@/generated/prisma/browser";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { decreaseRoleAssignmentLevel } from "@/modules/citizen/actions/decreaseRoleAssignmentLevel";
@@ -23,6 +22,7 @@ import { Link } from "@/modules/common/components/Link";
 import { Markdown } from "@/modules/common/components/Markdown";
 import { Note } from "@/modules/common/components/Note";
 import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
+import { type Role } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import Image from "next/image";
 import { useId } from "react";

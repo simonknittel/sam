@@ -1,6 +1,5 @@
 "use client";
 
-import { type User } from "@/generated/prisma/browser";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,6 +12,7 @@ import {
   AlertDialogTrigger,
 } from "@/modules/common/components/AlertDialog";
 import { Link } from "@/modules/common/components/Link";
+import { type User } from "@sam-monorepo/database/browser";
 import { unstable_rethrow } from "next/navigation";
 import { useId, useTransition } from "react";
 import toast from "react-hot-toast";

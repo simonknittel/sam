@@ -1,3 +1,7 @@
+import { Actions } from "@/modules/common/components/Actions";
+import { Link } from "@/modules/common/components/Link";
+import { formatDate } from "@/modules/common/utils/formatDate";
+import { type EntityLogConfirmationState } from "@/types";
 import {
   type ClassificationLevel,
   type Entity,
@@ -5,11 +9,7 @@ import {
   type EntityLogAttribute,
   type NoteType,
   type User,
-} from "@/generated/prisma/client";
-import { Actions } from "@/modules/common/components/Actions";
-import { Link } from "@/modules/common/components/Link";
-import { formatDate } from "@/modules/common/utils/formatDate";
-import { type EntityLogConfirmationState } from "@/types";
+} from "@sam-monorepo/database/client";
 import { FaSortDown, FaSortUp } from "react-icons/fa";
 import { CitizenPopover } from "./CitizenPopover";
 import { ConfirmationState } from "./ConfirmationState";

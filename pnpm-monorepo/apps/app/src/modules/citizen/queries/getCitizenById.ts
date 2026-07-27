@@ -1,6 +1,6 @@
 import { prisma } from "@/db";
-import type { Entity } from "@/generated/prisma/client";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
+import type { Entity } from "@sam-monorepo/database/client";
 import { cache } from "react";
 
 export const getCitizenById = cache(

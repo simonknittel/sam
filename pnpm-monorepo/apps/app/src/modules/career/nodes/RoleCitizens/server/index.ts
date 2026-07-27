@@ -1,4 +1,4 @@
-import { FlowNodeType } from "@/generated/prisma/client";
+import { FlowNodeType } from "@sam-monorepo/database/client";
 import { createManyMapping } from "./createManyMapping";
 import { updateFlowSchema } from "./updateFlowSchema";
 

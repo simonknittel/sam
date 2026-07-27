@@ -1,5 +1,8 @@
 import { prisma } from "@/db";
-import type { Event, EventDiscordParticipant } from "@/generated/prisma/client";
+import type {
+  Event,
+  EventDiscordParticipant,
+} from "@sam-monorepo/database/client";
 import { cache } from "react";
 
 export const getParticipants = cache(

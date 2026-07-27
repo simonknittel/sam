@@ -1,4 +1,4 @@
-import type { Event } from "@/generated/prisma/client";
+import type { Event } from "@sam-monorepo/database/client";
 import { formatISO } from "date-fns/formatISO";
 
 export const getGoogleCalendarUrl = (event: Event) => {

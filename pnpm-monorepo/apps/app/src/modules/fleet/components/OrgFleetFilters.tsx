@@ -1,8 +1,8 @@
-import type { Manufacturer, VariantTag } from "@/generated/prisma/browser";
 import { MultiSelectComboboxFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/MultiSelectComboboxFilter";
 import { RadioFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/RadioFilter";
 import { SingleSelectComboboxFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/SingleSelectComboboxFilter";
 import { TextSearchFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/TextSearchFilter";
+import type { Manufacturer, VariantTag } from "@sam-monorepo/database/browser";
 
 interface Props {
   readonly variantTags: VariantTag[];

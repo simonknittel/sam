@@ -1,6 +1,6 @@
 import { prisma } from "@/db";
-import { type Series } from "@/generated/prisma/client";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
+import { type Series } from "@sam-monorepo/database/client";
 
 export const getVariantsBySeriesId = withTrace(
   "getVariantsBySeriesId",

@@ -5,7 +5,7 @@ import {
   type Entity,
   type Organization,
   type OrganizationMembershipHistoryEntry,
-} from "@/generated/prisma/client";
+} from "@sam-monorepo/database/client";
 
 export const updateActiveMembership = async (citizenId: Entity["id"]) => {
   /**

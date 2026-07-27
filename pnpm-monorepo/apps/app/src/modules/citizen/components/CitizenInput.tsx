@@ -1,6 +1,5 @@
 "use client";
 
-import type { Entity } from "@/generated/prisma/browser";
 import Button from "@/modules/common/components/Button";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { underlineCharacters } from "@/modules/common/utils/underlineCharacters";
@@ -13,6 +12,7 @@ import {
   ComboboxOptions,
 } from "@headlessui/react";
 import * as Popover from "@radix-ui/react-popover";
+import type { Entity } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import Fuse, { type FuseResult } from "fuse.js";
 import { useRef, useState } from "react";

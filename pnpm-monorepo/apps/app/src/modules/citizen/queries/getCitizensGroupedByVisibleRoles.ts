@@ -1,7 +1,7 @@
 import { prisma } from "@/db";
-import type { Entity, Role, Upload } from "@/generated/prisma/client";
 import { getVisibleRoles } from "@/modules/roles/utils/getRoles";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
+import type { Entity, Role, Upload } from "@sam-monorepo/database/client";
 import { cache } from "react";
 
 export const getCitizensGroupedByVisibleRoles = cache(

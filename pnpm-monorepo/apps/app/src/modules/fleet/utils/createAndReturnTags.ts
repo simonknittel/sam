@@ -1,6 +1,6 @@
 import { prisma } from "@/db";
-import type { VariantTag } from "@/generated/prisma/client";
 import { requireAuthentication } from "@/modules/auth/server";
+import type { VariantTag } from "@sam-monorepo/database/client";
 
 export const createAndReturnTags = async (
   tagKeys: string[] | undefined,

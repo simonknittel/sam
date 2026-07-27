@@ -1,8 +1,8 @@
 "use client";
 
-import type { Entity } from "@/generated/prisma/browser";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
+import type { Entity } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { Link } from "./Link";
 

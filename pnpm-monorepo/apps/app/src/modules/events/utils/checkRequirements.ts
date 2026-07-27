@@ -1,4 +1,4 @@
-import type { Entity, Ship } from "@/generated/prisma/client";
+import type { Entity, Ship } from "@sam-monorepo/database/client";
 import type { PositionType } from "../components/Position";
 
 export const checkRequirements = (

@@ -8,6 +8,7 @@ on:
     paths:
       - .github/workflows/validate-app.yml
       - pnpm-monorepo/apps/app/**
+      - pnpm-monorepo/packages/database/**
       - pnpm-monorepo/pnpm-lock.yaml
       - pnpm-monorepo/pnpm-workspace.yaml
   push:
@@ -16,6 +17,7 @@ on:
     paths:
       - .github/workflows/validate-app.yml
       - pnpm-monorepo/apps/app/**
+      - pnpm-monorepo/packages/database/**
       - pnpm-monorepo/pnpm-lock.yaml
       - pnpm-monorepo/pnpm-workspace.yaml
 
@@ -41,7 +43,7 @@ jobs:
         working-directory: pnpm-monorepo
 
       - name: Install dependencies
-        run: pnpm install --filter @sam-monorepo/app
+        run: pnpm install --filter @sam-monorepo/app...
         working-directory: pnpm-monorepo
 
       - name: Lint
@@ -72,7 +74,7 @@ jobs:
         working-directory: pnpm-monorepo
 
       - name: Install dependencies
-        run: pnpm install --filter @sam-monorepo/app
+        run: pnpm install --filter @sam-monorepo/app...
         working-directory: pnpm-monorepo
 
       - name: Prettier
@@ -100,7 +102,7 @@ jobs:
         working-directory: pnpm-monorepo
 
       - name: Install dependencies
-        run: pnpm install --filter @sam-monorepo/app
+        run: pnpm install --filter @sam-monorepo/app...
         working-directory: pnpm-monorepo
 
       - name: Test

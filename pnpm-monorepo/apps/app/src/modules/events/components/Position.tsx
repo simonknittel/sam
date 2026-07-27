@@ -1,3 +1,8 @@
+import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
+import { AccordeonToggle } from "@/modules/common/components/Accordeon";
+import { CitizenLink } from "@/modules/common/components/CitizenLink";
+import { EditableInput } from "@/modules/common/components/form/EditableInput";
+import { VariantWithLogo } from "@/modules/fleet/components/VariantWithLogo";
 import {
   type Entity,
   type EventPosition,
@@ -8,12 +13,7 @@ import {
   type Ship,
   type Upload,
   type Variant,
-} from "@/generated/prisma/client";
-import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
-import { AccordeonToggle } from "@/modules/common/components/Accordeon";
-import { CitizenLink } from "@/modules/common/components/CitizenLink";
-import { EditableInput } from "@/modules/common/components/form/EditableInput";
-import { VariantWithLogo } from "@/modules/fleet/components/VariantWithLogo";
+} from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import { updateEventPositionName } from "../actions/updateEventPositionName";
 import { checkRequirements } from "../utils/checkRequirements";

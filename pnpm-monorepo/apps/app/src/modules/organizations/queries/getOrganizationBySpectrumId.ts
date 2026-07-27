@@ -1,6 +1,6 @@
 import { prisma } from "@/db";
-import type { Organization } from "@/generated/prisma/client";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
+import type { Organization } from "@sam-monorepo/database/client";
 
 export const getOrganizationBySpectrumId = withTrace(
   "getOrganizationBySpectrumId",

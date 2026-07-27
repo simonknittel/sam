@@ -1,5 +1,5 @@
-import { Prisma } from "@/generated/prisma/client";
 import { log } from "@/modules/logging";
+import { Prisma } from "@sam-monorepo/database/client";
 import { NextResponse } from "next/server";
 import { serializeError } from "serialize-error";
 import { ZodError } from "zod";

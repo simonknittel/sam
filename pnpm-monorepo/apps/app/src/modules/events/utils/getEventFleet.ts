@@ -3,7 +3,7 @@ import {
   VariantStatus,
   type Event,
   type EventDiscordParticipant,
-} from "@/generated/prisma/client";
+} from "@sam-monorepo/database/client";
 import { groupBy } from "lodash";
 import { cache } from "react";
 

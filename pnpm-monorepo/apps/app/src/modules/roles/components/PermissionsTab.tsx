@@ -1,13 +1,13 @@
 "use client";
 
+import { Tile } from "@/modules/common/components/Tile";
 import type {
   ClassificationLevel,
   Flow,
   NoteType,
   PermissionString,
   Role,
-} from "@/generated/prisma/browser";
-import { Tile } from "@/modules/common/components/Tile";
+} from "@sam-monorepo/database/browser";
 import { Permissions } from "./Permissions";
 import { PermissionsProvider } from "./PermissionsContext";
 

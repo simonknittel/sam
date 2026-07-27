@@ -1,8 +1,8 @@
-import type { Role } from "@/generated/prisma/client";
 import Button from "@/modules/common/components/Button";
 import { api } from "@/modules/common/utils/api";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import * as Popover from "@radix-ui/react-popover";
+import type { Role } from "@sam-monorepo/database/client";
 import { useState, type CSSProperties } from "react";
 import { FaPen, FaUsers } from "react-icons/fa";
 

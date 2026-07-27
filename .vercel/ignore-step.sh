@@ -16,9 +16,10 @@ fi
 cd "$(git rev-parse --show-toplevel)" || exit 1
 
 # Only proceed when files relevant to the app have changed. The app lives in
-# pnpm-monorepo/apps/app; its dependencies resolve through the workspace
-# lockfile and workspace config at the pnpm-monorepo root.
-if [[ ! `git diff HEAD^ HEAD -- pnpm-monorepo/apps/app pnpm-monorepo/pnpm-lock.yaml pnpm-monorepo/pnpm-workspace.yaml pnpm-monorepo/package.json pnpm-monorepo/.nvmrc` ]]; then
+# pnpm-monorepo/apps/app and consumes the Prisma schema/client from
+# pnpm-monorepo/packages/database; its dependencies resolve through the
+# workspace lockfile and workspace config at the pnpm-monorepo root.
+if [[ ! `git diff HEAD^ HEAD -- pnpm-monorepo/apps/app pnpm-monorepo/packages/database pnpm-monorepo/pnpm-lock.yaml pnpm-monorepo/pnpm-workspace.yaml pnpm-monorepo/package.json pnpm-monorepo/.nvmrc` ]]; then
   echo "🛑 - Build cancelled (no app changes)"
   exit 0;
 fi

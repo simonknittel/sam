@@ -8,10 +8,6 @@
 # testing
 /coverage
 
-# database
-/prisma/db.sqlite
-/prisma/db.sqlite-journal
-
 # next.js
 /.next/
 /out/
@@ -46,6 +42,3 @@ yarn-error.log*
 
 # next-agents-md
 .next-docs/
-
-# Prisma
-src/generated/

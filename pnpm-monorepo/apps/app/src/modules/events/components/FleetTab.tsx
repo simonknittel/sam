@@ -1,5 +1,8 @@
-import type { Event, EventDiscordParticipant } from "@/generated/prisma/client";
 import { FleetTable } from "@/modules/fleet/components/FleetTable";
+import type {
+  Event,
+  EventDiscordParticipant,
+} from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import { getEventFleet } from "../utils/getEventFleet";
 

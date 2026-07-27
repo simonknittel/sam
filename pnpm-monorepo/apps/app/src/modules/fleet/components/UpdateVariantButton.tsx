@@ -1,12 +1,12 @@
 "use client";
 
+import { useAction } from "@/modules/common/components/Actions";
+import Button from "@/modules/common/components/Button";
 import {
   type Variant,
   type VariantExternalLink,
   type VariantTag,
-} from "@/generated/prisma/browser";
-import { useAction } from "@/modules/common/components/Actions";
-import Button from "@/modules/common/components/Button";
+} from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import dynamic from "next/dynamic";
 import { Suspense, useState } from "react";

@@ -1,7 +1,7 @@
 import {
   FlowNodeRoleCitizensAlignment,
   FlowNodeType,
-} from "@/generated/prisma/client";
+} from "@sam-monorepo/database/client";
 import z from "zod";
 
 export const updateFlowSchema = z.object({

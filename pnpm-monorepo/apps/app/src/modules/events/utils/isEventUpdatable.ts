@@ -1,4 +1,4 @@
-import type { Event } from "@/generated/prisma/client";
+import type { Event } from "@sam-monorepo/database/client";
 
 export const isEventUpdatable = (
   event: Pick<Event, "startTime" | "endTime">,

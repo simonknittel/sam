@@ -1,4 +1,4 @@
-import { type Organization } from "@/generated/prisma/client";
+import { type Organization } from "@sam-monorepo/database/client";
 
 export const scrapeOrganizationLogo = async (
   organizationId: Organization["spectrumId"],

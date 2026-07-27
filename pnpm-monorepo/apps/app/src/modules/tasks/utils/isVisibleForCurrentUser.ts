@@ -1,10 +1,10 @@
+import { requireAuthentication } from "@/modules/auth/server";
 import type {
   Entity,
   Role,
   Task,
   TaskAssignment,
-} from "@/generated/prisma/client";
-import { requireAuthentication } from "@/modules/auth/server";
+} from "@sam-monorepo/database/client";
 
 interface TaskForVisibility extends Task {
   assignments: Pick<TaskAssignment, "citizenId">[];

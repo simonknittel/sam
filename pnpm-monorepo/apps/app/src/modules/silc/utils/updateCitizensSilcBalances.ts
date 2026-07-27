@@ -1,5 +1,5 @@
 import { prisma } from "@/db";
-import type { Entity } from "@/generated/prisma/client";
+import type { Entity } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
 import { getSilcTransactionsOfAllCitizensWithoutAuthorization } from "../queries/getSilcTransactionsOfAllCitizensWithoutAuthorization";
 

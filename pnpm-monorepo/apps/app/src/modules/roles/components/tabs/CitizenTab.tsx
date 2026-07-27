@@ -1,11 +1,11 @@
 "use client";
 
+import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
+import TabPanel from "@/modules/common/components/tabs/TabPanel";
 import {
   type ClassificationLevel,
   type NoteType,
-} from "@/generated/prisma/browser";
-import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
-import TabPanel from "@/modules/common/components/tabs/TabPanel";
+} from "@sam-monorepo/database/browser";
 import { usePermissionsContext } from "../PermissionsContext";
 import { CitizenIdSection } from "./components/CitizenIdSection";
 import CitizenSection from "./components/CitizenSection";

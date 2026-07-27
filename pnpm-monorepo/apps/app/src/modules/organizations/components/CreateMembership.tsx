@@ -1,14 +1,14 @@
 "use client";
 
-import {
-  ConfirmationStatus,
-  OrganizationMembershipType,
-  OrganizationMembershipVisibility,
-} from "@/generated/prisma/browser";
 import Button from "@/modules/common/components/Button";
 import { Button2 } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
+import {
+  ConfirmationStatus,
+  OrganizationMembershipType,
+  OrganizationMembershipVisibility,
+} from "@sam-monorepo/database/browser";
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";

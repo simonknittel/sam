@@ -1,6 +1,5 @@
 import { prisma } from "@/db";
 import { env } from "@/env";
-import type { Entity, RoleAssignment } from "@/generated/prisma/client";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import type { PermissionSet } from "@/modules/auth/common";
@@ -11,6 +10,7 @@ import { log } from "@/modules/logging";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { getUserById } from "@/modules/users/queries/getUserById";
 import { PrismaAdapter } from "@auth/prisma-adapter";
+import type { Entity, RoleAssignment } from "@sam-monorepo/database/client";
 import {
   getServerSession,
   type DefaultSession,

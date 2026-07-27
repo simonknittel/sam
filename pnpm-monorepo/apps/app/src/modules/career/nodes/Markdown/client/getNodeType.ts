@@ -1,6 +1,6 @@
 "use client";
 
-import { type FlowNode, FlowNodeType } from "@/generated/prisma/browser";
+import { type FlowNode, FlowNodeType } from "@sam-monorepo/database/browser";
 
 export const getNodeType = (node: FlowNode) => {
   const data = {

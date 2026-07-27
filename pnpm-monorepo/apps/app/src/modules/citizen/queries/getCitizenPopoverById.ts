@@ -1,8 +1,8 @@
 import { prisma } from "@/db";
-import type { Entity } from "@/generated/prisma/client";
 import { requireAuthentication } from "@/modules/auth/server";
 import { getAssignableRoles } from "@/modules/roles/utils/getRoles";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
+import type { Entity } from "@sam-monorepo/database/client";
 import { cache } from "react";
 
 export const getCitizenPopoverById = cache(

@@ -1,4 +1,4 @@
-import type { Task } from "@/generated/prisma/client";
+import type { Task } from "@sam-monorepo/database/client";
 
 export const isTaskUpdatable = (task: Task) => {
   if (task.completedAt) return false;

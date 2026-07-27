@@ -1,5 +1,5 @@
-import { SilcSettingKey } from "@/generated/prisma/client";
 import { Tile } from "@/modules/common/components/Tile";
+import { SilcSettingKey } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import { getSilcBalanceOfAllCitizens } from "../queries/getSilcBalanceOfAllCitizens";
 import { getSilcSetting } from "../queries/getSilcSetting";

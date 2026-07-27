@@ -1,11 +1,11 @@
 import { prisma } from "@/db";
-import { VariantStatus } from "@/generated/prisma/client";
 import { requireAuthentication } from "@/modules/auth/server";
 import {
   sortAscWithAndNullLast,
   sortDescAndNullLast,
 } from "@/modules/common/utils/sorting";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
+import { VariantStatus } from "@sam-monorepo/database/client";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
 

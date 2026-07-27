@@ -1,10 +1,10 @@
 "use client";
 
+import Button from "@/modules/common/components/Button";
 import {
   ConfirmationStatus,
   type OrganizationMembershipHistoryEntry,
-} from "@/generated/prisma/browser";
-import Button from "@/modules/common/components/Button";
+} from "@sam-monorepo/database/browser";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";

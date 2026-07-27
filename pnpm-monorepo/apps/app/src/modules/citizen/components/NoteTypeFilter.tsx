@@ -1,7 +1,7 @@
 "use client";
 
-import { type NoteType } from "@/generated/prisma/browser";
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
+import { type NoteType } from "@sam-monorepo/database/browser";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { ChangeEventHandler } from "react";
 

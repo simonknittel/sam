@@ -1,7 +1,7 @@
 import { prisma } from "@/db";
-import { type Entity } from "@/generated/prisma/client";
 import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
+import { type Entity } from "@sam-monorepo/database/client";
 
 const buildExpiredWhereClause = (expired: "active" | "all") => {
   if (expired === "active") {

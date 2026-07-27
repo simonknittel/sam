@@ -1,14 +1,14 @@
 "use client";
 
-import {
-  type Manufacturer,
-  type Series,
-  type VariantExternalLink,
-} from "@/generated/prisma/browser";
 import Button from "@/modules/common/components/Button";
 import Modal from "@/modules/common/components/Modal";
 import { api } from "@/trpc/react";
 import { createId } from "@paralleldrive/cuid2";
+import {
+  type Manufacturer,
+  type Series,
+  type VariantExternalLink,
+} from "@sam-monorepo/database/browser";
 import { unstable_rethrow } from "next/navigation";
 import { useId, useState, useTransition } from "react";
 import { toast } from "react-hot-toast";

@@ -1,4 +1,4 @@
-import type { ProfitDistributionCycleParticipant } from "@/generated/prisma/client";
+import type { ProfitDistributionCycleParticipant } from "@sam-monorepo/database/client";
 
 export const getOpenAuecPayout = (
   participants: ProfitDistributionCycleParticipant[],

@@ -1,9 +1,9 @@
+import getLatestNoteAttributes from "@/modules/common/utils/getLatestNoteAttributes";
+import { getAllClassificationLevels } from "@/modules/spynet/queries/getAllClassificationLevels";
 import {
   type EntityLog,
   type EntityLogAttribute,
-} from "@/generated/prisma/client";
-import getLatestNoteAttributes from "@/modules/common/utils/getLatestNoteAttributes";
-import { getAllClassificationLevels } from "@/modules/spynet/queries/getAllClassificationLevels";
+} from "@sam-monorepo/database/client";
 import clsx from "clsx";
 
 interface Props {

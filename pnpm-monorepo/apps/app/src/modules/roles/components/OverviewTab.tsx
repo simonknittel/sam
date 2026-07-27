@@ -1,12 +1,12 @@
 "use client";
 
-import type { Role, Upload } from "@/generated/prisma/browser";
 import { Button2 } from "@/modules/common/components/Button2";
 import { NumberInput } from "@/modules/common/components/form/NumberInput";
 import { Textarea } from "@/modules/common/components/form/Textarea";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import { ImageUpload } from "@/modules/common/components/ImageUpload";
 import Note from "@/modules/common/components/Note";
+import type { Role, Upload } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useActionState } from "react";
 import { FaSave, FaSpinner } from "react-icons/fa";
