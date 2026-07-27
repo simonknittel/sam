@@ -1,5 +1,5 @@
 {
-  "name": "app",
+  "name": "@sam-monorepo/app",
   "private": true,
   "scripts": {
     "build": "next build",
@@ -110,6 +110,7 @@
     "@typescript-eslint/parser": "8.64.0",
     "@vitest/coverage-v8": "4.1.10",
     "csv": "6.6.1",
+    "dotenv": "17.4.2",
     "eslint": "9.39.5",
     "eslint-config-next": "16.2.10",
     "eslint-plugin-react-compiler": "19.1.0-rc.2",
@@ -121,26 +122,9 @@
     "prisma": "7.9.0",
     "tailwindcss": "4.3.3",
     "typescript": "6.0.3",
+    "typescript-eslint": "8.64.0",
     "vercel": "57.0.0",
     "vitest": "4.1.10",
     "zod-validation-error": "5.0.0"
-  },
-  "packageManager": "npm@12.0.1",
-  "allowScripts": {
-    "@parcel/watcher": true,
-    "@prisma/engines": true,
-    "@swc/core": true,
-    "esbuild": true,
-    "prisma": true,
-    "protobufjs": true,
-    "sharp": true,
-    "unrs-resolver": true
-  },
-  "overrides": {
-    "@types/react-dom": "19.2.3",
-    "@types/react": "19.2.17",
-    "zod-validation-error": "5.0.0",
-    "@auth/core": "0.41.3",
-    "tar": "7.5.21"
   }
 }

@@ -7,9 +7,9 @@ services:
       dockerfile: Dockerfile
     volumes:
       # Mount the project's root directory (which also contains .git)
-      - ../..:/workspace:cached
+      - ../../../..:/workspace:cached
       # Mount node_modules into a volume to improve performance (see https://code.visualstudio.com/remote/advancedcontainers/improve-performance#_use-a-targeted-named-volume)
-      - devcontainer-node_modules:/workspace/app/node_modules
+      - devcontainer-node_modules:/workspace/pnpm-monorepo/apps/app/node_modules
     network_mode: service:db
     command: sleep infinity
 

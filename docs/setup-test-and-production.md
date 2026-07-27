@@ -97,7 +97,9 @@
 
 ## 7. Set up Vercel
 
-1. Set `Ignored Build Step` to `Run my Bash script: bash ../.vercel/ignore-step.sh`
+1. Set `Root Directory` to `pnpm-monorepo/apps/app` and keep "Include source files outside of the Root Directory in the Build Step" enabled (required for the workspace lockfile and `pnpm-workspace.yaml` at the `pnpm-monorepo` root)
+2. Add the environment variable `ENABLE_EXPERIMENTAL_COREPACK=1` so Vercel uses the pnpm version pinned via `packageManager` in `pnpm-monorepo/package.json`
+3. The `Ignored Build Step` is configured in code via `pnpm-monorepo/apps/app/vercel.json` (it runs `.vercel/ignore-step.sh` from the repository root); remove any `Ignored Build Step` override in the dashboard
 
 ## 8. Left over
 

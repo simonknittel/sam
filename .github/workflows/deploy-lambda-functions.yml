@@ -8,6 +8,8 @@ on:
       - .github/workflows/deploy-lambda-functions.yml
       - .github/workflows/build-lambda-functions.yml
       - pnpm-monorepo/**
+      # The Next.js app deploys to Vercel, not to Lambda
+      - "!pnpm-monorepo/apps/app/**"
   workflow_dispatch:
     inputs:
       environment:

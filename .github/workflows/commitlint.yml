@@ -14,12 +14,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+        with:
+          version: 11.8.0
+
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version-file: "app/.nvmrc"
-
-      - name: Install commitlint
-        run: npm install --global @commitlint/cli @commitlint/config-conventional
+          node-version-file: "pnpm-monorepo/.nvmrc"
 
       - name: Run commitlint
-        run: npx commitlint --from ${{ github.event.pull_request.head.sha }}~${{ github.event.pull_request.commits }} --to ${{ github.event.pull_request.head.sha }} --verbose
+        run: pnpm --package @commitlint/cli --package @commitlint/config-conventional dlx commitlint --from ${{ github.event.pull_request.head.sha }}~${{ github.event.pull_request.commits }} --to ${{ github.event.pull_request.head.sha }} --verbose

@@ -6,11 +6,14 @@ set -e
 # Make sure the node user can write to the node_modules directory which is mounted as named volume (see docker-compose.yml)
 sudo chown node:node node_modules
 
-npm ci
+# Use the pnpm version pinned via `packageManager` in pnpm-monorepo/package.json
+sudo corepack enable
+
+pnpm install
 
 # After a `git clone` the `.env` won't exist. When you start the container from an existing local project, the `.env` may already exist.
 if [ -e .env ]; then
-	npx prisma migrate dev
+	pnpm exec prisma migrate dev
 else
 	echo "Skipping database migration due to missing .env file"
 fi

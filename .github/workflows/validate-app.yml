@@ -7,13 +7,17 @@ on:
       - develop
     paths:
       - .github/workflows/validate-app.yml
-      - app/**
+      - pnpm-monorepo/apps/app/**
+      - pnpm-monorepo/pnpm-lock.yaml
+      - pnpm-monorepo/pnpm-workspace.yaml
   push:
     branches:
       - develop
     paths:
       - .github/workflows/validate-app.yml
-      - app/**
+      - pnpm-monorepo/apps/app/**
+      - pnpm-monorepo/pnpm-lock.yaml
+      - pnpm-monorepo/pnpm-workspace.yaml
 
 jobs:
   lint:
@@ -22,28 +26,27 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+        with:
+          version: 11.8.0
+
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version-file: "app/.nvmrc"
+          node-version-file: "pnpm-monorepo/.nvmrc"
+          cache: "pnpm"
+          cache-dependency-path: "pnpm-monorepo/pnpm-lock.yaml"
 
-      - name: npm audit guard
-        run: npm audit
-        working-directory: app
-
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        id: node-modules-cache
-        with:
-          path: app/node_modules
-          key: ${{ runner.os }}-${{ hashFiles('app/.nvmrc', 'app/package-lock.json', 'app/prisma/**/*.prisma') }}
+      - name: pnpm audit guard
+        run: pnpm audit
+        working-directory: pnpm-monorepo
 
       - name: Install dependencies
-        run: npm ci
-        working-directory: app
-        if: steps.node-modules-cache.outputs.cache-hit != 'true'
+        run: pnpm install --filter @sam-monorepo/app
+        working-directory: pnpm-monorepo
 
       - name: Lint
-        run: npm run lint
-        working-directory: app
+        run: pnpm --filter @sam-monorepo/app run lint
+        working-directory: pnpm-monorepo
         continue-on-error: true
         env:
           SKIP_VALIDATION: "1"
@@ -54,28 +57,27 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+        with:
+          version: 11.8.0
+
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version-file: "app/.nvmrc"
+          node-version-file: "pnpm-monorepo/.nvmrc"
+          cache: "pnpm"
+          cache-dependency-path: "pnpm-monorepo/pnpm-lock.yaml"
 
-      - name: npm audit guard
-        run: npm audit
-        working-directory: app
-
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        id: node-modules-cache
-        with:
-          path: app/node_modules
-          key: ${{ runner.os }}-${{ hashFiles('app/.nvmrc', 'app/package-lock.json', 'app/prisma/**/*.prisma') }}
+      - name: pnpm audit guard
+        run: pnpm audit
+        working-directory: pnpm-monorepo
 
       - name: Install dependencies
-        run: npm ci
-        working-directory: app
-        if: steps.node-modules-cache.outputs.cache-hit != 'true'
+        run: pnpm install --filter @sam-monorepo/app
+        working-directory: pnpm-monorepo
 
       - name: Prettier
-        run: npx prettier --check .
-        working-directory: app
+        run: pnpm --filter @sam-monorepo/app exec prettier --check .
+        working-directory: pnpm-monorepo
 
   test:
     runs-on: ubuntu-24.04
@@ -83,25 +85,24 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+        with:
+          version: 11.8.0
+
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version-file: "app/.nvmrc"
+          node-version-file: "pnpm-monorepo/.nvmrc"
+          cache: "pnpm"
+          cache-dependency-path: "pnpm-monorepo/pnpm-lock.yaml"
 
-      - name: npm audit guard
-        run: npm audit
-        working-directory: app
-
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        id: node-modules-cache
-        with:
-          path: app/node_modules
-          key: ${{ runner.os }}-${{ hashFiles('app/.nvmrc', 'app/package-lock.json', 'app/prisma/**/*.prisma') }}
+      - name: pnpm audit guard
+        run: pnpm audit
+        working-directory: pnpm-monorepo
 
       - name: Install dependencies
-        run: npm ci
-        working-directory: app
-        if: steps.node-modules-cache.outputs.cache-hit != 'true'
+        run: pnpm install --filter @sam-monorepo/app
+        working-directory: pnpm-monorepo
 
       - name: Test
-        run: npm run test
-        working-directory: app
+        run: pnpm --filter @sam-monorepo/app run test
+        working-directory: pnpm-monorepo

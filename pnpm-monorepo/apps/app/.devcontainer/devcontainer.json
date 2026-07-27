@@ -7,7 +7,7 @@
   "dockerComposeFile": "docker-compose.yml",
   "service": "devcontainer",
   // We mount the whole project directory but only want to work on the current subdirectory (see docker-compose.yml)
-  "workspaceFolder": "/workspace/${localWorkspaceFolderBasename}",
+  "workspaceFolder": "/workspace/pnpm-monorepo/apps/app",
   "customizations": {
     "vscode": {
       "extensions": [

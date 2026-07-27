@@ -4,9 +4,9 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "npm run lint",
-      "type": "npm",
-      "script": "lint",
+      "label": "pnpm run lint",
+      "type": "shell",
+      "command": "pnpm run lint",
       "problemMatcher": ["$eslint-stylish"]
     }
   ]
