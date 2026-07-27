@@ -156,14 +156,15 @@ export const LogAnalyzer = ({ className }: Props) => {
                 PATTERNS[rawMatch.patternKey as keyof typeof PATTERNS];
               if (!pattern) continue;
 
-              const date = new Date(rawMatch.isoDate);
-              const entry = pattern.matchMapping(date, rawMatch.groups);
-              if (newEntries.has(entry.key)) continue;
+              const key = `${rawMatch.patternKey}_${rawMatch.fullMatch}`;
+              if (newEntries.has(key)) continue;
 
-              newEntries.set(entry.key, {
-                ...entry,
-                isoDate: date,
+              newEntries.set(key, {
+                key,
+                type: rawMatch.patternKey as EntryType,
+                isoDate: new Date(rawMatch.isoDate),
                 isNew,
+                message: pattern.renderMessage?.(rawMatch.groups) ?? null,
               });
             }
 

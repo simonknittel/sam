@@ -1,6 +1,7 @@
 export interface RawMatch {
   readonly patternKey: string;
   readonly isoDate: string;
+  readonly fullMatch: string;
   readonly groups: Record<string, string>;
 }
 

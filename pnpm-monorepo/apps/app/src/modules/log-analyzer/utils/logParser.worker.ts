@@ -38,6 +38,7 @@ self.onmessage = (event: MessageEvent<ParseMessage>) => {
         matches.push({
           patternKey: key,
           isoDate: match.groups.isoDate,
+          fullMatch: match[0],
           groups: match.groups,
         });
       }
