@@ -58,6 +58,11 @@ export const env = createEnv({
     OTEL_EXPORTER_OTLP_ENDPOINT: z.string().optional(),
     /** Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
     PUSHER_CHANNELS_APP_SECRET: z.string().default("app-secret"),
+    /**
+     * Shared secret with the wiki collab server (apps/collab). Realtime
+     * collaboration is disabled if unset.
+     */
+    COLLAB_JWT_SECRET: z.string().optional(),
   },
 
   /*
@@ -82,6 +87,12 @@ export const env = createEnv({
     NEXT_PUBLIC_PUSHER_CHANNELS_PORT: z.coerce.number().default(6001),
     /** Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
     NEXT_PUBLIC_PUSHER_CHANNELS_SECURE_PORT: z.coerce.number().optional(),
+    /**
+     * WebSocket URL of the wiki collab server (apps/collab), e.g.
+     * wss://sam-collab.example.com. Realtime collaboration is disabled if
+     * unset.
+     */
+    NEXT_PUBLIC_COLLAB_URL: z.url({ protocol: /^wss?$/ }).optional(),
     /** npx web-push generate-vapid-keys */
     NEXT_PUBLIC_VAPID_KEY: z.string().optional(),
     NEXT_PUBLIC_PLAUSIBLE_ENDPOINT: z.url().optional(),
@@ -163,6 +174,8 @@ export const env = createEnv({
     NEXT_PUBLIC_PUSHER_CHANNELS_APP_KEY:
       process.env.NEXT_PUBLIC_PUSHER_CHANNELS_APP_KEY,
     PUSHER_CHANNELS_APP_SECRET: process.env.PUSHER_CHANNELS_APP_SECRET,
+    COLLAB_JWT_SECRET: process.env.COLLAB_JWT_SECRET,
+    NEXT_PUBLIC_COLLAB_URL: process.env.NEXT_PUBLIC_COLLAB_URL,
     NEXT_PUBLIC_PUSHER_CHANNELS_HOST:
       process.env.NEXT_PUBLIC_PUSHER_CHANNELS_HOST,
     NEXT_PUBLIC_PUSHER_CHANNELS_PORT:

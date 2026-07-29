@@ -17,3 +17,19 @@ services:
     ports:
       - 6001:6001
       - 9601:9601
+
+  # Wiki realtime collaboration backend (see docs/setup-local-machine.md for
+  # the app-side environment variables). Rebuild after changing
+  # pnpm-monorepo/apps/collab: `docker compose build sam-collab`
+  sam-collab:
+    build:
+      context: ./pnpm-monorepo
+      dockerfile: apps/collab/Dockerfile
+    restart: no
+    depends_on:
+      - psql
+    environment:
+      DATABASE_URL: postgresql://postgres:admin@psql:5432/db
+      COLLAB_JWT_SECRET: insecure-dev-secret
+    ports:
+      - 5210:5210
