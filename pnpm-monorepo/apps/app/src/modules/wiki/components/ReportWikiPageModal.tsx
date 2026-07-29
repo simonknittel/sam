@@ -27,9 +27,9 @@ export const ReportWikiPageModal = ({ className, pageId, title }: Props) => {
       <Button2
         type="button"
         onClick={() => setIsOpen(true)}
-        variant={Button2Variant.Secondary}
+        variant={Button2Variant.IconOnly}
         className={className}
-        title="Seite melden"
+        tooltip="Seite melden"
       >
         <FaFlag />
       </Button2>

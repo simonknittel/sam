@@ -74,7 +74,7 @@ export const TextFormatPicker = ({ editor }: Props) => {
           className={clsx(
             "flex size-8 cursor-pointer items-center justify-center rounded-secondary hover:bg-neutral-800",
             {
-              "bg-neutral-800 text-interaction-300":
+              "bg-neutral-800 text-interaction-500":
                 activeFormats?.includes(name),
               "text-neutral-300": !activeFormats?.includes(name),
             },

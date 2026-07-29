@@ -19,6 +19,7 @@ import type { Editor } from "@tiptap/react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import {
+  FaBan,
   FaCheck,
   FaDownload,
   FaExternalLinkAlt,
@@ -26,6 +27,7 @@ import {
   FaUnlink,
 } from "react-icons/fa";
 import { MdDragIndicator } from "react-icons/md";
+import { getWikiNodeTypeLabel } from "../utils/getWikiNodeTypeLabel";
 import { ALIGNMENT_OPTIONS } from "./toolbar/AlignmentPicker";
 import { CalloutColorSwatches } from "./toolbar/CalloutColorSwatches";
 import {
@@ -135,6 +137,7 @@ type MenuState =
     } & MenuTarget)
   | ({
       readonly kind: "block";
+      readonly typeName: string;
       readonly position: number;
       readonly nodeSize: number;
     } & MenuTarget)
@@ -175,6 +178,23 @@ const calloutMenu = (
   color: (node.attrs.color ?? "blue") as WikiCalloutColor,
   ...target,
 });
+
+/** Badge label naming the menu's target, e.g. "Tabelle" or "Überschrift 2" */
+const menuLabel = (menu: NonNullable<MenuState>): string => {
+  switch (menu.kind) {
+    case "link":
+      return "Link";
+    case "callout":
+      return getWikiNodeTypeLabel("wikiCallout");
+    case "text":
+      return getWikiNodeTypeLabel(
+        menu.headingLevel === null ? "paragraph" : "heading",
+        menu.headingLevel,
+      );
+    default:
+      return getWikiNodeTypeLabel(menu.typeName);
+  }
+};
 
 interface Props {
   readonly editor: Editor | null;
@@ -284,6 +304,7 @@ export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
         if (!resolved) return null;
         return {
           kind: "block",
+          typeName: resolved.node.type.name,
           position: resolved.position,
           nodeSize: resolved.node.nodeSize,
           ...target,
@@ -612,209 +633,219 @@ export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
       style={floatingStyles}
       className="pointer-events-auto z-20 py-2"
     >
-      <div className="flex items-center gap-1 rounded-secondary border border-neutral-700 bg-neutral-900 p-1 shadow-lg">
-        {menu.kind !== "link" && (
-          <>
-            <span
-              draggable
-              title="Block verschieben"
-              onDragStart={startNodeDrag}
-              onDragEnd={endNodeDrag}
-              className="flex size-8 cursor-grab items-center justify-center rounded-secondary text-neutral-500 hover:bg-neutral-800 hover:text-neutral-200 active:cursor-grabbing"
-            >
-              <MdDragIndicator className="size-4" />
-            </span>
-            <ToolbarDivider />
-          </>
-        )}
+      <div className="flex flex-col items-start gap-1">
+        <span className="rounded-secondary border border-neutral-700 bg-neutral-900 px-2 py-0.5 text-xs whitespace-nowrap text-neutral-300 shadow-lg">
+          {menuLabel(menu)}
+        </span>
 
-        {menu.kind === "node" && (
-          <>
-            {URL_NODE_TYPES.includes(menu.typeName) &&
-              urlForm(menu.src, saveNodeUrl)}
-
-            {menu.typeName === "wikiAttachment" && (
-              <ToolbarButton
-                title="Herunterladen"
-                isActive={false}
-                onClick={() =>
-                  openInNewTab(
-                    `/api/wiki/attachment/${encodeURIComponent(menu.uploadId)}`,
-                  )
-                }
+        <div className="flex items-center gap-1 rounded-secondary border border-neutral-700 bg-neutral-900 p-1 shadow-lg">
+          {menu.kind !== "link" && (
+            <>
+              <span
+                draggable
+                title="Block verschieben"
+                onDragStart={startNodeDrag}
+                onDragEnd={endNodeDrag}
+                className="flex size-8 cursor-grab items-center justify-center rounded-secondary text-neutral-500 hover:bg-neutral-800 hover:text-neutral-200 active:cursor-grabbing"
               >
-                <FaDownload />
-              </ToolbarButton>
-            )}
+                <MdDragIndicator className="size-4" />
+              </span>
 
-            {menu.typeName === "wikiPageLink" && (
-              <ToolbarButton
-                title="Seite öffnen"
-                isActive={false}
-                onClick={() =>
-                  openInNewTab(`/app/wiki/${encodeURIComponent(menu.pageId)}`)
-                }
-              >
-                <FaExternalLinkAlt />
-              </ToolbarButton>
-            )}
+              <ToolbarDivider />
+            </>
+          )}
 
-            {menu.typeName === "wikiCitizenMention" && (
-              <ToolbarButton
-                title="Spynet öffnen"
-                isActive={false}
-                onClick={() =>
-                  openInNewTab(
-                    `/app/spynet/citizen/${encodeURIComponent(menu.citizenId)}`,
-                  )
-                }
-              >
-                <FaExternalLinkAlt />
-              </ToolbarButton>
-            )}
+          {menu.kind === "node" && (
+            <>
+              {URL_NODE_TYPES.includes(menu.typeName) &&
+                urlForm(menu.src, saveNodeUrl)}
 
-            {URL_NODE_TYPES.includes(menu.typeName) && menu.src && (
-              <ToolbarButton
-                title="In neuem Tab öffnen"
-                isActive={false}
-                onClick={() => openInNewTab(menu.src)}
-              >
-                <FaExternalLinkAlt />
-              </ToolbarButton>
-            )}
-
-            {(WIKI_RESIZABLE_NODE_TYPES as readonly string[]).includes(
-              menu.typeName,
-            ) &&
-              ALIGNMENT_OPTIONS.map(({ value, title, icon: Icon }) => (
+              {menu.typeName === "wikiAttachment" && (
                 <ToolbarButton
-                  key={value}
+                  title="Herunterladen"
+                  isActive={false}
+                  onClick={() =>
+                    openInNewTab(
+                      `/api/wiki/attachment/${encodeURIComponent(menu.uploadId)}`,
+                    )
+                  }
+                >
+                  <FaDownload />
+                </ToolbarButton>
+              )}
+
+              {menu.typeName === "wikiPageLink" && (
+                <ToolbarButton
+                  title="Seite öffnen"
+                  isActive={false}
+                  onClick={() =>
+                    openInNewTab(`/app/wiki/${encodeURIComponent(menu.pageId)}`)
+                  }
+                >
+                  <FaExternalLinkAlt />
+                </ToolbarButton>
+              )}
+
+              {menu.typeName === "wikiCitizenMention" && (
+                <ToolbarButton
+                  title="Spynet öffnen"
+                  isActive={false}
+                  onClick={() =>
+                    openInNewTab(
+                      `/app/spynet/citizen/${encodeURIComponent(menu.citizenId)}`,
+                    )
+                  }
+                >
+                  <FaExternalLinkAlt />
+                </ToolbarButton>
+              )}
+
+              {URL_NODE_TYPES.includes(menu.typeName) && menu.src && (
+                <ToolbarButton
+                  title="In neuem Tab öffnen"
+                  isActive={false}
+                  onClick={() => openInNewTab(menu.src)}
+                >
+                  <FaExternalLinkAlt />
+                </ToolbarButton>
+              )}
+
+              {(WIKI_RESIZABLE_NODE_TYPES as readonly string[]).includes(
+                menu.typeName,
+              ) &&
+                ALIGNMENT_OPTIONS.map(({ value, title, icon: Icon }) => (
+                  <ToolbarButton
+                    key={value}
+                    title={title}
+                    isActive={menu.align === value}
+                    onClick={() => setNodeAlignment(value)}
+                  >
+                    <Icon />
+                  </ToolbarButton>
+                ))}
+
+              <ToolbarDivider />
+
+              <ToolbarButton
+                title="Löschen"
+                isActive={false}
+                onClick={deleteNode}
+              >
+                <FaTrash />
+              </ToolbarButton>
+            </>
+          )}
+
+          {menu.kind === "text" && (
+            <>
+              {([1, 2, 3] as const).map((level) => (
+                <ToolbarButton
+                  key={level}
+                  title={`Überschrift ${level}`}
+                  isActive={menu.headingLevel === level}
+                  onClick={() => toggleTextHeading(level)}
+                >
+                  <span className="text-xs font-bold">H{level}</span>
+                </ToolbarButton>
+              ))}
+
+              <ToolbarDivider />
+
+              {TEXT_FORMAT_OPTIONS.map(({ name, title, icon: Icon }) => (
+                <ToolbarButton
+                  key={name}
                   title={title}
-                  isActive={menu.align === value}
-                  onClick={() => setNodeAlignment(value)}
+                  isActive={menu.activeMarks.includes(name)}
+                  onClick={() => toggleTextMark(name)}
                 >
                   <Icon />
                 </ToolbarButton>
               ))}
 
-            <ToolbarButton
-              title="Löschen"
-              isActive={false}
-              onClick={deleteNode}
-            >
-              <FaTrash />
-            </ToolbarButton>
-          </>
-        )}
+              <ToolbarDivider />
 
-        {menu.kind === "text" && (
-          <>
-            {([1, 2, 3] as const).map((level) => (
+              {ALIGNMENT_OPTIONS.map(({ value, title, icon: Icon }) => (
+                <ToolbarButton
+                  key={value}
+                  title={title}
+                  isActive={menu.textAlign === value}
+                  onClick={() => setTextAlignment(value)}
+                >
+                  <Icon />
+                </ToolbarButton>
+              ))}
+
+              <ToolbarDivider />
+
               <ToolbarButton
-                key={level}
-                title={`Überschrift ${level}`}
-                isActive={menu.headingLevel === level}
-                onClick={() => toggleTextHeading(level)}
-              >
-                <span className="text-xs font-bold">H{level}</span>
-              </ToolbarButton>
-            ))}
-
-            <ToolbarDivider />
-
-            {TEXT_FORMAT_OPTIONS.map(({ name, title, icon: Icon }) => (
-              <ToolbarButton
-                key={name}
-                title={title}
-                isActive={menu.activeMarks.includes(name)}
-                onClick={() => toggleTextMark(name)}
-              >
-                <Icon />
-              </ToolbarButton>
-            ))}
-
-            <ToolbarDivider />
-
-            {ALIGNMENT_OPTIONS.map(({ value, title, icon: Icon }) => (
-              <ToolbarButton
-                key={value}
-                title={title}
-                isActive={menu.textAlign === value}
-                onClick={() => setTextAlignment(value)}
-              >
-                <Icon />
-              </ToolbarButton>
-            ))}
-
-            <ToolbarDivider />
-
-            <ToolbarButton
-              title="Block löschen"
-              isActive={false}
-              onClick={deleteTextBlock}
-            >
-              <FaTrash />
-            </ToolbarButton>
-          </>
-        )}
-
-        {menu.kind === "link" && (
-          <>
-            {urlForm(menu.href, saveLink)}
-            {menu.href && (
-              <ToolbarButton
-                title="In neuem Tab öffnen"
+                title="Block löschen"
                 isActive={false}
-                onClick={() => openInNewTab(menu.href)}
+                onClick={deleteTextBlock}
               >
-                <FaExternalLinkAlt />
+                <FaTrash />
               </ToolbarButton>
-            )}
-            <ToolbarButton
-              title="Link entfernen"
-              isActive={false}
-              onClick={removeLink}
-            >
-              <FaUnlink />
-            </ToolbarButton>
-          </>
-        )}
+            </>
+          )}
 
-        {menu.kind === "callout" && (
-          <>
-            <CalloutColorSwatches
-              activeColor={menu.color}
-              onSelect={setCalloutColor}
-            />
-            <button
-              type="button"
-              onClick={removeCallout}
-              className="ml-1 cursor-pointer px-1 text-xs text-neutral-400 hover:text-neutral-200"
-            >
-              Entfernen
-            </button>
+          {menu.kind === "link" && (
+            <>
+              {urlForm(menu.href, saveLink)}
+              {menu.href && (
+                <ToolbarButton
+                  title="In neuem Tab öffnen"
+                  isActive={false}
+                  onClick={() => openInNewTab(menu.href)}
+                >
+                  <FaExternalLinkAlt />
+                </ToolbarButton>
+              )}
 
-            <ToolbarDivider />
+              <ToolbarButton
+                title="Link entfernen"
+                isActive={false}
+                onClick={removeLink}
+              >
+                <FaUnlink />
+              </ToolbarButton>
+            </>
+          )}
 
+          {menu.kind === "callout" && (
+            <>
+              <CalloutColorSwatches
+                activeColor={menu.color}
+                onSelect={setCalloutColor}
+              />
+              <ToolbarButton
+                title="Entfernen"
+                isActive={false}
+                onClick={removeCallout}
+              >
+                <FaBan />
+              </ToolbarButton>
+
+              <ToolbarDivider />
+
+              <ToolbarButton
+                title="Block löschen"
+                isActive={false}
+                onClick={deleteCallout}
+              >
+                <FaTrash />
+              </ToolbarButton>
+            </>
+          )}
+
+          {menu.kind === "block" && (
             <ToolbarButton
               title="Block löschen"
               isActive={false}
-              onClick={deleteCallout}
-            >
+              onClick={deleteBlock}
+              >
               <FaTrash />
             </ToolbarButton>
-          </>
-        )}
-
-        {menu.kind === "block" && (
-          <ToolbarButton
-            title="Block löschen"
-            isActive={false}
-            onClick={deleteBlock}
-          >
-            <FaTrash />
-          </ToolbarButton>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

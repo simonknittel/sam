@@ -25,9 +25,9 @@ export const WikiPageFavoriteButton = ({
 
       <Button2
         type="submit"
-        variant={Button2Variant.Secondary}
+        variant={Button2Variant.IconOnly}
         disabled={isPending}
-        title={isFavorite ? "Favorit entfernen" : "Als Favorit speichern"}
+        tooltip={isFavorite ? "Favorit entfernen" : "Als Favorit speichern"}
       >
         {isPending ? (
           <AsciiSpinner />

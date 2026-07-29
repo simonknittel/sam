@@ -37,7 +37,7 @@ const CreateSubpageButton = ({ pageId }: CreateSubpageButtonProps) => {
       type="button"
       onClick={() => openCreateWikiPageModal(pageId)}
       title="Neue Unterseite erstellen"
-      className="p-1 text-neutral-500 cursor-pointer hover:text-neutral-200"
+      className="p-1 text-neutral-500 cursor-pointer hover:text-interaction-500 focus-visible:text-interaction-500"
     >
       <FaPlus className="size-3" />
     </button>
@@ -86,7 +86,7 @@ const TreeItem = ({ node, depth }: TreeItemProps) => {
           <Link
             href={`/app/wiki/${node.id}/${node.slug}`}
             className={clsx(
-              "block flex-1 truncate py-1 pr-2 hover:text-interaction-300",
+              "block flex-1 truncate py-1 pr-2 hover:text-interaction-500",
               {
                 "text-neutral-50": isActive,
                 "text-neutral-300": !isActive,

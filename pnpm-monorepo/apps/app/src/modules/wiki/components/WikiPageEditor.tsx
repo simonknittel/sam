@@ -108,9 +108,9 @@ export const WikiPageEditor = ({
     immediatelyRender: false,
     editorProps: {
       attributes: {
-        /** pl-16 is the gutter column (WikiGutter) */
+        /** pl-12 is the gutter column (WikiGutter) */
         class:
-          "prose prose-invert max-w-none focus:outline-hidden min-h-[50vh] pl-16",
+          "prose prose-invert max-w-none focus:outline-hidden min-h-[50vh] pl-12",
       },
     },
     onUpdate: ({ editor }) => {

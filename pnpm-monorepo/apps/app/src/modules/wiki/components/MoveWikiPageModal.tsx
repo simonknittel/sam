@@ -40,9 +40,9 @@ export const MoveWikiPageModal = ({
       <Button2
         type="button"
         onClick={() => setIsOpen(true)}
-        variant={Button2Variant.Secondary}
+        variant={Button2Variant.IconOnly}
         className={className}
-        title="Seite verschieben"
+        tooltip="Seite verschieben"
       >
         <FaFolderOpen />
       </Button2>

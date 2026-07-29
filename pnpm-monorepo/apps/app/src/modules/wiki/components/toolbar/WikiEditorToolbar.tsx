@@ -116,6 +116,7 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
       >
         <TextFormatPicker editor={editor} />
       </ToolbarPopover>
+
       <ToolbarPopover
         title="Textmarker"
         isActive={active?.highlight ?? false}
@@ -153,6 +154,7 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
       >
         <FaQuoteRight />
       </ToolbarButton>
+
       <ToolbarButton
         title="Codeblock"
         isActive={active?.codeBlock ?? false}
@@ -160,6 +162,7 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
       >
         <FaCode />
       </ToolbarButton>
+
       <ToolbarButton
         title="Ausklappbarer Abschnitt"
         isActive={active?.details ?? false}
@@ -174,6 +177,7 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
       >
         <FaCaretSquareDown />
       </ToolbarButton>
+
       <ToolbarPopover
         title="Hervorgehobener Block"
         isActive={active?.callout ?? false}
@@ -181,6 +185,7 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
       >
         <CalloutPicker editor={editor} />
       </ToolbarPopover>
+
       <ToolbarPopover
         title="Raster einfügen"
         isActive={active?.grid ?? false}
@@ -188,6 +193,7 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
       >
         <GridPicker editor={editor} />
       </ToolbarPopover>
+
       <ToolbarButton
         title="Tabelle einfügen"
         isActive={active?.table ?? false}
@@ -201,6 +207,7 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
       >
         <FaTable />
       </ToolbarButton>
+
       <ToolbarButton
         title="Trennlinie"
         isActive={false}
@@ -218,6 +225,7 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
       >
         <FaImage />
       </ToolbarButton>
+
       <ToolbarButton
         title="Dateianhang einfügen"
         isActive={active?.attachment ?? false}
@@ -225,6 +233,7 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
       >
         <FaPaperclip />
       </ToolbarButton>
+
       <ToolbarPopover
         title="Einbetten"
         isActive={active?.embed ?? false}
@@ -232,6 +241,7 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
       >
         <EmbedPicker editor={editor} />
       </ToolbarPopover>
+
       <ToolbarPopover
         title="Website einbetten (iframe)"
         isActive={active?.iframe ?? false}
@@ -249,6 +259,7 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
       >
         <FaUndo />
       </ToolbarButton>
+
       <ToolbarButton
         title="Wiederholen"
         isActive={false}

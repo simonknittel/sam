@@ -3,6 +3,7 @@
 import { usePopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
 import { WIKI_HIGHLIGHT_COLORS } from "@sam-monorepo/wiki-editor";
 import type { Editor } from "@tiptap/react";
+import { FaBan } from "react-icons/fa";
 
 interface Props {
   readonly editor: Editor | null;
@@ -33,13 +34,14 @@ export const HighlightPicker = ({ editor }: Props) => {
 
       <button
         type="button"
+        title="Entfernen"
         onClick={() => {
           editor?.chain().focus().unsetHighlight().run();
           closePopover();
         }}
-        className="ml-2 cursor-pointer text-xs text-neutral-400 hover:text-neutral-200"
+        className="ml-2 flex size-8 cursor-pointer items-center justify-center rounded-secondary text-neutral-300 hover:bg-neutral-800"
       >
-        Entfernen
+        <FaBan />
       </button>
     </div>
   );

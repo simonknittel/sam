@@ -255,9 +255,9 @@ const ConnectedEditor = ({
     immediatelyRender: false,
     editorProps: {
       attributes: {
-        /** pl-16 is the gutter column (WikiGutter), editors only */
+        /** pl-12 is the gutter column (WikiGutter), editors only */
         class: clsx("prose prose-invert max-w-none focus:outline-hidden", {
-          "min-h-[50vh] pl-16": canEdit,
+          "min-h-[50vh] pl-12": canEdit,
         }),
       },
     },

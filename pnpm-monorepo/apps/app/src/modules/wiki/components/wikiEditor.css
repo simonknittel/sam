@@ -193,7 +193,6 @@
 .prose [data-wiki-callout] {
   --wiki-callout-color: var(--color-blue-500);
   border: 1px solid var(--wiki-callout-color);
-  border-left-width: 4px;
   border-radius: var(--radius-secondary);
   background-color: color-mix(
     in srgb,

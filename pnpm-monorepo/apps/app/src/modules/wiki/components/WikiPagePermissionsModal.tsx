@@ -72,9 +72,9 @@ export const WikiPagePermissionsModal = ({
       <Button2
         type="button"
         onClick={() => setIsOpen(true)}
-        variant={Button2Variant.Secondary}
+        variant={Button2Variant.IconOnly}
         className={className}
-        title="Berechtigungen bearbeiten"
+        tooltip="Berechtigungen bearbeiten"
       >
         <FaLock />
       </Button2>

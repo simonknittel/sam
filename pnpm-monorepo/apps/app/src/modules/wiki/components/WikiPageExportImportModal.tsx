@@ -7,7 +7,7 @@ import Note from "@/modules/common/components/Note";
 import { unstable_rethrow } from "next/navigation";
 import { useId, useState, useTransition } from "react";
 import toast from "react-hot-toast";
-import { FaFileImport } from "react-icons/fa";
+import { FaFileExport, FaFileImport } from "react-icons/fa";
 import { importWikiPageContent } from "../actions/importWikiPageContent";
 
 const MAX_IMPORT_FILE_BYTES = 2_000_000;
@@ -19,12 +19,13 @@ interface Props {
 }
 
 /**
- * JSON import for wiki admins (see PLAN-wiki.md §9): replaces the page's
- * content with an uploaded Tiptap JSON file. The file is read client-side
- * and sent as text — the server action validates it against the editor
- * schema and the iframe allowlist.
+ * JSON export and import for wiki admins (see PLAN-wiki.md §9) behind a
+ * single toolbar button. The export downloads the page's content as Tiptap
+ * JSON; the import replaces it with an uploaded file. The file is read
+ * client-side and sent as text — the server action validates it against
+ * the editor schema and the iframe allowlist.
  */
-export const ImportWikiPageContentModal = ({
+export const WikiPageExportImportModal = ({
   className,
   pageId,
   title,
@@ -73,19 +74,35 @@ export const ImportWikiPageContentModal = ({
       <Button2
         type="button"
         onClick={() => setIsOpen(true)}
-        variant={Button2Variant.Secondary}
+        variant={Button2Variant.IconOnly}
         className={className}
-        title="JSON importieren"
+        tooltip="Exportieren / Importieren"
       >
-        <FaFileImport />
+        <FaFileExport />
       </Button2>
 
       <Modal
         isOpen={isOpen}
         onRequestClose={() => setIsOpen(false)}
         className="w-120"
-        heading={<h2>JSON importieren</h2>}
+        heading={<h2>Exportieren / Importieren</h2>}
       >
+        <p>
+          Exportiert den Inhalt der Seite &quot;{title}&quot; als Tiptap-JSON
+          (z.B. zum Import in eine andere Seite).
+        </p>
+
+        <Button2
+          as="a"
+          href={`/api/wiki/${pageId}/export`}
+          className="mt-4 ml-auto"
+        >
+          <FaFileExport />
+          Exportieren
+        </Button2>
+
+        <hr className="my-4 border-white/5" />
+
         <form onSubmit={handleSubmit}>
           <p>
             Ersetzt den Inhalt der Seite &quot;{title}&quot; vollständig durch

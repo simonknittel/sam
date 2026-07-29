@@ -94,7 +94,7 @@ export const AlignmentPicker = ({ editor }: Props) => {
           className={clsx(
             "flex size-8 cursor-pointer items-center justify-center rounded-secondary hover:bg-neutral-800",
             {
-              "bg-neutral-800 text-interaction-300": activeAlignment === value,
+              "bg-neutral-800 text-interaction-500": activeAlignment === value,
               "text-neutral-300": activeAlignment !== value,
             },
           )}

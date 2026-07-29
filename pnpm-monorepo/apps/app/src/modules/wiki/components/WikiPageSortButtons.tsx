@@ -47,7 +47,7 @@ export const WikiPageSortButtons = ({ className, pageId }: Props) => {
         onClick={() => move("up")}
         disabled={isPending}
         title="In der Reihenfolge nach oben verschieben"
-        className="p-1 text-neutral-500 cursor-pointer hover:text-neutral-200 disabled:opacity-50"
+        className="p-1 text-neutral-500 cursor-pointer hover:text-interaction-500 focus-visible:text-interaction-500 disabled:opacity-50"
       >
         <FaArrowUp className="size-3" />
       </button>
@@ -56,7 +56,7 @@ export const WikiPageSortButtons = ({ className, pageId }: Props) => {
         onClick={() => move("down")}
         disabled={isPending}
         title="In der Reihenfolge nach unten verschieben"
-        className="p-1 text-neutral-500 cursor-pointer hover:text-neutral-200 disabled:opacity-50"
+        className="p-1 text-neutral-500 cursor-pointer hover:text-interaction-500 focus-visible:text-interaction-500 disabled:opacity-50"
       >
         <FaArrowDown className="size-3" />
       </button>

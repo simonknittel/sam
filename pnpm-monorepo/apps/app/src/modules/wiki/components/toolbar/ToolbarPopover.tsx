@@ -20,7 +20,7 @@ export const ToolbarPopover = ({ title, isActive, icon, children }: Props) => {
           className={clsx(
             "flex size-8 cursor-pointer items-center justify-center rounded-secondary hover:bg-neutral-800",
             {
-              "bg-neutral-800 text-interaction-300": isActive,
+              "bg-neutral-800 text-interaction-500": isActive,
               "text-neutral-300": !isActive,
             },
           )}

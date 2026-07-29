@@ -30,11 +30,7 @@ export {
   WIKI_GRID_COLUMN_COUNTS,
   type WikiGridColumnCount,
 } from "./wikiGridNodes.js";
-export {
-  createWikiHeadingIdAssigner,
-  getWikiHeadingEntries,
-  type WikiHeadingEntry,
-} from "./wikiHeadingIds.js";
+export { createWikiHeadingIdAssigner } from "./wikiHeadingIds.js";
 export { WIKI_HIGHLIGHT_COLORS } from "./wikiHighlightColors.js";
 export {
   collectWikiIframeSrcs,

@@ -4,7 +4,6 @@ import {
   extractWikiPageText,
 } from "@sam-monorepo/wiki-editor";
 import { describe, expect, test } from "vitest";
-import { buildWikiPageToc } from "./buildWikiPageToc";
 
 const document = {
   type: "doc",
@@ -114,55 +113,19 @@ describe("collect mentioned citizen ids", () => {
   });
 });
 
-describe("build wiki page toc", () => {
-  test("collects headings with deduplicated slug ids", () => {
-    expect(buildWikiPageToc(document)).toEqual([
-      { id: "uebungsgefecht", text: "Übungsgefecht", level: 1 },
-      { id: "ablauf", text: "Ablauf", level: 2 },
-      { id: "ablauf-2", text: "Ablauf", level: 2 },
-    ]);
-  });
-
-  test("handles documents without headings", () => {
-    expect(buildWikiPageToc({ type: "doc", content: [] })).toEqual([]);
-  });
-
-  test("skips empty headings without shifting later anchor ids", () => {
-    const withEmptyHeadings = {
-      type: "doc",
-      content: [
-        {
-          type: "heading",
-          attrs: { level: 2 },
-          content: [{ type: "text", text: "Erster" }],
-        },
-        { type: "heading", attrs: { level: 2 } },
-        {
-          type: "heading",
-          attrs: { level: 2 },
-          content: [{ type: "text", text: "   " }],
-        },
-        {
-          type: "heading",
-          attrs: { level: 2 },
-          content: [{ type: "text", text: "Zweiter" }],
-        },
-      ],
-    };
-
-    expect(buildWikiPageToc(withEmptyHeadings)).toEqual([
-      { id: "erster", text: "Erster", level: 2 },
-      { id: "zweiter", text: "Zweiter", level: 2 },
-    ]);
-
-    /**
-     * The static renderer and the live editor walk EVERY heading and ask
-     * the shared assigner for an id — skipped headings get null (no id
-     * attribute), so the following ids stay aligned with the TOC entries.
-     */
+describe("wiki heading id assigner", () => {
+  /**
+   * The static renderer and the live editor walk EVERY heading and ask the
+   * shared assigner for an id — slugified, deduplicated with a numeric
+   * suffix, and empty/whitespace-only headings get null (no id attribute)
+   * without shifting later ids, so both renderers stay aligned.
+   */
+  test("slugifies, deduplicates and skips empty headings", () => {
     const nextHeadingId = createWikiHeadingIdAssigner();
     expect(
-      ["Erster", "", "   ", "Zweiter"].map((text) => nextHeadingId(text)),
-    ).toEqual(["erster", null, null, "zweiter"]);
+      ["Übungsgefecht", "Ablauf", "Ablauf", "", "   "].map((text) =>
+        nextHeadingId(text),
+      ),
+    ).toEqual(["uebungsgefecht", "ablauf", "ablauf-2", null, null]);
   });
 });

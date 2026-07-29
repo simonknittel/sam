@@ -26,14 +26,14 @@ interface HoveredBlock {
 }
 
 const BUTTON_CLASS_NAME =
-  "flex size-5 items-center justify-center rounded-secondary text-neutral-500 hover:bg-neutral-800 hover:text-neutral-200";
+  "flex size-5 items-center justify-center text-neutral-500 hover:text-interaction-500";
 
 /**
  * Keeps the buttons in the gutter column: the drag-handle plugin anchors
  * to the hovered node's DOM box, so for centered or resized blocks
  * (images, embeds) the handle would follow the block's left edge into the
  * page. This shifts it back to the editor's content-box left edge (the
- * pl-16 gutter). The editor element is resolved through the floating
+ * pl-12 gutter). The editor element is resolved through the floating
  * element — the plugin mounts its wrapper next to the ProseMirror root.
  */
 const alignWithGutter: Middleware = {
@@ -116,17 +116,6 @@ export const WikiGutter = ({ editor }: Props) => {
       .run();
   };
 
-  const deleteBlock = () => {
-    if (!block) return;
-    const node = editor.state.doc.nodeAt(block.pos);
-    if (!node) return;
-    editor
-      .chain()
-      .focus()
-      .deleteRange({ from: block.pos, to: block.pos + node.nodeSize })
-      .run();
-  };
-
   /**
    * While the dropdown is open the handle must neither follow the pointer
    * nor hide — the drag-handle plugin exposes a lock via transaction meta.
@@ -190,15 +179,6 @@ export const WikiGutter = ({ editor }: Props) => {
         >
           <BlockActions editor={editor} block={block} />
         </PopoverBaseUI>
-
-        <button
-          type="button"
-          title="Block löschen"
-          onClick={deleteBlock}
-          className={clsx(BUTTON_CLASS_NAME, "cursor-pointer")}
-        >
-          <FaTrash className="size-3" />
-        </button>
       </div>
     </DragHandle>
   );

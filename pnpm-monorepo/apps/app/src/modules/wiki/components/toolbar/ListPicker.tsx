@@ -58,7 +58,7 @@ export const ListPicker = ({ editor }: Props) => {
           className={clsx(
             "flex size-8 cursor-pointer items-center justify-center rounded-secondary hover:bg-neutral-800",
             {
-              "bg-neutral-800 text-interaction-300": activeList === name,
+              "bg-neutral-800 text-interaction-500": activeList === name,
               "text-neutral-300": activeList !== name,
             },
           )}

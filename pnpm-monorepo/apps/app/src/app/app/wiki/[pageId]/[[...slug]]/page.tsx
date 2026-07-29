@@ -9,15 +9,14 @@ import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/Suspe
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { renameWikiPage } from "@/modules/wiki/actions/renameWikiPage";
 import { DeleteWikiPageModal } from "@/modules/wiki/components/DeleteWikiPageModal";
-import { ImportWikiPageContentModal } from "@/modules/wiki/components/ImportWikiPageContentModal";
 import { MoveWikiPageModal } from "@/modules/wiki/components/MoveWikiPageModal";
 import { ReportWikiPageModal } from "@/modules/wiki/components/ReportWikiPageModal";
 import { WikiCollabEditor } from "@/modules/wiki/components/WikiCollabEditor";
 import { WikiPageEditor } from "@/modules/wiki/components/WikiPageEditor";
+import { WikiPageExportImportModal } from "@/modules/wiki/components/WikiPageExportImportModal";
 import { WikiPageFavoriteButton } from "@/modules/wiki/components/WikiPageFavoriteButton";
 import { WikiPagePermissionsModal } from "@/modules/wiki/components/WikiPagePermissionsModal";
 import { WikiPageStaticContent } from "@/modules/wiki/components/WikiPageStaticContent";
-import { WikiPageToc } from "@/modules/wiki/components/WikiPageToc";
 import { WikiSidebar } from "@/modules/wiki/components/WikiSidebar";
 import {
   getWikiContext,
@@ -26,7 +25,6 @@ import {
 } from "@/modules/wiki/queries/getWikiContext";
 import { getWikiFavoritePageIds } from "@/modules/wiki/queries/getWikiFavorites";
 import { getWikiIframeAllowlist } from "@/modules/wiki/queries/getWikiSettings";
-import { buildWikiPageToc } from "@/modules/wiki/utils/buildWikiPageToc";
 import { collectWikiPageDescendants } from "@/modules/wiki/utils/collectWikiPageDescendants";
 import {
   getEditableWikiPageTargets,
@@ -38,7 +36,7 @@ import { WikiPageAccessType } from "@sam-monorepo/database/client";
 import { collectWikiMentionedCitizenIds } from "@sam-monorepo/wiki-editor";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { FaFileExport, FaHistory, FaSitemap } from "react-icons/fa";
+import { FaHistory, FaSitemap } from "react-icons/fa";
 
 type Params = PageProps<"/app/wiki/[pageId]/[[...slug]]">["params"];
 
@@ -187,139 +185,126 @@ const PageContent = async ({
 
   return (
     <article className="bg-secondary rounded-primary p-4">
-      <h1 className="font-bold text-2xl">
-        {permissions.canAdmin ? (
-          <EditableInput
-            rowId={page.id}
-            columnName="title"
-            initialValue={page.title}
-            action={renameWikiPage}
+      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+        <div>
+          <h1 className="font-bold text-2xl">
+            {permissions.canAdmin ? (
+              <EditableInput
+                rowId={page.id}
+                columnName="title"
+                initialValue={page.title}
+                action={renameWikiPage}
+              />
+            ) : (
+              page.title
+            )}
+          </h1>
+
+          <p className="mt-1 text-xs text-white/20">
+            <span className="uppercase font-mono">Aktualisiert:</span>{" "}
+            {formatDate(page.updatedAt)}
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-1">
+          <WikiPageFavoriteButton
+            pageId={page.id}
+            isFavorite={favoritePageIds.has(page.id)}
           />
-        ) : (
-          page.title
-        )}
-      </h1>
 
-      <p className="mt-1 text-xs text-white/20">
-        <span className="uppercase font-mono">Aktualisiert:</span>{" "}
-        {formatDate(page.updatedAt)}
-      </p>
+          <ReportWikiPageModal pageId={page.id} title={page.title} />
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        <WikiPageFavoriteButton
-          pageId={page.id}
-          isFavorite={favoritePageIds.has(page.id)}
-        />
-        <ReportWikiPageModal pageId={page.id} title={page.title} />
+          {permissions.canAdmin && (
+            <>
+              <Button2
+                as={Link}
+                href={`/app/wiki/${page.id}/snapshots`}
+                variant={Button2Variant.IconOnly}
+                tooltip="Snapshots"
+              >
+                <FaHistory />
+              </Button2>
+              <MoveWikiPageModal
+                pageId={page.id}
+                targets={moveTargets}
+                allowTopLevel={canCreateTopLevel}
+                currentParentId={page.parentId}
+              />
+              <WikiPagePermissionsModal
+                page={{
+                  id: page.id,
+                  parentId: page.parentId,
+                  ownerId: page.ownerId,
+                  visibility: page.visibility,
+                  editability: page.editability,
+                  adminability: page.adminability,
+                }}
+                effectiveOwnerHandle={effectiveOwner?.handle ?? null}
+                readRoleIds={roleIdsOf(WikiPageAccessType.READ)}
+                editRoleIds={roleIdsOf(WikiPageAccessType.EDIT)}
+                adminRoleIds={roleIdsOf(WikiPageAccessType.ADMIN)}
+                inheritedFrom={{
+                  visibility: sourceTitle(permissions.visibilitySourceId),
+                  editability: sourceTitle(permissions.editabilitySourceId),
+                  adminability: sourceTitle(permissions.adminabilitySourceId),
+                }}
+                hasDescendants={descendantIds.length > 0}
+              />
 
-        {permissions.canAdmin && (
-          <>
-            <Button2
-              as={Link}
-              href={`/app/wiki/${page.id}/snapshots`}
-              variant={Button2Variant.Secondary}
-              title="Snapshots"
-            >
-              <FaHistory />
-            </Button2>
-            <MoveWikiPageModal
-              pageId={page.id}
-              targets={moveTargets}
-              allowTopLevel={canCreateTopLevel}
-              currentParentId={page.parentId}
-            />
-            <WikiPagePermissionsModal
-              page={{
-                id: page.id,
-                parentId: page.parentId,
-                ownerId: page.ownerId,
-                visibility: page.visibility,
-                editability: page.editability,
-                adminability: page.adminability,
-              }}
-              effectiveOwnerHandle={effectiveOwner?.handle ?? null}
-              readRoleIds={roleIdsOf(WikiPageAccessType.READ)}
-              editRoleIds={roleIdsOf(WikiPageAccessType.EDIT)}
-              adminRoleIds={roleIdsOf(WikiPageAccessType.ADMIN)}
-              inheritedFrom={{
-                visibility: sourceTitle(permissions.visibilitySourceId),
-                editability: sourceTitle(permissions.editabilitySourceId),
-                adminability: sourceTitle(permissions.adminabilitySourceId),
-              }}
-              hasDescendants={descendantIds.length > 0}
-            />
-            <DeleteWikiPageModal
-              pageId={page.id}
-              title={page.title}
-              descendantCount={descendantIds.length}
-            />
-          </>
-        )}
+              <DeleteWikiPageModal
+                pageId={page.id}
+                title={page.title}
+                descendantCount={descendantIds.length}
+              />
+            </>
+          )}
 
-        {context.viewer.hasWikiManage && (
-          <>
-            <Button2
-              as="a"
-              href={`/api/wiki/${page.id}/export`}
-              variant={Button2Variant.Secondary}
-              title="JSON exportieren"
-            >
-              <FaFileExport />
-            </Button2>
-            <ImportWikiPageContentModal pageId={page.id} title={page.title} />
-          </>
-        )}
-      </div>
-
-      <div className="mt-8 flex flex-col gap-8 xl:flex-row-reverse">
-        {!permissions.canEdit && (
-          <WikiPageToc
-            entries={buildWikiPageToc(pageContent?.content)}
-            className="xl:w-64 xl:flex-none self-start xl:sticky xl:top-4"
-          />
-        )}
-
-        <div className="min-w-0 flex-1">
-          {env.COLLAB_JWT_SECRET && env.NEXT_PUBLIC_COLLAB_URL ? (
-            <WikiCollabEditor
-              key={page.id}
-              pageId={page.id}
-              collabUrl={env.NEXT_PUBLIC_COLLAB_URL}
-              canEdit={permissions.canEdit}
-              userName={session?.entity?.handle ?? "Unbekannt"}
-              userColor={getWikiCollabColor(
-                session?.entity?.id ?? session?.user.id ?? page.id,
-              )}
-              iframeAllowlist={iframeAllowlist}
-              linkablePages={linkablePages}
-              mentionedCitizens={mentionedCitizens}
-              staticFallback={
-                <WikiPageStaticContent
-                  content={pageContent?.content}
-                  iframeAllowlist={iframeAllowlist}
-                  linkablePages={linkablePages}
-                  mentionedCitizens={mentionedCitizens}
-                />
-              }
-            />
-          ) : permissions.canEdit ? (
-            <WikiPageEditor
-              key={page.id}
-              pageId={page.id}
-              content={pageContent?.content}
-              iframeAllowlist={iframeAllowlist}
-              linkablePages={linkablePages}
-              mentionedCitizens={mentionedCitizens}
-            />
-          ) : (
-            <WikiPageStaticContent
-              content={pageContent?.content}
-              iframeAllowlist={iframeAllowlist}
-              linkablePages={linkablePages}
-              mentionedCitizens={mentionedCitizens}
-            />
+          {context.viewer.hasWikiManage && (
+            <WikiPageExportImportModal pageId={page.id} title={page.title} />
           )}
         </div>
+      </div>
+
+      <div className="mt-4">
+        {env.COLLAB_JWT_SECRET && env.NEXT_PUBLIC_COLLAB_URL ? (
+          <WikiCollabEditor
+            key={page.id}
+            pageId={page.id}
+            collabUrl={env.NEXT_PUBLIC_COLLAB_URL}
+            canEdit={permissions.canEdit}
+            userName={session?.entity?.handle ?? "Unbekannt"}
+            userColor={getWikiCollabColor(
+              session?.entity?.id ?? session?.user.id ?? page.id,
+            )}
+            iframeAllowlist={iframeAllowlist}
+            linkablePages={linkablePages}
+            mentionedCitizens={mentionedCitizens}
+            staticFallback={
+              <WikiPageStaticContent
+                content={pageContent?.content}
+                iframeAllowlist={iframeAllowlist}
+                linkablePages={linkablePages}
+                mentionedCitizens={mentionedCitizens}
+              />
+            }
+          />
+        ) : permissions.canEdit ? (
+          <WikiPageEditor
+            key={page.id}
+            pageId={page.id}
+            content={pageContent?.content}
+            iframeAllowlist={iframeAllowlist}
+            linkablePages={linkablePages}
+            mentionedCitizens={mentionedCitizens}
+          />
+        ) : (
+          <WikiPageStaticContent
+            content={pageContent?.content}
+            iframeAllowlist={iframeAllowlist}
+            linkablePages={linkablePages}
+            mentionedCitizens={mentionedCitizens}
+          />
+        )}
       </div>
     </article>
   );
