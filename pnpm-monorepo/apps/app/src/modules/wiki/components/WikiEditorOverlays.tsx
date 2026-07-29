@@ -6,7 +6,12 @@ import { WikiEditMenu } from "./WikiEditMenu";
 import { useWikiHoveredElement } from "./wikiEditorHover";
 import { WikiResizeHandles } from "./WikiResizeHandles";
 
-/** Everything the edit menu reacts to; the handles use a subset of it */
+/**
+ * Everything the edit menu reacts to; the handles use a subset of it.
+ * closest() picks the deepest match, so container blocks (lists, tables,
+ * grids, …) only take the hover on their own chrome — their children keep
+ * their more specific menus.
+ */
 const HOVER_SELECTOR = [
   "img",
   "[data-youtube-video]",
@@ -22,6 +27,15 @@ const HOVER_SELECTOR = [
   "h1",
   "h2",
   "h3",
+  "ul",
+  "ol",
+  "blockquote",
+  "pre",
+  "table",
+  ".tableWrapper",
+  "hr",
+  "details",
+  "[data-wiki-grid]",
 ].join(", ");
 
 interface Props {

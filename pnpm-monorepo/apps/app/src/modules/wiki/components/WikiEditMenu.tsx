@@ -14,6 +14,7 @@ import {
 } from "@sam-monorepo/wiki-editor";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { NodeSelection } from "@tiptap/pm/state";
+import type { EditorView } from "@tiptap/pm/view";
 import type { Editor } from "@tiptap/react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -24,6 +25,7 @@ import {
   FaTrash,
   FaUnlink,
 } from "react-icons/fa";
+import { MdDragIndicator } from "react-icons/md";
 import { ALIGNMENT_OPTIONS } from "./toolbar/AlignmentPicker";
 import { CalloutColorSwatches } from "./toolbar/CalloutColorSwatches";
 import {
@@ -32,7 +34,6 @@ import {
 } from "./toolbar/TextFormatPicker";
 import { ToolbarButton } from "./toolbar/ToolbarButton";
 import { ToolbarDivider } from "./toolbar/ToolbarDivider";
-import { setWikiActiveNodeHighlight } from "./WikiActiveNodeHighlight";
 import {
   insertWikiEmbedFromUrl,
   insertWikiIframeFromUrl,
@@ -50,10 +51,42 @@ const MENU_NODE_TYPES = [
 ];
 
 /**
+ * Container and leaf blocks without node-specific actions — their menu
+ * offers the shared drag handle and delete only, so every node type has
+ * at least those two.
+ */
+const BLOCK_MENU_SELECTOR =
+  "ul, ol, blockquote, pre, table, .tableWrapper, hr, details, [data-wiki-grid]";
+const BLOCK_NODE_TYPES = [
+  "bulletList",
+  "orderedList",
+  "taskList",
+  "blockquote",
+  "codeBlock",
+  "table",
+  "horizontalRule",
+  "details",
+  "wikiGrid",
+];
+
+/**
  * Viewport space reserved for the sticky editor toolbar — menus that would
  * reach into it flip below their target.
  */
 const TOOLBAR_CLEARANCE = 56;
+
+/**
+ * `EditorView.dragging` is ProseMirror's documented imperative interface
+ * for starting a drag from outside the editor DOM. The assignment lives in
+ * a module-level helper because the react-hooks lint forbids mutating
+ * prop-derived objects inside the component.
+ */
+const setViewDragging = (
+  view: EditorView,
+  dragging: EditorView["dragging"],
+) => {
+  view.dragging = dragging;
+};
 
 /**
  * Stable identity per hovered element: document positions shift under
@@ -101,6 +134,11 @@ type MenuState =
       readonly color: WikiCalloutColor;
     } & MenuTarget)
   | ({
+      readonly kind: "block";
+      readonly position: number;
+      readonly nodeSize: number;
+    } & MenuTarget)
+  | ({
       readonly kind: "text";
       readonly position: number;
       readonly nodeSize: number;
@@ -146,10 +184,11 @@ interface Props {
 
 /**
  * Contextual edit menu centered above the hovered (or, on touch devices,
- * selected) element: URL editing for embeds/iframes, download/open and
- * delete for attachments and page links, link editing for the link mark
- * and color switching for callouts. Companion of WikiResizeHandles inside
- * the shared overlay root.
+ * selected) element. Every block type gets at least the drag handle and a
+ * delete button; on top of that: URL editing for embeds/iframes,
+ * download/open for attachments and page links, link editing for the link
+ * mark, text formatting for paragraphs/headings and color switching for
+ * callouts. Companion of WikiResizeHandles inside the shared overlay root.
  */
 export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
   const [menu, setMenu] = useState<MenuState>(null);
@@ -236,6 +275,21 @@ export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
         return calloutMenu(resolved.node, resolved.position, target);
       }
 
+      if (element.matches(BLOCK_MENU_SELECTOR)) {
+        const resolved = resolveWikiNodeFromElement(
+          editor,
+          element,
+          BLOCK_NODE_TYPES,
+        );
+        if (!resolved) return null;
+        return {
+          kind: "block",
+          position: resolved.position,
+          nodeSize: resolved.node.nodeSize,
+          ...target,
+        };
+      }
+
       const resolved = resolveWikiNodeFromElement(
         editor,
         element,
@@ -304,15 +358,6 @@ export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
         (hoveredElement ? menuFromElement(hoveredElement) : null) ??
         menuFromSelection();
 
-      setWikiActiveNodeHighlight(
-        editor,
-        nextMenu?.kind === "node"
-          ? {
-              from: nextMenu.position,
-              to: nextMenu.position + nextMenu.nodeSize,
-            }
-          : null,
-      );
       setMenu(nextMenu);
     };
 
@@ -320,7 +365,6 @@ export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
     editor.on("transaction", update);
     return () => {
       editor.off("transaction", update);
-      setWikiActiveNodeHighlight(editor, null);
     };
   }, [editor, hoveredElement]);
 
@@ -333,6 +377,82 @@ export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
       .focus()
       .deleteRange({ from: menu.position, to: menu.position + menu.nodeSize })
       .run();
+  };
+
+  const deleteTextBlock = () => {
+    if (menu.kind !== "text") return;
+    editor
+      .chain()
+      .focus()
+      .deleteRange({ from: menu.position, to: menu.position + menu.nodeSize })
+      .run();
+  };
+
+  const deleteBlock = () => {
+    if (menu.kind !== "block") return;
+    editor
+      .chain()
+      .focus()
+      .deleteRange({ from: menu.position, to: menu.position + menu.nodeSize })
+      .run();
+  };
+
+  /**
+   * The callout menu state carries no nodeSize — read it fresh from the
+   * document (which also guards against stale positions after collab
+   * edits).
+   */
+  const deleteCallout = () => {
+    if (menu.kind !== "callout") return;
+    const node = editor.state.doc.nodeAt(menu.position);
+    if (node?.type.name !== "wikiCallout") return;
+    editor
+      .chain()
+      .focus()
+      .deleteRange({ from: menu.position, to: menu.position + node.nodeSize })
+      .run();
+  };
+
+  /**
+   * Starts a native drag of the menu's node, mirroring what the gutter's
+   * drag-handle plugin does for top-level blocks — unlike it, the menu
+   * also reaches nodes nested inside grids, callouts and collapsible
+   * sections. Selecting the node first is required: ProseMirror's drop
+   * handler removes the current selection when `move` is set.
+   */
+  const startNodeDrag = (event: React.DragEvent<HTMLSpanElement>) => {
+    if (menu.kind === "link") return;
+    const { view } = editor;
+
+    let selection: NodeSelection;
+    try {
+      selection = NodeSelection.create(view.state.doc, menu.position);
+    } catch {
+      return;
+    }
+    view.dispatch(view.state.tr.setSelection(selection));
+
+    const slice = selection.content();
+    const { dom, text } = view.serializeForClipboard(slice);
+    event.dataTransfer.clearData();
+    event.dataTransfer.setData("text/html", dom.innerHTML);
+    event.dataTransfer.setData("text/plain", text);
+    event.dataTransfer.effectAllowed = "copyMove";
+
+    const nodeDom = view.nodeDOM(menu.position);
+    if (nodeDom instanceof HTMLElement)
+      event.dataTransfer.setDragImage(nodeDom, 0, 0);
+
+    setViewDragging(view, { slice, move: true });
+  };
+
+  /**
+   * The grip lives outside the editor DOM, so ProseMirror never sees its
+   * dragend — clear the drag state explicitly (a cancelled drag would
+   * otherwise leak into the next drop).
+   */
+  const endNodeDrag = () => {
+    if (!editor.isDestroyed) setViewDragging(editor.view, null);
   };
 
   const openInNewTab = (url: string) => {
@@ -493,6 +613,21 @@ export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
       className="pointer-events-auto z-20 py-2"
     >
       <div className="flex items-center gap-1 rounded-secondary border border-neutral-700 bg-neutral-900 p-1 shadow-lg">
+        {menu.kind !== "link" && (
+          <>
+            <span
+              draggable
+              title="Block verschieben"
+              onDragStart={startNodeDrag}
+              onDragEnd={endNodeDrag}
+              className="flex size-8 cursor-grab items-center justify-center rounded-secondary text-neutral-500 hover:bg-neutral-800 hover:text-neutral-200 active:cursor-grabbing"
+            >
+              <MdDragIndicator className="size-4" />
+            </span>
+            <ToolbarDivider />
+          </>
+        )}
+
         {menu.kind === "node" && (
           <>
             {URL_NODE_TYPES.includes(menu.typeName) &&
@@ -610,6 +745,16 @@ export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
                 <Icon />
               </ToolbarButton>
             ))}
+
+            <ToolbarDivider />
+
+            <ToolbarButton
+              title="Block löschen"
+              isActive={false}
+              onClick={deleteTextBlock}
+            >
+              <FaTrash />
+            </ToolbarButton>
           </>
         )}
 
@@ -648,7 +793,27 @@ export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
             >
               Entfernen
             </button>
+
+            <ToolbarDivider />
+
+            <ToolbarButton
+              title="Block löschen"
+              isActive={false}
+              onClick={deleteCallout}
+            >
+              <FaTrash />
+            </ToolbarButton>
           </>
+        )}
+
+        {menu.kind === "block" && (
+          <ToolbarButton
+            title="Block löschen"
+            isActive={false}
+            onClick={deleteBlock}
+          >
+            <FaTrash />
+          </ToolbarButton>
         )}
       </div>
     </div>

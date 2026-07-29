@@ -281,18 +281,8 @@
 }
 
 /*
- * Red outline around the node whose edit menu/handles are showing
- * (applied by WikiEditMenu). Embed wrappers hand the outline to their
- * iframe so it hugs the visible box.
- */
-.tiptap .wiki-hover-highlight {
-  outline: 2px solid var(--color-interaction-500);
-  outline-offset: 2px;
-}
-
-/*
- * Light wash over the block whose gutter grip is hovered (or whose block
- * actions are open), so it's clear which node the gutter affects.
+ * Light wash over the hovered top-level block, so it's clear which node
+ * the gutter affects.
  */
 .tiptap .wiki-gutter-highlight {
   background-color: rgb(255 255 255 / 0.06);
@@ -304,7 +294,6 @@
  * line and positions it via inline styles): green line with a soft glow
  * fading out above and below — same look as the event lineup drag targets.
  */
-.wiki-drop-cursor::before,
 .wiki-drop-cursor::after {
   content: "";
   position: absolute;
@@ -312,29 +301,8 @@
   right: 0;
   height: 10px;
   pointer-events: none;
-}
-
-.wiki-drop-cursor::before {
-  bottom: 100%;
-  background: linear-gradient(to top, var(--color-green-900), transparent);
-}
-
-.wiki-drop-cursor::after {
   top: 100%;
   background: linear-gradient(to bottom, var(--color-green-900), transparent);
-}
-
-.tiptap [data-youtube-video].wiki-hover-highlight,
-.tiptap [data-wiki-embed].wiki-hover-highlight,
-.tiptap [data-wiki-iframe].wiki-hover-highlight {
-  outline: none;
-}
-
-.tiptap [data-youtube-video].wiki-hover-highlight iframe,
-.tiptap [data-wiki-embed].wiki-hover-highlight iframe,
-.tiptap [data-wiki-iframe].wiki-hover-highlight iframe {
-  outline: 2px solid var(--color-interaction-500);
-  outline-offset: 2px;
 }
 
 /*

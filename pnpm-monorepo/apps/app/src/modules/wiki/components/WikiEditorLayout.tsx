@@ -49,7 +49,7 @@ export const WikiEditorLayout = ({
           {canEdit && <WikiGutter editor={editor} />}
         </div>
       ) : (
-        <div className={clsx({ "mt-4 min-h-[50vh] pl-12": canEdit })}>
+        <div className={clsx({ "mt-4 min-h-[50vh] pl-16": canEdit })}>
           {staticFallback}
         </div>
       )}

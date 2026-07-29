@@ -4,7 +4,11 @@ import {
   PopoverBaseUI,
   usePopoverBaseUI,
 } from "@/modules/common/components/PopoverBaseUI";
-import { offset, type ComputePositionConfig } from "@floating-ui/react-dom";
+import {
+  offset,
+  type ComputePositionConfig,
+  type Middleware,
+} from "@floating-ui/react-dom";
 import type { WikiCalloutColor } from "@sam-monorepo/wiki-editor";
 import { DragHandle } from "@tiptap/extension-drag-handle-react";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
@@ -25,13 +29,46 @@ const BUTTON_CLASS_NAME =
   "flex size-5 items-center justify-center rounded-secondary text-neutral-500 hover:bg-neutral-800 hover:text-neutral-200";
 
 /**
+ * Keeps the buttons in the gutter column: the drag-handle plugin anchors
+ * to the hovered node's DOM box, so for centered or resized blocks
+ * (images, embeds) the handle would follow the block's left edge into the
+ * page. This shifts it back to the editor's content-box left edge (the
+ * pl-16 gutter). The editor element is resolved through the floating
+ * element — the plugin mounts its wrapper next to the ProseMirror root.
+ */
+const alignWithGutter: Middleware = {
+  name: "alignWithWikiGutter",
+  fn: ({ x, elements }) => {
+    const editorDom =
+      elements.floating.parentElement?.parentElement?.querySelector(
+        ".ProseMirror",
+      );
+    if (!(editorDom instanceof HTMLElement)) return {};
+
+    const editorRect = editorDom.getBoundingClientRect();
+    const paddingLeft =
+      Number.parseFloat(window.getComputedStyle(editorDom).paddingLeft) || 0;
+    const referenceRect = elements.reference.getBoundingClientRect();
+    const delta = referenceRect.left - (editorRect.left + paddingLeft);
+
+    return delta > 0 ? { x: x - delta } : {};
+  },
+};
+
+/**
  * Must be identity-stable (module scope): the DragHandle wrapper tears down
  * and re-registers its plugin (hiding the handle) whenever this prop
  * changes.
  */
 const COMPUTE_POSITION_CONFIG: ComputePositionConfig = {
   placement: "left-start",
-  middleware: [offset(4)],
+  middleware: [
+    offset({
+      mainAxis: 4,
+      crossAxis: 4,
+    }),
+    alignWithGutter,
+  ],
 };
 
 interface Props {
@@ -48,8 +85,6 @@ interface Props {
  */
 export const WikiGutter = ({ editor }: Props) => {
   const [block, setBlock] = useState<HoveredBlock | null>(null);
-  const [gripHovered, setGripHovered] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   /**
    * Identity-stable for the same reason as COMPUTE_POSITION_CONFIG — an
@@ -81,25 +116,33 @@ export const WikiGutter = ({ editor }: Props) => {
       .run();
   };
 
+  const deleteBlock = () => {
+    if (!block) return;
+    const node = editor.state.doc.nodeAt(block.pos);
+    if (!node) return;
+    editor
+      .chain()
+      .focus()
+      .deleteRange({ from: block.pos, to: block.pos + node.nodeSize })
+      .run();
+  };
+
   /**
    * While the dropdown is open the handle must neither follow the pointer
    * nor hide — the drag-handle plugin exposes a lock via transaction meta.
    */
   const handleOpenChange = (open: boolean) => {
-    setDropdownOpen(open);
     if (editor.isDestroyed) return;
     editor.view.dispatch(editor.state.tr.setMeta("lockDragHandle", open));
   };
 
   /**
-   * Highlights the affected block while the grip is hovered or its
-   * dropdown is open.
+   * Highlights the whole hovered block while the pointer is anywhere over
+   * it (the drag-handle plugin tracks the hover), so it's always clear
+   * which node the gutter affects.
    */
-  const highlight = (gripHovered || dropdownOpen) && block ? block : null;
-  const highlightFrom = highlight?.pos ?? null;
-  const highlightTo = highlight
-    ? highlight.pos + highlight.node.nodeSize
-    : null;
+  const highlightFrom = block?.pos ?? null;
+  const highlightTo = block ? block.pos + block.node.nodeSize : null;
   useEffect(() => {
     if (editor.isDestroyed) return;
     setWikiGutterHighlight(
@@ -113,18 +156,11 @@ export const WikiGutter = ({ editor }: Props) => {
     return () => setWikiGutterHighlight(editor, null);
   }, [editor]);
 
-  /**
-   * Native drag suppresses the grip's mouseleave — clear the hover state
-   * explicitly. Identity-stable like the other DragHandle props.
-   */
-  const handleDragStart = useCallback(() => setGripHovered(false), []);
-
   return (
     <DragHandle
       editor={editor}
       computePositionConfig={COMPUTE_POSITION_CONFIG}
       onNodeChange={handleNodeChange}
-      onElementDragStart={handleDragStart}
     >
       <div className="flex items-center">
         <button
@@ -143,8 +179,6 @@ export const WikiGutter = ({ editor }: Props) => {
           trigger={
             <span
               title="Block verschieben oder bearbeiten"
-              onMouseEnter={() => setGripHovered(true)}
-              onMouseLeave={() => setGripHovered(false)}
               className={clsx(
                 BUTTON_CLASS_NAME,
                 "cursor-grab active:cursor-grabbing",
@@ -156,6 +190,15 @@ export const WikiGutter = ({ editor }: Props) => {
         >
           <BlockActions editor={editor} block={block} />
         </PopoverBaseUI>
+
+        <button
+          type="button"
+          title="Block löschen"
+          onClick={deleteBlock}
+          className={clsx(BUTTON_CLASS_NAME, "cursor-pointer")}
+        >
+          <FaTrash className="size-3" />
+        </button>
       </div>
     </DragHandle>
   );
