@@ -2,10 +2,19 @@ model Upload {
   id             String         @id @default(cuid())
   fileName       String
   mimeType       String
+  /// File size in bytes. NULL for uploads created before this column existed.
+  size           Int?
   createdAt      DateTime       @default(now())
   createdById    String
   createdBy      User           @relation(fields: [createdById], references: [id], onDelete: Cascade)
   roleIcons      Role[]         @relation("icon")
   roleThumbnails Role[]         @relation("thumbnail")
   manufacturers  Manufacturer[]
+  /// Set when this upload is an image or attachment of a wiki page. Used to
+  /// permission-check attachment downloads against the page's visibility.
+  wikiPageId     String?
+  wikiPage       WikiPage?      @relation("attachments", fields: [wikiPageId], references: [id], onDelete: SetNull)
+  wikiPageIcons  WikiPage[]     @relation("icon")
+
+  @@index([wikiPageId])
 }

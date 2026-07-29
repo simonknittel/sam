@@ -1,0 +1,128 @@
+import { prisma } from "@/db";
+import { authenticate, resolveEffectiveRoles } from "@/modules/auth/server";
+import { withTrace } from "@/modules/tracing/utils/withTrace";
+import {
+  WikiPageNamespace,
+  type WikiPage,
+  type WikiPageAccessType,
+} from "@sam-monorepo/database/client";
+import { cache } from "react";
+import {
+  resolveWikiPagePermissions,
+  type ResolvedWikiPagePermissions,
+  type WikiPageViewer,
+} from "../utils/resolveWikiPagePermissions";
+
+export type WikiContextPage = Pick<
+  WikiPage,
+  | "id"
+  | "parentId"
+  | "ownerId"
+  | "title"
+  | "slug"
+  | "iconId"
+  | "sortOrder"
+  | "visibility"
+  | "editability"
+  | "adminability"
+  | "createdAt"
+  | "updatedAt"
+  | "deletedAt"
+  | "deletedById"
+> & {
+  roleAccess: { roleId: string; type: WikiPageAccessType }[];
+};
+
+export interface WikiContext {
+  viewer: WikiPageViewer;
+  /** All pages of the WIKI namespace, including soft-deleted ones */
+  allPages: WikiContextPage[];
+  /** Pages that are not soft-deleted */
+  pages: WikiContextPage[];
+  pagesById: Map<string, WikiContextPage>;
+  /** Effective permissions of the current viewer for every page */
+  permissions: Map<string, ResolvedWikiPagePermissions>;
+}
+
+/**
+ * Loads all wiki pages and resolves the current viewer's effective
+ * permissions once per request. Everything wiki-related (tree, breadcrumbs,
+ * page views, actions) derives from this context. Returns null if the
+ * viewer lacks `wiki;read`.
+ */
+export const getWikiContext = cache(
+  withTrace("getWikiContext", async (): Promise<WikiContext | null> => {
+    const authentication = await authenticate();
+    if (!authentication) return null;
+
+    /**
+     * The admin escape hatch (user.role === "admin" + enable_admin cookie)
+     * is part of authorize() and therefore flows into hasWikiManage, which
+     * grants all tiers on every page in the resolver. Enabled admins can
+     * use all wiki features without any role-based restrictions.
+     */
+    const [hasWikiRead, hasWikiManage] = await Promise.all([
+      authentication.authorize("wiki", "read"),
+      authentication.authorize("wiki", "manage"),
+    ]);
+    if (!hasWikiRead && !hasWikiManage) return null;
+
+    const citizenId = authentication.session.entity?.id ?? null;
+
+    const [roleAssignments, allPages] = await Promise.all([
+      citizenId
+        ? prisma.roleAssignment.findMany({
+            where: { citizenId },
+            include: { role: { include: { inherits: true } } },
+          })
+        : Promise.resolve([]),
+      prisma.wikiPage.findMany({
+        where: { namespace: WikiPageNamespace.WIKI },
+        select: {
+          id: true,
+          parentId: true,
+          ownerId: true,
+          title: true,
+          slug: true,
+          iconId: true,
+          sortOrder: true,
+          visibility: true,
+          editability: true,
+          adminability: true,
+          createdAt: true,
+          updatedAt: true,
+          deletedAt: true,
+          deletedById: true,
+          roleAccess: { select: { roleId: true, type: true } },
+        },
+      }),
+    ]);
+
+    /**
+     * Same semantics as the session callback — both use
+     * `resolveEffectiveRoles()`: leveled roles only count once the max level
+     * is reached, and inherited roles are included.
+     */
+    const roleIds = new Set(
+      resolveEffectiveRoles(roleAssignments).map((role) => role.id),
+    );
+
+    const viewer: WikiPageViewer = {
+      citizenId,
+      roleIds,
+      hasWikiRead: hasWikiRead || hasWikiManage,
+      hasWikiManage,
+    };
+
+    const permissions = resolveWikiPagePermissions(allPages, viewer);
+    const pages = allPages.filter((page) => page.deletedAt === null);
+
+    return {
+      viewer,
+      allPages,
+      pages,
+      pagesById: new Map(allPages.map((page) => [page.id, page])),
+      permissions,
+    };
+  }),
+);

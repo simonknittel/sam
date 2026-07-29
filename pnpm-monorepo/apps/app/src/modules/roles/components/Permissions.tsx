@@ -14,7 +14,13 @@ import {
 } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useActionState } from "react";
-import { FaCalendarDay, FaCog, FaPiggyBank, FaSave } from "react-icons/fa";
+import {
+  FaBookOpen,
+  FaCalendarDay,
+  FaCog,
+  FaPiggyBank,
+  FaSave,
+} from "react-icons/fa";
 import { FaScaleBalanced } from "react-icons/fa6";
 import { IoDocuments } from "react-icons/io5";
 import { MdTaskAlt, MdWorkspaces } from "react-icons/md";
@@ -29,6 +35,7 @@ import OtherTab from "./tabs/OtherTab";
 import { PenaltyPointsTab } from "./tabs/PenaltyPointsTab";
 import { SilcTab } from "./tabs/SilcTab";
 import { TasksTab } from "./tabs/TasksTab";
+import { WikiTab } from "./tabs/WikiTab";
 
 interface Props {
   readonly className?: string;
@@ -89,6 +96,10 @@ export const Permissions = ({
             <MdTaskAlt /> Tasks
           </Tab>
 
+          <Tab id="wiki">
+            <FaBookOpen /> Wiki
+          </Tab>
+
           <Tab id="other">
             <FaCog /> Sonstiges
           </Tab>
@@ -105,6 +116,7 @@ export const Permissions = ({
         <SilcTab />
         <PenaltyPointsTab />
         <TasksTab />
+        <WikiTab />
         <OtherTab roles={allRoles} flows={flows} />
       </TabsProvider>
 

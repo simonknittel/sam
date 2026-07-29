@@ -93,6 +93,16 @@ export enum AuditEventType {
   EMAIL_VERIFIED = "EMAIL_VERIFIED",
   EMAIL_CONFIRMATION_REQUESTED = "EMAIL_CONFIRMATION_REQUESTED",
   EMAIL_VERIFIED_VIA_TOKEN = "EMAIL_VERIFIED_VIA_TOKEN",
+  WIKI_PAGE_CREATED = "WIKI_PAGE_CREATED",
+  WIKI_PAGE_UPDATED = "WIKI_PAGE_UPDATED",
+  WIKI_PAGE_RENAMED = "WIKI_PAGE_RENAMED",
+  WIKI_PAGE_MOVED = "WIKI_PAGE_MOVED",
+  WIKI_PAGE_PERMISSIONS_UPDATED = "WIKI_PAGE_PERMISSIONS_UPDATED",
+  WIKI_PAGE_OWNERSHIP_TRANSFERRED = "WIKI_PAGE_OWNERSHIP_TRANSFERRED",
+  WIKI_PAGE_DELETED = "WIKI_PAGE_DELETED",
+  WIKI_PAGE_RESTORED = "WIKI_PAGE_RESTORED",
+  WIKI_PAGE_DESTROYED = "WIKI_PAGE_DESTROYED",
+  WIKI_SETTINGS_UPDATED = "WIKI_SETTINGS_UPDATED",
 }
 
 export interface AuditEventDataByType {
@@ -665,6 +675,73 @@ export interface AuditEventDataByType {
 
   [AuditEventType.EMAIL_VERIFIED_VIA_TOKEN]: {
     userId: string;
+  };
+
+  [AuditEventType.WIKI_PAGE_CREATED]: {
+    pageId: string;
+    title: string;
+    parentId: string | null;
+  };
+
+  [AuditEventType.WIKI_PAGE_UPDATED]: {
+    pageId: string;
+  };
+
+  [AuditEventType.WIKI_PAGE_RENAMED]: {
+    pageId: string;
+    previousTitle: string;
+    newTitle: string;
+  };
+
+  [AuditEventType.WIKI_PAGE_MOVED]: {
+    pageId: string;
+    previousParentId: string | null;
+    newParentId: string | null;
+  };
+
+  [AuditEventType.WIKI_PAGE_PERMISSIONS_UPDATED]: {
+    pageId: string;
+    visibility: string;
+    editability: string;
+    adminability: string;
+    readRoleIds: string[];
+    editRoleIds: string[];
+    adminRoleIds: string[];
+    /** True for events written by an "apply to all child pages" cascade */
+    cascaded: boolean;
+  };
+
+  [AuditEventType.WIKI_PAGE_OWNERSHIP_TRANSFERRED]: {
+    pageId: string;
+    previousOwnerId: string | null;
+    newOwnerId: string | null;
+    /** True for events written by an "apply to all child pages" cascade */
+    cascaded: boolean;
+  };
+
+  [AuditEventType.WIKI_PAGE_DELETED]: {
+    pageId: string;
+    title: string;
+    subtreePageIds: string[];
+  };
+
+  [AuditEventType.WIKI_PAGE_RESTORED]: {
+    pageId: string;
+    title: string;
+    restoredPageIds: string[];
+  };
+
+  [AuditEventType.WIKI_PAGE_DESTROYED]: {
+    pageId: string;
+    title: string;
+    destroyedPageIds: string[];
+  };
+
+  [AuditEventType.WIKI_SETTINGS_UPDATED]: {
+    /** WikiSetting key, e.g. "iframeAllowlist" or "supportPageId" */
+    setting: string;
+    /** The new value as stored in WikiSetting.value */
+    value: string | string[] | null;
   };
 }
 
@@ -1701,5 +1778,110 @@ export const AuditEventDefinitions: {
       userId: "string",
     },
     message: (data) => `Email verified via token for user ${data.userId}`,
+  },
+
+  [AuditEventType.WIKI_PAGE_CREATED]: {
+    type: AuditEventType.WIKI_PAGE_CREATED,
+    data: {
+      pageId: "string",
+      title: "string",
+      parentId: null,
+    },
+    message: (data) => `Wiki page created: "${data.title}" (${data.pageId})`,
+  },
+
+  [AuditEventType.WIKI_PAGE_UPDATED]: {
+    type: AuditEventType.WIKI_PAGE_UPDATED,
+    data: {
+      pageId: "string",
+    },
+    message: (data) => `Wiki page content updated (${data.pageId})`,
+  },
+
+  [AuditEventType.WIKI_PAGE_RENAMED]: {
+    type: AuditEventType.WIKI_PAGE_RENAMED,
+    data: {
+      pageId: "string",
+      previousTitle: "string",
+      newTitle: "string",
+    },
+    message: (data) =>
+      `Wiki page renamed from "${data.previousTitle}" to "${data.newTitle}" (${data.pageId})`,
+  },
+
+  [AuditEventType.WIKI_PAGE_MOVED]: {
+    type: AuditEventType.WIKI_PAGE_MOVED,
+    data: {
+      pageId: "string",
+      previousParentId: null,
+      newParentId: "string",
+    },
+    message: (data) => `Wiki page moved (${data.pageId})`,
+  },
+
+  [AuditEventType.WIKI_PAGE_PERMISSIONS_UPDATED]: {
+    type: AuditEventType.WIKI_PAGE_PERMISSIONS_UPDATED,
+    data: {
+      pageId: "string",
+      visibility: "RESTRICTED",
+      editability: "INHERIT",
+      adminability: "INHERIT",
+      readRoleIds: ["string"],
+      editRoleIds: [],
+      adminRoleIds: [],
+      cascaded: false,
+    },
+    message: (data) => `Wiki page permissions updated (${data.pageId})`,
+  },
+
+  [AuditEventType.WIKI_PAGE_OWNERSHIP_TRANSFERRED]: {
+    type: AuditEventType.WIKI_PAGE_OWNERSHIP_TRANSFERRED,
+    data: {
+      pageId: "string",
+      previousOwnerId: "string",
+      newOwnerId: null,
+      cascaded: false,
+    },
+    message: (data) => `Wiki page ownership transferred (${data.pageId})`,
+  },
+
+  [AuditEventType.WIKI_PAGE_DELETED]: {
+    type: AuditEventType.WIKI_PAGE_DELETED,
+    data: {
+      pageId: "string",
+      title: "string",
+      subtreePageIds: ["string"],
+    },
+    message: (data) => `Wiki page deleted: "${data.title}" (${data.pageId})`,
+  },
+
+  [AuditEventType.WIKI_PAGE_RESTORED]: {
+    type: AuditEventType.WIKI_PAGE_RESTORED,
+    data: {
+      pageId: "string",
+      title: "string",
+      restoredPageIds: ["string"],
+    },
+    message: (data) => `Wiki page restored: "${data.title}" (${data.pageId})`,
+  },
+
+  [AuditEventType.WIKI_PAGE_DESTROYED]: {
+    type: AuditEventType.WIKI_PAGE_DESTROYED,
+    data: {
+      pageId: "string",
+      title: "string",
+      destroyedPageIds: ["string"],
+    },
+    message: (data) =>
+      `Wiki page permanently deleted: "${data.title}" (${data.pageId})`,
+  },
+
+  [AuditEventType.WIKI_SETTINGS_UPDATED]: {
+    type: AuditEventType.WIKI_SETTINGS_UPDATED,
+    data: {
+      setting: "string",
+      value: "string",
+    },
+    message: (data) => `Wiki settings updated: ${data.setting}`,
   },
 };

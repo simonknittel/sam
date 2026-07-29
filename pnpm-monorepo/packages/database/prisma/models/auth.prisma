@@ -91,6 +91,7 @@ model Role {
   assignments             RoleAssignment[]       @relation("role")
   assignmentChanges       RoleAssignmentChange[] @relation("role")
   citizenCounts           RoleCitizenCount[]
+  wikiPageAccess          WikiPageRoleAccess[]
 
   /// Human-readable description of the role (markdown).
   description            String?

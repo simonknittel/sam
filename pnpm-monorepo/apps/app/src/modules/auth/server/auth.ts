@@ -56,6 +56,35 @@ const adapter = PrismaAdapter(prisma);
 const maxAge = 60 * 60 * 24 * 31; // 31 days
 
 /**
+ * Resolves the effective roles of a citizen from their role assignments:
+ * leveled roles only count once the max level is reached, and inherited
+ * roles are included. Security-critical and shared by the session callback
+ * below (permission sets) and `getWikiContext()` (wiki permission
+ * resolution) so both cannot drift apart.
+ */
+export const resolveEffectiveRoles = <
+  AssignedRole extends { maxLevel: number | null },
+  InheritedRole,
+>(
+  roleAssignments: readonly {
+    readonly currentLevel: number | null;
+    readonly role: AssignedRole & {
+      readonly inherits: readonly InheritedRole[];
+    };
+  }[],
+): (AssignedRole | InheritedRole)[] =>
+  roleAssignments
+    .filter(
+      (roleAssignment) =>
+        !roleAssignment.role.maxLevel ||
+        (roleAssignment.currentLevel ?? 0) >= roleAssignment.role.maxLevel,
+    )
+    .flatMap((roleAssignment): (AssignedRole | InheritedRole)[] => [
+      roleAssignment.role,
+      ...roleAssignment.role.inherits,
+    ]);
+
+/**
  * Options for NextAuth.js used to configure adapters, providers, callbacks, etc.
  *
  * @see https://next-auth.js.org/configuration/options
@@ -93,19 +122,9 @@ export const authOptions: NextAuthOptions = {
 
       let givenPermissionSets: PermissionSet[] = [];
       if (entity) {
-        const roles = entity.roleAssignments
-          .filter(
-            (roleAssignment) =>
-              !roleAssignment.role.maxLevel ||
-              (roleAssignment.currentLevel ?? 0) >=
-                roleAssignment.role.maxLevel,
-          )
-          .flatMap((roleAssignment) => [
-            roleAssignment.role,
-            ...roleAssignment.role.inherits,
-          ]);
-
-        givenPermissionSets = getPermissionSetsByRoles(roles);
+        givenPermissionSets = getPermissionSetsByRoles(
+          resolveEffectiveRoles(entity.roleAssignments),
+        );
       }
 
       // Only update lastSeenAt once a day

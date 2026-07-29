@@ -482,6 +482,23 @@ export const STATIC_PERMISSIONS = [
     string: "task;manage",
   },
 
+  // Wiki
+  {
+    section: "Wiki",
+    title: "Lesen",
+    string: "wiki;read",
+  },
+  {
+    section: "Wiki",
+    title: "Seiten auf oberster Ebene erstellen",
+    string: "wiki;create",
+  },
+  {
+    section: "Wiki",
+    title: "Verwalten",
+    string: "wiki;manage",
+  },
+
   // Other
   {
     section: "Sonstiges",

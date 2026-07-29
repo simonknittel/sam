@@ -53,6 +53,16 @@ model Entity {
   deletedShips                                 Ship[]                               @relation("deletedBy")
   unlockedBlueprints                           BlueprintUnlock[]                    @relation("citizen")
   changelogEntrySeens                          ChangelogEntrySeen[]
+  ownedWikiPages                               WikiPage[]                           @relation("owner")
+  createdWikiPages                             WikiPage[]                           @relation("createdBy")
+  updatedWikiPages                             WikiPage[]                           @relation("updatedBy")
+  deletedWikiPages                             WikiPage[]                           @relation("deletedBy")
+  createdWikiPageSnapshots                     WikiPageSnapshot[]                   @relation("createdBy")
+  wikiPageFavorites                            WikiPageFavorite[]
+  wikiPageVisits                               WikiPageVisit[]
+  createdWikiPageReports                       WikiPageReport[]                     @relation("createdBy")
+  resolvedWikiPageReports                      WikiPageReport[]                     @relation("resolvedBy")
+  updatedWikiSettings                          WikiSetting[]                        @relation("updatedBy")
 
   // Holds the latest confirmed values
   spectrumId                String?

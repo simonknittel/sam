@@ -1,0 +1,173 @@
+enum WikiPageNamespace {
+  WIKI
+}
+
+/// RESTRICTED always implicitly includes the owner of the page defining
+/// the setting. A "private" page is RESTRICTED with an empty role list.
+enum WikiPageVisibility {
+  INHERIT
+  PUBLIC
+  RESTRICTED
+}
+
+/// RESTRICTED always implicitly includes the owner of the page defining
+/// the setting. An "owner only" page is RESTRICTED with an empty role list.
+enum WikiPageEditability {
+  INHERIT
+  ALL
+  RESTRICTED
+}
+
+/// RESTRICTED always implicitly includes the owner of the page defining
+/// the setting. An "owner only" page is RESTRICTED with an empty role list.
+enum WikiPageAdminability {
+  INHERIT
+  RESTRICTED
+}
+
+model WikiPage {
+  id        String            @id @default(cuid(2))
+  namespace WikiPageNamespace @default(WIKI)
+  parentId  String?
+  parent    WikiPage?         @relation("hierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children  WikiPage[]        @relation("hierarchy")
+  /// Manual ordering among siblings
+  sortOrder Int               @default(0)
+
+  title  String
+  /// Derived from the title. Only used for human-readable URLs. Only the id
+  /// is used to resolve a page.
+  slug   String
+  iconId String?
+  icon   Upload? @relation("icon", fields: [iconId], references: [id], onDelete: SetNull)
+
+  /// Yjs document state. Source of truth for the page content. `content` and
+  /// `searchText` are derived from it.
+  ydoc       Bytes?
+  /// Tiptap JSON derived from `ydoc`. Used for static rendering and snapshots.
+  content    Json?
+  /// Plain text extracted from `content`. Used for full-text search.
+  searchText String @default("")
+
+  visibility   WikiPageVisibility   @default(INHERIT)
+  editability  WikiPageEditability  @default(INHERIT)
+  adminability WikiPageAdminability @default(INHERIT)
+  roleAccess   WikiPageRoleAccess[]
+
+  /// The effective owner holds the implicit permissions on a page (all three
+  /// tiers, implicit inclusion in RESTRICTED). NULL means the owner is
+  /// inherited from the nearest ancestor with an explicit owner ("nearest
+  /// setting wins", like the permission tiers); NULL at the root means no
+  /// owner (only `wiki;manage` retains access). Top-level pages start with
+  /// their creator as explicit owner, child pages start inheriting.
+  /// Transferable by page admins, e.g. when the owner leaves the org or
+  /// switches departments. `createdBy` is a pure audit fact without any
+  /// permission implications.
+  ownerId String?
+  owner   Entity? @relation("owner", fields: [ownerId], references: [id], onDelete: SetNull)
+
+  createdAt   DateTime  @default(now())
+  createdById String?
+  createdBy   Entity?   @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedAt   DateTime  @updatedAt
+  updatedById String?
+  updatedBy   Entity?   @relation("updatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  deletedAt   DateTime?
+  deletedById String?
+  deletedBy   Entity?   @relation("deletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
+
+  snapshots   WikiPageSnapshot[]
+  favorites   WikiPageFavorite[]
+  visits      WikiPageVisit[]
+  reports     WikiPageReport[]
+  attachments Upload[]           @relation("attachments")
+
+  @@index([parentId])
+  @@index([deletedAt])
+}
+
+enum WikiPageAccessType {
+  READ
+  EDIT
+  ADMIN
+}
+
+model WikiPageRoleAccess {
+  id     String             @id @default(cuid(2))
+  pageId String
+  page   WikiPage           @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  roleId String
+  role   Role               @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  type   WikiPageAccessType
+
+  @@unique([pageId, roleId, type])
+  @@index([roleId])
+}
+
+enum WikiPageSnapshotKind {
+  AUTO
+  MANUAL
+}
+
+model WikiPageSnapshot {
+  id          String               @id @default(cuid(2))
+  pageId      String
+  page        WikiPage             @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  kind        WikiPageSnapshotKind
+  /// Optional name for MANUAL snapshots
+  name        String?
+  /// Tiptap JSON at snapshot time
+  content     Json
+  createdAt   DateTime             @default(now())
+  createdById String?
+  createdBy   Entity?              @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([pageId, createdAt])
+}
+
+model WikiPageFavorite {
+  citizenId String
+  citizen   Entity   @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  pageId    String
+  page      WikiPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([citizenId, pageId])
+  @@index([pageId])
+}
+
+model WikiPageVisit {
+  citizenId     String
+  citizen       Entity   @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  pageId        String
+  page          WikiPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  lastVisitedAt DateTime
+
+  @@id([citizenId, pageId])
+  @@index([citizenId, lastVisitedAt])
+}
+
+model WikiPageReport {
+  id                String    @id @default(cuid(2))
+  pageId            String
+  page              WikiPage  @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  message           String
+  createdAt         DateTime  @default(now())
+  createdById       String?
+  createdBy         Entity?   @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
+  resolvedAt        DateTime?
+  resolvedById      String?
+  resolvedBy        Entity?   @relation("resolvedBy", fields: [resolvedById], references: [id], onDelete: SetNull)
+  resolutionComment String?
+
+  @@index([pageId])
+  @@index([resolvedAt])
+}
+
+model WikiSetting {
+  key         String   @id
+  value       Json
+  updatedAt   DateTime @updatedAt
+  updatedById String?
+  updatedBy   Entity?  @relation("updatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+}

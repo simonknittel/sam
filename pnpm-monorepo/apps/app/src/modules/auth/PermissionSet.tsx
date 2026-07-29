@@ -68,7 +68,8 @@ export interface PermissionSet {
     | "logAnalyzer"
     | "profitDistributionCycle"
     | "globalStatistics"
-    | "systemLog";
+    | "systemLog"
+    | "wiki";
   operation:
     | "create"
     | "read"
