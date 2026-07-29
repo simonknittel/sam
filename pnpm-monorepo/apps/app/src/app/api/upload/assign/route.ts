@@ -3,6 +3,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
+import { getWikiContext } from "@/modules/wiki/queries/getWikiContext";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -18,6 +19,17 @@ const bodySchema = z.discriminatedUnion("resourceType", [
     resourceAttribute: z.enum(["iconId", "thumbnailId"]),
     resourceId: z.cuid(),
     imageId: z.cuid(),
+  }),
+  /**
+   * Links an upload (image or file attachment) to the wiki page it is
+   * embedded in, so attachment downloads can be permission-checked against
+   * the page's visibility. `resourceId` is the page id.
+   */
+  z.object({
+    resourceType: z.literal("wikiPage"),
+    resourceAttribute: z.literal("wikiPageId"),
+    resourceId: z.cuid2(),
+    uploadId: z.cuid(),
   }),
 ]);
 
@@ -40,6 +52,44 @@ export async function PATCH(request: Request) {
     /**
      * Assign the image to the resource
      */
+    if (data.resourceType === "wikiPage") {
+      /**
+       * Authorize: edit permission on the target page. The upload must be
+       * the current user's own and not already belong to another page —
+       * re-assigning someone else's upload would break its downloads there.
+       */
+      const [context, upload] = await Promise.all([
+        getWikiContext(),
+        prisma.upload.findUnique({
+          where: { id: data.uploadId },
+          select: { id: true, createdById: true, wikiPageId: true },
+        }),
+      ]);
+      if (!context)
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+      const page = context.pagesById.get(data.resourceId);
+      if (!page || page.deletedAt || !upload)
+        return NextResponse.json({ error: "Bad Request" }, { status: 400 });
+      if (
+        !context.permissions.get(page.id)?.canEdit ||
+        upload.createdById !== authentication.session.user.id ||
+        (upload.wikiPageId !== null && upload.wikiPageId !== page.id)
+      )
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+      await prisma.upload.update({
+        where: { id: upload.id },
+        data: { wikiPageId: page.id },
+      });
+
+      /**
+       * No RESOURCE_IMAGE_ASSIGNED event here: the upload itself is audited
+       * via UPLOAD_CREATED and the editing session via WIKI_PAGE_UPDATED.
+       */
+      return NextResponse.json({});
+    }
+
     if (data.resourceType === "manufacturer") {
       /**
        * Authenticate and authorize the request

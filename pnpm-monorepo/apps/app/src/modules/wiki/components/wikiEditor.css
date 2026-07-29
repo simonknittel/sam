@@ -1,0 +1,468 @@
+/* Placeholder for the empty editor (Tiptap Placeholder extension) */
+.tiptap p.is-editor-empty:first-child::before {
+  color: var(--color-neutral-500);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Task lists (editor and static render) */
+.prose ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0;
+}
+
+.prose ul[data-type="taskList"] li {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.prose ul[data-type="taskList"] li > label {
+  flex: 0 0 auto;
+  user-select: none;
+}
+
+.prose ul[data-type="taskList"] li > div {
+  flex: 1 1 auto;
+}
+
+.prose ul[data-type="taskList"] li > div > p {
+  margin: 0;
+}
+
+/* Tables: make cells recognizable while editing */
+.tiptap table .selectedCell {
+  background-color: color-mix(
+    in srgb,
+    var(--color-interaction-700) 30%,
+    transparent
+  );
+}
+
+.tiptap .column-resize-handle {
+  background-color: var(--color-interaction-500);
+}
+
+/*
+ * Collapsible sections. The static render emits a native <details>, the
+ * editor a custom node view (div[data-type="details"] with a toggle
+ * button) — both get identical geometry so nothing shifts when the editor
+ * takes over from the static first paint: an absolutely positioned 1.25rem
+ * toggle slot and the content column starting at 1.5rem.
+ */
+.prose details,
+.tiptap [data-type="details"] {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-block: 1.25em;
+}
+
+.prose summary {
+  display: block;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+
+.prose summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Static render: arrow in the toggle slot via ::before */
+.prose details > summary::before {
+  content: "\25B8";
+  position: absolute;
+  left: 0;
+  top: 0.125em;
+  width: 1.25rem;
+  height: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-secondary);
+  color: var(--color-neutral-400);
+}
+
+.prose details > summary:hover::before {
+  background-color: var(--color-neutral-800);
+  color: var(--color-neutral-200);
+}
+
+.prose details[open] > summary::before {
+  content: "\25BE";
+}
+
+/* Editor: real toggle button in the same slot */
+.tiptap [data-type="details"] > button {
+  position: absolute;
+  left: 0;
+  top: 0.125em;
+  width: 1.25rem;
+  height: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-secondary);
+  cursor: pointer;
+  color: var(--color-neutral-400);
+}
+
+.tiptap [data-type="details"] > button:hover {
+  background-color: var(--color-neutral-800);
+  color: var(--color-neutral-200);
+}
+
+.tiptap [data-type="details"] > button::before {
+  content: "\25B8";
+}
+
+.tiptap [data-type="details"].is-open > button::before {
+  content: "\25BE";
+}
+
+.tiptap [data-type="details"] > div {
+  min-width: 0;
+}
+
+/*
+ * Visibility strictly follows the is-open class. The node view also toggles
+ * a hidden attribute, but that imperative state can desync when collab sync
+ * recreates node views — the class is the single source of truth here.
+ */
+.tiptap [data-type="details"] > div > [data-type="detailsContent"] {
+  display: block !important;
+}
+
+.tiptap
+  [data-type="details"]:not(.is-open)
+  > div
+  > [data-type="detailsContent"] {
+  display: none !important;
+}
+
+/* Grid layouts: side-by-side on larger screens, stacked on mobile */
+.prose [data-wiki-grid] {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-block: 1.25em;
+}
+
+@media (min-width: 640px) {
+  .prose [data-wiki-grid][data-columns="2"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .prose [data-wiki-grid][data-columns="3"] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .prose [data-wiki-grid][data-columns="4"] {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.prose [data-wiki-grid] > [data-wiki-grid-cell] {
+  min-width: 0;
+}
+
+.prose [data-wiki-grid][data-vertical-align="center"] > [data-wiki-grid-cell] {
+  align-content: center;
+}
+
+.prose [data-wiki-grid] > [data-wiki-grid-cell] > :first-child {
+  margin-top: 0;
+}
+
+.prose [data-wiki-grid] > [data-wiki-grid-cell] > :last-child {
+  margin-bottom: 0;
+}
+
+/*
+ * Make the cells visible while editing — outline instead of border/padding
+ * so the content geometry stays identical to the static render.
+ */
+.tiptap [data-wiki-grid] > [data-wiki-grid-cell] {
+  outline: 1px dashed var(--color-neutral-800);
+  outline-offset: 4px;
+  border-radius: var(--radius-secondary);
+}
+
+/* Callouts: blocks highlighted with a colored background and border */
+.prose [data-wiki-callout] {
+  --wiki-callout-color: var(--color-blue-500);
+  border: 1px solid var(--wiki-callout-color);
+  border-left-width: 4px;
+  border-radius: var(--radius-secondary);
+  background-color: color-mix(
+    in srgb,
+    var(--wiki-callout-color) 12%,
+    transparent
+  );
+  padding: 0.75rem 1rem;
+  margin-block: 1.25em;
+}
+
+.prose [data-wiki-callout] > :first-child {
+  margin-top: 0;
+}
+
+.prose [data-wiki-callout] > :last-child {
+  margin-bottom: 0;
+}
+
+.prose [data-wiki-callout][data-color="neutral"] {
+  --wiki-callout-color: var(--color-neutral-500);
+}
+
+.prose [data-wiki-callout][data-color="green"] {
+  --wiki-callout-color: var(--color-green-500);
+}
+
+.prose [data-wiki-callout][data-color="yellow"] {
+  --wiki-callout-color: var(--color-yellow-500);
+}
+
+.prose [data-wiki-callout][data-color="red"] {
+  --wiki-callout-color: var(--color-red-500);
+}
+
+/* Images: block-level so the alignment margins take effect */
+.prose img {
+  display: block;
+  border-radius: var(--radius-secondary);
+}
+
+/*
+ * Embeds: YouTube (extension), Twitch/Spotify/Google (wikiEmbed node) and
+ * allowlisted generic iframes (wikiIframe node)
+ */
+.prose [data-youtube-video],
+.prose [data-wiki-embed],
+.prose [data-wiki-iframe] {
+  margin-block: 1.25em;
+}
+
+.prose [data-youtube-video] iframe,
+.prose [data-wiki-embed] iframe,
+.prose [data-wiki-iframe] iframe {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-radius: var(--radius-secondary);
+  background-color: var(--color-neutral-900);
+}
+
+.prose [data-wiki-iframe] iframe {
+  height: 480px;
+}
+
+.prose [data-youtube-video] iframe,
+.prose [data-wiki-embed][data-provider="twitch"] iframe {
+  aspect-ratio: 16 / 9;
+  height: auto;
+}
+
+.prose [data-wiki-embed][data-provider="spotify"] iframe {
+  height: 352px;
+}
+
+.prose [data-wiki-embed][data-provider="google"] iframe {
+  height: 480px;
+}
+
+.prose [data-wiki-embed-blocked] {
+  border: 1px dashed var(--color-neutral-700);
+  border-radius: var(--radius-secondary);
+  color: var(--color-neutral-400);
+  padding: 0.75rem 1rem;
+  margin-block: 1.25em;
+}
+
+/*
+ * Red outline around the node whose edit menu/handles are showing
+ * (applied by WikiEditMenu). Embed wrappers hand the outline to their
+ * iframe so it hugs the visible box.
+ */
+.tiptap .wiki-hover-highlight {
+  outline: 2px solid var(--color-interaction-500);
+  outline-offset: 2px;
+}
+
+/*
+ * Light wash over the block whose gutter grip is hovered (or whose block
+ * actions are open), so it's clear which node the gutter affects.
+ */
+.tiptap .wiki-gutter-highlight {
+  background-color: rgb(255 255 255 / 0.06);
+  border-radius: var(--radius-secondary);
+}
+
+/*
+ * Drop indicator while dragging blocks (prosemirror-dropcursor renders the
+ * line and positions it via inline styles): green line with a soft glow
+ * fading out above and below — same look as the event lineup drag targets.
+ */
+.wiki-drop-cursor::before,
+.wiki-drop-cursor::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 10px;
+  pointer-events: none;
+}
+
+.wiki-drop-cursor::before {
+  bottom: 100%;
+  background: linear-gradient(to top, var(--color-green-900), transparent);
+}
+
+.wiki-drop-cursor::after {
+  top: 100%;
+  background: linear-gradient(to bottom, var(--color-green-900), transparent);
+}
+
+.tiptap [data-youtube-video].wiki-hover-highlight,
+.tiptap [data-wiki-embed].wiki-hover-highlight,
+.tiptap [data-wiki-iframe].wiki-hover-highlight {
+  outline: none;
+}
+
+.tiptap [data-youtube-video].wiki-hover-highlight iframe,
+.tiptap [data-wiki-embed].wiki-hover-highlight iframe,
+.tiptap [data-wiki-iframe].wiki-hover-highlight iframe {
+  outline: 2px solid var(--color-interaction-500);
+  outline-offset: 2px;
+}
+
+/*
+ * In the editable editor, iframes swallow clicks — the first click lands on
+ * the wrapper and selects the node (showing resize handles and the edit
+ * menu); the selected embed is fully interactive.
+ */
+.tiptap[contenteditable="true"]
+  [data-youtube-video]:not(.ProseMirror-selectednode)
+  iframe,
+.tiptap[contenteditable="true"]
+  [data-wiki-embed]:not(.ProseMirror-selectednode)
+  iframe,
+.tiptap[contenteditable="true"]
+  [data-wiki-iframe]:not(.ProseMirror-selectednode)
+  iframe {
+  pointer-events: none;
+}
+
+/* File attachments: downloadable card with name and size */
+.prose a[data-wiki-attachment] {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  border: 1px solid var(--color-neutral-700);
+  border-radius: var(--radius-secondary);
+  background-color: color-mix(
+    in srgb,
+    var(--color-neutral-800) 40%,
+    transparent
+  );
+  padding: 0.75rem 1rem;
+  margin-block: 1.25em;
+  text-decoration: none;
+}
+
+.prose a[data-wiki-attachment]:hover {
+  border-color: var(--color-neutral-500);
+  background-color: color-mix(
+    in srgb,
+    var(--color-neutral-800) 70%,
+    transparent
+  );
+}
+
+.prose a[data-wiki-attachment]:focus-visible {
+  outline: 2px solid var(--color-interaction-500);
+  outline-offset: 2px;
+}
+
+.prose a[data-wiki-attachment]:active {
+  background-color: var(--color-neutral-800);
+}
+
+.prose a[data-wiki-attachment] [data-wiki-attachment-name] {
+  font-weight: 600;
+  color: var(--color-neutral-50);
+  overflow-wrap: anywhere;
+}
+
+.prose a[data-wiki-attachment] [data-wiki-attachment-size] {
+  font-size: 0.75rem;
+  color: var(--color-neutral-400);
+}
+
+.prose a[data-wiki-attachment] [data-wiki-attachment-size]:empty {
+  display: none;
+}
+
+/* Internal page links */
+.prose a[data-wiki-page-link] {
+  font-weight: 600;
+}
+
+.prose a[data-wiki-page-link]:focus-visible {
+  outline: 2px solid var(--color-interaction-500);
+  outline-offset: 2px;
+  border-radius: 0.125rem;
+}
+
+.prose span[data-wiki-page-link][data-unavailable] {
+  color: var(--color-neutral-500);
+  text-decoration: line-through;
+}
+
+/* Citizen mentions */
+.prose a[data-wiki-citizen-mention] {
+  font-weight: 600;
+}
+
+.prose a[data-wiki-citizen-mention]:focus-visible {
+  outline: 2px solid var(--color-interaction-500);
+  outline-offset: 2px;
+  border-radius: 0.125rem;
+}
+
+.prose span[data-wiki-citizen-mention][data-unavailable] {
+  color: var(--color-neutral-500);
+}
+
+/* Inline text highlights keep the surrounding text color */
+.prose mark {
+  color: inherit;
+  border-radius: 0.125rem;
+  padding-inline: 0.125rem;
+}
+
+/* Presence carets of other collaborators (CollaborationCaret extension) */
+.tiptap .collaboration-carets__caret {
+  border-left: 1px solid;
+  border-right: 1px solid;
+  margin-left: -1px;
+  margin-right: -1px;
+  pointer-events: none;
+  position: relative;
+  word-break: normal;
+}
+
+.tiptap .collaboration-carets__label {
+  border-radius: 3px 3px 3px 0;
+  color: var(--color-neutral-50);
+  font-size: 0.7rem;
+  font-weight: 600;
+  left: -1px;
+  line-height: normal;
+  padding: 0.1rem 0.3rem;
+  position: absolute;
+  top: -1.4em;
+  user-select: none;
+  white-space: nowrap;
+}

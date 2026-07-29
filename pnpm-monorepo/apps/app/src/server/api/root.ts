@@ -11,6 +11,7 @@ import { getAssignableRoles } from "./routers/roles/getAssignableRoles";
 import { getVisibleRoles } from "./routers/roles/getVisibleRoles";
 import { getRolesForSalaries } from "./routers/silc/getRolesForSalaries";
 import { getById as getVariantById } from "./routers/variant/getById";
+import { getPageTargets } from "./routers/wiki/getPageTargets";
 import { createCallerFactory, createTRPCRouter } from "./trpc";
 
 /**
@@ -47,6 +48,9 @@ export const appRouter = createTRPCRouter({
   }),
   variant: createTRPCRouter({
     getById: getVariantById,
+  }),
+  wiki: createTRPCRouter({
+    getPageTargets,
   }),
 });
 

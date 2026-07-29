@@ -32,6 +32,9 @@ interface PopoverBaseUIContextProviderProps {
    * Click and touch interactions are ignored.
    */
   readonly hoverOnly?: boolean;
+  /** When false, hovering the trigger doesn't open the popover (click only) */
+  readonly openOnHover?: boolean;
+  readonly side?: "top" | "bottom" | "left" | "right";
 }
 
 export const PopoverBaseUI = ({
@@ -40,6 +43,8 @@ export const PopoverBaseUI = ({
   childrenClassName,
   onOpenChange,
   hoverOnly = false,
+  openOnHover = true,
+  side = "top",
 }: PopoverBaseUIContextProviderProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -67,7 +72,11 @@ export const PopoverBaseUI = ({
   return (
     <PopoverBaseUIContext.Provider value={value}>
       <Popover.Root open={isOpen} onOpenChange={handleOpenChange}>
-        <Popover.Trigger openOnHover className="text-left" delay={50}>
+        <Popover.Trigger
+          openOnHover={openOnHover}
+          className="text-left"
+          delay={50}
+        >
           {trigger}
         </Popover.Trigger>
 
@@ -75,7 +84,7 @@ export const PopoverBaseUI = ({
           <Popover.Positioner
             sideOffset={8}
             collisionPadding={{ left: 8, right: 8 }}
-            side="top"
+            side={side}
             className="z-30"
           >
             <Popover.Popup className="z-30 outline-hidden" initialFocus={false}>

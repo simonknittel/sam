@@ -16,6 +16,7 @@ export default function useUpload() {
       body: JSON.stringify({
         fileName: encodeURIComponent(file.name),
         mimeType: file.type,
+        size: file.size,
       }),
     })
       .then((response) => response.json())

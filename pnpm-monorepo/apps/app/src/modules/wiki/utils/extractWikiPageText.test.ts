@@ -1,0 +1,168 @@
+import {
+  collectWikiMentionedCitizenIds,
+  createWikiHeadingIdAssigner,
+  extractWikiPageText,
+} from "@sam-monorepo/wiki-editor";
+import { describe, expect, test } from "vitest";
+import { buildWikiPageToc } from "./buildWikiPageToc";
+
+const document = {
+  type: "doc",
+  content: [
+    {
+      type: "heading",
+      attrs: { level: 1 },
+      content: [{ type: "text", text: "Übungsgefecht" }],
+    },
+    {
+      type: "paragraph",
+      content: [
+        { type: "text", text: "Hallo " },
+        { type: "text", text: "Welt", marks: [{ type: "bold" }] },
+      ],
+    },
+    {
+      type: "heading",
+      attrs: { level: 2 },
+      content: [{ type: "text", text: "Ablauf" }],
+    },
+    {
+      type: "heading",
+      attrs: { level: 2 },
+      content: [{ type: "text", text: "Ablauf" }],
+    },
+    { type: "paragraph" },
+  ],
+};
+
+describe("extract wiki page text", () => {
+  test("collects text nodes with block boundaries as spaces", () => {
+    expect(extractWikiPageText(document)).toBe(
+      "Übungsgefecht Hallo Welt Ablauf Ablauf",
+    );
+  });
+
+  test("handles empty and invalid input", () => {
+    expect(extractWikiPageText(null)).toBe("");
+    expect(extractWikiPageText({})).toBe("");
+    expect(extractWikiPageText("nope")).toBe("");
+  });
+
+  test("includes citizen mention handles", () => {
+    expect(
+      extractWikiPageText({
+        type: "doc",
+        content: [
+          {
+            type: "paragraph",
+            content: [
+              { type: "text", text: "Gefunden von" },
+              {
+                type: "wikiCitizenMention",
+                attrs: { citizenId: "abc123", handle: "Chris" },
+              },
+            ],
+          },
+        ],
+      }),
+    ).toBe("Gefunden von Chris");
+  });
+});
+
+describe("collect mentioned citizen ids", () => {
+  test("collects unique ids from nested content", () => {
+    expect(
+      collectWikiMentionedCitizenIds({
+        type: "doc",
+        content: [
+          {
+            type: "paragraph",
+            content: [
+              {
+                type: "wikiCitizenMention",
+                attrs: { citizenId: "abc123", handle: "Chris" },
+              },
+              {
+                type: "wikiCitizenMention",
+                attrs: { citizenId: "abc123", handle: "Chris" },
+              },
+            ],
+          },
+          {
+            type: "blockquote",
+            content: [
+              {
+                type: "paragraph",
+                content: [
+                  {
+                    type: "wikiCitizenMention",
+                    attrs: { citizenId: "def456", handle: "Sam" },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      }),
+    ).toEqual(["abc123", "def456"]);
+  });
+
+  test("handles empty and invalid input", () => {
+    expect(collectWikiMentionedCitizenIds(null)).toEqual([]);
+    expect(collectWikiMentionedCitizenIds({})).toEqual([]);
+    expect(collectWikiMentionedCitizenIds("nope")).toEqual([]);
+  });
+});
+
+describe("build wiki page toc", () => {
+  test("collects headings with deduplicated slug ids", () => {
+    expect(buildWikiPageToc(document)).toEqual([
+      { id: "uebungsgefecht", text: "Übungsgefecht", level: 1 },
+      { id: "ablauf", text: "Ablauf", level: 2 },
+      { id: "ablauf-2", text: "Ablauf", level: 2 },
+    ]);
+  });
+
+  test("handles documents without headings", () => {
+    expect(buildWikiPageToc({ type: "doc", content: [] })).toEqual([]);
+  });
+
+  test("skips empty headings without shifting later anchor ids", () => {
+    const withEmptyHeadings = {
+      type: "doc",
+      content: [
+        {
+          type: "heading",
+          attrs: { level: 2 },
+          content: [{ type: "text", text: "Erster" }],
+        },
+        { type: "heading", attrs: { level: 2 } },
+        {
+          type: "heading",
+          attrs: { level: 2 },
+          content: [{ type: "text", text: "   " }],
+        },
+        {
+          type: "heading",
+          attrs: { level: 2 },
+          content: [{ type: "text", text: "Zweiter" }],
+        },
+      ],
+    };
+
+    expect(buildWikiPageToc(withEmptyHeadings)).toEqual([
+      { id: "erster", text: "Erster", level: 2 },
+      { id: "zweiter", text: "Zweiter", level: 2 },
+    ]);
+
+    /**
+     * The static renderer and the live editor walk EVERY heading and ask
+     * the shared assigner for an id — skipped headings get null (no id
+     * attribute), so the following ids stay aligned with the TOC entries.
+     */
+    const nextHeadingId = createWikiHeadingIdAssigner();
+    expect(
+      ["Erster", "", "   ", "Zweiter"].map((text) => nextHeadingId(text)),
+    ).toEqual(["erster", null, null, "zweiter"]);
+  });
+});
