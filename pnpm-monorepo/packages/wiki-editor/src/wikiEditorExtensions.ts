@@ -131,3 +131,11 @@ export const getWikiEditorExtensions = (
  */
 export const getWikiEditorSchema = (): Schema =>
   getSchema(getWikiEditorExtensions());
+
+/**
+ * Name of the Yjs XML fragment holding the document content. Tiptap's
+ * Collaboration extension uses "default"; every Yjs ⇄ ProseMirror
+ * conversion (collab server persistence, ydoc regeneration on snapshot
+ * restore/import) must use the same fragment name.
+ */
+export const WIKI_EDITOR_FRAGMENT = "default";

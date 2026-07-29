@@ -17,6 +17,7 @@ export {
   type WikiMentionedCitizen,
 } from "./wikiCitizenMentionNode.js";
 export {
+  WIKI_EDITOR_FRAGMENT,
   getWikiEditorExtensions,
   getWikiEditorSchema,
   type WikiEditorExtensionsOptions,
@@ -35,7 +36,10 @@ export {
   type WikiHeadingEntry,
 } from "./wikiHeadingIds.js";
 export { WIKI_HIGHLIGHT_COLORS } from "./wikiHighlightColors.js";
-export { isWikiIframeSrcAllowed } from "./wikiIframeNode.js";
+export {
+  collectWikiIframeSrcs,
+  isWikiIframeSrcAllowed,
+} from "./wikiIframeNode.js";
 export type { WikiPageLinkedPage } from "./wikiPageLinkNode.js";
 export {
   WIKI_RESIZABLE_NODE_TYPES,

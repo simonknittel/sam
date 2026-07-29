@@ -8,7 +8,7 @@ Status: planned (interview completed 2026-07-27), not started.
 | --- | --- |
 | Build vs. buy | Build in-repo, glue open-source pieces together (Tiptap v3, Hocuspocus 4, Yjs). No external wiki product. |
 | Collab backend | Self-hosted Hocuspocus container, deployed next to Soketi on the core-services Docker host (Traefik + Ansible + Terraform pattern). Server code lives in this monorepo. |
-| Save model | Live autosave (Notion-style). The page is the editor; no draft state. `Cmd+S` creates a named snapshot instead of "saving". |
+| Save model | Live autosave (Notion-style). The page is the editor; no draft state. Snapshots are created automatically while editing (30-minute cadence); no manual snapshot step. |
 | History | Snapshots + one-click restore. No visual diff in v1. |
 | Permission inheritance | Nearest explicit setting wins (Notion-style). A child page may be more or less visible than its parent. Redacted breadcrumbs for invisible ancestors. |
 | Page-level permission tiers | Three per-page settings, each inheritable: **visibility** (read), **editing**, **admin** (permissions/move/rename/delete). |
@@ -268,7 +268,7 @@ Component: `modules/wiki/components/PageEditor.tsx` (client). Extensions:
 | Slash commands | Notion-like "/" menu (`@tiptap/suggestion`): filterable block palette (`/h1`, `/tabelle`, `/raster`, …) with keyboard navigation |
 | Highlighting | `@tiptap/extension-highlight` (multicolor inline text marker) + custom `wikiCallout` node (blocks with colored background/border: neutral/blue/green/yellow/red) |
 
-Hotkeys: Tiptap defaults cover bold/italic/underline/code/undo/redo etc.; add `Cmd+S` → named-snapshot dialog (suppress browser save), `Cmd+K` → link dialog. Page-level shortcuts via the already-present `react-hotkeys-hook`.
+Hotkeys: Tiptap defaults cover bold/italic/underline/code/undo/redo etc.; add `Cmd+K` → link dialog (`Cmd+S` just flushes the autosave — snapshots are automatic). Page-level shortcuts via the already-present `react-hotkeys-hook`.
 
 Toolbar: fixed top toolbar + bubble menu for selections; German labels, matching existing form/Button components. Only rendered for users with edit permission.
 
@@ -286,8 +286,8 @@ Toolbar: fixed top toolbar + bubble menu for selections; German labels, matching
 
 ## 9. Snapshots, restore & JSON export/import
 
-- **Manual:** `Cmd+S` or toolbar button → dialog for an optional name → server action stores `WikiPageSnapshot(kind: MANUAL, content: current JSON)`.
-- **Auto:** on last-client disconnect, the collab server creates an `AUTO` snapshot if the newest one for the page is older than 30 minutes and content changed. Retention: keep the latest 50 `AUTO` snapshots per page (`MANUAL` kept forever).
+- **Automatic (no manual step):** before stored content is overwritten — in the single-user autosave action and in the collab server's store hook — the previous state is preserved as an `AUTO` snapshot when the newest snapshot of the page is older than 30 minutes and the content changed. Any state is snapshotted right before edits replace it, so a restore point at most 30 minutes behind always exists. Retention: keep the latest 50 `AUTO` snapshots per page.
+- **Safety snapshots:** restore and JSON import first preserve the current state as a named `MANUAL` snapshot (kept forever, immune to AUTO retention) — the undo path.
 - **Restore:** snapshots list at `/app/wiki/<id>/snapshots` (page-admin only). Restore = server action that (1) writes `content`/`searchText`, (2) regenerates `ydoc` via `TiptapTransformer.toYdoc` when no session is live, or (3) calls the collab server's internal replace endpoint when a session is live so connected editors converge. An automatic safety snapshot of the pre-restore state is created first.
 
 **JSON export/import (wiki admins only, gated `wiki;manage` — not page admins):**
@@ -390,7 +390,7 @@ Each phase is shippable to `develop` behind the unfinished app (the tile only ap
 4. **Collab:** `apps/collab` app + Dockerfile + CI image build; JWT minting; provider wiring + presence carets; core-services Ansible/Terraform (separate repo PR).
 5. **Embeds & files:** dedicated embed nodes, generic iframe + allowlist validation, settings UI, upload API extension, attachment node + presigned-GET route, internal page links.
 6. **Search, favorites/recents, reports:** FTS index + query + UI; favorite/visit models + landing page; report modal, triage list, tile badge; web-push wiring (new `NotificationType` + lambda type-handler + `NotificationSetting` entry).
-7. **Snapshots:** manual + auto, list + restore, safety snapshot, collab replace endpoint; JSON export/import for `wiki;manage` (§9, shares the restore write path).
+7. **Snapshots:** automatic snapshots, list + restore, safety snapshot, collab replace endpoint; JSON export/import for `wiki;manage` (§9, shares the restore write path).
 8. **Cutover:** seed script, demo-content script (§15 — needs all phase-5 node types), remove help/documents modules + 28 permissions, redirects, `INTEGRATED_APPS`/CmdK/topbar rewiring, changelog entry, screenshots, Playwright smoke tests (create/read/permission-deny).
 
 ## 19. Defaults I chose — flag if you disagree
@@ -403,7 +403,7 @@ Each phase is shippable to `develop` behind the unfinished app (the tile only ap
 - Reports: not anonymous (admins see the reporter), free-text reason required, multiple reports per page allowed, max ~5 open reports per user, resolving never auto-changes the page itself.
 - Page titles are a separate DB field with a rename action — not realtime-collaborative; concurrent viewers see a renamed title on next navigation.
 - Attachment presigned GET URLs expire after ~5 minutes; trash auto-purges after 30 days.
-- Auto-snapshot cadence 30 min / retention 50; manual snapshots unlimited.
+- Auto-snapshot cadence 30 min / retention 50; safety snapshots (before restore/import) are kept forever.
 - Attachment mime allowlist starts with PDF + office + archives, 25 MB cap.
 - FTS uses the `german` config (content is German); revisit if English content grows.
 - Audit granularity for content: one event per user editing session, not per save.

@@ -1,12 +1,15 @@
 import { prisma } from "@/db";
 import { env } from "@/env";
 import { authenticate, requireAuthenticationPage } from "@/modules/auth/server";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { EditableInput } from "@/modules/common/components/form/EditableInput";
 import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout";
+import { Link } from "@/modules/common/components/Link";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { renameWikiPage } from "@/modules/wiki/actions/renameWikiPage";
 import { DeleteWikiPageModal } from "@/modules/wiki/components/DeleteWikiPageModal";
+import { ImportWikiPageContentModal } from "@/modules/wiki/components/ImportWikiPageContentModal";
 import { MoveWikiPageModal } from "@/modules/wiki/components/MoveWikiPageModal";
 import { ReportWikiPageModal } from "@/modules/wiki/components/ReportWikiPageModal";
 import { WikiCollabEditor } from "@/modules/wiki/components/WikiCollabEditor";
@@ -35,7 +38,7 @@ import { WikiPageAccessType } from "@sam-monorepo/database/client";
 import { collectWikiMentionedCitizenIds } from "@sam-monorepo/wiki-editor";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { FaSitemap } from "react-icons/fa";
+import { FaFileExport, FaHistory, FaSitemap } from "react-icons/fa";
 
 type Params = PageProps<"/app/wiki/[pageId]/[[...slug]]">["params"];
 
@@ -198,7 +201,8 @@ const PageContent = async ({
       </h1>
 
       <p className="mt-1 text-xs text-white/20">
-        <span className="uppercase font-mono">Aktualisiert:</span> {formatDate(page.updatedAt)}
+        <span className="uppercase font-mono">Aktualisiert:</span>{" "}
+        {formatDate(page.updatedAt)}
       </p>
 
       <div className="mt-4 flex flex-wrap gap-2">
@@ -210,6 +214,14 @@ const PageContent = async ({
 
         {permissions.canAdmin && (
           <>
+            <Button2
+              as={Link}
+              href={`/app/wiki/${page.id}/snapshots`}
+              variant={Button2Variant.Secondary}
+              title="Snapshots"
+            >
+              <FaHistory />
+            </Button2>
             <MoveWikiPageModal
               pageId={page.id}
               targets={moveTargets}
@@ -241,6 +253,20 @@ const PageContent = async ({
               title={page.title}
               descendantCount={descendantIds.length}
             />
+          </>
+        )}
+
+        {context.viewer.hasWikiManage && (
+          <>
+            <Button2
+              as="a"
+              href={`/api/wiki/${page.id}/export`}
+              variant={Button2Variant.Secondary}
+              title="JSON exportieren"
+            >
+              <FaFileExport />
+            </Button2>
+            <ImportWikiPageContentModal pageId={page.id} title={page.title} />
           </>
         )}
       </div>

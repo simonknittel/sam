@@ -105,6 +105,8 @@ export enum AuditEventType {
   WIKI_SETTINGS_UPDATED = "WIKI_SETTINGS_UPDATED",
   WIKI_PAGE_REPORTED = "WIKI_PAGE_REPORTED",
   WIKI_PAGE_REPORT_RESOLVED = "WIKI_PAGE_REPORT_RESOLVED",
+  WIKI_PAGE_SNAPSHOT_RESTORED = "WIKI_PAGE_SNAPSHOT_RESTORED",
+  WIKI_PAGE_CONTENT_IMPORTED = "WIKI_PAGE_CONTENT_IMPORTED",
 }
 
 export interface AuditEventDataByType {
@@ -753,6 +755,15 @@ export interface AuditEventDataByType {
 
   [AuditEventType.WIKI_PAGE_REPORT_RESOLVED]: {
     reportId: string;
+    pageId: string;
+  };
+
+  [AuditEventType.WIKI_PAGE_SNAPSHOT_RESTORED]: {
+    pageId: string;
+    snapshotId: string;
+  };
+
+  [AuditEventType.WIKI_PAGE_CONTENT_IMPORTED]: {
     pageId: string;
   };
 }
@@ -1913,5 +1924,22 @@ export const AuditEventDefinitions: {
       pageId: "string",
     },
     message: (data) => `Wiki page report resolved (${data.pageId})`,
+  },
+
+  [AuditEventType.WIKI_PAGE_SNAPSHOT_RESTORED]: {
+    type: AuditEventType.WIKI_PAGE_SNAPSHOT_RESTORED,
+    data: {
+      pageId: "string",
+      snapshotId: "string",
+    },
+    message: (data) => `Wiki page snapshot restored (${data.pageId})`,
+  },
+
+  [AuditEventType.WIKI_PAGE_CONTENT_IMPORTED]: {
+    type: AuditEventType.WIKI_PAGE_CONTENT_IMPORTED,
+    data: {
+      pageId: "string",
+    },
+    message: (data) => `Wiki page content imported (${data.pageId})`,
   },
 };

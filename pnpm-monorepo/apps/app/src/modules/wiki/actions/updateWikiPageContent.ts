@@ -12,6 +12,7 @@ import { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getWikiContext } from "../queries/getWikiContext";
+import { maybeCreateWikiAutoSnapshot } from "../utils/maybeCreateWikiAutoSnapshot";
 
 const schema = z.object({
   id: z.cuid2(),
@@ -54,6 +55,12 @@ export const updateWikiPageContent = createAuthenticatedAction(
     } catch {
       return { error: t("Common.badRequest"), requestPayload: formData };
     }
+
+    /**
+     * Before overwriting, preserve the stored state as an automatic
+     * snapshot when the 30-minute cadence has passed.
+     */
+    await maybeCreateWikiAutoSnapshot(page.id);
 
     await prisma.wikiPage.update({
       where: { id: page.id },

@@ -1,4 +1,5 @@
 import { mergeAttributes, Node } from "@tiptap/core";
+import { walkWikiContent } from "./walkWikiContent.js";
 import { renderWikiBlockedPlaceholder } from "./wikiBlockedPlaceholder.js";
 import {
   wikiAlignAttribute,
@@ -46,6 +47,22 @@ export const isWikiIframeSrcAllowed = (
     if (!hostname) return false;
     return url.hostname === hostname || url.hostname.endsWith(`.${hostname}`);
   });
+};
+
+/**
+ * All generic-iframe src values of a Tiptap JSON document, e.g. for
+ * re-validating imported content against the allowlist (imports bypass the
+ * insertion-time check).
+ */
+export const collectWikiIframeSrcs = (content: unknown): string[] => {
+  const srcs = new Set<string>();
+
+  walkWikiContent(content, (node) => {
+    if (node.type === "wikiIframe" && typeof node.attrs?.src === "string")
+      srcs.add(node.attrs.src);
+  });
+
+  return [...srcs];
 };
 
 /**
