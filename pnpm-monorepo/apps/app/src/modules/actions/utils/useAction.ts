@@ -2,10 +2,10 @@ import { useTranslations } from "next-intl";
 import { unstable_rethrow } from "next/navigation";
 import { useActionState } from "react";
 import toast from "react-hot-toast";
-import type { createAuthenticatedAction } from "./createAction";
+import type { ActionResponse } from "./createAction";
 
 export const useAction = (
-  action: ReturnType<typeof createAuthenticatedAction>,
+  action: (formData: FormData) => Promise<ActionResponse | void>,
   options?: { onSuccess?: () => void },
 ) => {
   const t = useTranslations();
@@ -14,6 +14,16 @@ export const useAction = (
     async (previousState: unknown, formData: FormData) => {
       try {
         const response = await action(formData);
+
+        /**
+         * Actions that `redirect()` on success resolve without a response
+         * (the navigation is already in flight). Only run the success hook,
+         * e.g. to close a modal before the new page renders.
+         */
+        if (!response) {
+          options?.onSuccess?.();
+          return null;
+        }
 
         if ("error" in response) {
           toast.error(response.error);
@@ -55,7 +65,7 @@ export const useAction = (
       const value = state.requestPayload.get(formFieldName) as
         string | number | readonly string[] | undefined; // TODO: What about File?
 
-      if (!value) return value;
+      if (value) return value;
     }
 
     return fallback;

@@ -10,7 +10,7 @@ import { unstable_rethrow } from "next/navigation";
 import { serializeError } from "serialize-error";
 import type { z } from "zod";
 
-type Return = Promise<
+export type ActionResponse =
   | { success: string }
   | {
       error: string;
@@ -22,8 +22,9 @@ type Return = Promise<
        * `useAction()` for more details.
        */
       requestPayload: FormData;
-    }
->;
+    };
+
+type Return = Promise<ActionResponse>;
 
 export const createAuthenticatedAction = <T extends z.ZodTypeAny>(
   name: string,

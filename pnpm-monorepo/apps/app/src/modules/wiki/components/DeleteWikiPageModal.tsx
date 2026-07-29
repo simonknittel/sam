@@ -1,0 +1,82 @@
+"use client";
+
+import { useAction } from "@/modules/actions/utils/useAction";
+import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
+import Modal from "@/modules/common/components/Modal";
+import Note from "@/modules/common/components/Note";
+import { useState } from "react";
+import { FaTrash } from "react-icons/fa";
+import { deleteWikiPage } from "../actions/deleteWikiPage";
+
+interface Props {
+  readonly className?: string;
+  readonly pageId: string;
+  readonly title: string;
+  readonly descendantCount: number;
+}
+
+export const DeleteWikiPageModal = ({
+  className,
+  pageId,
+  title,
+  descendantCount,
+}: Props) => {
+  const [isOpen, setIsOpen] = useState(false);
+  /**
+   * On success the action redirects to the wiki root, so there is no
+   * success toast and no need to close the modal.
+   */
+  const { state, formAction, isPending } = useAction(deleteWikiPage);
+
+  return (
+    <>
+      <Button2
+        type="button"
+        onClick={() => setIsOpen(true)}
+        variant={Button2Variant.Secondary}
+        className={className}
+        title="Seite löschen"
+      >
+        <FaTrash /> Löschen
+      </Button2>
+
+      <Modal
+        isOpen={isOpen}
+        onRequestClose={() => setIsOpen(false)}
+        className="w-120"
+        heading={<h2>Seite löschen</h2>}
+      >
+        <form action={formAction}>
+          <input type="hidden" name="id" value={pageId} />
+
+          <p>
+            Soll die Seite &quot;{title}&quot;
+            {descendantCount > 0 && (
+              <>
+                {" "}
+                inklusive <strong>{descendantCount} Unterseite(n)</strong>
+              </>
+            )}{" "}
+            gelöscht werden?
+          </p>
+
+          <Note
+            type="info"
+            className="mt-4"
+            message="Gelöschte Seiten können 30 Tage lang aus dem Papierkorb wiederhergestellt werden."
+          />
+
+          <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
+            {isPending ? <AsciiSpinner /> : <FaTrash />}
+            Löschen
+          </Button2>
+
+          {state && "error" in state && state.error && (
+            <Note type="error" message={state.error} className="mt-4" />
+          )}
+        </form>
+      </Modal>
+    </>
+  );
+};

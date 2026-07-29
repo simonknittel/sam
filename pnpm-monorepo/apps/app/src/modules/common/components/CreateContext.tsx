@@ -55,6 +55,12 @@ const CreateSilcTransactionForm = dynamic(() =>
   ),
 );
 
+const CreateWikiPageGlobalForm = dynamic(() =>
+  import("@/modules/wiki/components/CreateWikiPageGlobalForm").then(
+    (mod) => mod.CreateWikiPageGlobalForm,
+  ),
+);
+
 export const createForms = {
   citizen: {
     formComponent: CreateCitizenForm,
@@ -89,6 +95,11 @@ export const createForms = {
   silcTransaction: {
     formComponent: CreateSilcTransactionForm,
     modalHeading: "Neue SILC-Transaktion",
+    modalWidth: "w-120",
+  },
+  wikiPage: {
+    formComponent: CreateWikiPageGlobalForm,
+    modalHeading: "Neue Seite",
     modalWidth: "w-120",
   },
 };

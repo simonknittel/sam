@@ -201,4 +201,11 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
     description:
       "Helfer für die Umrechnung von Zeiten zwischen verschiedenen Zeitzonen",
   },
+  {
+    name: "Wiki",
+    slug: "wiki",
+    href: "/app/wiki",
+    description: "Das Wissen der Organisation an einem Ort",
+    permissionStrings: ["wiki;read"],
+  },
 ];

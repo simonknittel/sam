@@ -1,0 +1,71 @@
+"use server";
+
+import { prisma } from "@/db";
+import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
+import {
+  MAX_WIKI_IFRAME_ALLOWLIST_ENTRIES,
+  WIKI_SETTING_IFRAME_ALLOWLIST,
+} from "../queries/getWikiSettings";
+import { WIKI_HOSTNAME_PATTERN } from "../utils/wikiHostnamePattern";
+
+const schema = z.object({
+  /** One hostname per line (the client component joins its list) */
+  domains: z
+    .string()
+    .max(10_000)
+    .transform((value) =>
+      [
+        ...new Set(
+          value
+            .split("\n")
+            .map((line) => line.trim().toLowerCase())
+            .filter(Boolean),
+        ),
+      ].toSorted(),
+    )
+    .refine(
+      (domains) =>
+        domains.length <= MAX_WIKI_IFRAME_ALLOWLIST_ENTRIES &&
+        domains.every((domain) => WIKI_HOSTNAME_PATTERN.test(domain)),
+      { message: "Invalid hostname" },
+    ),
+});
+
+export const updateWikiIframeAllowlist = createAuthenticatedAction(
+  "updateWikiIframeAllowlist",
+  schema,
+  async (formData, authentication, data, t) => {
+    if (!(await authentication.authorize("wiki", "manage")))
+      return { error: t("Common.forbidden"), requestPayload: formData };
+
+    const updatedById = authentication.session.entity?.id ?? null;
+    await prisma.wikiSetting.upsert({
+      where: { key: WIKI_SETTING_IFRAME_ALLOWLIST },
+      update: { value: data.domains, updatedById },
+      create: {
+        key: WIKI_SETTING_IFRAME_ALLOWLIST,
+        value: data.domains,
+        updatedById,
+      },
+    });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.WIKI_SETTINGS_UPDATED,
+        data: {
+          setting: WIKI_SETTING_IFRAME_ALLOWLIST,
+          value: data.domains,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
+
+    revalidatePath("/app/wiki", "layout");
+
+    return { success: t("Common.successfullySaved") };
+  },
+);

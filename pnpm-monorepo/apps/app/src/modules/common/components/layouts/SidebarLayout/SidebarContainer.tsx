@@ -8,9 +8,18 @@ import { Button2, Button2Variant } from "../../Button2";
 interface Props {
   readonly className?: string;
   readonly children: ReactNode;
+  /** Label of the toggle button shown on mobile. Defaults to "Filter". */
+  readonly mobileToggleLabel?: string;
+  /** Icon of the toggle button shown on mobile. Defaults to a filter icon. */
+  readonly mobileToggleIcon?: ReactNode;
 }
 
-export const SidebarContainer = ({ className, children }: Props) => {
+export const SidebarContainer = ({
+  className,
+  children,
+  mobileToggleLabel = "Filter",
+  mobileToggleIcon = <FaFilter />,
+}: Props) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -21,8 +30,8 @@ export const SidebarContainer = ({ className, children }: Props) => {
         variant={Button2Variant.Secondary}
         className="w-full md:hidden"
       >
-        <FaFilter />
-        Filter
+        {mobileToggleIcon}
+        {mobileToggleLabel}
       </Button2>
 
       <div

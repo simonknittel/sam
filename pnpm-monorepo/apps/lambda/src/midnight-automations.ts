@@ -9,6 +9,7 @@ import { countUniqueLogins } from "./midnight-automations/countUniqueLogins";
 import { disburseRoleSalaries } from "./midnight-automations/disburseRoleSalaries";
 import { endCollectionPhases } from "./midnight-automations/endCollectionPhases";
 import { endPayoutPhases } from "./midnight-automations/endPayoutPhases";
+import { purgeTrashedWikiPages } from "./midnight-automations/purgeTrashedWikiPages";
 import { removeExpiredRoles } from "./midnight-automations/removeExpiredRoles";
 
 export const handler: ScheduledHandler = async (event, context) => {
@@ -21,5 +22,6 @@ export const handler: ScheduledHandler = async (event, context) => {
     await disburseRoleSalaries();
     await countShips();
     await countUniqueLogins();
+    await purgeTrashedWikiPages();
   });
 };

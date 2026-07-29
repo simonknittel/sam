@@ -1,0 +1,64 @@
+"use server";
+
+import { prisma } from "@/db";
+import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
+import { getWikiContext } from "../queries/getWikiContext";
+import { collectWikiPageDescendants } from "../utils/collectWikiPageDescendants";
+
+const schema = z.object({
+  id: z.cuid2(),
+});
+
+/**
+ * Permanently deletes an already soft-deleted page and its subtree.
+ * Children are deleted before their parents because of the Restrict FK on
+ * parentId.
+ */
+export const destroyWikiPage = createAuthenticatedAction(
+  "destroyWikiPage",
+  schema,
+  async (formData, authentication, data, t) => {
+    const context = await getWikiContext();
+    if (!context)
+      return { error: t("Common.forbidden"), requestPayload: formData };
+
+    const page = context.pagesById.get(data.id);
+    if (!page?.deletedAt)
+      return { error: t("Common.badRequest"), requestPayload: formData };
+    if (!context.permissions.get(page.id)?.canAdmin)
+      return { error: t("Common.forbidden"), requestPayload: formData };
+
+    const descendantIds = collectWikiPageDescendants(context.allPages, page.id);
+    const destroyedIds = [page.id, ...descendantIds];
+
+    /**
+     * deleteMany can't order by depth, so delete leaves-first in a
+     * transaction: reverse BFS order guarantees children before parents.
+     */
+    await prisma.$transaction(
+      [...destroyedIds]
+        .reverse()
+        .map((id) => prisma.wikiPage.delete({ where: { id } })),
+    );
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.WIKI_PAGE_DESTROYED,
+        data: {
+          pageId: page.id,
+          title: page.title,
+          destroyedPageIds: destroyedIds,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
+
+    revalidatePath("/app/wiki", "layout");
+
+    return { success: "Endgültig gelöscht." };
+  },
+);

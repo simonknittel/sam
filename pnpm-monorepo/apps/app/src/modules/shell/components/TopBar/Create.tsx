@@ -47,6 +47,9 @@ export const Create = ({ className }: Props) => {
     authentication &&
     authentication.authorize("silcTransactionOfOtherCitizen", "create"),
   );
+  const showCreateWikiPage = Boolean(
+    authentication && authentication.authorize("wiki", "read"),
+  );
 
   if (
     !showCreateCitizen &&
@@ -55,7 +58,8 @@ export const Create = ({ className }: Props) => {
     !showCreateRole &&
     !showCreatePenaltyEntry &&
     !showCreateTask &&
-    !showCreateSilcTransaction
+    !showCreateSilcTransaction &&
+    !showCreateWikiPage
   )
     return null;
 
@@ -83,6 +87,7 @@ export const Create = ({ className }: Props) => {
           showCreatePenaltyEntry={showCreatePenaltyEntry}
           showCreateTask={showCreateTask}
           showCreateSilcTransaction={showCreateSilcTransaction}
+          showCreateWikiPage={showCreateWikiPage}
         />
       </Popover>
     </div>
@@ -97,6 +102,7 @@ interface PopoverChildrenProps {
   readonly showCreatePenaltyEntry: boolean;
   readonly showCreateTask: boolean;
   readonly showCreateSilcTransaction: boolean;
+  readonly showCreateWikiPage: boolean;
 }
 
 const PopoverChildren = ({
@@ -107,6 +113,7 @@ const PopoverChildren = ({
   showCreatePenaltyEntry,
   showCreateTask,
   showCreateSilcTransaction,
+  showCreateWikiPage,
 }: PopoverChildrenProps) => {
   const { closePopover } = usePopover();
   const { openCreateModal } = useCreateContext();
@@ -120,30 +127,30 @@ const PopoverChildren = ({
   // @ts-expect-error Doesn't make any sense
   let items: (
     | {
-      label: string;
-      type: "button";
-      modalId: keyof typeof createForms;
-    }
+        label: string;
+        type: "button";
+        modalId: keyof typeof createForms;
+      }
     | {
-      label: string;
-      type: "link";
-      href: string;
-    }
+        label: string;
+        type: "link";
+        href: string;
+      }
   )[] = [
-      ...(apps
-        ?.filter((app): app is ExternalApp =>
-          Boolean(
-            "createLinks" in app && app.createLinks && app.createLinks.length > 0,
-          ),
-        )
-        .flatMap((app) => {
-          return app.createLinks!.map((link) => ({
-            label: link.title,
-            type: "link",
-            href: `/app/external/${app.slug}/${link.slug}`,
-          }));
-        }) || []),
-    ];
+    ...(apps
+      ?.filter((app): app is ExternalApp =>
+        Boolean(
+          "createLinks" in app && app.createLinks && app.createLinks.length > 0,
+        ),
+      )
+      .flatMap((app) => {
+        return app.createLinks!.map((link) => ({
+          label: link.title,
+          type: "link",
+          href: `/app/external/${app.slug}/${link.slug}`,
+        }));
+      }) || []),
+  ];
 
   if (showCreateCitizen)
     items.push({ label: "Citizen", type: "button", modalId: "citizen" });
@@ -174,6 +181,12 @@ const PopoverChildren = ({
       label: "SILC-Transaktion",
       type: "button",
       modalId: "silcTransaction",
+    });
+  if (showCreateWikiPage)
+    items.push({
+      label: "Wiki-Seite",
+      type: "button",
+      modalId: "wikiPage",
     });
 
   items = items.toSorted((a, b) => a.label.localeCompare(b.label));
