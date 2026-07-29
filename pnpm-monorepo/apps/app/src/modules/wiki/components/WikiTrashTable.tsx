@@ -1,0 +1,121 @@
+import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
+import { formatDate } from "@/modules/common/utils/formatDate";
+import clsx from "clsx";
+import { forbidden } from "next/navigation";
+import {
+  createLoader,
+  parseAsString,
+  parseAsStringLiteral,
+  type SearchParams,
+} from "nuqs/server";
+import {
+  getWikiContext,
+  type WikiContextPage,
+} from "../queries/getWikiContext";
+import { WikiTrashActions } from "./WikiTrashActions";
+
+const TABLE_MIN_WIDTH = "min-w-160";
+const GRID_COLS = "grid-cols-[minmax(200px,_1fr)_140px_300px]";
+
+const loadSearchParams = createLoader({
+  sort: parseAsStringLiteral(["deleted-desc", "deleted-asc"]).withDefault(
+    "deleted-desc",
+  ),
+  q: parseAsString,
+});
+
+interface Props {
+  readonly className?: string;
+  readonly searchParams: Promise<SearchParams>;
+}
+
+export const WikiTrashTable = async ({ className, searchParams }: Props) => {
+  const { sort, q } = await loadSearchParams(searchParams);
+
+  const context = await getWikiContext();
+  if (!context) forbidden();
+
+  /**
+   * Only pages the viewer can administrate show up in their trash. Child
+   * pages of a deleted subtree are hidden — restoring/destroying the
+   * subtree root covers them.
+   */
+  const trashedPages = context.allPages.filter((page) => {
+    if (page.deletedAt === null) return false;
+    if (!context.permissions.get(page.id)?.canAdmin) return false;
+    const parent = page.parentId
+      ? context.pagesById.get(page.parentId)
+      : undefined;
+    return !parent?.deletedAt;
+  });
+
+  const filteredPages = trashedPages.filter((page) => {
+    if (!q) return true;
+    return page.title.toLowerCase().includes(q.toLowerCase());
+  });
+
+  const sortedPages = filteredPages.toSorted((a, b) => {
+    switch (sort) {
+      case "deleted-desc":
+        return b.deletedAt!.getTime() - a.deletedAt!.getTime();
+      case "deleted-asc":
+        return a.deletedAt!.getTime() - b.deletedAt!.getTime();
+      default:
+        throw new Error(`Unknown sort: ${sort satisfies never}`);
+    }
+  });
+
+  return (
+    <section className={clsx("p-4 bg-secondary rounded-primary", className)}>
+      <p className="mb-4 text-sm text-neutral-400">
+        Gelöschte Seiten werden nach 30 Tagen endgültig entfernt.
+      </p>
+
+      <Table tableClassName={TABLE_MIN_WIDTH}>
+        <THead className={GRID_COLS}>
+          <th>Seite</th>
+
+          <th>Gelöscht am</th>
+
+          <th className="sr-only">Aktionen</th>
+        </THead>
+
+        <TBody>
+          {sortedPages.map((page) => (
+            <TrashRow key={page.id} page={page} />
+          ))}
+        </TBody>
+      </Table>
+
+      {sortedPages.length <= 0 && (
+        <p className="text-neutral-500 italic">Der Papierkorb ist leer</p>
+      )}
+    </section>
+  );
+};
+
+interface TrashRowProps {
+  readonly page: WikiContextPage;
+}
+
+const TrashRow = ({ page }: TrashRowProps) => {
+  return (
+    <TRow className={clsx("h-10", GRID_COLS)}>
+      <td className="overflow-hidden">
+        <p className="truncate px-2 font-bold" title={page.title}>
+          {page.title}
+        </p>
+      </td>
+
+      <td>{formatDate(page.deletedAt)}</td>
+
+      <td>
+        <WikiTrashActions
+          pageId={page.id}
+          title={page.title}
+          className="flex flex-wrap items-center gap-2"
+        />
+      </td>
+    </TRow>
+  );
+};
