@@ -1,0 +1,103 @@
+import { Node, mergeAttributes } from "@tiptap/core";
+
+export const WIKI_GRID_COLUMN_COUNTS = [2, 3, 4] as const;
+export type WikiGridColumnCount = (typeof WIKI_GRID_COLUMN_COUNTS)[number];
+
+declare module "@tiptap/core" {
+  interface Commands<ReturnType> {
+    wikiGrid: {
+      /** Inserts a grid with the given number of columns */
+      insertWikiGrid: (columns: WikiGridColumnCount) => ReturnType;
+    };
+  }
+}
+
+/**
+ * A simple grid layout placing content side-by-side. Rendered as a CSS grid
+ * that collapses to a single column on small screens (see wikiEditor.css).
+ */
+export const WikiGrid = Node.create({
+  name: "wikiGrid",
+  group: "block",
+  content: "wikiGridCell+",
+  isolating: true,
+
+  addAttributes() {
+    return {
+      columns: {
+        default: 2,
+        parseHTML: (element) => {
+          const parsed = Number(element.getAttribute("data-columns"));
+          return WIKI_GRID_COLUMN_COUNTS.includes(parsed as WikiGridColumnCount)
+            ? parsed
+            : 2;
+        },
+        renderHTML: (attributes) => ({
+          "data-columns": String(attributes.columns),
+        }),
+      },
+      /**
+       * NULL/"top" aligns cell content to the top (default), "center"
+       * centers it vertically (see wikiEditor.css).
+       */
+      verticalAlign: {
+        default: null,
+        parseHTML: (element) =>
+          element.getAttribute("data-vertical-align") === "center"
+            ? "center"
+            : null,
+        renderHTML: (attributes) =>
+          attributes.verticalAlign === "center"
+            ? { "data-vertical-align": "center" }
+            : {},
+      },
+    };
+  },
+
+  parseHTML() {
+    return [{ tag: "div[data-wiki-grid]" }];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return [
+      "div",
+      mergeAttributes({ "data-wiki-grid": "" }, HTMLAttributes),
+      0,
+    ];
+  },
+
+  addCommands() {
+    return {
+      insertWikiGrid:
+        (columns) =>
+        ({ commands }) => {
+          return commands.insertContent({
+            type: this.name,
+            attrs: { columns },
+            content: Array.from({ length: columns }, () => ({
+              type: "wikiGridCell",
+              content: [{ type: "paragraph" }],
+            })),
+          });
+        },
+    };
+  },
+});
+
+export const WikiGridCell = Node.create({
+  name: "wikiGridCell",
+  content: "block+",
+  isolating: true,
+
+  parseHTML() {
+    return [{ tag: "div[data-wiki-grid-cell]" }];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return [
+      "div",
+      mergeAttributes({ "data-wiki-grid-cell": "" }, HTMLAttributes),
+      0,
+    ];
+  },
+});

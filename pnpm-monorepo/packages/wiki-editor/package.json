@@ -1,0 +1,33 @@
+{
+  "name": "@sam-monorepo/wiki-editor",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "postinstall": "tsc",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@tiptap/core": "3.28.0",
+    "@tiptap/extension-code-block-lowlight": "3.28.0",
+    "@tiptap/extension-details": "3.28.0",
+    "@tiptap/extension-highlight": "3.28.0",
+    "@tiptap/extension-image": "3.28.0",
+    "@tiptap/extension-list": "3.28.0",
+    "@tiptap/extension-table": "3.28.0",
+    "@tiptap/extension-text-align": "3.28.0",
+    "@tiptap/extension-youtube": "3.28.0",
+    "@tiptap/extensions": "3.28.0",
+    "@tiptap/pm": "3.28.0",
+    "@tiptap/starter-kit": "3.28.0",
+    "lowlight": "3.3.0",
+    "slug": "12.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.3",
+    "@types/slug": "5.0.9",
+    "typescript": "7.0.2"
+  }
+}
