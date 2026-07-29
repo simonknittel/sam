@@ -1,10 +1,22 @@
 {
 	"recommendations": [
+		"bradlc.vscode-tailwindcss",
+		"bruno-api-client.bruno",
+		"clinyong.vscode-css-modules",
+		"dbaeumer.vscode-eslint",
+		"deque-systems.vscode-axe-linter",
+		"esbenp.prettier-vscode",
 		"github.vscode-github-actions",
 		"hashicorp.terraform",
-		"bruno-api-client.bruno",
+		"lokalise.i18n-ally",
 		"ms-azuretools.vscode-containers",
 		"ms-playwright.playwright",
-		"prisma.prisma"
+		"ms-vscode-remote.remote-containers",
+		"prisma.prisma",
+		"prisma.prisma",
+		"prisma.prisma",
+		"streetsidesoftware.code-spell-checker-german",
+		"streetsidesoftware.code-spell-checker",
+		"vitest.explorer"
 	]
 }

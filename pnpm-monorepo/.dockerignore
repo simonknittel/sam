@@ -1,0 +1,14 @@
+# Keep local installs, build output and secrets out of Docker build
+# contexts (apps/collab/Dockerfile builds with pnpm-monorepo as context).
+# Everything in here is recreated inside the image by pnpm install and the
+# build step — copied-in local state would shadow it (e.g. macOS symlinks
+# into node_modules/.pnpm, or a stale tsconfig.tsbuildinfo making tsc skip
+# its emit).
+**/node_modules
+**/dist
+**/.next
+**/.turbo
+**/*.tsbuildinfo
+**/src/generated
+**/.env
+**/.env.*

@@ -3,8 +3,9 @@
   "private": true,
   "packageManager": "pnpm@11.8.0",
   "scripts": {
-    "build:lambda": "pnpm run --filter \"./packages/database\" build && pnpm run --filter \"./apps/lambda\" build",
-    "build:scripts": "pnpm run --filter \"./packages/database\" build",
+    "build:lambda": "pnpm run --filter \"@sam-monorepo/lambda...\" build",
+    "build:scripts": "pnpm run --filter \"@sam-monorepo/scripts^...\" build",
+    "dev:app": "pnpm run --filter \"@sam-monorepo/app^...\" build && pnpm run --filter \"@sam-monorepo/app\" dev",
     "format": "prettier --write . && pnpm run --filter \"*\" format"
   },
   "devDependencies": {

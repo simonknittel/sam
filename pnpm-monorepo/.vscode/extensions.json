@@ -1,8 +1,0 @@
-{
-  "recommendations": [
-    "prisma.prisma",
-    "streetsidesoftware.code-spell-checker-german",
-    "streetsidesoftware.code-spell-checker",
-    "esbenp.prettier-vscode"
-  ]
-}

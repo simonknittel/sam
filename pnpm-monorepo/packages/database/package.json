@@ -11,9 +11,9 @@
     "./browser": "./dist/browser.js"
   },
   "scripts": {
-    "postinstall": "prisma generate && node ./scripts/patch-generated-client.mjs && tsc",
-    "build": "prisma generate && node ./scripts/patch-generated-client.mjs && tsc",
-    "migrate:dev": "prisma migrate dev && node ./scripts/patch-generated-client.mjs && tsc",
+    "postinstall": "prisma generate && tsc",
+    "build": "prisma generate && tsc",
+    "migrate:dev": "prisma migrate dev && tsc",
     "format": "prisma format"
   },
   "dependencies": {
