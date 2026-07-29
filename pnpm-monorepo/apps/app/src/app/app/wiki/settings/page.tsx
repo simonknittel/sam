@@ -1,5 +1,6 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
+import { Tile } from "@/modules/common/components/Tile";
 import { WikiIframeAllowlistSettings } from "@/modules/wiki/components/WikiIframeAllowlistSettings";
 import { WikiSupportPageSetting } from "@/modules/wiki/components/WikiSupportPageSetting";
 import { getWikiContext } from "@/modules/wiki/queries/getWikiContext";
@@ -41,26 +42,22 @@ const Settings = async () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="bg-secondary rounded-primary p-4 lg:p-8">
-        <h1 className="font-bold text-xl">Einstellungen</h1>
-
-        <h2 className="mt-6 font-bold">Freigegebene Domains für iframes</h2>
-        <p className="mb-4 mt-1 text-sm text-neutral-400">
+      <Tile heading="Freigegebene Domains für iframes">
+        <p className="mb-4 text-sm text-neutral-400">
           Von diesen Domains können Websites in Wiki-Seiten eingebettet werden.
         </p>
         <WikiIframeAllowlistSettings initialDomains={iframeAllowlist} />
-      </section>
+      </Tile>
 
-      <section className="bg-secondary rounded-primary p-4 lg:p-8">
-        <h2 className="font-bold">Support-Seite</h2>
-        <p className="mb-4 mt-1 text-sm text-neutral-400">
+      <Tile heading="Support-Seite">
+        <p className="mb-4 text-sm text-neutral-400">
           Zentrale Anlaufstelle für Hilfe und Support.
         </p>
         <WikiSupportPageSetting
           options={pageOptions}
           currentSupportPageId={supportPageId}
         />
-      </section>
+      </Tile>
     </div>
   );
 };
