@@ -119,6 +119,19 @@ export const NOTIFICATIONS_APPS: NotificationApp[] = [
       },
     ],
   },
+
+  {
+    appTitle: "Wiki",
+    notificationTypes: [
+      {
+        id: "wiki_page_reported",
+        title: "Neue Meldung",
+        description:
+          "Wenn eine Seite gemeldet wird. Nur für Wiki-Administratoren relevant.",
+        category: "Wiki",
+      },
+    ],
+  },
 ];
 
 export const NOTIFICATION_TYPES: NotificationType[] =

@@ -3,6 +3,7 @@ import { DefaultLayout } from "@/modules/common/components/layouts/DefaultLayout
 import { MaxWidthContent } from "@/modules/common/components/layouts/MaxWidthContent";
 import { CreateWikiPageButton } from "@/modules/wiki/components/CreateWikiPageButton";
 import { CreateWikiPageProvider } from "@/modules/wiki/components/CreateWikiPageProvider";
+import { getOpenWikiReportCount } from "@/modules/wiki/queries/getOpenWikiReportCount";
 import { getWikiContext } from "@/modules/wiki/queries/getWikiContext";
 import { getEditableWikiPageTargets } from "@/modules/wiki/utils/getEditableWikiPageTargets";
 import type { Metadata } from "next";
@@ -30,6 +31,9 @@ export default async function Layout({ children }: LayoutProps<"/app/wiki">) {
   ]);
   const targets = context ? getEditableWikiPageTargets(context) : [];
   const showCta = allowTopLevel || targets.length > 0;
+  const openWikiReportCount = hasWikiManage
+    ? await getOpenWikiReportCount()
+    : 0;
 
   return (
     <CreateWikiPageProvider targets={targets} allowTopLevel={allowTopLevel}>
@@ -40,7 +44,16 @@ export default async function Layout({ children }: LayoutProps<"/app/wiki">) {
           { title: "Startseite", url: "/app/wiki" },
           { title: "Papierkorb", url: "/app/wiki/trash" },
           ...(hasWikiManage
-            ? [{ title: "Einstellungen", url: "/app/wiki/settings" }]
+            ? [
+                {
+                  title:
+                    openWikiReportCount > 0
+                      ? `Meldungen (${openWikiReportCount})`
+                      : "Meldungen",
+                  url: "/app/wiki/reports",
+                },
+                { title: "Einstellungen", url: "/app/wiki/settings" },
+              ]
             : []),
         ]}
         cta={showCta ? <CreateWikiPageButton /> : undefined}

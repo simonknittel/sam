@@ -2,11 +2,21 @@ import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout";
 import { Link } from "@/modules/common/components/Link";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
+import { formatDate } from "@/modules/common/utils/formatDate";
+import { WikiSearch } from "@/modules/wiki/components/WikiSearch";
 import { WikiSidebar } from "@/modules/wiki/components/WikiSidebar";
-import { getWikiContext } from "@/modules/wiki/queries/getWikiContext";
-import { buildVisibleWikiTree } from "@/modules/wiki/utils/buildVisibleWikiTree";
+import {
+  getWikiContext,
+  type WikiContextPage,
+} from "@/modules/wiki/queries/getWikiContext";
+import {
+  getWikiFavoritePageIds,
+  getWikiRecentVisitPageIds,
+} from "@/modules/wiki/queries/getWikiFavorites";
 import { forbidden } from "next/navigation";
 import { FaSitemap } from "react-icons/fa";
+
+const RECENT_LIMIT = 8;
 
 export default async function Page() {
   const authentication = await requireAuthenticationPage("/app/wiki");
@@ -27,38 +37,102 @@ export default async function Page() {
 }
 
 const Landing = async () => {
-  const context = await getWikiContext();
+  const [context, favoriteIds, recentVisitPageIds] = await Promise.all([
+    getWikiContext(),
+    getWikiFavoritePageIds(),
+    getWikiRecentVisitPageIds(),
+  ]);
   if (!context) forbidden();
 
-  const tree = buildVisibleWikiTree(context.pages, context.permissions);
+  const visiblePage = (pageId: string) => {
+    const page = context.pagesById.get(pageId);
+    if (!page || page.deletedAt) return undefined;
+    return context.permissions.get(page.id)?.canRead ? page : undefined;
+  };
+
+  const favorites = [...favoriteIds]
+    .map(visiblePage)
+    .filter((page) => page !== undefined)
+    .toSorted((a, b) => a.title.localeCompare(b.title));
+
+  const recentlyVisited = recentVisitPageIds
+    .map(visiblePage)
+    .filter((page) => page !== undefined)
+    .slice(0, RECENT_LIMIT);
+
+  const recentlyUpdated = context.pages
+    .filter((page) => context.permissions.get(page.id)?.canRead)
+    .toSorted((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
+    .slice(0, RECENT_LIMIT);
 
   return (
-    <section className="bg-secondary rounded-primary p-4 lg:p-8">
-      <h1 className="font-bold text-xl">Wiki</h1>
+    <div className="flex flex-col gap-0.5">
+      <section className="bg-secondary rounded-primary p-4 lg:p-8">
+        <WikiSearch className="mx-auto w-full max-w-xl" />
+      </section>
 
-      {tree.length > 0 ? (
-        <ul className="mt-4 flex flex-col gap-2">
-          {tree.map((node) => (
-            <li key={node.id}>
-              <Link
-                href={`/app/wiki/${node.id}/${node.slug}`}
-                className="text-interaction-500 hover:text-interaction-300"
-              >
-                {node.title}
-              </Link>
-              {node.children.length > 0 && (
-                <span className="ml-2 text-sm text-neutral-500">
-                  {node.children.length} Unterseite(n)
-                </span>
-              )}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="mt-4 text-neutral-400">
-          Es gibt noch keine für dich sichtbaren Seiten.
-        </p>
+      {favorites.length > 0 && (
+        <PageListSection heading="Favoriten" pages={favorites} />
       )}
+
+      {(recentlyVisited.length > 0 || recentlyUpdated.length > 0) && (
+        <div className="grid gap-0.5 lg:grid-cols-2">
+          {recentlyVisited.length > 0 && (
+            <PageListSection
+              heading="Zuletzt besucht"
+              pages={recentlyVisited}
+            />
+          )}
+
+          {recentlyUpdated.length > 0 && (
+            <PageListSection
+              heading="Zuletzt aktualisiert"
+              pages={recentlyUpdated}
+              showUpdatedAt
+            />
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+interface PageListSectionProps {
+  readonly heading: string;
+  readonly pages: WikiContextPage[];
+  readonly showUpdatedAt?: boolean;
+}
+
+const PageListSection = ({
+  heading,
+  pages,
+  showUpdatedAt = false,
+}: PageListSectionProps) => {
+  return (
+    <section className="bg-secondary rounded-primary p-4 lg:p-8">
+      <h2 className="font-mono uppercase font-bold text-xl">{heading}</h2>
+
+      <ul className="mt-4 flex flex-col gap-2">
+        {pages.map((page) => (
+          <li
+            key={page.id}
+            className="flex items-baseline justify-between gap-2"
+          >
+            <Link
+              href={`/app/wiki/${page.id}/${page.slug}`}
+              className="text-interaction-500 hover:text-interaction-300"
+            >
+              {page.title}
+            </Link>
+
+            {showUpdatedAt && (
+              <span className="text-sm text-neutral-500">
+                {formatDate(page.updatedAt)}
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
     </section>
   );
 };

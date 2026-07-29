@@ -8,8 +8,10 @@ import { formatDate } from "@/modules/common/utils/formatDate";
 import { renameWikiPage } from "@/modules/wiki/actions/renameWikiPage";
 import { DeleteWikiPageModal } from "@/modules/wiki/components/DeleteWikiPageModal";
 import { MoveWikiPageModal } from "@/modules/wiki/components/MoveWikiPageModal";
+import { ReportWikiPageModal } from "@/modules/wiki/components/ReportWikiPageModal";
 import { WikiCollabEditor } from "@/modules/wiki/components/WikiCollabEditor";
 import { WikiPageEditor } from "@/modules/wiki/components/WikiPageEditor";
+import { WikiPageFavoriteButton } from "@/modules/wiki/components/WikiPageFavoriteButton";
 import { WikiPagePermissionsModal } from "@/modules/wiki/components/WikiPagePermissionsModal";
 import { WikiPageStaticContent } from "@/modules/wiki/components/WikiPageStaticContent";
 import { WikiPageToc } from "@/modules/wiki/components/WikiPageToc";
@@ -19,6 +21,7 @@ import {
   type WikiContext,
   type WikiContextPage,
 } from "@/modules/wiki/queries/getWikiContext";
+import { getWikiFavoritePageIds } from "@/modules/wiki/queries/getWikiFavorites";
 import { getWikiIframeAllowlist } from "@/modules/wiki/queries/getWikiSettings";
 import { buildWikiPageToc } from "@/modules/wiki/utils/buildWikiPageToc";
 import { collectWikiPageDescendants } from "@/modules/wiki/utils/collectWikiPageDescendants";
@@ -27,6 +30,7 @@ import {
   type WikiPageTargetOption,
 } from "@/modules/wiki/utils/getEditableWikiPageTargets";
 import { getWikiCollabColor } from "@/modules/wiki/utils/getWikiCollabColor";
+import { trackWikiPageVisit } from "@/modules/wiki/utils/trackWikiPageVisit";
 import { WikiPageAccessType } from "@sam-monorepo/database/client";
 import { collectWikiMentionedCitizenIds } from "@sam-monorepo/wiki-editor";
 import type { Metadata } from "next";
@@ -100,28 +104,32 @@ const PageContent = async ({
   page,
   permissions,
 }: PageContentProps) => {
-  const [effectiveOwner, pageContent, iframeAllowlist] = await Promise.all([
-    permissions.effectiveOwnerId
-      ? prisma.entity.findUnique({
-          where: { id: permissions.effectiveOwnerId },
-          select: { id: true, handle: true },
-        })
-      : Promise.resolve(null),
-    /**
-     * The content is intentionally not part of getWikiContext (which loads
-     * all pages on every wiki request) — it's only needed here.
-     */
-    prisma.wikiPage.findUnique({
-      where: { id: page.id },
-      select: { content: true },
-    }),
-    getWikiIframeAllowlist(),
-  ]);
+  const [effectiveOwner, pageContent, iframeAllowlist, favoritePageIds] =
+    await Promise.all([
+      permissions.effectiveOwnerId
+        ? prisma.entity.findUnique({
+            where: { id: permissions.effectiveOwnerId },
+            select: { id: true, handle: true },
+          })
+        : Promise.resolve(null),
+      /**
+       * The content is intentionally not part of getWikiContext (which loads
+       * all pages on every wiki request) — it's only needed here.
+       */
+      prisma.wikiPage.findUnique({
+        where: { id: page.id },
+        select: { content: true },
+      }),
+      getWikiIframeAllowlist(),
+      getWikiFavoritePageIds(),
+    ]);
 
   const descendantIds = collectWikiPageDescendants(context.pages, page.id);
 
   const authentication = await authenticate();
   const session = authentication ? authentication.session : null;
+
+  trackWikiPageVisit(session?.entity?.id ?? null, page.id);
   const canReadCitizens = Boolean(
     authentication && (await authentication.authorize("citizen", "read")),
   );
@@ -190,44 +198,52 @@ const PageContent = async ({
       </h1>
 
       <p className="mt-1 text-xs text-white/20">
-        Aktualisiert: {formatDate(page.updatedAt)}
+        <span className="uppercase font-mono">Aktualisiert:</span> {formatDate(page.updatedAt)}
       </p>
 
-      {permissions.canAdmin && (
-        <div className="mt-4 flex flex-wrap gap-2">
-          <MoveWikiPageModal
-            pageId={page.id}
-            targets={moveTargets}
-            allowTopLevel={canCreateTopLevel}
-            currentParentId={page.parentId}
-          />
-          <WikiPagePermissionsModal
-            page={{
-              id: page.id,
-              parentId: page.parentId,
-              ownerId: page.ownerId,
-              visibility: page.visibility,
-              editability: page.editability,
-              adminability: page.adminability,
-            }}
-            effectiveOwnerHandle={effectiveOwner?.handle ?? null}
-            readRoleIds={roleIdsOf(WikiPageAccessType.READ)}
-            editRoleIds={roleIdsOf(WikiPageAccessType.EDIT)}
-            adminRoleIds={roleIdsOf(WikiPageAccessType.ADMIN)}
-            inheritedFrom={{
-              visibility: sourceTitle(permissions.visibilitySourceId),
-              editability: sourceTitle(permissions.editabilitySourceId),
-              adminability: sourceTitle(permissions.adminabilitySourceId),
-            }}
-            hasDescendants={descendantIds.length > 0}
-          />
-          <DeleteWikiPageModal
-            pageId={page.id}
-            title={page.title}
-            descendantCount={descendantIds.length}
-          />
-        </div>
-      )}
+      <div className="mt-4 flex flex-wrap gap-2">
+        <WikiPageFavoriteButton
+          pageId={page.id}
+          isFavorite={favoritePageIds.has(page.id)}
+        />
+        <ReportWikiPageModal pageId={page.id} title={page.title} />
+
+        {permissions.canAdmin && (
+          <>
+            <MoveWikiPageModal
+              pageId={page.id}
+              targets={moveTargets}
+              allowTopLevel={canCreateTopLevel}
+              currentParentId={page.parentId}
+            />
+            <WikiPagePermissionsModal
+              page={{
+                id: page.id,
+                parentId: page.parentId,
+                ownerId: page.ownerId,
+                visibility: page.visibility,
+                editability: page.editability,
+                adminability: page.adminability,
+              }}
+              effectiveOwnerHandle={effectiveOwner?.handle ?? null}
+              readRoleIds={roleIdsOf(WikiPageAccessType.READ)}
+              editRoleIds={roleIdsOf(WikiPageAccessType.EDIT)}
+              adminRoleIds={roleIdsOf(WikiPageAccessType.ADMIN)}
+              inheritedFrom={{
+                visibility: sourceTitle(permissions.visibilitySourceId),
+                editability: sourceTitle(permissions.editabilitySourceId),
+                adminability: sourceTitle(permissions.adminabilitySourceId),
+              }}
+              hasDescendants={descendantIds.length > 0}
+            />
+            <DeleteWikiPageModal
+              pageId={page.id}
+              title={page.title}
+              descendantCount={descendantIds.length}
+            />
+          </>
+        )}
+      </div>
 
       <div className="mt-8 flex flex-col gap-8 xl:flex-row-reverse">
         {!permissions.canEdit && (

@@ -17,6 +17,7 @@ import { getVisibleRoles } from "@/modules/roles/utils/getRoles";
 import { CmdKProvider } from "@/modules/shell/components/CmdK/CmdKContext";
 import { MobileActionBarLoader } from "@/modules/shell/components/Sidebar/MobileActionBarLoader";
 import { TopBar } from "@/modules/shell/components/TopBar";
+import { getOpenWikiReportCount } from "@/modules/wiki/queries/getOpenWikiReportCount";
 import { TRPCReactProvider } from "@/trpc/react";
 import { NextIntlClientProvider } from "next-intl";
 import { cookies } from "next/headers";
@@ -30,12 +31,14 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
     apps,
     visibleRoles,
     changelogUnseenKeys,
+    openWikiReportCount,
   ] = await Promise.all([
     requireAuthenticationPage(),
     getUnleashFlag(UNLEASH_FLAG.DisableAlgolia),
     getAppLinks(),
     getVisibleRoles(),
     getUnseenChangelogEntryKeys(),
+    getOpenWikiReportCount(),
   ]);
 
   return (
@@ -52,6 +55,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
                         apps={apps}
                         appDotBadgeCounts={{
                           changelog: changelogUnseenKeys.size,
+                          wiki: openWikiReportCount,
                         }}
                       >
                         <CreateContextProvider>

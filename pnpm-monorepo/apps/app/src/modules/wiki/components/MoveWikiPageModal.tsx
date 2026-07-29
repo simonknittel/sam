@@ -44,7 +44,7 @@ export const MoveWikiPageModal = ({
         className={className}
         title="Seite verschieben"
       >
-        <FaFolderOpen /> Verschieben
+        <FaFolderOpen />
       </Button2>
 
       <Modal

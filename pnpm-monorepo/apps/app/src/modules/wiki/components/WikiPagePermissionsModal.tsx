@@ -76,7 +76,7 @@ export const WikiPagePermissionsModal = ({
         className={className}
         title="Berechtigungen bearbeiten"
       >
-        <FaLock /> Berechtigungen
+        <FaLock />
       </Button2>
 
       <Modal

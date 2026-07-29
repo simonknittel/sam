@@ -103,6 +103,8 @@ export enum AuditEventType {
   WIKI_PAGE_RESTORED = "WIKI_PAGE_RESTORED",
   WIKI_PAGE_DESTROYED = "WIKI_PAGE_DESTROYED",
   WIKI_SETTINGS_UPDATED = "WIKI_SETTINGS_UPDATED",
+  WIKI_PAGE_REPORTED = "WIKI_PAGE_REPORTED",
+  WIKI_PAGE_REPORT_RESOLVED = "WIKI_PAGE_REPORT_RESOLVED",
 }
 
 export interface AuditEventDataByType {
@@ -742,6 +744,16 @@ export interface AuditEventDataByType {
     setting: string;
     /** The new value as stored in WikiSetting.value */
     value: string | string[] | null;
+  };
+
+  [AuditEventType.WIKI_PAGE_REPORTED]: {
+    reportId: string;
+    pageId: string;
+  };
+
+  [AuditEventType.WIKI_PAGE_REPORT_RESOLVED]: {
+    reportId: string;
+    pageId: string;
   };
 }
 
@@ -1883,5 +1895,23 @@ export const AuditEventDefinitions: {
       value: "string",
     },
     message: (data) => `Wiki settings updated: ${data.setting}`,
+  },
+
+  [AuditEventType.WIKI_PAGE_REPORTED]: {
+    type: AuditEventType.WIKI_PAGE_REPORTED,
+    data: {
+      reportId: "string",
+      pageId: "string",
+    },
+    message: (data) => `Wiki page reported (${data.pageId})`,
+  },
+
+  [AuditEventType.WIKI_PAGE_REPORT_RESOLVED]: {
+    type: AuditEventType.WIKI_PAGE_REPORT_RESOLVED,
+    data: {
+      reportId: "string",
+      pageId: "string",
+    },
+    message: (data) => `Wiki page report resolved (${data.pageId})`,
   },
 };

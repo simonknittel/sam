@@ -13,6 +13,7 @@ import { SilcTransactionsCreatedHandler } from "./type-handlers/SilcTransactions
 import { TaskAssignmentUpdatedHandler } from "./type-handlers/TaskAssignmentUpdated";
 import { TaskCreatedHandler } from "./type-handlers/TaskCreated";
 import { WebPushSubscribedHandler } from "./type-handlers/WebPushSubscribed";
+import { WikiPageReportedHandler } from "./type-handlers/WikiPageReported";
 
 export const notificationRouterHandler = async (
   body: z.infer<typeof bodySchema>,
@@ -60,6 +61,9 @@ export const notificationRouterHandler = async (
       break;
     case "WebPushSubscribed":
       await WebPushSubscribedHandler(body.payload);
+      break;
+    case "WikiPageReported":
+      await WikiPageReportedHandler(body.payload);
       break;
   }
 };
@@ -173,6 +177,14 @@ export const bodySchema = z.discriminatedUnion("type", [
     type: z.literal("WebPushSubscribed"),
     payload: z.object({
       subscriptionId: z.cuid2(),
+    }),
+    requestId: z.cuid2(),
+  }),
+
+  z.object({
+    type: z.literal("WikiPageReported"),
+    payload: z.object({
+      reportId: z.cuid2(),
     }),
     requestId: z.cuid2(),
   }),
