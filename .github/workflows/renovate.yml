@@ -7,7 +7,7 @@ on:
   workflow_dispatch: # Manually run the workflow
   push: # Run the workflow on changes to the configuration
     branches:
-      - develop
+      - main
     paths:
       - renovate.json
       - .github/workflows/renovate.yml
