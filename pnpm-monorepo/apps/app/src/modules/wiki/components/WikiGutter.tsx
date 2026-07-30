@@ -9,7 +9,6 @@ import {
   type ComputePositionConfig,
   type Middleware,
 } from "@floating-ui/react-dom";
-import type { WikiCalloutColor } from "@sam-monorepo/wiki-editor";
 import { DragHandle } from "@tiptap/extension-drag-handle-react";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import type { Editor } from "@tiptap/react";
@@ -21,9 +20,8 @@ import {
   useState,
   type RefObject,
 } from "react";
-import { FaPlus, FaTrash } from "react-icons/fa";
-import { MdDragIndicator, MdVerticalAlignCenter } from "react-icons/md";
-import { CalloutColorSwatches } from "./toolbar/CalloutColorSwatches";
+import { FaPlus } from "react-icons/fa";
+import { MdDragIndicator } from "react-icons/md";
 import { setWikiGutterHighlight } from "./WikiActiveNodeHighlight";
 import {
   WIKI_SLASH_COMMAND_ITEMS,
@@ -90,10 +88,8 @@ interface Props {
 /**
  * Gutter controls left of the hovered top-level block: a plus button
  * opening the insert palette (new block below, Alt: above) and a grip
- * that drags the block and opens the block actions on click. The
- * contextual edit menu (WikiEditMenu) stays reserved for the deepest
- * hovered element — block scope lives here, so nested nodes and their
- * ancestors never compete for the same popover space.
+ * that only drags the block — all block actions live in the contextual
+ * edit menu (WikiEditMenu).
  */
 export const WikiGutter = ({ editor, pageId }: Props) => {
   const [block, setBlock] = useState<HoveredBlock | null>(null);
@@ -124,8 +120,9 @@ export const WikiGutter = ({ editor, pageId }: Props) => {
   };
 
   /**
-   * While the dropdown is open the handle must neither follow the pointer
-   * nor hide — the drag-handle plugin exposes a lock via transaction meta.
+   * While the insert palette is open the handle must neither follow the
+   * pointer nor hide — the drag-handle plugin exposes a lock via
+   * transaction meta.
    */
   const handleOpenChange = (open: boolean) => {
     if (editor.isDestroyed) return;
@@ -181,24 +178,15 @@ export const WikiGutter = ({ editor, pageId }: Props) => {
           />
         </PopoverBaseUI>
 
-        <PopoverBaseUI
-          openOnHover={false}
-          side="bottom"
-          onOpenChange={handleOpenChange}
-          trigger={
-            <span
-              title="Block verschieben oder bearbeiten"
-              className={clsx(
-                BUTTON_CLASS_NAME,
-                "cursor-grab active:cursor-grabbing",
-              )}
-            >
-              <MdDragIndicator className="size-4" />
-            </span>
-          }
+        <span
+          title="Block verschieben"
+          className={clsx(
+            BUTTON_CLASS_NAME,
+            "cursor-grab active:cursor-grabbing",
+          )}
         >
-          <BlockActions editor={editor} block={block} />
-        </PopoverBaseUI>
+          <MdDragIndicator className="size-4" />
+        </span>
       </div>
     </DragHandle>
   );
@@ -267,108 +255,6 @@ const InsertBlockActions = ({
           {item.title}
         </button>
       ))}
-    </div>
-  );
-};
-
-interface BlockActionsProps {
-  readonly editor: Editor;
-  readonly block: HoveredBlock | null;
-}
-
-/**
- * Dropdown content of the gutter grip. Attributes are read fresh from the
- * document — the hovered snapshot can be stale after collab edits.
- */
-const BlockActions = ({ editor, block }: BlockActionsProps) => {
-  const { closePopover } = usePopoverBaseUI();
-
-  if (!block) return null;
-  const node = editor.state.doc.nodeAt(block.pos);
-  if (node?.type.name !== block.node.type.name) return null;
-
-  const deleteBlock = () => {
-    closePopover();
-    editor
-      .chain()
-      .focus()
-      .deleteRange({ from: block.pos, to: block.pos + node.nodeSize })
-      .run();
-  };
-
-  const toggleGridVerticalAlign = () => {
-    closePopover();
-    editor
-      .chain()
-      .command(({ tr }) => {
-        tr.setNodeAttribute(
-          block.pos,
-          "verticalAlign",
-          node.attrs.verticalAlign === "center" ? null : "center",
-        );
-        return true;
-      })
-      .run();
-  };
-
-  const setCalloutColor = (color: WikiCalloutColor) => {
-    closePopover();
-    editor
-      .chain()
-      .command(({ tr }) => {
-        tr.setNodeAttribute(block.pos, "color", color);
-        return true;
-      })
-      .run();
-  };
-
-  const removeCallout = () => {
-    closePopover();
-    editor
-      .chain()
-      .focus()
-      .setTextSelection(block.pos + 2)
-      .lift("wikiCallout")
-      .run();
-  };
-
-  return (
-    <div className="flex w-60 flex-col gap-1">
-      {node.type.name === "wikiGrid" && (
-        <button
-          type="button"
-          onClick={toggleGridVerticalAlign}
-          className={clsx(ROW_CLASS_NAME, {
-            "text-interaction-300": node.attrs.verticalAlign === "center",
-          })}
-        >
-          <MdVerticalAlignCenter className="size-4 shrink-0" />
-          Inhalte vertikal zentrieren
-        </button>
-      )}
-
-      {node.type.name === "wikiCallout" && (
-        <>
-          <div className="flex items-center gap-1 px-2 py-1">
-            <CalloutColorSwatches
-              activeColor={(node.attrs.color ?? "blue") as WikiCalloutColor}
-              onSelect={setCalloutColor}
-            />
-          </div>
-          <button
-            type="button"
-            onClick={removeCallout}
-            className={ROW_CLASS_NAME}
-          >
-            Hervorhebung entfernen
-          </button>
-        </>
-      )}
-
-      <button type="button" onClick={deleteBlock} className={ROW_CLASS_NAME}>
-        <FaTrash className="size-3 shrink-0" />
-        Block löschen
-      </button>
     </div>
   );
 };

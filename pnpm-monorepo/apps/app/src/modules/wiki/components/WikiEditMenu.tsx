@@ -26,7 +26,7 @@ import {
   FaTrash,
   FaUnlink,
 } from "react-icons/fa";
-import { MdDragIndicator } from "react-icons/md";
+import { MdDragIndicator, MdVerticalAlignCenter } from "react-icons/md";
 import { getWikiNodeTypeLabel } from "../utils/getWikiNodeTypeLabel";
 import { ALIGNMENT_OPTIONS } from "./toolbar/AlignmentPicker";
 import { CalloutColorSwatches } from "./toolbar/CalloutColorSwatches";
@@ -140,6 +140,8 @@ type MenuState =
       readonly typeName: string;
       readonly position: number;
       readonly nodeSize: number;
+      /** wikiGrid only: vertical centering of the cell contents */
+      readonly verticalAlign: "center" | null;
     } & MenuTarget)
   | ({
       readonly kind: "text";
@@ -307,6 +309,8 @@ export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
           typeName: resolved.node.type.name,
           position: resolved.position,
           nodeSize: resolved.node.nodeSize,
+          verticalAlign: (resolved.node.attrs.verticalAlign ?? null) as
+            "center" | null,
           ...target,
         };
       }
@@ -415,6 +419,21 @@ export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
       .chain()
       .focus()
       .deleteRange({ from: menu.position, to: menu.position + menu.nodeSize })
+      .run();
+  };
+
+  const toggleGridVerticalAlign = () => {
+    if (menu.kind !== "block") return;
+    editor
+      .chain()
+      .command(({ tr }) => {
+        tr.setNodeAttribute(
+          menu.position,
+          "verticalAlign",
+          menu.verticalAlign === "center" ? null : "center",
+        );
+        return true;
+      })
       .run();
   };
 
@@ -837,13 +856,25 @@ export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
           )}
 
           {menu.kind === "block" && (
-            <ToolbarButton
-              title="Block löschen"
-              isActive={false}
-              onClick={deleteBlock}
-            >
-              <FaTrash />
-            </ToolbarButton>
+            <>
+              {menu.typeName === "wikiGrid" && (
+                <ToolbarButton
+                  title="Inhalte vertikal zentrieren"
+                  isActive={menu.verticalAlign === "center"}
+                  onClick={toggleGridVerticalAlign}
+                >
+                  <MdVerticalAlignCenter />
+                </ToolbarButton>
+              )}
+
+              <ToolbarButton
+                title="Block löschen"
+                isActive={false}
+                onClick={deleteBlock}
+              >
+                <FaTrash />
+              </ToolbarButton>
+            </>
           )}
         </div>
       </div>
