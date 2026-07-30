@@ -100,8 +100,9 @@
 1. Set `Root Directory` to `pnpm-monorepo/apps/app` and keep "Include source files outside of the Root Directory in the Build Step" enabled (required for the workspace lockfile and `pnpm-workspace.yaml` at the `pnpm-monorepo` root)
 2. Add the environment variable `ENABLE_EXPERIMENTAL_COREPACK=1` so Vercel uses the pinned pnpm version. Vercel reads the `packageManager` field from the package.json at the repository root (not the Root Directory), so the pin lives in `/package.json` (kept in sync with `pnpm-monorepo/package.json`)
 3. The `Ignored Build Step` is configured in code via `pnpm-monorepo/apps/app/vercel.json` (it runs `.vercel/ignore-step.sh` from the repository root); remove any `Ignored Build Step` override in the dashboard
-4. Set `Production Branch` (Settings > Environments > Production) to `production-gate`. This branch intentionally doesn't exist: pushes to `main` only create preview deployments, and production deployments are only created by the [Release workflow](./releasing.md)
-5. Create an access token (Account Settings > Tokens) and store it together with the IDs from the project's settings as the `VERCEL_TOKEN`, `VERCEL_ORG_ID` (team ID) and `VERCEL_PROJECT_ID` secrets of the `Production` GitHub environment
+4. Create the frozen `production-gate` branch and a ruleset that blocks all pushes to it (no bypass actors). Vercel requires the Production Branch to exist in the repository, but this branch must never move: an accidental push to it would trigger a git-driven production deployment
+5. Set `Production Branch` (Settings > Environments > Production) to `production-gate`: pushes to `main` then only create preview deployments, and production deployments are only created by the [Release workflow](./releasing.md)
+6. Create an access token (Account Settings > Tokens) and store it together with the IDs from the project's settings as the `VERCEL_TOKEN`, `VERCEL_ORG_ID` (team ID) and `VERCEL_PROJECT_ID` secrets of the `Production` GitHub environment
 
 ## 8. Left over
 
