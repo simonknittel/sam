@@ -13,6 +13,7 @@ import { withWikiCitizenMentionPopover } from "./WikiCitizenMentionNodeView";
 import { WikiCitizenMentionSuggestion } from "./WikiCitizenMentionSuggestion";
 import { createWikiFileHandler } from "./wikiEditorFiles";
 import { WikiNodeClickSelection } from "./WikiNodeClickSelection";
+import { withWikiPageIndexNodeView } from "./WikiPageIndexNodeView";
 import { WikiPageLinkSuggestion } from "./WikiPageLinkSuggestion";
 import { WikiSlashCommand } from "./WikiSlashCommand";
 
@@ -42,14 +43,17 @@ export const useWikiEditorExtensions = ({
   const trpcUtils = api.useUtils();
 
   return [
-    ...withWikiCitizenMentionPopover(
-      getWikiEditorExtensions({
-        collaboration,
-        twitchParentHost: getWikiTwitchParentHost(),
-        iframeAllowlist,
-        pages: linkablePages,
-        citizens: mentionedCitizens,
-      }),
+    ...withWikiPageIndexNodeView(
+      withWikiCitizenMentionPopover(
+        getWikiEditorExtensions({
+          collaboration,
+          twitchParentHost: getWikiTwitchParentHost(),
+          iframeAllowlist,
+          pages: linkablePages,
+          citizens: mentionedCitizens,
+        }),
+      ),
+      pageId,
     ),
     ...(interactive
       ? [

@@ -37,6 +37,19 @@ export {
   collectWikiIframeSrcs,
   isWikiIframeSrcAllowed,
 } from "./wikiIframeNode.js";
+export {
+  WIKI_PAGE_INDEX_MATCH_MODES,
+  WIKI_PAGE_INDEX_MAX_DEPTH,
+  WIKI_PAGE_INDEX_MAX_TAGS,
+  WIKI_PAGE_INDEX_MODES,
+  WikiPageIndex,
+  collectWikiPageIndexConfigs,
+  normalizeWikiPageIndexConfig,
+  wikiPageIndexConfigKey,
+  type WikiPageIndexConfig,
+  type WikiPageIndexMatchMode,
+  type WikiPageIndexMode,
+} from "./wikiPageIndexNode.js";
 export type { WikiPageLinkedPage } from "./wikiPageLinkNode.js";
 export {
   WIKI_RESIZABLE_NODE_TYPES,

@@ -1,15 +1,12 @@
 import { prisma } from "@/db";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { Prisma } from "@sam-monorepo/database/client";
+import { buildVisibleWikiBreadcrumb } from "../utils/buildVisibleWikiBreadcrumb";
 import {
   WIKI_SEARCH_MARK_END,
   WIKI_SEARCH_MARK_START,
 } from "../utils/wikiSearchSnippet";
-import {
-  getWikiContext,
-  type WikiContext,
-  type WikiContextPage,
-} from "./getWikiContext";
+import { getWikiContext } from "./getWikiContext";
 
 export interface WikiSearchResult {
   readonly id: string;
@@ -46,36 +43,6 @@ const buildTsquery = (query: string): Prisma.Sql => {
   if (!head) return prefix;
 
   return Prisma.sql`(websearch_to_tsquery('german', ${head}) && ${prefix})`;
-};
-
-/**
- * Ancestor titles from the root down to the direct parent. Ancestors the
- * viewer cannot see are skipped so their titles never leak (matching the
- * sidebar's flattening).
- */
-const buildVisibleBreadcrumb = (
-  context: WikiContext,
-  page: WikiContextPage,
-) => {
-  const titles: string[] = [];
-  const visited = new Set<string>([page.id]);
-  let current = page.parentId
-    ? context.pagesById.get(page.parentId)
-    : undefined;
-
-  while (current && !visited.has(current.id)) {
-    visited.add(current.id);
-    if (
-      current.deletedAt === null &&
-      context.permissions.get(current.id)?.canRead
-    )
-      titles.unshift(current.title);
-    current = current.parentId
-      ? context.pagesById.get(current.parentId)
-      : undefined;
-  }
-
-  return titles;
 };
 
 /**
@@ -121,7 +88,7 @@ export const searchWikiPages = withTrace(
           id: page.id,
           title: page.title,
           slug: page.slug,
-          breadcrumb: buildVisibleBreadcrumb(context, page),
+          breadcrumb: buildVisibleWikiBreadcrumb(context, page),
           snippet: candidate.snippet,
         };
       })

@@ -62,6 +62,8 @@ model Entity {
   wikiPageVisits                               WikiPageVisit[]
   createdWikiPageReports                       WikiPageReport[]                     @relation("createdBy")
   resolvedWikiPageReports                      WikiPageReport[]                     @relation("resolvedBy")
+  createdWikiTags                              WikiTag[]                            @relation("createdBy")
+  createdWikiPageTags                          WikiPageTag[]                        @relation("createdBy")
   updatedWikiSettings                          WikiSetting[]                        @relation("updatedBy")
 
   // Holds the latest confirmed values

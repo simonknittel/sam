@@ -5,16 +5,13 @@ import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
 import Note from "@/modules/common/components/Note";
-import { Select } from "@/modules/common/components/form/Select";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
 import { useState } from "react";
 import { FaClone, FaSave } from "react-icons/fa";
 import { duplicateWikiPage } from "../actions/duplicateWikiPage";
-import {
-  wikiPageOptionLabel,
-  type WikiPageTargetOption,
-} from "../utils/getEditableWikiPageTargets";
+import type { WikiPageTargetOption } from "../utils/getEditableWikiPageTargets";
+import { WikiPageSelect } from "./WikiPageSelect";
 
 const TITLE_MAX_LENGTH = 128;
 const TITLE_SUFFIX = " (Duplikat)";
@@ -96,19 +93,14 @@ export const DuplicateWikiPageModal = ({
           />
 
           <label className="mt-4 mb-1 block">Ort</label>
-          <Select
+          <WikiPageSelect
             name="parentId"
             value={parentId}
             onChange={(event) => setParentId(event.target.value)}
             required={!allowTopLevel}
-          >
-            {allowTopLevel && <option value="">Oberste Ebene</option>}
-            {targets.map((target) => (
-              <option key={target.id} value={target.id}>
-                {wikiPageOptionLabel(target)}
-              </option>
-            ))}
-          </Select>
+            targets={targets}
+            emptyOptionLabel={allowTopLevel ? "Oberste Ebene" : undefined}
+          />
 
           {hasDescendants && (
             <div className="mt-4 flex items-center justify-between gap-2">

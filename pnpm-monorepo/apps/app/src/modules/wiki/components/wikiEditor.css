@@ -433,3 +433,28 @@
   user-select: none;
   white-space: nowrap;
 }
+
+/* ---------- Page index ("Seitenverzeichnis") ---------- */
+
+.prose [data-wiki-page-index] {
+  border: 1px solid var(--color-neutral-700);
+  border-radius: var(--radius-secondary);
+  background-color: color-mix(
+    in srgb,
+    var(--color-neutral-800) 40%,
+    transparent
+  );
+  padding: 0.75rem 1rem;
+  margin-block: 1.25em;
+}
+
+.prose [data-wiki-page-index] ul {
+  list-style: none;
+  margin-block: 0.25em;
+  padding-left: 0;
+}
+
+.prose [data-wiki-page-index] ul ul {
+  margin-block: 0;
+  padding-left: 1.25rem;
+}

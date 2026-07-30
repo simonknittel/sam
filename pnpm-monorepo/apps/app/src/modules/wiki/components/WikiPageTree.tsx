@@ -19,18 +19,25 @@ import {
 interface Props {
   readonly className?: string;
   readonly nodes: WikiTreeNode[];
+  /** Pages rendered dimmed, e.g. sidebar-hidden ones shown via the toggle */
+  readonly dimmedPageIds?: readonly string[];
 }
 
-export const WikiPageTree = ({ className, nodes }: Props) => {
+export const WikiPageTree = ({ className, nodes, dimmedPageIds }: Props) => {
   return (
     <WikiPageDndProvider>
-      <RootList className={className} nodes={nodes} />
+      <RootList
+        className={className}
+        nodes={nodes}
+        dimmedPageIds={dimmedPageIds}
+      />
     </WikiPageDndProvider>
   );
 };
 
-const RootList = ({ className, nodes }: Props) => {
+const RootList = ({ className, nodes, dimmedPageIds }: Props) => {
   const { isPending } = useWikiPageDnd();
+  const dimmedIds = new Set(dimmedPageIds ?? []);
 
   return (
     <ul
@@ -50,6 +57,7 @@ const RootList = ({ className, nodes }: Props) => {
           ancestorIds={[]}
           previousSiblingId={nodes[index - 1]?.id}
           nextSiblingId={nodes[index + 1]?.id}
+          dimmedIds={dimmedIds}
         />
       ))}
       {nodes.length > 0 && (
@@ -87,6 +95,7 @@ interface TreeItemProps {
   readonly ancestorIds: readonly string[];
   readonly previousSiblingId?: string;
   readonly nextSiblingId?: string;
+  readonly dimmedIds: ReadonlySet<string>;
 }
 
 const TreeItem = ({
@@ -95,6 +104,7 @@ const TreeItem = ({
   ancestorIds,
   previousSiblingId,
   nextSiblingId,
+  dimmedIds,
 }: TreeItemProps) => {
   const pathname = usePathname();
   const { draggedPageId } = useWikiPageDnd();
@@ -121,6 +131,8 @@ const TreeItem = ({
             "group flex min-w-0 flex-1 items-center gap-1 rounded-secondary pl-2",
             {
               "bg-neutral-800": isActive,
+              // Row-level (not subtree-level) so nested dimmed pages don't compound
+              "opacity-50": dimmedIds.has(node.id),
             },
           )}
         >
@@ -189,6 +201,7 @@ const TreeItem = ({
               ancestorIds={[...ancestorIds, node.id]}
               previousSiblingId={node.children[index - 1]?.id}
               nextSiblingId={node.children[index + 1]?.id}
+              dimmedIds={dimmedIds}
             />
           ))}
         </ul>

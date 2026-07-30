@@ -23,6 +23,7 @@ import { WikiEmbed } from "./wikiEmbedNode.js";
 import { WikiGrid, WikiGridCell } from "./wikiGridNodes.js";
 import { WikiHeadingIds } from "./wikiHeadingIds.js";
 import { WikiIframe } from "./wikiIframeNode.js";
+import { WikiPageIndex } from "./wikiPageIndexNode.js";
 import { WikiPageLink, type WikiPageLinkedPage } from "./wikiPageLinkNode.js";
 import { WikiImage, WikiYoutube } from "./wikiResizableNodes.js";
 
@@ -111,6 +112,7 @@ export const getWikiEditorExtensions = (
     WikiPageLink.configure({
       pages: options?.pages ?? {},
     }),
+    WikiPageIndex,
     WikiCitizenMention.configure({
       citizens: options?.citizens ?? {},
     }),

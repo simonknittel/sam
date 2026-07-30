@@ -22,6 +22,7 @@ export type WikiContextPage = Pick<
   | "slug"
   | "iconId"
   | "sortOrder"
+  | "sidebarMode"
   | "visibility"
   | "editability"
   | "adminability"
@@ -86,6 +87,7 @@ export const getWikiContext = cache(
           slug: true,
           iconId: true,
           sortOrder: true,
+          sidebarMode: true,
           visibility: true,
           editability: true,
           adminability: true,

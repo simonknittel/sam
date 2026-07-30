@@ -6,8 +6,9 @@ import {
 } from "../queries/getWikiContext";
 import { getWikiFavoritePageIds } from "../queries/getWikiFavorites";
 import { buildVisibleWikiTree } from "../utils/buildVisibleWikiTree";
-import { WikiPageTree } from "./WikiPageTree";
+import { filterWikiPagesBySidebarMode } from "../utils/filterWikiPagesBySidebarMode";
 import { WikiSearch } from "./WikiSearch";
+import { WikiSidebarTree } from "./WikiSidebarTree";
 
 export const WikiSidebar = async () => {
   const context = await getWikiContext();
@@ -21,7 +22,18 @@ export const WikiSidebar = async () => {
     )
     .toSorted((a, b) => a.title.localeCompare(b.title));
 
-  const tree = buildVisibleWikiTree(context.pages, context.permissions);
+  const filteredPages = filterWikiPagesBySidebarMode(context.pages);
+  const filteredPageIds = new Set(filteredPages.map((page) => page.id));
+  const tree = buildVisibleWikiTree(filteredPages, context.permissions);
+  const fullTree = buildVisibleWikiTree(context.pages, context.permissions);
+  /** Readable pages the sidebar mode hides — revealable via the tree's toggle */
+  const sidebarHiddenPageIds = context.pages
+    .filter(
+      (page) =>
+        !filteredPageIds.has(page.id) &&
+        context.permissions.get(page.id)?.canRead,
+    )
+    .map((page) => page.id);
 
   return (
     <>
@@ -34,15 +46,11 @@ export const WikiSidebar = async () => {
       </div>
 
       <div className="bg-secondary px-2 py-4 corners-secondary flex flex-col gap-4">
-        <p className="px-2 text-sm text-white/40 font-mono uppercase">
-          Inhaltsverzeichnis
-        </p>
-
-        {tree.length > 0 ? (
-          <WikiPageTree nodes={tree} />
-        ) : (
-          <p className="text-sm text-neutral-400">Keine Seiten vorhanden.</p>
-        )}
+        <WikiSidebarTree
+          tree={tree}
+          fullTree={fullTree}
+          hiddenPageIds={sidebarHiddenPageIds}
+        />
       </div>
     </>
   );

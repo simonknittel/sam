@@ -21,6 +21,7 @@ const NODE_TYPE_LABELS: Readonly<Record<string, string>> = {
   wikiIframe: "Iframe",
   wikiPageLink: "Seitenlink",
   wikiCitizenMention: "Citizen-Erwähnung",
+  wikiPageIndex: "Seitenverzeichnis",
 };
 
 export const getWikiNodeTypeLabel = (

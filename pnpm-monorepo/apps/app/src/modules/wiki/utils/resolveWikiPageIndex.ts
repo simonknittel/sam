@@ -1,0 +1,118 @@
+import { prisma } from "@/db";
+import { withTrace } from "@/modules/tracing/utils/withTrace";
+import type { WikiPageIndexConfig } from "@sam-monorepo/wiki-editor";
+import type { WikiPageIndexEntry } from "../components/WikiPageIndexList";
+import type { WikiContext } from "../queries/getWikiContext";
+import {
+  buildVisibleWikiTree,
+  type WikiTreeNode,
+} from "./buildVisibleWikiTree";
+import { collectWikiPageDescendants } from "./collectWikiPageDescendants";
+
+const toEntries = (nodes: readonly WikiTreeNode[]): WikiPageIndexEntry[] =>
+  nodes.map((node) => ({
+    id: node.id,
+    title: node.title,
+    slug: node.slug,
+    iconId: node.iconId,
+    children: toEntries(node.children),
+  }));
+
+const trimToDepth = (
+  nodes: readonly WikiTreeNode[],
+  depth: number,
+): WikiTreeNode[] => {
+  if (depth <= 0) return [];
+  return nodes.map((node) => ({
+    ...node,
+    children: trimToDepth(node.children, depth - 1),
+  }));
+};
+
+/**
+ * Resolves a page-index node's config into the page list the current viewer
+ * may see. Only ever returns visible, not-deleted pages. Deliberately
+ * ignores `sidebarMode` — an index on a "dataset" page is how sidebar-hidden
+ * child pages get surfaced.
+ */
+export const resolveWikiPageIndex = withTrace(
+  "resolveWikiPageIndex",
+  async (
+    context: WikiContext,
+    /** The page containing the node — the root when `rootPageId` is null */
+    currentPageId: string,
+    config: WikiPageIndexConfig,
+  ): Promise<WikiPageIndexEntry[]> => {
+    switch (config.mode) {
+      case "tree": {
+        const rootId = config.rootPageId ?? currentPageId;
+        const root = context.pagesById.get(rootId);
+        if (!root || root.deletedAt) return [];
+
+        /**
+         * Like the sidebar, visible descendants of invisible intermediate
+         * pages flatten under the nearest visible ancestor (or the index
+         * root), so they stay reachable without leaking invisible titles.
+         */
+        const descendantIds = new Set(
+          collectWikiPageDescendants(context.pages, rootId),
+        );
+        const tree = buildVisibleWikiTree(
+          context.pages.filter((page) => descendantIds.has(page.id)),
+          context.permissions,
+        );
+
+        return toEntries(
+          config.maxDepth === null ? tree : trimToDepth(tree, config.maxDepth),
+        );
+      }
+      case "tags": {
+        const requestedTagIds = new Set(config.tagIds);
+        if (requestedTagIds.size <= 0) return [];
+
+        const assignments = await prisma.wikiPageTag.findMany({
+          where: { tagId: { in: [...requestedTagIds] } },
+          select: { pageId: true, tagId: true },
+        });
+
+        const tagIdsByPage = new Map<string, Set<string>>();
+        for (const assignment of assignments) {
+          const tagIds = tagIdsByPage.get(assignment.pageId) ?? new Set();
+          tagIds.add(assignment.tagId);
+          tagIdsByPage.set(assignment.pageId, tagIds);
+        }
+
+        return [...tagIdsByPage.entries()]
+          .filter(([, tagIds]) => {
+            switch (config.matchMode) {
+              case "all":
+                return tagIds.size === requestedTagIds.size;
+              case "any":
+                return tagIds.size > 0;
+              default:
+                throw new Error(
+                  `Unknown match mode: ${config.matchMode satisfies never}`,
+                );
+            }
+          })
+          .map(([pageId]) => context.pagesById.get(pageId))
+          .filter((page) => page !== undefined)
+          .filter(
+            (page) =>
+              page.deletedAt === null &&
+              context.permissions.get(page.id)?.canRead,
+          )
+          .toSorted((a, b) => a.title.localeCompare(b.title))
+          .map((page) => ({
+            id: page.id,
+            title: page.title,
+            slug: page.slug,
+            iconId: page.iconId,
+            children: [],
+          }));
+      }
+      default:
+        throw new Error(`Unknown mode: ${config.mode satisfies never}`);
+    }
+  },
+);

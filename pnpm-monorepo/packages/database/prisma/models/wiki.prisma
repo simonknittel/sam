@@ -25,6 +25,18 @@ enum WikiPageAdminability {
   RESTRICTED
 }
 
+/// Controls whether a page shows up in the tree sidebar. Purely cosmetic —
+/// never a permission: hidden pages stay reachable via direct links, search,
+/// favorites, recents, tags and page-index nodes. HIDDEN takes the page and
+/// its whole subtree out of the sidebar; CHILDREN_HIDDEN keeps the page
+/// itself visible but hides all of its descendants (for "dataset" subtrees
+/// with many child pages).
+enum WikiPageSidebarMode {
+  VISIBLE
+  HIDDEN
+  CHILDREN_HIDDEN
+}
+
 model WikiPage {
   id        String            @id @default(cuid(2))
   namespace WikiPageNamespace @default(WIKI)
@@ -33,6 +45,8 @@ model WikiPage {
   children  WikiPage[]        @relation("hierarchy")
   /// Manual ordering among siblings
   sortOrder Int               @default(0)
+
+  sidebarMode WikiPageSidebarMode @default(VISIBLE)
 
   title  String
   /// Derived from the title. Only used for human-readable URLs. Only the id
@@ -80,6 +94,7 @@ model WikiPage {
   favorites   WikiPageFavorite[]
   visits      WikiPageVisit[]
   reports     WikiPageReport[]
+  tags        WikiPageTag[]
   /// Uploads embedded in this page as images or attachments (see
   /// Upload.wikiPages)
   attachments Upload[]           @relation("attachments")
@@ -164,6 +179,39 @@ model WikiPageReport {
 
   @@index([pageId])
   @@index([resolvedAt])
+}
+
+/// Free-form label shared by all wiki pages. Tags are global (no per-subtree
+/// namespaces) and live only while they are used: removing a tag's last
+/// assignment deletes it, and the midnight automations sweep orphans left
+/// behind by permanent page deletion.
+model WikiTag {
+  id   String @id @default(cuid(2))
+  /// Display casing from first use. Uniqueness is effectively
+  /// case-insensitive: actions match existing names case-insensitively
+  /// (find-or-create) before creating.
+  name String @unique
+
+  createdAt   DateTime @default(now())
+  createdById String?
+  createdBy   Entity?  @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  pages WikiPageTag[]
+}
+
+model WikiPageTag {
+  id     String   @id @default(cuid(2))
+  pageId String
+  page   WikiPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  tagId  String
+  tag    WikiTag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  createdById String?
+  createdBy   Entity?  @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@unique([pageId, tagId])
+  @@index([tagId])
 }
 
 model WikiSetting {

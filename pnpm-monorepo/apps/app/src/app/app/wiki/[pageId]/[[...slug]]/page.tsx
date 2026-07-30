@@ -17,7 +17,9 @@ import { WikiPageEditor } from "@/modules/wiki/components/WikiPageEditor";
 import { WikiPageExportImportModal } from "@/modules/wiki/components/WikiPageExportImportModal";
 import { WikiPageFavoriteButton } from "@/modules/wiki/components/WikiPageFavoriteButton";
 import { WikiPagePermissionsModal } from "@/modules/wiki/components/WikiPagePermissionsModal";
+import { WikiPageSidebarModeModal } from "@/modules/wiki/components/WikiPageSidebarModeModal";
 import { WikiPageStaticContent } from "@/modules/wiki/components/WikiPageStaticContent";
+import { WikiPageTags } from "@/modules/wiki/components/WikiPageTags";
 import { WikiSidebar } from "@/modules/wiki/components/WikiSidebar";
 import {
   getWikiContext,
@@ -32,9 +34,13 @@ import {
   type WikiPageTargetOption,
 } from "@/modules/wiki/utils/getEditableWikiPageTargets";
 import { getWikiCollabColor } from "@/modules/wiki/utils/getWikiCollabColor";
+import { resolveWikiPageIndex } from "@/modules/wiki/utils/resolveWikiPageIndex";
 import { trackWikiPageVisit } from "@/modules/wiki/utils/trackWikiPageVisit";
 import { WikiPageAccessType } from "@sam-monorepo/database/client";
-import { collectWikiMentionedCitizenIds } from "@sam-monorepo/wiki-editor";
+import {
+  collectWikiMentionedCitizenIds,
+  collectWikiPageIndexConfigs,
+} from "@sam-monorepo/wiki-editor";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { FaHistory, FaSitemap } from "react-icons/fa";
@@ -106,25 +112,35 @@ const PageContent = async ({
   page,
   permissions,
 }: PageContentProps) => {
-  const [effectiveOwner, pageContent, iframeAllowlist, favoritePageIds] =
-    await Promise.all([
-      permissions.effectiveOwnerId
-        ? prisma.entity.findUnique({
-            where: { id: permissions.effectiveOwnerId },
-            select: { id: true, handle: true },
-          })
-        : Promise.resolve(null),
-      /**
-       * The content is intentionally not part of getWikiContext (which loads
-       * all pages on every wiki request) — it's only needed here.
-       */
-      prisma.wikiPage.findUnique({
-        where: { id: page.id },
-        select: { content: true },
-      }),
-      getWikiIframeAllowlist(),
-      getWikiFavoritePageIds(),
-    ]);
+  const [
+    effectiveOwner,
+    pageContent,
+    iframeAllowlist,
+    favoritePageIds,
+    pageTags,
+  ] = await Promise.all([
+    permissions.effectiveOwnerId
+      ? prisma.entity.findUnique({
+          where: { id: permissions.effectiveOwnerId },
+          select: { id: true, handle: true },
+        })
+      : Promise.resolve(null),
+    /**
+     * The content is intentionally not part of getWikiContext (which loads
+     * all pages on every wiki request) — it's only needed here.
+     */
+    prisma.wikiPage.findUnique({
+      where: { id: page.id },
+      select: { content: true },
+    }),
+    getWikiIframeAllowlist(),
+    getWikiFavoritePageIds(),
+    prisma.wikiPageTag.findMany({
+      where: { pageId: page.id },
+      select: { tag: { select: { id: true, name: true } } },
+      orderBy: { tag: { name: "asc" } },
+    }),
+  ]);
 
   const descendantIds = collectWikiPageDescendants(context.pages, page.id);
 
@@ -166,6 +182,20 @@ const PageContent = async ({
         candidate.id,
         { title: candidate.title, slug: candidate.slug },
       ]),
+  );
+
+  /**
+   * Page lists of the page-index nodes on this page, resolved for this
+   * viewer — for the static render; the editor node view fetches them
+   * itself so config changes show up without a reload.
+   */
+  const pageIndexes = Object.fromEntries(
+    await Promise.all(
+      collectWikiPageIndexConfigs(pageContent?.content).map(
+        async ({ key, config }) =>
+          [key, await resolveWikiPageIndex(context, page.id, config)] as const,
+      ),
+    ),
   );
 
   const moveTargets: WikiPageTargetOption[] = permissions.canAdmin
@@ -248,6 +278,10 @@ const PageContent = async ({
                 allowTopLevel={canCreateTopLevel}
                 currentParentId={page.parentId}
               />
+              <WikiPageSidebarModeModal
+                pageId={page.id}
+                sidebarMode={page.sidebarMode}
+              />
               <WikiPagePermissionsModal
                 page={{
                   id: page.id,
@@ -283,6 +317,13 @@ const PageContent = async ({
         </div>
       </div>
 
+      <WikiPageTags
+        className="mt-3"
+        pageId={page.id}
+        tags={pageTags.map((entry) => entry.tag)}
+        canEdit={permissions.canEdit}
+      />
+
       <div className="mt-4">
         {env.COLLAB_JWT_SECRET && env.NEXT_PUBLIC_COLLAB_URL ? (
           <WikiCollabEditor
@@ -303,6 +344,7 @@ const PageContent = async ({
                 iframeAllowlist={iframeAllowlist}
                 linkablePages={linkablePages}
                 mentionedCitizens={mentionedCitizens}
+                pageIndexes={pageIndexes}
               />
             }
           />
@@ -314,6 +356,7 @@ const PageContent = async ({
             iframeAllowlist={iframeAllowlist}
             linkablePages={linkablePages}
             mentionedCitizens={mentionedCitizens}
+            pageIndexes={pageIndexes}
           />
         ) : (
           <WikiPageStaticContent
@@ -321,6 +364,7 @@ const PageContent = async ({
             iframeAllowlist={iframeAllowlist}
             linkablePages={linkablePages}
             mentionedCitizens={mentionedCitizens}
+            pageIndexes={pageIndexes}
           />
         )}
       </div>

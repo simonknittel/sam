@@ -7,6 +7,8 @@ const ANCHOR_NODE_TYPES = [
   "wikiAttachment",
   "wikiPageLink",
   "wikiCitizenMention",
+  // Renders a list of page links via its node view
+  "wikiPageIndex",
 ];
 
 /**

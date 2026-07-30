@@ -4,14 +4,11 @@ import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import Note from "@/modules/common/components/Note";
-import { Select } from "@/modules/common/components/form/Select";
 import { useId } from "react";
 import { FaSave } from "react-icons/fa";
 import { updateWikiSupportPage } from "../actions/updateWikiSupportPage";
-import {
-  wikiPageOptionLabel,
-  type WikiPageTargetOption,
-} from "../utils/getEditableWikiPageTargets";
+import type { WikiPageTargetOption } from "../utils/getEditableWikiPageTargets";
+import { WikiPageSelect } from "./WikiPageSelect";
 
 interface Props {
   readonly options: readonly WikiPageTargetOption[];
@@ -33,18 +30,13 @@ export const WikiSupportPageSetting = ({
       <label className="mb-1 block" htmlFor={selectId}>
         Support-Seite
       </label>
-      <Select
+      <WikiPageSelect
         id={selectId}
         name="supportPageId"
         defaultValue={currentSupportPageId ?? ""}
-      >
-        <option value="">Keine</option>
-        {options.map((option) => (
-          <option key={option.id} value={option.id}>
-            {wikiPageOptionLabel(option)}
-          </option>
-        ))}
-      </Select>
+        targets={options}
+        emptyOptionLabel="Keine"
+      />
       <p className="mt-1 text-xs text-white/40">
         Auf diese Seite verweist zukünftig das Fragezeichen-Symbol in der
         Kopfleiste.

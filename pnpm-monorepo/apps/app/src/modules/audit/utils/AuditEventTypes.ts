@@ -108,6 +108,8 @@ export enum AuditEventType {
   WIKI_PAGE_REPORT_RESOLVED = "WIKI_PAGE_REPORT_RESOLVED",
   WIKI_PAGE_SNAPSHOT_RESTORED = "WIKI_PAGE_SNAPSHOT_RESTORED",
   WIKI_PAGE_CONTENT_IMPORTED = "WIKI_PAGE_CONTENT_IMPORTED",
+  WIKI_PAGE_SIDEBAR_MODE_UPDATED = "WIKI_PAGE_SIDEBAR_MODE_UPDATED",
+  WIKI_PAGE_TAGS_UPDATED = "WIKI_PAGE_TAGS_UPDATED",
 }
 
 export interface AuditEventDataByType {
@@ -778,6 +780,18 @@ export interface AuditEventDataByType {
 
   [AuditEventType.WIKI_PAGE_CONTENT_IMPORTED]: {
     pageId: string;
+  };
+
+  [AuditEventType.WIKI_PAGE_SIDEBAR_MODE_UPDATED]: {
+    pageId: string;
+    previousSidebarMode: string;
+    newSidebarMode: string;
+  };
+
+  [AuditEventType.WIKI_PAGE_TAGS_UPDATED]: {
+    pageId: string;
+    addedTagNames: string[];
+    removedTagNames: string[];
   };
 }
 
@@ -1969,5 +1983,26 @@ export const AuditEventDefinitions: {
       pageId: "string",
     },
     message: (data) => `Wiki page content imported (${data.pageId})`,
+  },
+
+  [AuditEventType.WIKI_PAGE_SIDEBAR_MODE_UPDATED]: {
+    type: AuditEventType.WIKI_PAGE_SIDEBAR_MODE_UPDATED,
+    data: {
+      pageId: "string",
+      previousSidebarMode: "VISIBLE",
+      newSidebarMode: "CHILDREN_HIDDEN",
+    },
+    message: (data) =>
+      `Wiki page sidebar mode changed from ${data.previousSidebarMode} to ${data.newSidebarMode} (${data.pageId})`,
+  },
+
+  [AuditEventType.WIKI_PAGE_TAGS_UPDATED]: {
+    type: AuditEventType.WIKI_PAGE_TAGS_UPDATED,
+    data: {
+      pageId: "string",
+      addedTagNames: ["string"],
+      removedTagNames: [],
+    },
+    message: (data) => `Wiki page tags updated (${data.pageId})`,
   },
 };

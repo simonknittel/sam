@@ -4,15 +4,12 @@ import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import Note from "@/modules/common/components/Note";
-import { Select } from "@/modules/common/components/form/Select";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import { useState } from "react";
 import { FaSave } from "react-icons/fa";
 import { createWikiPage } from "../actions/createWikiPage";
-import {
-  wikiPageOptionLabel,
-  type WikiPageTargetOption,
-} from "../utils/getEditableWikiPageTargets";
+import type { WikiPageTargetOption } from "../utils/getEditableWikiPageTargets";
+import { WikiPageSelect } from "./WikiPageSelect";
 
 interface Props {
   readonly targets: WikiPageTargetOption[];
@@ -68,19 +65,14 @@ export const CreateWikiPageForm = ({
       />
 
       <label className="mt-4 mb-1 block">Übergeordnete Seite</label>
-      <Select
+      <WikiPageSelect
         name="parentId"
         value={parentId}
         onChange={(event) => setParentId(event.target.value)}
         required={!allowTopLevel}
-      >
-        {allowTopLevel && <option value="">Oberste Ebene</option>}
-        {targets.map((target) => (
-          <option key={target.id} value={target.id}>
-            {wikiPageOptionLabel(target)}
-          </option>
-        ))}
-      </Select>
+        targets={targets}
+        emptyOptionLabel={allowTopLevel ? "Oberste Ebene" : undefined}
+      />
 
       {parentId === "" && (
         <p className="mt-2 text-sm text-neutral-400">

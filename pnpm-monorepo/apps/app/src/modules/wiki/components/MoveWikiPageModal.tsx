@@ -5,14 +5,11 @@ import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
 import Note from "@/modules/common/components/Note";
-import { Select } from "@/modules/common/components/form/Select";
 import { useState } from "react";
 import { FaFolderOpen, FaSave } from "react-icons/fa";
 import { moveWikiPage } from "../actions/moveWikiPage";
-import {
-  wikiPageOptionLabel,
-  type WikiPageTargetOption,
-} from "../utils/getEditableWikiPageTargets";
+import type { WikiPageTargetOption } from "../utils/getEditableWikiPageTargets";
+import { WikiPageSelect } from "./WikiPageSelect";
 
 interface Props {
   readonly className?: string;
@@ -57,18 +54,13 @@ export const MoveWikiPageModal = ({
           <input type="hidden" name="id" value={pageId} />
 
           <label className="mb-1 block">Neuer Ort</label>
-          <Select
+          <WikiPageSelect
             name="newParentId"
             defaultValue={currentParentId ?? ""}
             required={!allowTopLevel}
-          >
-            {allowTopLevel && <option value="">Oberste Ebene</option>}
-            {targets.map((target) => (
-              <option key={target.id} value={target.id}>
-                {wikiPageOptionLabel(target)}
-              </option>
-            ))}
-          </Select>
+            targets={targets}
+            emptyOptionLabel={allowTopLevel ? "Oberste Ebene" : undefined}
+          />
 
           <Note
             type="info"

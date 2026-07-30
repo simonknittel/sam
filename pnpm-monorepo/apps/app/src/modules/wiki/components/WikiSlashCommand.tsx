@@ -149,6 +149,22 @@ export const WIKI_SLASH_COMMAND_ITEMS: readonly WikiSlashCommandItem[] = [
     run: (editor, range) =>
       editor.chain().focus().deleteRange(range).insertContent("@").run(),
   },
+  {
+    title: "Seitenverzeichnis",
+    keywords: [
+      "verzeichnis",
+      "seitenverzeichnis",
+      "seitenliste",
+      "index",
+      "toc",
+      "inhaltsverzeichnis",
+      "unterseiten",
+      "tags",
+    ],
+    /** Defaults to the subtree of the current page; configurable via the edit menu */
+    run: (editor, range) =>
+      editor.chain().focus().deleteRange(range).setWikiPageIndex().run(),
+  },
 ];
 
 const filterSlashCommandItems = (query: string) => {

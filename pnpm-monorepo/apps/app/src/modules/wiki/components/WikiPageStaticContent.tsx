@@ -2,6 +2,7 @@ import {
   createWikiHeadingIdAssigner,
   getWikiEditorExtensions,
   resolveWikiCitizenMention,
+  wikiPageIndexConfigKey,
   type WikiMentionedCitizen,
   type WikiPageLinkedPage,
 } from "@sam-monorepo/wiki-editor";
@@ -10,6 +11,10 @@ import clsx from "clsx";
 import { createElement, type ReactNode } from "react";
 import { getWikiTwitchParentHost } from "../utils/getWikiTwitchParentHost";
 import { WikiCitizenMentionChip } from "./WikiCitizenMentionNodeView";
+import {
+  WikiPageIndexList,
+  type WikiPageIndexEntry,
+} from "./WikiPageIndexList";
 import "./wikiEditor.css";
 
 type StaticContent = Parameters<typeof renderToReactElement>[0]["content"];
@@ -25,6 +30,7 @@ const renderWikiPageContent = (
   iframeAllowlist: readonly string[],
   linkablePages: Readonly<Record<string, WikiPageLinkedPage>>,
   mentionedCitizens: Readonly<Record<string, WikiMentionedCitizen>>,
+  pageIndexes: Readonly<Record<string, readonly WikiPageIndexEntry[]>>,
 ) => {
   const nextHeadingId = createWikiHeadingIdAssigner();
 
@@ -72,6 +78,15 @@ const renderWikiPageContent = (
             resolved={resolveWikiCitizenMention(mentionedCitizens, node.attrs)}
           />
         ),
+        /**
+         * Renders the page list pre-resolved by the server for this viewer
+         * (see resolveWikiPageIndex) instead of the node's placeholder.
+         */
+        wikiPageIndex: ({ node }) => (
+          <WikiPageIndexList
+            entries={pageIndexes[wikiPageIndexConfigKey(node.attrs)] ?? []}
+          />
+        ),
       },
     },
   });
@@ -86,6 +101,13 @@ interface Props {
   readonly linkablePages: Readonly<Record<string, WikiPageLinkedPage>>;
   /** Current handles of the citizens mentioned on the page, by id */
   readonly mentionedCitizens: Readonly<Record<string, WikiMentionedCitizen>>;
+  /**
+   * Resolved page lists of the page-index nodes on this page, keyed by
+   * `wikiPageIndexConfigKey`
+   */
+  readonly pageIndexes?: Readonly<
+    Record<string, readonly WikiPageIndexEntry[]>
+  >;
 }
 
 /**
@@ -98,6 +120,7 @@ export const WikiPageStaticContent = ({
   iframeAllowlist,
   linkablePages,
   mentionedCitizens,
+  pageIndexes = {},
 }: Props) => {
   if (!content)
     return (
@@ -111,6 +134,7 @@ export const WikiPageStaticContent = ({
     iframeAllowlist,
     linkablePages,
     mentionedCitizens,
+    pageIndexes,
   );
 
   return (

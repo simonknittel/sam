@@ -21,6 +21,7 @@ import toast from "react-hot-toast";
 import {
   FaBan,
   FaCheck,
+  FaCog,
   FaDownload,
   FaExternalLinkAlt,
   FaTrash,
@@ -28,6 +29,7 @@ import {
 } from "react-icons/fa";
 import { MdDragIndicator, MdVerticalAlignCenter } from "react-icons/md";
 import { getWikiNodeTypeLabel } from "../utils/getWikiNodeTypeLabel";
+import { WikiPageIndexConfigModal } from "./WikiPageIndexConfigModal";
 import { ALIGNMENT_OPTIONS } from "./toolbar/AlignmentPicker";
 import { CalloutColorSwatches } from "./toolbar/CalloutColorSwatches";
 import {
@@ -50,6 +52,7 @@ const MENU_NODE_TYPES = [
   "wikiAttachment",
   "wikiPageLink",
   "wikiCitizenMention",
+  "wikiPageIndex",
 ];
 
 /**
@@ -124,6 +127,8 @@ type MenuState =
       readonly pageId: string;
       readonly citizenId: string;
       readonly align: WikiNodeAlignment;
+      /** Raw attributes, e.g. for the page-index config dialog */
+      readonly attrs: Readonly<Record<string, unknown>>;
     } & MenuTarget)
   | ({
       readonly kind: "link";
@@ -167,6 +172,7 @@ const nodeMenu = (
   pageId: String(node.attrs.pageId ?? ""),
   citizenId: String(node.attrs.citizenId ?? ""),
   align: (node.attrs.align ?? "left") as WikiNodeAlignment,
+  attrs: node.attrs,
   ...target,
 });
 
@@ -214,6 +220,15 @@ interface Props {
  */
 export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
   const [menu, setMenu] = useState<MenuState>(null);
+  /**
+   * Lifted out of the menu itself: the hover menu unmounts when the pointer
+   * moves onto the (portaled) dialog, so the dialog must not live inside
+   * it.
+   */
+  const [pageIndexConfig, setPageIndexConfig] = useState<{
+    readonly position: number;
+    readonly attrs: Readonly<Record<string, unknown>>;
+  } | null>(null);
 
   const { refs, floatingStyles } = useFloating({
     placement: "top",
@@ -235,6 +250,23 @@ export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
         reference: element,
         key: targetKey(element),
       };
+
+      /**
+       * Everything inside a page index (its links and lists) resolves to
+       * the index node itself — the node view's content is rendered by
+       * React, not editor content.
+       */
+      const pageIndexDom = element.closest("[data-wiki-page-index]");
+      if (pageIndexDom instanceof HTMLElement) {
+        const resolved = resolveWikiNodeFromElement(editor, pageIndexDom, [
+          "wikiPageIndex",
+        ]);
+        if (!resolved) return null;
+        return nodeMenu(resolved.node, resolved.position, {
+          reference: pageIndexDom,
+          key: targetKey(pageIndexDom),
+        });
+      }
 
       /**
        * Plain links resolve through the mark, everything else through its
@@ -393,7 +425,18 @@ export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
     };
   }, [editor, hoveredElement]);
 
-  if (!editor || !menu) return null;
+  if (!editor) return null;
+
+  const configModal = pageIndexConfig && (
+    <WikiPageIndexConfigModal
+      editor={editor}
+      position={pageIndexConfig.position}
+      attrs={pageIndexConfig.attrs}
+      onRequestClose={() => setPageIndexConfig(null)}
+    />
+  );
+
+  if (!menu) return configModal || null;
 
   const deleteNode = () => {
     if (menu.kind !== "node") return;
@@ -640,244 +683,264 @@ export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
   );
 
   return (
-    /**
-     * The invisible vertical padding keeps the hover hit-area contiguous
-     * with the target element (see WikiEditorOverlays) while creating the
-     * visual gap.
-     */
-    <div
-      key={menu.key}
-      // eslint-disable-next-line react-hooks/refs -- floating-ui's refs.setFloating is a stable callback-ref setter, not a ref read
-      ref={refs.setFloating}
-      style={floatingStyles}
-      className="pointer-events-auto z-20 py-2"
-    >
-      <div className="flex flex-col items-start gap-1">
-        <span className="rounded-secondary border border-neutral-700 bg-neutral-900 px-2 py-0.5 text-xs whitespace-nowrap text-neutral-300 shadow-lg">
-          {menuLabel(menu)}
-        </span>
+    <>
+      {configModal}
+      {/*
+        The invisible vertical padding keeps the hover hit-area contiguous
+        with the target element (see WikiEditorOverlays) while creating the
+        visual gap.
+      */}
+      <div
+        key={menu.key}
+        // eslint-disable-next-line react-hooks/refs -- floating-ui's refs.setFloating is a stable callback-ref setter, not a ref read
+        ref={refs.setFloating}
+        style={floatingStyles}
+        className="pointer-events-auto z-20 py-2"
+      >
+        <div className="flex flex-col items-start gap-1">
+          <span className="rounded-secondary border border-neutral-700 bg-neutral-900 px-2 py-0.5 text-xs whitespace-nowrap text-neutral-300 shadow-lg">
+            {menuLabel(menu)}
+          </span>
 
-        <div className="flex items-center gap-1 rounded-secondary border border-neutral-700 bg-neutral-900 p-1 shadow-lg">
-          {menu.kind !== "link" && (
-            <>
-              <span
-                draggable
-                title="Block verschieben"
-                onDragStart={startNodeDrag}
-                onDragEnd={endNodeDrag}
-                className="flex size-8 cursor-grab items-center justify-center rounded-secondary text-neutral-500 hover:bg-neutral-800 hover:text-neutral-200 active:cursor-grabbing"
-              >
-                <MdDragIndicator className="size-4" />
-              </span>
-
-              <ToolbarDivider />
-            </>
-          )}
-
-          {menu.kind === "node" && (
-            <>
-              {URL_NODE_TYPES.includes(menu.typeName) &&
-                urlForm(menu.src, saveNodeUrl)}
-
-              {menu.typeName === "wikiAttachment" && (
-                <ToolbarButton
-                  title="Herunterladen"
-                  isActive={false}
-                  onClick={() =>
-                    openInNewTab(
-                      `/api/wiki/attachment/${encodeURIComponent(menu.uploadId)}`,
-                    )
-                  }
+          <div className="flex items-center gap-1 rounded-secondary border border-neutral-700 bg-neutral-900 p-1 shadow-lg">
+            {menu.kind !== "link" && (
+              <>
+                <span
+                  draggable
+                  title="Block verschieben"
+                  onDragStart={startNodeDrag}
+                  onDragEnd={endNodeDrag}
+                  className="flex size-8 cursor-grab items-center justify-center rounded-secondary text-neutral-500 hover:bg-neutral-800 hover:text-neutral-200 active:cursor-grabbing"
                 >
-                  <FaDownload />
-                </ToolbarButton>
-              )}
+                  <MdDragIndicator className="size-4" />
+                </span>
 
-              {menu.typeName === "wikiPageLink" && (
-                <ToolbarButton
-                  title="Seite öffnen"
-                  isActive={false}
-                  onClick={() =>
-                    openInNewTab(`/app/wiki/${encodeURIComponent(menu.pageId)}`)
-                  }
-                >
-                  <FaExternalLinkAlt />
-                </ToolbarButton>
-              )}
+                <ToolbarDivider />
+              </>
+            )}
 
-              {menu.typeName === "wikiCitizenMention" && (
-                <ToolbarButton
-                  title="Spynet öffnen"
-                  isActive={false}
-                  onClick={() =>
-                    openInNewTab(
-                      `/app/spynet/citizen/${encodeURIComponent(menu.citizenId)}`,
-                    )
-                  }
-                >
-                  <FaExternalLinkAlt />
-                </ToolbarButton>
-              )}
+            {menu.kind === "node" && (
+              <>
+                {URL_NODE_TYPES.includes(menu.typeName) &&
+                  urlForm(menu.src, saveNodeUrl)}
 
-              {URL_NODE_TYPES.includes(menu.typeName) && menu.src && (
-                <ToolbarButton
-                  title="In neuem Tab öffnen"
-                  isActive={false}
-                  onClick={() => openInNewTab(menu.src)}
-                >
-                  <FaExternalLinkAlt />
-                </ToolbarButton>
-              )}
-
-              {(WIKI_RESIZABLE_NODE_TYPES as readonly string[]).includes(
-                menu.typeName,
-              ) &&
-                ALIGNMENT_OPTIONS.map(({ value, title, icon: Icon }) => (
+                {menu.typeName === "wikiAttachment" && (
                   <ToolbarButton
-                    key={value}
+                    title="Herunterladen"
+                    isActive={false}
+                    onClick={() =>
+                      openInNewTab(
+                        `/api/wiki/attachment/${encodeURIComponent(menu.uploadId)}`,
+                      )
+                    }
+                  >
+                    <FaDownload />
+                  </ToolbarButton>
+                )}
+
+                {menu.typeName === "wikiPageLink" && (
+                  <ToolbarButton
+                    title="Seite öffnen"
+                    isActive={false}
+                    onClick={() =>
+                      openInNewTab(
+                        `/app/wiki/${encodeURIComponent(menu.pageId)}`,
+                      )
+                    }
+                  >
+                    <FaExternalLinkAlt />
+                  </ToolbarButton>
+                )}
+
+                {menu.typeName === "wikiCitizenMention" && (
+                  <ToolbarButton
+                    title="Spynet öffnen"
+                    isActive={false}
+                    onClick={() =>
+                      openInNewTab(
+                        `/app/spynet/citizen/${encodeURIComponent(menu.citizenId)}`,
+                      )
+                    }
+                  >
+                    <FaExternalLinkAlt />
+                  </ToolbarButton>
+                )}
+
+                {menu.typeName === "wikiPageIndex" && (
+                  <ToolbarButton
+                    title="Konfigurieren"
+                    isActive={false}
+                    onClick={() =>
+                      setPageIndexConfig({
+                        position: menu.position,
+                        attrs: menu.attrs,
+                      })
+                    }
+                  >
+                    <FaCog />
+                  </ToolbarButton>
+                )}
+
+                {URL_NODE_TYPES.includes(menu.typeName) && menu.src && (
+                  <ToolbarButton
+                    title="In neuem Tab öffnen"
+                    isActive={false}
+                    onClick={() => openInNewTab(menu.src)}
+                  >
+                    <FaExternalLinkAlt />
+                  </ToolbarButton>
+                )}
+
+                {(WIKI_RESIZABLE_NODE_TYPES as readonly string[]).includes(
+                  menu.typeName,
+                ) &&
+                  ALIGNMENT_OPTIONS.map(({ value, title, icon: Icon }) => (
+                    <ToolbarButton
+                      key={value}
+                      title={title}
+                      isActive={menu.align === value}
+                      onClick={() => setNodeAlignment(value)}
+                    >
+                      <Icon />
+                    </ToolbarButton>
+                  ))}
+
+                <ToolbarDivider />
+
+                <ToolbarButton
+                  title="Löschen"
+                  isActive={false}
+                  onClick={deleteNode}
+                >
+                  <FaTrash />
+                </ToolbarButton>
+              </>
+            )}
+
+            {menu.kind === "text" && (
+              <>
+                {([1, 2, 3] as const).map((level) => (
+                  <ToolbarButton
+                    key={level}
+                    title={`Überschrift ${level}`}
+                    isActive={menu.headingLevel === level}
+                    onClick={() => toggleTextHeading(level)}
+                  >
+                    <span className="text-xs font-bold">H{level}</span>
+                  </ToolbarButton>
+                ))}
+
+                <ToolbarDivider />
+
+                {TEXT_FORMAT_OPTIONS.map(({ name, title, icon: Icon }) => (
+                  <ToolbarButton
+                    key={name}
                     title={title}
-                    isActive={menu.align === value}
-                    onClick={() => setNodeAlignment(value)}
+                    isActive={menu.activeMarks.includes(name)}
+                    onClick={() => toggleTextMark(name)}
                   >
                     <Icon />
                   </ToolbarButton>
                 ))}
 
-              <ToolbarDivider />
+                <ToolbarDivider />
 
-              <ToolbarButton
-                title="Löschen"
-                isActive={false}
-                onClick={deleteNode}
-              >
-                <FaTrash />
-              </ToolbarButton>
-            </>
-          )}
+                {ALIGNMENT_OPTIONS.map(({ value, title, icon: Icon }) => (
+                  <ToolbarButton
+                    key={value}
+                    title={title}
+                    isActive={menu.textAlign === value}
+                    onClick={() => setTextAlignment(value)}
+                  >
+                    <Icon />
+                  </ToolbarButton>
+                ))}
 
-          {menu.kind === "text" && (
-            <>
-              {([1, 2, 3] as const).map((level) => (
+                <ToolbarDivider />
+
                 <ToolbarButton
-                  key={level}
-                  title={`Überschrift ${level}`}
-                  isActive={menu.headingLevel === level}
-                  onClick={() => toggleTextHeading(level)}
-                >
-                  <span className="text-xs font-bold">H{level}</span>
-                </ToolbarButton>
-              ))}
-
-              <ToolbarDivider />
-
-              {TEXT_FORMAT_OPTIONS.map(({ name, title, icon: Icon }) => (
-                <ToolbarButton
-                  key={name}
-                  title={title}
-                  isActive={menu.activeMarks.includes(name)}
-                  onClick={() => toggleTextMark(name)}
-                >
-                  <Icon />
-                </ToolbarButton>
-              ))}
-
-              <ToolbarDivider />
-
-              {ALIGNMENT_OPTIONS.map(({ value, title, icon: Icon }) => (
-                <ToolbarButton
-                  key={value}
-                  title={title}
-                  isActive={menu.textAlign === value}
-                  onClick={() => setTextAlignment(value)}
-                >
-                  <Icon />
-                </ToolbarButton>
-              ))}
-
-              <ToolbarDivider />
-
-              <ToolbarButton
-                title="Block löschen"
-                isActive={false}
-                onClick={deleteTextBlock}
-              >
-                <FaTrash />
-              </ToolbarButton>
-            </>
-          )}
-
-          {menu.kind === "link" && (
-            <>
-              {urlForm(menu.href, saveLink)}
-              {menu.href && (
-                <ToolbarButton
-                  title="In neuem Tab öffnen"
+                  title="Block löschen"
                   isActive={false}
-                  onClick={() => openInNewTab(menu.href)}
+                  onClick={deleteTextBlock}
                 >
-                  <FaExternalLinkAlt />
+                  <FaTrash />
                 </ToolbarButton>
-              )}
+              </>
+            )}
 
-              <ToolbarButton
-                title="Link entfernen"
-                isActive={false}
-                onClick={removeLink}
-              >
-                <FaUnlink />
-              </ToolbarButton>
-            </>
-          )}
+            {menu.kind === "link" && (
+              <>
+                {urlForm(menu.href, saveLink)}
+                {menu.href && (
+                  <ToolbarButton
+                    title="In neuem Tab öffnen"
+                    isActive={false}
+                    onClick={() => openInNewTab(menu.href)}
+                  >
+                    <FaExternalLinkAlt />
+                  </ToolbarButton>
+                )}
 
-          {menu.kind === "callout" && (
-            <>
-              <CalloutColorSwatches
-                activeColor={menu.color}
-                onSelect={setCalloutColor}
-              />
-              <ToolbarButton
-                title="Entfernen"
-                isActive={false}
-                onClick={removeCallout}
-              >
-                <FaBan />
-              </ToolbarButton>
-
-              <ToolbarDivider />
-
-              <ToolbarButton
-                title="Block löschen"
-                isActive={false}
-                onClick={deleteCallout}
-              >
-                <FaTrash />
-              </ToolbarButton>
-            </>
-          )}
-
-          {menu.kind === "block" && (
-            <>
-              {menu.typeName === "wikiGrid" && (
                 <ToolbarButton
-                  title="Inhalte vertikal zentrieren"
-                  isActive={menu.verticalAlign === "center"}
-                  onClick={toggleGridVerticalAlign}
+                  title="Link entfernen"
+                  isActive={false}
+                  onClick={removeLink}
                 >
-                  <MdVerticalAlignCenter />
+                  <FaUnlink />
                 </ToolbarButton>
-              )}
+              </>
+            )}
 
-              <ToolbarButton
-                title="Block löschen"
-                isActive={false}
-                onClick={deleteBlock}
-              >
-                <FaTrash />
-              </ToolbarButton>
-            </>
-          )}
+            {menu.kind === "callout" && (
+              <>
+                <CalloutColorSwatches
+                  activeColor={menu.color}
+                  onSelect={setCalloutColor}
+                />
+                <ToolbarButton
+                  title="Entfernen"
+                  isActive={false}
+                  onClick={removeCallout}
+                >
+                  <FaBan />
+                </ToolbarButton>
+
+                <ToolbarDivider />
+
+                <ToolbarButton
+                  title="Block löschen"
+                  isActive={false}
+                  onClick={deleteCallout}
+                >
+                  <FaTrash />
+                </ToolbarButton>
+              </>
+            )}
+
+            {menu.kind === "block" && (
+              <>
+                {menu.typeName === "wikiGrid" && (
+                  <ToolbarButton
+                    title="Inhalte vertikal zentrieren"
+                    isActive={menu.verticalAlign === "center"}
+                    onClick={toggleGridVerticalAlign}
+                  >
+                    <MdVerticalAlignCenter />
+                  </ToolbarButton>
+                )}
+
+                <ToolbarButton
+                  title="Block löschen"
+                  isActive={false}
+                  onClick={deleteBlock}
+                >
+                  <FaTrash />
+                </ToolbarButton>
+              </>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };

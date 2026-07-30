@@ -17,14 +17,13 @@ export const wikiPageOptionLabel = (target: WikiPageTargetOption) =>
   `${"\u00A0".repeat(target.depth * 4)}${target.depth > 0 ? "└ " : ""}${target.title}`;
 
 /**
- * Pages the viewer may create/move pages into: visible + editable, in
- * depth-first tree order so selects can represent the hierarchy. `depth` is
- * relative to the nearest included ancestor, so subtrees whose parents the
- * viewer can't edit still indent sensibly. Pass excludeSubtreeOf to drop a
- * page and its descendants (a page can't be moved into itself).
+ * Depth-first walk over the page tree collecting the pages `isIncluded`
+ * accepts. `depth` is relative to the nearest included ancestor, so
+ * subtrees whose parents are not included still indent sensibly.
  */
-export const getEditableWikiPageTargets = (
+const collectWikiPageTargets = (
   context: WikiContext,
+  isIncluded: (pageId: string) => boolean,
   excludeSubtreeOf?: string,
 ): WikiPageTargetOption[] => {
   const excluded = excludeSubtreeOf
@@ -52,7 +51,7 @@ export const getEditableWikiPageTargets = (
       if (visited.has(child.id) || excluded.has(child.id)) continue;
       visited.add(child.id);
 
-      const included = context.permissions.get(child.id)?.canEdit === true;
+      const included = isIncluded(child.id);
       if (included) result.push({ id: child.id, title: child.title, depth });
 
       walk(child.id, included ? depth + 1 : depth);
@@ -63,3 +62,31 @@ export const getEditableWikiPageTargets = (
 
   return result;
 };
+
+/**
+ * Pages the viewer may create/move pages into: visible + editable, in
+ * depth-first tree order so selects can represent the hierarchy. Pass
+ * excludeSubtreeOf to drop a page and its descendants (a page can't be
+ * moved into itself).
+ */
+export const getEditableWikiPageTargets = (
+  context: WikiContext,
+  excludeSubtreeOf?: string,
+): WikiPageTargetOption[] =>
+  collectWikiPageTargets(
+    context,
+    (pageId) => context.permissions.get(pageId)?.canEdit === true,
+    excludeSubtreeOf,
+  );
+
+/**
+ * All pages the viewer can read, in depth-first tree order — e.g. the root
+ * candidates of a page-index node. Ignores the sidebar mode on purpose.
+ */
+export const getReadableWikiPageTargets = (
+  context: WikiContext,
+): WikiPageTargetOption[] =>
+  collectWikiPageTargets(
+    context,
+    (pageId) => context.permissions.get(pageId)?.canRead === true,
+  );

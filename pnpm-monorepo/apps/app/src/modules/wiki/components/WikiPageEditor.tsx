@@ -12,6 +12,7 @@ import { updateWikiPageContent } from "../actions/updateWikiPageContent";
 import { useWikiEditorExtensions } from "./useWikiEditorExtensions";
 import "./wikiEditor.css";
 import { WikiEditorLayout } from "./WikiEditorLayout";
+import type { WikiPageIndexEntry } from "./WikiPageIndexList";
 import { WikiPageStaticContent } from "./WikiPageStaticContent";
 
 const AUTOSAVE_DEBOUNCE_MS = 2_000;
@@ -28,6 +29,10 @@ interface Props {
   readonly linkablePages: Readonly<Record<string, WikiPageLinkedPage>>;
   /** Current handles of the citizens mentioned on the page, by id */
   readonly mentionedCitizens: Readonly<Record<string, WikiMentionedCitizen>>;
+  /** Resolved page-index lists for the static fallback while loading */
+  readonly pageIndexes?: Readonly<
+    Record<string, readonly WikiPageIndexEntry[]>
+  >;
 }
 
 /**
@@ -42,6 +47,7 @@ export const WikiPageEditor = ({
   iframeAllowlist,
   linkablePages,
   mentionedCitizens,
+  pageIndexes,
 }: Props) => {
   const [saveState, setSaveState] = useState<SaveState>("saved");
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -171,6 +177,7 @@ export const WikiPageEditor = ({
           iframeAllowlist={iframeAllowlist}
           linkablePages={linkablePages}
           mentionedCitizens={mentionedCitizens}
+          pageIndexes={pageIndexes}
         />
       }
     />
