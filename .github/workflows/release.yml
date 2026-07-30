@@ -6,9 +6,9 @@
 # (pass an older git ref to roll back).
 #
 # Requirements:
-# - The Vercel project's Production Branch must be set to a branch that
-#   intentionally does not exist (e.g. `production-gate`) so pushes to main
-#   only create preview deployments. See docs/releasing.md
+# - The Vercel project's Production Branch must be set to `production-gate`, a
+#   frozen branch whose ruleset blocks all pushes, so pushes to main only
+#   create preview deployments. See docs/releasing.md
 # - The `Production` environment must provide the VERCEL_TOKEN, VERCEL_ORG_ID
 #   and VERCEL_PROJECT_ID secrets
 
