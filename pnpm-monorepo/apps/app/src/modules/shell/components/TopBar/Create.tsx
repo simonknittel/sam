@@ -120,30 +120,30 @@ const PopoverChildren = ({
   // @ts-expect-error Doesn't make any sense
   let items: (
     | {
-      label: string;
-      type: "button";
-      modalId: keyof typeof createForms;
-    }
+        label: string;
+        type: "button";
+        modalId: keyof typeof createForms;
+      }
     | {
-      label: string;
-      type: "link";
-      href: string;
-    }
+        label: string;
+        type: "link";
+        href: string;
+      }
   )[] = [
-      ...(apps
-        ?.filter((app): app is ExternalApp =>
-          Boolean(
-            "createLinks" in app && app.createLinks && app.createLinks.length > 0,
-          ),
-        )
-        .flatMap((app) => {
-          return app.createLinks!.map((link) => ({
-            label: link.title,
-            type: "link",
-            href: `/app/external/${app.slug}/${link.slug}`,
-          }));
-        }) || []),
-    ];
+    ...(apps
+      ?.filter((app): app is ExternalApp =>
+        Boolean(
+          "createLinks" in app && app.createLinks && app.createLinks.length > 0,
+        ),
+      )
+      .flatMap((app) => {
+        return app.createLinks!.map((link) => ({
+          label: link.title,
+          type: "link",
+          href: `/app/external/${app.slug}/${link.slug}`,
+        }));
+      }) || []),
+  ];
 
   if (showCreateCitizen)
     items.push({ label: "Citizen", type: "button", modalId: "citizen" });
