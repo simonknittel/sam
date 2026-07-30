@@ -3,6 +3,7 @@ import { prisma } from "@sam-monorepo/database";
 import { WikiPageSnapshotKind } from "@sam-monorepo/database/client";
 import {
   WIKI_EDITOR_FRAGMENT,
+  collectWikiAttachmentUploadIds,
   extractWikiPageText,
   getWikiEditorSchema,
 } from "@sam-monorepo/wiki-editor";
@@ -153,6 +154,41 @@ const maybeCreateAutoSnapshot = async (pageId: string) => {
     await prisma.wikiPageSnapshot.deleteMany({
       where: { id: { in: excessSnapshots.map((snapshot) => snapshot.id) } },
     });
+};
+
+/**
+ * Connects the page to every attachment upload referenced in the persisted
+ * content that isn't linked yet — e.g. attachments copy-pasted from another
+ * page. Connect-only, mirroring syncWikiPageUploadLinks in the app: stale
+ * links are dropped by the nightly upload cleanup against the persisted
+ * content.
+ */
+const syncUploadLinks = async (pageId: string, content: unknown) => {
+  const uploadIds = collectWikiAttachmentUploadIds(content);
+  if (uploadIds.length === 0) return;
+
+  const page = await prisma.wikiPage.findUnique({
+    where: { id: pageId },
+    select: { attachments: { select: { id: true } } },
+  });
+  if (!page) return;
+
+  const linked = new Set(page.attachments.map((upload) => upload.id));
+  const missingIds = uploadIds.filter((uploadId) => !linked.has(uploadId));
+  if (missingIds.length === 0) return;
+
+  const existing = await prisma.upload.findMany({
+    where: { id: { in: missingIds } },
+    select: { id: true },
+  });
+  if (existing.length === 0) return;
+
+  await prisma.wikiPage.update({
+    where: { id: pageId },
+    data: {
+      attachments: { connect: existing.map(({ id }) => ({ id })) },
+    },
+  });
 };
 
 /**
@@ -334,6 +370,15 @@ const server = new Server<ConnectionContext>({
         ...(lastEditorEntityId ? { updatedById: lastEditorEntityId } : {}),
       },
     });
+
+    /**
+     * Never lets a failed link sync block the store itself.
+     */
+    try {
+      await syncUploadLinks(data.documentName, content);
+    } catch (error) {
+      console.error("[collab] Upload link sync failed", error);
+    }
   },
 
   async onChange(data) {

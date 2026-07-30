@@ -13,6 +13,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getWikiContext } from "../queries/getWikiContext";
 import { maybeCreateWikiAutoSnapshot } from "../utils/maybeCreateWikiAutoSnapshot";
+import { syncWikiPageUploadLinks } from "../utils/syncWikiPageUploadLinks";
 
 const schema = z.object({
   id: z.cuid2(),
@@ -70,6 +71,8 @@ export const updateWikiPageContent = createAuthenticatedAction(
         updatedById: authentication.session.entity?.id ?? null,
       },
     });
+
+    await syncWikiPageUploadLinks(page.id, normalized);
 
     if (data.firstSaveOfSession) {
       await createAuditEvents([

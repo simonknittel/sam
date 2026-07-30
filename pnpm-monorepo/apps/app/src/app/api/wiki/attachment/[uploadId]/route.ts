@@ -19,8 +19,12 @@ const PRESIGNED_GET_EXPIRY_SECONDS = 5 * 60;
 /**
  * Permission-checked download of a wiki page attachment. Unlike images
  * (public by unguessable URL), attachments are only served to users who can
- * see the page the upload belongs to — via a redirect to a short-lived
+ * see a page containing the upload — via a redirect to a short-lived
  * presigned URL.
+ *
+ * Uploads can be linked to multiple pages (Upload.wikiPages, e.g. after a
+ * page duplication or a cross-page copy-paste); any readable linked page
+ * grants the download.
  */
 export async function GET(request: Request, props: { params: Params }) {
   try {
@@ -32,7 +36,12 @@ export async function GET(request: Request, props: { params: Params }) {
       getWikiContext(),
       prisma.upload.findUnique({
         where: { id: paramsData.uploadId },
-        select: { id: true, fileName: true, mimeType: true, wikiPageId: true },
+        select: {
+          id: true,
+          fileName: true,
+          mimeType: true,
+          wikiPages: { select: { id: true } },
+        },
       }),
     ]);
 
@@ -40,10 +49,16 @@ export async function GET(request: Request, props: { params: Params }) {
      * Invisible pages (and uploads outside the wiki) 404 instead of 403 to
      * avoid leaking their existence.
      */
-    if (!context || !upload?.wikiPageId)
+    if (!context || !upload)
       return NextResponse.json({ error: "Not Found" }, { status: 404 });
-    const page = context.pagesById.get(upload.wikiPageId);
-    if (!page || page.deletedAt || !context.permissions.get(page.id)?.canRead)
+
+    const allowed = upload.wikiPages.some((linked) => {
+      const page = context.pagesById.get(linked.id);
+      return Boolean(
+        page && !page.deletedAt && context.permissions.get(page.id)?.canRead,
+      );
+    });
+    if (!allowed)
       return NextResponse.json({ error: "Not Found" }, { status: 404 });
 
     const presignedUrl = await getPresignedDownloadUrl(upload);

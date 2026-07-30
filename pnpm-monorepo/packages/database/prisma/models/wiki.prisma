@@ -80,6 +80,8 @@ model WikiPage {
   favorites   WikiPageFavorite[]
   visits      WikiPageVisit[]
   reports     WikiPageReport[]
+  /// Uploads embedded in this page as images or attachments (see
+  /// Upload.wikiPages)
   attachments Upload[]           @relation("attachments")
 
   @@index([parentId])

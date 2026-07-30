@@ -1,4 +1,5 @@
 import { mergeAttributes, Node } from "@tiptap/core";
+import { walkWikiContent } from "./walkWikiContent.js";
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
@@ -30,6 +31,26 @@ export const formatWikiAttachmentSize = (size: number | null): string => {
     maximumFractionDigits: value >= 10 || unitIndex === 0 ? 0 : 1,
   }).format(value);
   return `${formatted} ${units[unitIndex]}`;
+};
+
+/**
+ * Collects the upload ids of all attachment cards in a Tiptap JSON
+ * document. Used to keep the page ⇄ upload links in sync with the persisted
+ * content (e.g. after an attachment was copy-pasted from another page).
+ */
+export const collectWikiAttachmentUploadIds = (content: unknown): string[] => {
+  const uploadIds = new Set<string>();
+
+  walkWikiContent(content, (node) => {
+    if (
+      node.type === "wikiAttachment" &&
+      typeof node.attrs?.uploadId === "string" &&
+      node.attrs.uploadId.length > 0
+    )
+      uploadIds.add(node.attrs.uploadId);
+  });
+
+  return [...uploadIds];
 };
 
 /**

@@ -27,7 +27,7 @@ const bodySchema = z.discriminatedUnion("resourceType", [
    */
   z.object({
     resourceType: z.literal("wikiPage"),
-    resourceAttribute: z.literal("wikiPageId"),
+    resourceAttribute: z.literal("wikiPages"),
     resourceId: z.cuid2(),
     uploadId: z.cuid(),
   }),
@@ -55,14 +55,20 @@ export async function PATCH(request: Request) {
     if (data.resourceType === "wikiPage") {
       /**
        * Authorize: edit permission on the target page. The upload must be
-       * the current user's own and not already belong to another page —
-       * re-assigning someone else's upload would break its downloads there.
+       * the current user's own and not linked to another page yet — this
+       * route only covers the initial link right after the upload; further
+       * pages get linked when their persisted content references the upload
+       * (see syncWikiPageUploadLinks).
        */
       const [context, upload] = await Promise.all([
         getWikiContext(),
         prisma.upload.findUnique({
           where: { id: data.uploadId },
-          select: { id: true, createdById: true, wikiPageId: true },
+          select: {
+            id: true,
+            createdById: true,
+            wikiPages: { select: { id: true } },
+          },
         }),
       ]);
       if (!context)
@@ -74,13 +80,13 @@ export async function PATCH(request: Request) {
       if (
         !context.permissions.get(page.id)?.canEdit ||
         upload.createdById !== authentication.session.user.id ||
-        (upload.wikiPageId !== null && upload.wikiPageId !== page.id)
+        upload.wikiPages.some((linked) => linked.id !== page.id)
       )
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
       await prisma.upload.update({
         where: { id: upload.id },
-        data: { wikiPageId: page.id },
+        data: { wikiPages: { connect: { id: page.id } } },
       });
 
       /**

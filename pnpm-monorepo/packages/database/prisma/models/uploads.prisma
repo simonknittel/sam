@@ -10,11 +10,11 @@ model Upload {
   roleIcons      Role[]         @relation("icon")
   roleThumbnails Role[]         @relation("thumbnail")
   manufacturers  Manufacturer[]
-  /// Set when this upload is an image or attachment of a wiki page. Used to
-  /// permission-check attachment downloads against the page's visibility.
-  wikiPageId     String?
-  wikiPage       WikiPage?      @relation("attachments", fields: [wikiPageId], references: [id], onDelete: SetNull)
+  /// Wiki pages this upload is embedded in as an image or attachment.
+  /// Linked at upload time, on page duplication and whenever persisted
+  /// content references the upload; the nightly upload cleanup drops links
+  /// whose page content no longer references the upload. Used to
+  /// permission-check attachment downloads against the pages' visibility.
+  wikiPages      WikiPage[]     @relation("attachments")
   wikiPageIcons  WikiPage[]     @relation("icon")
-
-  @@index([wikiPageId])
 }

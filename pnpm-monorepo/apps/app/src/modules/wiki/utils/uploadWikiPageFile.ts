@@ -95,7 +95,7 @@ export const uploadWikiPageFile = async (
     method: "PATCH",
     body: JSON.stringify({
       resourceType: "wikiPage",
-      resourceAttribute: "wikiPageId",
+      resourceAttribute: "wikiPages",
       resourceId: pageId,
       uploadId: created.item.id,
     }),

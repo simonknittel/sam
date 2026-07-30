@@ -8,6 +8,7 @@ import {
 import { SignJWT } from "jose";
 import { prosemirrorJSONToYDoc } from "y-prosemirror";
 import * as Y from "yjs";
+import { syncWikiPageUploadLinks } from "./syncWikiPageUploadLinks";
 
 const REPLACE_REQUEST_TIMEOUT_MS = 15_000;
 
@@ -85,4 +86,6 @@ export const replaceWikiPageContent = async ({
       updatedById: updatedByEntityId,
     },
   });
+
+  await syncWikiPageUploadLinks(pageId, content);
 };

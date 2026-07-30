@@ -23,6 +23,10 @@ const DELETE_BATCH_SIZE = 1000;
  * foreign key and deleting a resource only nulls it, so the previous upload
  * would otherwise be left behind forever.
  *
+ * Wiki page ⇄ upload links (Upload.wikiPages) are reconciled first: content
+ * persists only ever add links (see syncWikiPageUploadLinks), so links
+ * whose page content no longer references the upload are dropped here.
+ *
  * An upload counts as used while it is referenced as a role icon or
  * thumbnail, manufacturer image, wiki page icon or wiki page attachment. As
  * a safety net, uploads whose id still appears in some wiki page content or
@@ -52,11 +56,33 @@ export const deleteUnusedUploads = async () => {
     const cutoff = new Date();
     cutoff.setHours(cutoff.getHours() - GRACE_PERIOD_HOURS);
 
+    /**
+     * Drop page links whose page content no longer references the upload
+     * (destroyed pages already lose their links via the cascading foreign
+     * key). The grace period protects fresh uploads whose editing session
+     * hasn't persisted the content containing them yet.
+     */
+    await captureAsyncFunc(
+      "reconcile wiki page links",
+      () =>
+        prisma.$executeRaw`
+        DELETE FROM "_attachments" AS "link"
+        USING "Upload" AS "upload"
+        WHERE "upload"."id" = "link"."A"
+          AND "upload"."createdAt" < ${cutoff}
+          AND NOT EXISTS (
+            SELECT 1 FROM "WikiPage" AS "page"
+            WHERE "page"."id" = "link"."B"
+              AND "page"."content"::text LIKE '%' || "link"."A" || '%'
+          )
+      `,
+    );
+
     const unusedUploads = await captureAsyncFunc("find unused uploads", () =>
       prisma.upload.findMany({
         where: {
           createdAt: { lt: cutoff },
-          wikiPageId: null,
+          wikiPages: { none: {} },
           roleIcons: { none: {} },
           roleThumbnails: { none: {} },
           manufacturers: { none: {} },
