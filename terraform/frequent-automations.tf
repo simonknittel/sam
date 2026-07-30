@@ -4,7 +4,7 @@ module "frequent_automations" {
   function_name = "frequent-automations"
   account_id    = data.aws_caller_identity.current.account_id
   timeout       = 90
-  memory_size   = 256
+  memory_size   = 512
   environment_variables = merge(
     {
       AWS_EVENT_BUS_ARN = data.aws_cloudwatch_event_bus.default.arn
