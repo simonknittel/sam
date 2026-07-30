@@ -46,7 +46,7 @@ export const WikiEditorLayout = ({
         <div className={clsx("relative", { "mt-4": canEdit })}>
           <EditorContent editor={editor} />
           {canEdit && <WikiEditorOverlays editor={editor} />}
-          {canEdit && <WikiGutter editor={editor} />}
+          {canEdit && <WikiGutter editor={editor} pageId={pageId} />}
         </div>
       ) : (
         <div className={clsx({ "mt-4 min-h-[50vh] pl-12": canEdit })}>

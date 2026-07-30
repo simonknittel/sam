@@ -14,11 +14,21 @@ import { DragHandle } from "@tiptap/extension-drag-handle-react";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import type { Editor } from "@tiptap/react";
 import clsx from "clsx";
-import { useCallback, useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type RefObject,
+} from "react";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import { MdDragIndicator, MdVerticalAlignCenter } from "react-icons/md";
 import { CalloutColorSwatches } from "./toolbar/CalloutColorSwatches";
 import { setWikiGutterHighlight } from "./WikiActiveNodeHighlight";
+import {
+  WIKI_SLASH_COMMAND_ITEMS,
+  type WikiSlashCommandItem,
+} from "./WikiSlashCommand";
 
 interface HoveredBlock {
   readonly node: ProseMirrorNode;
@@ -73,17 +83,19 @@ const COMPUTE_POSITION_CONFIG: ComputePositionConfig = {
 
 interface Props {
   readonly editor: Editor;
+  /** Target for file uploads started from the insert palette */
+  readonly pageId: string;
 }
 
 /**
  * Gutter controls left of the hovered top-level block: a plus button
- * inserting a block below (Alt: above) and a grip that drags the block
- * and opens the block actions on click. The contextual edit menu
- * (WikiEditMenu) stays reserved for the deepest hovered element — block
- * scope lives here, so nested nodes and their ancestors never compete
- * for the same popover space.
+ * opening the insert palette (new block below, Alt: above) and a grip
+ * that drags the block and opens the block actions on click. The
+ * contextual edit menu (WikiEditMenu) stays reserved for the deepest
+ * hovered element — block scope lives here, so nested nodes and their
+ * ancestors never compete for the same popover space.
  */
-export const WikiGutter = ({ editor }: Props) => {
+export const WikiGutter = ({ editor, pageId }: Props) => {
   const [block, setBlock] = useState<HoveredBlock | null>(null);
 
   /**
@@ -102,18 +114,13 @@ export const WikiGutter = ({ editor }: Props) => {
     [],
   );
 
-  const insertBlock = (event: React.MouseEvent) => {
-    if (!block) return;
-    const node = editor.state.doc.nodeAt(block.pos);
-    if (!node) return;
-    const position = event.altKey ? block.pos : block.pos + node.nodeSize;
-    editor
-      .chain()
-      .focus()
-      .insertContentAt(position, { type: "paragraph" })
-      .setTextSelection(position + 1)
-      .insertContent("/")
-      .run();
+  /**
+   * The Alt state must be captured when the popover opens — by the time
+   * an entry is picked from the palette, the modifier is long released.
+   */
+  const insertAboveRef = useRef(false);
+  const captureInsertAbove = (event: React.MouseEvent) => {
+    insertAboveRef.current = event.altKey;
   };
 
   /**
@@ -152,14 +159,27 @@ export const WikiGutter = ({ editor }: Props) => {
       onNodeChange={handleNodeChange}
     >
       <div className="flex items-center">
-        <button
-          type="button"
-          title="Block darunter einfügen (Alt: darüber)"
-          onClick={insertBlock}
-          className={clsx(BUTTON_CLASS_NAME, "cursor-pointer")}
+        <PopoverBaseUI
+          openOnHover={false}
+          side="bottom"
+          onOpenChange={handleOpenChange}
+          trigger={
+            <span
+              title="Block darunter einfügen (Alt: darüber)"
+              onClick={captureInsertAbove}
+              className={clsx(BUTTON_CLASS_NAME, "cursor-pointer")}
+            >
+              <FaPlus className="size-3" />
+            </span>
+          }
         >
-          <FaPlus className="size-3" />
-        </button>
+          <InsertBlockActions
+            editor={editor}
+            block={block}
+            pageId={pageId}
+            insertAboveRef={insertAboveRef}
+          />
+        </PopoverBaseUI>
 
         <PopoverBaseUI
           openOnHover={false}
@@ -186,6 +206,70 @@ export const WikiGutter = ({ editor }: Props) => {
 
 const ROW_CLASS_NAME =
   "flex cursor-pointer items-center gap-2 rounded-secondary px-2 py-1 text-left text-sm text-neutral-300 hover:bg-neutral-800";
+
+interface InsertBlockActionsProps {
+  readonly editor: Editor;
+  readonly block: HoveredBlock | null;
+  readonly pageId: string;
+  readonly insertAboveRef: RefObject<boolean>;
+}
+
+/**
+ * Dropdown content of the gutter plus button: the slash-command palette
+ * as a click list. The document stays untouched until an entry is picked
+ * — only then a paragraph is inserted next to the hovered block and the
+ * palette action runs against it (the actions' leading deleteRange is a
+ * no-op on the collapsed range), so dismissing the popover never leaves
+ * an empty node behind.
+ */
+const InsertBlockActions = ({
+  editor,
+  block,
+  pageId,
+  insertAboveRef,
+}: InsertBlockActionsProps) => {
+  const { closePopover } = usePopoverBaseUI();
+
+  if (!block) return null;
+  const node = editor.state.doc.nodeAt(block.pos);
+  if (node?.type.name !== block.node.type.name) return null;
+
+  const insertBlock = (item: WikiSlashCommandItem) => {
+    closePopover();
+    /**
+     * closePopover is a programmatic close — Base UI reports only its own
+     * dismissals through onOpenChange, so the drag-handle lock has to be
+     * released here.
+     */
+    editor.view.dispatch(editor.state.tr.setMeta("lockDragHandle", false));
+
+    const position = insertAboveRef.current
+      ? block.pos
+      : block.pos + node.nodeSize;
+    editor
+      .chain()
+      .focus()
+      .insertContentAt(position, { type: "paragraph" })
+      .setTextSelection(position + 1)
+      .run();
+    item.run(editor, { from: position + 1, to: position + 1 }, { pageId });
+  };
+
+  return (
+    <div className="flex max-h-72 w-60 flex-col gap-1 overflow-y-auto">
+      {WIKI_SLASH_COMMAND_ITEMS.map((item) => (
+        <button
+          key={item.title}
+          type="button"
+          onClick={() => insertBlock(item)}
+          className={ROW_CLASS_NAME}
+        >
+          {item.title}
+        </button>
+      ))}
+    </div>
+  );
+};
 
 interface BlockActionsProps {
   readonly editor: Editor;

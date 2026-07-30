@@ -11,12 +11,12 @@ import {
 } from "./wikiEditorFiles";
 import { createWikiSuggestionRender } from "./WikiSuggestionMenu";
 
-interface WikiSlashCommandOptions {
+export interface WikiSlashCommandOptions {
   /** Id of the page being edited — target for file uploads */
   pageId: string;
 }
 
-interface WikiSlashCommandItem {
+export interface WikiSlashCommandItem {
   readonly title: string;
   readonly keywords: readonly string[];
   readonly run: (
@@ -26,7 +26,8 @@ interface WikiSlashCommandItem {
   ) => void;
 }
 
-const WIKI_SLASH_COMMAND_ITEMS: readonly WikiSlashCommandItem[] = [
+/** Shared with the gutter plus button (WikiGutter), which offers the same palette */
+export const WIKI_SLASH_COMMAND_ITEMS: readonly WikiSlashCommandItem[] = [
   {
     title: "Text",
     keywords: ["text", "paragraph", "absatz", "p"],
