@@ -17,8 +17,8 @@ Status: planned (interview completed 2026-07-27), not started.
 | Search | Postgres full-text search (first FTS in the codebase). Permission filtering server-side, no leaks. |
 | App-level permissions | `wiki;read` (see app + public pages), `wiki;create` (create top-level pages), `wiki;manage` (wiki admin: settings + page-admin on all pages). Child-page creation is gated by *edit* on the parent. |
 | V1 extras | File attachments (non-image uploads) and favorites & recents. Comments and page templates are deferred. |
-| Migration | Seed a page tree mirroring the 5 document categories (pages link the existing external PDFs); auto-map `documentX;read` role grants to page visibility. Help content re-authored manually. |
-| Rollout | Big-bang cutover: one release replaces help + documents, including seeded content, route redirects, and removal of the 28 `documentX` permission resources. |
+| Migration | No automatic migration of content, permissions, or similar — no seed script, no role mapping. Only the help app is migrated, re-authored manually by you. The documents app stays live for now. |
+| Rollout | Cutover replaces only the help app (route redirects, tile removal) once the help content has been manually re-authored. The documents app and its 28 `documentX` permission resources stay untouched. |
 | Page defaults | New top-level pages default to `RESTRICTED` with no roles (≙ private/owner-only) on all three tiers; children default to `INHERIT`. No separate PRIVATE/CREATOR enum values — `RESTRICTED` implicitly includes the source page's owner. |
 | Ownership | Pages have a transferable **owner** who holds all implicit permissions; `createdBy` is a pure audit fact with no permission implications — so access can be revoked when members leave or switch departments. Ownership is **inheritable** like the permission tiers: `ownerId = NULL` inherits from the nearest ancestor with an explicit owner. Top-level pages start with the creator as explicit owner; child pages start inheriting. |
 | Cascades | Changing any permission setting (visibility/editing/admin) or the owner offers an "auch auf alle Unterseiten anwenden" checkbox that resets the descendants to INHERIT/inherited ownership so they follow the changed setting. |
@@ -28,22 +28,26 @@ Status: planned (interview completed 2026-07-27), not started.
 | Trash | `/app/wiki/trash` with restore + permanent delete; auto-purge after 30 days via midnight-automations. |
 | JSON export/import | Wiki admins (`wiki;manage`) can export a page's raw Tiptap JSON and import JSON to replace a page's content — full replace, safety snapshot first, reuses the snapshot-restore write path. |
 | Demo-content script | Script in `apps/scripts` generates a "live demo page" Tiptap JSON exercising every formatting option/embed; imported manually via the JSON import to author/refresh help pages. |
+| Sidebar curation | Per-page `sidebarMode`: VISIBLE / HIDDEN / CHILDREN_HIDDEN. Hiding always takes the whole subtree out of the sidebar; CHILDREN_HIDDEN keeps the page itself visible as the entry point for "dataset" subtrees. Purely cosmetic, no permission implications — hidden pages stay reachable via search, links, tags, favorites and the page-index node. |
+| Tags | Global free-form tags (`WikiTag`/`WikiPageTag`), assigned by page editors via an autocompleting combobox (case-insensitive find-or-create prevents duplicates). Tag chips in the page header link to `/app/wiki/tags/<tagId>` — a permission-filtered list of all pages carrying the tag. |
+| Page-index node | `wikiPageIndex` block node ("Seitenverzeichnis"): tree mode (root page + max depth, default unlimited) or tag mode (tag set + AND/OR). Resolved per viewer at render time (permission-filtered), ignores `sidebarMode` — the canonical way to surface sidebar-hidden dataset pages. |
 
 ## 1. Goals & non-goals
 
 **Goals (v1):**
 
-- New integrated app "Wiki" (module `modules/wiki`, routes under `/app/wiki`) replacing the help app and the documents app.
+- New integrated app "Wiki" (module `modules/wiki`, routes under `/app/wiki`) replacing the help app. The documents app stays live for now — migrating it into the wiki remains possible later, but is out of scope.
 - Hierarchical pages with per-page visibility / editing / admin permissions, inherited from the nearest ancestor with an explicit setting.
 - Tiptap v3 editor with realtime collaboration (Yjs + Hocuspocus), live autosave, presence carets.
 - Rich content: images, tables, code blocks, task lists, YouTube/Twitch/Spotify/Google embeds, allowlisted generic iframes, internal page links, file attachments.
 - Automatic table of contents, permission-aware full-text search, snapshots + restore, favorites & recents.
-- Deep links from the apps overview and the topbar apps popover (replacing the Dokumente/Hilfe tiles).
+- Organization for large "dataset" subtrees: per-page sidebar curation (`sidebarMode`), free-form tags with autocomplete + tag list pages, and a configurable page-index node (page tree or tag query) — §18.
+- Deep links from the apps overview and the topbar apps popover (replacing the Hilfe tile; the Dokumente tile stays).
 
 **Non-goals (v1, but the data model must not block them):**
 
-- Events/tasks using the same page backend (see §16).
-- Custom interactive "rich content components" (polls, charts) — see §16.
+- Events/tasks using the same page backend (see §17).
+- Custom interactive "rich content components" (polls, charts) — see §17.
 - Comments, page templates, visual version diffs, CmdK deep content search.
 - Anonymous/unauthenticated access. "Public" always means "any authenticated user holding `wiki;read`".
 
@@ -77,6 +81,7 @@ enum WikiPageNamespace { WIKI }           // later: EVENT, TASK
 enum WikiPageVisibility { INHERIT PUBLIC RESTRICTED }
 enum WikiPageEditability { INHERIT ALL RESTRICTED }
 enum WikiPageAdminability { INHERIT RESTRICTED }
+enum WikiPageSidebarMode { VISIBLE HIDDEN CHILDREN_HIDDEN }   // §18 — sidebar curation, not a permission
 
 model WikiPage {
   id          String   @id @default(cuid())
@@ -85,6 +90,7 @@ model WikiPage {
   parent      WikiPage?  @relation("hierarchy", fields: [parentId], references: [id], onDelete: Restrict)
   children    WikiPage[] @relation("hierarchy")
   sortOrder   Int      @default(0)         // manual ordering among siblings
+  sidebarMode WikiPageSidebarMode @default(VISIBLE)   // §18
 
   title       String
   slug        String                        // derived from title, cosmetic only
@@ -119,6 +125,7 @@ model WikiPage {
   favorites  WikiPageFavorite[]
   visits     WikiPageVisit[]
   reports    WikiPageReport[]
+  tags       WikiPageTag[]
 }
 
 enum WikiPageAccessType { READ EDIT ADMIN }
@@ -158,6 +165,24 @@ model WikiPageVisit {
   pageId String
   lastVisitedAt DateTime
   @@id([userId, pageId])
+}
+
+model WikiTag {
+  id        String @id @default(cuid())
+  name      String @unique       // display casing from first use; actions match case-insensitively (find-or-create)
+  createdAt DateTime @default(now())
+  createdById String?
+  pages     WikiPageTag[]
+}
+
+model WikiPageTag {
+  pageId String
+  page   WikiPage @relation(..., onDelete: Cascade)
+  tagId  String
+  tag    WikiTag @relation(..., onDelete: Cascade)
+  createdAt DateTime @default(now())
+  createdById String?
+  @@id([pageId, tagId])
 }
 
 model WikiPageReport {
@@ -267,6 +292,7 @@ Component: `modules/wiki/components/PageEditor.tsx` (client). Extensions:
 | Grid layouts | custom `wikiGrid`/`wikiGridCell` nodes: 2–4 columns side-by-side via CSS grid, stacked on mobile |
 | Slash commands | Notion-like "/" menu (`@tiptap/suggestion`): filterable block palette (`/h1`, `/tabelle`, `/raster`, …) with keyboard navigation |
 | Highlighting | `@tiptap/extension-highlight` (multicolor inline text marker) + custom `wikiCallout` node (blocks with colored background/border: neutral/blue/green/yellow/red) |
+| Page index | custom `wikiPageIndex` block node (§18): lists pages by subtree or tag query, resolved per viewer at render time; configured via the edit-menu overlay, inserted via slash menu (`/verzeichnis`) |
 
 Hotkeys: Tiptap defaults cover bold/italic/underline/code/undo/redo etc.; add `Cmd+K` → link dialog (`Cmd+S` just flushes the autosave — snapshots are automatic). Page-level shortcuts via the already-present `react-hotkeys-hook`.
 
@@ -329,48 +355,45 @@ Routes (module `modules/wiki`, routes `src/app/app/wiki/`):
 - `/app/wiki/[pageId]` and `/app/wiki/[pageId]/[slug]` — page view/editor (canonical redirect to current slug); `authorizePage("wiki", "read")` + page-level visibility check (`forbidden()`/`notFound()` semantics: invisible = 404 to avoid existence leaks).
 - `/app/wiki/[pageId]/snapshots` — history + restore (page admin).
 - `/app/wiki/reports` — open/resolved reports triage (gated `wiki;manage`), §12.
+- `/app/wiki/tags/[tagId]` — permission-filtered list of all pages carrying the tag (gated `wiki;read`), §18; linked from the tag chips in page headers.
 - `/app/wiki/trash` — deleted pages (visible to `wiki;manage` + each page's admins) with restore and permanent-delete actions; auto-purge >30 days via midnight-automations.
 - `/app/wiki/settings` — §10.
 
-Page actions (all via `createAuthenticatedAction`): create (top-level: `wiki;create`; child: edit on parent), rename, move (admin on page + edit on new parent), change permissions incl. ownership transfer (admin, one dialog), delete/restore-from-trash (admin), favorite toggle, snapshot create/restore, JSON export/import (`wiki;manage`, §9), report create (visibility on page) / resolve (`wiki;manage`), settings update.
+Page actions (all via `createAuthenticatedAction`): create (top-level: `wiki;create`; child: edit on parent), rename, move (admin on page + edit on new parent), change permissions incl. ownership transfer (admin, one dialog), sidebar-mode change (admin, §18), tag assign/remove (edit, §18), delete/restore-from-trash (admin), favorite toggle, snapshot create/restore, JSON export/import (`wiki;manage`, §9), report create (visibility on page) / resolve (`wiki;manage`), settings update.
 
 **Cascade checkboxes:** every permission change (visibility/editing/admin) and the ownership transfer offer an "Auch auf alle Unterseiten anwenden" checkbox. Semantics are uniform: descendants are reset to `INHERIT` (tiers) / inherited ownership (`ownerId = NULL`), so they follow the changed setting and stay attached to it for future changes. Cascades only touch descendants the acting user has admin on — pages with foreign explicit settings inside the subtree are listed in the dialog and skipped unless the actor has admin there too.
 
-Navigation wiring (single cutover release):
+Navigation wiring (cutover release; documents app untouched):
 
-- `INTEGRATED_APPS.ts`: remove `Dokumente` and `Hilfe`; add `{ name: "Wiki", slug: "wiki", href: "/app/wiki", permissionStrings: ["wiki;read"], tags: ["featured"] }` + `modules/wiki/assets/screenshot.png`.
-- CmdK `List.tsx`: remove documents/help entries; add wiki entry with `authKey: "wiki"`.
-- `next.config.ts` redirects: `/app/documents/:path*` and `/app/help/:path*` → `/app/wiki` (old changelog links keep working).
-- Permission admin surfaces: remove `DocumentsTab.tsx` + the 28 matrix entries; add a small "Wiki" section (3 strings) to `PermissionMatrix.tsx` and a tab/section in `modules/roles/components/tabs/`.
-- `PermissionSet.tsx`: remove the 28 `documentX` resource literals, add `wiki`.
+- `INTEGRATED_APPS.ts`: remove `Hilfe` (keep `Dokumente`); add `{ name: "Wiki", slug: "wiki", href: "/app/wiki", permissionStrings: ["wiki;read"], tags: ["featured"] }` + `modules/wiki/assets/screenshot.png`.
+- CmdK `List.tsx`: remove the help entry; add wiki entry with `authKey: "wiki"`.
+- `next.config.ts` redirects: `/app/help/:path*` → `/app/wiki` (old changelog links keep working).
+- Permission admin surfaces: add a small "Wiki" section (3 strings) to `PermissionMatrix.tsx` and a tab/section in `modules/roles/components/tabs/`. `DocumentsTab.tsx` and the 28 `documentX` matrix entries stay.
+- `PermissionSet.tsx`: add `wiki`; the 28 `documentX` resource literals stay.
 
-## 15. Migration & cutover (big-bang, one release)
+## 15. Cutover (help app only — no automatic migration)
 
-Order of operations at release:
+No automatic migration of any content, permissions, or similar: no seed script, no role mapping, no generated page trees. The documents app stays live and untouched; only the help app is replaced, and its content is re-authored manually by you.
+
+Order of operations:
 
 1. Schema migration (new tables; nothing dropped) — existing `production-database-migrations.yml` flow.
-2. **Seed script** in `apps/scripts` (idempotent, run once against prod):
-   - Creates the root page `Dokumente` and one child per category (Basics, Abilities, Lead, Eco, Ship Manuals), each category `RESTRICTED` with the union of its documents' roles; one page per document containing a link/embed of the existing external PDF URL (from the current `getDocuments.ts` data, inlined into the script since the module gets deleted).
-   - Maps roles: for each document, read current `PermissionString` rows `documentX;read` → grant those roles `READ` on the page (`visibility: RESTRICTED`; documents whose permission was effectively org-wide can be flagged `PUBLIC` manually afterwards).
-   - Creates an empty `Hilfe` root page (`PUBLIC`) as the target for manual re-authoring; sets it as `supportPageId` default.
-   - Seeds `WikiSetting.iframeAllowlist` with the hosts of `NEXT_PUBLIC_DOWNLOADS_BASE_URL` / `NEXT_PUBLIC_DOWNLOADS_BASE_URL_2`, so the seeded PDF embeds render from day one.
-   - Deletes the `documentX;read` `PermissionString` rows after mapping.
-3. App deployment with the wiki, removed help/documents code, redirects, rewired navigation.
-4. Collab server deployed in core-services beforehand (it is inert until the app ships).
-5. Changelog entry in `modules/changelog/entries.tsx`; new screenshot asset.
+2. Collab server deployed in core-services beforehand (it is inert until the app ships).
+3. Wiki ships (phases 1–8) while the help app is still live. Manual work (yours): author the help content as wiki pages (demo-content script + JSON import where useful), create a support page and set `WikiSetting.supportPageId`, and fill the iframe allowlist via the settings UI as needed.
+4. Cutover release once the re-authoring is done: remove the help module, add the `/app/help/:path*` → `/app/wiki` redirects, rewire navigation (§14), changelog entry in `modules/changelog/entries.tsx` + new screenshot asset.
 
-Manual afterwork (yours): re-author the help content into the `Hilfe` tree, review seeded visibilities, optionally mark org-wide pages `PUBLIC`.
+The documents app: untouched in v1. Migrating it into the wiki later stays possible but is a separate decision; nothing in this plan depends on it.
 
 **Demo-content script (`apps/scripts`):**
 
-- Generates the Tiptap JSON for a "live demo page" exercising every supported feature: all heading levels, every text mark (bold, italic, underline, strikethrough, inline code, multicolor highlight, links), bullet/ordered/task lists, blockquote, horizontal rule, code blocks with syntax highlighting, tables, collapsible details, 2–4-column grids, callouts in every color, images, YouTube/Twitch/Spotify/Google embeds, an allowlisted generic iframe, internal page links, and a file attachment card.
+- Generates the Tiptap JSON for a "live demo page" exercising every supported feature: all heading levels, every text mark (bold, italic, underline, strikethrough, inline code, multicolor highlight, links), bullet/ordered/task lists, blockquote, horizontal rule, code blocks with syntax highlighting, tables, collapsible details, 2–4-column grids, callouts in every color, images, YouTube/Twitch/Spotify/Google embeds, an allowlisted generic iframe, internal page links, a page-index node in both modes, and a file attachment card.
 - Depends on `@sam-monorepo/wiki-editor` and validates the generated doc against the shared schema before writing, so the script fails loudly when extensions change instead of silently drifting out of date.
 - Nodes referencing real records (internal-link page IDs, image/attachment upload IDs, iframe hosts) are parameterized via CLI flags with documented placeholder defaults you replace after import.
 - Output: a JSON file you import via §9's import dialog to create/refresh help pages — e.g. a "Formatierungsoptionen" page that documents the editor for users and doubles as a manual regression check (one page rendering every node type in both the editor and the static renderer).
 
 ## 16. Audit events & notifications
 
-New immutable `AuditEventType`s: `WIKI_PAGE_CREATED`, `WIKI_PAGE_UPDATED` (one per user editing session), `WIKI_PAGE_MOVED`, `WIKI_PAGE_PERMISSIONS_UPDATED`, `WIKI_PAGE_OWNERSHIP_TRANSFERRED`, `WIKI_PAGE_DELETED`, `WIKI_PAGE_RESTORED` (trash), `WIKI_PAGE_SNAPSHOT_RESTORED`, `WIKI_PAGE_CONTENT_IMPORTED`, `WIKI_PAGE_REPORTED`, `WIKI_PAGE_REPORT_RESOLVED`, `WIKI_SETTINGS_UPDATED`. Cascaded permission/ownership changes write one event per affected page. Upload events reuse `UPLOAD_CREATED`.
+New immutable `AuditEventType`s: `WIKI_PAGE_CREATED`, `WIKI_PAGE_UPDATED` (one per user editing session), `WIKI_PAGE_MOVED`, `WIKI_PAGE_PERMISSIONS_UPDATED`, `WIKI_PAGE_OWNERSHIP_TRANSFERRED`, `WIKI_PAGE_DELETED`, `WIKI_PAGE_RESTORED` (trash), `WIKI_PAGE_SNAPSHOT_RESTORED`, `WIKI_PAGE_CONTENT_IMPORTED`, `WIKI_PAGE_REPORTED`, `WIKI_PAGE_REPORT_RESOLVED`, `WIKI_PAGE_SIDEBAR_MODE_UPDATED`, `WIKI_PAGE_TAGS_UPDATED` (one per assign/remove action), `WIKI_SETTINGS_UPDATED`. Cascaded permission/ownership changes write one event per affected page. Upload events reuse `UPLOAD_CREATED`.
 
 Notifications: v1 signals open reports to `wiki;manage` holders via the app-tile dot badge **and** web-push through the existing notification-router (§12). Watch/subscribe on pages remains a later candidate.
 
@@ -380,9 +403,36 @@ Notifications: v1 signals open reports to `wiki;manage` holders via the app-tile
 - **Rich content components:** Tiptap React NodeViews + a node-type registry in `modules/wiki`. Each custom component is a node with attrs (config) rendering a React component that may fetch app data via tRPC/server components. The static renderer needs a matching component per node type — the registry keeps editor and static rendering in lockstep.
 - **Comments, templates, diffs, CmdK content search, watch-notifications:** explicitly deferred; nothing in the schema blocks them (snapshots already store full JSON for future diffing).
 
-## 18. Implementation phases
+## 18. Page organization: sidebar curation, tags & page-index node
 
-Each phase is shippable to `develop` behind the unfinished app (the tile only appears once `INTEGRATED_APPS` is wired in phase 8).
+Added 2026-07-30 — supports "dataset" subtrees with many child pages that would overwhelm the tree sidebar.
+
+**Sidebar curation (`WikiPage.sidebarMode`):**
+
+- Enum `VISIBLE` (default) / `HIDDEN` / `CHILDREN_HIDDEN`. A page appears in the tree sidebar iff its own mode is not `HIDDEN` and no ancestor is `HIDDEN` or `CHILDREN_HIDDEN` — hiding always takes the whole subtree out of the sidebar. `CHILDREN_HIDDEN` keeps the page itself visible as the dataset's entry point (typically hosting a page-index node) while all current *and future* children stay hidden with a single switch.
+- Purely cosmetic, not a permission: hidden pages stay fully reachable via direct links, internal page links, search, favorites (a favorited hidden page still shows in the sidebar's favorites block), recents, tag pages and the page-index node; they remain selectable in the move dialog and the "Neue Seite" parent dropdown.
+- Interplay with the §4 flattening rule: sidebar hiding wins — permission-visible descendants inside a sidebar-hidden subtree are not flattened upward.
+- Toggled by **page admins** (three-option control in the page menu); implemented as a filter step over the per-request resolved tree structure (§4), so the sidebar — and only the sidebar — honors it.
+
+**Tags:**
+
+- Global free-form labels: `WikiTag` (globally unique name) + `WikiPageTag` join. Assign/remove requires **edit** permission on the page; chips render in the page header for everyone who can see the page.
+- Input: combobox in the page header (chips + text field). Autocomplete queries existing tag names case-insensitively (debounced); Enter creates a new tag only when nothing matches, and the server action re-checks case-insensitively (find-or-create) so `Mining`/`mining` can never coexist. Zod: trimmed, inner whitespace collapsed, 1–50 chars.
+- Clicking a chip → `/app/wiki/tags/[tagId]`: all pages carrying the tag that the viewer can see (icon, title, ancestor path — same presentation as search results); invisible pages are silently omitted, an empty result shows a neutral empty state.
+- Autocomplete suggests all existing tag names regardless of where they are used — a deliberate, name-only metadata leak (§20).
+- Lifecycle: removing a tag's last assignment deletes the tag (keeps autocomplete clean); the midnight trash-purge automation also sweeps orphaned tags left behind by permanent page deletion (assignments themselves cascade-delete). Tags are not part of the FTS index in v1.
+
+**Page-index node (`wikiPageIndex`, "Seitenverzeichnis" — not to be confused with the heading-based TOC of §7):**
+
+- The first §17-style rich-content component: a block node whose attrs are pure config; the page list is resolved per viewer at render time and never stored in the document.
+- Attrs: `mode: "tree" | "tags"`. Tree mode: `rootPageId` (page picker, defaults to the current page) + `maxDepth` (`null` = unlimited, default; `1` = direct children only). Tag mode: `tagIds: string[]` + `matchMode: "all" | "any"` (AND = page must carry all selected tags, OR = any; default `"all"`).
+- Tree mode renders the descendant tree as nested links (icon + title, sibling `sortOrder`), **ignoring `sidebarMode`** — this node is the canonical way to surface hidden dataset pages. Tag mode renders a flat list sorted by title.
+- Rendering: the editor NodeView fetches the list from the server (permission-filtered server-side); the static renderer resolves it from the request's resolved permission structure. Both only ever return pages the viewer can see, so different viewers may see different lists. Refresh happens on mount/attr change only — no realtime page-list updates in v1.
+- Config via the WikiEditMenu overlay (mode switch, page picker, depth, tag multi-select, AND/OR toggle); insertion via the slash menu (`/verzeichnis`, `/seitenliste`). A deleted/invisible root page or an empty result renders a neutral "Keine Seiten" placeholder without leaking titles.
+
+## 19. Implementation phases
+
+Each phase is shippable to `develop` behind the unfinished app (the tile only appears once `INTEGRATED_APPS` is wired in phase 9).
 
 1. **Foundation:** Prisma models + migration; `wiki` resource literal; permission matrix/tab entries; `resolvePagePermissions` + vitest suite; module scaffolding.
 2. **Pages CRUD:** tree sidebar, create/rename/move/delete (soft), trash view + restore + purge automation, permissions dialog (3 tiers, role multi-select), sibling reordering.
@@ -390,10 +440,11 @@ Each phase is shippable to `develop` behind the unfinished app (the tile only ap
 4. **Collab:** `apps/collab` app + Dockerfile + CI image build; JWT minting; provider wiring + presence carets; core-services Ansible/Terraform (separate repo PR).
 5. **Embeds & files:** dedicated embed nodes, generic iframe + allowlist validation, settings UI, upload API extension, attachment node + presigned-GET route, internal page links.
 6. **Search, favorites/recents, reports:** FTS index + query + UI; favorite/visit models + landing page; report modal, triage list, tile badge; web-push wiring (new `NotificationType` + lambda type-handler + `NotificationSetting` entry).
-7. **Snapshots:** automatic snapshots, list + restore, safety snapshot, collab replace endpoint; JSON export/import for `wiki;manage` (§9, shares the restore write path).
-8. **Cutover:** seed script, demo-content script (§15 — needs all phase-5 node types), remove help/documents modules + 28 permissions, redirects, `INTEGRATED_APPS`/CmdK/topbar rewiring, changelog entry, screenshots, Playwright smoke tests (create/read/permission-deny).
+7. **Organization (§18):** `sidebarMode` + sidebar filtering; tag models, header combobox, tag list pages, orphan-tag cleanup in the purge automation; `wikiPageIndex` node (NodeView + static renderer + edit-menu config + slash-menu entries).
+8. **Snapshots:** automatic snapshots, list + restore, safety snapshot, collab replace endpoint; JSON export/import for `wiki;manage` (§9, shares the restore write path).
+9. **Cutover:** demo-content script (§15 — needs the phase-5 node types and the phase-7 page-index node), manual help re-authoring (yours, not code), remove the help module (documents app stays), `/app/help` redirects, `INTEGRATED_APPS`/CmdK/topbar rewiring, changelog entry, screenshots, Playwright smoke tests (create/read/permission-deny). No seed script, no permission migration.
 
-## 19. Defaults I chose — flag if you disagree
+## 20. Defaults I chose — flag if you disagree
 
 - New **top-level** pages default to `RESTRICTED` with an empty role list (≙ private/owner-only) on all three tiers (decided in interview); children default to `INHERIT` on all three.
 - Cascade semantics: cascades reset descendants to `INHERIT` (tiers) / inherited ownership (owner) rather than copying explicit values — equivalent effect, keeps future inheritance attached.
@@ -411,6 +462,12 @@ Each phase is shippable to `develop` behind the unfinished app (the tile only ap
 - Import fully replaces the page content (no merge); the automatic safety snapshot is the undo path.
 - UI copy in German, matching the rest of the app.
 - Collab JWT TTL ~60 s (connect-time only); permission changes apply on reconnect.
+- `sidebarMode` is a 3-value enum instead of the per-page on/off toggle originally described: `HIDDEN` covers "this page (and its subtree) not in the sidebar", `CHILDREN_HIDDEN` covers the dataset case with one switch on the parent that automatically applies to future children. Hiding always hides the whole subtree — no flatten-up.
+- Sidebar-mode changes are page-**admin** (structural, affects everyone's navigation); tag assign/remove is page-**edit**.
+- Tag autocomplete exposes all tag names, even ones used only on invisible pages — accepted name-only leak in favor of consistent naming; the tag list page itself is permission-filtered.
+- Tags are global (no per-subtree namespaces), case-insensitively unique, and deleted when their last assignment is removed.
+- Page-index node defaults: tree mode with the current page as root and unlimited depth; tag mode defaults to AND (`"all"`). The node ignores `sidebarMode` and refreshes on mount/attr change only (no realtime list updates).
+- Tag names are not in the FTS index (v1) — tag pages + autocomplete cover discovery.
 
 ## Sources
 
