@@ -9,6 +9,7 @@ import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/Suspe
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { renameWikiPage } from "@/modules/wiki/actions/renameWikiPage";
 import { DeleteWikiPageModal } from "@/modules/wiki/components/DeleteWikiPageModal";
+import { DuplicateWikiPageModal } from "@/modules/wiki/components/DuplicateWikiPageModal";
 import { MoveWikiPageModal } from "@/modules/wiki/components/MoveWikiPageModal";
 import { ReportWikiPageModal } from "@/modules/wiki/components/ReportWikiPageModal";
 import { WikiCollabEditor } from "@/modules/wiki/components/WikiCollabEditor";
@@ -171,6 +172,12 @@ const PageContent = async ({
     ? getEditableWikiPageTargets(context, page.id)
     : [];
 
+  /**
+   * Unlike moving, duplicating into the page's own subtree is fine — the
+   * copy is a new page, so no cycle can occur.
+   */
+  const duplicateTargets = getEditableWikiPageTargets(context);
+
   const sourceTitle = (sourceId: string) =>
     sourceId === page.id ? undefined : context.pagesById.get(sourceId)?.title;
 
@@ -213,6 +220,17 @@ const PageContent = async ({
           />
 
           <ReportWikiPageModal pageId={page.id} title={page.title} />
+
+          {(canCreateTopLevel || duplicateTargets.length > 0) && (
+            <DuplicateWikiPageModal
+              pageId={page.id}
+              title={page.title}
+              targets={duplicateTargets}
+              allowTopLevel={canCreateTopLevel}
+              currentParentId={page.parentId}
+              hasDescendants={descendantIds.length > 0}
+            />
+          )}
 
           {permissions.canAdmin && (
             <>

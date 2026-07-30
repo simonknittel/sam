@@ -97,6 +97,7 @@ export enum AuditEventType {
   WIKI_PAGE_UPDATED = "WIKI_PAGE_UPDATED",
   WIKI_PAGE_RENAMED = "WIKI_PAGE_RENAMED",
   WIKI_PAGE_MOVED = "WIKI_PAGE_MOVED",
+  WIKI_PAGE_DUPLICATED = "WIKI_PAGE_DUPLICATED",
   WIKI_PAGE_PERMISSIONS_UPDATED = "WIKI_PAGE_PERMISSIONS_UPDATED",
   WIKI_PAGE_OWNERSHIP_TRANSFERRED = "WIKI_PAGE_OWNERSHIP_TRANSFERRED",
   WIKI_PAGE_DELETED = "WIKI_PAGE_DELETED",
@@ -701,6 +702,18 @@ export interface AuditEventDataByType {
     pageId: string;
     previousParentId: string | null;
     newParentId: string | null;
+  };
+
+  [AuditEventType.WIKI_PAGE_DUPLICATED]: {
+    /** The newly created page */
+    pageId: string;
+    sourcePageId: string;
+    title: string;
+    parentId: string | null;
+    /** All created pages, the copied root first */
+    duplicatedPageIds: string[];
+    mirroredChildren: boolean;
+    mirroredPermissions: boolean;
   };
 
   [AuditEventType.WIKI_PAGE_PERMISSIONS_UPDATED]: {
@@ -1840,6 +1853,21 @@ export const AuditEventDefinitions: {
       newParentId: "string",
     },
     message: (data) => `Wiki page moved (${data.pageId})`,
+  },
+
+  [AuditEventType.WIKI_PAGE_DUPLICATED]: {
+    type: AuditEventType.WIKI_PAGE_DUPLICATED,
+    data: {
+      pageId: "string",
+      sourcePageId: "string",
+      title: "string",
+      parentId: null,
+      duplicatedPageIds: ["string"],
+      mirroredChildren: true,
+      mirroredPermissions: true,
+    },
+    message: (data) =>
+      `Wiki page duplicated: "${data.title}" (${data.pageId}) from ${data.sourcePageId}`,
   },
 
   [AuditEventType.WIKI_PAGE_PERMISSIONS_UPDATED]: {
