@@ -4,8 +4,17 @@
 
 echo "VERCEL_GIT_COMMIT_REF: $VERCEL_GIT_COMMIT_REF";
 
-# Only proceed for main, develop, and feature branches
-if [[ "$VERCEL_GIT_COMMIT_REF" != "main" && "$VERCEL_GIT_COMMIT_REF" != "develop" && "$VERCEL_GIT_COMMIT_REF" != feature/* ]] ; then
+# Always build production deployments. Git pushes never create production
+# deployments (the project's Production Branch points to `production-gate`, a
+# frozen branch whose ruleset blocks all pushes); these are only created by the
+# Release workflow (.github/workflows/release.yml) through the Vercel CLI.
+if [[ "$VERCEL_ENV" == "production" ]] ; then
+  echo "✅ - Build can proceed (production release)"
+  exit 1;
+fi
+
+# Only proceed for the default branch and feature branches
+if [[ "$VERCEL_GIT_COMMIT_REF" != "main" && "$VERCEL_GIT_COMMIT_REF" != feature/* ]] ; then
   echo "🛑 - Build cancelled (incorrect branch)"
   exit 0;
 fi

@@ -3,7 +3,7 @@ name: "CodeQL"
 on:
   pull_request:
     branches:
-      - develop
+      - main
     paths:
       - .github/workflows/codeql.yml
       - '**.ts'

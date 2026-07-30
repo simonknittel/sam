@@ -4,13 +4,12 @@ on:
   pull_request:
     branches:
       - main
-      - develop
     paths:
       - .github/workflows/terraform-validate.yml
       - terraform/**
   push:
     branches:
-      - develop
+      - main
     paths:
       - .github/workflows/terraform-validate.yml
       - terraform/**
