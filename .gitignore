@@ -1,3 +1,7 @@
 .git
 .dccache
 .DS_Store
+
+# Written by `vercel link`
+.vercel/project.json
+.vercel/README.txt
