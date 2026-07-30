@@ -17,5 +17,9 @@ module "midnight_automations" {
   memory_size         = 256
   parameters = [
     "/database/connection_string",
+    "/s3/access_key_id",
+    "/s3/account_id",
+    "/s3/bucket_name",
+    "/s3/secret_access_key",
   ]
 }
