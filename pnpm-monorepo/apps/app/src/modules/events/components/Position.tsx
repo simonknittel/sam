@@ -267,7 +267,7 @@ export const Position = ({
                 Beschreibung
               </h3>
               {position.description ? (
-                <p>{position.description}</p>
+                <p className="whitespace-pre-wrap">{position.description}</p>
               ) : (
                 <p className="text-neutral-500">-</p>
               )}
