@@ -1,0 +1,97 @@
+# Deploys the app (Vercel) and the Lambda functions (AWS) to production.
+#
+# This workflow is the manual gate for production deployments: pushes to main
+# never deploy to production on their own. It runs automatically every Tuesday
+# morning and can be triggered manually for ad-hoc releases and rollbacks
+# (pass an older git ref to roll back).
+#
+# Requirements:
+# - The Vercel project's Production Branch must be set to a branch that
+#   intentionally does not exist (e.g. `production-gate`) so pushes to main
+#   only create preview deployments. See docs/releasing.md
+# - The `Production` environment must provide the VERCEL_TOKEN, VERCEL_ORG_ID
+#   and VERCEL_PROJECT_ID secrets
+
+name: Release
+
+on:
+  schedule:
+    - cron: "0 8 * * 2" # 8am UTC on Tuesday
+  workflow_dispatch:
+    inputs:
+      git_ref:
+        description: "Git ref (SHA, tag, branch, ...) to release (if empty, releases the latest commit of the default branch)"
+        type: string
+        required: false
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  preannounce:
+    name: Preannounce release
+    permissions:
+      contents: read
+    uses: ./.github/workflows/soketi-release-event.yml
+    with:
+      event: deploying
+    secrets: inherit
+
+  deploy_lambda_functions:
+    name: Deploy Lambda functions
+    permissions:
+      id-token: write # Required for aws-actions/configure-aws-credentials
+      contents: read # Required for aws-actions/configure-aws-credentials
+    uses: ./.github/workflows/deploy-lambda-functions.yml
+    with:
+      git_ref: ${{ inputs.git_ref || github.sha }}
+    secrets: inherit
+
+  deploy_app:
+    name: Deploy app to Vercel
+    runs-on: ubuntu-24.04
+
+    environment: Production
+
+    permissions:
+      contents: read
+
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.git_ref || github.sha }}
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: "pnpm-monorepo/.nvmrc"
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Deploy to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: vercel deploy --prod --yes --token="$VERCEL_TOKEN"
+
+  announce:
+    name: Announce release
+    needs: [deploy_lambda_functions, deploy_app]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/soketi-release-event.yml
+    with:
+      event: new
+    secrets: inherit
+
+  smoke_test:
+    name: Playwright tests
+    needs: [deploy_lambda_functions, deploy_app]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/playwright-tests.yml
+    secrets: inherit

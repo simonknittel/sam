@@ -4,7 +4,6 @@ on:
   pull_request:
     branches:
       - main
-      - develop
     paths:
       - .github/workflows/validate-app.yml
       - pnpm-monorepo/apps/app/**
@@ -13,7 +12,7 @@ on:
       - pnpm-monorepo/pnpm-workspace.yaml
   push:
     branches:
-      - develop
+      - main
     paths:
       - .github/workflows/validate-app.yml
       - pnpm-monorepo/apps/app/**
