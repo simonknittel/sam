@@ -8,7 +8,13 @@ import { usePathname } from "next/navigation";
 import { FaPlus } from "react-icons/fa";
 import type { WikiTreeNode } from "../utils/buildVisibleWikiTree";
 import { useCreateWikiPage } from "./CreateWikiPageProvider";
-import { WikiPageSortButtons } from "./WikiPageSortButtons";
+import {
+  useWikiPageDnd,
+  WikiPageDndProvider,
+  WikiPageDragHandle,
+  WikiPageDropTargets,
+  WikiPageTreeEndDropTarget,
+} from "./WikiPageTreeDragAndDrop";
 
 interface Props {
   readonly className?: string;
@@ -17,10 +23,40 @@ interface Props {
 
 export const WikiPageTree = ({ className, nodes }: Props) => {
   return (
-    <ul className={clsx("flex flex-col gap-2", className)}>
-      {nodes.map((node) => (
-        <TreeItem key={node.id} node={node} depth={0} />
+    <WikiPageDndProvider>
+      <RootList className={className} nodes={nodes} />
+    </WikiPageDndProvider>
+  );
+};
+
+const RootList = ({ className, nodes }: Props) => {
+  const { isPending } = useWikiPageDnd();
+
+  return (
+    <ul
+      className={clsx(
+        "relative flex flex-col gap-2",
+        {
+          "animate-pulse cursor-wait pointer-events-none": isPending,
+        },
+        className,
+      )}
+    >
+      {nodes.map((node, index) => (
+        <TreeItem
+          key={node.id}
+          node={node}
+          depth={0}
+          ancestorIds={[]}
+          previousSiblingId={nodes[index - 1]?.id}
+          nextSiblingId={nodes[index + 1]?.id}
+        />
       ))}
+      {nodes.length > 0 && (
+        <WikiPageTreeEndDropTarget
+          lastRootPageId={nodes[nodes.length - 1].id}
+        />
+      )}
     </ul>
   );
 };
@@ -47,19 +83,35 @@ const CreateSubpageButton = ({ pageId }: CreateSubpageButtonProps) => {
 interface TreeItemProps {
   readonly node: WikiTreeNode;
   readonly depth: number;
+  /** Ids of the node's ancestors in the visible tree */
+  readonly ancestorIds: readonly string[];
+  readonly previousSiblingId?: string;
+  readonly nextSiblingId?: string;
 }
 
-const TreeItem = ({ node, depth }: TreeItemProps) => {
+const TreeItem = ({
+  node,
+  depth,
+  ancestorIds,
+  previousSiblingId,
+  nextSiblingId,
+}: TreeItemProps) => {
   const pathname = usePathname();
+  const { draggedPageId } = useWikiPageDnd();
   const activePageId = pathname.startsWith("/app/wiki/")
     ? pathname.split("/")[3]
     : undefined;
   const isActive = activePageId === node.id;
 
   return (
-    <li>
+    <li
+      className={clsx({
+        // Mute the dragged page including its whole subtree
+        "opacity-25": draggedPageId === node.id,
+      })}
+    >
       <span
-        className="flex items-center gap-1"
+        className="relative flex items-center gap-1"
         // Margin instead of padding so the active background keeps a gap
         // matching the nesting level
         style={{ marginLeft: `${depth * 12}px` }}
@@ -101,11 +153,25 @@ const TreeItem = ({ node, depth }: TreeItemProps) => {
 
           {(node.canAdmin || node.canEdit) && (
             <span className="flex flex-none items-center opacity-0 group-hover:opacity-100 focus-within:opacity-100">
-              {node.canAdmin && <WikiPageSortButtons pageId={node.id} />}
+              {node.canAdmin && (
+                <WikiPageDragHandle
+                  pageId={node.id}
+                  previousSiblingId={previousSiblingId}
+                  nextSiblingId={nextSiblingId}
+                />
+              )}
               {node.canEdit && <CreateSubpageButton pageId={node.id} />}
             </span>
           )}
         </span>
+
+        <WikiPageDropTargets
+          pageId={node.id}
+          ancestorIds={ancestorIds}
+          canDropInside={node.canEdit}
+          hasChildren={node.children.length > 0}
+          isRootLevel={depth === 0}
+        />
       </span>
 
       {node.children.length > 0 && (
@@ -115,8 +181,15 @@ const TreeItem = ({ node, depth }: TreeItemProps) => {
             className="absolute bottom-0 top-0 w-px bg-neutral-700"
             style={{ left: `${depth * 12 + 8}px` }}
           />
-          {node.children.map((child) => (
-            <TreeItem key={child.id} node={child} depth={depth + 1} />
+          {node.children.map((child, index) => (
+            <TreeItem
+              key={child.id}
+              node={child}
+              depth={depth + 1}
+              ancestorIds={[...ancestorIds, node.id]}
+              previousSiblingId={node.children[index - 1]?.id}
+              nextSiblingId={node.children[index + 1]?.id}
+            />
           ))}
         </ul>
       )}

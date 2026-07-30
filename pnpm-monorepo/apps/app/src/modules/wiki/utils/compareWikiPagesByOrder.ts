@@ -1,8 +1,9 @@
 /**
  * Sibling sort order used by the sidebar tree, the hierarchy selects and the
- * reorder action. All of them must agree: the reorder arrows swap a page
- * with the neighbor produced by this comparator, so a diverging copy would
- * swap with a different page than the one shown next to it.
+ * reorder action. All of them must agree: the drag'n'drop action inserts a
+ * page relative to its reference sibling within the list produced by this
+ * comparator, so a diverging copy would place it somewhere other than the
+ * drop position shown in the sidebar.
  */
 export const compareWikiPagesByOrder = (
   a: { readonly sortOrder: number; readonly title: string },
