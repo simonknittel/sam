@@ -1,14 +1,15 @@
 {
   "name": "sam-monorepo",
   "private": true,
-  "packageManager": "pnpm@11.3.0",
+  "packageManager": "pnpm@11.8.0",
   "scripts": {
     "build:lambda": "pnpm run --filter \"./packages/database\" build && pnpm run --filter \"./apps/lambda\" build",
     "build:scripts": "pnpm run --filter \"./packages/database\" build",
     "format": "prettier --write . && pnpm run --filter \"*\" format"
   },
   "devDependencies": {
-    "prettier": "3.8.3",
-    "prettier-plugin-organize-imports": "4.3.0"
+    "prettier": "3.9.5",
+    "prettier-plugin-organize-imports": "4.3.0",
+    "typescript": "6.0.3"
   }
 }

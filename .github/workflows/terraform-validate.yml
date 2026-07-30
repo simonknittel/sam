@@ -20,12 +20,35 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Read .terraform-version
         id: terraform_version
         run: echo "value=$(cat .terraform-version)" >> $GITHUB_OUTPUT
         working-directory: terraform
+
+      # The CLI version comes from .terraform-version, while Terraform itself
+      # enforces required_version in main.tf. If the two drift apart, every
+      # terraform command fails on "Unsupported Terraform Core version", which
+      # does not say which file is wrong. Compare them up front instead.
+      - name: Check .terraform-version matches required_version
+        run: |
+          required_version="$(sed -nE 's/^[[:space:]]*required_version[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' main.tf)"
+
+          if [ -z "$required_version" ]; then
+            echo "::error file=terraform/main.tf::Could not read required_version from main.tf"
+            exit 1
+          fi
+
+          if [ "$required_version" != "$pinned_version" ]; then
+            echo "::error file=terraform/.terraform-version::.terraform-version pins $pinned_version but main.tf requires $required_version - update both to the same version"
+            exit 1
+          fi
+
+          echo "Both pin Terraform $pinned_version"
+        working-directory: terraform
+        env:
+          pinned_version: ${{ steps.terraform_version.outputs.value }}
 
       - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4
         with:

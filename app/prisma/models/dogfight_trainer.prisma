@@ -1,7 +1,0 @@
-// model CareBearShooterScore {
-//     id        String   @id @default(cuid())
-//     entityId  String
-//     entity    Entity   @relation(fields: [entityId], references: [id], onDelete: Cascade)
-//     score     Int
-//     createdAt DateTime @default(now())
-// }

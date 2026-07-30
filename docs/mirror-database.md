@@ -7,4 +7,4 @@
 > How to copy the production database to the stage database
 
 1. `./scripts/mirror-database-production-to-stage.sh "postgresql://<user>:<pass>@<host>:5432/production" "postgresql://<user>:<pass>@<host>:5432/stage"`
-2. `cd app && nvm install && DATABASE_URL="postgresql://<user>:<pass>@<host>:5432/stage" npx prisma db push`
+2. `cd pnpm-monorepo && nvm install && cd packages/database && DATABASE_URL="postgresql://<user>:<pass>@<host>:5432/stage" pnpm exec prisma db push`

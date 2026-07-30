@@ -1,0 +1,25 @@
+# Gitignored files that get copied into a new git worktree.
+#
+# Rule of thumb: list what a worktree cannot obtain on its own (local secrets,
+# per-environment values) plus generated code that is cheap to copy and slow to
+# rebuild. Everything installable — node_modules, .next, .terraform — is left
+# out and recreated with `pnpm install` / `terraform init`.
+
+# Local environment files. Without these the app, the lambdas and the Playwright
+# suite fail at startup on env validation.
+pnpm-monorepo/apps/app/.env
+pnpm-monorepo/apps/lambda/.env
+pnpm-monorepo/apps/playwright/.env
+pnpm-monorepo/packages/database/.env
+
+# Generated Prisma client. Required for typecheck and build to resolve until
+# `pnpm install` regenerates it.
+pnpm-monorepo/packages/database/src/generated/
+
+# Written by `next dev`/`next build` but gitignored; tsc needs it to resolve the
+# Next.js ambient types.
+pnpm-monorepo/apps/app/next-env.d.ts
+
+# Per-environment infrastructure inputs that are not in git.
+terraform/test.tfvars
+cloudformation/test-parameters.json

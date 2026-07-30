@@ -10,8 +10,16 @@ if [[ "$VERCEL_GIT_COMMIT_REF" != "main" && "$VERCEL_GIT_COMMIT_REF" != "develop
   exit 0;
 fi
 
-# Only proceed when files in /app have changed
-if [[ ! `git diff HEAD^ HEAD .` ]]; then
+# Run from the repository root so the paths below work no matter which
+# directory Vercel invokes this script from (it uses the project's Root
+# Directory, pnpm-monorepo/apps/app).
+cd "$(git rev-parse --show-toplevel)" || exit 1
+
+# Only proceed when files relevant to the app have changed. The app lives in
+# pnpm-monorepo/apps/app and consumes the Prisma schema/client from
+# pnpm-monorepo/packages/database; its dependencies resolve through the
+# workspace lockfile and workspace config at the pnpm-monorepo root.
+if [[ ! `git diff HEAD^ HEAD -- pnpm-monorepo/apps/app pnpm-monorepo/packages/database pnpm-monorepo/pnpm-lock.yaml pnpm-monorepo/pnpm-workspace.yaml pnpm-monorepo/package.json pnpm-monorepo/.nvmrc` ]]; then
   echo "🛑 - Build cancelled (no app changes)"
   exit 0;
 fi

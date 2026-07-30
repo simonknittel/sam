@@ -1,16 +1,14 @@
 import { prisma } from "@sam-monorepo/database";
-import algoliasearch from "algoliasearch";
+import { algoliasearch } from "algoliasearch";
 
 const client = algoliasearch(
   process.env.ALGOLIA_APP_ID!,
   process.env.ALGOLIA_ADMIN_API_KEY!,
 );
 
-const index = client.initIndex("spynet_entities");
+const indexName = "spynet_entities";
 
 async function main() {
-  await index.clearObjects();
-
   const entities = await prisma.entity.findMany({
     include: {
       logs: {
@@ -69,7 +67,7 @@ async function main() {
     };
   });
 
-  await index.saveObjects(objects);
+  await client.replaceAllObjects({ indexName, objects, batchSize: 1000 });
 }
 
 void main();

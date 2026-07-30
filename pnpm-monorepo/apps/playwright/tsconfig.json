@@ -18,6 +18,11 @@
     "module": "preserve",
     "noEmit": true,
     /* If your code runs in the DOM: */
-    "lib": ["es2024", "dom", "dom.iterable"]
+    "lib": ["es2024", "dom", "dom.iterable"],
+    /* Since TypeScript 6, packages from `node_modules/@types` are no longer
+       included automatically (the `types` default changed from `["*"]` to
+       `[]`). This makes the Node.js globals from `@types/node` (`process`,
+       etc.) available again. */
+    "types": ["node"]
   }
 }

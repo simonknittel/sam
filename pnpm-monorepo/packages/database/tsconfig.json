@@ -25,7 +25,12 @@
     "composite": true,
     "declarationMap": true,
     /* If your code doesn't run in the DOM: */
-    "lib": ["es2024"]
+    "lib": ["es2024"],
+    /* Since TypeScript 6, packages from `node_modules/@types` are no longer
+       included automatically (the `types` default changed from `["*"]` to
+       `[]`). This makes the Node.js globals from `@types/node` (`process`,
+       etc.) available again. */
+    "types": ["node"]
   },
   "include": ["src/**/*.ts"]
 }

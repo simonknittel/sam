@@ -1,0 +1,131 @@
+"use client";
+
+import { useAppsContext } from "@/modules/apps/components/AppsContext";
+import { AppTile } from "@/modules/apps/components/AppTile";
+import { AppTileGrid } from "@/modules/apps/components/AppTileGrid";
+import { RedactedAppTile } from "@/modules/apps/components/RedactedAppTile";
+import { groupByFeatured } from "@/modules/apps/utils/groupByFeatured";
+import type { App, RedactedApp } from "@/modules/apps/utils/types";
+import { Link } from "@/modules/common/components/Link";
+import { Popover, usePopover } from "@/modules/common/components/Popover";
+import clsx from "clsx";
+import { AiFillAppstore } from "react-icons/ai";
+
+interface Props {
+  readonly className?: string;
+}
+
+export const Apps = ({ className }: Props) => {
+  const { apps, appDotBadgeCounts } = useAppsContext();
+  if (!apps) return null;
+
+  const hasDotBadge = Object.values(appDotBadgeCounts).some(
+    (count) => count > 0,
+  );
+
+  return (
+    <Popover
+      trigger={
+        <button
+          className={clsx(
+            "border-r border-neutral-700 rounded-l-primary hover:bg-tertiary cursor-pointer focus-visible:bg-tertiary px-6 inline-flex items-center gap-1 h-full text-neutral-500",
+            className,
+          )}
+        >
+          <AiFillAppstore className="text-xl" />
+
+          <span className="text-xs font-mono uppercase relative top-px leading-px">
+            Apps
+          </span>
+
+          {hasDotBadge && (
+            <span className="inline-block rounded-full size-2 bg-amber-500 relative ml-1">
+              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 inline-block rounded-full size-3 bg-amber-500 animate-ping motion-reduce:hidden" />
+            </span>
+          )}
+        </button>
+      }
+      enableHover
+      childrenClassName="w-96"
+    >
+      <PopoverChildren apps={apps} appDotBadgeCounts={appDotBadgeCounts} />
+    </Popover>
+  );
+};
+
+interface PopoverChildrenProps {
+  apps: App[];
+  appDotBadgeCounts: Record<string, number>;
+}
+
+const PopoverChildren = ({ apps, appDotBadgeCounts }: PopoverChildrenProps) => {
+  const { closePopover } = usePopover();
+
+  const { featured, other } = groupByFeatured(apps);
+
+  return (
+    <>
+      {featured && (
+        <>
+          <p className="font-bold text-sm text-center font-mono uppercase">
+            Featured
+          </p>
+
+          <AppTileGrid variant="compact" className="mt-2">
+            {featured.map((app) =>
+              "redacted" in app && app.redacted ? (
+                <RedactedAppTile key={app.name} variant="compact" />
+              ) : (
+                <AppTile
+                  key={app.name}
+                  app={app as Exclude<App, RedactedApp>}
+                  variant="compact"
+                  onClick={closePopover}
+                  dotBadgeCount={
+                    ("slug" in app && appDotBadgeCounts[app.slug]) || undefined
+                  }
+                />
+              ),
+            )}
+          </AppTileGrid>
+        </>
+      )}
+
+      {other && (
+        <>
+          <p className="font-bold text-sm text-center mt-4 font-mono uppercase">
+            Weitere
+          </p>
+
+          <AppTileGrid variant="compact" className="mt-2">
+            {other.map((app) =>
+              "redacted" in app && app.redacted ? (
+                <RedactedAppTile key={app.name} variant="compact" />
+              ) : (
+                <AppTile
+                  key={app.name}
+                  app={app as Exclude<App, RedactedApp>}
+                  variant="compact"
+                  onClick={closePopover}
+                  dotBadgeCount={
+                    ("slug" in app && appDotBadgeCounts[app.slug]) || undefined
+                  }
+                />
+              ),
+            )}
+          </AppTileGrid>
+        </>
+      )}
+
+      <div className="flex justify-center">
+        <Link
+          href="/app/apps"
+          className="text-interaction-500 hover:underline focus-visible:underline text-sm p-4 -mb-4 font-mono uppercase"
+          onClick={closePopover}
+        >
+          Alle Apps
+        </Link>
+      </div>
+    </>
+  );
+};

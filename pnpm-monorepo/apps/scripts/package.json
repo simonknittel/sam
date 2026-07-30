@@ -4,14 +4,14 @@
   "type": "module",
   "dependencies": {
     "@sam-monorepo/database": "workspace:*",
-    "algoliasearch": "4.27.0",
-    "csv": "6.5.1",
-    "date-fns": "4.3.0",
-    "fast-xml-parser": "5.8.0"
+    "algoliasearch": "5.56.0",
+    "csv": "6.6.1",
+    "date-fns": "4.4.0",
+    "fast-xml-parser": "5.10.1"
   },
   "devDependencies": {
-    "@types/node": "24.12.4",
-    "tsx": "4.22.3",
-    "typescript": "5.9.3"
+    "@types/node": "24.13.3",
+    "tsx": "4.23.1",
+    "typescript": "7.0.2"
   }
 }

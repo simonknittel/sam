@@ -1,1 +1,7 @@
 pnpm-lock.yaml
+apps/playwright/playwright-report/
+apps/playwright/test-results/
+# The app formats itself via its own `format` script (invoked by
+# `pnpm run --filter "*" format`) because its Prettier plugins are declared in
+# apps/app and don't resolve from the workspace root.
+apps/app/

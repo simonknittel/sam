@@ -6,21 +6,25 @@
     "./dist/*"
   ],
   "exports": {
-    ".": "./dist/index.js"
+    ".": "./dist/index.js",
+    "./client": "./dist/client.js",
+    "./browser": "./dist/browser.js"
   },
   "scripts": {
-    "postinstall": "prisma generate",
-    "build": "prisma generate && tsc",
+    "postinstall": "prisma generate && node ./scripts/patch-generated-client.mjs && tsc",
+    "build": "prisma generate && node ./scripts/patch-generated-client.mjs && tsc",
+    "migrate:dev": "prisma migrate dev && node ./scripts/patch-generated-client.mjs && tsc",
     "format": "prisma format"
   },
   "dependencies": {
-    "@prisma/client": "6.17.1",
-    "@prisma/adapter-pg": "6.19.3",
+    "@prisma/client": "7.9.0",
+    "@prisma/adapter-pg": "7.9.0",
     "zod": "4.4.3"
   },
   "devDependencies": {
-    "@types/node": "24.12.4",
-    "prisma": "6.17.1",
-    "typescript": "5.9.3"
+    "@types/node": "24.13.3",
+    "dotenv": "17.4.2",
+    "prisma": "7.9.0",
+    "typescript": "7.0.2"
   }
 }
