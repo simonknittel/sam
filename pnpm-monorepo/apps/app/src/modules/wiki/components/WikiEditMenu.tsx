@@ -841,7 +841,7 @@ export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
               title="Block löschen"
               isActive={false}
               onClick={deleteBlock}
-              >
+            >
               <FaTrash />
             </ToolbarButton>
           )}
