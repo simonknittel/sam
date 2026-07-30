@@ -1,15 +1,6 @@
 name: Deploy Lambda functions
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - .github/workflows/deploy-lambda-functions.yml
-      - .github/workflows/build-lambda-functions.yml
-      - pnpm-monorepo/**
-      # The Next.js app deploys to Vercel, not to Lambda
-      - "!pnpm-monorepo/apps/app/**"
   workflow_dispatch:
     inputs:
       environment:
@@ -20,16 +11,25 @@ on:
         options:
           - test
       git_ref:
-        description: "Git ref (SHA, tag, branch, ...) to deploy (if empty, defaults to the latest commit)"
+        description: "Git ref (SHA, tag, branch, ...) to deploy"
         type: string
-        default: "develop"
+        default: "main"
         required: true
+  workflow_call:
+    inputs:
+      environment:
+        required: false
+        default: "test"
+        type: string
+      git_ref:
+        required: true
+        type: string
 
 jobs:
   build:
     uses: ./.github/workflows/build-lambda-functions.yml
     with:
-      git_ref: ${{ github.event.inputs.git_ref || 'develop' }}
+      git_ref: ${{ inputs.git_ref }}
 
   deploy:
     runs-on: ubuntu-24.04

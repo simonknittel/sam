@@ -1,20 +1,25 @@
-name: Announce release
+# Reusable workflow used by the Release workflow to send events to the
+# `releases` channel of Soketi (e.g. to show a "deploying" or "new release"
+# banner in the app).
+
+name: Send release event
 
 on:
-  deployment_status:
+  workflow_call:
+    inputs:
+      event:
+        description: "Name of the event to send to the releases channel (e.g. deploying, new)"
+        required: true
+        type: string
 
 jobs:
   send_event:
     name: Send event
-    if: >-
-      github.event.deployment.environment == 'Production' &&
-      github.event.deployment_status.state == 'success' &&
-      github.event.deployment_status.creator.login == 'vercel[bot]' &&
-      github.event.deployment_status.environment_url
     runs-on: ubuntu-24.04
     environment: Production
     permissions:
       contents: read
+    timeout-minutes: 5
     steps:
       - name: Send event
         env:
@@ -22,18 +27,19 @@ jobs:
           APP_ID: ${{ vars.SOKETI_APP_ID }}
           APP_KEY: ${{ vars.SOKETI_APP_KEY }}
           APP_SECRET: ${{ secrets.SOKETI_APP_SECRET }}
+          EVENT_NAME: ${{ inputs.event }}
         shell: bash
         run: |
           set -euo pipefail
 
-          for var in HOST APP_ID APP_KEY APP_SECRET; do
+          for var in HOST APP_ID APP_KEY APP_SECRET EVENT_NAME; do
             if [ -z "${!var:-}" ]; then
               echo "Missing required environment variable: $var" >&2
               exit 1
             fi
           done
 
-          BODY='{"name":"new","channels":["releases"],"data":"{}"}'
+          BODY=$(printf '{"name":"%s","channels":["releases"],"data":"{}"}' "$EVENT_NAME")
           BODY_MD5=$(printf '%s' "$BODY" | md5sum | awk '{print $1}')
           TIMESTAMP=$(date -u +%s)
 
