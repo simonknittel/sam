@@ -6,8 +6,10 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { clonePositions } from "../utils/clonePositions";
 import { isAllowedToManagePositions } from "../utils/isAllowedToManagePositions";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
+import { buildPositionTree } from "../utils/positionTree";
 
 const schema = z.object({
   targetEventId: z.cuid(),
@@ -44,6 +46,9 @@ export const copyLineupFromEvent = createAuthenticatedAction(
             },
           },
           positions: {
+            where: {
+              parentPositionId: null,
+            },
             select: {
               id: true,
             },
@@ -85,10 +90,9 @@ export const copyLineupFromEvent = createAuthenticatedAction(
       orderBy: { order: "asc" },
       select: {
         id: true,
+        parentPositionId: true,
         name: true,
         description: true,
-        order: true,
-        parentPositionId: true,
         fontSize: true,
         backgroundColor: true,
         textColor: true,
@@ -106,61 +110,14 @@ export const copyLineupFromEvent = createAuthenticatedAction(
         },
       },
     });
-    const orderOffset = targetEvent.positions.length;
-    await prisma.$transaction(async (tx) => {
-      const newIdsBySourceId = new Map<string, string>();
 
-      for (const position of sourcePositions) {
-        const createdPosition = await tx.eventPosition.create({
-          data: {
-            eventId: targetEvent.id,
-            name: position.name,
-            description: position.description,
-            fontSize: position.fontSize,
-            backgroundColor: position.backgroundColor,
-            textColor: position.textColor,
-            order: position.order + orderOffset,
-            ...(position.requiredRoles.length
-              ? {
-                  requiredRoles: {
-                    connect: position.requiredRoles.map(({ id }) => ({ id })),
-                  },
-                }
-              : {}),
-            ...(position.requiredVariants.length
-              ? {
-                  requiredVariants: {
-                    createMany: {
-                      data: position.requiredVariants.map(
-                        ({ variantId, order }) => ({
-                          variantId,
-                          order,
-                        }),
-                      ),
-                    },
-                  },
-                }
-              : {}),
-          },
-        });
-
-        newIdsBySourceId.set(position.id, createdPosition.id);
-      }
-
-      for (const position of sourcePositions) {
-        if (!position.parentPositionId) continue;
-
-        const childId = newIdsBySourceId.get(position.id);
-        const parentId = newIdsBySourceId.get(position.parentPositionId);
-
-        if (!childId || !parentId) continue;
-
-        await tx.eventPosition.update({
-          where: { id: childId },
-          data: { parentPositionId: parentId },
-        });
-      }
-    });
+    await prisma.$transaction((transaction) =>
+      clonePositions(transaction, buildPositionTree(sourcePositions), {
+        eventId: targetEvent.id,
+        parentPositionId: null,
+        startOrder: targetEvent.positions.length,
+      }),
+    );
 
     await createAuditEvents([
       {

@@ -17,12 +17,16 @@ import {
 import clsx from "clsx";
 import { updateEventPositionName } from "../actions/updateEventPositionName";
 import { checkRequirements } from "../utils/checkRequirements";
+import { MAX_LINEUP_DEPTH } from "../utils/positionTree";
+import { CopyEventPositionButton } from "./CopyEventPositionButton";
 import { CreateOrUpdateEventPosition } from "./CreateOrUpdateEventPosition";
 import { DeleteEventPosition } from "./DeleteEventPosition";
+import { DuplicateEventPositionButton } from "./DuplicateEventPositionButton";
 import { useLineupOrder } from "./LineupOrderContext/Context";
 import { DragHandle } from "./LineupOrderContext/DragHandle";
 import { DragTarget } from "./LineupOrderContext/DragTarget";
 import { useLineupVisibility } from "./LineupVisibilityContext";
+import { PasteEventPositionButton } from "./PasteEventPositionButton";
 import { PositionVariants } from "./PositionVariants";
 import { ToggleEventPositionApplicationForCurrentUser } from "./ToggleEventPositionApplicationForCurrentUser";
 import { UpdateEventPositionCitizenId } from "./UpdateEventPositionCitizenId";
@@ -297,7 +301,7 @@ export const Position = ({
 
               {showManage && (
                 <div className="flex items-center justify-center gap-2">
-                  {groupLevel < 4 && (
+                  {groupLevel < MAX_LINEUP_DEPTH && (
                     <CreateOrUpdateEventPosition
                       eventId={position.eventId}
                       parentPositionId={position.id}
@@ -305,6 +309,19 @@ export const Position = ({
                       className="flex-none"
                     />
                   )}
+                  <DuplicateEventPositionButton
+                    position={position}
+                    className="flex-none"
+                  />
+                  <CopyEventPositionButton
+                    position={position}
+                    className="flex-none"
+                  />
+                  <PasteEventPositionButton
+                    position={position}
+                    groupLevel={groupLevel}
+                    className="flex-none"
+                  />
                   <CreateOrUpdateEventPosition
                     position={position}
                     variants={variants}

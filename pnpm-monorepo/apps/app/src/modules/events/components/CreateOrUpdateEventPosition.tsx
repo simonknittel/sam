@@ -38,6 +38,9 @@ import {
 import { createEventPosition } from "../actions/createEventPosition";
 import { updateEventPosition } from "../actions/updateEventPosition";
 
+const ADD_LABEL = "Posten hinzufügen";
+const EDIT_LABEL = "Posten bearbeiten";
+
 interface BaseProps {
   readonly className?: string;
   readonly variants: (Manufacturer & {
@@ -109,38 +112,59 @@ export const CreateOrUpdateEventPosition = (props: Props) => {
   return (
     <>
       {"eventId" in props && !("parentPositionId" in props) && (
-        <Button2
-          onClick={handleClick}
-          className={clsx(props.className)}
-          title="Posten oder Gruppe hinzufügen"
+        <Tooltip
+          asChild
+          triggerChildren={
+            <Button2
+              onClick={handleClick}
+              className={clsx(props.className)}
+              aria-label={ADD_LABEL}
+            >
+              <span className="hidden md:inline">Hinzufügen</span>
+              {isOpen ? <AsciiSpinner /> : <FaPlus />}
+            </Button2>
+          }
         >
-          <span className="hidden md:inline">Hinzufügen</span>
-          {isOpen ? <AsciiSpinner /> : <FaPlus />}
-        </Button2>
+          {ADD_LABEL}
+        </Tooltip>
       )}
 
       {"eventId" in props && "parentPositionId" in props && (
-        <Button
-          onClick={handleClick}
-          variant="tertiary"
-          className={clsx("px-2 w-auto", props.className)}
-          title="Posten oder Gruppe hinzufügen"
-          iconOnly
+        <Tooltip
+          asChild
+          triggerChildren={
+            <Button
+              onClick={handleClick}
+              variant="tertiary"
+              className={clsx("px-2 w-auto", props.className)}
+              aria-label={ADD_LABEL}
+              iconOnly
+            >
+              {isOpen ? <AsciiSpinner /> : <FaPlus className="text-lg" />}
+            </Button>
+          }
         >
-          {isOpen ? <AsciiSpinner /> : <FaPlus className="text-lg" />}
-        </Button>
+          {ADD_LABEL}
+        </Tooltip>
       )}
 
       {"position" in props && (
-        <Button
-          onClick={handleClick}
-          variant="tertiary"
-          className={clsx("px-2 w-auto", props.className)}
-          title="Posten bearbeiten"
-          iconOnly
+        <Tooltip
+          asChild
+          triggerChildren={
+            <Button
+              onClick={handleClick}
+              variant="tertiary"
+              className={clsx("px-2 w-auto", props.className)}
+              aria-label={EDIT_LABEL}
+              iconOnly
+            >
+              {isOpen ? <AsciiSpinner /> : <FaPen className="text-lg" />}
+            </Button>
+          }
         >
-          {isOpen ? <AsciiSpinner /> : <FaPen className="text-lg" />}
-        </Button>
+          {EDIT_LABEL}
+        </Tooltip>
       )}
 
       <Modal
@@ -148,10 +172,7 @@ export const CreateOrUpdateEventPosition = (props: Props) => {
         onRequestClose={handleRequestClose}
         className="w-120"
         heading={
-          <h2>
-            Posten oder Gruppe{" "}
-            {"position" in props ? "bearbeiten" : "hinzufügen"}
-          </h2>
+          <h2>Posten {"position" in props ? "bearbeiten" : "hinzufügen"}</h2>
         }
       >
         <form action={formAction}>
