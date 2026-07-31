@@ -1,12 +1,20 @@
 import * as RadixUiTooltip from "@radix-ui/react-tooltip"; // eslint-disable-line no-restricted-imports
 import clsx from "clsx";
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
-interface Props {
-  readonly className?: string;
+interface Props extends Omit<
+  ComponentProps<typeof RadixUiTooltip.Trigger>,
+  "children" | "asChild"
+> {
   readonly contentClassName?: string;
   readonly triggerChildren: ReactNode;
   readonly children: ReactNode;
+  /**
+   * Turns `triggerChildren` itself into the trigger instead of wrapping it in
+   * another button. Required whenever the trigger already is an interactive
+   * element.
+   */
+  readonly asChild?: boolean;
 }
 
 export const Tooltip = ({
@@ -14,16 +22,23 @@ export const Tooltip = ({
   contentClassName,
   triggerChildren,
   children,
+  asChild,
+  ...triggerProps
 }: Props) => {
   return (
     <RadixUiTooltip.Provider delayDuration={0}>
       <RadixUiTooltip.Root>
         <RadixUiTooltip.Trigger
-          type="button"
-          className={clsx(
-            "text-brand-red-500 hover:underline focus-visible:underline font-mono uppercase cursor-help",
-            className,
-          )}
+          {...triggerProps}
+          {...(asChild ? { asChild: true } : { type: "button" as const })}
+          className={
+            asChild
+              ? className
+              : clsx(
+                  "text-brand-red-500 hover:underline focus-visible:underline font-mono uppercase cursor-help",
+                  className,
+                )
+          }
         >
           {triggerChildren}
         </RadixUiTooltip.Trigger>

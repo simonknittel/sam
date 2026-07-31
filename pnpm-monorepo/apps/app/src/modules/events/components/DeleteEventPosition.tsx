@@ -13,10 +13,13 @@ import {
   AlertDialogTrigger,
 } from "@/modules/common/components/AlertDialog";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
+import { Tooltip } from "@/modules/common/components/Tooltip";
 import { type EventPosition } from "@sam-monorepo/database/browser";
 import { useId } from "react";
 import { FaTrash } from "react-icons/fa";
 import { deleteEventPosition } from "../actions/deleteEventPosition";
+
+const LABEL = "Posten löschen";
 
 interface Props {
   readonly className?: string;
@@ -33,13 +36,20 @@ export const DeleteEventPosition = ({ className, position }: Props) => {
 
       <AlertDialog>
         <AlertDialogTrigger asChild>
-          <button
-            disabled={isPending}
-            className="text-brand-red-500 hover:text-brand-red-300 hover:cursor-pointer flex items-center px-2"
-            title="Posten löschen"
+          <Tooltip
+            asChild
+            triggerChildren={
+              <button
+                disabled={isPending}
+                className="text-brand-red-500 hover:text-brand-red-300 hover:cursor-pointer flex items-center px-2"
+                aria-label={LABEL}
+              >
+                <FaTrash />
+              </button>
+            }
           >
-            <FaTrash />
-          </button>
+            {LABEL}
+          </Tooltip>
         </AlertDialogTrigger>
 
         <AlertDialogContent>

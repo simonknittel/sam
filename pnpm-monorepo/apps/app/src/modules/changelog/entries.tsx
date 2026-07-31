@@ -29,6 +29,8 @@ import image20260510CitizenPopover from "@/modules/changelog/assets/2026-05-10-c
 import image20260510OverviewTab from "@/modules/changelog/assets/2026-05-10-overview-tab.png";
 import image20260510ProfileTile from "@/modules/changelog/assets/2026-05-10-profile-tile.png";
 import image20260521Timezones from "@/modules/changelog/assets/2026-05-21-timezones.png";
+import image20260731LineupPastePopover from "@/modules/changelog/assets/2026-07-31-lineup-paste-popover.png";
+import image20260731LineupPositionActions from "@/modules/changelog/assets/2026-07-31-lineup-position-actions.png";
 import type { ChangelogEntry } from "@/modules/changelog/types";
 import { Link } from "@/modules/common/components/Link";
 import Image from "next/image";
@@ -36,6 +38,56 @@ import { AiFillAppstore } from "react-icons/ai";
 import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
+  {
+    key: "2026-07-31-posten-kopieren-und-einfuegen",
+    date: "2026-07-31",
+    title: "Posten kopieren und einfügen",
+    tags: ["Neu", "Events"],
+    isTracked: true,
+    body: () => (
+      <>
+        <p>
+          In der Aufstellung eines Events gibt es bei jedem Posten drei neue
+          Schaltflächen: Duplizieren, Kopieren und Einfügen. Damit lassen sich
+          einzelne Posten und ganze Gruppen inkl. ihrer untergeordneten Posten
+          wiederverwenden, anstatt sie erneut anzulegen.
+        </p>
+
+        <Link href={image20260731LineupPositionActions.src}>
+          <Image
+            quality={100}
+            src={image20260731LineupPositionActions}
+            alt=""
+            loading="eager"
+            className="max-h-full w-auto"
+          />
+        </Link>
+
+        <p>
+          Duplizieren legt die Kopie direkt unter dem Original ab. Kopieren legt
+          den Posten in eine Zwischenablage, die auch beim Wechsel in ein
+          anderes Event erhalten bleibt. Von dort kann er entweder hinter einem
+          Posten oder in eine Gruppe eingefügt werden.
+        </p>
+
+        <Link href={image20260731LineupPastePopover.src}>
+          <Image
+            quality={100}
+            src={image20260731LineupPastePopover}
+            alt=""
+            loading="eager"
+            className="max-h-full w-auto"
+          />
+        </Link>
+
+        <p>
+          Zugewiesene Citizen und Bewerbungen werden nicht mitkopiert. Eine
+          Kopie startet also immer unbesetzt.
+        </p>
+      </>
+    ),
+  },
+
   {
     key: "2026-06-07-autostart-log-analyzer",
     date: "2026-06-07",

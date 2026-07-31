@@ -73,6 +73,7 @@ export enum AuditEventType {
   EVENT_POSITION_APPLICATION_CREATED = "EVENT_POSITION_APPLICATION_CREATED",
   EVENT_POSITION_APPLICATION_DELETED = "EVENT_POSITION_APPLICATION_DELETED",
   EVENT_LINEUP_COPIED = "EVENT_LINEUP_COPIED",
+  EVENT_POSITION_COPIED = "EVENT_POSITION_COPIED",
   CITIZEN_CREATED = "CITIZEN_CREATED",
   CITIZEN_DELETED = "CITIZEN_DELETED",
   ENTITY_LOG_CREATED = "ENTITY_LOG_CREATED",
@@ -573,6 +574,15 @@ export interface AuditEventDataByType {
   [AuditEventType.EVENT_LINEUP_COPIED]: {
     sourceEventId: string;
     targetEventId: string;
+  };
+
+  [AuditEventType.EVENT_POSITION_COPIED]: {
+    sourceEventId: string;
+    sourcePositionId: string;
+    targetEventId: string;
+    targetPositionId: string;
+    placement: "after" | "inside";
+    positionCount: number;
   };
 
   [AuditEventType.CITIZEN_CREATED]: {
@@ -1626,6 +1636,20 @@ export const AuditEventDefinitions: {
     },
     message: (data) =>
       `Event lineup copied from ${data.sourceEventId} to ${data.targetEventId}`,
+  },
+
+  [AuditEventType.EVENT_POSITION_COPIED]: {
+    type: AuditEventType.EVENT_POSITION_COPIED,
+    data: {
+      sourceEventId: "string",
+      sourcePositionId: "string",
+      targetEventId: "string",
+      targetPositionId: "string",
+      placement: "after",
+      positionCount: 0,
+    },
+    message: (data) =>
+      `${data.positionCount} event position(s) copied from ${data.sourcePositionId} (event: ${data.sourceEventId}) ${data.placement} ${data.targetPositionId} (event: ${data.targetEventId})`,
   },
 
   [AuditEventType.CITIZEN_CREATED]: {

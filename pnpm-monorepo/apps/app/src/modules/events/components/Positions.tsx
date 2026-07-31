@@ -1,6 +1,7 @@
 "use client";
 
 import type { ComponentProps } from "react";
+import { LineupClipboardProvider } from "./LineupClipboardContext";
 import { LineupOrderProvider } from "./LineupOrderContext/Context";
 import { LineupVisibilityProvider, ToggleAll } from "./LineupVisibilityContext";
 
@@ -21,15 +22,17 @@ export const Positions = ({
     <LineupVisibilityProvider items={positions}>
       <ToggleAll className="ml-auto" />
 
-      <LineupOrderProvider
-        positions={positions}
-        showManage={canManagePositions}
-        variants={variants}
-        myShips={myShips}
-        allEventCitizens={allEventCitizens}
-        showActions={showActions}
-        className="flex flex-col gap-px"
-      />
+      <LineupClipboardProvider>
+        <LineupOrderProvider
+          positions={positions}
+          showManage={canManagePositions}
+          variants={variants}
+          myShips={myShips}
+          allEventCitizens={allEventCitizens}
+          showActions={showActions}
+          className="flex flex-col gap-px"
+        />
+      </LineupClipboardProvider>
     </LineupVisibilityProvider>
   );
 };
