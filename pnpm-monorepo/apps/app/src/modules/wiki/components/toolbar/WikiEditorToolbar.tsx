@@ -6,7 +6,6 @@ import {
   FaCaretSquareDown,
   FaCode,
   FaColumns,
-  FaGlobe,
   FaHeading,
   FaImage,
   FaInfoCircle,
@@ -29,7 +28,6 @@ import { CalloutPicker } from "./CalloutPicker";
 import { EmbedPicker } from "./EmbedPicker";
 import { GridPicker } from "./GridPicker";
 import { HeadingPicker } from "./HeadingPicker";
-import { IframePicker } from "./IframePicker";
 import { ListPicker } from "./ListPicker";
 import { ToolbarButton } from "./ToolbarButton";
 import { ToolbarDivider } from "./ToolbarDivider";
@@ -76,8 +74,7 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
             table: editor.isActive("table"),
             image: editor.isActive("image"),
             attachment: editor.isActive("wikiAttachment"),
-            embed: editor.isActive("youtube") || editor.isActive("wikiEmbed"),
-            iframe: editor.isActive("wikiIframe"),
+            embed: editor.isActive("wikiEmbed"),
             /**
              * Text-only contexts (quote, table cell, list item, code
              * block, collapsible-section title) disable the controls
@@ -220,15 +217,6 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
         icon={<FaPhotoVideo />}
       >
         <EmbedPicker editor={editor} />
-      </ToolbarPopover>
-
-      <ToolbarPopover
-        title="Website einbetten (iframe)"
-        isActive={active?.iframe ?? false}
-        disabled={restricted.blocks}
-        icon={<FaGlobe />}
-      >
-        <IframePicker editor={editor} />
       </ToolbarPopover>
 
       <ToolbarDivider />

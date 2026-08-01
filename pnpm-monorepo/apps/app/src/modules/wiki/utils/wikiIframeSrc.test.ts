@@ -1,5 +1,8 @@
 // Tests for @sam-monorepo/wiki-editor deliberately hosted in the app because vitest is set up here.
-import { isWikiIframeSrcAllowed } from "@sam-monorepo/wiki-editor";
+import {
+  collectWikiIframeSrcs,
+  isWikiIframeSrcAllowed,
+} from "@sam-monorepo/wiki-editor";
 import { describe, expect, test } from "vitest";
 
 describe("isWikiIframeSrcAllowed", () => {
@@ -33,5 +36,45 @@ describe("isWikiIframeSrcAllowed", () => {
 
   test("ignores empty allowlist entries", () => {
     expect(isWikiIframeSrcAllowed("https://example.com/", [""])).toBe(false);
+  });
+});
+
+describe("collectWikiIframeSrcs", () => {
+  test("collects generic-iframe embeds, also nested, but no other providers", () => {
+    const content = {
+      type: "doc",
+      content: [
+        {
+          type: "wikiEmbed",
+          attrs: { provider: "iframe", src: "https://example.com/a" },
+        },
+        {
+          type: "wikiEmbed",
+          attrs: {
+            provider: "youtube",
+            src: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
+          },
+        },
+        {
+          type: "wikiGrid",
+          content: [
+            {
+              type: "wikiGridCell",
+              content: [
+                {
+                  type: "wikiEmbed",
+                  attrs: { provider: "iframe", src: "https://example.com/b" },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    expect(collectWikiIframeSrcs(content).sort()).toEqual([
+      "https://example.com/a",
+      "https://example.com/b",
+    ]);
   });
 });

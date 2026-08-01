@@ -1,20 +1,41 @@
-import { mergeAttributes, Node, nodePasteRule } from "@tiptap/core";
+import { mergeAttributes, Node } from "@tiptap/core";
+import { walkWikiContent } from "./walkWikiContent.js";
 import { renderWikiBlockedPlaceholder } from "./wikiBlockedPlaceholder.js";
 import {
   wikiAlignAttribute,
-  wikiWidthPercentAttribute,
+  wikiHeightPxAttribute,
+  wikiWidthPxAttribute,
+  type WikiNodeAlignment,
 } from "./wikiResizableNodes.js";
 
-export const WIKI_EMBED_PROVIDERS = ["twitch", "spotify", "google"] as const;
+/**
+ * "iframe" is the generic, allowlist-validated website embed; the other
+ * providers have fixed, hardcoded host patterns.
+ */
+export const WIKI_EMBED_PROVIDERS = [
+  "youtube",
+  "twitch",
+  "spotify",
+  "google",
+  "iframe",
+] as const;
 export type WikiEmbedProvider = (typeof WIKI_EMBED_PROVIDERS)[number];
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     wikiEmbed: {
-      /** Inserts a Twitch/Spotify/Google embed at the current position */
+      /**
+       * Inserts an embed at the current position. The src is validated
+       * against the provider's fixed host patterns — or, for provider
+       * "iframe", against the domain allowlist. The size/alignment
+       * attributes carry a previous node's layout through a URL update.
+       */
       setWikiEmbed: (attributes: {
         provider: WikiEmbedProvider;
         src: string;
+        widthPx?: number | null;
+        heightPx?: number | null;
+        align?: WikiNodeAlignment | null;
       }) => ReturnType;
     };
   }
@@ -27,8 +48,22 @@ export interface WikiEmbedOptions {
    * when unset.
    */
   twitchParentHost: string;
+  /**
+   * Hostnames generic iframes (provider "iframe") may embed (from the wiki
+   * settings). An entry matches its exact hostname and all subdomains.
+   * Rendering re-validates on every render, so removing an entry blocks
+   * existing embeds too.
+   */
+  iframeAllowlist: readonly string[];
 }
 
+const YOUTUBE_ID_PATTERN = /^[a-zA-Z0-9_-]{11}$/;
+const YOUTUBE_WATCH_HOSTS = [
+  "youtube.com",
+  "www.youtube.com",
+  "m.youtube.com",
+  "music.youtube.com",
+];
 const TWITCH_CHANNEL_PATTERN = /^[a-zA-Z0-9_]{3,25}$/;
 /** twitch.tv paths that are not channel pages */
 const TWITCH_RESERVED_PATHS = [
@@ -62,6 +97,54 @@ const parseUrl = (input: string): URL | null => {
   } catch {
     return null;
   }
+};
+
+/** YouTube's t/start parameter ("90", "90s", "1h2m30s") in seconds */
+const parseYoutubeStartSeconds = (url: URL): number => {
+  const raw = url.searchParams.get("t") ?? url.searchParams.get("start");
+  if (!raw) return 0;
+  if (/^\d+$/.test(raw)) return Number(raw);
+  const match = /^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$/.exec(raw);
+  if (!match || (!match[1] && !match[2] && !match[3])) return 0;
+  return (
+    Number(match[1] ?? 0) * 3600 +
+    Number(match[2] ?? 0) * 60 +
+    Number(match[3] ?? 0)
+  );
+};
+
+const normalizeYoutubeUrl = (url: URL): string | null => {
+  const segments = url.pathname.split("/").filter(Boolean);
+  const [first, second] = segments;
+
+  let id: string | null | undefined = null;
+
+  if (url.hostname === "youtu.be") {
+    if (segments.length === 1) id = first;
+  } else if (YOUTUBE_WATCH_HOSTS.includes(url.hostname)) {
+    if (segments.length === 1 && first === "watch")
+      id = url.searchParams.get("v");
+    else if (
+      segments.length === 2 &&
+      first &&
+      ["shorts", "live", "embed"].includes(first)
+    )
+      id = second;
+  } else if (
+    url.hostname === "www.youtube-nocookie.com" ||
+    url.hostname === "youtube-nocookie.com"
+  ) {
+    /**
+     * Already-normalized embed URLs pass through (round-trip when editing
+     * an existing embed).
+     */
+    if (segments.length === 2 && first === "embed") id = second;
+  }
+
+  if (!id || !YOUTUBE_ID_PATTERN.test(id)) return null;
+
+  const start = parseYoutubeStartSeconds(url);
+  return `https://www.youtube-nocookie.com/embed/${id}${start > 0 ? `?start=${start}` : ""}`;
 };
 
 const normalizeTwitchUrl = (url: URL): string | null => {
@@ -180,13 +263,18 @@ const normalizeGoogleUrl = (url: URL): string | null => {
 
 /**
  * Turns a URL pasted/entered by a user into the matching embed URL, or null
- * if it is not a recognized Twitch/Spotify/Google URL.
+ * if it is not a recognized YouTube/Twitch/Spotify/Google URL. Generic
+ * websites (provider "iframe") are not covered here — they are the
+ * caller's allowlist-validated fallback.
  */
 export const normalizeWikiEmbedUrl = (
   input: string,
 ): { provider: WikiEmbedProvider; src: string } | null => {
   const url = parseUrl(input.trim());
   if (!url) return null;
+
+  const youtube = normalizeYoutubeUrl(url);
+  if (youtube) return { provider: "youtube", src: youtube };
 
   const twitch = normalizeTwitchUrl(url);
   if (twitch) return { provider: "twitch", src: twitch };
@@ -201,13 +289,60 @@ export const normalizeWikiEmbedUrl = (
 };
 
 /**
+ * Checks a generic iframe src against the allowlist: https-only, hostname
+ * must equal an entry or be a subdomain of one.
+ */
+export const isWikiIframeSrcAllowed = (
+  src: unknown,
+  allowlist: readonly string[],
+): boolean => {
+  if (typeof src !== "string") return false;
+
+  let url: URL;
+  try {
+    url = new URL(src);
+  } catch {
+    return false;
+  }
+  if (url.protocol !== "https:") return false;
+
+  return allowlist.some((entry) => {
+    const hostname = entry.trim().toLowerCase();
+    if (!hostname) return false;
+    return url.hostname === hostname || url.hostname.endsWith(`.${hostname}`);
+  });
+};
+
+/**
+ * All generic-iframe src values of a Tiptap JSON document, e.g. for
+ * re-validating imported content against the allowlist (imports bypass the
+ * insertion-time check).
+ */
+export const collectWikiIframeSrcs = (content: unknown): string[] => {
+  const srcs = new Set<string>();
+
+  walkWikiContent(content, (node) => {
+    if (
+      node.type === "wikiEmbed" &&
+      node.attrs?.provider === "iframe" &&
+      typeof node.attrs.src === "string"
+    )
+      srcs.add(node.attrs.src);
+  });
+
+  return [...srcs];
+};
+
+/**
  * Re-validates a stored embed src against the fixed per-provider host
- * patterns. Stored documents are user input (and could bypass the
- * insertion UI), so the src is checked again on every render.
+ * patterns — or, for provider "iframe", the domain allowlist. Stored
+ * documents are user input (and could bypass the insertion UI), so the src
+ * is checked again on every render.
  */
 export const isAllowedWikiEmbedSrc = (
   provider: unknown,
   src: unknown,
+  iframeAllowlist: readonly string[],
 ): boolean => {
   if (typeof provider !== "string" || typeof src !== "string") return false;
   const url = parseUrl(src);
@@ -216,6 +351,15 @@ export const isAllowedWikiEmbedSrc = (
   const [first, second, third, fourth] = segments;
 
   switch (provider) {
+    case "youtube":
+      return (
+        url.hostname === "www.youtube-nocookie.com" &&
+        segments.length === 2 &&
+        first === "embed" &&
+        typeof second === "string" &&
+        YOUTUBE_ID_PATTERN.test(second)
+      );
+
     case "twitch":
       return (
         (url.hostname === "player.twitch.tv" && segments.length === 0) ||
@@ -255,24 +399,20 @@ export const isAllowedWikiEmbedSrc = (
         fourth === "preview"
       );
 
+    case "iframe":
+      return isWikiIframeSrcAllowed(src, iframeAllowlist);
+
     default:
       return false;
   }
 };
 
-const PASTE_PATTERNS = [
-  /https:\/\/(?:www\.)?twitch\.tv\/videos\/\d+\S*/g,
-  /https:\/\/(?:www\.)?twitch\.tv\/[a-zA-Z0-9_]{3,25}\/clip\/\S+/g,
-  /https:\/\/clips\.twitch\.tv\/[a-zA-Z0-9_-]+\S*/g,
-  /https:\/\/open\.spotify\.com\/(?:intl-[a-z]{2}\/)?(?:track|album|playlist|episode|show|artist)\/[a-zA-Z0-9]+\S*/g,
-  /https:\/\/docs\.google\.com\/(?:document|spreadsheets|presentation)\/d\/[a-zA-Z0-9_-]+\S*/g,
-  /https:\/\/drive\.google\.com\/file\/d\/[a-zA-Z0-9_-]+\S*/g,
-];
-
 /**
- * Embeds for Twitch, Spotify and Google Docs/Sheets/Slides/Drive with
- * fixed, hardcoded host patterns (YouTube uses @tiptap/extension-youtube).
- * Generic iframes are a separate, allowlist-validated node.
+ * The wiki's single embed node: YouTube, Twitch, Spotify and Google
+ * Docs/Sheets/Slides/Drive with fixed, hardcoded host patterns, plus
+ * generic websites (provider "iframe") validated against the domain
+ * allowlist from the wiki settings. Deliberately no paste rules — pasted
+ * URLs stay links; embedding is an explicit action.
  */
 export const WikiEmbed = Node.create<WikiEmbedOptions>({
   name: "wikiEmbed",
@@ -283,6 +423,7 @@ export const WikiEmbed = Node.create<WikiEmbedOptions>({
   addOptions() {
     return {
       twitchParentHost: "",
+      iframeAllowlist: [],
     };
   },
 
@@ -302,7 +443,13 @@ export const WikiEmbed = Node.create<WikiEmbedOptions>({
         renderHTML: (attributes) =>
           attributes.src === null ? {} : { "data-src": String(attributes.src) },
       },
-      ...wikiWidthPercentAttribute(),
+      ...wikiWidthPxAttribute(),
+      /**
+       * Only offered by the resize UI for provider "iframe" (see
+       * isWikiHeightResizable) — the other providers' heights follow their
+       * player's aspect ratio or fixed stylesheet height.
+       */
+      ...wikiHeightPxAttribute(),
       ...wikiAlignAttribute(),
     };
   },
@@ -315,8 +462,13 @@ export const WikiEmbed = Node.create<WikiEmbedOptions>({
     const provider = node.attrs.provider as string | null;
     const src = node.attrs.src as string | null;
 
-    if (!isAllowedWikiEmbedSrc(provider, src))
-      return renderWikiBlockedPlaceholder(HTMLAttributes);
+    if (!isAllowedWikiEmbedSrc(provider, src, this.options.iframeAllowlist))
+      return renderWikiBlockedPlaceholder(
+        HTMLAttributes,
+        provider === "iframe"
+          ? `Eingebettete Inhalte von dieser Domain sind nicht erlaubt: ${String(src ?? "")}`
+          : undefined,
+      );
 
     let iframeSrc = String(src);
     if (provider === "twitch") {
@@ -336,8 +488,22 @@ export const WikiEmbed = Node.create<WikiEmbedOptions>({
         "iframe",
         {
           src: iframeSrc,
-          allow:
-            "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture",
+          /**
+           * Generic websites are untrusted and run sandboxed; the dedicated
+           * providers keep their player-specific permissions.
+           */
+          ...(provider === "iframe"
+            ? {
+                sandbox:
+                  "allow-scripts allow-same-origin allow-forms allow-popups allow-presentation",
+                allow: "clipboard-write; encrypted-media; fullscreen",
+              }
+            : {
+                allow:
+                  provider === "youtube"
+                    ? "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    : "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture",
+              }),
           /**
            * Camel-cased for the React static renderer; the editor DOM is
            * unaffected (setAttribute lowercases HTML attribute names).
@@ -355,20 +521,16 @@ export const WikiEmbed = Node.create<WikiEmbedOptions>({
       setWikiEmbed:
         (attributes) =>
         ({ commands }) => {
-          if (!isAllowedWikiEmbedSrc(attributes.provider, attributes.src))
+          if (
+            !isAllowedWikiEmbedSrc(
+              attributes.provider,
+              attributes.src,
+              this.options.iframeAllowlist,
+            )
+          )
             return false;
           return commands.insertContent({ type: this.name, attrs: attributes });
         },
     };
-  },
-
-  addPasteRules() {
-    return PASTE_PATTERNS.map((pattern) =>
-      nodePasteRule({
-        find: pattern,
-        type: this.type,
-        getAttributes: (match) => normalizeWikiEmbedUrl(match[0]),
-      }),
-    );
   },
 });

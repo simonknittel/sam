@@ -31,7 +31,9 @@ export {
   type WikiEditorExtensionsOptions,
 } from "./wikiEditorExtensions.js";
 export {
+  collectWikiIframeSrcs,
   isAllowedWikiEmbedSrc,
+  isWikiIframeSrcAllowed,
   normalizeWikiEmbedUrl,
 } from "./wikiEmbedNode.js";
 export {
@@ -40,10 +42,6 @@ export {
 } from "./wikiGridNodes.js";
 export { createWikiHeadingIdAssigner } from "./wikiHeadingIds.js";
 export { WIKI_HIGHLIGHT_COLORS } from "./wikiHighlightColors.js";
-export {
-  collectWikiIframeSrcs,
-  isWikiIframeSrcAllowed,
-} from "./wikiIframeNode.js";
 export {
   WIKI_PAGE_INDEX_MATCH_MODES,
   WIKI_PAGE_INDEX_MAX_DEPTH,
@@ -59,10 +57,10 @@ export {
 } from "./wikiPageIndexNode.js";
 export type { WikiPageLinkedPage } from "./wikiPageLinkNode.js";
 export {
-  WIKI_HEIGHT_RESIZABLE_NODE_TYPES,
   WIKI_RESIZABLE_NODE_TYPES,
   clampWikiIframeHeightPx,
-  clampWikiWidthPercent,
+  clampWikiWidthPx,
+  isWikiHeightResizable,
   type WikiNodeAlignment,
 } from "./wikiResizableNodes.js";
 export {

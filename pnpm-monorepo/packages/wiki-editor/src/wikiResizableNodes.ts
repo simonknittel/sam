@@ -1,34 +1,26 @@
-import { mergeAttributes } from "@tiptap/core";
 import { Image } from "@tiptap/extension-image";
-import { getEmbedUrlFromYoutubeUrl, Youtube } from "@tiptap/extension-youtube";
-import { renderWikiBlockedPlaceholder } from "./wikiBlockedPlaceholder.js";
 
 /**
  * Node types whose width can be resized via drag handles in the editor.
- * They all carry the `widthPercent` attribute below.
+ * They all carry the `widthPx` attribute below.
  */
-export const WIKI_RESIZABLE_NODE_TYPES = [
-  "image",
-  "youtube",
-  "wikiEmbed",
-  "wikiIframe",
-] as const;
+export const WIKI_RESIZABLE_NODE_TYPES = ["image", "wikiEmbed"] as const;
 
-export const MIN_WIKI_WIDTH_PERCENT = 20;
-export const MAX_WIKI_WIDTH_PERCENT = 100;
+export const MIN_WIKI_WIDTH_PX = 120;
+export const MAX_WIKI_WIDTH_PX = 2000;
 
-export const clampWikiWidthPercent = (value: number): number =>
-  Math.min(
-    MAX_WIKI_WIDTH_PERCENT,
-    Math.max(MIN_WIKI_WIDTH_PERCENT, Math.round(value)),
-  );
+export const clampWikiWidthPx = (value: number): number =>
+  Math.min(MAX_WIKI_WIDTH_PX, Math.max(MIN_WIKI_WIDTH_PX, Math.round(value)));
 
 /**
- * Node types whose height can be resized via the bottom drag handle. Only
- * the generic iframe: its content has no intrinsic aspect ratio, so no
- * single default height fits.
+ * Whether a node's height can be resized via the bottom drag handle. Only
+ * the generic-iframe embed: its content has no intrinsic aspect ratio, so
+ * no single default height fits.
  */
-export const WIKI_HEIGHT_RESIZABLE_NODE_TYPES = ["wikiIframe"] as const;
+export const isWikiHeightResizable = (
+  nodeTypeName: string,
+  provider: unknown,
+): boolean => nodeTypeName === "wikiEmbed" && provider === "iframe";
 
 export const MIN_WIKI_IFRAME_HEIGHT_PX = 120;
 export const MAX_WIKI_IFRAME_HEIGHT_PX = 2000;
@@ -70,27 +62,29 @@ export const wikiAlignAttribute = () => ({
 });
 
 /**
- * Shared `widthPercent` attribute: NULL means natural/full width, otherwise
- * the width as percentage of the content column, rendered as an inline
- * style (which wins over the stylesheet's width defaults). Spread into a
- * node's addAttributes().
+ * Shared `widthPx` attribute: NULL means natural/full width, otherwise the
+ * width in pixels, rendered as an inline style (which wins over the
+ * stylesheet's width defaults). Absolute on purpose: a percentage shrinks
+ * with the viewport and keeps proportional whitespace next to the block,
+ * making it tiny on phones — the max-width caps the block at the content
+ * column instead. Spread into a node's addAttributes().
  */
-export const wikiWidthPercentAttribute = () => ({
-  widthPercent: {
+export const wikiWidthPxAttribute = () => ({
+  widthPx: {
     default: null,
     parseHTML: (element: HTMLElement) => {
-      const parsed = Number(element.getAttribute("data-width-percent"));
+      const parsed = Number(element.getAttribute("data-width-px"));
       return Number.isFinite(parsed) && parsed > 0
-        ? clampWikiWidthPercent(parsed)
+        ? clampWikiWidthPx(parsed)
         : null;
     },
     renderHTML: (attributes: Record<string, unknown>) => {
-      const value = attributes.widthPercent;
+      const value = attributes.widthPx;
       if (typeof value !== "number") return {};
-      const percent = clampWikiWidthPercent(value);
+      const px = clampWikiWidthPx(value);
       return {
-        "data-width-percent": String(percent),
-        style: `width: ${percent}%`,
+        "data-width-px": String(px),
+        style: `width: ${px}px; max-width: 100%`,
       };
     },
   },
@@ -131,61 +125,8 @@ export const WikiImage = Image.extend({
   addAttributes() {
     return {
       ...this.parent?.(),
-      ...wikiWidthPercentAttribute(),
+      ...wikiWidthPxAttribute(),
       ...wikiAlignAttribute(),
     };
-  },
-});
-
-/**
- * The stock Youtube node plus the resizable width attribute (the inline
- * style lands on the iframe; the stylesheet keeps the aspect ratio).
- * renderHTML is replaced: the stock implementation dumps every extension
- * option onto the iframe as a DOM attribute (allowfullscreen, autoplay,
- * disableKBcontrols, …), which the React static renderer rejects with
- * console warnings.
- */
-export const WikiYoutube = Youtube.extend({
-  addAttributes() {
-    return {
-      ...this.parent?.(),
-      ...wikiWidthPercentAttribute(),
-      ...wikiAlignAttribute(),
-    };
-  },
-
-  renderHTML({ node, HTMLAttributes }) {
-    const embedUrl = getEmbedUrlFromYoutubeUrl({
-      url: String(node.attrs.src ?? ""),
-      controls: this.options.controls,
-      nocookie: this.options.nocookie,
-      startAt: (node.attrs.start as number | null) ?? 0,
-      rel: this.options.rel,
-    });
-
-    if (!embedUrl) return renderWikiBlockedPlaceholder(HTMLAttributes);
-
-    const attributes: Record<string, unknown> = { ...HTMLAttributes };
-    delete attributes.src;
-    delete attributes.start;
-
-    return [
-      "div",
-      { "data-youtube-video": "" },
-      [
-        "iframe",
-        mergeAttributes(this.options.HTMLAttributes, attributes, {
-          src: embedUrl,
-          allow:
-            "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share",
-          /**
-           * Camel-cased for the React static renderer; the editor DOM is
-           * unaffected (setAttribute lowercases HTML attribute names).
-           */
-          allowFullScreen: true,
-          referrerPolicy: "strict-origin-when-cross-origin",
-        }),
-      ],
-    ];
   },
 });

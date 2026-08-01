@@ -440,17 +440,14 @@ const documentContent: DemoNode = {
       attrs: {
         src: flags["image-src"],
         alt: "Verkleinertes Beispielbild",
-        widthPercent: 50,
+        widthPx: 400,
         align: "center",
       },
     },
 
     heading(1, "Videos und Embeds"),
     heading(2, "YouTube"),
-    {
-      type: "youtube",
-      attrs: { src: "https://www.youtube.com/watch?v=v0Ufvgr8sTI" },
-    },
+    embed("youtube", "https://www.youtube.com/watch?v=v0Ufvgr8sTI"),
     heading(2, "Twitch"),
     embed("twitch", "https://www.twitch.tv/starcitizen"),
     heading(2, "Spotify"),
@@ -465,8 +462,8 @@ const documentContent: DemoNode = {
       "Beliebige Seiten lassen sich einbetten, solange ihre Domain auf der Allowlist in den Wiki-Einstellungen steht:",
     ),
     {
-      type: "wikiIframe",
-      attrs: { src: flags["iframe-src"] },
+      type: "wikiEmbed",
+      attrs: { provider: "iframe", src: flags["iframe-src"] },
     },
 
     heading(1, "Verweise"),

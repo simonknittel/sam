@@ -27,8 +27,13 @@ export const validateWikiIframeSrc = createAuthenticatedAction(
     const allowlist = await getWikiIframeAllowlist();
     if (!isWikiIframeSrcAllowed(data.src, allowlist))
       return {
+        /**
+         * The allowlist check is the last stop after the dedicated-provider
+         * patterns didn't match, so the message covers the whole range of
+         * supported URLs.
+         */
         error:
-          "Diese Domain ist nicht für eingebettete Inhalte freigegeben. Wiki-Administratoren können sie in den Wiki-Einstellungen freigeben.",
+          "Diese URL wird nicht unterstützt. Möglich sind YouTube, Twitch, Spotify, Google Docs/Tabellen/Präsentationen sowie Domains, die in den Wiki-Einstellungen freigegeben sind.",
         requestPayload: formData,
       };
 
