@@ -13,7 +13,7 @@ import {
   AlertDialogTrigger,
 } from "@/modules/common/components/AlertDialog";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
-import Button from "@/modules/common/components/Button";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { useId } from "react";
 import { FaUnlock } from "react-icons/fa";
 import { unbanUserAction } from "../actions/unbanUser";
@@ -32,9 +32,14 @@ export const UnbanUser = ({ userId }: Props) => {
 
       <AlertDialog>
         <AlertDialogTrigger asChild>
-          <Button variant="tertiary" disabled={isPending}>
-            {isPending ? <AsciiSpinner /> : <FaUnlock />} Entsperren
-          </Button>
+          <Button2
+            variant={Button2Variant.IconOnly}
+            disabled={isPending}
+            title="Benutzer entsperren"
+          >
+            {isPending ? <AsciiSpinner /> : <FaUnlock />}{" "}
+            <span className="sr-only">Entsperren</span>
+          </Button2>
         </AlertDialogTrigger>
 
         <AlertDialogContent>

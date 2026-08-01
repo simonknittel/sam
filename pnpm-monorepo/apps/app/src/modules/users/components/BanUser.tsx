@@ -13,7 +13,7 @@ import {
   AlertDialogTrigger,
 } from "@/modules/common/components/AlertDialog";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
-import Button from "@/modules/common/components/Button";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Textarea } from "@/modules/common/components/form/Textarea";
 import { useId } from "react";
 import { FaBan } from "react-icons/fa";
@@ -33,9 +33,14 @@ export const BanUser = ({ userId }: Props) => {
 
       <AlertDialog>
         <AlertDialogTrigger asChild>
-          <Button variant="tertiary" disabled={isPending}>
-            {isPending ? <AsciiSpinner /> : <FaBan />} Sperren
-          </Button>
+          <Button2
+            variant={Button2Variant.IconOnly}
+            disabled={isPending}
+            title="Benutzer sperren"
+          >
+            {isPending ? <AsciiSpinner /> : <FaBan />}{" "}
+            <span className="sr-only">Sperren</span>
+          </Button2>
         </AlertDialogTrigger>
 
         <AlertDialogContent>
@@ -53,6 +58,7 @@ export const BanUser = ({ userId }: Props) => {
               name="reason"
               maxLength={500}
               form={id}
+              autoFocus
             />
           </div>
 

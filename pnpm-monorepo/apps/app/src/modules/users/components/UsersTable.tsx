@@ -1,12 +1,10 @@
 "use client";
 
 import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
-import { Actions } from "@/modules/common/components/Actions";
 import Avatar from "@/modules/common/components/Avatar";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { Link } from "@/modules/common/components/Link";
 import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
-import { SmallBadge } from "@/modules/common/components/SmallBadge";
 import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { BanUser } from "@/modules/users/components/BanUser";
@@ -15,10 +13,11 @@ import { VerifyEmailButton } from "@/modules/users/components/VerifyEmailButton"
 import { type Entity, type User } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { FaExternalLinkAlt } from "react-icons/fa";
+import { FaCircleXmark } from "react-icons/fa6";
 
 const TABLE_MIN_WIDTH = "min-w-200";
 const GRID_COLS =
-  "grid-cols-[240px_240px_150px_200px_150px_24px_110px_64px] sm:grid-cols-[240px_240px_150px_200px_150px_128px_110px_64px]";
+  "grid-cols-[240px_240px_150px_200px_150px_150px_24px] sm:grid-cols-[240px_240px_150px_200px_150px_150px_110px]";
 
 interface Props {
   readonly className?: string;
@@ -47,19 +46,15 @@ export const UsersTable = ({
         <th>Registriert am</th>
         <th>Datenschutzerklärung</th>
         <th>Handle</th>
-        <th className="sr-only">Spynet</th>
         <th>Gesperrt</th>
-        <th className="sr-only">Aktionen</th>
+        <th>
+          <span className="sr-only">Spynet</span>
+        </th>
       </THead>
 
       <TBody>
         {users.map(({ user, discordId, entity }) => (
-          <TRow
-            key={user.id}
-            className={clsx("h-14", GRID_COLS, {
-              "opacity-50": Boolean(user.bannedAt),
-            })}
-          >
+          <TRow key={user.id} className={clsx("h-14", GRID_COLS)}>
             <td className="overflow-hidden">
               <div className="flex gap-2 items-center">
                 <Avatar
@@ -121,6 +116,40 @@ export const UsersTable = ({
               )}
             </td>
 
+            <td className="overflow-hidden flex items-center gap-2">
+              {user.bannedAt && (
+                <PopoverBaseUI
+                  trigger={
+                    <span className="flex items-center gap-1 ml-2">
+                      <FaCircleXmark className="text-red-500" /> Gesperrt
+                    </span>
+                  }
+                  childrenClassName="text-sm"
+                  hoverOnly
+                >
+                  <div className="flex flex-col gap-1">
+                    <p>Gesperrt am: {formatDate(user.bannedAt)}</p>
+
+                    <p>
+                      Gesperrt von: <CitizenLink citizen={user.bannedBy} />
+                    </p>
+
+                    {user.bannedReason && <p>Grund: {user.bannedReason}</p>}
+                  </div>
+                </PopoverBaseUI>
+              )}
+
+              {showBanActions &&
+              user.id !== ownUserId &&
+              user.role !== "admin" ? (
+                user.bannedAt ? (
+                  <UnbanUser userId={user.id} />
+                ) : (
+                  <BanUser userId={user.id} />
+                )
+              ) : null}
+            </td>
+
             <td className="overflow-hidden">
               {entity?.id ? (
                 <CitizenPopover citizenId={entity.id}>
@@ -133,38 +162,6 @@ export const UsersTable = ({
                   </Link>
                 </CitizenPopover>
               ) : null}
-            </td>
-
-            <td className="overflow-hidden">
-              {user.bannedAt && (
-                <PopoverBaseUI
-                  trigger={<SmallBadge value="Gesperrt" />}
-                  childrenClassName="text-sm"
-                  hoverOnly
-                >
-                  <div className="flex flex-col gap-1">
-                    <p>Gesperrt am: {formatDate(user.bannedAt)}</p>
-                    <p>
-                      Gesperrt von: <CitizenLink citizen={user.bannedBy} />
-                    </p>
-                    {user.bannedReason && <p>Grund: {user.bannedReason}</p>}
-                  </div>
-                </PopoverBaseUI>
-              )}
-            </td>
-
-            <td className="overflow-hidden">
-              {showBanActions &&
-                user.id !== ownUserId &&
-                user.role !== "admin" && (
-                  <Actions>
-                    {user.bannedAt ? (
-                      <UnbanUser userId={user.id} />
-                    ) : (
-                      <BanUser userId={user.id} />
-                    )}
-                  </Actions>
-                )}
             </td>
           </TRow>
         ))}
