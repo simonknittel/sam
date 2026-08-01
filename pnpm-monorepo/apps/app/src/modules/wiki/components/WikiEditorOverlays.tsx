@@ -11,7 +11,8 @@ import { WikiTableControls } from "./WikiTableControls";
  * Everything the edit menu reacts to; the handles use a subset of it.
  * closest() picks the deepest match, so container blocks (lists, tables,
  * grids, …) only take the hover on their own chrome — their children keep
- * their more specific menus.
+ * their more specific menus. Paragraphs and headings are absent on
+ * purpose: their menu is selection-driven (see WikiEditMenu).
  */
 const HOVER_SELECTOR = [
   "img",
@@ -25,10 +26,6 @@ const HOVER_SELECTOR = [
   "[data-wiki-page-index]",
   "a[href]",
   "[data-wiki-callout]",
-  "p",
-  "h1",
-  "h2",
-  "h3",
   "ul",
   "ol",
   "blockquote",

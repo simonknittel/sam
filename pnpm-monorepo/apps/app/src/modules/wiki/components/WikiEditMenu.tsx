@@ -6,6 +6,7 @@ import {
   offset,
   shift,
   useFloating,
+  type VirtualElement,
 } from "@floating-ui/react-dom";
 import {
   WIKI_RESIZABLE_NODE_TYPES,
@@ -14,7 +15,7 @@ import {
   type WikiNodeAlignment,
 } from "@sam-monorepo/wiki-editor";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
-import { NodeSelection } from "@tiptap/pm/state";
+import { NodeSelection, TextSelection } from "@tiptap/pm/state";
 import type { EditorView } from "@tiptap/pm/view";
 import type { Editor } from "@tiptap/react";
 import { useEffect, useState } from "react";
@@ -75,6 +76,9 @@ const BLOCK_NODE_TYPES = [
   "wikiGrid",
 ];
 
+/** Text blocks whose menu is selection-driven rather than hover-driven */
+const TEXT_MENU_NODE_TYPES = ["paragraph", "heading"];
+
 /**
  * Viewport space reserved for the sticky editor toolbar — menus that would
  * reach into it flip below their target.
@@ -110,9 +114,47 @@ const targetKey = (element: HTMLElement): string => {
   return `element:${id}`;
 };
 
+/**
+ * Floating-ui anchor for the text menu: horizontal bounds of the selected
+ * text, vertical bounds of the whole block — the menu keeps its place
+ * above the block but centers over the selection. Falls back to the block
+ * when the range cannot be measured (positions gone stale between the
+ * menu update and the measurement).
+ */
+const selectionAnchor = (
+  editor: Editor,
+  block: HTMLElement,
+  from: number,
+  to: number,
+): VirtualElement => ({
+  contextElement: block,
+  getBoundingClientRect: () => {
+    const blockRect = block.getBoundingClientRect();
+    if (editor.isDestroyed) return blockRect;
+    try {
+      const start = editor.view.domAtPos(from);
+      const end = editor.view.domAtPos(to);
+      const range = document.createRange();
+      range.setStart(start.node, start.offset);
+      range.setEnd(end.node, end.offset);
+      const selectionRect = range.getBoundingClientRect();
+      if (selectionRect.width > 0)
+        return new DOMRect(
+          selectionRect.x,
+          blockRect.y,
+          selectionRect.width,
+          blockRect.height,
+        );
+    } catch {
+      // domAtPos throws on out-of-range positions
+    }
+    return blockRect;
+  },
+});
+
 interface MenuTarget {
-  /** Element the menu is anchored to (floating-ui reference) */
-  readonly reference: HTMLElement;
+  /** Element or virtual element the menu is anchored to (floating-ui reference) */
+  readonly reference: HTMLElement | VirtualElement;
   /** Remounts the menu (e.g. its URL input) when the target changes */
   readonly key: string;
 }
@@ -164,6 +206,16 @@ type MenuState =
     } & MenuTarget)
   | null;
 
+/** DOM element a menu is anchored to (virtual anchors track their block) */
+const menuAnchorElement = (
+  menu: NonNullable<MenuState>,
+): HTMLElement | null => {
+  if (menu.reference instanceof HTMLElement) return menu.reference;
+  return menu.reference.contextElement instanceof HTMLElement
+    ? menu.reference.contextElement
+    : null;
+};
+
 const nodeMenu = (
   node: ProseMirrorNode,
   position: number,
@@ -193,6 +245,29 @@ const calloutMenu = (
   ...target,
 });
 
+/**
+ * Mark active states reflect the current selection (which the menu's
+ * existence guarantees to be inside the block), not the whole block.
+ */
+const textMenu = (
+  editor: Editor,
+  node: ProseMirrorNode,
+  position: number,
+  target: MenuTarget,
+): MenuState => ({
+  kind: "text",
+  position,
+  nodeSize: node.nodeSize,
+  headingLevel: node.type.name === "heading" ? Number(node.attrs.level) : null,
+  textAlign: (node.attrs.textAlign ?? "left") as WikiNodeAlignment,
+  activeMarks: TEXT_FORMAT_OPTIONS.filter((option) =>
+    editor.schema.marks[option.name] ? editor.isActive(option.name) : false,
+  ).map((option) => option.name),
+  inTextOnlyBlock: getWikiPositionRestrictions(editor.state.doc, position)
+    .blocks,
+  ...target,
+});
+
 /** Badge label naming the menu's target, e.g. "Tabelle" or "Überschrift 2" */
 const menuLabel = (menu: NonNullable<MenuState>): string => {
   switch (menu.kind) {
@@ -217,12 +292,17 @@ interface Props {
 }
 
 /**
- * Contextual edit menu centered above the hovered (or, on touch devices,
- * selected) element. Every block type gets at least the drag handle and a
- * delete button; on top of that: URL editing for embeds/iframes,
- * download/open for attachments and page links, link editing for the link
- * mark, text formatting for paragraphs/headings and color switching for
- * callouts. Companion of WikiResizeHandles inside the shared overlay root.
+ * Contextual edit menu centered above its target. Hover (or, on touch
+ * devices, selection) raises it for embeds, media, links, callouts and
+ * container blocks; for paragraphs/headings it is selection-driven
+ * instead: it appears while text inside a single block is selected,
+ * horizontally centered over the selection. Every block type gets at
+ * least a delete button, and all but the text menu the drag handle (text
+ * blocks are dragged via the gutter); on top of that: URL editing for
+ * embeds/iframes, download/open for attachments and page links, link
+ * editing for the link mark, text formatting for the selection and color
+ * switching for callouts. Companion of WikiResizeHandles inside the
+ * shared overlay root.
  */
 export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
   const [menu, setMenu] = useState<MenuState>(null);
@@ -298,39 +378,6 @@ export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
         };
       }
 
-      if (element.matches("p, h1, h2, h3")) {
-        const resolved = resolveWikiNodeFromElement(editor, element, [
-          "paragraph",
-          "heading",
-        ]);
-        if (!resolved) return null;
-        const from = resolved.position + 1;
-        const to = resolved.position + resolved.node.nodeSize - 1;
-        const activeMarks = TEXT_FORMAT_OPTIONS.filter((option) => {
-          const markType = editor.schema.marks[option.name];
-          return markType
-            ? editor.state.doc.rangeHasMark(from, to, markType)
-            : false;
-        }).map((option) => option.name);
-        return {
-          kind: "text",
-          position: resolved.position,
-          nodeSize: resolved.node.nodeSize,
-          headingLevel:
-            resolved.node.type.name === "heading"
-              ? Number(resolved.node.attrs.level)
-              : null,
-          textAlign: (resolved.node.attrs.textAlign ??
-            "left") as WikiNodeAlignment,
-          activeMarks,
-          inTextOnlyBlock: getWikiPositionRestrictions(
-            editor.state.doc,
-            resolved.position,
-          ).blocks,
-          ...target,
-        };
-      }
-
       if (element.matches("[data-wiki-callout]")) {
         const resolved = resolveWikiNodeFromElement(editor, element, [
           "wikiCallout",
@@ -381,6 +428,24 @@ export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
         });
       }
 
+      /**
+       * A text block's own NodeSelection (the gutter's drag handle
+       * creates one on dragstart) counts as "whole block selected": the
+       * menu shows through and after such drags, anchored to the whole
+       * block.
+       */
+      if (
+        selection instanceof NodeSelection &&
+        TEXT_MENU_NODE_TYPES.includes(selection.node.type.name)
+      ) {
+        const blockDom = editor.view.nodeDOM(selection.from);
+        if (!(blockDom instanceof HTMLElement)) return null;
+        return textMenu(editor, selection.node, selection.from, {
+          reference: blockDom,
+          key: targetKey(blockDom),
+        });
+      }
+
       if (editor.isActive("link")) {
         const domAtPos = editor.view.domAtPos(selection.from).node;
         const element =
@@ -394,6 +459,32 @@ export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
           reference: linkDom,
           key: `selection:${selection.from}`,
         };
+      }
+
+      /**
+       * Text selected inside a single paragraph/heading: the menu centers
+       * horizontally over the selection while keeping its vertical spot
+       * above the block. Selections spanning several blocks get no menu —
+       * the menu's actions target one block.
+       */
+      if (
+        selection instanceof TextSelection &&
+        !selection.empty &&
+        selection.$from.sameParent(selection.$to) &&
+        TEXT_MENU_NODE_TYPES.includes(selection.$from.parent.type.name)
+      ) {
+        const position = selection.$from.before();
+        const blockDom = editor.view.nodeDOM(position);
+        if (!(blockDom instanceof HTMLElement)) return null;
+        return textMenu(editor, selection.$from.parent, position, {
+          reference: selectionAnchor(
+            editor,
+            blockDom,
+            selection.from,
+            selection.to,
+          ),
+          key: targetKey(blockDom),
+        });
       }
 
       if (selection.empty && editor.isActive("wikiCallout")) {
@@ -421,9 +512,23 @@ export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
         return;
       }
 
+      const hoverMenu = hoveredElement ? menuFromElement(hoveredElement) : null;
+      const selectionMenu = menuFromSelection();
+
+      /**
+       * Hover wins — except when the hovered element merely contains the
+       * block a text selection lives in: selecting text inside a grid,
+       * callout, list or collapsible keeps the pointer inside that
+       * container, which would otherwise shadow the text menu there.
+       */
+      const textAnchor =
+        selectionMenu?.kind === "text"
+          ? menuAnchorElement(selectionMenu)
+          : null;
       const nextMenu =
-        (hoveredElement ? menuFromElement(hoveredElement) : null) ??
-        menuFromSelection();
+        hoveredElement && textAnchor && hoveredElement.contains(textAnchor)
+          ? selectionMenu
+          : (hoverMenu ?? selectionMenu);
 
       setMenu(nextMenu);
     };
@@ -514,7 +619,7 @@ export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
    * handler removes the current selection when `move` is set.
    */
   const startNodeDrag = (event: React.DragEvent<HTMLSpanElement>) => {
-    if (menu.kind === "link") return;
+    if (menu.kind === "link" || menu.kind === "text") return;
     const { view } = editor;
 
     let selection: NodeSelection;
@@ -623,40 +728,27 @@ export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
       .run();
   };
 
+  /**
+   * The text menu only exists while the selection is inside its block, so
+   * its commands run on the live selection (which also keeps the
+   * selection — and with it the menu — alive after a click): marks hit
+   * exactly the selected text, heading and alignment the block around it.
+   */
   const toggleTextHeading = (level: 1 | 2 | 3) => {
     if (menu.kind !== "text") return;
-    editor
-      .chain()
-      .focus()
-      .setTextSelection(menu.position + 1)
-      .toggleHeading({ level })
-      .run();
+    editor.chain().focus().toggleHeading({ level }).run();
   };
 
   const toggleTextMark = (
     name: (typeof TEXT_FORMAT_OPTIONS)[number]["name"],
   ) => {
     if (menu.kind !== "text") return;
-    toggleWikiTextFormat(
-      editor
-        .chain()
-        .focus()
-        .setTextSelection({
-          from: menu.position + 1,
-          to: menu.position + menu.nodeSize - 1,
-        }),
-      name,
-    );
+    toggleWikiTextFormat(editor.chain().focus(), name);
   };
 
   const setTextAlignment = (value: WikiNodeAlignment) => {
     if (menu.kind !== "text") return;
-    editor
-      .chain()
-      .focus()
-      .setTextSelection(menu.position + 1)
-      .setTextAlign(value)
-      .run();
+    editor.chain().focus().setTextAlign(value).run();
   };
 
   const removeCallout = () => {
@@ -713,7 +805,7 @@ export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
           </span>
 
           <div className="flex items-center gap-1 rounded-secondary border border-neutral-700 bg-neutral-900 p-1 shadow-lg">
-            {menu.kind !== "link" && (
+            {menu.kind !== "link" && menu.kind !== "text" && (
               <>
                 <span
                   draggable
