@@ -186,7 +186,7 @@ const gridCell = (...content: DemoNode[]): DemoNode => ({
 const grid = (
   columns: 2 | 3 | 4,
   cells: DemoNode[],
-  verticalAlign?: "center",
+  verticalAlign?: "center" | "stretch",
 ): DemoNode => ({
   type: "wikiGrid",
   attrs: { columns, ...(verticalAlign ? { verticalAlign } : {}) },
@@ -401,6 +401,28 @@ const documentContent: DemoNode = {
       gridCell(paragraph("3")),
       gridCell(paragraph("4")),
     ]),
+    grid(
+      2,
+      [
+        gridCell(
+          callout(
+            "blue",
+            paragraph(
+              "Hinweisboxen in einem gestreckten Raster enden auf gleicher Höhe.",
+            ),
+          ),
+        ),
+        gridCell(
+          callout(
+            "green",
+            paragraph(
+              "Auch wenn die Inhalte unterschiedlich lang sind: Diese Box hat deutlich mehr Text und bestimmt damit die Höhe der gesamten Zeile, an die sich die anderen Boxen anpassen.",
+            ),
+          ),
+        ),
+      ],
+      "stretch",
+    ),
 
     heading(1, "Hinweisboxen"),
     ...WIKI_CALLOUT_COLORS.map((color) =>

@@ -5,7 +5,7 @@ import type {
   WikiTextColor,
 } from "@sam-monorepo/wiki-editor";
 import type { Editor } from "@tiptap/react";
-import { FaBan } from "react-icons/fa";
+import { FaBan, FaLink } from "react-icons/fa";
 import { HighlightSwatches } from "../toolbar/HighlightSwatches";
 import { TextColorSwatches } from "../toolbar/TextColorSwatches";
 import {
@@ -19,6 +19,8 @@ import type { WikiTextSelectionMenuState } from "./wikiEditMenuState";
 interface Props {
   readonly editor: Editor;
   readonly menu: WikiTextSelectionMenuState;
+  /** Opens the link dialog (mounted by WikiCollabEditor) */
+  readonly onRequestLink: () => void;
 }
 
 /**
@@ -27,7 +29,11 @@ interface Props {
  * on the live selection: they hit exactly the selected text, and keeping
  * the selection keeps the menu alive after a click.
  */
-export const WikiTextSelectionMenuActions = ({ editor, menu }: Props) => {
+export const WikiTextSelectionMenuActions = ({
+  editor,
+  menu,
+  onRequestLink,
+}: Props) => {
   const toggleTextMark = (
     name: (typeof TEXT_FORMAT_OPTIONS)[number]["name"],
   ) => {
@@ -54,6 +60,14 @@ export const WikiTextSelectionMenuActions = ({ editor, menu }: Props) => {
           <Icon />
         </ToolbarButton>
       ))}
+
+      <ToolbarButton
+        title="Verlinken"
+        isActive={menu.hasLink}
+        onClick={onRequestLink}
+      >
+        <FaLink />
+      </ToolbarButton>
 
       <ToolbarDivider />
 

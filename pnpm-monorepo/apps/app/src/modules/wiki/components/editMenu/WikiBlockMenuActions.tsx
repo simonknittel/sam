@@ -1,8 +1,9 @@
 "use client";
 
+import type { WikiGridVerticalAlign } from "@sam-monorepo/wiki-editor";
 import type { Editor } from "@tiptap/react";
 import { FaTrash } from "react-icons/fa";
-import { MdVerticalAlignCenter } from "react-icons/md";
+import { MdHeight, MdVerticalAlignCenter } from "react-icons/md";
 import { ToolbarButton } from "../toolbar/ToolbarButton";
 import type { WikiBlockMenuState } from "./wikiEditMenuState";
 
@@ -16,14 +17,16 @@ interface Props {
  * tables, rulers, collapsibles, grids).
  */
 export const WikiBlockMenuActions = ({ editor, menu }: Props) => {
-  const toggleGridVerticalAlign = () => {
+  const toggleGridVerticalAlign = (
+    value: Exclude<WikiGridVerticalAlign, null>,
+  ) => {
     editor
       .chain()
       .command(({ tr }) => {
         tr.setNodeAttribute(
           menu.position,
           "verticalAlign",
-          menu.verticalAlign === "center" ? null : "center",
+          menu.verticalAlign === value ? null : value,
         );
         return true;
       })
@@ -41,13 +44,23 @@ export const WikiBlockMenuActions = ({ editor, menu }: Props) => {
   return (
     <>
       {menu.typeName === "wikiGrid" && (
-        <ToolbarButton
-          title="Inhalte vertikal zentrieren"
-          isActive={menu.verticalAlign === "center"}
-          onClick={toggleGridVerticalAlign}
-        >
-          <MdVerticalAlignCenter />
-        </ToolbarButton>
+        <>
+          <ToolbarButton
+            title="Inhalte vertikal zentrieren"
+            isActive={menu.verticalAlign === "center"}
+            onClick={() => toggleGridVerticalAlign("center")}
+          >
+            <MdVerticalAlignCenter />
+          </ToolbarButton>
+
+          <ToolbarButton
+            title="Inhalte auf gleiche Höhe strecken"
+            isActive={menu.verticalAlign === "stretch"}
+            onClick={() => toggleGridVerticalAlign("stretch")}
+          >
+            <MdHeight />
+          </ToolbarButton>
+        </>
       )}
 
       <ToolbarButton

@@ -1,13 +1,20 @@
 "use client";
 
 import type { ChainedCommands } from "@tiptap/core";
-import { FaBold, FaItalic, FaStrikethrough, FaUnderline } from "react-icons/fa";
+import {
+  FaBold,
+  FaCode,
+  FaItalic,
+  FaStrikethrough,
+  FaUnderline,
+} from "react-icons/fa";
 
 export const TEXT_FORMAT_OPTIONS = [
   { name: "bold", title: "Fett", icon: FaBold },
   { name: "italic", title: "Kursiv", icon: FaItalic },
   { name: "underline", title: "Unterstrichen", icon: FaUnderline },
   { name: "strike", title: "Durchgestrichen", icon: FaStrikethrough },
+  { name: "code", title: "Code", icon: FaCode },
 ] as const;
 
 /**
@@ -32,6 +39,10 @@ export const toggleWikiTextFormat = (
 
     case "strike":
       chain.toggleStrike().run();
+      break;
+
+    case "code":
+      chain.toggleCode().run();
       break;
 
     default:

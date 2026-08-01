@@ -45,7 +45,9 @@ export {
 } from "./wikiEmbedNode.js";
 export {
   WIKI_GRID_COLUMN_COUNTS,
+  WIKI_GRID_VERTICAL_ALIGNS,
   type WikiGridColumnCount,
+  type WikiGridVerticalAlign,
 } from "./wikiGridNodes.js";
 export { createWikiHeadingIdAssigner } from "./wikiHeadingIds.js";
 export {

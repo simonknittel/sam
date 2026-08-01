@@ -86,6 +86,8 @@ interface Props {
   readonly pageId: string;
   /** Opens the embed URL dialog (palette entry "Einbetten") */
   readonly onRequestEmbed: () => void;
+  /** Opens the link dialog (palette entry "Link") */
+  readonly onRequestLink: () => void;
 }
 
 /**
@@ -94,7 +96,12 @@ interface Props {
  * that only drags the block — all block actions live in the contextual
  * edit menu (WikiEditMenu).
  */
-export const WikiGutter = ({ editor, pageId, onRequestEmbed }: Props) => {
+export const WikiGutter = ({
+  editor,
+  pageId,
+  onRequestEmbed,
+  onRequestLink,
+}: Props) => {
   const [block, setBlock] = useState<HoveredBlock | null>(null);
   const [controlsHovered, setControlsHovered] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -201,6 +208,7 @@ export const WikiGutter = ({ editor, pageId, onRequestEmbed }: Props) => {
             block={block}
             pageId={pageId}
             onRequestEmbed={onRequestEmbed}
+            onRequestLink={onRequestLink}
             insertAboveRef={insertAboveRef}
             onClosePalette={closePalette}
           />
@@ -228,6 +236,7 @@ interface InsertBlockActionsProps {
   readonly block: HoveredBlock | null;
   readonly pageId: string;
   readonly onRequestEmbed: () => void;
+  readonly onRequestLink: () => void;
   readonly insertAboveRef: RefObject<boolean>;
   /** Releases the parent's palette state (lock, highlight) on insert */
   readonly onClosePalette: () => void;
@@ -246,6 +255,7 @@ const InsertBlockActions = ({
   block,
   pageId,
   onRequestEmbed,
+  onRequestLink,
   insertAboveRef,
   onClosePalette,
 }: InsertBlockActionsProps) => {
@@ -284,7 +294,7 @@ const InsertBlockActions = ({
     item.run(
       editor,
       { from: position + 1, to: position + 1 },
-      { pageId, onRequestEmbed },
+      { pageId, onRequestEmbed, onRequestLink },
     );
   };
 

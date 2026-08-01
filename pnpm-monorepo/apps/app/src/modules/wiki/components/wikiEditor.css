@@ -252,6 +252,22 @@
   align-content: center;
 }
 
+/*
+ * "stretch": the last block of each cell absorbs the extra height, so
+ * cells of a row visually end at the same bottom edge (e.g. callouts).
+ */
+.prose [data-wiki-grid][data-vertical-align="stretch"] > [data-wiki-grid-cell] {
+  display: flex;
+  flex-direction: column;
+}
+
+.prose
+  [data-wiki-grid][data-vertical-align="stretch"]
+  > [data-wiki-grid-cell]
+  > :last-child {
+  flex-grow: 1;
+}
+
 .prose [data-wiki-grid] > [data-wiki-grid-cell] > :first-child {
   margin-top: 0;
 }
@@ -523,6 +539,25 @@
 
 .prose [data-text-color="purple"] {
   color: var(--color-purple-400);
+}
+
+/* Inline code (code mark): subtle chip instead of the typography plugin's
+   default (which wraps inline code in literal backticks). Code blocks
+   (pre > code) are unaffected. */
+.prose :not(pre) > code {
+  background-color: color-mix(
+    in srgb,
+    var(--color-neutral-500) 25%,
+    transparent
+  );
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.25rem;
+  font-weight: 400;
+}
+
+.prose :not(pre) > code::before,
+.prose :not(pre) > code::after {
+  content: none;
 }
 
 /* Presence carets of other collaborators (CollaborationCaret extension) */
