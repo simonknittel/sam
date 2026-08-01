@@ -305,18 +305,14 @@
 }
 
 /*
- * Embeds: YouTube (extension), Twitch/Spotify/Google (wikiEmbed node) and
- * allowlisted generic iframes (wikiIframe node)
+ * Embeds (wikiEmbed node): YouTube/Twitch/Spotify/Google players and
+ * allowlisted generic iframes (provider "iframe")
  */
-.prose [data-youtube-video],
-.prose [data-wiki-embed],
-.prose [data-wiki-iframe] {
+.prose [data-wiki-embed] {
   margin-block: 1.25em;
 }
 
-.prose [data-youtube-video] iframe,
-.prose [data-wiki-embed] iframe,
-.prose [data-wiki-iframe] iframe {
+.prose [data-wiki-embed] iframe {
   display: block;
   width: 100%;
   border: 0;
@@ -328,18 +324,17 @@
  * Height lives on the wrapper: the heightPx attribute renders an inline
  * height there, which overrides this default; the iframe follows.
  */
-.prose [data-wiki-iframe] {
+.prose [data-wiki-embed][data-provider="iframe"] {
   height: 480px;
 }
 
-.prose [data-wiki-iframe] iframe {
+.prose [data-wiki-embed][data-provider="iframe"] iframe {
   height: 100%;
 }
 
-.prose [data-youtube-video] iframe,
+.prose [data-wiki-embed][data-provider="youtube"] iframe,
 .prose [data-wiki-embed][data-provider="twitch"] iframe {
   aspect-ratio: 16 / 9;
-  height: auto;
 }
 
 .prose [data-wiki-embed][data-provider="spotify"] iframe {
@@ -373,13 +368,7 @@
  * menu); the selected embed is fully interactive.
  */
 .tiptap[contenteditable="true"]
-  [data-youtube-video]:not(.ProseMirror-selectednode)
-  iframe,
-.tiptap[contenteditable="true"]
   [data-wiki-embed]:not(.ProseMirror-selectednode)
-  iframe,
-.tiptap[contenteditable="true"]
-  [data-wiki-iframe]:not(.ProseMirror-selectednode)
   iframe {
   pointer-events: none;
 }

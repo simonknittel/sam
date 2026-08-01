@@ -1,57 +1,83 @@
 "use client";
 
 import { normalizeWikiEmbedUrl } from "@sam-monorepo/wiki-editor";
+import { NodeSelection } from "@tiptap/pm/state";
 import type { Editor } from "@tiptap/react";
 import { unstable_rethrow } from "next/navigation";
 import toast from "react-hot-toast";
 import { validateWikiIframeSrc } from "../actions/validateWikiIframeSrc";
 
+interface PreviousEmbedLayout {
+  readonly provider: unknown;
+  readonly widthPx: number | null;
+  readonly heightPx: number | null;
+  readonly align: "center" | "right" | null;
+}
+
 /**
- * Inserts a YouTube/Twitch/Spotify/Google embed for the given URL at the
- * current selection (replacing a selected node). Shows a toast and returns
- * false when the URL is not supported.
+ * Layout attributes of the embed node the insert is about to replace (the
+ * edit menu selects the node before calling), so a URL update keeps the
+ * node's size and alignment.
  */
-export const insertWikiEmbedFromUrl = (
-  editor: Editor,
-  url: string,
-): boolean => {
-  const trimmed = url.trim();
-
-  if (/(?:youtube\.com|youtu\.be)\//.test(trimmed)) {
-    const inserted = editor
-      .chain()
-      .focus()
-      .setYoutubeVideo({ src: trimmed })
-      .run();
-    if (!inserted) toast.error("Diese YouTube-URL wird nicht unterstützt.");
-    return inserted;
-  }
-
-  const normalized = normalizeWikiEmbedUrl(trimmed);
-  if (!normalized) {
-    toast.error(
-      "Diese URL wird nicht unterstützt. Möglich sind YouTube, Twitch, Spotify und Google Docs/Tabellen/Präsentationen.",
-    );
-    return false;
-  }
-
-  return editor.chain().focus().setWikiEmbed(normalized).run();
+const getReplacedEmbedLayout = (editor: Editor): PreviousEmbedLayout | null => {
+  const { selection } = editor.state;
+  if (!(selection instanceof NodeSelection)) return null;
+  if (selection.node.type.name !== "wikiEmbed") return null;
+  const attrs: Record<string, unknown> = selection.node.attrs;
+  return {
+    provider: attrs.provider,
+    widthPx: typeof attrs.widthPx === "number" ? attrs.widthPx : null,
+    heightPx: typeof attrs.heightPx === "number" ? attrs.heightPx : null,
+    align:
+      attrs.align === "center" || attrs.align === "right" ? attrs.align : null,
+  };
 };
 
 /**
- * Validates a generic iframe URL against the domain allowlist (server
- * action) and inserts it at the current selection (replacing a selected
- * node). Shows a toast and returns false when rejected.
+ * Generic iframes size differently than the players (free height vs. fixed
+ * height/aspect ratio), so the layout only carries over while the update
+ * stays on the same side of that boundary.
  */
-export const insertWikiIframeFromUrl = async (
+const withPreviousLayout = <T extends { readonly provider: string }>(
+  attributes: T,
+  previous: PreviousEmbedLayout | null,
+): T => {
+  if (!previous) return attributes;
+  if ((previous.provider === "iframe") !== (attributes.provider === "iframe"))
+    return attributes;
+  return {
+    ...attributes,
+    widthPx: previous.widthPx,
+    heightPx: previous.heightPx,
+    align: previous.align,
+  };
+};
+
+/**
+ * Inserts an embed for the given URL at the current selection (replacing a
+ * selected node). YouTube/Twitch/Spotify/Google URLs are recognized by
+ * their fixed patterns and get their dedicated player; any other URL falls
+ * back to a generic iframe, validated against the domain allowlist through
+ * a server action. Shows a toast and returns false when rejected.
+ */
+export const insertWikiEmbedFromUrl = async (
   editor: Editor,
   url: string,
 ): Promise<boolean> => {
-  const src = url.trim();
+  const trimmed = url.trim();
+  const previous = getReplacedEmbedLayout(editor);
+
+  const normalized = normalizeWikiEmbedUrl(trimmed);
+  if (normalized)
+    return editor
+      .chain()
+      .focus()
+      .setWikiEmbed(withPreviousLayout(normalized, previous))
+      .run();
 
   try {
     const formData = new FormData();
-    formData.set("src", src);
+    formData.set("src", trimmed);
     const response = await validateWikiIframeSrc(formData);
     if ("error" in response) {
       toast.error(response.error);
@@ -66,5 +92,14 @@ export const insertWikiIframeFromUrl = async (
     return false;
   }
 
-  return editor.chain().focus().setWikiIframe({ src }).run();
+  return editor
+    .chain()
+    .focus()
+    .setWikiEmbed(
+      withPreviousLayout(
+        { provider: "iframe" as const, src: trimmed },
+        previous,
+      ),
+    )
+    .run();
 };

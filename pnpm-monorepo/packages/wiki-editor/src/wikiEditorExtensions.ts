@@ -26,10 +26,9 @@ import {
   WikiGridCell,
 } from "./wikiGridNodes.js";
 import { WikiHeadingIds } from "./wikiHeadingIds.js";
-import { WikiIframe } from "./wikiIframeNode.js";
 import { WikiPageIndex } from "./wikiPageIndexNode.js";
 import { WikiPageLink, type WikiPageLinkedPage } from "./wikiPageLinkNode.js";
-import { WikiImage, WikiYoutube } from "./wikiResizableNodes.js";
+import { WikiImage } from "./wikiResizableNodes.js";
 import { WikiTextColorMark } from "./wikiTextColorMark.js";
 import {
   WikiBlockquote,
@@ -146,14 +145,9 @@ export const getWikiEditorExtensions = (
     WikiTextOnlyBlockGuard,
     WikiImage,
     WikiAttachment,
-    WikiYoutube.configure({
-      nocookie: true,
-    }),
     WikiEmbed.configure({
       twitchParentHost: options?.twitchParentHost ?? "",
-    }),
-    WikiIframe.configure({
-      allowlist: options?.iframeAllowlist ?? [],
+      iframeAllowlist: options?.iframeAllowlist ?? [],
     }),
     WikiPageLink.configure({
       pages: options?.pages ?? {},

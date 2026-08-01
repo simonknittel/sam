@@ -3,8 +3,8 @@
 import { autoUpdate } from "@floating-ui/react-dom";
 import {
   clampWikiIframeHeightPx,
-  clampWikiWidthPercent,
-  WIKI_HEIGHT_RESIZABLE_NODE_TYPES,
+  clampWikiWidthPx,
+  isWikiHeightResizable,
   WIKI_RESIZABLE_NODE_TYPES,
 } from "@sam-monorepo/wiki-editor";
 import { NodeSelection } from "@tiptap/pm/state";
@@ -20,7 +20,7 @@ interface DragState {
   startHeight: number;
   containerWidth: number;
   element: HTMLElement;
-  /** Pending attribute value: widthPercent (left/right) or heightPx (bottom) */
+  /** Pending attribute value: widthPx (left/right) or heightPx (bottom) */
   value: number;
   position: number;
 }
@@ -28,27 +28,14 @@ interface DragState {
 interface ResizeTarget {
   /** Document position of the node */
   readonly position: number;
-  readonly nodeTypeName: string;
+  /** Whether the node gets the bottom height handle (generic iframe) */
+  readonly heightResizable: boolean;
   /** Rect of the visual element, relative to the overlay */
   readonly left: number;
   readonly top: number;
   readonly width: number;
   readonly height: number;
 }
-
-/**
- * The element carrying the widthPercent inline style: the img itself, the
- * youtube iframe (the extension renders attributes onto it), or the
- * embed/iframe wrapper div.
- */
-const getStyledElement = (
-  nodeTypeName: string,
-  nodeDom: HTMLElement,
-): HTMLElement => {
-  if (nodeTypeName === "youtube")
-    return nodeDom.querySelector("iframe") ?? nodeDom;
-  return nodeDom;
-};
 
 /** Thickness of the visual handle bar (w-1.5/h-1.5) */
 const HANDLE_WIDTH = 6;
@@ -71,7 +58,7 @@ interface Props {
  * Drag handles on the edges of the hovered (or, on touch devices,
  * selected) resizable node: left/right for the width on all resizable
  * nodes, bottom for the height on the generic iframe. Dragging previews
- * the size on the DOM and commits it as `widthPercent`/`heightPx` on
+ * the size on the DOM and commits it as `widthPx`/`heightPx` on
  * release. The hitboxes overlap the element's edges, so the pointer never
  * leaves the hover containment (see WikiEditorOverlays) on its way to a
  * handle.
@@ -109,7 +96,8 @@ export const WikiResizeHandles = ({
        * The hovered node wins; a node-selected node (tap on touch
        * devices) is the fallback.
        */
-      let resolved: { position: number; nodeTypeName: string } | null = null;
+      let resolved: { position: number; heightResizable: boolean } | null =
+        null;
       let nodeDom: HTMLElement | null = null;
 
       if (hoveredElement) {
@@ -121,7 +109,10 @@ export const WikiResizeHandles = ({
         if (hovered) {
           resolved = {
             position: hovered.position,
-            nodeTypeName: hovered.node.type.name,
+            heightResizable: isWikiHeightResizable(
+              hovered.node.type.name,
+              hovered.node.attrs.provider,
+            ),
           };
           nodeDom = hoveredElement;
         }
@@ -139,7 +130,10 @@ export const WikiResizeHandles = ({
           if (dom instanceof HTMLElement) {
             resolved = {
               position: selection.from,
-              nodeTypeName: selection.node.type.name,
+              heightResizable: isWikiHeightResizable(
+                selection.node.type.name,
+                selection.node.attrs.provider,
+              ),
             };
             nodeDom = dom;
           }
@@ -151,8 +145,8 @@ export const WikiResizeHandles = ({
         return;
       }
 
-      const { position, nodeTypeName } = resolved;
-      const element = getStyledElement(nodeTypeName, nodeDom);
+      const { position, heightResizable } = resolved;
+      const element = nodeDom;
 
       const measure = () => {
         if (dragStateRef.current) return;
@@ -160,7 +154,7 @@ export const WikiResizeHandles = ({
         const overlayRect = overlay.getBoundingClientRect();
         setTarget({
           position,
-          nodeTypeName,
+          heightResizable,
           left: rect.left - overlayRect.left,
           top: rect.top - overlayRect.top,
           width: rect.width,
@@ -185,9 +179,8 @@ export const WikiResizeHandles = ({
     event: React.PointerEvent,
   ) => {
     if (!editor || !target) return;
-    const nodeDom = editor.view.nodeDOM(target.position);
-    if (!(nodeDom instanceof HTMLElement)) return;
-    const element = getStyledElement(target.nodeTypeName, nodeDom);
+    const element = editor.view.nodeDOM(target.position);
+    if (!(element instanceof HTMLElement)) return;
     const containerWidth =
       element.parentElement?.clientWidth ?? editor.view.dom.clientWidth;
     if (side !== "bottom" && containerWidth <= 0) return;
@@ -206,7 +199,7 @@ export const WikiResizeHandles = ({
       value:
         side === "bottom"
           ? clampWikiIframeHeightPx(startRect.height)
-          : clampWikiWidthPercent((startRect.width / containerWidth) * 100),
+          : Math.min(containerWidth, clampWikiWidthPx(startRect.width)),
       position: target.position,
     };
 
@@ -223,10 +216,16 @@ export const WikiResizeHandles = ({
         const width =
           dragState.startWidth +
           (moveEvent.clientX - dragState.startX) * direction;
-        dragState.value = clampWikiWidthPercent(
-          (width / dragState.containerWidth) * 100,
+        /**
+         * The stored width is absolute but never exceeds the content
+         * column it was dragged in — narrower viewports cap it via the
+         * attribute's max-width.
+         */
+        dragState.value = Math.min(
+          dragState.containerWidth,
+          clampWikiWidthPx(width),
         );
-        dragState.element.style.width = `${dragState.value}%`;
+        dragState.element.style.width = `${dragState.value}px`;
       }
 
       const overlay = overlayRef.current;
@@ -259,7 +258,7 @@ export const WikiResizeHandles = ({
         .command(({ tr }) => {
           tr.setNodeAttribute(
             dragState.position,
-            dragState.side === "bottom" ? "heightPx" : "widthPercent",
+            dragState.side === "bottom" ? "heightPx" : "widthPx",
             dragState.value,
           );
           return true;
@@ -272,10 +271,6 @@ export const WikiResizeHandles = ({
   };
 
   if (!editor || !target) return null;
-
-  const heightResizable = (
-    WIKI_HEIGHT_RESIZABLE_NODE_TYPES as readonly string[]
-  ).includes(target.nodeTypeName);
 
   const barHeight = Math.min(48, Math.max(24, target.height / 3));
   const barWidth = Math.min(48, Math.max(24, target.width / 3));
@@ -312,7 +307,7 @@ export const WikiResizeHandles = ({
       >
         <div className={barClassName} style={{ height: barHeight }} />
       </div>
-      {heightResizable && (
+      {target.heightResizable && (
         <div
           role="separator"
           aria-label="Höhe ändern"

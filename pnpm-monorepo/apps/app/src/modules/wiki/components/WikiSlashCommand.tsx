@@ -18,6 +18,7 @@ import {
   FaMinus,
   FaPaperclip,
   FaParagraph,
+  FaPhotoVideo,
   FaQuoteRight,
   FaSitemap,
   FaTable,
@@ -29,6 +30,7 @@ import {
   WIKI_ATTACHMENT_ACCEPT,
   WIKI_IMAGE_ACCEPT,
 } from "./wikiEditorFiles";
+import { openWikiEmbedModal } from "./WikiEmbedUrlModal";
 import { createWikiSuggestionRender } from "./WikiSuggestionMenu";
 
 export interface WikiSlashCommandOptions {
@@ -188,6 +190,26 @@ export const WIKI_SLASH_COMMAND_ITEMS: readonly WikiSlashCommandItem[] = [
         for (const file of files)
           void insertWikiFile(editor, options.pageId, file);
       });
+    },
+  },
+  {
+    title: "Einbetten",
+    icon: <FaPhotoVideo />,
+    keywords: [
+      "einbetten",
+      "embed",
+      "youtube",
+      "twitch",
+      "spotify",
+      "google",
+      "iframe",
+      "video",
+      "website",
+    ],
+    /** The URL dialog is mounted by WikiEditorOverlays */
+    run: (editor, range) => {
+      editor.chain().focus().deleteRange(range).run();
+      openWikiEmbedModal();
     },
   },
   {

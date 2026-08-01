@@ -53,15 +53,12 @@ import {
   setWikiActiveNodeHighlight,
   type WikiHighlightRange,
 } from "./WikiActiveNodeHighlight";
-import {
-  insertWikiEmbedFromUrl,
-  insertWikiIframeFromUrl,
-} from "./wikiEditorEmbeds";
+import { insertWikiEmbedFromUrl } from "./wikiEditorEmbeds";
 import { resolveWikiNodeFromElement } from "./wikiEditorHover";
 import { WikiPageIndexConfigModal } from "./WikiPageIndexConfigModal";
 
 /** Node types with an editable src URL */
-const URL_NODE_TYPES = ["youtube", "wikiEmbed", "wikiIframe"];
+const URL_NODE_TYPES = ["wikiEmbed"];
 const MENU_NODE_TYPES = [
   ...URL_NODE_TYPES,
   "image",
@@ -763,15 +760,11 @@ export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
   const saveNodeUrl = (url: string) => {
     if (menu.kind !== "node") return;
     /**
-     * Select the node first — the insert helpers replace the current
+     * Select the node first — the insert helper replaces the current
      * selection.
      */
     editor.commands.setNodeSelection(menu.position);
-    if (menu.typeName === "wikiIframe") {
-      void insertWikiIframeFromUrl(editor, url);
-      return;
-    }
-    insertWikiEmbedFromUrl(editor, url);
+    void insertWikiEmbedFromUrl(editor, url);
   };
 
   const saveLink = (href: string) => {
