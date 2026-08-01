@@ -2,6 +2,7 @@ import { prisma } from "@/db";
 import { env } from "@/env";
 import { authenticate, requireAuthenticationPage } from "@/modules/auth/server";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
+import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { EditableInput } from "@/modules/common/components/form/EditableInput";
 import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout";
 import { Link } from "@/modules/common/components/Link";
@@ -240,6 +241,13 @@ const PageContent = async ({
           <p className="mt-1 text-xs text-white/20">
             <span className="uppercase font-mono">Aktualisiert:</span>{" "}
             {formatDate(page.updatedAt)}
+            {effectiveOwner && (
+              <>
+                {" · "}
+                <span className="uppercase font-mono">Besitzer:</span>{" "}
+                <CitizenLink citizen={effectiveOwner} />
+              </>
+            )}
           </p>
         </div>
 
