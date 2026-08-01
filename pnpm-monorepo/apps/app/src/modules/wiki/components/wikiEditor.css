@@ -351,10 +351,10 @@
 }
 
 /*
- * Light wash over the hovered top-level block, so it's clear which node
- * the gutter affects.
+ * Light wash over the block the gutter or the contextual edit menu
+ * currently targets, so it's clear which node their actions affect.
  */
-.tiptap .wiki-gutter-highlight {
+.tiptap .wiki-active-node-highlight {
   background-color: rgb(255 255 255 / 0.06);
   border-radius: var(--radius-secondary);
 }

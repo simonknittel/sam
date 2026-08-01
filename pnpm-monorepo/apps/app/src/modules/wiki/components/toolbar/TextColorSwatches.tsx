@@ -29,10 +29,7 @@ interface Props {
   readonly onSelect: (color: WikiTextColor) => void;
 }
 
-/**
- * The text color swatch row shared by the toolbar's TextColorPicker and
- * the contextual edit menu.
- */
+/** The text color swatch row of the contextual edit menu. */
 export const TextColorSwatches = ({ activeColor = null, onSelect }: Props) => {
   return (
     <>
