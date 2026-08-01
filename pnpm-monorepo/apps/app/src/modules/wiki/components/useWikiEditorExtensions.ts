@@ -11,6 +11,7 @@ import { getWikiTwitchParentHost } from "../utils/getWikiTwitchParentHost";
 import { WikiActiveNodeHighlight } from "./WikiActiveNodeHighlight";
 import { withWikiCitizenMentionPopover } from "./WikiCitizenMentionNodeView";
 import { WikiCitizenMentionSuggestion } from "./WikiCitizenMentionSuggestion";
+import { WikiDetailsSummaryToggle } from "./WikiDetailsSummaryToggle";
 import { createWikiFileHandler } from "./wikiEditorFiles";
 import { WikiNodeClickSelection } from "./WikiNodeClickSelection";
 import { withWikiPageIndexNodeView } from "./WikiPageIndexNodeView";
@@ -55,6 +56,7 @@ export const useWikiEditorExtensions = ({
       ),
       pageId,
     ),
+    WikiDetailsSummaryToggle,
     ...(interactive
       ? [
           WikiSlashCommand.configure({ pageId }),

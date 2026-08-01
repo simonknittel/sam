@@ -88,81 +88,122 @@
  * Collapsible sections. The static render emits a native <details>, the
  * editor a custom node view (div[data-type="details"] with a toggle
  * button) — both get identical geometry so nothing shifts when the editor
- * takes over from the static first paint: an absolutely positioned 1.25rem
- * toggle slot and the content column starting at 1.5rem.
+ * takes over from the static first paint: the summary is a padded header
+ * row with an icon slot spanning its first text line, and the content
+ * column starting at 2.25rem.
  */
 .prose details,
 .tiptap [data-type="details"] {
   position: relative;
-  padding-left: 1.5rem;
   margin-block: 1.25em;
 }
 
+/* Header row — .prose summary also matches the editor (its root has .prose) */
 .prose summary {
   display: block;
   font-weight: 700;
-  cursor: pointer;
   list-style: none;
+  padding: 0.375rem 0.75rem 0.375rem 2.25rem;
+  border-radius: var(--radius-secondary);
 }
 
 .prose summary::-webkit-details-marker {
   display: none;
 }
 
-/* Static render: arrow in the toggle slot via ::before */
-.prose details > summary::before {
-  content: "\25B8";
-  position: absolute;
-  left: 0;
-  top: 0.125em;
-  width: 1.25rem;
-  height: 1.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-secondary);
-  color: var(--color-neutral-400);
+/*
+ * Wherever the render is read-only the whole header row toggles: natively
+ * in the static render, via WikiDetailsSummaryToggle in the editor. The
+ * node view's toggle button only spans the icon slot, so it is taken out
+ * of hit testing there (it stays keyboard-focusable) and the row gets the
+ * hover feedback. While editing, clicks on the header must place the
+ * cursor instead, so only the button toggles.
+ */
+.prose details > summary,
+.tiptap[contenteditable="false"] [data-type="details"] > div > summary {
+  cursor: pointer;
+}
+
+.prose details > summary:hover,
+.tiptap[contenteditable="false"] [data-type="details"] > div > summary:hover {
+  background-color: var(--color-neutral-800);
 }
 
 .prose details > summary:hover::before {
-  background-color: var(--color-neutral-800);
-  color: var(--color-neutral-200);
+  color: var(--color-interaction-300);
 }
 
-.prose details[open] > summary::before {
-  content: "\25BE";
+.tiptap[contenteditable="false"] [data-type="details"] > button {
+  pointer-events: none;
 }
 
-/* Editor: real toggle button in the same slot */
+.tiptap[contenteditable="false"]
+  [data-type="details"]:has(> div > summary:hover)
+  > button {
+  color: var(--color-interaction-300);
+}
+
+/*
+ * Icon slot: covers the whole area left of the title text — up to the
+ * 2.25rem text indent and the header's first line incl. its 0.375rem
+ * paddings — so the editing toggle button gets a generous hit area. The
+ * glyph centers on the first text line either way.
+ */
+.prose details > summary::before,
 .tiptap [data-type="details"] > button {
   position: absolute;
   left: 0;
-  top: 0.125em;
-  width: 1.25rem;
-  height: 1.25rem;
+  top: 0;
+  width: 2.25rem;
+  height: calc(1lh + 0.75rem);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-secondary);
-  cursor: pointer;
   color: var(--color-neutral-400);
 }
 
-.tiptap [data-type="details"] > button:hover {
-  background-color: var(--color-neutral-800);
-  color: var(--color-neutral-200);
+.tiptap [data-type="details"] > button {
+  /* Buttons don't inherit fonts — needed for the 1lh slot height above */
+  font: inherit;
 }
 
+.prose details > summary::before,
 .tiptap [data-type="details"] > button::before {
   content: "\25B8";
+  /* Scaling instead of font-size keeps the slot height at the line height */
+  scale: 1.6;
 }
 
+.prose details[open] > summary::before,
 .tiptap [data-type="details"].is-open > button::before {
   content: "\25BE";
 }
 
+/* Editor while editing: the button is the (only) toggle */
+.tiptap[contenteditable="true"] [data-type="details"] > button {
+  cursor: pointer;
+  border-radius: var(--radius-secondary);
+}
+
+.tiptap[contenteditable="true"] [data-type="details"] > button:hover {
+  background-color: var(--color-neutral-800);
+  color: var(--color-interaction-300);
+}
+
+.prose summary:focus-visible,
+.tiptap [data-type="details"] > button:focus-visible {
+  outline: 2px solid var(--color-interaction-500);
+  outline-offset: 2px;
+}
+
 .tiptap [data-type="details"] > div {
   min-width: 0;
+}
+
+/* Content column aligns with the header text */
+.prose details > [data-type="detailsContent"],
+.tiptap [data-type="details"] > div > [data-type="detailsContent"] {
+  padding-left: 2.25rem;
 }
 
 /*
