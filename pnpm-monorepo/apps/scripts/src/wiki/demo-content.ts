@@ -229,16 +229,7 @@ const documentContent: DemoNode = {
   type: "doc",
   content: [
     paragraph(
-      "Diese Seite demonstriert alle Formatierungsoptionen des Wikis — als Anleitung für Autoren und als manueller Regressionstest: Jeder Inhaltstyp wird einmal im Editor und in der statischen Ansicht gerendert.",
-    ),
-    callout(
-      "yellow",
-      paragraph(
-        text("Hinweis: ", mark("bold")),
-        "Diese Seite wurde mit dem Skript ",
-        text("apps/scripts/src/wiki/demo-content.ts", mark("code")),
-        " generiert. Verweise auf echte Datensätze (Seiten, Citizen, Uploads, Tags, Google-Dokument) sind Platzhalter und müssen nach dem Import ersetzt werden.",
-      ),
+      "Diese Seite zeigt alle Formatierungsoptionen des Wikis im Überblick.",
     ),
 
     heading(1, "Überschriften"),
@@ -438,16 +429,13 @@ const documentContent: DemoNode = {
     heading(2, "YouTube"),
     {
       type: "youtube",
-      attrs: { src: "https://www.youtube.com/watch?v=jNQXAC9IVRw" },
+      attrs: { src: "https://www.youtube.com/watch?v=v0Ufvgr8sTI" },
     },
     heading(2, "Twitch"),
     embed("twitch", "https://www.twitch.tv/starcitizen"),
     heading(2, "Spotify"),
     embed("spotify", "https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC"),
     heading(2, "Google Docs"),
-    paragraph(
-      "Google zeigt einen Fehlerrahmen, bis die Dokument-ID auf ein öffentlich lesbares Dokument zeigt.",
-    ),
     embed(
       "google",
       `https://docs.google.com/document/d/${flags["google-doc-id"]}/edit`,
@@ -493,9 +481,7 @@ const documentContent: DemoNode = {
         matchMode: "all",
       },
     },
-    paragraph(
-      "Oder alle Seiten mit bestimmten Tags (Tag-Modus; ohne konfigurierte Tags erscheint „Keine Seiten“):",
-    ),
+    paragraph("Oder alle Seiten mit bestimmten Tags (Tag-Modus):"),
     {
       type: "wikiPageIndex",
       attrs: {
