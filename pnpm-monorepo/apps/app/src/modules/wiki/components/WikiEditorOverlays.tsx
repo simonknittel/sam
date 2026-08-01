@@ -1,13 +1,9 @@
 "use client";
 
 import type { Editor } from "@tiptap/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef } from "react";
 import { WikiEditMenu } from "./WikiEditMenu";
 import { useWikiHoveredElement } from "./wikiEditorHover";
-import {
-  WIKI_OPEN_EMBED_MODAL_EVENT,
-  WikiEmbedUrlModal,
-} from "./WikiEmbedUrlModal";
 import { WikiResizeHandles } from "./WikiResizeHandles";
 import { WikiTableControls } from "./WikiTableControls";
 
@@ -58,7 +54,6 @@ interface Props {
 export const WikiEditorOverlays = ({ editor }: Props) => {
   const overlayRef = useRef<HTMLDivElement>(null);
   const dragLockRef = useRef(false);
-  const [embedModalOpen, setEmbedModalOpen] = useState(false);
 
   const hoveredElement = useWikiHoveredElement(editor, HOVER_SELECTOR, {
     overlayRef,
@@ -67,13 +62,6 @@ export const WikiEditorOverlays = ({ editor }: Props) => {
 
   const setDragLock = useCallback((locked: boolean) => {
     dragLockRef.current = locked;
-  }, []);
-
-  /** The palettes' "Einbetten" entry requests the dialog, see openWikiEmbedModal */
-  useEffect(() => {
-    const open = () => setEmbedModalOpen(true);
-    window.addEventListener(WIKI_OPEN_EMBED_MODAL_EVENT, open);
-    return () => window.removeEventListener(WIKI_OPEN_EMBED_MODAL_EVENT, open);
   }, []);
 
   return (
@@ -90,13 +78,6 @@ export const WikiEditorOverlays = ({ editor }: Props) => {
         overlayRef={overlayRef}
       />
       <WikiEditMenu editor={editor} hoveredElement={hoveredElement} />
-
-      {editor && embedModalOpen && (
-        <WikiEmbedUrlModal
-          editor={editor}
-          onRequestClose={() => setEmbedModalOpen(false)}
-        />
-      )}
     </div>
   );
 };

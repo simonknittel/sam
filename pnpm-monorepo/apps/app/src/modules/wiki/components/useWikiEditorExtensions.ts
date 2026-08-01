@@ -26,6 +26,8 @@ interface Options {
   readonly collaboration?: boolean;
   /** Include the editing helpers (slash menu, suggestions, uploads)? */
   readonly interactive: boolean;
+  /** Opens the embed URL dialog (palette entry "Einbetten") */
+  readonly onRequestEmbed: () => void;
 }
 
 /**
@@ -40,6 +42,7 @@ export const useWikiEditorExtensions = ({
   mentionedCitizens,
   collaboration = false,
   interactive,
+  onRequestEmbed,
 }: Options): AnyExtension[] => {
   const trpcUtils = api.useUtils();
 
@@ -59,7 +62,7 @@ export const useWikiEditorExtensions = ({
     WikiDetailsSummaryToggle,
     ...(interactive
       ? [
-          WikiSlashCommand.configure({ pageId }),
+          WikiSlashCommand.configure({ pageId, onRequestEmbed }),
           WikiPageLinkSuggestion.configure({ pages: linkablePages }),
           WikiCitizenMentionSuggestion.configure({
             fetchCitizens: () => trpcUtils.citizens.getAllCitizens.ensureData(),

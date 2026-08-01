@@ -17,6 +17,8 @@ interface Props {
   /** Right end of the toolbar row: save state or collab status dot */
   readonly statusSlot: ReactNode;
   readonly staticFallback: ReactNode;
+  /** Opens the embed URL dialog (gutter palette entry "Einbetten") */
+  readonly onRequestEmbed: () => void;
 }
 
 /**
@@ -31,6 +33,7 @@ export const WikiEditorLayout = ({
   editor,
   statusSlot,
   staticFallback,
+  onRequestEmbed,
 }: Props) => {
   return (
     <div className={clsx(className)}>
@@ -46,7 +49,13 @@ export const WikiEditorLayout = ({
         <div className={clsx("relative", { "mt-4": isEditing })}>
           <EditorContent editor={editor} />
           {isEditing && <WikiEditorOverlays editor={editor} />}
-          {isEditing && <WikiGutter editor={editor} pageId={pageId} />}
+          {isEditing && (
+            <WikiGutter
+              editor={editor}
+              pageId={pageId}
+              onRequestEmbed={onRequestEmbed}
+            />
+          )}
         </div>
       ) : (
         <div className={clsx({ "mt-4 min-h-[50vh] pl-12": isEditing })}>

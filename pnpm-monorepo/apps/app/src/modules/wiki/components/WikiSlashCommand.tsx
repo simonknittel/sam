@@ -30,12 +30,13 @@ import {
   WIKI_ATTACHMENT_ACCEPT,
   WIKI_IMAGE_ACCEPT,
 } from "./wikiEditorFiles";
-import { openWikiEmbedModal } from "./WikiEmbedUrlModal";
 import { createWikiSuggestionRender } from "./WikiSuggestionMenu";
 
 export interface WikiSlashCommandOptions {
   /** Id of the page being edited — target for file uploads */
   pageId: string;
+  /** Opens the embed URL dialog (mounted by WikiCollabEditor) */
+  onRequestEmbed: () => void;
 }
 
 export interface WikiSlashCommandItem {
@@ -206,10 +207,9 @@ export const WIKI_SLASH_COMMAND_ITEMS: readonly WikiSlashCommandItem[] = [
       "video",
       "website",
     ],
-    /** The URL dialog is mounted by WikiEditorOverlays */
-    run: (editor, range) => {
+    run: (editor, range, options) => {
       editor.chain().focus().deleteRange(range).run();
-      openWikiEmbedModal();
+      options.onRequestEmbed();
     },
   },
   {
@@ -292,6 +292,7 @@ export const WikiSlashCommand = Extension.create<WikiSlashCommandOptions>({
   addOptions() {
     return {
       pageId: "",
+      onRequestEmbed: () => undefined,
     };
   },
 
