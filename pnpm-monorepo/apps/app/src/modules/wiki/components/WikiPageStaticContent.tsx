@@ -1,6 +1,7 @@
 import {
   createWikiHeadingIdAssigner,
   getWikiEditorExtensions,
+  isWikiPageContentEmpty,
   resolveWikiCitizenMention,
   wikiPageIndexConfigKey,
   type WikiMentionedCitizen,
@@ -122,11 +123,16 @@ export const WikiPageStaticContent = ({
   mentionedCitizens,
   pageIndexes = {},
 }: Props) => {
-  if (!content)
+  // Covers docs emptied in the editor too (one empty paragraph, not null)
+  if (!content || isWikiPageContentEmpty(content))
     return (
-      <p className={clsx("text-neutral-400", className)}>
-        Diese Seite hat noch keinen Inhalt.
-      </p>
+      <div className={clsx("prose prose-invert max-w-none", className)}>
+        {/* Same box as the editor's empty paragraph + Placeholder, so the
+            swap to the connected editor doesn't shift the page */}
+        <p className="text-center text-neutral-500">
+          Diese Seite hat noch keinen Inhalt.
+        </p>
+      </div>
     );
 
   const rendered = renderWikiPageContent(

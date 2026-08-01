@@ -1,10 +1,12 @@
-/* Placeholder for the empty editor (Tiptap Placeholder extension) */
+/* Placeholder for the empty editor (Tiptap Placeholder extension).
+   height: 0 keeps the caret on the same line as the centered text. */
 .tiptap p.is-editor-empty:first-child::before {
   color: var(--color-neutral-500);
   content: attr(data-placeholder);
-  float: left;
+  display: block;
   height: 0;
   pointer-events: none;
+  text-align: center;
 }
 
 /* Task lists (editor and static render) */

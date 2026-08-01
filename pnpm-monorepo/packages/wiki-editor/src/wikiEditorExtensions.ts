@@ -121,7 +121,9 @@ export const getWikiEditorExtensions = (
     WikiCallout,
     WikiHeadingIds,
     Placeholder.configure({
-      placeholder: "Schreibe etwas …",
+      placeholder: "Diese Seite hat noch keinen Inhalt.",
+      // Also cover the read-only view — same empty state in every mode
+      showOnlyWhenEditable: false,
     }),
   ];
 };

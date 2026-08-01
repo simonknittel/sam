@@ -5,6 +5,7 @@
  * consumers always agree on the same schema.
  */
 export { extractWikiPageText } from "./extractWikiPageText.js";
+export { isWikiPageContentEmpty } from "./isWikiPageContentEmpty.js";
 export { collectWikiAttachmentUploadIds } from "./wikiAttachmentNode.js";
 export {
   WIKI_CALLOUT_COLORS,
