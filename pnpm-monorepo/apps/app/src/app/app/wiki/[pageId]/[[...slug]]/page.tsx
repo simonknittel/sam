@@ -335,7 +335,7 @@ const PageContent = async ({
         </div>
 
         <WikiPageTags
-          className="mt-3"
+          className="mt-1"
           pageId={page.id}
           tags={pageTags.map((entry) => entry.tag)}
           canEdit={permissions.canEdit}
