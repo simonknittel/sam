@@ -7,6 +7,7 @@ import { WikiPageIcon } from "@/modules/wiki/components/WikiPageIcon";
 import { WikiSidebar } from "@/modules/wiki/components/WikiSidebar";
 import { getWikiContext } from "@/modules/wiki/queries/getWikiContext";
 import { buildVisibleWikiBreadcrumb } from "@/modules/wiki/utils/buildVisibleWikiBreadcrumb";
+import { getAccessibleWikiPage } from "@/modules/wiki/utils/getAccessibleWikiPage";
 import type { Metadata } from "next";
 import { forbidden, notFound } from "next/navigation";
 import { FaSitemap, FaTag } from "react-icons/fa";
@@ -62,12 +63,10 @@ const TagPageList = async ({ params }: TagPageListProps) => {
    * silently omitted.
    */
   const pages = tag.pages
-    .map((assignment) => context.pagesById.get(assignment.pageId))
-    .filter((page) => page !== undefined)
-    .filter(
-      (page) =>
-        page.deletedAt === null && context.permissions.get(page.id)?.canRead,
+    .map((assignment) =>
+      getAccessibleWikiPage(context, assignment.pageId, "read"),
     )
+    .filter((page) => page !== null)
     .toSorted((a, b) => a.title.localeCompare(b.title));
 
   return (

@@ -14,6 +14,7 @@ import {
   getWikiFavoritePageIds,
   getWikiRecentVisitPageIds,
 } from "@/modules/wiki/queries/getWikiFavorites";
+import { getAccessibleWikiPage } from "@/modules/wiki/utils/getAccessibleWikiPage";
 import { forbidden } from "next/navigation";
 import { FaSitemap } from "react-icons/fa";
 
@@ -45,20 +46,17 @@ const Landing = async () => {
   ]);
   if (!context) forbidden();
 
-  const visiblePage = (pageId: string) => {
-    const page = context.pagesById.get(pageId);
-    if (!page || page.deletedAt) return undefined;
-    return context.permissions.get(page.id)?.canRead ? page : undefined;
-  };
+  const visiblePage = (pageId: string) =>
+    getAccessibleWikiPage(context, pageId, "read");
 
   const favorites = [...favoriteIds]
     .map(visiblePage)
-    .filter((page) => page !== undefined)
+    .filter((page) => page !== null)
     .toSorted((a, b) => a.title.localeCompare(b.title));
 
   const recentlyVisited = recentVisitPageIds
     .map(visiblePage)
-    .filter((page) => page !== undefined)
+    .filter((page) => page !== null)
     .slice(0, RECENT_LIMIT);
 
   const recentlyUpdated = context.pages

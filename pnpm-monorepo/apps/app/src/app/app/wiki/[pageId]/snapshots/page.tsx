@@ -4,6 +4,7 @@ import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/Suspe
 import { WikiSidebar } from "@/modules/wiki/components/WikiSidebar";
 import { WikiSnapshotsTable } from "@/modules/wiki/components/WikiSnapshotsTable";
 import { getWikiContext } from "@/modules/wiki/queries/getWikiContext";
+import { getAccessibleWikiPage } from "@/modules/wiki/utils/getAccessibleWikiPage";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { FaSitemap } from "react-icons/fa";
@@ -15,11 +16,7 @@ const getAdministrablePage = async (params: Params) => {
   const context = await getWikiContext();
   if (!context) return null;
 
-  const page = context.pagesById.get(pageId);
-  if (!page || page.deletedAt) return null;
-  if (!context.permissions.get(page.id)?.canAdmin) return null;
-
-  return page;
+  return getAccessibleWikiPage(context, pageId, "admin");
 };
 
 export const generateMetadata = async (

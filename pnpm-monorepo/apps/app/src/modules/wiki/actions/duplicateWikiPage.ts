@@ -15,6 +15,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getWikiContext } from "../queries/getWikiContext";
 import { collectVisibleWikiSubtree } from "../utils/collectVisibleWikiSubtree";
+import { getAccessibleWikiPage } from "../utils/getAccessibleWikiPage";
 import { slugifyWikiPageTitle } from "../utils/slugifyWikiPageTitle";
 
 const schema = z.object({
@@ -70,16 +71,8 @@ export const duplicateWikiPage = createAuthenticatedAction(
       return { error: t("Common.forbidden"), requestPayload: formData };
     const entity = authentication.session.entity;
 
-    /**
-     * Invisible pages report "not found" instead of "forbidden" to avoid
-     * leaking their existence.
-     */
-    const source = context.pagesById.get(data.id);
-    if (
-      !source ||
-      source.deletedAt ||
-      !context.permissions.get(source.id)?.canRead
-    )
+    const source = getAccessibleWikiPage(context, data.id, "read");
+    if (!source)
       return { error: t("Common.notFound"), requestPayload: formData };
 
     if (data.parentId) {
