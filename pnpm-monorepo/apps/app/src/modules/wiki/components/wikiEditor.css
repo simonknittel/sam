@@ -472,6 +472,37 @@
   padding-inline: 0.125rem;
 }
 
+/* Inline highlights (highlight mark): named tokens resolve to theme colors
+   only here, keeping the stored documents theme-independent.
+   Semi-transparent so the text stays readable on the dark theme */
+.prose mark[data-highlight="yellow"] {
+  background-color: color-mix(
+    in srgb,
+    var(--color-yellow-500) 40%,
+    transparent
+  );
+}
+
+.prose mark[data-highlight="green"] {
+  background-color: color-mix(in srgb, var(--color-green-500) 40%, transparent);
+}
+
+.prose mark[data-highlight="blue"] {
+  background-color: color-mix(in srgb, var(--color-blue-500) 40%, transparent);
+}
+
+.prose mark[data-highlight="red"] {
+  background-color: color-mix(in srgb, var(--color-red-500) 40%, transparent);
+}
+
+.prose mark[data-highlight="purple"] {
+  background-color: color-mix(
+    in srgb,
+    var(--color-purple-500) 40%,
+    transparent
+  );
+}
+
 /* Inline text colors (wikiTextColor mark): named tokens resolve to theme
    colors only here, keeping the stored documents theme-independent */
 .prose [data-text-color="yellow"] {

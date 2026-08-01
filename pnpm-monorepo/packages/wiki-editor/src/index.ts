@@ -24,6 +24,7 @@ export {
   serializeWikiCollabStatelessMessage,
   type WikiCollabStatelessMessage,
 } from "./wikiCollabSaveState.js";
+export { WIKI_COLOR_LABELS, type WikiColorToken } from "./wikiColorTokens.js";
 export {
   WIKI_EDITOR_FRAGMENT,
   getWikiEditorExtensions,
@@ -41,7 +42,10 @@ export {
   type WikiGridColumnCount,
 } from "./wikiGridNodes.js";
 export { createWikiHeadingIdAssigner } from "./wikiHeadingIds.js";
-export { WIKI_HIGHLIGHT_COLORS } from "./wikiHighlightColors.js";
+export {
+  WIKI_HIGHLIGHT_COLORS,
+  type WikiHighlightColor,
+} from "./wikiHighlightMark.js";
 export {
   WIKI_PAGE_INDEX_MATCH_MODES,
   WIKI_PAGE_INDEX_MAX_DEPTH,

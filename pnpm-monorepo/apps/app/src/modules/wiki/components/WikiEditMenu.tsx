@@ -14,6 +14,7 @@ import {
   WIKI_TEXT_COLORS,
   getWikiPositionRestrictions,
   type WikiCalloutColor,
+  type WikiHighlightColor,
   type WikiNodeAlignment,
   type WikiTextColor,
 } from "@sam-monorepo/wiki-editor";
@@ -38,10 +39,7 @@ import { MdDragIndicator, MdVerticalAlignCenter } from "react-icons/md";
 import { getWikiNodeTypeLabel } from "../utils/getWikiNodeTypeLabel";
 import { ALIGNMENT_OPTIONS } from "./toolbar/alignments";
 import { CalloutColorSwatches } from "./toolbar/CalloutColorSwatches";
-import {
-  HighlightSwatches,
-  type WikiHighlightColor,
-} from "./toolbar/HighlightSwatches";
+import { HighlightSwatches } from "./toolbar/HighlightSwatches";
 import { TextColorSwatches } from "./toolbar/TextColorSwatches";
 import {
   TEXT_FORMAT_OPTIONS,
@@ -288,8 +286,8 @@ const textSelectionMenu = (
     : null,
   activeHighlightColor: editor.schema.marks.highlight
     ? (WIKI_HIGHLIGHT_COLORS.find((color) =>
-        editor.isActive("highlight", { color: color.value }),
-      )?.value ?? null)
+        editor.isActive("highlight", { color }),
+      ) ?? null)
     : null,
   ...target,
 });

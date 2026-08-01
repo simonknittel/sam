@@ -6,7 +6,6 @@ import {
   DetailsSummary,
 } from "@tiptap/extension-details";
 import { Document } from "@tiptap/extension-document";
-import { Highlight } from "@tiptap/extension-highlight";
 import { TaskList } from "@tiptap/extension-list";
 import { TableKit } from "@tiptap/extension-table";
 import { Placeholder } from "@tiptap/extensions";
@@ -26,6 +25,7 @@ import {
   WikiGridCell,
 } from "./wikiGridNodes.js";
 import { WikiHeadingIds } from "./wikiHeadingIds.js";
+import { WikiHighlight } from "./wikiHighlightMark.js";
 import { WikiPageIndex } from "./wikiPageIndexNode.js";
 import { WikiPageLink, type WikiPageLinkedPage } from "./wikiPageLinkNode.js";
 import { WikiImage } from "./wikiResizableNodes.js";
@@ -136,7 +136,7 @@ export const getWikiEditorExtensions = (
     Details,
     DetailsSummary,
     WikiDetailsContent,
-    Highlight.configure({ multicolor: true }),
+    WikiHighlight,
     // After the StarterKit marks so it renders as their innermost element,
     // letting its CSS color win over the typography plugin's strong/link
     // colors
