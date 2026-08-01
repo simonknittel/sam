@@ -12,7 +12,12 @@ interface Props {
   readonly onSelect: (color: WikiHighlightColor) => void;
 }
 
-/** The highlight swatch row of the contextual edit menu. */
+/**
+ * The highlight swatch row of the contextual edit menu. Swatches preview
+ * the mark itself — an "A" in regular text color on the highlight
+ * background — which also tells them apart from the text color swatches
+ * (colored "A", see TextColorSwatches).
+ */
 export const HighlightSwatches = ({ activeColor = null, onSelect }: Props) => {
   return (
     <>
@@ -22,12 +27,17 @@ export const HighlightSwatches = ({ activeColor = null, onSelect }: Props) => {
           type="button"
           title={color.name}
           onClick={() => onSelect(color.value)}
-          className={clsx("size-6 cursor-pointer rounded-secondary border", {
-            "border-neutral-50": activeColor === color.value,
-            "border-neutral-700": activeColor !== color.value,
-          })}
+          className={clsx(
+            "flex size-6 cursor-pointer items-center justify-center rounded-secondary border text-sm font-bold text-neutral-50",
+            {
+              "border-neutral-50": activeColor === color.value,
+              "border-neutral-700": activeColor !== color.value,
+            },
+          )}
           style={{ backgroundColor: color.value }}
-        />
+        >
+          A
+        </button>
       ))}
     </>
   );

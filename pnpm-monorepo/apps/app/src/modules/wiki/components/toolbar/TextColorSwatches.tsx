@@ -8,11 +8,11 @@ import clsx from "clsx";
 
 /* Same 400 shades the wikiTextColor mark resolves to (wikiEditor.css) */
 const COLOR_CLASSES: Record<WikiTextColor, string> = {
-  yellow: "bg-yellow-400",
-  green: "bg-green-400",
-  blue: "bg-blue-400",
-  red: "bg-red-400",
-  purple: "bg-purple-400",
+  yellow: "text-yellow-400",
+  green: "text-green-400",
+  blue: "text-blue-400",
+  red: "text-red-400",
+  purple: "text-purple-400",
 };
 
 const COLOR_LABELS: Record<WikiTextColor, string> = {
@@ -29,7 +29,12 @@ interface Props {
   readonly onSelect: (color: WikiTextColor) => void;
 }
 
-/** The text color swatch row of the contextual edit menu. */
+/**
+ * The text color swatch row of the contextual edit menu. Swatches preview
+ * the mark itself — a colored "A" on the popover background — which also
+ * tells them apart from the marker swatches (colored background, see
+ * HighlightSwatches).
+ */
 export const TextColorSwatches = ({ activeColor = null, onSelect }: Props) => {
   return (
     <>
@@ -40,14 +45,16 @@ export const TextColorSwatches = ({ activeColor = null, onSelect }: Props) => {
           title={COLOR_LABELS[color]}
           onClick={() => onSelect(color)}
           className={clsx(
-            "size-6 cursor-pointer rounded-secondary border",
+            "flex size-6 cursor-pointer items-center justify-center rounded-secondary border text-sm font-bold",
             COLOR_CLASSES[color],
             {
               "border-neutral-50": activeColor === color,
               "border-neutral-700": activeColor !== color,
             },
           )}
-        />
+        >
+          A
+        </button>
       ))}
     </>
   );
