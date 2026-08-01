@@ -69,10 +69,6 @@ const Landing = async () => {
         <WikiSearch className="mx-auto w-full max-w-xl" />
       </section>
 
-      {favorites.length > 0 && (
-        <PageListSection heading="Favoriten" pages={favorites} />
-      )}
-
       {(recentlyVisited.length > 0 || recentlyUpdated.length > 0) && (
         <div className="grid gap-0.5 lg:grid-cols-2">
           {recentlyVisited.length > 0 && (
