@@ -62,6 +62,11 @@ describe("text-only blocks schema", () => {
                 text: " markiert",
                 marks: [{ type: "highlight", attrs: { color: "#fef08a" } }],
               },
+              {
+                type: "text",
+                text: " gefärbt",
+                marks: [{ type: "wikiTextColor", attrs: { color: "red" } }],
+              },
             ],
           },
           paragraph("— Quelle"),

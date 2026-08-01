@@ -475,6 +475,28 @@
   padding-inline: 0.125rem;
 }
 
+/* Inline text colors (wikiTextColor mark): named tokens resolve to theme
+   colors only here, keeping the stored documents theme-independent */
+.prose [data-text-color="yellow"] {
+  color: var(--color-yellow-400);
+}
+
+.prose [data-text-color="green"] {
+  color: var(--color-green-400);
+}
+
+.prose [data-text-color="blue"] {
+  color: var(--color-blue-400);
+}
+
+.prose [data-text-color="red"] {
+  color: var(--color-red-400);
+}
+
+.prose [data-text-color="purple"] {
+  color: var(--color-purple-400);
+}
+
 /* Presence carets of other collaborators (CollaborationCaret extension) */
 .tiptap .collaboration-carets__caret {
   border-left: 1px solid;

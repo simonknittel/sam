@@ -7,6 +7,7 @@ import {
   FaCaretSquareDown,
   FaCode,
   FaColumns,
+  FaFont,
   FaGlobe,
   FaHeading,
   FaHighlighter,
@@ -39,6 +40,7 @@ import { HeadingPicker } from "./HeadingPicker";
 import { HighlightPicker } from "./HighlightPicker";
 import { IframePicker } from "./IframePicker";
 import { ListPicker } from "./ListPicker";
+import { TextColorPicker } from "./TextColorPicker";
 import { TEXT_FORMAT_OPTIONS, TextFormatPicker } from "./TextFormatPicker";
 import { ToolbarButton } from "./ToolbarButton";
 import { ToolbarDivider } from "./ToolbarDivider";
@@ -77,6 +79,7 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
               editor.isActive(option.name),
             ),
             highlight: editor.isActive("highlight"),
+            textColor: editor.isActive("wikiTextColor"),
             alignment: getActiveWikiAlignment(editor),
             list:
               editor.isActive("bulletList") ||
@@ -140,6 +143,15 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
         icon={<FaHighlighter />}
       >
         <HighlightPicker editor={editor} />
+      </ToolbarPopover>
+
+      <ToolbarPopover
+        title="Textfarbe"
+        isActive={active?.textColor ?? false}
+        disabled={restricted.marks}
+        icon={<FaFont />}
+      >
+        <TextColorPicker editor={editor} />
       </ToolbarPopover>
 
       <ToolbarPopover
