@@ -31,6 +31,7 @@ Status: planned (interview completed 2026-07-27), not started.
 | Sidebar curation | Per-page `sidebarMode`: VISIBLE / HIDDEN / CHILDREN_HIDDEN. Hiding always takes the whole subtree out of the sidebar; CHILDREN_HIDDEN keeps the page itself visible as the entry point for "dataset" subtrees. Purely cosmetic, no permission implications — hidden pages stay reachable via search, links, tags, favorites and the page-index node. |
 | Tags | Global free-form tags (`WikiTag`/`WikiPageTag`), assigned by page editors via an autocompleting combobox (case-insensitive find-or-create prevents duplicates). Tag chips in the page header link to `/app/wiki/tags/<tagId>` — a permission-filtered list of all pages carrying the tag. |
 | Page-index node | `wikiPageIndex` block node ("Seitenverzeichnis"): tree mode (root page + max depth, default unlimited) or tag mode (tag set + AND/OR). Resolved per viewer at render time (permission-filtered), ignores `sidebarMode` — the canonical way to surface sidebar-hidden dataset pages. |
+| Page links (2026-08-01) | The support-page setting is generalized into a registry of configurable "page links" (`WIKI_PAGE_LINKS`), each stored as `WikiSetting["pageLink:<key>"]` with a picker in the settings UI and a stable redirect URL `/app/wiki/link/<key>` — so future well-known links (not only support) can point at wiki pages. See §10. |
 
 ## 1. Goals & non-goals
 
@@ -325,7 +326,7 @@ Toolbar: fixed top toolbar + bubble menu for selections; German labels, matching
 ## 10. Wiki settings (`/app/wiki/settings`, gated `wiki;manage`)
 
 - **Iframe allowlist:** editable domain list (add/remove, stored in `WikiSetting.iframeAllowlist`). Used by the generic-iframe node validation and re-checked at static render time.
-- **Support page:** optional page picker stored as `WikiSetting.supportPageId`; the topbar question-mark icon (`TopBar/Support.tsx`) links there (hidden if unset). Replaces the hardcoded `/app/help/support` links (topbar, sidebar account menu, error boundary, external-app info page).
+- **Page links (generalized support page, 2026-08-01):** registry `WIKI_PAGE_LINKS` (`modules/wiki/utils/wikiPageLinks.ts`) of well-known app locations that link to a configurable wiki page; v1 has one entry, `support`. Each entry gets a page picker in the settings ("Verknüpfte Seiten" tile), stored as `WikiSetting["pageLink:<key>"]` (replaces `supportPageId`; no data migration — pre-release). Server components resolve via `getWikiPageLinkTarget(key)` (null when unset, page deleted, or viewer lacks `wiki;read` — links hide then); client components and i18n strings use the stable redirect URL `/app/wiki/link/<key>`, which falls back to `/app/wiki` when unset. The `support` link replaces the hardcoded `/app/help/support` links (topbar question-mark icon, mobile account row, error boundary, external-app info page).
 
 ## 11. Favorites & recents
 
@@ -367,7 +368,7 @@ Navigation wiring (cutover release; documents app untouched):
 
 - `INTEGRATED_APPS.ts`: remove `Hilfe` (keep `Dokumente`); add `{ name: "Wiki", slug: "wiki", href: "/app/wiki", permissionStrings: ["wiki;read"], tags: ["featured"] }` + `modules/wiki/assets/screenshot.png`.
 - CmdK `List.tsx`: remove the help entry; add wiki entry with `authKey: "wiki"`.
-- `next.config.ts` redirects: `/app/help/:path*` → `/app/wiki` (old changelog links keep working).
+- No `/app/help` redirects (decision 2026-08-01: no backwards compatibility for the removed help app — old `/app/help/*` URLs, incl. the 2025-10-02 changelog entry link, simply 404).
 - Permission admin surfaces: add a small "Wiki" section (3 strings) to `PermissionMatrix.tsx` and a tab/section in `modules/roles/components/tabs/`. `DocumentsTab.tsx` and the 28 `documentX` matrix entries stay.
 - `PermissionSet.tsx`: add `wiki`; the 28 `documentX` resource literals stay.
 
@@ -380,7 +381,7 @@ Order of operations:
 1. Schema migration (new tables; nothing dropped) — existing `production-database-migrations.yml` flow.
 2. Collab server deployed in core-services beforehand (it is inert until the app ships).
 3. Wiki ships (phases 1–8) while the help app is still live. Manual work (yours): author the help content as wiki pages (demo-content script + JSON import where useful), create a support page and set `WikiSetting.supportPageId`, and fill the iframe allowlist via the settings UI as needed.
-4. Cutover release once the re-authoring is done: remove the help module, add the `/app/help/:path*` → `/app/wiki` redirects, rewire navigation (§14), changelog entry in `modules/changelog/entries.tsx` + new screenshot asset.
+4. Cutover release once the re-authoring is done: remove the help module (no redirects — old `/app/help` URLs 404), rewire navigation (§14), changelog entry in `modules/changelog/entries.tsx` + new screenshot asset.
 
 The documents app: untouched in v1. Migrating it into the wiki later stays possible but is a separate decision; nothing in this plan depends on it.
 
@@ -443,6 +444,7 @@ Each phase is shippable to `develop` behind the unfinished app (the tile only ap
 7. **Organization (§18):** `sidebarMode` + sidebar filtering; tag models, header combobox, tag list pages, orphan-tag cleanup in the purge automation; `wikiPageIndex` node (NodeView + static renderer + edit-menu config + slash-menu entries).
 8. **Snapshots:** automatic snapshots, list + restore, safety snapshot, collab replace endpoint; JSON export/import for `wiki;manage` (§9, shares the restore write path).
 9. **Cutover:** demo-content script (§15 — needs the phase-5 node types and the phase-7 page-index node), manual help re-authoring (yours, not code), remove the help module (documents app stays), `/app/help` redirects, `INTEGRATED_APPS`/CmdK/topbar rewiring, changelog entry, screenshots, Playwright smoke tests (create/read/permission-deny). No seed script, no permission migration.
+   *Status 2026-08-01:* help module removed without redirects (old `/app/help/*` URLs 404 — no backwards compatibility), Hilfe tile removed, CmdK wiki entry added (`authKey` on `wiki;read`), all four support links wired to the `support` page link (§10). Still open: help re-authoring, demo-content script, changelog entry, wiki screenshot for the apps overview (`INTEGRATED_APPS` entry has no `imageSrc` yet), Playwright smoke tests.
 
 ## 20. Defaults I chose — flag if you disagree
 

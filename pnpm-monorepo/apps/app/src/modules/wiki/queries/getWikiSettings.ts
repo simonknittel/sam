@@ -1,10 +1,14 @@
 import { prisma } from "@/db";
+import { authenticate } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { cache } from "react";
 import { z } from "zod";
+import {
+  wikiPageLinkSettingKey,
+  type WikiPageLinkKey,
+} from "../utils/wikiPageLinks";
 
 export const WIKI_SETTING_IFRAME_ALLOWLIST = "iframeAllowlist";
-export const WIKI_SETTING_SUPPORT_PAGE_ID = "supportPageId";
 
 export const MAX_WIKI_IFRAME_ALLOWLIST_ENTRIES = 100;
 
@@ -28,14 +32,58 @@ export const getWikiIframeAllowlist = cache(
 );
 
 /**
- * Id of the page the topbar support icon links to, or null if unset.
+ * Id of the page configured for a page link (see `WIKI_PAGE_LINKS`), or
+ * null if unset. Raw setting value without permission checks — for the
+ * settings UI; link consumers use `getWikiPageLinkTarget`.
  */
-export const getWikiSupportPageId = cache(
-  withTrace("getWikiSupportPageId", async (): Promise<string | null> => {
-    const setting = await prisma.wikiSetting.findUnique({
-      where: { key: WIKI_SETTING_SUPPORT_PAGE_ID },
-    });
-    const parsed = z.string().min(1).safeParse(setting?.value);
-    return parsed.success ? parsed.data : null;
-  }),
+export const getWikiPageLinkPageId = cache(
+  withTrace(
+    "getWikiPageLinkPageId",
+    async (key: WikiPageLinkKey): Promise<string | null> => {
+      const setting = await prisma.wikiSetting.findUnique({
+        where: { key: wikiPageLinkSettingKey(key) },
+      });
+      const parsed = z.string().min(1).safeParse(setting?.value);
+      return parsed.success ? parsed.data : null;
+    },
+  ),
+);
+
+export interface WikiPageLinkTarget {
+  readonly pageId: string;
+  readonly title: string;
+  readonly href: string;
+}
+
+/**
+ * Resolves a page link to the configured page, or null when the link is
+ * unset, the page is deleted, or the viewer lacks `wiki;read`. Cheap
+ * enough for the root layout (topbar), so it deliberately skips the
+ * per-page permission resolution — the page itself enforces that on
+ * navigation.
+ */
+export const getWikiPageLinkTarget = cache(
+  withTrace(
+    "getWikiPageLinkTarget",
+    async (key: WikiPageLinkKey): Promise<WikiPageLinkTarget | null> => {
+      const authentication = await authenticate();
+      if (!authentication) return null;
+      if (!(await authentication.authorize("wiki", "read"))) return null;
+
+      const pageId = await getWikiPageLinkPageId(key);
+      if (!pageId) return null;
+
+      const page = await prisma.wikiPage.findUnique({
+        where: { id: pageId },
+        select: { id: true, title: true, slug: true, deletedAt: true },
+      });
+      if (!page || page.deletedAt) return null;
+
+      return {
+        pageId: page.id,
+        title: page.title,
+        href: `/app/wiki/${page.id}/${page.slug}`,
+      };
+    },
+  ),
 );

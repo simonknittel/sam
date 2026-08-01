@@ -2,13 +2,14 @@ import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { Tile } from "@/modules/common/components/Tile";
 import { WikiIframeAllowlistSettings } from "@/modules/wiki/components/WikiIframeAllowlistSettings";
-import { WikiSupportPageSetting } from "@/modules/wiki/components/WikiSupportPageSetting";
+import { WikiPageLinkSetting } from "@/modules/wiki/components/WikiPageLinkSetting";
 import { getWikiContext } from "@/modules/wiki/queries/getWikiContext";
 import {
   getWikiIframeAllowlist,
-  getWikiSupportPageId,
+  getWikiPageLinkPageId,
 } from "@/modules/wiki/queries/getWikiSettings";
 import { getEditableWikiPageTargets } from "@/modules/wiki/utils/getEditableWikiPageTargets";
+import { WIKI_PAGE_LINK_KEYS } from "@/modules/wiki/utils/wikiPageLinks";
 import { forbidden } from "next/navigation";
 
 export const metadata = {
@@ -27,10 +28,14 @@ export default async function Page() {
 }
 
 const Settings = async () => {
-  const [context, iframeAllowlist, supportPageId] = await Promise.all([
+  const [context, iframeAllowlist, pageLinkIds] = await Promise.all([
     getWikiContext(),
     getWikiIframeAllowlist(),
-    getWikiSupportPageId(),
+    Promise.all(
+      WIKI_PAGE_LINK_KEYS.map(
+        async (key) => [key, await getWikiPageLinkPageId(key)] as const,
+      ),
+    ).then((entries) => new Map(entries)),
   ]);
   if (!context) forbidden();
 
@@ -49,14 +54,21 @@ const Settings = async () => {
         <WikiIframeAllowlistSettings initialDomains={iframeAllowlist} />
       </Tile>
 
-      <Tile heading="Support-Seite">
+      <Tile heading="Verknüpfte Seiten">
         <p className="mb-4 text-sm text-neutral-400">
-          Zentrale Anlaufstelle für Hilfe und Support.
+          An diesen Stellen im SAM wird direkt auf ausgewählte Wiki-Seiten
+          verwiesen.
         </p>
-        <WikiSupportPageSetting
-          options={pageOptions}
-          currentSupportPageId={supportPageId}
-        />
+        <div className="flex flex-col gap-8">
+          {WIKI_PAGE_LINK_KEYS.map((key) => (
+            <WikiPageLinkSetting
+              key={key}
+              linkKey={key}
+              options={pageOptions}
+              currentPageId={pageLinkIds.get(key) ?? null}
+            />
+          ))}
+        </div>
       </Tile>
     </div>
   );

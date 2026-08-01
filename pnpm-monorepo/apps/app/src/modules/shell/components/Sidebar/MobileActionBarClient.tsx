@@ -13,7 +13,11 @@ import { Account } from "./Account";
 import { MobileActionBarFlyout } from "./MobileActionBarFlyout";
 import { RedBar } from "./RedBar";
 
-export const MobileActionBarClient = () => {
+interface Props {
+  readonly supportHref: string | null;
+}
+
+export const MobileActionBarClient = ({ supportHref }: Props) => {
   const authentication = useAuthentication();
   if (!authentication) throw new Error("Unauthorized");
 
@@ -117,7 +121,7 @@ export const MobileActionBarClient = () => {
 
       <li className="h-full py-1">
         <MobileActionBarFlyout>
-          <Account />
+          <Account supportHref={supportHref} />
 
           <div className="p-4 relative" data-red-bar-container>
             {featured && (

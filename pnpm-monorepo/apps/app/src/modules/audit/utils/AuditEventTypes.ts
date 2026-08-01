@@ -783,7 +783,7 @@ export interface AuditEventDataByType {
   };
 
   [AuditEventType.WIKI_SETTINGS_UPDATED]: {
-    /** WikiSetting key, e.g. "iframeAllowlist" or "supportPageId" */
+    /** WikiSetting key, e.g. "iframeAllowlist" or "pageLink:support" */
     setting: string;
     /** The new value as stored in WikiSetting.value */
     value: string | string[] | null;
