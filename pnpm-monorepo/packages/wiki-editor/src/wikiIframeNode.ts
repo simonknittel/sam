@@ -3,6 +3,7 @@ import { walkWikiContent } from "./walkWikiContent.js";
 import { renderWikiBlockedPlaceholder } from "./wikiBlockedPlaceholder.js";
 import {
   wikiAlignAttribute,
+  wikiHeightPxAttribute,
   wikiWidthPercentAttribute,
 } from "./wikiResizableNodes.js";
 
@@ -90,6 +91,7 @@ export const WikiIframe = Node.create<WikiIframeOptions>({
           attributes.src === null ? {} : { "data-src": String(attributes.src) },
       },
       ...wikiWidthPercentAttribute(),
+      ...wikiHeightPxAttribute(),
       ...wikiAlignAttribute(),
     };
   },

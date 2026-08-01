@@ -59,7 +59,9 @@ export {
 } from "./wikiPageIndexNode.js";
 export type { WikiPageLinkedPage } from "./wikiPageLinkNode.js";
 export {
+  WIKI_HEIGHT_RESIZABLE_NODE_TYPES,
   WIKI_RESIZABLE_NODE_TYPES,
+  clampWikiIframeHeightPx,
   clampWikiWidthPercent,
   type WikiNodeAlignment,
 } from "./wikiResizableNodes.js";

@@ -324,8 +324,16 @@
   background-color: var(--color-neutral-900);
 }
 
-.prose [data-wiki-iframe] iframe {
+/*
+ * Height lives on the wrapper: the heightPx attribute renders an inline
+ * height there, which overrides this default; the iframe follows.
+ */
+.prose [data-wiki-iframe] {
   height: 480px;
+}
+
+.prose [data-wiki-iframe] iframe {
+  height: 100%;
 }
 
 .prose [data-youtube-video] iframe,
