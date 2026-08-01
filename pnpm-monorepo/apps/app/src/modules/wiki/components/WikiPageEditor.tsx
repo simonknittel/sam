@@ -4,12 +4,15 @@ import type {
   WikiMentionedCitizen,
   WikiPageLinkedPage,
 } from "@sam-monorepo/wiki-editor";
+import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { useEditor, type Editor } from "@tiptap/react";
+import clsx from "clsx";
 import { unstable_rethrow } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { updateWikiPageContent } from "../actions/updateWikiPageContent";
 import { useWikiEditorExtensions } from "./useWikiEditorExtensions";
+import { useWikiEditMode } from "./WikiEditModeProvider";
 import "./wikiEditor.css";
 import { WikiEditorLayout } from "./WikiEditorLayout";
 import type { WikiPageIndexEntry } from "./WikiPageIndexList";
@@ -38,7 +41,8 @@ interface Props {
 /**
  * Single-user editor with debounced autosave through a server action. Used
  * when the collab server is not configured — otherwise WikiCollabEditor
- * takes over.
+ * takes over. Starts as a read-only render; the editing chrome only shows
+ * while edit mode is toggled on (WikiEditModeToggle).
  */
 export const WikiPageEditor = ({
   className,
@@ -49,12 +53,20 @@ export const WikiPageEditor = ({
   mentionedCitizens,
   pageIndexes,
 }: Props) => {
+  const { isEditMode } = useWikiEditMode();
+
   const [saveState, setSaveState] = useState<SaveState>("saved");
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isFirstSaveOfSession = useRef(true);
   const editCount = useRef(0);
   /** Edit count covered by the last successful save — differing counts mean unsaved changes */
   const savedEditCount = useRef(0);
+  /**
+   * Latest document, so toggling edit mode (which recreates the editor)
+   * keeps the edits instead of falling back to the server-rendered content
+   * prop.
+   */
+  const latestDoc = useRef<ProseMirrorNode | null>(null);
 
   const save = useCallback(
     async (editor: Editor) => {
@@ -105,34 +117,59 @@ export const WikiPageEditor = ({
     iframeAllowlist,
     linkablePages,
     mentionedCitizens,
-    interactive: true,
-  });
-
-  const editor = useEditor({
-    extensions,
-    content: content ?? null,
-    immediatelyRender: false,
-    editorProps: {
-      attributes: {
-        /** pl-12 is the gutter column (WikiGutter) */
-        class:
-          "prose prose-invert max-w-none focus:outline-hidden min-h-[50vh] pl-12",
-      },
-    },
-    onUpdate: ({ editor }) => {
-      editCount.current += 1;
-      setSaveState("dirty");
-      if (saveTimer.current) clearTimeout(saveTimer.current);
-      saveTimer.current = setTimeout(() => {
-        void save(editor);
-      }, AUTOSAVE_DEBOUNCE_MS);
-    },
+    interactive: isEditMode,
   });
 
   /**
-   * Cmd/Ctrl+S saves immediately; in-app navigation flushes pending changes
-   * on unmount; closing the tab with unsaved changes asks for confirmation
-   * (a fired-and-forgotten save would be cancelled by the browser).
+   * Only serialized when the mode flips (the moment the editor is
+   * recreated) — the options object is rebuilt every render, and an inline
+   * toJSON() there would serialize the whole document each time.
+   */
+  const initialContent = useMemo(
+    () => latestDoc.current?.toJSON() ?? content ?? null,
+    [content, isEditMode],
+  );
+
+  /**
+   * Toggling edit mode recreates the editor (the deps array) — the
+   * interactive extensions can't be added or removed at runtime. Pending
+   * changes of the outgoing editor are flushed by the effect cleanup below,
+   * which runs before the recreation.
+   */
+  const editor = useEditor(
+    {
+      extensions,
+      content: initialContent,
+      editable: isEditMode,
+      immediatelyRender: false,
+      editorProps: {
+        attributes: {
+          /** pl-12 is the gutter column (WikiGutter), edit mode only */
+          class: clsx("prose prose-invert max-w-none focus:outline-hidden", {
+            "min-h-[50vh] pl-12": isEditMode,
+          }),
+        },
+      },
+      onUpdate: ({ editor }) => {
+        latestDoc.current = editor.state.doc;
+        editCount.current += 1;
+        setSaveState("dirty");
+        if (saveTimer.current) clearTimeout(saveTimer.current);
+        saveTimer.current = setTimeout(() => {
+          void save(editor);
+        }, AUTOSAVE_DEBOUNCE_MS);
+      },
+    },
+    [isEditMode],
+  );
+
+  /**
+   * Cmd/Ctrl+S saves immediately (edit mode only — a read-only render must
+   * not hijack the browser shortcut); in-app navigation and toggling edit
+   * mode off flush pending changes through the cleanup (the recreation
+   * destroys the outgoing editor only after cleanups ran); closing the tab
+   * with unsaved changes asks for confirmation (a fired-and-forgotten save
+   * would be cancelled by the browser).
    */
   useEffect(() => {
     if (!editor) return;
@@ -148,7 +185,7 @@ export const WikiPageEditor = ({
       if (editCount.current !== savedEditCount.current) event.preventDefault();
     };
 
-    window.addEventListener("keydown", handleKeyDown);
+    if (editor.isEditable) window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
@@ -161,7 +198,7 @@ export const WikiPageEditor = ({
     <WikiEditorLayout
       className={className}
       pageId={pageId}
-      canEdit={true}
+      isEditing={isEditMode}
       editor={editor}
       statusSlot={
         <span className="ml-auto pr-2 text-xs text-neutral-500">

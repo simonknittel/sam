@@ -14,6 +14,8 @@ import { DuplicateWikiPageModal } from "@/modules/wiki/components/DuplicateWikiP
 import { MoveWikiPageModal } from "@/modules/wiki/components/MoveWikiPageModal";
 import { ReportWikiPageModal } from "@/modules/wiki/components/ReportWikiPageModal";
 import { WikiCollabEditor } from "@/modules/wiki/components/WikiCollabEditor";
+import { WikiEditModeProvider } from "@/modules/wiki/components/WikiEditModeProvider";
+import { WikiEditModeToggle } from "@/modules/wiki/components/WikiEditModeToggle";
 import { WikiPageEditor } from "@/modules/wiki/components/WikiPageEditor";
 import { WikiPageExportImportModal } from "@/modules/wiki/components/WikiPageExportImportModal";
 import { WikiPageFavoriteButton } from "@/modules/wiki/components/WikiPageFavoriteButton";
@@ -222,160 +224,168 @@ const PageContent = async ({
   );
 
   return (
-    <article className="bg-secondary rounded-primary p-4">
-      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
-        <div>
-          <h1 className="font-bold text-2xl">
-            {permissions.canAdmin ? (
-              <EditableInput
-                rowId={page.id}
-                columnName="title"
-                initialValue={page.title}
-                action={renameWikiPage}
-              />
-            ) : (
-              page.title
-            )}
-          </h1>
+    /**
+     * Keyed by page so navigating to another page always starts back in
+     * view mode.
+     */
+    <WikiEditModeProvider key={page.id}>
+      <article className="bg-secondary rounded-primary p-4">
+        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+          <div>
+            <h1 className="font-bold text-2xl">
+              {permissions.canAdmin ? (
+                <EditableInput
+                  rowId={page.id}
+                  columnName="title"
+                  initialValue={page.title}
+                  action={renameWikiPage}
+                />
+              ) : (
+                page.title
+              )}
+            </h1>
 
-          <p className="mt-1 text-xs text-white/20">
-            <span className="uppercase font-mono">Aktualisiert:</span>{" "}
-            {formatDate(page.updatedAt)}
-            {effectiveOwner && (
-              <>
-                {" · "}
-                <span className="uppercase font-mono">Besitzer:</span>{" "}
-                <CitizenLink citizen={effectiveOwner} />
-              </>
-            )}
-          </p>
-        </div>
+            <p className="mt-1 text-xs text-white/20">
+              <span className="uppercase font-mono">Aktualisiert:</span>{" "}
+              {formatDate(page.updatedAt)}
+              {effectiveOwner && (
+                <>
+                  {" · "}
+                  <span className="uppercase font-mono">Besitzer:</span>{" "}
+                  <CitizenLink citizen={effectiveOwner} />
+                </>
+              )}
+            </p>
+          </div>
 
-        <div className="flex flex-wrap gap-1">
-          <WikiPageFavoriteButton
-            pageId={page.id}
-            isFavorite={favoritePageIds.has(page.id)}
-          />
+          <div className="flex flex-wrap gap-1">
+            {permissions.canEdit && <WikiEditModeToggle />}
 
-          <ReportWikiPageModal pageId={page.id} title={page.title} />
-
-          {(canCreateTopLevel || duplicateTargets.length > 0) && (
-            <DuplicateWikiPageModal
+            <WikiPageFavoriteButton
               pageId={page.id}
-              title={page.title}
-              targets={duplicateTargets}
-              allowTopLevel={canCreateTopLevel}
-              currentParentId={page.parentId}
-              hasDescendants={descendantIds.length > 0}
+              isFavorite={favoritePageIds.has(page.id)}
             />
-          )}
 
-          {permissions.canAdmin && (
-            <>
-              <Button2
-                as={Link}
-                href={`/app/wiki/${page.id}/snapshots`}
-                variant={Button2Variant.IconOnly}
-                tooltip="Snapshots"
-              >
-                <FaHistory />
-              </Button2>
-              <MoveWikiPageModal
-                pageId={page.id}
-                targets={moveTargets}
-                allowTopLevel={canCreateTopLevel}
-                currentParentId={page.parentId}
-              />
-              <WikiPageSidebarModeModal
-                pageId={page.id}
-                sidebarMode={page.sidebarMode}
-              />
-              <WikiPagePermissionsModal
-                page={{
-                  id: page.id,
-                  parentId: page.parentId,
-                  ownerId: page.ownerId,
-                  visibility: page.visibility,
-                  editability: page.editability,
-                  adminability: page.adminability,
-                }}
-                effectiveOwnerHandle={effectiveOwner?.handle ?? null}
-                readRoleIds={roleIdsOf(WikiPageAccessType.READ)}
-                editRoleIds={roleIdsOf(WikiPageAccessType.EDIT)}
-                adminRoleIds={roleIdsOf(WikiPageAccessType.ADMIN)}
-                inheritedFrom={{
-                  visibility: sourceTitle(permissions.visibilitySourceId),
-                  editability: sourceTitle(permissions.editabilitySourceId),
-                  adminability: sourceTitle(permissions.adminabilitySourceId),
-                }}
-                hasDescendants={descendantIds.length > 0}
-              />
+            <ReportWikiPageModal pageId={page.id} title={page.title} />
 
-              <DeleteWikiPageModal
+            {(canCreateTopLevel || duplicateTargets.length > 0) && (
+              <DuplicateWikiPageModal
                 pageId={page.id}
                 title={page.title}
-                descendantCount={descendantIds.length}
+                targets={duplicateTargets}
+                allowTopLevel={canCreateTopLevel}
+                currentParentId={page.parentId}
+                hasDescendants={descendantIds.length > 0}
               />
-            </>
-          )}
+            )}
 
-          {context.viewer.hasWikiManage && (
-            <WikiPageExportImportModal pageId={page.id} title={page.title} />
+            {permissions.canAdmin && (
+              <>
+                <Button2
+                  as={Link}
+                  href={`/app/wiki/${page.id}/snapshots`}
+                  variant={Button2Variant.IconOnly}
+                  tooltip="Snapshots"
+                >
+                  <FaHistory />
+                </Button2>
+                <MoveWikiPageModal
+                  pageId={page.id}
+                  targets={moveTargets}
+                  allowTopLevel={canCreateTopLevel}
+                  currentParentId={page.parentId}
+                />
+                <WikiPageSidebarModeModal
+                  pageId={page.id}
+                  sidebarMode={page.sidebarMode}
+                />
+                <WikiPagePermissionsModal
+                  page={{
+                    id: page.id,
+                    parentId: page.parentId,
+                    ownerId: page.ownerId,
+                    visibility: page.visibility,
+                    editability: page.editability,
+                    adminability: page.adminability,
+                  }}
+                  effectiveOwnerHandle={effectiveOwner?.handle ?? null}
+                  readRoleIds={roleIdsOf(WikiPageAccessType.READ)}
+                  editRoleIds={roleIdsOf(WikiPageAccessType.EDIT)}
+                  adminRoleIds={roleIdsOf(WikiPageAccessType.ADMIN)}
+                  inheritedFrom={{
+                    visibility: sourceTitle(permissions.visibilitySourceId),
+                    editability: sourceTitle(permissions.editabilitySourceId),
+                    adminability: sourceTitle(permissions.adminabilitySourceId),
+                  }}
+                  hasDescendants={descendantIds.length > 0}
+                />
+
+                <DeleteWikiPageModal
+                  pageId={page.id}
+                  title={page.title}
+                  descendantCount={descendantIds.length}
+                />
+              </>
+            )}
+
+            {context.viewer.hasWikiManage && (
+              <WikiPageExportImportModal pageId={page.id} title={page.title} />
+            )}
+          </div>
+        </div>
+
+        <WikiPageTags
+          className="mt-3"
+          pageId={page.id}
+          tags={pageTags.map((entry) => entry.tag)}
+          canEdit={permissions.canEdit}
+        />
+
+        <div className="mt-4">
+          {env.COLLAB_JWT_SECRET && env.NEXT_PUBLIC_COLLAB_URL ? (
+            <WikiCollabEditor
+              key={page.id}
+              pageId={page.id}
+              collabUrl={env.NEXT_PUBLIC_COLLAB_URL}
+              canEdit={permissions.canEdit}
+              userName={session?.entity?.handle ?? "Unbekannt"}
+              userColor={getWikiCollabColor(
+                session?.entity?.id ?? session?.user.id ?? page.id,
+              )}
+              iframeAllowlist={iframeAllowlist}
+              linkablePages={linkablePages}
+              mentionedCitizens={mentionedCitizens}
+              staticFallback={
+                <WikiPageStaticContent
+                  content={pageContent?.content}
+                  iframeAllowlist={iframeAllowlist}
+                  linkablePages={linkablePages}
+                  mentionedCitizens={mentionedCitizens}
+                  pageIndexes={pageIndexes}
+                />
+              }
+            />
+          ) : permissions.canEdit ? (
+            <WikiPageEditor
+              key={page.id}
+              pageId={page.id}
+              content={pageContent?.content}
+              iframeAllowlist={iframeAllowlist}
+              linkablePages={linkablePages}
+              mentionedCitizens={mentionedCitizens}
+              pageIndexes={pageIndexes}
+            />
+          ) : (
+            <WikiPageStaticContent
+              content={pageContent?.content}
+              iframeAllowlist={iframeAllowlist}
+              linkablePages={linkablePages}
+              mentionedCitizens={mentionedCitizens}
+              pageIndexes={pageIndexes}
+            />
           )}
         </div>
-      </div>
-
-      <WikiPageTags
-        className="mt-3"
-        pageId={page.id}
-        tags={pageTags.map((entry) => entry.tag)}
-        canEdit={permissions.canEdit}
-      />
-
-      <div className="mt-4">
-        {env.COLLAB_JWT_SECRET && env.NEXT_PUBLIC_COLLAB_URL ? (
-          <WikiCollabEditor
-            key={page.id}
-            pageId={page.id}
-            collabUrl={env.NEXT_PUBLIC_COLLAB_URL}
-            canEdit={permissions.canEdit}
-            userName={session?.entity?.handle ?? "Unbekannt"}
-            userColor={getWikiCollabColor(
-              session?.entity?.id ?? session?.user.id ?? page.id,
-            )}
-            iframeAllowlist={iframeAllowlist}
-            linkablePages={linkablePages}
-            mentionedCitizens={mentionedCitizens}
-            staticFallback={
-              <WikiPageStaticContent
-                content={pageContent?.content}
-                iframeAllowlist={iframeAllowlist}
-                linkablePages={linkablePages}
-                mentionedCitizens={mentionedCitizens}
-                pageIndexes={pageIndexes}
-              />
-            }
-          />
-        ) : permissions.canEdit ? (
-          <WikiPageEditor
-            key={page.id}
-            pageId={page.id}
-            content={pageContent?.content}
-            iframeAllowlist={iframeAllowlist}
-            linkablePages={linkablePages}
-            mentionedCitizens={mentionedCitizens}
-            pageIndexes={pageIndexes}
-          />
-        ) : (
-          <WikiPageStaticContent
-            content={pageContent?.content}
-            iframeAllowlist={iframeAllowlist}
-            linkablePages={linkablePages}
-            mentionedCitizens={mentionedCitizens}
-            pageIndexes={pageIndexes}
-          />
-        )}
-      </div>
-    </article>
+      </article>
+    </WikiEditModeProvider>
   );
 };

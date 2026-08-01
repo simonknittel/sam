@@ -10,7 +10,8 @@ import { WikiGutter } from "./WikiGutter";
 interface Props {
   readonly className?: string;
   readonly pageId: string;
-  readonly canEdit: boolean;
+  /** Whether the editing chrome (toolbar, overlays, gutter) is shown */
+  readonly isEditing: boolean;
   /** NULL until the editor is ready — the static fallback renders instead */
   readonly editor: Editor | null;
   /** Right end of the toolbar row: save state or collab status dot */
@@ -27,14 +28,14 @@ interface Props {
 export const WikiEditorLayout = ({
   className,
   pageId,
-  canEdit,
+  isEditing,
   editor,
   statusSlot,
   staticFallback,
 }: Props) => {
   return (
     <div className={clsx(className)}>
-      {canEdit && (
+      {isEditing && (
         <div className="flex flex-wrap items-center gap-1 border border-neutral-800 rounded-secondary p-1 sticky top-0 z-10 bg-neutral-900">
           <WikiEditorToolbar editor={editor} pageId={pageId} />
 
@@ -43,13 +44,13 @@ export const WikiEditorLayout = ({
       )}
 
       {editor ? (
-        <div className={clsx("relative", { "mt-4": canEdit })}>
+        <div className={clsx("relative", { "mt-4": isEditing })}>
           <EditorContent editor={editor} />
-          {canEdit && <WikiEditorOverlays editor={editor} />}
-          {canEdit && <WikiGutter editor={editor} pageId={pageId} />}
+          {isEditing && <WikiEditorOverlays editor={editor} />}
+          {isEditing && <WikiGutter editor={editor} pageId={pageId} />}
         </div>
       ) : (
-        <div className={clsx({ "mt-4 min-h-[50vh] pl-12": canEdit })}>
+        <div className={clsx({ "mt-4 min-h-[50vh] pl-12": isEditing })}>
           {staticFallback}
         </div>
       )}
