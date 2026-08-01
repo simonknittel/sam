@@ -13,18 +13,13 @@ import {
 import { WIKI_HOSTNAME_PATTERN } from "../utils/wikiHostnamePattern";
 
 const schema = z.object({
-  /** One hostname per line (the client component joins its list) */
+  /** One `domain` form field per hostname */
   domains: z
-    .string()
-    .max(10_000)
-    .transform((value) =>
+    .array(z.string().max(255))
+    .max(1_000)
+    .transform((values) =>
       [
-        ...new Set(
-          value
-            .split("\n")
-            .map((line) => line.trim().toLowerCase())
-            .filter(Boolean),
-        ),
+        ...new Set(values.map((value) => value.trim().toLowerCase())),
       ].toSorted(),
     )
     .refine(
@@ -67,5 +62,8 @@ export const updateWikiIframeAllowlist = createAuthenticatedAction(
     revalidatePath("/app/wiki", "layout");
 
     return { success: t("Common.successfullySaved") };
+  },
+  {
+    parseFormData: (formData) => ({ domains: formData.getAll("domain") }),
   },
 );

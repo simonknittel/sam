@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
@@ -27,7 +28,9 @@ export const DeleteWikiPageModal = ({
    * On success the action redirects to the wiki root, so there is no
    * success toast and no need to close the modal.
    */
-  const { state, formAction, isPending } = useAction(deleteWikiPage);
+  const { state, formAction, isPending } = useAction(deleteWikiPage, {
+    errorToast: false,
+  });
 
   return (
     <>
@@ -72,9 +75,7 @@ export const DeleteWikiPageModal = ({
             Löschen
           </Button2>
 
-          {state && "error" in state && state.error && (
-            <Note type="error" message={state.error} className="mt-4" />
-          )}
+          <ActionErrorNote className="mt-4" state={state} />
         </form>
       </Modal>
     </>

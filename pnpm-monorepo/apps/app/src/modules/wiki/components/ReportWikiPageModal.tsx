@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
@@ -19,6 +20,7 @@ interface Props {
 export const ReportWikiPageModal = ({ className, pageId, title }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const { state, formAction, isPending } = useAction(createWikiPageReport, {
+    errorToast: false,
     onSuccess: () => setIsOpen(false),
   });
 
@@ -67,9 +69,7 @@ export const ReportWikiPageModal = ({ className, pageId, title }: Props) => {
             Melden
           </Button2>
 
-          {state && "error" in state && state.error && (
-            <Note type="error" message={state.error} className="mt-4" />
-          )}
+          <ActionErrorNote className="mt-4" state={state} />
         </form>
       </Modal>
     </>

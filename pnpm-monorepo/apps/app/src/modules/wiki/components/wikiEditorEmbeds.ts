@@ -1,10 +1,9 @@
 "use client";
 
+import { runAction } from "@/modules/actions/utils/runAction";
 import { normalizeWikiEmbedUrl } from "@sam-monorepo/wiki-editor";
 import { NodeSelection } from "@tiptap/pm/state";
 import type { Editor } from "@tiptap/react";
-import { unstable_rethrow } from "next/navigation";
-import toast from "react-hot-toast";
 import { validateWikiIframeSrc } from "../actions/validateWikiIframeSrc";
 
 interface PreviousEmbedLayout {
@@ -75,22 +74,15 @@ export const insertWikiEmbedFromUrl = async (
       .setWikiEmbed(withPreviousLayout(normalized, previous))
       .run();
 
-  try {
-    const formData = new FormData();
-    formData.set("src", trimmed);
-    const response = await validateWikiIframeSrc(formData);
-    if ("error" in response) {
-      toast.error(response.error);
-      return false;
-    }
-  } catch (error) {
-    unstable_rethrow(error);
-    toast.error(
+  const formData = new FormData();
+  formData.set("src", trimmed);
+  const allowed = await runAction(validateWikiIframeSrc, formData, {
+    // The inserted embed itself is the feedback
+    successToast: false,
+    unknownErrorMessage:
       "Die URL konnte nicht geprüft werden. Bitte versuche es später erneut.",
-    );
-    console.error(error);
-    return false;
-  }
+  });
+  if (!allowed) return false;
 
   return editor
     .chain()

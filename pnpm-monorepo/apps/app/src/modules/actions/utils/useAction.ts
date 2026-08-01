@@ -6,7 +6,14 @@ import type { ActionResponse } from "./createAction";
 
 export const useAction = (
   action: (formData: FormData) => Promise<ActionResponse | void>,
-  options?: { onSuccess?: () => void },
+  options?: {
+    onSuccess?: () => void;
+    /**
+     * Disable the error toast where the form renders the error inline
+     * (see ActionErrorNote) — errors should surface once, not twice.
+     */
+    errorToast?: boolean;
+  },
 ) => {
   const t = useTranslations();
 
@@ -26,7 +33,7 @@ export const useAction = (
         }
 
         if ("error" in response) {
-          toast.error(response.error);
+          if (options?.errorToast !== false) toast.error(response.error);
           console.error(response);
           return response;
         }
@@ -36,7 +43,8 @@ export const useAction = (
         return response;
       } catch (error) {
         unstable_rethrow(error);
-        toast.error(t("Common.internalServerError"));
+        if (options?.errorToast !== false)
+          toast.error(t("Common.internalServerError"));
         console.error(error);
         return {
           error: t("Common.internalServerError"),

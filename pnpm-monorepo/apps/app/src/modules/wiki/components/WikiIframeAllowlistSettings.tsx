@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
@@ -23,7 +24,10 @@ export const WikiIframeAllowlistSettings = ({ initialDomains }: Props) => {
   const [domains, setDomains] = useState<string[]>([...initialDomains]);
   const [newDomain, setNewDomain] = useState("");
 
-  const { state, formAction, isPending } = useAction(updateWikiIframeAllowlist);
+  const { state, formAction, isPending } = useAction(
+    updateWikiIframeAllowlist,
+    { errorToast: false },
+  );
 
   const addDomain = () => {
     const domain = newDomain.trim().toLowerCase();
@@ -89,7 +93,9 @@ export const WikiIframeAllowlistSettings = ({ initialDomains }: Props) => {
       </form>
 
       <form action={formAction} className="mt-4">
-        <input type="hidden" name="domains" value={domains.join("\n")} />
+        {domains.map((domain) => (
+          <input key={domain} type="hidden" name="domain" value={domain} />
+        ))}
 
         <Note
           type="info"
@@ -102,9 +108,7 @@ export const WikiIframeAllowlistSettings = ({ initialDomains }: Props) => {
           Speichern
         </Button2>
 
-        {state && "error" in state && state.error && (
-          <Note type="error" message={state.error} className="mt-4" />
-        )}
+        <ActionErrorNote className="mt-4" state={state} />
       </form>
     </div>
   );

@@ -114,8 +114,10 @@ export const WikiCollabEditor = ({
         const formData = new FormData();
         formData.set("id", pageId);
         const response = await createWikiCollabToken(formData);
-        if ("error" in response) throw new Error(response.error);
-        return response.token;
+        if ("token" in response) return response.token;
+        throw new Error(
+          "error" in response ? response.error : "Ungültige Antwort",
+        );
       },
     });
     // eslint-disable-next-line react-hooks/set-state-in-effect -- The provider is an external resource that must be instantiated post-commit (see above); this effect is its only owner.
