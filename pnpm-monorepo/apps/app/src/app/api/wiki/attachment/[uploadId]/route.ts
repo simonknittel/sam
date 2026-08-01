@@ -3,6 +3,7 @@ import { env } from "@/env";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import { getWikiContext } from "@/modules/wiki/queries/getWikiContext";
+import { getAccessibleWikiPage } from "@/modules/wiki/utils/getAccessibleWikiPage";
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { NextResponse } from "next/server";
@@ -52,12 +53,9 @@ export async function GET(_request: Request, props: { params: Params }) {
     if (!context || !upload)
       return NextResponse.json({ error: "Not Found" }, { status: 404 });
 
-    const allowed = upload.wikiPages.some((linked) => {
-      const page = context.pagesById.get(linked.id);
-      return Boolean(
-        page && !page.deletedAt && context.permissions.get(page.id)?.canRead,
-      );
-    });
+    const allowed = upload.wikiPages.some(
+      (linked) => getAccessibleWikiPage(context, linked.id, "read") !== null,
+    );
     if (!allowed)
       return NextResponse.json({ error: "Not Found" }, { status: 404 });
 

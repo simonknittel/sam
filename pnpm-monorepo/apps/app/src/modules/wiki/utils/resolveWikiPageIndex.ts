@@ -8,6 +8,7 @@ import {
   type WikiTreeNode,
 } from "./buildVisibleWikiTree";
 import { collectWikiPageDescendants } from "./collectWikiPageDescendants";
+import { getAccessibleWikiPage } from "./getAccessibleWikiPage";
 
 const toEntries = (nodes: readonly WikiTreeNode[]): WikiPageIndexEntry[] =>
   nodes.map((node) => ({
@@ -90,13 +91,8 @@ export const resolveWikiPageIndex = withTrace(
               config.matchMode === "any" ||
               tagIds.size === requestedTagIds.size,
           )
-          .map(([pageId]) => context.pagesById.get(pageId))
-          .filter((page) => page !== undefined)
-          .filter(
-            (page) =>
-              page.deletedAt === null &&
-              context.permissions.get(page.id)?.canRead,
-          )
+          .map(([pageId]) => getAccessibleWikiPage(context, pageId, "read"))
+          .filter((page) => page !== null)
           .toSorted((a, b) => a.title.localeCompare(b.title))
           .map((page) => ({
             id: page.id,

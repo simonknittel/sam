@@ -32,6 +32,7 @@ import {
 import { getWikiFavoritePageIds } from "@/modules/wiki/queries/getWikiFavorites";
 import { getWikiIframeAllowlist } from "@/modules/wiki/queries/getWikiSettings";
 import { collectWikiPageDescendants } from "@/modules/wiki/utils/collectWikiPageDescendants";
+import { getAccessibleWikiPage } from "@/modules/wiki/utils/getAccessibleWikiPage";
 import {
   getEditableWikiPageTargets,
   type WikiPageTargetOption,
@@ -55,10 +56,10 @@ const getVisiblePage = async (params: Params) => {
   const context = await getWikiContext();
   if (!context) return null;
 
-  const page = context.pagesById.get(pageId);
-  if (!page || page.deletedAt) return null;
+  const page = getAccessibleWikiPage(context, pageId, "read");
+  if (!page) return null;
   const permissions = context.permissions.get(page.id);
-  if (!permissions?.canRead) return null;
+  if (!permissions) return null;
 
   return { context, page, permissions };
 };
