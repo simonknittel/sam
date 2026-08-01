@@ -3,6 +3,7 @@
 import { env } from "@/env";
 import { requireAuthenticationAction } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
+import type { WikiCollabSessionTokenPayload } from "@sam-monorepo/wiki-editor";
 import { SignJWT } from "jose";
 import { unstable_rethrow } from "next/navigation";
 import { serializeError } from "serialize-error";
@@ -38,11 +39,14 @@ export const createWikiCollabToken = async (formData: FormData) => {
     const permissions = context.permissions.get(page.id);
     if (!permissions?.canRead) return { error: "Keine Berechtigung." };
 
-    const token = await new SignJWT({
+    const claims = {
+      scope: "session",
       pageId: page.id,
       entityId: authentication.session.entity?.id ?? null,
       canEdit: permissions.canEdit,
-    })
+    } satisfies Omit<WikiCollabSessionTokenPayload, "sub">;
+
+    const token = await new SignJWT(claims)
       .setProtectedHeader({ alg: "HS256" })
       .setSubject(authentication.session.user.id)
       .setIssuedAt()

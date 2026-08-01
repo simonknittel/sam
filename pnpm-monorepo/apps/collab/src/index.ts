@@ -7,6 +7,8 @@ import {
   collectWikiAttachmentUploadIds,
   extractWikiPageText,
   getWikiEditorSchema,
+  parseWikiCollabReplaceTokenPayload,
+  parseWikiCollabSessionTokenPayload,
   parseWikiCollabStatelessMessage,
   serializeWikiCollabStatelessMessage,
 } from "@sam-monorepo/wiki-editor";
@@ -29,19 +31,6 @@ import { env } from "./env.js";
  * @sam-monorepo/wiki-editor. Deployed next to Soketi via the core-services
  * repository.
  */
-
-const tokenSchema = z.object({
-  sub: z.string(),
-  pageId: z.string(),
-  entityId: z.string().nullable(),
-  canEdit: z.boolean(),
-});
-
-const replaceTokenSchema = z.object({
-  scope: z.literal("replace"),
-  pageId: z.string(),
-  entityId: z.string().nullable(),
-});
 
 const replaceBodySchema = z.object({
   content: z.unknown(),
@@ -240,9 +229,10 @@ const handleReplaceRequest = async (
       secret,
       { algorithms: ["HS256"] },
     );
-    const result = replaceTokenSchema.parse(payload);
-    pageId = result.pageId;
-    entityId = result.entityId;
+    const token = parseWikiCollabReplaceTokenPayload(payload);
+    if (!token) throw new Error("Invalid token payload");
+    pageId = token.pageId;
+    entityId = token.entityId;
   } catch {
     respondJson(response, 401, { error: "Unauthorized" });
     return;
@@ -305,17 +295,17 @@ const server = new Server<ConnectionContext>({
     const { payload } = await jwtVerify(data.token, secret, {
       algorithms: ["HS256"],
     });
-    const result = tokenSchema.safeParse(payload);
-    if (!result.success) throw new Error("Invalid token payload");
-    if (result.data.pageId !== data.documentName)
+    const token = parseWikiCollabSessionTokenPayload(payload);
+    if (!token) throw new Error("Invalid token payload");
+    if (token.pageId !== data.documentName)
       throw new Error("Token does not match the requested document");
 
-    if (!result.data.canEdit) data.connectionConfig.readOnly = true;
+    if (!token.canEdit) data.connectionConfig.readOnly = true;
 
     const context: ConnectionContext = {
-      userId: result.data.sub,
-      entityId: result.data.entityId,
-      canEdit: result.data.canEdit,
+      userId: token.sub,
+      entityId: token.entityId,
+      canEdit: token.canEdit,
     };
     return context;
   },
