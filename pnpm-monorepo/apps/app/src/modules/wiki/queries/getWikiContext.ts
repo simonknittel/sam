@@ -49,7 +49,7 @@ export interface WikiContext {
  * Loads all wiki pages and resolves the current viewer's effective
  * permissions once per request. Everything wiki-related (tree, breadcrumbs,
  * page views, actions) derives from this context. Returns null if the
- * viewer lacks `wiki;read`.
+ * viewer is unauthenticated.
  */
 export const getWikiContext = cache(
   withTrace("getWikiContext", async (): Promise<WikiContext | null> => {
@@ -62,11 +62,7 @@ export const getWikiContext = cache(
      * grants all tiers on every page in the resolver. Enabled admins can
      * use all wiki features without any role-based restrictions.
      */
-    const [hasWikiRead, hasWikiManage] = await Promise.all([
-      authentication.authorize("wiki", "read"),
-      authentication.authorize("wiki", "manage"),
-    ]);
-    if (!hasWikiRead && !hasWikiManage) return null;
+    const hasWikiManage = await authentication.authorize("wiki", "manage");
 
     const citizenId = authentication.session.entity?.id ?? null;
 
@@ -112,7 +108,6 @@ export const getWikiContext = cache(
     const viewer: WikiPageViewer = {
       citizenId,
       roleIds,
-      hasWikiRead: hasWikiRead || hasWikiManage,
       hasWikiManage,
     };
 

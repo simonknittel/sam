@@ -485,11 +485,6 @@ export const STATIC_PERMISSIONS = [
   // Wiki
   {
     section: "Wiki",
-    title: "Lesen",
-    string: "wiki;read",
-  },
-  {
-    section: "Wiki",
     title: "Seiten auf oberster Ebene erstellen",
     string: "wiki;create",
   },

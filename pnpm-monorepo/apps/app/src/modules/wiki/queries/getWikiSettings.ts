@@ -57,10 +57,9 @@ export interface WikiPageLinkTarget {
 
 /**
  * Resolves a page link to the configured page, or null when the link is
- * unset, the page is deleted, or the viewer lacks `wiki;read`. Cheap
- * enough for the root layout (topbar), so it deliberately skips the
- * per-page permission resolution — the page itself enforces that on
- * navigation.
+ * unset or the page is deleted. Cheap enough for the root layout (topbar),
+ * so it deliberately skips the per-page permission resolution — the page
+ * itself enforces that on navigation.
  */
 export const getWikiPageLinkTarget = cache(
   withTrace(
@@ -68,7 +67,6 @@ export const getWikiPageLinkTarget = cache(
     async (key: WikiPageLinkKey): Promise<WikiPageLinkTarget | null> => {
       const authentication = await authenticate();
       if (!authentication) return null;
-      if (!(await authentication.authorize("wiki", "read"))) return null;
 
       const pageId = await getWikiPageLinkPageId(key);
       if (!pageId) return null;

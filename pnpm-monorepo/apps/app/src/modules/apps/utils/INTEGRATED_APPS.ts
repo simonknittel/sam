@@ -198,7 +198,6 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
     slug: "wiki",
     href: "/app/wiki",
     description: "Das Wissen der Organisation an einem Ort",
-    permissionStrings: ["wiki;read"],
     tags: ["featured"],
   },
 ];

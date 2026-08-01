@@ -31,8 +31,7 @@ export const generateMetadata = async (
 };
 
 export default async function Page(props: PageProps<"/app/wiki/tags/[tagId]">) {
-  const authentication = await requireAuthenticationPage("/app/wiki");
-  await authentication.authorizePage("wiki", "read");
+  await requireAuthenticationPage("/app/wiki");
 
   return (
     <SidebarLayout

@@ -47,9 +47,7 @@ export const Create = ({ className }: Props) => {
     authentication &&
     authentication.authorize("silcTransactionOfOtherCitizen", "create"),
   );
-  const showCreateWikiPage = Boolean(
-    authentication && authentication.authorize("wiki", "read"),
-  );
+  const showCreateWikiPage = Boolean(authentication);
 
   if (
     !showCreateCitizen &&

@@ -89,7 +89,6 @@ export const List = () => {
     careerTeamRead,
     globalStatisticsRead,
     systemLogRead,
-    wikiRead,
   ] = [
     authentication.authorize("citizen", "read"),
     authentication.authorize("organization", "read"),
@@ -129,7 +128,6 @@ export const List = () => {
     ]),
     authentication.authorize("globalStatistics", "read"),
     authentication.authorize("systemLog", "read"),
-    authentication.authorize("wiki", "read"),
   ];
   const careerRead =
     careerSecurityRead ||
@@ -153,7 +151,6 @@ export const List = () => {
     penaltyEntryCreate,
     taskRead,
     systemLogRead,
-    wikiRead,
   };
 
   const menuItems: MenuItem[] = useMemo(
@@ -261,7 +258,6 @@ export const List = () => {
         icon: <FaBookOpen />,
         type: MenuItemType.Link,
         href: "/app/wiki",
-        authKey: "wikiRead",
       },
       {
         id: "iam",

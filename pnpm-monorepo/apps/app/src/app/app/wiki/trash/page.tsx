@@ -12,8 +12,7 @@ export const metadata: Metadata = {
 export default async function Page({
   searchParams,
 }: PageProps<"/app/wiki/trash">) {
-  const authentication = await requireAuthenticationPage("/app/wiki/trash");
-  await authentication.authorizePage("wiki", "read");
+  await requireAuthenticationPage("/app/wiki/trash");
 
   return (
     <SidebarLayout sidebar={<WikiTrashFilters />}>

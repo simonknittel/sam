@@ -30,8 +30,7 @@ export const generateMetadata = async (
 export default async function Page(
   props: PageProps<"/app/wiki/[pageId]/snapshots">,
 ) {
-  const authentication = await requireAuthenticationPage("/app/wiki");
-  await authentication.authorizePage("wiki", "read");
+  await requireAuthenticationPage("/app/wiki");
 
   const page = await getAdministrablePage(props.params);
   /**

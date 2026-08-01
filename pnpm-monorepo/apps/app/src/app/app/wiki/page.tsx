@@ -21,8 +21,7 @@ import { FaSitemap } from "react-icons/fa";
 const RECENT_LIMIT = 8;
 
 export default async function Page() {
-  const authentication = await requireAuthenticationPage("/app/wiki");
-  await authentication.authorizePage("wiki", "read");
+  await requireAuthenticationPage("/app/wiki");
 
   return (
     <SidebarLayout

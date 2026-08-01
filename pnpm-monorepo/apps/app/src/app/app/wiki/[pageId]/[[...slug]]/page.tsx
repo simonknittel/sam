@@ -75,8 +75,7 @@ export const generateMetadata = async (
 export default async function Page(
   props: PageProps<"/app/wiki/[pageId]/[[...slug]]">,
 ) {
-  const authentication = await requireAuthenticationPage("/app/wiki");
-  await authentication.authorizePage("wiki", "read");
+  await requireAuthenticationPage("/app/wiki");
 
   const result = await getVisiblePage(props.params);
   /**

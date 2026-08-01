@@ -25,7 +25,6 @@ export interface WikiPagePermissionSource {
 export interface WikiPageViewer {
   readonly citizenId: string | null;
   readonly roleIds: ReadonlySet<string>;
-  readonly hasWikiRead: boolean;
   readonly hasWikiManage: boolean;
 }
 
@@ -197,7 +196,6 @@ const isGrantedRead = (
  *
  * Grant rules:
  * - `wiki;manage` grants all tiers on every page.
- * - Everything else requires `wiki;read` as a baseline.
  * - Ownership is inherited like the permission tiers: a page's effective
  *   owner is the nearest explicit owner up the chain. The effective owner
  *   always has all tiers on the page. The creator deliberately has no
@@ -256,36 +254,30 @@ export const resolveWikiPagePermissions = (
     let canEdit = false;
     let canAdmin = false;
 
-    if (viewer.hasWikiManage) {
+    if (viewer.hasWikiManage || isEffectivelyOwned(page)) {
       canRead = true;
       canEdit = true;
       canAdmin = true;
-    } else if (viewer.hasWikiRead) {
-      if (isEffectivelyOwned(page)) {
-        canRead = true;
-        canEdit = true;
-        canAdmin = true;
-      } else {
-        canAdmin = isGrantedAdmin(
-          adminabilitySource,
-          isEffectivelyOwned(adminabilitySource),
+    } else {
+      canAdmin = isGrantedAdmin(
+        adminabilitySource,
+        isEffectivelyOwned(adminabilitySource),
+        viewer,
+      );
+      canEdit =
+        canAdmin ||
+        isGrantedEdit(
+          editabilitySource,
+          isEffectivelyOwned(editabilitySource),
           viewer,
         );
-        canEdit =
-          canAdmin ||
-          isGrantedEdit(
-            editabilitySource,
-            isEffectivelyOwned(editabilitySource),
-            viewer,
-          );
-        canRead =
-          canEdit ||
-          isGrantedRead(
-            visibilitySource,
-            isEffectivelyOwned(visibilitySource),
-            viewer,
-          );
-      }
+      canRead =
+        canEdit ||
+        isGrantedRead(
+          visibilitySource,
+          isEffectivelyOwned(visibilitySource),
+          viewer,
+        );
     }
 
     result.set(page.id, {

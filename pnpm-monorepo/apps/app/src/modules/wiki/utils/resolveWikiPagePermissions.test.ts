@@ -33,29 +33,11 @@ const restrictedToOwner = {
 const viewer = (overrides: Partial<WikiPageViewer> = {}): WikiPageViewer => ({
   citizenId: "viewer",
   roleIds: new Set(),
-  hasWikiRead: true,
   hasWikiManage: false,
   ...overrides,
 });
 
 describe("resolve wiki page permissions", () => {
-  test("no wiki;read denies everything, even public pages", () => {
-    const pages = [
-      page({ id: "1", visibility: WikiPageVisibility.PUBLIC }),
-    ] as const;
-
-    const result = resolveWikiPagePermissions(
-      pages,
-      viewer({ hasWikiRead: false }),
-    );
-
-    expect(result.get("1")).toMatchObject({
-      canRead: false,
-      canEdit: false,
-      canAdmin: false,
-    });
-  });
-
   test("wiki;manage grants all tiers on foreign private pages", () => {
     const pages = [
       page({

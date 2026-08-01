@@ -11,19 +11,6 @@ export const WikiTab = () => {
     <TabPanel id="wiki">
       <div className="py-2 flex justify-between items-center gap-2">
         <div>
-          <h4 className="font-bold">Lesen</h4>
-          <p className="text-sm text-neutral-400">
-            Citizen mit dieser Berechtigung können das Wiki öffnen und
-            öffentliche Seiten lesen. Welche weiteren Seiten sie lesen können,
-            wird an den einzelnen Seiten festgelegt.
-          </p>
-        </div>
-
-        <YesNoCheckbox {...register("wiki;read")} />
-      </div>
-
-      <div className="py-2 flex justify-between items-center gap-2 mt-2">
-        <div>
           <h4 className="font-bold">Seiten auf oberster Ebene erstellen</h4>
           <p className="text-sm text-neutral-400">
             Citizen mit dieser Berechtigung können Seiten auf der obersten Ebene
