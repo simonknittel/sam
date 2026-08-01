@@ -185,7 +185,7 @@ const TagsModal = ({
                 type="button"
                 onClick={() => addTag(tag.name)}
                 disabled={limitReached}
-                className="flex items-center gap-1 rounded-secondary bg-neutral-700/50 py-1 px-2 text-sm text-neutral-300 hover:bg-neutral-700 focus-visible:bg-neutral-700 disabled:opacity-50"
+                className="flex items-center gap-1 rounded-secondary bg-neutral-700/50 py-1 px-2 text-sm text-neutral-300 hover:bg-neutral-700 focus-visible:bg-neutral-700 disabled:opacity-50 cursor-pointer"
               >
                 <FaTag className="size-3 flex-none text-neutral-500" />
                 {tag.name}
@@ -203,7 +203,7 @@ const TagsModal = ({
                   type="button"
                   onClick={() => addTag(normalizedQuery)}
                   disabled={limitReached}
-                  className="flex items-center gap-1 rounded-secondary border border-dashed border-neutral-600 py-1 px-2 text-sm text-neutral-400 hover:border-neutral-400 hover:text-neutral-200 focus-visible:border-neutral-400 focus-visible:text-neutral-200 disabled:opacity-50"
+                  className="flex items-center gap-1 rounded-secondary border border-dashed border-neutral-600 py-1 px-2 text-sm text-neutral-400 hover:border-neutral-400 hover:text-neutral-200 focus-visible:border-neutral-400 focus-visible:text-neutral-200 disabled:opacity-50 cursor-pointer"
                 >
                   &quot;{normalizedQuery}&quot; neu anlegen
                 </button>
@@ -219,8 +219,10 @@ const TagsModal = ({
           />
         )}
 
-        {selectedNames.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-1">
+        <p className="mt-4">Ausgewählte Tags</p>
+
+        {selectedNames.length > 0 ? (
+          <div className="mt-1 flex flex-wrap gap-1">
             {selectedNames.map((name) => (
               <span key={name.toLocaleLowerCase()}>
                 <button
@@ -231,7 +233,7 @@ const TagsModal = ({
                     )
                   }
                   title={`Tag "${name}" entfernen`}
-                  className="flex items-center gap-2 rounded-secondary bg-neutral-700/50 py-1 px-2 text-sm hover:bg-neutral-700 focus-visible:bg-neutral-700"
+                  className="flex items-center gap-2 rounded-secondary bg-neutral-700/50 py-1 px-2 text-sm hover:bg-neutral-700 focus-visible:bg-neutral-700 cursor-pointer"
                 >
                   <FaTag className="size-3 flex-none text-neutral-500" />
                   {name}
@@ -242,6 +244,8 @@ const TagsModal = ({
               </span>
             ))}
           </div>
+        ) : (
+          <p className="mt-1 text-sm text-neutral-400">Keine Tags ausgewählt.</p>
         )}
 
         <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
