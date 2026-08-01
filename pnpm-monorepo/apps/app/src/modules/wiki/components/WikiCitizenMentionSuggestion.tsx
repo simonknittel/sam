@@ -22,7 +22,8 @@ interface WikiCitizenMentionSuggestionOptions {
 }
 
 interface CitizenMentionSuggestionItem {
-  readonly citizenId: string;
+  /** Citizen id — also the menu key, since handles are not guaranteed unique */
+  readonly id: string;
   readonly handle: string;
   readonly title: string;
 }
@@ -56,7 +57,7 @@ export const WikiCitizenMentionSuggestion =
               .insertContent([
                 {
                   type: "wikiCitizenMention",
-                  attrs: { citizenId: props.citizenId, handle: props.handle },
+                  attrs: { citizenId: props.id, handle: props.handle },
                 },
                 { type: "text", text: " " },
               ])
@@ -69,7 +70,7 @@ export const WikiCitizenMentionSuggestion =
                 citizen.handle
                   ? [
                       {
-                        citizenId: citizen.id,
+                        id: citizen.id,
                         handle: citizen.handle,
                         title: citizen.handle,
                       },

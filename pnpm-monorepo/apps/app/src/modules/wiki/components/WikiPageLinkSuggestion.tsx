@@ -15,7 +15,8 @@ interface WikiPageLinkSuggestionOptions {
 }
 
 interface PageLinkSuggestionItem {
-  readonly pageId: string;
+  /** Page id — also the menu key, since page titles are not unique */
+  readonly id: string;
   readonly title: string;
 }
 
@@ -46,7 +47,7 @@ export const WikiPageLinkSuggestion =
               .focus()
               .deleteRange(range)
               .insertContent([
-                { type: "wikiPageLink", attrs: { pageId: props.pageId } },
+                { type: "wikiPageLink", attrs: { pageId: props.id } },
                 { type: "text", text: " " },
               ])
               .run();
@@ -54,7 +55,7 @@ export const WikiPageLinkSuggestion =
           items: ({ query }) =>
             rankWikiSuggestionItems(
               Object.entries(this.options.pages).map(([pageId, page]) => ({
-                pageId,
+                id: pageId,
                 title: page.title,
               })),
               query,

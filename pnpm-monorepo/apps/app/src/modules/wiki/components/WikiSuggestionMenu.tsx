@@ -40,7 +40,17 @@ export const rankWikiSuggestionItems = <Item extends { title: string }>(
     .slice(0, MAX_SUGGESTIONS);
 };
 
-interface WikiSuggestionMenuProps<Item extends { title: string }> {
+interface WikiSuggestionMenuItem {
+  /**
+   * Unique key of the item. Optional for menus whose titles are already
+   * unique (slash commands) — required whenever titles can collide (page
+   * titles, citizen handles).
+   */
+  readonly id?: string;
+  readonly title: string;
+}
+
+interface WikiSuggestionMenuProps<Item extends WikiSuggestionMenuItem> {
   readonly items: readonly Item[];
   readonly command: (item: Item) => void;
   readonly ref?: Ref<WikiSuggestionMenuHandle>;
@@ -50,7 +60,7 @@ interface WikiSuggestionMenuProps<Item extends { title: string }> {
  * Keyboard-navigable popup shared by the wiki editor's suggestions (slash
  * commands, internal page links).
  */
-export const WikiSuggestionMenu = <Item extends { title: string }>({
+export const WikiSuggestionMenu = <Item extends WikiSuggestionMenuItem>({
   items,
   command,
   ref,
@@ -107,7 +117,7 @@ export const WikiSuggestionMenu = <Item extends { title: string }>({
     >
       {items.map((item, index) => (
         <button
-          key={item.title}
+          key={item.id ?? item.title}
           type="button"
           onClick={() => command(item)}
           title={item.title}
@@ -131,7 +141,9 @@ export const WikiSuggestionMenu = <Item extends { title: string }>({
  * The Tiptap `Suggestion` render plumbing around WikiSuggestionMenu:
  * mounts the popup into the body and positions it at the caret.
  */
-export const createWikiSuggestionRender = <Item extends { title: string }>(): {
+export const createWikiSuggestionRender = <
+  Item extends WikiSuggestionMenuItem,
+>(): {
   onStart: (props: SuggestionProps<Item, Item>) => void;
   onUpdate: (props: SuggestionProps<Item, Item>) => void;
   onKeyDown: (props: SuggestionKeyDownProps) => boolean;
