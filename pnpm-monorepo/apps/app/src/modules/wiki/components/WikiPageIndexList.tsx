@@ -24,7 +24,7 @@ interface Props {
 export const WikiPageIndexList = ({ entries, isLoading = false }: Props) => {
   return (
     <div data-wiki-page-index="">
-      <p className="text-xs text-white/40 font-mono uppercase my-0">
+      <p className="text-xs text-white/40 font-mono uppercase my-0!">
         Seitenverzeichnis
       </p>
 
@@ -45,7 +45,7 @@ interface EntryListProps {
 
 const EntryList = ({ entries }: EntryListProps) => {
   return (
-    <ul className="my-1">
+    <ul className="my-0!">
       {entries.map((entry) => (
         <li key={entry.id} className="my-0">
           <Link

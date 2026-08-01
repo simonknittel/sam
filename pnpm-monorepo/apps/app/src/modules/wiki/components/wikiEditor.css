@@ -560,7 +560,7 @@
     var(--color-neutral-800) 40%,
     transparent
   );
-  padding: 0.75rem 1rem;
+  padding: 1rem;
   margin-block: 1.25em;
 }
 
