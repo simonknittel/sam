@@ -5,6 +5,7 @@ import { useCallback, useRef } from "react";
 import { WikiEditMenu } from "./WikiEditMenu";
 import { useWikiHoveredElement } from "./wikiEditorHover";
 import { WikiResizeHandles } from "./WikiResizeHandles";
+import { WikiTableControls } from "./WikiTableControls";
 
 /**
  * Everything the edit menu reacts to; the handles use a subset of it.
@@ -44,8 +45,9 @@ interface Props {
 }
 
 /**
- * Shares one hover state between the edit menu, the resize handles and the
- * hover outline, so all of them appear and disappear together. The overlay
+ * Shares one hover state between the edit menu, the resize handles, the
+ * table controls and the hover outline, so all of them appear and
+ * disappear together. The overlay
  * root is the hover hook's containment boundary: the pointer may roam over
  * the menu and the handles (including their invisible hit-area padding
  * bridging the gaps to the element) without losing the hover; anywhere
@@ -71,6 +73,11 @@ export const WikiEditorOverlays = ({ editor }: Props) => {
         hoveredElement={hoveredElement}
         overlayRef={overlayRef}
         setDragLock={setDragLock}
+      />
+      <WikiTableControls
+        editor={editor}
+        hoveredElement={hoveredElement}
+        overlayRef={overlayRef}
       />
       <WikiEditMenu editor={editor} hoveredElement={hoveredElement} />
     </div>
