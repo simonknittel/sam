@@ -13,6 +13,12 @@ export const getUsersWithEntities = withTrace(
       prisma.user.findMany({
         include: {
           accounts: true,
+          bannedBy: {
+            select: {
+              id: true,
+              handle: true,
+            },
+          },
         },
       }),
 

@@ -94,6 +94,9 @@ export enum AuditEventType {
   EMAIL_VERIFIED = "EMAIL_VERIFIED",
   EMAIL_CONFIRMATION_REQUESTED = "EMAIL_CONFIRMATION_REQUESTED",
   EMAIL_VERIFIED_VIA_TOKEN = "EMAIL_VERIFIED_VIA_TOKEN",
+  USER_BANNED = "USER_BANNED",
+  USER_UNBANNED = "USER_UNBANNED",
+  USER_LOGIN_BLOCKED = "USER_LOGIN_BLOCKED",
   WIKI_PAGE_CREATED = "WIKI_PAGE_CREATED",
   WIKI_PAGE_UPDATED = "WIKI_PAGE_UPDATED",
   WIKI_PAGE_RENAMED = "WIKI_PAGE_RENAMED",
@@ -691,6 +694,19 @@ export interface AuditEventDataByType {
   };
 
   [AuditEventType.EMAIL_VERIFIED_VIA_TOKEN]: {
+    userId: string;
+  };
+
+  [AuditEventType.USER_BANNED]: {
+    userId: string;
+    reason?: string;
+  };
+
+  [AuditEventType.USER_UNBANNED]: {
+    userId: string;
+  };
+
+  [AuditEventType.USER_LOGIN_BLOCKED]: {
     userId: string;
   };
 
@@ -1852,6 +1868,32 @@ export const AuditEventDefinitions: {
       userId: "string",
     },
     message: (data) => `Email verified via token for user ${data.userId}`,
+  },
+
+  [AuditEventType.USER_BANNED]: {
+    type: AuditEventType.USER_BANNED,
+    data: {
+      userId: "string",
+      reason: "string",
+    },
+    message: (data) =>
+      `User ${data.userId} banned${data.reason ? ` (reason: ${data.reason})` : ""}`,
+  },
+
+  [AuditEventType.USER_UNBANNED]: {
+    type: AuditEventType.USER_UNBANNED,
+    data: {
+      userId: "string",
+    },
+    message: (data) => `User ${data.userId} unbanned`,
+  },
+
+  [AuditEventType.USER_LOGIN_BLOCKED]: {
+    type: AuditEventType.USER_LOGIN_BLOCKED,
+    data: {
+      userId: "string",
+    },
+    message: (data) => `Login attempt of banned user ${data.userId} blocked`,
   },
 
   [AuditEventType.WIKI_PAGE_CREATED]: {
