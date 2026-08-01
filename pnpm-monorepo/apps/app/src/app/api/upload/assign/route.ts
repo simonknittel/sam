@@ -114,7 +114,7 @@ export async function PATCH(request: Request) {
        * the current user's own and not linked to another page yet — this
        * route only covers the initial link right after the upload; further
        * pages get linked when their persisted content references the upload
-       * (see syncWikiPageUploadLinks).
+       * (see syncUploadLinks in the collab server).
        */
       const [context, upload] = await Promise.all([
         getWikiContext(),
