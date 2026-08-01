@@ -1,4 +1,5 @@
 import { Node, mergeAttributes } from "@tiptap/core";
+import { TextSelection } from "@tiptap/pm/state";
 import { getWikiSelectionRestrictions } from "./wikiTextOnlyBlocks.js";
 
 export const WIKI_GRID_COLUMN_COUNTS = [2, 3, 4] as const;
@@ -79,21 +80,41 @@ export const WikiGrid = Node.create({
     return {
       insertWikiGrid:
         (columns) =>
-        ({ state, commands }) => {
+        ({ state, chain }) => {
           /**
            * The schema only rules out DIRECT nesting — this also covers
            * indirect nesting via a callout or collapsible section inside
            * a grid cell.
            */
           if (getWikiSelectionRestrictions(state).grids) return false;
-          return commands.insertContent({
-            type: this.name,
-            attrs: { columns },
-            content: Array.from({ length: columns }, () => ({
-              type: "wikiGridCell",
-              content: [{ type: "paragraph" }],
-            })),
-          });
+          return chain()
+            .insertContent({
+              type: this.name,
+              attrs: { columns },
+              content: Array.from({ length: columns }, () => ({
+                type: "wikiGridCell",
+                content: [{ type: "paragraph" }],
+              })),
+            })
+            .command(({ tr, dispatch }) => {
+              /**
+               * insertContent leaves the cursor in the LAST cell; move it
+               * into the first cell instead.
+               */
+              if (dispatch) {
+                const { $from } = tr.selection;
+                for (let depth = $from.depth; depth > 0; depth--) {
+                  if ($from.node(depth).type.name !== this.name) continue;
+                  const firstCellContentStart = $from.before(depth) + 2;
+                  tr.setSelection(
+                    TextSelection.near(tr.doc.resolve(firstCellContentStart)),
+                  );
+                  break;
+                }
+              }
+              return true;
+            })
+            .run();
         },
     };
   },
