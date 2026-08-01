@@ -35,13 +35,18 @@ export const WikiDuplicateCopyActions = ({
     return node;
   };
 
+  /**
+   * Both actions focus at an explicit position: a bare focus() scrolls
+   * the stale selection (wherever the cursor last was) into view,
+   * jumping the viewport away from the block being acted on.
+   */
   const duplicateNode = () => {
     const node = resolveNode();
     if (!node) return;
     editor
       .chain()
-      .focus()
       .insertContentAt(position + node.nodeSize, node.toJSON() as JSONContent)
+      .focus(position + node.nodeSize)
       .run();
   };
 
@@ -49,7 +54,7 @@ export const WikiDuplicateCopyActions = ({
     const node = resolveNode();
     if (!node) return;
     setWikiCopiedBlock(node);
-    editor.commands.focus();
+    editor.commands.focus(position);
     toast.success("Kopiert – einfügbar über das Plus-Menü");
   };
 
