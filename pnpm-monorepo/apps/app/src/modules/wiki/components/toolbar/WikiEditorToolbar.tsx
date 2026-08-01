@@ -45,7 +45,7 @@ interface Props {
 }
 
 /**
- * Shared toolbar of the single-user and the collaborative wiki editor.
+ * Toolbar of the wiki editor.
  */
 export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
   const pickAndInsert = (accept: string) => {

@@ -20,10 +20,9 @@ interface Props {
 }
 
 /**
- * Layout shared by the single-user and the collaborative editor: toolbar
- * row, content area with the editing overlays, and the statically rendered
- * fallback filling the same space until the editor is ready — so mounting
- * doesn't shift the page.
+ * Layout of the collaborative editor: toolbar row, content area with the
+ * editing overlays, and the statically rendered fallback filling the same
+ * space until the editor is ready — so mounting doesn't shift the page.
  */
 export const WikiEditorLayout = ({
   className,

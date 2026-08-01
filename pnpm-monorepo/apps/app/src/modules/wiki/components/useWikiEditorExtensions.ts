@@ -29,9 +29,9 @@ interface Options {
 }
 
 /**
- * Extension list shared by the single-user and the collaborative editor:
- * the schema extensions from the shared package plus the app-side editing
- * helpers for users who can edit.
+ * Extension list of the collaborative editor: the schema extensions from
+ * the shared package plus the app-side editing helpers for users who can
+ * edit.
  */
 export const useWikiEditorExtensions = ({
   pageId,

@@ -16,7 +16,6 @@ import { ReportWikiPageModal } from "@/modules/wiki/components/ReportWikiPageMod
 import { WikiCollabEditor } from "@/modules/wiki/components/WikiCollabEditor";
 import { WikiEditModeProvider } from "@/modules/wiki/components/WikiEditModeProvider";
 import { WikiEditModeToggle } from "@/modules/wiki/components/WikiEditModeToggle";
-import { WikiPageEditor } from "@/modules/wiki/components/WikiPageEditor";
 import { WikiPageExportImportModal } from "@/modules/wiki/components/WikiPageExportImportModal";
 import { WikiPageFavoriteButton } from "@/modules/wiki/components/WikiPageFavoriteButton";
 import { WikiPageIconButton } from "@/modules/wiki/components/WikiPageIconButton";
@@ -230,6 +229,15 @@ const PageContent = async ({
     authentication && (await authentication.authorize("wiki", "create")),
   );
 
+  /**
+   * Editing requires the collab server — without it (e.g. a preview
+   * deployment missing the env vars) the wiki is read-only.
+   */
+  const collabUrl =
+    env.COLLAB_JWT_SECRET && env.NEXT_PUBLIC_COLLAB_URL
+      ? env.NEXT_PUBLIC_COLLAB_URL
+      : null;
+
   return (
     /**
      * Keyed by page so navigating to another page always starts back in
@@ -272,7 +280,7 @@ const PageContent = async ({
           </div>
 
           <div className="flex flex-wrap gap-1">
-            {permissions.canEdit && <WikiEditModeToggle />}
+            {permissions.canEdit && collabUrl && <WikiEditModeToggle />}
 
             <WikiPageFavoriteButton
               pageId={page.id}
@@ -355,11 +363,11 @@ const PageContent = async ({
         />
 
         <div className="mt-4">
-          {env.COLLAB_JWT_SECRET && env.NEXT_PUBLIC_COLLAB_URL ? (
+          {collabUrl ? (
             <WikiCollabEditor
               key={page.id}
               pageId={page.id}
-              collabUrl={env.NEXT_PUBLIC_COLLAB_URL}
+              collabUrl={collabUrl}
               canEdit={permissions.canEdit}
               userName={session?.entity?.handle ?? "Unbekannt"}
               userColor={getWikiCollabColor(
@@ -377,16 +385,6 @@ const PageContent = async ({
                   pageIndexes={pageIndexes}
                 />
               }
-            />
-          ) : permissions.canEdit ? (
-            <WikiPageEditor
-              key={page.id}
-              pageId={page.id}
-              content={pageContent?.content}
-              iframeAllowlist={iframeAllowlist}
-              linkablePages={linkablePages}
-              mentionedCitizens={mentionedCitizens}
-              pageIndexes={pageIndexes}
             />
           ) : (
             <WikiPageStaticContent

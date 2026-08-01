@@ -127,8 +127,7 @@ const respondJson = (
  * Preserves the page's stored content as an automatic snapshot before it
  * is overwritten, at most every 30 minutes: any state is snapshotted right
  * before edits replace it, so there is always a restore point at most 30
- * minutes behind — without a manual "save" step. Mirrors
- * maybeCreateWikiAutoSnapshot in the app (its single-user autosave path).
+ * minutes behind — without a manual "save" step.
  *
  * The common case (a recent snapshot exists) costs one indexed query; the
  * content comparison only runs when the cadence has passed.
@@ -184,9 +183,9 @@ const maybeCreateAutoSnapshot = async (pageId: string) => {
 /**
  * Connects the page to every attachment upload referenced in the persisted
  * content that isn't linked yet — e.g. attachments copy-pasted from another
- * page. Connect-only, mirroring syncWikiPageUploadLinks in the app: stale
- * links are dropped by the nightly upload cleanup against the persisted
- * content.
+ * page. Connect-only: stale links are dropped by the nightly upload
+ * cleanup against the persisted content, so an unsaved editing session
+ * can't cost an upload its links.
  */
 const syncUploadLinks = async (pageId: string, content: unknown) => {
   const uploadIds = collectWikiAttachmentUploadIds(content);

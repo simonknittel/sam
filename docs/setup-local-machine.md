@@ -20,7 +20,7 @@
 
 ### Wiki realtime collaboration
 
-The wiki's collaborative editing uses the `sam-collab` container from
+Editing wiki pages always goes through the `sam-collab` container from
 [compose.yml](../compose.yml). To enable it, add the following to
 `pnpm-monorepo/apps/app/.env` (matching the container's defaults) and restart
 the app:
@@ -30,8 +30,9 @@ COLLAB_JWT_SECRET="insecure-dev-secret"
 NEXT_PUBLIC_COLLAB_URL="ws://localhost:5210"
 ```
 
-Without these variables the wiki falls back to single-user editing with
-autosave. After changing `pnpm-monorepo/apps/collab`, rebuild the container
+Without these variables the wiki is read-only (this also applies to
+deployments, e.g. previews without the env vars).
+After changing `pnpm-monorepo/apps/collab`, rebuild the container
 with `docker compose build sam-collab`. Alternatively run the server without
 Docker: `pnpm --filter @sam-monorepo/collab run dev` (uses
 `pnpm-monorepo/apps/collab/.env`, see its
