@@ -2,7 +2,9 @@
 
 import { autoUpdate } from "@floating-ui/react-dom";
 import {
+  clampWikiIframeHeightPx,
   clampWikiWidthPercent,
+  WIKI_HEIGHT_RESIZABLE_NODE_TYPES,
   WIKI_RESIZABLE_NODE_TYPES,
 } from "@sam-monorepo/wiki-editor";
 import { NodeSelection } from "@tiptap/pm/state";
@@ -11,12 +13,15 @@ import { useEffect, useRef, useState, type RefObject } from "react";
 import { resolveWikiNodeFromElement } from "./wikiEditorHover";
 
 interface DragState {
-  side: "left" | "right";
+  side: "left" | "right" | "bottom";
   startX: number;
+  startY: number;
   startWidth: number;
+  startHeight: number;
   containerWidth: number;
   element: HTMLElement;
-  percent: number;
+  /** Pending attribute value: widthPercent (left/right) or heightPx (bottom) */
+  value: number;
   position: number;
 }
 
@@ -45,7 +50,7 @@ const getStyledElement = (
   return nodeDom;
 };
 
-/** Width of the visual handle bar (w-1.5) */
+/** Thickness of the visual handle bar (w-1.5/h-1.5) */
 const HANDLE_WIDTH = 6;
 /** Invisible hit-area padding around the bar (px-2/py-2) */
 const HANDLE_HIT_PADDING = 8;
@@ -63,11 +68,13 @@ interface Props {
 }
 
 /**
- * Drag handles on the left/right edges of the hovered (or, on touch
- * devices, selected) resizable node. Dragging previews the width on the
- * DOM and commits it as `widthPercent` on release. The hitboxes overlap
- * the element's edges, so the pointer never leaves the hover containment
- * (see WikiEditorOverlays) on its way to a handle.
+ * Drag handles on the edges of the hovered (or, on touch devices,
+ * selected) resizable node: left/right for the width on all resizable
+ * nodes, bottom for the height on the generic iframe. Dragging previews
+ * the size on the DOM and commits it as `widthPercent`/`heightPx` on
+ * release. The hitboxes overlap the element's edges, so the pointer never
+ * leaves the hover containment (see WikiEditorOverlays) on its way to a
+ * handle.
  */
 export const WikiResizeHandles = ({
   editor,
@@ -173,40 +180,54 @@ export const WikiResizeHandles = ({
     };
   }, [editor, hoveredElement, overlayRef]);
 
-  const startDrag = (side: "left" | "right", event: React.PointerEvent) => {
+  const startDrag = (
+    side: "left" | "right" | "bottom",
+    event: React.PointerEvent,
+  ) => {
     if (!editor || !target) return;
     const nodeDom = editor.view.nodeDOM(target.position);
     if (!(nodeDom instanceof HTMLElement)) return;
     const element = getStyledElement(target.nodeTypeName, nodeDom);
     const containerWidth =
       element.parentElement?.clientWidth ?? editor.view.dom.clientWidth;
-    if (containerWidth <= 0) return;
+    if (side !== "bottom" && containerWidth <= 0) return;
 
     event.preventDefault();
     setDragLock(true);
-    const startX = event.clientX;
-    const startWidth = element.getBoundingClientRect().width;
+    const startRect = element.getBoundingClientRect();
     dragStateRef.current = {
       side,
-      startX,
-      startWidth,
+      startX: event.clientX,
+      startY: event.clientY,
+      startWidth: startRect.width,
+      startHeight: startRect.height,
       containerWidth,
       element,
-      percent: clampWikiWidthPercent((startWidth / containerWidth) * 100),
+      value:
+        side === "bottom"
+          ? clampWikiIframeHeightPx(startRect.height)
+          : clampWikiWidthPercent((startRect.width / containerWidth) * 100),
       position: target.position,
     };
 
     const handlePointerMove = (moveEvent: PointerEvent) => {
       const dragState = dragStateRef.current;
       if (!dragState) return;
-      const direction = dragState.side === "right" ? 1 : -1;
-      const width =
-        dragState.startWidth +
-        (moveEvent.clientX - dragState.startX) * direction;
-      dragState.percent = clampWikiWidthPercent(
-        (width / dragState.containerWidth) * 100,
-      );
-      dragState.element.style.width = `${dragState.percent}%`;
+      if (dragState.side === "bottom") {
+        const height =
+          dragState.startHeight + (moveEvent.clientY - dragState.startY);
+        dragState.value = clampWikiIframeHeightPx(height);
+        dragState.element.style.height = `${dragState.value}px`;
+      } else {
+        const direction = dragState.side === "right" ? 1 : -1;
+        const width =
+          dragState.startWidth +
+          (moveEvent.clientX - dragState.startX) * direction;
+        dragState.value = clampWikiWidthPercent(
+          (width / dragState.containerWidth) * 100,
+        );
+        dragState.element.style.width = `${dragState.value}%`;
+      }
 
       const overlay = overlayRef.current;
       if (!overlay) return;
@@ -238,8 +259,8 @@ export const WikiResizeHandles = ({
         .command(({ tr }) => {
           tr.setNodeAttribute(
             dragState.position,
-            "widthPercent",
-            dragState.percent,
+            dragState.side === "bottom" ? "heightPx" : "widthPercent",
+            dragState.value,
           );
           return true;
         })
@@ -252,7 +273,12 @@ export const WikiResizeHandles = ({
 
   if (!editor || !target) return null;
 
+  const heightResizable = (
+    WIKI_HEIGHT_RESIZABLE_NODE_TYPES as readonly string[]
+  ).includes(target.nodeTypeName);
+
   const barHeight = Math.min(48, Math.max(24, target.height / 3));
+  const barWidth = Math.min(48, Math.max(24, target.width / 3));
   const hitboxTop =
     target.top + target.height / 2 - barHeight / 2 - HANDLE_HIT_PADDING;
   const hitboxClassName =
@@ -286,6 +312,27 @@ export const WikiResizeHandles = ({
       >
         <div className={barClassName} style={{ height: barHeight }} />
       </div>
+      {heightResizable && (
+        <div
+          role="separator"
+          aria-label="Höhe ändern"
+          className="group pointer-events-auto absolute flex cursor-ns-resize touch-none justify-center px-2 py-2"
+          style={{
+            left:
+              target.left +
+              target.width / 2 -
+              barWidth / 2 -
+              HANDLE_HIT_PADDING,
+            top: target.top + target.height + HANDLE_GAP - HANDLE_HIT_PADDING,
+          }}
+          onPointerDown={(event) => startDrag("bottom", event)}
+        >
+          <div
+            className="h-1.5 rounded-full bg-interaction-500 opacity-80 group-hover:opacity-100"
+            style={{ width: barWidth }}
+          />
+        </div>
+      )}
     </>
   );
 };

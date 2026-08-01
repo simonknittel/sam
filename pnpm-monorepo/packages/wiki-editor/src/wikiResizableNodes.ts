@@ -23,6 +23,22 @@ export const clampWikiWidthPercent = (value: number): number =>
     Math.max(MIN_WIKI_WIDTH_PERCENT, Math.round(value)),
   );
 
+/**
+ * Node types whose height can be resized via the bottom drag handle. Only
+ * the generic iframe: its content has no intrinsic aspect ratio, so no
+ * single default height fits.
+ */
+export const WIKI_HEIGHT_RESIZABLE_NODE_TYPES = ["wikiIframe"] as const;
+
+export const MIN_WIKI_IFRAME_HEIGHT_PX = 120;
+export const MAX_WIKI_IFRAME_HEIGHT_PX = 2000;
+
+export const clampWikiIframeHeightPx = (value: number): number =>
+  Math.min(
+    MAX_WIKI_IFRAME_HEIGHT_PX,
+    Math.max(MIN_WIKI_IFRAME_HEIGHT_PX, Math.round(value)),
+  );
+
 export const WIKI_NODE_ALIGNMENTS = ["left", "center", "right"] as const;
 export type WikiNodeAlignment = (typeof WIKI_NODE_ALIGNMENTS)[number];
 
@@ -75,6 +91,33 @@ export const wikiWidthPercentAttribute = () => ({
       return {
         "data-width-percent": String(percent),
         style: `width: ${percent}%`,
+      };
+    },
+  },
+});
+
+/**
+ * `heightPx` attribute of the generic iframe: NULL means the stylesheet's
+ * default height, otherwise the frame height in pixels. Rendered as an
+ * inline height on the wrapper div (where the attribute styles land) — the
+ * stylesheet stretches the iframe to the wrapper's height.
+ */
+export const wikiHeightPxAttribute = () => ({
+  heightPx: {
+    default: null,
+    parseHTML: (element: HTMLElement) => {
+      const parsed = Number(element.getAttribute("data-height-px"));
+      return Number.isFinite(parsed) && parsed > 0
+        ? clampWikiIframeHeightPx(parsed)
+        : null;
+    },
+    renderHTML: (attributes: Record<string, unknown>) => {
+      const value = attributes.heightPx;
+      if (typeof value !== "number") return {};
+      const px = clampWikiIframeHeightPx(value);
+      return {
+        "data-height-px": String(px),
+        style: `height: ${px}px`,
       };
     },
   },
