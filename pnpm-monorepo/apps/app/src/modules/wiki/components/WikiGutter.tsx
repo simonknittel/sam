@@ -23,7 +23,7 @@ import {
 } from "react";
 import { FaPlus } from "react-icons/fa";
 import { MdDragIndicator } from "react-icons/md";
-import { setWikiGutterHighlight } from "./WikiActiveNodeHighlight";
+import { setWikiActiveNodeHighlight } from "./WikiActiveNodeHighlight";
 import {
   WIKI_SLASH_COMMAND_ITEMS,
   type WikiSlashCommandItem,
@@ -94,6 +94,8 @@ interface Props {
  */
 export const WikiGutter = ({ editor, pageId }: Props) => {
   const [block, setBlock] = useState<HoveredBlock | null>(null);
+  const [controlsHovered, setControlsHovered] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
 
   /**
    * Identity-stable for the same reason as COMPUTE_POSITION_CONFIG — an
@@ -126,28 +128,45 @@ export const WikiGutter = ({ editor, pageId }: Props) => {
    * transaction meta.
    */
   const handleOpenChange = (open: boolean) => {
+    setPaletteOpen(open);
     if (editor.isDestroyed) return;
     editor.view.dispatch(editor.state.tr.setMeta("lockDragHandle", open));
   };
 
   /**
-   * Highlights the whole hovered block while the pointer is anywhere over
-   * it (the drag-handle plugin tracks the hover), so it's always clear
-   * which node the gutter affects.
+   * closePopover in the palette is a programmatic close — Base UI reports
+   * only its own dismissals through onOpenChange, so the palette calls
+   * this when an entry is picked.
    */
-  const highlightFrom = block?.pos ?? null;
-  const highlightTo = block ? block.pos + block.node.nodeSize : null;
+  const closePalette = () => {
+    setPaletteOpen(false);
+    if (editor.isDestroyed) return;
+    editor.view.dispatch(editor.state.tr.setMeta("lockDragHandle", false));
+  };
+
+  /**
+   * Highlights the gutter's block while the gutter is in use (pointer
+   * over its controls or the insert palette open), so it's clear which
+   * node it affects. Merely hovering block content washes the edit
+   * menu's target instead — for nested content that is the inner block,
+   * not this top-level one.
+   */
+  const gutterInUse = controlsHovered || paletteOpen;
+  const highlightFrom = gutterInUse ? (block?.pos ?? null) : null;
+  const highlightTo =
+    gutterInUse && block ? block.pos + block.node.nodeSize : null;
   useEffect(() => {
     if (editor.isDestroyed) return;
-    setWikiGutterHighlight(
+    setWikiActiveNodeHighlight(
       editor,
       highlightFrom !== null && highlightTo !== null
         ? { from: highlightFrom, to: highlightTo }
         : null,
+      "gutter",
     );
   }, [editor, highlightFrom, highlightTo]);
   useEffect(() => {
-    return () => setWikiGutterHighlight(editor, null);
+    return () => setWikiActiveNodeHighlight(editor, null, "gutter");
   }, [editor]);
 
   return (
@@ -156,7 +175,11 @@ export const WikiGutter = ({ editor, pageId }: Props) => {
       computePositionConfig={COMPUTE_POSITION_CONFIG}
       onNodeChange={handleNodeChange}
     >
-      <div className="flex items-center">
+      <div
+        className="flex items-center"
+        onMouseEnter={() => setControlsHovered(true)}
+        onMouseLeave={() => setControlsHovered(false)}
+      >
         <PopoverBaseUI
           openOnHover={false}
           side="bottom"
@@ -176,6 +199,7 @@ export const WikiGutter = ({ editor, pageId }: Props) => {
             block={block}
             pageId={pageId}
             insertAboveRef={insertAboveRef}
+            onClosePalette={closePalette}
           />
         </PopoverBaseUI>
 
@@ -201,6 +225,8 @@ interface InsertBlockActionsProps {
   readonly block: HoveredBlock | null;
   readonly pageId: string;
   readonly insertAboveRef: RefObject<boolean>;
+  /** Releases the parent's palette state (lock, highlight) on insert */
+  readonly onClosePalette: () => void;
 }
 
 /**
@@ -216,6 +242,7 @@ const InsertBlockActions = ({
   block,
   pageId,
   insertAboveRef,
+  onClosePalette,
 }: InsertBlockActionsProps) => {
   const { closePopover } = usePopoverBaseUI();
 
@@ -238,12 +265,7 @@ const InsertBlockActions = ({
 
   const insertBlock = (item: WikiSlashCommandItem) => {
     closePopover();
-    /**
-     * closePopover is a programmatic close — Base UI reports only its own
-     * dismissals through onOpenChange, so the drag-handle lock has to be
-     * released here.
-     */
-    editor.view.dispatch(editor.state.tr.setMeta("lockDragHandle", false));
+    onClosePalette();
 
     const position = insertAboveRef.current
       ? block.pos

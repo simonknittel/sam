@@ -1,0 +1,40 @@
+"use client";
+
+import type { ChainedCommands } from "@tiptap/core";
+import { FaBold, FaItalic, FaStrikethrough, FaUnderline } from "react-icons/fa";
+
+export const TEXT_FORMAT_OPTIONS = [
+  { name: "bold", title: "Fett", icon: FaBold },
+  { name: "italic", title: "Kursiv", icon: FaItalic },
+  { name: "underline", title: "Unterstrichen", icon: FaUnderline },
+  { name: "strike", title: "Durchgestrichen", icon: FaStrikethrough },
+] as const;
+
+/**
+ * Runs the toggle command for a text format on a prepared chain.
+ */
+export const toggleWikiTextFormat = (
+  chain: ChainedCommands,
+  name: (typeof TEXT_FORMAT_OPTIONS)[number]["name"],
+) => {
+  switch (name) {
+    case "bold":
+      chain.toggleBold().run();
+      break;
+
+    case "italic":
+      chain.toggleItalic().run();
+      break;
+
+    case "underline":
+      chain.toggleUnderline().run();
+      break;
+
+    case "strike":
+      chain.toggleStrike().run();
+      break;
+
+    default:
+      throw new Error(`Unknown format: ${name satisfies never}`);
+  }
+};

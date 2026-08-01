@@ -11,8 +11,7 @@ import { WikiTableControls } from "./WikiTableControls";
  * Everything the edit menu reacts to; the handles use a subset of it.
  * closest() picks the deepest match, so container blocks (lists, tables,
  * grids, …) only take the hover on their own chrome — their children keep
- * their more specific menus. Paragraphs and headings are absent on
- * purpose: their menu is selection-driven (see WikiEditMenu).
+ * their more specific menus.
  */
 const HOVER_SELECTOR = [
   "img",
@@ -26,6 +25,10 @@ const HOVER_SELECTOR = [
   "[data-wiki-page-index]",
   "a[href]",
   "[data-wiki-callout]",
+  "p",
+  "h1",
+  "h2",
+  "h3",
   "ul",
   "ol",
   "blockquote",
@@ -46,9 +49,9 @@ interface Props {
  * table controls and the hover outline, so all of them appear and
  * disappear together. The overlay
  * root is the hover hook's containment boundary: the pointer may roam over
- * the menu and the handles (including their invisible hit-area padding
- * bridging the gaps to the element) without losing the hover; anywhere
- * else, hiding is immediate.
+ * the menu's actions row and the handles (including the invisible hit-area
+ * strips bridging the gaps to the element) without losing the hover;
+ * anywhere else — including the menu's label row — hiding is immediate.
  */
 export const WikiEditorOverlays = ({ editor }: Props) => {
   const overlayRef = useRef<HTMLDivElement>(null);

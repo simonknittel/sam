@@ -3,14 +3,11 @@
 import { getWikiSelectionRestrictions } from "@sam-monorepo/wiki-editor";
 import { useEditorState, type Editor } from "@tiptap/react";
 import {
-  FaBold,
   FaCaretSquareDown,
   FaCode,
   FaColumns,
-  FaFont,
   FaGlobe,
   FaHeading,
-  FaHighlighter,
   FaImage,
   FaInfoCircle,
   FaListUl,
@@ -28,20 +25,12 @@ import {
   WIKI_ATTACHMENT_ACCEPT,
   WIKI_IMAGE_ACCEPT,
 } from "../wikiEditorFiles";
-import {
-  ALIGNMENT_OPTIONS,
-  AlignmentPicker,
-  getActiveWikiAlignment,
-} from "./AlignmentPicker";
 import { CalloutPicker } from "./CalloutPicker";
 import { EmbedPicker } from "./EmbedPicker";
 import { GridPicker } from "./GridPicker";
 import { HeadingPicker } from "./HeadingPicker";
-import { HighlightPicker } from "./HighlightPicker";
 import { IframePicker } from "./IframePicker";
 import { ListPicker } from "./ListPicker";
-import { TextColorPicker } from "./TextColorPicker";
-import { TEXT_FORMAT_OPTIONS, TextFormatPicker } from "./TextFormatPicker";
 import { ToolbarButton } from "./ToolbarButton";
 import { ToolbarDivider } from "./ToolbarDivider";
 import { ToolbarPopover } from "./ToolbarPopover";
@@ -75,12 +64,6 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
         ? null
         : {
             heading: editor.isActive("heading"),
-            textFormat: TEXT_FORMAT_OPTIONS.some((option) =>
-              editor.isActive(option.name),
-            ),
-            highlight: editor.isActive("highlight"),
-            textColor: editor.isActive("wikiTextColor"),
-            alignment: getActiveWikiAlignment(editor),
             list:
               editor.isActive("bulletList") ||
               editor.isActive("orderedList") ||
@@ -108,14 +91,7 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
     blocks: active?.restrictions.blocks ?? false,
     grids: active?.restrictions.grids ?? false,
     lists: active?.restrictions.lists ?? false,
-    marks: active?.restrictions.marks ?? false,
-    alignment: active?.restrictions.alignment ?? false,
   };
-
-  const activeAlignment = active?.alignment ?? "left";
-  const ActiveAlignmentIcon =
-    ALIGNMENT_OPTIONS.find((option) => option.value === activeAlignment)
-      ?.icon ?? ALIGNMENT_OPTIONS[0].icon;
 
   return (
     <>
@@ -127,44 +103,6 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
       >
         <HeadingPicker editor={editor} />
       </ToolbarPopover>
-
-      <ToolbarPopover
-        title="Textformat"
-        isActive={active?.textFormat ?? false}
-        disabled={restricted.marks}
-        icon={<FaBold />}
-      >
-        <TextFormatPicker editor={editor} />
-      </ToolbarPopover>
-
-      <ToolbarPopover
-        title="Textmarker"
-        isActive={active?.highlight ?? false}
-        disabled={restricted.marks}
-        icon={<FaHighlighter />}
-      >
-        <HighlightPicker editor={editor} />
-      </ToolbarPopover>
-
-      <ToolbarPopover
-        title="Textfarbe"
-        isActive={active?.textColor ?? false}
-        disabled={restricted.marks}
-        icon={<FaFont />}
-      >
-        <TextColorPicker editor={editor} />
-      </ToolbarPopover>
-
-      <ToolbarPopover
-        title="Ausrichtung"
-        isActive={activeAlignment !== "left"}
-        disabled={restricted.alignment}
-        icon={<ActiveAlignmentIcon />}
-      >
-        <AlignmentPicker editor={editor} />
-      </ToolbarPopover>
-
-      <ToolbarDivider />
 
       <ToolbarPopover
         title="Liste"
