@@ -619,4 +619,16 @@
 .prose [data-wiki-page-index] ul ul {
   margin-block: 0;
   padding-left: 1.25rem;
+  position: relative;
+}
+
+/* Same hierarchy line as the sidebar's page tree (WikiPageTree) */
+.prose [data-wiki-page-index] ul ul::before {
+  background-color: var(--color-neutral-700);
+  bottom: 0;
+  content: "";
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 1px;
 }
