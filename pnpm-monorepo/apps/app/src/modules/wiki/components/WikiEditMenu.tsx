@@ -22,7 +22,7 @@ import { NodeSelection, TextSelection } from "@tiptap/pm/state";
 import type { EditorView } from "@tiptap/pm/view";
 import type { Editor } from "@tiptap/react";
 import clsx from "clsx";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import {
   FaBan,
@@ -378,6 +378,13 @@ interface Props {
 export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
   const [menu, setMenu] = useState<MenuState>(null);
   /**
+   * ProseMirror keeps the selection — without dispatching a transaction —
+   * when focus leaves the editor, so a click outside would leave the
+   * formatting menu standing on the stale selection. A ref, not state:
+   * the blur/focus handlers re-run the menu update themselves.
+   */
+  const editorBlurredRef = useRef(false);
+  /**
    * Lifted out of the menu itself: the hover menu unmounts when the pointer
    * moves onto the (portaled) dialog, so the dialog must not live inside
    * it.
@@ -560,8 +567,11 @@ export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
        * formatting menu, centered horizontally over the selection while
        * keeping its vertical spot above the block. Selections spanning
        * several blocks get no menu — the menu's actions target one block.
+       * A blurred editor gets none either: its selection survives the
+       * blur, but focus has moved on (e.g. a click outside the editor).
        */
       if (
+        !editorBlurredRef.current &&
         selection instanceof TextSelection &&
         !selection.empty &&
         selection.$from.sameParent(selection.$to) &&
@@ -635,13 +645,40 @@ export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
       );
     };
 
+    /**
+     * Pressing a menu button moves focus onto it before its click lands,
+     * blurring the editor — such blurs into the menu must not close it,
+     * or the button would unmount under the pointer and swallow the
+     * click. The button's command refocuses the editor afterwards. Only
+     * the formatting menu closes on blur: the NodeSelection-raised block
+     * menu has to survive gutter drags (see above), whose drag handle
+     * also steals focus.
+     */
+    const handleBlur = ({ event }: { event: FocusEvent }) => {
+      if (
+        event.relatedTarget instanceof Node &&
+        refs.floating.current?.contains(event.relatedTarget)
+      )
+        return;
+      editorBlurredRef.current = true;
+      update();
+    };
+    const handleFocus = () => {
+      editorBlurredRef.current = false;
+      update();
+    };
+
     update();
     editor.on("transaction", update);
+    editor.on("blur", handleBlur);
+    editor.on("focus", handleFocus);
     return () => {
       editor.off("transaction", update);
+      editor.off("blur", handleBlur);
+      editor.off("focus", handleFocus);
       setWikiActiveNodeHighlight(editor, null, "menu");
     };
-  }, [editor, hoveredElement]);
+  }, [editor, hoveredElement, refs]);
 
   if (!editor) return null;
 
