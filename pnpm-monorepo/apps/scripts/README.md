@@ -14,7 +14,7 @@ DATABASE_URL="postgresql://postgres:admin@localhost:5432/db" ALGOLIA_APP_ID="" A
 
 ## Wiki demo page
 
-Generates the Tiptap JSON for the wiki's "live demo page" exercising every formatting option and embed (PLAN-wiki.md §15). Import the output file via the wiki's JSON import (page menu, requires `wiki;manage`).
+Generates the Tiptap JSON for the wiki's "live demo page" exercising every formatting option and embed. Import the output file via the wiki's JSON import (page menu, requires `wiki;manage`).
 
 ```sh
 pnpm run build:scripts

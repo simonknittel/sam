@@ -26,7 +26,7 @@ const PRESIGNED_GET_EXPIRY_SECONDS = 5 * 60;
  * page duplication or a cross-page copy-paste); any readable linked page
  * grants the download.
  */
-export async function GET(request: Request, props: { params: Params }) {
+export async function GET(_request: Request, props: { params: Params }) {
   try {
     await requireAuthenticationApi("/api/wiki/attachment/[uploadId]", "GET");
 

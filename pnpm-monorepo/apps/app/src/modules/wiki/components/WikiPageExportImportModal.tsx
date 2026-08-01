@@ -19,8 +19,8 @@ interface Props {
 }
 
 /**
- * JSON export and import for wiki admins (see PLAN-wiki.md §9) behind a
- * single toolbar button. The export downloads the page's content as Tiptap
+ * JSON export and import for wiki admins behind a single toolbar button.
+ * The export downloads the page's content as Tiptap
  * JSON; the import replaces it with an uploaded file. The file is read
  * client-side and sent as text — the server action validates it against
  * the editor schema and the iframe allowlist.

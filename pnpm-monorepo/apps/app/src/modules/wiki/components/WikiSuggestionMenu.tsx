@@ -65,7 +65,7 @@ interface WikiSuggestionMenuProps<Item extends WikiSuggestionMenuItem> {
 
 /**
  * Keyboard-navigable popup shared by the wiki editor's suggestions (slash
- * commands, internal page links).
+ * commands, internal page links, citizen mentions).
  */
 export const WikiSuggestionMenu = <Item extends WikiSuggestionMenuItem>({
   items,

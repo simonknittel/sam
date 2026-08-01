@@ -47,30 +47,21 @@ const bodySchema = z.discriminatedUnion("resourceType", [
 
 export async function PATCH(request: Request) {
   try {
-    /**
-     * Authenticate and authorize the request
-     */
     const authentication = await requireAuthenticationApi(
       "/api/upload/assign",
       "PATCH",
     );
 
-    /**
-     * Validate the request params and body
-     */
     const body: unknown = await request.json();
     const data = bodySchema.parse(body);
 
-    /**
-     * Assign the image to the resource
-     */
     if (
       data.resourceType === "wikiPage" &&
       data.resourceAttribute === "iconId"
     ) {
       /**
-       * Authorize: edit permission on the page (see PLAN-wiki.md — icons
-       * follow the content, not the admin-gated title). When assigning, the
+       * Authorize: edit permission on the page — icons follow the content,
+       * not the admin-gated title. When assigning, the
        * upload must be the current user's own image. A replaced or removed
        * icon's upload is left behind for the nightly cleanup.
        */
@@ -213,9 +204,6 @@ export async function PATCH(request: Request) {
       },
     ]);
 
-    /**
-     * Respond with the result
-     */
     return NextResponse.json({});
   } catch (error) {
     return apiErrorHandler(error);

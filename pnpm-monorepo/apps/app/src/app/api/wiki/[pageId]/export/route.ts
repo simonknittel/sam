@@ -12,11 +12,10 @@ type Params = Promise<{
 const paramsSchema = z.object({ pageId: z.cuid2() });
 
 /**
- * Serves a page's raw Tiptap JSON as a download (see PLAN-wiki.md §9).
- * Wiki admins only — the counterpart of the JSON import. Read-only, no
- * audit event.
+ * Serves a page's raw Tiptap JSON as a download. Wiki admins only — the
+ * counterpart of the JSON import. Read-only, no audit event.
  */
-export async function GET(request: Request, props: { params: Params }) {
+export async function GET(_request: Request, props: { params: Params }) {
   try {
     const authentication = await requireAuthenticationApi(
       "/api/wiki/[pageId]/export",
