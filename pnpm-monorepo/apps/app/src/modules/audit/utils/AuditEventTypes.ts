@@ -114,6 +114,7 @@ export enum AuditEventType {
   WIKI_PAGE_CONTENT_IMPORTED = "WIKI_PAGE_CONTENT_IMPORTED",
   WIKI_PAGE_SIDEBAR_MODE_UPDATED = "WIKI_PAGE_SIDEBAR_MODE_UPDATED",
   WIKI_PAGE_TAGS_UPDATED = "WIKI_PAGE_TAGS_UPDATED",
+  WIKI_PAGE_ICON_UPDATED = "WIKI_PAGE_ICON_UPDATED",
 }
 
 export interface AuditEventDataByType {
@@ -818,6 +819,12 @@ export interface AuditEventDataByType {
     pageId: string;
     addedTagNames: string[];
     removedTagNames: string[];
+  };
+
+  [AuditEventType.WIKI_PAGE_ICON_UPDATED]: {
+    pageId: string;
+    /** The assigned upload, or null when the icon was removed */
+    iconId: string | null;
   };
 }
 
@@ -2070,5 +2077,17 @@ export const AuditEventDefinitions: {
       removedTagNames: [],
     },
     message: (data) => `Wiki page tags updated (${data.pageId})`,
+  },
+
+  [AuditEventType.WIKI_PAGE_ICON_UPDATED]: {
+    type: AuditEventType.WIKI_PAGE_ICON_UPDATED,
+    data: {
+      pageId: "string",
+      iconId: null,
+    },
+    message: (data) =>
+      data.iconId
+        ? `Wiki page icon updated (${data.pageId})`
+        : `Wiki page icon removed (${data.pageId})`,
   },
 };

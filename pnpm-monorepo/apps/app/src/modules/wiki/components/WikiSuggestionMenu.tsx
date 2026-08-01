@@ -6,7 +6,13 @@ import type {
   SuggestionProps,
 } from "@tiptap/suggestion";
 import clsx from "clsx";
-import { useImperativeHandle, useRef, useState, type Ref } from "react";
+import {
+  useImperativeHandle,
+  useRef,
+  useState,
+  type ReactNode,
+  type Ref,
+} from "react";
 
 export interface WikiSuggestionMenuHandle {
   readonly onKeyDown: (props: Pick<SuggestionKeyDownProps, "event">) => boolean;
@@ -48,6 +54,7 @@ interface WikiSuggestionMenuItem {
    */
   readonly id?: string;
   readonly title: string;
+  readonly icon?: ReactNode;
 }
 
 interface WikiSuggestionMenuProps<Item extends WikiSuggestionMenuItem> {
@@ -123,14 +130,17 @@ export const WikiSuggestionMenu = <Item extends WikiSuggestionMenuItem>({
           title={item.title}
           className={clsx(
             // shrink-0: items must overflow (scroll), not shrink into the max height
-            "shrink-0 cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap rounded-secondary px-2 py-1 text-left text-sm hover:bg-neutral-800 hover:text-neutral-50",
+            "flex shrink-0 cursor-pointer items-center gap-2 rounded-secondary px-2 py-1 text-left text-sm hover:bg-neutral-800 hover:text-neutral-50",
             {
               "bg-neutral-800 text-neutral-50": index === selectedIndex,
               "text-neutral-300": index !== selectedIndex,
             },
           )}
         >
-          {item.title}
+          {item.icon}
+          <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
+            {item.title}
+          </span>
         </button>
       ))}
     </div>

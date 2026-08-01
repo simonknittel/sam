@@ -1,13 +1,12 @@
 "use client";
 
-import { env } from "@/env";
 import { Link } from "@/modules/common/components/Link";
 import clsx from "clsx";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { FaPlus } from "react-icons/fa";
 import type { WikiTreeNode } from "../utils/buildVisibleWikiTree";
 import { useCreateWikiPage } from "./CreateWikiPageProvider";
+import { WikiPageIcon } from "./WikiPageIcon";
 import {
   useWikiPageDnd,
   WikiPageDndProvider,
@@ -136,16 +135,7 @@ const TreeItem = ({
             },
           )}
         >
-          {node.iconId && (
-            <Image
-              src={`https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${node.iconId}`}
-              alt=""
-              width={16}
-              height={16}
-              className="flex-none size-4 rounded-xs object-cover"
-              unoptimized
-            />
-          )}
+          {node.iconId && <WikiPageIcon iconId={node.iconId} />}
 
           <Link
             href={`/app/wiki/${node.id}/${node.slug}`}

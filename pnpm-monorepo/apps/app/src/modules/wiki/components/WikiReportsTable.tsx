@@ -13,6 +13,7 @@ import {
   getWikiPageReports,
   type WikiPageReportRow,
 } from "../queries/getWikiPageReports";
+import { WikiPageIcon } from "./WikiPageIcon";
 
 const TABLE_MIN_WIDTH = "min-w-190";
 const GRID_COLS = "grid-cols-[minmax(200px,_1fr)_200px_160px_140px_110px]";
@@ -122,14 +123,16 @@ const ReportRow = ({ report }: ReportRowProps) => {
             prefetch={false}
             title={report.page.title}
           >
+            {report.page.iconId && <WikiPageIcon iconId={report.page.iconId} />}
             <p className="truncate">{report.page.title}</p>
           </Link>
         ) : (
           <p
-            className="truncate px-2 text-white/40"
+            className="flex items-center gap-2 px-2 text-white/40"
             title={`${report.page.title} (gelöscht)`}
           >
-            {report.page.title} (gelöscht)
+            {report.page.iconId && <WikiPageIcon iconId={report.page.iconId} />}
+            <span className="truncate">{report.page.title} (gelöscht)</span>
           </p>
         )}
       </td>

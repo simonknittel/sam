@@ -7,6 +7,7 @@ import { WikiPageSnapshotKind } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import { FaArrowLeft } from "react-icons/fa";
 import type { WikiContextPage } from "../queries/getWikiContext";
+import { WikiPageIcon } from "./WikiPageIcon";
 import { WikiSnapshotRestoreButton } from "./WikiSnapshotRestoreButton";
 
 const TABLE_MIN_WIDTH = "min-w-190";
@@ -45,6 +46,7 @@ export const WikiSnapshotsTable = async ({ className, page }: Props) => {
           className="flex items-center gap-1 text-sm text-interaction-500 hover:text-interaction-300"
         >
           <FaArrowLeft className="text-xs" />
+          {page.iconId && <WikiPageIcon iconId={page.iconId} />}
           {page.title}
         </Link>
       </div>

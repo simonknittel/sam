@@ -12,6 +12,7 @@ import {
   getWikiContext,
   type WikiContextPage,
 } from "../queries/getWikiContext";
+import { WikiPageIcon } from "./WikiPageIcon";
 import { WikiTrashActions } from "./WikiTrashActions";
 
 const TABLE_MIN_WIDTH = "min-w-160";
@@ -102,8 +103,12 @@ const TrashRow = ({ page }: TrashRowProps) => {
   return (
     <TRow className={clsx("h-10", GRID_COLS)}>
       <td className="overflow-hidden">
-        <p className="truncate px-2 font-bold" title={page.title}>
-          {page.title}
+        <p
+          className="flex items-center gap-2 px-2 font-bold"
+          title={page.title}
+        >
+          {page.iconId && <WikiPageIcon iconId={page.iconId} />}
+          <span className="truncate">{page.title}</span>
         </p>
       </td>
 

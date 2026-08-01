@@ -3,6 +3,7 @@ import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout
 import { Link } from "@/modules/common/components/Link";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { formatDate } from "@/modules/common/utils/formatDate";
+import { WikiPageIcon } from "@/modules/wiki/components/WikiPageIcon";
 import { WikiSearch } from "@/modules/wiki/components/WikiSearch";
 import { WikiSidebar } from "@/modules/wiki/components/WikiSidebar";
 import {
@@ -120,8 +121,9 @@ const PageListSection = ({
           >
             <Link
               href={`/app/wiki/${page.id}/${page.slug}`}
-              className="text-interaction-500 hover:text-interaction-300"
+              className="inline-flex items-center gap-2 text-interaction-500 hover:text-interaction-300"
             >
+              {page.iconId && <WikiPageIcon iconId={page.iconId} />}
               {page.title}
             </Link>
 

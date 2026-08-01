@@ -11,7 +11,15 @@ export const wikiPageReportSelect = {
   resolvedAt: true,
   resolvedBy: { select: { id: true, handle: true } },
   resolutionComment: true,
-  page: { select: { id: true, title: true, slug: true, deletedAt: true } },
+  page: {
+    select: {
+      id: true,
+      title: true,
+      slug: true,
+      iconId: true,
+      deletedAt: true,
+    },
+  },
 } satisfies Prisma.WikiPageReportSelect;
 
 export type WikiPageReportRow = Prisma.WikiPageReportGetPayload<{

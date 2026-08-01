@@ -12,6 +12,11 @@ declare module "@tiptap/core" {
 export interface WikiPageLinkedPage {
   title: string;
   slug: string;
+  /**
+   * Absolute URL of the page's icon, if it has one. Resolved by the app so
+   * this package needs no knowledge of the upload storage.
+   */
+  iconSrc?: string;
 }
 
 export interface WikiPageLinkOptions {
@@ -76,6 +81,10 @@ export const WikiPageLink = Node.create<WikiPageLinkOptions>({
         "Nicht verfügbare Seite",
       ];
 
+    const children: (string | [string, Record<string, string>])[] = page.iconSrc
+      ? [["img", { src: page.iconSrc, alt: "" }], page.title]
+      : [page.title];
+
     return [
       "a",
       mergeAttributes(
@@ -84,7 +93,7 @@ export const WikiPageLink = Node.create<WikiPageLinkOptions>({
         },
         HTMLAttributes,
       ),
-      page.title,
+      ...children,
     ];
   },
 

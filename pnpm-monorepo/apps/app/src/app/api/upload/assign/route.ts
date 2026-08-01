@@ -20,17 +20,29 @@ const bodySchema = z.discriminatedUnion("resourceType", [
     resourceId: z.cuid(),
     imageId: z.cuid(),
   }),
-  /**
-   * Links an upload (image or file attachment) to the wiki page it is
-   * embedded in, so attachment downloads can be permission-checked against
-   * the page's visibility. `resourceId` is the page id.
-   */
-  z.object({
-    resourceType: z.literal("wikiPage"),
-    resourceAttribute: z.literal("wikiPages"),
-    resourceId: z.cuid2(),
-    uploadId: z.cuid(),
-  }),
+  z.discriminatedUnion("resourceAttribute", [
+    /**
+     * Links an upload (image or file attachment) to the wiki page it is
+     * embedded in, so attachment downloads can be permission-checked against
+     * the page's visibility. `resourceId` is the page id.
+     */
+    z.object({
+      resourceType: z.literal("wikiPage"),
+      resourceAttribute: z.literal("wikiPages"),
+      resourceId: z.cuid2(),
+      uploadId: z.cuid(),
+    }),
+    /**
+     * Sets or removes (`imageId: null`) a wiki page's icon. `resourceId` is
+     * the page id.
+     */
+    z.object({
+      resourceType: z.literal("wikiPage"),
+      resourceAttribute: z.literal("iconId"),
+      resourceId: z.cuid2(),
+      imageId: z.cuid().nullable(),
+    }),
+  ]),
 ]);
 
 export async function PATCH(request: Request) {
@@ -52,6 +64,59 @@ export async function PATCH(request: Request) {
     /**
      * Assign the image to the resource
      */
+    if (
+      data.resourceType === "wikiPage" &&
+      data.resourceAttribute === "iconId"
+    ) {
+      /**
+       * Authorize: edit permission on the page (see PLAN-wiki.md — icons
+       * follow the content, not the admin-gated title). When assigning, the
+       * upload must be the current user's own image. A replaced or removed
+       * icon's upload is left behind for the nightly cleanup.
+       */
+      const [context, upload] = await Promise.all([
+        getWikiContext(),
+        data.imageId
+          ? prisma.upload.findUnique({
+              where: { id: data.imageId },
+              select: { id: true, createdById: true, mimeType: true },
+            })
+          : Promise.resolve(null),
+      ]);
+      if (!context)
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+      const page = context.pagesById.get(data.resourceId);
+      if (!page || page.deletedAt || (data.imageId !== null && !upload))
+        return NextResponse.json({ error: "Bad Request" }, { status: 400 });
+      if (!context.permissions.get(page.id)?.canEdit)
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      if (upload) {
+        if (upload.createdById !== authentication.session.user.id)
+          return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        if (!upload.mimeType.startsWith("image/"))
+          return NextResponse.json({ error: "Bad Request" }, { status: 400 });
+      }
+
+      await prisma.wikiPage.update({
+        where: { id: page.id },
+        data: {
+          iconId: data.imageId,
+          updatedById: authentication.session.entity?.id ?? null,
+        },
+      });
+
+      await createAuditEvents([
+        {
+          type: AuditEventType.WIKI_PAGE_ICON_UPDATED,
+          data: { pageId: page.id, iconId: data.imageId },
+          createdById: authentication.session.user.id,
+        },
+      ]);
+
+      return NextResponse.json({});
+    }
+
     if (data.resourceType === "wikiPage") {
       /**
        * Authorize: edit permission on the target page. The upload must be

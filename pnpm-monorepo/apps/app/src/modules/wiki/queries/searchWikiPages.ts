@@ -12,6 +12,7 @@ export interface WikiSearchResult {
   readonly id: string;
   readonly title: string;
   readonly slug: string;
+  readonly iconId: string | null;
   /** Titles of the visible, not-deleted ancestors, root first */
   readonly breadcrumb: string[];
   /** Plain-text snippet with matches wrapped in the wiki search markers */
@@ -88,6 +89,7 @@ export const searchWikiPages = withTrace(
           id: page.id,
           title: page.title,
           slug: page.slug,
+          iconId: page.iconId,
           breadcrumb: buildVisibleWikiBreadcrumb(context, page),
           snippet: candidate.snippet,
         };

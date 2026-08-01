@@ -3,6 +3,7 @@ import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { ResolveWikiPageReportForm } from "@/modules/wiki/components/ResolveWikiPageReportForm";
+import { WikiPageIcon } from "@/modules/wiki/components/WikiPageIcon";
 import { getWikiPageReportById } from "@/modules/wiki/queries/getWikiPageReports";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -23,8 +24,9 @@ export default async function Page(
 
   return (
     <div>
-      <div className="flex gap-2 font-bold text-xl">
+      <div className="flex items-center gap-2 font-bold text-xl">
         <span className="text-neutral-500">Meldung /</span>
+        {report.page.iconId && <WikiPageIcon iconId={report.page.iconId} />}
         <p>{report.page.title}</p>
       </div>
 
@@ -36,8 +38,11 @@ export default async function Page(
               {report.page.deletedAt === null ? (
                 <Link
                   href={`/app/wiki/${report.page.id}/${report.page.slug}`}
-                  className="text-interaction-500 hover:text-interaction-300"
+                  className="inline-flex items-center gap-2 text-interaction-500 hover:text-interaction-300"
                 >
+                  {report.page.iconId && (
+                    <WikiPageIcon iconId={report.page.iconId} />
+                  )}
                   {report.page.title}
                 </Link>
               ) : (

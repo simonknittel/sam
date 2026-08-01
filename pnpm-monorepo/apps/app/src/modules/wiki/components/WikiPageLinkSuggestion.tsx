@@ -4,6 +4,8 @@ import type { WikiPageLinkedPage } from "@sam-monorepo/wiki-editor";
 import { Extension } from "@tiptap/core";
 import { PluginKey } from "@tiptap/pm/state";
 import { Suggestion } from "@tiptap/suggestion";
+import Image from "next/image";
+import type { ReactNode } from "react";
 import {
   createWikiSuggestionRender,
   rankWikiSuggestionItems,
@@ -18,6 +20,7 @@ interface PageLinkSuggestionItem {
   /** Page id — also the menu key, since page titles are not unique */
   readonly id: string;
   readonly title: string;
+  readonly icon?: ReactNode;
 }
 
 /**
@@ -57,6 +60,16 @@ export const WikiPageLinkSuggestion =
               Object.entries(this.options.pages).map(([pageId, page]) => ({
                 id: pageId,
                 title: page.title,
+                icon: page.iconSrc ? (
+                  <Image
+                    src={page.iconSrc}
+                    alt=""
+                    width={16}
+                    height={16}
+                    className="size-4 flex-none rounded-xs object-cover"
+                    unoptimized
+                  />
+                ) : undefined,
               })),
               query,
             ),

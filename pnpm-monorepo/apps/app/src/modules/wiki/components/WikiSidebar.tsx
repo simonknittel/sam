@@ -7,6 +7,7 @@ import {
 import { getWikiFavoritePageIds } from "../queries/getWikiFavorites";
 import { buildVisibleWikiTree } from "../utils/buildVisibleWikiTree";
 import { filterWikiPagesBySidebarMode } from "../utils/filterWikiPagesBySidebarMode";
+import { WikiPageIcon } from "./WikiPageIcon";
 import { WikiSearch } from "./WikiSearch";
 import { WikiSidebarTree } from "./WikiSidebarTree";
 
@@ -76,7 +77,11 @@ const Favorites = ({ pages }: FavoritesProps) => {
                 className="flex items-center gap-2 rounded-secondary px-2 py-1 text-neutral-300 hover:text-interaction-300"
                 title={page.title}
               >
-                <FaStar className="size-3 flex-none text-amber-400" />
+                {page.iconId ? (
+                  <WikiPageIcon iconId={page.iconId} />
+                ) : (
+                  <FaStar className="size-3 flex-none text-amber-400" />
+                )}
                 <span className="truncate">{page.title}</span>
               </Link>
             </li>

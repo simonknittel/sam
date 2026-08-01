@@ -19,6 +19,7 @@ import { WikiEditModeToggle } from "@/modules/wiki/components/WikiEditModeToggle
 import { WikiPageEditor } from "@/modules/wiki/components/WikiPageEditor";
 import { WikiPageExportImportModal } from "@/modules/wiki/components/WikiPageExportImportModal";
 import { WikiPageFavoriteButton } from "@/modules/wiki/components/WikiPageFavoriteButton";
+import { WikiPageIconButton } from "@/modules/wiki/components/WikiPageIconButton";
 import { WikiPagePermissionsModal } from "@/modules/wiki/components/WikiPagePermissionsModal";
 import { WikiPageSidebarModeModal } from "@/modules/wiki/components/WikiPageSidebarModeModal";
 import { WikiPageStaticContent } from "@/modules/wiki/components/WikiPageStaticContent";
@@ -183,7 +184,13 @@ const PageContent = async ({
       .filter((candidate) => context.permissions.get(candidate.id)?.canRead)
       .map((candidate) => [
         candidate.id,
-        { title: candidate.title, slug: candidate.slug },
+        {
+          title: candidate.title,
+          slug: candidate.slug,
+          iconSrc: candidate.iconId
+            ? `https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${candidate.iconId}`
+            : undefined,
+        },
       ]),
   );
 
@@ -232,7 +239,13 @@ const PageContent = async ({
       <article className="bg-secondary rounded-primary p-4">
         <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
           <div>
-            <h1 className="font-bold text-2xl">
+            <h1 className="flex items-center gap-2 font-bold text-2xl">
+              <WikiPageIconButton
+                pageId={page.id}
+                iconId={page.iconId}
+                canEdit={permissions.canEdit}
+              />
+
               {permissions.canAdmin ? (
                 <EditableInput
                   rowId={page.id}

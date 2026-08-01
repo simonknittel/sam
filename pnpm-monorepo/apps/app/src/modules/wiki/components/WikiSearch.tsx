@@ -9,6 +9,7 @@ import { Fragment, useEffect, useId, useState } from "react";
 import { FaSearch } from "react-icons/fa";
 import type { WikiSearchResult } from "../queries/searchWikiPages";
 import { parseWikiSearchSnippet } from "../utils/wikiSearchSnippet";
+import { WikiPageIcon } from "./WikiPageIcon";
 
 const MIN_QUERY_LENGTH = 2;
 
@@ -218,7 +219,8 @@ const SearchResult = ({
           </span>
         )}
 
-        <span className="block font-bold text-sm text-interaction-500">
+        <span className="flex items-center gap-2 font-bold text-sm text-interaction-500">
+          {result.iconId && <WikiPageIcon iconId={result.iconId} />}
           {result.title}
         </span>
 

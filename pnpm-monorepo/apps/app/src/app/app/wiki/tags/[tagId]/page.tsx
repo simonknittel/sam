@@ -1,14 +1,13 @@
 import { prisma } from "@/db";
-import { env } from "@/env";
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout";
 import { Link } from "@/modules/common/components/Link";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
+import { WikiPageIcon } from "@/modules/wiki/components/WikiPageIcon";
 import { WikiSidebar } from "@/modules/wiki/components/WikiSidebar";
 import { getWikiContext } from "@/modules/wiki/queries/getWikiContext";
 import { buildVisibleWikiBreadcrumb } from "@/modules/wiki/utils/buildVisibleWikiBreadcrumb";
 import type { Metadata } from "next";
-import Image from "next/image";
 import { forbidden, notFound } from "next/navigation";
 import { FaSitemap, FaTag } from "react-icons/fa";
 
@@ -103,16 +102,7 @@ const TagPageList = async ({ params }: TagPageListProps) => {
                   href={`/app/wiki/${page.id}/${page.slug}`}
                   className="inline-flex items-center gap-2 text-interaction-500 hover:text-interaction-300"
                 >
-                  {page.iconId && (
-                    <Image
-                      src={`https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${page.iconId}`}
-                      alt=""
-                      width={16}
-                      height={16}
-                      className="flex-none size-4 rounded-xs object-cover"
-                      unoptimized
-                    />
-                  )}
+                  {page.iconId && <WikiPageIcon iconId={page.iconId} />}
                   {page.title}
                 </Link>
               </li>

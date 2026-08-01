@@ -1,6 +1,5 @@
-import { env } from "@/env";
 import { Link } from "@/modules/common/components/Link";
-import Image from "next/image";
+import { WikiPageIcon } from "./WikiPageIcon";
 
 export interface WikiPageIndexEntry {
   readonly id: string;
@@ -55,14 +54,7 @@ const EntryList = ({ entries }: EntryListProps) => {
             title={entry.title}
           >
             {entry.iconId && (
-              <Image
-                src={`https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${entry.iconId}`}
-                alt=""
-                width={16}
-                height={16}
-                className="flex-none size-4 rounded-xs object-cover my-0"
-                unoptimized
-              />
+              <WikiPageIcon iconId={entry.iconId} className="size-4 my-0" />
             )}
             {entry.title}
           </Link>
