@@ -218,11 +218,11 @@ const SearchResult = ({
           </span>
         )}
 
-        <span className="block font-bold text-interaction-500">
+        <span className="block font-bold text-sm text-interaction-500">
           {result.title}
         </span>
 
-        <span className="block text-sm text-neutral-400">
+        <span className="block text-xs text-neutral-400">
           {parseWikiSearchSnippet(result.snippet).map((segment, index) =>
             segment.highlighted ? (
               <mark

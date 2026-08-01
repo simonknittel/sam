@@ -67,7 +67,7 @@ const Landing = async () => {
 
   return (
     <div className="flex flex-col gap-0.5">
-      <section className="bg-secondary rounded-primary p-4 lg:p-8">
+      <section className="bg-secondary rounded-primary p-4">
         <WikiSearch className="mx-auto w-full max-w-xl" />
       </section>
 
@@ -109,7 +109,7 @@ const PageListSection = ({
   showUpdatedAt = false,
 }: PageListSectionProps) => {
   return (
-    <section className="bg-secondary rounded-primary p-4 lg:p-8">
+    <section className="bg-secondary rounded-primary p-4">
       <h2 className="font-mono uppercase font-bold text-xl">{heading}</h2>
 
       <ul className="mt-4 flex flex-col gap-2">
