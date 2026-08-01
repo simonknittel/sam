@@ -2,7 +2,7 @@
   "name": "@sam-monorepo/app",
   "private": true,
   "scripts": {
-    "build": "next build",
+    "build": "pnpm --filter=@sam-monorepo/app^... build && next build",
     "dev": "next dev",
     "postinstall": "next typegen",
     "lint": "eslint .",
