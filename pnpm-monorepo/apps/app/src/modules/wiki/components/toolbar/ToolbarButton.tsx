@@ -1,5 +1,6 @@
 "use client";
 
+import { Tooltip } from "@/modules/common/components/Tooltip";
 import clsx from "clsx";
 import type { ReactNode } from "react";
 
@@ -20,19 +21,26 @@ export const ToolbarButton = ({
   children,
 }: Props) => {
   return (
-    <button
-      type={type}
-      title={title}
-      onClick={onClick}
-      className={clsx(
-        "flex size-8 cursor-pointer items-center justify-center rounded-secondary hover:bg-neutral-800",
-        {
-          "bg-neutral-800 text-interaction-500": isActive,
-          "text-neutral-300": !isActive,
-        },
-      )}
+    <Tooltip
+      asChild
+      triggerChildren={
+        <button
+          type={type}
+          aria-label={title}
+          onClick={onClick}
+          className={clsx(
+            "flex size-8 cursor-pointer items-center justify-center rounded-secondary hover:bg-neutral-800",
+            {
+              "bg-neutral-800 text-interaction-500": isActive,
+              "text-neutral-300": !isActive,
+            },
+          )}
+        >
+          {children}
+        </button>
+      }
     >
-      {children}
-    </button>
+      {title}
+    </Tooltip>
   );
 };

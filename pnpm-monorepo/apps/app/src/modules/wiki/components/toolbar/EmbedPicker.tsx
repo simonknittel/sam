@@ -37,7 +37,7 @@ export const EmbedPicker = ({ editor }: Props) => {
       }}
     >
       <TextInput
-        label="Einbetten"
+        aria-label="Einbetten"
         hint="YouTube, Twitch, Spotify oder Google Docs/Tabellen/Präsentationen"
         placeholder="https://…"
         value={url}

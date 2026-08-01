@@ -125,8 +125,6 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
         <HighlightPicker editor={editor} />
       </ToolbarPopover>
 
-      <ToolbarDivider />
-
       <ToolbarPopover
         title="Ausrichtung"
         isActive={activeAlignment !== "left"}
@@ -144,8 +142,6 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
       >
         <ListPicker editor={editor} />
       </ToolbarPopover>
-
-      <ToolbarDivider />
 
       <ToolbarButton
         title="Zitat"

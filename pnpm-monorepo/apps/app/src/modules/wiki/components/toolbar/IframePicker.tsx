@@ -41,7 +41,7 @@ export const IframePicker = ({ editor }: Props) => {
       }}
     >
       <TextInput
-        label="Website einbetten"
+        aria-label="Website einbetten"
         hint="Nur Domains, die in den Wiki-Einstellungen freigegeben sind"
         placeholder="https://…"
         value={url}

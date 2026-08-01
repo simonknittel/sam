@@ -2,7 +2,8 @@ import clsx from "clsx";
 import { useId, type ComponentProps, type ReactNode } from "react";
 
 interface Props extends ComponentProps<"input"> {
-  label: ReactNode;
+  /** Omit only when the context already names the input — pass `aria-label` then */
+  label?: ReactNode;
   hint?: ReactNode;
 }
 
@@ -15,9 +16,11 @@ export const TextInput = (props: Props) => {
 
   return (
     <>
-      <label className={clsx("block text-white/90", className)} htmlFor={id}>
-        {label}
-      </label>
+      {label && (
+        <label className={clsx("block text-white/90", className)} htmlFor={id}>
+          {label}
+        </label>
+      )}
 
       <input
         type="text"

@@ -16,7 +16,7 @@ export const ToolbarPopover = ({ title, isActive, icon, children }: Props) => {
     <PopoverBaseUI
       trigger={
         <span
-          title={title}
+          aria-label={title}
           className={clsx(
             "flex size-8 cursor-pointer items-center justify-center rounded-secondary hover:bg-neutral-800",
             {
@@ -29,6 +29,7 @@ export const ToolbarPopover = ({ title, isActive, icon, children }: Props) => {
         </span>
       }
     >
+      <p className="mb-2 font-mono text-xs uppercase text-white/40">{title}</p>
       {children}
     </PopoverBaseUI>
   );
