@@ -1,5 +1,6 @@
 "use client";
 
+import { wikiPageLinkHref } from "@/modules/wiki/utils/wikiPageLinks";
 import clsx from "clsx";
 import { useTranslations } from "next-intl";
 import { type ReactNode } from "react";
@@ -51,7 +52,7 @@ export const Fallback = ({ className, error }: FallbackProps) => {
           {t.rich("Common.internalServerError", {
             link: (chunks) => (
               <Link
-                href="/app/help/support"
+                href={wikiPageLinkHref("support")}
                 className="underline text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300"
               >
                 {chunks}

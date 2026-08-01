@@ -8,6 +8,7 @@ import type { ReactElement } from "react";
 import { useMemo } from "react";
 import { AiFillAppstore } from "react-icons/ai";
 import {
+  FaBookOpen,
   FaCamera,
   FaChartLine,
   FaClock,
@@ -22,7 +23,6 @@ import {
   FaScaleBalanced,
   FaTableList,
 } from "react-icons/fa6";
-import { IoIosHelpCircleOutline } from "react-icons/io";
 import { IoDocuments } from "react-icons/io5";
 import { MdEvent, MdTaskAlt, MdWorkspaces } from "react-icons/md";
 import { RiLogoutCircleRLine, RiSpyFill } from "react-icons/ri";
@@ -89,6 +89,7 @@ export const List = () => {
     careerTeamRead,
     globalStatisticsRead,
     systemLogRead,
+    wikiRead,
   ] = [
     authentication.authorize("citizen", "read"),
     authentication.authorize("organization", "read"),
@@ -128,6 +129,7 @@ export const List = () => {
     ]),
     authentication.authorize("globalStatistics", "read"),
     authentication.authorize("systemLog", "read"),
+    authentication.authorize("wiki", "read"),
   ];
   const careerRead =
     careerSecurityRead ||
@@ -151,6 +153,7 @@ export const List = () => {
     penaltyEntryCreate,
     taskRead,
     systemLogRead,
+    wikiRead,
   };
 
   const menuItems: MenuItem[] = useMemo(
@@ -252,12 +255,13 @@ export const List = () => {
         authKey: "profitDistributionCycleRead",
       },
       {
-        id: "help",
-        label: "Hilfe",
-        keywords: ["Hilfe", "Help", "Support"],
-        icon: <IoIosHelpCircleOutline />,
+        id: "wiki",
+        label: "Wiki",
+        keywords: ["Wiki", "Hilfe", "Help", "Support", "Wissen"],
+        icon: <FaBookOpen />,
         type: MenuItemType.Link,
-        href: "/app/help",
+        href: "/app/wiki",
+        authKey: "wikiRead",
       },
       {
         id: "iam",

@@ -6,7 +6,11 @@ import clsx from "clsx";
 import { FaBell, FaQuestionCircle, FaUser } from "react-icons/fa";
 import { LogoutButton } from "../LogoutButton";
 
-export const Account = () => {
+interface Props {
+  readonly supportHref: string | null;
+}
+
+export const Account = ({ supportHref }: Props) => {
   const authentication = useAuthentication();
   if (!authentication) return null;
 
@@ -32,14 +36,16 @@ export const Account = () => {
       </div>
 
       <div className="flex gap-1">
-        <Button2
-          as={Link}
-          href="/app/help/support"
-          title="Support"
-          variant={Button2Variant.Secondary}
-        >
-          <FaQuestionCircle />
-        </Button2>
+        {supportHref && (
+          <Button2
+            as={Link}
+            href={supportHref}
+            title="Support"
+            variant={Button2Variant.Secondary}
+          >
+            <FaQuestionCircle />
+          </Button2>
+        )}
 
         <Button2
           as={Link}

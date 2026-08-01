@@ -4,6 +4,7 @@ import { MaxWidthContent } from "@/modules/common/components/layouts/MaxWidthCon
 import { Link } from "@/modules/common/components/Link";
 import { RichText } from "@/modules/common/components/RichText";
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
+import { getWikiPageLinkTarget } from "@/modules/wiki/queries/getWikiSettings";
 import { notFound } from "next/navigation";
 
 type Params = Promise<{
@@ -29,7 +30,10 @@ export default async function Page({
   await requireAuthenticationPage("/app/external/[appSlug]/info");
 
   const { appSlug } = await params;
-  const app = await getExternalAppBySlug(appSlug);
+  const [app, supportTarget] = await Promise.all([
+    getExternalAppBySlug(appSlug),
+    getWikiPageLinkTarget("support"),
+  ]);
   if (!app) notFound();
 
   return (
@@ -45,8 +49,14 @@ export default async function Page({
           </p>
           <p>
             Wenn das verantwortliche Team nicht weiterhelfen kann, melde dich im
-            Zweifel beim Support des SAM (siehe{" "}
-            <Link href="/app/help/support">Hilfe &gt; Support</Link>).
+            Zweifel beim Support des SAM
+            {supportTarget && (
+              <>
+                {" "}
+                (siehe <Link href={supportTarget.href}>Support</Link>)
+              </>
+            )}
+            .
           </p>
 
           <h2>Team</h2>

@@ -7,41 +7,46 @@ import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getWikiContext } from "../queries/getWikiContext";
-import { WIKI_SETTING_SUPPORT_PAGE_ID } from "../queries/getWikiSettings";
+import {
+  WIKI_PAGE_LINK_KEYS,
+  wikiPageLinkSettingKey,
+} from "../utils/wikiPageLinks";
 
 const schema = z.object({
-  /** Empty string unsets the support page */
-  supportPageId: z.union([z.cuid2(), z.literal("")]),
+  key: z.enum(WIKI_PAGE_LINK_KEYS),
+  /** Empty string unsets the link */
+  pageId: z.union([z.cuid2(), z.literal("")]),
 });
 
-export const updateWikiSupportPage = createAuthenticatedAction(
-  "updateWikiSupportPage",
+export const updateWikiPageLink = createAuthenticatedAction(
+  "updateWikiPageLink",
   schema,
   async (formData, authentication, data, t) => {
     if (!(await authentication.authorize("wiki", "manage")))
       return { error: t("Common.forbidden"), requestPayload: formData };
 
-    if (data.supportPageId) {
+    if (data.pageId) {
       const context = await getWikiContext();
-      const page = context?.pagesById.get(data.supportPageId);
+      const page = context?.pagesById.get(data.pageId);
       if (!page || page.deletedAt)
         return { error: t("Common.badRequest"), requestPayload: formData };
     }
 
+    const settingKey = wikiPageLinkSettingKey(data.key);
     const updatedById = authentication.session.entity?.id ?? null;
-    if (data.supportPageId) {
+    if (data.pageId) {
       await prisma.wikiSetting.upsert({
-        where: { key: WIKI_SETTING_SUPPORT_PAGE_ID },
-        update: { value: data.supportPageId, updatedById },
+        where: { key: settingKey },
+        update: { value: data.pageId, updatedById },
         create: {
-          key: WIKI_SETTING_SUPPORT_PAGE_ID,
-          value: data.supportPageId,
+          key: settingKey,
+          value: data.pageId,
           updatedById,
         },
       });
     } else {
       await prisma.wikiSetting.deleteMany({
-        where: { key: WIKI_SETTING_SUPPORT_PAGE_ID },
+        where: { key: settingKey },
       });
     }
 
@@ -49,14 +54,16 @@ export const updateWikiSupportPage = createAuthenticatedAction(
       {
         type: AuditEventType.WIKI_SETTINGS_UPDATED,
         data: {
-          setting: WIKI_SETTING_SUPPORT_PAGE_ID,
-          value: data.supportPageId,
+          setting: settingKey,
+          value: data.pageId,
         },
         createdById: authentication.session.user.id,
       },
     ]);
 
-    revalidatePath("/app/wiki", "layout");
+    // Page links render in the root app layout (topbar, mobile action bar),
+    // not only under /app/wiki
+    revalidatePath("/app", "layout");
 
     return { success: t("Common.successfullySaved") };
   },
