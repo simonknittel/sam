@@ -360,22 +360,6 @@
 }
 
 /*
- * Drop indicator while dragging blocks (prosemirror-dropcursor renders the
- * line and positions it via inline styles): green line with a soft glow
- * fading out above and below — same look as the event lineup drag targets.
- */
-.wiki-drop-cursor::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 10px;
-  pointer-events: none;
-  top: 100%;
-  background: linear-gradient(to bottom, var(--color-green-900), transparent);
-}
-
-/*
  * In the editable editor, iframes swallow clicks — the first click lands on
  * the wrapper and selects the node (showing resize handles and the edit
  * menu); the selected embed is fully interactive.
