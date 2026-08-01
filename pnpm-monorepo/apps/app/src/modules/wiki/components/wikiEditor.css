@@ -179,16 +179,6 @@
   margin-bottom: 0;
 }
 
-/*
- * Make the cells visible while editing — outline instead of border/padding
- * so the content geometry stays identical to the static render.
- */
-.tiptap [data-wiki-grid] > [data-wiki-grid-cell] {
-  outline: 1px dashed var(--color-neutral-800);
-  outline-offset: 4px;
-  border-radius: var(--radius-secondary);
-}
-
 /* Callouts: blocks highlighted with a colored background and border */
 .prose [data-wiki-callout] {
   --wiki-callout-color: var(--color-blue-500);
