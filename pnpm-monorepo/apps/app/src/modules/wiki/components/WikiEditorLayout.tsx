@@ -19,6 +19,8 @@ interface Props {
   readonly staticFallback: ReactNode;
   /** Opens the embed URL dialog (gutter palette entry "Einbetten") */
   readonly onRequestEmbed: () => void;
+  /** Opens the link dialog (gutter palette entry "Link", selection menu) */
+  readonly onRequestLink: () => void;
 }
 
 /**
@@ -34,6 +36,7 @@ export const WikiEditorLayout = ({
   statusSlot,
   staticFallback,
   onRequestEmbed,
+  onRequestLink,
 }: Props) => {
   return (
     <div className={clsx(className)}>
@@ -48,12 +51,15 @@ export const WikiEditorLayout = ({
       {editor ? (
         <div className={clsx("relative", { "mt-4": isEditing })}>
           <EditorContent editor={editor} />
-          {isEditing && <WikiEditorOverlays editor={editor} />}
+          {isEditing && (
+            <WikiEditorOverlays editor={editor} onRequestLink={onRequestLink} />
+          )}
           {isEditing && (
             <WikiGutter
               editor={editor}
               pageId={pageId}
               onRequestEmbed={onRequestEmbed}
+              onRequestLink={onRequestLink}
             />
           )}
         </div>

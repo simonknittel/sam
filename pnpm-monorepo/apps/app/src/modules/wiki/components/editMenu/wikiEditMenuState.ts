@@ -6,6 +6,7 @@ import {
   WIKI_TEXT_COLORS,
   getWikiPositionRestrictions,
   type WikiCalloutColor,
+  type WikiGridVerticalAlign,
   type WikiHighlightColor,
   type WikiNodeAlignment,
   type WikiTextColor,
@@ -143,8 +144,8 @@ export type WikiBlockMenuState = {
   readonly typeName: string;
   readonly position: number;
   readonly nodeSize: number;
-  /** wikiGrid only: vertical centering of the cell contents */
-  readonly verticalAlign: "center" | null;
+  /** wikiGrid only: vertical alignment of the cell contents */
+  readonly verticalAlign: WikiGridVerticalAlign;
 } & WikiMenuTarget;
 
 /** Formatting menu while text inside a single block is selected */
@@ -154,6 +155,8 @@ export type WikiTextSelectionMenuState = {
   readonly activeMarks: readonly string[];
   readonly activeTextColor: WikiTextColor | null;
   readonly activeHighlightColor: WikiHighlightColor | null;
+  /** Whether the selection carries a link mark (the link button prefills) */
+  readonly hasLink: boolean;
 } & WikiMenuTarget;
 
 /** Block menu of the hovered (or whole-selected) paragraph/heading */
@@ -235,6 +238,7 @@ const textSelectionMenu = (
         editor.isActive("highlight", { color }),
       ) ?? null)
     : null,
+  hasLink: editor.schema.marks.link ? editor.isActive("link") : false,
   ...target,
 });
 
@@ -335,8 +339,8 @@ export const wikiMenuFromElement = (
       typeName: resolved.node.type.name,
       position: resolved.position,
       nodeSize: resolved.node.nodeSize,
-      verticalAlign: (resolved.node.attrs.verticalAlign ?? null) as
-        "center" | null,
+      verticalAlign: (resolved.node.attrs.verticalAlign ??
+        null) as WikiGridVerticalAlign,
       ...target,
     };
   }
@@ -383,7 +387,14 @@ export const wikiMenuFromSelection = (
     });
   }
 
-  if (editor.isActive("link")) {
+  /**
+   * Only a CARET inside a link raises the link menu (the touch fallback
+   * for editing an existing link; deliberately blur-proof — focus moves
+   * into its URL form while editing). A non-empty selection over a link
+   * falls through to the formatting menu below, whose link button opens
+   * the link dialog prefilled.
+   */
+  if (selection.empty && editor.isActive("link")) {
     const domAtPos = editor.view.domAtPos(selection.from).node;
     const element =
       domAtPos instanceof HTMLElement ? domAtPos : domAtPos.parentElement;

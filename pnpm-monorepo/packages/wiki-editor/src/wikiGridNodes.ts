@@ -5,6 +5,10 @@ import { getWikiSelectionRestrictions } from "./wikiTextOnlyBlocks.js";
 export const WIKI_GRID_COLUMN_COUNTS = [2, 3, 4] as const;
 export type WikiGridColumnCount = (typeof WIKI_GRID_COLUMN_COUNTS)[number];
 
+export const WIKI_GRID_VERTICAL_ALIGNS = ["center", "stretch"] as const;
+export type WikiGridVerticalAlign =
+  (typeof WIKI_GRID_VERTICAL_ALIGNS)[number] | null;
+
 /**
  * Content expression for the containers that hold grids next to regular
  * blocks (document, collapsible-section content, callout). The grid is
@@ -48,17 +52,22 @@ export const WikiGrid = Node.create({
       },
       /**
        * NULL/"top" aligns cell content to the top (default), "center"
-       * centers it vertically (see wikiEditor.css).
+       * centers it vertically, "stretch" grows the last block of each
+       * cell so all cells fill to equal height (see wikiEditor.css).
        */
       verticalAlign: {
         default: null,
-        parseHTML: (element) =>
-          element.getAttribute("data-vertical-align") === "center"
-            ? "center"
-            : null,
+        parseHTML: (element) => {
+          const parsed = element.getAttribute("data-vertical-align");
+          return WIKI_GRID_VERTICAL_ALIGNS.includes(
+            parsed as Exclude<WikiGridVerticalAlign, null>,
+          )
+            ? parsed
+            : null;
+        },
         renderHTML: (attributes) =>
-          attributes.verticalAlign === "center"
-            ? { "data-vertical-align": "center" }
+          attributes.verticalAlign
+            ? { "data-vertical-align": String(attributes.verticalAlign) }
             : {},
       },
     };

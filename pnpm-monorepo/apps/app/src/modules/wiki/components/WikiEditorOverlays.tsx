@@ -40,6 +40,8 @@ const HOVER_SELECTOR = [
 
 interface Props {
   readonly editor: Editor | null;
+  /** Opens the link dialog (selection menu's link button) */
+  readonly onRequestLink: () => void;
 }
 
 /**
@@ -51,7 +53,7 @@ interface Props {
  * strips bridging the gaps to the element) without losing the hover;
  * anywhere else — including the menu's label row — hiding is immediate.
  */
-export const WikiEditorOverlays = ({ editor }: Props) => {
+export const WikiEditorOverlays = ({ editor, onRequestLink }: Props) => {
   const overlayRef = useRef<HTMLDivElement>(null);
   const dragLockRef = useRef(false);
 
@@ -77,7 +79,11 @@ export const WikiEditorOverlays = ({ editor }: Props) => {
         hoveredElement={hoveredElement}
         overlayRef={overlayRef}
       />
-      <WikiEditMenu editor={editor} hoveredElement={hoveredElement} />
+      <WikiEditMenu
+        editor={editor}
+        hoveredElement={hoveredElement}
+        onRequestLink={onRequestLink}
+      />
     </div>
   );
 };

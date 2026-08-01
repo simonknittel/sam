@@ -28,6 +28,7 @@ import { useWikiEditMode } from "./WikiEditModeProvider";
 import "./wikiEditor.css";
 import { WikiEditorLayout } from "./WikiEditorLayout";
 import { WikiEmbedUrlModal } from "./WikiEmbedUrlModal";
+import { WikiLinkModal } from "./WikiLinkModal";
 
 interface Props {
   readonly className?: string;
@@ -146,8 +147,9 @@ export const WikiCollabEditor = ({
           />
         }
         staticFallback={staticFallback}
-        /** No editor yet — the gutter (the only consumer) is not rendered */
+        /** No editor yet — the gutter/overlays (the only consumers) are not rendered */
         onRequestEmbed={noop}
+        onRequestLink={noop}
       />
     );
 
@@ -252,6 +254,9 @@ const ConnectedEditor = ({
   const [isEmbedModalOpen, setIsEmbedModalOpen] = useState(false);
   const requestEmbed = useCallback(() => setIsEmbedModalOpen(true), []);
 
+  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+  const requestLink = useCallback(() => setIsLinkModalOpen(true), []);
+
   const extensions = useWikiEditorExtensions({
     pageId,
     iframeAllowlist,
@@ -260,6 +265,7 @@ const ConnectedEditor = ({
     collaboration: true,
     interactive: isEditing,
     onRequestEmbed: requestEmbed,
+    onRequestLink: requestLink,
   });
 
   /**
@@ -316,12 +322,20 @@ const ConnectedEditor = ({
         }
         staticFallback={staticFallback}
         onRequestEmbed={requestEmbed}
+        onRequestLink={requestLink}
       />
 
       {editor && isEmbedModalOpen && (
         <WikiEmbedUrlModal
           editor={editor}
           onRequestClose={() => setIsEmbedModalOpen(false)}
+        />
+      )}
+
+      {editor && isLinkModalOpen && (
+        <WikiLinkModal
+          editor={editor}
+          onRequestClose={() => setIsLinkModalOpen(false)}
         />
       )}
     </>

@@ -37,6 +37,8 @@ export interface WikiSlashCommandOptions {
   pageId: string;
   /** Opens the embed URL dialog (mounted by WikiCollabEditor) */
   onRequestEmbed: () => void;
+  /** Opens the link dialog (mounted by WikiCollabEditor) */
+  onRequestLink: () => void;
 }
 
 export interface WikiSlashCommandItem {
@@ -213,14 +215,27 @@ export const WIKI_SLASH_COMMAND_ITEMS: readonly WikiSlashCommandItem[] = [
     },
   },
   {
-    title: "Seitenlink",
+    title: "Link",
     icon: <FaLink />,
-    keywords: ["seitenlink", "link", "seite", "page", "verweis"],
+    keywords: [
+      "link",
+      "seitenlink",
+      "seite",
+      "page",
+      "url",
+      "verweis",
+      "verknüpfung",
+    ],
     allowedInTextOnlyBlock: true,
-    insertsInline: true,
-    /** "[[" opens the page link suggestion (WikiPageLinkSuggestion) */
-    run: (editor, range) =>
-      editor.chain().focus().deleteRange(range).insertContent("[[").run(),
+    /**
+     * Deliberately NOT insertsInline: the dialog also creates plain URL
+     * links, which are valid where inline nodes (page links) are not —
+     * it restricts itself to URLs there.
+     */
+    run: (editor, range, options) => {
+      editor.chain().focus().deleteRange(range).run();
+      options.onRequestLink();
+    },
   },
   {
     title: "Citizen erwähnen",
@@ -293,6 +308,7 @@ export const WikiSlashCommand = Extension.create<WikiSlashCommandOptions>({
     return {
       pageId: "",
       onRequestEmbed: () => undefined,
+      onRequestLink: () => undefined,
     };
   },
 

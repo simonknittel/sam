@@ -53,6 +53,8 @@ interface Props {
   readonly editor: Editor | null;
   /** Shared hover state, see WikiEditorOverlays */
   readonly hoveredElement: HTMLElement | null;
+  /** Opens the link dialog (selection menu's link button) */
+  readonly onRequestLink: () => void;
 }
 
 /**
@@ -67,7 +69,7 @@ interface Props {
  * drag handle; the per-kind actions live in editMenu/. Companion of
  * WikiResizeHandles inside the shared overlay root.
  */
-export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
+export const WikiEditMenu = ({ editor, hoveredElement, onRequestLink }: Props) => {
   const [menu, setMenu] = useState<WikiEditMenuState>(null);
   /**
    * ProseMirror keeps the selection — without dispatching a transaction —
@@ -298,7 +300,11 @@ export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
               />
             )}
             {menu.kind === "textSelection" && (
-              <WikiTextSelectionMenuActions editor={editor} menu={menu} />
+              <WikiTextSelectionMenuActions
+                editor={editor}
+                menu={menu}
+                onRequestLink={onRequestLink}
+              />
             )}
             {menu.kind === "textNode" && (
               <WikiTextNodeMenuActions editor={editor} menu={menu} />
