@@ -54,7 +54,7 @@ const EntryList = ({ entries }: EntryListProps) => {
             title={entry.title}
           >
             {entry.iconId && (
-              <WikiPageIcon iconId={entry.iconId} className="size-4 my-0" />
+              <WikiPageIcon iconId={entry.iconId} className="size-4 my-0!" />
             )}
             {entry.title}
           </Link>
