@@ -25,6 +25,7 @@ import { WikiIframe } from "./wikiIframeNode.js";
 import { WikiPageIndex } from "./wikiPageIndexNode.js";
 import { WikiPageLink, type WikiPageLinkedPage } from "./wikiPageLinkNode.js";
 import { WikiImage, WikiYoutube } from "./wikiResizableNodes.js";
+import { WikiTextColorMark } from "./wikiTextColorMark.js";
 import {
   WikiBlockquote,
   WikiHeading,
@@ -118,6 +119,10 @@ export const getWikiEditorExtensions = (
     DetailsSummary,
     DetailsContent,
     Highlight.configure({ multicolor: true }),
+    // After the StarterKit marks so it renders as their innermost element,
+    // letting its CSS color win over the typography plugin's strong/link
+    // colors
+    WikiTextColorMark,
     WikiTextAlign.configure({ types: ["heading", "paragraph"] }),
     WikiTextOnlyBlockGuard,
     WikiImage,

@@ -9,9 +9,11 @@ import {
 } from "@floating-ui/react-dom";
 import {
   WIKI_RESIZABLE_NODE_TYPES,
+  WIKI_TEXT_COLORS,
   getWikiPositionRestrictions,
   type WikiCalloutColor,
   type WikiNodeAlignment,
+  type WikiTextColor,
 } from "@sam-monorepo/wiki-editor";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { NodeSelection } from "@tiptap/pm/state";
@@ -33,6 +35,7 @@ import { getWikiNodeTypeLabel } from "../utils/getWikiNodeTypeLabel";
 import { WikiPageIndexConfigModal } from "./WikiPageIndexConfigModal";
 import { ALIGNMENT_OPTIONS } from "./toolbar/AlignmentPicker";
 import { CalloutColorSwatches } from "./toolbar/CalloutColorSwatches";
+import { TextColorSwatches } from "./toolbar/TextColorSwatches";
 import {
   TEXT_FORMAT_OPTIONS,
   toggleWikiTextFormat,
@@ -156,6 +159,7 @@ type MenuState =
       readonly headingLevel: number | null;
       readonly textAlign: WikiNodeAlignment;
       readonly activeMarks: readonly string[];
+      readonly activeTextColor: WikiTextColor | null;
       /**
        * Paragraph inside a text-only container (quote, table cell, list
        * item): headings and alignment are unavailable there
@@ -312,6 +316,16 @@ export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
             ? editor.state.doc.rangeHasMark(from, to, markType)
             : false;
         }).map((option) => option.name);
+        const textColorMark = editor.schema.marks.wikiTextColor;
+        const activeTextColor = textColorMark
+          ? (WIKI_TEXT_COLORS.find((color) =>
+              editor.state.doc.rangeHasMark(
+                from,
+                to,
+                textColorMark.create({ color }),
+              ),
+            ) ?? null)
+          : null;
         return {
           kind: "text",
           position: resolved.position,
@@ -323,6 +337,7 @@ export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
           textAlign: (resolved.node.attrs.textAlign ??
             "left") as WikiNodeAlignment,
           activeMarks,
+          activeTextColor,
           inTextOnlyBlock: getWikiPositionRestrictions(
             editor.state.doc,
             resolved.position,
@@ -649,6 +664,32 @@ export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
     );
   };
 
+  const toggleTextColor = (color: WikiTextColor) => {
+    if (menu.kind !== "text") return;
+    editor
+      .chain()
+      .focus()
+      .setTextSelection({
+        from: menu.position + 1,
+        to: menu.position + menu.nodeSize - 1,
+      })
+      .toggleWikiTextColor(color)
+      .run();
+  };
+
+  const removeTextColor = () => {
+    if (menu.kind !== "text") return;
+    editor
+      .chain()
+      .focus()
+      .setTextSelection({
+        from: menu.position + 1,
+        to: menu.position + menu.nodeSize - 1,
+      })
+      .unsetWikiTextColor()
+      .run();
+  };
+
   const setTextAlignment = (value: WikiNodeAlignment) => {
     if (menu.kind !== "text") return;
     editor
@@ -856,6 +897,20 @@ export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
                     <Icon />
                   </ToolbarButton>
                 ))}
+
+                <ToolbarDivider />
+
+                <TextColorSwatches
+                  activeColor={menu.activeTextColor}
+                  onSelect={toggleTextColor}
+                />
+                <ToolbarButton
+                  title="Textfarbe entfernen"
+                  isActive={false}
+                  onClick={removeTextColor}
+                >
+                  <FaBan />
+                </ToolbarButton>
 
                 {!menu.inTextOnlyBlock && (
                   <>

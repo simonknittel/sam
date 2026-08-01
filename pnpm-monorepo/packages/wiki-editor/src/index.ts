@@ -64,6 +64,11 @@ export {
   type WikiNodeAlignment,
 } from "./wikiResizableNodes.js";
 export {
+  WIKI_TEXT_COLORS,
+  WikiTextColorMark,
+  type WikiTextColor,
+} from "./wikiTextColorMark.js";
+export {
   WIKI_TEXT_ONLY_BLOCK_TYPES,
   getWikiPositionRestrictions,
   getWikiSelectionRestrictions,
