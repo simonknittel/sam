@@ -20,6 +20,15 @@
   min-height: 1lh;
 }
 
+/*
+ * The typography plugin zeroes the top margin of anything directly following
+ * an h2/h3/h4 (or hr) but has no such rule for h1, so an h2 right below an
+ * h1 kept its 2em top margin — matched here for h1.
+ */
+.prose h1 + * {
+  margin-top: 0;
+}
+
 /* Task lists (editor and static render) */
 .prose ul[data-type="taskList"] {
   list-style: none;
