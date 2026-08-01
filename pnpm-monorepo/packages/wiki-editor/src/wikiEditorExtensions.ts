@@ -6,9 +6,8 @@ import {
   DetailsSummary,
 } from "@tiptap/extension-details";
 import { Highlight } from "@tiptap/extension-highlight";
-import { TaskItem, TaskList } from "@tiptap/extension-list";
+import { TaskList } from "@tiptap/extension-list";
 import { TableKit } from "@tiptap/extension-table";
-import { TextAlign } from "@tiptap/extension-text-align";
 import { Placeholder } from "@tiptap/extensions";
 import type { Schema } from "@tiptap/pm/model";
 import StarterKit from "@tiptap/starter-kit";
@@ -26,6 +25,16 @@ import { WikiIframe } from "./wikiIframeNode.js";
 import { WikiPageIndex } from "./wikiPageIndexNode.js";
 import { WikiPageLink, type WikiPageLinkedPage } from "./wikiPageLinkNode.js";
 import { WikiImage, WikiYoutube } from "./wikiResizableNodes.js";
+import {
+  WikiBlockquote,
+  WikiHeading,
+  WikiListItem,
+  WikiTableCell,
+  WikiTableHeader,
+  WikiTaskItem,
+  WikiTextAlign,
+  WikiTextOnlyBlockGuard,
+} from "./wikiTextOnlyBlocks.js";
 
 export interface WikiEditorExtensionsOptions {
   /** Undo/redo comes from Yjs in the collab editor instead of StarterKit */
@@ -76,6 +85,10 @@ export const getWikiEditorExtensions = (
     StarterKit.configure({
       // Replaced with the lowlight-highlighted variant below
       codeBlock: false,
+      // Replaced with the text-only variants below
+      blockquote: false,
+      heading: false,
+      listItem: false,
       link: {
         openOnClick: false,
       },
@@ -88,16 +101,25 @@ export const getWikiEditorExtensions = (
       },
     }),
     CodeBlockLowlight.configure({ lowlight }),
+    WikiBlockquote,
+    WikiHeading,
+    WikiListItem,
     TableKit.configure({
       table: { resizable: false },
+      // Replaced with the text-only variants below
+      tableCell: false,
+      tableHeader: false,
     }),
+    WikiTableCell,
+    WikiTableHeader,
     TaskList,
-    TaskItem.configure({ nested: true }),
+    WikiTaskItem.configure({ nested: true }),
     Details,
     DetailsSummary,
     DetailsContent,
     Highlight.configure({ multicolor: true }),
-    TextAlign.configure({ types: ["heading", "paragraph"] }),
+    WikiTextAlign.configure({ types: ["heading", "paragraph"] }),
+    WikiTextOnlyBlockGuard,
     WikiImage,
     WikiAttachment,
     WikiYoutube.configure({

@@ -1,5 +1,6 @@
 "use client";
 
+import { getWikiSelectionRestrictions } from "@sam-monorepo/wiki-editor";
 import { Extension, type Editor, type Range } from "@tiptap/core";
 import { PluginKey } from "@tiptap/pm/state";
 import { Suggestion } from "@tiptap/suggestion";
@@ -19,6 +20,18 @@ export interface WikiSlashCommandOptions {
 export interface WikiSlashCommandItem {
   readonly title: string;
   readonly keywords: readonly string[];
+  /**
+   * Whether the entry stays available inside a text-only container
+   * (quote, table cell, list item) — only entries keeping the current
+   * paragraph or inserting inline content qualify; everything
+   * block-level is filtered out there.
+   */
+  readonly allowedInTextOnlyBlock?: boolean;
+  /**
+   * Whether the entry inserts inline nodes (page link, mention) — hidden
+   * where those are schema-invalid (headings hold plain text only).
+   */
+  readonly insertsInline?: boolean;
   readonly run: (
     editor: Editor,
     range: Range,
@@ -31,6 +44,7 @@ export const WIKI_SLASH_COMMAND_ITEMS: readonly WikiSlashCommandItem[] = [
   {
     title: "Text",
     keywords: ["text", "paragraph", "absatz", "p"],
+    allowedInTextOnlyBlock: true,
     run: (editor, range) =>
       editor.chain().focus().deleteRange(range).setParagraph().run(),
   },
@@ -138,6 +152,8 @@ export const WIKI_SLASH_COMMAND_ITEMS: readonly WikiSlashCommandItem[] = [
   {
     title: "Seitenlink",
     keywords: ["seitenlink", "link", "seite", "page", "verweis"],
+    allowedInTextOnlyBlock: true,
+    insertsInline: true,
     /** "[[" opens the page link suggestion (WikiPageLinkSuggestion) */
     run: (editor, range) =>
       editor.chain().focus().deleteRange(range).insertContent("[[").run(),
@@ -145,6 +161,8 @@ export const WIKI_SLASH_COMMAND_ITEMS: readonly WikiSlashCommandItem[] = [
   {
     title: "Citizen erwähnen",
     keywords: ["citizen", "mention", "erwähnen", "erwähnung", "spieler"],
+    allowedInTextOnlyBlock: true,
+    insertsInline: true,
     /** "@" opens the citizen suggestion (WikiCitizenMentionSuggestion) */
     run: (editor, range) =>
       editor.chain().focus().deleteRange(range).insertContent("@").run(),
@@ -167,10 +185,27 @@ export const WIKI_SLASH_COMMAND_ITEMS: readonly WikiSlashCommandItem[] = [
   },
 ];
 
-const filterSlashCommandItems = (query: string) => {
+/** The palette entries applying at the caret, see WikiTextRestrictions */
+const availableSlashCommandItems = (editor: Editor) => {
+  switch (getWikiSelectionRestrictions(editor.state).slashItems) {
+    case "none":
+      return [];
+    case "textOnly":
+      return WIKI_SLASH_COMMAND_ITEMS.filter(
+        (item) => item.allowedInTextOnlyBlock,
+      );
+    case "noInline":
+      return WIKI_SLASH_COMMAND_ITEMS.filter((item) => !item.insertsInline);
+    default:
+      return WIKI_SLASH_COMMAND_ITEMS;
+  }
+};
+
+const filterSlashCommandItems = (query: string, editor: Editor) => {
+  const items = availableSlashCommandItems(editor);
   const normalized = query.toLowerCase().trim();
-  if (!normalized) return [...WIKI_SLASH_COMMAND_ITEMS];
-  return WIKI_SLASH_COMMAND_ITEMS.filter(
+  if (!normalized) return [...items];
+  return items.filter(
     (item) =>
       item.title.toLowerCase().includes(normalized) ||
       item.keywords.some((keyword) => keyword.startsWith(normalized)),
@@ -202,7 +237,7 @@ export const WikiSlashCommand = Extension.create<WikiSlashCommandOptions>({
         command: ({ editor, range, props }) => {
           props.run(editor, range, this.options);
         },
-        items: ({ query }) => filterSlashCommandItems(query),
+        items: ({ query, editor }) => filterSlashCommandItems(query, editor),
         render: () => createWikiSuggestionRender<WikiSlashCommandItem>(),
       }),
     ];

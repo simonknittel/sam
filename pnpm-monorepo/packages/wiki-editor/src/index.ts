@@ -63,3 +63,10 @@ export {
   clampWikiWidthPercent,
   type WikiNodeAlignment,
 } from "./wikiResizableNodes.js";
+export {
+  WIKI_TEXT_ONLY_BLOCK_TYPES,
+  getWikiPositionRestrictions,
+  getWikiSelectionRestrictions,
+  stripWikiTextOnlyAlignment,
+  type WikiTextRestrictions,
+} from "./wikiTextOnlyBlocks.js";

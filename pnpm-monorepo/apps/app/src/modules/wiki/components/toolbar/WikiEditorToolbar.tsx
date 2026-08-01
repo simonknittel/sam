@@ -1,5 +1,6 @@
 "use client";
 
+import { getWikiSelectionRestrictions } from "@sam-monorepo/wiki-editor";
 import { useEditorState, type Editor } from "@tiptap/react";
 import {
   FaBold,
@@ -91,8 +92,21 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
             attachment: editor.isActive("wikiAttachment"),
             embed: editor.isActive("youtube") || editor.isActive("wikiEmbed"),
             iframe: editor.isActive("wikiIframe"),
+            /**
+             * Text-only contexts (quote, table cell, list item, code
+             * block, collapsible-section title) disable the controls
+             * that cannot apply there.
+             */
+            restrictions: getWikiSelectionRestrictions(editor.state),
           },
   });
+
+  const restricted = {
+    blocks: active?.restrictions.blocks ?? false,
+    lists: active?.restrictions.lists ?? false,
+    marks: active?.restrictions.marks ?? false,
+    alignment: active?.restrictions.alignment ?? false,
+  };
 
   const activeAlignment = active?.alignment ?? "left";
   const ActiveAlignmentIcon =
@@ -104,6 +118,7 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
       <ToolbarPopover
         title="Überschrift"
         isActive={active?.heading ?? false}
+        disabled={restricted.blocks}
         icon={<FaHeading />}
       >
         <HeadingPicker editor={editor} />
@@ -112,6 +127,7 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
       <ToolbarPopover
         title="Textformat"
         isActive={active?.textFormat ?? false}
+        disabled={restricted.marks}
         icon={<FaBold />}
       >
         <TextFormatPicker editor={editor} />
@@ -120,6 +136,7 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
       <ToolbarPopover
         title="Textmarker"
         isActive={active?.highlight ?? false}
+        disabled={restricted.marks}
         icon={<FaHighlighter />}
       >
         <HighlightPicker editor={editor} />
@@ -128,6 +145,7 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
       <ToolbarPopover
         title="Ausrichtung"
         isActive={activeAlignment !== "left"}
+        disabled={restricted.alignment}
         icon={<ActiveAlignmentIcon />}
       >
         <AlignmentPicker editor={editor} />
@@ -138,6 +156,7 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
       <ToolbarPopover
         title="Liste"
         isActive={active?.list ?? false}
+        disabled={restricted.lists}
         icon={<FaListUl />}
       >
         <ListPicker editor={editor} />
@@ -146,6 +165,8 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
       <ToolbarButton
         title="Zitat"
         isActive={active?.blockquote ?? false}
+        // Inside a quote the toggle still unwraps it
+        disabled={restricted.blocks && !active?.blockquote}
         onClick={() => editor?.chain().focus().toggleBlockquote().run()}
       >
         <FaQuoteRight />
@@ -154,6 +175,8 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
       <ToolbarButton
         title="Codeblock"
         isActive={active?.codeBlock ?? false}
+        // Inside a code block the toggle still converts it back to text
+        disabled={restricted.blocks && !active?.codeBlock}
         onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
       >
         <FaCode />
@@ -162,6 +185,8 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
       <ToolbarButton
         title="Ausklappbarer Abschnitt"
         isActive={active?.details ?? false}
+        // From inside (incl. the title) the toggle still unwraps the section
+        disabled={restricted.blocks && !active?.details}
         onClick={() => {
           if (!editor) return;
           if (editor.isActive("details")) {
@@ -177,6 +202,7 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
       <ToolbarPopover
         title="Hervorgehobener Block"
         isActive={active?.callout ?? false}
+        disabled={restricted.blocks}
         icon={<FaInfoCircle />}
       >
         <CalloutPicker editor={editor} />
@@ -185,6 +211,7 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
       <ToolbarPopover
         title="Raster einfügen"
         isActive={active?.grid ?? false}
+        disabled={restricted.blocks}
         icon={<FaColumns />}
       >
         <GridPicker editor={editor} />
@@ -193,6 +220,7 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
       <ToolbarButton
         title="Tabelle einfügen"
         isActive={active?.table ?? false}
+        disabled={restricted.blocks}
         onClick={() =>
           editor
             ?.chain()
@@ -207,6 +235,7 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
       <ToolbarButton
         title="Trennlinie"
         isActive={false}
+        disabled={restricted.blocks}
         onClick={() => editor?.chain().focus().setHorizontalRule().run()}
       >
         <FaMinus />
@@ -217,6 +246,7 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
       <ToolbarButton
         title="Bild einfügen"
         isActive={active?.image ?? false}
+        disabled={restricted.blocks}
         onClick={() => pickAndInsert(WIKI_IMAGE_ACCEPT)}
       >
         <FaImage />
@@ -225,6 +255,7 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
       <ToolbarButton
         title="Dateianhang einfügen"
         isActive={active?.attachment ?? false}
+        disabled={restricted.blocks}
         onClick={() => pickAndInsert(WIKI_ATTACHMENT_ACCEPT)}
       >
         <FaPaperclip />
@@ -233,6 +264,7 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
       <ToolbarPopover
         title="Einbetten"
         isActive={active?.embed ?? false}
+        disabled={restricted.blocks}
         icon={<FaPhotoVideo />}
       >
         <EmbedPicker editor={editor} />
@@ -241,6 +273,7 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
       <ToolbarPopover
         title="Website einbetten (iframe)"
         isActive={active?.iframe ?? false}
+        disabled={restricted.blocks}
         icon={<FaGlobe />}
       >
         <IframePicker editor={editor} />
