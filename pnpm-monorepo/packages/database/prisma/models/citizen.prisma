@@ -53,6 +53,7 @@ model Entity {
   deletedShips                                 Ship[]                               @relation("deletedBy")
   unlockedBlueprints                           BlueprintUnlock[]                    @relation("citizen")
   changelogEntrySeens                          ChangelogEntrySeen[]
+  bannedUsers                                  User[]                               @relation("bannedBy")
 
   // Holds the latest confirmed values
   spectrumId                String?

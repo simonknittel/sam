@@ -186,6 +186,24 @@ export const authOptions: NextAuthOptions = {
         throw new Error("account.access_token is missing");
 
       if (existingUser) {
+        if (existingUser.bannedAt) {
+          log.info("Banned user attempted to log in", {
+            userId: user.id,
+          });
+
+          await createAuditEvents([
+            {
+              type: AuditEventType.USER_LOGIN_BLOCKED,
+              data: {
+                userId: user.id,
+              },
+              createdById: user.id,
+            },
+          ]);
+
+          return "/?error=UserBanned";
+        }
+
         const guildMember = await getGuildMember(account.access_token);
 
         if ("message" in guildMember) {

@@ -37,7 +37,11 @@ export default async function Page({ searchParams }: PageProps<"/">) {
         {urlSearchParams.has("error") && (
           <Note
             className="max-w-xs lg:p-4!"
-            message="Beim Anmelden ist ein Fehler aufgetreten."
+            message={
+              urlSearchParams.get("error") === "UserBanned"
+                ? "Dein Account wurde gesperrt."
+                : "Beim Anmelden ist ein Fehler aufgetreten."
+            }
           />
         )}
       </main>

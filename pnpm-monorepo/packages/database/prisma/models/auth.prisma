@@ -48,6 +48,10 @@ model User {
   createdVariantTags         VariantTag[]             @relation("createdBy")
   updatedVariantTags         VariantTag[]             @relation("updatedBy")
   createdAuditEvents         AuditEvent[]             @relation("createdBy")
+  bannedAt                   DateTime?
+  bannedReason               String?
+  bannedById                 String?
+  bannedBy                   Entity?                  @relation("bannedBy", fields: [bannedById], references: [id])
 }
 
 model VerificationToken {

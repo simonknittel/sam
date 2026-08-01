@@ -1,3 +1,4 @@
+import { requireAuthentication } from "@/modules/auth/server";
 import {
   sortAscWithAndNullLast,
   sortDescAndNullLast,
@@ -22,6 +23,7 @@ const loadSearchParams = createLoader({
     "name-desc",
   ]).withDefault("createdAt-desc"),
   q: parseAsString,
+  banned: parseAsStringLiteral(["all", "banned", "active"]).withDefault("all"),
 });
 
 interface Props {
@@ -30,16 +32,26 @@ interface Props {
 }
 
 export const UsersTile = async ({ className, searchParams }: Props) => {
-  const { sort, q } = await loadSearchParams(searchParams);
+  const { sort, q, banned } = await loadSearchParams(searchParams);
+
+  const authentication = await requireAuthentication();
+  const showBanActions = await authentication.authorize("user", "ban");
 
   const users = await getUsersWithEntities();
 
-  const filteredUsers = q
+  const searchedUsers = q
     ? users.filter((user) => {
         const searchQuery = q.toLowerCase();
         return user.entity?.handle?.toLowerCase().includes(searchQuery);
       })
     : users;
+
+  const filteredUsers =
+    banned === "all"
+      ? searchedUsers
+      : searchedUsers.filter(({ user }) =>
+          banned === "banned" ? Boolean(user.bannedAt) : !user.bannedAt,
+        );
 
   const sortedUsers = filteredUsers.toSorted((a, b) => {
     switch (sort) {
@@ -65,7 +77,11 @@ export const UsersTile = async ({ className, searchParams }: Props) => {
 
   return (
     <section className={clsx("p-4 bg-secondary rounded-primary", className)}>
-      <UsersTable users={sortedUsers} />
+      <UsersTable
+        users={sortedUsers}
+        showBanActions={showBanActions}
+        ownUserId={authentication.session.user.id}
+      />
     </section>
   );
 };

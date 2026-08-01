@@ -76,6 +76,7 @@ export interface PermissionSet {
     | "update"
     | "delete"
     | "manage"
+    | "ban"
     | "confirm"
     | "assign"
     | "dismiss"
