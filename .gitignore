@@ -2,6 +2,9 @@
 .dccache
 .DS_Store
 
+# Per-worktree Docker Compose port overrides (see .agents/skills/run-app/SKILL.md)
+/.env
+
 # Written by `vercel link`
 .vercel/project.json
 .vercel/README.txt

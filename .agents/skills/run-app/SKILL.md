@@ -8,6 +8,37 @@ description: Spin up the sam Next.js app locally (dev server + backing Docker se
 The app is a Next.js app at `pnpm-monorepo/apps/app` (package
 `@sam-monorepo/app`). Dev server: `pnpm run dev`, port 3000.
 
+Multiple git worktrees can run at the same time: each checkout runs its
+OWN compose stack and dev server on its own ports. Docker Compose
+derives the project name from the checkout directory, so the container
+sets never collide — only host ports must differ. The main checkout
+(first entry of `git worktree list`, project `sam`, containers
+`sam-psql-1` etc.) uses the default ports; every worktree picks a port
+slot. Always run `docker compose` from the root of the checkout you are
+working in — the directory determines which stack you address.
+
+## Port slots
+
+The main checkout is slot 0 (all defaults). A worktree takes the lowest
+slot N ≥ 1 whose ports are free:
+
+| Service            | Slot 0 (main) | Slot N   |
+| ------------------ | ------------- | -------- |
+| Next.js dev server | 3000          | 3000 + N |
+| Postgres           | 5432          | 5432 + N |
+| soketi websockets  | 6001          | 6001 + N |
+| soketi metrics     | 9601          | 9601 + N |
+| collab (wiki)      | 5210          | 5210 + N |
+
+```bash
+lsof -nP -iTCP:3001,5433,6002,9602,5211 -sTCP:LISTEN   # slot 1 free if no output
+```
+
+No output → the slot is free (bump all five ports by one and re-check
+for slot 2, and so on). Ports of a stopped-but-existing worktree stack
+don't show up here — prefer reusing that stack (`docker compose start`)
+over claiming its slot for a different worktree.
+
 ## 1. Install (fresh checkout/worktree only)
 
 ```bash
@@ -19,54 +50,103 @@ The postinstall steps (Prisma client generation in `packages/database`,
 `next typegen` in the app) are required — without them the app and
 `tsc` fail with hundreds of bogus errors. Takes ~45s.
 
-`apps/app/.env` is gitignored but required; worktrees created by the
-harness get it copied automatically. If it is missing, copy it from the
-main checkout at `<repo>/pnpm-monorepo/apps/app/.env`.
+Two gitignored `.env` files are required; worktrees created by the
+harness usually get them copied automatically. If missing, copy both
+from the main checkout:
+
+- `pnpm-monorepo/apps/app/.env`
+- `pnpm-monorepo/packages/database/.env` (read by Prisma CLI commands)
+
+In a worktree, adjust them to the slot's ports (slot 1 shown):
+
+- `DATABASE_URL` → port `5433` (in BOTH files)
+- `NEXTAUTH_URL` → `http://localhost:3001`
+- `NEXT_PUBLIC_COLLAB_URL` → `ws://localhost:5211`
+- append `NEXT_PUBLIC_PUSHER_CHANNELS_PORT="6002"` (not present in the
+  main `.env`; the app defaults to 6001)
 
 ## 2. Backing services (Docker)
 
-`compose.yml` at the repo root defines `psql` (Postgres, 5432), `soketi`
-(websockets, 6001/9601) and `sam-collab` (wiki realtime backend, 5210).
+`compose.yml` at the repo root defines `psql` (Postgres), `soketi`
+(websockets) and `sam-collab` (wiki realtime backend). Host ports
+interpolate `SAM_*_PORT` variables from a gitignored `.env` next to
+`compose.yml` — absent variables fall back to the slot-0 defaults.
 
-**Reuse the existing containers of the `sam` compose project — do not
-`docker compose up` from a worktree.** A worktree directory yields a
-different compose project name, which creates fresh containers and an
-EMPTY database; compose.yml declares no named volumes, so the dev data
-lives inside the existing containers.
+**Main checkout** — no root `.env`; just start the existing containers:
 
 ```bash
-docker start sam-psql-1 sam-soketi-1
+docker start sam-psql-1 sam-soketi-1 sam-sam-collab-1
 docker exec sam-psql-1 pg_isready -U postgres   # wait for "accepting connections"
 ```
 
-Port 5210 (collab): the user often runs the Hocuspocus collab server
-locally from `../../core-services` instead of the container. Check
-first:
+**Worktree** — write the slot's ports to `<worktree>/.env` (slot 1
+shown), then bring up the stack:
 
 ```bash
-lsof -nP -iTCP:5210 -sTCP:LISTEN
+cat > <worktree>/.env <<'EOF'
+SAM_PSQL_PORT=5433
+SAM_SOKETI_PORT=6002
+SAM_SOKETI_METRICS_PORT=9602
+SAM_COLLAB_PORT=5211
+EOF
+cd <worktree>
+docker compose up -d --build
+docker compose exec psql pg_isready -U postgres   # wait for "accepting connections"
 ```
 
-- A local `node` process listens → leave it; the app uses it via
-  `NEXT_PUBLIC_COLLAB_URL`. `docker start sam-sam-collab-1` would just
-  fail with "address already in use".
-- Nothing listens → `docker start sam-sam-collab-1`.
+`--build` matters: it builds the `sam-collab` image from THIS
+worktree's `pnpm-monorepo/apps/collab` instead of reusing an image
+built from another branch's code.
 
-## 3. Dev server
+## 3. Seed the worktree database from the main stack
 
-Port 3000 must be free (`NEXTAUTH_URL` pins auth callbacks to
-`localhost:3000`; Next silently moving to 3001 breaks login).
+`compose.yml` declares no named volumes — each stack's data lives
+inside its own `psql` container, and a fresh worktree stack starts with
+an EMPTY database. Copy the main checkout's dev data (main Postgres
+must be running):
+
+```bash
+docker start sam-psql-1
+cd <worktree>
+docker exec sam-psql-1 pg_dump -U postgres db | docker compose exec -T psql psql -q -U postgres db
+```
+
+If the worktree branch adds migrations, apply them afterwards:
+
+```bash
+cd <worktree>/pnpm-monorepo/packages/database
+pnpm run migrate:dev
+```
+
+To re-seed later (fresh copy of the main data), drop and recreate the
+database first, restart the collab server (it held connections to the
+dropped database), then repeat the copy:
+
+```bash
+cd <worktree>
+docker compose exec psql psql -U postgres -d postgres -c 'DROP DATABASE db WITH (FORCE)' -c 'CREATE DATABASE db'
+docker compose restart sam-collab
+```
+
+## 4. Dev server
+
+The dev server MUST run on the slot's port and `NEXTAUTH_URL` must
+match it — auth callbacks are pinned to that origin, and Next silently
+moving to the next free port breaks login. If the slot port is taken,
+something is wrong (probably a leftover dev server) — fix that instead
+of letting Next pick another port.
 
 ```bash
 cd <checkout>/pnpm-monorepo/apps/app
-pnpm run dev   # run in background; "✓ Ready in ~3s"
+PORT=3001 pnpm run dev   # worktree slot 1; main: plain `pnpm run dev` (3000)
+# run in background; "✓ Ready in ~3s"
 ```
 
-## 4. Smoke check
+## 5. Smoke check
 
 ```bash
-curl -s -o /dev/null -w "%{http_code}\n" http://localhost:3000/          # 200
-curl -s -o /dev/null -w "%{http_code}\n" http://localhost:3000/app/wiki  # 307 → /
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:3001/          # 200
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:3001/app/wiki  # 307 → /
 ```
 
 The 307 to `/` is the unauthenticated redirect and is expected: login
@@ -74,8 +154,21 @@ is Discord OAuth, so authenticated pages can only be tested through the
 user's browser session — hand them the URL instead of trying to log in
 programmatically.
 
-## 5. Shutdown
+Login usually carries over from the main app: sessions are
+database-backed (and were copied with the database) and localhost
+cookies are shared across ports. If a FRESH Discord login on a worktree
+port fails with a redirect_uri error, the Discord application needs
+`http://localhost:<port>/api/auth/callback/discord` added to its OAuth2
+redirect URIs — a one-time manual step for the user.
 
-Kill the dev server, then `docker stop sam-psql-1 sam-soketi-1` (and
-`sam-sam-collab-1` if you started it). Do not stop the user's local
-collab server on 5210.
+## 6. Shutdown
+
+Kill the dev server you started.
+
+- Worktree stack: `docker compose stop` (keeps the seeded database for
+  next time). `docker compose down` also works but destroys the data —
+  re-seed on next start. Run `down` when the worktree is being removed.
+- Main stack: leave it running; stop with
+  `docker stop sam-psql-1 sam-soketi-1 sam-sam-collab-1` only when the
+  user asks. NEVER `docker compose down` the main stack — its
+  containers hold the only copy of the dev data.

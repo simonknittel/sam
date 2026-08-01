@@ -1,3 +1,6 @@
+# Host ports are overridable so that multiple git worktrees can run their own
+# stack side by side (each worktree sets the SAM_*_PORT variables in a
+# gitignored .env next to this file, see .agents/skills/run-app/SKILL.md).
 services:
 
   psql:
@@ -7,7 +10,7 @@ services:
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: db
     ports:
-      - 5432:5432
+      - ${SAM_PSQL_PORT:-5432}:5432
 
   soketi:
     image: quay.io/soketi/soketi:1.6.1-16-distroless@sha256:22486a3b4ac387a3c7ee97963cccf5189d38c0a54b0d75f10c0881d60437a77a
@@ -15,8 +18,8 @@ services:
     environment:
       SOKETI_DEFAULT_APP_USER_AUTHENTICATION: "true"
     ports:
-      - 6001:6001
-      - 9601:9601
+      - ${SAM_SOKETI_PORT:-6001}:6001
+      - ${SAM_SOKETI_METRICS_PORT:-9601}:9601
 
   # Wiki realtime collaboration backend (see docs/setup-local-machine.md for
   # the app-side environment variables). Rebuild after changing
@@ -32,4 +35,4 @@ services:
       DATABASE_URL: postgresql://postgres:admin@psql:5432/db
       COLLAB_JWT_SECRET: insecure-dev-secret
     ports:
-      - 5210:5210
+      - ${SAM_COLLAB_PORT:-5210}:5210
