@@ -5,6 +5,11 @@
 # Per-worktree Docker Compose port overrides (see .agents/skills/run-app/SKILL.md)
 /.env
 
+# Artifacts of accidentally running pnpm at the repo root (the monorepo
+# lives in pnpm-monorepo/)
+/node_modules/
+/pnpm-lock.yaml
+
 # Written by `vercel link`
 .vercel/project.json
 .vercel/README.txt
