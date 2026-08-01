@@ -1,10 +1,10 @@
 "use client";
 
+import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import { Textarea } from "@/modules/common/components/form/Textarea";
-import Note from "@/modules/common/components/Note";
 import { FaCheck } from "react-icons/fa";
 import { resolveWikiPageReport } from "../actions/resolveWikiPageReport";
 
@@ -15,7 +15,9 @@ interface Props {
 
 /** Inline resolve form on the report detail page. */
 export const ResolveWikiPageReportForm = ({ className, reportId }: Props) => {
-  const { state, formAction, isPending } = useAction(resolveWikiPageReport);
+  const { state, formAction, isPending } = useAction(resolveWikiPageReport, {
+    errorToast: false,
+  });
 
   return (
     <form action={formAction} className={className}>
@@ -37,9 +39,7 @@ export const ResolveWikiPageReportForm = ({ className, reportId }: Props) => {
         Als bearbeitet markieren
       </Button2>
 
-      {state && "error" in state && state.error && (
-        <Note type="error" message={state.error} className="mt-4" />
-      )}
+      <ActionErrorNote className="mt-4" state={state} />
     </form>
   );
 };

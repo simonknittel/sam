@@ -1,9 +1,9 @@
 "use client";
 
+import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
-import Note from "@/modules/common/components/Note";
 import { useId } from "react";
 import { FaSave } from "react-icons/fa";
 import { updateWikiPageLink } from "../actions/updateWikiPageLink";
@@ -26,7 +26,9 @@ export const WikiPageLinkSetting = ({
   currentPageId,
 }: Props) => {
   const selectId = useId();
-  const { state, formAction, isPending } = useAction(updateWikiPageLink);
+  const { state, formAction, isPending } = useAction(updateWikiPageLink, {
+    errorToast: false,
+  });
   const link = WIKI_PAGE_LINKS[linkKey];
 
   return (
@@ -50,9 +52,7 @@ export const WikiPageLinkSetting = ({
         Speichern
       </Button2>
 
-      {state && "error" in state && state.error && (
-        <Note type="error" message={state.error} className="mt-4" />
-      )}
+      <ActionErrorNote className="mt-4" state={state} />
     </form>
   );
 };

@@ -24,9 +24,16 @@ export type ActionResponse =
       requestPayload: FormData;
     };
 
-type Return = Promise<ActionResponse>;
-
-export const createAuthenticatedAction = <T extends z.ZodTypeAny>(
+/**
+ * The `Response` generic widens the return type for actions that respond
+ * with more than an ActionResponse (e.g. a minted token) — the wrapper's
+ * own error responses stay ActionResponse. Pass it explicitly (it is
+ * NoInfer, so plain actions keep their exact ActionResponse type).
+ */
+export const createAuthenticatedAction = <
+  T extends z.ZodTypeAny,
+  Response = never,
+>(
   name: string,
   zodSchema: T,
   action: (
@@ -37,8 +44,16 @@ export const createAuthenticatedAction = <T extends z.ZodTypeAny>(
     >,
     data: z.infer<T>,
     t: Awaited<ReturnType<typeof getTranslations>>,
-  ) => Return,
-): ((formData: FormData) => Return) => {
+  ) => Promise<ActionResponse | NoInfer<Response>>,
+  options?: {
+    /**
+     * Maps the FormData to the schema input. The default keeps only the
+     * last value of a repeated field — actions with array fields
+     * (formData.getAll) or per-field normalization pass their own mapping.
+     */
+    parseFormData?: (formData: FormData) => unknown;
+  },
+): ((formData: FormData) => Promise<ActionResponse | Response>) => {
   return async (formData: FormData) => {
     const t = await getTranslations();
 
@@ -59,7 +74,9 @@ export const createAuthenticatedAction = <T extends z.ZodTypeAny>(
            * Validate the request
            */
           const result = zodSchema.safeParse(
-            Object.fromEntries(formData.entries()),
+            options?.parseFormData
+              ? options.parseFormData(formData)
+              : Object.fromEntries(formData.entries()),
           );
           if (!result.success) {
             log.warn("Invalid Zod schema", {
@@ -73,12 +90,7 @@ export const createAuthenticatedAction = <T extends z.ZodTypeAny>(
             };
           }
 
-          return await action(
-            formData,
-            authentication,
-            result.data as z.infer<T>,
-            t,
-          );
+          return await action(formData, authentication, result.data, t);
         } catch (error) {
           span.setStatus({
             code: SpanStatusCode.ERROR,

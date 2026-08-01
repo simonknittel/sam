@@ -1,20 +1,16 @@
 "use server";
 
 import { prisma } from "@/db";
+import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { requireAuthenticationAction } from "@/modules/auth/server";
-import { log } from "@/modules/logging";
 import {
   WikiPageAccessType,
   WikiPageAdminability,
   WikiPageEditability,
   WikiPageVisibility,
 } from "@sam-monorepo/database/client";
-import { getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
-import { unstable_rethrow } from "next/navigation";
-import { serializeError } from "serialize-error";
 import { z } from "zod";
 import { getWikiContext } from "../queries/getWikiContext";
 import { collectWikiPageDescendants } from "../utils/collectWikiPageDescendants";
@@ -35,41 +31,15 @@ const schema = z.object({
   cascadeOwner: z.coerce.boolean(),
 });
 
-export const updateWikiPagePermissions = async (formData: FormData) => {
-  const t = await getTranslations();
-
-  try {
-    const authentication = await requireAuthenticationAction(
-      "updateWikiPagePermissions",
-    );
-
-    const result = schema.safeParse({
-      id: formData.get("id"),
-      visibility: formData.get("visibility"),
-      editability: formData.get("editability"),
-      adminability: formData.get("adminability"),
-      readRoles: formData.getAll("readRole[]"),
-      editRoles: formData.getAll("editRole[]"),
-      adminRoles: formData.getAll("adminRole[]"),
-      cascadeVisibility: formData.get("cascadeVisibility") ?? undefined,
-      cascadeEditability: formData.get("cascadeEditability") ?? undefined,
-      cascadeAdminability: formData.get("cascadeAdminability") ?? undefined,
-      ownerMode: formData.get("ownerMode"),
-      newOwnerId: formData.get("newOwnerId") || undefined,
-      cascadeOwner: formData.get("cascadeOwner") ?? undefined,
-    });
-    if (!result.success)
-      return {
-        error: t("Common.badRequest"),
-        errorDetails: result.error,
-        requestPayload: formData,
-      };
-
+export const updateWikiPagePermissions = createAuthenticatedAction(
+  "updateWikiPagePermissions",
+  schema,
+  async (formData, authentication, data, t) => {
     const context = await getWikiContext();
     if (!context)
       return { error: t("Common.forbidden"), requestPayload: formData };
 
-    const page = context.pagesById.get(result.data.id);
+    const page = context.pagesById.get(data.id);
     if (!page || page.deletedAt)
       return { error: t("Common.badRequest"), requestPayload: formData };
     if (!context.permissions.get(page.id)?.canAdmin)
@@ -80,9 +50,9 @@ export const updateWikiPagePermissions = async (formData: FormData) => {
      */
     if (
       !page.parentId &&
-      (result.data.visibility === WikiPageVisibility.INHERIT ||
-        result.data.editability === WikiPageEditability.INHERIT ||
-        result.data.adminability === WikiPageAdminability.INHERIT)
+      (data.visibility === WikiPageVisibility.INHERIT ||
+        data.editability === WikiPageEditability.INHERIT ||
+        data.adminability === WikiPageAdminability.INHERIT)
     )
       return { error: t("Common.badRequest"), requestPayload: formData };
 
@@ -92,10 +62,8 @@ export const updateWikiPagePermissions = async (formData: FormData) => {
      * via wiki;manage), "explicit" requires an existing citizen.
      */
     const newOwnerId =
-      result.data.ownerMode === "inherit"
-        ? null
-        : (result.data.newOwnerId ?? null);
-    if (result.data.ownerMode === "explicit") {
+      data.ownerMode === "inherit" ? null : (data.newOwnerId ?? null);
+    if (data.ownerMode === "explicit") {
       if (!newOwnerId)
         return { error: t("Common.badRequest"), requestPayload: formData };
       const owner = await prisma.entity.findUnique({
@@ -109,17 +77,17 @@ export const updateWikiPagePermissions = async (formData: FormData) => {
       return { error: t("Common.badRequest"), requestPayload: formData };
 
     const roleAccess = [
-      ...[...new Set(result.data.readRoles)].map((roleId) => ({
+      ...[...new Set(data.readRoles)].map((roleId) => ({
         pageId: page.id,
         roleId,
         type: WikiPageAccessType.READ,
       })),
-      ...[...new Set(result.data.editRoles)].map((roleId) => ({
+      ...[...new Set(data.editRoles)].map((roleId) => ({
         pageId: page.id,
         roleId,
         type: WikiPageAccessType.EDIT,
       })),
-      ...[...new Set(result.data.adminRoles)].map((roleId) => ({
+      ...[...new Set(data.adminRoles)].map((roleId) => ({
         pageId: page.id,
         roleId,
         type: WikiPageAccessType.ADMIN,
@@ -138,15 +106,15 @@ export const updateWikiPagePermissions = async (formData: FormData) => {
     const skippedCount = descendantIds.length - cascadableIds.length;
 
     const anyCascade =
-      result.data.cascadeVisibility ||
-      result.data.cascadeEditability ||
-      result.data.cascadeAdminability;
+      data.cascadeVisibility ||
+      data.cascadeEditability ||
+      data.cascadeAdminability;
 
     /**
      * The owner cascade resets descendants to inherited ownership so they
      * follow this page's owner — only where the actor has admin.
      */
-    const ownerCascadeIds = result.data.cascadeOwner
+    const ownerCascadeIds = data.cascadeOwner
       ? cascadableIds.filter(
           (id) => context.pagesById.get(id)?.ownerId !== null,
         )
@@ -156,9 +124,9 @@ export const updateWikiPagePermissions = async (formData: FormData) => {
       prisma.wikiPage.update({
         where: { id: page.id },
         data: {
-          visibility: result.data.visibility,
-          editability: result.data.editability,
-          adminability: result.data.adminability,
+          visibility: data.visibility,
+          editability: data.editability,
+          adminability: data.adminability,
           ownerId: newOwnerId,
           updatedById: authentication.session.entity?.id ?? null,
         },
@@ -173,7 +141,7 @@ export const updateWikiPagePermissions = async (formData: FormData) => {
         : []),
       prisma.wikiPageRoleAccess.deleteMany({ where: { pageId: page.id } }),
       prisma.wikiPageRoleAccess.createMany({ data: roleAccess }),
-      ...(cascadableIds.length > 0 && result.data.cascadeVisibility
+      ...(cascadableIds.length > 0 && data.cascadeVisibility
         ? [
             prisma.wikiPage.updateMany({
               where: { id: { in: cascadableIds } },
@@ -187,7 +155,7 @@ export const updateWikiPagePermissions = async (formData: FormData) => {
             }),
           ]
         : []),
-      ...(cascadableIds.length > 0 && result.data.cascadeEditability
+      ...(cascadableIds.length > 0 && data.cascadeEditability
         ? [
             prisma.wikiPage.updateMany({
               where: { id: { in: cascadableIds } },
@@ -201,7 +169,7 @@ export const updateWikiPagePermissions = async (formData: FormData) => {
             }),
           ]
         : []),
-      ...(cascadableIds.length > 0 && result.data.cascadeAdminability
+      ...(cascadableIds.length > 0 && data.cascadeAdminability
         ? [
             prisma.wikiPage.updateMany({
               where: { id: { in: cascadableIds } },
@@ -222,12 +190,12 @@ export const updateWikiPagePermissions = async (formData: FormData) => {
         type: AuditEventType.WIKI_PAGE_PERMISSIONS_UPDATED,
         data: {
           pageId: page.id,
-          visibility: result.data.visibility,
-          editability: result.data.editability,
-          adminability: result.data.adminability,
-          readRoleIds: result.data.readRoles,
-          editRoleIds: result.data.editRoles,
-          adminRoleIds: result.data.adminRoles,
+          visibility: data.visibility,
+          editability: data.editability,
+          adminability: data.adminability,
+          readRoleIds: data.readRoles,
+          editRoleIds: data.editRoles,
+          adminRoleIds: data.adminRoles,
           cascaded: false,
         },
         createdById: authentication.session.user.id,
@@ -237,13 +205,13 @@ export const updateWikiPagePermissions = async (formData: FormData) => {
             type: AuditEventType.WIKI_PAGE_PERMISSIONS_UPDATED as const,
             data: {
               pageId: id,
-              visibility: result.data.cascadeVisibility
+              visibility: data.cascadeVisibility
                 ? WikiPageVisibility.INHERIT
                 : "unchanged",
-              editability: result.data.cascadeEditability
+              editability: data.cascadeEditability
                 ? WikiPageEditability.INHERIT
                 : "unchanged",
-              adminability: result.data.cascadeAdminability
+              adminability: data.cascadeAdminability
                 ? WikiPageAdminability.INHERIT
                 : "unchanged",
               readRoleIds: [],
@@ -288,12 +256,22 @@ export const updateWikiPagePermissions = async (formData: FormData) => {
           ? `Erfolgreich gespeichert. ${skippedCount} Unterseite(n) ohne Verwalten-Berechtigung wurden übersprungen.`
           : t("Common.successfullySaved"),
     };
-  } catch (error) {
-    unstable_rethrow(error);
-    log.error("Internal Server Error", { error: serializeError(error) });
-    return {
-      error: t("Common.internalServerError"),
-      requestPayload: formData,
-    };
-  }
-};
+  },
+  {
+    parseFormData: (formData) => ({
+      id: formData.get("id"),
+      visibility: formData.get("visibility"),
+      editability: formData.get("editability"),
+      adminability: formData.get("adminability"),
+      readRoles: formData.getAll("readRole[]"),
+      editRoles: formData.getAll("editRole[]"),
+      adminRoles: formData.getAll("adminRole[]"),
+      cascadeVisibility: formData.get("cascadeVisibility") ?? undefined,
+      cascadeEditability: formData.get("cascadeEditability") ?? undefined,
+      cascadeAdminability: formData.get("cascadeAdminability") ?? undefined,
+      ownerMode: formData.get("ownerMode"),
+      newOwnerId: formData.get("newOwnerId") || undefined,
+      cascadeOwner: formData.get("cascadeOwner") ?? undefined,
+    }),
+  },
+);

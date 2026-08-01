@@ -1,12 +1,9 @@
 "use server";
 
 import { env } from "@/env";
-import { requireAuthenticationAction } from "@/modules/auth/server";
-import { log } from "@/modules/logging";
+import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import type { WikiCollabSessionTokenPayload } from "@sam-monorepo/wiki-editor";
 import { SignJWT } from "jose";
-import { unstable_rethrow } from "next/navigation";
-import { serializeError } from "serialize-error";
 import { z } from "zod";
 import { getWikiContext } from "../queries/getWikiContext";
 
@@ -20,24 +17,26 @@ const schema = z.object({
  * collab server seeds pages that never saw a collab session itself (content
  * JSON → ydoc).
  */
-export const createWikiCollabToken = async (formData: FormData) => {
-  try {
-    const authentication = await requireAuthenticationAction(
-      "createWikiCollabToken",
-    );
-
-    if (!env.COLLAB_JWT_SECRET) return { error: "Nicht konfiguriert." };
-
-    const result = schema.safeParse({ id: formData.get("id") });
-    if (!result.success) return { error: "Ungültige Anfrage." };
+export const createWikiCollabToken = createAuthenticatedAction<
+  typeof schema,
+  { token: string }
+>(
+  "createWikiCollabToken",
+  schema,
+  async (formData, authentication, data, t) => {
+    if (!env.COLLAB_JWT_SECRET)
+      return { error: t("Common.badRequest"), requestPayload: formData };
 
     const context = await getWikiContext();
-    if (!context) return { error: "Keine Berechtigung." };
+    if (!context)
+      return { error: t("Common.forbidden"), requestPayload: formData };
 
-    const page = context.pagesById.get(result.data.id);
-    if (!page || page.deletedAt) return { error: "Ungültige Anfrage." };
+    const page = context.pagesById.get(data.id);
+    if (!page || page.deletedAt)
+      return { error: t("Common.badRequest"), requestPayload: formData };
     const permissions = context.permissions.get(page.id);
-    if (!permissions?.canRead) return { error: "Keine Berechtigung." };
+    if (!permissions?.canRead)
+      return { error: t("Common.forbidden"), requestPayload: formData };
 
     const claims = {
       scope: "session",
@@ -54,9 +53,5 @@ export const createWikiCollabToken = async (formData: FormData) => {
       .sign(new TextEncoder().encode(env.COLLAB_JWT_SECRET));
 
     return { token };
-  } catch (error) {
-    unstable_rethrow(error);
-    log.error("Internal Server Error", { error: serializeError(error) });
-    return { error: "Ein unbekannter Fehler ist aufgetreten." };
-  }
-};
+  },
+);

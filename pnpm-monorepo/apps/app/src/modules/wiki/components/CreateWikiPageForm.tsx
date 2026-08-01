@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
@@ -43,6 +44,7 @@ export const CreateWikiPageForm = ({
    * modal so it isn't still open after the navigation.
    */
   const { state, formAction, isPending } = useAction(createWikiPage, {
+    errorToast: false,
     onSuccess,
   });
 
@@ -87,9 +89,7 @@ export const CreateWikiPageForm = ({
         Erstellen
       </Button2>
 
-      {state && "error" in state && state.error && (
-        <Note type="error" message={state.error} className="mt-4" />
-      )}
+      <ActionErrorNote className="mt-4" state={state} />
     </form>
   );
 };

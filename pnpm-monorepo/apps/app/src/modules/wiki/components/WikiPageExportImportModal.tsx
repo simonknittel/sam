@@ -1,10 +1,10 @@
 "use client";
 
+import { runAction } from "@/modules/actions/utils/runAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
 import Note from "@/modules/common/components/Note";
-import { unstable_rethrow } from "next/navigation";
 import { useId, useState, useTransition } from "react";
 import toast from "react-hot-toast";
 import { FaFileExport, FaFileImport } from "react-icons/fa";
@@ -46,26 +46,11 @@ export const WikiPageExportImportModal = ({
     }
 
     startTransition(async () => {
-      try {
-        const content = await file.text();
-        const formData = new FormData();
-        formData.set("id", pageId);
-        formData.set("content", content);
-        const response = await importWikiPageContent(formData);
-        if ("error" in response) {
-          toast.error(response.error);
-          console.error(response);
-          return;
-        }
-        toast.success(response.success);
-        setIsOpen(false);
-      } catch (error) {
-        unstable_rethrow(error);
-        toast.error(
-          "Ein unbekannter Fehler ist aufgetreten. Bitte versuche es später erneut.",
-        );
-        console.error(error);
-      }
+      const content = await file.text();
+      const formData = new FormData();
+      formData.set("id", pageId);
+      formData.set("content", content);
+      if (await runAction(importWikiPageContent, formData)) setIsOpen(false);
     });
   };
 

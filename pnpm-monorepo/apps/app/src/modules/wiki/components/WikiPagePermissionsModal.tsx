@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
@@ -64,7 +65,7 @@ export const WikiPagePermissionsModal = ({
 
   const { state, formAction, isPending } = useAction(
     updateWikiPagePermissions,
-    { onSuccess: () => setIsOpen(false) },
+    { errorToast: false, onSuccess: () => setIsOpen(false) },
   );
 
   return (
@@ -296,9 +297,7 @@ export const WikiPagePermissionsModal = ({
             Speichern
           </Button2>
 
-          {state && "error" in state && state.error && (
-            <Note type="error" message={state.error} className="mt-4" />
-          )}
+          <ActionErrorNote className="mt-4" state={state} />
         </form>
       </Modal>
     </>

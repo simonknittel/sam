@@ -1,7 +1,7 @@
 "use client";
 
+import { runAction } from "@/modules/actions/utils/runAction";
 import clsx from "clsx";
-import { unstable_rethrow } from "next/navigation";
 import {
   createContext,
   useCallback,
@@ -13,7 +13,6 @@ import {
   type MouseEvent,
   type ReactNode,
 } from "react";
-import toast from "react-hot-toast";
 import { MdDragIndicator } from "react-icons/md";
 import { updateWikiPagePosition } from "../actions/updateWikiPagePosition";
 
@@ -70,23 +69,14 @@ export const WikiPageDndProvider = ({ children }: ProviderProps) => {
   const submitPosition = useCallback(
     (pageId: string, referenceId: string, position: DropPosition) => {
       startTransition(async () => {
-        try {
-          const formData = new FormData();
-          formData.set("id", pageId);
-          formData.set("referenceId", referenceId);
-          formData.set("position", position);
-          const response = await updateWikiPagePosition(formData);
-          if ("error" in response) {
-            toast.error(response.error);
-            console.error(response);
-          }
-        } catch (error) {
-          unstable_rethrow(error);
-          toast.error(
-            "Ein unbekannter Fehler ist aufgetreten. Bitte versuche es später erneut.",
-          );
-          console.error(error);
-        }
+        const formData = new FormData();
+        formData.set("id", pageId);
+        formData.set("referenceId", referenceId);
+        formData.set("position", position);
+        await runAction(updateWikiPagePosition, formData, {
+          // The successful reorder is visible in the sidebar itself
+          successToast: false,
+        });
       });
     },
     [],

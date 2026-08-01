@@ -1,10 +1,10 @@
 "use client";
 
+import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
-import Note from "@/modules/common/components/Note";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
 import { useState } from "react";
@@ -56,6 +56,7 @@ export const DuplicateWikiPageModal = ({
   const [mirrorPermissions, setMirrorPermissions] = useState(true);
 
   const { state, formAction, isPending } = useAction(duplicateWikiPage, {
+    errorToast: false,
     onSuccess: () => setIsOpen(false),
   });
 
@@ -153,9 +154,7 @@ export const DuplicateWikiPageModal = ({
             Duplizieren
           </Button2>
 
-          {state && "error" in state && state.error && (
-            <Note type="error" message={state.error} className="mt-4" />
-          )}
+          <ActionErrorNote className="mt-4" state={state} />
         </form>
       </Modal>
     </>

@@ -1,14 +1,10 @@
 "use server";
 
 import { prisma } from "@/db";
+import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { requireAuthenticationAction } from "@/modules/auth/server";
-import { log } from "@/modules/logging";
-import { getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
-import { unstable_rethrow } from "next/navigation";
-import { serializeError } from "serialize-error";
 import { z } from "zod";
 import { getWikiContext } from "../queries/getWikiContext";
 
@@ -30,29 +26,15 @@ const schema = z.object({
  * assignment is removed here is deleted right away to keep the autocomplete
  * clean.
  */
-export const updateWikiPageTags = async (formData: FormData) => {
-  const t = await getTranslations();
-
-  try {
-    const authentication =
-      await requireAuthenticationAction("updateWikiPageTags");
-
-    const result = schema.safeParse({
-      id: formData.get("id"),
-      tagNames: formData.getAll("tagName[]"),
-    });
-    if (!result.success)
-      return {
-        error: t("Common.badRequest"),
-        errorDetails: result.error,
-        requestPayload: formData,
-      };
-
+export const updateWikiPageTags = createAuthenticatedAction(
+  "updateWikiPageTags",
+  schema,
+  async (formData, authentication, data, t) => {
     const context = await getWikiContext();
     if (!context)
       return { error: t("Common.forbidden"), requestPayload: formData };
 
-    const page = context.pagesById.get(result.data.id);
+    const page = context.pagesById.get(data.id);
     if (!page || page.deletedAt)
       return { error: t("Common.badRequest"), requestPayload: formData };
     if (!context.permissions.get(page.id)?.canEdit)
@@ -62,7 +44,7 @@ export const updateWikiPageTags = async (formData: FormData) => {
      * First submitted casing wins for names that only differ in casing.
      */
     const requestedNamesByLower = new Map<string, string>();
-    for (const name of result.data.tagNames) {
+    for (const name of data.tagNames) {
       const lower = name.toLocaleLowerCase();
       if (!requestedNamesByLower.has(lower))
         requestedNamesByLower.set(lower, name);
@@ -153,12 +135,11 @@ export const updateWikiPageTags = async (formData: FormData) => {
     revalidatePath("/app/wiki", "layout");
 
     return { success: t("Common.successfullySaved") };
-  } catch (error) {
-    unstable_rethrow(error);
-    log.error("Internal Server Error", { error: serializeError(error) });
-    return {
-      error: t("Common.internalServerError"),
-      requestPayload: formData,
-    };
-  }
-};
+  },
+  {
+    parseFormData: (formData) => ({
+      id: formData.get("id"),
+      tagNames: formData.getAll("tagName[]"),
+    }),
+  },
+);
