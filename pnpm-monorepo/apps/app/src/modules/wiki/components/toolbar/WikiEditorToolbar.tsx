@@ -106,6 +106,7 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
 
   const restricted = {
     blocks: active?.restrictions.blocks ?? false,
+    grids: active?.restrictions.grids ?? false,
     lists: active?.restrictions.lists ?? false,
     marks: active?.restrictions.marks ?? false,
     alignment: active?.restrictions.alignment ?? false,
@@ -223,7 +224,8 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
       <ToolbarPopover
         title="Raster einfügen"
         isActive={active?.grid ?? false}
-        disabled={restricted.blocks}
+        // Also restricted inside grids — grids never nest
+        disabled={restricted.grids}
         icon={<FaColumns />}
       >
         <GridPicker editor={editor} />

@@ -52,6 +52,11 @@ export interface WikiSlashCommandItem {
    * where those are schema-invalid (headings hold plain text only).
    */
   readonly insertsInline?: boolean;
+  /**
+   * Whether the entry inserts a grid — hidden inside grids (grids never
+   * nest, not even indirectly via callouts or collapsible sections).
+   */
+  readonly insertsGrid?: boolean;
   readonly run: (
     editor: Editor,
     range: Range,
@@ -150,6 +155,7 @@ export const WIKI_SLASH_COMMAND_ITEMS: readonly WikiSlashCommandItem[] = [
       "spalten",
       "columns",
     ],
+    insertsGrid: true,
     run: (editor: Editor, range: Range) =>
       editor.chain().focus().deleteRange(range).insertWikiGrid(columns).run(),
   })),
@@ -225,17 +231,19 @@ export const WIKI_SLASH_COMMAND_ITEMS: readonly WikiSlashCommandItem[] = [
 
 /** The palette entries applying at the caret, see WikiTextRestrictions */
 const availableSlashCommandItems = (editor: Editor) => {
-  switch (getWikiSelectionRestrictions(editor.state).slashItems) {
+  const restrictions = getWikiSelectionRestrictions(editor.state);
+  const items = WIKI_SLASH_COMMAND_ITEMS.filter(
+    (item) => !(restrictions.grids && item.insertsGrid),
+  );
+  switch (restrictions.slashItems) {
     case "none":
       return [];
     case "textOnly":
-      return WIKI_SLASH_COMMAND_ITEMS.filter(
-        (item) => item.allowedInTextOnlyBlock,
-      );
+      return items.filter((item) => item.allowedInTextOnlyBlock);
     case "noInline":
-      return WIKI_SLASH_COMMAND_ITEMS.filter((item) => !item.insertsInline);
+      return items.filter((item) => !item.insertsInline);
     default:
-      return WIKI_SLASH_COMMAND_ITEMS;
+      return items;
   }
 };
 

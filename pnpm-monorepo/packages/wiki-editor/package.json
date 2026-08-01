@@ -14,6 +14,7 @@
     "@tiptap/extension-blockquote": "3.28.0",
     "@tiptap/extension-code-block-lowlight": "3.28.0",
     "@tiptap/extension-details": "3.28.0",
+    "@tiptap/extension-document": "3.28.0",
     "@tiptap/extension-heading": "3.28.0",
     "@tiptap/extension-highlight": "3.28.0",
     "@tiptap/extension-image": "3.28.0",

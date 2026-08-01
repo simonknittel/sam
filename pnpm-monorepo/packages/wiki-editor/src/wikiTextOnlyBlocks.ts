@@ -56,12 +56,15 @@ export const WikiHeading = Heading.extend({ content: "text*" });
 /**
  * What the current selection (or document position) must not do. All
  * flags derive from the schema restrictions above plus the text-only
- * leaves (code block, details summary), so the editor UI can disable or
- * hide exactly the actions that cannot apply.
+ * leaves (code block, details summary) and the no-nested-grids rule
+ * (wikiGridNodes.ts), so the editor UI can disable or hide exactly the
+ * actions that cannot apply.
  */
 export interface WikiTextRestrictions {
   /** Block-level actions (headings, quote, table, media, …) unavailable */
   readonly blocks: boolean;
+  /** Grid insertion unavailable (grids never nest inside grids) */
+  readonly grids: boolean;
   /** List toggles unavailable (inside lists they still switch the type) */
   readonly lists: boolean;
   /** Inline nodes (page links, mentions) unavailable */
@@ -76,6 +79,7 @@ export interface WikiTextRestrictions {
 
 const UNRESTRICTED: WikiTextRestrictions = {
   blocks: false,
+  grids: false,
   lists: false,
   inlineNodes: false,
   marks: false,
@@ -93,11 +97,13 @@ const restrictionsForTextblock = (
 ): WikiTextRestrictions => {
   let inTextOnlyContainer = false;
   let inListItem = false;
+  let inGridCell = false;
   for (let depth = $position.depth; depth > 0; depth--) {
     const ancestor = $position.node(depth).type.name;
     if ((WIKI_TEXT_ONLY_BLOCK_TYPES as readonly string[]).includes(ancestor))
       inTextOnlyContainer = true;
     if (LIST_ITEM_TYPES.includes(ancestor)) inListItem = true;
+    if (ancestor === "wikiGridCell") inGridCell = true;
   }
 
   const inCodeBlock = textblockTypeName === "codeBlock";
@@ -107,6 +113,7 @@ const restrictionsForTextblock = (
 
   return {
     blocks: inTextOnlyContainer || inLeaf,
+    grids: inTextOnlyContainer || inLeaf || inGridCell,
     lists: (inTextOnlyContainer && !inListItem) || inLeaf,
     inlineNodes: inLeaf || inHeading,
     marks: inCodeBlock,
@@ -127,6 +134,7 @@ const mergeRestrictions = (
 ): WikiTextRestrictions => ({
   /** A restriction only applies when it applies to EVERY selected block */
   blocks: a.blocks && b.blocks,
+  grids: a.grids && b.grids,
   lists: a.lists && b.lists,
   inlineNodes: a.inlineNodes && b.inlineNodes,
   marks: a.marks && b.marks,
