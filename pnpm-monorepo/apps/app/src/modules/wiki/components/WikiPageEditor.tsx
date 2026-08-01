@@ -1,8 +1,9 @@
 "use client";
 
-import type {
-  WikiMentionedCitizen,
-  WikiPageLinkedPage,
+import {
+  WikiSaveState,
+  type WikiMentionedCitizen,
+  type WikiPageLinkedPage,
 } from "@sam-monorepo/wiki-editor";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { useEditor, type Editor } from "@tiptap/react";
@@ -17,10 +18,9 @@ import "./wikiEditor.css";
 import { WikiEditorLayout } from "./WikiEditorLayout";
 import type { WikiPageIndexEntry } from "./WikiPageIndexList";
 import { WikiPageStaticContent } from "./WikiPageStaticContent";
+import { WikiSaveStateIndicator } from "./WikiSaveStateIndicator";
 
 const AUTOSAVE_DEBOUNCE_MS = 2_000;
-
-type SaveState = "saved" | "dirty" | "saving";
 
 interface Props {
   readonly className?: string;
@@ -55,7 +55,7 @@ export const WikiPageEditor = ({
 }: Props) => {
   const { isEditMode } = useWikiEditMode();
 
-  const [saveState, setSaveState] = useState<SaveState>("saved");
+  const [saveState, setSaveState] = useState(WikiSaveState.Saved);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isFirstSaveOfSession = useRef(true);
   const editCount = useRef(0);
@@ -79,7 +79,7 @@ export const WikiPageEditor = ({
       // dirty — their own debounced save is already scheduled.
       const editCountAtStart = editCount.current;
 
-      setSaveState("saving");
+      setSaveState(WikiSaveState.Saving);
       try {
         const formData = new FormData();
         formData.set("id", pageId);
@@ -91,14 +91,16 @@ export const WikiPageEditor = ({
         if ("error" in response) {
           toast.error(response.error);
           console.error(response);
-          setSaveState("dirty");
+          setSaveState(WikiSaveState.Dirty);
           return;
         }
 
         isFirstSaveOfSession.current = false;
         savedEditCount.current = editCountAtStart;
         setSaveState(
-          editCount.current === editCountAtStart ? "saved" : "dirty",
+          editCount.current === editCountAtStart
+            ? WikiSaveState.Saved
+            : WikiSaveState.Dirty,
         );
       } catch (error) {
         unstable_rethrow(error);
@@ -106,7 +108,7 @@ export const WikiPageEditor = ({
           "Speichern fehlgeschlagen. Bitte versuche es später erneut.",
         );
         console.error(error);
-        setSaveState("dirty");
+        setSaveState(WikiSaveState.Dirty);
       }
     },
     [pageId],
@@ -153,7 +155,7 @@ export const WikiPageEditor = ({
       onUpdate: ({ editor }) => {
         latestDoc.current = editor.state.doc;
         editCount.current += 1;
-        setSaveState("dirty");
+        setSaveState(WikiSaveState.Dirty);
         if (saveTimer.current) clearTimeout(saveTimer.current);
         saveTimer.current = setTimeout(() => {
           void save(editor);
@@ -201,12 +203,15 @@ export const WikiPageEditor = ({
       isEditing={isEditMode}
       editor={editor}
       statusSlot={
-        <span className="ml-auto pr-2 text-xs text-neutral-500">
-          {!editor && "Lädt …"}
-          {editor && saveState === "saving" && "Speichert …"}
-          {editor && saveState === "dirty" && "Ungespeicherte Änderungen"}
-          {editor && saveState === "saved" && "Gespeichert"}
-        </span>
+        editor ? (
+          <WikiSaveStateIndicator
+            className="ml-auto"
+            state={saveState}
+            onForceSave={() => void save(editor)}
+          />
+        ) : (
+          <span className="ml-auto pr-2 text-xs text-neutral-500">Lädt …</span>
+        )
       }
       staticFallback={
         <WikiPageStaticContent

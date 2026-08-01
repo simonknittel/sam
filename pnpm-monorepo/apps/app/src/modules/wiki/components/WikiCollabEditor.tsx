@@ -19,6 +19,7 @@ import {
 } from "react";
 import { createWikiCollabToken } from "../actions/createWikiCollabToken";
 import { useWikiEditorExtensions } from "./useWikiEditorExtensions";
+import { WikiCollabSaveIndicator } from "./WikiCollabSaveIndicator";
 import {
   WikiCollabStatusDot,
   type WikiCollabUser,
@@ -288,11 +289,18 @@ const ConnectedEditor = ({
       isEditing={isEditing}
       editor={showEditor ? editor : null}
       statusSlot={
-        <WikiCollabStatusDot
-          status={status}
-          users={collabUsers}
-          className="ml-auto mr-2"
-        />
+        <>
+          <WikiCollabSaveIndicator
+            provider={provider}
+            status={status}
+            className="ml-auto"
+          />
+          <WikiCollabStatusDot
+            status={status}
+            users={collabUsers}
+            className="mr-2"
+          />
+        </>
       }
       staticFallback={staticFallback}
     />

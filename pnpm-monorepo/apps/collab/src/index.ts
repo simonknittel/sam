@@ -1,11 +1,14 @@
-import { Server } from "@hocuspocus/server";
+import { Server, type Document } from "@hocuspocus/server";
 import { prisma } from "@sam-monorepo/database";
 import { WikiPageSnapshotKind } from "@sam-monorepo/database/client";
 import {
   WIKI_EDITOR_FRAGMENT,
+  WikiSaveState,
   collectWikiAttachmentUploadIds,
   extractWikiPageText,
   getWikiEditorSchema,
+  parseWikiCollabStatelessMessage,
+  serializeWikiCollabStatelessMessage,
 } from "@sam-monorepo/wiki-editor";
 import { jwtVerify } from "jose";
 import type { IncomingMessage, ServerResponse } from "node:http";
@@ -56,6 +59,28 @@ interface ConnectionContext {
 const secret = new TextEncoder().encode(env.COLLAB_JWT_SECRET);
 
 const editorSchema = getWikiEditorSchema();
+
+/**
+ * Last save state broadcast per loaded document, so repeated states (e.g.
+ * dirty on every keystroke) are only sent once. Entries are dropped on
+ * unload; a missing entry means saved.
+ */
+const saveStates = new Map<string, WikiSaveState>();
+
+const getSaveState = (documentName: string) =>
+  saveStates.get(documentName) ?? WikiSaveState.Saved;
+
+const broadcastSaveState = (
+  document: Document,
+  documentName: string,
+  state: WikiSaveState,
+) => {
+  if (getSaveState(documentName) === state) return;
+  saveStates.set(documentName, state);
+  document.broadcastStateless(
+    serializeWikiCollabStatelessMessage({ type: "saveState", state }),
+  );
+};
 
 /**
  * Create an AUTO snapshot when the newest snapshot of the page is older
@@ -339,7 +364,65 @@ const server = new Server<ConnectionContext>({
     return data.document;
   },
 
+  /**
+   * Clients assume "saved" until told otherwise; a (re)connecting client
+   * gets the actual state so it doesn't keep a stale one (e.g. a store
+   * that finished while it was offline).
+   */
+  async connected(data) {
+    data.connection.sendStateless(
+      serializeWikiCollabStatelessMessage({
+        type: "saveState",
+        state: getSaveState(data.documentName),
+      }),
+    );
+  },
+
+  /**
+   * Force-save request from the editor's save indicator: persist pending
+   * changes immediately instead of waiting for the store debounce.
+   * Read-only connections can't have produced the changes — ignored.
+   */
+  async onStateless(data) {
+    const message = parseWikiCollabStatelessMessage(data.payload);
+    if (message?.type !== "forceSave" || data.connection.readOnly) return;
+
+    const state = getSaveState(data.documentName);
+    if (state !== WikiSaveState.Dirty) {
+      /**
+       * Nothing pending (or a store is already running and will broadcast
+       * its outcome) — just (re)confirm the state to the requester.
+       */
+      data.connection.sendStateless(
+        serializeWikiCollabStatelessMessage({ type: "saveState", state }),
+      );
+      return;
+    }
+
+    /**
+     * Replaces the scheduled debounced store with an immediate one; also
+     * covers changes whose previous store attempt failed (nothing is
+     * scheduled then). The requester becomes the store's context, so a
+     * forced save attributes updatedById to them. Fired and forgotten —
+     * the store broadcasts its own outcome, and errors are handled inside.
+     */
+    void server.hocuspocus.storeDocumentHooks(
+      data.document,
+      {
+        instance: server.hocuspocus,
+        clientsCount: data.document.getConnectionsCount(),
+        document: data.document,
+        documentName: data.documentName,
+        lastContext: data.connection.context,
+        lastTransactionOrigin: null,
+      },
+      true,
+    );
+  },
+
   async onStoreDocument(data) {
+    broadcastSaveState(data.document, data.documentName, WikiSaveState.Saving);
+
     const content = yXmlFragmentToProseMirrorRootNode(
       data.document.getXmlFragment(WIKI_EDITOR_FRAGMENT),
       editorSchema,
@@ -361,15 +444,24 @@ const server = new Server<ConnectionContext>({
       console.error("[collab] Auto-snapshot failed", error);
     }
 
-    await prisma.wikiPage.update({
-      where: { id: data.documentName },
-      data: {
-        ydoc,
-        content,
-        searchText: extractWikiPageText(content).slice(0, 200_000),
-        ...(lastEditorEntityId ? { updatedById: lastEditorEntityId } : {}),
-      },
-    });
+    try {
+      await prisma.wikiPage.update({
+        where: { id: data.documentName },
+        data: {
+          ydoc,
+          content,
+          searchText: extractWikiPageText(content).slice(0, 200_000),
+          ...(lastEditorEntityId ? { updatedById: lastEditorEntityId } : {}),
+        },
+      });
+    } catch (error) {
+      /**
+       * The changes are still only in memory — back to dirty (Hocuspocus
+       * logs the error and keeps the document loaded).
+       */
+      broadcastSaveState(data.document, data.documentName, WikiSaveState.Dirty);
+      throw error;
+    }
 
     /**
      * Never lets a failed link sync block the store itself.
@@ -379,10 +471,19 @@ const server = new Server<ConnectionContext>({
     } catch (error) {
       console.error("[collab] Upload link sync failed", error);
     }
+
+    /**
+     * Changes that arrived while the store ran are not part of it — their
+     * onChange has already switched the state back to dirty; only an
+     * untouched "saving" becomes "saved".
+     */
+    if (getSaveState(data.documentName) === WikiSaveState.Saving)
+      broadcastSaveState(data.document, data.documentName, WikiSaveState.Saved);
   },
 
   async onChange(data) {
     if (data.context) data.context.didEdit = true;
+    broadcastSaveState(data.document, data.documentName, WikiSaveState.Dirty);
   },
 
   async onDisconnect(data) {
@@ -401,6 +502,10 @@ const server = new Server<ConnectionContext>({
         createdById: data.context.userId,
       },
     });
+  },
+
+  async afterUnloadDocument(data) {
+    saveStates.delete(data.documentName);
   },
 });
 

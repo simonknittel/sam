@@ -18,6 +18,12 @@ export {
   type WikiMentionedCitizen,
 } from "./wikiCitizenMentionNode.js";
 export {
+  WikiSaveState,
+  parseWikiCollabStatelessMessage,
+  serializeWikiCollabStatelessMessage,
+  type WikiCollabStatelessMessage,
+} from "./wikiCollabSaveState.js";
+export {
   WIKI_EDITOR_FRAGMENT,
   getWikiEditorExtensions,
   getWikiEditorSchema,
