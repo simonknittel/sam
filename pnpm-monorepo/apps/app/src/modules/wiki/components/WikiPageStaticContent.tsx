@@ -42,8 +42,8 @@ const tableCellProps = (node: ProseMirrorNode) => {
 /**
  * Plain helper (not a component) so the render callbacks may keep the
  * stateful heading id assigner — headings get the same anchor ids in the
- * same document order as the TOC (see wikiHeadingIds.ts in the wiki-editor
- * package).
+ * same document order as the live editor (see wikiHeadingIds.ts in the
+ * wiki-editor package), so `#anchor` deep links stay stable.
  */
 const renderWikiPageContent = (
   content: StaticContent,

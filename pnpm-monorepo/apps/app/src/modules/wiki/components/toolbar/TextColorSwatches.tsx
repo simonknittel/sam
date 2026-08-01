@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  WIKI_COLOR_LABELS,
   WIKI_TEXT_COLORS,
   type WikiTextColor,
 } from "@sam-monorepo/wiki-editor";
@@ -13,14 +14,6 @@ const COLOR_CLASSES: Record<WikiTextColor, string> = {
   blue: "text-blue-400",
   red: "text-red-400",
   purple: "text-purple-400",
-};
-
-const COLOR_LABELS: Record<WikiTextColor, string> = {
-  yellow: "Gelb",
-  green: "Grün",
-  blue: "Blau",
-  red: "Rot",
-  purple: "Lila",
 };
 
 interface Props {
@@ -42,7 +35,7 @@ export const TextColorSwatches = ({ activeColor = null, onSelect }: Props) => {
         <button
           key={color}
           type="button"
-          title={COLOR_LABELS[color]}
+          title={WIKI_COLOR_LABELS[color]}
           onClick={() => onSelect(color)}
           className={clsx(
             "flex size-6 cursor-pointer items-center justify-center rounded-secondary border text-sm font-bold",

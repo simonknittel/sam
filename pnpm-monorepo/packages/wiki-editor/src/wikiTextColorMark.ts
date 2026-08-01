@@ -1,13 +1,8 @@
 import { Mark, mergeAttributes } from "@tiptap/core";
+import { WIKI_COLOR_TOKENS, type WikiColorToken } from "./wikiColorTokens.js";
 
-export const WIKI_TEXT_COLORS = [
-  "yellow",
-  "green",
-  "blue",
-  "red",
-  "purple",
-] as const;
-export type WikiTextColor = (typeof WIKI_TEXT_COLORS)[number];
+export const WIKI_TEXT_COLORS = WIKI_COLOR_TOKENS;
+export type WikiTextColor = WikiColorToken;
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {

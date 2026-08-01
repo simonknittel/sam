@@ -2,6 +2,7 @@ import {
   getWikiEditorSchema,
   normalizeWikiEmbedUrl,
   WIKI_CALLOUT_COLORS,
+  WIKI_COLOR_LABELS,
   WIKI_HIGHLIGHT_COLORS,
   WIKI_TEXT_COLORS,
 } from "@sam-monorepo/wiki-editor";
@@ -221,14 +222,6 @@ const CALLOUT_LABELS: Record<string, string> = {
   red: "Rot",
 };
 
-const TEXT_COLOR_LABELS: Record<string, string> = {
-  yellow: "Gelb",
-  green: "Grün",
-  blue: "Blau",
-  red: "Rot",
-  purple: "Lila",
-};
-
 const tagIds = flags["tag-ids"]
   .split(",")
   .map((tagId) => tagId.trim())
@@ -278,7 +271,7 @@ const documentContent: DemoNode = {
       "Textmarker in allen Farben: ",
       ...WIKI_HIGHLIGHT_COLORS.flatMap((color, index) => [
         ...(index > 0 ? [", "] : []),
-        text(color.name, mark("highlight", { color: color.value })),
+        text(WIKI_COLOR_LABELS[color], mark("highlight", { color })),
       ]),
       ".",
     ),
@@ -286,10 +279,7 @@ const documentContent: DemoNode = {
       "Textfarben in allen Tönen: ",
       ...WIKI_TEXT_COLORS.flatMap((color, index) => [
         ...(index > 0 ? [", "] : []),
-        text(
-          TEXT_COLOR_LABELS[color] ?? color,
-          mark("wikiTextColor", { color }),
-        ),
+        text(WIKI_COLOR_LABELS[color], mark("wikiTextColor", { color })),
       ]),
       ".",
     ),
