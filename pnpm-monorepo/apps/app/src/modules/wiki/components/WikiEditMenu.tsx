@@ -69,7 +69,11 @@ interface Props {
  * drag handle; the per-kind actions live in editMenu/. Companion of
  * WikiResizeHandles inside the shared overlay root.
  */
-export const WikiEditMenu = ({ editor, hoveredElement, onRequestLink }: Props) => {
+export const WikiEditMenu = ({
+  editor,
+  hoveredElement,
+  onRequestLink,
+}: Props) => {
   const [menu, setMenu] = useState<WikiEditMenuState>(null);
   /**
    * ProseMirror keeps the selection — without dispatching a transaction —
