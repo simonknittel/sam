@@ -1,4 +1,5 @@
 import { Node, mergeAttributes } from "@tiptap/core";
+import { WIKI_GRID_HOST_CONTENT } from "./wikiGridNodes.js";
 
 export const WIKI_CALLOUT_COLORS = [
   "neutral",
@@ -27,7 +28,7 @@ declare module "@tiptap/core" {
 export const WikiCallout = Node.create({
   name: "wikiCallout",
   group: "block",
-  content: "block+",
+  content: WIKI_GRID_HOST_CONTENT,
   defining: true,
 
   addAttributes() {

@@ -5,6 +5,7 @@ import {
   DetailsContent,
   DetailsSummary,
 } from "@tiptap/extension-details";
+import { Document } from "@tiptap/extension-document";
 import { Highlight } from "@tiptap/extension-highlight";
 import { TaskList } from "@tiptap/extension-list";
 import { TableKit } from "@tiptap/extension-table";
@@ -19,7 +20,11 @@ import {
   type WikiMentionedCitizen,
 } from "./wikiCitizenMentionNode.js";
 import { WikiEmbed } from "./wikiEmbedNode.js";
-import { WikiGrid, WikiGridCell } from "./wikiGridNodes.js";
+import {
+  WIKI_GRID_HOST_CONTENT,
+  WikiGrid,
+  WikiGridCell,
+} from "./wikiGridNodes.js";
 import { WikiHeadingIds } from "./wikiHeadingIds.js";
 import { WikiIframe } from "./wikiIframeNode.js";
 import { WikiPageIndex } from "./wikiPageIndexNode.js";
@@ -73,6 +78,17 @@ export interface WikiEditorExtensionsOptions {
 const lowlight = createLowlight(common);
 
 /**
+ * The containers that hold grids next to regular blocks — grids live
+ * outside the `block` group so grid cells cannot nest them (see
+ * WIKI_GRID_HOST_CONTENT).
+ */
+const WikiDocument = Document.extend({ content: WIKI_GRID_HOST_CONTENT });
+
+const WikiDetailsContent = DetailsContent.extend({
+  content: WIKI_GRID_HOST_CONTENT,
+});
+
+/**
  * The wiki's Tiptap extensions. Shared between the editor, the static
  * renderer for readers and the server-side content validation so all three
  * always agree on the schema. All options only affect editor behavior or
@@ -85,6 +101,8 @@ export const getWikiEditorExtensions = (
     StarterKit.configure({
       // Replaced with the lowlight-highlighted variant below
       codeBlock: false,
+      // Replaced with the grid-hosting variant below
+      document: false,
       // Replaced with the text-only variants below
       blockquote: false,
       heading: false,
@@ -100,6 +118,7 @@ export const getWikiEditorExtensions = (
         class: "wiki-drop-cursor",
       },
     }),
+    WikiDocument,
     CodeBlockLowlight.configure({ lowlight }),
     WikiBlockquote,
     WikiHeading,
@@ -116,7 +135,7 @@ export const getWikiEditorExtensions = (
     WikiTaskItem.configure({ nested: true }),
     Details,
     DetailsSummary,
-    DetailsContent,
+    WikiDetailsContent,
     Highlight.configure({ multicolor: true }),
     WikiTextAlign.configure({ types: ["heading", "paragraph"] }),
     WikiTextOnlyBlockGuard,

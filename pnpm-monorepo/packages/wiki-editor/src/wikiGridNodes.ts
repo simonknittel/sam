@@ -1,7 +1,17 @@
 import { Node, mergeAttributes } from "@tiptap/core";
+import { getWikiSelectionRestrictions } from "./wikiTextOnlyBlocks.js";
 
 export const WIKI_GRID_COLUMN_COUNTS = [2, 3, 4] as const;
 export type WikiGridColumnCount = (typeof WIKI_GRID_COLUMN_COUNTS)[number];
+
+/**
+ * Content expression for the containers that hold grids next to regular
+ * blocks (document, collapsible-section content, callout). The grid is
+ * deliberately NOT in the `block` group, so every `block+` container —
+ * most importantly the grid cell itself — rejects grids by schema and no
+ * insertion path (typing, paste, drag'n'drop) can nest them.
+ */
+export const WIKI_GRID_HOST_CONTENT = "(block | wikiGrid)+";
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
@@ -18,7 +28,6 @@ declare module "@tiptap/core" {
  */
 export const WikiGrid = Node.create({
   name: "wikiGrid",
-  group: "block",
   content: "wikiGridCell+",
   isolating: true,
 
@@ -70,7 +79,13 @@ export const WikiGrid = Node.create({
     return {
       insertWikiGrid:
         (columns) =>
-        ({ commands }) => {
+        ({ state, commands }) => {
+          /**
+           * The schema only rules out DIRECT nesting — this also covers
+           * indirect nesting via a callout or collapsible section inside
+           * a grid cell.
+           */
+          if (getWikiSelectionRestrictions(state).grids) return false;
           return commands.insertContent({
             type: this.name,
             attrs: { columns },

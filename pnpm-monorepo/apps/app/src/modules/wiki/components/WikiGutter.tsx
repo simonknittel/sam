@@ -226,11 +226,15 @@ const InsertBlockActions = ({
   /**
    * The palette inserts next to the hovered block, i.e. into its parent —
    * for blocks nested in a text-only container (quote, table cell, list
-   * item) only the text-level entries apply there.
+   * item) only the text-level entries apply there, and inside a grid the
+   * grid entries disappear (grids never nest).
    */
-  const items = getWikiPositionRestrictions(editor.state.doc, block.pos).blocks
-    ? WIKI_SLASH_COMMAND_ITEMS.filter((item) => item.allowedInTextOnlyBlock)
-    : WIKI_SLASH_COMMAND_ITEMS;
+  const restrictions = getWikiPositionRestrictions(editor.state.doc, block.pos);
+  const items = (
+    restrictions.blocks
+      ? WIKI_SLASH_COMMAND_ITEMS.filter((item) => item.allowedInTextOnlyBlock)
+      : WIKI_SLASH_COMMAND_ITEMS
+  ).filter((item) => !(restrictions.grids && item.insertsGrid));
 
   const insertBlock = (item: WikiSlashCommandItem) => {
     closePopover();

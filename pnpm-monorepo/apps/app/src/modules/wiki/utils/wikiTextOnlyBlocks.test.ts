@@ -232,6 +232,7 @@ describe("wiki text restrictions", () => {
   test("plain paragraphs are unrestricted", () => {
     expect(restrictionsAt(2)).toStrictEqual({
       blocks: false,
+      grids: false,
       lists: false,
       inlineNodes: false,
       marks: false,
@@ -243,6 +244,7 @@ describe("wiki text restrictions", () => {
   test("headings only forbid inline nodes", () => {
     expect(restrictionsAt(13)).toStrictEqual({
       blocks: false,
+      grids: false,
       lists: false,
       inlineNodes: true,
       marks: false,
@@ -254,6 +256,7 @@ describe("wiki text restrictions", () => {
   test("code blocks forbid everything", () => {
     expect(restrictionsAt(20)).toStrictEqual({
       blocks: true,
+      grids: true,
       lists: true,
       inlineNodes: true,
       marks: true,
@@ -265,6 +268,7 @@ describe("wiki text restrictions", () => {
   test("list items keep list toggles available", () => {
     expect(restrictionsAt(28)).toStrictEqual({
       blocks: true,
+      grids: true,
       lists: false,
       inlineNodes: false,
       marks: false,
@@ -276,6 +280,7 @@ describe("wiki text restrictions", () => {
   test("details summaries forbid blocks but keep marks", () => {
     expect(restrictionsAt(38)).toStrictEqual({
       blocks: true,
+      grids: true,
       lists: true,
       inlineNodes: true,
       marks: false,
@@ -287,6 +292,7 @@ describe("wiki text restrictions", () => {
   test("quotes forbid blocks, lists and alignment", () => {
     expect(restrictionsAt(56)).toStrictEqual({
       blocks: true,
+      grids: true,
       lists: true,
       inlineNodes: false,
       marks: false,
