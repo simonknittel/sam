@@ -27,6 +27,7 @@ import {
 import { useWikiEditMode } from "./WikiEditModeProvider";
 import "./wikiEditor.css";
 import { WikiEditorLayout } from "./WikiEditorLayout";
+import { WikiEmbedUrlModal } from "./WikiEmbedUrlModal";
 
 interface Props {
   readonly className?: string;
@@ -51,6 +52,8 @@ interface Props {
 /**
  * Unique connected users (by name) from the provider's awareness states.
  */
+const noop = () => undefined;
+
 const getAwarenessUsers = (provider: HocuspocusProvider): WikiCollabUser[] => {
   const states = provider.awareness
     ? [...provider.awareness.getStates().values()]
@@ -143,6 +146,8 @@ export const WikiCollabEditor = ({
           />
         }
         staticFallback={staticFallback}
+        /** No editor yet — the gutter (the only consumer) is not rendered */
+        onRequestEmbed={noop}
       />
     );
 
@@ -244,6 +249,9 @@ const ConnectedEditor = ({
     () => usersCache.current.users,
   );
 
+  const [isEmbedModalOpen, setIsEmbedModalOpen] = useState(false);
+  const requestEmbed = useCallback(() => setIsEmbedModalOpen(true), []);
+
   const extensions = useWikiEditorExtensions({
     pageId,
     iframeAllowlist,
@@ -251,6 +259,7 @@ const ConnectedEditor = ({
     mentionedCitizens,
     collaboration: true,
     interactive: isEditing,
+    onRequestEmbed: requestEmbed,
   });
 
   /**
@@ -285,26 +294,36 @@ const ConnectedEditor = ({
   const showEditor = editor !== null && isSynced;
 
   return (
-    <WikiEditorLayout
-      className={className}
-      pageId={pageId}
-      isEditing={isEditing}
-      editor={showEditor ? editor : null}
-      statusSlot={
-        <>
-          <WikiCollabSaveIndicator
-            provider={provider}
-            status={status}
-            className="ml-auto"
-          />
-          <WikiCollabStatusDot
-            status={status}
-            users={collabUsers}
-            className="mr-2"
-          />
-        </>
-      }
-      staticFallback={staticFallback}
-    />
+    <>
+      <WikiEditorLayout
+        className={className}
+        pageId={pageId}
+        isEditing={isEditing}
+        editor={showEditor ? editor : null}
+        statusSlot={
+          <>
+            <WikiCollabSaveIndicator
+              provider={provider}
+              status={status}
+              className="ml-auto"
+            />
+            <WikiCollabStatusDot
+              status={status}
+              users={collabUsers}
+              className="mr-2"
+            />
+          </>
+        }
+        staticFallback={staticFallback}
+        onRequestEmbed={requestEmbed}
+      />
+
+      {editor && isEmbedModalOpen && (
+        <WikiEmbedUrlModal
+          editor={editor}
+          onRequestClose={() => setIsEmbedModalOpen(false)}
+        />
+      )}
+    </>
   );
 };

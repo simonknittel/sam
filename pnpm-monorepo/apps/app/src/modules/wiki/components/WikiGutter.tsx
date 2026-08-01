@@ -84,6 +84,8 @@ interface Props {
   readonly editor: Editor;
   /** Target for file uploads started from the insert palette */
   readonly pageId: string;
+  /** Opens the embed URL dialog (palette entry "Einbetten") */
+  readonly onRequestEmbed: () => void;
 }
 
 /**
@@ -92,7 +94,7 @@ interface Props {
  * that only drags the block — all block actions live in the contextual
  * edit menu (WikiEditMenu).
  */
-export const WikiGutter = ({ editor, pageId }: Props) => {
+export const WikiGutter = ({ editor, pageId, onRequestEmbed }: Props) => {
   const [block, setBlock] = useState<HoveredBlock | null>(null);
   const [controlsHovered, setControlsHovered] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -198,6 +200,7 @@ export const WikiGutter = ({ editor, pageId }: Props) => {
             editor={editor}
             block={block}
             pageId={pageId}
+            onRequestEmbed={onRequestEmbed}
             insertAboveRef={insertAboveRef}
             onClosePalette={closePalette}
           />
@@ -224,6 +227,7 @@ interface InsertBlockActionsProps {
   readonly editor: Editor;
   readonly block: HoveredBlock | null;
   readonly pageId: string;
+  readonly onRequestEmbed: () => void;
   readonly insertAboveRef: RefObject<boolean>;
   /** Releases the parent's palette state (lock, highlight) on insert */
   readonly onClosePalette: () => void;
@@ -241,6 +245,7 @@ const InsertBlockActions = ({
   editor,
   block,
   pageId,
+  onRequestEmbed,
   insertAboveRef,
   onClosePalette,
 }: InsertBlockActionsProps) => {
@@ -276,7 +281,11 @@ const InsertBlockActions = ({
       .insertContentAt(position, { type: "paragraph" })
       .setTextSelection(position + 1)
       .run();
-    item.run(editor, { from: position + 1, to: position + 1 }, { pageId });
+    item.run(
+      editor,
+      { from: position + 1, to: position + 1 },
+      { pageId, onRequestEmbed },
+    );
   };
 
   return (

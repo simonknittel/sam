@@ -9,18 +9,6 @@ import { useState, useTransition } from "react";
 import { FaPlus } from "react-icons/fa";
 import { insertWikiEmbedFromUrl } from "./wikiEditorEmbeds";
 
-export const WIKI_OPEN_EMBED_MODAL_EVENT = "wiki:openEmbedModal";
-
-/**
- * Opens the embed URL dialog. The palettes' entries (slash command,
- * gutter) run outside any React tree, so a window event stands in for a
- * callback prop — WikiEditorOverlays listens and mounts the dialog. Only
- * one editor is mounted at a time, so no per-editor scoping is needed.
- */
-export const openWikiEmbedModal = () => {
-  window.dispatchEvent(new CustomEvent(WIKI_OPEN_EMBED_MODAL_EVENT));
-};
-
 interface Props {
   readonly editor: Editor;
   readonly onRequestClose: () => void;
