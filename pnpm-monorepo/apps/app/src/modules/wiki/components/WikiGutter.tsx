@@ -21,9 +21,11 @@ import {
   useState,
   type RefObject,
 } from "react";
-import { FaPlus } from "react-icons/fa";
+import { FaPaste, FaPlus } from "react-icons/fa";
 import { MdDragIndicator } from "react-icons/md";
+import { getWikiNodeTypeLabel } from "../utils/getWikiNodeTypeLabel";
 import { setWikiActiveNodeHighlight } from "./WikiActiveNodeHighlight";
+import { getWikiCopiedBlock } from "./wikiBlockClipboard";
 import {
   WIKI_SLASH_COMMAND_ITEMS,
   type WikiSlashCommandItem,
@@ -278,13 +280,47 @@ const InsertBlockActions = ({
       : WIKI_SLASH_COMMAND_ITEMS
   ).filter((item) => !(restrictions.grids && item.insertsGrid));
 
+  /**
+   * The copied block (edit menu's copy button, wikiBlockClipboard) obeys
+   * the same placement rules as the palette entries: text-only containers
+   * accept only paragraphs (or inline nodes, which get wrapped in one on
+   * insert), and grids never nest.
+   */
+  const copied = getWikiCopiedBlock();
+  const insertableCopied =
+    copied &&
+    (!restrictions.blocks ||
+      copied.isInline ||
+      copied.typeName === "paragraph") &&
+    !(restrictions.grids && copied.containsGrid)
+      ? copied
+      : null;
+
+  const insertPosition = () =>
+    insertAboveRef.current ? block.pos : block.pos + node.nodeSize;
+
+  const insertCopiedBlock = () => {
+    if (!insertableCopied) return;
+    closePopover();
+    onClosePalette();
+
+    editor
+      .chain()
+      .focus()
+      .insertContentAt(
+        insertPosition(),
+        insertableCopied.isInline
+          ? { type: "paragraph", content: [insertableCopied.content] }
+          : insertableCopied.content,
+      )
+      .run();
+  };
+
   const insertBlock = (item: WikiSlashCommandItem) => {
     closePopover();
     onClosePalette();
 
-    const position = insertAboveRef.current
-      ? block.pos
-      : block.pos + node.nodeSize;
+    const position = insertPosition();
     editor
       .chain()
       .focus()
@@ -300,6 +336,31 @@ const InsertBlockActions = ({
 
   return (
     <div className="flex max-h-72 w-60 flex-col gap-1 overflow-y-auto">
+      {insertableCopied && (
+        <>
+          <button
+            type="button"
+            onClick={insertCopiedBlock}
+            className={ROW_CLASS_NAME}
+          >
+            <span className="flex size-4 flex-none items-center justify-center">
+              <FaPaste />
+            </span>
+            <span className="flex flex-col items-start">
+              Kopierten Block einfügen
+              <span className="text-xs text-neutral-500">
+                {getWikiNodeTypeLabel(
+                  insertableCopied.typeName,
+                  insertableCopied.headingLevel,
+                )}
+              </span>
+            </span>
+          </button>
+
+          <div className="border-t border-neutral-800" />
+        </>
+      )}
+
       {items.map((item) => (
         <button
           key={item.title}

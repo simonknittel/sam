@@ -8,6 +8,7 @@ import { ToolbarButton } from "../toolbar/ToolbarButton";
 import { ToolbarDivider } from "../toolbar/ToolbarDivider";
 import { insertWikiEmbedFromUrl } from "../wikiEditorEmbeds";
 import { openInNewTab } from "./openInNewTab";
+import { WikiDuplicateCopyActions } from "./WikiDuplicateCopyActions";
 import { URL_NODE_TYPES, type WikiNodeMenuState } from "./wikiEditMenuState";
 import { WikiEditMenuUrlForm } from "./WikiEditMenuUrlForm";
 
@@ -147,6 +148,12 @@ export const WikiNodeMenuActions = ({
         ))}
 
       <ToolbarDivider />
+
+      <WikiDuplicateCopyActions
+        editor={editor}
+        position={menu.position}
+        typeNames={[menu.typeName]}
+      />
 
       <ToolbarButton title="Löschen" isActive={false} onClick={deleteNode}>
         <FaTrash />

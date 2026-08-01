@@ -6,6 +6,7 @@ import { FaBan, FaTrash } from "react-icons/fa";
 import { CalloutColorSwatches } from "../toolbar/CalloutColorSwatches";
 import { ToolbarButton } from "../toolbar/ToolbarButton";
 import { ToolbarDivider } from "../toolbar/ToolbarDivider";
+import { WikiDuplicateCopyActions } from "./WikiDuplicateCopyActions";
 import type { WikiCalloutMenuState } from "./wikiEditMenuState";
 
 interface Props {
@@ -60,6 +61,12 @@ export const WikiCalloutMenuActions = ({ editor, menu }: Props) => {
       </ToolbarButton>
 
       <ToolbarDivider />
+
+      <WikiDuplicateCopyActions
+        editor={editor}
+        position={menu.position}
+        typeNames={["wikiCallout"]}
+      />
 
       <ToolbarButton
         title="Block löschen"

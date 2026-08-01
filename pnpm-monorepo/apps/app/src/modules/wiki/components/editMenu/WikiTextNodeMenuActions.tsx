@@ -6,6 +6,7 @@ import { FaParagraph, FaTrash } from "react-icons/fa";
 import { ALIGNMENT_OPTIONS } from "../toolbar/alignments";
 import { ToolbarButton } from "../toolbar/ToolbarButton";
 import { ToolbarDivider } from "../toolbar/ToolbarDivider";
+import { WikiDuplicateCopyActions } from "./WikiDuplicateCopyActions";
 import type { WikiTextNodeMenuState } from "./wikiEditMenuState";
 
 interface Props {
@@ -92,6 +93,12 @@ export const WikiTextNodeMenuActions = ({ editor, menu }: Props) => {
           <ToolbarDivider />
         </>
       )}
+
+      <WikiDuplicateCopyActions
+        editor={editor}
+        position={menu.position}
+        typeNames={["paragraph", "heading"]}
+      />
 
       <ToolbarButton
         title="Block löschen"

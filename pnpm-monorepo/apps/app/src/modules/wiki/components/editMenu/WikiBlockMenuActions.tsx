@@ -5,6 +5,8 @@ import type { Editor } from "@tiptap/react";
 import { FaTrash } from "react-icons/fa";
 import { MdHeight, MdVerticalAlignCenter } from "react-icons/md";
 import { ToolbarButton } from "../toolbar/ToolbarButton";
+import { ToolbarDivider } from "../toolbar/ToolbarDivider";
+import { WikiDuplicateCopyActions } from "./WikiDuplicateCopyActions";
 import type { WikiBlockMenuState } from "./wikiEditMenuState";
 
 interface Props {
@@ -60,8 +62,16 @@ export const WikiBlockMenuActions = ({ editor, menu }: Props) => {
           >
             <MdHeight />
           </ToolbarButton>
+
+          <ToolbarDivider />
         </>
       )}
+
+      <WikiDuplicateCopyActions
+        editor={editor}
+        position={menu.position}
+        typeNames={[menu.typeName]}
+      />
 
       <ToolbarButton
         title="Block löschen"
