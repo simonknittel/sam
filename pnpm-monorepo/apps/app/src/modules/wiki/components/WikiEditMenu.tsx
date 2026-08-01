@@ -9,6 +9,7 @@ import {
 } from "@floating-ui/react-dom";
 import {
   WIKI_RESIZABLE_NODE_TYPES,
+  getWikiPositionRestrictions,
   type WikiCalloutColor,
   type WikiNodeAlignment,
 } from "@sam-monorepo/wiki-editor";
@@ -155,6 +156,11 @@ type MenuState =
       readonly headingLevel: number | null;
       readonly textAlign: WikiNodeAlignment;
       readonly activeMarks: readonly string[];
+      /**
+       * Paragraph inside a text-only container (quote, table cell, list
+       * item): headings and alignment are unavailable there
+       */
+      readonly inTextOnlyBlock: boolean;
     } & MenuTarget)
   | null;
 
@@ -317,6 +323,10 @@ export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
           textAlign: (resolved.node.attrs.textAlign ??
             "left") as WikiNodeAlignment,
           activeMarks,
+          inTextOnlyBlock: getWikiPositionRestrictions(
+            editor.state.doc,
+            resolved.position,
+          ).blocks,
           ...target,
         };
       }
@@ -819,18 +829,22 @@ export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
 
             {menu.kind === "text" && (
               <>
-                {([1, 2, 3] as const).map((level) => (
-                  <ToolbarButton
-                    key={level}
-                    title={`Überschrift ${level}`}
-                    isActive={menu.headingLevel === level}
-                    onClick={() => toggleTextHeading(level)}
-                  >
-                    <span className="text-xs font-bold">H{level}</span>
-                  </ToolbarButton>
-                ))}
+                {!menu.inTextOnlyBlock && (
+                  <>
+                    {([1, 2, 3] as const).map((level) => (
+                      <ToolbarButton
+                        key={level}
+                        title={`Überschrift ${level}`}
+                        isActive={menu.headingLevel === level}
+                        onClick={() => toggleTextHeading(level)}
+                      >
+                        <span className="text-xs font-bold">H{level}</span>
+                      </ToolbarButton>
+                    ))}
 
-                <ToolbarDivider />
+                    <ToolbarDivider />
+                  </>
+                )}
 
                 {TEXT_FORMAT_OPTIONS.map(({ name, title, icon: Icon }) => (
                   <ToolbarButton
@@ -843,18 +857,22 @@ export const WikiEditMenu = ({ editor, hoveredElement }: Props) => {
                   </ToolbarButton>
                 ))}
 
-                <ToolbarDivider />
+                {!menu.inTextOnlyBlock && (
+                  <>
+                    <ToolbarDivider />
 
-                {ALIGNMENT_OPTIONS.map(({ value, title, icon: Icon }) => (
-                  <ToolbarButton
-                    key={value}
-                    title={title}
-                    isActive={menu.textAlign === value}
-                    onClick={() => setTextAlignment(value)}
-                  >
-                    <Icon />
-                  </ToolbarButton>
-                ))}
+                    {ALIGNMENT_OPTIONS.map(({ value, title, icon: Icon }) => (
+                      <ToolbarButton
+                        key={value}
+                        title={title}
+                        isActive={menu.textAlign === value}
+                        onClick={() => setTextAlignment(value)}
+                      >
+                        <Icon />
+                      </ToolbarButton>
+                    ))}
+                  </>
+                )}
 
                 <ToolbarDivider />
 

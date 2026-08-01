@@ -9,6 +9,7 @@ import {
   type ComputePositionConfig,
   type Middleware,
 } from "@floating-ui/react-dom";
+import { getWikiPositionRestrictions } from "@sam-monorepo/wiki-editor";
 import { DragHandle } from "@tiptap/extension-drag-handle-react";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import type { Editor } from "@tiptap/react";
@@ -222,6 +223,15 @@ const InsertBlockActions = ({
   const node = editor.state.doc.nodeAt(block.pos);
   if (node?.type.name !== block.node.type.name) return null;
 
+  /**
+   * The palette inserts next to the hovered block, i.e. into its parent —
+   * for blocks nested in a text-only container (quote, table cell, list
+   * item) only the text-level entries apply there.
+   */
+  const items = getWikiPositionRestrictions(editor.state.doc, block.pos).blocks
+    ? WIKI_SLASH_COMMAND_ITEMS.filter((item) => item.allowedInTextOnlyBlock)
+    : WIKI_SLASH_COMMAND_ITEMS;
+
   const insertBlock = (item: WikiSlashCommandItem) => {
     closePopover();
     /**
@@ -245,7 +255,7 @@ const InsertBlockActions = ({
 
   return (
     <div className="flex max-h-72 w-60 flex-col gap-1 overflow-y-auto">
-      {WIKI_SLASH_COMMAND_ITEMS.map((item) => (
+      {items.map((item) => (
         <button
           key={item.title}
           type="button"

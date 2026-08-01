@@ -34,6 +34,8 @@ interface PopoverBaseUIContextProviderProps {
   readonly hoverOnly?: boolean;
   /** When false, hovering the trigger doesn't open the popover (click only) */
   readonly openOnHover?: boolean;
+  /** When true, the trigger is inert and the popover cannot open */
+  readonly disabled?: boolean;
   readonly side?: "top" | "bottom" | "left" | "right";
 }
 
@@ -44,6 +46,7 @@ export const PopoverBaseUI = ({
   onOpenChange,
   hoverOnly = false,
   openOnHover = true,
+  disabled = false,
   side = "top",
 }: PopoverBaseUIContextProviderProps) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -71,11 +74,12 @@ export const PopoverBaseUI = ({
 
   return (
     <PopoverBaseUIContext.Provider value={value}>
-      <Popover.Root open={isOpen} onOpenChange={handleOpenChange}>
+      <Popover.Root open={!disabled && isOpen} onOpenChange={handleOpenChange}>
         <Popover.Trigger
           openOnHover={openOnHover}
           className="text-left"
           delay={50}
+          disabled={disabled}
         >
           {trigger}
         </Popover.Trigger>

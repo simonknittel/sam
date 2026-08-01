@@ -8,20 +8,31 @@ interface Props {
   readonly title: string;
   readonly isActive: boolean;
   readonly icon: ReactNode;
+  readonly disabled?: boolean;
   readonly children: ReactNode;
 }
 
-export const ToolbarPopover = ({ title, isActive, icon, children }: Props) => {
+export const ToolbarPopover = ({
+  title,
+  isActive,
+  icon,
+  disabled = false,
+  children,
+}: Props) => {
   return (
     <PopoverBaseUI
+      disabled={disabled}
       trigger={
         <span
           aria-label={title}
           className={clsx(
-            "flex size-8 cursor-pointer items-center justify-center rounded-secondary hover:bg-neutral-800",
+            "flex size-8 items-center justify-center rounded-secondary",
+            disabled
+              ? "cursor-not-allowed text-neutral-600"
+              : "cursor-pointer hover:bg-neutral-800",
             {
-              "bg-neutral-800 text-interaction-500": isActive,
-              "text-neutral-300": !isActive,
+              "bg-neutral-800 text-interaction-500": isActive && !disabled,
+              "text-neutral-300": !isActive && !disabled,
             },
           )}
         >

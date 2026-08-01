@@ -10,6 +10,7 @@ interface Props {
   /** Optional for type="submit" buttons inside forms */
   readonly onClick?: () => void;
   readonly type?: "button" | "submit";
+  readonly disabled?: boolean;
   readonly children: ReactNode;
 }
 
@@ -18,6 +19,7 @@ export const ToolbarButton = ({
   isActive,
   onClick,
   type = "button",
+  disabled = false,
   children,
 }: Props) => {
   return (
@@ -28,11 +30,15 @@ export const ToolbarButton = ({
           type={type}
           aria-label={title}
           onClick={onClick}
+          disabled={disabled}
           className={clsx(
-            "flex size-8 cursor-pointer items-center justify-center rounded-secondary hover:bg-neutral-800",
+            "flex size-8 items-center justify-center rounded-secondary",
+            disabled
+              ? "cursor-not-allowed text-neutral-600"
+              : "cursor-pointer hover:bg-neutral-800",
             {
-              "bg-neutral-800 text-interaction-500": isActive,
-              "text-neutral-300": !isActive,
+              "bg-neutral-800 text-interaction-500": isActive && !disabled,
+              "text-neutral-300": !isActive && !disabled,
             },
           )}
         >
