@@ -167,7 +167,11 @@ export const WikiPageStaticContent = ({
   );
 
   return (
-    <div className={clsx("prose prose-invert max-w-none", className)}>
+    // The data attribute scopes the static-only geometry fixes (wikiEditor.css)
+    <div
+      className={clsx("prose prose-invert max-w-none", className)}
+      data-wiki-static-content=""
+    >
       {rendered}
     </div>
   );

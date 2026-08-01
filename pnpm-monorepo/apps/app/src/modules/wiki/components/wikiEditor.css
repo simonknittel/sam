@@ -9,6 +9,17 @@
   text-align: center;
 }
 
+/*
+ * ProseMirror gives every empty paragraph a trailing <br>, so in the editor
+ * (read-only included) it is one line tall. The static renderer emits a bare
+ * <p></p>, which would collapse to zero height — matched here so the page
+ * doesn't grow once the connected editor replaces the static first paint
+ * (e.g. the trailing empty line editors leave at the bottom).
+ */
+[data-wiki-static-content] p:empty {
+  min-height: 1lh;
+}
+
 /* Task lists (editor and static render) */
 .prose ul[data-type="taskList"] {
   list-style: none;
