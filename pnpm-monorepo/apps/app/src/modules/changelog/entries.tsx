@@ -31,6 +31,9 @@ import image20260510ProfileTile from "@/modules/changelog/assets/2026-05-10-prof
 import image20260521Timezones from "@/modules/changelog/assets/2026-05-21-timezones.png";
 import image20260731LineupPastePopover from "@/modules/changelog/assets/2026-07-31-lineup-paste-popover.png";
 import image20260731LineupPositionActions from "@/modules/changelog/assets/2026-07-31-lineup-position-actions.png";
+import image20260801WikiEditor from "@/modules/changelog/assets/2026-08-01-wiki-editor.png";
+import image20260801WikiPage from "@/modules/changelog/assets/2026-08-01-wiki-page.png";
+import image20260801WikiSearch from "@/modules/changelog/assets/2026-08-01-wiki-search.png";
 import type { ChangelogEntry } from "@/modules/changelog/types";
 import { Link } from "@/modules/common/components/Link";
 import Image from "next/image";
@@ -38,6 +41,85 @@ import { AiFillAppstore } from "react-icons/ai";
 import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
+  {
+    key: "2026-08-01-wiki",
+    date: "2026-08-01",
+    title: "Neue App: Wiki",
+    tags: ["Neu", "Wiki"],
+    isTracked: true,
+    body: () => (
+      <>
+        <p>
+          Mit dem{" "}
+          <Link
+            href="/app/wiki"
+            className="text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300"
+          >
+            Wiki
+          </Link>{" "}
+          gibt es jetzt einen Ort für das gesammelte Wissen der Organisation.
+          Seiten können von mehreren Personen gleichzeitig bearbeitet werden –
+          Änderungen werden live gespeichert und sind sofort für alle sichtbar.
+        </p>
+
+        <Link href={image20260801WikiPage.src}>
+          <Image
+            quality={100}
+            src={image20260801WikiPage}
+            alt=""
+            loading="eager"
+            className="max-h-full w-auto"
+          />
+        </Link>
+
+        <p>
+          Der Editor kann neben Text unter anderem Tabellen, Callouts,
+          mehrspaltige Raster, Aufgabenlisten, Bilder, Dateianhänge und
+          Einbettungen wie YouTube-Videos. Neue Blöcke fügst du über die
+          Toolbar, über das Plus am Seitenrand oder direkt beim Schreiben mit{" "}
+          <code>/</code> ein.
+        </p>
+
+        <Link href={image20260801WikiEditor.src}>
+          <Image
+            quality={100}
+            src={image20260801WikiEditor}
+            alt=""
+            loading="eager"
+            className="max-h-full w-auto"
+          />
+        </Link>
+
+        <p>
+          Seiten sind hierarchisch organisiert und lassen sich mit Favoriten und
+          Tags strukturieren. Die Volltextsuche durchsucht alle für dich
+          sichtbaren Seiten. Wer eine Seite sehen, bearbeiten oder verwalten
+          darf, wird pro Seite festgelegt – Unterseiten übernehmen die
+          Einstellungen automatisch.
+        </p>
+
+        <Link href={image20260801WikiSearch.src}>
+          <Image
+            quality={100}
+            src={image20260801WikiSearch}
+            alt=""
+            loading="eager"
+            className="max-h-full w-auto"
+          />
+        </Link>
+
+        <p>
+          Die Hilfe-App wurde durch das Wiki abgelöst – ihre Inhalte findest du
+          ab sofort dort.
+        </p>
+
+        <p className="text-sm text-neutral-500">
+          Die Screenshots zeigen Beispielinhalte.
+        </p>
+      </>
+    ),
+  },
+
   {
     key: "2026-07-31-posten-kopieren-und-einfuegen",
     date: "2026-07-31",

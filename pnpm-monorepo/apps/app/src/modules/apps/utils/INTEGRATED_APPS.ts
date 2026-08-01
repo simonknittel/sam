@@ -16,6 +16,7 @@ import silcScreenshot from "@/modules/silc/assets/screenshot.png";
 import spynetScreenshot from "@/modules/spynet/assets/screenshot.png";
 import tasksScreenshot from "@/modules/tasks/assets/screenshot.png";
 import timezonesScreenshot from "@/modules/timezones/assets/screenshot.png";
+import wikiScreenshot from "@/modules/wiki/assets/screenshot.png";
 import type { IntegratedApp } from "./types";
 
 export const INTEGRATED_APPS: IntegratedApp[] = [
@@ -197,6 +198,7 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
     name: "Wiki",
     slug: "wiki",
     href: "/app/wiki",
+    imageSrc: wikiScreenshot,
     description: "Das Wissen der Organisation an einem Ort",
     tags: ["featured"],
   },
