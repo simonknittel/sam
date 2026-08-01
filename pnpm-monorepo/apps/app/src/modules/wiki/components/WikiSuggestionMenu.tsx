@@ -137,7 +137,13 @@ export const WikiSuggestionMenu = <Item extends WikiSuggestionMenuItem>({
             },
           )}
         >
-          {item.icon}
+          {item.icon !== undefined && (
+            /* Fixed box — titles must align across icon shapes (svgs, the
+             * slash commands' H badges, page icon images) */
+            <span className="flex size-4 flex-none items-center justify-center">
+              {item.icon}
+            </span>
+          )}
           <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
             {item.title}
           </span>

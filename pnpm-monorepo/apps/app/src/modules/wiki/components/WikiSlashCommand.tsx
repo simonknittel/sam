@@ -3,6 +3,25 @@
 import { Extension, type Editor, type Range } from "@tiptap/core";
 import { PluginKey } from "@tiptap/pm/state";
 import { Suggestion } from "@tiptap/suggestion";
+import type { ReactNode } from "react";
+import {
+  FaAt,
+  FaCaretSquareDown,
+  FaCode,
+  FaColumns,
+  FaImage,
+  FaInfoCircle,
+  FaLink,
+  FaListOl,
+  FaListUl,
+  FaMinus,
+  FaPaperclip,
+  FaParagraph,
+  FaQuoteRight,
+  FaSitemap,
+  FaTable,
+  FaTasks,
+} from "react-icons/fa";
 import {
   insertWikiFile,
   pickWikiFiles,
@@ -18,6 +37,7 @@ export interface WikiSlashCommandOptions {
 
 export interface WikiSlashCommandItem {
   readonly title: string;
+  readonly icon: ReactNode;
   readonly keywords: readonly string[];
   readonly run: (
     editor: Editor,
@@ -30,48 +50,57 @@ export interface WikiSlashCommandItem {
 export const WIKI_SLASH_COMMAND_ITEMS: readonly WikiSlashCommandItem[] = [
   {
     title: "Text",
+    icon: <FaParagraph />,
     keywords: ["text", "paragraph", "absatz", "p"],
     run: (editor, range) =>
       editor.chain().focus().deleteRange(range).setParagraph().run(),
   },
   ...([1, 2, 3] as const).map((level) => ({
     title: `Überschrift ${level}`,
+    /** Text badge like the toolbar's heading picker (has no svg icons) */
+    icon: <span className="text-xs font-bold">H{level}</span>,
     keywords: [`h${level}`, `heading${level}`, `überschrift${level}`],
     run: (editor: Editor, range: Range) =>
       editor.chain().focus().deleteRange(range).toggleHeading({ level }).run(),
   })),
   {
     title: "Liste",
+    icon: <FaListUl />,
     keywords: ["ul", "liste", "bullet", "list"],
     run: (editor, range) =>
       editor.chain().focus().deleteRange(range).toggleBulletList().run(),
   },
   {
     title: "Nummerierte Liste",
+    icon: <FaListOl />,
     keywords: ["ol", "nummeriert", "ordered"],
     run: (editor, range) =>
       editor.chain().focus().deleteRange(range).toggleOrderedList().run(),
   },
   {
     title: "Aufgabenliste",
+    icon: <FaTasks />,
     keywords: ["todo", "task", "aufgabe", "checkbox"],
     run: (editor, range) =>
       editor.chain().focus().deleteRange(range).toggleTaskList().run(),
   },
   {
     title: "Zitat",
+    icon: <FaQuoteRight />,
     keywords: ["quote", "zitat", "blockquote"],
     run: (editor, range) =>
       editor.chain().focus().deleteRange(range).toggleBlockquote().run(),
   },
   {
     title: "Codeblock",
+    icon: <FaCode />,
     keywords: ["code", "codeblock"],
     run: (editor, range) =>
       editor.chain().focus().deleteRange(range).toggleCodeBlock().run(),
   },
   {
     title: "Tabelle",
+    icon: <FaTable />,
     keywords: ["table", "tabelle"],
     run: (editor, range) =>
       editor
@@ -83,18 +112,21 @@ export const WIKI_SLASH_COMMAND_ITEMS: readonly WikiSlashCommandItem[] = [
   },
   {
     title: "Ausklappbarer Abschnitt",
+    icon: <FaCaretSquareDown />,
     keywords: ["details", "toggle", "ausklappen", "accordion"],
     run: (editor, range) =>
       editor.chain().focus().deleteRange(range).setDetails().run(),
   },
   {
     title: "Hervorgehobener Block",
+    icon: <FaInfoCircle />,
     keywords: ["callout", "info", "hinweis", "warnung", "note"],
     run: (editor, range) =>
       editor.chain().focus().deleteRange(range).toggleWikiCallout("blue").run(),
   },
   ...([2, 3, 4] as const).map((columns) => ({
     title: `Raster mit ${columns} Spalten`,
+    icon: <FaColumns />,
     keywords: [
       `raster${columns}`,
       `grid${columns}`,
@@ -109,12 +141,14 @@ export const WIKI_SLASH_COMMAND_ITEMS: readonly WikiSlashCommandItem[] = [
   })),
   {
     title: "Trennlinie",
+    icon: <FaMinus />,
     keywords: ["hr", "divider", "trennlinie", "linie"],
     run: (editor, range) =>
       editor.chain().focus().deleteRange(range).setHorizontalRule().run(),
   },
   {
     title: "Bild",
+    icon: <FaImage />,
     keywords: ["bild", "image", "foto", "img"],
     run: (editor, range, options) => {
       editor.chain().focus().deleteRange(range).run();
@@ -126,6 +160,7 @@ export const WIKI_SLASH_COMMAND_ITEMS: readonly WikiSlashCommandItem[] = [
   },
   {
     title: "Dateianhang",
+    icon: <FaPaperclip />,
     keywords: ["datei", "anhang", "attachment", "file", "pdf", "upload"],
     run: (editor, range, options) => {
       editor.chain().focus().deleteRange(range).run();
@@ -137,6 +172,7 @@ export const WIKI_SLASH_COMMAND_ITEMS: readonly WikiSlashCommandItem[] = [
   },
   {
     title: "Seitenlink",
+    icon: <FaLink />,
     keywords: ["seitenlink", "link", "seite", "page", "verweis"],
     /** "[[" opens the page link suggestion (WikiPageLinkSuggestion) */
     run: (editor, range) =>
@@ -144,6 +180,7 @@ export const WIKI_SLASH_COMMAND_ITEMS: readonly WikiSlashCommandItem[] = [
   },
   {
     title: "Citizen erwähnen",
+    icon: <FaAt />,
     keywords: ["citizen", "mention", "erwähnen", "erwähnung", "spieler"],
     /** "@" opens the citizen suggestion (WikiCitizenMentionSuggestion) */
     run: (editor, range) =>
@@ -151,6 +188,7 @@ export const WIKI_SLASH_COMMAND_ITEMS: readonly WikiSlashCommandItem[] = [
   },
   {
     title: "Seitenverzeichnis",
+    icon: <FaSitemap />,
     keywords: [
       "verzeichnis",
       "seitenverzeichnis",

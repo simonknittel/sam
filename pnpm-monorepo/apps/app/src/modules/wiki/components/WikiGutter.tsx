@@ -252,6 +252,9 @@ const InsertBlockActions = ({
           onClick={() => insertBlock(item)}
           className={ROW_CLASS_NAME}
         >
+          <span className="flex size-4 flex-none items-center justify-center">
+            {item.icon}
+          </span>
           {item.title}
         </button>
       ))}
