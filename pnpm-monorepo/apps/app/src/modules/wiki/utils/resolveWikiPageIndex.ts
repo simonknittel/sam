@@ -83,18 +83,13 @@ export const resolveWikiPageIndex = withTrace(
         }
 
         return [...tagIdsByPage.entries()]
-          .filter(([, tagIds]) => {
-            switch (config.matchMode) {
-              case "all":
-                return tagIds.size === requestedTagIds.size;
-              case "any":
-                return tagIds.size > 0;
-              default:
-                throw new Error(
-                  `Unknown match mode: ${config.matchMode satisfies never}`,
-                );
-            }
-          })
+          .filter(
+            // "any" needs no filter — every entry has a matching tag by
+            // construction
+            ([, tagIds]) =>
+              config.matchMode === "any" ||
+              tagIds.size === requestedTagIds.size,
+          )
           .map(([pageId]) => context.pagesById.get(pageId))
           .filter((page) => page !== undefined)
           .filter(

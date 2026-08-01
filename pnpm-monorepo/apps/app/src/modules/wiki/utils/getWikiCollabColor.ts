@@ -25,7 +25,8 @@ const PALETTE = [
 export const getWikiCollabColor = (seed: string) => {
   let hash = 0;
   for (const character of seed)
-    hash = (hash * 31 + (character.codePointAt(0) ?? 0)) % 360;
+    // Bounded so long ids can't push the hash past exact-integer range
+    hash = (hash * 31 + (character.codePointAt(0) ?? 0)) % 2_147_483_647;
 
   return PALETTE[hash % PALETTE.length];
 };

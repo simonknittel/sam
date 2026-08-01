@@ -22,8 +22,8 @@ import { z } from "zod";
 import { env } from "./env.js";
 
 /**
- * The Yjs collaboration backend for the wiki (see PLAN-wiki.md §5). The
- * Next.js app remains the single permission authority: it mints short-lived
+ * The Yjs collaboration backend for the wiki. The Next.js app remains the
+ * single permission authority: it mints short-lived
  * JWTs per page and viewer, this server only verifies them and persists
  * documents. The editor schema is shared with the app through
  * @sam-monorepo/wiki-editor. Deployed next to Soketi via the core-services

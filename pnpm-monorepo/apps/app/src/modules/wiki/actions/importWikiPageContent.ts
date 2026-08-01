@@ -27,8 +27,8 @@ const schema = z.object({
 });
 
 /**
- * Fully replaces a page's content with uploaded Tiptap JSON (see
- * PLAN-wiki.md §9). Wiki admins only — an import injects arbitrary node
+ * Fully replaces a page's content with uploaded Tiptap JSON. Wiki admins
+ * only — an import injects arbitrary node
  * structures, bypassing the editor's insertion-time validation, so it stays
  * a `wiki;manage` tool. No merge semantics; the automatic safety snapshot
  * is the undo path.

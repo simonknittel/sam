@@ -11,7 +11,7 @@ import { parseArgs } from "node:util";
 
 /**
  * Generates the Tiptap JSON for a "live demo page" exercising every
- * formatting option and embed the wiki editor supports (PLAN-wiki.md §15).
+ * formatting option and embed the wiki editor supports.
  * Import the output file via the wiki's JSON import (page menu, requires
  * `wiki;manage`) to author/refresh help pages — e.g. a
  * "Formatierungsoptionen" page that documents the editor for users and
@@ -247,7 +247,7 @@ const documentContent: DemoNode = {
       text("/h1", mark("code")),
       " bis ",
       text("/h3", mark("code")),
-      "). Jede Überschrift bekommt automatisch einen Anker für Deep-Links und das Inhaltsverzeichnis rechts.",
+      "). Jede Überschrift bekommt automatisch einen Anker für Deep-Links.",
     ),
     heading(1, "Überschrift 1"),
     heading(2, "Überschrift 2"),
