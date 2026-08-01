@@ -1,4 +1,5 @@
 import { env } from "@/env";
+import type { WikiCollabReplaceTokenPayload } from "@sam-monorepo/wiki-editor";
 import { SignJWT } from "jose";
 
 const REPLACE_REQUEST_TIMEOUT_MS = 15_000;
@@ -34,11 +35,13 @@ export const replaceWikiPageContent = async ({
   const replaceUrl = new URL("/replace", env.NEXT_PUBLIC_COLLAB_URL);
   replaceUrl.protocol = replaceUrl.protocol === "ws:" ? "http:" : "https:";
 
-  const token = await new SignJWT({
+  const claims = {
     scope: "replace",
     pageId,
     entityId: updatedByEntityId,
-  })
+  } satisfies WikiCollabReplaceTokenPayload;
+
+  const token = await new SignJWT(claims)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("60s")

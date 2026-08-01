@@ -24,6 +24,12 @@ export {
   serializeWikiCollabStatelessMessage,
   type WikiCollabStatelessMessage,
 } from "./wikiCollabSaveState.js";
+export {
+  parseWikiCollabReplaceTokenPayload,
+  parseWikiCollabSessionTokenPayload,
+  type WikiCollabReplaceTokenPayload,
+  type WikiCollabSessionTokenPayload,
+} from "./wikiCollabTokens.js";
 export { WIKI_COLOR_LABELS, type WikiColorToken } from "./wikiColorTokens.js";
 export {
   WIKI_EDITOR_FRAGMENT,
