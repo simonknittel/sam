@@ -7,9 +7,10 @@ import {
   type WikiMentionedCitizen,
   type WikiPageLinkedPage,
 } from "@sam-monorepo/wiki-editor";
+import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { renderToReactElement } from "@tiptap/static-renderer";
 import clsx from "clsx";
-import { createElement, type ReactNode } from "react";
+import { createElement, type CSSProperties, type ReactNode } from "react";
 import { getWikiTwitchParentHost } from "../utils/getWikiTwitchParentHost";
 import { WikiCitizenMentionChip } from "./WikiCitizenMentionNodeView";
 import {
@@ -19,6 +20,24 @@ import {
 import "./wikiEditor.css";
 
 type StaticContent = Parameters<typeof renderToReactElement>[0]["content"];
+
+/**
+ * Mirrors TableCell's/TableHeader's renderHTML, but with React's camelCased
+ * span props and the align attribute as a style object — the default
+ * mapping passes the HTML attribute names (colspan/rowspan) through
+ * verbatim, which React warns about.
+ */
+const tableCellProps = (node: ProseMirrorNode) => {
+  const { colspan, rowspan, colwidth, align } = node.attrs;
+  return {
+    colSpan: colspan as number,
+    rowSpan: rowspan as number,
+    colwidth: (colwidth as number[] | null)?.join(",") ?? undefined,
+    style: align
+      ? { textAlign: align as CSSProperties["textAlign"] }
+      : undefined,
+  };
+};
 
 /**
  * Plain helper (not a component) so the render callbacks may keep the
@@ -70,6 +89,10 @@ const renderWikiPageContent = (
             </li>
           );
         },
+        tableCell: ({ node, children }) =>
+          createElement("td", tableCellProps(node), children as ReactNode),
+        tableHeader: ({ node, children }) =>
+          createElement("th", tableCellProps(node), children as ReactNode),
         /**
          * Unlike the node's renderHTML, the chip adds the citizen hover
          * popover around the mention link — same as the editor node view.
