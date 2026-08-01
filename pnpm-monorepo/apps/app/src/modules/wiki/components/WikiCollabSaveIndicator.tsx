@@ -1,18 +1,24 @@
 "use client";
 
-import { HocuspocusProvider, WebSocketStatus } from "@hocuspocus/provider";
+import { WebSocketStatus, type HocuspocusProvider } from "@hocuspocus/provider";
 import {
   WikiSaveState,
   parseWikiCollabStatelessMessage,
   serializeWikiCollabStatelessMessage,
 } from "@sam-monorepo/wiki-editor";
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { type WikiCollabStatus } from "./WikiCollabStatusDot";
 import { WikiSaveStateIndicator } from "./WikiSaveStateIndicator";
 
 interface Props {
   readonly className?: string;
   readonly provider: HocuspocusProvider;
-  readonly status: WebSocketStatus;
+  /**
+   * An unauthorized connection ("authenticationFailed") counts as not
+   * connected here: the server won't accept changes, so local ones must
+   * show as unsaved and force-saving stays disabled.
+   */
+  readonly status: WikiCollabStatus;
 }
 
 /**

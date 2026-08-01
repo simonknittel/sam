@@ -4,9 +4,22 @@ import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
 import { WebSocketStatus } from "@hocuspocus/provider";
 import clsx from "clsx";
 
+/**
+ * The transport status plus the provider-level failure the transport can't
+ * see: authentication happens inside the open socket, so a rejected session
+ * token (or a failed token mint) leaves the WebSocketStatus at "connected"
+ * while nothing syncs.
+ */
+export type WikiCollabStatus = WebSocketStatus | "authenticationFailed";
+
 const STATUS_CONFIG: Record<
-  WebSocketStatus,
-  { label: string; solidClassName: string; pingClassName: string }
+  WikiCollabStatus,
+  {
+    label: string;
+    description?: string;
+    solidClassName: string;
+    pingClassName: string;
+  }
 > = {
   [WebSocketStatus.Connected]: {
     label: "Verbunden",
@@ -23,6 +36,13 @@ const STATUS_CONFIG: Record<
     solidClassName: "bg-red-500",
     pingClassName: "bg-red-500",
   },
+  authenticationFailed: {
+    label: "Nicht berechtigt",
+    description:
+      "Die Echtzeit-Verbindung wurde nicht autorisiert. Änderungen werden nicht gespeichert.",
+    solidClassName: "bg-amber-500",
+    pingClassName: "bg-amber-500",
+  },
 };
 
 export interface WikiCollabUser {
@@ -32,16 +52,17 @@ export interface WikiCollabUser {
 
 interface Props {
   readonly className?: string;
-  readonly status: WebSocketStatus;
+  readonly status: WikiCollabStatus;
   /** Connected collaborators (from the provider's awareness states) */
   readonly users: readonly WikiCollabUser[];
 }
 
 /**
  * Pinging connection indicator of the collaborative editor (green:
- * connected, blue: connecting, red: disconnected), like the dot badge on
- * the app tiles, plus the number of connected users. The popover explains
- * the state and lists the users by name.
+ * connected, blue: connecting, red: disconnected, amber: authentication
+ * failed), like the dot badge on the app tiles, plus the number of
+ * connected users. The popover explains the state and lists the users by
+ * name.
  */
 export const WikiCollabStatusDot = ({ className, status, users }: Props) => {
   const config = STATUS_CONFIG[status];
@@ -79,6 +100,12 @@ export const WikiCollabStatusDot = ({ className, status, users }: Props) => {
         }
       >
         <p className="text-sm uppercase font-mono font-bold">{config.label}</p>
+
+        {config.description && (
+          <p className="mt-2 max-w-64 text-sm text-neutral-300">
+            {config.description}
+          </p>
+        )}
 
         {showUsers && (
           <ul className="mt-4 flex flex-col gap-1 text-sm">

@@ -22,6 +22,7 @@ import { useWikiEditorExtensions } from "./useWikiEditorExtensions";
 import { WikiCollabSaveIndicator } from "./WikiCollabSaveIndicator";
 import {
   WikiCollabStatusDot,
+  type WikiCollabStatus,
   type WikiCollabUser,
 } from "./WikiCollabStatusDot";
 import { useWikiEditMode } from "./WikiEditModeProvider";
@@ -212,7 +213,7 @@ const ConnectedEditor = ({
     () => false,
   );
 
-  const status = useSyncExternalStore(
+  const websocketStatus = useSyncExternalStore(
     useCallback(
       (onStoreChange: () => void) => {
         provider.on("status", onStoreChange);
@@ -223,6 +224,48 @@ const ConnectedEditor = ({
     () => provider.configuration.websocketProvider.status,
     () => WebSocketStatus.Connecting,
   );
+
+  /**
+   * Authentication happens inside the open socket, so the transport status
+   * above stays "connected" while the server rejects the session token (or
+   * the token mint fails) — the provider only reports that via these
+   * events (a failed mint also arrives as "authenticationFailed"). Sticky
+   * across the provider's retry loop, which reopens the socket before
+   * failing again — gating on the transport status would just flicker.
+   * Only a successful authentication clears it. No provider property holds
+   * this (isAuthenticated is false while connecting too), so the flag
+   * lives in a ref and there is no snapshot to initialize from; a remount
+   * during a failure loop shows the transport status until the next retry
+   * fails.
+   */
+  const hasAuthenticationFailedRef = useRef(false);
+  const hasAuthenticationFailed = useSyncExternalStore(
+    useCallback(
+      (onStoreChange: () => void) => {
+        const handleFailed = () => {
+          hasAuthenticationFailedRef.current = true;
+          onStoreChange();
+        };
+        const handleAuthenticated = () => {
+          hasAuthenticationFailedRef.current = false;
+          onStoreChange();
+        };
+        provider.on("authenticationFailed", handleFailed);
+        provider.on("authenticated", handleAuthenticated);
+        return () => {
+          provider.off("authenticationFailed", handleFailed);
+          provider.off("authenticated", handleAuthenticated);
+        };
+      },
+      [provider],
+    ),
+    () => hasAuthenticationFailedRef.current,
+    () => false,
+  );
+
+  const status: WikiCollabStatus = hasAuthenticationFailed
+    ? "authenticationFailed"
+    : websocketStatus;
 
   /**
    * Connected users from the provider's awareness states (the caret
