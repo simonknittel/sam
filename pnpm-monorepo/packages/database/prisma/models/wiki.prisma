@@ -62,6 +62,10 @@ model WikiPage {
   content    Json?
   /// Plain text extracted from `content`. Used for full-text search.
   searchText String @default("")
+  /// Space-joined names of the page's tags. Denormalized because the FTS
+  /// GIN index is an expression index on this table and cannot span the tag
+  /// tables. Kept in sync by updateWikiPageTags.
+  tagsText   String @default("")
 
   visibility   WikiPageVisibility   @default(INHERIT)
   editability  WikiPageEditability  @default(INHERIT)

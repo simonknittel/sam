@@ -14,7 +14,7 @@ import { getById as getVariantById } from "./routers/variant/getById";
 import { getPageIndex } from "./routers/wiki/getPageIndex";
 import { getPageTargets } from "./routers/wiki/getPageTargets";
 import { getTags } from "./routers/wiki/getTags";
-import { searchPages } from "./routers/wiki/searchPages";
+import { search } from "./routers/wiki/search";
 import { createCallerFactory, createTRPCRouter } from "./trpc";
 
 /**
@@ -56,7 +56,7 @@ export const appRouter = createTRPCRouter({
     getPageIndex,
     getPageTargets,
     getTags,
-    searchPages,
+    search,
   }),
 });
 

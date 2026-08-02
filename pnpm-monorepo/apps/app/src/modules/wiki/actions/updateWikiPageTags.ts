@@ -97,6 +97,13 @@ export const updateWikiPageTags = createAuthenticatedAction(
       (assignment) => assignment.tagId,
     );
 
+    const keptNames = currentAssignments
+      .filter((assignment) => !removedAssignments.includes(assignment))
+      .map((assignment) => assignment.tag.name);
+    const tagsText = [...keptNames, ...addedTags.map((tag) => tag.name)]
+      .sort((a, b) => a.localeCompare(b))
+      .join(" ");
+
     await prisma.$transaction([
       prisma.wikiPageTag.deleteMany({
         where: { id: { in: removedAssignments.map((entry) => entry.id) } },
@@ -115,6 +122,14 @@ export const updateWikiPageTags = createAuthenticatedAction(
        */
       prisma.wikiTag.deleteMany({
         where: { id: { in: removedTagIds }, pages: { none: {} } },
+      }),
+      /**
+       * Denormalized copy of the tag names for the full-text search (see
+       * WikiPage.tagsText).
+       */
+      prisma.wikiPage.update({
+        where: { id: page.id },
+        data: { tagsText, updatedById: citizenId },
       }),
     ]);
 

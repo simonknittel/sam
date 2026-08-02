@@ -6,12 +6,24 @@ import { api } from "@/modules/common/utils/api";
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
 import { Fragment, useEffect, useId, useState } from "react";
-import { FaSearch } from "react-icons/fa";
-import type { WikiSearchResult } from "../queries/searchWikiPages";
+import { FaSearch, FaTag } from "react-icons/fa";
+import type {
+  WikiSearchPageResult,
+  WikiSearchTagResult,
+} from "../queries/searchWiki";
 import { parseWikiSearchSnippet } from "../utils/wikiSearchSnippet";
 import { WikiPageIcon } from "./WikiPageIcon";
 
 const MIN_QUERY_LENGTH = 2;
+
+type WikiSearchOption =
+  | { readonly type: "tag"; readonly tag: WikiSearchTagResult }
+  | { readonly type: "page"; readonly page: WikiSearchPageResult };
+
+const optionHref = (option: WikiSearchOption) =>
+  option.type === "tag"
+    ? `/app/wiki/tags/${option.tag.id}`
+    : `/app/wiki/${option.page.id}/${option.page.slug}`;
 
 interface Props {
   readonly className?: string;
@@ -19,8 +31,9 @@ interface Props {
 }
 
 /**
- * Search-as-you-type over all visible wiki pages, used in the wiki sidebar
- * and on the landing page. Results are permission-filtered server-side and
+ * Search-as-you-type over all visible wiki pages and all tags, used in the
+ * wiki sidebar and on the landing page. Tag results come first and lead to
+ * the tag's list page. Page results are permission-filtered server-side and
  * shown in a popover beneath the input, so the surrounding content never
  * shifts. Arrow keys move through the results, Enter opens the active one
  * (or the first when none is active).
@@ -42,7 +55,7 @@ export const WikiSearch = ({ className, compact }: Props) => {
   }, [query]);
 
   const enabled = debouncedQuery.length >= MIN_QUERY_LENGTH;
-  const { data, isFetching } = api.wiki.searchPages.useQuery(
+  const { data, isFetching } = api.wiki.search.useQuery(
     { query: debouncedQuery },
     {
       enabled,
@@ -51,8 +64,14 @@ export const WikiSearch = ({ className, compact }: Props) => {
     },
   );
 
-  const results = enabled ? (data ?? []) : [];
-  const activeResult = activeIndex >= 0 ? results[activeIndex] : undefined;
+  const options: WikiSearchOption[] =
+    enabled && data
+      ? [
+          ...data.tags.map((tag) => ({ type: "tag" as const, tag })),
+          ...data.pages.map((page) => ({ type: "page" as const, page })),
+        ]
+      : [];
+  const activeOption = activeIndex >= 0 ? options[activeIndex] : undefined;
   const optionId = (index: number) => `${listboxId}-option-${index}`;
 
   /**
@@ -69,22 +88,22 @@ export const WikiSearch = ({ className, compact }: Props) => {
   };
 
   const handleInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (results.length === 0) return;
+    if (options.length === 0) return;
 
     if (event.key === "ArrowDown") {
       event.preventDefault();
       setIsOpen(true);
-      moveActiveIndex(Math.min(activeIndex + 1, results.length - 1));
+      moveActiveIndex(Math.min(activeIndex + 1, options.length - 1));
     } else if (event.key === "ArrowUp") {
       event.preventDefault();
       moveActiveIndex(Math.max(activeIndex - 1, -1));
     } else if (event.key === "Enter") {
       if (!isOpen) return;
-      const result = activeResult ?? results[0];
-      if (!result) return;
+      const option = activeOption ?? options[0];
+      if (!option) return;
       event.preventDefault();
       setIsOpen(false);
-      router.push(`/app/wiki/${result.id}/${result.slug}`);
+      router.push(optionHref(option));
     }
   };
 
@@ -132,7 +151,7 @@ export const WikiSearch = ({ className, compact }: Props) => {
             aria-controls={listboxId}
             aria-autocomplete="list"
             aria-activedescendant={
-              activeResult ? optionId(activeIndex) : undefined
+              activeOption ? optionId(activeIndex) : undefined
             }
             value={query}
             onChange={(event) => {
@@ -153,23 +172,34 @@ export const WikiSearch = ({ className, compact }: Props) => {
             )}
 
             {data &&
-              (results.length > 0 ? (
+              (options.length > 0 ? (
                 <ul
                   id={listboxId}
                   role="listbox"
                   aria-label="Suchergebnisse"
                   className="flex flex-col divide-y divide-neutral-800"
                 >
-                  {results.map((result, index) => (
-                    <SearchResult
-                      key={result.id}
-                      id={optionId(index)}
-                      result={result}
-                      isActive={index === activeIndex}
-                      onHover={() => setActiveIndex(index)}
-                      onSelect={() => setIsOpen(false)}
-                    />
-                  ))}
+                  {options.map((option, index) =>
+                    option.type === "tag" ? (
+                      <TagResult
+                        key={`tag-${option.tag.id}`}
+                        id={optionId(index)}
+                        tag={option.tag}
+                        isActive={index === activeIndex}
+                        onHover={() => setActiveIndex(index)}
+                        onSelect={() => setIsOpen(false)}
+                      />
+                    ) : (
+                      <PageResult
+                        key={`page-${option.page.id}`}
+                        id={optionId(index)}
+                        page={option.page}
+                        isActive={index === activeIndex}
+                        onHover={() => setActiveIndex(index)}
+                        onSelect={() => setIsOpen(false)}
+                      />
+                    ),
+                  )}
                 </ul>
               ) : (
                 <p className="p-2 text-sm text-neutral-400">Keine Treffer.</p>
@@ -181,27 +211,65 @@ export const WikiSearch = ({ className, compact }: Props) => {
   );
 };
 
-interface SearchResultProps {
+interface TagResultProps {
   readonly id: string;
-  readonly result: WikiSearchResult;
+  readonly tag: WikiSearchTagResult;
   readonly isActive: boolean;
   readonly onHover: () => void;
   readonly onSelect: () => void;
 }
 
-const SearchResult = ({
+const TagResult = ({
   id,
-  result,
+  tag,
   isActive,
   onHover,
   onSelect,
-}: SearchResultProps) => {
-  const breadcrumb = result.breadcrumb.join(" › ");
+}: TagResultProps) => {
+  return (
+    <li id={id} role="option" aria-selected={isActive} onMouseEnter={onHover}>
+      <Link
+        href={`/app/wiki/tags/${tag.id}`}
+        onClick={onSelect}
+        title={`Alle Seiten mit dem Tag "${tag.name}" anzeigen`}
+        className={clsx(
+          "flex items-center gap-2 rounded-secondary p-2 focus-visible:outline-2 outline-interaction-700",
+          {
+            "bg-neutral-800": isActive,
+          },
+        )}
+      >
+        <FaTag className="size-3 flex-none text-neutral-500" />
+        <span className="font-bold text-sm text-interaction-500">
+          {tag.name}
+        </span>
+        <span className="text-xs text-neutral-500">Tag</span>
+      </Link>
+    </li>
+  );
+};
+
+interface PageResultProps {
+  readonly id: string;
+  readonly page: WikiSearchPageResult;
+  readonly isActive: boolean;
+  readonly onHover: () => void;
+  readonly onSelect: () => void;
+}
+
+const PageResult = ({
+  id,
+  page,
+  isActive,
+  onHover,
+  onSelect,
+}: PageResultProps) => {
+  const breadcrumb = page.breadcrumb.join(" › ");
 
   return (
     <li id={id} role="option" aria-selected={isActive} onMouseEnter={onHover}>
       <Link
-        href={`/app/wiki/${result.id}/${result.slug}`}
+        href={`/app/wiki/${page.id}/${page.slug}`}
         onClick={onSelect}
         className={clsx(
           "block rounded-secondary p-2 focus-visible:outline-2 outline-interaction-700",
@@ -220,12 +288,12 @@ const SearchResult = ({
         )}
 
         <span className="flex items-center gap-2 font-bold text-sm text-interaction-500">
-          {result.iconId && <WikiPageIcon iconId={result.iconId} />}
-          {result.title}
+          {page.iconId && <WikiPageIcon iconId={page.iconId} />}
+          {page.title}
         </span>
 
         <span className="block text-xs text-neutral-400">
-          {parseWikiSearchSnippet(result.snippet).map((segment, index) =>
+          {parseWikiSearchSnippet(page.snippet).map((segment, index) =>
             segment.highlighted ? (
               <mark
                 key={index}
@@ -238,6 +306,24 @@ const SearchResult = ({
             ),
           )}
         </span>
+
+        {/**
+         * The whole result is one link, so unlike the chips in the page
+         * header these don't link to the tag's list page.
+         */}
+        {page.matchedTags.length > 0 && (
+          <span className="mt-1 flex flex-wrap gap-1">
+            {page.matchedTags.map((name) => (
+              <span
+                key={name}
+                className="flex items-center gap-1 rounded-secondary bg-neutral-700/50 py-0.5 px-1.5 text-xs text-neutral-300"
+              >
+                <FaTag className="size-2.5 flex-none text-neutral-500" />
+                {name}
+              </span>
+            ))}
+          </span>
+        )}
       </Link>
     </li>
   );
