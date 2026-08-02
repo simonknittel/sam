@@ -1,4 +1,5 @@
 import { Link } from "@/modules/common/components/Link";
+import { cookies } from "next/headers";
 import { FaStar } from "react-icons/fa";
 import {
   getWikiContext,
@@ -7,6 +8,7 @@ import {
 import { getWikiFavoritePageIds } from "../queries/getWikiFavorites";
 import { buildVisibleWikiTree } from "../utils/buildVisibleWikiTree";
 import { filterWikiPagesBySidebarMode } from "../utils/filterWikiPagesBySidebarMode";
+import { WIKI_SHOW_HIDDEN_PAGES_COOKIE } from "../utils/wikiShowHiddenPagesCookie";
 import { WikiPageIcon } from "./WikiPageIcon";
 import { WikiSearch } from "./WikiSearch";
 import { WikiSidebarTree } from "./WikiSidebarTree";
@@ -36,6 +38,9 @@ export const WikiSidebar = async () => {
     )
     .map((page) => page.id);
 
+  const showHidden =
+    (await cookies()).get(WIKI_SHOW_HIDDEN_PAGES_COOKIE)?.value === "1";
+
   return (
     <>
       <div className="bg-secondary p-4 corners-secondary flex flex-col gap-4">
@@ -51,6 +56,7 @@ export const WikiSidebar = async () => {
           tree={tree}
           fullTree={fullTree}
           hiddenPageIds={sidebarHiddenPageIds}
+          initialShowHidden={showHidden}
         />
       </div>
     </>
