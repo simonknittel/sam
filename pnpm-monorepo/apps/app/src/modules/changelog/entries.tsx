@@ -42,6 +42,30 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-08-02-wiki-rollenmitglieder",
+    date: "2026-08-02",
+    title: "Wiki: Rollenmitglieder",
+    tags: ["Neu", "Wiki"],
+    body: () => (
+      <>
+        <p>
+          Wiki-Seiten können jetzt einen Block &bdquo;Rollenmitglieder&ldquo;
+          enthalten: Du wählst eine Rolle aus und der Block listet alle Citizens
+          auf, denen diese Rolle zugewiesen ist. Bei Rollen mit Leveln
+          erscheinen nur die Citizens, die das höchste Level erreicht haben.
+        </p>
+
+        <p>
+          Die Liste wird bei jedem Aufruf neu ermittelt – wer eine Rolle nicht
+          sehen darf, sieht auch ihre Mitglieder nicht. Eingefügt wird der Block
+          über das Plus am Seitenrand oder mit <code>/</code> im Editor; die
+          Rolle wählst du anschließend über das Zahnrad im Block-Menü.
+        </p>
+      </>
+    ),
+  },
+
+  {
     key: "2026-08-02-wiki-suche-tags",
     date: "2026-08-02",
     title: "Wiki: Tags in der Suche",
