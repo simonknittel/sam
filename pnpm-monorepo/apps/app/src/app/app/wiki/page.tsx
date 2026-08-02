@@ -48,11 +48,6 @@ const Landing = async () => {
   const visiblePage = (pageId: string) =>
     getAccessibleWikiPage(context, pageId, "read");
 
-  const favorites = [...favoriteIds]
-    .map(visiblePage)
-    .filter((page) => page !== null)
-    .toSorted((a, b) => a.title.localeCompare(b.title));
-
   const recentlyVisited = recentVisitPageIds
     .map(visiblePage)
     .filter((page) => page !== null)
