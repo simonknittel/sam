@@ -11,9 +11,24 @@ import {
   ReactNodeViewRenderer,
   type NodeViewProps,
 } from "@tiptap/react";
-import { WikiRoleCitizensList } from "./WikiRoleCitizensList";
+import {
+  WikiRoleCitizensList,
+  type WikiRoleCitizen,
+} from "./WikiRoleCitizensList";
 
-const WikiRoleCitizensNodeView = ({ node }: NodeViewProps) => {
+interface WikiRoleCitizensNodeViewOptions {
+  /**
+   * Members resolved during the server render, keyed by role id — shown
+   * until the node view's own fetch lands, so swapping in the editor
+   * doesn't flash a loading state over the static fallback's list. Roles
+   * selected after the render miss here and get the loading state.
+   */
+  initialCitizens: Readonly<Record<string, WikiRoleCitizen[]>>;
+}
+
+const WikiRoleCitizensNodeView = ({ node, extension }: NodeViewProps) => {
+  const { initialCitizens } =
+    extension.options as WikiRoleCitizensNodeViewOptions;
   const { roleId } = normalizeWikiRoleCitizensConfig(node.attrs);
 
   const { data, isPending } = api.wiki.getRoleCitizens.useQuery(
@@ -21,7 +36,8 @@ const WikiRoleCitizensNodeView = ({ node }: NodeViewProps) => {
     {
       enabled: roleId !== null,
       refetchOnWindowFocus: false,
-      placeholderData: (previous) => previous,
+      placeholderData: (previous) =>
+        previous ?? (roleId ? initialCitizens[roleId] : undefined),
     },
   );
 
@@ -44,11 +60,16 @@ const WikiRoleCitizensNodeView = ({ node }: NodeViewProps) => {
  * validation, the collab server and the static renderer stay untouched by
  * this variant.
  */
-const WikiRoleCitizensWithNodeView = WikiRoleCitizens.extend({
-  addNodeView() {
-    return ReactNodeViewRenderer(WikiRoleCitizensNodeView);
-  },
-});
+const WikiRoleCitizensWithNodeView =
+  WikiRoleCitizens.extend<WikiRoleCitizensNodeViewOptions>({
+    addOptions() {
+      return { initialCitizens: {} };
+    },
+
+    addNodeView() {
+      return ReactNodeViewRenderer(WikiRoleCitizensNodeView);
+    },
+  });
 
 /**
  * Swaps the plain role-members node in an extension list for the node-view
@@ -56,9 +77,10 @@ const WikiRoleCitizensWithNodeView = WikiRoleCitizens.extend({
  */
 export const withWikiRoleCitizensNodeView = (
   extensions: AnyExtension[],
+  initialCitizens: Readonly<Record<string, WikiRoleCitizen[]>>,
 ): AnyExtension[] =>
   extensions.map((extension) =>
     extension.name === WikiRoleCitizens.name
-      ? WikiRoleCitizensWithNodeView
+      ? WikiRoleCitizensWithNodeView.configure({ initialCitizens })
       : extension,
   );

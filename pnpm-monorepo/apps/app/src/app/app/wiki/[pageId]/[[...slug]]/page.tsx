@@ -241,8 +241,9 @@ const PageContent = async ({
 
   /**
    * Page lists of the page-index nodes on this page, resolved for this
-   * viewer — for the static render; the editor node view fetches them
-   * itself so config changes show up without a reload.
+   * viewer — for the static render and as the editor node views' initial
+   * data; the node views refetch so config changes show up without a
+   * reload.
    */
   const pageIndexes = Object.fromEntries(
     await Promise.all(
@@ -255,8 +256,8 @@ const PageContent = async ({
 
   /**
    * Members of the role-member nodes on this page, resolved for this viewer
-   * — for the static render; the editor node view fetches them itself so
-   * role changes show up without a reload.
+   * — for the static render and as the editor node views' initial data; the
+   * node views refetch so role changes show up without a reload.
    */
   const roleCitizens = Object.fromEntries(
     await Promise.all(
@@ -437,6 +438,8 @@ const PageContent = async ({
               linkablePages={linkablePages}
               mentionedCitizens={mentionedCitizens}
               linkedVariants={linkedVariants}
+              pageIndexes={pageIndexes}
+              roleCitizens={roleCitizens}
               staticFallback={
                 <WikiPageStaticContent
                   content={pageContent?.content}

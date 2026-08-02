@@ -16,8 +16,10 @@ import { WikiCitizenMentionSuggestion } from "./WikiCitizenMentionSuggestion";
 import { WikiDetailsSummaryToggle } from "./WikiDetailsSummaryToggle";
 import { createWikiFileHandler } from "./wikiEditorFiles";
 import { WikiNodeClickSelection } from "./WikiNodeClickSelection";
+import type { WikiPageIndexEntry } from "./WikiPageIndexList";
 import { withWikiPageIndexNodeView } from "./WikiPageIndexNodeView";
 import { WikiPageLinkSuggestion } from "./WikiPageLinkSuggestion";
+import type { WikiRoleCitizen } from "./WikiRoleCitizensList";
 import { withWikiRoleCitizensNodeView } from "./WikiRoleCitizensNodeView";
 import { WikiSlashCommand } from "./WikiSlashCommand";
 import { withWikiVariantLinkNodeView } from "./WikiVariantLinkNodeView";
@@ -29,6 +31,16 @@ interface Options {
   readonly mentionedCitizens: Readonly<Record<string, WikiMentionedCitizen>>;
   /** Current names and manufacturer logos of the variants linked on the page, by id */
   readonly linkedVariants: Readonly<Record<string, WikiLinkedVariant>>;
+  /**
+   * Server-resolved page lists of the page-index nodes, keyed by
+   * `wikiPageIndexConfigKey` — the node views' initial data
+   */
+  readonly pageIndexes: Readonly<Record<string, WikiPageIndexEntry[]>>;
+  /**
+   * Server-resolved members of the role-member nodes, keyed by role id —
+   * the node views' initial data
+   */
+  readonly roleCitizens: Readonly<Record<string, WikiRoleCitizen[]>>;
   readonly collaboration?: boolean;
   /** Include the editing helpers (slash menu, suggestions, uploads)? */
   readonly interactive: boolean;
@@ -51,6 +63,8 @@ export const useWikiEditorExtensions = ({
   linkablePages,
   mentionedCitizens,
   linkedVariants,
+  pageIndexes,
+  roleCitizens,
   collaboration = false,
   interactive,
   onRequestEmbed,
@@ -73,8 +87,10 @@ export const useWikiEditorExtensions = ({
           }),
         ),
       ),
+      roleCitizens,
     ),
     pageId,
+    pageIndexes,
   );
 
   return [

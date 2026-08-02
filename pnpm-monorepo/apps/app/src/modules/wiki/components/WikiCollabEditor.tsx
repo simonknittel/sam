@@ -31,6 +31,8 @@ import "./wikiEditor.css";
 import { WikiEditorLayout } from "./WikiEditorLayout";
 import { WikiEmbedUrlModal } from "./WikiEmbedUrlModal";
 import { WikiLinkModal } from "./WikiLinkModal";
+import type { WikiPageIndexEntry } from "./WikiPageIndexList";
+import type { WikiRoleCitizen } from "./WikiRoleCitizensList";
 import { WikiVariantLinkModal } from "./WikiVariantLinkModal";
 
 interface Props {
@@ -48,6 +50,16 @@ interface Props {
   readonly mentionedCitizens: Readonly<Record<string, WikiMentionedCitizen>>;
   /** Current names and manufacturer logos of the variants linked on the page, by id */
   readonly linkedVariants: Readonly<Record<string, WikiLinkedVariant>>;
+  /**
+   * Server-resolved page lists of the page-index nodes, keyed by
+   * `wikiPageIndexConfigKey` — the node views' initial data
+   */
+  readonly pageIndexes: Readonly<Record<string, WikiPageIndexEntry[]>>;
+  /**
+   * Server-resolved members of the role-member nodes, keyed by role id —
+   * the node views' initial data
+   */
+  readonly roleCitizens: Readonly<Record<string, WikiRoleCitizen[]>>;
   /**
    * Server-rendered static content shown until the collab provider has
    * synced, so readers get a fast first paint.
@@ -103,6 +115,8 @@ export const WikiCollabEditor = ({
   linkablePages,
   mentionedCitizens,
   linkedVariants,
+  pageIndexes,
+  roleCitizens,
   staticFallback,
 }: Props) => {
   const { isEditMode } = useWikiEditMode();
@@ -172,6 +186,8 @@ export const WikiCollabEditor = ({
       linkablePages={linkablePages}
       mentionedCitizens={mentionedCitizens}
       linkedVariants={linkedVariants}
+      pageIndexes={pageIndexes}
+      roleCitizens={roleCitizens}
       staticFallback={staticFallback}
     />
   );
@@ -189,6 +205,8 @@ interface ConnectedEditorProps {
   readonly linkablePages: Readonly<Record<string, WikiPageLinkedPage>>;
   readonly mentionedCitizens: Readonly<Record<string, WikiMentionedCitizen>>;
   readonly linkedVariants: Readonly<Record<string, WikiLinkedVariant>>;
+  readonly pageIndexes: Readonly<Record<string, WikiPageIndexEntry[]>>;
+  readonly roleCitizens: Readonly<Record<string, WikiRoleCitizen[]>>;
   readonly staticFallback: ReactNode;
 }
 
@@ -203,6 +221,8 @@ const ConnectedEditor = ({
   linkablePages,
   mentionedCitizens,
   linkedVariants,
+  pageIndexes,
+  roleCitizens,
   staticFallback,
 }: ConnectedEditorProps) => {
   /**
@@ -321,6 +341,8 @@ const ConnectedEditor = ({
     linkablePages,
     mentionedCitizens,
     linkedVariants,
+    pageIndexes,
+    roleCitizens,
     collaboration: true,
     interactive: isEditing,
     onRequestEmbed: requestEmbed,
