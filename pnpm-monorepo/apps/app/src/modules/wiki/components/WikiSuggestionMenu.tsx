@@ -1,5 +1,6 @@
 "use client";
 
+import { PopoverBaseUIDetached } from "@/modules/common/components/PopoverBaseUI";
 import { ReactRenderer } from "@tiptap/react";
 import type {
   SuggestionKeyDownProps,
@@ -7,7 +8,9 @@ import type {
 } from "@tiptap/suggestion";
 import clsx from "clsx";
 import {
+  Fragment,
   useImperativeHandle,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -17,15 +20,6 @@ import {
 export interface WikiSuggestionMenuHandle {
   readonly onKeyDown: (props: Pick<SuggestionKeyDownProps, "event">) => boolean;
 }
-
-/**
- * Width of the popup in px — must stay in sync with the Tailwind `w-64`
- * class on the menu container.
- */
-export const WIKI_SUGGESTION_MENU_WIDTH = 256;
-
-/** Gap kept between the popup and the right viewport edge */
-const VIEWPORT_MARGIN = 24;
 
 /** Maximum number of entries a suggestion popup shows */
 const MAX_SUGGESTIONS = 10;
@@ -55,6 +49,13 @@ interface WikiSuggestionMenuItem {
   readonly id?: string;
   readonly title: string;
   readonly icon?: ReactNode;
+  /** Secondary line under the title (e.g. node type of the copied block) */
+  readonly subtitle?: string;
+  /**
+   * Renders a divider below the entry — separates pinned entries from
+   * the regular ones (gutter palette's "Kopierten Block einfügen").
+   */
+  readonly dividerAfter?: boolean;
 }
 
 interface WikiSuggestionMenuProps<Item extends WikiSuggestionMenuItem> {
@@ -64,8 +65,12 @@ interface WikiSuggestionMenuProps<Item extends WikiSuggestionMenuItem> {
 }
 
 /**
- * Keyboard-navigable popup shared by the wiki editor's suggestions (slash
- * commands, internal page links, citizen mentions).
+ * Keyboard-navigable list shared by the wiki editor's suggestion popups
+ * (slash commands, internal page links, citizen mentions) and the gutter
+ * plus button's insert palette. Renders only the list — the popover
+ * chrome around it comes from PopoverBaseUI(Detached). Keys arrive from
+ * outside (the Suggestion plugin or the palette's filter input) via the
+ * imperative handle; focus never moves into the list.
  */
 export const WikiSuggestionMenu = <Item extends WikiSuggestionMenuItem>({
   items,
@@ -87,7 +92,10 @@ export const WikiSuggestionMenu = <Item extends WikiSuggestionMenuItem>({
 
   const selectIndex = (index: number) => {
     setSelectedIndex(index);
-    const item = containerRef.current?.children[index];
+    /* Looked up by attribute — dividers make child indices unreliable */
+    const item = containerRef.current?.querySelector(
+      `[data-suggestion-index="${index}"]`,
+    );
     if (item instanceof HTMLElement) item.scrollIntoView({ block: "nearest" });
   };
 
@@ -111,51 +119,103 @@ export const WikiSuggestionMenu = <Item extends WikiSuggestionMenuItem>({
   }));
 
   if (items.length === 0)
-    return (
-      <div className="rounded-secondary border border-neutral-700 bg-neutral-900 p-2 text-sm text-neutral-500 shadow-lg">
-        Keine Treffer
-      </div>
-    );
+    return <div className="text-sm text-neutral-500">Keine Treffer</div>;
 
   return (
     <div
       ref={containerRef}
-      className="flex max-h-72 w-64 flex-col overflow-auto rounded-secondary border border-neutral-700 bg-neutral-900 p-1 shadow-lg"
+      className="flex max-h-72 w-64 flex-col gap-1 overflow-auto"
     >
       {items.map((item, index) => (
-        <button
-          key={item.id ?? item.title}
-          type="button"
-          onClick={() => command(item)}
-          title={item.title}
-          className={clsx(
-            // shrink-0: items must overflow (scroll), not shrink into the max height
-            "flex shrink-0 cursor-pointer items-center gap-2 rounded-secondary px-2 py-1 text-left text-sm hover:bg-neutral-800 hover:text-neutral-50",
-            {
-              "bg-neutral-800 text-neutral-50": index === selectedIndex,
-              "text-neutral-300": index !== selectedIndex,
-            },
-          )}
-        >
-          {item.icon !== undefined && (
-            /* Fixed box — titles must align across icon shapes (svgs, the
-             * slash commands' H badges, page icon images) */
-            <span className="flex size-4 flex-none items-center justify-center">
-              {item.icon}
+        <Fragment key={item.id ?? item.title}>
+          <button
+            type="button"
+            data-suggestion-index={index}
+            onClick={() => command(item)}
+            title={item.title}
+            className={clsx(
+              // shrink-0: items must overflow (scroll), not shrink into the max height
+              "flex shrink-0 cursor-pointer items-center gap-2 rounded-secondary px-2 py-1 text-left text-sm hover:bg-neutral-800 hover:text-neutral-50",
+              {
+                "bg-neutral-800 text-neutral-50": index === selectedIndex,
+                "text-neutral-300": index !== selectedIndex,
+              },
+            )}
+          >
+            {item.icon !== undefined && (
+              /* Fixed box — titles must align across icon shapes (svgs, the
+               * slash commands' H badges, page icon images) */
+              <span className="flex size-4 flex-none items-center justify-center">
+                {item.icon}
+              </span>
+            )}
+            <span className="flex min-w-0 flex-1 flex-col items-start">
+              <span className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap">
+                {item.title}
+              </span>
+              {item.subtitle !== undefined && (
+                <span className="text-xs text-neutral-500">
+                  {item.subtitle}
+                </span>
+              )}
             </span>
+          </button>
+
+          {item.dividerAfter === true && (
+            <div className="shrink-0 border-t border-neutral-800" />
           )}
-          <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
-            {item.title}
-          </span>
-        </button>
+        </Fragment>
       ))}
     </div>
   );
 };
 
+interface WikiSuggestionPopoverProps<Item extends WikiSuggestionMenuItem> {
+  readonly items: readonly Item[];
+  readonly command: (item: Item) => void;
+  /** Viewport rect of the caret the popup anchors to */
+  readonly anchorRect: DOMRect | null;
+  readonly open: boolean;
+  /** Base UI dismissed the popup (outside press, Escape) */
+  readonly onDismiss: () => void;
+  readonly ref?: Ref<WikiSuggestionMenuHandle>;
+}
+
+/**
+ * Caret-anchored popover around WikiSuggestionMenu: flips above the
+ * caret when the viewport bottom is too close.
+ */
+const WikiSuggestionPopover = <Item extends WikiSuggestionMenuItem>({
+  items,
+  command,
+  anchorRect,
+  open,
+  onDismiss,
+  ref,
+}: WikiSuggestionPopoverProps<Item>) => {
+  const anchor = useMemo(
+    () => (anchorRect ? { getBoundingClientRect: () => anchorRect } : null),
+    [anchorRect],
+  );
+
+  return (
+    <PopoverBaseUIDetached
+      open={open && anchor !== null}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) onDismiss();
+      }}
+      anchor={anchor}
+      side="bottom"
+    >
+      <WikiSuggestionMenu items={items} command={command} ref={ref} />
+    </PopoverBaseUIDetached>
+  );
+};
+
 /**
  * The Tiptap `Suggestion` render plumbing around WikiSuggestionMenu:
- * mounts the popup into the body and positions it at the caret.
+ * feeds the caret rect and the filtered items into the popover and
+ * routes the plugin's key events into the menu.
  */
 export const createWikiSuggestionRender = <
   Item extends WikiSuggestionMenuItem,
@@ -167,55 +227,56 @@ export const createWikiSuggestionRender = <
 } => {
   let component: ReactRenderer<
     WikiSuggestionMenuHandle,
-    WikiSuggestionMenuProps<Item>
+    WikiSuggestionPopoverProps<Item>
   > | null = null;
 
   /**
-   * Escape removes the popup but the Suggestion plugin stays active — keep
-   * it dismissed (keys type normally, no repositioning) until the
-   * suggestion is re-triggered, like Notion.
+   * Escape (or an outside press) removes the popup but the Suggestion
+   * plugin stays active — keep it dismissed (keys type normally) until
+   * the suggestion is re-triggered, like Notion.
    */
   let dismissed = false;
 
-  const updatePosition = (clientRect: SuggestionProps["clientRect"]) => {
-    const rect = clientRect?.();
-    if (!rect || !component) return;
-    const element = component.element;
-    element.style.position = "fixed";
-    element.style.left = `${Math.min(rect.left, window.innerWidth - WIKI_SUGGESTION_MENU_WIDTH - VIEWPORT_MARGIN)}px`;
-    element.style.top = `${rect.bottom + 4}px`;
+  const dismiss = () => {
+    dismissed = true;
+    component?.updateProps({ open: false });
   };
 
   return {
     onStart: (props) => {
       dismissed = false;
-      component = new ReactRenderer(WikiSuggestionMenu<Item>, {
+      /**
+       * The popup itself renders through the popover's portal — the
+       * renderer's own element stays empty and off-document.
+       */
+      component = new ReactRenderer(WikiSuggestionPopover<Item>, {
         editor: props.editor,
-        props: { items: props.items, command: props.command },
+        props: {
+          items: props.items,
+          command: props.command,
+          anchorRect: props.clientRect?.() ?? null,
+          open: true,
+          onDismiss: dismiss,
+        },
       });
-      component.element.classList.add("z-50");
-      document.body.appendChild(component.element);
-      updatePosition(props.clientRect);
     },
     onUpdate: (props) => {
       if (dismissed) return;
       component?.updateProps({
         items: props.items,
         command: props.command,
+        anchorRect: props.clientRect?.() ?? null,
       });
-      updatePosition(props.clientRect);
     },
     onKeyDown: (props) => {
       if (dismissed) return false;
       if (props.event.key === "Escape") {
-        dismissed = true;
-        component?.element.remove();
+        dismiss();
         return true;
       }
       return component?.ref?.onKeyDown(props) ?? false;
     },
     onExit: () => {
-      component?.element.remove();
       component?.destroy();
       component = null;
     },

@@ -4,7 +4,9 @@
   transition:
     opacity 0.2s ease,
     transform 0.2s ease;
-  transform-origin: center top;
+  /* Base UI exposes the anchor-facing origin — popups flipped above an
+   * anchor then scale in from their bottom edge */
+  transform-origin: var(--transform-origin, center top);
 
   @starting-style {
     opacity: 0;

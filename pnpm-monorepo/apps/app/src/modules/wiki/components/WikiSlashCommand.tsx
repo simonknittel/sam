@@ -284,14 +284,25 @@ const availableSlashCommandItems = (editor: Editor) => {
   }
 };
 
-const filterSlashCommandItems = (query: string, editor: Editor) => {
-  const items = availableSlashCommandItems(editor);
+/**
+ * Palette query matching shared with the gutter's insert palette:
+ * case-insensitive substring on the title, prefix on the keywords.
+ */
+export const matchesWikiSlashCommandQuery = (
+  item: WikiSlashCommandItem,
+  query: string,
+) => {
   const normalized = query.toLowerCase().trim();
-  if (!normalized) return [...items];
-  return items.filter(
-    (item) =>
-      item.title.toLowerCase().includes(normalized) ||
-      item.keywords.some((keyword) => keyword.startsWith(normalized)),
+  if (!normalized) return true;
+  return (
+    item.title.toLowerCase().includes(normalized) ||
+    item.keywords.some((keyword) => keyword.startsWith(normalized))
+  );
+};
+
+const filterSlashCommandItems = (query: string, editor: Editor) => {
+  return availableSlashCommandItems(editor).filter((item) =>
+    matchesWikiSlashCommandQuery(item, query),
   );
 };
 

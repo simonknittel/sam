@@ -9,6 +9,7 @@ import {
   useContext,
   useMemo,
   useState,
+  type ComponentProps,
   type ReactNode,
 } from "react";
 import { IoMdArrowDropup } from "react-icons/io";
@@ -21,6 +22,49 @@ interface PopoverBaseUIContext {
 const PopoverBaseUIContext = createContext<PopoverBaseUIContext | undefined>(
   undefined,
 );
+
+interface PopoverChromeProps {
+  readonly children: ReactNode;
+  readonly childrenClassName?: string;
+  /**
+   * Invisible strips bridging the sideOffset gap so the pointer can
+   * travel from a hover trigger into the popup — omitted for detached
+   * popovers, where they would swallow clicks next to the anchor.
+   */
+  readonly hoverBridges?: boolean;
+}
+
+/** Popup content shared by the trigger-based and the detached popover */
+const PopoverChrome = ({
+  children,
+  childrenClassName,
+  hoverBridges = false,
+}: PopoverChromeProps) => {
+  return (
+    <>
+      <Popover.Arrow className="data-[side=bottom]:-top-3.75 data-[side=left]:-right-3.25 data-[side=left]:rotate-90 data-[side=right]:-left-3.25 data-[side=right]:-rotate-90 data-[side=top]:-bottom-3.75 data-[side=top]:rotate-180">
+        <IoMdArrowDropup className="fill-neutral-700 size-6" />
+      </Popover.Arrow>
+
+      <div
+        className={clsx(
+          "bg-black border border-white/20 p-4 rounded-secondary",
+          styles.popover,
+          childrenClassName,
+        )}
+      >
+        {children}
+      </div>
+
+      {hoverBridges && (
+        <>
+          <div className="h-2 absolute left-0 right-0 bottom-full" />
+          <div className="h-2 absolute left-0 right-0 top-full" />
+        </>
+      )}
+    </>
+  );
+};
 
 interface PopoverBaseUIContextProviderProps {
   readonly trigger: ReactNode;
@@ -92,22 +136,74 @@ export const PopoverBaseUI = ({
             className="z-30"
           >
             <Popover.Popup className="z-30 outline-hidden" initialFocus={false}>
-              <Popover.Arrow className="data-[side=bottom]:-top-3.75 data-[side=left]:-right-3.25 data-[side=left]:rotate-90 data-[side=right]:-left-3.25 data-[side=right]:-rotate-90 data-[side=top]:-bottom-3.75 data-[side=top]:rotate-180">
-                <IoMdArrowDropup className="fill-neutral-700 size-6" />
-              </Popover.Arrow>
-
-              <div
-                className={clsx(
-                  "bg-black border border-white/20 p-4 rounded-secondary",
-                  styles.popover,
-                  childrenClassName,
-                )}
-              >
+              <PopoverChrome childrenClassName={childrenClassName} hoverBridges>
                 {children}
-              </div>
+              </PopoverChrome>
+            </Popover.Popup>
+          </Popover.Positioner>
+        </Popover.Portal>
+      </Popover.Root>
+    </PopoverBaseUIContext.Provider>
+  );
+};
 
-              <div className="h-2 absolute left-0 right-0 bottom-full" />
-              <div className="h-2 absolute left-0 right-0 top-full" />
+interface PopoverBaseUIDetachedProps {
+  readonly open: boolean;
+  /**
+   * Reports Base UI's own dismissals (outside press, Escape). `open` is
+   * fully controlled — the owner decides whether to actually close.
+   */
+  readonly onOpenChange?: (open: boolean) => void;
+  /** Element or virtual element (e.g. a caret rect) the popup anchors to */
+  readonly anchor: ComponentProps<typeof Popover.Positioner>["anchor"];
+  readonly children: ReactNode;
+  readonly childrenClassName?: string;
+  readonly side?: "top" | "bottom" | "left" | "right";
+}
+
+/**
+ * Popover without a trigger element, positioned against an anchor — for
+ * popups tied to something that is not a DOM element, like the wiki
+ * editor's caret (suggestion menus). Same chrome and collision handling
+ * (flip at viewport edges) as PopoverBaseUI, but never opens itself and
+ * never takes focus.
+ */
+export const PopoverBaseUIDetached = ({
+  open,
+  onOpenChange,
+  anchor,
+  children,
+  childrenClassName,
+  side = "bottom",
+}: PopoverBaseUIDetachedProps) => {
+  const handleOpenChange = useCallback(
+    (nextOpen: boolean) => {
+      onOpenChange?.(nextOpen);
+    },
+    [onOpenChange],
+  );
+
+  const closePopover = useCallback(() => {
+    onOpenChange?.(false);
+  }, [onOpenChange]);
+
+  const value = useMemo(() => ({ closePopover }), [closePopover]);
+
+  return (
+    <PopoverBaseUIContext.Provider value={value}>
+      <Popover.Root open={open} onOpenChange={handleOpenChange}>
+        <Popover.Portal>
+          <Popover.Positioner
+            anchor={anchor}
+            sideOffset={8}
+            collisionPadding={8}
+            side={side}
+            className="z-30"
+          >
+            <Popover.Popup className="z-30 outline-hidden" initialFocus={false}>
+              <PopoverChrome childrenClassName={childrenClassName}>
+                {children}
+              </PopoverChrome>
             </Popover.Popup>
           </Popover.Positioner>
         </Popover.Portal>

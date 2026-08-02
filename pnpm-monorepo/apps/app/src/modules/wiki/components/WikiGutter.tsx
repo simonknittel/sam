@@ -17,19 +17,27 @@ import clsx from "clsx";
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
+  type KeyboardEvent,
+  type ReactNode,
   type RefObject,
 } from "react";
-import { FaPaste, FaPlus } from "react-icons/fa";
+import { FaPaste, FaPlus, FaSearch } from "react-icons/fa";
 import { MdDragIndicator } from "react-icons/md";
 import { getWikiNodeTypeLabel } from "../utils/getWikiNodeTypeLabel";
 import { setWikiActiveNodeHighlight } from "./WikiActiveNodeHighlight";
 import { getWikiCopiedBlock } from "./wikiBlockClipboard";
 import {
+  matchesWikiSlashCommandQuery,
   WIKI_SLASH_COMMAND_ITEMS,
   type WikiSlashCommandItem,
 } from "./WikiSlashCommand";
+import {
+  WikiSuggestionMenu,
+  type WikiSuggestionMenuHandle,
+} from "./WikiSuggestionMenu";
 
 interface HoveredBlock {
   readonly node: ProseMirrorNode;
@@ -230,9 +238,6 @@ export const WikiGutter = ({
   );
 };
 
-const ROW_CLASS_NAME =
-  "flex cursor-pointer items-center gap-2 rounded-secondary px-2 py-1 text-left text-sm text-neutral-300 hover:bg-neutral-800";
-
 interface InsertBlockActionsProps {
   readonly editor: Editor;
   readonly block: HoveredBlock | null;
@@ -244,13 +249,27 @@ interface InsertBlockActionsProps {
   readonly onClosePalette: () => void;
 }
 
+const COPIED_BLOCK_TITLE = "Kopierten Block einfügen";
+
+/** Entry of the gutter palette list, fed into WikiSuggestionMenu */
+interface GutterPaletteEntry {
+  readonly id: string;
+  readonly title: string;
+  readonly icon: ReactNode;
+  readonly subtitle?: string;
+  readonly dividerAfter?: boolean;
+  /** The palette item behind the entry — absent for the copied block */
+  readonly item?: WikiSlashCommandItem;
+}
+
 /**
  * Dropdown content of the gutter plus button: the slash-command palette
- * as a click list. The document stays untouched until an entry is picked
- * — only then a paragraph is inserted next to the hovered block and the
- * palette action runs against it (the actions' leading deleteRange is a
- * no-op on the collapsed range), so dismissing the popover never leaves
- * an empty node behind.
+ * with a filter input and keyboard navigation (shared WikiSuggestionMenu).
+ * The document stays untouched until an entry is picked — only then a
+ * paragraph is inserted next to the hovered block and the palette action
+ * runs against it (the actions' leading deleteRange is a no-op on the
+ * collapsed range), so dismissing the popover never leaves an empty node
+ * behind.
  */
 const InsertBlockActions = ({
   editor,
@@ -262,39 +281,97 @@ const InsertBlockActions = ({
   onClosePalette,
 }: InsertBlockActionsProps) => {
   const { closePopover } = usePopoverBaseUI();
+  const [query, setQuery] = useState("");
+  const menuRef = useRef<WikiSuggestionMenuHandle>(null);
+
+  /**
+   * Focus on mount, but without scrolling: the ref fires before Base UI
+   * has positioned the popup (child effects run first), so a plain
+   * autoFocus would scroll the page to the popup's initial (0,0)
+   * position.
+   */
+  const focusInput = useCallback((input: HTMLInputElement | null) => {
+    input?.focus({ preventScroll: true });
+  }, []);
+
+  /**
+   * Memoized so unrelated gutter re-renders (hover state) keep the array
+   * identity — WikiSuggestionMenu resets its keyboard selection whenever
+   * the items identity changes (wanted only when the query changes).
+   */
+  const { entries, insertableCopied } = useMemo(() => {
+    if (!block) {
+      return { entries: [] as GutterPaletteEntry[], insertableCopied: null };
+    }
+
+    /**
+     * The palette inserts next to the hovered block, i.e. into its parent —
+     * for blocks nested in a text-only container (quote, table cell, list
+     * item) only the text-level entries apply there, and inside a grid the
+     * grid entries disappear (grids never nest).
+     */
+    const restrictions = getWikiPositionRestrictions(
+      editor.state.doc,
+      block.pos,
+    );
+    const items = (
+      restrictions.blocks
+        ? WIKI_SLASH_COMMAND_ITEMS.filter((item) => item.allowedInTextOnlyBlock)
+        : WIKI_SLASH_COMMAND_ITEMS
+    )
+      .filter((item) => !(restrictions.grids && item.insertsGrid))
+      .filter((item) => matchesWikiSlashCommandQuery(item, query));
+
+    /**
+     * The copied block (edit menu's copy button, wikiBlockClipboard) obeys
+     * the same placement rules as the palette entries: text-only containers
+     * accept only paragraphs (or inline nodes, which get wrapped in one on
+     * insert), and grids never nest.
+     */
+    const copied = getWikiCopiedBlock();
+    const copiedAllowed =
+      copied &&
+      (!restrictions.blocks ||
+        copied.isInline ||
+        copied.typeName === "paragraph") &&
+      !(restrictions.grids && copied.containsGrid)
+        ? copied
+        : null;
+    const copiedLabel = copiedAllowed
+      ? getWikiNodeTypeLabel(copiedAllowed.typeName, copiedAllowed.headingLevel)
+      : null;
+    const normalized = query.toLowerCase().trim();
+    const copiedMatchesQuery =
+      !normalized ||
+      COPIED_BLOCK_TITLE.toLowerCase().includes(normalized) ||
+      (copiedLabel?.toLowerCase().includes(normalized) ?? false);
+
+    const entries: GutterPaletteEntry[] = [
+      ...(copiedAllowed && copiedLabel !== null && copiedMatchesQuery
+        ? [
+            {
+              id: "copied-block",
+              title: COPIED_BLOCK_TITLE,
+              icon: <FaPaste />,
+              subtitle: copiedLabel,
+              dividerAfter: items.length > 0,
+            },
+          ]
+        : []),
+      ...items.map((item) => ({
+        id: item.title,
+        title: item.title,
+        icon: item.icon,
+        item,
+      })),
+    ];
+
+    return { entries, insertableCopied: copiedAllowed };
+  }, [editor, block, query]);
 
   if (!block) return null;
   const node = editor.state.doc.nodeAt(block.pos);
   if (node?.type.name !== block.node.type.name) return null;
-
-  /**
-   * The palette inserts next to the hovered block, i.e. into its parent —
-   * for blocks nested in a text-only container (quote, table cell, list
-   * item) only the text-level entries apply there, and inside a grid the
-   * grid entries disappear (grids never nest).
-   */
-  const restrictions = getWikiPositionRestrictions(editor.state.doc, block.pos);
-  const items = (
-    restrictions.blocks
-      ? WIKI_SLASH_COMMAND_ITEMS.filter((item) => item.allowedInTextOnlyBlock)
-      : WIKI_SLASH_COMMAND_ITEMS
-  ).filter((item) => !(restrictions.grids && item.insertsGrid));
-
-  /**
-   * The copied block (edit menu's copy button, wikiBlockClipboard) obeys
-   * the same placement rules as the palette entries: text-only containers
-   * accept only paragraphs (or inline nodes, which get wrapped in one on
-   * insert), and grids never nest.
-   */
-  const copied = getWikiCopiedBlock();
-  const insertableCopied =
-    copied &&
-    (!restrictions.blocks ||
-      copied.isInline ||
-      copied.typeName === "paragraph") &&
-    !(restrictions.grids && copied.containsGrid)
-      ? copied
-      : null;
 
   const insertPosition = () =>
     insertAboveRef.current ? block.pos : block.pos + node.nodeSize;
@@ -334,46 +411,34 @@ const InsertBlockActions = ({
     );
   };
 
+  const runEntry = (entry: GutterPaletteEntry) => {
+    if (entry.item) insertBlock(entry.item);
+    else insertCopiedBlock();
+  };
+
+  /** Arrow/Enter go to the list; everything else stays in the input */
+  const handleInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (menuRef.current?.onKeyDown({ event: event.nativeEvent }) === true)
+      event.preventDefault();
+  };
+
   return (
-    <div className="flex max-h-72 w-60 flex-col gap-1 overflow-y-auto">
-      {insertableCopied && (
-        <>
-          <button
-            type="button"
-            onClick={insertCopiedBlock}
-            className={ROW_CLASS_NAME}
-          >
-            <span className="flex size-4 flex-none items-center justify-center">
-              <FaPaste />
-            </span>
-            <span className="flex flex-col items-start">
-              Kopierten Block einfügen
-              <span className="text-xs text-neutral-500">
-                {getWikiNodeTypeLabel(
-                  insertableCopied.typeName,
-                  insertableCopied.headingLevel,
-                )}
-              </span>
-            </span>
-          </button>
+    <div className="flex w-64 flex-col gap-2">
+      <label className="relative block">
+        <span className="sr-only">Blocktypen filtern</span>
+        <FaSearch className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-neutral-500" />
+        <input
+          type="text"
+          ref={focusInput}
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          onKeyDown={handleInputKeyDown}
+          placeholder="Filtern …"
+          className="w-full rounded-secondary border border-neutral-800 bg-neutral-900 py-1 pl-7 pr-2 text-sm outline-interaction-700 focus-visible:outline-2"
+        />
+      </label>
 
-          <div className="border-t border-neutral-800" />
-        </>
-      )}
-
-      {items.map((item) => (
-        <button
-          key={item.title}
-          type="button"
-          onClick={() => insertBlock(item)}
-          className={ROW_CLASS_NAME}
-        >
-          <span className="flex size-4 flex-none items-center justify-center">
-            {item.icon}
-          </span>
-          {item.title}
-        </button>
-      ))}
+      <WikiSuggestionMenu items={entries} command={runEntry} ref={menuRef} />
     </div>
   );
 };
