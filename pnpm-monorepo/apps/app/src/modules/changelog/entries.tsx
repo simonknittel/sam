@@ -42,6 +42,23 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-08-02-wiki-schiffe",
+    date: "2026-08-02",
+    title: "Wiki: Schiffe verlinken",
+    tags: ["Neu", "Wiki"],
+    isTracked: false,
+    body: () => (
+      <p>
+        Im Wiki lassen sich jetzt Schiffe aus der Flotte verlinken: Der Eintrag
+        „Schiff“ im Slash-Menü und im Plus-Menü am Seitenrand öffnet eine Suche
+        über alle Schiffe und Hersteller. Der eingefügte Link zeigt den
+        Schiffsnamen samt Hersteller-Logo und führt direkt zur Schiffsseite –
+        eingefügte Schiff-URLs werden automatisch zu solchen Links.
+      </p>
+    ),
+  },
+
+  {
     key: "2026-08-02-wiki-suche-tags",
     date: "2026-08-02",
     title: "Wiki: Tags in der Suche",

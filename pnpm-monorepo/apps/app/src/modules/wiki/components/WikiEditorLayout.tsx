@@ -21,6 +21,8 @@ interface Props {
   readonly onRequestEmbed: () => void;
   /** Opens the link dialog (gutter palette entry "Link", selection menu) */
   readonly onRequestLink: () => void;
+  /** Opens the ship picker (gutter palette entry "Schiff") */
+  readonly onRequestVariantLink: () => void;
 }
 
 /**
@@ -37,6 +39,7 @@ export const WikiEditorLayout = ({
   staticFallback,
   onRequestEmbed,
   onRequestLink,
+  onRequestVariantLink,
 }: Props) => {
   return (
     <div className={clsx(className)}>
@@ -60,6 +63,7 @@ export const WikiEditorLayout = ({
               pageId={pageId}
               onRequestEmbed={onRequestEmbed}
               onRequestLink={onRequestLink}
+              onRequestVariantLink={onRequestVariantLink}
             />
           )}
         </div>

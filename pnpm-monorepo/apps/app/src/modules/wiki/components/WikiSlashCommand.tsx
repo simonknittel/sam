@@ -21,6 +21,7 @@ import {
   FaPhotoVideo,
   FaQuoteRight,
   FaSitemap,
+  FaSpaceShuttle,
   FaTable,
   FaTasks,
 } from "react-icons/fa";
@@ -39,6 +40,8 @@ export interface WikiSlashCommandOptions {
   onRequestEmbed: () => void;
   /** Opens the link dialog (mounted by WikiCollabEditor) */
   onRequestLink: () => void;
+  /** Opens the ship picker (mounted by WikiCollabEditor) */
+  onRequestVariantLink: () => void;
 }
 
 export interface WikiSlashCommandItem {
@@ -238,6 +241,25 @@ export const WIKI_SLASH_COMMAND_ITEMS: readonly WikiSlashCommandItem[] = [
     },
   },
   {
+    title: "Schiff",
+    icon: <FaSpaceShuttle />,
+    keywords: [
+      "schiff",
+      "ship",
+      "variante",
+      "variant",
+      "flotte",
+      "fleet",
+      "hersteller",
+    ],
+    allowedInTextOnlyBlock: true,
+    insertsInline: true,
+    run: (editor, range, options) => {
+      editor.chain().focus().deleteRange(range).run();
+      options.onRequestVariantLink();
+    },
+  },
+  {
     title: "Citizen erwähnen",
     icon: <FaAt />,
     keywords: ["citizen", "mention", "erwähnen", "erwähnung", "spieler"],
@@ -320,6 +342,7 @@ export const WikiSlashCommand = Extension.create<WikiSlashCommandOptions>({
       pageId: "",
       onRequestEmbed: () => undefined,
       onRequestLink: () => undefined,
+      onRequestVariantLink: () => undefined,
     };
   },
 

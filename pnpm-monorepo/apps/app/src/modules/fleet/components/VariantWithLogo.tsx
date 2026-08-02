@@ -11,11 +11,21 @@ import Image from "next/image";
 interface Props {
   readonly className?: string;
   readonly variantNameClassName?: string;
-  readonly variant: Variant;
-  readonly manufacturer: Manufacturer & {
-    image: Upload | null;
+  readonly variant: Pick<Variant, "id" | "name">;
+  readonly manufacturer: Pick<Manufacturer, "name"> & {
+    image?: Pick<Upload, "id" | "mimeType"> | null;
   };
-  readonly size?: 32 | 48 | 80;
+  /**
+   * Logo of an already-resolved URL, for callers that don't hold the
+   * manufacturer's upload row (the wiki resolves it when rendering a
+   * variant link). Takes precedence over `manufacturer.image`.
+   */
+  readonly logo?: { readonly src: string; readonly mimeType: string } | null;
+  /**
+   * "inline" renders the variant inside a line of text, with the logo
+   * scaled to the surrounding font size (the wiki's variant links).
+   */
+  readonly size?: 32 | 48 | 80 | "inline";
   readonly disableLink?: boolean;
 }
 
@@ -24,91 +34,97 @@ export const VariantWithLogo = ({
   variantNameClassName,
   variant,
   manufacturer,
+  logo,
   size = 48,
   disableLink = false,
 }: Props) => {
-  if (disableLink) {
-    return (
-      <div className={clsx("flex items-center gap-2", className)}>
-        {manufacturer.image ? (
-          <Image
-            src={`https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${manufacturer.image.id}`}
-            alt={`Logo of ${manufacturer.name}`}
-            width={size}
-            height={size}
-            className={clsx("flex-none object-contain object-center", {
-              "size-8": size === 32,
-              "size-12": size === 48,
-              "size-20": size === 80,
-            })}
-            title={`Logo of ${manufacturer.name}`}
-            unoptimized={["image/svg+xml", "image/gif"].includes(
-              manufacturer.image.mimeType,
-            )}
-            loading="lazy"
-          />
-        ) : (
-          <span
-            className={clsx("block flex-none", {
-              "size-8": size === 32,
-              "size-12": size === 48,
-              "size-20": size === 80,
-            })}
-          ></span>
-        )}
+  const isInline = size === "inline";
 
-        <span
-          className={clsx("block truncate", variantNameClassName)}
-          title={variant.name}
-        >
-          {variant.name}
-        </span>
+  const resolvedLogo =
+    logo ??
+    (manufacturer.image
+      ? {
+          src: `https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${manufacturer.image.id}`,
+          mimeType: manufacturer.image.mimeType,
+        }
+      : null);
+
+  const logoElement = resolvedLogo ? (
+    <Image
+      src={resolvedLogo.src}
+      /** Decorative inline: the ship's name sits right next to the logo */
+      alt={isInline ? "" : `Logo of ${manufacturer.name}`}
+      width={isInline ? 16 : size}
+      height={isInline ? 16 : size}
+      className={clsx(
+        "object-contain object-center",
+        isInline
+          ? "mr-1 inline-block h-[1em] w-auto max-w-[3em] align-[-0.15em]"
+          : "flex-none",
+        {
+          "size-8": size === 32,
+          "size-12": size === 48,
+          "size-20": size === 80,
+        },
+      )}
+      title={`Logo of ${manufacturer.name}`}
+      unoptimized={["image/svg+xml", "image/gif"].includes(
+        resolvedLogo.mimeType,
+      )}
+      loading="lazy"
+    />
+  ) : (
+    /* Keeps a list of variants aligned; a line of text needs no such spacer */
+    !isInline && (
+      <span
+        className={clsx("block flex-none", {
+          "size-8": size === 32,
+          "size-12": size === 48,
+          "size-20": size === 80,
+        })}
+      ></span>
+    )
+  );
+
+  const name = isInline ? (
+    <span className={variantNameClassName}>{variant.name}</span>
+  ) : (
+    <span
+      className={clsx("block truncate", variantNameClassName)}
+      title={variant.name}
+    >
+      {variant.name}
+    </span>
+  );
+
+  if (disableLink)
+    return isInline ? (
+      <span className={className}>
+        {logoElement}
+        {name}
+      </span>
+    ) : (
+      <div className={clsx("flex items-center gap-2", className)}>
+        {logoElement}
+        {name}
       </div>
     );
-  }
 
   return (
     <Link
       href={`/app/fleet/variant/${variant.id}`}
-      className={clsx(
-        "flex items-center gap-2 hover:bg-white/10 focus-visible:bg-white/10 rounded-secondary p-1",
-        className,
-      )}
+      className={
+        isInline
+          ? className
+          : clsx(
+              "flex items-center gap-2 hover:bg-white/10 focus-visible:bg-white/10 rounded-secondary p-1",
+              className,
+            )
+      }
       prefetch={false}
     >
-      {manufacturer.image ? (
-        <Image
-          src={`https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${manufacturer.image.id}`}
-          alt={`Logo of ${manufacturer.name}`}
-          width={size}
-          height={size}
-          className={clsx("flex-none object-contain object-center", {
-            "size-8": size === 32,
-            "size-12": size === 48,
-            "size-20": size === 80,
-          })}
-          title={`Logo of ${manufacturer.name}`}
-          unoptimized={["image/svg+xml", "image/gif"].includes(
-            manufacturer.image.mimeType,
-          )}
-          loading="lazy"
-        />
-      ) : (
-        <span
-          className={clsx("block flex-none", {
-            "size-8": size === 32,
-            "size-12": size === 48,
-            "size-20": size === 80,
-          })}
-        ></span>
-      )}
-
-      <span
-        className={clsx("block truncate", variantNameClassName)}
-        title={variant.name}
-      >
-        {variant.name}
-      </span>
+      {logoElement}
+      {name}
     </Link>
   );
 };

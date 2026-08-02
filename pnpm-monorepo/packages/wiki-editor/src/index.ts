@@ -91,3 +91,12 @@ export {
   stripWikiTextOnlyAlignment,
   type WikiTextRestrictions,
 } from "./wikiTextOnlyBlocks.js";
+export {
+  WikiVariantLink,
+  collectWikiVariantLinkIds,
+  resolveWikiVariantLink,
+  wikiVariantLinkHref,
+  type ResolvedWikiVariantLink,
+  type WikiLinkedVariant,
+  type WikiVariantLogo,
+} from "./wikiVariantLinkNode.js";

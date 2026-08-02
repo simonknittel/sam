@@ -3,6 +3,7 @@
 import { api } from "@/trpc/react";
 import {
   getWikiEditorExtensions,
+  type WikiLinkedVariant,
   type WikiMentionedCitizen,
   type WikiPageLinkedPage,
 } from "@sam-monorepo/wiki-editor";
@@ -18,12 +19,15 @@ import { WikiNodeClickSelection } from "./WikiNodeClickSelection";
 import { withWikiPageIndexNodeView } from "./WikiPageIndexNodeView";
 import { WikiPageLinkSuggestion } from "./WikiPageLinkSuggestion";
 import { WikiSlashCommand } from "./WikiSlashCommand";
+import { withWikiVariantLinkNodeView } from "./WikiVariantLinkNodeView";
 
 interface Options {
   readonly pageId: string;
   readonly iframeAllowlist: readonly string[];
   readonly linkablePages: Readonly<Record<string, WikiPageLinkedPage>>;
   readonly mentionedCitizens: Readonly<Record<string, WikiMentionedCitizen>>;
+  /** Current names and manufacturer logos of the variants linked on the page, by id */
+  readonly linkedVariants: Readonly<Record<string, WikiLinkedVariant>>;
   readonly collaboration?: boolean;
   /** Include the editing helpers (slash menu, suggestions, uploads)? */
   readonly interactive: boolean;
@@ -31,6 +35,8 @@ interface Options {
   readonly onRequestEmbed: () => void;
   /** Opens the link dialog (palette entry "Link") */
   readonly onRequestLink: () => void;
+  /** Opens the ship picker (palette entry "Schiff") */
+  readonly onRequestVariantLink: () => void;
 }
 
 /**
@@ -43,22 +49,27 @@ export const useWikiEditorExtensions = ({
   iframeAllowlist,
   linkablePages,
   mentionedCitizens,
+  linkedVariants,
   collaboration = false,
   interactive,
   onRequestEmbed,
   onRequestLink,
+  onRequestVariantLink,
 }: Options): AnyExtension[] => {
   const trpcUtils = api.useUtils();
 
   const baseExtensions = withWikiPageIndexNodeView(
-    withWikiCitizenMentionPopover(
-      getWikiEditorExtensions({
-        collaboration,
-        twitchParentHost: getWikiTwitchParentHost(),
-        iframeAllowlist,
-        pages: linkablePages,
-        citizens: mentionedCitizens,
-      }),
+    withWikiVariantLinkNodeView(
+      withWikiCitizenMentionPopover(
+        getWikiEditorExtensions({
+          collaboration,
+          twitchParentHost: getWikiTwitchParentHost(),
+          iframeAllowlist,
+          pages: linkablePages,
+          citizens: mentionedCitizens,
+          variants: linkedVariants,
+        }),
+      ),
     ),
     pageId,
   );
@@ -74,7 +85,12 @@ export const useWikiEditorExtensions = ({
     WikiDetailsSummaryToggle,
     ...(interactive
       ? [
-          WikiSlashCommand.configure({ pageId, onRequestEmbed, onRequestLink }),
+          WikiSlashCommand.configure({
+            pageId,
+            onRequestEmbed,
+            onRequestLink,
+            onRequestVariantLink,
+          }),
           WikiPageLinkSuggestion.configure({ pages: linkablePages }),
           WikiCitizenMentionSuggestion.configure({
             fetchCitizens: () => trpcUtils.citizens.getAllCitizens.ensureData(),

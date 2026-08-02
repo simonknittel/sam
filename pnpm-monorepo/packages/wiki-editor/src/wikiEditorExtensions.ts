@@ -40,6 +40,10 @@ import {
   WikiTextAlign,
   WikiTextOnlyBlockGuard,
 } from "./wikiTextOnlyBlocks.js";
+import {
+  WikiVariantLink,
+  type WikiLinkedVariant,
+} from "./wikiVariantLinkNode.js";
 
 export interface WikiEditorExtensionsOptions {
   /** Undo/redo comes from Yjs in the collab editor instead of StarterKit */
@@ -68,6 +72,12 @@ export interface WikiEditorExtensionsOptions {
    * the schema.
    */
   citizens?: Readonly<Record<string, WikiMentionedCitizen>>;
+  /**
+   * Current names and manufacturer logos of the variants linked on the
+   * page, by id — resolves variant links' labels at render time. Only
+   * affects rendering, not the schema.
+   */
+  variants?: Readonly<Record<string, WikiLinkedVariant>>;
 }
 
 /**
@@ -155,6 +165,9 @@ export const getWikiEditorExtensions = (
     WikiPageIndex,
     WikiCitizenMention.configure({
       citizens: options?.citizens ?? {},
+    }),
+    WikiVariantLink.configure({
+      variants: options?.variants ?? {},
     }),
     WikiGrid,
     WikiGridCell,

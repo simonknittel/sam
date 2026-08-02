@@ -29,6 +29,7 @@ import { WikiTextSelectionMenuActions } from "./editMenu/WikiTextSelectionMenuAc
 import { ToolbarDivider } from "./toolbar/ToolbarDivider";
 import { setWikiActiveNodeHighlight } from "./WikiActiveNodeHighlight";
 import { WikiPageIndexConfigModal } from "./WikiPageIndexConfigModal";
+import { WikiVariantLinkModal } from "./WikiVariantLinkModal";
 
 /**
  * Viewport space reserved for the sticky editor toolbar — menus that would
@@ -84,12 +85,14 @@ export const WikiEditMenu = ({
   const editorBlurredRef = useRef(false);
   /**
    * Lifted out of the menu itself: the hover menu unmounts when the pointer
-   * moves onto the (portaled) dialog, so the dialog must not live inside
-   * it.
+   * moves onto the (portaled) dialogs, so they must not live inside it.
    */
   const [pageIndexConfig, setPageIndexConfig] = useState<{
     readonly position: number;
     readonly attrs: Readonly<Record<string, unknown>>;
+  } | null>(null);
+  const [variantLinkConfig, setVariantLinkConfig] = useState<{
+    readonly position: number;
   } | null>(null);
 
   const {
@@ -192,16 +195,26 @@ export const WikiEditMenu = ({
 
   if (!editor) return null;
 
-  const configModal = pageIndexConfig && (
-    <WikiPageIndexConfigModal
-      editor={editor}
-      position={pageIndexConfig.position}
-      attrs={pageIndexConfig.attrs}
-      onRequestClose={() => setPageIndexConfig(null)}
-    />
-  );
+  const configModals = (
+    <>
+      {pageIndexConfig && (
+        <WikiPageIndexConfigModal
+          editor={editor}
+          position={pageIndexConfig.position}
+          attrs={pageIndexConfig.attrs}
+          onRequestClose={() => setPageIndexConfig(null)}
+        />
+      )}
 
-  if (!menu) return configModal || null;
+      {variantLinkConfig && (
+        <WikiVariantLinkModal
+          editor={editor}
+          position={variantLinkConfig.position}
+          onRequestClose={() => setVariantLinkConfig(null)}
+        />
+      )}
+    </>
+  );
 
   /**
    * Starts a native drag of the menu's node, mirroring what the gutter's
@@ -211,7 +224,7 @@ export const WikiEditMenu = ({
    * handler removes the current selection when `move` is set.
    */
   const startNodeDrag = (event: React.DragEvent<HTMLSpanElement>) => {
-    if (menu.kind === "link" || menu.kind === "textSelection") return;
+    if (!menu || menu.kind === "link" || menu.kind === "textSelection") return;
     const { view } = editor;
 
     let selection: NodeSelection;
@@ -245,9 +258,16 @@ export const WikiEditMenu = ({
     if (!editor.isDestroyed) setViewDragging(editor.view, null);
   };
 
+  /**
+   * The menu is rendered conditionally INSIDE this tree, never by
+   * returning early: swapping the returned tree would move the dialogs to
+   * another position and remount them — a dialog opened from the menu
+   * must survive the menu closing when the pointer moves off its target.
+   */
   return (
     <>
-      {configModal}
+      {configModals}
+
       {/*
         Only the actions row keeps the hover (and with it the menu) alive:
         an invisible strip (::after) on it bridges the visual gap to the
@@ -256,75 +276,78 @@ export const WikiEditMenu = ({
         when the menu flips below the target keeps the actions row the one
         facing it.
       */}
-      <div
-        key={menu.key}
-        // eslint-disable-next-line react-hooks/refs -- floating-ui's refs.setFloating is a stable callback-ref setter, not a ref read
-        ref={refs.setFloating}
-        style={floatingStyles}
-        className="pointer-events-none z-20 py-2"
-      >
+      {menu && (
         <div
-          className={clsx("flex items-start gap-1", {
-            "flex-col": !flippedBelow,
-            "flex-col-reverse": flippedBelow,
-          })}
+          key={menu.key}
+          // eslint-disable-next-line react-hooks/refs -- floating-ui's refs.setFloating is a stable callback-ref setter, not a ref read
+          ref={refs.setFloating}
+          style={floatingStyles}
+          className="pointer-events-none z-20 py-2"
         >
-          <span className="rounded-secondary border border-neutral-700 bg-neutral-900 px-2 py-0.5 text-xs whitespace-nowrap text-neutral-300 shadow-lg">
-            {wikiMenuLabel(menu)}
-          </span>
-
           <div
-            className={clsx(
-              "pointer-events-auto relative flex items-center gap-1 rounded-secondary border border-neutral-700 bg-neutral-900 p-1 shadow-lg",
-              "after:absolute after:inset-x-0 after:h-2 after:content-['']",
-              flippedBelow ? "after:bottom-full" : "after:top-full",
-            )}
+            className={clsx("flex items-start gap-1", {
+              "flex-col": !flippedBelow,
+              "flex-col-reverse": flippedBelow,
+            })}
           >
-            {menu.kind !== "link" && menu.kind !== "textSelection" && (
-              <>
-                <span
-                  draggable
-                  title="Block verschieben"
-                  onDragStart={startNodeDrag}
-                  onDragEnd={endNodeDrag}
-                  className="flex size-8 cursor-grab items-center justify-center rounded-secondary text-neutral-500 hover:bg-neutral-800 hover:text-neutral-200 active:cursor-grabbing"
-                >
-                  <MdDragIndicator className="size-4" />
-                </span>
+            <span className="rounded-secondary border border-neutral-700 bg-neutral-900 px-2 py-0.5 text-xs whitespace-nowrap text-neutral-300 shadow-lg">
+              {wikiMenuLabel(menu)}
+            </span>
 
-                <ToolbarDivider />
-              </>
-            )}
+            <div
+              className={clsx(
+                "pointer-events-auto relative flex items-center gap-1 rounded-secondary border border-neutral-700 bg-neutral-900 p-1 shadow-lg",
+                "after:absolute after:inset-x-0 after:h-2 after:content-['']",
+                flippedBelow ? "after:bottom-full" : "after:top-full",
+              )}
+            >
+              {menu.kind !== "link" && menu.kind !== "textSelection" && (
+                <>
+                  <span
+                    draggable
+                    title="Block verschieben"
+                    onDragStart={startNodeDrag}
+                    onDragEnd={endNodeDrag}
+                    className="flex size-8 cursor-grab items-center justify-center rounded-secondary text-neutral-500 hover:bg-neutral-800 hover:text-neutral-200 active:cursor-grabbing"
+                  >
+                    <MdDragIndicator className="size-4" />
+                  </span>
 
-            {menu.kind === "node" && (
-              <WikiNodeMenuActions
-                editor={editor}
-                menu={menu}
-                onOpenPageIndexConfig={setPageIndexConfig}
-              />
-            )}
-            {menu.kind === "textSelection" && (
-              <WikiTextSelectionMenuActions
-                editor={editor}
-                menu={menu}
-                onRequestLink={onRequestLink}
-              />
-            )}
-            {menu.kind === "textNode" && (
-              <WikiTextNodeMenuActions editor={editor} menu={menu} />
-            )}
-            {menu.kind === "link" && (
-              <WikiLinkMenuActions editor={editor} menu={menu} />
-            )}
-            {menu.kind === "callout" && (
-              <WikiCalloutMenuActions editor={editor} menu={menu} />
-            )}
-            {menu.kind === "block" && (
-              <WikiBlockMenuActions editor={editor} menu={menu} />
-            )}
+                  <ToolbarDivider />
+                </>
+              )}
+
+              {menu.kind === "node" && (
+                <WikiNodeMenuActions
+                  editor={editor}
+                  menu={menu}
+                  onOpenPageIndexConfig={setPageIndexConfig}
+                  onOpenVariantLink={setVariantLinkConfig}
+                />
+              )}
+              {menu.kind === "textSelection" && (
+                <WikiTextSelectionMenuActions
+                  editor={editor}
+                  menu={menu}
+                  onRequestLink={onRequestLink}
+                />
+              )}
+              {menu.kind === "textNode" && (
+                <WikiTextNodeMenuActions editor={editor} menu={menu} />
+              )}
+              {menu.kind === "link" && (
+                <WikiLinkMenuActions editor={editor} menu={menu} />
+              )}
+              {menu.kind === "callout" && (
+                <WikiCalloutMenuActions editor={editor} menu={menu} />
+              )}
+              {menu.kind === "block" && (
+                <WikiBlockMenuActions editor={editor} menu={menu} />
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </>
   );
 };

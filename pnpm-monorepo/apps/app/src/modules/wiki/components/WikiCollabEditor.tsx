@@ -2,6 +2,7 @@
 
 import { HocuspocusProvider, WebSocketStatus } from "@hocuspocus/provider";
 import type {
+  WikiLinkedVariant,
   WikiMentionedCitizen,
   WikiPageLinkedPage,
 } from "@sam-monorepo/wiki-editor";
@@ -30,6 +31,7 @@ import "./wikiEditor.css";
 import { WikiEditorLayout } from "./WikiEditorLayout";
 import { WikiEmbedUrlModal } from "./WikiEmbedUrlModal";
 import { WikiLinkModal } from "./WikiLinkModal";
+import { WikiVariantLinkModal } from "./WikiVariantLinkModal";
 
 interface Props {
   readonly className?: string;
@@ -44,6 +46,8 @@ interface Props {
   readonly linkablePages: Readonly<Record<string, WikiPageLinkedPage>>;
   /** Current handles of the citizens mentioned on the page, by id */
   readonly mentionedCitizens: Readonly<Record<string, WikiMentionedCitizen>>;
+  /** Current names and manufacturer logos of the variants linked on the page, by id */
+  readonly linkedVariants: Readonly<Record<string, WikiLinkedVariant>>;
   /**
    * Server-rendered static content shown until the collab provider has
    * synced, so readers get a fast first paint.
@@ -98,6 +102,7 @@ export const WikiCollabEditor = ({
   iframeAllowlist,
   linkablePages,
   mentionedCitizens,
+  linkedVariants,
   staticFallback,
 }: Props) => {
   const { isEditMode } = useWikiEditMode();
@@ -151,6 +156,7 @@ export const WikiCollabEditor = ({
         /** No editor yet — the gutter/overlays (the only consumers) are not rendered */
         onRequestEmbed={noop}
         onRequestLink={noop}
+        onRequestVariantLink={noop}
       />
     );
 
@@ -165,6 +171,7 @@ export const WikiCollabEditor = ({
       iframeAllowlist={iframeAllowlist}
       linkablePages={linkablePages}
       mentionedCitizens={mentionedCitizens}
+      linkedVariants={linkedVariants}
       staticFallback={staticFallback}
     />
   );
@@ -181,6 +188,7 @@ interface ConnectedEditorProps {
   readonly iframeAllowlist: readonly string[];
   readonly linkablePages: Readonly<Record<string, WikiPageLinkedPage>>;
   readonly mentionedCitizens: Readonly<Record<string, WikiMentionedCitizen>>;
+  readonly linkedVariants: Readonly<Record<string, WikiLinkedVariant>>;
   readonly staticFallback: ReactNode;
 }
 
@@ -194,6 +202,7 @@ const ConnectedEditor = ({
   iframeAllowlist,
   linkablePages,
   mentionedCitizens,
+  linkedVariants,
   staticFallback,
 }: ConnectedEditorProps) => {
   /**
@@ -300,15 +309,23 @@ const ConnectedEditor = ({
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   const requestLink = useCallback(() => setIsLinkModalOpen(true), []);
 
+  const [isVariantLinkModalOpen, setIsVariantLinkModalOpen] = useState(false);
+  const requestVariantLink = useCallback(
+    () => setIsVariantLinkModalOpen(true),
+    [],
+  );
+
   const extensions = useWikiEditorExtensions({
     pageId,
     iframeAllowlist,
     linkablePages,
     mentionedCitizens,
+    linkedVariants,
     collaboration: true,
     interactive: isEditing,
     onRequestEmbed: requestEmbed,
     onRequestLink: requestLink,
+    onRequestVariantLink: requestVariantLink,
   });
 
   /**
@@ -366,6 +383,7 @@ const ConnectedEditor = ({
         staticFallback={staticFallback}
         onRequestEmbed={requestEmbed}
         onRequestLink={requestLink}
+        onRequestVariantLink={requestVariantLink}
       />
 
       {editor && isEmbedModalOpen && (
@@ -379,6 +397,13 @@ const ConnectedEditor = ({
         <WikiLinkModal
           editor={editor}
           onRequestClose={() => setIsLinkModalOpen(false)}
+        />
+      )}
+
+      {editor && isVariantLinkModalOpen && (
+        <WikiVariantLinkModal
+          editor={editor}
+          onRequestClose={() => setIsVariantLinkModalOpen(false)}
         />
       )}
     </>

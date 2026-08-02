@@ -20,6 +20,12 @@ export const extractWikiPageText = (content: unknown): string => {
       node.attrs.handle
     )
       parts.push(node.attrs.handle);
+    if (
+      node.type === "wikiVariantLink" &&
+      typeof node.attrs?.name === "string" &&
+      node.attrs.name
+    )
+      parts.push(node.attrs.name);
   });
 
   return parts.join(" ").replace(/\s+/g, " ").trim();

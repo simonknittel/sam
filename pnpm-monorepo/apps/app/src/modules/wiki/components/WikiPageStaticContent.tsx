@@ -3,7 +3,9 @@ import {
   getWikiEditorExtensions,
   isWikiPageContentEmpty,
   resolveWikiCitizenMention,
+  resolveWikiVariantLink,
   wikiPageIndexConfigKey,
+  type WikiLinkedVariant,
   type WikiMentionedCitizen,
   type WikiPageLinkedPage,
 } from "@sam-monorepo/wiki-editor";
@@ -18,6 +20,7 @@ import {
   WikiPageIndexList,
   type WikiPageIndexEntry,
 } from "./WikiPageIndexList";
+import { WikiVariantLinkChip } from "./WikiVariantLinkNodeView";
 import "./wikiEditor.css";
 
 type StaticContent = Parameters<typeof renderToReactElement>[0]["content"];
@@ -51,6 +54,7 @@ const renderWikiPageContent = (
   iframeAllowlist: readonly string[],
   linkablePages: Readonly<Record<string, WikiPageLinkedPage>>,
   mentionedCitizens: Readonly<Record<string, WikiMentionedCitizen>>,
+  linkedVariants: Readonly<Record<string, WikiLinkedVariant>>,
   pageIndexes: Readonly<Record<string, readonly WikiPageIndexEntry[]>>,
   pageId: string | undefined,
 ) => {
@@ -63,6 +67,7 @@ const renderWikiPageContent = (
       iframeAllowlist,
       pages: linkablePages,
       citizens: mentionedCitizens,
+      variants: linkedVariants,
     }),
     options: {
       nodeMapping: {
@@ -119,6 +124,15 @@ const renderWikiPageContent = (
           />
         ),
         /**
+         * Unlike the node's renderHTML, the chip renders the fleet app's
+         * variant component — same as the editor node view.
+         */
+        wikiVariantLink: ({ node }) => (
+          <WikiVariantLinkChip
+            resolved={resolveWikiVariantLink(linkedVariants, node.attrs)}
+          />
+        ),
+        /**
          * Renders the page list pre-resolved by the server for this viewer
          * (see resolveWikiPageIndex) instead of the node's placeholder.
          */
@@ -143,6 +157,8 @@ interface Props {
   readonly linkablePages: Readonly<Record<string, WikiPageLinkedPage>>;
   /** Current handles of the citizens mentioned on the page, by id */
   readonly mentionedCitizens: Readonly<Record<string, WikiMentionedCitizen>>;
+  /** Current names and manufacturer logos of the variants linked on the page, by id */
+  readonly linkedVariants: Readonly<Record<string, WikiLinkedVariant>>;
   /**
    * Resolved page lists of the page-index nodes on this page, keyed by
    * `wikiPageIndexConfigKey`
@@ -163,6 +179,7 @@ export const WikiPageStaticContent = ({
   iframeAllowlist,
   linkablePages,
   mentionedCitizens,
+  linkedVariants,
   pageIndexes = {},
 }: Props) => {
   // Covers docs emptied in the editor too (one empty paragraph, not null)
@@ -182,6 +199,7 @@ export const WikiPageStaticContent = ({
     iframeAllowlist,
     linkablePages,
     mentionedCitizens,
+    linkedVariants,
     pageIndexes,
     pageId,
   );

@@ -27,6 +27,7 @@ const MENU_NODE_TYPES = [
   "wikiAttachment",
   "wikiPageLink",
   "wikiCitizenMention",
+  "wikiVariantLink",
   "wikiPageIndex",
 ];
 
@@ -122,6 +123,7 @@ export type WikiNodeMenuState = {
   readonly uploadId: string;
   readonly pageId: string;
   readonly citizenId: string;
+  readonly variantId: string;
   readonly align: WikiNodeAlignment;
   /** Raw attributes, e.g. for the page-index config dialog */
   readonly attrs: Readonly<Record<string, unknown>>;
@@ -195,6 +197,7 @@ const nodeMenu = (
   uploadId: String(node.attrs.uploadId ?? ""),
   pageId: String(node.attrs.pageId ?? ""),
   citizenId: String(node.attrs.citizenId ?? ""),
+  variantId: String(node.attrs.variantId ?? ""),
   align: (node.attrs.align ?? "left") as WikiNodeAlignment,
   attrs: node.attrs,
   ...target,
@@ -292,7 +295,7 @@ export const wikiMenuFromElement = (
   if (
     element.matches("a[href]") &&
     !element.matches(
-      "[data-wiki-attachment], [data-wiki-page-link], [data-wiki-citizen-mention]",
+      "[data-wiki-attachment], [data-wiki-page-link], [data-wiki-citizen-mention], [data-wiki-variant-link]",
     )
   ) {
     let position: number;

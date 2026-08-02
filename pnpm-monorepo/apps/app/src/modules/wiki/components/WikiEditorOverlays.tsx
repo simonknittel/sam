@@ -20,6 +20,7 @@ const HOVER_SELECTOR = [
   "a[data-wiki-attachment]",
   "a[data-wiki-page-link]",
   "a[data-wiki-citizen-mention]",
+  "a[data-wiki-variant-link]",
   "[data-wiki-page-index]",
   "a[href]",
   "[data-wiki-callout]",

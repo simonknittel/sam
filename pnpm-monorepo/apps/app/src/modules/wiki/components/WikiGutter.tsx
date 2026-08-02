@@ -98,6 +98,8 @@ interface Props {
   readonly onRequestEmbed: () => void;
   /** Opens the link dialog (palette entry "Link") */
   readonly onRequestLink: () => void;
+  /** Opens the ship picker (palette entry "Schiff") */
+  readonly onRequestVariantLink: () => void;
 }
 
 /**
@@ -111,6 +113,7 @@ export const WikiGutter = ({
   pageId,
   onRequestEmbed,
   onRequestLink,
+  onRequestVariantLink,
 }: Props) => {
   const [block, setBlock] = useState<HoveredBlock | null>(null);
   const [controlsHovered, setControlsHovered] = useState(false);
@@ -219,6 +222,7 @@ export const WikiGutter = ({
             pageId={pageId}
             onRequestEmbed={onRequestEmbed}
             onRequestLink={onRequestLink}
+            onRequestVariantLink={onRequestVariantLink}
             insertAboveRef={insertAboveRef}
             onClosePalette={closePalette}
           />
@@ -244,6 +248,7 @@ interface InsertBlockActionsProps {
   readonly pageId: string;
   readonly onRequestEmbed: () => void;
   readonly onRequestLink: () => void;
+  readonly onRequestVariantLink: () => void;
   readonly insertAboveRef: RefObject<boolean>;
   /** Releases the parent's palette state (lock, highlight) on insert */
   readonly onClosePalette: () => void;
@@ -277,6 +282,7 @@ const InsertBlockActions = ({
   pageId,
   onRequestEmbed,
   onRequestLink,
+  onRequestVariantLink,
   insertAboveRef,
   onClosePalette,
 }: InsertBlockActionsProps) => {
@@ -407,7 +413,7 @@ const InsertBlockActions = ({
     item.run(
       editor,
       { from: position + 1, to: position + 1 },
-      { pageId, onRequestEmbed, onRequestLink },
+      { pageId, onRequestEmbed, onRequestLink, onRequestVariantLink },
     );
   };
 

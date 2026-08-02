@@ -1,5 +1,6 @@
 import {
   collectWikiMentionedCitizenIds,
+  collectWikiVariantLinkIds,
   createWikiHeadingIdAssigner,
   extractWikiPageText,
 } from "@sam-monorepo/wiki-editor";
@@ -65,6 +66,76 @@ describe("extract wiki page text", () => {
         ],
       }),
     ).toBe("Gefunden von Chris");
+  });
+
+  test("includes variant link names", () => {
+    expect(
+      extractWikiPageText({
+        type: "doc",
+        content: [
+          {
+            type: "paragraph",
+            content: [
+              { type: "text", text: "Wir fliegen" },
+              {
+                type: "wikiVariantLink",
+                attrs: { variantId: "abc123", name: "Carrack" },
+              },
+              /** Pasted as a URL — no name to index yet */
+              {
+                type: "wikiVariantLink",
+                attrs: { variantId: "def456", name: null },
+              },
+            ],
+          },
+        ],
+      }),
+    ).toBe("Wir fliegen Carrack");
+  });
+});
+
+describe("collect variant link ids", () => {
+  test("collects unique ids from nested content", () => {
+    expect(
+      collectWikiVariantLinkIds({
+        type: "doc",
+        content: [
+          {
+            type: "paragraph",
+            content: [
+              {
+                type: "wikiVariantLink",
+                attrs: { variantId: "abc123", name: "Carrack" },
+              },
+              {
+                type: "wikiVariantLink",
+                attrs: { variantId: "abc123", name: "Carrack" },
+              },
+            ],
+          },
+          {
+            type: "blockquote",
+            content: [
+              {
+                type: "paragraph",
+                content: [
+                  {
+                    type: "wikiVariantLink",
+                    attrs: { variantId: "def456", name: "Caterpillar" },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      }),
+    ).toEqual(["abc123", "def456"]);
+  });
+
+  test("handles empty and invalid input", () => {
+    expect(collectWikiVariantLinkIds(null)).toEqual([]);
+    expect(collectWikiVariantLinkIds({})).toEqual([]);
+    expect(collectWikiVariantLinkIds("nope")).toEqual([]);
   });
 });
 

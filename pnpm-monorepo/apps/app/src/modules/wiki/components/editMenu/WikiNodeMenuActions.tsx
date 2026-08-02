@@ -2,7 +2,13 @@
 
 import { WIKI_RESIZABLE_NODE_TYPES } from "@sam-monorepo/wiki-editor";
 import type { Editor } from "@tiptap/react";
-import { FaCog, FaDownload, FaExternalLinkAlt, FaTrash } from "react-icons/fa";
+import {
+  FaCog,
+  FaDownload,
+  FaExchangeAlt,
+  FaExternalLinkAlt,
+  FaTrash,
+} from "react-icons/fa";
 import { ALIGNMENT_OPTIONS } from "../toolbar/alignments";
 import { ToolbarButton } from "../toolbar/ToolbarButton";
 import { ToolbarDivider } from "../toolbar/ToolbarDivider";
@@ -20,16 +26,19 @@ interface Props {
     readonly position: number;
     readonly attrs: Readonly<Record<string, unknown>>;
   }) => void;
+  /** Opens the ship picker for an existing link (mounted by the menu shell) */
+  readonly onOpenVariantLink: (config: { readonly position: number }) => void;
 }
 
 /**
  * Actions of the atom-node menu (embeds, images, attachments, page links,
- * mentions, page indexes).
+ * mentions, variant links, page indexes).
  */
 export const WikiNodeMenuActions = ({
   editor,
   menu,
   onOpenPageIndexConfig,
+  onOpenVariantLink,
 }: Props) => {
   /**
    * Focus at the deletion point — a bare focus() scrolls the stale
@@ -111,6 +120,30 @@ export const WikiNodeMenuActions = ({
         >
           <FaExternalLinkAlt />
         </ToolbarButton>
+      )}
+
+      {menu.typeName === "wikiVariantLink" && (
+        <>
+          <ToolbarButton
+            title="Schiff öffnen"
+            isActive={false}
+            onClick={() =>
+              openInNewTab(
+                `/app/fleet/variant/${encodeURIComponent(menu.variantId)}`,
+              )
+            }
+          >
+            <FaExternalLinkAlt />
+          </ToolbarButton>
+
+          <ToolbarButton
+            title="Schiff ändern"
+            isActive={false}
+            onClick={() => onOpenVariantLink({ position: menu.position })}
+          >
+            <FaExchangeAlt />
+          </ToolbarButton>
+        </>
       )}
 
       {menu.typeName === "wikiPageIndex" && (

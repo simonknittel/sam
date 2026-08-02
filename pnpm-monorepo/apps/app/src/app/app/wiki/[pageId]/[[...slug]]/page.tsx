@@ -44,6 +44,7 @@ import { WikiPageAccessType } from "@sam-monorepo/database/client";
 import {
   collectWikiMentionedCitizenIds,
   collectWikiPageIndexConfigs,
+  collectWikiVariantLinkIds,
 } from "@sam-monorepo/wiki-editor";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
@@ -172,6 +173,49 @@ const PageContent = async ({
         })
       : []
     ).map((citizen) => [citizen.id, { handle: citizen.handle }]),
+  );
+
+  /**
+   * Current names and manufacturer logos of the variants linked in the
+   * content, so links follow renames. Links inserted after this render
+   * resolve themselves client-side (see WikiVariantLinkNodeView).
+   * Deliberately not permission-filtered: the wiki shows every reader
+   * which ship is meant — only the variant page itself stays gated.
+   */
+  const linkedVariantIds = collectWikiVariantLinkIds(pageContent?.content);
+  const linkedVariants = Object.fromEntries(
+    (linkedVariantIds.length > 0
+      ? await prisma.variant.findMany({
+          where: { id: { in: linkedVariantIds } },
+          select: {
+            id: true,
+            name: true,
+            series: {
+              select: {
+                manufacturer: {
+                  select: {
+                    name: true,
+                    image: { select: { id: true, mimeType: true } },
+                  },
+                },
+              },
+            },
+          },
+        })
+      : []
+    ).map((variant) => [
+      variant.id,
+      {
+        name: variant.name,
+        manufacturerName: variant.series.manufacturer.name,
+        logo: variant.series.manufacturer.image
+          ? {
+              src: `https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${variant.series.manufacturer.image.id}`,
+              mimeType: variant.series.manufacturer.image.mimeType,
+            }
+          : undefined,
+      },
+    ]),
   );
 
   /**
@@ -376,6 +420,7 @@ const PageContent = async ({
               iframeAllowlist={iframeAllowlist}
               linkablePages={linkablePages}
               mentionedCitizens={mentionedCitizens}
+              linkedVariants={linkedVariants}
               staticFallback={
                 <WikiPageStaticContent
                   content={pageContent?.content}
@@ -383,6 +428,7 @@ const PageContent = async ({
                   iframeAllowlist={iframeAllowlist}
                   linkablePages={linkablePages}
                   mentionedCitizens={mentionedCitizens}
+                  linkedVariants={linkedVariants}
                   pageIndexes={pageIndexes}
                 />
               }
@@ -394,6 +440,7 @@ const PageContent = async ({
               iframeAllowlist={iframeAllowlist}
               linkablePages={linkablePages}
               mentionedCitizens={mentionedCitizens}
+              linkedVariants={linkedVariants}
               pageIndexes={pageIndexes}
             />
           )}

@@ -19,6 +19,7 @@ const NODE_TYPE_LABELS: Readonly<Record<string, string>> = {
   wikiEmbed: "Einbettung",
   wikiPageLink: "Seitenlink",
   wikiCitizenMention: "Citizen-Erwähnung",
+  wikiVariantLink: "Schiff",
   wikiPageIndex: "Seitenverzeichnis",
 };
 

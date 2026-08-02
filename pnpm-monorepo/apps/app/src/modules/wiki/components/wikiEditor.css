@@ -548,6 +548,37 @@
   color: var(--color-neutral-500);
 }
 
+/* Links to fleet variants */
+.prose a[data-wiki-variant-link] {
+  font-weight: 600;
+}
+
+.prose a[data-wiki-variant-link]:focus-visible {
+  outline: 2px solid var(--color-interaction-500);
+  outline-offset: 2px;
+  border-radius: 0.125rem;
+}
+
+.prose span[data-wiki-variant-link][data-unavailable] {
+  color: var(--color-neutral-500);
+  text-decoration: line-through;
+}
+
+/*
+ * Manufacturer logo inside a variant link — inline and scaled to the
+ * surrounding text, overriding the typography plugin's block images
+ * (which the component's own utilities would lose against).
+ */
+.prose a[data-wiki-variant-link] img {
+  display: inline-block;
+  width: auto;
+  height: 1em;
+  max-width: 4em;
+  margin: 0 0.25em 0 0;
+  object-fit: contain;
+  vertical-align: -0.15em;
+}
+
 /* Inline text highlights keep the surrounding text color */
 .prose mark {
   color: inherit;
