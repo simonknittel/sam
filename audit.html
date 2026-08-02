@@ -1,0 +1,1112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Audit: Role selectors</title>
+    <style>
+      :root {
+        --bg: #0a0a0a;
+        --bg-raised: #171717;
+        --bg-sunken: #000;
+        --border: #262626;
+        --border-strong: #404040;
+        --fg: #e5e5e5;
+        --fg-muted: #a3a3a3;
+        --fg-dim: #737373;
+        --accent: #f04438;
+        --accent-dim: #7f1d1d;
+        --ok: #22c55e;
+        --warn: #eab308;
+        --bad: #ef4444;
+        --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      }
+
+      html { -webkit-text-size-adjust: 100%; }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        font-size: 16px;
+        line-height: 1.6;
+      }
+
+      .wrap {
+        box-sizing: border-box;
+        max-width: 74rem;
+        margin: 0 auto;
+        padding: 3rem 1.25rem 6rem;
+      }
+
+      header.page {
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 2rem;
+        margin-bottom: 2.5rem;
+      }
+
+      .eyebrow {
+        font-family: var(--mono);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        font-size: 0.75rem;
+        color: var(--accent);
+        margin: 0 0 0.75rem;
+      }
+
+      h1 {
+        font-size: clamp(1.75rem, 4vw, 2.5rem);
+        line-height: 1.15;
+        margin: 0 0 0.75rem;
+        letter-spacing: -0.02em;
+      }
+
+      h2 {
+        font-size: 1.5rem;
+        margin: 3.5rem 0 1rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border);
+        letter-spacing: -0.01em;
+      }
+
+      h2:first-of-type { border-top: 0; padding-top: 0; }
+
+      h3 {
+        font-size: 1.125rem;
+        margin: 2rem 0 0.5rem;
+      }
+
+      h4 {
+        font-size: 0.95rem;
+        margin: 1.5rem 0 0.5rem;
+        color: var(--fg-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-family: var(--mono);
+      }
+
+      p { margin: 0 0 1rem; }
+
+      a { color: var(--accent); }
+
+      .intro { color: var(--fg-muted); font-size: 1.05rem; max-width: 60ch; }
+
+      code, .path {
+        font-family: var(--mono);
+        font-size: 0.85em;
+        background: var(--bg-sunken);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 0.1em 0.35em;
+        color: #fca5a5;
+        overflow-wrap: anywhere;
+      }
+
+      ul, ol { margin: 0 0 1rem; padding-left: 1.25rem; }
+      li { margin-bottom: 0.5rem; }
+      li > ul, li > ol { margin-top: 0.5rem; }
+
+      /* ---- Stat row ---- */
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+        gap: 0.75rem;
+        margin: 2rem 0;
+      }
+
+      .stat {
+        background: var(--bg-raised);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 1rem;
+      }
+
+      .stat .n {
+        font-size: 2rem;
+        font-weight: 700;
+        line-height: 1;
+        font-family: var(--mono);
+      }
+
+      .stat .l {
+        font-size: 0.8rem;
+        color: var(--fg-dim);
+        margin-top: 0.4rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      /* ---- Cards ---- */
+      .card {
+        background: var(--bg-raised);
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--border-strong);
+        border-radius: 8px;
+        padding: 1.25rem 1.5rem;
+        margin: 1.25rem 0;
+      }
+
+      .card.family-a { border-left-color: #f04438; }
+      .card.family-b { border-left-color: #3b82f6; }
+      .card.family-c { border-left-color: #a855f7; }
+      .card.family-d { border-left-color: #22c55e; }
+
+      .card h3 { margin-top: 0; display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap; }
+
+      .tag {
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        background: var(--bg-sunken);
+        border: 1px solid var(--border-strong);
+        color: var(--fg-dim);
+        border-radius: 999px;
+        padding: 0.15em 0.6em;
+        white-space: nowrap;
+      }
+
+      .card dl { margin: 0.75rem 0 0; display: grid; grid-template-columns: max-content 1fr; gap: 0.4rem 1rem; }
+      .card dt { color: var(--fg-dim); font-family: var(--mono); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; padding-top: 0.15rem; }
+      .card dd { margin: 0; }
+
+      @media (max-width: 46rem) {
+        .card dl { grid-template-columns: 1fr; gap: 0.15rem; }
+        .card dd { margin-bottom: 0.6rem; }
+      }
+
+      /* ---- Tables ---- */
+      .scroller {
+        overflow-x: auto;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        margin: 1.25rem 0;
+        background: var(--bg-raised);
+      }
+
+      table { border-collapse: collapse; width: 100%; font-size: 0.875rem; min-width: 52rem; }
+
+      th, td { text-align: left; padding: 0.65rem 0.85rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+
+      thead th {
+        background: var(--bg-sunken);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        color: var(--fg-dim);
+        font-family: var(--mono);
+        position: sticky;
+        top: 0;
+        white-space: nowrap;
+      }
+
+      tbody tr:last-child td { border-bottom: 0; }
+      tbody tr:hover { background: #ffffff08; }
+
+      td.site { white-space: nowrap; font-weight: 600; }
+
+      .yes { color: var(--ok); font-weight: 700; }
+      .no { color: var(--bad); font-weight: 700; }
+      .partial { color: var(--warn); font-weight: 700; }
+
+      /* ---- Callouts ---- */
+      .callout {
+        border-radius: 8px;
+        padding: 1rem 1.25rem;
+        margin: 1.25rem 0;
+        border: 1px solid var(--border);
+        background: var(--bg-raised);
+      }
+
+      .callout.bug { border-color: var(--accent-dim); background: #7f1d1d1a; }
+      .callout.note { border-color: #1e3a8a; background: #1e3a8a1a; }
+
+      .callout > :last-child { margin-bottom: 0; }
+
+      /* ---- Numbered problem list ---- */
+      ol.problems { counter-reset: p; list-style: none; padding-left: 0; }
+      ol.problems > li {
+        counter-increment: p;
+        position: relative;
+        padding-left: 2.75rem;
+        margin-bottom: 1.1rem;
+      }
+      ol.problems > li::before {
+        content: counter(p);
+        position: absolute;
+        left: 0;
+        top: 0.1rem;
+        width: 1.85rem;
+        height: 1.85rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        background: var(--accent-dim);
+        color: #fecaca;
+        font-family: var(--mono);
+        font-size: 0.8rem;
+        font-weight: 700;
+      }
+      ol.problems strong { color: #fff; }
+
+      /* ---- Requirement list ---- */
+      .requirements { list-style: none; padding-left: 0; }
+      .requirements li {
+        padding-left: 1.75rem;
+        position: relative;
+      }
+      .requirements li::before {
+        content: "▸";
+        position: absolute;
+        left: 0.35rem;
+        color: var(--accent);
+      }
+      .requirements li.new::after {
+        content: "new";
+        font-family: var(--mono);
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        background: var(--accent);
+        color: #fff;
+        border-radius: 999px;
+        padding: 0.1em 0.5em;
+        margin-left: 0.5rem;
+        vertical-align: 0.15em;
+      }
+
+      /* ---- TOC ---- */
+      nav.toc {
+        background: var(--bg-raised);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 1rem 1.25rem;
+        margin: 2rem 0 3rem;
+      }
+      nav.toc p { font-family: var(--mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--fg-dim); margin: 0 0 0.6rem; }
+      nav.toc ol { margin: 0; padding-left: 1.2rem; columns: 2; column-gap: 2rem; }
+      nav.toc li { margin-bottom: 0.3rem; break-inside: avoid; }
+      nav.toc a { text-decoration: none; color: var(--fg); }
+      nav.toc a:hover { color: var(--accent); text-decoration: underline; }
+      @media (max-width: 40rem) { nav.toc ol { columns: 1; } }
+
+      footer.page {
+        margin-top: 4rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border);
+        color: var(--fg-dim);
+        font-size: 0.85rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="page">
+        <p class="eyebrow">Audit · 2026-08-02</p>
+        <h1>Role selectors across the app</h1>
+        <p class="intro">
+          An inventory of every place where one or more roles are selected — the
+          purpose of each, how it is built, how it behaves UX-wise, and the gaps
+          that need to be settled before unifying them.
+        </p>
+      </header>
+
+      <h4>Target requirements</h4>
+      <ul class="requirements">
+        <li>Lists all roles the user is allowed to see.</li>
+        <li>A switch between single and multiple selection.</li>
+        <li>Roles can be de-selected again.</li>
+        <li>Filter/search by typing.</li>
+        <li>Full keyboard control.</li>
+        <li class="new">
+          "Rich" role display: icon + name, as in
+          <span class="path">SingleRoleBadge.tsx</span>.
+        </li>
+      </ul>
+
+      <div class="stats">
+        <div class="stat"><div class="n">11</div><div class="l">selection sites</div></div>
+        <div class="stat"><div class="n">4</div><div class="l">UI patterns</div></div>
+        <div class="stat"><div class="n">6</div><div class="l">data sources</div></div>
+        <div class="stat"><div class="n">1</div><div class="l">with search</div></div>
+        <div class="stat"><div class="n">0</div><div class="l">with arrow keys</div></div>
+      </div>
+
+      <nav class="toc">
+        <p>Contents</p>
+        <ol>
+          <li><a href="#matrix">Capability matrix</a></li>
+          <li><a href="#family-a">Family A — Popover of badges</a></li>
+          <li><a href="#family-b">Family B — Checkbox lists</a></li>
+          <li><a href="#family-c">Family C — Native selects</a></li>
+          <li><a href="#family-d">Family D — Generic comboboxes</a></li>
+          <li><a href="#blocks">Shared building blocks</a></li>
+          <li><a href="#data">Data sources &amp; permissions</a></li>
+          <li><a href="#problems">Problems found</a></li>
+          <li><a href="#rich">Consequences of rich display</a></li>
+          <li><a href="#gaps">Open decisions</a></li>
+        </ol>
+      </nav>
+
+      <h2 id="matrix">Capability matrix</h2>
+      <p>
+        Each row is an existing selection site, each column one of the target
+        requirements. Family D is the reference combobox that is
+        <em>not</em> used for roles today.
+      </p>
+
+      <div class="scroller">
+        <table>
+          <thead>
+            <tr>
+              <th>Site</th>
+              <th>Role set</th>
+              <th>Mode</th>
+              <th>De-select</th>
+              <th>Search</th>
+              <th>Keyboard</th>
+              <th>Rich (icon+name)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="site">A1 · Wiki permissions</td>
+              <td>visible (tRPC)</td>
+              <td>multi + <code>single</code> prop</td>
+              <td class="partial">chip trash only</td>
+              <td class="no">no</td>
+              <td class="partial">Tab only</td>
+              <td class="yes">badge</td>
+            </tr>
+            <tr>
+              <td class="site">A2 · Task required roles</td>
+              <td>visible (tRPC)</td>
+              <td>multi</td>
+              <td class="partial">chip trash only</td>
+              <td class="no">no</td>
+              <td class="partial">Tab only</td>
+              <td class="yes">badge (with nested popover)</td>
+            </tr>
+            <tr>
+              <td class="site">A3 · SILC salaries</td>
+              <td class="no">all roles</td>
+              <td>single</td>
+              <td class="no">not at all</td>
+              <td class="no">no</td>
+              <td class="partial">Tab only</td>
+              <td class="partial">badge, blank for invisible roles</td>
+            </tr>
+            <tr>
+              <td class="site">A4 · CitizenInput shortcut</td>
+              <td>visible, grouped</td>
+              <td>—</td>
+              <td>—</td>
+              <td class="no">no</td>
+              <td class="partial">Tab only</td>
+              <td class="yes">badge</td>
+            </tr>
+            <tr>
+              <td class="site">B1 · Assign roles</td>
+              <td>assignable</td>
+              <td>multi</td>
+              <td class="yes">checkbox</td>
+              <td class="yes">fuzzy + highlight</td>
+              <td class="partial">Tab + Space</td>
+              <td class="partial">icon+name, no badge</td>
+            </tr>
+            <tr>
+              <td class="site">B2 · Role inheritance</td>
+              <td class="no">all roles</td>
+              <td>multi</td>
+              <td class="yes">checkbox</td>
+              <td class="no">no</td>
+              <td class="partial">Tab + Space</td>
+              <td class="partial">badge, blank for invisible roles</td>
+            </tr>
+            <tr>
+              <td class="site">B3 · Citizen table filter</td>
+              <td>visible (server)</td>
+              <td>multi</td>
+              <td class="yes">checkbox</td>
+              <td class="no">no</td>
+              <td class="partial">Tab + Space</td>
+              <td class="partial">icon+name, no badge</td>
+            </tr>
+            <tr>
+              <td class="site">C1 · Career "Role" node</td>
+              <td>visible or all</td>
+              <td>single, never empty</td>
+              <td class="no">no</td>
+              <td class="partial">native only</td>
+              <td class="yes">full native</td>
+              <td class="no">text only</td>
+            </tr>
+            <tr>
+              <td class="site">C2 · Career "Role members" node</td>
+              <td>visible or all</td>
+              <td>single, never empty</td>
+              <td class="no">no</td>
+              <td class="partial">native only</td>
+              <td class="yes">full native</td>
+              <td class="no">text only</td>
+            </tr>
+            <tr>
+              <td class="site">C3 · Permission rule builder</td>
+              <td class="no">all roles</td>
+              <td>single + <code>*</code></td>
+              <td class="no">required field</td>
+              <td class="partial">native only</td>
+              <td class="yes">full native</td>
+              <td class="no">text only</td>
+            </tr>
+            <tr>
+              <td class="site">D · Combobox filters <span class="tag">reference</span></td>
+              <td>—</td>
+              <td>single &amp; multi</td>
+              <td class="yes">chip + toggle</td>
+              <td class="yes">substring</td>
+              <td class="yes">full</td>
+              <td class="no">text only</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout note">
+        <p>
+          <strong>Key finding:</strong> not a single site meets all six
+          requirements today. Families A and B satisfy the rich display but not
+          search or keyboard control; family C and the reference combobox D
+          satisfy keyboard and search but not the rich display.
+        </p>
+      </div>
+
+      <h2 id="family-a">Family A — Popover of role badges + chips below</h2>
+      <p>
+        Visually near-identical, written independently three times, plus a fourth
+        variant with a different payload. Shared model: a trigger opens a popover
+        listing <code>SingleRoleBadge</code> buttons; picking one adds it;
+        selected roles appear as chips underneath; the value reaches the form via
+        hidden inputs.
+      </p>
+
+      <div class="card family-a">
+        <h3>A1 · WikiRoleSelector <span class="tag">Base UI popover</span></h3>
+        <dl>
+          <dt>File</dt>
+          <dd><span class="path">modules/wiki/components/WikiRoleSelector.tsx</span></dd>
+          <dt>Purpose</dt>
+          <dd>
+            Read, edit and admin roles of a wiki page; and the role for the
+            "role members" block.
+          </dd>
+          <dt>Used in</dt>
+          <dd>
+            <span class="path">WikiPagePermissionsModal.tsx:134, :188, :323</span> (multi),
+            <span class="path">WikiRoleCitizensConfigModal.tsx:68</span> (single)
+          </dd>
+          <dt>UX</dt>
+          <dd>
+            Trigger reads "Rolle hinzufügen" / "Rolle auswählen". The popover
+            <strong>opens on hover</strong> (<code>openOnHover</code> defaults to
+            true, 50 ms delay) and <strong>takes no focus</strong> when opening
+            (<code>initialFocus={false}</code>,
+            <span class="path">PopoverBaseUI.tsx:139</span>). The list is sorted
+            by name and scrolls at <code>max-h-96</code>. Clicking adds a role —
+            the popover <strong>never closes</strong>, not even in
+            <code>single</code> mode. Already-selected roles are not marked in
+            the list, and clicking them again is a no-op (no toggle). Removal is
+            only possible through the chip's trash button.
+          </dd>
+          <dt>Value</dt>
+          <dd>One hidden input per role, name configurable via <code>inputName</code>.</dd>
+          <dt>Data</dt>
+          <dd><code>api.roles.getVisibleRoles</code></dd>
+          <dt>States</dt>
+          <dd>
+            <code>opacity-50</code> while loading, but the trigger still opens an
+            empty popover. No error state.
+          </dd>
+        </dl>
+      </div>
+
+      <div class="card family-a">
+        <h3>A2 · RequiredRoles <span class="tag">Radix popover</span></h3>
+        <dl>
+          <dt>File</dt>
+          <dd><span class="path">modules/tasks/components/CreateTask/RequiredRoles.tsx</span></dd>
+          <dt>Purpose</dt>
+          <dd>Required roles for a task — only these roles may accept it.</dd>
+          <dt>Used in</dt>
+          <dd>
+            <span class="path">CreateTaskForm.tsx:254</span>,
+            <span class="path">UpdateRequiredRoles.tsx:77</span> (modal)
+          </dd>
+          <dt>UX</dt>
+          <dd>
+            Same interaction model as A1, but built on Radix instead of Base UI,
+            with a manually managed portal container
+            (<code>popoverPortalRef</code>, lines 34/53/81) to escape a stacking
+            context. The trigger is <code>disabled</code> while loading. No
+            toggle; removal via the chip's trash button.
+          </dd>
+          <dt>Value</dt>
+          <dd>Hidden input <code>requiredRole[]</code></dd>
+          <dt>Data</dt>
+          <dd><code>api.roles.getVisibleRoles</code></dd>
+        </dl>
+      </div>
+
+      <div class="card family-a">
+        <h3>A3 · RoleSelector (SILC) <span class="tag">Radix popover</span></h3>
+        <dl>
+          <dt>File</dt>
+          <dd><span class="path">modules/silc/components/RoleSalariesClient/RoleSelector.tsx</span></dd>
+          <dt>Purpose</dt>
+          <dd>The role a SILC salary row applies to.</dd>
+          <dt>Used in</dt>
+          <dd><span class="path">RoleSalariesClient/index.tsx:71</span>, one instance per salary row</dd>
+          <dt>UX</dt>
+          <dd>
+            Single selection, and the only one in this family that
+            <strong>closes on pick</strong>. The trigger swaps between a "Rolle
+            auswählen" button and the selected badge plus a pen icon.
+            <strong>No way to clear</strong> — you can only replace it, or delete
+            the entire row. A third trigger variant with
+            <code>animate-pulse</code> covers the loading state.
+          </dd>
+          <dt>Value</dt>
+          <dd><code>onChange</code> callback <em>and</em> a hidden <code>roleId[]</code></dd>
+          <dt>Data</dt>
+          <dd><code>api.silc.getRolesForSalaries</code> — all roles, no visibility filter</dd>
+        </dl>
+      </div>
+
+      <div class="card family-a">
+        <h3>A4 · Role shortcut in CitizenInput <span class="tag">Radix popover</span></h3>
+        <dl>
+          <dt>File</dt>
+          <dd><span class="path">modules/citizen/components/CitizenInput.tsx:257–299</span></dd>
+          <dt>Purpose</dt>
+          <dd>
+            Strictly speaking not a role selector: picking a role
+            <strong>replaces the selected citizens</strong> with that role's
+            members (bulk-filling a citizen picker).
+          </dd>
+          <dt>UX</dt>
+          <dd>
+            Identical popover markup, icon-only trigger, same portal-ref trick.
+            Belongs in the unification because it is the same list widget with a
+            different result.
+          </dd>
+          <dt>Data</dt>
+          <dd><code>api.citizens.getCitizensGroupedByVisibleRoles</code></dd>
+        </dl>
+      </div>
+
+      <h2 id="family-b">Family B — Checkbox lists</h2>
+
+      <div class="card family-b">
+        <h3>B1 · AddRoles + RoleCheckbox + UpdateRolesForm <span class="tag">modal</span></h3>
+        <dl>
+          <dt>Files</dt>
+          <dd><span class="path">modules/citizen/components/roles/{AddRoles,RoleCheckbox,UpdateRolesForm}.tsx</span></dd>
+          <dt>Purpose</dt>
+          <dd>Assign roles to a citizen, or take them away.</dd>
+          <dt>UX</dt>
+          <dd>
+            By far the most capable variant and the
+            <strong>only one with search</strong>: a modal
+            (<code>w-7xl</code>) with fuzzy search via fuse.js
+            (<code>threshold: 0.2</code>,
+            <span class="path">AddRoles.tsx:60–72</span>) that
+            <strong>underlines the matched characters</strong>. Non-matching
+            roles are hidden via CSS, <em>not</em> unmounted
+            (<span class="path">RoleCheckbox.tsx:62</span>) — deliberately,
+            because the form submits <em>all</em> checkboxes. Layout is
+            multi-column via <code>columns-3xs</code>. Each role can be
+            <strong>individually disabled</strong> based on the
+            <code>assign</code>/<code>dismiss</code> permission
+            (<span class="path">RoleCheckbox.tsx:31–55</span>). There is no save
+            button: a 1 s debounce on <code>onChange</code> fires a server action
+            plus a toast. Roles are only fetched when the modal opens
+            (<code>enabled: isOpen</code>). Proper loading and error UI.
+          </dd>
+          <dt>Value</dt>
+          <dd>Checkbox names <code>role_&lt;id&gt;</code></dd>
+          <dt>Data</dt>
+          <dd><code>api.roles.getAssignableRoles</code> — the only site using the assignable set</dd>
+          <dt>Quirk</dt>
+          <dd>
+            The "Suche" label is invisible: <code>TextInput</code> forwards
+            <code>className</code> to the <code>&lt;label&gt;</code>, not the
+            input (<span class="path">TextInput.tsx:20</span>), and
+            <span class="path">AddRoles.tsx:123</span> passes
+            <code>className="hidden"</code>.
+          </dd>
+        </dl>
+      </div>
+
+      <div class="card family-b">
+        <h3>B2 · InheritanceForm <span class="tag">page</span></h3>
+        <dl>
+          <dt>File</dt>
+          <dd><span class="path">modules/roles/components/InheritanceForm.tsx</span></dd>
+          <dt>Purpose</dt>
+          <dd>Which roles a role inherits permissions from (<span class="path">/app/roles/[id]/inheritance</span>).</dd>
+          <dt>UX</dt>
+          <dd>
+            A flat checkbox list of <strong>all</strong> roles, using hand-rolled
+            square checkboxes (<code>peer-checked</code>) plus a badge, sorted by
+            name, with an explicit save button and a <code>Note</code> for
+            success/error. No search, no popover, no chips, no height cap.
+          </dd>
+          <dt>Value</dt>
+          <dd>Checkboxes named <code>roles</code></dd>
+          <dt>Data</dt>
+          <dd>Server-side <code>getRoles()</code> — all roles, unfiltered</dd>
+        </dl>
+      </div>
+
+      <div class="card family-b">
+        <h3>B3 · RoleFilter <span class="tag">filter popover</span></h3>
+        <dl>
+          <dt>File</dt>
+          <dd><span class="path">modules/citizen/components/RoleFilter.tsx</span></dd>
+          <dt>Purpose</dt>
+          <dd>Filter the citizen table by role.</dd>
+          <dt>UX</dt>
+          <dd>
+            A checkbox list inside the generic <code>Filter</code> popover
+            (<span class="path">CitizenTableFilters.tsx:31</span>). Renders the
+            role icon plus a plain-text name — <strong>not</strong>
+            <code>SingleRoleBadge</code>. Every toggle writes a comma-joined
+            query parameter <code>filters=role-&lt;id&gt;,…</code> and triggers a
+            full <code>router.push</code> navigation: no debounce, no loading
+            indicator, no "clear all". No search.
+          </dd>
+          <dt>Data</dt>
+          <dd>Server-side <code>getVisibleRoles()</code>, passed as a prop</dd>
+        </dl>
+      </div>
+
+      <h2 id="family-c">Family C — Native <code>&lt;select&gt;</code></h2>
+
+      <div class="card family-c">
+        <h3>C1 / C2 · Career flow nodes</h3>
+        <dl>
+          <dt>Files</dt>
+          <dd>
+            <span class="path">modules/career/nodes/Role/client/CreateOrUpdateForm.tsx:121</span><br />
+            <span class="path">modules/career/nodes/RoleCitizens/client/CreateOrUpdateForm.tsx:121</span>
+          </dd>
+          <dt>Purpose</dt>
+          <dd>The role a career-flow node represents.</dd>
+          <dt>UX</dt>
+          <dd>
+            A plain <code>&lt;Select&gt;</code> of role names. Single selection
+            only, <strong>can never be empty</strong> (defaults to
+            <code>roles[0]</code>), no icons, no search — but full native
+            keyboard support and native mobile pickers.
+          </dd>
+          <dt>Data</dt>
+          <dd>
+            <code>additionalData.roles</code>, i.e. <code>getRoles()</code> in
+            edit mode and <code>getVisibleRoles()</code> when merely viewing
+            (<span class="path">app/app/career/[flowId]/page.tsx:63</span>)
+          </dd>
+        </dl>
+      </div>
+
+      <div class="card family-c">
+        <h3>C3 · Permission rule builder ("this role can do X to these roles")</h3>
+        <dl>
+          <dt>File</dt>
+          <dd><span class="path">modules/roles/components/tabs/components/RoleSection.tsx:95–108</span></dd>
+          <dt>Purpose</dt>
+          <dd>Build rules of the form <code>otherRole;&lt;operation&gt;;roleId=&lt;id&gt;</code>.</dd>
+          <dt>UX</dt>
+          <dd>
+            Two native <code>&lt;select&gt;</code> elements per rule row. The
+            role select has a hidden empty placeholder option plus a
+            <strong>wildcard <code>*</code> = "Alle"</strong> — the only site
+            needing a pseudo-role. The chosen value is encoded into the
+            <em>name</em> of a hidden input. Rules are added and removed with
+            buttons.
+          </dd>
+          <dt>Data</dt>
+          <dd><code>getRoles()</code> (all roles), sorted inline</dd>
+        </dl>
+      </div>
+
+      <h2 id="family-d">Family D — Generic comboboxes (capable of almost everything, never used for roles)</h2>
+
+      <div class="card family-d">
+        <h3>MultiSelectComboboxFilter / SingleSelectComboboxFilter <span class="tag">Base UI combobox</span></h3>
+        <dl>
+          <dt>Files</dt>
+          <dd><span class="path">modules/common/components/layouts/SidebarLayout/Filters/{Multi,Single}SelectComboboxFilter.tsx</span></dd>
+          <dt>Capabilities</dt>
+          <dd>
+            Typing filters the list, chips have their own remove button,
+            <code>Combobox.Empty</code> ("Keine Treffer"), optional groups, a
+            check-mark indicator for selected items, full keyboard control, and
+            nuqs URL binding including cursor-pagination reset.
+          </dd>
+          <dt>Used by</dt>
+          <dd>
+            Fleet, audit log, users, wiki reports, wiki trash, and the filters of
+            the roles <em>table</em>
+            (<span class="path">RolesFilters.tsx</span>) —
+            <strong>never for selecting roles</strong>.
+          </dd>
+          <dt>Gaps for roles</dt>
+          <dd>
+            Items are plain <code>{value, label}</code> text (no icon, no badge —
+            see the rich-display section), and the components are hard-wired to
+            URL state rather than form values.
+          </dd>
+        </dl>
+      </div>
+
+      <h2 id="blocks">Shared building blocks</h2>
+      <ul>
+        <li>
+          <strong><span class="path">SingleRoleBadge.tsx</span></strong> — icon +
+          name + level progress bar, with its own detail popover. Inside a picker
+          it needs <code>withPopover={false}</code>, otherwise buttons get nested
+          (A1 does this, A2/A3/A4 do not).
+        </li>
+        <li>
+          <strong><span class="path">RolesContext.tsx</span></strong>, provided in
+          <span class="path">app/app/layout.tsx:52</span> — already holds
+          <strong>every visible role client-side</strong>, including icon,
+          thumbnail and <code>inherits</code>. <code>SingleRoleBadge</code>
+          resolves names from it and
+          <strong>renders <code>null</code> for any role not in it</strong>
+          (<span class="path">SingleRoleBadge.tsx:81</span>).
+        </li>
+        <li>
+          <strong><span class="path">PopoverBaseUI.tsx</span></strong> (Base UI)
+          and <strong>Radix Popover</strong> — both popover stacks are in use at
+          once, partly for the very same pattern.
+        </li>
+        <li>
+          <strong><span class="path">YesNoCheckbox.tsx</span></strong> — the
+          checkbox look in B1 and B3.
+        </li>
+      </ul>
+
+      <h2 id="data">Data sources &amp; permissions</h2>
+      <div class="scroller">
+        <table>
+          <thead>
+            <tr><th>Source</th><th>Set</th><th>Used by</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="site"><code>api.roles.getVisibleRoles</code></td>
+              <td>visible roles (<code>otherRole;read</code>)</td>
+              <td>A1, A2</td>
+            </tr>
+            <tr>
+              <td class="site"><code>api.roles.getAssignableRoles</code></td>
+              <td>visible + <code>assign</code>/<code>dismiss</code></td>
+              <td>B1</td>
+            </tr>
+            <tr>
+              <td class="site"><code>api.silc.getRolesForSalaries</code></td>
+              <td class="no">all roles + citizen counts</td>
+              <td>A3</td>
+            </tr>
+            <tr>
+              <td class="site"><code>api.citizens.getCitizensGroupedByVisibleRoles</code></td>
+              <td>visible roles incl. members</td>
+              <td>A4</td>
+            </tr>
+            <tr>
+              <td class="site">Server <code>getVisibleRoles()</code></td>
+              <td>visible roles</td>
+              <td>B3, C1/C2 (view mode), RolesContext</td>
+            </tr>
+            <tr>
+              <td class="site">Server <code>getRoles()</code></td>
+              <td class="no">all roles</td>
+              <td>B2, C3, C1/C2 (edit mode)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="problems">Problems found</h2>
+      <ol class="problems">
+        <li>
+          <strong>Blank rows in the SILC picker.</strong> A3 lists roles from
+          <code>getRolesForSalaries</code>, which is built on
+          <code>getRoles()</code> (all roles, no visibility filter,
+          <span class="path">server/api/routers/silc/getRolesForSalaries.ts:36</span>),
+          but renders them through <code>SingleRoleBadge</code>, which returns
+          <code>null</code> for roles outside the <code>RolesContext</code>.
+          Anyone with <code>silcSetting;manage</code> but limited role visibility
+          sees clickable, empty list entries.
+        </li>
+        <li>
+          <strong>Same issue in InheritanceForm (B2).</strong>
+          <code>getRoles()</code> + <code>SingleRoleBadge</code> ⇒ invisible
+          roles show up as a bare checkbox with no label.
+        </li>
+        <li>
+          <strong>Six data sources for "the roles I may see".</strong> Nothing
+          enforces which one is correct where.
+          <code>getAssignableRoles</code> is used at exactly one site.
+        </li>
+        <li>
+          <strong>Redundant fetching.</strong> A1 and A2 fetch
+          <code>roles.getVisibleRoles</code> over tRPC although
+          <code>RolesContext</code> already holds that exact list in memory.
+        </li>
+        <li>
+          <strong>Portal container ref read during render</strong> (A2 and A4):
+          <code>popoverPortalRef.current</code> is <code>null</code> on the first
+          render pass, so the assignment is timing-dependent.
+        </li>
+        <li>
+          <strong>No de-selecting from the list</strong> in A1/A2/A4: selected
+          roles are neither marked nor toggleable; removal only works through the
+          chip's trash button.
+        </li>
+        <li>
+          <strong>Inconsistent close-on-select.</strong> A3 closes on pick,
+          A1/A2/A4 do not — A1 not even in <code>single</code> mode.
+        </li>
+        <li>
+          <strong>Keyboard.</strong> A1–A4 are tab-through button lists: no arrow
+          keys, no typeahead, no focus restoration after Escape; A1 takes no
+          focus at all when opening. Only the native selects (C) and the unused
+          comboboxes (D) are properly keyboard-operable.
+        </li>
+        <li>
+          <strong>Loading and error states.</strong> Only B1 has both. A1–A4
+          silently render an empty list on error.
+        </li>
+        <li>
+          <strong>Hardcoded German strings everywhere</strong>;
+          <code>next-intl</code> is used only in <code>UpdateRolesForm</code>.
+        </li>
+        <li>
+          <strong>No test coverage</strong> for any role picker (the only e2e
+          file is <span class="path">apps/playwright/tests/smoke.spec.ts</span>).
+        </li>
+      </ol>
+
+      <h2 id="rich">Consequences of the rich display (icon + name)</h2>
+      <p>
+        This requirement is the decisive reason why the existing combobox filters
+        (family D) <em>cannot</em> simply be adopted as-is, and it forces several
+        follow-up decisions:
+      </p>
+      <ul>
+        <li>
+          <strong>The item model has to open up.</strong> D works with
+          <code>{value, label}</code> strings and renders
+          <code>title={item.label}</code> plus <code>truncate</code>. Badges need
+          either a render prop per option/chip or a role-specific item model. The
+          plain text value is still required — for search, for
+          <code>title</code> tooltips and for typeahead matching.
+        </li>
+        <li>
+          <strong><code>SingleRoleBadge</code> returns <code>null</code></strong>
+          when the role is not in <code>RolesContext</code>. Once the unified
+          selector renders badges everywhere, the data-source question becomes
+          <em>mandatory</em>: either every picker uses the visible set, or the
+          badge needs a fallback for unknown roles (see problems 1 and 2).
+        </li>
+        <li>
+          <strong>Nested buttons.</strong> The badge ships its own popover with a
+          <code>&lt;button&gt;</code>. Inside options and chips
+          <code>withPopover={false}</code> is required — currently forgotten in
+          A2, A3 and A4.
+        </li>
+        <li>
+          <strong>Level progress and assignment actions</strong> in the badge
+          (level +/−, delete assignment) make no sense inside a picker and should
+          be suppressed there. Open question: does the selector need a reduced
+          badge variant?
+        </li>
+        <li>
+          <strong>Layout.</strong> A badge is <code>h-8</code> tall and carries a
+          24 px icon — noticeably taller than a line of text. That affects tight
+          contexts (the SILC salary grid row, chip rows in the wiki modal, the
+          filter sidebar) and how many options fit into the
+          <code>max-h-96</code> popover.
+        </li>
+        <li>
+          <strong>Image loading.</strong> Icons come from S3 via
+          <code>next/image</code>, partly <code>unoptimized</code> for SVG/GIF,
+          with <code>loading="lazy"</code>. In a scrollable, filtered list that
+          means visible pop-in; a placeholder is needed so the list does not jump
+          while typing (<code>showPlaceholder</code> already exists).
+        </li>
+        <li>
+          <strong>Search highlighting vs. badge.</strong> B1 currently underlines
+          the matched characters in the role name
+          (<code>underlineCharacters</code>). If the name lives inside the badge
+          from now on, the badge must accept an already-rendered name node —
+          otherwise the highlighting is lost.
+        </li>
+        <li>
+          <strong>Consistency win.</strong> B1 and B3 rebuild icon + name by hand
+          today, including their own S3 URL construction and
+          <code>unoptimized</code> logic. Unifying on the badge removes those
+          duplicates.
+        </li>
+        <li>
+          <strong>Regression risk for family C.</strong> C1–C3 are plain text
+          selects today; switching them to badges is a genuine visual
+          improvement, but costs the native keyboard and mobile behaviour.
+        </li>
+      </ul>
+
+      <h2 id="gaps">Open decisions (what the requirements do not cover yet)</h2>
+
+      <h3>Data scope</h3>
+      <ul>
+        <li>
+          <strong>Which set of roles?</strong> "All visible ones" fits wiki and
+          tasks, but citizen assignment needs the <em>assignable</em> roles,
+          while the rule builder and inheritance need <em>all</em> roles. This
+          has to be an explicit prop or data-source contract, not a default.
+        </li>
+        <li>
+          <strong>Disabled entries with a reason.</strong> B1 locks individual
+          roles based on permission — the new selector needs
+          <code>disabled</code> per option plus an explanation.
+        </li>
+        <li>
+          <strong>Pseudo options.</strong> C3 needs a <code>*</code> "Alle"
+          entry; C1/C2 must never be empty.
+        </li>
+        <li>
+          <strong>Fetch itself, or take roles as a prop?</strong> Since
+          <code>RolesContext</code> already holds the visible set, a
+          context-first component with an optional override would save three
+          network round-trips.
+        </li>
+      </ul>
+
+      <h3>Value &amp; form integration</h3>
+      <ul>
+        <li>
+          <strong>Output contract.</strong> In use today, in parallel: a hidden
+          input with a configurable name (A1), with a fixed name (A2/A3),
+          <code>onChange</code> (A3/A4), checkbox names
+          <code>role_&lt;id&gt;</code> (B1) and <code>roles</code> (B2), URL query
+          parameters (B3), values encoded into input <em>names</em> (C3), and
+          React state → node attributes (C1/C2). The new selector should support
+          at least three modes: uncontrolled with hidden inputs, controlled via
+          <code>value</code>/<code>onChange</code>, and nuqs/URL-bound.
+        </li>
+        <li>
+          <strong>Save semantics.</strong> B1 auto-saves with a debounce, B2/A2
+          have a save button, B3 navigates immediately. Does the selector own any
+          of this, or stay purely presentational?
+        </li>
+        <li>
+          <strong>Required vs. optional, and what "empty" means.</strong> Empty
+          means "private page" in the wiki, "no restriction" for tasks, and
+          "invalid" for career nodes.
+        </li>
+        <li><strong>Minimum/maximum number of selections.</strong></li>
+      </ul>
+
+      <h3>UX details</h3>
+      <ul>
+        <li>
+          <strong>Is the single/multi switch a prop or a user-facing toggle?</strong>
+          Today the mode is fixed by the call site everywhere; a runtime toggle
+          really only makes sense in filters.
+        </li>
+        <li><strong>Close after selection</strong> — for single vs. multiple selection.</li>
+        <li>
+          <strong>Mark already-selected roles in the list</strong> and allow
+          de-selecting them there too (in addition to the chips).
+        </li>
+        <li>
+          <strong>Ordering &amp; grouping.</strong> Alphabetical everywhere
+          today. Should selected roles float to the top? Group by anything (e.g.
+          inheritance)?
+        </li>
+        <li>
+          <strong>Search behaviour.</strong> Fuzzy (B1, fuse.js, with match
+          highlighting) vs. substring (D). The highlighting is worth keeping.
+        </li>
+        <li>
+          <strong>Long lists.</strong> Everything caps at <code>max-h-96</code>
+          and scrolls; no virtualization. How many roles realistically exist?
+        </li>
+        <li><strong>Empty-state copy</strong> ("Keine Treffer", "no visible roles").</li>
+        <li>
+          <strong>Loading and error presentation</strong> — define it once, in
+          line with the existing wiki rule of "no silent failures".
+        </li>
+        <li>
+          <strong>Placement inside modals, React Flow and the wiki editor</strong>
+          — the portal/z-index problem A2 and A4 work around by hand today. In
+          the wiki editor the selection also has to survive collaborative
+          re-renders.
+        </li>
+        <li>
+          <strong>Mobile/touch.</strong> Hover-to-open (A1) does not work on
+          touch; the native selects (C) currently offer the best mobile
+          experience of the lot.
+        </li>
+        <li>
+          <strong>Keyboard specifics:</strong> roving arrow keys, Home/End,
+          typeahead, Enter/Space to toggle, Backspace removing the last chip,
+          Escape closing and returning focus, and focus restoration after
+          removing a chip (removing the last chip currently destroys the focused
+          element).
+        </li>
+        <li>
+          <strong>Accessibility:</strong> an accessible name for the whole
+          widget, <code>aria-multiselectable</code>, announcing selection
+          changes, and an actually visible label (B1's label is
+          <code>display:none</code> today).
+        </li>
+        <li>
+          <strong>i18n:</strong> decide whether the new component moves to
+          <code>next-intl</code> or stays with German literals.
+        </li>
+      </ul>
+
+      <h3>Migration</h3>
+      <ul>
+        <li>
+          C1/C2/C3 get keyboard and mobile behaviour for free from the native
+          <code>&lt;select&gt;</code>. Replacing them with a custom combobox is a
+          regression as long as keyboard support is incomplete — worth deciding
+          whether those three migrate at all, or only families A and B.
+        </li>
+        <li>
+          A4 (CitizenInput) selects roles but produces citizens. Whether it
+          becomes the same component with a different <code>onChange</code> or
+          stays out of scope needs to be settled.
+        </li>
+        <li>
+          B1 depends on filtered-out options <em>staying mounted</em>, because
+          the form submits all checkboxes. A selector that unmounts while
+          searching breaks that model — so the selection has to live in state,
+          not in the DOM.
+        </li>
+      </ul>
+
+      <footer class="page">
+        Audit created 2026-08-02 · Basis:
+        <span class="path">pnpm-monorepo/apps/app/src</span> on
+        <span class="path">main</span> (65379fee) · Nothing was implemented.
+      </footer>
+    </div>
+  </body>
+</html>
