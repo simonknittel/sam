@@ -56,6 +56,7 @@ export const ReportWikiPageModal = ({ className, pageId, title }: Props) => {
             required
             maxLength={2048}
             className="mt-4"
+            autoFocus
           />
 
           <Note
