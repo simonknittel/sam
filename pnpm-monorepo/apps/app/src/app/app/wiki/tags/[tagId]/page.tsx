@@ -69,7 +69,7 @@ const TagPageList = async ({ params }: TagPageListProps) => {
     .toSorted((a, b) => a.title.localeCompare(b.title));
 
   return (
-    <section className="bg-secondary rounded-primary p-4 lg:p-8">
+    <section className="bg-secondary rounded-primary p-4">
       <h1 className="flex items-center gap-3 font-bold text-2xl">
         <FaTag className="flex-none text-neutral-500" />
         {tag.name}
