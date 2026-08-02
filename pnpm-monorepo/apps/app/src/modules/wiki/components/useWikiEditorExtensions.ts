@@ -17,6 +17,7 @@ import { createWikiFileHandler } from "./wikiEditorFiles";
 import { WikiNodeClickSelection } from "./WikiNodeClickSelection";
 import { withWikiPageIndexNodeView } from "./WikiPageIndexNodeView";
 import { WikiPageLinkSuggestion } from "./WikiPageLinkSuggestion";
+import { withWikiRoleCitizensNodeView } from "./WikiRoleCitizensNodeView";
 import { WikiSlashCommand } from "./WikiSlashCommand";
 
 interface Options {
@@ -51,14 +52,16 @@ export const useWikiEditorExtensions = ({
   const trpcUtils = api.useUtils();
 
   const baseExtensions = withWikiPageIndexNodeView(
-    withWikiCitizenMentionPopover(
-      getWikiEditorExtensions({
-        collaboration,
-        twitchParentHost: getWikiTwitchParentHost(),
-        iframeAllowlist,
-        pages: linkablePages,
-        citizens: mentionedCitizens,
-      }),
+    withWikiRoleCitizensNodeView(
+      withWikiCitizenMentionPopover(
+        getWikiEditorExtensions({
+          collaboration,
+          twitchParentHost: getWikiTwitchParentHost(),
+          iframeAllowlist,
+          pages: linkablePages,
+          citizens: mentionedCitizens,
+        }),
+      ),
     ),
     pageId,
   );

@@ -29,6 +29,7 @@ import { WikiTextSelectionMenuActions } from "./editMenu/WikiTextSelectionMenuAc
 import { ToolbarDivider } from "./toolbar/ToolbarDivider";
 import { setWikiActiveNodeHighlight } from "./WikiActiveNodeHighlight";
 import { WikiPageIndexConfigModal } from "./WikiPageIndexConfigModal";
+import { WikiRoleCitizensConfigModal } from "./WikiRoleCitizensConfigModal";
 
 /**
  * Viewport space reserved for the sticky editor toolbar — menus that would
@@ -87,7 +88,8 @@ export const WikiEditMenu = ({
    * moves onto the (portaled) dialog, so the dialog must not live inside
    * it.
    */
-  const [pageIndexConfig, setPageIndexConfig] = useState<{
+  const [nodeConfig, setNodeConfig] = useState<{
+    readonly typeName: string;
     readonly position: number;
     readonly attrs: Readonly<Record<string, unknown>>;
   } | null>(null);
@@ -192,16 +194,25 @@ export const WikiEditMenu = ({
 
   if (!editor) return null;
 
-  const configModal = pageIndexConfig && (
+  const closeNodeConfig = () => setNodeConfig(null);
+  const configModal = !nodeConfig ? null : nodeConfig.typeName ===
+    "wikiRoleCitizens" ? (
+    <WikiRoleCitizensConfigModal
+      editor={editor}
+      position={nodeConfig.position}
+      attrs={nodeConfig.attrs}
+      onRequestClose={closeNodeConfig}
+    />
+  ) : (
     <WikiPageIndexConfigModal
       editor={editor}
-      position={pageIndexConfig.position}
-      attrs={pageIndexConfig.attrs}
-      onRequestClose={() => setPageIndexConfig(null)}
+      position={nodeConfig.position}
+      attrs={nodeConfig.attrs}
+      onRequestClose={closeNodeConfig}
     />
   );
 
-  if (!menu) return configModal || null;
+  if (!menu) return configModal;
 
   /**
    * Starts a native drag of the menu's node, mirroring what the gutter's
@@ -300,7 +311,7 @@ export const WikiEditMenu = ({
               <WikiNodeMenuActions
                 editor={editor}
                 menu={menu}
-                onOpenPageIndexConfig={setPageIndexConfig}
+                onOpenNodeConfig={setNodeConfig}
               />
             )}
             {menu.kind === "textSelection" && (

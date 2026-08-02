@@ -29,6 +29,7 @@ import { WikiHighlight } from "./wikiHighlightMark.js";
 import { WikiPageIndex } from "./wikiPageIndexNode.js";
 import { WikiPageLink, type WikiPageLinkedPage } from "./wikiPageLinkNode.js";
 import { WikiImage } from "./wikiResizableNodes.js";
+import { WikiRoleCitizens } from "./wikiRoleCitizensNode.js";
 import { WikiTextColorMark } from "./wikiTextColorMark.js";
 import {
   WikiBlockquote,
@@ -153,6 +154,7 @@ export const getWikiEditorExtensions = (
       pages: options?.pages ?? {},
     }),
     WikiPageIndex,
+    WikiRoleCitizens,
     WikiCitizenMention.configure({
       citizens: options?.citizens ?? {},
     }),

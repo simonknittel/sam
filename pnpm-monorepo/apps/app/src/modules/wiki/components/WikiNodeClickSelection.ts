@@ -9,6 +9,8 @@ const ANCHOR_NODE_TYPES = [
   "wikiCitizenMention",
   // Renders a list of page links via its node view
   "wikiPageIndex",
+  // Renders a list of citizen links via its node view
+  "wikiRoleCitizens",
 ];
 
 /**
