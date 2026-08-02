@@ -2,6 +2,7 @@ import {
   WikiPageAccessType,
   WikiPageAdminability,
   WikiPageEditability,
+  WikiPageUploadability,
   WikiPageVisibility,
 } from "@sam-monorepo/database/browser";
 
@@ -16,6 +17,8 @@ export interface WikiPagePermissionSource {
   readonly visibility: WikiPageVisibility;
   readonly editability: WikiPageEditability;
   readonly adminability: WikiPageAdminability;
+  readonly imageUploadability: WikiPageUploadability;
+  readonly attachmentUploadability: WikiPageUploadability;
   readonly roleAccess: readonly {
     readonly roleId: string;
     readonly type: WikiPageAccessType;
@@ -32,6 +35,8 @@ export interface ResolvedWikiPagePermissions {
   readonly canRead: boolean;
   readonly canEdit: boolean;
   readonly canAdmin: boolean;
+  readonly canUploadImages: boolean;
+  readonly canUploadAttachments: boolean;
   /**
    * Page whose explicit (non-INHERIT/non-null) setting supplied the
    * effective value. Equals the page's own id if it doesn't inherit. Used by
@@ -40,12 +45,20 @@ export interface ResolvedWikiPagePermissions {
   readonly visibilitySourceId: string;
   readonly editabilitySourceId: string;
   readonly adminabilitySourceId: string;
+  readonly imageUploadabilitySourceId: string;
+  readonly attachmentUploadabilitySourceId: string;
   readonly ownerSourceId: string;
   /** Owner after inheritance. NULL if the whole chain has no explicit owner. */
   readonly effectiveOwnerId: string | null;
 }
 
-type PermissionTier = "visibility" | "editability" | "adminability" | "owner";
+type PermissionTier =
+  | "visibility"
+  | "editability"
+  | "adminability"
+  | "imageUploadability"
+  | "attachmentUploadability"
+  | "owner";
 
 const hasExplicitSetting = (
   page: WikiPagePermissionSource,
@@ -58,6 +71,10 @@ const hasExplicitSetting = (
       return page.editability !== WikiPageEditability.INHERIT;
     case "adminability":
       return page.adminability !== WikiPageAdminability.INHERIT;
+    case "imageUploadability":
+      return page.imageUploadability !== WikiPageUploadability.INHERIT;
+    case "attachmentUploadability":
+      return page.attachmentUploadability !== WikiPageUploadability.INHERIT;
     case "owner":
       return page.ownerId !== null;
     default:
@@ -167,6 +184,31 @@ const isGrantedEdit = (
   }
 };
 
+/**
+ * Upload tiers have no role lists: RESTRICTED means effective admins only
+ * (which already covers the effective owner, admin roles and `wiki;manage`),
+ * EDITORS extends that to everyone with effective edit permission.
+ */
+const isGrantedUpload = (
+  uploadability: WikiPageUploadability,
+  canEdit: boolean,
+  canAdmin: boolean,
+) => {
+  switch (uploadability) {
+    case WikiPageUploadability.EDITORS:
+      return canEdit;
+    case WikiPageUploadability.RESTRICTED:
+      return canAdmin;
+    // Fallback source of a fully-INHERIT chain: like RESTRICTED
+    case WikiPageUploadability.INHERIT:
+      return canAdmin;
+    default:
+      throw new Error(
+        `Unexpected uploadability: ${uploadability satisfies never}`,
+      );
+  }
+};
+
 const isGrantedRead = (
   source: WikiPagePermissionSource,
   sourceIsOwned: boolean,
@@ -208,6 +250,10 @@ const isGrantedRead = (
  *   and subtree owners keep access to descendants even if those have a
  *   different explicit owner.
  * - Tiers imply the lower ones: admin ⇒ edit ⇒ read.
+ * - The upload tiers (image/attachment uploadability) are independent of
+ *   each other and gate who may upload while editing: RESTRICTED = admins
+ *   only, EDITORS = everyone with edit permission. Uploading implies
+ *   editing — without `canEdit` there is never upload permission.
  */
 export const resolveWikiPagePermissions = (
   pages: readonly WikiPagePermissionSource[],
@@ -217,6 +263,11 @@ export const resolveWikiPagePermissions = (
   const visibilityCache = new Map<string, WikiPagePermissionSource>();
   const editabilityCache = new Map<string, WikiPagePermissionSource>();
   const adminabilityCache = new Map<string, WikiPagePermissionSource>();
+  const imageUploadabilityCache = new Map<string, WikiPagePermissionSource>();
+  const attachmentUploadabilityCache = new Map<
+    string,
+    WikiPagePermissionSource
+  >();
   const ownerCache = new Map<string, WikiPagePermissionSource>();
 
   const effectiveOwnerIdOf = (page: WikiPagePermissionSource) =>
@@ -247,6 +298,18 @@ export const resolveWikiPagePermissions = (
       "adminability",
       pagesById,
       adminabilityCache,
+    );
+    const imageUploadabilitySource = findSource(
+      page,
+      "imageUploadability",
+      pagesById,
+      imageUploadabilityCache,
+    );
+    const attachmentUploadabilitySource = findSource(
+      page,
+      "attachmentUploadability",
+      pagesById,
+      attachmentUploadabilityCache,
     );
     const ownerSource = findSource(page, "owner", pagesById, ownerCache);
 
@@ -284,9 +347,21 @@ export const resolveWikiPagePermissions = (
       canRead,
       canEdit,
       canAdmin,
+      canUploadImages: isGrantedUpload(
+        imageUploadabilitySource.imageUploadability,
+        canEdit,
+        canAdmin,
+      ),
+      canUploadAttachments: isGrantedUpload(
+        attachmentUploadabilitySource.attachmentUploadability,
+        canEdit,
+        canAdmin,
+      ),
       visibilitySourceId: visibilitySource.id,
       editabilitySourceId: editabilitySource.id,
       adminabilitySourceId: adminabilitySource.id,
+      imageUploadabilitySourceId: imageUploadabilitySource.id,
+      attachmentUploadabilitySourceId: attachmentUploadabilitySource.id,
       ownerSourceId: ownerSource.id,
       effectiveOwnerId: ownerSource.ownerId,
     });

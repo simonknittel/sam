@@ -175,6 +175,11 @@ const maybeCreateAutoSnapshot = async (pageId: string) => {
  * page. Connect-only: stale links are dropped by the nightly upload
  * cleanup against the persisted content, so an unsaved editing session
  * can't cost an upload its links.
+ *
+ * Deliberately not gated by the per-page uploadability settings: those
+ * gate NEW uploads (enforced by the app's assign route), while this
+ * reconciles references to already-uploaded files, which any editor may
+ * move or copy between pages.
  */
 const syncUploadLinks = async (pageId: string, content: unknown) => {
   const uploadIds = collectWikiAttachmentUploadIds(content);

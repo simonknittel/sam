@@ -60,10 +60,11 @@ export async function PATCH(request: Request) {
       data.resourceAttribute === "iconId"
     ) {
       /**
-       * Authorize: edit permission on the page — icons follow the content,
-       * not the admin-gated title. When assigning, the
-       * upload must be the current user's own image. A replaced or removed
-       * icon's upload is left behind for the nightly cleanup.
+       * Authorize: admin permission on the page — icon changes are
+       * manage-gated like the title, independent of the per-page upload
+       * settings. When assigning, the upload must be the current user's own
+       * image. A replaced or removed icon's upload is left behind for the
+       * nightly cleanup.
        */
       const [context, upload] = await Promise.all([
         getWikiContext(),
@@ -80,7 +81,7 @@ export async function PATCH(request: Request) {
       const page = context.pagesById.get(data.resourceId);
       if (!page || page.deletedAt || (data.imageId !== null && !upload))
         return NextResponse.json({ error: "Bad Request" }, { status: 400 });
-      if (!context.permissions.get(page.id)?.canEdit)
+      if (!context.permissions.get(page.id)?.canAdmin)
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       if (upload) {
         if (upload.createdById !== authentication.session.user.id)
@@ -110,11 +111,13 @@ export async function PATCH(request: Request) {
 
     if (data.resourceType === "wikiPage") {
       /**
-       * Authorize: edit permission on the target page. The upload must be
-       * the current user's own and not linked to another page yet — this
-       * route only covers the initial link right after the upload; further
-       * pages get linked when their persisted content references the upload
-       * (see syncUploadLinks in the collab server).
+       * Authorize: upload permission for the upload's kind on the target
+       * page (image vs. attachment, derived from the stored mime type like
+       * getWikiUploadKind does client-side). The upload must be the current
+       * user's own and not linked to another page yet — this route only
+       * covers the initial link right after the upload; further pages get
+       * linked when their persisted content references the upload (see
+       * syncUploadLinks in the collab server).
        */
       const [context, upload] = await Promise.all([
         getWikiContext(),
@@ -123,6 +126,7 @@ export async function PATCH(request: Request) {
           select: {
             id: true,
             createdById: true,
+            mimeType: true,
             wikiPages: { select: { id: true } },
           },
         }),
@@ -133,8 +137,12 @@ export async function PATCH(request: Request) {
       const page = context.pagesById.get(data.resourceId);
       if (!page || page.deletedAt || !upload)
         return NextResponse.json({ error: "Bad Request" }, { status: 400 });
+      const permissions = context.permissions.get(page.id);
+      const canUpload = upload.mimeType.startsWith("image/")
+        ? permissions?.canUploadImages
+        : permissions?.canUploadAttachments;
       if (
-        !context.permissions.get(page.id)?.canEdit ||
+        !canUpload ||
         upload.createdById !== authentication.session.user.id ||
         upload.wikiPages.some((linked) => linked.id !== page.id)
       )

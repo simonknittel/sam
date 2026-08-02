@@ -12,6 +12,7 @@ import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
 import {
   WikiPageAdminability,
   WikiPageEditability,
+  WikiPageUploadability,
   WikiPageVisibility,
 } from "@sam-monorepo/database/browser";
 import { useState } from "react";
@@ -28,6 +29,8 @@ interface Props {
     readonly visibility: WikiPageVisibility;
     readonly editability: WikiPageEditability;
     readonly adminability: WikiPageAdminability;
+    readonly imageUploadability: WikiPageUploadability;
+    readonly attachmentUploadability: WikiPageUploadability;
   };
   /** Handle of the effective owner (after inheritance), for display */
   readonly effectiveOwnerHandle: string | null;
@@ -39,6 +42,8 @@ interface Props {
     readonly visibility?: string;
     readonly editability?: string;
     readonly adminability?: string;
+    readonly imageUploadability?: string;
+    readonly attachmentUploadability?: string;
   };
   readonly hasDescendants: boolean;
 }
@@ -59,6 +64,11 @@ export const WikiPagePermissionsModal = ({
   const [visibility, setVisibility] = useState<string>(page.visibility);
   const [editability, setEditability] = useState<string>(page.editability);
   const [adminability, setAdminability] = useState<string>(page.adminability);
+  const [imageUploadability, setImageUploadability] = useState<string>(
+    page.imageUploadability,
+  );
+  const [attachmentUploadability, setAttachmentUploadability] =
+    useState<string>(page.attachmentUploadability);
   const [ownerMode, setOwnerMode] = useState<string>(
     page.ownerId ? "explicit" : "inherit",
   );
@@ -188,6 +198,93 @@ export const WikiPagePermissionsModal = ({
                   Auch auf alle Unterseiten anwenden
                 </span>
                 <YesNoCheckbox name="cascadeEditability" value="1" />
+              </div>
+            )}
+          </section>
+
+          <section className="border rounded-secondary border-neutral-700 p-4 mt-4">
+            <h3 className="font-bold text-lg">Hochladen</h3>
+            <p className="text-sm text-neutral-400">
+              Wer darf beim Bearbeiten Bilder bzw. Dateianhänge hochladen?
+              Verwalter dürfen immer hochladen.
+            </p>
+
+            <h4 className="font-bold mt-4">Bilder</h4>
+
+            <RadioGroup
+              name="imageUploadability"
+              className="mt-2"
+              value={imageUploadability}
+              onChange={setImageUploadability}
+              items={[
+                ...(isRoot
+                  ? []
+                  : [
+                      {
+                        value: WikiPageUploadability.INHERIT,
+                        label: inheritedFrom.imageUploadability
+                          ? `Geerbt (von "${inheritedFrom.imageUploadability}")`
+                          : "Geerbt",
+                      },
+                    ]),
+                {
+                  value: WikiPageUploadability.EDITORS,
+                  label: "Alle, die die Seite bearbeiten dürfen",
+                },
+                {
+                  value: WikiPageUploadability.RESTRICTED,
+                  label: "Nur Verwalter",
+                },
+              ]}
+            />
+
+            {hasDescendants && (
+              <div className="mt-2 flex items-center justify-between gap-2">
+                <span className="text-sm text-neutral-400">
+                  Auch auf alle Unterseiten anwenden
+                </span>
+                <YesNoCheckbox name="cascadeImageUploadability" value="1" />
+              </div>
+            )}
+
+            <h4 className="font-bold mt-4">Dateianhänge</h4>
+
+            <RadioGroup
+              name="attachmentUploadability"
+              className="mt-2"
+              value={attachmentUploadability}
+              onChange={setAttachmentUploadability}
+              items={[
+                ...(isRoot
+                  ? []
+                  : [
+                      {
+                        value: WikiPageUploadability.INHERIT,
+                        label: inheritedFrom.attachmentUploadability
+                          ? `Geerbt (von "${inheritedFrom.attachmentUploadability}")`
+                          : "Geerbt",
+                      },
+                    ]),
+                {
+                  value: WikiPageUploadability.EDITORS,
+                  label: "Alle, die die Seite bearbeiten dürfen",
+                },
+                {
+                  value: WikiPageUploadability.RESTRICTED,
+                  label: "Nur Verwalter",
+                },
+              ]}
+            />
+
+            {hasDescendants && (
+              <div className="mt-2 flex items-center justify-between gap-2">
+                <span className="text-sm text-neutral-400">
+                  Auch auf alle Unterseiten anwenden
+                </span>
+                <YesNoCheckbox
+                  name="cascadeAttachmentUploadability"
+                  value="1"
+                />
               </div>
             )}
           </section>

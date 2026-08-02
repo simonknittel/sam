@@ -12,6 +12,10 @@ interface Props {
   readonly pageId: string;
   /** Whether the editing chrome (toolbar, overlays, gutter) is shown */
   readonly isEditing: boolean;
+  /** Whether the viewer may upload images to the page */
+  readonly canUploadImages: boolean;
+  /** Whether the viewer may upload file attachments to the page */
+  readonly canUploadAttachments: boolean;
   /** NULL until the editor is ready — the static fallback renders instead */
   readonly editor: Editor | null;
   /** Right end of the toolbar row: save state or collab status dot */
@@ -34,6 +38,8 @@ export const WikiEditorLayout = ({
   className,
   pageId,
   isEditing,
+  canUploadImages,
+  canUploadAttachments,
   editor,
   statusSlot,
   staticFallback,
@@ -45,7 +51,12 @@ export const WikiEditorLayout = ({
     <div className={clsx(className)}>
       {isEditing && (
         <div className="flex flex-wrap items-center gap-1 border border-neutral-800 rounded-secondary p-1 sticky top-0 z-10 bg-neutral-900">
-          <WikiEditorToolbar editor={editor} pageId={pageId} />
+          <WikiEditorToolbar
+            editor={editor}
+            pageId={pageId}
+            canUploadImages={canUploadImages}
+            canUploadAttachments={canUploadAttachments}
+          />
 
           {statusSlot}
         </div>
@@ -61,6 +72,8 @@ export const WikiEditorLayout = ({
             <WikiGutter
               editor={editor}
               pageId={pageId}
+              canUploadImages={canUploadImages}
+              canUploadAttachments={canUploadAttachments}
               onRequestEmbed={onRequestEmbed}
               onRequestLink={onRequestLink}
               onRequestVariantLink={onRequestVariantLink}

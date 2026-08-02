@@ -8,6 +8,7 @@ import {
   WikiPageAccessType,
   WikiPageAdminability,
   WikiPageEditability,
+  WikiPageUploadability,
   WikiPageVisibility,
 } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
@@ -20,12 +21,16 @@ const schema = z.object({
   visibility: z.enum(WikiPageVisibility),
   editability: z.enum(WikiPageEditability),
   adminability: z.enum(WikiPageAdminability),
+  imageUploadability: z.enum(WikiPageUploadability),
+  attachmentUploadability: z.enum(WikiPageUploadability),
   readRoles: z.array(z.cuid()).max(50),
   editRoles: z.array(z.cuid()).max(50),
   adminRoles: z.array(z.cuid()).max(50),
   cascadeVisibility: z.coerce.boolean(),
   cascadeEditability: z.coerce.boolean(),
   cascadeAdminability: z.coerce.boolean(),
+  cascadeImageUploadability: z.coerce.boolean(),
+  cascadeAttachmentUploadability: z.coerce.boolean(),
   ownerMode: z.enum(["inherit", "explicit"]),
   newOwnerId: z.cuid().optional(),
   cascadeOwner: z.coerce.boolean(),
@@ -52,7 +57,9 @@ export const updateWikiPagePermissions = createAuthenticatedAction(
       !page.parentId &&
       (data.visibility === WikiPageVisibility.INHERIT ||
         data.editability === WikiPageEditability.INHERIT ||
-        data.adminability === WikiPageAdminability.INHERIT)
+        data.adminability === WikiPageAdminability.INHERIT ||
+        data.imageUploadability === WikiPageUploadability.INHERIT ||
+        data.attachmentUploadability === WikiPageUploadability.INHERIT)
     )
       return { error: t("Common.badRequest"), requestPayload: formData };
 
@@ -108,7 +115,9 @@ export const updateWikiPagePermissions = createAuthenticatedAction(
     const anyCascade =
       data.cascadeVisibility ||
       data.cascadeEditability ||
-      data.cascadeAdminability;
+      data.cascadeAdminability ||
+      data.cascadeImageUploadability ||
+      data.cascadeAttachmentUploadability;
 
     /**
      * The owner cascade resets descendants to inherited ownership so they
@@ -127,6 +136,8 @@ export const updateWikiPagePermissions = createAuthenticatedAction(
           visibility: data.visibility,
           editability: data.editability,
           adminability: data.adminability,
+          imageUploadability: data.imageUploadability,
+          attachmentUploadability: data.attachmentUploadability,
           ownerId: newOwnerId,
           updatedById: authentication.session.entity?.id ?? null,
         },
@@ -183,6 +194,23 @@ export const updateWikiPagePermissions = createAuthenticatedAction(
             }),
           ]
         : []),
+      /** The upload tiers have no role lists to drop */
+      ...(cascadableIds.length > 0 && data.cascadeImageUploadability
+        ? [
+            prisma.wikiPage.updateMany({
+              where: { id: { in: cascadableIds } },
+              data: { imageUploadability: WikiPageUploadability.INHERIT },
+            }),
+          ]
+        : []),
+      ...(cascadableIds.length > 0 && data.cascadeAttachmentUploadability
+        ? [
+            prisma.wikiPage.updateMany({
+              where: { id: { in: cascadableIds } },
+              data: { attachmentUploadability: WikiPageUploadability.INHERIT },
+            }),
+          ]
+        : []),
     ]);
 
     await createAuditEvents([
@@ -193,6 +221,8 @@ export const updateWikiPagePermissions = createAuthenticatedAction(
           visibility: data.visibility,
           editability: data.editability,
           adminability: data.adminability,
+          imageUploadability: data.imageUploadability,
+          attachmentUploadability: data.attachmentUploadability,
           readRoleIds: data.readRoles,
           editRoleIds: data.editRoles,
           adminRoleIds: data.adminRoles,
@@ -213,6 +243,12 @@ export const updateWikiPagePermissions = createAuthenticatedAction(
                 : "unchanged",
               adminability: data.cascadeAdminability
                 ? WikiPageAdminability.INHERIT
+                : "unchanged",
+              imageUploadability: data.cascadeImageUploadability
+                ? WikiPageUploadability.INHERIT
+                : "unchanged",
+              attachmentUploadability: data.cascadeAttachmentUploadability
+                ? WikiPageUploadability.INHERIT
                 : "unchanged",
               readRoleIds: [],
               editRoleIds: [],
@@ -263,12 +299,18 @@ export const updateWikiPagePermissions = createAuthenticatedAction(
       visibility: formData.get("visibility"),
       editability: formData.get("editability"),
       adminability: formData.get("adminability"),
+      imageUploadability: formData.get("imageUploadability"),
+      attachmentUploadability: formData.get("attachmentUploadability"),
       readRoles: formData.getAll("readRole[]"),
       editRoles: formData.getAll("editRole[]"),
       adminRoles: formData.getAll("adminRole[]"),
       cascadeVisibility: formData.get("cascadeVisibility") ?? undefined,
       cascadeEditability: formData.get("cascadeEditability") ?? undefined,
       cascadeAdminability: formData.get("cascadeAdminability") ?? undefined,
+      cascadeImageUploadability:
+        formData.get("cascadeImageUploadability") ?? undefined,
+      cascadeAttachmentUploadability:
+        formData.get("cascadeAttachmentUploadability") ?? undefined,
       ownerMode: formData.get("ownerMode"),
       newOwnerId: formData.get("newOwnerId") || undefined,
       cascadeOwner: formData.get("cascadeOwner") ?? undefined,

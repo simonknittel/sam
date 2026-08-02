@@ -312,7 +312,7 @@ const PageContent = async ({
               <WikiPageIconButton
                 pageId={page.id}
                 iconId={page.iconId}
-                canEdit={permissions.canEdit}
+                canAdmin={permissions.canAdmin}
               />
 
               {permissions.canAdmin ? (
@@ -389,6 +389,8 @@ const PageContent = async ({
                     visibility: page.visibility,
                     editability: page.editability,
                     adminability: page.adminability,
+                    imageUploadability: page.imageUploadability,
+                    attachmentUploadability: page.attachmentUploadability,
                   }}
                   effectiveOwnerHandle={effectiveOwner?.handle ?? null}
                   readRoleIds={roleIdsOf(WikiPageAccessType.READ)}
@@ -398,6 +400,12 @@ const PageContent = async ({
                     visibility: sourceTitle(permissions.visibilitySourceId),
                     editability: sourceTitle(permissions.editabilitySourceId),
                     adminability: sourceTitle(permissions.adminabilitySourceId),
+                    imageUploadability: sourceTitle(
+                      permissions.imageUploadabilitySourceId,
+                    ),
+                    attachmentUploadability: sourceTitle(
+                      permissions.attachmentUploadabilitySourceId,
+                    ),
                   }}
                   hasDescendants={descendantIds.length > 0}
                 />
@@ -430,6 +438,8 @@ const PageContent = async ({
               pageId={page.id}
               collabUrl={collabUrl}
               canEdit={permissions.canEdit}
+              canUploadImages={permissions.canUploadImages}
+              canUploadAttachments={permissions.canUploadAttachments}
               userName={session?.entity?.handle ?? "Unbekannt"}
               userColor={getWikiCollabColor(
                 session?.entity?.id ?? session?.user.id ?? page.id,

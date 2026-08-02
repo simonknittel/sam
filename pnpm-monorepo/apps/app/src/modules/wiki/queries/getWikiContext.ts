@@ -26,6 +26,8 @@ export type WikiContextPage = Pick<
   | "visibility"
   | "editability"
   | "adminability"
+  | "imageUploadability"
+  | "attachmentUploadability"
   | "createdAt"
   | "updatedAt"
   | "deletedAt"
@@ -87,6 +89,8 @@ export const getWikiContext = cache(
           visibility: true,
           editability: true,
           adminability: true,
+          imageUploadability: true,
+          attachmentUploadability: true,
           createdAt: true,
           updatedAt: true,
           deletedAt: true,

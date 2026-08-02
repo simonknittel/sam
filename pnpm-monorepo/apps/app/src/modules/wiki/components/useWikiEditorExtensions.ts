@@ -44,6 +44,10 @@ interface Options {
   readonly collaboration?: boolean;
   /** Include the editing helpers (slash menu, suggestions, uploads)? */
   readonly interactive: boolean;
+  /** Whether the viewer may upload images to the page */
+  readonly canUploadImages: boolean;
+  /** Whether the viewer may upload file attachments to the page */
+  readonly canUploadAttachments: boolean;
   /** Opens the embed URL dialog (palette entry "Einbetten") */
   readonly onRequestEmbed: () => void;
   /** Opens the link dialog (palette entry "Link") */
@@ -67,6 +71,8 @@ export const useWikiEditorExtensions = ({
   roleCitizens,
   collaboration = false,
   interactive,
+  canUploadImages,
+  canUploadAttachments,
   onRequestEmbed,
   onRequestLink,
   onRequestVariantLink,
@@ -106,6 +112,8 @@ export const useWikiEditorExtensions = ({
       ? [
           WikiSlashCommand.configure({
             pageId,
+            canUploadImages,
+            canUploadAttachments,
             onRequestEmbed,
             onRequestLink,
             onRequestVariantLink,
@@ -116,7 +124,10 @@ export const useWikiEditorExtensions = ({
           }),
           WikiNodeClickSelection,
           WikiActiveNodeHighlight,
-          createWikiFileHandler(pageId),
+          createWikiFileHandler(pageId, {
+            canUploadImages,
+            canUploadAttachments,
+          }),
         ]
       : []),
   ];

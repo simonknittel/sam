@@ -2,6 +2,7 @@ import {
   WikiPageAccessType,
   WikiPageAdminability,
   WikiPageEditability,
+  WikiPageUploadability,
   WikiPageVisibility,
 } from "@sam-monorepo/database/browser";
 import { describe, expect, test } from "vitest";
@@ -19,6 +20,8 @@ const page = (
   visibility: WikiPageVisibility.INHERIT,
   editability: WikiPageEditability.INHERIT,
   adminability: WikiPageAdminability.INHERIT,
+  imageUploadability: WikiPageUploadability.INHERIT,
+  attachmentUploadability: WikiPageUploadability.INHERIT,
   roleAccess: [],
   ...overrides,
 });
@@ -494,6 +497,169 @@ describe("resolve wiki page permissions", () => {
       visibilitySourceId: "root",
       editabilitySourceId: "child",
       adminabilitySourceId: "root",
+    });
+  });
+});
+
+describe("upload permissions", () => {
+  /** Editable by everyone, owned by someone else */
+  const editableByAll = {
+    ownerId: "someone-else",
+    ...restrictedToOwner,
+    editability: WikiPageEditability.ALL,
+  } as const;
+
+  test("a fully-INHERIT chain restricts uploads to admins", () => {
+    const pages = [
+      page({ id: "root", ...editableByAll }),
+      page({ id: "child", parentId: "root" }),
+    ] as const;
+
+    const asEditor = resolveWikiPagePermissions(pages, viewer());
+    const asAdmin = resolveWikiPagePermissions(
+      pages,
+      viewer({ citizenId: "someone-else" }),
+    );
+
+    expect(asEditor.get("child")).toMatchObject({
+      canEdit: true,
+      canUploadImages: false,
+      canUploadAttachments: false,
+    });
+    expect(asAdmin.get("child")).toMatchObject({
+      canAdmin: true,
+      canUploadImages: true,
+      canUploadAttachments: true,
+    });
+  });
+
+  test("EDITORS opens the kind to everyone with edit permission — independently per kind", () => {
+    const pages = [
+      page({
+        id: "1",
+        ...editableByAll,
+        imageUploadability: WikiPageUploadability.EDITORS,
+        attachmentUploadability: WikiPageUploadability.RESTRICTED,
+      }),
+      page({
+        id: "2",
+        ...editableByAll,
+        imageUploadability: WikiPageUploadability.RESTRICTED,
+        attachmentUploadability: WikiPageUploadability.EDITORS,
+      }),
+    ] as const;
+
+    const result = resolveWikiPagePermissions(pages, viewer());
+
+    expect(result.get("1")).toMatchObject({
+      canUploadImages: true,
+      canUploadAttachments: false,
+    });
+    expect(result.get("2")).toMatchObject({
+      canUploadImages: false,
+      canUploadAttachments: true,
+    });
+  });
+
+  test("uploading implies editing: readers get nothing from EDITORS", () => {
+    const pages = [
+      page({
+        id: "1",
+        ownerId: "someone-else",
+        ...restrictedToOwner,
+        visibility: WikiPageVisibility.PUBLIC,
+        imageUploadability: WikiPageUploadability.EDITORS,
+        attachmentUploadability: WikiPageUploadability.EDITORS,
+      }),
+    ] as const;
+
+    const result = resolveWikiPagePermissions(pages, viewer());
+
+    expect(result.get("1")).toMatchObject({
+      canRead: true,
+      canEdit: false,
+      canUploadImages: false,
+      canUploadAttachments: false,
+    });
+  });
+
+  test("INHERIT resolves against the nearest ancestor, nearest setting wins", () => {
+    const pages = [
+      page({
+        id: "root",
+        ...editableByAll,
+        imageUploadability: WikiPageUploadability.EDITORS,
+      }),
+      page({ id: "child", parentId: "root" }),
+      page({
+        id: "grandchild",
+        parentId: "child",
+        imageUploadability: WikiPageUploadability.RESTRICTED,
+      }),
+    ] as const;
+
+    const result = resolveWikiPagePermissions(pages, viewer());
+
+    expect(result.get("child")).toMatchObject({
+      canUploadImages: true,
+      imageUploadabilitySourceId: "root",
+      attachmentUploadabilitySourceId: "root",
+    });
+    expect(result.get("grandchild")).toMatchObject({
+      canUploadImages: false,
+      imageUploadabilitySourceId: "grandchild",
+    });
+  });
+
+  test("wiki;manage and effective owners may always upload", () => {
+    const pages = [
+      page({
+        id: "1",
+        ownerId: "owner",
+        ...restrictedToOwner,
+        imageUploadability: WikiPageUploadability.RESTRICTED,
+        attachmentUploadability: WikiPageUploadability.RESTRICTED,
+      }),
+    ] as const;
+
+    const asManager = resolveWikiPagePermissions(
+      pages,
+      viewer({ hasWikiManage: true }),
+    );
+    const asOwner = resolveWikiPagePermissions(
+      pages,
+      viewer({ citizenId: "owner" }),
+    );
+
+    expect(asManager.get("1")).toMatchObject({
+      canUploadImages: true,
+      canUploadAttachments: true,
+    });
+    expect(asOwner.get("1")).toMatchObject({
+      canUploadImages: true,
+      canUploadAttachments: true,
+    });
+  });
+
+  test("role-based page admins may upload under RESTRICTED", () => {
+    const pages = [
+      page({
+        id: "1",
+        ownerId: "someone-else",
+        ...restrictedToOwner,
+        roleAccess: [{ roleId: "role-a", type: WikiPageAccessType.ADMIN }],
+      }),
+    ] as const;
+
+    const result = resolveWikiPagePermissions(
+      pages,
+      viewer({ roleIds: new Set(["role-a"]) }),
+    );
+
+    expect(result.get("1")).toMatchObject({
+      canAdmin: true,
+      canUploadImages: true,
+      canUploadAttachments: true,
     });
   });
 });

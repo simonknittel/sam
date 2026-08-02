@@ -14,20 +14,20 @@ import { WikiPageIcon } from "./WikiPageIcon";
 interface Props {
   readonly pageId: string;
   readonly iconId: string | null;
-  readonly canEdit: boolean;
+  readonly canAdmin: boolean;
 }
 
 /**
- * The page icon next to the title. Editors get a button opening a modal to
- * upload, replace or remove the icon; everyone else just sees the image (or
- * nothing).
+ * The page icon next to the title. Page admins get a button opening a modal
+ * to upload, replace or remove the icon; everyone else just sees the image
+ * (or nothing).
  */
-export const WikiPageIconButton = ({ pageId, iconId, canEdit }: Props) => {
+export const WikiPageIconButton = ({ pageId, iconId, canAdmin }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
   const router = useRouter();
 
-  if (!canEdit)
+  if (!canAdmin)
     return iconId ? (
       <WikiPageIcon iconId={iconId} size={28} className="size-7" />
     ) : null;

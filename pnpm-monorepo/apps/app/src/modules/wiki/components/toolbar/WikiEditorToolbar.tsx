@@ -42,16 +42,28 @@ interface Props {
   readonly editor: Editor | null;
   /** Id of the page being edited — target for file uploads */
   readonly pageId: string;
+  /** Whether the viewer may upload images to the page */
+  readonly canUploadImages: boolean;
+  /** Whether the viewer may upload file attachments to the page */
+  readonly canUploadAttachments: boolean;
 }
 
 /**
  * Toolbar of the wiki editor.
  */
-export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
+export const WikiEditorToolbar = ({
+  editor,
+  pageId,
+  canUploadImages,
+  canUploadAttachments,
+}: Props) => {
+  const uploadPermissions = { canUploadImages, canUploadAttachments };
+
   const pickAndInsert = (accept: string) => {
     if (!editor) return;
     pickWikiFiles(accept, (files) => {
-      for (const file of files) void insertWikiFile(editor, pageId, file);
+      for (const file of files)
+        void insertWikiFile(editor, pageId, uploadPermissions, file);
     });
   };
 
@@ -193,18 +205,26 @@ export const WikiEditorToolbar = ({ editor, pageId }: Props) => {
       <ToolbarDivider />
 
       <ToolbarButton
-        title="Bild einfügen"
+        title={
+          canUploadImages
+            ? "Bild einfügen"
+            : "Bild einfügen – nur für Verwalter dieser Seite"
+        }
         isActive={active?.image ?? false}
-        disabled={restricted.blocks}
+        disabled={restricted.blocks || !canUploadImages}
         onClick={() => pickAndInsert(WIKI_IMAGE_ACCEPT)}
       >
         <FaImage />
       </ToolbarButton>
 
       <ToolbarButton
-        title="Dateianhang einfügen"
+        title={
+          canUploadAttachments
+            ? "Dateianhang einfügen"
+            : "Dateianhang einfügen – nur für Verwalter dieser Seite"
+        }
         isActive={active?.attachment ?? false}
-        disabled={restricted.blocks}
+        disabled={restricted.blocks || !canUploadAttachments}
         onClick={() => pickAndInsert(WIKI_ATTACHMENT_ACCEPT)}
       >
         <FaPaperclip />

@@ -30,6 +30,7 @@ import { getWikiNodeTypeLabel } from "../utils/getWikiNodeTypeLabel";
 import { setWikiActiveNodeHighlight } from "./WikiActiveNodeHighlight";
 import { getWikiCopiedBlock } from "./wikiBlockClipboard";
 import {
+  applyWikiUploadRestrictions,
   matchesWikiSlashCommandQuery,
   WIKI_SLASH_COMMAND_ITEMS,
   type WikiSlashCommandItem,
@@ -94,6 +95,10 @@ interface Props {
   readonly editor: Editor;
   /** Target for file uploads started from the insert palette */
   readonly pageId: string;
+  /** Whether the viewer may upload images to the page */
+  readonly canUploadImages: boolean;
+  /** Whether the viewer may upload file attachments to the page */
+  readonly canUploadAttachments: boolean;
   /** Opens the embed URL dialog (palette entry "Einbetten") */
   readonly onRequestEmbed: () => void;
   /** Opens the link dialog (palette entry "Link") */
@@ -111,6 +116,8 @@ interface Props {
 export const WikiGutter = ({
   editor,
   pageId,
+  canUploadImages,
+  canUploadAttachments,
   onRequestEmbed,
   onRequestLink,
   onRequestVariantLink,
@@ -220,6 +227,8 @@ export const WikiGutter = ({
             editor={editor}
             block={block}
             pageId={pageId}
+            canUploadImages={canUploadImages}
+            canUploadAttachments={canUploadAttachments}
             onRequestEmbed={onRequestEmbed}
             onRequestLink={onRequestLink}
             onRequestVariantLink={onRequestVariantLink}
@@ -246,6 +255,8 @@ interface InsertBlockActionsProps {
   readonly editor: Editor;
   readonly block: HoveredBlock | null;
   readonly pageId: string;
+  readonly canUploadImages: boolean;
+  readonly canUploadAttachments: boolean;
   readonly onRequestEmbed: () => void;
   readonly onRequestLink: () => void;
   readonly onRequestVariantLink: () => void;
@@ -263,6 +274,8 @@ interface GutterPaletteEntry {
   readonly icon: ReactNode;
   readonly subtitle?: string;
   readonly dividerAfter?: boolean;
+  /** Muted and inert (WikiSuggestionMenu) — blocked upload entries */
+  readonly disabled?: boolean;
   /** The palette item behind the entry — absent for the copied block */
   readonly item?: WikiSlashCommandItem;
 }
@@ -280,6 +293,8 @@ const InsertBlockActions = ({
   editor,
   block,
   pageId,
+  canUploadImages,
+  canUploadAttachments,
   onRequestEmbed,
   onRequestLink,
   onRequestVariantLink,
@@ -320,13 +335,13 @@ const InsertBlockActions = ({
       editor.state.doc,
       block.pos,
     );
-    const items = (
-      restrictions.blocks
+    const items = applyWikiUploadRestrictions(
+      (restrictions.blocks
         ? WIKI_SLASH_COMMAND_ITEMS.filter((item) => item.allowedInTextOnlyBlock)
         : WIKI_SLASH_COMMAND_ITEMS
-    )
-      .filter((item) => !(restrictions.grids && item.insertsGrid))
-      .filter((item) => matchesWikiSlashCommandQuery(item, query));
+      ).filter((item) => !(restrictions.grids && item.insertsGrid)),
+      { canUploadImages, canUploadAttachments },
+    ).filter((item) => matchesWikiSlashCommandQuery(item, query));
 
     /**
      * The copied block (edit menu's copy button, wikiBlockClipboard) obeys
@@ -368,12 +383,14 @@ const InsertBlockActions = ({
         id: item.title,
         title: item.title,
         icon: item.icon,
+        subtitle: item.subtitle,
+        disabled: item.disabled,
         item,
       })),
     ];
 
     return { entries, insertableCopied: copiedAllowed };
-  }, [editor, block, query]);
+  }, [editor, block, query, canUploadImages, canUploadAttachments]);
 
   if (!block) return null;
   const node = editor.state.doc.nodeAt(block.pos);
@@ -413,11 +430,19 @@ const InsertBlockActions = ({
     item.run(
       editor,
       { from: position + 1, to: position + 1 },
-      { pageId, onRequestEmbed, onRequestLink, onRequestVariantLink },
+      {
+        pageId,
+        canUploadImages,
+        canUploadAttachments,
+        onRequestEmbed,
+        onRequestLink,
+        onRequestVariantLink,
+      },
     );
   };
 
   const runEntry = (entry: GutterPaletteEntry) => {
+    if (entry.disabled) return;
     if (entry.item) insertBlock(entry.item);
     else insertCopiedBlock();
   };

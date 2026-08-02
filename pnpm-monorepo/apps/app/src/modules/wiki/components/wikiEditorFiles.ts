@@ -37,18 +37,53 @@ export const WIKI_ATTACHMENT_ACCEPT = [
 ].join(",");
 
 /**
+ * The viewer's effective upload permissions on the page being edited
+ * (ResolvedWikiPagePermissions), resolved server-side per upload kind.
+ * Display/UX gating only — /api/upload/assign enforces them regardless.
+ */
+export interface WikiUploadPermissions {
+  readonly canUploadImages: boolean;
+  readonly canUploadAttachments: boolean;
+}
+
+export const isWikiUploadKindAllowed = (
+  kind: WikiUploadKind,
+  permissions: WikiUploadPermissions,
+) =>
+  kind === WikiUploadKind.Image
+    ? permissions.canUploadImages
+    : permissions.canUploadAttachments;
+
+const UPLOAD_BLOCKED_MESSAGES: Record<WikiUploadKind, string> = {
+  [WikiUploadKind.Image]:
+    "Bilder dürfen auf dieser Seite nur Verwalter hochladen.",
+  [WikiUploadKind.Attachment]:
+    "Dateianhänge dürfen auf dieser Seite nur Verwalter hochladen.",
+};
+
+/**
  * Uploads a file and inserts the matching node (image or attachment card)
  * into the editor — at `position` for drops, at the selection otherwise.
  */
 export const insertWikiFile = async (
   editor: Editor,
   pageId: string,
+  permissions: WikiUploadPermissions,
   file: File,
   position?: number,
 ) => {
   const kind = getWikiUploadKind(file);
   if (!kind) {
     toast.error(`Der Dateityp von "${file.name}" wird nicht unterstützt.`);
+    return;
+  }
+
+  /**
+   * Callers disable their upload UI when the kind is blocked — this guard
+   * covers the remaining paths (stale UI after a permission change).
+   */
+  if (!isWikiUploadKindAllowed(kind, permissions)) {
+    toast.error(UPLOAD_BLOCKED_MESSAGES[kind]);
     return;
   }
 
@@ -120,13 +155,30 @@ export const pickWikiFiles = (
 
 /**
  * Paste/drop handling for images and file attachments. Editor-only
- * behavior — the extension adds no schema.
+ * behavior — the extension adds no schema. Files of a blocked kind are
+ * dropped with one notice per kind; allowed kinds of a mixed drop still
+ * upload.
  */
-export const createWikiFileHandler = (pageId: string) =>
-  FileHandler.configure({
+export const createWikiFileHandler = (
+  pageId: string,
+  permissions: WikiUploadPermissions,
+) => {
+  const handleFiles = (editor: Editor, files: File[], position?: number) => {
+    const blockedKinds = new Set<WikiUploadKind>();
+    for (const file of files) {
+      const kind = getWikiUploadKind(file);
+      if (kind && !isWikiUploadKindAllowed(kind, permissions)) {
+        blockedKinds.add(kind);
+        continue;
+      }
+      void insertWikiFile(editor, pageId, permissions, file, position);
+    }
+    for (const kind of blockedKinds) toast.error(UPLOAD_BLOCKED_MESSAGES[kind]);
+  };
+
+  return FileHandler.configure({
     onDrop: (editor, files, position) => {
-      for (const file of files)
-        void insertWikiFile(editor, pageId, file, position);
+      handleFiles(editor, files, position);
     },
     onPaste: (editor, files, htmlContent) => {
       /**
@@ -134,7 +186,8 @@ export const createWikiFileHandler = (pageId: string) =>
        * website), let the default paste handle it instead of re-uploading.
        */
       if (htmlContent) return false;
-      for (const file of files) void insertWikiFile(editor, pageId, file);
+      handleFiles(editor, files);
       return true;
     },
   });
+};

@@ -7,6 +7,7 @@ import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import {
   WikiPageAdminability,
   WikiPageEditability,
+  WikiPageUploadability,
   WikiPageVisibility,
 } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
@@ -71,6 +72,12 @@ export const createWikiPage = createAuthenticatedAction(
         adminability: data.parentId
           ? WikiPageAdminability.INHERIT
           : WikiPageAdminability.RESTRICTED,
+        imageUploadability: data.parentId
+          ? WikiPageUploadability.INHERIT
+          : WikiPageUploadability.RESTRICTED,
+        attachmentUploadability: data.parentId
+          ? WikiPageUploadability.INHERIT
+          : WikiPageUploadability.RESTRICTED,
         ownerId: data.parentId ? null : authentication.session.entity.id,
         createdById: authentication.session.entity.id,
       },
