@@ -42,6 +42,22 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-08-02-wiki-suche-tags",
+    date: "2026-08-02",
+    title: "Wiki: Tags in der Suche",
+    tags: ["Neu", "Wiki"],
+    isTracked: true,
+    body: () => (
+      <p>
+        Die Wiki-Suche berücksichtigt jetzt auch Tags: Seiten, deren Tags zum
+        Suchbegriff passen, erscheinen in den Ergebnissen und zeigen die
+        passenden Tags an. Zusätzlich tauchen passende Tags selbst als Ergebnis
+        auf und führen direkt zur Übersicht aller Seiten mit diesem Tag.
+      </p>
+    ),
+  },
+
+  {
     key: "2026-08-02-wiki-dateianhaenge",
     date: "2026-08-02",
     title: "Wiki: Dateianhänge melden",
