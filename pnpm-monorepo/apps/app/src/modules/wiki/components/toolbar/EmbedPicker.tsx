@@ -48,6 +48,7 @@ export const EmbedPicker = ({ editor }: Props) => {
         value={url}
         onChange={(event) => setUrl(event.target.value)}
         required
+        autoFocus
       />
 
       <Button2 type="submit" disabled={isPending} className="mt-3 ml-auto">
