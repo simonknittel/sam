@@ -37,6 +37,12 @@ interface Props {
   readonly citizenId?: string;
   readonly citizenLevel?: number | null;
   readonly onSuccess?: () => void;
+  /**
+   * Whether the badge opens the role's detail popover. Turn it off inside
+   * another interactive element (e.g. a role picker's option button) —
+   * the popover's trigger is a button and would nest buttons there.
+   */
+  readonly withPopover?: boolean;
 }
 
 export const SingleRoleBadge = ({
@@ -46,6 +52,7 @@ export const SingleRoleBadge = ({
   citizenId,
   citizenLevel = 0,
   onSuccess,
+  withPopover = true,
 }: Props) => {
   const { roles } = useRolesContext();
   const authentication = useAuthentication();
@@ -95,52 +102,53 @@ export const SingleRoleBadge = ({
   const showLevelProgress =
     role.maxLevel && citizenId && (citizenLevel ?? 0) < role.maxLevel;
 
-  return (
-    <PopoverBaseUI
-      trigger={
-        <span
-          className={clsx(
-            "px-2 h-8 rounded-secondary bg-neutral-700/50 inline-flex align-middle gap-2 items-center overflow-hidden relative",
-            {
-              "pb-0.5 opacity-50": showLevelProgress,
-            },
-            className,
-          )}
-        >
-          {role.icon && (
-            <span className="aspect-square size-6 flex items-center justify-center">
-              <Image
-                src={`https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${role.icon.id}`}
-                alt=""
-                width={24}
-                height={24}
-                className="max-w-full max-h-full"
-                unoptimized={["image/svg+xml", "image/gif"].includes(
-                  role.icon.mimeType,
-                )}
-                loading="lazy"
-              />
-            </span>
-          )}
-
-          {!role.iconId && showPlaceholder && <span className="size-6" />}
-
-          <span className="truncate font-mono text-sm">{role.name}</span>
-
-          {showLevelProgress && (
-            <span className="block absolute left-0 bottom-0 right-0 h-px bg-white/30">
-              <span
-                className="block h-full bg-me"
-                style={{
-                  width: `${((citizenLevel ?? 0) / role.maxLevel!) * 100}%`,
-                }}
-              />
-            </span>
-          )}
-        </span>
-      }
-      childrenClassName="w-[400px]"
+  const badge = (
+    <span
+      className={clsx(
+        "px-2 h-8 rounded-secondary bg-neutral-700/50 inline-flex align-middle gap-2 items-center overflow-hidden relative",
+        {
+          "pb-0.5 opacity-50": showLevelProgress,
+        },
+        className,
+      )}
     >
+      {role.icon && (
+        <span className="aspect-square size-6 flex items-center justify-center">
+          <Image
+            src={`https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${role.icon.id}`}
+            alt=""
+            width={24}
+            height={24}
+            className="max-w-full max-h-full"
+            unoptimized={["image/svg+xml", "image/gif"].includes(
+              role.icon.mimeType,
+            )}
+            loading="lazy"
+          />
+        </span>
+      )}
+
+      {!role.iconId && showPlaceholder && <span className="size-6" />}
+
+      <span className="truncate font-mono text-sm">{role.name}</span>
+
+      {showLevelProgress && (
+        <span className="block absolute left-0 bottom-0 right-0 h-px bg-white/30">
+          <span
+            className="block h-full bg-me"
+            style={{
+              width: `${((citizenLevel ?? 0) / role.maxLevel!) * 100}%`,
+            }}
+          />
+        </span>
+      )}
+    </span>
+  );
+
+  if (!withPopover) return badge;
+
+  return (
+    <PopoverBaseUI trigger={badge} childrenClassName="w-[400px]">
       <div>
         <div className="inline-flex align-middle gap-4 items-center">
           {role.icon ? (

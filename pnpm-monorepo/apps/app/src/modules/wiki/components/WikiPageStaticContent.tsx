@@ -2,6 +2,7 @@ import {
   createWikiHeadingIdAssigner,
   getWikiEditorExtensions,
   isWikiPageContentEmpty,
+  normalizeWikiRoleCitizensConfig,
   resolveWikiCitizenMention,
   resolveWikiVariantLink,
   wikiPageIndexConfigKey,
@@ -20,6 +21,10 @@ import {
   WikiPageIndexList,
   type WikiPageIndexEntry,
 } from "./WikiPageIndexList";
+import {
+  WikiRoleCitizensList,
+  type WikiRoleCitizen,
+} from "./WikiRoleCitizensList";
 import { WikiVariantLinkChip } from "./WikiVariantLinkNodeView";
 import "./wikiEditor.css";
 
@@ -56,6 +61,7 @@ const renderWikiPageContent = (
   mentionedCitizens: Readonly<Record<string, WikiMentionedCitizen>>,
   linkedVariants: Readonly<Record<string, WikiLinkedVariant>>,
   pageIndexes: Readonly<Record<string, readonly WikiPageIndexEntry[]>>,
+  roleCitizens: Readonly<Record<string, readonly WikiRoleCitizen[]>>,
   pageId: string | undefined,
 ) => {
   const nextHeadingId = createWikiHeadingIdAssigner();
@@ -141,6 +147,19 @@ const renderWikiPageContent = (
             entries={pageIndexes[wikiPageIndexConfigKey(node.attrs)] ?? []}
           />
         ),
+        /**
+         * Renders the members pre-resolved by the server for this viewer
+         * (see resolveWikiRoleCitizens) instead of the node's placeholder.
+         */
+        wikiRoleCitizens: ({ node }) => {
+          const { roleId } = normalizeWikiRoleCitizensConfig(node.attrs);
+          return (
+            <WikiRoleCitizensList
+              roleId={roleId}
+              citizens={(roleId && roleCitizens[roleId]) || []}
+            />
+          );
+        },
       },
     },
   });
@@ -166,6 +185,11 @@ interface Props {
   readonly pageIndexes?: Readonly<
     Record<string, readonly WikiPageIndexEntry[]>
   >;
+  /**
+   * Resolved members of the role-member nodes on this page, keyed by role
+   * id
+   */
+  readonly roleCitizens?: Readonly<Record<string, readonly WikiRoleCitizen[]>>;
 }
 
 /**
@@ -181,6 +205,7 @@ export const WikiPageStaticContent = ({
   mentionedCitizens,
   linkedVariants,
   pageIndexes = {},
+  roleCitizens = {},
 }: Props) => {
   // Covers docs emptied in the editor too (one empty paragraph, not null)
   if (!content || isWikiPageContentEmpty(content))
@@ -201,6 +226,7 @@ export const WikiPageStaticContent = ({
     mentionedCitizens,
     linkedVariants,
     pageIndexes,
+    roleCitizens,
     pageId,
   );
 

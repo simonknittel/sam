@@ -29,6 +29,7 @@ import { WikiTextSelectionMenuActions } from "./editMenu/WikiTextSelectionMenuAc
 import { ToolbarDivider } from "./toolbar/ToolbarDivider";
 import { setWikiActiveNodeHighlight } from "./WikiActiveNodeHighlight";
 import { WikiPageIndexConfigModal } from "./WikiPageIndexConfigModal";
+import { WikiRoleCitizensConfigModal } from "./WikiRoleCitizensConfigModal";
 import { WikiVariantLinkModal } from "./WikiVariantLinkModal";
 
 /**
@@ -87,7 +88,8 @@ export const WikiEditMenu = ({
    * Lifted out of the menu itself: the hover menu unmounts when the pointer
    * moves onto the (portaled) dialogs, so they must not live inside it.
    */
-  const [pageIndexConfig, setPageIndexConfig] = useState<{
+  const [nodeConfig, setNodeConfig] = useState<{
+    readonly typeName: string;
     readonly position: number;
     readonly attrs: Readonly<Record<string, unknown>>;
   } | null>(null);
@@ -195,16 +197,25 @@ export const WikiEditMenu = ({
 
   if (!editor) return null;
 
+  const closeNodeConfig = () => setNodeConfig(null);
   const configModals = (
     <>
-      {pageIndexConfig && (
-        <WikiPageIndexConfigModal
-          editor={editor}
-          position={pageIndexConfig.position}
-          attrs={pageIndexConfig.attrs}
-          onRequestClose={() => setPageIndexConfig(null)}
-        />
-      )}
+      {nodeConfig &&
+        (nodeConfig.typeName === "wikiRoleCitizens" ? (
+          <WikiRoleCitizensConfigModal
+            editor={editor}
+            position={nodeConfig.position}
+            attrs={nodeConfig.attrs}
+            onRequestClose={closeNodeConfig}
+          />
+        ) : (
+          <WikiPageIndexConfigModal
+            editor={editor}
+            position={nodeConfig.position}
+            attrs={nodeConfig.attrs}
+            onRequestClose={closeNodeConfig}
+          />
+        ))}
 
       {variantLinkConfig && (
         <WikiVariantLinkModal
@@ -321,7 +332,7 @@ export const WikiEditMenu = ({
                 <WikiNodeMenuActions
                   editor={editor}
                   menu={menu}
-                  onOpenPageIndexConfig={setPageIndexConfig}
+                  onOpenNodeConfig={setNodeConfig}
                   onOpenVariantLink={setVariantLinkConfig}
                 />
               )}

@@ -24,6 +24,7 @@ import {
   FaSpaceShuttle,
   FaTable,
   FaTasks,
+  FaUsers,
 } from "react-icons/fa";
 import {
   insertWikiFile,
@@ -285,6 +286,23 @@ export const WIKI_SLASH_COMMAND_ITEMS: readonly WikiSlashCommandItem[] = [
     /** Defaults to the subtree of the current page; configurable via the edit menu */
     run: (editor, range) =>
       editor.chain().focus().deleteRange(range).setWikiPageIndex().run(),
+  },
+  {
+    title: "Rollenmitglieder",
+    icon: <FaUsers />,
+    keywords: [
+      "rolle",
+      "rollen",
+      "rollenmitglieder",
+      "mitglieder",
+      "role",
+      "members",
+      "citizens",
+      "team",
+    ],
+    /** Starts without a role; picked in the edit menu's config dialog */
+    run: (editor, range) =>
+      editor.chain().focus().deleteRange(range).setWikiRoleCitizens().run(),
   },
 ];
 

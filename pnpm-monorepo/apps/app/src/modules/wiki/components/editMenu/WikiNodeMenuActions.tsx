@@ -15,14 +15,19 @@ import { ToolbarDivider } from "../toolbar/ToolbarDivider";
 import { insertWikiEmbedFromUrl } from "../wikiEditorEmbeds";
 import { openInNewTab } from "./openInNewTab";
 import { WikiDuplicateCopyActions } from "./WikiDuplicateCopyActions";
-import { URL_NODE_TYPES, type WikiNodeMenuState } from "./wikiEditMenuState";
+import {
+  CONFIGURABLE_NODE_TYPES,
+  URL_NODE_TYPES,
+  type WikiNodeMenuState,
+} from "./wikiEditMenuState";
 import { WikiEditMenuUrlForm } from "./WikiEditMenuUrlForm";
 
 interface Props {
   readonly editor: Editor;
   readonly menu: WikiNodeMenuState;
-  /** Opens the page-index config dialog (mounted by the menu shell) */
-  readonly onOpenPageIndexConfig: (config: {
+  /** Opens the node's config dialog (mounted by the menu shell) */
+  readonly onOpenNodeConfig: (config: {
+    readonly typeName: string;
     readonly position: number;
     readonly attrs: Readonly<Record<string, unknown>>;
   }) => void;
@@ -32,12 +37,12 @@ interface Props {
 
 /**
  * Actions of the atom-node menu (embeds, images, attachments, page links,
- * mentions, variant links, page indexes).
+ * mentions, variant links, page indexes, role member lists).
  */
 export const WikiNodeMenuActions = ({
   editor,
   menu,
-  onOpenPageIndexConfig,
+  onOpenNodeConfig,
   onOpenVariantLink,
 }: Props) => {
   /**
@@ -146,12 +151,13 @@ export const WikiNodeMenuActions = ({
         </>
       )}
 
-      {menu.typeName === "wikiPageIndex" && (
+      {CONFIGURABLE_NODE_TYPES.includes(menu.typeName) && (
         <ToolbarButton
           title="Konfigurieren"
           isActive={false}
           onClick={() =>
-            onOpenPageIndexConfig({
+            onOpenNodeConfig({
+              typeName: menu.typeName,
               position: menu.position,
               attrs: menu.attrs,
             })

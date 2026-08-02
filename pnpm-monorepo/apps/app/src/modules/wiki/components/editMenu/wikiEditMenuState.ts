@@ -29,7 +29,24 @@ const MENU_NODE_TYPES = [
   "wikiCitizenMention",
   "wikiVariantLink",
   "wikiPageIndex",
+  "wikiRoleCitizens",
 ];
+
+/**
+ * Nodes rendering their content through a React node view — everything
+ * inside them (their links and lists) resolves to the node itself, since
+ * that content is rendered by React, not editor content.
+ */
+const NODE_VIEW_MENU_TARGETS: readonly {
+  readonly selector: string;
+  readonly typeName: string;
+}[] = [
+  { selector: "[data-wiki-page-index]", typeName: "wikiPageIndex" },
+  { selector: "[data-wiki-role-citizens]", typeName: "wikiRoleCitizens" },
+];
+
+/** Nodes whose menu offers a config dialog (mounted by WikiEditMenu) */
+export const CONFIGURABLE_NODE_TYPES = ["wikiPageIndex", "wikiRoleCitizens"];
 
 /**
  * Container and leaf blocks without node-specific actions — their menu
@@ -271,20 +288,17 @@ export const wikiMenuFromElement = (
     key: targetKey(element),
   };
 
-  /**
-   * Everything inside a page index (its links and lists) resolves to
-   * the index node itself — the node view's content is rendered by
-   * React, not editor content.
-   */
-  const pageIndexDom = element.closest("[data-wiki-page-index]");
-  if (pageIndexDom instanceof HTMLElement) {
-    const resolved = resolveWikiNodeFromElement(editor, pageIndexDom, [
-      "wikiPageIndex",
+  for (const { selector, typeName } of NODE_VIEW_MENU_TARGETS) {
+    const nodeViewDom = element.closest(selector);
+    if (!(nodeViewDom instanceof HTMLElement)) continue;
+
+    const resolved = resolveWikiNodeFromElement(editor, nodeViewDom, [
+      typeName,
     ]);
     if (!resolved) return null;
     return nodeMenu(resolved.node, resolved.position, {
-      reference: pageIndexDom,
-      key: targetKey(pageIndexDom),
+      reference: nodeViewDom,
+      key: targetKey(nodeViewDom),
     });
   }
 

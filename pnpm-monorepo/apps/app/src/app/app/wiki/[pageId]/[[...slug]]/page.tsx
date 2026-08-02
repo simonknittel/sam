@@ -39,11 +39,13 @@ import {
 } from "@/modules/wiki/utils/getEditableWikiPageTargets";
 import { getWikiCollabColor } from "@/modules/wiki/utils/getWikiCollabColor";
 import { resolveWikiPageIndex } from "@/modules/wiki/utils/resolveWikiPageIndex";
+import { resolveWikiRoleCitizens } from "@/modules/wiki/utils/resolveWikiRoleCitizens";
 import { trackWikiPageVisit } from "@/modules/wiki/utils/trackWikiPageVisit";
 import { WikiPageAccessType } from "@sam-monorepo/database/client";
 import {
   collectWikiMentionedCitizenIds,
   collectWikiPageIndexConfigs,
+  collectWikiRoleCitizensRoleIds,
   collectWikiVariantLinkIds,
 } from "@sam-monorepo/wiki-editor";
 import type { Metadata } from "next";
@@ -251,6 +253,20 @@ const PageContent = async ({
     ),
   );
 
+  /**
+   * Members of the role-member nodes on this page, resolved for this viewer
+   * — for the static render; the editor node view fetches them itself so
+   * role changes show up without a reload.
+   */
+  const roleCitizens = Object.fromEntries(
+    await Promise.all(
+      collectWikiRoleCitizensRoleIds(pageContent?.content).map(
+        async (roleId) =>
+          [roleId, await resolveWikiRoleCitizens(roleId)] as const,
+      ),
+    ),
+  );
+
   const moveTargets: WikiPageTargetOption[] = permissions.canAdmin
     ? getEditableWikiPageTargets(context, page.id)
     : [];
@@ -430,6 +446,7 @@ const PageContent = async ({
                   mentionedCitizens={mentionedCitizens}
                   linkedVariants={linkedVariants}
                   pageIndexes={pageIndexes}
+                  roleCitizens={roleCitizens}
                 />
               }
             />
@@ -442,6 +459,7 @@ const PageContent = async ({
               mentionedCitizens={mentionedCitizens}
               linkedVariants={linkedVariants}
               pageIndexes={pageIndexes}
+              roleCitizens={roleCitizens}
             />
           )}
         </div>

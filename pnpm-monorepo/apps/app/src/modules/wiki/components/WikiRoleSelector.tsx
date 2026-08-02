@@ -13,15 +13,22 @@ interface Props {
   /** Name of the hidden inputs, e.g. "readRole[]" */
   readonly inputName: string;
   readonly defaultValue?: Role["id"][];
+  /**
+   * Pick exactly one role instead of many: picking replaces the current
+   * selection, so at most one hidden input is submitted.
+   */
+  readonly single?: boolean;
 }
 
 /**
- * Multi role picker submitting the selected role ids as hidden inputs.
+ * Role picker submitting the selected role ids as hidden inputs — multi
+ * select by default, see `single`.
  */
 export const WikiRoleSelector = ({
   className,
   inputName,
   defaultValue,
+  single = false,
 }: Props) => {
   const { isPending, data } = api.roles.getVisibleRoles.useQuery(undefined, {
     refetchOnWindowFocus: false,
@@ -34,6 +41,7 @@ export const WikiRoleSelector = ({
 
   const handleSelectRole = (roleId: Role["id"]) => {
     setSelectedRoles((previous) => {
+      if (single) return [roleId];
       if (previous.includes(roleId)) return previous;
       return [...previous, roleId];
     });
@@ -49,7 +57,7 @@ export const WikiRoleSelector = ({
               { "opacity-50": isPending },
             )}
           >
-            <FaUsers /> Rolle hinzufügen
+            <FaUsers /> {single ? "Rolle auswählen" : "Rolle hinzufügen"}
           </span>
         }
         childrenClassName="max-h-96 overflow-auto"
@@ -65,9 +73,11 @@ export const WikiRoleSelector = ({
                     onClick={() => handleSelectRole(role.id)}
                     className="group"
                   >
+                    {/* The badge's own popover trigger would nest buttons here */}
                     <SingleRoleBadge
                       roleId={role.id}
                       showPlaceholder
+                      withPopover={false}
                       className="bg-transparent group-hover:bg-neutral-700/50 group-focus-visible:bg-neutral-700/50"
                     />
                   </button>
@@ -98,6 +108,7 @@ export const WikiRoleSelector = ({
                     className="bg-transparent"
                     roleId={role!.id}
                     showPlaceholder
+                    withPopover={false}
                   />
                   <FaTrash className="text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300 flex-none" />
                 </button>

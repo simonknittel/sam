@@ -21,6 +21,7 @@ const NODE_TYPE_LABELS: Readonly<Record<string, string>> = {
   wikiCitizenMention: "Citizen-Erwähnung",
   wikiVariantLink: "Schiff",
   wikiPageIndex: "Seitenverzeichnis",
+  wikiRoleCitizens: "Rollenmitglieder",
 };
 
 export const getWikiNodeTypeLabel = (

@@ -80,6 +80,12 @@ export {
   type WikiNodeAlignment,
 } from "./wikiResizableNodes.js";
 export {
+  WikiRoleCitizens,
+  collectWikiRoleCitizensRoleIds,
+  normalizeWikiRoleCitizensConfig,
+  type WikiRoleCitizensConfig,
+} from "./wikiRoleCitizensNode.js";
+export {
   WIKI_TEXT_COLORS,
   WikiTextColorMark,
   type WikiTextColor,

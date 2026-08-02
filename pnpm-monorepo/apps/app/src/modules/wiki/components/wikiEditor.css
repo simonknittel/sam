@@ -719,3 +719,18 @@
   top: 0;
   width: 1px;
 }
+
+/* ---------- Role members ("Rollenmitglieder") ---------- */
+
+/* Same card as the page index — both are server-resolved list blocks */
+.prose [data-wiki-role-citizens] {
+  border: 1px solid var(--color-neutral-700);
+  border-radius: var(--radius-secondary);
+  background-color: color-mix(
+    in srgb,
+    var(--color-neutral-800) 40%,
+    transparent
+  );
+  padding: 1rem;
+  margin-block: 1.25em;
+}
