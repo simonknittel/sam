@@ -48,12 +48,14 @@ const STATUS_CONFIG: Record<
 export interface WikiCollabUser {
   readonly name: string;
   readonly color: string;
+  /** Whether they may change the page — read-only viewers connect too */
+  readonly canEdit: boolean;
 }
 
 interface Props {
   readonly className?: string;
   readonly status: WikiCollabStatus;
-  /** Connected collaborators (from the provider's awareness states) */
+  /** Connected users (from the provider's awareness states) */
   readonly users: readonly WikiCollabUser[];
 }
 
@@ -62,11 +64,14 @@ interface Props {
  * connected, blue: connecting, red: disconnected, amber: authentication
  * failed), like the dot badge on the app tiles, plus the number of
  * connected users. The popover explains the state and lists the users by
- * name.
+ * name, split into the ones who can edit and the ones who are only
+ * reading along.
  */
 export const WikiCollabStatusDot = ({ className, status, users }: Props) => {
   const config = STATUS_CONFIG[status];
   const showUsers = status === WebSocketStatus.Connected && users.length > 0;
+  const editors = users.filter((user) => user.canEdit);
+  const readers = users.filter((user) => !user.canEdit);
 
   return (
     <span className={clsx("flex items-center", className)}>
@@ -108,19 +113,44 @@ export const WikiCollabStatusDot = ({ className, status, users }: Props) => {
         )}
 
         {showUsers && (
-          <ul className="mt-4 flex flex-col gap-1 text-sm">
-            {users.map((user) => (
-              <li key={user.name} className="flex items-center gap-1.5">
-                <span
-                  className="size-2 flex-none rounded-full"
-                  style={{ backgroundColor: user.color }}
-                />
-                {user.name}
-              </li>
-            ))}
-          </ul>
+          <div className="mt-4 flex flex-col gap-3">
+            {/* Wording follows the permission tiers (WikiPagePermissionsModal) */}
+            <UserSection label="Bearbeiten" users={editors} />
+            <UserSection label="Sehen" users={readers} />
+          </div>
         )}
       </PopoverBaseUI>
     </span>
+  );
+};
+
+interface UserSectionProps {
+  readonly label: string;
+  readonly users: readonly WikiCollabUser[];
+}
+
+/**
+ * One group of the popover's user list. Renders nothing when the group is
+ * empty, so a heading never stands without users under it.
+ */
+const UserSection = ({ label, users }: UserSectionProps) => {
+  if (users.length <= 0) return null;
+
+  return (
+    <div>
+      <p className="text-xs uppercase font-mono text-neutral-400">{label}</p>
+
+      <ul className="mt-1 flex flex-col gap-1 text-sm">
+        {users.map((user) => (
+          <li key={user.name} className="flex items-center gap-1.5">
+            <span
+              className="size-2 flex-none rounded-full"
+              style={{ backgroundColor: user.color }}
+            />
+            {user.name}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 };

@@ -67,11 +67,17 @@ interface Props {
   readonly staticFallback: ReactNode;
 }
 
-/**
- * Unique connected users (by name) from the provider's awareness states.
- */
 const noop = () => undefined;
 
+/**
+ * Unique connected users (by name) from the provider's awareness states,
+ * each with the edit permission its client published — read-only viewers
+ * connect and publish awareness too, and the status dot lists them in
+ * their own section. The flag comes from the same awareness state as the
+ * name and color, i.e. from the client itself; the connection's real
+ * permission is the JWT the collab server verifies, this list is display
+ * only.
+ */
 const getAwarenessUsers = (provider: HocuspocusProvider): WikiCollabUser[] => {
   const states = provider.awareness
     ? [...provider.awareness.getStates().values()]
@@ -79,14 +85,33 @@ const getAwarenessUsers = (provider: HocuspocusProvider): WikiCollabUser[] => {
 
   const usersByName = new Map<string, WikiCollabUser>();
   for (const state of states) {
-    const user = (state as { user?: { name?: unknown; color?: unknown } }).user;
+    const user = (
+      state as {
+        user?: { name?: unknown; color?: unknown; canEdit?: unknown };
+      }
+    ).user;
     if (
-      user &&
-      typeof user.name === "string" &&
-      typeof user.color === "string" &&
-      !usersByName.has(user.name)
+      !user ||
+      typeof user.name !== "string" ||
+      typeof user.color !== "string"
     )
-      usersByName.set(user.name, { name: user.name, color: user.color });
+      continue;
+
+    const canEdit = user.canEdit === true;
+    const existing = usersByName.get(user.name);
+    /**
+     * Several connections of one user collapse into one entry, and an
+     * editing one wins: the permission is captured when the page renders,
+     * so tabs opened before and after a permission change disagree.
+     */
+    if (!existing)
+      usersByName.set(user.name, {
+        name: user.name,
+        color: user.color,
+        canEdit,
+      });
+    else if (canEdit && !existing.canEdit)
+      usersByName.set(user.name, { ...existing, canEdit });
   }
 
   return [...usersByName.values()].toSorted((a, b) =>
@@ -179,6 +204,7 @@ export const WikiCollabEditor = ({
       className={className}
       pageId={pageId}
       provider={provider}
+      canEdit={canEdit}
       isEditing={isEditing}
       userName={userName}
       userColor={userColor}
@@ -197,6 +223,8 @@ interface ConnectedEditorProps {
   readonly className?: string;
   readonly pageId: string;
   readonly provider: HocuspocusProvider;
+  /** Whether the viewer has edit permission — published to the other clients */
+  readonly canEdit: boolean;
   /** Whether the viewer can edit AND has toggled edit mode on */
   readonly isEditing: boolean;
   readonly userName: string;
@@ -214,6 +242,7 @@ const ConnectedEditor = ({
   className,
   pageId,
   provider,
+  canEdit,
   isEditing,
   userName,
   userColor,
@@ -362,7 +391,12 @@ const ConnectedEditor = ({
         Collaboration.configure({ document: provider.document }),
         CollaborationCaret.configure({
           provider,
-          user: { name: userName, color: userColor },
+          /**
+           * Published to the other clients as this connection's awareness
+           * state — canEdit rides along so their status dot can list the
+           * users who can edit (getAwarenessUsers).
+           */
+          user: { name: userName, color: userColor, canEdit },
         }),
       ],
       editable: isEditing,

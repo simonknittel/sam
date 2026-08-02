@@ -42,6 +42,21 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-08-02-wiki-verbundene-nutzer",
+    date: "2026-08-02",
+    title: "Wiki: Verbundene Nutzer",
+    tags: ["Änderung", "Wiki"],
+    isTracked: false,
+    body: () => (
+      <p>
+        Die Liste der verbundenen Nutzer im Editor – der grüne Punkt in der
+        Werkzeugleiste – trennt jetzt zwischen denen, die die Seite bearbeiten
+        können, und denen, die nur mitlesen.
+      </p>
+    ),
+  },
+
+  {
     key: "2026-08-02-wiki-rollenmitglieder",
     date: "2026-08-02",
     title: "Wiki: Rollenmitglieder",
