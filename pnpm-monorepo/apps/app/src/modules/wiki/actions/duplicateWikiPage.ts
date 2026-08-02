@@ -7,6 +7,7 @@ import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import {
   WikiPageAdminability,
   WikiPageEditability,
+  WikiPageUploadability,
   WikiPageVisibility,
   type WikiPageAccessType,
 } from "@sam-monorepo/database/client";
@@ -42,6 +43,8 @@ interface CopiedPermissions {
   visibility: WikiPageVisibility;
   editability: WikiPageEditability;
   adminability: WikiPageAdminability;
+  imageUploadability: WikiPageUploadability;
+  attachmentUploadability: WikiPageUploadability;
   ownerId: string | null;
   roleAccess: readonly { roleId: string; type: WikiPageAccessType }[];
 }
@@ -146,6 +149,16 @@ export const duplicateWikiPage = createAuthenticatedAction(
           topLevel && source.adminability === WikiPageAdminability.INHERIT
             ? WikiPageAdminability.RESTRICTED
             : source.adminability,
+        imageUploadability:
+          topLevel &&
+          source.imageUploadability === WikiPageUploadability.INHERIT
+            ? WikiPageUploadability.RESTRICTED
+            : source.imageUploadability,
+        attachmentUploadability:
+          topLevel &&
+          source.attachmentUploadability === WikiPageUploadability.INHERIT
+            ? WikiPageUploadability.RESTRICTED
+            : source.attachmentUploadability,
         ownerId: entity.id,
         roleAccess: source.roleAccess,
       };
@@ -165,6 +178,12 @@ export const duplicateWikiPage = createAuthenticatedAction(
         adminability: data.parentId
           ? WikiPageAdminability.INHERIT
           : WikiPageAdminability.RESTRICTED,
+        imageUploadability: data.parentId
+          ? WikiPageUploadability.INHERIT
+          : WikiPageUploadability.RESTRICTED,
+        attachmentUploadability: data.parentId
+          ? WikiPageUploadability.INHERIT
+          : WikiPageUploadability.RESTRICTED,
         ownerId: data.parentId ? null : entity.id,
         roleAccess: [],
       };
@@ -194,6 +213,8 @@ export const duplicateWikiPage = createAuthenticatedAction(
             visibility: rootPermissions.visibility,
             editability: rootPermissions.editability,
             adminability: rootPermissions.adminability,
+            imageUploadability: rootPermissions.imageUploadability,
+            attachmentUploadability: rootPermissions.attachmentUploadability,
             ownerId: rootPermissions.ownerId,
             roleAccess:
               rootPermissions.roleAccess.length > 0
@@ -241,6 +262,12 @@ export const duplicateWikiPage = createAuthenticatedAction(
               adminability: data.mirrorPermissions
                 ? page.adminability
                 : WikiPageAdminability.INHERIT,
+              imageUploadability: data.mirrorPermissions
+                ? page.imageUploadability
+                : WikiPageUploadability.INHERIT,
+              attachmentUploadability: data.mirrorPermissions
+                ? page.attachmentUploadability
+                : WikiPageUploadability.INHERIT,
               ownerId: data.mirrorPermissions ? page.ownerId : null,
               roleAccess:
                 data.mirrorPermissions && page.roleAccess.length > 0

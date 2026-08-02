@@ -56,6 +56,12 @@ interface WikiSuggestionMenuItem {
    * the regular ones (gutter palette's "Kopierten Block einfügen").
    */
   readonly dividerAfter?: boolean;
+  /**
+   * Shown muted but inert: never triggers `command`, and the keyboard
+   * selection skips it. The `subtitle` carries the reason (e.g. upload
+   * entries the viewer lacks permission for).
+   */
+  readonly disabled?: boolean;
 }
 
 interface WikiSuggestionMenuProps<Item extends WikiSuggestionMenuItem> {
@@ -82,12 +88,13 @@ export const WikiSuggestionMenu = <Item extends WikiSuggestionMenuItem>({
 
   /**
    * Reset the selection when the filtered items change — adjusted during
-   * render instead of in an effect.
+   * render instead of in an effect. Starts on the first enabled item.
    */
   const [previousItems, setPreviousItems] = useState(items);
   if (previousItems !== items) {
     setPreviousItems(items);
-    setSelectedIndex(0);
+    const firstEnabled = items.findIndex((item) => item.disabled !== true);
+    setSelectedIndex(firstEnabled === -1 ? 0 : firstEnabled);
   }
 
   const selectIndex = (index: number) => {
@@ -99,19 +106,31 @@ export const WikiSuggestionMenu = <Item extends WikiSuggestionMenuItem>({
     if (item instanceof HTMLElement) item.scrollIntoView({ block: "nearest" });
   };
 
+  /** Next index in the given direction, skipping disabled items (wraps) */
+  const moveSelection = (direction: 1 | -1) => {
+    let index = selectedIndex;
+    let remainingSteps = items.length;
+    while (remainingSteps > 0) {
+      index = (index + direction + items.length) % items.length;
+      if (items[index]?.disabled !== true) break;
+      remainingSteps -= 1;
+    }
+    selectIndex(index);
+  };
+
   useImperativeHandle(ref, () => ({
     onKeyDown: ({ event }) => {
       if (event.key === "ArrowUp") {
-        selectIndex((selectedIndex + items.length - 1) % items.length);
+        moveSelection(-1);
         return true;
       }
       if (event.key === "ArrowDown") {
-        selectIndex((selectedIndex + 1) % items.length);
+        moveSelection(1);
         return true;
       }
       if (event.key === "Enter") {
         const item = items[selectedIndex];
-        if (item) command(item);
+        if (item && item.disabled !== true) command(item);
         return true;
       }
       return false;
@@ -133,13 +152,19 @@ export const WikiSuggestionMenu = <Item extends WikiSuggestionMenuItem>({
             data-suggestion-index={index}
             onClick={() => command(item)}
             title={item.title}
+            disabled={item.disabled === true}
             className={clsx(
               // shrink-0: items must overflow (scroll), not shrink into the max height
-              "flex shrink-0 cursor-pointer items-center gap-2 rounded-secondary px-2 py-1 text-left text-sm hover:bg-neutral-800 hover:text-neutral-50",
-              {
-                "bg-neutral-800 text-neutral-50": index === selectedIndex,
-                "text-neutral-300": index !== selectedIndex,
-              },
+              "flex shrink-0 items-center gap-2 rounded-secondary px-2 py-1 text-left text-sm",
+              item.disabled === true
+                ? "cursor-not-allowed text-neutral-600"
+                : [
+                    "cursor-pointer hover:bg-neutral-800 hover:text-neutral-50",
+                    {
+                      "bg-neutral-800 text-neutral-50": index === selectedIndex,
+                      "text-neutral-300": index !== selectedIndex,
+                    },
+                  ],
             )}
           >
             {item.icon !== undefined && (

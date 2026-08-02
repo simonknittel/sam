@@ -40,6 +40,10 @@ interface Props {
   readonly pageId: string;
   readonly collabUrl: string;
   readonly canEdit: boolean;
+  /** Whether the viewer may upload images to the page */
+  readonly canUploadImages: boolean;
+  /** Whether the viewer may upload file attachments to the page */
+  readonly canUploadAttachments: boolean;
   readonly userName: string;
   readonly userColor: string;
   /** Hostnames generic iframes may embed (WikiSetting.iframeAllowlist) */
@@ -134,6 +138,8 @@ export const WikiCollabEditor = ({
   pageId,
   collabUrl,
   canEdit,
+  canUploadImages,
+  canUploadAttachments,
   userName,
   userColor,
   iframeAllowlist,
@@ -183,6 +189,8 @@ export const WikiCollabEditor = ({
         className={className}
         pageId={pageId}
         isEditing={isEditing}
+        canUploadImages={canUploadImages}
+        canUploadAttachments={canUploadAttachments}
         editor={null}
         statusSlot={
           <WikiCollabStatusDot
@@ -205,6 +213,8 @@ export const WikiCollabEditor = ({
       pageId={pageId}
       provider={provider}
       canEdit={canEdit}
+      canUploadImages={canUploadImages}
+      canUploadAttachments={canUploadAttachments}
       isEditing={isEditing}
       userName={userName}
       userColor={userColor}
@@ -225,6 +235,10 @@ interface ConnectedEditorProps {
   readonly provider: HocuspocusProvider;
   /** Whether the viewer has edit permission — published to the other clients */
   readonly canEdit: boolean;
+  /** Whether the viewer may upload images to the page */
+  readonly canUploadImages: boolean;
+  /** Whether the viewer may upload file attachments to the page */
+  readonly canUploadAttachments: boolean;
   /** Whether the viewer can edit AND has toggled edit mode on */
   readonly isEditing: boolean;
   readonly userName: string;
@@ -243,6 +257,8 @@ const ConnectedEditor = ({
   pageId,
   provider,
   canEdit,
+  canUploadImages,
+  canUploadAttachments,
   isEditing,
   userName,
   userColor,
@@ -374,6 +390,8 @@ const ConnectedEditor = ({
     roleCitizens,
     collaboration: true,
     interactive: isEditing,
+    canUploadImages,
+    canUploadAttachments,
     onRequestEmbed: requestEmbed,
     onRequestLink: requestLink,
     onRequestVariantLink: requestVariantLink,
@@ -421,6 +439,8 @@ const ConnectedEditor = ({
         className={className}
         pageId={pageId}
         isEditing={isEditing}
+        canUploadImages={canUploadImages}
+        canUploadAttachments={canUploadAttachments}
         editor={showEditor ? editor : null}
         statusSlot={
           <>

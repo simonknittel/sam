@@ -26,17 +26,24 @@ import {
   FaTasks,
   FaUsers,
 } from "react-icons/fa";
+import { WikiUploadKind } from "../utils/uploadWikiPageFile";
 import {
   insertWikiFile,
+  isWikiUploadKindAllowed,
   pickWikiFiles,
   WIKI_ATTACHMENT_ACCEPT,
   WIKI_IMAGE_ACCEPT,
+  type WikiUploadPermissions,
 } from "./wikiEditorFiles";
 import { createWikiSuggestionRender } from "./WikiSuggestionMenu";
 
 export interface WikiSlashCommandOptions {
   /** Id of the page being edited — target for file uploads */
   pageId: string;
+  /** Whether the viewer may upload images to the page */
+  canUploadImages: boolean;
+  /** Whether the viewer may upload file attachments to the page */
+  canUploadAttachments: boolean;
   /** Opens the embed URL dialog (mounted by WikiCollabEditor) */
   onRequestEmbed: () => void;
   /** Opens the link dialog (mounted by WikiCollabEditor) */
@@ -66,6 +73,15 @@ export interface WikiSlashCommandItem {
    * nest, not even indirectly via callouts or collapsible sections).
    */
   readonly insertsGrid?: boolean;
+  /**
+   * The upload kind the entry starts — entries of a kind the viewer may
+   * not upload are shown disabled (applyWikiUploadRestrictions).
+   */
+  readonly uploadKind?: WikiUploadKind;
+  /** Shown muted and inert; run is never called (WikiSuggestionMenu) */
+  readonly disabled?: boolean;
+  /** Secondary line under the title (the disabled entries' hint) */
+  readonly subtitle?: string;
   readonly run: (
     editor: Editor,
     range: Range,
@@ -179,11 +195,12 @@ export const WIKI_SLASH_COMMAND_ITEMS: readonly WikiSlashCommandItem[] = [
     title: "Bild",
     icon: <FaImage />,
     keywords: ["bild", "image", "foto", "img"],
+    uploadKind: WikiUploadKind.Image,
     run: (editor, range, options) => {
       editor.chain().focus().deleteRange(range).run();
       pickWikiFiles(WIKI_IMAGE_ACCEPT, (files) => {
         for (const file of files)
-          void insertWikiFile(editor, options.pageId, file);
+          void insertWikiFile(editor, options.pageId, options, file);
       });
     },
   },
@@ -191,11 +208,12 @@ export const WIKI_SLASH_COMMAND_ITEMS: readonly WikiSlashCommandItem[] = [
     title: "Dateianhang",
     icon: <FaPaperclip />,
     keywords: ["datei", "anhang", "attachment", "file", "pdf", "upload"],
+    uploadKind: WikiUploadKind.Attachment,
     run: (editor, range, options) => {
       editor.chain().focus().deleteRange(range).run();
       pickWikiFiles(WIKI_ATTACHMENT_ACCEPT, (files) => {
         for (const file of files)
-          void insertWikiFile(editor, options.pageId, file);
+          void insertWikiFile(editor, options.pageId, options, file);
       });
     },
   },
@@ -340,10 +358,32 @@ export const matchesWikiSlashCommandQuery = (
   );
 };
 
-const filterSlashCommandItems = (query: string, editor: Editor) => {
-  return availableSlashCommandItems(editor).filter((item) =>
-    matchesWikiSlashCommandQuery(item, query),
+/**
+ * Marks upload entries of a kind the viewer may not upload as disabled
+ * with a hint — applied AFTER the availability filtering, so blocked
+ * entries stay visible (but inert) wherever they would appear at all.
+ * Shared with the gutter's insert palette.
+ */
+export const applyWikiUploadRestrictions = (
+  items: readonly WikiSlashCommandItem[],
+  permissions: WikiUploadPermissions,
+): WikiSlashCommandItem[] =>
+  items.map((item) =>
+    item.uploadKind !== undefined &&
+    !isWikiUploadKindAllowed(item.uploadKind, permissions)
+      ? { ...item, disabled: true, subtitle: "Nur für Verwalter dieser Seite" }
+      : item,
   );
+
+const filterSlashCommandItems = (
+  query: string,
+  editor: Editor,
+  permissions: WikiUploadPermissions,
+) => {
+  return applyWikiUploadRestrictions(
+    availableSlashCommandItems(editor),
+    permissions,
+  ).filter((item) => matchesWikiSlashCommandQuery(item, query));
 };
 
 /**
@@ -358,6 +398,8 @@ export const WikiSlashCommand = Extension.create<WikiSlashCommandOptions>({
   addOptions() {
     return {
       pageId: "",
+      canUploadImages: false,
+      canUploadAttachments: false,
       onRequestEmbed: () => undefined,
       onRequestLink: () => undefined,
       onRequestVariantLink: () => undefined,
@@ -372,9 +414,11 @@ export const WikiSlashCommand = Extension.create<WikiSlashCommandOptions>({
         char: "/",
         allowSpaces: false,
         command: ({ editor, range, props }) => {
+          if (props.disabled) return;
           props.run(editor, range, this.options);
         },
-        items: ({ query, editor }) => filterSlashCommandItems(query, editor),
+        items: ({ query, editor }) =>
+          filterSlashCommandItems(query, editor, this.options),
         render: () => createWikiSuggestionRender<WikiSlashCommandItem>(),
       }),
     ];

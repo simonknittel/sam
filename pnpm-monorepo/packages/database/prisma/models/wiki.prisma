@@ -25,6 +25,18 @@ enum WikiPageAdminability {
   RESTRICTED
 }
 
+/// Who may upload while editing a page (one field per upload kind: images
+/// and file attachments, fully independent of each other). Unlike the
+/// permission tiers there are no role lists: RESTRICTED means only users
+/// with effective admin permission on the page, EDITORS extends that to
+/// everyone with effective edit permission. INHERIT at the root resolves
+/// to RESTRICTED.
+enum WikiPageUploadability {
+  INHERIT
+  EDITORS
+  RESTRICTED
+}
+
 /// Controls whether a page shows up in the tree sidebar. Purely cosmetic —
 /// never a permission: hidden pages stay reachable via direct links, search,
 /// favorites, recents, tags and page-index nodes. HIDDEN takes the page and
@@ -71,6 +83,9 @@ model WikiPage {
   editability  WikiPageEditability  @default(INHERIT)
   adminability WikiPageAdminability @default(INHERIT)
   roleAccess   WikiPageRoleAccess[]
+
+  imageUploadability      WikiPageUploadability @default(INHERIT)
+  attachmentUploadability WikiPageUploadability @default(INHERIT)
 
   /// The effective owner holds the implicit permissions on a page (all three
   /// tiers, implicit inclusion in RESTRICTED). NULL means the owner is

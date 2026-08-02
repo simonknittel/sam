@@ -42,6 +42,29 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-08-02-wiki-upload-berechtigungen",
+    date: "2026-08-02",
+    title: "Wiki: Upload-Berechtigungen",
+    tags: ["Änderung", "Wiki"],
+    isTracked: false,
+    body: () => (
+      <>
+        <p>
+          Bilder und Dateianhänge können ab jetzt standardmäßig nur noch
+          Verwalter einer Wiki-Seite hochladen. Im Berechtigungen-Dialog gibt es
+          dafür den neuen Abschnitt &bdquo;Hochladen&ldquo;: Dort lässt sich pro
+          Seite – getrennt für Bilder und Dateianhänge – freischalten, dass auch
+          alle mit Bearbeiten-Berechtigung hochladen dürfen. Wie die übrigen
+          Berechtigungen erben Unterseiten die Einstellung, solange sie keine
+          eigene haben.
+        </p>
+
+        <p>Das Seiten-Icon können ebenfalls nur noch Verwalter ändern.</p>
+      </>
+    ),
+  },
+
+  {
     key: "2026-08-02-wiki-verbundene-nutzer",
     date: "2026-08-02",
     title: "Wiki: Verbundene Nutzer",

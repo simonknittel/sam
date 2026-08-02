@@ -750,6 +750,8 @@ export interface AuditEventDataByType {
     visibility: string;
     editability: string;
     adminability: string;
+    imageUploadability: string;
+    attachmentUploadability: string;
     readRoleIds: string[];
     editRoleIds: string[];
     adminRoleIds: string[];
@@ -1966,6 +1968,8 @@ export const AuditEventDefinitions: {
       visibility: "RESTRICTED",
       editability: "INHERIT",
       adminability: "INHERIT",
+      imageUploadability: "INHERIT",
+      attachmentUploadability: "EDITORS",
       readRoleIds: ["string"],
       editRoleIds: [],
       adminRoleIds: [],
