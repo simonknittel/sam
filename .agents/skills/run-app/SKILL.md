@@ -96,7 +96,9 @@ docker compose exec psql pg_isready -U postgres   # wait for "accepting connecti
 
 `--build` matters: it builds the `sam-collab` image from THIS
 worktree's `pnpm-monorepo/apps/collab` instead of reusing an image
-built from another branch's code.
+built from another branch's code. Each rebuild leaves the previous
+image dangling and grows the build cache — §7 covers reclaiming that
+space.
 
 ## 3. Seed the worktree database from the main stack
 
@@ -165,10 +167,47 @@ redirect URIs — a one-time manual step for the user.
 
 Kill the dev server you started.
 
-- Worktree stack: `docker compose stop` (keeps the seeded database for
-  next time). `docker compose down` also works but destroys the data —
-  re-seed on next start. Run `down` when the worktree is being removed.
-- Main stack: leave it running; stop with
-  `docker stop sam-psql-1 sam-soketi-1 sam-sam-collab-1` only when the
-  user asks. NEVER `docker compose down` the main stack — its
-  containers hold the only copy of the dev data.
+**Worktree stack, keeping it around:** `docker compose stop` (keeps the
+seeded database for next time).
+
+**Worktree being removed:** tear the stack down fully, BEFORE deleting
+the worktree directory:
+
+```bash
+cd <worktree>
+docker compose down --rmi local --volumes --remove-orphans
+```
+
+A plain `down` removes only the containers and network, leaving two
+things that pile up on disk: the `sam-collab` image built from this
+worktree (`<project>-sam-collab`) and the anonymous volume the postgres
+image creates for its data. The flags remove both. If the worktree
+directory is already gone, address the stack by project name instead:
+`docker compose ls -a` to find it, then
+`docker compose -p <project> down --rmi local --volumes --remove-orphans`.
+
+**Main stack:** leave it running; stop with
+`docker stop sam-psql-1 sam-soketi-1 sam-sam-collab-1` only when the
+user asks. NEVER `docker compose down` the main stack — its containers
+hold the only copy of the dev data.
+
+## 7. Reclaiming disk space
+
+Heavy worktree use leaks disk in three places: stacks of worktrees that
+were deleted without the full `down` above, superseded `sam-collab`
+images left dangling by every `--build`, and Docker build cache. To
+check and clean:
+
+```bash
+docker system df                  # what's using space
+docker compose ls -a              # tear down stacks whose worktree no longer exists (§6)
+docker image prune -f             # dangling images (old sam-collab builds)
+docker builder prune -f           # build cache
+docker volume prune -f            # anonymous volumes orphaned by earlier plain `down`s
+```
+
+The main stack survives all three prunes: its containers exist (even
+when stopped), so their image and data volume count as in use. The
+prunes are Docker-wide though — they also drop dangling images and
+cache from the user's other projects (all rebuildable, but worth
+mentioning to the user).
