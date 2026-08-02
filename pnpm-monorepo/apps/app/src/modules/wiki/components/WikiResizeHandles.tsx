@@ -83,6 +83,14 @@ export const WikiResizeHandles = ({
        */
       if (dragStateRef.current) return;
 
+      /**
+       * A transaction that redraws the hovered node detaches the element;
+       * the hover hook re-anchors (or clears) it right after — skip the
+       * tick instead of flashing the handles away, the prop change re-runs
+       * the update.
+       */
+      if (hoveredElement && !hoveredElement.isConnected) return;
+
       stopMeasuring?.();
       stopMeasuring = null;
 
@@ -94,7 +102,9 @@ export const WikiResizeHandles = ({
 
       /**
        * The hovered node wins; a node-selected node (tap on touch
-       * devices) is the fallback.
+       * devices) is the fallback. Nested blocks (grid cells, callouts,
+       * collapsibles) get no handles — width only applies to direct
+       * children of the document.
        */
       let resolved: { position: number; heightResizable: boolean } | null =
         null;
@@ -106,7 +116,7 @@ export const WikiResizeHandles = ({
           hoveredElement,
           WIKI_RESIZABLE_NODE_TYPES,
         );
-        if (hovered) {
+        if (hovered && editor.state.doc.resolve(hovered.position).depth === 0) {
           resolved = {
             position: hovered.position,
             heightResizable: isWikiHeightResizable(
@@ -122,6 +132,7 @@ export const WikiResizeHandles = ({
         const { selection } = editor.state;
         if (
           selection instanceof NodeSelection &&
+          selection.$from.depth === 0 &&
           (WIKI_RESIZABLE_NODE_TYPES as readonly string[]).includes(
             selection.node.type.name,
           )
@@ -187,6 +198,17 @@ export const WikiResizeHandles = ({
 
     event.preventDefault();
     setDragLock(true);
+    if (side !== "bottom") {
+      /**
+       * Preview the margins the committed width will render (centered by
+       * default), so the block re-centers live while dragging instead of
+       * jumping into position on release.
+       */
+      const align: unknown = editor.state.doc.nodeAt(target.position)?.attrs
+        .align;
+      element.style.marginLeft = align === "left" ? "0" : "auto";
+      element.style.marginRight = align === "right" ? "0" : "auto";
+    }
     const startRect = element.getBoundingClientRect();
     dragStateRef.current = {
       side,

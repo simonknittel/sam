@@ -1,5 +1,9 @@
 import { mergeAttributes, Node } from "@tiptap/core";
 import { walkWikiContent } from "./walkWikiContent.js";
+import {
+  wikiAlignAttribute,
+  wikiWidthPxAttribute,
+} from "./wikiResizableNodes.js";
 
 /**
  * The node's configuration. The document only ever stores the role — its
@@ -68,6 +72,8 @@ export const WikiRoleCitizens = Node.create({
 
   addAttributes() {
     return {
+      ...wikiWidthPxAttribute(),
+      ...wikiAlignAttribute(),
       roleId: {
         default: null,
         parseHTML: (element) =>

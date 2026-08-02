@@ -6,8 +6,10 @@ import {
   DetailsSummary,
 } from "@tiptap/extension-details";
 import { Document } from "@tiptap/extension-document";
-import { TaskList } from "@tiptap/extension-list";
-import { TableKit } from "@tiptap/extension-table";
+import { HorizontalRule } from "@tiptap/extension-horizontal-rule";
+import { BulletList, OrderedList, TaskList } from "@tiptap/extension-list";
+import { Paragraph } from "@tiptap/extension-paragraph";
+import { Table, TableKit } from "@tiptap/extension-table";
 import { Placeholder } from "@tiptap/extensions";
 import type { Schema } from "@tiptap/pm/model";
 import StarterKit from "@tiptap/starter-kit";
@@ -28,7 +30,12 @@ import { WikiHeadingIds } from "./wikiHeadingIds.js";
 import { WikiHighlight } from "./wikiHighlightMark.js";
 import { WikiPageIndex } from "./wikiPageIndexNode.js";
 import { WikiPageLink, type WikiPageLinkedPage } from "./wikiPageLinkNode.js";
-import { WikiImage } from "./wikiResizableNodes.js";
+import {
+  WIKI_NARROW_WIDTH_PX,
+  WIKI_WIDE_WIDTH_PX,
+  WikiImage,
+  withWikiBlockLayout,
+} from "./wikiResizableNodes.js";
 import { WikiRoleCitizens } from "./wikiRoleCitizensNode.js";
 import { WikiTextColorMark } from "./wikiTextColorMark.js";
 import {
@@ -100,6 +107,94 @@ const WikiDetailsContent = DetailsContent.extend({
 });
 
 /**
+ * The stock block nodes plus the resizable width and block-position
+ * attributes (wikiResizableNodes.ts). They replace their StarterKit and
+ * TableKit variants below; the custom block nodes (callout, grid,
+ * attachment, …) carry the attributes in their own definitions instead —
+ * the app extends those exports directly (e.g. with node views), and an
+ * assembly-time wrapper would be lost in that replacement. Space-hungry
+ * blocks default to the wide preset instead of narrow.
+ */
+const WikiParagraph = withWikiBlockLayout(Paragraph);
+const WikiBulletList = withWikiBlockLayout(BulletList);
+const WikiOrderedList = withWikiBlockLayout(OrderedList);
+const WikiTaskList = withWikiBlockLayout(TaskList);
+const WikiHorizontalRule = withWikiBlockLayout(
+  HorizontalRule,
+  WIKI_WIDE_WIDTH_PX,
+);
+/**
+ * Type conversions copy the source block's attributes (Tiptap's setNode),
+ * so a paragraph toggled into a code block would keep the narrow width —
+ * the commands override the width with the TARGET type's default in both
+ * directions (wide for the code block, narrow for the paragraph it
+ * toggles back into) unless the caller passes one explicitly. The ```
+ * input rule is unaffected: it creates a fresh node, whose defaults
+ * already apply. The casts widen the stock `{ language }` attribute type.
+ */
+const WikiCodeBlock = withWikiBlockLayout(
+  CodeBlockLowlight,
+  WIKI_WIDE_WIDTH_PX,
+).extend({
+  addCommands() {
+    const parent = this.parent?.();
+    return {
+      ...parent,
+      setCodeBlock: (attributes) => (props) =>
+        parent?.setCodeBlock?.({
+          widthPx: WIKI_WIDE_WIDTH_PX,
+          ...attributes,
+        } as {
+          language: string;
+        })(props) ?? false,
+      toggleCodeBlock: (attributes) => (props) => {
+        const widthPx = props.editor.isActive(this.name)
+          ? WIKI_NARROW_WIDTH_PX
+          : WIKI_WIDE_WIDTH_PX;
+        return (
+          parent?.toggleCodeBlock?.({ widthPx, ...attributes } as {
+            language: string;
+          })(props) ?? false
+        );
+      },
+    };
+  },
+});
+const WikiTable = withWikiBlockLayout(Table, WIKI_WIDE_WIDTH_PX);
+
+/**
+ * The stock Details node view applies the node's attributes (including
+ * the layout styles) only on mount — its update() just tracks the open
+ * state. Recreate the view whenever the layout attributes change so they
+ * are re-applied.
+ */
+const WikiDetails = withWikiBlockLayout(Details).extend({
+  addNodeView() {
+    const createParentView = this.parent?.();
+    if (!createParentView) return null;
+
+    return (props) => {
+      const view = createParentView(props);
+      if (!view || typeof view !== "object" || !("update" in view)) return view;
+
+      const parentUpdate = view.update?.bind(view);
+      let renderedNode = props.node;
+      view.update = (node, decorations, innerDecorations) => {
+        const previous = renderedNode;
+        renderedNode = node;
+        if (
+          node.attrs.widthPx !== previous.attrs.widthPx ||
+          node.attrs.align !== previous.attrs.align
+        )
+          return false;
+        return parentUpdate?.(node, decorations, innerDecorations) ?? false;
+      };
+      return view;
+    };
+  },
+});
+
+/**
  * The wiki's Tiptap extensions. Shared between the editor, the static
  * renderer for readers and the server-side content validation so all three
  * always agree on the schema. All options only affect editor behavior or
@@ -118,6 +213,11 @@ export const getWikiEditorExtensions = (
       blockquote: false,
       heading: false,
       listItem: false,
+      // Replaced with the resizable variants below
+      paragraph: false,
+      bulletList: false,
+      orderedList: false,
+      horizontalRule: false,
       link: {
         openOnClick: false,
       },
@@ -130,21 +230,34 @@ export const getWikiEditorExtensions = (
       },
     }),
     WikiDocument,
-    CodeBlockLowlight.configure({ lowlight }),
+    WikiParagraph,
+    WikiBulletList,
+    WikiOrderedList,
+    WikiHorizontalRule,
+    WikiCodeBlock.configure({ lowlight }),
     WikiBlockquote,
     WikiHeading,
     WikiListItem,
     TableKit.configure({
-      table: { resizable: false },
+      // Replaced with the resizable variant below
+      table: false,
       // Replaced with the text-only variants below
       tableCell: false,
       tableHeader: false,
     }),
+    /**
+     * No node view (View: NULL): the stock TableView manages the table's
+     * inline width itself and ignores attribute updates, which would both
+     * fight the layout attributes — without it the editor renders through
+     * renderHTML like the static renderer (also meaning: no .tableWrapper
+     * div in the editor DOM) and re-renders on attribute changes.
+     */
+    WikiTable.configure({ resizable: false, View: null }),
     WikiTableCell,
     WikiTableHeader,
-    TaskList,
+    WikiTaskList,
     WikiTaskItem.configure({ nested: true }),
-    Details,
+    WikiDetails,
     DetailsSummary,
     WikiDetailsContent,
     WikiHighlight,

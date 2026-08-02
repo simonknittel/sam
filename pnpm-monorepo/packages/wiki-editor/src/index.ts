@@ -73,7 +73,10 @@ export {
 } from "./wikiPageIndexNode.js";
 export type { WikiPageLinkedPage } from "./wikiPageLinkNode.js";
 export {
+  WIKI_FULL_WIDTH,
+  WIKI_NARROW_WIDTH_PX,
   WIKI_RESIZABLE_NODE_TYPES,
+  WIKI_WIDE_WIDTH_PX,
   clampWikiIframeHeightPx,
   clampWikiWidthPx,
   isWikiHeightResizable,

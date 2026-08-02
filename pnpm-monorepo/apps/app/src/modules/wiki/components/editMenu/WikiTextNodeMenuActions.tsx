@@ -6,6 +6,7 @@ import { FaParagraph, FaTrash } from "react-icons/fa";
 import { ALIGNMENT_OPTIONS } from "../toolbar/alignments";
 import { ToolbarButton } from "../toolbar/ToolbarButton";
 import { ToolbarDivider } from "../toolbar/ToolbarDivider";
+import { WikiBlockLayoutActions } from "./WikiBlockLayoutActions";
 import { WikiDuplicateCopyActions } from "./WikiDuplicateCopyActions";
 import type { WikiTextNodeMenuState } from "./wikiEditMenuState";
 
@@ -94,6 +95,19 @@ export const WikiTextNodeMenuActions = ({ editor, menu }: Props) => {
               <Icon />
             </ToolbarButton>
           ))}
+
+          <ToolbarDivider />
+        </>
+      )}
+
+      {menu.topLevel && (
+        <>
+          <WikiBlockLayoutActions
+            editor={editor}
+            position={menu.position}
+            widthPx={menu.widthPx}
+            align={menu.align}
+          />
 
           <ToolbarDivider />
         </>

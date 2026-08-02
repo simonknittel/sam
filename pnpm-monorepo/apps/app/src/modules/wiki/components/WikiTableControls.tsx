@@ -52,6 +52,14 @@ export const WikiTableControls = ({
     let stopMeasuring: (() => void) | null = null;
 
     const update = () => {
+      /**
+       * A transaction that redraws the hovered node detaches the element;
+       * the hover hook re-anchors (or clears) it right after — skip the
+       * tick instead of flashing the controls away, the prop change
+       * re-runs the update.
+       */
+      if (hoveredElement && !hoveredElement.isConnected) return;
+
       stopMeasuring?.();
       stopMeasuring = null;
 
@@ -62,10 +70,6 @@ export const WikiTableControls = ({
       }
 
       let tableDom: Element | null = hoveredElement?.closest("table") ?? null;
-
-      /** The hovered element may be the wrapper AROUND the table */
-      if (!tableDom && hoveredElement?.matches(".tableWrapper"))
-        tableDom = hoveredElement.querySelector("table");
 
       /**
        * Touch devices don't hover, and typing dismisses the hover — fall

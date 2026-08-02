@@ -17,7 +17,10 @@ import type { Editor } from "@tiptap/react";
 import { getWikiNodeTypeLabel } from "../../utils/getWikiNodeTypeLabel";
 import { TEXT_FORMAT_OPTIONS } from "../toolbar/textFormats";
 import type { WikiHighlightRange } from "../WikiActiveNodeHighlight";
-import { resolveWikiNodeFromElement } from "../wikiEditorHover";
+import {
+  resolveWikiNodeFromElement,
+  wikiHoverTargetKey,
+} from "../wikiEditorHover";
 
 /** Node types with an editable src URL */
 export const URL_NODE_TYPES = ["wikiEmbed"];
@@ -54,7 +57,7 @@ export const CONFIGURABLE_NODE_TYPES = ["wikiPageIndex", "wikiRoleCitizens"];
  * at least those two.
  */
 const BLOCK_MENU_SELECTOR =
-  "ul, ol, blockquote, pre, table, .tableWrapper, hr, details, [data-wiki-grid]";
+  "ul, ol, blockquote, pre, table, hr, details, [data-wiki-grid]";
 const BLOCK_NODE_TYPES = [
   "bulletList",
   "orderedList",
@@ -69,22 +72,6 @@ const BLOCK_NODE_TYPES = [
 
 /** Text blocks with the hover-raised block menu and the selection-raised formatting menu */
 const TEXT_MENU_NODE_TYPES = ["paragraph", "heading"];
-
-/**
- * Stable identity per hovered element: document positions shift under
- * remote collab edits and must not remount a menu (and reset a URL input
- * being typed in), so the menu key derives from the element instead.
- */
-let nextTargetId = 0;
-const targetIds = new WeakMap<HTMLElement, number>();
-const targetKey = (element: HTMLElement): string => {
-  let id = targetIds.get(element);
-  if (id === undefined) {
-    id = ++nextTargetId;
-    targetIds.set(element, id);
-  }
-  return `element:${id}`;
-};
 
 /**
  * Floating-ui anchor for the text menu: horizontal bounds of the selected
@@ -142,6 +129,9 @@ export type WikiNodeMenuState = {
   readonly citizenId: string;
   readonly variantId: string;
   readonly align: WikiNodeAlignment;
+  readonly widthPx: number | null;
+  /** Width/position only apply to direct children of the document */
+  readonly topLevel: boolean;
   /** Raw attributes, e.g. for the page-index config dialog */
   readonly attrs: Readonly<Record<string, unknown>>;
 } & WikiMenuTarget;
@@ -156,6 +146,10 @@ export type WikiCalloutMenuState = {
   readonly kind: "callout";
   readonly position: number;
   readonly color: WikiCalloutColor;
+  readonly align: WikiNodeAlignment;
+  readonly widthPx: number | null;
+  /** Width/position only apply to direct children of the document */
+  readonly topLevel: boolean;
 } & WikiMenuTarget;
 
 export type WikiBlockMenuState = {
@@ -165,6 +159,10 @@ export type WikiBlockMenuState = {
   readonly nodeSize: number;
   /** wikiGrid only: vertical alignment of the cell contents */
   readonly verticalAlign: WikiGridVerticalAlign;
+  readonly align: WikiNodeAlignment;
+  readonly widthPx: number | null;
+  /** Width/position only apply to direct children of the document */
+  readonly topLevel: boolean;
 } & WikiMenuTarget;
 
 /** Formatting menu while text inside a single block is selected */
@@ -185,6 +183,10 @@ export type WikiTextNodeMenuState = {
   readonly nodeSize: number;
   readonly headingLevel: number | null;
   readonly textAlign: WikiNodeAlignment;
+  readonly align: WikiNodeAlignment;
+  readonly widthPx: number | null;
+  /** Width/position only apply to direct children of the document */
+  readonly topLevel: boolean;
   /**
    * Paragraph inside a text-only container (quote, table cell, list
    * item): headings and alignment are unavailable there
@@ -201,7 +203,21 @@ export type WikiEditMenuState =
   | WikiTextNodeMenuState
   | null;
 
+/** Width/position only apply to direct children of the document */
+const isTopLevel = (editor: Editor, position: number): boolean =>
+  editor.state.doc.resolve(position).depth === 0;
+
+/**
+ * The menu's width value: a pixel number, or NULL for full width (both
+ * the explicit WIKI_FULL_WIDTH marker and the stripped/legacy NULL).
+ */
+const menuWidthPx = (node: ProseMirrorNode): number | null => {
+  const value: unknown = node.attrs.widthPx;
+  return typeof value === "number" ? value : null;
+};
+
 const nodeMenu = (
+  editor: Editor,
   node: ProseMirrorNode,
   position: number,
   target: WikiMenuTarget,
@@ -215,12 +231,15 @@ const nodeMenu = (
   pageId: String(node.attrs.pageId ?? ""),
   citizenId: String(node.attrs.citizenId ?? ""),
   variantId: String(node.attrs.variantId ?? ""),
-  align: (node.attrs.align ?? "left") as WikiNodeAlignment,
+  align: (node.attrs.align ?? "center") as WikiNodeAlignment,
+  widthPx: menuWidthPx(node),
+  topLevel: isTopLevel(editor, position),
   attrs: node.attrs,
   ...target,
 });
 
 const calloutMenu = (
+  editor: Editor,
   node: ProseMirrorNode,
   position: number,
   target: WikiMenuTarget,
@@ -228,6 +247,9 @@ const calloutMenu = (
   kind: "callout",
   position,
   color: (node.attrs.color ?? "blue") as WikiCalloutColor,
+  align: (node.attrs.align ?? "center") as WikiNodeAlignment,
+  widthPx: menuWidthPx(node),
+  topLevel: isTopLevel(editor, position),
   ...target,
 });
 
@@ -273,6 +295,9 @@ const textNodeMenu = (
   nodeSize: node.nodeSize,
   headingLevel: textHeadingLevel(node),
   textAlign: (node.attrs.textAlign ?? "left") as WikiNodeAlignment,
+  align: (node.attrs.align ?? "center") as WikiNodeAlignment,
+  widthPx: menuWidthPx(node),
+  topLevel: isTopLevel(editor, position),
   inTextOnlyBlock: getWikiPositionRestrictions(editor.state.doc, position)
     .blocks,
   ...target,
@@ -285,7 +310,7 @@ export const wikiMenuFromElement = (
 ): WikiEditMenuState => {
   const target: WikiMenuTarget = {
     reference: element,
-    key: targetKey(element),
+    key: wikiHoverTargetKey(element),
   };
 
   for (const { selector, typeName } of NODE_VIEW_MENU_TARGETS) {
@@ -296,9 +321,9 @@ export const wikiMenuFromElement = (
       typeName,
     ]);
     if (!resolved) return null;
-    return nodeMenu(resolved.node, resolved.position, {
+    return nodeMenu(editor, resolved.node, resolved.position, {
       reference: nodeViewDom,
-      key: targetKey(nodeViewDom),
+      key: wikiHoverTargetKey(nodeViewDom),
     });
   }
 
@@ -331,7 +356,7 @@ export const wikiMenuFromElement = (
       "wikiCallout",
     ]);
     if (!resolved) return null;
-    return calloutMenu(resolved.node, resolved.position, target);
+    return calloutMenu(editor, resolved.node, resolved.position, target);
   }
 
   if (element.matches("p, h1, h2, h3")) {
@@ -358,13 +383,16 @@ export const wikiMenuFromElement = (
       nodeSize: resolved.node.nodeSize,
       verticalAlign: (resolved.node.attrs.verticalAlign ??
         null) as WikiGridVerticalAlign,
+      align: (resolved.node.attrs.align ?? "center") as WikiNodeAlignment,
+      widthPx: menuWidthPx(resolved.node),
+      topLevel: isTopLevel(editor, resolved.position),
       ...target,
     };
   }
 
   const resolved = resolveWikiNodeFromElement(editor, element, MENU_NODE_TYPES);
   if (!resolved) return null;
-  return nodeMenu(resolved.node, resolved.position, target);
+  return nodeMenu(editor, resolved.node, resolved.position, target);
 };
 
 /** The menu the current selection raises, or NULL when it raises none */
@@ -380,7 +408,7 @@ export const wikiMenuFromSelection = (
   ) {
     const nodeDom = editor.view.nodeDOM(selection.from);
     if (!(nodeDom instanceof HTMLElement)) return null;
-    return nodeMenu(selection.node, selection.from, {
+    return nodeMenu(editor, selection.node, selection.from, {
       reference: nodeDom,
       key: `selection:${selection.from}`,
     });
@@ -400,7 +428,7 @@ export const wikiMenuFromSelection = (
     if (!(blockDom instanceof HTMLElement)) return null;
     return textNodeMenu(editor, selection.node, selection.from, {
       reference: blockDom,
-      key: targetKey(blockDom),
+      key: wikiHoverTargetKey(blockDom),
     });
   }
 
@@ -451,7 +479,7 @@ export const wikiMenuFromSelection = (
         selection.from,
         selection.to,
       ),
-      key: targetKey(blockDom),
+      key: wikiHoverTargetKey(blockDom),
     });
   }
 
@@ -465,7 +493,7 @@ export const wikiMenuFromSelection = (
       "wikiCallout",
     ]);
     if (!resolved) return null;
-    return calloutMenu(resolved.node, resolved.position, {
+    return calloutMenu(editor, resolved.node, resolved.position, {
       reference: calloutDom,
       key: `selection:${resolved.position}`,
     });

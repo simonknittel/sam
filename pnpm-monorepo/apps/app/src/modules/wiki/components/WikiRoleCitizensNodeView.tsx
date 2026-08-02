@@ -11,6 +11,7 @@ import {
   ReactNodeViewRenderer,
   type NodeViewProps,
 } from "@tiptap/react";
+import { wikiBlockLayoutStyle } from "./wikiBlockLayoutStyle";
 import {
   WikiRoleCitizensList,
   type WikiRoleCitizen,
@@ -42,7 +43,7 @@ const WikiRoleCitizensNodeView = ({ node, extension }: NodeViewProps) => {
   );
 
   return (
-    <NodeViewWrapper>
+    <NodeViewWrapper style={wikiBlockLayoutStyle(node.attrs)}>
       <WikiRoleCitizensList
         roleId={roleId}
         citizens={data ?? []}

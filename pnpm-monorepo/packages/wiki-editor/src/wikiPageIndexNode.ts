@@ -1,5 +1,9 @@
 import { mergeAttributes, Node } from "@tiptap/core";
 import { walkWikiContent } from "./walkWikiContent.js";
+import {
+  wikiAlignAttribute,
+  wikiWidthPxAttribute,
+} from "./wikiResizableNodes.js";
 
 export const WIKI_PAGE_INDEX_MODES = ["tree", "tags"] as const;
 export type WikiPageIndexMode = (typeof WIKI_PAGE_INDEX_MODES)[number];
@@ -132,6 +136,8 @@ export const WikiPageIndex = Node.create({
 
   addAttributes() {
     return {
+      ...wikiWidthPxAttribute(),
+      ...wikiAlignAttribute(),
       mode: {
         default: "tree",
         parseHTML: (element) =>

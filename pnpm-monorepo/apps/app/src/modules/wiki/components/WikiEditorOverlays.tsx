@@ -34,7 +34,6 @@ const HOVER_SELECTOR = [
   "blockquote",
   "pre",
   "table",
-  ".tableWrapper",
   "hr",
   "details",
   "[data-wiki-grid]",

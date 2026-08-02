@@ -9,11 +9,11 @@ import {
   FaExternalLinkAlt,
   FaTrash,
 } from "react-icons/fa";
-import { ALIGNMENT_OPTIONS } from "../toolbar/alignments";
 import { ToolbarButton } from "../toolbar/ToolbarButton";
 import { ToolbarDivider } from "../toolbar/ToolbarDivider";
 import { insertWikiEmbedFromUrl } from "../wikiEditorEmbeds";
 import { openInNewTab } from "./openInNewTab";
+import { WikiBlockLayoutActions } from "./WikiBlockLayoutActions";
 import { WikiDuplicateCopyActions } from "./WikiDuplicateCopyActions";
 import {
   CONFIGURABLE_NODE_TYPES,
@@ -65,20 +65,6 @@ export const WikiNodeMenuActions = ({
      */
     editor.commands.setNodeSelection(menu.position);
     void insertWikiEmbedFromUrl(editor, url);
-  };
-
-  const setNodeAlignment = (value: string) => {
-    editor
-      .chain()
-      .command(({ tr }) => {
-        tr.setNodeAttribute(
-          menu.position,
-          "align",
-          value === "left" ? null : value,
-        );
-        return true;
-      })
-      .run();
   };
 
   return (
@@ -180,16 +166,14 @@ export const WikiNodeMenuActions = ({
       {(WIKI_RESIZABLE_NODE_TYPES as readonly string[]).includes(
         menu.typeName,
       ) &&
-        ALIGNMENT_OPTIONS.map(({ value, title, icon: Icon }) => (
-          <ToolbarButton
-            key={value}
-            title={title}
-            isActive={menu.align === value}
-            onClick={() => setNodeAlignment(value)}
-          >
-            <Icon />
-          </ToolbarButton>
-        ))}
+        menu.topLevel && (
+          <WikiBlockLayoutActions
+            editor={editor}
+            position={menu.position}
+            widthPx={menu.widthPx}
+            align={menu.align}
+          />
+        )}
 
       <ToolbarDivider />
 

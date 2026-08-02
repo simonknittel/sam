@@ -131,6 +131,14 @@ export const WikiEditMenu = ({
         return;
       }
 
+      /**
+       * A transaction that redraws the hovered node detaches the element;
+       * the hover hook re-anchors (or clears) it right after — skip the
+       * tick instead of flashing the menu closed, the prop change re-runs
+       * the update.
+       */
+      if (hoveredElement && !hoveredElement.isConnected) return;
+
       const hoverMenu = hoveredElement
         ? wikiMenuFromElement(editor, hoveredElement)
         : null;

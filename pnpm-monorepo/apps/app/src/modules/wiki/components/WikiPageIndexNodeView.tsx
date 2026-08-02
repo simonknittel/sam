@@ -12,6 +12,7 @@ import {
   ReactNodeViewRenderer,
   type NodeViewProps,
 } from "@tiptap/react";
+import { wikiBlockLayoutStyle } from "./wikiBlockLayoutStyle";
 import {
   WikiPageIndexList,
   type WikiPageIndexEntry,
@@ -52,7 +53,7 @@ const WikiPageIndexNodeView = ({ node, extension }: NodeViewProps) => {
   );
 
   return (
-    <NodeViewWrapper>
+    <NodeViewWrapper style={wikiBlockLayoutStyle(node.attrs)}>
       <WikiPageIndexList entries={data ?? []} isLoading={isPending} />
     </NodeViewWrapper>
   );

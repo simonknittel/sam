@@ -1,8 +1,28 @@
 "use client";
 
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
+import type { Transaction } from "@tiptap/pm/state";
 import type { Editor } from "@tiptap/react";
 import { useEffect, useState, type RefObject } from "react";
+
+/**
+ * Stable identity per hovered element: document positions shift under
+ * remote collab edits and must not remount a menu (and reset a URL input
+ * being typed in), so menu keys derive from the element instead. When a
+ * transaction redraws the hovered node, useWikiHoveredElement hands the
+ * old element's id to its replacement, so the key also survives redraws.
+ */
+let nextTargetId = 0;
+const targetIds = new WeakMap<HTMLElement, number>();
+
+export const wikiHoverTargetKey = (element: HTMLElement): string => {
+  let id = targetIds.get(element);
+  if (id === undefined) {
+    id = ++nextTargetId;
+    targetIds.set(element, id);
+  }
+  return `element:${id}`;
+};
 
 /**
  * Tracks which element matching `selector` the pointer is over inside the
@@ -31,6 +51,40 @@ export const useWikiHoveredElement = (
     if (!editor || editor.isDestroyed) return;
     const editorDom = editor.view.dom;
 
+    /** Mirror of the state for the listeners below */
+    let hovered: HTMLElement | null = null;
+    /**
+     * The hovered node's own position (nodeDOM(position) renders the
+     * element, possibly via a wrapper), kept mapped through every
+     * transaction so the hover can re-anchor after redraws. NULL when
+     * the element has no such position (mark-rendered links).
+     */
+    let hoveredPosition: number | null = null;
+
+    const setHovered = (next: HTMLElement | null) => {
+      hovered = next;
+      hoveredPosition = null;
+      if (next) {
+        try {
+          const base = editor.view.posAtDOM(next, 0);
+          for (const candidate of [base, base - 1]) {
+            if (candidate < 0) continue;
+            const dom = editor.view.nodeDOM(candidate);
+            if (
+              dom === next ||
+              (dom instanceof HTMLElement && dom.contains(next))
+            ) {
+              hoveredPosition = candidate;
+              break;
+            }
+          }
+        } catch {
+          // posAtDOM throws on out-of-range positions
+        }
+      }
+      setElement(next);
+    };
+
     const handleMouseMove = (event: MouseEvent) => {
       if (lockRef.current) return;
       const target = event.target;
@@ -40,11 +94,11 @@ export const useWikiHoveredElement = (
 
       const match = target.closest(selector);
       if (match instanceof HTMLElement && editorDom.contains(match)) {
-        setElement(match);
+        if (match !== hovered) setHovered(match);
         return;
       }
 
-      setElement(null);
+      if (hovered) setHovered(null);
     };
 
     /**
@@ -53,14 +107,69 @@ export const useWikiHoveredElement = (
      */
     const handleKeyDown = () => {
       if (lockRef.current) return;
-      setElement(null);
+      setHovered(null);
+    };
+
+    /**
+     * Re-anchors the hover when a transaction redraws the hovered node:
+     * markup changes (width presets, alignment, heading level, …) make
+     * ProseMirror replace the node's DOM element wholesale, which would
+     * otherwise drop the hover — closing the edit menu under the pointer
+     * that just clicked one of its buttons. The node counts as redrawn
+     * (not gone) while a node with equal content sits at the mapped
+     * position; otherwise the hover clears like a mouse-out.
+     */
+    const handleTransaction = ({
+      transaction,
+    }: {
+      transaction: Transaction;
+    }) => {
+      if (hoveredPosition === null) {
+        // Not re-anchorable — a detached element just loses the hover
+        if (hovered && !hovered.isConnected && !lockRef.current)
+          setHovered(null);
+        return;
+      }
+
+      try {
+        const previousNode = transaction.before.nodeAt(hoveredPosition);
+        hoveredPosition = transaction.mapping.map(hoveredPosition);
+        if (!hovered || hovered.isConnected || lockRef.current) return;
+
+        const node = transaction.doc.nodeAt(hoveredPosition);
+        const dom = editor.view.nodeDOM(hoveredPosition);
+        const outer = dom instanceof HTMLElement ? dom : null;
+        const match = outer?.matches(selector)
+          ? outer
+          : (outer?.querySelector(selector) ?? null);
+
+        if (
+          !previousNode ||
+          !node ||
+          !previousNode.content.eq(node.content) ||
+          !(match instanceof HTMLElement) ||
+          !editorDom.contains(match)
+        ) {
+          setHovered(null);
+          return;
+        }
+
+        const id = targetIds.get(hovered);
+        if (id !== undefined && !targetIds.has(match)) targetIds.set(match, id);
+        setHovered(match);
+      } catch {
+        // Stale positions must not break the dispatch chain
+        setHovered(null);
+      }
     };
 
     window.addEventListener("mousemove", handleMouseMove);
     editorDom.addEventListener("keydown", handleKeyDown);
+    editor.on("transaction", handleTransaction);
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
       editorDom.removeEventListener("keydown", handleKeyDown);
+      editor.off("transaction", handleTransaction);
     };
   }, [editor, selector, overlayRef, lockRef]);
 

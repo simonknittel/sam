@@ -1,4 +1,5 @@
 import { Link } from "@/modules/common/components/Link";
+import type { CSSProperties } from "react";
 import { WikiPageIcon } from "./WikiPageIcon";
 
 export interface WikiPageIndexEntry {
@@ -12,6 +13,8 @@ export interface WikiPageIndexEntry {
 interface Props {
   readonly entries: readonly WikiPageIndexEntry[];
   readonly isLoading?: boolean;
+  /** The node's width/position styles in the static render (wikiBlockLayoutStyle) */
+  readonly style?: CSSProperties;
 }
 
 /**
@@ -21,9 +24,13 @@ interface Props {
  * permission-filtered server-side — different viewers may see different
  * lists.
  */
-export const WikiPageIndexList = ({ entries, isLoading = false }: Props) => {
+export const WikiPageIndexList = ({
+  entries,
+  isLoading = false,
+  style,
+}: Props) => {
   return (
-    <div data-wiki-page-index="">
+    <div data-wiki-page-index="" style={style}>
       <p className="text-xs text-white/40 font-mono uppercase my-0!">
         Seitenverzeichnis
       </p>

@@ -3,6 +3,7 @@
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { useRolesContext } from "@/modules/roles/components/RolesContext";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
+import type { CSSProperties } from "react";
 
 export interface WikiRoleCitizen {
   readonly id: string;
@@ -13,6 +14,8 @@ interface Props {
   readonly roleId: string | null;
   readonly citizens: readonly WikiRoleCitizen[];
   readonly isLoading?: boolean;
+  /** The node's width/position styles in the static render (wikiBlockLayoutStyle) */
+  readonly style?: CSSProperties;
 }
 
 /**
@@ -26,6 +29,7 @@ export const WikiRoleCitizensList = ({
   roleId,
   citizens,
   isLoading = false,
+  style,
 }: Props) => {
   /**
    * Same source as SingleRoleBadge: a role missing from the context is one
@@ -36,7 +40,7 @@ export const WikiRoleCitizensList = ({
 
   if (!role)
     return (
-      <div data-wiki-role-citizens="">
+      <div data-wiki-role-citizens="" style={style}>
         <p className="text-xs text-white/40 font-mono uppercase my-0!">
           Rollenmitglieder
         </p>
@@ -48,7 +52,7 @@ export const WikiRoleCitizensList = ({
     );
 
   return (
-    <div data-wiki-role-citizens="">
+    <div data-wiki-role-citizens="" style={style}>
       <SingleRoleBadge roleId={role.id} />
 
       {citizens.length > 0 ? (

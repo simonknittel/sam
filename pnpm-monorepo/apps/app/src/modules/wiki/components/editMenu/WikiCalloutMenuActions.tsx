@@ -6,6 +6,7 @@ import { FaBan, FaTrash } from "react-icons/fa";
 import { CalloutColorSwatches } from "../toolbar/CalloutColorSwatches";
 import { ToolbarButton } from "../toolbar/ToolbarButton";
 import { ToolbarDivider } from "../toolbar/ToolbarDivider";
+import { WikiBlockLayoutActions } from "./WikiBlockLayoutActions";
 import { WikiDuplicateCopyActions } from "./WikiDuplicateCopyActions";
 import type { WikiCalloutMenuState } from "./wikiEditMenuState";
 
@@ -62,6 +63,19 @@ export const WikiCalloutMenuActions = ({ editor, menu }: Props) => {
       <ToolbarButton title="Entfernen" isActive={false} onClick={removeCallout}>
         <FaBan />
       </ToolbarButton>
+
+      {menu.topLevel && (
+        <>
+          <ToolbarDivider />
+
+          <WikiBlockLayoutActions
+            editor={editor}
+            position={menu.position}
+            widthPx={menu.widthPx}
+            align={menu.align}
+          />
+        </>
+      )}
 
       <ToolbarDivider />
 

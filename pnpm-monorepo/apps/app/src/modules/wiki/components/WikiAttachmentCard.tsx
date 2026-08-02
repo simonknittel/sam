@@ -10,7 +10,9 @@ import {
   ReactNodeViewRenderer,
   type NodeViewProps,
 } from "@tiptap/react";
+import type { CSSProperties } from "react";
 import { ReportWikiAttachmentModal } from "./ReportWikiAttachmentModal";
+import { wikiBlockLayoutStyle } from "./wikiBlockLayoutStyle";
 
 interface CardProps {
   readonly uploadId: string;
@@ -19,6 +21,8 @@ interface CardProps {
   readonly mimeType: string | null;
   /** Page containing the attachment — without it the report button is omitted */
   readonly pageId?: string;
+  /** The node's width/position styles (wikiBlockLayoutStyle) */
+  readonly style?: CSSProperties;
 }
 
 /**
@@ -34,7 +38,7 @@ const WikiAttachmentCardContent = ({
   size,
   mimeType,
   pageId,
-}: CardProps) => (
+}: Omit<CardProps, "style">) => (
   <>
     <a
       data-wiki-attachment=""
@@ -59,8 +63,8 @@ const WikiAttachmentCardContent = ({
 );
 
 /** Static render of an attachment card (readers' first paint). */
-export const WikiAttachmentCard = (props: CardProps) => (
-  <div data-wiki-attachment-card="">
+export const WikiAttachmentCard = ({ style, ...props }: CardProps) => (
+  <div data-wiki-attachment-card="" style={style}>
     <WikiAttachmentCardContent {...props} />
   </div>
 );
@@ -69,7 +73,10 @@ const WikiAttachmentNodeView = ({ node, extension }: NodeViewProps) => {
   const { pageId } = extension.options as { pageId: string };
 
   return (
-    <NodeViewWrapper data-wiki-attachment-card="">
+    <NodeViewWrapper
+      data-wiki-attachment-card=""
+      style={wikiBlockLayoutStyle(node.attrs)}
+    >
       <WikiAttachmentCardContent
         uploadId={String(node.attrs.uploadId ?? "")}
         fileName={String(node.attrs.fileName ?? "")}

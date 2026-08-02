@@ -1,5 +1,10 @@
 import { Node, mergeAttributes } from "@tiptap/core";
 import { TextSelection } from "@tiptap/pm/state";
+import {
+  WIKI_WIDE_WIDTH_PX,
+  wikiAlignAttribute,
+  wikiWidthPxAttribute,
+} from "./wikiResizableNodes.js";
 import { getWikiSelectionRestrictions } from "./wikiTextOnlyBlocks.js";
 
 export const WIKI_GRID_COLUMN_COUNTS = [2, 3, 4] as const;
@@ -38,6 +43,9 @@ export const WikiGrid = Node.create({
 
   addAttributes() {
     return {
+      // Grids place blocks side by side — they default to the wide preset
+      ...wikiWidthPxAttribute(WIKI_WIDE_WIDTH_PX),
+      ...wikiAlignAttribute(),
       columns: {
         default: 2,
         parseHTML: (element) => {

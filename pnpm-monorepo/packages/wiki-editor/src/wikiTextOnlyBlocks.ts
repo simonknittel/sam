@@ -11,6 +11,10 @@ import {
   type EditorState,
   type Transaction,
 } from "@tiptap/pm/state";
+import {
+  stripWikiNestedBlockLayout,
+  withWikiBlockLayout,
+} from "./wikiResizableNodes.js";
 
 /**
  * Containers whose children are restricted to plain-text paragraphs (list
@@ -33,7 +37,9 @@ const LIST_ITEM_TYPES = ["listItem", "taskItem"];
 
 const WIKI_NESTABLE_LISTS = "(bulletList | orderedList | taskList)*";
 
-export const WikiBlockquote = Blockquote.extend({ content: "paragraph+" });
+export const WikiBlockquote = withWikiBlockLayout(
+  Blockquote.extend({ content: "paragraph+" }),
+);
 
 export const WikiTableCell = TableCell.extend({ content: "paragraph+" });
 
@@ -51,7 +57,9 @@ export const WikiTaskItem = TaskItem.extend({
  * Headings hold plain text only — no page links, mentions or hard breaks
  * (marks like bold/highlight remain available).
  */
-export const WikiHeading = Heading.extend({ content: "text*" });
+export const WikiHeading = withWikiBlockLayout(
+  Heading.extend({ content: "text*" }),
+);
 
 /**
  * What the current selection (or document position) must not do. All
@@ -234,11 +242,13 @@ export const stripWikiTextOnlyAlignment = (
 
 /**
  * The content expressions above keep foreign blocks out of text-only
- * containers, but the shared `textAlign` attribute lives on the paragraph
- * itself and survives schema fitting — this guard strips it again
- * wherever an aligned paragraph lands inside one (paste, drag'n'drop,
- * remote collab edits). Read-only editors never dispatch the fix-up:
- * with collaboration they must not produce document updates.
+ * containers, but two attribute families live on the nodes themselves and
+ * survive schema fitting — this guard strips them again wherever a node
+ * lands where they don't apply (paste, drag'n'drop, remote collab edits):
+ * `textAlign` on paragraphs inside text-only containers, and the
+ * top-level-only `widthPx`/`align` layout on nested blocks (see
+ * stripWikiNestedBlockLayout). Read-only editors never dispatch the
+ * fix-up: with collaboration they must not produce document updates.
  */
 export const WikiTextOnlyBlockGuard = Extension.create({
   name: "wikiTextOnlyBlockGuard",
@@ -253,7 +263,10 @@ export const WikiTextOnlyBlockGuard = Extension.create({
           if (!editor.isEditable) return null;
           if (!transactions.some((transaction) => transaction.docChanged))
             return null;
-          return stripWikiTextOnlyAlignment(newState);
+          return stripWikiNestedBlockLayout(
+            newState,
+            stripWikiTextOnlyAlignment(newState),
+          );
         },
       }),
     ];

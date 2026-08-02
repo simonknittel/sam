@@ -1,5 +1,9 @@
 import { Node, mergeAttributes } from "@tiptap/core";
 import { WIKI_GRID_HOST_CONTENT } from "./wikiGridNodes.js";
+import {
+  wikiAlignAttribute,
+  wikiWidthPxAttribute,
+} from "./wikiResizableNodes.js";
 
 export const WIKI_CALLOUT_COLORS = [
   "neutral",
@@ -33,6 +37,8 @@ export const WikiCallout = Node.create({
 
   addAttributes() {
     return {
+      ...wikiWidthPxAttribute(),
+      ...wikiAlignAttribute(),
       color: {
         default: "blue",
         parseHTML: (element) => {

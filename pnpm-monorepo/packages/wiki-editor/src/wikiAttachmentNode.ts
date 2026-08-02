@@ -1,5 +1,9 @@
 import { mergeAttributes, Node } from "@tiptap/core";
 import { walkWikiContent } from "./walkWikiContent.js";
+import {
+  wikiAlignAttribute,
+  wikiWidthPxAttribute,
+} from "./wikiResizableNodes.js";
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
@@ -66,6 +70,8 @@ export const WikiAttachment = Node.create({
 
   addAttributes() {
     return {
+      ...wikiWidthPxAttribute(),
+      ...wikiAlignAttribute(),
       uploadId: {
         default: null,
         parseHTML: (element) => element.getAttribute("data-upload-id"),

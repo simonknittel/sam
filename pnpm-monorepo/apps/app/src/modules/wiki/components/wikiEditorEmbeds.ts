@@ -8,9 +8,9 @@ import { validateWikiIframeSrc } from "../actions/validateWikiIframeSrc";
 
 interface PreviousEmbedLayout {
   readonly provider: unknown;
-  readonly widthPx: number | null;
+  readonly widthPx: number | "full" | null;
   readonly heightPx: number | null;
-  readonly align: "center" | "right" | null;
+  readonly align: "left" | "right" | null;
 }
 
 /**
@@ -25,10 +25,13 @@ const getReplacedEmbedLayout = (editor: Editor): PreviousEmbedLayout | null => {
   const attrs: Record<string, unknown> = selection.node.attrs;
   return {
     provider: attrs.provider,
-    widthPx: typeof attrs.widthPx === "number" ? attrs.widthPx : null,
+    widthPx:
+      typeof attrs.widthPx === "number" || attrs.widthPx === "full"
+        ? attrs.widthPx
+        : null,
     heightPx: typeof attrs.heightPx === "number" ? attrs.heightPx : null,
     align:
-      attrs.align === "center" || attrs.align === "right" ? attrs.align : null,
+      attrs.align === "left" || attrs.align === "right" ? attrs.align : null,
   };
 };
 

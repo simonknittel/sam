@@ -42,6 +42,26 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-08-02-wiki-blockbreite",
+    date: "2026-08-02",
+    title: "Wiki: Blockbreite",
+    tags: ["Neu", "Wiki"],
+    isTracked: false,
+    body: () => (
+      <p>
+        Alle Blöcke im Wiki-Editor – Absätze, Überschriften, Listen, Tabellen,
+        Code-Blöcke, aufklappbare Bereiche und mehr – lassen sich jetzt wie
+        Bilder an den Seiten in der Breite ziehen. Im Menü jedes Blocks gibt es
+        dafür drei Voreinstellungen (Schmal, Breit, Volle Breite). Seiten werden
+        dadurch zur zentrierten Lesespalte: Blöcke starten in
+        &bdquo;Schmal&ldquo;, platzhungrige Elemente wie Tabellen, Code-Blöcke,
+        Embeds, Raster und Trennlinien in &bdquo;Breit&ldquo;; jeder Block lässt
+        sich außerdem links, mittig oder rechts positionieren.
+      </p>
+    ),
+  },
+
+  {
     key: "2026-08-02-wiki-upload-berechtigungen",
     date: "2026-08-02",
     title: "Wiki: Upload-Berechtigungen",

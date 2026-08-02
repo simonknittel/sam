@@ -2,6 +2,7 @@ import { mergeAttributes, Node } from "@tiptap/core";
 import { walkWikiContent } from "./walkWikiContent.js";
 import { renderWikiBlockedPlaceholder } from "./wikiBlockedPlaceholder.js";
 import {
+  WIKI_WIDE_WIDTH_PX,
   wikiAlignAttribute,
   wikiHeightPxAttribute,
   wikiWidthPxAttribute,
@@ -33,7 +34,7 @@ declare module "@tiptap/core" {
       setWikiEmbed: (attributes: {
         provider: WikiEmbedProvider;
         src: string;
-        widthPx?: number | null;
+        widthPx?: number | "full" | null;
         heightPx?: number | null;
         align?: WikiNodeAlignment | null;
       }) => ReturnType;
@@ -443,7 +444,8 @@ export const WikiEmbed = Node.create<WikiEmbedOptions>({
         renderHTML: (attributes) =>
           attributes.src === null ? {} : { "data-src": String(attributes.src) },
       },
-      ...wikiWidthPxAttribute(),
+      // Embeds are space-hungry — they default to the wide preset
+      ...wikiWidthPxAttribute(WIKI_WIDE_WIDTH_PX),
       /**
        * Only offered by the resize UI for provider "iframe" (see
        * isWikiHeightResizable) — the other providers' heights follow their

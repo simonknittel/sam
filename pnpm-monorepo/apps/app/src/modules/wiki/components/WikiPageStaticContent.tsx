@@ -5,6 +5,7 @@ import {
   normalizeWikiRoleCitizensConfig,
   resolveWikiCitizenMention,
   resolveWikiVariantLink,
+  WIKI_FULL_WIDTH,
   wikiPageIndexConfigKey,
   type WikiLinkedVariant,
   type WikiMentionedCitizen,
@@ -16,7 +17,9 @@ import clsx from "clsx";
 import { createElement, type CSSProperties, type ReactNode } from "react";
 import { getWikiTwitchParentHost } from "../utils/getWikiTwitchParentHost";
 import { WikiAttachmentCard } from "./WikiAttachmentCard";
+import { wikiBlockLayoutStyle } from "./wikiBlockLayoutStyle";
 import { WikiCitizenMentionChip } from "./WikiCitizenMentionNodeView";
+import "./wikiEditor.css";
 import {
   WikiPageIndexList,
   type WikiPageIndexEntry,
@@ -26,7 +29,6 @@ import {
   type WikiRoleCitizen,
 } from "./WikiRoleCitizensList";
 import { WikiVariantLinkChip } from "./WikiVariantLinkNodeView";
-import "./wikiEditor.css";
 
 type StaticContent = Parameters<typeof renderToReactElement>[0]["content"];
 
@@ -77,11 +79,32 @@ const renderWikiPageContent = (
     }),
     options: {
       nodeMapping: {
+        /**
+         * The mapping replaces the node's renderHTML entirely, so the
+         * attribute styles (text alignment, width/position) are rebuilt
+         * here by hand.
+         */
         heading: ({ node, children }) => {
           const level = Math.min(Math.max(Number(node.attrs.level) || 1, 1), 6);
+          const textAlign = node.attrs.textAlign as
+            CSSProperties["textAlign"] | null;
+          const widthPx: unknown = node.attrs.widthPx;
+          const align: unknown = node.attrs.align;
           return createElement(
             `h${level}`,
-            { id: nextHeadingId(node.textContent) ?? undefined },
+            {
+              id: nextHeadingId(node.textContent) ?? undefined,
+              // The data attributes keep copy/paste back into the editor lossless
+              "data-width-px":
+                typeof widthPx === "number" || widthPx === WIKI_FULL_WIDTH
+                  ? widthPx
+                  : undefined,
+              "data-align":
+                align === "left" || align === "right" ? align : undefined,
+              style: textAlign
+                ? { textAlign, ...wikiBlockLayoutStyle(node.attrs) }
+                : wikiBlockLayoutStyle(node.attrs),
+            },
             children as ReactNode,
           );
         },
@@ -118,6 +141,7 @@ const renderWikiPageContent = (
             size={(node.attrs.size as number | null) ?? null}
             mimeType={(node.attrs.mimeType as string | null) ?? null}
             pageId={pageId}
+            style={wikiBlockLayoutStyle(node.attrs)}
           />
         ),
         /**
@@ -145,6 +169,7 @@ const renderWikiPageContent = (
         wikiPageIndex: ({ node }) => (
           <WikiPageIndexList
             entries={pageIndexes[wikiPageIndexConfigKey(node.attrs)] ?? []}
+            style={wikiBlockLayoutStyle(node.attrs)}
           />
         ),
         /**
@@ -157,6 +182,7 @@ const renderWikiPageContent = (
             <WikiRoleCitizensList
               roleId={roleId}
               citizens={(roleId && roleCitizens[roleId]) || []}
+              style={wikiBlockLayoutStyle(node.attrs)}
             />
           );
         },

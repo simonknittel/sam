@@ -6,6 +6,7 @@ import { FaTrash } from "react-icons/fa";
 import { MdHeight, MdVerticalAlignCenter } from "react-icons/md";
 import { ToolbarButton } from "../toolbar/ToolbarButton";
 import { ToolbarDivider } from "../toolbar/ToolbarDivider";
+import { WikiBlockLayoutActions } from "./WikiBlockLayoutActions";
 import { WikiDuplicateCopyActions } from "./WikiDuplicateCopyActions";
 import type { WikiBlockMenuState } from "./wikiEditMenuState";
 
@@ -67,6 +68,19 @@ export const WikiBlockMenuActions = ({ editor, menu }: Props) => {
           >
             <MdHeight />
           </ToolbarButton>
+
+          <ToolbarDivider />
+        </>
+      )}
+
+      {menu.topLevel && (
+        <>
+          <WikiBlockLayoutActions
+            editor={editor}
+            position={menu.position}
+            widthPx={menu.widthPx}
+            align={menu.align}
+          />
 
           <ToolbarDivider />
         </>
