@@ -5,7 +5,7 @@ import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import {
-  ATTACHMENT_MIME_TYPES,
+  isAttachmentMimeType,
   MAX_ATTACHMENT_SIZE_BYTES,
 } from "@/modules/common/utils/uploadConstraints";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
@@ -32,12 +32,9 @@ const postBodySchema = z.union([
   z.object({
     category: z.literal("attachment"),
     fileName: z.string().trim().min(1).max(255),
-    mimeType: z
-      .string()
-      .trim()
-      .refine((mimeType) => ATTACHMENT_MIME_TYPES.includes(mimeType), {
-        message: "Unsupported mime type",
-      }),
+    mimeType: z.string().trim().max(255).refine(isAttachmentMimeType, {
+      message: "Unsupported mime type",
+    }),
     size: z.number().int().min(0).max(MAX_ATTACHMENT_SIZE_BYTES),
   }),
 ]);

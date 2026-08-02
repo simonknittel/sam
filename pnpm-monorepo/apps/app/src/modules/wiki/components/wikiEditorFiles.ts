@@ -1,6 +1,6 @@
 "use client";
 
-import { ATTACHMENT_MIME_TYPES } from "@/modules/common/utils/uploadConstraints";
+import { ATTACHMENT_APPLICATION_MIME_TYPES } from "@/modules/common/utils/uploadConstraints";
 import type { Editor } from "@tiptap/core";
 import { FileHandler } from "@tiptap/extension-file-handler";
 import { NodeSelection } from "@tiptap/pm/state";
@@ -14,13 +14,26 @@ import {
 
 export const WIKI_IMAGE_ACCEPT = "image/*";
 /**
- * The extensions cover files the platform reports no mime type for (e.g.
- * Markdown), which mime-only accept values would exclude from the picker.
+ * `text/*` is not one of the spec's wildcard values (only image, audio and
+ * video are), but the major browsers prefix-match any `type/*` entry. The
+ * extensions cover files the platform reports no mime type for (Markdown,
+ * YAML, …), which mime-only accept values would exclude from the picker —
+ * they must stay in sync with MIME_TYPES_BY_EXTENSION.
  */
 export const WIKI_ATTACHMENT_ACCEPT = [
-  ...ATTACHMENT_MIME_TYPES,
+  ...ATTACHMENT_APPLICATION_MIME_TYPES,
+  "text/*",
   ".md",
   ".markdown",
+  ".yml",
+  ".yaml",
+  ".toml",
+  ".sql",
+  ".log",
+  ".ini",
+  ".conf",
+  ".cfg",
+  ".env",
 ].join(",");
 
 /**

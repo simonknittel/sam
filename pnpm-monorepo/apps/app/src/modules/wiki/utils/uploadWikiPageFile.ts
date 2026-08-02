@@ -1,6 +1,6 @@
 import { env } from "@/env";
 import {
-  ATTACHMENT_MIME_TYPES,
+  isAttachmentMimeType,
   MAX_ATTACHMENT_SIZE_BYTES,
 } from "@/modules/common/utils/uploadConstraints";
 import { z } from "zod";
@@ -25,12 +25,21 @@ const createUploadResponseSchema = z.object({
 const MIME_TYPES_BY_EXTENSION: Readonly<Record<string, string>> = {
   md: "text/markdown",
   markdown: "text/markdown",
+  yml: "application/yaml",
+  yaml: "application/yaml",
+  toml: "application/toml",
+  sql: "application/sql",
+  log: "text/plain",
+  ini: "text/plain",
+  conf: "text/plain",
+  cfg: "text/plain",
+  env: "text/plain",
 };
 
 /**
  * Browsers leave `file.type` empty for types their platform has no
- * registered mapping for (Markdown being the common case) — fall back to
- * the file extension for those.
+ * registered mapping for (most developer text formats: Markdown, YAML,
+ * TOML, logs, …) — fall back to the file extension for those.
  */
 export const resolveWikiFileMimeType = (file: File): string => {
   if (file.type) return file.type;
@@ -41,8 +50,7 @@ export const resolveWikiFileMimeType = (file: File): string => {
 export const getWikiUploadKind = (file: File): WikiUploadKind | null => {
   const mimeType = resolveWikiFileMimeType(file);
   if (mimeType.startsWith("image/")) return WikiUploadKind.Image;
-  if (ATTACHMENT_MIME_TYPES.includes(mimeType))
-    return WikiUploadKind.Attachment;
+  if (isAttachmentMimeType(mimeType)) return WikiUploadKind.Attachment;
   return null;
 };
 
