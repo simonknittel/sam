@@ -14,8 +14,23 @@ const MAX_OPEN_REPORTS_PER_USER = 5;
 
 const schema = z.object({
   pageId: z.cuid2(),
+  /** Set when the report targets a file attachment instead of the page */
+  uploadId: z.cuid().optional(),
   message: z.string().trim().min(1).max(2048),
 });
+
+/**
+ * Upload.fileName is stored URI-encoded (see uploadWikiPageFile); the
+ * report snapshots the display name. Malformed encodings fall back to the
+ * stored value.
+ */
+const decodeUploadFileName = (fileName: string): string => {
+  try {
+    return decodeURIComponent(fileName);
+  } catch {
+    return fileName;
+  }
+};
 
 export const createWikiPageReport = createAuthenticatedAction(
   "createWikiPageReport",
@@ -29,6 +44,21 @@ export const createWikiPageReport = createAuthenticatedAction(
     const page = context.pagesById.get(data.pageId);
     if (!page || page.deletedAt || !context.permissions.get(page.id)?.canRead)
       return { error: t("Common.notFound"), requestPayload: formData };
+
+    /**
+     * Only uploads linked to the reported page can be reported — the link
+     * also scopes what the reporter could actually see (same check as the
+     * attachment download route).
+     */
+    let upload: { id: string; fileName: string } | null = null;
+    if (data.uploadId) {
+      upload = await prisma.upload.findFirst({
+        where: { id: data.uploadId, wikiPages: { some: { id: page.id } } },
+        select: { id: true, fileName: true },
+      });
+      if (!upload)
+        return { error: t("Common.notFound"), requestPayload: formData };
+    }
 
     const openReports = await prisma.wikiPageReport.count({
       where: { createdById: citizenId, resolvedAt: null },
@@ -45,6 +75,10 @@ export const createWikiPageReport = createAuthenticatedAction(
         pageId: page.id,
         message: data.message,
         createdById: citizenId,
+        ...(upload && {
+          uploadId: upload.id,
+          uploadFileName: decodeUploadFileName(upload.fileName),
+        }),
       },
       select: { id: true },
     });
@@ -55,6 +89,7 @@ export const createWikiPageReport = createAuthenticatedAction(
         data: {
           reportId: report.id,
           pageId: page.id,
+          ...(upload && { uploadId: upload.id }),
         },
         createdById: authentication.session.user.id,
       },

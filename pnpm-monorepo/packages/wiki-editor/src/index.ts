@@ -6,7 +6,11 @@
  */
 export { extractWikiPageText } from "./extractWikiPageText.js";
 export { isWikiPageContentEmpty } from "./isWikiPageContentEmpty.js";
-export { collectWikiAttachmentUploadIds } from "./wikiAttachmentNode.js";
+export {
+  WikiAttachment,
+  collectWikiAttachmentUploadIds,
+  formatWikiAttachmentSize,
+} from "./wikiAttachmentNode.js";
 export {
   WIKI_CALLOUT_COLORS,
   type WikiCalloutColor,

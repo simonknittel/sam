@@ -12,6 +12,7 @@ import { renderToReactElement } from "@tiptap/static-renderer";
 import clsx from "clsx";
 import { createElement, type CSSProperties, type ReactNode } from "react";
 import { getWikiTwitchParentHost } from "../utils/getWikiTwitchParentHost";
+import { WikiAttachmentCard } from "./WikiAttachmentCard";
 import { WikiCitizenMentionChip } from "./WikiCitizenMentionNodeView";
 import {
   WikiPageIndexList,
@@ -51,6 +52,7 @@ const renderWikiPageContent = (
   linkablePages: Readonly<Record<string, WikiPageLinkedPage>>,
   mentionedCitizens: Readonly<Record<string, WikiMentionedCitizen>>,
   pageIndexes: Readonly<Record<string, readonly WikiPageIndexEntry[]>>,
+  pageId: string | undefined,
 ) => {
   const nextHeadingId = createWikiHeadingIdAssigner();
 
@@ -94,6 +96,20 @@ const renderWikiPageContent = (
         tableHeader: ({ node, children }) =>
           createElement("th", tableCellProps(node), children as ReactNode),
         /**
+         * Unlike the node's renderHTML, the card adds the report button
+         * next to the download link — same as the read-only editor's node
+         * view.
+         */
+        wikiAttachment: ({ node }) => (
+          <WikiAttachmentCard
+            uploadId={String(node.attrs.uploadId ?? "")}
+            fileName={String(node.attrs.fileName ?? "")}
+            size={(node.attrs.size as number | null) ?? null}
+            mimeType={(node.attrs.mimeType as string | null) ?? null}
+            pageId={pageId}
+          />
+        ),
+        /**
          * Unlike the node's renderHTML, the chip adds the citizen hover
          * popover around the mention link — same as the editor node view.
          */
@@ -119,6 +135,8 @@ const renderWikiPageContent = (
 interface Props {
   readonly className?: string;
   readonly content: unknown;
+  /** Page the content belongs to — without it the attachment report buttons are omitted */
+  readonly pageId?: string;
   /** Hostnames generic iframes may embed (WikiSetting.iframeAllowlist) */
   readonly iframeAllowlist: readonly string[];
   /** Pages the viewer can see, by id — for internal page links */
@@ -141,6 +159,7 @@ interface Props {
 export const WikiPageStaticContent = ({
   className,
   content,
+  pageId,
   iframeAllowlist,
   linkablePages,
   mentionedCitizens,
@@ -164,6 +183,7 @@ export const WikiPageStaticContent = ({
     linkablePages,
     mentionedCitizens,
     pageIndexes,
+    pageId,
   );
 
   return (

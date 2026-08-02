@@ -9,6 +9,7 @@ import {
 import type { AnyExtension } from "@tiptap/core";
 import { getWikiTwitchParentHost } from "../utils/getWikiTwitchParentHost";
 import { WikiActiveNodeHighlight } from "./WikiActiveNodeHighlight";
+import { withWikiAttachmentReportButton } from "./WikiAttachmentCard";
 import { withWikiCitizenMentionPopover } from "./WikiCitizenMentionNodeView";
 import { WikiCitizenMentionSuggestion } from "./WikiCitizenMentionSuggestion";
 import { WikiDetailsSummaryToggle } from "./WikiDetailsSummaryToggle";
@@ -49,19 +50,27 @@ export const useWikiEditorExtensions = ({
 }: Options): AnyExtension[] => {
   const trpcUtils = api.useUtils();
 
-  return [
-    ...withWikiPageIndexNodeView(
-      withWikiCitizenMentionPopover(
-        getWikiEditorExtensions({
-          collaboration,
-          twitchParentHost: getWikiTwitchParentHost(),
-          iframeAllowlist,
-          pages: linkablePages,
-          citizens: mentionedCitizens,
-        }),
-      ),
-      pageId,
+  const baseExtensions = withWikiPageIndexNodeView(
+    withWikiCitizenMentionPopover(
+      getWikiEditorExtensions({
+        collaboration,
+        twitchParentHost: getWikiTwitchParentHost(),
+        iframeAllowlist,
+        pages: linkablePages,
+        citizens: mentionedCitizens,
+      }),
     ),
+    pageId,
+  );
+
+  return [
+    /**
+     * While editing, the plain attachment node keeps its native
+     * drag/selection behavior — the report button is a read-view affordance.
+     */
+    ...(interactive
+      ? baseExtensions
+      : withWikiAttachmentReportButton(baseExtensions, pageId)),
     WikiDetailsSummaryToggle,
     ...(interactive
       ? [

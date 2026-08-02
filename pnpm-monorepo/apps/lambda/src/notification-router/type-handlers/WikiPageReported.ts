@@ -15,6 +15,7 @@ export const WikiPageReportedHandler = async (payload: Payload) => {
     },
     select: {
       id: true,
+      uploadFileName: true,
       page: {
         select: {
           title: true,
@@ -63,7 +64,9 @@ export const WikiPageReportedHandler = async (payload: Payload) => {
       receiverId: recipient.id,
       notificationType: "wiki_page_reported",
       title: "Neue Meldung im Wiki",
-      body: `${report.createdBy?.handle ?? "Unbekannt"} hat die Seite "${report.page.title}" gemeldet`,
+      body: report.uploadFileName
+        ? `${report.createdBy?.handle ?? "Unbekannt"} hat den Dateianhang "${report.uploadFileName}" auf der Seite "${report.page.title}" gemeldet`
+        : `${report.createdBy?.handle ?? "Unbekannt"} hat die Seite "${report.page.title}" gemeldet`,
       url: "/app/wiki/reports",
     })),
   );

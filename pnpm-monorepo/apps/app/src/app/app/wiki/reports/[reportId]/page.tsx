@@ -55,6 +55,29 @@ export default async function Page(
               )}
             </dd>
 
+            {report.uploadFileName && (
+              <>
+                <dt className="text-sm text-neutral-500">Dateianhang</dt>
+                <dd>
+                  {report.uploadId !== null ? (
+                    <a
+                      href={`/api/wiki/attachment/${encodeURIComponent(report.uploadId)}`}
+                      className="text-interaction-500 hover:text-interaction-300"
+                    >
+                      {report.uploadFileName}
+                    </a>
+                  ) : (
+                    <>
+                      {report.uploadFileName}
+                      <span className="ml-2 text-sm text-neutral-500">
+                        (gelöscht)
+                      </span>
+                    </>
+                  )}
+                </dd>
+              </>
+            )}
+
             <dt className="text-sm text-neutral-500">Gemeldet von</dt>
             <dd>
               <CitizenLink citizen={report.createdBy} />

@@ -793,6 +793,8 @@ export interface AuditEventDataByType {
   [AuditEventType.WIKI_PAGE_REPORTED]: {
     reportId: string;
     pageId: string;
+    /** Set when the report targets a file attachment on the page */
+    uploadId?: string;
   };
 
   [AuditEventType.WIKI_PAGE_REPORT_RESOLVED]: {
@@ -2028,6 +2030,7 @@ export const AuditEventDefinitions: {
     data: {
       reportId: "string",
       pageId: "string",
+      uploadId: "string",
     },
     message: (data) => `Wiki page reported (${data.pageId})`,
   },

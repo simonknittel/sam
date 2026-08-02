@@ -1,20 +1,21 @@
 model Upload {
-  id             String         @id @default(cuid())
+  id             String           @id @default(cuid())
   fileName       String
   mimeType       String
   /// File size in bytes. NULL for uploads created before this column existed.
   size           Int?
-  createdAt      DateTime       @default(now())
+  createdAt      DateTime         @default(now())
   createdById    String
-  createdBy      User           @relation(fields: [createdById], references: [id], onDelete: Cascade)
-  roleIcons      Role[]         @relation("icon")
-  roleThumbnails Role[]         @relation("thumbnail")
+  createdBy      User             @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  roleIcons      Role[]           @relation("icon")
+  roleThumbnails Role[]           @relation("thumbnail")
   manufacturers  Manufacturer[]
   /// Wiki pages this upload is embedded in as an image or attachment.
   /// Linked at upload time, on page duplication and whenever persisted
   /// content references the upload; the nightly upload cleanup drops links
   /// whose page content no longer references the upload. Used to
   /// permission-check attachment downloads against the pages' visibility.
-  wikiPages      WikiPage[]     @relation("attachments")
-  wikiPageIcons  WikiPage[]     @relation("icon")
+  wikiPages      WikiPage[]       @relation("attachments")
+  wikiPageIcons  WikiPage[]       @relation("icon")
+  wikiReports    WikiPageReport[]
 }

@@ -42,6 +42,21 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-08-02-wiki-dateianhaenge",
+    date: "2026-08-02",
+    title: "Wiki: Dateianhänge melden",
+    tags: ["Neu", "Wiki"],
+    isTracked: true,
+    body: () => (
+      <p>
+        Dateianhänge im Wiki zeigen jetzt ein Download-Icon und können — wie
+        Seiten — über das Flaggen-Symbol neben dem Anhang direkt den
+        Wiki-Administratoren gemeldet werden.
+      </p>
+    ),
+  },
+
+  {
     key: "2026-08-01-wiki",
     date: "2026-08-01",
     title: "Neue App: Wiki",

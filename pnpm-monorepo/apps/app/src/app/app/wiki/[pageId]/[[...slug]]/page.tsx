@@ -379,6 +379,7 @@ const PageContent = async ({
               staticFallback={
                 <WikiPageStaticContent
                   content={pageContent?.content}
+                  pageId={page.id}
                   iframeAllowlist={iframeAllowlist}
                   linkablePages={linkablePages}
                   mentionedCitizens={mentionedCitizens}
@@ -389,6 +390,7 @@ const PageContent = async ({
           ) : (
             <WikiPageStaticContent
               content={pageContent?.content}
+              pageId={page.id}
               iframeAllowlist={iframeAllowlist}
               linkablePages={linkablePages}
               mentionedCitizens={mentionedCitizens}

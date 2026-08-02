@@ -15,8 +15,9 @@ import {
 } from "../queries/getWikiPageReports";
 import { WikiPageIcon } from "./WikiPageIcon";
 
-const TABLE_MIN_WIDTH = "min-w-190";
-const GRID_COLS = "grid-cols-[minmax(200px,_1fr)_200px_160px_140px_110px]";
+const TABLE_MIN_WIDTH = "min-w-230";
+const GRID_COLS =
+  "grid-cols-[minmax(200px,_1fr)_200px_160px_160px_140px_110px]";
 
 const loadSearchParams = createLoader({
   status: parseAsStringLiteral(["open", "resolved", "all"]).withDefault("open"),
@@ -40,10 +41,13 @@ export const WikiReportsTable = async ({ className, searchParams }: Props) => {
     if (q) {
       const searchQuery = q.toLowerCase();
       const matchesPage = report.page.title.toLowerCase().includes(searchQuery);
+      const matchesFile = (report.uploadFileName ?? "")
+        .toLowerCase()
+        .includes(searchQuery);
       const matchesReporter = (report.createdBy?.handle ?? "")
         .toLowerCase()
         .includes(searchQuery);
-      if (!matchesPage && !matchesReporter) return false;
+      if (!matchesPage && !matchesFile && !matchesReporter) return false;
     }
     switch (status) {
       case "open":
@@ -75,6 +79,8 @@ export const WikiReportsTable = async ({ className, searchParams }: Props) => {
           <th>Grund</th>
 
           <th>Seite</th>
+
+          <th>Dateianhang</th>
 
           <th>Gemeldet von</th>
 
@@ -134,6 +140,26 @@ const ReportRow = ({ report }: ReportRowProps) => {
             {report.page.iconId && <WikiPageIcon iconId={report.page.iconId} />}
             <span className="truncate">{report.page.title} (gelöscht)</span>
           </p>
+        )}
+      </td>
+
+      <td className="overflow-hidden">
+        {report.uploadFileName ? (
+          <p
+            className="truncate px-2"
+            title={
+              report.uploadId === null
+                ? `${report.uploadFileName} (gelöscht)`
+                : report.uploadFileName
+            }
+          >
+            {report.uploadFileName}
+            {report.uploadId === null && (
+              <span className="text-white/40"> (gelöscht)</span>
+            )}
+          </p>
+        ) : (
+          <p className="px-2 text-white/40">—</p>
         )}
       </td>
 

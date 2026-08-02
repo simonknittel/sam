@@ -172,6 +172,14 @@ model WikiPageReport {
   id                String    @id @default(cuid(2))
   pageId            String
   page              WikiPage  @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  /// Set when the report targets a file attachment on the page instead of
+  /// the page itself. NULL again once the upload was deleted (e.g. by the
+  /// nightly cleanup after the attachment was removed from the page).
+  uploadId          String?
+  upload            Upload?   @relation(fields: [uploadId], references: [id], onDelete: SetNull)
+  /// Display file name of the reported attachment at report time, so the
+  /// report stays meaningful after the upload was deleted.
+  uploadFileName    String?
   message           String
   createdAt         DateTime  @default(now())
   createdById       String?
@@ -182,6 +190,7 @@ model WikiPageReport {
   resolutionComment String?
 
   @@index([pageId])
+  @@index([uploadId])
   @@index([resolvedAt])
 }
 

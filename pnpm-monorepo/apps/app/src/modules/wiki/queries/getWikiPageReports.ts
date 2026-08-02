@@ -6,6 +6,8 @@ import { cache } from "react";
 export const wikiPageReportSelect = {
   id: true,
   message: true,
+  uploadId: true,
+  uploadFileName: true,
   createdAt: true,
   createdBy: { select: { id: true, handle: true } },
   resolvedAt: true,
