@@ -31,11 +31,16 @@ export const WikiNodeMenuActions = ({
   menu,
   onOpenPageIndexConfig,
 }: Props) => {
+  /**
+   * Focus at the deletion point — a bare focus() scrolls the stale
+   * selection (wherever the cursor last was) into view, jumping the
+   * viewport away from the deleted block (see WikiDuplicateCopyActions).
+   */
   const deleteNode = () => {
     editor
       .chain()
-      .focus()
       .deleteRange({ from: menu.position, to: menu.position + menu.nodeSize })
+      .focus(menu.position)
       .run();
   };
 

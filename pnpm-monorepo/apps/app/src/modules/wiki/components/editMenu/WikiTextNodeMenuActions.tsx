@@ -47,11 +47,16 @@ export const WikiTextNodeMenuActions = ({ editor, menu }: Props) => {
       .run();
   };
 
+  /**
+   * Focus at the deletion point — a bare focus() scrolls the stale
+   * selection (wherever the cursor last was) into view, jumping the
+   * viewport away from the deleted block (see WikiDuplicateCopyActions).
+   */
   const deleteTextBlock = () => {
     editor
       .chain()
-      .focus()
       .deleteRange({ from: menu.position, to: menu.position + menu.nodeSize })
+      .focus(menu.position)
       .run();
   };
 

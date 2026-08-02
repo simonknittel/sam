@@ -38,15 +38,18 @@ export const WikiCalloutMenuActions = ({ editor, menu }: Props) => {
   /**
    * The callout menu state carries no nodeSize — read it fresh from the
    * document (which also guards against stale positions after collab
-   * edits).
+   * edits). Focus at the deletion point — a bare focus() scrolls the
+   * stale selection (wherever the cursor last was) into view, jumping
+   * the viewport away from the deleted block (see
+   * WikiDuplicateCopyActions).
    */
   const deleteCallout = () => {
     const node = editor.state.doc.nodeAt(menu.position);
     if (node?.type.name !== "wikiCallout") return;
     editor
       .chain()
-      .focus()
       .deleteRange({ from: menu.position, to: menu.position + node.nodeSize })
+      .focus(menu.position)
       .run();
   };
 
