@@ -288,11 +288,44 @@
   flex-grow: 1;
 }
 
-.prose [data-wiki-grid] > [data-wiki-grid-cell] > :first-child {
+/*
+ * The cell's own gap is the only spacing at its edges — the first and last
+ * block drop theirs, so a cell's content lines up with its neighbours'.
+ *
+ * In the editor a React node view nests its styled block below the cell's
+ * direct child: inside the renderer's container element and, depending on
+ * the node view, inside NodeViewWrapper as well. The margin lives on the
+ * innermost of those, so the reset has to reach both levels — otherwise it
+ * lands on the container and the block's own margin adds to the gap
+ * (statically rendered blocks are direct children and need neither).
+ */
+.prose [data-wiki-grid] > [data-wiki-grid-cell] > :first-child,
+.prose
+  [data-wiki-grid]
+  > [data-wiki-grid-cell]
+  > :first-child
+  > [data-node-view-wrapper],
+.prose
+  [data-wiki-grid]
+  > [data-wiki-grid-cell]
+  > :first-child
+  > [data-node-view-wrapper]
+  > :first-child {
   margin-top: 0;
 }
 
-.prose [data-wiki-grid] > [data-wiki-grid-cell] > :last-child {
+.prose [data-wiki-grid] > [data-wiki-grid-cell] > :last-child,
+.prose
+  [data-wiki-grid]
+  > [data-wiki-grid-cell]
+  > :last-child
+  > [data-node-view-wrapper],
+.prose
+  [data-wiki-grid]
+  > [data-wiki-grid-cell]
+  > :last-child
+  > [data-node-view-wrapper]
+  > :last-child {
   margin-bottom: 0;
 }
 
