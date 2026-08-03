@@ -119,10 +119,7 @@ const WikiParagraph = withWikiBlockLayout(Paragraph);
 const WikiBulletList = withWikiBlockLayout(BulletList);
 const WikiOrderedList = withWikiBlockLayout(OrderedList);
 const WikiTaskList = withWikiBlockLayout(TaskList);
-const WikiHorizontalRule = withWikiBlockLayout(
-  HorizontalRule,
-  WIKI_WIDE_WIDTH_PX,
-);
+const WikiHorizontalRule = withWikiBlockLayout(HorizontalRule);
 /**
  * Type conversions copy the source block's attributes (Tiptap's setNode),
  * so a paragraph toggled into a code block would keep the narrow width —

@@ -36,8 +36,7 @@ export const MAX_WIKI_WIDTH_PX = 2000;
  * The width presets offered in the block menus next to the drag handles.
  * They double as the schema defaults: most blocks start narrow so pages
  * read as a centered, comfortable column, while the space-hungry blocks
- * (rulers, embeds, code, tables, grids) start wide — see the node
- * definitions.
+ * (embeds, code, tables, grids) start wide — see the node definitions.
  */
 export const WIKI_NARROW_WIDTH_PX = 720;
 export const WIKI_WIDE_WIDTH_PX = 1080;
