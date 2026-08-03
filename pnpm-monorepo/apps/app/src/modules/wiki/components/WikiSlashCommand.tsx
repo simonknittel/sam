@@ -371,7 +371,7 @@ export const applyWikiUploadRestrictions = (
   items.map((item) =>
     item.uploadKind !== undefined &&
     !isWikiUploadKindAllowed(item.uploadKind, permissions)
-      ? { ...item, disabled: true, subtitle: "Nur für Verwalter dieser Seite" }
+      ? { ...item, disabled: true, subtitle: "Nur für Manager dieser Seite" }
       : item,
   );
 

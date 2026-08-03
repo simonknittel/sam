@@ -24,9 +24,11 @@ export interface WikiTreeNode {
 }
 
 /**
- * Builds the tree shown in the wiki sidebar: only pages the viewer can read,
- * with visible descendants of invisible pages flattened under the nearest
- * visible ancestor (or the root), so they stay reachable.
+ * Builds the tree shown in the wiki sidebar: the pages the viewer can read,
+ * in their real hierarchy. Readable pages always have readable ancestors — a
+ * page grants nothing to someone who cannot read the page above it — so only
+ * pages whose parent is missing from the list (e.g. deleted) hang at the top
+ * level instead.
  */
 export const buildVisibleWikiTree = (
   pages: readonly WikiTreePageInput[],
@@ -35,28 +37,11 @@ export const buildVisibleWikiTree = (
   const pagesById = new Map(pages.map((page) => [page.id, page]));
   const canRead = (id: string) => permissions.get(id)?.canRead === true;
 
-  /**
-   * Nearest visible ancestor id, or null for "attach to the root". Cycles and
-   * broken chains attach to the root as well.
-   */
-  const visibleParentOf = (page: WikiTreePageInput) => {
-    const visited = new Set<string>([page.id]);
-    let current = page.parentId ? pagesById.get(page.parentId) : undefined;
-
-    while (current) {
-      if (visited.has(current.id)) return null;
-      visited.add(current.id);
-      if (canRead(current.id)) return current.id;
-      current = current.parentId ? pagesById.get(current.parentId) : undefined;
-    }
-
-    return null;
-  };
-
   const childrenByParent = new Map<string | null, WikiTreePageInput[]>();
   for (const page of pages) {
     if (!canRead(page.id)) continue;
-    const parentId = visibleParentOf(page);
+    const parentId =
+      page.parentId && pagesById.has(page.parentId) ? page.parentId : null;
     const siblings = childrenByParent.get(parentId) ?? [];
     siblings.push(page);
     childrenByParent.set(parentId, siblings);

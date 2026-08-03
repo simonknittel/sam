@@ -103,6 +103,8 @@ export enum AuditEventType {
   WIKI_PAGE_MOVED = "WIKI_PAGE_MOVED",
   WIKI_PAGE_DUPLICATED = "WIKI_PAGE_DUPLICATED",
   WIKI_PAGE_PERMISSIONS_UPDATED = "WIKI_PAGE_PERMISSIONS_UPDATED",
+  WIKI_PAGE_ROLE_ACCESS_PRUNED = "WIKI_PAGE_ROLE_ACCESS_PRUNED",
+  WIKI_PAGE_PERMISSIONS_RESET_BY_MOVE = "WIKI_PAGE_PERMISSIONS_RESET_BY_MOVE",
   WIKI_PAGE_OWNERSHIP_TRANSFERRED = "WIKI_PAGE_OWNERSHIP_TRANSFERRED",
   WIKI_PAGE_DELETED = "WIKI_PAGE_DELETED",
   WIKI_PAGE_RESTORED = "WIKI_PAGE_RESTORED",
@@ -749,7 +751,6 @@ export interface AuditEventDataByType {
     pageId: string;
     visibility: string;
     editability: string;
-    adminability: string;
     imageUploadability: string;
     attachmentUploadability: string;
     readRoleIds: string[];
@@ -757,6 +758,29 @@ export interface AuditEventDataByType {
     adminRoleIds: string[];
     /** True for events written by an "apply to all child pages" cascade */
     cascaded: boolean;
+  };
+
+  /**
+   * Role access of a descendant page that stopped granting anything because
+   * the role can no longer read the page above it — a page never hands out
+   * more than its parent, so those entries are dropped instead of being kept
+   * as dead data.
+   */
+  [AuditEventType.WIKI_PAGE_ROLE_ACCESS_PRUNED]: {
+    pageId: string;
+    removedRoleIds: string[];
+    trigger: "PERMISSIONS_UPDATED" | "DUPLICATED";
+  };
+
+  /**
+   * A moved page and its subtree take the permissions of their new place, so
+   * every page in it loses its own settings and role lists.
+   */
+  [AuditEventType.WIKI_PAGE_PERMISSIONS_RESET_BY_MOVE]: {
+    pageId: string;
+    /** The page that was moved; equals pageId for the moved page itself */
+    movedPageId: string;
+    newParentId: string | null;
   };
 
   [AuditEventType.WIKI_PAGE_OWNERSHIP_TRANSFERRED]: {
@@ -1967,7 +1991,6 @@ export const AuditEventDefinitions: {
       pageId: "string",
       visibility: "RESTRICTED",
       editability: "INHERIT",
-      adminability: "INHERIT",
       imageUploadability: "INHERIT",
       attachmentUploadability: "EDITORS",
       readRoleIds: ["string"],
@@ -1976,6 +1999,28 @@ export const AuditEventDefinitions: {
       cascaded: false,
     },
     message: (data) => `Wiki page permissions updated (${data.pageId})`,
+  },
+
+  [AuditEventType.WIKI_PAGE_ROLE_ACCESS_PRUNED]: {
+    type: AuditEventType.WIKI_PAGE_ROLE_ACCESS_PRUNED,
+    data: {
+      pageId: "string",
+      removedRoleIds: ["string"],
+      trigger: "PERMISSIONS_UPDATED",
+    },
+    message: (data) =>
+      `Wiki page role access pruned (${data.pageId}): ${data.removedRoleIds.length} role(s) removed`,
+  },
+
+  [AuditEventType.WIKI_PAGE_PERMISSIONS_RESET_BY_MOVE]: {
+    type: AuditEventType.WIKI_PAGE_PERMISSIONS_RESET_BY_MOVE,
+    data: {
+      pageId: "string",
+      movedPageId: "string",
+      newParentId: null,
+    },
+    message: (data) =>
+      `Wiki page permissions reset by move (${data.pageId}), moved page ${data.movedPageId}`,
   },
 
   [AuditEventType.WIKI_PAGE_OWNERSHIP_TRANSFERRED]: {

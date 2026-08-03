@@ -30,6 +30,7 @@ import {
   type WikiContextPage,
 } from "@/modules/wiki/queries/getWikiContext";
 import { getWikiFavoritePageIds } from "@/modules/wiki/queries/getWikiFavorites";
+import { getWikiPermissionRoles } from "@/modules/wiki/queries/getWikiPermissionRoles";
 import { getWikiIframeAllowlist } from "@/modules/wiki/queries/getWikiSettings";
 import { collectWikiPageDescendants } from "@/modules/wiki/utils/collectWikiPageDescendants";
 import { getAccessibleWikiPage } from "@/modules/wiki/utils/getAccessibleWikiPage";
@@ -38,7 +39,9 @@ import {
   type WikiPageTargetOption,
 } from "@/modules/wiki/utils/getEditableWikiPageTargets";
 import { getWikiCollabColor } from "@/modules/wiki/utils/getWikiCollabColor";
+import { resolveWikiPageEffectivePermissions } from "@/modules/wiki/utils/resolveWikiPageEffectivePermissions";
 import { resolveWikiPageIndex } from "@/modules/wiki/utils/resolveWikiPageIndex";
+import { resolveWikiPageReadRoleIds } from "@/modules/wiki/utils/resolveWikiPageRolePermissions";
 import { resolveWikiRoleCitizens } from "@/modules/wiki/utils/resolveWikiRoleCitizens";
 import { trackWikiPageVisit } from "@/modules/wiki/utils/trackWikiPageVisit";
 import { WikiPageAccessType } from "@sam-monorepo/database/client";
@@ -286,6 +289,47 @@ const PageContent = async ({
       .filter((access) => access.type === type)
       .map((access) => access.roleId);
 
+  /**
+   * Roles that cannot read the parent grant nothing here, so the dialog does
+   * not offer them as selected — saving then drops them for good. Stored
+   * entries like these are left over from before a parent was narrowed.
+   */
+  const grantingRoleIdsOf = (type: WikiPageAccessType) =>
+    page.parentId
+      ? roleIdsOf(type).filter((roleId) => parentReadRoleIds.includes(roleId))
+      : roleIdsOf(type);
+
+  /**
+   * Input of the permissions dialog. Resolving permissions role by role
+   * needs every role of the org, so it only happens for page admins — the
+   * only ones who get the dialog.
+   */
+  const permissionRoles = permissions.canAdmin
+    ? await getWikiPermissionRoles()
+    : [];
+  const effectivePermissions = permissions.canAdmin
+    ? resolveWikiPageEffectivePermissions(
+        context.allPages,
+        permissionRoles,
+        page.id,
+        {
+          ownerHandle: effectiveOwner?.handle ?? null,
+          ownerInheritedFrom: sourceTitle(permissions.ownerSourceId),
+          titleOf: (pageId) => context.pagesById.get(pageId)?.title,
+        },
+      )
+    : { read: [], edit: [], inheritedAdmin: [] };
+  const parentReadRoleIds =
+    permissions.canAdmin && page.parentId
+      ? [
+          ...resolveWikiPageReadRoleIds(
+            context.allPages,
+            permissionRoles,
+            page.parentId,
+          ),
+        ]
+      : [];
+
   const canCreateTopLevel = Boolean(
     authentication && (await authentication.authorize("wiki", "create")),
   );
@@ -388,18 +432,16 @@ const PageContent = async ({
                     ownerId: page.ownerId,
                     visibility: page.visibility,
                     editability: page.editability,
-                    adminability: page.adminability,
                     imageUploadability: page.imageUploadability,
                     attachmentUploadability: page.attachmentUploadability,
                   }}
                   effectiveOwnerHandle={effectiveOwner?.handle ?? null}
-                  readRoleIds={roleIdsOf(WikiPageAccessType.READ)}
-                  editRoleIds={roleIdsOf(WikiPageAccessType.EDIT)}
-                  adminRoleIds={roleIdsOf(WikiPageAccessType.ADMIN)}
+                  readRoleIds={grantingRoleIdsOf(WikiPageAccessType.READ)}
+                  editRoleIds={grantingRoleIdsOf(WikiPageAccessType.EDIT)}
+                  adminRoleIds={grantingRoleIdsOf(WikiPageAccessType.ADMIN)}
                   inheritedFrom={{
                     visibility: sourceTitle(permissions.visibilitySourceId),
                     editability: sourceTitle(permissions.editabilitySourceId),
-                    adminability: sourceTitle(permissions.adminabilitySourceId),
                     imageUploadability: sourceTitle(
                       permissions.imageUploadabilitySourceId,
                     ),
@@ -407,6 +449,13 @@ const PageContent = async ({
                       permissions.attachmentUploadabilitySourceId,
                     ),
                   }}
+                  parentTitle={
+                    page.parentId
+                      ? context.pagesById.get(page.parentId)?.title
+                      : undefined
+                  }
+                  parentReadRoleIds={parentReadRoleIds}
+                  effectivePermissions={effectivePermissions}
                   hasDescendants={descendantIds.length > 0}
                 />
 

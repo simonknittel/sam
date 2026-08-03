@@ -5,7 +5,6 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import {
-  WikiPageAdminability,
   WikiPageEditability,
   WikiPageUploadability,
   WikiPageVisibility,
@@ -17,6 +16,7 @@ import { z } from "zod";
 import { getWikiContext } from "../queries/getWikiContext";
 import { collectVisibleWikiSubtree } from "../utils/collectVisibleWikiSubtree";
 import { getAccessibleWikiPage } from "../utils/getAccessibleWikiPage";
+import { pruneWikiPageRoleAccess } from "../utils/pruneWikiPageRoleAccess";
 import { slugifyWikiPageTitle } from "../utils/slugifyWikiPageTitle";
 
 const schema = z.object({
@@ -42,7 +42,6 @@ const TRANSACTION_TIMEOUT_MS = 30_000;
 interface CopiedPermissions {
   visibility: WikiPageVisibility;
   editability: WikiPageEditability;
-  adminability: WikiPageAdminability;
   imageUploadability: WikiPageUploadability;
   attachmentUploadability: WikiPageUploadability;
   ownerId: string | null;
@@ -51,8 +50,8 @@ interface CopiedPermissions {
 
 /**
  * Creates a copy of a page at the chosen location, optionally including the
- * subtree the viewer can see (descendants of unreadable pages are hoisted
- * like in the sidebar; unreadable pages are never copied). Content
+ * subtree the viewer can see (an unreadable page hides its whole subtree, so
+ * neither it nor anything below it is copied). Content
  * (including the Yjs document) is copied from the last persisted state —
  * unsaved changes of a live collab session are not included. Images and
  * attachments keep referencing the source pages' uploads; each copy is
@@ -133,22 +132,21 @@ export const duplicateWikiPage = createAuthenticatedAction(
        * Mirrored INHERIT tiers stay INHERIT at a child location (they then
        * inherit from the new parent chain) but fall back to the top-level
        * creation defaults when the copy becomes a root page, where INHERIT
-       * has no referent.
+       * has no referent. PUBLIC makes the opposite move: it only exists on
+       * top-level pages, so a copy landing under a parent inherits instead.
        */
       const topLevel = !data.parentId;
       rootPermissions = {
         visibility:
           topLevel && source.visibility === WikiPageVisibility.INHERIT
             ? WikiPageVisibility.RESTRICTED
-            : source.visibility,
+            : !topLevel && source.visibility === WikiPageVisibility.PUBLIC
+              ? WikiPageVisibility.INHERIT
+              : source.visibility,
         editability:
           topLevel && source.editability === WikiPageEditability.INHERIT
             ? WikiPageEditability.RESTRICTED
             : source.editability,
-        adminability:
-          topLevel && source.adminability === WikiPageAdminability.INHERIT
-            ? WikiPageAdminability.RESTRICTED
-            : source.adminability,
         imageUploadability:
           topLevel &&
           source.imageUploadability === WikiPageUploadability.INHERIT
@@ -175,9 +173,6 @@ export const duplicateWikiPage = createAuthenticatedAction(
         editability: data.parentId
           ? WikiPageEditability.INHERIT
           : WikiPageEditability.RESTRICTED,
-        adminability: data.parentId
-          ? WikiPageAdminability.INHERIT
-          : WikiPageAdminability.RESTRICTED,
         imageUploadability: data.parentId
           ? WikiPageUploadability.INHERIT
           : WikiPageUploadability.RESTRICTED,
@@ -212,7 +207,6 @@ export const duplicateWikiPage = createAuthenticatedAction(
                 : undefined,
             visibility: rootPermissions.visibility,
             editability: rootPermissions.editability,
-            adminability: rootPermissions.adminability,
             imageUploadability: rootPermissions.imageUploadability,
             attachmentUploadability: rootPermissions.attachmentUploadability,
             ownerId: rootPermissions.ownerId,
@@ -259,9 +253,6 @@ export const duplicateWikiPage = createAuthenticatedAction(
               editability: data.mirrorPermissions
                 ? page.editability
                 : WikiPageEditability.INHERIT,
-              adminability: data.mirrorPermissions
-                ? page.adminability
-                : WikiPageAdminability.INHERIT,
               imageUploadability: data.mirrorPermissions
                 ? page.imageUploadability
                 : WikiPageUploadability.INHERIT,
@@ -308,6 +299,33 @@ export const duplicateWikiPage = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
+
+    /**
+     * Mirrored read roles can be wider than the target location allows —
+     * read access never widens downwards, so those entries are dropped.
+     */
+    if (data.mirrorPermissions) {
+      const copies = await prisma.wikiPage.findMany({
+        where: { id: { in: duplicatedPageIds } },
+        select: {
+          id: true,
+          parentId: true,
+          ownerId: true,
+          visibility: true,
+          editability: true,
+          imageUploadability: true,
+          attachmentUploadability: true,
+          roleAccess: { select: { roleId: true, type: true } },
+        },
+      });
+
+      await pruneWikiPageRoleAccess(
+        [...context.allPages, ...copies],
+        duplicatedPageIds,
+        "DUPLICATED",
+        authentication.session.user.id,
+      );
+    }
 
     revalidatePath("/app/wiki", "layout");
     redirect(`/app/wiki/${root.id}/${root.slug}`);

@@ -5,9 +5,19 @@ import { useEffect, useId, useState, type ReactNode } from "react";
 interface Props {
   readonly className?: string;
   readonly name: string;
-  readonly items: { value: string; label: string; hint?: ReactNode }[];
+  readonly items: {
+    value: string;
+    label: string;
+    icon?: ReactNode;
+    hint?: ReactNode;
+  }[];
   readonly value: string;
   readonly onChange: (value: string) => void;
+  /**
+   * Spreads the items evenly over the full width instead of sizing each one
+   * by its label. Keeps groups of short, icon-led options tidy.
+   */
+  readonly equalWidth?: boolean;
 }
 
 export const RadioGroup = ({
@@ -16,6 +26,7 @@ export const RadioGroup = ({
   items,
   value,
   onChange,
+  equalWidth = false,
 }: Props) => {
   const idPrefix = useId();
 
@@ -42,7 +53,7 @@ export const RadioGroup = ({
         name={name}
       >
         {items.map((item, index) => (
-          <div key={item.value}>
+          <div key={item.value} className={clsx({ "flex-1": equalWidth })}>
             <RadixRadioGroup.Item
               className="peer sr-only"
               value={item.value}
@@ -58,16 +69,18 @@ export const RadioGroup = ({
                 {
                   "rounded-l": index === 0,
                   "rounded-r": index === items.length - 1,
+                  "h-full": equalWidth,
                 },
               )}
             >
+              {item.icon}
               {item.label}
             </label>
           </div>
         ))}
       </RadixRadioGroup.Root>
 
-      {hint && <p className="text-xs mt-1 text-gray-400">{hint}</p>}
+      {hint && <p className="text-xs mt-1 text-white/40">{hint}</p>}
     </>
   );
 };

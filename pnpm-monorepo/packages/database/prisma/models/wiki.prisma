@@ -2,26 +2,26 @@ enum WikiPageNamespace {
   WIKI
 }
 
-/// RESTRICTED always implicitly includes the owner of the page defining
-/// the setting. A "private" page is RESTRICTED with an empty role list.
+/// A page never hands out more than the page above it: whoever cannot read
+/// the parent gets no permission at all here, whatever this page defines.
+/// RESTRICTED therefore grants read to the intersection of its role list and
+/// the parent's readers, and INHERIT grants exactly the parent's readers.
+/// PUBLIC is only meaningful — and only allowed — on top-level pages. A
+/// "private" page is RESTRICTED with an empty role list.
 enum WikiPageVisibility {
   INHERIT
   PUBLIC
   RESTRICTED
 }
 
-/// RESTRICTED always implicitly includes the owner of the page defining
-/// the setting. An "owner only" page is RESTRICTED with an empty role list.
+/// Bounded by the parent's read access like every tier (see
+/// WikiPageVisibility). ALL grants edit to everyone who may read the page,
+/// which on a restricted page is less than "everyone with wiki access".
+/// RESTRICTED always implicitly includes the owner of the page defining the
+/// setting. An "owner only" page is RESTRICTED with an empty role list.
 enum WikiPageEditability {
   INHERIT
   ALL
-  RESTRICTED
-}
-
-/// RESTRICTED always implicitly includes the owner of the page defining
-/// the setting. An "owner only" page is RESTRICTED with an empty role list.
-enum WikiPageAdminability {
-  INHERIT
   RESTRICTED
 }
 
@@ -79,10 +79,13 @@ model WikiPage {
   /// tables. Kept in sync by updateWikiPageTags.
   tagsText   String @default("")
 
-  visibility   WikiPageVisibility   @default(INHERIT)
-  editability  WikiPageEditability  @default(INHERIT)
-  adminability WikiPageAdminability @default(INHERIT)
-  roleAccess   WikiPageRoleAccess[]
+  visibility  WikiPageVisibility   @default(INHERIT)
+  editability WikiPageEditability  @default(INHERIT)
+  /// Manage access has no enum: it is purely additive along the hierarchy.
+  /// A page is managed by the ADMIN roles listed here plus everyone managing
+  /// any of its ancestors, so owners and managers of a page always keep all
+  /// three tiers on its whole subtree.
+  roleAccess  WikiPageRoleAccess[]
 
   imageUploadability      WikiPageUploadability @default(INHERIT)
   attachmentUploadability WikiPageUploadability @default(INHERIT)
@@ -90,9 +93,12 @@ model WikiPage {
   /// The effective owner holds the implicit permissions on a page (all three
   /// tiers, implicit inclusion in RESTRICTED). NULL means the owner is
   /// inherited from the nearest ancestor with an explicit owner ("nearest
-  /// setting wins", like the permission tiers); NULL at the root means no
-  /// owner (only `wiki;manage` retains access). Top-level pages start with
-  /// their creator as explicit owner, child pages start inheriting.
+  /// setting wins", like visibility and editability); NULL at the root means
+  /// no owner (only `wiki;manage` retains access). An own owner does not cut
+  /// the ancestors' owners off — they keep managing the page either way — and
+  /// only holds their rights while they may read the page's parent.
+  /// Top-level pages start with their creator as explicit owner, child pages
+  /// start inheriting.
   /// Transferable by page admins, e.g. when the owner leaves the org or
   /// switches departments. `createdBy` is a pure audit fact without any
   /// permission implications.

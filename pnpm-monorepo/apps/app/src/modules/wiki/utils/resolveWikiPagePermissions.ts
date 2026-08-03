@@ -1,6 +1,5 @@
 import {
   WikiPageAccessType,
-  WikiPageAdminability,
   WikiPageEditability,
   WikiPageUploadability,
   WikiPageVisibility,
@@ -16,7 +15,6 @@ export interface WikiPagePermissionSource {
   readonly ownerId: string | null;
   readonly visibility: WikiPageVisibility;
   readonly editability: WikiPageEditability;
-  readonly adminability: WikiPageAdminability;
   readonly imageUploadability: WikiPageUploadability;
   readonly attachmentUploadability: WikiPageUploadability;
   readonly roleAccess: readonly {
@@ -41,10 +39,10 @@ export interface ResolvedWikiPagePermissions {
    * Page whose explicit (non-INHERIT/non-null) setting supplied the
    * effective value. Equals the page's own id if it doesn't inherit. Used by
    * the permissions dialog to show where an inherited setting comes from.
+   * Manage has no such source — it is additive along the whole chain.
    */
   readonly visibilitySourceId: string;
   readonly editabilitySourceId: string;
-  readonly adminabilitySourceId: string;
   readonly imageUploadabilitySourceId: string;
   readonly attachmentUploadabilitySourceId: string;
   readonly ownerSourceId: string;
@@ -52,25 +50,22 @@ export interface ResolvedWikiPagePermissions {
   readonly effectiveOwnerId: string | null;
 }
 
-type PermissionTier =
+type InheritedTier =
   | "visibility"
   | "editability"
-  | "adminability"
   | "imageUploadability"
   | "attachmentUploadability"
   | "owner";
 
 const hasExplicitSetting = (
   page: WikiPagePermissionSource,
-  tier: PermissionTier,
+  tier: InheritedTier,
 ) => {
   switch (tier) {
     case "visibility":
       return page.visibility !== WikiPageVisibility.INHERIT;
     case "editability":
       return page.editability !== WikiPageEditability.INHERIT;
-    case "adminability":
-      return page.adminability !== WikiPageAdminability.INHERIT;
     case "imageUploadability":
       return page.imageUploadability !== WikiPageUploadability.INHERIT;
     case "attachmentUploadability":
@@ -92,7 +87,7 @@ const hasExplicitSetting = (
  */
 const findSource = (
   page: WikiPagePermissionSource,
-  tier: PermissionTier,
+  tier: InheritedTier,
   pagesById: ReadonlyMap<string, WikiPagePermissionSource>,
   cache: Map<string, WikiPagePermissionSource>,
 ) => {
@@ -134,54 +129,13 @@ const findSource = (
 };
 
 const hasRoleAccess = (
-  source: WikiPagePermissionSource,
+  page: WikiPagePermissionSource,
   type: WikiPageAccessType,
   viewer: WikiPageViewer,
 ) => {
-  return source.roleAccess.some(
+  return page.roleAccess.some(
     (access) => access.type === type && viewer.roleIds.has(access.roleId),
   );
-};
-
-const isGrantedAdmin = (
-  source: WikiPagePermissionSource,
-  sourceIsOwned: boolean,
-  viewer: WikiPageViewer,
-) => {
-  switch (source.adminability) {
-    case WikiPageAdminability.RESTRICTED:
-      return (
-        sourceIsOwned || hasRoleAccess(source, WikiPageAccessType.ADMIN, viewer)
-      );
-    // Fallback source of a fully-INHERIT chain: like RESTRICTED with no roles
-    case WikiPageAdminability.INHERIT:
-      return sourceIsOwned;
-    default:
-      throw new Error(
-        `Unexpected adminability: ${source.adminability satisfies never}`,
-      );
-  }
-};
-
-const isGrantedEdit = (
-  source: WikiPagePermissionSource,
-  sourceIsOwned: boolean,
-  viewer: WikiPageViewer,
-) => {
-  switch (source.editability) {
-    case WikiPageEditability.ALL:
-      return true;
-    case WikiPageEditability.RESTRICTED:
-      return (
-        sourceIsOwned || hasRoleAccess(source, WikiPageAccessType.EDIT, viewer)
-      );
-    case WikiPageEditability.INHERIT:
-      return sourceIsOwned;
-    default:
-      throw new Error(
-        `Unexpected editability: ${source.editability satisfies never}`,
-      );
-  }
 };
 
 /**
@@ -209,66 +163,73 @@ const isGrantedUpload = (
   }
 };
 
-const isGrantedRead = (
-  source: WikiPagePermissionSource,
-  sourceIsOwned: boolean,
-  viewer: WikiPageViewer,
-) => {
-  switch (source.visibility) {
-    case WikiPageVisibility.PUBLIC:
-      return true;
-    case WikiPageVisibility.RESTRICTED:
-      return (
-        sourceIsOwned || hasRoleAccess(source, WikiPageAccessType.READ, viewer)
-      );
-    case WikiPageVisibility.INHERIT:
-      return sourceIsOwned;
-    default:
-      throw new Error(
-        `Unexpected visibility: ${source.visibility satisfies never}`,
-      );
-  }
-};
-
 /**
- * Resolves the effective permissions of the given viewer for every given
- * page. Pass all pages of a namespace including soft-deleted ones (trash
+ * Resolves the permissions of one viewer against a set of pages, memoized
+ * per page. Pass all pages of a namespace including soft-deleted ones (trash
  * restore/destroy need permissions on them); deleted ancestors still supply
  * inherited settings, resolved against the ancestor chain.
  *
  * Grant rules:
  * - `wiki;manage` grants all tiers on every page.
- * - Ownership is inherited like the permission tiers: a page's effective
- *   owner is the nearest explicit owner up the chain. The effective owner
- *   always has all tiers on the page. The creator deliberately has no
- *   implicit permissions: top-level pages start with the creator as
- *   explicit owner, child pages start inheriting, and ownership is
- *   transferable, so access can be revoked when members leave or switch
- *   departments.
- * - RESTRICTED implicitly includes the effective owner of the page defining
- *   the setting, so a "private" page is RESTRICTED with an empty role list
- *   and subtree owners keep access to descendants even if those have a
- *   different explicit owner.
+ * - A page grants nothing to someone who cannot read its parent. Access to
+ *   a subtree is therefore always a subset of the access to the page above
+ *   it, whatever the subtree defines for itself — no page can be reached
+ *   without a readable path from the top level down to it.
+ * - Manage is additive along the hierarchy: whoever manages a page manages
+ *   its whole subtree. Owners and admin roles of an ancestor therefore keep
+ *   all three tiers on every descendant, even on descendants that have an
+ *   own owner or own admin roles — that is what makes handing a subtree to
+ *   someone else possible without losing control over it. This does not
+ *   collide with the rule above: managing a page implies reading it.
+ * - Ownership itself is inherited "nearest setting wins": a page's effective
+ *   owner is the nearest explicit owner up the chain, and the effective
+ *   owner has all tiers on the page — as long as they may read its parent.
+ *   The creator deliberately has no implicit permissions: top-level pages
+ *   start with the creator as explicit owner, child pages start inheriting,
+ *   and ownership is transferable, so access can be revoked when members
+ *   leave or switch departments.
+ * - Edit resolves "nearest setting wins" within those bounds. ALL means
+ *   "everyone who may read this page", not "everyone with wiki access" — an
+ *   open page below a restricted one stays as narrow as the page itself.
  * - Tiers imply the lower ones: admin ⇒ edit ⇒ read.
+ * - INHERIT without a reachable parent (top-level page, broken chain, cycle)
+ *   is the most restrictive value, not the most permissive one: only the
+ *   effective owner and the managers get in.
  * - The upload tiers (image/attachment uploadability) are independent of
  *   each other and gate who may upload while editing: RESTRICTED = admins
  *   only, EDITORS = everyone with edit permission. Uploading implies
  *   editing — without `canEdit` there is never upload permission.
  */
-export const resolveWikiPagePermissions = (
+export const createWikiPagePermissionResolver = (
   pages: readonly WikiPagePermissionSource[],
   viewer: WikiPageViewer,
 ) => {
   const pagesById = new Map(pages.map((page) => [page.id, page]));
   const visibilityCache = new Map<string, WikiPagePermissionSource>();
   const editabilityCache = new Map<string, WikiPagePermissionSource>();
-  const adminabilityCache = new Map<string, WikiPagePermissionSource>();
   const imageUploadabilityCache = new Map<string, WikiPagePermissionSource>();
   const attachmentUploadabilityCache = new Map<
     string,
     WikiPagePermissionSource
   >();
   const ownerCache = new Map<string, WikiPagePermissionSource>();
+
+  const adminCache = new Map<string, boolean>();
+  const editCache = new Map<string, boolean>();
+  const readGrantCache = new Map<string, boolean>();
+  const readCache = new Map<string, boolean>();
+  /**
+   * Pages currently on the recursion stack, one set per tier: a tier depends
+   * on the lower tiers of the same page (read on edit on admin), so a shared
+   * set would mistake that for a cycle.
+   */
+  const adminPending = new Set<string>();
+  const editPending = new Set<string>();
+  const readGrantPending = new Set<string>();
+  const readPending = new Set<string>();
+
+  const parentOf = (page: WikiPagePermissionSource) =>
+    page.parentId ? pagesById.get(page.parentId) : undefined;
 
   const effectiveOwnerIdOf = (page: WikiPagePermissionSource) =>
     findSource(page, "owner", pagesById, ownerCache).ownerId;
@@ -278,27 +239,116 @@ export const resolveWikiPagePermissions = (
     return Boolean(effectiveOwnerId) && effectiveOwnerId === viewer.citizenId;
   };
 
-  const result = new Map<string, ResolvedWikiPagePermissions>();
+  /**
+   * Memoizes one tier of one page and cuts parent cycles by denying the
+   * re-entered page: corrupt data must neither hang the request nor grant
+   * access.
+   */
+  const resolveTier = (
+    page: WikiPagePermissionSource,
+    cache: Map<string, boolean>,
+    pending: Set<string>,
+    compute: () => boolean,
+  ) => {
+    const cached = cache.get(page.id);
+    if (cached !== undefined) return cached;
+    if (pending.has(page.id)) return false;
 
-  for (const page of pages) {
-    const visibilitySource = findSource(
-      page,
-      "visibility",
-      pagesById,
-      visibilityCache,
-    );
-    const editabilitySource = findSource(
-      page,
-      "editability",
-      pagesById,
-      editabilityCache,
-    );
-    const adminabilitySource = findSource(
-      page,
-      "adminability",
-      pagesById,
-      adminabilityCache,
-    );
+    pending.add(page.id);
+    const result = compute();
+    pending.delete(page.id);
+
+    cache.set(page.id, result);
+    return result;
+  };
+
+  /**
+   * The gate every tier passes through: a page hands out nothing to someone
+   * who cannot read the page above it. Top-level pages have nothing to be
+   * gated by. A page whose parent is missing from the data counts as
+   * top-level, matching how the inherited tiers treat a broken chain.
+   */
+  const isAccessible = (page: WikiPagePermissionSource) => {
+    const parent = parentOf(page);
+    return parent ? canReadOf(parent) : true;
+  };
+
+  const canAdminOf = (page: WikiPagePermissionSource): boolean =>
+    resolveTier(page, adminCache, adminPending, () => {
+      if (viewer.hasWikiManage) return true;
+      if (!isAccessible(page)) return false;
+      if (isEffectivelyOwned(page)) return true;
+      if (hasRoleAccess(page, WikiPageAccessType.ADMIN, viewer)) return true;
+
+      const parent = parentOf(page);
+      return parent ? canAdminOf(parent) : false;
+    });
+
+  /**
+   * What the page's own visibility grants, without the "may edit ⇒ may read"
+   * implication and without the parent gate. Editability ALL is defined on
+   * top of it, so the two must not be expressed through each other.
+   */
+  const hasReadGrant = (page: WikiPagePermissionSource): boolean =>
+    resolveTier(page, readGrantCache, readGrantPending, () => {
+      switch (page.visibility) {
+        /**
+         * PUBLIC is only allowed on top-level pages. On a child page it
+         * would mean "no own restriction", which is exactly what INHERIT
+         * means there — treated alike so leftover data cannot widen read
+         * access.
+         */
+        case WikiPageVisibility.PUBLIC:
+          return true;
+        case WikiPageVisibility.RESTRICTED:
+          return hasRoleAccess(page, WikiPageAccessType.READ, viewer);
+        /** No own restriction; a top-level page has nothing to inherit */
+        case WikiPageVisibility.INHERIT:
+          return Boolean(parentOf(page));
+        default:
+          throw new Error(
+            `Unexpected visibility: ${page.visibility satisfies never}`,
+          );
+      }
+    });
+
+  const canEditOf = (page: WikiPagePermissionSource): boolean =>
+    resolveTier(page, editCache, editPending, () => {
+      if (viewer.hasWikiManage) return true;
+      if (canAdminOf(page)) return true;
+      if (!isAccessible(page)) return false;
+
+      switch (page.editability) {
+        case WikiPageEditability.ALL:
+          return hasReadGrant(page);
+        case WikiPageEditability.RESTRICTED:
+          return hasRoleAccess(page, WikiPageAccessType.EDIT, viewer);
+        case WikiPageEditability.INHERIT: {
+          const parent = parentOf(page);
+          return parent ? canEditOf(parent) : false;
+        }
+        default:
+          throw new Error(
+            `Unexpected editability: ${page.editability satisfies never}`,
+          );
+      }
+    });
+
+  const canReadOf = (page: WikiPagePermissionSource): boolean =>
+    resolveTier(page, readCache, readPending, () => {
+      if (viewer.hasWikiManage) return true;
+      if (canEditOf(page)) return true;
+      return isAccessible(page) && hasReadGrant(page);
+    });
+
+  const get = (pageId: string): ResolvedWikiPagePermissions | undefined => {
+    const page = pagesById.get(pageId);
+    if (!page) return undefined;
+
+    const canAdmin = canAdminOf(page);
+    const canEdit = canEditOf(page);
+    const canRead = canReadOf(page);
+
     const imageUploadabilitySource = findSource(
       page,
       "imageUploadability",
@@ -313,37 +363,7 @@ export const resolveWikiPagePermissions = (
     );
     const ownerSource = findSource(page, "owner", pagesById, ownerCache);
 
-    let canRead = false;
-    let canEdit = false;
-    let canAdmin = false;
-
-    if (viewer.hasWikiManage || isEffectivelyOwned(page)) {
-      canRead = true;
-      canEdit = true;
-      canAdmin = true;
-    } else {
-      canAdmin = isGrantedAdmin(
-        adminabilitySource,
-        isEffectivelyOwned(adminabilitySource),
-        viewer,
-      );
-      canEdit =
-        canAdmin ||
-        isGrantedEdit(
-          editabilitySource,
-          isEffectivelyOwned(editabilitySource),
-          viewer,
-        );
-      canRead =
-        canEdit ||
-        isGrantedRead(
-          visibilitySource,
-          isEffectivelyOwned(visibilitySource),
-          viewer,
-        );
-    }
-
-    result.set(page.id, {
+    return {
       canRead,
       canEdit,
       canAdmin,
@@ -357,14 +377,42 @@ export const resolveWikiPagePermissions = (
         canEdit,
         canAdmin,
       ),
-      visibilitySourceId: visibilitySource.id,
-      editabilitySourceId: editabilitySource.id,
-      adminabilitySourceId: adminabilitySource.id,
+      visibilitySourceId: findSource(
+        page,
+        "visibility",
+        pagesById,
+        visibilityCache,
+      ).id,
+      editabilitySourceId: findSource(
+        page,
+        "editability",
+        pagesById,
+        editabilityCache,
+      ).id,
       imageUploadabilitySourceId: imageUploadabilitySource.id,
       attachmentUploadabilitySourceId: attachmentUploadabilitySource.id,
       ownerSourceId: ownerSource.id,
       effectiveOwnerId: ownerSource.ownerId,
-    });
+    };
+  };
+
+  return { get };
+};
+
+/**
+ * Resolves the effective permissions of the given viewer for every given
+ * page — see `createWikiPagePermissionResolver()` for the grant rules.
+ */
+export const resolveWikiPagePermissions = (
+  pages: readonly WikiPagePermissionSource[],
+  viewer: WikiPageViewer,
+) => {
+  const resolver = createWikiPagePermissionResolver(pages, viewer);
+
+  const result = new Map<string, ResolvedWikiPagePermissions>();
+  for (const page of pages) {
+    const permissions = resolver.get(page.id);
+    if (permissions) result.set(page.id, permissions);
   }
 
   return result;

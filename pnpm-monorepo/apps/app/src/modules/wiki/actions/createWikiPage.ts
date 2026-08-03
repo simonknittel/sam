@@ -5,7 +5,6 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import {
-  WikiPageAdminability,
   WikiPageEditability,
   WikiPageUploadability,
   WikiPageVisibility,
@@ -69,9 +68,6 @@ export const createWikiPage = createAuthenticatedAction(
         editability: data.parentId
           ? WikiPageEditability.INHERIT
           : WikiPageEditability.RESTRICTED,
-        adminability: data.parentId
-          ? WikiPageAdminability.INHERIT
-          : WikiPageAdminability.RESTRICTED,
         imageUploadability: data.parentId
           ? WikiPageUploadability.INHERIT
           : WikiPageUploadability.RESTRICTED,

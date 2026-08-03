@@ -25,7 +25,6 @@ export type WikiContextPage = Pick<
   | "sidebarMode"
   | "visibility"
   | "editability"
-  | "adminability"
   | "imageUploadability"
   | "attachmentUploadability"
   | "createdAt"
@@ -88,7 +87,6 @@ export const getWikiContext = cache(
           sidebarMode: true,
           visibility: true,
           editability: true,
-          adminability: true,
           imageUploadability: true,
           attachmentUploadability: true,
           createdAt: true,

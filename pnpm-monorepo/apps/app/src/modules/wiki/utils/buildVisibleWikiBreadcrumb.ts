@@ -1,9 +1,9 @@
 import type { WikiContext, WikiContextPage } from "../queries/getWikiContext";
 
 /**
- * Ancestor titles from the root down to the direct parent. Ancestors the
- * viewer cannot see are skipped so their titles never leak (matching the
- * sidebar's flattening).
+ * Ancestor titles from the root down to the direct parent. Deleted ancestors
+ * are skipped; unreadable ones cannot occur, because a page grants nothing
+ * to someone who cannot read the page above it.
  */
 export const buildVisibleWikiBreadcrumb = (
   context: WikiContext,

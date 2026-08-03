@@ -10,14 +10,24 @@ import Note from "@/modules/common/components/Note";
 import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
 import {
-  WikiPageAdminability,
   WikiPageEditability,
   WikiPageUploadability,
   WikiPageVisibility,
 } from "@sam-monorepo/database/browser";
 import { useState } from "react";
-import { FaLock, FaSave } from "react-icons/fa";
+import {
+  FaGlobe,
+  FaLock,
+  FaPen,
+  FaSave,
+  FaSitemap,
+  FaUser,
+  FaUsers,
+  FaUserShield,
+} from "react-icons/fa";
 import { updateWikiPagePermissions } from "../actions/updateWikiPagePermissions";
+import type { WikiEffectivePermissions } from "../utils/resolveWikiPageEffectivePermissions";
+import { WikiEffectivePermissionList } from "./WikiEffectivePermissionList";
 import { WikiRoleSelector } from "./WikiRoleSelector";
 
 interface Props {
@@ -28,7 +38,6 @@ interface Props {
     readonly ownerId: string | null;
     readonly visibility: WikiPageVisibility;
     readonly editability: WikiPageEditability;
-    readonly adminability: WikiPageAdminability;
     readonly imageUploadability: WikiPageUploadability;
     readonly attachmentUploadability: WikiPageUploadability;
   };
@@ -41,12 +50,19 @@ interface Props {
   readonly inheritedFrom: {
     readonly visibility?: string;
     readonly editability?: string;
-    readonly adminability?: string;
     readonly imageUploadability?: string;
     readonly attachmentUploadability?: string;
   };
+  readonly parentTitle?: string;
+  /** Roles allowed to read the parent page — read access only narrows */
+  readonly parentReadRoleIds: string[];
+  readonly effectivePermissions: WikiEffectivePermissions;
   readonly hasDescendants: boolean;
 }
+
+const CASCADE_LABEL = "Auch auf alle Unterseiten anwenden";
+const EFFECTIVE_HEADING = "Effektiv (gespeicherter Stand):";
+const NOBODY_LABEL = "Niemand außer den Wiki-Managern.";
 
 export const WikiPagePermissionsModal = ({
   className,
@@ -56,6 +72,9 @@ export const WikiPagePermissionsModal = ({
   editRoleIds,
   adminRoleIds,
   inheritedFrom,
+  parentTitle,
+  parentReadRoleIds,
+  effectivePermissions,
   hasDescendants,
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -63,7 +82,6 @@ export const WikiPagePermissionsModal = ({
 
   const [visibility, setVisibility] = useState<string>(page.visibility);
   const [editability, setEditability] = useState<string>(page.editability);
-  const [adminability, setAdminability] = useState<string>(page.adminability);
   const [imageUploadability, setImageUploadability] = useState<string>(
     page.imageUploadability,
   );
@@ -77,6 +95,11 @@ export const WikiPagePermissionsModal = ({
     updateWikiPagePermissions,
     { errorToast: false, onSuccess: () => setIsOpen(false) },
   );
+
+  const inheritedHint = (sourceTitle: string | undefined) =>
+    sourceTitle
+      ? `Wie die übergeordnete Seite, aktuell geerbt von "${sourceTitle}".`
+      : "Wie die übergeordnete Seite.";
 
   return (
     <>
@@ -99,32 +122,50 @@ export const WikiPagePermissionsModal = ({
         <form action={formAction}>
           <input type="hidden" name="id" value={page.id} />
 
-          <section className="border rounded-secondary border-neutral-700 p-4">
-            <h3 className="font-bold text-lg">Sichtbarkeit</h3>
+          <Note
+            type="info"
+            message="Verwalten schließt Bearbeiten ein, Bearbeiten schließt Lesen ein. Eine Unterseite gibt nie mehr als die Seite darüber: Wer die übergeordnete Seite nicht lesen darf, bekommt hier gar keine Berechtigung."
+          />
+
+          <section className="mt-8">
+            <h3 className="font-bold text-lg font-mono uppercase">Lesen</h3>
 
             <RadioGroup
               name="visibility"
               className="mt-2"
+              equalWidth
               value={visibility}
               onChange={setVisibility}
               items={[
+                /**
+                 * Only top-level pages can be public: read access never
+                 * widens downwards, so on a child page "public" would mean
+                 * exactly what "inherited" already means.
+                 */
                 ...(isRoot
-                  ? []
+                  ? [
+                      {
+                        value: WikiPageVisibility.PUBLIC,
+                        label: "Öffentlich",
+                        icon: <FaGlobe />,
+                        hint: "Alle mit Wiki-Zugriff können die Seite lesen.",
+                      },
+                    ]
                   : [
                       {
                         value: WikiPageVisibility.INHERIT,
-                        label: inheritedFrom.visibility
-                          ? `Geerbt (von "${inheritedFrom.visibility}")`
-                          : "Geerbt",
+                        label: "Geerbt",
+                        icon: <FaSitemap />,
+                        hint: inheritedHint(inheritedFrom.visibility),
                       },
                     ]),
                 {
-                  value: WikiPageVisibility.PUBLIC,
-                  label: "Öffentlich (alle mit Wiki-Zugriff)",
-                },
-                {
                   value: WikiPageVisibility.RESTRICTED,
-                  label: "Eingeschränkt (Besitzer und ausgewählte Rollen)",
+                  label: "Eingeschränkt",
+                  icon: <FaLock />,
+                  hint: isRoot
+                    ? "Nur der Besitzer, die Manager und ausgewählte Rollen."
+                    : `Nur der Besitzer, die Manager und ausgewählte Rollen — zur Auswahl stehen nur Rollen, die auch ${parentTitle ? `"${parentTitle}"` : "die übergeordnete Seite"} lesen dürfen.`,
                 },
               ]}
             />
@@ -135,31 +176,39 @@ export const WikiPagePermissionsModal = ({
                   className="mt-2"
                   inputName="readRole[]"
                   defaultValue={readRoleIds}
+                  selectableRoleIds={isRoot ? undefined : parentReadRoleIds}
                 />
                 <p className="mt-1 text-xs text-neutral-400">
-                  Ohne Rollen ist die Seite privat: Nur der Besitzer kann sie
-                  sehen.
+                  Ohne Rollen ist die Seite privat: Nur der Besitzer und die
+                  Manager können sie lesen.
                 </p>
               </>
             )}
 
+            <WikiEffectivePermissionList
+              className="mt-3"
+              heading={EFFECTIVE_HEADING}
+              entries={effectivePermissions.read}
+              emptyLabel={NOBODY_LABEL}
+            />
+
             {hasDescendants && (
-              <div className="mt-2 flex items-center justify-between gap-2">
+              <div className="mt-3 flex items-center justify-between gap-2">
                 <span className="text-sm text-neutral-400">
-                  Auch auf alle Unterseiten anwenden (setzt deren Sichtbarkeit
-                  auf &quot;Geerbt&quot;)
+                  {`${CASCADE_LABEL} (setzt deren Sichtbarkeit auf "Geerbt")`}
                 </span>
                 <YesNoCheckbox name="cascadeVisibility" value="1" />
               </div>
             )}
           </section>
 
-          <section className="border rounded-secondary border-neutral-700 p-4 mt-4">
-            <h3 className="font-bold text-lg">Bearbeiten</h3>
+          <section className="mt-8">
+            <h3 className="font-bold text-lg font-mono uppercase">Bearbeiten</h3>
 
             <RadioGroup
               name="editability"
               className="mt-2"
+              equalWidth
               value={editability}
               onChange={setEditability}
               items={[
@@ -168,18 +217,24 @@ export const WikiPagePermissionsModal = ({
                   : [
                       {
                         value: WikiPageEditability.INHERIT,
-                        label: inheritedFrom.editability
-                          ? `Geerbt (von "${inheritedFrom.editability}")`
-                          : "Geerbt",
+                        label: "Geerbt",
+                        icon: <FaSitemap />,
+                        hint: inheritedHint(inheritedFrom.editability),
                       },
                     ]),
                 {
                   value: WikiPageEditability.ALL,
-                  label: "Alle mit Wiki-Zugriff",
+                  label: "Alle",
+                  icon: <FaUsers />,
+                  hint: "Alle mit Lese-Zugriff können die Seite bearbeiten.",
                 },
                 {
                   value: WikiPageEditability.RESTRICTED,
-                  label: "Eingeschränkt (Besitzer und ausgewählte Rollen)",
+                  label: "Eingeschränkt",
+                  icon: <FaLock />,
+                  hint: isRoot
+                    ? "Nur der Besitzer, die Manager und ausgewählte Rollen."
+                    : `Nur der Besitzer, die Manager und ausgewählte Rollen — zur Auswahl stehen nur Rollen, die auch ${parentTitle ? `"${parentTitle}"` : "die übergeordnete Seite"} lesen dürfen.`,
                 },
               ]}
             />
@@ -189,24 +244,32 @@ export const WikiPagePermissionsModal = ({
                 className="mt-2"
                 inputName="editRole[]"
                 defaultValue={editRoleIds}
+                selectableRoleIds={isRoot ? undefined : parentReadRoleIds}
               />
             )}
 
+            <WikiEffectivePermissionList
+              className="mt-3"
+              heading={EFFECTIVE_HEADING}
+              entries={effectivePermissions.edit}
+              emptyLabel={NOBODY_LABEL}
+            />
+
             {hasDescendants && (
-              <div className="mt-2 flex items-center justify-between gap-2">
+              <div className="mt-3 flex items-center justify-between gap-2">
                 <span className="text-sm text-neutral-400">
-                  Auch auf alle Unterseiten anwenden
+                  {CASCADE_LABEL}
                 </span>
                 <YesNoCheckbox name="cascadeEditability" value="1" />
               </div>
             )}
           </section>
 
-          <section className="border rounded-secondary border-neutral-700 p-4 mt-4">
-            <h3 className="font-bold text-lg">Hochladen</h3>
+          <section className="mt-8">
+            <h3 className="font-bold text-lg font-mono uppercase">Hochladen</h3>
             <p className="text-sm text-neutral-400">
               Wer darf beim Bearbeiten Bilder bzw. Dateianhänge hochladen?
-              Verwalter dürfen immer hochladen.
+              Manager dürfen immer hochladen.
             </p>
 
             <h4 className="font-bold mt-4">Bilder</h4>
@@ -214,6 +277,7 @@ export const WikiPagePermissionsModal = ({
             <RadioGroup
               name="imageUploadability"
               className="mt-2"
+              equalWidth
               value={imageUploadability}
               onChange={setImageUploadability}
               items={[
@@ -222,18 +286,22 @@ export const WikiPagePermissionsModal = ({
                   : [
                       {
                         value: WikiPageUploadability.INHERIT,
-                        label: inheritedFrom.imageUploadability
-                          ? `Geerbt (von "${inheritedFrom.imageUploadability}")`
-                          : "Geerbt",
+                        label: "Geerbt",
+                        icon: <FaSitemap />,
+                        hint: inheritedHint(inheritedFrom.imageUploadability),
                       },
                     ]),
                 {
                   value: WikiPageUploadability.EDITORS,
-                  label: "Alle, die die Seite bearbeiten dürfen",
+                  label: "Bearbeiter",
+                  icon: <FaPen />,
+                  hint: "Alle, die die Seite bearbeiten dürfen.",
                 },
                 {
                   value: WikiPageUploadability.RESTRICTED,
-                  label: "Nur Verwalter",
+                  label: "Manager",
+                  icon: <FaUserShield />,
+                  hint: "Nur die Manager der Seite.",
                 },
               ]}
             />
@@ -241,7 +309,7 @@ export const WikiPagePermissionsModal = ({
             {hasDescendants && (
               <div className="mt-2 flex items-center justify-between gap-2">
                 <span className="text-sm text-neutral-400">
-                  Auch auf alle Unterseiten anwenden
+                  {CASCADE_LABEL}
                 </span>
                 <YesNoCheckbox name="cascadeImageUploadability" value="1" />
               </div>
@@ -252,6 +320,7 @@ export const WikiPagePermissionsModal = ({
             <RadioGroup
               name="attachmentUploadability"
               className="mt-2"
+              equalWidth
               value={attachmentUploadability}
               onChange={setAttachmentUploadability}
               items={[
@@ -260,18 +329,24 @@ export const WikiPagePermissionsModal = ({
                   : [
                       {
                         value: WikiPageUploadability.INHERIT,
-                        label: inheritedFrom.attachmentUploadability
-                          ? `Geerbt (von "${inheritedFrom.attachmentUploadability}")`
-                          : "Geerbt",
+                        label: "Geerbt",
+                        icon: <FaSitemap />,
+                        hint: inheritedHint(
+                          inheritedFrom.attachmentUploadability,
+                        ),
                       },
                     ]),
                 {
                   value: WikiPageUploadability.EDITORS,
-                  label: "Alle, die die Seite bearbeiten dürfen",
+                  label: "Bearbeiter",
+                  icon: <FaPen />,
+                  hint: "Alle, die die Seite bearbeiten dürfen.",
                 },
                 {
                   value: WikiPageUploadability.RESTRICTED,
-                  label: "Nur Verwalter",
+                  label: "Manager",
+                  icon: <FaUserShield />,
+                  hint: "Nur die Manager der Seite.",
                 },
               ]}
             />
@@ -279,7 +354,7 @@ export const WikiPagePermissionsModal = ({
             {hasDescendants && (
               <div className="mt-2 flex items-center justify-between gap-2">
                 <span className="text-sm text-neutral-400">
-                  Auch auf alle Unterseiten anwenden
+                  {CASCADE_LABEL}
                 </span>
                 <YesNoCheckbox
                   name="cascadeAttachmentUploadability"
@@ -289,59 +364,47 @@ export const WikiPagePermissionsModal = ({
             )}
           </section>
 
-          <section className="border rounded-secondary border-neutral-700 p-4 mt-4">
-            <h3 className="font-bold text-lg">Verwalten</h3>
+          <section className="mt-8">
+            <h3 className="font-bold text-lg font-mono uppercase">Manager</h3>
             <p className="text-sm text-neutral-400">
-              Verwalter können Berechtigungen ändern sowie Seiten umbenennen,
-              verschieben und löschen.
+              Manager können Berechtigungen ändern sowie Seiten umbenennen,
+              verschieben und löschen. Wer eine Seite verwaltet, verwaltet
+              immer auch alle ihre Unterseiten.
             </p>
 
-            <RadioGroup
-              name="adminability"
-              className="mt-2"
-              value={adminability}
-              onChange={setAdminability}
-              items={[
-                ...(isRoot
-                  ? []
-                  : [
-                      {
-                        value: WikiPageAdminability.INHERIT,
-                        label: inheritedFrom.adminability
-                          ? `Geerbt (von "${inheritedFrom.adminability}")`
-                          : "Geerbt",
-                      },
-                    ]),
-                {
-                  value: WikiPageAdminability.RESTRICTED,
-                  label: "Eingeschränkt (Besitzer und ausgewählte Rollen)",
-                },
-              ]}
+            <WikiEffectivePermissionList
+              className="mt-3"
+              heading="Immer (von übergeordneten Seiten):"
+              entries={effectivePermissions.inheritedAdmin}
+              emptyLabel={NOBODY_LABEL}
             />
 
-            {adminability === WikiPageAdminability.RESTRICTED && (
-              <WikiRoleSelector
-                className="mt-2"
-                inputName="adminRole[]"
-                defaultValue={adminRoleIds}
-              />
-            )}
+            <p className="mt-3 text-sm text-neutral-400">
+              Zusätzliche Manager dieser Seite und ihrer Unterseiten:
+            </p>
+
+            <WikiRoleSelector
+              className="mt-2"
+              inputName="adminRole[]"
+              defaultValue={adminRoleIds}
+              selectableRoleIds={isRoot ? undefined : parentReadRoleIds}
+            />
 
             {hasDescendants && (
-              <div className="mt-2 flex items-center justify-between gap-2">
+              <div className="mt-3 flex items-center justify-between gap-2">
                 <span className="text-sm text-neutral-400">
-                  Auch auf alle Unterseiten anwenden
+                  Zusätzliche Manager der Unterseiten entfernen
                 </span>
-                <YesNoCheckbox name="cascadeAdminability" value="1" />
+                <YesNoCheckbox name="cascadeAdminRoles" value="1" />
               </div>
             )}
           </section>
 
-          <section className="border rounded-secondary border-neutral-700 p-4 mt-4">
-            <h3 className="font-bold text-lg">Besitzer</h3>
+          <section className="mt-8">
+            <h3 className="font-bold text-lg font-mono uppercase">Besitzer</h3>
             <p className="text-sm text-neutral-400">
               Aktueller Besitzer:{" "}
-              {effectiveOwnerHandle ?? "kein Besitzer (nur Wiki-Verwalter)"}
+              {effectiveOwnerHandle ?? "kein Besitzer (nur Wiki-Manager)"}
               {!page.ownerId && effectiveOwnerHandle ? " (geerbt)" : ""}. Der
               Besitzer hat immer alle Berechtigungen auf die Seite.
             </p>
@@ -352,14 +415,22 @@ export const WikiPagePermissionsModal = ({
               <RadioGroup
                 name="ownerMode"
                 className="mt-2"
+                equalWidth
                 value={ownerMode}
                 onChange={setOwnerMode}
                 items={[
                   {
                     value: "inherit",
-                    label: "Von der übergeordneten Seite erben",
+                    label: "Geerbt",
+                    icon: <FaSitemap />,
+                    hint: "Der Besitzer der übergeordneten Seite besitzt auch diese Seite.",
                   },
-                  { value: "explicit", label: "Bestimmter Citizen" },
+                  {
+                    value: "explicit",
+                    label: "Citizen",
+                    icon: <FaUser />,
+                    hint: "Ein bestimmter Citizen besitzt diese Seite. Besitzer übergeordneter Seiten bleiben trotzdem Manager.",
+                  },
                 ]}
               />
             )}
@@ -375,21 +446,14 @@ export const WikiPagePermissionsModal = ({
             {hasDescendants && (
               <div className="mt-2 flex items-center justify-between gap-2">
                 <span className="text-sm text-neutral-400">
-                  Auch auf alle Unterseiten anwenden (setzt deren Besitzer auf
-                  &quot;Geerbt&quot;)
+                  {`${CASCADE_LABEL} (setzt deren Besitzer auf "Geerbt")`}
                 </span>
                 <YesNoCheckbox name="cascadeOwner" value="1" />
               </div>
             )}
           </section>
 
-          <Note
-            type="info"
-            className="mt-4"
-            message="Es gilt: Verwalten schließt Bearbeiten ein, Bearbeiten schließt Sehen ein. Der Besitzer der Seite hat immer alle Berechtigungen."
-          />
-
-          <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
+          <Button2 type="submit" disabled={isPending} className="mt-8 ml-auto">
             {isPending ? <AsciiSpinner /> : <FaSave />}
             Speichern
           </Button2>

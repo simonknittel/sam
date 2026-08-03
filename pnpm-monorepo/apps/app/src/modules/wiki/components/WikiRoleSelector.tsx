@@ -18,6 +18,12 @@ interface Props {
    * selection, so at most one hidden input is submitted.
    */
   readonly single?: boolean;
+  /**
+   * Restricts the offered roles, e.g. to those allowed to read the parent
+   * page. Already selected roles outside the list stay selected and
+   * removable so the reason for a rejected save stays visible.
+   */
+  readonly selectableRoleIds?: readonly Role["id"][];
 }
 
 /**
@@ -29,11 +35,20 @@ export const WikiRoleSelector = ({
   inputName,
   defaultValue,
   single = false,
+  selectableRoleIds,
 }: Props) => {
-  const { isPending, data } = api.roles.getVisibleRoles.useQuery(undefined, {
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-  });
+  const { isPending, data: allRoles } = api.roles.getVisibleRoles.useQuery(
+    undefined,
+    {
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+    },
+  );
+
+  const data = allRoles;
+  const selectableRoles = selectableRoleIds
+    ? allRoles?.filter((role) => selectableRoleIds.includes(role.id))
+    : allRoles;
 
   const [selectedRoles, setSelectedRoles] = useState<Role["id"][]>(
     defaultValue || [],
@@ -63,8 +78,8 @@ export const WikiRoleSelector = ({
         childrenClassName="max-h-96 overflow-auto"
       >
         <div className="flex flex-col gap-2">
-          {data
-            ? data
+          {selectableRoles
+            ? selectableRoles
                 .toSorted((a, b) => a.name.localeCompare(b.name))
                 .map((role) => (
                   <button

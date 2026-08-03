@@ -7,6 +7,7 @@ import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getWikiContext } from "../queries/getWikiContext";
+import { buildWikiPageMoveReset } from "../utils/buildWikiPageMoveReset";
 import { collectWikiPageDescendants } from "../utils/collectWikiPageDescendants";
 
 const schema = z.object({
@@ -60,14 +61,24 @@ export const moveWikiPage = createAuthenticatedAction(
         ? Math.max(...siblings.map((sibling) => sibling.sortOrder)) + 1
         : 0;
 
-    await prisma.wikiPage.update({
-      where: { id: page.id },
-      data: {
-        parentId: newParentId,
-        sortOrder,
-        updatedById: authentication.session.entity?.id ?? null,
-      },
-    });
+    const reset = buildWikiPageMoveReset(
+      context.allPages,
+      page,
+      newParentId,
+      authentication.session.entity?.id ?? null,
+    );
+
+    await prisma.$transaction([
+      prisma.wikiPage.update({
+        where: { id: page.id },
+        data: {
+          parentId: newParentId,
+          sortOrder,
+          updatedById: authentication.session.entity?.id ?? null,
+        },
+      }),
+      ...reset.statements,
+    ]);
 
     await createAuditEvents([
       {
@@ -79,10 +90,20 @@ export const moveWikiPage = createAuthenticatedAction(
         },
         createdById: authentication.session.user.id,
       },
+      ...reset.subtreeIds.map((id) => ({
+        type: AuditEventType.WIKI_PAGE_PERMISSIONS_RESET_BY_MOVE as const,
+        data: { pageId: id, movedPageId: page.id, newParentId },
+        createdById: authentication.session.user.id,
+      })),
     ]);
 
     revalidatePath("/app/wiki", "layout");
 
-    return { success: t("Common.successfullySaved") };
+    return {
+      success:
+        reset.subtreeIds.length > 1
+          ? `Erfolgreich verschoben. Die Seite und ${reset.subtreeIds.length - 1} Unterseite(n) übernehmen jetzt die Berechtigungen des neuen Elternteils.`
+          : "Erfolgreich verschoben. Die Seite übernimmt jetzt die Berechtigungen des neuen Elternteils.",
+    };
   },
 );

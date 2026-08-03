@@ -208,7 +208,7 @@ export const WikiEditorToolbar = ({
         title={
           canUploadImages
             ? "Bild einfügen"
-            : "Bild einfügen – nur für Verwalter dieser Seite"
+            : "Bild einfügen – nur für Manager dieser Seite"
         }
         isActive={active?.image ?? false}
         disabled={restricted.blocks || !canUploadImages}
@@ -221,7 +221,7 @@ export const WikiEditorToolbar = ({
         title={
           canUploadAttachments
             ? "Dateianhang einfügen"
-            : "Dateianhang einfügen – nur für Verwalter dieser Seite"
+            : "Dateianhang einfügen – nur für Manager dieser Seite"
         }
         isActive={active?.attachment ?? false}
         disabled={restricted.blocks || !canUploadAttachments}

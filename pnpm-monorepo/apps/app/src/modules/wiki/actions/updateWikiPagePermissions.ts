@@ -6,21 +6,27 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import {
   WikiPageAccessType,
-  WikiPageAdminability,
   WikiPageEditability,
   WikiPageUploadability,
   WikiPageVisibility,
 } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { getWikiContext } from "../queries/getWikiContext";
+import { getWikiPermissionRoles } from "../queries/getWikiPermissionRoles";
+import {
+  getWikiContext,
+  type WikiContextPage,
+} from "../queries/getWikiContext";
+import { getWikiViewerForCitizen } from "../queries/getWikiViewerForCitizen";
 import { collectWikiPageDescendants } from "../utils/collectWikiPageDescendants";
+import { collectWikiPageRolePrunes } from "../utils/collectWikiPageRolePrunes";
+import { createWikiPagePermissionResolver } from "../utils/resolveWikiPagePermissions";
+import { resolveWikiPageReadRoleIds } from "../utils/resolveWikiPageRolePermissions";
 
 const schema = z.object({
   id: z.cuid2(),
   visibility: z.enum(WikiPageVisibility),
   editability: z.enum(WikiPageEditability),
-  adminability: z.enum(WikiPageAdminability),
   imageUploadability: z.enum(WikiPageUploadability),
   attachmentUploadability: z.enum(WikiPageUploadability),
   readRoles: z.array(z.cuid()).max(50),
@@ -28,7 +34,7 @@ const schema = z.object({
   adminRoles: z.array(z.cuid()).max(50),
   cascadeVisibility: z.coerce.boolean(),
   cascadeEditability: z.coerce.boolean(),
-  cascadeAdminability: z.coerce.boolean(),
+  cascadeAdminRoles: z.coerce.boolean(),
   cascadeImageUploadability: z.coerce.boolean(),
   cascadeAttachmentUploadability: z.coerce.boolean(),
   ownerMode: z.enum(["inherit", "explicit"]),
@@ -52,15 +58,19 @@ export const updateWikiPagePermissions = createAuthenticatedAction(
 
     /**
      * Top-level pages must not inherit — there is nothing to inherit from.
+     * Child pages in turn must not be public: read access only narrows
+     * downwards, so "public" below a restricted page would be a promise the
+     * resolver cannot keep.
      */
     if (
       !page.parentId &&
       (data.visibility === WikiPageVisibility.INHERIT ||
         data.editability === WikiPageEditability.INHERIT ||
-        data.adminability === WikiPageAdminability.INHERIT ||
         data.imageUploadability === WikiPageUploadability.INHERIT ||
         data.attachmentUploadability === WikiPageUploadability.INHERIT)
     )
+      return { error: t("Common.badRequest"), requestPayload: formData };
+    if (page.parentId && data.visibility === WikiPageVisibility.PUBLIC)
       return { error: t("Common.badRequest"), requestPayload: formData };
 
     /**
@@ -83,18 +93,64 @@ export const updateWikiPagePermissions = createAuthenticatedAction(
     if (!page.parentId && !newOwnerId)
       return { error: t("Common.badRequest"), requestPayload: formData };
 
+    const roles = await getWikiPermissionRoles();
+    const readRoles = [...new Set(data.readRoles)];
+    const editRoles = [...new Set(data.editRoles)];
+    const adminRoles = [...new Set(data.adminRoles)];
+
+    /**
+     * Nobody gets access to a page they cannot reach: every role and the
+     * explicit owner must be able to read the parent. The pickers only offer
+     * such roles, so this normally only catches entries that lost their
+     * access to the parent in the meantime — naming them is more helpful
+     * than silently dropping part of the selection.
+     */
+    if (page.parentId) {
+      const allowedRoleIds = resolveWikiPageReadRoleIds(
+        context.allPages,
+        roles,
+        page.parentId,
+      );
+      const rejected = [
+        ...new Set([...readRoles, ...editRoles, ...adminRoles]),
+      ].filter((roleId) => !allowedRoleIds.has(roleId));
+      if (rejected.length > 0) {
+        const names = rejected.map(
+          (roleId) => roles.find((role) => role.id === roleId)?.name ?? roleId,
+        );
+        return {
+          error: `Diese Rollen dürfen die übergeordnete Seite nicht lesen und können deshalb auch auf diese Seite keinen Zugriff erhalten: ${names.join(", ")}.`,
+          requestPayload: formData,
+        };
+      }
+
+      if (newOwnerId) {
+        const ownerViewer = await getWikiViewerForCitizen(newOwnerId);
+        const ownerCanReachPage = createWikiPagePermissionResolver(
+          context.allPages,
+          ownerViewer,
+        ).get(page.parentId)?.canRead;
+        if (!ownerCanReachPage)
+          return {
+            error:
+              "Der ausgewählte Besitzer darf die übergeordnete Seite nicht lesen und hätte deshalb keinen Zugriff auf diese Seite.",
+            requestPayload: formData,
+          };
+      }
+    }
+
     const roleAccess = [
-      ...[...new Set(data.readRoles)].map((roleId) => ({
+      ...readRoles.map((roleId) => ({
         pageId: page.id,
         roleId,
         type: WikiPageAccessType.READ,
       })),
-      ...[...new Set(data.editRoles)].map((roleId) => ({
+      ...editRoles.map((roleId) => ({
         pageId: page.id,
         roleId,
         type: WikiPageAccessType.EDIT,
       })),
-      ...[...new Set(data.adminRoles)].map((roleId) => ({
+      ...adminRoles.map((roleId) => ({
         pageId: page.id,
         roleId,
         type: WikiPageAccessType.ADMIN,
@@ -102,32 +158,85 @@ export const updateWikiPagePermissions = createAuthenticatedAction(
     ];
 
     /**
-     * Cascades reset the tier on all descendants the actor has admin on to
-     * INHERIT (they then follow this page's setting) and drop their now
-     * irrelevant role lists for that tier.
+     * Cascades reset the tier on all descendants to INHERIT (they then
+     * follow this page's setting) and drop their now irrelevant role lists
+     * for that tier. Managing a page means managing its whole subtree, so
+     * there is never a descendant the actor may not touch.
      */
     const descendantIds = collectWikiPageDescendants(context.pages, page.id);
-    const cascadableIds = descendantIds.filter(
-      (id) => context.permissions.get(id)?.canAdmin,
-    );
-    const skippedCount = descendantIds.length - cascadableIds.length;
 
     const anyCascade =
       data.cascadeVisibility ||
       data.cascadeEditability ||
-      data.cascadeAdminability ||
+      data.cascadeAdminRoles ||
       data.cascadeImageUploadability ||
       data.cascadeAttachmentUploadability;
 
     /**
      * The owner cascade resets descendants to inherited ownership so they
-     * follow this page's owner — only where the actor has admin.
+     * follow this page's owner.
      */
     const ownerCascadeIds = data.cascadeOwner
-      ? cascadableIds.filter(
-          (id) => context.pagesById.get(id)?.ownerId !== null,
-        )
+      ? descendantIds.filter((id) => context.pagesById.get(id)?.ownerId !== null)
       : [];
+
+    /**
+     * Descendants whose role access stops granting anything because this
+     * page (or one of the cascades) narrowed their access — derived from the
+     * page data as it will be after this update. Soft-deleted descendants are
+     * included, so restoring one cannot bring dead entries back.
+     */
+    const cascadedIds = new Set(descendantIds);
+    const ownerCascadeIdSet = new Set(ownerCascadeIds);
+    const updatedPages: WikiContextPage[] = context.allPages.map((entry) => {
+      if (entry.id === page.id)
+        return {
+          ...entry,
+          visibility: data.visibility,
+          editability: data.editability,
+          imageUploadability: data.imageUploadability,
+          attachmentUploadability: data.attachmentUploadability,
+          ownerId: newOwnerId,
+          roleAccess: roleAccess.map(({ roleId, type }) => ({ roleId, type })),
+        };
+
+      if (!cascadedIds.has(entry.id)) return entry;
+
+      return {
+        ...entry,
+        visibility: data.cascadeVisibility
+          ? WikiPageVisibility.INHERIT
+          : entry.visibility,
+        editability: data.cascadeEditability
+          ? WikiPageEditability.INHERIT
+          : entry.editability,
+        imageUploadability: data.cascadeImageUploadability
+          ? WikiPageUploadability.INHERIT
+          : entry.imageUploadability,
+        attachmentUploadability: data.cascadeAttachmentUploadability
+          ? WikiPageUploadability.INHERIT
+          : entry.attachmentUploadability,
+        ownerId: ownerCascadeIdSet.has(entry.id) ? null : entry.ownerId,
+        roleAccess: entry.roleAccess.filter(
+          (access) =>
+            !(
+              data.cascadeVisibility && access.type === WikiPageAccessType.READ
+            ) &&
+            !(
+              data.cascadeEditability && access.type === WikiPageAccessType.EDIT
+            ) &&
+            !(
+              data.cascadeAdminRoles && access.type === WikiPageAccessType.ADMIN
+            ),
+        ),
+      };
+    });
+
+    const prunes = collectWikiPageRolePrunes(
+      updatedPages,
+      roles,
+      collectWikiPageDescendants(context.allPages, page.id),
+    );
 
     await prisma.$transaction([
       prisma.wikiPage.update({
@@ -135,7 +244,6 @@ export const updateWikiPagePermissions = createAuthenticatedAction(
         data: {
           visibility: data.visibility,
           editability: data.editability,
-          adminability: data.adminability,
           imageUploadability: data.imageUploadability,
           attachmentUploadability: data.attachmentUploadability,
           ownerId: newOwnerId,
@@ -152,62 +260,71 @@ export const updateWikiPagePermissions = createAuthenticatedAction(
         : []),
       prisma.wikiPageRoleAccess.deleteMany({ where: { pageId: page.id } }),
       prisma.wikiPageRoleAccess.createMany({ data: roleAccess }),
-      ...(cascadableIds.length > 0 && data.cascadeVisibility
+      ...(descendantIds.length > 0 && data.cascadeVisibility
         ? [
             prisma.wikiPage.updateMany({
-              where: { id: { in: cascadableIds } },
+              where: { id: { in: descendantIds } },
               data: { visibility: WikiPageVisibility.INHERIT },
             }),
             prisma.wikiPageRoleAccess.deleteMany({
               where: {
-                pageId: { in: cascadableIds },
+                pageId: { in: descendantIds },
                 type: WikiPageAccessType.READ,
               },
             }),
           ]
         : []),
-      ...(cascadableIds.length > 0 && data.cascadeEditability
+      ...(descendantIds.length > 0 && data.cascadeEditability
         ? [
             prisma.wikiPage.updateMany({
-              where: { id: { in: cascadableIds } },
+              where: { id: { in: descendantIds } },
               data: { editability: WikiPageEditability.INHERIT },
             }),
             prisma.wikiPageRoleAccess.deleteMany({
               where: {
-                pageId: { in: cascadableIds },
+                pageId: { in: descendantIds },
                 type: WikiPageAccessType.EDIT,
               },
             }),
           ]
         : []),
-      ...(cascadableIds.length > 0 && data.cascadeAdminability
+      /** Manage has no tier to reset, only the additional manager roles */
+      ...(descendantIds.length > 0 && data.cascadeAdminRoles
         ? [
-            prisma.wikiPage.updateMany({
-              where: { id: { in: cascadableIds } },
-              data: { adminability: WikiPageAdminability.INHERIT },
-            }),
             prisma.wikiPageRoleAccess.deleteMany({
               where: {
-                pageId: { in: cascadableIds },
+                pageId: { in: descendantIds },
                 type: WikiPageAccessType.ADMIN,
               },
             }),
           ]
         : []),
       /** The upload tiers have no role lists to drop */
-      ...(cascadableIds.length > 0 && data.cascadeImageUploadability
+      ...(descendantIds.length > 0 && data.cascadeImageUploadability
         ? [
             prisma.wikiPage.updateMany({
-              where: { id: { in: cascadableIds } },
+              where: { id: { in: descendantIds } },
               data: { imageUploadability: WikiPageUploadability.INHERIT },
             }),
           ]
         : []),
-      ...(cascadableIds.length > 0 && data.cascadeAttachmentUploadability
+      ...(descendantIds.length > 0 && data.cascadeAttachmentUploadability
         ? [
             prisma.wikiPage.updateMany({
-              where: { id: { in: cascadableIds } },
+              where: { id: { in: descendantIds } },
               data: { attachmentUploadability: WikiPageUploadability.INHERIT },
+            }),
+          ]
+        : []),
+      ...(prunes.length > 0
+        ? [
+            prisma.wikiPageRoleAccess.deleteMany({
+              where: {
+                OR: prunes.map((prune) => ({
+                  pageId: prune.pageId,
+                  roleId: { in: prune.roleIds },
+                })),
+              },
             }),
           ]
         : []),
@@ -220,10 +337,9 @@ export const updateWikiPagePermissions = createAuthenticatedAction(
           pageId: page.id,
           visibility: data.visibility,
           editability: data.editability,
-          adminability: data.adminability,
           imageUploadability: data.imageUploadability,
           attachmentUploadability: data.attachmentUploadability,
-          readRoleIds: data.readRoles,
+          readRoleIds: readRoles,
           editRoleIds: data.editRoles,
           adminRoleIds: data.adminRoles,
           cascaded: false,
@@ -231,7 +347,7 @@ export const updateWikiPagePermissions = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
       ...(anyCascade
-        ? cascadableIds.map((id) => ({
+        ? descendantIds.map((id) => ({
             type: AuditEventType.WIKI_PAGE_PERMISSIONS_UPDATED as const,
             data: {
               pageId: id,
@@ -240,9 +356,6 @@ export const updateWikiPagePermissions = createAuthenticatedAction(
                 : "unchanged",
               editability: data.cascadeEditability
                 ? WikiPageEditability.INHERIT
-                : "unchanged",
-              adminability: data.cascadeAdminability
-                ? WikiPageAdminability.INHERIT
                 : "unchanged",
               imageUploadability: data.cascadeImageUploadability
                 ? WikiPageUploadability.INHERIT
@@ -258,6 +371,15 @@ export const updateWikiPagePermissions = createAuthenticatedAction(
             createdById: authentication.session.user.id,
           }))
         : []),
+      ...prunes.map((prune) => ({
+        type: AuditEventType.WIKI_PAGE_ROLE_ACCESS_PRUNED as const,
+        data: {
+          pageId: prune.pageId,
+          removedRoleIds: prune.roleIds,
+          trigger: "PERMISSIONS_UPDATED" as const,
+        },
+        createdById: authentication.session.user.id,
+      })),
       ...(newOwnerId !== page.ownerId
         ? [
             {
@@ -288,8 +410,8 @@ export const updateWikiPagePermissions = createAuthenticatedAction(
 
     return {
       success:
-        skippedCount > 0 && anyCascade
-          ? `Erfolgreich gespeichert. ${skippedCount} Unterseite(n) ohne Verwalten-Berechtigung wurden übersprungen.`
+        prunes.length > 0
+          ? `Erfolgreich gespeichert. Auf ${prunes.length} Unterseite(n) wurden Rollen entfernt, die dadurch keinen Zugriff mehr hatten.`
           : t("Common.successfullySaved"),
     };
   },
@@ -298,7 +420,6 @@ export const updateWikiPagePermissions = createAuthenticatedAction(
       id: formData.get("id"),
       visibility: formData.get("visibility"),
       editability: formData.get("editability"),
-      adminability: formData.get("adminability"),
       imageUploadability: formData.get("imageUploadability"),
       attachmentUploadability: formData.get("attachmentUploadability"),
       readRoles: formData.getAll("readRole[]"),
@@ -306,7 +427,7 @@ export const updateWikiPagePermissions = createAuthenticatedAction(
       adminRoles: formData.getAll("adminRole[]"),
       cascadeVisibility: formData.get("cascadeVisibility") ?? undefined,
       cascadeEditability: formData.get("cascadeEditability") ?? undefined,
-      cascadeAdminability: formData.get("cascadeAdminability") ?? undefined,
+      cascadeAdminRoles: formData.get("cascadeAdminRoles") ?? undefined,
       cascadeImageUploadability:
         formData.get("cascadeImageUploadability") ?? undefined,
       cascadeAttachmentUploadability:

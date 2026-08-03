@@ -116,7 +116,7 @@ export const WikiCollabStatusDot = ({ className, status, users }: Props) => {
           <div className="mt-4 flex flex-col gap-3">
             {/* Wording follows the permission tiers (WikiPagePermissionsModal) */}
             <UserSection label="Bearbeiten" users={editors} />
-            <UserSection label="Sehen" users={readers} />
+            <UserSection label="Lesen" users={readers} />
           </div>
         )}
       </PopoverBaseUI>

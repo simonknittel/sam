@@ -32,13 +32,14 @@ describe("collectVisibleWikiSubtree", () => {
     ]);
   });
 
-  test("hoists readable descendants of unreadable pages to the nearest readable ancestor", () => {
+  test("an unreadable page takes its whole subtree with it", () => {
+    // Nothing below an unreadable page can be readable, so the predicate
+    // below is a contradiction the collector is allowed to ignore.
     const pages = [
       page("root", null),
       page("a", "root"),
       page("hidden", "a"),
       page("hidden-child", "hidden"),
-      page("hidden-hidden", "hidden"),
     ];
 
     const result = collectVisibleWikiSubtree(
@@ -49,7 +50,6 @@ describe("collectVisibleWikiSubtree", () => {
 
     expect(result).toEqual([
       { page: page("a", "root"), visibleParentId: "root" },
-      { page: page("hidden-child", "hidden"), visibleParentId: "a" },
     ]);
   });
 

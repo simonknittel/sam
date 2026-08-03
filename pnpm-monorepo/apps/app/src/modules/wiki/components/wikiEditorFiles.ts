@@ -56,9 +56,9 @@ export const isWikiUploadKindAllowed = (
 
 const UPLOAD_BLOCKED_MESSAGES: Record<WikiUploadKind, string> = {
   [WikiUploadKind.Image]:
-    "Bilder dürfen auf dieser Seite nur Verwalter hochladen.",
+    "Bilder dürfen auf dieser Seite nur Manager hochladen.",
   [WikiUploadKind.Attachment]:
-    "Dateianhänge dürfen auf dieser Seite nur Verwalter hochladen.",
+    "Dateianhänge dürfen auf dieser Seite nur Manager hochladen.",
 };
 
 /**

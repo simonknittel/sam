@@ -1,6 +1,5 @@
 import {
   WikiPageAccessType,
-  WikiPageAdminability,
   WikiPageEditability,
   WikiPageUploadability,
   WikiPageVisibility,
@@ -19,7 +18,6 @@ const page = (
   ownerId: null,
   visibility: WikiPageVisibility.INHERIT,
   editability: WikiPageEditability.INHERIT,
-  adminability: WikiPageAdminability.INHERIT,
   imageUploadability: WikiPageUploadability.INHERIT,
   attachmentUploadability: WikiPageUploadability.INHERIT,
   roleAccess: [],
@@ -30,7 +28,6 @@ const page = (
 const restrictedToOwner = {
   visibility: WikiPageVisibility.RESTRICTED,
   editability: WikiPageEditability.RESTRICTED,
-  adminability: WikiPageAdminability.RESTRICTED,
 } as const;
 
 const viewer = (overrides: Partial<WikiPageViewer> = {}): WikiPageViewer => ({
@@ -188,6 +185,9 @@ describe("resolve wiki page permissions", () => {
         id: "root",
         ownerId: "owner-a",
         ...restrictedToOwner,
+        // owner-b reaches the root through this role, so the parent gate
+        // lets their ownership of the child subtree take effect
+        roleAccess: [{ roleId: "role-b", type: WikiPageAccessType.READ }],
       }),
       page({ id: "child", parentId: "root", ownerId: "owner-b" }),
       page({ id: "grandchild", parentId: "child" }),
@@ -195,7 +195,7 @@ describe("resolve wiki page permissions", () => {
 
     const asB = resolveWikiPagePermissions(
       pages,
-      viewer({ citizenId: "owner-b" }),
+      viewer({ citizenId: "owner-b", roleIds: new Set(["role-b"]) }),
     );
 
     // owner-b owns the child subtree, including inheriting descendants
@@ -209,8 +209,11 @@ describe("resolve wiki page permissions", () => {
       canRead: true,
       effectiveOwnerId: "owner-b",
     });
-    // ...but does not own the root
-    expect(asB.get("root")).toMatchObject({ canRead: false });
+    // ...but only reads the root, they don't own it
+    expect(asB.get("root")).toMatchObject({
+      canRead: true,
+      canAdmin: false,
+    });
   });
 
   test("a root without an owner is only accessible via wiki;manage", () => {
@@ -314,7 +317,9 @@ describe("resolve wiki page permissions", () => {
     expect(withoutRole.get("child")).toMatchObject({ canRead: false });
   });
 
-  test("nearest setting wins: a child can be more visible than its parent", () => {
+  test("a child page cannot widen read access", () => {
+    // PUBLIC is rejected on child pages by the update action; leftover data
+    // must not turn a restricted subtree public either.
     const pages = [
       page({
         id: "root",
@@ -323,19 +328,218 @@ describe("resolve wiki page permissions", () => {
         roleAccess: [{ roleId: "role-a", type: WikiPageAccessType.READ }],
       }),
       page({
-        id: "child",
+        id: "public-child",
         parentId: "root",
         ownerId: "someone-else",
         visibility: WikiPageVisibility.PUBLIC,
       }),
+      page({
+        id: "restricted-child",
+        parentId: "root",
+        ownerId: "someone-else",
+        visibility: WikiPageVisibility.RESTRICTED,
+        roleAccess: [{ roleId: "role-b", type: WikiPageAccessType.READ }],
+      }),
     ] as const;
 
-    const result = resolveWikiPagePermissions(pages, viewer());
+    const asStranger = resolveWikiPagePermissions(pages, viewer());
+    const withParentRole = resolveWikiPagePermissions(
+      pages,
+      viewer({ roleIds: new Set(["role-a"]) }),
+    );
+    const withChildRole = resolveWikiPagePermissions(
+      pages,
+      viewer({ roleIds: new Set(["role-b"]) }),
+    );
+    const withBothRoles = resolveWikiPagePermissions(
+      pages,
+      viewer({ roleIds: new Set(["role-a", "role-b"])
+       }),
+    );
 
-    expect(result.get("root")).toMatchObject({ canRead: false });
+    expect(asStranger.get("public-child")).toMatchObject({ canRead: false });
+    expect(withParentRole.get("public-child")).toMatchObject({ canRead: true });
+    // The child narrows the parent's audience down to role-b...
+    expect(withParentRole.get("restricted-child")).toMatchObject({
+      canRead: false,
+    });
+    // ...but cannot hand access to a role the parent locks out
+    expect(withChildRole.get("restricted-child")).toMatchObject({
+      canRead: false,
+    });
+    expect(withBothRoles.get("restricted-child")).toMatchObject({
+      canRead: true,
+    });
+  });
+
+  test("managers of a page keep all tiers on its whole subtree", () => {
+    const pages = [
+      page({
+        id: "root",
+        ownerId: "owner-a",
+        ...restrictedToOwner,
+        roleAccess: [{ roleId: "role-admin", type: WikiPageAccessType.ADMIN }],
+      }),
+      page({
+        id: "child",
+        parentId: "root",
+        // An own owner and an own manager role must not cut the root off
+        ownerId: "owner-b",
+        ...restrictedToOwner,
+        roleAccess: [
+          { roleId: "role-other-admin", type: WikiPageAccessType.ADMIN },
+        ],
+      }),
+      page({ id: "grandchild", parentId: "child", ...restrictedToOwner }),
+    ] as const;
+
+    const asRootOwner = resolveWikiPagePermissions(
+      pages,
+      viewer({ citizenId: "owner-a" }),
+    );
+    const asRootAdminRole = resolveWikiPagePermissions(
+      pages,
+      viewer({ roleIds: new Set(["role-admin"]) }),
+    );
+    const asChildAdminRole = resolveWikiPagePermissions(
+      pages,
+      viewer({ roleIds: new Set(["role-other-admin"]) }),
+    );
+
+    for (const result of [asRootOwner, asRootAdminRole]) {
+      expect(result.get("child")).toMatchObject({
+        canRead: true,
+        canEdit: true,
+        canAdmin: true,
+      });
+      expect(result.get("grandchild")).toMatchObject({
+        canRead: true,
+        canEdit: true,
+        canAdmin: true,
+      });
+    }
+
+    // ...while a manager role that cannot even read the root gets nothing,
+    // not even on the page listing it
+    expect(asChildAdminRole.get("root")).toMatchObject({
+      canRead: false,
+      canAdmin: false,
+    });
+    expect(asChildAdminRole.get("child")).toMatchObject({
+      canRead: false,
+      canAdmin: false,
+    });
+    expect(asChildAdminRole.get("grandchild")).toMatchObject({
+      canRead: false,
+      canAdmin: false,
+    });
+  });
+
+  test("a page grants nothing to someone who cannot read its parent", () => {
+    const pages = [
+      page({
+        id: "root",
+        ownerId: "someone-else",
+        ...restrictedToOwner,
+      }),
+      page({
+        id: "editable-child",
+        parentId: "root",
+        ownerId: "someone-else",
+        ...restrictedToOwner,
+        roleAccess: [
+          { roleId: "role-a", type: WikiPageAccessType.EDIT },
+          { roleId: "role-b", type: WikiPageAccessType.ADMIN },
+        ],
+      }),
+      page({
+        id: "owned-child",
+        parentId: "root",
+        ownerId: "owner-b",
+        ...restrictedToOwner,
+      }),
+      page({
+        id: "open-child",
+        parentId: "root",
+        ownerId: "someone-else",
+        ...restrictedToOwner,
+        editability: WikiPageEditability.ALL,
+        visibility: WikiPageVisibility.PUBLIC,
+      }),
+    ] as const;
+
+    const asEditor = resolveWikiPagePermissions(
+      pages,
+      viewer({ roleIds: new Set(["role-a"]) }),
+    );
+    const asChildManager = resolveWikiPagePermissions(
+      pages,
+      viewer({ roleIds: new Set(["role-b"]) }),
+    );
+    const asChildOwner = resolveWikiPagePermissions(
+      pages,
+      viewer({ citizenId: "owner-b" }),
+    );
+    const asStranger = resolveWikiPagePermissions(pages, viewer());
+
+    for (const [result, pageId] of [
+      [asEditor, "editable-child"],
+      [asChildManager, "editable-child"],
+      [asChildOwner, "owned-child"],
+      [asStranger, "open-child"],
+    ] as const) {
+      expect(result.get(pageId)).toMatchObject({
+        canRead: false,
+        canEdit: false,
+        canAdmin: false,
+      });
+    }
+  });
+
+  test("the parent gate lets through what the parent grants", () => {
+    const pages = [
+      page({
+        id: "root",
+        ownerId: "someone-else",
+        ...restrictedToOwner,
+        roleAccess: [{ roleId: "role-reader", type: WikiPageAccessType.READ }],
+      }),
+      page({
+        id: "child",
+        parentId: "root",
+        ownerId: "someone-else",
+        ...restrictedToOwner,
+        roleAccess: [{ roleId: "role-reader", type: WikiPageAccessType.EDIT }],
+      }),
+    ] as const;
+
+    const result = resolveWikiPagePermissions(
+      pages,
+      viewer({ roleIds: new Set(["role-reader"]) }),
+    );
+
     expect(result.get("child")).toMatchObject({
       canRead: true,
-      visibilitySourceId: "child",
+      canEdit: true,
+      canAdmin: false,
+    });
+  });
+
+  test("wiki;manage is never locked out by the parent gate", () => {
+    const pages = [
+      page({ id: "root", ownerId: null, ...restrictedToOwner }),
+      page({ id: "child", parentId: "root", ...restrictedToOwner }),
+    ] as const;
+
+    const result = resolveWikiPagePermissions(
+      pages,
+      viewer({ hasWikiManage: true }),
+    );
+
+    expect(result.get("child")).toMatchObject({
+      canRead: true,
+      canEdit: true,
+      canAdmin: true,
     });
   });
 
@@ -383,22 +587,82 @@ describe("resolve wiki page permissions", () => {
     });
   });
 
-  test("editability ALL makes the page editable (and readable) for every reader", () => {
+  test("editability ALL means everyone who may read, not everyone with wiki access", () => {
     const pages = [
       page({
-        id: "1",
+        id: "restricted",
         ownerId: "someone-else",
         ...restrictedToOwner,
+        editability: WikiPageEditability.ALL,
+        roleAccess: [{ roleId: "role-a", type: WikiPageAccessType.READ }],
+      }),
+      page({
+        id: "public",
+        ownerId: "someone-else",
+        ...restrictedToOwner,
+        visibility: WikiPageVisibility.PUBLIC,
         editability: WikiPageEditability.ALL,
       }),
     ] as const;
 
-    const result = resolveWikiPagePermissions(pages, viewer());
+    const withRole = resolveWikiPagePermissions(
+      pages,
+      viewer({ roleIds: new Set(["role-a"]) }),
+    );
+    const withoutRole = resolveWikiPagePermissions(pages, viewer());
 
-    expect(result.get("1")).toMatchObject({
+    expect(withRole.get("restricted")).toMatchObject({
       canRead: true,
       canEdit: true,
       canAdmin: false,
+    });
+    expect(withoutRole.get("restricted")).toMatchObject({
+      canRead: false,
+      canEdit: false,
+    });
+    expect(withoutRole.get("public")).toMatchObject({
+      canRead: true,
+      canEdit: true,
+    });
+  });
+
+  test("a page resolved before its parent sees the parent's own grants", () => {
+    // Regression: read, edit and admin of one page must not be mistaken for
+    // a cycle when the parent's read is requested through a descendant.
+    const pages = [
+      page({
+        id: "child",
+        ownerId: "someone-else",
+        visibility: WikiPageVisibility.INHERIT,
+        editability: WikiPageEditability.INHERIT,
+      }),
+      page({
+        id: "parent",
+        ownerId: "someone-else",
+        ...restrictedToOwner,
+        editability: WikiPageEditability.RESTRICTED,
+        roleAccess: [{ roleId: "role-a", type: WikiPageAccessType.EDIT }],
+      }),
+    ] as const;
+    // The child is listed first on purpose — that is what triggered the bug
+    const withChildFirst = [pages[0], { ...pages[1], parentId: null }] as const;
+    const withParent = [
+      { ...withChildFirst[0], parentId: "parent" },
+      withChildFirst[1],
+    ] as const;
+
+    const result = resolveWikiPagePermissions(
+      withParent,
+      viewer({ roleIds: new Set(["role-a"]) }),
+    );
+
+    expect(result.get("parent")).toMatchObject({
+      canRead: true,
+      canEdit: true,
+    });
+    expect(result.get("child")).toMatchObject({
+      canRead: true,
+      canEdit: true,
     });
   });
 
@@ -496,16 +760,16 @@ describe("resolve wiki page permissions", () => {
     expect(result.get("child")).toMatchObject({
       visibilitySourceId: "root",
       editabilitySourceId: "child",
-      adminabilitySourceId: "root",
     });
   });
 });
 
 describe("upload permissions", () => {
-  /** Editable by everyone, owned by someone else */
+  /** Readable and therefore editable by everyone, owned by someone else */
   const editableByAll = {
     ownerId: "someone-else",
     ...restrictedToOwner,
+    visibility: WikiPageVisibility.PUBLIC,
     editability: WikiPageEditability.ALL,
   } as const;
 

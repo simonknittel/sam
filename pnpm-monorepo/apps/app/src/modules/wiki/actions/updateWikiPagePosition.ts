@@ -7,6 +7,7 @@ import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getWikiContext } from "../queries/getWikiContext";
+import { buildWikiPageMoveReset } from "../utils/buildWikiPageMoveReset";
 import { collectWikiPageDescendants } from "../utils/collectWikiPageDescendants";
 import { compareWikiPagesByOrder } from "../utils/compareWikiPagesByOrder";
 
@@ -107,9 +108,15 @@ export const updateWikiPagePosition = createAuthenticatedAction(
         }),
       ];
     });
-    if (updates.length > 0) await prisma.$transaction(updates);
+    /** Same permission reset as moveWikiPage, see there */
+    const reset = changesParent
+      ? buildWikiPageMoveReset(context.allPages, page, newParentId, updatedById)
+      : null;
 
-    if (changesParent)
+    if (updates.length > 0 || reset)
+      await prisma.$transaction([...updates, ...(reset?.statements ?? [])]);
+
+    if (reset)
       await createAuditEvents([
         {
           type: AuditEventType.WIKI_PAGE_MOVED,
@@ -120,10 +127,19 @@ export const updateWikiPagePosition = createAuthenticatedAction(
           },
           createdById: authentication.session.user.id,
         },
+        ...reset.subtreeIds.map((id) => ({
+          type: AuditEventType.WIKI_PAGE_PERMISSIONS_RESET_BY_MOVE as const,
+          data: { pageId: id, movedPageId: page.id, newParentId },
+          createdById: authentication.session.user.id,
+        })),
       ]);
 
     revalidatePath("/app/wiki", "layout");
 
-    return { success: t("Common.successfullySaved") };
+    return {
+      success: reset
+        ? "Erfolgreich verschoben. Die Seite und ihre Unterseiten übernehmen jetzt die Berechtigungen des neuen Elternteils."
+        : t("Common.successfullySaved"),
+    };
   },
 );
