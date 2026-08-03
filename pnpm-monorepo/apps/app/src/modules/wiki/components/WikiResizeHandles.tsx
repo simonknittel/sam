@@ -7,22 +7,29 @@ import {
   isWikiHeightResizable,
   WIKI_RESIZABLE_NODE_TYPES,
 } from "@sam-monorepo/wiki-editor";
-import { NodeSelection } from "@tiptap/pm/state";
+import { NodeSelection, type Transaction } from "@tiptap/pm/state";
 import type { Editor } from "@tiptap/react";
 import { useEffect, useRef, useState, type RefObject } from "react";
-import { resolveWikiNodeFromElement } from "./wikiEditorHover";
+import { resolveWikiNodeByElement } from "./wikiEditorHover";
 
 interface DragState {
-  side: "left" | "right" | "bottom";
-  startX: number;
-  startY: number;
-  startWidth: number;
-  startHeight: number;
-  containerWidth: number;
-  element: HTMLElement;
-  /** Pending attribute value: widthPx (left/right) or heightPx (bottom) */
-  value: number;
+  readonly side: "left" | "right" | "bottom";
+  readonly attribute: "widthPx" | "heightPx";
+  readonly startX: number;
+  readonly startY: number;
+  readonly startWidth: number;
+  readonly startHeight: number;
+  readonly containerWidth: number;
+  /** The attribute's value before the drag, restored for a single undo step */
+  readonly startValue: unknown;
+  /** Node position, mapped through transactions arriving mid-drag */
   position: number;
+  /** Latest dragged value: widthPx (left/right) or heightPx (bottom) */
+  value: number;
+  /** Value already written to the document, NULL until the first write */
+  writtenValue: number | null;
+  /** Pending animation frame of the write, see writeDraggedValue */
+  frame: number | null;
 }
 
 interface ResizeTarget {
@@ -30,7 +37,7 @@ interface ResizeTarget {
   readonly position: number;
   /** Whether the node gets the bottom height handle (generic iframe) */
   readonly heightResizable: boolean;
-  /** Rect of the visual element, relative to the overlay */
+  /** Rect of the node's element, relative to the overlay */
   readonly left: number;
   readonly top: number;
   readonly width: number;
@@ -43,6 +50,22 @@ const HANDLE_WIDTH = 6;
 const HANDLE_HIT_PADDING = 8;
 /** Gap between the element edge and the bar */
 const HANDLE_GAP = 2;
+
+/**
+ * The resizable node at a position: width and position only apply to
+ * direct children of the document, so nested blocks (grid cells, callout
+ * and collapsible contents) have no handles.
+ */
+const resizableNodeAt = (editor: Editor, position: number) => {
+  if (position < 0 || position > editor.state.doc.content.size) return null;
+  const node = editor.state.doc.nodeAt(position);
+  if (
+    !node ||
+    !(WIKI_RESIZABLE_NODE_TYPES as readonly string[]).includes(node.type.name)
+  )
+    return null;
+  return editor.state.doc.resolve(position).depth === 0 ? node : null;
+};
 
 interface Props {
   readonly editor: Editor | null;
@@ -57,11 +80,16 @@ interface Props {
 /**
  * Drag handles on the edges of the hovered (or, on touch devices,
  * selected) resizable node: left/right for the width on all resizable
- * nodes, bottom for the height on the generic iframe. Dragging previews
- * the size on the DOM and commits it as `widthPx`/`heightPx` on
- * release. The hitboxes overlap the element's edges, so the pointer never
- * leaves the hover containment (see WikiEditorOverlays) on its way to a
- * handle.
+ * nodes, bottom for the height on the generic iframe. The hitboxes overlap
+ * the element's edges, so the pointer never leaves the hover containment
+ * (see WikiEditorOverlays) on its way to a handle.
+ *
+ * Dragging writes `widthPx`/`heightPx` to the document instead of
+ * previewing the size on the DOM: ProseMirror owns the editor's DOM and
+ * re-renders any node whose markup changed behind its back, which detached
+ * the previewed element mid-drag and left the block at its old size until
+ * the drag ended. Driven by the document, the block, the handles and the
+ * hover wash resize together — and remote editors see the drag live.
  */
 export const WikiResizeHandles = ({
   editor,
@@ -76,12 +104,50 @@ export const WikiResizeHandles = ({
     if (!editor) return;
     let stopMeasuring: (() => void) | null = null;
 
+    /**
+     * The node's own element — the one carrying the width, which for node
+     * views is their outer element (see wikiNodeViewElementAttributes) and
+     * not the markup inside it. Looked up per use: an element does not
+     * survive its node's redraws.
+     */
+    const nodeElement = (position: number): HTMLElement | null => {
+      const dom = editor.view.nodeDOM(position);
+      return dom instanceof HTMLElement ? dom : null;
+    };
+
+    const measure = (position: number, element: HTMLElement) => {
+      const overlay = overlayRef.current;
+      const node = resizableNodeAt(editor, position);
+      if (!overlay || !node) {
+        setTarget(null);
+        return;
+      }
+      const rect = element.getBoundingClientRect();
+      const overlayRect = overlay.getBoundingClientRect();
+      setTarget({
+        position,
+        heightResizable: isWikiHeightResizable(
+          node.type.name,
+          node.attrs.provider,
+        ),
+        left: rect.left - overlayRect.left,
+        top: rect.top - overlayRect.top,
+        width: rect.width,
+        height: rect.height,
+      });
+    };
+
     const update = () => {
       /**
-       * While dragging, the DOM is updated imperatively — skip state
-       * updates so the drag math keeps its reference frame.
+       * While dragging, the dragged node stays the target wherever the
+       * pointer is — it left the block for the handle.
        */
-      if (dragStateRef.current) return;
+      const dragState = dragStateRef.current;
+      if (dragState) {
+        const element = nodeElement(dragState.position);
+        if (element) measure(dragState.position, element);
+        return;
+      }
 
       /**
        * A transaction that redraws the hovered node detaches the element;
@@ -102,86 +168,54 @@ export const WikiResizeHandles = ({
 
       /**
        * The hovered node wins; a node-selected node (tap on touch
-       * devices) is the fallback. Nested blocks (grid cells, callouts,
-       * collapsibles) get no handles — width only applies to direct
-       * children of the document.
+       * devices) is the fallback.
        */
-      let resolved: { position: number; heightResizable: boolean } | null =
-        null;
-      let nodeDom: HTMLElement | null = null;
+      let position: number | null = null;
 
       if (hoveredElement) {
-        const hovered = resolveWikiNodeFromElement(
-          editor,
-          hoveredElement,
-          WIKI_RESIZABLE_NODE_TYPES,
-        );
-        if (hovered && editor.state.doc.resolve(hovered.position).depth === 0) {
-          resolved = {
-            position: hovered.position,
-            heightResizable: isWikiHeightResizable(
-              hovered.node.type.name,
-              hovered.node.attrs.provider,
-            ),
-          };
-          nodeDom = hoveredElement;
-        }
+        const hovered = resolveWikiNodeByElement(editor, hoveredElement);
+        if (hovered && resizableNodeAt(editor, hovered.position))
+          position = hovered.position;
       }
 
-      if (!resolved) {
+      if (position === null) {
         const { selection } = editor.state;
         if (
           selection instanceof NodeSelection &&
-          selection.$from.depth === 0 &&
-          (WIKI_RESIZABLE_NODE_TYPES as readonly string[]).includes(
-            selection.node.type.name,
-          )
-        ) {
-          const dom = editor.view.nodeDOM(selection.from);
-          if (dom instanceof HTMLElement) {
-            resolved = {
-              position: selection.from,
-              heightResizable: isWikiHeightResizable(
-                selection.node.type.name,
-                selection.node.attrs.provider,
-              ),
-            };
-            nodeDom = dom;
-          }
-        }
+          resizableNodeAt(editor, selection.from)
+        )
+          position = selection.from;
       }
 
-      if (!resolved || !nodeDom) {
+      const element = position === null ? null : nodeElement(position);
+      if (position === null || !element) {
         setTarget(null);
         return;
       }
 
-      const { position, heightResizable } = resolved;
-      const element = nodeDom;
-
-      const measure = () => {
-        if (dragStateRef.current) return;
-        const rect = element.getBoundingClientRect();
-        const overlayRect = overlay.getBoundingClientRect();
-        setTarget({
-          position,
-          heightResizable,
-          left: rect.left - overlayRect.left,
-          top: rect.top - overlayRect.top,
-          width: rect.width,
-          height: rect.height,
-        });
-      };
-
       /** Keeps the measured rect fresh on scroll, resize and layout shifts */
-      stopMeasuring = autoUpdate(element, overlay, measure);
+      stopMeasuring = autoUpdate(element, overlay, () => {
+        if (dragStateRef.current) return;
+        measure(position, element);
+      });
+    };
+
+    const handleTransaction = ({
+      transaction,
+    }: {
+      transaction: Transaction;
+    }) => {
+      const dragState = dragStateRef.current;
+      if (dragState && transaction.docChanged)
+        dragState.position = transaction.mapping.map(dragState.position);
+      update();
     };
 
     update();
-    editor.on("transaction", update);
+    editor.on("transaction", handleTransaction);
     return () => {
       stopMeasuring?.();
-      editor.off("transaction", update);
+      editor.off("transaction", handleTransaction);
     };
   }, [editor, hoveredElement, overlayRef]);
 
@@ -198,41 +232,60 @@ export const WikiResizeHandles = ({
 
     event.preventDefault();
     setDragLock(true);
-    if (side !== "bottom") {
-      /**
-       * Preview the margins the committed width will render (centered by
-       * default), so the block re-centers live while dragging instead of
-       * jumping into position on release.
-       */
-      const align: unknown = editor.state.doc.nodeAt(target.position)?.attrs
-        .align;
-      element.style.marginLeft = align === "left" ? "0" : "auto";
-      element.style.marginRight = align === "right" ? "0" : "auto";
-    }
+    const attribute = side === "bottom" ? "heightPx" : "widthPx";
+    const nodeTypeName = editor.state.doc.nodeAt(target.position)?.type.name;
     const startRect = element.getBoundingClientRect();
-    dragStateRef.current = {
+    const dragState: DragState = {
       side,
+      attribute,
       startX: event.clientX,
       startY: event.clientY,
       startWidth: startRect.width,
       startHeight: startRect.height,
       containerWidth,
-      element,
+      startValue: editor.state.doc.nodeAt(target.position)?.attrs[attribute],
+      position: target.position,
       value:
         side === "bottom"
           ? clampWikiIframeHeightPx(startRect.height)
           : Math.min(containerWidth, clampWikiWidthPx(startRect.width)),
-      position: target.position,
+      writtenValue: null,
+      frame: null,
+    };
+    dragStateRef.current = dragState;
+
+    /**
+     * Whether the dragged node is still there: a remote editor may delete
+     * it mid-drag, and writing to its position would throw.
+     */
+    const isNodeGone = () =>
+      editor.isDestroyed ||
+      editor.state.doc.nodeAt(dragState.position)?.type.name !== nodeTypeName;
+
+    /**
+     * One write per frame: pointer moves arrive faster than the editor
+     * re-renders, and every write is a transaction the collab session
+     * syncs. They stay out of the undo history — the release below turns
+     * the whole drag into a single undoable step.
+     */
+    const writeDraggedValue = () => {
+      dragState.frame = null;
+      if (dragStateRef.current !== dragState || isNodeGone()) return;
+      if (dragState.value === dragState.writtenValue) return;
+      dragState.writtenValue = dragState.value;
+      editor.view.dispatch(
+        editor.state.tr
+          .setNodeAttribute(dragState.position, attribute, dragState.value)
+          .setMeta("addToHistory", false),
+      );
     };
 
     const handlePointerMove = (moveEvent: PointerEvent) => {
-      const dragState = dragStateRef.current;
-      if (!dragState) return;
+      if (dragStateRef.current !== dragState) return;
       if (dragState.side === "bottom") {
-        const height =
-          dragState.startHeight + (moveEvent.clientY - dragState.startY);
-        dragState.value = clampWikiIframeHeightPx(height);
-        dragState.element.style.height = `${dragState.value}px`;
+        dragState.value = clampWikiIframeHeightPx(
+          dragState.startHeight + (moveEvent.clientY - dragState.startY),
+        );
       } else {
         const direction = dragState.side === "right" ? 1 : -1;
         const width =
@@ -247,45 +300,38 @@ export const WikiResizeHandles = ({
           dragState.containerWidth,
           clampWikiWidthPx(width),
         );
-        dragState.element.style.width = `${dragState.value}px`;
       }
 
-      const overlay = overlayRef.current;
-      if (!overlay) return;
-      const rect = dragState.element.getBoundingClientRect();
-      const overlayRect = overlay.getBoundingClientRect();
-      setTarget((previous) =>
-        previous
-          ? {
-              ...previous,
-              left: rect.left - overlayRect.left,
-              top: rect.top - overlayRect.top,
-              width: rect.width,
-              height: rect.height,
-            }
-          : previous,
-      );
+      dragState.frame ??= window.requestAnimationFrame(writeDraggedValue);
     };
 
     const handlePointerUp = () => {
-      const dragState = dragStateRef.current;
       dragStateRef.current = null;
       setDragLock(false);
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
-      if (!dragState) return;
+      if (dragState.frame !== null)
+        window.cancelAnimationFrame(dragState.frame);
+      /** Never moved: nothing was written, so there is nothing to commit */
+      if (dragState.writtenValue === null || isNodeGone()) return;
 
-      editor
-        .chain()
-        .command(({ tr }) => {
-          tr.setNodeAttribute(
-            dragState.position,
-            dragState.side === "bottom" ? "heightPx" : "widthPx",
-            dragState.value,
-          );
-          return true;
-        })
-        .run();
+      /**
+       * Rewind to the pre-drag value, then set the final one: both
+       * dispatches run in this handler, so nothing renders in between and
+       * the whole drag becomes ONE undo step instead of one per frame.
+       */
+      editor.view.dispatch(
+        editor.state.tr
+          .setNodeAttribute(dragState.position, attribute, dragState.startValue)
+          .setMeta("addToHistory", false),
+      );
+      editor.view.dispatch(
+        editor.state.tr.setNodeAttribute(
+          dragState.position,
+          attribute,
+          dragState.value,
+        ),
+      );
     };
 
     window.addEventListener("pointermove", handlePointerMove);

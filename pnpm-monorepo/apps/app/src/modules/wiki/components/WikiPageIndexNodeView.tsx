@@ -12,11 +12,11 @@ import {
   ReactNodeViewRenderer,
   type NodeViewProps,
 } from "@tiptap/react";
-import { wikiBlockLayoutStyle } from "./wikiBlockLayoutStyle";
 import {
   WikiPageIndexList,
   type WikiPageIndexEntry,
 } from "./WikiPageIndexList";
+import { wikiNodeViewElementAttributes } from "./wikiNodeViewAttributes";
 
 interface WikiPageIndexNodeViewOptions {
   /** The page being edited/viewed — the root when `rootPageId` is null */
@@ -53,7 +53,7 @@ const WikiPageIndexNodeView = ({ node, extension }: NodeViewProps) => {
   );
 
   return (
-    <NodeViewWrapper style={wikiBlockLayoutStyle(node.attrs)}>
+    <NodeViewWrapper>
       <WikiPageIndexList entries={data ?? []} isLoading={isPending} />
     </NodeViewWrapper>
   );
@@ -74,7 +74,9 @@ const WikiPageIndexWithNodeView =
     },
 
     addNodeView() {
-      return ReactNodeViewRenderer(WikiPageIndexNodeView);
+      return ReactNodeViewRenderer(WikiPageIndexNodeView, {
+        attrs: wikiNodeViewElementAttributes,
+      });
     },
   });
 

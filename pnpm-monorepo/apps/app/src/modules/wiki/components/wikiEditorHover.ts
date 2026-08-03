@@ -25,6 +25,23 @@ export const wikiHoverTargetKey = (element: HTMLElement): string => {
 };
 
 /**
+ * Nodes rendering their own content through a React node view (page index,
+ * role members, variant chip). Everything inside them is generated per
+ * viewer — paragraphs, lists, links, logos — and is not editor content, so
+ * a hover anywhere in them belongs to the node itself; otherwise each of
+ * those elements would raise its own menu and resize handles for something
+ * that cannot be edited or resized.
+ */
+const SELF_RENDERED_NODE_SELECTOR = [
+  "[data-wiki-page-index]",
+  "[data-wiki-role-citizens]",
+  "[data-wiki-variant-link]",
+].join(", ");
+
+const liftToSelfRenderedNode = (element: HTMLElement): HTMLElement =>
+  element.closest<HTMLElement>(SELF_RENDERED_NODE_SELECTOR) ?? element;
+
+/**
  * Tracks which element matching `selector` the pointer is over inside the
  * editor. Driven by a single window mousemove listener instead of
  * enter/leave boundary events — React's synthetic mouseenter fires before
@@ -94,7 +111,8 @@ export const useWikiHoveredElement = (
 
       const match = target.closest(selector);
       if (match instanceof HTMLElement && editorDom.contains(match)) {
-        if (match !== hovered) setHovered(match);
+        const next = liftToSelfRenderedNode(match);
+        if (next !== hovered) setHovered(next);
         return;
       }
 
@@ -139,9 +157,13 @@ export const useWikiHoveredElement = (
         const node = transaction.doc.nodeAt(hoveredPosition);
         const dom = editor.view.nodeDOM(hoveredPosition);
         const outer = dom instanceof HTMLElement ? dom : null;
-        const match = outer?.matches(selector)
+        const redrawn = outer?.matches(selector)
           ? outer
           : (outer?.querySelector(selector) ?? null);
+        const match =
+          redrawn instanceof HTMLElement
+            ? liftToSelfRenderedNode(redrawn)
+            : null;
 
         if (
           !previousNode ||
@@ -177,6 +199,58 @@ export const useWikiHoveredElement = (
    * Transactions can re-render the node and detach the hovered element.
    */
   return element?.isConnected ? element : null;
+};
+
+/**
+ * Resolves the node an element RENDERS — the one whose `nodeDOM` is that
+ * element (or, for node views, contains it). Unlike
+ * resolveWikiNodeFromElement it does not guess by node type, so container
+ * blocks whose first child is itself a candidate type (a callout or quote
+ * around a paragraph) resolve to the container instead of that child.
+ * Returns NULL when the element renders no node of its own, e.g. a
+ * mark-rendered link or a node view's inner markup that sits below the
+ * node's own element.
+ */
+export const resolveWikiNodeByElement = (
+  editor: Editor,
+  element: HTMLElement,
+): { position: number; node: ProseMirrorNode } | null => {
+  let basePosition: number;
+  try {
+    basePosition = editor.view.posAtDOM(element, 0);
+  } catch {
+    return null;
+  }
+
+  const document = editor.state.doc;
+  if (basePosition < 0 || basePosition > document.content.size) return null;
+  const $base = document.resolve(basePosition);
+
+  /**
+   * posAtDOM answers with the position before the node for leafs and with
+   * the one inside it for elements with content, hence the three
+   * candidates — the third one covers content elements whose first child
+   * starts further in (a callout's paragraph).
+   */
+  const candidates = [
+    basePosition,
+    basePosition - 1,
+    $base.depth > 0 ? $base.before() : -1,
+  ];
+
+  for (const position of candidates) {
+    if (position < 0 || position > document.content.size) continue;
+    const node = document.nodeAt(position);
+    if (!node) continue;
+    const dom = editor.view.nodeDOM(position);
+    if (
+      dom instanceof HTMLElement &&
+      (dom === element || dom.contains(element))
+    )
+      return { position, node };
+  }
+
+  return null;
 };
 
 /**
