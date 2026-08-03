@@ -28,10 +28,7 @@ export const buildWikiPageMoveReset = (
   newParentId: string | null,
   movedById: string | null,
 ) => {
-  const subtreeIds = [
-    page.id,
-    ...collectWikiPageDescendants(pages, page.id),
-  ];
+  const subtreeIds = [page.id, ...collectWikiPageDescendants(pages, page.id)];
   const descendantIds = subtreeIds.filter((id) => id !== page.id);
 
   const inherited = {

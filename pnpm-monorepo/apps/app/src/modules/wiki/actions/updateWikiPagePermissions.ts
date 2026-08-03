@@ -12,11 +12,11 @@ import {
 } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { getWikiPermissionRoles } from "../queries/getWikiPermissionRoles";
 import {
   getWikiContext,
   type WikiContextPage,
 } from "../queries/getWikiContext";
+import { getWikiPermissionRoles } from "../queries/getWikiPermissionRoles";
 import { getWikiViewerForCitizen } from "../queries/getWikiViewerForCitizen";
 import { collectWikiPageDescendants } from "../utils/collectWikiPageDescendants";
 import { collectWikiPageRolePrunes } from "../utils/collectWikiPageRolePrunes";
@@ -177,7 +177,9 @@ export const updateWikiPagePermissions = createAuthenticatedAction(
      * follow this page's owner.
      */
     const ownerCascadeIds = data.cascadeOwner
-      ? descendantIds.filter((id) => context.pagesById.get(id)?.ownerId !== null)
+      ? descendantIds.filter(
+          (id) => context.pagesById.get(id)?.ownerId !== null,
+        )
       : [];
 
     /**

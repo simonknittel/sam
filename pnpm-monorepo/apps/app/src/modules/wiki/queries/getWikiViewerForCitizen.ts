@@ -1,6 +1,9 @@
 import { prisma } from "@/db";
 import comparePermissionSets from "@/modules/auth/comparePermissionSets";
-import { getPermissionSetsByRoles, resolveEffectiveRoles } from "@/modules/auth/server";
+import {
+  getPermissionSetsByRoles,
+  resolveEffectiveRoles,
+} from "@/modules/auth/server";
 import type { WikiPageViewer } from "../utils/resolveWikiPagePermissions";
 
 /**

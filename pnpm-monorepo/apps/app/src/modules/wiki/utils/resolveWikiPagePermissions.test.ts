@@ -353,8 +353,7 @@ describe("resolve wiki page permissions", () => {
     );
     const withBothRoles = resolveWikiPagePermissions(
       pages,
-      viewer({ roleIds: new Set(["role-a", "role-b"])
-       }),
+      viewer({ roleIds: new Set(["role-a", "role-b"]) }),
     );
 
     expect(asStranger.get("public-child")).toMatchObject({ canRead: false });

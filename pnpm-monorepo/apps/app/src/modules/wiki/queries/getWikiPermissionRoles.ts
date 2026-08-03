@@ -17,33 +17,34 @@ export type WikiPermissionRoleWithName = WikiPermissionRole & {
  * that is what `getVisibleRoles()` is for.
  */
 export const getWikiPermissionRoles = cache(
-  withTrace("getWikiPermissionRoles", async (): Promise<
-    WikiPermissionRoleWithName[]
-  > => {
-    const roles = await prisma.role.findMany({
-      select: {
-        id: true,
-        name: true,
-        permissionStrings: true,
-        inherits: { select: { id: true, permissionStrings: true } },
-      },
-    });
+  withTrace(
+    "getWikiPermissionRoles",
+    async (): Promise<WikiPermissionRoleWithName[]> => {
+      const roles = await prisma.role.findMany({
+        select: {
+          id: true,
+          name: true,
+          permissionStrings: true,
+          inherits: { select: { id: true, permissionStrings: true } },
+        },
+      });
 
-    return roles
-      .map((role) => ({
-        id: role.id,
-        name: role.name,
-        /**
-         * Same rule as `resolveEffectiveRoles()`: holding a role means
-         * holding the roles it inherits. The level check doesn't apply here
-         * — it depends on the individual assignment, not on the role.
-         */
-        effectiveRoleIds: [role.id, ...role.inherits.map(({ id }) => id)],
-        hasWikiManage: comparePermissionSets(
-          { resource: "wiki", operation: "manage" },
-          getPermissionSetsByRoles([role, ...role.inherits]),
-        ),
-      }))
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }),
+      return roles
+        .map((role) => ({
+          id: role.id,
+          name: role.name,
+          /**
+           * Same rule as `resolveEffectiveRoles()`: holding a role means
+           * holding the roles it inherits. The level check doesn't apply here
+           * — it depends on the individual assignment, not on the role.
+           */
+          effectiveRoleIds: [role.id, ...role.inherits.map(({ id }) => id)],
+          hasWikiManage: comparePermissionSets(
+            { resource: "wiki", operation: "manage" },
+            getPermissionSetsByRoles([role, ...role.inherits]),
+          ),
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+    },
+  ),
 );

@@ -128,7 +128,8 @@ export const resolveWikiPageEffectivePermissions = (
         const sourceTitle = source ? titleOf(source.id) : undefined;
         inheritedAdmin.push({
           roleId: role.id,
-          note: manageNote ?? (sourceTitle ? `von "${sourceTitle}"` : undefined),
+          note:
+            manageNote ?? (sourceTitle ? `von "${sourceTitle}"` : undefined),
         });
       }
     }

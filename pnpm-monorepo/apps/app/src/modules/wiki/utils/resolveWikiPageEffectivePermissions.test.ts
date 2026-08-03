@@ -41,7 +41,9 @@ const resolve = (
   pages: WikiPagePermissionSource[],
   roles: WikiPermissionRole[],
   pageId: string,
-  options: Partial<Parameters<typeof resolveWikiPageEffectivePermissions>[3]> = {},
+  options: Partial<
+    Parameters<typeof resolveWikiPageEffectivePermissions>[3]
+  > = {},
 ) =>
   resolveWikiPageEffectivePermissions(pages, roles, pageId, {
     ownerHandle: null,
@@ -178,11 +180,7 @@ describe("resolve wiki page effective permissions", () => {
       }),
     ];
 
-    const result = resolve(
-      pages,
-      [role("reader"), role("outsider")],
-      "child",
-    );
+    const result = resolve(pages, [role("reader"), role("outsider")], "child");
 
     expect(result.read).toEqual([]);
   });

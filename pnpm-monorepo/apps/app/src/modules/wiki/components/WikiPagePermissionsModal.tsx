@@ -203,7 +203,9 @@ export const WikiPagePermissionsModal = ({
           </section>
 
           <section className="mt-8">
-            <h3 className="font-bold text-lg font-mono uppercase">Bearbeiten</h3>
+            <h3 className="font-bold text-lg font-mono uppercase">
+              Bearbeiten
+            </h3>
 
             <RadioGroup
               name="editability"
@@ -368,8 +370,8 @@ export const WikiPagePermissionsModal = ({
             <h3 className="font-bold text-lg font-mono uppercase">Manager</h3>
             <p className="text-sm text-neutral-400">
               Manager können Berechtigungen ändern sowie Seiten umbenennen,
-              verschieben und löschen. Wer eine Seite verwaltet, verwaltet
-              immer auch alle ihre Unterseiten.
+              verschieben und löschen. Wer eine Seite verwaltet, verwaltet immer
+              auch alle ihre Unterseiten.
             </p>
 
             <WikiEffectivePermissionList
