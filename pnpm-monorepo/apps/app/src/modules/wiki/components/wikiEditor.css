@@ -600,15 +600,18 @@
 /*
  * Manufacturer logo inside a variant link — inline and scaled to the
  * surrounding text, overriding the typography plugin's block images
- * (which the component's own utilities would lose against).
+ * (which the component's own utilities would lose against). The box is a
+ * fixed width instead of the logo's own so that the names of links stacked
+ * underneath each other start at the same offset regardless of how wide
+ * their manufacturer's logo is; `contain` letterboxes the logo inside it.
  */
 .prose a[data-wiki-variant-link] img {
   display: inline-block;
-  width: auto;
+  width: 3em;
   height: 1em;
-  max-width: 4em;
   margin: 0 0.25em 0 0;
   object-fit: contain;
+  object-position: center;
   vertical-align: -0.15em;
 }
 

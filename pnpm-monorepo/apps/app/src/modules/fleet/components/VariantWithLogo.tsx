@@ -59,7 +59,8 @@ export const VariantWithLogo = ({
       className={clsx(
         "object-contain object-center",
         isInline
-          ? "mr-1 inline-block h-[1em] w-auto max-w-[3em] align-[-0.15em]"
+          ? /* Fixed width so stacked links align, see wikiEditor.css */
+            "mr-1 inline-block h-[1em] w-[3em] align-[-0.15em]"
           : "flex-none",
         {
           "size-8": size === 32,
@@ -74,16 +75,19 @@ export const VariantWithLogo = ({
       loading="lazy"
     />
   ) : (
-    /* Keeps a list of variants aligned; a line of text needs no such spacer */
-    !isInline && (
-      <span
-        className={clsx("block flex-none", {
+    /* Keeps variants aligned when their manufacturer has no logo */
+    <span
+      className={clsx(
+        isInline
+          ? "mr-1 inline-block h-[1em] w-[3em] align-[-0.15em]"
+          : "block flex-none",
+        {
           "size-8": size === 32,
           "size-12": size === 48,
           "size-20": size === 80,
-        })}
-      ></span>
-    )
+        },
+      )}
+    ></span>
   );
 
   const name = isInline ? (
