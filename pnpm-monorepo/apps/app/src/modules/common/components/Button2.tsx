@@ -30,6 +30,11 @@ type Props<E extends ElementType = "button"> = {
    * the accessible name, so icon-only buttons don't need a `title` attribute.
    */
   readonly tooltip?: string;
+  /**
+   * Key that triggers the button, shown as a badge inside the tooltip. Left
+   * out of the accessible name — use `aria-keyshortcuts` for that.
+   */
+  readonly tooltipHotkey?: string;
 } & Omit<ComponentProps<E>, "as" | "className" | "children">;
 
 export const Button2 = <E extends ElementType = "button">({
@@ -39,6 +44,7 @@ export const Button2 = <E extends ElementType = "button">({
   variant = Button2Variant.Primary,
   colorSchema = Button2ColorSchema.Interaction,
   tooltip,
+  tooltipHotkey,
   ...otherProps
 }: Props<E>) => {
   const Component = as ?? "button";
@@ -85,6 +91,12 @@ export const Button2 = <E extends ElementType = "button">({
             className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 hidden -translate-x-1/2 rounded-secondary bg-neutral-600 px-2 py-1 font-sans text-xs leading-tight font-normal normal-case whitespace-nowrap text-white group-hover/button2:block group-focus-visible/button2:block"
           >
             {tooltip}
+
+            {tooltipHotkey && (
+              <kbd className="ml-1.5 rounded-secondary bg-white/15 px-1 py-0.5 font-mono text-[0.625rem] uppercase">
+                {tooltipHotkey}
+              </kbd>
+            )}
           </span>
         </>
       )}
