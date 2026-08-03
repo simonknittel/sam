@@ -21,16 +21,14 @@ import {
   useRef,
   useState,
   type KeyboardEvent,
-  type ReactNode,
   type RefObject,
 } from "react";
-import { FaPaste, FaPlus, FaSearch } from "react-icons/fa";
+import { FaPlus, FaSearch } from "react-icons/fa";
 import { MdDragIndicator } from "react-icons/md";
-import { getWikiNodeTypeLabel } from "../utils/getWikiNodeTypeLabel";
 import { setWikiActiveNodeHighlight } from "./WikiActiveNodeHighlight";
-import { getWikiCopiedBlock } from "./wikiBlockClipboard";
 import {
   applyWikiUploadRestrictions,
+  getWikiCopiedBlockItem,
   matchesWikiSlashCommandQuery,
   WIKI_SLASH_COMMAND_ITEMS,
   type WikiSlashCommandItem,
@@ -265,21 +263,6 @@ interface InsertBlockActionsProps {
   readonly onClosePalette: () => void;
 }
 
-const COPIED_BLOCK_TITLE = "Kopierten Block einfügen";
-
-/** Entry of the gutter palette list, fed into WikiSuggestionMenu */
-interface GutterPaletteEntry {
-  readonly id: string;
-  readonly title: string;
-  readonly icon: ReactNode;
-  readonly subtitle?: string;
-  readonly dividerAfter?: boolean;
-  /** Muted and inert (WikiSuggestionMenu) — blocked upload entries */
-  readonly disabled?: boolean;
-  /** The palette item behind the entry — absent for the copied block */
-  readonly item?: WikiSlashCommandItem;
-}
-
 /**
  * Dropdown content of the gutter plus button: the slash-command palette
  * with a filter input and keyboard navigation (shared WikiSuggestionMenu).
@@ -320,10 +303,8 @@ const InsertBlockActions = ({
    * identity — WikiSuggestionMenu resets its keyboard selection whenever
    * the items identity changes (wanted only when the query changes).
    */
-  const { entries, insertableCopied } = useMemo(() => {
-    if (!block) {
-      return { entries: [] as GutterPaletteEntry[], insertableCopied: null };
-    }
+  const entries = useMemo(() => {
+    if (!block) return [];
 
     /**
      * The palette inserts next to the hovered block, i.e. into its parent —
@@ -343,53 +324,12 @@ const InsertBlockActions = ({
       { canUploadImages, canUploadAttachments },
     ).filter((item) => matchesWikiSlashCommandQuery(item, query));
 
-    /**
-     * The copied block (edit menu's copy button, wikiBlockClipboard) obeys
-     * the same placement rules as the palette entries: text-only containers
-     * accept only paragraphs (or inline nodes, which get wrapped in one on
-     * insert), and grids never nest.
-     */
-    const copied = getWikiCopiedBlock();
-    const copiedAllowed =
-      copied &&
-      (!restrictions.blocks ||
-        copied.isInline ||
-        copied.typeName === "paragraph") &&
-      !(restrictions.grids && copied.containsGrid)
-        ? copied
-        : null;
-    const copiedLabel = copiedAllowed
-      ? getWikiNodeTypeLabel(copiedAllowed.typeName, copiedAllowed.headingLevel)
-      : null;
-    const normalized = query.toLowerCase().trim();
-    const copiedMatchesQuery =
-      !normalized ||
-      COPIED_BLOCK_TITLE.toLowerCase().includes(normalized) ||
-      (copiedLabel?.toLowerCase().includes(normalized) ?? false);
-
-    const entries: GutterPaletteEntry[] = [
-      ...(copiedAllowed && copiedLabel !== null && copiedMatchesQuery
-        ? [
-            {
-              id: "copied-block",
-              title: COPIED_BLOCK_TITLE,
-              icon: <FaPaste />,
-              subtitle: copiedLabel,
-              dividerAfter: items.length > 0,
-            },
-          ]
-        : []),
-      ...items.map((item) => ({
-        id: item.title,
-        title: item.title,
-        icon: item.icon,
-        subtitle: item.subtitle,
-        disabled: item.disabled,
-        item,
-      })),
-    ];
-
-    return { entries, insertableCopied: copiedAllowed };
+    const copiedBlockItem = getWikiCopiedBlockItem(
+      restrictions,
+      query,
+      items.length > 0,
+    );
+    return copiedBlockItem ? [copiedBlockItem, ...items] : items;
   }, [editor, block, query, canUploadImages, canUploadAttachments]);
 
   if (!block) return null;
@@ -399,24 +339,8 @@ const InsertBlockActions = ({
   const insertPosition = () =>
     insertAboveRef.current ? block.pos : block.pos + node.nodeSize;
 
-  const insertCopiedBlock = () => {
-    if (!insertableCopied) return;
-    closePopover();
-    onClosePalette();
-
-    editor
-      .chain()
-      .focus()
-      .insertContentAt(
-        insertPosition(),
-        insertableCopied.isInline
-          ? { type: "paragraph", content: [insertableCopied.content] }
-          : insertableCopied.content,
-      )
-      .run();
-  };
-
   const insertBlock = (item: WikiSlashCommandItem) => {
+    if (item.disabled === true) return;
     closePopover();
     onClosePalette();
 
@@ -441,12 +365,6 @@ const InsertBlockActions = ({
     );
   };
 
-  const runEntry = (entry: GutterPaletteEntry) => {
-    if (entry.disabled) return;
-    if (entry.item) insertBlock(entry.item);
-    else insertCopiedBlock();
-  };
-
   /** Arrow/Enter go to the list; everything else stays in the input */
   const handleInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (menuRef.current?.onKeyDown({ event: event.nativeEvent }) === true)
@@ -469,7 +387,7 @@ const InsertBlockActions = ({
         />
       </label>
 
-      <WikiSuggestionMenu items={entries} command={runEntry} ref={menuRef} />
+      <WikiSuggestionMenu items={entries} command={insertBlock} ref={menuRef} />
     </div>
   );
 };

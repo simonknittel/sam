@@ -16,7 +16,8 @@ export interface WikiCopiedBlock {
 
 /**
  * App-wide clipboard slot for the edit menus' copy button, offered for
- * insertion by the gutter's plus palette. Module scope on purpose: it
+ * insertion by both insert palettes (gutter plus button, slash command —
+ * getWikiCopiedBlockItem). Module scope on purpose: it
  * survives page navigation, so blocks copy across wiki pages.
  * Deliberately separate from the OS clipboard — the palette needs
  * structured node JSON, which the OS clipboard can neither guarantee nor
@@ -43,7 +44,8 @@ export const setWikiCopiedBlock = (node: ProseMirrorNode) => {
 };
 
 /**
- * Read at render time of the palette — its popover content mounts on
- * open, so no subscription is needed for freshness.
+ * Read while the palette builds its entries — the gutter's popover
+ * content mounts on open and the slash command re-filters on every
+ * keystroke, so no subscription is needed for freshness.
  */
 export const getWikiCopiedBlock = (): WikiCopiedBlock | null => copiedBlock;

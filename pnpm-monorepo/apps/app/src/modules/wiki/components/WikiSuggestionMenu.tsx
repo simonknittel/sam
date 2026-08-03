@@ -53,7 +53,7 @@ interface WikiSuggestionMenuItem {
   readonly subtitle?: string;
   /**
    * Renders a divider below the entry — separates pinned entries from
-   * the regular ones (gutter palette's "Kopierten Block einfügen").
+   * the regular ones (the insert palettes' "Kopierten Block einfügen").
    */
   readonly dividerAfter?: boolean;
   /**

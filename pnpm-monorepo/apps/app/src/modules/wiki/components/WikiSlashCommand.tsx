@@ -1,6 +1,9 @@
 "use client";
 
-import { getWikiSelectionRestrictions } from "@sam-monorepo/wiki-editor";
+import {
+  getWikiSelectionRestrictions,
+  type WikiTextRestrictions,
+} from "@sam-monorepo/wiki-editor";
 import { Extension, type Editor, type Range } from "@tiptap/core";
 import { PluginKey } from "@tiptap/pm/state";
 import { Suggestion } from "@tiptap/suggestion";
@@ -18,6 +21,7 @@ import {
   FaMinus,
   FaPaperclip,
   FaParagraph,
+  FaPaste,
   FaPhotoVideo,
   FaQuoteRight,
   FaSitemap,
@@ -26,7 +30,9 @@ import {
   FaTasks,
   FaUsers,
 } from "react-icons/fa";
+import { getWikiNodeTypeLabel } from "../utils/getWikiNodeTypeLabel";
 import { WikiUploadKind } from "../utils/uploadWikiPageFile";
+import { getWikiCopiedBlock, type WikiCopiedBlock } from "./wikiBlockClipboard";
 import {
   insertWikiFile,
   isWikiUploadKindAllowed,
@@ -82,6 +88,8 @@ export interface WikiSlashCommandItem {
   readonly disabled?: boolean;
   /** Secondary line under the title (the disabled entries' hint) */
   readonly subtitle?: string;
+  /** Renders a divider below the entry (the pinned copied-block entry) */
+  readonly dividerAfter?: boolean;
   readonly run: (
     editor: Editor,
     range: Range,
@@ -324,9 +332,75 @@ export const WIKI_SLASH_COMMAND_ITEMS: readonly WikiSlashCommandItem[] = [
   },
 ];
 
-/** The palette entries applying at the caret, see WikiTextRestrictions */
-const availableSlashCommandItems = (editor: Editor) => {
-  const restrictions = getWikiSelectionRestrictions(editor.state);
+const COPIED_BLOCK_TITLE = "Kopierten Block einfügen";
+
+const COPIED_BLOCK_KEYWORDS = [
+  "einfügen",
+  "kopiert",
+  "paste",
+  "zwischenablage",
+  "clipboard",
+];
+
+/**
+ * Whether the copied block may be placed where the given restrictions
+ * apply: leaves (code block, summary) take no nodes at all, text-only
+ * containers (quote, table cell, list item) take paragraphs and inline
+ * nodes, headings take no inline nodes, and grids never nest.
+ */
+const copiedBlockFitsRestrictions = (
+  block: WikiCopiedBlock,
+  restrictions: WikiTextRestrictions,
+) => {
+  if (restrictions.grids && block.containsGrid) return false;
+  if (block.isInline) return !restrictions.inlineNodes;
+  if (restrictions.slashItems === "none") return false;
+  return !restrictions.blocks || block.typeName === "paragraph";
+};
+
+/**
+ * The entry pasting the block captured by the edit menus' copy button
+ * (wikiBlockClipboard), pinned above the regular entries in both palettes
+ * (slash command, gutter plus button). NULL when nothing was copied, when
+ * it may not be placed where the restrictions apply, or when it doesn't
+ * match the query.
+ */
+export const getWikiCopiedBlockItem = (
+  restrictions: WikiTextRestrictions,
+  query: string,
+  /** Set while regular entries follow below the pinned one */
+  dividerAfter: boolean,
+): WikiSlashCommandItem | null => {
+  const block = getWikiCopiedBlock();
+  if (!block || !copiedBlockFitsRestrictions(block, restrictions)) return null;
+
+  const label = getWikiNodeTypeLabel(block.typeName, block.headingLevel);
+  const item: WikiSlashCommandItem = {
+    title: COPIED_BLOCK_TITLE,
+    icon: <FaPaste />,
+    /** The node type label makes the entry findable by what was copied */
+    keywords: [...COPIED_BLOCK_KEYWORDS, label.toLowerCase()],
+    subtitle: label,
+    dividerAfter,
+    /**
+     * Block content replaces the (then empty) paragraph the palette was
+     * invoked in, inline content lands inside it — both handled by
+     * insertContent.
+     */
+    run: (editor, range) =>
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .insertContent(block.content)
+        .run(),
+  };
+
+  return matchesWikiSlashCommandQuery(item, query) ? item : null;
+};
+
+/** The palette entries applying where the restrictions apply, see WikiTextRestrictions */
+const availableSlashCommandItems = (restrictions: WikiTextRestrictions) => {
   const items = WIKI_SLASH_COMMAND_ITEMS.filter(
     (item) => !(restrictions.grids && item.insertsGrid),
   );
@@ -380,10 +454,18 @@ const filterSlashCommandItems = (
   editor: Editor,
   permissions: WikiUploadPermissions,
 ) => {
-  return applyWikiUploadRestrictions(
-    availableSlashCommandItems(editor),
+  const restrictions = getWikiSelectionRestrictions(editor.state);
+  const items = applyWikiUploadRestrictions(
+    availableSlashCommandItems(restrictions),
     permissions,
   ).filter((item) => matchesWikiSlashCommandQuery(item, query));
+
+  const copiedBlockItem = getWikiCopiedBlockItem(
+    restrictions,
+    query,
+    items.length > 0,
+  );
+  return copiedBlockItem ? [copiedBlockItem, ...items] : items;
 };
 
 /**

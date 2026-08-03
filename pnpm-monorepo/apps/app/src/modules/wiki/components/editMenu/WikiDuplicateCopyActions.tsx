@@ -17,8 +17,8 @@ interface Props {
 /**
  * Duplicate and copy buttons shared by every block menu. Duplicate
  * inserts an identical sibling right below the block; copy fills the
- * app-wide clipboard slot the gutter's plus palette offers for insertion
- * (wikiBlockClipboard).
+ * app-wide clipboard slot the insert palettes (gutter plus button, slash
+ * command) offer for insertion (wikiBlockClipboard).
  */
 export const WikiDuplicateCopyActions = ({
   editor,
@@ -55,7 +55,7 @@ export const WikiDuplicateCopyActions = ({
     if (!node) return;
     setWikiCopiedBlock(node);
     editor.commands.focus(position);
-    toast.success("Kopiert – einfügbar über das Plus-Menü");
+    toast.success("Kopiert – einfügbar über das Plus-Menü oder „/“");
   };
 
   return (
