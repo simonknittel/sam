@@ -35,7 +35,9 @@ const HOVER_SELECTOR = [
   "pre",
   "table",
   "hr",
+  // The collapsible's node view renders a div, the static render a <details>
   "details",
+  '[data-type="details"]',
   "[data-wiki-grid]",
 ].join(", ");
 

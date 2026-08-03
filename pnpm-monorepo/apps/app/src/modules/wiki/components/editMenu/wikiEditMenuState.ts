@@ -35,19 +35,6 @@ const MENU_NODE_TYPES = [
   "wikiRoleCitizens",
 ];
 
-/**
- * Nodes rendering their content through a React node view — everything
- * inside them (their links and lists) resolves to the node itself, since
- * that content is rendered by React, not editor content.
- */
-const NODE_VIEW_MENU_TARGETS: readonly {
-  readonly selector: string;
-  readonly typeName: string;
-}[] = [
-  { selector: "[data-wiki-page-index]", typeName: "wikiPageIndex" },
-  { selector: "[data-wiki-role-citizens]", typeName: "wikiRoleCitizens" },
-];
-
 /** Nodes whose menu offers a config dialog (mounted by WikiEditMenu) */
 export const CONFIGURABLE_NODE_TYPES = ["wikiPageIndex", "wikiRoleCitizens"];
 
@@ -57,7 +44,7 @@ export const CONFIGURABLE_NODE_TYPES = ["wikiPageIndex", "wikiRoleCitizens"];
  * at least those two.
  */
 const BLOCK_MENU_SELECTOR =
-  "ul, ol, blockquote, pre, table, hr, details, [data-wiki-grid]";
+  'ul, ol, blockquote, pre, table, hr, details, [data-type="details"], [data-wiki-grid]';
 const BLOCK_NODE_TYPES = [
   "bulletList",
   "orderedList",
@@ -303,7 +290,12 @@ const textNodeMenu = (
   ...target,
 });
 
-/** The menu of a hovered element, or NULL when it has none */
+/**
+ * The menu of a hovered element, or NULL when it has none. Nodes rendering
+ * their own content (page index, role members, …) arrive as their node-view
+ * root — the hover never points inside them, see useWikiHoveredElement — and
+ * fall through to the node menu below.
+ */
 export const wikiMenuFromElement = (
   editor: Editor,
   element: HTMLElement,
@@ -312,20 +304,6 @@ export const wikiMenuFromElement = (
     reference: element,
     key: wikiHoverTargetKey(element),
   };
-
-  for (const { selector, typeName } of NODE_VIEW_MENU_TARGETS) {
-    const nodeViewDom = element.closest(selector);
-    if (!(nodeViewDom instanceof HTMLElement)) continue;
-
-    const resolved = resolveWikiNodeFromElement(editor, nodeViewDom, [
-      typeName,
-    ]);
-    if (!resolved) return null;
-    return nodeMenu(editor, resolved.node, resolved.position, {
-      reference: nodeViewDom,
-      key: wikiHoverTargetKey(nodeViewDom),
-    });
-  }
 
   /**
    * Plain links resolve through the mark, everything else through its
