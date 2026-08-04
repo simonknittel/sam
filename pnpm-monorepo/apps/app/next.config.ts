@@ -104,8 +104,6 @@ const nextConfig: NextConfig = {
 
   experimental: {
     authInterrupts: true,
-
-    turbopackFileSystemCacheForDev: true,
   },
 };
 
