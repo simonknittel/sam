@@ -39,6 +39,3 @@ yarn-error.log*
 
 # other
 .dccache
-
-# next-agents-md
-.next-docs/
