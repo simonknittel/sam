@@ -13,6 +13,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getWikiContext } from "../queries/getWikiContext";
+import {
+  resolveWikiPagePlacement,
+  WikiPagePlacement,
+} from "../utils/resolveWikiPagePlacement";
 import { slugifyWikiPageTitle } from "../utils/slugifyWikiPageTitle";
 
 const schema = z.object({
@@ -33,11 +37,15 @@ export const createWikiPage = createAuthenticatedAction(
       return { error: t("Common.forbidden"), requestPayload: formData };
 
     if (data.parentId) {
-      const parent = context.pagesById.get(data.parentId);
-      if (!parent || parent.deletedAt)
-        return { error: t("Common.notFound"), requestPayload: formData };
-      if (!context.permissions.get(parent.id)?.canEdit)
-        return { error: t("Common.forbidden"), requestPayload: formData };
+      const placement = resolveWikiPagePlacement(context, data.parentId);
+      if (placement !== WikiPagePlacement.Allowed)
+        return {
+          error:
+            placement === WikiPagePlacement.Missing
+              ? t("Common.notFound")
+              : t("Common.forbidden"),
+          requestPayload: formData,
+        };
     } else {
       if (!(await authentication.authorize("wiki", "create")))
         return { error: t("Common.forbidden"), requestPayload: formData };

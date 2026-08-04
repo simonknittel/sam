@@ -70,17 +70,35 @@ const RootList = ({ className, nodes, dimmedPageIds }: Props) => {
 
 interface CreateSubpageButtonProps {
   readonly pageId: string;
+  /**
+   * Shown disabled to those who may edit the page but not manage it — they
+   * had this button before subpages became a manager's decision, so it
+   * explains itself instead of silently disappearing.
+   */
+  readonly canCreate: boolean;
 }
 
-const CreateSubpageButton = ({ pageId }: CreateSubpageButtonProps) => {
+const CreateSubpageButton = ({
+  pageId,
+  canCreate,
+}: CreateSubpageButtonProps) => {
   const { openCreateWikiPageModal } = useCreateWikiPage();
 
   return (
     <button
       type="button"
       onClick={() => openCreateWikiPageModal(pageId)}
-      title="Neue Unterseite erstellen"
-      className="p-1 text-neutral-500 cursor-pointer hover:text-interaction-500 focus-visible:text-interaction-500"
+      disabled={!canCreate}
+      title={
+        canCreate
+          ? "Neue Unterseite erstellen"
+          : "Unterseiten können nur Verwalter dieser Seite erstellen"
+      }
+      className={clsx("p-1", {
+        "text-neutral-500 cursor-pointer hover:text-interaction-500 focus-visible:text-interaction-500":
+          canCreate,
+        "text-neutral-700 cursor-not-allowed": !canCreate,
+      })}
     >
       <FaPlus className="size-3" />
     </button>
@@ -162,7 +180,12 @@ const TreeItem = ({
                   nextSiblingId={nextSiblingId}
                 />
               )}
-              {node.canEdit && <CreateSubpageButton pageId={node.id} />}
+              {node.canEdit && (
+                <CreateSubpageButton
+                  pageId={node.id}
+                  canCreate={node.canAdmin}
+                />
+              )}
             </span>
           )}
         </span>
@@ -170,7 +193,7 @@ const TreeItem = ({
         <WikiPageDropTargets
           pageId={node.id}
           ancestorIds={ancestorIds}
-          canDropInside={node.canEdit}
+          canDropInside={node.canAdmin}
           hasChildren={node.children.length > 0}
           isRootLevel={depth === 0}
         />

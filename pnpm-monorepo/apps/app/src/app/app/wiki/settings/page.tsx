@@ -8,7 +8,7 @@ import {
   getWikiIframeAllowlist,
   getWikiPageLinkPageId,
 } from "@/modules/wiki/queries/getWikiSettings";
-import { getEditableWikiPageTargets } from "@/modules/wiki/utils/getEditableWikiPageTargets";
+import { getManageableWikiPageTargets } from "@/modules/wiki/utils/getWikiPageTargets";
 import { WIKI_PAGE_LINK_KEYS } from "@/modules/wiki/utils/wikiPageLinks";
 import { forbidden } from "next/navigation";
 
@@ -40,10 +40,10 @@ const Settings = async () => {
   if (!context) forbidden();
 
   /**
-   * wiki;manage holders can edit every page, so this lists the whole tree
-   * in display order.
+   * wiki;manage holders manage every page, so this lists the whole tree in
+   * display order.
    */
-  const pageOptions = getEditableWikiPageTargets(context);
+  const pageOptions = getManageableWikiPageTargets(context);
 
   return (
     <div className="flex flex-col gap-4">

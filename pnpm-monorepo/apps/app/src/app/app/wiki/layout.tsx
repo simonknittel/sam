@@ -5,7 +5,7 @@ import { CreateWikiPageButton } from "@/modules/wiki/components/CreateWikiPageBu
 import { CreateWikiPageProvider } from "@/modules/wiki/components/CreateWikiPageProvider";
 import { getOpenWikiReportCount } from "@/modules/wiki/queries/getOpenWikiReportCount";
 import { getWikiContext } from "@/modules/wiki/queries/getWikiContext";
-import { getEditableWikiPageTargets } from "@/modules/wiki/utils/getEditableWikiPageTargets";
+import { getManageableWikiPageTargets } from "@/modules/wiki/utils/getWikiPageTargets";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -29,8 +29,8 @@ export default async function Layout({ children }: LayoutProps<"/app/wiki">) {
       ? authentication.authorize("wiki", "manage")
       : Promise.resolve(false),
   ]);
-  const targets = context ? getEditableWikiPageTargets(context) : [];
-  const showCta = allowTopLevel || targets.length > 0;
+  const targets = context ? getManageableWikiPageTargets(context) : [];
+  const canCreate = allowTopLevel || targets.length > 0;
   const openWikiReportCount = hasWikiManage
     ? await getOpenWikiReportCount()
     : 0;
@@ -56,7 +56,7 @@ export default async function Layout({ children }: LayoutProps<"/app/wiki">) {
               ]
             : []),
         ]}
-        cta={showCta ? <CreateWikiPageButton /> : undefined}
+        cta={<CreateWikiPageButton canCreate={canCreate} />}
       >
         <MaxWidthContent>{children}</MaxWidthContent>
       </DefaultLayout>

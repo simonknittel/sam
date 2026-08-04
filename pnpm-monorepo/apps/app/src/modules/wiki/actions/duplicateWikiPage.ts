@@ -8,7 +8,6 @@ import {
   WikiPageEditability,
   WikiPageUploadability,
   WikiPageVisibility,
-  type WikiPageAccessType,
 } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -16,7 +15,10 @@ import { z } from "zod";
 import { getWikiContext } from "../queries/getWikiContext";
 import { collectVisibleWikiSubtree } from "../utils/collectVisibleWikiSubtree";
 import { getAccessibleWikiPage } from "../utils/getAccessibleWikiPage";
-import { pruneWikiPageRoleAccess } from "../utils/pruneWikiPageRoleAccess";
+import {
+  resolveWikiPagePlacement,
+  WikiPagePlacement,
+} from "../utils/resolveWikiPagePlacement";
 import { slugifyWikiPageTitle } from "../utils/slugifyWikiPageTitle";
 
 const schema = z.object({
@@ -31,22 +33,9 @@ const schema = z.object({
     .literal("1")
     .optional()
     .transform((value) => value === "1"),
-  mirrorPermissions: z
-    .literal("1")
-    .optional()
-    .transform((value) => value === "1"),
 });
 
 const TRANSACTION_TIMEOUT_MS = 30_000;
-
-interface CopiedPermissions {
-  visibility: WikiPageVisibility;
-  editability: WikiPageEditability;
-  imageUploadability: WikiPageUploadability;
-  attachmentUploadability: WikiPageUploadability;
-  ownerId: string | null;
-  roleAccess: readonly { roleId: string; type: WikiPageAccessType }[];
-}
 
 /**
  * Creates a copy of a page at the chosen location, optionally including the
@@ -58,11 +47,12 @@ interface CopiedPermissions {
  * linked to its source page's uploads (Upload.wikiPages) so attachment
  * downloads are permission-checked against the copy itself.
  *
- * With mirrored permissions the copies keep their explicit tiers, role
- * lists and owners, except that the duplicator becomes the explicit owner
- * of the copied root — this guarantees they keep access to their copy even
- * when the mirrored settings are restrictive. Without mirroring, the copies
- * get the same defaults as newly created pages.
+ * No copy carries the source's permissions over: they all get the defaults of
+ * a newly created page and therefore take on the permissions of their new
+ * location — copied subpages with settings of their own included. A copy can
+ * thereby reach a wider audience than its source. Placing it takes managing
+ * the target, so that is the target's manager to decide, and the dialog says
+ * so.
  */
 export const duplicateWikiPage = createAuthenticatedAction(
   "duplicateWikiPage",
@@ -78,11 +68,15 @@ export const duplicateWikiPage = createAuthenticatedAction(
       return { error: t("Common.notFound"), requestPayload: formData };
 
     if (data.parentId) {
-      const parent = context.pagesById.get(data.parentId);
-      if (!parent || parent.deletedAt)
-        return { error: t("Common.notFound"), requestPayload: formData };
-      if (!context.permissions.get(parent.id)?.canEdit)
-        return { error: t("Common.forbidden"), requestPayload: formData };
+      const placement = resolveWikiPagePlacement(context, data.parentId);
+      if (placement !== WikiPagePlacement.Allowed)
+        return {
+          error:
+            placement === WikiPagePlacement.Missing
+              ? t("Common.notFound")
+              : t("Common.forbidden"),
+          requestPayload: formData,
+        };
     } else {
       if (!(await authentication.authorize("wiki", "create")))
         return { error: t("Common.forbidden"), requestPayload: formData };
@@ -126,63 +120,27 @@ export const duplicateWikiPage = createAuthenticatedAction(
         ? Math.max(...siblings.map((page) => page.sortOrder)) + 1
         : 0;
 
-    let rootPermissions: CopiedPermissions;
-    if (data.mirrorPermissions) {
-      /**
-       * Mirrored INHERIT tiers stay INHERIT at a child location (they then
-       * inherit from the new parent chain) but fall back to the top-level
-       * creation defaults when the copy becomes a root page, where INHERIT
-       * has no referent. PUBLIC makes the opposite move: it only exists on
-       * top-level pages, so a copy landing under a parent inherits instead.
-       */
-      const topLevel = !data.parentId;
-      rootPermissions = {
-        visibility:
-          topLevel && source.visibility === WikiPageVisibility.INHERIT
-            ? WikiPageVisibility.RESTRICTED
-            : !topLevel && source.visibility === WikiPageVisibility.PUBLIC
-              ? WikiPageVisibility.INHERIT
-              : source.visibility,
-        editability:
-          topLevel && source.editability === WikiPageEditability.INHERIT
-            ? WikiPageEditability.RESTRICTED
-            : source.editability,
-        imageUploadability:
-          topLevel &&
-          source.imageUploadability === WikiPageUploadability.INHERIT
-            ? WikiPageUploadability.RESTRICTED
-            : source.imageUploadability,
-        attachmentUploadability:
-          topLevel &&
-          source.attachmentUploadability === WikiPageUploadability.INHERIT
-            ? WikiPageUploadability.RESTRICTED
-            : source.attachmentUploadability,
-        ownerId: entity.id,
-        roleAccess: source.roleAccess,
-      };
-    } else {
-      /**
-       * Defaults of a newly created page: top-level pages are "private"
-       * (RESTRICTED without roles) and owned by their creator; child pages
-       * inherit everything including the owner.
-       */
-      rootPermissions = {
-        visibility: data.parentId
-          ? WikiPageVisibility.INHERIT
-          : WikiPageVisibility.RESTRICTED,
-        editability: data.parentId
-          ? WikiPageEditability.INHERIT
-          : WikiPageEditability.RESTRICTED,
-        imageUploadability: data.parentId
-          ? WikiPageUploadability.INHERIT
-          : WikiPageUploadability.RESTRICTED,
-        attachmentUploadability: data.parentId
-          ? WikiPageUploadability.INHERIT
-          : WikiPageUploadability.RESTRICTED,
-        ownerId: data.parentId ? null : entity.id,
-        roleAccess: [],
-      };
-    }
+    /**
+     * Defaults of a newly created page: top-level pages are "private"
+     * (RESTRICTED without roles) and owned by their creator, child pages
+     * inherit everything including the owner. Copied subpages always hang
+     * under their copied ancestor and therefore always inherit.
+     */
+    const rootPermissions = {
+      visibility: data.parentId
+        ? WikiPageVisibility.INHERIT
+        : WikiPageVisibility.RESTRICTED,
+      editability: data.parentId
+        ? WikiPageEditability.INHERIT
+        : WikiPageEditability.RESTRICTED,
+      imageUploadability: data.parentId
+        ? WikiPageUploadability.INHERIT
+        : WikiPageUploadability.RESTRICTED,
+      attachmentUploadability: data.parentId
+        ? WikiPageUploadability.INHERIT
+        : WikiPageUploadability.RESTRICTED,
+      ownerId: data.parentId ? null : entity.id,
+    };
 
     const { root, duplicatedPageIds } = await prisma.$transaction(
       async (tx) => {
@@ -210,17 +168,6 @@ export const duplicateWikiPage = createAuthenticatedAction(
             imageUploadability: rootPermissions.imageUploadability,
             attachmentUploadability: rootPermissions.attachmentUploadability,
             ownerId: rootPermissions.ownerId,
-            roleAccess:
-              rootPermissions.roleAccess.length > 0
-                ? {
-                    createMany: {
-                      data: rootPermissions.roleAccess.map((access) => ({
-                        roleId: access.roleId,
-                        type: access.type,
-                      })),
-                    },
-                  }
-                : undefined,
             createdById: entity.id,
           },
           select: { id: true, slug: true },
@@ -247,30 +194,11 @@ export const duplicateWikiPage = createAuthenticatedAction(
                       connect: content.attachments.map(({ id }) => ({ id })),
                     }
                   : undefined,
-              visibility: data.mirrorPermissions
-                ? page.visibility
-                : WikiPageVisibility.INHERIT,
-              editability: data.mirrorPermissions
-                ? page.editability
-                : WikiPageEditability.INHERIT,
-              imageUploadability: data.mirrorPermissions
-                ? page.imageUploadability
-                : WikiPageUploadability.INHERIT,
-              attachmentUploadability: data.mirrorPermissions
-                ? page.attachmentUploadability
-                : WikiPageUploadability.INHERIT,
-              ownerId: data.mirrorPermissions ? page.ownerId : null,
-              roleAccess:
-                data.mirrorPermissions && page.roleAccess.length > 0
-                  ? {
-                      createMany: {
-                        data: page.roleAccess.map((access) => ({
-                          roleId: access.roleId,
-                          type: access.type,
-                        })),
-                      },
-                    }
-                  : undefined,
+              visibility: WikiPageVisibility.INHERIT,
+              editability: WikiPageEditability.INHERIT,
+              imageUploadability: WikiPageUploadability.INHERIT,
+              attachmentUploadability: WikiPageUploadability.INHERIT,
+              ownerId: null,
               createdById: entity.id,
             },
             select: { id: true },
@@ -294,38 +222,10 @@ export const duplicateWikiPage = createAuthenticatedAction(
           parentId: data.parentId ?? null,
           duplicatedPageIds,
           mirroredChildren: data.mirrorChildren,
-          mirroredPermissions: data.mirrorPermissions,
         },
         createdById: authentication.session.user.id,
       },
     ]);
-
-    /**
-     * Mirrored read roles can be wider than the target location allows —
-     * read access never widens downwards, so those entries are dropped.
-     */
-    if (data.mirrorPermissions) {
-      const copies = await prisma.wikiPage.findMany({
-        where: { id: { in: duplicatedPageIds } },
-        select: {
-          id: true,
-          parentId: true,
-          ownerId: true,
-          visibility: true,
-          editability: true,
-          imageUploadability: true,
-          attachmentUploadability: true,
-          roleAccess: { select: { roleId: true, type: true } },
-        },
-      });
-
-      await pruneWikiPageRoleAccess(
-        [...context.allPages, ...copies],
-        duplicatedPageIds,
-        "DUPLICATED",
-        authentication.session.user.id,
-      );
-    }
 
     revalidatePath("/app/wiki", "layout");
     redirect(`/app/wiki/${root.id}/${root.slug}`);

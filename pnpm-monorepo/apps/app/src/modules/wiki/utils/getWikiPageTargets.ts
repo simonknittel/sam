@@ -64,18 +64,19 @@ const collectWikiPageTargets = (
 };
 
 /**
- * Pages the viewer may create/move pages into: visible + editable, in
- * depth-first tree order so selects can represent the hierarchy. Pass
+ * Pages the viewer may create/move/duplicate pages into: visible + managed,
+ * in depth-first tree order so selects can represent the hierarchy. Pass
  * excludeSubtreeOf to drop a page and its descendants (a page can't be
- * moved into itself).
+ * moved into itself). Mirrors `resolveWikiPagePlacement()`, which is what
+ * the server actions enforce.
  */
-export const getEditableWikiPageTargets = (
+export const getManageableWikiPageTargets = (
   context: WikiContext,
   excludeSubtreeOf?: string,
 ): WikiPageTargetOption[] =>
   collectWikiPageTargets(
     context,
-    (pageId) => context.permissions.get(pageId)?.canEdit === true,
+    (pageId) => context.permissions.get(pageId)?.canAdmin === true,
     excludeSubtreeOf,
   );
 

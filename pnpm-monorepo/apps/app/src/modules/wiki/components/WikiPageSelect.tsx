@@ -5,10 +5,10 @@ import type { ComponentProps } from "react";
 import {
   wikiPageOptionLabel,
   type WikiPageTargetOption,
-} from "../utils/getEditableWikiPageTargets";
+} from "../utils/getWikiPageTargets";
 
 interface Props extends Omit<ComponentProps<typeof Select>, "children"> {
-  /** In depth-first tree order, e.g. from getEditableWikiPageTargets */
+  /** In depth-first tree order, e.g. from getManageableWikiPageTargets */
   readonly targets: readonly WikiPageTargetOption[];
   /** Label of the empty-value ("") option; omit to render none */
   readonly emptyOptionLabel?: string;

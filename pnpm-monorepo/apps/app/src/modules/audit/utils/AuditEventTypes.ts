@@ -744,7 +744,8 @@ export interface AuditEventDataByType {
     /** All created pages, the copied root first */
     duplicatedPageIds: string[];
     mirroredChildren: boolean;
-    mirroredPermissions: boolean;
+    /** Only on events from before permission mirroring was removed */
+    mirroredPermissions?: boolean;
   };
 
   [AuditEventType.WIKI_PAGE_PERMISSIONS_UPDATED]: {
@@ -769,6 +770,7 @@ export interface AuditEventDataByType {
   [AuditEventType.WIKI_PAGE_ROLE_ACCESS_PRUNED]: {
     pageId: string;
     removedRoleIds: string[];
+    /** DUPLICATED only occurs on events from before mirroring was removed */
     trigger: "PERMISSIONS_UPDATED" | "DUPLICATED";
   };
 
@@ -1979,7 +1981,6 @@ export const AuditEventDefinitions: {
       parentId: null,
       duplicatedPageIds: ["string"],
       mirroredChildren: true,
-      mirroredPermissions: true,
     },
     message: (data) =>
       `Wiki page duplicated: "${data.title}" (${data.pageId}) from ${data.sourcePageId}`,

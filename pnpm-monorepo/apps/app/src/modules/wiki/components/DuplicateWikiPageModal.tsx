@@ -5,12 +5,13 @@ import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
+import Note from "@/modules/common/components/Note";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
 import { useState } from "react";
 import { FaClone, FaSave } from "react-icons/fa";
 import { duplicateWikiPage } from "../actions/duplicateWikiPage";
-import type { WikiPageTargetOption } from "../utils/getEditableWikiPageTargets";
+import type { WikiPageTargetOption } from "../utils/getWikiPageTargets";
 import { WikiPageSelect } from "./WikiPageSelect";
 
 const TITLE_MAX_LENGTH = 128;
@@ -20,7 +21,7 @@ interface Props {
   readonly className?: string;
   readonly pageId: string;
   readonly title: string;
-  /** Visible pages the viewer can edit */
+  /** Visible pages the viewer manages */
   readonly targets: readonly WikiPageTargetOption[];
   readonly allowTopLevel: boolean;
   readonly currentParentId: string | null;
@@ -29,8 +30,9 @@ interface Props {
 
 /**
  * Duplicates a page to a chosen location, optionally including its visible
- * subtree and the permission settings. On success the action redirects to
- * the new page.
+ * subtree. On success the action redirects to the new page. Copies never
+ * carry the source's permissions over — the warning says so, because that
+ * can make the copy visible to more people than the original.
  */
 export const DuplicateWikiPageModal = ({
   className,
@@ -53,7 +55,6 @@ export const DuplicateWikiPageModal = ({
     return targets[0].id;
   });
   const [mirrorChildren, setMirrorChildren] = useState(true);
-  const [mirrorPermissions, setMirrorPermissions] = useState(true);
 
   const { state, formAction, isPending } = useAction(duplicateWikiPage, {
     errorToast: false,
@@ -63,6 +64,9 @@ export const DuplicateWikiPageModal = ({
   const defaultTitle =
     title.slice(0, TITLE_MAX_LENGTH - TITLE_SUFFIX.length) + TITLE_SUFFIX;
 
+  /** Duplicating needs somewhere to put the copy */
+  const canDuplicate = allowTopLevel || targets.length > 0;
+
   return (
     <>
       <Button2
@@ -70,7 +74,12 @@ export const DuplicateWikiPageModal = ({
         onClick={() => setIsOpen(true)}
         variant={Button2Variant.IconOnly}
         className={className}
-        tooltip="Seite duplizieren"
+        disabled={!canDuplicate}
+        tooltip={
+          canDuplicate
+            ? "Seite duplizieren"
+            : "Duplikate kannst du nur in Seiten ablegen, die du verwaltest"
+        }
       >
         <FaClone />
       </Button2>
@@ -118,34 +127,17 @@ export const DuplicateWikiPageModal = ({
             </div>
           )}
 
-          <div className="mt-4 flex items-center justify-between gap-2">
-            <span className="text-sm text-neutral-400">
-              Berechtigungen übernehmen
-            </span>
-            <YesNoCheckbox
-              name="mirrorPermissions"
-              value="1"
-              checked={mirrorPermissions}
-              onChange={(event) => setMirrorPermissions(event.target.checked)}
-            />
-          </div>
+          <Note
+            type="warning"
+            className="mt-4"
+            message="Die Kopie und alle mitkopierten Unterseiten übernehmen die Berechtigungen des neuen Orts — eigene Berechtigungen des Originals werden nicht übernommen. Dadurch kann die Kopie für mehr Personen sichtbar sein als das Original."
+          />
 
-          {mirrorPermissions ? (
-            <p className="mt-2 text-sm text-neutral-400">
-              Die Kopie übernimmt die Berechtigungs-Einstellungen des Originals
-              und du wirst ihr Besitzer. Einstellungen mit &quot;Geerbt&quot;
-              übernehmen am neuen Ort die Berechtigungen der neuen
-              übergeordneten Seiten.
-            </p>
-          ) : parentId === "" ? (
+          {parentId === "" && (
             <p className="mt-2 text-sm text-neutral-400">
               Neue Seiten auf oberster Ebene sind zunächst privat: Nur du kannst
               sie sehen und bearbeiten. Die Berechtigungen kannst du
               anschließend an der Seite anpassen.
-            </p>
-          ) : (
-            <p className="mt-2 text-sm text-neutral-400">
-              Die Kopie erbt die Berechtigungen der neuen übergeordneten Seite.
             </p>
           )}
 

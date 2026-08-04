@@ -10,6 +10,10 @@ import { getWikiContext } from "../queries/getWikiContext";
 import { buildWikiPageMoveReset } from "../utils/buildWikiPageMoveReset";
 import { collectWikiPageDescendants } from "../utils/collectWikiPageDescendants";
 import { compareWikiPagesByOrder } from "../utils/compareWikiPagesByOrder";
+import {
+  resolveWikiPagePlacement,
+  WikiPagePlacement,
+} from "../utils/resolveWikiPagePlacement";
 
 const schema = z.object({
   id: z.cuid2(),
@@ -51,11 +55,15 @@ export const updateWikiPagePosition = createAuthenticatedAction(
     /** Same checks as moveWikiPage when the page changes its parent */
     if (changesParent) {
       if (newParentId) {
-        const newParent = context.pagesById.get(newParentId);
-        if (!newParent || newParent.deletedAt)
-          return { error: t("Common.badRequest"), requestPayload: formData };
-        if (!context.permissions.get(newParent.id)?.canEdit)
-          return { error: t("Common.forbidden"), requestPayload: formData };
+        const placement = resolveWikiPagePlacement(context, newParentId);
+        if (placement !== WikiPagePlacement.Allowed)
+          return {
+            error:
+              placement === WikiPagePlacement.Missing
+                ? t("Common.badRequest")
+                : t("Common.forbidden"),
+            requestPayload: formData,
+          };
 
         /**
          * Prevent cycles: the new parent must not be the page itself or one

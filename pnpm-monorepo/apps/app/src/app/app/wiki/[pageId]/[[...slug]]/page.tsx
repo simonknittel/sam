@@ -34,11 +34,11 @@ import { getWikiPermissionRoles } from "@/modules/wiki/queries/getWikiPermission
 import { getWikiIframeAllowlist } from "@/modules/wiki/queries/getWikiSettings";
 import { collectWikiPageDescendants } from "@/modules/wiki/utils/collectWikiPageDescendants";
 import { getAccessibleWikiPage } from "@/modules/wiki/utils/getAccessibleWikiPage";
-import {
-  getEditableWikiPageTargets,
-  type WikiPageTargetOption,
-} from "@/modules/wiki/utils/getEditableWikiPageTargets";
 import { getWikiCollabColor } from "@/modules/wiki/utils/getWikiCollabColor";
+import {
+  getManageableWikiPageTargets,
+  type WikiPageTargetOption,
+} from "@/modules/wiki/utils/getWikiPageTargets";
 import { resolveWikiPageEffectivePermissions } from "@/modules/wiki/utils/resolveWikiPageEffectivePermissions";
 import { resolveWikiPageIndex } from "@/modules/wiki/utils/resolveWikiPageIndex";
 import { resolveWikiPageReadRoleIds } from "@/modules/wiki/utils/resolveWikiPageRolePermissions";
@@ -272,14 +272,14 @@ const PageContent = async ({
   );
 
   const moveTargets: WikiPageTargetOption[] = permissions.canAdmin
-    ? getEditableWikiPageTargets(context, page.id)
+    ? getManageableWikiPageTargets(context, page.id)
     : [];
 
   /**
    * Unlike moving, duplicating into the page's own subtree is fine — the
    * copy is a new page, so no cycle can occur.
    */
-  const duplicateTargets = getEditableWikiPageTargets(context);
+  const duplicateTargets = getManageableWikiPageTargets(context);
 
   const sourceTitle = (sourceId: string) =>
     sourceId === page.id ? undefined : context.pagesById.get(sourceId)?.title;
@@ -394,16 +394,14 @@ const PageContent = async ({
 
             <ReportWikiPageModal pageId={page.id} title={page.title} />
 
-            {(canCreateTopLevel || duplicateTargets.length > 0) && (
-              <DuplicateWikiPageModal
-                pageId={page.id}
-                title={page.title}
-                targets={duplicateTargets}
-                allowTopLevel={canCreateTopLevel}
-                currentParentId={page.parentId}
-                hasDescendants={descendantIds.length > 0}
-              />
-            )}
+            <DuplicateWikiPageModal
+              pageId={page.id}
+              title={page.title}
+              targets={duplicateTargets}
+              allowTopLevel={canCreateTopLevel}
+              currentParentId={page.parentId}
+              hasDescendants={descendantIds.length > 0}
+            />
 
             {permissions.canAdmin && (
               <>
