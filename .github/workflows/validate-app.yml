@@ -20,6 +20,12 @@ on:
       - pnpm-monorepo/pnpm-lock.yaml
       - pnpm-monorepo/pnpm-workspace.yaml
 
+# The app's postinstall runs `next typegen`, which loads the app's modules and
+# therefore src/env.ts. None of the runtime secrets exist here, so validation
+# has to be skipped for the install to succeed.
+env:
+  SKIP_VALIDATION: "1"
+
 jobs:
   lint:
     runs-on: ubuntu-24.04
@@ -49,8 +55,6 @@ jobs:
         run: pnpm --filter @sam-monorepo/app run lint
         working-directory: pnpm-monorepo
         continue-on-error: true
-        env:
-          SKIP_VALIDATION: "1"
 
   prettier:
     runs-on: ubuntu-24.04

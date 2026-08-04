@@ -7,6 +7,12 @@ on:
         required: true
         type: string
 
+# The unfiltered install below also runs the app's postinstall (`next typegen`),
+# which loads src/env.ts. None of the runtime secrets exist here, so validation
+# has to be skipped for the install to succeed.
+env:
+  SKIP_VALIDATION: "1"
+
 jobs:
   build:
     runs-on: ubuntu-24.04
