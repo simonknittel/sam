@@ -9,10 +9,11 @@ import { TextInput } from "@/modules/common/components/form/TextInput";
 import { useState } from "react";
 import { FaSave } from "react-icons/fa";
 import { createWikiPage } from "../actions/createWikiPage";
-import type { WikiPageTargetOption } from "../utils/getEditableWikiPageTargets";
+import type { WikiPageTargetOption } from "../utils/getWikiPageTargets";
 import { WikiPageSelect } from "./WikiPageSelect";
 
 interface Props {
+  /** Visible pages the viewer manages */
   readonly targets: WikiPageTargetOption[];
   readonly allowTopLevel: boolean;
   readonly defaultParentId?: string;
@@ -52,7 +53,7 @@ export const CreateWikiPageForm = ({
     return (
       <Note
         type="info"
-        message="Du hast derzeit keine Berechtigung, Seiten zu erstellen."
+        message="Neue Seiten kannst du nur in Seiten anlegen, die du verwaltest. Derzeit verwaltest du keine Seite."
       />
     );
 

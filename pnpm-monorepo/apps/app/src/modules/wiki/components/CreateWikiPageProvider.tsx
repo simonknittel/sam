@@ -10,7 +10,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { WikiPageTargetOption } from "../utils/getEditableWikiPageTargets";
+import type { WikiPageTargetOption } from "../utils/getWikiPageTargets";
 import { CreateWikiPageForm } from "./CreateWikiPageForm";
 
 interface CreateWikiPageContext {
