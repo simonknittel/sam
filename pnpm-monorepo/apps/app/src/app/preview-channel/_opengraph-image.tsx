@@ -1,4 +1,6 @@
 import { ImageResponse } from "next/og";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 
 export const alt = "Sinister Corporated - Hoist the Black";
 export const size = {
@@ -6,12 +8,11 @@ export const size = {
   height: 630,
 };
 export const contentType = "image/png";
-export const runtime = "edge";
 
 export default async function og() {
-  const fontData = await fetch(
-    new URL("../../assets/subset-Inter-Bold.ttf", import.meta.url),
-  ).then((res) => res.arrayBuffer());
+  const fontData = await readFile(
+    join(process.cwd(), "src/assets/subset-Inter-Bold.ttf"),
+  );
 
   return new ImageResponse(
     <div tw="w-full h-full flex flex-col justify-between items-center uppercase font-bold p-24 bg-neutral-900">
