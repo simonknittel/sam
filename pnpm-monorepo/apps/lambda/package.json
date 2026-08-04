@@ -5,10 +5,10 @@
     "build": "./scripts/build.sh"
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "3.1094.0",
-    "@aws-sdk/client-eventbridge": "3.1094.0",
-    "@aws-sdk/client-s3": "3.1094.0",
-    "@aws-sdk/client-ssm": "3.1094.0",
+    "@aws-sdk/client-dynamodb": "3.1096.0",
+    "@aws-sdk/client-eventbridge": "3.1096.0",
+    "@aws-sdk/client-s3": "3.1096.0",
+    "@aws-sdk/client-ssm": "3.1096.0",
     "@openpgp/web-stream-tools": "0.3.1",
     "@paralleldrive/cuid2": "3.3.0",
     "@sam-monorepo/database": "workspace:*",
@@ -19,7 +19,7 @@
     "mailgun.js": "13.3.0",
     "openpgp": "6.3.1",
     "react-dom": "19.2.8",
-    "react-email": "6.9.0",
+    "react-email": "6.9.1",
     "react": "19.2.8",
     "serialize-error": "13.0.1",
     "web-push": "3.6.7",

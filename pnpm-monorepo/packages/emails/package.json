@@ -9,10 +9,10 @@
     "./emails/EmailConfirmation": "./emails/EmailConfirmation.tsx"
   },
   "dependencies": {
-    "react-email": "6.9.0"
+    "react-email": "6.9.1"
   },
   "devDependencies": {
-    "@react-email/ui": "6.9.0",
+    "@react-email/ui": "6.9.1",
     "@types/react": "19.2.17",
     "react": "19.2.8",
     "react-dom": "19.2.8"
