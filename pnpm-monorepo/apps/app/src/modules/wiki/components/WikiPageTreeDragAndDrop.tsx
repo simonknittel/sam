@@ -250,11 +250,11 @@ export const WikiPageDropTargets = ({
         onMouseUp={() => handleDrop(pageId, "before")}
       >
         {isRootLevel && (
-          // Extends the hit area into the upper half of the list gap
-          <span className="absolute inset-x-0 -top-1 h-1" />
+          // Half of RootList's gap-4, so this meets the band above it
+          <span className="absolute inset-x-0 -top-2 h-2" />
         )}
         <DropIndicatorLine
-          className={clsx("-translate-y-1/2", isRootLevel ? "-top-1" : "top-0")}
+          className={clsx("-translate-y-1/2", isRootLevel ? "-top-2" : "top-0")}
         />
       </span>
       {canDropInside && (
@@ -283,13 +283,13 @@ export const WikiPageDropTargets = ({
           onMouseUp={() => handleDrop(pageId, "after")}
         >
           {isRootLevel && (
-            // Extends the hit area into the lower half of the list gap
-            <span className="absolute inset-x-0 -bottom-1 h-1" />
+            // Half of RootList's gap-4, so this meets the band below it
+            <span className="absolute inset-x-0 -bottom-2 h-2" />
           )}
           <DropIndicatorLine
             className={clsx(
               "translate-y-1/2",
-              isRootLevel ? "-bottom-1" : "bottom-0",
+              isRootLevel ? "-bottom-2" : "bottom-0",
             )}
           />
         </span>
@@ -323,7 +323,7 @@ export const WikiPageTreeEndDropTarget = ({
       onMouseUp={() => handleDrop(lastRootPageId, "after")}
     >
       {/* At the same height as the after band line of a childless last row */}
-      <DropIndicatorLine className="top-1 -translate-y-1/2" />
+      <DropIndicatorLine className="top-2 -translate-y-1/2" />
     </li>
   );
 };
