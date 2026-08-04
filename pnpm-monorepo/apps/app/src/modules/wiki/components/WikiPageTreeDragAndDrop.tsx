@@ -6,7 +6,9 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
+  useRef,
   useState,
   useTransition,
   type KeyboardEvent,
@@ -165,11 +167,18 @@ interface DropTargetsProps {
   readonly ancestorIds: readonly string[];
   /** Whether the viewer may create subpages, i.e. drop other pages inside */
   readonly canDropInside: boolean;
-  /** Whether the row shows children in the visible tree */
-  readonly hasChildren: boolean;
+  /** Whether the row currently shows its children */
+  readonly showsChildren: boolean;
+  /** Whether the row has children but keeps them collapsed */
+  readonly hasCollapsedChildren: boolean;
+  /** Expands the row, so a page dropped inside it is visible afterwards */
+  readonly onRequestExpand: () => void;
   /** Root rows are separated by a flex gap; their zones extend into it */
   readonly isRootLevel: boolean;
 }
+
+/** How long the pointer has to rest on a collapsed row to open it */
+const SPRING_OPEN_DELAY_IN_MILLISECONDS = 700;
 
 interface DropIndicatorLineProps {
   /** Position within the surrounding `group/band`, e.g. `-top-1 -translate-y-1/2` */
@@ -199,21 +208,40 @@ const DropIndicatorLine = ({ className }: DropIndicatorLineProps) => (
  * root rows (whose bands also extend their hit areas into the gap). Two
  * adjacent zones targeting the same position therefore show one identical,
  * centered line.
+ *
+ * A collapsed row hides its children, so it both offers an after band again
+ * and springs open while the pointer rests on it — otherwise its subtree
+ * would be unreachable as a drop target for the length of the drag.
  */
 export const WikiPageDropTargets = ({
   pageId,
   ancestorIds,
   canDropInside,
-  hasChildren,
+  showsChildren,
+  hasCollapsedChildren,
+  onRequestExpand,
   isRootLevel,
 }: DropTargetsProps) => {
   const { draggedPageId, handleDrop } = useWikiPageDnd();
+  const springOpenTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  useEffect(() => () => clearTimeout(springOpenTimeout.current), []);
 
   if (!draggedPageId || draggedPageId === pageId) return null;
   // Dropping a page into its own subtree would create a cycle
   if (ancestorIds.includes(draggedPageId)) return null;
 
   const edgeBandHeight = canDropInside ? "h-1/4" : "h-1/2";
+
+  const cancelSpringOpen = () => clearTimeout(springOpenTimeout.current);
+
+  const startSpringOpen = () => {
+    if (!hasCollapsedChildren) return;
+    springOpenTimeout.current = setTimeout(
+      onRequestExpand,
+      SPRING_OPEN_DELAY_IN_MILLISECONDS,
+    );
+  };
 
   return (
     <span className="absolute inset-0 z-10 flex cursor-grabbing flex-col">
@@ -232,7 +260,14 @@ export const WikiPageDropTargets = ({
       {canDropInside && (
         <span
           className="group/band flex-1"
-          onMouseUp={() => handleDrop(pageId, "inside")}
+          onMouseEnter={startSpringOpen}
+          onMouseLeave={cancelSpringOpen}
+          onMouseUp={() => {
+            cancelSpringOpen();
+            // Without this the page would seem to vanish into a closed row
+            onRequestExpand();
+            handleDrop(pageId, "inside");
+          }}
         >
           {/*
            * Anchored to the container (hence no `relative` on the band) so
@@ -242,7 +277,7 @@ export const WikiPageDropTargets = ({
           <span className="pointer-events-none absolute inset-0 hidden rounded-secondary bg-green-500/20 group-hover/band:block" />
         </span>
       )}
-      {!hasChildren && (
+      {!showsChildren && (
         <span
           className={clsx("group/band relative", edgeBandHeight)}
           onMouseUp={() => handleDrop(pageId, "after")}

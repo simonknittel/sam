@@ -8,6 +8,7 @@ import {
 import { getWikiFavoritePageIds } from "../queries/getWikiFavorites";
 import { buildVisibleWikiTree } from "../utils/buildVisibleWikiTree";
 import { filterWikiPagesBySidebarMode } from "../utils/filterWikiPagesBySidebarMode";
+import { WIKI_EXPANDED_PAGES_COOKIE } from "../utils/wikiExpandedPagesCookie";
 import { WIKI_SHOW_HIDDEN_PAGES_COOKIE } from "../utils/wikiShowHiddenPagesCookie";
 import { WikiPageIcon } from "./WikiPageIcon";
 import { WikiSearch } from "./WikiSearch";
@@ -38,8 +39,10 @@ export const WikiSidebar = async () => {
     )
     .map((page) => page.id);
 
+  const cookieStore = await cookies();
   const showHidden =
-    (await cookies()).get(WIKI_SHOW_HIDDEN_PAGES_COOKIE)?.value === "1";
+    cookieStore.get(WIKI_SHOW_HIDDEN_PAGES_COOKIE)?.value === "1";
+  const expandedPages = cookieStore.get(WIKI_EXPANDED_PAGES_COOKIE)?.value;
 
   return (
     <>
@@ -57,6 +60,7 @@ export const WikiSidebar = async () => {
           fullTree={fullTree}
           hiddenPageIds={sidebarHiddenPageIds}
           initialShowHidden={showHidden}
+          expandedPagesCookie={expandedPages}
         />
       </div>
     </>
