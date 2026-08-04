@@ -42,6 +42,32 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-08-04-wiki-inhaltsverzeichnis-einklappen",
+    date: "2026-08-04",
+    title: "Wiki: Inhaltsverzeichnis einklappen",
+    tags: ["Neu", "Wiki"],
+    isTracked: false,
+    body: () => (
+      <>
+        <p>
+          Das Inhaltsverzeichnis in der Wiki-Seitenleiste lässt sich jetzt
+          einklappen: Jede Seite mit Unterseiten hat davor einen Pfeil, der ihre
+          Unterseiten ein- und ausblendet. Zu Beginn ist alles eingeklappt, so
+          dass nur die obersten Seiten zu sehen sind. Über der Liste klappt ein
+          Knopf das gesamte Verzeichnis auf einen Schlag auf oder zu.
+        </p>
+
+        <p>
+          Öffnest du eine Seite, klappt der Weg dorthin automatisch auf – und
+          hat sie selbst Unterseiten, werden diese gleich mit angezeigt. Welche
+          Seiten aufgeklappt sind, merkt sich der Browser bis zum nächsten
+          Besuch.
+        </p>
+      </>
+    ),
+  },
+
+  {
     key: "2026-08-02-wiki-blockbreite",
     date: "2026-08-02",
     title: "Wiki: Blockbreite",

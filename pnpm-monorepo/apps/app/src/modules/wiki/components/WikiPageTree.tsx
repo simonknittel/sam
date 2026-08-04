@@ -3,10 +3,11 @@
 import { Link } from "@/modules/common/components/Link";
 import clsx from "clsx";
 import { usePathname } from "next/navigation";
-import { FaPlus } from "react-icons/fa";
+import { FaChevronDown, FaChevronRight, FaPlus } from "react-icons/fa";
 import type { WikiTreeNode } from "../utils/buildVisibleWikiTree";
 import { useCreateWikiPage } from "./CreateWikiPageProvider";
 import { WikiPageIcon } from "./WikiPageIcon";
+import { useWikiPageTreeCollapse } from "./WikiPageTreeCollapseProvider";
 import {
   useWikiPageDnd,
   WikiPageDndProvider,
@@ -41,7 +42,7 @@ const RootList = ({ className, nodes, dimmedPageIds }: Props) => {
   return (
     <ul
       className={clsx(
-        "relative flex flex-col gap-2",
+        "relative flex flex-col gap-4",
         {
           "animate-pulse cursor-wait pointer-events-none": isPending,
         },
@@ -65,6 +66,33 @@ const RootList = ({ className, nodes, dimmedPageIds }: Props) => {
         />
       )}
     </ul>
+  );
+};
+
+interface ExpandButtonProps {
+  readonly pageId: string;
+  readonly subtreeId: string;
+  readonly isExpanded: boolean;
+}
+
+const ExpandButton = ({ pageId, subtreeId, isExpanded }: ExpandButtonProps) => {
+  const { toggle } = useWikiPageTreeCollapse();
+
+  return (
+    <button
+      type="button"
+      onClick={() => toggle(pageId)}
+      aria-expanded={isExpanded}
+      aria-controls={isExpanded ? subtreeId : undefined}
+      title={isExpanded ? "Unterseiten ausblenden" : "Unterseiten anzeigen"}
+      className="flex-none p-1 text-neutral-500 cursor-pointer hover:text-interaction-500 focus-visible:text-interaction-500 active:text-interaction-300"
+    >
+      {isExpanded ? (
+        <FaChevronDown className="size-3" />
+      ) : (
+        <FaChevronRight className="size-3" />
+      )}
+    </button>
   );
 };
 
@@ -125,10 +153,15 @@ const TreeItem = ({
 }: TreeItemProps) => {
   const pathname = usePathname();
   const { draggedPageId } = useWikiPageDnd();
+  const { isExpanded, expand } = useWikiPageTreeCollapse();
   const activePageId = pathname.startsWith("/app/wiki/")
     ? pathname.split("/")[3]
     : undefined;
   const isActive = activePageId === node.id;
+
+  const hasChildren = node.children.length > 0;
+  const showsChildren = hasChildren && isExpanded(node.id);
+  const subtreeId = `wiki-subtree-${node.id}`;
 
   return (
     <li
@@ -141,11 +174,11 @@ const TreeItem = ({
         className="relative flex items-center gap-1"
         // Margin instead of padding so the active background keeps a gap
         // matching the nesting level
-        style={{ marginLeft: `${depth * 12}px` }}
+        style={{ marginLeft: `${depth * 20}px` }}
       >
         <span
           className={clsx(
-            "group flex min-w-0 flex-1 items-center gap-1 rounded-secondary pl-2",
+            "group flex min-w-0 flex-1 items-center gap-1 rounded-secondary pl-1",
             {
               "bg-neutral-800": isActive,
               // Row-level (not subtree-level) so nested dimmed pages don't compound
@@ -153,6 +186,17 @@ const TreeItem = ({
             },
           )}
         >
+          {hasChildren ? (
+            <ExpandButton
+              pageId={node.id}
+              subtreeId={subtreeId}
+              isExpanded={showsChildren}
+            />
+          ) : (
+            // Keeps titles aligned with those of their collapsible siblings
+            <span aria-hidden className="size-5 flex-none" />
+          )}
+
           {node.iconId && <WikiPageIcon iconId={node.iconId} />}
 
           <Link
@@ -194,18 +238,15 @@ const TreeItem = ({
           pageId={node.id}
           ancestorIds={ancestorIds}
           canDropInside={node.canAdmin}
-          hasChildren={node.children.length > 0}
+          showsChildren={showsChildren}
+          hasCollapsedChildren={hasChildren && !showsChildren}
+          onRequestExpand={() => expand(node.id)}
           isRootLevel={depth === 0}
         />
       </span>
 
-      {node.children.length > 0 && (
-        <ul className="relative flex flex-col">
-          <span
-            aria-hidden
-            className="absolute bottom-0 top-0 w-px bg-neutral-700"
-            style={{ left: `${depth * 12 + 8}px` }}
-          />
+      {showsChildren && (
+        <ul id={subtreeId} className="flex flex-col">
           {node.children.map((child, index) => (
             <TreeItem
               key={child.id}

@@ -745,7 +745,7 @@
   position: relative;
 }
 
-/* Same hierarchy line as the sidebar's page tree (WikiPageTree) */
+/* Hierarchy line marking a nesting level of the index */
 .prose [data-wiki-page-index] ul ul::before {
   background-color: var(--color-neutral-700);
   bottom: 0;
