@@ -41,6 +41,8 @@ const RootList = ({ className, nodes, dimmedPageIds }: Props) => {
 
   return (
     <ul
+      // Root rows are the only ones separated by a gap; WikiPageDropTargets
+      // spans it from both sides, so changing it means adjusting those too
       className={clsx(
         "relative flex flex-col gap-4",
         {
