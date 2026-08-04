@@ -6,13 +6,10 @@
  * Purely cosmetic: the state only expands or collapses rows the viewer may
  * see anyway, so a tampered cookie can't widen access.
  *
- * The value has two modes so that expanding or collapsing the whole tree
- * stays a single byte no matter how large the wiki grows:
+ * The value lists the expanded pages, nothing else:
  *
  *   ""                  everything collapsed (also the default)
  *   "a1b2c3d4,e5f6g7h8" only these pages are expanded
- *   "*"                 everything expanded
- *   "*,a1b2c3d4"        everything expanded except these pages
  */
 export const WIKI_EXPANDED_PAGES_COOKIE = "wiki_expanded_pages";
 
@@ -20,8 +17,6 @@ export const WIKI_EXPANDED_PAGES_COOKIE = "wiki_expanded_pages";
 export const WIKI_EXPANDED_PAGES_COOKIE_PATH = "/app/wiki";
 
 const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365;
-
-const INVERTED_MARKER = "*";
 
 /**
  * Pages are identified by the last characters of their 24 character cuid2
@@ -48,21 +43,10 @@ const MAX_PAGE_KEYS = 350;
  */
 const MAX_COOKIE_VALUE_LENGTH = 4096;
 
-export interface WikiExpansionState {
-  /** Whether `keys` lists the collapsed pages instead of the expanded ones */
-  readonly inverted: boolean;
-  readonly keys: ReadonlySet<string>;
-}
+/** Keys of the expanded pages, in the order they were expanded */
+export type WikiExpansionState = ReadonlySet<string>;
 
-export const WIKI_ALL_COLLAPSED: WikiExpansionState = {
-  inverted: false,
-  keys: new Set(),
-};
-
-export const WIKI_ALL_EXPANDED: WikiExpansionState = {
-  inverted: true,
-  keys: new Set(),
-};
+export const WIKI_ALL_COLLAPSED: WikiExpansionState = new Set();
 
 export const getWikiPageKey = (pageId: string) =>
   pageId.slice(-PAGE_KEY_LENGTH);
@@ -73,47 +57,38 @@ export const parseWikiExpandedPagesCookie = (
   if (!value || value.length > MAX_COOKIE_VALUE_LENGTH)
     return WIKI_ALL_COLLAPSED;
 
-  const entries = value.split(",");
-  const inverted = entries[0] === INVERTED_MARKER;
-  const start = inverted ? 1 : 0;
-
   const keys = new Set(
-    entries
-      .slice(start, start + MAX_PAGE_KEYS)
+    value
+      .split(",")
+      .slice(0, MAX_PAGE_KEYS)
       .filter((entry) => PAGE_KEY_PATTERN.test(entry)),
   );
 
-  if (!inverted && keys.size === 0) return WIKI_ALL_COLLAPSED;
-  if (inverted && keys.size === 0) return WIKI_ALL_EXPANDED;
-  return { inverted, keys };
+  return keys.size > 0 ? keys : WIKI_ALL_COLLAPSED;
 };
 
 export const serializeWikiExpandedPagesCookie = (state: WikiExpansionState) => {
-  // Insertion order makes this drop the least recently changed pages
-  const keys = [...state.keys].slice(-MAX_PAGE_KEYS);
-  const value = (state.inverted ? [INVERTED_MARKER, ...keys] : keys).join(",");
+  // Insertion order makes this drop the least recently expanded pages
+  const value = [...state].slice(-MAX_PAGE_KEYS).join(",");
 
   return `${WIKI_EXPANDED_PAGES_COOKIE}=${value}; path=${WIKI_EXPANDED_PAGES_COOKIE_PATH}; samesite=lax; max-age=${value ? ONE_YEAR_IN_SECONDS : 0};`;
 };
 
 export const isWikiPageExpanded = (state: WikiExpansionState, pageId: string) =>
-  state.keys.has(getWikiPageKey(pageId)) !== state.inverted;
-
-export const hasAnyWikiPageExpanded = (state: WikiExpansionState) =>
-  state.inverted || state.keys.size > 0;
+  state.has(getWikiPageKey(pageId));
 
 /**
  * All mutations return the given state unchanged when nothing moves. The
- * sidebar reapplies the active page's path on every server render, and only
- * a stable reference stops that from looping through its cookie effect.
+ * sidebar reapplies the active page's path on every render, and only a stable
+ * reference stops that from looping through its cookie effect.
  */
 const withKeys = (
   state: WikiExpansionState,
   keys: Set<string>,
 ): WikiExpansionState =>
-  keys.size === state.keys.size && [...keys].every((key) => state.keys.has(key))
+  keys.size === state.size && [...keys].every((key) => state.has(key))
     ? state
-    : { inverted: state.inverted, keys };
+    : keys;
 
 export const setWikiPageExpansion = (
   state: WikiExpansionState,
@@ -121,11 +96,11 @@ export const setWikiPageExpansion = (
   expanded: boolean,
 ): WikiExpansionState => {
   const key = getWikiPageKey(pageId);
-  const keys = new Set(state.keys);
+  const keys = new Set(state);
 
   // Re-adding a key moves it to the end, i.e. marks it as most recent
   keys.delete(key);
-  if (expanded !== state.inverted) keys.add(key);
+  if (expanded) keys.add(key);
 
   return withKeys(state, keys);
 };
@@ -134,13 +109,8 @@ export const expandWikiPages = (
   state: WikiExpansionState,
   pageIds: readonly string[],
 ): WikiExpansionState => {
-  const keys = new Set(state.keys);
-
-  for (const pageId of pageIds) {
-    const key = getWikiPageKey(pageId);
-    if (state.inverted) keys.delete(key);
-    else keys.add(key);
-  }
+  const keys = new Set(state);
+  for (const pageId of pageIds) keys.add(getWikiPageKey(pageId));
 
   return withKeys(state, keys);
 };

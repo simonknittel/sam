@@ -10,16 +10,16 @@ import {
   type ReactNode,
 } from "react";
 import type { WikiTreeNode } from "../utils/buildVisibleWikiTree";
+import { collectExpandableWikiPages } from "../utils/collectExpandableWikiPages";
 import { collectWikiPagesToExpand } from "../utils/collectWikiPagesToExpand";
 import {
   expandWikiPages,
-  hasAnyWikiPageExpanded,
   isWikiPageExpanded,
   parseWikiExpandedPagesCookie,
   serializeWikiExpandedPagesCookie,
   setWikiPageExpansion,
   WIKI_ALL_COLLAPSED,
-  WIKI_ALL_EXPANDED,
+  type WikiExpansionState,
 } from "../utils/wikiExpandedPagesCookie";
 
 interface WikiPageTreeCollapseContextValue {
@@ -37,6 +37,18 @@ const splitPath = (path: string) => (path ? path.split(",") : []);
 const WikiPageTreeCollapseContext = createContext<
   WikiPageTreeCollapseContextValue | undefined
 >(undefined);
+
+/**
+ * The state the previous mount ended with. Every wiki page renders its own
+ * sidebar, so navigating remounts this provider — and the page navigated to
+ * may come from the router cache, carrying the cookie as it was when that
+ * page was fetched. Without this, returning to an already visited page would
+ * collapse everything the viewer expanded since.
+ *
+ * Written from an effect only, which never runs on the server, so requests
+ * cannot read each other's state through this module.
+ */
+let previousMountState: WikiExpansionState | undefined;
 
 interface Props {
   readonly children: ReactNode;
@@ -69,18 +81,22 @@ export const WikiPageTreeCollapseProvider = ({
     : undefined;
 
   /**
-   * Joined instead of kept as an array: the tree arrives as a new array with
-   * every server render, so only a value comparable by equality keeps the
+   * Joined instead of kept as arrays: the tree arrives as a new array with
+   * every server render, so only values comparable by equality keep the
    * adjustment below from rerunning on each of them.
    */
   const pagesToExpand = useMemo(
     () => collectWikiPagesToExpand(nodes, activePageId).join(","),
     [nodes, activePageId],
   );
+  const expandablePages = useMemo(
+    () => collectExpandableWikiPages(nodes).join(","),
+    [nodes],
+  );
 
   const [state, setState] = useState(() =>
     expandWikiPages(
-      parseWikiExpandedPagesCookie(cookieValue),
+      previousMountState ?? parseWikiExpandedPagesCookie(cookieValue),
       splitPath(pagesToExpand),
     ),
   );
@@ -98,6 +114,7 @@ export const WikiPageTreeCollapseProvider = ({
   }
 
   useEffect(() => {
+    previousMountState = state;
     document.cookie = serializeWikiExpandedPagesCookie(state);
   }, [state]);
 
@@ -114,11 +131,16 @@ export const WikiPageTreeCollapseProvider = ({
         ),
       expand: (pageId: string) =>
         setState((previous) => setWikiPageExpansion(previous, pageId, true)),
-      expandAll: () => setState(WIKI_ALL_EXPANDED),
+      // Merged into the state so pages the sidebar currently leaves out, e.g.
+      // the hidden ones, keep theirs instead of silently collapsing
+      expandAll: () =>
+        setState((previous) =>
+          expandWikiPages(previous, splitPath(expandablePages)),
+        ),
       collapseAll: () => setState(WIKI_ALL_COLLAPSED),
-      hasAnyExpanded: hasAnyWikiPageExpanded(state),
+      hasAnyExpanded: state.size > 0,
     }),
-    [state],
+    [state, expandablePages],
   );
 
   return (
