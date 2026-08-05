@@ -37,6 +37,7 @@ import {
   withWikiBlockLayout,
 } from "./wikiResizableNodes.js";
 import { WikiRoleCitizens } from "./wikiRoleCitizensNode.js";
+import { WikiSmallTextMark } from "./wikiSmallTextMark.js";
 import { WikiTextColorMark } from "./wikiTextColorMark.js";
 import {
   WikiBlockquote,
@@ -258,6 +259,7 @@ export const getWikiEditorExtensions = (
     DetailsSummary,
     WikiDetailsContent,
     WikiHighlight,
+    WikiSmallTextMark,
     // After the StarterKit marks so it renders as their innermost element,
     // letting its CSS color win over the typography plugin's strong/link
     // colors

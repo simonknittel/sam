@@ -675,6 +675,14 @@
   color: var(--color-purple-400);
 }
 
+/* Small text (wikiSmallText mark): side notes, captions and fine print.
+   An explicit factor overrides the browser's `smaller` keyword, which
+   shrinks by a varying amount depending on the surrounding font size and
+   would therefore be inconsistent between paragraphs and headings */
+.prose small {
+  font-size: 0.75em;
+}
+
 /* Inline code (code mark): subtle chip instead of the typography plugin's
    default (which wraps inline code in literal backticks). Code blocks
    (pre > code) are unaffected. */

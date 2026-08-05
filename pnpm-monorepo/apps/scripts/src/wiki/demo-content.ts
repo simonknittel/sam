@@ -257,6 +257,8 @@ const documentContent: DemoNode = {
       ", ",
       text("durchgestrichen", mark("strike")),
       ", ",
+      text("klein", mark("wikiSmallText")),
+      ", ",
       text("Code", mark("code")),
       " oder ",
       text("kombiniert", mark("bold"), mark("italic"), mark("underline")),

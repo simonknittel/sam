@@ -42,6 +42,24 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-08-05-wiki-kleiner-text",
+    date: "2026-08-05",
+    title: "Wiki: Kleiner Text",
+    tags: ["Neu", "Wiki"],
+    isTracked: false,
+    body: () => (
+      <p>
+        Im Wiki-Editor gibt es jetzt die Formatierung &bdquo;Kleiner Text&ldquo;
+        – für Bildunterschriften, Randbemerkungen und Kleingedrucktes. Sie
+        funktioniert wie Fett oder Kursiv: Text markieren, im Menü auf das
+        Symbol klicken. Und weil sie eine Formatierung ist, lässt sie sich
+        überall einsetzen, wo Text steht – auch in Überschriften, Listen und
+        Tabellen.
+      </p>
+    ),
+  },
+
+  {
     key: "2026-08-05-wiki-seite-auf-dem-dashboard",
     date: "2026-08-05",
     title: "Wiki-Seite auf dem Dashboard",
