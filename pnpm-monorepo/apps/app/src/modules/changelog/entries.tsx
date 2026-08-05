@@ -42,6 +42,38 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-08-05-wiki-hervorgehobene-seiten",
+    date: "2026-08-05",
+    title: "Wiki: Hervorgehobene Seiten",
+    tags: ["Neu", "Wiki"],
+    isTracked: false,
+    body: () => (
+      <>
+        <p>
+          Die{" "}
+          <Link
+            href="/app/wiki"
+            className="text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300"
+          >
+            Wiki-Startseite
+          </Link>{" "}
+          zeigt jetzt ganz oben einen Bereich mit hervorgehobenen Seiten – als
+          Kacheln mit Symbol, Titel und Datum der letzten Änderung. So sind die
+          wichtigsten Seiten wie Handbuch oder Onboarding sofort erreichbar,
+          statt im Inhaltsverzeichnis gesucht werden zu müssen.
+        </p>
+
+        <p>
+          Welche Seiten das sind und in welcher Reihenfolge sie erscheinen,
+          legen die Wiki-Verwalter in den Wiki-Einstellungen fest. Wie überall
+          im Wiki gilt: Angezeigt wird eine Seite nur denen, die sie auch lesen
+          dürfen.
+        </p>
+      </>
+    ),
+  },
+
+  {
     key: "2026-08-04-wiki-inhaltsverzeichnis-einklappen",
     date: "2026-08-04",
     title: "Wiki: Inhaltsverzeichnis einklappen",

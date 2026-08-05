@@ -3,6 +3,7 @@ import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout
 import { Link } from "@/modules/common/components/Link";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { formatDate } from "@/modules/common/utils/formatDate";
+import { WikiFeaturedPages } from "@/modules/wiki/components/WikiFeaturedPages";
 import { WikiPageIcon } from "@/modules/wiki/components/WikiPageIcon";
 import { WikiSearch } from "@/modules/wiki/components/WikiSearch";
 import { WikiSidebar } from "@/modules/wiki/components/WikiSidebar";
@@ -14,7 +15,9 @@ import {
   getWikiFavoritePageIds,
   getWikiRecentVisitPageIds,
 } from "@/modules/wiki/queries/getWikiFavorites";
+import { getWikiFeaturedPageIds } from "@/modules/wiki/queries/getWikiSettings";
 import { getAccessibleWikiPage } from "@/modules/wiki/utils/getAccessibleWikiPage";
+import { resolveWikiFeaturedPages } from "@/modules/wiki/utils/wikiFeaturedPages";
 import { forbidden } from "next/navigation";
 import { FaSitemap } from "react-icons/fa";
 
@@ -38,15 +41,23 @@ export default async function Page() {
 }
 
 const Landing = async () => {
-  const [context, favoriteIds, recentVisitPageIds] = await Promise.all([
-    getWikiContext(),
-    getWikiFavoritePageIds(),
-    getWikiRecentVisitPageIds(),
-  ]);
+  const [context, favoriteIds, recentVisitPageIds, featuredPageIds] =
+    await Promise.all([
+      getWikiContext(),
+      getWikiFavoritePageIds(),
+      getWikiRecentVisitPageIds(),
+      getWikiFeaturedPageIds(),
+    ]);
   if (!context) forbidden();
 
   const visiblePage = (pageId: string) =>
     getAccessibleWikiPage(context, pageId, "read");
+
+  const featuredPages = resolveWikiFeaturedPages(
+    featuredPageIds,
+    context.pagesById,
+    (pageId) => context.permissions.get(pageId)?.canRead === true,
+  );
 
   const recentlyVisited = recentVisitPageIds
     .map(visiblePage)
@@ -63,6 +74,8 @@ const Landing = async () => {
       <section className="bg-secondary rounded-primary p-4">
         <WikiSearch className="mx-auto w-full max-w-xl" />
       </section>
+
+      {featuredPages.length > 0 && <WikiFeaturedPages pages={featuredPages} />}
 
       {(recentlyVisited.length > 0 || recentlyUpdated.length > 0) && (
         <div className="grid gap-0.5 lg:grid-cols-2">
