@@ -1,11 +1,13 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { Tile } from "@/modules/common/components/Tile";
+import { WikiDashboardPageSetting } from "@/modules/wiki/components/WikiDashboardPageSetting";
 import { WikiFeaturedPagesSettings } from "@/modules/wiki/components/WikiFeaturedPagesSettings";
 import { WikiIframeAllowlistSettings } from "@/modules/wiki/components/WikiIframeAllowlistSettings";
 import { WikiPageLinkSetting } from "@/modules/wiki/components/WikiPageLinkSetting";
 import { getWikiContext } from "@/modules/wiki/queries/getWikiContext";
 import {
+  getWikiDashboardPageId,
   getWikiFeaturedPageIds,
   getWikiIframeAllowlist,
   getWikiPageLinkPageId,
@@ -31,17 +33,23 @@ export default async function Page() {
 }
 
 const Settings = async () => {
-  const [context, iframeAllowlist, featuredPageIds, pageLinkIds] =
-    await Promise.all([
-      getWikiContext(),
-      getWikiIframeAllowlist(),
-      getWikiFeaturedPageIds(),
-      Promise.all(
-        WIKI_PAGE_LINK_KEYS.map(
-          async (key) => [key, await getWikiPageLinkPageId(key)] as const,
-        ),
-      ).then((entries) => new Map(entries)),
-    ]);
+  const [
+    context,
+    iframeAllowlist,
+    featuredPageIds,
+    dashboardPageId,
+    pageLinkIds,
+  ] = await Promise.all([
+    getWikiContext(),
+    getWikiIframeAllowlist(),
+    getWikiFeaturedPageIds(),
+    getWikiDashboardPageId(),
+    Promise.all(
+      WIKI_PAGE_LINK_KEYS.map(
+        async (key) => [key, await getWikiPageLinkPageId(key)] as const,
+      ),
+    ).then((entries) => new Map(entries)),
+  ]);
   if (!context) forbidden();
 
   /**
@@ -73,6 +81,17 @@ const Settings = async () => {
             title: page.title,
           }))}
           targets={pageOptions}
+        />
+      </Tile>
+
+      <Tile heading="Dashboard">
+        <p className="mb-4 text-sm text-neutral-400">
+          Der Inhalt dieser Seite wird auf dem Dashboard angezeigt – jedoch nur
+          denen, die die Seite auch lesen dürfen.
+        </p>
+        <WikiDashboardPageSetting
+          options={pageOptions}
+          currentPageId={dashboardPageId}
         />
       </Tile>
 

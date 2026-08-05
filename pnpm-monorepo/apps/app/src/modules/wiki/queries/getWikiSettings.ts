@@ -69,6 +69,24 @@ export const getWikiPageLinkPageId = cache(
   ),
 );
 
+export const WIKI_SETTING_DASHBOARD_PAGE = "dashboardPage";
+
+/**
+ * Id of the page whose content is shown on the app dashboard, or null if
+ * unset. Raw setting value without permission checks — the dashboard panel
+ * resolves the viewer's read permission itself. An id of a page deleted
+ * since is dropped there and for good on the next save.
+ */
+export const getWikiDashboardPageId = cache(
+  withTrace("getWikiDashboardPageId", async (): Promise<string | null> => {
+    const setting = await prisma.wikiSetting.findUnique({
+      where: { key: WIKI_SETTING_DASHBOARD_PAGE },
+    });
+    const parsed = z.cuid2().safeParse(setting?.value);
+    return parsed.success ? parsed.data : null;
+  }),
+);
+
 export interface WikiPageLinkTarget {
   readonly pageId: string;
   readonly title: string;

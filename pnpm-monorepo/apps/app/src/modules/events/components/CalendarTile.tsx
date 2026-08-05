@@ -1,5 +1,8 @@
 import { Link } from "@/modules/common/components/Link";
-import { getEvents } from "@/modules/events/queries/getEvents";
+import {
+  getEvents,
+  getOpenEventCount,
+} from "@/modules/events/queries/getEvents";
 import clsx from "clsx";
 import { Event } from "./Event";
 
@@ -7,8 +10,19 @@ interface Props {
   readonly className?: string;
 }
 
+/**
+ * Keeps the tile short enough to leave room for the rest of the dashboard.
+ * Everything beyond that is one click away on the events page, which keeps
+ * the shared query's larger page size.
+ */
+const MAX_EVENTS = 5;
+
 export const CalendarTile = async ({ className }: Props) => {
-  const { events } = await getEvents("open");
+  const [{ events: allEvents }, openEventCount] = await Promise.all([
+    getEvents("open"),
+    getOpenEventCount(),
+  ]);
+  const events = allEvents.slice(0, MAX_EVENTS);
 
   return (
     <section
@@ -35,7 +49,7 @@ export const CalendarTile = async ({ className }: Props) => {
         href="/app/events"
         className="text-interaction-500 hover:underline focus-visible:underline font-mono uppercase text-sm mt-2"
       >
-        Alle Events
+        Alle Events ({openEventCount})
       </Link>
     </section>
   );

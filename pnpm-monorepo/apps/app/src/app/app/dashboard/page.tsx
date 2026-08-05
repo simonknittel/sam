@@ -8,6 +8,7 @@ import { CalendarTile } from "@/modules/events/components/CalendarTile";
 import { SpynetSearchTile } from "@/modules/spynet/components/SpynetSearchTile/SpynetSearchTile";
 import { TasksDashboardTile } from "@/modules/tasks/components/DashboardTile";
 import { LatestTasksDashboardTile } from "@/modules/tasks/components/LatestTasksDashboardTile";
+import { WikiDashboardPageTile } from "@/modules/wiki/components/WikiDashboardPageTile";
 import { Suspense } from "react";
 
 export default async function Page() {
@@ -27,15 +28,17 @@ export default async function Page() {
 
   return (
     <div className="flex gap-6 flex-row flex-wrap justify-center @container/main">
-      {showCalendar && (
-        <Suspense
-          fallback={
-            <TileSkeleton className="flex-none @7xl/main:flex-1 w-100 @7xl/main:max-w-none" />
-          }
-        >
-          <CalendarTile className="flex-none @7xl/main:flex-1 w-100 @7xl/main:max-w-none @container/events" />
-        </Suspense>
-      )}
+      <div className="flex flex-col gap-6 flex-none @7xl/main:flex-1 w-100 @7xl/main:max-w-none">
+        {showCalendar && (
+          <Suspense fallback={<TileSkeleton />}>
+            <CalendarTile className="@container/events" />
+          </Suspense>
+        )}
+
+        <SuspenseWithErrorBoundaryTile>
+          <WikiDashboardPageTile />
+        </SuspenseWithErrorBoundaryTile>
+      </div>
 
       <div className="flex flex-col gap-6 w-100 flex-none">
         <TasksDashboardTile />
