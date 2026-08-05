@@ -84,8 +84,8 @@ const Favorites = ({ pages }: FavoritesProps) => {
             <li key={page.id}>
               <Link
                 href={`/app/wiki/${page.id}/${page.slug}`}
-                // See the tree's links: prefetching a page prefetches the
-                // sidebar it renders along with it
+                // Like the tree's links, deliberately not prefetched — every
+                // prefetch is a full server render of the target page
                 prefetch={false}
                 className="flex items-center gap-2 rounded-secondary px-2 py-1 text-neutral-300 hover:text-interaction-300"
                 title={page.title}

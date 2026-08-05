@@ -1,16 +1,14 @@
 import { prisma } from "@/db";
 import { requireAuthenticationPage } from "@/modules/auth/server";
-import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout";
 import { Link } from "@/modules/common/components/Link";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { WikiPageIcon } from "@/modules/wiki/components/WikiPageIcon";
-import { WikiSidebar } from "@/modules/wiki/components/WikiSidebar";
 import { getWikiContext } from "@/modules/wiki/queries/getWikiContext";
 import { buildVisibleWikiBreadcrumb } from "@/modules/wiki/utils/buildVisibleWikiBreadcrumb";
 import { getAccessibleWikiPage } from "@/modules/wiki/utils/getAccessibleWikiPage";
 import type { Metadata } from "next";
 import { forbidden, notFound } from "next/navigation";
-import { FaSitemap, FaTag } from "react-icons/fa";
+import { FaTag } from "react-icons/fa";
 
 type Params = PageProps<"/app/wiki/tags/[tagId]">["params"];
 
@@ -34,16 +32,9 @@ export default async function Page(props: PageProps<"/app/wiki/tags/[tagId]">) {
   await requireAuthenticationPage("/app/wiki");
 
   return (
-    <SidebarLayout
-      sidebar={<WikiSidebar />}
-      mobileToggleLabel="Seiten"
-      mobileToggleIcon={<FaSitemap />}
-      sidebarWidthClassName="md:w-80"
-    >
-      <SuspenseWithErrorBoundaryTile>
-        <TagPageList params={props.params} />
-      </SuspenseWithErrorBoundaryTile>
-    </SidebarLayout>
+    <SuspenseWithErrorBoundaryTile>
+      <TagPageList params={props.params} />
+    </SuspenseWithErrorBoundaryTile>
   );
 }
 

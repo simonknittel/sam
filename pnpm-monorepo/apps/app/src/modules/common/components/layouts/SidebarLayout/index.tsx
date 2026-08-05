@@ -13,6 +13,8 @@ interface Props {
   readonly mobileToggleIcon?: ReactNode;
   /** Sidebar width class(es). Defaults to "md:w-64". */
   readonly sidebarWidthClassName?: string;
+  /** Additional class(es) for the sidebar container, e.g. to make it sticky. */
+  readonly sidebarClassName?: string;
 }
 
 export const SidebarLayout = ({
@@ -23,11 +25,16 @@ export const SidebarLayout = ({
   mobileToggleLabel,
   mobileToggleIcon,
   sidebarWidthClassName = "md:w-64",
+  sidebarClassName,
 }: Props) => {
   return (
     <div className={clsx("flex flex-col md:flex-row gap-4", className)}>
       <SidebarContainer
-        className={clsx("md:flex-none", sidebarWidthClassName)}
+        className={clsx(
+          "md:flex-none",
+          sidebarWidthClassName,
+          sidebarClassName,
+        )}
         mobileToggleLabel={mobileToggleLabel}
         mobileToggleIcon={mobileToggleIcon}
       >

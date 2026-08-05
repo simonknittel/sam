@@ -203,9 +203,9 @@ const TreeItem = ({
 
           <Link
             href={`/app/wiki/${node.id}/${node.slug}`}
-            // Each wiki page renders the sidebar itself, so a prefetched page
-            // carries a snapshot of the whole tree that the router then
-            // replays — outdated once anything about the tree has changed
+            // The tree can show a link for every page of the wiki, and each
+            // prefetch is a full server render of the target page — too much
+            // for links the viewer mostly never opens
             prefetch={false}
             className={clsx(
               "block flex-1 truncate py-1 pr-2 hover:text-interaction-500",

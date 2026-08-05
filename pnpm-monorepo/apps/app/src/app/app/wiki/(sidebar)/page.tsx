@@ -1,22 +1,16 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
-import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout";
 import { Link } from "@/modules/common/components/Link";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { WikiPageIcon } from "@/modules/wiki/components/WikiPageIcon";
 import { WikiSearch } from "@/modules/wiki/components/WikiSearch";
-import { WikiSidebar } from "@/modules/wiki/components/WikiSidebar";
 import {
   getWikiContext,
   type WikiContextPage,
 } from "@/modules/wiki/queries/getWikiContext";
-import {
-  getWikiFavoritePageIds,
-  getWikiRecentVisitPageIds,
-} from "@/modules/wiki/queries/getWikiFavorites";
+import { getWikiRecentVisitPageIds } from "@/modules/wiki/queries/getWikiFavorites";
 import { getAccessibleWikiPage } from "@/modules/wiki/utils/getAccessibleWikiPage";
 import { forbidden } from "next/navigation";
-import { FaSitemap } from "react-icons/fa";
 
 const RECENT_LIMIT = 8;
 
@@ -24,23 +18,15 @@ export default async function Page() {
   await requireAuthenticationPage("/app/wiki");
 
   return (
-    <SidebarLayout
-      sidebar={<WikiSidebar />}
-      mobileToggleLabel="Seiten"
-      mobileToggleIcon={<FaSitemap />}
-      sidebarWidthClassName="md:w-80"
-    >
-      <SuspenseWithErrorBoundaryTile>
-        <Landing />
-      </SuspenseWithErrorBoundaryTile>
-    </SidebarLayout>
+    <SuspenseWithErrorBoundaryTile>
+      <Landing />
+    </SuspenseWithErrorBoundaryTile>
   );
 }
 
 const Landing = async () => {
-  const [context, favoriteIds, recentVisitPageIds] = await Promise.all([
+  const [context, recentVisitPageIds] = await Promise.all([
     getWikiContext(),
-    getWikiFavoritePageIds(),
     getWikiRecentVisitPageIds(),
   ]);
   if (!context) forbidden();

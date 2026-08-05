@@ -4,7 +4,6 @@ import { authenticate, requireAuthenticationPage } from "@/modules/auth/server";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { EditableInput } from "@/modules/common/components/form/EditableInput";
-import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout";
 import { Link } from "@/modules/common/components/Link";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { formatDate } from "@/modules/common/utils/formatDate";
@@ -23,7 +22,6 @@ import { WikiPagePermissionsModal } from "@/modules/wiki/components/WikiPagePerm
 import { WikiPageSidebarModeModal } from "@/modules/wiki/components/WikiPageSidebarModeModal";
 import { WikiPageStaticContent } from "@/modules/wiki/components/WikiPageStaticContent";
 import { WikiPageTags } from "@/modules/wiki/components/WikiPageTags";
-import { WikiSidebar } from "@/modules/wiki/components/WikiSidebar";
 import {
   getWikiContext,
   type WikiContext,
@@ -53,7 +51,7 @@ import {
 } from "@sam-monorepo/wiki-editor";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { FaHistory, FaSitemap } from "react-icons/fa";
+import { FaHistory } from "react-icons/fa";
 
 type Params = PageProps<"/app/wiki/[pageId]/[[...slug]]">["params"];
 
@@ -95,16 +93,9 @@ export default async function Page(
   if (slug?.[0] !== page.slug) redirect(`/app/wiki/${page.id}/${page.slug}`);
 
   return (
-    <SidebarLayout
-      sidebar={<WikiSidebar />}
-      mobileToggleLabel="Seiten"
-      mobileToggleIcon={<FaSitemap />}
-      sidebarWidthClassName="md:w-80"
-    >
-      <SuspenseWithErrorBoundaryTile>
-        <PageContent context={context} page={page} permissions={permissions} />
-      </SuspenseWithErrorBoundaryTile>
-    </SidebarLayout>
+    <SuspenseWithErrorBoundaryTile>
+      <PageContent context={context} page={page} permissions={permissions} />
+    </SuspenseWithErrorBoundaryTile>
   );
 }
 
