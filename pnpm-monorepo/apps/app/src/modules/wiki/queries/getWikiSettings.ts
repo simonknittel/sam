@@ -3,6 +3,7 @@ import { authenticate } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { cache } from "react";
 import { z } from "zod";
+import { MAX_WIKI_FEATURED_PAGES } from "../utils/wikiFeaturedPages";
 import {
   wikiPageLinkSettingKey,
   type WikiPageLinkKey,
@@ -27,6 +28,25 @@ export const getWikiIframeAllowlist = cache(
       where: { key: WIKI_SETTING_IFRAME_ALLOWLIST },
     });
     const parsed = iframeAllowlistSchema.safeParse(setting?.value);
+    return parsed.success ? parsed.data : [];
+  }),
+);
+
+export const WIKI_SETTING_FEATURED_PAGES = "featuredPages";
+
+const featuredPagesSchema = z.array(z.cuid2()).max(MAX_WIKI_FEATURED_PAGES);
+
+/**
+ * Ids of the pages highlighted on the wiki landing page, in the order the
+ * wiki admins arranged them. Pages that have been deleted since stay in the
+ * list until it is saved again — `resolveWikiFeaturedPages()` drops them.
+ */
+export const getWikiFeaturedPageIds = cache(
+  withTrace("getWikiFeaturedPageIds", async (): Promise<string[]> => {
+    const setting = await prisma.wikiSetting.findUnique({
+      where: { key: WIKI_SETTING_FEATURED_PAGES },
+    });
+    const parsed = featuredPagesSchema.safeParse(setting?.value);
     return parsed.success ? parsed.data : [];
   }),
 );
