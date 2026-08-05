@@ -46,7 +46,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
     date: "2026-08-05",
     title: "Wiki-Seite auf dem Dashboard",
     tags: ["Neu", "Dashboard", "Wiki"],
-    isTracked: false,
+    isTracked: true,
     body: () => (
       <>
         <p>
