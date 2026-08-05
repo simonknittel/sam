@@ -88,6 +88,7 @@ export {
   normalizeWikiRoleCitizensConfig,
   type WikiRoleCitizensConfig,
 } from "./wikiRoleCitizensNode.js";
+export { WikiSmallTextMark } from "./wikiSmallTextMark.js";
 export {
   WIKI_TEXT_COLORS,
   WikiTextColorMark,

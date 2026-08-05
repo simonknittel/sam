@@ -8,12 +8,14 @@ import {
   FaStrikethrough,
   FaUnderline,
 } from "react-icons/fa";
+import { MdTextDecrease } from "react-icons/md";
 
 export const TEXT_FORMAT_OPTIONS = [
   { name: "bold", title: "Fett", icon: FaBold },
   { name: "italic", title: "Kursiv", icon: FaItalic },
   { name: "underline", title: "Unterstrichen", icon: FaUnderline },
   { name: "strike", title: "Durchgestrichen", icon: FaStrikethrough },
+  { name: "wikiSmallText", title: "Kleiner Text", icon: MdTextDecrease },
   { name: "code", title: "Code", icon: FaCode },
 ] as const;
 
@@ -39,6 +41,10 @@ export const toggleWikiTextFormat = (
 
     case "strike":
       chain.toggleStrike().run();
+      break;
+
+    case "wikiSmallText":
+      chain.toggleWikiSmallText().run();
       break;
 
     case "code":
