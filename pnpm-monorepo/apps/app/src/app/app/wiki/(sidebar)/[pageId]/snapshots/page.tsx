@@ -1,13 +1,10 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
-import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
-import { WikiSidebar } from "@/modules/wiki/components/WikiSidebar";
 import { WikiSnapshotsTable } from "@/modules/wiki/components/WikiSnapshotsTable";
 import { getWikiContext } from "@/modules/wiki/queries/getWikiContext";
 import { getAccessibleWikiPage } from "@/modules/wiki/utils/getAccessibleWikiPage";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { FaSitemap } from "react-icons/fa";
 
 type Params = PageProps<"/app/wiki/[pageId]/snapshots">["params"];
 
@@ -40,15 +37,8 @@ export default async function Page(
   if (!page) notFound();
 
   return (
-    <SidebarLayout
-      sidebar={<WikiSidebar />}
-      mobileToggleLabel="Seiten"
-      mobileToggleIcon={<FaSitemap />}
-      sidebarWidthClassName="md:w-80"
-    >
-      <SuspenseWithErrorBoundaryTile>
-        <WikiSnapshotsTable page={page} />
-      </SuspenseWithErrorBoundaryTile>
-    </SidebarLayout>
+    <SuspenseWithErrorBoundaryTile>
+      <WikiSnapshotsTable page={page} />
+    </SuspenseWithErrorBoundaryTile>
   );
 }

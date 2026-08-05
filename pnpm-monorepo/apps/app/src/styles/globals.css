@@ -38,6 +38,12 @@
   --font-mono: var(--font-roboto-mono), monospace;
 }
 
+/* Dark scrollbars to match the theme (thin thumb on a transparent track). */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-neutral-700) transparent;
+}
+
 @utility background-primary {
   background:
     radial-gradient(hsla(0, 0%, 100%, 0.03) 1px, transparent 0),

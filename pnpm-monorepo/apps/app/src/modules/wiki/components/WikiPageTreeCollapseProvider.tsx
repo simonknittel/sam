@@ -39,11 +39,12 @@ const WikiPageTreeCollapseContext = createContext<
 >(undefined);
 
 /**
- * The state the previous mount ended with. Every wiki page renders its own
- * sidebar, so navigating remounts this provider — and the page navigated to
- * may come from the router cache, carrying the cookie as it was when that
- * page was fetched. Without this, returning to an already visited page would
- * collapse everything the viewer expanded since.
+ * The state the previous mount ended with. The sidebar lives in a layout and
+ * survives navigations between the wiki routes showing it, but coming back
+ * from any other route remounts this provider — and that navigation may come
+ * from the router cache, carrying the cookie as it was when the layout was
+ * fetched. Without this, returning to the wiki would collapse everything the
+ * viewer expanded since.
  *
  * Written from an effect only, which never runs on the server, so requests
  * cannot read each other's state through this module.
