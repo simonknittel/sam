@@ -42,9 +42,9 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
-    key: "2026-08-05-wiki-hervorgehobene-seiten",
+    key: "2026-08-05-wiki-featured-seiten",
     date: "2026-08-05",
-    title: "Wiki: Hervorgehobene Seiten",
+    title: "Wiki: Featured Seiten",
     tags: ["Neu", "Wiki"],
     isTracked: false,
     body: () => (
@@ -57,8 +57,8 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
           >
             Wiki-Startseite
           </Link>{" "}
-          zeigt jetzt ganz oben einen Bereich mit hervorgehobenen Seiten – als
-          Kacheln mit Symbol, Titel und Datum der letzten Änderung. So sind die
+          zeigt jetzt ganz oben einen Bereich mit Featured Seiten – als Kacheln
+          mit Symbol, Titel und Datum der letzten Änderung. So sind die
           wichtigsten Seiten wie Handbuch oder Onboarding sofort erreichbar,
           statt im Inhaltsverzeichnis gesucht werden zu müssen.
         </p>

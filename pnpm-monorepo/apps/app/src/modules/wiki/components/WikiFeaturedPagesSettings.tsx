@@ -126,7 +126,7 @@ export const WikiFeaturedPagesSettings = ({ initialPages, targets }: Props) => {
         </ul>
       ) : (
         <p className="text-sm text-neutral-400">
-          Keine Seiten hervorgehoben. Der Bereich erscheint dann nicht auf der
+          Keine Featured Seiten. Der Bereich erscheint dann nicht auf der
           Wiki-Startseite.
         </p>
       )}
@@ -162,8 +162,8 @@ export const WikiFeaturedPagesSettings = ({ initialPages, targets }: Props) => {
 
       {hasReachedLimit && (
         <p className="mt-1 text-xs text-white/40">
-          Mehr als {MAX_WIKI_FEATURED_PAGES} Seiten können nicht hervorgehoben
-          werden. Entferne zuerst eine Seite.
+          Mehr als {MAX_WIKI_FEATURED_PAGES} Featured Seiten sind nicht möglich.
+          Entferne zuerst eine Seite.
         </p>
       )}
 
@@ -174,7 +174,7 @@ export const WikiFeaturedPagesSettings = ({ initialPages, targets }: Props) => {
 
         <Note
           type="info"
-          message="Hervorgehobene Seiten erscheinen ganz oben auf der Wiki-Startseite — allerdings nur für die Personen, die sie auch lesen dürfen."
+          message="Featured Seiten erscheinen ganz oben auf der Wiki-Startseite — allerdings nur für die Personen, die sie auch lesen dürfen."
         />
 
         <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">

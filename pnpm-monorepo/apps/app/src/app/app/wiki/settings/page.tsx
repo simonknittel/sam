@@ -64,8 +64,8 @@ const Settings = async () => {
     <div className="flex flex-col gap-4">
       <Tile heading="Featured Seiten">
         <p className="mb-4 text-sm text-neutral-400">
-          Diese Seiten werden in dieser Reihenfolge oben auf der Wiki-Startseite
-          hervorgehoben.
+          Diese Seiten erscheinen in dieser Reihenfolge im Featured-Bereich oben
+          auf der Wiki-Startseite.
         </p>
         <WikiFeaturedPagesSettings
           initialPages={featuredPages.map((page) => ({
