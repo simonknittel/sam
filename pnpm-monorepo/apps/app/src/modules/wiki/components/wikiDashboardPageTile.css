@@ -1,0 +1,81 @@
+/*
+ * The typography plugin's `> :first-child { margin-top: 0 }` reset carries
+ * no specificity (it is wrapped in :where()), so every node type
+ * wikiEditor.css gives an explicit margin to — callouts, grids, tables —
+ * keeps its top margin and doubles up with the panel's padding. On a wiki
+ * page that margin sits below the page header and reads fine; here the
+ * content starts the box, so both edges are reset.
+ */
+[data-wiki-dashboard-content] .prose > :first-child {
+  margin-top: 0;
+}
+
+[data-wiki-dashboard-content] .prose > :last-child {
+  margin-bottom: 0;
+}
+
+/*
+ * Scroll affordance at the bottom edge of the content box: visible while
+ * there is more to scroll to, gone once the end is reached. Driven by the
+ * scroll container's own progress instead of measuring in JavaScript — the
+ * panel must render its final layout on the server, and the overlay is
+ * positioned absolutely so it never moves anything. An inactive timeline
+ * (content fits, or a browser without scroll-driven animations) leaves the
+ * base opacity of 0, which is exactly the "nothing to scroll" state.
+ */
+/*
+ * The indicator is a sibling of the scroll container, not a descendant, so
+ * the panel has to lift the timeline into a scope both of them can see.
+ */
+[data-wiki-dashboard-content] {
+  timeline-scope: --wiki-dashboard-scroll;
+}
+
+[data-wiki-dashboard-scroller] {
+  scroll-timeline-name: --wiki-dashboard-scroll;
+  scroll-timeline-axis: block;
+}
+
+[data-wiki-dashboard-scroll-indicator] {
+  opacity: 0;
+  /* The panel's own background, so the fade blends into its bottom edge */
+  background-image: linear-gradient(
+    to bottom,
+    transparent,
+    var(--background-color-secondary-opaque)
+  );
+  animation-name: wiki-dashboard-scroll-indicator;
+  animation-timeline: --wiki-dashboard-scroll;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+  /* Spans the whole scroll range — the `animation` shorthand would reset
+     this to 0s and finish the animation immediately */
+  animation-duration: auto;
+}
+
+@keyframes wiki-dashboard-scroll-indicator {
+  0%,
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/*
+ * Nothing here moves, but the fade still reacts to scrolling — pinned to a
+ * constant instead, so the affordance survives without the reaction.
+ */
+@media (prefers-reduced-motion: reduce) {
+  [data-wiki-dashboard-scroll-indicator] {
+    animation-name: wiki-dashboard-scroll-indicator-constant;
+  }
+
+  @keyframes wiki-dashboard-scroll-indicator-constant {
+    0%,
+    100% {
+      opacity: 1;
+    }
+  }
+}

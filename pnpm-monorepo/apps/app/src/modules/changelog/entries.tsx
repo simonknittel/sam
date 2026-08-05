@@ -42,6 +42,37 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-08-05-wiki-seite-auf-dem-dashboard",
+    date: "2026-08-05",
+    title: "Wiki-Seite auf dem Dashboard",
+    tags: ["Neu", "Dashboard", "Wiki"],
+    isTracked: false,
+    body: () => (
+      <>
+        <p>
+          Das{" "}
+          <Link
+            href="/app/dashboard"
+            className="text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300"
+          >
+            Dashboard
+          </Link>{" "}
+          zeigt jetzt unter den Events den Inhalt einer Wiki-Seite – etwa für
+          Ankündigungen oder die wichtigsten Infos der Woche. Längere Seiten
+          lassen sich direkt im Kasten scrollen, darunter führt ein Link auf die
+          ganze Seite im Wiki.
+        </p>
+
+        <p>
+          Welche Seite das ist, legen die Wiki-Verwalter in den
+          Wiki-Einstellungen fest. Wie überall im Wiki gilt: Angezeigt wird sie
+          nur denen, die sie auch lesen dürfen.
+        </p>
+      </>
+    ),
+  },
+
+  {
     key: "2026-08-05-wiki-featured-seiten",
     date: "2026-08-05",
     title: "Wiki: Featured Seiten",

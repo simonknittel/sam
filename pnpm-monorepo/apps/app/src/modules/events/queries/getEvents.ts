@@ -7,6 +7,24 @@ import { cache } from "react";
 
 const EVENTS_PAGE_SIZE = 10;
 
+/** Events that have not ended yet — the filter behind the "open" status */
+const openEventsWhere = (now: Date): Prisma.EventWhereInput => ({
+  OR: [{ startTime: { gte: now } }, { endTime: { gte: now } }],
+});
+
+/**
+ * How many open events there are in total — for the dashboard tile, which
+ * only lists the next few of them.
+ */
+export const getOpenEventCount = cache(
+  withTrace("getOpenEventCount", async (): Promise<number> => {
+    const authentication = await requireAuthentication();
+    if (!(await authentication.authorize("event", "read"))) forbidden();
+
+    return prisma.event.count({ where: openEventsWhere(new Date()) });
+  }),
+);
+
 export const getEvents = cache(
   withTrace(
     "getEvents",
@@ -26,9 +44,7 @@ export const getEvents = cache(
       if (status === "closed") {
         where = { startTime: { lt: now } };
       } else if (status === "open") {
-        where = {
-          OR: [{ startTime: { gte: now } }, { endTime: { gte: now } }],
-        };
+        where = openEventsWhere(now);
       } else {
         // "all" - no additional filtering needed
         where = {};

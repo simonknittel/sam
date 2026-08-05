@@ -28,8 +28,8 @@ import {
   type WikiContextPage,
 } from "@/modules/wiki/queries/getWikiContext";
 import { getWikiFavoritePageIds } from "@/modules/wiki/queries/getWikiFavorites";
+import { getWikiPageStaticContent } from "@/modules/wiki/queries/getWikiPageStaticContent";
 import { getWikiPermissionRoles } from "@/modules/wiki/queries/getWikiPermissionRoles";
-import { getWikiIframeAllowlist } from "@/modules/wiki/queries/getWikiSettings";
 import { collectWikiPageDescendants } from "@/modules/wiki/utils/collectWikiPageDescendants";
 import { getAccessibleWikiPage } from "@/modules/wiki/utils/getAccessibleWikiPage";
 import { getWikiCollabColor } from "@/modules/wiki/utils/getWikiCollabColor";
@@ -38,17 +38,9 @@ import {
   type WikiPageTargetOption,
 } from "@/modules/wiki/utils/getWikiPageTargets";
 import { resolveWikiPageEffectivePermissions } from "@/modules/wiki/utils/resolveWikiPageEffectivePermissions";
-import { resolveWikiPageIndex } from "@/modules/wiki/utils/resolveWikiPageIndex";
 import { resolveWikiPageReadRoleIds } from "@/modules/wiki/utils/resolveWikiPageRolePermissions";
-import { resolveWikiRoleCitizens } from "@/modules/wiki/utils/resolveWikiRoleCitizens";
 import { trackWikiPageVisit } from "@/modules/wiki/utils/trackWikiPageVisit";
 import { WikiPageAccessType } from "@sam-monorepo/database/client";
-import {
-  collectWikiMentionedCitizenIds,
-  collectWikiPageIndexConfigs,
-  collectWikiRoleCitizensRoleIds,
-  collectWikiVariantLinkIds,
-} from "@sam-monorepo/wiki-editor";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { FaHistory } from "react-icons/fa";
@@ -112,35 +104,22 @@ const PageContent = async ({
   page,
   permissions,
 }: PageContentProps) => {
-  const [
-    effectiveOwner,
-    pageContent,
-    iframeAllowlist,
-    favoritePageIds,
-    pageTags,
-  ] = await Promise.all([
-    permissions.effectiveOwnerId
-      ? prisma.entity.findUnique({
-          where: { id: permissions.effectiveOwnerId },
-          select: { id: true, handle: true },
-        })
-      : Promise.resolve(null),
-    /**
-     * The content is intentionally not part of getWikiContext (which loads
-     * all pages on every wiki request) — it's only needed here.
-     */
-    prisma.wikiPage.findUnique({
-      where: { id: page.id },
-      select: { content: true },
-    }),
-    getWikiIframeAllowlist(),
-    getWikiFavoritePageIds(),
-    prisma.wikiPageTag.findMany({
-      where: { pageId: page.id },
-      select: { tag: { select: { id: true, name: true } } },
-      orderBy: { tag: { name: "asc" } },
-    }),
-  ]);
+  const [effectiveOwner, staticContent, favoritePageIds, pageTags] =
+    await Promise.all([
+      permissions.effectiveOwnerId
+        ? prisma.entity.findUnique({
+            where: { id: permissions.effectiveOwnerId },
+            select: { id: true, handle: true },
+          })
+        : Promise.resolve(null),
+      getWikiPageStaticContent(context, page.id),
+      getWikiFavoritePageIds(),
+      prisma.wikiPageTag.findMany({
+        where: { pageId: page.id },
+        select: { tag: { select: { id: true, name: true } } },
+        orderBy: { tag: { name: "asc" } },
+      }),
+    ]);
 
   const descendantIds = collectWikiPageDescendants(context.pages, page.id);
 
@@ -148,119 +127,6 @@ const PageContent = async ({
   const session = authentication ? authentication.session : null;
 
   trackWikiPageVisit(session?.entity?.id ?? null, page.id);
-  const canReadCitizens = Boolean(
-    authentication && (await authentication.authorize("citizen", "read")),
-  );
-
-  /**
-   * Current handles of the citizens mentioned in the content, so mentions
-   * follow handle changes. Mentions inserted after this render fall back to
-   * the handle stored in the document. Viewers without the citizen read
-   * permission get these insertion-time handles instead of live ones.
-   */
-  const mentionedCitizenIds = collectWikiMentionedCitizenIds(
-    pageContent?.content,
-  );
-  const mentionedCitizens = Object.fromEntries(
-    (canReadCitizens && mentionedCitizenIds.length > 0
-      ? await prisma.entity.findMany({
-          where: { id: { in: mentionedCitizenIds } },
-          select: { id: true, handle: true },
-        })
-      : []
-    ).map((citizen) => [citizen.id, { handle: citizen.handle }]),
-  );
-
-  /**
-   * Current names and manufacturer logos of the variants linked in the
-   * content, so links follow renames. Links inserted after this render
-   * resolve themselves client-side (see WikiVariantLinkNodeView).
-   * Deliberately not permission-filtered: the wiki shows every reader
-   * which ship is meant — only the variant page itself stays gated.
-   */
-  const linkedVariantIds = collectWikiVariantLinkIds(pageContent?.content);
-  const linkedVariants = Object.fromEntries(
-    (linkedVariantIds.length > 0
-      ? await prisma.variant.findMany({
-          where: { id: { in: linkedVariantIds } },
-          select: {
-            id: true,
-            name: true,
-            series: {
-              select: {
-                manufacturer: {
-                  select: {
-                    name: true,
-                    image: { select: { id: true, mimeType: true } },
-                  },
-                },
-              },
-            },
-          },
-        })
-      : []
-    ).map((variant) => [
-      variant.id,
-      {
-        name: variant.name,
-        manufacturerName: variant.series.manufacturer.name,
-        logo: variant.series.manufacturer.image
-          ? {
-              src: `https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${variant.series.manufacturer.image.id}`,
-              mimeType: variant.series.manufacturer.image.mimeType,
-            }
-          : undefined,
-      },
-    ]),
-  );
-
-  /**
-   * Pages this viewer can see, for rendering internal page links and the
-   * "[[" suggestion. Invisible pages stay out so their titles never leak.
-   */
-  const linkablePages = Object.fromEntries(
-    context.pages
-      .filter((candidate) => context.permissions.get(candidate.id)?.canRead)
-      .map((candidate) => [
-        candidate.id,
-        {
-          title: candidate.title,
-          slug: candidate.slug,
-          iconSrc: candidate.iconId
-            ? `https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${candidate.iconId}`
-            : undefined,
-        },
-      ]),
-  );
-
-  /**
-   * Page lists of the page-index nodes on this page, resolved for this
-   * viewer — for the static render and as the editor node views' initial
-   * data; the node views refetch so config changes show up without a
-   * reload.
-   */
-  const pageIndexes = Object.fromEntries(
-    await Promise.all(
-      collectWikiPageIndexConfigs(pageContent?.content).map(
-        async ({ key, config }) =>
-          [key, await resolveWikiPageIndex(context, page.id, config)] as const,
-      ),
-    ),
-  );
-
-  /**
-   * Members of the role-member nodes on this page, resolved for this viewer
-   * — for the static render and as the editor node views' initial data; the
-   * node views refetch so role changes show up without a reload.
-   */
-  const roleCitizens = Object.fromEntries(
-    await Promise.all(
-      collectWikiRoleCitizensRoleIds(pageContent?.content).map(
-        async (roleId) =>
-          [roleId, await resolveWikiRoleCitizens(roleId)] as const,
-      ),
-    ),
-  );
 
   const moveTargets: WikiPageTargetOption[] = permissions.canAdmin
     ? getManageableWikiPageTargets(context, page.id)
@@ -482,36 +348,18 @@ const PageContent = async ({
               userColor={getWikiCollabColor(
                 session?.entity?.id ?? session?.user.id ?? page.id,
               )}
-              iframeAllowlist={iframeAllowlist}
-              linkablePages={linkablePages}
-              mentionedCitizens={mentionedCitizens}
-              linkedVariants={linkedVariants}
-              pageIndexes={pageIndexes}
-              roleCitizens={roleCitizens}
+              iframeAllowlist={staticContent.iframeAllowlist}
+              linkablePages={staticContent.linkablePages}
+              mentionedCitizens={staticContent.mentionedCitizens}
+              linkedVariants={staticContent.linkedVariants}
+              pageIndexes={staticContent.pageIndexes}
+              roleCitizens={staticContent.roleCitizens}
               staticFallback={
-                <WikiPageStaticContent
-                  content={pageContent?.content}
-                  pageId={page.id}
-                  iframeAllowlist={iframeAllowlist}
-                  linkablePages={linkablePages}
-                  mentionedCitizens={mentionedCitizens}
-                  linkedVariants={linkedVariants}
-                  pageIndexes={pageIndexes}
-                  roleCitizens={roleCitizens}
-                />
+                <WikiPageStaticContent pageId={page.id} {...staticContent} />
               }
             />
           ) : (
-            <WikiPageStaticContent
-              content={pageContent?.content}
-              pageId={page.id}
-              iframeAllowlist={iframeAllowlist}
-              linkablePages={linkablePages}
-              mentionedCitizens={mentionedCitizens}
-              linkedVariants={linkedVariants}
-              pageIndexes={pageIndexes}
-              roleCitizens={roleCitizens}
-            />
+            <WikiPageStaticContent pageId={page.id} {...staticContent} />
           )}
         </div>
       </article>
