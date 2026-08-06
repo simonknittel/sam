@@ -49,11 +49,13 @@ export const WikiDashboardPageTile = async () => {
         className="relative w-full overflow-hidden bg-secondary corners-primary"
         data-wiki-dashboard-content=""
       >
+        {/*
+          Scroll chaining stays at the browser default: `overscroll-contain`
+          would swallow the gesture even when the content fits or the end is
+          already reached, leaving no way to scroll the dashboard on from here.
+        */}
         <div
-          className={clsx(
-            "overflow-y-auto overscroll-contain p-4",
-            MAX_CONTENT_HEIGHT,
-          )}
+          className={clsx("overflow-y-auto p-4", MAX_CONTENT_HEIGHT)}
           data-wiki-dashboard-scroller=""
         >
           <WikiPageStaticContent pageId={page.id} {...staticContent} />
