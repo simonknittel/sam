@@ -109,16 +109,20 @@ const renderWikiPageContent = (
           );
         },
         /**
-         * Mirrors TaskItem's renderHTML DOM, but with defaultChecked +
-         * disabled — the default mapping emits a controlled `checked` prop
-         * without onChange, which React warns about.
+         * Mirrors TaskItem's renderHTML DOM, but with defaultChecked — the
+         * default mapping emits a controlled `checked` prop without
+         * onChange, which React warns about. The box is deliberately not
+         * `disabled`: the editor's read-only view renders an enabled one
+         * (it just reverts the toggle), and a disabled box paints in the
+         * greyed-out system colors, so the swap would recolor every task.
+         * wikiEditor.css makes it inert instead.
          */
         taskItem: ({ node, children }) => {
           const checked = Boolean(node.attrs.checked);
           return (
             <li data-type="taskItem" data-checked={checked ? "true" : "false"}>
               <label>
-                <input type="checkbox" defaultChecked={checked} disabled />
+                <input type="checkbox" defaultChecked={checked} />
                 <span />
               </label>
               <div>{children as ReactNode}</div>
