@@ -16,6 +16,7 @@ import { renderToReactElement } from "@tiptap/static-renderer";
 import clsx from "clsx";
 import { createElement, type CSSProperties, type ReactNode } from "react";
 import { getWikiTwitchParentHost } from "../utils/getWikiTwitchParentHost";
+import { withoutWikiTrailingEmptyParagraph } from "../utils/wikiTrailingParagraph";
 import { WikiAttachmentCard } from "./WikiAttachmentCard";
 import { wikiBlockLayoutStyle } from "./wikiBlockLayoutStyle";
 import { WikiCitizenMentionChip } from "./WikiCitizenMentionNodeView";
@@ -246,7 +247,7 @@ export const WikiPageStaticContent = ({
     );
 
   const rendered = renderWikiPageContent(
-    content,
+    withoutWikiTrailingEmptyParagraph(content),
     iframeAllowlist,
     linkablePages,
     mentionedCitizens,

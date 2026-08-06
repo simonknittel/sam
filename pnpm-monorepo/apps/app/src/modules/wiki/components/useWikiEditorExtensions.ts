@@ -15,6 +15,7 @@ import { withWikiCitizenMentionPopover } from "./WikiCitizenMentionNodeView";
 import { WikiCitizenMentionSuggestion } from "./WikiCitizenMentionSuggestion";
 import { WikiDetailsSummaryToggle } from "./WikiDetailsSummaryToggle";
 import { createWikiFileHandler } from "./wikiEditorFiles";
+import { WikiHiddenTrailingParagraph } from "./WikiHiddenTrailingParagraph";
 import { WikiNodeClickSelection } from "./WikiNodeClickSelection";
 import type { WikiPageIndexEntry } from "./WikiPageIndexList";
 import { withWikiPageIndexNodeView } from "./WikiPageIndexNodeView";
@@ -129,6 +130,6 @@ export const useWikiEditorExtensions = ({
             canUploadAttachments,
           }),
         ]
-      : []),
+      : [WikiHiddenTrailingParagraph]),
   ];
 };

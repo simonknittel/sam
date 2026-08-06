@@ -14,10 +14,19 @@
  * (read-only included) it is one line tall. The static renderer emits a bare
  * <p></p>, which would collapse to zero height — matched here so the page
  * doesn't grow once the connected editor replaces the static first paint
- * (e.g. the trailing empty line editors leave at the bottom).
+ * (empty paragraphs authors leave between blocks as spacing; the trailing
+ * one is dropped from both renderings, see wikiTrailingParagraph.ts).
  */
 [data-wiki-static-content] p:empty {
   min-height: 1lh;
+}
+
+/*
+ * Decorated by WikiHiddenTrailingParagraph — the read-only editor's
+ * counterpart to the static render dropping that paragraph.
+ */
+.wiki-hidden-trailing-paragraph {
+  display: none;
 }
 
 /*
