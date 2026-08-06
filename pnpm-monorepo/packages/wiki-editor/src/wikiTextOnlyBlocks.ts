@@ -79,6 +79,11 @@ export interface WikiTextRestrictions {
   readonly inlineNodes: boolean;
   /** Formatting marks unavailable (code blocks allow no marks) */
   readonly marks: boolean;
+  /**
+   * The inline small-text mark is unavailable — the block or one of its
+   * ancestors is already small, where the mark would compound
+   */
+  readonly smallText: boolean;
   /** Text alignment unavailable */
   readonly alignment: boolean;
   /** Which slash-command entries apply at the caret */
@@ -91,6 +96,7 @@ const UNRESTRICTED: WikiTextRestrictions = {
   lists: false,
   inlineNodes: false,
   marks: false,
+  smallText: false,
   alignment: false,
   slashItems: "all",
 };
@@ -102,16 +108,23 @@ const UNRESTRICTED: WikiTextRestrictions = {
 const restrictionsForTextblock = (
   textblockTypeName: string | null,
   $position: ResolvedPos,
+  /** `textSize` of the textblock itself, which $position cannot reach */
+  textblockTextSize: unknown = null,
 ): WikiTextRestrictions => {
   let inTextOnlyContainer = false;
   let inListItem = false;
   let inGridCell = false;
+  let inSmallBlock = textblockTextSize != null;
   for (let depth = $position.depth; depth > 0; depth--) {
-    const ancestor = $position.node(depth).type.name;
-    if ((WIKI_TEXT_ONLY_BLOCK_TYPES as readonly string[]).includes(ancestor))
+    const ancestor = $position.node(depth);
+    const ancestorName = ancestor.type.name;
+    if (
+      (WIKI_TEXT_ONLY_BLOCK_TYPES as readonly string[]).includes(ancestorName)
+    )
       inTextOnlyContainer = true;
-    if (LIST_ITEM_TYPES.includes(ancestor)) inListItem = true;
-    if (ancestor === "wikiGridCell") inGridCell = true;
+    if (LIST_ITEM_TYPES.includes(ancestorName)) inListItem = true;
+    if (ancestorName === "wikiGridCell") inGridCell = true;
+    if (ancestor.attrs.textSize != null) inSmallBlock = true;
   }
 
   const inCodeBlock = textblockTypeName === "codeBlock";
@@ -125,6 +138,7 @@ const restrictionsForTextblock = (
     lists: (inTextOnlyContainer && !inListItem) || inLeaf,
     inlineNodes: inLeaf || inHeading,
     marks: inCodeBlock,
+    smallText: inSmallBlock,
     alignment: inTextOnlyContainer || inLeaf,
     slashItems: inLeaf
       ? "none"
@@ -146,6 +160,7 @@ const mergeRestrictions = (
   lists: a.lists && b.lists,
   inlineNodes: a.inlineNodes && b.inlineNodes,
   marks: a.marks && b.marks,
+  smallText: a.smallText && b.smallText,
   alignment: a.alignment && b.alignment,
   slashItems: a.slashItems === b.slashItems ? a.slashItems : "all",
 });
@@ -166,6 +181,7 @@ export const getWikiSelectionRestrictions = (
     const restrictions = restrictionsForTextblock(
       node.type.name,
       state.doc.resolve(position),
+      node.attrs.textSize,
     );
     merged = merged ? mergeRestrictions(merged, restrictions) : restrictions;
     return false;
@@ -241,14 +257,47 @@ export const stripWikiTextOnlyAlignment = (
 };
 
 /**
+ * A transaction removing the inline small-text mark from the content of
+ * every small block, appended to `transaction` (or NULL when there is
+ * nothing to fix). The two sizes would otherwise compound. The mark's
+ * button is disabled inside small blocks (see the `smallText` restriction
+ * above), so this covers the paths that bypass it: switching a block to
+ * small, paste, drag'n'drop and remote collaborators.
+ */
+export const stripWikiSmallTextInSmallBlocks = (
+  state: EditorState,
+  transaction: Transaction | null = null,
+): Transaction | null => {
+  const markType = state.schema.marks.wikiSmallText;
+  if (!markType) return transaction;
+
+  state.doc.descendants((node, position) => {
+    if (node.attrs.textSize == null) return true;
+    // Descending would only schedule the same removal again for nested
+    // small blocks — the range below already covers the whole subtree
+    if (node.rangeHasMark(0, node.content.size, markType)) {
+      transaction ??= state.tr;
+      transaction.removeMark(
+        position + 1,
+        position + node.nodeSize - 1,
+        markType,
+      );
+    }
+    return false;
+  });
+  return transaction;
+};
+
+/**
  * The content expressions above keep foreign blocks out of text-only
- * containers, but two attribute families live on the nodes themselves and
- * survive schema fitting — this guard strips them again wherever a node
- * lands where they don't apply (paste, drag'n'drop, remote collab edits):
- * `textAlign` on paragraphs inside text-only containers, and the
+ * containers, but some presentation lives on the nodes themselves and
+ * survives schema fitting — this guard strips it again wherever a node
+ * lands where it doesn't apply (paste, drag'n'drop, remote collab edits):
+ * `textAlign` on paragraphs inside text-only containers, the
  * top-level-only `widthPx`/`align` layout on nested blocks (see
- * stripWikiNestedBlockLayout). Read-only editors never dispatch the
- * fix-up: with collaboration they must not produce document updates.
+ * stripWikiNestedBlockLayout), and the small-text mark inside small
+ * blocks. Read-only editors never dispatch the fix-up: with collaboration
+ * they must not produce document updates.
  */
 export const WikiTextOnlyBlockGuard = Extension.create({
   name: "wikiTextOnlyBlockGuard",
@@ -263,9 +312,12 @@ export const WikiTextOnlyBlockGuard = Extension.create({
           if (!editor.isEditable) return null;
           if (!transactions.some((transaction) => transaction.docChanged))
             return null;
-          return stripWikiNestedBlockLayout(
+          return stripWikiSmallTextInSmallBlocks(
             newState,
-            stripWikiTextOnlyAlignment(newState),
+            stripWikiNestedBlockLayout(
+              newState,
+              stripWikiTextOnlyAlignment(newState),
+            ),
           );
         },
       }),

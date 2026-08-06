@@ -159,6 +159,7 @@ describe("grid restrictions", () => {
       lists: false,
       inlineNodes: false,
       marks: false,
+      smallText: false,
       alignment: false,
       slashItems: "all",
     });

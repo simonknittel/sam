@@ -241,6 +241,7 @@ describe("wiki text restrictions", () => {
       lists: false,
       inlineNodes: false,
       marks: false,
+      smallText: false,
       alignment: false,
       slashItems: "all",
     });
@@ -253,6 +254,7 @@ describe("wiki text restrictions", () => {
       lists: false,
       inlineNodes: true,
       marks: false,
+      smallText: false,
       alignment: false,
       slashItems: "noInline",
     });
@@ -265,6 +267,7 @@ describe("wiki text restrictions", () => {
       lists: true,
       inlineNodes: true,
       marks: true,
+      smallText: false,
       alignment: true,
       slashItems: "none",
     });
@@ -277,6 +280,7 @@ describe("wiki text restrictions", () => {
       lists: false,
       inlineNodes: false,
       marks: false,
+      smallText: false,
       alignment: true,
       slashItems: "textOnly",
     });
@@ -289,6 +293,7 @@ describe("wiki text restrictions", () => {
       lists: true,
       inlineNodes: true,
       marks: false,
+      smallText: false,
       alignment: true,
       slashItems: "none",
     });
@@ -301,6 +306,7 @@ describe("wiki text restrictions", () => {
       lists: true,
       inlineNodes: false,
       marks: false,
+      smallText: false,
       alignment: true,
       slashItems: "textOnly",
     });

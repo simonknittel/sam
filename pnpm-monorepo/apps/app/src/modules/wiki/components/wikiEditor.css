@@ -683,6 +683,30 @@
   font-size: 0.75em;
 }
 
+/* Small text blocks (the `textSize` attribute of paragraphs and lists).
+   Deliberately no line-height: the unitless value inherited from .prose
+   scales the leading with the font size, which is the whole point of the
+   block variant — the mark above shrinks the glyphs but leaves the line
+   boxes at the block's strut height. The em-based paragraph margins
+   shrink along with it. Same factor as the mark, so both look alike. */
+.prose [data-text-size="small"] {
+  font-size: 0.75em;
+}
+
+/* `em` compounds, so a small block inside another small block (a small
+   paragraph in a small list, nested small lists) would shrink twice */
+.prose [data-text-size="small"] [data-text-size="small"] {
+  font-size: 1em;
+}
+
+/* Same for the mark inside a small block. WikiTextOnlyBlockGuard strips
+   that combination, but only in editable sessions — read-only editors and
+   the static renderer never dispatch its fix-up, so content that acquired
+   it elsewhere (import, an older app version) would compound here. */
+.prose [data-text-size="small"] small {
+  font-size: 1em;
+}
+
 /* Inline code (code mark): subtle chip instead of the typography plugin's
    default (which wraps inline code in literal backticks). Code blocks
    (pre > code) are unaffected. */

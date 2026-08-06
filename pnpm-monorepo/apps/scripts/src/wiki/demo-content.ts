@@ -133,6 +133,12 @@ const alignedParagraph = (
   content: inline(content),
 });
 
+const smallParagraph = (...content: (DemoNode | string)[]): DemoNode => ({
+  type: "paragraph",
+  attrs: { textSize: "small" },
+  content: inline(content),
+});
+
 const heading = (level: 1 | 2 | 3, value: string): DemoNode => ({
   type: "heading",
   attrs: { level },
@@ -285,6 +291,20 @@ const documentContent: DemoNode = {
       ]),
       ".",
     ),
+    smallParagraph(
+      "Ganze Blöcke lassen sich auf „Kleiner Text“ stellen — anders als die ",
+      text("Formatierung", mark("wikiSmallText")),
+      " schrumpft dabei auch der Zeilenabstand, was sich erst über mehrere ",
+      "Zeilen zeigt: für Bildunterschriften, Fußnoten und Kleingedrucktes.",
+    ),
+    {
+      type: "bulletList",
+      attrs: { textSize: "small" },
+      content: [
+        listItem(paragraph("Listen können ebenfalls klein sein")),
+        listItem(paragraph("Der Schalter dafür sitzt im Menü der Liste")),
+      ],
+    },
     alignedParagraph("center", "Zentrierter Absatz."),
     alignedParagraph("right", "Rechtsbündiger Absatz."),
     paragraph(

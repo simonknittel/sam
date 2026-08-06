@@ -5,11 +5,13 @@ import {
   WIKI_HIGHLIGHT_COLORS,
   WIKI_TEXT_COLORS,
   getWikiPositionRestrictions,
+  getWikiSelectionRestrictions,
   type WikiCalloutColor,
   type WikiGridVerticalAlign,
   type WikiHighlightColor,
   type WikiNodeAlignment,
   type WikiTextColor,
+  type WikiTextSize,
 } from "@sam-monorepo/wiki-editor";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { NodeSelection, TextSelection } from "@tiptap/pm/state";
@@ -146,6 +148,8 @@ export type WikiBlockMenuState = {
   readonly nodeSize: number;
   /** wikiGrid only: vertical alignment of the cell contents */
   readonly verticalAlign: WikiGridVerticalAlign;
+  /** Lists only: block-level text size of the whole list */
+  readonly textSize: WikiTextSize | null;
   readonly align: WikiNodeAlignment;
   readonly widthPx: number | null;
   /** Width/position only apply to direct children of the document */
@@ -159,6 +163,11 @@ export type WikiTextSelectionMenuState = {
   readonly activeMarks: readonly string[];
   readonly activeTextColor: WikiTextColor | null;
   readonly activeHighlightColor: WikiHighlightColor | null;
+  /**
+   * The block is already small, so the inline small-text mark would only
+   * compound — its button is shown disabled
+   */
+  readonly smallTextUnavailable: boolean;
   /** Whether the selection carries a link mark (the link button prefills) */
   readonly hasLink: boolean;
 } & WikiMenuTarget;
@@ -169,6 +178,8 @@ export type WikiTextNodeMenuState = {
   readonly position: number;
   readonly nodeSize: number;
   readonly headingLevel: number | null;
+  /** Paragraphs only: NULL for headings and for the normal size */
+  readonly textSize: WikiTextSize | null;
   readonly textAlign: WikiNodeAlignment;
   readonly align: WikiNodeAlignment;
   readonly widthPx: number | null;
@@ -268,6 +279,7 @@ const textSelectionMenu = (
       ) ?? null)
     : null,
   hasLink: editor.schema.marks.link ? editor.isActive("link") : false,
+  smallTextUnavailable: getWikiSelectionRestrictions(editor.state).smallText,
   ...target,
 });
 
@@ -281,6 +293,7 @@ const textNodeMenu = (
   position,
   nodeSize: node.nodeSize,
   headingLevel: textHeadingLevel(node),
+  textSize: (node.attrs.textSize ?? null) as WikiTextSize | null,
   textAlign: (node.attrs.textAlign ?? "left") as WikiNodeAlignment,
   align: (node.attrs.align ?? "center") as WikiNodeAlignment,
   widthPx: menuWidthPx(node),
@@ -361,6 +374,7 @@ export const wikiMenuFromElement = (
       nodeSize: resolved.node.nodeSize,
       verticalAlign: (resolved.node.attrs.verticalAlign ??
         null) as WikiGridVerticalAlign,
+      textSize: (resolved.node.attrs.textSize ?? null) as WikiTextSize | null,
       align: (resolved.node.attrs.align ?? "center") as WikiNodeAlignment,
       widthPx: menuWidthPx(resolved.node),
       topLevel: isTopLevel(editor, resolved.position),

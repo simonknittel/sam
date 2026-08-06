@@ -1,8 +1,11 @@
 "use client";
 
-import type { WikiGridVerticalAlign } from "@sam-monorepo/wiki-editor";
+import {
+  WIKI_TEXT_SIZE_LIST_TYPES,
+  type WikiGridVerticalAlign,
+} from "@sam-monorepo/wiki-editor";
 import type { Editor } from "@tiptap/react";
-import { FaTrash } from "react-icons/fa";
+import { FaParagraph, FaTrash } from "react-icons/fa";
 import { MdHeight, MdVerticalAlignCenter } from "react-icons/md";
 import { ToolbarButton } from "../toolbar/ToolbarButton";
 import { ToolbarDivider } from "../toolbar/ToolbarDivider";
@@ -30,6 +33,20 @@ export const WikiBlockMenuActions = ({ editor, menu }: Props) => {
           menu.position,
           "verticalAlign",
           menu.verticalAlign === value ? null : value,
+        );
+        return true;
+      })
+      .run();
+  };
+
+  const toggleListTextSize = () => {
+    editor
+      .chain()
+      .command(({ tr }) => {
+        tr.setNodeAttribute(
+          menu.position,
+          "textSize",
+          menu.textSize === "small" ? null : "small",
         );
         return true;
       })
@@ -67,6 +84,24 @@ export const WikiBlockMenuActions = ({ editor, menu }: Props) => {
             onClick={() => toggleGridVerticalAlign("stretch")}
           >
             <MdHeight />
+          </ToolbarButton>
+
+          <ToolbarDivider />
+        </>
+      )}
+
+      {(WIKI_TEXT_SIZE_LIST_TYPES as readonly string[]).includes(
+        menu.typeName,
+      ) && (
+        <>
+          {/* Lists are switched as a whole from here — the paragraph type
+              row is unavailable inside list items */}
+          <ToolbarButton
+            title="Kleiner Text"
+            isActive={menu.textSize === "small"}
+            onClick={toggleListTextSize}
+          >
+            <FaParagraph className="text-[0.6rem]" />
           </ToolbarButton>
 
           <ToolbarDivider />

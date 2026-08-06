@@ -104,8 +104,34 @@ export const WIKI_SLASH_COMMAND_ITEMS: readonly WikiSlashCommandItem[] = [
     icon: <FaParagraph />,
     keywords: ["text", "paragraph", "absatz", "p"],
     allowedInTextOnlyBlock: true,
+    /**
+     * setNode copies the block's attributes and merges the given ones on
+     * top, so the size has to be passed in BOTH directions — a bare
+     * setParagraph() would leave a small paragraph small. This entry is
+     * therefore also the way back out of "Kleiner Text" inside quotes,
+     * table cells and list items, where the type row is unavailable.
+     */
     run: (editor, range) =>
-      editor.chain().focus().deleteRange(range).setParagraph().run(),
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .setNode("paragraph", { textSize: null })
+        .run(),
+  },
+  {
+    title: "Kleiner Text",
+    /** The same glyph as "Text" at a smaller size, like the type picker */
+    icon: <FaParagraph className="text-[0.6rem]" />,
+    keywords: ["klein", "small", "fein", "kleingedrucktes"],
+    allowedInTextOnlyBlock: true,
+    run: (editor, range) =>
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .setNode("paragraph", { textSize: "small" })
+        .run(),
   },
   ...([1, 2, 3] as const).map((level) => ({
     title: `Überschrift ${level}`,
