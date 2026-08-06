@@ -82,6 +82,14 @@
 }
 
 /*
+ * Decorated by WikiHiddenTrailingParagraph — the read-only editor's
+ * counterpart to the static render dropping that paragraph.
+ */
+.wiki-hidden-trailing-paragraph {
+  display: none;
+}
+
+/*
  * The typography plugin zeroes the top margin of anything directly following
  * an h2/h3/h4 (or hr) but has no such rule for h1, so an h2 right below an
  * h1 kept its 2em top margin — matched here for h1.
