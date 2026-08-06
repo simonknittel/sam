@@ -10,14 +10,75 @@
 }
 
 /*
- * ProseMirror gives every empty paragraph a trailing <br>, so in the editor
+ * ProseMirror gives every empty text block a trailing <br>, so in the editor
  * (read-only included) it is one line tall. The static renderer emits a bare
- * <p></p>, which would collapse to zero height — matched here so the page
- * doesn't grow once the connected editor replaces the static first paint
- * (e.g. the trailing empty line editors leave at the bottom).
+ * <p></p> — no inline content at all, and therefore no line box: the block
+ * collapses to zero height, and it contributes no baseline either. The
+ * missing baseline is the subtler half: table cells align on their first
+ * baseline, so a cell starting with an empty paragraph would fall through to
+ * the baseline of the line BELOW it and drag the whole row's content down
+ * with it. The empty inline-block restores the line box — its strut sets both
+ * the height and the baseline, exactly like the editor's <br>.
  */
-[data-wiki-static-content] p:empty {
-  min-height: 1lh;
+[data-wiki-static-content]
+  :is(p, h1, h2, h3, h4, h5, h6, summary):empty::after {
+  content: "";
+  display: inline-block;
+}
+
+/*
+ * Text layout of the editor, mirrored onto the static render.
+ *
+ * Tiptap injects a `.ProseMirror` block of its own when an editor is
+ * created (its `injectCSS` option), and three of its declarations change
+ * how text is laid out: `word-wrap: break-word` breaks over-long words
+ * instead of letting them overflow, `white-space: break-spaces` keeps
+ * consecutive and trailing spaces instead of collapsing them, and the
+ * ligature settings change the glyph widths. HTML's defaults do none of
+ * that, so the same document wraps into a different number of lines in
+ * the static first paint than in the connected editor — every paragraph,
+ * table cell and list item can gain or lose a line the moment the editor
+ * takes over. The editor is the authoritative rendering here (it is what
+ * the text was written in), so the static render follows it.
+ */
+[data-wiki-static-content] {
+  overflow-wrap: break-word;
+  font-variant-ligatures: none;
+  /* Ligature kill-switch for browsers ignoring the property above */
+  font-feature-settings: "liga" 0;
+}
+
+/*
+ * Only the text blocks, not the whole subtree: Tiptap's block resets
+ * `white-space` to normal inside `[contenteditable="false"]`, which is
+ * every node view (attachment card, page index, role members, …), and
+ * those hold no text blocks. The inline atoms sit inside a paragraph and
+ * do need the explicit reset below.
+ */
+[data-wiki-static-content] :is(p, h1, h2, h3, h4, h5, h6, summary) {
+  /* Tiptap's own fallback order — both sides have to degrade alike */
+  white-space: pre-wrap;
+  white-space: break-spaces;
+}
+
+[data-wiki-static-content]
+  :is([data-wiki-citizen-mention], [data-wiki-variant-link]) {
+  white-space: normal;
+}
+
+/* Matches `.ProseMirror pre` — code lines wrap instead of scrolling */
+[data-wiki-static-content] pre {
+  white-space: pre-wrap;
+}
+
+/*
+ * Task boxes render enabled so they look the same as in the editor (see
+ * the taskItem mapping in WikiPageStaticContent) — nothing here can write
+ * back to the document, so the label swallows the clicks that would
+ * otherwise toggle the box.
+ */
+[data-wiki-static-content] ul[data-type="taskList"] li > label {
+  pointer-events: none;
 }
 
 /*
