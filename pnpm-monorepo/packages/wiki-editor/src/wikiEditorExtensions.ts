@@ -49,6 +49,7 @@ import {
   WikiTextAlign,
   WikiTextOnlyBlockGuard,
 } from "./wikiTextOnlyBlocks.js";
+import { WikiTextSize, withWikiTextSize } from "./wikiTextSize.js";
 import {
   WikiVariantLink,
   type WikiLinkedVariant,
@@ -114,12 +115,13 @@ const WikiDetailsContent = DetailsContent.extend({
  * attachment, …) carry the attributes in their own definitions instead —
  * the app extends those exports directly (e.g. with node views), and an
  * assembly-time wrapper would be lost in that replacement. Space-hungry
- * blocks default to the wide preset instead of narrow.
+ * blocks default to the wide preset instead of narrow. Paragraphs and
+ * lists additionally carry the block-level text size (wikiTextSize.ts).
  */
-const WikiParagraph = withWikiBlockLayout(Paragraph);
-const WikiBulletList = withWikiBlockLayout(BulletList);
-const WikiOrderedList = withWikiBlockLayout(OrderedList);
-const WikiTaskList = withWikiBlockLayout(TaskList);
+const WikiParagraph = withWikiTextSize(withWikiBlockLayout(Paragraph));
+const WikiBulletList = withWikiTextSize(withWikiBlockLayout(BulletList));
+const WikiOrderedList = withWikiTextSize(withWikiBlockLayout(OrderedList));
+const WikiTaskList = withWikiTextSize(withWikiBlockLayout(TaskList));
 const WikiHorizontalRule = withWikiBlockLayout(HorizontalRule);
 /**
  * Type conversions copy the source block's attributes (Tiptap's setNode),
@@ -265,6 +267,7 @@ export const getWikiEditorExtensions = (
     // colors
     WikiTextColorMark,
     WikiTextAlign.configure({ types: ["heading", "paragraph"] }),
+    WikiTextSize,
     WikiTextOnlyBlockGuard,
     WikiImage,
     WikiAttachment,

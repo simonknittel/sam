@@ -15,7 +15,8 @@ export const TEXT_FORMAT_OPTIONS = [
   { name: "italic", title: "Kursiv", icon: FaItalic },
   { name: "underline", title: "Unterstrichen", icon: FaUnderline },
   { name: "strike", title: "Durchgestrichen", icon: FaStrikethrough },
-  { name: "wikiSmallText", title: "Kleiner Text", icon: MdTextDecrease },
+  // Not "Kleiner Text" — that is the block type in the type picker
+  { name: "wikiSmallText", title: "Text verkleinern", icon: MdTextDecrease },
   { name: "code", title: "Code", icon: FaCode },
 ] as const;
 

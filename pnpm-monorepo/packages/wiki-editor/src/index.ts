@@ -98,9 +98,14 @@ export {
   WIKI_TEXT_ONLY_BLOCK_TYPES,
   getWikiPositionRestrictions,
   getWikiSelectionRestrictions,
+  stripWikiSmallTextInSmallBlocks,
   stripWikiTextOnlyAlignment,
   type WikiTextRestrictions,
 } from "./wikiTextOnlyBlocks.js";
+export {
+  WIKI_TEXT_SIZE_LIST_TYPES,
+  type WikiTextSize,
+} from "./wikiTextSize.js";
 export {
   WikiVariantLink,
   collectWikiVariantLinkIds,

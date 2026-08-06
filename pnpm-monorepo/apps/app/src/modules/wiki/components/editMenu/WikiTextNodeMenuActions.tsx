@@ -1,6 +1,9 @@
 "use client";
 
-import type { WikiNodeAlignment } from "@sam-monorepo/wiki-editor";
+import type {
+  WikiNodeAlignment,
+  WikiTextSize,
+} from "@sam-monorepo/wiki-editor";
 import type { Editor } from "@tiptap/react";
 import { FaParagraph, FaTrash } from "react-icons/fa";
 import { ALIGNMENT_OPTIONS } from "../toolbar/alignments";
@@ -30,12 +33,17 @@ export const WikiTextNodeMenuActions = ({ editor, menu }: Props) => {
       .run();
   };
 
-  const setTextParagraph = () => {
+  /**
+   * setNode copies the block's attributes and merges the given ones on
+   * top, so the size has to be passed in BOTH directions — a bare
+   * setParagraph() would leave a small paragraph small.
+   */
+  const setTextParagraph = (textSize: WikiTextSize | null) => {
     editor
       .chain()
       .focus()
       .setTextSelection(menu.position + 1)
-      .setParagraph()
+      .setNode("paragraph", { textSize })
       .run();
   };
 
@@ -77,10 +85,20 @@ export const WikiTextNodeMenuActions = ({ editor, menu }: Props) => {
           ))}
           <ToolbarButton
             title="Text"
-            isActive={menu.headingLevel === null}
-            onClick={setTextParagraph}
+            isActive={menu.headingLevel === null && menu.textSize === null}
+            onClick={() => setTextParagraph(null)}
           >
             <FaParagraph />
+          </ToolbarButton>
+
+          {/* The same glyph as "Text" at a smaller size — the contrast
+              between the two next to each other tells them apart */}
+          <ToolbarButton
+            title="Kleiner Text"
+            isActive={menu.textSize === "small"}
+            onClick={() => setTextParagraph("small")}
+          >
+            <FaParagraph className="text-[0.6rem]" />
           </ToolbarButton>
 
           <ToolbarDivider />

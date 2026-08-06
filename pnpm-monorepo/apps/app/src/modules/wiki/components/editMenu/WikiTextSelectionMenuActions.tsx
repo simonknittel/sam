@@ -55,6 +55,8 @@ export const WikiTextSelectionMenuActions = ({
           key={name}
           title={title}
           isActive={menu.activeMarks.includes(name)}
+          // Inside a small block the mark would only compound
+          disabled={name === "wikiSmallText" && menu.smallTextUnavailable}
           onClick={() => toggleTextMark(name)}
         >
           <Icon />
