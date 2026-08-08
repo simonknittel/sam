@@ -75,7 +75,7 @@ const broadcastSaveState = (
  * Create an AUTO snapshot when the newest snapshot of the page is older
  * than this and the content changed since.
  */
-const AUTO_SNAPSHOT_MIN_INTERVAL_MS = 30 * 60 * 1000;
+const AUTO_SNAPSHOT_MIN_INTERVAL_MS = 5 * 60 * 1000;
 /** AUTO snapshots kept per page (MANUAL ones are kept forever) */
 const AUTO_SNAPSHOT_RETENTION = 50;
 
@@ -114,8 +114,8 @@ const respondJson = (
 
 /**
  * Preserves the page's stored content as an automatic snapshot before it
- * is overwritten, at most every 30 minutes: any state is snapshotted right
- * before edits replace it, so there is always a restore point at most 30
+ * is overwritten, at most every 5 minutes: any state is snapshotted right
+ * before edits replace it, so there is always a restore point at most 5
  * minutes behind — without a manual "save" step.
  *
  * The common case (a recent snapshot exists) costs one indexed query; the

@@ -53,7 +53,7 @@ export const WikiSnapshotsTable = async ({ className, page }: Props) => {
 
       <p className="mt-2 mb-4 text-sm text-neutral-400">
         Snapshots entstehen automatisch, während die Seite bearbeitet wird
-        (höchstens alle 30 Minuten); die letzten 50 werden aufbewahrt. Vor dem
+        (höchstens alle 5 Minuten); die letzten 50 werden aufbewahrt. Vor dem
         Wiederherstellen und Importieren wird der aktuelle Stand zusätzlich als
         dauerhafte Sicherung festgehalten.
       </p>
