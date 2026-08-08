@@ -17,6 +17,9 @@ Detect suspicious activity in the AWS account — especially usage of a leaked a
 - Log file validation gets enabled on the trail (free tamper-evidence, currently off).
 - The AWS Console Mobile App channel association on the existing notification configuration stays unmanaged by Terraform — it is tied to Simon's device and SSO identity, not infrastructure.
 - Expected costs: $0.20/month for the two alarms, cents for CloudWatch Logs ingestion at current volume (~410 MB compressed over 17 months), GuardDuty an estimated $1–2/month after its 30-day free trial. Fits the $10/month budget.
+- All CloudWatch alarms follow the naming schema `<title> | <component name> [SAM] (<Test|Prod>)` (added during implementation), driven by a new required `environment` variable (`Test`/`Prod`). Renaming replaces the alarm resources, which is safe — no alarm history worth keeping.
+- ap-south-1 is excluded from GuardDuty: the network the applies run on blocks India traffic, so the regional API endpoint is unreachable and Terraform could neither create nor refresh resources there. Confirmed via the log group that the create call never reached AWS (no orphan detector). The multi-region trail still records ap-south-1 activity server-side, so the CloudTrail alarms cover that region.
+- CreateDetector via API auto-enabled the default protection plans (S3_DATA_EVENTS, EKS_AUDIT_LOGS, EBS_MALWARE_PROTECTION, RDS_LOGIN_EVENTS, LAMBDA_NETWORK_LOGS) contrary to the plan's assumption — explicit `aws_guardduty_detector_feature` resources now pin all six paid features (incl. RUNTIME_MONITORING) to DISABLED in every managed region.
 
 ### Out of scope
 
@@ -94,7 +97,7 @@ Deliver the trail to a CloudWatch Logs log group and create the metric filters a
 
 #### Status
 
-Not started.
+Done — applied and verified end-to-end on 2026-08-08: log streams from all regions arrive in the log group; a real AccessDenied burst (4 denied calls via a temporary permissionless role, since deleted) drove the unauthorized-API-calls alarm into ALARM; the critical-activity alarm fired on its own from the apply's IAM policy changes and recovered; User Notifications generated notification events for every transition (delivery confirmed server-side via `list-notification-events` — which must be queried against the notification hub region eu-central-1, not us-east-1).
 
 #### Steps
 
@@ -122,7 +125,7 @@ Enable GuardDuty detectors in every active region and email all findings via a n
 
 #### Status
 
-Not started.
+Mostly done — 16 detectors (all enabled regions except the unreachable ap-south-1) plus the guardduty-findings notification configuration applied on 2026-08-08; sample findings created in eu-central-1 and us-east-1. Outstanding: the final apply pins the auto-enabled paid protection plans to DISABLED (96 feature resources), and the finding emails need inbox confirmation.
 
 #### Steps
 

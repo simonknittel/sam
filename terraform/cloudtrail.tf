@@ -10,6 +10,12 @@ resource "aws_cloudtrail" "management_events" {
   is_multi_region_trail         = true
   enable_log_file_validation    = true
 
+  # The log group only exists to drive the metric filters in
+  # cloudtrail-alarms.tf — the S3 bucket is the long-term archive. CloudTrail
+  # requires the ":*" suffix on the log group ARN.
+  cloud_watch_logs_group_arn = "${aws_cloudwatch_log_group.cloudtrail.arn}:*"
+  cloud_watch_logs_role_arn  = aws_iam_role.cloudtrail_cloudwatch_logs.arn
+
   advanced_event_selector {
     name = "Management events selector"
 
@@ -20,6 +26,55 @@ resource "aws_cloudtrail" "management_events" {
   }
 
   depends_on = [aws_s3_bucket_policy.cloudtrail]
+}
+
+resource "aws_cloudwatch_log_group" "cloudtrail" {
+  name = "cloudtrail-management-events"
+
+  retention_in_days = 90
+}
+
+resource "aws_iam_role" "cloudtrail_cloudwatch_logs" {
+  name = "cloudtrail-cloudwatch-logs"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "cloudtrail.amazonaws.com"
+        }
+        Condition = {
+          StringEquals = {
+            "aws:SourceArn" = local.cloudtrail_trail_arn
+          }
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "cloudtrail_cloudwatch_logs" {
+  role = aws_iam_role.cloudtrail_cloudwatch_logs.id
+  name = "cloudwatch-logs"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+        ]
+        Effect = "Allow"
+        Resource = [
+          "${aws_cloudwatch_log_group.cloudtrail.arn}:log-stream:*"
+        ]
+      }
+    ]
+  })
 }
 
 resource "aws_s3_bucket" "cloudtrail" {
