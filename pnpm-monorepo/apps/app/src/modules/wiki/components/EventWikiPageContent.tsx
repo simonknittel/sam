@@ -193,7 +193,6 @@ export const EventWikiPageContent = async ({ context, page }: Props) => {
                 readScope={page.eventReadScope}
                 readScopePositionId={page.eventReadScopePositionId}
                 editScope={page.eventEditScope}
-                editScopePositionId={page.eventEditScopePositionId}
                 imageUploadability={page.imageUploadability}
                 attachmentUploadability={page.attachmentUploadability}
                 positionOptions={getEventWikiPositionOptions(context.positions)}

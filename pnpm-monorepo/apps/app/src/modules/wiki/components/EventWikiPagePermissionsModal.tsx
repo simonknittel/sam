@@ -42,7 +42,6 @@ interface Props {
   readonly readScope: WikiPageEventScope;
   readonly readScopePositionId: string | null;
   readonly editScope: WikiPageEventScope;
-  readonly editScopePositionId: string | null;
   readonly imageUploadability: WikiPageUploadability;
   readonly attachmentUploadability: WikiPageUploadability;
   /** Lineup positions in depth-first tree order, for the POSITION scope */
@@ -82,7 +81,6 @@ export const EventWikiPagePermissionsModal = ({
   readScope: initialReadScope,
   readScopePositionId: initialReadPositionId,
   editScope: initialEditScope,
-  editScopePositionId: initialEditPositionId,
   imageUploadability: initialImageUploadability,
   attachmentUploadability: initialAttachmentUploadability,
   positionOptions,
@@ -97,9 +95,6 @@ export const EventWikiPagePermissionsModal = ({
     initialReadPositionId ?? "",
   );
   const [editScope, setEditScope] = useState<string>(initialEditScope);
-  const [editPositionId, setEditPositionId] = useState(
-    initialEditPositionId ?? "",
-  );
   /**
    * Seeded root pages store INHERIT, which the root cannot offer (nothing to
    * inherit from) — show its effective meaning instead: managers only.
@@ -134,65 +129,36 @@ export const EventWikiPagePermissionsModal = ({
 
   const currentEffectiveRead = effectiveRead(readScope, readPositionId);
 
-  const editSelection = (
-    scope: string,
-    positionId: string,
-  ): EventWikiScopeSelection =>
-    scope === WikiPageEventScope.INHERIT
-      ? (parentEditScope ?? MANAGERS_ONLY)
-      : {
-          scope: scope as WikiPageEventScope,
-          positionId: positionId || null,
-        };
-
   /**
-   * A POSITION edit selection without a picked position is still valid as
-   * long as any position would be — the empty required select forces the
-   * pick before submitting.
+   * An explicit edit scope POSITION always means the read scope's group, so
+   * it is valid exactly while reading is limited to a group. INHERIT
+   * resolves to the parent's effective edit scope, which the subset rule
+   * checks like any other value.
    */
   const isEditChoiceAllowed = (
     scope: string,
-    positionId: string,
     read: EventWikiScopeSelection,
   ) => {
-    if (scope === WikiPageEventScope.POSITION && !positionId)
-      return allowedEditPositionOptions(read).length > 0;
+    if (scope === WikiPageEventScope.POSITION)
+      return read.scope === WikiPageEventScope.POSITION;
     return isEventWikiScopeSubset(
-      editSelection(scope, positionId),
+      scope === WikiPageEventScope.INHERIT
+        ? (parentEditScope ?? MANAGERS_ONLY)
+        : { scope: scope as WikiPageEventScope, positionId: null },
       read,
       positions,
     );
   };
-
-  const allowedEditPositionOptions = (read: EventWikiScopeSelection) =>
-    positionOptions.filter((option) =>
-      isEventWikiScopeSubset(
-        { scope: WikiPageEventScope.POSITION, positionId: option.id },
-        read,
-        positions,
-      ),
-    );
 
   /** Narrowing the read scope resets an edit choice it no longer contains */
   const handleReadChange = (nextScope: string, nextPositionId: string) => {
     setReadScope(nextScope);
     setReadPositionId(nextPositionId);
 
-    const nextRead = effectiveRead(nextScope, nextPositionId);
-    if (!isEditChoiceAllowed(editScope, editPositionId, nextRead)) {
+    if (
+      !isEditChoiceAllowed(editScope, effectiveRead(nextScope, nextPositionId))
+    )
       setEditScope(WikiPageEventScope.MANAGERS);
-      setEditPositionId("");
-    } else if (
-      editScope === WikiPageEventScope.POSITION &&
-      editPositionId &&
-      !isEventWikiScopeSubset(
-        { scope: WikiPageEventScope.POSITION, positionId: editPositionId },
-        nextRead,
-        positions,
-      )
-    ) {
-      setEditPositionId("");
-    }
   };
 
   return (
@@ -228,33 +194,34 @@ export const EventWikiPagePermissionsModal = ({
           <ScopeSection
             legend="Lesen"
             name="readScope"
-            positionSelectName="readScopePositionId"
             scope={readScope}
-            positionId={readPositionId}
             onScopeChange={(next) => handleReadChange(next, readPositionId)}
-            onPositionChange={(next) => handleReadChange(readScope, next)}
             allowInherit={!isRootPage}
             inheritedFrom={inheritedFrom.read}
-            positionOptions={positionOptions}
+            positionHint={
+              positionOptions.length > 0
+                ? "Alle, die einer Position innerhalb der gewählten Aufstellungs-Gruppe zugewiesen sind."
+                : "Das Event hat noch keine passende Aufstellungs-Gruppe."
+            }
             isOptionAllowed={() => true}
+            positionSelect={{
+              name: "readScopePositionId",
+              value: readPositionId,
+              onChange: (next) => handleReadChange(readScope, next),
+              options: positionOptions,
+            }}
           />
 
           <ScopeSection
             legend="Bearbeiten"
             name="editScope"
-            positionSelectName="editScopePositionId"
             scope={editScope}
-            positionId={editPositionId}
-            onScopeChange={(next) => {
-              setEditScope(next);
-              if (next !== WikiPageEventScope.POSITION) setEditPositionId("");
-            }}
-            onPositionChange={setEditPositionId}
+            onScopeChange={setEditScope}
             allowInherit={!isRootPage}
             inheritedFrom={inheritedFrom.edit}
-            positionOptions={allowedEditPositionOptions(currentEffectiveRead)}
+            positionHint="Alle aus der für Lesen gewählten Aufstellungs-Gruppe."
             isOptionAllowed={(scope) =>
-              isEditChoiceAllowed(scope, editPositionId, currentEffectiveRead)
+              isEditChoiceAllowed(scope, currentEffectiveRead)
             }
           />
 
@@ -262,7 +229,7 @@ export const EventWikiPagePermissionsModal = ({
             <h3 className="font-bold text-lg font-mono uppercase">Hochladen</h3>
             <p className="text-sm text-neutral-400">
               Wer darf beim Bearbeiten Bilder bzw. Dateianhänge hochladen?
-              Verwalter dürfen immer hochladen.
+              Manager dürfen immer hochladen.
             </p>
 
             <h4 className="font-bold mt-4">Bilder</h4>
@@ -285,12 +252,11 @@ export const EventWikiPagePermissionsModal = ({
           </section>
 
           <section className="mt-8">
-            <h3 className="font-bold text-lg font-mono uppercase">Verwalter</h3>
+            <h3 className="font-bold text-lg font-mono uppercase">Manager</h3>
             <p className="text-sm text-neutral-400">
-              Der Organisator, die Verwalter des Events und Personen mit der
-              Verwalten-Berechtigung für Events verwalten alle Seiten dieses
-              Briefings und haben immer alle Berechtigungen. Das ist nicht
-              konfigurierbar.
+              Der Event-Organisator, die Event-Manager und Rollen mit der
+              "Events verwalten"-Berechtigung haben immer vollen Zugriff auf
+              alle Seiten dieses Briefings.
             </p>
           </section>
 
@@ -314,30 +280,32 @@ const inheritedHint = (sourceTitle: string | undefined) =>
 interface ScopeSectionProps {
   readonly legend: string;
   readonly name: string;
-  readonly positionSelectName: string;
   readonly scope: string;
-  readonly positionId: string;
   readonly onScopeChange: (scope: string) => void;
-  readonly onPositionChange: (positionId: string) => void;
   readonly allowInherit: boolean;
   readonly inheritedFrom?: string;
-  readonly positionOptions: WikiPageTargetOption[];
+  readonly positionHint: string;
   /** Drops scope options the subset rule forbids (the edit section) */
   readonly isOptionAllowed: (scope: string) => boolean;
+  /** Only the read scope picks a group; edit follows the read's */
+  readonly positionSelect?: {
+    readonly name: string;
+    readonly value: string;
+    readonly onChange: (positionId: string) => void;
+    readonly options: WikiPageTargetOption[];
+  };
 }
 
 const ScopeSection = ({
   legend,
   name,
-  positionSelectName,
   scope,
-  positionId,
   onScopeChange,
-  onPositionChange,
   allowInherit,
   inheritedFrom,
-  positionOptions,
+  positionHint,
   isOptionAllowed,
+  positionSelect,
 }: ScopeSectionProps) => {
   const items = [
     ...(allowInherit
@@ -352,24 +320,21 @@ const ScopeSection = ({
       : []),
     {
       value: WikiPageEventScope.MANAGERS,
-      label: "Verwalter",
+      label: "Manager",
       icon: <FaUserShield />,
-      hint: "Nur der Organisator und die Verwalter des Events.",
-    },
-    {
-      value: WikiPageEventScope.PARTICIPANTS,
-      label: "Teilnehmer",
-      icon: <FaUsers />,
-      hint: "Alle, die dem Event auf Discord zugesagt haben.",
+      hint: "Nur der Organisator und die Manager des Events.",
     },
     {
       value: WikiPageEventScope.POSITION,
       label: "Aufstellung",
       icon: <MdWorkspaces />,
-      hint:
-        positionOptions.length > 0
-          ? "Alle, die einer Position innerhalb der gewählten Aufstellungs-Gruppe zugewiesen sind."
-          : "Das Event hat noch keine passende Aufstellungs-Gruppe.",
+      hint: positionHint,
+    },
+    {
+      value: WikiPageEventScope.PARTICIPANTS,
+      label: "Teilnehmer",
+      icon: <FaUsers />,
+      hint: "Alle, die dem Event zugesagt haben.",
     },
     {
       value: WikiPageEventScope.ALL,
@@ -392,14 +357,14 @@ const ScopeSection = ({
         items={items}
       />
 
-      {scope === WikiPageEventScope.POSITION && (
+      {positionSelect && scope === WikiPageEventScope.POSITION && (
         <WikiPageSelect
-          name={positionSelectName}
-          value={positionId}
-          onChange={(event) => onPositionChange(event.target.value)}
+          name={positionSelect.name}
+          value={positionSelect.value}
+          onChange={(event) => positionSelect.onChange(event.target.value)}
           required
           className="mt-2 w-full"
-          targets={positionOptions}
+          targets={positionSelect.options}
           emptyOptionLabel="Position wählen …"
         />
       )}
@@ -448,9 +413,9 @@ const UploadabilityRadioGroup = ({
         },
         {
           value: WikiPageUploadability.RESTRICTED,
-          label: "Verwalter",
+          label: "Manager",
           icon: <FaUserShield />,
-          hint: "Nur die Verwalter des Events.",
+          hint: "Nur die Manager des Events.",
         },
       ]}
     />

@@ -31,11 +31,11 @@ const schema = z.object({
     .union([z.cuid(), z.literal("")])
     .optional()
     .transform((value) => (value ? value : null)),
+  /**
+   * An edit scope POSITION carries no own position: it always means the
+   * read scope's group, derived below.
+   */
   editScope: scopeSchema,
-  editScopePositionId: z
-    .union([z.cuid(), z.literal("")])
-    .optional()
-    .transform((value) => (value ? value : null)),
   imageUploadability: z.enum(WikiPageUploadability),
   attachmentUploadability: z.enum(WikiPageUploadability),
 });
@@ -101,11 +101,7 @@ export const updateEventWikiPagePermissions = createAuthenticatedAction(
       data.readScope,
       data.readScopePositionId,
     );
-    const editPosition = resolvePositionId(
-      data.editScope,
-      data.editScopePositionId,
-    );
-    if (readPosition.error || editPosition.error)
+    if (readPosition.error)
       return { error: t("Common.badRequest"), requestPayload: formData };
 
     /**
@@ -129,9 +125,24 @@ export const updateEventWikiPagePermissions = createAuthenticatedAction(
       readPosition.value ?? null,
       "read",
     );
+
+    /**
+     * An explicit edit scope POSITION is only offered while reading is
+     * limited to a group — and then always means exactly that group.
+     */
+    let editPositionId: string | null = null;
+    if (data.editScope === WikiPageEventScope.POSITION) {
+      if (
+        effectiveRead.scope !== WikiPageEventScope.POSITION ||
+        !effectiveRead.positionId
+      )
+        return { error: t("Common.badRequest"), requestPayload: formData };
+      editPositionId = effectiveRead.positionId;
+    }
+
     const effectiveEdit = submittedOrParent(
       data.editScope,
-      editPosition.value ?? null,
+      editPositionId,
       "edit",
     );
     if (
@@ -148,7 +159,7 @@ export const updateEventWikiPagePermissions = createAuthenticatedAction(
         eventReadScope: data.readScope,
         eventReadScopePositionId: readPosition.value ?? null,
         eventEditScope: data.editScope,
-        eventEditScopePositionId: editPosition.value ?? null,
+        eventEditScopePositionId: editPositionId,
         imageUploadability: data.imageUploadability,
         attachmentUploadability: data.attachmentUploadability,
         updatedById: authentication.session.entity?.id ?? null,
@@ -164,7 +175,7 @@ export const updateEventWikiPagePermissions = createAuthenticatedAction(
           readScope: data.readScope,
           readScopePositionId: readPosition.value ?? null,
           editScope: data.editScope,
-          editScopePositionId: editPosition.value ?? null,
+          editScopePositionId: editPositionId,
           imageUploadability: data.imageUploadability,
           attachmentUploadability: data.attachmentUploadability,
         },
