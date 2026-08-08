@@ -23,3 +23,28 @@ import {
   to = aws_s3_bucket_public_access_block.cloudtrail
   id = "aws-cloudtrail-logs-220746603587-6f2d1bf9"
 }
+
+import {
+  to = aws_notifications_notification_hub.eu_central_1
+  id = "eu-central-1"
+}
+
+import {
+  to = aws_notificationscontacts_email_contact.simon_knittel
+  id = "arn:aws:notifications-contacts::220746603587:emailcontact/a01hhsbt41vkzvna6n5vc0x1bcy"
+}
+
+import {
+  to = aws_notifications_notification_configuration.cloudwatch_alarms
+  id = "arn:aws:notifications::220746603587:configuration/a01hhsbt51hcth28h753cdqq9m8"
+}
+
+import {
+  to = aws_notifications_event_rule.cloudwatch_alarms
+  id = "arn:aws:notifications::220746603587:configuration/a01hhsbt51hcth28h753cdqq9m8/rule/a01hhsbt58qn5aadqrtaxqyknnp"
+}
+
+import {
+  to = aws_notifications_channel_association.cloudwatch_alarms_email
+  id = "arn:aws:notifications::220746603587:configuration/a01hhsbt51hcth28h753cdqq9m8,arn:aws:notifications-contacts::220746603587:emailcontact/a01hhsbt41vkzvna6n5vc0x1bcy"
+}

@@ -70,7 +70,7 @@ Bring the existing manually created User Notifications setup under Terraform: th
 
 #### Status
 
-Not started.
+Done — all five resources imported and applied on 2026-08-08; follow-up plan is a clean no-op; the Console Mobile App channel and the event rule (ACTIVE) verified untouched; setup doc updated. Channel association import ID format is `<configuration ARN>,<channel ARN>`.
 
 #### Steps
 

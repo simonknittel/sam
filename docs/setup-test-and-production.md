@@ -54,30 +54,13 @@
    1. `AWS_PROFILE=sam-test aws sso login`
    2. `AWS_PROFILE=sam-test aws --region eu-central-1 cloudformation deploy --template-file setup.yaml --stack-name setup --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM --tags ManagedBy=CloudFormation Repository=simonknittel/sam --parameter-override file://test-parameters.json`
 
-4. Manually set up AWS User Notifications through the console
+4. Set up AWS User Notifications
 
-   1. Notification hubs: eu-central-1
-   2. Create notification configuration for CloudWatch
-
-      1. Name: `cloudwatch-alarms`
-      2. AWS service name: `CloudWatch`
-      3. Event type: `CloudWatch Alarm State Change`
-      4. Regions: eu-central-1
-      5. Advanced filter
-
-      ```json
-      {
-        "detail": {
-          "previousState": { "value": ["OK", "INSUFFICIENT_DATA"] },
-          "state": { "value": ["ALARM"] }
-        }
-      }
-      ```
-
-      6. Aggregation settings: Receive within 5 minutes
-      7. Delivery channels: Email
-
-   3. Create notification configuration for Health
+   1. The notification hub, the email contact, and the notification configurations for CloudWatch alarms and GuardDuty findings (incl. their email delivery) are managed with Terraform (see `terraform/user-notifications.tf`)
+   2. After the first apply, activate the email contact through the activation mail AWS sends
+   3. Manually through the console:
+      1. Create the notification configuration for Health (quick setup)
+      2. Optionally add the AWS Console Mobile App as an additional delivery channel to the Terraform-managed notification configurations (personal devices are intentionally not managed with Terraform)
 
 ### Related
 
