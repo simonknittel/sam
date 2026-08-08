@@ -24,7 +24,6 @@ import { trackWikiPageVisit } from "../utils/trackWikiPageVisit";
 import { createEventWikiHrefMode } from "../utils/wikiPageHref";
 import { CopyWikiPageModal } from "./CopyWikiPageModal";
 import { DeleteWikiPageModal } from "./DeleteWikiPageModal";
-import { DuplicateWikiPageModal } from "./DuplicateWikiPageModal";
 import { EventWikiPagePermissionsModal } from "./EventWikiPagePermissionsModal";
 import { MoveWikiPageModal } from "./MoveWikiPageModal";
 import { ReportWikiPageModal } from "./ReportWikiPageModal";
@@ -97,15 +96,6 @@ export const EventWikiPageContent = async ({
   const moveTargets = canMutateStructure
     ? getManageableWikiPageTargets(context, page.id)
     : [];
-  /**
-   * Unlike moving, duplicating into the page's own subtree is fine — the
-   * copy is a new page, so no cycle can occur.
-   */
-  const canDuplicate = canAdministrate && !context.frozen;
-  const duplicateTargets = canDuplicate
-    ? getManageableWikiPageTargets(context)
-    : [];
-
   const collabUrl = getWikiCollabUrl();
 
   return (
@@ -163,17 +153,6 @@ export const EventWikiPageContent = async ({
               title={page.title}
               visibleDescendantCount={visibleDescendantCount}
             />
-
-            {canDuplicate && (
-              <DuplicateWikiPageModal
-                pageId={page.id}
-                title={page.title}
-                targets={duplicateTargets}
-                allowTopLevel={false}
-                currentParentId={page.parentId}
-                hasDescendants={descendantIds.length > 0}
-              />
-            )}
 
             {canAdministrate && (
               <Button2

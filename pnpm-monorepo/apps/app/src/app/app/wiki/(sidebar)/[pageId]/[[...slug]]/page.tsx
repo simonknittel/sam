@@ -9,7 +9,6 @@ import { formatDate } from "@/modules/common/utils/formatDate";
 import { renameWikiPage } from "@/modules/wiki/actions/renameWikiPage";
 import { CopyWikiPageModal } from "@/modules/wiki/components/CopyWikiPageModal";
 import { DeleteWikiPageModal } from "@/modules/wiki/components/DeleteWikiPageModal";
-import { DuplicateWikiPageModal } from "@/modules/wiki/components/DuplicateWikiPageModal";
 import { MoveWikiPageModal } from "@/modules/wiki/components/MoveWikiPageModal";
 import { ReportWikiPageModal } from "@/modules/wiki/components/ReportWikiPageModal";
 import { WikiEditModeProvider } from "@/modules/wiki/components/WikiEditModeProvider";
@@ -139,12 +138,6 @@ const PageContent = async ({
     ? getManageableWikiPageTargets(context, page.id)
     : [];
 
-  /**
-   * Unlike moving, duplicating into the page's own subtree is fine — the
-   * copy is a new page, so no cycle can occur.
-   */
-  const duplicateTargets = getManageableWikiPageTargets(context);
-
   const sourceTitle = (sourceId: string) =>
     sourceId === page.id ? undefined : context.pagesById.get(sourceId)?.title;
 
@@ -256,15 +249,6 @@ const PageContent = async ({
               pageId={page.id}
               title={page.title}
               visibleDescendantCount={visibleDescendantCount}
-            />
-
-            <DuplicateWikiPageModal
-              pageId={page.id}
-              title={page.title}
-              targets={duplicateTargets}
-              allowTopLevel={canCreateTopLevel}
-              currentParentId={page.parentId}
-              hasDescendants={descendantIds.length > 0}
             />
 
             {permissions.canAdmin && (
