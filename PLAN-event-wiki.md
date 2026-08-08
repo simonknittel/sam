@@ -84,7 +84,7 @@ Build the request-scoped context loader and the event-mode permission resolver â
 
 #### Status
 
-Not started
+Implemented and verified
 
 #### Steps
 
@@ -96,6 +96,8 @@ Not started
 #### Notes
 
 - The manage tier must not consult `wiki;manage`; the admin escape hatch continues to work only through `event;manage`.
+- The grant checks resolve INHERIT recursively through the parent gate (mirroring the role resolver); the source walk exists only for the settings display. The read tier's "edit implies read" uses the unfrozen edit grant so read access via an edit scope survives the freeze.
+- POSITION membership is precomputed per viewer as "every assigned position plus its ancestors" (`collectPositionScopeIdsForCitizen`), turning the subtree check into a set lookup.
 
 #### Verification
 
