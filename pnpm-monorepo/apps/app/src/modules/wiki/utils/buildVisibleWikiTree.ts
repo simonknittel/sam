@@ -1,5 +1,5 @@
 import { compareWikiPagesByOrder } from "./compareWikiPagesByOrder";
-import type { ResolvedWikiPagePermissions } from "./resolveWikiPagePermissions";
+import type { WikiPageTierPermissions } from "./resolveWikiPagePermissions";
 
 export interface WikiTreePageInput {
   readonly id: string;
@@ -32,7 +32,7 @@ export interface WikiTreeNode {
  */
 export const buildVisibleWikiTree = (
   pages: readonly WikiTreePageInput[],
-  permissions: ReadonlyMap<string, ResolvedWikiPagePermissions>,
+  permissions: ReadonlyMap<string, WikiPageTierPermissions>,
 ): WikiTreeNode[] => {
   const pagesById = new Map(pages.map((page) => [page.id, page]));
   const canRead = (id: string) => permissions.get(id)?.canRead === true;

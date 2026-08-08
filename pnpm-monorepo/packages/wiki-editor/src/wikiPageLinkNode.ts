@@ -17,6 +17,11 @@ export interface WikiPageLinkedPage {
    * this package needs no knowledge of the upload storage.
    */
   iconSrc?: string;
+  /**
+   * Route of the page, resolved by the app. Event wiki pages live under
+   * their event, not under the global wiki route this node falls back to.
+   */
+  href?: string;
 }
 
 export interface WikiPageLinkOptions {
@@ -89,7 +94,9 @@ export const WikiPageLink = Node.create<WikiPageLinkOptions>({
       "a",
       mergeAttributes(
         {
-          href: `/app/wiki/${encodeURIComponent(pageId)}/${encodeURIComponent(page.slug)}`,
+          href:
+            page.href ??
+            `/app/wiki/${encodeURIComponent(pageId)}/${encodeURIComponent(page.slug)}`,
         },
         HTMLAttributes,
       ),

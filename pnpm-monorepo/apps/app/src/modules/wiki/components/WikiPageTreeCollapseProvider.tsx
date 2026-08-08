@@ -21,6 +21,8 @@ import {
   WIKI_ALL_COLLAPSED,
   type WikiExpansionState,
 } from "../utils/wikiExpandedPagesCookie";
+import { getActiveWikiPageId } from "../utils/wikiPageHref";
+import { useWikiPageHrefMode } from "./WikiPageHrefModeProvider";
 
 interface WikiPageTreeCollapseContextValue {
   isExpanded: (pageId: string) => boolean;
@@ -77,9 +79,8 @@ export const WikiPageTreeCollapseProvider = ({
   cookieValue,
 }: Props) => {
   const pathname = usePathname();
-  const activePageId = pathname.startsWith("/app/wiki/")
-    ? pathname.split("/")[3]
-    : undefined;
+  const hrefMode = useWikiPageHrefMode();
+  const activePageId = getActiveWikiPageId(hrefMode, pathname);
 
   /**
    * Joined instead of kept as arrays: the tree arrives as a new array with
@@ -116,8 +117,8 @@ export const WikiPageTreeCollapseProvider = ({
 
   useEffect(() => {
     previousMountState = state;
-    document.cookie = serializeWikiExpandedPagesCookie(state);
-  }, [state]);
+    document.cookie = serializeWikiExpandedPagesCookie(state, hrefMode.scope);
+  }, [state, hrefMode.scope]);
 
   const value = useMemo(
     () => ({

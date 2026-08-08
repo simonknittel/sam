@@ -1,6 +1,20 @@
-import type { WikiContext, WikiContextPage } from "../queries/getWikiContext";
+import type { WikiPageTierPermissions } from "./resolveWikiPagePermissions";
 
 export type WikiPageAccessTier = "read" | "edit" | "admin";
+
+interface AccessiblePage {
+  readonly id: string;
+  readonly deletedAt: Date | null;
+}
+
+/**
+ * Generic over the page type so the global and the event wiki context both
+ * get their own page shape back.
+ */
+interface AccessibleWikiPageContext<TPage extends AccessiblePage> {
+  readonly pagesById: ReadonlyMap<string, TPage>;
+  readonly permissions: ReadonlyMap<string, WikiPageTierPermissions>;
+}
 
 /**
  * The page if it exists, is not trashed and the viewer holds the tier —
@@ -9,11 +23,11 @@ export type WikiPageAccessTier = "read" | "edit" | "admin";
  * needing separate missing-vs-forbidden responses keep their explicit
  * checks instead.
  */
-export const getAccessibleWikiPage = (
-  context: WikiContext,
+export const getAccessibleWikiPage = <TPage extends AccessiblePage>(
+  context: AccessibleWikiPageContext<TPage>,
   pageId: string | null | undefined,
   tier: WikiPageAccessTier,
-): WikiContextPage | null => {
+): TPage | null => {
   if (!pageId) return null;
   const page = context.pagesById.get(pageId);
   if (!page || page.deletedAt) return null;

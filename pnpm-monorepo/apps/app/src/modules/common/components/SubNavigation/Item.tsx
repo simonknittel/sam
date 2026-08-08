@@ -10,13 +10,16 @@ interface Props {
     readonly path: string;
     readonly name: string;
     readonly icon?: ReactNode;
+    readonly matchesSubpaths?: boolean;
   };
 }
 
 export const Item = ({ page }: Props) => {
   const pathname = usePathname();
 
-  const isActive = page.path === pathname;
+  const isActive = page.matchesSubpaths
+    ? pathname === page.path || pathname.startsWith(`${page.path}/`)
+    : page.path === pathname;
 
   return (
     <Link

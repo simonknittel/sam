@@ -11,7 +11,9 @@ import {
   type ReactNode,
 } from "react";
 import type { WikiPageTargetOption } from "../utils/getWikiPageTargets";
+import { getActiveWikiPageId } from "../utils/wikiPageHref";
 import { CreateWikiPageForm } from "./CreateWikiPageForm";
+import { useWikiPageHrefMode } from "./WikiPageHrefModeProvider";
 
 interface CreateWikiPageContext {
   /**
@@ -37,18 +39,17 @@ export const CreateWikiPageProvider = ({
   allowTopLevel,
 }: Props) => {
   const pathname = usePathname();
+  const hrefMode = useWikiPageHrefMode();
   const [openState, setOpenState] = useState<{ parentId?: string } | null>(
     null,
   );
 
   const openCreateWikiPageModal = useCallback(
     (parentId?: string) => {
-      const activePageId = pathname.startsWith("/app/wiki/")
-        ? pathname.split("/")[3]
-        : undefined;
+      const activePageId = getActiveWikiPageId(hrefMode, pathname);
       setOpenState({ parentId: parentId ?? activePageId });
     },
-    [pathname],
+    [pathname, hrefMode],
   );
 
   const value = useMemo(

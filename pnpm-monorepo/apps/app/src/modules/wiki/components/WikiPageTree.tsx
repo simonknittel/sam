@@ -5,7 +5,9 @@ import clsx from "clsx";
 import { usePathname } from "next/navigation";
 import { FaChevronDown, FaChevronRight, FaPlus } from "react-icons/fa";
 import type { WikiTreeNode } from "../utils/buildVisibleWikiTree";
+import { buildWikiPageHref, getActiveWikiPageId } from "../utils/wikiPageHref";
 import { useCreateWikiPage } from "./CreateWikiPageProvider";
+import { useWikiPageHrefMode } from "./WikiPageHrefModeProvider";
 import { WikiPageIcon } from "./WikiPageIcon";
 import { useWikiPageTreeCollapse } from "./WikiPageTreeCollapseProvider";
 import {
@@ -154,12 +156,12 @@ const TreeItem = ({
   dimmedIds,
 }: TreeItemProps) => {
   const pathname = usePathname();
+  const hrefMode = useWikiPageHrefMode();
   const { draggedPageId } = useWikiPageDnd();
   const { isExpanded, expand } = useWikiPageTreeCollapse();
-  const activePageId = pathname.startsWith("/app/wiki/")
-    ? pathname.split("/")[3]
-    : undefined;
-  const isActive = activePageId === node.id;
+  const isActive = getActiveWikiPageId(hrefMode, pathname) === node.id;
+  /** The event wiki's root page can neither be moved nor get siblings */
+  const isLockedRoot = node.id === hrefMode.rootPageId;
 
   const hasChildren = node.children.length > 0;
   const showsChildren = hasChildren && isExpanded(node.id);
@@ -202,7 +204,7 @@ const TreeItem = ({
           {node.iconId && <WikiPageIcon iconId={node.iconId} />}
 
           <Link
-            href={`/app/wiki/${node.id}/${node.slug}`}
+            href={buildWikiPageHref(hrefMode, node)}
             // The tree can show a link for every page of the wiki, and each
             // prefetch is a full server render of the target page — too much
             // for links the viewer mostly never opens
@@ -223,7 +225,7 @@ const TreeItem = ({
 
           {(node.canAdmin || node.canEdit) && (
             <span className="flex flex-none items-center opacity-0 group-hover:opacity-100 focus-within:opacity-100">
-              {node.canAdmin && (
+              {node.canAdmin && !isLockedRoot && (
                 <WikiPageDragHandle
                   pageId={node.id}
                   previousSiblingId={previousSiblingId}

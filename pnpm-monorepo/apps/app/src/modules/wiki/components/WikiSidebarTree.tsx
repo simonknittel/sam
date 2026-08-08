@@ -10,6 +10,7 @@ import {
 } from "react-icons/fa";
 import type { WikiTreeNode } from "../utils/buildVisibleWikiTree";
 import { serializeWikiShowHiddenPagesCookie } from "../utils/wikiShowHiddenPagesCookie";
+import { useWikiPageHrefMode } from "./WikiPageHrefModeProvider";
 import { WikiPageTree } from "./WikiPageTree";
 import {
   useWikiPageTreeCollapse,
@@ -49,6 +50,7 @@ export const WikiSidebarTree = ({
   initialShowHidden,
   expandedPagesCookie,
 }: Props) => {
+  const hrefMode = useWikiPageHrefMode();
   const [showHidden, setShowHidden] = useState(initialShowHidden);
   const nodes = showHidden ? fullTree : tree;
   const hasCollapsiblePages = nodes.some((node) => node.children.length > 0);
@@ -56,7 +58,7 @@ export const WikiSidebarTree = ({
   const handleClick = () => {
     const next = !showHidden;
     setShowHidden(next);
-    document.cookie = serializeWikiShowHiddenPagesCookie(next);
+    document.cookie = serializeWikiShowHiddenPagesCookie(next, hrefMode.scope);
   };
 
   return (

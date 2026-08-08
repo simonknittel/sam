@@ -1,4 +1,7 @@
-import type { WikiContext, WikiContextPage } from "../queries/getWikiContext";
+import type {
+  WikiContextPage,
+  WikiSharedContext,
+} from "../queries/getWikiContext";
 import { collectWikiPageDescendants } from "./collectWikiPageDescendants";
 import { compareWikiPagesByOrder } from "./compareWikiPagesByOrder";
 
@@ -22,7 +25,7 @@ export const wikiPageOptionLabel = (target: WikiPageTargetOption) =>
  * subtrees whose parents are not included still indent sensibly.
  */
 const collectWikiPageTargets = (
-  context: WikiContext,
+  context: WikiSharedContext,
   isIncluded: (pageId: string) => boolean,
   excludeSubtreeOf?: string,
 ): WikiPageTargetOption[] => {
@@ -71,7 +74,7 @@ const collectWikiPageTargets = (
  * the server actions enforce.
  */
 export const getManageableWikiPageTargets = (
-  context: WikiContext,
+  context: WikiSharedContext,
   excludeSubtreeOf?: string,
 ): WikiPageTargetOption[] =>
   collectWikiPageTargets(
@@ -85,7 +88,7 @@ export const getManageableWikiPageTargets = (
  * candidates of a page-index node. Ignores the sidebar mode on purpose.
  */
 export const getReadableWikiPageTargets = (
-  context: WikiContext,
+  context: WikiSharedContext,
 ): WikiPageTargetOption[] =>
   collectWikiPageTargets(
     context,

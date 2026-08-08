@@ -1,3 +1,5 @@
+import { WikiScope } from "./wikiPageHref";
+
 /**
  * Persists which sidebar tree pages are expanded. Read on the server so SSR
  * already renders the remembered state — a client-only store would render
@@ -15,6 +17,15 @@ export const WIKI_EXPANDED_PAGES_COOKIE = "wiki_expanded_pages";
 
 /** Only the wiki reads this cookie — no need to send it with every request */
 export const WIKI_EXPANDED_PAGES_COOKIE_PATH = "/app/wiki";
+
+/**
+ * One shared cookie for all event wikis: the page keys below are id-based
+ * and therefore unique across events, and sharing the budget keeps the
+ * cookie jar small.
+ */
+export const EVENT_WIKI_EXPANDED_PAGES_COOKIE = "event_wiki_expanded_pages";
+
+export const EVENT_WIKI_EXPANDED_PAGES_COOKIE_PATH = "/app/events";
 
 const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365;
 
@@ -67,11 +78,22 @@ export const parseWikiExpandedPagesCookie = (
   return keys.size > 0 ? keys : WIKI_ALL_COLLAPSED;
 };
 
-export const serializeWikiExpandedPagesCookie = (state: WikiExpansionState) => {
+export const serializeWikiExpandedPagesCookie = (
+  state: WikiExpansionState,
+  scope: WikiScope = WikiScope.Wiki,
+) => {
   // Insertion order makes this drop the least recently expanded pages
   const value = [...state].slice(-MAX_PAGE_KEYS).join(",");
 
-  return `${WIKI_EXPANDED_PAGES_COOKIE}=${value}; path=${WIKI_EXPANDED_PAGES_COOKIE_PATH}; samesite=lax; max-age=${value ? ONE_YEAR_IN_SECONDS : 0};`;
+  const [name, path] =
+    scope === WikiScope.Event
+      ? [
+          EVENT_WIKI_EXPANDED_PAGES_COOKIE,
+          EVENT_WIKI_EXPANDED_PAGES_COOKIE_PATH,
+        ]
+      : [WIKI_EXPANDED_PAGES_COOKIE, WIKI_EXPANDED_PAGES_COOKIE_PATH];
+
+  return `${name}=${value}; path=${path}; samesite=lax; max-age=${value ? ONE_YEAR_IN_SECONDS : 0};`;
 };
 
 export const isWikiPageExpanded = (state: WikiExpansionState, pageId: string) =>

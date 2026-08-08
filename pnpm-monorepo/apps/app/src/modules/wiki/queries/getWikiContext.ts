@@ -10,6 +10,7 @@ import { cache } from "react";
 import {
   resolveWikiPagePermissions,
   type ResolvedWikiPagePermissions,
+  type WikiPageTierPermissions,
   type WikiPageViewer,
 } from "../utils/resolveWikiPagePermissions";
 
@@ -35,6 +36,18 @@ export type WikiContextPage = Pick<
 > & {
   roleAccess: { roleId: string; type: WikiPageAccessType }[];
 };
+
+/**
+ * Structural subset shared by the global and the event wiki context, so the
+ * tree/breadcrumb/target/index utilities serve both namespaces.
+ */
+export interface WikiSharedContext {
+  /** Pages that are not soft-deleted */
+  pages: WikiContextPage[];
+  pagesById: Map<string, WikiContextPage>;
+  /** Effective permissions of the current viewer for every page */
+  permissions: Map<string, WikiPageTierPermissions>;
+}
 
 export interface WikiContext {
   viewer: WikiPageViewer;

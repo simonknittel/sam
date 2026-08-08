@@ -1,12 +1,8 @@
 import { prisma } from "@/db";
 import { env } from "@/env";
-import { authenticate } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import {
-  collectWikiMentionedCitizenIds,
   collectWikiPageIndexConfigs,
-  collectWikiRoleCitizensRoleIds,
-  collectWikiVariantLinkIds,
   type WikiLinkedVariant,
   type WikiMentionedCitizen,
   type WikiPageLinkedPage,
@@ -15,8 +11,12 @@ import { cache } from "react";
 import type { WikiPageIndexEntry } from "../components/WikiPageIndexList";
 import type { WikiRoleCitizen } from "../components/WikiRoleCitizensList";
 import { resolveWikiPageIndex } from "../utils/resolveWikiPageIndex";
-import { resolveWikiRoleCitizens } from "../utils/resolveWikiRoleCitizens";
 import type { WikiContext } from "./getWikiContext";
+import {
+  getWikiLinkedVariants,
+  getWikiMentionedCitizens,
+  getWikiRoleCitizensByRole,
+} from "./getWikiPageContentReferences";
 import { getWikiIframeAllowlist } from "./getWikiSettings";
 
 export interface WikiPageStaticContent {
@@ -45,7 +45,7 @@ export const getWikiPageStaticContent = cache(
       context: WikiContext,
       pageId: string,
     ): Promise<WikiPageStaticContent> => {
-      const [page, iframeAllowlist, authentication] = await Promise.all([
+      const [page, iframeAllowlist] = await Promise.all([
         /**
          * The content is intentionally not part of getWikiContext (which
          * loads all pages on every wiki request) — it's only needed here.
@@ -55,75 +55,9 @@ export const getWikiPageStaticContent = cache(
           select: { content: true },
         }),
         getWikiIframeAllowlist(),
-        authenticate(),
       ]);
 
       const content = page?.content;
-
-      const canReadCitizens = Boolean(
-        authentication && (await authentication.authorize("citizen", "read")),
-      );
-
-      /**
-       * Current handles of the citizens mentioned in the content, so
-       * mentions follow handle changes. Mentions inserted after this render
-       * fall back to the handle stored in the document. Viewers without the
-       * citizen read permission get these insertion-time handles instead of
-       * live ones.
-       */
-      const mentionedCitizenIds = collectWikiMentionedCitizenIds(content);
-      const mentionedCitizens = Object.fromEntries(
-        (canReadCitizens && mentionedCitizenIds.length > 0
-          ? await prisma.entity.findMany({
-              where: { id: { in: mentionedCitizenIds } },
-              select: { id: true, handle: true },
-            })
-          : []
-        ).map((citizen) => [citizen.id, { handle: citizen.handle }]),
-      );
-
-      /**
-       * Current names and manufacturer logos of the variants linked in the
-       * content, so links follow renames. Links inserted after this render
-       * resolve themselves client-side (see WikiVariantLinkNodeView).
-       * Deliberately not permission-filtered: the wiki shows every reader
-       * which ship is meant — only the variant page itself stays gated.
-       */
-      const linkedVariantIds = collectWikiVariantLinkIds(content);
-      const linkedVariants = Object.fromEntries(
-        (linkedVariantIds.length > 0
-          ? await prisma.variant.findMany({
-              where: { id: { in: linkedVariantIds } },
-              select: {
-                id: true,
-                name: true,
-                series: {
-                  select: {
-                    manufacturer: {
-                      select: {
-                        name: true,
-                        image: { select: { id: true, mimeType: true } },
-                      },
-                    },
-                  },
-                },
-              },
-            })
-          : []
-        ).map((variant) => [
-          variant.id,
-          {
-            name: variant.name,
-            manufacturerName: variant.series.manufacturer.name,
-            logo: variant.series.manufacturer.image
-              ? {
-                  src: `https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${variant.series.manufacturer.image.id}`,
-                  mimeType: variant.series.manufacturer.image.mimeType,
-                }
-              : undefined,
-          },
-        ]),
-      );
 
       /**
        * Pages this viewer can see, for rendering internal page links and the
@@ -162,20 +96,12 @@ export const getWikiPageStaticContent = cache(
         ),
       );
 
-      /**
-       * Members of the role-member nodes on this page, resolved for this
-       * viewer — for the static render and as the editor node views' initial
-       * data; the node views refetch so role changes show up without a
-       * reload.
-       */
-      const roleCitizens = Object.fromEntries(
-        await Promise.all(
-          collectWikiRoleCitizensRoleIds(content).map(
-            async (roleId) =>
-              [roleId, await resolveWikiRoleCitizens(roleId)] as const,
-          ),
-        ),
-      );
+      const [mentionedCitizens, linkedVariants, roleCitizens] =
+        await Promise.all([
+          getWikiMentionedCitizens(content),
+          getWikiLinkedVariants(content),
+          getWikiRoleCitizensByRole(content),
+        ]);
 
       return {
         content,

@@ -1,4 +1,7 @@
-import type { WikiContext, WikiContextPage } from "../queries/getWikiContext";
+import type {
+  WikiContextPage,
+  WikiSharedContext,
+} from "../queries/getWikiContext";
 
 /**
  * Ancestor titles from the root down to the direct parent. Deleted ancestors
@@ -6,7 +9,7 @@ import type { WikiContext, WikiContextPage } from "../queries/getWikiContext";
  * to someone who cannot read the page above it.
  */
 export const buildVisibleWikiBreadcrumb = (
-  context: WikiContext,
+  context: WikiSharedContext,
   page: WikiContextPage,
 ) => {
   const titles: string[] = [];

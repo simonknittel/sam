@@ -29,10 +29,18 @@ export interface WikiPageViewer {
   readonly hasWikiManage: boolean;
 }
 
-export interface ResolvedWikiPagePermissions {
+/**
+ * The three access tiers shared by this role-based resolver and the event
+ * resolver — the subset the tree/breadcrumb/target/index utilities need, so
+ * they serve both namespaces.
+ */
+export interface WikiPageTierPermissions {
   readonly canRead: boolean;
   readonly canEdit: boolean;
   readonly canAdmin: boolean;
+}
+
+export interface ResolvedWikiPagePermissions extends WikiPageTierPermissions {
   readonly canUploadImages: boolean;
   readonly canUploadAttachments: boolean;
   /**

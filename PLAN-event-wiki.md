@@ -134,7 +134,7 @@ Make the tab appear for readable briefings and render the root page full-width w
 
 #### Status
 
-Not started
+Implemented (in-app verification pending)
 
 #### Steps
 
@@ -147,6 +147,10 @@ Not started
 #### Notes
 
 - The sidebar cookie's page keys are id-suffix based and globally unique, so one cookie can serve all events; the existing key cap applies across them.
+- Hoisting `MaxWidthContent` turned out unnecessary: the events shell already uses the same screen-3xl `MaxWidthContent` as the wiki app — the wiki's "full-width" feel comes from its `SidebarLayout` inside that wrapper, which the briefing tab now nests the same way.
+- Client components stay namespace-agnostic through a `WikiPageHrefMode` React context (default = global wiki, so the wiki app needs no provider): it supplies href building, active-page detection, the locked-root flag (suppresses the root's drag handle and root-level drop bands), and the cookie scope. Server components pass precomputed hrefs.
+- A `getWikiPageScopedContext(pageId)` helper (page id → namespace → matching context) is the seam server actions use to serve both scopes; the favourite toggle already runs through it.
+- The shared tree/breadcrumb/target/index utilities now accept a structural `WikiSharedContext` (and `WikiPageTierPermissions`), which both context types satisfy — no forked utilities.
 
 #### Verification
 

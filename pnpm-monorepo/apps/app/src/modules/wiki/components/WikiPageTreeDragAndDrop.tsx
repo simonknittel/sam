@@ -17,6 +17,7 @@ import {
 } from "react";
 import { MdDragIndicator } from "react-icons/md";
 import { updateWikiPagePosition } from "../actions/updateWikiPagePosition";
+import { useWikiPageHrefMode } from "./WikiPageHrefModeProvider";
 
 type DropPosition = "before" | "after" | "inside";
 
@@ -223,6 +224,7 @@ export const WikiPageDropTargets = ({
   isRootLevel,
 }: DropTargetsProps) => {
   const { draggedPageId, handleDrop } = useWikiPageDnd();
+  const { rootPageId } = useWikiPageHrefMode();
   const springOpenTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => () => clearTimeout(springOpenTimeout.current), []);
@@ -230,6 +232,13 @@ export const WikiPageDropTargets = ({
   if (!draggedPageId || draggedPageId === pageId) return null;
   // Dropping a page into its own subtree would create a cycle
   if (ancestorIds.includes(draggedPageId)) return null;
+
+  /**
+   * In an event wiki the top level belongs to the locked root page alone —
+   * before/after drops beside it would create siblings, so only the inside
+   * band remains there.
+   */
+  const suppressEdgeBands = isRootLevel && rootPageId !== null;
 
   const edgeBandHeight = canDropInside ? "h-1/4" : "h-1/2";
 
@@ -245,18 +254,23 @@ export const WikiPageDropTargets = ({
 
   return (
     <span className="absolute inset-0 z-10 flex cursor-grabbing flex-col">
-      <span
-        className={clsx("group/band relative", edgeBandHeight)}
-        onMouseUp={() => handleDrop(pageId, "before")}
-      >
-        {isRootLevel && (
-          // Half of RootList's gap-4, so this meets the band above it
-          <span className="absolute inset-x-0 -top-2 h-2" />
-        )}
-        <DropIndicatorLine
-          className={clsx("-translate-y-1/2", isRootLevel ? "-top-2" : "top-0")}
-        />
-      </span>
+      {!suppressEdgeBands && (
+        <span
+          className={clsx("group/band relative", edgeBandHeight)}
+          onMouseUp={() => handleDrop(pageId, "before")}
+        >
+          {isRootLevel && (
+            // Half of RootList's gap-4, so this meets the band above it
+            <span className="absolute inset-x-0 -top-2 h-2" />
+          )}
+          <DropIndicatorLine
+            className={clsx(
+              "-translate-y-1/2",
+              isRootLevel ? "-top-2" : "top-0",
+            )}
+          />
+        </span>
+      )}
       {canDropInside && (
         <span
           className="group/band flex-1"
@@ -277,7 +291,7 @@ export const WikiPageDropTargets = ({
           <span className="pointer-events-none absolute inset-0 hidden rounded-secondary bg-green-500/20 group-hover/band:block" />
         </span>
       )}
-      {!showsChildren && (
+      {!showsChildren && !suppressEdgeBands && (
         <span
           className={clsx("group/band relative", edgeBandHeight)}
           onMouseUp={() => handleDrop(pageId, "after")}
@@ -314,8 +328,11 @@ export const WikiPageTreeEndDropTarget = ({
   lastRootPageId,
 }: TreeEndDropTargetProps) => {
   const { draggedPageId, handleDrop } = useWikiPageDnd();
+  const { rootPageId } = useWikiPageHrefMode();
 
   if (!draggedPageId || draggedPageId === lastRootPageId) return null;
+  // No drops beside the event wiki's locked root page (see the edge bands)
+  if (rootPageId !== null) return null;
 
   return (
     <li

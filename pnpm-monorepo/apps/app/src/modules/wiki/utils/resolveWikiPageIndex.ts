@@ -2,7 +2,7 @@ import { prisma } from "@/db";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import type { WikiPageIndexConfig } from "@sam-monorepo/wiki-editor";
 import type { WikiPageIndexEntry } from "../components/WikiPageIndexList";
-import type { WikiContext } from "../queries/getWikiContext";
+import type { WikiSharedContext } from "../queries/getWikiContext";
 import {
   buildVisibleWikiTree,
   type WikiTreeNode,
@@ -39,7 +39,7 @@ const trimToDepth = (
 export const resolveWikiPageIndex = withTrace(
   "resolveWikiPageIndex",
   async (
-    context: WikiContext,
+    context: WikiSharedContext,
     /** The page containing the node — the root when `rootPageId` is null */
     currentPageId: string,
     config: WikiPageIndexConfig,
