@@ -19,33 +19,54 @@ interface WikiImageNodeViewOptions extends WikiImageOptions {
  * rendering, so the resize handles (which size the anchor), the hover menu
  * and the static read view all see the same structure.
  */
+const findImageElement = (element: HTMLElement): HTMLElement | null =>
+  element.tagName === "IMG" ? element : element.querySelector("img");
+
+/**
+ * Applies the attribute diff between two renderings to the live element.
+ * Diffed against the previous rendering, not the live element, so
+ * attributes others manage on it — ProseMirror's selection class,
+ * decoration attributes — are never touched.
+ */
+const syncManagedAttributes = (
+  target: Element,
+  previous: Element,
+  next: Element,
+) => {
+  for (const name of previous.getAttributeNames())
+    if (!next.hasAttribute(name)) target.removeAttribute(name);
+  for (const name of next.getAttributeNames()) {
+    const value = next.getAttribute(name);
+    if (value !== null && target.getAttribute(name) !== value)
+      target.setAttribute(name, value);
+  }
+};
+
 const createWikiImageNodeView =
   (
     getImageDimensions: () => Readonly<Record<string, WikiImageDimensions>>,
   ): NodeViewRenderer =>
   ({ node }) => {
     let renderedNode = node;
-    const renderNode = (rendering: ProseMirrorNode): HTMLElement => {
-      /**
-       * Serialized into an inert document: an img created in the live
-       * document starts downloading its src immediately, even while
-       * detached — the original file would load alongside the optimized
-       * variant. Images in an inert document never load; the browser only
-       * evaluates the final attribute set once the node view is mounted.
-       */
+
+    /**
+     * Built in an inert document: an img created in the live document
+     * starts downloading its src immediately, even while detached — the
+     * original file would load alongside the optimized variant. Images in
+     * an inert document never load; the browser only evaluates the final
+     * attribute set once the returned element is imported and mounted.
+     */
+    const buildRendering = (nodeToRender: ProseMirrorNode): HTMLElement => {
       const inertDocument = document.implementation.createHTMLDocument();
       const serialized = DOMSerializer.fromSchema(
-        rendering.type.schema,
-      ).serializeNode(rendering, { document: inertDocument }) as HTMLElement;
+        nodeToRender.type.schema,
+      ).serializeNode(nodeToRender, { document: inertDocument }) as HTMLElement;
 
-      const image =
-        serialized.tagName === "IMG"
-          ? serialized
-          : serialized.querySelector("img");
-      if (!image) return document.importNode(serialized, true);
+      const image = findImageElement(serialized);
+      if (!image) return serialized;
 
       const { dimensions, optimized } = resolveWikiImageRendering(
-        rendering.attrs,
+        nodeToRender.attrs,
         getImageDimensions(),
       );
       if (dimensions) {
@@ -60,22 +81,40 @@ const createWikiImageNodeView =
         image.setAttribute("src", optimized.src);
       }
 
-      return document.importNode(serialized, true);
+      return serialized;
     };
 
+    let rendering = buildRendering(node);
+    const dom = document.importNode(rendering, true);
+
     return {
-      dom: renderNode(node),
+      dom,
       /**
-       * Mirrors how ProseMirror treated the node before this node view
-       * existed: attribute changes (resize drags, alignment) recreate the
-       * DOM, everything else — decoration changes above all — keeps it.
-       * Recreating on decoration changes would loop: the active-node
-       * highlight decorates the hovered block, and the overlays re-anchor
+       * Attribute changes (resize drags dispatch one per animation frame,
+       * alignment) are patched onto the existing elements: recreating the
+       * img mid-drag would blank it while a not yet cached optimizer
+       * candidate loads. Decoration-only updates leave the DOM entirely
+       * alone — recreating on them would loop, because the active-node
+       * highlight decorates the hovered block and the overlays re-anchor
        * on every redraw.
        */
       update: (updatedNode) => {
         if (updatedNode.type !== renderedNode.type) return false;
-        if (!updatedNode.sameMarkup(renderedNode)) return false;
+        if (!updatedNode.sameMarkup(renderedNode)) {
+          const replacement = buildRendering(updatedNode);
+          const liveImage = findImageElement(dom);
+          const previousImage = findImageElement(rendering);
+          const nextImage = findImageElement(replacement);
+          const structureChanged =
+            replacement.tagName !== rendering.tagName ||
+            Boolean(nextImage) !== Boolean(previousImage);
+          if (structureChanged) return false;
+
+          syncManagedAttributes(dom, rendering, replacement);
+          if (liveImage && previousImage && nextImage && liveImage !== dom)
+            syncManagedAttributes(liveImage, previousImage, nextImage);
+          rendering = replacement;
+        }
         renderedNode = updatedNode;
         return true;
       },

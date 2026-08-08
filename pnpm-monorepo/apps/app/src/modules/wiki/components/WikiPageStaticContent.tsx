@@ -71,6 +71,8 @@ const renderWikiPageContent = (
   pageId: string | undefined,
 ) => {
   const nextHeadingId = createWikiHeadingIdAssigner();
+  // The document's first image is a likely LCP candidate — load it eagerly
+  let isFirstImage = true;
 
   return renderToReactElement({
     content,
@@ -142,12 +144,17 @@ const renderWikiPageContent = (
          * render through the Next.js image optimizer; the rest keep the
          * plain img.
          */
-        image: ({ node }) => (
-          <WikiContentImage
-            attrs={node.attrs}
-            imageDimensions={imageDimensions}
-          />
-        ),
+        image: ({ node }) => {
+          const eager = isFirstImage;
+          isFirstImage = false;
+          return (
+            <WikiContentImage
+              attrs={node.attrs}
+              imageDimensions={imageDimensions}
+              eager={eager}
+            />
+          );
+        },
         /**
          * Unlike the node's renderHTML, the card adds the report button
          * next to the download link — same as the read-only editor's node

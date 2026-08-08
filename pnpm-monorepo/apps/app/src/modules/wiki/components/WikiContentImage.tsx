@@ -9,6 +9,11 @@ interface Props {
   readonly attrs: Readonly<Record<string, unknown>>;
   /** Intrinsic dimensions of the content's uploaded images, by upload id */
   readonly imageDimensions: Readonly<Record<string, WikiImageDimensions>>;
+  /**
+   * Load immediately and with priority instead of lazily — for the page's
+   * first image, which is a likely LCP candidate
+   */
+  readonly eager?: boolean;
 }
 
 /**
@@ -17,10 +22,13 @@ interface Props {
  * layout attributes, the image inside it. Uploads with probed dimensions
  * render through the Next.js image optimizer with their aspect-ratio box
  * reserved from SSR; everything else (external srcs, SVG, GIF, uploads
- * without dimensions) keeps the original src and behaves exactly as
- * before.
+ * without dimensions) keeps the original src.
  */
-export const WikiContentImage = ({ attrs, imageDimensions }: Props) => {
+export const WikiContentImage = ({
+  attrs,
+  imageDimensions,
+  eager = false,
+}: Props) => {
   const src = typeof attrs.src === "string" ? attrs.src : "";
   const alt = typeof attrs.alt === "string" ? attrs.alt : "";
   const title = typeof attrs.title === "string" ? attrs.title : undefined;
@@ -47,8 +55,16 @@ export const WikiContentImage = ({ attrs, imageDimensions }: Props) => {
    * node's outer element and carries the layout attributes.
    */
   if (!src)
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img alt={alt} title={title} loading="lazy" {...layoutAttributes} />;
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        alt={alt}
+        title={title}
+        loading="lazy"
+        decoding="async"
+        {...layoutAttributes}
+      />
+    );
 
   return (
     <a
@@ -56,6 +72,7 @@ export const WikiContentImage = ({ attrs, imageDimensions }: Props) => {
       href={src}
       target="_blank"
       rel="noopener noreferrer"
+      aria-label={alt ? undefined : "Bild in Originalgröße öffnen"}
       {...layoutAttributes}
     >
       {/* src deliberately last: React applies props in order, and a src
@@ -69,7 +86,8 @@ export const WikiContentImage = ({ attrs, imageDimensions }: Props) => {
         title={title}
         width={dimensions?.width}
         height={dimensions?.height}
-        loading="lazy"
+        loading={eager ? "eager" : "lazy"}
+        fetchPriority={eager ? "high" : undefined}
         decoding="async"
         src={optimized ? optimized.src : src}
       />
