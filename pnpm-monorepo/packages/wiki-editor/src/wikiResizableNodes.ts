@@ -1,5 +1,4 @@
 import type { Node } from "@tiptap/core";
-import { Image } from "@tiptap/extension-image";
 import type { EditorState, Transaction } from "@tiptap/pm/state";
 
 /**
@@ -193,21 +192,6 @@ export const withWikiBlockLayout = <Options, Storage>(
       };
     },
   });
-
-/**
- * The stock Image node plus the layout attributes (on the img element).
- * Unlike the other blocks, the width defaults to NULL — natural image
- * size — because the wide-preset default would upscale small images.
- */
-export const WikiImage = Image.extend({
-  addAttributes() {
-    return {
-      ...this.parent?.(),
-      ...wikiWidthPxAttribute(null),
-      ...wikiAlignAttribute(),
-    };
-  },
-});
 
 /**
  * A transaction clearing `widthPx`/`align` on every block that is not a

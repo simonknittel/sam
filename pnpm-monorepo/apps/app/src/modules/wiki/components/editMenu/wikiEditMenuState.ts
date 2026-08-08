@@ -325,7 +325,7 @@ export const wikiMenuFromElement = (
   if (
     element.matches("a[href]") &&
     !element.matches(
-      "[data-wiki-attachment], [data-wiki-page-link], [data-wiki-citizen-mention], [data-wiki-variant-link]",
+      "[data-wiki-image], [data-wiki-attachment], [data-wiki-page-link], [data-wiki-citizen-mention], [data-wiki-variant-link]",
     )
   ) {
     let position: number;

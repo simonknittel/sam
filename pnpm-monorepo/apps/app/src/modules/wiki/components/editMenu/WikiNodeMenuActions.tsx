@@ -73,6 +73,16 @@ export const WikiNodeMenuActions = ({
         <WikiEditMenuUrlForm defaultValue={menu.src} onSave={saveNodeUrl} />
       )}
 
+      {menu.typeName === "image" && menu.src && (
+        <ToolbarButton
+          title="Original öffnen"
+          isActive={false}
+          onClick={() => openInNewTab(menu.src)}
+        >
+          <FaExternalLinkAlt />
+        </ToolbarButton>
+      )}
+
       {menu.typeName === "wikiAttachment" && (
         <ToolbarButton
           title="Herunterladen"
