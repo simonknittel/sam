@@ -1,6 +1,7 @@
 import { env } from "@/env";
 import type { WikiCollabReplaceTokenPayload } from "@sam-monorepo/wiki-editor";
 import { SignJWT } from "jose";
+import { getWikiCollabUrl } from "./getWikiCollabUrl";
 
 const REPLACE_REQUEST_TIMEOUT_MS = 15_000;
 
@@ -27,12 +28,13 @@ export const replaceWikiPageContent = async ({
   content,
   updatedByEntityId,
 }: Options) => {
-  if (!env.COLLAB_JWT_SECRET || !env.NEXT_PUBLIC_COLLAB_URL)
+  const collabUrl = getWikiCollabUrl();
+  if (!env.COLLAB_JWT_SECRET || !collabUrl)
     throw new Error(
       "The collab server is not configured — wiki content can only be replaced through it",
     );
 
-  const replaceUrl = new URL("/replace", env.NEXT_PUBLIC_COLLAB_URL);
+  const replaceUrl = new URL("/replace", collabUrl);
   replaceUrl.protocol = replaceUrl.protocol === "ws:" ? "http:" : "https:";
 
   const claims = {

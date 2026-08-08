@@ -63,6 +63,13 @@ export const env = createEnv({
      * collaboration is disabled if unset.
      */
     COLLAB_JWT_SECRET: z.string().optional(),
+    /**
+     * Runtime override for NEXT_PUBLIC_COLLAB_URL, which is inlined into the
+     * build and therefore identical for every instance of the same build.
+     * Lets multiple app instances of one build talk to different collab
+     * servers (used by the Playwright test stack).
+     */
+    COLLAB_URL: z.url({ protocol: /^wss?$/ }).optional(),
   },
 
   /*
@@ -175,6 +182,7 @@ export const env = createEnv({
       process.env.NEXT_PUBLIC_PUSHER_CHANNELS_APP_KEY,
     PUSHER_CHANNELS_APP_SECRET: process.env.PUSHER_CHANNELS_APP_SECRET,
     COLLAB_JWT_SECRET: process.env.COLLAB_JWT_SECRET,
+    COLLAB_URL: process.env.COLLAB_URL,
     NEXT_PUBLIC_COLLAB_URL: process.env.NEXT_PUBLIC_COLLAB_URL,
     NEXT_PUBLIC_PUSHER_CHANNELS_HOST:
       process.env.NEXT_PUBLIC_PUSHER_CHANNELS_HOST,

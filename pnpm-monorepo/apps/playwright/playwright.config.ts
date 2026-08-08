@@ -1,22 +1,23 @@
 import { defineConfig } from "@playwright/test";
-import "dotenv/config";
 
 export default defineConfig({
   testDir: "./tests",
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  // Every worker runs its own app instance, collab container and database
+  // (see setup/README in fixtures/test.ts), so more workers cost real memory.
+  workers: 2,
   reporter: "html",
 
+  globalSetup: "./setup/global-setup.ts",
+
   use: {
-    baseURL: process.env.BASE_URL,
     trace: "on-first-retry",
-    extraHTTPHeaders: {
-      [process.env.PLAYWRIGHT_CUSTOM_HEADER_NAME as string]: process.env
-        .PLAYWRIGHT_CUSTOM_HEADER_VALUE as string,
-    },
     viewport: { width: 1280, height: 720 },
-    // reducedMotion: "reduce",
+    // The Hero glitch animation and similar effects respect
+    // prefers-reduced-motion; without this, screenshots and text assertions
+    // catch elements mid-animation.
+    contextOptions: { reducedMotion: "reduce" },
   },
 });

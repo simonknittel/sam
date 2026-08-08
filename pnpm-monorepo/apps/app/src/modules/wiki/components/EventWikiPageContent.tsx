@@ -27,10 +27,8 @@ import { MoveWikiPageModal } from "./MoveWikiPageModal";
 import { ReportWikiPageModal } from "./ReportWikiPageModal";
 import { WikiEditModeProvider } from "./WikiEditModeProvider";
 import { WikiEditModeToggle } from "./WikiEditModeToggle";
-import {
-  getWikiCollabUrl,
-  WikiPageEditorSection,
-} from "./WikiPageEditorSection";
+import { getWikiCollabUrl } from "../utils/getWikiCollabUrl";
+import { WikiPageEditorSection } from "./WikiPageEditorSection";
 import { WikiPageExportImportModal } from "./WikiPageExportImportModal";
 import { WikiPageFavoriteButton } from "./WikiPageFavoriteButton";
 import { WikiPageIconButton } from "./WikiPageIconButton";

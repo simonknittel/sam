@@ -1,19 +1,9 @@
-import { env } from "@/env";
 import { authenticate } from "@/modules/auth/server";
 import type { WikiPageStaticContent } from "../queries/getWikiPageStaticContent";
 import { getWikiCollabColor } from "../utils/getWikiCollabColor";
+import { getWikiCollabUrl } from "../utils/getWikiCollabUrl";
 import { WikiCollabEditor } from "./WikiCollabEditor";
 import { WikiPageStaticContent as WikiPageStaticContentView } from "./WikiPageStaticContent";
-
-/**
- * Editing requires the collab server — without it (e.g. a preview
- * deployment missing the env vars) pages are read-only. Also used by the
- * page headers to decide whether to offer the edit-mode toggle.
- */
-export const getWikiCollabUrl = () =>
-  env.COLLAB_JWT_SECRET && env.NEXT_PUBLIC_COLLAB_URL
-    ? env.NEXT_PUBLIC_COLLAB_URL
-    : null;
 
 interface Props {
   readonly pageId: string;

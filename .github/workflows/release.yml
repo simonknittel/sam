@@ -87,11 +87,3 @@ jobs:
     with:
       event: new
     secrets: inherit
-
-  smoke_test:
-    name: Playwright tests
-    needs: [deploy_lambda_functions, deploy_app]
-    permissions:
-      contents: read
-    uses: ./.github/workflows/playwright-tests.yml
-    secrets: inherit

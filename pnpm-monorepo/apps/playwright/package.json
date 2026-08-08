@@ -6,8 +6,11 @@
   },
   "devDependencies": {
     "@playwright/test": "1.62.0",
+    "@prisma/adapter-pg": "7.9.1",
+    "@sam-monorepo/database": "workspace:*",
+    "@testcontainers/postgresql": "12.0.4",
     "@types/node": "24.13.3",
-    "dotenv": "17.4.2",
+    "testcontainers": "12.0.4",
     "typescript": "7.0.2"
   }
 }

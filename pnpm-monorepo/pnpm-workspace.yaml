@@ -111,4 +111,8 @@ allowBuilds:
   # a workspace project lifecycle; no need to run it again as a dependency
   # build of apps/app.
   "@sam-monorepo/database@file:packages/database": false
+  # Optional native accelerators of testcontainers' ssh2 dependency — the
+  # pure-JS fallbacks are fine for the test stack.
+  cpu-features: false
+  ssh2: false
 auditLevel: critical

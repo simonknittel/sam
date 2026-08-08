@@ -1,24 +1,26 @@
 name: Playwright tests
 
 on:
-  schedule:
-    - cron: '0 0,8,16 * * *'
-  workflow_dispatch:
-  workflow_call: # Called by the Release workflow after a production deployment
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/playwright-tests.yml
+      - pnpm-monorepo/**
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/playwright-tests.yml
+      - pnpm-monorepo/**
 
 jobs:
-  smoke_test:
+  playwright_tests:
     name: Playwright tests
     runs-on: ubuntu-24.04
-    environment: Production
+    timeout-minutes: 30
     permissions:
       contents: read
-    container:
-      # Must stay on the same version as `@playwright/test` in
-      # apps/playwright/package.json. The image only ships the browser builds of
-      # its own version, so a mismatch fails with "Executable doesn't exist".
-      image: mcr.microsoft.com/playwright:v1.62.1-noble@sha256:dcc5531e97840b9b5e794f2814476b21571c5124a3fca2267d73041f56e7580e
-      options: --user 1001
     defaults:
       run:
         working-directory: pnpm-monorepo
@@ -37,17 +39,23 @@ jobs:
 
       - name: pnpm audit guard
         run: pnpm audit
-        working-directory: pnpm-monorepo
 
       - name: Install dependencies
-        run: pnpm install --filter @sam-monorepo/playwright
+        run: pnpm install --filter @sam-monorepo/app... --filter @sam-monorepo/playwright...
+        env:
+          # The app's postinstall runs `next typegen`, which loads src/env.ts;
+          # none of the runtime secrets exist here. The tests themselves run
+          # WITH validation — the stack provides substitute values.
+          SKIP_VALIDATION: "1"
 
+      - name: Install Playwright browsers
+        run: pnpm --filter @sam-monorepo/playwright exec playwright install --with-deps chromium
+
+      # Spawns the whole stack itself: Postgres and collab containers via
+      # testcontainers (the runner's Docker daemon) plus a production build
+      # of the app per worker.
       - name: Run tests
         run: pnpm --filter @sam-monorepo/playwright test
-        env:
-          BASE_URL: ${{ vars.BASE_URL }}
-          PLAYWRIGHT_CUSTOM_HEADER_NAME: ${{ vars.PLAYWRIGHT_CUSTOM_HEADER_NAME }}
-          PLAYWRIGHT_CUSTOM_HEADER_VALUE: ${{ secrets.PLAYWRIGHT_CUSTOM_HEADER_VALUE }}
 
       - name: Upload test report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
