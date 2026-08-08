@@ -125,7 +125,7 @@ Enable GuardDuty detectors in every active region and email all findings via a n
 
 #### Status
 
-Mostly done — 16 detectors (all enabled regions except the unreachable ap-south-1) plus the guardduty-findings notification configuration applied on 2026-08-08; sample findings created in eu-central-1 and us-east-1. Outstanding: the final apply pins the auto-enabled paid protection plans to DISABLED (96 feature resources), and the finding emails need inbox confirmation.
+Done — 16 detectors (all enabled regions except the unreachable ap-south-1) plus the guardduty-findings notification configuration applied on 2026-08-08. The auto-enabled paid protection plans are pinned to DISABLED (verified: only CLOUD_TRAIL, DNS_LOGS, FLOW_LOGS enabled). Sample findings in eu-central-1 and us-east-1 both produced emails (confirmed by Simon) and were archived afterwards. RUNTIME_MONITORING is intentionally not managed: it is off by default, and managing it causes permanent drift because the API always reports its three agent-management sub-configurations.
 
 #### Steps
 
@@ -146,17 +146,19 @@ Mostly done — 16 detectors (all enabled regions except the unreachable ap-sout
 
 ## Final end-to-end verification
 
-- `terraform plan` is clean (no drift) after the import blocks have been removed.
-- The permissionless-role AccessDenied test triggers the unauthorized-API-calls alarm and an email lands in hallo@simonknittel.de.
-- GuardDuty sample findings from two regions each produce an email.
-- The trail delivers to both S3 and CloudWatch Logs; log file validation on; lifecycle rule visible.
-- After a few days: Cost Explorer shows GuardDuty/CloudWatch costs in the expected range (well within the $10 budget) and alarm noise is acceptable, otherwise tune the unauthorized threshold.
+All verified on 2026-08-08:
+
+- `terraform plan` is clean (no drift) after the import blocks were removed and applied. ✓
+- The permissionless-role AccessDenied test (4 denied calls) drove the unauthorized-API-calls alarm into ALARM; notification events were generated and emails arrived. ✓ The critical-activity alarm additionally fired on its own from the apply's IAM policy changes and recovered. ✓
+- GuardDuty sample findings from eu-central-1 and us-east-1 each produced an email (confirmed in inbox); findings archived afterwards. ✓
+- The trail delivers to both S3 and CloudWatch Logs (streams from all regions observed); log file validation on; lifecycle rule active. ✓
+- Outstanding: after a few days, check Cost Explorer for GuardDuty/CloudWatch costs (well within the $10 budget expected) and observe alarm noise — the unauthorized alarm flapped a few times during verification (test calls arriving spread over periods plus console background noise), so the threshold of 3 may need raising.
 
 ## Rollout plan
 
-1. Implement in a separate worktree, review, merge to main — not started.
-2. `terraform apply` against the test state (the single live account), which performs the imports and creates everything — not started.
-3. Run the end-to-end verification — not started.
-4. Remove the import blocks and commit — not started.
-5. Observe alarm noise and GuardDuty trial costs for about a week; tune thresholds if needed — not started.
-6. Future prod account: apply the same config with prod tfvars/backend (fresh creation, no imports; email contact needs its activation click) — blocked until a prod account exists.
+1. Implement in a separate worktree, review, merge to main — implementation done (branch `worktree-aws-security-monitoring`), awaiting review and merge.
+2. `terraform apply` against the test state (the single live account), which performs the imports and creates everything — done 2026-08-08 (in four incremental applies).
+3. Run the end-to-end verification — done 2026-08-08, see above.
+4. Remove the import blocks and commit — done 2026-08-08.
+5. Observe alarm noise and GuardDuty trial costs for about a week; tune thresholds if needed — pending.
+6. Future prod account: apply the same config with prod tfvars/backend (fresh creation, no imports; `environment = "Prod"` and a `cloudtrail_s3_bucket_name` in prod.tfvars; email contact needs its activation click) — blocked until a prod account exists.

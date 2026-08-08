@@ -22,13 +22,16 @@ locals {
   # CreateDetector enables these paid protection plans by default. The
   # foundational sources (CLOUD_TRAIL, DNS_LOGS, FLOW_LOGS) are all this setup
   # needs, so everything else is explicitly disabled to keep costs down.
+  # RUNTIME_MONITORING is not listed because it is off by default and managing
+  # it produces permanent drift: the API always reports its three
+  # agent-management sub-configurations, which the provider then tries to
+  # remove on every plan.
   guardduty_disabled_features = [
     "S3_DATA_EVENTS",
     "EKS_AUDIT_LOGS",
     "EBS_MALWARE_PROTECTION",
     "RDS_LOGIN_EVENTS",
     "LAMBDA_NETWORK_LOGS",
-    "RUNTIME_MONITORING",
   ]
 }
 
