@@ -221,11 +221,6 @@ export const EventWikiPageContent = async ({ context, page }: Props) => {
                     ? getEffectiveEventWikiScope(context, page.parentId, "edit")
                     : null
                 }
-                parentTitle={
-                  page.parentId
-                    ? context.pagesById.get(page.parentId)?.title
-                    : undefined
-                }
               />
             )}
 

@@ -12,7 +12,16 @@ import {
   WikiPageUploadability,
 } from "@sam-monorepo/database/browser";
 import { useState } from "react";
-import { FaLock, FaPen, FaSave, FaSitemap, FaUserShield } from "react-icons/fa";
+import {
+  FaGlobe,
+  FaLock,
+  FaPen,
+  FaSave,
+  FaSitemap,
+  FaUsers,
+  FaUserShield,
+} from "react-icons/fa";
+import { MdWorkspaces } from "react-icons/md";
 import { updateEventWikiPagePermissions } from "../actions/updateEventWikiPagePermissions";
 import type { WikiPageTargetOption } from "../utils/getWikiPageTargets";
 import {
@@ -50,7 +59,6 @@ interface Props {
   /** The parent's effective scopes — what INHERIT resolves to here */
   readonly parentReadScope: EventWikiScopeSelection | null;
   readonly parentEditScope: EventWikiScopeSelection | null;
-  readonly parentTitle?: string;
 }
 
 const MANAGERS_ONLY: EventWikiScopeSelection = {
@@ -60,11 +68,12 @@ const MANAGERS_ONLY: EventWikiScopeSelection = {
 
 /**
  * The event-mode permissions dialog: read and edit scopes plus the upload
- * tiers, instead of the global wiki's role lists. The manage tier is not
- * configurable — the organizer, the event managers and `event;manage`
- * always manage every page. The edit scope only offers subsets of the read
- * scope (and resets to the managers when narrowing the read scope
- * invalidates it), mirroring the server-side validation.
+ * tiers, instead of the global wiki's role lists. Styled like
+ * `WikiPagePermissionsModal` so both dialogs read as one. The manage tier
+ * is not configurable — the organizer, the event managers and
+ * `event;manage` always manage every page. The edit scope only offers
+ * subsets of the read scope (and resets to the managers when narrowing the
+ * read scope invalidates it), mirroring the server-side validation.
  */
 export const EventWikiPagePermissionsModal = ({
   className,
@@ -81,7 +90,6 @@ export const EventWikiPagePermissionsModal = ({
   inheritedFrom,
   parentReadScope,
   parentEditScope,
-  parentTitle,
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const [readScope, setReadScope] = useState<string>(initialReadScope);
@@ -194,7 +202,7 @@ export const EventWikiPagePermissionsModal = ({
         onClick={() => setIsOpen(true)}
         variant={Button2Variant.IconOnly}
         className={className}
-        tooltip="Berechtigungen"
+        tooltip="Berechtigungen bearbeiten"
       >
         <FaLock />
       </Button2>
@@ -202,11 +210,20 @@ export const EventWikiPagePermissionsModal = ({
       <Modal
         isOpen={isOpen}
         onRequestClose={() => setIsOpen(false)}
-        className="w-140"
+        className="w-160"
         heading={<h2>Berechtigungen</h2>}
       >
         <form action={formAction}>
           <input type="hidden" name="id" value={pageId} />
+
+          <Note
+            type="info"
+            message={
+              isRootPage
+                ? "Der Lese-Scope der Briefing-Startseite entscheidet, wer den Briefing-Tab des Events sieht. Bearbeiten schließt Lesen ein und ist nie weiter gefasst als Lesen."
+                : "Bearbeiten schließt Lesen ein und ist nie weiter gefasst als Lesen. Eine Unterseite gibt nie mehr als die Seite darüber: Wer die übergeordnete Seite nicht lesen darf, bekommt hier gar keine Berechtigung."
+            }
+          />
 
           <ScopeSection
             legend="Lesen"
@@ -218,13 +235,11 @@ export const EventWikiPagePermissionsModal = ({
             onPositionChange={(next) => handleReadChange(readScope, next)}
             allowInherit={!isRootPage}
             inheritedFrom={inheritedFrom.read}
-            parentTitle={parentTitle}
             positionOptions={positionOptions}
             isOptionAllowed={() => true}
           />
 
           <ScopeSection
-            className="mt-6"
             legend="Bearbeiten"
             name="editScope"
             positionSelectName="editScopePositionId"
@@ -237,18 +252,15 @@ export const EventWikiPagePermissionsModal = ({
             onPositionChange={setEditPositionId}
             allowInherit={!isRootPage}
             inheritedFrom={inheritedFrom.edit}
-            parentTitle={parentTitle}
             positionOptions={allowedEditPositionOptions(currentEffectiveRead)}
             isOptionAllowed={(scope) =>
               isEditChoiceAllowed(scope, editPositionId, currentEffectiveRead)
             }
           />
 
-          <section className="mt-6">
-            <h3 className="text-sm text-white/40 font-mono uppercase">
-              Hochladen
-            </h3>
-            <p className="mt-1 text-sm text-neutral-400">
+          <section className="mt-8">
+            <h3 className="font-bold text-lg font-mono uppercase">Hochladen</h3>
+            <p className="text-sm text-neutral-400">
               Wer darf beim Bearbeiten Bilder bzw. Dateianhänge hochladen?
               Verwalter dürfen immer hochladen.
             </p>
@@ -260,7 +272,6 @@ export const EventWikiPagePermissionsModal = ({
               onChange={setImageUploadability}
               allowInherit={!isRootPage}
               inheritedFrom={inheritedFrom.imageUploadability}
-              parentTitle={parentTitle}
             />
 
             <h4 className="font-bold mt-4">Dateianhänge</h4>
@@ -270,21 +281,20 @@ export const EventWikiPagePermissionsModal = ({
               onChange={setAttachmentUploadability}
               allowInherit={!isRootPage}
               inheritedFrom={inheritedFrom.attachmentUploadability}
-              parentTitle={parentTitle}
             />
           </section>
 
-          <Note
-            type="info"
-            className="mt-6"
-            message={
-              isRootPage
-                ? "Der Lese-Scope der Briefing-Startseite entscheidet, wer den Briefing-Tab sieht. Organisator und Event-Verwalter haben immer vollen Zugriff. Bearbeiten schließt Lesen ein."
-                : "Wer die übergeordnete Seite nicht lesen kann, erhält hier keinen Zugriff — egal was diese Seite einstellt. Organisator und Event-Verwalter haben immer vollen Zugriff. Bearbeiten schließt Lesen ein."
-            }
-          />
+          <section className="mt-8">
+            <h3 className="font-bold text-lg font-mono uppercase">Verwalter</h3>
+            <p className="text-sm text-neutral-400">
+              Der Organisator, die Verwalter des Events und Personen mit der
+              Verwalten-Berechtigung für Events verwalten alle Seiten dieses
+              Briefings und haben immer alle Berechtigungen. Das ist nicht
+              konfigurierbar.
+            </p>
+          </section>
 
-          <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
+          <Button2 type="submit" disabled={isPending} className="mt-8 ml-auto">
             {isPending ? <AsciiSpinner /> : <FaSave />}
             Speichern
           </Button2>
@@ -296,8 +306,12 @@ export const EventWikiPagePermissionsModal = ({
   );
 };
 
+const inheritedHint = (sourceTitle: string | undefined) =>
+  sourceTitle
+    ? `Wie die übergeordnete Seite, aktuell geerbt von "${sourceTitle}".`
+    : "Wie die übergeordnete Seite.";
+
 interface ScopeSectionProps {
-  readonly className?: string;
   readonly legend: string;
   readonly name: string;
   readonly positionSelectName: string;
@@ -307,14 +321,12 @@ interface ScopeSectionProps {
   readonly onPositionChange: (positionId: string) => void;
   readonly allowInherit: boolean;
   readonly inheritedFrom?: string;
-  readonly parentTitle?: string;
   readonly positionOptions: WikiPageTargetOption[];
   /** Drops scope options the subset rule forbids (the edit section) */
   readonly isOptionAllowed: (scope: string) => boolean;
 }
 
 const ScopeSection = ({
-  className,
   legend,
   name,
   positionSelectName,
@@ -324,7 +336,6 @@ const ScopeSection = ({
   onPositionChange,
   allowInherit,
   inheritedFrom,
-  parentTitle,
   positionOptions,
   isOptionAllowed,
 }: ScopeSectionProps) => {
@@ -334,45 +345,48 @@ const ScopeSection = ({
           {
             value: WikiPageEventScope.INHERIT,
             label: "Geerbt",
-            hint: inheritedFrom
-              ? `Übernimmt die Einstellung von „${inheritedFrom}“.`
-              : `Übernimmt die Einstellung der übergeordneten Seite${parentTitle ? ` „${parentTitle}“` : ""}.`,
+            icon: <FaSitemap />,
+            hint: inheritedHint(inheritedFrom),
           },
         ]
       : []),
     {
       value: WikiPageEventScope.MANAGERS,
-      label: "Nur Verwalter",
-      hint: "Organisator, Event-Verwalter und Personen mit der Verwalten-Berechtigung für Events.",
+      label: "Verwalter",
+      icon: <FaUserShield />,
+      hint: "Nur der Organisator und die Verwalter des Events.",
     },
     {
       value: WikiPageEventScope.PARTICIPANTS,
-      label: "Alle Teilnehmer",
+      label: "Teilnehmer",
+      icon: <FaUsers />,
       hint: "Alle, die dem Event auf Discord zugesagt haben.",
     },
     {
       value: WikiPageEventScope.POSITION,
-      label: "Aufstellungs-Gruppe",
+      label: "Aufstellung",
+      icon: <MdWorkspaces />,
       hint:
         positionOptions.length > 0
-          ? "Alle, die einer Position innerhalb der gewählten Gruppe zugewiesen sind."
+          ? "Alle, die einer Position innerhalb der gewählten Aufstellungs-Gruppe zugewiesen sind."
           : "Das Event hat noch keine passende Aufstellungs-Gruppe.",
     },
     {
       value: WikiPageEventScope.ALL,
       label: "Alle",
+      icon: <FaGlobe />,
       hint: "Alle mit Zugriff auf Events.",
     },
   ].filter((item) => isOptionAllowed(item.value));
 
   return (
-    <fieldset className={className}>
-      <legend className="mb-2 text-sm text-white/40 font-mono uppercase">
-        {legend}
-      </legend>
+    <section className="mt-8">
+      <h3 className="font-bold text-lg font-mono uppercase">{legend}</h3>
 
       <RadioGroup
         name={name}
+        className="mt-2"
+        equalWidth
         value={scope}
         onChange={onScopeChange}
         items={items}
@@ -389,7 +403,7 @@ const ScopeSection = ({
           emptyOptionLabel="Position wählen …"
         />
       )}
-    </fieldset>
+    </section>
   );
 };
 
@@ -399,7 +413,6 @@ interface UploadabilityRadioGroupProps {
   readonly onChange: (value: string) => void;
   readonly allowInherit: boolean;
   readonly inheritedFrom?: string;
-  readonly parentTitle?: string;
 }
 
 const UploadabilityRadioGroup = ({
@@ -408,7 +421,6 @@ const UploadabilityRadioGroup = ({
   onChange,
   allowInherit,
   inheritedFrom,
-  parentTitle,
 }: UploadabilityRadioGroupProps) => {
   return (
     <RadioGroup
@@ -424,9 +436,7 @@ const UploadabilityRadioGroup = ({
                 value: WikiPageUploadability.INHERIT,
                 label: "Geerbt",
                 icon: <FaSitemap />,
-                hint: inheritedFrom
-                  ? `Übernimmt die Einstellung von „${inheritedFrom}“.`
-                  : `Übernimmt die Einstellung der übergeordneten Seite${parentTitle ? ` „${parentTitle}“` : ""}.`,
+                hint: inheritedHint(inheritedFrom),
               },
             ]
           : []),
