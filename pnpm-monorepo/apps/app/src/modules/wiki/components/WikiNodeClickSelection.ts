@@ -4,6 +4,8 @@ import { Extension } from "@tiptap/core";
 import { NodeSelection, Plugin, PluginKey } from "@tiptap/pm/state";
 
 const ANCHOR_NODE_TYPES = [
+  // Linked to the original file it displays
+  "image",
   "wikiAttachment",
   "wikiPageLink",
   "wikiCitizenMention",
@@ -15,12 +17,12 @@ const ANCHOR_NODE_TYPES = [
 ];
 
 /**
- * The atom nodes in ANCHOR_NODE_TYPES (attachment cards, internal page
- * links, citizen mentions, variant links) render as anchors — while editing, a plain
- * click would navigate away. This selects the node instead (showing the
- * edit menu, which offers download/open); read-only views keep the
- * anchors' native navigation. Editor-only behavior, the extension adds
- * no schema.
+ * The atom nodes in ANCHOR_NODE_TYPES (images, attachment cards, internal
+ * page links, citizen mentions, variant links) render as anchors — while
+ * editing, a plain click would navigate away. This selects the node
+ * instead (showing the edit menu, which offers download/open); read-only
+ * views keep the anchors' native navigation. Editor-only behavior, the
+ * extension adds no schema.
  */
 export const WikiNodeClickSelection = Extension.create({
   name: "wikiNodeClickSelection",
@@ -41,6 +43,29 @@ export const WikiNodeClickSelection = Extension.create({
               ),
             );
             return true;
+          },
+
+          handleDOMEvents: {
+            /**
+             * ProseMirror runs handleClickOn on mouseup, where cancelling
+             * the event is too late to stop the anchor: a link is followed
+             * by the click event that comes after it. Cancelling that too
+             * is what actually keeps the editor on the page — the node is
+             * selected by then, so the selection identifies the click as
+             * one of the handler's above.
+             */
+            click: (view, event) => {
+              if (!view.editable) return false;
+              const { selection } = view.state;
+              if (
+                !(selection instanceof NodeSelection) ||
+                !ANCHOR_NODE_TYPES.includes(selection.node.type.name)
+              )
+                return false;
+
+              event.preventDefault();
+              return false;
+            },
           },
         },
       }),

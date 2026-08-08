@@ -15,6 +15,7 @@ import { ReportWikiPageModal } from "@/modules/wiki/components/ReportWikiPageMod
 import { WikiCollabEditor } from "@/modules/wiki/components/WikiCollabEditor";
 import { WikiEditModeProvider } from "@/modules/wiki/components/WikiEditModeProvider";
 import { WikiEditModeToggle } from "@/modules/wiki/components/WikiEditModeToggle";
+import { WikiPageDetailsPopover } from "@/modules/wiki/components/WikiPageDetailsPopover";
 import { WikiPageExportImportModal } from "@/modules/wiki/components/WikiPageExportImportModal";
 import { WikiPageFavoriteButton } from "@/modules/wiki/components/WikiPageFavoriteButton";
 import { WikiPageIconButton } from "@/modules/wiki/components/WikiPageIconButton";
@@ -229,6 +230,7 @@ const PageContent = async ({
             </h1>
 
             <p className="mt-1 text-xs text-white/20">
+              <WikiPageDetailsPopover pageId={page.id} />{" "}
               <span className="uppercase font-mono">Aktualisiert:</span>{" "}
               {formatDate(page.updatedAt)}
               {effectiveOwner && (
