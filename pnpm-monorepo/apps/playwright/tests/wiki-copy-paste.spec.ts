@@ -1,0 +1,197 @@
+import type { Locator, Page } from "@playwright/test";
+import {
+  createCitizen,
+  createRole,
+  createWikiPage,
+  wikiDocument,
+  WikiPageAccessType,
+  WikiPageVisibility,
+  wikiParagraph,
+} from "../fixtures/factories";
+import { expect, test } from "../fixtures/test";
+
+/**
+ * A click landing before React hydrates is swallowed — retry until the
+ * expected reaction shows up.
+ */
+const clickUntilVisible = (button: Locator, reaction: Locator) =>
+  expect(async () => {
+    await button.click({ timeout: 2_000 });
+    await expect(reaction).toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 15_000 });
+
+const copyPageToClipboard = async (page: Page) => {
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Seite kopieren" }),
+    page.getByRole("heading", { name: "Seite kopieren" }),
+  );
+  await page.getByRole("button", { name: "Kopieren", exact: true }).click();
+  await expect(
+    page.getByText("Seite in die Zwischenablage kopiert"),
+  ).toBeVisible();
+};
+
+const openCreatePageModal = async (page: Page) => {
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Neue Seite" }),
+    page.getByRole("heading", { name: "Neue Seite" }),
+  );
+};
+
+test("copy'n'paste inserts a page with its children under another page", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const member = await createCitizen(prisma, { handle: "kopierer" });
+  const source = await createWikiPage(prisma, {
+    title: "Handbuch",
+    visibility: WikiPageVisibility.PUBLIC,
+    content: wikiDocument(wikiParagraph("Grundlagen des Bergbaus.")),
+  });
+  const chapter = await createWikiPage(prisma, {
+    title: "Kapitel",
+    parentId: source.id,
+    content: wikiDocument(wikiParagraph("Erstes Kapitel.")),
+  });
+  const target = await createWikiPage(prisma, {
+    title: "Zielbereich",
+    visibility: WikiPageVisibility.PUBLIC,
+    ownerId: member.entity.id,
+  });
+  await signIn(member.user);
+
+  await page.goto(`/app/wiki/${source.id}/${source.slug}`);
+  await copyPageToClipboard(page);
+
+  await page.goto(`/app/wiki/${target.id}/${target.slug}`);
+  await openCreatePageModal(page);
+
+  await expect(
+    page.getByRole("heading", { name: "Kopierte Seite einfügen" }),
+  ).toBeVisible();
+  await expect(page.getByText("„Handbuch“ + 1 Unterseiten")).toBeVisible();
+  await page.getByRole("button", { name: "Einfügen", exact: true }).click();
+
+  await expect(page).toHaveURL(/handbuch-kopie$/, { timeout: 15_000 });
+  await expect(page.getByText("Grundlagen des Bergbaus.")).toBeVisible();
+
+  const rootCopy = await prisma.wikiPage.findFirstOrThrow({
+    where: { title: "Handbuch (Kopie)" },
+  });
+  expect(rootCopy.parentId).toBe(target.id);
+  expect(rootCopy.visibility).toBe(WikiPageVisibility.INHERIT);
+  expect(rootCopy.ownerId).toBeNull();
+
+  const chapterCopy = await prisma.wikiPage.findFirstOrThrow({
+    where: { title: "Kapitel", parentId: rootCopy.id },
+  });
+  expect(chapterCopy.content).toEqual(chapter.content);
+  expect(chapterCopy.visibility).toBe(WikiPageVisibility.INHERIT);
+
+  // The insert consumed the clipboard
+  const cookies = await page.context().cookies();
+  expect(
+    cookies.find((cookie) => cookie.name === "wiki_clipboard"),
+  ).toBeUndefined();
+});
+
+test("a new page can start as a copy of an existing page", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const member = await createCitizen(prisma, { handle: "vorlagen-nutzer" });
+  const template = await createWikiPage(prisma, {
+    title: "Vorlage",
+    visibility: WikiPageVisibility.PUBLIC,
+    content: wikiDocument(wikiParagraph("Struktur der Vorlage.")),
+  });
+  await createWikiPage(prisma, {
+    title: "Vorlagen-Detail",
+    parentId: template.id,
+    content: wikiDocument(wikiParagraph("Details der Vorlage.")),
+  });
+  const target = await createWikiPage(prisma, {
+    title: "Arbeitsbereich",
+    visibility: WikiPageVisibility.PUBLIC,
+    ownerId: member.entity.id,
+  });
+  await signIn(member.user);
+
+  await page.goto(`/app/wiki/${target.id}/${target.slug}`);
+  await openCreatePageModal(page);
+
+  await page.locator('input[name="title"]').fill("Neu aus Vorlage");
+  // The select waits for the lazily fetched readable pages
+  await page
+    .locator('select[name="copyFromPageId"]')
+    .selectOption({ label: "Vorlage" });
+  await page.getByRole("button", { name: "Erstellen", exact: true }).click();
+
+  await expect(page.getByText("Struktur der Vorlage.")).toBeVisible({
+    timeout: 15_000,
+  });
+
+  const created = await prisma.wikiPage.findFirstOrThrow({
+    where: { title: "Neu aus Vorlage" },
+  });
+  expect(created.parentId).toBe(target.id);
+
+  const childCopy = await prisma.wikiPage.findFirstOrThrow({
+    where: { title: "Vorlagen-Detail", parentId: created.id },
+  });
+  expect(childCopy.visibility).toBe(WikiPageVisibility.INHERIT);
+});
+
+test("copying skips children the user cannot read", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const member = await createCitizen(prisma, { handle: "leser" });
+  const secretRole = await createRole(prisma, { name: "geheim" });
+  const source = await createWikiPage(prisma, {
+    title: "Übersicht",
+    visibility: WikiPageVisibility.PUBLIC,
+    content: wikiDocument(wikiParagraph("Überblick über alles.")),
+  });
+  await createWikiPage(prisma, {
+    title: "Offen",
+    parentId: source.id,
+    content: wikiDocument(wikiParagraph("Für alle lesbar.")),
+  });
+  await createWikiPage(prisma, {
+    title: "Geheim",
+    parentId: source.id,
+    visibility: WikiPageVisibility.RESTRICTED,
+    roleAccess: [{ roleId: secretRole.id, type: WikiPageAccessType.READ }],
+  });
+  const target = await createWikiPage(prisma, {
+    title: "Ziel",
+    visibility: WikiPageVisibility.PUBLIC,
+    ownerId: member.entity.id,
+  });
+  await signIn(member.user);
+
+  await page.goto(`/app/wiki/${source.id}/${source.slug}`);
+  await copyPageToClipboard(page);
+
+  await page.goto(`/app/wiki/${target.id}/${target.slug}`);
+  await openCreatePageModal(page);
+  // Only the readable child counts
+  await expect(page.getByText("„Übersicht“ + 1 Unterseiten")).toBeVisible();
+  await page.getByRole("button", { name: "Einfügen", exact: true }).click();
+  await expect(page).toHaveURL(/bersicht-kopie$/, { timeout: 15_000 });
+
+  const rootCopy = await prisma.wikiPage.findFirstOrThrow({
+    where: { title: "Übersicht (Kopie)" },
+  });
+  expect(
+    await prisma.wikiPage.count({
+      where: { title: "Offen", parentId: rootCopy.id },
+    }),
+  ).toBe(1);
+  // The unreadable child was not copied — only the original exists
+  expect(await prisma.wikiPage.count({ where: { title: "Geheim" } })).toBe(1);
+});
