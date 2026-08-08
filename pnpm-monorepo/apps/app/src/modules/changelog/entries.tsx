@@ -42,6 +42,36 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-08-08-event-briefing",
+    date: "2026-08-08",
+    title: "Events: Briefing",
+    tags: ["Neu", "Events", "Wiki"],
+    isTracked: true,
+    requiresAuth: { resource: "event", action: "read" },
+    body: () => (
+      <>
+        <p>
+          Jedes neu angelegte Event bekommt einen eigenen
+          &bdquo;Briefing&ldquo;-Tab: ein Wiki nur für dieses Event. Der
+          Organisator und die Event-Manager befüllen es und legen pro Seite
+          fest, wer lesen und bearbeiten darf – nur die Manager, die Teilnehmer,
+          eine Gruppe der Aufstellung oder alle. Sobald die Startseite für mehr
+          als die Manager freigegeben wird, erscheint der Tab für die neue
+          Zielgruppe und sie bekommt einmalig eine Benachrichtigung.
+        </p>
+
+        <p>
+          Im Briefing stecken die bekannten Wiki-Funktionen: gemeinsames
+          Bearbeiten, Unterseiten, Suche, Tags, Favoriten, Bilder und
+          Dateianhänge. Nach dem Ende des Events wird das Briefing wie das
+          restliche Event eingefroren und bleibt lesbar. In den
+          Event-Übersichten führt ein Briefing-Button direkt hinein.
+        </p>
+      </>
+    ),
+  },
+
+  {
     key: "2026-08-05-wiki-kleiner-text",
     date: "2026-08-05",
     title: "Wiki: Kleiner Text",
