@@ -2,6 +2,7 @@ module "notification_router" {
   source = "./modules/eventbridge-sqs-lambda"
 
   function_name                  = "notification-router"
+  environment                    = var.environment
   reserved_concurrent_executions = 2
   account_id                     = data.aws_caller_identity.current.account_id
   timeout                        = 180

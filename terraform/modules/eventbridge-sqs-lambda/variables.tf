@@ -2,12 +2,16 @@ variable "function_name" {
   type = string
 }
 
+variable "environment" {
+  type = string
+}
+
 variable "reserved_concurrent_executions" {
   type    = number
   default = 2
 
   validation {
-    condition = var.reserved_concurrent_executions >= 2
+    condition     = var.reserved_concurrent_executions >= 2
     error_message = "Must be greater than or equal to 2"
   }
 }
@@ -18,7 +22,7 @@ variable "provisioned_concurrent_executions" {
 }
 
 variable "parameters" {
-  type = list(string)
+  type    = list(string)
   default = []
 }
 
@@ -48,19 +52,19 @@ variable "dynamodb" {
 }
 
 variable "runtime" {
-  type    = string
+  type = string
 }
 
 variable "environment_variables" {
   type      = map(string)
   sensitive = true
-  default = {}
+  default   = {}
 }
 
 variable "batch_size" {
-  type    = number
+  type = number
 }
 
 variable "batch_window" {
-  type    = number
+  type = number
 }

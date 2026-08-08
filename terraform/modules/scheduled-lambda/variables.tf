@@ -2,14 +2,18 @@ variable "function_name" {
   type = string
 }
 
+variable "environment" {
+  type = string
+}
+
 variable "runtime" {
-  type    = string
+  type = string
 }
 
 variable "environment_variables" {
   type      = map(string)
   sensitive = true
-  default = {}
+  default   = {}
 }
 
 variable "account_id" {
@@ -27,7 +31,7 @@ variable "memory_size" {
 }
 
 variable "schedule_expression" {
-  type    = string
+  type = string
 }
 
 variable "scheduler_state" {
@@ -42,6 +46,6 @@ variable "event_bus" {
 }
 
 variable "parameters" {
-  type = list(string)
+  type    = list(string)
   default = []
 }

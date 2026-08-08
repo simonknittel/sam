@@ -2,6 +2,7 @@ module "frequent_automations" {
   source = "./modules/scheduled-lambda"
 
   function_name = "frequent-automations"
+  environment   = var.environment
   account_id    = data.aws_caller_identity.current.account_id
   timeout       = 90
   memory_size   = 512

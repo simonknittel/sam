@@ -1,7 +1,7 @@
 # https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Best_Practice_Recommended_Alarms_AWS_Services.html
 
 resource "aws_cloudwatch_metric_alarm" "lambda_throttles" {
-  alarm_name = "${var.function_name}-lambda-throttles"
+  alarm_name = "Throttled invocations | ${var.function_name} [SAM] (${var.environment})"
 
   namespace   = "AWS/Lambda"
   metric_name = "Throttles"
@@ -19,7 +19,7 @@ resource "aws_cloudwatch_metric_alarm" "lambda_throttles" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "lambda_errors" {
-  alarm_name = "${var.function_name}-lambda-errors"
+  alarm_name = "Invocation errors | ${var.function_name} [SAM] (${var.environment})"
 
   namespace   = "AWS/Lambda"
   metric_name = "Errors"
@@ -37,7 +37,7 @@ resource "aws_cloudwatch_metric_alarm" "lambda_errors" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "memory_utilization" {
-  alarm_name = "${var.function_name}-memory-utilization"
+  alarm_name = "High memory usage | ${var.function_name} [SAM] (${var.environment})"
 
   namespace   = "LambdaInsights"
   metric_name = "memory_utilization"
@@ -56,7 +56,7 @@ resource "aws_cloudwatch_metric_alarm" "memory_utilization" {
 
 
 resource "aws_cloudwatch_metric_alarm" "deadletter_message_count" {
-  alarm_name = "deadletter-message-count-${var.function_name}"
+  alarm_name = "Messages in dead letter queue | ${var.function_name} [SAM] (${var.environment})"
 
   namespace   = "AWS/SQS"
   metric_name = "ApproximateNumberOfMessagesVisible"

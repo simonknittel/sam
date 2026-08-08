@@ -32,3 +32,13 @@ variable "email_function_environment_variables" {
 variable "cloudtrail_s3_bucket_name" {
   type = string
 }
+
+# TF_VAR_environment = "Test"
+variable "environment" {
+  type = string
+
+  validation {
+    condition     = contains(["Test", "Prod"], var.environment)
+    error_message = "The environment must be either \"Test\" or \"Prod\"."
+  }
+}
