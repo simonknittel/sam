@@ -61,7 +61,7 @@ In a worktree, adjust them to the slot's ports (slot 1 shown):
 
 - `DATABASE_URL` → port `5433` (in BOTH files)
 - `NEXTAUTH_URL` → `http://localhost:3001`
-- `NEXT_PUBLIC_COLLAB_URL` → `ws://localhost:5211`
+- `COLLAB_URL` → `ws://localhost:5211`
 - append `NEXT_PUBLIC_PUSHER_CHANNELS_PORT="6002"` (not present in the
   main `.env`; the app defaults to 6001)
 

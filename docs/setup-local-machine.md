@@ -27,7 +27,7 @@ the app:
 
 ```dotenv
 COLLAB_JWT_SECRET="insecure-dev-secret"
-NEXT_PUBLIC_COLLAB_URL="ws://localhost:5210"
+COLLAB_URL="ws://localhost:5210"
 ```
 
 Without these variables the wiki is read-only (this also applies to

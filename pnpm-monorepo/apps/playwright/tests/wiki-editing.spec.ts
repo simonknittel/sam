@@ -19,8 +19,19 @@ const focusEditor = async (page: import("@playwright/test").Page) => {
   return editor;
 };
 
+/**
+ * A click landing before React hydrates is swallowed — retry until the
+ * toggle reports pressed.
+ */
 const enterEditMode = async (page: import("@playwright/test").Page) => {
-  await page.locator('article button[aria-pressed="false"]').click();
+  await expect(async () => {
+    await page
+      .locator('article button[aria-pressed="false"]')
+      .click({ timeout: 2_000 });
+    await expect(
+      page.locator('article button[aria-pressed="true"]'),
+    ).toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 15_000 });
 };
 
 test("typed content persists through the collab server", async ({

@@ -64,10 +64,12 @@ export const env = createEnv({
      */
     COLLAB_JWT_SECRET: z.string().optional(),
     /**
-     * Runtime override for NEXT_PUBLIC_COLLAB_URL, which is inlined into the
-     * build and therefore identical for every instance of the same build.
-     * Lets multiple app instances of one build talk to different collab
-     * servers (used by the Playwright test stack).
+     * WebSocket URL of the wiki collab server (apps/collab), e.g.
+     * wss://sam-collab.example.com. Realtime collaboration is disabled if
+     * unset. Server-only on purpose: the client receives the URL as a prop,
+     * and a runtime variable — unlike a build-inlined NEXT_PUBLIC_ one —
+     * lets several instances of one build talk to different collab servers
+     * (used by the Playwright test stack).
      */
     COLLAB_URL: z.url({ protocol: /^wss?$/ }).optional(),
   },
@@ -94,12 +96,6 @@ export const env = createEnv({
     NEXT_PUBLIC_PUSHER_CHANNELS_PORT: z.coerce.number().default(6001),
     /** Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
     NEXT_PUBLIC_PUSHER_CHANNELS_SECURE_PORT: z.coerce.number().optional(),
-    /**
-     * WebSocket URL of the wiki collab server (apps/collab), e.g.
-     * wss://sam-collab.example.com. Realtime collaboration is disabled if
-     * unset.
-     */
-    NEXT_PUBLIC_COLLAB_URL: z.url({ protocol: /^wss?$/ }).optional(),
     /** npx web-push generate-vapid-keys */
     NEXT_PUBLIC_VAPID_KEY: z.string().optional(),
     NEXT_PUBLIC_PLAUSIBLE_ENDPOINT: z.url().optional(),
@@ -183,7 +179,6 @@ export const env = createEnv({
     PUSHER_CHANNELS_APP_SECRET: process.env.PUSHER_CHANNELS_APP_SECRET,
     COLLAB_JWT_SECRET: process.env.COLLAB_JWT_SECRET,
     COLLAB_URL: process.env.COLLAB_URL,
-    NEXT_PUBLIC_COLLAB_URL: process.env.NEXT_PUBLIC_COLLAB_URL,
     NEXT_PUBLIC_PUSHER_CHANNELS_HOST:
       process.env.NEXT_PUBLIC_PUSHER_CHANNELS_HOST,
     NEXT_PUBLIC_PUSHER_CHANNELS_PORT:

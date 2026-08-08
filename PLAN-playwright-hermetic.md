@@ -26,9 +26,11 @@ architecture, add a first batch of end-to-end tests for the wiki.
 - Wiki test scope (first batch): rendering + navigation,
   permissions/visibility, editing via collab, and search/tags/featured.
 - Tiny app change approved: an optional server-side `COLLAB_URL` env var
-  overrides the build-inlined `NEXT_PUBLIC_COLLAB_URL` at runtime. Required
-  because `NEXT_PUBLIC_*` values are inlined at build time (also in server
-  code), but per-worker collab ports must vary under one shared build.
+  replaces `NEXT_PUBLIC_COLLAB_URL` (removed entirely in a follow-up, per
+  Simon). Required because `NEXT_PUBLIC_*` values are inlined at build time
+  (also in server code), but per-worker collab ports must vary under one
+  shared build — and the client only ever receives the URL as a
+  server-passed prop, so nothing needed the public variant.
 - soketi/pusher is omitted from the test stack; the app self-disables pusher
   when the `NEXT_PUBLIC_PUSHER_*` vars are unset.
 
@@ -93,12 +95,15 @@ Done — `COLLAB_URL` override in env.ts, shared `getWikiCollabUrl()` util used 
 #### Steps
 
 - Add an optional server-side `COLLAB_URL` env var to the app's env schema.
-- Prefer it over `NEXT_PUBLIC_COLLAB_URL` where the server resolves the
-  collab URL for the client.
+- Use it where the server resolves the collab URL for the client, and drop
+  `NEXT_PUBLIC_COLLAB_URL` everywhere (schema, docs, .env examples, run-app
+  skill).
 
 #### Notes
 
-- Deployments keep working unchanged; the new var is optional.
+- Deployments must set `COLLAB_URL` (same value as the former
+  `NEXT_PUBLIC_COLLAB_URL`) BEFORE this release, or the wiki silently
+  becomes read-only. Local `.env` files need the same rename.
 
 #### Verification
 
@@ -291,6 +296,13 @@ Done — workflow rewritten (PR/push, no job container, browser install, report 
 
 ## Rollout plan
 
+- [ ] BEFORE the release: add `COLLAB_URL` (value of the current
+      `NEXT_PUBLIC_COLLAB_URL`, e.g. `wss://…`) to the Vercel production
+      env — without it the wiki goes read-only; drop
+      `NEXT_PUBLIC_COLLAB_URL` there once released (manual, Simon)
+- [ ] Rename the var in local `.env` files of the main checkout and any
+      other worktrees (`NEXT_PUBLIC_COLLAB_URL` → `COLLAB_URL`; this
+      worktree's copy is already renamed)
 - [ ] Merge to `main` (fast-forward from the worktree branch)
 - [ ] First CI run on `main` push is green
 - [ ] Delete the now-unused GitHub bits: the `BASE_URL` +
