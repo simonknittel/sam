@@ -2,12 +2,12 @@
 
 ## Goal
 
-Serve wiki content images through Next.js' built-in image optimizer instead of delivering the original uploads at full size. To make this possible, store each image upload's intrinsic width and height on the `Upload` row (probed server-side after upload), render wiki images in the static read view with `next/image`, and backfill dimensions for all existing image uploads.
+Serve wiki content images through Next.js' built-in image optimizer instead of delivering the original uploads at full size. To make this possible, store each image upload's intrinsic width and height on the `Upload` row (probed server-side after upload), render wiki images with optimizer srcsets in both the static read view and the collab editor, and backfill dimensions for all existing image uploads.
 
 ## Decision log
 
 - **Dimensions live on the `Upload` row** (nullable `width`/`height` columns), not in Tiptap node attrs. The Yjs `ydoc` is the source of truth for page content — backfilling node attrs would mean rewriting every ydoc through the collab server, and old snapshots would stay dimension-less. A DB column keeps the backfill a plain row update and automatically covers snapshots, duplicated pages and the dashboard tile.
-- **Scope: all image uploads get dimensions** (wiki images, page icons, role icons, manufacturer images — they share `Upload` and the same upload routes), but **only the wiki static renderer switches to `next/image`** for now. Other consumers can adopt the columns later without a second backfill.
+- **Scope: all image uploads get dimensions** (wiki images, page icons, role icons, manufacturer images — they share `Upload` and the same upload routes), but **only wiki content images switch to optimized rendering** for now. Other consumers (icons, role/manufacturer images) can adopt the columns later without a second backfill.
 - ~~**The collab editor keeps its plain `<img>`.**~~ **Revised 2026-08-08:** the editor is where most users actually read (viewers connect to collab too), so the editor optimizes as well — via a *vanilla* ProseMirror node view whose DOM is exactly the schema's renderHTML output (anchor + img) with the img's src swapped for the optimizer srcset. Not a React node view on purpose: the DOM structure stays byte-identical to the static render and the pre-node-view editor, so `WikiResizeHandles` (which sizes the anchor), the hover menu, click-to-select and drag are untouched.
 - **Rebased onto the image-original-link work** (`f3bbec28`, merged to main after this branch started): images now render as `<a data-wiki-image href=<original>>` around the `<img>`, with the layout attributes on the anchor. Both the static renderer and the editor node view mirror that structure; the link keeps pointing at the *original* file while the displayed img is optimized.
 - **Optimizer URLs are hand-built in one shared util** (`imageOptimizer.ts`) used by both renderers, instead of `next/image` in the static view + something else in the editor. The width allowlist is pinned in `next.config.ts` (`deviceSizes`/`imageSizes`, today's Next defaults) so a Next upgrade can never invalidate the hand-built srcsets.
@@ -30,9 +30,9 @@ Serve wiki content images through Next.js' built-in image optimizer instead of d
 
 - **Upload flow recap:** `POST /api/upload` creates the `Upload` row and returns a presigned PUT URL (the server never sees the bytes), the client PUTs to R2, then `PATCH /api/upload/assign` links the upload to its resource. The assign step is the one place the server knows the object exists — that's where the probe hooks in.
 - **Probe mechanics:** `GetObjectCommand` via the existing S3 client, abort if `ContentLength` exceeds the cap, buffer, `sharp` (already an app dependency) `metadata()`, swap width/height for EXIF orientations 5–8 (browsers apply `image-orientation: from-image`, so stored dimensions must be the displayed ones), bounded-int validation, `prisma.upload.update`. Everything wrapped so a failure only logs (no PII — upload id only) and leaves `NULL`s.
-- **Rendering:** `WikiPageStaticContent.tsx` gets an `image` entry in its `nodeMapping` (the same pattern as `wikiAttachment`). For srcs on `https://${NEXT_PUBLIC_S3_PUBLIC_URL}/<uploadId>` with known dimensions it renders `next/image`; anything else (external src, unknown dims, probe failures) falls back to the exact `<img>` produced today. The `width`/`height` props carry the *intrinsic* dimensions (correct aspect-ratio box, identical layout semantics to a plain img with size attributes); the `sizes` attribute caps what the optimizer serves at the *display* width — `min(100vw, <widthPx ?? intrinsic width>px)`, `100vw` for explicit full width — so with `sizes` present Next.js emits the full device-size srcset and the browser picks a sanely sized candidate. `widthPx`/`align` keep rendering as inline styles exactly as the stock `renderHTML` does, and `.prose img` CSS still applies since `next/image` emits an `<img>`.
+- **Rendering:** one shared resolution path (`resolveWikiImageRendering` + `imageOptimizer.ts`) feeds both renderers — `WikiContentImage` in the static renderer's `nodeMapping` and the editor's vanilla image node view. For srcs on `https://${NEXT_PUBLIC_S3_PUBLIC_URL}/<uploadId>` with known dimensions, the img gets a hand-built `/_next/image` srcset over the pinned width allowlist; anything else (external src, unknown dims, probe failures, SVG/GIF) keeps the original src. `width`/`height` attributes carry the *intrinsic* dimensions (correct aspect-ratio box); `sizes` bounds what the browser fetches at the display width — `min(100vw, <min(widthPx ?? intrinsic, 1552)>px)`, where 1552px is the content column's desktop max. The anchor keeps the `widthPx`/`align` layout styles exactly as `renderHTML` emits them.
 - **Layout stability:** with width/height set the browser reserves the aspect-ratio box before the image loads — image-heavy pages stop shifting during load. This must hold from SSR (no client-side measurement).
-- **No collab redeploy needed:** the wiki-editor schema is untouched (the stock Image node's `width`/`height` attrs already exist and stay unused).
+- **No collab redeploy needed:** the wiki-editor package changed (new exports, `loading="lazy"` in the image renderHTML) but the *schema* — node names, attributes, parse rules — is untouched, and the collab server only uses the schema for ydoc ⇄ JSON conversion.
 - **The optimizer setup already exists:** the R2 host is allowlisted in `next.config.ts` `images.remotePatterns`, `minimumCacheTTL` is 30 days, `sharp` is installed. Vercel bills image transformations; the 30-day cache and the fact that wiki traffic is internal keep that bounded, and optimizer caching *reduces* hits on the rate-limited `*.r2.dev` host.
 - **Deploy order:** app release first (migration adds nullable columns — safe), then run the backfill script against production. No coordination with the collab server.
 
@@ -113,11 +113,11 @@ Done (2026-08-08). `probeUploadImageDimensions.ts` (mirrors the `trackWikiPageVi
 
 ### Phase 4: Optimized rendering in the static read view
 
-Render wiki content images with `next/image` wherever dimensions are known; keep today's `<img>` as the fallback.
+Render wiki content images through the optimizer wherever dimensions are known; keep today's `<img>` as the fallback. (Originally built on `next/image`; Phase 6 replaced that with the shared hand-built markup so the editor emits identical output — the notes below record the original state.)
 
 #### Status
 
-Done (2026-08-08). New `WikiContentImage` component + `image` nodeMapping; `collectWikiImageUploadIds`/`getWikiImageUploadId` in the wiki-editor package (exported, but not used by the collab server — no redeploy needed); `imageDimensions` map threaded through `getWikiPageStaticContent`.
+Done (2026-08-08). New `WikiContentImage` component + `image` nodeMapping; `collectWikiImageUploadIds`/`getWikiImageUploadId` in the wiki-editor package (exported, but not used by the collab server — no redeploy needed); `imageDimensions` map threaded through `getWikiPageStaticContent`. Partially superseded by Phase 6: `next/image` → shared util, anchor markup after the rebase, column-max `sizes` cap, always-lazy loading.
 
 #### Steps
 
@@ -127,8 +127,8 @@ Done (2026-08-08). New `WikiContentImage` component + `image` nodeMapping; `coll
 
 #### Notes
 
-- `width`/`height` props are the intrinsic dimensions; `sizes` = `min(100vw, <display width>px)` bounds the fetched variant. No content-column constant needed — the viewport bound plus `max-width: 100%` cover it.
-- Images now load lazily (`next/image` default) where the previous plain imgs were eager — accepted; below-fold images on image-heavy pages stop loading upfront.
+- `width`/`height` props are the intrinsic dimensions; `sizes` = `min(100vw, <display width>px)` bounds the fetched variant. ~~No content-column constant needed~~ — superseded in Phase 6: the display width is additionally capped at the column's desktop max (1552px).
+- Images now load lazily where the previous plain imgs were eager — accepted; below-fold images on image-heavy pages stop loading upfront. (Since Phase 6 the lazy attribute comes from `renderHTML` itself, for every rendering of the node.)
 - The dashboard page tile reuses the same query + renderer and needs no separate change (tile passes `wikiPageIndexPages: null` etc. — dimension map piggybacks on the same object).
 - Images in *snapshots* render through the same static renderer when previewing — the dimension map comes from the same Upload rows, so they're covered.
 - Implementation detail: a `Map<uploadId, {width, height, mimeType}>` threaded alongside the existing resolution maps; note the rendered tree is also passed as `staticFallback` prop into the client editor, so the `next/image` element must be RSC-serializable (it is — but verify in the running app).
@@ -199,7 +199,13 @@ Done (2026-08-08). `WikiImageNodeView.ts` (vanilla node view via `withWikiImageO
 
 ## Final end-to-end verification
 
-Verified 2026-08-08 in the worktree against the main dev stack (dev server on port 3001):
+Round 2 (2026-08-08, after the rebase onto `f7eb9906`, the editor optimization and the double-load fix — commits `1deceaaf`, `5d52bfa1`, `8082d2b3`):
+
+- Typecheck, ESLint and the full vitest suite (25 files, 253 tests incl. the updated image-link snapshots) pass.
+- Connected editor and static view both emit identical anchor+img markup with optimizer srcsets — see Phase 6 verification for the details (candidate selection, resize geometry, click-to-select, zero raw-original fetches).
+- Manual testing by Simon on port 3001 surfaced the double-load bug; after the fix an image-heavy page fetches only optimizer candidates.
+
+Round 1 (2026-08-08, static view only — some points superseded by Phase 6):
 
 - Typecheck (`tsc --noEmit`), targeted ESLint on all changed files, and the full app vitest suite (24 files, 246 tests) pass. New unit tests cover `getWikiImageUploadId`/`collectWikiImageUploadIds`.
 - Upload flow via the live API: `POST /api/upload` with a 30 MB image declaration → 400; a valid upload (123×45 PNG) → presigned PUT → assign → the `after()` probe filled `width=123, height=45` and corrected `size` within seconds, without delaying the assign response.
@@ -207,4 +213,5 @@ Verified 2026-08-08 in the worktree against the main dev stack (dev server on po
 - Edit mode (collab editor) untouched — still renders the stock plain `<img>`.
 - Backfill run against the dev DB (see Phase 5).
 - Not exercised in-app: the client-side toast for an oversized image pick (code path mirrors the existing attachment cap), SVG/GIF unoptimized rendering in wiki content (pattern verified via DB dimensions on SVG uploads + the shared opt-out list), and a rotated-EXIF JPEG upload.
-- After production release: run the backfill against production (`NEXT_PUBLIC_S3_PUBLIC_URL=<prod host>` + prod `DATABASE_URL`), then spot-check an image-heavy wiki page for optimized URLs and absence of layout shift.
+
+Still open after the production release: run the backfill against production (`NEXT_PUBLIC_S3_PUBLIC_URL=<prod host>` + prod `DATABASE_URL`), then spot-check an image-heavy wiki page for optimized URLs and absence of layout shift.
