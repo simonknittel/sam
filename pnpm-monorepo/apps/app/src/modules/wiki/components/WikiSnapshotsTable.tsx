@@ -16,6 +16,8 @@ const GRID_COLS = "grid-cols-[minmax(200px,_1fr)_120px_160px_160px_180px]";
 interface Props {
   readonly className?: string;
   readonly page: WikiContextPage;
+  /** Route of the page, e.g. its event route; defaults to the wiki route */
+  readonly pageHref?: string;
 }
 
 /**
@@ -23,7 +25,11 @@ interface Props {
  * while the page is edited plus safety snapshots taken before restores and
  * imports, newest first, each with a restore action.
  */
-export const WikiSnapshotsTable = async ({ className, page }: Props) => {
+export const WikiSnapshotsTable = async ({
+  className,
+  page,
+  pageHref,
+}: Props) => {
   const snapshots = await prisma.wikiPageSnapshot.findMany({
     where: { pageId: page.id },
     orderBy: { createdAt: "desc" },
@@ -42,7 +48,7 @@ export const WikiSnapshotsTable = async ({ className, page }: Props) => {
         <h1 className="font-bold text-2xl">Snapshots</h1>
 
         <Link
-          href={`/app/wiki/${page.id}/${page.slug}`}
+          href={pageHref ?? `/app/wiki/${page.id}/${page.slug}`}
           className="flex items-center gap-1 text-sm text-interaction-500 hover:text-interaction-300"
         >
           <FaArrowLeft className="text-xs" />

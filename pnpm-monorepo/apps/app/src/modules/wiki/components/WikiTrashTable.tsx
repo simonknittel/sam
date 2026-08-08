@@ -11,6 +11,7 @@ import {
 import {
   getWikiContext,
   type WikiContextPage,
+  type WikiSharedContext,
 } from "../queries/getWikiContext";
 import { WikiPageIcon } from "./WikiPageIcon";
 import { WikiTrashActions } from "./WikiTrashActions";
@@ -28,12 +29,23 @@ const loadSearchParams = createLoader({
 interface Props {
   readonly className?: string;
   readonly searchParams: Promise<SearchParams>;
+  /**
+   * Context whose trash to show, e.g. an event wiki's; defaults to the
+   * global wiki
+   */
+  readonly context?: WikiSharedContext & {
+    readonly allPages: WikiContextPage[];
+  };
 }
 
-export const WikiTrashTable = async ({ className, searchParams }: Props) => {
+export const WikiTrashTable = async ({
+  className,
+  searchParams,
+  context: givenContext,
+}: Props) => {
   const { sort, q } = await loadSearchParams(searchParams);
 
-  const context = await getWikiContext();
+  const context = givenContext ?? (await getWikiContext());
   if (!context) forbidden();
 
   /**

@@ -49,8 +49,9 @@ export const HeadingPicker = ({ editor }: Props) => {
     editor,
     selector: ({ editor }) => ({
       headingLevel:
-        HEADING_LEVELS.find((level) => editor?.isActive("heading", { level })) ??
-        null,
+        HEADING_LEVELS.find((level) =>
+          editor?.isActive("heading", { level }),
+        ) ?? null,
       isSmall: editor?.isActive("paragraph", { textSize: "small" }) ?? false,
     }),
   });

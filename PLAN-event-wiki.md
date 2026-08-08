@@ -191,7 +191,7 @@ Every mutating page action honors the event scope, the freeze, and the root lock
 
 #### Status
 
-Not started
+Implemented (in-app verification pending)
 
 #### Steps
 
@@ -204,6 +204,10 @@ Not started
 #### Notes
 
 - The root page accepts only content edits (per scopes) and permission changes — everything else is rejected server-side, not merely hidden.
+- All page actions now run through `getWikiPageScopedContext`; the freeze answers with the events' usual "Das Event ist bereits vorbei." and cross-scope moves/duplications are impossible by construction (the scoped context only contains the page's own scope, so foreign targets resolve as missing).
+- Moves inside an event reset the moved subtree's scopes to INHERIT (`buildEventWikiPageMoveReset`) so both modes keep the dialogs' "takes on the new parent's permissions" promise.
+- Favourites, visits and reports stay writable after the freeze (per-user/meta data, not content).
+- The trash and snapshot tables are shared: `WikiTrashTable` accepts a context, `WikiSnapshotsTable` a pageHref.
 
 #### Verification
 

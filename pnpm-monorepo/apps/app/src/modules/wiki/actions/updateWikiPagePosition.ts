@@ -6,14 +6,21 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { getWikiContext } from "../queries/getWikiContext";
+import {
+  getWikiPageScopedContext,
+  getWikiScopeRevalidationPath,
+  isWikiScopeFrozen,
+} from "../queries/getWikiPageScopedContext";
+import { buildEventWikiPageMoveReset } from "../utils/buildEventWikiPageMoveReset";
 import { buildWikiPageMoveReset } from "../utils/buildWikiPageMoveReset";
 import { collectWikiPageDescendants } from "../utils/collectWikiPageDescendants";
 import { compareWikiPagesByOrder } from "../utils/compareWikiPagesByOrder";
+import { isEventWikiRootPage } from "../utils/isEventWikiRootPage";
 import {
   resolveWikiPagePlacement,
   WikiPagePlacement,
 } from "../utils/resolveWikiPagePlacement";
+import { WikiScope } from "../utils/wikiPageHref";
 
 const schema = z.object({
   id: z.cuid2(),
@@ -34,15 +41,24 @@ export const updateWikiPagePosition = createAuthenticatedAction(
   "updateWikiPagePosition",
   schema,
   async (formData, authentication, data, t) => {
-    const context = await getWikiContext();
-    if (!context)
+    const scoped = await getWikiPageScopedContext(data.id);
+    if (!scoped)
       return { error: t("Common.forbidden"), requestPayload: formData };
+    const context = scoped.context;
 
     const page = context.pagesById.get(data.id);
     if (!page || page.deletedAt)
       return { error: t("Common.badRequest"), requestPayload: formData };
     if (!context.permissions.get(page.id)?.canAdmin)
       return { error: t("Common.forbidden"), requestPayload: formData };
+    if (isWikiScopeFrozen(scoped))
+      return {
+        error: "Das Event ist bereits vorbei.",
+        requestPayload: formData,
+      };
+    /** The event wiki's locked root page can never be moved */
+    if (isEventWikiRootPage(page))
+      return { error: t("Common.badRequest"), requestPayload: formData };
 
     const reference = context.pagesById.get(data.referenceId);
     if (!reference || reference.deletedAt || reference.id === page.id)
@@ -77,6 +93,9 @@ export const updateWikiPagePosition = createAuthenticatedAction(
         )
           return { error: t("Common.badRequest"), requestPayload: formData };
       } else {
+        /** Event wikis have exactly one top-level page: the locked root */
+        if (scoped.scope === WikiScope.Event)
+          return { error: t("Common.badRequest"), requestPayload: formData };
         if (!(await authentication.authorize("wiki", "create")))
           return { error: t("Common.forbidden"), requestPayload: formData };
       }
@@ -118,7 +137,14 @@ export const updateWikiPagePosition = createAuthenticatedAction(
     });
     /** Same permission reset as moveWikiPage, see there */
     const reset = changesParent
-      ? buildWikiPageMoveReset(context.allPages, page, newParentId, updatedById)
+      ? scoped.scope === WikiScope.Event
+        ? buildEventWikiPageMoveReset(context.allPages, page.id)
+        : buildWikiPageMoveReset(
+            context.allPages,
+            page,
+            newParentId,
+            updatedById,
+          )
       : null;
 
     if (updates.length > 0 || reset)
@@ -142,7 +168,7 @@ export const updateWikiPagePosition = createAuthenticatedAction(
         })),
       ]);
 
-    revalidatePath("/app/wiki", "layout");
+    revalidatePath(getWikiScopeRevalidationPath(scoped), "layout");
 
     return {
       success: reset

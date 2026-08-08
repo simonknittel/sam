@@ -1,20 +1,36 @@
+import { prisma } from "@/db";
 import { env } from "@/env";
 import { authenticate } from "@/modules/auth/server";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
+import { EditableInput } from "@/modules/common/components/form/EditableInput";
+import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
+import { FaHistory } from "react-icons/fa";
+import { renameWikiPage } from "../actions/renameWikiPage";
 import {
   type EventWikiContext,
   type EventWikiContextPage,
 } from "../queries/getEventWikiContext";
 import { getEventWikiPageStaticContent } from "../queries/getEventWikiPageStaticContent";
 import { getWikiFavoritePageIds } from "../queries/getWikiFavorites";
+import { collectWikiPageDescendants } from "../utils/collectWikiPageDescendants";
 import { getWikiCollabColor } from "../utils/getWikiCollabColor";
+import { getManageableWikiPageTargets } from "../utils/getWikiPageTargets";
+import { isEventWikiRootPage } from "../utils/isEventWikiRootPage";
 import { trackWikiPageVisit } from "../utils/trackWikiPageVisit";
+import { createEventWikiHrefMode } from "../utils/wikiPageHref";
+import { DeleteWikiPageModal } from "./DeleteWikiPageModal";
+import { DuplicateWikiPageModal } from "./DuplicateWikiPageModal";
+import { MoveWikiPageModal } from "./MoveWikiPageModal";
+import { ReportWikiPageModal } from "./ReportWikiPageModal";
 import { WikiCollabEditor } from "./WikiCollabEditor";
 import { WikiEditModeProvider } from "./WikiEditModeProvider";
 import { WikiEditModeToggle } from "./WikiEditModeToggle";
 import { WikiPageFavoriteButton } from "./WikiPageFavoriteButton";
-import { WikiPageIcon } from "./WikiPageIcon";
+import { WikiPageIconButton } from "./WikiPageIconButton";
+import { WikiPageSidebarModeModal } from "./WikiPageSidebarModeModal";
 import { WikiPageStaticContent } from "./WikiPageStaticContent";
+import { WikiPageTags } from "./WikiPageTags";
 
 interface Props {
   readonly context: EventWikiContext;
@@ -27,15 +43,47 @@ interface Props {
  * Callers must have checked the viewer's read permission.
  */
 export const EventWikiPageContent = async ({ context, page }: Props) => {
-  const [staticContent, favoritePageIds, authentication] = await Promise.all([
-    getEventWikiPageStaticContent(context, page.id),
-    getWikiFavoritePageIds(),
-    authenticate(),
-  ]);
+  const [staticContent, favoritePageIds, authentication, pageTags] =
+    await Promise.all([
+      getEventWikiPageStaticContent(context, page.id),
+      getWikiFavoritePageIds(),
+      authenticate(),
+      prisma.wikiPageTag.findMany({
+        where: { pageId: page.id },
+        select: { tag: { select: { id: true, name: true } } },
+        orderBy: { tag: { name: "asc" } },
+      }),
+    ]);
 
   const permissions = context.permissions.get(page.id);
   const session = authentication ? authentication.session : null;
   trackWikiPageVisit(session?.entity?.id ?? null, page.id);
+
+  const hrefMode = createEventWikiHrefMode(
+    context.event.id,
+    context.rootPage?.id ?? null,
+  );
+  const isRootPage = isEventWikiRootPage(page);
+  /**
+   * The freeze keeps canAdmin (read-only manage views), so the mutating
+   * affordances hide on it explicitly.
+   */
+  const canMutateStructure =
+    permissions?.canAdmin === true && !context.frozen && !isRootPage;
+  const canAdministrate = permissions?.canAdmin === true;
+
+  const descendantIds = collectWikiPageDescendants(context.pages, page.id);
+  const moveTargets = canMutateStructure
+    ? getManageableWikiPageTargets(context, page.id)
+    : [];
+  /**
+   * Unlike moving, duplicating into the page's own subtree is fine — the
+   * copy is a new page, so no cycle can occur.
+   */
+  const duplicateTargets =
+    canAdministrate && !context.frozen
+      ? getManageableWikiPageTargets(context)
+      : [];
 
   /**
    * Editing requires the collab server — without it (e.g. a preview
@@ -57,8 +105,22 @@ export const EventWikiPageContent = async ({ context, page }: Props) => {
         <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
           <div>
             <h1 className="flex items-center gap-2 font-bold text-2xl">
-              {page.iconId && <WikiPageIcon iconId={page.iconId} />}
-              {page.title}
+              <WikiPageIconButton
+                pageId={page.id}
+                iconId={page.iconId}
+                canAdmin={canAdministrate && !context.frozen}
+              />
+
+              {canMutateStructure ? (
+                <EditableInput
+                  rowId={page.id}
+                  columnName="title"
+                  initialValue={page.title}
+                  action={renameWikiPage}
+                />
+              ) : (
+                page.title
+              )}
             </h1>
 
             <p className="mt-1 text-xs text-white/20">
@@ -74,8 +136,59 @@ export const EventWikiPageContent = async ({ context, page }: Props) => {
               pageId={page.id}
               isFavorite={favoritePageIds.has(page.id)}
             />
+
+            <ReportWikiPageModal pageId={page.id} title={page.title} />
+
+            {canAdministrate && !context.frozen && (
+              <DuplicateWikiPageModal
+                pageId={page.id}
+                title={page.title}
+                targets={duplicateTargets}
+                allowTopLevel={false}
+                currentParentId={page.parentId}
+                hasDescendants={descendantIds.length > 0}
+              />
+            )}
+
+            {canAdministrate && (
+              <Button2
+                as={Link}
+                href={`${hrefMode.basePath}/${page.id}/snapshots`}
+                variant={Button2Variant.IconOnly}
+                tooltip="Snapshots"
+              >
+                <FaHistory />
+              </Button2>
+            )}
+
+            {canMutateStructure && (
+              <>
+                <MoveWikiPageModal
+                  pageId={page.id}
+                  targets={moveTargets}
+                  allowTopLevel={false}
+                  currentParentId={page.parentId}
+                />
+                <WikiPageSidebarModeModal
+                  pageId={page.id}
+                  sidebarMode={page.sidebarMode}
+                />
+                <DeleteWikiPageModal
+                  pageId={page.id}
+                  title={page.title}
+                  descendantCount={descendantIds.length}
+                />
+              </>
+            )}
           </div>
         </div>
+
+        <WikiPageTags
+          className="mt-1"
+          pageId={page.id}
+          tags={pageTags.map((entry) => entry.tag)}
+          canEdit={permissions?.canEdit === true}
+        />
 
         <div className="mt-4">
           {collabUrl ? (

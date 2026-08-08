@@ -6,7 +6,10 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { getWikiContext } from "../queries/getWikiContext";
+import {
+  getWikiPageScopedContext,
+  getWikiScopeRevalidationPath,
+} from "../queries/getWikiPageScopedContext";
 
 const tagNameSchema = z
   .string()
@@ -30,9 +33,10 @@ export const updateWikiPageTags = createAuthenticatedAction(
   "updateWikiPageTags",
   schema,
   async (formData, authentication, data, t) => {
-    const context = await getWikiContext();
-    if (!context)
+    const scoped = await getWikiPageScopedContext(data.id);
+    if (!scoped)
       return { error: t("Common.forbidden"), requestPayload: formData };
+    const context = scoped.context;
 
     const page = context.pagesById.get(data.id);
     if (!page || page.deletedAt)
@@ -151,7 +155,7 @@ export const updateWikiPageTags = createAuthenticatedAction(
       },
     ]);
 
-    revalidatePath("/app/wiki", "layout");
+    revalidatePath(getWikiScopeRevalidationPath(scoped), "layout");
 
     return { success: t("Common.successfullySaved") };
   },

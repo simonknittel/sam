@@ -43,11 +43,7 @@ const stateOf = (...content: unknown[]) => {
 };
 
 const hasSmallTextMark = (state: EditorState) =>
-  state.doc.rangeHasMark(
-    0,
-    state.doc.content.size,
-    schema.marks.wikiSmallText,
-  );
+  state.doc.rangeHasMark(0, state.doc.content.size, schema.marks.wikiSmallText);
 
 /** The same renderer the read-only page view uses (WikiPageStaticContent) */
 const render = (content: unknown) =>
@@ -83,7 +79,11 @@ const parseTextSize = (
 describe("block-level text size", () => {
   test("renders as a data attribute on paragraphs and lists", () => {
     const html = render(
-      doc(paragraph("klein", "small"), bulletList("small"), paragraph("normal")),
+      doc(
+        paragraph("klein", "small"),
+        bulletList("small"),
+        paragraph("normal"),
+      ),
     );
 
     expect(html).toMatch(/<p [^>]*data-text-size="small"/);

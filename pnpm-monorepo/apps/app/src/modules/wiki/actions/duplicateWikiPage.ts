@@ -6,13 +6,18 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import {
   WikiPageEditability,
+  WikiPageNamespace,
   WikiPageUploadability,
   WikiPageVisibility,
 } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { getWikiContext } from "../queries/getWikiContext";
+import {
+  getWikiPageScopedContext,
+  getWikiScopeRevalidationPath,
+  isWikiScopeFrozen,
+} from "../queries/getWikiPageScopedContext";
 import { collectVisibleWikiSubtree } from "../utils/collectVisibleWikiSubtree";
 import { getAccessibleWikiPage } from "../utils/getAccessibleWikiPage";
 import {
@@ -20,6 +25,12 @@ import {
   WikiPagePlacement,
 } from "../utils/resolveWikiPagePlacement";
 import { slugifyWikiPageTitle } from "../utils/slugifyWikiPageTitle";
+import {
+  buildWikiPageHref,
+  createEventWikiHrefMode,
+  GLOBAL_WIKI_HREF_MODE,
+  WikiScope,
+} from "../utils/wikiPageHref";
 
 const schema = z.object({
   id: z.cuid2(),
@@ -58,14 +69,20 @@ export const duplicateWikiPage = createAuthenticatedAction(
   "duplicateWikiPage",
   schema,
   async (formData, authentication, data, t) => {
-    const context = await getWikiContext();
-    if (!context || !authentication.session.entity)
+    const scoped = await getWikiPageScopedContext(data.id);
+    if (!scoped || !authentication.session.entity)
       return { error: t("Common.forbidden"), requestPayload: formData };
+    const context = scoped.context;
     const entity = authentication.session.entity;
 
     const source = getAccessibleWikiPage(context, data.id, "read");
     if (!source)
       return { error: t("Common.notFound"), requestPayload: formData };
+    if (isWikiScopeFrozen(scoped))
+      return {
+        error: "Das Event ist bereits vorbei.",
+        requestPayload: formData,
+      };
 
     if (data.parentId) {
       const placement = resolveWikiPagePlacement(context, data.parentId);
@@ -78,6 +95,13 @@ export const duplicateWikiPage = createAuthenticatedAction(
           requestPayload: formData,
         };
     } else {
+      /**
+       * Event pages never duplicate to a top level: their wikis have exactly
+       * one top-level page, and copying into the global wiki would cross the
+       * isolation boundary.
+       */
+      if (scoped.scope === WikiScope.Event)
+        return { error: t("Common.badRequest"), requestPayload: formData };
       if (!(await authentication.authorize("wiki", "create")))
         return { error: t("Common.forbidden"), requestPayload: formData };
     }
@@ -139,7 +163,15 @@ export const duplicateWikiPage = createAuthenticatedAction(
       attachmentUploadability: data.parentId
         ? WikiPageUploadability.INHERIT
         : WikiPageUploadability.RESTRICTED,
-      ownerId: data.parentId ? null : entity.id,
+      ownerId: data.parentId || source.eventId ? null : entity.id,
+    };
+
+    /** Copies stay in their source's scope */
+    const scopeColumns = {
+      namespace: source.eventId
+        ? WikiPageNamespace.EVENT
+        : WikiPageNamespace.WIKI,
+      eventId: source.eventId,
     };
 
     const { root, duplicatedPageIds } = await prisma.$transaction(
@@ -150,6 +182,7 @@ export const duplicateWikiPage = createAuthenticatedAction(
             title: data.title,
             slug: slugifyWikiPageTitle(data.title),
             parentId: data.parentId ?? null,
+            ...scopeColumns,
             sortOrder,
             iconId: source.iconId,
             content: sourceContent?.content ?? undefined,
@@ -183,6 +216,7 @@ export const duplicateWikiPage = createAuthenticatedAction(
               title: page.title,
               slug: page.slug,
               parentId: newIdByOldId.get(visibleParentId)!,
+              ...scopeColumns,
               sortOrder: page.sortOrder,
               iconId: page.iconId,
               content: content?.content ?? undefined,
@@ -227,7 +261,15 @@ export const duplicateWikiPage = createAuthenticatedAction(
       },
     ]);
 
-    revalidatePath("/app/wiki", "layout");
-    redirect(`/app/wiki/${root.id}/${root.slug}`);
+    const hrefMode =
+      scoped.scope === WikiScope.Event
+        ? createEventWikiHrefMode(
+            scoped.context.event.id,
+            scoped.context.rootPage?.id ?? null,
+          )
+        : GLOBAL_WIKI_HREF_MODE;
+
+    revalidatePath(getWikiScopeRevalidationPath(scoped), "layout");
+    redirect(buildWikiPageHref(hrefMode, root));
   },
 );

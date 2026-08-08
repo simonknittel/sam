@@ -12,7 +12,11 @@ import { revalidatePath } from "next/cache";
 import { unstable_rethrow } from "next/navigation";
 import { serializeError } from "serialize-error";
 import { z } from "zod";
-import { getWikiContext } from "../queries/getWikiContext";
+import {
+  getWikiPageScopedContext,
+  getWikiScopeRevalidationPath,
+  isWikiScopeFrozen,
+} from "../queries/getWikiPageScopedContext";
 import { replaceWikiPageContent } from "../utils/replaceWikiPageContent";
 
 const schema = z.object({
@@ -29,10 +33,6 @@ export const restoreWikiPageSnapshot = createAuthenticatedAction(
   "restoreWikiPageSnapshot",
   schema,
   async (formData, authentication, data, t) => {
-    const context = await getWikiContext();
-    if (!context)
-      return { error: t("Common.forbidden"), requestPayload: formData };
-
     const snapshot = await prisma.wikiPageSnapshot.findUnique({
       where: { id: data.snapshotId },
       select: { id: true, pageId: true, content: true },
@@ -40,11 +40,21 @@ export const restoreWikiPageSnapshot = createAuthenticatedAction(
     if (!snapshot)
       return { error: t("Common.badRequest"), requestPayload: formData };
 
+    const scoped = await getWikiPageScopedContext(snapshot.pageId);
+    if (!scoped)
+      return { error: t("Common.forbidden"), requestPayload: formData };
+    const context = scoped.context;
+
     const page = context.pagesById.get(snapshot.pageId);
     if (!page || page.deletedAt)
       return { error: t("Common.badRequest"), requestPayload: formData };
     if (!context.permissions.get(page.id)?.canAdmin)
       return { error: t("Common.forbidden"), requestPayload: formData };
+    if (isWikiScopeFrozen(scoped))
+      return {
+        error: "Das Event ist bereits vorbei.",
+        requestPayload: formData,
+      };
 
     /**
      * Snapshots may predate editor schema changes — validate against the
@@ -113,7 +123,7 @@ export const restoreWikiPageSnapshot = createAuthenticatedAction(
       },
     ]);
 
-    revalidatePath("/app/wiki", "layout");
+    revalidatePath(getWikiScopeRevalidationPath(scoped), "layout");
 
     return { success: "Snapshot wiederhergestellt." };
   },

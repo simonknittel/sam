@@ -7,7 +7,10 @@ import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { getWikiContext } from "../queries/getWikiContext";
+import {
+  getWikiPageScopedContext,
+  getWikiScopeRevalidationPath,
+} from "../queries/getWikiPageScopedContext";
 
 /** Simple abuse guard: at most this many unresolved reports per user */
 const MAX_OPEN_REPORTS_PER_USER = 5;
@@ -36,10 +39,11 @@ export const createWikiPageReport = createAuthenticatedAction(
   "createWikiPageReport",
   schema,
   async (formData, authentication, data, t) => {
-    const context = await getWikiContext();
+    const scoped = await getWikiPageScopedContext(data.pageId);
     const citizenId = authentication.session.entity?.id;
-    if (!context || !citizenId)
+    if (!scoped || !citizenId)
       return { error: t("Common.forbidden"), requestPayload: formData };
+    const context = scoped.context;
 
     const page = context.pagesById.get(data.pageId);
     if (!page || page.deletedAt || !context.permissions.get(page.id)?.canRead)
@@ -104,7 +108,7 @@ export const createWikiPageReport = createAuthenticatedAction(
       },
     ]);
 
-    revalidatePath("/app/wiki", "layout");
+    revalidatePath(getWikiScopeRevalidationPath(scoped), "layout");
 
     return { success: "Meldung gesendet." };
   },

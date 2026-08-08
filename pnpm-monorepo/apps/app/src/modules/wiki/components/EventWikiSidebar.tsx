@@ -1,4 +1,6 @@
+import { Link } from "@/modules/common/components/Link";
 import { cookies } from "next/headers";
+import { FaTrash } from "react-icons/fa";
 import { getEventWikiContext } from "../queries/getEventWikiContext";
 import { getWikiFavoritePageIds } from "../queries/getWikiFavorites";
 import { buildVisibleWikiTree } from "../utils/buildVisibleWikiTree";
@@ -77,6 +79,19 @@ export const EventWikiSidebar = async ({ eventId }: Props) => {
           expandedPagesCookie={expandedPages}
         />
       </div>
+
+      {context.viewer.isEventManager && (
+        <div className="bg-secondary px-2 py-2 corners-secondary">
+          <Link
+            href={`${hrefMode.basePath}/trash`}
+            prefetch={false}
+            className="flex items-center gap-2 rounded-secondary px-2 py-1 text-neutral-300 hover:text-interaction-300"
+          >
+            <FaTrash className="size-3 flex-none text-neutral-500" />
+            Papierkorb
+          </Link>
+        </div>
+      )}
     </>
   );
 };
