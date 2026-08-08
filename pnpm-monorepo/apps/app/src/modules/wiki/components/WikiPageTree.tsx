@@ -224,7 +224,10 @@ const TreeItem = ({
           </Link>
 
           {(node.canAdmin || node.canEdit) && (
-            <span className="flex flex-none items-center opacity-0 group-hover:opacity-100 focus-within:opacity-100">
+            // Collapsed to zero width instead of merely hidden, so the title
+            // gets the whole row while the buttons are away and only gives
+            // that space back once they appear
+            <span className="flex w-0 flex-none items-center overflow-hidden group-hover:w-auto focus-within:w-auto">
               {node.canAdmin && !isLockedRoot && (
                 <WikiPageDragHandle
                   pageId={node.id}
