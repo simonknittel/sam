@@ -27,3 +27,8 @@ variable "email_function_environment_variables" {
   type      = map(string)
   sensitive = true
 }
+
+# TF_VAR_cloudtrail_s3_bucket_name = "aws-cloudtrail-logs-<account id>-<random suffix>"
+variable "cloudtrail_s3_bucket_name" {
+  type = string
+}
