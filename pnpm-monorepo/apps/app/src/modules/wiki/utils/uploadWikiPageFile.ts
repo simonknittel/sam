@@ -74,7 +74,9 @@ export const uploadWikiPageFile = async (
       ? MAX_ATTACHMENT_SIZE_BYTES
       : MAX_IMAGE_SIZE_BYTES;
   if (file.size > maxSizeBytes)
-    throw new Error("Die Datei ist zu groß (maximal 25 MB).");
+    throw new Error(
+      `Die Datei ist zu groß (maximal ${maxSizeBytes / 1024 / 1024} MB).`,
+    );
 
   const mimeType = resolveWikiFileMimeType(file);
 

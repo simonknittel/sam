@@ -9,12 +9,19 @@ export default function useUpload() {
   const [file, setFile] = useState<File | null>(null);
   const [upload, setUpload] = useState<string | null>(null);
 
-  const setFileWithSizeCheck = (newFile: File | null) => {
+  /**
+   * Returns whether the file was accepted, so callers tracking their own
+   * pending state don't get stuck waiting for an upload that never starts.
+   */
+  const setFileWithSizeCheck = (newFile: File | null): boolean => {
     if (newFile && newFile.size > MAX_IMAGE_SIZE_BYTES) {
-      toast.error("Die Datei ist zu groß (maximal 25 MB).");
-      return;
+      toast.error(
+        `Die Datei ist zu groß (maximal ${MAX_IMAGE_SIZE_BYTES / 1024 / 1024} MB).`,
+      );
+      return false;
     }
     setFile(newFile);
+    return true;
   };
 
   useEffect(() => {
