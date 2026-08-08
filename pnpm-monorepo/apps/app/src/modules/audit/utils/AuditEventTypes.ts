@@ -765,13 +765,19 @@ export interface AuditEventDataByType {
    * occurs on historical events.
    */
   [AuditEventType.WIKI_PAGE_COPIED]: WikiPageAuditScope & {
-    /** The newly created page */
+    /** The newly created page — or the replaced one, see below */
     pageId: string;
     sourcePageId: string;
     title: string;
     parentId: string | null;
     /** Root of the copied subtree; equals pageId for the root itself */
     rootPageId: string;
+    /**
+     * True on the root event of a replace-mode paste: pageId is then an
+     * existing page that took over the copied root's content and
+     * attributes instead of a newly created one.
+     */
+    replacedExistingPage?: boolean;
   };
 
   [AuditEventType.WIKI_PAGE_PERMISSIONS_UPDATED]: {

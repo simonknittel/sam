@@ -117,8 +117,11 @@ export const createWikiPage = createAuthenticatedAction(
         sourcePage,
         includeChildren: data.copyChildren,
         targetScoped: scoped,
-        targetParentId: data.parentId,
-        rootTitle: data.title,
+        destination: {
+          kind: "newPage",
+          parentId: data.parentId,
+          rootTitle: data.title,
+        },
         createdByEntityId: authentication.session.entity.id,
       });
 

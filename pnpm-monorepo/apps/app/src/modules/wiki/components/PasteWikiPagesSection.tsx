@@ -4,6 +4,8 @@ import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
+import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
+import Note from "@/modules/common/components/Note";
 import clsx from "clsx";
 import { useState } from "react";
 import { FaPaste, FaTrashAlt } from "react-icons/fa";
@@ -11,6 +13,11 @@ import { pasteWikiPages } from "../actions/pasteWikiPages";
 import type { WikiPageTargetOption } from "../utils/getWikiPageTargets";
 import type { WikiClipboardEntry } from "../utils/wikiClipboardCookie";
 import { WikiPageSelect } from "./WikiPageSelect";
+
+enum PasteMode {
+  Child = "child",
+  Replace = "replace",
+}
 
 interface Props {
   readonly className?: string;
@@ -25,9 +32,12 @@ interface Props {
 
 /**
  * The insert half of copy'n'paste, shown by the create-page modal while the
- * clipboard cookie holds a copied page. The clipboard's title and child
- * count are display-only — the insert re-resolves the source, so the error
- * here is where a meanwhile deleted or hidden source surfaces.
+ * clipboard cookie holds a copied page. Inserts either as a new subpage of
+ * the selected page or — replace mode — onto the selected page itself,
+ * which is how a whole briefing lands on another event's locked root. The
+ * clipboard's title and child count are display-only: the insert
+ * re-resolves the source, so the error here is where a meanwhile deleted or
+ * hidden source surfaces.
  */
 export const PasteWikiPagesSection = ({
   className,
@@ -38,6 +48,7 @@ export const PasteWikiPagesSection = ({
   onDiscard,
   onSuccess,
 }: Props) => {
+  const [mode, setMode] = useState(PasteMode.Child);
   const [parentId, setParentId] = useState(() => {
     if (
       defaultParentId &&
@@ -56,6 +67,14 @@ export const PasteWikiPagesSection = ({
     errorToast: false,
     onSuccess,
   });
+
+  const changeMode = (value: string) => {
+    const nextMode = value as PasteMode;
+    setMode(nextMode);
+    /** Replace mode needs a page — "Oberste Ebene" only exists for children */
+    if (nextMode === PasteMode.Replace && parentId === "")
+      setParentId(targets[0]?.id ?? "");
+  };
 
   return (
     <section
@@ -80,19 +99,47 @@ export const PasteWikiPagesSection = ({
           <input type="hidden" name="includeChildren" value="1" />
         )}
 
-        <label className="mt-4 mb-1 block">Einfügen unter</label>
+        <RadioGroup
+          className="mt-4"
+          name="mode"
+          value={mode}
+          onChange={changeMode}
+          equalWidth
+          items={[
+            { value: PasteMode.Child, label: "Als Unterseite" },
+            { value: PasteMode.Replace, label: "Seite ersetzen" },
+          ]}
+        />
+
+        <label className="mt-4 mb-1 block">
+          {mode === PasteMode.Replace
+            ? "Zu ersetzende Seite"
+            : "Einfügen unter"}
+        </label>
         <WikiPageSelect
           name="parentId"
           value={parentId}
           onChange={(event) => setParentId(event.target.value)}
-          required={!allowTopLevel}
+          required={mode === PasteMode.Replace || !allowTopLevel}
           targets={targets}
-          emptyOptionLabel={allowTopLevel ? "Oberste Ebene" : undefined}
+          emptyOptionLabel={
+            mode === PasteMode.Child && allowTopLevel
+              ? "Oberste Ebene"
+              : undefined
+          }
         />
 
-        <p className="mt-2 text-sm text-neutral-400">
-          Die eingefügten Seiten übernehmen die Berechtigungen des neuen Orts.
-        </p>
+        {mode === PasteMode.Replace ? (
+          <Note
+            type="warning"
+            className="mt-2"
+            message="Der Inhalt der ausgewählten Seite wird durch die Kopie ersetzt — der alte Inhalt wird als Snapshot gesichert. Icon, Tags und Seitenleisten-Einstellung werden übernommen; Titel und Berechtigungen bleiben. Bestehende Unterseiten bleiben erhalten, kopierte werden dahinter eingefügt."
+          />
+        ) : (
+          <p className="mt-2 text-sm text-neutral-400">
+            Die eingefügten Seiten übernehmen die Berechtigungen des neuen Orts.
+          </p>
+        )}
 
         <div className="mt-4 flex justify-end gap-2">
           <Button2

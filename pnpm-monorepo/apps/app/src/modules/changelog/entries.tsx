@@ -57,6 +57,14 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
         </p>
 
         <p>
+          Beim Einfügen hast du die Wahl: als neue Unterseite – oder eine
+          bestehende Seite ersetzen. Beim Ersetzen übernimmt die Seite den
+          Inhalt der Kopie (der alte Inhalt wird als Snapshot gesichert), behält
+          aber Titel und Berechtigungen. So lässt sich etwa das Briefing eines
+          früheren Events in ein neues übernehmen.
+        </p>
+
+        <p>
           Beim Erstellen einer neuen Seite kann ihr Inhalt außerdem direkt von
           einer bestehenden Seite übernommen werden (&bdquo;Inhalt kopieren
           von&ldquo;). Kopien übernehmen die Berechtigungen ihres neuen Orts.

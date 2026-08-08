@@ -195,3 +195,73 @@ test("copying skips children the user cannot read", async ({
   // The unreadable child was not copied — only the original exists
   expect(await prisma.wikiPage.count({ where: { title: "Geheim" } })).toBe(1);
 });
+
+test("replace mode transplants the copy onto an existing page", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const member = await createCitizen(prisma, { handle: "ersetzer" });
+  const source = await createWikiPage(prisma, {
+    title: "Muster",
+    visibility: WikiPageVisibility.PUBLIC,
+    content: wikiDocument(wikiParagraph("Muster-Inhalt.")),
+  });
+  await createWikiPage(prisma, {
+    title: "Muster-Kind",
+    parentId: source.id,
+    content: wikiDocument(wikiParagraph("Kind-Inhalt.")),
+  });
+  const target = await createWikiPage(prisma, {
+    title: "Bestehend",
+    visibility: WikiPageVisibility.PUBLIC,
+    ownerId: member.entity.id,
+    content: wikiDocument(wikiParagraph("Alter Inhalt.")),
+  });
+  await createWikiPage(prisma, { title: "Altes Kind", parentId: target.id });
+  await signIn(member.user);
+
+  await page.goto(`/app/wiki/${source.id}/${source.slug}`);
+  await copyPageToClipboard(page);
+
+  await page.goto(`/app/wiki/${target.id}/${target.slug}`);
+  await openCreatePageModal(page);
+  await page.getByText("Seite ersetzen", { exact: true }).click();
+  await page.getByRole("button", { name: "Einfügen", exact: true }).click();
+
+  // The page keeps its identity; only its content is transplanted
+  await expect(page).toHaveURL(new RegExp(`/app/wiki/${target.id}/`), {
+    timeout: 15_000,
+  });
+  await expect(page.getByText("Muster-Inhalt.")).toBeVisible();
+
+  const targetRow = await prisma.wikiPage.findUniqueOrThrow({
+    where: { id: target.id },
+    select: { title: true, searchText: true },
+  });
+  expect(targetRow.title).toBe("Bestehend");
+  expect(targetRow.searchText).toContain("Muster-Inhalt.");
+
+  // The old content survives as an automatic snapshot
+  expect(
+    await prisma.wikiPageSnapshot.count({
+      where: { pageId: target.id, name: "Automatische Sicherung vor Ersetzen" },
+    }),
+  ).toBe(1);
+
+  // Existing children are kept, copied children appended
+  expect(
+    await prisma.wikiPage.count({
+      where: { title: "Altes Kind", parentId: target.id },
+    }),
+  ).toBe(1);
+  expect(
+    await prisma.wikiPage.count({
+      where: { title: "Muster-Kind", parentId: target.id },
+    }),
+  ).toBe(1);
+  // No "(Kopie)" page was created — the target itself was replaced
+  expect(
+    await prisma.wikiPage.count({ where: { title: "Muster (Kopie)" } }),
+  ).toBe(0);
+});
