@@ -8,10 +8,11 @@ enum WikiPageNamespace {
 }
 
 /// Permission scopes for pages in the EVENT namespace, where the role-based
-/// tiers (visibility/editability/roleAccess/uploadability) are unused. Read
-/// and edit are configured independently; upload permission follows the edit
-/// scope. Manage access is not configurable: the event's organizer, its
-/// managers and holders of `event;manage` always manage every page.
+/// tiers (visibility/editability/roleAccess) are unused. Read and edit are
+/// configured independently and edit never exceeds read; the uploadability
+/// tiers above apply to event pages too. Manage access is not configurable:
+/// the event's organizer, its managers and holders of `event;manage` always
+/// manage every page.
 /// MANAGERS grants only to that fixed manage set. PARTICIPANTS grants to the
 /// event's Discord participants. POSITION grants to citizens assigned to a
 /// position inside the referenced lineup subtree; a dangling reference
@@ -126,7 +127,9 @@ model WikiPage {
   /// Permission configuration for namespace EVENT (see WikiPageEventScope);
   /// ignored in namespace WIKI. The position references are only meaningful
   /// while the matching scope is POSITION; SetNull on a deleted position
-  /// intentionally degrades that scope to managers-only.
+  /// intentionally degrades that scope to managers-only. The edit scope is
+  /// validated to stay a subset of the read scope, and an edit scope
+  /// POSITION always stores the read scope's position.
   eventReadScope           WikiPageEventScope @default(INHERIT)
   eventReadScopePositionId String?
   eventReadScopePosition   EventPosition?     @relation("wikiReadScopePages", fields: [eventReadScopePositionId], references: [id], onDelete: SetNull)

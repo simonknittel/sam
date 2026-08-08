@@ -229,7 +229,6 @@ export const EventWikiPagePermissionsModal = ({
             <h3 className="font-bold text-lg font-mono uppercase">Hochladen</h3>
             <p className="text-sm text-neutral-400">
               Wer darf beim Bearbeiten Bilder bzw. Dateianhänge hochladen?
-              Manager dürfen immer hochladen.
             </p>
 
             <h4 className="font-bold mt-4">Bilder</h4>
