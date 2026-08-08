@@ -184,19 +184,21 @@ export const getWikiPageStaticContent = cache(
        * Intrinsic dimensions of the uploaded images embedded in the
        * content, for optimized rendering with the aspect-ratio box reserved
        * from SSR. Uploads without probed dimensions are absent — those
-       * images render as a plain img like before.
+       * images render as a plain img.
        */
       const imageUploadIds = collectWikiImageUploadIds(
         content,
         env.NEXT_PUBLIC_S3_PUBLIC_URL,
       );
+      const uploadsWithDimensions =
+        imageUploadIds.length > 0
+          ? await prisma.upload.findMany({
+              where: { id: { in: imageUploadIds }, width: { not: null } },
+              select: { id: true, width: true, height: true, mimeType: true },
+            })
+          : [];
       const imageDimensions: Record<string, WikiImageDimensions> = {};
-      for (const upload of imageUploadIds.length > 0
-        ? await prisma.upload.findMany({
-            where: { id: { in: imageUploadIds }, width: { not: null } },
-            select: { id: true, width: true, height: true, mimeType: true },
-          })
-        : []) {
+      for (const upload of uploadsWithDimensions) {
         if (upload.width === null || upload.height === null) continue;
         imageDimensions[upload.id] = {
           width: upload.width,

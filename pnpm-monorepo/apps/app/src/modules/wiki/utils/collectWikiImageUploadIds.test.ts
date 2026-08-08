@@ -23,9 +23,9 @@ describe("getWikiImageUploadId", () => {
     expect(
       getWikiImageUploadId(`https://${PUBLIC_HOST}/nested/path`, PUBLIC_HOST),
     ).toBeNull();
-    expect(getWikiImageUploadId(`https://${PUBLIC_HOST}/`, PUBLIC_HOST)).toBe(
-      null,
-    );
+    expect(
+      getWikiImageUploadId(`https://${PUBLIC_HOST}/`, PUBLIC_HOST),
+    ).toBeNull();
     expect(getWikiImageUploadId("not a url", PUBLIC_HOST)).toBeNull();
     expect(getWikiImageUploadId(null, PUBLIC_HOST)).toBeNull();
     expect(

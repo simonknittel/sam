@@ -22,14 +22,23 @@ const UNOPTIMIZED_MIME_TYPES: readonly string[] = [
 ];
 
 /**
- * Desktop max width of the wiki content column: the site shell's
- * max-w-(--breakpoint-3xl) (1920px, globals.css) minus MaxWidthContent's
- * p-4 padding (2 × 16px), the sidebar (md:w-80, 320px) and the gap-4
- * between them (16px). Upper bound for the `sizes` hint — the layout
- * itself stays CSS-driven, so a drift here only shifts which srcset
- * candidate the browser picks.
+ * Horizontal space next to the wiki content column once the sidebar
+ * appears: the sidebar itself (md:w-80, 320px), the gap-4 between them
+ * (16px) and MaxWidthContent's p-4 padding (2 × 16px). Only feeds the
+ * `sizes` hint — the layout itself stays CSS-driven, so a drift here only
+ * shifts which srcset candidate the browser picks.
  */
-const WIKI_CONTENT_COLUMN_MAX_WIDTH_PX = 1552;
+const WIKI_CONTENT_COLUMN_DESKTOP_OVERHEAD_PX = 368;
+
+/** Tailwind's `md` breakpoint, where the sidebar appears */
+const WIKI_SIDEBAR_BREAKPOINT_PX = 768;
+
+/**
+ * Desktop max width of the wiki content column: the site shell's
+ * max-w-(--breakpoint-3xl) (1920px, globals.css) minus the overhead above.
+ */
+const WIKI_CONTENT_COLUMN_MAX_WIDTH_PX =
+  1920 - WIKI_CONTENT_COLUMN_DESKTOP_OVERHEAD_PX;
 
 export interface WikiImageRendering {
   /**
@@ -62,14 +71,34 @@ export const resolveWikiImageRendering = (
     return { dimensions, optimized: undefined };
 
   const widthPx: unknown = attrs.widthPx;
+  let requestedWidthPx: number;
+  if (typeof widthPx === "number") requestedWidthPx = widthPx;
+  else if (widthPx === WIKI_FULL_WIDTH)
+    requestedWidthPx = WIKI_CONTENT_COLUMN_MAX_WIDTH_PX;
+  else requestedWidthPx = dimensions.width;
   const displayWidthPx = Math.min(
-    typeof widthPx === "number"
-      ? widthPx
-      : widthPx === WIKI_FULL_WIDTH
-        ? WIKI_CONTENT_COLUMN_MAX_WIDTH_PX
-        : dimensions.width,
+    requestedWidthPx,
     WIKI_CONTENT_COLUMN_MAX_WIDTH_PX,
   );
 
-  return { dimensions, optimized: getOptimizedImageProps(src, displayWidthPx) };
+  /**
+   * What the image occupies at most: its display width, bounded by the
+   * content column — which is the viewport minus the sidebar once that
+   * appears. Keeps the browser from fetching a candidate sized for the
+   * full viewport width on desktop.
+   */
+  const sizes =
+    `(min-width: ${WIKI_SIDEBAR_BREAKPOINT_PX}px) ` +
+    `min(calc(100vw - ${WIKI_CONTENT_COLUMN_DESKTOP_OVERHEAD_PX}px), ${displayWidthPx}px), ` +
+    `min(100vw, ${displayWidthPx}px)`;
+
+  return {
+    dimensions,
+    optimized: getOptimizedImageProps(
+      src,
+      dimensions.width,
+      dimensions.height,
+      sizes,
+    ),
+  };
 };
