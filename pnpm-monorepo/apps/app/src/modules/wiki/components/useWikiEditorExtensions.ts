@@ -9,6 +9,7 @@ import {
 } from "@sam-monorepo/wiki-editor";
 import type { AnyExtension } from "@tiptap/core";
 import { getWikiTwitchParentHost } from "../utils/getWikiTwitchParentHost";
+import type { WikiImageDimensions } from "../utils/wikiImageRendering";
 import { WikiActiveNodeHighlight } from "./WikiActiveNodeHighlight";
 import { withWikiAttachmentReportButton } from "./WikiAttachmentCard";
 import { withWikiCitizenMentionPopover } from "./WikiCitizenMentionNodeView";
@@ -25,7 +26,6 @@ import type { WikiRoleCitizen } from "./WikiRoleCitizensList";
 import { withWikiRoleCitizensNodeView } from "./WikiRoleCitizensNodeView";
 import { WikiSlashCommand } from "./WikiSlashCommand";
 import { withWikiVariantLinkNodeView } from "./WikiVariantLinkNodeView";
-import type { WikiImageDimensions } from "../utils/wikiImageRendering";
 
 interface Options {
   readonly pageId: string;

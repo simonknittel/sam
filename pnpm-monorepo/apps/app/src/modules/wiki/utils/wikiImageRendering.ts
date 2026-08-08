@@ -3,7 +3,10 @@ import {
   getOptimizedImageProps,
   type OptimizedImageProps,
 } from "@/modules/common/utils/imageOptimizer";
-import { getWikiImageUploadId, WIKI_FULL_WIDTH } from "@sam-monorepo/wiki-editor";
+import {
+  getWikiImageUploadId,
+  WIKI_FULL_WIDTH,
+} from "@sam-monorepo/wiki-editor";
 
 export interface WikiImageDimensions {
   readonly width: number;

@@ -19,6 +19,7 @@ import {
   type ReactNode,
 } from "react";
 import { createWikiCollabToken } from "../actions/createWikiCollabToken";
+import type { WikiImageDimensions } from "../utils/wikiImageRendering";
 import { useWikiEditorExtensions } from "./useWikiEditorExtensions";
 import { WikiCollabSaveIndicator } from "./WikiCollabSaveIndicator";
 import {
@@ -31,7 +32,6 @@ import "./wikiEditor.css";
 import { WikiEditorLayout } from "./WikiEditorLayout";
 import { WikiEmbedUrlModal } from "./WikiEmbedUrlModal";
 import { WikiLinkModal } from "./WikiLinkModal";
-import type { WikiImageDimensions } from "../utils/wikiImageRendering";
 import type { WikiPageIndexEntry } from "./WikiPageIndexList";
 import type { WikiRoleCitizen } from "./WikiRoleCitizensList";
 import { WikiVariantLinkModal } from "./WikiVariantLinkModal";

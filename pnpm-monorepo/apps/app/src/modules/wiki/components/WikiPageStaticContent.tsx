@@ -16,11 +16,11 @@ import { renderToReactElement } from "@tiptap/static-renderer";
 import clsx from "clsx";
 import { createElement, type CSSProperties, type ReactNode } from "react";
 import { getWikiTwitchParentHost } from "../utils/getWikiTwitchParentHost";
+import type { WikiImageDimensions } from "../utils/wikiImageRendering";
 import { withoutWikiTrailingEmptyParagraph } from "../utils/wikiTrailingParagraph";
 import { WikiAttachmentCard } from "./WikiAttachmentCard";
 import { wikiBlockLayoutStyle } from "./wikiBlockLayoutStyle";
 import { WikiCitizenMentionChip } from "./WikiCitizenMentionNodeView";
-import type { WikiImageDimensions } from "../utils/wikiImageRendering";
 import { WikiContentImage } from "./WikiContentImage";
 import "./wikiEditor.css";
 import {
