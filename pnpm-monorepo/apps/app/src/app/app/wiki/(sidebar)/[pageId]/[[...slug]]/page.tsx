@@ -7,6 +7,7 @@ import { Link } from "@/modules/common/components/Link";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { renameWikiPage } from "@/modules/wiki/actions/renameWikiPage";
+import { CopyWikiPageModal } from "@/modules/wiki/components/CopyWikiPageModal";
 import { DeleteWikiPageModal } from "@/modules/wiki/components/DeleteWikiPageModal";
 import { DuplicateWikiPageModal } from "@/modules/wiki/components/DuplicateWikiPageModal";
 import { MoveWikiPageModal } from "@/modules/wiki/components/MoveWikiPageModal";
@@ -29,6 +30,7 @@ import {
 import { getWikiFavoritePageIds } from "@/modules/wiki/queries/getWikiFavorites";
 import { getWikiPageStaticContent } from "@/modules/wiki/queries/getWikiPageStaticContent";
 import { getWikiPermissionRoles } from "@/modules/wiki/queries/getWikiPermissionRoles";
+import { collectVisibleWikiSubtree } from "@/modules/wiki/utils/collectVisibleWikiSubtree";
 import { collectWikiPageDescendants } from "@/modules/wiki/utils/collectWikiPageDescendants";
 import { getAccessibleWikiPage } from "@/modules/wiki/utils/getAccessibleWikiPage";
 import { getWikiCollabUrl } from "@/modules/wiki/utils/getWikiCollabUrl";
@@ -121,6 +123,12 @@ const PageContent = async ({
     ]);
 
   const descendantIds = collectWikiPageDescendants(context.pages, page.id);
+  /** What the copy dialog's "Unterseiten mitkopieren" would copy */
+  const visibleDescendantCount = collectVisibleWikiSubtree(
+    context.pages,
+    page.id,
+    (id) => context.permissions.get(id)?.canRead === true,
+  ).length;
 
   const authentication = await authenticate();
   const session = authentication ? authentication.session : null;
@@ -243,6 +251,12 @@ const PageContent = async ({
             />
 
             <ReportWikiPageModal pageId={page.id} title={page.title} />
+
+            <CopyWikiPageModal
+              pageId={page.id}
+              title={page.title}
+              visibleDescendantCount={visibleDescendantCount}
+            />
 
             <DuplicateWikiPageModal
               pageId={page.id}

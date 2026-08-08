@@ -12,6 +12,7 @@ import {
 } from "../queries/getEventWikiContext";
 import { getEventWikiPageStaticContent } from "../queries/getEventWikiPageStaticContent";
 import { getWikiFavoritePageIds } from "../queries/getWikiFavorites";
+import { collectVisibleWikiSubtree } from "../utils/collectVisibleWikiSubtree";
 import { collectWikiPageDescendants } from "../utils/collectWikiPageDescendants";
 import { getEffectiveEventWikiScope } from "../utils/getEffectiveEventWikiScope";
 import { getEventWikiPositionOptions } from "../utils/getEventWikiPositionOptions";
@@ -21,6 +22,7 @@ import { isEventWikiRootPage } from "../utils/isEventWikiRootPage";
 import type { ResolvedEventWikiPagePermissions } from "../utils/resolveEventWikiPagePermissions";
 import { trackWikiPageVisit } from "../utils/trackWikiPageVisit";
 import { createEventWikiHrefMode } from "../utils/wikiPageHref";
+import { CopyWikiPageModal } from "./CopyWikiPageModal";
 import { DeleteWikiPageModal } from "./DeleteWikiPageModal";
 import { DuplicateWikiPageModal } from "./DuplicateWikiPageModal";
 import { EventWikiPagePermissionsModal } from "./EventWikiPagePermissionsModal";
@@ -80,6 +82,12 @@ export const EventWikiPageContent = async ({
   const canAdministrate = permissions.canAdmin;
 
   const descendantIds = collectWikiPageDescendants(context.pages, page.id);
+  /** What the copy dialog's "Unterseiten mitkopieren" would copy */
+  const visibleDescendantCount = collectVisibleWikiSubtree(
+    context.pages,
+    page.id,
+    (id) => context.permissions.get(id)?.canRead === true,
+  ).length;
 
   /** Title of the page an inherited scope comes from, for the dialog */
   const sourceTitle = (sourceId: string | undefined) =>
@@ -148,6 +156,13 @@ export const EventWikiPageContent = async ({
             />
 
             <ReportWikiPageModal pageId={page.id} title={page.title} />
+
+            {/** Copying from a frozen event stays possible, like exporting */}
+            <CopyWikiPageModal
+              pageId={page.id}
+              title={page.title}
+              visibleDescendantCount={visibleDescendantCount}
+            />
 
             {canDuplicate && (
               <DuplicateWikiPageModal
