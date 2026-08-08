@@ -14,7 +14,6 @@ import { ReportWikiPageModal } from "@/modules/wiki/components/ReportWikiPageMod
 import { WikiEditModeProvider } from "@/modules/wiki/components/WikiEditModeProvider";
 import { WikiEditModeToggle } from "@/modules/wiki/components/WikiEditModeToggle";
 import { WikiPageDetailsPopover } from "@/modules/wiki/components/WikiPageDetailsPopover";
-import { getWikiCollabUrl } from "@/modules/wiki/utils/getWikiCollabUrl";
 import { WikiPageEditorSection } from "@/modules/wiki/components/WikiPageEditorSection";
 import { WikiPageExportImportModal } from "@/modules/wiki/components/WikiPageExportImportModal";
 import { WikiPageFavoriteButton } from "@/modules/wiki/components/WikiPageFavoriteButton";
@@ -32,6 +31,7 @@ import { getWikiPageStaticContent } from "@/modules/wiki/queries/getWikiPageStat
 import { getWikiPermissionRoles } from "@/modules/wiki/queries/getWikiPermissionRoles";
 import { collectWikiPageDescendants } from "@/modules/wiki/utils/collectWikiPageDescendants";
 import { getAccessibleWikiPage } from "@/modules/wiki/utils/getAccessibleWikiPage";
+import { getWikiCollabUrl } from "@/modules/wiki/utils/getWikiCollabUrl";
 import {
   getManageableWikiPageTargets,
   type WikiPageTargetOption,
