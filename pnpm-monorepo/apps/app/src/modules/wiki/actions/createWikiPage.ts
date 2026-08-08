@@ -13,13 +13,18 @@ import {
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { getWikiContext } from "../queries/getWikiContext";
+import {
+  getWikiContext,
+  type WikiSharedContextPage,
+} from "../queries/getWikiContext";
 import {
   getWikiPageScopedContext,
   getWikiScopeRevalidationPath,
   isWikiScopeFrozen,
   type WikiPageScopedContext,
 } from "../queries/getWikiPageScopedContext";
+import { copyWikiPageSubtree } from "../utils/copyWikiPageSubtree";
+import { getAccessibleWikiPage } from "../utils/getAccessibleWikiPage";
 import {
   resolveWikiPagePlacement,
   WikiPagePlacement,
@@ -34,6 +39,15 @@ const schema = z.object({
     .union([z.cuid2(), z.literal("")])
     .optional()
     .transform((value) => (value === "" ? undefined : value)),
+  /** Readable page whose content the new page starts with */
+  copyFromPageId: z
+    .union([z.cuid2(), z.literal("")])
+    .optional()
+    .transform((value) => (value === "" ? undefined : value)),
+  copyChildren: z
+    .literal("1")
+    .optional()
+    .transform((value) => value === "1"),
 });
 
 export const createWikiPage = createAuthenticatedAction(
@@ -79,6 +93,60 @@ export const createWikiPage = createAuthenticatedAction(
     }
 
     const parent = data.parentId ? context.pagesById.get(data.parentId) : null;
+
+    /**
+     * With a "copy from" source the new page is a copy of that page —
+     * optionally with its readable subtree — instead of an empty one. The
+     * source only takes read access and is resolved in its own scope; see
+     * copyWikiPageSubtree for the copy semantics.
+     */
+    if (data.copyFromPageId) {
+      const sourceScoped = await getWikiPageScopedContext(data.copyFromPageId);
+      const sourcePage = sourceScoped
+        ? getAccessibleWikiPage<WikiSharedContextPage>(
+            sourceScoped.context,
+            data.copyFromPageId,
+            "read",
+          )
+        : null;
+      if (!sourceScoped || !sourcePage)
+        return { error: t("Common.notFound"), requestPayload: formData };
+
+      const { root, copiedPages } = await copyWikiPageSubtree({
+        sourceScoped,
+        sourcePage,
+        includeChildren: data.copyChildren,
+        targetScoped: scoped,
+        targetParentId: data.parentId,
+        rootTitle: data.title,
+        createdByEntityId: authentication.session.entity.id,
+      });
+
+      await createAuditEvents(
+        copiedPages.map((copiedPage) => ({
+          type: AuditEventType.WIKI_PAGE_COPIED as const,
+          data: {
+            pageId: copiedPage.id,
+            eventId: parent?.eventId ?? undefined,
+            sourcePageId: copiedPage.sourcePageId,
+            title: copiedPage.title,
+            parentId: copiedPage.parentId,
+            rootPageId: root.id,
+          },
+          createdById: authentication.session.user.id,
+        })),
+      );
+
+      revalidatePath(getWikiScopeRevalidationPath(scoped), "layout");
+      /** A copied page is never an event root page */
+      redirect(
+        getWikiPageRouteHref({
+          id: root.id,
+          slug: root.slug,
+          eventId: parent?.eventId ?? null,
+        }),
+      );
+    }
 
     const siblings = context.pages.filter(
       (page) => page.parentId === (data.parentId ?? null),

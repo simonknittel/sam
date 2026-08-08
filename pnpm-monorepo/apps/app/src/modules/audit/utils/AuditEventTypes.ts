@@ -102,6 +102,7 @@ export enum AuditEventType {
   WIKI_PAGE_RENAMED = "WIKI_PAGE_RENAMED",
   WIKI_PAGE_MOVED = "WIKI_PAGE_MOVED",
   WIKI_PAGE_DUPLICATED = "WIKI_PAGE_DUPLICATED",
+  WIKI_PAGE_COPIED = "WIKI_PAGE_COPIED",
   WIKI_PAGE_PERMISSIONS_UPDATED = "WIKI_PAGE_PERMISSIONS_UPDATED",
   WIKI_PAGE_EVENT_SCOPES_UPDATED = "WIKI_PAGE_EVENT_SCOPES_UPDATED",
   WIKI_PAGE_ROLE_ACCESS_PRUNED = "WIKI_PAGE_ROLE_ACCESS_PRUNED",
@@ -756,6 +757,21 @@ export interface AuditEventDataByType {
     mirroredChildren: boolean;
     /** Only on events from before permission mirroring was removed */
     mirroredPermissions?: boolean;
+  };
+
+  /**
+   * One event per page created by copy'n'paste or the create form's
+   * "copy from" — the successor of WIKI_PAGE_DUPLICATED, which only
+   * occurs on historical events.
+   */
+  [AuditEventType.WIKI_PAGE_COPIED]: WikiPageAuditScope & {
+    /** The newly created page */
+    pageId: string;
+    sourcePageId: string;
+    title: string;
+    parentId: string | null;
+    /** Root of the copied subtree; equals pageId for the root itself */
+    rootPageId: string;
   };
 
   [AuditEventType.WIKI_PAGE_PERMISSIONS_UPDATED]: {
@@ -2010,6 +2026,19 @@ export const AuditEventDefinitions: {
     },
     message: (data) =>
       `Wiki page duplicated: "${data.title}" (${data.pageId}) from ${data.sourcePageId}`,
+  },
+
+  [AuditEventType.WIKI_PAGE_COPIED]: {
+    type: AuditEventType.WIKI_PAGE_COPIED,
+    data: {
+      pageId: "string",
+      sourcePageId: "string",
+      title: "string",
+      parentId: null,
+      rootPageId: "string",
+    },
+    message: (data) =>
+      `Wiki page copied: "${data.title}" (${data.pageId}) from ${data.sourcePageId}`,
   },
 
   [AuditEventType.WIKI_PAGE_PERMISSIONS_UPDATED]: {
