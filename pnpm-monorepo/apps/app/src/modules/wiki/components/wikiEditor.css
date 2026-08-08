@@ -174,26 +174,44 @@
 }
 
 /*
- * Collapsible sections. The static render emits a native <details>, the
- * editor a custom node view (div[data-type="details"] with a toggle
- * button) — both get identical geometry so nothing shifts when the editor
- * takes over from the static first paint: the summary is a padded header
- * row with an icon slot spanning its first text line, and the content
- * column starting at 2.25rem.
+ * Collapsible sections, styled as the attachment card is: a bordered,
+ * tinted card holding the header row and — while open — the content. The
+ * static render emits a native <details>, the editor a custom node view
+ * (div[data-type="details"] with a toggle button) — both get identical
+ * geometry so nothing shifts when the editor takes over from the static
+ * first paint: the summary is a padded header row with an icon slot
+ * spanning its first text line, and the content column starting at
+ * 3.25rem, the attachment card's text indent.
  */
 .prose details,
 .tiptap [data-type="details"] {
   position: relative;
   margin-block: 1.25em;
+  border: 1px solid var(--color-neutral-700);
+  border-radius: var(--radius-secondary);
+  background-color: color-mix(
+    in srgb,
+    var(--color-neutral-800) 40%,
+    transparent
+  );
 }
 
 /* Header row — .prose summary also matches the editor (its root has .prose) */
 .prose summary {
   display: block;
-  font-weight: 700;
+  font-weight: 600;
+  color: var(--color-neutral-50);
   list-style: none;
-  padding: 0.375rem 0.75rem 0.375rem 2.25rem;
+  padding: 0.75rem 1rem 0.75rem 3.25rem;
   border-radius: var(--radius-secondary);
+}
+
+/* Open: the header is only the card's top half and gains its divider */
+.prose details[open] > summary,
+.tiptap [data-type="details"].is-open > div > summary {
+  border-bottom: 1px solid var(--color-neutral-700);
+  border-end-start-radius: 0;
+  border-end-end-radius: 0;
 }
 
 .prose summary::-webkit-details-marker {
@@ -213,13 +231,23 @@
   cursor: pointer;
 }
 
+/* Composites onto the card's 40% tint to the download card's hover shade */
 .prose details > summary:hover,
 .tiptap[contenteditable="false"] [data-type="details"] > div > summary:hover {
+  background-color: color-mix(
+    in srgb,
+    var(--color-neutral-800) 50%,
+    transparent
+  );
+}
+
+.prose details > summary:active,
+.tiptap[contenteditable="false"] [data-type="details"] > div > summary:active {
   background-color: var(--color-neutral-800);
 }
 
 .prose details > summary:hover::before {
-  color: var(--color-interaction-300);
+  background-color: var(--color-interaction-300);
 }
 
 .tiptap[contenteditable="false"] [data-type="details"] > button {
@@ -228,27 +256,29 @@
 
 .tiptap[contenteditable="false"]
   [data-type="details"]:has(> div > summary:hover)
-  > button {
-  color: var(--color-interaction-300);
+  > button::before {
+  background-color: var(--color-interaction-300);
 }
 
 /*
  * Icon slot: covers the whole area left of the title text — up to the
- * 2.25rem text indent and the header's first line incl. its 0.375rem
+ * 3.25rem text indent and the header's first line incl. its 0.75rem
  * paddings — so the editing toggle button gets a generous hit area. The
- * glyph centers on the first text line either way.
+ * chevron centers on the first text line either way: statically the slot
+ * itself carries the mask (a pseudo-element has none of its own), in the
+ * editor the button's ::before does, leaving the button's background free
+ * for its own hover state.
  */
 .prose details > summary::before,
 .tiptap [data-type="details"] > button {
   position: absolute;
   left: 0;
   top: 0;
-  width: 2.25rem;
-  height: calc(1lh + 0.75rem);
+  width: 3.25rem;
+  height: calc(1lh + 1.5rem);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-neutral-400);
 }
 
 .tiptap [data-type="details"] > button {
@@ -256,16 +286,26 @@
   font: inherit;
 }
 
+/* Chevron (Font Awesome, like the attachment card's download icon) */
 .prose details > summary::before,
 .tiptap [data-type="details"] > button::before {
-  content: "\25B8";
-  /* Scaling instead of font-size keeps the slot height at the line height */
-  scale: 1.6;
+  content: "";
+  background-color: var(--color-neutral-400);
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512'%3E%3Cpath d='M285.476 272.971L91.132 467.314c-9.373 9.373-24.569 9.373-33.941 0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941 0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z'/%3E%3C/svg%3E");
+  mask-repeat: no-repeat;
+  mask-position: center;
+  /* Height only — the chevron's viewBox is far from square */
+  mask-size: auto 1rem;
+}
+
+.tiptap [data-type="details"] > button::before {
+  width: 1.125rem;
+  height: 1.125rem;
 }
 
 .prose details[open] > summary::before,
 .tiptap [data-type="details"].is-open > button::before {
-  content: "\25BE";
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath d='M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z'/%3E%3C/svg%3E");
 }
 
 /* Editor while editing: the button is the (only) toggle */
@@ -276,7 +316,10 @@
 
 .tiptap[contenteditable="true"] [data-type="details"] > button:hover {
   background-color: var(--color-neutral-800);
-  color: var(--color-interaction-300);
+}
+
+.tiptap[contenteditable="true"] [data-type="details"] > button:hover::before {
+  background-color: var(--color-interaction-300);
 }
 
 .prose summary:focus-visible,
@@ -289,10 +332,15 @@
   min-width: 0;
 }
 
-/* Content column aligns with the header text */
+/*
+ * Content column aligns with the header text. No vertical padding: the
+ * blocks' own margins already space them off the divider and the card's
+ * bottom border, and adding padding would stop them from collapsing and
+ * double the gaps.
+ */
 .prose details > [data-type="detailsContent"],
 .tiptap [data-type="details"] > div > [data-type="detailsContent"] {
-  padding-left: 2.25rem;
+  padding-inline: 3.25rem 1rem;
 }
 
 /*
