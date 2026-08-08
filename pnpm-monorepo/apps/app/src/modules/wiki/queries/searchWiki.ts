@@ -1,12 +1,14 @@
 import { prisma } from "@/db";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
+import type { Event } from "@sam-monorepo/database/client";
 import { Prisma } from "@sam-monorepo/database/client";
 import { buildVisibleWikiBreadcrumb } from "../utils/buildVisibleWikiBreadcrumb";
 import {
   WIKI_SEARCH_MARK_END,
   WIKI_SEARCH_MARK_START,
 } from "../utils/wikiSearchSnippet";
-import { getWikiContext } from "./getWikiContext";
+import { getEventWikiContext } from "./getEventWikiContext";
+import { getWikiContext, type WikiSharedContext } from "./getWikiContext";
 
 export interface WikiSearchPageResult {
   readonly id: string;
@@ -30,6 +32,8 @@ export interface WikiSearchResults {
   readonly tags: WikiSearchTagResult[];
   readonly pages: WikiSearchPageResult[];
 }
+
+const EMPTY_RESULTS: WikiSearchResults = { tags: [], pages: [] };
 
 /**
  * More candidates than results are fetched because the permission filter
@@ -59,86 +63,118 @@ const buildTsquery = (query: string): Prisma.Sql => {
   return Prisma.sql`(websearch_to_tsquery('german', ${head}) && ${prefix})`;
 };
 
+interface WikiSearchScopeFilters {
+  /** WHERE fragment limiting WikiTag rows to the scope */
+  readonly tagsFilter: Prisma.Sql;
+  /** WHERE fragment limiting WikiPage rows to the scope */
+  readonly pagesFilter: Prisma.Sql;
+}
+
 /**
- * Full-text search over the global wiki's pages and tags (event wikis have
- * their own scoped search). Page candidates come from Postgres FTS; the
- * viewer's resolved permissions trim them down server-side before anything
- * is returned, so invisible pages never leak. Tag results are deliberately
- * not permission-filtered — tag names are shared within their scope, like
- * the autocomplete in getTags — and the tag's list page permission-filters
- * its content itself. Tags match through the same
- * tsquery as pages, so a returned tag row and the tag chips on page
- * results always agree.
+ * Full-text search over one scope's pages and tags. Page candidates come
+ * from Postgres FTS; the viewer's resolved permissions trim them down
+ * server-side before anything is returned, so invisible pages never leak.
+ * Tag results are deliberately not permission-filtered — tag names are
+ * shared within their scope, like the autocomplete in getTags — and the
+ * tag's list page permission-filters its content itself. Tags match
+ * through the same tsquery as pages, so a returned tag row and the tag
+ * chips on page results always agree.
  */
+const runWikiSearch = async (
+  context: WikiSharedContext,
+  query: string,
+  filters: WikiSearchScopeFilters,
+): Promise<WikiSearchResults> => {
+  const tsquery = buildTsquery(query.trim());
+  const headlineOptions = `StartSel=${WIKI_SEARCH_MARK_START}, StopSel=${WIKI_SEARCH_MARK_END}, MaxWords=25, MinWords=10, ShortWord=2, MaxFragments=2`;
+
+  const tags = await prisma.$queryRaw<WikiSearchTagResult[]>`
+    SELECT "id", "name"
+    FROM "WikiTag"
+    WHERE ${filters.tagsFilter}
+      AND to_tsvector('german', "name") @@ ${tsquery}
+    ORDER BY "name"
+    LIMIT ${TAG_RESULT_LIMIT}
+  `;
+
+  /**
+   * The expression inside to_tsvector must match the expression GIN index
+   * on WikiPage exactly, otherwise the index is not used.
+   *
+   * The snippet deliberately excludes tagsText — tag matches are shown as
+   * chips instead, so a tag name never poses as page content. A tag only
+   * counts as matched when it satisfies the whole tsquery by itself: with
+   * a multi-word query, a tag contributing just one of the words keeps
+   * the page in the results (via tagsText) but is not returned as a chip.
+   */
+  const candidates = await prisma.$queryRaw<
+    { id: string; snippet: string; matchedTags: string[] }[]
+  >`
+    SELECT
+      "id",
+      ts_headline('german', "title" || ' ' || "searchText", ${tsquery}, ${headlineOptions}) AS "snippet",
+      ARRAY(
+        SELECT "WikiTag"."name"
+        FROM "WikiPageTag"
+        INNER JOIN "WikiTag" ON "WikiTag"."id" = "WikiPageTag"."tagId"
+        WHERE "WikiPageTag"."pageId" = "WikiPage"."id"
+          AND to_tsvector('german', "WikiTag"."name") @@ ${tsquery}
+        ORDER BY "WikiTag"."name"
+      ) AS "matchedTags"
+    FROM "WikiPage"
+    WHERE ${filters.pagesFilter}
+      AND "deletedAt" IS NULL
+      AND to_tsvector('german', "title" || ' ' || "tagsText" || ' ' || "searchText") @@ ${tsquery}
+    ORDER BY ts_rank(to_tsvector('german', "title" || ' ' || "tagsText" || ' ' || "searchText"), ${tsquery}) DESC
+    LIMIT ${CANDIDATE_LIMIT}
+  `;
+
+  const pages = candidates
+    .filter((candidate) => context.permissions.get(candidate.id)?.canRead)
+    .slice(0, RESULT_LIMIT)
+    .map((candidate) => {
+      const page = context.pagesById.get(candidate.id);
+      if (!page) return null;
+
+      return {
+        id: page.id,
+        title: page.title,
+        slug: page.slug,
+        iconId: page.iconId,
+        breadcrumb: buildVisibleWikiBreadcrumb(context, page),
+        snippet: candidate.snippet,
+        matchedTags: candidate.matchedTags,
+      };
+    })
+    .filter((result) => result !== null);
+
+  return { tags, pages };
+};
+
+/** Full-text search over the global wiki (event wikis search separately) */
 export const searchWiki = withTrace(
   "searchWiki",
   async (query: string): Promise<WikiSearchResults> => {
     const context = await getWikiContext();
-    if (!context) return { tags: [], pages: [] };
+    if (!context) return EMPTY_RESULTS;
 
-    const tsquery = buildTsquery(query.trim());
-    const headlineOptions = `StartSel=${WIKI_SEARCH_MARK_START}, StopSel=${WIKI_SEARCH_MARK_END}, MaxWords=25, MinWords=10, ShortWord=2, MaxFragments=2`;
+    return runWikiSearch(context, query, {
+      tagsFilter: Prisma.sql`"eventId" IS NULL`,
+      pagesFilter: Prisma.sql`"namespace" = 'WIKI'`,
+    });
+  },
+);
 
-    const tags = await prisma.$queryRaw<WikiSearchTagResult[]>`
-      SELECT "id", "name"
-      FROM "WikiTag"
-      WHERE "eventId" IS NULL
-        AND to_tsvector('german', "name") @@ ${tsquery}
-      ORDER BY "name"
-      LIMIT ${TAG_RESULT_LIMIT}
-    `;
+/** Full-text search limited to one event's wiki pages and tags */
+export const searchEventWiki = withTrace(
+  "searchEventWiki",
+  async (eventId: Event["id"], query: string): Promise<WikiSearchResults> => {
+    const context = await getEventWikiContext(eventId);
+    if (!context) return EMPTY_RESULTS;
 
-    /**
-     * The expression inside to_tsvector must match the expression GIN index
-     * on WikiPage exactly, otherwise the index is not used.
-     *
-     * The snippet deliberately excludes tagsText — tag matches are shown as
-     * chips instead, so a tag name never poses as page content. A tag only
-     * counts as matched when it satisfies the whole tsquery by itself: with
-     * a multi-word query, a tag contributing just one of the words keeps
-     * the page in the results (via tagsText) but is not returned as a chip.
-     */
-    const candidates = await prisma.$queryRaw<
-      { id: string; snippet: string; matchedTags: string[] }[]
-    >`
-      SELECT
-        "id",
-        ts_headline('german', "title" || ' ' || "searchText", ${tsquery}, ${headlineOptions}) AS "snippet",
-        ARRAY(
-          SELECT "WikiTag"."name"
-          FROM "WikiPageTag"
-          INNER JOIN "WikiTag" ON "WikiTag"."id" = "WikiPageTag"."tagId"
-          WHERE "WikiPageTag"."pageId" = "WikiPage"."id"
-            AND to_tsvector('german', "WikiTag"."name") @@ ${tsquery}
-          ORDER BY "WikiTag"."name"
-        ) AS "matchedTags"
-      FROM "WikiPage"
-      WHERE "namespace" = 'WIKI'
-        AND "deletedAt" IS NULL
-        AND to_tsvector('german', "title" || ' ' || "tagsText" || ' ' || "searchText") @@ ${tsquery}
-      ORDER BY ts_rank(to_tsvector('german', "title" || ' ' || "tagsText" || ' ' || "searchText"), ${tsquery}) DESC
-      LIMIT ${CANDIDATE_LIMIT}
-    `;
-
-    const pages = candidates
-      .filter((candidate) => context.permissions.get(candidate.id)?.canRead)
-      .slice(0, RESULT_LIMIT)
-      .map((candidate) => {
-        const page = context.pagesById.get(candidate.id);
-        if (!page) return null;
-
-        return {
-          id: page.id,
-          title: page.title,
-          slug: page.slug,
-          iconId: page.iconId,
-          breadcrumb: buildVisibleWikiBreadcrumb(context, page),
-          snippet: candidate.snippet,
-          matchedTags: candidate.matchedTags,
-        };
-      })
-      .filter((result) => result !== null);
-
-    return { tags, pages };
+    return runWikiSearch(context, query, {
+      tagsFilter: Prisma.sql`"eventId" = ${eventId}`,
+      pagesFilter: Prisma.sql`"namespace" = 'EVENT' AND "eventId" = ${eventId}`,
+    });
   },
 );

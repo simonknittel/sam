@@ -11,7 +11,9 @@ import type {
   WikiSearchPageResult,
   WikiSearchTagResult,
 } from "../queries/searchWiki";
+import { buildWikiPageHref } from "../utils/wikiPageHref";
 import { parseWikiSearchSnippet } from "../utils/wikiSearchSnippet";
+import { useWikiPageHrefMode } from "./WikiPageHrefModeProvider";
 import { WikiPageIcon } from "./WikiPageIcon";
 
 const MIN_QUERY_LENGTH = 2;
@@ -20,14 +22,11 @@ type WikiSearchOption =
   | { readonly type: "tag"; readonly tag: WikiSearchTagResult }
   | { readonly type: "page"; readonly page: WikiSearchPageResult };
 
-const optionHref = (option: WikiSearchOption) =>
-  option.type === "tag"
-    ? `/app/wiki/tags/${option.tag.id}`
-    : `/app/wiki/${option.page.id}/${option.page.slug}`;
-
 interface Props {
   readonly className?: string;
   readonly compact?: boolean;
+  /** Limits the search to one event's wiki (the briefing sidebar) */
+  readonly eventId?: string;
 }
 
 /**
@@ -38,8 +37,15 @@ interface Props {
  * shifts. Arrow keys move through the results, Enter opens the active one
  * (or the first when none is active).
  */
-export const WikiSearch = ({ className, compact }: Props) => {
+export const WikiSearch = ({ className, compact, eventId }: Props) => {
+  const hrefMode = useWikiPageHrefMode();
   const [query, setQuery] = useState("");
+
+  const optionHref = (option: WikiSearchOption) =>
+    option.type === "tag"
+      ? `${hrefMode.basePath}/tags/${option.tag.id}`
+      : buildWikiPageHref(hrefMode, option.page);
+
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -56,7 +62,7 @@ export const WikiSearch = ({ className, compact }: Props) => {
 
   const enabled = debouncedQuery.length >= MIN_QUERY_LENGTH;
   const { data, isFetching } = api.wiki.search.useQuery(
-    { query: debouncedQuery },
+    { query: debouncedQuery, eventId },
     {
       enabled,
       placeholderData: (previous) => previous,

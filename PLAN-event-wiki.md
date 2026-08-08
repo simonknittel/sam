@@ -245,7 +245,7 @@ The sidebar search finds only this event's pages and tags.
 
 #### Status
 
-Not started
+Implemented (in-app verification pending)
 
 #### Steps
 
@@ -256,6 +256,8 @@ Not started
 #### Notes
 
 - The FTS expression must keep matching the existing GIN expression index; only WHERE clauses change.
+- The search core is shared (`runWikiSearch` with per-scope WHERE fragments); result links resolve client-side through the href-mode context, so results carry no URLs.
+- The tag autocomplete (`getTags`) takes an optional eventId, threaded from the page content through the tags modal.
 
 #### Verification
 

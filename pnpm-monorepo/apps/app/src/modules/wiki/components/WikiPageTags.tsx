@@ -28,6 +28,8 @@ interface Props {
   readonly pageId: string;
   readonly tags: readonly Tag[];
   readonly canEdit: boolean;
+  /** Scopes the autocomplete to one event's tags (event wiki pages) */
+  readonly eventId?: string;
 }
 
 /**
@@ -35,7 +37,13 @@ interface Props {
  * additionally get a modal replacing the page's tag set; existing tag names
  * are suggested while typing so duplicates don't come into existence.
  */
-export const WikiPageTags = ({ className, pageId, tags, canEdit }: Props) => {
+export const WikiPageTags = ({
+  className,
+  pageId,
+  tags,
+  canEdit,
+  eventId,
+}: Props) => {
   const hrefMode = useWikiPageHrefMode();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedNames, setSelectedNames] = useState<string[]>([]);
@@ -80,6 +88,7 @@ export const WikiPageTags = ({ className, pageId, tags, canEdit }: Props) => {
 
           <TagsModal
             pageId={pageId}
+            eventId={eventId}
             isOpen={isOpen}
             onRequestClose={() => setIsOpen(false)}
             selectedNames={selectedNames}
@@ -93,6 +102,7 @@ export const WikiPageTags = ({ className, pageId, tags, canEdit }: Props) => {
 
 interface TagsModalProps {
   readonly pageId: string;
+  readonly eventId?: string;
   readonly isOpen: boolean;
   readonly onRequestClose: () => void;
   readonly selectedNames: readonly string[];
@@ -101,6 +111,7 @@ interface TagsModalProps {
 
 const TagsModal = ({
   pageId,
+  eventId,
   isOpen,
   onRequestClose,
   selectedNames,
@@ -113,11 +124,14 @@ const TagsModal = ({
     onSuccess: onRequestClose,
   });
 
-  const { data: existingTags } = api.wiki.getTags.useQuery(undefined, {
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    enabled: isOpen,
-  });
+  const { data: existingTags } = api.wiki.getTags.useQuery(
+    { eventId },
+    {
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      enabled: isOpen,
+    },
+  );
 
   const normalizedQuery = query.trim().replaceAll(/\s+/g, " ");
   const isSelected = (name: string) =>

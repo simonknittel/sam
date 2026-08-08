@@ -11,6 +11,7 @@ import {
   createEventWikiHrefMode,
 } from "../utils/wikiPageHref";
 import { EVENT_WIKI_SHOW_HIDDEN_PAGES_COOKIE } from "../utils/wikiShowHiddenPagesCookie";
+import { WikiSearch } from "./WikiSearch";
 import { WikiSidebarFavorites } from "./WikiSidebarFavorites";
 import { WikiSidebarTree } from "./WikiSidebarTree";
 
@@ -66,6 +67,10 @@ export const EventWikiSidebar = async ({ eventId }: Props) => {
 
   return (
     <>
+      <div className="bg-secondary p-4 corners-secondary flex flex-col gap-4">
+        <WikiSearch compact eventId={eventId} />
+      </div>
+
       <div className="bg-secondary px-2 py-4 corners-secondary flex flex-col gap-4">
         <WikiSidebarFavorites pages={favorites} />
       </div>

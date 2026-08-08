@@ -220,6 +220,7 @@ export const EventWikiPageContent = async ({ context, page }: Props) => {
           pageId={page.id}
           tags={pageTags.map((entry) => entry.tag)}
           canEdit={permissions?.canEdit === true}
+          eventId={context.event.id}
         />
 
         <div className="mt-4">
