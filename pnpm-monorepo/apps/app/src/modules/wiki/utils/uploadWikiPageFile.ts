@@ -2,6 +2,7 @@ import { env } from "@/env";
 import {
   isAttachmentMimeType,
   MAX_ATTACHMENT_SIZE_BYTES,
+  MAX_IMAGE_SIZE_BYTES,
 } from "@/modules/common/utils/uploadConstraints";
 import { z } from "zod";
 
@@ -68,11 +69,14 @@ export const uploadWikiPageFile = async (
   pageId: string,
   kind: WikiUploadKind,
 ): Promise<UploadedWikiPageFile> => {
-  if (
-    kind === WikiUploadKind.Attachment &&
-    file.size > MAX_ATTACHMENT_SIZE_BYTES
-  )
-    throw new Error("Die Datei ist zu groß (maximal 25 MB).");
+  const maxSizeBytes =
+    kind === WikiUploadKind.Attachment
+      ? MAX_ATTACHMENT_SIZE_BYTES
+      : MAX_IMAGE_SIZE_BYTES;
+  if (file.size > maxSizeBytes)
+    throw new Error(
+      `Die Datei ist zu groß (maximal ${maxSizeBytes / 1024 / 1024} MB).`,
+    );
 
   const mimeType = resolveWikiFileMimeType(file);
 

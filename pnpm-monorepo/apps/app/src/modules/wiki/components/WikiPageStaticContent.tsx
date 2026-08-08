@@ -20,6 +20,8 @@ import { withoutWikiTrailingEmptyParagraph } from "../utils/wikiTrailingParagrap
 import { WikiAttachmentCard } from "./WikiAttachmentCard";
 import { wikiBlockLayoutStyle } from "./wikiBlockLayoutStyle";
 import { WikiCitizenMentionChip } from "./WikiCitizenMentionNodeView";
+import type { WikiImageDimensions } from "../utils/wikiImageRendering";
+import { WikiContentImage } from "./WikiContentImage";
 import "./wikiEditor.css";
 import {
   WikiPageIndexList,
@@ -65,9 +67,12 @@ const renderWikiPageContent = (
   linkedVariants: Readonly<Record<string, WikiLinkedVariant>>,
   pageIndexes: Readonly<Record<string, readonly WikiPageIndexEntry[]>>,
   roleCitizens: Readonly<Record<string, readonly WikiRoleCitizen[]>>,
+  imageDimensions: Readonly<Record<string, WikiImageDimensions>>,
   pageId: string | undefined,
 ) => {
   const nextHeadingId = createWikiHeadingIdAssigner();
+  // The document's first image is a likely LCP candidate — load it eagerly
+  let isFirstImage = true;
 
   return renderToReactElement({
     content,
@@ -134,6 +139,22 @@ const renderWikiPageContent = (
           createElement("td", tableCellProps(node), children as ReactNode),
         tableHeader: ({ node, children }) =>
           createElement("th", tableCellProps(node), children as ReactNode),
+        /**
+         * Unlike the node's renderHTML, uploads with probed dimensions
+         * render through the Next.js image optimizer; the rest keep the
+         * plain img.
+         */
+        image: ({ node }) => {
+          const eager = isFirstImage;
+          isFirstImage = false;
+          return (
+            <WikiContentImage
+              attrs={node.attrs}
+              imageDimensions={imageDimensions}
+              eager={eager}
+            />
+          );
+        },
         /**
          * Unlike the node's renderHTML, the card adds the report button
          * next to the download link — same as the read-only editor's node
@@ -221,6 +242,11 @@ interface Props {
    * id
    */
   readonly roleCitizens?: Readonly<Record<string, readonly WikiRoleCitizen[]>>;
+  /**
+   * Intrinsic dimensions of the content's uploaded images, keyed by upload
+   * id — images without an entry render as a plain img
+   */
+  readonly imageDimensions?: Readonly<Record<string, WikiImageDimensions>>;
 }
 
 /**
@@ -237,6 +263,7 @@ export const WikiPageStaticContent = ({
   linkedVariants,
   pageIndexes = {},
   roleCitizens = {},
+  imageDimensions = {},
 }: Props) => {
   // Covers docs emptied in the editor too (one empty paragraph, not null)
   if (!content || isWikiPageContentEmpty(content))
@@ -258,6 +285,7 @@ export const WikiPageStaticContent = ({
     linkedVariants,
     pageIndexes,
     roleCitizens,
+    imageDimensions,
     pageId,
   );
 

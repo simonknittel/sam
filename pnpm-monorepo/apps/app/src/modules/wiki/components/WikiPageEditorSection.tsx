@@ -62,6 +62,7 @@ export const WikiPageEditorSection = async ({
       linkedVariants={staticContent.linkedVariants}
       pageIndexes={staticContent.pageIndexes}
       roleCitizens={staticContent.roleCitizens}
+      imageDimensions={staticContent.imageDimensions}
       staticFallback={staticFallback}
     />
   );

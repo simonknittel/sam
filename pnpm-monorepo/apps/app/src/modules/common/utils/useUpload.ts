@@ -1,5 +1,6 @@
 "use client";
 
+import { MAX_IMAGE_SIZE_BYTES } from "@/modules/common/utils/uploadConstraints";
 import { type Upload } from "@sam-monorepo/database/browser";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
@@ -7,6 +8,21 @@ import { toast } from "react-hot-toast";
 export default function useUpload() {
   const [file, setFile] = useState<File | null>(null);
   const [upload, setUpload] = useState<string | null>(null);
+
+  /**
+   * Returns whether the file was accepted, so callers tracking their own
+   * pending state don't get stuck waiting for an upload that never starts.
+   */
+  const setFileWithSizeCheck = (newFile: File | null): boolean => {
+    if (newFile && newFile.size > MAX_IMAGE_SIZE_BYTES) {
+      toast.error(
+        `Die Datei ist zu groß (maximal ${MAX_IMAGE_SIZE_BYTES / 1024 / 1024} MB).`,
+      );
+      return false;
+    }
+    setFile(newFile);
+    return true;
+  };
 
   useEffect(() => {
     if (!file) return;
@@ -38,7 +54,7 @@ export default function useUpload() {
   }, [file]);
 
   return {
-    setFile,
+    setFile: setFileWithSizeCheck,
     upload,
     setUpload,
   };

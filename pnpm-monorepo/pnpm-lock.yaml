@@ -565,6 +565,9 @@ importers:
       fast-xml-parser:
         specifier: 5.10.1
         version: 5.10.1
+      sharp:
+        specifier: 0.35.3
+        version: 0.35.3(@types/node@24.13.3)
     devDependencies:
       '@types/node':
         specifier: 24.13.3

@@ -68,8 +68,7 @@ export const ImageUpload = ({
 
   const changeHandler: ChangeEventHandler<HTMLInputElement> = (e) => {
     if (e.target.files && e.target.files.length > 0 && e.target.files[0]) {
-      setIsPending(true);
-      setFile(e.target.files[0]);
+      if (setFile(e.target.files[0])) setIsPending(true);
     }
   };
 

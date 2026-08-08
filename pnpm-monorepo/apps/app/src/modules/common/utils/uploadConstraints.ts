@@ -43,3 +43,11 @@ export const isAttachmentMimeType = (mimeType: string): boolean =>
  * presigned PUT itself cannot enforce it.
  */
 export const MAX_ATTACHMENT_SIZE_BYTES = 25 * 1024 * 1024;
+
+/**
+ * Maximum declared size for image uploads. Validated at upload creation and
+ * enforced client-side like `MAX_ATTACHMENT_SIZE_BYTES`. Doubles as the
+ * upper bound for the server-side dimension probe so it never buffers an
+ * unbounded object (the declared size is only a client statement).
+ */
+export const MAX_IMAGE_SIZE_BYTES = 25 * 1024 * 1024;

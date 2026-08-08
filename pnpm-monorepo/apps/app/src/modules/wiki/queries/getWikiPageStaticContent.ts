@@ -2,6 +2,7 @@ import { prisma } from "@/db";
 import { env } from "@/env";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import {
+  collectWikiImageUploadIds,
   collectWikiPageIndexConfigs,
   type WikiLinkedVariant,
   type WikiMentionedCitizen,
@@ -11,6 +12,7 @@ import { cache } from "react";
 import type { WikiPageIndexEntry } from "../components/WikiPageIndexList";
 import type { WikiRoleCitizen } from "../components/WikiRoleCitizensList";
 import { resolveWikiPageIndex } from "../utils/resolveWikiPageIndex";
+import type { WikiImageDimensions } from "../utils/wikiImageRendering";
 import {
   buildWikiPageHref,
   GLOBAL_WIKI_HREF_MODE,
@@ -33,6 +35,7 @@ export interface WikiPageStaticContent {
   readonly linkedVariants: Readonly<Record<string, WikiLinkedVariant>>;
   readonly pageIndexes: Readonly<Record<string, WikiPageIndexEntry[]>>;
   readonly roleCitizens: Readonly<Record<string, WikiRoleCitizen[]>>;
+  readonly imageDimensions: Readonly<Record<string, WikiImageDimensions>>;
 }
 
 /**
@@ -106,6 +109,33 @@ const assembleWikiPageStaticContent = async (
     getWikiRoleCitizensByRole(content),
   ]);
 
+  /**
+   * Intrinsic dimensions of the uploaded images embedded in the
+   * content, for optimized rendering with the aspect-ratio box reserved
+   * from SSR. Uploads without probed dimensions are absent — those
+   * images render as a plain img.
+   */
+  const imageUploadIds = collectWikiImageUploadIds(
+    content,
+    env.NEXT_PUBLIC_S3_PUBLIC_URL,
+  );
+  const uploadsWithDimensions =
+    imageUploadIds.length > 0
+      ? await prisma.upload.findMany({
+          where: { id: { in: imageUploadIds }, width: { not: null } },
+          select: { id: true, width: true, height: true, mimeType: true },
+        })
+      : [];
+  const imageDimensions: Record<string, WikiImageDimensions> = {};
+  for (const upload of uploadsWithDimensions) {
+    if (upload.width === null || upload.height === null) continue;
+    imageDimensions[upload.id] = {
+      width: upload.width,
+      height: upload.height,
+      mimeType: upload.mimeType,
+    };
+  }
+
   return {
     content,
     iframeAllowlist,
@@ -114,6 +144,7 @@ const assembleWikiPageStaticContent = async (
     linkedVariants,
     pageIndexes,
     roleCitizens,
+    imageDimensions,
   };
 };
 
