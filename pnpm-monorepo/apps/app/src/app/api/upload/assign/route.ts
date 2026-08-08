@@ -3,7 +3,10 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
-import { getWikiContext } from "@/modules/wiki/queries/getWikiContext";
+import {
+  getWikiPageScopedContext,
+  isWikiScopeFrozen,
+} from "@/modules/wiki/queries/getWikiPageScopedContext";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -66,8 +69,8 @@ export async function PATCH(request: Request) {
        * image. A replaced or removed icon's upload is left behind for the
        * nightly cleanup.
        */
-      const [context, upload] = await Promise.all([
-        getWikiContext(),
+      const [scoped, upload] = await Promise.all([
+        getWikiPageScopedContext(data.resourceId),
         data.imageId
           ? prisma.upload.findUnique({
               where: { id: data.imageId },
@@ -75,13 +78,16 @@ export async function PATCH(request: Request) {
             })
           : Promise.resolve(null),
       ]);
-      if (!context)
+      if (!scoped)
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-      const page = context.pagesById.get(data.resourceId);
+      const page = scoped.context.pagesById.get(data.resourceId);
       if (!page || page.deletedAt || (data.imageId !== null && !upload))
         return NextResponse.json({ error: "Bad Request" }, { status: 400 });
-      if (!context.permissions.get(page.id)?.canAdmin)
+      if (
+        !scoped.context.permissions.get(page.id)?.canAdmin ||
+        isWikiScopeFrozen(scoped)
+      )
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       if (upload) {
         if (upload.createdById !== authentication.session.user.id)
@@ -119,8 +125,8 @@ export async function PATCH(request: Request) {
        * linked when their persisted content references the upload (see
        * syncUploadLinks in the collab server).
        */
-      const [context, upload] = await Promise.all([
-        getWikiContext(),
+      const [scoped, upload] = await Promise.all([
+        getWikiPageScopedContext(data.resourceId),
         prisma.upload.findUnique({
           where: { id: data.uploadId },
           select: {
@@ -131,13 +137,13 @@ export async function PATCH(request: Request) {
           },
         }),
       ]);
-      if (!context)
+      if (!scoped)
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-      const page = context.pagesById.get(data.resourceId);
+      const page = scoped.context.pagesById.get(data.resourceId);
       if (!page || page.deletedAt || !upload)
         return NextResponse.json({ error: "Bad Request" }, { status: 400 });
-      const permissions = context.permissions.get(page.id);
+      const permissions = scoped.context.permissions.get(page.id);
       const canUpload = upload.mimeType.startsWith("image/")
         ? permissions?.canUploadImages
         : permissions?.canUploadAttachments;

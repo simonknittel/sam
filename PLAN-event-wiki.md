@@ -163,7 +163,7 @@ Wire the collab editor into event pages with freeze-aware tokens, scoped link su
 
 #### Status
 
-Not started
+Implemented (in-app verification pending)
 
 #### Steps
 
@@ -176,6 +176,9 @@ Not started
 
 - The collab server needs no code change; its redeploy must precede the Lambda deploy (see deploy order).
 - The shared-extensions change touches the same package the collab server builds against — another reason the collab redeploy comes before event pages exist.
+- The token mint, upload assignment and attachment download all switched to `getWikiPageScopedContext`, so one code path serves both scopes; the event resolver's freeze-aware `canEdit` makes frozen tokens read-only without any collab-side logic. Icon changes additionally check the freeze explicitly (they run on the canAdmin tier, which survives it).
+- The attachment download resolves each linked page's own context because an upload can be linked from pages of different scopes.
+- A second paste rule linkifies pasted briefing-page URLs; resolution still runs through the viewer's pages map, so foreign events render as unavailable.
 
 #### Verification
 

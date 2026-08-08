@@ -2,7 +2,7 @@ import { prisma } from "@/db";
 import { env } from "@/env";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
-import { getWikiContext } from "@/modules/wiki/queries/getWikiContext";
+import { getWikiPageScopedContext } from "@/modules/wiki/queries/getWikiPageScopedContext";
 import { getAccessibleWikiPage } from "@/modules/wiki/utils/getAccessibleWikiPage";
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -33,29 +33,39 @@ export async function GET(_request: Request, props: { params: Params }) {
 
     const paramsData = paramsSchema.parse(await props.params);
 
-    const [context, upload] = await Promise.all([
-      getWikiContext(),
-      prisma.upload.findUnique({
-        where: { id: paramsData.uploadId },
-        select: {
-          id: true,
-          fileName: true,
-          mimeType: true,
-          wikiPages: { select: { id: true } },
-        },
-      }),
-    ]);
+    const upload = await prisma.upload.findUnique({
+      where: { id: paramsData.uploadId },
+      select: {
+        id: true,
+        fileName: true,
+        mimeType: true,
+        wikiPages: { select: { id: true } },
+      },
+    });
 
     /**
      * Invisible pages (and uploads outside the wiki) 404 instead of 403 to
      * avoid leaking their existence.
      */
-    if (!context || !upload)
+    if (!upload)
       return NextResponse.json({ error: "Not Found" }, { status: 404 });
 
-    const allowed = upload.wikiPages.some(
-      (linked) => getAccessibleWikiPage(context, linked.id, "read") !== null,
-    );
+    /**
+     * The linked pages can span scopes (global wiki and event pages), so
+     * each check loads the page's own context — request-cached, and uploads
+     * rarely link more than one page.
+     */
+    let allowed = false;
+    for (const linked of upload.wikiPages) {
+      const scoped = await getWikiPageScopedContext(linked.id);
+      if (
+        scoped &&
+        getAccessibleWikiPage(scoped.context, linked.id, "read") !== null
+      ) {
+        allowed = true;
+        break;
+      }
+    }
     if (!allowed)
       return NextResponse.json({ error: "Not Found" }, { status: 404 });
 

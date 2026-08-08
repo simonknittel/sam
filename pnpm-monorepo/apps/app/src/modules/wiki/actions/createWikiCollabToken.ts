@@ -5,7 +5,7 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import type { WikiCollabSessionTokenPayload } from "@sam-monorepo/wiki-editor";
 import { SignJWT } from "jose";
 import { z } from "zod";
-import { getWikiContext } from "../queries/getWikiContext";
+import { getWikiPageScopedContext } from "../queries/getWikiPageScopedContext";
 
 const schema = z.object({
   id: z.cuid2(),
@@ -15,7 +15,9 @@ const schema = z.object({
  * Mints a short-lived JWT for connecting to the wiki collab server
  * (apps/collab). Called by the collab provider on every (re)connect. The
  * collab server seeds pages that never saw a collab session itself (content
- * JSON → ydoc).
+ * JSON → ydoc). Serves both the global wiki and event pages — the event
+ * resolver already withdraws canEdit once the event is over, so frozen
+ * pages get read-only tokens.
  */
 export const createWikiCollabToken = createAuthenticatedAction<
   typeof schema,
@@ -27,14 +29,14 @@ export const createWikiCollabToken = createAuthenticatedAction<
     if (!env.COLLAB_JWT_SECRET)
       return { error: t("Common.badRequest"), requestPayload: formData };
 
-    const context = await getWikiContext();
-    if (!context)
+    const scoped = await getWikiPageScopedContext(data.id);
+    if (!scoped)
       return { error: t("Common.forbidden"), requestPayload: formData };
 
-    const page = context.pagesById.get(data.id);
+    const page = scoped.context.pagesById.get(data.id);
     if (!page || page.deletedAt)
       return { error: t("Common.badRequest"), requestPayload: formData };
-    const permissions = context.permissions.get(page.id);
+    const permissions = scoped.context.permissions.get(page.id);
     if (!permissions?.canRead)
       return { error: t("Common.forbidden"), requestPayload: formData };
 

@@ -40,6 +40,16 @@ export interface WikiPageLinkOptions {
 const PASTE_PATTERN = /https?:\/\/\S+\/app\/wiki\/([a-z0-9]{10,40})(?:\/\S*)?/g;
 
 /**
+ * Same for event wiki page URLs (/app/events/<eventId>/briefing/<pageId>).
+ * Whether the resulting link resolves depends on the viewer's pages map
+ * like everywhere else — a page of a foreign event renders as unavailable.
+ * The bare briefing path is not matched: it carries no page id, and the
+ * root page's id-URL redirects there anyway.
+ */
+const EVENT_PASTE_PATTERN =
+  /https?:\/\/\S+\/app\/events\/[a-z0-9]{10,40}\/briefing\/([a-z0-9]{10,40})(?:\/\S*)?/g;
+
+/**
  * An internal link to another wiki page. Only the page id is stored — the
  * title is looked up when rendering, so links follow renames and moves.
  */
@@ -115,13 +125,13 @@ export const WikiPageLink = Node.create<WikiPageLinkOptions>({
   },
 
   addPasteRules() {
-    return [
+    return [PASTE_PATTERN, EVENT_PASTE_PATTERN].map((pattern) =>
       nodePasteRule({
-        find: PASTE_PATTERN,
+        find: pattern,
         type: this.type,
         getAttributes: (match) =>
           typeof match[1] === "string" ? { pageId: match[1] } : null,
       }),
-    ];
+    );
   },
 });
