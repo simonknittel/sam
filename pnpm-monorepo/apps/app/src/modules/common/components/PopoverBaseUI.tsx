@@ -81,6 +81,8 @@ interface PopoverBaseUIContextProviderProps {
   /** When true, the trigger is inert and the popover cannot open */
   readonly disabled?: boolean;
   readonly side?: "top" | "bottom" | "left" | "right";
+  /** Where the popup sits along the trigger's edge */
+  readonly align?: "start" | "center" | "end";
 }
 
 export const PopoverBaseUI = ({
@@ -92,6 +94,7 @@ export const PopoverBaseUI = ({
   openOnHover = true,
   disabled = false,
   side = "top",
+  align = "center",
 }: PopoverBaseUIContextProviderProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -133,6 +136,7 @@ export const PopoverBaseUI = ({
             sideOffset={8}
             collisionPadding={{ left: 8, right: 8 }}
             side={side}
+            align={align}
             className="z-30"
           >
             <Popover.Popup className="z-30 outline-hidden" initialFocus={false}>
