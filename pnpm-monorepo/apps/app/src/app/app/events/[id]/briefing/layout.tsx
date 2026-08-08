@@ -36,7 +36,11 @@ export default async function Layout({
 
   return (
     <WikiPageHrefModeProvider mode={hrefMode}>
-      <CreateWikiPageProvider targets={createTargets} allowTopLevel={false}>
+      <CreateWikiPageProvider
+        targets={createTargets}
+        allowTopLevel={false}
+        eventId={id}
+      >
         <SidebarLayout
           sidebar={<EventWikiSidebar eventId={id} />}
           mobileToggleLabel="Seiten"

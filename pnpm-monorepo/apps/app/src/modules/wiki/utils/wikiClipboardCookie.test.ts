@@ -31,7 +31,9 @@ describe("wikiClipboardCookie", () => {
       parseWikiClipboardCookie(`${WIKI_CLIPBOARD_COOKIE}=not-json`),
     ).toBeNull();
     expect(
-      parseWikiClipboardCookie(`${WIKI_CLIPBOARD_COOKIE}=%7B%22pageId%22%3A1%7D`),
+      parseWikiClipboardCookie(
+        `${WIKI_CLIPBOARD_COOKIE}=%7B%22pageId%22%3A1%7D`,
+      ),
     ).toBeNull();
     expect(
       parseWikiClipboardCookie(

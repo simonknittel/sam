@@ -11,8 +11,14 @@ import {
   type ReactNode,
 } from "react";
 import type { WikiPageTargetOption } from "../utils/getWikiPageTargets";
+import {
+  parseWikiClipboardCookie,
+  serializeWikiClipboardClearCookie,
+  type WikiClipboardEntry,
+} from "../utils/wikiClipboardCookie";
 import { getActiveWikiPageId } from "../utils/wikiPageHref";
 import { CreateWikiPageForm } from "./CreateWikiPageForm";
+import { PasteWikiPagesSection } from "./PasteWikiPagesSection";
 import { useWikiPageHrefMode } from "./WikiPageHrefModeProvider";
 
 interface CreateWikiPageContext {
@@ -27,27 +33,37 @@ const CreateWikiPageContext = createContext<CreateWikiPageContext | undefined>(
   undefined,
 );
 
+interface OpenState {
+  readonly parentId?: string;
+  /** Clipboard cookie at open time; null renders the plain create form */
+  readonly clipboard: WikiClipboardEntry | null;
+}
+
 interface Props {
   readonly children: ReactNode;
   readonly targets: WikiPageTargetOption[];
   readonly allowTopLevel: boolean;
+  /** Set inside an event wiki — scopes the form's "copy from" options */
+  readonly eventId?: string;
 }
 
 export const CreateWikiPageProvider = ({
   children,
   targets,
   allowTopLevel,
+  eventId,
 }: Props) => {
   const pathname = usePathname();
   const hrefMode = useWikiPageHrefMode();
-  const [openState, setOpenState] = useState<{ parentId?: string } | null>(
-    null,
-  );
+  const [openState, setOpenState] = useState<OpenState | null>(null);
 
   const openCreateWikiPageModal = useCallback(
     (parentId?: string) => {
       const activePageId = getActiveWikiPageId(hrefMode, pathname);
-      setOpenState({ parentId: parentId ?? activePageId });
+      setOpenState({
+        parentId: parentId ?? activePageId,
+        clipboard: parseWikiClipboardCookie(document.cookie),
+      });
     },
     [pathname, hrefMode],
   );
@@ -56,6 +72,11 @@ export const CreateWikiPageProvider = ({
     () => ({ openCreateWikiPageModal }),
     [openCreateWikiPageModal],
   );
+
+  const discardClipboard = () => {
+    document.cookie = serializeWikiClipboardClearCookie();
+    setOpenState((state) => (state ? { ...state, clipboard: null } : state));
+  };
 
   return (
     <CreateWikiPageContext.Provider value={value}>
@@ -67,10 +88,33 @@ export const CreateWikiPageProvider = ({
         className="w-120"
         heading={<h2>Neue Seite</h2>}
       >
+        {openState?.clipboard && (
+          <>
+            <PasteWikiPagesSection
+              clipboard={openState.clipboard}
+              targets={targets}
+              allowTopLevel={allowTopLevel}
+              defaultParentId={openState.parentId}
+              onDiscard={discardClipboard}
+              onSuccess={() => setOpenState(null)}
+            />
+
+            <div
+              className="my-4 flex items-center gap-4 text-sm text-neutral-500"
+              aria-hidden
+            >
+              <hr className="flex-1 border-white/5" />
+              oder neue Seite erstellen
+              <hr className="flex-1 border-white/5" />
+            </div>
+          </>
+        )}
+
         <CreateWikiPageForm
           targets={targets}
           allowTopLevel={allowTopLevel}
           defaultParentId={openState?.parentId}
+          eventId={eventId}
           onSuccess={() => setOpenState(null)}
         />
       </Modal>

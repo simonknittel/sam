@@ -64,8 +64,8 @@ export const CopyWikiPageModal = ({
       >
         <p>
           Die Seite kommt in die Zwischenablage. Einfügen kannst du sie über
-          „Neue Seite“ oder das Plus in der Seitenleiste — auch in einem
-          anderen Wiki, etwa dem Briefing eines Events.
+          „Neue Seite“ oder das Plus in der Seitenleiste — auch in einem anderen
+          Wiki, etwa dem Briefing eines Events.
         </p>
 
         {visibleDescendantCount > 0 && (

@@ -81,7 +81,9 @@ export const copyWikiPageSubtree = async (
   const sourceContext = options.sourceScoped.context;
   const targetContext = targetScoped.context;
   const targetEventId =
-    targetScoped.scope === WikiScope.Event ? targetScoped.context.event.id : null;
+    targetScoped.scope === WikiScope.Event
+      ? targetScoped.context.event.id
+      : null;
   if (!options.targetParentId && targetEventId)
     throw new Error("Event wikis have no top level to copy to");
 
@@ -197,8 +199,8 @@ export const copyWikiPageSubtree = async (
       }
 
       const tagsOf = (sourcePageId: string) => {
-        const tags = (tagNamesByPageId.get(sourcePageId) ?? []).map(
-          (name) => tagsByLower.get(name.toLocaleLowerCase())!,
+        const tags = (tagNamesByPageId.get(sourcePageId) ?? []).map((name) =>
+          tagsByLower.get(name.toLocaleLowerCase())!,
         );
         return {
           tagIds: tags.map((tag) => tag.id),
