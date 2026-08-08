@@ -82,6 +82,13 @@ describe("the link to an image's original", () => {
     );
   });
 
+  test("names the link for screen readers when the image has no alt", () => {
+    expect(render(image({ src: SOURCE }))).toMatch(/<a [^>]*aria-label="/);
+    expect(render(image({ src: SOURCE, alt: "Karte.png" }))).not.toContain(
+      "aria-label",
+    );
+  });
+
   test("renders a bare image when there is nothing to link to", () => {
     const html = render(image({ src: null, widthPx: 720 }));
 
@@ -127,13 +134,35 @@ describe("the link to an image's original", () => {
     });
   });
 
+  /**
+   * Renderers may swap the displayed img's src for an optimized variant
+   * (WikiContentImage) while the anchor's href keeps the original —
+   * parsing must recover the original, or a copy from the read view would
+   * store the optimizer URL.
+   */
+  test("takes the source from the link, not from the displayed image", () => {
+    const attrs = parseRenderedAnchor(
+      renderedAnchor(
+        { "data-wiki-image": "", href: SOURCE },
+        { src: "/_next/image?url=x&w=3840&q=75", alt: "Karte.png" },
+      ),
+    );
+
+    expect(attrs).toMatchObject({ src: SOURCE, alt: "Karte.png" });
+  });
+
   test("rejects an anchor without an image and base64 sources", () => {
     expect(
-      parseRenderedAnchor(renderedAnchor({ "data-wiki-image": "" }, null)),
+      parseRenderedAnchor(
+        renderedAnchor({ "data-wiki-image": "", href: SOURCE }, null),
+      ),
     ).toBeNull();
     expect(
       parseRenderedAnchor(
-        renderedAnchor({ "data-wiki-image": "" }, { src: "data:image/png,x" }),
+        renderedAnchor(
+          { "data-wiki-image": "", href: "data:image/png,x" },
+          { src: "data:image/png,x" },
+        ),
       ),
     ).toBeNull();
   });

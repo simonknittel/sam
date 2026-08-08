@@ -28,7 +28,7 @@ const IMAGE_ELEMENT_ATTRIBUTES = ["src", "alt", "title", "width", "height"];
  * parsing: they are numbers, which that conversion handles and this one
  * would not, and the wiki never sets them anyway.
  */
-const IMAGE_ELEMENT_TEXT_ATTRIBUTES = ["src", "alt", "title"];
+const IMAGE_ELEMENT_TEXT_ATTRIBUTES = ["alt", "title"];
 
 /**
  * Reads an `img` attribute from whichever element a parse rule matched:
@@ -41,6 +41,17 @@ const parseImageElementAttribute =
     element.tagName === "IMG"
       ? element.getAttribute(name)
       : (element.querySelector("img")?.getAttribute(name) ?? null);
+
+/**
+ * `src` comes from the anchor's `href`, not the image inside it: both
+ * always carry the original URL, but renderers may swap the displayed
+ * img's src for an optimized variant (WikiContentImage) — parsing that
+ * back would store the optimizer URL and lose the upload identity.
+ */
+const parseImageSource = (element: HTMLElement): string | null =>
+  element.tagName === "IMG"
+    ? element.getAttribute("src")
+    : element.getAttribute("href");
 
 /**
  * The stock Image node, wrapped in a link to the file it displays. Images
@@ -71,6 +82,10 @@ export const WikiImage = Image.extend({
     return {
       ...inherited,
       ...readFromImageElement,
+      src: {
+        ...(inherited.src as Record<string, unknown>),
+        parseHTML: parseImageSource,
+      },
       ...wikiWidthPxAttribute(null),
       ...wikiAlignAttribute(),
     };
@@ -90,10 +105,8 @@ export const WikiImage = Image.extend({
         tag: `a[${WIKI_IMAGE_ATTRIBUTE}]`,
         priority: 60,
         getAttrs: (element: HTMLElement) => {
-          const source =
-            element.querySelector("img")?.getAttribute("src") ?? "";
-          // An anchor without an image is not an image
-          if (!source) return false;
+          const source = parseImageSource(element) ?? "";
+          if (!source || !element.querySelector("img")) return false;
           // The same base64 restriction the inherited rule applies
           return !allowBase64 && source.startsWith("data:") ? false : null;
         },
@@ -106,13 +119,11 @@ export const WikiImage = Image.extend({
     const source = String(node.attrs.src ?? "");
 
     /**
-     * Lazy on every rendering of the node, not only the optimized ones:
-     * Tiptap renders a (re)created editor's document once through
-     * renderHTML before the node views take over, and a non-lazy img
-     * starts downloading the original file during that throwaway render —
-     * even detached, browsers fetch an eager img the moment src is set.
-     * A lazy img only loads once it is connected and near the viewport,
-     * which the throwaway render never is.
+     * Lazy on every rendering of the node: Tiptap runs a (re)created
+     * editor's document through renderHTML once before the node views take
+     * over, and browsers fetch an eager img the moment src is set, even
+     * detached — the original file would download during that throwaway
+     * render. A lazy img only loads once connected and near the viewport.
      */
     const loadingAttributes = { loading: "lazy", decoding: "async" };
 
@@ -145,6 +156,13 @@ export const WikiImage = Image.extend({
           href: source,
           target: "_blank",
           rel: "noopener noreferrer",
+          /**
+           * Without an alt the image cannot name the link — give screen
+           * readers a fallback instead of an unnamed tab stop
+           */
+          ...(node.attrs.alt
+            ? {}
+            : { "aria-label": "Bild in Originalgröße öffnen" }),
         },
         anchorAttributes,
       ),
