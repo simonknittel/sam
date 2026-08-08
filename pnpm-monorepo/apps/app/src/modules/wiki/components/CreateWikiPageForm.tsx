@@ -116,7 +116,7 @@ export const CreateWikiPageForm = ({
         <>
           <div className="mt-4 flex items-center justify-between gap-2">
             <span className="text-sm text-neutral-400">
-              Unterseiten mitkopieren (nur Seiten, die für dich sichtbar sind)
+              Unterseiten mitkopieren
             </span>
             <YesNoCheckbox
               name="copyChildren"

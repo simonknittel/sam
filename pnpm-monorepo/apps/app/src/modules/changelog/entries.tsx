@@ -50,21 +50,17 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
     body: () => (
       <>
         <p>
-          Wiki-Seiten lassen sich jetzt kopieren und an anderer Stelle wieder
-          einfügen. Der neue Kopieren-Button auf der Seite legt sie – auf Wunsch
-          mit allen für dich sichtbaren Unterseiten – in die Zwischenablage.
-          Eingefügt wird über &bdquo;Neue Seite&ldquo; oder das Plus in der
-          Seitenleiste: Liegt etwas in der Zwischenablage, bietet der Dialog das
-          Einfügen an. Das funktioniert auch über Wiki-Grenzen hinweg – etwa vom
-          Wiki ins Briefing eines Events oder von einem Event zum nächsten.
+          Wiki-Seiten lassen sich jetzt kopieren. Der neue Kopieren-Button auf
+          der Seite legt sie in die Zwischenablage. Eingefügt wird über
+          &bdquo;Neue Seite&ldquo; oder das Plus im Inhaltsverzeichnis: Dies ist
+          auch zwischen Wiki und Events möglich.
         </p>
 
         <p>
-          Beim Anlegen einer neuen Seite kann ihr Inhalt außerdem direkt von
+          Beim Erstellen einer neuen Seite kann ihr Inhalt außerdem direkt von
           einer bestehenden Seite übernommen werden (&bdquo;Inhalt kopieren
-          von&ldquo;). Eingefügte Kopien übernehmen immer die Berechtigungen
-          ihres neuen Orts. Der bisherige Duplizieren-Button ist damit
-          überflüssig und wurde entfernt.
+          von&ldquo;). Kopien übernehmen die Berechtigungen ihres neuen Orts.
+          Der bisherige Duplizieren-Button wurde entfernt.
         </p>
       </>
     ),

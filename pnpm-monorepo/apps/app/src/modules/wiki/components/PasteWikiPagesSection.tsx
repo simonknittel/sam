@@ -91,8 +91,7 @@ export const PasteWikiPagesSection = ({
         />
 
         <p className="mt-2 text-sm text-neutral-400">
-          Die eingefügten Seiten übernehmen die Berechtigungen des neuen Orts —
-          eigene Berechtigungen des Originals werden nicht übernommen.
+          Die eingefügten Seiten übernehmen die Berechtigungen des neuen Orts.
         </p>
 
         <div className="mt-4 flex justify-end gap-2">
