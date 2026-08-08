@@ -2,13 +2,44 @@
 
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
+import { AssumedUserBanner } from "./AssumedUserBanner";
+import { AssumeUserButton } from "./AssumeUserButton";
 
 interface Props {
   readonly className?: string;
   readonly enabled?: boolean;
+  readonly assumedUserLabel?: string;
 }
 
-export const AdminEnabler = ({ className, enabled = false }: Props) => {
+export const AdminEnabler = ({
+  className,
+  enabled = false,
+  assumedUserLabel,
+}: Props) => {
+  return (
+    <div
+      className={clsx(
+        "fixed top-2 left-1/2 -translate-x-1/2 z-50 flex max-w-xs gap-2",
+        className,
+      )}
+    >
+      {assumedUserLabel ? (
+        <AssumedUserBanner assumedUserLabel={assumedUserLabel} />
+      ) : (
+        <>
+          <EnableAdminButton enabled={enabled} />
+          <AssumeUserButton />
+        </>
+      )}
+    </div>
+  );
+};
+
+interface EnableAdminButtonProps {
+  readonly enabled: boolean;
+}
+
+const EnableAdminButton = ({ enabled }: EnableAdminButtonProps) => {
   const router = useRouter();
 
   const handleClick = () => {
@@ -23,13 +54,15 @@ export const AdminEnabler = ({ className, enabled = false }: Props) => {
 
   return (
     <button
+      type="button"
       className={clsx(
-        "fixed top-2 left-1/2 -translate-x-1/2 backdrop-blur-sm z-50 max-w-xs px-2 py-1 rounded-secondary gap-4 justify-between transition-colors whitespace-nowrap text-xs font-mono uppercase cursor-pointer",
+        "backdrop-blur-sm px-2 py-1 rounded-secondary transition-colors motion-reduce:transition-none whitespace-nowrap text-xs font-mono uppercase cursor-pointer",
         {
-          "bg-green-500/50 hover:bg-green-500": !enabled,
-          "bg-red-500/50 hover:bg-red-500": enabled,
+          "bg-green-500/50 hover:bg-green-500 focus-visible:bg-green-500 active:bg-green-400":
+            !enabled,
+          "bg-red-500/50 hover:bg-red-500 focus-visible:bg-red-500 active:bg-red-400":
+            enabled,
         },
-        className,
       )}
       onClick={handleClick}
     >

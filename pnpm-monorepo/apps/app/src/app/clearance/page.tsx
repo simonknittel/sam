@@ -1,6 +1,7 @@
 import { AdminEnabler } from "@/modules/auth/components/AdminEnabler";
 import { authenticate } from "@/modules/auth/server";
 import { requireConfirmedEmailForPage } from "@/modules/auth/utils/emailConfirmation";
+import { getAssumedUserLabel } from "@/modules/auth/utils/getAssumedUserLabel";
 import { ScrambleIn } from "@/modules/common/components/ScrambleIn";
 import { ClearanceLogout } from "@/modules/iam/components/ClearanceLogout";
 import { log } from "@/modules/logging";
@@ -30,7 +31,9 @@ export default async function Page() {
 
   if (await authentication.authorize("login", "manage")) redirect("/app");
 
-  const showAdminEnabler = authentication.session.user.role === "admin";
+  const showAdminEnabler =
+    authentication.session.user.role === "admin" ||
+    authentication.session.assumedByAdmin;
 
   return (
     <div className="min-h-dvh flex justify-center items-center flex-col py-8 background-primary">
@@ -124,6 +127,7 @@ export default async function Page() {
       {showAdminEnabler && (
         <AdminEnabler
           enabled={(await cookies()).get("enable_admin")?.value === "1"}
+          assumedUserLabel={getAssumedUserLabel(authentication.session)}
         />
       )}
     </div>

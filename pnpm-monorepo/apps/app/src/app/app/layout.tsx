@@ -3,9 +3,9 @@ import { getAppLinks } from "@/modules/apps/utils/queries/getAppLinks";
 import { AdminEnabler } from "@/modules/auth/components/AdminEnabler";
 import { SessionProviderContainer } from "@/modules/auth/components/SessionProviderContainer";
 import { requireAuthenticationPage } from "@/modules/auth/server";
+import { getAssumedUserLabel } from "@/modules/auth/utils/getAssumedUserLabel";
 import { getUnseenChangelogEntryKeys } from "@/modules/changelog/queries/getUnseenChangelogEntryKeys";
 import { CreateContextProvider } from "@/modules/common/components/CreateContext";
-import ImpersonationBannerContainer from "@/modules/common/components/ImpersonationBannerContainer";
 import { NewReleaseToast } from "@/modules/common/components/NewReleaseToast";
 import QueryClientProviderContainer from "@/modules/common/components/QueryClientProviderContainer";
 import { ServiceWorkerLoader } from "@/modules/common/components/ServiceWorkerLoader";
@@ -22,7 +22,6 @@ import { TRPCReactProvider } from "@/trpc/react";
 import { NextIntlClientProvider } from "next-intl";
 import { cookies } from "next/headers";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
-import { Suspense } from "react";
 
 export default async function AppLayout({ children }: LayoutProps<"/app">) {
   const [
@@ -71,15 +70,15 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
                       </AppsContextProvider>
                     </div>
 
-                    <Suspense>
-                      <ImpersonationBannerContainer />
-                    </Suspense>
-
-                    {authentication.session.user.role === "admin" && (
+                    {(authentication.session.user.role === "admin" ||
+                      authentication.session.assumedByAdmin) && (
                       <AdminEnabler
                         enabled={
                           (await cookies()).get("enable_admin")?.value === "1"
                         }
+                        assumedUserLabel={getAssumedUserLabel(
+                          authentication.session,
+                        )}
                       />
                     )}
 

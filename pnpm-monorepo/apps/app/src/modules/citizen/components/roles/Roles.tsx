@@ -54,8 +54,6 @@ export const Roles = async ({ className, entity }: Props) => {
             citizenId={entity.id}
             assignedRoleIds={assignedAndVisibleRoleIds}
           />
-
-          {/* <ImpersonateRoles roles={visibleRoles} /> */}
         </div>
       )}
     </Tile>

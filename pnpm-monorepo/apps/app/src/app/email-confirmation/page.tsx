@@ -7,6 +7,7 @@ import {
 } from "@/modules/auth/components/RequestConfirmationEmail";
 import { authenticate } from "@/modules/auth/server";
 import { requiresEmailConfirmation } from "@/modules/auth/utils/emailConfirmation";
+import { getAssumedUserLabel } from "@/modules/auth/utils/getAssumedUserLabel";
 import { Link } from "@/modules/common/components/Link";
 import type { NextjsSearchParams } from "@/modules/common/utils/searchParamsNextjsToURLSearchParams";
 import { log } from "@/modules/logging";
@@ -97,9 +98,11 @@ export default async function Page(props: Readonly<Props>) {
       </main>
       <Footer className="mt-4" />
       <PageRefresher />
-      {authentication.session.user.role === "admin" && (
+      {(authentication.session.user.role === "admin" ||
+        authentication.session.assumedByAdmin) && (
         <AdminEnabler
           enabled={(await cookies()).get("enable_admin")?.value === "1"}
+          assumedUserLabel={getAssumedUserLabel(authentication.session)}
         />
       )}
     </div>
