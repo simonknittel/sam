@@ -28,12 +28,12 @@ import {
 } from "./wikiGridNodes.js";
 import { WikiHeadingIds } from "./wikiHeadingIds.js";
 import { WikiHighlight } from "./wikiHighlightMark.js";
+import { WikiImage } from "./wikiImageNode.js";
 import { WikiPageIndex } from "./wikiPageIndexNode.js";
 import { WikiPageLink, type WikiPageLinkedPage } from "./wikiPageLinkNode.js";
 import {
   WIKI_NARROW_WIDTH_PX,
   WIKI_WIDE_WIDTH_PX,
-  WikiImage,
   withWikiBlockLayout,
 } from "./wikiResizableNodes.js";
 import { WikiRoleCitizens } from "./wikiRoleCitizensNode.js";

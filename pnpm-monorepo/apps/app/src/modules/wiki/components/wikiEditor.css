@@ -443,6 +443,34 @@
 }
 
 /*
+ * Images are wrapped in a link to their original file (see
+ * wikiImageNode). That anchor is the image node's outer element and
+ * carries its width, so it has to be a block and the image inside fills
+ * it. Without a width of its own it hugs the image, keeping the link's hit
+ * area off the empty column next to a narrow one.
+ */
+.prose a[data-wiki-image] {
+  display: block;
+  width: fit-content;
+  cursor: zoom-in;
+}
+
+.prose a[data-wiki-image] img {
+  width: 100%;
+  height: auto;
+}
+
+.prose a[data-wiki-image]:focus-visible {
+  outline: 2px solid var(--color-interaction-500);
+  outline-offset: 2px;
+}
+
+/* While editing, a click selects the image instead of opening it */
+.tiptap[contenteditable="true"] a[data-wiki-image] {
+  cursor: default;
+}
+
+/*
  * Embeds (wikiEmbed node): YouTube/Twitch/Spotify/Google players and
  * allowlisted generic iframes (provider "iframe")
  */
