@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { log } from "../common/logger";
+import { EventBriefingPublishedHandler } from "./type-handlers/EventBriefingPublished";
 import { EventCreatedHandler } from "./type-handlers/EventCreated";
 import { EventDeletedHandler } from "./type-handlers/EventDeleted";
 import { EventLineupEnabledHandler } from "./type-handlers/EventLineupEnabled";
@@ -34,6 +35,9 @@ export const notificationRouterHandler = async (
       break;
     case "EventLineupEnabled":
       await EventLineupEnabledHandler(body.payload);
+      break;
+    case "EventBriefingPublished":
+      await EventBriefingPublishedHandler(body.payload);
       break;
     case "EventStarting":
       await EventStartingHandler(body.payload);
@@ -105,6 +109,16 @@ export const bodySchema = z.discriminatedUnion("type", [
     type: z.literal("EventStarting"),
     payload: z.object({
       eventId: z.cuid(),
+    }),
+    requestId: z.cuid2(),
+  }),
+
+  z.object({
+    type: z.literal("EventBriefingPublished"),
+    payload: z.object({
+      eventId: z.cuid(),
+      readScope: z.enum(["PARTICIPANTS", "POSITION", "ALL"]),
+      readScopePositionId: z.cuid().nullable(),
     }),
     requestId: z.cuid2(),
   }),

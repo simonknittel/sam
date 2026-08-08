@@ -14,6 +14,7 @@ import {
 import { getEventWikiPageStaticContent } from "../queries/getEventWikiPageStaticContent";
 import { getWikiFavoritePageIds } from "../queries/getWikiFavorites";
 import { collectWikiPageDescendants } from "../utils/collectWikiPageDescendants";
+import { getEventWikiPositionOptions } from "../utils/getEventWikiPositionOptions";
 import { getWikiCollabColor } from "../utils/getWikiCollabColor";
 import { getManageableWikiPageTargets } from "../utils/getWikiPageTargets";
 import { isEventWikiRootPage } from "../utils/isEventWikiRootPage";
@@ -21,6 +22,7 @@ import { trackWikiPageVisit } from "../utils/trackWikiPageVisit";
 import { createEventWikiHrefMode } from "../utils/wikiPageHref";
 import { DeleteWikiPageModal } from "./DeleteWikiPageModal";
 import { DuplicateWikiPageModal } from "./DuplicateWikiPageModal";
+import { EventWikiPagePermissionsModal } from "./EventWikiPagePermissionsModal";
 import { MoveWikiPageModal } from "./MoveWikiPageModal";
 import { ReportWikiPageModal } from "./ReportWikiPageModal";
 import { WikiCollabEditor } from "./WikiCollabEditor";
@@ -73,6 +75,12 @@ export const EventWikiPageContent = async ({ context, page }: Props) => {
   const canAdministrate = permissions?.canAdmin === true;
 
   const descendantIds = collectWikiPageDescendants(context.pages, page.id);
+
+  /** Title of the page an inherited scope comes from, for the dialog */
+  const sourceTitle = (sourceId: string | undefined) =>
+    !sourceId || sourceId === page.id
+      ? undefined
+      : context.pagesById.get(sourceId)?.title;
   const moveTargets = canMutateStructure
     ? getManageableWikiPageTargets(context, page.id)
     : [];
@@ -173,12 +181,36 @@ export const EventWikiPageContent = async ({ context, page }: Props) => {
                   pageId={page.id}
                   sidebarMode={page.sidebarMode}
                 />
-                <DeleteWikiPageModal
-                  pageId={page.id}
-                  title={page.title}
-                  descendantCount={descendantIds.length}
-                />
               </>
+            )}
+
+            {canAdministrate && !context.frozen && (
+              <EventWikiPagePermissionsModal
+                pageId={page.id}
+                isRootPage={isRootPage}
+                readScope={page.eventReadScope}
+                readScopePositionId={page.eventReadScopePositionId}
+                editScope={page.eventEditScope}
+                editScopePositionId={page.eventEditScopePositionId}
+                positionOptions={getEventWikiPositionOptions(context.positions)}
+                inheritedFrom={{
+                  read: sourceTitle(permissions?.readScopeSourceId),
+                  edit: sourceTitle(permissions?.editScopeSourceId),
+                }}
+                parentTitle={
+                  page.parentId
+                    ? context.pagesById.get(page.parentId)?.title
+                    : undefined
+                }
+              />
+            )}
+
+            {canMutateStructure && (
+              <DeleteWikiPageModal
+                pageId={page.id}
+                title={page.title}
+                descendantCount={descendantIds.length}
+              />
             )}
           </div>
         </div>

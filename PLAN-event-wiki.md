@@ -219,7 +219,7 @@ Managers configure scopes through a dedicated modal, and the first widening of t
 
 #### Status
 
-Not started
+Implemented (in-app verification pending)
 
 #### Steps
 
@@ -231,6 +231,8 @@ Not started
 
 - No cascading permission rewrites are needed on scope changes — the resolver's parent-read gate constrains children dynamically, unlike the role model's prune machinery.
 - Notification fires at most once per event (timestamp guard), including across un-publish/re-publish cycles.
+- Recipient resolution moved into the notification router (payload carries the scope snapshot), matching the codebase's delivery pattern: PARTICIPANTS reuses `getEventParticipants`, POSITION resolves the assigned subtree, ALL notifies every citizen holding `login;manage` + `event;read`. Same audience as "computed at emission", but robust against delivery lag.
+- The scope update audits as a dedicated `WIKI_PAGE_EVENT_SCOPES_UPDATED` type (the role-based audit payload is strictly typed and does not fit).
 
 #### Verification
 

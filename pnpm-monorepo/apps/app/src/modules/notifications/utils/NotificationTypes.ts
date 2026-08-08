@@ -50,6 +50,12 @@ export const NOTIFICATIONS_APPS: NotificationApp[] = [
         category: "Events",
       },
       {
+        id: "event_briefing_published",
+        title: "Briefing veröffentlicht",
+        description: "Wenn das Briefing eines Events für mich freigegeben wird",
+        category: "Events",
+      },
+      {
         id: "event_starting",
         title: "Event beginnt bald",
         description: "Nur bei eigener Teilnahme. 15 Minuten vor Event-Start.",

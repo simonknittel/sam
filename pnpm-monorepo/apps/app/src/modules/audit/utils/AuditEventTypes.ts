@@ -103,6 +103,7 @@ export enum AuditEventType {
   WIKI_PAGE_MOVED = "WIKI_PAGE_MOVED",
   WIKI_PAGE_DUPLICATED = "WIKI_PAGE_DUPLICATED",
   WIKI_PAGE_PERMISSIONS_UPDATED = "WIKI_PAGE_PERMISSIONS_UPDATED",
+  WIKI_PAGE_EVENT_SCOPES_UPDATED = "WIKI_PAGE_EVENT_SCOPES_UPDATED",
   WIKI_PAGE_ROLE_ACCESS_PRUNED = "WIKI_PAGE_ROLE_ACCESS_PRUNED",
   WIKI_PAGE_PERMISSIONS_RESET_BY_MOVE = "WIKI_PAGE_PERMISSIONS_RESET_BY_MOVE",
   WIKI_PAGE_OWNERSHIP_TRANSFERRED = "WIKI_PAGE_OWNERSHIP_TRANSFERRED",
@@ -759,6 +760,16 @@ export interface AuditEventDataByType {
     adminRoleIds: string[];
     /** True for events written by an "apply to all child pages" cascade */
     cascaded: boolean;
+  };
+
+  /** The event-mode counterpart of WIKI_PAGE_PERMISSIONS_UPDATED */
+  [AuditEventType.WIKI_PAGE_EVENT_SCOPES_UPDATED]: {
+    pageId: string;
+    eventId: string;
+    readScope: string;
+    readScopePositionId: string | null;
+    editScope: string;
+    editScopePositionId: string | null;
   };
 
   /**
@@ -2000,6 +2011,20 @@ export const AuditEventDefinitions: {
       cascaded: false,
     },
     message: (data) => `Wiki page permissions updated (${data.pageId})`,
+  },
+
+  [AuditEventType.WIKI_PAGE_EVENT_SCOPES_UPDATED]: {
+    type: AuditEventType.WIKI_PAGE_EVENT_SCOPES_UPDATED,
+    data: {
+      pageId: "string",
+      eventId: "string",
+      readScope: "PARTICIPANTS",
+      readScopePositionId: null,
+      editScope: "MANAGERS",
+      editScopePositionId: null,
+    },
+    message: (data) =>
+      `Event wiki page scopes updated (${data.pageId}, event ${data.eventId})`,
   },
 
   [AuditEventType.WIKI_PAGE_ROLE_ACCESS_PRUNED]: {
