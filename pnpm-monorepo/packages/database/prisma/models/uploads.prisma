@@ -4,6 +4,12 @@ model Upload {
   mimeType       String
   /// File size in bytes. NULL for uploads created before this column existed.
   size           Int?
+  /// Intrinsic image width in pixels, after EXIF orientation. Probed
+  /// server-side after upload. NULL for non-images and for uploads whose
+  /// probe failed or hasn't run yet — consumers must fall back gracefully.
+  width          Int?
+  /// Intrinsic image height in pixels, after EXIF orientation. See `width`.
+  height         Int?
   createdAt      DateTime         @default(now())
   createdById    String
   createdBy      User             @relation(fields: [createdById], references: [id], onDelete: Cascade)

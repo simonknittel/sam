@@ -3,6 +3,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
+import { probeUploadImageDimensions } from "@/modules/common/utils/probeUploadImageDimensions";
 import { getWikiContext } from "@/modules/wiki/queries/getWikiContext";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -106,6 +107,8 @@ export async function PATCH(request: Request) {
         },
       ]);
 
+      if (data.imageId) probeUploadImageDimensions(data.imageId);
+
       return NextResponse.json({});
     }
 
@@ -152,6 +155,9 @@ export async function PATCH(request: Request) {
         where: { id: upload.id },
         data: { wikiPages: { connect: { id: page.id } } },
       });
+
+      if (upload.mimeType.startsWith("image/"))
+        probeUploadImageDimensions(upload.id);
 
       /**
        * No RESOURCE_IMAGE_ASSIGNED event here: the upload itself is audited
@@ -211,6 +217,8 @@ export async function PATCH(request: Request) {
         createdById: authentication.session.user.id,
       },
     ]);
+
+    probeUploadImageDimensions(data.imageId);
 
     return NextResponse.json({});
   } catch (error) {

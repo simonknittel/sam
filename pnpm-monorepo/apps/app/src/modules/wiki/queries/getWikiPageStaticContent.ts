@@ -3,6 +3,7 @@ import { env } from "@/env";
 import { authenticate } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import {
+  collectWikiImageUploadIds,
   collectWikiMentionedCitizenIds,
   collectWikiPageIndexConfigs,
   collectWikiRoleCitizensRoleIds,
@@ -12,6 +13,7 @@ import {
   type WikiPageLinkedPage,
 } from "@sam-monorepo/wiki-editor";
 import { cache } from "react";
+import type { WikiImageDimensions } from "../components/WikiContentImage";
 import type { WikiPageIndexEntry } from "../components/WikiPageIndexList";
 import type { WikiRoleCitizen } from "../components/WikiRoleCitizensList";
 import { resolveWikiPageIndex } from "../utils/resolveWikiPageIndex";
@@ -28,6 +30,7 @@ export interface WikiPageStaticContent {
   readonly linkedVariants: Readonly<Record<string, WikiLinkedVariant>>;
   readonly pageIndexes: Readonly<Record<string, WikiPageIndexEntry[]>>;
   readonly roleCitizens: Readonly<Record<string, WikiRoleCitizen[]>>;
+  readonly imageDimensions: Readonly<Record<string, WikiImageDimensions>>;
 }
 
 /**
@@ -177,6 +180,31 @@ export const getWikiPageStaticContent = cache(
         ),
       );
 
+      /**
+       * Intrinsic dimensions of the uploaded images embedded in the
+       * content, for optimized rendering with the aspect-ratio box reserved
+       * from SSR. Uploads without probed dimensions are absent — those
+       * images render as a plain img like before.
+       */
+      const imageUploadIds = collectWikiImageUploadIds(
+        content,
+        env.NEXT_PUBLIC_S3_PUBLIC_URL,
+      );
+      const imageDimensions: Record<string, WikiImageDimensions> = {};
+      for (const upload of imageUploadIds.length > 0
+        ? await prisma.upload.findMany({
+            where: { id: { in: imageUploadIds }, width: { not: null } },
+            select: { id: true, width: true, height: true, mimeType: true },
+          })
+        : []) {
+        if (upload.width === null || upload.height === null) continue;
+        imageDimensions[upload.id] = {
+          width: upload.width,
+          height: upload.height,
+          mimeType: upload.mimeType,
+        };
+      }
+
       return {
         content,
         iframeAllowlist,
@@ -185,6 +213,7 @@ export const getWikiPageStaticContent = cache(
         linkedVariants,
         pageIndexes,
         roleCitizens,
+        imageDimensions,
       };
     },
   ),

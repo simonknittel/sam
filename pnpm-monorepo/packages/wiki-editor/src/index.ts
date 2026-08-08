@@ -59,6 +59,10 @@ export {
   type WikiHighlightColor,
 } from "./wikiHighlightMark.js";
 export {
+  collectWikiImageUploadIds,
+  getWikiImageUploadId,
+} from "./wikiImageUploads.js";
+export {
   WIKI_PAGE_INDEX_MATCH_MODES,
   WIKI_PAGE_INDEX_MAX_DEPTH,
   WIKI_PAGE_INDEX_MAX_TAGS,

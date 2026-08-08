@@ -7,6 +7,7 @@ import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import {
   isAttachmentMimeType,
   MAX_ATTACHMENT_SIZE_BYTES,
+  MAX_IMAGE_SIZE_BYTES,
 } from "@/modules/common/utils/uploadConstraints";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -22,7 +23,7 @@ const postBodySchema = z.union([
     category: z.literal("image").optional(),
     fileName: z.string().trim().min(1).max(255),
     mimeType: z.string().trim().startsWith("image/").max(255),
-    size: z.number().int().min(0).optional(),
+    size: z.number().int().min(0).max(MAX_IMAGE_SIZE_BYTES),
   }),
   /**
    * Non-image file attachments (e.g. of wiki pages). The declared size is
@@ -62,7 +63,7 @@ export async function POST(request: Request) {
       data: {
         fileName: data.fileName,
         mimeType: data.mimeType,
-        size: data.size ?? null,
+        size: data.size,
         createdBy: {
           connect: {
             id: authentication.session.user.id,
