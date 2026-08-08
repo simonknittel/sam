@@ -1,6 +1,10 @@
 import "./scrape-discord-events/setup"; // must be first
 
 import { prisma } from "@sam-monorepo/database";
+import {
+  WikiPageEventScope,
+  WikiPageNamespace,
+} from "@sam-monorepo/database/client";
 import type { ScheduledHandler } from "aws-lambda";
 import { shuffle } from "lodash";
 import { log } from "./common/logger";
@@ -109,6 +113,22 @@ export const handler: ScheduledHandler = async (event, context) => {
               location: futureEventFromDiscord.entity_metadata.location || null,
               discordImage: futureEventFromDiscord.image,
               discordGuildId: futureEventFromDiscord.guild_id,
+              /**
+               * Seeds the event wiki with its locked root "Briefing" page:
+               * the wiki's homepage and gate (events without one have no
+               * Briefing tab). Title and slug are constants because the
+               * root page can never be renamed. MANAGERS scopes keep the
+               * tab hidden until the organizer deliberately publishes it.
+               */
+              wikiPages: {
+                create: {
+                  namespace: WikiPageNamespace.EVENT,
+                  title: "Briefing",
+                  slug: "briefing",
+                  eventReadScope: WikiPageEventScope.MANAGERS,
+                  eventEditScope: WikiPageEventScope.MANAGERS,
+                },
+              },
             },
             select: {
               id: true,

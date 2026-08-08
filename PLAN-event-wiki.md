@@ -109,7 +109,7 @@ Seed the locked root page at event creation and confirm deletion hygiene, so the
 
 #### Status
 
-Not started
+Implemented and verified
 
 #### Steps
 
@@ -121,6 +121,8 @@ Not started
 
 - Existing events at deploy time simply never get a row — that *is* the gate; no cutoff constant needed.
 - The Lambda deploys via Terraform independently of the app; ordering per the overall notes.
+- The seed is a nested create on `prisma.event.create` (atomic, no transaction wrapper). Title and slug are constants because the root page can never be renamed.
+- Cascade verified against the dev database: deleting the event removes root, descendants (through the `Restrict` parent FK, same-statement semantics), tags, tag assignments and snapshots. The trash purge automation is namespace-agnostic and needs no change.
 
 #### Verification
 
