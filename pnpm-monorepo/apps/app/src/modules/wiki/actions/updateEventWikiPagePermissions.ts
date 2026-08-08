@@ -5,7 +5,10 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
-import { WikiPageEventScope } from "@sam-monorepo/database/client";
+import {
+  WikiPageEventScope,
+  WikiPageUploadability,
+} from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import {
@@ -13,7 +16,9 @@ import {
   getWikiScopeRevalidationPath,
   isWikiScopeFrozen,
 } from "../queries/getWikiPageScopedContext";
+import { getEffectiveEventWikiScope } from "../utils/getEffectiveEventWikiScope";
 import { isEventWikiRootPage } from "../utils/isEventWikiRootPage";
+import { isEventWikiScopeSubset } from "../utils/isEventWikiScopeSubset";
 import { WikiScope } from "../utils/wikiPageHref";
 
 const scopeSchema = z.enum(WikiPageEventScope);
@@ -31,6 +36,8 @@ const schema = z.object({
     .union([z.cuid(), z.literal("")])
     .optional()
     .transform((value) => (value ? value : null)),
+  imageUploadability: z.enum(WikiPageUploadability),
+  attachmentUploadability: z.enum(WikiPageUploadability),
 });
 
 /**
@@ -68,7 +75,9 @@ export const updateEventWikiPagePermissions = createAuthenticatedAction(
     if (
       isRootPage &&
       (data.readScope === WikiPageEventScope.INHERIT ||
-        data.editScope === WikiPageEventScope.INHERIT)
+        data.editScope === WikiPageEventScope.INHERIT ||
+        data.imageUploadability === WikiPageUploadability.INHERIT ||
+        data.attachmentUploadability === WikiPageUploadability.INHERIT)
     )
       return { error: t("Common.badRequest"), requestPayload: formData };
 
@@ -99,6 +108,40 @@ export const updateEventWikiPagePermissions = createAuthenticatedAction(
     if (readPosition.error || editPosition.error)
       return { error: t("Common.badRequest"), requestPayload: formData };
 
+    /**
+     * The edit scope must stay a subset of the read scope. INHERIT resolves
+     * against the parent's effective scope — the value the setting would
+     * actually take here.
+     */
+    const submittedOrParent = (
+      scope: WikiPageEventScope,
+      positionId: string | null,
+      tier: "read" | "edit",
+    ) =>
+      scope !== WikiPageEventScope.INHERIT
+        ? { scope, positionId }
+        : page.parentId
+          ? getEffectiveEventWikiScope(context, page.parentId, tier)
+          : { scope: WikiPageEventScope.MANAGERS, positionId: null };
+
+    const effectiveRead = submittedOrParent(
+      data.readScope,
+      readPosition.value ?? null,
+      "read",
+    );
+    const effectiveEdit = submittedOrParent(
+      data.editScope,
+      editPosition.value ?? null,
+      "edit",
+    );
+    if (
+      !isEventWikiScopeSubset(effectiveEdit, effectiveRead, context.positions)
+    )
+      return {
+        error: "Bearbeiten darf nicht mehr Personen umfassen als Lesen.",
+        requestPayload: formData,
+      };
+
     await prisma.wikiPage.update({
       where: { id: page.id },
       data: {
@@ -106,6 +149,8 @@ export const updateEventWikiPagePermissions = createAuthenticatedAction(
         eventReadScopePositionId: readPosition.value ?? null,
         eventEditScope: data.editScope,
         eventEditScopePositionId: editPosition.value ?? null,
+        imageUploadability: data.imageUploadability,
+        attachmentUploadability: data.attachmentUploadability,
         updatedById: authentication.session.entity?.id ?? null,
       },
     });
@@ -120,6 +165,8 @@ export const updateEventWikiPagePermissions = createAuthenticatedAction(
           readScopePositionId: readPosition.value ?? null,
           editScope: data.editScope,
           editScopePositionId: editPosition.value ?? null,
+          imageUploadability: data.imageUploadability,
+          attachmentUploadability: data.attachmentUploadability,
         },
         createdById: authentication.session.user.id,
       },

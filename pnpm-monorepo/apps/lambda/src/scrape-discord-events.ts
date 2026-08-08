@@ -4,6 +4,7 @@ import { prisma } from "@sam-monorepo/database";
 import {
   WikiPageEventScope,
   WikiPageNamespace,
+  WikiPageUploadability,
 } from "@sam-monorepo/database/client";
 import type { ScheduledHandler } from "aws-lambda";
 import { shuffle } from "lodash";
@@ -127,6 +128,8 @@ export const handler: ScheduledHandler = async (event, context) => {
                   slug: "briefing",
                   eventReadScope: WikiPageEventScope.MANAGERS,
                   eventEditScope: WikiPageEventScope.MANAGERS,
+                  imageUploadability: WikiPageUploadability.RESTRICTED,
+                  attachmentUploadability: WikiPageUploadability.RESTRICTED,
                 },
               },
             },

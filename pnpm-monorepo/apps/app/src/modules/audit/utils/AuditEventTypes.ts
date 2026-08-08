@@ -770,6 +770,9 @@ export interface AuditEventDataByType {
     readScopePositionId: string | null;
     editScope: string;
     editScopePositionId: string | null;
+    /** Absent on events from before the upload tiers reached event pages */
+    imageUploadability?: string;
+    attachmentUploadability?: string;
   };
 
   /**

@@ -20,6 +20,7 @@ export const wikiPageReportSelect = {
       slug: true,
       iconId: true,
       deletedAt: true,
+      eventId: true,
     },
   },
 } satisfies Prisma.WikiPageReportSelect;

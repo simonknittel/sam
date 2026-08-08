@@ -5,6 +5,7 @@ import { formatDate } from "@/modules/common/utils/formatDate";
 import { ResolveWikiPageReportForm } from "@/modules/wiki/components/ResolveWikiPageReportForm";
 import { WikiPageIcon } from "@/modules/wiki/components/WikiPageIcon";
 import { getWikiPageReportById } from "@/modules/wiki/queries/getWikiPageReports";
+import { getWikiPageRouteHref } from "@/modules/wiki/utils/wikiPageHref";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -37,7 +38,7 @@ export default async function Page(
             <dd>
               {report.page.deletedAt === null ? (
                 <Link
-                  href={`/app/wiki/${report.page.id}/${report.page.slug}`}
+                  href={getWikiPageRouteHref(report.page)}
                   className="inline-flex items-center gap-2 text-interaction-500 hover:text-interaction-300"
                 >
                   {report.page.iconId && (

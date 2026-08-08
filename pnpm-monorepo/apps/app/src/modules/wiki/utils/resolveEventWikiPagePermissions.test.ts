@@ -1,4 +1,7 @@
-import { WikiPageEventScope } from "@sam-monorepo/database/browser";
+import {
+  WikiPageEventScope,
+  WikiPageUploadability,
+} from "@sam-monorepo/database/browser";
 import { describe, expect, test } from "vitest";
 import {
   collectPositionScopeIdsForCitizen,
@@ -15,6 +18,8 @@ const page = (
   eventReadScopePositionId: null,
   eventEditScope: WikiPageEventScope.INHERIT,
   eventEditScopePositionId: null,
+  imageUploadability: WikiPageUploadability.INHERIT,
+  attachmentUploadability: WikiPageUploadability.INHERIT,
   ...overrides,
 });
 
@@ -198,6 +203,64 @@ describe("resolve event wiki page permissions", () => {
     expect(asManager.get("root")).toMatchObject({ canRead: true });
   });
 
+  test("uploading defaults to the managers and EDITORS extends it", () => {
+    const pages = [
+      page({
+        id: "root",
+        eventReadScope: WikiPageEventScope.PARTICIPANTS,
+        eventEditScope: WikiPageEventScope.PARTICIPANTS,
+      }),
+      page({
+        id: "open",
+        parentId: "root",
+        imageUploadability: WikiPageUploadability.EDITORS,
+      }),
+      page({ id: "inheriting", parentId: "open" }),
+    ] as const;
+
+    const asParticipant = resolve(pages, viewer({ isParticipant: true }));
+    const asManager = resolve(pages, viewer({ isEventManager: true }));
+
+    expect(asParticipant.get("root")).toMatchObject({
+      canEdit: true,
+      canUploadImages: false,
+      canUploadAttachments: false,
+    });
+    expect(asManager.get("root")).toMatchObject({
+      canUploadImages: true,
+      canUploadAttachments: true,
+    });
+    /** EDITORS on "open" is inherited by "inheriting" (nearest setting wins) */
+    expect(asParticipant.get("open")).toMatchObject({
+      canUploadImages: true,
+      canUploadAttachments: false,
+      imageUploadabilitySourceId: "open",
+    });
+    expect(asParticipant.get("inheriting")).toMatchObject({
+      canUploadImages: true,
+      imageUploadabilitySourceId: "open",
+    });
+  });
+
+  test("the freeze stops uploading even for managers", () => {
+    const pages = [
+      page({
+        id: "root",
+        eventReadScope: WikiPageEventScope.PARTICIPANTS,
+        eventEditScope: WikiPageEventScope.PARTICIPANTS,
+        imageUploadability: WikiPageUploadability.EDITORS,
+        attachmentUploadability: WikiPageUploadability.EDITORS,
+      }),
+    ] as const;
+
+    const asManager = resolve(pages, viewer({ isEventManager: true }), true);
+
+    expect(asManager.get("root")).toMatchObject({
+      canUploadImages: false,
+      canUploadAttachments: false,
+    });
+  });
+
   test("edit implies read", () => {
     const pages = [
       page({
@@ -212,8 +275,6 @@ describe("resolve event wiki page permissions", () => {
     expect(asParticipant.get("root")).toMatchObject({
       canRead: true,
       canEdit: true,
-      canUploadImages: true,
-      canUploadAttachments: true,
     });
   });
 

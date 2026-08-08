@@ -13,6 +13,7 @@ import {
   getWikiPageReports,
   type WikiPageReportRow,
 } from "../queries/getWikiPageReports";
+import { getWikiPageRouteHref } from "../utils/wikiPageHref";
 import { WikiPageIcon } from "./WikiPageIcon";
 
 const TABLE_MIN_WIDTH = "min-w-230";
@@ -124,7 +125,7 @@ const ReportRow = ({ report }: ReportRowProps) => {
       <td className="overflow-hidden">
         {report.page.deletedAt === null ? (
           <Link
-            href={`/app/wiki/${report.page.id}/${report.page.slug}`}
+            href={getWikiPageRouteHref(report.page)}
             className="flex items-center gap-2 hover:bg-white/10 px-2 rounded-secondary h-8"
             prefetch={false}
             title={report.page.title}

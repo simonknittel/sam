@@ -190,6 +190,7 @@ export const WikiSearch = ({ className, compact, eventId }: Props) => {
                       <TagResult
                         key={`tag-${option.tag.id}`}
                         id={optionId(index)}
+                        href={optionHref(option)}
                         tag={option.tag}
                         isActive={index === activeIndex}
                         onHover={() => setActiveIndex(index)}
@@ -199,6 +200,7 @@ export const WikiSearch = ({ className, compact, eventId }: Props) => {
                       <PageResult
                         key={`page-${option.page.id}`}
                         id={optionId(index)}
+                        href={optionHref(option)}
                         page={option.page}
                         isActive={index === activeIndex}
                         onHover={() => setActiveIndex(index)}
@@ -219,6 +221,7 @@ export const WikiSearch = ({ className, compact, eventId }: Props) => {
 
 interface TagResultProps {
   readonly id: string;
+  readonly href: string;
   readonly tag: WikiSearchTagResult;
   readonly isActive: boolean;
   readonly onHover: () => void;
@@ -227,6 +230,7 @@ interface TagResultProps {
 
 const TagResult = ({
   id,
+  href,
   tag,
   isActive,
   onHover,
@@ -235,7 +239,7 @@ const TagResult = ({
   return (
     <li id={id} role="option" aria-selected={isActive} onMouseEnter={onHover}>
       <Link
-        href={`/app/wiki/tags/${tag.id}`}
+        href={href}
         onClick={onSelect}
         title={`Alle Seiten mit dem Tag "${tag.name}" anzeigen`}
         className={clsx(
@@ -257,6 +261,7 @@ const TagResult = ({
 
 interface PageResultProps {
   readonly id: string;
+  readonly href: string;
   readonly page: WikiSearchPageResult;
   readonly isActive: boolean;
   readonly onHover: () => void;
@@ -265,6 +270,7 @@ interface PageResultProps {
 
 const PageResult = ({
   id,
+  href,
   page,
   isActive,
   onHover,
@@ -275,7 +281,7 @@ const PageResult = ({
   return (
     <li id={id} role="option" aria-selected={isActive} onMouseEnter={onHover}>
       <Link
-        href={`/app/wiki/${page.id}/${page.slug}`}
+        href={href}
         onClick={onSelect}
         className={clsx(
           "block rounded-secondary p-2 focus-visible:outline-2 outline-interaction-700",

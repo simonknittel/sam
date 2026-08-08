@@ -14,7 +14,7 @@ import type {
 import clsx from "clsx";
 import { useNow } from "next-intl";
 import Image from "next/image";
-import { FaCheck, FaClock, FaUser } from "react-icons/fa";
+import { FaBook, FaCheck, FaClock, FaUser } from "react-icons/fa";
 import { MdWorkspaces } from "react-icons/md";
 import styles from "./EventClient.module.css";
 
@@ -34,6 +34,7 @@ interface Props {
   };
   readonly index: number;
   readonly showLineupButton?: boolean;
+  readonly showBriefingButton?: boolean;
 }
 
 export const EventClient = ({
@@ -41,6 +42,7 @@ export const EventClient = ({
   event,
   index,
   showLineupButton,
+  showBriefingButton,
 }: Props) => {
   const authentication = useAuthentication();
   const diff = event.startTime.getTime() - Date.now();
@@ -151,6 +153,16 @@ export const EventClient = ({
             >
               Details
             </Link>
+
+            {showBriefingButton && (
+              <Link
+                href={`/app/events/${event.id}/briefing`}
+                className="first:rounded-l-secondary border border-interaction-700 last:rounded-r-secondary h-8 flex items-center justify-center px-3 gap-2 uppercase text-interaction-500 hover:text-interaction-300 hover:border-interaction-300 font-mono"
+              >
+                <FaBook />
+                Briefing
+              </Link>
+            )}
 
             {showLineupButton && (
               <Link

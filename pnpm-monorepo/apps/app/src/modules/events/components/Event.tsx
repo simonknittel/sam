@@ -1,3 +1,4 @@
+import { canReadEventBriefing } from "@/modules/wiki/utils/canReadEventBriefing";
 import type {
   Entity,
   EventDiscordParticipant,
@@ -24,7 +25,10 @@ interface Props {
 }
 
 export const Event = async ({ className, event, index }: Props) => {
-  const showLineupButton = await isLineupVisible(event);
+  const [showLineupButton, showBriefingButton] = await Promise.all([
+    isLineupVisible(event),
+    canReadEventBriefing(event),
+  ]);
 
   return (
     <EventClient
@@ -32,6 +36,7 @@ export const Event = async ({ className, event, index }: Props) => {
       event={event}
       index={index}
       showLineupButton={showLineupButton}
+      showBriefingButton={showBriefingButton}
     />
   );
 };

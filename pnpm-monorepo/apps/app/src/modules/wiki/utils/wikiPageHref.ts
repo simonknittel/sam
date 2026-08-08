@@ -60,3 +60,19 @@ export const getActiveWikiPageId = (
   if (!pathname.startsWith(`${mode.basePath}/`)) return undefined;
   return pathname.slice(mode.basePath.length + 1).split("/")[0];
 };
+
+/**
+ * Route of a page identified only by its row, without a loaded context:
+ * event pages live under their event, everything else under the global
+ * wiki. An event root page's id-URL redirects to the bare briefing path,
+ * so no root lookup is needed. Used by cross-scope surfaces like the
+ * reports queue.
+ */
+export const getWikiPageRouteHref = (page: {
+  readonly id: string;
+  readonly slug: string;
+  readonly eventId: string | null;
+}) =>
+  page.eventId
+    ? `${getEventWikiBasePath(page.eventId)}/${page.id}/${page.slug}`
+    : `/app/wiki/${page.id}/${page.slug}`;

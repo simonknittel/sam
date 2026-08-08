@@ -1,4 +1,7 @@
-import { WikiPageEventScope } from "@sam-monorepo/database/browser";
+import {
+  WikiPageEventScope,
+  WikiPageUploadability,
+} from "@sam-monorepo/database/browser";
 
 export interface EventWikiPagePermissionSource {
   readonly id: string;
@@ -7,6 +10,9 @@ export interface EventWikiPagePermissionSource {
   readonly eventReadScopePositionId: string | null;
   readonly eventEditScope: WikiPageEventScope;
   readonly eventEditScopePositionId: string | null;
+  /** The same upload tiers the role-based wiki uses (see WikiPage) */
+  readonly imageUploadability: WikiPageUploadability;
+  readonly attachmentUploadability: WikiPageUploadability;
 }
 
 export interface EventWikiViewer {
@@ -34,7 +40,11 @@ export interface ResolvedEventWikiPagePermissions {
    * additionally checks the freeze itself.
    */
   readonly canAdmin: boolean;
-  /** Uploads in the EVENT namespace follow the edit scope */
+  /**
+   * Same semantics as the role-based wiki: EDITORS extends uploading to
+   * everyone with edit permission, RESTRICTED (and the INHERIT fallback)
+   * keeps it at the managers. Nobody uploads once the event is over.
+   */
   readonly canUploadImages: boolean;
   readonly canUploadAttachments: boolean;
   /**
@@ -45,6 +55,8 @@ export interface ResolvedEventWikiPagePermissions {
    */
   readonly readScopeSourceId: string;
   readonly editScopeSourceId: string;
+  readonly imageUploadabilitySourceId: string;
+  readonly attachmentUploadabilitySourceId: string;
 }
 
 interface FlatPositionAssignment {
@@ -84,10 +96,26 @@ export const collectPositionScopeIdsForCitizen = (
   return scopeIds;
 };
 
-type ScopeTier = "read" | "edit";
+type ScopeTier =
+  "read" | "edit" | "imageUploadability" | "attachmentUploadability";
 
-const scopeOf = (page: EventWikiPagePermissionSource, tier: ScopeTier) =>
-  tier === "read" ? page.eventReadScope : page.eventEditScope;
+const hasExplicitSetting = (
+  page: EventWikiPagePermissionSource,
+  tier: ScopeTier,
+) => {
+  switch (tier) {
+    case "read":
+      return page.eventReadScope !== WikiPageEventScope.INHERIT;
+    case "edit":
+      return page.eventEditScope !== WikiPageEventScope.INHERIT;
+    case "imageUploadability":
+      return page.imageUploadability !== WikiPageUploadability.INHERIT;
+    case "attachmentUploadability":
+      return page.attachmentUploadability !== WikiPageUploadability.INHERIT;
+    default:
+      throw new Error(`Unexpected tier: ${tier satisfies never}`);
+  }
+};
 
 /**
  * Walks up the ancestor chain to the nearest page with an explicit scope
@@ -116,7 +144,7 @@ const findScopeSource = (
     visited.add(current.id);
     chain.push(current);
 
-    if (scopeOf(current, tier) !== WikiPageEventScope.INHERIT) {
+    if (hasExplicitSetting(current, tier)) {
       source = current;
       break;
     }
@@ -172,6 +200,14 @@ export const createEventWikiPagePermissionResolver = (
   const pagesById = new Map(pages.map((page) => [page.id, page]));
   const readScopeSourceCache = new Map<string, EventWikiPagePermissionSource>();
   const editScopeSourceCache = new Map<string, EventWikiPagePermissionSource>();
+  const imageUploadabilitySourceCache = new Map<
+    string,
+    EventWikiPagePermissionSource
+  >();
+  const attachmentUploadabilitySourceCache = new Map<
+    string,
+    EventWikiPagePermissionSource
+  >();
 
   const editGrantCache = new Map<string, boolean>();
   const readGrantCache = new Map<string, boolean>();
@@ -283,6 +319,31 @@ export const createEventWikiPagePermissionResolver = (
       return isAccessible(page) && hasReadGrant(page);
     });
 
+  /**
+   * EDITORS extends uploading to everyone with edit permission, RESTRICTED
+   * keeps it at the managers, and the fallback source of a fully-INHERIT
+   * chain behaves like RESTRICTED — mirroring `isGrantedUpload` of the
+   * role-based resolver. The freeze stops all uploading.
+   */
+  const isGrantedUpload = (
+    uploadability: WikiPageUploadability,
+    canEdit: boolean,
+  ) => {
+    if (options.frozen) return false;
+    switch (uploadability) {
+      case WikiPageUploadability.EDITORS:
+        return canEdit;
+      case WikiPageUploadability.RESTRICTED:
+        return viewer.isEventManager;
+      case WikiPageUploadability.INHERIT:
+        return viewer.isEventManager;
+      default:
+        throw new Error(
+          `Unexpected uploadability: ${uploadability satisfies never}`,
+        );
+    }
+  };
+
   const get = (
     pageId: string,
   ): ResolvedEventWikiPagePermissions | undefined => {
@@ -291,12 +352,31 @@ export const createEventWikiPagePermissionResolver = (
 
     const canEdit = hasEditGrantOf(page) && !options.frozen;
 
+    const imageUploadabilitySource = findScopeSource(
+      page,
+      "imageUploadability",
+      pagesById,
+      imageUploadabilitySourceCache,
+    );
+    const attachmentUploadabilitySource = findScopeSource(
+      page,
+      "attachmentUploadability",
+      pagesById,
+      attachmentUploadabilitySourceCache,
+    );
+
     return {
       canRead: canReadOf(page),
       canEdit,
       canAdmin: viewer.isEventManager,
-      canUploadImages: canEdit,
-      canUploadAttachments: canEdit,
+      canUploadImages: isGrantedUpload(
+        imageUploadabilitySource.imageUploadability,
+        canEdit,
+      ),
+      canUploadAttachments: isGrantedUpload(
+        attachmentUploadabilitySource.attachmentUploadability,
+        canEdit,
+      ),
       readScopeSourceId: findScopeSource(
         page,
         "read",
@@ -309,6 +389,8 @@ export const createEventWikiPagePermissionResolver = (
         pagesById,
         editScopeSourceCache,
       ).id,
+      imageUploadabilitySourceId: imageUploadabilitySource.id,
+      attachmentUploadabilitySourceId: attachmentUploadabilitySource.id,
     };
   };
 

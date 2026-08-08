@@ -16,9 +16,14 @@ import { revalidatePath } from "next/cache";
 import { unstable_rethrow } from "next/navigation";
 import { serializeError } from "serialize-error";
 import { z } from "zod";
-import { getWikiContext } from "../queries/getWikiContext";
+import {
+  getWikiPageScopedContext,
+  getWikiScopeRevalidationPath,
+  isWikiScopeFrozen,
+} from "../queries/getWikiPageScopedContext";
 import { getWikiIframeAllowlist } from "../queries/getWikiSettings";
 import { replaceWikiPageContent } from "../utils/replaceWikiPageContent";
+import { WikiScope } from "../utils/wikiPageHref";
 
 const schema = z.object({
   id: z.cuid2(),
@@ -27,26 +32,36 @@ const schema = z.object({
 });
 
 /**
- * Fully replaces a page's content with uploaded Tiptap JSON. Wiki admins
- * only — an import injects arbitrary node
- * structures, bypassing the editor's insertion-time validation, so it stays
- * a `wiki;manage` tool. No merge semantics; the automatic safety snapshot
- * is the undo path.
+ * Fully replaces a page's content with uploaded Tiptap JSON. An import
+ * injects arbitrary node structures, bypassing the editor's insertion-time
+ * validation, so it stays an admin tool: `wiki;manage` for the global wiki,
+ * the event managers for event pages (the structures land only in their
+ * own event wiki, which they control anyway). No merge semantics; the
+ * automatic safety snapshot is the undo path.
  */
 export const importWikiPageContent = createAuthenticatedAction(
   "importWikiPageContent",
   schema,
   async (formData, authentication, data, t) => {
-    if (!(await authentication.authorize("wiki", "manage")))
+    const scoped = await getWikiPageScopedContext(data.id);
+    if (!scoped)
       return { error: t("Common.forbidden"), requestPayload: formData };
-
-    const context = await getWikiContext();
-    if (!context)
-      return { error: t("Common.forbidden"), requestPayload: formData };
+    const context = scoped.context;
 
     const page = context.pagesById.get(data.id);
     if (!page || page.deletedAt)
       return { error: t("Common.badRequest"), requestPayload: formData };
+    const allowed =
+      scoped.scope === WikiScope.Event
+        ? context.permissions.get(page.id)?.canAdmin === true
+        : await authentication.authorize("wiki", "manage");
+    if (!allowed)
+      return { error: t("Common.forbidden"), requestPayload: formData };
+    if (isWikiScopeFrozen(scoped))
+      return {
+        error: "Das Event ist bereits vorbei.",
+        requestPayload: formData,
+      };
 
     /**
      * Reject unknown node/mark types and invalid structures — the file may
@@ -129,7 +144,7 @@ export const importWikiPageContent = createAuthenticatedAction(
       },
     ]);
 
-    revalidatePath("/app/wiki", "layout");
+    revalidatePath(getWikiScopeRevalidationPath(scoped), "layout");
 
     return { success: "Inhalt importiert." };
   },

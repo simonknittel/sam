@@ -14,6 +14,7 @@ import {
 import { getEventWikiPageStaticContent } from "../queries/getEventWikiPageStaticContent";
 import { getWikiFavoritePageIds } from "../queries/getWikiFavorites";
 import { collectWikiPageDescendants } from "../utils/collectWikiPageDescendants";
+import { getEffectiveEventWikiScope } from "../utils/getEffectiveEventWikiScope";
 import { getEventWikiPositionOptions } from "../utils/getEventWikiPositionOptions";
 import { getWikiCollabColor } from "../utils/getWikiCollabColor";
 import { getManageableWikiPageTargets } from "../utils/getWikiPageTargets";
@@ -28,6 +29,7 @@ import { ReportWikiPageModal } from "./ReportWikiPageModal";
 import { WikiCollabEditor } from "./WikiCollabEditor";
 import { WikiEditModeProvider } from "./WikiEditModeProvider";
 import { WikiEditModeToggle } from "./WikiEditModeToggle";
+import { WikiPageExportImportModal } from "./WikiPageExportImportModal";
 import { WikiPageFavoriteButton } from "./WikiPageFavoriteButton";
 import { WikiPageIconButton } from "./WikiPageIconButton";
 import { WikiPageSidebarModeModal } from "./WikiPageSidebarModeModal";
@@ -192,11 +194,33 @@ export const EventWikiPageContent = async ({ context, page }: Props) => {
                 readScopePositionId={page.eventReadScopePositionId}
                 editScope={page.eventEditScope}
                 editScopePositionId={page.eventEditScopePositionId}
+                imageUploadability={page.imageUploadability}
+                attachmentUploadability={page.attachmentUploadability}
                 positionOptions={getEventWikiPositionOptions(context.positions)}
+                positions={context.positions.map((position) => ({
+                  id: position.id,
+                  parentPositionId: position.parentPositionId,
+                }))}
                 inheritedFrom={{
                   read: sourceTitle(permissions?.readScopeSourceId),
                   edit: sourceTitle(permissions?.editScopeSourceId),
+                  imageUploadability: sourceTitle(
+                    permissions?.imageUploadabilitySourceId,
+                  ),
+                  attachmentUploadability: sourceTitle(
+                    permissions?.attachmentUploadabilitySourceId,
+                  ),
                 }}
+                parentReadScope={
+                  page.parentId
+                    ? getEffectiveEventWikiScope(context, page.parentId, "read")
+                    : null
+                }
+                parentEditScope={
+                  page.parentId
+                    ? getEffectiveEventWikiScope(context, page.parentId, "edit")
+                    : null
+                }
                 parentTitle={
                   page.parentId
                     ? context.pagesById.get(page.parentId)?.title
@@ -211,6 +235,10 @@ export const EventWikiPageContent = async ({ context, page }: Props) => {
                 title={page.title}
                 descendantCount={descendantIds.length}
               />
+            )}
+
+            {canAdministrate && (
+              <WikiPageExportImportModal pageId={page.id} title={page.title} />
             )}
           </div>
         </div>

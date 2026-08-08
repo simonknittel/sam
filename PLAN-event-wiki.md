@@ -24,6 +24,10 @@ Give every event its own isolated wiki, surfaced as a new "Briefing" tab on the 
 - **Links**: event pages can `[[...]]`-link to their own event's pages and to global wiki pages. Global wiki pages never suggest or resolve event pages. No cross-event links.
 - **Notification**: "Briefing veröffentlicht" fires when the root read scope leaves managers-only for the first time (guarded by a new timestamp on `Event`). Recipients are computed at emission: only citizens who can actually read the briefing under the new scope.
 - **Owner concept unused**: event pages keep `ownerId = null`; the fixed manage tier replaces it.
+- **Edit ⊆ read** (feedback round 2026-08-08): a page's edit scope must be a subset of its read scope — MANAGERS ⊆ POSITION ⊆ PARTICIPANTS ⊆ ALL, one POSITION inside another only within its subtree. Enforced server-side against the effective (INHERIT-resolved) scopes and mirrored in the dialog, which only offers valid edit options and resets to managers-only when narrowing the read scope invalidates the choice.
+- **Upload permissions** (feedback round): event pages reuse the wiki's `imageUploadability`/`attachmentUploadability` tiers (inherit / editors / managers) instead of following the edit scope; the seed sets managers-only explicitly and the freeze stops all uploads.
+- **Export/import** (feedback round): available on event pages for event managers (import freeze-guarded); the global wiki keeps its `wiki;manage` gate.
+- **Tile links** (feedback round): event tiles (events list and dashboard, same component) show a Briefing button when the viewer can read the root page — one indexed root-page lookup per tile plus the lineup only for POSITION scopes (`canReadEventBriefing`).
 - **Excluded surfaces**: featured pages, dashboard page, connected pages ("Verknüpfte Seiten"), export/import, and all global-wiki listings (search, trash, recents, page targets) exclude event pages.
 
 ### Out of scope
@@ -272,6 +276,7 @@ Executed 2026-08-08 on a dedicated worktree stack (slot-2 compose stack, collab 
 - **Freeze**: with `endTime` in the past, every mutating affordance (edit toggle, permissions, duplicate, create-subpage) disappeared while the page, tree and manager snapshot view stayed readable.
 - **Regression**: full vitest suite (264 tests), `tsc` on the app, and the collab + lambda + wiki-editor builds all green, including after merging main (which gained the image-optimization and details-popover branches mid-implementation).
 - **Not exercised in-app**: multi-user permission matrix (covered by the resolver unit tests), the notification delivery path (EventBridge/web-push need AWS), and the real Discord scraper seeding (covered by a direct test of the nested create against the dev database).
+- **Feedback round (2026-08-08, after Simon's manual test)**: fixed search results linking to the global wiki (the visible result links bypassed the href-mode context) and report links 404ing on event pages (`getWikiPageRouteHref`); added the edit-⊆-read constraint, the upload permission tiers, export/import for event managers, and the tile Briefing buttons. All re-verified in-app: scoped search links, subset-filtered edit options (with auto-reset), uploadability persisting (editors/managers), export button, tile button with correct href; suite at 240 wiki tests green.
 
 Original checklist:
 
