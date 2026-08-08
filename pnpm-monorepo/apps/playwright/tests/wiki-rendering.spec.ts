@@ -89,9 +89,14 @@ test("the sidebar tree links between pages", async ({
 
   await expect(page.getByRole("link", { name: "Flotte" })).toBeVisible();
 
-  await page.getByRole("link", { name: "Schiffe" }).click();
-
-  await expect(page).toHaveURL(`/app/wiki/${child.id}/${child.slug}`);
+  // A click landing while React hydrates can get swallowed by the DOM
+  // swap — retry until the navigation actually happens
+  await expect(async () => {
+    await page.getByRole("link", { name: "Schiffe" }).click({ timeout: 2_000 });
+    await expect(page).toHaveURL(`/app/wiki/${child.id}/${child.slug}`, {
+      timeout: 2_000,
+    });
+  }).toPass({ timeout: 15_000 });
   await expect(page.getByText("Liste aller Schiffe.")).toBeVisible();
 });
 

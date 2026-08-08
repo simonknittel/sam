@@ -91,9 +91,16 @@ test("tags are shown on the page and list their pages", async ({
   await signIn(citizen.user);
 
   await page.goto(`/app/wiki/${wikiPage.id}/${wikiPage.slug}`);
-  await page.getByRole("link", { name: "Wirtschaft" }).click();
-
-  await expect(page).toHaveURL(`/app/wiki/tags/${tag.id}`);
+  // A click landing while React hydrates can get swallowed by the DOM
+  // swap — retry until the navigation actually happens
+  await expect(async () => {
+    await page
+      .getByRole("link", { name: "Wirtschaft" })
+      .click({ timeout: 2_000 });
+    await expect(page).toHaveURL(`/app/wiki/tags/${tag.id}`, {
+      timeout: 2_000,
+    });
+  }).toPass({ timeout: 15_000 });
   // Scoped to the listing section — the sidebar tree links the page too
   await expect(
     page.locator("section").getByRole("link", { name: "Handelsrouten" }),
