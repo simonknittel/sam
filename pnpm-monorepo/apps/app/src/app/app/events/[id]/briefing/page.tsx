@@ -1,3 +1,4 @@
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { EventWikiPageContent } from "@/modules/wiki/components/EventWikiPageContent";
 import { getEventWikiContext } from "@/modules/wiki/queries/getEventWikiContext";
@@ -16,6 +17,8 @@ export const metadata: Metadata = {
 export default async function Page({
   params,
 }: PageProps<"/app/events/[id]/briefing">) {
+  await requireAuthenticationPage("/app/events/[id]/briefing");
+
   const { id } = await params;
   const context = await getEventWikiContext(id);
   if (!context) notFound();

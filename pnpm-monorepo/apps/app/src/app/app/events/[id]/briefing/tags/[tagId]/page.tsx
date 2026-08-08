@@ -1,5 +1,6 @@
 import { prisma } from "@/db";
 import { Link } from "@/modules/common/components/Link";
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { WikiPageIcon } from "@/modules/wiki/components/WikiPageIcon";
 import { getEventWikiContext } from "@/modules/wiki/queries/getEventWikiContext";
@@ -38,6 +39,8 @@ export const generateMetadata = async (
 export default async function Page(
   props: PageProps<"/app/events/[id]/briefing/tags/[tagId]">,
 ) {
+  await requireAuthenticationPage("/app/events/[id]/briefing/tags/[tagId]");
+
   return (
     <SuspenseWithErrorBoundaryTile>
       <TagPageList params={props.params} />

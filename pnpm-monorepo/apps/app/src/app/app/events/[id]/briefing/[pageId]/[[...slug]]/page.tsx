@@ -1,3 +1,4 @@
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { EventWikiPageContent } from "@/modules/wiki/components/EventWikiPageContent";
 import { getEventWikiContext } from "@/modules/wiki/queries/getEventWikiContext";
@@ -31,6 +32,8 @@ export const generateMetadata = async (
 export default async function Page(
   props: PageProps<"/app/events/[id]/briefing/[pageId]/[[...slug]]">,
 ) {
+  await requireAuthenticationPage("/app/events/[id]/briefing/[pageId]/[[...slug]]");
+
   const result = await getVisiblePage(props.params);
   /**
    * Invisible pages 404 instead of 403 to avoid leaking their existence.

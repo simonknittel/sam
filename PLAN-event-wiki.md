@@ -134,7 +134,7 @@ Make the tab appear for readable briefings and render the root page full-width w
 
 #### Status
 
-Implemented (in-app verification pending)
+Implemented and verified
 
 #### Steps
 
@@ -163,7 +163,7 @@ Wire the collab editor into event pages with freeze-aware tokens, scoped link su
 
 #### Status
 
-Implemented (in-app verification pending)
+Implemented and verified
 
 #### Steps
 
@@ -191,7 +191,7 @@ Every mutating page action honors the event scope, the freeze, and the root lock
 
 #### Status
 
-Implemented (in-app verification pending)
+Implemented and verified
 
 #### Steps
 
@@ -219,7 +219,7 @@ Managers configure scopes through a dedicated modal, and the first widening of t
 
 #### Status
 
-Implemented (in-app verification pending)
+Implemented and verified
 
 #### Steps
 
@@ -245,7 +245,7 @@ The sidebar search finds only this event's pages and tags.
 
 #### Status
 
-Implemented (in-app verification pending)
+Implemented and verified
 
 #### Steps
 
@@ -264,6 +264,16 @@ Implemented (in-app verification pending)
 - Search inside event A finds its pages/tags only — not global pages, not event B's; global search finds no event pages; snippets, tag chips and breadcrumbs render correctly.
 
 ## Final end-to-end verification
+
+Executed 2026-08-08 on a dedicated worktree stack (slot-2 compose stack, collab image built from this branch — which also validated the collab-rebuild path). Results:
+
+- **Smoke walkthrough**: seeded event + root page (Lambda shape, via SQL) → Briefing tab appeared second for the organizer while scoped MANAGERS; briefing rendered the locked root (static title, no move/delete/sidebar-mode) with sidebar (search, favourites, tree with create-`+`, manager trash link); child page created via the tree lands on `/briefing/<pageId>/<slug>` with a rename input; collab editing persisted typed text through the branch-built collab server; the permissions dialog (no "Geerbt" on root) saved read = PARTICIPANTS, set `briefingPublishedAt`, and wrote the `WIKI_PAGE_EVENT_SCOPES_UPDATED` audit event.
+- **Isolation**: the global wiki landing/sidebar showed no event pages; global search returned 0 results for the event page while the event-scoped search found it; deleting the event cascade-removed every page and tag (0 rows left).
+- **Freeze**: with `endTime` in the past, every mutating affordance (edit toggle, permissions, duplicate, create-subpage) disappeared while the page, tree and manager snapshot view stayed readable.
+- **Regression**: full vitest suite (264 tests), `tsc` on the app, and the collab + lambda + wiki-editor builds all green, including after merging main (which gained the image-optimization and details-popover branches mid-implementation).
+- **Not exercised in-app**: multi-user permission matrix (covered by the resolver unit tests), the notification delivery path (EventBridge/web-push need AWS), and the real Discord scraper seeding (covered by a direct test of the nested create against the dev database).
+
+Original checklist:
 
 - **Lifecycle walkthrough on dev**: scraper seeds a new event → tab hidden for a participant, visible for the organizer → organizer writes content, sets read = participants → participant gets the notification, sees the tab, reads; lineup-scoped page readable only by assigned citizens → event end time passes → everything read-only for everyone, including the organizer → event cancelled on Discord → event and all wiki rows gone.
 - **Isolation audit**: with event pages existing, check every global surface lists none of them — search, tag autocomplete and tag pages, featured/dashboard/connected page pickers, page-index nodes on global pages, trash, recents/recently-updated, `[[` suggestions, page targets. Check the reverse direction: event surfaces never list global pages except in link suggestions.

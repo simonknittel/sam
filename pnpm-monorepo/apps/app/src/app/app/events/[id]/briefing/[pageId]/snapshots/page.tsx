@@ -1,3 +1,4 @@
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { WikiSnapshotsTable } from "@/modules/wiki/components/WikiSnapshotsTable";
 import { getEventWikiContext } from "@/modules/wiki/queries/getEventWikiContext";
@@ -34,6 +35,8 @@ export const generateMetadata = async (
 export default async function Page(
   props: PageProps<"/app/events/[id]/briefing/[pageId]/snapshots">,
 ) {
+  await requireAuthenticationPage("/app/events/[id]/briefing/[pageId]/snapshots");
+
   const result = await getAdministrablePage(props.params);
   /**
    * Pages the viewer can't administrate 404 instead of 403 to avoid

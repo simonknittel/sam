@@ -1,3 +1,4 @@
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { WikiTrashTable } from "@/modules/wiki/components/WikiTrashTable";
 import { getEventWikiContext } from "@/modules/wiki/queries/getEventWikiContext";
@@ -16,6 +17,8 @@ export default async function Page({
   params,
   searchParams,
 }: PageProps<"/app/events/[id]/briefing/trash">) {
+  await requireAuthenticationPage("/app/events/[id]/briefing/trash");
+
   const { id } = await params;
   const context = await getEventWikiContext(id);
   if (!context) notFound();
