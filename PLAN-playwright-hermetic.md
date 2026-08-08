@@ -300,10 +300,9 @@ Done — workflow rewritten (PR/push, no job container, browser install, report 
       `NEXT_PUBLIC_COLLAB_URL`, e.g. `wss://…`) to the Vercel production
       env — without it the wiki goes read-only; drop
       `NEXT_PUBLIC_COLLAB_URL` there once released (manual, Simon)
-- [ ] Rename the var in local `.env` files of the main checkout and any
-      other worktrees (`NEXT_PUBLIC_COLLAB_URL` → `COLLAB_URL`; this
-      worktree's copy is already renamed)
-- [ ] Merge to `main` (fast-forward from the worktree branch)
+- [x] Rename the var in local `.env` files of the main checkout and the
+      playwright worktree (other worktrees still pending)
+- [x] Merge to `main` (fast-forward from the worktree branch, `7e61e69a`)
 - [ ] First CI run on `main` push is green
 - [ ] Delete the now-unused GitHub bits: the `BASE_URL` +
       `PLAYWRIGHT_CUSTOM_HEADER_NAME` variables and the
