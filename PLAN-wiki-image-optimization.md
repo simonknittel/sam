@@ -183,6 +183,8 @@ Done (2026-08-08). `WikiImageNodeView.ts` (vanilla node view via `withWikiImageO
 #### Notes
 
 - `update: () => false` — attribute changes recreate the node view, which is exactly the redraw ProseMirror performed before the node view existed; no attribute-sync edge cases (selection class, draggable, decorations).
+- **Double-load bug found by Simon while testing** (thumbnail + full original both downloaded): Tiptap renders a (re)created editor's document once through plain renderHTML before registering node views, and that throwaway render's `<img src=original>` starts downloading immediately — browsers fetch eager images even while detached. Traced via CDP (`Page.addScriptToEvaluateOnNewDocument` + setAttribute hook: the fetching element was a live-document anchor+img that never got connected). Fix: `renderHTML` itself emits `loading="lazy" decoding="async"` — lazy images never load while detached, and everywhere that markup genuinely renders, lazy is right anyway. Defense in depth: the node view serializes into an inert `createHTMLDocument()` and the static renderer applies `src` last (React applies props in order; next/image follows the same convention).
+- The `sizes` bound uses the content column's desktop max: 1552px = `--breakpoint-3xl` (1920) − MaxWidthContent p-4 (32) − sidebar md:w-80 (320) − gap-4 (16). `widthPx`/intrinsic widths are capped at it.
 - The wiki-editor package only gained exports (`WikiImage`, `WikiImageOptions`) — schema unchanged, still no collab redeploy needed for this feature.
 - Dimension lookups match srcs against the *current* `NEXT_PUBLIC_S3_PUBLIC_URL` only. In dev, flipping between the localhost/shared bucket makes images uploaded under the other host fall back to the plain img (they would 404 anyway); in production the host is stable.
 - Incident found while verifying: the main dev stack's collab container (image built 2026-08-02) failed **all** persistence with Prisma P2022 after this session's `migrate:dev` applied the pending wiki-permissions migration (dropped column) to the shared dev DB. Rebuilt the container from current main (`docker compose -p sam … up -d --build sam-collab`) — collab images must be rebuilt whenever pending migrations get applied to the dev DB.
@@ -193,6 +195,7 @@ Done (2026-08-08). `WikiImageNodeView.ts` (vanilla node view via `withWikiImageO
 - Resized + right-aligned image: layout styles on the anchor (`width: 300px; max-width: 100%; margin-left: auto; margin-right: 0`), rendered box 300×109.75 (aspect preserved).
 - External-src image keeps the plain img (no srcset) inside its link.
 - Edit mode: clicking an image selects the node (no navigation); resize/alignment redraws behave as before.
+- After the lazy/inert fixes: zero raw-original fetches on an image-heavy page (network filter on the bucket host), only the optimizer candidates.
 
 ## Final end-to-end verification
 

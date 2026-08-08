@@ -48,7 +48,7 @@ export const WikiContentImage = ({ attrs, imageDimensions }: Props) => {
    */
   if (!src)
     // eslint-disable-next-line @next/next/no-img-element
-    return <img alt={alt} title={title} {...layoutAttributes} />;
+    return <img alt={alt} title={title} loading="lazy" {...layoutAttributes} />;
 
   return (
     <a
@@ -58,17 +58,20 @@ export const WikiContentImage = ({ attrs, imageDimensions }: Props) => {
       rel="noopener noreferrer"
       {...layoutAttributes}
     >
+      {/* src deliberately last: React applies props in order, and a src
+          applied before srcSet starts a full-size fetch on client-side
+          mounts — the same convention next/image follows. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={optimized ? optimized.src : src}
         srcSet={optimized?.srcSet}
         sizes={optimized?.sizes}
         alt={alt}
         title={title}
         width={dimensions?.width}
         height={dimensions?.height}
-        loading={optimized ? "lazy" : undefined}
-        decoding={optimized ? "async" : undefined}
+        loading="lazy"
+        decoding="async"
+        src={optimized ? optimized.src : src}
       />
     </a>
   );

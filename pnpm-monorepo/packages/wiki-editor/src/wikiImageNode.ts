@@ -106,13 +106,28 @@ export const WikiImage = Image.extend({
     const source = String(node.attrs.src ?? "");
 
     /**
+     * Lazy on every rendering of the node, not only the optimized ones:
+     * Tiptap renders a (re)created editor's document once through
+     * renderHTML before the node views take over, and a non-lazy img
+     * starts downloading the original file during that throwaway render —
+     * even detached, browsers fetch an eager img the moment src is set.
+     * A lazy img only loads once it is connected and near the viewport,
+     * which the throwaway render never is.
+     */
+    const loadingAttributes = { loading: "lazy", decoding: "async" };
+
+    /**
      * Nothing to link to — the image stays the node's outer element and
      * keeps carrying the layout styles itself.
      */
     if (!source)
       return [
         "img",
-        mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
+        mergeAttributes(
+          loadingAttributes,
+          this.options.HTMLAttributes,
+          HTMLAttributes,
+        ),
       ];
 
     const imageAttributes: Record<string, unknown> = {};
@@ -133,7 +148,14 @@ export const WikiImage = Image.extend({
         },
         anchorAttributes,
       ),
-      ["img", mergeAttributes(this.options.HTMLAttributes, imageAttributes)],
+      [
+        "img",
+        mergeAttributes(
+          loadingAttributes,
+          this.options.HTMLAttributes,
+          imageAttributes,
+        ),
+      ],
     ];
   },
 });

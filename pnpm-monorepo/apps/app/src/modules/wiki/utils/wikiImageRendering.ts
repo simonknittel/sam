@@ -21,6 +21,16 @@ const UNOPTIMIZED_MIME_TYPES: readonly string[] = [
   "image/gif",
 ];
 
+/**
+ * Desktop max width of the wiki content column: the site shell's
+ * max-w-(--breakpoint-3xl) (1920px, globals.css) minus MaxWidthContent's
+ * p-4 padding (2 × 16px), the sidebar (md:w-80, 320px) and the gap-4
+ * between them (16px). Upper bound for the `sizes` hint — the layout
+ * itself stays CSS-driven, so a drift here only shifts which srcset
+ * candidate the browser picks.
+ */
+const WIKI_CONTENT_COLUMN_MAX_WIDTH_PX = 1552;
+
 export interface WikiImageRendering {
   /**
    * Intrinsic dimensions when known — rendered as width/height attributes
@@ -52,12 +62,14 @@ export const resolveWikiImageRendering = (
     return { dimensions, optimized: undefined };
 
   const widthPx: unknown = attrs.widthPx;
-  const displayWidthPx =
+  const displayWidthPx = Math.min(
     typeof widthPx === "number"
       ? widthPx
       : widthPx === WIKI_FULL_WIDTH
-        ? null
-        : dimensions.width;
+        ? WIKI_CONTENT_COLUMN_MAX_WIDTH_PX
+        : dimensions.width,
+    WIKI_CONTENT_COLUMN_MAX_WIDTH_PX,
+  );
 
   return { dimensions, optimized: getOptimizedImageProps(src, displayWidthPx) };
 };

@@ -29,12 +29,12 @@ export interface OptimizedImageProps {
  * Builds the src/srcset/sizes triple next/image would emit for a remote
  * image, for places that render an `img` outside React's reach (the wiki
  * editor's image node view) or need identical markup with those (the wiki
- * static renderer). `displayWidthPx` bounds what the browser fetches —
- * NULL means "up to the viewport width" (explicit full-width blocks).
+ * static renderer). `displayWidthPx` is the width the image renders at on
+ * a large viewport; it bounds which srcset candidate the browser fetches.
  */
 export const getOptimizedImageProps = (
   sourceUrl: string,
-  displayWidthPx: number | null,
+  displayWidthPx: number,
 ): OptimizedImageProps => {
   const optimizedUrl = (width: number) =>
     `/_next/image?url=${encodeURIComponent(sourceUrl)}&w=${width}&q=${IMAGE_OPTIMIZER_QUALITY}`;
@@ -44,7 +44,6 @@ export const getOptimizedImageProps = (
     srcSet: ALL_WIDTHS.map(
       (width) => `${optimizedUrl(width)} ${width}w`,
     ).join(", "),
-    sizes:
-      displayWidthPx === null ? "100vw" : `min(100vw, ${displayWidthPx}px)`,
+    sizes: `min(100vw, ${displayWidthPx}px)`,
   };
 };

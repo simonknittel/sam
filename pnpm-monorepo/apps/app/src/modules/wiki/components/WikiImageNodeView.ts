@@ -25,15 +25,23 @@ const createWikiImageNodeView =
   ): NodeViewRenderer =>
   ({ node }) => {
     const renderNode = (rendering: ProseMirrorNode): HTMLElement => {
+      /**
+       * Serialized into an inert document: an img created in the live
+       * document starts downloading its src immediately, even while
+       * detached — the original file would load alongside the optimized
+       * variant. Images in an inert document never load; the browser only
+       * evaluates the final attribute set once the node view is mounted.
+       */
+      const inertDocument = document.implementation.createHTMLDocument();
       const serialized = DOMSerializer.fromSchema(
         rendering.type.schema,
-      ).serializeNode(rendering) as HTMLElement;
+      ).serializeNode(rendering, { document: inertDocument }) as HTMLElement;
 
       const image =
-        serialized instanceof HTMLImageElement
+        serialized.tagName === "IMG"
           ? serialized
           : serialized.querySelector("img");
-      if (!image) return serialized;
+      if (!image) return document.importNode(serialized, true);
 
       const { dimensions, optimized } = resolveWikiImageRendering(
         rendering.attrs,
@@ -44,14 +52,14 @@ const createWikiImageNodeView =
         image.setAttribute("height", String(dimensions.height));
       }
       if (optimized) {
-        image.setAttribute("src", optimized.src);
         image.setAttribute("srcset", optimized.srcSet);
         image.setAttribute("sizes", optimized.sizes);
         image.setAttribute("loading", "lazy");
         image.setAttribute("decoding", "async");
+        image.setAttribute("src", optimized.src);
       }
 
-      return serialized;
+      return document.importNode(serialized, true);
     };
 
     return {

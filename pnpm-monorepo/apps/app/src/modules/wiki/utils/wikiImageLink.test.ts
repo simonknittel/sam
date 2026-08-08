@@ -64,7 +64,7 @@ describe("the link to an image's original", () => {
     expect(html).toBe(
       `<a data-wiki-image="" href="${SOURCE}" target="_blank" ` +
         `rel="noopener noreferrer" style="margin-left: auto; margin-right: auto">` +
-        `<img src="${SOURCE}" alt="Karte.png"/>` +
+        `<img loading="lazy" decoding="async" src="${SOURCE}" alt="Karte.png"/>` +
         `</a>`,
     );
   });
@@ -77,7 +77,9 @@ describe("the link to an image's original", () => {
     );
     expect(html).toMatch(/<a [^>]*margin-left: auto; margin-right: 0/);
     // The image itself is left to fill that box, see wikiEditor.css
-    expect(html).toContain(`<img src="${SOURCE}"/>`);
+    expect(html).toContain(
+      `<img loading="lazy" decoding="async" src="${SOURCE}"/>`,
+    );
   });
 
   test("renders a bare image when there is nothing to link to", () => {
