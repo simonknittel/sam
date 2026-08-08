@@ -13,8 +13,8 @@ import {
   type WikiPageLinkedPage,
 } from "@sam-monorepo/wiki-editor";
 import { cache } from "react";
-import type { WikiImageDimensions } from "../components/WikiContentImage";
 import type { WikiPageIndexEntry } from "../components/WikiPageIndexList";
+import type { WikiImageDimensions } from "../utils/wikiImageRendering";
 import type { WikiRoleCitizen } from "../components/WikiRoleCitizensList";
 import { resolveWikiPageIndex } from "../utils/resolveWikiPageIndex";
 import { resolveWikiRoleCitizens } from "../utils/resolveWikiRoleCitizens";

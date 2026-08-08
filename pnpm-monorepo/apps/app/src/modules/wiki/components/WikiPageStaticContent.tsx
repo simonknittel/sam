@@ -20,10 +20,8 @@ import { withoutWikiTrailingEmptyParagraph } from "../utils/wikiTrailingParagrap
 import { WikiAttachmentCard } from "./WikiAttachmentCard";
 import { wikiBlockLayoutStyle } from "./wikiBlockLayoutStyle";
 import { WikiCitizenMentionChip } from "./WikiCitizenMentionNodeView";
-import {
-  WikiContentImage,
-  type WikiImageDimensions,
-} from "./WikiContentImage";
+import type { WikiImageDimensions } from "../utils/wikiImageRendering";
+import { WikiContentImage } from "./WikiContentImage";
 import "./wikiEditor.css";
 import {
   WikiPageIndexList,

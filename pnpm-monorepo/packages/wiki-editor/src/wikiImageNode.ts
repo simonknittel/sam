@@ -5,6 +5,8 @@ import {
   wikiWidthPxAttribute,
 } from "./wikiResizableNodes.js";
 
+export type { ImageOptions as WikiImageOptions } from "@tiptap/extension-image";
+
 /**
  * Marks an anchor as an image node's own element rather than a link an
  * author wrote around content — the editor's hover menu tells them apart

@@ -31,6 +31,7 @@ import "./wikiEditor.css";
 import { WikiEditorLayout } from "./WikiEditorLayout";
 import { WikiEmbedUrlModal } from "./WikiEmbedUrlModal";
 import { WikiLinkModal } from "./WikiLinkModal";
+import type { WikiImageDimensions } from "../utils/wikiImageRendering";
 import type { WikiPageIndexEntry } from "./WikiPageIndexList";
 import type { WikiRoleCitizen } from "./WikiRoleCitizensList";
 import { WikiVariantLinkModal } from "./WikiVariantLinkModal";
@@ -64,6 +65,11 @@ interface Props {
    * the node views' initial data
    */
   readonly roleCitizens: Readonly<Record<string, WikiRoleCitizen[]>>;
+  /**
+   * Intrinsic dimensions of the page's uploaded images, by upload id —
+   * lets the image node view serve optimized images
+   */
+  readonly imageDimensions: Readonly<Record<string, WikiImageDimensions>>;
   /**
    * Server-rendered static content shown until the collab provider has
    * synced, so readers get a fast first paint.
@@ -148,6 +154,7 @@ export const WikiCollabEditor = ({
   linkedVariants,
   pageIndexes,
   roleCitizens,
+  imageDimensions,
   staticFallback,
 }: Props) => {
   const { isEditMode } = useWikiEditMode();
@@ -224,6 +231,7 @@ export const WikiCollabEditor = ({
       linkedVariants={linkedVariants}
       pageIndexes={pageIndexes}
       roleCitizens={roleCitizens}
+      imageDimensions={imageDimensions}
       staticFallback={staticFallback}
     />
   );
@@ -249,6 +257,7 @@ interface ConnectedEditorProps {
   readonly linkedVariants: Readonly<Record<string, WikiLinkedVariant>>;
   readonly pageIndexes: Readonly<Record<string, WikiPageIndexEntry[]>>;
   readonly roleCitizens: Readonly<Record<string, WikiRoleCitizen[]>>;
+  readonly imageDimensions: Readonly<Record<string, WikiImageDimensions>>;
   readonly staticFallback: ReactNode;
 }
 
@@ -268,6 +277,7 @@ const ConnectedEditor = ({
   linkedVariants,
   pageIndexes,
   roleCitizens,
+  imageDimensions,
   staticFallback,
 }: ConnectedEditorProps) => {
   /**
@@ -388,6 +398,7 @@ const ConnectedEditor = ({
     linkedVariants,
     pageIndexes,
     roleCitizens,
+    imageDimensions,
     collaboration: true,
     interactive: isEditing,
     canUploadImages,

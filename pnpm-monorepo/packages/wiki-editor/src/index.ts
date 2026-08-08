@@ -58,6 +58,7 @@ export {
   WIKI_HIGHLIGHT_COLORS,
   type WikiHighlightColor,
 } from "./wikiHighlightMark.js";
+export { WikiImage, type WikiImageOptions } from "./wikiImageNode.js";
 export {
   collectWikiImageUploadIds,
   getWikiImageUploadId,

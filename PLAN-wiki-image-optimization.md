@@ -8,7 +8,9 @@ Serve wiki content images through Next.js' built-in image optimizer instead of d
 
 - **Dimensions live on the `Upload` row** (nullable `width`/`height` columns), not in Tiptap node attrs. The Yjs `ydoc` is the source of truth for page content — backfilling node attrs would mean rewriting every ydoc through the collab server, and old snapshots would stay dimension-less. A DB column keeps the backfill a plain row update and automatically covers snapshots, duplicated pages and the dashboard tile.
 - **Scope: all image uploads get dimensions** (wiki images, page icons, role icons, manufacturer images — they share `Upload` and the same upload routes), but **only the wiki static renderer switches to `next/image`** for now. Other consumers can adopt the columns later without a second backfill.
-- **The collab editor keeps its plain `<img>`.** Optimization benefits readers (the vast majority); a React node view for the image node would have to coexist with `WikiResizeHandles`, drag and alignment — not worth the risk now.
+- ~~**The collab editor keeps its plain `<img>`.**~~ **Revised 2026-08-08:** the editor is where most users actually read (viewers connect to collab too), so the editor optimizes as well — via a *vanilla* ProseMirror node view whose DOM is exactly the schema's renderHTML output (anchor + img) with the img's src swapped for the optimizer srcset. Not a React node view on purpose: the DOM structure stays byte-identical to the static render and the pre-node-view editor, so `WikiResizeHandles` (which sizes the anchor), the hover menu, click-to-select and drag are untouched.
+- **Rebased onto the image-original-link work** (`f3bbec28`, merged to main after this branch started): images now render as `<a data-wiki-image href=<original>>` around the `<img>`, with the layout attributes on the anchor. Both the static renderer and the editor node view mirror that structure; the link keeps pointing at the *original* file while the displayed img is optimized.
+- **Optimizer URLs are hand-built in one shared util** (`imageOptimizer.ts`) used by both renderers, instead of `next/image` in the static view + something else in the editor. The width allowlist is pinned in `next.config.ts` (`deviceSizes`/`imageSizes`, today's Next defaults) so a Next upgrade can never invalidate the hand-built srcsets.
 - **Dimensions are probed server-side** (not measured client-side at upload): trustworthy values and the same code path shape as the backfill. The probe runs on `PATCH /api/upload/assign` inside Next's `after()`, so the upload UX pays no latency. If the probe fails, dimensions stay `NULL` and rendering falls back to today's plain `<img>`.
 - **Images get a 25 MB upload cap** (shared value with `MAX_ATTACHMENT_SIZE_BYTES`), enforced in the image branch of `POST /api/upload` plus client-side checks. The same threshold guards the probe and the backfill so a huge object is never buffered. Existing larger uploads stay untouched — they keep `NULL` dimensions and render as today.
 - **SVG and GIF render unoptimized** (matching the existing pattern in `ImageUpload.tsx` / `WikiPageIcon.tsx`), but still get width/height for layout stability where determinable.
@@ -19,7 +21,6 @@ Serve wiki content images through Next.js' built-in image optimizer instead of d
 
 ### Out of scope
 
-- Optimized images in the collab editor (edit mode keeps the stock `<img>` rendering).
 - Switching `WikiPageIcon`, `ImageUpload`, role/manufacturer renderers to real dimensions or optimization.
 - Icons inside page-link chips and variant-link chips (raw `<img>` in `renderHTML`).
 - Moving the R2 bucket behind a custom domain / Cloudflare image transformations (the `*.r2.dev` host rules those out today).
@@ -163,6 +164,35 @@ Done (2026-08-08). `apps/scripts/src/migrations/012-backfill-upload-dimensions.t
 #### Verification
 
 - Run against the dev database: all fetchable image uploads gain plausible dimensions; the summary lists any skipped rows with reasons; re-running is a no-op.
+
+### Phase 6: Optimized images inside the collab editor
+
+Serve the same optimized srcsets inside the Tiptap editor (which read-only viewers connect to as well), added after the static-only scope was revised.
+
+#### Status
+
+Done (2026-08-08). `WikiImageNodeView.ts` (vanilla node view via `withWikiImageOptimization`), shared `resolveWikiImageRendering` util, `imageDimensions` threaded page → `WikiCollabEditor` → `useWikiEditorExtensions`; `WikiContentImage` rewritten onto the same util and the anchor markup.
+
+#### Steps
+
+- Extract the optimization decision (upload id → dimensions → srcset/sizes or fallback) into a util shared by the static renderer and the editor.
+- Pin the optimizer's width allowlist in next.config from a shared constants module and hand-build the srcset URLs from it.
+- Add a vanilla node view for the image node that serializes the node's own renderHTML (anchor + img) and patches the inner img with the optimizer attributes; swap it into the extension list like the other node-view variants.
+- Pass the page's dimensions map into the collab editor alongside the other server-resolved node-view data.
+
+#### Notes
+
+- `update: () => false` — attribute changes recreate the node view, which is exactly the redraw ProseMirror performed before the node view existed; no attribute-sync edge cases (selection class, draggable, decorations).
+- The wiki-editor package only gained exports (`WikiImage`, `WikiImageOptions`) — schema unchanged, still no collab redeploy needed for this feature.
+- Dimension lookups match srcs against the *current* `NEXT_PUBLIC_S3_PUBLIC_URL` only. In dev, flipping between the localhost/shared bucket makes images uploaded under the other host fall back to the plain img (they would 404 anyway); in production the host is stable.
+- Incident found while verifying: the main dev stack's collab container (image built 2026-08-02) failed **all** persistence with Prisma P2022 after this session's `migrate:dev` applied the pending wiki-permissions migration (dropped column) to the shared dev DB. Rebuilt the container from current main (`docker compose -p sam … up -d --build sam-collab`) — collab images must be rebuilt whenever pending migrations get applied to the dev DB.
+
+#### Verification
+
+- Connected editor (read mode): images render as `a[data-wiki-image] > img` with `/_next/image` srcset, `sizes`, `width`/`height`, lazy loading; optimizer requests return 200 with sanely sized candidates (w=256 for a 123px image, w=640 for a 300px resize at 2× DPR).
+- Resized + right-aligned image: layout styles on the anchor (`width: 300px; max-width: 100%; margin-left: auto; margin-right: 0`), rendered box 300×109.75 (aspect preserved).
+- External-src image keeps the plain img (no srcset) inside its link.
+- Edit mode: clicking an image selects the node (no navigation); resize/alignment redraws behave as before.
 
 ## Final end-to-end verification
 

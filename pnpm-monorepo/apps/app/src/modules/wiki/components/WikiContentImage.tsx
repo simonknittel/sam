@@ -1,23 +1,9 @@
-import { env } from "@/env";
+import { WIKI_FULL_WIDTH } from "@sam-monorepo/wiki-editor";
 import {
-  getWikiImageUploadId,
-  WIKI_FULL_WIDTH,
-} from "@sam-monorepo/wiki-editor";
-import Image from "next/image";
+  resolveWikiImageRendering,
+  type WikiImageDimensions,
+} from "../utils/wikiImageRendering";
 import { wikiBlockLayoutStyle } from "./wikiBlockLayoutStyle";
-
-export interface WikiImageDimensions {
-  readonly width: number;
-  readonly height: number;
-  readonly mimeType: string;
-}
-
-/**
- * Formats without a meaningful raster to optimize: SVG is resolution
- * independent, GIF would lose its animation. Same opt-out as ImageUpload
- * and WikiPageIcon.
- */
-const UNOPTIMIZED_MIME_TYPES: readonly string[] = ["image/svg+xml", "image/gif"];
 
 interface Props {
   readonly attrs: Readonly<Record<string, unknown>>;
@@ -26,11 +12,13 @@ interface Props {
 }
 
 /**
- * An image block in the static read view. Uploads with probed dimensions
+ * An image block in the static read view, mirroring WikiImage.renderHTML:
+ * an anchor to the original file as the node's outer element carrying the
+ * layout attributes, the image inside it. Uploads with probed dimensions
  * render through the Next.js image optimizer with their aspect-ratio box
  * reserved from SSR; everything else (external srcs, SVG, GIF, uploads
- * without dimensions) falls back to the plain `<img>` the schema's
- * renderHTML produces, so those keep behaving exactly as before.
+ * without dimensions) keeps the original src and behaves exactly as
+ * before.
  */
 export const WikiContentImage = ({ attrs, imageDimensions }: Props) => {
   const src = typeof attrs.src === "string" ? attrs.src : "";
@@ -39,12 +27,13 @@ export const WikiContentImage = ({ attrs, imageDimensions }: Props) => {
   const widthPx: unknown = attrs.widthPx;
   const align: unknown = attrs.align;
 
-  const uploadId = getWikiImageUploadId(src, env.NEXT_PUBLIC_S3_PUBLIC_URL);
-  const dimensions = uploadId ? imageDimensions[uploadId] : undefined;
+  const { dimensions, optimized } = resolveWikiImageRendering(
+    attrs,
+    imageDimensions,
+  );
 
   // The data attributes keep copy/paste back into the editor lossless
-  const sharedProps = {
-    title,
+  const layoutAttributes = {
     "data-width-px":
       typeof widthPx === "number" || widthPx === WIKI_FULL_WIDTH
         ? widthPx
@@ -53,40 +42,34 @@ export const WikiContentImage = ({ attrs, imageDimensions }: Props) => {
     style: wikiBlockLayoutStyle(attrs),
   };
 
-  if (!dimensions || UNOPTIMIZED_MIME_TYPES.includes(dimensions.mimeType))
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={src}
-        alt={alt}
-        width={dimensions?.width}
-        height={dimensions?.height}
-        {...sharedProps}
-      />
-    );
-
   /**
-   * The rendered width the browser will pick: an explicit resize wins,
-   * otherwise the natural size capped by the content column (max-width:
-   * 100%). The optimizer's srcset candidates derive from it via `sizes` —
-   * without capping at the viewport a 4000px original would always be
-   * fetched at full size.
+   * Nothing to link to — like renderHTML, the image itself stays the
+   * node's outer element and carries the layout attributes.
    */
-  const displayWidthPx =
-    typeof widthPx === "number" ? widthPx : dimensions.width;
+  if (!src)
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img alt={alt} title={title} {...layoutAttributes} />;
 
   return (
-    <Image
-      src={src}
-      alt={alt}
-      width={dimensions.width}
-      height={dimensions.height}
-      sizes={
-        widthPx === WIKI_FULL_WIDTH
-          ? "100vw"
-          : `min(100vw, ${displayWidthPx}px)`
-      }
-      {...sharedProps}
-    />
+    <a
+      data-wiki-image=""
+      href={src}
+      target="_blank"
+      rel="noopener noreferrer"
+      {...layoutAttributes}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={optimized ? optimized.src : src}
+        srcSet={optimized?.srcSet}
+        sizes={optimized?.sizes}
+        alt={alt}
+        title={title}
+        width={dimensions?.width}
+        height={dimensions?.height}
+        loading={optimized ? "lazy" : undefined}
+        decoding={optimized ? "async" : undefined}
+      />
+    </a>
   );
 };

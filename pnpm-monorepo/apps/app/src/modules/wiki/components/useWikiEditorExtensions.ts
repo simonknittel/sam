@@ -16,6 +16,7 @@ import { WikiCitizenMentionSuggestion } from "./WikiCitizenMentionSuggestion";
 import { WikiDetailsSummaryToggle } from "./WikiDetailsSummaryToggle";
 import { createWikiFileHandler } from "./wikiEditorFiles";
 import { WikiHiddenTrailingParagraph } from "./WikiHiddenTrailingParagraph";
+import { withWikiImageOptimization } from "./WikiImageNodeView";
 import { WikiNodeClickSelection } from "./WikiNodeClickSelection";
 import type { WikiPageIndexEntry } from "./WikiPageIndexList";
 import { withWikiPageIndexNodeView } from "./WikiPageIndexNodeView";
@@ -24,6 +25,7 @@ import type { WikiRoleCitizen } from "./WikiRoleCitizensList";
 import { withWikiRoleCitizensNodeView } from "./WikiRoleCitizensNodeView";
 import { WikiSlashCommand } from "./WikiSlashCommand";
 import { withWikiVariantLinkNodeView } from "./WikiVariantLinkNodeView";
+import type { WikiImageDimensions } from "../utils/wikiImageRendering";
 
 interface Options {
   readonly pageId: string;
@@ -42,6 +44,11 @@ interface Options {
    * the node views' initial data
    */
   readonly roleCitizens: Readonly<Record<string, WikiRoleCitizen[]>>;
+  /**
+   * Intrinsic dimensions of the page's uploaded images, by upload id —
+   * lets the image node view serve optimized images
+   */
+  readonly imageDimensions: Readonly<Record<string, WikiImageDimensions>>;
   readonly collaboration?: boolean;
   /** Include the editing helpers (slash menu, suggestions, uploads)? */
   readonly interactive: boolean;
@@ -70,6 +77,7 @@ export const useWikiEditorExtensions = ({
   linkedVariants,
   pageIndexes,
   roleCitizens,
+  imageDimensions,
   collaboration = false,
   interactive,
   canUploadImages,
@@ -80,24 +88,27 @@ export const useWikiEditorExtensions = ({
 }: Options): AnyExtension[] => {
   const trpcUtils = api.useUtils();
 
-  const baseExtensions = withWikiPageIndexNodeView(
-    withWikiRoleCitizensNodeView(
-      withWikiVariantLinkNodeView(
-        withWikiCitizenMentionPopover(
-          getWikiEditorExtensions({
-            collaboration,
-            twitchParentHost: getWikiTwitchParentHost(),
-            iframeAllowlist,
-            pages: linkablePages,
-            citizens: mentionedCitizens,
-            variants: linkedVariants,
-          }),
+  const baseExtensions = withWikiImageOptimization(
+    withWikiPageIndexNodeView(
+      withWikiRoleCitizensNodeView(
+        withWikiVariantLinkNodeView(
+          withWikiCitizenMentionPopover(
+            getWikiEditorExtensions({
+              collaboration,
+              twitchParentHost: getWikiTwitchParentHost(),
+              iframeAllowlist,
+              pages: linkablePages,
+              citizens: mentionedCitizens,
+              variants: linkedVariants,
+            }),
+          ),
         ),
+        roleCitizens,
       ),
-      roleCitizens,
+      pageId,
+      pageIndexes,
     ),
-    pageId,
-    pageIndexes,
+    imageDimensions,
   );
 
   return [

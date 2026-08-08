@@ -356,6 +356,7 @@ const PageContent = async ({
               linkedVariants={staticContent.linkedVariants}
               pageIndexes={staticContent.pageIndexes}
               roleCitizens={staticContent.roleCitizens}
+              imageDimensions={staticContent.imageDimensions}
               staticFallback={
                 <WikiPageStaticContent pageId={page.id} {...staticContent} />
               }

@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 import { env } from "./src/env";
+import {
+  IMAGE_OPTIMIZER_DEVICE_SIZES,
+  IMAGE_OPTIMIZER_IMAGE_SIZES,
+} from "./src/modules/common/utils/imageOptimizer";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -27,6 +31,10 @@ const nextConfig: NextConfig = {
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
     qualities: [75, 100],
+    // The Next.js defaults, pinned because hand-built srcsets depend on
+    // them (see imageOptimizer.ts)
+    deviceSizes: [...IMAGE_OPTIMIZER_DEVICE_SIZES],
+    imageSizes: [...IMAGE_OPTIMIZER_IMAGE_SIZES],
   },
 
   poweredByHeader: false,
