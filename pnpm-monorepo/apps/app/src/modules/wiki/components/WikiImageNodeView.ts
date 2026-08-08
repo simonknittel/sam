@@ -24,6 +24,7 @@ const createWikiImageNodeView =
     getImageDimensions: () => Readonly<Record<string, WikiImageDimensions>>,
   ): NodeViewRenderer =>
   ({ node }) => {
+    let renderedNode = node;
     const renderNode = (rendering: ProseMirrorNode): HTMLElement => {
       /**
        * Serialized into an inert document: an img created in the live
@@ -65,11 +66,19 @@ const createWikiImageNodeView =
     return {
       dom: renderNode(node),
       /**
-       * Attribute changes (resize drags, alignment) recreate the node view
-       * — the same redraw ProseMirror performed before this node view
-       * existed, so re-anchoring behaviors keep working unchanged.
+       * Mirrors how ProseMirror treated the node before this node view
+       * existed: attribute changes (resize drags, alignment) recreate the
+       * DOM, everything else — decoration changes above all — keeps it.
+       * Recreating on decoration changes would loop: the active-node
+       * highlight decorates the hovered block, and the overlays re-anchor
+       * on every redraw.
        */
-      update: () => false,
+      update: (updatedNode) => {
+        if (updatedNode.type !== renderedNode.type) return false;
+        if (!updatedNode.sameMarkup(renderedNode)) return false;
+        renderedNode = updatedNode;
+        return true;
+      },
       ignoreMutation: () => true,
     };
   };
