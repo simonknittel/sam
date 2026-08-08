@@ -17,6 +17,9 @@ import { MAX_IMAGE_SIZE_BYTES } from "./uploadConstraints";
  */
 const MAX_DIMENSION_PX = 100_000;
 
+/** Same bound the backfill script uses for its fetches */
+const S3_REQUEST_TIMEOUT_MS = 30_000;
+
 const isPlausibleDimension = (value: number | undefined): value is number =>
   value !== undefined &&
   Number.isInteger(value) &&
@@ -66,6 +69,7 @@ export const probeUploadImageDimensions = (uploadId: string) => {
           Bucket: env.S3_BUCKET_NAME,
           Key: uploadId,
         }),
+        { abortSignal: AbortSignal.timeout(S3_REQUEST_TIMEOUT_MS) },
       );
       if (
         head.ContentLength === undefined ||
@@ -75,6 +79,14 @@ export const probeUploadImageDimensions = (uploadId: string) => {
           uploadId,
           contentLength: head.ContentLength,
         });
+        if (head.ContentLength !== undefined) {
+          // Still replace the unverified client-declared size with the
+          // object's actual one
+          await prisma.upload.update({
+            where: { id: uploadId },
+            data: { size: head.ContentLength },
+          });
+        }
         return;
       }
 
@@ -83,8 +95,21 @@ export const probeUploadImageDimensions = (uploadId: string) => {
           Bucket: env.S3_BUCKET_NAME,
           Key: uploadId,
         }),
+        { abortSignal: AbortSignal.timeout(S3_REQUEST_TIMEOUT_MS) },
       );
       if (!object.Body) return;
+      // Re-checked on the GET: the object can be replaced between the two
+      // requests (the presigned PUT URL stays valid for a while)
+      if (
+        object.ContentLength !== undefined &&
+        object.ContentLength > MAX_IMAGE_SIZE_BYTES
+      ) {
+        log.warn("Skipped image dimension probe for oversized upload", {
+          uploadId,
+          contentLength: object.ContentLength,
+        });
+        return;
+      }
       const bytes = await object.Body.transformToByteArray();
 
       const metadata = await sharp(bytes).metadata();

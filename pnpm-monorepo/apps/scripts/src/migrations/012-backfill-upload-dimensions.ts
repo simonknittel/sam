@@ -19,6 +19,7 @@ const MAX_IMAGE_SIZE_BYTES = 25 * 1024 * 1024;
 const MAX_DIMENSION_PX = 100_000;
 const CONCURRENCY = 5;
 const FETCH_TIMEOUT_MS = 30_000;
+const PROGRESS_LOG_INTERVAL = 25;
 
 const publicUrlHost = process.env.NEXT_PUBLIC_S3_PUBLIC_URL;
 if (!publicUrlHost) throw new Error("NEXT_PUBLIC_S3_PUBLIC_URL is not set");
@@ -50,11 +51,16 @@ async function backfillUpload(uploadId: string) {
     return;
   }
 
-  const contentLength = Number(response.headers.get("content-length"));
+  const contentLengthHeader = response.headers.get("content-length");
+  if (contentLengthHeader === null) {
+    skipped.push({ uploadId, reason: "unknown content length" });
+    return;
+  }
+  const contentLength = Number(contentLengthHeader);
   if (!Number.isFinite(contentLength) || contentLength > MAX_IMAGE_SIZE_BYTES) {
     skipped.push({
       uploadId,
-      reason: `oversized or unknown content length (${contentLength})`,
+      reason: `oversized or unknown content length (${contentLengthHeader})`,
     });
     return;
   }
@@ -77,7 +83,9 @@ async function backfillUpload(uploadId: string) {
 
   await prisma.upload.update({
     where: { id: uploadId },
-    data: { width, height, size: contentLength },
+    // The buffered length is authoritative; the header is only trusted as
+    // an upper bound before buffering
+    data: { width, height, size: bytes.byteLength },
   });
   backfilled += 1;
 }
@@ -102,7 +110,7 @@ async function main() {
           skipped.push({ uploadId, reason: String(error) });
         }
         const processed = backfilled + skipped.length;
-        if (processed % 25 === 0)
+        if (processed % PROGRESS_LOG_INTERVAL === 0)
           console.log(`${processed}/${uploads.length} processed`);
       }
     }),
