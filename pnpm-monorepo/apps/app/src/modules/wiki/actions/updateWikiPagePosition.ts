@@ -43,7 +43,7 @@ export const updateWikiPagePosition = createAuthenticatedAction(
   async (formData, authentication, data, t) => {
     const scoped = await getWikiPageScopedContext(data.id);
     if (!scoped)
-      return { error: t("Common.forbidden"), requestPayload: formData };
+      return { error: t("Common.badRequest"), requestPayload: formData };
     const context = scoped.context;
 
     const page = context.pagesById.get(data.id);
@@ -140,8 +140,8 @@ export const updateWikiPagePosition = createAuthenticatedAction(
       ? scoped.scope === WikiScope.Event
         ? buildEventWikiPageMoveReset(context.allPages, page.id)
         : buildWikiPageMoveReset(
-            context.allPages,
-            page,
+            scoped.context.allPages,
+            scoped.context.pagesById.get(page.id)!,
             newParentId,
             updatedById,
           )
@@ -156,6 +156,7 @@ export const updateWikiPagePosition = createAuthenticatedAction(
           type: AuditEventType.WIKI_PAGE_MOVED,
           data: {
             pageId: page.id,
+            eventId: page.eventId ?? undefined,
             previousParentId: page.parentId,
             newParentId,
           },
@@ -163,7 +164,12 @@ export const updateWikiPagePosition = createAuthenticatedAction(
         },
         ...reset.subtreeIds.map((id) => ({
           type: AuditEventType.WIKI_PAGE_PERMISSIONS_RESET_BY_MOVE as const,
-          data: { pageId: id, movedPageId: page.id, newParentId },
+          data: {
+            pageId: id,
+            eventId: page.eventId ?? undefined,
+            movedPageId: page.id,
+            newParentId,
+          },
           createdById: authentication.session.user.id,
         })),
       ]);

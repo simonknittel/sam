@@ -35,7 +35,9 @@ export const generateMetadata = async (
 export default async function Page(
   props: PageProps<"/app/events/[id]/briefing/[pageId]/snapshots">,
 ) {
-  await requireAuthenticationPage("/app/events/[id]/briefing/[pageId]/snapshots");
+  await requireAuthenticationPage(
+    "/app/events/[id]/briefing/[pageId]/snapshots",
+  );
 
   const result = await getAdministrablePage(props.params);
   /**
@@ -54,6 +56,7 @@ export default async function Page(
       <WikiSnapshotsTable
         page={result.page}
         pageHref={buildWikiPageHref(hrefMode, result.page)}
+        canRestore={!result.context.frozen}
       />
     </SuspenseWithErrorBoundaryTile>
   );

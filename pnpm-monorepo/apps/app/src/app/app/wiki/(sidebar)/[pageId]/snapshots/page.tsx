@@ -38,7 +38,7 @@ export default async function Page(
 
   return (
     <SuspenseWithErrorBoundaryTile>
-      <WikiSnapshotsTable page={page} />
+      <WikiSnapshotsTable page={page} canRestore />
     </SuspenseWithErrorBoundaryTile>
   );
 }

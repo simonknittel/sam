@@ -2,6 +2,7 @@ import { prisma } from "@/db";
 import { env } from "@/env";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
+import type { WikiSharedContextPage } from "@/modules/wiki/queries/getWikiContext";
 import { getWikiPageScopedContext } from "@/modules/wiki/queries/getWikiPageScopedContext";
 import { getAccessibleWikiPage } from "@/modules/wiki/utils/getAccessibleWikiPage";
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
@@ -60,7 +61,11 @@ export async function GET(_request: Request, props: { params: Params }) {
       const scoped = await getWikiPageScopedContext(linked.id);
       if (
         scoped &&
-        getAccessibleWikiPage(scoped.context, linked.id, "read") !== null
+        getAccessibleWikiPage<WikiSharedContextPage>(
+          scoped.context,
+          linked.id,
+          "read",
+        ) !== null
       ) {
         allowed = true;
         break;

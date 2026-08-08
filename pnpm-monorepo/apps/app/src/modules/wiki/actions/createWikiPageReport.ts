@@ -42,7 +42,7 @@ export const createWikiPageReport = createAuthenticatedAction(
     const scoped = await getWikiPageScopedContext(data.pageId);
     const citizenId = authentication.session.entity?.id;
     if (!scoped || !citizenId)
-      return { error: t("Common.forbidden"), requestPayload: formData };
+      return { error: t("Common.notFound"), requestPayload: formData };
     const context = scoped.context;
 
     const page = context.pagesById.get(data.pageId);
@@ -93,6 +93,7 @@ export const createWikiPageReport = createAuthenticatedAction(
         data: {
           reportId: report.id,
           pageId: page.id,
+          eventId: page.eventId ?? undefined,
           ...(upload && { uploadId: upload.id }),
         },
         createdById: authentication.session.user.id,

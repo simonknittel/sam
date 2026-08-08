@@ -1,5 +1,4 @@
 import { prisma } from "@/db";
-import { env } from "@/env";
 import { authenticate } from "@/modules/auth/server";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { EditableInput } from "@/modules/common/components/form/EditableInput";
@@ -16,9 +15,9 @@ import { getWikiFavoritePageIds } from "../queries/getWikiFavorites";
 import { collectWikiPageDescendants } from "../utils/collectWikiPageDescendants";
 import { getEffectiveEventWikiScope } from "../utils/getEffectiveEventWikiScope";
 import { getEventWikiPositionOptions } from "../utils/getEventWikiPositionOptions";
-import { getWikiCollabColor } from "../utils/getWikiCollabColor";
 import { getManageableWikiPageTargets } from "../utils/getWikiPageTargets";
 import { isEventWikiRootPage } from "../utils/isEventWikiRootPage";
+import type { ResolvedEventWikiPagePermissions } from "../utils/resolveEventWikiPagePermissions";
 import { trackWikiPageVisit } from "../utils/trackWikiPageVisit";
 import { createEventWikiHrefMode } from "../utils/wikiPageHref";
 import { DeleteWikiPageModal } from "./DeleteWikiPageModal";
@@ -26,19 +25,22 @@ import { DuplicateWikiPageModal } from "./DuplicateWikiPageModal";
 import { EventWikiPagePermissionsModal } from "./EventWikiPagePermissionsModal";
 import { MoveWikiPageModal } from "./MoveWikiPageModal";
 import { ReportWikiPageModal } from "./ReportWikiPageModal";
-import { WikiCollabEditor } from "./WikiCollabEditor";
 import { WikiEditModeProvider } from "./WikiEditModeProvider";
 import { WikiEditModeToggle } from "./WikiEditModeToggle";
+import {
+  getWikiCollabUrl,
+  WikiPageEditorSection,
+} from "./WikiPageEditorSection";
 import { WikiPageExportImportModal } from "./WikiPageExportImportModal";
 import { WikiPageFavoriteButton } from "./WikiPageFavoriteButton";
 import { WikiPageIconButton } from "./WikiPageIconButton";
 import { WikiPageSidebarModeModal } from "./WikiPageSidebarModeModal";
-import { WikiPageStaticContent } from "./WikiPageStaticContent";
 import { WikiPageTags } from "./WikiPageTags";
 
 interface Props {
   readonly context: EventWikiContext;
   readonly page: EventWikiContextPage;
+  readonly permissions: ResolvedEventWikiPagePermissions;
 }
 
 /**
@@ -46,7 +48,11 @@ interface Props {
  * root route (which serves the locked root page) and the child page route.
  * Callers must have checked the viewer's read permission.
  */
-export const EventWikiPageContent = async ({ context, page }: Props) => {
+export const EventWikiPageContent = async ({
+  context,
+  page,
+  permissions,
+}: Props) => {
   const [staticContent, favoritePageIds, authentication, pageTags] =
     await Promise.all([
       getEventWikiPageStaticContent(context, page.id),
@@ -59,7 +65,6 @@ export const EventWikiPageContent = async ({ context, page }: Props) => {
       }),
     ]);
 
-  const permissions = context.permissions.get(page.id);
   const session = authentication ? authentication.session : null;
   trackWikiPageVisit(session?.entity?.id ?? null, page.id);
 
@@ -73,8 +78,8 @@ export const EventWikiPageContent = async ({ context, page }: Props) => {
    * affordances hide on it explicitly.
    */
   const canMutateStructure =
-    permissions?.canAdmin === true && !context.frozen && !isRootPage;
-  const canAdministrate = permissions?.canAdmin === true;
+    permissions.canAdmin && !context.frozen && !isRootPage;
+  const canAdministrate = permissions.canAdmin;
 
   const descendantIds = collectWikiPageDescendants(context.pages, page.id);
 
@@ -90,20 +95,12 @@ export const EventWikiPageContent = async ({ context, page }: Props) => {
    * Unlike moving, duplicating into the page's own subtree is fine — the
    * copy is a new page, so no cycle can occur.
    */
-  const duplicateTargets =
-    canAdministrate && !context.frozen
-      ? getManageableWikiPageTargets(context)
-      : [];
+  const canDuplicate = canAdministrate && !context.frozen;
+  const duplicateTargets = canDuplicate
+    ? getManageableWikiPageTargets(context)
+    : [];
 
-  /**
-   * Editing requires the collab server — without it (e.g. a preview
-   * deployment missing the env vars) the briefing is read-only, like the
-   * wiki.
-   */
-  const collabUrl =
-    env.COLLAB_JWT_SECRET && env.NEXT_PUBLIC_COLLAB_URL
-      ? env.NEXT_PUBLIC_COLLAB_URL
-      : null;
+  const collabUrl = getWikiCollabUrl();
 
   return (
     /**
@@ -133,6 +130,11 @@ export const EventWikiPageContent = async ({ context, page }: Props) => {
               )}
             </h1>
 
+            {/**
+             * Unlike the global page header there is no details popover:
+             * its tRPC route resolves via the global context and would 404
+             * for event pages. Mounting it needs a scope-aware route first.
+             */}
             <p className="mt-1 text-xs text-white/20">
               <span className="uppercase font-mono">Aktualisiert:</span>{" "}
               {formatDate(page.updatedAt)}
@@ -140,7 +142,7 @@ export const EventWikiPageContent = async ({ context, page }: Props) => {
           </div>
 
           <div className="flex flex-wrap gap-1">
-            {permissions?.canEdit && collabUrl && <WikiEditModeToggle />}
+            {permissions.canEdit && collabUrl && <WikiEditModeToggle />}
 
             <WikiPageFavoriteButton
               pageId={page.id}
@@ -149,7 +151,7 @@ export const EventWikiPageContent = async ({ context, page }: Props) => {
 
             <ReportWikiPageModal pageId={page.id} title={page.title} />
 
-            {canAdministrate && !context.frozen && (
+            {canDuplicate && (
               <DuplicateWikiPageModal
                 pageId={page.id}
                 title={page.title}
@@ -201,13 +203,13 @@ export const EventWikiPageContent = async ({ context, page }: Props) => {
                   parentPositionId: position.parentPositionId,
                 }))}
                 inheritedFrom={{
-                  read: sourceTitle(permissions?.readScopeSourceId),
-                  edit: sourceTitle(permissions?.editScopeSourceId),
+                  read: sourceTitle(permissions.readScopeSourceId),
+                  edit: sourceTitle(permissions.editScopeSourceId),
                   imageUploadability: sourceTitle(
-                    permissions?.imageUploadabilitySourceId,
+                    permissions.imageUploadabilitySourceId,
                   ),
                   attachmentUploadability: sourceTitle(
-                    permissions?.attachmentUploadabilitySourceId,
+                    permissions.attachmentUploadabilitySourceId,
                   ),
                 }}
                 parentReadScope={
@@ -232,7 +234,11 @@ export const EventWikiPageContent = async ({ context, page }: Props) => {
             )}
 
             {canAdministrate && (
-              <WikiPageExportImportModal pageId={page.id} title={page.title} />
+              <WikiPageExportImportModal
+                pageId={page.id}
+                title={page.title}
+                canImport={!context.frozen}
+              />
             )}
           </div>
         </div>
@@ -241,36 +247,17 @@ export const EventWikiPageContent = async ({ context, page }: Props) => {
           className="mt-1"
           pageId={page.id}
           tags={pageTags.map((entry) => entry.tag)}
-          canEdit={permissions?.canEdit === true}
-          eventId={context.event.id}
+          canEdit={permissions.canEdit}
         />
 
         <div className="mt-4">
-          {collabUrl ? (
-            <WikiCollabEditor
-              key={page.id}
-              pageId={page.id}
-              collabUrl={collabUrl}
-              canEdit={permissions?.canEdit === true}
-              canUploadImages={permissions?.canUploadImages === true}
-              canUploadAttachments={permissions?.canUploadAttachments === true}
-              userName={session?.entity?.handle ?? "Unbekannt"}
-              userColor={getWikiCollabColor(
-                session?.entity?.id ?? session?.user.id ?? page.id,
-              )}
-              iframeAllowlist={staticContent.iframeAllowlist}
-              linkablePages={staticContent.linkablePages}
-              mentionedCitizens={staticContent.mentionedCitizens}
-              linkedVariants={staticContent.linkedVariants}
-              pageIndexes={staticContent.pageIndexes}
-              roleCitizens={staticContent.roleCitizens}
-              staticFallback={
-                <WikiPageStaticContent pageId={page.id} {...staticContent} />
-              }
-            />
-          ) : (
-            <WikiPageStaticContent pageId={page.id} {...staticContent} />
-          )}
+          <WikiPageEditorSection
+            pageId={page.id}
+            canEdit={permissions.canEdit}
+            canUploadImages={permissions.canUploadImages}
+            canUploadAttachments={permissions.canUploadAttachments}
+            staticContent={staticContent}
+          />
         </div>
       </article>
     </WikiEditModeProvider>

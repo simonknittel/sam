@@ -9,6 +9,7 @@ import { z } from "zod";
 import {
   getWikiPageScopedContext,
   getWikiScopeRevalidationPath,
+  isWikiScopeFrozen,
 } from "../queries/getWikiPageScopedContext";
 
 const tagNameSchema = z
@@ -35,12 +36,22 @@ export const updateWikiPageTags = createAuthenticatedAction(
   async (formData, authentication, data, t) => {
     const scoped = await getWikiPageScopedContext(data.id);
     if (!scoped)
-      return { error: t("Common.forbidden"), requestPayload: formData };
+      return { error: t("Common.badRequest"), requestPayload: formData };
     const context = scoped.context;
 
     const page = context.pagesById.get(data.id);
     if (!page || page.deletedAt)
       return { error: t("Common.badRequest"), requestPayload: formData };
+    /**
+     * The freeze would already deny through canEdit (the resolver strips it
+     * on frozen events); the explicit check only yields the events' usual
+     * error message instead of a generic forbidden.
+     */
+    if (isWikiScopeFrozen(scoped))
+      return {
+        error: "Das Event ist bereits vorbei.",
+        requestPayload: formData,
+      };
     if (!context.permissions.get(page.id)?.canEdit)
       return { error: t("Common.forbidden"), requestPayload: formData };
 
@@ -146,6 +157,7 @@ export const updateWikiPageTags = createAuthenticatedAction(
         type: AuditEventType.WIKI_PAGE_TAGS_UPDATED,
         data: {
           pageId: page.id,
+          eventId: page.eventId ?? undefined,
           addedTagNames: addedTags.map((tag) => tag.name),
           removedTagNames: removedAssignments.map(
             (assignment) => assignment.tag.name,

@@ -23,7 +23,7 @@ const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365;
 
 export const serializeWikiShowHiddenPagesCookie = (
   showHidden: boolean,
-  scope: WikiScope = WikiScope.Wiki,
+  scope: WikiScope,
 ) => {
   const [name, path] =
     scope === WikiScope.Event

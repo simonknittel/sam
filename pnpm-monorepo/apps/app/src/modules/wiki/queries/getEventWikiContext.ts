@@ -15,17 +15,16 @@ import {
   type EventWikiViewer,
   type ResolvedEventWikiPagePermissions,
 } from "../utils/resolveEventWikiPagePermissions";
-import type { WikiContextPage } from "./getWikiContext";
+import type { WikiSharedContextPage } from "./getWikiContext";
 
 /**
- * Same shape as the global context pages (so the tree, breadcrumb and
- * sidebar utilities work on both) plus the event scope configuration. The
- * role-based fields are loaded but unused in the EVENT namespace.
+ * The shared page shape (so the tree, breadcrumb and sidebar utilities work
+ * on both contexts) plus the event scope configuration. The role-based
+ * columns are never loaded in the EVENT namespace.
  */
-export type EventWikiContextPage = WikiContextPage &
+export type EventWikiContextPage = WikiSharedContextPage &
   Pick<
     WikiPage,
-    | "eventId"
     | "eventReadScope"
     | "eventReadScopePositionId"
     | "eventEditScope"
@@ -68,6 +67,19 @@ export interface EventWikiContext {
   /** Effective permissions of the current viewer for every page */
   permissions: Map<string, ResolvedEventWikiPagePermissions>;
 }
+
+/**
+ * The briefing gate: the event has a root page and the viewer can read it.
+ * Holding a context (= `event;read`) is not enough — surfaces behind the
+ * gate (layout, search, tag names, metadata) must behave as if the briefing
+ * did not exist while this is false, or an unpublished briefing's existence
+ * and tag names would leak to every `event;read` holder.
+ */
+export const hasReadableEventWikiRoot = (
+  context: EventWikiContext,
+): context is EventWikiContext & { rootPage: EventWikiContextPage } =>
+  context.rootPage !== null &&
+  context.permissions.get(context.rootPage.id)?.canRead === true;
 
 /**
  * Loads one event's wiki pages and resolves the current viewer's effective
@@ -117,14 +129,11 @@ export const getEventWikiContext = cache(
           select: {
             id: true,
             parentId: true,
-            ownerId: true,
             title: true,
             slug: true,
             iconId: true,
             sortOrder: true,
             sidebarMode: true,
-            visibility: true,
-            editability: true,
             imageUploadability: true,
             attachmentUploadability: true,
             createdAt: true,
@@ -136,14 +145,12 @@ export const getEventWikiContext = cache(
             eventReadScopePositionId: true,
             eventEditScope: true,
             eventEditScopePositionId: true,
-            roleAccess: { select: { roleId: true, type: true } },
           },
         }),
       ]);
       if (!event) return null;
 
       const viewer: EventWikiViewer = {
-        citizenId,
         isParticipant: participant !== null,
         isEventManager: await isAllowedToManageEvent(event),
         positionScopeIds: collectPositionScopeIdsForCitizen(

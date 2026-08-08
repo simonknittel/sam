@@ -18,18 +18,14 @@ import {
   getWikiPageScopedContext,
   getWikiScopeRevalidationPath,
   isWikiScopeFrozen,
+  type WikiPageScopedContext,
 } from "../queries/getWikiPageScopedContext";
 import {
   resolveWikiPagePlacement,
   WikiPagePlacement,
 } from "../utils/resolveWikiPagePlacement";
 import { slugifyWikiPageTitle } from "../utils/slugifyWikiPageTitle";
-import {
-  buildWikiPageHref,
-  createEventWikiHrefMode,
-  GLOBAL_WIKI_HREF_MODE,
-  WikiScope,
-} from "../utils/wikiPageHref";
+import { getWikiPageRouteHref, WikiScope } from "../utils/wikiPageHref";
 
 const schema = z.object({
   title: z.string().trim().min(1).max(128),
@@ -50,26 +46,19 @@ export const createWikiPage = createAuthenticatedAction(
     /**
      * The parent decides the scope: an event page's children live in the
      * same event wiki. Top-level pages exist only in the global wiki — the
-     * event wikis' single top-level page is the seeded root.
+     * event wikis' single top-level page is the seeded root — so the
+     * no-parent case wraps the global context into the same scoped shape.
      */
-    const scoped = data.parentId
+    const scoped: WikiPageScopedContext | null = data.parentId
       ? await getWikiPageScopedContext(data.parentId)
-      : null;
-    const context = scoped
-      ? scoped.context
-      : data.parentId
-        ? null
-        : await getWikiContext();
-    if (!context)
-      return { error: t("Common.forbidden"), requestPayload: formData };
+      : await getWikiContext().then((context) =>
+          context ? { scope: WikiScope.Wiki, context } : null,
+        );
+    if (!scoped)
+      return { error: t("Common.badRequest"), requestPayload: formData };
+    const context = scoped.context;
 
     if (data.parentId) {
-      if (scoped && isWikiScopeFrozen(scoped))
-        return {
-          error: "Das Event ist bereits vorbei.",
-          requestPayload: formData,
-        };
-
       const placement = resolveWikiPagePlacement(context, data.parentId);
       if (placement !== WikiPagePlacement.Allowed)
         return {
@@ -77,6 +66,11 @@ export const createWikiPage = createAuthenticatedAction(
             placement === WikiPagePlacement.Missing
               ? t("Common.notFound")
               : t("Common.forbidden"),
+          requestPayload: formData,
+        };
+      if (isWikiScopeFrozen(scoped))
+        return {
+          error: "Das Event ist bereits vorbei.",
           requestPayload: formData,
         };
     } else {
@@ -136,26 +130,22 @@ export const createWikiPage = createAuthenticatedAction(
         type: AuditEventType.WIKI_PAGE_CREATED,
         data: {
           pageId: page.id,
+          eventId: parent?.eventId ?? undefined,
           title: data.title,
           parentId: data.parentId ?? null,
-          ...(parent?.eventId ? { eventId: parent.eventId } : {}),
         },
         createdById: authentication.session.user.id,
       },
     ]);
 
-    const hrefMode =
-      scoped?.scope === WikiScope.Event
-        ? createEventWikiHrefMode(
-            scoped.context.event.id,
-            scoped.context.rootPage?.id ?? null,
-          )
-        : GLOBAL_WIKI_HREF_MODE;
-
-    revalidatePath(
-      scoped ? getWikiScopeRevalidationPath(scoped) : "/app/wiki",
-      "layout",
+    revalidatePath(getWikiScopeRevalidationPath(scoped), "layout");
+    /** A newly created page is never an event root page */
+    redirect(
+      getWikiPageRouteHref({
+        id: page.id,
+        slug: page.slug,
+        eventId: parent?.eventId ?? null,
+      }),
     );
-    redirect(buildWikiPageHref(hrefMode, page));
   },
 );

@@ -25,10 +25,16 @@ export default async function Page({
 
   const page = getAccessibleWikiPage(context, context.rootPage?.id, "read");
   if (!page) notFound();
+  const permissions = context.permissions.get(page.id);
+  if (!permissions) notFound();
 
   return (
     <SuspenseWithErrorBoundaryTile>
-      <EventWikiPageContent context={context} page={page} />
+      <EventWikiPageContent
+        context={context}
+        page={page}
+        permissions={permissions}
+      />
     </SuspenseWithErrorBoundaryTile>
   );
 }

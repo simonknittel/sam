@@ -17,8 +17,10 @@ const getVisiblePage = async (params: Params) => {
 
   const page = getAccessibleWikiPage(context, pageId, "read");
   if (!page) return null;
+  const permissions = context.permissions.get(page.id);
+  if (!permissions) return null;
 
-  return { context, page };
+  return { context, page, permissions };
 };
 
 export const generateMetadata = async (
@@ -32,7 +34,9 @@ export const generateMetadata = async (
 export default async function Page(
   props: PageProps<"/app/events/[id]/briefing/[pageId]/[[...slug]]">,
 ) {
-  await requireAuthenticationPage("/app/events/[id]/briefing/[pageId]/[[...slug]]");
+  await requireAuthenticationPage(
+    "/app/events/[id]/briefing/[pageId]/[[...slug]]",
+  );
 
   const result = await getVisiblePage(props.params);
   /**
@@ -40,7 +44,7 @@ export default async function Page(
    */
   if (!result) notFound();
 
-  const { context, page } = result;
+  const { context, page, permissions } = result;
   const { id, slug } = await props.params;
   const basePath = getEventWikiBasePath(id);
 
@@ -50,7 +54,11 @@ export default async function Page(
 
   return (
     <SuspenseWithErrorBoundaryTile>
-      <EventWikiPageContent context={context} page={page} />
+      <EventWikiPageContent
+        context={context}
+        page={page}
+        permissions={permissions}
+      />
     </SuspenseWithErrorBoundaryTile>
   );
 }

@@ -13,7 +13,6 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import {
   getWikiPageScopedContext,
-  getWikiScopeRevalidationPath,
   isWikiScopeFrozen,
 } from "../queries/getWikiPageScopedContext";
 import { getEffectiveEventWikiScope } from "../utils/getEffectiveEventWikiScope";
@@ -43,7 +42,11 @@ const schema = z.object({
 /**
  * Updates an event wiki page's read/edit scopes. No cascading rewrites are
  * needed on scope changes — the resolver's parent-read gate bounds children
- * dynamically, unlike the role model's prune machinery.
+ * dynamically, unlike the role model's prune machinery. Narrowing an
+ * ancestor can therefore strand a descendant's explicit edit scope wider
+ * than its effective read scope: no access leaks (the parent gate denies
+ * first), the descendant's dialog just shows a combination that would not
+ * validate today.
  *
  * Widening the root page's read scope beyond the managers for the first
  * time publishes the briefing: the tab appears for the new audience, who
@@ -55,7 +58,7 @@ export const updateEventWikiPagePermissions = createAuthenticatedAction(
   async (formData, authentication, data, t) => {
     const scoped = await getWikiPageScopedContext(data.id);
     if (!scoped)
-      return { error: t("Common.forbidden"), requestPayload: formData };
+      return { error: t("Common.badRequest"), requestPayload: formData };
     if (scoped.scope !== WikiScope.Event)
       return { error: t("Common.badRequest"), requestPayload: formData };
     const context = scoped.context;
@@ -91,7 +94,9 @@ export const updateEventWikiPagePermissions = createAuthenticatedAction(
     const resolvePositionId = (
       scope: WikiPageEventScope,
       positionId: string | null,
-    ) => {
+    ):
+      | { error: true; value?: never }
+      | { error?: never; value: string | null } => {
       if (scope !== WikiPageEventScope.POSITION) return { value: null };
       if (!positionId || !positionIds.has(positionId)) return { error: true };
       return { value: positionId };
@@ -122,7 +127,7 @@ export const updateEventWikiPagePermissions = createAuthenticatedAction(
 
     const effectiveRead = submittedOrParent(
       data.readScope,
-      readPosition.value ?? null,
+      readPosition.value,
       "read",
     );
 
@@ -153,11 +158,29 @@ export const updateEventWikiPagePermissions = createAuthenticatedAction(
         requestPayload: formData,
       };
 
-    await prisma.wikiPage.update({
+    /**
+     * "Published" means the root page's read scope leaves the managers for
+     * the first time. Recipients are resolved by the notification router
+     * from the scope snapshot, so only those who can now read the briefing
+     * are notified — and only once per event, ever: the claim on
+     * `Event.briefingPublishedAt` is atomic (conditioned on it still being
+     * null) and commits together with the scope change, so concurrent
+     * submissions cannot publish twice and a failed scope update cannot
+     * consume the once-only guard. A crash between the commit and the
+     * EventBridge emit still loses the notification for good — accepted
+     * over the reverse (notifying without the scope actually changing).
+     */
+    const leavesManagers =
+      isRootPage &&
+      data.readScope !== WikiPageEventScope.MANAGERS &&
+      (page.eventReadScope === WikiPageEventScope.MANAGERS ||
+        page.eventReadScope === WikiPageEventScope.INHERIT);
+
+    const scopeUpdate = prisma.wikiPage.update({
       where: { id: page.id },
       data: {
         eventReadScope: data.readScope,
-        eventReadScopePositionId: readPosition.value ?? null,
+        eventReadScopePositionId: readPosition.value,
         eventEditScope: data.editScope,
         eventEditScopePositionId: editPositionId,
         imageUploadability: data.imageUploadability,
@@ -165,6 +188,15 @@ export const updateEventWikiPagePermissions = createAuthenticatedAction(
         updatedById: authentication.session.entity?.id ?? null,
       },
     });
+    const [publishClaim] = leavesManagers
+      ? await prisma.$transaction([
+          prisma.event.updateMany({
+            where: { id: context.event.id, briefingPublishedAt: null },
+            data: { briefingPublishedAt: new Date() },
+          }),
+          scopeUpdate,
+        ])
+      : [null, await scopeUpdate];
 
     await createAuditEvents([
       {
@@ -173,7 +205,7 @@ export const updateEventWikiPagePermissions = createAuthenticatedAction(
           pageId: page.id,
           eventId: context.event.id,
           readScope: data.readScope,
-          readScopePositionId: readPosition.value ?? null,
+          readScopePositionId: readPosition.value,
           editScope: data.editScope,
           editScopePositionId: editPositionId,
           imageUploadability: data.imageUploadability,
@@ -183,36 +215,23 @@ export const updateEventWikiPagePermissions = createAuthenticatedAction(
       },
     ]);
 
-    /**
-     * "Published" means the root page's read scope leaves the managers for
-     * the first time. Recipients are resolved by the notification router
-     * from the scope snapshot, so only those who can now read the briefing
-     * are notified — and only once per event, ever.
-     */
-    const leavesManagers =
-      isRootPage &&
-      data.readScope !== WikiPageEventScope.MANAGERS &&
-      (page.eventReadScope === WikiPageEventScope.MANAGERS ||
-        page.eventReadScope === WikiPageEventScope.INHERIT);
-    if (leavesManagers && context.event.briefingPublishedAt === null) {
-      await prisma.event.update({
-        where: { id: context.event.id },
-        data: { briefingPublishedAt: new Date() },
-      });
-
+    if (publishClaim?.count === 1) {
       await triggerNotifications([
         {
           type: "EventBriefingPublished",
           payload: {
             eventId: context.event.id,
             readScope: data.readScope,
-            readScopePositionId: readPosition.value ?? null,
+            readScopePositionId: readPosition.value,
           },
         },
       ]);
     }
 
-    revalidatePath(getWikiScopeRevalidationPath(scoped), "layout");
+    /**
+     * The event layout (an ancestor of /briefing) revalidates so the tab
+     * and tile gates pick up a widened root scope immediately.
+     */
     revalidatePath(`/app/events/${context.event.id}`, "layout");
 
     return { success: t("Common.successfullySaved") };

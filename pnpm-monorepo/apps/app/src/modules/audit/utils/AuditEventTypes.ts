@@ -120,6 +120,15 @@ export enum AuditEventType {
   WIKI_PAGE_ICON_UPDATED = "WIKI_PAGE_ICON_UPDATED",
 }
 
+/**
+ * Wiki page audit payloads carry the owning event's id so event wiki rows
+ * stay attributable after the event (and its pages) are cascade-deleted.
+ * Absent for global wiki pages and on events from before the event wikis.
+ */
+interface WikiPageAuditScope {
+  eventId?: string;
+}
+
 export interface AuditEventDataByType {
   [AuditEventType.USER_LOGIN]: {
     userId: string;
@@ -714,7 +723,7 @@ export interface AuditEventDataByType {
     userId: string;
   };
 
-  [AuditEventType.WIKI_PAGE_CREATED]: {
+  [AuditEventType.WIKI_PAGE_CREATED]: WikiPageAuditScope & {
     pageId: string;
     title: string;
     parentId: string | null;
@@ -724,19 +733,19 @@ export interface AuditEventDataByType {
     pageId: string;
   };
 
-  [AuditEventType.WIKI_PAGE_RENAMED]: {
+  [AuditEventType.WIKI_PAGE_RENAMED]: WikiPageAuditScope & {
     pageId: string;
     previousTitle: string;
     newTitle: string;
   };
 
-  [AuditEventType.WIKI_PAGE_MOVED]: {
+  [AuditEventType.WIKI_PAGE_MOVED]: WikiPageAuditScope & {
     pageId: string;
     previousParentId: string | null;
     newParentId: string | null;
   };
 
-  [AuditEventType.WIKI_PAGE_DUPLICATED]: {
+  [AuditEventType.WIKI_PAGE_DUPLICATED]: WikiPageAuditScope & {
     /** The newly created page */
     pageId: string;
     sourcePageId: string;
@@ -770,7 +779,10 @@ export interface AuditEventDataByType {
     readScopePositionId: string | null;
     editScope: string;
     editScopePositionId: string | null;
-    /** Absent on events from before the upload tiers reached event pages */
+    /**
+     * Absent only on dev rows written mid-branch, before the feedback round
+     * added the uploadability tiers to event pages
+     */
     imageUploadability?: string;
     attachmentUploadability?: string;
   };
@@ -792,7 +804,7 @@ export interface AuditEventDataByType {
    * A moved page and its subtree take the permissions of their new place, so
    * every page in it loses its own settings and role lists.
    */
-  [AuditEventType.WIKI_PAGE_PERMISSIONS_RESET_BY_MOVE]: {
+  [AuditEventType.WIKI_PAGE_PERMISSIONS_RESET_BY_MOVE]: WikiPageAuditScope & {
     pageId: string;
     /** The page that was moved; equals pageId for the moved page itself */
     movedPageId: string;
@@ -807,19 +819,19 @@ export interface AuditEventDataByType {
     cascaded: boolean;
   };
 
-  [AuditEventType.WIKI_PAGE_DELETED]: {
+  [AuditEventType.WIKI_PAGE_DELETED]: WikiPageAuditScope & {
     pageId: string;
     title: string;
     subtreePageIds: string[];
   };
 
-  [AuditEventType.WIKI_PAGE_RESTORED]: {
+  [AuditEventType.WIKI_PAGE_RESTORED]: WikiPageAuditScope & {
     pageId: string;
     title: string;
     restoredPageIds: string[];
   };
 
-  [AuditEventType.WIKI_PAGE_DESTROYED]: {
+  [AuditEventType.WIKI_PAGE_DESTROYED]: WikiPageAuditScope & {
     pageId: string;
     title: string;
     destroyedPageIds: string[];
@@ -832,7 +844,7 @@ export interface AuditEventDataByType {
     value: string | string[] | null;
   };
 
-  [AuditEventType.WIKI_PAGE_REPORTED]: {
+  [AuditEventType.WIKI_PAGE_REPORTED]: WikiPageAuditScope & {
     reportId: string;
     pageId: string;
     /** Set when the report targets a file attachment on the page */
@@ -844,28 +856,28 @@ export interface AuditEventDataByType {
     pageId: string;
   };
 
-  [AuditEventType.WIKI_PAGE_SNAPSHOT_RESTORED]: {
+  [AuditEventType.WIKI_PAGE_SNAPSHOT_RESTORED]: WikiPageAuditScope & {
     pageId: string;
     snapshotId: string;
   };
 
-  [AuditEventType.WIKI_PAGE_CONTENT_IMPORTED]: {
+  [AuditEventType.WIKI_PAGE_CONTENT_IMPORTED]: WikiPageAuditScope & {
     pageId: string;
   };
 
-  [AuditEventType.WIKI_PAGE_SIDEBAR_MODE_UPDATED]: {
+  [AuditEventType.WIKI_PAGE_SIDEBAR_MODE_UPDATED]: WikiPageAuditScope & {
     pageId: string;
     previousSidebarMode: string;
     newSidebarMode: string;
   };
 
-  [AuditEventType.WIKI_PAGE_TAGS_UPDATED]: {
+  [AuditEventType.WIKI_PAGE_TAGS_UPDATED]: WikiPageAuditScope & {
     pageId: string;
     addedTagNames: string[];
     removedTagNames: string[];
   };
 
-  [AuditEventType.WIKI_PAGE_ICON_UPDATED]: {
+  [AuditEventType.WIKI_PAGE_ICON_UPDATED]: WikiPageAuditScope & {
     pageId: string;
     /** The assigned upload, or null when the icon was removed */
     iconId: string | null;

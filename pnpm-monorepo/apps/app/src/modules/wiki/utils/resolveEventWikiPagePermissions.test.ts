@@ -24,7 +24,6 @@ const page = (
 });
 
 const viewer = (overrides: Partial<EventWikiViewer> = {}): EventWikiViewer => ({
-  citizenId: "viewer",
   isParticipant: false,
   isEventManager: false,
   positionScopeIds: new Set(),
@@ -137,6 +136,35 @@ describe("resolve event wiki page permissions", () => {
 
     expect(asParticipant.get("root")).toMatchObject({ canRead: false });
     expect(asManager.get("root")).toMatchObject({ canRead: true });
+  });
+
+  test("edit scope POSITION grants subtree members editing and, implied, reading", () => {
+    const pages = [
+      page({
+        id: "root",
+        eventReadScope: WikiPageEventScope.MANAGERS,
+        eventEditScope: WikiPageEventScope.POSITION,
+        eventEditScopePositionId: "squad",
+      }),
+    ] as const;
+
+    const asMember = resolve(
+      pages,
+      viewer({ positionScopeIds: new Set(["squad", "wing"]) }),
+    );
+    const asSibling = resolve(
+      pages,
+      viewer({ positionScopeIds: new Set(["wing"]) }),
+    );
+
+    expect(asMember.get("root")).toMatchObject({
+      canRead: true,
+      canEdit: true,
+    });
+    expect(asSibling.get("root")).toMatchObject({
+      canRead: false,
+      canEdit: false,
+    });
   });
 
   test("a page grants nothing to someone who cannot read its parent", () => {

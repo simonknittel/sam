@@ -6,7 +6,8 @@ import { formatDate } from "@/modules/common/utils/formatDate";
 import { WikiPageSnapshotKind } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import { FaArrowLeft } from "react-icons/fa";
-import type { WikiContextPage } from "../queries/getWikiContext";
+import type { WikiSharedContextPage } from "../queries/getWikiContext";
+import { getWikiPageRouteHref } from "../utils/wikiPageHref";
 import { WikiPageIcon } from "./WikiPageIcon";
 import { WikiSnapshotRestoreButton } from "./WikiSnapshotRestoreButton";
 
@@ -15,9 +16,11 @@ const GRID_COLS = "grid-cols-[minmax(200px,_1fr)_120px_160px_160px_180px]";
 
 interface Props {
   readonly className?: string;
-  readonly page: WikiContextPage;
-  /** Route of the page, e.g. its event route; defaults to the wiki route */
+  readonly page: WikiSharedContextPage;
+  /** Route of the page, e.g. its event root route; defaults to the id-URL */
   readonly pageHref?: string;
+  /** Restoring is a mutation — frozen event pages only view their history */
+  readonly canRestore: boolean;
 }
 
 /**
@@ -29,6 +32,7 @@ export const WikiSnapshotsTable = async ({
   className,
   page,
   pageHref,
+  canRestore,
 }: Props) => {
   const snapshots = await prisma.wikiPageSnapshot.findMany({
     where: { pageId: page.id },
@@ -48,7 +52,7 @@ export const WikiSnapshotsTable = async ({
         <h1 className="font-bold text-2xl">Snapshots</h1>
 
         <Link
-          href={pageHref ?? `/app/wiki/${page.id}/${page.slug}`}
+          href={pageHref ?? getWikiPageRouteHref(page)}
           className="flex items-center gap-1 text-sm text-interaction-500 hover:text-interaction-300"
         >
           <FaArrowLeft className="text-xs" />
@@ -79,7 +83,11 @@ export const WikiSnapshotsTable = async ({
 
         <TBody>
           {snapshots.map((snapshot) => (
-            <SnapshotRow key={snapshot.id} snapshot={snapshot} />
+            <SnapshotRow
+              key={snapshot.id}
+              snapshot={snapshot}
+              canRestore={canRestore}
+            />
           ))}
         </TBody>
       </Table>
@@ -102,9 +110,10 @@ interface SnapshotRowProps {
       readonly handle: string | null;
     } | null;
   };
+  readonly canRestore: boolean;
 }
 
-const SnapshotRow = ({ snapshot }: SnapshotRowProps) => {
+const SnapshotRow = ({ snapshot, canRestore }: SnapshotRowProps) => {
   const name = snapshot.name || "Automatischer Snapshot";
 
   return (
@@ -132,7 +141,9 @@ const SnapshotRow = ({ snapshot }: SnapshotRowProps) => {
       </td>
 
       <td>
-        <WikiSnapshotRestoreButton snapshotId={snapshot.id} name={name} />
+        {canRestore && (
+          <WikiSnapshotRestoreButton snapshotId={snapshot.id} name={name} />
+        )}
       </td>
     </TRow>
   );

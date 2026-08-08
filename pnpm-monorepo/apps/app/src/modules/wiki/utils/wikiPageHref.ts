@@ -10,6 +10,12 @@ export enum WikiScope {
 
 export interface WikiPageHrefMode {
   readonly scope: WikiScope;
+  /**
+   * The owning event in the Event scope, so client components can scope
+   * their queries (tags, search, page targets) without a parallel prop;
+   * null for the global wiki
+   */
+  readonly eventId: string | null;
   /** Route prefix all page URLs live under */
   readonly basePath: string;
   /**
@@ -22,6 +28,7 @@ export interface WikiPageHrefMode {
 
 export const GLOBAL_WIKI_HREF_MODE: WikiPageHrefMode = {
   scope: WikiScope.Wiki,
+  eventId: null,
   basePath: "/app/wiki",
   rootPageId: null,
 };
@@ -34,6 +41,7 @@ export const createEventWikiHrefMode = (
   rootPageId: string | null,
 ): WikiPageHrefMode => ({
   scope: WikiScope.Event,
+  eventId,
   basePath: getEventWikiBasePath(eventId),
   rootPageId,
 });

@@ -1,4 +1,8 @@
 import { log } from "@/modules/logging";
+import {
+  getEventWikiContext,
+  hasReadableEventWikiRoot,
+} from "@/modules/wiki/queries/getEventWikiContext";
 import { getWikiContext } from "@/modules/wiki/queries/getWikiContext";
 import {
   getManageableWikiPageTargets,
@@ -12,13 +16,27 @@ import { protectedProcedure } from "../../trpc";
 /**
  * Pages in depth-first tree order for hierarchy selects: managed ones for
  * the global "Neue Seite" form (default), readable ones e.g. for the
- * page-index config.
+ * page-index config. An eventId scopes the tree to that event's wiki,
+ * gated like the other event surfaces.
  */
 export const getPageTargets = protectedProcedure
-  .input(z.object({ permission: z.enum(["manage", "read"]) }).optional())
+  .input(
+    z
+      .object({
+        permission: z.enum(["manage", "read"]),
+        eventId: z.cuid().optional(),
+      })
+      .optional(),
+  )
   .query(async ({ input }) => {
     try {
-      const context = await getWikiContext();
+      const context = input?.eventId
+        ? await getEventWikiContext(input.eventId).then((eventContext) =>
+            eventContext && hasReadableEventWikiRoot(eventContext)
+              ? eventContext
+              : null,
+          )
+        : await getWikiContext();
       if (!context) return [];
 
       return input?.permission === "read"

@@ -9,12 +9,13 @@ import {
   WIKI_EXPANDED_PAGES_COOKIE,
   type WikiExpansionState,
 } from "./wikiExpandedPagesCookie";
+import { WikiScope } from "./wikiPageHref";
 
 /** Page ids are 24 character cuid2s, of which only the last 8 are stored */
 const pageId = (key: string) => `prefix0000000000${key}`;
 
 const cookieValue = (state: WikiExpansionState) => {
-  const serialized = serializeWikiExpandedPagesCookie(state);
+  const serialized = serializeWikiExpandedPagesCookie(state, WikiScope.Wiki);
 
   return serialized.slice(
     `${WIKI_EXPANDED_PAGES_COOKIE}=`.length,
@@ -71,9 +72,9 @@ describe("serializeWikiExpandedPagesCookie", () => {
   });
 
   test("expires the cookie when everything is collapsed", () => {
-    expect(serializeWikiExpandedPagesCookie(WIKI_ALL_COLLAPSED)).toContain(
-      "max-age=0",
-    );
+    expect(
+      serializeWikiExpandedPagesCookie(WIKI_ALL_COLLAPSED, WikiScope.Wiki),
+    ).toContain("max-age=0");
   });
 
   test("keeps the most recent entries when the cap is exceeded", () => {

@@ -1,6 +1,6 @@
 import type {
-  WikiContextPage,
   WikiSharedContext,
+  WikiSharedContextPage,
 } from "../queries/getWikiContext";
 
 /**
@@ -10,7 +10,7 @@ import type {
  */
 export const buildVisibleWikiBreadcrumb = (
   context: WikiSharedContext,
-  page: WikiContextPage,
+  page: WikiSharedContextPage,
 ) => {
   const titles: string[] = [];
   const visited = new Set<string>([page.id]);

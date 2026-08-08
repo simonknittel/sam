@@ -25,7 +25,11 @@ export default async function Page({
 
   return (
     <SuspenseWithErrorBoundaryTile>
-      <WikiTrashTable searchParams={searchParams} context={context} />
+      <WikiTrashTable
+        searchParams={searchParams}
+        context={context}
+        canRestore={!context.frozen}
+      />
     </SuspenseWithErrorBoundaryTile>
   );
 }

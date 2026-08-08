@@ -7,7 +7,10 @@ import {
   WIKI_SEARCH_MARK_END,
   WIKI_SEARCH_MARK_START,
 } from "../utils/wikiSearchSnippet";
-import { getEventWikiContext } from "./getEventWikiContext";
+import {
+  getEventWikiContext,
+  hasReadableEventWikiRoot,
+} from "./getEventWikiContext";
 import { getWikiContext, type WikiSharedContext } from "./getWikiContext";
 
 export interface WikiSearchPageResult {
@@ -160,7 +163,12 @@ export const searchWiki = withTrace(
 
     return runWikiSearch(context, query, {
       tagsFilter: Prisma.sql`"eventId" IS NULL`,
-      pagesFilter: Prisma.sql`"namespace" = 'WIKI'`,
+      /**
+       * The namespace alone excludes event pages (a CHECK constraint ties
+       * namespace EVENT to a non-null eventId); the eventId filter makes
+       * the exclusion explicit and index-friendly regardless.
+       */
+      pagesFilter: Prisma.sql`"namespace" = 'WIKI' AND "eventId" IS NULL`,
     });
   },
 );
@@ -171,6 +179,12 @@ export const searchEventWiki = withTrace(
   async (eventId: Event["id"], query: string): Promise<WikiSearchResults> => {
     const context = await getEventWikiContext(eventId);
     if (!context) return EMPTY_RESULTS;
+    /**
+     * Without the briefing gate the page results would come back empty
+     * anyway (parent-read gating), but the unfiltered tag branch would
+     * still hand tag names to `event;read` holders the layout 404s.
+     */
+    if (!hasReadableEventWikiRoot(context)) return EMPTY_RESULTS;
 
     return runWikiSearch(context, query, {
       tagsFilter: Prisma.sql`"eventId" = ${eventId}`,

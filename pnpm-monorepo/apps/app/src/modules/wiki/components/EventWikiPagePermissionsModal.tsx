@@ -90,24 +90,31 @@ export const EventWikiPagePermissionsModal = ({
   parentEditScope,
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [readScope, setReadScope] = useState<string>(initialReadScope);
+  const [readScope, setReadScope] =
+    useState<WikiPageEventScope>(initialReadScope);
   const [readPositionId, setReadPositionId] = useState(
     initialReadPositionId ?? "",
   );
-  const [editScope, setEditScope] = useState<string>(initialEditScope);
+  const [editScope, setEditScope] =
+    useState<WikiPageEventScope>(initialEditScope);
   /**
-   * Seeded root pages store INHERIT, which the root cannot offer (nothing to
-   * inherit from) — show its effective meaning instead: managers only.
+   * A stored INHERIT on a root page (the schema default; the seed writes
+   * RESTRICTED explicitly since the uploadability tiers reached event
+   * pages) cannot be offered — the root has nothing to inherit from — so
+   * show its effective meaning instead: managers only.
    */
   const initialUploadability = (value: WikiPageUploadability) =>
     isRootPage && value === WikiPageUploadability.INHERIT
       ? WikiPageUploadability.RESTRICTED
       : value;
-  const [imageUploadability, setImageUploadability] = useState<string>(
-    initialUploadability(initialImageUploadability),
-  );
+  const [imageUploadability, setImageUploadability] =
+    useState<WikiPageUploadability>(
+      initialUploadability(initialImageUploadability),
+    );
   const [attachmentUploadability, setAttachmentUploadability] =
-    useState<string>(initialUploadability(initialAttachmentUploadability));
+    useState<WikiPageUploadability>(
+      initialUploadability(initialAttachmentUploadability),
+    );
   const { state, formAction, isPending } = useAction(
     updateEventWikiPagePermissions,
     {
@@ -117,15 +124,12 @@ export const EventWikiPagePermissionsModal = ({
   );
 
   const effectiveRead = (
-    scope: string,
+    scope: WikiPageEventScope,
     positionId: string,
   ): EventWikiScopeSelection =>
     scope === WikiPageEventScope.INHERIT
       ? (parentReadScope ?? MANAGERS_ONLY)
-      : {
-          scope: scope as WikiPageEventScope,
-          positionId: positionId || null,
-        };
+      : { scope, positionId: positionId || null };
 
   const currentEffectiveRead = effectiveRead(readScope, readPositionId);
 
@@ -136,7 +140,7 @@ export const EventWikiPagePermissionsModal = ({
    * checks like any other value.
    */
   const isEditChoiceAllowed = (
-    scope: string,
+    scope: WikiPageEventScope,
     read: EventWikiScopeSelection,
   ) => {
     if (scope === WikiPageEventScope.POSITION)
@@ -144,14 +148,17 @@ export const EventWikiPagePermissionsModal = ({
     return isEventWikiScopeSubset(
       scope === WikiPageEventScope.INHERIT
         ? (parentEditScope ?? MANAGERS_ONLY)
-        : { scope: scope as WikiPageEventScope, positionId: null },
+        : { scope, positionId: null },
       read,
       positions,
     );
   };
 
   /** Narrowing the read scope resets an edit choice it no longer contains */
-  const handleReadChange = (nextScope: string, nextPositionId: string) => {
+  const handleReadChange = (
+    nextScope: WikiPageEventScope,
+    nextPositionId: string,
+  ) => {
     setReadScope(nextScope);
     setReadPositionId(nextPositionId);
 
@@ -279,13 +286,13 @@ const inheritedHint = (sourceTitle: string | undefined) =>
 interface ScopeSectionProps {
   readonly legend: string;
   readonly name: string;
-  readonly scope: string;
-  readonly onScopeChange: (scope: string) => void;
+  readonly scope: WikiPageEventScope;
+  readonly onScopeChange: (scope: WikiPageEventScope) => void;
   readonly allowInherit: boolean;
   readonly inheritedFrom?: string;
   readonly positionHint: string;
   /** Drops scope options the subset rule forbids (the edit section) */
-  readonly isOptionAllowed: (scope: string) => boolean;
+  readonly isOptionAllowed: (scope: WikiPageEventScope) => boolean;
   /** Only the read scope picks a group; edit follows the read's */
   readonly positionSelect?: {
     readonly name: string;
@@ -352,7 +359,8 @@ const ScopeSection = ({
         className="mt-2"
         equalWidth
         value={scope}
-        onChange={onScopeChange}
+        /** RadioGroup is string-typed; the items only carry enum values */
+        onChange={(next) => onScopeChange(next as WikiPageEventScope)}
         items={items}
       />
 
@@ -373,8 +381,8 @@ const ScopeSection = ({
 
 interface UploadabilityRadioGroupProps {
   readonly name: string;
-  readonly value: string;
-  readonly onChange: (value: string) => void;
+  readonly value: WikiPageUploadability;
+  readonly onChange: (value: WikiPageUploadability) => void;
   readonly allowInherit: boolean;
   readonly inheritedFrom?: string;
 }
@@ -392,7 +400,8 @@ const UploadabilityRadioGroup = ({
       className="mt-2"
       equalWidth
       value={value}
-      onChange={onChange}
+      /** RadioGroup is string-typed; the items only carry enum values */
+      onChange={(next) => onChange(next as WikiPageUploadability)}
       items={[
         ...(allowInherit
           ? [

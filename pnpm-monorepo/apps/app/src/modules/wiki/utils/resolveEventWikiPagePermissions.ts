@@ -2,6 +2,10 @@ import {
   WikiPageEventScope,
   WikiPageUploadability,
 } from "@sam-monorepo/database/browser";
+import {
+  findWikiPageSettingSource,
+  resolveWikiPageTier,
+} from "./wikiPageHierarchy";
 
 export interface EventWikiPagePermissionSource {
   readonly id: string;
@@ -16,7 +20,6 @@ export interface EventWikiPagePermissionSource {
 }
 
 export interface EventWikiViewer {
-  readonly citizenId: string | null;
   /** Has a Discord RSVP on the event */
   readonly isParticipant: boolean;
   /** Organizer, event manager or `event;manage` — the fixed manage tier */
@@ -118,53 +121,20 @@ const hasExplicitSetting = (
 };
 
 /**
- * Walks up the ancestor chain to the nearest page with an explicit scope
- * ("nearest setting wins"), mirroring `findSource` of the role-based
- * resolver. Only used for the sourceId display — the grant checks resolve
- * INHERIT recursively through the parent gate instead.
+ * Nearest page with an explicit scope for the given tier, via the shared
+ * hierarchy walk. Used for the sourceId display and the upload tiers — the
+ * read/edit grant checks resolve INHERIT recursively through the parent
+ * gate instead.
  */
 const findScopeSource = (
   page: EventWikiPagePermissionSource,
   tier: ScopeTier,
   pagesById: ReadonlyMap<string, EventWikiPagePermissionSource>,
   cache: Map<string, EventWikiPagePermissionSource>,
-) => {
-  const chain: EventWikiPagePermissionSource[] = [];
-  const visited = new Set<string>();
-  let current: EventWikiPagePermissionSource | undefined = page;
-  let source: EventWikiPagePermissionSource | undefined;
-
-  while (current) {
-    const cached = cache.get(current.id);
-    if (cached) {
-      source = cached;
-      break;
-    }
-
-    visited.add(current.id);
-    chain.push(current);
-
-    if (hasExplicitSetting(current, tier)) {
-      source = current;
-      break;
-    }
-
-    const parent: EventWikiPagePermissionSource | undefined = current.parentId
-      ? pagesById.get(current.parentId)
-      : undefined;
-    if (!parent || visited.has(parent.id)) {
-      // Root reached while inheriting, broken chain or cycle
-      source = current;
-      break;
-    }
-
-    current = parent;
-  }
-
-  const result = source ?? page;
-  for (const entry of chain) cache.set(entry.id, result);
-  return result;
-};
+) =>
+  findWikiPageSettingSource(page, pagesById, cache, (candidate) =>
+    hasExplicitSetting(candidate, tier),
+  );
 
 /**
  * Resolves the permissions of one viewer against the pages of one event
@@ -245,29 +215,6 @@ export const createEventWikiPagePermissionResolver = (
   };
 
   /**
-   * Memoizes one tier of one page and cuts parent cycles by denying the
-   * re-entered page: corrupt data must neither hang the request nor grant
-   * access.
-   */
-  const resolveTier = (
-    page: EventWikiPagePermissionSource,
-    cache: Map<string, boolean>,
-    pending: Set<string>,
-    compute: () => boolean,
-  ) => {
-    const cached = cache.get(page.id);
-    if (cached !== undefined) return cached;
-    if (pending.has(page.id)) return false;
-
-    pending.add(page.id);
-    const result = compute();
-    pending.delete(page.id);
-
-    cache.set(page.id, result);
-    return result;
-  };
-
-  /**
    * The gate every tier passes through: a page hands out nothing to someone
    * who cannot read the page above it. Top-level pages have nothing to be
    * gated by; a page whose parent is missing from the data counts as
@@ -285,7 +232,7 @@ export const createEventWikiPagePermissionResolver = (
    * other.
    */
   const hasReadGrant = (page: EventWikiPagePermissionSource): boolean =>
-    resolveTier(page, readGrantCache, readGrantPending, () => {
+    resolveWikiPageTier(page, readGrantCache, readGrantPending, () => {
       /** No own restriction; a top-level page has nothing to inherit */
       if (page.eventReadScope === WikiPageEventScope.INHERIT)
         return Boolean(parentOf(page));
@@ -298,7 +245,7 @@ export const createEventWikiPagePermissionResolver = (
    * implication builds on it, and reading must survive the freeze.
    */
   const hasEditGrantOf = (page: EventWikiPagePermissionSource): boolean =>
-    resolveTier(page, editGrantCache, editGrantPending, () => {
+    resolveWikiPageTier(page, editGrantCache, editGrantPending, () => {
       if (viewer.isEventManager) return true;
       if (!isAccessible(page)) return false;
 
@@ -313,7 +260,7 @@ export const createEventWikiPagePermissionResolver = (
     });
 
   const canReadOf = (page: EventWikiPagePermissionSource): boolean =>
-    resolveTier(page, readCache, readPending, () => {
+    resolveWikiPageTier(page, readCache, readPending, () => {
       if (viewer.isEventManager) return true;
       if (hasEditGrantOf(page)) return true;
       return isAccessible(page) && hasReadGrant(page);

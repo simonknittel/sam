@@ -25,8 +25,6 @@ type WikiSearchOption =
 interface Props {
   readonly className?: string;
   readonly compact?: boolean;
-  /** Limits the search to one event's wiki (the briefing sidebar) */
-  readonly eventId?: string;
 }
 
 /**
@@ -37,7 +35,7 @@ interface Props {
  * shifts. Arrow keys move through the results, Enter opens the active one
  * (or the first when none is active).
  */
-export const WikiSearch = ({ className, compact, eventId }: Props) => {
+export const WikiSearch = ({ className, compact }: Props) => {
   const hrefMode = useWikiPageHrefMode();
   const [query, setQuery] = useState("");
 
@@ -62,7 +60,7 @@ export const WikiSearch = ({ className, compact, eventId }: Props) => {
 
   const enabled = debouncedQuery.length >= MIN_QUERY_LENGTH;
   const { data, isFetching } = api.wiki.search.useQuery(
-    { query: debouncedQuery, eventId },
+    { query: debouncedQuery, eventId: hrefMode.eventId ?? undefined },
     {
       enabled,
       placeholderData: (previous) => previous,

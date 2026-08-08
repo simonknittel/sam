@@ -42,7 +42,7 @@ export const restoreWikiPageSnapshot = createAuthenticatedAction(
 
     const scoped = await getWikiPageScopedContext(snapshot.pageId);
     if (!scoped)
-      return { error: t("Common.forbidden"), requestPayload: formData };
+      return { error: t("Common.badRequest"), requestPayload: formData };
     const context = scoped.context;
 
     const page = context.pagesById.get(snapshot.pageId);
@@ -117,6 +117,7 @@ export const restoreWikiPageSnapshot = createAuthenticatedAction(
         type: AuditEventType.WIKI_PAGE_SNAPSHOT_RESTORED,
         data: {
           pageId: page.id,
+          eventId: page.eventId ?? undefined,
           snapshotId: snapshot.id,
         },
         createdById: authentication.session.user.id,

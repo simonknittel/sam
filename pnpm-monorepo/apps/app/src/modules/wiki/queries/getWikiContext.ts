@@ -14,18 +14,21 @@ import {
   type WikiPageViewer,
 } from "../utils/resolveWikiPagePermissions";
 
-export type WikiContextPage = Pick<
+/**
+ * Page fields both context flavors load — everything the shared
+ * tree/breadcrumb/target/index utilities read. The role-based permission
+ * columns stay out: they belong to WikiContextPage alone, so the event
+ * context never has to fetch them.
+ */
+export type WikiSharedContextPage = Pick<
   WikiPage,
   | "id"
   | "parentId"
-  | "ownerId"
   | "title"
   | "slug"
   | "iconId"
   | "sortOrder"
   | "sidebarMode"
-  | "visibility"
-  | "editability"
   | "imageUploadability"
   | "attachmentUploadability"
   | "createdAt"
@@ -33,9 +36,12 @@ export type WikiContextPage = Pick<
   | "deletedAt"
   | "deletedById"
   | "eventId"
-> & {
-  roleAccess: { roleId: string; type: WikiPageAccessType }[];
-};
+>;
+
+export type WikiContextPage = WikiSharedContextPage &
+  Pick<WikiPage, "ownerId" | "visibility" | "editability"> & {
+    roleAccess: { roleId: string; type: WikiPageAccessType }[];
+  };
 
 /**
  * Structural subset shared by the global and the event wiki context, so the
@@ -43,8 +49,8 @@ export type WikiContextPage = Pick<
  */
 export interface WikiSharedContext {
   /** Pages that are not soft-deleted */
-  pages: WikiContextPage[];
-  pagesById: Map<string, WikiContextPage>;
+  pages: WikiSharedContextPage[];
+  pagesById: Map<string, WikiSharedContextPage>;
   /** Effective permissions of the current viewer for every page */
   permissions: Map<string, WikiPageTierPermissions>;
 }

@@ -79,7 +79,7 @@ export async function PATCH(request: Request) {
           : Promise.resolve(null),
       ]);
       if (!scoped)
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        return NextResponse.json({ error: "Bad Request" }, { status: 400 });
 
       const page = scoped.context.pagesById.get(data.resourceId);
       if (!page || page.deletedAt || (data.imageId !== null && !upload))
@@ -107,7 +107,11 @@ export async function PATCH(request: Request) {
       await createAuditEvents([
         {
           type: AuditEventType.WIKI_PAGE_ICON_UPDATED,
-          data: { pageId: page.id, iconId: data.imageId },
+          data: {
+            pageId: page.id,
+            eventId: page.eventId ?? undefined,
+            iconId: data.imageId,
+          },
           createdById: authentication.session.user.id,
         },
       ]);
@@ -138,7 +142,7 @@ export async function PATCH(request: Request) {
         }),
       ]);
       if (!scoped)
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        return NextResponse.json({ error: "Bad Request" }, { status: 400 });
 
       const page = scoped.context.pagesById.get(data.resourceId);
       if (!page || page.deletedAt || !upload)

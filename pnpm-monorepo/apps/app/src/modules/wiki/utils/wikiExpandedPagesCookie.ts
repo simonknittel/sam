@@ -80,7 +80,7 @@ export const parseWikiExpandedPagesCookie = (
 
 export const serializeWikiExpandedPagesCookie = (
   state: WikiExpansionState,
-  scope: WikiScope = WikiScope.Wiki,
+  scope: WikiScope,
 ) => {
   // Insertion order makes this drop the least recently expanded pages
   const value = [...state].slice(-MAX_PAGE_KEYS).join(",");

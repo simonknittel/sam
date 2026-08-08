@@ -1,9 +1,11 @@
 import { prisma } from "@/db";
-import { Link } from "@/modules/common/components/Link";
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
-import { WikiPageIcon } from "@/modules/wiki/components/WikiPageIcon";
-import { getEventWikiContext } from "@/modules/wiki/queries/getEventWikiContext";
+import { WikiTagPageContent } from "@/modules/wiki/components/WikiTagPageContent";
+import {
+  getEventWikiContext,
+  hasReadableEventWikiRoot,
+} from "@/modules/wiki/queries/getEventWikiContext";
 import { buildVisibleWikiBreadcrumb } from "@/modules/wiki/utils/buildVisibleWikiBreadcrumb";
 import { getAccessibleWikiPage } from "@/modules/wiki/utils/getAccessibleWikiPage";
 import {
@@ -12,7 +14,6 @@ import {
 } from "@/modules/wiki/utils/wikiPageHref";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { FaTag } from "react-icons/fa";
 
 type Params = PageProps<"/app/events/[id]/briefing/tags/[tagId]">["params"];
 
@@ -24,9 +25,18 @@ const getTag = async (params: Params) => {
   });
 };
 
+/**
+ * Metadata runs independently of the layout's 404 gate, so it applies the
+ * briefing gate itself — otherwise the tag name would reach the document
+ * title for viewers the layout turns away.
+ */
 export const generateMetadata = async (
   props: PageProps<"/app/events/[id]/briefing/tags/[tagId]">,
 ): Promise<Metadata> => {
+  const { id } = await props.params;
+  const context = await getEventWikiContext(id);
+  if (!context || !hasReadableEventWikiRoot(context)) return {};
+
   const tag = await getTag(props.params);
   if (!tag) return {};
   return { title: `Tag: ${tag.name}` };
@@ -58,7 +68,7 @@ const TagPageList = async ({ params }: TagPageListProps) => {
     getEventWikiContext(id),
     getTag(params),
   ]);
-  if (!context) notFound();
+  if (!context || !hasReadableEventWikiRoot(context)) notFound();
   if (!tag) notFound();
 
   const hrefMode = createEventWikiHrefMode(
@@ -76,52 +86,13 @@ const TagPageList = async ({ params }: TagPageListProps) => {
       getAccessibleWikiPage(context, assignment.pageId, "read"),
     )
     .filter((page) => page !== null)
-    .toSorted((a, b) => a.title.localeCompare(b.title));
+    .toSorted((a, b) => a.title.localeCompare(b.title))
+    .map((page) => ({
+      href: buildWikiPageHref(hrefMode, page),
+      title: page.title,
+      iconId: page.iconId,
+      breadcrumb: buildVisibleWikiBreadcrumb(context, page),
+    }));
 
-  return (
-    <section className="bg-secondary rounded-primary p-4">
-      <h1 className="flex items-center gap-3 font-bold text-2xl">
-        <FaTag className="flex-none text-neutral-500" />
-        {tag.name}
-      </h1>
-
-      <p className="mt-1 text-xs text-white/20">
-        <span className="uppercase font-mono">Seiten mit diesem Tag:</span>{" "}
-        {pages.length}
-      </p>
-
-      {pages.length > 0 ? (
-        <ul className="mt-4 flex flex-col gap-2">
-          {pages.map((page) => {
-            const breadcrumb = buildVisibleWikiBreadcrumb(context, page);
-
-            return (
-              <li key={page.id}>
-                {breadcrumb.length > 0 && (
-                  <p
-                    className="text-xs text-neutral-500 truncate"
-                    title={breadcrumb.join(" / ")}
-                  >
-                    {breadcrumb.join(" / ")}
-                  </p>
-                )}
-
-                <Link
-                  href={buildWikiPageHref(hrefMode, page)}
-                  className="inline-flex items-center gap-2 text-interaction-500 hover:text-interaction-300"
-                >
-                  {page.iconId && <WikiPageIcon iconId={page.iconId} />}
-                  {page.title}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      ) : (
-        <p className="mt-4 text-sm text-neutral-400">
-          Keine sichtbaren Seiten mit diesem Tag.
-        </p>
-      )}
-    </section>
-  );
+  return <WikiTagPageContent tagName={tag.name} pages={pages} />;
 };

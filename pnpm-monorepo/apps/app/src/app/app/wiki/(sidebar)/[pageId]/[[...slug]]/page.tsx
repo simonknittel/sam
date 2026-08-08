@@ -1,5 +1,4 @@
 import { prisma } from "@/db";
-import { env } from "@/env";
 import { authenticate, requireAuthenticationPage } from "@/modules/auth/server";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
@@ -12,16 +11,18 @@ import { DeleteWikiPageModal } from "@/modules/wiki/components/DeleteWikiPageMod
 import { DuplicateWikiPageModal } from "@/modules/wiki/components/DuplicateWikiPageModal";
 import { MoveWikiPageModal } from "@/modules/wiki/components/MoveWikiPageModal";
 import { ReportWikiPageModal } from "@/modules/wiki/components/ReportWikiPageModal";
-import { WikiCollabEditor } from "@/modules/wiki/components/WikiCollabEditor";
 import { WikiEditModeProvider } from "@/modules/wiki/components/WikiEditModeProvider";
 import { WikiEditModeToggle } from "@/modules/wiki/components/WikiEditModeToggle";
 import { WikiPageDetailsPopover } from "@/modules/wiki/components/WikiPageDetailsPopover";
+import {
+  getWikiCollabUrl,
+  WikiPageEditorSection,
+} from "@/modules/wiki/components/WikiPageEditorSection";
 import { WikiPageExportImportModal } from "@/modules/wiki/components/WikiPageExportImportModal";
 import { WikiPageFavoriteButton } from "@/modules/wiki/components/WikiPageFavoriteButton";
 import { WikiPageIconButton } from "@/modules/wiki/components/WikiPageIconButton";
 import { WikiPagePermissionsModal } from "@/modules/wiki/components/WikiPagePermissionsModal";
 import { WikiPageSidebarModeModal } from "@/modules/wiki/components/WikiPageSidebarModeModal";
-import { WikiPageStaticContent } from "@/modules/wiki/components/WikiPageStaticContent";
 import { WikiPageTags } from "@/modules/wiki/components/WikiPageTags";
 import {
   getWikiContext,
@@ -33,7 +34,6 @@ import { getWikiPageStaticContent } from "@/modules/wiki/queries/getWikiPageStat
 import { getWikiPermissionRoles } from "@/modules/wiki/queries/getWikiPermissionRoles";
 import { collectWikiPageDescendants } from "@/modules/wiki/utils/collectWikiPageDescendants";
 import { getAccessibleWikiPage } from "@/modules/wiki/utils/getAccessibleWikiPage";
-import { getWikiCollabColor } from "@/modules/wiki/utils/getWikiCollabColor";
 import {
   getManageableWikiPageTargets,
   type WikiPageTargetOption,
@@ -192,14 +192,7 @@ const PageContent = async ({
     authentication && (await authentication.authorize("wiki", "create")),
   );
 
-  /**
-   * Editing requires the collab server — without it (e.g. a preview
-   * deployment missing the env vars) the wiki is read-only.
-   */
-  const collabUrl =
-    env.COLLAB_JWT_SECRET && env.NEXT_PUBLIC_COLLAB_URL
-      ? env.NEXT_PUBLIC_COLLAB_URL
-      : null;
+  const collabUrl = getWikiCollabUrl();
 
   return (
     /**
@@ -325,7 +318,11 @@ const PageContent = async ({
             )}
 
             {context.viewer.hasWikiManage && (
-              <WikiPageExportImportModal pageId={page.id} title={page.title} />
+              <WikiPageExportImportModal
+                pageId={page.id}
+                title={page.title}
+                canImport
+              />
             )}
           </div>
         </div>
@@ -338,31 +335,13 @@ const PageContent = async ({
         />
 
         <div className="mt-4">
-          {collabUrl ? (
-            <WikiCollabEditor
-              key={page.id}
-              pageId={page.id}
-              collabUrl={collabUrl}
-              canEdit={permissions.canEdit}
-              canUploadImages={permissions.canUploadImages}
-              canUploadAttachments={permissions.canUploadAttachments}
-              userName={session?.entity?.handle ?? "Unbekannt"}
-              userColor={getWikiCollabColor(
-                session?.entity?.id ?? session?.user.id ?? page.id,
-              )}
-              iframeAllowlist={staticContent.iframeAllowlist}
-              linkablePages={staticContent.linkablePages}
-              mentionedCitizens={staticContent.mentionedCitizens}
-              linkedVariants={staticContent.linkedVariants}
-              pageIndexes={staticContent.pageIndexes}
-              roleCitizens={staticContent.roleCitizens}
-              staticFallback={
-                <WikiPageStaticContent pageId={page.id} {...staticContent} />
-              }
-            />
-          ) : (
-            <WikiPageStaticContent pageId={page.id} {...staticContent} />
-          )}
+          <WikiPageEditorSection
+            pageId={page.id}
+            canEdit={permissions.canEdit}
+            canUploadImages={permissions.canUploadImages}
+            canUploadAttachments={permissions.canUploadAttachments}
+            staticContent={staticContent}
+          />
         </div>
       </article>
     </WikiEditModeProvider>

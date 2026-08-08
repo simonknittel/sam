@@ -16,6 +16,8 @@ interface Props {
   readonly className?: string;
   readonly pageId: string;
   readonly title: string;
+  /** Import is a mutation — frozen event pages offer export only */
+  readonly canImport: boolean;
 }
 
 /**
@@ -29,6 +31,7 @@ export const WikiPageExportImportModal = ({
   className,
   pageId,
   title,
+  canImport,
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -61,7 +64,7 @@ export const WikiPageExportImportModal = ({
         onClick={() => setIsOpen(true)}
         variant={Button2Variant.IconOnly}
         className={className}
-        tooltip="Exportieren / Importieren"
+        tooltip={canImport ? "Exportieren / Importieren" : "Exportieren"}
       >
         <FaFileExport />
       </Button2>
@@ -70,7 +73,9 @@ export const WikiPageExportImportModal = ({
         isOpen={isOpen}
         onRequestClose={() => setIsOpen(false)}
         className="w-120"
-        heading={<h2>Exportieren / Importieren</h2>}
+        heading={
+          <h2>{canImport ? "Exportieren / Importieren" : "Exportieren"}</h2>
+        }
       >
         <p>
           Exportiert den Inhalt der Seite &quot;{title}&quot; als Tiptap-JSON
@@ -86,38 +91,46 @@ export const WikiPageExportImportModal = ({
           Exportieren
         </Button2>
 
-        <hr className="my-4 border-white/5" />
+        {canImport && (
+          <>
+            <hr className="my-4 border-white/5" />
 
-        <form onSubmit={handleSubmit}>
-          <p>
-            Ersetzt den Inhalt der Seite &quot;{title}&quot; vollständig durch
-            das hochgeladene Tiptap-JSON (z.B. aus dem JSON-Export einer anderen
-            Seite).
-          </p>
+            <form onSubmit={handleSubmit}>
+              <p>
+                Ersetzt den Inhalt der Seite &quot;{title}&quot; vollständig
+                durch das hochgeladene Tiptap-JSON (z.B. aus dem JSON-Export
+                einer anderen Seite).
+              </p>
 
-          <label className="mt-4 block text-white/90" htmlFor={fileInputId}>
-            Datei
-          </label>
-          <input
-            id={fileInputId}
-            name="file"
-            type="file"
-            accept=".json,application/json"
-            required
-            className="mt-2 w-full rounded-secondary border border-neutral-800 bg-neutral-900 p-2 file:mr-2 file:cursor-pointer file:rounded-secondary file:border-0 file:bg-neutral-800 file:px-2 file:py-1 file:text-neutral-50"
-          />
+              <label className="mt-4 block text-white/90" htmlFor={fileInputId}>
+                Datei
+              </label>
+              <input
+                id={fileInputId}
+                name="file"
+                type="file"
+                accept=".json,application/json"
+                required
+                className="mt-2 w-full rounded-secondary border border-neutral-800 bg-neutral-900 p-2 file:mr-2 file:cursor-pointer file:rounded-secondary file:border-0 file:bg-neutral-800 file:px-2 file:py-1 file:text-neutral-50"
+              />
 
-          <Note
-            type="info"
-            className="mt-4"
-            message="Der aktuelle Stand wird vorher automatisch als Snapshot gesichert."
-          />
+              <Note
+                type="info"
+                className="mt-4"
+                message="Der aktuelle Stand wird vorher automatisch als Snapshot gesichert."
+              />
 
-          <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
-            {isPending ? <AsciiSpinner /> : <FaFileImport />}
-            Importieren
-          </Button2>
-        </form>
+              <Button2
+                type="submit"
+                disabled={isPending}
+                className="mt-4 ml-auto"
+              >
+                {isPending ? <AsciiSpinner /> : <FaFileImport />}
+                Importieren
+              </Button2>
+            </form>
+          </>
+        )}
       </Modal>
     </>
   );

@@ -132,4 +132,26 @@ describe("event wiki scope subset", () => {
       ),
     ).toBe(false);
   });
+
+  test("unknown position ids and corrupted lineups fail closed", () => {
+    expect(
+      isEventWikiScopeSubset(
+        selection(WikiPageEventScope.POSITION, "ghost"),
+        selection(WikiPageEventScope.POSITION, "wing"),
+        positions,
+      ),
+    ).toBe(false);
+
+    const cyclicPositions = [
+      { id: "a", parentPositionId: "b" },
+      { id: "b", parentPositionId: "a" },
+    ] as const;
+    expect(
+      isEventWikiScopeSubset(
+        selection(WikiPageEventScope.POSITION, "a"),
+        selection(WikiPageEventScope.POSITION, "wing"),
+        cyclicPositions,
+      ),
+    ).toBe(false);
+  });
 });

@@ -10,8 +10,8 @@ import {
 } from "nuqs/server";
 import {
   getWikiContext,
-  type WikiContextPage,
   type WikiSharedContext,
+  type WikiSharedContextPage,
 } from "../queries/getWikiContext";
 import { WikiPageIcon } from "./WikiPageIcon";
 import { WikiTrashActions } from "./WikiTrashActions";
@@ -34,14 +34,17 @@ interface Props {
    * global wiki
    */
   readonly context?: WikiSharedContext & {
-    readonly allPages: WikiContextPage[];
+    readonly allPages: WikiSharedContextPage[];
   };
+  /** Restore/destroy are mutations — frozen events only view their trash */
+  readonly canRestore?: boolean;
 }
 
 export const WikiTrashTable = async ({
   className,
   searchParams,
   context: givenContext,
+  canRestore = true,
 }: Props) => {
   const { sort, q } = await loadSearchParams(searchParams);
 
@@ -95,7 +98,7 @@ export const WikiTrashTable = async ({
 
         <TBody>
           {sortedPages.map((page) => (
-            <TrashRow key={page.id} page={page} />
+            <TrashRow key={page.id} page={page} canRestore={canRestore} />
           ))}
         </TBody>
       </Table>
@@ -108,10 +111,11 @@ export const WikiTrashTable = async ({
 };
 
 interface TrashRowProps {
-  readonly page: WikiContextPage;
+  readonly page: WikiSharedContextPage;
+  readonly canRestore: boolean;
 }
 
-const TrashRow = ({ page }: TrashRowProps) => {
+const TrashRow = ({ page, canRestore }: TrashRowProps) => {
   return (
     <TRow className={clsx("h-10", GRID_COLS)}>
       <td className="overflow-hidden">
@@ -127,11 +131,13 @@ const TrashRow = ({ page }: TrashRowProps) => {
       <td>{formatDate(page.deletedAt)}</td>
 
       <td>
-        <WikiTrashActions
-          pageId={page.id}
-          title={page.title}
-          className="flex flex-wrap items-center gap-2"
-        />
+        {canRestore && (
+          <WikiTrashActions
+            pageId={page.id}
+            title={page.title}
+            className="flex flex-wrap items-center gap-2"
+          />
+        )}
       </td>
     </TRow>
   );

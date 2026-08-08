@@ -13,6 +13,7 @@ import {
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import type { WikiSharedContextPage } from "../queries/getWikiContext";
 import {
   getWikiPageScopedContext,
   getWikiScopeRevalidationPath,
@@ -25,12 +26,7 @@ import {
   WikiPagePlacement,
 } from "../utils/resolveWikiPagePlacement";
 import { slugifyWikiPageTitle } from "../utils/slugifyWikiPageTitle";
-import {
-  buildWikiPageHref,
-  createEventWikiHrefMode,
-  GLOBAL_WIKI_HREF_MODE,
-  WikiScope,
-} from "../utils/wikiPageHref";
+import { getWikiPageRouteHref, WikiScope } from "../utils/wikiPageHref";
 
 const schema = z.object({
   id: z.cuid2(),
@@ -71,11 +67,15 @@ export const duplicateWikiPage = createAuthenticatedAction(
   async (formData, authentication, data, t) => {
     const scoped = await getWikiPageScopedContext(data.id);
     if (!scoped || !authentication.session.entity)
-      return { error: t("Common.forbidden"), requestPayload: formData };
+      return { error: t("Common.notFound"), requestPayload: formData };
     const context = scoped.context;
     const entity = authentication.session.entity;
 
-    const source = getAccessibleWikiPage(context, data.id, "read");
+    const source = getAccessibleWikiPage<WikiSharedContextPage>(
+      context,
+      data.id,
+      "read",
+    );
     if (!source)
       return { error: t("Common.notFound"), requestPayload: formData };
     if (isWikiScopeFrozen(scoped))
@@ -107,7 +107,7 @@ export const duplicateWikiPage = createAuthenticatedAction(
     }
 
     const subtree = data.mirrorChildren
-      ? collectVisibleWikiSubtree(
+      ? collectVisibleWikiSubtree<WikiSharedContextPage>(
           context.pages,
           source.id,
           (id) => context.permissions.get(id)?.canRead === true,
@@ -251,6 +251,7 @@ export const duplicateWikiPage = createAuthenticatedAction(
         type: AuditEventType.WIKI_PAGE_DUPLICATED,
         data: {
           pageId: root.id,
+          eventId: source.eventId ?? undefined,
           sourcePageId: source.id,
           title: data.title,
           parentId: data.parentId ?? null,
@@ -261,15 +262,14 @@ export const duplicateWikiPage = createAuthenticatedAction(
       },
     ]);
 
-    const hrefMode =
-      scoped.scope === WikiScope.Event
-        ? createEventWikiHrefMode(
-            scoped.context.event.id,
-            scoped.context.rootPage?.id ?? null,
-          )
-        : GLOBAL_WIKI_HREF_MODE;
-
     revalidatePath(getWikiScopeRevalidationPath(scoped), "layout");
-    redirect(buildWikiPageHref(hrefMode, root));
+    /** A copy is never an event root page, so the plain id-URL is correct */
+    redirect(
+      getWikiPageRouteHref({
+        id: root.id,
+        slug: root.slug,
+        eventId: source.eventId,
+      }),
+    );
   },
 );

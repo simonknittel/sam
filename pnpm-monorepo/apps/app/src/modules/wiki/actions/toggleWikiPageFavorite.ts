@@ -4,6 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import type { WikiSharedContextPage } from "../queries/getWikiContext";
 import {
   getWikiPageScopedContext,
   getWikiScopeRevalidationPath,
@@ -21,9 +22,13 @@ export const toggleWikiPageFavorite = createAuthenticatedAction(
     const scoped = await getWikiPageScopedContext(data.pageId);
     const citizenId = authentication.session.entity?.id;
     if (!scoped || !citizenId)
-      return { error: t("Common.forbidden"), requestPayload: formData };
+      return { error: t("Common.notFound"), requestPayload: formData };
 
-    const page = getAccessibleWikiPage(scoped.context, data.pageId, "read");
+    const page = getAccessibleWikiPage<WikiSharedContextPage>(
+      scoped.context,
+      data.pageId,
+      "read",
+    );
     if (!page) return { error: t("Common.notFound"), requestPayload: formData };
 
     const existing = await prisma.wikiPageFavorite.findUnique({

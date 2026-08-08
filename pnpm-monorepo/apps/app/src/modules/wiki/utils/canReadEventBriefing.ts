@@ -17,6 +17,13 @@ import { collectPositionScopeIdsForCitizen } from "./resolveEventWikiPagePermiss
  * render several events per page: one indexed root-page lookup per event,
  * plus the lineup only when a POSITION scope asks for it. Callers must
  * have checked `event;read`, like every event list does.
+ *
+ * Deliberately ignores the edit scope although the resolver's "may edit ⇒
+ * may read" implication could widen reading: this stays equivalent only
+ * because `updateEventWikiPagePermissions` enforces edit ⊆ read on every
+ * root update (and the seed starts at MANAGERS/MANAGERS). Relaxing that
+ * subset rule would silently desync tab and tile visibility from actual
+ * readability.
  */
 export const canReadEventBriefing = async (
   event: Pick<Event, "id" | "discordCreatorId"> & {
@@ -24,6 +31,9 @@ export const canReadEventBriefing = async (
     readonly discordParticipants: EventDiscordParticipant[];
   },
 ): Promise<boolean> => {
+  const authentication = await authenticate();
+  if (!authentication) return false;
+
   const rootPage = await prisma.wikiPage.findFirst({
     where: {
       namespace: WikiPageNamespace.EVENT,
@@ -35,9 +45,6 @@ export const canReadEventBriefing = async (
     select: { eventReadScope: true, eventReadScopePositionId: true },
   });
   if (!rootPage) return false;
-
-  const authentication = await authenticate();
-  if (!authentication) return false;
 
   if (await isAllowedToManageEvent(event)) return true;
 

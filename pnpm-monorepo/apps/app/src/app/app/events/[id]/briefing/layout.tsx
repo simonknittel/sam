@@ -3,7 +3,10 @@ import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout
 import { CreateWikiPageProvider } from "@/modules/wiki/components/CreateWikiPageProvider";
 import { EventWikiSidebar } from "@/modules/wiki/components/EventWikiSidebar";
 import { WikiPageHrefModeProvider } from "@/modules/wiki/components/WikiPageHrefModeProvider";
-import { getEventWikiContext } from "@/modules/wiki/queries/getEventWikiContext";
+import {
+  getEventWikiContext,
+  hasReadableEventWikiRoot,
+} from "@/modules/wiki/queries/getEventWikiContext";
 import { getManageableWikiPageTargets } from "@/modules/wiki/utils/getWikiPageTargets";
 import { createEventWikiHrefMode } from "@/modules/wiki/utils/wikiPageHref";
 import { notFound } from "next/navigation";
@@ -26,11 +29,7 @@ export default async function Layout({
    * feature) or with an unreadable one have no briefing — 404 instead of
    * 403, matching the wiki's existence-hiding.
    */
-  if (
-    !context?.rootPage ||
-    !context.permissions.get(context.rootPage.id)?.canRead
-  )
-    notFound();
+  if (!context || !hasReadableEventWikiRoot(context)) notFound();
 
   const hrefMode = createEventWikiHrefMode(id, context.rootPage.id);
   const createTargets = getManageableWikiPageTargets(context);

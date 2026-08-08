@@ -1,6 +1,6 @@
 import type {
-  WikiContextPage,
   WikiSharedContext,
+  WikiSharedContextPage,
 } from "../queries/getWikiContext";
 import { collectWikiPageDescendants } from "./collectWikiPageDescendants";
 import { compareWikiPagesByOrder } from "./compareWikiPagesByOrder";
@@ -36,7 +36,7 @@ const collectWikiPageTargets = (
       ])
     : new Set<string>();
 
-  const childrenByParent = new Map<string | null, WikiContextPage[]>();
+  const childrenByParent = new Map<string | null, WikiSharedContextPage[]>();
   for (const page of context.pages) {
     const children = childrenByParent.get(page.parentId) ?? [];
     children.push(page);

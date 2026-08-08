@@ -14,6 +14,7 @@ import {
 import type { Editor } from "@tiptap/react";
 import { useId, useState } from "react";
 import { FaSave, FaTag } from "react-icons/fa";
+import { useWikiPageHrefMode } from "./WikiPageHrefModeProvider";
 import { WikiPageSelect } from "./WikiPageSelect";
 
 interface Props {
@@ -36,6 +37,8 @@ export const WikiPageIndexConfigModal = ({
   attrs,
   onRequestClose,
 }: Props) => {
+  /** Scopes tag and page pickers to the event wiki on briefing pages */
+  const { eventId } = useWikiPageHrefMode();
   const depthInputId = useId();
   const initial = normalizeWikiPageIndexConfig(attrs);
 
@@ -47,17 +50,20 @@ export const WikiPageIndexConfigModal = ({
   const [tagIds, setTagIds] = useState<readonly string[]>(initial.tagIds);
   const [matchMode, setMatchMode] = useState<string>(initial.matchMode);
 
-  const { data: existingTags } = api.wiki.getTags.useQuery(undefined, {
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-  });
+  const { data: existingTags } = api.wiki.getTags.useQuery(
+    { eventId: eventId ?? undefined },
+    {
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+    },
+  );
 
   /**
    * Readable pages in tree order for the root picker — permission-filtered
    * server-side, so invisible titles can never leak.
    */
   const { data: pageTargets } = api.wiki.getPageTargets.useQuery(
-    { permission: "read" },
+    { permission: "read", eventId: eventId ?? undefined },
     { refetchOnWindowFocus: false, refetchOnReconnect: false },
   );
 

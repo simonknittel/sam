@@ -30,7 +30,7 @@ export const restoreWikiPage = createAuthenticatedAction(
   async (formData, authentication, data, t) => {
     const scoped = await getWikiPageScopedContext(data.id);
     if (!scoped)
-      return { error: t("Common.forbidden"), requestPayload: formData };
+      return { error: t("Common.badRequest"), requestPayload: formData };
     const context = scoped.context;
 
     const page = context.pagesById.get(data.id);
@@ -73,6 +73,7 @@ export const restoreWikiPage = createAuthenticatedAction(
         type: AuditEventType.WIKI_PAGE_RESTORED,
         data: {
           pageId: page.id,
+          eventId: page.eventId ?? undefined,
           title: page.title,
           restoredPageIds: restoredIds,
         },

@@ -4,6 +4,10 @@ import {
   WikiPageUploadability,
   WikiPageVisibility,
 } from "@sam-monorepo/database/browser";
+import {
+  findWikiPageSettingSource,
+  resolveWikiPageTier,
+} from "./wikiPageHierarchy";
 
 export interface WikiPagePermissionSource {
   readonly id: string;
@@ -86,55 +90,20 @@ const hasExplicitSetting = (
 };
 
 /**
- * Walks up the ancestor chain to the nearest page with an explicit setting
- * for the given tier ("nearest setting wins"). Falls back to the last
- * reachable ancestor if the whole chain is inheriting, the chain is broken
- * or contains a cycle. The effective value of such a fallback source stays
- * INHERIT (or a null owner) and is treated as most restrictive by the grant
- * checks below.
+ * Nearest page with an explicit setting for the given tier, via the shared
+ * hierarchy walk. The effective value of a fallback source (fully-INHERIT
+ * chain, broken chain, cycle) stays INHERIT (or a null owner) and is
+ * treated as most restrictive by the grant checks below.
  */
 const findSource = (
   page: WikiPagePermissionSource,
   tier: InheritedTier,
   pagesById: ReadonlyMap<string, WikiPagePermissionSource>,
   cache: Map<string, WikiPagePermissionSource>,
-) => {
-  const chain: WikiPagePermissionSource[] = [];
-  const visited = new Set<string>();
-  let current: WikiPagePermissionSource | undefined = page;
-  let source: WikiPagePermissionSource | undefined;
-
-  while (current) {
-    const cached = cache.get(current.id);
-    if (cached) {
-      source = cached;
-      break;
-    }
-
-    visited.add(current.id);
-    chain.push(current);
-
-    if (hasExplicitSetting(current, tier)) {
-      source = current;
-      break;
-    }
-
-    const parent: WikiPagePermissionSource | undefined = current.parentId
-      ? pagesById.get(current.parentId)
-      : undefined;
-    if (!parent || visited.has(parent.id)) {
-      // Root reached while inheriting, broken chain or cycle
-      source = current;
-      break;
-    }
-
-    current = parent;
-  }
-
-  const result = source ?? page;
-  for (const entry of chain) cache.set(entry.id, result);
-  return result;
-};
+) =>
+  findWikiPageSettingSource(page, pagesById, cache, (candidate) =>
+    hasExplicitSetting(candidate, tier),
+  );
 
 const hasRoleAccess = (
   page: WikiPagePermissionSource,
@@ -248,29 +217,6 @@ export const createWikiPagePermissionResolver = (
   };
 
   /**
-   * Memoizes one tier of one page and cuts parent cycles by denying the
-   * re-entered page: corrupt data must neither hang the request nor grant
-   * access.
-   */
-  const resolveTier = (
-    page: WikiPagePermissionSource,
-    cache: Map<string, boolean>,
-    pending: Set<string>,
-    compute: () => boolean,
-  ) => {
-    const cached = cache.get(page.id);
-    if (cached !== undefined) return cached;
-    if (pending.has(page.id)) return false;
-
-    pending.add(page.id);
-    const result = compute();
-    pending.delete(page.id);
-
-    cache.set(page.id, result);
-    return result;
-  };
-
-  /**
    * The gate every tier passes through: a page hands out nothing to someone
    * who cannot read the page above it. Top-level pages have nothing to be
    * gated by. A page whose parent is missing from the data counts as
@@ -282,7 +228,7 @@ export const createWikiPagePermissionResolver = (
   };
 
   const canAdminOf = (page: WikiPagePermissionSource): boolean =>
-    resolveTier(page, adminCache, adminPending, () => {
+    resolveWikiPageTier(page, adminCache, adminPending, () => {
       if (viewer.hasWikiManage) return true;
       if (!isAccessible(page)) return false;
       if (isEffectivelyOwned(page)) return true;
@@ -298,7 +244,7 @@ export const createWikiPagePermissionResolver = (
    * top of it, so the two must not be expressed through each other.
    */
   const hasReadGrant = (page: WikiPagePermissionSource): boolean =>
-    resolveTier(page, readGrantCache, readGrantPending, () => {
+    resolveWikiPageTier(page, readGrantCache, readGrantPending, () => {
       switch (page.visibility) {
         /**
          * PUBLIC is only allowed on top-level pages. On a child page it
@@ -321,7 +267,7 @@ export const createWikiPagePermissionResolver = (
     });
 
   const canEditOf = (page: WikiPagePermissionSource): boolean =>
-    resolveTier(page, editCache, editPending, () => {
+    resolveWikiPageTier(page, editCache, editPending, () => {
       if (viewer.hasWikiManage) return true;
       if (canAdminOf(page)) return true;
       if (!isAccessible(page)) return false;
@@ -343,7 +289,7 @@ export const createWikiPagePermissionResolver = (
     });
 
   const canReadOf = (page: WikiPagePermissionSource): boolean =>
-    resolveTier(page, readCache, readPending, () => {
+    resolveWikiPageTier(page, readCache, readPending, () => {
       if (viewer.hasWikiManage) return true;
       if (canEditOf(page)) return true;
       return isAccessible(page) && hasReadGrant(page);

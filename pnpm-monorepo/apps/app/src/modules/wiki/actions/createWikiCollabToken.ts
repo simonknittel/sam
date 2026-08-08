@@ -31,7 +31,7 @@ export const createWikiCollabToken = createAuthenticatedAction<
 
     const scoped = await getWikiPageScopedContext(data.id);
     if (!scoped)
-      return { error: t("Common.forbidden"), requestPayload: formData };
+      return { error: t("Common.badRequest"), requestPayload: formData };
 
     const page = scoped.context.pagesById.get(data.id);
     if (!page || page.deletedAt)

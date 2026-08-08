@@ -22,11 +22,16 @@ export const getEffectiveEventWikiScope = (
   const source = sourceId ? context.pagesById.get(sourceId) : undefined;
   if (!source) return { scope: WikiPageEventScope.MANAGERS, positionId: null };
 
-  const scope = tier === "read" ? source.eventReadScope : source.eventEditScope;
-  const positionId =
+  const { scope, positionId } =
     tier === "read"
-      ? source.eventReadScopePositionId
-      : source.eventEditScopePositionId;
+      ? {
+          scope: source.eventReadScope,
+          positionId: source.eventReadScopePositionId,
+        }
+      : {
+          scope: source.eventEditScope,
+          positionId: source.eventEditScopePositionId,
+        };
 
   return scope === WikiPageEventScope.INHERIT
     ? { scope: WikiPageEventScope.MANAGERS, positionId: null }
