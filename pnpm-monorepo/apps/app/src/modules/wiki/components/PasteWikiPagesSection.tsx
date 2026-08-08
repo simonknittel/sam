@@ -5,7 +5,6 @@ import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
-import Note from "@/modules/common/components/Note";
 import clsx from "clsx";
 import { useState } from "react";
 import { FaPaste, FaTrashAlt } from "react-icons/fa";
@@ -129,17 +128,11 @@ export const PasteWikiPagesSection = ({
           }
         />
 
-        {mode === PasteMode.Replace ? (
-          <Note
-            type="warning"
-            className="mt-2"
-            message="Der Inhalt der ausgewählten Seite wird durch die Kopie ersetzt — der alte Inhalt wird als Snapshot gesichert. Icon, Tags und Seitenleisten-Einstellung werden übernommen; Titel und Berechtigungen bleiben. Bestehende Unterseiten bleiben erhalten, kopierte werden dahinter eingefügt."
-          />
-        ) : (
-          <p className="mt-2 text-sm text-neutral-400">
-            Die eingefügten Seiten übernehmen die Berechtigungen des neuen Orts.
-          </p>
-        )}
+        <p className="mt-2 text-sm text-neutral-400">
+          {mode === PasteMode.Replace
+            ? "Icon, Tags und Seitenleisten-Einstellung werden übernommen; Titel, Berechtigungen, Unterseiten bleiben erhalten, kopierte werden daneben eingefügt."
+            : "Die eingefügten Seiten übernehmen die Berechtigungen des neuen Orts."}
+        </p>
 
         <div className="mt-4 flex justify-end gap-2">
           <Button2
