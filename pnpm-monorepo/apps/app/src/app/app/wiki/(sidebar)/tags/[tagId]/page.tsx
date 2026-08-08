@@ -14,8 +14,8 @@ type Params = PageProps<"/app/wiki/tags/[tagId]">["params"];
 
 const getTag = async (params: Params) => {
   const { tagId } = await params;
-  return prisma.wikiTag.findUnique({
-    where: { id: tagId },
+  return prisma.wikiTag.findFirst({
+    where: { id: tagId, eventId: null },
     select: { id: true, name: true, pages: { select: { pageId: true } } },
   });
 };

@@ -60,12 +60,13 @@ const buildTsquery = (query: string): Prisma.Sql => {
 };
 
 /**
- * Full-text search over all wiki pages and tags. Page candidates come from
- * Postgres FTS; the viewer's resolved permissions trim them down
- * server-side before anything is returned, so invisible pages never leak.
- * Tag results are deliberately not permission-filtered — tag names are
- * global, like the autocomplete in getTags — and the tag's list page
- * permission-filters its content itself. Tags match through the same
+ * Full-text search over the global wiki's pages and tags (event wikis have
+ * their own scoped search). Page candidates come from Postgres FTS; the
+ * viewer's resolved permissions trim them down server-side before anything
+ * is returned, so invisible pages never leak. Tag results are deliberately
+ * not permission-filtered — tag names are shared within their scope, like
+ * the autocomplete in getTags — and the tag's list page permission-filters
+ * its content itself. Tags match through the same
  * tsquery as pages, so a returned tag row and the tag chips on page
  * results always agree.
  */
@@ -81,7 +82,8 @@ export const searchWiki = withTrace(
     const tags = await prisma.$queryRaw<WikiSearchTagResult[]>`
       SELECT "id", "name"
       FROM "WikiTag"
-      WHERE to_tsvector('german', "name") @@ ${tsquery}
+      WHERE "eventId" IS NULL
+        AND to_tsvector('german', "name") @@ ${tsquery}
       ORDER BY "name"
       LIMIT ${TAG_RESULT_LIMIT}
     `;

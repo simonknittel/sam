@@ -16,6 +16,12 @@ model Event {
   discordGuildId      String?
   managers            Entity[]                  @relation("eventManagers")
 
+  /// Set when the briefing root page's read scope first left MANAGERS.
+  /// Guards the one-time "briefing published" notification.
+  briefingPublishedAt DateTime?
+  wikiPages           WikiPage[]
+  wikiTags            WikiTag[]
+
   @@index([startTime])
   @@index([endTime])
   @@map("DiscordEvent")
@@ -51,6 +57,11 @@ model EventPosition {
   fontSize         String?
   backgroundColor  String?
   textColor        String?
+
+  /// Event wiki pages whose read/edit scope references this position's
+  /// subtree (see WikiPage.eventReadScopePosition)
+  wikiReadScopePages WikiPage[] @relation("wikiReadScopePages")
+  wikiEditScopePages WikiPage[] @relation("wikiEditScopePages")
 }
 
 model EventPositionRequiredVariant {

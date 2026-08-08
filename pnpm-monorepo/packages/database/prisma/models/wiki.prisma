@@ -1,5 +1,29 @@
+/// WIKI is the global wiki app. EVENT pages belong to exactly one event
+/// (see WikiPage.eventId) and are fully isolated from the global wiki: they
+/// never appear in its sidebar, search, settings or link suggestions. A
+/// TASK namespace is expected to follow the same pattern later.
 enum WikiPageNamespace {
   WIKI
+  EVENT
+}
+
+/// Permission scopes for pages in the EVENT namespace, where the role-based
+/// tiers (visibility/editability/roleAccess/uploadability) are unused. Read
+/// and edit are configured independently; upload permission follows the edit
+/// scope. Manage access is not configurable: the event's organizer, its
+/// managers and holders of `event;manage` always manage every page.
+/// MANAGERS grants only to that fixed manage set. PARTICIPANTS grants to the
+/// event's Discord participants. POSITION grants to citizens assigned to a
+/// position inside the referenced lineup subtree; a dangling reference
+/// degrades to MANAGERS (fail closed). ALL grants to everyone with
+/// `event;read`. INHERIT takes the nearest ancestor's explicit scope and is
+/// not allowed on top-level pages.
+enum WikiPageEventScope {
+  INHERIT
+  MANAGERS
+  PARTICIPANTS
+  POSITION
+  ALL
 }
 
 /// A page never hands out more than the page above it: whoever cannot read
@@ -90,6 +114,26 @@ model WikiPage {
   imageUploadability      WikiPageUploadability @default(INHERIT)
   attachmentUploadability WikiPageUploadability @default(INHERIT)
 
+  /// The owning event for namespace EVENT, NULL for namespace WIKI (enforced
+  /// by a CHECK constraint, see migration event_wiki_scoping). The cascade
+  /// removes the whole event wiki with its event. It passes the parent
+  /// relation's Restrict above because all of an event's pages go in the
+  /// same statement — Postgres queues the constraint triggers until the
+  /// statement (including its cascades) is done.
+  eventId String?
+  event   Event?  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  /// Permission configuration for namespace EVENT (see WikiPageEventScope);
+  /// ignored in namespace WIKI. The position references are only meaningful
+  /// while the matching scope is POSITION; SetNull on a deleted position
+  /// intentionally degrades that scope to managers-only.
+  eventReadScope           WikiPageEventScope @default(INHERIT)
+  eventReadScopePositionId String?
+  eventReadScopePosition   EventPosition?     @relation("wikiReadScopePages", fields: [eventReadScopePositionId], references: [id], onDelete: SetNull)
+  eventEditScope           WikiPageEventScope @default(INHERIT)
+  eventEditScopePositionId String?
+  eventEditScopePosition   EventPosition?     @relation("wikiEditScopePages", fields: [eventEditScopePositionId], references: [id], onDelete: SetNull)
+
   /// The effective owner holds the implicit permissions on a page (all three
   /// tiers, implicit inclusion in RESTRICTED). NULL means the owner is
   /// inherited from the nearest ancestor with an explicit owner ("nearest
@@ -126,6 +170,7 @@ model WikiPage {
 
   @@index([parentId])
   @@index([deletedAt])
+  @@index([eventId])
 }
 
 enum WikiPageAccessType {
@@ -215,22 +260,32 @@ model WikiPageReport {
   @@index([resolvedAt])
 }
 
-/// Free-form label shared by all wiki pages. Tags are global (no per-subtree
-/// namespaces) and live only while they are used: removing a tag's last
-/// assignment deletes it, and the midnight automations sweep orphans left
-/// behind by permanent page deletion.
+/// Free-form label shared by all wiki pages of one scope. Tags live in the
+/// same scopes as pages — the global wiki (eventId NULL) or a single event —
+/// and never leak across scopes. They live only while they are used:
+/// removing a tag's last assignment deletes it, and the midnight automations
+/// sweep orphans left behind by permanent page deletion.
 model WikiTag {
   id   String @id @default(cuid(2))
-  /// Display casing from first use. Uniqueness is effectively
+  /// Display casing from first use. Uniqueness is per scope and effectively
   /// case-insensitive: actions match existing names case-insensitively
-  /// (find-or-create) before creating.
-  name String @unique
+  /// (find-or-create) before creating. Enforced by two partial unique
+  /// indexes Prisma cannot express (see migration event_wiki_scoping):
+  /// (name) WHERE eventId IS NULL and (eventId, name) WHERE eventId IS NOT
+  /// NULL — a plain compound unique would treat NULL eventIds as distinct.
+  name String
+
+  /// The owning event, NULL for the global wiki (mirrors WikiPage.eventId).
+  eventId String?
+  event   Event?  @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   createdAt   DateTime @default(now())
   createdById String?
   createdBy   Entity?  @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
 
   pages WikiPageTag[]
+
+  @@index([eventId])
 }
 
 model WikiPageTag {

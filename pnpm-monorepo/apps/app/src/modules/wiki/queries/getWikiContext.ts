@@ -31,6 +31,7 @@ export type WikiContextPage = Pick<
   | "updatedAt"
   | "deletedAt"
   | "deletedById"
+  | "eventId"
 > & {
   roleAccess: { roleId: string; type: WikiPageAccessType }[];
 };
@@ -93,6 +94,7 @@ export const getWikiContext = cache(
           updatedAt: true,
           deletedAt: true,
           deletedById: true,
+          eventId: true,
           roleAccess: { select: { roleId: true, type: true } },
         },
       }),

@@ -6,10 +6,11 @@ import { serializeError } from "serialize-error";
 import { protectedProcedure } from "../../trpc";
 
 /**
- * All existing wiki tags, for the tag input's autocomplete. Deliberately not
- * filtered by page visibility: consistent tag naming beats hiding the names
- * of tags that are only used on invisible pages (name-only leak, the tag
- * list pages themselves are permission-filtered).
+ * All global wiki tags, for the tag input's autocomplete. Event tags live in
+ * their own scope and never show up here. Deliberately not filtered by page
+ * visibility: consistent tag naming beats hiding the names of tags that are
+ * only used on invisible pages (name-only leak, the tag list pages
+ * themselves are permission-filtered).
  */
 export const getTags = protectedProcedure.query(async () => {
   try {
@@ -21,6 +22,7 @@ export const getTags = protectedProcedure.query(async () => {
       });
 
     return await prisma.wikiTag.findMany({
+      where: { eventId: null },
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     });

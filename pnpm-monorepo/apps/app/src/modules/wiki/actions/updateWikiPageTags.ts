@@ -75,19 +75,23 @@ export const updateWikiPageTags = createAuthenticatedAction(
     const citizenId = authentication.session.entity?.id ?? null;
 
     /**
-     * Case-insensitive find-or-create per added name. The display casing of
-     * an existing tag wins over the submitted one.
+     * Case-insensitive find-or-create per added name, scoped to the page's
+     * event (or the global wiki). The display casing of an existing tag wins
+     * over the submitted one.
      */
     const addedTags = [];
     for (const name of addedNames) {
       const existing = await prisma.wikiTag.findFirst({
-        where: { name: { equals: name, mode: "insensitive" } },
+        where: {
+          name: { equals: name, mode: "insensitive" },
+          eventId: page.eventId,
+        },
         select: { id: true, name: true },
       });
       addedTags.push(
         existing ??
           (await prisma.wikiTag.create({
-            data: { name, createdById: citizenId },
+            data: { name, eventId: page.eventId, createdById: citizenId },
             select: { id: true, name: true },
           })),
       );
