@@ -1,15 +1,11 @@
 import "./scrape-discord-events/setup"; // must be first
 
 import { prisma } from "@sam-monorepo/database";
-import {
-  WikiPageEventScope,
-  WikiPageNamespace,
-  WikiPageUploadability,
-} from "@sam-monorepo/database/client";
 import type { ScheduledHandler } from "aws-lambda";
 import { shuffle } from "lodash";
 import { log } from "./common/logger";
 import { initializeRequestContext } from "./common/requestContext";
+import { buildBriefingRootPageData } from "./scrape-discord-events/buildBriefingRootPageData";
 import { deleteCancelledEvents } from "./scrape-discord-events/deleteCancelledEvents";
 import { getEvents } from "./scrape-discord-events/discord/utils/getEvents";
 import { triggerNotifications } from "./scrape-discord-events/notifications";
@@ -35,6 +31,17 @@ export const handler: ScheduledHandler = async (event, context) => {
         const existingEventFromDatabase = await prisma.event.findUnique({
           where: {
             discordId: futureEventFromDiscord.id,
+          },
+          include: {
+            wikiPages: {
+              where: {
+                parentId: null,
+              },
+              select: {
+                id: true,
+              },
+              take: 1,
+            },
           },
         });
 
@@ -102,6 +109,22 @@ export const handler: ScheduledHandler = async (event, context) => {
               },
             ]);
           }
+
+          if (existingEventFromDatabase.wikiPages.length === 0) {
+            await prisma.wikiPage.create({
+              data: {
+                ...(await buildBriefingRootPageData(
+                  existingEventFromDatabase.discordCreatorId,
+                )),
+                eventId: existingEventFromDatabase.id,
+              },
+            });
+
+            void log.info("Seeded missing briefing page for existing event", {
+              eventId: existingEventFromDatabase.id,
+              discordEventId: futureEventFromDiscord.id,
+            });
+          }
         } else {
           const newEvent = await prisma.event.create({
             data: {
@@ -114,23 +137,10 @@ export const handler: ScheduledHandler = async (event, context) => {
               location: futureEventFromDiscord.entity_metadata.location || null,
               discordImage: futureEventFromDiscord.image,
               discordGuildId: futureEventFromDiscord.guild_id,
-              /**
-               * Seeds the event wiki with its locked root "Briefing" page:
-               * the wiki's homepage and gate (events without one have no
-               * Briefing tab). Title and slug are constants because the
-               * root page can never be renamed. MANAGERS scopes keep the
-               * tab hidden until the organizer deliberately publishes it.
-               */
               wikiPages: {
-                create: {
-                  namespace: WikiPageNamespace.EVENT,
-                  title: "Briefing",
-                  slug: "briefing",
-                  eventReadScope: WikiPageEventScope.MANAGERS,
-                  eventEditScope: WikiPageEventScope.MANAGERS,
-                  imageUploadability: WikiPageUploadability.RESTRICTED,
-                  attachmentUploadability: WikiPageUploadability.RESTRICTED,
-                },
+                create: await buildBriefingRootPageData(
+                  futureEventFromDiscord.creator_id,
+                ),
               },
             },
             select: {
