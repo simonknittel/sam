@@ -47,7 +47,6 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
     title: "Events: Briefing",
     tags: ["Neu", "Events", "Wiki"],
     isTracked: true,
-    requiresAuth: { resource: "event", action: "read" },
     body: () => (
       <>
         <p>
