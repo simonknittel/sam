@@ -25,7 +25,7 @@ export const buildBriefingRootPageData = async (discordCreatorId: string) => {
 
   return {
     namespace: WikiPageNamespace.EVENT,
-    title: "Briefing",
+    title: "BRIEFING",
     slug: "briefing",
     eventReadScope: WikiPageEventScope.MANAGERS,
     eventEditScope: WikiPageEventScope.MANAGERS,
