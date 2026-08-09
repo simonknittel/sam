@@ -118,3 +118,38 @@ resource "aws_cloudwatch_metric_alarm" "critical_account_activity" {
   treat_missing_data  = "notBreaching"
   alarm_description   = "This alarm detects critical account activity: root account usage, console sign-in failures, IAM policy changes or CloudTrail configuration changes. Check the cloudtrail-management-events log group for the matching event."
 }
+
+# Saved Logs Insights queries, one per alarm, named after the alarm they belong
+# to. When an alarm fires, run the matching query over the alarm's time range to
+# see the exact events which triggered it. The filter expressions must stay in
+# sync with the metric filter patterns above — Logs Insights has no way to reuse
+# them.
+
+resource "aws_cloudwatch_query_definition" "unauthorized_api_calls" {
+  name = "cloudtrail-alarms/${aws_cloudwatch_metric_alarm.unauthorized_api_calls.alarm_name}"
+
+  log_group_names = [aws_cloudwatch_log_group.cloudtrail.name]
+
+  query_string = <<-EOT
+    fields @timestamp, eventSource, eventName, errorCode, errorMessage, userIdentity.arn, userIdentity.accessKeyId, sourceIPAddress, userAgent
+    | filter errorCode like /UnauthorizedOperation$/ or errorCode like /^AccessDenied/
+    | sort @timestamp desc
+  EOT
+}
+
+resource "aws_cloudwatch_query_definition" "critical_account_activity" {
+  name = "cloudtrail-alarms/${aws_cloudwatch_metric_alarm.critical_account_activity.alarm_name}"
+
+  log_group_names = [aws_cloudwatch_log_group.cloudtrail.name]
+
+  # One clause per metric filter feeding the CriticalAccountActivity metric.
+  # The eventName and userIdentity.type columns show which category matched.
+  query_string = <<-EOT
+    fields @timestamp, eventSource, eventName, userIdentity.type, userIdentity.arn, sourceIPAddress, errorMessage
+    | filter (userIdentity.type = "Root" and not ispresent(userIdentity.invokedBy) and eventType != "AwsServiceEvent")
+      or (eventName = "ConsoleLogin" and errorMessage = "Failed authentication")
+      or eventName in ["DeleteGroupPolicy", "DeleteRolePolicy", "DeleteUserPolicy", "PutGroupPolicy", "PutRolePolicy", "PutUserPolicy", "CreatePolicy", "DeletePolicy", "CreatePolicyVersion", "DeletePolicyVersion", "AttachRolePolicy", "DetachRolePolicy", "AttachUserPolicy", "DetachUserPolicy", "AttachGroupPolicy", "DetachGroupPolicy"]
+      or eventName in ["CreateTrail", "UpdateTrail", "DeleteTrail", "StartLogging", "StopLogging", "PutEventSelectors"]
+    | sort @timestamp desc
+  EOT
+}
