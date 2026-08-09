@@ -1,9 +1,9 @@
 import {
   type PermissionSet,
   type PermissionSetAttribute,
-} from "./PermissionSet";
+} from "./PermissionSet.js";
 
-export default function comparePermissionSets(
+export function comparePermissionSets(
   requiredPermissionSet: PermissionSet,
   givenPermissionSets: PermissionSet[],
 ) {

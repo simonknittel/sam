@@ -1,12 +1,10 @@
 import { WikiPageAccessType } from "@sam-monorepo/database/browser";
 import {
   createWikiPagePermissionResolver,
-  type WikiPagePermissionSource,
-} from "./resolveWikiPagePermissions";
-import {
   createWikiPageRoleResolvers,
+  type WikiPagePermissionSource,
   type WikiPermissionRole,
-} from "./resolveWikiPageRolePermissions";
+} from "@sam-monorepo/permissions";
 
 export interface WikiEffectivePermissionEntry {
   /** Rendered as a role badge; without it `label` is rendered as plain text */

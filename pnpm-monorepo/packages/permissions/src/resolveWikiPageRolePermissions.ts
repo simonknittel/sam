@@ -2,7 +2,7 @@ import {
   createWikiPagePermissionResolver,
   type ResolvedWikiPagePermissions,
   type WikiPagePermissionSource,
-} from "./resolveWikiPagePermissions";
+} from "./resolveWikiPagePermissions.js";
 
 export interface WikiPermissionRole {
   readonly id: string;

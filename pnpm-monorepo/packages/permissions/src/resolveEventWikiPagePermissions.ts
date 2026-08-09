@@ -5,7 +5,7 @@ import {
 import {
   findWikiPageSettingSource,
   resolveWikiPageTier,
-} from "./wikiPageHierarchy";
+} from "./wikiPageHierarchy.js";
 
 export interface EventWikiPagePermissionSource {
   readonly id: string;

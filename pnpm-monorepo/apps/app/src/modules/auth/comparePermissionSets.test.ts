@@ -1,5 +1,5 @@
+import { comparePermissionSets } from "@sam-monorepo/permissions";
 import { describe, expect, test } from "vitest";
-import comparePermissionSets from "./comparePermissionSets";
 
 describe("compare permission sets", () => {
   test("permission set containing no attributes vs. no permission sets", () => {

@@ -1,10 +1,10 @@
 import { prisma } from "@/db";
-import comparePermissionSets from "@/modules/auth/comparePermissionSets";
 import {
+  comparePermissionSets,
   getPermissionSetsByRoles,
   resolveEffectiveRoles,
-} from "@/modules/auth/server";
-import type { WikiPageViewer } from "../utils/resolveWikiPagePermissions";
+  type WikiPageViewer,
+} from "@sam-monorepo/permissions";
 
 /**
  * Builds the wiki viewer of another citizen, e.g. to check whether someone

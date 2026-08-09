@@ -1,4 +1,4 @@
-import type { PermissionSet } from "@/modules/auth/PermissionSet.tsx";
+import type { PermissionSet } from "@sam-monorepo/permissions";
 import type { ReactNode } from "react";
 
 interface AuthRequirement {

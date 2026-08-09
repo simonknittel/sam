@@ -1,8 +1,8 @@
-import type { WikiPagePermissionSource } from "./resolveWikiPagePermissions";
+import type { WikiPagePermissionSource } from "@sam-monorepo/permissions";
 import {
   createWikiPageRoleResolvers,
   type WikiPermissionRole,
-} from "./resolveWikiPageRolePermissions";
+} from "@sam-monorepo/permissions";
 
 export interface WikiPageRolePrune {
   readonly pageId: string;

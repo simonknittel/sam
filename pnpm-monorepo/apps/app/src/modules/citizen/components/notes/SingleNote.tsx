@@ -1,5 +1,4 @@
 import { prisma } from "@/db";
-import { type PermissionSet } from "@/modules/auth/PermissionSet";
 import { requireAuthentication } from "@/modules/auth/server";
 import styles from "@/modules/common/components/ConfirmationGradient.module.css";
 import { Link } from "@/modules/common/components/Link";
@@ -11,6 +10,7 @@ import {
   type EntityLogAttribute,
   type Organization,
 } from "@sam-monorepo/database/client";
+import { type PermissionSet } from "@sam-monorepo/permissions";
 import clsx from "clsx";
 import Image from "next/image";
 import { Suspense, type ReactNode } from "react";

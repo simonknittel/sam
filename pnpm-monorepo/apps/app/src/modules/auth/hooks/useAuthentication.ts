@@ -1,8 +1,10 @@
 "use client";
 
+import {
+  comparePermissionSets,
+  type PermissionSet,
+} from "@sam-monorepo/permissions";
 import { useSession } from "next-auth/react";
-import { type PermissionSet } from "../PermissionSet";
-import comparePermissionSets from "../comparePermissionSets";
 
 export const useAuthentication = () => {
   const { data: session } = useSession();

@@ -6,12 +6,14 @@ import {
 } from "@/modules/auth/utils/emailConfirmation";
 import { log } from "@/modules/logging";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
+import {
+  comparePermissionSets,
+  type PermissionSet,
+} from "@sam-monorepo/permissions";
 import { getServerSession, type Session } from "next-auth";
 import { cookies } from "next/headers";
 import { forbidden, redirect } from "next/navigation";
 import { cache } from "react";
-import { type PermissionSet } from "./PermissionSet";
-import comparePermissionSets from "./comparePermissionSets";
 
 export const authenticate = cache(
   withTrace("authenticate", async () => {

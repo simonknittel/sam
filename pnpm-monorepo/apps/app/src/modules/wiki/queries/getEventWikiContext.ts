@@ -8,13 +8,13 @@ import {
   type Event,
   type WikiPage,
 } from "@sam-monorepo/database/client";
-import { cache } from "react";
 import {
   collectPositionScopeIdsForCitizen,
   resolveEventWikiPagePermissions,
   type EventWikiViewer,
   type ResolvedEventWikiPagePermissions,
-} from "../utils/resolveEventWikiPagePermissions";
+} from "@sam-monorepo/permissions";
+import { cache } from "react";
 import type { WikiSharedContextPage } from "./getWikiContext";
 
 /**

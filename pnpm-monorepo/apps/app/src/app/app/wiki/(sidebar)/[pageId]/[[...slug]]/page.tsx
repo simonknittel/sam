@@ -38,9 +38,9 @@ import {
   type WikiPageTargetOption,
 } from "@/modules/wiki/utils/getWikiPageTargets";
 import { resolveWikiPageEffectivePermissions } from "@/modules/wiki/utils/resolveWikiPageEffectivePermissions";
-import { resolveWikiPageReadRoleIds } from "@/modules/wiki/utils/resolveWikiPageRolePermissions";
 import { trackWikiPageVisit } from "@/modules/wiki/utils/trackWikiPageVisit";
 import { WikiPageAccessType } from "@sam-monorepo/database/client";
+import { resolveWikiPageReadRoleIds } from "@sam-monorepo/permissions";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { FaHistory } from "react-icons/fa";

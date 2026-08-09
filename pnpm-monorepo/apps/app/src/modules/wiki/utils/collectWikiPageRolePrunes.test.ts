@@ -4,10 +4,12 @@ import {
   WikiPageUploadability,
   WikiPageVisibility,
 } from "@sam-monorepo/database/browser";
+import type {
+  WikiPagePermissionSource,
+  WikiPermissionRole,
+} from "@sam-monorepo/permissions";
 import { describe, expect, test } from "vitest";
 import { collectWikiPageRolePrunes } from "./collectWikiPageRolePrunes";
-import type { WikiPagePermissionSource } from "./resolveWikiPagePermissions";
-import type { WikiPermissionRole } from "./resolveWikiPageRolePermissions";
 
 const page = (
   overrides: Partial<WikiPagePermissionSource> & { id: string },

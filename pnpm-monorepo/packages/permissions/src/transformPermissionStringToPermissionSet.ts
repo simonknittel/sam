@@ -1,4 +1,4 @@
-import type { PermissionSet } from "./common";
+import type { PermissionSet } from "./PermissionSet.js";
 
 export const transformPermissionStringToPermissionSet = (
   permissionString: string,

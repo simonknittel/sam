@@ -10,6 +10,10 @@ import {
   WikiPageUploadability,
   WikiPageVisibility,
 } from "@sam-monorepo/database/client";
+import {
+  createWikiPagePermissionResolver,
+  resolveWikiPageReadRoleIds,
+} from "@sam-monorepo/permissions";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import {
@@ -20,8 +24,6 @@ import { getWikiPermissionRoles } from "../queries/getWikiPermissionRoles";
 import { getWikiViewerForCitizen } from "../queries/getWikiViewerForCitizen";
 import { collectWikiPageDescendants } from "../utils/collectWikiPageDescendants";
 import { collectWikiPageRolePrunes } from "../utils/collectWikiPageRolePrunes";
-import { createWikiPagePermissionResolver } from "../utils/resolveWikiPagePermissions";
-import { resolveWikiPageReadRoleIds } from "../utils/resolveWikiPageRolePermissions";
 
 const schema = z.object({
   id: z.cuid2(),

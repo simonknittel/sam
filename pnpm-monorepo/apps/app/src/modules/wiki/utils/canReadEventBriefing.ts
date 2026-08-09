@@ -8,7 +8,7 @@ import {
   type Event,
   type EventDiscordParticipant,
 } from "@sam-monorepo/database/client";
-import { collectPositionScopeIdsForCitizen } from "./resolveEventWikiPagePermissions";
+import { collectPositionScopeIdsForCitizen } from "@sam-monorepo/permissions";
 
 /**
  * Whether the current viewer may read an event's briefing — the same rule

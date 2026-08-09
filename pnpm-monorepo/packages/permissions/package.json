@@ -1,0 +1,22 @@
+{
+  "name": "@sam-monorepo/permissions",
+  "private": true,
+  "type": "module",
+  "files": [
+    "./dist/*"
+  ],
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "postinstall": "tsc",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@sam-monorepo/database": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.3",
+    "typescript": "7.0.2"
+  }
+}

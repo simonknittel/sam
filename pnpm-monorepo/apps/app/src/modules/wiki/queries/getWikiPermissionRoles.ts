@@ -1,9 +1,11 @@
 import { prisma } from "@/db";
-import comparePermissionSets from "@/modules/auth/comparePermissionSets";
-import { getPermissionSetsByRoles } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
+import {
+  comparePermissionSets,
+  getPermissionSetsByRoles,
+  type WikiPermissionRole,
+} from "@sam-monorepo/permissions";
 import { cache } from "react";
-import type { WikiPermissionRole } from "../utils/resolveWikiPageRolePermissions";
 
 export type WikiPermissionRoleWithName = WikiPermissionRole & {
   readonly name: string;

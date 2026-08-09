@@ -4,6 +4,7 @@ import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { EditableInput } from "@/modules/common/components/form/EditableInput";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
+import type { ResolvedEventWikiPagePermissions } from "@sam-monorepo/permissions";
 import { FaHistory } from "react-icons/fa";
 import { renameWikiPage } from "../actions/renameWikiPage";
 import {
@@ -19,7 +20,6 @@ import { getEventWikiPositionOptions } from "../utils/getEventWikiPositionOption
 import { getWikiCollabUrl } from "../utils/getWikiCollabUrl";
 import { getManageableWikiPageTargets } from "../utils/getWikiPageTargets";
 import { isEventWikiRootPage } from "../utils/isEventWikiRootPage";
-import type { ResolvedEventWikiPagePermissions } from "../utils/resolveEventWikiPagePermissions";
 import { trackWikiPageVisit } from "../utils/trackWikiPageVisit";
 import { createEventWikiHrefMode } from "../utils/wikiPageHref";
 import { CopyWikiPageModal } from "./CopyWikiPageModal";

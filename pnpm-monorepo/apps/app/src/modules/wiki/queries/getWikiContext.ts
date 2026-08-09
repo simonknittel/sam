@@ -1,18 +1,19 @@
 import { prisma } from "@/db";
-import { authenticate, resolveEffectiveRoles } from "@/modules/auth/server";
+import { authenticate } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import {
   WikiPageNamespace,
   type WikiPage,
   type WikiPageAccessType,
 } from "@sam-monorepo/database/client";
-import { cache } from "react";
 import {
+  resolveEffectiveRoles,
   resolveWikiPagePermissions,
   type ResolvedWikiPagePermissions,
   type WikiPageTierPermissions,
   type WikiPageViewer,
-} from "../utils/resolveWikiPagePermissions";
+} from "@sam-monorepo/permissions";
+import { cache } from "react";
 
 /**
  * Page fields both context flavors load — everything the shared

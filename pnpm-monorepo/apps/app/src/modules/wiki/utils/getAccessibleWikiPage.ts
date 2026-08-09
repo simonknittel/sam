@@ -1,4 +1,4 @@
-import type { WikiPageTierPermissions } from "./resolveWikiPagePermissions";
+import type { WikiPageTierPermissions } from "@sam-monorepo/permissions";
 
 export type WikiPageAccessTier = "read" | "edit" | "admin";
 

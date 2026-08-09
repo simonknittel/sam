@@ -1,3 +1,4 @@
+import type { GenericEntityLogType } from "@sam-monorepo/permissions";
 import "react";
 
 declare module "react" {
@@ -12,8 +13,7 @@ export type UserRole = null | "confirmed" | "admin";
 export type EntityLogConfirmationState =
   "confirmed" | "false-report" | undefined;
 
-export type GenericEntityLogType =
-  "handle" | "discord-id" | "teamspeak-id" | "citizen-id" | "community-moniker";
+export type { GenericEntityLogType } from "@sam-monorepo/permissions";
 
 // TODO: Use ENUM (https://www.prisma.io/docs/concepts/components/prisma-schema/data-model#defining-enums)
 export type EntityLogType =

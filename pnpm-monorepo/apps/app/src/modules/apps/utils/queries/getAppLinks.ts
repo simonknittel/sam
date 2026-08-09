@@ -1,6 +1,6 @@
 import { authenticate } from "@/modules/auth/server";
-import { transformPermissionStringToPermissionSet } from "@/modules/auth/transformPermissionStringToPermissionSet";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
+import { transformPermissionStringToPermissionSet } from "@sam-monorepo/permissions";
 import { cache } from "react";
 import { externalApps } from "../externalApps";
 import { INTEGRATED_APPS } from "../INTEGRATED_APPS";
