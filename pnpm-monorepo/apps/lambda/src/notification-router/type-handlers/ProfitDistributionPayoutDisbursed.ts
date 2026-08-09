@@ -1,7 +1,7 @@
 import { prisma } from "@sam-monorepo/database";
 import { getAuecPerSilc } from "../getAuecPerSilc";
 import { getTotalSilc } from "../getTotalSilc";
-import { publishWebPushNotifications } from "../web-push";
+import { publishNotifications } from "../publish";
 
 interface Change {
   citizenId: string;
@@ -52,7 +52,7 @@ export const ProfitDistributionPayoutDisbursedHandler = async (
   /**
    * Publish notifications
    */
-  await publishWebPushNotifications(
+  await publishNotifications(
     participantsWithDisbursedEnabled.map((participant) => {
       const aUEC =
         (participant.silcBalanceSnapshot || 0) *
@@ -60,7 +60,12 @@ export const ProfitDistributionPayoutDisbursedHandler = async (
 
       return {
         receiverId: participant.citizenId,
-        notificationType: "sincome_payout_disbursed",
+        notificationType: "sincome_payout_disbursed" as const,
+        payload: {
+          cycleId: cycle.id,
+          cycleTitle: cycle.title,
+          auecAmount: aUEC,
+        },
         title: "SINcome-Auszahlung erhalten",
         body: `Für den Zeitraum ${cycle.title} hast du eine Auszahlung in Höhe von ${aUEC.toLocaleString("de-DE")} aUEC erhalten.`,
         url: `/app/sincome/${cycle.id}`,

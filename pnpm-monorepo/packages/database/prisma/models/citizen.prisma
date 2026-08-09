@@ -35,7 +35,7 @@ model Entity {
   payoutStartedProfitDistributionCycles        ProfitDistributionCycle[]            @relation("payoutStartedBy")
   payoutEndedProfitDistributionCycles          ProfitDistributionCycle[]            @relation("payoutEndedBy")
   notificationSettings                         NotificationSetting[]
-  // receivedOnSiteNotifications                  OnSiteNotification[]
+  onSiteNotifications                          OnSiteNotification[]
   webPushSubscriptions                         WebPushSubscription[]
   roleAssignments                              RoleAssignment[]                     @relation("citizen")
   /// Changes made by others to the roles of this citizen

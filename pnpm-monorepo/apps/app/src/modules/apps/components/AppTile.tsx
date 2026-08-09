@@ -1,5 +1,6 @@
 import { Badge } from "@/modules/common/components/Badge";
 import { Link } from "@/modules/common/components/Link";
+import { UnreadDot } from "@/modules/common/components/UnreadDot";
 import clsx from "clsx";
 import Image from "next/image";
 import { FaExternalLinkAlt } from "react-icons/fa";
@@ -43,11 +44,7 @@ export const AppTile = ({
           {app.name}
         </span>
 
-        {dotBadgeCount > 0 && (
-          <span className="inline-block rounded-full size-2 bg-amber-500 relative ml-1">
-            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 inline-block rounded-full size-3 bg-amber-500 animate-ping motion-reduce:hidden" />
-          </span>
-        )}
+        {dotBadgeCount > 0 && <UnreadDot className="ml-1" />}
 
         {isExternal && (
           <FaExternalLinkAlt className="flex-none text-neutral-500" />

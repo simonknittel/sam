@@ -133,6 +133,9 @@ importers:
       '@sam-monorepo/database':
         specifier: workspace:*
         version: file:packages/database(prisma@7.9.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(magicast@0.5.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3))(typescript@6.0.3)
+      '@sam-monorepo/notifications':
+        specifier: workspace:*
+        version: link:../../packages/notifications
       '@sam-monorepo/wiki-editor':
         specifier: workspace:*
         version: link:../../packages/wiki-editor
@@ -477,6 +480,9 @@ importers:
       '@sam-monorepo/emails':
         specifier: workspace:*
         version: link:../../packages/emails
+      '@sam-monorepo/notifications':
+        specifier: workspace:*
+        version: link:../../packages/notifications
       aws-xray-sdk-core:
         specifier: 3.12.0
         version: 3.12.0
@@ -492,6 +498,9 @@ importers:
       openpgp:
         specifier: 6.3.1
         version: 6.3.1(@openpgp/web-stream-tools@0.3.1(@types/node@24.13.3)(typescript@7.0.2))
+      pusher:
+        specifier: 5.3.4
+        version: 5.3.4
       react:
         specifier: 19.2.8
         version: 19.2.8
@@ -631,6 +640,19 @@ importers:
       react-dom:
         specifier: 19.2.8
         version: 19.2.8(react@19.2.8)
+
+  packages/notifications:
+    dependencies:
+      zod:
+        specifier: 4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@types/node':
+        specifier: 24.13.3
+        version: 24.13.3
+      typescript:
+        specifier: 7.0.2
+        version: 7.0.2
 
   packages/wiki-editor:
     dependencies:

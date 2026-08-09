@@ -1,5 +1,5 @@
 import { prisma, type Task } from "@sam-monorepo/database";
-import { publishWebPushNotifications } from "../web-push";
+import { publishNotifications } from "../publish";
 
 interface Payload {
   taskId: Task["id"];
@@ -26,10 +26,11 @@ export const TaskAssignmentUpdatedHandler = async (payload: Payload) => {
   /**
    * Publish notifications
    */
-  await publishWebPushNotifications(
+  await publishNotifications(
     task.assignments.map((assignment) => ({
       receiverId: assignment.citizenId,
-      notificationType: "task_assignment_updated",
+      notificationType: "task_assignment_updated" as const,
+      payload: { taskId: task.id, taskTitle: task.title },
       title: "Neuer Task",
       body: `Dir wurde ein Task zugewiesen: ${task.title}`,
       url: `/app/tasks/${task.id}`,

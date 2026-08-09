@@ -42,6 +42,35 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-08-09-benachrichtigungszentrale",
+    date: "2026-08-09",
+    title: "Benachrichtigungszentrale",
+    tags: ["Neu"],
+    isTracked: true,
+    body: () => (
+      <>
+        <p>
+          Die Glocke in der oberen Leiste öffnet jetzt die neue
+          Benachrichtigungszentrale: Alle Benachrichtigungen landen dort
+          zusätzlich zu den Browser-Benachrichtigungen. Neue
+          Benachrichtigungen erscheinen in Echtzeit.
+        </p>
+
+        <p>
+          Welche Benachrichtigungen es gibt, zeigt weiterhin die
+          Übersicht in den{" "}
+          <Link
+            href="/app/account/notifications"
+            className="text-interaction-500 hover:underline focus-visible:underline"
+          >
+            Einstellungen
+          </Link>
+          .
+        </p>
+      </>
+    ),
+  },
+  {
     key: "2026-08-08-wiki-kopieren-und-einfuegen",
     date: "2026-08-08",
     title: "Wiki: Seiten kopieren und einfügen",

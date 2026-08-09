@@ -45,6 +45,7 @@
     "@radix-ui/react-select": "2.3.7",
     "@radix-ui/react-tooltip": "1.2.16",
     "@sam-monorepo/database": "workspace:*",
+    "@sam-monorepo/notifications": "workspace:*",
     "@sam-monorepo/wiki-editor": "workspace:*",
     "@t3-oss/env-nextjs": "0.13.11",
     "@tanstack/react-query": "5.101.4",

@@ -29,6 +29,10 @@ interface PopoverContextProviderProps {
   readonly onOpenChange?: (open: boolean) => void;
 }
 
+/**
+ * @deprecated Use `PopoverBaseUI` instead — this Radix-based popover is only
+ * kept for its remaining usages and should not be used for new code.
+ */
 export const Popover = ({
   trigger,
   children,
@@ -119,6 +123,8 @@ export const Popover = ({
 /**
  * Check for undefined since the defaultValue of the context is undefined. If
  * it's still undefined, the provider component is missing.
+ *
+ * @deprecated Use `usePopoverBaseUI` (with `PopoverBaseUI`) instead.
  */
 export function usePopover() {
   const context = useContext(PopoverContext);

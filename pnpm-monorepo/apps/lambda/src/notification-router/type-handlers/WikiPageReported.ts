@@ -1,5 +1,5 @@
 import { prisma, type WikiPageReport } from "@sam-monorepo/database";
-import { publishWebPushNotifications } from "../web-push";
+import { publishNotifications } from "../publish";
 
 interface Payload {
   reportId: WikiPageReport["id"];
@@ -59,10 +59,16 @@ export const WikiPageReportedHandler = async (payload: Payload) => {
   /**
    * Publish notifications
    */
-  await publishWebPushNotifications(
+  await publishNotifications(
     recipients.map((recipient) => ({
       receiverId: recipient.id,
-      notificationType: "wiki_page_reported",
+      notificationType: "wiki_page_reported" as const,
+      payload: {
+        reportId: report.id,
+        pageTitle: report.page.title,
+        uploadFileName: report.uploadFileName,
+        reportedByHandle: report.createdBy?.handle ?? null,
+      },
       title: "Neue Meldung im Wiki",
       body: report.uploadFileName
         ? `${report.createdBy?.handle ?? "Unbekannt"} hat den Dateianhang "${report.uploadFileName}" auf der Seite "${report.page.title}" gemeldet`

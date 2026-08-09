@@ -1,7 +1,7 @@
 import { prisma, type Event } from "@sam-monorepo/database";
 import { getEventParticipants } from "../getEventParticipants.js";
 import { getNotifiableCitizens } from "../getNotifiableCitizens.js";
-import { publishWebPushNotifications } from "../web-push.js";
+import { publishNotifications } from "../publish.js";
 
 type Payload = {
   eventId: Event["id"];
@@ -19,10 +19,14 @@ export const EventBriefingPublishedHandler = async (payload: Payload) => {
   const recipients = await getRecipients(payload);
   if (!recipients) return;
 
-  await publishWebPushNotifications(
+  await publishNotifications(
     recipients.citizens.map((citizen) => ({
       receiverId: citizen.id,
-      notificationType: "event_briefing_published",
+      notificationType: "event_briefing_published" as const,
+      payload: {
+        eventId: recipients.event.id,
+        eventName: recipients.event.name,
+      },
       title: "Briefing veröffentlicht",
       body: recipients.event.name,
       url: `/app/events/${recipients.event.id}/briefing`,

@@ -7,6 +7,7 @@ import { getAllEvents } from "./routers/events/getAllEvents";
 import { getAllManufacturers } from "./routers/manufacturer/getAll";
 import { getManufacturerById } from "./routers/manufacturer/getById";
 import { getSeriesByManufacturerId } from "./routers/manufacturer/getSeriesByManufacturerId";
+import { list as listOnSiteNotifications } from "./routers/onSiteNotifications/list";
 import { getAssignableRoles } from "./routers/roles/getAssignableRoles";
 import { getVisibleRoles } from "./routers/roles/getVisibleRoles";
 import { getRolesForSalaries } from "./routers/silc/getRolesForSalaries";
@@ -45,6 +46,9 @@ export const appRouter = createTRPCRouter({
     getAll: getAllManufacturers,
     getById: getManufacturerById,
     getSeriesByManufacturerId,
+  }),
+  onSiteNotifications: createTRPCRouter({
+    list: listOnSiteNotifications,
   }),
   roles: createTRPCRouter({
     getVisibleRoles,

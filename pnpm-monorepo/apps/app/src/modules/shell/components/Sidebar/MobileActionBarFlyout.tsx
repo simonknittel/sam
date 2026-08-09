@@ -1,10 +1,29 @@
 "use client";
 
+import { UnreadDot } from "@/modules/common/components/UnreadDot";
+import { useOnSiteNotifications } from "@/modules/notifications/components/OnSiteNotificationsProvider";
 import clsx from "clsx";
 import { usePathname } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 import { AiFillAppstore } from "react-icons/ai";
 import { FaTimes } from "react-icons/fa";
+
+/**
+ * The flyout stays mounted while it is translated off-screen, so content
+ * which should only be active while the flyout is open (e.g. the
+ * notification center's queries and read-on-view tracking) reads this.
+ */
+const MobileActionBarFlyoutVisibilityContext = createContext(false);
+
+export function useMobileActionBarFlyoutVisibility() {
+  return useContext(MobileActionBarFlyoutVisibilityContext);
+}
 
 interface Props {
   readonly children?: ReactNode;
@@ -13,6 +32,7 @@ interface Props {
 export const MobileActionBarFlyout = ({ children }: Props) => {
   const pathname = usePathname();
   const [isVisible, setIsVisible] = useState(false);
+  const { unreadCount } = useOnSiteNotifications();
 
   useEffect(() => {
     setIsVisible(false);
@@ -25,7 +45,12 @@ export const MobileActionBarFlyout = ({ children }: Props) => {
         type="button"
         className="flex flex-col items-center justify-center px-4 h-full active:bg-neutral-700 rounded-secondary"
       >
-        {isVisible ? <FaTimes /> : <AiFillAppstore />}
+        <span className="relative">
+          {isVisible ? <FaTimes /> : <AiFillAppstore />}
+          {unreadCount > 0 && (
+            <UnreadDot className="absolute -top-1 -right-2" />
+          )}
+        </span>
         <span className="text-xs">Apps</span>
       </button>
 
@@ -38,7 +63,9 @@ export const MobileActionBarFlyout = ({ children }: Props) => {
           },
         )}
       >
-        {children}
+        <MobileActionBarFlyoutVisibilityContext.Provider value={isVisible}>
+          {children}
+        </MobileActionBarFlyoutVisibilityContext.Provider>
       </div>
 
       {isVisible && (

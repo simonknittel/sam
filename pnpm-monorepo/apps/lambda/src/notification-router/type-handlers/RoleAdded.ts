@@ -1,5 +1,5 @@
 import { prisma, type Entity, type Role } from "@sam-monorepo/database";
-import { publishWebPushNotifications } from "../web-push";
+import { publishNotifications } from "../publish";
 
 interface Payload {
   citizenId: Entity["id"];
@@ -88,10 +88,11 @@ export const RoleAddedHandler = async (payload: Payload) => {
   /**
    * Publish notifications
    */
-  await publishWebPushNotifications([
+  await publishNotifications([
     {
       receiverId: payload.citizenId,
-      notificationType: "role_added",
+      notificationType: "role_added" as const,
+      payload: { roleId: payload.roleId, roleName: role.name },
       title: "Neue Rolle",
       body: `Dir wurde eine neue Rolle zugewiesen: ${role.name}`,
     },

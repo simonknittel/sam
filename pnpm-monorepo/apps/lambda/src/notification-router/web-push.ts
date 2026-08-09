@@ -1,8 +1,4 @@
-import {
-  NotificationChannel,
-  prisma,
-  type Entity,
-} from "@sam-monorepo/database";
+import { NotificationChannel, prisma } from "@sam-monorepo/database";
 import {
   sendNotification,
   setVapidDetails,
@@ -10,20 +6,13 @@ import {
   type RequestOptions,
 } from "web-push";
 import { log } from "../common/logger";
+import { type Notification } from "./notification";
 
 setVapidDetails(
   process.env.BASE_URL!,
   process.env.PUBLIC_VAPID_KEY!,
   process.env.PRIVATE_VAPID_KEY!,
 );
-
-interface Notification {
-  readonly receiverId: Entity["id"];
-  readonly notificationType: string;
-  readonly title: string;
-  readonly body: string;
-  readonly url?: string;
-}
 
 const RATE_LIMIT_MAX_RETRIES = 3;
 const RATE_LIMIT_DEFAULT_DELAY_MS = 1_000;

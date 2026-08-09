@@ -1,0 +1,128 @@
+"use client";
+
+import { Link } from "@/modules/common/components/Link";
+import { RelativeDate } from "@/modules/common/components/RelativeDate";
+import { FaArchive, FaEnvelope, FaUndo } from "react-icons/fa";
+import { renderOnSiteNotification } from "../utils/renderOnSiteNotification";
+import {
+  NotificationCenterTab,
+  type OnSiteNotificationRow,
+} from "../utils/types";
+
+interface Props {
+  readonly notification: OnSiteNotificationRow;
+  readonly tab: NotificationCenterTab;
+  readonly onArchive: (notification: OnSiteNotificationRow) => void;
+  readonly onUnarchive: (notification: OnSiteNotificationRow) => void;
+  readonly onMarkUnread: (notification: OnSiteNotificationRow) => void;
+  readonly onNavigateToTarget: (
+    notificationId: string,
+    isUnread: boolean,
+  ) => void;
+}
+
+export const NotificationListItem = ({
+  notification,
+  tab,
+  onArchive,
+  onUnarchive,
+  onMarkUnread,
+  onNavigateToTarget,
+}: Props) => {
+  const rendering = renderOnSiteNotification(notification);
+  const isUnread = !notification.readAt;
+  const trackReadOnView = isUnread && tab === NotificationCenterTab.Inbox;
+
+  return (
+    <li
+      className="relative group/notification px-4 py-2 hover:bg-neutral-800/50 focus-within:bg-neutral-800/50"
+      data-unread-notification-id={
+        trackReadOnView ? notification.id : undefined
+      }
+    >
+      <div className="flex items-center gap-2">
+        {isUnread && (
+          <span
+            className="flex-none inline-block rounded-full size-2 bg-amber-500"
+            title="Ungelesen"
+          />
+        )}
+
+        {rendering.url ? (
+          <Link
+            href={rendering.url}
+            onClick={() => onNavigateToTarget(notification.id, isUnread)}
+            className="font-bold text-sm truncate hover:underline focus-visible:underline after:absolute after:inset-0"
+            title={rendering.title}
+          >
+            {rendering.title}
+          </Link>
+        ) : (
+          <span className="font-bold text-sm truncate" title={rendering.title}>
+            {rendering.title}
+          </span>
+        )}
+
+        <RelativeDate
+          date={notification.createdAt}
+          className="ml-auto flex-none text-xs text-neutral-500"
+        />
+      </div>
+
+      {rendering.body && (
+        <p
+          className="text-sm text-neutral-300 truncate mt-0.5"
+          title={rendering.body}
+        >
+          {rendering.body}
+        </p>
+      )}
+
+      <div className="flex items-center justify-between gap-2 mt-0.5 min-h-6">
+        <span className="text-xs text-neutral-500 font-mono uppercase truncate">
+          {rendering.appTitle}
+        </span>
+
+        <div className="relative flex gap-1 opacity-0 group-hover/notification:opacity-100 group-focus-within/notification:opacity-100">
+          {tab === NotificationCenterTab.Inbox && (
+            <>
+              {!isUnread && (
+                <button
+                  type="button"
+                  onClick={() => onMarkUnread(notification)}
+                  title="Als ungelesen markieren"
+                  aria-label="Als ungelesen markieren"
+                  className="p-1 text-neutral-500 hover:text-interaction-500 focus-visible:text-interaction-500 active:scale-95 cursor-pointer transition-colors"
+                >
+                  <FaEnvelope />
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => onArchive(notification)}
+                title="Archivieren"
+                aria-label="Archivieren"
+                className="p-1 text-neutral-500 hover:text-interaction-500 focus-visible:text-interaction-500 active:scale-95 cursor-pointer transition-colors"
+              >
+                <FaArchive />
+              </button>
+            </>
+          )}
+
+          {tab === NotificationCenterTab.Archive && (
+            <button
+              type="button"
+              onClick={() => onUnarchive(notification)}
+              title="Wiederherstellen"
+              aria-label="Wiederherstellen"
+              className="p-1 text-neutral-500 hover:text-interaction-500 focus-visible:text-interaction-500 active:scale-95 cursor-pointer transition-colors"
+            >
+              <FaUndo />
+            </button>
+          )}
+        </div>
+      </div>
+    </li>
+  );
+};

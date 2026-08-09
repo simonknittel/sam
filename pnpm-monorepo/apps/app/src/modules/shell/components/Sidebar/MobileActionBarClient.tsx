@@ -5,13 +5,27 @@ import { groupByFeatured } from "@/modules/apps/utils/groupByFeatured";
 import type { App, RedactedApp } from "@/modules/apps/utils/types";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { Link } from "@/modules/common/components/Link";
+import { NotificationCenter } from "@/modules/notifications/components/NotificationCenter";
 import { FaHome } from "react-icons/fa";
 import { MdTaskAlt, MdWorkspaces } from "react-icons/md";
 import { TbMilitaryRank } from "react-icons/tb";
 import { Footer } from "../Footer";
 import { Account } from "./Account";
-import { MobileActionBarFlyout } from "./MobileActionBarFlyout";
+import {
+  MobileActionBarFlyout,
+  useMobileActionBarFlyoutVisibility,
+} from "./MobileActionBarFlyout";
 import { RedBar } from "./RedBar";
+
+/**
+ * The flyout keeps its children mounted while closed — only activate the
+ * notification center's queries and read-on-view while it is open.
+ */
+const FlyoutNotificationCenter = () => {
+  const isFlyoutVisible = useMobileActionBarFlyoutVisibility();
+
+  return <NotificationCenter enabled={isFlyoutVisible} />;
+};
 
 interface Props {
   readonly supportHref: string | null;
@@ -122,6 +136,10 @@ export const MobileActionBarClient = ({ supportHref }: Props) => {
       <li className="h-full py-1">
         <MobileActionBarFlyout>
           <Account supportHref={supportHref} />
+
+          <div className="p-4">
+            <FlyoutNotificationCenter />
+          </div>
 
           <div className="p-4 relative" data-red-bar-container>
             {featured && (

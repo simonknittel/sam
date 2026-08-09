@@ -1,5 +1,5 @@
 import { prisma, type SilcTransaction } from "@sam-monorepo/database";
-import { publishWebPushNotifications } from "../web-push";
+import { publishNotifications } from "../publish";
 
 interface Payload {
   transactionIds: SilcTransaction["id"][];
@@ -90,7 +90,7 @@ export const SilcTransactionsCreatedHandler = async (payload: Payload) => {
   /**
    * Publish notifications
    */
-  await publishWebPushNotifications(
+  await publishNotifications(
     transactions
       .filter((transaction) =>
         citizensWithMatchingRoles.some(
@@ -99,7 +99,12 @@ export const SilcTransactionsCreatedHandler = async (payload: Payload) => {
       )
       .map((transaction) => ({
         receiverId: transaction.receiverId,
-        notificationType: "silc_transaction_created",
+        notificationType: "silc_transaction_created" as const,
+        payload: {
+          transactionId: transaction.id,
+          value: transaction.value,
+          description: transaction.description,
+        },
         title: "SILC-Transaktion erhalten",
         body: `${transaction.value >= 0 ? "+" : "-"}${Math.abs(transaction.value).toLocaleString("de")} SILC - ${transaction.description}`,
       })),

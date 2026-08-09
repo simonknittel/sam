@@ -1,0 +1,29 @@
+import { prisma, type OnSiteNotification } from "@sam-monorepo/database";
+import { ON_SITE_NOTIFICATION_PAYLOAD_VERSIONS } from "@sam-monorepo/notifications";
+import { log } from "../common/logger";
+import { type Notification } from "./notification";
+
+/**
+ * Persists one `OnSiteNotification` row per notification. On-site is
+ * always-on, so this happens for every recipient, before any
+ * `NotificationSetting` filtering is applied for other channels.
+ */
+export const createOnSiteNotifications = async (
+  notifications: Notification[],
+): Promise<OnSiteNotification[]> => {
+  if (notifications.length <= 0) return [];
+
+  const rows = await prisma.onSiteNotification.createManyAndReturn({
+    data: notifications.map((notification) => ({
+      citizenId: notification.receiverId,
+      notificationType: notification.notificationType,
+      payload: notification.payload,
+      payloadVersion:
+        ON_SITE_NOTIFICATION_PAYLOAD_VERSIONS[notification.notificationType],
+    })),
+  });
+
+  log.info("Created on-site notifications", { count: rows.length });
+
+  return rows;
+};

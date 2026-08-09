@@ -17,5 +17,11 @@ module "notification_router" {
     "/database/connection_string",
     "/web_push/private_vapid_key",
     "/web_push/public_vapid_key",
+    "/soketi/app_id",
+    "/soketi/app_key",
+    "/soketi/app_secret",
+    "/soketi/host",
+    "/soketi/port",
+    "/soketi/secure_port",
   ]
 }

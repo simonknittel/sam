@@ -1,5 +1,6 @@
 import type {
   Entity,
+  Prisma,
   PrismaClient,
   Role,
   User,
@@ -221,6 +222,40 @@ export const createWikiTag = async (
 
   return tag;
 };
+
+interface CreateOnSiteNotificationOptions {
+  readonly citizenId: string;
+  readonly notificationType?: string;
+  readonly payload?: Prisma.InputJsonValue;
+  readonly payloadVersion?: number;
+  readonly createdAt?: Date;
+  readonly readAt?: Date | null;
+  readonly archivedAt?: Date | null;
+}
+
+export const createOnSiteNotification = (
+  prisma: PrismaClient,
+  {
+    citizenId,
+    notificationType = "event_created",
+    payload = { eventId: "test-event", eventName: "Operation Testlauf" },
+    payloadVersion = 1,
+    createdAt,
+    readAt = null,
+    archivedAt = null,
+  }: CreateOnSiteNotificationOptions,
+) =>
+  prisma.onSiteNotification.create({
+    data: {
+      citizenId,
+      notificationType,
+      payload,
+      payloadVersion,
+      createdAt,
+      readAt,
+      archivedAt,
+    },
+  });
 
 export const WIKI_SETTING_FEATURED_PAGES = "featuredPages";
 

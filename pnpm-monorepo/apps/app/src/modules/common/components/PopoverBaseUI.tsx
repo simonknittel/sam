@@ -68,6 +68,10 @@ const PopoverChrome = ({
 
 interface PopoverBaseUIContextProviderProps {
   readonly trigger: ReactNode;
+  /** Applied to the button element Base UI renders around `trigger` */
+  readonly triggerClassName?: string;
+  /** Tooltip and accessible name of the trigger button (for icon-only triggers) */
+  readonly triggerTitle?: string;
   readonly children: ReactNode;
   readonly childrenClassName?: string;
   readonly onOpenChange?: (open: boolean) => void;
@@ -87,6 +91,8 @@ interface PopoverBaseUIContextProviderProps {
 
 export const PopoverBaseUI = ({
   trigger,
+  triggerClassName,
+  triggerTitle,
   children,
   childrenClassName,
   onOpenChange,
@@ -124,9 +130,11 @@ export const PopoverBaseUI = ({
       <Popover.Root open={!disabled && isOpen} onOpenChange={handleOpenChange}>
         <Popover.Trigger
           openOnHover={openOnHover}
-          className="text-left"
+          className={clsx("text-left", triggerClassName)}
           delay={50}
           disabled={disabled}
+          title={triggerTitle}
+          aria-label={triggerTitle}
         >
           {trigger}
         </Popover.Trigger>

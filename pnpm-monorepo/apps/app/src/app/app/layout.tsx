@@ -11,6 +11,8 @@ import QueryClientProviderContainer from "@/modules/common/components/QueryClien
 import { ServiceWorkerLoader } from "@/modules/common/components/ServiceWorkerLoader";
 import { getUnleashFlag } from "@/modules/common/utils/getUnleashFlag";
 import { UNLEASH_FLAG } from "@/modules/common/utils/UNLEASH_FLAG";
+import { OnSiteNotificationsProvider } from "@/modules/notifications/components/OnSiteNotificationsProvider";
+import { getUnreadOnSiteNotificationCount } from "@/modules/notifications/utils/queries/getUnreadOnSiteNotificationCount";
 import { ChannelsProvider } from "@/modules/pusher/components/ChannelsContext";
 import { RolesContextProvider } from "@/modules/roles/components/RolesContext";
 import { getVisibleRoles } from "@/modules/roles/utils/getRoles";
@@ -31,6 +33,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
     visibleRoles,
     changelogUnseenKeys,
     openWikiReportCount,
+    unreadOnSiteNotificationCount,
   ] = await Promise.all([
     requireAuthenticationPage(),
     getUnleashFlag(UNLEASH_FLAG.DisableAlgolia),
@@ -38,6 +41,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
     getVisibleRoles(),
     getUnseenChangelogEntryKeys(),
     getOpenWikiReportCount(),
+    getUnreadOnSiteNotificationCount(),
   ]);
 
   return (
@@ -57,16 +61,20 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
                           wiki: openWikiReportCount,
                         }}
                       >
-                        <CreateContextProvider>
-                          <CmdKProvider disableAlgolia={disableAlgolia}>
-                            <TopBar />
-                            <MobileActionBarLoader />
-                          </CmdKProvider>
+                        <OnSiteNotificationsProvider
+                          initialUnreadCount={unreadOnSiteNotificationCount}
+                        >
+                          <CreateContextProvider>
+                            <CmdKProvider disableAlgolia={disableAlgolia}>
+                              <TopBar />
+                              <MobileActionBarLoader />
+                            </CmdKProvider>
 
-                          <div className="pt-12 lg:pt-28 pb-16 lg:pb-0 min-h-dvh">
-                            {children}
-                          </div>
-                        </CreateContextProvider>
+                            <div className="pt-12 lg:pt-28 pb-16 lg:pb-0 min-h-dvh">
+                              {children}
+                            </div>
+                          </CreateContextProvider>
+                        </OnSiteNotificationsProvider>
                       </AppsContextProvider>
                     </div>
 

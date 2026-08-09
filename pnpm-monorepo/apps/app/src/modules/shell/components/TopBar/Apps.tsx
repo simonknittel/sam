@@ -8,6 +8,7 @@ import { groupByFeatured } from "@/modules/apps/utils/groupByFeatured";
 import type { App, RedactedApp } from "@/modules/apps/utils/types";
 import { Link } from "@/modules/common/components/Link";
 import { Popover, usePopover } from "@/modules/common/components/Popover";
+import { UnreadDot } from "@/modules/common/components/UnreadDot";
 import clsx from "clsx";
 import { AiFillAppstore } from "react-icons/ai";
 
@@ -38,11 +39,7 @@ export const Apps = ({ className }: Props) => {
             Apps
           </span>
 
-          {hasDotBadge && (
-            <span className="inline-block rounded-full size-2 bg-amber-500 relative ml-1">
-              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 inline-block rounded-full size-3 bg-amber-500 animate-ping motion-reduce:hidden" />
-            </span>
-          )}
+          {hasDotBadge && <UnreadDot className="ml-1" />}
         </button>
       }
       enableHover

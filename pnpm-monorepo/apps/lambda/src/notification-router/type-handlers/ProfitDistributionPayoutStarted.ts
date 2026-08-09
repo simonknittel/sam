@@ -1,5 +1,5 @@
 import { prisma } from "@sam-monorepo/database";
-import { publishWebPushNotifications } from "../web-push";
+import { publishNotifications } from "../publish";
 
 interface Payload {
   cycleId: string;
@@ -29,10 +29,11 @@ export const ProfitDistributionPayoutStartedHandler = async (
   /**
    * Publish notifications
    */
-  await publishWebPushNotifications(
+  await publishNotifications(
     cycle.participants.map((participant) => ({
       receiverId: participant.citizenId,
-      notificationType: "sincome_payout_started",
+      notificationType: "sincome_payout_started" as const,
+      payload: { cycleId: cycle.id, cycleTitle: cycle.title },
       title: "SINcome-Auszahlung gestartet",
       body: `Die Auszahlungsphase für den Zeitraum ${cycle.title} wurde gestartet. Bitte stimme der Auszahlung zu.`,
       url: `/app/sincome/${cycle.id}`,

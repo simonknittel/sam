@@ -1,5 +1,5 @@
 import { prisma, type PenaltyEntry } from "@sam-monorepo/database";
-import { publishWebPushNotifications } from "../web-push";
+import { publishNotifications } from "../publish";
 
 interface Payload {
   penaltyEntryId: PenaltyEntry["id"];
@@ -79,10 +79,11 @@ export const PenaltyEntryCreatedHandler = async (payload: Payload) => {
   /**
    * Publish notifications
    */
-  await publishWebPushNotifications([
+  await publishNotifications([
     {
       receiverId: penaltyEntry.citizenId,
-      notificationType: "penalty_entry_created",
+      notificationType: "penalty_entry_created" as const,
+      payload: { points: penaltyEntry.points, reason: penaltyEntry.reason },
       title: "Strafpunkte erhalten",
       body: `Du hast ${penaltyEntry.points} Strafpunkte erhalten für ${penaltyEntry.reason}`,
     },

@@ -1,5 +1,5 @@
 import { prisma, type Event } from "@sam-monorepo/database";
-import { publishWebPushNotifications } from "../web-push.js";
+import { publishNotifications } from "../publish.js";
 
 type Payload = {
   eventId: Event["id"];
@@ -93,10 +93,11 @@ export const EventDeletedHandler = async (payload: Payload) => {
   /**
    * Publish notifications
    */
-  await publishWebPushNotifications(
+  await publishNotifications(
     citizensWithMatchingRoles.map((citizen) => ({
       receiverId: citizen.id,
-      notificationType: "event_deleted",
+      notificationType: "event_deleted" as const,
+      payload: { eventName: event.name },
       title: "Event gelöscht",
       body: event.name,
     })),

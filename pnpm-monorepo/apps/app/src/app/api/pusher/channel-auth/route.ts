@@ -2,6 +2,7 @@ import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import { log } from "@/modules/logging";
 import { channelsClient } from "@/modules/pusher/utils/channelsClient";
+import { CITIZEN_CHANNEL_PREFIX } from "@sam-monorepo/notifications";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -42,6 +43,25 @@ export async function POST(request: Request) {
 
     if (data.channel_name.startsWith("private-event-")) {
       await authentication.authorizeApi("event", "read");
+      const authResponse = channelsClient.authorizeChannel(
+        data.socket_id,
+        data.channel_name,
+      );
+      return NextResponse.json(authResponse);
+    }
+
+    /**
+     * On-site notification channel: every citizen may only subscribe to
+     * their own channel.
+     */
+    if (data.channel_name.startsWith(CITIZEN_CHANNEL_PREFIX)) {
+      const requestedCitizenId = data.channel_name.slice(
+        CITIZEN_CHANNEL_PREFIX.length,
+      );
+      if (requestedCitizenId !== authentication.session.entity?.id) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+
       const authResponse = channelsClient.authorizeChannel(
         data.socket_id,
         data.channel_name,

@@ -111,6 +111,9 @@ allowBuilds:
   # a workspace project lifecycle; no need to run it again as a dependency
   # build of apps/app.
   "@sam-monorepo/database@file:packages/database": false
+  # Same reasoning as for the database package: the postinstall (tsc) already
+  # runs as a workspace project lifecycle.
+  "@sam-monorepo/notifications@file:packages/notifications": false
   # Optional native accelerators of testcontainers' ssh2 dependency — the
   # pure-JS fallbacks are fine for the test stack.
   cpu-features: false
