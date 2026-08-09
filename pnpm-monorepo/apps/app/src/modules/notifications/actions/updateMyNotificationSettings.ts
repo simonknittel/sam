@@ -2,6 +2,8 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { NotificationChannel } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -114,6 +116,29 @@ export const updateMyNotificationSettings = createAuthenticatedAction(
         });
       }),
     );
+
+    if (changes.length > 0)
+      await createAuditEvents([
+        {
+          type: AuditEventType.NOTIFICATION_SETTINGS_UPDATED,
+          data: {
+            citizenId: authentication.session.entity.id,
+            enabled: changes
+              .filter((change) => change.enabled)
+              .map(({ notificationType, channel }) => ({
+                notificationType,
+                channel,
+              })),
+            disabled: changes
+              .filter((change) => !change.enabled)
+              .map(({ notificationType, channel }) => ({
+                notificationType,
+                channel,
+              })),
+          },
+          createdById: authentication.session.user.id,
+        },
+      ]);
 
     /**
      * Revalidate cache(s)

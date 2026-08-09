@@ -3,8 +3,16 @@ import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
+import { HIGH_VOLUME_AUDIT_EVENT_TYPES } from "../utils/AuditEventTypes";
+import { getSystemLogDateRange } from "../utils/systemLogDateRange";
+import { SystemLogVolume } from "../utils/systemLogFilterParams";
 
 const AUDIT_EVENTS_PAGE_SIZE = 50;
+
+const isHidingHighVolumeAuditEvents = (
+  type: string[] | null | undefined,
+  volume: SystemLogVolume,
+) => volume === SystemLogVolume.WithoutHighVolume && !(type && type.length > 0);
 
 export const getAuditEvents = cache(
   withTrace(
@@ -14,15 +22,29 @@ export const getAuditEvents = cache(
       createdById?: string[] | null,
       cursor?: string | null,
       direction: "next" | "prev" = "next",
+      volume: SystemLogVolume = SystemLogVolume.WithoutHighVolume,
+      from?: string | null,
+      to?: string | null,
     ) => {
       const authentication = await requireAuthentication();
       if (!(await authentication.authorize("systemLog", "read"))) forbidden();
 
+      const createdAt = getSystemLogDateRange(from, to);
+
+      /**
+       * An explicit type filter always wins, so picking a high-volume type
+       * can never come back empty because of the volume setting.
+       */
       const where = {
-        ...(type && type.length > 0 ? { type: { in: type } } : {}),
+        ...(type && type.length > 0
+          ? { type: { in: type } }
+          : isHidingHighVolumeAuditEvents(type, volume)
+            ? { type: { notIn: [...HIGH_VOLUME_AUDIT_EVENT_TYPES] } }
+            : {}),
         ...(createdById && createdById.length > 0
           ? { createdById: { in: createdById } }
           : {}),
+        ...(Object.keys(createdAt).length > 0 ? { createdAt } : {}),
       };
 
       const take =
@@ -32,9 +54,14 @@ export const getAuditEvents = cache(
 
       const rows = await prisma.auditEvent.findMany({
         where,
-        orderBy: {
-          createdAt: "desc",
-        },
+        /**
+         * `id` breaks ties so the order is total. Events written in one
+         * batch share a `createdAt` down to the millisecond, and the cursor
+         * below can only pick a page boundary out of an order that has
+         * exactly one — otherwise rows tied with the cursor row get skipped
+         * or repeated across pages.
+         */
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
         ...(cursor
           ? {
               cursor: {

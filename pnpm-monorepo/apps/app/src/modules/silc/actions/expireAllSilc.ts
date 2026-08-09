@@ -1,6 +1,8 @@
 "use server";
 
 import { prisma } from "@/db";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationAction } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
 import { revalidatePath } from "next/cache";
@@ -43,6 +45,20 @@ export const expireAllSilc = async () => {
     });
 
     await updateCitizensSilcBalances(citizens.map((citizen) => citizen.id));
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.SILC_ALL_EXPIRED,
+        data: {
+          citizenCount: citizens.length,
+          expiredValue: citizens.reduce(
+            (sum, citizen) => sum + citizen.silcBalance,
+            0,
+          ),
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Revalidate cache(s)

@@ -1,4 +1,5 @@
 import { prisma } from "@sam-monorepo/database";
+import { createAuditEvents } from "../common/audit";
 import { log } from "../common/logger";
 import { captureAsyncFunc } from "../common/xray";
 
@@ -37,6 +38,13 @@ export const countCitizensPerRole = async () => {
         data,
       }),
     );
+
+    await createAuditEvents([
+      {
+        type: "CITIZENS_PER_ROLE_COUNTED",
+        data: { roleCount: data.length },
+      },
+    ]);
 
     log.info("Saved citizens per role statistics", { count: data.length });
   });

@@ -2,6 +2,8 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { WikiSharedContextPage } from "../queries/getWikiContext";
@@ -44,6 +46,20 @@ export const toggleWikiPageFavorite = createAuthenticatedAction(
         data: { citizenId, pageId: page.id },
       });
     }
+
+    await createAuditEvents([
+      {
+        type: existing
+          ? AuditEventType.WIKI_PAGE_FAVORITE_REMOVED
+          : AuditEventType.WIKI_PAGE_FAVORITE_ADDED,
+        data: {
+          pageId: page.id,
+          eventId: page.eventId ?? undefined,
+          citizenId,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     revalidatePath(getWikiScopeRevalidationPath(scoped), "layout");
 

@@ -3,6 +3,7 @@ import "./scrape-discord-events/setup"; // must be first
 import { prisma } from "@sam-monorepo/database";
 import type { ScheduledHandler } from "aws-lambda";
 import { shuffle } from "lodash";
+import { createAuditEvents } from "./common/audit";
 import { log } from "./common/logger";
 import { initializeRequestContext } from "./common/requestContext";
 import { buildBriefingRootPageData } from "./scrape-discord-events/buildBriefingRootPageData";
@@ -83,6 +84,17 @@ export const handler: ScheduledHandler = async (event, context) => {
               eventId: existingEventFromDatabase.id,
               discordEventId: futureEventFromDiscord.id,
             });
+
+            await createAuditEvents([
+              {
+                type: "EVENT_UPDATED_FROM_DISCORD",
+                data: {
+                  eventId: existingEventFromDatabase.id,
+                  discordId: futureEventFromDiscord.id,
+                  name: futureEventFromDiscord.name,
+                },
+              },
+            ]);
           }
 
           const hasChangesForNotification =
@@ -152,6 +164,17 @@ export const handler: ScheduledHandler = async (event, context) => {
             eventId: newEvent.id,
             discordEventId: futureEventFromDiscord.id,
           });
+
+          await createAuditEvents([
+            {
+              type: "EVENT_IMPORTED_FROM_DISCORD",
+              data: {
+                eventId: newEvent.id,
+                discordId: futureEventFromDiscord.id,
+                name: futureEventFromDiscord.name,
+              },
+            },
+          ]);
 
           await triggerNotifications([
             {

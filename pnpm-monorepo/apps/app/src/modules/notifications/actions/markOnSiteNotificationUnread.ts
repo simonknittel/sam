@@ -2,6 +2,8 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { z } from "zod";
 
 const schema = z.object({
@@ -18,7 +20,7 @@ export const markOnSiteNotificationUnread = createAuthenticatedAction(
         requestPayload: formData,
       };
 
-    await prisma.onSiteNotification.updateMany({
+    const { count } = await prisma.onSiteNotification.updateMany({
       where: {
         id: data.notificationId,
         citizenId: authentication.session.entity.id,
@@ -27,6 +29,18 @@ export const markOnSiteNotificationUnread = createAuthenticatedAction(
         readAt: null,
       },
     });
+
+    if (count > 0)
+      await createAuditEvents([
+        {
+          type: AuditEventType.ON_SITE_NOTIFICATION_UNREAD,
+          data: {
+            citizenId: authentication.session.entity.id,
+            notificationId: data.notificationId,
+          },
+          createdById: authentication.session.user.id,
+        },
+      ]);
 
     return { success: "Als ungelesen markiert" };
   },

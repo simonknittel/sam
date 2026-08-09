@@ -1,5 +1,6 @@
 import { prisma, type OnSiteNotification } from "@sam-monorepo/database";
 import { ON_SITE_NOTIFICATION_PAYLOAD_VERSIONS } from "@sam-monorepo/notifications";
+import { createAuditEvents } from "../common/audit";
 import { log } from "../common/logger";
 import { type Notification } from "./notification";
 
@@ -24,6 +25,18 @@ export const createOnSiteNotifications = async (
   });
 
   log.info("Created on-site notifications", { count: rows.length });
+
+  await createAuditEvents([
+    {
+      type: "ON_SITE_NOTIFICATIONS_CREATED",
+      data: {
+        count: rows.length,
+        notificationTypes: [
+          ...new Set(rows.map((row) => row.notificationType)),
+        ],
+      },
+    },
+  ]);
 
   return rows;
 };

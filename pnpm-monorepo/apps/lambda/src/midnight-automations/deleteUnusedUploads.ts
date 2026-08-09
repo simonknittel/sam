@@ -4,6 +4,7 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import { prisma } from "@sam-monorepo/database";
+import { createAuditEvents } from "../common/audit";
 import { log } from "../common/logger";
 import { captureAsyncFunc } from "../common/xray";
 
@@ -201,10 +202,21 @@ export const deleteUnusedUploads = async () => {
       });
     }
 
-    if (deletableIds.length > 0 || orphanedKeys.length > 0)
+    if (deletableIds.length > 0 || orphanedKeys.length > 0) {
       log.info("Deleted unused uploads", {
         databaseCount: deletableIds.length,
         bucketCount: orphanedKeys.length,
       });
+
+      await createAuditEvents([
+        {
+          type: "UNUSED_UPLOADS_DELETED",
+          data: {
+            databaseCount: deletableIds.length,
+            bucketCount: orphanedKeys.length,
+          },
+        },
+      ]);
+    }
   });
 };

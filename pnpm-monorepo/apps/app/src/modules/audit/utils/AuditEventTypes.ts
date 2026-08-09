@@ -119,7 +119,58 @@ export enum AuditEventType {
   WIKI_PAGE_SIDEBAR_MODE_UPDATED = "WIKI_PAGE_SIDEBAR_MODE_UPDATED",
   WIKI_PAGE_TAGS_UPDATED = "WIKI_PAGE_TAGS_UPDATED",
   WIKI_PAGE_ICON_UPDATED = "WIKI_PAGE_ICON_UPDATED",
+  WIKI_PAGE_FAVORITE_ADDED = "WIKI_PAGE_FAVORITE_ADDED",
+  WIKI_PAGE_FAVORITE_REMOVED = "WIKI_PAGE_FAVORITE_REMOVED",
+  WIKI_PAGE_VISITED = "WIKI_PAGE_VISITED",
+  WIKI_CITIZEN_MENTIONS_SWEPT = "WIKI_CITIZEN_MENTIONS_SWEPT",
+  TRASHED_WIKI_PAGES_PURGED = "TRASHED_WIKI_PAGES_PURGED",
+  ORPHANED_WIKI_TAGS_PURGED = "ORPHANED_WIKI_TAGS_PURGED",
+  MANUFACTURER_CREATED = "MANUFACTURER_CREATED",
+  SERIES_CREATED = "SERIES_CREATED",
+  ENTITY_LOG_CONFIRMED = "ENTITY_LOG_CONFIRMED",
+  CAREER_FLOW_UPDATED = "CAREER_FLOW_UPDATED",
+  SILC_SETTING_UPDATED = "SILC_SETTING_UPDATED",
+  SILC_ALL_EXPIRED = "SILC_ALL_EXPIRED",
+  SILC_BALANCES_REFRESHED = "SILC_BALANCES_REFRESHED",
+  ROLE_SALARIES_DISBURSED = "ROLE_SALARIES_DISBURSED",
+  NOTIFICATION_SETTINGS_UPDATED = "NOTIFICATION_SETTINGS_UPDATED",
+  ON_SITE_NOTIFICATIONS_CREATED = "ON_SITE_NOTIFICATIONS_CREATED",
+  ON_SITE_NOTIFICATIONS_READ = "ON_SITE_NOTIFICATIONS_READ",
+  ON_SITE_NOTIFICATIONS_ALL_READ = "ON_SITE_NOTIFICATIONS_ALL_READ",
+  ON_SITE_NOTIFICATION_UNREAD = "ON_SITE_NOTIFICATION_UNREAD",
+  ON_SITE_NOTIFICATION_ARCHIVED = "ON_SITE_NOTIFICATION_ARCHIVED",
+  ON_SITE_NOTIFICATIONS_READ_ARCHIVED = "ON_SITE_NOTIFICATIONS_READ_ARCHIVED",
+  ON_SITE_NOTIFICATION_UNARCHIVED = "ON_SITE_NOTIFICATION_UNARCHIVED",
+  WEB_PUSH_SUBSCRIPTIONS_PRUNED = "WEB_PUSH_SUBSCRIPTIONS_PRUNED",
+  CHANGELOG_ENTRIES_SEEN = "CHANGELOG_ENTRIES_SEEN",
+  UNUSED_UPLOADS_DELETED = "UNUSED_UPLOADS_DELETED",
+  EVENT_IMPORTED_FROM_DISCORD = "EVENT_IMPORTED_FROM_DISCORD",
+  EVENT_UPDATED_FROM_DISCORD = "EVENT_UPDATED_FROM_DISCORD",
+  EVENT_DELETED_FROM_DISCORD = "EVENT_DELETED_FROM_DISCORD",
+  EVENT_PARTICIPANTS_SYNCED = "EVENT_PARTICIPANTS_SYNCED",
+  CITIZENS_PER_ROLE_COUNTED = "CITIZENS_PER_ROLE_COUNTED",
+  SHIPS_PER_VARIANT_COUNTED = "SHIPS_PER_VARIANT_COUNTED",
+  UNIQUE_LOGINS_COUNTED = "UNIQUE_LOGINS_COUNTED",
 }
+
+/**
+ * Types whose events are written often enough to drown out everything else
+ * in the system log — per page view, per opened notification popover, per
+ * automation run. The system log hides them unless they are explicitly
+ * selected in its type filter.
+ */
+export const HIGH_VOLUME_AUDIT_EVENT_TYPES: ReadonlySet<AuditEventType> =
+  new Set([
+    AuditEventType.WIKI_PAGE_VISITED,
+    AuditEventType.ON_SITE_NOTIFICATIONS_CREATED,
+    AuditEventType.ON_SITE_NOTIFICATIONS_READ,
+    AuditEventType.ON_SITE_NOTIFICATIONS_ALL_READ,
+    AuditEventType.ON_SITE_NOTIFICATION_UNREAD,
+    AuditEventType.ON_SITE_NOTIFICATION_ARCHIVED,
+    AuditEventType.ON_SITE_NOTIFICATIONS_READ_ARCHIVED,
+    AuditEventType.ON_SITE_NOTIFICATION_UNARCHIVED,
+    AuditEventType.CHANGELOG_ENTRIES_SEEN,
+  ]);
 
 /**
  * Wiki page audit payloads carry the owning event's id so event wiki rows
@@ -903,6 +954,171 @@ export interface AuditEventDataByType {
     pageId: string;
     /** The assigned upload, or null when the icon was removed */
     iconId: string | null;
+  };
+
+  [AuditEventType.WIKI_PAGE_FAVORITE_ADDED]: WikiPageAuditScope & {
+    pageId: string;
+    citizenId: string;
+  };
+
+  [AuditEventType.WIKI_PAGE_FAVORITE_REMOVED]: WikiPageAuditScope & {
+    pageId: string;
+    citizenId: string;
+  };
+
+  [AuditEventType.WIKI_PAGE_VISITED]: {
+    pageId: string;
+    citizenId: string;
+  };
+
+  [AuditEventType.WIKI_CITIZEN_MENTIONS_SWEPT]: {
+    notifiedCount: number;
+    suppressedCount: number;
+  };
+
+  [AuditEventType.TRASHED_WIKI_PAGES_PURGED]: {
+    count: number;
+  };
+
+  [AuditEventType.ORPHANED_WIKI_TAGS_PURGED]: {
+    count: number;
+  };
+
+  [AuditEventType.MANUFACTURER_CREATED]: {
+    manufacturerId: string;
+    name: string;
+  };
+
+  [AuditEventType.SERIES_CREATED]: {
+    seriesId: string;
+    name: string;
+    manufacturerId: string;
+  };
+
+  [AuditEventType.ENTITY_LOG_CONFIRMED]: {
+    entityId: string;
+    logId: string;
+    logType: string;
+    confirmed: "confirmed" | "false-report";
+  };
+
+  [AuditEventType.CAREER_FLOW_UPDATED]: {
+    flowId: string;
+    nodeCount: number;
+    edgeCount: number;
+  };
+
+  [AuditEventType.SILC_SETTING_UPDATED]: {
+    key: string;
+    value: string;
+  };
+
+  [AuditEventType.SILC_ALL_EXPIRED]: {
+    citizenCount: number;
+    /** Sum of the balances that were written off, as a positive number */
+    expiredValue: number;
+  };
+
+  [AuditEventType.SILC_BALANCES_REFRESHED]: {
+    citizenCount: number;
+  };
+
+  [AuditEventType.ROLE_SALARIES_DISBURSED]: {
+    roleIds: string[];
+    transactionCount: number;
+    disbursedValue: number;
+  };
+
+  [AuditEventType.NOTIFICATION_SETTINGS_UPDATED]: {
+    citizenId: string;
+    enabled: { notificationType: string; channel: string }[];
+    disabled: { notificationType: string; channel: string }[];
+  };
+
+  [AuditEventType.ON_SITE_NOTIFICATIONS_CREATED]: {
+    count: number;
+    notificationTypes: string[];
+  };
+
+  [AuditEventType.ON_SITE_NOTIFICATIONS_READ]: {
+    citizenId: string;
+    count: number;
+  };
+
+  [AuditEventType.ON_SITE_NOTIFICATIONS_ALL_READ]: {
+    citizenId: string;
+    count: number;
+  };
+
+  [AuditEventType.ON_SITE_NOTIFICATION_UNREAD]: {
+    citizenId: string;
+    notificationId: string;
+  };
+
+  [AuditEventType.ON_SITE_NOTIFICATION_ARCHIVED]: {
+    citizenId: string;
+    notificationId: string;
+  };
+
+  [AuditEventType.ON_SITE_NOTIFICATIONS_READ_ARCHIVED]: {
+    citizenId: string;
+    count: number;
+  };
+
+  [AuditEventType.ON_SITE_NOTIFICATION_UNARCHIVED]: {
+    citizenId: string;
+    notificationId: string;
+  };
+
+  [AuditEventType.WEB_PUSH_SUBSCRIPTIONS_PRUNED]: {
+    count: number;
+    /** Why the endpoints were dropped by their push service */
+    reason: "expired" | "invalid";
+  };
+
+  [AuditEventType.CHANGELOG_ENTRIES_SEEN]: {
+    citizenId: string;
+    count: number;
+  };
+
+  [AuditEventType.UNUSED_UPLOADS_DELETED]: {
+    databaseCount: number;
+    bucketCount: number;
+  };
+
+  [AuditEventType.EVENT_IMPORTED_FROM_DISCORD]: {
+    eventId: string;
+    discordId: string;
+    name: string;
+  };
+
+  [AuditEventType.EVENT_UPDATED_FROM_DISCORD]: {
+    eventId: string;
+    discordId: string;
+    name: string;
+  };
+
+  [AuditEventType.EVENT_DELETED_FROM_DISCORD]: {
+    eventIds: string[];
+  };
+
+  [AuditEventType.EVENT_PARTICIPANTS_SYNCED]: {
+    eventId: string;
+    addedCount: number;
+    removedCount: number;
+  };
+
+  [AuditEventType.CITIZENS_PER_ROLE_COUNTED]: {
+    roleCount: number;
+  };
+
+  [AuditEventType.SHIPS_PER_VARIANT_COUNTED]: {
+    variantCount: number;
+  };
+
+  [AuditEventType.UNIQUE_LOGINS_COUNTED]: {
+    date: string;
+    count: number;
   };
 }
 
@@ -2217,5 +2433,316 @@ export const AuditEventDefinitions: {
       data.iconId
         ? `Wiki page icon updated (${data.pageId})`
         : `Wiki page icon removed (${data.pageId})`,
+  },
+
+  [AuditEventType.WIKI_PAGE_FAVORITE_ADDED]: {
+    type: AuditEventType.WIKI_PAGE_FAVORITE_ADDED,
+    data: {
+      pageId: "string",
+      citizenId: "string",
+    },
+    message: (data) => `Wiki page saved as a favorite (${data.pageId})`,
+  },
+
+  [AuditEventType.WIKI_PAGE_FAVORITE_REMOVED]: {
+    type: AuditEventType.WIKI_PAGE_FAVORITE_REMOVED,
+    data: {
+      pageId: "string",
+      citizenId: "string",
+    },
+    message: (data) => `Wiki page removed from favorites (${data.pageId})`,
+  },
+
+  [AuditEventType.WIKI_PAGE_VISITED]: {
+    type: AuditEventType.WIKI_PAGE_VISITED,
+    data: {
+      pageId: "string",
+      citizenId: "string",
+    },
+    message: (data) => `Wiki page visited (${data.pageId})`,
+  },
+
+  [AuditEventType.WIKI_CITIZEN_MENTIONS_SWEPT]: {
+    type: AuditEventType.WIKI_CITIZEN_MENTIONS_SWEPT,
+    data: {
+      notifiedCount: 0,
+      suppressedCount: 0,
+    },
+    message: (data) =>
+      `Swept pending wiki citizen mentions: ${data.notifiedCount} notified, ${data.suppressedCount} suppressed`,
+  },
+
+  [AuditEventType.TRASHED_WIKI_PAGES_PURGED]: {
+    type: AuditEventType.TRASHED_WIKI_PAGES_PURGED,
+    data: {
+      count: 0,
+    },
+    message: (data) => `Permanently deleted ${data.count} trashed wiki page(s)`,
+  },
+
+  [AuditEventType.ORPHANED_WIKI_TAGS_PURGED]: {
+    type: AuditEventType.ORPHANED_WIKI_TAGS_PURGED,
+    data: {
+      count: 0,
+    },
+    message: (data) => `Deleted ${data.count} orphaned wiki tag(s)`,
+  },
+
+  [AuditEventType.MANUFACTURER_CREATED]: {
+    type: AuditEventType.MANUFACTURER_CREATED,
+    data: {
+      manufacturerId: "string",
+      name: "string",
+    },
+    message: (data) =>
+      `Manufacturer ${data.name} created (${data.manufacturerId})`,
+  },
+
+  [AuditEventType.SERIES_CREATED]: {
+    type: AuditEventType.SERIES_CREATED,
+    data: {
+      seriesId: "string",
+      name: "string",
+      manufacturerId: "string",
+    },
+    message: (data) => `Series ${data.name} created (${data.seriesId})`,
+  },
+
+  [AuditEventType.ENTITY_LOG_CONFIRMED]: {
+    type: AuditEventType.ENTITY_LOG_CONFIRMED,
+    data: {
+      entityId: "string",
+      logId: "string",
+      logType: "string",
+      confirmed: "confirmed",
+    },
+    message: (data) =>
+      data.confirmed === "confirmed"
+        ? `Entity log ${data.logType} confirmed (${data.logId})`
+        : `Entity log ${data.logType} marked as a false report (${data.logId})`,
+  },
+
+  [AuditEventType.CAREER_FLOW_UPDATED]: {
+    type: AuditEventType.CAREER_FLOW_UPDATED,
+    data: {
+      flowId: "string",
+      nodeCount: 0,
+      edgeCount: 0,
+    },
+    message: (data) =>
+      `Career flow updated to ${data.nodeCount} node(s) and ${data.edgeCount} edge(s) (${data.flowId})`,
+  },
+
+  [AuditEventType.SILC_SETTING_UPDATED]: {
+    type: AuditEventType.SILC_SETTING_UPDATED,
+    data: {
+      key: "string",
+      value: "string",
+    },
+    message: (data) => `SILC setting ${data.key} set to ${data.value}`,
+  },
+
+  [AuditEventType.SILC_ALL_EXPIRED]: {
+    type: AuditEventType.SILC_ALL_EXPIRED,
+    data: {
+      citizenCount: 0,
+      expiredValue: 0,
+    },
+    message: (data) =>
+      `Expired ${data.expiredValue} SILC of ${data.citizenCount} citizen(s)`,
+  },
+
+  [AuditEventType.SILC_BALANCES_REFRESHED]: {
+    type: AuditEventType.SILC_BALANCES_REFRESHED,
+    data: {
+      citizenCount: 0,
+    },
+    message: (data) =>
+      `Recalculated the SILC balances of ${data.citizenCount} citizen(s)`,
+  },
+
+  [AuditEventType.ROLE_SALARIES_DISBURSED]: {
+    type: AuditEventType.ROLE_SALARIES_DISBURSED,
+    data: {
+      roleIds: ["string"],
+      transactionCount: 0,
+      disbursedValue: 0,
+    },
+    message: (data) =>
+      `Disbursed ${data.disbursedValue} SILC in ${data.transactionCount} salary transaction(s) for ${data.roleIds.length} role(s)`,
+  },
+
+  [AuditEventType.NOTIFICATION_SETTINGS_UPDATED]: {
+    type: AuditEventType.NOTIFICATION_SETTINGS_UPDATED,
+    data: {
+      citizenId: "string",
+      enabled: [{ notificationType: "string", channel: "string" }],
+      disabled: [],
+    },
+    message: (data) =>
+      `Notification settings updated: ${data.enabled.length} enabled, ${data.disabled.length} disabled`,
+  },
+
+  [AuditEventType.ON_SITE_NOTIFICATIONS_CREATED]: {
+    type: AuditEventType.ON_SITE_NOTIFICATIONS_CREATED,
+    data: {
+      count: 0,
+      notificationTypes: ["string"],
+    },
+    message: (data) =>
+      `Created ${data.count} on-site notification(s) of type ${data.notificationTypes.join(", ")}`,
+  },
+
+  [AuditEventType.ON_SITE_NOTIFICATIONS_READ]: {
+    type: AuditEventType.ON_SITE_NOTIFICATIONS_READ,
+    data: {
+      citizenId: "string",
+      count: 0,
+    },
+    message: (data) => `Marked ${data.count} notification(s) as read`,
+  },
+
+  [AuditEventType.ON_SITE_NOTIFICATIONS_ALL_READ]: {
+    type: AuditEventType.ON_SITE_NOTIFICATIONS_ALL_READ,
+    data: {
+      citizenId: "string",
+      count: 0,
+    },
+    message: (data) =>
+      `Marked all ${data.count} unread notification(s) as read`,
+  },
+
+  [AuditEventType.ON_SITE_NOTIFICATION_UNREAD]: {
+    type: AuditEventType.ON_SITE_NOTIFICATION_UNREAD,
+    data: {
+      citizenId: "string",
+      notificationId: "string",
+    },
+    message: (data) => `Marked notification ${data.notificationId} as unread`,
+  },
+
+  [AuditEventType.ON_SITE_NOTIFICATION_ARCHIVED]: {
+    type: AuditEventType.ON_SITE_NOTIFICATION_ARCHIVED,
+    data: {
+      citizenId: "string",
+      notificationId: "string",
+    },
+    message: (data) => `Archived notification ${data.notificationId}`,
+  },
+
+  [AuditEventType.ON_SITE_NOTIFICATIONS_READ_ARCHIVED]: {
+    type: AuditEventType.ON_SITE_NOTIFICATIONS_READ_ARCHIVED,
+    data: {
+      citizenId: "string",
+      count: 0,
+    },
+    message: (data) => `Archived ${data.count} read notification(s)`,
+  },
+
+  [AuditEventType.ON_SITE_NOTIFICATION_UNARCHIVED]: {
+    type: AuditEventType.ON_SITE_NOTIFICATION_UNARCHIVED,
+    data: {
+      citizenId: "string",
+      notificationId: "string",
+    },
+    message: (data) => `Restored notification ${data.notificationId}`,
+  },
+
+  [AuditEventType.WEB_PUSH_SUBSCRIPTIONS_PRUNED]: {
+    type: AuditEventType.WEB_PUSH_SUBSCRIPTIONS_PRUNED,
+    data: {
+      count: 0,
+      reason: "expired",
+    },
+    message: (data) =>
+      `Deleted ${data.count} ${data.reason} Web Push subscription(s)`,
+  },
+
+  [AuditEventType.CHANGELOG_ENTRIES_SEEN]: {
+    type: AuditEventType.CHANGELOG_ENTRIES_SEEN,
+    data: {
+      citizenId: "string",
+      count: 0,
+    },
+    message: (data) => `Read ${data.count} new changelog entry/entries`,
+  },
+
+  [AuditEventType.UNUSED_UPLOADS_DELETED]: {
+    type: AuditEventType.UNUSED_UPLOADS_DELETED,
+    data: {
+      databaseCount: 0,
+      bucketCount: 0,
+    },
+    message: (data) =>
+      `Deleted ${data.databaseCount} unused upload(s) and ${data.bucketCount} orphaned bucket object(s)`,
+  },
+
+  [AuditEventType.EVENT_IMPORTED_FROM_DISCORD]: {
+    type: AuditEventType.EVENT_IMPORTED_FROM_DISCORD,
+    data: {
+      eventId: "string",
+      discordId: "string",
+      name: "string",
+    },
+    message: (data) =>
+      `Imported event ${data.name} from Discord (${data.eventId})`,
+  },
+
+  [AuditEventType.EVENT_UPDATED_FROM_DISCORD]: {
+    type: AuditEventType.EVENT_UPDATED_FROM_DISCORD,
+    data: {
+      eventId: "string",
+      discordId: "string",
+      name: "string",
+    },
+    message: (data) =>
+      `Updated event ${data.name} from Discord (${data.eventId})`,
+  },
+
+  [AuditEventType.EVENT_DELETED_FROM_DISCORD]: {
+    type: AuditEventType.EVENT_DELETED_FROM_DISCORD,
+    data: {
+      eventIds: ["string"],
+    },
+    message: (data) =>
+      `Deleted ${data.eventIds.length} event(s) cancelled on Discord`,
+  },
+
+  [AuditEventType.EVENT_PARTICIPANTS_SYNCED]: {
+    type: AuditEventType.EVENT_PARTICIPANTS_SYNCED,
+    data: {
+      eventId: "string",
+      addedCount: 0,
+      removedCount: 0,
+    },
+    message: (data) =>
+      `Synced event participants from Discord: ${data.addedCount} added, ${data.removedCount} removed (${data.eventId})`,
+  },
+
+  [AuditEventType.CITIZENS_PER_ROLE_COUNTED]: {
+    type: AuditEventType.CITIZENS_PER_ROLE_COUNTED,
+    data: {
+      roleCount: 0,
+    },
+    message: (data) =>
+      `Saved the citizen count statistic of ${data.roleCount} role(s)`,
+  },
+
+  [AuditEventType.SHIPS_PER_VARIANT_COUNTED]: {
+    type: AuditEventType.SHIPS_PER_VARIANT_COUNTED,
+    data: {
+      variantCount: 0,
+    },
+    message: (data) =>
+      `Saved the ship count statistic of ${data.variantCount} variant(s)`,
+  },
+
+  [AuditEventType.UNIQUE_LOGINS_COUNTED]: {
+    type: AuditEventType.UNIQUE_LOGINS_COUNTED,
+    data: {
+      date: "string",
+      count: 0,
+    },
+    message: (data) => `Counted ${data.count} unique login(s) on ${data.date}`,
   },
 };

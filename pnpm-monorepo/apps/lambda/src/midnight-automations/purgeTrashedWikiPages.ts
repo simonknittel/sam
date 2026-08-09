@@ -1,4 +1,5 @@
 import { prisma } from "@sam-monorepo/database";
+import { createAuditEvents } from "../common/audit";
 import { log } from "../common/logger";
 import { captureAsyncFunc } from "../common/xray";
 
@@ -35,7 +36,15 @@ export const purgeTrashedWikiPages = async () => {
       totalDeleted += result.count;
     }
 
-    if (totalDeleted > 0)
+    if (totalDeleted > 0) {
       log.info("Purged trashed wiki pages", { count: totalDeleted });
+
+      await createAuditEvents([
+        {
+          type: "TRASHED_WIKI_PAGES_PURGED",
+          data: { count: totalDeleted },
+        },
+      ]);
+    }
   });
 };

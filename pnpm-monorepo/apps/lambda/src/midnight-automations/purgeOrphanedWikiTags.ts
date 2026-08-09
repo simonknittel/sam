@@ -1,4 +1,5 @@
 import { prisma } from "@sam-monorepo/database";
+import { createAuditEvents } from "../common/audit";
 import { log } from "../common/logger";
 import { captureAsyncFunc } from "../common/xray";
 
@@ -14,7 +15,15 @@ export const purgeOrphanedWikiTags = async () => {
       where: { pages: { none: {} } },
     });
 
-    if (result.count > 0)
+    if (result.count > 0) {
       log.info("Purged orphaned wiki tags", { count: result.count });
+
+      await createAuditEvents([
+        {
+          type: "ORPHANED_WIKI_TAGS_PURGED",
+          data: { count: result.count },
+        },
+      ]);
+    }
   });
 };

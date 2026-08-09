@@ -1,6 +1,8 @@
 "use server";
 
 import { prisma } from "@/db";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationAction } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
 import { getTranslations } from "next-intl/server";
@@ -124,6 +126,18 @@ export const updateFlow = async (formData: FormData) => {
           targetHandle: edge.targetHandle,
         })),
       }),
+    ]);
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.CAREER_FLOW_UPDATED,
+        data: {
+          flowId: result.data.flowId,
+          nodeCount: result.data.nodes.length,
+          edgeCount: result.data.edges.length,
+        },
+        createdById: authentication.session.user.id,
+      },
     ]);
 
     /**

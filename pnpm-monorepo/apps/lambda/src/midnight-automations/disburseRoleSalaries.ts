@@ -1,5 +1,6 @@
 import { createId } from "@paralleldrive/cuid2";
 import { prisma, type Entity, type Role } from "@sam-monorepo/database";
+import { createAuditEvents } from "../common/audit";
 import { emitEvents } from "../common/eventbridge";
 import { log } from "../common/logger";
 import { captureAsyncFunc } from "../common/xray";
@@ -64,10 +65,15 @@ export const disburseRoleSalaries = async () => {
     }
 
     const allTransactionIds: string[] = [];
+    const disbursedRoleIds: string[] = [];
+    let disbursedValue = 0;
 
     for (const salary of todaysSalaries) {
       const group = citizensGroupedByRole.get(salary.roleId);
       if (!group) continue;
+
+      disbursedRoleIds.push(salary.roleId);
+      disbursedValue += salary.value * group.citizens.length;
 
       const createdTransactions =
         await prisma.silcTransaction.createManyAndReturn({
@@ -94,6 +100,19 @@ export const disburseRoleSalaries = async () => {
           ?.citizens.map((citizen) => citizen.id) || [],
     );
     await updateCitizensSilcBalances(citizenIds);
+
+    if (allTransactionIds.length > 0) {
+      await createAuditEvents([
+        {
+          type: "ROLE_SALARIES_DISBURSED",
+          data: {
+            roleIds: disbursedRoleIds,
+            transactionCount: allTransactionIds.length,
+            disbursedValue,
+          },
+        },
+      ]);
+    }
 
     /**
      * Trigger notifications

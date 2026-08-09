@@ -1,4 +1,6 @@
 import { prisma } from "@/db";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import { NextResponse } from "next/server";
@@ -36,6 +38,17 @@ export async function POST(request: Request) {
         name: data.name,
       },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.MANUFACTURER_CREATED,
+        data: {
+          manufacturerId: createdItem.id,
+          name: createdItem.name,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     return NextResponse.json(createdItem);
   } catch (error) {

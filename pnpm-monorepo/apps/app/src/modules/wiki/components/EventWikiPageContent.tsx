@@ -65,7 +65,11 @@ export const EventWikiPageContent = async ({
     ]);
 
   const session = authentication ? authentication.session : null;
-  trackWikiPageVisit(session?.entity?.id ?? null, page.id);
+  trackWikiPageVisit(
+    session?.entity?.id ?? null,
+    page.id,
+    session?.user.id ?? null,
+  );
 
   const hrefMode = createEventWikiHrefMode(
     context.event.id,

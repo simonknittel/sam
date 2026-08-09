@@ -1,5 +1,6 @@
 import { prisma } from "@sam-monorepo/database";
 import type { z } from "zod";
+import { createAuditEvents } from "../common/audit";
 import { getEventUsers } from "./discord/utils/getEventUsers";
 import type { eventSchema } from "./discord/utils/schemas";
 
@@ -89,5 +90,23 @@ export const updateParticipants = async (
         discordUserId: participantId,
       })),
     });
+  }
+
+  /**
+   * Leaving an event also drops the citizen's position applications and
+   * unassigns them from their lineup positions, so a sync is worth
+   * recording even though it only mirrors Discord.
+   */
+  if (participants.create.length > 0 || participants.delete.length > 0) {
+    await createAuditEvents([
+      {
+        type: "EVENT_PARTICIPANTS_SYNCED",
+        data: {
+          eventId: databaseEvent.id,
+          addedCount: participants.create.length,
+          removedCount: participants.delete.length,
+        },
+      },
+    ]);
   }
 };

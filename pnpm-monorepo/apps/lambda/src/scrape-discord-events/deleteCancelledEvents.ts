@@ -1,4 +1,5 @@
 import { prisma } from "@sam-monorepo/database";
+import { createAuditEvents } from "../common/audit";
 import type { getEvents } from "./discord/utils/getEvents";
 import { triggerNotifications } from "./notifications";
 
@@ -29,6 +30,15 @@ export const deleteCancelledEvents = async (
       },
     },
   });
+
+  await createAuditEvents([
+    {
+      type: "EVENT_DELETED_FROM_DISCORD",
+      data: {
+        eventIds: cancelledEvents.map((event) => event.id),
+      },
+    },
+  ]);
 
   await triggerNotifications(
     cancelledEvents.map((event) => ({

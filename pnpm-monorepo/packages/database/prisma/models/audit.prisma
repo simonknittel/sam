@@ -6,6 +6,11 @@ model AuditEvent {
   type        String
   data        Json
 
-  @@index([type])
-  @@index([createdById])
+  // The system log always sorts by (createdAt, id) and optionally narrows by
+  // type and/or creator, so both filters are indexed together with the full
+  // sort key instead of on their own. Carrying id keeps the tie-breaking sort
+  // that makes its cursor pagination well-defined inside the index scan.
+  @@index([createdAt, id])
+  @@index([type, createdAt, id])
+  @@index([createdById, createdAt, id])
 }

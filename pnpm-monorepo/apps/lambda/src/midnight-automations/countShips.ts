@@ -1,4 +1,5 @@
 import { prisma, type Organization } from "@sam-monorepo/database";
+import { createAuditEvents } from "../common/audit";
 import { log } from "../common/logger";
 import { captureAsyncFunc } from "../common/xray";
 
@@ -93,6 +94,13 @@ export const countShips = async () => {
         data,
       }),
     );
+
+    await createAuditEvents([
+      {
+        type: "SHIPS_PER_VARIANT_COUNTED",
+        data: { variantCount: data.length },
+      },
+    ]);
 
     log.info("Saved ships per variant statistics", { count: data.length });
   });

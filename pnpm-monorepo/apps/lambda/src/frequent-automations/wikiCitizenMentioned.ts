@@ -10,6 +10,7 @@ import {
   resolveEffectiveRoles,
   type PermissionSet,
 } from "@sam-monorepo/permissions";
+import { createAuditEvents } from "../common/audit";
 import { emitEvents } from "../common/eventbridge";
 import { log } from "../common/logger";
 import { captureAsyncFunc } from "../common/xray";
@@ -305,6 +306,16 @@ export const wikiCitizenMentioned = async () => {
       notified: notifiable.length,
       suppressed: suppressedIds.length,
     });
+
+    await createAuditEvents([
+      {
+        type: "WIKI_CITIZEN_MENTIONS_SWEPT",
+        data: {
+          notifiedCount: notifiable.length,
+          suppressedCount: suppressedIds.length,
+        },
+      },
+    ]);
 
     if (suppressedIds.length > 0) {
       await prisma.wikiPageCitizenMention.updateMany({

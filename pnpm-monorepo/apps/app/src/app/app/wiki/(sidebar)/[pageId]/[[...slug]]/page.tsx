@@ -132,7 +132,11 @@ const PageContent = async ({
   const authentication = await authenticate();
   const session = authentication ? authentication.session : null;
 
-  trackWikiPageVisit(session?.entity?.id ?? null, page.id);
+  trackWikiPageVisit(
+    session?.entity?.id ?? null,
+    page.id,
+    session?.user.id ?? null,
+  );
 
   const moveTargets: WikiPageTargetOption[] = permissions.canAdmin
     ? getManageableWikiPageTargets(context, page.id)

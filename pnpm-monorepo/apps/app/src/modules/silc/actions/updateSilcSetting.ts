@@ -1,6 +1,8 @@
 "use server";
 
 import { prisma } from "@/db";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationAction } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
 import { SilcSettingKey } from "@sam-monorepo/database/client";
@@ -80,6 +82,17 @@ export const updateSilcSetting = async (
         },
       },
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.SILC_SETTING_UPDATED,
+        data: {
+          key: result.data.key,
+          value: result.data.value,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Revalidate cache(s)

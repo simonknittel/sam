@@ -1,5 +1,6 @@
 import { prisma, type WebPushSubscription } from "@sam-monorepo/database";
 import { sendNotification, setVapidDetails, WebPushError } from "web-push";
+import { createAuditEvents } from "../../common/audit";
 import { log } from "../../common/logger";
 
 setVapidDetails(
@@ -79,6 +80,14 @@ export const WebPushSubscribedHandler = async (payload: Payload) => {
           id: subscription.id,
         },
       });
+
+      await createAuditEvents([
+        {
+          type: "WEB_PUSH_SUBSCRIPTIONS_PRUNED",
+          data: { count: 1, reason: "invalid" },
+          createdById: null,
+        },
+      ]);
     } else {
       log.error("Error sending test notification", {
         error,

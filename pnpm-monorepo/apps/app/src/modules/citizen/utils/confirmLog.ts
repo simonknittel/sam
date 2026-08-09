@@ -1,6 +1,8 @@
 import { updateAlgoliaWithGenericLogType } from "@/app/api/spynet/citizen/[id]/log/[logId]/_lib/updateAlgoliaWithGenericLogType";
 import { updateEntityCaches } from "@/app/api/spynet/citizen/[id]/log/[logId]/_lib/updateEntityCaches";
 import { prisma } from "@/db";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthentication } from "@/modules/auth/server";
 import getLatestNoteAttributes from "@/modules/common/utils/getLatestNoteAttributes";
 import type {
@@ -74,6 +76,19 @@ export const confirmLog = async (
       },
     },
   });
+
+  await createAuditEvents([
+    {
+      type: AuditEventType.ENTITY_LOG_CONFIRMED,
+      data: {
+        entityId: log.entityId,
+        logId: log.id,
+        logType: log.type,
+        confirmed: value,
+      },
+      createdById: authentication.session.user.id,
+    },
+  ]);
 
   // Update username
   if (["handle", "discord-id"].includes(log.type)) {

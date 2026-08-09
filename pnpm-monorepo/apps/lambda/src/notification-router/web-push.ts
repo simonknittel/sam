@@ -5,6 +5,7 @@ import {
   WebPushError,
   type RequestOptions,
 } from "web-push";
+import { createAuditEvents } from "../common/audit";
 import { log } from "../common/logger";
 import { type Notification } from "./notification";
 
@@ -161,11 +162,18 @@ export const publishWebPushNotifications = async (
   log.info("Deleting Web Push subscriptions", {
     count: subscriptionsToRemove.length,
   });
-  await prisma.webPushSubscription.deleteMany({
+  const { count } = await prisma.webPushSubscription.deleteMany({
     where: {
       endpoint: {
         in: subscriptionsToRemove,
       },
     },
   });
+
+  await createAuditEvents([
+    {
+      type: "WEB_PUSH_SUBSCRIPTIONS_PRUNED",
+      data: { count, reason: "expired" },
+    },
+  ]);
 };

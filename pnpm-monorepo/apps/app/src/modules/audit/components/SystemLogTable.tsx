@@ -10,10 +10,13 @@ import {
   type SearchParams,
 } from "nuqs/server";
 import { getAuditEvents } from "../queries/getAuditEvents";
+import { getAuditEventMessage } from "../utils/getAuditEventMessage";
 import {
-  AuditEventDefinitions,
-  type AuditEventType,
-} from "../utils/AuditEventTypes";
+  SYSTEM_LOG_FROM_PARAM,
+  SYSTEM_LOG_TO_PARAM,
+  SYSTEM_LOG_VOLUME_PARAM,
+  systemLogVolumeParser,
+} from "../utils/systemLogFilterParams";
 
 const TABLE_MIN_WIDTH = "min-w-200";
 const GRID_CLASSES = "grid-cols-[150px_250px_150px_1fr]";
@@ -21,6 +24,9 @@ const GRID_CLASSES = "grid-cols-[150px_250px_150px_1fr]";
 const loadSearchParams = createLoader({
   type: parseAsArrayOf(parseAsString),
   createdById: parseAsArrayOf(parseAsString),
+  [SYSTEM_LOG_VOLUME_PARAM]: systemLogVolumeParser,
+  [SYSTEM_LOG_FROM_PARAM]: parseAsString,
+  [SYSTEM_LOG_TO_PARAM]: parseAsString,
   ...cursorPaginationParsers,
 });
 
@@ -30,7 +36,7 @@ interface Props {
 }
 
 export const SystemLogTable = async ({ className, searchParams }: Props) => {
-  const { type, createdById, cursor, direction } =
+  const { type, createdById, cursor, direction, volume, from, to } =
     await loadSearchParams(searchParams);
 
   const { events, nextCursor, prevCursor } = await getAuditEvents(
@@ -38,15 +44,28 @@ export const SystemLogTable = async ({ className, searchParams }: Props) => {
     createdById,
     cursor,
     direction,
+    volume,
+    from,
+    to,
   );
 
   const isLastPage = !nextCursor;
+  const hasActiveFilters = Boolean(
+    (type && type.length > 0) ||
+    (createdById && createdById.length > 0) ||
+    from ||
+    to,
+  );
 
   return (
     <div className={clsx("flex flex-col gap-4", className)}>
       {events.length === 0 ? (
         <div className="rounded-primary bg-secondary p-4 grid place-content-center">
-          <p>Bisher wurden keine Ereignisse aufgezeichnet.</p>
+          <p>
+            {hasActiveFilters
+              ? "Keine Ereignisse für diese Filter."
+              : "Bisher wurden keine Ereignisse aufgezeichnet."}
+          </p>
         </div>
       ) : (
         <Table
@@ -62,10 +81,7 @@ export const SystemLogTable = async ({ className, searchParams }: Props) => {
 
           <TBody className="text-sm">
             {events.map((event) => {
-              const definition =
-                AuditEventDefinitions[event.type as AuditEventType];
-              // @ts-expect-error Improve types
-              const message = definition.message(JSON.parse(event.data));
+              const message = getAuditEventMessage(event.type, event.data);
 
               const createdBy = event.createdBy?.name || event.createdBy?.id;
 

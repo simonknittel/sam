@@ -1,6 +1,8 @@
 "use server";
 
 import { prisma } from "@/db";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationAction } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
 import { revalidatePath } from "next/cache";
@@ -23,6 +25,16 @@ export const refreshSilcBalances = async () => {
      */
     const citizens = await prisma.entity.findMany();
     await updateCitizensSilcBalances(citizens.map((citizen) => citizen.id));
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.SILC_BALANCES_REFRESHED,
+        data: {
+          citizenCount: citizens.length,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     /**
      * Revalidate cache(s)
