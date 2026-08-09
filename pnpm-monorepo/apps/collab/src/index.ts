@@ -5,6 +5,7 @@ import {
   WIKI_EDITOR_FRAGMENT,
   WikiSaveState,
   collectWikiAttachmentUploadIds,
+  collectWikiMentionedCitizenIds,
   extractWikiPageText,
   getWikiEditorSchema,
   parseWikiCollabReplaceTokenPayload,
@@ -207,6 +208,73 @@ const syncUploadLinks = async (pageId: string, content: unknown) => {
       attachments: { connect: existing.map(({ id }) => ({ id })) },
     },
   });
+};
+
+/**
+ * A page legitimately never mentions anywhere near this many distinct
+ * citizens; the cap keeps a hostile paste from amplifying every store into
+ * huge queries. Citizens beyond it (in document order) get no link row.
+ */
+const MAX_SYNCED_MENTIONS = 1_000;
+
+/**
+ * Keeps WikiPageCitizenMention in lockstep with the persisted content: one
+ * row per citizen the content currently mentions. A new mention inserts a
+ * pending row which the 15-minute notification sweep turns into a
+ * notification; a removed mention deletes its row — cancelling a pending
+ * notification and letting a future re-mention notify again. Rows from
+ * internal writes (/replace: snapshot restores, imports, transplants) and
+ * self-mentions are created already suppressed, so they never notify.
+ */
+const syncCitizenMentionLinks = async (
+  pageId: string,
+  content: unknown,
+  editorEntityId: string | null,
+  isInternal: boolean,
+) => {
+  const mentionedCitizenIds = new Set(
+    collectWikiMentionedCitizenIds(content).slice(0, MAX_SYNCED_MENTIONS),
+  );
+
+  const existingRows = await prisma.wikiPageCitizenMention.findMany({
+    where: { pageId },
+    select: { id: true, citizenId: true },
+  });
+
+  const removedRowIds = existingRows
+    .filter((row) => !mentionedCitizenIds.has(row.citizenId))
+    .map((row) => row.id);
+
+  const existingCitizenIds = new Set(existingRows.map((row) => row.citizenId));
+  const newCitizenIds = [...mentionedCitizenIds].filter(
+    (citizenId) => !existingCitizenIds.has(citizenId),
+  );
+
+  if (removedRowIds.length === 0 && newCitizenIds.length === 0) return;
+
+  /** Mentions of citizens that no longer exist must not create rows */
+  const existingCitizens =
+    newCitizenIds.length > 0
+      ? await prisma.entity.findMany({
+          where: { id: { in: newCitizenIds } },
+          select: { id: true },
+        })
+      : [];
+
+  await prisma.$transaction([
+    prisma.wikiPageCitizenMention.deleteMany({
+      where: { id: { in: removedRowIds } },
+    }),
+    prisma.wikiPageCitizenMention.createMany({
+      data: existingCitizens.map(({ id }) => ({
+        pageId,
+        citizenId: id,
+        createdById: editorEntityId,
+        suppressedAt: isInternal || id === editorEntityId ? new Date() : null,
+      })),
+      skipDuplicates: true,
+    }),
+  ]);
 };
 
 /**
@@ -464,6 +532,17 @@ const server = new Server<ConnectionContext>({
       await syncUploadLinks(data.documentName, content);
     } catch (error) {
       console.error("[collab] Upload link sync failed", error);
+    }
+
+    try {
+      await syncCitizenMentionLinks(
+        data.documentName,
+        content,
+        lastEditorEntityId,
+        data.lastContext?.isInternal ?? false,
+      );
+    } catch (error) {
+      console.error("[collab] Citizen mention link sync failed", error);
     }
 
     /**
