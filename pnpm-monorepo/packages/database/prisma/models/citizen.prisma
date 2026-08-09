@@ -66,6 +66,8 @@ model Entity {
   createdWikiTags                              WikiTag[]                            @relation("createdBy")
   createdWikiPageTags                          WikiPageTag[]                        @relation("createdBy")
   updatedWikiSettings                          WikiSetting[]                        @relation("updatedBy")
+  wikiPageMentions                             WikiPageCitizenMention[]             @relation("citizen")
+  createdWikiPageCitizenMentions               WikiPageCitizenMention[]             @relation("createdBy")
 
   // Holds the latest confirmed values
   spectrumId                String?

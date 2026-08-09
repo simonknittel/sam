@@ -162,14 +162,15 @@ model WikiPage {
   deletedById String?
   deletedBy   Entity?   @relation("deletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
 
-  snapshots   WikiPageSnapshot[]
-  favorites   WikiPageFavorite[]
-  visits      WikiPageVisit[]
-  reports     WikiPageReport[]
-  tags        WikiPageTag[]
+  snapshots       WikiPageSnapshot[]
+  favorites       WikiPageFavorite[]
+  visits          WikiPageVisit[]
+  reports         WikiPageReport[]
+  tags            WikiPageTag[]
+  citizenMentions WikiPageCitizenMention[]
   /// Uploads embedded in this page as images or attachments (see
   /// Upload.wikiPages)
-  attachments Upload[]           @relation("attachments")
+  attachments     Upload[]                 @relation("attachments")
 
   @@index([parentId])
   @@index([deletedAt])
@@ -304,6 +305,42 @@ model WikiPageTag {
 
   @@unique([pageId, tagId])
   @@index([tagId])
+}
+
+/// One row per (page, citizen) pair the page's saved content currently
+/// mentions via an @citizen mention. The collab server keeps the table in
+/// lockstep with the content on every store: a new mention inserts a
+/// pending row, a removed mention deletes its row — which cancels a pending
+/// notification, and makes a later re-mention notify again. The 15-minute
+/// notification sweep turns pending rows (both timestamps NULL) into
+/// notifications. Also carries a hand-written partial index on the pending
+/// predicate Prisma cannot express (see migration
+/// wiki_page_citizen_mentions).
+model WikiPageCitizenMention {
+  id        String   @id @default(cuid(2))
+  pageId    String
+  page      WikiPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  citizenId String
+  citizen   Entity   @relation("citizen", fields: [citizenId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  /// The editor whose save introduced the mention (the storing connection's
+  /// editor, so best-effort within one debounced save). NULL for backfilled
+  /// rows.
+  createdById String?
+  createdBy   Entity?  @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  /// Set when the notification for this mention was sent.
+  notifiedAt   DateTime?
+  /// Set when the row was consumed without sending a notification:
+  /// programmatic /replace writes (snapshot restores, paste transplants,
+  /// briefing seeding), self-mentions, the backfill of pre-existing
+  /// mentions, and mentions failing the read-permission gate at send time.
+  suppressedAt DateTime?
+
+  @@unique([pageId, citizenId])
+  @@index([citizenId])
+  @@index([createdById])
 }
 
 model WikiSetting {
