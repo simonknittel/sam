@@ -35,19 +35,22 @@ export const NotificationListItem = ({
 
   return (
     <li
-      className="relative group/notification px-4 py-2 hover:bg-neutral-800/50 focus-within:bg-neutral-800/50"
+      className="relative group/notification border-l border-l-transparent px-4 py-2 hover:bg-neutral-800/50 focus-within:bg-neutral-800/50"
       data-unread-notification-id={
         trackReadOnView ? notification.id : undefined
       }
     >
-      <div className="flex items-center gap-2">
-        {isUnread && (
-          <span
-            className="flex-none inline-block rounded-full size-2 bg-amber-500"
-            title="Ungelesen"
-          />
-        )}
+      {isUnread && (
+        <div
+          className="absolute left-0 top-0 bottom-0 w-px"
+          style={{
+            background: "linear-gradient(to bottom, #f59e0b, transparent)",
+          }}
+          title="Ungelesen"
+        />
+      )}
 
+      <div className="flex items-center gap-2">
         {rendering.url ? (
           <Link
             href={rendering.url}
@@ -63,9 +66,11 @@ export const NotificationListItem = ({
           </span>
         )}
 
+        {/* Positioned so it sits above the link's full-item overlay and its
+        absolute-date tooltip stays reachable. */}
         <RelativeDate
           date={notification.createdAt}
-          className="ml-auto flex-none text-xs text-neutral-500"
+          className="relative ml-auto flex-none text-xs text-neutral-500"
         />
       </div>
 
