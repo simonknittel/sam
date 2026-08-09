@@ -21,10 +21,14 @@ import {
 interface WorkerStack {
   readonly baseURL: string;
   readonly prisma: PrismaClient;
+  /** HTTP base of the worker's collab container (e.g. for /replace) */
+  readonly collabHttpUrl: string;
 }
 
 interface Fixtures {
   readonly prisma: PrismaClient;
+  /** HTTP base of the worker's collab container (e.g. for /replace) */
+  readonly collabHttpUrl: string;
   /**
    * Signs the given user in by inserting a database session and setting the
    * session cookie (next-auth v4 database sessions).
@@ -75,6 +79,8 @@ const createWorkerDatabase = async (
   }
 };
 
+const TRUNCATE_ATTEMPTS = 3;
+
 const truncateAllTables = async (prisma: PrismaClient) => {
   const tables = await prisma.$queryRaw<{ tablename: string }[]>`
     SELECT tablename FROM pg_tables
@@ -85,7 +91,21 @@ const truncateAllTables = async (prisma: PrismaClient) => {
   const quotedNames = tables
     .map(({ tablename }) => `"${tablename}"`)
     .join(", ");
-  await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${quotedNames} CASCADE`);
+
+  /**
+   * The previous test's collab teardown writes (final store, audit event)
+   * can race this multi-table TRUNCATE into a deadlock; Postgres picks a
+   * victim, which may be us — the standard remedy is to retry.
+   */
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${quotedNames} CASCADE`);
+      return;
+    } catch (error) {
+      if (attempt === TRUNCATE_ATTEMPTS) throw error;
+      await sleep(250 * attempt);
+    }
+  }
 };
 
 export const test = base.extend<Fixtures, WorkerFixtures>({
@@ -112,6 +132,7 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
       const appPort = await getFreePort();
       const baseURL = `http://localhost:${appPort}`;
       const workerDatabaseUrl = hostDatabaseUrl(state, databaseName);
+      const collabHttpUrl = `http://localhost:${collabContainer.getMappedPort(collabPort)}`;
 
       const appProcess = spawn(
         "pnpm",
@@ -134,7 +155,7 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
         await waitForHttpOk(baseURL, appProcess);
 
         const prisma = createPrismaClient(workerDatabaseUrl);
-        await use({ baseURL, prisma });
+        await use({ baseURL, prisma, collabHttpUrl });
         await prisma.$disconnect();
       } finally {
         await stopProcess(appProcess);
@@ -150,6 +171,10 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
 
   prisma: async ({ stack }, use) => {
     await use(stack.prisma);
+  },
+
+  collabHttpUrl: async ({ stack }, use) => {
+    await use(stack.collabHttpUrl);
   },
 
   databaseReset: [

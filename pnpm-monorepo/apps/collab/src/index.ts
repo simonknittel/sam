@@ -568,13 +568,23 @@ const server = new Server<ConnectionContext>({
      */
     if (!data.context?.didEdit || data.context.isInternal) return;
 
-    await prisma.auditEvent.create({
-      data: {
-        type: "WIKI_PAGE_UPDATED",
-        data: JSON.stringify({ pageId: data.documentName }),
-        createdById: data.context.userId,
-      },
-    });
+    /**
+     * A failed audit write must never take the server down: connection
+     * teardown is not awaited by anyone, so a rejection here (e.g. the
+     * user row disappearing mid-session) would escalate to an unhandled
+     * rejection and kill the process.
+     */
+    try {
+      await prisma.auditEvent.create({
+        data: {
+          type: "WIKI_PAGE_UPDATED",
+          data: JSON.stringify({ pageId: data.documentName }),
+          createdById: data.context.userId,
+        },
+      });
+    } catch (error) {
+      console.error("[collab] Audit event write failed", error);
+    }
   },
 
   async afterUnloadDocument(data) {

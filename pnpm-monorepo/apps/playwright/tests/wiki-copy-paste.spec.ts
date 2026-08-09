@@ -237,10 +237,24 @@ test("replace mode transplants the copy onto an existing page", async ({
 
   const targetRow = await prisma.wikiPage.findUniqueOrThrow({
     where: { id: target.id },
-    select: { title: true, searchText: true },
+    select: { title: true },
   });
   expect(targetRow.title).toBe("Bestehend");
-  expect(targetRow.searchText).toContain("Muster-Inhalt.");
+
+  // The transplanted content reaches searchText with the collab server's
+  // store debounce — poll instead of reading once
+  await expect
+    .poll(
+      async () => {
+        const stored = await prisma.wikiPage.findUniqueOrThrow({
+          where: { id: target.id },
+          select: { searchText: true },
+        });
+        return stored.searchText;
+      },
+      { timeout: 20_000 },
+    )
+    .toContain("Muster-Inhalt.");
 
   // The old content survives as an automatic snapshot
   expect(
