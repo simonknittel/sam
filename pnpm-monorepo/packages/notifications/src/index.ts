@@ -92,6 +92,14 @@ export const wikiPageReportedPayloadSchema = z.object({
   reportedByHandle: z.string().nullable(),
 });
 
+export const wikiCitizenMentionedPayloadSchema = z.object({
+  pageId: z.string(),
+  pageTitle: z.string(),
+  mentionedByHandle: z.string().nullable(),
+  /** Set for EVENT-namespace (briefing) pages, whose page URL needs it */
+  eventId: z.string().nullable(),
+});
+
 export const onSiteNotificationPayloadSchemas = {
   event_created: eventCreatedPayloadSchema,
   event_updated: eventUpdatedPayloadSchema,
@@ -106,6 +114,7 @@ export const onSiteNotificationPayloadSchemas = {
   penalty_entry_created: penaltyEntryCreatedPayloadSchema,
   task_assignment_updated: taskAssignmentUpdatedPayloadSchema,
   wiki_page_reported: wikiPageReportedPayloadSchema,
+  wiki_citizen_mentioned: wikiCitizenMentionedPayloadSchema,
 } as const;
 
 export type OnSiteNotificationType =
@@ -131,6 +140,7 @@ export const ON_SITE_NOTIFICATION_PAYLOAD_VERSIONS: Record<
   penalty_entry_created: 1,
   task_assignment_updated: 1,
   wiki_page_reported: 1,
+  wiki_citizen_mentioned: 1,
 };
 
 export type ParsedOnSiteNotificationPayload = {

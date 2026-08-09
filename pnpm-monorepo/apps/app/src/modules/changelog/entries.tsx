@@ -42,6 +42,34 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-08-09-wiki-erwaehnungen",
+    date: "2026-08-09",
+    title: "Wiki: Benachrichtigung bei Erwähnung",
+    tags: ["Neu", "Wiki", "Events"],
+    isTracked: true,
+    body: () => (
+      <>
+        <p>
+          Wer auf einer Wiki-Seite oder in einem Event-Briefing per @-Erwähnung
+          verlinkt wird, bekommt dazu jetzt eine Benachrichtigung &ndash;
+          vorausgesetzt, die Person kann die Seite auch lesen.
+        </p>
+
+        <p>
+          Browser-Benachrichtigungen dafür lassen sich in den{" "}
+          <Link
+            href="/app/account/notifications"
+            className="text-interaction-500 hover:underline focus-visible:underline"
+          >
+            Einstellungen
+          </Link>{" "}
+          aktivieren.
+        </p>
+      </>
+    ),
+  },
+
+  {
     key: "2026-08-09-benachrichtigungszentrale",
     date: "2026-08-09",
     title: "Benachrichtigungszentrale",

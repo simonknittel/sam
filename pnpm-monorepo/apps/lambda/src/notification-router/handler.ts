@@ -14,6 +14,7 @@ import { SilcTransactionsCreatedHandler } from "./type-handlers/SilcTransactions
 import { TaskAssignmentUpdatedHandler } from "./type-handlers/TaskAssignmentUpdated";
 import { TaskCreatedHandler } from "./type-handlers/TaskCreated";
 import { WebPushSubscribedHandler } from "./type-handlers/WebPushSubscribed";
+import { WikiCitizenMentionedHandler } from "./type-handlers/WikiCitizenMentioned";
 import { WikiPageReportedHandler } from "./type-handlers/WikiPageReported";
 
 export const notificationRouterHandler = async (
@@ -68,6 +69,9 @@ export const notificationRouterHandler = async (
       break;
     case "WikiPageReported":
       await WikiPageReportedHandler(body.payload);
+      break;
+    case "WikiCitizenMentioned":
+      await WikiCitizenMentionedHandler(body.payload);
       break;
   }
 };
@@ -199,6 +203,14 @@ export const bodySchema = z.discriminatedUnion("type", [
     type: z.literal("WikiPageReported"),
     payload: z.object({
       reportId: z.cuid2(),
+    }),
+    requestId: z.cuid2(),
+  }),
+
+  z.object({
+    type: z.literal("WikiCitizenMentioned"),
+    payload: z.object({
+      mentionId: z.cuid2(),
     }),
     requestId: z.cuid2(),
   }),

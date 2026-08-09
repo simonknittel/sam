@@ -151,6 +151,18 @@ export const renderOnSiteNotification = (
         appTitle,
       };
 
+    case "wiki_citizen_mentioned":
+      return {
+        title: "Du wurdest im Wiki erwähnt",
+        body: parsed.payload.mentionedByHandle
+          ? `${parsed.payload.mentionedByHandle} hat dich auf der Seite "${parsed.payload.pageTitle}" erwähnt`
+          : `Du wurdest auf der Seite "${parsed.payload.pageTitle}" erwähnt`,
+        url: parsed.payload.eventId
+          ? `/app/events/${parsed.payload.eventId}/briefing/${parsed.payload.pageId}`
+          : `/app/wiki/${parsed.payload.pageId}`,
+        appTitle,
+      };
+
     default:
       throw new Error(`Unknown notification type: ${parsed satisfies never}`);
   }

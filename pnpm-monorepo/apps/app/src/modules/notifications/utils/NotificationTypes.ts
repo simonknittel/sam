@@ -136,6 +136,13 @@ export const NOTIFICATIONS_APPS: NotificationApp[] = [
           "Wenn eine Seite gemeldet wird. Nur für Wiki-Administratoren relevant.",
         category: "Wiki",
       },
+      {
+        id: "wiki_citizen_mentioned",
+        title: "Erwähnung",
+        description:
+          "Wenn ich auf einer Wiki-Seite oder in einem Event-Briefing erwähnt werde",
+        category: "Wiki",
+      },
     ],
   },
 ];
