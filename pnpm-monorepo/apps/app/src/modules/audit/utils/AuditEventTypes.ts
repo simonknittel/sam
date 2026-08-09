@@ -141,6 +141,7 @@ export enum AuditEventType {
   ON_SITE_NOTIFICATION_ARCHIVED = "ON_SITE_NOTIFICATION_ARCHIVED",
   ON_SITE_NOTIFICATIONS_READ_ARCHIVED = "ON_SITE_NOTIFICATIONS_READ_ARCHIVED",
   ON_SITE_NOTIFICATION_UNARCHIVED = "ON_SITE_NOTIFICATION_UNARCHIVED",
+  IRRELEVANT_ON_SITE_NOTIFICATIONS_ARCHIVED = "IRRELEVANT_ON_SITE_NOTIFICATIONS_ARCHIVED",
   WEB_PUSH_SUBSCRIPTIONS_PRUNED = "WEB_PUSH_SUBSCRIPTIONS_PRUNED",
   CHANGELOG_ENTRIES_SEEN = "CHANGELOG_ENTRIES_SEEN",
   UNUSED_UPLOADS_DELETED = "UNUSED_UPLOADS_DELETED",
@@ -1068,6 +1069,10 @@ export interface AuditEventDataByType {
   [AuditEventType.ON_SITE_NOTIFICATION_UNARCHIVED]: {
     citizenId: string;
     notificationId: string;
+  };
+
+  [AuditEventType.IRRELEVANT_ON_SITE_NOTIFICATIONS_ARCHIVED]: {
+    count: number;
   };
 
   [AuditEventType.WEB_PUSH_SUBSCRIPTIONS_PRUNED]: {
@@ -2646,6 +2651,15 @@ export const AuditEventDefinitions: {
       notificationId: "string",
     },
     message: (data) => `Restored notification ${data.notificationId}`,
+  },
+
+  [AuditEventType.IRRELEVANT_ON_SITE_NOTIFICATIONS_ARCHIVED]: {
+    type: AuditEventType.IRRELEVANT_ON_SITE_NOTIFICATIONS_ARCHIVED,
+    data: {
+      count: 0,
+    },
+    message: (data) =>
+      `Archived ${data.count} on-site notification(s) which aren't relevant anymore`,
   },
 
   [AuditEventType.WEB_PUSH_SUBSCRIPTIONS_PRUNED]: {
