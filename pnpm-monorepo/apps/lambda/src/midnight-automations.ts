@@ -2,6 +2,7 @@ import "./midnight-automations/setup"; // must be first
 
 import type { ScheduledHandler } from "aws-lambda";
 import { initializeRequestContext } from "./common/requestContext";
+import { archiveIrrelevantOnSiteNotifications } from "./midnight-automations/archiveIrrelevantOnSiteNotifications";
 import { autoAssignInactiveRoles } from "./midnight-automations/autoAssignInactiveRoles";
 import { countCitizensPerRole } from "./midnight-automations/countCitizensPerRole";
 import { countShips } from "./midnight-automations/countShips";
@@ -26,6 +27,7 @@ export const handler: ScheduledHandler = async (event, context) => {
     await countUniqueLogins();
     await purgeTrashedWikiPages();
     await purgeOrphanedWikiTags();
+    await archiveIrrelevantOnSiteNotifications();
     await deleteUnusedUploads();
   });
 };
