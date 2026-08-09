@@ -20,7 +20,7 @@ export const Notifications = () => {
           {unreadCount > 0 && <UnreadDot className="ml-1" />}
         </>
       }
-      triggerClassName="h-full px-4 flex items-center hover:bg-tertiary focus-visible:bg-tertiary cursor-pointer"
+      triggerClassName="h-full px-4 flex items-center text-neutral-500 hover:bg-tertiary hover:text-white focus-visible:bg-tertiary focus-visible:text-white cursor-pointer"
       triggerTitle="Benachrichtigungen"
       childrenClassName="w-96"
     >

@@ -9,7 +9,7 @@ export const Support = async () => {
   return (
     <Link
       href={target.href}
-      className="h-full px-4 flex items-center hover:bg-tertiary focus-visible:bg-tertiary"
+      className="h-full px-4 flex items-center text-neutral-500 hover:bg-tertiary hover:text-white focus-visible:bg-tertiary focus-visible:text-white"
       title="Support"
     >
       <FaQuestionCircle />
