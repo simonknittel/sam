@@ -162,7 +162,10 @@ export enum AuditEventType {
  */
 export const HIGH_VOLUME_AUDIT_EVENT_TYPES: ReadonlySet<AuditEventType> =
   new Set([
+    AuditEventType.USER_LOGIN_V2,
+    AuditEventType.USER_FIRST_VISIT_OF_THE_DAY_V2,
     AuditEventType.WIKI_PAGE_VISITED,
+    AuditEventType.WIKI_PAGE_UPDATED,
     AuditEventType.ON_SITE_NOTIFICATIONS_CREATED,
     AuditEventType.ON_SITE_NOTIFICATIONS_READ,
     AuditEventType.ON_SITE_NOTIFICATIONS_ALL_READ,
