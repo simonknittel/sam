@@ -3,6 +3,7 @@
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { useTabsContext } from "@/modules/common/components/tabs/TabsContext";
 import { api } from "@/trpc/react";
+import clsx from "clsx";
 import { useCallback, useEffect, useRef } from "react";
 import { BsExclamationOctagonFill } from "react-icons/bs";
 import { useOnSiteNotificationMutations } from "../hooks/useOnSiteNotificationMutations";
@@ -19,6 +20,17 @@ interface Props {
   readonly onNavigate?: () => void;
   readonly enabled?: boolean;
 }
+
+/**
+ * Mirrors the footprint of the notification list showing a single
+ * `NotificationListItem` with a body line: the same edge bleed and top border
+ * as the `ul` below, and `min-h-21` (84px) matching the item's height (`py-2`
+ * plus title, body and action rows). `box-content` makes the top border add to
+ * the min-height like the list's border does. This keeps the popover height
+ * identical across the loading, error, empty and single-notification states.
+ */
+const statusMessageClassName =
+  "-mx-4 -mb-4 border-t border-neutral-800 box-content min-h-21 px-4 flex gap-2 justify-center items-center text-center";
 
 export const NotificationList = ({
   tab,
@@ -142,7 +154,12 @@ export const NotificationList = ({
 
   if (isPending)
     return (
-      <p className="font-mono uppercase flex gap-2 justify-center items-center animate-pulse py-8">
+      <p
+        className={clsx(
+          statusMessageClassName,
+          "font-mono text-sm animate-pulse",
+        )}
+      >
         <AsciiSpinner />
         Benachrichtigungen werden geladen...
       </p>
@@ -150,7 +167,12 @@ export const NotificationList = ({
 
   if (error)
     return (
-      <p className="font-mono uppercase flex gap-2 justify-center items-center text-red-500 py-8">
+      <p
+        className={clsx(
+          statusMessageClassName,
+          "font-mono text-sm text-red-500",
+        )}
+      >
         <BsExclamationOctagonFill className="text-red-800" />
         Fehler beim Laden der Benachrichtigungen
       </p>
@@ -158,7 +180,7 @@ export const NotificationList = ({
 
   if (notifications.length <= 0)
     return (
-      <p className="text-neutral-500 text-sm text-center py-8">
+      <p className={clsx(statusMessageClassName, "text-neutral-500 text-sm")}>
         {tab === NotificationCenterTab.Inbox
           ? "Keine Benachrichtigungen"
           : "Keine archivierten Benachrichtigungen"}
