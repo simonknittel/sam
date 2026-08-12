@@ -6,7 +6,9 @@ on:
       - main
     paths:
       - .github/workflows/validate-app.yml
+      - pnpm-monorepo/.nvmrc
       - pnpm-monorepo/apps/app/**
+      - pnpm-monorepo/apps/scripts/**
       - pnpm-monorepo/packages/**
       - pnpm-monorepo/pnpm-lock.yaml
       - pnpm-monorepo/pnpm-workspace.yaml
@@ -15,16 +17,12 @@ on:
       - main
     paths:
       - .github/workflows/validate-app.yml
+      - pnpm-monorepo/.nvmrc
       - pnpm-monorepo/apps/app/**
+      - pnpm-monorepo/apps/scripts/**
       - pnpm-monorepo/packages/**
       - pnpm-monorepo/pnpm-lock.yaml
       - pnpm-monorepo/pnpm-workspace.yaml
-
-# The app's postinstall runs `next typegen`, which loads the app's modules and
-# therefore src/env.ts. None of the runtime secrets exist here, so validation
-# has to be skipped for the install to succeed.
-env:
-  SKIP_VALIDATION: "1"
 
 jobs:
   lint:
@@ -50,6 +48,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --filter @sam-monorepo/app...
         working-directory: pnpm-monorepo
+        env:
+          # The app's postinstall runs `next typegen`, which loads the app's
+          # modules and therefore src/env.ts. None of the runtime secrets
+          # exist here, so validation has to be skipped for the install to
+          # succeed. Only the install skips it — the checks themselves run
+          # with validation.
+          SKIP_VALIDATION: "1"
 
       - name: Lint
         run: pnpm --filter @sam-monorepo/app run lint
@@ -79,6 +84,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --filter @sam-monorepo/app...
         working-directory: pnpm-monorepo
+        env:
+          # See the lint job's install step
+          SKIP_VALIDATION: "1"
 
       - name: Prettier
         run: pnpm --filter @sam-monorepo/app exec prettier --check .
@@ -107,7 +115,53 @@ jobs:
       - name: Install dependencies
         run: pnpm install --filter @sam-monorepo/app...
         working-directory: pnpm-monorepo
+        env:
+          # See the lint job's install step
+          SKIP_VALIDATION: "1"
 
-      - name: Test
+      - name: Test app
         run: pnpm --filter @sam-monorepo/app run test
+        working-directory: pnpm-monorepo
+
+      - name: Test packages
+        run: pnpm --filter @sam-monorepo/permissions --filter @sam-monorepo/wiki-editor run test
+        working-directory: pnpm-monorepo
+
+  typecheck:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        with:
+          version: 11.20.0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: "pnpm-monorepo/.nvmrc"
+          cache: "pnpm"
+          cache-dependency-path: "pnpm-monorepo/pnpm-lock.yaml"
+
+      - name: pnpm audit guard
+        run: pnpm audit
+        working-directory: pnpm-monorepo
+
+      - name: Install dependencies
+        run: pnpm install --filter @sam-monorepo/app... --filter @sam-monorepo/scripts...
+        working-directory: pnpm-monorepo
+        env:
+          # See the lint job's install step
+          SKIP_VALIDATION: "1"
+
+      - name: Typecheck app
+        run: pnpm --filter @sam-monorepo/app run typecheck
+        working-directory: pnpm-monorepo
+
+      - name: Typecheck packages
+        run: pnpm --filter @sam-monorepo/permissions --filter @sam-monorepo/wiki-editor run typecheck
+        working-directory: pnpm-monorepo
+
+      - name: Typecheck scripts
+        run: pnpm --filter @sam-monorepo/scripts run typecheck
         working-directory: pnpm-monorepo
