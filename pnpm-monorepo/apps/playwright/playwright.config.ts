@@ -20,4 +20,20 @@ export default defineConfig({
     // catch elements mid-animation.
     contextOptions: { reducedMotion: "reduce" },
   },
+
+  projects: [
+    {
+      // Talks to the collab container over plain HTTP and must not share a
+      // worker stack with tests whose websocket editing sessions' teardown
+      // writes race the database reset (can deadlock the collab container).
+      // Workers are never shared across projects, so this always runs on a
+      // fresh stack.
+      name: "collab-http",
+      testMatch: /collab-replace\.spec\.ts/,
+    },
+    {
+      name: "app",
+      testIgnore: /collab-replace\.spec\.ts/,
+    },
+  ],
 });
