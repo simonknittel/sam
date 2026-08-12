@@ -9,14 +9,17 @@
     ".": "./dist/index.js"
   },
   "scripts": {
-    "postinstall": "tsc",
-    "build": "tsc"
+    "postinstall": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@sam-monorepo/database": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "24.13.3",
-    "typescript": "7.0.2"
+    "typescript": "7.0.2",
+    "vitest": "4.1.10"
   }
 }

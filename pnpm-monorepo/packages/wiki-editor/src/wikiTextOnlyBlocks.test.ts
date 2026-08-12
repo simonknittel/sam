@@ -1,12 +1,12 @@
+import { Fragment, Slice } from "@tiptap/pm/model";
+import { EditorState, TextSelection } from "@tiptap/pm/state";
+import { describe, expect, test } from "vitest";
 import {
   getWikiEditorSchema,
   getWikiPositionRestrictions,
   getWikiSelectionRestrictions,
   stripWikiTextOnlyAlignment,
-} from "@sam-monorepo/wiki-editor";
-import { Fragment, Slice } from "@tiptap/pm/model";
-import { EditorState, TextSelection } from "@tiptap/pm/state";
-import { describe, expect, test } from "vitest";
+} from "./index.js";
 
 const schema = getWikiEditorSchema();
 

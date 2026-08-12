@@ -1,13 +1,13 @@
+import { EditorState, TextSelection } from "@tiptap/pm/state";
+import { renderToHTMLString } from "@tiptap/static-renderer";
+import { describe, expect, test } from "vitest";
 import {
   getWikiEditorExtensions,
   getWikiEditorSchema,
   getWikiSelectionRestrictions,
   stripWikiSmallTextInSmallBlocks,
   type WikiTextSize,
-} from "@sam-monorepo/wiki-editor";
-import { EditorState, TextSelection } from "@tiptap/pm/state";
-import { renderToHTMLString } from "@tiptap/static-renderer";
-import { describe, expect, test } from "vitest";
+} from "./index.js";
 
 const schema = getWikiEditorSchema();
 const extensions = getWikiEditorExtensions();
@@ -42,8 +42,11 @@ const stateOf = (...content: unknown[]) => {
   return EditorState.create({ schema, doc: node });
 };
 
-const hasSmallTextMark = (state: EditorState) =>
-  state.doc.rangeHasMark(0, state.doc.content.size, schema.marks.wikiSmallText);
+const hasSmallTextMark = (state: EditorState) => {
+  const smallTextMark = schema.marks.wikiSmallText;
+  if (!smallTextMark) throw new Error("No wikiSmallText mark in the schema");
+  return state.doc.rangeHasMark(0, state.doc.content.size, smallTextMark);
+};
 
 /** The same renderer the read-only page view uses (WikiPageStaticContent) */
 const render = (content: unknown) =>
@@ -62,7 +65,9 @@ const parseTextSize = (
   typeName: string,
   attributes: Readonly<Record<string, string>>,
 ) => {
-  const rule = schema.nodes[typeName]?.spec.parseDOM?.find(
+  const nodeType = schema.nodes[typeName];
+  if (!nodeType) throw new Error(`No ${typeName} node in the schema`);
+  const rule = nodeType.spec.parseDOM?.find(
     (candidate) => "getAttrs" in candidate && candidate.getAttrs,
   );
   if (!rule?.getAttrs) throw new Error(`No parse rule for ${typeName}`);
@@ -72,7 +77,7 @@ const parseTextSize = (
   } as unknown as HTMLElement);
   if (parsed === false) throw new Error(`Parse rule rejected ${typeName}`);
   // Through create() so a value the rule drops shows up as the schema default
-  const { textSize } = schema.nodes[typeName].create(parsed ?? undefined).attrs;
+  const { textSize } = nodeType.create(parsed ?? undefined).attrs;
   return textSize as WikiTextSize | null;
 };
 

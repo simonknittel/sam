@@ -1,10 +1,10 @@
+import { describe, expect, test } from "vitest";
 import {
   collectWikiMentionedCitizenIds,
   collectWikiVariantLinkIds,
   createWikiHeadingIdAssigner,
   extractWikiPageText,
-} from "@sam-monorepo/wiki-editor";
-import { describe, expect, test } from "vitest";
+} from "./index.js";
 
 const document = {
   type: "doc",

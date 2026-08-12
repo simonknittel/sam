@@ -1,9 +1,5 @@
-// Tests for @sam-monorepo/wiki-editor deliberately hosted in the app because vitest is set up here.
-import {
-  collectWikiIframeSrcs,
-  isWikiIframeSrcAllowed,
-} from "@sam-monorepo/wiki-editor";
 import { describe, expect, test } from "vitest";
+import { collectWikiIframeSrcs, isWikiIframeSrcAllowed } from "./index.js";
 
 describe("isWikiIframeSrcAllowed", () => {
   const allowlist = ["example.com", "maps.google.com"];

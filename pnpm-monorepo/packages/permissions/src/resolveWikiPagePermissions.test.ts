@@ -4,12 +4,12 @@ import {
   WikiPageUploadability,
   WikiPageVisibility,
 } from "@sam-monorepo/database/browser";
+import { describe, expect, test } from "vitest";
 import {
   resolveWikiPagePermissions,
   type WikiPagePermissionSource,
   type WikiPageViewer,
-} from "@sam-monorepo/permissions";
-import { describe, expect, test } from "vitest";
+} from "./index.js";
 
 const page = (
   overrides: Partial<WikiPagePermissionSource> & { id: string },

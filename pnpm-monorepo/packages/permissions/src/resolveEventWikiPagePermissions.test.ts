@@ -2,13 +2,13 @@ import {
   WikiPageEventScope,
   WikiPageUploadability,
 } from "@sam-monorepo/database/browser";
+import { describe, expect, test } from "vitest";
 import {
   collectPositionScopeIdsForCitizen,
   resolveEventWikiPagePermissions,
   type EventWikiPagePermissionSource,
   type EventWikiViewer,
-} from "@sam-monorepo/permissions";
-import { describe, expect, test } from "vitest";
+} from "./index.js";
 
 const page = (
   overrides: Partial<EventWikiPagePermissionSource> & { id: string },

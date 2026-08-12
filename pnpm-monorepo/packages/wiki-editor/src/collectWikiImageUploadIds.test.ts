@@ -1,8 +1,5 @@
-import {
-  collectWikiImageUploadIds,
-  getWikiImageUploadId,
-} from "@sam-monorepo/wiki-editor";
 import { describe, expect, test } from "vitest";
+import { collectWikiImageUploadIds, getWikiImageUploadId } from "./index.js";
 
 const PUBLIC_HOST = "uploads.example.com";
 

@@ -1,9 +1,9 @@
+import { describe, expect, test } from "vitest";
 import {
   WikiSaveState,
   parseWikiCollabStatelessMessage,
   serializeWikiCollabStatelessMessage,
-} from "@sam-monorepo/wiki-editor";
-import { describe, expect, test } from "vitest";
+} from "./index.js";
 
 describe("parseWikiCollabStatelessMessage", () => {
   test("round-trips both message types", () => {

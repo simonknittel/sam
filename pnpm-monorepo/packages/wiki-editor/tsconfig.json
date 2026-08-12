@@ -1,4 +1,6 @@
 /* Reference: https://www.totaltypescript.com/tsconfig-cheat-sheet */
+/* IDE/typecheck config covering sources and tests; the emitting build
+   lives in tsconfig.build.json and excludes tests. */
 {
   "compilerOptions": {
     /* Base Options: */
@@ -14,16 +16,9 @@
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
-    /* If transpiling with TypeScript: */
+    /* If NOT transpiling with TypeScript: */
     "module": "NodeNext",
-    "outDir": "dist",
-    "rootDir": "src",
-    "sourceMap": true,
-    /* AND if you're building for a library: */
-    "declaration": true,
-    /* AND if you're building for a library in a monorepo: */
-    "composite": true,
-    "declarationMap": true,
+    "noEmit": true,
     /* If your code doesn't run in the DOM: */
     "lib": ["es2024"],
     /* Since TypeScript 6, packages from `node_modules/@types` are no longer

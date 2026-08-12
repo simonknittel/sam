@@ -1,10 +1,7 @@
-import {
-  getWikiEditorExtensions,
-  getWikiEditorSchema,
-} from "@sam-monorepo/wiki-editor";
 import { DOMParser } from "@tiptap/pm/model";
 import { renderToHTMLString } from "@tiptap/static-renderer";
 import { describe, expect, test } from "vitest";
+import { getWikiEditorExtensions, getWikiEditorSchema } from "./index.js";
 
 const schema = getWikiEditorSchema();
 const extensions = getWikiEditorExtensions();
@@ -48,13 +45,15 @@ const renderedAnchor = (
  * NULL when the rule rejects the element.
  */
 const parseRenderedAnchor = (element: HTMLElement) => {
-  const rule = schema.nodes.image.spec.parseDOM?.find(
+  const imageNodeType = schema.nodes.image;
+  if (!imageNodeType) throw new Error("No image node in the schema");
+  const rule = imageNodeType.spec.parseDOM?.find(
     (candidate) => "tag" in candidate && candidate.tag === "a[data-wiki-image]",
   );
   if (!rule?.getAttrs) throw new Error("No parse rule for the image link");
   const parsed = rule.getAttrs(element);
   if (parsed === false) return null;
-  return schema.nodes.image.create(parsed ?? undefined).attrs;
+  return imageNodeType.create(parsed ?? undefined).attrs;
 };
 
 describe("the link to an image's original", () => {

@@ -1,9 +1,5 @@
-// Tests for @sam-monorepo/wiki-editor deliberately hosted in the app because vitest is set up here.
-import {
-  isAllowedWikiEmbedSrc,
-  normalizeWikiEmbedUrl,
-} from "@sam-monorepo/wiki-editor";
 import { describe, expect, test } from "vitest";
+import { isAllowedWikiEmbedSrc, normalizeWikiEmbedUrl } from "./index.js";
 
 describe("normalizeWikiEmbedUrl", () => {
   test.each([

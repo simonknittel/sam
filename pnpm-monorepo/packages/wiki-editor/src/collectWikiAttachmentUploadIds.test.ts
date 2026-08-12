@@ -1,5 +1,5 @@
-import { collectWikiAttachmentUploadIds } from "@sam-monorepo/wiki-editor";
 import { describe, expect, test } from "vitest";
+import { collectWikiAttachmentUploadIds } from "./index.js";
 
 describe("collectWikiAttachmentUploadIds", () => {
   test("collects unique upload ids of attachment nodes", () => {
