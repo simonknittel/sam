@@ -38,6 +38,7 @@ export const getUnleashFlag = cache(
       log.error("Error fetching feature flag", {
         error: serializeError(error),
       });
+      return false;
     }
   }),
 );
