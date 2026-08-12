@@ -1,18 +1,35 @@
 name: Playwright tests
 
+# The paths cover everything the test stack is built from: the app and the
+# collab image (built from the checkout), the workspace packages, and the
+# workspace plumbing. Lambda- or scripts-only changes don't run the suite.
 on:
   pull_request:
     branches:
       - main
     paths:
       - .github/workflows/playwright-tests.yml
-      - pnpm-monorepo/**
+      - pnpm-monorepo/.nvmrc
+      - pnpm-monorepo/package.json
+      - pnpm-monorepo/apps/app/**
+      - pnpm-monorepo/apps/collab/**
+      - pnpm-monorepo/apps/playwright/**
+      - pnpm-monorepo/packages/**
+      - pnpm-monorepo/pnpm-lock.yaml
+      - pnpm-monorepo/pnpm-workspace.yaml
   push:
     branches:
       - main
     paths:
       - .github/workflows/playwright-tests.yml
-      - pnpm-monorepo/**
+      - pnpm-monorepo/.nvmrc
+      - pnpm-monorepo/package.json
+      - pnpm-monorepo/apps/app/**
+      - pnpm-monorepo/apps/collab/**
+      - pnpm-monorepo/apps/playwright/**
+      - pnpm-monorepo/packages/**
+      - pnpm-monorepo/pnpm-lock.yaml
+      - pnpm-monorepo/pnpm-workspace.yaml
 
 jobs:
   playwright_tests:
