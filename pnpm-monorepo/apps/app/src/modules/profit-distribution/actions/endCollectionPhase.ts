@@ -4,6 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { updateCitizensSilcBalances } from "@/modules/silc/utils/updateCitizensSilcBalances";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -55,7 +56,19 @@ export const endCollectionPhase = createAuthenticatedAction(
       },
     });
 
-    await prisma.$transaction([
+    const [createdSilcTransactions] = await prisma.$transaction([
+      prisma.silcTransaction.createManyAndReturn({
+        data: allSilcBalances.map((citizen) => ({
+          receiverId: citizen.id,
+          value: -citizen.silcBalance,
+          description: `SINcome: ${cycle.title}`,
+          createdById: authentication.session.entity!.id,
+        })),
+        select: {
+          id: true,
+        },
+      }),
+
       prisma.profitDistributionCycle.update({
         where: {
           id: data.id,
@@ -84,15 +97,6 @@ export const endCollectionPhase = createAuthenticatedAction(
           },
         }),
       ),
-
-      prisma.silcTransaction.createMany({
-        data: allSilcBalances.map((citizen) => ({
-          receiverId: citizen.id,
-          value: -citizen.silcBalance,
-          description: `SINcome: ${cycle.title}`,
-          createdById: authentication.session.entity!.id,
-        })),
-      }),
     ]);
 
     await updateCitizensSilcBalances(
@@ -106,6 +110,20 @@ export const endCollectionPhase = createAuthenticatedAction(
           cycleId: data.id,
         },
         createdById: authentication.session.user.id,
+      },
+    ]);
+
+    /**
+     * Trigger notifications
+     */
+    await triggerNotifications([
+      {
+        type: "SilcTransactionsCreated",
+        payload: {
+          transactionIds: createdSilcTransactions.map(
+            (transaction) => transaction.id,
+          ),
+        },
       },
     ]);
 
