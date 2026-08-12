@@ -269,11 +269,21 @@ test("replace mode transplants the copy onto an existing page", async ({
       where: { title: "Altes Kind", parentId: target.id },
     }),
   ).toBe(1);
-  expect(
-    await prisma.wikiPage.count({
-      where: { title: "Muster-Kind", parentId: target.id },
-    }),
-  ).toBe(1);
+  /**
+   * The action copies the children only after the collab replace, whose
+   * store debounce already satisfies the searchText poll above — so the
+   * action may still be running here. Poll until the child copy lands;
+   * this also orders the "no (Kopie) page" check below after the action.
+   */
+  await expect
+    .poll(
+      () =>
+        prisma.wikiPage.count({
+          where: { title: "Muster-Kind", parentId: target.id },
+        }),
+      { timeout: 15_000 },
+    )
+    .toBe(1);
   // No "(Kopie)" page was created — the target itself was replaced
   expect(
     await prisma.wikiPage.count({ where: { title: "Muster (Kopie)" } }),

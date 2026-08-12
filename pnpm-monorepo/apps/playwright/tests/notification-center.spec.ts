@@ -41,7 +41,8 @@ test("unread notifications drive the bell dot and the tab title", async ({
 
   await page.goto("/app");
 
-  await expect(page).toHaveTitle(/^\(2\)/);
+  // Often the worker's first page load — warm-up can exceed the default 5s
+  await expect(page).toHaveTitle(/^\(2\)/, { timeout: 15_000 });
   await expect(bellButton(page).locator(".bg-amber-500").first()).toBeVisible();
 });
 
