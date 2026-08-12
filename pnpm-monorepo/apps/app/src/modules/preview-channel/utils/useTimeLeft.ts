@@ -14,7 +14,7 @@ export const useTimeLeft = (date: Date) => {
     return () => {
       clearInterval(interval);
     };
-  });
+  }, [date]);
 
   return timeLeft;
 };
