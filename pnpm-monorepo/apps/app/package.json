@@ -113,6 +113,7 @@
     "zod": "4.4.3"
   },
   "devDependencies": {
+    "@eslint/compat": "2.1.0",
     "@eslint/eslintrc": "3.3.6",
     "@tailwindcss/postcss": "4.3.3",
     "@tailwindcss/typography": "0.5.20",
@@ -129,7 +130,7 @@
     "@vitest/coverage-v8": "4.1.10",
     "csv": "6.6.3",
     "dotenv": "17.4.2",
-    "eslint": "9.39.5",
+    "eslint": "10.8.0",
     "eslint-config-next": "16.3.0",
     "eslint-plugin-react-compiler": "19.1.0-rc.2",
     "eslint-plugin-react-you-might-not-need-an-effect": "1.0.1",
