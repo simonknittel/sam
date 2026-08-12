@@ -35,66 +35,6 @@ saveExact: true
 # diffs instead of hard-failing CI.
 minimumReleaseAge: 10080
 minimumReleaseAgeStrict: false
-# Versions already in the lockfile when the age gate was introduced
-# (2026-07-27). Safe to prune once they are older than 7 days.
-minimumReleaseAgeExclude:
-  - "@aws-sdk/core@3.977.1"
-  - "@aws-sdk/credential-provider-env@3.972.61"
-  - "@aws-sdk/credential-provider-http@3.972.63"
-  - "@aws-sdk/credential-provider-ini@3.973.6"
-  - "@aws-sdk/credential-provider-login@3.972.68"
-  - "@aws-sdk/credential-provider-node@3.972.72"
-  - "@aws-sdk/credential-provider-process@3.972.61"
-  - "@aws-sdk/credential-provider-sso@3.973.5"
-  - "@aws-sdk/credential-provider-web-identity@3.972.67"
-  - "@aws-sdk/dynamodb-codec@3.973.35"
-  - "@aws-sdk/middleware-endpoint-discovery@3.972.26"
-  - "@aws-sdk/nested-clients@3.997.35"
-  - "@aws-sdk/signature-v4-multi-region@3.996.42"
-  - "@aws-sdk/token-providers@3.1095.0"
-  - "@aws-sdk/xml-builder@3.972.37"
-  - "@emnapi/runtime@1.11.3"
-  - "@prisma/adapter-pg@7.9.0"
-  - "@prisma/client-runtime-utils@7.9.0"
-  - "@prisma/client@7.9.0"
-  - "@prisma/config@7.9.0"
-  - "@prisma/debug@7.9.0"
-  - "@prisma/driver-adapter-utils@7.9.0"
-  - "@prisma/engines@7.9.0"
-  - "@prisma/fetch-engine@7.9.0"
-  - "@prisma/get-platform@7.9.0"
-  - "@smithy/core@3.30.0"
-  - "@smithy/credential-provider-imds@4.4.14"
-  - "@smithy/fetch-http-handler@5.6.11"
-  - "@smithy/node-http-handler@4.9.11"
-  - "@smithy/signature-v4@5.6.10"
-  - "baseline-browser-mapping@2.11.3"
-  - "brace-expansion@5.0.8"
-  - "dot-prop@10.2.0"
-  - "giget@3.3.1"
-  - "prisma@7.9.0"
-  - "@auth/core@0.41.3"
-  - "@next/env@16.2.11 || 16.3.0"
-  - "@next/swc-darwin-arm64@16.2.11 || 16.3.0"
-  - "@next/swc-darwin-x64@16.2.11 || 16.3.0"
-  - "@next/swc-linux-arm64-gnu@16.2.11 || 16.3.0"
-  - "@next/swc-linux-arm64-musl@16.2.11 || 16.3.0"
-  - "@next/swc-linux-x64-gnu@16.2.11 || 16.3.0"
-  - "@next/swc-linux-x64-musl@16.2.11 || 16.3.0"
-  - "@next/swc-win32-arm64-msvc@16.2.11 || 16.3.0"
-  - "@next/swc-win32-x64-msvc@16.2.11 || 16.3.0"
-  - "@prisma/instrumentation@7.9.0"
-  - "@vercel/build-utils@13.35.0"
-  - "@vercel/cli-auth@0.3.1"
-  - "@vercel/cli-config@0.2.1"
-  - next-auth@4.24.15
-  - next@16.2.11 || 16.3.0
-  - tar@7.5.21
-  - vercel@57.0.0
-  # Renovate security update: postcss@8.5.23
-  - postcss@8.5.23
-  - "@next/eslint-plugin-next@16.3.0"
-  - eslint-config-next@16.3.0
 allowBuilds:
   # Since Prisma 7 the client no longer has a postinstall script (generation
   # happens explicitly via `prisma generate` in packages/database).
