@@ -7,7 +7,8 @@
     "postinstall": "next typegen",
     "lint": "eslint .",
     "start": "next start",
-    "test": "vitest run --coverage",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "format": "prettier --write ."
   },
   "dependencies": {
