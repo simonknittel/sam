@@ -6,6 +6,7 @@ import {
   WikiPageVisibility,
   wikiParagraph,
 } from "../fixtures/factories";
+import { clickUntilUrl } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 test("a seeded page renders its title and content", async ({
@@ -89,14 +90,11 @@ test("the sidebar tree links between pages", async ({
 
   await expect(page.getByRole("link", { name: "Flotte" })).toBeVisible();
 
-  // A click landing while React hydrates can get swallowed by the DOM
-  // swap — retry until the navigation actually happens
-  await expect(async () => {
-    await page.getByRole("link", { name: "Schiffe" }).click({ timeout: 2_000 });
-    await expect(page).toHaveURL(`/app/wiki/${child.id}/${child.slug}`, {
-      timeout: 2_000,
-    });
-  }).toPass({ timeout: 15_000 });
+  await clickUntilUrl(
+    page,
+    page.getByRole("link", { name: "Schiffe" }),
+    `/app/wiki/${child.id}/${child.slug}`,
+  );
   await expect(page.getByText("Liste aller Schiffe.")).toBeVisible();
 });
 

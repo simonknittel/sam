@@ -10,6 +10,7 @@ import {
   WikiPageVisibility,
   wikiParagraph,
 } from "../fixtures/factories";
+import { clickUntilUrl, fillUntilVisible } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 const landingSearch = (page: Page) =>
@@ -18,20 +19,11 @@ const landingSearch = (page: Page) =>
     .filter({ has: page.getByRole("heading", { name: "Seiten durchsuchen" }) })
     .getByRole("combobox");
 
-/**
- * A fill() landing before React hydrates never reaches the controlled
- * input's state and the search silently does nothing — retry the fill
- * until the given reaction shows up.
- */
 const searchUntilReaction = (
   page: Page,
   query: string,
   reaction: ReturnType<Page["locator"]>,
-) =>
-  expect(async () => {
-    await landingSearch(page).fill(query);
-    await expect(reaction).toBeVisible({ timeout: 2_000 });
-  }).toPass({ timeout: 15_000 });
+) => fillUntilVisible(landingSearch(page), query, reaction);
 
 test("search finds a page by its content", async ({ page, prisma, signIn }) => {
   const citizen = await createCitizen(prisma, { handle: "searcher" });
@@ -91,16 +83,11 @@ test("tags are shown on the page and list their pages", async ({
   await signIn(citizen.user);
 
   await page.goto(`/app/wiki/${wikiPage.id}/${wikiPage.slug}`);
-  // A click landing while React hydrates can get swallowed by the DOM
-  // swap — retry until the navigation actually happens
-  await expect(async () => {
-    await page
-      .getByRole("link", { name: "Wirtschaft" })
-      .click({ timeout: 2_000 });
-    await expect(page).toHaveURL(`/app/wiki/tags/${tag.id}`, {
-      timeout: 2_000,
-    });
-  }).toPass({ timeout: 15_000 });
+  await clickUntilUrl(
+    page,
+    page.getByRole("link", { name: "Wirtschaft" }),
+    `/app/wiki/tags/${tag.id}`,
+  );
   // Scoped to the listing section — the sidebar tree links the page too
   await expect(
     page.locator("section").getByRole("link", { name: "Handelsrouten" }),

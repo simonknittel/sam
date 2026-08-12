@@ -5,34 +5,7 @@ import {
   WikiPageVisibility,
 } from "../fixtures/factories";
 import { expect, test } from "../fixtures/test";
-
-/**
- * The editor swallows clicks near block edges (invisible hover-menu
- * corridors) and element.focus() alone gives ProseMirror no selection —
- * focusing the contenteditable via JS and typing right away is the reliable
- * way in.
- */
-const focusEditor = async (page: import("@playwright/test").Page) => {
-  const editor = page.locator('.tiptap[contenteditable="true"]');
-  await expect(editor).toBeVisible();
-  await editor.evaluate((element) => (element as HTMLElement).focus());
-  return editor;
-};
-
-/**
- * A click landing before React hydrates is swallowed — retry until the
- * toggle reports pressed.
- */
-const enterEditMode = async (page: import("@playwright/test").Page) => {
-  await expect(async () => {
-    await page
-      .locator('article button[aria-pressed="false"]')
-      .click({ timeout: 2_000 });
-    await expect(
-      page.locator('article button[aria-pressed="true"]'),
-    ).toBeVisible({ timeout: 2_000 });
-  }).toPass({ timeout: 15_000 });
-};
+import { enterEditMode, focusEditor } from "../fixtures/wiki-editor";
 
 test("typed content persists through the collab server", async ({
   page,

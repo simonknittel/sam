@@ -1,4 +1,4 @@
-import type { Locator, Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import {
   createCitizen,
   createRole,
@@ -8,17 +8,8 @@ import {
   WikiPageVisibility,
   wikiParagraph,
 } from "../fixtures/factories";
+import { clickUntilVisible } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
-
-/**
- * A click landing before React hydrates is swallowed — retry until the
- * expected reaction shows up.
- */
-const clickUntilVisible = (button: Locator, reaction: Locator) =>
-  expect(async () => {
-    await button.click({ timeout: 2_000 });
-    await expect(reaction).toBeVisible({ timeout: 2_000 });
-  }).toPass({ timeout: 15_000 });
 
 const copyPageToClipboard = async (page: Page) => {
   await clickUntilVisible(
