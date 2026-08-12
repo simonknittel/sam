@@ -1,6 +1,7 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
+import { formatInTimeZone } from "date-fns-tz";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
 import {
@@ -8,6 +9,9 @@ import {
   normalizeOptions,
   type StatisticChartData,
 } from "../utils/chartData";
+
+const formatDateKey = (date: Date) =>
+  formatInTimeZone(date, "Europe/Berlin", "yyyy-MM-dd");
 
 export const getTotalCitizenStatisticChart = cache(
   withTrace("getTotalCitizenStatisticChart", async () => {
@@ -44,7 +48,7 @@ export const getTotalCitizenStatisticChart = cache(
 
     const citizensByDate = new Map<string, number>();
     for (const citizen of citizens) {
-      const dateKey = `${citizen.createdAt.getFullYear()}-${citizen.createdAt.getMonth()}-${citizen.createdAt.getDate()}`;
+      const dateKey = formatDateKey(citizen.createdAt);
       citizensByDate.set(dateKey, (citizensByDate.get(dateKey) ?? 0) + 1);
     }
 

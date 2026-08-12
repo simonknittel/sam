@@ -1,9 +1,14 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
+import { subHours } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
 import { buildChartData, type StatisticChartData } from "../utils/chartData";
+
+const formatDateKey = (date: Date) =>
+  formatInTimeZone(date, "Europe/Berlin", "yyyy-MM-dd");
 
 export const getTotalShipStatisticChart = cache(
   withTrace("getTotalShipStatisticChart", async () => {
@@ -30,10 +35,12 @@ export const getTotalShipStatisticChart = cache(
     >();
 
     for (const row of rows) {
-      const createdAt = new Date(row.createdAt);
-      createdAt.setDate(createdAt.getDate() - 1); // Workaround: Offset due to timezone
+      // The snapshot is written moments after midnight (Europe/Berlin) and
+      // describes the day that just ended. Stepping back half a day lands
+      // inside that day regardless of DST shifts.
+      const createdAt = subHours(row.createdAt, 12);
 
-      const key = `${createdAt.getFullYear()}-${createdAt.getMonth()}-${createdAt.getDate()}`;
+      const key = formatDateKey(createdAt);
       const existing = totalsByDate.get(key);
 
       if (existing) {

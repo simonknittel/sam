@@ -19,15 +19,13 @@ export const getDailyLoginStatisticChart = cache(
       },
     });
 
-    const orderedLogins = rows.map((row) => {
-      const createdAt = new Date(row.date);
-      createdAt.setDate(createdAt.getDate() + 1); // Workaround: Offset due to timezone
-
-      return {
-        createdAt,
-        count: row.count,
-      };
-    });
+    const orderedLogins = rows.map((row) => ({
+      // `date` is a DATE column (midnight UTC) naming the counted day.
+      // Europe/Berlin is always ahead of UTC, so the chart buckets it under
+      // that same calendar day.
+      createdAt: row.date,
+      count: row.count,
+    }));
 
     const totalRecords = orderedLogins.map((entry) => ({
       id: "logins",

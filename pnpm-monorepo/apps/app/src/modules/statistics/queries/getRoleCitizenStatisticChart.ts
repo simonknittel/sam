@@ -1,6 +1,7 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
+import { subHours } from "date-fns";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
 import { buildChartData } from "../utils/chartData";
@@ -30,17 +31,15 @@ export const getRoleCitizenStatisticChart = cache(
       },
     });
 
-    const records = rows.map((row) => {
-      const createdAt = new Date(row.createdAt);
-      createdAt.setDate(createdAt.getDate() - 1); // Workaround: Offset due to timezone
-
-      return {
-        id: row.roleId,
-        name: row.role.name,
-        createdAt,
-        count: row.count,
-      };
-    });
+    const records = rows.map((row) => ({
+      id: row.roleId,
+      name: row.role.name,
+      // The snapshot is written moments after midnight (Europe/Berlin) and
+      // describes the day that just ended. Stepping back half a day lands
+      // inside that day regardless of DST shifts.
+      createdAt: subHours(row.createdAt, 12),
+      count: row.count,
+    }));
 
     return {
       ...buildChartData(records, configuration),

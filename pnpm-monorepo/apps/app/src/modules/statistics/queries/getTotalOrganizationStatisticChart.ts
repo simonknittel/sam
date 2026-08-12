@@ -1,6 +1,7 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
+import { formatInTimeZone } from "date-fns-tz";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
 import {
@@ -8,6 +9,9 @@ import {
   normalizeOptions,
   type StatisticChartData,
 } from "../utils/chartData";
+
+const formatDateKey = (date: Date) =>
+  formatInTimeZone(date, "Europe/Berlin", "yyyy-MM-dd");
 
 export const getTotalOrganizationStatisticChart = cache(
   withTrace("getTotalOrganizationStatisticChart", async () => {
@@ -44,7 +48,7 @@ export const getTotalOrganizationStatisticChart = cache(
 
     const organizationsByDate = new Map<string, number>();
     for (const organization of organizations) {
-      const dateKey = `${organization.createdAt.getFullYear()}-${organization.createdAt.getMonth()}-${organization.createdAt.getDate()}`;
+      const dateKey = formatDateKey(organization.createdAt);
       organizationsByDate.set(
         dateKey,
         (organizationsByDate.get(dateKey) ?? 0) + 1,
