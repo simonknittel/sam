@@ -5,12 +5,12 @@
     "test": "playwright test"
   },
   "devDependencies": {
-    "@playwright/test": "1.62.0",
+    "@playwright/test": "1.62.1",
     "@prisma/adapter-pg": "7.9.1",
     "@sam-monorepo/database": "workspace:*",
-    "@testcontainers/postgresql": "12.0.4",
+    "@testcontainers/postgresql": "12.1.0",
     "@types/node": "24.13.3",
-    "testcontainers": "12.0.4",
+    "testcontainers": "12.1.0",
     "typescript": "7.0.2"
   }
 }

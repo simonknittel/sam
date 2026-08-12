@@ -1,7 +1,7 @@
 {
   "name": "sam-monorepo",
   "private": true,
-  "packageManager": "pnpm@11.17.0",
+  "packageManager": "pnpm@11.20.0",
   "scripts": {
     "build:lambda": "pnpm run --filter \"@sam-monorepo/lambda...\" build",
     "build:scripts": "pnpm run --filter \"@sam-monorepo/scripts^...\" build",
