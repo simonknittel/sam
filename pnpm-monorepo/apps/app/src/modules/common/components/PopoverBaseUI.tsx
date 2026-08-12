@@ -70,6 +70,11 @@ interface PopoverBaseUIContextProviderProps {
   readonly trigger: ReactNode;
   /** Applied to the button element Base UI renders around `trigger` */
   readonly triggerClassName?: string;
+  /**
+   * Element to render the trigger as (Base UI `render` prop), e.g. a
+   * `Button2` — used instead of the default unstyled button.
+   */
+  readonly triggerRender?: ComponentProps<typeof Popover.Trigger>["render"];
   /** Tooltip and accessible name of the trigger button (for icon-only triggers) */
   readonly triggerTitle?: string;
   readonly children: ReactNode;
@@ -87,11 +92,17 @@ interface PopoverBaseUIContextProviderProps {
   readonly side?: "top" | "bottom" | "left" | "right";
   /** Where the popup sits along the trigger's edge */
   readonly align?: "start" | "center" | "end";
+  /**
+   * Replaces the positioner's default `z-30` — for popovers which must
+   * stack above higher surfaces, e.g. the mobile flyout (`z-50`).
+   */
+  readonly positionerClassName?: string;
 }
 
 export const PopoverBaseUI = ({
   trigger,
   triggerClassName,
+  triggerRender,
   triggerTitle,
   children,
   childrenClassName,
@@ -101,6 +112,7 @@ export const PopoverBaseUI = ({
   disabled = false,
   side = "top",
   align = "center",
+  positionerClassName,
 }: PopoverBaseUIContextProviderProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -129,6 +141,7 @@ export const PopoverBaseUI = ({
     <PopoverBaseUIContext.Provider value={value}>
       <Popover.Root open={!disabled && isOpen} onOpenChange={handleOpenChange}>
         <Popover.Trigger
+          render={triggerRender}
           openOnHover={openOnHover}
           className={clsx("text-left", triggerClassName)}
           delay={50}
@@ -145,7 +158,7 @@ export const PopoverBaseUI = ({
             collisionPadding={{ left: 8, right: 8 }}
             side={side}
             align={align}
-            className="z-30"
+            className={positionerClassName ?? "z-30"}
           >
             <Popover.Popup className="z-30 outline-hidden" initialFocus={false}>
               <PopoverChrome childrenClassName={childrenClassName} hoverBridges>
