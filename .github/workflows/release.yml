@@ -69,7 +69,7 @@ jobs:
           node-version-file: "pnpm-monorepo/.nvmrc"
 
       - name: Install Vercel CLI
-        run: npm install --global vercel@latest
+        run: npm install --global vercel@58.5.1
 
       - name: Deploy to Vercel
         env:
