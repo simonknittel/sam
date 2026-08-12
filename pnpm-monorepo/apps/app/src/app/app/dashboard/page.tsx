@@ -14,13 +14,19 @@ import { Suspense } from "react";
 export default async function Page() {
   const authentication = await requireAuthenticationPage("/app/dashboard");
 
-  const [disableAlgolia, canCitizenRead, canOrgRead, canEventRead] =
-    await Promise.all([
-      getUnleashFlag(UNLEASH_FLAG.DisableAlgolia),
-      authentication.authorize("citizen", "read"),
-      authentication.authorize("organization", "read"),
-      authentication.authorize("event", "read"),
-    ]);
+  const [
+    disableAlgolia,
+    canCitizenRead,
+    canOrgRead,
+    canEventRead,
+    canTaskRead,
+  ] = await Promise.all([
+    getUnleashFlag(UNLEASH_FLAG.DisableAlgolia),
+    authentication.authorize("citizen", "read"),
+    authentication.authorize("organization", "read"),
+    authentication.authorize("event", "read"),
+    authentication.authorize("task", "read"),
+  ]);
 
   const showCalendar = canEventRead;
   const showSpynetSearchTile =
@@ -41,8 +47,12 @@ export default async function Page() {
       </div>
 
       <div className="flex flex-col gap-6 w-100 flex-none">
-        <TasksDashboardTile />
-        <LatestTasksDashboardTile />
+        {canTaskRead && (
+          <>
+            <TasksDashboardTile />
+            <LatestTasksDashboardTile />
+          </>
+        )}
 
         <section className="flex flex-col gap-0.5 flex-none">
           <h2 className="font-thin text-2xl self-start mb-2 font-mono uppercase">
