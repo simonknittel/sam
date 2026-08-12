@@ -16,8 +16,8 @@ import { FaTimes } from "react-icons/fa";
 
 /**
  * The flyout stays mounted while it is translated off-screen, so content
- * which should only be active while the flyout is open (e.g. the
- * notification center's queries and read-on-view tracking) reads this.
+ * which must react to the flyout closing (e.g. the notification popover
+ * dismissing itself) reads this.
  */
 const MobileActionBarFlyoutVisibilityContext = createContext(false);
 

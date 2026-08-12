@@ -3,8 +3,9 @@ import Avatar from "@/modules/common/components/Avatar";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Link } from "@/modules/common/components/Link";
 import clsx from "clsx";
-import { FaBell, FaQuestionCircle, FaUser } from "react-icons/fa";
+import { FaQuestionCircle, FaUser } from "react-icons/fa";
 import { LogoutButton } from "../LogoutButton";
+import { Notifications } from "./Notifications";
 
 interface Props {
   readonly supportHref: string | null;
@@ -47,14 +48,7 @@ export const Account = ({ supportHref }: Props) => {
           </Button2>
         )}
 
-        <Button2
-          as={Link}
-          href="/app/account/notifications"
-          title="Benachrichtigungen"
-          variant={Button2Variant.Secondary}
-        >
-          <FaBell />
-        </Button2>
+        <Notifications />
 
         <Button2 as={Link} href="/app/account" title="Account">
           <FaUser />

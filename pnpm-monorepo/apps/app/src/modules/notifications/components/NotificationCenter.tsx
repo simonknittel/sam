@@ -17,18 +17,13 @@ import { useOnSiteNotifications } from "./OnSiteNotificationsProvider";
 interface Props {
   /**
    * Called when the user navigates away through a link of the notification
-   * center (settings, notification target) so the surrounding popover or
-   * flyout can close itself.
+   * center (settings, notification target) so the surrounding popover can
+   * close itself.
    */
   readonly onNavigate?: () => void;
-  /**
-   * Set to false while the surrounding container keeps the center mounted
-   * but off-screen (mobile flyout) — pauses queries and read-on-view.
-   */
-  readonly enabled?: boolean;
 }
 
-export const NotificationCenter = ({ onNavigate, enabled = true }: Props) => {
+export const NotificationCenter = ({ onNavigate }: Props) => {
   return (
     <TabsProvider initialActiveTab={NotificationCenterTab.Inbox}>
       <div className="flex items-start justify-between gap-2">
@@ -44,7 +39,6 @@ export const NotificationCenter = ({ onNavigate, enabled = true }: Props) => {
         <NotificationList
           tab={NotificationCenterTab.Inbox}
           onNavigate={onNavigate}
-          enabled={enabled}
         />
       </TabPanel>
 
@@ -52,7 +46,6 @@ export const NotificationCenter = ({ onNavigate, enabled = true }: Props) => {
         <NotificationList
           tab={NotificationCenterTab.Archive}
           onNavigate={onNavigate}
-          enabled={enabled}
         />
       </TabPanel>
     </TabsProvider>

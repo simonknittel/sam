@@ -18,7 +18,6 @@ import { NotificationListItem } from "./NotificationListItem";
 interface Props {
   readonly tab: NotificationCenterTab;
   readonly onNavigate?: () => void;
-  readonly enabled?: boolean;
 }
 
 /**
@@ -32,13 +31,9 @@ interface Props {
 const statusMessageClassName =
   "-mx-4 -mb-4 border-t border-neutral-800 box-content min-h-21 px-4 flex gap-2 justify-center items-center text-center";
 
-export const NotificationList = ({
-  tab,
-  onNavigate,
-  enabled = true,
-}: Props) => {
+export const NotificationList = ({ tab, onNavigate }: Props) => {
   const { activeTab } = useTabsContext();
-  const isActive = enabled && activeTab === tab;
+  const isActive = activeTab === tab;
   const {
     isPending,
     data,
