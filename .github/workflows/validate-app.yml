@@ -7,7 +7,7 @@ on:
     paths:
       - .github/workflows/validate-app.yml
       - pnpm-monorepo/apps/app/**
-      - pnpm-monorepo/packages/database/**
+      - pnpm-monorepo/packages/**
       - pnpm-monorepo/pnpm-lock.yaml
       - pnpm-monorepo/pnpm-workspace.yaml
   push:
@@ -16,7 +16,7 @@ on:
     paths:
       - .github/workflows/validate-app.yml
       - pnpm-monorepo/apps/app/**
-      - pnpm-monorepo/packages/database/**
+      - pnpm-monorepo/packages/**
       - pnpm-monorepo/pnpm-lock.yaml
       - pnpm-monorepo/pnpm-workspace.yaml
 
