@@ -18,8 +18,16 @@
     "moduleResolution": "NodeNext",
     "noEmit": true,
     /* If your code doesn't run in the DOM: */
-    "lib": ["es2024"]
+    "lib": ["es2024"],
+    /* Since TypeScript 6, packages from `node_modules/@types` are no longer
+       included automatically (the `types` default changed from `["*"]` to
+       `[]`). This makes the Node.js globals from `@types/node` (`process`,
+       etc.) available again. */
+    "types": ["node"]
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules"]
+  /* The migration scripts are frozen one-off scripts (some predate breaking
+     dependency upgrades and no longer compile) and are deliberately not
+     typechecked. */
+  "exclude": ["node_modules", "src/migrations"]
 }

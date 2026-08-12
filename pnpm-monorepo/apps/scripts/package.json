@@ -2,6 +2,9 @@
   "name": "@sam-monorepo/scripts",
   "private": true,
   "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
   "dependencies": {
     "@sam-monorepo/database": "workspace:*",
     "@sam-monorepo/wiki-editor": "workspace:*",
