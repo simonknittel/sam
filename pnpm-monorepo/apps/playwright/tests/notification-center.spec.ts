@@ -435,13 +435,11 @@ test.describe("mobile", () => {
     await expect(page).toHaveTitle(/^\(1\)/);
 
     await page.locator("nav").getByRole("button", { name: "Apps" }).click();
+    await openNotificationCenter(page);
 
-    await expect(
-      page.getByRole("button", { name: "Posteingang" }),
-    ).toBeVisible();
-    await expect(page.getByText("Neues Event")).toBeVisible();
+    await expect(popover(page).getByText("Neues Event")).toBeVisible();
 
-    await expect(page.getByTitle("Ungelesen", { exact: true })).toHaveCount(0, {
+    await expect(unreadRowDots(page)).toHaveCount(0, {
       timeout: READ_ON_VIEW_TIMEOUT,
     });
     await expect(page).toHaveTitle(/^[^(]/);
