@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-nocheck -- Half-implemented feature: the participant split logic is still TODO
 
 import { NumberInput } from "@/modules/common/components/form/NumberInput";
 import { RadioGroup } from "@/modules/common/components/form/RadioGroup";

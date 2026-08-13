@@ -21,7 +21,7 @@ export const getInitialNodesAndEdges = (
 
     if (!matchingNodeDefinition) throw new Error("Invalid node type");
 
-    // @ts-expect-error
+    // @ts-expect-error The career node definitions are too heterogeneous for TypeScript to unify
     return matchingNodeDefinition.getNodeType(node, additionalData);
   });
 

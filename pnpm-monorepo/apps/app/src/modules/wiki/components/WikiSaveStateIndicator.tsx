@@ -44,6 +44,7 @@ const MIN_SAVING_DISPLAY_MS = 500;
  * transition is held back — a switch to "dirty" (new edits, failed save)
  * shows immediately.
  */
+/* eslint-disable react-you-might-not-need-an-effect/no-event-handler, react-you-might-not-need-an-effect/no-derived-state -- Deliberate time-based smoothing: the displayed state must lag the actual state by a timer, which requires an effect and mirrored state. */
 const useMinimumSavingDisplay = (state: WikiSaveState): WikiSaveState => {
   const [displayState, setDisplayState] = useState(state);
   const savingSince = useRef<number | null>(null);
@@ -65,12 +66,12 @@ const useMinimumSavingDisplay = (state: WikiSaveState): WikiSaveState => {
       return () => clearTimeout(timer);
     }
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- Mirrors the prop with a delay; the effect is the only place that sees the transitions.
     setDisplayState(state);
   }, [state]);
 
   return displayState;
 };
+/* eslint-enable react-you-might-not-need-an-effect/no-event-handler, react-you-might-not-need-an-effect/no-derived-state */
 
 interface Props {
   readonly className?: string;

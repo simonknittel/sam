@@ -97,8 +97,9 @@ export const ScrambleIn = ({
   }));
 
   useEffect(() => {
+    // eslint-disable-next-line react-you-might-not-need-an-effect/no-event-handler -- The animation must start after mount; the component is slated for a rewrite that removes this (maintenance plan phase 6).
     if (autoStart) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- The animation must start after mount; the component is slated for a rewrite that removes this (maintenance plan phase 6).
       startAnimation();
     }
   }, [autoStart, startAnimation]);

@@ -183,6 +183,7 @@ export const WikiGutter = ({
   const highlightTo =
     gutterInUse && block ? block.pos + block.node.nodeSize : null;
   useEffect(() => {
+    // eslint-disable-next-line react-you-might-not-need-an-effect/no-event-handler -- The highlight lives in the imperative tiptap plugin state; the effect syncs the derived range into the editor.
     if (editor.isDestroyed) return;
     setWikiActiveNodeHighlight(
       editor,

@@ -13,7 +13,7 @@ const nodesSchema = z
   .array(
     z.discriminatedUnion(
       "type",
-      // @ts-expect-error
+      // @ts-expect-error The career node definitions are too heterogeneous for TypeScript to unify
       nodeDefinitions.map((nodeDefinition) => nodeDefinition.updateFlowSchema),
     ),
   )
@@ -66,10 +66,10 @@ export const updateFlow = createAuthenticatedAction(
       }),
 
       prisma.flowNode.createMany({
-        // @ts-expect-error
+        // @ts-expect-error The career node definitions are too heterogeneous for TypeScript to unify
         data: data.nodes.map((node) => {
           const matchingNodeDefnition = nodeDefinitions.find(
-            // @ts-expect-error
+            // @ts-expect-error The career node definitions are too heterogeneous for TypeScript to unify
             (nodeDefinition) => nodeDefinition.enum === node.type,
           );
 
@@ -79,7 +79,7 @@ export const updateFlow = createAuthenticatedAction(
           }
 
           return matchingNodeDefnition.createManyMapping(
-            // @ts-expect-error
+            // @ts-expect-error The career node definitions are too heterogeneous for TypeScript to unify
             node,
             data.flowId,
           );

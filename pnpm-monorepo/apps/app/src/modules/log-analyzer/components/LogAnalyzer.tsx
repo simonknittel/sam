@@ -182,6 +182,7 @@ export const LogAnalyzer = ({ className }: Props) => {
       isAutostartEnabled,
       isLiveModeEnabled,
       pipWindow,
+      setEntries,
       startTransition,
     ],
   );

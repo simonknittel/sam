@@ -200,6 +200,7 @@ export const StatisticChart = ({ chart }: Props) => {
           },
         };
       }),
+      // eslint-disable-next-line react-you-might-not-need-an-effect/no-pass-data-to-parent -- False positive: this builds the imperative echarts option inside the sync effect, nothing flows to a parent.
       series: chart.series.map((serie) => ({
         name: serie.name,
         type: "line",

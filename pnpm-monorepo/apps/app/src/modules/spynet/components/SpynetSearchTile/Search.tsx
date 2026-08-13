@@ -31,11 +31,11 @@ const searchClient = algoliasearch(
   env.NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY,
 );
 
-// @ts-expect-error
+// @ts-expect-error The hand-rolled debouncePromise is untyped; the Algolia stack is being replaced
 function debouncePromise(fn, time: number) {
   let timerId: NodeJS.Timeout | undefined = undefined;
 
-  // @ts-expect-error
+  // @ts-expect-error The hand-rolled debouncePromise is untyped; the Algolia stack is being replaced
   return function debounced(...args) {
     if (timerId) {
       clearTimeout(timerId);
@@ -48,7 +48,7 @@ function debouncePromise(fn, time: number) {
   };
 }
 
-// @ts-expect-error
+// @ts-expect-error The hand-rolled debouncePromise is untyped; the Algolia stack is being replaced
 const debounced = debouncePromise((items) => Promise.resolve(items), 300);
 
 export const Search = () => {
@@ -56,7 +56,7 @@ export const Search = () => {
     <div className="w-full">
       <Autocomplete
         openOnFocus={true}
-        // @ts-expect-error
+        // @ts-expect-error The hand-rolled debouncePromise is untyped; the Algolia stack is being replaced
         getSources={({ query }) => {
           return debounced([
             {

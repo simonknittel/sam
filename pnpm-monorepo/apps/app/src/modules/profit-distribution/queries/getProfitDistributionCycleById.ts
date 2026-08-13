@@ -64,7 +64,7 @@ export const getProfitDistributionCycleById = cache(
       const totalSilc = getTotalSilc(cycle.participants);
       const auecPerSilc =
         cycle.auecProfit !== null
-          ? // @ts-expect-error
+          ? // @ts-expect-error auecProfit's bigint doesn't match the helper's number parameter
             getAuecPerSilc(cycle.auecProfit, totalSilc)
           : null;
       const myShare =

@@ -44,7 +44,7 @@ export const Note = ({ className, message, type = "info", error }: Props) => {
         {error && (
           <div className="text-neutral-500 mt-4">
             {"digest" in error ? (
-              // @ts-expect-error
+              // @ts-expect-error TypeScript doesn't narrow Error by the 'digest' in check
               <pre>Error digest: {error.digest}</pre>
             ) : (
               <pre>Error message: {error.message}</pre>

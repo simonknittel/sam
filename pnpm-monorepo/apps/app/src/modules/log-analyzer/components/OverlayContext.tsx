@@ -42,7 +42,7 @@ export function OverlayProvider({ children }: Props) {
     // We don't want to allow multiple requests.
     if (pipWindow != null) return;
 
-    // @ts-expect-error
+    // @ts-expect-error documentPictureInPicture is not yet part of TypeScript's DOM types
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     const pip = (await window.documentPictureInPicture.requestWindow({
       disallowReturnToOpener: true,

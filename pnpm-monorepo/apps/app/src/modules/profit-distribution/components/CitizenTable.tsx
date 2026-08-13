@@ -261,6 +261,7 @@ export const CitizenTable = ({ className, cycleData }: Props) => {
     ];
   }, [cycleData.currentPhase, cycleData.cycle.id]);
 
+  // eslint-disable-next-line react-hooks/incompatible-library -- TanStack Table's API is not React-Compiler-safe; the component simply opts out of compilation.
   const table = useReactTable({
     data: rows,
     columns,

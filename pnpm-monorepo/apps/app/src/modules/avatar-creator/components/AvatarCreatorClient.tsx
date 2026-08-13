@@ -166,6 +166,7 @@ export const AvatarCreatorClient = ({ className }: Props) => {
     const height =
       canvasSize?.height ?? frameImage?.naturalHeight ?? CANVAS_HEIGHT;
 
+    // eslint-disable-next-line react-you-might-not-need-an-effect/no-event-handler -- Canvas drawing is imperative; the effect redraws whenever a drawing input changes.
     if (canvas.width !== width || canvas.height !== height) {
       canvas.width = width;
       canvas.height = height;

@@ -86,9 +86,10 @@ const eslintConfig = defineConfig([
       "@typescript-eslint/ban-ts-comment": [
         "warn",
         {
-          "ts-expect-error": true,
+          // Suppressions must carry a justification; bare ones are flagged.
+          "ts-expect-error": "allow-with-description",
           "ts-ignore": true,
-          "ts-nocheck": true,
+          "ts-nocheck": "allow-with-description",
           "ts-check": false,
         },
       ],

@@ -25,6 +25,7 @@ export default function useUpload() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-you-might-not-need-an-effect/no-event-handler -- The upload chain is deliberately effect-driven; restructuring is planned together with the upload validation hardening (maintenance plan phase 7).
     if (!file) return;
 
     fetch("/api/upload", {

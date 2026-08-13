@@ -8,7 +8,7 @@ export const nodeTypes: Record<
   ComponentType<NodeProps>
 > = nodeDefinitions.reduce(
   (acc, nodeDefinition) => {
-    // @ts-expect-error
+    // @ts-expect-error The career node definitions are too heterogeneous for TypeScript to unify
     acc[nodeDefinition.enum] = nodeDefinition.Node;
     return acc;
   },

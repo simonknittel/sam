@@ -22,7 +22,7 @@ export const InstallPWA = ({ className }: Props) => {
 
   const handleClick = async () => {
     if (!installPrompt.current) return;
-    // @ts-expect-error
+    // @ts-expect-error beforeinstallprompt's prompt() is not part of TypeScript's DOM types
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     await installPrompt.current.prompt();
   };

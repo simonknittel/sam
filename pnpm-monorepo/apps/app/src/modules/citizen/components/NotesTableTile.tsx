@@ -84,7 +84,7 @@ export const NotesTableTile = async ({ className, searchParams }: Props) => {
         )!,
         confirmationState: confirmed?.value as EntityLogConfirmationState,
         confirmedAt: confirmed?.createdAt,
-        // @ts-expect-error
+        // @ts-expect-error createdBy is loaded by the query but missing from the narrowed type
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         confirmedBy: confirmed?.createdBy,
         entityLog,

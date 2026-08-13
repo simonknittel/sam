@@ -35,7 +35,7 @@ export const LinkItem = ({
 
   const _icon = icon
     ? cloneElement(icon, {
-        // @ts-expect-error
+        // @ts-expect-error cloneElement can't know the icon accepts className
         className: "text-neutral-500 text-sm",
       })
     : null;
@@ -74,7 +74,7 @@ export const PageItem = ({
 }: PageItemProps) => {
   const _icon = icon
     ? cloneElement(icon, {
-        // @ts-expect-error
+        // @ts-expect-error cloneElement can't know the icon accepts className
         className: "text-neutral-500 text-sm",
       })
     : null;
@@ -110,7 +110,7 @@ export const CommandItem = ({
 }: CommandItemProps) => {
   const _icon = icon
     ? cloneElement(icon, {
-        // @ts-expect-error
+        // @ts-expect-error cloneElement can't know the icon accepts className
         className: "text-neutral-500 text-sm",
       })
     : null;

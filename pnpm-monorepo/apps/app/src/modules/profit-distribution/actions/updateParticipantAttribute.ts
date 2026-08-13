@@ -92,21 +92,21 @@ export const updateParticipantAttribute = createAuthenticatedAction(
 
       for (const attribute of validAttributes) {
         if (
-          // @ts-expect-error
+          // @ts-expect-error The template-literal key can't be narrowed to the participant's properties
           participant[`${attribute}At`] &&
           enabledAttributes.includes(attribute)
         )
           continue;
 
         if (
-          // @ts-expect-error
+          // @ts-expect-error The template-literal key can't be narrowed to the participant's properties
           !participant[`${attribute}At`] &&
           !enabledAttributes.includes(attribute)
         )
           continue;
 
         if (
-          // @ts-expect-error
+          // @ts-expect-error The template-literal key can't be narrowed to the participant's properties
           participant[`${attribute}At`] &&
           !enabledAttributes.includes(attribute)
         ) {
@@ -119,7 +119,7 @@ export const updateParticipantAttribute = createAuthenticatedAction(
         }
 
         if (
-          // @ts-expect-error
+          // @ts-expect-error The template-literal key can't be narrowed to the participant's properties
           !participant[`${attribute}At`] &&
           enabledAttributes.includes(attribute)
         ) {

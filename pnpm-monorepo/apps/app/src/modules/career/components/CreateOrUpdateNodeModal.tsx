@@ -61,7 +61,7 @@ export const CreateOrUpdateNodeModal = ({
 
       {matchingNodeDefinition && (
         <matchingNodeDefinition.CreateOrUpdateForm
-          // @ts-expect-error
+          // @ts-expect-error The career node definitions are too heterogeneous for TypeScript to unify
           initialData={initialData}
           onUpdate={onUpdate}
         />

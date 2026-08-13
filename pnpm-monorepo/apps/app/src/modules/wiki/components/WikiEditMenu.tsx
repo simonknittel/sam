@@ -191,6 +191,7 @@ export const WikiEditMenu = ({
       update();
     };
 
+    // eslint-disable-next-line react-you-might-not-need-an-effect/no-external-store-subscription -- The tiptap editor is an imperative external store; its event API is the only way to mirror its state.
     update();
     editor.on("transaction", update);
     editor.on("blur", handleBlur);

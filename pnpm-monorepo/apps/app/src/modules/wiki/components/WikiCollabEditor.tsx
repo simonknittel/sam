@@ -182,7 +182,7 @@ export const WikiCollabEditor = ({
         );
       },
     });
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- The provider is an external resource that must be instantiated post-commit (see above); this effect is its only owner.
+    // eslint-disable-next-line react-hooks/set-state-in-effect, react-you-might-not-need-an-effect/no-external-store-subscription, react-you-might-not-need-an-effect/no-adjust-state-on-prop-change -- The provider is an external resource that must be instantiated post-commit (see above); this effect is its only owner.
     setProvider(createdProvider);
 
     return () => {

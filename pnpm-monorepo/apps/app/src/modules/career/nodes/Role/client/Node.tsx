@@ -146,7 +146,7 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
 
   const role =
     "role" in props.data && props.data.role
-      ? // @ts-expect-error
+      ? // @ts-expect-error The career node definitions are too heterogeneous for TypeScript to unify
         roles.find((role) => role.id === props.data.role.id) // eslint-disable-line @typescript-eslint/no-unsafe-member-access
       : null;
 
