@@ -1,10 +1,10 @@
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
+import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
 import { api } from "@/modules/common/utils/api";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
-import * as Popover from "@radix-ui/react-popover";
 import type { Role } from "@sam-monorepo/database/client";
 import clsx from "clsx";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { FaTrash, FaUsers } from "react-icons/fa";
 
 interface Props {
@@ -29,56 +29,50 @@ export const RequiredRoles = ({ className, defaultValue }: Props) => {
     });
   };
 
-  const [isOpen, setIsOpen] = useState(false);
-
-  const popoverPortalRef = useRef<HTMLDivElement | null>(null);
-
   return (
     <div className={clsx(className)}>
       <p className="mb-1">Erforderliche Rolle(n)</p>
 
-      <Popover.Root open={isOpen} onOpenChange={setIsOpen}>
-        <Popover.Trigger asChild>
+      <PopoverBaseUI
+        trigger={
+          <>
+            <FaUsers /> Rolle auswählen
+          </>
+        }
+        triggerRender={
           <Button2
             type="button"
             title="Rolle auswählen"
             variant={Button2Variant.Secondary}
             className="flex-none"
             disabled={isPending}
-          >
-            <FaUsers /> Rolle auswählen
-          </Button2>
-        </Popover.Trigger>
-
-        <Popover.Portal container={popoverPortalRef.current}>
-          <Popover.Content sideOffset={4} side="top">
-            <div className="flex flex-col gap-2 p-4 rounded-secondary bg-neutral-800 border border-brand-red-500 max-h-96 overflow-auto">
-              {data
-                ? data
-                    .toSorted((a, b) => a.name.localeCompare(b.name))
-                    .map((role) => (
-                      <button
-                        key={role.id}
-                        type="button"
-                        onClick={() => handleSelectRole(role.id)}
-                        className="group"
-                      >
-                        <SingleRoleBadge
-                          roleId={role.id}
-                          showPlaceholder
-                          className="bg-transparent group-hover:bg-neutral-700/50 group-focus-visible:bg-neutral-700/50"
-                        />
-                      </button>
-                    ))
-                : null}
-            </div>
-
-            <Popover.Arrow className="fill-neutral-800" />
-          </Popover.Content>
-        </Popover.Portal>
-      </Popover.Root>
-
-      <div ref={popoverPortalRef} className="z-10" />
+          />
+        }
+        openOnHover={false}
+        positionerClassName="z-40"
+        childrenClassName="max-h-96 overflow-auto"
+      >
+        <div className="flex flex-col gap-2">
+          {data
+            ? data
+                .toSorted((a, b) => a.name.localeCompare(b.name))
+                .map((role) => (
+                  <button
+                    key={role.id}
+                    type="button"
+                    onClick={() => handleSelectRole(role.id)}
+                    className="group"
+                  >
+                    <SingleRoleBadge
+                      roleId={role.id}
+                      showPlaceholder
+                      className="bg-transparent group-hover:bg-neutral-700/50 group-focus-visible:bg-neutral-700/50"
+                    />
+                  </button>
+                ))
+            : null}
+        </div>
+      </PopoverBaseUI>
 
       <p className="text-xs mt-1 text-gray-400">
         Dieser Task kann nur von den ausgewählten Rollen angenommen werden.

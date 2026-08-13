@@ -15,6 +15,8 @@ interface Props extends Omit<
    * element.
    */
   readonly asChild?: boolean;
+  readonly side?: ComponentProps<typeof RadixUiTooltip.Content>["side"];
+  readonly sideOffset?: number;
 }
 
 export const Tooltip = ({
@@ -23,6 +25,8 @@ export const Tooltip = ({
   triggerChildren,
   children,
   asChild,
+  side,
+  sideOffset = 5,
   ...triggerProps
 }: Props) => {
   return (
@@ -48,7 +52,8 @@ export const Tooltip = ({
             "p-2 text-sm leading-tight max-w-[320px] select-none rounded-secondary bg-neutral-600 text-white font-normal",
             contentClassName,
           )}
-          sideOffset={5}
+          side={side}
+          sideOffset={sideOffset}
         >
           {children}
           <RadixUiTooltip.Arrow className="fill-neutral-600" />

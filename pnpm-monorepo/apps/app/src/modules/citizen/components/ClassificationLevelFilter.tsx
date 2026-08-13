@@ -37,7 +37,7 @@ export const ClassificationLevelFilter = ({ classificationLevels }: Props) => {
   };
 
   return (
-    <div className="flex flex-col items-start gap-2 px-4 py-2 rounded-secondary bg-neutral-800 max-h-96 overflow-auto">
+    <div className="flex flex-col items-start gap-2 max-h-96 overflow-auto">
       {classificationLevels.map((noteType) => (
         <div
           key={noteType.id}

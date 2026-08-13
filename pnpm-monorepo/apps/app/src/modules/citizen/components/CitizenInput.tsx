@@ -2,6 +2,7 @@
 
 import Button from "@/modules/common/components/Button";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
+import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
 import { underlineCharacters } from "@/modules/common/utils/underlineCharacters";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import { api } from "@/trpc/react";
@@ -11,11 +12,10 @@ import {
   ComboboxOption,
   ComboboxOptions,
 } from "@headlessui/react";
-import * as Popover from "@radix-ui/react-popover";
 import type { Entity } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import Fuse, { type FuseResult } from "fuse.js";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { FaCheck, FaTrash, FaUsers } from "react-icons/fa";
 
 interface BaseProps {
@@ -220,10 +220,6 @@ const Multiple = ({
       dataCitizensGroupedByVisibleRoles.get(roleId)?.citizens || [],
     );
   };
-  const [isOpen, setIsOpen] = useState(false);
-
-  const popoverPortalRef = useRef<HTMLDivElement | null>(null);
-
   return (
     <>
       <div className="flex gap-2">
@@ -254,8 +250,9 @@ const Multiple = ({
           </ComboboxOptions>
         </Combobox>
 
-        <Popover.Root open={isOpen} onOpenChange={setIsOpen}>
-          <Popover.Trigger asChild>
+        <PopoverBaseUI
+          trigger={<FaUsers />}
+          triggerRender={
             <Button
               type="button"
               title="Rolle auswählen"
@@ -263,43 +260,34 @@ const Multiple = ({
               iconOnly
               className="flex-none"
               disabled={isPending}
-            >
-              <FaUsers />
-            </Button>
-          </Popover.Trigger>
-
-          <Popover.Portal container={popoverPortalRef.current}>
-            <Popover.Content sideOffset={4} side="top">
-              <div className="flex flex-col gap-2 p-4 rounded-secondary bg-neutral-800 border border-brand-red-500 max-h-96 overflow-auto">
-                {dataCitizensGroupedByVisibleRoles
-                  ? Array.from(dataCitizensGroupedByVisibleRoles.values())
-                      .toSorted((a, b) =>
-                        a.role.name.localeCompare(b.role.name),
-                      )
-                      .map(({ role }) => (
-                        <button
-                          key={role.id}
-                          type="button"
-                          onClick={() => handleSelectRole(role.id)}
-                          className="group"
-                        >
-                          <SingleRoleBadge
-                            roleId={role.id}
-                            showPlaceholder
-                            className="bg-transparent group-hover:bg-neutral-700/50 group-focus-visible:bg-neutral-700/50"
-                          />
-                        </button>
-                      ))
-                  : null}
-              </div>
-
-              <Popover.Arrow className="fill-neutral-800" />
-            </Popover.Content>
-          </Popover.Portal>
-        </Popover.Root>
+            />
+          }
+          openOnHover={false}
+          positionerClassName="z-40"
+          childrenClassName="max-h-96 overflow-auto"
+        >
+          <div className="flex flex-col gap-2">
+            {dataCitizensGroupedByVisibleRoles
+              ? Array.from(dataCitizensGroupedByVisibleRoles.values())
+                  .toSorted((a, b) => a.role.name.localeCompare(b.role.name))
+                  .map(({ role }) => (
+                    <button
+                      key={role.id}
+                      type="button"
+                      onClick={() => handleSelectRole(role.id)}
+                      className="group"
+                    >
+                      <SingleRoleBadge
+                        roleId={role.id}
+                        showPlaceholder
+                        className="bg-transparent group-hover:bg-neutral-700/50 group-focus-visible:bg-neutral-700/50"
+                      />
+                    </button>
+                  ))
+              : null}
+          </div>
+        </PopoverBaseUI>
       </div>
-
-      <div ref={popoverPortalRef} className="z-10" />
 
       <p className="text-xs mt-1 text-gray-400">Mehrfachauswahl möglich</p>
 

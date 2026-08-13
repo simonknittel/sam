@@ -4,8 +4,8 @@ import { runAction } from "@/modules/actions/utils/runAction";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
+import { Tooltip } from "@/modules/common/components/Tooltip";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
-import * as Tooltip from "@radix-ui/react-tooltip";
 import {
   TaskVisibility,
   type Role,
@@ -90,63 +90,52 @@ export const ToggleAssignmentForCurrentUser = ({
       <input type="hidden" name="taskId" value={task.id} />
 
       {disabled ? (
-        <Tooltip.Provider delayDuration={0}>
-          <Tooltip.Root>
-            <Tooltip.Trigger asChild>{button}</Tooltip.Trigger>
+        <Tooltip asChild triggerChildren={button}>
+          <div className="flex flex-col gap-4">
+            {isCurrentUserAssigned && isPersonalizedOrGroupTask && (
+              <p>
+                Du kannst personalisierte und Gruppen-Tasks nicht selbstständig
+                aufgeben.
+              </p>
+            )}
 
-            <Tooltip.Content
-              className="p-4 max-w-[320px] select-none rounded-secondary bg-neutral-950 border border-brand-red-500 text-white font-normal"
-              sideOffset={5}
-            >
-              <div className="flex flex-col gap-4">
-                {isCurrentUserAssigned && isPersonalizedOrGroupTask && (
-                  <p>
-                    Du kannst personalisierte und Gruppen-Tasks nicht
-                    selbstständig aufgeben.
-                  </p>
-                )}
+            {!isCurrentUserAssigned && isPersonalizedOrGroupTask && (
+              <p>
+                Du kannst personalisierte und Gruppen-Tasks von anderen nicht
+                annehmen.
+              </p>
+            )}
 
-                {!isCurrentUserAssigned && isPersonalizedOrGroupTask && (
-                  <p>
-                    Du kannst personalisierte und Gruppen-Tasks von anderen
-                    nicht annehmen.
-                  </p>
-                )}
+            {!isCurrentUserAssigned && isAssignmentLimitReached && (
+              <p>
+                Du kannst diesen Task nicht annehmen, da das Teilnehmerlimit
+                erreicht ist.
+              </p>
+            )}
 
-                {!isCurrentUserAssigned && isAssignmentLimitReached && (
-                  <p>
-                    Du kannst diesen Task nicht annehmen, da das Teilnehmerlimit
-                    erreicht ist.
-                  </p>
-                )}
+            {!isCurrentUserAssigned && !doesCurrentUserSatisfyRequirements && (
+              <div className="flex flex-col gap-1">
+                <p>
+                  Du kannst diesen Task nicht annehmen, da dir die folgenden
+                  Rollen fehlen:
+                </p>
 
-                {!isCurrentUserAssigned &&
-                  !doesCurrentUserSatisfyRequirements && (
-                    <div className="flex flex-col gap-1">
-                      <p>
-                        Du kannst diesen Task nicht annehmen, da dir die
-                        folgenden Rollen fehlen:
-                      </p>
-
-                      {task.requiredRoles.length > 0 && (
-                        <div>
-                          <p className="text-sm text-gray-500">
-                            Erforderliche Rollen
-                          </p>
-                          <div className="flex flex-col items-start gap-1 mt-1">
-                            {task.requiredRoles.map((role) => (
-                              <SingleRoleBadge key={role.id} roleId={role.id} />
-                            ))}
-                          </div>
-                        </div>
-                      )}
+                {task.requiredRoles.length > 0 && (
+                  <div>
+                    <p className="text-sm text-gray-500">
+                      Erforderliche Rollen
+                    </p>
+                    <div className="flex flex-col items-start gap-1 mt-1">
+                      {task.requiredRoles.map((role) => (
+                        <SingleRoleBadge key={role.id} roleId={role.id} />
+                      ))}
                     </div>
-                  )}
+                  </div>
+                )}
               </div>
-              <Tooltip.Arrow className="fill-brand-red-500" />
-            </Tooltip.Content>
-          </Tooltip.Root>
-        </Tooltip.Provider>
+            )}
+          </div>
+        </Tooltip>
       ) : (
         button
       )}

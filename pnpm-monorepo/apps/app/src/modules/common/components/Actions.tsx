@@ -1,6 +1,5 @@
 "use client";
 
-import * as Popover from "@radix-ui/react-popover";
 import {
   createContext,
   useContext,
@@ -10,6 +9,7 @@ import {
 } from "react";
 import { FaEllipsisH, FaTimes } from "react-icons/fa";
 import Button from "./Button";
+import { PopoverBaseUI, usePopoverBaseUI } from "./PopoverBaseUI";
 
 interface Props {
   children?: ReactNode;
@@ -18,40 +18,32 @@ interface Props {
 export const Actions = ({ children }: Readonly<Props>) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const value = useMemo(
-    () => ({
-      setIsOpen,
-    }),
-    [setIsOpen],
+  return (
+    <PopoverBaseUI
+      trigger={isOpen ? <FaTimes /> : <FaEllipsisH />}
+      triggerRender={<Button variant="secondary" iconOnly={true} />}
+      onOpenChange={setIsOpen}
+      openOnHover={false}
+      side="left"
+      childrenClassName="flex flex-col items-start gap-2"
+    >
+      <ActionsContextBridge>{children}</ActionsContextBridge>
+    </PopoverBaseUI>
   );
+};
+
+const ActionsContextBridge = ({ children }: Readonly<Props>) => {
+  const { closePopover } = usePopoverBaseUI();
+
+  const value = useMemo(() => ({ closePopover }), [closePopover]);
 
   return (
-    <ActionContext.Provider value={value}>
-      <Popover.Root open={isOpen} onOpenChange={setIsOpen}>
-        <Popover.Trigger asChild>
-          <Button variant="secondary" iconOnly={true}>
-            {isOpen ? <FaTimes /> : <FaEllipsisH />}
-          </Button>
-        </Popover.Trigger>
-
-        <Popover.Portal>
-          <Popover.Content
-            sideOffset={4}
-            side="left"
-            className="flex flex-col items-start gap-2 px-4 py-2 rounded-secondary bg-neutral-800 border border-neutral-900 z-10"
-          >
-            {children}
-
-            <Popover.Arrow className="fill-neutral-800" />
-          </Popover.Content>
-        </Popover.Portal>
-      </Popover.Root>
-    </ActionContext.Provider>
+    <ActionContext.Provider value={value}>{children}</ActionContext.Provider>
   );
 };
 
 interface ActionContextInterface {
-  setIsOpen: (value: boolean) => void;
+  closePopover: () => void;
 }
 
 const ActionContext = createContext<ActionContextInterface | undefined>(

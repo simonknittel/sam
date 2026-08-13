@@ -36,7 +36,7 @@ export const ConfirmationStateFilter = ({ confirmationStates }: Props) => {
   };
 
   return (
-    <div className="flex flex-col items-start gap-2 px-4 py-2 rounded-secondary bg-neutral-800">
+    <div className="flex flex-col items-start gap-2">
       {confirmationStates.includes("unconfirmed") && (
         <div className="flex justify-between items-center w-full gap-4">
           <label

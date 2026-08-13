@@ -4,7 +4,7 @@ import { env } from "@/env";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { Handles } from "@/modules/career/components/Handles";
 import { useRolesContext } from "@/modules/roles/components/RolesContext";
-import * as Tooltip from "@radix-ui/react-tooltip";
+import { Tooltip } from "@/modules/common/components/Tooltip";
 import {
   FlowNodeRoleImage,
   FlowNodeType,
@@ -243,9 +243,13 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
         }}
       >
         {role && (
-          <Tooltip.Provider delayDuration={0}>
-            <Tooltip.Root>
-              <Tooltip.Trigger className="cursor-help w-full h-full pb-1">
+          <Tooltip
+            asChild
+            side="top"
+            sideOffset={20}
+            contentClassName={styles.TooltipContent}
+            triggerChildren={
+              <button type="button" className="cursor-help w-full h-full pb-1">
                 <Image
                   src={`https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${image?.id}`}
                   alt={role.name}
@@ -273,21 +277,11 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
                     />
                   </span>
                 ) : null}
-              </Tooltip.Trigger>
-
-              <Tooltip.Content
-                className={clsx(
-                  "px-2 py-1 text-sm leading-tight select-none rounded-secondary bg-brand-red-500 text-white",
-                  styles.TooltipContent,
-                )}
-                side="top"
-                sideOffset={20}
-              >
-                {role.name}
-                <Tooltip.Arrow className="fill-brand-red-500" />
-              </Tooltip.Content>
-            </Tooltip.Root>
-          </Tooltip.Provider>
+              </button>
+            }
+          >
+            {role.name}
+          </Tooltip>
         )}
 
         {"redacted" in props.data && (

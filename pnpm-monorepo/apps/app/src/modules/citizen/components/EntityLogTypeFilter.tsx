@@ -37,7 +37,7 @@ export const EntityLogTypeFilter = ({ entityLogTypes }: Props) => {
   };
 
   return (
-    <div className="flex flex-col items-start gap-2 px-4 py-2 rounded-secondary bg-neutral-800">
+    <div className="flex flex-col items-start gap-2">
       {Array.from(entityLogTypes)
         .toSorted((a, b) => a[1].localeCompare(b[1]))
         .map(([type, translation]) => (

@@ -45,7 +45,7 @@ export const UpdateVariantButton = ({ className, variant }: Props) => {
           <UpdateVariantModal
             onRequestClose={() => {
               setIsOpen(false);
-              actionsContext.setIsOpen(false);
+              actionsContext.closePopover();
             }}
             variant={variant}
           />

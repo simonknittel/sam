@@ -37,7 +37,7 @@ export const NoteTypeFilter = ({ noteTypes }: Props) => {
   };
 
   return (
-    <div className="flex flex-col items-start gap-2 px-4 py-2 rounded-secondary bg-neutral-800 max-h-96 overflow-auto">
+    <div className="flex flex-col items-start gap-2 max-h-96 overflow-auto">
       {noteTypes.map((noteType) => (
         <div
           key={noteType.id}

@@ -41,7 +41,7 @@ export const RoleFilter = ({ roles }: Props) => {
   };
 
   return (
-    <div className="flex flex-col gap-2 px-4 py-2 rounded-secondary bg-neutral-800 max-h-96 overflow-auto">
+    <div className="flex flex-col gap-2 max-h-96 overflow-auto">
       {roles.map((role) => (
         <div
           key={role.id}
