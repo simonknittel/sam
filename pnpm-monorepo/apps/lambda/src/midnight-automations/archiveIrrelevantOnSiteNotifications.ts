@@ -1,4 +1,5 @@
 import { prisma } from "@sam-monorepo/database";
+import { AuditEventType } from "@sam-monorepo/domain";
 import { type OnSiteNotificationType } from "@sam-monorepo/notifications";
 import { createAuditEvents } from "../common/audit";
 import { log } from "../common/logger";
@@ -53,7 +54,7 @@ export const archiveIrrelevantOnSiteNotifications = async () => {
 
       await createAuditEvents([
         {
-          type: "IRRELEVANT_ON_SITE_NOTIFICATIONS_ARCHIVED",
+          type: AuditEventType.IRRELEVANT_ON_SITE_NOTIFICATIONS_ARCHIVED,
           data: { count: result.count },
         },
       ]);

@@ -1,4 +1,5 @@
 import { NotificationChannel, prisma } from "@sam-monorepo/database";
+import { AuditEventType } from "@sam-monorepo/domain";
 import {
   sendNotification,
   setVapidDetails,
@@ -172,7 +173,7 @@ export const publishWebPushNotifications = async (
 
   await createAuditEvents([
     {
-      type: "WEB_PUSH_SUBSCRIPTIONS_PRUNED",
+      type: AuditEventType.WEB_PUSH_SUBSCRIPTIONS_PRUNED,
       data: { count, reason: "expired" },
     },
   ]);

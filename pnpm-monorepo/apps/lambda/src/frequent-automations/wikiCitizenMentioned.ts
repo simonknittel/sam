@@ -1,6 +1,7 @@
 import { createId } from "@paralleldrive/cuid2";
 import { prisma } from "@sam-monorepo/database";
 import { WikiPageNamespace } from "@sam-monorepo/database/client";
+import { AuditEventType } from "@sam-monorepo/domain";
 import {
   collectPositionScopeIdsForCitizen,
   comparePermissionSets,
@@ -309,7 +310,7 @@ export const wikiCitizenMentioned = async () => {
 
     await createAuditEvents([
       {
-        type: "WIKI_CITIZEN_MENTIONS_SWEPT",
+        type: AuditEventType.WIKI_CITIZEN_MENTIONS_SWEPT,
         data: {
           notifiedCount: notifiable.length,
           suppressedCount: suppressedIds.length,

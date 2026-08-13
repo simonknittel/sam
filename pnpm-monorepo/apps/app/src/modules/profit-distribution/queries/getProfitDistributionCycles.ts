@@ -2,13 +2,12 @@ import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import { getSilcBalanceOfCurrentCitizen } from "@/modules/silc/queries/getSilcBalanceOfCurrentCitizen";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
+import { getAuecPerSilc, getTotalSilc } from "@sam-monorepo/domain";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
-import { getAuecPerSilc } from "../utils/getAuecPerSilc";
 import { CyclePhase, getCurrentPhase } from "../utils/getCurrentPhase";
 import { getPayoutState } from "../utils/getMyPayoutStatus";
 import { getMyShare } from "../utils/getMyShare";
-import { getTotalSilc } from "../utils/getTotalSilc";
 
 export const getProfitDistributionCycles = cache(
   withTrace("getProfitDistributionCycles", async (status = "open") => {
@@ -82,8 +81,7 @@ export const getProfitDistributionCycles = cache(
           const totalSilc = getTotalSilc(cycle.participants);
           const auecPerSilc =
             cycle.auecProfit !== null
-              ? // @ts-expect-error auecProfit's bigint doesn't match the helper's number parameter
-                getAuecPerSilc(cycle.auecProfit, totalSilc)
+              ? getAuecPerSilc(cycle.auecProfit, totalSilc)
               : 0;
           const myShare = getMyShare(mySilcBalance, auecPerSilc);
           const myPayoutState = getPayoutState(cycle, myParticipant);

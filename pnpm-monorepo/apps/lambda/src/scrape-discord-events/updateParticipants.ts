@@ -1,4 +1,5 @@
 import { prisma } from "@sam-monorepo/database";
+import { AuditEventType } from "@sam-monorepo/domain";
 import type { z } from "zod";
 import { createAuditEvents } from "../common/audit";
 import { getEventUsers } from "./discord/utils/getEventUsers";
@@ -100,7 +101,7 @@ export const updateParticipants = async (
   if (participants.create.length > 0 || participants.delete.length > 0) {
     await createAuditEvents([
       {
-        type: "EVENT_PARTICIPANTS_SYNCED",
+        type: AuditEventType.EVENT_PARTICIPANTS_SYNCED,
         data: {
           eventId: databaseEvent.id,
           addedCount: participants.create.length,

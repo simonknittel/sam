@@ -1,5 +1,3 @@
-// Make sure to mirror this file with pnpm-monorepo/apps/lambda/src/functions/notification-router/utils/getTotalSilc.ts
-
 import type { ProfitDistributionCycleParticipant } from "@sam-monorepo/database/client";
 
 export const getTotalSilc = (

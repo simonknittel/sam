@@ -12,11 +12,10 @@ import {
   type Upload,
   type VariantTag,
 } from "@sam-monorepo/database/client";
+import { ORG_ID } from "@sam-monorepo/domain";
 import { groupBy } from "lodash";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
-
-const ORG_ID = "cm4wm57sw0001opxo2c8oq0o0"; // TODO: Implement UI for configuring org ID
 
 const ORG_FLEET_PAGE_SIZE = 100;
 

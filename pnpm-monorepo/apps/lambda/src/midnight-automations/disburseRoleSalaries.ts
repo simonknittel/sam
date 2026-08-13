@@ -1,5 +1,6 @@
 import { createId } from "@paralleldrive/cuid2";
 import { prisma, type Entity, type Role } from "@sam-monorepo/database";
+import { AuditEventType } from "@sam-monorepo/domain";
 import { createAuditEvents } from "../common/audit";
 import { emitEvents } from "../common/eventbridge";
 import { log } from "../common/logger";
@@ -104,7 +105,7 @@ export const disburseRoleSalaries = async () => {
     if (allTransactionIds.length > 0) {
       await createAuditEvents([
         {
-          type: "ROLE_SALARIES_DISBURSED",
+          type: AuditEventType.ROLE_SALARIES_DISBURSED,
           data: {
             roleIds: disbursedRoleIds,
             transactionCount: allTransactionIds.length,

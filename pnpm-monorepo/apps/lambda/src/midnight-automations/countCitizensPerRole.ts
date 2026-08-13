@@ -1,4 +1,5 @@
 import { prisma } from "@sam-monorepo/database";
+import { AuditEventType } from "@sam-monorepo/domain";
 import { createAuditEvents } from "../common/audit";
 import { log } from "../common/logger";
 import { captureAsyncFunc } from "../common/xray";
@@ -41,7 +42,7 @@ export const countCitizensPerRole = async () => {
 
     await createAuditEvents([
       {
-        type: "CITIZENS_PER_ROLE_COUNTED",
+        type: AuditEventType.CITIZENS_PER_ROLE_COUNTED,
         data: { roleCount: data.length },
       },
     ]);

@@ -4,6 +4,7 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import { prisma } from "@sam-monorepo/database";
+import { AuditEventType } from "@sam-monorepo/domain";
 import { createAuditEvents } from "../common/audit";
 import { log } from "../common/logger";
 import { captureAsyncFunc } from "../common/xray";
@@ -210,7 +211,7 @@ export const deleteUnusedUploads = async () => {
 
       await createAuditEvents([
         {
-          type: "UNUSED_UPLOADS_DELETED",
+          type: AuditEventType.UNUSED_UPLOADS_DELETED,
           data: {
             databaseCount: deletableIds.length,
             bucketCount: orphanedKeys.length,

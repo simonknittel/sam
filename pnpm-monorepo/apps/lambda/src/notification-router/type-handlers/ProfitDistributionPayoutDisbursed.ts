@@ -1,6 +1,5 @@
 import { prisma } from "@sam-monorepo/database";
-import { getAuecPerSilc } from "../getAuecPerSilc";
-import { getTotalSilc } from "../getTotalSilc";
+import { getAuecPerSilc, getTotalSilc } from "@sam-monorepo/domain";
 import { publishNotifications } from "../publish";
 
 interface Change {

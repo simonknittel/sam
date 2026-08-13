@@ -133,6 +133,9 @@ importers:
       '@sam-monorepo/database':
         specifier: workspace:*
         version: file:packages/database(prisma@7.9.1(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(magicast@0.5.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3))(typescript@6.0.3)
+      '@sam-monorepo/domain':
+        specifier: workspace:*
+        version: file:packages/domain(prisma@7.9.1(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(magicast@0.5.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3))(typescript@6.0.3)
       '@sam-monorepo/notifications':
         specifier: workspace:*
         version: link:../../packages/notifications
@@ -483,6 +486,9 @@ importers:
       '@sam-monorepo/database':
         specifier: workspace:*
         version: file:packages/database(prisma@7.9.1(@types/react@19.2.18)(magicast@0.5.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@7.0.2))(typescript@7.0.2)
+      '@sam-monorepo/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
       '@sam-monorepo/emails':
         specifier: workspace:*
         version: link:../../packages/emails
@@ -627,6 +633,19 @@ importers:
       prisma:
         specifier: 7.9.1
         version: 7.9.1(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(magicast@0.5.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@7.0.2)
+      typescript:
+        specifier: 7.0.2
+        version: 7.0.2
+
+  packages/domain:
+    dependencies:
+      '@sam-monorepo/database':
+        specifier: workspace:*
+        version: file:packages/database(prisma@7.9.1(@types/react@19.2.18)(magicast@0.5.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@7.0.2))(typescript@7.0.2)
+    devDependencies:
+      '@types/node':
+        specifier: 24.13.3
+        version: 24.13.3
       typescript:
         specifier: 7.0.2
         version: 7.0.2
@@ -3927,6 +3946,9 @@ packages:
 
   '@sam-monorepo/database@file:packages/database':
     resolution: {directory: packages/database, type: directory}
+
+  '@sam-monorepo/domain@file:packages/domain':
+    resolution: {directory: packages/domain, type: directory}
 
   '@sam-monorepo/permissions@file:packages/permissions':
     resolution: {directory: packages/permissions, type: directory}
@@ -12897,6 +12919,14 @@ snapshots:
       '@prisma/adapter-pg': 7.9.1
       '@prisma/client': 7.9.1(prisma@7.9.1(@types/react@19.2.18)(magicast@0.5.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@7.0.2))(typescript@7.0.2)
       zod: 4.4.3
+    transitivePeerDependencies:
+      - pg-native
+      - prisma
+      - typescript
+
+  '@sam-monorepo/domain@file:packages/domain(prisma@7.9.1(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(magicast@0.5.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3))(typescript@6.0.3)':
+    dependencies:
+      '@sam-monorepo/database': file:packages/database(prisma@7.9.1(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(magicast@0.5.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3))(typescript@6.0.3)
     transitivePeerDependencies:
       - pg-native
       - prisma

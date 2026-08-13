@@ -12,6 +12,7 @@
     "@openpgp/web-stream-tools": "0.3.1",
     "@paralleldrive/cuid2": "3.3.0",
     "@sam-monorepo/database": "workspace:*",
+    "@sam-monorepo/domain": "workspace:*",
     "@sam-monorepo/notifications": "workspace:*",
     "@sam-monorepo/emails": "workspace:*",
     "@sam-monorepo/permissions": "workspace:*",

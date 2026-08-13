@@ -4,15 +4,14 @@ import { getSilcBalanceOfAllCitizens } from "@/modules/silc/queries/getSilcBalan
 import { getSilcBalanceOfCurrentCitizen } from "@/modules/silc/queries/getSilcBalanceOfCurrentCitizen";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import type { ProfitDistributionCycle } from "@sam-monorepo/database/client";
+import { getAuecPerSilc, getTotalSilc } from "@sam-monorepo/domain";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
-import { getAuecPerSilc } from "../utils/getAuecPerSilc";
 import { CyclePhase, getCurrentPhase } from "../utils/getCurrentPhase";
 import { getPayoutState } from "../utils/getMyPayoutStatus";
 import { getMyShare } from "../utils/getMyShare";
 import { getOpenAuecPayout } from "../utils/getOpenAuecPayout";
 import { getPaidAuec } from "../utils/getPaidAuec";
-import { getTotalSilc } from "../utils/getTotalSilc";
 
 export const getProfitDistributionCycleById = cache(
   withTrace(
@@ -64,8 +63,7 @@ export const getProfitDistributionCycleById = cache(
       const totalSilc = getTotalSilc(cycle.participants);
       const auecPerSilc =
         cycle.auecProfit !== null
-          ? // @ts-expect-error auecProfit's bigint doesn't match the helper's number parameter
-            getAuecPerSilc(cycle.auecProfit, totalSilc)
+          ? getAuecPerSilc(cycle.auecProfit, totalSilc)
           : null;
       const myShare =
         auecPerSilc !== null ? getMyShare(mySilcBalance, auecPerSilc) : null;

@@ -158,7 +158,7 @@ jobs:
         working-directory: pnpm-monorepo
 
       - name: Typecheck packages
-        run: pnpm --filter @sam-monorepo/permissions --filter @sam-monorepo/wiki-editor run typecheck
+        run: pnpm --filter @sam-monorepo/domain --filter @sam-monorepo/permissions --filter @sam-monorepo/wiki-editor run typecheck
         working-directory: pnpm-monorepo
 
       - name: Typecheck scripts

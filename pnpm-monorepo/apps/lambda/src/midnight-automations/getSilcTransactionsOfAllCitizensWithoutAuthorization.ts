@@ -1,4 +1,5 @@
 import { prisma } from "@sam-monorepo/database";
+import { SILC_TRANSACTIONS_OF_ALL_CITIZENS_QUERY } from "@sam-monorepo/domain";
 import { captureAsyncFunc } from "../common/xray";
 
 export const getSilcTransactionsOfAllCitizensWithoutAuthorization =
@@ -6,34 +7,9 @@ export const getSilcTransactionsOfAllCitizensWithoutAuthorization =
     return captureAsyncFunc(
       "getSilcTransactionsOfAllCitizensWithoutAuthorization",
       async () => {
-        return await prisma.silcTransaction.findMany({
-          where: {
-            deletedAt: null,
-          },
-          orderBy: {
-            createdAt: "asc",
-          },
-          include: {
-            receiver: {
-              select: {
-                id: true,
-                handle: true,
-              },
-            },
-            createdBy: {
-              select: {
-                id: true,
-                handle: true,
-              },
-            },
-            updatedBy: {
-              select: {
-                id: true,
-                handle: true,
-              },
-            },
-          },
-        });
+        return await prisma.silcTransaction.findMany(
+          SILC_TRANSACTIONS_OF_ALL_CITIZENS_QUERY,
+        );
       },
     );
   };

@@ -1,4 +1,5 @@
 import { prisma, RoleAssignmentChangeType } from "@sam-monorepo/database";
+import { AuditEventType } from "@sam-monorepo/domain";
 import { log } from "../common/logger";
 import { captureAsyncFunc } from "../common/xray";
 
@@ -137,7 +138,7 @@ export const autoAssignInactiveRoles = async () => {
     await captureAsyncFunc("create audit events", () =>
       prisma.auditEvent.createMany({
         data: assignmentsToCreate.map((assignment) => ({
-          type: "ROLE_AUTO_ASSIGNED",
+          type: AuditEventType.ROLE_AUTO_ASSIGNED,
           data: JSON.stringify({
             citizenId: assignment.citizenId,
             citizenHandle: assignment.citizenHandle,

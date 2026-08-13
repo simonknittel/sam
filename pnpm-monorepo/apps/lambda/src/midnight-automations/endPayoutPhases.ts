@@ -1,4 +1,5 @@
 import { prisma } from "@sam-monorepo/database";
+import { AuditEventType } from "@sam-monorepo/domain";
 import { log } from "../common/logger";
 import { captureAsyncFunc } from "../common/xray";
 
@@ -42,7 +43,7 @@ export const endPayoutPhases = async () => {
 
       await prisma.auditEvent.create({
         data: {
-          type: "PROFIT_CYCLE_PAYOUT_ENDED",
+          type: AuditEventType.PROFIT_CYCLE_PAYOUT_ENDED,
           data: JSON.stringify({
             cycleId: cycle.id,
           }),

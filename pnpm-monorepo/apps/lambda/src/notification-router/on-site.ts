@@ -1,4 +1,5 @@
 import { prisma, type OnSiteNotification } from "@sam-monorepo/database";
+import { AuditEventType } from "@sam-monorepo/domain";
 import { ON_SITE_NOTIFICATION_PAYLOAD_VERSIONS } from "@sam-monorepo/notifications";
 import { createAuditEvents } from "../common/audit";
 import { log } from "../common/logger";
@@ -28,7 +29,7 @@ export const createOnSiteNotifications = async (
 
   await createAuditEvents([
     {
-      type: "ON_SITE_NOTIFICATIONS_CREATED",
+      type: AuditEventType.ON_SITE_NOTIFICATIONS_CREATED,
       data: {
         count: rows.length,
         notificationTypes: [

@@ -1,4 +1,5 @@
 import { prisma, RoleAssignmentChangeType } from "@sam-monorepo/database";
+import { AuditEventType } from "@sam-monorepo/domain";
 import { log } from "../common/logger";
 import { captureAsyncFunc } from "../common/xray";
 
@@ -142,7 +143,7 @@ export const removeExpiredRoles = async () => {
     await captureAsyncFunc("create audit events", () =>
       prisma.auditEvent.createMany({
         data: changes.map((change) => ({
-          type: "ROLE_AUTO_REMOVED",
+          type: AuditEventType.ROLE_AUTO_REMOVED,
           data: JSON.stringify({
             citizenId: change.citizenId,
             citizenHandle: change.citizenHandle,

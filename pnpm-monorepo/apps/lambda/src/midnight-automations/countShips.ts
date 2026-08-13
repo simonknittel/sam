@@ -1,9 +1,8 @@
 import { prisma, type Organization } from "@sam-monorepo/database";
+import { AuditEventType, ORG_ID } from "@sam-monorepo/domain";
 import { createAuditEvents } from "../common/audit";
 import { log } from "../common/logger";
 import { captureAsyncFunc } from "../common/xray";
-
-const ORG_ID = "cm4wm57sw0001opxo2c8oq0o0"; // TODO: Implement UI for configuring org ID
 
 const getActiveOrganizationMemberships = async (id: Organization["id"]) => {
   return await captureAsyncFunc(
@@ -97,7 +96,7 @@ export const countShips = async () => {
 
     await createAuditEvents([
       {
-        type: "SHIPS_PER_VARIANT_COUNTED",
+        type: AuditEventType.SHIPS_PER_VARIANT_COUNTED,
         data: { variantCount: data.length },
       },
     ]);

@@ -1,3 +1,4 @@
+import { AuditEventType } from "@sam-monorepo/domain";
 import "./scrape-discord-events/setup"; // must be first
 
 import { prisma } from "@sam-monorepo/database";
@@ -87,7 +88,7 @@ export const handler: ScheduledHandler = async (event, context) => {
 
             await createAuditEvents([
               {
-                type: "EVENT_UPDATED_FROM_DISCORD",
+                type: AuditEventType.EVENT_UPDATED_FROM_DISCORD,
                 data: {
                   eventId: existingEventFromDatabase.id,
                   discordId: futureEventFromDiscord.id,
@@ -167,7 +168,7 @@ export const handler: ScheduledHandler = async (event, context) => {
 
           await createAuditEvents([
             {
-              type: "EVENT_IMPORTED_FROM_DISCORD",
+              type: AuditEventType.EVENT_IMPORTED_FROM_DISCORD,
               data: {
                 eventId: newEvent.id,
                 discordId: futureEventFromDiscord.id,

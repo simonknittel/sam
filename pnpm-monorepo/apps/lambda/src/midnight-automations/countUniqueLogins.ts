@@ -1,4 +1,5 @@
 import { prisma } from "@sam-monorepo/database";
+import { AuditEventType } from "@sam-monorepo/domain";
 import { createAuditEvents } from "../common/audit";
 import { log } from "../common/logger";
 import { captureAsyncFunc } from "../common/xray";
@@ -46,7 +47,7 @@ export const countUniqueLogins = async () => {
 
     await createAuditEvents([
       {
-        type: "UNIQUE_LOGINS_COUNTED",
+        type: AuditEventType.UNIQUE_LOGINS_COUNTED,
         data: {
           date: startOfDay.toISOString(),
           count: uniqueLoginCount,
