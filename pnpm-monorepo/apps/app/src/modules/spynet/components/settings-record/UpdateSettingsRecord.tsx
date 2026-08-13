@@ -4,30 +4,31 @@ import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { Button2 } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
-import { type NoteType } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import toast from "react-hot-toast";
 import { FaPen, FaSave } from "react-icons/fa";
+import type { SettingsRecord } from "./SettingsRecord";
 
 interface FormValues {
   name: string;
 }
 
 interface Props {
-  className?: string;
-  noteType: NoteType;
+  readonly className?: string;
+  readonly apiPath: string;
+  readonly record: SettingsRecord;
 }
 
-const Update = ({ className, noteType }: Readonly<Props>) => {
+export const UpdateSettingsRecord = ({ className, apiPath, record }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const router = useRouter();
   const { register, handleSubmit } = useForm<FormValues>({
     defaultValues: {
-      name: noteType.name,
+      name: record.name,
     },
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -37,7 +38,7 @@ const Update = ({ className, noteType }: Readonly<Props>) => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`/api/note-type/${noteType.id}`, {
+      const response = await fetch(`${apiPath}/${record.id}`, {
         method: "PATCH",
         body: JSON.stringify({
           name: data.name,
@@ -99,5 +100,3 @@ const Update = ({ className, noteType }: Readonly<Props>) => {
     </>
   );
 };
-
-export default Update;

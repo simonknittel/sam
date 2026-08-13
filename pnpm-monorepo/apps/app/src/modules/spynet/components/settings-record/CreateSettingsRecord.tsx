@@ -1,35 +1,29 @@
 "use client";
 
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
-import Button from "@/modules/common/components/Button";
-import { Button2 } from "@/modules/common/components/Button2";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
-import { type ClassificationLevel } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import toast from "react-hot-toast";
-import { FaPen, FaSave } from "react-icons/fa";
+import { FaPlus, FaSave } from "react-icons/fa";
 
 interface FormValues {
   name: string;
 }
 
 interface Props {
-  className?: string;
-  classificationLevel: ClassificationLevel;
+  readonly className?: string;
+  readonly apiPath: string;
 }
 
-const Update = ({ className, classificationLevel }: Readonly<Props>) => {
+export const CreateSettingsRecord = ({ className, apiPath }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const router = useRouter();
-  const { register, handleSubmit } = useForm<FormValues>({
-    defaultValues: {
-      name: classificationLevel.name,
-    },
-  });
+  const { register, handleSubmit, reset } = useForm<FormValues>();
   const [isLoading, setIsLoading] = useState(false);
   const inputId = useId();
 
@@ -37,25 +31,23 @@ const Update = ({ className, classificationLevel }: Readonly<Props>) => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(
-        `/api/classification-level/${classificationLevel.id}`,
-        {
-          method: "PATCH",
-          body: JSON.stringify({
-            name: data.name,
-          }),
-        },
-      );
+      const response = await fetch(apiPath, {
+        method: "POST",
+        body: JSON.stringify({
+          name: data.name,
+        }),
+      });
 
       if (response.ok) {
         router.refresh();
-        toast.success("Erfolgreich bearbeitet");
+        toast.success("Erfolgreich hinzugefügt");
+        reset();
         setIsOpen(false);
       } else {
-        toast.error("Beim Bearbeiten ist ein Fehler aufgetreten.");
+        toast.error("Beim Hinzufügen ist ein Fehler aufgetreten.");
       }
     } catch (error) {
-      toast.error("Beim Bearbeiten ist ein Fehler aufgetreten.");
+      toast.error("Beim Hinzufügen ist ein Fehler aufgetreten.");
       console.error(error);
     }
 
@@ -64,20 +56,20 @@ const Update = ({ className, classificationLevel }: Readonly<Props>) => {
 
   return (
     <>
-      <Button
-        variant="tertiary"
+      <Button2
+        variant={Button2Variant.Secondary}
         onClick={() => setIsOpen(true)}
         className={clsx(className)}
       >
-        <FaPen />
-        Bearbeiten
-      </Button>
+        <FaPlus />
+        Hinzufügen
+      </Button2>
 
       <Modal
         isOpen={isOpen}
         onRequestClose={() => setIsOpen(false)}
         className="w-120"
-        heading={<h2>Bearbeiten</h2>}
+        heading={<h2>Hinzufügen</h2>}
       >
         <form onSubmit={handleSubmit(onSubmit)}>
           <label className="block" htmlFor={inputId}>
@@ -102,5 +94,3 @@ const Update = ({ className, classificationLevel }: Readonly<Props>) => {
     </>
   );
 };
-
-export default Update;
