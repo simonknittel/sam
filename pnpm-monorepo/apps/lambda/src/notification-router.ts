@@ -1,12 +1,9 @@
 import "./notification-router/setup"; // must be first
 
 import type { SQSBatchItemFailure, SQSHandler } from "aws-lambda";
+import { isRequestProcessed, setRequestProcessed } from "./common/dynamodb";
 import { log } from "./common/logger";
 import { initializeRequestContext } from "./common/requestContext";
-import {
-  isRequestProcessed,
-  setRequestProcessed,
-} from "./common/dynamodb";
 import {
   bodySchema,
   notificationRouterHandler,

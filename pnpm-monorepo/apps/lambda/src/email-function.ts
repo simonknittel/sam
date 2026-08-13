@@ -2,12 +2,9 @@ import "./email-function/setup";
 
 import type { SQSBatchItemFailure, SQSHandler } from "aws-lambda";
 import { z } from "zod";
+import { isRequestProcessed, setRequestProcessed } from "./common/dynamodb";
 import { log } from "./common/logger";
 import { initializeRequestContext } from "./common/requestContext";
-import {
-  isRequestProcessed,
-  setRequestProcessed,
-} from "./common/dynamodb";
 import { emailFunctionHandler } from "./email-function/handler";
 
 export const handler: SQSHandler = async (event, context) => {
