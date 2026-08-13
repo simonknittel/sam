@@ -3,6 +3,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
+import { updateActiveMembership } from "@/modules/organizations/utils/updateActiveMembership";
 import {
   ConfirmationStatus,
   OrganizationMembershipType,
@@ -50,103 +51,53 @@ export async function POST(request: Request, props: { params: Params }) {
     const data = postBodySchema.parse(body);
 
     /**
-     * Do the thing
+     * Create the history entry. The active memberships are derived from the
+     * confirmed history entries via updateActiveMembership() instead of being
+     * written directly, so both stay consistent.
      */
-    if (
+    const confirmable =
       data.confirmed === ConfirmationStatus.CONFIRMED &&
-      (await authentication.authorize("organizationMembership", "confirm"))
-    ) {
-      await prisma.$transaction([
-        prisma.activeOrganizationMembership.create({
-          data: {
-            organization: {
-              connect: {
-                id: paramsData.organizationId,
-              },
-            },
-            citizen: {
-              connect: {
-                id: data.citizenId,
-              },
-            },
-            type: data.type,
-            visibility:
-              data.redacted || OrganizationMembershipVisibility.PUBLIC,
-          },
-        }),
+      (await authentication.authorize("organizationMembership", "confirm"));
 
-        prisma.organizationMembershipHistoryEntry.create({
-          data: {
-            organization: {
-              connect: {
-                id: paramsData.organizationId,
-              },
-            },
-            citizen: {
-              connect: {
-                id: data.citizenId,
-              },
-            },
-            type: data.type,
-            visibility:
-              data.redacted || OrganizationMembershipVisibility.PUBLIC,
-            createdBy: {
-              connect: {
-                /**
-                 * We can use `!` here since at this point it's guaranteed that the user has an entity attached.
-                 * This is because permissions are attached to the entity and above we check for permissions. If the
-                 * user wouldn't have an entity, they also wouldn't have permissions and the request would have been
-                 * rejected above.
-                 * The only exception is with the `adminEnabled` cookie.
-                 */
-                id: authentication.session.entity.id,
-              },
-            },
-            confirmed: ConfirmationStatus.CONFIRMED,
-            confirmedAt: new Date(),
-            confirmedBy: {
-              connect: {
-                id: authentication.session.entity.id,
-              },
-            },
-          },
-        }),
-      ]);
-    } else {
-      const visibility =
-        data.redacted === OrganizationMembershipVisibility.REDACTED
-          ? OrganizationMembershipVisibility.REDACTED
-          : OrganizationMembershipVisibility.PUBLIC;
+    const visibility =
+      data.redacted === OrganizationMembershipVisibility.REDACTED
+        ? OrganizationMembershipVisibility.REDACTED
+        : OrganizationMembershipVisibility.PUBLIC;
 
-      await prisma.organizationMembershipHistoryEntry.create({
-        data: {
-          organization: {
-            connect: {
-              id: paramsData.organizationId,
-            },
-          },
-          citizen: {
-            connect: {
-              id: data.citizenId,
-            },
-          },
-          type: data.type,
-          visibility,
-          createdBy: {
-            connect: {
-              /**
-               * We can use `!` here since at this point it's guaranteed that the user has an entity attached.
-               * This is because permissions are attached to the entity and above we check for permissions. If the
-               * user wouldn't have an entity, they also wouldn't have permissions and the request would have been
-               * rejected above.
-               * The only exception is with the `adminEnabled` cookie.
-               */
-              id: authentication.session.entity.id,
-            },
+    await prisma.organizationMembershipHistoryEntry.create({
+      data: {
+        organization: {
+          connect: {
+            id: paramsData.organizationId,
           },
         },
-      });
-    }
+        citizen: {
+          connect: {
+            id: data.citizenId,
+          },
+        },
+        type: data.type,
+        visibility,
+        createdBy: {
+          connect: {
+            id: authentication.session.entity.id,
+          },
+        },
+        ...(confirmable
+          ? {
+              confirmed: ConfirmationStatus.CONFIRMED,
+              confirmedAt: new Date(),
+              confirmedBy: {
+                connect: {
+                  id: authentication.session.entity.id,
+                },
+              },
+            }
+          : {}),
+      },
+    });
+
+    if (confirmable) await updateActiveMembership(data.citizenId);
 
     await createAuditEvents([
       {
