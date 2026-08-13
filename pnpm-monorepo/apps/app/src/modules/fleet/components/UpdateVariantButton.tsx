@@ -1,6 +1,6 @@
 "use client";
 
-import { useAction } from "@/modules/common/components/Actions";
+import { useActionsContext } from "@/modules/common/components/Actions";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import {
@@ -27,7 +27,7 @@ interface Props {
 
 export const UpdateVariantButton = ({ className, variant }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
-  const action = useAction();
+  const actionsContext = useActionsContext();
 
   return (
     <div className={clsx(className, "flex justify-center")}>
@@ -45,7 +45,7 @@ export const UpdateVariantButton = ({ className, variant }: Props) => {
           <UpdateVariantModal
             onRequestClose={() => {
               setIsOpen(false);
-              action.setIsOpen(false);
+              actionsContext.setIsOpen(false);
             }}
             variant={variant}
           />

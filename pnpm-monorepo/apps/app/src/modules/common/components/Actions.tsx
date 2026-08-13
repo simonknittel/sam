@@ -61,12 +61,15 @@ const ActionContext = createContext<ActionContextInterface | undefined>(
 /**
  * Check for undefined since the defaultValue of the context is undefined. If
  * it's still undefined, then the provider is missing.
+ *
+ * Deliberately not named `useAction` — that name belongs to the server-action
+ * hook in `modules/actions`.
  */
-export function useAction() {
+export function useActionsContext() {
   const context = useContext(ActionContext);
   if (!context)
     throw new Error(
-      "Provider for `useAction()` is missing. Make sure to have a `<Action> ... </Action>` parent.",
+      "Provider for `useActionsContext()` is missing. Make sure to have a `<Actions> ... </Actions>` parent.",
     );
   return context;
 }
