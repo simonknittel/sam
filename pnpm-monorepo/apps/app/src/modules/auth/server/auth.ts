@@ -414,17 +414,24 @@ export const authOptions: NextAuthOptions = {
     },
 
     signOut: async (message) => {
+      /**
+       * `id` and `userId` DO exist on the session here. However, the types
+       * won't be fixed for anything auth-related due to the pending migration
+       * off of NextAuth.js.
+       */
+      const session = message.session as unknown as {
+        id: string;
+        userId: string;
+      };
+
       await createAuditEvents([
         {
           type: AuditEventType.USER_LOGOUT,
           data: {
-            // @ts-expect-error The `id` DOES exist. However, I'm not going to fix the type for any auth related things due to the pending migration off of NextAuth.js
-            sessionId: message.session.id,
-            // @ts-expect-error The `id` DOES exist. However, I'm not going to fix the type for any auth related things due to the pending migration off of NextAuth.js
-            userId: message.session.userId,
+            sessionId: session.id,
+            userId: session.userId,
           },
-          // @ts-expect-error The `id` DOES exist. However, I'm not going to fix the type for any auth related things due to the pending migration off of NextAuth.js
-          createdById: message.session.userId,
+          createdById: session.userId,
         },
       ]);
     },

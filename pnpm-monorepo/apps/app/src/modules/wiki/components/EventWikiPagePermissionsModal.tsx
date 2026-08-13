@@ -261,8 +261,8 @@ export const EventWikiPagePermissionsModal = ({
             <h3 className="font-bold text-lg font-mono uppercase">Manager</h3>
             <p className="text-sm text-neutral-400">
               Der Event-Organisator, die Event-Manager und Rollen mit der
-              "Events verwalten"-Berechtigung haben immer vollen Zugriff auf
-              alle Seiten dieses Briefings.
+              &quot;Events verwalten&quot;-Berechtigung haben immer vollen
+              Zugriff auf alle Seiten dieses Briefings.
             </p>
           </section>
 

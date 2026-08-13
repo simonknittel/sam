@@ -28,13 +28,15 @@ import srcScavenger from "@/modules/documents/assets/scavenger.svg";
 import srcSupervisor from "@/modules/documents/assets/supervisor.svg";
 import srcTechAndTactic from "@/modules/documents/assets/techAndTactic.svg";
 import srcTradeAndTransport from "@/modules/documents/assets/tradeAndTransport.svg";
+import { svgToStaticImageData } from "@/modules/common/utils/svgToStaticImageData";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
+import type { StaticImageData } from "next/image";
 import { cache } from "react";
 
 interface Document {
   name: string;
   slug: string;
-  src: string;
+  src: StaticImageData;
   href: string;
 }
 
@@ -50,37 +52,37 @@ const categories: Category[] = [
       {
         name: "Alliance",
         slug: "alliance",
-        src: srcAlliance,
+        src: svgToStaticImageData(srcAlliance),
         href: `${env.NEXT_PUBLIC_DOWNLOADS_BASE_URL_2}/fJ4JG5QbTnHYLp5`,
       },
       {
         name: "Onboarding",
         slug: "onboarding",
-        src: srcOnboarding,
+        src: svgToStaticImageData(srcOnboarding),
         href: `${env.NEXT_PUBLIC_DOWNLOADS_BASE_URL_2}7gZRw8y93aE3Nky`,
       },
       {
         name: "A1",
         slug: "a1",
-        src: srcA1,
+        src: svgToStaticImageData(srcA1),
         href: `${env.NEXT_PUBLIC_DOWNLOADS_BASE_URL}/a1.pdf`,
       },
       {
         name: "A2",
         slug: "a2",
-        src: srcA2,
+        src: svgToStaticImageData(srcA2),
         href: `${env.NEXT_PUBLIC_DOWNLOADS_BASE_URL}/a2.pdf`,
       },
       {
         name: "A3",
         slug: "a3",
-        src: srcA3,
+        src: svgToStaticImageData(srcA3),
         href: `${env.NEXT_PUBLIC_DOWNLOADS_BASE_URL_2}XwpDeR2dyyKA8Sm`,
       },
       {
         name: "Member",
         slug: "member",
-        src: srcMember,
+        src: svgToStaticImageData(srcMember),
         href: `${env.NEXT_PUBLIC_DOWNLOADS_BASE_URL_2}o5Cydra6B7rtgRK`,
       },
     ],
@@ -92,61 +94,61 @@ const categories: Category[] = [
       {
         name: "Recon",
         slug: "recon",
-        src: srcRecon,
+        src: svgToStaticImageData(srcRecon),
         href: `${env.NEXT_PUBLIC_DOWNLOADS_BASE_URL_2}Y9cY4dJ5AyJqKty`,
       },
       {
         name: "Dogfight",
         slug: "dogfight",
-        src: srcDogfight,
+        src: svgToStaticImageData(srcDogfight),
         href: `${env.NEXT_PUBLIC_DOWNLOADS_BASE_URL}/dogfight.pdf`,
       },
       {
         name: "Advanced Dogfight",
         slug: "advanced-dogfight",
-        src: srcAdvancedDogfight,
+        src: svgToStaticImageData(srcAdvancedDogfight),
         href: `${env.NEXT_PUBLIC_DOWNLOADS_BASE_URL}/advanced-dogfight.pdf`,
       },
       {
         name: "Hands On Deck",
         slug: "hands-on-deck",
-        src: srcHandsOnDeck,
+        src: svgToStaticImageData(srcHandsOnDeck),
         href: `${env.NEXT_PUBLIC_DOWNLOADS_BASE_URL_2}wxDGfB7LKHG52Q4`,
       },
       {
         name: "Engineering",
         slug: "engineering",
-        src: srcEngineering,
+        src: svgToStaticImageData(srcEngineering),
         href: `${env.NEXT_PUBLIC_DOWNLOADS_BASE_URL}/engineering.pdf`,
       },
       {
         name: "Boots On The Ground",
         slug: "boots-on-the-ground",
-        src: srcBootsOnTheGround,
+        src: svgToStaticImageData(srcBootsOnTheGround),
         href: `${env.NEXT_PUBLIC_DOWNLOADS_BASE_URL_2}JgP6Aj8Qgyfg8QH`,
       },
       {
         name: "Captain On The Bridge",
         slug: "captain-on-the-bridge",
-        src: srcCaptainOnTheBridge,
+        src: svgToStaticImageData(srcCaptainOnTheBridge),
         href: `${env.NEXT_PUBLIC_DOWNLOADS_BASE_URL}/captain-on-the-bridge.pdf`,
       },
       {
         name: "Missiles",
         slug: "missiles",
-        src: srcMissiles,
+        src: svgToStaticImageData(srcMissiles),
         href: `${env.NEXT_PUBLIC_DOWNLOADS_BASE_URL}/missiles.pdf`,
       },
       {
         name: "Bombardment",
         slug: "bombardment",
-        src: srcBombardment,
+        src: svgToStaticImageData(srcBombardment),
         href: `${env.NEXT_PUBLIC_DOWNLOADS_BASE_URL}/bombardment.pdf`,
       },
       {
         name: "Interdict & Disable",
         slug: "interdict-and-disable",
-        src: srcInterdictAndDisable,
+        src: svgToStaticImageData(srcInterdictAndDisable),
         href: `${env.NEXT_PUBLIC_DOWNLOADS_BASE_URL_2}xCH6dpcisQGqrgq`,
       },
     ],
@@ -158,37 +160,37 @@ const categories: Category[] = [
       {
         name: "Leadership",
         slug: "leadership",
-        src: srcLeadership,
+        src: svgToStaticImageData(srcLeadership),
         href: `${env.NEXT_PUBLIC_DOWNLOADS_BASE_URL_2}LCwBaiFBdj3B6fz`,
       },
       {
         name: "Tech & Tactic",
         slug: "tech-and-tactic",
-        src: srcTechAndTactic,
+        src: svgToStaticImageData(srcTechAndTactic),
         href: `${env.NEXT_PUBLIC_DOWNLOADS_BASE_URL}/tech&tactic.pdf`,
       },
       {
         name: "Frontline",
         slug: "frontline",
-        src: srcFrontline,
+        src: svgToStaticImageData(srcFrontline),
         href: `${env.NEXT_PUBLIC_DOWNLOADS_BASE_URL}/frontline.pdf`,
       },
       {
         name: "Lead The Pack",
         slug: "lead-the-pack",
-        src: srcLeadThePack,
+        src: svgToStaticImageData(srcLeadThePack),
         href: `${env.NEXT_PUBLIC_DOWNLOADS_BASE_URL}/lead-the-pack.pdf`,
       },
       {
         name: "Supervisor",
         slug: "supervisor",
-        src: srcSupervisor,
+        src: svgToStaticImageData(srcSupervisor),
         href: `${env.NEXT_PUBLIC_DOWNLOADS_BASE_URL_2}jBWF7DYkL9xMHpF`,
       },
       {
         name: "Manager",
         slug: "manager",
-        src: srcManager,
+        src: svgToStaticImageData(srcManager),
         href: `${env.NEXT_PUBLIC_DOWNLOADS_BASE_URL}/manager.pdf`,
       },
     ],
@@ -200,31 +202,31 @@ const categories: Category[] = [
       {
         name: "Salvage",
         slug: "salvage",
-        src: srcSalvage,
+        src: svgToStaticImageData(srcSalvage),
         href: `${env.NEXT_PUBLIC_DOWNLOADS_BASE_URL}/salvage.pdf`,
       },
       {
         name: "Mining",
         slug: "mining",
-        src: srcMining,
+        src: svgToStaticImageData(srcMining),
         href: `${env.NEXT_PUBLIC_DOWNLOADS_BASE_URL_2}fRXkXeyfSoY5Xws`,
       },
       {
         name: "Trade & Transport",
         slug: "trade-and-transport",
-        src: srcTradeAndTransport,
+        src: svgToStaticImageData(srcTradeAndTransport),
         href: `${env.NEXT_PUBLIC_DOWNLOADS_BASE_URL_2}EXpqq82JoKTpW2a`,
       },
       {
         name: "Scavenger",
         slug: "scavenger",
-        src: srcScavenger,
+        src: svgToStaticImageData(srcScavenger),
         href: `${env.NEXT_PUBLIC_DOWNLOADS_BASE_URL_2}gCaqeqtSjsHxtDx`,
       },
       {
         name: "Marketeer",
         slug: "marketeer",
-        src: srcMarketeer,
+        src: svgToStaticImageData(srcMarketeer),
         href: `${env.NEXT_PUBLIC_DOWNLOADS_BASE_URL}/marketeer.pdf`,
       },
     ],
@@ -236,7 +238,7 @@ const categories: Category[] = [
       {
         name: "Polaris",
         slug: "polaris",
-        src: srcPolaris,
+        src: svgToStaticImageData(srcPolaris),
         href: `${env.NEXT_PUBLIC_DOWNLOADS_BASE_URL}/polaris.pdf`,
       },
     ],

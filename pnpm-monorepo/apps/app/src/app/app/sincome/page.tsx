@@ -1,6 +1,7 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
+import { svgToStaticImageData } from "@/modules/common/utils/svgToStaticImageData";
 import diagramSvg from "@/modules/profit-distribution/assets/diagram.svg";
 import { ProfitDistributionCycleExcerptList } from "@/modules/profit-distribution/components/ProfitDistributionCycleExcerptList";
 import { ProfitDistributionCycleSidebar } from "@/modules/profit-distribution/components/ProfitDistributionCycleSidebar";
@@ -15,7 +16,7 @@ export default async function Page({
   return (
     <>
       <Image
-        src={diagramSvg}
+        src={svgToStaticImageData(diagramSvg)}
         unoptimized
         alt=""
         className="mx-auto mt-4 mb-8"

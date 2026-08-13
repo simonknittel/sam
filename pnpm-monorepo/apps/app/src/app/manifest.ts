@@ -1,4 +1,5 @@
 import { env } from "@/env";
+import { svgToStaticImageData } from "@/modules/common/utils/svgToStaticImageData";
 import { type MetadataRoute } from "next";
 import faviconSrc from "../assets/favicon.svg";
 import screenshotAppsMobileSrc from "../assets/screenshots/screenshot-apps-mobile.avif";
@@ -35,7 +36,7 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#000",
     icons: [
       {
-        src: faviconSrc.src,
+        src: svgToStaticImageData(faviconSrc).src,
         sizes: "any",
         type: "image/svg+xml",
       },

@@ -20,6 +20,7 @@ export {
   collectWikiMentionedCitizenIds,
   resolveWikiCitizenMention,
   type ResolvedWikiCitizenMention,
+  type WikiCitizenMentionOptions,
   type WikiMentionedCitizen,
 } from "./wikiCitizenMentionNode.js";
 export {
@@ -118,5 +119,6 @@ export {
   wikiVariantLinkHref,
   type ResolvedWikiVariantLink,
   type WikiLinkedVariant,
+  type WikiVariantLinkOptions,
   type WikiVariantLogo,
 } from "./wikiVariantLinkNode.js";

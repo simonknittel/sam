@@ -97,9 +97,7 @@ export const updateRole = createAuthenticatedAction(
     parseFormData: (formData) => ({
       id: formData.get("id"),
       name: formData.get("name"),
-      description: formData.get("description")
-        ? String(formData.get("description"))
-        : null,
+      description: formData.get("description") || null,
       maxAgeDays: formData.get("maxAgeDays")
         ? Number(formData.get("maxAgeDays"))
         : null,

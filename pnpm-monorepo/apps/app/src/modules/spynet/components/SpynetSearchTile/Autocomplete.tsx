@@ -23,7 +23,12 @@ export const Autocomplete = (props: Props) => {
 
     const search = autocomplete({
       container: containerRef.current,
-      renderer: { createElement, Fragment, render: () => {} },
+      renderer: {
+        createElement,
+        Fragment,
+        // Intentional no-op: rendering happens through `render()` below
+        render: () => undefined,
+      },
       render({ children }, root) {
         if (!panelRootRef.current || rootRef.current !== root) {
           rootRef.current = root;

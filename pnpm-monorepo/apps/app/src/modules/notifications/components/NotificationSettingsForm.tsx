@@ -3,7 +3,7 @@
 import { runAction } from "@/modules/actions/utils/runAction";
 import clsx from "clsx";
 import { debounce } from "lodash";
-import { useEffect, useMemo, useRef, type ReactNode } from "react";
+import { useEffect, useMemo, type FormEvent, type ReactNode } from "react";
 import { updateMyNotificationSettings } from "../actions/updateMyNotificationSettings";
 
 interface Props {
@@ -12,14 +12,10 @@ interface Props {
 }
 
 export const NotificationSettingsForm = ({ children, className }: Props) => {
-  const formRef = useRef<HTMLFormElement>(null);
-
-  const handleChange = useMemo(
+  const submit = useMemo(
     () =>
-      debounce(() => {
-        if (!formRef.current) return;
-
-        const formData = new FormData(formRef.current);
+      debounce((form: HTMLFormElement) => {
+        const formData = new FormData(form);
 
         void runAction(updateMyNotificationSettings, formData);
       }, 1000),
@@ -28,12 +24,16 @@ export const NotificationSettingsForm = ({ children, className }: Props) => {
 
   useEffect(() => {
     return () => {
-      handleChange.cancel();
+      submit.cancel();
     };
-  }, [handleChange]);
+  }, [submit]);
+
+  const handleChange = (event: FormEvent<HTMLFormElement>) => {
+    submit(event.currentTarget);
+  };
 
   return (
-    <form ref={formRef} onChange={handleChange} className={clsx(className)}>
+    <form onChange={handleChange} className={clsx(className)}>
       {children}
     </form>
   );

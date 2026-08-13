@@ -3,7 +3,7 @@
 import { runAction } from "@/modules/actions/utils/runAction";
 import clsx from "clsx";
 import { debounce } from "lodash";
-import { useEffect, useMemo, useRef, type ReactNode } from "react";
+import { useEffect, useMemo, type FormEvent, type ReactNode } from "react";
 import { updateParticipantAttribute } from "../actions/updateParticipantAttribute";
 
 interface Props {
@@ -13,14 +13,10 @@ interface Props {
 }
 
 export const CitizenTableForm = ({ children, className, cycleId }: Props) => {
-  const formRef = useRef<HTMLFormElement>(null);
-
-  const handleChange = useMemo(
+  const submit = useMemo(
     () =>
-      debounce(() => {
-        if (!formRef.current) return;
-
-        const formData = new FormData(formRef.current);
+      debounce((form: HTMLFormElement) => {
+        const formData = new FormData(form);
         formData.append("cycleId", cycleId);
 
         void runAction(updateParticipantAttribute, formData);
@@ -30,12 +26,16 @@ export const CitizenTableForm = ({ children, className, cycleId }: Props) => {
 
   useEffect(() => {
     return () => {
-      handleChange.cancel();
+      submit.cancel();
     };
-  }, [handleChange]);
+  }, [submit]);
+
+  const handleChange = (event: FormEvent<HTMLFormElement>) => {
+    submit(event.currentTarget);
+  };
 
   return (
-    <form ref={formRef} onChange={handleChange} className={clsx(className)}>
+    <form onChange={handleChange} className={clsx(className)}>
       {children}
     </form>
   );

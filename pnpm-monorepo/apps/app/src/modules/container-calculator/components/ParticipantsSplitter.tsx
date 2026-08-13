@@ -7,7 +7,8 @@ import clsx from "clsx";
 import { useRef, useState, type ChangeEventHandler } from "react";
 import type { ContainerResult } from "./ContainerCalculator";
 
-interface ParticipantsResult {}
+// TODO: Shape the result once the split methods are implemented
+type ParticipantsResult = unknown;
 
 interface Props {
   readonly className?: string;
@@ -16,21 +17,12 @@ interface Props {
 
 export const ParticipantsSplitter = ({ className, containerResult }: Props) => {
   const participantsFormRef = useRef<HTMLFormElement>(null);
-  const [participantsResult, setParticipantsResult] =
-    useState<ParticipantsResult | null>(null);
+  const [, setParticipantsResult] = useState<ParticipantsResult>(null);
   const [method, setMethod] = useState("bigToSmall");
 
   const handleChangeParticipants: ChangeEventHandler<HTMLFormElement> = () => {
     if (!participantsFormRef.current) return;
     if (!containerResult) return;
-
-    const participantsCount =
-      parseInt(
-        new FormData(participantsFormRef.current).get(
-          "participantsCount",
-        ) as string,
-        10,
-      ) || 2;
 
     if (method === "bigToSmall") {
       // TODO

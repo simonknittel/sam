@@ -1,11 +1,9 @@
 "use client";
 
+import { runAction } from "@/modules/actions/utils/runAction";
 import clsx from "clsx";
 import { debounce } from "lodash";
-import { useTranslations } from "next-intl";
-import { unstable_rethrow } from "next/navigation";
-import { useEffect, useMemo, useRef, type ReactNode } from "react";
-import toast from "react-hot-toast";
+import { useEffect, useMemo, type FormEvent, type ReactNode } from "react";
 import { updateRoleAssignments } from "../../actions/updateRoleAssignment";
 
 interface Props {
@@ -14,43 +12,28 @@ interface Props {
 }
 
 export const UpdateRolesForm = ({ children, className }: Props) => {
-  const t = useTranslations();
-  const formRef = useRef<HTMLFormElement>(null);
-
-  const handleChange = useMemo(
+  const submit = useMemo(
     () =>
-      debounce(() => {
-        if (!formRef.current) return;
+      debounce((form: HTMLFormElement) => {
+        const formData = new FormData(form);
 
-        const formData = new FormData(formRef.current);
-
-        updateRoleAssignments(formData)
-          .then((response) => {
-            if ("error" in response) {
-              toast.error(response.error);
-              console.error(response);
-              return response;
-            }
-
-            toast.success(response.success);
-          })
-          .catch((error) => {
-            unstable_rethrow(error);
-            toast.error(t("Common.internalServerError"));
-            console.error(error);
-          });
+        void runAction(updateRoleAssignments, formData);
       }, 1000),
-    [t],
+    [],
   );
 
   useEffect(() => {
     return () => {
-      handleChange.cancel();
+      submit.cancel();
     };
-  }, [handleChange]);
+  }, [submit]);
+
+  const handleChange = (event: FormEvent<HTMLFormElement>) => {
+    submit(event.currentTarget);
+  };
 
   return (
-    <form ref={formRef} onChange={handleChange} className={clsx(className)}>
+    <form onChange={handleChange} className={clsx(className)}>
       {children}
     </form>
   );

@@ -7,7 +7,7 @@ import { cache } from "react";
 export const getVariantDetail = cache(
   withTrace(
     "getVariantDetail",
-    async (variantId: string, requireOtherShipsRead: boolean = false) => {
+    async (variantId: string, requireOtherShipsRead = false) => {
       const authentication = await requireAuthentication();
 
       const hasShipManage = await authentication.authorize("ship", "manage");

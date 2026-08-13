@@ -1,6 +1,6 @@
 import * as RadixRadioGroup from "@radix-ui/react-radio-group";
 import clsx from "clsx";
-import { useEffect, useId, useState, type ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
 
 interface Props {
   readonly className?: string;
@@ -31,9 +31,11 @@ export const RadioGroup = ({
   const idPrefix = useId();
 
   const [_value, setValue] = useState(value);
-  useEffect(() => {
+  const [previousValue, setPreviousValue] = useState(value);
+  if (value !== previousValue) {
+    setPreviousValue(value);
     setValue(value);
-  }, [value]);
+  }
   const _onChange = (newValue: string) => {
     setValue(newValue);
     onChange(newValue);

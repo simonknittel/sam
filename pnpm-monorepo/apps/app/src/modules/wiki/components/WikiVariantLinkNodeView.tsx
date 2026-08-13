@@ -8,6 +8,7 @@ import {
   wikiVariantLinkHref,
   type ResolvedWikiVariantLink,
   type WikiLinkedVariant,
+  type WikiVariantLinkOptions,
 } from "@sam-monorepo/wiki-editor";
 import type { AnyExtension } from "@tiptap/core";
 import {
@@ -122,6 +123,8 @@ export const withWikiVariantLinkNodeView = (
 ): AnyExtension[] =>
   extensions.map((extension) =>
     extension.name === WikiVariantLink.name
-      ? WikiVariantLinkWithNodeView.configure(extension.options)
+      ? WikiVariantLinkWithNodeView.configure(
+          extension.options as Partial<WikiVariantLinkOptions>,
+        )
       : extension,
   );

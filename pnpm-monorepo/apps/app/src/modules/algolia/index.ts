@@ -13,7 +13,7 @@ export function getClient() {
 
 export function saveObject(
   entityId: Entity["id"],
-  attributes: Record<string, any>,
+  attributes: Record<string, unknown>,
 ) {
   const client = getClient();
 
@@ -28,7 +28,7 @@ export function saveObject(
 
 export function updateObject(
   entityId: Entity["id"],
-  attributes: Record<string, any>,
+  attributes: Record<string, unknown>,
 ) {
   const client = getClient();
 

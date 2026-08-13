@@ -63,8 +63,7 @@ export const ImageUpload = ({
         setUpload(null);
         setIsPending(false);
       });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [upload]);
+  }, [upload, setUpload, resourceType, resourceId, resourceAttribute, router]);
 
   const changeHandler: ChangeEventHandler<HTMLInputElement> = (e) => {
     if (e.target.files && e.target.files.length > 0 && e.target.files[0]) {

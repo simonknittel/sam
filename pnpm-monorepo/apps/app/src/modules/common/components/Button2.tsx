@@ -1,10 +1,5 @@
 import clsx from "clsx";
-import type {
-  ComponentProps,
-  ComponentPropsWithRef,
-  ElementType,
-  ReactNode,
-} from "react";
+import type { ComponentProps, ElementType, ReactNode } from "react";
 
 export enum Button2Variant {
   Primary = "primary",
@@ -78,7 +73,7 @@ export const Button2 = <E extends ElementType = "button">({
         },
         className,
       )}
-      {...(otherProps as ComponentPropsWithRef<E>)}
+      {...otherProps}
     >
       {children}
 

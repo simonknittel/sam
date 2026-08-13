@@ -52,6 +52,7 @@ export const ChannelsProvider = ({ children, userId }: Props) => {
       });
       console.info("[Pusher] Channels client initialized.");
 
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- The Pusher client connects on construction, so it can only be created inside an effect; consumers need the instance, which requires state.
       setClient(pusher);
 
       pusher.signin();

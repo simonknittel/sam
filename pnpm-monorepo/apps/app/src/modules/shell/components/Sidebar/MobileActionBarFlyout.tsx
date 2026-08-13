@@ -4,13 +4,7 @@ import { UnreadDot } from "@/modules/common/components/UnreadDot";
 import { useOnSiteNotifications } from "@/modules/notifications/components/OnSiteNotificationsProvider";
 import clsx from "clsx";
 import { usePathname } from "next/navigation";
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 import { AiFillAppstore } from "react-icons/ai";
 import { FaTimes } from "react-icons/fa";
 
@@ -34,9 +28,11 @@ export const MobileActionBarFlyout = ({ children }: Props) => {
   const [isVisible, setIsVisible] = useState(false);
   const { unreadCount } = useOnSiteNotifications();
 
-  useEffect(() => {
+  const [previousPathname, setPreviousPathname] = useState(pathname);
+  if (pathname !== previousPathname) {
+    setPreviousPathname(pathname);
     setIsVisible(false);
-  }, [pathname]);
+  }
 
   return (
     <>

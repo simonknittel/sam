@@ -206,40 +206,41 @@ export const LogAnalyzer = ({ className }: Props) => {
     };
   }, [isLiveModeEnabled, parseLogs]);
 
-  const handlePreviousDirectorySelect = (
-    event?: MouseEvent<HTMLButtonElement>,
-  ) => {
-    event?.preventDefault();
+  const handlePreviousDirectorySelect = useCallback(
+    (event?: MouseEvent<HTMLButtonElement>) => {
+      event?.preventDefault();
 
-    get("directory_handle")
-      .then(
-        async (
-          existingDirectoryHandle: FileSystemDirectoryHandle | undefined,
-        ) => {
-          if (existingDirectoryHandle) {
-            const permissionState =
-              await existingDirectoryHandle.requestPermission();
-            if (permissionState === "granted") {
-              directoryHandleRef.current = existingDirectoryHandle;
-              parseLogs();
-              return;
+      get("directory_handle")
+        .then(
+          async (
+            existingDirectoryHandle: FileSystemDirectoryHandle | undefined,
+          ) => {
+            if (existingDirectoryHandle) {
+              const permissionState =
+                await existingDirectoryHandle.requestPermission();
+              if (permissionState === "granted") {
+                directoryHandleRef.current = existingDirectoryHandle;
+                parseLogs();
+                return;
+              }
             }
-          }
 
-          const newDirectoryHandle = await window.showDirectoryPicker();
-          if (!newDirectoryHandle) return;
-          directoryHandleRef.current = newDirectoryHandle;
-          parseLogs();
-          await set("directory_handle", newDirectoryHandle);
-        },
-      )
-      .catch((error) => {
-        console.error(
-          "[Log Analyzer] Error retrieving or selecting directory handle:",
-          error,
-        );
-      });
-  };
+            const newDirectoryHandle = await window.showDirectoryPicker();
+            if (!newDirectoryHandle) return;
+            directoryHandleRef.current = newDirectoryHandle;
+            parseLogs();
+            await set("directory_handle", newDirectoryHandle);
+          },
+        )
+        .catch((error) => {
+          console.error(
+            "[Log Analyzer] Error retrieving or selecting directory handle:",
+            error,
+          );
+        });
+    },
+    [parseLogs],
+  );
 
   const handleNewDirectorySelect = (event?: MouseEvent<HTMLButtonElement>) => {
     event?.preventDefault();
@@ -257,12 +258,21 @@ export const LogAnalyzer = ({ className }: Props) => {
       });
   };
 
+  /**
+   * The ref makes sure enabling autostart triggers the directory selection
+   * exactly once, even when `handlePreviousDirectorySelect` changes identity.
+   */
+  const autostartTriggeredRef = useRef(false);
   useEffect(() => {
-    if (isAutostartEnabled) {
-      handlePreviousDirectorySelect();
+    if (!isAutostartEnabled) {
+      autostartTriggeredRef.current = false;
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAutostartEnabled]);
+    if (autostartTriggeredRef.current) return;
+
+    autostartTriggeredRef.current = true;
+    handlePreviousDirectorySelect();
+  }, [isAutostartEnabled, handlePreviousDirectorySelect]);
 
   return (
     <div className={clsx(className)}>

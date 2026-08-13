@@ -5,7 +5,7 @@ import { emailConfirmationHandler } from "./type-handlers/email_confirmation";
 
 interface Notification {
   type: string;
-  payload: any;
+  payload: unknown;
 }
 
 export const triggerNotifications = withTrace(
@@ -13,7 +13,11 @@ export const triggerNotifications = withTrace(
   async (notifications: Notification[] = []) => {
     if (notifications[0]?.type === "EmailConfirmation") {
       // TODO: Migrate to "NotificationRequested" event type handler
-      await emailConfirmationHandler(notifications[0].payload);
+      await emailConfirmationHandler(
+        notifications[0].payload as Parameters<
+          typeof emailConfirmationHandler
+        >[0],
+      );
     } else {
       await emitEvents(
         notifications.map((notification) => ({

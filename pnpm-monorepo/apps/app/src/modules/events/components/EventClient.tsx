@@ -45,7 +45,12 @@ export const EventClient = ({
   showBriefingButton,
 }: Props) => {
   const authentication = useAuthentication();
-  const diff = event.startTime.getTime() - Date.now();
+  /**
+   * The coarse clock only decides how fast the actual clock has to tick:
+   * every second right before the event starts, every 30 seconds otherwise.
+   */
+  const coarseNow = useNow({ updateInterval: 30_000 });
+  const diff = event.startTime.getTime() - coarseNow.getTime();
   const updateInterval = diff >= 0 && diff <= 120_000 ? 1_000 : 30_000;
   const now = useNow({ updateInterval });
 

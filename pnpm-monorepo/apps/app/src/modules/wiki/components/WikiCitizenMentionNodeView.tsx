@@ -5,6 +5,7 @@ import {
   WikiCitizenMention,
   resolveWikiCitizenMention,
   type ResolvedWikiCitizenMention,
+  type WikiCitizenMentionOptions,
   type WikiMentionedCitizen,
 } from "@sam-monorepo/wiki-editor";
 import type { AnyExtension } from "@tiptap/core";
@@ -81,6 +82,8 @@ export const withWikiCitizenMentionPopover = (
 ): AnyExtension[] =>
   extensions.map((extension) =>
     extension.name === WikiCitizenMention.name
-      ? WikiCitizenMentionWithPopover.configure(extension.options)
+      ? WikiCitizenMentionWithPopover.configure(
+          extension.options as Partial<WikiCitizenMentionOptions>,
+        )
       : extension,
   );
