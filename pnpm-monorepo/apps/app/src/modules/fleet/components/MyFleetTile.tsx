@@ -1,30 +1,12 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import { CursorPaginationControls } from "@/modules/common/CursorPagination/CursorPaginationControls";
-import { cursorPaginationParsers } from "@/modules/common/CursorPagination/cursorPaginationParsers";
 import { forbidden } from "next/navigation";
-import {
-  createLoader,
-  parseAsArrayOf,
-  parseAsString,
-  parseAsStringLiteral,
-  type SearchParams,
-} from "nuqs/server";
+import { type SearchParams } from "nuqs/server";
 import { getMyFleet } from "../queries/getMyFleet";
+import { loadFleetListSearchParams } from "../utils/loadFleetListSearchParams";
 import { AssignShip } from "./AssignShip";
-import { MyFleetTable } from "./MyFleetTable";
-
-const loadSearchParams = createLoader({
-  flight_ready: parseAsStringLiteral(["all", "flight_ready"]).withDefault(
-    "all",
-  ),
-  sort: parseAsStringLiteral(["name-asc", "name-desc"]).withDefault("name-asc"),
-  variantTags: parseAsArrayOf(parseAsString),
-  manufacturerIds: parseAsArrayOf(parseAsString),
-  showDeleted: parseAsStringLiteral(["all", "deleted"]).withDefault("all"),
-  q: parseAsString,
-  ...cursorPaginationParsers,
-});
+import { ShipsTable } from "./ShipsTable";
 
 interface Props {
   readonly className?: string;
@@ -44,7 +26,7 @@ export const MyFleetTile = async ({ className, searchParams }: Props) => {
     q,
     cursor,
     direction,
-  } = await loadSearchParams(searchParams);
+  } = await loadFleetListSearchParams(searchParams);
 
   const [{ ships, total, nextCursor, prevCursor }, allVariants] =
     await Promise.all([
@@ -84,7 +66,7 @@ export const MyFleetTile = async ({ className, searchParams }: Props) => {
           </div>
         ) : (
           <>
-            <MyFleetTable ships={ships} />
+            <ShipsTable ships={ships} editable />
 
             <CursorPaginationControls
               nextCursor={nextCursor}

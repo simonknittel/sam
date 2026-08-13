@@ -7,16 +7,20 @@ import {
 import { getActiveOrganizationMemberships } from "@/modules/organizations/queries/getActiveOrganizationMemberships";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import {
-  VariantStatus,
   type Manufacturer,
   type Upload,
+  type VariantStatus,
   type VariantTag,
 } from "@sam-monorepo/database/client";
 import { ORG_ID } from "@sam-monorepo/domain";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
-
-const MY_FLEET_PAGE_SIZE = 100;
+import {
+  buildVariantFilterWhere,
+  FLEET_PAGE_SIZE,
+  paginateByCursor,
+  SHIP_VARIANT_INCLUDE,
+} from "./shipQuery";
 
 type CitizenFleetSort = "name-asc" | "name-desc";
 
@@ -120,12 +124,7 @@ export const getVariantShips = cache(
 
       const variantWhere: Record<string, unknown> = {
         id: variantId,
-        ...(flightReady === "flight_ready"
-          ? { status: VariantStatus.FLIGHT_READY }
-          : {}),
-        ...(variantTagIds.length > 0
-          ? { tags: { some: { id: { in: variantTagIds } } } }
-          : {}),
+        ...buildVariantFilterWhere({ flightReady, variantTagIds }),
       };
 
       // If variant doesn't match filters, return empty
@@ -158,16 +157,7 @@ export const getVariantShips = cache(
             },
           },
           variant: {
-            include: {
-              series: {
-                include: {
-                  manufacturer: {
-                    include: { image: true },
-                  },
-                },
-              },
-              tags: true,
-            },
+            include: SHIP_VARIANT_INCLUDE,
           },
         },
       });
@@ -198,45 +188,22 @@ export const getVariantShips = cache(
             ),
       );
 
-      let pageItems: typeof sortedShips;
-
-      if (!cursor) {
-        pageItems = sortedShips.slice(0, MY_FLEET_PAGE_SIZE + 1);
-      } else if (direction === "next") {
-        const cursorIndex = sortedShips.findIndex((s) => s.id === cursor);
-        const fromIndex = cursorIndex !== -1 ? cursorIndex + 1 : 0;
-        pageItems = sortedShips.slice(
-          fromIndex,
-          fromIndex + MY_FLEET_PAGE_SIZE + 1,
-        );
-      } else {
-        const cursorIndex = sortedShips.findIndex((s) => s.id === cursor);
-        const toIndex = cursorIndex !== -1 ? cursorIndex : sortedShips.length;
-        const fromIndex = Math.max(0, toIndex - MY_FLEET_PAGE_SIZE - 1);
-        pageItems = sortedShips.slice(fromIndex, toIndex);
-      }
-
-      const hasMore = pageItems.length > MY_FLEET_PAGE_SIZE;
-
-      let ships: typeof sortedShips;
-      if (hasMore) {
-        ships =
-          direction === "next"
-            ? pageItems.slice(0, MY_FLEET_PAGE_SIZE)
-            : pageItems.slice(1);
-      } else {
-        ships = pageItems;
-      }
-
-      const hasNextPage = direction === "next" ? hasMore : !!cursor;
-      const hasPrevPage = direction === "prev" ? hasMore : !!cursor;
+      const {
+        items: ships,
+        nextCursor,
+        prevCursor,
+      } = paginateByCursor(sortedShips, {
+        cursor,
+        direction,
+        pageSize: FLEET_PAGE_SIZE,
+        getCursor: (ship) => ship.id,
+      });
 
       return {
         ships,
-        total: shipsWithCitizen.length,
-        nextCursor:
-          hasNextPage && ships.length > 0 ? ships[ships.length - 1].id : null,
-        prevCursor: hasPrevPage && ships.length > 0 ? ships[0].id : null,
+        total: sortedShips.length,
+        nextCursor,
+        prevCursor,
         variantName: matchingVariant.name,
       };
     },

@@ -15,12 +15,12 @@ import { EditableShipName } from "./EditableShipName";
 import { VariantTagBadge } from "./VariantTagBadge";
 import { VariantWithLogo } from "./VariantWithLogo";
 
-export interface MyFleetRow {
+export interface ShipsTableRow {
   id: Ship["id"];
   ownerId: Ship["ownerId"];
   variantId: Ship["variantId"];
   name: Ship["name"];
-  deletedAt: Date | null;
+  deletedAt?: Date | null;
   variant: Variant & {
     series: Series & {
       manufacturer: Manufacturer & {
@@ -32,27 +32,33 @@ export interface MyFleetRow {
 }
 
 const TABLE_MIN_WIDTH = "min-w-140";
-const GRID_COLS = "grid-cols-[256px_256px_minmax(256px,1fr)_80px_80px]";
+const EDITABLE_GRID_COLS =
+  "grid-cols-[256px_256px_minmax(256px,1fr)_80px_80px]";
+const READONLY_GRID_COLS = "grid-cols-[256px_256px_minmax(256px,1fr)_80px]";
 
 interface Props {
   readonly className?: string;
-  readonly ships: MyFleetRow[];
+  readonly ships: ShipsTableRow[];
+  /** Own ships get an editable name and a delete action */
+  readonly editable?: boolean;
 }
 
-export const MyFleetTable = ({ className, ships }: Props) => {
+export const ShipsTable = ({ className, ships, editable = false }: Props) => {
+  const gridCols = editable ? EDITABLE_GRID_COLS : READONLY_GRID_COLS;
+
   return (
     <Table className={className} tableClassName={TABLE_MIN_WIDTH}>
-      <THead className={GRID_COLS}>
+      <THead className={gridCols}>
         <th>Schiff</th>
         <th>Name</th>
         <th>Tags</th>
         <th className="text-center">Status</th>
-        <th className="text-center">Aktionen</th>
+        {editable && <th className="text-center">Aktionen</th>}
       </THead>
 
       <TBody>
         {ships.map((ship) => (
-          <TRow key={ship.id} className={GRID_COLS}>
+          <TRow key={ship.id} className={gridCols}>
             <td className="overflow-hidden">
               <VariantWithLogo
                 variant={ship.variant}
@@ -60,18 +66,24 @@ export const MyFleetTable = ({ className, ships }: Props) => {
               />
             </td>
 
-            <td className="overflow-hidden">
-              {ship.deletedAt ? (
-                ship.name
-              ) : (
-                <EditableShipName
-                  key={ship.id}
-                  shipId={ship.id}
-                  name={ship.name || ""}
-                  className="[&>button]:text-left"
-                />
-              )}
-            </td>
+            {editable ? (
+              <td className="overflow-hidden">
+                {ship.deletedAt ? (
+                  ship.name
+                ) : (
+                  <EditableShipName
+                    key={ship.id}
+                    shipId={ship.id}
+                    name={ship.name || ""}
+                    className="[&>button]:text-left"
+                  />
+                )}
+              </td>
+            ) : (
+              <td title={ship.name || undefined} className="truncate">
+                {ship.name || null}
+              </td>
+            )}
 
             <td className="overflow-hidden">
               <div className="overflow-hidden flex flex-wrap gap-1">
@@ -95,19 +107,21 @@ export const MyFleetTable = ({ className, ships }: Props) => {
               )}
             </td>
 
-            <td className="overflow-hidden flex justify-center">
-              {!ship.deletedAt && (
-                <DeleteShip
-                  ship={{
-                    id: ship.id,
-                    ownerId: ship.ownerId,
-                    variantId: ship.variantId,
-                    name: ship.name,
-                    variant: ship.variant,
-                  }}
-                />
-              )}
-            </td>
+            {editable && (
+              <td className="overflow-hidden flex justify-center">
+                {!ship.deletedAt && (
+                  <DeleteShip
+                    ship={{
+                      id: ship.id,
+                      ownerId: ship.ownerId,
+                      variantId: ship.variantId,
+                      name: ship.name,
+                      variant: ship.variant,
+                    }}
+                  />
+                )}
+              </td>
+            )}
           </TRow>
         ))}
       </TBody>

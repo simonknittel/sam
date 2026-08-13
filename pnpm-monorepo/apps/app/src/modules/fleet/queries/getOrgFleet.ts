@@ -7,17 +7,21 @@ import {
 import { getActiveOrganizationMemberships } from "@/modules/organizations/queries/getActiveOrganizationMemberships";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import {
-  VariantStatus,
   type Manufacturer,
   type Upload,
+  type VariantStatus,
   type VariantTag,
 } from "@sam-monorepo/database/client";
 import { ORG_ID } from "@sam-monorepo/domain";
 import { groupBy } from "lodash";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
-
-const ORG_FLEET_PAGE_SIZE = 100;
+import {
+  buildVariantFilterWhere,
+  FLEET_PAGE_SIZE,
+  paginateByCursor,
+  SHIP_VARIANT_INCLUDE,
+} from "./shipQuery";
 
 type OrgFleetSort = "name-asc" | "name-desc" | "count-asc" | "count-desc";
 
@@ -80,20 +84,12 @@ export const getOrgFleet = cache(
         };
 
       // Build where clause for variants (shared between ship subquery and all-variants query)
-      const variantWhere: Record<string, unknown> = {
-        ...(flightReady === "flight_ready"
-          ? { status: VariantStatus.FLIGHT_READY }
-          : {}),
-        ...(variantTagIds.length > 0
-          ? { tags: { some: { id: { in: variantTagIds } } } }
-          : {}),
-        ...(manufacturerIds.length > 0
-          ? { series: { manufacturerId: { in: manufacturerIds } } }
-          : {}),
-        ...(searchQuery
-          ? { name: { contains: searchQuery, mode: "insensitive" } }
-          : {}),
-      };
+      const variantWhere = buildVariantFilterWhere({
+        flightReady,
+        variantTagIds,
+        manufacturerIds,
+        searchQuery,
+      });
 
       // Get ships for all those citizens
       const accounts = await prisma.account.findMany({
@@ -113,18 +109,7 @@ export const getOrgFleet = cache(
                 },
                 include: {
                   variant: {
-                    include: {
-                      series: {
-                        include: {
-                          manufacturer: {
-                            include: {
-                              image: true,
-                            },
-                          },
-                        },
-                      },
-                      tags: true,
-                    },
+                    include: SHIP_VARIANT_INCLUDE,
                   },
                 },
               },
@@ -149,16 +134,7 @@ export const getOrgFleet = cache(
       // Fetch ALL variants matching the same filters
       const allVariants = await prisma.variant.findMany({
         where: variantWhere,
-        include: {
-          series: {
-            include: {
-              manufacturer: {
-                include: { image: true },
-              },
-            },
-          },
-          tags: true,
-        },
+        include: SHIP_VARIANT_INCLUDE,
       });
 
       // Merge: owned variants with count + unowned variants with count 0
@@ -204,47 +180,16 @@ export const getOrgFleet = cache(
       });
 
       // Apply cursor-based pagination (cursor = variant id)
-      const allItems = sortedFleet;
-
-      let pageItems: (OrgFleetShip & { count: number })[];
-
-      if (!cursor) {
-        // First page - fetch from start
-        pageItems = allItems.slice(0, ORG_FLEET_PAGE_SIZE + 1);
-      } else if (direction === "next") {
-        // After cursor
-        const cursorIndex = allItems.findIndex(
-          (item) => item.variant.id === cursor,
-        );
-        const fromIndex = cursorIndex !== -1 ? cursorIndex + 1 : 0;
-        pageItems = allItems.slice(
-          fromIndex,
-          fromIndex + ORG_FLEET_PAGE_SIZE + 1,
-        );
-      } else {
-        // Before cursor
-        const cursorIndex = allItems.findIndex(
-          (item) => item.variant.id === cursor,
-        );
-        const toIndex = cursorIndex !== -1 ? cursorIndex : allItems.length;
-        const fromIndex = Math.max(0, toIndex - ORG_FLEET_PAGE_SIZE - 1);
-        pageItems = allItems.slice(fromIndex, toIndex);
-      }
-
-      const hasMore = pageItems.length > ORG_FLEET_PAGE_SIZE;
-
-      let fleet: (OrgFleetShip & { count: number })[];
-      if (hasMore) {
-        fleet =
-          direction === "next"
-            ? pageItems.slice(0, ORG_FLEET_PAGE_SIZE)
-            : pageItems.slice(1);
-      } else {
-        fleet = pageItems;
-      }
-
-      const hasNextPage = direction === "next" ? hasMore : !!cursor;
-      const hasPrevPage = direction === "prev" ? hasMore : !!cursor;
+      const {
+        items: fleet,
+        nextCursor,
+        prevCursor,
+      } = paginateByCursor(sortedFleet, {
+        cursor,
+        direction,
+        pageSize: FLEET_PAGE_SIZE,
+        getCursor: (item) => item.variant.id,
+      });
 
       const totalUsers = new Set(allShips.map((ship) => ship.ownerId)).size;
       const totalShips = allShips.length;
@@ -253,12 +198,8 @@ export const getOrgFleet = cache(
         fleet,
         totalUsers,
         totalShips,
-        nextCursor:
-          hasNextPage && fleet.length > 0
-            ? fleet[fleet.length - 1].variant.id
-            : null,
-        prevCursor:
-          hasPrevPage && fleet.length > 0 ? fleet[0].variant.id : null,
+        nextCursor,
+        prevCursor,
       };
     },
   ),

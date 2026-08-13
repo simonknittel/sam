@@ -1,7 +1,7 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
-import { OrgFleetFilters } from "@/modules/fleet/components/OrgFleetFilters";
+import { FleetFilters } from "@/modules/fleet/components/FleetFilters";
 import { OrgFleetTile } from "@/modules/fleet/components/OrgFleetTile";
 import { getManufacturers } from "@/modules/fleet/queries/getManufacturers";
 import { getOrgFleetVariantTags } from "@/modules/fleet/queries/getOrgFleetVariantTags";
@@ -25,7 +25,8 @@ export default async function Page({
   return (
     <SidebarLayout
       sidebar={
-        <OrgFleetFilters
+        <FleetFilters
+          withCountSort
           variantTags={variantTags}
           manufacturers={manufacturers}
         />

@@ -1,28 +1,10 @@
 import { ScrambleIn } from "@/modules/common/components/ScrambleIn";
 import { StatisticTile } from "@/modules/common/components/StatisticTile";
 import { CursorPaginationControls } from "@/modules/common/CursorPagination/CursorPaginationControls";
-import { cursorPaginationParsers } from "@/modules/common/CursorPagination/cursorPaginationParsers";
-import {
-  createLoader,
-  parseAsArrayOf,
-  parseAsString,
-  parseAsStringLiteral,
-  type SearchParams,
-} from "nuqs/server";
+import { type SearchParams } from "nuqs/server";
 import { getCitizenFleet } from "../queries/getCitizenFleet";
-import { CitizenFleetTable } from "./CitizenFleetTable";
-
-const loadSearchParams = createLoader({
-  flight_ready: parseAsStringLiteral(["all", "flight_ready"]).withDefault(
-    "all",
-  ),
-  sort: parseAsStringLiteral(["name-asc", "name-desc"]).withDefault("name-asc"),
-  variantTags: parseAsArrayOf(parseAsString),
-  manufacturerIds: parseAsArrayOf(parseAsString),
-  showDeleted: parseAsStringLiteral(["all", "deleted"]).withDefault("all"),
-  q: parseAsString,
-  ...cursorPaginationParsers,
-});
+import { loadFleetListSearchParams } from "../utils/loadFleetListSearchParams";
+import { ShipsTable } from "./ShipsTable";
 
 interface Props {
   readonly className?: string;
@@ -44,7 +26,7 @@ export const CitizenFleetTile = async ({
     q,
     cursor,
     direction,
-  } = await loadSearchParams(searchParams);
+  } = await loadFleetListSearchParams(searchParams);
 
   const { ships, total, nextCursor, prevCursor } = await getCitizenFleet(
     citizenId,
@@ -76,7 +58,7 @@ export const CitizenFleetTile = async ({
           </div>
         ) : (
           <>
-            <CitizenFleetTable ships={ships} />
+            <ShipsTable ships={ships} />
 
             <CursorPaginationControls
               nextCursor={nextCursor}

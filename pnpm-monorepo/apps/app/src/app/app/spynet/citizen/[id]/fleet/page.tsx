@@ -3,7 +3,7 @@ import { getCitizenById } from "@/modules/citizen/queries/getCitizenById";
 import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { CitizenFleetTile } from "@/modules/fleet/components/CitizenFleetTile";
-import { MyFleetFilters } from "@/modules/fleet/components/MyFleetFilters";
+import { FleetFilters } from "@/modules/fleet/components/FleetFilters";
 import { getCitizenFleetVariantTags } from "@/modules/fleet/queries/getCitizenFleetVariantTags";
 import { getManufacturers } from "@/modules/fleet/queries/getManufacturers";
 import { type Metadata } from "next";
@@ -34,7 +34,8 @@ export default async function Page({
   return (
     <SidebarLayout
       sidebar={
-        <MyFleetFilters
+        <FleetFilters
+          showDeletedFilter
           variantTags={variantTags}
           manufacturers={manufacturers}
         />

@@ -1,7 +1,7 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
-import { MyFleetFilters } from "@/modules/fleet/components/MyFleetFilters";
+import { FleetFilters } from "@/modules/fleet/components/FleetFilters";
 import { MyFleetTile } from "@/modules/fleet/components/MyFleetTile";
 import { getManufacturers } from "@/modules/fleet/queries/getManufacturers";
 import { getMyFleetVariantTags } from "@/modules/fleet/queries/getMyFleetVariantTags";
@@ -25,7 +25,8 @@ export default async function Page({
   return (
     <SidebarLayout
       sidebar={
-        <MyFleetFilters
+        <FleetFilters
+          showDeletedFilter
           variantTags={variantTags}
           manufacturers={manufacturers}
         />

@@ -17,22 +17,28 @@ import toast from "react-hot-toast";
 import { FaPlus, FaSave } from "react-icons/fa";
 
 interface FormValues {
-  citizenId: string;
+  counterpartId: string;
   type: OrganizationMembershipType;
   visibility: OrganizationMembershipVisibility;
   confirmed?: "CONFIRMED";
 }
 
-interface Props {
+type Props = {
   readonly className?: string;
-  readonly organizationId: string;
   readonly showConfirmButton?: boolean;
-}
+} &
+  /** On an organization's page the citizen is entered in the modal */
+  (
+    | { readonly organizationId: string; readonly citizenId?: never }
+    /** On a citizen's page the organization is entered in the modal */
+    | { readonly organizationId?: never; readonly citizenId: string }
+  );
 
 export const CreateMembership = ({
   className,
+  showConfirmButton = false,
   organizationId,
-  showConfirmButton,
+  citizenId,
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
@@ -42,29 +48,33 @@ export const CreateMembership = ({
     },
   });
   const [isLoading, setIsLoading] = useState(false);
-  const citizenIdInputId = useId();
+  const counterpartInputId = useId();
   const typeInputId = useId();
   const visibilityInputId = useId();
 
-  const onSubmit: SubmitHandler<FormValues> = async (data, e) => {
+  const counterpartLabel = organizationId
+    ? "Citizen hinzufügen"
+    : "Organisation hinzufügen";
+
+  const onSubmit: SubmitHandler<FormValues> = async (data, event) => {
     setIsLoading(true);
     if (
-      !(e?.nativeEvent instanceof SubmitEvent) ||
-      !(e.nativeEvent.submitter instanceof HTMLButtonElement)
+      !(event?.nativeEvent instanceof SubmitEvent) ||
+      !(event.nativeEvent.submitter instanceof HTMLButtonElement)
     )
       return;
 
     try {
       const response = await fetch(
-        `/api/spynet/organization/${organizationId}/membership`,
+        `/api/spynet/organization/${organizationId ?? data.counterpartId}/membership`,
         {
           method: "POST",
           body: JSON.stringify({
-            citizenId: data.citizenId,
+            citizenId: citizenId ?? data.counterpartId,
             type: data.type,
             redacted: data.visibility || false,
             confirmed:
-              e.nativeEvent.submitter.name === "confirmed"
+              event.nativeEvent.submitter.name === "confirmed"
                 ? ConfirmationStatus.CONFIRMED
                 : undefined,
           }),
@@ -91,9 +101,9 @@ export const CreateMembership = ({
     <>
       <Button
         className={className}
-        variant="tertiary"
+        variant={organizationId ? "tertiary" : "secondary"}
         onClick={() => setIsOpen(true)}
-        title="Citizen hinzufügen"
+        title={counterpartLabel}
       >
         <FaPlus /> Hinzufügen
       </Button>
@@ -102,17 +112,19 @@ export const CreateMembership = ({
         isOpen={isOpen}
         onRequestClose={() => setIsOpen(false)}
         className="w-120"
-        heading={<h2>Citizen hinzufügen</h2>}
+        heading={<h2>{counterpartLabel}</h2>}
       >
         <form onSubmit={handleSubmit(onSubmit)}>
-          <label className="block" htmlFor={citizenIdInputId}>
-            Citizen (Internal ID)
+          <label className="block" htmlFor={counterpartInputId}>
+            {organizationId
+              ? "Citizen (Internal ID)"
+              : "Organisation (Internal ID)"}
           </label>
 
           <input
             className="p-2 rounded-secondary bg-neutral-900 w-full mt-2"
-            id={citizenIdInputId}
-            {...register("citizenId", { required: true })}
+            id={counterpartInputId}
+            {...register("counterpartId", { required: true })}
             autoFocus
           />
 

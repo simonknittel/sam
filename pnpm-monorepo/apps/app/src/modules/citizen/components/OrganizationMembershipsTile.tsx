@@ -2,12 +2,12 @@ import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import { Link } from "@/modules/common/components/Link";
 import { Tile } from "@/modules/common/components/Tile";
+import { CreateMembership } from "@/modules/organizations/components/CreateMembership";
 import { DeleteOrganizationMembership } from "@/modules/spynet/components/DeleteOrganizationMembership";
 import { OrganizationMembershipVisibility } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import Image from "next/image";
 import { FaExternalLinkAlt } from "react-icons/fa";
-import { CreateOrganizationMembership } from "./CreateOrganizationMembership";
 
 interface Props {
   readonly className?: string;
@@ -66,7 +66,7 @@ export const OrganizationMembershipsTile = async ({ className, id }: Props) => {
       heading="Aktuell"
       cta={
         showCreateButton ? (
-          <CreateOrganizationMembership
+          <CreateMembership
             citizenId={id}
             showConfirmButton={showConfirmButton}
           />

@@ -7,18 +7,27 @@ import type { Manufacturer, VariantTag } from "@sam-monorepo/database/browser";
 interface Props {
   readonly variantTags: VariantTag[];
   readonly manufacturers: Manufacturer[];
+  /** Ship lists offer filtering by deleted ships; the org's variant list has none */
+  readonly showDeletedFilter?: boolean;
+  /** The org's variant list can additionally sort by ship count */
+  readonly withCountSort?: boolean;
 }
 
-export const OrgFleetFilters = ({ variantTags, manufacturers }: Props) => {
+export const FleetFilters = ({
+  variantTags,
+  manufacturers,
+  showDeletedFilter = false,
+  withCountSort = false,
+}: Props) => {
   const tagItems = variantTags.map((tag) => ({
     value: tag.id,
     label: tag.value,
     group: tag.key,
   }));
 
-  const manufacturerItems = manufacturers.map((m) => ({
-    value: m.id,
-    label: m.name,
+  const manufacturerItems = manufacturers.map((manufacturer) => ({
+    value: manufacturer.id,
+    label: manufacturer.name,
   }));
 
   return (
@@ -34,6 +43,18 @@ export const OrgFleetFilters = ({ variantTags, manufacturers }: Props) => {
         ]}
         resetCursorPagination
       />
+
+      {showDeletedFilter && (
+        <RadioFilter
+          name="showDeleted"
+          label="Status"
+          items={[
+            { value: "all", label: "Alle", default: true },
+            { value: "deleted", label: "Gelöscht" },
+          ]}
+          resetCursorPagination
+        />
+      )}
 
       <MultiSelectComboboxFilter
         name="variantTags"
@@ -57,8 +78,12 @@ export const OrgFleetFilters = ({ variantTags, manufacturers }: Props) => {
         items={[
           { value: "name-asc", label: "Name A - Z" },
           { value: "name-desc", label: "Name Z - A" },
-          { value: "count-desc", label: "Anzahl ↓" },
-          { value: "count-asc", label: "Anzahl ↑" },
+          ...(withCountSort
+            ? [
+                { value: "count-desc", label: "Anzahl ↓" },
+                { value: "count-asc", label: "Anzahl ↑" },
+              ]
+            : []),
         ]}
         resetCursorPagination
       />
