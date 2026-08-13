@@ -6,7 +6,7 @@ import { initializeRequestContext } from "./common/requestContext";
 import {
   isRequestProcessed,
   setRequestProcessed,
-} from "./notification-router/dynamodb";
+} from "./common/dynamodb";
 import {
   bodySchema,
   notificationRouterHandler,

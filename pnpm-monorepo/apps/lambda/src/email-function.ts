@@ -7,7 +7,7 @@ import { initializeRequestContext } from "./common/requestContext";
 import {
   isRequestProcessed,
   setRequestProcessed,
-} from "./email-function/dynamodb";
+} from "./common/dynamodb";
 import { emailFunctionHandler } from "./email-function/handler";
 
 export const handler: SQSHandler = async (event, context) => {
