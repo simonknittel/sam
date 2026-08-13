@@ -1,15 +1,15 @@
 "use client";
 
+import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
+import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import { NumberInput } from "@/modules/common/components/form/NumberInput";
 import { Textarea } from "@/modules/common/components/form/Textarea";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import { ImageUpload } from "@/modules/common/components/ImageUpload";
-import Note from "@/modules/common/components/Note";
 import type { Role, Upload } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
-import { useActionState } from "react";
 import { FaSave } from "react-icons/fa";
 import { updateRole } from "../actions/updateRole";
 import { DeleteRole } from "./DeleteRole";
@@ -22,10 +22,13 @@ interface Props {
 }
 
 export const OverviewTab = ({ className, role }: Props) => {
-  const [updateState, updateFormAction, updateIsPending] = useActionState(
-    updateRole,
-    null,
-  );
+  const {
+    state: updateState,
+    formAction: updateFormAction,
+    isPending: updateIsPending,
+  } = useAction(updateRole, {
+    errorToast: false,
+  });
 
   return (
     <div className={clsx("flex flex-col gap-2", className)}>
@@ -105,17 +108,7 @@ export const OverviewTab = ({ className, role }: Props) => {
           Speichern
         </Button2>
 
-        {updateState && (
-          <Note
-            type={updateState.success ? "success" : "error"}
-            message={
-              updateState.success ? updateState.success : updateState.error
-            }
-            className={clsx("mt-4", {
-              "animate-pulse": updateIsPending,
-            })}
-          />
-        )}
+        <ActionErrorNote className="mt-4" state={updateState} />
       </form>
 
       <section className={clsx("bg-secondary rounded-primary p-4", className)}>

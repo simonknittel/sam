@@ -1,14 +1,10 @@
 "use server";
 
 import { prisma } from "@/db";
+import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { requireAuthenticationAction } from "@/modules/auth/server";
-import { log } from "@/modules/logging";
-import { getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
-import { unstable_rethrow } from "next/navigation";
-import { serializeError } from "serialize-error";
 import { z } from "zod";
 
 const schema = z.object({
@@ -24,37 +20,15 @@ const schema = z.object({
     .max(250), // Arbitrary (untested) limit to prevent DDoS
 });
 
-export const updateRolePermissions = async (
-  previousState: unknown,
-  formData: FormData,
-) => {
-  const t = await getTranslations();
-
-  try {
-    /**
-     * Authenticate and authorize the request
-     */
-    const authentication = await requireAuthenticationAction(
-      "updateRolePermissions",
-    );
-    await authentication.authorizeAction("role", "manage");
-
-    /**
-     * Validate the request
-     */
-    const result = schema.safeParse({
-      id: formData.get("id"),
-      permissionStrings: Array.from(formData.keys()).filter(
-        (key) => key !== "id" && !key.startsWith("$ACTION"),
-      ),
-    });
-    if (!result.success) {
-      log.warn("Bad Request", { error: serializeError(result.error) });
+export const updateRolePermissions = createAuthenticatedAction(
+  "updateRolePermissions",
+  schema,
+  async (formData, authentication, data, t) => {
+    if (!(await authentication.authorize("role", "manage")))
       return {
-        error: t("Common.badRequest"),
+        error: t("Common.forbidden"),
         requestPayload: formData,
       };
-    }
 
     /**
      * Update role
@@ -62,14 +36,14 @@ export const updateRolePermissions = async (
     await prisma.$transaction([
       prisma.permissionString.deleteMany({
         where: {
-          roleId: result.data.id,
+          roleId: data.id,
         },
       }),
 
-      ...result.data.permissionStrings.map((permissionString) => {
+      ...data.permissionStrings.map((permissionString) => {
         return prisma.permissionString.create({
           data: {
-            roleId: result.data.id,
+            roleId: data.id,
             permissionString,
           },
         });
@@ -80,7 +54,7 @@ export const updateRolePermissions = async (
       {
         type: AuditEventType.ROLE_PERMISSIONS_UPDATED,
         data: {
-          roleId: result.data.id,
+          roleId: data.id,
         },
         createdById: authentication.session.user.id,
       },
@@ -89,7 +63,7 @@ export const updateRolePermissions = async (
     /**
      * Revalidate cache(s)
      */
-    revalidatePath(`/app/roles/${result.data.id}/permissions`);
+    revalidatePath(`/app/roles/${data.id}/permissions`);
 
     /**
      * Respond with the result
@@ -97,12 +71,13 @@ export const updateRolePermissions = async (
     return {
       success: t("Common.successfullySaved"),
     };
-  } catch (error) {
-    unstable_rethrow(error);
-    log.error("Internal Server Error", { error: serializeError(error) });
-    return {
-      error: t("Common.internalServerError"),
-      requestPayload: formData,
-    };
-  }
-};
+  },
+  {
+    parseFormData: (formData) => ({
+      id: formData.get("id"),
+      permissionStrings: Array.from(formData.keys()).filter(
+        (key) => key !== "id" && !key.startsWith("$ACTION"),
+      ),
+    }),
+  },
+);

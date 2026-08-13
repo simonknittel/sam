@@ -1,14 +1,10 @@
 "use server";
 
 import { prisma } from "@/db";
+import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { requireAuthenticationAction } from "@/modules/auth/server";
-import { log } from "@/modules/logging";
-import { getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
-import { unstable_rethrow } from "next/navigation";
-import { serializeError } from "serialize-error";
 import { z } from "zod";
 
 const schema = z.object({
@@ -16,52 +12,32 @@ const schema = z.object({
   roles: z.array(z.cuid()).max(250), // Arbitrary (untested) limit to prevent DDoS
 });
 
-export const updateRoleInheritance = async (
-  previousState: unknown,
-  formData: FormData,
-) => {
-  const t = await getTranslations();
-
-  try {
-    /**
-     * Authenticate and authorize the request
-     */
-    const authentication = await requireAuthenticationAction(
-      "updateRoleInheritance",
-    );
-    await authentication.authorizeAction("role", "manage");
-
-    /**
-     * Validate the request
-     */
-    const result = schema.safeParse({
-      id: formData.get("id"),
-      roles: formData.getAll("roles"),
-    });
-    if (!result.success) {
-      log.warn("Bad Request", { error: serializeError(result.error) });
+export const updateRoleInheritance = createAuthenticatedAction(
+  "updateRoleInheritance",
+  schema,
+  async (formData, authentication, data, t) => {
+    if (!(await authentication.authorize("role", "manage")))
       return {
-        error: t("Common.badRequest"),
+        error: t("Common.forbidden"),
         requestPayload: formData,
       };
-    }
 
     /**
      * Update role
      */
     await prisma.role.findUnique({
       where: {
-        id: result.data.id,
+        id: data.id,
       },
     });
 
     await prisma.role.update({
       where: {
-        id: result.data.id,
+        id: data.id,
       },
       data: {
         inherits: {
-          set: result.data.roles.map((id) => ({ id })),
+          set: data.roles.map((id) => ({ id })),
         },
       },
     });
@@ -70,7 +46,7 @@ export const updateRoleInheritance = async (
       {
         type: AuditEventType.ROLE_INHERITANCE_UPDATED,
         data: {
-          roleId: result.data.id,
+          roleId: data.id,
         },
         createdById: authentication.session.user.id,
       },
@@ -79,7 +55,7 @@ export const updateRoleInheritance = async (
     /**
      * Revalidate cache(s)
      */
-    revalidatePath(`/app/roles/${result.data.id}`);
+    revalidatePath(`/app/roles/${data.id}`);
 
     /**
      * Respond with the result
@@ -87,12 +63,11 @@ export const updateRoleInheritance = async (
     return {
       success: t("Common.successfullySaved"),
     };
-  } catch (error) {
-    unstable_rethrow(error);
-    log.error("Internal Server Error", { error: serializeError(error) });
-    return {
-      error: t("Common.internalServerError"),
-      requestPayload: formData,
-    };
-  }
-};
+  },
+  {
+    parseFormData: (formData) => ({
+      id: formData.get("id"),
+      roles: formData.getAll("roles"),
+    }),
+  },
+);

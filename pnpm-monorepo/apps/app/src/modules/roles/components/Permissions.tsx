@@ -1,8 +1,9 @@
 "use client";
 
+import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
+import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
-import Note from "@/modules/common/components/Note";
 import Tab from "@/modules/common/components/tabs/Tab";
 import TabList from "@/modules/common/components/tabs/TabList";
 import { TabsProvider } from "@/modules/common/components/tabs/TabsContext";
@@ -12,8 +13,6 @@ import {
   type NoteType,
   type Role,
 } from "@sam-monorepo/database/browser";
-import clsx from "clsx";
-import { useActionState } from "react";
 import {
   FaBookOpen,
   FaCalendarDay,
@@ -53,10 +52,9 @@ export const Permissions = ({
   allRoles,
   flows,
 }: Props) => {
-  const [state, formAction, isPending] = useActionState(
-    updateRolePermissions,
-    null,
-  );
+  const { state, formAction, isPending } = useAction(updateRolePermissions, {
+    errorToast: false,
+  });
 
   return (
     <form action={formAction}>
@@ -125,15 +123,7 @@ export const Permissions = ({
         Speichern
       </Button2>
 
-      {state && (
-        <Note
-          type={state.success ? "success" : "error"}
-          message={state.success ? state.success : state.error}
-          className={clsx("mt-4", {
-            "animate-pulse": isPending,
-          })}
-        />
-      )}
+      <ActionErrorNote className="mt-4" state={state} />
     </form>
   );
 };

@@ -1,14 +1,10 @@
 "use server";
 
 import { prisma } from "@/db";
+import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { requireAuthenticationAction } from "@/modules/auth/server";
-import { log } from "@/modules/logging";
-import { getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
-import { unstable_rethrow } from "next/navigation";
-import { serializeError } from "serialize-error";
 import { z } from "zod";
 
 const schema = z.object({
@@ -21,55 +17,22 @@ const schema = z.object({
   maxLevel: z.coerce.number().min(1).max(100).nullish(),
 });
 
-export const updateRole = async (
-  previousState: unknown,
-  formData: FormData,
-) => {
-  const t = await getTranslations();
-
-  try {
-    /**
-     * Authenticate and authorize the request
-     */
-    const authentication = await requireAuthenticationAction("updateRole");
-    await authentication.authorizeAction("role", "manage");
-
-    /**
-     * Validate the request
-     */
-    const result = schema.safeParse({
-      id: formData.get("id"),
-      name: formData.get("name"),
-      description: formData.get("description")
-        ? String(formData.get("description"))
-        : null,
-      maxAgeDays: formData.get("maxAgeDays")
-        ? Number(formData.get("maxAgeDays"))
-        : null,
-      assignAfterInactiveDays: formData.get("assignAfterInactiveDays")
-        ? Number(formData.get("assignAfterInactiveDays"))
-        : null,
-      // inactivityThreshold: formData.get("inactivityThreshold")
-      //   ? Number(formData.get("inactivityThreshold"))
-      //   : null,
-      maxLevel: formData.get("maxLevel")
-        ? Number(formData.get("maxLevel"))
-        : null,
-    });
-    if (!result.success) {
-      log.warn("Bad Request", { error: serializeError(result.error) });
+export const updateRole = createAuthenticatedAction(
+  "updateRole",
+  schema,
+  async (formData, authentication, data, t) => {
+    if (!(await authentication.authorize("role", "manage")))
       return {
-        error: t("Common.badRequest"),
+        error: t("Common.forbidden"),
         requestPayload: formData,
       };
-    }
 
     /**
      * Update role
      */
     const existingRole = await prisma.role.findUnique({
       where: {
-        id: result.data.id,
+        id: data.id,
       },
       select: {
         name: true,
@@ -86,15 +49,15 @@ export const updateRole = async (
 
     const updatedRole = await prisma.role.update({
       where: {
-        id: result.data.id,
+        id: data.id,
       },
       data: {
-        name: result.data.name,
-        description: result.data.description,
-        maxAgeDays: result.data.maxAgeDays,
-        assignAfterInactiveDays: result.data.assignAfterInactiveDays,
-        // inactivityThreshold: result.data.inactivityThreshold,
-        maxLevel: result.data.maxLevel,
+        name: data.name,
+        description: data.description,
+        maxAgeDays: data.maxAgeDays,
+        assignAfterInactiveDays: data.assignAfterInactiveDays,
+        // inactivityThreshold: data.inactivityThreshold,
+        maxLevel: data.maxLevel,
       },
     });
 
@@ -129,12 +92,26 @@ export const updateRole = async (
     return {
       success: t("Common.successfullySaved"),
     };
-  } catch (error) {
-    unstable_rethrow(error);
-    log.error("Internal Server Error", { error: serializeError(error) });
-    return {
-      error: t("Common.internalServerError"),
-      requestPayload: formData,
-    };
-  }
-};
+  },
+  {
+    parseFormData: (formData) => ({
+      id: formData.get("id"),
+      name: formData.get("name"),
+      description: formData.get("description")
+        ? String(formData.get("description"))
+        : null,
+      maxAgeDays: formData.get("maxAgeDays")
+        ? Number(formData.get("maxAgeDays"))
+        : null,
+      assignAfterInactiveDays: formData.get("assignAfterInactiveDays")
+        ? Number(formData.get("assignAfterInactiveDays"))
+        : null,
+      // inactivityThreshold: formData.get("inactivityThreshold")
+      //   ? Number(formData.get("inactivityThreshold"))
+      //   : null,
+      maxLevel: formData.get("maxLevel")
+        ? Number(formData.get("maxLevel"))
+        : null,
+    }),
+  },
+);
