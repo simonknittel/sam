@@ -1,5 +1,7 @@
 "use client";
 
+import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
+import { useAction } from "@/modules/actions/utils/useAction";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
@@ -11,13 +13,10 @@ import { Textarea } from "@/modules/common/components/form/Textarea";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
 import { Link } from "@/modules/common/components/Link";
-import { Note } from "@/modules/common/components/Note";
 import { createTask } from "@/modules/tasks/actions/createTask";
 import { TaskRewardType, TaskVisibility } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
-import { unstable_rethrow } from "next/navigation";
-import { useActionState, useState } from "react";
-import toast from "react-hot-toast";
+import { useState } from "react";
 import { FaChevronRight, FaSave } from "react-icons/fa";
 import { RequiredRoles } from "./RequiredRoles";
 
@@ -50,35 +49,11 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
   ]);
 
   const [step, setStep] = useState<Step>(Step.Description);
-  const [state, formAction, isPending] = useActionState(
-    async (previousState: unknown, formData: FormData) => {
-      try {
-        const response = await createTask(formData);
-
-        if (response.error) {
-          toast.error(response.error);
-          console.error(response);
-          return response;
-        }
-
-        toast.success(response.success!);
-        onSuccess?.();
-        return response;
-      } catch (error) {
-        unstable_rethrow(error);
-        toast.error(
-          "Ein unbekannter Fehler ist aufgetreten. Bitte versuche es später erneut.",
-        );
-        console.error(error);
-        return {
-          error:
-            "Ein unbekannter Fehler ist aufgetreten. Bitte versuche es später erneut.",
-          requestPayload: formData,
-        };
-      }
-    },
-    null,
-  );
+  const { state, formAction, isPending, getDefaultValueWithFallback } =
+    useAction(createTask, {
+      errorToast: false,
+      onSuccess,
+    });
   const [visibility, setVisibility] = useState<string>(TaskVisibility.PUBLIC);
   const [rewardType, setRewardType] = useState<string>(TaskRewardType.TEXT);
 
@@ -156,11 +131,7 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
           name="title"
           label="Titel"
           maxLength={64}
-          defaultValue={
-            state?.requestPayload?.has("title")
-              ? (state.requestPayload.get("title") as string)
-              : ""
-          }
+          defaultValue={getDefaultValueWithFallback("title", "")}
           required
           autoFocus
         />
@@ -181,11 +152,7 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
             </>
           }
           maxLength={2048}
-          defaultValue={
-            state?.requestPayload?.has("description")
-              ? (state.requestPayload.get("description") as string)
-              : ""
-          }
+          defaultValue={getDefaultValueWithFallback("description", "")}
           className="mt-4"
           classNameTextarea="h-64"
         />
@@ -242,11 +209,10 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
               name="assignmentLimit"
               label="Teilnehmerlimit"
               hint="optional"
-              defaultValue={
-                state?.requestPayload?.has("assignmentLimit")
-                  ? (state.requestPayload.get("assignmentLimit") as string)
-                  : undefined
-              }
+              defaultValue={getDefaultValueWithFallback(
+                "assignmentLimit",
+                undefined,
+              )}
               min={1}
               labelClassName="mt-4"
             />
@@ -329,11 +295,7 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
           <NumberInput
             name="rewardTypeSilcValue"
             label="SILC (pro Citizen)"
-            defaultValue={
-              state?.requestPayload?.has("rewardTypeSilcValue")
-                ? (state.requestPayload.get("rewardTypeSilcValue") as string)
-                : 1
-            }
+            defaultValue={getDefaultValueWithFallback("rewardTypeSilcValue", 1)}
             required
             labelClassName="mt-4"
           />
@@ -343,11 +305,10 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
           <NumberInput
             name="rewardTypeNewSilcValue"
             label="SILC (pro Citizen)"
-            defaultValue={
-              state?.requestPayload?.has("rewardTypeNewSilcValue")
-                ? (state.requestPayload.get("rewardTypeNewSilcValue") as string)
-                : 1
-            }
+            defaultValue={getDefaultValueWithFallback(
+              "rewardTypeNewSilcValue",
+              1,
+            )}
             required
             labelClassName="mt-4"
           />
@@ -370,11 +331,7 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
               </>
             }
             maxLength={2048}
-            defaultValue={
-              state?.requestPayload?.has("rewardTypeTextValue")
-                ? (state.requestPayload.get("rewardTypeTextValue") as string)
-                : ""
-            }
+            defaultValue={getDefaultValueWithFallback("rewardTypeTextValue", "")}
             className="mt-4"
             classNameTextarea="h-64"
           />
@@ -401,22 +358,14 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
           name="expiresAt"
           label="Ablaufdatum"
           hint="optional"
-          defaultValue={
-            state?.requestPayload?.has("expiresAt")
-              ? (state.requestPayload.get("expiresAt") as string)
-              : ""
-          }
+          defaultValue={getDefaultValueWithFallback("expiresAt", "")}
           className="mt-4"
         />
 
         <NumberInput
           name="repeatable"
           label="Wie häufig kann dieser Task abgeschlossen werden?"
-          defaultValue={
-            state?.requestPayload?.has("repeatable")
-              ? (state.requestPayload.get("repeatable") as string)
-              : 1
-          }
+          defaultValue={getDefaultValueWithFallback("repeatable", 1)}
           required
           min={1}
           labelClassName="mt-4"
@@ -428,9 +377,7 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
         </Button2>
       </div>
 
-      {state?.error && (
-        <Note type="error" message={state.error} className="mt-4" />
-      )}
+      <ActionErrorNote className="mt-4" state={state} />
     </form>
   );
 };

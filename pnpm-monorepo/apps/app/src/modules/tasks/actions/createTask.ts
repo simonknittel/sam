@@ -1,20 +1,16 @@
 "use server";
 
 import { prisma } from "@/db";
+import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { requireAuthenticationAction } from "@/modules/auth/server";
-import { log } from "@/modules/logging";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import {
   TaskRewardType,
   TaskVisibility,
   type Task,
 } from "@sam-monorepo/database/client";
-import { getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
-import { unstable_rethrow } from "next/navigation";
-import { serializeError } from "serialize-error";
 import { z } from "zod";
 
 const schema = z.object({
@@ -34,15 +30,15 @@ const schema = z.object({
   canSelfComplete: z.coerce.boolean().optional(),
 });
 
-export const createTask = async (formData: FormData) => {
-  const t = await getTranslations();
-
-  try {
-    /**
-     * Authenticate and authorize the request
-     */
-    const authentication = await requireAuthenticationAction("createTask");
-    await authentication.authorizeAction("task", "create");
+export const createTask = createAuthenticatedAction(
+  "createTask",
+  schema,
+  async (formData, authentication, data, t) => {
+    if (!(await authentication.authorize("task", "create")))
+      return {
+        error: t("Common.forbidden"),
+        requestPayload: formData,
+      };
     if (!authentication.session.entity)
       return {
         error: t("Common.forbidden"),
@@ -50,9 +46,194 @@ export const createTask = async (formData: FormData) => {
       };
 
     /**
-     * Validate the request
+     * Authorize the request
      */
-    const result = schema.safeParse({
+    if (
+      (data.visibility === TaskVisibility.PERSONALIZED ||
+        data.visibility === TaskVisibility.GROUP) &&
+      !(await authentication.authorize("task", "create", [
+        {
+          key: "taskVisibility",
+          value: TaskVisibility.PERSONALIZED,
+        },
+      ]))
+    )
+      return {
+        error: t("Common.forbidden"),
+        requestPayload: formData,
+      };
+    if (
+      data.rewardType === TaskRewardType.NEW_SILC &&
+      !(await authentication.authorize("task", "create", [
+        {
+          key: "taskRewardType",
+          value: TaskRewardType.NEW_SILC,
+        },
+      ]))
+    )
+      return {
+        error: t("Common.forbidden"),
+        requestPayload: formData,
+      };
+
+    /**
+     * Create task
+     */
+    const createdTasks: Pick<Task, "id">[] = [];
+    switch (data.visibility) {
+      case TaskVisibility.PUBLIC:
+        createdTasks.push(
+          await prisma.task.create({
+            data: {
+              visibility: data.visibility,
+              assignmentLimit: data.assignmentLimit,
+              title: data.title,
+              description: data.description,
+              createdBy: {
+                connect: {
+                  id: authentication.session.entity.id,
+                },
+              },
+              expiresAt: data.expiresAt,
+              rewardType: data.rewardType,
+              rewardTypeTextValue: data.rewardTypeTextValue,
+              rewardTypeSilcValue: data.rewardTypeSilcValue,
+              rewardTypeNewSilcValue: data.rewardTypeNewSilcValue,
+              repeatable: data.repeatable,
+              requiredRoles: {
+                connect: data.requiredRoles
+                  ? data.requiredRoles.map((roleId) => ({
+                      id: roleId,
+                    }))
+                  : [],
+              },
+              hiddenForOtherRoles: data.hiddenForOtherRoles,
+            },
+            select: {
+              id: true,
+            },
+          }),
+        );
+        break;
+
+      case TaskVisibility.GROUP:
+        createdTasks.push(
+          await prisma.task.create({
+            data: {
+              visibility: data.visibility,
+              assignmentLimit: data.assignmentLimit,
+              title: data.title,
+              description: data.description,
+              createdBy: {
+                connect: {
+                  id: authentication.session.entity.id,
+                },
+              },
+              expiresAt: data.expiresAt,
+              rewardType: data.rewardType,
+              rewardTypeTextValue: data.rewardTypeTextValue,
+              rewardTypeSilcValue: data.rewardTypeSilcValue,
+              rewardTypeNewSilcValue: data.rewardTypeNewSilcValue,
+              assignments: {
+                createMany: {
+                  data:
+                    data.assignedToIds!.map((id) => ({
+                      citizenId: id,
+                      createdById: authentication.session.entity!.id,
+                    })) || [],
+                },
+              },
+              repeatable: data.repeatable,
+              canSelfComplete: data.canSelfComplete,
+            },
+            select: {
+              id: true,
+            },
+          }),
+        );
+        break;
+
+      case TaskVisibility.PERSONALIZED:
+        createdTasks.push(
+          ...(await prisma.$transaction([
+            ...data.assignedToIds!.flatMap((assignedToId) => {
+              return [
+                prisma.task.create({
+                  data: {
+                    visibility: data.visibility,
+                    assignmentLimit: data.assignmentLimit,
+                    title: data.title,
+                    description: data.description,
+                    createdById: authentication.session.entity!.id,
+                    expiresAt: data.expiresAt,
+                    rewardType: data.rewardType,
+                    rewardTypeTextValue: data.rewardTypeTextValue,
+                    rewardTypeSilcValue: data.rewardTypeSilcValue,
+                    rewardTypeNewSilcValue: data.rewardTypeNewSilcValue,
+                    repeatable: data.repeatable,
+                    assignments: {
+                      create: {
+                        citizenId: assignedToId,
+                        createdById: authentication.session.entity!.id,
+                      },
+                    },
+                    canSelfComplete: data.canSelfComplete,
+                  },
+                  select: {
+                    id: true,
+                  },
+                }),
+              ];
+            }),
+          ])),
+        );
+        break;
+
+      default:
+        return {
+          error: t("Common.badRequest"),
+          requestPayload: formData,
+        };
+    }
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.TASK_CREATED,
+        data: {
+          taskIds: createdTasks.map((task) => task.id),
+          visibility: data.visibility,
+          rewardType: data.rewardType,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
+
+    /**
+     * Trigger notifications
+     */
+    await triggerNotifications([
+      {
+        type: "TaskCreated",
+        payload: {
+          taskIds: createdTasks.map((task) => task.id),
+        },
+      },
+    ]);
+
+    /**
+     * Revalidate cache(s)
+     */
+    revalidatePath("/app/tasks");
+
+    /**
+     * Respond with the result
+     */
+    return {
+      success: "Erfolgreich gespeichert.",
+    };
+  },
+  {
+    parseFormData: (formData) => ({
       visibility: formData.get("visibility"),
       assignmentLimit:
         formData.has("assignmentLimit") &&
@@ -86,206 +267,6 @@ export const createTask = async (formData: FormData) => {
       canSelfComplete: formData.has("canSelfComplete")
         ? formData.get("canSelfComplete")
         : undefined,
-    });
-    if (!result.success)
-      return {
-        error: t("Common.badRequest"),
-        errorDetails: result.error,
-        requestPayload: formData,
-      };
-
-    /**
-     * Authorize the request
-     */
-    if (
-      (result.data.visibility === TaskVisibility.PERSONALIZED ||
-        result.data.visibility === TaskVisibility.GROUP) &&
-      !(await authentication.authorize("task", "create", [
-        {
-          key: "taskVisibility",
-          value: TaskVisibility.PERSONALIZED,
-        },
-      ]))
-    )
-      return {
-        error: t("Common.forbidden"),
-        requestPayload: formData,
-      };
-    if (
-      result.data.rewardType === TaskRewardType.NEW_SILC &&
-      !(await authentication.authorize("task", "create", [
-        {
-          key: "taskRewardType",
-          value: TaskRewardType.NEW_SILC,
-        },
-      ]))
-    )
-      return {
-        error: t("Common.forbidden"),
-        requestPayload: formData,
-      };
-
-    /**
-     * Create task
-     */
-    const createdTasks: Pick<Task, "id">[] = [];
-    switch (result.data.visibility) {
-      case TaskVisibility.PUBLIC:
-        createdTasks.push(
-          await prisma.task.create({
-            data: {
-              visibility: result.data.visibility,
-              assignmentLimit: result.data.assignmentLimit,
-              title: result.data.title,
-              description: result.data.description,
-              createdBy: {
-                connect: {
-                  id: authentication.session.entity.id,
-                },
-              },
-              expiresAt: result.data.expiresAt,
-              rewardType: result.data.rewardType,
-              rewardTypeTextValue: result.data.rewardTypeTextValue,
-              rewardTypeSilcValue: result.data.rewardTypeSilcValue,
-              rewardTypeNewSilcValue: result.data.rewardTypeNewSilcValue,
-              repeatable: result.data.repeatable,
-              requiredRoles: {
-                connect: result.data.requiredRoles
-                  ? result.data.requiredRoles.map((roleId) => ({
-                      id: roleId,
-                    }))
-                  : [],
-              },
-              hiddenForOtherRoles: result.data.hiddenForOtherRoles,
-            },
-            select: {
-              id: true,
-            },
-          }),
-        );
-        break;
-
-      case TaskVisibility.GROUP:
-        createdTasks.push(
-          await prisma.task.create({
-            data: {
-              visibility: result.data.visibility,
-              assignmentLimit: result.data.assignmentLimit,
-              title: result.data.title,
-              description: result.data.description,
-              createdBy: {
-                connect: {
-                  id: authentication.session.entity.id,
-                },
-              },
-              expiresAt: result.data.expiresAt,
-              rewardType: result.data.rewardType,
-              rewardTypeTextValue: result.data.rewardTypeTextValue,
-              rewardTypeSilcValue: result.data.rewardTypeSilcValue,
-              rewardTypeNewSilcValue: result.data.rewardTypeNewSilcValue,
-              assignments: {
-                createMany: {
-                  data:
-                    result.data.assignedToIds!.map((id) => ({
-                      citizenId: id,
-                      createdById: authentication.session.entity!.id,
-                    })) || [],
-                },
-              },
-              repeatable: result.data.repeatable,
-              canSelfComplete: result.data.canSelfComplete,
-            },
-            select: {
-              id: true,
-            },
-          }),
-        );
-        break;
-
-      case TaskVisibility.PERSONALIZED:
-        createdTasks.push(
-          ...(await prisma.$transaction([
-            ...result.data.assignedToIds!.flatMap((assignedToId) => {
-              return [
-                prisma.task.create({
-                  data: {
-                    visibility: result.data.visibility,
-                    assignmentLimit: result.data.assignmentLimit,
-                    title: result.data.title,
-                    description: result.data.description,
-                    createdById: authentication.session.entity!.id,
-                    expiresAt: result.data.expiresAt,
-                    rewardType: result.data.rewardType,
-                    rewardTypeTextValue: result.data.rewardTypeTextValue,
-                    rewardTypeSilcValue: result.data.rewardTypeSilcValue,
-                    rewardTypeNewSilcValue: result.data.rewardTypeNewSilcValue,
-                    repeatable: result.data.repeatable,
-                    assignments: {
-                      create: {
-                        citizenId: assignedToId,
-                        createdById: authentication.session.entity!.id,
-                      },
-                    },
-                    canSelfComplete: result.data.canSelfComplete,
-                  },
-                  select: {
-                    id: true,
-                  },
-                }),
-              ];
-            }),
-          ])),
-        );
-        break;
-
-      default:
-        return {
-          error: t("Common.badRequest"),
-          requestPayload: formData,
-        };
-    }
-
-    await createAuditEvents([
-      {
-        type: AuditEventType.TASK_CREATED,
-        data: {
-          taskIds: createdTasks.map((task) => task.id),
-          visibility: result.data.visibility,
-          rewardType: result.data.rewardType,
-        },
-        createdById: authentication.session.user.id,
-      },
-    ]);
-
-    /**
-     * Trigger notifications
-     */
-    await triggerNotifications([
-      {
-        type: "TaskCreated",
-        payload: {
-          taskIds: createdTasks.map((task) => task.id),
-        },
-      },
-    ]);
-
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath("/app/tasks");
-
-    /**
-     * Respond with the result
-     */
-    return {
-      success: "Erfolgreich gespeichert.",
-    };
-  } catch (error) {
-    unstable_rethrow(error);
-    log.error("Internal Server Error", { error: serializeError(error) });
-    return {
-      error: t("Common.internalServerError"),
-      requestPayload: formData,
-    };
-  }
-};
+    }),
+  },
+);

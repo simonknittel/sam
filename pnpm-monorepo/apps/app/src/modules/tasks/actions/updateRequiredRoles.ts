@@ -1,14 +1,10 @@
 "use server";
 
 import { prisma } from "@/db";
+import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { requireAuthenticationAction } from "@/modules/auth/server";
-import { log } from "@/modules/logging";
-import { getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
-import { unstable_rethrow } from "next/navigation";
-import { serializeError } from "serialize-error";
 import { z } from "zod";
 import { getTaskById } from "../queries/getTaskById";
 import { isAllowedToManageTask } from "../utils/isAllowedToTask";
@@ -20,38 +16,14 @@ const schema = z.object({
   hiddenForOtherRoles: z.coerce.boolean(),
 });
 
-export const updateRequiredRoles = async (formData: FormData) => {
-  const t = await getTranslations();
-
-  try {
-    /**
-     * Authenticate and authorize the request
-     */
-    const authentication = await requireAuthenticationAction(
-      "updateRequiredRoles",
-    );
-
-    /**
-     * Validate the request
-     */
-    const result = schema.safeParse({
-      id: formData.get("id"),
-      requiredRoles: formData.getAll("requiredRole[]"),
-      hiddenForOtherRoles: formData.get("hiddenForOtherRoles")
-        ? formData.get("hiddenForOtherRoles")
-        : false,
-    });
-    if (!result.success)
-      return {
-        error: t("Common.badRequest"),
-        errorDetails: result.error,
-        requestPayload: formData,
-      };
-
+export const updateRequiredRoles = createAuthenticatedAction(
+  "updateRequiredRoles",
+  schema,
+  async (formData, authentication, data, t) => {
     /**
      * Authorize the request
      */
-    const task = await getTaskById(result.data.id);
+    const task = await getTaskById(data.id);
     if (!task)
       return { error: "Task nicht gefunden", requestPayload: formData };
     if (!isTaskUpdatable(task))
@@ -69,14 +41,14 @@ export const updateRequiredRoles = async (formData: FormData) => {
      * Update task
      */
     await prisma.task.update({
-      where: { id: result.data.id },
+      where: { id: data.id },
       data: {
         requiredRoles: {
-          set: result.data.requiredRoles.map((roleId) => ({
+          set: data.requiredRoles.map((roleId) => ({
             id: roleId,
           })),
         },
-        hiddenForOtherRoles: result.data.hiddenForOtherRoles,
+        hiddenForOtherRoles: data.hiddenForOtherRoles,
       },
     });
 
@@ -102,12 +74,14 @@ export const updateRequiredRoles = async (formData: FormData) => {
     return {
       success: "Erfolgreich gespeichert.",
     };
-  } catch (error) {
-    unstable_rethrow(error);
-    log.error("Internal Server Error", { error: serializeError(error) });
-    return {
-      error: t("Common.internalServerError"),
-      requestPayload: formData,
-    };
-  }
-};
+  },
+  {
+    parseFormData: (formData) => ({
+      id: formData.get("id"),
+      requiredRoles: formData.getAll("requiredRole[]"),
+      hiddenForOtherRoles: formData.get("hiddenForOtherRoles")
+        ? formData.get("hiddenForOtherRoles")
+        : false,
+    }),
+  },
+);

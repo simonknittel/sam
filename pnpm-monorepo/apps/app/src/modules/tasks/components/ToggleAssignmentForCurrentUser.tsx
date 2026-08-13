@@ -1,5 +1,6 @@
 "use client";
 
+import { runAction } from "@/modules/actions/utils/runAction";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
@@ -13,9 +14,7 @@ import {
   type Upload,
 } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
-import { unstable_rethrow } from "next/navigation";
 import { useId, useTransition } from "react";
-import toast from "react-hot-toast";
 import { FaMinus, FaPlus } from "react-icons/fa";
 import { createTaskAssignmentForCurrentUser } from "../actions/createTaskAssignmentForCurrentUser";
 import { deleteTaskAssignmentForCurrentUser } from "../actions/deleteTaskAssignmentForCurrentUser";
@@ -45,25 +44,12 @@ export const ToggleAssignmentForCurrentUser = ({
 
   const formAction = (formData: FormData) => {
     startTransition(async () => {
-      try {
-        const response = isCurrentUserAssigned
-          ? await deleteTaskAssignmentForCurrentUser(formData)
-          : await createTaskAssignmentForCurrentUser(formData);
-
-        if ("error" in response) {
-          toast.error(response.error);
-          console.error(response);
-          return;
-        }
-
-        toast.success(response.success);
-      } catch (error) {
-        unstable_rethrow(error);
-        toast.error(
-          "Ein unbekannter Fehler ist aufgetreten. Bitte versuche es später erneut.",
-        );
-        console.error(error);
-      }
+      await runAction(
+        isCurrentUserAssigned
+          ? deleteTaskAssignmentForCurrentUser
+          : createTaskAssignmentForCurrentUser,
+        formData,
+      );
     });
   };
 

@@ -1,18 +1,14 @@
 "use server";
 
 import { prisma } from "@/db";
+import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { requireAuthenticationAction } from "@/modules/auth/server";
-import { log } from "@/modules/logging";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { updateCitizensSilcBalances } from "@/modules/silc/utils/updateCitizensSilcBalances";
 import { createId } from "@paralleldrive/cuid2";
 import { TaskRewardType, TaskVisibility } from "@sam-monorepo/database/client";
-import { getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
-import { unstable_rethrow } from "next/navigation";
-import { serializeError } from "serialize-error";
 import { z } from "zod";
 import { getTaskById } from "../queries/getTaskById";
 import { isAllowedToManageTask } from "../utils/isAllowedToTask";
@@ -23,14 +19,10 @@ const schema = z.object({
   completionistIds: z.array(z.cuid()).max(250), // Arbitrary (untested) limit to prevent DDoS
 });
 
-export const completeTask = async (formData: FormData) => {
-  const t = await getTranslations();
-
-  try {
-    /**
-     * Authenticate and authorize the request
-     */
-    const authentication = await requireAuthenticationAction("completeTask");
+export const completeTask = createAuthenticatedAction(
+  "completeTask",
+  schema,
+  async (formData, authentication, data, t) => {
     if (!authentication.session.entity)
       return {
         error: t("Common.forbidden"),
@@ -38,23 +30,9 @@ export const completeTask = async (formData: FormData) => {
       };
 
     /**
-     * Validate the request
-     */
-    const result = schema.safeParse({
-      id: formData.get("id"),
-      completionistIds: formData.getAll("completionistId[]"),
-    });
-    if (!result.success)
-      return {
-        error: t("Common.badRequest"),
-        errorDetails: result.error,
-        requestPayload: formData,
-      };
-
-    /**
      * Authorize the request
      */
-    const task = await getTaskById(result.data.id);
+    const task = await getTaskById(data.id);
     if (!task)
       return { error: "Task nicht gefunden", requestPayload: formData };
     if (!isTaskUpdatable(task))
@@ -74,7 +52,7 @@ export const completeTask = async (formData: FormData) => {
         requestPayload: formData,
       };
 
-    if (result.data.completionistIds.length <= 0)
+    if (data.completionistIds.length <= 0)
       return {
         error:
           "Der Task kann nicht abgeschlossen werden, ohne dass ihn jemand erfüllt hat.",
@@ -86,7 +64,7 @@ export const completeTask = async (formData: FormData) => {
      */
     await prisma.task.update({
       where: {
-        id: result.data.id,
+        id: data.id,
       },
       data: {
         completedAt: new Date(),
@@ -96,7 +74,7 @@ export const completeTask = async (formData: FormData) => {
           },
         },
         completionists: {
-          connect: result.data.completionistIds.map((id) => ({
+          connect: data.completionistIds.map((id) => ({
             id,
           })),
         },
@@ -115,7 +93,7 @@ export const completeTask = async (formData: FormData) => {
       if (task.rewardType === TaskRewardType.SILC) {
         const transactions = await prisma.$transaction([
           prisma.silcTransaction.createManyAndReturn({
-            data: result.data.completionistIds.map((receiverId) => ({
+            data: data.completionistIds.map((receiverId) => ({
               receiverId,
               value: task.rewardTypeSilcValue!,
               description: `Task erfüllt: ${task.title}`,
@@ -132,8 +110,7 @@ export const completeTask = async (formData: FormData) => {
                   data: {
                     receiverId: task.createdById,
                     value: -(
-                      task.rewardTypeSilcValue! *
-                      result.data.completionistIds.length
+                      task.rewardTypeSilcValue! * data.completionistIds.length
                     ),
                     description: `Task abgeschlossen: ${task.title}`,
                     createdById: authentication.session.entity.id,
@@ -160,7 +137,7 @@ export const completeTask = async (formData: FormData) => {
       } else if (task.rewardType === TaskRewardType.NEW_SILC) {
         const createdTransactions =
           await prisma.silcTransaction.createManyAndReturn({
-            data: result.data.completionistIds.map((receiverId) => ({
+            data: data.completionistIds.map((receiverId) => ({
               receiverId,
               value: task.rewardTypeNewSilcValue!,
               description: `Task erfüllt: ${task.title}`,
@@ -177,7 +154,7 @@ export const completeTask = async (formData: FormData) => {
       /**
        * Update citizens' balances
        */
-      await updateCitizensSilcBalances(result.data.completionistIds);
+      await updateCitizensSilcBalances(data.completionistIds);
 
       /**
        * Trigger notifications
@@ -229,9 +206,7 @@ export const completeTask = async (formData: FormData) => {
                   data: task.assignments
                     .filter(
                       (assignment) =>
-                        !result.data.completionistIds.includes(
-                          assignment.citizenId,
-                        ),
+                        !data.completionistIds.includes(assignment.citizenId),
                     )
                     .map((assignment) => ({
                       citizenId: assignment.citizenId,
@@ -329,7 +304,7 @@ export const completeTask = async (formData: FormData) => {
         type: AuditEventType.TASK_COMPLETED,
         data: {
           taskId: task.id,
-          completionistIds: result.data.completionistIds,
+          completionistIds: data.completionistIds,
           rewardType: task.rewardType,
         },
         createdById: authentication.session.user.id,
@@ -348,12 +323,11 @@ export const completeTask = async (formData: FormData) => {
     return {
       success: "Erfolgreich abgeschlossen.",
     };
-  } catch (error) {
-    unstable_rethrow(error);
-    log.error("Internal Server Error", { error: serializeError(error) });
-    return {
-      error: t("Common.internalServerError"),
-      requestPayload: formData,
-    };
-  }
-};
+  },
+  {
+    parseFormData: (formData) => ({
+      id: formData.get("id"),
+      completionistIds: formData.getAll("completionistId[]"),
+    }),
+  },
+);

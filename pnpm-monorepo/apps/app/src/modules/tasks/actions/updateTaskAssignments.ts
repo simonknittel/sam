@@ -1,15 +1,11 @@
 "use server";
 
 import { prisma } from "@/db";
+import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { requireAuthenticationAction } from "@/modules/auth/server";
-import { log } from "@/modules/logging";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
-import { getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
-import { unstable_rethrow } from "next/navigation";
-import { serializeError } from "serialize-error";
 import { z } from "zod";
 import { getTaskById } from "../queries/getTaskById";
 import { isAllowedToManageTask } from "../utils/isAllowedToTask";
@@ -21,16 +17,10 @@ const schema = z.object({
   assignedToIds: z.array(z.cuid()).max(250).optional(), // Arbitrary (untested) limit to prevent DDoS
 });
 
-export const updateTaskAssignments = async (formData: FormData) => {
-  const t = await getTranslations();
-
-  try {
-    /**
-     * Authenticate and authorize the request
-     */
-    const authentication = await requireAuthenticationAction(
-      "updateTaskAssignments",
-    );
+export const updateTaskAssignments = createAuthenticatedAction(
+  "updateTaskAssignments",
+  schema,
+  async (formData, authentication, data, t) => {
     if (!authentication.session.entity)
       return {
         error: t("Common.forbidden"),
@@ -38,30 +28,9 @@ export const updateTaskAssignments = async (formData: FormData) => {
       };
 
     /**
-     * Validate the request
-     */
-    const result = schema.safeParse({
-      id: formData.get("id"),
-      assignmentLimit:
-        formData.has("assignmentLimit") &&
-        formData.get("assignmentLimit") !== ""
-          ? formData.get("assignmentLimit")
-          : null,
-      assignedToIds: formData.has("assignedToId[]")
-        ? formData.getAll("assignedToId[]")
-        : undefined,
-    });
-    if (!result.success)
-      return {
-        error: t("Common.badRequest"),
-        errorDetails: result.error,
-        requestPayload: formData,
-      };
-
-    /**
      * Authorize the request
      */
-    const task = await getTaskById(result.data.id);
+    const task = await getTaskById(data.id);
     if (!task)
       return { error: "Task nicht gefunden", requestPayload: formData };
     if (!isTaskUpdatable(task))
@@ -80,19 +49,19 @@ export const updateTaskAssignments = async (formData: FormData) => {
      */
     const assignmentsToDelete = task.assignments.filter(
       (assignment) =>
-        !result.data.assignedToIds?.includes(assignment.citizenId),
+        !data.assignedToIds?.includes(assignment.citizenId),
     );
     const assignmentsToCreate =
-      result.data.assignedToIds?.filter(
+      data.assignedToIds?.filter(
         (assignedToId) =>
           !task.assignments
             .map((assignment) => assignment.citizenId)
             .includes(assignedToId),
       ) || [];
     await prisma.task.update({
-      where: { id: result.data.id },
+      where: { id: data.id },
       data: {
-        assignmentLimit: result.data.assignmentLimit,
+        assignmentLimit: data.assignmentLimit,
         assignments: {
           deleteMany: {
             citizenId: {
@@ -112,7 +81,7 @@ export const updateTaskAssignments = async (formData: FormData) => {
       {
         type: AuditEventType.TASK_ASSIGNMENTS_UPDATED,
         data: {
-          taskId: result.data.id,
+          taskId: data.id,
         },
         createdById: authentication.session.user.id,
       },
@@ -125,7 +94,7 @@ export const updateTaskAssignments = async (formData: FormData) => {
       {
         type: "TaskAssignmentUpdated",
         payload: {
-          taskId: result.data.id,
+          taskId: data.id,
         },
       },
     ]);
@@ -142,12 +111,18 @@ export const updateTaskAssignments = async (formData: FormData) => {
     return {
       success: "Erfolgreich gespeichert.",
     };
-  } catch (error) {
-    unstable_rethrow(error);
-    log.error("Internal Server Error", { error: serializeError(error) });
-    return {
-      error: t("Common.internalServerError"),
-      requestPayload: formData,
-    };
-  }
-};
+  },
+  {
+    parseFormData: (formData) => ({
+      id: formData.get("id"),
+      assignmentLimit:
+        formData.has("assignmentLimit") &&
+        formData.get("assignmentLimit") !== ""
+          ? formData.get("assignmentLimit")
+          : null,
+      assignedToIds: formData.has("assignedToId[]")
+        ? formData.getAll("assignedToId[]")
+        : undefined,
+    }),
+  },
+);

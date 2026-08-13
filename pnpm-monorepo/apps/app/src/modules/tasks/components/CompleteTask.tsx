@@ -1,19 +1,18 @@
 "use client";
 
+import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
+import { useAction } from "@/modules/actions/utils/useAction";
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
-import Note from "@/modules/common/components/Note";
 import {
   TaskRewardType,
   type Task,
   type TaskAssignment,
 } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
-import { unstable_rethrow } from "next/navigation";
-import { useActionState, useState } from "react";
-import toast from "react-hot-toast";
+import { useState } from "react";
 import { FaCheck, FaSave } from "react-icons/fa";
 import { completeTask } from "../actions/completeTask";
 
@@ -26,35 +25,10 @@ interface Props {
 
 export const CompleteTask = ({ className, task }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [state, formAction, isPending] = useActionState(
-    async (previousState: unknown, formData: FormData) => {
-      try {
-        const response = await completeTask(formData);
-
-        if (response.error) {
-          toast.error(response.error);
-          console.error(response);
-          return response;
-        }
-
-        toast.success(response.success!);
-        setIsOpen(false);
-        return response;
-      } catch (error) {
-        unstable_rethrow(error);
-        toast.error(
-          "Ein unbekannter Fehler ist aufgetreten. Bitte versuche es später erneut.",
-        );
-        console.error(error);
-        return {
-          error:
-            "Ein unbekannter Fehler ist aufgetreten. Bitte versuche es später erneut.",
-          requestPayload: formData,
-        };
-      }
-    },
-    null,
-  );
+  const { state, formAction, isPending } = useAction(completeTask, {
+    errorToast: false,
+    onSuccess: () => setIsOpen(false),
+  });
 
   const handleClick = () => {
     setIsOpen(true);
@@ -111,9 +85,7 @@ export const CompleteTask = ({ className, task }: Props) => {
             Speichern
           </Button2>
 
-          {state?.error && (
-            <Note type="error" message={state.error} className="mt-4" />
-          )}
+          <ActionErrorNote className="mt-4" state={state} />
         </form>
       </Modal>
     </>
