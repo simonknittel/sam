@@ -2,10 +2,9 @@
 
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
+import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionButton";
 import { type EntityLog } from "@sam-monorepo/database/browser";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import toast from "react-hot-toast";
 import { FaTrash } from "react-icons/fa";
 
 interface Props {
@@ -14,49 +13,41 @@ interface Props {
 
 export const OtherTableDelete = ({ log }: Props) => {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleClick = async () => {
-    setIsLoading(true);
+  const deleteLog = async (formData: FormData) => {
+    const response = await fetch(
+      `/api/spynet/citizen/${log.entityId}/log/${log.id}`,
+      {
+        method: "DELETE",
+      },
+    );
 
-    try {
-      const confirmation = window.confirm(`Willst du diesen Eintrag löschen?`);
+    if (!response.ok)
+      return {
+        error: "Beim Löschen ist ein Fehler aufgetreten.",
+        requestPayload: formData,
+      };
 
-      if (!confirmation) {
-        setIsLoading(false);
-        return;
-      }
-
-      const response = await fetch(
-        `/api/spynet/citizen/${log.entityId}/log/${log.id}`,
-        {
-          method: "DELETE",
-        },
-      );
-
-      if (response.ok) {
-        router.refresh();
-        toast.success("Erfolgreich gelöscht");
-      } else {
-        toast.error("Beim Löschen ist ein Fehler aufgetreten.");
-      }
-    } catch (error) {
-      toast.error("Beim Löschen ist ein Fehler aufgetreten.");
-      console.error(error);
-    }
-
-    setIsLoading(false);
+    return { success: "Erfolgreich gelöscht" };
   };
 
   return (
-    <Button
-      title="Eintrag löschen"
-      onClick={() => void handleClick()}
-      disabled={isLoading}
-      variant="tertiary"
-      type="button"
-    >
-      {isLoading ? <AsciiSpinner /> : <FaTrash />} Löschen
-    </Button>
+    <ConfirmActionButton
+      action={deleteLog}
+      trigger={(isPending) => (
+        <Button
+          title="Eintrag löschen"
+          disabled={isPending}
+          variant="tertiary"
+          type="button"
+        >
+          {isPending ? <AsciiSpinner /> : <FaTrash />} Löschen
+        </Button>
+      )}
+      title="Eintrag löschen?"
+      description="Willst du diesen Eintrag löschen?"
+      confirmLabel="Löschen"
+      onSuccess={() => router.refresh()}
+    />
   );
 };

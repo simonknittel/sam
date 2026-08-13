@@ -1,21 +1,8 @@
 "use client";
 
-import { useAction } from "@/modules/actions/utils/useAction";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/modules/common/components/AlertDialog";
-import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
+import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionButton";
 import { Tooltip } from "@/modules/common/components/Tooltip";
 import { type EventPosition } from "@sam-monorepo/database/browser";
-import { useId } from "react";
 import { FaTrash } from "react-icons/fa";
 import { deleteEventPosition } from "../actions/deleteEventPosition";
 
@@ -27,50 +14,35 @@ interface Props {
 }
 
 export const DeleteEventPosition = ({ className, position }: Props) => {
-  const { isPending, formAction } = useAction(deleteEventPosition);
-  const formId = useId();
-
   return (
-    <form action={formAction} id={formId} className={className}>
-      <input type="hidden" name="id" value={position.id} />
-
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <Tooltip
-            asChild
-            triggerChildren={
-              <button
-                disabled={isPending}
-                className="text-brand-red-500 hover:text-brand-red-300 hover:cursor-pointer flex items-center px-2"
-                aria-label={LABEL}
-              >
-                <FaTrash />
-              </button>
-            }
-          >
-            {LABEL}
-          </Tooltip>
-        </AlertDialogTrigger>
-
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Posten löschen?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Willst du den Posten{" "}
-              <span className="font-bold">{position.name}</span> löschen?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-
-          <AlertDialogFooter>
-            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-
-            <AlertDialogAction type="submit" form={formId}>
-              {isPending && <AsciiSpinner />}
-              Löschen
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </form>
+    <ConfirmActionButton
+      className={className}
+      action={deleteEventPosition}
+      hiddenFields={[{ name: "id", value: position.id }]}
+      trigger={(isPending) => (
+        <Tooltip
+          asChild
+          triggerChildren={
+            <button
+              disabled={isPending}
+              className="text-brand-red-500 hover:text-brand-red-300 hover:cursor-pointer flex items-center px-2"
+              aria-label={LABEL}
+            >
+              <FaTrash />
+            </button>
+          }
+        >
+          {LABEL}
+        </Tooltip>
+      )}
+      title="Posten löschen?"
+      description={
+        <>
+          Willst du den Posten{" "}
+          <span className="font-bold">{position.name}</span> löschen?
+        </>
+      }
+      confirmLabel="Löschen"
+    />
   );
 };

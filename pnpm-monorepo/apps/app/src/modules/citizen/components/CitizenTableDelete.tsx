@@ -2,10 +2,9 @@
 
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
+import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionButton";
 import { type Entity } from "@sam-monorepo/database/browser";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import toast from "react-hot-toast";
 import { FaTrash } from "react-icons/fa";
 
 interface Props {
@@ -14,46 +13,33 @@ interface Props {
 
 export const CitizenTableDelete = ({ entity }: Props) => {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleClick = async () => {
-    setIsLoading(true);
+  const deleteCitizen = async (formData: FormData) => {
+    const response = await fetch(`/api/spynet/citizen/${entity.id}`, {
+      method: "DELETE",
+    });
 
-    try {
-      const confirmation = window.confirm(
-        `Willst du diesen Citizen komplett löschen?`,
-      );
+    if (!response.ok)
+      return {
+        error: "Beim Löschen ist ein Fehler aufgetreten.",
+        requestPayload: formData,
+      };
 
-      if (!confirmation) {
-        setIsLoading(false);
-        return;
-      }
-
-      const response = await fetch(`/api/spynet/citizen/${entity.id}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        router.refresh();
-        toast.success("Erfolgreich gelöscht");
-      } else {
-        toast.error("Beim Löschen ist ein Fehler aufgetreten.");
-      }
-    } catch (error) {
-      toast.error("Beim Löschen ist ein Fehler aufgetreten.");
-      console.error(error);
-    }
-
-    setIsLoading(false);
+    return { success: "Erfolgreich gelöscht" };
   };
 
   return (
-    <Button
-      onClick={() => void handleClick()}
-      disabled={isLoading}
-      variant="tertiary"
-    >
-      {isLoading ? <AsciiSpinner /> : <FaTrash />} Löschen
-    </Button>
+    <ConfirmActionButton
+      action={deleteCitizen}
+      trigger={(isPending) => (
+        <Button disabled={isPending} variant="tertiary">
+          {isPending ? <AsciiSpinner /> : <FaTrash />} Löschen
+        </Button>
+      )}
+      title="Citizen löschen?"
+      description="Willst du diesen Citizen komplett löschen?"
+      confirmLabel="Löschen"
+      onSuccess={() => router.refresh()}
+    />
   );
 };
