@@ -6,12 +6,9 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import {
-  getWikiPageScopedContext,
-  getWikiScopeRevalidationPath,
-  isWikiScopeFrozen,
-} from "../queries/getWikiPageScopedContext";
+import { getWikiScopeRevalidationPath } from "../queries/getWikiPageScopedContext";
 import { collectWikiPageDescendants } from "../utils/collectWikiPageDescendants";
+import { requireAdminableWikiPage } from "../utils/requireAdminableWikiPage";
 
 const schema = z.object({
   id: z.cuid2(),
@@ -28,21 +25,14 @@ export const restoreWikiPage = createAuthenticatedAction(
   "restoreWikiPage",
   schema,
   async (formData, authentication, data, t) => {
-    const scoped = await getWikiPageScopedContext(data.id);
-    if (!scoped)
-      return { error: t("Common.badRequest"), requestPayload: formData };
+    const { scoped, page, failure } = await requireAdminableWikiPage(
+      data.id,
+      formData,
+      t,
+      { expectDeleted: true },
+    );
+    if (failure) return failure;
     const context = scoped.context;
-
-    const page = context.pagesById.get(data.id);
-    if (!page?.deletedAt)
-      return { error: t("Common.badRequest"), requestPayload: formData };
-    if (!context.permissions.get(page.id)?.canAdmin)
-      return { error: t("Common.forbidden"), requestPayload: formData };
-    if (isWikiScopeFrozen(scoped))
-      return {
-        error: "Das Event ist bereits vorbei.",
-        requestPayload: formData,
-      };
 
     const deletedAncestorIds: string[] = [];
     const visited = new Set<string>([page.id]);

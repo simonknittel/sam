@@ -7,9 +7,7 @@ import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { getTaskById } from "../queries/getTaskById";
-import { isAllowedToManageTask } from "../utils/isAllowedToTask";
-import { isTaskUpdatable } from "../utils/isTaskUpdatable";
+import { requireManageableTask } from "../utils/requireManageableTask";
 
 const schema = z.object({
   id: z.union([z.cuid(), z.cuid2()]),
@@ -30,19 +28,8 @@ export const updateTaskAssignments = createAuthenticatedAction(
     /**
      * Authorize the request
      */
-    const task = await getTaskById(data.id);
-    if (!task)
-      return { error: "Task nicht gefunden", requestPayload: formData };
-    if (!isTaskUpdatable(task))
-      return {
-        error: "Der Task ist bereits abgeschlossen.",
-        requestPayload: formData,
-      };
-    if (!(await isAllowedToManageTask(task)))
-      return {
-        error: t("Common.forbidden"),
-        requestPayload: formData,
-      };
+    const { task, failure } = await requireManageableTask(data.id, formData, t);
+    if (failure) return failure;
 
     /**
      * Update task

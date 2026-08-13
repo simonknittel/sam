@@ -6,8 +6,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { isAllowedToManagePositions } from "../utils/isAllowedToManagePositions";
-import { isEventUpdatable } from "../utils/isEventUpdatable";
+import { requireManageablePosition } from "../utils/requireManageablePosition";
 
 const schema = z.object({
   positionId: z.cuid(),
@@ -20,30 +19,12 @@ export const resetEventPositionCitizenId = createAuthenticatedAction(
     /**
      * Authorize the request
      */
-    const position = await prisma.eventPosition.findUnique({
-      where: {
-        id: data.positionId,
-      },
-      include: {
-        event: {
-          include: {
-            managers: true,
-          },
-        },
-      },
-    });
-    if (!position)
-      return { error: "Posten nicht gefunden", requestPayload: formData };
-    if (!isEventUpdatable(position.event))
-      return {
-        error: "Das Event ist bereits vorbei.",
-        requestPayload: formData,
-      };
-    if (!(await isAllowedToManagePositions(position.event)))
-      return {
-        error: t("Common.forbidden"),
-        requestPayload: formData,
-      };
+    const { position, failure } = await requireManageablePosition(
+      data.positionId,
+      formData,
+      t,
+    );
+    if (failure) return failure;
 
     /**
      * Update position

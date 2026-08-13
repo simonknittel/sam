@@ -7,13 +7,9 @@ import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import {
-  getWikiPageScopedContext,
-  getWikiScopeRevalidationPath,
-  isWikiScopeFrozen,
-} from "../queries/getWikiPageScopedContext";
+import { getWikiScopeRevalidationPath } from "../queries/getWikiPageScopedContext";
 import { collectWikiPageDescendants } from "../utils/collectWikiPageDescendants";
-import { isEventWikiRootPage } from "../utils/isEventWikiRootPage";
+import { requireAdminableWikiPage } from "../utils/requireAdminableWikiPage";
 
 const schema = z.object({
   id: z.cuid2(),
@@ -27,24 +23,14 @@ export const deleteWikiPage = createAuthenticatedAction(
   "deleteWikiPage",
   schema,
   async (formData, authentication, data, t) => {
-    const scoped = await getWikiPageScopedContext(data.id);
-    if (!scoped)
-      return { error: t("Common.badRequest"), requestPayload: formData };
+    const { scoped, page, failure } = await requireAdminableWikiPage(
+      data.id,
+      formData,
+      t,
+      { rejectEventWikiRootPage: true },
+    );
+    if (failure) return failure;
     const context = scoped.context;
-
-    const page = context.pagesById.get(data.id);
-    if (!page || page.deletedAt)
-      return { error: t("Common.badRequest"), requestPayload: formData };
-    if (!context.permissions.get(page.id)?.canAdmin)
-      return { error: t("Common.forbidden"), requestPayload: formData };
-    if (isWikiScopeFrozen(scoped))
-      return {
-        error: "Das Event ist bereits vorbei.",
-        requestPayload: formData,
-      };
-    /** The event wiki's locked root page cannot be changed structurally */
-    if (isEventWikiRootPage(page))
-      return { error: t("Common.badRequest"), requestPayload: formData };
 
     const subtreeIds = [
       page.id,
