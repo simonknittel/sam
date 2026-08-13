@@ -3,7 +3,13 @@
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { useClickAway } from "@uidotdev/usehooks";
 import clsx from "clsx";
-import { useRef, useState, useTransition, type ReactNode } from "react";
+import {
+  useCallback,
+  useRef,
+  useState,
+  useTransition,
+  type ReactNode,
+} from "react";
 import toast from "react-hot-toast";
 import { FaPen, FaSave } from "react-icons/fa";
 
@@ -65,6 +71,12 @@ export const EditableField = <Value,>({
     setIsEditing(false);
   });
 
+  /** Only ever passed as the input element's `ref`, so the write happens
+   * during commit, not during render. */
+  const setInputElement = useCallback((element: HTMLElement | null) => {
+    inputElementRef.current = element;
+  }, []);
+
   const handleStartEditing = () => {
     onStartEditing?.();
     setIsEditing(true);
@@ -122,12 +134,11 @@ export const EditableField = <Value,>({
         >
           <input type="hidden" name="id" value={rowId} />
 
+          {/* eslint-disable-next-line react-hooks/refs -- setInputElement is a ref callback the variants pass as the input's `ref`, so the ref write happens during commit, not render */}
           {renderInput({
             value,
             isPending,
-            setInputElement: (element) => {
-              inputElementRef.current = element;
-            },
+            setInputElement,
           })}
 
           <button
