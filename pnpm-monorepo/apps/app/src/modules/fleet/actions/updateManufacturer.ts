@@ -1,11 +1,9 @@
 "use server";
 
 import { prisma } from "@/db";
+import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { requireAuthenticationAction } from "@/modules/auth/server";
-import { serverActionErrorHandler } from "@/modules/common/actions/serverActionErrorHandler";
-import type { ServerAction } from "@/modules/common/actions/types";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -15,31 +13,23 @@ const schema = z.object({
   imageId: z.string().trim().min(1).max(255).optional(),
 });
 
-export const updateManufacturerAction: ServerAction = async (formData) => {
-  try {
-    /**
-     * Authenticate and authorize the request
-     */
-    const authentication = await requireAuthenticationAction(
-      "updateManufacturerAction",
-    );
-    await authentication.authorizeAction(
-      "manufacturersSeriesAndVariants",
-      "manage",
-    );
-
-    /**
-     * Validate the request
-     */
-    const { id, ...data } = schema.parse({
-      id: formData.get("id"),
-      name: formData.has("name") ? formData.get("name") : undefined,
-      imageId: formData.has("imageId") ? formData.get("imageId") : undefined,
-    });
+export const updateManufacturerAction = createAuthenticatedAction(
+  "updateManufacturerAction",
+  schema,
+  async (formData, authentication, data, t) => {
+    if (
+      !(await authentication.authorize("manufacturersSeriesAndVariants", "manage"))
+    )
+      return {
+        error: t("Common.forbidden"),
+        requestPayload: formData,
+      };
 
     /**
      * Update
      */
+    const { id, ...updateData } = data;
+
     const existingManufacturer = await prisma.manufacturer.findUnique({
       where: {
         id,
@@ -49,13 +39,17 @@ export const updateManufacturerAction: ServerAction = async (formData) => {
         imageId: true,
       },
     });
-    if (!existingManufacturer) throw new Error("Not found");
+    if (!existingManufacturer)
+      return {
+        error: t("Common.notFound"),
+        requestPayload: formData,
+      };
 
     const updatedManufacturer = await prisma.manufacturer.update({
       where: {
         id,
       },
-      data,
+      data: updateData,
     });
 
     await createAuditEvents([
@@ -83,19 +77,14 @@ export const updateManufacturerAction: ServerAction = async (formData) => {
      * Respond with the result
      */
     return {
-      status: 200,
+      success: t("Common.successfullySaved"),
     };
-  } catch (error) {
-    return serverActionErrorHandler(error, {
-      errorMessages: {
-        "400": "Ungültige Anfrage",
-        "401": "Du musst angemeldet sein, um diese Aktion auszuführen",
-        "403": "Du bist nicht berechtigt, diese Aktion auszuführen",
-        "404":
-          "Beim Speichern ist ein Fehler aufgetreten. Der Hersteller konnte nicht gefunden werden.",
-        "409": "Konflikt. Bitte aktualisiere die Seite und probiere es erneut.",
-        "500": "Beim Speichern ist ein unerwarteter Fehler aufgetreten",
-      },
-    });
-  }
-};
+  },
+  {
+    parseFormData: (formData) => ({
+      id: formData.get("id"),
+      name: formData.has("name") ? formData.get("name") : undefined,
+      imageId: formData.has("imageId") ? formData.get("imageId") : undefined,
+    }),
+  },
+);

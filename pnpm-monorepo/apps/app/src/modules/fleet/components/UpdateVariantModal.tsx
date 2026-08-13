@@ -1,5 +1,6 @@
 "use client";
 
+import { runAction } from "@/modules/actions/utils/runAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { Button2 } from "@/modules/common/components/Button2";
@@ -11,9 +12,7 @@ import {
   type VariantExternalLink,
   type VariantTag,
 } from "@sam-monorepo/database/browser";
-import { unstable_rethrow } from "next/navigation";
 import { useId, useState, useTransition } from "react";
-import { toast } from "react-hot-toast";
 import { FaPlus, FaSave, FaTrash } from "react-icons/fa";
 import { updateVariant } from "../actions/updateVariant";
 import { ExternalService, ExternalServiceDisplayNames } from "../types";
@@ -58,23 +57,7 @@ export const UpdateVariantModal = ({ onRequestClose, variant }: Props) => {
 
   const _action = (formData: FormData) => {
     startTransition(async () => {
-      try {
-        const response = await updateVariant(formData);
-
-        if (response.status === 200) {
-          toast.success("Erfolgreich gespeichert");
-          onRequestClose();
-        } else {
-          toast.error(
-            response.errorMessage ||
-              "Beim Speichern ist ein Fehler aufgetreten.",
-          );
-        }
-      } catch (error) {
-        unstable_rethrow(error);
-        toast.error("Beim Speichern ist ein Fehler aufgetreten.");
-        console.error(error);
-      }
+      if (await runAction(updateVariant, formData)) onRequestClose();
     });
   };
 

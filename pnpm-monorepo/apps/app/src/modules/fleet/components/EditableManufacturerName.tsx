@@ -1,6 +1,6 @@
 "use client";
 
-import { EditableText } from "@/modules/common/components/form/EditableText";
+import { EditableInput } from "@/modules/common/components/form/EditableInput";
 import { type Manufacturer } from "@sam-monorepo/database/browser";
 import { updateManufacturerAction } from "../actions/updateManufacturer";
 
@@ -13,19 +13,13 @@ export const EditableManufacturerName = ({
   className,
   manufacturer,
 }: Props) => {
-  const action = (formData: FormData) => {
-    const _formData = new FormData();
-    _formData.set("id", manufacturer.id);
-    _formData.set("name", (formData.get("value") as string) || "");
-
-    return updateManufacturerAction(_formData);
-  };
-
   return (
-    <EditableText
+    <EditableInput
       className={className}
-      action={action}
+      rowId={manufacturer.id}
+      columnName="name"
       initialValue={manufacturer.name}
+      action={updateManufacturerAction}
     />
   );
 };

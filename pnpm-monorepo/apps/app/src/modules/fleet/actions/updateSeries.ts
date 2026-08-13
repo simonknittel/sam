@@ -1,11 +1,9 @@
 "use server";
 
 import { prisma } from "@/db";
+import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { requireAuthenticationAction } from "@/modules/auth/server";
-import { serverActionErrorHandler } from "@/modules/common/actions/serverActionErrorHandler";
-import type { ServerAction } from "@/modules/common/actions/types";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -14,28 +12,23 @@ const schema = z.object({
   name: z.string().trim().min(1).optional(),
 });
 
-export const updateSeries: ServerAction = async (formData) => {
-  try {
-    /**
-     * Authenticate and authorize the request
-     */
-    const authentication = await requireAuthenticationAction("updateSeries");
-    await authentication.authorizeAction(
-      "manufacturersSeriesAndVariants",
-      "manage",
-    );
-
-    /**
-     * Validate the request
-     */
-    const { id, ...data } = schema.parse({
-      id: formData.get("id"),
-      name: formData.get("name"),
-    });
+export const updateSeries = createAuthenticatedAction(
+  "updateSeries",
+  schema,
+  async (formData, authentication, data, t) => {
+    if (
+      !(await authentication.authorize("manufacturersSeriesAndVariants", "manage"))
+    )
+      return {
+        error: t("Common.forbidden"),
+        requestPayload: formData,
+      };
 
     /**
      * Update
      */
+    const { id, ...updateData } = data;
+
     const existingSeries = await prisma.series.findUnique({
       where: {
         id,
@@ -44,13 +37,17 @@ export const updateSeries: ServerAction = async (formData) => {
         name: true,
       },
     });
-    if (!existingSeries) throw new Error("Not found");
+    if (!existingSeries)
+      return {
+        error: t("Common.notFound"),
+        requestPayload: formData,
+      };
 
     const updatedItem = await prisma.series.update({
       where: {
         id,
       },
-      data,
+      data: updateData,
     });
 
     await createAuditEvents([
@@ -80,19 +77,13 @@ export const updateSeries: ServerAction = async (formData) => {
      * Respond with the result
      */
     return {
-      status: 200,
+      success: t("Common.successfullySaved"),
     };
-  } catch (error) {
-    return serverActionErrorHandler(error, {
-      errorMessages: {
-        "400": "Ungültige Anfrage",
-        "401": "Du musst angemeldet sein, um diese Aktion auszuführen",
-        "403": "Du bist nicht berechtigt, diese Aktion auszuführen",
-        "404":
-          "Beim Speichern ist ein Fehler aufgetreten. Die Series konnte nicht gefunden werden.",
-        "409": "Konflikt. Bitte aktualisiere die Seite und probiere es erneut.",
-        "500": "Beim Speichern ist ein unerwarteter Fehler aufgetreten",
-      },
-    });
-  }
-};
+  },
+  {
+    parseFormData: (formData) => ({
+      id: formData.get("id"),
+      name: formData.get("name"),
+    }),
+  },
+);

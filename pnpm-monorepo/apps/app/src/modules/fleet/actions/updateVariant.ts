@@ -1,11 +1,9 @@
 "use server";
 
 import { prisma } from "@/db";
+import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { requireAuthenticationAction } from "@/modules/auth/server";
-import { serverActionErrorHandler } from "@/modules/common/actions/serverActionErrorHandler";
-import type { ServerAction } from "@/modules/common/actions/types";
 import { VariantStatus } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -37,37 +35,17 @@ const schema = z.object({
   linkUrls: z.array(z.string().url()).max(50).nullish(),
 });
 
-export const updateVariant: ServerAction = async (formData) => {
-  try {
-    /**
-     * Authenticate and authorize the request
-     */
-    const authentication = await requireAuthenticationAction("updateVariant");
-    await authentication.authorizeAction(
-      "manufacturersSeriesAndVariants",
-      "manage",
-    );
-
-    /**
-     * Validate the request
-     */
-    const { id, ...data } = schema.parse({
-      id: formData.get("id"),
-      name: formData.get("name"),
-      status: formData.get("status"),
-      tagKeys: formData.has("tagKeys[]")
-        ? formData.getAll("tagKeys[]")
-        : undefined,
-      tagValues: formData.has("tagValues[]")
-        ? formData.getAll("tagValues[]")
-        : undefined,
-      linkServiceNames: formData.has("linkServiceNames[]")
-        ? formData.getAll("linkServiceNames[]")
-        : undefined,
-      linkUrls: formData.has("linkUrls[]")
-        ? formData.getAll("linkUrls[]")
-        : undefined,
-    });
+export const updateVariant = createAuthenticatedAction(
+  "updateVariant",
+  schema,
+  async (formData, authentication, data, t) => {
+    if (
+      !(await authentication.authorize("manufacturersSeriesAndVariants", "manage"))
+    )
+      return {
+        error: t("Common.forbidden"),
+        requestPayload: formData,
+      };
 
     /**
      * Update variant
@@ -79,7 +57,7 @@ export const updateVariant: ServerAction = async (formData) => {
 
     const existingVariant = await prisma.variant.findUnique({
       where: {
-        id,
+        id: data.id,
       },
       select: {
         name: true,
@@ -92,11 +70,15 @@ export const updateVariant: ServerAction = async (formData) => {
         },
       },
     });
-    if (!existingVariant) throw new Error("Not found");
+    if (!existingVariant)
+      return {
+        error: t("Common.notFound"),
+        requestPayload: formData,
+      };
 
     const updatedItem = await prisma.variant.update({
       where: {
-        id,
+        id: data.id,
       },
       data: {
         name: data.name,
@@ -152,19 +134,26 @@ export const updateVariant: ServerAction = async (formData) => {
      * Respond with the result
      */
     return {
-      status: 200,
+      success: t("Common.successfullySaved"),
     };
-  } catch (error) {
-    return serverActionErrorHandler(error, {
-      errorMessages: {
-        "400": "Ungültige Anfrage",
-        "401": "Du musst angemeldet sein, um diese Aktion auszuführen",
-        "403": "Du bist nicht berechtigt, diese Aktion auszuführen",
-        "404":
-          "Beim Speichern ist ein Fehler aufgetreten. Die Variante konnte nicht gefunden werden.",
-        "409": "Konflikt. Bitte aktualisiere die Seite und probiere es erneut.",
-        "500": "Beim Speichern ist ein unerwarteter Fehler aufgetreten",
-      },
-    });
-  }
-};
+  },
+  {
+    parseFormData: (formData) => ({
+      id: formData.get("id"),
+      name: formData.get("name"),
+      status: formData.get("status"),
+      tagKeys: formData.has("tagKeys[]")
+        ? formData.getAll("tagKeys[]")
+        : undefined,
+      tagValues: formData.has("tagValues[]")
+        ? formData.getAll("tagValues[]")
+        : undefined,
+      linkServiceNames: formData.has("linkServiceNames[]")
+        ? formData.getAll("linkServiceNames[]")
+        : undefined,
+      linkUrls: formData.has("linkUrls[]")
+        ? formData.getAll("linkUrls[]")
+        : undefined,
+    }),
+  },
+);

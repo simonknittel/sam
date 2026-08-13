@@ -1,10 +1,9 @@
 "use server";
+
 import { prisma } from "@/db";
+import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { requireAuthenticationAction } from "@/modules/auth/server";
-import { serverActionErrorHandler } from "@/modules/common/actions/serverActionErrorHandler";
-import type { ServerAction } from "@/modules/common/actions/types";
 import { z } from "zod";
 
 const schema = z.object({
@@ -12,27 +11,26 @@ const schema = z.object({
   name: z.string().trim(),
 });
 
-export const updateShipAction: ServerAction = async (formData) => {
-  try {
-    /**
-     * Authenticate and authorize the request
-     */
-    const authentication =
-      await requireAuthenticationAction("updateShipAction");
-    await authentication.authorizeAction("ship", "manage");
-    if (!authentication.session.entity) throw new Error("Forbidden");
-
-    /**
-     * Validate the request
-     */
-    const { id, ...data } = schema.parse({
-      id: formData.get("id"),
-      name: formData.get("name"),
-    });
+export const updateShipAction = createAuthenticatedAction(
+  "updateShipAction",
+  schema,
+  async (formData, authentication, data, t) => {
+    if (!(await authentication.authorize("ship", "manage")))
+      return {
+        error: t("Common.forbidden"),
+        requestPayload: formData,
+      };
+    if (!authentication.session.entity)
+      return {
+        error: t("Common.forbidden"),
+        requestPayload: formData,
+      };
 
     /**
      * Update
      */
+    const { id, ...updateData } = data;
+
     const existingShip = await prisma.ship.findUnique({
       where: {
         id,
@@ -45,7 +43,11 @@ export const updateShipAction: ServerAction = async (formData) => {
         deletedAt: true,
       },
     });
-    if (existingShip?.deletedAt !== null) throw new Error("Not found");
+    if (existingShip?.deletedAt !== null)
+      return {
+        error: t("Common.notFound"),
+        requestPayload: formData,
+      };
 
     const updatedShip = await prisma.ship.update({
       where: {
@@ -53,7 +55,7 @@ export const updateShipAction: ServerAction = async (formData) => {
         ownerId: authentication.session.user.id,
       },
       data: {
-        ...data,
+        ...updateData,
         updatedById: authentication.session.entity.id,
       },
       select: {
@@ -80,19 +82,13 @@ export const updateShipAction: ServerAction = async (formData) => {
      * Respond with the result
      */
     return {
-      status: 200,
+      success: t("Common.successfullySaved"),
     };
-  } catch (error) {
-    return serverActionErrorHandler(error, {
-      errorMessages: {
-        "400": "Ungültige Anfrage",
-        "401": "Du musst angemeldet sein, um diese Aktion auszuführen",
-        "403": "Du bist nicht berechtigt, diese Aktion auszuführen",
-        "404":
-          "Beim Speichern ist ein Fehler aufgetreten. Das Schiff konnte nicht gefunden werden.",
-        "409": "Konflikt. Bitte aktualisiere die Seite und probiere es erneut.",
-        "500": "Beim Speichern ist ein unerwarteter Fehler aufgetreten",
-      },
-    });
-  }
-};
+  },
+  {
+    parseFormData: (formData) => ({
+      id: formData.get("id"),
+      name: formData.get("name"),
+    }),
+  },
+);
