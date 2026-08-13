@@ -59,7 +59,6 @@ jobs:
       - name: Lint
         run: pnpm --filter @sam-monorepo/app run lint
         working-directory: pnpm-monorepo
-        continue-on-error: true
 
   prettier:
     runs-on: ubuntu-24.04
