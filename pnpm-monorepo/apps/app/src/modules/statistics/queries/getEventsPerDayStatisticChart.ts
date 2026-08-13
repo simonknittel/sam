@@ -2,17 +2,13 @@ import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { startOfDay } from "date-fns";
-import { formatInTimeZone } from "date-fns-tz";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
 import {
-  buildChartData,
+  buildTotalAndDeltaChart,
+  formatDateKey,
   normalizeOptions,
-  type StatisticChartData,
 } from "../utils/chartData";
-
-const formatDateKey = (date: Date) =>
-  formatInTimeZone(date, "Europe/Berlin", "yyyy-MM-dd");
 
 export const getEventsPerDayStatisticChart = cache(
   withTrace("getEventsPerDayStatisticChart", async () => {
@@ -52,58 +48,11 @@ export const getEventsPerDayStatisticChart = cache(
       };
     });
 
-    const totalRecords = orderedEvents.map((entry) => ({
-      id: "events",
-      name: "Events",
-      createdAt: entry.createdAt,
-      count: entry.count,
-    }));
-
-    const deltaRecords = orderedEvents.flatMap((entry, index) => {
-      if (index === 0) return [];
-
-      return [
-        {
-          id: "events-delta",
-          name: "Veränderung zum Vortag",
-          createdAt: entry.createdAt,
-          count: entry.count - orderedEvents[index - 1].count,
-        },
-      ];
-    });
-
-    const chartData = buildChartData(
-      [...totalRecords, ...deltaRecords],
+    return buildTotalAndDeltaChart(
+      orderedEvents,
+      "events",
+      "Events",
       configuration,
     );
-
-    const series = chartData.series.map((serie) =>
-      serie.name === "Veränderung zum Vortag"
-        ? {
-            ...serie,
-            yAxisIndex: 1,
-            lineStyle: {
-              type: "dashed" as const,
-              width: 1,
-            },
-          }
-        : serie,
-    );
-
-    return {
-      ...chartData,
-      series,
-      configuration,
-      yAxes: [
-        {
-          name: "Events",
-          position: "left",
-        },
-        {
-          name: "Δ Vortag",
-          position: "right",
-        },
-      ],
-    } satisfies StatisticChartData;
   }),
 );

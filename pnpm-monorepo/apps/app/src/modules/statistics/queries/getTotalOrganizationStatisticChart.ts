@@ -1,17 +1,13 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import { formatInTimeZone } from "date-fns-tz";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
 import {
-  buildChartData,
+  buildTotalAndDeltaChart,
+  formatDateKey,
   normalizeOptions,
-  type StatisticChartData,
 } from "../utils/chartData";
-
-const formatDateKey = (date: Date) =>
-  formatInTimeZone(date, "Europe/Berlin", "yyyy-MM-dd");
 
 export const getTotalOrganizationStatisticChart = cache(
   withTrace("getTotalOrganizationStatisticChart", async () => {
@@ -66,60 +62,11 @@ export const getTotalOrganizationStatisticChart = cache(
       };
     });
 
-    const totalRecords = orderedTotals.map(({ createdAt, count }) => ({
-      id: "organizations",
-      name: "Organisationen",
-      createdAt,
-      count,
-    }));
-
-    const deltaRecords = orderedTotals.flatMap(
-      ({ createdAt, count }, index) => {
-        if (index === 0) return [];
-
-        return [
-          {
-            id: "organizations-delta",
-            name: "Veränderung zum Vortag",
-            createdAt,
-            count: count - orderedTotals[index - 1].count,
-          },
-        ];
-      },
-    );
-
-    const chartData = buildChartData(
-      [...totalRecords, ...deltaRecords],
+    return buildTotalAndDeltaChart(
+      orderedTotals,
+      "organizations",
+      "Organisationen",
       configuration,
     );
-
-    const series = chartData.series.map((serie) =>
-      serie.name === "Veränderung zum Vortag"
-        ? {
-            ...serie,
-            yAxisIndex: 1,
-            lineStyle: {
-              type: "dashed" as const,
-              width: 1,
-            },
-          }
-        : serie,
-    );
-
-    return {
-      ...chartData,
-      series,
-      configuration,
-      yAxes: [
-        {
-          name: "Organisationen",
-          position: "left",
-        },
-        {
-          name: "Δ Vortag",
-          position: "right",
-        },
-      ],
-    } satisfies StatisticChartData;
   }),
 );

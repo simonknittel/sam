@@ -61,7 +61,7 @@ interface ChartOptions {
 const DEFAULT_DAYS = 365;
 const MIN_AXIS_DATE = startOfDay(new Date("2025-12-02"));
 
-const formatDateKey = (date: Date) =>
+export const formatDateKey = (date: Date) =>
   formatInTimeZone(date, "Europe/Berlin", "yyyy-MM-dd");
 
 const buildAxisPoints = (fromDate: Date, toDate: Date) => {
@@ -94,6 +94,80 @@ export const normalizeOptions = (options?: ChartOptions): NormalizedOptions => {
     toDateExclusive: addDays(toDate, 1),
     axisPoints: buildAxisPoints(fromDate, toDate),
   } satisfies NormalizedOptions;
+};
+
+interface TotalPoint {
+  createdAt: Date;
+  count: number;
+}
+
+const DELTA_SERIES_NAME = "Veränderung zum Vortag";
+
+/**
+ * The shared tail of the statistic chart queries: turns an ordered
+ * day-by-day total series into the chart's total line plus a dashed
+ * "change vs. previous day" line on a second y-axis. The series name
+ * doubles as the left axis label.
+ */
+export const buildTotalAndDeltaChart = (
+  orderedTotals: TotalPoint[],
+  seriesId: string,
+  seriesName: string,
+  configuration?: ChartConfiguration,
+): StatisticChartData => {
+  const totalRecords = orderedTotals.map(({ createdAt, count }) => ({
+    id: seriesId,
+    name: seriesName,
+    createdAt,
+    count,
+  }));
+
+  const deltaRecords = orderedTotals.flatMap(({ createdAt, count }, index) => {
+    if (index === 0) return [];
+
+    return [
+      {
+        id: `${seriesId}-delta`,
+        name: DELTA_SERIES_NAME,
+        createdAt,
+        count: count - orderedTotals[index - 1].count,
+      },
+    ];
+  });
+
+  const chartData = buildChartData(
+    [...totalRecords, ...deltaRecords],
+    configuration,
+  );
+
+  const series = chartData.series.map((serie) =>
+    serie.name === DELTA_SERIES_NAME
+      ? {
+          ...serie,
+          yAxisIndex: 1,
+          lineStyle: {
+            type: "dashed" as const,
+            width: 1,
+          },
+        }
+      : serie,
+  );
+
+  return {
+    ...chartData,
+    series,
+    configuration,
+    yAxes: [
+      {
+        name: seriesName,
+        position: "left",
+      },
+      {
+        name: "Δ Vortag",
+        position: "right",
+      },
+    ],
+  } satisfies StatisticChartData;
 };
 
 export const buildChartData = (
