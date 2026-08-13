@@ -4,8 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
-import { updateCitizensSilcBalances } from "@/modules/silc/utils/updateCitizensSilcBalances";
+import { createSilcTransactions } from "@/modules/silc/utils/createSilcTransactions";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { CyclePhase, getCurrentPhase } from "../utils/getCurrentPhase";
@@ -56,51 +55,45 @@ export const endCollectionPhase = createAuthenticatedAction(
       },
     });
 
-    const [createdSilcTransactions] = await prisma.$transaction([
-      prisma.silcTransaction.createManyAndReturn({
-        data: allSilcBalances.map((citizen) => ({
-          receiverId: citizen.id,
-          value: -citizen.silcBalance,
-          description: `SINcome: ${cycle.title}`,
-          createdById: authentication.session.entity!.id,
-        })),
-        select: {
-          id: true,
-        },
-      }),
-
-      prisma.profitDistributionCycle.update({
-        where: {
-          id: data.id,
-        },
-        data: {
-          collectionEndedAt: new Date(),
-          collectionEndedById: authentication.session.entity?.id,
-        },
-      }),
-
-      ...allSilcBalances.map((entity) =>
-        prisma.profitDistributionCycleParticipant.upsert({
-          where: {
-            cycleId_citizenId: {
-              cycleId: data.id,
-              citizenId: entity.id,
+    await createSilcTransactions(
+      allSilcBalances.map((citizen) => ({
+        receiverId: citizen.id,
+        value: -citizen.silcBalance,
+        description: `SINcome: ${cycle.title}`,
+        createdById: authentication.session.entity!.id,
+      })),
+      {
+        additionalOperations: [
+          prisma.profitDistributionCycle.update({
+            where: {
+              id: data.id,
             },
-          },
-          update: {
-            silcBalanceSnapshot: entity.silcBalance,
-          },
-          create: {
-            cycleId: data.id,
-            citizenId: entity.id,
-            silcBalanceSnapshot: entity.silcBalance,
-          },
-        }),
-      ),
-    ]);
+            data: {
+              collectionEndedAt: new Date(),
+              collectionEndedById: authentication.session.entity?.id,
+            },
+          }),
 
-    await updateCitizensSilcBalances(
-      allSilcBalances.map((citizen) => citizen.id),
+          ...allSilcBalances.map((entity) =>
+            prisma.profitDistributionCycleParticipant.upsert({
+              where: {
+                cycleId_citizenId: {
+                  cycleId: data.id,
+                  citizenId: entity.id,
+                },
+              },
+              update: {
+                silcBalanceSnapshot: entity.silcBalance,
+              },
+              create: {
+                cycleId: data.id,
+                citizenId: entity.id,
+                silcBalanceSnapshot: entity.silcBalance,
+              },
+            }),
+          ),
+        ],
+      },
     );
 
     await createAuditEvents([
@@ -110,20 +103,6 @@ export const endCollectionPhase = createAuthenticatedAction(
           cycleId: data.id,
         },
         createdById: authentication.session.user.id,
-      },
-    ]);
-
-    /**
-     * Trigger notifications
-     */
-    await triggerNotifications([
-      {
-        type: "SilcTransactionsCreated",
-        payload: {
-          transactionIds: createdSilcTransactions.map(
-            (transaction) => transaction.id,
-          ),
-        },
       },
     ]);
 

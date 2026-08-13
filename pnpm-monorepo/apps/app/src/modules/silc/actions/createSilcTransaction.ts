@@ -1,13 +1,10 @@
 "use server";
 
-import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { updateCitizensSilcBalances } from "../utils/updateCitizensSilcBalances";
+import { createSilcTransactions } from "../utils/createSilcTransactions";
 
 const schema = z.object({
   receiverIds: z.array(z.string().trim().cuid()).min(1).max(250), // Arbitrary (untested) limit to prevent DDoS
@@ -38,26 +35,20 @@ export const createSilcTransaction = createAuthenticatedAction(
     /**
      * Create transaction
      */
-    const createdSilcTransactions =
-      await prisma.silcTransaction.createManyAndReturn({
-        data: data.receiverIds.map((receiverId) => ({
-          receiverId,
-          value: data.value,
-          description: data.description,
-          createdById: authentication.session.entity!.id,
-        })),
-        select: {
-          id: true,
-        },
-      });
+    const transactionIds = await createSilcTransactions(
+      data.receiverIds.map((receiverId) => ({
+        receiverId,
+        value: data.value,
+        description: data.description,
+        createdById: authentication.session.entity!.id,
+      })),
+    );
 
     await createAuditEvents([
       {
         type: AuditEventType.SILC_TRANSACTION_CREATED,
         data: {
-          transactionIds: createdSilcTransactions.map(
-            (transaction) => transaction.id,
-          ),
+          transactionIds,
           receiverIds: data.receiverIds,
           value: data.value,
           description: data.description,
@@ -65,32 +56,6 @@ export const createSilcTransaction = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    /**
-     * Update citizens' balances
-     */
-    await updateCitizensSilcBalances(data.receiverIds);
-
-    /**
-     * Trigger notifications
-     */
-    await triggerNotifications([
-      {
-        type: "SilcTransactionsCreated",
-        payload: {
-          transactionIds: createdSilcTransactions.map(
-            (transaction) => transaction.id,
-          ),
-        },
-      },
-    ]);
-
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath("/app/silc");
-    revalidatePath("/app/silc/transactions");
-    revalidatePath("/app/dashboard");
 
     /**
      * Respond with the result

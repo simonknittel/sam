@@ -4,8 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
-import { updateCitizensSilcBalances } from "@/modules/silc/utils/updateCitizensSilcBalances";
+import { createSilcTransactions } from "@/modules/silc/utils/createSilcTransactions";
 import { createId } from "@paralleldrive/cuid2";
 import { TaskRewardType, TaskVisibility } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
@@ -88,94 +87,37 @@ export const completeTask = createAuthenticatedAction(
       task.rewardType === TaskRewardType.SILC ||
       task.rewardType === TaskRewardType.NEW_SILC
     ) {
-      const silcTransactionIds: string[] = [];
+      const rewardValue =
+        task.rewardType === TaskRewardType.SILC
+          ? task.rewardTypeSilcValue!
+          : task.rewardTypeNewSilcValue!;
 
-      if (task.rewardType === TaskRewardType.SILC) {
-        const transactions = await prisma.$transaction([
-          prisma.silcTransaction.createManyAndReturn({
-            data: data.completionistIds.map((receiverId) => ({
-              receiverId,
-              value: task.rewardTypeSilcValue!,
-              description: `Task erfüllt: ${task.title}`,
-              createdById: authentication.session.entity!.id,
-            })),
-            select: {
-              id: true,
-            },
-          }),
+      await createSilcTransactions([
+        ...data.completionistIds.map((receiverId) => ({
+          receiverId,
+          value: rewardValue,
+          description: `Task erfüllt: ${task.title}`,
+          createdById: authentication.session.entity!.id,
+        })),
 
-          ...(task.createdById
-            ? [
-                prisma.silcTransaction.create({
-                  data: {
-                    receiverId: task.createdById,
-                    value: -(
-                      task.rewardTypeSilcValue! * data.completionistIds.length
-                    ),
-                    description: `Task abgeschlossen: ${task.title}`,
-                    createdById: authentication.session.entity.id,
-                  },
-                }),
-              ]
-            : []),
-        ]);
-
-        const completionistTransactions = transactions[0];
-        silcTransactionIds.push(
-          ...(completionistTransactions as { id: string }[]).map((t) => t.id),
-        );
-
-        if (task.createdById && transactions[1]) {
-          silcTransactionIds.push((transactions[1] as { id: string }).id);
-        }
-
-        /**
-         * Update citizens' balances
-         */
-        if (task.createdById)
-          await updateCitizensSilcBalances([task.createdById]);
-      } else if (task.rewardType === TaskRewardType.NEW_SILC) {
-        const createdTransactions =
-          await prisma.silcTransaction.createManyAndReturn({
-            data: data.completionistIds.map((receiverId) => ({
-              receiverId,
-              value: task.rewardTypeNewSilcValue!,
-              description: `Task erfüllt: ${task.title}`,
-              createdById: authentication.session.entity!.id,
-            })),
-            select: {
-              id: true,
-            },
-          });
-
-        silcTransactionIds.push(...createdTransactions.map((t) => t.id));
-      }
-
-      /**
-       * Update citizens' balances
-       */
-      await updateCitizensSilcBalances(data.completionistIds);
-
-      /**
-       * Trigger notifications
-       */
-      if (silcTransactionIds.length > 0) {
-        await triggerNotifications([
-          {
-            type: "SilcTransactionsCreated",
-            payload: {
-              transactionIds: silcTransactionIds,
-            },
-          },
-        ]);
-      }
+        // With the SILC reward type the task's creator funds the reward
+        ...(task.rewardType === TaskRewardType.SILC && task.createdById
+          ? [
+              {
+                receiverId: task.createdById,
+                value: -(
+                  task.rewardTypeSilcValue! * data.completionistIds.length
+                ),
+                description: `Task abgeschlossen: ${task.title}`,
+                createdById: authentication.session.entity.id,
+              },
+            ]
+          : []),
+      ]);
 
       /**
        * Revalidate cache(s)
        */
-      revalidatePath("/app/silc");
-      revalidatePath("/app/silc/transactions");
-      revalidatePath("/app/dashboard");
       revalidatePath("/app/spynet/citizen/[id]/silc");
     }
 
