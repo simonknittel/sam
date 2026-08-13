@@ -1,5 +1,6 @@
 "use client";
 
+import { runAction } from "@/modules/actions/utils/runAction";
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
@@ -7,9 +8,7 @@ import { Button2 } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
 import type { Event } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
-import { unstable_rethrow } from "next/navigation";
 import { useState, useTransition } from "react";
-import toast from "react-hot-toast";
 import { FaPlus, FaSave } from "react-icons/fa";
 import { createManagers } from "../actions/createManagers";
 
@@ -32,24 +31,7 @@ export const CreateManagers = (props: Props) => {
 
   const formAction = (formData: FormData) => {
     startSubmitTransition(async () => {
-      try {
-        const response = await createManagers(formData);
-
-        if (response.error) {
-          toast.error(response.error);
-          console.error(response);
-          return;
-        }
-
-        toast.success(response.success!);
-        setIsOpen(false);
-      } catch (error) {
-        unstable_rethrow(error);
-        toast.error(
-          "Ein unbekannter Fehler ist aufgetreten. Bitte versuche es später erneut.",
-        );
-        console.error(error);
-      }
+      if (await runAction(createManagers, formData)) setIsOpen(false);
     });
   };
 

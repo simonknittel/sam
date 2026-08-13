@@ -1,14 +1,10 @@
 "use server";
 
 import { prisma } from "@/db";
+import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { requireAuthenticationAction } from "@/modules/auth/server";
-import { log } from "@/modules/logging";
-import { getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
-import { unstable_rethrow } from "next/navigation";
-import { serializeError } from "serialize-error";
 import { z } from "zod";
 import { isAllowedToManagePositions } from "../utils/isAllowedToManagePositions";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
@@ -23,46 +19,16 @@ const schema = z.object({
   textColor: z.string().max(7).optional().nullable(),
 });
 
-export const updateEventPosition = async (formData: FormData) => {
-  const t = await getTranslations();
-
-  try {
-    /**
-     * Authenticate
-     */
-    const authentication = await requireAuthenticationAction(
-      "updateEventPosition",
-    );
-
-    /**
-     * Validate the request
-     */
-    const result = schema.safeParse({
-      positionId: formData.get("positionId"),
-      name: formData.get("name"),
-      description: formData.has("description")
-        ? formData.get("description")
-        : undefined,
-      variantIds: formData.getAll("variantId[]") || [],
-      fontSize: formData.has("fontSize") ? formData.get("fontSize") : null,
-      backgroundColor: formData.has("backgroundColor")
-        ? formData.get("backgroundColor")
-        : null,
-      textColor: formData.has("textColor") ? formData.get("textColor") : null,
-    });
-    if (!result.success)
-      return {
-        error: t("Common.badRequest"),
-        errorDetails: result.error,
-        requestPayload: formData,
-      };
-
+export const updateEventPosition = createAuthenticatedAction(
+  "updateEventPosition",
+  schema,
+  async (formData, authentication, data, t) => {
     /**
      * Authorize the request
      */
     const position = await prisma.eventPosition.findUnique({
       where: {
-        id: result.data.positionId,
+        id: data.positionId,
       },
       include: {
         event: {
@@ -95,17 +61,17 @@ export const updateEventPosition = async (formData: FormData) => {
 
       prisma.eventPosition.update({
         where: {
-          id: result.data.positionId,
+          id: data.positionId,
         },
         data: {
-          name: result.data.name,
-          description: result.data.description,
-          fontSize: result.data.fontSize,
-          backgroundColor: result.data.backgroundColor,
-          textColor: result.data.textColor,
+          name: data.name,
+          description: data.description,
+          fontSize: data.fontSize,
+          backgroundColor: data.backgroundColor,
+          textColor: data.textColor,
           requiredVariants: {
             createMany: {
-              data: result.data.variantIds.map((id, index) => ({
+              data: data.variantIds.map((id, index) => ({
                 variantId: id,
                 order: index,
               })),
@@ -122,13 +88,13 @@ export const updateEventPosition = async (formData: FormData) => {
           eventId: position.event.id,
           positionId: position.id,
           previousName: position.name,
-          newName: result.data.name,
+          newName: data.name,
           previousFontSize: position.fontSize || null,
-          newFontSize: result.data.fontSize || null,
+          newFontSize: data.fontSize || null,
           previousBackgroundColor: position.backgroundColor || null,
-          newBackgroundColor: result.data.backgroundColor || null,
+          newBackgroundColor: data.backgroundColor || null,
           previousTextColor: position.textColor || null,
-          newTextColor: result.data.textColor || null,
+          newTextColor: data.textColor || null,
         },
         createdById: authentication.session.user.id,
       },
@@ -145,12 +111,20 @@ export const updateEventPosition = async (formData: FormData) => {
     return {
       success: "Erfolgreich gespeichert.",
     };
-  } catch (error) {
-    unstable_rethrow(error);
-    log.error("Internal Server Error", { error: serializeError(error) });
-    return {
-      error: t("Common.internalServerError"),
-      requestPayload: formData,
-    };
-  }
-};
+  },
+  {
+    parseFormData: (formData) => ({
+      positionId: formData.get("positionId"),
+      name: formData.get("name"),
+      description: formData.has("description")
+        ? formData.get("description")
+        : undefined,
+      variantIds: formData.getAll("variantId[]") || [],
+      fontSize: formData.has("fontSize") ? formData.get("fontSize") : null,
+      backgroundColor: formData.has("backgroundColor")
+        ? formData.get("backgroundColor")
+        : null,
+      textColor: formData.has("textColor") ? formData.get("textColor") : null,
+    }),
+  },
+);

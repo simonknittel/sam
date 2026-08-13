@@ -1,5 +1,6 @@
 "use client";
 
+import { runAction } from "@/modules/actions/utils/runAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import { VariantWithLogo } from "@/modules/fleet/components/VariantWithLogo";
@@ -13,9 +14,7 @@ import type {
   Variant,
 } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
-import { unstable_rethrow } from "next/navigation";
 import { useId, useTransition } from "react";
-import toast from "react-hot-toast";
 import { FaMinus, FaPlus } from "react-icons/fa";
 import { createEventPositionApplicationForCurrentUser } from "../actions/createEventPositionApplicationForCurrentUser";
 import { deleteEventPositionApplicationForCurrentUser } from "../actions/deleteEventPositionApplicationForCurrentUser";
@@ -50,25 +49,12 @@ export const ToggleEventPositionApplicationForCurrentUser = ({
 
   const formAction = (formData: FormData) => {
     startTransition(async () => {
-      try {
-        const response = hasCurrentUserAlreadyApplied
-          ? await deleteEventPositionApplicationForCurrentUser(formData)
-          : await createEventPositionApplicationForCurrentUser(formData);
-
-        if ("error" in response) {
-          toast.error(response.error);
-          console.error(response);
-          return;
-        }
-
-        toast.success(response.success);
-      } catch (error) {
-        unstable_rethrow(error);
-        toast.error(
-          "Ein unbekannter Fehler ist aufgetreten. Bitte versuche es später erneut.",
-        );
-        console.error(error);
-      }
+      await runAction(
+        hasCurrentUserAlreadyApplied
+          ? deleteEventPositionApplicationForCurrentUser
+          : createEventPositionApplicationForCurrentUser,
+        formData,
+      );
     });
   };
 

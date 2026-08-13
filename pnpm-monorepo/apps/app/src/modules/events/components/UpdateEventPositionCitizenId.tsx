@@ -1,5 +1,6 @@
 "use client";
 
+import { runAction } from "@/modules/actions/utils/runAction";
 import type {
   Entity,
   EventPosition,
@@ -7,9 +8,7 @@ import type {
   Ship,
 } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
-import { unstable_rethrow } from "next/navigation";
 import { useTransition, type ChangeEventHandler } from "react";
-import toast from "react-hot-toast";
 import { resetEventPositionCitizenId } from "../actions/resetEventPositionCitizenId";
 import { updateEventPositionCitizenId } from "../actions/updateEventPositionCitizenId";
 import styles from "./UpdateEventPositionCitizenId.module.css";
@@ -46,26 +45,12 @@ export const UpdateEventPositionCitizenId = ({
     formData.set("citizenId", event.target.value);
 
     startTransition(async () => {
-      try {
-        const response =
-          event.target.value === "-"
-            ? await resetEventPositionCitizenId(formData)
-            : await updateEventPositionCitizenId(formData);
-
-        if ("error" in response) {
-          toast.error(response.error);
-          console.error(response);
-          return;
-        }
-
-        toast.success(response.success);
-      } catch (error) {
-        unstable_rethrow(error);
-        toast.error(
-          "Ein unbekannter Fehler ist aufgetreten. Bitte versuche es später erneut.",
-        );
-        console.error(error);
-      }
+      await runAction(
+        event.target.value === "-"
+          ? resetEventPositionCitizenId
+          : updateEventPositionCitizenId,
+        formData,
+      );
     });
   };
 

@@ -1,14 +1,10 @@
 "use server";
 
 import { prisma } from "@/db";
+import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { requireAuthenticationAction } from "@/modules/auth/server";
-import { log } from "@/modules/logging";
-import { getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
-import { unstable_rethrow } from "next/navigation";
-import { serializeError } from "serialize-error";
 import { z } from "zod";
 import { isAllowedToManageEvent } from "../utils/isAllowedToManageEvent";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
@@ -18,35 +14,16 @@ const schema = z.object({
   managerIds: z.array(z.string().trim().cuid()).max(50), // Arbitrary (untested) limit to prevent DDoS
 });
 
-export const createManagers = async (formData: FormData) => {
-  const t = await getTranslations();
-
-  try {
-    /**
-     * Authenticate and authorize the request
-     */
-    const authentication = await requireAuthenticationAction("createManagers");
-
-    /**
-     * Validate the request
-     */
-    const result = schema.safeParse({
-      eventId: formData.get("eventId"),
-      managerIds: formData.getAll("managerId[]"),
-    });
-    if (!result.success)
-      return {
-        error: t("Common.badRequest"),
-        errorDetails: result.error,
-        requestPayload: formData,
-      };
-
+export const createManagers = createAuthenticatedAction(
+  "createManagers",
+  schema,
+  async (formData, authentication, data, t) => {
     /**
      * Authorize the request
      */
     const event = await prisma.event.findUnique({
       where: {
-        id: result.data.eventId,
+        id: data.eventId,
       },
       include: {
         managers: true,
@@ -71,7 +48,7 @@ export const createManagers = async (formData: FormData) => {
       },
       data: {
         managers: {
-          connect: result.data.managerIds.map((id) => ({
+          connect: data.managerIds.map((id) => ({
             id,
           })),
         },
@@ -83,7 +60,7 @@ export const createManagers = async (formData: FormData) => {
         type: AuditEventType.EVENT_MANAGERS_ASSIGNED,
         data: {
           eventId: event.id,
-          managerIds: result.data.managerIds,
+          managerIds: data.managerIds,
         },
         createdById: authentication.session.user.id,
       },
@@ -100,12 +77,11 @@ export const createManagers = async (formData: FormData) => {
     return {
       success: "Erfolgreich gespeichert.",
     };
-  } catch (error) {
-    unstable_rethrow(error);
-    log.error("Internal Server Error", { error: serializeError(error) });
-    return {
-      error: t("Common.internalServerError"),
-      requestPayload: formData,
-    };
-  }
-};
+  },
+  {
+    parseFormData: (formData) => ({
+      eventId: formData.get("eventId"),
+      managerIds: formData.getAll("managerId[]"),
+    }),
+  },
+);

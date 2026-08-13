@@ -11,12 +11,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/modules/common/components/AlertDialog";
+import { runAction } from "@/modules/actions/utils/runAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { type Entity, type Event } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
-import { unstable_rethrow } from "next/navigation";
 import { useId, useTransition } from "react";
-import toast from "react-hot-toast";
 import { FaTrash } from "react-icons/fa";
 import { deleteManager } from "../actions/deleteManager";
 
@@ -32,23 +31,7 @@ export const DeleteManager = ({ className, eventId, managerId }: Props) => {
 
   const formAction = (formData: FormData) => {
     startTransition(async () => {
-      try {
-        const response = await deleteManager(formData);
-
-        if ("error" in response) {
-          toast.error(response.error);
-          console.error(response);
-          return;
-        }
-
-        toast.success(response.success);
-      } catch (error) {
-        unstable_rethrow(error);
-        toast.error(
-          "Ein unbekannter Fehler ist aufgetreten. Bitte versuche es später erneut.",
-        );
-        console.error(error);
-      }
+      await runAction(deleteManager, formData);
     });
   };
 

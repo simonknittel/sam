@@ -1,14 +1,10 @@
 "use server";
 
 import { prisma } from "@/db";
+import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { requireAuthenticationAction } from "@/modules/auth/server";
-import { log } from "@/modules/logging";
-import { getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
-import { unstable_rethrow } from "next/navigation";
-import { serializeError } from "serialize-error";
 import { z } from "zod";
 import { isAllowedToManagePositions } from "../utils/isAllowedToManagePositions";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
@@ -24,49 +20,16 @@ const schema = z.object({
   textColor: z.string().max(7).optional().nullish(),
 });
 
-export const createEventPosition = async (formData: FormData) => {
-  const t = await getTranslations();
-
-  try {
-    /**
-     * Authenticate
-     */
-    const authentication = await requireAuthenticationAction(
-      "createEventPosition",
-    );
-
-    /**
-     * Validate the request
-     */
-    const result = schema.safeParse({
-      eventId: formData.get("eventId"),
-      name: formData.get("name"),
-      description: formData.has("description")
-        ? formData.get("description")
-        : undefined,
-      variantIds: formData.getAll("variantId[]") || [],
-      parentPositionId: formData.has("parentPositionId")
-        ? formData.get("parentPositionId")
-        : undefined,
-      fontSize: formData.has("fontSize") ? formData.get("fontSize") : null,
-      backgroundColor: formData.has("backgroundColor")
-        ? formData.get("backgroundColor")
-        : null,
-      textColor: formData.has("textColor") ? formData.get("textColor") : null,
-    });
-    if (!result.success)
-      return {
-        error: t("Common.badRequest"),
-        errorDetails: result.error,
-        requestPayload: formData,
-      };
-
+export const createEventPosition = createAuthenticatedAction(
+  "createEventPosition",
+  schema,
+  async (formData, authentication, data, t) => {
     /**
      * Authorize the request
      */
     const event = await prisma.event.findUnique({
       where: {
-        id: result.data.eventId,
+        id: data.eventId,
       },
       include: {
         managers: true,
@@ -90,28 +53,28 @@ export const createEventPosition = async (formData: FormData) => {
       data: {
         event: {
           connect: {
-            id: result.data.eventId,
+            id: data.eventId,
           },
         },
-        name: result.data.name,
-        description: result.data.description,
-        fontSize: result.data.fontSize,
-        backgroundColor: result.data.backgroundColor,
-        textColor: result.data.textColor,
+        name: data.name,
+        description: data.description,
+        fontSize: data.fontSize,
+        backgroundColor: data.backgroundColor,
+        textColor: data.textColor,
         order: event.positions.length,
         requiredVariants: {
           createMany: {
-            data: result.data.variantIds.map((id, index) => ({
+            data: data.variantIds.map((id, index) => ({
               variantId: id,
               order: index,
             })),
           },
         },
-        ...(result.data.parentPositionId
+        ...(data.parentPositionId
           ? {
               parentPosition: {
                 connect: {
-                  id: result.data.parentPositionId,
+                  id: data.parentPositionId,
                 },
               },
             }
@@ -128,9 +91,9 @@ export const createEventPosition = async (formData: FormData) => {
         data: {
           eventId: event.id,
           positionId: createdPosition.id,
-          name: result.data.name,
-          variantIds: result.data.variantIds,
-          parentPositionId: result.data.parentPositionId,
+          name: data.name,
+          variantIds: data.variantIds,
+          parentPositionId: data.parentPositionId,
         },
         createdById: authentication.session.user.id,
       },
@@ -147,14 +110,23 @@ export const createEventPosition = async (formData: FormData) => {
     return {
       success: t("Common.successfullySaved"),
     };
-  } catch (error) {
-    unstable_rethrow(error);
-    log.error("Internal Server Error", {
-      error: serializeError(error),
-    });
-    return {
-      error: t("Common.internalServerError"),
-      requestPayload: formData,
-    };
-  }
-};
+  },
+  {
+    parseFormData: (formData) => ({
+      eventId: formData.get("eventId"),
+      name: formData.get("name"),
+      description: formData.has("description")
+        ? formData.get("description")
+        : undefined,
+      variantIds: formData.getAll("variantId[]") || [],
+      parentPositionId: formData.has("parentPositionId")
+        ? formData.get("parentPositionId")
+        : undefined,
+      fontSize: formData.has("fontSize") ? formData.get("fontSize") : null,
+      backgroundColor: formData.has("backgroundColor")
+        ? formData.get("backgroundColor")
+        : null,
+      textColor: formData.has("textColor") ? formData.get("textColor") : null,
+    }),
+  },
+);

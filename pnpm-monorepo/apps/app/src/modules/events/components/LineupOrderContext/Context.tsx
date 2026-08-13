@@ -1,5 +1,6 @@
 "use client";
 
+import { runAction } from "@/modules/actions/utils/runAction";
 import {
   updateEventLineupOrder,
   type MappedPosition,
@@ -12,7 +13,6 @@ import type {
   Variant,
 } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
-import { unstable_rethrow } from "next/navigation";
 import type { MouseEvent } from "react";
 import {
   createContext,
@@ -22,7 +22,6 @@ import {
   useState,
   useTransition,
 } from "react";
-import toast from "react-hot-toast";
 import { Position, type PositionType } from "../Position";
 
 interface LineupOrderContext {
@@ -184,23 +183,7 @@ export const LineupOrderProvider = ({
           JSON.stringify(clonedPositions.map(mapPosition)),
         );
 
-        try {
-          const response = await updateEventLineupOrder(formData);
-
-          if (response.error) {
-            toast.error(response.error);
-            console.error(response);
-            return;
-          }
-
-          toast.success(response.success!);
-        } catch (error) {
-          unstable_rethrow(error);
-          toast.error(
-            "Ein unbekannter Fehler ist aufgetreten. Bitte versuche es später erneut.",
-          );
-          console.error(error);
-        }
+        await runAction(updateEventLineupOrder, formData);
       });
     },
     [handleCancel, isDragging, positions],

@@ -1,5 +1,6 @@
 "use client";
 
+import { runAction } from "@/modules/actions/utils/runAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
@@ -17,7 +18,6 @@ import type {
 } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { flatten } from "lodash";
-import { unstable_rethrow } from "next/navigation";
 import {
   useId,
   useRef,
@@ -25,7 +25,6 @@ import {
   useTransition,
   type ChangeEvent,
 } from "react";
-import toast from "react-hot-toast";
 import {
   FaChevronDown,
   FaChevronUp,
@@ -80,31 +79,16 @@ export const CreateOrUpdateEventPosition = (props: Props) => {
 
   const formAction = (formData: FormData) => {
     startTransition(async () => {
-      try {
-        const response =
-          "position" in props
-            ? await updateEventPosition(formData)
-            : await createEventPosition(formData);
+      const succeeded = await runAction(
+        "position" in props ? updateEventPosition : createEventPosition,
+        formData,
+      );
+      if (!succeeded) return;
 
-        if (response.error) {
-          toast.error(response.error);
-          console.error(response);
-          return;
-        }
-
-        toast.success(response.success!);
-        if (formData.has("createAnother")) {
-          nameInputRef.current?.focus();
-          return;
-        } else {
-          setIsOpen(false);
-        }
-      } catch (error) {
-        unstable_rethrow(error);
-        toast.error(
-          "Ein unbekannter Fehler ist aufgetreten. Bitte versuche es später erneut.",
-        );
-        console.error(error);
+      if (formData.has("createAnother")) {
+        nameInputRef.current?.focus();
+      } else {
+        setIsOpen(false);
       }
     });
   };
