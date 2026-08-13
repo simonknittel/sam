@@ -18,7 +18,10 @@ export const updateManufacturerAction = createAuthenticatedAction(
   schema,
   async (formData, authentication, data, t) => {
     if (
-      !(await authentication.authorize("manufacturersSeriesAndVariants", "manage"))
+      !(await authentication.authorize(
+        "manufacturersSeriesAndVariants",
+        "manage",
+      ))
     )
       return {
         error: t("Common.forbidden"),

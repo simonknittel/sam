@@ -3,8 +3,8 @@
 import { env } from "@/env";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { Handles } from "@/modules/career/components/Handles";
-import { useRolesContext } from "@/modules/roles/components/RolesContext";
 import { Tooltip } from "@/modules/common/components/Tooltip";
+import { useRolesContext } from "@/modules/roles/components/RolesContext";
 import {
   FlowNodeRoleImage,
   FlowNodeType,

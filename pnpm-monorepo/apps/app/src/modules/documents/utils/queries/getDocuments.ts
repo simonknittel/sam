@@ -1,5 +1,6 @@
 import { env } from "@/env";
 import { requireAuthentication } from "@/modules/auth/server";
+import { svgToStaticImageData } from "@/modules/common/utils/svgToStaticImageData";
 import srcA1 from "@/modules/documents/assets/a1.svg";
 import srcA2 from "@/modules/documents/assets/a2.svg";
 import srcA3 from "@/modules/documents/assets/a3.svg";
@@ -28,7 +29,6 @@ import srcScavenger from "@/modules/documents/assets/scavenger.svg";
 import srcSupervisor from "@/modules/documents/assets/supervisor.svg";
 import srcTechAndTactic from "@/modules/documents/assets/techAndTactic.svg";
 import srcTradeAndTransport from "@/modules/documents/assets/tradeAndTransport.svg";
-import { svgToStaticImageData } from "@/modules/common/utils/svgToStaticImageData";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import type { StaticImageData } from "next/image";
 import { cache } from "react";

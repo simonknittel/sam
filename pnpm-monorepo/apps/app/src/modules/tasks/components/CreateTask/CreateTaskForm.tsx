@@ -331,7 +331,10 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
               </>
             }
             maxLength={2048}
-            defaultValue={getDefaultValueWithFallback("rewardTypeTextValue", "")}
+            defaultValue={getDefaultValueWithFallback(
+              "rewardTypeTextValue",
+              "",
+            )}
             className="mt-4"
             classNameTextarea="h-64"
           />

@@ -48,8 +48,7 @@ export const updateTaskAssignments = createAuthenticatedAction(
      * Update task
      */
     const assignmentsToDelete = task.assignments.filter(
-      (assignment) =>
-        !data.assignedToIds?.includes(assignment.citizenId),
+      (assignment) => !data.assignedToIds?.includes(assignment.citizenId),
     );
     const assignmentsToCreate =
       data.assignedToIds?.filter(

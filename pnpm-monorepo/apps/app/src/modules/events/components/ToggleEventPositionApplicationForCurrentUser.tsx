@@ -113,9 +113,7 @@ export const ToggleEventPositionApplicationForCurrentUser = ({
                     <VariantWithLogo
                       key={requiredVariant.id}
                       variant={requiredVariant.variant}
-                      manufacturer={
-                        requiredVariant.variant.series.manufacturer
-                      }
+                      manufacturer={requiredVariant.variant.series.manufacturer}
                       size={32}
                     />
                   ))}
@@ -129,7 +127,10 @@ export const ToggleEventPositionApplicationForCurrentUser = ({
         <Tooltip
           asChild
           triggerChildren={
-            <Button2 title="Für diesen Posten Interesse anmelden" disabled={true}>
+            <Button2
+              title="Für diesen Posten Interesse anmelden"
+              disabled={true}
+            >
               Interesse anmelden
               <FaPlus />
             </Button2>
