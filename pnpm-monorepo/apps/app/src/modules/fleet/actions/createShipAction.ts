@@ -1,14 +1,10 @@
 "use server";
 
 import { prisma } from "@/db";
+import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { requireAuthenticationAction } from "@/modules/auth/server";
-import { log } from "@/modules/logging";
-import { getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
-import { unstable_rethrow } from "next/navigation";
-import { serializeError } from "serialize-error";
 import { z } from "zod";
 
 const schema = z.object({
@@ -16,31 +12,20 @@ const schema = z.object({
   name: z.string().trim().max(255).optional(),
 });
 
-export const createShipAction = async (formData: FormData) => {
-  const t = await getTranslations();
-
-  try {
-    /**
-     * Authenticate and authorize the request
-     */
-    const authentication =
-      await requireAuthenticationAction("createShipAction");
-    await authentication.authorizeAction("ship", "manage");
-    if (!authentication.session.entity) throw new Error("Forbidden");
-
-    /**
-     * Validate the request
-     */
-    const result = schema.safeParse({
-      variantId: formData.get("variantId"),
-      name: formData.has("name") ? formData.get("name") : undefined,
-    });
-    if (!result.success) {
+export const createShipAction = createAuthenticatedAction(
+  "createShipAction",
+  schema,
+  async (formData, authentication, data, t) => {
+    if (!(await authentication.authorize("ship", "manage")))
       return {
-        error: t("Common.badRequest"),
+        error: t("Common.forbidden"),
         requestPayload: formData,
       };
-    }
+    if (!authentication.session.entity)
+      return {
+        error: t("Common.forbidden"),
+        requestPayload: formData,
+      };
 
     /**
      * Assign the ship to the user
@@ -49,7 +34,7 @@ export const createShipAction = async (formData: FormData) => {
       data: {
         ownerId: authentication.session.user.id,
         createdById: authentication.session.entity.id,
-        ...result.data,
+        ...data,
       },
       select: {
         id: true,
@@ -61,7 +46,7 @@ export const createShipAction = async (formData: FormData) => {
         data: {
           shipId: ship.id,
           ownerId: authentication.session.user.id,
-          variantId: result.data.variantId,
+          variantId: data.variantId,
         },
         createdById: authentication.session.user.id,
       },
@@ -79,12 +64,11 @@ export const createShipAction = async (formData: FormData) => {
     return {
       success: t("Common.successfullySaved"),
     };
-  } catch (error) {
-    unstable_rethrow(error);
-    log.error("Internal Server Error", { error: serializeError(error) });
-    return {
-      error: t("Common.internalServerError"),
-      requestPayload: formData,
-    };
-  }
-};
+  },
+  {
+    parseFormData: (formData) => ({
+      variantId: formData.get("variantId"),
+      name: formData.has("name") ? formData.get("name") : undefined,
+    }),
+  },
+);

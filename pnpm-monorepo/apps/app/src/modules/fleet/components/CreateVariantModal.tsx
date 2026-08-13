@@ -1,5 +1,6 @@
 "use client";
 
+import { runAction } from "@/modules/actions/utils/runAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import Modal from "@/modules/common/components/Modal";
@@ -10,9 +11,7 @@ import {
   type Series,
   type VariantExternalLink,
 } from "@sam-monorepo/database/browser";
-import { unstable_rethrow } from "next/navigation";
 import { useId, useState, useTransition } from "react";
-import { toast } from "react-hot-toast";
 import { FaPlus, FaSave, FaTrash } from "react-icons/fa";
 import { createVariant } from "../actions/createVariant";
 import { ExternalService, ExternalServiceDisplayNames } from "../types";
@@ -58,23 +57,7 @@ export const CreateVariantModal = ({
 
   const formAction = (formData: FormData) => {
     startTransition(async () => {
-      try {
-        const response = await createVariant(formData);
-
-        if (response.success) {
-          toast.success(response.success);
-          onRequestClose();
-        } else {
-          toast.error(response.error!);
-          console.error(response.error);
-        }
-      } catch (error) {
-        unstable_rethrow(error);
-        toast.error(
-          "Ein unbekannter Fehler ist aufgetreten. Bitte versuche es später erneut.",
-        );
-        console.error(error);
-      }
+      if (await runAction(createVariant, formData)) onRequestClose();
     });
   };
 

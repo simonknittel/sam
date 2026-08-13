@@ -1,15 +1,11 @@
 "use server";
 
 import { prisma } from "@/db";
+import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { requireAuthenticationAction } from "@/modules/auth/server";
-import { log } from "@/modules/logging";
 import { VariantStatus } from "@sam-monorepo/database/client";
-import { getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
-import { unstable_rethrow } from "next/navigation";
-import { serializeError } from "serialize-error";
 import { z } from "zod";
 import { ExternalService } from "../types";
 import { createAndReturnTags } from "../utils/createAndReturnTags";
@@ -39,59 +35,31 @@ const schema = z.object({
   linkUrls: z.array(z.string().url()).max(50).nullish(),
 });
 
-export const createVariant = async (formData: FormData) => {
-  const t = await getTranslations();
-
-  try {
-    /**
-     * Authenticate and authorize the request
-     */
-    const authentication = await requireAuthenticationAction("createVariant");
-    await authentication.authorizeAction(
-      "manufacturersSeriesAndVariants",
-      "manage",
-    );
-
-    /**
-     * Validate the request
-     */
-    const result = schema.safeParse({
-      seriesId: formData.get("seriesId"),
-      name: formData.get("name"),
-      status: formData.has("status") ? formData.get("status") : undefined,
-      tagKeys: formData.has("tagKeys[]")
-        ? formData.getAll("tagKeys[]")
-        : undefined,
-      tagValues: formData.has("tagValues[]")
-        ? formData.getAll("tagValues[]")
-        : undefined,
-      linkServiceNames: formData.has("linkServiceNames[]")
-        ? formData.getAll("linkServiceNames[]")
-        : undefined,
-      linkUrls: formData.has("linkUrls[]")
-        ? formData.getAll("linkUrls[]")
-        : undefined,
-    });
-    if (!result.success) {
+export const createVariant = createAuthenticatedAction(
+  "createVariant",
+  schema,
+  async (formData, authentication, data, t) => {
+    if (
+      !(await authentication.authorize("manufacturersSeriesAndVariants", "manage"))
+    )
       return {
-        error: t("Common.badRequest"),
+        error: t("Common.forbidden"),
         requestPayload: formData,
       };
-    }
 
     /**
      * Create variant
      */
     const tagsToConnect = await createAndReturnTags(
-      result.data.tagKeys,
-      result.data.tagValues,
+      data.tagKeys,
+      data.tagValues,
     );
 
     const createdVariant = await prisma.variant.create({
       data: {
-        seriesId: result.data.seriesId,
-        name: result.data.name,
-        status: result.data.status,
+        seriesId: data.seriesId,
+        name: data.name,
+        status: data.status,
         ...(tagsToConnect &&
           tagsToConnect.length > 0 && {
             tags: {
@@ -104,10 +72,10 @@ export const createVariant = async (formData: FormData) => {
       },
     });
 
-    const incomingLinks = result.data.linkServiceNames
+    const incomingLinks = data.linkServiceNames
       ?.map((serviceName, index) => ({
         serviceName,
-        url: result.data.linkUrls?.[index],
+        url: data.linkUrls?.[index],
       }))
       .filter((link) => Boolean(link.serviceName && link.url)) as
       IncomingLink[] | undefined;
@@ -145,12 +113,24 @@ export const createVariant = async (formData: FormData) => {
     return {
       success: t("Common.successfullySaved"),
     };
-  } catch (error) {
-    unstable_rethrow(error);
-    log.error("Internal Server Error", { error: serializeError(error) });
-    return {
-      error: t("Common.internalServerError"),
-      requestPayload: formData,
-    };
-  }
-};
+  },
+  {
+    parseFormData: (formData) => ({
+      seriesId: formData.get("seriesId"),
+      name: formData.get("name"),
+      status: formData.has("status") ? formData.get("status") : undefined,
+      tagKeys: formData.has("tagKeys[]")
+        ? formData.getAll("tagKeys[]")
+        : undefined,
+      tagValues: formData.has("tagValues[]")
+        ? formData.getAll("tagValues[]")
+        : undefined,
+      linkServiceNames: formData.has("linkServiceNames[]")
+        ? formData.getAll("linkServiceNames[]")
+        : undefined,
+      linkUrls: formData.has("linkUrls[]")
+        ? formData.getAll("linkUrls[]")
+        : undefined,
+    }),
+  },
+);

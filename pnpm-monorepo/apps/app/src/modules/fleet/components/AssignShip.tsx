@@ -1,5 +1,6 @@
 "use client";
 
+import { runAction } from "@/modules/actions/utils/runAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { Button2 } from "@/modules/common/components/Button2";
@@ -13,7 +14,6 @@ import {
 } from "@sam-monorepo/database/browser";
 import { flatten } from "lodash";
 import { useId, useState, useTransition } from "react";
-import toast from "react-hot-toast";
 import { FaPlus, FaSave } from "react-icons/fa";
 import { createShipAction } from "../actions/createShipAction";
 
@@ -34,21 +34,7 @@ export const AssignShip = ({ className, data = [] }: Props) => {
 
   const formAction = (formData: FormData) => {
     startTransition(async () => {
-      try {
-        const response = await createShipAction(formData);
-
-        if (response.success) {
-          toast.success(response.success);
-          setIsOpen(false);
-        } else {
-          toast.error(response.error!);
-        }
-      } catch (error) {
-        toast.error(
-          "Ein unbekannter Fehler ist aufgetreten. Bitte versuche es später erneut.",
-        );
-        console.error(error);
-      }
+      if (await runAction(createShipAction, formData)) setIsOpen(false);
     });
   };
 
