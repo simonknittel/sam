@@ -1,14 +1,11 @@
 "use server";
 
 import { prisma } from "@/db";
+import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { requireAuthenticationAction } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
-import { getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
-import { unstable_rethrow } from "next/navigation";
-import { serializeError } from "serialize-error";
 import { z } from "zod";
 import { nodeDefinitions } from "../nodes/server";
 
@@ -41,49 +38,22 @@ const schema = z.object({
   edges: edgesSchema,
 });
 
-export const updateFlow = async (formData: FormData) => {
-  const t = await getTranslations();
-
-  try {
-    /**
-     * Authenticate and authorize the request
-     */
-    const authentication = await requireAuthenticationAction("updateFlow");
-
-    /**
-     * Validate the request
-     */
-    const nodes = formData.get("nodes");
-    const edges = formData.get("edges");
-    if (!nodes || !edges) {
-      log.warn("Bad Request", { error: "Missing nodes or edges" });
+export const updateFlow = createAuthenticatedAction(
+  "updateFlow",
+  schema,
+  async (formData, authentication, data, t) => {
+    if (
+      !(await authentication.authorize("career", "update", [
+        {
+          key: "flowId",
+          value: data.flowId,
+        },
+      ]))
+    )
       return {
-        error: t("Common.badRequest"),
+        error: t("Common.forbidden"),
         requestPayload: formData,
       };
-    }
-    const result = schema.safeParse({
-      flowId: formData.get("flowId"),
-      nodes: JSON.parse(nodes as string) as unknown,
-      edges: JSON.parse(edges as string) as unknown,
-    });
-    if (!result.success) {
-      log.warn("Bad Request", { error: serializeError(result.error) });
-      return {
-        error: t("Common.badRequest"),
-        requestPayload: formData,
-      };
-    }
-
-    /**
-     * Authenticate and authorize the request
-     */
-    await authentication.authorizeAction("career", "update", [
-      {
-        key: "flowId",
-        value: result.data.flowId,
-      },
-    ]);
 
     /**
      * Update flow
@@ -91,13 +61,13 @@ export const updateFlow = async (formData: FormData) => {
     await prisma.$transaction([
       prisma.flowNode.deleteMany({
         where: {
-          flowId: result.data.flowId,
+          flowId: data.flowId,
         },
       }),
 
       prisma.flowNode.createMany({
         // @ts-expect-error
-        data: result.data.nodes.map((node) => {
+        data: data.nodes.map((node) => {
           const matchingNodeDefnition = nodeDefinitions.find(
             // @ts-expect-error
             (nodeDefinition) => nodeDefinition.enum === node.type,
@@ -111,13 +81,13 @@ export const updateFlow = async (formData: FormData) => {
           return matchingNodeDefnition.createManyMapping(
             // @ts-expect-error
             node,
-            result.data.flowId,
+            data.flowId,
           );
         }),
       }),
 
       prisma.flowEdge.createMany({
-        data: result.data.edges.map((edge) => ({
+        data: data.edges.map((edge) => ({
           id: edge.id,
           type: edge.type,
           sourceId: edge.source,
@@ -132,9 +102,9 @@ export const updateFlow = async (formData: FormData) => {
       {
         type: AuditEventType.CAREER_FLOW_UPDATED,
         data: {
-          flowId: result.data.flowId,
-          nodeCount: result.data.nodes.length,
-          edgeCount: result.data.edges.length,
+          flowId: data.flowId,
+          nodeCount: data.nodes.length,
+          edgeCount: data.edges.length,
         },
         createdById: authentication.session.user.id,
       },
@@ -143,7 +113,7 @@ export const updateFlow = async (formData: FormData) => {
     /**
      * Revalidate cache(s)
      */
-    revalidatePath(`/app/career/${result.data.flowId}`);
+    revalidatePath(`/app/career/${data.flowId}`);
 
     /**
      * Respond with the result
@@ -151,12 +121,12 @@ export const updateFlow = async (formData: FormData) => {
     return {
       success: t("Common.successfullySaved"),
     };
-  } catch (error) {
-    unstable_rethrow(error);
-    log.error("Internal Server Error", { error: serializeError(error) });
-    return {
-      error: t("Common.internalServerError"),
-      requestPayload: formData,
-    };
-  }
-};
+  },
+  {
+    parseFormData: (formData) => ({
+      flowId: formData.get("flowId"),
+      nodes: JSON.parse((formData.get("nodes") as string) || "null") as unknown,
+      edges: JSON.parse((formData.get("edges") as string) || "null") as unknown,
+    }),
+  },
+);

@@ -1,15 +1,11 @@
 "use server";
 
 import { prisma } from "@/db";
+import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { requireAuthenticationAction } from "@/modules/auth/server";
-import { log } from "@/modules/logging";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
-import { getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
-import { unstable_rethrow } from "next/navigation";
-import { serializeError } from "serialize-error";
 import { z } from "zod";
 
 const schema = z.object({
@@ -19,38 +15,18 @@ const schema = z.object({
   expiresAt: z.coerce.date().optional(),
 });
 
-export const createPenaltyEntry = async (formData: FormData) => {
-  const t = await getTranslations();
-
-  try {
-    /**
-     * Authenticate and authorize the request
-     */
-    const authentication =
-      await requireAuthenticationAction("createPenaltyEntry");
-    await authentication.authorizeAction("penaltyEntry", "create");
-    if (!authentication.session.entity)
+export const createPenaltyEntry = createAuthenticatedAction(
+  "createPenaltyEntry",
+  schema,
+  async (formData, authentication, data, t) => {
+    if (!(await authentication.authorize("penaltyEntry", "create")))
       return {
         error: t("Common.forbidden"),
         requestPayload: formData,
       };
-
-    /**
-     * Validate the request
-     */
-    const result = schema.safeParse({
-      citizenId: formData.get("citizenId"),
-      points: formData.get("points"),
-      reason: formData.has("reason") ? formData.get("reason") : undefined,
-      expiresAt:
-        formData.has("expiresAt") && formData.get("expiresAt") !== ""
-          ? formData.get("expiresAt")
-          : undefined,
-    });
-    if (!result.success)
+    if (!authentication.session.entity)
       return {
-        error: t("Common.badRequest"),
-        errorDetails: result.error,
+        error: t("Common.forbidden"),
         requestPayload: formData,
       };
 
@@ -66,12 +42,12 @@ export const createPenaltyEntry = async (formData: FormData) => {
         },
         citizen: {
           connect: {
-            id: result.data.citizenId,
+            id: data.citizenId,
           },
         },
-        points: result.data.points,
-        reason: result.data.reason,
-        expiresAt: result.data.expiresAt,
+        points: data.points,
+        reason: data.reason,
+        expiresAt: data.expiresAt,
       },
       select: {
         id: true,
@@ -85,9 +61,9 @@ export const createPenaltyEntry = async (formData: FormData) => {
         data: {
           penaltyEntryId: createdEntry.id,
           citizenId: createdEntry.citizenId,
-          points: result.data.points,
-          reason: result.data.reason || null,
-          expiresAt: result.data.expiresAt || null,
+          points: data.points,
+          reason: data.reason || null,
+          expiresAt: data.expiresAt || null,
         },
         createdById: authentication.session.user.id,
       },
@@ -119,12 +95,16 @@ export const createPenaltyEntry = async (formData: FormData) => {
     return {
       success: "Erfolgreich gespeichert.",
     };
-  } catch (error) {
-    unstable_rethrow(error);
-    log.error("Internal Server Error", { error: serializeError(error) });
-    return {
-      error: t("Common.internalServerError"),
-      requestPayload: formData,
-    };
-  }
-};
+  },
+  {
+    parseFormData: (formData) => ({
+      citizenId: formData.get("citizenId"),
+      points: formData.get("points"),
+      reason: formData.has("reason") ? formData.get("reason") : undefined,
+      expiresAt:
+        formData.has("expiresAt") && formData.get("expiresAt") !== ""
+          ? formData.get("expiresAt")
+          : undefined,
+    }),
+  },
+);

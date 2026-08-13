@@ -1,5 +1,6 @@
 "use client";
 
+import { runAction } from "@/modules/actions/utils/runAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Note from "@/modules/common/components/Note";
 import {
@@ -24,14 +25,13 @@ import {
   type OnNodesChange,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { unstable_rethrow, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   useCallback,
   useState,
   useTransition,
   type MouseEventHandler,
 } from "react";
-import toast from "react-hot-toast";
 import { FaPen, FaSave } from "react-icons/fa";
 import { FaPlus } from "react-icons/fa6";
 import { updateFlow } from "../actions/updateFlow";
@@ -94,29 +94,12 @@ export const Flow = ({
 
   const onSave: MouseEventHandler<HTMLButtonElement> = useCallback(() => {
     startTransition(async () => {
-      try {
-        const formData = new FormData();
-        formData.append("flowId", flow.id);
-        formData.append("nodes", JSON.stringify(nodes));
-        formData.append("edges", JSON.stringify(edges));
+      const formData = new FormData();
+      formData.append("flowId", flow.id);
+      formData.append("nodes", JSON.stringify(nodes));
+      formData.append("edges", JSON.stringify(edges));
 
-        const result = await updateFlow(formData);
-
-        if (result.error) {
-          toast.error(result.error);
-          console.error(result.error);
-          return;
-        }
-
-        setUnsaved(false);
-        toast.success(result.success!);
-      } catch (error) {
-        unstable_rethrow(error);
-        toast.error(
-          "Ein unbekannter Fehler ist aufgetreten. Bitte versuche es später erneut.",
-        );
-        console.error(error);
-      }
+      if (await runAction(updateFlow, formData)) setUnsaved(false);
     });
   }, [flow.id, nodes, edges]);
 

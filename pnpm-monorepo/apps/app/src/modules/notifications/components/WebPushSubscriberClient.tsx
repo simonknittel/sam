@@ -1,6 +1,7 @@
 "use client";
 
 import { env } from "@/env";
+import { runAction } from "@/modules/actions/utils/runAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Tile } from "@/modules/common/components/Tile";
@@ -73,10 +74,13 @@ export const WebPushSubscriberClient = ({ className }: Props) => {
        */
       const formData = new FormData();
       formData.append("subscription", JSON.stringify(subscription));
-      await subscribeWebPush(formData);
+      const succeeded = await runAction(subscribeWebPush, formData, {
+        successToast: false,
+      });
 
       setIsPending(false);
-      toast.success("Die Benachrichtigungen wurden erfolgreich aktiviert.");
+      if (succeeded)
+        toast.success("Die Benachrichtigungen wurden erfolgreich aktiviert.");
     });
   };
 

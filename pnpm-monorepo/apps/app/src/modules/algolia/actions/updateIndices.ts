@@ -1,16 +1,25 @@
 "use server";
 
 import { prisma } from "@/db";
-import { log } from "@/modules/logging";
+import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { getOrganizations } from "@/modules/organizations/queries/getOrganizations";
 import { getTracer } from "@/modules/tracing/utils/getTracer";
 import { SpanStatusCode } from "@opentelemetry/api";
-import { unstable_rethrow } from "next/navigation";
-import { serializeError } from "serialize-error";
+import { z } from "zod";
 import { getClient, indexName } from "..";
 
-export const updateIndices = async () => {
-  try {
+const schema = z.object({});
+
+export const updateIndices = createAuthenticatedAction(
+  "updateIndices",
+  schema,
+  async (formData, authentication, _data, t) => {
+    if (!(await authentication.authorize("algolia", "manage")))
+      return {
+        error: t("Common.forbidden"),
+        requestPayload: formData,
+      };
+
     const [organizations, citizen] = await Promise.all([
       getOrganizations(),
 
@@ -82,13 +91,5 @@ export const updateIndices = async () => {
     return {
       success: "Successfully updated Algolia indices",
     };
-  } catch (error) {
-    unstable_rethrow(error);
-    log.error("Failed to update Algolia indices", {
-      error: serializeError(error),
-    });
-    return {
-      error: "Failed to update Algolia indices",
-    };
-  }
-};
+  },
+);

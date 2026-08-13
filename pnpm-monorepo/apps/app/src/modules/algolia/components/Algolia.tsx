@@ -1,11 +1,11 @@
 "use client";
 
+import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
+import { useAction } from "@/modules/actions/utils/useAction";
 import { updateIndices } from "@/modules/algolia/actions/updateIndices";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
-import Note from "@/modules/common/components/Note";
 import clsx from "clsx";
-import { useActionState } from "react";
 import { TbRestore } from "react-icons/tb";
 
 interface Props {
@@ -13,34 +13,18 @@ interface Props {
 }
 
 export const Algolia = ({ className }: Props) => {
-  const [state, formAction, isPending] = useActionState(updateIndices, null);
+  const { state, formAction, isPending } = useAction(updateIndices, {
+    errorToast: false,
+  });
 
   return (
     <form action={formAction} className={clsx(className)}>
-      <Button2 type="submit">
+      <Button2 type="submit" disabled={isPending}>
         {isPending ? <AsciiSpinner /> : <TbRestore />}
         Update Algolia indices
       </Button2>
 
-      {state?.success && (
-        <Note
-          type="success"
-          message={state.success}
-          className={clsx("mt-4", {
-            "animate-pulse": isPending,
-          })}
-        />
-      )}
-
-      {state?.error && (
-        <Note
-          type="error"
-          message={state.error}
-          className={clsx("mt-4", {
-            "animate-pulse": isPending,
-          })}
-        />
-      )}
+      <ActionErrorNote className="mt-4" state={state} />
     </form>
   );
 };

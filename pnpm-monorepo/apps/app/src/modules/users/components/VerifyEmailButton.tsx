@@ -11,12 +11,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/modules/common/components/AlertDialog";
+import { runAction } from "@/modules/actions/utils/runAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Link } from "@/modules/common/components/Link";
 import { type User } from "@sam-monorepo/database/browser";
-import { unstable_rethrow } from "next/navigation";
 import { useId, useTransition } from "react";
-import toast from "react-hot-toast";
 import { verifyEmailAction } from "../actions/verifyEmail";
 
 interface Props {
@@ -30,22 +29,7 @@ export const VerifyEmailButton = ({ className, userId }: Props) => {
 
   const formAction = (formData: FormData) => {
     startTransition(async () => {
-      try {
-        const response = await verifyEmailAction(formData);
-
-        if ("success" in response) {
-          toast.success(response.success);
-        } else {
-          toast.error(response.error);
-          console.error(response);
-        }
-      } catch (error) {
-        unstable_rethrow(error);
-        toast.error(
-          "Ein unbekannter Fehler ist aufgetreten. Bitte versuche es später erneut.",
-        );
-        console.error(error);
-      }
+      await runAction(verifyEmailAction, formData);
     });
   };
 

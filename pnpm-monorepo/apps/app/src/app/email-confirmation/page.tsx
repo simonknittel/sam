@@ -48,6 +48,11 @@ export default async function Page(props: Readonly<Props>) {
       ? searchParams["new-user"][0]
       : searchParams["new-user"]) === "true";
 
+  const formAction = async (formData: FormData) => {
+    "use server";
+    await requestEmailConfirmationAction(formData);
+  };
+
   return (
     <div className="min-h-dvh flex justify-center items-center flex-col py-8 background-primary">
       <main className="w-full max-w-3xl">
@@ -66,7 +71,7 @@ export default async function Page(props: Readonly<Props>) {
             bestätigen.
           </p>
 
-          <form action={requestEmailConfirmationAction}>
+          <form action={formAction}>
             {newUser ? (
               <p className="mb-3 font-bold">
                 Zur Bestätigung haben wir dir eine E-Mail geschickt.
