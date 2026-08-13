@@ -1,10 +1,10 @@
 "use client";
 
 import { Link } from "@/modules/common/components/Link";
+import { SortableTable } from "@/modules/common/components/SortableTable";
 import type { Entity } from "@sam-monorepo/database/browser";
 import {
   createColumnHelper,
-  flexRender,
   getCoreRowModel,
   getSortedRowModel,
   useReactTable,
@@ -12,7 +12,6 @@ import {
 } from "@tanstack/react-table";
 import clsx from "clsx";
 import { useMemo, useState } from "react";
-import { FaSortAlphaDown, FaSortAlphaUpAlt } from "react-icons/fa";
 
 type Row = Pick<Entity, "id" | "handle" | "silcBalance" | "totalEarnedSilc">;
 
@@ -95,58 +94,13 @@ export const SilcBalancesTableClient = ({ className, rows }: Props) => {
 
   return (
     <div className={clsx("w-full overflow-x-auto", className)}>
-      <table className={clsx("w-full", TABLE_MIN_WIDTH)}>
-        <thead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr
-              key={headerGroup.id}
-              className={clsx("grid items-center gap-4 pb-2", GRID_COLS)}
-            >
-              {headerGroup.headers.map((header) => (
-                <th key={header.id} className="text-left text-neutral-500 p-0">
-                  {header.isPlaceholder ? null : (
-                    <div
-                      {...{
-                        className: header.column.getCanSort()
-                          ? "cursor-pointer select-none flex items-center gap-2 hover:text-neutral-300"
-                          : "",
-                        onClick: header.column.getToggleSortingHandler(),
-                      }}
-                    >
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
-                      {{
-                        asc: <FaSortAlphaDown />,
-                        desc: <FaSortAlphaUpAlt />,
-                      }[header.column.getIsSorted() as string] ?? null}
-                    </div>
-                  )}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-
-        <tbody>
-          {table.getRowModel().rows.map((row) => (
-            <tr
-              key={row.id}
-              className={clsx(
-                "grid items-center gap-4 border-t border-white/5 py-1",
-                GRID_COLS,
-              )}
-            >
-              {row.getVisibleCells().map((cell) => (
-                <td key={cell.id} className="overflow-hidden h-full">
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <SortableTable
+        table={table}
+        className={TABLE_MIN_WIDTH}
+        gridColsClassName={GRID_COLS}
+        rowClassName="border-t border-white/5 py-1"
+        cellClassName="h-full"
+      />
     </div>
   );
 };

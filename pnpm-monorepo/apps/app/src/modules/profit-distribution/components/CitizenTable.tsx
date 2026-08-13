@@ -2,11 +2,11 @@
 
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
+import { SortableTable } from "@/modules/common/components/SortableTable";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import type { Entity } from "@sam-monorepo/database/browser";
 import {
   createColumnHelper,
-  flexRender,
   getCoreRowModel,
   getSortedRowModel,
   useReactTable,
@@ -14,7 +14,6 @@ import {
 } from "@tanstack/react-table";
 import clsx from "clsx";
 import { useMemo, useState } from "react";
-import { FaSortAlphaDown, FaSortAlphaUp } from "react-icons/fa";
 import type { getProfitDistributionCycleById } from "../queries/getProfitDistributionCycleById";
 import { CyclePhase } from "../utils/getCurrentPhase";
 import { getPayoutState, PayoutState } from "../utils/getMyPayoutStatus";
@@ -275,55 +274,12 @@ export const CitizenTable = ({ className, cycleData }: Props) => {
 
   return (
     <CitizenTableForm cycleId={cycleData.cycle.id} className="overflow-x-auto">
-      <table className={clsx("w-full", TABLE_MIN_WIDTH, className)}>
-        <thead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr
-              key={headerGroup.id}
-              className={clsx("grid items-center gap-4 pb-2", GRID_COLS)}
-            >
-              {headerGroup.headers.map((header) => (
-                <th key={header.id} className="text-left text-neutral-500 p-0">
-                  {header.isPlaceholder ? null : (
-                    <div
-                      {...{
-                        className: header.column.getCanSort()
-                          ? "cursor-pointer select-none flex items-center gap-2 hover:text-neutral-300"
-                          : "",
-                        onClick: header.column.getToggleSortingHandler(),
-                      }}
-                    >
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
-                      {{
-                        asc: <FaSortAlphaDown />,
-                        desc: <FaSortAlphaUp />,
-                      }[header.column.getIsSorted() as string] ?? null}
-                    </div>
-                  )}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-
-        <tbody>
-          {table.getRowModel().rows.map((row) => (
-            <tr
-              key={row.id}
-              className={clsx("grid items-center gap-4 py-px", GRID_COLS)}
-            >
-              {row.getVisibleCells().map((cell) => (
-                <td key={cell.id} className="overflow-hidden">
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <SortableTable
+        table={table}
+        className={clsx(TABLE_MIN_WIDTH, className)}
+        gridColsClassName={GRID_COLS}
+        rowClassName="py-px"
+      />
     </CitizenTableForm>
   );
 };

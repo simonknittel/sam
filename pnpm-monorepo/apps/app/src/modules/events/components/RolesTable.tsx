@@ -1,10 +1,10 @@
 "use client";
 
+import { SortableTable } from "@/modules/common/components/SortableTable";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import type { Role, Upload } from "@sam-monorepo/database/browser";
 import {
   createColumnHelper,
-  flexRender,
   getCoreRowModel,
   getSortedRowModel,
   useReactTable,
@@ -12,7 +12,6 @@ import {
 } from "@tanstack/react-table";
 import clsx from "clsx";
 import { useMemo, useState } from "react";
-import { FaSortAlphaDown, FaSortAlphaUpAlt } from "react-icons/fa";
 
 interface Row {
   role: Role & {
@@ -65,54 +64,11 @@ export const RolesTable = ({ className, rows }: Props) => {
   });
 
   return (
-    <table className={clsx("w-full", TABLE_MIN_WIDTH, className)}>
-      <thead>
-        {table.getHeaderGroups().map((headerGroup) => (
-          <tr
-            key={headerGroup.id}
-            className={clsx("grid items-center gap-4 pb-2", GRID_COLS)}
-          >
-            {headerGroup.headers.map((header) => (
-              <th key={header.id} className="text-left text-neutral-500 p-0">
-                {header.isPlaceholder ? null : (
-                  <div
-                    {...{
-                      className: header.column.getCanSort()
-                        ? "cursor-pointer select-none flex items-center gap-2 hover:text-neutral-300"
-                        : "",
-                      onClick: header.column.getToggleSortingHandler(),
-                    }}
-                  >
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext(),
-                    )}
-                    {{
-                      asc: <FaSortAlphaDown />,
-                      desc: <FaSortAlphaUpAlt />,
-                    }[header.column.getIsSorted() as string] ?? null}
-                  </div>
-                )}
-              </th>
-            ))}
-          </tr>
-        ))}
-      </thead>
-
-      <tbody>
-        {table.getRowModel().rows.map((row) => (
-          <tr
-            key={row.id}
-            className={clsx("grid items-center gap-4", GRID_COLS)}
-          >
-            {row.getVisibleCells().map((cell) => (
-              <td key={cell.id} className="overflow-hidden p-px">
-                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-              </td>
-            ))}
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <SortableTable
+      table={table}
+      className={clsx(TABLE_MIN_WIDTH, className)}
+      gridColsClassName={GRID_COLS}
+      cellClassName="p-px"
+    />
   );
 };
