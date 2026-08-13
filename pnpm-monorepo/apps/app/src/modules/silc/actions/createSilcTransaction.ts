@@ -1,15 +1,11 @@
 "use server";
 
 import { prisma } from "@/db";
+import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { requireAuthenticationAction } from "@/modules/auth/server";
-import { log } from "@/modules/logging";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
-import { getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
-import { unstable_rethrow } from "next/navigation";
-import { serializeError } from "serialize-error";
 import { z } from "zod";
 import { updateCitizensSilcBalances } from "../utils/updateCitizensSilcBalances";
 
@@ -19,40 +15,23 @@ const schema = z.object({
   description: z.string().trim().max(512).optional(),
 });
 
-export const createSilcTransaction = async (formData: FormData) => {
-  const t = await getTranslations();
-
-  try {
-    /**
-     * Authenticate and authorize the request
-     */
-    const authentication = await requireAuthenticationAction(
-      "createSilcTransaction",
-    );
-    await authentication.authorizeAction(
-      "silcTransactionOfOtherCitizen",
-      "create",
-    );
-    if (!authentication.session.entity)
+export const createSilcTransaction = createAuthenticatedAction(
+  "createSilcTransaction",
+  schema,
+  async (formData, authentication, data, t) => {
+    if (
+      !(await authentication.authorize(
+        "silcTransactionOfOtherCitizen",
+        "create",
+      ))
+    )
       return {
         error: t("Common.forbidden"),
         requestPayload: formData,
       };
-
-    /**
-     * Validate the request
-     */
-    const result = schema.safeParse({
-      receiverIds: formData.getAll("receiverId[]"),
-      value: formData.get("value"),
-      description: formData.has("description")
-        ? formData.get("description")
-        : undefined,
-    });
-    if (!result.success)
+    if (!authentication.session.entity)
       return {
-        error: t("Common.badRequest"),
-        errorDetails: result.error,
+        error: t("Common.forbidden"),
         requestPayload: formData,
       };
 
@@ -61,10 +40,10 @@ export const createSilcTransaction = async (formData: FormData) => {
      */
     const createdSilcTransactions =
       await prisma.silcTransaction.createManyAndReturn({
-        data: result.data.receiverIds.map((receiverId) => ({
+        data: data.receiverIds.map((receiverId) => ({
           receiverId,
-          value: result.data.value,
-          description: result.data.description,
+          value: data.value,
+          description: data.description,
           createdById: authentication.session.entity!.id,
         })),
         select: {
@@ -79,9 +58,9 @@ export const createSilcTransaction = async (formData: FormData) => {
           transactionIds: createdSilcTransactions.map(
             (transaction) => transaction.id,
           ),
-          receiverIds: result.data.receiverIds,
-          value: result.data.value,
-          description: result.data.description,
+          receiverIds: data.receiverIds,
+          value: data.value,
+          description: data.description,
         },
         createdById: authentication.session.user.id,
       },
@@ -90,7 +69,7 @@ export const createSilcTransaction = async (formData: FormData) => {
     /**
      * Update citizens' balances
      */
-    await updateCitizensSilcBalances(result.data.receiverIds);
+    await updateCitizensSilcBalances(data.receiverIds);
 
     /**
      * Trigger notifications
@@ -119,12 +98,14 @@ export const createSilcTransaction = async (formData: FormData) => {
     return {
       success: "Erfolgreich gespeichert.",
     };
-  } catch (error) {
-    unstable_rethrow(error);
-    log.error("Internal Server Error", { error: serializeError(error) });
-    return {
-      error: t("Common.internalServerError"),
-      requestPayload: formData,
-    };
-  }
-};
+  },
+  {
+    parseFormData: (formData) => ({
+      receiverIds: formData.getAll("receiverId[]"),
+      value: formData.get("value"),
+      description: formData.has("description")
+        ? formData.get("description")
+        : undefined,
+    }),
+  },
+);

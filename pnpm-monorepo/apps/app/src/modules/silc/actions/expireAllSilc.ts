@@ -1,31 +1,31 @@
 "use server";
 
 import { prisma } from "@/db";
+import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { requireAuthenticationAction } from "@/modules/auth/server";
-import { log } from "@/modules/logging";
 import { revalidatePath } from "next/cache";
-import { unstable_rethrow } from "next/navigation";
-import { serializeError } from "serialize-error";
+import { z } from "zod";
 import { updateCitizensSilcBalances } from "../utils/updateCitizensSilcBalances";
 
-export const expireAllSilc = async () => {
-  try {
-    /**
-     * Authenticate and authorize the request
-     */
-    const authentication = await requireAuthenticationAction("expireAllSilc");
-    if (!authentication.session.entity) {
-      log.info("Unauthorized request to action", {
-        actionName: "expireAllSilc",
-        userId: authentication.session.user.id,
-        reason: "Insufficient permissions",
-      });
+const schema = z.object({});
 
-      throw new Error("Forbidden");
-    }
-    await authentication.authorizeAction("silcBalanceOfOtherCitizen", "manage");
+export const expireAllSilc = createAuthenticatedAction(
+  "expireAllSilc",
+  schema,
+  async (formData, authentication, _data, t) => {
+    if (
+      !(await authentication.authorize("silcBalanceOfOtherCitizen", "manage"))
+    )
+      return {
+        error: t("Common.forbidden"),
+        requestPayload: formData,
+      };
+    if (!authentication.session.entity)
+      return {
+        error: t("Common.forbidden"),
+        requestPayload: formData,
+      };
 
     /**
      * Update citizens' balances
@@ -73,12 +73,5 @@ export const expireAllSilc = async () => {
     return {
       success: "Erfolgreich gespeichert.",
     };
-  } catch (error) {
-    unstable_rethrow(error);
-    log.error("Internal Server Error", { error: serializeError(error) });
-    return {
-      error:
-        "Ein unbekannter Fehler ist aufgetreten. Bitte versuche es später erneut.",
-    };
-  }
-};
+  },
+);

@@ -1,15 +1,13 @@
 "use client";
 
+import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
+import { useAction } from "@/modules/actions/utils/useAction";
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { Button2 } from "@/modules/common/components/Button2";
 import { NumberInput } from "@/modules/common/components/form/NumberInput";
 import { Textarea } from "@/modules/common/components/form/Textarea";
-import Note from "@/modules/common/components/Note";
-import { unstable_rethrow } from "next/navigation";
-import { useActionState } from "react";
-import toast from "react-hot-toast";
 import { FaSave } from "react-icons/fa";
 import { createSilcTransaction } from "../actions/createSilcTransaction";
 
@@ -18,39 +16,14 @@ interface Props {
 }
 
 export const CreateSilcTransactionForm = ({ onSuccess }: Props) => {
-  const [state, formAction, isPending] = useActionState(
-    async (previousState: unknown, formData: FormData) => {
-      try {
-        const response = await createSilcTransaction(formData);
-
-        if (response.error) {
-          toast.error(response.error);
-          console.error(response);
-          return response;
-        }
-
-        toast.success(response.success!);
-        if (formData.has("createAnother")) {
-          return response;
-        }
-
+  const { state, formAction, isPending, getDefaultValueWithFallback } =
+    useAction(createSilcTransaction, {
+      errorToast: false,
+      onSuccess: (formData) => {
+        if (formData.has("createAnother")) return;
         onSuccess?.();
-        return response;
-      } catch (error) {
-        unstable_rethrow(error);
-        toast.error(
-          "Ein unbekannter Fehler ist aufgetreten. Bitte versuche es später erneut.",
-        );
-        console.error(error);
-        return {
-          error:
-            "Ein unbekannter Fehler ist aufgetreten. Bitte versuche es später erneut.",
-          requestPayload: formData,
-        };
-      }
-    },
-    null,
-  );
+      },
+    });
 
   return (
     <form action={formAction}>
@@ -61,11 +34,7 @@ export const CreateSilcTransactionForm = ({ onSuccess }: Props) => {
         label="Wert"
         hint="Kann negativ sein, um Guthaben zu entziehen."
         required
-        defaultValue={
-          state?.requestPayload?.has("value")
-            ? (state.requestPayload.get("value") as string)
-            : 1
-        }
+        defaultValue={getDefaultValueWithFallback("value", 1)}
         labelClassName="mt-4"
       />
 
@@ -74,11 +43,7 @@ export const CreateSilcTransactionForm = ({ onSuccess }: Props) => {
         label="Beschreibung"
         hint="optional"
         maxLength={512}
-        defaultValue={
-          state?.requestPayload?.has("description")
-            ? (state.requestPayload.get("description") as string)
-            : ""
-        }
+        defaultValue={getDefaultValueWithFallback("description", "")}
         className="mt-4"
       />
 
@@ -99,9 +64,7 @@ export const CreateSilcTransactionForm = ({ onSuccess }: Props) => {
         </Button>
       </div>
 
-      {state?.error && (
-        <Note type="error" message={state.error} className="mt-4" />
-      )}
+      <ActionErrorNote className="mt-4" state={state} />
     </form>
   );
 };

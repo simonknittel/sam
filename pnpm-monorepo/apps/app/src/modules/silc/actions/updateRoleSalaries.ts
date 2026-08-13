@@ -1,14 +1,10 @@
 "use server";
 
 import { prisma } from "@/db";
+import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { requireAuthenticationAction } from "@/modules/auth/server";
-import { log } from "@/modules/logging";
-import { getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
-import { unstable_rethrow } from "next/navigation";
-import { serializeError } from "serialize-error";
 import { z } from "zod";
 
 const schema = z.object({
@@ -17,34 +13,18 @@ const schema = z.object({
   dayOfMonths: z.array(z.coerce.number().min(1).max(31)).max(250), // Arbitrary (untested) limit to prevent DDoS
 });
 
-export const updateRoleSalaries = async (formData: FormData) => {
-  const t = await getTranslations();
-
-  try {
-    /**
-     * Authenticate and authorize the request
-     */
-    const authentication =
-      await requireAuthenticationAction("updateRoleSalaries");
-    await authentication.authorizeAction("silcSetting", "update");
-    if (!authentication.session.entity)
+export const updateRoleSalaries = createAuthenticatedAction(
+  "updateRoleSalaries",
+  schema,
+  async (formData, authentication, data, t) => {
+    if (!(await authentication.authorize("silcSetting", "update")))
       return {
         error: t("Common.forbidden"),
         requestPayload: formData,
       };
-
-    /**
-     * Validate the request
-     */
-    const result = schema.safeParse({
-      roleIds: formData.getAll("roleId[]"),
-      values: formData.getAll("value[]"),
-      dayOfMonths: formData.getAll("dayOfMonth[]"),
-    });
-    if (!result.success)
+    if (!authentication.session.entity)
       return {
-        error: t("Common.badRequest"),
-        errorDetails: result.error,
+        error: t("Common.forbidden"),
         requestPayload: formData,
       };
 
@@ -55,10 +35,10 @@ export const updateRoleSalaries = async (formData: FormData) => {
       prisma.silcRoleSalary.deleteMany(),
 
       prisma.silcRoleSalary.createMany({
-        data: result.data.roleIds.map((roleId, index) => ({
+        data: data.roleIds.map((roleId, index) => ({
           roleId,
-          dayOfMonth: result.data.dayOfMonths[index],
-          value: result.data.values[index],
+          dayOfMonth: data.dayOfMonths[index],
+          value: data.values[index],
         })),
       }),
     ]);
@@ -67,7 +47,7 @@ export const updateRoleSalaries = async (formData: FormData) => {
       {
         type: AuditEventType.SALARY_CONFIG_UPDATED,
         data: {
-          roleIds: result.data.roleIds,
+          roleIds: data.roleIds,
         },
         createdById: authentication.session.user.id,
       },
@@ -84,12 +64,12 @@ export const updateRoleSalaries = async (formData: FormData) => {
     return {
       success: t("Common.successfullySaved"),
     };
-  } catch (error) {
-    unstable_rethrow(error);
-    log.error("Internal Server Error", { error: serializeError(error) });
-    return {
-      error: t("Common.internalServerError"),
-      requestPayload: formData,
-    };
-  }
-};
+  },
+  {
+    parseFormData: (formData) => ({
+      roleIds: formData.getAll("roleId[]"),
+      values: formData.getAll("value[]"),
+      dayOfMonths: formData.getAll("dayOfMonth[]"),
+    }),
+  },
+);

@@ -7,7 +7,8 @@ import type { ActionResponse } from "./createAction";
 export const useAction = (
   action: (formData: FormData) => Promise<ActionResponse | void>,
   options?: {
-    onSuccess?: () => void;
+    /** Receives the submitted FormData, e.g. to branch on the clicked submit button */
+    onSuccess?: (formData: FormData) => void;
     /**
      * Disable the error toast where the form renders the error inline
      * (see ActionErrorNote) — errors should surface once, not twice.
@@ -28,7 +29,7 @@ export const useAction = (
          * e.g. to close a modal before the new page renders.
          */
         if (!response) {
-          options?.onSuccess?.();
+          options?.onSuccess?.(formData);
           return null;
         }
 
@@ -39,7 +40,7 @@ export const useAction = (
         }
 
         toast.success(response.success);
-        options?.onSuccess?.();
+        options?.onSuccess?.(formData);
         return response;
       } catch (error) {
         unstable_rethrow(error);

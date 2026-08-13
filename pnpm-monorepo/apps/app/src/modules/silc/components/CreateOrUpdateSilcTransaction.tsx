@@ -1,5 +1,7 @@
 "use client";
 
+import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
+import { useAction } from "@/modules/actions/utils/useAction";
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
@@ -7,12 +9,9 @@ import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { NumberInput } from "@/modules/common/components/form/NumberInput";
 import { Textarea } from "@/modules/common/components/form/Textarea";
 import Modal from "@/modules/common/components/Modal";
-import Note from "@/modules/common/components/Note";
 import type { Entity, SilcTransaction } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
-import { unstable_rethrow } from "next/navigation";
-import { useActionState, useState } from "react";
-import toast from "react-hot-toast";
+import { useState } from "react";
 import { FaPen, FaPlus, FaSave } from "react-icons/fa";
 import { createSilcTransaction } from "../actions/createSilcTransaction";
 import { updateSilcTransaction } from "../actions/updateSilcTransaction";
@@ -34,42 +33,17 @@ type Props = CreateProps | UpdateProps;
 
 export const CreateOrUpdateSilcTransaction = (props: Props) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [state, formAction, isPending] = useActionState(
-    async (previousState: unknown, formData: FormData) => {
-      try {
-        const response =
-          "transaction" in props
-            ? await updateSilcTransaction(formData)
-            : await createSilcTransaction(formData);
-
-        if (response.error) {
-          toast.error(response.error);
-          console.error(response);
-          return response;
-        }
-
-        toast.success(response.success!);
-        if (formData.has("createAnother")) {
-          return response;
-        }
-
-        setIsOpen(false);
-        return response;
-      } catch (error) {
-        unstable_rethrow(error);
-        toast.error(
-          "Ein unbekannter Fehler ist aufgetreten. Bitte versuche es später erneut.",
-        );
-        console.error(error);
-        return {
-          error:
-            "Ein unbekannter Fehler ist aufgetreten. Bitte versuche es später erneut.",
-          requestPayload: formData,
-        };
-      }
-    },
-    null,
-  );
+  const { state, formAction, isPending, getDefaultValueWithFallback } =
+    useAction(
+      "transaction" in props ? updateSilcTransaction : createSilcTransaction,
+      {
+        errorToast: false,
+        onSuccess: (formData) => {
+          if (formData.has("createAnother")) return;
+          setIsOpen(false);
+        },
+      },
+    );
 
   return (
     <>
@@ -139,11 +113,10 @@ export const CreateOrUpdateSilcTransaction = (props: Props) => {
             label="Wert"
             hint="Kann negativ sein, um Guthaben zu entziehen."
             required
-            defaultValue={
-              state?.requestPayload?.has("value")
-                ? (state.requestPayload.get("value") as string)
-                : ("transaction" in props && props.transaction?.value) || 1
-            }
+            defaultValue={getDefaultValueWithFallback(
+              "value",
+              ("transaction" in props && props.transaction?.value) || 1,
+            )}
             labelClassName="mt-4"
           />
 
@@ -152,15 +125,14 @@ export const CreateOrUpdateSilcTransaction = (props: Props) => {
             label="Beschreibung"
             hint="optional"
             maxLength={512}
-            defaultValue={
-              state?.requestPayload?.has("description")
-                ? (state.requestPayload.get("description") as string)
-                : "transaction" in props && props.transaction?.description
-                  ? props.transaction?.description
-                  : "initialDescription" in props
-                    ? props.initialDescription
-                    : ""
-            }
+            defaultValue={getDefaultValueWithFallback(
+              "description",
+              "transaction" in props && props.transaction?.description
+                ? props.transaction.description
+                : "initialDescription" in props
+                  ? props.initialDescription
+                  : "",
+            )}
             className="mt-4"
           />
 
@@ -183,9 +155,7 @@ export const CreateOrUpdateSilcTransaction = (props: Props) => {
             )}
           </div>
 
-          {state?.error && (
-            <Note type="error" message={state.error} className="mt-4" />
-          )}
+          <ActionErrorNote className="mt-4" state={state} />
         </form>
       </Modal>
     </>
