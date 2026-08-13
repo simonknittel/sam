@@ -1,9 +1,9 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
+import getLatestNoteAttributes from "@/modules/citizen/utils/getLatestNoteAttributes";
 import Tab from "@/modules/common/components/tabs/Tab";
 import TabList from "@/modules/common/components/tabs/TabList";
 import { TabsProvider } from "@/modules/common/components/tabs/TabsContext";
-import getLatestNoteAttributes from "@/modules/common/utils/getLatestNoteAttributes";
 import {
   type Entity,
   type EntityLog,

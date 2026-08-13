@@ -1,6 +1,7 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import isAllowedToRead from "@/modules/citizen/utils/isAllowedToRead";
+import Pagination from "@/modules/common/components/Pagination";
 import {
   getCurrentPageFromSearchParams,
   limitRows,
@@ -10,7 +11,6 @@ import {
   sortAscWithAndNullLast,
   sortDescAndNullLast,
 } from "@/modules/common/utils/sorting";
-import Pagination from "@/modules/spynet/components/Pagination";
 import type { EntityLogConfirmationState } from "@/types";
 import clsx from "clsx";
 import { OtherFilters } from "./OtherFilters";

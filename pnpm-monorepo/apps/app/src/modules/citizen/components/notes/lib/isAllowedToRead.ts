@@ -1,5 +1,5 @@
 import { type requireAuthentication } from "@/modules/auth/server";
-import getLatestNoteAttributes from "@/modules/common/utils/getLatestNoteAttributes";
+import getLatestNoteAttributes from "@/modules/citizen/utils/getLatestNoteAttributes";
 import {
   type EntityLog,
   type EntityLogAttribute,

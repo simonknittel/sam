@@ -1,6 +1,6 @@
 import { requireAuthentication } from "@/modules/auth/server";
+import { Filter } from "@/modules/common/components/Filter";
 import { getVisibleRoles } from "@/modules/roles/utils/getRoles";
-import { Filter } from "@/modules/spynet/components/Filter";
 import clsx from "clsx";
 import { RoleFilter } from "./RoleFilter";
 import { UnknownsFilter } from "./UnknownsFilter";

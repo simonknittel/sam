@@ -1,5 +1,5 @@
-import { entityLogTypeTranslations } from "@/modules/common/utils/entityLogTypeTranslations";
-import { Filter } from "@/modules/spynet/components/Filter";
+import { entityLogTypeTranslations } from "@/modules/citizen/utils/entityLogTypeTranslations";
+import { Filter } from "@/modules/common/components/Filter";
 import type { EntityLogType } from "@/types";
 import { ConfirmationStateFilter } from "./ConfirmationStateFilter";
 import { EntityLogTypeFilter } from "./EntityLogTypeFilter";

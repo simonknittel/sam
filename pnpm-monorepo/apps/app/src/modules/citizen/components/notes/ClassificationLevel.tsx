@@ -1,4 +1,4 @@
-import getLatestNoteAttributes from "@/modules/common/utils/getLatestNoteAttributes";
+import getLatestNoteAttributes from "@/modules/citizen/utils/getLatestNoteAttributes";
 import { getAllClassificationLevels } from "@/modules/spynet/queries/getAllClassificationLevels";
 import {
   type EntityLog,

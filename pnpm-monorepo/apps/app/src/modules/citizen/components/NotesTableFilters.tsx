@@ -1,4 +1,4 @@
-import { Filter } from "@/modules/spynet/components/Filter";
+import { Filter } from "@/modules/common/components/Filter";
 import { type NoteType } from "@sam-monorepo/database/client";
 import { ClassificationLevelFilter } from "./ClassificationLevelFilter";
 import { ConfirmationStateFilter } from "./ConfirmationStateFilter";

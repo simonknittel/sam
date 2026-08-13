@@ -2,9 +2,9 @@ import { prisma } from "@/db";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
+import getLatestNoteAttributes from "@/modules/citizen/utils/getLatestNoteAttributes";
 import { syncCitizenIdentityAfterLogChange } from "@/modules/citizen/utils/syncCitizenIdentityAfterLogChange";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
-import getLatestNoteAttributes from "@/modules/common/utils/getLatestNoteAttributes";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 

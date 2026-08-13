@@ -1,6 +1,7 @@
 import { requireAuthentication } from "@/modules/auth/server";
 import { getCitizens } from "@/modules/citizen/queries/getCitizens";
-import { getLastSeenAt } from "@/modules/common/utils/getLastSeenAt";
+import { getLastSeenAt } from "@/modules/citizen/utils/getLastSeenAt";
+import Pagination from "@/modules/common/components/Pagination";
 import {
   getCurrentPageFromSearchParams,
   limitRows,
@@ -11,7 +12,6 @@ import {
   sortDescAndNullLast,
 } from "@/modules/common/utils/sorting";
 import { getAssignedRoles } from "@/modules/roles/utils/getRoles";
-import Pagination from "@/modules/spynet/components/Pagination";
 import clsx from "clsx";
 import { CitizenTable } from "./CitizenTable";
 import { CitizenTableFilters } from "./CitizenTableFilters";

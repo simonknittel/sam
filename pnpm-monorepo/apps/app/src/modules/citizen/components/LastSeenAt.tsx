@@ -1,5 +1,5 @@
+import { getLastSeenAt } from "@/modules/citizen/utils/getLastSeenAt";
 import { formatDate } from "@/modules/common/utils/formatDate";
-import { getLastSeenAt } from "@/modules/common/utils/getLastSeenAt";
 import { type Entity } from "@sam-monorepo/database/client";
 
 interface Props {

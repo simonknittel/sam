@@ -1,9 +1,9 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
+import getLatestNoteAttributes from "@/modules/citizen/utils/getLatestNoteAttributes";
 import styles from "@/modules/common/components/ConfirmationGradient.module.css";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
-import getLatestNoteAttributes from "@/modules/common/utils/getLatestNoteAttributes";
 import {
   type Entity,
   type EntityLog,

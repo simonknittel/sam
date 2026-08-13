@@ -1,6 +1,7 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
-import getLatestNoteAttributes from "@/modules/common/utils/getLatestNoteAttributes";
+import getLatestNoteAttributes from "@/modules/citizen/utils/getLatestNoteAttributes";
+import Pagination from "@/modules/common/components/Pagination";
 import {
   getCurrentPageFromSearchParams,
   limitRows,
@@ -10,7 +11,6 @@ import {
   sortAscWithAndNullLast,
   sortDescAndNullLast,
 } from "@/modules/common/utils/sorting";
-import Pagination from "@/modules/spynet/components/Pagination";
 import { getAllClassificationLevels } from "@/modules/spynet/queries/getAllClassificationLevels";
 import { getAllNoteTypes } from "@/modules/spynet/queries/getAllNoteTypes";
 import type { EntityLogConfirmationState } from "@/types";

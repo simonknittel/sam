@@ -1,4 +1,4 @@
-import getLatestNoteAttributes from "@/modules/common/utils/getLatestNoteAttributes";
+import getLatestNoteAttributes from "@/modules/citizen/utils/getLatestNoteAttributes";
 import { getAllNoteTypes } from "@/modules/spynet/queries/getAllNoteTypes";
 import { getCreatableClassificationLevelsDeduped } from "@/modules/spynet/utils/getAllClassificationLevels";
 import {

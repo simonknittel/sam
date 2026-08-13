@@ -2,7 +2,7 @@ import { prisma } from "@/db";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthentication } from "@/modules/auth/server";
-import getLatestNoteAttributes from "@/modules/common/utils/getLatestNoteAttributes";
+import getLatestNoteAttributes from "@/modules/citizen/utils/getLatestNoteAttributes";
 import type {
   EntityLog,
   EntityLogAttribute,

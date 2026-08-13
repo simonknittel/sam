@@ -1,11 +1,11 @@
 "use client";
 
+import getLatestNoteAttributes from "@/modules/citizen/utils/getLatestNoteAttributes";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { Button2 } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
 import { Select } from "@/modules/common/components/form/Select";
-import getLatestNoteAttributes from "@/modules/common/utils/getLatestNoteAttributes";
 import {
   type ClassificationLevel,
   type EntityLog,

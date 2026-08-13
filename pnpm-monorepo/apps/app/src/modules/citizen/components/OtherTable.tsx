@@ -1,6 +1,6 @@
+import { entityLogTypeTranslations } from "@/modules/citizen/utils/entityLogTypeTranslations";
 import { Actions } from "@/modules/common/components/Actions";
 import { Link } from "@/modules/common/components/Link";
-import { entityLogTypeTranslations } from "@/modules/common/utils/entityLogTypeTranslations";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import {
   SortDirection,
