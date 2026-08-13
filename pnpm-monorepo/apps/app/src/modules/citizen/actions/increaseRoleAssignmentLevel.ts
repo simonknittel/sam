@@ -1,129 +1,20 @@
 "use server";
 
-import { prisma } from "@/db";
-import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
-import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { RoleAssignmentLevelChangeType } from "@sam-monorepo/database/client";
-import { refresh } from "next/cache";
-import { z } from "zod";
+import { createRoleAssignmentLevelAction } from "../utils/createRoleAssignmentLevelAction";
 
-const schema = z.object({
-  citizenId: z.cuid(),
-  roleId: z.cuid(),
-});
-
-export const increaseRoleAssignmentLevel = createAuthenticatedAction(
+export const increaseRoleAssignmentLevel = createRoleAssignmentLevelAction(
   "increaseRoleAssignmentLevel",
-  schema,
-  async (formData, authentication, data, t) => {
-    /**
-     * Authorize the request
-     */
-    if (!authentication.session.entity)
-      return {
-        error: t("Common.forbidden"),
-        requestPayload: formData,
-      };
-
-    if (
-      !(await authentication.authorize("otherRole", "assign", [
-        {
-          key: "roleId",
-          value: data.roleId,
-        },
-      ]))
-    )
-      return {
-        error: t("Common.forbidden"),
-        requestPayload: formData,
-      };
-
-    /**
-     * Further validate the request
-     */
-    if (Array.from(formData.keys()).length > 500)
-      return {
-        error: t("Common.badRequest"),
-        requestPayload: formData,
-      };
-    const roleAssignment = await prisma.roleAssignment.findUnique({
-      where: {
-        citizenId_roleId: {
-          citizenId: data.citizenId,
-          roleId: data.roleId,
-        },
-      },
-      select: {
-        currentLevel: true,
-        role: {
-          select: {
-            maxLevel: true,
-          },
-        },
-      },
-    });
-    if (!roleAssignment)
-      return {
-        error: t("Common.notFound"),
-        requestPayload: formData,
-      };
-    if (!roleAssignment.role.maxLevel)
-      return {
-        error: t("Common.badRequest"),
-        requestPayload: formData,
-      };
-
-    /**
-     *
-     */
-    await prisma.$transaction([
-      prisma.roleAssignment.update({
-        where: {
-          citizenId_roleId: {
-            citizenId: data.citizenId,
-            roleId: data.roleId,
-          },
-        },
-        data: {
-          currentLevel:
-            roleAssignment.currentLevel === null
-              ? 1
-              : roleAssignment.currentLevel >= roleAssignment.role.maxLevel
-                ? roleAssignment.currentLevel
-                : { increment: 1 },
-          currentLevelUpdatedAt: new Date(),
-        },
-      }),
-
-      prisma.roleAssignmentLevelChange.create({
-        data: {
-          citizenId: data.citizenId,
-          roleId: data.roleId,
-          type: RoleAssignmentLevelChangeType.UP,
-          createdById: authentication.session.entity.id,
-        },
-      }),
-    ]);
-
-    /**
-     * Create audit event
-     */
-    await createAuditEvents([
-      {
-        type: AuditEventType.ROLE_ASSIGNMENT_LEVEL_INCREASED,
-        data: {
-          citizenId: data.citizenId,
-          roleId: data.roleId,
-        },
-        createdById: authentication.session.user.id,
-      },
-    ]);
-
-    refresh();
-
-    return {
-      success: t("Common.successfullySaved"),
-    };
+  {
+    permission: "assign",
+    changeType: RoleAssignmentLevelChangeType.UP,
+    auditEventType: AuditEventType.ROLE_ASSIGNMENT_LEVEL_INCREASED,
+    nextLevel: (roleAssignment) =>
+      roleAssignment.currentLevel === null
+        ? 1
+        : roleAssignment.currentLevel >= roleAssignment.role.maxLevel
+          ? roleAssignment.currentLevel
+          : { increment: 1 },
   },
 );

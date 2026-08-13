@@ -1,5 +1,3 @@
-import { updateAlgoliaWithGenericLogType } from "@/app/api/spynet/citizen/[id]/log/[logId]/_lib/updateAlgoliaWithGenericLogType";
-import { updateEntityCaches } from "@/app/api/spynet/citizen/[id]/log/[logId]/_lib/updateEntityCaches";
 import { prisma } from "@/db";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
@@ -9,6 +7,7 @@ import type {
   EntityLog,
   EntityLogAttribute,
 } from "@sam-monorepo/database/client";
+import { syncCitizenIdentityAfterLogChange } from "./syncCitizenIdentityAfterLogChange";
 
 export const confirmLog = async (
   log: EntityLog & {
@@ -90,75 +89,7 @@ export const confirmLog = async (
     },
   ]);
 
-  // Update username
-  if (["handle", "discord-id"].includes(log.type)) {
-    const entityLogs = await prisma.entityLog.findMany({
-      where: {
-        entityId: log.entityId,
-        type: {
-          in: ["discord-id", "handle"],
-        },
-        attributes: {
-          some: {
-            key: "confirmed",
-            value: "confirmed",
-          },
-        },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-
-    const latestConfirmedHandleLog = entityLogs.find(
-      (log) => log.type === "handle",
-    );
-    const latestConfirmedDiscordIdLog = entityLogs.find(
-      (log) => log.type === "discord-id",
-    );
-
-    if (latestConfirmedDiscordIdLog) {
-      const account = await prisma.account.findUnique({
-        where: {
-          provider_providerAccountId: {
-            provider: "discord",
-            providerAccountId: latestConfirmedDiscordIdLog.content!,
-          },
-        },
-      });
-
-      if (account) {
-        await prisma.user.update({
-          where: {
-            id: account.userId,
-          },
-          data: {
-            name: latestConfirmedHandleLog?.content || log.entityId,
-          },
-        });
-      }
-    }
-  }
-
-  await updateEntityCaches(log);
-
-  /**
-   * Update Algolia
-   */
-  switch (log.type) {
-    case "handle":
-      await updateAlgoliaWithGenericLogType(log, "handles");
-      break;
-    case "citizen-id":
-      await updateAlgoliaWithGenericLogType(log, "citizenIds");
-      break;
-    case "community-moniker":
-      await updateAlgoliaWithGenericLogType(log, "communityMonikers");
-      break;
-
-    default:
-      break;
-  }
+  await syncCitizenIdentityAfterLogChange(log);
 
   return confirmedAttribute;
 };

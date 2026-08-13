@@ -1,95 +1,17 @@
 "use server";
 
-import { prisma } from "@/db";
-import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
-import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
-import { z } from "zod";
-import { CyclePhase, getCurrentPhase } from "../utils/getCurrentPhase";
+import { createToggleMyParticipationAction } from "../utils/createToggleMyParticipationAction";
+import { CyclePhase } from "../utils/getCurrentPhase";
 
-const schema = z.object({
-  id: z.cuid2(),
-  value: z.preprocess(
-    (value) => (value === "true" ? true : value === "false" ? false : value),
-    z.boolean(),
-  ),
-});
-
-export const toggleMyAccepted = createAuthenticatedAction(
+export const toggleMyAccepted = createToggleMyParticipationAction(
   "toggleMyAccepted",
-  schema,
-  async (formData, authentication, data, t) => {
-    /**
-     * Authorize the request
-     */
-    if (!authentication.session.entity)
-      return {
-        error: t("Common.forbidden"),
-        requestPayload: formData,
-      };
-
-    /**
-     * Validate the request
-     */
-    const cycle = await prisma.profitDistributionCycle.findUnique({
-      where: { id: data.id },
-    });
-    if (!cycle)
-      return {
-        error: t("Common.notFound"),
-        requestPayload: formData,
-      };
-    const currentPhase = getCurrentPhase(cycle);
-    if (currentPhase !== CyclePhase.Payout)
-      return {
-        error: t("Common.badRequest"),
-        requestPayload: formData,
-      };
-
-    /**
-     *
-     */
-    await prisma.profitDistributionCycleParticipant.upsert({
-      where: {
-        cycleId_citizenId: {
-          cycleId: data.id,
-          citizenId: authentication.session.entity.id,
-        },
-      },
-      update: {
-        acceptedAt: data.value ? new Date() : null,
-        acceptedById: authentication.session.entity.id,
-      },
-      create: {
-        cycleId: data.id,
-        citizenId: authentication.session.entity.id,
-        acceptedAt: data.value ? new Date() : null,
-        acceptedById: authentication.session.entity.id,
-      },
-    });
-
-    await createAuditEvents([
-      {
-        type: AuditEventType.PROFIT_DISTRIBUTION_MY_ACCEPTED_TOGGLED,
-        data: {
-          cycleId: data.id,
-          citizenId: authentication.session.entity.id,
-          value: data.value,
-        },
-        createdById: authentication.session.user.id,
-      },
-    ]);
-
-    /**
-     * Revalidate cache(s)
-     */
-    revalidatePath(`/app/sincome/${data.id}/management`);
-    revalidatePath(`/app/sincome/${data.id}`);
-    revalidatePath("/app/sincome");
-
-    return {
-      success: t("Common.successfullySaved"),
-    };
+  {
+    requiredPhase: CyclePhase.Payout,
+    auditEventType: AuditEventType.PROFIT_DISTRIBUTION_MY_ACCEPTED_TOGGLED,
+    participantData: (value, citizenId) => ({
+      acceptedAt: value ? new Date() : null,
+      acceptedById: citizenId,
+    }),
   },
 );

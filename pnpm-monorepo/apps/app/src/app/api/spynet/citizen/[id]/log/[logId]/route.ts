@@ -2,12 +2,11 @@ import { prisma } from "@/db";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
+import { syncCitizenIdentityAfterLogChange } from "@/modules/citizen/utils/syncCitizenIdentityAfterLogChange";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import getLatestNoteAttributes from "@/modules/common/utils/getLatestNoteAttributes";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { updateAlgoliaWithGenericLogType } from "./_lib/updateAlgoliaWithGenericLogType";
-import { updateEntityCaches } from "./_lib/updateEntityCaches";
 
 type Params = Promise<{
   id: string;
@@ -224,77 +223,7 @@ export async function DELETE(request: Request, props: { params: Params }) {
       },
     ]);
 
-    /**
-     * Update name field of user corresponding use entry
-     */
-    if (["handle", "discord-id"].includes(entityLog.type)) {
-      const entityLogs = await prisma.entityLog.findMany({
-        where: {
-          entityId: entityLog.entityId,
-          type: {
-            in: ["discord-id", "handle"],
-          },
-          attributes: {
-            some: {
-              key: "confirmed",
-              value: "confirmed",
-            },
-          },
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      });
-
-      const latestConfirmedHandleLog = entityLogs.find(
-        (log) => log.type === "handle",
-      );
-      const latestConfirmedDiscordIdLog = entityLogs.find(
-        (log) => log.type === "discord-id",
-      );
-
-      if (latestConfirmedDiscordIdLog) {
-        const account = await prisma.account.findUnique({
-          where: {
-            provider_providerAccountId: {
-              provider: "discord",
-              providerAccountId: latestConfirmedDiscordIdLog.content!,
-            },
-          },
-        });
-
-        if (account) {
-          await prisma.user.update({
-            where: {
-              id: account.userId,
-            },
-            data: {
-              name: latestConfirmedHandleLog?.content || entityLog.entityId,
-            },
-          });
-        }
-      }
-    }
-
-    await updateEntityCaches(entityLog);
-
-    /**
-     * Update Algolia
-     */
-    switch (entityLog.type) {
-      case "handle":
-        await updateAlgoliaWithGenericLogType(entityLog, "handles");
-        break;
-      case "citizen-id":
-        await updateAlgoliaWithGenericLogType(entityLog, "citizenIds");
-        break;
-      case "community-moniker":
-        await updateAlgoliaWithGenericLogType(entityLog, "communityMonikers");
-        break;
-
-      default:
-        break;
-    }
+    await syncCitizenIdentityAfterLogChange(entityLog);
 
     /**
      * Respond with the result

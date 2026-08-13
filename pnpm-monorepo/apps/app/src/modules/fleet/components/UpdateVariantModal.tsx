@@ -2,20 +2,19 @@
 
 import { runAction } from "@/modules/actions/utils/runAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
-import Button from "@/modules/common/components/Button";
 import { Button2 } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
 import { api } from "@/trpc/react";
-import { createId } from "@paralleldrive/cuid2";
 import {
   type Variant,
   type VariantExternalLink,
   type VariantTag,
 } from "@sam-monorepo/database/browser";
-import { useId, useState, useTransition } from "react";
-import { FaPlus, FaSave, FaTrash } from "react-icons/fa";
+import { useId, useTransition } from "react";
+import { FaSave } from "react-icons/fa";
 import { updateVariant } from "../actions/updateVariant";
-import { ExternalService, ExternalServiceDisplayNames } from "../types";
+import { VariantExternalLinkFields } from "./VariantExternalLinkFields";
+import { VariantTagFields } from "./VariantTagFields";
 
 interface Props {
   readonly onRequestClose: () => void;
@@ -36,24 +35,6 @@ export const UpdateVariantModal = ({ onRequestClose, variant }: Props) => {
   const [isPending, startTransition] = useTransition();
   const nameId = useId();
   const statusId = useId();
-  const [tags, setTags] = useState<
-    { id: string; key: string; value: string }[]
-  >(
-    variant.tags.map((tag) => ({
-      id: tag.id,
-      key: tag.key,
-      value: tag.value,
-    })),
-  );
-  const [externalLinks, setExternalLinks] = useState<
-    Pick<VariantExternalLink, "id" | "serviceName" | "url">[]
-  >(
-    variant.externalLinks.map((link) => ({
-      id: link.id,
-      serviceName: link.serviceName,
-      url: link.url,
-    })),
-  );
 
   const _action = (formData: FormData) => {
     startTransition(async () => {
@@ -107,115 +88,21 @@ export const UpdateVariantModal = ({ onRequestClose, variant }: Props) => {
         )}
         <small className="text-white/40">optional</small>
 
-        <p className="mt-6">
-          Tags <small className="text-white/40">optional</small>
-        </p>
-        <div className="flex flex-col gap-2 mt-2">
-          {tags.map((tag) => (
-            <div key={tag.id} className="flex gap-1 items-stretch">
-              <input
-                type="text"
-                className="p-2 rounded-secondary bg-neutral-900 flex-1 min-w-0"
-                name="tagKeys[]"
-                placeholder="Key"
-                defaultValue={tag.key}
-                autoFocus={Boolean(!tag.key)}
-              />
-              <input
-                type="text"
-                className="p-2 rounded-secondary bg-neutral-900 flex-1 min-w-0"
-                name="tagValues[]"
-                placeholder="Value"
-                defaultValue={tag.value}
-              />
-              <Button
-                onClick={() =>
-                  setTags((prev) => prev.filter(({ id }) => id !== tag.id))
-                }
-                type="button"
-                variant="tertiary"
-                title="Löschen"
-                iconOnly
-                className="h-auto flex-none w-6"
-              >
-                <FaTrash />
-              </Button>
-            </div>
-          ))}
-        </div>
-        <Button
-          onClick={() =>
-            setTags((prev) => [...prev, { id: createId(), key: "", value: "" }])
-          }
-          type="button"
-          variant="tertiary"
-          className="mx-auto"
-        >
-          <FaPlus />
-          Hinzufügen
-        </Button>
+        <VariantTagFields
+          initialTags={variant.tags.map((tag) => ({
+            id: tag.id,
+            key: tag.key,
+            value: tag.value,
+          }))}
+        />
 
-        <p className="mt-6">
-          Externe Links <small className="text-white/40">optional</small>
-        </p>
-        <div className="flex flex-col gap-2 mt-2">
-          {externalLinks.map((link) => (
-            <div key={link.id} className="flex gap-1 items-stretch">
-              <select
-                className="p-2 rounded-secondary bg-neutral-900 flex-none min-w-0"
-                name="linkServiceNames[]"
-                defaultValue={link.serviceName}
-              >
-                {Object.entries(ExternalServiceDisplayNames).map(
-                  ([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ),
-                )}
-              </select>
-              <input
-                type="url"
-                className="p-2 rounded-secondary bg-neutral-900 flex-1 min-w-0"
-                name="linkUrls[]"
-                placeholder="https://..."
-                defaultValue={link.url}
-              />
-              <Button
-                onClick={() =>
-                  setExternalLinks((prev) =>
-                    prev.filter(({ id }) => id !== link.id),
-                  )
-                }
-                type="button"
-                variant="tertiary"
-                title="Löschen"
-                iconOnly
-                className="h-auto flex-none w-6"
-              >
-                <FaTrash />
-              </Button>
-            </div>
-          ))}
-        </div>
-        <Button
-          onClick={() =>
-            setExternalLinks((prev) => [
-              ...prev,
-              {
-                id: createId(),
-                serviceName: ExternalService.SPVIEWER,
-                url: "",
-              },
-            ])
-          }
-          type="button"
-          variant="tertiary"
-          className="mx-auto"
-        >
-          <FaPlus />
-          Hinzufügen
-        </Button>
+        <VariantExternalLinkFields
+          initialLinks={variant.externalLinks.map((link) => ({
+            id: link.id,
+            serviceName: link.serviceName,
+            url: link.url,
+          }))}
+        />
 
         <div className="flex justify-end mt-8">
           <Button2 disabled={isPending || _variant.isFetching} type="submit">

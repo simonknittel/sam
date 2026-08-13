@@ -2,22 +2,18 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
-import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getWikiScopeRevalidationPath } from "../queries/getWikiPageScopedContext";
-import { buildEventWikiPageMoveReset } from "../utils/buildEventWikiPageMoveReset";
-import { buildWikiPageMoveReset } from "../utils/buildWikiPageMoveReset";
-import { collectWikiPageDescendants } from "../utils/collectWikiPageDescendants";
 import { compareWikiPagesByOrder } from "../utils/compareWikiPagesByOrder";
 import { isEventWikiRootPage } from "../utils/isEventWikiRootPage";
-import { requireAdminableWikiPage } from "../utils/requireAdminableWikiPage";
 import {
-  resolveWikiPagePlacement,
-  WikiPagePlacement,
-} from "../utils/resolveWikiPagePlacement";
-import { WikiScope } from "../utils/wikiPageHref";
+  buildWikiPageReparentAuditEvents,
+  buildWikiPageReparentReset,
+  validateWikiPageReparent,
+} from "../utils/reparentWikiPage";
+import { requireAdminableWikiPage } from "../utils/requireAdminableWikiPage";
 
 const schema = z.object({
   id: z.cuid2(),
@@ -57,37 +53,16 @@ export const updateWikiPagePosition = createAuthenticatedAction(
       data.position === "inside" ? reference.id : reference.parentId;
     const changesParent = newParentId !== page.parentId;
 
-    /** Same checks as moveWikiPage when the page changes its parent */
     if (changesParent) {
-      if (newParentId) {
-        const placement = resolveWikiPagePlacement(context, newParentId);
-        if (placement !== WikiPagePlacement.Allowed)
-          return {
-            error:
-              placement === WikiPagePlacement.Missing
-                ? t("Common.badRequest")
-                : t("Common.forbidden"),
-            requestPayload: formData,
-          };
-
-        /**
-         * Prevent cycles: the new parent must not be the page itself or one
-         * of its descendants.
-         */
-        if (
-          newParentId === page.id ||
-          collectWikiPageDescendants(context.pages, page.id).includes(
-            newParentId,
-          )
-        )
-          return { error: t("Common.badRequest"), requestPayload: formData };
-      } else {
-        /** Event wikis have exactly one top-level page: the locked root */
-        if (scoped.scope === WikiScope.Event)
-          return { error: t("Common.badRequest"), requestPayload: formData };
-        if (!(await authentication.authorize("wiki", "create")))
-          return { error: t("Common.forbidden"), requestPayload: formData };
-      }
+      const reparentFailure = await validateWikiPageReparent(
+        scoped,
+        page,
+        newParentId,
+        authentication,
+        formData,
+        t,
+      );
+      if (reparentFailure) return reparentFailure;
     }
 
     const newSiblings = context.pages
@@ -126,42 +101,21 @@ export const updateWikiPagePosition = createAuthenticatedAction(
     });
     /** Same permission reset as moveWikiPage, see there */
     const reset = changesParent
-      ? scoped.scope === WikiScope.Event
-        ? buildEventWikiPageMoveReset(context.allPages, page.id)
-        : buildWikiPageMoveReset(
-            scoped.context.allPages,
-            scoped.context.pagesById.get(page.id)!,
-            newParentId,
-            updatedById,
-          )
+      ? buildWikiPageReparentReset(scoped, page, newParentId, updatedById)
       : null;
 
     if (updates.length > 0 || reset)
       await prisma.$transaction([...updates, ...(reset?.statements ?? [])]);
 
     if (reset)
-      await createAuditEvents([
-        {
-          type: AuditEventType.WIKI_PAGE_MOVED,
-          data: {
-            pageId: page.id,
-            eventId: page.eventId ?? undefined,
-            previousParentId: page.parentId,
-            newParentId,
-          },
-          createdById: authentication.session.user.id,
-        },
-        ...reset.subtreeIds.map((id) => ({
-          type: AuditEventType.WIKI_PAGE_PERMISSIONS_RESET_BY_MOVE as const,
-          data: {
-            pageId: id,
-            eventId: page.eventId ?? undefined,
-            movedPageId: page.id,
-            newParentId,
-          },
-          createdById: authentication.session.user.id,
-        })),
-      ]);
+      await createAuditEvents(
+        buildWikiPageReparentAuditEvents(
+          page,
+          newParentId,
+          reset.subtreeIds,
+          authentication.session.user.id,
+        ),
+      );
 
     revalidatePath(getWikiScopeRevalidationPath(scoped), "layout");
 

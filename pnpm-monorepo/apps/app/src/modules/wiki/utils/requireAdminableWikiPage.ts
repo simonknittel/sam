@@ -5,11 +5,11 @@ import {
 } from "../queries/getWikiPageScopedContext";
 import { isEventWikiRootPage } from "./isEventWikiRootPage";
 
-type ScopedContext = NonNullable<
+export type ScopedContext = NonNullable<
   Awaited<ReturnType<typeof getWikiPageScopedContext>>
 >;
 
-type ScopedWikiPage =
+export type ScopedWikiPage =
   ScopedContext["context"]["pagesById"] extends Map<string, infer Page>
     ? Page
     : never;
