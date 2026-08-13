@@ -8,7 +8,7 @@ export const SkeletonTile = ({ className }: Props) => {
   return (
     <div
       className={clsx(
-        "bg-neutral-800/50 rounded-primary animate-pulse min-h-90",
+        "bg-neutral-800/50 rounded-primary animate-pulse",
         className,
       )}
     />

@@ -1,6 +1,10 @@
 import { Actions } from "@/modules/common/components/Actions";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
+import {
+  SortDirection,
+  toggleSortParam,
+} from "@/modules/common/utils/toggleSortParam";
 import { type EntityLogConfirmationState } from "@/types";
 import {
   type ClassificationLevel,
@@ -14,7 +18,7 @@ import { FaSortDown, FaSortUp } from "react-icons/fa";
 import { CitizenPopover } from "./CitizenPopover";
 import { ConfirmationState } from "./ConfirmationState";
 import { DeleteLog } from "./DeleteLog";
-import { UpdateNote } from "./UpdateNote";
+import { UpdateNote } from "./notes/UpdateNote";
 
 export type Row = Readonly<{
   entity: Entity;
@@ -35,22 +39,17 @@ interface Props {
 }
 
 export const NotesTable = ({ rows, searchParams }: Props) => {
-  const createdAtSearchParams = new URLSearchParams(searchParams);
-  if (
-    !searchParams.has("sort") ||
-    searchParams.get("sort") === "created-at-desc"
-  ) {
-    createdAtSearchParams.set("sort", "created-at-asc");
-  } else {
-    createdAtSearchParams.set("sort", "created-at-desc");
-  }
-
-  const confirmedAtSearchParams = new URLSearchParams(searchParams);
-  if (searchParams.get("sort") === "confirmed-at-desc") {
-    confirmedAtSearchParams.set("sort", "confirmed-at-asc");
-  } else {
-    confirmedAtSearchParams.set("sort", "confirmed-at-desc");
-  }
+  const createdAtSearchParams = toggleSortParam(searchParams, "created-at", {
+    initialDirection: SortDirection.Descending,
+    treatMissingAs: "created-at-desc",
+  });
+  const confirmedAtSearchParams = toggleSortParam(
+    searchParams,
+    "confirmed-at",
+    {
+      initialDirection: SortDirection.Descending,
+    },
+  );
 
   return (
     <table className="w-full min-w-500">

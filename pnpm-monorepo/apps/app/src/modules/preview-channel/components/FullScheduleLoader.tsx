@@ -1,14 +1,14 @@
 "use client";
 
+import { SkeletonTile } from "@/modules/common/components/SkeletonTile";
 import dynamic from "next/dynamic";
 import type { Schedule } from "../utils/schedule";
-import { TileSkeleton } from "./TileSkeleton";
 
 const FullSchedule = dynamic(
   () => import("@/modules/preview-channel/components/FullSchedule"),
   {
     ssr: false,
-    loading: () => <TileSkeleton className="mt-4" />,
+    loading: () => <SkeletonTile className="mt-4 min-h-40 w-full max-w-xl" />,
   },
 );
 

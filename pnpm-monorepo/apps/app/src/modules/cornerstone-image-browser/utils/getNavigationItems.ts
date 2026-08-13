@@ -1,18 +1,8 @@
-import { authenticate } from "@/modules/auth/server";
-import type { Page } from "@/modules/common/components/layouts/DefaultLayout/Navigation";
+import { createNavigationItems } from "@/modules/common/utils/createNavigationItems";
 
-export const getNavigationItems = async () => {
-  const authentication = await authenticate();
-  if (!authentication) return null;
-
-  // const permissions = await Promise.all([]);
-
-  const pages: Page[] = [];
-
-  pages.push({
+export const getNavigationItems = createNavigationItems([
+  {
     title: "Alle Kategorien",
     url: "/app/tools/cornerstone-image-browser",
-  });
-
-  return pages;
-};
+  },
+]);

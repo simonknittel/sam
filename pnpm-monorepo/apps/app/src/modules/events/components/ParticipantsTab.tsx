@@ -10,6 +10,7 @@ import {
   sortAscWithAndNullLast,
   sortDescAndNullLast,
 } from "@/modules/common/utils/sorting";
+import { toggleSortParam } from "@/modules/common/utils/toggleSortParam";
 import { CreateOrUpdateSilcTransaction } from "@/modules/silc/components/CreateOrUpdateSilcTransaction";
 import type {
   Entity,
@@ -57,22 +58,10 @@ export const ParticipantsTab = async ({
 
   const resolvedParticipants = await getParticipants(event);
 
-  const citizenSearchParams = new URLSearchParams(urlSearchParams);
-  if (
-    !urlSearchParams.has("sort") ||
-    urlSearchParams.get("sort") === "citizen-asc"
-  ) {
-    citizenSearchParams.set("sort", "citizen-desc");
-  } else {
-    citizenSearchParams.set("sort", "citizen-asc");
-  }
-
-  const joinedAtSearchParams = new URLSearchParams(urlSearchParams);
-  if (urlSearchParams.get("sort") === "joined-at-asc") {
-    joinedAtSearchParams.set("sort", "joined-at-desc");
-  } else {
-    joinedAtSearchParams.set("sort", "joined-at-asc");
-  }
+  const citizenSearchParams = toggleSortParam(urlSearchParams, "citizen", {
+    treatMissingAs: "citizen-asc",
+  });
+  const joinedAtSearchParams = toggleSortParam(urlSearchParams, "joined-at");
 
   const sortedResolvedParticipants = resolvedParticipants.toSorted((a, b) => {
     switch (urlSearchParams.get("sort")) {

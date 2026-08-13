@@ -2,6 +2,10 @@ import { Actions } from "@/modules/common/components/Actions";
 import { Link } from "@/modules/common/components/Link";
 import { entityLogTypeTranslations } from "@/modules/common/utils/entityLogTypeTranslations";
 import { formatDate } from "@/modules/common/utils/formatDate";
+import {
+  SortDirection,
+  toggleSortParam,
+} from "@/modules/common/utils/toggleSortParam";
 import type { EntityLogConfirmationState } from "@/types";
 import {
   type Entity,
@@ -30,22 +34,17 @@ interface Props {
 }
 
 export const OtherTable = ({ rows, searchParams }: Props) => {
-  const createdAtSearchParams = new URLSearchParams(searchParams);
-  if (
-    !searchParams.has("sort") ||
-    searchParams.get("sort") === "created-at-desc"
-  ) {
-    createdAtSearchParams.set("sort", "created-at-asc");
-  } else {
-    createdAtSearchParams.set("sort", "created-at-desc");
-  }
-
-  const confirmedAtSearchParams = new URLSearchParams(searchParams);
-  if (searchParams.get("sort") === "confirmed-at-desc") {
-    confirmedAtSearchParams.set("sort", "confirmed-at-asc");
-  } else {
-    confirmedAtSearchParams.set("sort", "confirmed-at-desc");
-  }
+  const createdAtSearchParams = toggleSortParam(searchParams, "created-at", {
+    initialDirection: SortDirection.Descending,
+    treatMissingAs: "created-at-desc",
+  });
+  const confirmedAtSearchParams = toggleSortParam(
+    searchParams,
+    "confirmed-at",
+    {
+      initialDirection: SortDirection.Descending,
+    },
+  );
 
   return (
     <table className="w-full min-w-400">

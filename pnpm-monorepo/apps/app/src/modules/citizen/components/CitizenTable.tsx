@@ -1,6 +1,10 @@
 import { Actions } from "@/modules/common/components/Actions";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
+import {
+  SortDirection,
+  toggleSortParam,
+} from "@/modules/common/utils/toggleSortParam";
 import { type Entity } from "@sam-monorepo/database/client";
 import { Suspense } from "react";
 import { FaExternalLinkAlt, FaSortDown, FaSortUp } from "react-icons/fa";
@@ -29,43 +33,14 @@ export const CitizenTable = ({
   showDeleteEntityButton = false,
   searchParams,
 }: Props) => {
-  const handleSearchParams = new URLSearchParams(searchParams);
-  if (searchParams.get("sort") === "handle-asc") {
-    handleSearchParams.set("sort", "handle-desc");
-  } else {
-    handleSearchParams.set("sort", "handle-asc");
-  }
-
-  const discordIdSearchParams = new URLSearchParams(searchParams);
-  if (searchParams.get("sort") === "discord-id-asc") {
-    discordIdSearchParams.set("sort", "discord-id-desc");
-  } else {
-    discordIdSearchParams.set("sort", "discord-id-asc");
-  }
-
-  const teamspeakIdSearchParams = new URLSearchParams(searchParams);
-  if (searchParams.get("sort") === "teamspeak-id-asc") {
-    teamspeakIdSearchParams.set("sort", "teamspeak-id-desc");
-  } else {
-    teamspeakIdSearchParams.set("sort", "teamspeak-id-asc");
-  }
-
-  const createdAtSearchParams = new URLSearchParams(searchParams);
-  if (
-    !searchParams.has("sort") ||
-    searchParams.get("sort") === "created-at-desc"
-  ) {
-    createdAtSearchParams.set("sort", "created-at-asc");
-  } else {
-    createdAtSearchParams.set("sort", "created-at-desc");
-  }
-
-  const lastSeenAtSearchParams = new URLSearchParams(searchParams);
-  if (searchParams.get("sort") === "last-seen-at-desc") {
-    lastSeenAtSearchParams.set("sort", "last-seen-at-asc");
-  } else {
-    lastSeenAtSearchParams.set("sort", "last-seen-at-desc");
-  }
+  const handleSearchParams = toggleSortParam(searchParams, "handle");
+  const createdAtSearchParams = toggleSortParam(searchParams, "created-at", {
+    initialDirection: SortDirection.Descending,
+    treatMissingAs: "created-at-desc",
+  });
+  const lastSeenAtSearchParams = toggleSortParam(searchParams, "last-seen-at", {
+    initialDirection: SortDirection.Descending,
+  });
 
   // Tailwind CSS can't detect dynamic CSS classes. Therefore we are using an inline style here.
   const gridTemplateColumns = [

@@ -11,9 +11,10 @@ interface Props {
   readonly note: EntityLog & {
     attributes: EntityLogAttribute[];
   };
+  readonly withBullet?: boolean;
 }
 
-export const UpdateNote = async ({ note }: Props) => {
+export const UpdateNote = async ({ note, withBullet = false }: Props) => {
   const { noteTypeId } = getLatestNoteAttributes(note);
 
   const [allNoteTypes, classificationLevels] = await Promise.all([
@@ -21,15 +22,21 @@ export const UpdateNote = async ({ note }: Props) => {
     getCreatableClassificationLevelsDeduped(noteTypeId!.value),
   ]);
 
+  const modal = (
+    <UpdateNoteModal
+      className={withBullet ? "h-auto self-center" : undefined}
+      note={note}
+      noteTypes={allNoteTypes}
+      classificationLevels={classificationLevels}
+    />
+  );
+
+  if (!withBullet) return modal;
+
   return (
     <>
       <span>&bull;</span>
-      <UpdateNoteModal
-        className="h-auto self-center"
-        note={note}
-        noteTypes={allNoteTypes}
-        classificationLevels={classificationLevels}
-      />
+      {modal}
     </>
   );
 };

@@ -1,11 +1,8 @@
-import { authenticate } from "@/modules/auth/server";
 import type { Page } from "@/modules/common/components/layouts/DefaultLayout/Navigation";
+import { createNavigationItems } from "@/modules/common/utils/createNavigationItems";
 import { getMyReadableFlows } from "../queries/getMyReadableFlows";
 
-export const getNavigationItems = async () => {
-  const authentication = await authenticate();
-  if (!authentication) return null;
-
+export const getNavigationItems = createNavigationItems(async () => {
   const flows = await getMyReadableFlows();
 
   const pages: Page[] = flows.map((flow) => ({
@@ -14,4 +11,4 @@ export const getNavigationItems = async () => {
   }));
 
   return pages;
-};
+});

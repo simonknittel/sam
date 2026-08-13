@@ -1,3 +1,4 @@
+import clsx from "clsx";
 import { Suspense, type ReactNode } from "react";
 import { SkeletonTile } from "../SkeletonTile";
 import { ErrorBoundary } from "./ErrorBoundary";
@@ -13,7 +14,9 @@ export const SuspenseWithErrorBoundaryTile = ({
 }: Props) => {
   return (
     <ErrorBoundary className={className}>
-      <Suspense fallback={<SkeletonTile className={className} />}>
+      <Suspense
+        fallback={<SkeletonTile className={clsx("min-h-90", className)} />}
+      >
         {children}
       </Suspense>
     </ErrorBoundary>

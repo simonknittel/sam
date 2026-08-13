@@ -238,7 +238,7 @@ export const SingleNote = async ({ note }: Props) => {
 
             {showUpdate && (
               <Suspense>
-                <UpdateNote note={note} />
+                <UpdateNote note={note} withBullet />
               </Suspense>
             )}
 

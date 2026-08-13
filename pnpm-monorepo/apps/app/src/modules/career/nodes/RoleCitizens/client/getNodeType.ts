@@ -1,8 +1,8 @@
 "use client";
 
 import { type FlowNode, FlowNodeType } from "@sam-monorepo/database/browser";
+import { isUnlocked } from "../../shared/isUnlocked";
 import type { AdditionalDataType } from "./additionalDataType";
-import { isUnlocked } from "./helpers";
 
 export const getNodeType = (
   node: FlowNode,
