@@ -14,56 +14,40 @@ export const requiresEmailConfirmation = async (session: Session) => {
   return true;
 };
 
-export const requireConfirmedEmailForPage = async (session: Session) => {
+const requireConfirmedEmail = async (
+  session: Session,
+  logMessage: string,
+  onUnconfirmedEmail: () => never,
+) => {
   if (!(await requiresEmailConfirmation(session))) return;
 
   if (!session.user.emailVerified) {
-    log.info("Forbidden request to page", {
-      // TODO: Add request path
+    log.info(logMessage, {
+      // TODO: Add request path/action name
       userId: session.user.id,
       reason: "Unconfirmed email",
     });
 
-    redirect("/email-confirmation");
+    onUnconfirmedEmail();
   }
 };
 
-export const requireConfirmedEmailForApi = async (session: Session) => {
-  if (!(await requiresEmailConfirmation(session))) return;
+export const requireConfirmedEmailForPage = (session: Session) =>
+  requireConfirmedEmail(session, "Forbidden request to page", () =>
+    redirect("/email-confirmation"),
+  );
 
-  if (!session.user.emailVerified) {
-    log.info("Forbidden request to API", {
-      // TODO: Add request path
-      userId: session.user.id,
-      reason: "Unconfirmed email",
-    });
-
+export const requireConfirmedEmailForApi = (session: Session) =>
+  requireConfirmedEmail(session, "Forbidden request to API", () => {
     throw new Error("Forbidden");
-  }
-};
+  });
 
-export const requireConfirmedEmailForAction = async (session: Session) => {
-  if (!(await requiresEmailConfirmation(session))) return;
-
-  if (!session.user.emailVerified) {
-    log.info("Forbidden request to action", {
-      // TODO: Add action name
-      userId: session.user.id,
-      reason: "Unconfirmed email",
-    });
-
+export const requireConfirmedEmailForAction = (session: Session) =>
+  requireConfirmedEmail(session, "Forbidden request to action", () => {
     throw new Error("Forbidden");
-  }
-};
+  });
 
-export const requireConfirmedEmailForTrpc = async (session: Session) => {
-  if (!(await requiresEmailConfirmation(session))) return;
-
-  if (!session.user.emailVerified) {
-    log.info("Forbidden request to tRPC", {
-      userId: session.user.id,
-      reason: "Unconfirmed email",
-    });
+export const requireConfirmedEmailForTrpc = (session: Session) =>
+  requireConfirmedEmail(session, "Forbidden request to tRPC", () => {
     throw new TRPCError({ code: "FORBIDDEN" });
-  }
-};
+  });

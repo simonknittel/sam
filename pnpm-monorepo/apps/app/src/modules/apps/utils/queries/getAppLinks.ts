@@ -17,8 +17,8 @@ export const getAppLinks = cache(
 
     // TODO: Implement fetching apps from database
 
-    const apps: App[] = await Promise.all([
-      ...INTEGRATED_APPS.map(async (app) => {
+    const integratedApps = await Promise.all(
+      INTEGRATED_APPS.map(async (app) => {
         let redacted = false;
 
         if (app.permissionStrings && app.permissionStrings.length > 0) {
@@ -51,15 +51,10 @@ export const getAppLinks = cache(
           ...app,
         };
       }),
+    );
 
-      // TODO: Implement permission check
-      // eslint-disable-next-line @typescript-eslint/await-thenable
-      ...externalApps.map((externalApp) => {
-        return {
-          ...externalApp,
-        };
-      }),
-    ]);
+    // TODO: Implement permission check
+    const apps: App[] = [...integratedApps, ...externalApps];
 
     return apps;
   }),

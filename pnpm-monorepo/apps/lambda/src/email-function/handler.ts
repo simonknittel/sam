@@ -21,12 +21,7 @@ export const emailFunctionHandler = async (
     url: "https://api.eu.mailgun.net",
   });
 
-  switch (body.template) {
-    case "emailConfirmation":
-      await emailConfirmation(mg, body.messages);
-      break;
-
-    default:
-      throw new Error(`Invalid template: ${body.template}`);
-  }
+  // body.template is a size-1 z.enum; reintroduce a switch when a second
+  // template exists.
+  await emailConfirmation(mg, body.messages);
 };

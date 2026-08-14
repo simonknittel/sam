@@ -1,10 +1,8 @@
-import { log } from "@/modules/logging";
 import { getWikiContext } from "@/modules/wiki/queries/getWikiContext";
 import { resolveWikiRoleCitizens } from "@/modules/wiki/utils/resolveWikiRoleCitizens";
 import { TRPCError } from "@trpc/server";
-import { serializeError } from "serialize-error";
 import { z } from "zod";
-import { protectedProcedure } from "../../trpc";
+import { protectedProcedure, toTrpcError } from "../../trpc";
 
 /**
  * Resolves a role-members node's role for the editor node view. The static
@@ -25,15 +23,6 @@ export const getRoleCitizens = protectedProcedure
 
       return await resolveWikiRoleCitizens(input.roleId);
     } catch (error) {
-      if (error instanceof TRPCError) throw error;
-
-      log.error("Failed to resolve wiki role citizens", {
-        error: serializeError(error),
-      });
-
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to resolve wiki role citizens",
-      });
+      throw toTrpcError(error, "Failed to resolve wiki role citizens");
     }
   });

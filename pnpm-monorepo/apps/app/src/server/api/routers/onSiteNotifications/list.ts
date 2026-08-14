@@ -1,10 +1,8 @@
 import { prisma } from "@/db";
-import { log } from "@/modules/logging";
 import { ON_SITE_NOTIFICATIONS_PAGE_SIZE } from "@/modules/notifications/utils/config";
 import { TRPCError } from "@trpc/server";
-import { serializeError } from "serialize-error";
 import { z } from "zod";
-import { protectedProcedure } from "../../trpc";
+import { protectedProcedure, toTrpcError } from "../../trpc";
 
 /**
  * Pages through the current citizen's on-site notifications, newest first.
@@ -47,15 +45,6 @@ export const list = protectedProcedure
         nextCursor: hasNextPage ? items.at(-1)!.id : null,
       };
     } catch (error) {
-      if (error instanceof TRPCError) throw error;
-
-      log.error("Failed to load on-site notifications", {
-        error: serializeError(error),
-      });
-
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to load on-site notifications",
-      });
+      throw toTrpcError(error, "Failed to load on-site notifications");
     }
   });

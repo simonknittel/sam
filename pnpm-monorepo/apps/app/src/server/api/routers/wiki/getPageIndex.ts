@@ -1,4 +1,3 @@
-import { log } from "@/modules/logging";
 import { getWikiContext } from "@/modules/wiki/queries/getWikiContext";
 import { resolveWikiPageIndex } from "@/modules/wiki/utils/resolveWikiPageIndex";
 import {
@@ -8,9 +7,8 @@ import {
   WIKI_PAGE_INDEX_MODES,
 } from "@sam-monorepo/wiki-editor";
 import { TRPCError } from "@trpc/server";
-import { serializeError } from "serialize-error";
 import { z } from "zod";
-import { protectedProcedure } from "../../trpc";
+import { protectedProcedure, toTrpcError } from "../../trpc";
 
 /**
  * Resolves a page-index node's config for the editor node view. The static
@@ -56,15 +54,6 @@ export const getPageIndex = protectedProcedure
         matchMode: input.matchMode,
       });
     } catch (error) {
-      if (error instanceof TRPCError) throw error;
-
-      log.error("Failed to resolve wiki page index", {
-        error: serializeError(error),
-      });
-
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to resolve wiki page index",
-      });
+      throw toTrpcError(error, "Failed to resolve wiki page index");
     }
   });
