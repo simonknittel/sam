@@ -95,6 +95,7 @@ export const ProfitDistributionCycleExcerpt = ({
   return (
     <Link
       href={`/app/sincome/${cycleData.cycle.id}`}
+      title="Details öffnen"
       className={clsx(
         "bg-secondary hover:bg-neutral-800 active:bg-neutral-900 flex corners-secondary",
         className,
@@ -181,7 +182,7 @@ export const ProfitDistributionCycleExcerpt = ({
         </div>
       </div>
 
-      <AccordeonLink title="Details öffnen" className="flex-none" />
+      <AccordeonLink className="flex-none" />
     </Link>
   );
 };

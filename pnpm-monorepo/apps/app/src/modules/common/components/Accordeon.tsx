@@ -14,7 +14,7 @@ export const AccordeonToggle = (props: AccordeonToggleProps) => {
       type="button"
       title={isOpen ? "Details schließen" : "Details öffnen"}
       className={clsx(
-        "flex-none p-3 flex items-center justify-center border-l border-white/10 hover:bg-white/5 hover:cursor-pointer rounded-secondary",
+        "flex-none p-3 flex items-center justify-center border-l border-white/10 hover:bg-white/5 focus-visible:bg-white/5 active:bg-white/10 hover:cursor-pointer rounded-secondary",
         className,
       )}
       {...rest}
@@ -30,12 +30,18 @@ export const AccordeonToggle = (props: AccordeonToggleProps) => {
 
 type AccordeonLinkProps = ComponentProps<"div">;
 
+/**
+ * Decorative chevron for card links whose whole surface already is the
+ * interactive element — it must not carry a title or any control
+ * semantics of its own (nested controls are invalid); put the label on
+ * the surrounding link instead.
+ */
 export const AccordeonLink = (props: AccordeonLinkProps) => {
   const { className, ...rest } = props;
 
   return (
     <div
-      title="Details öffnen"
+      aria-hidden="true"
       className={clsx(
         "flex-none p-3 flex items-center justify-center border-l border-white/10",
         className,

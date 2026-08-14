@@ -124,6 +124,7 @@ export const Task = ({ className, task }: Props) => {
   return (
     <Link
       href={`/app/tasks/${task.id}`}
+      title="Details öffnen"
       className={clsx(
         "flex bg-secondary overflow-hidden hover:bg-neutral-800 corners-secondary",
         className,
@@ -146,7 +147,7 @@ export const Task = ({ className, task }: Props) => {
         )}
       </div>
 
-      <AccordeonLink title="Details öffnen" />
+      <AccordeonLink />
     </Link>
   );
 };
