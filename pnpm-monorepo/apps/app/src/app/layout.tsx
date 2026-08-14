@@ -1,5 +1,6 @@
 import { env } from "@/env";
 import ToasterContainer from "@/modules/common/components/ToasterContainer";
+import { TooltipProvider } from "@/modules/common/components/Tooltip";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import clsx from "clsx";
 import { type Metadata } from "next";
@@ -29,7 +30,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <body
         className={clsx("bg-neutral-800 text-text-primary", robotMono.variable)}
       >
-        {children}
+        <TooltipProvider>{children}</TooltipProvider>
         <NextTopLoader color="#c22424" showSpinner={false} />
         <ToasterContainer />
         <SpeedInsights sampleRate={0.5} />
