@@ -129,7 +129,14 @@ export const AlertDialogAction = (props: AlertDialogActionProps) => {
         !disabled
           ? () => {
               if (type !== "submit" || !form) return;
-              // TODO: This shouldn't be necessary. I'm very confused why this doesn't work without it.
+              // Radix closes the dialog on Action click, which unmounts this
+              // portaled button before the browser runs the click's default
+              // action — so the native submission of the associated form
+              // never happens (runtime-verified 2026-08 against
+              // @radix-ui/react-alert-dialog 1.x, with the form attribute
+              // forwarded). Submit manually instead. The form attribute is
+              // deliberately not forwarded so a future Radix fix cannot
+              // cause a double submission.
               (
                 document.getElementById(form) as HTMLFormElement | null
               )?.requestSubmit();
