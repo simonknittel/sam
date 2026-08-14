@@ -49,14 +49,6 @@ class MySampler implements Sampler {
 const sdk = new NodeSDK({
   resource,
   spanProcessors: [
-    // new BatchSpanProcessor(
-    //   new OTLPTraceExporter({
-    //     url: `${env.OTEL_EXPORTER_OTLP_ENDPOINT}/v1/traces`,
-    //   }),
-    //   {
-    //     scheduledDelayMillis: 1000,
-    //   },
-    // ),
     new SimpleSpanProcessor(
       new OTLPTraceExporter({
         url: `${env.OTEL_EXPORTER_OTLP_ENDPOINT}/v1/traces`,
@@ -64,12 +56,6 @@ const sdk = new NodeSDK({
     ),
   ],
   logRecordProcessors: [
-    // new BatchLogRecordProcessor({
-    //   exporter: new OTLPLogExporter({
-    //     url: `${env.OTEL_EXPORTER_OTLP_ENDPOINT}/v1/logs`,
-    //   }),
-    //   scheduledDelayMillis: 1000,
-    // }),
     new SimpleLogRecordProcessor({
       exporter: new OTLPLogExporter({
         url: `${env.OTEL_EXPORTER_OTLP_ENDPOINT}/v1/logs`,

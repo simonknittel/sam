@@ -47,13 +47,7 @@ export default async function Page() {
                 </td>
 
                 <td className="h-14 flex items-center px-2 truncate">
-                  {/* <Link
-                    href={`/app/spynet/citizen/${}`}
-                    prefetch={false}
-                    className="flex items-center gap-2 text-brand-red-500 hover:bg-neutral-800 px-2 rounded-secondary h-full truncate"
-                  > */}
                   {citizen.displayname}
-                  {/* </Link> */}
                 </td>
               </tr>
             ))}

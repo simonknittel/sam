@@ -116,20 +116,6 @@ export const AddNote = ({
         )}
 
         <div className="flex gap-4 items-center justify-end col-start-3">
-          {/* <Button
-            type="submit"
-            disabled={isLoading}
-            title="Speichern"
-            variant="tertiary"
-            name="confirmed"
-            className="whitespace-nowrap text-left hidden sm:inline-flex"
-          >
-            {isLoading ? <AsciiSpinner /> : <FaSave />}
-            Speichern und
-            <br />
-            bestätigen
-          </Button> */}
-
           <Button2
             type="submit"
             disabled={isLoading}

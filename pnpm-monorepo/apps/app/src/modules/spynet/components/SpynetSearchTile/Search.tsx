@@ -101,7 +101,6 @@ export const Search = () => {
           detachedSearchButton: "static!",
         }}
         placeholder="Suche"
-        // renderNoResults={() => "Kein Ergebnisse"} // TODO
       />
     </div>
   );

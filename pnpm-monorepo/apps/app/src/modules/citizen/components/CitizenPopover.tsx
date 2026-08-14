@@ -117,7 +117,6 @@ export const CitizenPopover = ({ children, citizenId }: Props) => {
           </div>
 
           {/* TODO: Show active organization memberships */}
-          {/* <div className="border-t border-neutral-700 pt-2">Organisationen</div> */}
         </>
       )}
     </PopoverBaseUI>

@@ -226,15 +226,6 @@ export const SingleNote = async ({ note }: Props) => {
             </Suspense>
 
             {/* TODO: Introduce permission to see submittedBy and confirmedBy */}
-            {/* <span>&bull;</span>
-            <p>Eingereicht von {note.submittedBy.name}</p>
-
-            {confirmed && (
-              <>
-                <span>&bull;</span>
-                <p>Bestätigt von {confirmed.createdBy.name}</p>
-              </>
-            )} */}
 
             {showUpdate && (
               <Suspense>

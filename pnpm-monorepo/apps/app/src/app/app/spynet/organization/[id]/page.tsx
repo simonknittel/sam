@@ -73,7 +73,6 @@ export default async function Page(props: Props) {
 
         <h1 className="truncate">{organization.name}</h1>
 
-        {/* {authentication.authorize("organization", "delete") && <DeleteEntity entity={organization} />} */}
       </div>
 
       <div className="mt-4 flex flex-col 3xl:flex-row-reverse gap-8">

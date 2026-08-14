@@ -278,12 +278,6 @@ export const Position = ({
             </div>
 
             {/* TODO: Implement (multiple) role requirements */}
-            {/* <div className="flex-1 flex flex-col">
-              <h3 className="text-sm text-white/40">
-                Erforderliche Ränge/Zertifikate
-              </h3>
-              <p>-</p>
-            </div> */}
           </div>
 
           {(showActions || showManage) && (

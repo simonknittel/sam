@@ -75,20 +75,6 @@ export const OverviewTab = ({ className, role }: Props) => {
           </div>
         </div>
 
-        {/* <div className="grid grid-cols-2 gap-8">
-          <div>
-            <NumberInput
-              label="Inaktiv nach (in Tagen)"
-              name="inactivityThreshold"
-              defaultValue={role.inactivityThreshold ?? undefined}
-              min={1}
-              step={1}
-              hint="(Optional) Für Citizen, dessen Level für diese Rolle sich innerhalb dieses Zeitraums nicht ändert, gilt diese Rolle als inaktiv und die Berechtigungen dieser Rolle werden deaktiviert"
-              labelClassName="mt-4"
-            />
-          </div>
-        </div> */}
-
         <NumberInput
           label="Level"
           name="maxLevel"

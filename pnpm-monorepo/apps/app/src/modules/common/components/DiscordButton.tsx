@@ -10,7 +10,6 @@ interface Props {
 
 export const DiscordButton = ({ className, path }: Props) => {
   const href = `https://discord.com/${path}`;
-  // const urlScheme = `discord://-/${path}`;
 
   return (
     <Button2
