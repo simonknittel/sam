@@ -1,14 +1,15 @@
 import { z } from "zod";
+import { env } from "../../setup";
 import { checkResponseForError } from "./checkResponseForError";
 import { eventSchema } from "./schemas";
 
 export const getEvents = async () => {
   // https://discord.com/developers/docs/resources/guild-scheduled-event#list-scheduled-events-for-guild
   const response = await fetch(
-    `https://discord.com/api/v10/guilds/${process.env.DISCORD_GUILD_ID}/scheduled-events?with_user_count=true`,
+    `https://discord.com/api/v10/guilds/${env.DISCORD_GUILD_ID}/scheduled-events?with_user_count=true`,
     {
       headers: new Headers({
-        Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}`,
+        Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`,
       }),
     },
   );

@@ -30,7 +30,7 @@ const environmentSchema = z.object({
   S3_BUCKET_NAME: z.string().nullish(),
 });
 
-export const setup = async () => {
+const setup = async () => {
   const parameters = await fetchParameters(parameterMap);
 
   let s3Parameters: Partial<typeof s3ParameterMap> = {};
@@ -42,13 +42,19 @@ export const setup = async () => {
     );
   }
 
+  // Also mutated into process.env because the database package reads its
+  // configuration from there.
   process.env = {
     ...process.env,
     ...parameters,
     ...s3Parameters,
   };
 
-  environmentSchema.parse(process.env);
+  return environmentSchema.parse(process.env);
 };
 
-await setup();
+/**
+ * Validated environment. Importing it guarantees the SSM parameters were
+ * fetched and validated first (top-level await).
+ */
+export const env = await setup();

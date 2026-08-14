@@ -3,12 +3,9 @@ import { AuditEventType } from "@sam-monorepo/domain";
 import { sendNotification, setVapidDetails, WebPushError } from "web-push";
 import { createAuditEvents } from "../../common/audit";
 import { log } from "../../common/logger";
+import { env } from "../setup";
 
-setVapidDetails(
-  process.env.BASE_URL,
-  process.env.PUBLIC_VAPID_KEY,
-  process.env.PRIVATE_VAPID_KEY,
-);
+setVapidDetails(env.BASE_URL, env.PUBLIC_VAPID_KEY, env.PRIVATE_VAPID_KEY);
 
 interface Payload {
   subscriptionId: WebPushSubscription["id"];

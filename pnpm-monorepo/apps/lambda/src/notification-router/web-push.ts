@@ -9,12 +9,9 @@ import {
 import { createAuditEvents } from "../common/audit";
 import { log } from "../common/logger";
 import { type Notification } from "./notification";
+import { env } from "./setup";
 
-setVapidDetails(
-  process.env.BASE_URL!,
-  process.env.PUBLIC_VAPID_KEY!,
-  process.env.PRIVATE_VAPID_KEY!,
-);
+setVapidDetails(env.BASE_URL, env.PUBLIC_VAPID_KEY, env.PRIVATE_VAPID_KEY);
 
 const RATE_LIMIT_MAX_RETRIES = 3;
 const RATE_LIMIT_DEFAULT_DELAY_MS = 1_000;

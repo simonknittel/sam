@@ -11,15 +11,21 @@ const environmentSchema = z.object({
   BASE_URL: z.url().default("http://localhost:3000"),
 });
 
-export const setup = async () => {
+const setup = async () => {
   const parameters = await fetchParameters(parameterMap);
 
+  // Also mutated into process.env because libraries read their
+  // configuration from there.
   process.env = {
     ...process.env,
     ...parameters,
   };
 
-  environmentSchema.parse(process.env);
+  return environmentSchema.parse(process.env);
 };
 
-await setup();
+/**
+ * Validated environment. Importing it guarantees the SSM parameters were
+ * fetched and validated first (top-level await).
+ */
+export const env = await setup();

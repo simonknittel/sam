@@ -8,6 +8,7 @@ import { AuditEventType } from "@sam-monorepo/domain";
 import { createAuditEvents } from "../common/audit";
 import { log } from "../common/logger";
 import { captureAsyncFunc } from "../common/xray";
+import { env } from "./setup";
 
 /**
  * Uploads are created in the database before the browser PUTs the file and
@@ -46,7 +47,7 @@ export const deleteUnusedUploads = async () => {
       S3_ACCESS_KEY_ID: accessKeyId,
       S3_SECRET_ACCESS_KEY: secretAccessKey,
       S3_BUCKET_NAME: bucketName,
-    } = process.env;
+    } = env;
 
     if (!accountId || !accessKeyId || !secretAccessKey || !bucketName) {
       log.warn(

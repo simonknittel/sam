@@ -5,6 +5,7 @@ import {
 } from "@sam-monorepo/notifications";
 import Pusher from "pusher";
 import { log } from "../common/logger";
+import { env } from "./setup";
 
 /**
  * Maximum number of events per `triggerBatch` call, limited by the Pusher
@@ -20,21 +21,21 @@ const TRIGGER_BATCH_MAX_EVENTS = 10;
 let channelsClient: Pusher | null = null;
 
 if (
-  process.env.PUSHER_CHANNELS_APP_ID &&
-  process.env.PUSHER_CHANNELS_APP_KEY &&
-  process.env.PUSHER_CHANNELS_APP_SECRET &&
-  process.env.PUSHER_CHANNELS_HOST &&
-  process.env.PUSHER_CHANNELS_PORT
+  env.PUSHER_CHANNELS_APP_ID &&
+  env.PUSHER_CHANNELS_APP_KEY &&
+  env.PUSHER_CHANNELS_APP_SECRET &&
+  env.PUSHER_CHANNELS_HOST &&
+  env.PUSHER_CHANNELS_PORT
 ) {
   channelsClient = new Pusher({
-    appId: process.env.PUSHER_CHANNELS_APP_ID,
-    key: process.env.PUSHER_CHANNELS_APP_KEY,
-    secret: process.env.PUSHER_CHANNELS_APP_SECRET,
-    host: process.env.PUSHER_CHANNELS_HOST,
-    port: process.env.PUSHER_CHANNELS_SECURE_PORT
-      ? process.env.PUSHER_CHANNELS_SECURE_PORT
-      : process.env.PUSHER_CHANNELS_PORT,
-    useTLS: Boolean(process.env.PUSHER_CHANNELS_SECURE_PORT),
+    appId: env.PUSHER_CHANNELS_APP_ID,
+    key: env.PUSHER_CHANNELS_APP_KEY,
+    secret: env.PUSHER_CHANNELS_APP_SECRET,
+    host: env.PUSHER_CHANNELS_HOST,
+    port: env.PUSHER_CHANNELS_SECURE_PORT
+      ? env.PUSHER_CHANNELS_SECURE_PORT
+      : env.PUSHER_CHANNELS_PORT,
+    useTLS: Boolean(env.PUSHER_CHANNELS_SECURE_PORT),
   });
 }
 

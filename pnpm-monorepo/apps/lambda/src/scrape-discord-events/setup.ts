@@ -16,15 +16,21 @@ const environmentSchema = z.object({
   AWS_EVENT_BUS_ARN: z.string().nullish(),
 });
 
-export const setup = async () => {
+const setup = async () => {
   const parameters = await fetchParameters(parameterMap);
 
+  // Also mutated into process.env because the database package reads its
+  // configuration from there.
   process.env = {
     ...process.env,
     ...parameters,
   };
 
-  environmentSchema.parse(process.env);
+  return environmentSchema.parse(process.env);
 };
 
-await setup();
+/**
+ * Validated environment. Importing it guarantees the SSM parameters were
+ * fetched and validated first (top-level await).
+ */
+export const env = await setup();

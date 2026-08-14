@@ -49,7 +49,7 @@ const environmentSchema = z.object({
   PUSHER_CHANNELS_SECURE_PORT: z.string().optional(),
 });
 
-export const setup = async () => {
+const setup = async () => {
   const [parameters, optionalParameters] = await Promise.all([
     fetchParameters(parameterMap),
     fetchOptionalParameters(optionalParameterMap),
@@ -61,13 +61,19 @@ export const setup = async () => {
     ),
   );
 
+  // Also mutated into process.env because the database package and the AWS
+  // SDKs read their configuration from there.
   process.env = {
     ...process.env,
     ...parameters,
     ...configuredOptionalParameters,
   };
 
-  environmentSchema.parse(process.env);
+  return environmentSchema.parse(process.env);
 };
 
-await setup();
+/**
+ * Validated environment. Importing it guarantees the SSM parameters were
+ * fetched and validated first (top-level await).
+ */
+export const env = await setup();

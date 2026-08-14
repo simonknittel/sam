@@ -1,10 +1,8 @@
 import { prisma } from "@sam-monorepo/database";
 import { algoliasearch } from "algoliasearch";
+import { env } from "../env.js";
 
-const client = algoliasearch(
-  process.env.ALGOLIA_APP_ID!,
-  process.env.ALGOLIA_ADMIN_API_KEY!,
-);
+const client = algoliasearch(env.ALGOLIA_APP_ID, env.ALGOLIA_ADMIN_API_KEY);
 
 const indexName = "spynet_entities";
 

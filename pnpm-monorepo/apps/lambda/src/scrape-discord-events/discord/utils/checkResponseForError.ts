@@ -1,3 +1,5 @@
+import { env } from "../../setup";
+
 export const checkResponseForError = (
   data: Record<string, unknown> | unknown[],
 ) => {
@@ -9,13 +11,13 @@ export const checkResponseForError = (
 
   if (data.message === "Unknown Guild") {
     throw new Error(
-      `The Discord server "${process.env.DISCORD_GUILD_ID}" does not exist.`,
+      `The Discord server "${env.DISCORD_GUILD_ID}" does not exist.`,
     );
   }
 
   if (data.message === "Missing Access") {
     throw new Error(
-      `This application does not have access to the Discord server "${process.env.DISCORD_GUILD_ID}".`,
+      `This application does not have access to the Discord server "${env.DISCORD_GUILD_ID}".`,
     );
   }
 

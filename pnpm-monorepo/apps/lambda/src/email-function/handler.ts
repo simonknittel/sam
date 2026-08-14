@@ -3,6 +3,7 @@ import Mailgun from "mailgun.js";
 import { z } from "zod";
 import { log } from "../common/logger";
 import { requestBodySchema } from "../email-function";
+import { env } from "./setup";
 import { emailConfirmation } from "./templates/emailConfirmation";
 
 export const emailFunctionHandler = async (
@@ -17,7 +18,7 @@ export const emailFunctionHandler = async (
 
   const mg = mailgun.client({
     username: "api",
-    key: process.env.MAILGUN_API_KEY!,
+    key: env.MAILGUN_API_KEY,
     url: "https://api.eu.mailgun.net",
   });
 

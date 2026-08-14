@@ -12,7 +12,8 @@
     "csv": "6.6.3",
     "date-fns": "4.4.0",
     "fast-xml-parser": "5.10.1",
-    "sharp": "0.35.3"
+    "sharp": "0.35.3",
+    "zod": "4.4.3"
   },
   "devDependencies": {
     "@types/node": "24.13.3",
