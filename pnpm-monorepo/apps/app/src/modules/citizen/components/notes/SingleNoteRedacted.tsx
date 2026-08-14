@@ -1,21 +1,10 @@
+import { LOREM_IPSUM_PLACEHOLDER } from "@/modules/common/utils/loremIpsumPlaceholder";
 import { random } from "lodash";
-import { LoremIpsum } from "lorem-ipsum";
-
-const lorem = new LoremIpsum({
-  sentencesPerParagraph: {
-    max: 3,
-    min: 1,
-  },
-  wordsPerSentence: {
-    max: 16,
-    min: 4,
-  },
-});
 
 const SingleNoteRedacted = () => {
   return (
     <article className="mt-4 lg:mt-8 relative p-4">
-      <p>{lorem.generateParagraphs(random(1, 3))}</p>
+      <p>{LOREM_IPSUM_PLACEHOLDER}</p>
 
       <div className="absolute inset-0 flex items-center justify-center backdrop-blur-sm">
         <p

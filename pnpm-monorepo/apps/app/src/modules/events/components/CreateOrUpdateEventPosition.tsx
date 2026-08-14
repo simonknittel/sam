@@ -17,7 +17,6 @@ import type {
   Variant,
 } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
-import { flatten } from "lodash";
 import {
   useId,
   useRef,
@@ -270,15 +269,12 @@ const RequiredVariants = ({
     .map((manufacturer) => {
       return {
         manufacturer,
-        variants: flatten(
-          manufacturer.series
-            .sort((a, b) => a.name.localeCompare(b.name))
-            .map((series) =>
-              series.variants
-                .sort((a, b) => a.name.localeCompare(b.name))
-                .map((variant) => variant),
-            ),
-        ),
+        variants: manufacturer.series
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map((series) =>
+            series.variants.sort((a, b) => a.name.localeCompare(b.name)),
+          )
+          .flat(),
       };
     });
 

@@ -13,7 +13,6 @@ import {
   type VariantTag,
 } from "@sam-monorepo/database/client";
 import { ORG_ID } from "@sam-monorepo/domain";
-import { groupBy } from "lodash";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
 import {
@@ -123,9 +122,9 @@ export const getOrgFleet = cache(
       ) as OrgFleetShip[];
 
       // Group owned ships by variant ID
-      const groupedShips = groupBy(allShips, (ship) => ship.variant.id);
+      const groupedShips = Map.groupBy(allShips, (ship) => ship.variant.id);
       const ownedVariants = new Map<string, OrgFleetShip & { count: number }>(
-        Object.entries(groupedShips).map(([variantId, ships]) => [
+        Array.from(groupedShips, ([variantId, ships]) => [
           variantId,
           { ...ships[0], count: ships.length },
         ]),

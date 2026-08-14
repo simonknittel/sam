@@ -1,16 +1,5 @@
+import { LOREM_IPSUM_PLACEHOLDER } from "@/modules/common/utils/loremIpsumPlaceholder";
 import { random } from "lodash";
-import { LoremIpsum } from "lorem-ipsum";
-
-const lorem = new LoremIpsum({
-  sentencesPerParagraph: {
-    max: 3,
-    min: 1,
-  },
-  wordsPerSentence: {
-    max: 16,
-    min: 4,
-  },
-});
 
 export const RedactedDayItem = () => {
   return (
@@ -20,7 +9,7 @@ export const RedactedDayItem = () => {
       </strong>
 
       <div className="mt-1 flex flex-col gap-2">
-        <p>{lorem.generateParagraphs(1)}</p>
+        <p>{LOREM_IPSUM_PLACEHOLDER}</p>
       </div>
 
       <div className="absolute inset-0 flex items-center justify-center backdrop-blur-sm">

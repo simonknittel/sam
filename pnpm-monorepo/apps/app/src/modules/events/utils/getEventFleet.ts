@@ -4,7 +4,6 @@ import {
   type Event,
   type EventDiscordParticipant,
 } from "@sam-monorepo/database/client";
-import { groupBy } from "lodash";
 import { cache } from "react";
 
 export const getEventFleet = cache(
@@ -51,9 +50,9 @@ export const getEventFleet = cache(
       },
     });
 
-    const groupedShips = groupBy(ships, (ship) => ship.variant.id);
+    const groupedShips = Map.groupBy(ships, (ship) => ship.variant.id);
 
-    const countedShips = Object.values(groupedShips).map((ships) => {
+    const countedShips = Array.from(groupedShips.values(), (ships) => {
       const ship = ships[0];
 
       return {

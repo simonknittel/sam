@@ -1,7 +1,6 @@
 import { env } from "@/env";
+import { useDebounce } from "@uidotdev/usehooks";
 import { Command } from "cmdk";
-import { debounce } from "lodash";
-import { useEffect, useMemo, useState } from "react";
 import useSWR from "swr";
 import { type Hit } from "../../../spynet/components/SpynetSearchTile/Search";
 import { SpynetSearchResultEntry } from "./SpynetSearchResultEntry";
@@ -27,13 +26,7 @@ interface Props {
 }
 
 export const SpynetSearchPage = ({ search, onSelect }: Props) => {
-  const [debouncedSearch, setDebouncedSearch] = useState(search);
-
-  const handleSearch = (value: string) => {
-    setDebouncedSearch(value);
-  };
-
-  const debouncedHandleSearch = useMemo(() => debounce(handleSearch, 500), []);
+  const debouncedSearch = useDebounce(search, 500);
 
   const { data, isValidating } = useSWR<AlgoliaResponse>(
     `https://${env.NEXT_PUBLIC_ALGOLIA_APP_ID}-dsn.algolia.net/1/indexes/spynet_entities?query=${debouncedSearch}&hitsPerPage=5`,
@@ -43,10 +36,6 @@ export const SpynetSearchPage = ({ search, onSelect }: Props) => {
       revalidateOnReconnect: false,
     },
   );
-
-  useEffect(() => {
-    debouncedHandleSearch(search);
-  }, [debouncedHandleSearch, search]);
 
   return (
     <Command.Group

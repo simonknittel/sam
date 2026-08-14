@@ -12,7 +12,6 @@ import {
   type Series,
   type Variant,
 } from "@sam-monorepo/database/browser";
-import { flatten } from "lodash";
 import { useId, useState, useTransition } from "react";
 import { FaPlus, FaSave } from "react-icons/fa";
 import { createShipAction } from "../actions/createShipAction";
@@ -46,15 +45,12 @@ export const AssignShip = ({ className, data = [] }: Props) => {
     .map((manufacturer) => {
       return {
         manufacturer,
-        variants: flatten(
-          manufacturer.series
-            .sort((a, b) => a.name.localeCompare(b.name))
-            .map((series) =>
-              series.variants
-                .sort((a, b) => a.name.localeCompare(b.name))
-                .map((variant) => variant),
-            ),
-        ),
+        variants: manufacturer.series
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map((series) =>
+            series.variants.sort((a, b) => a.name.localeCompare(b.name)),
+          )
+          .flat(),
       };
     });
 
