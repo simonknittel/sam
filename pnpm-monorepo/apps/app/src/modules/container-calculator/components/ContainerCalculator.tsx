@@ -130,11 +130,6 @@ export const ContainerCalculator = ({ className }: Props) => {
           )}
         </div>
       </Tile>
-
-      {/* <ParticipantsSplitter
-        className="mt-4"
-        containerResult={containerResult}
-      /> */}
     </>
   );
 };

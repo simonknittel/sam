@@ -223,8 +223,6 @@ export const LineupOrderProvider = ({
           />
         ))}
       </div>
-
-      {/* {isDragging && <DragPlaceholder />} */}
     </LineupOrderContext.Provider>
   );
 };
