@@ -53,12 +53,13 @@ export const StatisticChart = ({ chart }: Props) => {
       renderer: "canvas",
     });
 
-    const handleResize = () => chartRef.current?.resize();
-
-    window.addEventListener("resize", handleResize);
+    // Observe the container instead of the window so the chart also follows
+    // layout-only size changes (e.g. the sidebar collapsing).
+    const resizeObserver = new ResizeObserver(() => chartRef.current?.resize());
+    resizeObserver.observe(containerRef.current);
 
     return () => {
-      window.removeEventListener("resize", handleResize);
+      resizeObserver.disconnect();
       chartRef.current?.dispose();
       chartRef.current = null;
     };

@@ -1,39 +1,25 @@
-import { useEffect, useState } from "react";
-import { getNow } from "./getNow";
+import { useNow } from "next-intl";
 import { type Schedule } from "./schedule";
 
 export const useSchedule = (schedule: Schedule) => {
-  const [currentlyLive, setCurrentlyLive] = useState<
-    Schedule[number] | undefined
-  >(getCurrentlyLive(schedule));
-
-  const [nextLive, setNextLive] = useState<Schedule[number] | undefined>(
-    getNextLive(schedule),
-  );
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentlyLive(getCurrentlyLive(schedule));
-      setNextLive(getNextLive(schedule));
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [schedule]);
+  const now = useNow({ updateInterval: 1000 });
 
   return {
-    currentlyLive,
-    nextLive,
+    currentlyLive: getCurrentlyLive(schedule, now),
+    nextLive: getNextLive(schedule, now),
   };
 };
 
-function getCurrentlyLive(schedule: Schedule): Schedule[number] | undefined {
-  const now = getNow();
-
+function getCurrentlyLive(
+  schedule: Schedule,
+  now: Date,
+): Schedule[number] | undefined {
   return schedule.find((time) => time.start <= now && now <= time.end);
 }
 
-function getNextLive(schedule: Schedule): Schedule[number] | undefined {
-  const now = getNow();
-
+function getNextLive(
+  schedule: Schedule,
+  now: Date,
+): Schedule[number] | undefined {
   return schedule.find((time) => time.start > now);
 }

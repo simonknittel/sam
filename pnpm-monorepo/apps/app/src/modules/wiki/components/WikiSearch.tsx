@@ -3,9 +3,10 @@
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Link } from "@/modules/common/components/Link";
 import { api } from "@/modules/common/utils/api";
+import { useDebounce } from "@uidotdev/usehooks";
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
-import { Fragment, useEffect, useId, useState } from "react";
+import { Fragment, useId, useState } from "react";
 import { FaSearch, FaTag } from "react-icons/fa";
 import type {
   WikiSearchPageResult,
@@ -44,19 +45,11 @@ export const WikiSearch = ({ className, compact }: Props) => {
       ? `${hrefMode.basePath}/tags/${option.tag.id}`
       : buildWikiPageHref(hrefMode, option.page);
 
-  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const debouncedQuery = useDebounce(query, 300).trim();
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const listboxId = useId();
   const router = useRouter();
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setDebouncedQuery(query.trim());
-      setActiveIndex(-1);
-    }, 300);
-    return () => clearTimeout(timeout);
-  }, [query]);
 
   const enabled = debouncedQuery.length >= MIN_QUERY_LENGTH;
   const { data, isFetching } = api.wiki.search.useQuery(
@@ -160,6 +153,7 @@ export const WikiSearch = ({ className, compact }: Props) => {
             value={query}
             onChange={(event) => {
               setQuery(event.target.value);
+              setActiveIndex(-1);
               setIsOpen(true);
             }}
             onKeyDown={handleInputKeyDown}

@@ -17,6 +17,12 @@ interface Props extends Omit<
   readonly asChild?: boolean;
   readonly side?: ComponentProps<typeof RadixUiTooltip.Content>["side"];
   readonly sideOffset?: number;
+  /**
+   * Controls the tooltip programmatically instead of by hover/focus — for
+   * confirmation bubbles like CopyToClipboard. Leave undefined for the
+   * regular hover behavior.
+   */
+  readonly open?: boolean;
 }
 
 export const Tooltip = ({
@@ -27,11 +33,12 @@ export const Tooltip = ({
   asChild,
   side,
   sideOffset = 5,
+  open,
   ...triggerProps
 }: Props) => {
   return (
     <RadixUiTooltip.Provider delayDuration={0}>
-      <RadixUiTooltip.Root>
+      <RadixUiTooltip.Root open={open}>
         <RadixUiTooltip.Trigger
           {...triggerProps}
           {...(asChild ? { asChild: true } : { type: "button" as const })}

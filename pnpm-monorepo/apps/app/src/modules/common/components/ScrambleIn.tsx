@@ -1,5 +1,6 @@
 "use client";
 
+import { useMediaQuery } from "@base-ui/react/unstable-use-media-query";
 import { useEffect, useState } from "react";
 
 /** How often (in ms) the scrambled letters refresh */
@@ -22,13 +23,12 @@ export const ScrambleIn = ({
   repeatInterval,
   characters = DEFAULT_CHARACTERS,
 }: Props) => {
-  const prefersReducedMotion =
-    typeof window !== "undefined" &&
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  const [displayText, setDisplayText] = useState(
-    prefersReducedMotion ? text : "",
+  const prefersReducedMotion = useMediaQuery(
+    "(prefers-reduced-motion: reduce)",
+    { defaultMatches: false },
   );
+
+  const [displayText, setDisplayText] = useState("");
 
   useEffect(() => {
     if (prefersReducedMotion) return;
@@ -68,7 +68,7 @@ export const ScrambleIn = ({
     <>
       <span className="sr-only">{text}</span>
       <span className="inline-block whitespace-pre-wrap" aria-hidden="true">
-        {displayText}
+        {prefersReducedMotion ? text : displayText}
       </span>
     </>
   );

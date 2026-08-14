@@ -1,27 +1,11 @@
-import { useEffect, useState } from "react";
-import { getNow } from "./getNow";
+import { useNow } from "next-intl";
 
 export const useTimeLeft = (date: Date) => {
-  const [timeLeft, setTimeLeft] = useState<[number, number, number]>(
-    getTimeLeft(date),
-  );
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTimeLeft(getTimeLeft(date));
-    }, 1000);
-
-    return () => {
-      clearInterval(interval);
-    };
-  }, [date]);
-
-  return timeLeft;
+  const now = useNow({ updateInterval: 1000 });
+  return getTimeLeft(date, now);
 };
 
-function getTimeLeft(date: Date): [number, number, number] {
-  const now = getNow();
-
+function getTimeLeft(date: Date, now: Date): [number, number, number] {
   return [
     Math.floor((date.getTime() - now.getTime()) / 1000 / 60 / 60),
     Math.floor((date.getTime() - now.getTime()) / 1000 / 60) % 60,
