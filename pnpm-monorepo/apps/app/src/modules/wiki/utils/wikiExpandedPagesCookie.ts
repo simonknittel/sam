@@ -59,8 +59,7 @@ export type WikiExpansionState = ReadonlySet<string>;
 
 export const WIKI_ALL_COLLAPSED: WikiExpansionState = new Set();
 
-const getWikiPageKey = (pageId: string) =>
-  pageId.slice(-PAGE_KEY_LENGTH);
+const getWikiPageKey = (pageId: string) => pageId.slice(-PAGE_KEY_LENGTH);
 
 export const parseWikiExpandedPagesCookie = (
   value: string | undefined,

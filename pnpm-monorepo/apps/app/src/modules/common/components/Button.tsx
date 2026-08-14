@@ -9,13 +9,7 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 export const Button = (props: Props) => {
-  const {
-    variant = "primary",
-    type,
-    iconOnly,
-    className,
-    ...other
-  } = props;
+  const { variant = "primary", type, iconOnly, className, ...other } = props;
 
   return (
     <button

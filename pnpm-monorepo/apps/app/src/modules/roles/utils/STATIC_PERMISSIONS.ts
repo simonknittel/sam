@@ -1,7 +1,4 @@
-import {
-  TaskRewardType,
-  TaskVisibility,
-} from "@sam-monorepo/database/client";
+import { TaskRewardType, TaskVisibility } from "@sam-monorepo/database/client";
 
 /**
  * The static permission matrix rows: every non-career permission the roles

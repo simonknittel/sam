@@ -18,10 +18,7 @@ interface Props {
   readonly onSuccess?: () => void;
 }
 
-export const CreateRoleForm = ({
-  className,
-  onSuccess,
-}: Props) => {
+export const CreateRoleForm = ({ className, onSuccess }: Props) => {
   const router = useRouter();
   const { register, handleSubmit, reset, setValue } = useForm<FormValues>();
   const [isLoading, setIsLoading] = useState(false);

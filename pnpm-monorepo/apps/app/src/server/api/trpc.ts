@@ -7,9 +7,9 @@
  * need to use are documented accordingly near the end.
  */
 import { prisma } from "@/db";
-import { log } from "@/modules/logging";
 import { getServerAuthSession } from "@/modules/auth/server";
 import { requireConfirmedEmailForTrpc } from "@/modules/auth/utils/emailConfirmation";
+import { log } from "@/modules/logging";
 import { initTRPC, TRPCError } from "@trpc/server";
 import { serializeError } from "serialize-error";
 import superjson from "superjson";

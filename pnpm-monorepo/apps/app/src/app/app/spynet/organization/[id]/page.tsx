@@ -72,7 +72,6 @@ export default async function Page(props: Props) {
         <span className="text-neutral-500">/</span>
 
         <h1 className="truncate">{organization.name}</h1>
-
       </div>
 
       <div className="mt-4 flex flex-col 3xl:flex-row-reverse gap-8">

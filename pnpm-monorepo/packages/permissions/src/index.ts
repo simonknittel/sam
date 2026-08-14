@@ -7,10 +7,7 @@
  */
 export { comparePermissionSets } from "./comparePermissionSets.js";
 export { getPermissionSetsByRoles } from "./getPermissionSetsByRoles.js";
-export type {
-  GenericEntityLogType,
-  PermissionSet,
-} from "./PermissionSet.js";
+export type { GenericEntityLogType, PermissionSet } from "./PermissionSet.js";
 export { resolveEffectiveRoles } from "./resolveEffectiveRoles.js";
 export {
   collectPositionScopeIdsForCitizen,
