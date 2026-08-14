@@ -11,13 +11,13 @@ import { WikiScope } from "./wikiPageHref";
 export const WIKI_SHOW_HIDDEN_PAGES_COOKIE = "wiki_show_hidden_pages";
 
 /** Only the wiki reads this cookie — no need to send it with every request */
-export const WIKI_SHOW_HIDDEN_PAGES_COOKIE_PATH = "/app/wiki";
+const WIKI_SHOW_HIDDEN_PAGES_COOKIE_PATH = "/app/wiki";
 
 /** One shared cookie for all event wikis, like the expanded-pages one */
 export const EVENT_WIKI_SHOW_HIDDEN_PAGES_COOKIE =
   "event_wiki_show_hidden_pages";
 
-export const EVENT_WIKI_SHOW_HIDDEN_PAGES_COOKIE_PATH = "/app/events";
+const EVENT_WIKI_SHOW_HIDDEN_PAGES_COOKIE_PATH = "/app/events";
 
 const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365;
 

@@ -43,7 +43,7 @@ const WIKI_SIDEBAR_BREAKPOINT_PX = 768;
 const WIKI_CONTENT_COLUMN_MAX_WIDTH_PX =
   1920 - WIKI_CONTENT_COLUMN_DESKTOP_OVERHEAD_PX;
 
-export interface WikiImageRendering {
+interface WikiImageRendering {
   /**
    * Intrinsic dimensions when known — rendered as width/height attributes
    * so the browser reserves the aspect-ratio box before the image loads

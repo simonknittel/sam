@@ -4,7 +4,7 @@ import {
   type WikiPermissionRole,
 } from "@sam-monorepo/permissions";
 
-export interface WikiPageRolePrune {
+interface WikiPageRolePrune {
   readonly pageId: string;
   readonly roleIds: string[];
 }

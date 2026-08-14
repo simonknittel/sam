@@ -2,7 +2,7 @@ import { parseOnSiteNotificationPayload } from "@sam-monorepo/notifications";
 import { NOTIFICATIONS_APPS } from "./NotificationTypes";
 import type { OnSiteNotificationRow } from "./types";
 
-export interface OnSiteNotificationRendering {
+interface OnSiteNotificationRendering {
   readonly title: string;
   readonly body: string | null;
   readonly url: string | null;

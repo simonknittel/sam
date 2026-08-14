@@ -430,7 +430,7 @@ export const List = () => {
   );
 };
 
-export const CornerstoneImageBrowserPage = () => {
+const CornerstoneImageBrowserPage = () => {
   const { setOpen, setSearch } = useCmdKContext();
 
   return (
@@ -460,7 +460,7 @@ interface IAMPageProps {
   readonly roleManage: boolean | Session;
 }
 
-export const IAMPage = ({ userRead, roleManage }: IAMPageProps) => {
+const IAMPage = ({ userRead, roleManage }: IAMPageProps) => {
   const { setOpen, setSearch } = useCmdKContext();
 
   return (
@@ -503,7 +503,7 @@ export const IAMPage = ({ userRead, roleManage }: IAMPageProps) => {
   );
 };
 
-export const SpynetPage = () => {
+const SpynetPage = () => {
   const { setOpen, setSearch, setPages, disableAlgolia } = useCmdKContext();
 
   const authentication = useAuthentication();

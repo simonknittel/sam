@@ -25,7 +25,7 @@ interface NormalizedOptions {
   axisPoints: AxisPoint[];
 }
 
-export interface StatisticSeries {
+interface StatisticSeries {
   name: string;
   data: (number | null)[];
   yAxisIndex?: number;
@@ -35,7 +35,7 @@ export interface StatisticSeries {
   };
 }
 
-export interface StatisticYAxis {
+interface StatisticYAxis {
   name?: string;
   position?: "left" | "right";
   axisLabelColor?: string;

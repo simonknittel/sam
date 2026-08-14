@@ -2,7 +2,7 @@ import { Link } from "@/modules/common/components/Link";
 import { FaStar } from "react-icons/fa";
 import { WikiPageIcon } from "./WikiPageIcon";
 
-export interface WikiSidebarFavoritePage {
+interface WikiSidebarFavoritePage {
   readonly id: string;
   readonly title: string;
   readonly iconId: string | null;

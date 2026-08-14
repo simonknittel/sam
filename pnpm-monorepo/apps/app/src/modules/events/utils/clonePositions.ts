@@ -4,7 +4,7 @@ import type {
   Prisma,
 } from "@sam-monorepo/database/client";
 
-export interface ClonablePosition {
+interface ClonablePosition {
   name: EventPosition["name"];
   description: EventPosition["description"];
   fontSize: EventPosition["fontSize"];

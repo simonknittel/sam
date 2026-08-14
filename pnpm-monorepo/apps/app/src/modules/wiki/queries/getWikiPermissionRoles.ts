@@ -7,7 +7,7 @@ import {
 } from "@sam-monorepo/permissions";
 import { cache } from "react";
 
-export type WikiPermissionRoleWithName = WikiPermissionRole & {
+type WikiPermissionRoleWithName = WikiPermissionRole & {
   readonly name: string;
 };
 

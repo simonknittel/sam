@@ -33,7 +33,3 @@ export const getRequestContext = () => {
 
   return store;
 };
-
-export const disableRequestContext = () => {
-  requestContext.disable();
-};

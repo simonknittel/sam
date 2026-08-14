@@ -2,7 +2,7 @@ import { VariantStatus, type Prisma } from "@sam-monorepo/database/client";
 
 export const FLEET_PAGE_SIZE = 100;
 
-export interface VariantFilterOptions {
+interface VariantFilterOptions {
   readonly flightReady?: "all" | "flight_ready";
   readonly variantTagIds?: string[];
   readonly manufacturerIds?: string[];

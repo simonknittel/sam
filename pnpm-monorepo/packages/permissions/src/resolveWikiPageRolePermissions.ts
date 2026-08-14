@@ -1,6 +1,5 @@
 import {
   createWikiPagePermissionResolver,
-  type ResolvedWikiPagePermissions,
   type WikiPagePermissionSource,
 } from "./resolveWikiPagePermissions.js";
 
@@ -41,22 +40,6 @@ export const createWikiPageRoleResolvers = (
       hasWikiManage: role.hasWikiManage,
     }),
   }));
-
-/** Permissions of every role on a single page, keyed by role id */
-export const resolveWikiPageRolePermissions = (
-  pages: readonly WikiPagePermissionSource[],
-  roles: readonly WikiPermissionRole[],
-  pageId: string,
-) => {
-  const result = new Map<string, ResolvedWikiPagePermissions>();
-
-  for (const { role, resolver } of createWikiPageRoleResolvers(pages, roles)) {
-    const permissions = resolver.get(pageId);
-    if (permissions) result.set(role.id, permissions);
-  }
-
-  return result;
-};
 
 /** Ids of the roles that may read the given page on their own */
 export const resolveWikiPageReadRoleIds = (

@@ -7,7 +7,7 @@
  * This module must stay importable from client components (pure data, no
  * server-only imports).
  */
-export interface WikiPageLink {
+interface WikiPageLink {
   readonly label: string;
   /** Shown in the settings UI to explain where the link appears */
   readonly description: string;

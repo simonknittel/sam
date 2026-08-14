@@ -8,7 +8,7 @@ import {
   rankWikiSuggestionItems,
 } from "./WikiSuggestionMenu";
 
-export interface WikiMentionableCitizen {
+interface WikiMentionableCitizen {
   readonly id: string;
   readonly handle: string | null;
 }

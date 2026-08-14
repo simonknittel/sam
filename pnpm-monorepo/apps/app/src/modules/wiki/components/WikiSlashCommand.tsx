@@ -43,7 +43,7 @@ import {
 } from "./wikiEditorFiles";
 import { createWikiSuggestionRender } from "./WikiSuggestionMenu";
 
-export interface WikiSlashCommandOptions {
+interface WikiSlashCommandOptions {
   /** Id of the page being edited — target for file uploads */
   pageId: string;
   /** Whether the viewer may upload images to the page */

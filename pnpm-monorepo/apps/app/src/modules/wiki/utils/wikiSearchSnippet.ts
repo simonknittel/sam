@@ -6,7 +6,7 @@
 export const WIKI_SEARCH_MARK_START = "\u0001";
 export const WIKI_SEARCH_MARK_END = "\u0002";
 
-export interface WikiSearchSnippetSegment {
+interface WikiSearchSnippetSegment {
   readonly text: string;
   readonly highlighted: boolean;
 }

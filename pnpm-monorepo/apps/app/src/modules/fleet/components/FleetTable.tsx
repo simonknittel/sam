@@ -12,7 +12,7 @@ import { FaRegCircleXmark } from "react-icons/fa6";
 import { VariantTagBadge } from "./VariantTagBadge";
 import { VariantWithLogo } from "./VariantWithLogo";
 
-export interface FleetRow {
+interface FleetRow {
   variant: Variant & {
     series: Series & {
       manufacturer: Manufacturer & {

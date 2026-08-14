@@ -2,7 +2,7 @@ import clsx from "clsx";
 import Image from "next/image";
 
 // https://stackoverflow.com/questions/3426404/create-a-hexadecimal-colour-based-on-a-string-with-javascript/21682946#21682946
-export function stringToColor(str: string) {
+function stringToColor(str: string) {
   let hash = 0;
 
   for (let i = 0; i < str.length; i++) {

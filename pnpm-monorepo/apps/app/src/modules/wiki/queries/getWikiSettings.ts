@@ -87,7 +87,7 @@ export const getWikiDashboardPageId = cache(
   }),
 );
 
-export interface WikiPageLinkTarget {
+interface WikiPageLinkTarget {
   readonly pageId: string;
   readonly title: string;
   readonly href: string;

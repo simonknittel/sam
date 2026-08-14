@@ -1,7 +1,7 @@
 import type { StaticImageData } from "next/image";
 import type { ReactElement } from "react";
 
-export interface BaseApp {
+interface BaseApp {
   name: string;
   description: string;
   imageSrc?: StaticImageData;

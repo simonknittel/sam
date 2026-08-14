@@ -15,7 +15,7 @@ import { EditableShipName } from "./EditableShipName";
 import { VariantTagBadge } from "./VariantTagBadge";
 import { VariantWithLogo } from "./VariantWithLogo";
 
-export interface ShipsTableRow {
+interface ShipsTableRow {
   id: Ship["id"];
   ownerId: Ship["ownerId"];
   variantId: Ship["variantId"];

@@ -11,7 +11,7 @@ export enum WikiUploadKind {
   Attachment = "attachment",
 }
 
-export interface UploadedWikiPageFile {
+interface UploadedWikiPageFile {
   readonly uploadId: string;
   readonly fileName: string;
   readonly size: number;
@@ -42,7 +42,7 @@ const MIME_TYPES_BY_EXTENSION: Readonly<Record<string, string>> = {
  * registered mapping for (most developer text formats: Markdown, YAML,
  * TOML, logs, …) — fall back to the file extension for those.
  */
-export const resolveWikiFileMimeType = (file: File): string => {
+const resolveWikiFileMimeType = (file: File): string => {
   if (file.type) return file.type;
   const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
   return MIME_TYPES_BY_EXTENSION[extension] ?? "";

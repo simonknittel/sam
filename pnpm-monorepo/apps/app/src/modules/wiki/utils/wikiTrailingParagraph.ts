@@ -26,7 +26,7 @@ export const withoutWikiTrailingEmptyParagraph = (
   return { ...content, content: nodes.slice(0, -1) };
 };
 
-export interface WikiDocumentRange {
+interface WikiDocumentRange {
   readonly from: number;
   readonly to: number;
 }

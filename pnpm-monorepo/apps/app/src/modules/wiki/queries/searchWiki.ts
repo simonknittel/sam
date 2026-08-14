@@ -31,7 +31,7 @@ export interface WikiSearchTagResult {
   readonly name: string;
 }
 
-export interface WikiSearchResults {
+interface WikiSearchResults {
   readonly tags: WikiSearchTagResult[];
   readonly pages: WikiSearchPageResult[];
 }

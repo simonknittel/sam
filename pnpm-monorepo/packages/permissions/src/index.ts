@@ -10,7 +10,6 @@ export { getPermissionSetsByRoles } from "./getPermissionSetsByRoles.js";
 export type {
   GenericEntityLogType,
   PermissionSet,
-  PermissionSetAttribute,
 } from "./PermissionSet.js";
 export { resolveEffectiveRoles } from "./resolveEffectiveRoles.js";
 export {
@@ -32,11 +31,6 @@ export {
 export {
   createWikiPageRoleResolvers,
   resolveWikiPageReadRoleIds,
-  resolveWikiPageRolePermissions,
   type WikiPermissionRole,
 } from "./resolveWikiPageRolePermissions.js";
 export { transformPermissionStringToPermissionSet } from "./transformPermissionStringToPermissionSet.js";
-export {
-  findWikiPageSettingSource,
-  resolveWikiPageTier,
-} from "./wikiPageHierarchy.js";

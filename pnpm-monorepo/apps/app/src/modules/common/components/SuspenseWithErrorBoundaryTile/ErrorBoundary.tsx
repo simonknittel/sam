@@ -32,7 +32,7 @@ interface FallbackProps {
   };
 }
 
-export const Fallback = ({ className, error }: FallbackProps) => {
+const Fallback = ({ className, error }: FallbackProps) => {
   const t = useTranslations();
 
   return (

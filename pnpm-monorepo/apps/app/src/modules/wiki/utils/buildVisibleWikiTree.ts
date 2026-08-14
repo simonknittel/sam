@@ -1,7 +1,7 @@
 import type { WikiPageTierPermissions } from "@sam-monorepo/permissions";
 import { compareWikiPagesByOrder } from "./compareWikiPagesByOrder";
 
-export interface WikiTreePageInput {
+interface WikiTreePageInput {
   readonly id: string;
   readonly parentId: string | null;
   readonly title: string;

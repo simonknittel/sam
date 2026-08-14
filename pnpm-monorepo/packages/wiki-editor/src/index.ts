@@ -27,7 +27,6 @@ export {
   WikiSaveState,
   parseWikiCollabStatelessMessage,
   serializeWikiCollabStatelessMessage,
-  type WikiCollabStatelessMessage,
 } from "./wikiCollabSaveState.js";
 export {
   parseWikiCollabReplaceTokenPayload,
@@ -35,12 +34,11 @@ export {
   type WikiCollabReplaceTokenPayload,
   type WikiCollabSessionTokenPayload,
 } from "./wikiCollabTokens.js";
-export { WIKI_COLOR_LABELS, type WikiColorToken } from "./wikiColorTokens.js";
+export { WIKI_COLOR_LABELS } from "./wikiColorTokens.js";
 export {
   WIKI_EDITOR_FRAGMENT,
   getWikiEditorExtensions,
   getWikiEditorSchema,
-  type WikiEditorExtensionsOptions,
 } from "./wikiEditorExtensions.js";
 export {
   collectWikiIframeSrcs,
@@ -50,8 +48,6 @@ export {
 } from "./wikiEmbedNode.js";
 export {
   WIKI_GRID_COLUMN_COUNTS,
-  WIKI_GRID_VERTICAL_ALIGNS,
-  type WikiGridColumnCount,
   type WikiGridVerticalAlign,
 } from "./wikiGridNodes.js";
 export { createWikiHeadingIdAssigner } from "./wikiHeadingIds.js";
@@ -92,7 +88,6 @@ export {
   WikiRoleCitizens,
   collectWikiRoleCitizensRoleIds,
   normalizeWikiRoleCitizensConfig,
-  type WikiRoleCitizensConfig,
 } from "./wikiRoleCitizensNode.js";
 export { WikiSmallTextMark } from "./wikiSmallTextMark.js";
 export {
@@ -101,7 +96,6 @@ export {
   type WikiTextColor,
 } from "./wikiTextColorMark.js";
 export {
-  WIKI_TEXT_ONLY_BLOCK_TYPES,
   getWikiPositionRestrictions,
   getWikiSelectionRestrictions,
   stripWikiSmallTextInSmallBlocks,

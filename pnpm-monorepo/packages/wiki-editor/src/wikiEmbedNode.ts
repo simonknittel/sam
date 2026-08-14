@@ -13,14 +13,14 @@ import {
  * "iframe" is the generic, allowlist-validated website embed; the other
  * providers have fixed, hardcoded host patterns.
  */
-export const WIKI_EMBED_PROVIDERS = [
+const WIKI_EMBED_PROVIDERS = [
   "youtube",
   "twitch",
   "spotify",
   "google",
   "iframe",
 ] as const;
-export type WikiEmbedProvider = (typeof WIKI_EMBED_PROVIDERS)[number];
+type WikiEmbedProvider = (typeof WIKI_EMBED_PROVIDERS)[number];
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {

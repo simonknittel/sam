@@ -15,7 +15,7 @@ import { WikiScope } from "./wikiPageHref";
 
 const TRANSACTION_TIMEOUT_MS = 30_000;
 
-export type CopyWikiPageDestination =
+type CopyWikiPageDestination =
   | {
       /** The copied root becomes a new page underneath parentId */
       readonly kind: "newPage";

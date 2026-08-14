@@ -3,7 +3,7 @@ import { withTrace } from "@/modules/tracing/utils/withTrace";
 import type { Prisma } from "@sam-monorepo/database/client";
 import { cache } from "react";
 
-export const wikiPageReportSelect = {
+const wikiPageReportSelect = {
   id: true,
   message: true,
   uploadId: true,

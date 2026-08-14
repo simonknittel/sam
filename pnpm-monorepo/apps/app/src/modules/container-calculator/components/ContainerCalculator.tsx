@@ -6,7 +6,7 @@ import { useRef, useState, type ChangeEventHandler } from "react";
 
 const CONTAINER_SIZES = [32, 24, 16, 8, 4, 2, 1];
 
-export interface ContainerResult {
+interface ContainerResult {
   [size: number]: number;
   leftover: number;
 }

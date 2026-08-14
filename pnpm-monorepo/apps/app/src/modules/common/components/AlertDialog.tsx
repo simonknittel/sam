@@ -9,13 +9,13 @@ export const AlertDialog = AlertDialogPrimitive.Root;
 
 export const AlertDialogTrigger = AlertDialogPrimitive.Trigger;
 
-export const AlertDialogPortal = AlertDialogPrimitive.Portal;
+const AlertDialogPortal = AlertDialogPrimitive.Portal;
 
 type AlertDialogOverlayProps = ComponentProps<
   typeof AlertDialogPrimitive.Overlay
 >;
 
-export const AlertDialogOverlay = ({
+const AlertDialogOverlay = ({
   className,
   ...props
 }: AlertDialogOverlayProps) => (

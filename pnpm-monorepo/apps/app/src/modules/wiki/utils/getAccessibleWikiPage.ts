@@ -1,6 +1,6 @@
 import type { WikiPageTierPermissions } from "@sam-monorepo/permissions";
 
-export type WikiPageAccessTier = "read" | "edit" | "admin";
+type WikiPageAccessTier = "read" | "edit" | "admin";
 
 interface AccessiblePage {
   readonly id: string;

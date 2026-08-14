@@ -100,7 +100,7 @@ const selectionAnchor = (
   },
 });
 
-export interface WikiMenuTarget {
+interface WikiMenuTarget {
   /** Element or virtual element the menu is anchored to (floating-ui reference) */
   readonly reference: HTMLElement | VirtualElement;
   /** Remounts the menu (e.g. its URL input) when the target changes */

@@ -16,7 +16,7 @@ import { WikiScope } from "./wikiPageHref";
 export const WIKI_EXPANDED_PAGES_COOKIE = "wiki_expanded_pages";
 
 /** Only the wiki reads this cookie — no need to send it with every request */
-export const WIKI_EXPANDED_PAGES_COOKIE_PATH = "/app/wiki";
+const WIKI_EXPANDED_PAGES_COOKIE_PATH = "/app/wiki";
 
 /**
  * One shared cookie for all event wikis: the page keys below are id-based
@@ -25,7 +25,7 @@ export const WIKI_EXPANDED_PAGES_COOKIE_PATH = "/app/wiki";
  */
 export const EVENT_WIKI_EXPANDED_PAGES_COOKIE = "event_wiki_expanded_pages";
 
-export const EVENT_WIKI_EXPANDED_PAGES_COOKIE_PATH = "/app/events";
+const EVENT_WIKI_EXPANDED_PAGES_COOKIE_PATH = "/app/events";
 
 const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365;
 
@@ -59,7 +59,7 @@ export type WikiExpansionState = ReadonlySet<string>;
 
 export const WIKI_ALL_COLLAPSED: WikiExpansionState = new Set();
 
-export const getWikiPageKey = (pageId: string) =>
+const getWikiPageKey = (pageId: string) =>
   pageId.slice(-PAGE_KEY_LENGTH);
 
 export const parseWikiExpandedPagesCookie = (

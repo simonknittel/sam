@@ -14,7 +14,7 @@ import type { WikiPageTargetOption } from "../utils/getWikiPageTargets";
 import { MAX_WIKI_FEATURED_PAGES } from "../utils/wikiFeaturedPages";
 import { WikiPageSelect } from "./WikiPageSelect";
 
-export interface WikiFeaturedPage {
+interface WikiFeaturedPage {
   readonly id: string;
   readonly title: string;
 }

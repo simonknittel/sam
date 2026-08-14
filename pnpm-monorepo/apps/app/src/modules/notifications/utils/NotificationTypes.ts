@@ -5,7 +5,7 @@ export interface NotificationType {
   readonly category: string;
 }
 
-export interface NotificationApp {
+interface NotificationApp {
   readonly appTitle: string;
   readonly notificationTypes: NotificationType[];
 }

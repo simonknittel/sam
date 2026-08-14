@@ -1,4 +1,4 @@
-export interface VisibleWikiSubtreeEntry<
+interface VisibleWikiSubtreeEntry<
   T extends { id: string; parentId: string | null },
 > {
   readonly page: T;
