@@ -49,7 +49,6 @@ export const requestBodySchema = z.object({
     z.object({
       to: z.email(),
       templateProps: z.record(z.string(), z.string()),
-      recipientsPublicKey: z.string().optional(),
     }),
   ),
   requestId: z.cuid2(),

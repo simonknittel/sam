@@ -477,9 +477,6 @@ importers:
       '@aws-sdk/client-ssm':
         specifier: 3.1103.0
         version: 3.1103.0
-      '@openpgp/web-stream-tools':
-        specifier: 0.3.1
-        version: 0.3.1(@types/node@24.13.3)(typescript@7.0.2)
       '@paralleldrive/cuid2':
         specifier: 3.3.0
         version: 3.3.0
@@ -510,9 +507,6 @@ importers:
       mailgun.js:
         specifier: 13.3.0
         version: 13.3.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
-      openpgp:
-        specifier: 6.3.1
-        version: 6.3.1(@openpgp/web-stream-tools@0.3.1(@types/node@24.13.3)(typescript@7.0.2))
       pusher:
         specifier: 5.3.4
         version: 5.3.4
@@ -2253,18 +2247,6 @@ packages:
   '@npmcli/redact@4.0.0':
     resolution: {integrity: sha512-gOBg5YHMfZy+TfHArfVogwgfBeQnKbbGo3pSUyK/gSI0AVu+pEiDVcKlQb0D8Mg1LNRZILZ6XG8I5dJ4KuAd9Q==}
     engines: {node: ^20.17.0 || >=22.9.0}
-
-  '@openpgp/web-stream-tools@0.3.1':
-    resolution: {integrity: sha512-EV+VQ4Dr8b+JmlGnc74FLgx7EhLyydOr4j6s6Hp+2scQh6sLQMs2h+1oEYUIslXcQPicWKG5ZQx+/dua0dgPWA==}
-    engines: {node: '>= 18.0.0'}
-    peerDependencies:
-      '@types/node': '>=18.0.0'
-      typescript: '>=4.7'
-    peerDependenciesMeta:
-      '@types/node':
-        optional: true
-      typescript:
-        optional: true
 
   '@opentelemetry/api-logs@0.207.0':
     resolution: {integrity: sha512-lAb0jQRVyleQQGiuuvCOTDVspc14nx6XJjP4FspJ1sNARo3Regq4ZZbrc3rN4b1TYSuUCvgH+UXUPug4SLOqEQ==}
@@ -8052,15 +8034,6 @@ packages:
   openid-client@5.7.1:
     resolution: {integrity: sha512-jDBPgSVfTnkIh71Hg9pRvtJc6wTwqjRkN88+gCFtYWrlP4Yx2Dsrow8uPi3qLr/aeymPF3o2+dS+wOpglK04ew==}
 
-  openpgp@6.3.1:
-    resolution: {integrity: sha512-7oSPvmlKPojxFoyelT5DWPIAVmqWZh4qU/5pO6bdoShEtRpCw9Sye9IXUQj6EFM3XpgGssqccAr705YtTcLNQw==}
-    engines: {node: '>= 18.0.0', typescript: '>= 5.0.0'}
-    peerDependencies:
-      '@openpgp/web-stream-tools': ~0.3.0
-    peerDependenciesMeta:
-      '@openpgp/web-stream-tools':
-        optional: true
-
   optionator@0.9.4:
     resolution: {integrity: sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g==}
     engines: {node: '>= 0.8.0'}
@@ -11128,11 +11101,6 @@ snapshots:
       semver: 7.8.5
 
   '@npmcli/redact@4.0.0': {}
-
-  '@openpgp/web-stream-tools@0.3.1(@types/node@24.13.3)(typescript@7.0.2)':
-    optionalDependencies:
-      '@types/node': 24.13.3
-      typescript: 7.0.2
 
   '@opentelemetry/api-logs@0.207.0':
     dependencies:
@@ -17576,10 +17544,6 @@ snapshots:
       lru-cache: 6.0.0
       object-hash: 2.2.0
       oidc-token-hash: 5.2.0
-
-  openpgp@6.3.1(@openpgp/web-stream-tools@0.3.1(@types/node@24.13.3)(typescript@7.0.2)):
-    optionalDependencies:
-      '@openpgp/web-stream-tools': 0.3.1(@types/node@24.13.3)(typescript@7.0.2)
 
   optionator@0.9.4:
     dependencies:
