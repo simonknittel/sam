@@ -2,8 +2,6 @@ import type { Event } from "@sam-monorepo/database/client";
 import { formatInTimeZone } from "date-fns-tz";
 
 export const getOutlookUrl = (event: Event) => {
-  const subject = encodeURIComponent(event.name);
-
   const start = formatInTimeZone(
     event.startTime,
     "Europe/Berlin",
@@ -17,13 +15,12 @@ export const getOutlookUrl = (event: Event) => {
     "yyyy-MM-dd'T'HH:mm:ss",
   );
 
-  const description = event.description
-    ? `&body=${encodeURIComponent(event.description)}`
-    : "";
+  const url = new URL("https://outlook.live.com/calendar/deeplink/compose");
+  url.searchParams.set("subject", event.name);
+  url.searchParams.set("startdt", start);
+  url.searchParams.set("enddt", end);
+  if (event.description) url.searchParams.set("body", event.description);
+  if (event.location) url.searchParams.set("location", event.location);
 
-  const location = event.location
-    ? `&location=${encodeURIComponent(event.location)}`
-    : "";
-
-  return `https://outlook.live.com/calendar/deeplink/compose?subject=${subject}&startdt=${start}&enddt=${end}${description}${location}`;
+  return url.toString();
 };
