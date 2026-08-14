@@ -1,5 +1,6 @@
 "use client";
 
+import { Tabs } from "@base-ui/react/tabs";
 import type { ReactNode } from "react";
 import { createContext, useContext, useMemo, useState } from "react";
 
@@ -8,9 +9,7 @@ interface TabsContextInterface {
   setActiveTab: (tab: string) => void;
 }
 
-const AccountContext = createContext<TabsContextInterface | undefined>(
-  undefined,
-);
+const TabsContext = createContext<TabsContextInterface | undefined>(undefined);
 
 interface Props {
   children: ReactNode;
@@ -34,7 +33,11 @@ export const TabsProvider = ({
   );
 
   return (
-    <AccountContext.Provider value={value}>{children}</AccountContext.Provider>
+    <TabsContext.Provider value={value}>
+      <Tabs.Root value={activeTab} onValueChange={setActiveTab}>
+        {children}
+      </Tabs.Root>
+    </TabsContext.Provider>
   );
 };
 
@@ -43,7 +46,7 @@ export const TabsProvider = ({
  * it's still undefined, the provider component is missing.
  */
 export function useTabsContext() {
-  const context = useContext(AccountContext);
+  const context = useContext(TabsContext);
   if (!context) throw new Error("Provider missing!");
   return context;
 }

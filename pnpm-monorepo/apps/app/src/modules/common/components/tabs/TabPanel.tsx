@@ -1,21 +1,24 @@
 "use client";
 
-import clsx from "clsx";
+import { Tabs } from "@base-ui/react/tabs";
 import { type ReactNode } from "react";
-import { useTabsContext } from "./TabsContext";
 
 interface Props {
   children?: ReactNode;
   id: string;
 }
 
+/**
+ * Panels stay mounted while hidden (`keepMounted`): forms spanning multiple
+ * panels (e.g. the role permissions form) rely on the inputs of inactive
+ * panels keeping their state and being included in the submission.
+ */
 const TabPanel = ({ children, id }: Readonly<Props>) => {
-  const { activeTab } = useTabsContext();
-
-  // if (activeTab !== id) return null; // TODO: This will make forms with tabs (permissions) unusable since some of the inputs won't get initialized.
-  // return children;
-
-  return <div className={clsx({ hidden: activeTab !== id })}>{children}</div>;
+  return (
+    <Tabs.Panel value={id} keepMounted>
+      {children}
+    </Tabs.Panel>
+  );
 };
 
 export default TabPanel;

@@ -1,8 +1,8 @@
 "use client";
 
+import { Tabs } from "@base-ui/react/tabs";
 import clsx from "clsx";
 import { type ReactNode } from "react";
-import { useTabsContext } from "./TabsContext";
 
 interface Props {
   children?: ReactNode;
@@ -10,24 +10,22 @@ interface Props {
 }
 
 const Tab = ({ children, id }: Readonly<Props>) => {
-  const { activeTab, setActiveTab } = useTabsContext();
-
   return (
-    <button
-      onClick={() => setActiveTab(id)}
-      type="button"
-      className={clsx(
-        "first:rounded-l border border-brand-red-700 last:rounded-r h-8 flex items-center justify-center px-3 gap-2 font-mono uppercase enabled:cursor-pointer",
-        {
-          "bg-brand-red-500 text-white": activeTab === id,
-          "text-brand-red-500": activeTab !== id,
-          "hover:text-brand-red-300 hover:border-brand-red-300":
-            activeTab !== id,
-        },
-      )}
+    <Tabs.Tab
+      value={id}
+      className={(state) =>
+        clsx(
+          "first:rounded-l border border-brand-red-700 last:rounded-r h-8 flex items-center justify-center px-3 gap-2 font-mono uppercase enabled:cursor-pointer",
+          {
+            "bg-brand-red-500 text-white": state.active,
+            "text-brand-red-500 hover:text-brand-red-300 hover:border-brand-red-300":
+              !state.active,
+          },
+        )
+      }
     >
       {children}
-    </button>
+    </Tabs.Tab>
   );
 };
 
