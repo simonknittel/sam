@@ -7,7 +7,6 @@ interface Props {
   readonly text: string;
   readonly size?: "sm" | "md" | "lg";
   readonly withGlitch?: boolean;
-  readonly asSpan?: boolean;
 }
 
 export const Hero = ({
@@ -15,30 +14,7 @@ export const Hero = ({
   text,
   size = "lg",
   withGlitch = false,
-  asSpan = false,
 }: Props) => {
-  if (asSpan)
-    return (
-      <span
-        className={clsx(
-          className,
-          "inline-block uppercase font-extrabold bg-clip-text text-transparent bg-brand-text-gradient relative z-1 whitespace-nowrap font-mono",
-          {
-            "text-5xl lg:text-6xl": size === "lg",
-            [styles.layers]: withGlitch,
-            [styles.glitch]: withGlitch,
-            "text-3xl lg:text-4xl": size === "md",
-            "text-xl lg:text-2xl": size === "sm",
-          },
-        )}
-        data-text={text}
-      >
-        <span>
-          <ScrambleIn text={text} repeatInterval={5000} />
-        </span>
-      </span>
-    );
-
   return (
     <h1
       className={clsx(

@@ -15,17 +15,13 @@ interface FormValues {
 
 interface Props {
   readonly className?: string;
-  readonly enableSuggestions?: boolean;
   readonly onSuccess?: () => void;
 }
 
 export const CreateRoleForm = ({
   className,
-  enableSuggestions = true,
   onSuccess,
 }: Props) => {
-  // TODO: Re-add "enableSuggestions" -> Unleash: "RoleNameSuggestions"
-
   const router = useRouter();
   const { register, handleSubmit, reset, setValue } = useForm<FormValues>();
   const [isLoading, setIsLoading] = useState(false);
@@ -66,12 +62,10 @@ export const CreateRoleForm = ({
         autoFocus
       />
 
-      {enableSuggestions && (
-        <Suggestions
-          className="mt-4"
-          onClick={(roleName) => setValue("name", roleName)}
-        />
-      )}
+      <Suggestions
+        className="mt-4"
+        onClick={(roleName) => setValue("name", roleName)}
+      />
 
       <div className="flex justify-end mt-8">
         <Button2 type="submit" disabled={isLoading}>

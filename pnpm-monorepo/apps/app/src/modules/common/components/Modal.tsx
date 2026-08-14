@@ -13,7 +13,6 @@ interface Props {
   readonly isOpen?: boolean | null;
   readonly onRequestClose?: () => void;
   readonly children?: ReactNode;
-  readonly keepChildrenInDom?: boolean;
   readonly heading: ReactNode;
 }
 

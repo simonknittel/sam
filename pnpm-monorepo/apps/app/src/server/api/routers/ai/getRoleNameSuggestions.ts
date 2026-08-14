@@ -10,7 +10,7 @@ import { z } from "zod";
 import { protectedProcedure } from "../../trpc";
 
 export const getRoleNameSuggestions = protectedProcedure.query(async () => {
-  if (!(await isOpenAIEnabled("RoleNameSuggestions")))
+  if (!(await isOpenAIEnabled()))
     throw new TRPCError({
       code: "FORBIDDEN",
       message: "Generation is disabled",

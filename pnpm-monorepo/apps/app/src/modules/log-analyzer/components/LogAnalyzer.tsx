@@ -22,7 +22,6 @@ import { Toolbar } from "./Toolbar";
 
 interface Props {
   readonly className?: string;
-  readonly crashLogAnalyzer?: boolean;
 }
 
 export const LogAnalyzer = ({ className }: Props) => {

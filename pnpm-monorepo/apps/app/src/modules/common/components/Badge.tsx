@@ -5,7 +5,6 @@ interface Props {
   readonly className?: string;
   readonly label: string;
   readonly value: string;
-  readonly valueNode?: ReactNode;
   readonly showLabel?: boolean;
   readonly icon?: ReactNode;
   readonly cta?: ReactNode;
@@ -15,7 +14,6 @@ export const Badge = ({
   className,
   label,
   value,
-  valueNode,
   showLabel,
   icon,
   cta,
@@ -39,7 +37,7 @@ export const Badge = ({
           {label}
         </span>
 
-        <span className="truncate">{valueNode || value}</span>
+        <span className="truncate">{value}</span>
       </div>
 
       {cta && <span className="text-xs">{cta}</span>}
