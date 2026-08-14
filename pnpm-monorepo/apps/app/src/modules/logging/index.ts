@@ -4,56 +4,26 @@ import { logToConsole } from "./console";
 import { logToOTel } from "./otel";
 import { LogLevel, type LogEntry } from "./types";
 
-const info = (message: string, args: Record<string, unknown> = {}) => {
-  after(async () => {
-    const logEntry: LogEntry = {
-      ...args,
-      timestamp: new Date().toISOString(),
-      level: LogLevel.Info,
-      message,
-      host: env.NEXT_PUBLIC_HOST,
-      stack: new Error().stack,
-      ...(env.COMMIT_SHA && { commitSha: env.COMMIT_SHA }),
-    };
+const createLogLevel =
+  (level: LogLevel) =>
+  (message: string, args: Record<string, unknown> = {}) => {
+    after(async () => {
+      const logEntry: LogEntry = {
+        ...args,
+        timestamp: new Date().toISOString(),
+        level,
+        message,
+        host: env.NEXT_PUBLIC_HOST,
+        stack: new Error().stack,
+        ...(env.COMMIT_SHA && { commitSha: env.COMMIT_SHA }),
+      };
 
-    await Promise.all([logToConsole(logEntry), logToOTel(logEntry)]);
-  });
-};
-
-const warn = (message: string, args: Record<string, unknown> = {}) => {
-  after(async () => {
-    const logEntry: LogEntry = {
-      ...args,
-      timestamp: new Date().toISOString(),
-      level: LogLevel.Warn,
-      message,
-      host: env.NEXT_PUBLIC_HOST,
-      stack: new Error().stack,
-      ...(env.COMMIT_SHA && { commitSha: env.COMMIT_SHA }),
-    };
-
-    await Promise.all([logToConsole(logEntry), logToOTel(logEntry)]);
-  });
-};
-
-const error = (message: string, args: Record<string, unknown> = {}) => {
-  after(async () => {
-    const logEntry: LogEntry = {
-      ...args,
-      timestamp: new Date().toISOString(),
-      level: LogLevel.Error,
-      message,
-      host: env.NEXT_PUBLIC_HOST,
-      stack: new Error().stack,
-      ...(env.COMMIT_SHA && { commitSha: env.COMMIT_SHA }),
-    };
-
-    await Promise.all([logToConsole(logEntry), logToOTel(logEntry)]);
-  });
-};
+      await Promise.all([logToConsole(logEntry), logToOTel(logEntry)]);
+    });
+  };
 
 export const log = {
-  info,
-  warn,
-  error,
+  info: createLogLevel(LogLevel.Info),
+  warn: createLogLevel(LogLevel.Warn),
+  error: createLogLevel(LogLevel.Error),
 };

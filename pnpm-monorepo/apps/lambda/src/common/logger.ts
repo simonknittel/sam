@@ -13,92 +13,37 @@ interface LogEntry {
   [key: string]: string | number | boolean | undefined | null;
 }
 
-const info = async (message: string, args: Record<string, unknown> = {}) => {
-  const { error, ..._args } = args;
+const createLogLevel =
+  (level: LogEntry["level"]) =>
+  async (message: string, args: Record<string, unknown> = {}) => {
+    const { error, ...remainingArgs } = args;
 
-  let requestContext: RequestContext | undefined;
-  try {
-    requestContext = getRequestContext();
-  } catch (error) {}
+    let requestContext: RequestContext | undefined;
+    try {
+      requestContext = getRequestContext();
+    } catch {}
 
-  const logEntry: LogEntry = {
-    timestamp: new Date().toISOString(),
-    message,
-    level: "info",
-    ...(requestContext ? { requestId: requestContext.requestId } : {}),
-    // biome-ignore lint/style/noNonNullAssertion: <explanation>
-    stack: new Error().stack!,
-    ...(error
-      ? { serializedError: JSON.stringify(serializeError(error)) }
-      : {}),
-    ...args,
+    const logEntry: LogEntry = {
+      timestamp: new Date().toISOString(),
+      message,
+      level,
+      ...(requestContext ? { requestId: requestContext.requestId } : {}),
+      stack: new Error().stack!,
+      ...(error
+        ? { serializedError: JSON.stringify(serializeError(error)) }
+        : {}),
+      ...remainingArgs,
+    };
+
+    if (process.env.NODE_ENV === "production") {
+      console[level](JSON.stringify(logEntry));
+    } else {
+      console[level](logEntry);
+    }
   };
-
-  if (process.env.NODE_ENV === "production") {
-    console.info(JSON.stringify(logEntry));
-  } else {
-    console.info(logEntry);
-  }
-};
-
-const warn = async (message: string, args: Record<string, unknown> = {}) => {
-  const { error, ..._args } = args;
-
-  let requestContext: RequestContext | undefined;
-  try {
-    requestContext = getRequestContext();
-  } catch (error) {}
-
-  const logEntry: LogEntry = {
-    timestamp: new Date().toISOString(),
-    message,
-    level: "warn",
-    ...(requestContext ? { requestId: requestContext.requestId } : {}),
-    // biome-ignore lint/style/noNonNullAssertion: <explanation>
-    stack: new Error().stack!,
-    ...(error
-      ? { serializedError: JSON.stringify(serializeError(error)) }
-      : {}),
-    ...args,
-  };
-
-  if (process.env.NODE_ENV === "production") {
-    console.warn(JSON.stringify(logEntry));
-  } else {
-    console.warn(logEntry);
-  }
-};
-
-const error = async (message: string, args: Record<string, unknown> = {}) => {
-  const { error, ..._args } = args;
-
-  let requestContext: RequestContext | undefined;
-  try {
-    requestContext = getRequestContext();
-  } catch (error) {}
-
-  const logEntry: LogEntry = {
-    timestamp: new Date().toISOString(),
-    message,
-    level: "error",
-    ...(requestContext ? { requestId: requestContext.requestId } : {}),
-    // biome-ignore lint/style/noNonNullAssertion: <explanation>
-    stack: new Error().stack!,
-    ...(error
-      ? { serializedError: JSON.stringify(serializeError(error)) }
-      : {}),
-    ..._args,
-  };
-
-  if (process.env.NODE_ENV === "production") {
-    console.error(JSON.stringify(logEntry));
-  } else {
-    console.error(logEntry);
-  }
-};
 
 export const log = {
-  info,
-  warn,
-  error,
+  info: createLogLevel("info"),
+  warn: createLogLevel("warn"),
+  error: createLogLevel("error"),
 };
