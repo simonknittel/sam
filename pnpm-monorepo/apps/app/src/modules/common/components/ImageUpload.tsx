@@ -49,9 +49,10 @@ export const ImageUpload = ({
         resourceAttribute,
         imageId: upload,
       }),
+      signal: AbortSignal.timeout(10_000),
     })
-      .then((response) => response.json())
-      .then(() => {
+      .then((response) => {
+        if (!response.ok) throw new Error("Assigning the upload failed");
         router.refresh();
         toast.success("Erfolgreich hochgeladen");
       })

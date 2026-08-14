@@ -8,6 +8,9 @@ import { useId, useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import toast from "react-hot-toast";
 import { FaSave } from "react-icons/fa";
+import { z } from "zod";
+
+const createdCitizenResponseSchema = z.object({ id: z.string() });
 
 interface FormValues {
   spectrumId: string;
@@ -37,7 +40,7 @@ export const CreateCitizenForm = ({ className, onSuccess }: Props) => {
       });
 
       if (response.ok) {
-        const data = (await response.json()) as { id: string };
+        const data = createdCitizenResponseSchema.parse(await response.json());
         router.push(`/app/spynet/citizen/${data.id}`);
         reset();
         onSuccess?.();

@@ -1,10 +1,10 @@
 import { env } from "@/env";
+import { createUploadResponseSchema } from "@/modules/common/utils/createUploadResponseSchema";
 import {
   isAttachmentMimeType,
   MAX_ATTACHMENT_SIZE_BYTES,
   MAX_IMAGE_SIZE_BYTES,
 } from "@/modules/common/utils/uploadConstraints";
-import { z } from "zod";
 
 export enum WikiUploadKind {
   Image = "image",
@@ -17,11 +17,6 @@ interface UploadedWikiPageFile {
   readonly size: number;
   readonly mimeType: string;
 }
-
-const createUploadResponseSchema = z.object({
-  item: z.object({ id: z.string() }),
-  presignedUploadUrl: z.url(),
-});
 
 const MIME_TYPES_BY_EXTENSION: Readonly<Record<string, string>> = {
   md: "text/markdown",

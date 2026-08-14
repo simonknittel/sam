@@ -6,6 +6,9 @@ import { useId, useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import toast from "react-hot-toast";
 import { FaSave } from "react-icons/fa";
+import { z } from "zod";
+
+const createdOrganizationResponseSchema = z.object({ id: z.string() });
 
 interface FormValues {
   spectrumId: string;
@@ -37,7 +40,9 @@ export const CreateOrganizationForm = ({ className, onSuccess }: Props) => {
       });
 
       if (response.ok) {
-        const data = (await response.json()) as { id: string };
+        const data = createdOrganizationResponseSchema.parse(
+          await response.json(),
+        );
         router.push(`/app/spynet/organization/${data.id}`);
         reset();
         onSuccess?.();
