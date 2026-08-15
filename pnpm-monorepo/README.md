@@ -3,6 +3,7 @@
 ## Prerequisites
 
 - Git
+- [Docker](https://www.docker.com/) (for the database and the other backing services from [compose.yml](../compose.yml))
 - [nvm](https://github.com/creationix/nvm) and [pnpm](https://pnpm.io/)
   1. `nvm install`
   2. `corepack enable`
@@ -11,13 +12,11 @@
 ## Installation
 
 1. Run `pnpm install` to install all dependencies
-2. Configure environment variables
-   1. Duplicate the `.env.examples` files to `.env` and fill in the blanks.
-   2. `apps/app/.env.example`
-   3. `apps/lambda/.env.example`
-   4. `packages/database/.env.example`
-3. Run the app(s):
-   - Next.js app: `pnpm --filter @sam-monorepo/app run dev` (see [docs/setup-local-machine.md](../docs/setup-local-machine.md))
-   - Lambda: `pnpm run dev:lambda`
-     - Alternatively, you can use the launch configuration when using VSCode
-4. Access the Next.js app at <http://localhost:3000> and the local Lambda API at <http://localhost:3001>
+2. Configure environment variables: Duplicate the `.env.example` files to `.env` and fill in the blanks.
+   - `apps/app/.env.example`
+   - `apps/collab/.env.example`
+   - `apps/lambda/.env.example`
+   - `packages/database/.env.example`
+3. Start the backing services (database, Soketi, collab server) from the repository root: `docker compose up`
+4. Run the Next.js app (builds the app's workspace packages first): `pnpm run dev:app` (see [docs/setup-local-machine.md](../docs/setup-local-machine.md))
+5. Access the app at <http://localhost:3000>
