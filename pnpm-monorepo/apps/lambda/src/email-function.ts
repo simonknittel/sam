@@ -1,3 +1,4 @@
+// Temporary CI path-filter verification (this PR is closed without merging).
 import "./email-function/setup";
 
 import type { SQSBatchItemFailure, SQSHandler } from "aws-lambda";
