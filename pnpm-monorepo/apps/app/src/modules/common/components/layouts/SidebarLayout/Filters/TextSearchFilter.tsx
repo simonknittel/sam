@@ -34,6 +34,12 @@ export const TextSearchFilter = ({
     parseAsString.withDefault("").withOptions({
       shallow: false,
       startTransition,
+      // The input itself updates optimistically — the debounce only holds
+      // back the URL write and with it the server round trip per keystroke
+      limitUrlUpdates: {
+        method: "debounce",
+        timeMs: 500,
+      },
     }),
   );
 
