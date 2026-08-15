@@ -97,6 +97,16 @@ describe("collectWikiImageUploadIds", () => {
           ],
         },
         {
+          type: "paragraph",
+          content: [
+            {
+              type: "wikiFloatImage",
+              attrs: { src: `https://${PUBLIC_HOST}/upload-4` },
+            },
+            { type: "text", text: "Fließtext" },
+          ],
+        },
+        {
           type: "image",
           attrs: { src: "https://external.example.com/photo.jpg" },
         },
@@ -110,6 +120,7 @@ describe("collectWikiImageUploadIds", () => {
     expect(collectWikiImageUploadIds(document, PUBLIC_HOST)).toEqual([
       "upload-1",
       "upload-2",
+      "upload-4",
     ]);
   });
 

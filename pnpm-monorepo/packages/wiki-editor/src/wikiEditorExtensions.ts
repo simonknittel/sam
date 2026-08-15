@@ -21,6 +21,7 @@ import {
   type WikiMentionedCitizen,
 } from "./wikiCitizenMentionNode.js";
 import { WikiEmbed } from "./wikiEmbedNode.js";
+import { WikiFloatImage } from "./wikiFloatImageNode.js";
 import {
   WIKI_GRID_HOST_CONTENT,
   WikiGrid,
@@ -270,6 +271,7 @@ export const getWikiEditorExtensions = (
     WikiTextSize,
     WikiTextOnlyBlockGuard,
     WikiImage,
+    WikiFloatImage,
     WikiAttachment,
     WikiEmbed.configure({
       twitchParentHost: options?.twitchParentHost ?? "",

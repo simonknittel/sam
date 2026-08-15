@@ -55,7 +55,7 @@ export const collectWikiImageUploadIds = (
   const uploadIds = new Set<string>();
 
   walkWikiContent(content, (node) => {
-    if (node.type !== "image") return;
+    if (node.type !== "image" && node.type !== "wikiFloatImage") return;
     const uploadId = getWikiImageUploadId(node.attrs?.src, publicUrl);
     if (uploadId) uploadIds.add(uploadId);
   });

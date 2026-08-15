@@ -47,6 +47,12 @@ export {
   normalizeWikiEmbedUrl,
 } from "./wikiEmbedNode.js";
 export {
+  WIKI_FLOAT_IMAGE_FALLBACK_WIDTH_PX,
+  WIKI_FLOAT_IMAGE_SIDES,
+  WikiFloatImage,
+  type WikiFloatImageSide,
+} from "./wikiFloatImageNode.js";
+export {
   WIKI_GRID_COLUMN_COUNTS,
   type WikiGridVerticalAlign,
 } from "./wikiGridNodes.js";
