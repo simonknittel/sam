@@ -8,7 +8,7 @@
 ## Setup
 
 1. Clone the repository
-2. Configure environment variables: Duplicate [pnpm-monorepo/apps/app/.env.example](../pnpm-monorepo/apps/app/.env.example) to [pnpm-monorepo/apps/app/.env](../pnpm-monorepo/apps/app/.env) (and [pnpm-monorepo/packages/database/.env.example](../pnpm-monorepo/packages/database/.env.example) to `.env` likewise) and fill in the blanks.
+2. Configure environment variables: Duplicate [pnpm-monorepo/apps/app/.env.example](../pnpm-monorepo/apps/app/.env.example) to `pnpm-monorepo/apps/app/.env` (and [pnpm-monorepo/packages/database/.env.example](../pnpm-monorepo/packages/database/.env.example) to `.env` likewise) and fill in the blanks.
 3. Start up the database (plus Soketi and the wiki collaboration server): `docker compose up`
 4. Open a second terminal and change to the `pnpm-monorepo` directory: `cd pnpm-monorepo`
 5. Install required Node.js version: `nvm install`
@@ -21,35 +21,27 @@
 ### Wiki realtime collaboration
 
 Editing wiki pages always goes through the `sam-collab` container from
-[compose.yml](../compose.yml). To enable it, add the following to
-`pnpm-monorepo/apps/app/.env` (matching the container's defaults) and restart
-the app:
-
-```dotenv
-COLLAB_JWT_SECRET="insecure-dev-secret"
-COLLAB_URL="ws://localhost:5210"
-```
-
-Without these variables the wiki is read-only (this also applies to
-deployments, e.g. previews without the env vars).
+[compose.yml](../compose.yml). The `COLLAB_JWT_SECRET` and `COLLAB_URL`
+defaults from `pnpm-monorepo/apps/app/.env.example` match the container's
+configuration — keep them. Without these variables the wiki is read-only
+(this also applies to deployments, e.g. previews without the env vars).
 After changing `pnpm-monorepo/apps/collab`, rebuild the container
 with `docker compose build sam-collab`. Alternatively run the server without
 Docker: `pnpm --filter @sam-monorepo/collab run dev` (uses
 `pnpm-monorepo/apps/collab/.env`, see its
 [.env.example](../pnpm-monorepo/apps/collab/.env.example)).
 
-### (Experimental) Dev Container
+### Optional environment tweaks
 
-1. Install the _Dev Containers_ extension for VSCode
-2. `Dev Containers: Reopen In Container` and wait for it to finish
-3. Go to your VSCode extensions and enable the recommended ones
-4. (Optional) Install your personal VSCode extensions in Dev Container
-   - You'll need to do this after every rebuild of the container
-5. Update the database's schema: `pnpm --filter @sam-monorepo/database run migrate:dev`
-6. Run the app
-   - Terminal: `pnpm run dev`
-   - VSCode debugger: `F5`
-7. Access the app at: <http://localhost:3000>
+- `SKIP_VALIDATION=1` skips the app's environment variable validation
+  (`pnpm-monorepo/apps/app/src/env.ts`), e.g. to build without a fully
+  configured `.env`:
+  `SKIP_VALIDATION=1 pnpm --filter @sam-monorepo/app run build`
+- The Docker services' host ports can be overridden so multiple checkouts
+  (e.g. git worktrees) can run their stacks side by side: set
+  `SAM_PSQL_PORT`, `SAM_SOKETI_PORT`, `SAM_SOKETI_METRICS_PORT` and/or
+  `SAM_COLLAB_PORT` in a gitignored `.env` next to
+  [compose.yml](../compose.yml).
 
 ## Bot Invite Link with required scopes
 
