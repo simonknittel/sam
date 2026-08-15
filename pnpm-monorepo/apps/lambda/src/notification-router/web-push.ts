@@ -78,8 +78,7 @@ export const publishWebPushNotifications = async (
       // Opt-out model: a NotificationSetting row means the citizen disabled
       // this notification type for web push.
       const disabledSetting = citizen.notificationSettings.find(
-        (setting) =>
-          setting.notificationType === notification.notificationType,
+        (setting) => setting.notificationType === notification.notificationType,
       );
       if (disabledSetting) return false;
 
