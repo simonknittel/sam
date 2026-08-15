@@ -171,6 +171,11 @@ const Single = ({
 
         <ComboboxOptions
           anchor="bottom"
+          // Anchored options default to modal, which marks the rest of an
+          // enclosing dialog inert while the popup is open — in multiple
+          // mode the popup stays open after selecting, leaving the other
+          // form fields unreachable
+          modal={false}
           className="w-(--input-width) rounded-b border border-brand-red-500 bg-black p-1 [--anchor-gap:var(--spacing-1)] empty:invisible transition duration-100 ease-in data-leave:data-closed:opacity-0 z-50"
         >
           {filterResult.map((result) => (
@@ -242,6 +247,8 @@ const Multiple = ({
 
           <ComboboxOptions
             anchor="bottom"
+            // See the single-mode options above
+            modal={false}
             className="w-(--input-width) rounded-b border border-brand-red-500 bg-black p-1 [--anchor-gap:var(--spacing-1)] empty:invisible transition duration-100 ease-in data-leave:data-closed:opacity-0 z-50"
           >
             {filterResult.map((result) => (
