@@ -53,7 +53,14 @@ export const publishWebPushNotifications = async (
     },
     select: {
       id: true,
-      notificationSettings: true,
+      notificationSettings: {
+        where: {
+          channel: NotificationChannel.WEB_PUSH,
+        },
+        select: {
+          notificationType: true,
+        },
+      },
       webPushSubscriptions: true,
     },
   });
@@ -68,12 +75,13 @@ export const publishWebPushNotifications = async (
       const citizen = citizens.find((c) => c.id === notification.receiverId);
       if (!citizen) return false;
 
-      const setting = citizen.notificationSettings.find(
-        (s) =>
-          s.channel === NotificationChannel.WEB_PUSH &&
-          s.notificationType === notification.notificationType,
+      // Opt-out model: a NotificationSetting row means the citizen disabled
+      // this notification type for web push.
+      const disabledSetting = citizen.notificationSettings.find(
+        (setting) =>
+          setting.notificationType === notification.notificationType,
       );
-      if (!setting) return false;
+      if (disabledSetting) return false;
 
       if (citizen.webPushSubscriptions.length <= 0) return false;
 
