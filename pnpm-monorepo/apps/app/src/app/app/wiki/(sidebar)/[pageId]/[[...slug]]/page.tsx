@@ -1,5 +1,6 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
+import { VariantWikiBacklinks } from "@/modules/fleet/components/VariantWikiBacklinks";
 import { WikiPageContent } from "@/modules/wiki/components/WikiPageContent";
 import { getWikiContext } from "@/modules/wiki/queries/getWikiContext";
 import { getAccessibleWikiPage } from "@/modules/wiki/utils/getAccessibleWikiPage";
@@ -51,6 +52,7 @@ export default async function Page(
         context={context}
         page={page}
         permissions={permissions}
+        headerExtra={<VariantWikiBacklinks pageId={page.id} />}
       />
     </SuspenseWithErrorBoundaryTile>
   );
