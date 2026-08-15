@@ -11,7 +11,7 @@ import path from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { promisify } from "node:util";
 import { GenericContainer, Network, Wait } from "testcontainers";
-import { getFreePort, runCommand } from "./processes";
+import { runCommand } from "./processes";
 import {
   appDirectory,
   appDummyEnvironment,
@@ -21,7 +21,6 @@ import {
   postgresNetworkAlias,
   postgresPassword,
   postgresUser,
-  readStackState,
   rustfsImage,
   s3AccessKeyId,
   s3AnonymousReadPolicy,
@@ -76,22 +75,6 @@ const buildApp = (templateDatabaseUrl: string, s3Port: number) =>
     },
     label: "app build",
   });
-
-/**
- * The host port must be identical to the one inlined into the app build
- * (see s3Environment), so on skipped builds the previous run's port is
- * reused instead of picking a fresh free one.
- */
-const resolveS3Port = (skipBuild: boolean) => {
-  if (!skipBuild) return getFreePort();
-  try {
-    return readStackState().s3Port;
-  } catch {
-    throw new Error(
-      "PLAYWRIGHT_SKIP_BUILD=1 but no stack state from a previous run exists — run once without the flag",
-    );
-  }
-};
 
 const BUCKET_BOOTSTRAP_ATTEMPTS = 5;
 
@@ -150,7 +133,6 @@ const bootstrapUploadsBucket = async (s3Port: number) => {
 
 const globalSetup = async () => {
   const skipBuild = process.env.PLAYWRIGHT_SKIP_BUILD === "1";
-  const s3Port = await resolveS3Port(skipBuild);
 
   console.log("[stack] Starting RustFS…");
   const rustfs = await new GenericContainer(rustfsImage)
@@ -158,9 +140,10 @@ const globalSetup = async () => {
       RUSTFS_ACCESS_KEY: s3AccessKeyId,
       RUSTFS_SECRET_KEY: s3SecretAccessKey,
     })
-    .withExposedPorts({ container: s3ContainerPort, host: s3Port })
+    .withExposedPorts(s3ContainerPort)
     .withWaitStrategy(Wait.forHttp("/health", s3ContainerPort))
     .start();
+  const s3Port = rustfs.getMappedPort(s3ContainerPort);
   await bootstrapUploadsBucket(s3Port);
 
   const network = await new Network().start();

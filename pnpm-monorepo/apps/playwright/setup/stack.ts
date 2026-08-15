@@ -55,10 +55,10 @@ export const s3CorsConfiguration = {
 };
 
 /**
- * S3 environment of the app. NEXT_PUBLIC_S3_PUBLIC_URL is inlined into the
- * client bundle at build time, so the RustFS host port must be known
- * before the app build and stay identical for every worker's `next start`
- * — it is picked in the global setup and persisted in the stack state.
+ * S3 environment of the app — all runtime-read server variables, so the
+ * RustFS container's random host port only needs to be known when a
+ * worker's `next start` launches (the app build merely needs the variables
+ * present for its env validation).
  */
 export const s3Environment = (s3Port: number) =>
   ({
@@ -66,7 +66,7 @@ export const s3Environment = (s3Port: number) =>
     S3_ACCESS_KEY_ID: s3AccessKeyId,
     S3_SECRET_ACCESS_KEY: s3SecretAccessKey,
     S3_BUCKET_NAME: s3BucketName,
-    NEXT_PUBLIC_S3_PUBLIC_URL: `http://localhost:${s3Port}/${s3BucketName}`,
+    S3_PUBLIC_URL: `http://localhost:${s3Port}/${s3BucketName}`,
   }) as const;
 
 /**
