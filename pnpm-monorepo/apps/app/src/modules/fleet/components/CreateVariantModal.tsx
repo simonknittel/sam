@@ -11,6 +11,7 @@ import { FaSave } from "react-icons/fa";
 import { createVariant } from "../actions/createVariant";
 import { VariantExternalLinkFields } from "./VariantExternalLinkFields";
 import { VariantTagFields } from "./VariantTagFields";
+import { VariantWikiPageField } from "./VariantWikiPageField";
 
 interface Props {
   readonly onRequestClose: () => void;
@@ -124,6 +125,8 @@ export const CreateVariantModal = ({
         <VariantTagFields />
 
         <VariantExternalLinkFields />
+
+        <VariantWikiPageField />
 
         <div className="flex justify-end mt-8">
           <Button

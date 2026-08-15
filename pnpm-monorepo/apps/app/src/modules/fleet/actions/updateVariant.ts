@@ -4,6 +4,8 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { getWikiContext } from "@/modules/wiki/queries/getWikiContext";
+import { getAccessibleWikiPage } from "@/modules/wiki/utils/getAccessibleWikiPage";
 import { VariantStatus } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -33,6 +35,7 @@ const schema = z.object({
     .max(50)
     .nullish(),
   linkUrls: z.array(z.string().url()).max(50).nullish(),
+  wikiPageId: z.union([z.cuid2(), z.literal("")]).optional(),
 });
 
 export const updateVariant = createAuthenticatedAction(
@@ -65,6 +68,7 @@ export const updateVariant = createAuthenticatedAction(
       select: {
         name: true,
         status: true,
+        wikiPageId: true,
         externalLinks: {
           select: {
             serviceName: true,
@@ -79,6 +83,34 @@ export const updateVariant = createAuthenticatedAction(
         requestPayload: formData,
       };
 
+    /**
+     * A changed link must point at a readable page of the global wiki. One
+     * generic error for unknown, trashed and unreadable pages alike, so
+     * page existence never leaks. Keeping the unchanged value is exempt:
+     * a manager who cannot read the currently linked page must still be
+     * able to save the other fields without unlinking it.
+     */
+    const incomingWikiPageId =
+      data.wikiPageId === undefined
+        ? undefined
+        : data.wikiPageId === ""
+          ? null
+          : data.wikiPageId;
+    if (
+      incomingWikiPageId &&
+      incomingWikiPageId !== existingVariant.wikiPageId
+    ) {
+      const wikiContext = await getWikiContext();
+      if (
+        !wikiContext ||
+        !getAccessibleWikiPage(wikiContext, incomingWikiPageId, "read")
+      )
+        return {
+          error: t("Common.badRequest"),
+          requestPayload: formData,
+        };
+    }
+
     const updatedItem = await prisma.variant.update({
       where: {
         id: data.id,
@@ -86,6 +118,7 @@ export const updateVariant = createAuthenticatedAction(
       data: {
         name: data.name,
         status: data.status,
+        wikiPageId: incomingWikiPageId,
         tags: {
           set: tagsToConnect.map((tagId) => ({ id: tagId })),
         },
@@ -106,7 +139,7 @@ export const updateVariant = createAuthenticatedAction(
 
     await createAuditEvents([
       {
-        type: AuditEventType.VARIANT_UPDATED_V2,
+        type: AuditEventType.VARIANT_UPDATED_V3,
         data: {
           variantId: updatedItem.id,
           seriesId: updatedItem.seriesId,
@@ -116,6 +149,8 @@ export const updateVariant = createAuthenticatedAction(
           newStatus: updatedItem.status,
           previousLinks: existingVariant.externalLinks,
           newLinks: incomingLinks ?? [],
+          previousWikiPageId: existingVariant.wikiPageId,
+          newWikiPageId: updatedItem.wikiPageId,
         },
         createdById: authentication.session.user.id,
       },
@@ -132,6 +167,7 @@ export const updateVariant = createAuthenticatedAction(
     );
     revalidatePath("/app/fleet/org");
     revalidatePath("/app/fleet/my-ships");
+    revalidatePath(`/app/fleet/variant/${updatedItem.id}`, "layout");
 
     /**
      * Respond with the result
@@ -145,6 +181,9 @@ export const updateVariant = createAuthenticatedAction(
       id: formData.get("id"),
       name: formData.get("name"),
       status: formData.get("status"),
+      wikiPageId: formData.has("wikiPageId")
+        ? formData.get("wikiPageId")
+        : undefined,
       tagKeys: formData.has("tagKeys[]")
         ? formData.getAll("tagKeys[]")
         : undefined,

@@ -4,6 +4,8 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { getWikiContext } from "@/modules/wiki/queries/getWikiContext";
+import { getAccessibleWikiPage } from "@/modules/wiki/utils/getAccessibleWikiPage";
 import { VariantStatus } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -33,6 +35,7 @@ const schema = z.object({
     .max(50)
     .nullish(),
   linkUrls: z.array(z.string().url()).max(50).nullish(),
+  wikiPageId: z.union([z.cuid2(), z.literal("")]).optional(),
 });
 
 export const createVariant = createAuthenticatedAction(
@@ -51,6 +54,24 @@ export const createVariant = createAuthenticatedAction(
       };
 
     /**
+     * The linked page must be a readable page of the global wiki. One
+     * generic error for unknown, trashed and unreadable pages alike, so
+     * page existence never leaks.
+     */
+    const wikiPageId = data.wikiPageId ? data.wikiPageId : null;
+    if (wikiPageId) {
+      const wikiContext = await getWikiContext();
+      if (
+        !wikiContext ||
+        !getAccessibleWikiPage(wikiContext, wikiPageId, "read")
+      )
+        return {
+          error: t("Common.badRequest"),
+          requestPayload: formData,
+        };
+    }
+
+    /**
      * Create variant
      */
     const tagsToConnect = await createAndReturnTags(
@@ -63,6 +84,7 @@ export const createVariant = createAuthenticatedAction(
         seriesId: data.seriesId,
         name: data.name,
         status: data.status,
+        wikiPageId,
         ...(tagsToConnect &&
           tagsToConnect.length > 0 && {
             tags: {
@@ -86,13 +108,14 @@ export const createVariant = createAuthenticatedAction(
 
     await createAuditEvents([
       {
-        type: AuditEventType.VARIANT_CREATED_V2,
+        type: AuditEventType.VARIANT_CREATED_V3,
         data: {
           variantId: createdVariant.id,
           seriesId: createdVariant.seriesId,
           name: createdVariant.name,
           status: createdVariant.status,
           links: incomingLinks ?? [],
+          wikiPageId: createdVariant.wikiPageId,
         },
         createdById: authentication.session.user.id,
       },
@@ -109,6 +132,7 @@ export const createVariant = createAuthenticatedAction(
     );
     revalidatePath("/app/fleet/org");
     revalidatePath("/app/fleet/my-ships");
+    revalidatePath(`/app/fleet/variant/${createdVariant.id}`, "layout");
 
     /**
      * Respond with the result
@@ -122,6 +146,9 @@ export const createVariant = createAuthenticatedAction(
       seriesId: formData.get("seriesId"),
       name: formData.get("name"),
       status: formData.has("status") ? formData.get("status") : undefined,
+      wikiPageId: formData.has("wikiPageId")
+        ? formData.get("wikiPageId")
+        : undefined,
       tagKeys: formData.has("tagKeys[]")
         ? formData.getAll("tagKeys[]")
         : undefined,
