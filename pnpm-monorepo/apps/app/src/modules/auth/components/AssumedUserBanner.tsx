@@ -1,17 +1,16 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-
 interface Props {
   readonly assumedUserLabel: string;
 }
 
 export const AssumedUserBanner = ({ assumedUserLabel }: Props) => {
-  const router = useRouter();
-
   const handleExit = () => {
     document.cookie = `assume_user=; path=/; samesite=lax; max-age=0;`;
-    router.refresh();
+    // Full reload instead of router.refresh(): a page rendered through the
+    // forbidden() boundary is not re-rendered by a refresh and would keep
+    // the assumed user's redaction state
+    window.location.reload();
   };
 
   return (

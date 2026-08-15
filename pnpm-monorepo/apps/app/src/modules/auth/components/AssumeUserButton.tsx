@@ -9,7 +9,6 @@ import {
   ComboboxOptions,
 } from "@headlessui/react";
 import Fuse from "fuse.js";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 // Assuming a user swaps the whole session including audit attribution, so
@@ -43,7 +42,6 @@ export const AssumeUserButton = () => {
 };
 
 const AssumeUserCombobox = () => {
-  const router = useRouter();
   const { closePopover } = usePopover();
   const [query, setQuery] = useState("");
 
@@ -62,7 +60,10 @@ const AssumeUserCombobox = () => {
     document.cookie = `assume_user=${user.id}; path=/; samesite=lax; max-age=${ASSUME_USER_COOKIE_MAX_AGE};`;
 
     closePopover();
-    router.refresh();
+    // Full reload instead of router.refresh(): a page rendered through the
+    // forbidden() boundary is not re-rendered by a refresh and would keep
+    // the previous user's redaction state
+    window.location.reload();
   };
 
   const fuse = new Fuse(users ?? [], {

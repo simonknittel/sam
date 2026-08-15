@@ -1,7 +1,6 @@
 "use client";
 
 import clsx from "clsx";
-import { useRouter } from "next/navigation";
 import { AssumedUserBanner } from "./AssumedUserBanner";
 import { AssumeUserButton } from "./AssumeUserButton";
 
@@ -40,8 +39,6 @@ interface EnableAdminButtonProps {
 }
 
 const EnableAdminButton = ({ enabled }: EnableAdminButtonProps) => {
-  const router = useRouter();
-
   const handleClick = () => {
     if (enabled) {
       document.cookie = `enable_admin=; path=/; samesite=lax; max-age=0;`;
@@ -49,7 +46,10 @@ const EnableAdminButton = ({ enabled }: EnableAdminButtonProps) => {
       document.cookie = `enable_admin=1; path=/; samesite=lax; max-age=${60 * 60 * 24 * 7};`;
     }
 
-    router.refresh();
+    // Full reload instead of router.refresh(): a page rendered through the
+    // forbidden() boundary is not re-rendered by a refresh and would stay
+    // redacted after enabling
+    window.location.reload();
   };
 
   return (
