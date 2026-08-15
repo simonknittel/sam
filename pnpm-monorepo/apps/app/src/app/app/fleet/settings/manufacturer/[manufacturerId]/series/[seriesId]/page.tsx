@@ -1,3 +1,4 @@
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
 import { EditableSeriesName } from "@/modules/fleet/components/EditableSeriesName";
@@ -33,6 +34,14 @@ interface Props {
 }
 
 export default async function Page(props: Props) {
+  const authentication = await requireAuthenticationPage(
+    "/app/fleet/settings/manufacturer/[manufacturerId]/series/[seriesId]",
+  );
+  await authentication.authorizePage(
+    "manufacturersSeriesAndVariants",
+    "manage",
+  );
+
   const params = await props.params;
   const [series, manufacturer] = await getSeriesAndManufacturerById(
     params.seriesId,

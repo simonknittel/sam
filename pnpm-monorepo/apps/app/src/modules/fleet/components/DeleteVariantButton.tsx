@@ -29,7 +29,7 @@ export const DeleteVariantButton = ({
           {isPending ? <AsciiSpinner /> : <FaTrash />} Löschen
         </Button>
       )}
-      title="Schiff löschen?"
+      title="Variante löschen?"
       description={<>Willst du &quot;{variant.name}&quot; löschen?</>}
       confirmLabel="Löschen"
       confirmDisabled={shipCount > 0}

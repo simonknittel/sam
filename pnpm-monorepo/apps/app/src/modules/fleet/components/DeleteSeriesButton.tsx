@@ -23,7 +23,7 @@ export const DeleteSeriesButton = ({ className, series }: Props) => {
           {isPending ? <AsciiSpinner /> : <FaTrash />} Löschen
         </Button>
       )}
-      title="Schiff löschen?"
+      title="Serie löschen?"
       description={<>Willst du &quot;{series.name}&quot; löschen?</>}
       confirmLabel="Löschen"
     />

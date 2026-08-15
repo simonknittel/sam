@@ -1,3 +1,4 @@
+import { requireAuthenticationPage } from "@/modules/auth/server";
 import { ImageUpload } from "@/modules/common/components/ImageUpload";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
@@ -31,6 +32,14 @@ interface Props {
 }
 
 export default async function Page(props: Props) {
+  const authentication = await requireAuthenticationPage(
+    "/app/fleet/settings/manufacturer/[manufacturerId]",
+  );
+  await authentication.authorizePage(
+    "manufacturersSeriesAndVariants",
+    "manage",
+  );
+
   const manufacturer = await getManufacturerById(
     (await props.params).manufacturerId,
   );

@@ -26,7 +26,7 @@ export const DeleteManufacturerButton = ({
           {isPending ? <AsciiSpinner /> : <FaTrash />} Löschen
         </Button>
       )}
-      title="Schiff löschen?"
+      title="Hersteller löschen?"
       description={<>Willst du &quot;{manufacturer.name}&quot; löschen?</>}
       confirmLabel="Löschen"
     />
