@@ -16,6 +16,46 @@ export { stateFilePath };
 export const postgresImage =
   "postgres:18.4-alpine3.23@sha256:996d0920e4ff9df1fc19dacb904492f3c1ec0ec1cc338f0ad7123be7731c5f5e";
 
+/** Same pinned image as compose.yml (S3-compatible upload storage). */
+export const seaweedfsImage =
+  "chrislusf/seaweedfs:4.41@sha256:43b768cd62b00d132439cda881b93fd1adebf1b315e996e794087743821d771d";
+
+export const s3AccessKeyId = "playwright-s3-access-key";
+export const s3SecretAccessKey = "playwright-insecure-s3-secret";
+export const s3BucketName = "uploads";
+export const s3ContainerPort = 8333;
+
+/**
+ * Same identity model as the compose.yml SeaweedFS service: authenticated
+ * writes for the app, anonymous reads so uploaded files are public by
+ * unguessable URL like on the real bucket.
+ */
+export const seaweedfsS3Config = JSON.stringify({
+  identities: [
+    { name: "anonymous", actions: ["Read"] },
+    {
+      name: "playwright",
+      credentials: [{ accessKey: s3AccessKeyId, secretKey: s3SecretAccessKey }],
+      actions: ["Admin", "Read", "List", "Tagging", "Write"],
+    },
+  ],
+});
+
+/**
+ * S3 environment of the app. NEXT_PUBLIC_S3_PUBLIC_URL is inlined into the
+ * client bundle at build time, so the SeaweedFS host port must be known
+ * before the app build and stay identical for every worker's `next start`
+ * — it is picked in the global setup and persisted in the stack state.
+ */
+export const s3Environment = (s3Port: number) =>
+  ({
+    S3_ENDPOINT: `http://localhost:${s3Port}`,
+    S3_ACCESS_KEY_ID: s3AccessKeyId,
+    S3_SECRET_ACCESS_KEY: s3SecretAccessKey,
+    S3_BUCKET_NAME: s3BucketName,
+    NEXT_PUBLIC_S3_PUBLIC_URL: `http://localhost:${s3Port}/${s3BucketName}`,
+  }) as const;
+
 /**
  * The collab image tag is unique per checkout so parallel worktrees don't
  * overwrite each other's image between building and starting containers.
@@ -39,6 +79,8 @@ export interface StackState {
   readonly postgresHost: string;
   readonly postgresPort: number;
   readonly networkName: string;
+  /** Host port of the SeaweedFS S3 gateway (see s3Environment) */
+  readonly s3Port: number;
 }
 
 export const readStackState = (): StackState =>
@@ -52,8 +94,9 @@ export const containerDatabaseUrl = (database: string) =>
 
 /**
  * The app validates its environment with non-empty strings for services the
- * test stack doesn't provide (Discord OAuth, Algolia, S3). The features
- * degrade gracefully at runtime; tests must not depend on them.
+ * test stack doesn't provide (Discord OAuth, Algolia). The features degrade
+ * gracefully at runtime; tests must not depend on them. S3 is real though —
+ * uploads go to the stack's SeaweedFS container (see s3Environment).
  */
 export const appDummyEnvironment = {
   DISCORD_CLIENT_ID: "playwright-dummy",
@@ -63,10 +106,5 @@ export const appDummyEnvironment = {
   NEXT_PUBLIC_ALGOLIA_APP_ID: "playwright-dummy",
   ALGOLIA_ADMIN_API_KEY: "playwright-dummy",
   NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY: "playwright-dummy",
-  S3_ACCOUNT_ID: "playwright-dummy",
-  S3_ACCESS_KEY_ID: "playwright-dummy",
-  S3_SECRET_ACCESS_KEY: "playwright-dummy",
-  S3_BUCKET_NAME: "playwright-dummy",
-  NEXT_PUBLIC_S3_PUBLIC_URL: "uploads.playwright.invalid",
   NEXTAUTH_SECRET: "playwright-insecure-auth-secret",
 } as const;
