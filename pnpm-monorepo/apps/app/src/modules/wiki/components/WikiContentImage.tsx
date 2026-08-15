@@ -3,7 +3,10 @@ import {
   resolveWikiImageRendering,
   type WikiImageDimensions,
 } from "../utils/wikiImageRendering";
-import { wikiBlockLayoutStyle } from "./wikiBlockLayoutStyle";
+import {
+  wikiBlockLayoutStyle,
+  wikiFloatImageStyle,
+} from "./wikiBlockLayoutStyle";
 
 interface Props {
   readonly attrs: Readonly<Record<string, unknown>>;
@@ -14,11 +17,17 @@ interface Props {
    * first image, which is a likely LCP candidate
    */
   readonly eager?: boolean;
+  /**
+   * Render as the floated inline image (wikiFloatImage node) instead of
+   * the block image: its own marker, the float side instead of the
+   * block-position margins
+   */
+  readonly floating?: boolean;
 }
 
 /**
- * An image block in the static read view, mirroring WikiImage.renderHTML:
- * an anchor to the original file as the node's outer element carrying the
+ * An image in the static read view, mirroring the node's renderHTML: an
+ * anchor to the original file as the node's outer element carrying the
  * layout attributes, the image inside it. Uploads with probed dimensions
  * render through the Next.js image optimizer with their aspect-ratio box
  * reserved from SSR; everything else (external srcs, SVG, GIF, uploads
@@ -28,6 +37,7 @@ export const WikiContentImage = ({
   attrs,
   imageDimensions,
   eager = false,
+  floating = false,
 }: Props) => {
   const src = typeof attrs.src === "string" ? attrs.src : "";
   const alt = typeof attrs.alt === "string" ? attrs.alt : "";
@@ -46,9 +56,21 @@ export const WikiContentImage = ({
       typeof widthPx === "number" || widthPx === WIKI_FULL_WIDTH
         ? widthPx
         : undefined,
-    "data-align": align === "left" || align === "right" ? align : undefined,
-    style: wikiBlockLayoutStyle(attrs),
+    ...(floating
+      ? {
+          "data-float-side": attrs.floatSide === "right" ? "right" : "left",
+          style: wikiFloatImageStyle(attrs),
+        }
+      : {
+          "data-align":
+            align === "left" || align === "right" ? align : undefined,
+          style: wikiBlockLayoutStyle(attrs),
+        }),
   };
+
+  const markerAttribute = floating
+    ? { "data-wiki-float-image": "" }
+    : { "data-wiki-image": "" };
 
   /**
    * Nothing to link to — like renderHTML, the image itself stays the
@@ -68,7 +90,7 @@ export const WikiContentImage = ({
 
   return (
     <a
-      data-wiki-image=""
+      {...markerAttribute}
       href={src}
       target="_blank"
       rel="noopener noreferrer"

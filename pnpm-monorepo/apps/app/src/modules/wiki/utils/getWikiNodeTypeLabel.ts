@@ -15,6 +15,7 @@ const NODE_TYPE_LABELS: Readonly<Record<string, string>> = {
   wikiGrid: "Raster",
   wikiCallout: "Hervorgehobener Block",
   image: "Bild",
+  wikiFloatImage: "Umflossenes Bild",
   wikiAttachment: "Dateianhang",
   wikiEmbed: "Einbettung",
   wikiPageLink: "Seitenlink",

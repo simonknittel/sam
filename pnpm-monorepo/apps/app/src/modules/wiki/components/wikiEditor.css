@@ -495,27 +495,69 @@
  * wikiImageNode). That anchor is the image node's outer element and
  * carries its width, so it has to be a block and the image inside fills
  * it. Without a width of its own it hugs the image, keeping the link's hit
- * area off the empty column next to a narrow one.
+ * area off the empty column next to a narrow one. Same markup for the
+ * floated variant (wikiFloatImageNode), whose anchor additionally floats.
  */
-.prose a[data-wiki-image] {
+.prose :is(a[data-wiki-image], a[data-wiki-float-image]) {
   display: block;
   width: fit-content;
   cursor: zoom-in;
 }
 
-.prose a[data-wiki-image] img {
+.prose :is(a[data-wiki-image], a[data-wiki-float-image]) img {
   width: 100%;
   height: auto;
 }
 
-.prose a[data-wiki-image]:focus-visible {
+.prose :is(a[data-wiki-image], a[data-wiki-float-image]):focus-visible {
   outline: 2px solid var(--color-interaction-500);
   outline-offset: 2px;
 }
 
 /* While editing, a click selects the image instead of opening it */
-.tiptap[contenteditable="true"] a[data-wiki-image] {
+.tiptap[contenteditable="true"]
+  :is(a[data-wiki-image], a[data-wiki-float-image]) {
   cursor: default;
+}
+
+/*
+ * Floated images (wikiFloatImage node): inline nodes inside a paragraph,
+ * floated to one of its sides so the text flows around them. Living
+ * inside the paragraph anchors the float to the paragraph's own box — its
+ * width and centering margins — instead of the editor's, and the
+ * max-width caps the image at the paragraph's current width even when the
+ * paragraph gets resized below the image's stored width. The float side
+ * and width render inline (schema attributes); the gap to the text lives
+ * here.
+ */
+.prose a[data-wiki-float-image] {
+  max-width: 100%;
+}
+
+.prose a[data-wiki-float-image][data-float-side="left"] {
+  margin-right: 1em;
+  margin-bottom: 0.5em;
+}
+
+.prose a[data-wiki-float-image][data-float-side="right"] {
+  margin-left: 1em;
+  margin-bottom: 0.5em;
+}
+
+/*
+ * A float taller than its text reaches below the last line. The content
+ * roots and the card-like containers establish their own formatting
+ * context so it cannot bleed past a card's border or the content area
+ * onto whatever follows (grid and table cells are such contexts
+ * natively). Safe margin-wise: the typography plugin zeroes the roots'
+ * first/last-child margins, the callout zeroes its own, and the
+ * collapsible's card border already kept its content margins inside.
+ */
+.tiptap,
+[data-wiki-static-content],
+.prose [data-wiki-callout],
+.prose [data-type="detailsContent"] {
+  display: flow-root;
 }
 
 /*

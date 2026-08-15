@@ -155,6 +155,18 @@ const renderWikiPageContent = (
             />
           );
         },
+        wikiFloatImage: ({ node }) => {
+          const eager = isFirstImage;
+          isFirstImage = false;
+          return (
+            <WikiContentImage
+              attrs={node.attrs}
+              imageDimensions={imageDimensions}
+              eager={eager}
+              floating
+            />
+          );
+        },
         /**
          * Unlike the node's renderHTML, the card adds the report button
          * next to the download link — same as the read-only editor's node

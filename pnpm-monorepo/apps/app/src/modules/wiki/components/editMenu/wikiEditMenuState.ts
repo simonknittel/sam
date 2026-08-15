@@ -29,6 +29,7 @@ export const URL_NODE_TYPES = ["wikiEmbed"];
 const MENU_NODE_TYPES = [
   ...URL_NODE_TYPES,
   "image",
+  "wikiFloatImage",
   "wikiAttachment",
   "wikiPageLink",
   "wikiCitizenMention",
@@ -325,7 +326,7 @@ export const wikiMenuFromElement = (
   if (
     element.matches("a[href]") &&
     !element.matches(
-      "[data-wiki-image], [data-wiki-attachment], [data-wiki-page-link], [data-wiki-citizen-mention], [data-wiki-variant-link]",
+      "[data-wiki-image], [data-wiki-float-image], [data-wiki-attachment], [data-wiki-page-link], [data-wiki-citizen-mention], [data-wiki-variant-link]",
     )
   ) {
     let position: number;

@@ -21,6 +21,7 @@ import {
   type WikiNodeMenuState,
 } from "./wikiEditMenuState";
 import { WikiEditMenuUrlForm } from "./WikiEditMenuUrlForm";
+import { WikiImageFloatActions } from "./WikiImageFloatActions";
 
 interface Props {
   readonly editor: Editor;
@@ -73,14 +74,29 @@ export const WikiNodeMenuActions = ({
         <WikiEditMenuUrlForm defaultValue={menu.src} onSave={saveNodeUrl} />
       )}
 
-      {menu.typeName === "image" && menu.src && (
-        <ToolbarButton
-          title="Original öffnen"
-          isActive={false}
-          onClick={() => openInNewTab(menu.src)}
-        >
-          <FaExternalLinkAlt />
-        </ToolbarButton>
+      {(menu.typeName === "image" || menu.typeName === "wikiFloatImage") &&
+        menu.src && (
+          <ToolbarButton
+            title="Original öffnen"
+            isActive={false}
+            onClick={() => openInNewTab(menu.src)}
+          >
+            <FaExternalLinkAlt />
+          </ToolbarButton>
+        )}
+
+      {(menu.typeName === "image" || menu.typeName === "wikiFloatImage") && (
+        <WikiImageFloatActions
+          editor={editor}
+          position={menu.position}
+          floatSide={
+            menu.typeName === "wikiFloatImage"
+              ? menu.attrs.floatSide === "right"
+                ? "right"
+                : "left"
+              : null
+          }
+        />
       )}
 
       {menu.typeName === "wikiAttachment" && (

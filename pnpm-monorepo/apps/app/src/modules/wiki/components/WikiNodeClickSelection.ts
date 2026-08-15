@@ -6,6 +6,7 @@ import { NodeSelection, Plugin, PluginKey } from "@tiptap/pm/state";
 const ANCHOR_NODE_TYPES = [
   // Linked to the original file it displays
   "image",
+  "wikiFloatImage",
   "wikiAttachment",
   "wikiPageLink",
   "wikiCitizenMention",

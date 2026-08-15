@@ -54,13 +54,16 @@ const HANDLE_GAP = 2;
 /**
  * The resizable node at a position: width and position only apply to
  * direct children of the document, so nested blocks (grid cells, callout
- * and collapsible contents) have no handles.
+ * and collapsible contents) have no handles. The floated image is the
+ * exception — its width resizes against the paragraph it lives in (the
+ * drag's container below), which is well-defined at any depth.
  */
 const resizableNodeAt = (editor: Editor, position: number) => {
   if (position < 0 || position > editor.state.doc.content.size) return null;
   const node = editor.state.doc.nodeAt(position);
+  if (!node) return null;
+  if (node.type.name === "wikiFloatImage") return node;
   if (
-    !node ||
     !(WIKI_RESIZABLE_NODE_TYPES as readonly string[]).includes(node.type.name)
   )
     return null;

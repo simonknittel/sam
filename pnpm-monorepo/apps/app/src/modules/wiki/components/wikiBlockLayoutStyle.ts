@@ -21,3 +21,21 @@ export const wikiBlockLayoutStyle = (
   }
   return style;
 };
+
+/**
+ * Same idea for the floated image's `floatSide`/`widthPx` attributes: the
+ * float side instead of the block-position margins. The max-width caps the
+ * image at the paragraph it floats in.
+ */
+export const wikiFloatImageStyle = (
+  attrs: Readonly<Record<string, unknown>>,
+): CSSProperties => {
+  const style: CSSProperties = {
+    float: attrs.floatSide === "right" ? "right" : "left",
+  };
+  if (typeof attrs.widthPx === "number") {
+    style.width = clampWikiWidthPx(attrs.widthPx);
+    style.maxWidth = "100%";
+  }
+  return style;
+};

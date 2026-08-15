@@ -1,4 +1,8 @@
-import { WikiImage, type WikiImageOptions } from "@sam-monorepo/wiki-editor";
+import {
+  WikiFloatImage,
+  WikiImage,
+  type WikiImageOptions,
+} from "@sam-monorepo/wiki-editor";
 import type { AnyExtension, NodeViewRenderer } from "@tiptap/core";
 import { DOMSerializer, type Node as ProseMirrorNode } from "@tiptap/pm/model";
 import {
@@ -135,22 +139,41 @@ const WikiImageWithOptimizedView = WikiImage.extend<WikiImageNodeViewOptions>({
   },
 });
 
+const WikiFloatImageWithOptimizedView =
+  WikiFloatImage.extend<WikiImageNodeViewOptions>({
+    addOptions() {
+      return {
+        ...(this.parent?.() as WikiImageOptions),
+        imageDimensions: {},
+      };
+    },
+
+    addNodeView() {
+      return createWikiImageNodeView(() => this.options.imageDimensions);
+    },
+  });
+
 /**
- * Swaps the plain image node in an extension list for the node-view
- * variant serving optimized images, keeping its position in the list. Same
- * name, attributes and schema — only the in-editor rendering differs, so
- * save validation, the collab server and the static renderer stay
- * untouched by this variant.
+ * Swaps the plain image nodes (block and floated) in an extension list for
+ * the node-view variants serving optimized images, keeping their position
+ * in the list. Same names, attributes and schema — only the in-editor
+ * rendering differs, so save validation, the collab server and the static
+ * renderer stay untouched by these variants.
  */
 export const withWikiImageOptimization = (
   extensions: AnyExtension[],
   imageDimensions: Readonly<Record<string, WikiImageDimensions>>,
 ): AnyExtension[] =>
-  extensions.map((extension) =>
-    extension.name === WikiImage.name
-      ? WikiImageWithOptimizedView.configure({
-          ...(extension.options as WikiImageOptions),
-          imageDimensions,
-        })
-      : extension,
-  );
+  extensions.map((extension) => {
+    if (extension.name === WikiImage.name)
+      return WikiImageWithOptimizedView.configure({
+        ...(extension.options as WikiImageOptions),
+        imageDimensions,
+      });
+    if (extension.name === WikiFloatImage.name)
+      return WikiFloatImageWithOptimizedView.configure({
+        ...(extension.options as WikiImageOptions),
+        imageDimensions,
+      });
+    return extension;
+  });
