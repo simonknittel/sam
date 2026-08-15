@@ -28,6 +28,11 @@ export const NotificationSettings = ({ className, settings }: Props) => {
     <NotificationSettingsForm
       className={clsx("flex flex-col gap-0.5", className)}
     >
+      <p className="text-sm text-neutral-500 px-4 max-w-prose">
+        Browser-Benachrichtigungen werden nur an Geräte zugestellt, auf denen du
+        sie genehmigt hast.
+      </p>
+
       <div className="flex gap-2 text-neutral-500 px-4">
         <div className="flex-1" />
 
@@ -99,7 +104,9 @@ const SingleNotificationSettings = ({
   notificationType,
   settings,
 }: SingleNotificationSettingsProps) => {
-  const isWebEnabled = settings?.some(
+  // Opt-out model: the existence of a row means the notification type is
+  // disabled.
+  const isWebDisabled = settings?.some(
     (setting) =>
       setting.notificationType === notificationType.id &&
       setting.channel === NotificationChannel.WEB_PUSH,
@@ -129,7 +136,7 @@ const SingleNotificationSettings = ({
         <YesNoCheckbox
           key={`${NotificationChannel.WEB_PUSH}_${notificationType.id}`}
           name={`${NotificationChannel.WEB_PUSH}_${notificationType.id}`}
-          defaultChecked={isWebEnabled}
+          defaultChecked={!isWebDisabled}
           hideLabel
         />
       </div>

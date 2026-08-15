@@ -24,6 +24,7 @@ export enum AuditEventType {
   MANUFACTURER_UPDATED = "MANUFACTURER_UPDATED",
   MANUFACTURER_DELETED = "MANUFACTURER_DELETED",
   WEB_PUSH_SUBSCRIBED = "WEB_PUSH_SUBSCRIBED",
+  WEB_PUSH_UNSUBSCRIBED = "WEB_PUSH_UNSUBSCRIBED",
   ROLE_CREATED = "ROLE_CREATED",
   ROLE_UPDATED = "ROLE_UPDATED",
   ROLE_UPDATED_V2 = "ROLE_UPDATED_V2",
@@ -286,6 +287,11 @@ export interface AuditEventDataByType {
   [AuditEventType.WEB_PUSH_SUBSCRIBED]: {
     subscriptionId: string;
     citizenId: string;
+  };
+
+  [AuditEventType.WEB_PUSH_UNSUBSCRIBED]: {
+    citizenId: string;
+    count: number;
   };
 
   [AuditEventType.ROLE_CREATED]: {

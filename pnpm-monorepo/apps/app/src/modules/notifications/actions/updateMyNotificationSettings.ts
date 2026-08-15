@@ -64,14 +64,15 @@ export const updateMyNotificationSettings = createAuthenticatedAction(
         const inputName = `${channel}_${notificationType.id}`;
         const isEnabled = newlyEnabledSettings.includes(inputName);
 
-        const currentlyEnabled = myCurrentSettings?.some(
+        // Opt-out model: the existence of a row means the notification type
+        // is disabled.
+        const currentlyEnabled = !myCurrentSettings?.some(
           (setting) =>
             setting.notificationType === notificationType.id &&
-            setting.channel === channel &&
-            setting.enabledAt,
+            setting.channel === channel,
         );
 
-        if (isEnabled !== Boolean(currentlyEnabled)) {
+        if (isEnabled !== currentlyEnabled) {
           changes.push({
             citizenId: authentication.session.entity.id,
             notificationType: notificationType.id,
@@ -84,14 +85,14 @@ export const updateMyNotificationSettings = createAuthenticatedAction(
 
     await prisma.$transaction(
       changes.map((change) => {
-        if (change.enabled === false) {
-          return prisma.notificationSetting.delete({
+        if (change.enabled === true) {
+          // deleteMany instead of delete so overlapping debounced submits
+          // don't throw when the row is already gone
+          return prisma.notificationSetting.deleteMany({
             where: {
-              citizenId_notificationType_channel: {
-                citizenId: authentication.session.entity!.id,
-                notificationType: change.notificationType,
-                channel: change.channel,
-              },
+              citizenId: authentication.session.entity!.id,
+              notificationType: change.notificationType,
+              channel: change.channel,
             },
           });
         }
@@ -105,13 +106,13 @@ export const updateMyNotificationSettings = createAuthenticatedAction(
             },
           },
           update: {
-            enabledAt: new Date(),
+            disabledAt: new Date(),
           },
           create: {
             citizenId: change.citizenId,
             notificationType: change.notificationType,
             channel: change.channel,
-            enabledAt: new Date(),
+            disabledAt: new Date(),
           },
         });
       }),

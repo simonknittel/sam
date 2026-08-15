@@ -2,6 +2,7 @@ import { requireAuthenticationPage } from "@/modules/auth/server";
 import { NotificationSettings } from "@/modules/notifications/components/NotificationSettings";
 import { WebPushSubscriberClient } from "@/modules/notifications/components/WebPushSubscriberClient";
 import { getMyNotificationSettings } from "@/modules/notifications/utils/queries/getMyNotificationSettings";
+import { getMyWebPushSubscriptionCount } from "@/modules/notifications/utils/queries/getMyWebPushSubscriptionCount";
 import { type Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -15,10 +16,16 @@ export default async function Page() {
   );
   if (!authentication.session.entity) notFound();
 
-  const myNotificationSettings = await getMyNotificationSettings();
+  const [myNotificationSettings, myWebPushSubscriptionCount] =
+    await Promise.all([
+      getMyNotificationSettings(),
+      getMyWebPushSubscriptionCount(),
+    ]);
   return (
     <div className="flex flex-col gap-4">
-      <WebPushSubscriberClient />
+      <WebPushSubscriberClient
+        hasSubscriptions={myWebPushSubscriptionCount > 0}
+      />
 
       <NotificationSettings settings={myNotificationSettings} />
 

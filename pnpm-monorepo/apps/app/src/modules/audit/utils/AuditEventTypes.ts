@@ -255,6 +255,16 @@ export const AuditEventDefinitions: {
       `Web push subscription created for citizen ${data.citizenId}`,
   },
 
+  [AuditEventType.WEB_PUSH_UNSUBSCRIBED]: {
+    type: AuditEventType.WEB_PUSH_UNSUBSCRIBED,
+    data: {
+      citizenId: "string",
+      count: 0,
+    },
+    message: (data) =>
+      `Unsubscribed from web push notifications (${data.count} subscription(s) removed)`,
+  },
+
   [AuditEventType.ROLE_CREATED]: {
     type: AuditEventType.ROLE_CREATED,
     data: {

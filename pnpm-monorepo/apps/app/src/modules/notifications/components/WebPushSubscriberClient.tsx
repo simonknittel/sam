@@ -9,13 +9,19 @@ import clsx from "clsx";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { subscribeWebPush } from "../actions/subscribeWebPush";
+import { unsubscribeWebPush } from "../actions/unsubscribeWebPush";
 
 interface Props {
   readonly className?: string;
+  readonly hasSubscriptions: boolean;
 }
 
-export const WebPushSubscriberClient = ({ className }: Props) => {
+export const WebPushSubscriberClient = ({
+  className,
+  hasSubscriptions,
+}: Props) => {
   const [isPending, setIsPending] = useState(false);
+  const [isUnsubscribePending, setIsUnsubscribePending] = useState(false);
 
   const handleClick = () => {
     if (!env.NEXT_PUBLIC_VAPID_KEY) {
@@ -84,6 +90,29 @@ export const WebPushSubscriberClient = ({ className }: Props) => {
     });
   };
 
+  const handleUnsubscribeClick = async () => {
+    setIsUnsubscribePending(true);
+
+    /**
+     * Best-effort clean-up of the subscription on this device. The server
+     * won't send push notifications without the stored subscriptions anyway,
+     * so failures are ignored.
+     */
+    try {
+      if ("serviceWorker" in navigator) {
+        const registration = await navigator.serviceWorker.getRegistration();
+        const subscription = await registration?.pushManager.getSubscription();
+        await subscription?.unsubscribe();
+      }
+    } catch (error) {
+      console.error(error);
+    }
+
+    await runAction(unsubscribeWebPush, new FormData());
+
+    setIsUnsubscribePending(false);
+  };
+
   return (
     <Tile heading="Browser-Benachrichtigungen" className={clsx(className)}>
       <div className="max-w-prose">
@@ -111,6 +140,33 @@ export const WebPushSubscriberClient = ({ className }: Props) => {
         <p className="text-neutral-500 text-sm mt-2">
           Die Genehmigung muss pro Browser und Gerät angefordert werden.
         </p>
+
+        {hasSubscriptions && (
+          <div className="border-t border-white/5 mt-4 pt-4">
+            <p>
+              Browser-Benachrichtigungen sind auf mindestens einem Gerät
+              aktiviert.
+            </p>
+
+            <Button2
+              type="button"
+              onClick={() => void handleUnsubscribeClick()}
+              disabled={isUnsubscribePending}
+              variant={Button2Variant.Secondary}
+              className="mt-2"
+            >
+              {isUnsubscribePending && <AsciiSpinner />}
+              Auf allen Geräten deaktivieren
+            </Button2>
+
+            <p className="text-neutral-500 text-sm mt-2">
+              Dabei werden alle Geräte abgemeldet. Zum erneuten Aktivieren muss
+              die Genehmigung pro Gerät erneut angefordert werden. Die
+              Genehmigung im Browser bleibt bestehen und kann nur über dessen
+              Einstellungen entzogen werden.
+            </p>
+          </div>
+        )}
       </div>
     </Tile>
   );
