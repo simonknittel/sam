@@ -53,7 +53,7 @@ export const WikiPageTags = ({ className, pageId, tags, canEdit }: Props) => {
         <Link
           key={tag.id}
           href={`${hrefMode.basePath}/tags/${tag.id}`}
-          className="flex items-center gap-1 rounded-secondary bg-neutral-700/50 py-1 px-2 text-sm text-neutral-300 hover:bg-neutral-700 hover:text-interaction-300 focus-visible:text-interaction-300"
+          className="flex items-center gap-1 rounded-secondary bg-neutral-700/50 py-1 px-2 text-sm text-neutral-300 hover:bg-neutral-700 hover:text-interaction-500 focus-visible:text-interaction-500"
           title={`Alle Seiten mit dem Tag "${tag.name}" anzeigen`}
         >
           <FaTag className="size-3 flex-none text-neutral-500" />
