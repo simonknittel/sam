@@ -143,15 +143,12 @@ export const createWikiPage = createAuthenticatedAction(
       );
 
       revalidateWikiScope(scoped);
-      const copyVariantHref =
-        data.variantId && scoped.scope === WikiScope.Wiki
-          ? await resolveVariantWikiRedirectHref(
-              scoped.context,
-              data.variantId,
-              root,
-              data.parentId ?? null,
-            )
-          : null;
+      const copyVariantHref = await resolveVariantWikiRedirectHref(
+        scoped,
+        data.variantId,
+        root,
+        data.parentId ?? null,
+      );
       /** A copied page is never an event root page */
       redirect(
         copyVariantHref ??
@@ -222,15 +219,12 @@ export const createWikiPage = createAuthenticatedAction(
     ]);
 
     revalidateWikiScope(scoped);
-    const variantHref =
-      data.variantId && scoped.scope === WikiScope.Wiki
-        ? await resolveVariantWikiRedirectHref(
-            scoped.context,
-            data.variantId,
-            page,
-            data.parentId ?? null,
-          )
-        : null;
+    const variantHref = await resolveVariantWikiRedirectHref(
+      scoped,
+      data.variantId,
+      page,
+      data.parentId ?? null,
+    );
     /** A newly created page is never an event root page */
     redirect(
       variantHref ??

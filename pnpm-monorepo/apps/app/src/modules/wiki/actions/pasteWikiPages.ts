@@ -292,15 +292,12 @@ export const pasteWikiPages = createAuthenticatedAction(
       if (targetEventId && targetPage.parentId === null) {
         redirectHref = getEventWikiBasePath(targetEventId);
       } else {
-        const variantHref =
-          data.variantId && targetScoped.scope === WikiScope.Wiki
-            ? await resolveVariantWikiRedirectHref(
-                targetScoped.context,
-                data.variantId,
-                root,
-                targetPage.parentId,
-              )
-            : null;
+        const variantHref = await resolveVariantWikiRedirectHref(
+          targetScoped,
+          data.variantId,
+          root,
+          targetPage.parentId,
+        );
         redirectHref =
           variantHref ??
           getWikiPageRouteHref({
@@ -327,15 +324,12 @@ export const pasteWikiPages = createAuthenticatedAction(
         createdByEntityId: entity.id,
       }));
 
-      const variantHref =
-        data.variantId && targetScoped.scope === WikiScope.Wiki
-          ? await resolveVariantWikiRedirectHref(
-              targetScoped.context,
-              data.variantId,
-              root,
-              data.parentId ?? null,
-            )
-          : null;
+      const variantHref = await resolveVariantWikiRedirectHref(
+        targetScoped,
+        data.variantId,
+        root,
+        data.parentId ?? null,
+      );
       /** A newly created copy is never an event root page */
       redirectHref =
         variantHref ??
