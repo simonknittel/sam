@@ -34,7 +34,7 @@ export const getEventWikiPageStaticContent = cache(
         context.rootPage?.id ?? null,
       );
 
-      return assembleWikiPageStaticContent(context, pageId, async () => {
+      const loadLinkablePages = async () => {
         const globalContext = await getWikiContext();
 
         return Object.fromEntries([
@@ -62,7 +62,14 @@ export const getEventWikiPageStaticContent = cache(
                 ] as const,
             ),
         ]);
-      });
+      };
+
+      return assembleWikiPageStaticContent(
+        context,
+        pageId,
+        loadLinkablePages,
+        eventHrefMode,
+      );
     },
   ),
 );

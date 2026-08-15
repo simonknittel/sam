@@ -12,6 +12,7 @@ import {
   ReactNodeViewRenderer,
   type NodeViewProps,
 } from "@tiptap/react";
+import { useWikiPageHrefMode } from "./WikiPageHrefModeProvider";
 import {
   WikiPageIndexList,
   type WikiPageIndexEntry,
@@ -34,6 +35,7 @@ interface WikiPageIndexNodeViewOptions {
 const WikiPageIndexNodeView = ({ node, extension }: NodeViewProps) => {
   const { currentPageId, initialEntries } =
     extension.options as WikiPageIndexNodeViewOptions;
+  const { variantId } = useWikiPageHrefMode();
   const config = normalizeWikiPageIndexConfig(node.attrs);
 
   const { data, isPending } = api.wiki.getPageIndex.useQuery(
@@ -44,6 +46,7 @@ const WikiPageIndexNodeView = ({ node, extension }: NodeViewProps) => {
       maxDepth: config.maxDepth,
       tagIds: [...config.tagIds],
       matchMode: config.matchMode,
+      variantId: variantId ?? undefined,
     },
     {
       refetchOnWindowFocus: false,

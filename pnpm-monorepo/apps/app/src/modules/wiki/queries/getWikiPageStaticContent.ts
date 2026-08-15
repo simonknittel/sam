@@ -73,6 +73,8 @@ const assembleWikiPageStaticContent = async (
   loadLinkablePages: () => Promise<
     Readonly<Record<string, WikiPageLinkedPage>>
   >,
+  /** Scope the page-index entry links render under; global by default */
+  hrefMode: WikiPageHrefMode = GLOBAL_WIKI_HREF_MODE,
 ): Promise<WikiPageStaticContent> => {
   const [page, iframeAllowlist, linkablePages] = await Promise.all([
     /**
@@ -99,7 +101,10 @@ const assembleWikiPageStaticContent = async (
     await Promise.all(
       collectWikiPageIndexConfigs(content).map(
         async ({ key, config }) =>
-          [key, await resolveWikiPageIndex(context, pageId, config)] as const,
+          [
+            key,
+            await resolveWikiPageIndex(context, pageId, config, hrefMode),
+          ] as const,
       ),
     ),
   );

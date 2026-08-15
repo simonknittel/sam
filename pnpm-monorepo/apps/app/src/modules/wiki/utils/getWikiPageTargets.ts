@@ -28,6 +28,7 @@ const collectWikiPageTargets = (
   context: WikiSharedContext,
   isIncluded: (pageId: string) => boolean,
   excludeSubtreeOf?: string,
+  withinSubtreeOf?: string,
 ): WikiPageTargetOption[] => {
   const excluded = excludeSubtreeOf
     ? new Set([
@@ -61,7 +62,25 @@ const collectWikiPageTargets = (
     }
   };
 
-  walk(null, 0);
+  /**
+   * The plain walk seeds at the top level and would never reach a subtree
+   * whose root has a parent — the variant embeds' case. Their root is a
+   * regular target itself: only moving/renaming/deleting it is barred, not
+   * placing pages under it.
+   */
+  if (withinSubtreeOf) {
+    const rootPage = context.pagesById.get(withinSubtreeOf);
+    if (!rootPage || excluded.has(rootPage.id)) return result;
+
+    visited.add(rootPage.id);
+    const rootIncluded = isIncluded(rootPage.id);
+    if (rootIncluded)
+      result.push({ id: rootPage.id, title: rootPage.title, depth: 0 });
+
+    walk(rootPage.id, rootIncluded ? 1 : 0);
+  } else {
+    walk(null, 0);
+  }
 
   return result;
 };
@@ -76,11 +95,13 @@ const collectWikiPageTargets = (
 export const getManageableWikiPageTargets = (
   context: WikiSharedContext,
   excludeSubtreeOf?: string,
+  withinSubtreeOf?: string,
 ): WikiPageTargetOption[] =>
   collectWikiPageTargets(
     context,
     (pageId) => context.permissions.get(pageId)?.canAdmin === true,
     excludeSubtreeOf,
+    withinSubtreeOf,
   );
 
 /**
@@ -89,8 +110,11 @@ export const getManageableWikiPageTargets = (
  */
 export const getReadableWikiPageTargets = (
   context: WikiSharedContext,
+  withinSubtreeOf?: string,
 ): WikiPageTargetOption[] =>
   collectWikiPageTargets(
     context,
     (pageId) => context.permissions.get(pageId)?.canRead === true,
+    undefined,
+    withinSubtreeOf,
   );

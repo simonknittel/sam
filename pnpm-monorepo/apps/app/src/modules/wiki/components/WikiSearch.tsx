@@ -53,7 +53,11 @@ export const WikiSearch = ({ className, compact }: Props) => {
 
   const enabled = debouncedQuery.length >= MIN_QUERY_LENGTH;
   const { data, isFetching } = api.wiki.search.useQuery(
-    { query: debouncedQuery, eventId: hrefMode.eventId ?? undefined },
+    {
+      query: debouncedQuery,
+      eventId: hrefMode.eventId ?? undefined,
+      variantId: hrefMode.variantId ?? undefined,
+    },
     {
       enabled,
       placeholderData: (previous) => previous,
