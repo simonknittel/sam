@@ -1,7 +1,7 @@
 "use client";
 
-import { env } from "@/env";
 import { FilterCheckboxList } from "@/modules/common/components/FilterCheckboxList";
+import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
 import { type Role, type Upload } from "@sam-monorepo/database/browser";
 import Image from "next/image";
 
@@ -23,7 +23,7 @@ export const RoleFilter = ({ roles }: Props) => {
             {role.icon && (
               <div className="aspect-square w-6 h-6 flex items-center justify-center rounded-secondary overflow-hidden">
                 <Image
-                  src={`https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${role.icon.id}`}
+                  src={getPublicUploadUrl(role.icon.id)}
                   alt=""
                   width={24}
                   height={24}

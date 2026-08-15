@@ -27,8 +27,17 @@ export const env = createEnv({
     DISCORD_GUILD_ID: z.string(),
     DISCORD_TOKEN: z.string(),
     ALGOLIA_ADMIN_API_KEY: z.string(),
-    /** Amazon S3 (or any other S3-compatible provider like Cloudflare R2) */
-    S3_ACCOUNT_ID: z.string(),
+    /**
+     * Cloudflare R2 account id, used to derive the bucket endpoint when
+     * S3_ENDPOINT is unset
+     */
+    S3_ACCOUNT_ID: z.string().optional(),
+    /**
+     * Explicit endpoint of any S3-compatible provider (e.g. the local
+     * SeaweedFS container from compose.yml). Requests use path-style
+     * addressing when set. Takes precedence over S3_ACCOUNT_ID.
+     */
+    S3_ENDPOINT: z.url().optional(),
     /** Amazon S3 (or any other S3-compatible provider like Cloudflare R2) */
     S3_ACCESS_KEY_ID: z.string(),
     /** Amazon S3 (or any other S3-compatible provider like Cloudflare R2) */
@@ -82,6 +91,13 @@ export const env = createEnv({
   client: {
     NEXT_PUBLIC_ALGOLIA_APP_ID: z.string(),
     NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY: z.string(),
+    /**
+     * Public base of the uploads bucket: either a bare host (e.g. an R2
+     * public bucket domain — https is implied and the upload id is the sole
+     * path segment) or a full base URL incl. scheme, port and bucket path
+     * for providers without per-bucket domains (e.g. the local SeaweedFS
+     * container, http://localhost:8333/uploads).
+     */
     NEXT_PUBLIC_S3_PUBLIC_URL: z.string(),
     NEXT_PUBLIC_CARE_BEAR_SHOOTER_BUILD_URL: z.url().optional(),
     NEXT_PUBLIC_DOWNLOADS_BASE_URL: z.url().optional(),
@@ -149,6 +165,7 @@ export const env = createEnv({
     NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY:
       process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY,
     S3_ACCOUNT_ID: process.env.S3_ACCOUNT_ID,
+    S3_ENDPOINT: process.env.S3_ENDPOINT,
     S3_ACCESS_KEY_ID: process.env.S3_ACCESS_KEY_ID,
     S3_SECRET_ACCESS_KEY: process.env.S3_SECRET_ACCESS_KEY,
     S3_BUCKET_NAME: process.env.S3_BUCKET_NAME,

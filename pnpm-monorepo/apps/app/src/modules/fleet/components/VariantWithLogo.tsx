@@ -1,5 +1,5 @@
-import { env } from "@/env";
 import { Link } from "@/modules/common/components/Link";
+import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
 import type {
   Manufacturer,
   Upload,
@@ -44,7 +44,7 @@ export const VariantWithLogo = ({
     logo ??
     (manufacturer.image
       ? {
-          src: `https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${manufacturer.image.id}`,
+          src: getPublicUploadUrl(manufacturer.image.id),
           mimeType: manufacturer.image.mimeType,
         }
       : null);

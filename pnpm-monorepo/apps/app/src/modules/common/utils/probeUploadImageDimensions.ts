@@ -1,14 +1,11 @@
 import { prisma } from "@/db";
 import { env } from "@/env";
 import { log } from "@/modules/logging";
-import {
-  GetObjectCommand,
-  HeadObjectCommand,
-  S3Client,
-} from "@aws-sdk/client-s3";
+import { GetObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
 import { after } from "next/server";
 import { serializeError } from "serialize-error";
 import sharp from "sharp";
+import { createS3Client } from "./createS3Client";
 import { MAX_IMAGE_SIZE_BYTES } from "./uploadConstraints";
 
 /**
@@ -55,14 +52,7 @@ export const probeUploadImageDimensions = (uploadId: string) => {
       )
         return;
 
-      const client = new S3Client({
-        region: "auto",
-        endpoint: `https://${env.S3_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-        credentials: {
-          accessKeyId: env.S3_ACCESS_KEY_ID,
-          secretAccessKey: env.S3_SECRET_ACCESS_KEY,
-        },
-      });
+      const client = createS3Client();
 
       const head = await client.send(
         new HeadObjectCommand({

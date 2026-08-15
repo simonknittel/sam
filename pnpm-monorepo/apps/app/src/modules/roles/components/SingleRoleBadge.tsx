@@ -1,6 +1,5 @@
 "use client";
 
-import { env } from "@/env";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { decreaseRoleAssignmentLevel } from "@/modules/citizen/actions/decreaseRoleAssignmentLevel";
@@ -23,6 +22,7 @@ import { Link } from "@/modules/common/components/Link";
 import { Markdown } from "@/modules/common/components/Markdown";
 import { Note } from "@/modules/common/components/Note";
 import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
+import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
 import { type Role } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import Image from "next/image";
@@ -115,7 +115,7 @@ export const SingleRoleBadge = ({
       {role.icon && (
         <span className="aspect-square size-6 flex items-center justify-center">
           <Image
-            src={`https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${role.icon.id}`}
+            src={getPublicUploadUrl(role.icon.id)}
             alt=""
             width={24}
             height={24}
@@ -154,7 +154,7 @@ export const SingleRoleBadge = ({
           {role.icon ? (
             <span className="aspect-square size-12 flex items-center justify-center">
               <Image
-                src={`https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${role.icon.id}`}
+                src={getPublicUploadUrl(role.icon.id)}
                 alt=""
                 width={48}
                 height={48}

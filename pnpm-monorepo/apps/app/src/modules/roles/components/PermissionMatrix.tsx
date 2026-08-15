@@ -1,6 +1,6 @@
-import { env } from "@/env";
 import { getAllFlows } from "@/modules/career/queries/getAllFlows";
 import { Link } from "@/modules/common/components/Link";
+import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
 import type {
   PermissionString,
   Role,
@@ -123,7 +123,7 @@ const Row = ({ role, permissions, gridTemplateColumns }: RowProps) => {
           {role.icon ? (
             <div className="aspect-square size-4 flex items-center justify-center rounded-secondary overflow-hidden flex-none">
               <Image
-                src={`https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${role.icon.id}`}
+                src={getPublicUploadUrl(role.icon.id)}
                 alt=""
                 width={16}
                 height={16}

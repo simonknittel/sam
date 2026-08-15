@@ -1,4 +1,4 @@
-import { env } from "@/env";
+import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
 import clsx from "clsx";
 import Image from "next/image";
 
@@ -21,7 +21,7 @@ export const WikiPageIcon = ({
 }: Props) => {
   return (
     <Image
-      src={`https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${iconId}`}
+      src={getPublicUploadUrl(iconId)}
       alt=""
       width={size}
       height={size}

@@ -2,12 +2,50 @@ import { describe, expect, test } from "vitest";
 import { collectWikiImageUploadIds, getWikiImageUploadId } from "./index.js";
 
 const PUBLIC_HOST = "uploads.example.com";
+const PUBLIC_BASE_URL = "http://localhost:8333/uploads";
 
 describe("getWikiImageUploadId", () => {
   test("extracts the upload id from a public bucket src", () => {
     expect(
       getWikiImageUploadId(`https://${PUBLIC_HOST}/upload-1`, PUBLIC_HOST),
     ).toBe("upload-1");
+  });
+
+  test("extracts the upload id when the public base is a full URL with a bucket path", () => {
+    expect(
+      getWikiImageUploadId(`${PUBLIC_BASE_URL}/upload-1`, PUBLIC_BASE_URL),
+    ).toBe("upload-1");
+  });
+
+  test("rejects srcs not matching a full-URL public base", () => {
+    expect(
+      getWikiImageUploadId(
+        "http://localhost:8333/other-bucket/upload-1",
+        PUBLIC_BASE_URL,
+      ),
+    ).toBeNull();
+    expect(
+      getWikiImageUploadId(
+        "http://localhost:9000/uploads/upload-1",
+        PUBLIC_BASE_URL,
+      ),
+    ).toBeNull();
+    expect(
+      getWikiImageUploadId(
+        "https://localhost:8333/uploads/upload-1",
+        PUBLIC_BASE_URL,
+      ),
+    ).toBeNull();
+    expect(
+      getWikiImageUploadId(
+        `${PUBLIC_BASE_URL}/nested/upload-1`,
+        PUBLIC_BASE_URL,
+      ),
+    ).toBeNull();
+    expect(getWikiImageUploadId(PUBLIC_BASE_URL, PUBLIC_BASE_URL)).toBeNull();
+    expect(
+      getWikiImageUploadId(`${PUBLIC_BASE_URL}/`, PUBLIC_BASE_URL),
+    ).toBeNull();
   });
 
   test("rejects srcs not pointing at an uploaded object", () => {
