@@ -3,10 +3,10 @@
 ## General
 
 - When reviewing code, don't list any positive things. Only list things which need fixing.
-- When you think a change may causes issues, go and check that. For example: when a function signature changes, go and find all references to this function and check if they got adapted accordingly.
+- When you think a change may cause issues, go and check that. For example: when a function signature changes, go and find all references to this function and check if they got adapted accordingly.
 - When suggesting changes, avoid premature optimization. For example, if an abstraction could reduce code duplication, only suggest it if it saves a significant amount of code or meaningfully improves maintainability.
 - Implement tests which primarily focus on end-to-end testing of the respective feature. Add unit tests only for critical or complex logic. Don't add tests just for the sake of increasing code coverage.
-- Stay closed to conventions and defaults. Don't try to reinvent the wheel.
+- Stay close to conventions and defaults. Don't try to reinvent the wheel.
 
 ## Security
 
@@ -123,9 +123,9 @@
 
 - No single character variable or function names
 - Don't use abbreviations
-- Don't write unnecessary comments, code should be readable on it's own. Use them to explain intentions which may not be recognizable on first view
+- Don't write unnecessary comments, code should be readable on its own. Use them to explain intentions which may not be recognizable on first view
   - Example: Don't write comments like: `myString.split(",") // Splits the string into an array using , as delimiter`
-- DocumentMagic Numbers
+- Document magic numbers
 - Always use `encodeURI()` and `decodeURI()` or preferably `new URL()`
 - Always integrate dependencies (npm packages, Docker images, etc.) with a fixed version number (full SemVer, e.g. `1.2.3` instead of `1`, `^1.2.3` or `latest`)
   - Don't use outdated versions. Always check at the respective package registry (e.g. <https://www.npmjs.com/>) what the latest version of a dependency is and use that.
