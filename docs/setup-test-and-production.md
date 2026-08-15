@@ -7,7 +7,6 @@
 ## 3. Set up Mailgun
 
 1. Create API keys for sending
-
    1. `sinister-incorporated-aws-test`
    2. `sinister-incorporated-aws-prod`
 
@@ -15,12 +14,12 @@
 
 1. Create environments with their variables and secrets
 
-   | Environment            | Variables                                             | Secrets                                                                             |
-   | ---------------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------- |
-   | `terraform-test`       | `IAM_ROLE_ARN`, `TFVARS`                              |                                                                                     |
-   | `terraform-prod`       | `IAM_ROLE_ARN`, `TFVARS`                              |                                                                                     |
-   | `lambda-functions-test` | `IAM_ROLE_ARN`                                        |                                                                                     |
-   | `Production`           | `SOKETI_APP_ID`, `SOKETI_APP_KEY`, `SOKETI_HOST`      | `DATABASE_URL`, `SOKETI_APP_SECRET`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` (for the Vercel values see [7. Set up Vercel](#7-set-up-vercel)) |
+   | Environment             | Variables                                        | Secrets                                                                                                                                                    |
+   | ----------------------- | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+   | `terraform-test`        | `IAM_ROLE_ARN`, `TFVARS`                         |                                                                                                                                                            |
+   | `terraform-prod`        | `IAM_ROLE_ARN`, `TFVARS`                         |                                                                                                                                                            |
+   | `lambda-functions-test` | `IAM_ROLE_ARN`                                   |                                                                                                                                                            |
+   | `Production`            | `SOKETI_APP_ID`, `SOKETI_APP_KEY`, `SOKETI_HOST` | `DATABASE_URL`, `SOKETI_APP_SECRET`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` (for the Vercel values see [7. Set up Vercel](#7-set-up-vercel)) |
 
 2. Enable "Allow GitHub Actions to create and approve pull requests" in Settings/Actions/General/Workflow permissions
 
@@ -30,7 +29,6 @@
 > There is no production AWS account (yet). Only `sam-test` is set up, and it intentionally doubles as production: the weekly [Release workflow](./releasing.md) deploys the Lambda functions to the test environment.
 
 1. Create AWS accounts
-
    1. `sam-test`
    2. `sam-prod` (not set up yet, see above)
 
@@ -45,10 +43,10 @@
    sso_account_id = 220746603587
    sso_role_name = AdministratorAccess
 
-   [profile sam-prod]
-   sso_session = sam-sso
-   sso_account_id =
-   sso_role_name = AdministratorAccess
+   # [profile sam-prod]
+   # sso_session = sam-sso
+   # sso_account_id =
+   # sso_role_name = AdministratorAccess
 
    [sso-session sam-sso]
    sso_region = eu-central-1
@@ -56,19 +54,10 @@
    ```
 
 3. Create and deploy setup stack with AWS CloudFormation
-
    1. `cd cloudformation`
    2. Create and populate `test-parameters.json` and `prod-parameters.json`
    3. `AWS_PROFILE=sam-test aws sso login`
    4. `AWS_PROFILE=sam-test aws --region eu-central-1 cloudformation deploy --template-file setup.yaml --stack-name setup --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM --tags ManagedBy=CloudFormation Repository=simonknittel/sam --parameter-overrides file://test-parameters.json`
-
-4. Set up AWS User Notifications
-
-   1. The notification hub, the email contact, and the notification configurations for CloudWatch alarms and GuardDuty findings (incl. their email delivery) are managed with Terraform (see `terraform/user-notifications.tf`)
-   2. After the first apply, activate the email contact through the activation mail AWS sends
-   3. Manually through the console:
-      1. Create the notification configuration for Health (quick setup)
-      2. Optionally add the AWS Console Mobile App as an additional delivery channel to the Terraform-managed notification configurations (personal devices are intentionally not managed with Terraform)
 
 ### Related
 
@@ -82,7 +71,6 @@
 1. `cd terraform`
 2. Create and populate `test.tfvars` and `prod.tfvars` (gitignored; the `test.s3.tfbackend` and `prod.s3.tfbackend` backend configurations are already committed in this directory)
 3. Create Terraform resources
-
    1. `AWS_PROFILE=sam-test aws sso login`
    2. `AWS_PROFILE=sam-test terraform init -backend-config=test.s3.tfbackend -reconfigure`
    3. `AWS_PROFILE=sam-test terraform apply -var-file="test.tfvars"`
