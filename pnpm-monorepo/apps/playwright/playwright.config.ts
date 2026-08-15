@@ -6,7 +6,7 @@ export default defineConfig({
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
   // Every worker runs its own app instance, collab container and database
-  // (see setup/README in fixtures/test.ts), so more workers cost real memory.
+  // (see README.md and fixtures/test.ts), so more workers cost real memory.
   workers: 2,
   reporter: "html",
 
