@@ -21,6 +21,39 @@ services:
       - ${SAM_SOKETI_PORT:-6001}:6001
       - ${SAM_SOKETI_METRICS_PORT:-9601}:9601
 
+  # Local S3-compatible object storage for uploads (see
+  # docs/setup-local-machine.md for the app-side environment variables). The
+  # app and uploaded-file URLs both use the S3 port. Reads are anonymous so
+  # uploaded files can be displayed without signed URLs, mirroring the public
+  # bucket used in deployments.
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.41@sha256:43b768cd62b00d132439cda881b93fd1adebf1b315e996e794087743821d771d
+    restart: no
+    # -ip.bind: bind to all interfaces — the default binds to the container
+    # IP only, which breaks the localhost healthcheck
+    command: server -dir=/data -ip.bind=0.0.0.0 -s3 -s3.config=/etc/seaweedfs/s3.json
+    configs:
+      - source: seaweedfs-s3-config
+        target: /etc/seaweedfs/s3.json
+    ports:
+      - ${SAM_SEAWEEDFS_PORT:-8333}:8333
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--output-document=-", "http://localhost:8333/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  # One-shot helper which creates the uploads bucket on startup. Safe to re-run
+  # (creating an existing bucket succeeds).
+  seaweedfs-create-bucket:
+    image: chrislusf/seaweedfs:4.41@sha256:43b768cd62b00d132439cda881b93fd1adebf1b315e996e794087743821d771d
+    restart: no
+    depends_on:
+      seaweedfs:
+        condition: service_healthy
+    entrypoint: /bin/sh
+    command: -c 'echo "s3.bucket.create -name uploads" | weed shell -master=seaweedfs:9333'
+
   # Wiki realtime collaboration backend (see docs/setup-local-machine.md for
   # the app-side environment variables). Rebuild after changing
   # pnpm-monorepo/apps/collab: `docker compose build sam-collab`
@@ -36,3 +69,28 @@ services:
       COLLAB_JWT_SECRET: insecure-dev-secret
     ports:
       - ${SAM_COLLAB_PORT:-5210}:5210
+
+configs:
+  # Local-only credentials; must match the S3_* variables in
+  # pnpm-monorepo/apps/app/.env.example. The anonymous identity allows
+  # unauthenticated reads of uploaded files.
+  seaweedfs-s3-config:
+    content: |
+      {
+        "identities": [
+          {
+            "name": "anonymous",
+            "actions": ["Read"]
+          },
+          {
+            "name": "local-dev",
+            "credentials": [
+              {
+                "accessKey": "sam-local-dev",
+                "secretKey": "sam-local-dev-insecure"
+              }
+            ],
+            "actions": ["Admin", "Read", "List", "Tagging", "Write"]
+          }
+        ]
+      }

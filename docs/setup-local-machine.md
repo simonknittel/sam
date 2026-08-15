@@ -9,7 +9,7 @@
 
 1. Clone the repository
 2. Configure environment variables: Duplicate [pnpm-monorepo/apps/app/.env.example](../pnpm-monorepo/apps/app/.env.example) to `pnpm-monorepo/apps/app/.env` (and [pnpm-monorepo/packages/database/.env.example](../pnpm-monorepo/packages/database/.env.example) to `.env` likewise) and fill in the blanks.
-3. Start up the database (plus Soketi and the wiki collaboration server): `docker compose up`
+3. Start up the database (plus Soketi, the wiki collaboration server and the S3-compatible upload storage): `docker compose up`
 4. Open a second terminal and change to the `pnpm-monorepo` directory: `cd pnpm-monorepo`
 5. Install required Node.js version: `nvm install`
 6. Enable pnpm: `corepack enable && corepack install`
@@ -31,6 +31,17 @@ Docker: `pnpm --filter @sam-monorepo/collab run dev` (uses
 `pnpm-monorepo/apps/collab/.env`, see its
 [.env.example](../pnpm-monorepo/apps/collab/.env.example)).
 
+### Uploads (S3-compatible storage)
+
+File uploads (role icons, wiki images, attachments, …) go to the `seaweedfs`
+container from [compose.yml](../compose.yml). The `S3_*` and
+`NEXT_PUBLIC_S3_PUBLIC_URL` defaults from
+`pnpm-monorepo/apps/app/.env.example` match the container's credentials and
+bucket — keep them. The bucket is created automatically on `docker compose up`
+(by the one-shot `seaweedfs-create-bucket` service). Uploaded files live only
+inside the container. Alternatively point the variables at any S3-compatible
+provider (e.g. Cloudflare R2, see the comments in `.env.example`).
+
 ### Optional environment tweaks
 
 - `SKIP_VALIDATION=1` skips the app's environment variable validation
@@ -39,8 +50,8 @@ Docker: `pnpm --filter @sam-monorepo/collab run dev` (uses
   `SKIP_VALIDATION=1 pnpm --filter @sam-monorepo/app run build`
 - The Docker services' host ports can be overridden so multiple checkouts
   (e.g. git worktrees) can run their stacks side by side: set
-  `SAM_PSQL_PORT`, `SAM_SOKETI_PORT`, `SAM_SOKETI_METRICS_PORT` and/or
-  `SAM_COLLAB_PORT` in a gitignored `.env` next to
+  `SAM_PSQL_PORT`, `SAM_SOKETI_PORT`, `SAM_SOKETI_METRICS_PORT`,
+  `SAM_COLLAB_PORT` and/or `SAM_SEAWEEDFS_PORT` in a gitignored `.env` next to
   [compose.yml](../compose.yml).
 
 ## Bot Invite Link with required scopes
