@@ -9,3 +9,4 @@
 - Reuse code (especially components) from the local `common` module (`pnpm-monorepo/apps/app/src/modules/common`) when possible.
 - Use `createAuthenticatedAction` (server-side) and `useAction` or `runAction` (in client components) from the local `actions` module (`pnpm-monorepo/apps/app/src/modules/actions`) for any server action in Next.js/React.
 - You may attempt to run the Docker containers and Next.js app yourself. With the Next.js app you will probably run into the blocker that you need to log in via Discord to access the actual app. If so, you can seed the database (the one from the Docker containers) with a session for my user (id: `clhaw95yi0000jr08ybuvy137`) that you can use as cookie to log in (cookie name: `next-auth.session-token`).
+- This repository is optimized to successfully work with Git worktrees. Use a separate worktree for changes you are working on.
