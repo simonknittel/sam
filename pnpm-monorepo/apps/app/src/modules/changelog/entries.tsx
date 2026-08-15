@@ -42,6 +42,37 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-08-15-browser-benachrichtigungen-standardmaessig-aktiv",
+    date: "2026-08-15",
+    title: "Browser-Benachrichtigungen standardmäßig aktiv",
+    tags: ["Änderung"],
+    isTracked: true,
+    body: () => (
+      <>
+        <p>
+          Wer Browser-Benachrichtigungen genehmigt hat, erhält ab sofort
+          standardmäßig alle Benachrichtigungsarten &ndash; auch solche, die in
+          Zukunft hinzukommen. Einzelne Arten lassen sich in den{" "}
+          <Link
+            href="/app/account/notifications"
+            className="text-interaction-500 hover:underline focus-visible:underline"
+          >
+            Einstellungen
+          </Link>{" "}
+          gezielt deaktivieren. Wer bisher eine eigene Auswahl getroffen hatte,
+          behält diese unverändert.
+        </p>
+
+        <p>
+          Neu ist außerdem die Möglichkeit, Browser-Benachrichtigungen
+          vollständig zu deaktivieren. Dabei werden alle angemeldeten Geräte
+          abgemeldet.
+        </p>
+      </>
+    ),
+  },
+
+  {
     key: "2026-08-09-wiki-erwaehnungen",
     date: "2026-08-09",
     title: "Wiki: Benachrichtigung bei Erwähnung",
