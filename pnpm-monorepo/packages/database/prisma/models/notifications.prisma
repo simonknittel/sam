@@ -2,13 +2,17 @@ enum NotificationChannel {
   WEB_PUSH
 }
 
+/// Opt-out model: the existence of a row means the notification type is
+/// disabled for the citizen on the given channel. The absence of a row means
+/// the type is enabled. Notification types introduced in the future are
+/// therefore enabled by default for everyone.
 model NotificationSetting {
   id               String              @id @default(cuid(2))
   citizenId        String
   citizen          Entity              @relation(fields: [citizenId], references: [id], onDelete: Cascade)
   notificationType String
   channel          NotificationChannel
-  enabledAt        DateTime            @default(now())
+  disabledAt       DateTime            @default(now())
 
   @@unique([citizenId, notificationType, channel])
   @@index([citizenId])
