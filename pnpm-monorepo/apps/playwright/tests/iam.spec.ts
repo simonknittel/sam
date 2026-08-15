@@ -58,7 +58,7 @@ test("a role created and assigned through the UI grants its permission", async (
   // ... and grants it the task-read permission
   await page.getByRole("link", { name: "Aufgabenleser" }).click();
   await page.getByRole("link", { name: "Berechtigungen" }).click();
-  await page.getByRole("button", { name: "Tasks" }).click();
+  await page.getByRole("tab", { name: "Tasks" }).click();
   await page
     .locator("label")
     .filter({ has: page.locator('input[name="task;read"]') })

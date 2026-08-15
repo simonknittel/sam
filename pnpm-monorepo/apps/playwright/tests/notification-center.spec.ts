@@ -15,7 +15,7 @@ const popover = (page: Page) => page.getByRole("dialog");
 const openNotificationCenter = async (page: Page) => {
   await bellButton(page).click();
   await expect(
-    popover(page).getByRole("button", { name: "Posteingang" }),
+    popover(page).getByRole("tab", { name: "Posteingang" }),
   ).toBeVisible();
 };
 
@@ -245,9 +245,7 @@ test("archiving removes the notification and clears the count", async ({
   ).toBeVisible();
   await expect(page).toHaveTitle(/^[^(]/);
 
-  await popover(page)
-    .getByRole("button", { name: "Archiv", exact: true })
-    .click();
+  await popover(page).getByRole("tab", { name: "Archiv", exact: true }).click();
   await expect(popover(page).getByText("Neues Event")).toBeVisible();
   await expect(
     popover(page).getByRole("button", { name: "Wiederherstellen" }),
@@ -279,9 +277,7 @@ test("an archived notification can be restored", async ({
   await page.goto("/app");
   await openNotificationCenter(page);
 
-  await popover(page)
-    .getByRole("button", { name: "Archiv", exact: true })
-    .click();
+  await popover(page).getByRole("tab", { name: "Archiv", exact: true }).click();
   await popover(page).getByText("Neues Event").hover();
   await popover(page)
     .getByRole("button", { name: "Wiederherstellen", exact: true })
@@ -292,7 +288,7 @@ test("an archived notification can be restored", async ({
   ).toBeVisible();
 
   await popover(page)
-    .getByRole("button", { name: "Posteingang", exact: true })
+    .getByRole("tab", { name: "Posteingang", exact: true })
     .click();
   await expect(popover(page).getByText("Neues Event")).toBeVisible();
 
@@ -361,9 +357,7 @@ test("read notifications can be archived at once", async ({
   await expect(popover(page).getByText("Ungelesenes Event")).toBeVisible();
   await expect(popover(page).getByText("Gelesen 0")).not.toBeAttached();
 
-  await popover(page)
-    .getByRole("button", { name: "Archiv", exact: true })
-    .click();
+  await popover(page).getByRole("tab", { name: "Archiv", exact: true }).click();
   await expect(popover(page).getByText("Gelesen 0")).toBeVisible();
   await expect(popover(page).getByText("Gelesen 1")).toBeVisible();
 });
