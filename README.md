@@ -14,7 +14,10 @@
 
 ## Features
 
+A non-exhaustive overview:
+
 - Spynet: ERP- and CRM-like citizen and organization management
+- Wiki: Org-internal wiki with realtime collaborative editing and per-page permissions
 - Fully dynamic role and attribute based access control
 - Fleet: Org-wide management of the member's Star Citizen fleet
 - Events: Prepare complex operations based on the event participant's roles and fleet. Synchronized with Discord events
@@ -33,4 +36,4 @@ Next.js, PostgreSQL, Vercel, Tailwind CSS, TypeScript, React, AWS
 
 ## License
 
-APGL-3.0 (see [LICENSE](./LICENSE))
+AGPL-3.0 (see [LICENSE](./LICENSE))
