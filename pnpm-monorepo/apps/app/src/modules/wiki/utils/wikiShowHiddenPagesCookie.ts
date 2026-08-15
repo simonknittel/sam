@@ -19,19 +19,47 @@ export const EVENT_WIKI_SHOW_HIDDEN_PAGES_COOKIE =
 
 const EVENT_WIKI_SHOW_HIDDEN_PAGES_COOKIE_PATH = "/app/events";
 
+/** One shared cookie for all variant embeds, like the expanded-pages one */
+export const VARIANT_WIKI_SHOW_HIDDEN_PAGES_COOKIE =
+  "variant_wiki_show_hidden_pages";
+
+const VARIANT_WIKI_SHOW_HIDDEN_PAGES_COOKIE_PATH = "/app/fleet/variant";
+
 const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365;
+
+const getWikiShowHiddenPagesCookieNameAndPath = (scope: WikiScope) => {
+  switch (scope) {
+    case WikiScope.Wiki:
+      return [
+        WIKI_SHOW_HIDDEN_PAGES_COOKIE,
+        WIKI_SHOW_HIDDEN_PAGES_COOKIE_PATH,
+      ] as const;
+
+    case WikiScope.Event:
+      return [
+        EVENT_WIKI_SHOW_HIDDEN_PAGES_COOKIE,
+        EVENT_WIKI_SHOW_HIDDEN_PAGES_COOKIE_PATH,
+      ] as const;
+
+    case WikiScope.Variant:
+      return [
+        VARIANT_WIKI_SHOW_HIDDEN_PAGES_COOKIE,
+        VARIANT_WIKI_SHOW_HIDDEN_PAGES_COOKIE_PATH,
+      ] as const;
+
+    default:
+      throw new Error(`Unknown wiki scope: ${scope satisfies never}`);
+  }
+};
+
+export const getWikiShowHiddenPagesCookieName = (scope: WikiScope) =>
+  getWikiShowHiddenPagesCookieNameAndPath(scope)[0];
 
 export const serializeWikiShowHiddenPagesCookie = (
   showHidden: boolean,
   scope: WikiScope,
 ) => {
-  const [name, path] =
-    scope === WikiScope.Event
-      ? [
-          EVENT_WIKI_SHOW_HIDDEN_PAGES_COOKIE,
-          EVENT_WIKI_SHOW_HIDDEN_PAGES_COOKIE_PATH,
-        ]
-      : [WIKI_SHOW_HIDDEN_PAGES_COOKIE, WIKI_SHOW_HIDDEN_PAGES_COOKIE_PATH];
+  const [name, path] = getWikiShowHiddenPagesCookieNameAndPath(scope);
 
   return showHidden
     ? `${name}=1; path=${path}; samesite=lax; max-age=${ONE_YEAR_IN_SECONDS};`

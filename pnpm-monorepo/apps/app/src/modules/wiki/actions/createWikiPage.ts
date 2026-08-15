@@ -10,7 +10,6 @@ import {
   WikiPageUploadability,
   WikiPageVisibility,
 } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import {
@@ -19,12 +18,13 @@ import {
 } from "../queries/getWikiContext";
 import {
   getWikiPageScopedContext,
-  getWikiScopeRevalidationPath,
   isWikiScopeFrozen,
+  revalidateWikiScope,
   type WikiPageScopedContext,
 } from "../queries/getWikiPageScopedContext";
 import { copyWikiPageSubtree } from "../utils/copyWikiPageSubtree";
 import { getAccessibleWikiPage } from "../utils/getAccessibleWikiPage";
+import { resolveVariantWikiRedirectHref } from "../utils/resolveVariantWikiRedirectHref";
 import {
   resolveWikiPagePlacement,
   WikiPagePlacement,
@@ -34,6 +34,8 @@ import { getWikiPageRouteHref, WikiScope } from "../utils/wikiPageHref";
 
 const schema = z.object({
   title: z.string().trim().min(1).max(128),
+  /** Set when creating from inside a variant embed, for the redirect */
+  variantId: z.cuid().optional(),
   /** Empty string or absent creates a top-level page */
   parentId: z
     .union([z.cuid2(), z.literal("")])
@@ -140,14 +142,21 @@ export const createWikiPage = createAuthenticatedAction(
         })),
       );
 
-      revalidatePath(getWikiScopeRevalidationPath(scoped), "layout");
+      revalidateWikiScope(scoped);
+      const copyVariantHref = await resolveVariantWikiRedirectHref(
+        scoped,
+        data.variantId,
+        root,
+        data.parentId ?? null,
+      );
       /** A copied page is never an event root page */
       redirect(
-        getWikiPageRouteHref({
-          id: root.id,
-          slug: root.slug,
-          eventId: parent?.eventId ?? null,
-        }),
+        copyVariantHref ??
+          getWikiPageRouteHref({
+            id: root.id,
+            slug: root.slug,
+            eventId: parent?.eventId ?? null,
+          }),
       );
     }
 
@@ -209,14 +218,21 @@ export const createWikiPage = createAuthenticatedAction(
       },
     ]);
 
-    revalidatePath(getWikiScopeRevalidationPath(scoped), "layout");
+    revalidateWikiScope(scoped);
+    const variantHref = await resolveVariantWikiRedirectHref(
+      scoped,
+      data.variantId,
+      page,
+      data.parentId ?? null,
+    );
     /** A newly created page is never an event root page */
     redirect(
-      getWikiPageRouteHref({
-        id: page.id,
-        slug: page.slug,
-        eventId: parent?.eventId ?? null,
-      }),
+      variantHref ??
+        getWikiPageRouteHref({
+          id: page.id,
+          slug: page.slug,
+          eventId: parent?.eventId ?? null,
+        }),
     );
   },
 );

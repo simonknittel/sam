@@ -46,6 +46,10 @@ export const SHIP_VARIANT_INCLUDE = {
   tags: true,
 } as const satisfies Prisma.VariantInclude;
 
+export type ShipVariant = Prisma.VariantGetPayload<{
+  include: typeof SHIP_VARIANT_INCLUDE;
+}>;
+
 export const SHIP_INCLUDE = {
   variant: {
     include: SHIP_VARIANT_INCLUDE,

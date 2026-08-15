@@ -8,14 +8,13 @@ import { log } from "@/modules/logging";
 import { WikiPageSnapshotKind } from "@sam-monorepo/database/client";
 import { getWikiEditorSchema } from "@sam-monorepo/wiki-editor";
 import { Node as ProseMirrorNode } from "@tiptap/pm/model";
-import { revalidatePath } from "next/cache";
 import { unstable_rethrow } from "next/navigation";
 import { serializeError } from "serialize-error";
 import { z } from "zod";
 import {
   getWikiPageScopedContext,
-  getWikiScopeRevalidationPath,
   isWikiScopeFrozen,
+  revalidateWikiScope,
 } from "../queries/getWikiPageScopedContext";
 import { replaceWikiPageContent } from "../utils/replaceWikiPageContent";
 
@@ -124,7 +123,7 @@ export const restoreWikiPageSnapshot = createAuthenticatedAction(
       },
     ]);
 
-    revalidatePath(getWikiScopeRevalidationPath(scoped), "layout");
+    revalidateWikiScope(scoped);
 
     return { success: "Snapshot wiederhergestellt." };
   },

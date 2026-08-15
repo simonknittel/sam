@@ -149,6 +149,25 @@ export const AuditEventDefinitions: {
       `Variant created: "${data.name}" (series: ${data.seriesId}, links: ${data.links.length})`,
   },
 
+  [AuditEventType.VARIANT_CREATED_V3]: {
+    type: AuditEventType.VARIANT_CREATED_V3,
+    data: {
+      variantId: "string",
+      seriesId: "string",
+      name: "string",
+      status: "FLIGHT_READY",
+      links: [
+        {
+          serviceName: "SPVIEWER",
+          url: "https://example.com",
+        },
+      ],
+      wikiPageId: "string",
+    },
+    message: (data) =>
+      `Variant created: "${data.name}" (series: ${data.seriesId}, links: ${data.links.length}, wiki page: ${data.wikiPageId ?? "none"})`,
+  },
+
   [AuditEventType.VARIANT_UPDATED]: {
     type: AuditEventType.VARIANT_UPDATED,
     data: {
@@ -187,6 +206,34 @@ export const AuditEventDefinitions: {
     },
     message: (data) =>
       `Variant updated: "${data.previousName}" → "${data.newName}" (links: ${data.previousLinks.length} → ${data.newLinks.length})`,
+  },
+
+  [AuditEventType.VARIANT_UPDATED_V3]: {
+    type: AuditEventType.VARIANT_UPDATED_V3,
+    data: {
+      variantId: "string",
+      seriesId: "string",
+      previousName: "string",
+      newName: "string",
+      previousStatus: "FLIGHT_READY",
+      newStatus: "NOT_FLIGHT_READY",
+      previousLinks: [
+        {
+          serviceName: "SPVIEWER",
+          url: "https://example.com",
+        },
+      ],
+      newLinks: [
+        {
+          serviceName: "SPVIEWER",
+          url: "https://example.com",
+        },
+      ],
+      previousWikiPageId: "string",
+      newWikiPageId: "string",
+    },
+    message: (data) =>
+      `Variant updated: "${data.previousName}" → "${data.newName}" (links: ${data.previousLinks.length} → ${data.newLinks.length}, wiki page: ${data.previousWikiPageId ?? "none"} → ${data.newWikiPageId ?? "none"})`,
   },
 
   [AuditEventType.VARIANT_DELETED]: {

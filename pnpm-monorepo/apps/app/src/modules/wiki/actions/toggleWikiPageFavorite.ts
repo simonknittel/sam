@@ -4,12 +4,11 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { WikiSharedContextPage } from "../queries/getWikiContext";
 import {
   getWikiPageScopedContext,
-  getWikiScopeRevalidationPath,
+  revalidateWikiScope,
 } from "../queries/getWikiPageScopedContext";
 import { getAccessibleWikiPage } from "../utils/getAccessibleWikiPage";
 
@@ -61,7 +60,7 @@ export const toggleWikiPageFavorite = createAuthenticatedAction(
       },
     ]);
 
-    revalidatePath(getWikiScopeRevalidationPath(scoped), "layout");
+    revalidateWikiScope(scoped);
 
     return {
       success: existing ? "Favorit entfernt." : "Als Favorit gespeichert.",

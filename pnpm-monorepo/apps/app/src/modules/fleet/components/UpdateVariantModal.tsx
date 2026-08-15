@@ -15,6 +15,7 @@ import { FaSave } from "react-icons/fa";
 import { updateVariant } from "../actions/updateVariant";
 import { VariantExternalLinkFields } from "./VariantExternalLinkFields";
 import { VariantTagFields } from "./VariantTagFields";
+import { VariantWikiPageField } from "./VariantWikiPageField";
 
 interface Props {
   readonly onRequestClose: () => void;
@@ -102,6 +103,11 @@ export const UpdateVariantModal = ({ onRequestClose, variant }: Props) => {
             serviceName: link.serviceName,
             url: link.url,
           }))}
+        />
+
+        <VariantWikiPageField
+          currentWikiPageId={_variant.data?.wikiPageId}
+          loading={_variant.isFetching}
         />
 
         <div className="flex justify-end mt-8">

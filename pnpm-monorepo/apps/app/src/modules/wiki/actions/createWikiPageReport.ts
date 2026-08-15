@@ -5,11 +5,10 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import {
   getWikiPageScopedContext,
-  getWikiScopeRevalidationPath,
+  revalidateWikiScope,
 } from "../queries/getWikiPageScopedContext";
 
 /** Simple abuse guard: at most this many unresolved reports per user */
@@ -109,7 +108,7 @@ export const createWikiPageReport = createAuthenticatedAction(
       },
     ]);
 
-    revalidatePath(getWikiScopeRevalidationPath(scoped), "layout");
+    revalidateWikiScope(scoped);
 
     return { success: "Meldung gesendet." };
   },

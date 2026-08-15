@@ -3,6 +3,7 @@ import {
   getEventWikiContext,
   hasReadableEventWikiRoot,
 } from "@/modules/wiki/queries/getEventWikiContext";
+import { getVariantWikiContext } from "@/modules/wiki/queries/getVariantWikiContext";
 import { getWikiContext } from "@/modules/wiki/queries/getWikiContext";
 import {
   getManageableWikiPageTargets,
@@ -17,7 +18,9 @@ import { protectedProcedure } from "../../trpc";
  * Pages in depth-first tree order for hierarchy selects: managed ones for
  * the global "Neue Seite" form (default), readable ones e.g. for the
  * page-index config. An eventId scopes the tree to that event's wiki,
- * gated like the other event surfaces.
+ * gated like the other event surfaces; a variantId to the subtree embedded
+ * on that variant's page, gated like its routes — this is what keeps the
+ * embed's create/move targets inside the subtree.
  */
 export const getPageTargets = protectedProcedure
   .input(
@@ -25,11 +28,31 @@ export const getPageTargets = protectedProcedure
       .object({
         permission: z.enum(["manage", "read"]),
         eventId: z.cuid().optional(),
+        variantId: z.cuid().optional(),
+      })
+      .refine((input) => !(input.eventId && input.variantId), {
+        message: "eventId and variantId are mutually exclusive",
       })
       .optional(),
   )
   .query(async ({ input }) => {
     try {
+      if (input?.variantId) {
+        const variantContext = await getVariantWikiContext(input.variantId);
+        if (!variantContext) return [];
+
+        return input.permission === "read"
+          ? getReadableWikiPageTargets(
+              variantContext,
+              variantContext.rootPage.id,
+            )
+          : getManageableWikiPageTargets(
+              variantContext,
+              undefined,
+              variantContext.rootPage.id,
+            );
+      }
+
       const context = input?.eventId
         ? await getEventWikiContext(input.eventId).then((eventContext) =>
             eventContext && hasReadableEventWikiRoot(eventContext)

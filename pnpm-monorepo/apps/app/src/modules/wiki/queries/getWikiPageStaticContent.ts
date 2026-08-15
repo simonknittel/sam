@@ -4,6 +4,7 @@ import {
   getPublicUploadUrl,
 } from "@/modules/common/utils/getPublicUploadUrl";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
+import type { WikiPageTierPermissions } from "@sam-monorepo/permissions";
 import {
   collectWikiImageUploadIds,
   collectWikiPageIndexConfigs,
@@ -46,7 +47,7 @@ export interface WikiPageStaticContent {
  * `/app/wiki` fallback is dead safety only — the URL pattern lives in
  * wikiPageHref.ts alone.
  */
-export const toWikiLinkedPage = (
+const toWikiLinkedPage = (
   mode: WikiPageHrefMode,
   page: {
     readonly id: string;
@@ -62,6 +63,29 @@ export const toWikiLinkedPage = (
 });
 
 /**
+ * Linkable-pages entries of one scope, for rendering internal page links
+ * and the "[[" suggestion: the given pages this viewer can read, each
+ * linked under the given mode. Invisible pages stay out so their titles
+ * never leak. The scoped builders spread several of these into one record,
+ * later entries overriding earlier ones.
+ */
+export const collectLinkableWikiPages = (
+  mode: WikiPageHrefMode,
+  pages: readonly {
+    readonly id: string;
+    readonly title: string;
+    readonly slug: string;
+    readonly iconId: string | null;
+  }[],
+  permissions: ReadonlyMap<string, WikiPageTierPermissions>,
+) =>
+  pages
+    .filter((candidate) => permissions.get(candidate.id)?.canRead)
+    .map(
+      (candidate) => [candidate.id, toWikiLinkedPage(mode, candidate)] as const,
+    );
+
+/**
  * The scope-independent part of resolving a page's content for the current
  * viewer: content, iframe allowlist, page-index lists and the referenced
  * citizens/variants/roles. Only the linkable-pages set differs between the
@@ -73,6 +97,8 @@ const assembleWikiPageStaticContent = async (
   loadLinkablePages: () => Promise<
     Readonly<Record<string, WikiPageLinkedPage>>
   >,
+  /** Scope the page-index entry links render under; global by default */
+  hrefMode: WikiPageHrefMode = GLOBAL_WIKI_HREF_MODE,
 ): Promise<WikiPageStaticContent> => {
   const [page, iframeAllowlist, linkablePages] = await Promise.all([
     /**
@@ -99,7 +125,10 @@ const assembleWikiPageStaticContent = async (
     await Promise.all(
       collectWikiPageIndexConfigs(content).map(
         async ({ key, config }) =>
-          [key, await resolveWikiPageIndex(context, pageId, config)] as const,
+          [
+            key,
+            await resolveWikiPageIndex(context, pageId, config, hrefMode),
+          ] as const,
       ),
     ),
   );
@@ -167,21 +196,13 @@ export const getWikiPageStaticContent = cache(
       pageId: string,
     ): Promise<WikiPageStaticContent> =>
       assembleWikiPageStaticContent(context, pageId, () =>
-        /**
-         * Pages this viewer can see, for rendering internal page links and
-         * the "[[" suggestion. Invisible pages stay out so their titles
-         * never leak.
-         */
         Promise.resolve(
           Object.fromEntries(
-            context.pages
-              .filter(
-                (candidate) => context.permissions.get(candidate.id)?.canRead,
-              )
-              .map((candidate) => [
-                candidate.id,
-                toWikiLinkedPage(GLOBAL_WIKI_HREF_MODE, candidate),
-              ]),
+            collectLinkableWikiPages(
+              GLOBAL_WIKI_HREF_MODE,
+              context.pages,
+              context.permissions,
+            ),
           ),
         ),
       ),

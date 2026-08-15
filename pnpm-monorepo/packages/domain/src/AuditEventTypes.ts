@@ -15,9 +15,13 @@ export enum AuditEventType {
   SHIP_UPDATED = "SHIP_UPDATED",
   SHIP_DELETED = "SHIP_DELETED",
   VARIANT_CREATED = "VARIANT_CREATED",
+  /** @deprecated Superseded by VARIANT_CREATED_V3 (adds the wiki page link) */
   VARIANT_CREATED_V2 = "VARIANT_CREATED_V2",
+  VARIANT_CREATED_V3 = "VARIANT_CREATED_V3",
   VARIANT_UPDATED = "VARIANT_UPDATED",
+  /** @deprecated Superseded by VARIANT_UPDATED_V3 (adds the wiki page link) */
   VARIANT_UPDATED_V2 = "VARIANT_UPDATED_V2",
+  VARIANT_UPDATED_V3 = "VARIANT_UPDATED_V3",
   VARIANT_DELETED = "VARIANT_DELETED",
   SERIES_UPDATED = "SERIES_UPDATED",
   SERIES_DELETED = "SERIES_DELETED",
@@ -232,6 +236,15 @@ export interface AuditEventDataByType {
     links: { serviceName: string; url: string }[];
   };
 
+  [AuditEventType.VARIANT_CREATED_V3]: {
+    variantId: string;
+    seriesId: string;
+    name: string;
+    status: string | null;
+    links: { serviceName: string; url: string }[];
+    wikiPageId: string | null;
+  };
+
   [AuditEventType.VARIANT_UPDATED]: {
     variantId: string;
     seriesId: string;
@@ -250,6 +263,19 @@ export interface AuditEventDataByType {
     newStatus: string | null;
     previousLinks: { serviceName: string; url: string }[];
     newLinks: { serviceName: string; url: string }[];
+  };
+
+  [AuditEventType.VARIANT_UPDATED_V3]: {
+    variantId: string;
+    seriesId: string;
+    previousName: string;
+    newName: string;
+    previousStatus: string | null;
+    newStatus: string | null;
+    previousLinks: { serviceName: string; url: string }[];
+    newLinks: { serviceName: string; url: string }[];
+    previousWikiPageId: string | null;
+    newWikiPageId: string | null;
   };
 
   [AuditEventType.VARIANT_DELETED]: {

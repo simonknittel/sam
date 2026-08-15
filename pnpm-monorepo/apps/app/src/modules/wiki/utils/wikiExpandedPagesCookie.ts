@@ -27,6 +27,11 @@ export const EVENT_WIKI_EXPANDED_PAGES_COOKIE = "event_wiki_expanded_pages";
 
 const EVENT_WIKI_EXPANDED_PAGES_COOKIE_PATH = "/app/events";
 
+/** One shared cookie for all variant embeds, like the event one above */
+export const VARIANT_WIKI_EXPANDED_PAGES_COOKIE = "variant_wiki_expanded_pages";
+
+const VARIANT_WIKI_EXPANDED_PAGES_COOKIE_PATH = "/app/fleet/variant";
+
 const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365;
 
 /**
@@ -77,6 +82,34 @@ export const parseWikiExpandedPagesCookie = (
   return keys.size > 0 ? keys : WIKI_ALL_COLLAPSED;
 };
 
+const getWikiExpandedPagesCookieNameAndPath = (scope: WikiScope) => {
+  switch (scope) {
+    case WikiScope.Wiki:
+      return [
+        WIKI_EXPANDED_PAGES_COOKIE,
+        WIKI_EXPANDED_PAGES_COOKIE_PATH,
+      ] as const;
+
+    case WikiScope.Event:
+      return [
+        EVENT_WIKI_EXPANDED_PAGES_COOKIE,
+        EVENT_WIKI_EXPANDED_PAGES_COOKIE_PATH,
+      ] as const;
+
+    case WikiScope.Variant:
+      return [
+        VARIANT_WIKI_EXPANDED_PAGES_COOKIE,
+        VARIANT_WIKI_EXPANDED_PAGES_COOKIE_PATH,
+      ] as const;
+
+    default:
+      throw new Error(`Unknown wiki scope: ${scope satisfies never}`);
+  }
+};
+
+export const getWikiExpandedPagesCookieName = (scope: WikiScope) =>
+  getWikiExpandedPagesCookieNameAndPath(scope)[0];
+
 export const serializeWikiExpandedPagesCookie = (
   state: WikiExpansionState,
   scope: WikiScope,
@@ -84,13 +117,7 @@ export const serializeWikiExpandedPagesCookie = (
   // Insertion order makes this drop the least recently expanded pages
   const value = [...state].slice(-MAX_PAGE_KEYS).join(",");
 
-  const [name, path] =
-    scope === WikiScope.Event
-      ? [
-          EVENT_WIKI_EXPANDED_PAGES_COOKIE,
-          EVENT_WIKI_EXPANDED_PAGES_COOKIE_PATH,
-        ]
-      : [WIKI_EXPANDED_PAGES_COOKIE, WIKI_EXPANDED_PAGES_COOKIE_PATH];
+  const [name, path] = getWikiExpandedPagesCookieNameAndPath(scope);
 
   return `${name}=${value}; path=${path}; samesite=lax; max-age=${value ? ONE_YEAR_IN_SECONDS : 0};`;
 };

@@ -6,12 +6,6 @@ import {
 } from "@/modules/common/utils/sorting";
 import { getActiveOrganizationMemberships } from "@/modules/organizations/queries/getActiveOrganizationMemberships";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import {
-  type Manufacturer,
-  type Upload,
-  type VariantStatus,
-  type VariantTag,
-} from "@sam-monorepo/database/client";
 import { ORG_ID } from "@sam-monorepo/domain";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
@@ -20,6 +14,7 @@ import {
   FLEET_PAGE_SIZE,
   paginateByCursor,
   SHIP_VARIANT_INCLUDE,
+  type ShipVariant,
 } from "./shipQuery";
 
 type CitizenFleetSort = "name-asc" | "name-desc";
@@ -32,19 +27,7 @@ interface VariantShipRow {
   owner: {
     accounts: { providerAccountId: string }[];
   };
-  variant: {
-    id: string;
-    name: string;
-    seriesId: string;
-    status: VariantStatus | null;
-    series: {
-      id: string;
-      name: string;
-      manufacturerId: string;
-      manufacturer: Manufacturer & { image: Upload | null };
-    };
-    tags: VariantTag[];
-  };
+  variant: ShipVariant;
   citizenHandle: string | null;
   citizenId: string | null;
 }

@@ -12,7 +12,7 @@ import type {
   WikiSearchPageResult,
   WikiSearchTagResult,
 } from "../queries/searchWiki";
-import { buildWikiPageHref } from "../utils/wikiPageHref";
+import { buildWikiPageHref, buildWikiTagHref } from "../utils/wikiPageHref";
 import { parseWikiSearchSnippet } from "../utils/wikiSearchSnippet";
 import { useWikiPageHrefMode } from "./WikiPageHrefModeProvider";
 import { WikiPageIcon } from "./WikiPageIcon";
@@ -42,7 +42,7 @@ export const WikiSearch = ({ className, compact }: Props) => {
 
   const optionHref = (option: WikiSearchOption) =>
     option.type === "tag"
-      ? `${hrefMode.basePath}/tags/${option.tag.id}`
+      ? buildWikiTagHref(hrefMode, option.tag.id)
       : buildWikiPageHref(hrefMode, option.page);
 
   const debouncedQuery = useDebounce(query, 300).trim();
@@ -53,7 +53,11 @@ export const WikiSearch = ({ className, compact }: Props) => {
 
   const enabled = debouncedQuery.length >= MIN_QUERY_LENGTH;
   const { data, isFetching } = api.wiki.search.useQuery(
-    { query: debouncedQuery, eventId: hrefMode.eventId ?? undefined },
+    {
+      query: debouncedQuery,
+      eventId: hrefMode.eventId ?? undefined,
+      variantId: hrefMode.variantId ?? undefined,
+    },
     {
       enabled,
       placeholderData: (previous) => previous,

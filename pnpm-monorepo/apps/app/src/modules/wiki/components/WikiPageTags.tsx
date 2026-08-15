@@ -12,6 +12,7 @@ import clsx from "clsx";
 import { useId, useState } from "react";
 import { FaPen, FaSave, FaTag, FaTrash } from "react-icons/fa";
 import { updateWikiPageTags } from "../actions/updateWikiPageTags";
+import { buildWikiTagHref } from "../utils/wikiPageHref";
 import { useWikiPageHrefMode } from "./WikiPageHrefModeProvider";
 
 const MAX_TAGS_PER_PAGE = 20;
@@ -52,7 +53,7 @@ export const WikiPageTags = ({ className, pageId, tags, canEdit }: Props) => {
       {tags.map((tag) => (
         <Link
           key={tag.id}
-          href={`${hrefMode.basePath}/tags/${tag.id}`}
+          href={buildWikiTagHref(hrefMode, tag.id)}
           className="flex items-center gap-1 rounded-secondary bg-neutral-700/50 py-1 px-2 text-sm text-neutral-300 hover:bg-neutral-700 hover:text-interaction-500 focus-visible:text-interaction-500"
           title={`Alle Seiten mit dem Tag "${tag.name}" anzeigen`}
         >

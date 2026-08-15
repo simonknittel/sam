@@ -11,6 +11,7 @@ import { FaPaste, FaTrashAlt } from "react-icons/fa";
 import { pasteWikiPages } from "../actions/pasteWikiPages";
 import type { WikiPageTargetOption } from "../utils/getWikiPageTargets";
 import type { WikiClipboardEntry } from "../utils/wikiClipboardCookie";
+import { useWikiPageHrefMode } from "./WikiPageHrefModeProvider";
 import { WikiPageSelect } from "./WikiPageSelect";
 
 enum PasteMode {
@@ -47,6 +48,8 @@ export const PasteWikiPagesSection = ({
   onDiscard,
   onSuccess,
 }: Props) => {
+  /** Inside a variant embed the action redirects back into the embed */
+  const { variantId } = useWikiPageHrefMode();
   const [mode, setMode] = useState(PasteMode.Child);
   const [parentId, setParentId] = useState(() => {
     if (
@@ -96,6 +99,9 @@ export const PasteWikiPagesSection = ({
         <input type="hidden" name="sourcePageId" value={clipboard.pageId} />
         {clipboard.includeChildren && (
           <input type="hidden" name="includeChildren" value="1" />
+        )}
+        {variantId && (
+          <input type="hidden" name="variantId" value={variantId} />
         )}
 
         <RadioGroup

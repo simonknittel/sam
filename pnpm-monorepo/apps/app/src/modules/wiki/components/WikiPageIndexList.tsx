@@ -7,6 +7,8 @@ export interface WikiPageIndexEntry {
   readonly title: string;
   readonly slug: string;
   readonly iconId: string | null;
+  /** Scope-aware link from resolveWikiPageIndex; absent in legacy data */
+  readonly href?: string;
   readonly children: readonly WikiPageIndexEntry[];
 }
 
@@ -56,7 +58,7 @@ const EntryList = ({ entries }: EntryListProps) => {
       {entries.map((entry) => (
         <li key={entry.id} className="my-0">
           <Link
-            href={`/app/wiki/${entry.id}/${entry.slug}`}
+            href={entry.href ?? `/app/wiki/${entry.id}/${entry.slug}`}
             className="inline-flex items-center gap-2 text-interaction-500 hover:text-interaction-300 no-underline hover:underline"
             title={entry.title}
           >

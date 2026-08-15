@@ -1,6 +1,6 @@
 import { prisma } from "@/db";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import type { Event } from "@sam-monorepo/database/client";
+import type { Event, Variant } from "@sam-monorepo/database/client";
 import { Prisma } from "@sam-monorepo/database/client";
 import { buildVisibleWikiBreadcrumb } from "../utils/buildVisibleWikiBreadcrumb";
 import {
@@ -11,6 +11,7 @@ import {
   getEventWikiContext,
   hasReadableEventWikiRoot,
 } from "./getEventWikiContext";
+import { getVariantWikiContext } from "./getVariantWikiContext";
 import { getWikiContext, type WikiSharedContext } from "./getWikiContext";
 
 export interface WikiSearchPageResult {
@@ -189,6 +190,33 @@ export const searchEventWiki = withTrace(
     return runWikiSearch(context, query, {
       tagsFilter: Prisma.sql`"eventId" = ${eventId}`,
       pagesFilter: Prisma.sql`"namespace" = 'EVENT' AND "eventId" = ${eventId}`,
+    });
+  },
+);
+
+/**
+ * Full-text search limited to the wiki subtree embedded on a variant page.
+ * The subtree restriction happens inside the SQL (before the candidate
+ * limit), so global matches never crowd out subtree hits, and the extra
+ * `AND` leaves the indexed tsvector expression untouched. Tag results are
+ * limited to tags used inside the subtree — they link out to the global
+ * wiki, whose tag pages then show everything readable.
+ */
+export const searchVariantWiki = withTrace(
+  "searchVariantWiki",
+  async (
+    variantId: Variant["id"],
+    query: string,
+  ): Promise<WikiSearchResults> => {
+    const context = await getVariantWikiContext(variantId);
+    if (!context) return EMPTY_RESULTS;
+
+    /** Never empty — the subtree always contains the root page */
+    const subtreeIds = [...context.subtreePageIds];
+
+    return runWikiSearch(context, query, {
+      tagsFilter: Prisma.sql`"eventId" IS NULL AND "id" IN (SELECT "tagId" FROM "WikiPageTag" WHERE "pageId" IN (${Prisma.join(subtreeIds)}))`,
+      pagesFilter: Prisma.sql`"namespace" = 'WIKI' AND "eventId" IS NULL AND "id" IN (${Prisma.join(subtreeIds)})`,
     });
   },
 );

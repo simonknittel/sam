@@ -9,14 +9,23 @@ import {
 } from "./buildVisibleWikiTree";
 import { collectWikiPageDescendants } from "./collectWikiPageDescendants";
 import { getAccessibleWikiPage } from "./getAccessibleWikiPage";
+import {
+  buildWikiPageHref,
+  GLOBAL_WIKI_HREF_MODE,
+  type WikiPageHrefMode,
+} from "./wikiPageHref";
 
-const toEntries = (nodes: readonly WikiTreeNode[]): WikiPageIndexEntry[] =>
+const toEntries = (
+  nodes: readonly WikiTreeNode[],
+  hrefMode: WikiPageHrefMode,
+): WikiPageIndexEntry[] =>
   nodes.map((node) => ({
     id: node.id,
     title: node.title,
     slug: node.slug,
     iconId: node.iconId,
-    children: toEntries(node.children),
+    href: buildWikiPageHref(hrefMode, node),
+    children: toEntries(node.children, hrefMode),
   }));
 
 const trimToDepth = (
@@ -43,6 +52,8 @@ export const resolveWikiPageIndex = withTrace(
     /** The page containing the node — the root when `rootPageId` is null */
     currentPageId: string,
     config: WikiPageIndexConfig,
+    /** Scope the entry links render under; defaults to the global wiki */
+    hrefMode: WikiPageHrefMode = GLOBAL_WIKI_HREF_MODE,
   ): Promise<WikiPageIndexEntry[]> => {
     switch (config.mode) {
       case "tree": {
@@ -65,6 +76,7 @@ export const resolveWikiPageIndex = withTrace(
 
         return toEntries(
           config.maxDepth === null ? tree : trimToDepth(tree, config.maxDepth),
+          hrefMode,
         );
       }
       case "tags": {
@@ -99,6 +111,7 @@ export const resolveWikiPageIndex = withTrace(
             title: page.title,
             slug: page.slug,
             iconId: page.iconId,
+            href: buildWikiPageHref(hrefMode, page),
             children: [],
           }));
       }

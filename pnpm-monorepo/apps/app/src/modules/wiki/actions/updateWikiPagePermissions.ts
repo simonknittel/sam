@@ -14,12 +14,12 @@ import {
   createWikiPagePermissionResolver,
   resolveWikiPageReadRoleIds,
 } from "@sam-monorepo/permissions";
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import {
   getWikiContext,
   type WikiContextPage,
 } from "../queries/getWikiContext";
+import { revalidateGlobalWikiScope } from "../queries/getWikiPageScopedContext";
 import { getWikiPermissionRoles } from "../queries/getWikiPermissionRoles";
 import { getWikiViewerForCitizen } from "../queries/getWikiViewerForCitizen";
 import { collectWikiPageDescendants } from "../utils/collectWikiPageDescendants";
@@ -410,7 +410,7 @@ export const updateWikiPagePermissions = createAuthenticatedAction(
       })),
     ]);
 
-    revalidatePath("/app/wiki", "layout");
+    revalidateGlobalWikiScope();
 
     return {
       success:

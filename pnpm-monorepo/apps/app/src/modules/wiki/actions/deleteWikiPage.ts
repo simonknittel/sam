@@ -4,15 +4,21 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { getWikiScopeRevalidationPath } from "../queries/getWikiPageScopedContext";
+import {
+  getWikiScopeRevalidationPath,
+  revalidateWikiScope,
+} from "../queries/getWikiPageScopedContext";
 import { collectWikiPageDescendants } from "../utils/collectWikiPageDescendants";
 import { requireAdminableWikiPage } from "../utils/requireAdminableWikiPage";
+import { resolveVariantWikiRedirectHref } from "../utils/resolveVariantWikiRedirectHref";
+import { getVariantWikiRootPath } from "../utils/wikiPageHref";
 
 const schema = z.object({
   id: z.cuid2(),
+  /** Set when deleting from inside a variant embed, for the redirect */
+  variantId: z.cuid().optional(),
 });
 
 /**
@@ -58,8 +64,25 @@ export const deleteWikiPage = createAuthenticatedAction(
       },
     ]);
 
-    const basePath = getWikiScopeRevalidationPath(scoped);
-    revalidatePath(basePath, "layout");
-    redirect(basePath);
+    revalidateWikiScope(scoped);
+
+    /**
+     * Deleting from inside a variant embed leads back to the variant page —
+     * validated like the create/paste redirects (the page must have been
+     * inside the variant's linked subtree); a stale or foreign variant id
+     * silently falls back to the scope's home. The resolver's page URL is
+     * unusable here (the page is gone), only its validation matters.
+     */
+    if (data.variantId) {
+      const variantHref = await resolveVariantWikiRedirectHref(
+        scoped,
+        data.variantId,
+        page,
+        page.parentId,
+      );
+      if (variantHref) redirect(getVariantWikiRootPath(data.variantId));
+    }
+
+    redirect(getWikiScopeRevalidationPath(scoped));
   },
 );

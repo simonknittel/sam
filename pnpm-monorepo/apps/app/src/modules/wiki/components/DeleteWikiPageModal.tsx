@@ -9,6 +9,7 @@ import Note from "@/modules/common/components/Note";
 import { useState } from "react";
 import { FaTrash } from "react-icons/fa";
 import { deleteWikiPage } from "../actions/deleteWikiPage";
+import { useWikiPageHrefMode } from "./WikiPageHrefModeProvider";
 
 interface Props {
   readonly className?: string;
@@ -23,6 +24,8 @@ export const DeleteWikiPageModal = ({
   title,
   descendantCount,
 }: Props) => {
+  /** Inside a variant embed the action redirects back to the variant page */
+  const { variantId } = useWikiPageHrefMode();
   const [isOpen, setIsOpen] = useState(false);
   /**
    * On success the action redirects to the wiki root, so there is no
@@ -52,6 +55,9 @@ export const DeleteWikiPageModal = ({
       >
         <form action={formAction}>
           <input type="hidden" name="id" value={pageId} />
+          {variantId && (
+            <input type="hidden" name="variantId" value={variantId} />
+          )}
 
           <p>
             Soll die Seite &quot;{title}&quot;

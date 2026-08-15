@@ -3,9 +3,8 @@
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { getWikiScopeRevalidationPath } from "../queries/getWikiPageScopedContext";
+import { revalidateWikiScope } from "../queries/getWikiPageScopedContext";
 import { compareWikiPagesByOrder } from "../utils/compareWikiPagesByOrder";
 import { isEventWikiRootPage } from "../utils/isEventWikiRootPage";
 import {
@@ -117,7 +116,7 @@ export const updateWikiPagePosition = createAuthenticatedAction(
         ),
       );
 
-    revalidatePath(getWikiScopeRevalidationPath(scoped), "layout");
+    revalidateWikiScope(scoped);
 
     return {
       success: reset

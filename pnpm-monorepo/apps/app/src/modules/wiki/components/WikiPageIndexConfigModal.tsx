@@ -37,8 +37,12 @@ export const WikiPageIndexConfigModal = ({
   attrs,
   onRequestClose,
 }: Props) => {
-  /** Scopes tag and page pickers to the event wiki on briefing pages */
-  const { eventId } = useWikiPageHrefMode();
+  /**
+   * Scopes tag and page pickers to the event wiki on briefing pages, and
+   * the page picker to the subtree inside variant embeds (tags stay global
+   * there — the WIKI namespace has one shared tag scope)
+   */
+  const { eventId, variantId } = useWikiPageHrefMode();
   const depthInputId = useId();
   const initial = normalizeWikiPageIndexConfig(attrs);
 
@@ -63,7 +67,11 @@ export const WikiPageIndexConfigModal = ({
    * server-side, so invisible titles can never leak.
    */
   const { data: pageTargets } = api.wiki.getPageTargets.useQuery(
-    { permission: "read", eventId: eventId ?? undefined },
+    {
+      permission: "read",
+      eventId: eventId ?? undefined,
+      variantId: variantId ?? undefined,
+    },
     { refetchOnWindowFocus: false, refetchOnReconnect: false },
   );
 
