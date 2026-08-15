@@ -42,6 +42,32 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-08-15-wiki-umflossene-bilder",
+    date: "2026-08-15",
+    title: "Wiki: Vom Text umflossene Bilder",
+    tags: ["Neu", "Wiki"],
+    isTracked: true,
+    body: () => (
+      <>
+        <p>
+          Bilder im Wiki können jetzt links oder rechts vom Text umflossen
+          werden. Die beiden neuen Schaltflächen im Menü eines Bildes
+          verschieben es in den benachbarten Textblock &ndash; dort richtet es
+          sich an dessen Rändern aus und bleibt auch dann am Text verankert,
+          wenn der Textblock verschoben oder schmaler gezogen wird.
+        </p>
+
+        <p>
+          Umflossene Bilder lassen sich weiterhin frei in der Breite ziehen,
+          maximal bis zur aktuellen Breite ihres Textblocks. Über das Menü lässt
+          sich die Seite wechseln oder das Bild wieder als eigenständiger Block
+          herauslösen.
+        </p>
+      </>
+    ),
+  },
+
+  {
     key: "2026-08-15-browser-benachrichtigungen-standardmaessig-aktiv",
     date: "2026-08-15",
     title: "Browser-Benachrichtigungen standardmäßig aktiv",
