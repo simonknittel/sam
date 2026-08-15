@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Usage: `./scripts/mirror-database-production-to-stage.sh "postgresql://<user>:<pass>@<host>:5432/production" "postgresql://<user>:<pass>@<host>:5432/staging"`
+# Usage: `./scripts/mirror-database-production-to-stage.sh "postgresql://<user>:<pass>@<host>:5432/production" "postgresql://<user>:<pass>@<host>:5432/stage"`
 # # See `docs/mirror-database.md` for more information
 
 # Exit immediately if a command exits with a non-zero status.
