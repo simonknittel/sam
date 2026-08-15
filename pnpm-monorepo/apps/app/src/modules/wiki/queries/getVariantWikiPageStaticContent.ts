@@ -4,7 +4,7 @@ import { GLOBAL_WIKI_HREF_MODE } from "../utils/wikiPageHref";
 import type { VariantWikiContext } from "./getVariantWikiContext";
 import {
   assembleWikiPageStaticContent,
-  toWikiLinkedPage,
+  collectLinkableWikiPages,
   type WikiPageStaticContent,
 } from "./getWikiPageStaticContent";
 
@@ -29,29 +29,16 @@ export const getVariantWikiPageStaticContent = cache(
       const loadLinkablePages = () =>
         Promise.resolve(
           Object.fromEntries([
-            ...context.globalContext.pages
-              .filter(
-                (candidate) =>
-                  context.globalContext.permissions.get(candidate.id)?.canRead,
-              )
-              .map(
-                (candidate) =>
-                  [
-                    candidate.id,
-                    toWikiLinkedPage(GLOBAL_WIKI_HREF_MODE, candidate),
-                  ] as const,
-              ),
-            ...context.pages
-              .filter(
-                (candidate) => context.permissions.get(candidate.id)?.canRead,
-              )
-              .map(
-                (candidate) =>
-                  [
-                    candidate.id,
-                    toWikiLinkedPage(context.hrefMode, candidate),
-                  ] as const,
-              ),
+            ...collectLinkableWikiPages(
+              GLOBAL_WIKI_HREF_MODE,
+              context.globalContext.pages,
+              context.globalContext.permissions,
+            ),
+            ...collectLinkableWikiPages(
+              context.hrefMode,
+              context.pages,
+              context.permissions,
+            ),
           ]),
         );
 

@@ -3,6 +3,7 @@ import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
+import { canViewVariantPages } from "../utils/canViewVariantPages";
 
 export const getVariantDetail = cache(
   withTrace(
@@ -10,13 +11,7 @@ export const getVariantDetail = cache(
     async (variantId: string, requireOtherShipsRead = false) => {
       const authentication = await requireAuthentication();
 
-      const hasShipManage = await authentication.authorize("ship", "manage");
-      const hasOrgFleetRead = await authentication.authorize(
-        "orgFleet",
-        "read",
-      );
-
-      if (!hasShipManage && !hasOrgFleetRead) forbidden();
+      if (!(await canViewVariantPages(authentication))) forbidden();
 
       if (requireOtherShipsRead) {
         const hasOtherShipsRead = await authentication.authorize(

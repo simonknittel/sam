@@ -107,6 +107,9 @@ const getWikiExpandedPagesCookieNameAndPath = (scope: WikiScope) => {
   }
 };
 
+export const getWikiExpandedPagesCookieName = (scope: WikiScope) =>
+  getWikiExpandedPagesCookieNameAndPath(scope)[0];
+
 export const serializeWikiExpandedPagesCookie = (
   state: WikiExpansionState,
   scope: WikiScope,

@@ -8,7 +8,7 @@ import type { EventWikiContext } from "./getEventWikiContext";
 import { getWikiContext } from "./getWikiContext";
 import {
   assembleWikiPageStaticContent,
-  toWikiLinkedPage,
+  collectLinkableWikiPages,
   type WikiPageStaticContent,
 } from "./getWikiPageStaticContent";
 
@@ -38,29 +38,18 @@ export const getEventWikiPageStaticContent = cache(
         const globalContext = await getWikiContext();
 
         return Object.fromEntries([
-          ...(globalContext?.pages ?? [])
-            .filter(
-              (candidate) =>
-                globalContext?.permissions.get(candidate.id)?.canRead,
-            )
-            .map(
-              (candidate) =>
-                [
-                  candidate.id,
-                  toWikiLinkedPage(GLOBAL_WIKI_HREF_MODE, candidate),
-                ] as const,
-            ),
-          ...context.pages
-            .filter(
-              (candidate) => context.permissions.get(candidate.id)?.canRead,
-            )
-            .map(
-              (candidate) =>
-                [
-                  candidate.id,
-                  toWikiLinkedPage(eventHrefMode, candidate),
-                ] as const,
-            ),
+          ...(globalContext
+            ? collectLinkableWikiPages(
+                GLOBAL_WIKI_HREF_MODE,
+                globalContext.pages,
+                globalContext.permissions,
+              )
+            : []),
+          ...collectLinkableWikiPages(
+            eventHrefMode,
+            context.pages,
+            context.permissions,
+          ),
         ]);
       };
 

@@ -2,6 +2,7 @@ import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { VariantDetailFrame } from "@/modules/fleet/components/VariantDetailFrame";
 import { getVariantDetail } from "@/modules/fleet/queries/variantDetail";
+import { canViewVariantPages } from "@/modules/fleet/utils/canViewVariantPages";
 import { WikiSnapshotsTable } from "@/modules/wiki/components/WikiSnapshotsTable";
 import { getVariantWikiContext } from "@/modules/wiki/queries/getVariantWikiContext";
 import { getAccessibleWikiPage } from "@/modules/wiki/utils/getAccessibleWikiPage";
@@ -39,9 +40,7 @@ export default async function Page(
   );
 
   /** The same 403 behavior as the variant page this route extends */
-  const hasShipManage = await authentication.authorize("ship", "manage");
-  const hasOrgFleetRead = await authentication.authorize("orgFleet", "read");
-  if (!hasShipManage && !hasOrgFleetRead) {
+  if (!(await canViewVariantPages(authentication))) {
     await authentication.authorizePage("ship", "manage");
   }
 

@@ -1,5 +1,6 @@
 import { prisma } from "@/db";
 import { authenticate } from "@/modules/auth/server";
+import { canViewVariantPages } from "@/modules/fleet/utils/canViewVariantPages";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import type { Variant } from "@sam-monorepo/database/client";
 import type {
@@ -60,11 +61,7 @@ export const getVariantWikiContext = cache(
       if (!authentication) return null;
 
       /** The same gate the variant detail page requires */
-      const [hasShipManage, hasOrgFleetRead] = await Promise.all([
-        authentication.authorize("ship", "manage"),
-        authentication.authorize("orgFleet", "read"),
-      ]);
-      if (!hasShipManage && !hasOrgFleetRead) return null;
+      if (!(await canViewVariantPages(authentication))) return null;
 
       const variant = await prisma.variant.findUnique({
         where: { id: variantId },

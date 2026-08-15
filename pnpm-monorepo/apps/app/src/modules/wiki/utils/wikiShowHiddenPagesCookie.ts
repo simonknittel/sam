@@ -52,6 +52,9 @@ const getWikiShowHiddenPagesCookieNameAndPath = (scope: WikiScope) => {
   }
 };
 
+export const getWikiShowHiddenPagesCookieName = (scope: WikiScope) =>
+  getWikiShowHiddenPagesCookieNameAndPath(scope)[0];
+
 export const serializeWikiShowHiddenPagesCookie = (
   showHidden: boolean,
   scope: WikiScope,

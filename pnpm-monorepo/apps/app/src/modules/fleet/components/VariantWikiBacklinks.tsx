@@ -1,5 +1,6 @@
 import { prisma } from "@/db";
 import { authenticate } from "@/modules/auth/server";
+import { canViewVariantPages } from "../utils/canViewVariantPages";
 import { VariantWithLogo } from "./VariantWithLogo";
 
 interface Props {
@@ -17,11 +18,7 @@ export const VariantWikiBacklinks = async ({ pageId }: Props) => {
   const authentication = await authenticate();
   if (!authentication) return null;
 
-  const [hasShipManage, hasOrgFleetRead] = await Promise.all([
-    authentication.authorize("ship", "manage"),
-    authentication.authorize("orgFleet", "read"),
-  ]);
-  if (!hasShipManage && !hasOrgFleetRead) return null;
+  if (!(await canViewVariantPages(authentication))) return null;
 
   const variants = await prisma.variant.findMany({
     where: { wikiPageId: pageId },
