@@ -12,6 +12,12 @@ import {
 interface Props {
   readonly notification: OnSiteNotificationRow;
   readonly tab: NotificationCenterTab;
+  /**
+   * Keeps the unread highlight visible although the notification is already
+   * read — read-on-view marks notifications read while the popover is open,
+   * but their highlight should only disappear once the popover closes.
+   */
+  readonly keepUnreadHighlight: boolean;
   readonly onArchive: (notification: OnSiteNotificationRow) => void;
   readonly onUnarchive: (notification: OnSiteNotificationRow) => void;
   readonly onMarkUnread: (notification: OnSiteNotificationRow) => void;
@@ -24,6 +30,7 @@ interface Props {
 export const NotificationListItem = ({
   notification,
   tab,
+  keepUnreadHighlight,
   onArchive,
   onUnarchive,
   onMarkUnread,
@@ -31,6 +38,7 @@ export const NotificationListItem = ({
 }: Props) => {
   const rendering = renderOnSiteNotification(notification);
   const isUnread = !notification.readAt;
+  const showsUnreadHighlight = isUnread || keepUnreadHighlight;
   const trackReadOnView = isUnread && tab === NotificationCenterTab.Inbox;
 
   return (
@@ -40,7 +48,7 @@ export const NotificationListItem = ({
         trackReadOnView ? notification.id : undefined
       }
     >
-      {isUnread && (
+      {showsUnreadHighlight && (
         <div
           className="absolute left-0 top-0 bottom-0 w-0.5"
           style={{

@@ -18,6 +18,10 @@ import { NotificationListItem } from "./NotificationListItem";
 interface Props {
   readonly tab: NotificationCenterTab;
   readonly onNavigate?: () => void;
+  /** Notifications which keep their unread highlight although already read */
+  readonly retainedHighlightIds?: ReadonlySet<string>;
+  /** Called with the ids read-on-view marks read, to retain their highlight */
+  readonly onRetainHighlights?: (notificationIds: string[]) => void;
 }
 
 /**
@@ -31,7 +35,12 @@ interface Props {
 const statusMessageClassName =
   "-mx-4 -mb-4 border-t border-neutral-800 box-content min-h-21 px-4 flex gap-2 justify-center items-center text-center";
 
-export const NotificationList = ({ tab, onNavigate }: Props) => {
+export const NotificationList = ({
+  tab,
+  onNavigate,
+  retainedHighlightIds,
+  onRetainHighlights,
+}: Props) => {
   const { activeTab } = useTabsContext();
   const isActive = activeTab === tab;
   const {
@@ -62,11 +71,17 @@ export const NotificationList = ({ tab, onNavigate }: Props) => {
     markReadRef.current = markRead;
   }, [markRead]);
 
+  const onRetainHighlightsRef = useRef(onRetainHighlights);
+  useEffect(() => {
+    onRetainHighlightsRef.current = onRetainHighlights;
+  }, [onRetainHighlights]);
+
   /**
    * Read-on-view: an unread notification which stays sufficiently visible in
    * the scroll container for the dwell time is collected, and collected ids
-   * are flushed as one batched mark-read call. Pending ids survive closing
-   * the popover (flush on cleanup); pending dwell timers do not.
+   * are flushed as one batched mark-read call which also retains their
+   * highlight. Pending ids survive closing the popover (flush on cleanup);
+   * pending dwell timers do not.
    */
   const notificationIds = notifications.map((item) => item.id).join(",");
   useEffect(() => {
@@ -83,6 +98,7 @@ export const NotificationList = ({ tab, onNavigate }: Props) => {
       if (pendingReadIds.size <= 0) return;
       const idsToMark = Array.from(pendingReadIds);
       pendingReadIds.clear();
+      onRetainHighlightsRef.current?.(idsToMark);
       void markReadRef.current(idsToMark);
     };
 
@@ -192,6 +208,9 @@ export const NotificationList = ({ tab, onNavigate }: Props) => {
           key={notification.id}
           notification={notification}
           tab={tab}
+          keepUnreadHighlight={
+            retainedHighlightIds?.has(notification.id) ?? false
+          }
           onArchive={archive}
           onUnarchive={unarchive}
           onMarkUnread={markUnread}
