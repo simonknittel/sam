@@ -4,12 +4,11 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import {
   getWikiPageScopedContext,
-  getWikiScopeRevalidationPath,
   isWikiScopeFrozen,
+  revalidateWikiScope,
 } from "../queries/getWikiPageScopedContext";
 
 const tagNameSchema = z
@@ -167,7 +166,7 @@ export const updateWikiPageTags = createAuthenticatedAction(
       },
     ]);
 
-    revalidatePath(getWikiScopeRevalidationPath(scoped), "layout");
+    revalidateWikiScope(scoped);
 
     return { success: t("Common.successfullySaved") };
   },

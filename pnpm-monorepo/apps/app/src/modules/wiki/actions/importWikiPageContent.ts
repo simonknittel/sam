@@ -12,14 +12,13 @@ import {
   isWikiIframeSrcAllowed,
 } from "@sam-monorepo/wiki-editor";
 import { Node as ProseMirrorNode } from "@tiptap/pm/model";
-import { revalidatePath } from "next/cache";
 import { unstable_rethrow } from "next/navigation";
 import { serializeError } from "serialize-error";
 import { z } from "zod";
 import {
   getWikiPageScopedContext,
-  getWikiScopeRevalidationPath,
   isWikiScopeFrozen,
+  revalidateWikiScope,
 } from "../queries/getWikiPageScopedContext";
 import { getWikiIframeAllowlist } from "../queries/getWikiSettings";
 import { replaceWikiPageContent } from "../utils/replaceWikiPageContent";
@@ -145,7 +144,7 @@ export const importWikiPageContent = createAuthenticatedAction(
       },
     ]);
 
-    revalidatePath(getWikiScopeRevalidationPath(scoped), "layout");
+    revalidateWikiScope(scoped);
 
     return { success: "Inhalt importiert." };
   },

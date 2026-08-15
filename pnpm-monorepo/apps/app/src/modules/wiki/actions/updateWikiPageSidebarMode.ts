@@ -5,9 +5,8 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { WikiPageSidebarMode } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { getWikiScopeRevalidationPath } from "../queries/getWikiPageScopedContext";
+import { revalidateWikiScope } from "../queries/getWikiPageScopedContext";
 import { requireAdminableWikiPage } from "../utils/requireAdminableWikiPage";
 
 const schema = z.object({
@@ -56,7 +55,7 @@ export const updateWikiPageSidebarMode = createAuthenticatedAction(
       },
     ]);
 
-    revalidatePath(getWikiScopeRevalidationPath(scoped), "layout");
+    revalidateWikiScope(scoped);
 
     return { success: t("Common.successfullySaved") };
   },

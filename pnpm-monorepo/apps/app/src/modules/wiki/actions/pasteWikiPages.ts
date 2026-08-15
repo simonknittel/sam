@@ -6,7 +6,6 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { log } from "@/modules/logging";
 import { WikiPageSnapshotKind } from "@sam-monorepo/database/client";
-import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect, unstable_rethrow } from "next/navigation";
 import { serializeError } from "serialize-error";
@@ -17,8 +16,8 @@ import {
 } from "../queries/getWikiContext";
 import {
   getWikiPageScopedContext,
-  getWikiScopeRevalidationPath,
   isWikiScopeFrozen,
+  revalidateWikiScope,
   type WikiPageScopedContext,
 } from "../queries/getWikiPageScopedContext";
 import {
@@ -28,6 +27,7 @@ import {
 import { findOrCreateWikiTags } from "../utils/findOrCreateWikiTags";
 import { getAccessibleWikiPage } from "../utils/getAccessibleWikiPage";
 import { replaceWikiPageContent } from "../utils/replaceWikiPageContent";
+import { resolveVariantWikiRedirectHref } from "../utils/resolveVariantWikiRedirectHref";
 import {
   resolveWikiPagePlacement,
   WikiPagePlacement,
@@ -65,6 +65,8 @@ const schema = z.object({
     .optional()
     .transform((value) => (value === "" ? undefined : value)),
   mode: z.enum(["child", "replace"]).default("child"),
+  /** Set when pasting from inside a variant embed, for the redirect */
+  variantId: z.cuid().optional(),
 });
 
 /**
@@ -287,14 +289,26 @@ export const pasteWikiPages = createAuthenticatedAction(
       ];
 
       /** A replaced event root's canonical URL is the briefing base path */
-      redirectHref =
-        targetEventId && targetPage.parentId === null
-          ? getEventWikiBasePath(targetEventId)
-          : getWikiPageRouteHref({
-              id: root.id,
-              slug: root.slug,
-              eventId: targetEventId ?? null,
-            });
+      if (targetEventId && targetPage.parentId === null) {
+        redirectHref = getEventWikiBasePath(targetEventId);
+      } else {
+        const variantHref =
+          data.variantId && targetScoped.scope === WikiScope.Wiki
+            ? await resolveVariantWikiRedirectHref(
+                targetScoped.context,
+                data.variantId,
+                root,
+                targetPage.parentId,
+              )
+            : null;
+        redirectHref =
+          variantHref ??
+          getWikiPageRouteHref({
+            id: root.id,
+            slug: root.slug,
+            eventId: targetEventId ?? null,
+          });
+      }
     } else {
       const rootTitle =
         sourcePage.title.slice(0, TITLE_MAX_LENGTH - TITLE_SUFFIX.length) +
@@ -313,12 +327,23 @@ export const pasteWikiPages = createAuthenticatedAction(
         createdByEntityId: entity.id,
       }));
 
+      const variantHref =
+        data.variantId && targetScoped.scope === WikiScope.Wiki
+          ? await resolveVariantWikiRedirectHref(
+              targetScoped.context,
+              data.variantId,
+              root,
+              data.parentId ?? null,
+            )
+          : null;
       /** A newly created copy is never an event root page */
-      redirectHref = getWikiPageRouteHref({
-        id: root.id,
-        slug: root.slug,
-        eventId: targetEventId ?? null,
-      });
+      redirectHref =
+        variantHref ??
+        getWikiPageRouteHref({
+          id: root.id,
+          slug: root.slug,
+          eventId: targetEventId ?? null,
+        });
     }
 
     await createAuditEvents(
@@ -345,7 +370,7 @@ export const pasteWikiPages = createAuthenticatedAction(
       path: WIKI_CLIPBOARD_COOKIE_PATH,
     });
 
-    revalidatePath(getWikiScopeRevalidationPath(targetScoped), "layout");
+    revalidateWikiScope(targetScoped);
     redirect(redirectHref);
   },
 );

@@ -4,15 +4,20 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { getWikiScopeRevalidationPath } from "../queries/getWikiPageScopedContext";
+import {
+  getWikiScopeRevalidationPath,
+  revalidateWikiScope,
+} from "../queries/getWikiPageScopedContext";
 import { collectWikiPageDescendants } from "../utils/collectWikiPageDescendants";
 import { requireAdminableWikiPage } from "../utils/requireAdminableWikiPage";
+import { getVariantWikiRootPath, WikiScope } from "../utils/wikiPageHref";
 
 const schema = z.object({
   id: z.cuid2(),
+  /** Set when deleting from inside a variant embed, for the redirect */
+  variantId: z.cuid().optional(),
 });
 
 /**
@@ -58,8 +63,22 @@ export const deleteWikiPage = createAuthenticatedAction(
       },
     ]);
 
-    const basePath = getWikiScopeRevalidationPath(scoped);
-    revalidatePath(basePath, "layout");
-    redirect(basePath);
+    revalidateWikiScope(scoped);
+
+    /**
+     * Deleting from inside a variant embed leads back to the variant page.
+     * The target only ever derives from a database-validated variant id —
+     * a stale or foreign id silently falls back to the scope's home, and
+     * nothing user-controlled reaches the redirect (no open redirect).
+     */
+    if (data.variantId && scoped.scope === WikiScope.Wiki) {
+      const variant = await prisma.variant.findUnique({
+        where: { id: data.variantId },
+        select: { id: true },
+      });
+      if (variant) redirect(getVariantWikiRootPath(variant.id));
+    }
+
+    redirect(getWikiScopeRevalidationPath(scoped));
   },
 );

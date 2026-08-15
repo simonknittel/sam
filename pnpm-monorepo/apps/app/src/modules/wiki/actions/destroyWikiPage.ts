@@ -4,9 +4,8 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { getWikiScopeRevalidationPath } from "../queries/getWikiPageScopedContext";
+import { revalidateWikiScope } from "../queries/getWikiPageScopedContext";
 import { collectWikiPageDescendants } from "../utils/collectWikiPageDescendants";
 import { requireAdminableWikiPage } from "../utils/requireAdminableWikiPage";
 
@@ -58,7 +57,7 @@ export const destroyWikiPage = createAuthenticatedAction(
       },
     ]);
 
-    revalidatePath(getWikiScopeRevalidationPath(scoped), "layout");
+    revalidateWikiScope(scoped);
 
     return { success: "Endgültig gelöscht." };
   },

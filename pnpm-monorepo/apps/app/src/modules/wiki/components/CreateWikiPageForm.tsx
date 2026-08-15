@@ -12,6 +12,7 @@ import { useState } from "react";
 import { FaSave } from "react-icons/fa";
 import { createWikiPage } from "../actions/createWikiPage";
 import type { WikiPageTargetOption } from "../utils/getWikiPageTargets";
+import { useWikiPageHrefMode } from "./WikiPageHrefModeProvider";
 import { WikiPageSelect } from "./WikiPageSelect";
 
 interface Props {
@@ -36,6 +37,8 @@ export const CreateWikiPageForm = ({
   eventId,
   onSuccess,
 }: Props) => {
+  /** Inside a variant embed the action redirects back into the embed */
+  const { variantId } = useWikiPageHrefMode();
   const [parentId, setParentId] = useState(() => {
     if (
       defaultParentId &&
@@ -76,6 +79,8 @@ export const CreateWikiPageForm = ({
 
   return (
     <form action={formAction}>
+      {variantId && <input type="hidden" name="variantId" value={variantId} />}
+
       <TextInput
         name="title"
         label="Titel"

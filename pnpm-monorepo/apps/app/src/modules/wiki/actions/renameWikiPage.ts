@@ -4,9 +4,8 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { getWikiScopeRevalidationPath } from "../queries/getWikiPageScopedContext";
+import { revalidateWikiScope } from "../queries/getWikiPageScopedContext";
 import { requireAdminableWikiPage } from "../utils/requireAdminableWikiPage";
 import { slugifyWikiPageTitle } from "../utils/slugifyWikiPageTitle";
 
@@ -49,7 +48,7 @@ export const renameWikiPage = createAuthenticatedAction(
       },
     ]);
 
-    revalidatePath(getWikiScopeRevalidationPath(scoped), "layout");
+    revalidateWikiScope(scoped);
 
     return { success: t("Common.successfullySaved") };
   },

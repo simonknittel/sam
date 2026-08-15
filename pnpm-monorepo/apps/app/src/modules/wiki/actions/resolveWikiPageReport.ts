@@ -4,8 +4,8 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { revalidateGlobalWikiScope } from "../queries/getWikiPageScopedContext";
 
 const schema = z.object({
   reportId: z.cuid2(),
@@ -59,7 +59,7 @@ export const resolveWikiPageReport = createAuthenticatedAction(
       },
     ]);
 
-    revalidatePath("/app/wiki", "layout");
+    revalidateGlobalWikiScope();
 
     return { success: "Meldung als bearbeitet markiert." };
   },
