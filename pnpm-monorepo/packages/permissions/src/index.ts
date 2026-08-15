@@ -31,3 +31,5 @@ export {
   type WikiPermissionRole,
 } from "./resolveWikiPageRolePermissions.js";
 export { transformPermissionStringToPermissionSet } from "./transformPermissionStringToPermissionSet.js";
+
+// Temporary CI path-filter verification (this PR is closed without merging).
