@@ -33,14 +33,15 @@ Docker: `pnpm --filter @sam-monorepo/collab run dev` (uses
 
 ### Uploads (S3-compatible storage)
 
-File uploads (role icons, wiki images, attachments, …) go to the `seaweedfs`
+File uploads (role icons, wiki images, attachments, …) go to the `rustfs`
 container from [compose.yml](../compose.yml). The `S3_*` and
 `NEXT_PUBLIC_S3_PUBLIC_URL` defaults from
 `pnpm-monorepo/apps/app/.env.example` match the container's credentials and
-bucket — keep them. The bucket is created automatically on `docker compose up`
-(by the one-shot `seaweedfs-create-bucket` service). Uploaded files live only
-inside the container. Alternatively point the variables at any S3-compatible
-provider (e.g. Cloudflare R2, see the comments in `.env.example`).
+bucket — keep them. The bucket (incl. its anonymous-read policy and CORS
+rules) is created automatically on `docker compose up` by the one-shot
+`rustfs-bootstrap` service. Uploaded files live only inside the container.
+Alternatively point the variables at any S3-compatible provider (e.g.
+Cloudflare R2, see the comments in `.env.example`).
 
 ### Optional environment tweaks
 
@@ -51,7 +52,7 @@ provider (e.g. Cloudflare R2, see the comments in `.env.example`).
 - The Docker services' host ports can be overridden so multiple checkouts
   (e.g. git worktrees) can run their stacks side by side: set
   `SAM_PSQL_PORT`, `SAM_SOKETI_PORT`, `SAM_SOKETI_METRICS_PORT`,
-  `SAM_COLLAB_PORT` and/or `SAM_SEAWEEDFS_PORT` in a gitignored `.env` next to
+  `SAM_COLLAB_PORT` and/or `SAM_RUSTFS_PORT` in a gitignored `.env` next to
   [compose.yml](../compose.yml).
 
 ## Bot Invite Link with required scopes

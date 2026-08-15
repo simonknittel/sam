@@ -4,7 +4,7 @@ import { walkWikiContent } from "./walkWikiContent.js";
  * The public bucket base is either a bare host (https implied, upload id as
  * the sole path segment — e.g. an R2 public bucket domain) or a full base
  * URL incl. scheme, port and bucket path (providers without per-bucket
- * domains, e.g. a local SeaweedFS container).
+ * domains, e.g. a local RustFS container).
  */
 const parsePublicUrlBase = (publicUrl: string): URL | null => {
   if (publicUrl.length === 0) return null;

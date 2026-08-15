@@ -29,10 +29,10 @@ slot N ≥ 1 whose ports are free:
 | soketi websockets  | 6001          | 6001 + N |
 | soketi metrics     | 9601          | 9601 + N |
 | collab (wiki)      | 5210          | 5210 + N |
-| seaweedfs S3       | 8333          | 8333 + N |
+| rustfs S3          | 9000          | 9000 + N |
 
 ```bash
-lsof -nP -iTCP:3001,5433,6002,9602,5211,8334 -sTCP:LISTEN   # slot 1 free if no output
+lsof -nP -iTCP:3001,5433,6002,9602,5211,9001 -sTCP:LISTEN   # slot 1 free if no output
 ```
 
 No output → the slot is free (bump all five ports by one and re-check
@@ -63,24 +63,25 @@ In a worktree, adjust them to the slot's ports (slot 1 shown):
 - `DATABASE_URL` → port `5433` (in BOTH files)
 - `NEXTAUTH_URL` → `http://localhost:3001`
 - `COLLAB_URL` → `ws://localhost:5211`
-- `S3_ENDPOINT` → `http://localhost:8334` and
-  `NEXT_PUBLIC_S3_PUBLIC_URL` → `http://localhost:8334/uploads`
+- `S3_ENDPOINT` → `http://localhost:9001` and
+  `NEXT_PUBLIC_S3_PUBLIC_URL` → `http://localhost:9001/uploads`
 - append `NEXT_PUBLIC_PUSHER_CHANNELS_PORT="6002"` (not present in the
   main `.env`; the app defaults to 6001)
 
 ## 2. Backing services (Docker)
 
 `compose.yml` at the repo root defines `psql` (Postgres), `soketi`
-(websockets), `sam-collab` (wiki realtime backend) and `seaweedfs`
-(S3-compatible upload storage, bucket auto-created by the one-shot
-`seaweedfs-create-bucket` service). Host ports interpolate `SAM_*_PORT`
-variables from a gitignored `.env` next to `compose.yml` — absent
-variables fall back to the slot-0 defaults.
+(websockets), `sam-collab` (wiki realtime backend) and `rustfs`
+(S3-compatible upload storage; the bucket incl. anonymous-read policy
+and CORS rules is created by the one-shot `rustfs-bootstrap` service).
+Host ports interpolate `SAM_*_PORT` variables from a gitignored `.env`
+next to `compose.yml` — absent variables fall back to the slot-0
+defaults.
 
 **Main checkout** — no root `.env`; just start the existing containers:
 
 ```bash
-docker start sam-psql-1 sam-soketi-1 sam-sam-collab-1 sam-seaweedfs-1
+docker start sam-psql-1 sam-soketi-1 sam-sam-collab-1 sam-rustfs-1
 docker exec sam-psql-1 pg_isready -U postgres   # wait for "accepting connections"
 ```
 
@@ -93,7 +94,7 @@ SAM_PSQL_PORT=5433
 SAM_SOKETI_PORT=6002
 SAM_SOKETI_METRICS_PORT=9602
 SAM_COLLAB_PORT=5211
-SAM_SEAWEEDFS_PORT=8334
+SAM_RUSTFS_PORT=9001
 EOF
 cd <worktree>
 docker compose up -d --build
@@ -193,7 +194,7 @@ directory is already gone, address the stack by project name instead:
 `docker compose -p <project> down --rmi local --volumes --remove-orphans`.
 
 **Main stack:** leave it running; stop with
-`docker stop sam-psql-1 sam-soketi-1 sam-sam-collab-1 sam-seaweedfs-1`
+`docker stop sam-psql-1 sam-soketi-1 sam-sam-collab-1 sam-rustfs-1`
 only when the user asks. NEVER `docker compose down` the main stack — its containers
 hold the only copy of the dev data.
 

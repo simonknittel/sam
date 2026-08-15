@@ -34,7 +34,7 @@ export const env = createEnv({
     S3_ACCOUNT_ID: z.string().optional(),
     /**
      * Explicit endpoint of any S3-compatible provider (e.g. the local
-     * SeaweedFS container from compose.yml). Requests use path-style
+     * RustFS container from compose.yml). Requests use path-style
      * addressing when set. Takes precedence over S3_ACCOUNT_ID.
      */
     S3_ENDPOINT: z.url().optional(),
@@ -95,8 +95,8 @@ export const env = createEnv({
      * Public base of the uploads bucket: either a bare host (e.g. an R2
      * public bucket domain — https is implied and the upload id is the sole
      * path segment) or a full base URL incl. scheme, port and bucket path
-     * for providers without per-bucket domains (e.g. the local SeaweedFS
-     * container, http://localhost:8333/uploads).
+     * for providers without per-bucket domains (e.g. the local RustFS
+     * container, http://localhost:9000/uploads).
      */
     NEXT_PUBLIC_S3_PUBLIC_URL: z.string(),
     NEXT_PUBLIC_CARE_BEAR_SHOOTER_BUILD_URL: z.url().optional(),
