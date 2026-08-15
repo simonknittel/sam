@@ -26,17 +26,13 @@ test("an admin's pages stay redacted until admin mode is enabled", async ({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
 
+  // The button fully reloads the page so the forbidden() boundary
+  // re-renders with the new cookie
   await waitForAppShellHydration(page);
   await page.getByRole("button", { name: "Enable admin" }).click();
   await expect(page.getByRole("button", { name: "Disable admin" })).toBeVisible(
     { timeout: ACTION_FEEDBACK_TIMEOUT },
   );
-  /**
-   * The button's router.refresh() does not re-render the forbidden()
-   * boundary — the redacted page only recovers on a full navigation.
-   * Potential app bug, see docs/E2E.md notes.
-   */
-  await page.reload();
   await expect(page.getByText("Zeitraum:")).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
@@ -47,7 +43,6 @@ test("an admin's pages stay redacted until admin mode is enabled", async ({
   await expect(page.getByRole("button", { name: "Enable admin" })).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
-  await page.reload();
   await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });

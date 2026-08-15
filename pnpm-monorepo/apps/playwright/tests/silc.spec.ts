@@ -1,4 +1,3 @@
-import type { Locator, Page } from "@playwright/test";
 import { createCitizen, createSilcTransaction } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
@@ -13,23 +12,6 @@ const SILC_ADMIN_PERMISSIONS = [
   "silcBalanceOfOtherCitizen;read",
   "silcTransactionOfOtherCitizen;manage",
 ];
-
-/**
- * The citizen multi-select keeps its popup open after picking an option,
- * and the open popup marks everything else in the dialog inert — fields
- * and buttons are unreachable until it is closed. Escape only closes the
- * popup (not the dialog) while it is open, hence the guard on
- * aria-expanded. Arguably an app bug, see docs/E2E.md notes.
- */
-const closeCitizenPopup = async (page: Page, combobox: Locator) => {
-  await expect(async () => {
-    if ((await combobox.getAttribute("aria-expanded")) === "true")
-      await page.keyboard.press("Escape");
-    await expect(combobox).toHaveAttribute("aria-expanded", "false", {
-      timeout: 1_000,
-    });
-  }).toPass({ timeout: ACTION_FEEDBACK_TIMEOUT });
-};
 
 test("a transaction created through the UI updates balances and the system log", async ({
   page,
@@ -51,19 +33,23 @@ test("a transaction created through the UI updates balances and the system log",
     createModal,
   );
 
-  const citizenCombobox = createModal.getByRole("combobox", {
-    name: "Citizens",
-  });
-  await citizenCombobox.fill("silc-empfaenger");
-  const receiverOption = page.getByRole("option", { name: /silc-empfaenger/ });
-  await expect(receiverOption).toBeVisible();
-  await receiverOption.click();
-  await closeCitizenPopup(page, citizenCombobox);
-
+  // Value and description first — filling them right after picking a
+  // citizen can race the selection's re-render under full-suite load
   await createModal.getByLabel("Wert").fill("42");
   await createModal
     .getByLabel("Beschreibung")
     .fill("Belohnung für den Testeinsatz");
+
+  await createModal
+    .getByRole("combobox", { name: "Citizens" })
+    .fill("silc-empfaenger");
+  const receiverOption = page.getByRole("option", { name: /silc-empfaenger/ });
+  await expect(receiverOption).toBeVisible();
+  await receiverOption.click();
+  await expect(
+    createModal.getByRole("link", { name: "silc-empfaenger" }),
+  ).toBeVisible();
+
   await createModal
     .getByRole("button", { name: "Speichern", exact: true })
     .click();
@@ -132,18 +118,22 @@ test('"Speichern und weitere Transaktion erstellen" keeps the modal open with a 
     createModal,
   );
 
-  const citizenCombobox = createModal.getByRole("combobox", {
-    name: "Citizens",
-  });
-  await citizenCombobox.fill("silc-dauerempfaenger");
+  // Value first — filling it right after picking a citizen can race the
+  // selection's re-render under full-suite load
+  await createModal.getByLabel("Wert").fill("10");
+
+  await createModal
+    .getByRole("combobox", { name: "Citizens" })
+    .fill("silc-dauerempfaenger");
   const receiverOption = page.getByRole("option", {
     name: /silc-dauerempfaenger/,
   });
   await expect(receiverOption).toBeVisible();
   await receiverOption.click();
-  await closeCitizenPopup(page, citizenCombobox);
+  await expect(
+    createModal.getByRole("link", { name: "silc-dauerempfaenger" }),
+  ).toBeVisible();
 
-  await createModal.getByLabel("Wert").fill("10");
   await createModal
     .getByRole("button", {
       name: "Speichern und weitere Transaktion erstellen",

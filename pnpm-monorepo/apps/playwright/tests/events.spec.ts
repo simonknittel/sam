@@ -81,9 +81,9 @@ test("a participant can toggle their interest in a position", async ({
   signIn,
 }) => {
   /**
-   * ship;read is required because the lineup page unconditionally loads the
-   * viewer's fleet (getMyFleet) for the requirement checks — without it the
-   * whole lineup is forbidden. Potential app bug, see docs/E2E.md notes.
+   * ship;read is required because the lineup page loads the viewer's fleet
+   * (getMyFleet) for the requirement checks — without it the whole lineup
+   * is forbidden. This is intended behavior.
    */
   const participant = await createCitizen(prisma, {
     handle: "posteninteressent",
