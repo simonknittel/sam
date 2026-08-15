@@ -86,10 +86,6 @@ test("the popover lists notifications with their content", async ({
   await page.goto("/app");
   await openNotificationCenter(page);
 
-  /**
-   * Asserted first: read-on-view marks the visible unread row as read a few
-   * seconds after opening, so the dot count is only briefly 1.
-   */
   await expect(unreadRowDots(page)).toHaveCount(1);
 
   await expect(popover(page).getByText("Neues Event")).toBeVisible();
@@ -125,7 +121,7 @@ test("unknown notification types render a generic fallback", async ({
   ).toBeVisible();
 });
 
-test("notifications in view are marked read after a moment", async ({
+test("notifications in view are marked read, keeping their highlight until the popover closes", async ({
   page,
   prisma,
   signIn,
@@ -140,15 +136,20 @@ test("notifications in view are marked read after a moment", async ({
   await openNotificationCenter(page);
   await expect(unreadRowDots(page)).toHaveCount(2);
 
-  await expect(unreadRowDots(page)).toHaveCount(0, {
-    timeout: READ_ON_VIEW_TIMEOUT,
-  });
-  await expect(page).toHaveTitle(/^[^(]/);
+  await expect(page).toHaveTitle(/^[^(]/, { timeout: READ_ON_VIEW_TIMEOUT });
   await expect(bellButton(page).locator(".bg-amber-500")).toHaveCount(0);
-
   await expect
     .poll(() => prisma.onSiteNotification.count({ where: { readAt: null } }))
     .toBe(0);
+
+  // Read in the database, but still highlighted while the popover stays open
+  await expect(unreadRowDots(page)).toHaveCount(2);
+
+  await page.keyboard.press("Escape");
+  await expect(popover(page)).toHaveCount(0);
+  await openNotificationCenter(page);
+
+  await expect(unreadRowDots(page)).toHaveCount(0);
 });
 
 test("only notifications in view get marked read", async ({
@@ -434,13 +435,12 @@ test.describe("mobile", () => {
 
     await expect(popover(page).getByText("Neues Event")).toBeVisible();
 
-    await expect(unreadRowDots(page)).toHaveCount(0, {
-      timeout: READ_ON_VIEW_TIMEOUT,
-    });
-    await expect(page).toHaveTitle(/^[^(]/);
-
+    await expect(page).toHaveTitle(/^[^(]/, { timeout: READ_ON_VIEW_TIMEOUT });
     await expect
       .poll(() => prisma.onSiteNotification.count({ where: { readAt: null } }))
       .toBe(0);
+
+    // Read in the database, but still highlighted while the popover stays open
+    await expect(unreadRowDots(page)).toHaveCount(1);
   });
 });
