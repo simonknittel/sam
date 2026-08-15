@@ -534,6 +534,17 @@
   max-width: 100%;
 }
 
+/*
+ * The typography plugin's 2em block-image margins collapse away through
+ * the block image's anchor, but the floated anchor is a formatting
+ * context of its own — there they push the image down inside the anchor
+ * and pad it below, so the float would not sit flush with the
+ * paragraph's first line.
+ */
+.prose a[data-wiki-float-image] img {
+  margin-block: 0;
+}
+
 .prose a[data-wiki-float-image][data-float-side="left"] {
   margin-right: 1em;
   margin-bottom: 0.5em;
