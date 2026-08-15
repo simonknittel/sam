@@ -171,6 +171,9 @@ model WikiPage {
   /// Uploads embedded in this page as images or attachments (see
   /// Upload.wikiPages)
   attachments     Upload[]                 @relation("attachments")
+  /// Fleet variants embedding this page's subtree on their detail page (see
+  /// Variant.wikiPageId)
+  linkedVariants  Variant[]                @relation("variantWikiPage")
 
   @@index([parentId])
   @@index([deletedAt])

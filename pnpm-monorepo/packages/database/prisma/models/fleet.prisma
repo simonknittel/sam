@@ -28,7 +28,16 @@ model Variant {
   shipCounts                    VariantShipCount[]
   externalLinks                 VariantExternalLink[]
 
+  /// Wiki page whose subtree is embedded on the variant's detail page, NULL
+  /// for no embed. Always a WIKI-namespace page that stays a normal page of
+  /// the global wiki; several variants may link the same page. SetNull
+  /// degrades a permanently deleted page to "no embed" — a soft-deleted page
+  /// keeps the link and merely hides the embed while it sits in the trash.
+  wikiPageId String?
+  wikiPage   WikiPage? @relation("variantWikiPage", fields: [wikiPageId], references: [id], onDelete: SetNull)
+
   @@unique([name, seriesId])
+  @@index([wikiPageId])
 }
 
 model VariantExternalLink {
