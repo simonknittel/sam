@@ -1,15 +1,16 @@
+import {
+  CreateBucketCommand,
+  PutBucketCorsCommand,
+  PutBucketPolicyCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
 import { PostgreSqlContainer } from "@testcontainers/postgresql";
 import { execFile } from "node:child_process";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { promisify } from "node:util";
-import {
-  GenericContainer,
-  Network,
-  Wait,
-  type StartedTestContainer,
-} from "testcontainers";
+import { GenericContainer, Network, Wait } from "testcontainers";
 import { getFreePort, runCommand } from "./processes";
 import {
   appDirectory,
@@ -21,11 +22,14 @@ import {
   postgresPassword,
   postgresUser,
   readStackState,
+  rustfsImage,
+  s3AccessKeyId,
+  s3AnonymousReadPolicy,
   s3BucketName,
   s3ContainerPort,
+  s3CorsConfiguration,
   s3Environment,
-  seaweedfsImage,
-  seaweedfsS3Config,
+  s3SecretAccessKey,
   stateDirectory,
   stateFilePath,
   templateDatabase,
@@ -89,24 +93,58 @@ const resolveS3Port = (skipBuild: boolean) => {
   }
 };
 
-const BUCKET_CREATE_ATTEMPTS = 5;
+const BUCKET_BOOTSTRAP_ATTEMPTS = 5;
 
 /**
- * Buckets are not auto-created on the first PUT — same one-shot creation as
- * the seaweedfs-create-bucket service of the dev stack (compose.yml).
+ * Buckets are not auto-created on the first PUT — same one-shot setup as
+ * the rustfs-bootstrap service of the dev stack (compose.yml): create the
+ * bucket, allow anonymous reads and configure CORS.
  */
-const createUploadsBucket = async (seaweedfs: StartedTestContainer) => {
-  for (let attempt = 1; ; attempt++) {
-    const result = await seaweedfs.exec([
-      "/bin/sh",
-      "-c",
-      `echo "s3.bucket.create -name ${s3BucketName}" | weed shell -master=localhost:9333`,
-    ]);
-    if (result.exitCode === 0 && result.output.includes("created bucket"))
-      return;
-    if (attempt === BUCKET_CREATE_ATTEMPTS)
-      throw new Error(`Creating the uploads bucket failed: ${result.output}`);
-    await sleep(500 * attempt);
+const bootstrapUploadsBucket = async (s3Port: number) => {
+  const client = new S3Client({
+    region: "auto",
+    endpoint: `http://localhost:${s3Port}`,
+    forcePathStyle: true,
+    requestChecksumCalculation: "WHEN_REQUIRED",
+    credentials: {
+      accessKeyId: s3AccessKeyId,
+      secretAccessKey: s3SecretAccessKey,
+    },
+  });
+
+  try {
+    for (let attempt = 1; ; attempt++) {
+      try {
+        try {
+          await client.send(new CreateBucketCommand({ Bucket: s3BucketName }));
+        } catch (error) {
+          // A previous attempt may have gotten this far already
+          if (
+            !(error instanceof Error) ||
+            error.name !== "BucketAlreadyOwnedByYou"
+          )
+            throw error;
+        }
+        await client.send(
+          new PutBucketPolicyCommand({
+            Bucket: s3BucketName,
+            Policy: s3AnonymousReadPolicy,
+          }),
+        );
+        await client.send(
+          new PutBucketCorsCommand({
+            Bucket: s3BucketName,
+            CORSConfiguration: s3CorsConfiguration,
+          }),
+        );
+        return;
+      } catch (error) {
+        if (attempt === BUCKET_BOOTSTRAP_ATTEMPTS) throw error;
+        await sleep(500 * attempt);
+      }
+    }
+  } finally {
+    client.destroy();
   }
 };
 
@@ -114,24 +152,16 @@ const globalSetup = async () => {
   const skipBuild = process.env.PLAYWRIGHT_SKIP_BUILD === "1";
   const s3Port = await resolveS3Port(skipBuild);
 
-  console.log("[stack] Starting SeaweedFS…");
-  const seaweedfs = await new GenericContainer(seaweedfsImage)
-    .withCommand([
-      "server",
-      "-dir=/data",
-      // Bind to all interfaces — the default binds to the container IP
-      // only, which breaks the localhost health request and weed shell
-      "-ip.bind=0.0.0.0",
-      "-s3",
-      "-s3.config=/etc/seaweedfs/s3.json",
-    ])
-    .withCopyContentToContainer([
-      { content: seaweedfsS3Config, target: "/etc/seaweedfs/s3.json" },
-    ])
+  console.log("[stack] Starting RustFS…");
+  const rustfs = await new GenericContainer(rustfsImage)
+    .withEnvironment({
+      RUSTFS_ACCESS_KEY: s3AccessKeyId,
+      RUSTFS_SECRET_KEY: s3SecretAccessKey,
+    })
     .withExposedPorts({ container: s3ContainerPort, host: s3Port })
-    .withWaitStrategy(Wait.forHttp("/healthz", s3ContainerPort))
+    .withWaitStrategy(Wait.forHttp("/health", s3ContainerPort))
     .start();
-  await createUploadsBucket(seaweedfs);
+  await bootstrapUploadsBucket(s3Port);
 
   const network = await new Network().start();
 
@@ -198,7 +228,7 @@ const globalSetup = async () => {
 
   return async () => {
     await postgres.stop();
-    await seaweedfs.stop();
+    await rustfs.stop();
     await network.stop();
   };
 };

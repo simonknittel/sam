@@ -5,6 +5,7 @@
     "test": "playwright test"
   },
   "devDependencies": {
+    "@aws-sdk/client-s3": "3.1103.0",
     "@playwright/test": "1.62.1",
     "@prisma/adapter-pg": "7.9.1",
     "@sam-monorepo/database": "workspace:*",
