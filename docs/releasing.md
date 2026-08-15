@@ -7,14 +7,21 @@ There is a single branch (`main`). Pushes to `main` never deploy to production o
 
 ## Release workflow
 
-The [Release workflow](../.github/workflows/release.yml) is the only path to production. It:
+The [Release workflow](../.github/workflows/release.yml) is the only path to production. It runs three jobs in parallel:
 
-1. Sends the `deploying` event to the `releases` channel of Soketi
-2. Deploys the Lambda functions to AWS and the app to Vercel (via `vercel deploy --prod`, built on Vercel's infrastructure with production environment variables)
-3. Sends the `new` event to the `releases` channel of Soketi
-4. Runs the Playwright smoke tests against production
+- Sends the `deploying` event to the `releases` channel of Soketi
+- Deploys the Lambda functions to AWS
+- Deploys the app to Vercel (via `vercel deploy --prod`, built on Vercel's infrastructure with production environment variables)
 
-It runs automatically every Tuesday at 8am UTC and can be triggered manually via `Actions > Release > Run workflow`.
+Once both deployments have finished, it sends the `new` event to the `releases` channel of Soketi.
+
+The Lambda functions deploy to the **test** AWS environment: there is no production AWS account (yet), so the test environment intentionally doubles as production (see [setup-test-and-production.md](./setup-test-and-production.md)).
+
+The workflow runs automatically every Tuesday at 8am UTC and can be triggered manually via `Actions > Release > Run workflow`.
+
+## Collab server
+
+The wiki collaboration server is not part of the Release workflow. The [Build collab server workflow](../.github/workflows/build-collab-server.yml) builds and pushes the `ghcr.io/simonknittel/sam-collab` image on every push to `main` that touches the collab server or its workspace dependencies (it can also be triggered manually). Production runs on an externally managed host which pulls this image.
 
 ## Ad-hoc releases and rollbacks
 
