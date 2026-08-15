@@ -1,9 +1,9 @@
 import {
   createCitizen,
   createWikiPage,
+  wikiDocument,
   WikiPageEditability,
   WikiPageVisibility,
-  wikiDocument,
 } from "../fixtures/factories";
 import { expect, test } from "../fixtures/test";
 import { enterEditMode } from "../fixtures/wiki-editor";
