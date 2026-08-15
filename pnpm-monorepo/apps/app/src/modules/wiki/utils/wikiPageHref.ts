@@ -1,11 +1,13 @@
 /**
- * The wiki UI serves two homes: the global wiki app and the event-scoped
- * briefing wikis. Shared components derive page URLs and the active page
- * from this mode instead of hardcoding the global paths.
+ * The wiki UI serves three homes: the global wiki app, the event-scoped
+ * briefing wikis and the wiki subtrees embedded on fleet variant pages.
+ * Shared components derive page URLs and the active page from this mode
+ * instead of hardcoding the global paths.
  */
 export enum WikiScope {
   Wiki = "wiki",
   Event = "event",
+  Variant = "variant",
 }
 
 export interface WikiPageHrefMode {
@@ -13,24 +15,38 @@ export interface WikiPageHrefMode {
   /**
    * The owning event in the Event scope, so client components can scope
    * their queries (tags, search, page targets) without a parallel prop;
-   * null for the global wiki
+   * null for the other scopes
    */
   readonly eventId: string | null;
+  /**
+   * The embedding variant in the Variant scope, the query-scoping key like
+   * `eventId` above; null for the other scopes
+   */
+  readonly variantId: string | null;
   /** Route prefix all page URLs live under */
   readonly basePath: string;
   /**
-   * Page served at the bare basePath: the event wiki's locked root page,
-   * which doubles as its homepage. NULL for the global wiki, whose landing
-   * page is a static route, not a page.
+   * Page served at the "home" of the scope: the event wiki's locked root
+   * page and the variant embed's linked page double as their homepages.
+   * NULL for the global wiki, whose landing page is a static route, not a
+   * page.
    */
   readonly rootPageId: string | null;
+  /**
+   * Where the root page serves when that differs from the basePath: the
+   * variant embed's root renders on the plain variant URL while its
+   * subpages live under the `/wiki` suffix. NULL means the basePath.
+   */
+  readonly rootHref: string | null;
 }
 
 export const GLOBAL_WIKI_HREF_MODE: WikiPageHrefMode = {
   scope: WikiScope.Wiki,
   eventId: null,
+  variantId: null,
   basePath: "/app/wiki",
   rootPageId: null,
+  rootHref: null,
 };
 
 export const getEventWikiBasePath = (eventId: string) =>
@@ -42,8 +58,28 @@ export const createEventWikiHrefMode = (
 ): WikiPageHrefMode => ({
   scope: WikiScope.Event,
   eventId,
+  variantId: null,
   basePath: getEventWikiBasePath(eventId),
   rootPageId,
+  rootHref: null,
+});
+
+export const getVariantWikiRootPath = (variantId: string) =>
+  `/app/fleet/variant/${variantId}`;
+
+export const getVariantWikiBasePath = (variantId: string) =>
+  `${getVariantWikiRootPath(variantId)}/wiki`;
+
+export const createVariantWikiHrefMode = (
+  variantId: string,
+  rootPageId: string,
+): WikiPageHrefMode => ({
+  scope: WikiScope.Variant,
+  eventId: null,
+  variantId,
+  basePath: getVariantWikiBasePath(variantId),
+  rootPageId,
+  rootHref: getVariantWikiRootPath(variantId),
 });
 
 export const buildWikiPageHref = (
@@ -51,7 +87,7 @@ export const buildWikiPageHref = (
   page: { readonly id: string; readonly slug: string },
 ) =>
   page.id === mode.rootPageId
-    ? mode.basePath
+    ? (mode.rootHref ?? mode.basePath)
     : `${mode.basePath}/${page.id}/${page.slug}`;
 
 /**
@@ -64,17 +100,50 @@ export const getActiveWikiPageId = (
   mode: WikiPageHrefMode,
   pathname: string,
 ) => {
+  if (mode.rootHref !== null && pathname === mode.rootHref)
+    return mode.rootPageId ?? undefined;
   if (pathname === mode.basePath) return mode.rootPageId ?? undefined;
   if (!pathname.startsWith(`${mode.basePath}/`)) return undefined;
   return pathname.slice(mode.basePath.length + 1).split("/")[0];
 };
 
 /**
+ * Tag list page a tag chip or search result links to. Variant embeds have
+ * no tag routes of their own — tags are global in the WIKI namespace, so
+ * they link out to the global wiki.
+ */
+export const buildWikiTagHref = (mode: WikiPageHrefMode, tagId: string) => {
+  switch (mode.scope) {
+    case WikiScope.Wiki:
+    case WikiScope.Variant:
+      return `/app/wiki/tags/${tagId}`;
+
+    case WikiScope.Event:
+      return `${mode.basePath}/tags/${tagId}`;
+
+    default:
+      throw new Error(`Unknown wiki scope: ${mode.scope satisfies never}`);
+  }
+};
+
+/**
+ * Always basePath-based, also for the root page: its snapshots never live
+ * on the scope's home path, so the rootHref collapse of buildWikiPageHref
+ * must not apply here.
+ */
+export const buildWikiPageSnapshotsHref = (
+  mode: WikiPageHrefMode,
+  pageId: string,
+) => `${mode.basePath}/${pageId}/snapshots`;
+
+/**
  * Route of a page identified only by its row, without a loaded context:
  * event pages live under their event, everything else under the global
  * wiki. An event root page's id-URL redirects to the bare briefing path,
  * so no root lookup is needed. Used by cross-scope surfaces like the
- * reports queue.
+ * reports queue, and by the variant embed's "open in full wiki" link —
+ * pages of a variant subtree are ordinary global wiki pages, so their
+ * cross-scope home deliberately stays `/app/wiki`.
  */
 export const getWikiPageRouteHref = (page: {
   readonly id: string;

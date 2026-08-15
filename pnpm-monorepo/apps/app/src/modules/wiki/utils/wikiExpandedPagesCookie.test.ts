@@ -1,10 +1,12 @@
 import { describe, expect, test } from "vitest";
 import {
+  EVENT_WIKI_EXPANDED_PAGES_COOKIE,
   expandWikiPages,
   isWikiPageExpanded,
   parseWikiExpandedPagesCookie,
   serializeWikiExpandedPagesCookie,
   setWikiPageExpansion,
+  VARIANT_WIKI_EXPANDED_PAGES_COOKIE,
   WIKI_ALL_COLLAPSED,
   WIKI_EXPANDED_PAGES_COOKIE,
   type WikiExpansionState,
@@ -86,6 +88,22 @@ describe("serializeWikiExpandedPagesCookie", () => {
 
     expect(value.split(",")).toHaveLength(350);
     expect(value.startsWith("a0000010,")).toBe(true);
+  });
+
+  test("uses one cookie name and path per scope", () => {
+    const state = expandWikiPages(WIKI_ALL_COLLAPSED, [pageId("a1b2c3d4")]);
+
+    expect(serializeWikiExpandedPagesCookie(state, WikiScope.Wiki)).toContain(
+      `${WIKI_EXPANDED_PAGES_COOKIE}=a1b2c3d4; path=/app/wiki;`,
+    );
+    expect(serializeWikiExpandedPagesCookie(state, WikiScope.Event)).toContain(
+      `${EVENT_WIKI_EXPANDED_PAGES_COOKIE}=a1b2c3d4; path=/app/events;`,
+    );
+    expect(
+      serializeWikiExpandedPagesCookie(state, WikiScope.Variant),
+    ).toContain(
+      `${VARIANT_WIKI_EXPANDED_PAGES_COOKIE}=a1b2c3d4; path=/app/fleet/variant;`,
+    );
   });
 });
 
