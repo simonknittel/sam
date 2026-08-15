@@ -532,6 +532,7 @@
  */
 .prose a[data-wiki-float-image] {
   max-width: 100%;
+  margin-block: 0.5em;
 }
 
 /*
@@ -547,12 +548,10 @@
 
 .prose a[data-wiki-float-image][data-float-side="left"] {
   margin-right: 1em;
-  margin-bottom: 0.5em;
 }
 
 .prose a[data-wiki-float-image][data-float-side="right"] {
   margin-left: 1em;
-  margin-bottom: 0.5em;
 }
 
 /*
