@@ -13,19 +13,26 @@
 
 ## 4. Set up GitHub
 
-1. Create environments
-   1. `terraform-test`
-   2. `terraform-prod`
-2. Create environment variables
-   - `IAM_ROLE`
-3. Enable "Allow GitHub Actions to create and approve pull requests" in Settings/Actions/General/Workflow permissions
+1. Create environments with their variables and secrets
+
+   | Environment            | Variables                                             | Secrets                                                                             |
+   | ---------------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------- |
+   | `terraform-test`       | `IAM_ROLE_ARN`, `TFVARS`                              |                                                                                     |
+   | `terraform-prod`       | `IAM_ROLE_ARN`, `TFVARS`                              |                                                                                     |
+   | `lambda-functions-test` | `IAM_ROLE_ARN`                                        |                                                                                     |
+   | `Production`           | `SOKETI_APP_ID`, `SOKETI_APP_KEY`, `SOKETI_HOST`      | `DATABASE_URL`, `SOKETI_APP_SECRET`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` (for the Vercel values see [7. Set up Vercel](#7-set-up-vercel)) |
+
+2. Enable "Allow GitHub Actions to create and approve pull requests" in Settings/Actions/General/Workflow permissions
 
 ## 5. Set up AWS
+
+> [!NOTE]
+> There is no production AWS account (yet). Only `sam-test` is set up, and it intentionally doubles as production: the weekly [Release workflow](./releasing.md) deploys the Lambda functions to the test environment.
 
 1. Create AWS accounts
 
    1. `sam-test`
-   2. `sam-prod`
+   2. `sam-prod` (not set up yet, see above)
 
 2. Prepare AWS CLI
 
@@ -50,9 +57,10 @@
 
 3. Create and deploy setup stack with AWS CloudFormation
 
-   1. Create and populate `test-parameters.json` and `prod-parameters.json`
-   1. `AWS_PROFILE=sam-test aws sso login`
-   2. `AWS_PROFILE=sam-test aws --region eu-central-1 cloudformation deploy --template-file setup.yaml --stack-name setup --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM --tags ManagedBy=CloudFormation Repository=simonknittel/sam --parameter-override file://test-parameters.json`
+   1. `cd cloudformation`
+   2. Create and populate `test-parameters.json` and `prod-parameters.json`
+   3. `AWS_PROFILE=sam-test aws sso login`
+   4. `AWS_PROFILE=sam-test aws --region eu-central-1 cloudformation deploy --template-file setup.yaml --stack-name setup --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM --tags ManagedBy=CloudFormation Repository=simonknittel/sam --parameter-overrides file://test-parameters.json`
 
 4. Set up AWS User Notifications
 
@@ -71,8 +79,9 @@
 
 ## 6. Set up Terraform
 
-1. Create and populate `test.s3.tfbackend`, `prod.s3.tfbackend`, `test.tfvars` and `prod.tfvars`
-2. Create Terraform resources
+1. `cd terraform`
+2. Create and populate `test.tfvars` and `prod.tfvars` (gitignored; the `test.s3.tfbackend` and `prod.s3.tfbackend` backend configurations are already committed in this directory)
+3. Create Terraform resources
 
    1. `AWS_PROFILE=sam-test aws sso login`
    2. `AWS_PROFILE=sam-test terraform init -backend-config=test.s3.tfbackend -reconfigure`
@@ -89,7 +98,7 @@
 
 ## 8. Left over
 
-1. Manually enable we monthly budget report on AWS
+1. Manually enable the monthly budget report on AWS
    - Budget report name: `Total monthly costs`
    - Select budgets: `Total monthly budget`
    - Report frequency: `Monthly`
