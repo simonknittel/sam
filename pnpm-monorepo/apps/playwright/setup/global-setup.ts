@@ -1,9 +1,16 @@
+import {
+  CreateBucketCommand,
+  PutBucketCorsCommand,
+  PutBucketPolicyCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
 import { PostgreSqlContainer } from "@testcontainers/postgresql";
 import { execFile } from "node:child_process";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { setTimeout as sleep } from "node:timers/promises";
 import { promisify } from "node:util";
-import { Network } from "testcontainers";
+import { GenericContainer, Network, Wait } from "testcontainers";
 import { runCommand } from "./processes";
 import {
   appDirectory,
@@ -14,6 +21,14 @@ import {
   postgresNetworkAlias,
   postgresPassword,
   postgresUser,
+  rustfsImage,
+  s3AccessKeyId,
+  s3AnonymousReadPolicy,
+  s3BucketName,
+  s3ContainerPort,
+  s3CorsConfiguration,
+  s3Environment,
+  s3SecretAccessKey,
   stateDirectory,
   stateFilePath,
   templateDatabase,
@@ -50,17 +65,87 @@ const buildCollabImage = () =>
     { cwd: monorepoRoot, label: "collab image build" },
   );
 
-const buildApp = (templateDatabaseUrl: string) =>
+const buildApp = (templateDatabaseUrl: string, s3Port: number) =>
   runCommand("pnpm", ["--filter", "@sam-monorepo/app", "run", "build"], {
     cwd: monorepoRoot,
     env: {
       ...appDummyEnvironment,
+      ...s3Environment(s3Port),
       DATABASE_URL: templateDatabaseUrl,
     },
     label: "app build",
   });
 
+const BUCKET_BOOTSTRAP_ATTEMPTS = 5;
+
+/**
+ * Buckets are not auto-created on the first PUT — same one-shot setup as
+ * the rustfs-bootstrap service of the dev stack (compose.yml): create the
+ * bucket, allow anonymous reads and configure CORS.
+ */
+const bootstrapUploadsBucket = async (s3Port: number) => {
+  const client = new S3Client({
+    region: "auto",
+    endpoint: `http://localhost:${s3Port}`,
+    forcePathStyle: true,
+    requestChecksumCalculation: "WHEN_REQUIRED",
+    credentials: {
+      accessKeyId: s3AccessKeyId,
+      secretAccessKey: s3SecretAccessKey,
+    },
+  });
+
+  try {
+    for (let attempt = 1; ; attempt++) {
+      try {
+        try {
+          await client.send(new CreateBucketCommand({ Bucket: s3BucketName }));
+        } catch (error) {
+          // A previous attempt may have gotten this far already
+          if (
+            !(error instanceof Error) ||
+            error.name !== "BucketAlreadyOwnedByYou"
+          )
+            throw error;
+        }
+        await client.send(
+          new PutBucketPolicyCommand({
+            Bucket: s3BucketName,
+            Policy: s3AnonymousReadPolicy,
+          }),
+        );
+        await client.send(
+          new PutBucketCorsCommand({
+            Bucket: s3BucketName,
+            CORSConfiguration: s3CorsConfiguration,
+          }),
+        );
+        return;
+      } catch (error) {
+        if (attempt === BUCKET_BOOTSTRAP_ATTEMPTS) throw error;
+        await sleep(500 * attempt);
+      }
+    }
+  } finally {
+    client.destroy();
+  }
+};
+
 const globalSetup = async () => {
+  const skipBuild = process.env.PLAYWRIGHT_SKIP_BUILD === "1";
+
+  console.log("[stack] Starting RustFS…");
+  const rustfs = await new GenericContainer(rustfsImage)
+    .withEnvironment({
+      RUSTFS_ACCESS_KEY: s3AccessKeyId,
+      RUSTFS_SECRET_KEY: s3SecretAccessKey,
+    })
+    .withExposedPorts(s3ContainerPort)
+    .withWaitStrategy(Wait.forHttp("/health", s3ContainerPort))
+    .start();
+  const s3Port = rustfs.getMappedPort(s3ContainerPort);
+  await bootstrapUploadsBucket(s3Port);
+
   const network = await new Network().start();
 
   console.log("[stack] Starting Postgres…");
@@ -92,7 +177,6 @@ const globalSetup = async () => {
     },
   );
 
-  const skipBuild = process.env.PLAYWRIGHT_SKIP_BUILD === "1";
   const builds: Promise<void>[] = [];
 
   if (skipBuild) {
@@ -109,7 +193,7 @@ const globalSetup = async () => {
     );
   } else {
     console.log("[stack] Building the app and the collab image…");
-    builds.push(buildApp(templateDatabaseUrl), buildCollabImage());
+    builds.push(buildApp(templateDatabaseUrl, s3Port), buildCollabImage());
   }
 
   await Promise.all(builds);
@@ -118,6 +202,7 @@ const globalSetup = async () => {
     postgresHost: postgres.getHost(),
     postgresPort: postgres.getMappedPort(5432),
     networkName: network.getName(),
+    s3Port,
   };
   mkdirSync(stateDirectory, { recursive: true });
   writeFileSync(stateFilePath, JSON.stringify(state, null, 2));
@@ -126,6 +211,7 @@ const globalSetup = async () => {
 
   return async () => {
     await postgres.stop();
+    await rustfs.stop();
     await network.stop();
   };
 };

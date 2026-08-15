@@ -4,12 +4,13 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
+import { createS3Client } from "@/modules/common/utils/createS3Client";
 import {
   isAttachmentMimeType,
   MAX_ATTACHMENT_SIZE_BYTES,
   MAX_IMAGE_SIZE_BYTES,
 } from "@/modules/common/utils/uploadConstraints";
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -99,17 +100,8 @@ export async function POST(request: Request) {
 }
 
 async function getPresignedUploadUrl(key: string) {
-  const S3 = new S3Client({
-    region: "auto",
-    endpoint: `https://${env.S3_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-    credentials: {
-      accessKeyId: env.S3_ACCESS_KEY_ID,
-      secretAccessKey: env.S3_SECRET_ACCESS_KEY,
-    },
-  });
-
   return await getSignedUrl(
-    S3,
+    createS3Client(),
     new PutObjectCommand({ Bucket: env.S3_BUCKET_NAME, Key: key }),
     {
       expiresIn: 60 * 60, // 1 hour

@@ -1,6 +1,6 @@
 import { prisma } from "@/db";
-import { env } from "@/env";
 import { authenticate } from "@/modules/auth/server";
+import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
 import {
   collectWikiMentionedCitizenIds,
   collectWikiRoleCitizensRoleIds,
@@ -81,7 +81,7 @@ export const getWikiLinkedVariants = async (
         manufacturerName: variant.series.manufacturer.name,
         logo: variant.series.manufacturer.image
           ? {
-              src: `https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${variant.series.manufacturer.image.id}`,
+              src: getPublicUploadUrl(variant.series.manufacturer.image.id),
               mimeType: variant.series.manufacturer.image.mimeType,
             }
           : undefined,

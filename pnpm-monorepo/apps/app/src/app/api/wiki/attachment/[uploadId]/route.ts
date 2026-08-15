@@ -2,10 +2,11 @@ import { prisma } from "@/db";
 import { env } from "@/env";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
+import { createS3Client } from "@/modules/common/utils/createS3Client";
 import type { WikiSharedContextPage } from "@/modules/wiki/queries/getWikiContext";
 import { getWikiPageScopedContext } from "@/modules/wiki/queries/getWikiPageScopedContext";
 import { getAccessibleWikiPage } from "@/modules/wiki/utils/getAccessibleWikiPage";
-import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -87,15 +88,6 @@ async function getPresignedDownloadUrl(upload: {
   fileName: string;
   mimeType: string;
 }) {
-  const S3 = new S3Client({
-    region: "auto",
-    endpoint: `https://${env.S3_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-    credentials: {
-      accessKeyId: env.S3_ACCESS_KEY_ID,
-      secretAccessKey: env.S3_SECRET_ACCESS_KEY,
-    },
-  });
-
   /**
    * The stored file name is already URI-encoded (see useUpload/the wiki
    * upload helper), matching the RFC 5987 `filename*` percent-encoding —
@@ -105,7 +97,7 @@ async function getPresignedDownloadUrl(upload: {
   const encodedFileName = upload.fileName.replaceAll("'", "%27");
 
   return await getSignedUrl(
-    S3,
+    createS3Client(),
     new GetObjectCommand({
       Bucket: env.S3_BUCKET_NAME,
       Key: upload.id,

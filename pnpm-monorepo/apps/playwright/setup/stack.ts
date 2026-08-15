@@ -16,6 +16,59 @@ export { stateFilePath };
 export const postgresImage =
   "postgres:18.4-alpine3.23@sha256:996d0920e4ff9df1fc19dacb904492f3c1ec0ec1cc338f0ad7123be7731c5f5e";
 
+/** Same pinned image as compose.yml (S3-compatible upload storage). */
+export const rustfsImage =
+  "rustfs/rustfs:1.0.0-rc.2@sha256:7d6d361c49c08d427250fb59aae5d78df83d644c3405d9ccf4b21cda0b0692d0";
+
+export const s3AccessKeyId = "playwright-s3-access-key";
+export const s3SecretAccessKey = "playwright-insecure-s3-secret";
+export const s3BucketName = "uploads";
+export const s3ContainerPort = 9000;
+
+/**
+ * Same bucket setup as the compose.yml rustfs-bootstrap service: anonymous
+ * reads so uploaded files are public by unguessable URL like on the real
+ * bucket, and CORS for the browser's cross-origin presigned PUTs.
+ */
+export const s3AnonymousReadPolicy = JSON.stringify({
+  Version: "2012-10-17",
+  Statement: [
+    {
+      Effect: "Allow",
+      Principal: { AWS: ["*"] },
+      Action: ["s3:GetObject"],
+      Resource: [`arn:aws:s3:::${s3BucketName}/*`],
+    },
+  ],
+});
+
+export const s3CorsConfiguration = {
+  CORSRules: [
+    {
+      AllowedOrigins: ["*"],
+      AllowedMethods: ["GET", "PUT", "HEAD"],
+      AllowedHeaders: ["*"],
+      ExposeHeaders: ["ETag"],
+      MaxAgeSeconds: 3600,
+    },
+  ],
+};
+
+/**
+ * S3 environment of the app — all runtime-read server variables, so the
+ * RustFS container's random host port only needs to be known when a
+ * worker's `next start` launches (the app build merely needs the variables
+ * present for its env validation).
+ */
+export const s3Environment = (s3Port: number) =>
+  ({
+    S3_ENDPOINT: `http://localhost:${s3Port}`,
+    S3_ACCESS_KEY_ID: s3AccessKeyId,
+    S3_SECRET_ACCESS_KEY: s3SecretAccessKey,
+    S3_BUCKET_NAME: s3BucketName,
+    S3_PUBLIC_URL: `http://localhost:${s3Port}/${s3BucketName}`,
+  }) as const;
+
 /**
  * The collab image tag is unique per checkout so parallel worktrees don't
  * overwrite each other's image between building and starting containers.
@@ -39,6 +92,8 @@ export interface StackState {
   readonly postgresHost: string;
   readonly postgresPort: number;
   readonly networkName: string;
+  /** Host port of the RustFS S3 endpoint (see s3Environment) */
+  readonly s3Port: number;
 }
 
 export const readStackState = (): StackState =>
@@ -52,8 +107,9 @@ export const containerDatabaseUrl = (database: string) =>
 
 /**
  * The app validates its environment with non-empty strings for services the
- * test stack doesn't provide (Discord OAuth, Algolia, S3). The features
- * degrade gracefully at runtime; tests must not depend on them.
+ * test stack doesn't provide (Discord OAuth, Algolia). The features degrade
+ * gracefully at runtime; tests must not depend on them. S3 is real though —
+ * uploads go to the stack's RustFS container (see s3Environment).
  */
 export const appDummyEnvironment = {
   DISCORD_CLIENT_ID: "playwright-dummy",
@@ -63,10 +119,5 @@ export const appDummyEnvironment = {
   NEXT_PUBLIC_ALGOLIA_APP_ID: "playwright-dummy",
   ALGOLIA_ADMIN_API_KEY: "playwright-dummy",
   NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY: "playwright-dummy",
-  S3_ACCOUNT_ID: "playwright-dummy",
-  S3_ACCESS_KEY_ID: "playwright-dummy",
-  S3_SECRET_ACCESS_KEY: "playwright-dummy",
-  S3_BUCKET_NAME: "playwright-dummy",
-  NEXT_PUBLIC_S3_PUBLIC_URL: "uploads.playwright.invalid",
   NEXTAUTH_SECRET: "playwright-insecure-auth-secret",
 } as const;

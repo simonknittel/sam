@@ -1,9 +1,9 @@
 "use client";
 
-import { env } from "@/env";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { Handles } from "@/modules/career/components/Handles";
 import { Tooltip } from "@/modules/common/components/Tooltip";
+import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
 import { useRolesContext } from "@/modules/roles/components/RolesContext";
 import {
   FlowNodeRoleImage,
@@ -251,7 +251,7 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
             triggerChildren={
               <button type="button" className="cursor-help w-full h-full pb-1">
                 <Image
-                  src={`https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${image?.id}`}
+                  src={getPublicUploadUrl(image?.id ?? "")}
                   alt={role.name}
                   title={role.name}
                   width={100}

@@ -1,7 +1,7 @@
 "use client";
 
-import { env } from "@/env";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
+import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
 import clsx from "clsx";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -76,7 +76,7 @@ export const ImageUpload = ({
     <div className={clsx(className, "relative")}>
       {imageId && !isPending && (
         <Image
-          src={`https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${imageId}`}
+          src={getPublicUploadUrl(imageId)}
           alt=""
           width={width}
           height={height}

@@ -1,4 +1,4 @@
-import { env } from "@/env";
+import { getPublicUploadBaseUrl } from "@/modules/common/utils/getPublicUploadUrl";
 import {
   getOptimizedImageProps,
   type OptimizedImageProps,
@@ -67,7 +67,7 @@ export const resolveWikiImageRendering = (
   imageDimensions: Readonly<Record<string, WikiImageDimensions>>,
 ): WikiImageRendering => {
   const src = typeof attrs.src === "string" ? attrs.src : "";
-  const uploadId = getWikiImageUploadId(src, env.NEXT_PUBLIC_S3_PUBLIC_URL);
+  const uploadId = getWikiImageUploadId(src, getPublicUploadBaseUrl());
   const dimensions = uploadId ? imageDimensions[uploadId] : undefined;
   if (!dimensions) return { dimensions: undefined, optimized: undefined };
   if (UNOPTIMIZED_MIME_TYPES.includes(dimensions.mimeType))

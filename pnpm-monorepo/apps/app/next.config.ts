@@ -2,6 +2,19 @@ import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 import { env } from "./src/env";
 
+/**
+ * S3_PUBLIC_URL is either a bare host (https implied) or a full base URL
+ * incl. scheme, port and bucket path — see its doc comment in src/env.ts.
+ * The variable can be undefined despite its type when the env validation is
+ * skipped (SKIP_VALIDATION=1, e.g. `next typegen` in CI) — the placeholder
+ * keeps the config loadable.
+ */
+const s3PublicUrlRaw =
+  (env.S3_PUBLIC_URL as string | undefined) || "uploads.invalid";
+const s3PublicUrl = new URL(
+  s3PublicUrlRaw.includes("://") ? s3PublicUrlRaw : `https://${s3PublicUrlRaw}`,
+);
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
 
@@ -14,14 +27,27 @@ const nextConfig: NextConfig = {
         hostname: "cdn.discordapp.com",
       },
       {
-        protocol: "https",
-        hostname: env.NEXT_PUBLIC_S3_PUBLIC_URL,
+        protocol: s3PublicUrl.protocol === "http:" ? "http" : "https",
+        hostname: s3PublicUrl.hostname,
+        port: s3PublicUrl.port,
+        pathname:
+          s3PublicUrl.pathname === "/"
+            ? "/**"
+            : `${s3PublicUrl.pathname.replace(/\/+$/, "")}/**`,
       },
       {
         protocol: "https",
         hostname: "robertsspaceindustries.com",
       },
     ],
+    /**
+     * The optimizer refuses loopback IPs by default (SSRF protection).
+     * Only enabled when the uploads bucket itself is local (dev stack,
+     * Playwright) — never the case in deployments.
+     */
+    dangerouslyAllowLocalIP: ["localhost", "127.0.0.1", "[::1]"].includes(
+      s3PublicUrl.hostname,
+    ),
     dangerouslyAllowSVG: true,
     contentDispositionType: "attachment",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",

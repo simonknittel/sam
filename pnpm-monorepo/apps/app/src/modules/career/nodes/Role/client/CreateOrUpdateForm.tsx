@@ -1,7 +1,7 @@
-import { env } from "@/env";
 import { Button2 } from "@/modules/common/components/Button2";
 import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
 import { Select } from "@/modules/common/components/form/Select";
+import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
 import { createId } from "@paralleldrive/cuid2";
 import {
   FlowNodeRoleImage,
@@ -151,7 +151,7 @@ export const CreateOrUpdateForm = ({ initialData, onUpdate }: Props) => {
       />
       {roleImage === FlowNodeRoleImage.ICON && role?.icon && (
         <Image
-          src={`https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${role.icon.id}`}
+          src={getPublicUploadUrl(role.icon.id)}
           alt=""
           width={128}
           height={128}
@@ -163,7 +163,7 @@ export const CreateOrUpdateForm = ({ initialData, onUpdate }: Props) => {
       )}
       {roleImage === FlowNodeRoleImage.THUMBNAIL && role?.thumbnail && (
         <Image
-          src={`https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${role.thumbnail.id}`}
+          src={getPublicUploadUrl(role.thumbnail.id)}
           alt=""
           width={228}
           height={128}

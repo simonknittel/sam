@@ -21,6 +21,52 @@ services:
       - ${SAM_SOKETI_PORT:-6001}:6001
       - ${SAM_SOKETI_METRICS_PORT:-9601}:9601
 
+  # Local S3-compatible object storage for uploads (see
+  # docs/setup-local-machine.md for the app-side environment variables). The
+  # app and uploaded-file URLs both use the S3 port. Reads are anonymous so
+  # uploaded files can be displayed without signed URLs, mirroring the public
+  # bucket used in deployments.
+  rustfs:
+    image: rustfs/rustfs:1.0.0-rc.2@sha256:7d6d361c49c08d427250fb59aae5d78df83d644c3405d9ccf4b21cda0b0692d0
+    restart: no
+    # Local-only credentials; must match the S3_* variables in
+    # pnpm-monorepo/apps/app/.env.example
+    environment:
+      RUSTFS_ACCESS_KEY: sam-local-dev
+      RUSTFS_SECRET_KEY: sam-local-dev-insecure
+    ports:
+      - ${SAM_RUSTFS_PORT:-9000}:9000
+    healthcheck:
+      test: ["CMD", "curl", "--silent", "--fail", "http://localhost:9000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  # One-shot helper which creates the uploads bucket on startup and applies
+  # the anonymous-read policy and the CORS rules (the browser PUTs to
+  # presigned URLs cross-origin). Safe to re-run.
+  rustfs-bootstrap:
+    image: amazon/aws-cli:2.36.19@sha256:7e78b80fc653b9f6bdacc54709458910374da3213e3a19abdaf395680831a5da
+    restart: no
+    depends_on:
+      rustfs:
+        condition: service_healthy
+    environment:
+      AWS_ACCESS_KEY_ID: sam-local-dev
+      AWS_SECRET_ACCESS_KEY: sam-local-dev-insecure
+      AWS_REGION: us-east-1
+    configs:
+      - source: rustfs-anonymous-read-policy
+        target: /bootstrap/policy.json
+      - source: rustfs-cors
+        target: /bootstrap/cors.json
+    entrypoint: /bin/sh
+    command: >-
+      -c "aws --endpoint-url http://rustfs:9000 s3api head-bucket --bucket uploads 2>/dev/null
+      || aws --endpoint-url http://rustfs:9000 s3api create-bucket --bucket uploads;
+      aws --endpoint-url http://rustfs:9000 s3api put-bucket-policy --bucket uploads --policy file:///bootstrap/policy.json
+      && aws --endpoint-url http://rustfs:9000 s3api put-bucket-cors --bucket uploads --cors-configuration file:///bootstrap/cors.json"
+
   # Wiki realtime collaboration backend (see docs/setup-local-machine.md for
   # the app-side environment variables). Rebuild after changing
   # pnpm-monorepo/apps/collab: `docker compose build sam-collab`
@@ -36,3 +82,33 @@ services:
       COLLAB_JWT_SECRET: insecure-dev-secret
     ports:
       - ${SAM_COLLAB_PORT:-5210}:5210
+
+configs:
+  # Unauthenticated reads of uploaded files — public by unguessable URL,
+  # like the real bucket
+  rustfs-anonymous-read-policy:
+    content: |
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": { "AWS": ["*"] },
+            "Action": ["s3:GetObject"],
+            "Resource": ["arn:aws:s3:::uploads/*"]
+          }
+        ]
+      }
+  rustfs-cors:
+    content: |
+      {
+        "CORSRules": [
+          {
+            "AllowedOrigins": ["*"],
+            "AllowedMethods": ["GET", "PUT", "HEAD"],
+            "AllowedHeaders": ["*"],
+            "ExposeHeaders": ["ETag"],
+            "MaxAgeSeconds": 3600
+          }
+        ]
+      }

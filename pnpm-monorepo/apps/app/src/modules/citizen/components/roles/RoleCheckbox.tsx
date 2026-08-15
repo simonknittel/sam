@@ -1,8 +1,8 @@
 "use client";
 
-import { env } from "@/env";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
+import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
 import { underlineCharacters } from "@/modules/common/utils/underlineCharacters";
 import { type Role, type Upload } from "@sam-monorepo/database/browser";
 import { clsx } from "clsx";
@@ -66,7 +66,7 @@ export const RoleCheckbox = ({
         {role.icon && (
           <div className="flex-none aspect-square w-6 h-6 flex items-center justify-center rounded-secondary overflow-hidden">
             <Image
-              src={`https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${role.icon.id}`}
+              src={getPublicUploadUrl(role.icon.id)}
               alt=""
               width={24}
               height={24}

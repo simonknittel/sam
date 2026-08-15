@@ -1,6 +1,6 @@
-import { env } from "@/env";
 import { Link } from "@/modules/common/components/Link";
 import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
+import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
 import {
   sortAscWithAndNullLast,
   sortDescAndNullLast,
@@ -130,7 +130,7 @@ export const RolesTable = async ({ className, searchParams }: Props) => {
                   {role.icon ? (
                     <div className="aspect-square size-6 flex items-center justify-center rounded-secondary overflow-hidden flex-none">
                       <Image
-                        src={`https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${role.icon.id}`}
+                        src={getPublicUploadUrl(role.icon.id)}
                         alt=""
                         width={24}
                         height={24}

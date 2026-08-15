@@ -1,5 +1,5 @@
-import { env } from "@/env";
 import { createUploadResponseSchema } from "@/modules/common/utils/createUploadResponseSchema";
+import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
 import {
   isAttachmentMimeType,
   MAX_ATTACHMENT_SIZE_BYTES,
@@ -51,7 +51,7 @@ export const getWikiUploadKind = (file: File): WikiUploadKind | null => {
 };
 
 export const getWikiImageUrl = (uploadId: string) =>
-  `https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${uploadId}`;
+  getPublicUploadUrl(uploadId);
 
 /**
  * Uploads a file dropped/pasted/picked in the wiki editor: creates the

@@ -15,6 +15,7 @@ import {
   containerDatabaseUrl,
   hostDatabaseUrl,
   readStackState,
+  s3Environment,
   templateDatabase,
 } from "../setup/stack";
 
@@ -142,6 +143,7 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
           env: {
             ...process.env,
             ...appDummyEnvironment,
+            ...s3Environment(state.s3Port),
             DATABASE_URL: workerDatabaseUrl,
             NEXTAUTH_URL: baseURL,
             COLLAB_URL: `ws://localhost:${collabContainer.getMappedPort(collabPort)}`,

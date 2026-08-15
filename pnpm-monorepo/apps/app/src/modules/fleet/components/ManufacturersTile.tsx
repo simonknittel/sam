@@ -1,7 +1,7 @@
-import { env } from "@/env";
 import { Actions } from "@/modules/common/components/Actions";
 import { Link } from "@/modules/common/components/Link";
 import { Tile } from "@/modules/common/components/Tile";
+import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
 import clsx from "clsx";
 import Image from "next/image";
 import { getManufacturers } from "../queries/getManufacturers";
@@ -48,7 +48,7 @@ export const ManufacturersTile = async () => {
                 <td>
                   {row.image && (
                     <Image
-                      src={`https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${row.image.id}`}
+                      src={getPublicUploadUrl(row.image.id)}
                       width={48}
                       height={48}
                       alt={`Logo of ${row.name}`}

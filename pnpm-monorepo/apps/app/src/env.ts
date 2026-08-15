@@ -27,8 +27,17 @@ export const env = createEnv({
     DISCORD_GUILD_ID: z.string(),
     DISCORD_TOKEN: z.string(),
     ALGOLIA_ADMIN_API_KEY: z.string(),
-    /** Amazon S3 (or any other S3-compatible provider like Cloudflare R2) */
-    S3_ACCOUNT_ID: z.string(),
+    /**
+     * Cloudflare R2 account id, used to derive the bucket endpoint when
+     * S3_ENDPOINT is unset
+     */
+    S3_ACCOUNT_ID: z.string().optional(),
+    /**
+     * Explicit endpoint of any S3-compatible provider (e.g. the local
+     * RustFS container from compose.yml). Requests use path-style
+     * addressing when set. Takes precedence over S3_ACCOUNT_ID.
+     */
+    S3_ENDPOINT: z.url().optional(),
     /** Amazon S3 (or any other S3-compatible provider like Cloudflare R2) */
     S3_ACCESS_KEY_ID: z.string(),
     /** Amazon S3 (or any other S3-compatible provider like Cloudflare R2) */
@@ -59,6 +68,19 @@ export const env = createEnv({
     /** Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
     PUSHER_CHANNELS_APP_SECRET: z.string().default("app-secret"),
     /**
+     * Public base of the uploads bucket: either a bare host (e.g. an R2
+     * public bucket domain — https is implied and the upload id is the sole
+     * path segment) or a full base URL incl. scheme, port and bucket path
+     * for providers without per-bucket domains (e.g. the local RustFS
+     * container, http://localhost:9000/uploads). Server-only on purpose:
+     * the client reads it at runtime from an attribute the root layout
+     * renders (see getPublicUploadUrl.ts), and a runtime variable — unlike
+     * a build-inlined NEXT_PUBLIC_ one — lets several instances of one
+     * build serve uploads from different buckets (used by the Playwright
+     * test stack).
+     */
+    S3_PUBLIC_URL: z.string(),
+    /**
      * Shared secret with the wiki collab server (apps/collab). Realtime
      * collaboration is disabled if unset.
      */
@@ -82,7 +104,6 @@ export const env = createEnv({
   client: {
     NEXT_PUBLIC_ALGOLIA_APP_ID: z.string(),
     NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY: z.string(),
-    NEXT_PUBLIC_S3_PUBLIC_URL: z.string(),
     NEXT_PUBLIC_CARE_BEAR_SHOOTER_BUILD_URL: z.url().optional(),
     NEXT_PUBLIC_DOWNLOADS_BASE_URL: z.url().optional(),
     NEXT_PUBLIC_DOWNLOADS_BASE_URL_2: z.url().optional(),
@@ -149,10 +170,11 @@ export const env = createEnv({
     NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY:
       process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY,
     S3_ACCOUNT_ID: process.env.S3_ACCOUNT_ID,
+    S3_ENDPOINT: process.env.S3_ENDPOINT,
     S3_ACCESS_KEY_ID: process.env.S3_ACCESS_KEY_ID,
     S3_SECRET_ACCESS_KEY: process.env.S3_SECRET_ACCESS_KEY,
     S3_BUCKET_NAME: process.env.S3_BUCKET_NAME,
-    NEXT_PUBLIC_S3_PUBLIC_URL: process.env.NEXT_PUBLIC_S3_PUBLIC_URL,
+    S3_PUBLIC_URL: process.env.S3_PUBLIC_URL,
     UNLEASH_SERVER_API_URL: process.env.UNLEASH_SERVER_API_URL,
     UNLEASH_SERVER_API_TOKEN: process.env.UNLEASH_SERVER_API_TOKEN,
     NEXT_PUBLIC_HOST: process.env.NEXT_PUBLIC_HOST,

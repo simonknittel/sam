@@ -1,5 +1,8 @@
 import { prisma } from "@/db";
-import { env } from "@/env";
+import {
+  getPublicUploadBaseUrl,
+  getPublicUploadUrl,
+} from "@/modules/common/utils/getPublicUploadUrl";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import {
   collectWikiImageUploadIds,
@@ -54,9 +57,7 @@ export const toWikiLinkedPage = (
 ): WikiPageLinkedPage => ({
   title: page.title,
   slug: page.slug,
-  iconSrc: page.iconId
-    ? `https://${env.NEXT_PUBLIC_S3_PUBLIC_URL}/${page.iconId}`
-    : undefined,
+  iconSrc: page.iconId ? getPublicUploadUrl(page.iconId) : undefined,
   href: buildWikiPageHref(mode, page),
 });
 
@@ -117,7 +118,7 @@ const assembleWikiPageStaticContent = async (
    */
   const imageUploadIds = collectWikiImageUploadIds(
     content,
-    env.NEXT_PUBLIC_S3_PUBLIC_URL,
+    getPublicUploadBaseUrl(),
   );
   const uploadsWithDimensions =
     imageUploadIds.length > 0
