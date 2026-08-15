@@ -20,20 +20,42 @@ const browserCheckboxLabel = (page: Page, notificationType: string) =>
     .locator("label")
     .filter({ has: browserCheckbox(page, notificationType) });
 
-test("enabling a browser notification persists the setting", async ({
+test("browser notifications are enabled by default", async ({
   page,
   prisma,
   signIn,
 }) => {
-  const citizen = await createCitizen(prisma, { handle: "notification-tuner" });
+  const citizen = await createCitizen(prisma, {
+    handle: "notification-defaulter",
+  });
   await signIn(citizen.user);
 
   await page.goto("/app/account/notifications");
   await waitForAppShellHydration(page);
 
-  await expect(browserCheckbox(page, "event_created")).not.toBeChecked();
-  await browserCheckboxLabel(page, "event_created").click();
   await expect(browserCheckbox(page, "event_created")).toBeChecked();
+  await expect(browserCheckbox(page, "wiki_page_reported")).toBeChecked();
+
+  const settingsCount = await prisma.notificationSetting.count({
+    where: { citizenId: citizen.entity.id },
+  });
+  expect(settingsCount).toBe(0);
+});
+
+test("disabling a browser notification persists a disabled setting", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const citizen = await createCitizen(prisma, { handle: "notification-muter" });
+  await signIn(citizen.user);
+
+  await page.goto("/app/account/notifications");
+  await waitForAppShellHydration(page);
+
+  await expect(browserCheckbox(page, "event_created")).toBeChecked();
+  await browserCheckboxLabel(page, "event_created").click();
+  await expect(browserCheckbox(page, "event_created")).not.toBeChecked();
   await expect(page.getByText("Erfolgreich gespeichert")).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
@@ -53,12 +75,12 @@ test("enabling a browser notification persists the setting", async ({
   expect(auditEvent).not.toBeNull();
 });
 
-test("disabling a browser notification deletes the setting", async ({
+test("re-enabling a browser notification deletes the disabled setting", async ({
   page,
   prisma,
   signIn,
 }) => {
-  const citizen = await createCitizen(prisma, { handle: "notification-muter" });
+  const citizen = await createCitizen(prisma, { handle: "notification-tuner" });
   await prisma.notificationSetting.create({
     data: {
       citizenId: citizen.entity.id,
@@ -71,9 +93,9 @@ test("disabling a browser notification deletes the setting", async ({
   await page.goto("/app/account/notifications");
   await waitForAppShellHydration(page);
 
-  await expect(browserCheckbox(page, "event_created")).toBeChecked();
-  await browserCheckboxLabel(page, "event_created").click();
   await expect(browserCheckbox(page, "event_created")).not.toBeChecked();
+  await browserCheckboxLabel(page, "event_created").click();
+  await expect(browserCheckbox(page, "event_created")).toBeChecked();
   await expect(page.getByText("Erfolgreich gespeichert")).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
@@ -100,4 +122,68 @@ test("the on-site channel is always on and cannot be disabled", async ({
   const onSiteCheckbox = page.locator('input[name="ONSITE_event_created"]');
   await expect(onSiteCheckbox).toBeChecked();
   await expect(onSiteCheckbox).toBeDisabled();
+});
+
+test("disabling web push entirely removes all subscriptions", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const citizen = await createCitizen(prisma, { handle: "push-unsubscriber" });
+  await prisma.webPushSubscription.createMany({
+    data: [
+      {
+        citizenId: citizen.entity.id,
+        endpoint: "https://push.example.com/push-unsubscriber-device-1",
+        p256dh: "test-p256dh-1",
+        auth: "test-auth-1",
+      },
+      {
+        citizenId: citizen.entity.id,
+        endpoint: "https://push.example.com/push-unsubscriber-device-2",
+        p256dh: "test-p256dh-2",
+        auth: "test-auth-2",
+      },
+    ],
+  });
+  await prisma.notificationSetting.create({
+    data: {
+      citizenId: citizen.entity.id,
+      notificationType: "event_created",
+      channel: NotificationChannel.WEB_PUSH,
+    },
+  });
+  await signIn(citizen.user);
+
+  await page.goto("/app/account/notifications");
+  await waitForAppShellHydration(page);
+
+  await page
+    .getByRole("button", { name: "Auf allen Geräten deaktivieren" })
+    .click();
+  await expect(
+    page.getByText(
+      "Die Benachrichtigungen wurden auf allen Geräten deaktiviert.",
+    ),
+  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+
+  await expect
+    .poll(() =>
+      prisma.webPushSubscription.count({
+        where: { citizenId: citizen.entity.id },
+      }),
+    )
+    .toBe(0);
+
+  // The per-type disabled setting survives so it is restored when the citizen
+  // subscribes again.
+  const settingsCount = await prisma.notificationSetting.count({
+    where: { citizenId: citizen.entity.id },
+  });
+  expect(settingsCount).toBe(1);
+
+  const auditEvent = await prisma.auditEvent.findFirst({
+    where: { type: "WEB_PUSH_UNSUBSCRIBED" },
+  });
+  expect(auditEvent).not.toBeNull();
 });
