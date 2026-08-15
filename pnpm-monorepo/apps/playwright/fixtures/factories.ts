@@ -4,9 +4,12 @@ import type {
   PrismaClient,
   Role,
   User,
+  VariantStatus,
   WikiPage,
 } from "@sam-monorepo/database/client";
 import {
+  OrganizationMembershipType,
+  OrganizationMembershipVisibility,
   WikiPageAccessType,
   WikiPageEditability,
   WikiPageSidebarMode,
@@ -268,6 +271,134 @@ export const setWikiFeaturedPages = (
     create: { key: WIKI_SETTING_FEATURED_PAGES, value: [...pageIds] },
     update: { value: [...pageIds] },
   });
+
+interface CreateSilcTransactionOptions {
+  readonly receiverId: string;
+  readonly value: number;
+  readonly description?: string;
+  readonly createdById?: string;
+}
+
+/**
+ * Creates a transaction and keeps the denormalized balance columns on
+ * Entity in sync the way the app's updateCitizensSilcBalances does
+ * (totalEarnedSilc only counts positive values).
+ */
+export const createSilcTransaction = async (
+  prisma: PrismaClient,
+  { receiverId, value, description, createdById }: CreateSilcTransactionOptions,
+) => {
+  const transaction = await prisma.silcTransaction.create({
+    data: { receiverId, value, description, createdById },
+  });
+
+  await prisma.entity.update({
+    where: { id: receiverId },
+    data: {
+      silcBalance: { increment: value },
+      ...(value > 0 ? { totalEarnedSilc: { increment: value } } : {}),
+    },
+  });
+
+  return transaction;
+};
+
+interface CreateEventOptions {
+  readonly name: string;
+  /** Discord id of the organizer — managing rights key off this. */
+  readonly discordCreatorId: string;
+  readonly startTime: Date;
+  readonly lineupEnabled?: boolean;
+  readonly location?: string;
+}
+
+/**
+ * Events are only ever written by the Discord-scraping lambda, so seeding
+ * them directly is the intended route in tests. discordImage stays unset on
+ * purpose — it would make the page fetch from the Discord CDN.
+ */
+export const createEvent = (
+  prisma: PrismaClient,
+  {
+    name,
+    discordCreatorId,
+    startTime,
+    lineupEnabled,
+    location,
+  }: CreateEventOptions,
+) =>
+  prisma.event.create({
+    data: {
+      discordId: randomUUID(),
+      discordCreatorId,
+      name,
+      startTime,
+      lineupEnabled,
+      location,
+      discordGuildId: "playwright-guild",
+    },
+  });
+
+interface CreateVariantOptions {
+  readonly manufacturerName: string;
+  readonly seriesName: string;
+  readonly variantName: string;
+  readonly status?: VariantStatus;
+}
+
+/**
+ * Seeds the Manufacturer → Series → Variant chain a Ship hangs off of.
+ * Manufacturer and Series names are globally unique, but every test starts
+ * from a truncated database, so plain names are fine.
+ */
+export const createVariant = async (
+  prisma: PrismaClient,
+  { manufacturerName, seriesName, variantName, status }: CreateVariantOptions,
+) => {
+  const manufacturer = await prisma.manufacturer.create({
+    data: { name: manufacturerName },
+  });
+  const series = await prisma.series.create({
+    data: { name: seriesName, manufacturerId: manufacturer.id },
+  });
+  const variant = await prisma.variant.create({
+    data: { name: variantName, seriesId: series.id, status },
+  });
+
+  return { manufacturer, series, variant };
+};
+
+/**
+ * The id the app considers "the" organization, see
+ * packages/domain/src/ORG_ID.ts. The org fleet only counts ships of its
+ * active members.
+ */
+export const ORG_ID = "cm4wm57sw0001opxo2c8oq0o0";
+
+export const addCitizenToOrganization = async (
+  prisma: PrismaClient,
+  citizen: Citizen,
+) => {
+  await prisma.organization.upsert({
+    where: { id: ORG_ID },
+    create: {
+      id: ORG_ID,
+      name: "Playwright Org",
+      spectrumId: "PLAYWRIGHTORG",
+      createdById: citizen.entity.id,
+    },
+    update: {},
+  });
+
+  await prisma.activeOrganizationMembership.create({
+    data: {
+      organizationId: ORG_ID,
+      citizenId: citizen.entity.id,
+      type: OrganizationMembershipType.MAIN,
+      visibility: OrganizationMembershipVisibility.PUBLIC,
+    },
+  });
+};
 
 export {
   WikiPageAccessType,
