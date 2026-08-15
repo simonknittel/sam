@@ -48,8 +48,8 @@ const STATUS_CONFIG: Record<
 export interface WikiCollabUser {
   readonly name: string;
   readonly color: string;
-  /** Whether they may change the page — read-only viewers connect too */
-  readonly canEdit: boolean;
+  /** Whether they have edit mode toggled on — everyone else is just reading */
+  readonly isEditing: boolean;
 }
 
 interface Props {
@@ -64,14 +64,14 @@ interface Props {
  * connected, blue: connecting, red: disconnected, amber: authentication
  * failed), like the dot badge on the app tiles, plus the number of
  * connected users. The popover explains the state and lists the users by
- * name, split into the ones who can edit and the ones who are only
- * reading along.
+ * name, split into the ones who are editing right now and the ones who
+ * are only reading along.
  */
 export const WikiCollabStatusDot = ({ className, status, users }: Props) => {
   const config = STATUS_CONFIG[status];
   const showUsers = status === WebSocketStatus.Connected && users.length > 0;
-  const editors = users.filter((user) => user.canEdit);
-  const readers = users.filter((user) => !user.canEdit);
+  const editingUsers = users.filter((user) => user.isEditing);
+  const readingUsers = users.filter((user) => !user.isEditing);
 
   return (
     <span className={clsx("flex items-center", className)}>
@@ -114,9 +114,9 @@ export const WikiCollabStatusDot = ({ className, status, users }: Props) => {
 
         {showUsers && (
           <div className="mt-4 flex flex-col gap-3">
-            {/* Wording follows the permission tiers (WikiPagePermissionsModal) */}
-            <UserSection label="Bearbeiten" users={editors} />
-            <UserSection label="Lesen" users={readers} />
+            {/* Mode wording follows the edit-mode toggle (WikiEditModeToggle) */}
+            <UserSection label="Bearbeiten" users={editingUsers} />
+            <UserSection label="Lesen" users={readingUsers} />
           </div>
         )}
       </PopoverBaseUI>
