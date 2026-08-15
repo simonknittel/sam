@@ -1,6 +1,8 @@
 import { prisma } from "@/db";
-import { env } from "@/env";
-import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
+import {
+  getPublicUploadBaseUrl,
+  getPublicUploadUrl,
+} from "@/modules/common/utils/getPublicUploadUrl";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import {
   collectWikiImageUploadIds,
@@ -116,7 +118,7 @@ const assembleWikiPageStaticContent = async (
    */
   const imageUploadIds = collectWikiImageUploadIds(
     content,
-    env.NEXT_PUBLIC_S3_PUBLIC_URL,
+    getPublicUploadBaseUrl(),
   );
   const uploadsWithDimensions =
     imageUploadIds.length > 0

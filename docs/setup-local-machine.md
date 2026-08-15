@@ -34,8 +34,7 @@ Docker: `pnpm --filter @sam-monorepo/collab run dev` (uses
 ### Uploads (S3-compatible storage)
 
 File uploads (role icons, wiki images, attachments, …) go to the `rustfs`
-container from [compose.yml](../compose.yml). The `S3_*` and
-`NEXT_PUBLIC_S3_PUBLIC_URL` defaults from
+container from [compose.yml](../compose.yml). The `S3_*` defaults from
 `pnpm-monorepo/apps/app/.env.example` match the container's credentials and
 bucket — keep them. The bucket (incl. its anonymous-read policy and CORS
 rules) is created automatically on `docker compose up` by the one-shot

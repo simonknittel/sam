@@ -3,14 +3,14 @@ import createNextIntlPlugin from "next-intl/plugin";
 import { env } from "./src/env";
 
 /**
- * NEXT_PUBLIC_S3_PUBLIC_URL is either a bare host (https implied) or a full
- * base URL incl. scheme, port and bucket path — see its doc comment in
- * src/env.ts. The variable can be undefined despite its type when the env
- * validation is skipped (SKIP_VALIDATION=1, e.g. `next typegen` in CI) —
- * the placeholder keeps the config loadable.
+ * S3_PUBLIC_URL is either a bare host (https implied) or a full base URL
+ * incl. scheme, port and bucket path — see its doc comment in src/env.ts.
+ * The variable can be undefined despite its type when the env validation is
+ * skipped (SKIP_VALIDATION=1, e.g. `next typegen` in CI) — the placeholder
+ * keeps the config loadable.
  */
 const s3PublicUrlRaw =
-  (env.NEXT_PUBLIC_S3_PUBLIC_URL as string | undefined) || "uploads.invalid";
+  (env.S3_PUBLIC_URL as string | undefined) || "uploads.invalid";
 const s3PublicUrl = new URL(
   s3PublicUrlRaw.includes("://") ? s3PublicUrlRaw : `https://${s3PublicUrlRaw}`,
 );

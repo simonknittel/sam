@@ -64,7 +64,7 @@ In a worktree, adjust them to the slot's ports (slot 1 shown):
 - `NEXTAUTH_URL` → `http://localhost:3001`
 - `COLLAB_URL` → `ws://localhost:5211`
 - `S3_ENDPOINT` → `http://localhost:9001` and
-  `NEXT_PUBLIC_S3_PUBLIC_URL` → `http://localhost:9001/uploads`
+  `S3_PUBLIC_URL` → `http://localhost:9001/uploads`
 - append `NEXT_PUBLIC_PUSHER_CHANNELS_PORT="6002"` (not present in the
   main `.env`; the app defaults to 6001)
 

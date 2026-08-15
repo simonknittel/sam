@@ -1,6 +1,10 @@
 import { env } from "@/env";
 import ToasterContainer from "@/modules/common/components/ToasterContainer";
 import { TooltipProvider } from "@/modules/common/components/Tooltip";
+import {
+  getPublicUploadBaseUrl,
+  PUBLIC_UPLOAD_BASE_URL_ATTRIBUTE,
+} from "@/modules/common/utils/getPublicUploadUrl";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import clsx from "clsx";
 import { type Metadata } from "next";
@@ -29,6 +33,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     <html lang={locale} style={{ scrollPaddingTop: "122px" }}>
       <body
         className={clsx("bg-neutral-800 text-text-primary", robotMono.variable)}
+        {...{ [PUBLIC_UPLOAD_BASE_URL_ATTRIBUTE]: getPublicUploadBaseUrl() }}
       >
         <TooltipProvider>{children}</TooltipProvider>
         <NextTopLoader color="#c22424" showSpinner={false} />

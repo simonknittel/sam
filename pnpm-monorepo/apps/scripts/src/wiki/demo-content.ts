@@ -43,7 +43,7 @@ Options:
   --citizen-id <id>            Entity (citizen) id of the citizen mention.
   --citizen-handle <handle>    Handle stored as the mention's label fallback.
   --image-src <url>            Image URL. Uploaded images live at
-                               https://<NEXT_PUBLIC_S3_PUBLIC_URL>/<uploadId>.
+                               https://<S3_PUBLIC_URL>/<uploadId>.
   --attachment-upload-id <id>  Upload id of the file attachment card. The
                                download 404s until it points at a real upload
                                assigned to the page.

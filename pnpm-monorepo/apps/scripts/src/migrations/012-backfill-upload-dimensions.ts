@@ -8,7 +8,7 @@ import sharp from "sharp";
  * `probeUploadImageDimensions` in the app.
  *
  * Usage:
- *   NEXT_PUBLIC_S3_PUBLIC_URL=<public bucket host> \
+ *   S3_PUBLIC_URL=<public bucket host> \
  *     pnpm exec tsx src/migrations/012-backfill-upload-dimensions.ts
  *
  * Idempotent: only rows with a NULL width are touched, so failed rows can
@@ -21,8 +21,8 @@ const CONCURRENCY = 5;
 const FETCH_TIMEOUT_MS = 30_000;
 const PROGRESS_LOG_INTERVAL = 25;
 
-const publicUrlHost = process.env.NEXT_PUBLIC_S3_PUBLIC_URL;
-if (!publicUrlHost) throw new Error("NEXT_PUBLIC_S3_PUBLIC_URL is not set");
+const publicUrlHost = process.env.S3_PUBLIC_URL;
+if (!publicUrlHost) throw new Error("S3_PUBLIC_URL is not set");
 
 const isPlausibleDimension = (value: number | undefined): value is number =>
   value !== undefined &&
