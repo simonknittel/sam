@@ -66,11 +66,11 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
           Die neue Kachel &bdquo;Meine Teilnahme&ldquo; zeigt auf beiden
           Event-Arten den eigenen Anmeldestatus und die eigenen Posten aus der
           Aufstellung. Aufstellung, Briefing, Flotte und Manager funktionieren
-          wie gewohnt; zusätzlich zeigt der neue Reiter
-          &bdquo;Aktivität&ldquo;, was sich am Event getan hat, und über
-          &bdquo;Einstellungen&ldquo; bearbeiten Organisatoren ihr Event oder
-          sagen es ab. In der Eventliste filtert der neue Filter
-          &bdquo;Typ&ldquo; zwischen App- und Discord-Events.
+          wie gewohnt; zusätzlich zeigt der neue Reiter &bdquo;Aktivität&ldquo;,
+          was sich am Event getan hat, und über &bdquo;Einstellungen&ldquo;
+          bearbeiten Organisatoren ihr Event oder sagen es ab. In der Eventliste
+          filtert der neue Filter &bdquo;Typ&ldquo; zwischen App- und
+          Discord-Events.
         </p>
       </>
     ),

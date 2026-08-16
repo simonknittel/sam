@@ -93,9 +93,7 @@ export const PersonalBriefing = async ({ className, event }: Props) => {
         className,
       )}
     >
-      <h2 className="font-bold font-mono uppercase text-me">
-        Meine Teilnahme
-      </h2>
+      <h2 className="font-bold font-mono uppercase text-me">Meine Teilnahme</h2>
 
       {event.source === EventSource.DISCORD ? (
         <>
