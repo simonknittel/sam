@@ -5,8 +5,13 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
+import {
+  EventActivityType,
+  EventSource,
+} from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { createEventActivity } from "../utils/eventActivity";
 import { isAllowedToManagePositions } from "../utils/isAllowedToManagePositions";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
 
@@ -46,13 +51,27 @@ export const updateEventLineupEnabled = createAuthenticatedAction(
     /**
      * Create entry
      */
-    await prisma.event.update({
-      where: {
-        id: data.eventId,
-      },
-      data: {
-        lineupEnabled: data.value,
-      },
+    await prisma.$transaction(async (transaction) => {
+      await transaction.event.update({
+        where: {
+          id: data.eventId,
+        },
+        data: {
+          lineupEnabled: data.value,
+        },
+      });
+
+      /**
+       * The activity feed only exists on app events; recorded in both
+       * directions, rendered as "published"/"withdrawn".
+       */
+      if (event.source === EventSource.APP && event.lineupEnabled !== data.value)
+        await createEventActivity(transaction, {
+          eventId: event.id,
+          citizenId: authentication.session.entity?.id ?? null,
+          type: EventActivityType.LINEUP_TOGGLED,
+          payload: { enabled: data.value },
+        });
     });
 
     await createAuditEvents([

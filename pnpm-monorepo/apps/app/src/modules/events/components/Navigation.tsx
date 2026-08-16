@@ -4,7 +4,7 @@ import { getEventWikiContext } from "@/modules/wiki/queries/getEventWikiContext"
 import { getEventWikiBasePath } from "@/modules/wiki/utils/wikiPageHref";
 import { EventSource, type Entity, type Event } from "@sam-monorepo/database/client";
 import clsx from "clsx";
-import { FaBook, FaCog, FaHome, FaUsers } from "react-icons/fa";
+import { FaBook, FaCog, FaHistory, FaHome, FaUsers } from "react-icons/fa";
 import { MdWorkspaces } from "react-icons/md";
 import { isAllowedToManageEvent } from "../utils/isAllowedToManageEvent";
 import { isLineupVisible } from "../utils/isLineupVisible";
@@ -67,6 +67,15 @@ export const Navigation = async ({ className, event }: Props) => {
       icon: <FaUsers />,
       path: `/app/events/${event.id}/participants`,
     },
+    ...(event.source === EventSource.APP
+      ? [
+          {
+            name: "Aktivität",
+            icon: <FaHistory />,
+            path: `/app/events/${event.id}/activity`,
+          },
+        ]
+      : []),
     ...(showFleetLink
       ? [
           {
