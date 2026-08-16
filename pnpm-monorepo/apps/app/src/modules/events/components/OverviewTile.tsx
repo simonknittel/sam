@@ -1,14 +1,21 @@
+import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { DiscordButton } from "@/modules/common/components/DiscordButton";
 import { Markdown } from "@/modules/common/components/Markdown";
 import { formatDate } from "@/modules/common/utils/formatDate";
-import type { Event } from "@sam-monorepo/database/client";
+import {
+  EventSource,
+  type Entity,
+  type Event,
+} from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import Image from "next/image";
 import { DownloadEventButton } from "./DownloadEventButton";
 
 interface Props {
   readonly className?: string;
-  readonly event: Event;
+  readonly event: Event & {
+    readonly createdBy?: Entity | null;
+  };
 }
 
 export const OverviewTile = ({ className, event }: Props) => {
@@ -74,10 +81,25 @@ export const OverviewTile = ({ className, event }: Props) => {
             }) || "-"}
           </dd>
 
-          <dt className="text-neutral-500 font-mono uppercase text-xs mt-4">
-            Ort
-          </dt>
-          <dd>{event.location || "-"}</dd>
+          {event.source === EventSource.DISCORD && (
+            <>
+              <dt className="text-neutral-500 font-mono uppercase text-xs mt-4">
+                Ort
+              </dt>
+              <dd>{event.location || "-"}</dd>
+            </>
+          )}
+
+          {event.source === EventSource.APP && (
+            <>
+              <dt className="text-neutral-500 font-mono uppercase text-xs mt-4">
+                Erstellt von
+              </dt>
+              <dd>
+                <CitizenLink citizen={event.createdBy} />
+              </dd>
+            </>
+          )}
 
           <dt className="text-neutral-500 font-mono uppercase text-xs mt-4">
             Erstellt am
@@ -89,9 +111,11 @@ export const OverviewTile = ({ className, event }: Props) => {
           <div className="flex flex-col gap-2 mt-4">
             <DownloadEventButton event={event} />
 
-            <DiscordButton
-              path={`events/${event.discordGuildId}/${event.discordId}`}
-            />
+            {event.discordGuildId && event.discordId && (
+              <DiscordButton
+                path={`events/${event.discordGuildId}/${event.discordId}`}
+              />
+            )}
           </div>
         )}
       </div>

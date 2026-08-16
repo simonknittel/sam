@@ -17,6 +17,7 @@ export const getEventById = cache(
       },
       include: {
         visibilityRoles: true,
+        createdBy: true,
         participants: {
           where: { cancelledAt: null },
         },

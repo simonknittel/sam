@@ -2,10 +2,11 @@ import { requireAuthentication } from "@/modules/auth/server";
 import { SubNavigation } from "@/modules/common/components/SubNavigation";
 import { getEventWikiContext } from "@/modules/wiki/queries/getEventWikiContext";
 import { getEventWikiBasePath } from "@/modules/wiki/utils/wikiPageHref";
-import type { Entity, Event } from "@sam-monorepo/database/client";
+import { EventSource, type Entity, type Event } from "@sam-monorepo/database/client";
 import clsx from "clsx";
-import { FaBook, FaHome, FaUsers } from "react-icons/fa";
+import { FaBook, FaCog, FaHome, FaUsers } from "react-icons/fa";
 import { MdWorkspaces } from "react-icons/md";
+import { isAllowedToManageEvent } from "../utils/isAllowedToManageEvent";
 import { isLineupVisible } from "../utils/isLineupVisible";
 
 interface Props {
@@ -17,11 +18,15 @@ interface Props {
 
 export const Navigation = async ({ className, event }: Props) => {
   const authentication = await requireAuthentication();
-  const [showLineup, showFleetLink, eventWikiContext] = await Promise.all([
-    isLineupVisible(event),
-    authentication.authorize("orgFleet", "read"),
-    getEventWikiContext(event.id),
-  ]);
+  const [showLineup, showFleetLink, eventWikiContext, showSettings] =
+    await Promise.all([
+      isLineupVisible(event),
+      authentication.authorize("orgFleet", "read"),
+      getEventWikiContext(event.id),
+      event.source === EventSource.APP
+        ? isAllowedToManageEvent(event)
+        : Promise.resolve(false),
+    ]);
 
   /**
    * The gate: only events seeded with a root page have a briefing, and the
@@ -68,6 +73,15 @@ export const Navigation = async ({ className, event }: Props) => {
             name: "Flotte",
             icon: <MdWorkspaces />,
             path: `/app/events/${event.id}/fleet`,
+          },
+        ]
+      : []),
+    ...(showSettings
+      ? [
+          {
+            name: "Einstellungen",
+            icon: <FaCog />,
+            path: `/app/events/${event.id}/settings`,
           },
         ]
       : []),

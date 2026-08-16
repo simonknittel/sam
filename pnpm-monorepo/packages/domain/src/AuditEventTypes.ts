@@ -161,6 +161,13 @@ export enum AuditEventType {
   EVENT_UPDATED_FROM_DISCORD = "EVENT_UPDATED_FROM_DISCORD",
   EVENT_DELETED_FROM_DISCORD = "EVENT_DELETED_FROM_DISCORD",
   EVENT_PARTICIPANTS_SYNCED = "EVENT_PARTICIPANTS_SYNCED",
+  EVENT_CREATED_IN_APP = "EVENT_CREATED_IN_APP",
+  EVENT_UPDATED_IN_APP = "EVENT_UPDATED_IN_APP",
+  EVENT_DELETED_IN_APP = "EVENT_DELETED_IN_APP",
+  EVENT_VISIBILITY_UPDATED = "EVENT_VISIBILITY_UPDATED",
+  EVENT_PARTICIPATION_SIGNED_UP = "EVENT_PARTICIPATION_SIGNED_UP",
+  EVENT_PARTICIPATION_COMMENT_UPDATED = "EVENT_PARTICIPATION_COMMENT_UPDATED",
+  EVENT_PARTICIPATION_CANCELLED = "EVENT_PARTICIPATION_CANCELLED",
   CITIZENS_PER_ROLE_COUNTED = "CITIZENS_PER_ROLE_COUNTED",
   SHIPS_PER_VARIANT_COUNTED = "SHIPS_PER_VARIANT_COUNTED",
   UNIQUE_LOGINS_COUNTED = "UNIQUE_LOGINS_COUNTED",
@@ -1131,6 +1138,42 @@ export interface AuditEventDataByType {
     eventId: string;
     addedCount: number;
     removedCount: number;
+  };
+
+  [AuditEventType.EVENT_CREATED_IN_APP]: {
+    eventId: string;
+    name: string;
+  };
+
+  [AuditEventType.EVENT_UPDATED_IN_APP]: {
+    eventId: string;
+    changedFields: string[];
+  };
+
+  [AuditEventType.EVENT_DELETED_IN_APP]: {
+    eventId: string;
+    name: string;
+  };
+
+  [AuditEventType.EVENT_VISIBILITY_UPDATED]: {
+    eventId: string;
+    visibility: string;
+    roleIds: string[];
+  };
+
+  [AuditEventType.EVENT_PARTICIPATION_SIGNED_UP]: {
+    eventId: string;
+    citizenId: string;
+  };
+
+  [AuditEventType.EVENT_PARTICIPATION_COMMENT_UPDATED]: {
+    eventId: string;
+    citizenId: string;
+  };
+
+  [AuditEventType.EVENT_PARTICIPATION_CANCELLED]: {
+    eventId: string;
+    citizenId: string;
   };
 
   [AuditEventType.CITIZENS_PER_ROLE_COUNTED]: {

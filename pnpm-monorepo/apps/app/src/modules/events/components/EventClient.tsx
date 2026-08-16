@@ -179,9 +179,11 @@ export const EventClient = ({
               </Link>
             )}
 
-            <DiscordNavigationButton
-              path={`events/${event.discordGuildId}/${event.discordId}`}
-            />
+            {event.discordGuildId && event.discordId && (
+              <DiscordNavigationButton
+                path={`events/${event.discordGuildId}/${event.discordId}`}
+              />
+            )}
           </div>
         </div>
       </div>

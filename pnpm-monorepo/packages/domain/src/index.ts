@@ -9,6 +9,7 @@ export {
   type AuditEventDataByType,
   type AuditEventInput,
 } from "./AuditEventTypes.js";
+export { buildBriefingRootPageSeed } from "./buildBriefingRootPageSeed.js";
 export { isAllowedWebPushEndpointUrl } from "./isAllowedWebPushEndpointUrl.js";
 export { ORG_ID } from "./ORG_ID.js";
 export { calculateSilcBalances } from "./silc/calculateSilcBalances.js";

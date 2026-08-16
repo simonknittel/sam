@@ -43,6 +43,12 @@ const CreateTaskForm = dynamic(() =>
   ),
 );
 
+const CreateEventForm = dynamic(() =>
+  import("@/modules/events/components/CreateEvent/CreateEventForm").then(
+    (mod) => mod.CreateEventForm,
+  ),
+);
+
 const CreateProfitDistributionCycleForm = dynamic(() =>
   import("@/modules/profit-distribution/components/CreateProfitDistributionCycleForm").then(
     (mod) => mod.CreateProfitDistributionCycleForm,
@@ -91,6 +97,11 @@ export const createForms = {
     formComponent: CreateTaskForm,
     modalHeading: "Neuer Task",
     modalWidth: "w-3xl",
+  },
+  event: {
+    formComponent: CreateEventForm,
+    modalHeading: "Neues Event",
+    modalWidth: "w-120",
   },
   silcTransaction: {
     formComponent: CreateSilcTransactionForm,

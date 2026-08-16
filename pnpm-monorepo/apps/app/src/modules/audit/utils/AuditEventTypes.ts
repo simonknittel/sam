@@ -1692,6 +1692,77 @@ export const AuditEventDefinitions: {
       `Synced event participants from Discord: ${data.addedCount} added, ${data.removedCount} removed (${data.eventId})`,
   },
 
+  [AuditEventType.EVENT_CREATED_IN_APP]: {
+    type: AuditEventType.EVENT_CREATED_IN_APP,
+    data: {
+      eventId: "string",
+      name: "string",
+    },
+    message: (data) => `Event "${data.name}" created (event: ${data.eventId})`,
+  },
+
+  [AuditEventType.EVENT_UPDATED_IN_APP]: {
+    type: AuditEventType.EVENT_UPDATED_IN_APP,
+    data: {
+      eventId: "string",
+      changedFields: ["string"],
+    },
+    message: (data) =>
+      `Event updated: ${data.changedFields.join(", ")} (event: ${data.eventId})`,
+  },
+
+  [AuditEventType.EVENT_DELETED_IN_APP]: {
+    type: AuditEventType.EVENT_DELETED_IN_APP,
+    data: {
+      eventId: "string",
+      name: "string",
+    },
+    message: (data) => `Event "${data.name}" deleted (event: ${data.eventId})`,
+  },
+
+  [AuditEventType.EVENT_VISIBILITY_UPDATED]: {
+    type: AuditEventType.EVENT_VISIBILITY_UPDATED,
+    data: {
+      eventId: "string",
+      visibility: "string",
+      roleIds: ["string"],
+    },
+    message: (data) =>
+      `Event visibility set to ${data.visibility}${
+        data.roleIds.length > 0 ? ` (roles: ${data.roleIds.join(", ")})` : ""
+      } (event: ${data.eventId})`,
+  },
+
+  [AuditEventType.EVENT_PARTICIPATION_SIGNED_UP]: {
+    type: AuditEventType.EVENT_PARTICIPATION_SIGNED_UP,
+    data: {
+      eventId: "string",
+      citizenId: "string",
+    },
+    message: (data) =>
+      `Citizen ${data.citizenId} signed up for event ${data.eventId}`,
+  },
+
+  [AuditEventType.EVENT_PARTICIPATION_COMMENT_UPDATED]: {
+    type: AuditEventType.EVENT_PARTICIPATION_COMMENT_UPDATED,
+    data: {
+      eventId: "string",
+      citizenId: "string",
+    },
+    message: (data) =>
+      `Citizen ${data.citizenId} updated their participation comment for event ${data.eventId}`,
+  },
+
+  [AuditEventType.EVENT_PARTICIPATION_CANCELLED]: {
+    type: AuditEventType.EVENT_PARTICIPATION_CANCELLED,
+    data: {
+      eventId: "string",
+      citizenId: "string",
+    },
+    message: (data) =>
+      `Citizen ${data.citizenId} cancelled their participation in event ${data.eventId}`,
+  },
+
   [AuditEventType.CITIZENS_PER_ROLE_COUNTED]: {
     type: AuditEventType.CITIZENS_PER_ROLE_COUNTED,
     data: {
