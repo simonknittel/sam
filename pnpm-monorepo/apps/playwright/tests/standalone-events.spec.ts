@@ -9,7 +9,10 @@ import {
   createVariant,
   type Citizen,
 } from "../fixtures/factories";
-import { ACTION_FEEDBACK_TIMEOUT } from "../fixtures/interactions";
+import {
+  ACTION_FEEDBACK_TIMEOUT,
+  waitForAppShellHydration,
+} from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 const ONE_HOUR_MS = 60 * 60 * 1000;
@@ -141,6 +144,7 @@ test("the organizer edits the event via the settings tab", async ({
 
   await signIn(creator.user);
   await page.goto(`/app/events/${event.id}/settings`);
+  await waitForAppShellHydration(page);
 
   await page.getByLabel("Titel").fill("Operation Neuer Name");
   await page.getByLabel("Beschreibung").fill("Jetzt mit Beschreibung.");
@@ -298,6 +302,7 @@ test("the sign-up lifecycle: sign up with comment, edit, cancel, re-sign-up", as
 
   await signIn(participant.user);
   await page.goto(`/app/events/${event.id}`);
+  await waitForAppShellHydration(page);
 
   await expect(page.getByText("Nicht angemeldet")).toBeVisible();
   await page.getByLabel("Kommentar").fill("Bringe Snacks mit");
@@ -318,9 +323,12 @@ test("the sign-up lifecycle: sign up with comment, edit, cancel, re-sign-up", as
     page.getByRole("link", { name: "anmelde-orga", exact: true }),
   ).toBeVisible();
 
-  // Edit the comment. Waiting for the prefilled value guards against
-  // filling before hydration, which would append the default to the input.
+  // Edit the comment. The stored value is already in the SSR markup, so
+  // asserting it proves nothing about hydration — filling the controlled
+  // textarea any earlier lets React re-seed the draft mid-fill, which leaves
+  // the typed text prepended to the restored one.
   await page.goto(`/app/events/${event.id}`);
+  await waitForAppShellHydration(page);
   await expect(page.getByLabel("Kommentar")).toHaveValue("Bringe Snacks mit");
   await page.getByLabel("Kommentar").fill("Bringe doch keine Snacks mit");
   await page.getByRole("button", { name: "Kommentar speichern" }).click();
@@ -338,6 +346,7 @@ test("the sign-up lifecycle: sign up with comment, edit, cancel, re-sign-up", as
   });
 
   await page.goto(`/app/events/${event.id}`);
+  await waitForAppShellHydration(page);
   await expect(page.getByText("Sanitäter")).toBeVisible();
 
   await page.getByRole("button", { name: "Abmelden", exact: true }).click();
