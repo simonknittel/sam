@@ -1,20 +1,58 @@
+/// Where an event originates. DISCORD events are mirrored by the sync Lambda
+/// and their core data stays read-only in the app; APP events are created
+/// and fully managed inside the app.
+enum EventSource {
+  DISCORD
+  APP
+}
+
+/// PUBLIC events are visible to everyone with `event;read`. RESTRICTED
+/// events are only visible to holders of the selected roles
+/// (EventVisibilityRole), the event's creator, its managers and holders of
+/// `event;manage`.
+enum EventVisibility {
+  PUBLIC
+  RESTRICTED
+}
+
 model Event {
-  id                  String                    @id @default(cuid())
-  discordId           String                    @unique
-  discordCreatorId    String
-  name                String                    @map("discordName")
-  createdAt           DateTime                  @default(now())
-  updatedAt           DateTime                  @updatedAt
-  discordParticipants EventDiscordParticipant[]
-  positions           EventPosition[]
-  lineupEnabled       Boolean                   @default(false)
-  startTime           DateTime
-  endTime             DateTime?
-  description         String?
-  location            String?
-  discordImage        String?
-  discordGuildId      String?
-  managers            Entity[]                  @relation("eventManagers")
+  id     String      @id @default(cuid())
+  source EventSource
+
+  // Discord-sourced events only (source DISCORD)
+  discordId        String? @unique
+  discordCreatorId String?
+  discordImage     String?
+  discordGuildId   String?
+
+  name        String
+  startTime   DateTime
+  endTime     DateTime?
+  description String?
+  location    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// The creating citizen of app events; backfilled for Discord events
+  /// whose Discord creator matches a citizen's Discord id.
+  createdById String?
+  createdBy   Entity? @relation("createdEvents", fields: [createdById], references: [id], onDelete: SetNull)
+
+  /// Soft delete for app events. Discord events cancelled on Discord are
+  /// hard-deleted by the sync, like before the unification.
+  deletedAt   DateTime?
+  deletedById String?
+  deletedBy   Entity?   @relation("deletedEvents", fields: [deletedById], references: [id], onDelete: SetNull)
+
+  visibility      EventVisibility       @default(PUBLIC)
+  visibilityRoles EventVisibilityRole[]
+
+  participants  EventParticipant[]
+  positions     EventPosition[]
+  lineupEnabled Boolean            @default(false)
+  managers      Entity[]           @relation("eventManagers")
+  activities    EventActivity[]
 
   /// Set when the briefing root page's read scope first left MANAGERS.
   /// Guards the one-time "briefing published" notification.
@@ -24,19 +62,82 @@ model Event {
 
   @@index([startTime])
   @@index([endTime])
-  @@map("DiscordEvent")
 }
 
-model EventDiscordParticipant {
-  id            String   @id @default(cuid())
-  eventId       String
-  event         Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  discordUserId String
-  createdAt     DateTime @default(now())
+/// The roles a RESTRICTED event is visible to. Ignored for PUBLIC events.
+model EventVisibilityRole {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  roleId    String
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
 
-  @@unique([eventId, discordUserId])
+  @@unique([eventId, roleId])
+}
+
+/// One participation of one person in one event, from either source:
+/// DISCORD rows mirror a Discord RSVP (identity is the Discord user id, the
+/// citizen is resolved when possible), APP rows are in-app sign-ups
+/// (identity is the citizen). Cancellation is a soft-cancel; every
+/// re-sign-up creates a fresh row, so rows double as participation history.
+model EventParticipant {
+  id      String      @id @default(cuid())
+  eventId String
+  event   Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  source  EventSource
+
+  citizenId     String?
+  citizen       Entity? @relation("citizen", fields: [citizenId], references: [id], onDelete: Cascade)
+  discordUserId String?
+
+  comment String?
+
+  createdAt     DateTime  @default(now())
+  cancelledAt   DateTime?
+  cancelledById String?
+  cancelledBy   Entity?   @relation("cancelledBy", fields: [cancelledById], references: [id], onDelete: SetNull)
+
+  /// Mirror of citizenId/discordUserId while the row is active, NULL once
+  /// cancelled: Postgres treats NULLs as distinct, so the unique constraints
+  /// below enforce "at most one active row per person per event" while
+  /// keeping any number of cancelled rows. Cancellation must NULL these in
+  /// the same update that sets cancelledAt.
+  activeCitizenId     String?
+  activeDiscordUserId String?
+
+  @@unique([eventId, activeCitizenId])
+  @@unique([eventId, activeDiscordUserId])
+  @@index([citizenId])
   @@index([discordUserId])
-  @@map("DiscordEventParticipant")
+}
+
+/// The in-event activity feed of app events, visible to everyone who can
+/// see the event — deliberately separate from the admin-gated, immutable
+/// AuditEvent system log. "Event start"/"event end" entries are rendered
+/// synthetically from the event's startTime/endTime and never stored.
+enum EventActivityType {
+  CREATED
+  TITLE_UPDATED
+  DESCRIPTION_UPDATED
+  SCHEDULE_UPDATED
+  PARTICIPATION_SIGNED_UP
+  PARTICIPATION_COMMENT_UPDATED
+  PARTICIPATION_CANCELLED
+  LINEUP_TOGGLED
+}
+
+model EventActivity {
+  id        String            @id @default(cuid())
+  eventId   String
+  event     Event             @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  type      EventActivityType
+  payload   Json?
+  citizenId String?
+  citizen   Entity?           @relation("citizen", fields: [citizenId], references: [id], onDelete: SetNull)
+  createdAt DateTime          @default(now())
+
+  @@index([eventId, createdAt])
 }
 
 model EventPosition {

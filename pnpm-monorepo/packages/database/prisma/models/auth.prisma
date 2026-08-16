@@ -82,6 +82,7 @@ model Role {
   inherits                Role[]                 @relation("inheritance")
   inheritedBy             Role[]                 @relation("inheritance")
   eventPositions          EventPosition[]
+  eventVisibilities       EventVisibilityRole[]
   tasksRequiredIn         Task[]                 @relation("requiredRoles")
   silcSalaries            SilcRoleSalary[]
   /// Number of days after which this role gets removed from a citizen due to
