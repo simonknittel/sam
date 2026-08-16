@@ -7,7 +7,7 @@
  * need to use are documented accordingly near the end.
  */
 import { prisma } from "@/db";
-import { getServerAuthSession } from "@/modules/auth/server";
+import { authorize, getServerAuthSession } from "@/modules/auth/server";
 import { requireConfirmedEmailForTrpc } from "@/modules/auth/utils/emailConfirmation";
 import { log } from "@/modules/logging";
 import { initTRPC, TRPCError } from "@trpc/server";
@@ -93,6 +93,10 @@ export const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
   }
 
   await requireConfirmedEmailForTrpc(ctx.session);
+
+  // The same clearance gate as requireAuthenticationPage/Api/Action
+  if (!(await authorize(ctx.session, "login", "manage")))
+    throw new TRPCError({ code: "FORBIDDEN" });
 
   return next({
     ctx: {
