@@ -1,8 +1,10 @@
+// The browser-safe entry keeps the Prisma runtime (and its Node builtins)
+// out of client bundles — domain is imported from client components too.
 import {
   WikiPageEventScope,
   WikiPageNamespace,
   WikiPageUploadability,
-} from "@sam-monorepo/database/client";
+} from "@sam-monorepo/database/browser";
 
 /**
  * Data for an event wiki's locked root "Briefing" page: the wiki's homepage
