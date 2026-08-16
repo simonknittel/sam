@@ -45,7 +45,12 @@ export const EventParticipationControls = ({
             </>
           ) : (
             <>
-              <FaTimes className="text-neutral-500" />
+              <FaTimes
+                className={clsx({
+                  "text-red-500": hasCancelled,
+                  "text-neutral-500": !hasCancelled,
+                })}
+              />
               {hasCancelled ? "Abgemeldet" : "Nicht angemeldet"}
             </>
           )}
