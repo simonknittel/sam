@@ -11,6 +11,9 @@ import { expect, test } from "../fixtures/test";
 const SILC_ADMIN_PERMISSIONS = [
   "silcBalanceOfOtherCitizen;read",
   "silcTransactionOfOtherCitizen;manage",
+  // The transaction modal's citizen picker loads the roster, which
+  // requires the citizen read permission
+  "citizen;read",
 ];
 
 test("a transaction created through the UI updates balances and the system log", async ({

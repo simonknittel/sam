@@ -150,7 +150,9 @@ test("completing a task with a SILC reward pays the completionists", async ({
 }) => {
   const manager = await createCitizen(prisma, {
     handle: "task-verwalter",
-    permissionStrings: ["task;read"],
+    // The completion modal's citizen picker loads the roster, which
+    // requires the citizen read permission
+    permissionStrings: ["task;read", "citizen;read"],
   });
   const worker = await createCitizen(prisma, { handle: "silc-arbeiter" });
   const task = await createSilcTask(
