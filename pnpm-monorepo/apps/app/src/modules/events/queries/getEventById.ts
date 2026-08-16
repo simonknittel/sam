@@ -1,5 +1,6 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
+import { canSeeEvent } from "@/modules/events/utils/eventVisibility";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import type { Event } from "@sam-monorepo/database/client";
 import { forbidden } from "next/navigation";
@@ -10,11 +11,12 @@ export const getEventById = cache(
     const authentication = await requireAuthentication();
     if (!(await authentication.authorize("event", "read"))) forbidden();
 
-    return prisma.event.findUnique({
+    const event = await prisma.event.findUnique({
       where: {
         id,
       },
       include: {
+        visibilityRoles: true,
         participants: {
           where: { cancelledAt: null },
         },
@@ -156,5 +158,14 @@ export const getEventById = cache(
         managers: true,
       },
     });
+    if (!event) return null;
+
+    /**
+     * Not visible is indistinguishable from nonexistent: callers translate
+     * the null into a 404.
+     */
+    if (!(await canSeeEvent(event))) return null;
+
+    return event;
   }),
 );

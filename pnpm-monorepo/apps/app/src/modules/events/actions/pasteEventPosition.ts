@@ -28,9 +28,10 @@ const eventSelect = {
   startTime: true,
   endTime: true,
   discordCreatorId: true,
+  createdById: true,
   managers: {
     select: {
-      discordId: true,
+      id: true,
     },
   },
 } as const;

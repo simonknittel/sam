@@ -268,6 +268,11 @@ export const STATIC_PERMISSIONS = [
   },
   {
     section: "Events",
+    title: "Events erstellen",
+    string: "event;create",
+  },
+  {
+    section: "Events",
     title: "Events verwalten",
     string: "event;manage",
   },

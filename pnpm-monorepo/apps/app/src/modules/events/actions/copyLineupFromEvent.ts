@@ -40,9 +40,10 @@ export const copyLineupFromEvent = createAuthenticatedAction(
           startTime: true,
           endTime: true,
           discordCreatorId: true,
+          createdById: true,
           managers: {
             select: {
-              discordId: true,
+              id: true,
             },
           },
           positions: {
@@ -62,9 +63,10 @@ export const copyLineupFromEvent = createAuthenticatedAction(
           id: true,
           lineupEnabled: true,
           discordCreatorId: true,
+          createdById: true,
           managers: {
             select: {
-              discordId: true,
+              id: true,
             },
           },
         },

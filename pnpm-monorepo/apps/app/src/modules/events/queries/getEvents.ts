@@ -1,5 +1,6 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
+import { getVisibleEventsWhere } from "@/modules/events/utils/eventVisibility";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import type { Prisma } from "@sam-monorepo/database/client";
 import { forbidden } from "next/navigation";
@@ -21,7 +22,11 @@ export const getOpenEventCount = cache(
     const authentication = await requireAuthentication();
     if (!(await authentication.authorize("event", "read"))) forbidden();
 
-    return prisma.event.count({ where: openEventsWhere(new Date()) });
+    return prisma.event.count({
+      where: {
+        AND: [openEventsWhere(new Date()), await getVisibleEventsWhere()],
+      },
+    });
   }),
 );
 
@@ -69,7 +74,9 @@ export const getEvents = cache(
         direction === "prev" ? -(EVENTS_PAGE_SIZE + 1) : EVENTS_PAGE_SIZE + 1;
 
       const rows = await prisma.event.findMany({
-        where,
+        where: {
+          AND: [where, await getVisibleEventsWhere()],
+        },
         include: {
           participants: {
             where: { cancelledAt: null },

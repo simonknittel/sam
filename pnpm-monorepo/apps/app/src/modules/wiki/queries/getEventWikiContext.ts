@@ -1,5 +1,6 @@
 import { prisma } from "@/db";
 import { authenticate } from "@/modules/auth/server";
+import { canSeeEvent } from "@/modules/events/utils/eventVisibility";
 import { isAllowedToManageEvent } from "@/modules/events/utils/isAllowedToManageEvent";
 import { isEventUpdatable } from "@/modules/events/utils/isEventUpdatable";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
@@ -105,6 +106,7 @@ export const getEventWikiContext = cache(
           where: { id: eventId },
           include: {
             managers: true,
+            visibilityRoles: true,
             positions: {
               select: {
                 id: true,
@@ -152,6 +154,12 @@ export const getEventWikiContext = cache(
         }),
       ]);
       if (!event) return null;
+
+      /**
+       * Restricted or soft-deleted events must not leak through their wiki:
+       * no context means every caller behaves as if the event did not exist.
+       */
+      if (!(await canSeeEvent(event))) return null;
 
       const viewer: EventWikiViewer = {
         isParticipant: participant !== null,

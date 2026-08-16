@@ -26,7 +26,7 @@ import { collectPositionScopeIdsForCitizen } from "@sam-monorepo/permissions";
  * readability.
  */
 export const canReadEventBriefing = async (
-  event: Pick<Event, "id" | "discordCreatorId"> & {
+  event: Pick<Event, "id" | "discordCreatorId" | "createdById"> & {
     readonly managers: Entity[];
     readonly participants: EventParticipant[];
   },

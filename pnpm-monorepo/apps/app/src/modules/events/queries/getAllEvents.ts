@@ -1,5 +1,6 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
+import { getVisibleEventsWhere } from "@/modules/events/utils/eventVisibility";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
@@ -10,6 +11,7 @@ export const getAllEvents = cache(
     if (!(await authentication.authorize("event", "read"))) forbidden();
 
     return prisma.event.findMany({
+      where: await getVisibleEventsWhere(),
       orderBy: {
         name: "asc",
       },

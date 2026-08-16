@@ -1,5 +1,7 @@
+import { prisma } from "@/db";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
+import { canSeeEvent } from "@/modules/events/utils/eventVisibility";
 import { log } from "@/modules/logging";
 import { channelsClient } from "@/modules/pusher/utils/channelsClient";
 import { CITIZEN_CHANNEL_PREFIX } from "@sam-monorepo/notifications";
@@ -43,6 +45,26 @@ export async function POST(request: Request) {
 
     if (data.channel_name.startsWith("private-event-")) {
       await authentication.authorizeApi("event", "read");
+
+      /**
+       * Restricted and soft-deleted events must stay invisible: subscribing
+       * to their channel is treated like the event not existing.
+       */
+      const eventId = data.channel_name.slice("private-event-".length);
+      const event = await prisma.event.findUnique({
+        where: { id: eventId },
+        select: {
+          visibility: true,
+          createdById: true,
+          deletedAt: true,
+          visibilityRoles: { select: { roleId: true } },
+          managers: { select: { id: true } },
+        },
+      });
+      if (!event || !(await canSeeEvent(event))) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+
       const authResponse = channelsClient.authorizeChannel(
         data.socket_id,
         data.channel_name,

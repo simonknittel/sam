@@ -15,6 +15,18 @@ const EventsTab = () => {
         <YesNoCheckbox {...register("event;read")} />
       </div>
 
+      <div className="py-2 flex justify-between items-center gap-2">
+        <div>
+          <h4 className="font-bold">Events erstellen</h4>
+          <p className="text-sm">
+            Citizen mit dieser Berechtigung können eigene Events in der App
+            erstellen und diese als Organisator verwalten.
+          </p>
+        </div>
+
+        <YesNoCheckbox {...register("event;create")} />
+      </div>
+
       <div className="py-2 flex justify-between items-center">
         <h4 className="font-bold">Events verwalten</h4>
 
