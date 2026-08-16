@@ -272,6 +272,15 @@ export const setWikiFeaturedPages = (
     update: { value: [...pageIds] },
   });
 
+export const WIKI_SETTING_DASHBOARD_PAGE = "dashboardPage";
+
+export const setWikiDashboardPage = (prisma: PrismaClient, pageId: string) =>
+  prisma.wikiSetting.upsert({
+    where: { key: WIKI_SETTING_DASHBOARD_PAGE },
+    create: { key: WIKI_SETTING_DASHBOARD_PAGE, value: pageId },
+    update: { value: pageId },
+  });
+
 interface CreateSilcTransactionOptions {
   readonly receiverId: string;
   readonly value: number;
