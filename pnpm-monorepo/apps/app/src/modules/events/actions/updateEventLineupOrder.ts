@@ -81,6 +81,36 @@ export const updateEventLineupOrder = createAuthenticatedAction(
       return { error: t("Common.forbidden"), requestPayload: formData };
 
     /**
+     * Make sure every submitted position belongs to the authorized event.
+     * Parent assignments are derived from the submitted tree, so this also
+     * keeps every new parentPositionId within the event.
+     */
+    const eventPositions = await prisma.eventPosition.findMany({
+      where: {
+        eventId: event.id,
+      },
+      select: {
+        id: true,
+      },
+    });
+    const eventPositionIds = new Set(
+      eventPositions.map((position) => position.id),
+    );
+    const flattenPositionIds = (positions: MappedPosition[]): string[] =>
+      positions.flatMap((position) => [
+        position.id,
+        ...(position.childPositions
+          ? flattenPositionIds(position.childPositions)
+          : []),
+      ]);
+    if (
+      flattenPositionIds(data.order).some(
+        (positionId) => !eventPositionIds.has(positionId),
+      )
+    )
+      return { error: t("Common.badRequest"), requestPayload: formData };
+
+    /**
      * Update lineup order
      */
     const transactions: ReturnType<typeof prisma.eventPosition.update>[] = [];
