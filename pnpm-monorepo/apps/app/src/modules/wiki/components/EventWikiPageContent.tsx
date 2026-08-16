@@ -1,5 +1,4 @@
 import { prisma } from "@/db";
-import { authenticate } from "@/modules/auth/server";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { EditableInput } from "@/modules/common/components/form/EditableInput";
 import { Link } from "@/modules/common/components/Link";
@@ -20,13 +19,13 @@ import { getEventWikiPositionOptions } from "../utils/getEventWikiPositionOption
 import { getWikiCollabUrl } from "../utils/getWikiCollabUrl";
 import { getManageableWikiPageTargets } from "../utils/getWikiPageTargets";
 import { isEventWikiRootPage } from "../utils/isEventWikiRootPage";
-import { trackWikiPageVisit } from "../utils/trackWikiPageVisit";
 import { createEventWikiHrefMode } from "../utils/wikiPageHref";
 import { CopyWikiPageModal } from "./CopyWikiPageModal";
 import { DeleteWikiPageModal } from "./DeleteWikiPageModal";
 import { EventWikiPagePermissionsModal } from "./EventWikiPagePermissionsModal";
 import { MoveWikiPageModal } from "./MoveWikiPageModal";
 import { ReportWikiPageModal } from "./ReportWikiPageModal";
+import { TrackWikiPageVisit } from "./TrackWikiPageVisit";
 import { WikiEditModeProvider } from "./WikiEditModeProvider";
 import { WikiEditModeToggle } from "./WikiEditModeToggle";
 import { WikiPageEditorSection } from "./WikiPageEditorSection";
@@ -52,24 +51,15 @@ export const EventWikiPageContent = async ({
   page,
   permissions,
 }: Props) => {
-  const [staticContent, favoritePageIds, authentication, pageTags] =
-    await Promise.all([
-      getEventWikiPageStaticContent(context, page.id),
-      getWikiFavoritePageIds(),
-      authenticate(),
-      prisma.wikiPageTag.findMany({
-        where: { pageId: page.id },
-        select: { tag: { select: { id: true, name: true } } },
-        orderBy: { tag: { name: "asc" } },
-      }),
-    ]);
-
-  const session = authentication ? authentication.session : null;
-  trackWikiPageVisit(
-    session?.entity?.id ?? null,
-    page.id,
-    session?.user.id ?? null,
-  );
+  const [staticContent, favoritePageIds, pageTags] = await Promise.all([
+    getEventWikiPageStaticContent(context, page.id),
+    getWikiFavoritePageIds(),
+    prisma.wikiPageTag.findMany({
+      where: { pageId: page.id },
+      select: { tag: { select: { id: true, name: true } } },
+      orderBy: { tag: { name: "asc" } },
+    }),
+  ]);
 
   const hrefMode = createEventWikiHrefMode(
     context.event.id,
@@ -108,6 +98,8 @@ export const EventWikiPageContent = async ({
      * view mode.
      */
     <WikiEditModeProvider key={page.id}>
+      <TrackWikiPageVisit pageId={page.id} />
+
       <article className="bg-secondary rounded-primary p-4">
         <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
           <div>

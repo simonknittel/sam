@@ -26,7 +26,6 @@ import {
   type WikiPageTargetOption,
 } from "../utils/getWikiPageTargets";
 import { resolveWikiPageEffectivePermissions } from "../utils/resolveWikiPageEffectivePermissions";
-import { trackWikiPageVisit } from "../utils/trackWikiPageVisit";
 import {
   buildWikiPageSnapshotsHref,
   getWikiPageRouteHref,
@@ -38,6 +37,7 @@ import { CopyWikiPageModal } from "./CopyWikiPageModal";
 import { DeleteWikiPageModal } from "./DeleteWikiPageModal";
 import { MoveWikiPageModal } from "./MoveWikiPageModal";
 import { ReportWikiPageModal } from "./ReportWikiPageModal";
+import { TrackWikiPageVisit } from "./TrackWikiPageVisit";
 import { WikiEditModeProvider } from "./WikiEditModeProvider";
 import { WikiEditModeToggle } from "./WikiEditModeToggle";
 import { WikiPageDetailsPopover } from "./WikiPageDetailsPopover";
@@ -116,13 +116,6 @@ export const WikiPageContent = async ({
   ).length;
 
   const authentication = await authenticate();
-  const session = authentication ? authentication.session : null;
-
-  trackWikiPageVisit(
-    session?.entity?.id ?? null,
-    page.id,
-    session?.user.id ?? null,
-  );
 
   const resolvedMoveTargets: WikiPageTargetOption[] = permissions.canAdmin
     ? (moveTargets ?? getManageableWikiPageTargets(context, page.id))
@@ -191,6 +184,8 @@ export const WikiPageContent = async ({
      * view mode.
      */
     <WikiEditModeProvider key={page.id}>
+      <TrackWikiPageVisit pageId={page.id} />
+
       <article className="bg-secondary rounded-primary p-4">
         <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
           <div>
