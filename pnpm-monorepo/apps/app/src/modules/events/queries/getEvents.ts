@@ -56,10 +56,14 @@ export const getEvents = cache(
       }
 
       if (participating === "me") {
+        const citizenId = authentication.session.entity?.id;
         where.participants = {
           some: {
-            discordUserId: authentication.session.discordId,
             cancelledAt: null,
+            OR: [
+              { discordUserId: authentication.session.discordId },
+              ...(citizenId ? [{ citizenId }] : []),
+            ],
           },
         };
       }

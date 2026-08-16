@@ -191,7 +191,7 @@ export const wikiCitizenMentioned = async () => {
               managers: { select: { id: true } },
               participants: {
                 where: { cancelledAt: null },
-                select: { discordUserId: true },
+                select: { discordUserId: true, citizenId: true },
               },
               positions: {
                 select: { id: true, parentPositionId: true, citizenId: true },
@@ -252,11 +252,12 @@ export const wikiCitizenMentioned = async () => {
       const resolver = createEventWikiPagePermissionResolver(
         event.wikiPages,
         {
-          isParticipant:
-            discordId !== null &&
-            event.participants.some(
-              (participant) => participant.discordUserId === discordId,
-            ),
+          isParticipant: event.participants.some(
+            (participant) =>
+              (discordId !== null &&
+                participant.discordUserId === discordId) ||
+              participant.citizenId === citizenId,
+          ),
           isEventManager:
             event.managers.some((manager) => manager.id === citizenId) ||
             (discordId !== null && event.discordCreatorId === discordId) ||

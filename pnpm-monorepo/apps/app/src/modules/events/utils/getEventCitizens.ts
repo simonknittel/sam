@@ -2,6 +2,12 @@ import { prisma } from "@/db";
 import type { Event } from "@sam-monorepo/database/client";
 import { cache } from "react";
 
+/**
+ * The event's active participants as citizens with their ships. Citizens
+ * are resolved via the participation row's citizen id (app sign-ups) or
+ * Discord id (Discord RSVPs); ships attach through the citizen's Discord
+ * account, the only link between citizens and users.
+ */
 export const getEventCitizens = cache(async (eventId: Event["id"]) => {
   const databaseParticipants = await prisma.eventParticipant.findMany({
     where: {
@@ -10,15 +16,22 @@ export const getEventCitizens = cache(async (eventId: Event["id"]) => {
     },
   });
 
+  const citizenIds = new Set<string>();
+  const discordUserIds = new Set<string>();
+  for (const participant of databaseParticipants) {
+    if (participant.citizenId) {
+      citizenIds.add(participant.citizenId);
+    } else if (participant.discordUserId) {
+      discordUserIds.add(participant.discordUserId);
+    }
+  }
+
   const citizens = await prisma.entity.findMany({
     where: {
-      discordId: {
-        in: databaseParticipants
-          .map((participant) => participant.discordUserId)
-          .filter(
-            (discordUserId): discordUserId is string => discordUserId !== null,
-          ),
-      },
+      OR: [
+        { id: { in: Array.from(citizenIds) } },
+        { discordId: { in: Array.from(discordUserIds) } },
+      ],
     },
   });
 

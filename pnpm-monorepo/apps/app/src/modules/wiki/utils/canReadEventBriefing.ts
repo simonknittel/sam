@@ -55,7 +55,10 @@ export const canReadEventBriefing = async (
     case WikiPageEventScope.PARTICIPANTS:
       return event.participants.some(
         (participant) =>
-          participant.discordUserId === authentication.session.discordId,
+          (participant.discordUserId !== null &&
+            participant.discordUserId === authentication.session.discordId) ||
+          (participant.citizenId !== null &&
+            participant.citizenId === authentication.session.entity?.id),
       );
 
     case WikiPageEventScope.POSITION: {

@@ -1,7 +1,9 @@
 "use client";
 
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
+import Note from "@/modules/common/components/Note";
 import {
+  EventSource,
   type Entity,
   type Event,
   type Manufacturer,
@@ -80,7 +82,22 @@ export const LineupTab = ({
         allEventCitizens={allEventCitizens}
       />
 
-      {!isCurrentUserEventCitizen && <DiscordWarning />}
+      {!isCurrentUserEventCitizen &&
+        (event.source === EventSource.DISCORD ? (
+          <DiscordWarning />
+        ) : (
+          <Note
+            type="warning"
+            message={
+              <p>
+                Du musst dich erst auf der Übersichtsseite bei diesem Event
+                anmelden, bevor du dich hier in der Aufstellung anmelden
+                kannst.
+              </p>
+            }
+            className="max-w-none!"
+          />
+        ))}
 
       {event.positions.length > 0 ? (
         <Positions

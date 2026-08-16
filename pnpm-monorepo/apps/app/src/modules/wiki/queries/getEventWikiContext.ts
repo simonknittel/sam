@@ -118,17 +118,17 @@ export const getEventWikiContext = cache(
             },
           },
         }),
-        discordUserId
-          ? prisma.eventParticipant.findUnique({
-              where: {
-                eventId_activeDiscordUserId: {
-                  eventId,
-                  activeDiscordUserId: discordUserId,
-                },
-              },
-              select: { id: true },
-            })
-          : Promise.resolve(null),
+        prisma.eventParticipant.findFirst({
+          where: {
+            eventId,
+            cancelledAt: null,
+            OR: [
+              ...(discordUserId ? [{ discordUserId }] : []),
+              ...(citizenId ? [{ citizenId }] : []),
+            ],
+          },
+          select: { id: true },
+        }),
         prisma.wikiPage.findMany({
           where: { namespace: WikiPageNamespace.EVENT, eventId },
           select: {

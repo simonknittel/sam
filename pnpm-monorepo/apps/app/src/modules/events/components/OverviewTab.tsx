@@ -1,6 +1,7 @@
 import { requireAuthentication } from "@/modules/auth/server";
 import { getAssignedRoles } from "@/modules/roles/utils/getRoles";
 import type {
+  Entity,
   Event,
   EventParticipant,
   Role,
@@ -11,6 +12,7 @@ import clsx from "clsx";
 import { getEventFleet } from "../utils/getEventFleet";
 import { getParticipants } from "../utils/getParticipants";
 import { OverviewTile } from "./OverviewTile";
+import { PersonalBriefing } from "./PersonalBriefing";
 import { RolesTable } from "./RolesTable";
 import { VariantTagsTable } from "./VariantTagsTable";
 
@@ -18,6 +20,7 @@ interface Props {
   readonly className?: string;
   readonly event: Event & {
     readonly participants: EventParticipant[];
+    readonly managers: Entity[];
   };
 }
 
@@ -35,6 +38,11 @@ export const OverviewTab = async ({ className, event }: Props) => {
       <OverviewTile event={event} className="w-full max-w-120 flex-none" />
 
       <div className="flex-1 w-full flex-col md:flex-row lg:flex-col xl:flex-row 2xl:flex-col 3xl:flex-row flex gap-2">
+        <PersonalBriefing
+          event={event}
+          className="flex-initial w-full md:w-1/2 lg:w-full xl:w-1/2 2xl:w-full 3xl:w-1/2"
+        />
+
         {showFleetSummary && (
           <FleetSummary
             event={event}

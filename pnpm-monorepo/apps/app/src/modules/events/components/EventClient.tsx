@@ -68,7 +68,10 @@ export const EventClient = ({
   const isCurrentCitizenParticipating = event.participants.some(
     (participant) =>
       authentication &&
-      participant.discordUserId === authentication.session.discordId,
+      ((participant.discordUserId !== null &&
+        participant.discordUserId === authentication.session.discordId) ||
+        (participant.citizenId !== null &&
+          participant.citizenId === authentication.session.entity?.id)),
   );
 
   return (

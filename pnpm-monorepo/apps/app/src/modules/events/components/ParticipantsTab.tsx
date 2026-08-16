@@ -12,10 +12,11 @@ import {
 } from "@/modules/common/utils/sorting";
 import { toggleSortParam } from "@/modules/common/utils/toggleSortParam";
 import { CreateOrUpdateSilcTransaction } from "@/modules/silc/components/CreateOrUpdateSilcTransaction";
-import type {
-  Entity,
-  Event,
-  EventParticipant,
+import {
+  EventSource,
+  type Entity,
+  type Event,
+  type EventParticipant,
 } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import { forbidden } from "next/navigation";
@@ -32,13 +33,12 @@ import { isAllowedToManageEvent as _isAllowedToManageEvent } from "../utils/isAl
 import { CreateManagers } from "./CreateManagers";
 import { DeleteManager } from "./DeleteManager";
 
-const GRID_COLS = "grid-cols-[160px_160px_1fr]";
-
 interface Props {
   readonly className?: string;
   readonly event: Event & {
     readonly participants: EventParticipant[];
     readonly managers: Entity[];
+    readonly createdBy?: Entity | null;
   };
   readonly urlSearchParams: URLSearchParams;
 }
@@ -55,6 +55,11 @@ export const ParticipantsTab = async ({
     "silcTransactionOfOtherCitizen",
     "create",
   );
+
+  const isAppEvent = event.source === EventSource.APP;
+  const gridCols = isAppEvent
+    ? "grid-cols-[160px_160px_240px_1fr]"
+    : "grid-cols-[160px_160px_1fr]";
 
   const resolvedParticipants = await getParticipants(event);
 
@@ -86,9 +91,11 @@ export const ParticipantsTab = async ({
     }
   });
 
-  const resolvedCreatorCitizen = event.discordCreatorId
-    ? await getCitizenByDiscordId(event.discordCreatorId)
-    : null;
+  const resolvedCreatorCitizen = isAppEvent
+    ? (event.createdBy ?? null)
+    : event.discordCreatorId
+      ? await getCitizenByDiscordId(event.discordCreatorId)
+      : null;
 
   return (
     <div className={clsx("flex flex-col gap-2", className)}>
@@ -175,10 +182,12 @@ export const ParticipantsTab = async ({
           <span className="font-mono uppercase">
             Teilnehmer ({sortedResolvedParticipants.length})
           </span>
-          <Tooltip triggerChildren={<FaInfoCircle />}>
-            Es werden nur Discord-Anmeldungen mit einem Spynet-Eintrag
-            angezeigt.
-          </Tooltip>
+          {!isAppEvent && (
+            <Tooltip triggerChildren={<FaInfoCircle />}>
+              Es werden nur Discord-Anmeldungen mit einem Spynet-Eintrag
+              angezeigt.
+            </Tooltip>
+          )}
         </h2>
 
         {sortedResolvedParticipants.length > 0 ? (
@@ -187,7 +196,7 @@ export const ParticipantsTab = async ({
               <tr
                 className={clsx(
                   "grid items-center gap-4 text-left text-neutral-500 -mx-2",
-                  GRID_COLS,
+                  gridCols,
                 )}
               >
                 <th className="px-2">
@@ -220,10 +229,18 @@ export const ParticipantsTab = async ({
                     )}
                   </Link>
 
-                  <Tooltip triggerChildren={<FaInfoCircle />}>
-                    Auf etwa 4 Minuten genau
-                  </Tooltip>
+                  {!isAppEvent && (
+                    <Tooltip triggerChildren={<FaInfoCircle />}>
+                      Auf etwa 4 Minuten genau
+                    </Tooltip>
+                  )}
                 </th>
+
+                {isAppEvent && (
+                  <th className="truncate" title="Kommentar">
+                    Kommentar
+                  </th>
+                )}
 
                 <th className="truncate" title="Rollen/Zertifikate">
                   Rollen/Zertifikate
@@ -238,7 +255,7 @@ export const ParticipantsTab = async ({
                     key={resolvedParticipant.citizen.id}
                     className={clsx(
                       "grid items-start gap-4 rounded-secondary -mx-2",
-                      GRID_COLS,
+                      gridCols,
                     )}
                   >
                     <td>
@@ -285,6 +302,21 @@ export const ParticipantsTab = async ({
                       )}
                     </td>
 
+                    {isAppEvent && (
+                      <td className="min-h-8 flex items-center">
+                        {resolvedParticipant.participant?.comment ? (
+                          <span
+                            className="overflow-hidden text-ellipsis line-clamp-2"
+                            title={resolvedParticipant.participant.comment}
+                          >
+                            {resolvedParticipant.participant.comment}
+                          </span>
+                        ) : (
+                          <span className="text-neutral-500 italic">-</span>
+                        )}
+                      </td>
+                    )}
+
                     <td className="min-h-8 flex items-center">
                       <Suspense
                         fallback={
@@ -304,7 +336,11 @@ export const ParticipantsTab = async ({
             </tbody>
           </table>
         ) : (
-          <p>Zu den gemeldeten Teilnehmern gibt es keine Spynet-Einträge.</p>
+          <p>
+            {isAppEvent
+              ? "Bisher hat sich niemand angemeldet."
+              : "Zu den gemeldeten Teilnehmern gibt es keine Spynet-Einträge."}
+          </p>
         )}
       </section>
     </div>
