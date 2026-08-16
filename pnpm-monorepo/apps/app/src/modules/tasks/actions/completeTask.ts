@@ -39,19 +39,39 @@ export const completeTask = createAuthenticatedAction(
         error: "Der Task ist bereits abgeschlossen.",
         requestPayload: formData,
       };
+    const isAllowedToManage = await isAllowedToManageTask(task);
     const isAllowedToSelfComplete =
       task.canSelfComplete &&
       task.assignments.some(
         (assignment) =>
           assignment.citizenId === authentication.session.entity!.id,
       );
-    if (!(await isAllowedToManageTask(task)) && !isAllowedToSelfComplete)
+    if (!isAllowedToManage && !isAllowedToSelfComplete)
       return {
         error: t("Common.forbidden"),
         requestPayload: formData,
       };
 
-    if (data.completionistIds.length <= 0)
+    // Deduplicated since each completionist may receive the reward only once
+    const completionistIds = [...new Set(data.completionistIds)];
+
+    // Managers may credit anyone, self-completers only the task's actual assignees
+    if (!isAllowedToManage) {
+      const assigneeIds = new Set(
+        task.assignments.map((assignment) => assignment.citizenId),
+      );
+      if (
+        completionistIds.some(
+          (completionistId) => !assigneeIds.has(completionistId),
+        )
+      )
+        return {
+          error: t("Common.forbidden"),
+          requestPayload: formData,
+        };
+    }
+
+    if (completionistIds.length <= 0)
       return {
         error:
           "Der Task kann nicht abgeschlossen werden, ohne dass ihn jemand erfüllt hat.",
@@ -73,7 +93,7 @@ export const completeTask = createAuthenticatedAction(
           },
         },
         completionists: {
-          connect: data.completionistIds.map((id) => ({
+          connect: completionistIds.map((id) => ({
             id,
           })),
         },
@@ -93,7 +113,7 @@ export const completeTask = createAuthenticatedAction(
           : task.rewardTypeNewSilcValue!;
 
       await createSilcTransactions([
-        ...data.completionistIds.map((receiverId) => ({
+        ...completionistIds.map((receiverId) => ({
           receiverId,
           value: rewardValue,
           description: `Task erfüllt: ${task.title}`,
@@ -105,9 +125,7 @@ export const completeTask = createAuthenticatedAction(
           ? [
               {
                 receiverId: task.createdById,
-                value: -(
-                  task.rewardTypeSilcValue! * data.completionistIds.length
-                ),
+                value: -(task.rewardTypeSilcValue! * completionistIds.length),
                 description: `Task abgeschlossen: ${task.title}`,
                 createdById: authentication.session.entity.id,
               },
@@ -148,7 +166,7 @@ export const completeTask = createAuthenticatedAction(
                   data: task.assignments
                     .filter(
                       (assignment) =>
-                        !data.completionistIds.includes(assignment.citizenId),
+                        !completionistIds.includes(assignment.citizenId),
                     )
                     .map((assignment) => ({
                       citizenId: assignment.citizenId,
@@ -246,7 +264,7 @@ export const completeTask = createAuthenticatedAction(
         type: AuditEventType.TASK_COMPLETED,
         data: {
           taskId: task.id,
-          completionistIds: data.completionistIds,
+          completionistIds,
           rewardType: task.rewardType,
         },
         createdById: authentication.session.user.id,
