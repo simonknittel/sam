@@ -6,6 +6,7 @@ import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import { createS3Client } from "@/modules/common/utils/createS3Client";
 import {
+  isAllowedImageMimeType,
   isAttachmentMimeType,
   MAX_ATTACHMENT_SIZE_BYTES,
   MAX_IMAGE_SIZE_BYTES,
@@ -23,7 +24,9 @@ const postBodySchema = z.union([
   z.object({
     category: z.literal("image").optional(),
     fileName: z.string().trim().min(1).max(255),
-    mimeType: z.string().trim().startsWith("image/").max(255),
+    mimeType: z.string().trim().max(255).refine(isAllowedImageMimeType, {
+      message: "Unsupported mime type",
+    }),
     size: z.number().int().min(0).max(MAX_IMAGE_SIZE_BYTES),
   }),
   /**
@@ -85,7 +88,10 @@ export async function POST(request: Request) {
       },
     ]);
 
-    const presignedUploadUrl = await getPresignedUploadUrl(item.id);
+    const presignedUploadUrl = await getPresignedUploadUrl(
+      item.id,
+      item.mimeType,
+    );
 
     /**
      * Respond with the result
@@ -99,10 +105,19 @@ export async function POST(request: Request) {
   }
 }
 
-async function getPresignedUploadUrl(key: string) {
+/**
+ * ContentType is part of the signature, so the PUT must send exactly the
+ * validated mime type — the stored (and later served) Content-Type cannot
+ * diverge from what was validated here.
+ */
+async function getPresignedUploadUrl(key: string, mimeType: string) {
   return await getSignedUrl(
     createS3Client(),
-    new PutObjectCommand({ Bucket: env.S3_BUCKET_NAME, Key: key }),
+    new PutObjectCommand({
+      Bucket: env.S3_BUCKET_NAME,
+      Key: key,
+      ContentType: mimeType,
+    }),
     {
       expiresIn: 60 * 60, // 1 hour
     },

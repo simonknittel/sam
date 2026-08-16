@@ -27,6 +27,8 @@ export default function useUpload() {
     const putResponse = await fetch(created.presignedUploadUrl, {
       method: "PUT",
       body: file,
+      // The presigned URL signs the Content-Type — it must match exactly
+      headers: { "Content-Type": file.type },
       // Generous timeout — uploads may be large on slow uplinks
       signal: AbortSignal.timeout(5 * 60_000),
     });

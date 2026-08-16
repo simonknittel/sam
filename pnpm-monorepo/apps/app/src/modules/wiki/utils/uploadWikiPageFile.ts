@@ -92,6 +92,10 @@ export const uploadWikiPageFile = async (
   const putResponse = await fetch(created.presignedUploadUrl, {
     method: "PUT",
     body: file,
+    // The presigned URL signs the Content-Type — it must match exactly,
+    // including for types resolved from the extension where file.type is
+    // empty and fetch would otherwise send no Content-Type at all
+    headers: { "Content-Type": mimeType },
     // Generous timeout — attachments may be up to 25 MB on slow uplinks
     signal: AbortSignal.timeout(5 * 60_000),
   });
