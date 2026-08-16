@@ -36,19 +36,41 @@ export const EventParticipationControls = ({
 
   return (
     <div className={clsx(className)}>
-      <p className="flex items-center gap-2">
-        {isSignedUp ? (
-          <>
-            <FaCheck className="text-green-500" />
-            Zugesagt
-          </>
-        ) : (
-          <>
-            <FaTimes className="text-neutral-500" />
-            {hasCancelled ? "Abgemeldet" : "Nicht angemeldet"}
-          </>
+      <div className="flex items-center justify-between gap-2">
+        <p className="flex items-center gap-2">
+          {isSignedUp ? (
+            <>
+              <FaCheck className="text-green-500" />
+              Zugesagt
+            </>
+          ) : (
+            <>
+              <FaTimes className="text-neutral-500" />
+              {hasCancelled ? "Abgemeldet" : "Nicht angemeldet"}
+            </>
+          )}
+        </p>
+
+        {participationOpen && isSignedUp && (
+          <ConfirmActionButton
+            action={cancelEventParticipation}
+            hiddenFields={[{ name: "eventId", value: eventId }]}
+            trigger={(isPending) => (
+              <Button2
+                type="button"
+                variant={Button2Variant.Secondary}
+                disabled={isPending}
+              >
+                {isPending ? <AsciiSpinner /> : <FaTimes />}
+                Abmelden
+              </Button2>
+            )}
+            title="Vom Event abmelden?"
+            description="Deine Posten in der Aufstellung und deine Bewerbungen werden dabei entfernt."
+            confirmLabel="Abmelden"
+          />
         )}
-      </p>
+      </div>
 
       {!participationOpen && (
         <>
@@ -116,25 +138,6 @@ export const EventParticipationControls = ({
 
             <ActionErrorNote className="mt-2" state={updateComment.state} />
           </form>
-
-          <ConfirmActionButton
-            className="mt-4"
-            action={cancelEventParticipation}
-            hiddenFields={[{ name: "eventId", value: eventId }]}
-            trigger={(isPending) => (
-              <Button2
-                type="button"
-                variant={Button2Variant.Secondary}
-                disabled={isPending}
-              >
-                {isPending ? <AsciiSpinner /> : <FaTimes />}
-                Abmelden
-              </Button2>
-            )}
-            title="Vom Event abmelden?"
-            description="Deine Posten in der Aufstellung und deine Bewerbungen werden dabei entfernt."
-            confirmLabel="Abmelden"
-          />
         </>
       )}
     </div>

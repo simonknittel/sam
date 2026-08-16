@@ -93,6 +93,7 @@ export const getEvents = cache(
             where: { cancelledAt: null },
           },
           managers: true,
+          coverImage: true,
         },
         orderBy,
         ...(cursor

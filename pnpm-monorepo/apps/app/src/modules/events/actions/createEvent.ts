@@ -4,6 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { probeUploadImageDimensions } from "@/modules/common/utils/probeUploadImageDimensions";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import {
   EventActivityType,
@@ -27,6 +28,7 @@ const schema = z.object({
   endTime: WALL_TIME_SCHEMA,
   visibility: z.enum(EventVisibility),
   visibilityRoleIds: z.array(z.cuid()).max(50).optional(),
+  coverImageId: z.cuid().optional(),
 });
 
 export const createEvent = createAuthenticatedAction(
@@ -73,6 +75,26 @@ export const createEvent = createAuthenticatedAction(
       };
 
     /**
+     * The cover was uploaded by the form before submitting; it must be the
+     * submitter's own image so nobody can attach someone else's upload.
+     */
+    if (data.coverImageId) {
+      const coverImage = await prisma.upload.findUnique({
+        where: { id: data.coverImageId },
+        select: { createdById: true, mimeType: true },
+      });
+      if (
+        !coverImage ||
+        coverImage.createdById !== authentication.session.user.id ||
+        !coverImage.mimeType.startsWith("image/")
+      )
+        return {
+          error: "Ungültiges Titelbild",
+          requestPayload: formData,
+        };
+    }
+
+    /**
      * Create the event with its briefing root page and activity entry
      */
     const createdEvent = await prisma.$transaction(async (transaction) => {
@@ -88,6 +110,7 @@ export const createEvent = createAuthenticatedAction(
             create: visibilityRoleIds.map((roleId) => ({ roleId })),
           },
           createdById: citizenId,
+          coverImageId: data.coverImageId ?? null,
           wikiPages: {
             create: buildBriefingRootPageSeed(citizenId),
           },
@@ -107,6 +130,8 @@ export const createEvent = createAuthenticatedAction(
 
       return event;
     });
+
+    if (data.coverImageId) probeUploadImageDimensions(data.coverImageId);
 
     await createAuditEvents([
       {
@@ -152,6 +177,7 @@ export const createEvent = createAuthenticatedAction(
       endTime: formData.get("endTime"),
       visibility: formData.get("visibility"),
       visibilityRoleIds: formData.getAll("visibilityRole[]"),
+      coverImageId: formData.get("coverImageId") || undefined,
     }),
   },
 );

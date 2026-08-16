@@ -6,10 +6,12 @@ import { DiscordNavigationButton } from "@/modules/common/components/DiscordNavi
 import { Link } from "@/modules/common/components/Link";
 import { RelativeDate } from "@/modules/common/components/RelativeDate";
 import { formatDate } from "@/modules/common/utils/formatDate";
+import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
 import type {
   Entity,
   EventParticipant,
   Event as PrismaEvent,
+  Upload,
 } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useNow } from "next-intl";
@@ -31,6 +33,7 @@ interface Props {
   readonly event: PrismaEvent & {
     participants: EventParticipant[];
     managers: Entity[];
+    coverImage?: Upload | null;
   };
   readonly index: number;
   readonly showLineupButton?: boolean;
@@ -111,14 +114,25 @@ export const EventClient = ({
           },
         )}
       >
-        {event.discordImage && (
+        {(event.coverImage || event.discordImage) && (
           <div className="@4xl/events:grow-0 @4xl/events:shrink-0 @4xl/events:basis-100 max-h-40 flex justify-center rounded-r-primary rounded-b-primary overflow-hidden">
             <Image
-              src={`https://cdn.discordapp.com/guild-events/${event.discordId}/${event.discordImage}.webp?size=1024`}
+              src={
+                event.coverImage
+                  ? getPublicUploadUrl(event.coverImage.id)
+                  : `https://cdn.discordapp.com/guild-events/${event.discordId}/${event.discordImage}.webp?size=1024`
+              }
               alt=""
               width={400}
               height={160}
               priority={index < 3}
+              unoptimized={
+                event.coverImage
+                  ? ["image/svg+xml", "image/gif"].includes(
+                      event.coverImage.mimeType,
+                    )
+                  : false
+              }
             />
           </div>
         )}

@@ -2,10 +2,12 @@ import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { DiscordButton } from "@/modules/common/components/DiscordButton";
 import { Markdown } from "@/modules/common/components/Markdown";
 import { formatDate } from "@/modules/common/utils/formatDate";
+import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
 import {
   EventSource,
   type Entity,
   type Event,
+  type Upload,
 } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import Image from "next/image";
@@ -15,6 +17,7 @@ interface Props {
   readonly className?: string;
   readonly event: Event & {
     readonly createdBy?: Entity | null;
+    readonly coverImage?: Upload | null;
   };
 }
 
@@ -31,24 +34,42 @@ export const OverviewTile = ({ className, event }: Props) => {
         gridArea: "overview",
       }}
     >
-      {event.discordImage && (
+      {(event.coverImage || event.discordImage) && (
         <Image
-          src={`https://cdn.discordapp.com/guild-events/${event.discordId}/${event.discordImage}.webp?size=1024`}
+          src={
+            event.coverImage
+              ? getPublicUploadUrl(event.coverImage.id)
+              : `https://cdn.discordapp.com/guild-events/${event.discordId}/${event.discordImage}.webp?size=1024`
+          }
           alt=""
-          // Discord recommends 800x320px
+          // Discord recommends 800x320px; app covers follow the same ratio
           width={800}
           height={320}
           className="flex-initial w-full"
           priority
+          unoptimized={
+            event.coverImage
+              ? ["image/svg+xml", "image/gif"].includes(
+                  event.coverImage.mimeType,
+                )
+              : false
+          }
         />
       )}
 
       <div className="p-4">
         <h1 className="font-bold font-mono uppercase">{event.name}</h1>
 
-        {event.description && (
-          <Markdown className="mt-4">{event.description}</Markdown>
-        )}
+        {event.description &&
+          (event.source === EventSource.DISCORD ? (
+            <Markdown className="mt-4">{event.description}</Markdown>
+          ) : (
+            /**
+             * Deliberately plain text: app events keep a short description
+             * here, everything longer belongs into the event's briefing.
+             */
+            <p className="mt-4 whitespace-pre-line">{event.description}</p>
+          ))}
 
         <dl className="mt-4">
           <dt className="text-neutral-500 font-mono uppercase text-xs">

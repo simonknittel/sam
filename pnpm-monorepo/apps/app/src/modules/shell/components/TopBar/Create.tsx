@@ -43,6 +43,9 @@ export const Create = ({ className }: Props) => {
   const showCreateTask = Boolean(
     authentication && authentication.authorize("task", "create"),
   );
+  const showCreateEvent = Boolean(
+    authentication && authentication.authorize("event", "create"),
+  );
   const showCreateSilcTransaction = Boolean(
     authentication &&
     authentication.authorize("silcTransactionOfOtherCitizen", "create"),
@@ -56,6 +59,7 @@ export const Create = ({ className }: Props) => {
     !showCreateRole &&
     !showCreatePenaltyEntry &&
     !showCreateTask &&
+    !showCreateEvent &&
     !showCreateSilcTransaction &&
     !showCreateWikiPage
   )
@@ -84,6 +88,7 @@ export const Create = ({ className }: Props) => {
           showCreateRole={showCreateRole}
           showCreatePenaltyEntry={showCreatePenaltyEntry}
           showCreateTask={showCreateTask}
+          showCreateEvent={showCreateEvent}
           showCreateSilcTransaction={showCreateSilcTransaction}
           showCreateWikiPage={showCreateWikiPage}
         />
@@ -99,6 +104,7 @@ interface PopoverChildrenProps {
   readonly showCreateRole: boolean;
   readonly showCreatePenaltyEntry: boolean;
   readonly showCreateTask: boolean;
+  readonly showCreateEvent: boolean;
   readonly showCreateSilcTransaction: boolean;
   readonly showCreateWikiPage: boolean;
 }
@@ -110,6 +116,7 @@ const PopoverChildren = ({
   showCreateRole,
   showCreatePenaltyEntry,
   showCreateTask,
+  showCreateEvent,
   showCreateSilcTransaction,
   showCreateWikiPage,
 }: PopoverChildrenProps) => {
@@ -174,6 +181,8 @@ const PopoverChildren = ({
     });
   if (showCreateTask)
     items.push({ label: "Task", type: "button", modalId: "task" });
+  if (showCreateEvent)
+    items.push({ label: "Event", type: "button", modalId: "event" });
   if (showCreateSilcTransaction)
     items.push({
       label: "SILC-Transaktion",

@@ -4,10 +4,14 @@ import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import { probeUploadImageDimensions } from "@/modules/common/utils/probeUploadImageDimensions";
+import { isAllowedToManageEvent } from "@/modules/events/utils/isAllowedToManageEvent";
+import { isEventUpdatable } from "@/modules/events/utils/isEventUpdatable";
 import {
   getWikiPageScopedContext,
   isWikiScopeFrozen,
 } from "@/modules/wiki/queries/getWikiPageScopedContext";
+import { EventSource } from "@sam-monorepo/database/client";
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -17,6 +21,16 @@ const bodySchema = z.discriminatedUnion("resourceType", [
     resourceId: z.cuid(),
     resourceAttribute: z.literal("imageId"),
     imageId: z.cuid(),
+  }),
+  /**
+   * Sets or removes (`imageId: null`) an app event's cover image.
+   * `resourceId` is the event id.
+   */
+  z.object({
+    resourceType: z.literal("event"),
+    resourceAttribute: z.literal("coverImageId"),
+    resourceId: z.cuid(),
+    imageId: z.cuid().nullable(),
   }),
   z.object({
     resourceType: z.literal("role"),
@@ -118,6 +132,65 @@ export async function PATCH(request: Request) {
       ]);
 
       if (data.imageId) probeUploadImageDimensions(data.imageId);
+
+      return NextResponse.json({});
+    }
+
+    if (data.resourceType === "event") {
+      /**
+       * Authorize: only app events carry a cover, changing it is
+       * manage-gated like the other event settings and frozen once the
+       * event is over. When assigning, the upload must be the current
+       * user's own image. A replaced or removed cover's upload is left
+       * behind for the nightly cleanup.
+       */
+      const [event, upload] = await Promise.all([
+        prisma.event.findUnique({
+          where: {
+            id: data.resourceId,
+            source: EventSource.APP,
+            deletedAt: null,
+          },
+          include: { managers: true },
+        }),
+        data.imageId
+          ? prisma.upload.findUnique({
+              where: { id: data.imageId },
+              select: { id: true, createdById: true, mimeType: true },
+            })
+          : Promise.resolve(null),
+      ]);
+      if (!event || (data.imageId !== null && !upload))
+        return NextResponse.json({ error: "Bad Request" }, { status: 400 });
+      if (!isEventUpdatable(event) || !(await isAllowedToManageEvent(event)))
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      if (upload) {
+        if (upload.createdById !== authentication.session.user.id)
+          return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        if (!upload.mimeType.startsWith("image/"))
+          return NextResponse.json({ error: "Bad Request" }, { status: 400 });
+      }
+
+      await prisma.event.update({
+        where: { id: event.id },
+        data: { coverImageId: data.imageId },
+      });
+
+      await createAuditEvents([
+        {
+          type: AuditEventType.EVENT_UPDATED_IN_APP,
+          data: {
+            eventId: event.id,
+            changedFields: ["coverImage"],
+          },
+          createdById: authentication.session.user.id,
+        },
+      ]);
+
+      if (data.imageId) probeUploadImageDimensions(data.imageId);
+
+      revalidatePath("/app/events");
+      revalidatePath(`/app/events/${event.id}`, "layout");
 
       return NextResponse.json({});
     }

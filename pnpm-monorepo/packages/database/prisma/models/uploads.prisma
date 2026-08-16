@@ -16,6 +16,7 @@ model Upload {
   roleIcons      Role[]           @relation("icon")
   roleThumbnails Role[]           @relation("thumbnail")
   manufacturers  Manufacturer[]
+  eventCovers    Event[]          @relation("eventCoverImage")
   /// Wiki pages this upload is embedded in as an image or attachment.
   /// Linked at upload time, on page duplication and whenever persisted
   /// content references the upload; the nightly upload cleanup drops links

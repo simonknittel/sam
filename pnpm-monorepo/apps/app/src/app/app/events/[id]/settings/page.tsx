@@ -63,6 +63,12 @@ export default async function Page({
           visibilityRoleIds: event.visibilityRoles.map(
             (visibilityRole) => visibilityRole.roleId,
           ),
+          coverImage: event.coverImage
+            ? {
+                id: event.coverImage.id,
+                mimeType: event.coverImage.mimeType,
+              }
+            : null,
         }}
       />
     </SuspenseWithErrorBoundaryTile>

@@ -31,6 +31,11 @@ model Event {
   description String?
   location    String?
 
+  /// Cover image of app events, uploaded by the organizer. Discord events
+  /// use discordImage (a Discord CDN reference) instead.
+  coverImageId String?
+  coverImage   Upload? @relation("eventCoverImage", fields: [coverImageId], references: [id], onDelete: SetNull)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

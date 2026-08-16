@@ -1,5 +1,6 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
+import { VariantWithLogo } from "@/modules/fleet/components/VariantWithLogo";
 import {
   EventSource,
   type Entity,
@@ -66,7 +67,19 @@ export const PersonalBriefing = async ({ className, event }: Props) => {
             requiredVariants: {
               orderBy: { order: "asc" },
               include: {
-                variant: true,
+                variant: {
+                  include: {
+                    series: {
+                      include: {
+                        manufacturer: {
+                          include: {
+                            image: true,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
               },
             },
           },
@@ -75,9 +88,14 @@ export const PersonalBriefing = async ({ className, event }: Props) => {
 
   return (
     <section
-      className={clsx("rounded-primary bg-neutral-800/50 p-4", className)}
+      className={clsx(
+        "rounded-primary bg-me/10 border border-me/30 p-4",
+        className,
+      )}
     >
-      <h2 className="font-bold font-mono uppercase">Meine Teilnahme</h2>
+      <h2 className="font-bold font-mono uppercase text-me">
+        Meine Teilnahme
+      </h2>
 
       {event.source === EventSource.DISCORD ? (
         <>
@@ -117,24 +135,40 @@ export const PersonalBriefing = async ({ className, event }: Props) => {
             Meine Posten
           </h3>
 
-          <ul className="mt-1 flex flex-col gap-2">
+          {/* One line per position, mirroring the lineup's rows: name left,
+              required ship right. The description travels in the tooltip. */}
+          <ul className="mt-1 flex flex-col gap-1">
             {assignedPositions.map((position) => (
-              <li key={position.id}>
-                <p className="font-bold">{position.name}</p>
+              <li
+                key={position.id}
+                className="flex items-center gap-2 rounded-secondary bg-neutral-800/50 p-2"
+              >
+                <span
+                  className="flex-1 font-bold truncate"
+                  title={
+                    position.description
+                      ? `${position.name} — ${position.description}`
+                      : position.name
+                  }
+                >
+                  {position.name}
+                </span>
 
-                {position.description && (
-                  <p className="text-sm text-neutral-300">
-                    {position.description}
-                  </p>
-                )}
-
-                {position.requiredVariants.length > 0 && (
-                  <p className="text-sm text-neutral-500">
-                    Benötigte Schiffe:{" "}
-                    {position.requiredVariants
-                      .map((requiredVariant) => requiredVariant.variant.name)
-                      .join(", ")}
-                  </p>
+                {position.requiredVariants.length > 0 ? (
+                  <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1">
+                    {position.requiredVariants.map((requiredVariant) => (
+                      <VariantWithLogo
+                        key={requiredVariant.id}
+                        variant={requiredVariant.variant}
+                        manufacturer={
+                          requiredVariant.variant.series.manufacturer
+                        }
+                        size={32}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-neutral-500">-</span>
                 )}
               </li>
             ))}

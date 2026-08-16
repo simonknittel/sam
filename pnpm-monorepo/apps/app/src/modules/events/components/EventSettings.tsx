@@ -5,10 +5,10 @@ import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionButton";
+import { ImageUpload } from "@/modules/common/components/ImageUpload";
 import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
 import { Textarea } from "@/modules/common/components/form/Textarea";
 import { TextInput } from "@/modules/common/components/form/TextInput";
-import { Link } from "@/modules/common/components/Link";
 import { deleteEvent } from "@/modules/events/actions/deleteEvent";
 import { updateEvent } from "@/modules/events/actions/updateEvent";
 import { WikiRoleSelector } from "@/modules/wiki/components/WikiRoleSelector";
@@ -31,6 +31,10 @@ interface Props {
     readonly endTime: string;
     readonly visibility: EventVisibility;
     readonly visibilityRoleIds: string[];
+    readonly coverImage: {
+      readonly id: string;
+      readonly mimeType: string;
+    } | null;
   };
 }
 
@@ -62,19 +66,8 @@ export const EventSettings = ({ className, event }: Props) => {
 
           <Textarea
             name="description"
-            label="Beschreibung"
-            hint={
-              <>
-                optional, max. 2.000 Zeichen,{" "}
-                <Link
-                  href="https://github.github.com/gfm/"
-                  target="_blank"
-                  className="text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300"
-                >
-                  GitHub Flavored Markdown-Support
-                </Link>
-              </>
-            }
+            label="Kurzbeschreibung"
+            hint="optional, max. 2.000 Zeichen, kein Markdown. Ausführlichere Informationen gehören ins Briefing (Event-Wiki) des Events."
             maxLength={2000}
             defaultValue={getDefaultValueWithFallback(
               "description",
@@ -144,6 +137,29 @@ export const EventSettings = ({ className, event }: Props) => {
 
       <section className="rounded-primary bg-neutral-800/50 p-4">
         <h2 className="font-bold mb-2 text-lg font-mono uppercase">
+          Titelbild
+        </h2>
+
+        <p className="mb-4 text-sm text-neutral-500">
+          Empfohlen 800x320 Pixel. Klicke auf das Bild, um es zu ersetzen.
+        </p>
+
+        <ImageUpload
+          resourceType="event"
+          resourceId={event.id}
+          resourceAttribute="coverImageId"
+          imageId={event.coverImage?.id}
+          imageMimeType={event.coverImage?.mimeType}
+          width={800}
+          height={320}
+          className="w-full max-w-120 min-h-24 rounded-secondary border border-dashed border-neutral-700"
+          imageClassName="w-full rounded-secondary"
+          pendingClassName="h-24"
+        />
+      </section>
+
+      <section className="rounded-primary bg-red-500/10 border border-red-500/30 p-4">
+        <h2 className="font-bold mb-2 text-lg font-mono uppercase text-red-500">
           Event löschen
         </h2>
 

@@ -7,13 +7,13 @@ import { Button2 } from "@/modules/common/components/Button2";
 import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
 import { Textarea } from "@/modules/common/components/form/Textarea";
 import { TextInput } from "@/modules/common/components/form/TextInput";
-import { Link } from "@/modules/common/components/Link";
 import { createEvent } from "@/modules/events/actions/createEvent";
 import { WikiRoleSelector } from "@/modules/wiki/components/WikiRoleSelector";
 import { EventVisibility } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useState } from "react";
 import { FaGlobe, FaLock, FaSave } from "react-icons/fa";
+import { EventCoverImageField } from "../EventCoverImageField";
 import { EventDateTimeField } from "../EventDateTimeField";
 
 interface Props {
@@ -42,24 +42,15 @@ export const CreateEventForm = ({ className, onSuccess }: Props) => {
 
       <Textarea
         name="description"
-        label="Beschreibung"
-        hint={
-          <>
-            optional, max. 2.000 Zeichen,{" "}
-            <Link
-              href="https://github.github.com/gfm/"
-              target="_blank"
-              className="text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300"
-            >
-              GitHub Flavored Markdown-Support
-            </Link>
-          </>
-        }
+        label="Kurzbeschreibung"
+        hint="optional, max. 2.000 Zeichen, kein Markdown. Ausführlichere Informationen gehören ins Briefing (Event-Wiki) des Events."
         maxLength={2000}
         defaultValue={getDefaultValueWithFallback("description", "")}
         className="mt-4"
         classNameTextarea="h-40"
       />
+
+      <EventCoverImageField name="coverImageId" className="mt-4" />
 
       <EventDateTimeField
         name="startTime"
