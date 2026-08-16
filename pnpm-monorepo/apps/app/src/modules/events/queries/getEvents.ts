@@ -2,7 +2,7 @@ import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import { getVisibleEventsWhere } from "@/modules/events/utils/eventVisibility";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import type { Prisma } from "@sam-monorepo/database/client";
+import { EventSource, type Prisma } from "@sam-monorepo/database/client";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
 
@@ -36,6 +36,7 @@ export const getEvents = cache(
     async (
       status: "open" | "closed" | "all" = "open",
       participating: "me" | "all" = "all",
+      type: "app" | "discord" | "all" = "all",
       cursor?: string | null,
       direction: "next" | "prev" = "next",
     ) => {
@@ -53,6 +54,12 @@ export const getEvents = cache(
       } else {
         // "all" - no additional filtering needed
         where = {};
+      }
+
+      if (type === "app") {
+        where.source = EventSource.APP;
+      } else if (type === "discord") {
+        where.source = EventSource.DISCORD;
       }
 
       if (participating === "me") {

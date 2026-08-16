@@ -22,6 +22,17 @@ export const EventFilters = () => {
         ]}
         resetCursorPagination
       />
+
+      <RadioFilter
+        name="type"
+        label="Typ"
+        items={[
+          { value: "all", label: "Alle", default: true },
+          { value: "app", label: "App" },
+          { value: "discord", label: "Discord" },
+        ]}
+        resetCursorPagination
+      />
     </>
   );
 };

@@ -12,6 +12,7 @@ import { Event } from "./Event";
 const loadSearchParams = createLoader({
   status: parseAsStringLiteral(["open", "closed", "all"]).withDefault("open"),
   participating: parseAsStringLiteral(["all", "me"]).withDefault("all"),
+  type: parseAsStringLiteral(["all", "app", "discord"]).withDefault("all"),
   ...cursorPaginationParsers,
 });
 
@@ -21,12 +22,13 @@ interface Props {
 }
 
 export const EventsTile = async ({ className, searchParams }: Props) => {
-  const { status, participating, cursor, direction } =
+  const { status, participating, type, cursor, direction } =
     await loadSearchParams(searchParams);
 
   const { events, nextCursor, prevCursor } = await getEvents(
     status,
     participating,
+    type,
     cursor,
     direction,
   );
