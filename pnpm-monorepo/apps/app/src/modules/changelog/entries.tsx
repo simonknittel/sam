@@ -42,6 +42,41 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-08-16-app-events",
+    date: "2026-08-16",
+    title: "Events direkt in der App erstellen",
+    tags: ["Events", "Neu"],
+    isTracked: true,
+    requiresAuth: { resource: "event", action: "read" },
+    body: () => (
+      <>
+        <p>
+          Events müssen nicht mehr über Discord angelegt werden: Mit der neuen
+          Berechtigung &bdquo;Events erstellen&ldquo; lassen sie sich direkt in
+          der App anlegen &ndash; über den Button auf der Eventliste oder das
+          &bdquo;Neu&ldquo;-Menü in der Kopfleiste. Titel, Kurzbeschreibung,
+          Titelbild, Start und Ende (Zeitzone Europe/Berlin) werden dabei
+          festgelegt; die Sichtbarkeit kann optional auf ausgewählte Rollen
+          eingeschränkt werden.
+        </p>
+
+        <p>
+          Bei App-Events meldet man sich direkt auf der Übersichtsseite an
+          &ndash; optional mit einem Kommentar, sichtbar für alle Teilnehmer.
+          Die neue Kachel &bdquo;Meine Teilnahme&ldquo; zeigt auf beiden
+          Event-Arten den eigenen Anmeldestatus und die eigenen Posten aus der
+          Aufstellung. Aufstellung, Briefing, Flotte und Manager funktionieren
+          wie gewohnt; zusätzlich zeigt der neue Reiter
+          &bdquo;Aktivität&ldquo;, was sich am Event getan hat, und über
+          &bdquo;Einstellungen&ldquo; bearbeiten Organisatoren ihr Event oder
+          sagen es ab. In der Eventliste filtert der neue Filter
+          &bdquo;Typ&ldquo; zwischen App- und Discord-Events.
+        </p>
+      </>
+    ),
+  },
+
+  {
     key: "2026-08-15-wiki-umflossene-bilder",
     date: "2026-08-15",
     title: "Wiki: Vom Text umflossene Bilder",
