@@ -1,5 +1,6 @@
 import { prisma, type Event } from "@sam-monorepo/database";
 import { getEventParticipants } from "../getEventParticipants.js";
+import { getEventRecipientWhere } from "../getEventRecipientWhere.js";
 import { getNotifiableCitizens } from "../getNotifiableCitizens.js";
 import { publishNotifications } from "../publish.js";
 
@@ -92,7 +93,12 @@ const getRecipients = async (payload: Payload) => {
       ];
       if (citizenIds.length <= 0) return;
 
-      const citizens = await getNotifiableCitizens({ id: { in: citizenIds } });
+      const recipientWhere = await getEventRecipientWhere(event.id);
+      if (!recipientWhere) return;
+
+      const citizens = await getNotifiableCitizens({
+        AND: [{ id: { in: citizenIds } }, recipientWhere],
+      });
       if (!citizens || citizens.length <= 0) return;
 
       return { event: { id: event.id, name: event.name }, citizens };
@@ -105,7 +111,10 @@ const getRecipients = async (payload: Payload) => {
       });
       if (!event) return;
 
-      const citizens = await getNotifiableCitizens({});
+      const recipientWhere = await getEventRecipientWhere(event.id);
+      if (!recipientWhere) return;
+
+      const citizens = await getNotifiableCitizens(recipientWhere);
       if (!citizens || citizens.length <= 0) return;
 
       return { event, citizens };

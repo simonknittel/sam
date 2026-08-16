@@ -1,4 +1,5 @@
 import { prisma, type Event } from "@sam-monorepo/database";
+import { getEventRecipientWhere } from "../getEventRecipientWhere.js";
 import { getNotifiableCitizens } from "../getNotifiableCitizens.js";
 import { publishNotifications } from "../publish.js";
 
@@ -21,7 +22,10 @@ export const EventCreatedHandler = async (payload: Payload) => {
   });
   if (!event) return;
 
-  const citizens = await getNotifiableCitizens({});
+  const recipientWhere = await getEventRecipientWhere(event.id);
+  if (!recipientWhere) return;
+
+  const citizens = await getNotifiableCitizens(recipientWhere);
   if (!citizens || citizens.length <= 0) return;
 
   /**

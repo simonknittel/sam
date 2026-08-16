@@ -21,6 +21,7 @@ export const eventStartingSoon = async () => {
           gte: now,
           lte: notificationWindow,
         },
+        deletedAt: null,
       },
       select: {
         id: true,

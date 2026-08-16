@@ -1,4 +1,5 @@
 import { prisma, type Event } from "@sam-monorepo/database";
+import { getEventRecipientWhere } from "../getEventRecipientWhere.js";
 import { publishNotifications } from "../publish.js";
 
 type Payload = {
@@ -20,11 +21,15 @@ export const EventDeletedHandler = async (payload: Payload) => {
         where: { cancelledAt: null },
         select: {
           discordUserId: true,
+          citizenId: true,
         },
       },
     },
   });
   if (!event || event.participants.length <= 0) return;
+
+  const recipientWhere = await getEventRecipientWhere(event.id);
+  if (!recipientWhere) return;
 
   const permissionStrings = await prisma.permissionString.findMany({
     where: {
@@ -61,13 +66,32 @@ export const EventDeletedHandler = async (payload: Payload) => {
 
   const citizensWithRoles = await prisma.entity.findMany({
     where: {
-      discordId: {
-        in: event.participants
-          .map((participant) => participant.discordUserId)
-          .filter(
-            (discordUserId): discordUserId is string => discordUserId !== null,
-          ),
-      },
+      AND: [
+        {
+          OR: [
+            {
+              discordId: {
+                in: event.participants
+                  .map((participant) => participant.discordUserId)
+                  .filter(
+                    (discordUserId): discordUserId is string =>
+                      discordUserId !== null,
+                  ),
+              },
+            },
+            {
+              id: {
+                in: event.participants
+                  .map((participant) => participant.citizenId)
+                  .filter(
+                    (citizenId): citizenId is string => citizenId !== null,
+                  ),
+              },
+            },
+          ],
+        },
+        recipientWhere,
+      ],
       roleAssignments: {
         some: {},
       },
