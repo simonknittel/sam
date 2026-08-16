@@ -20,7 +20,8 @@
     "module": "NodeNext",
     "noEmit": true,
     /* If your code doesn't run in the DOM: */
-    "lib": ["es2024"]
+    "lib": ["es2024"],
+    "types": ["node"]
   },
   "include": ["src/**/*.ts"]
 }

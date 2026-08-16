@@ -9,6 +9,7 @@ export {
   type AuditEventDataByType,
   type AuditEventInput,
 } from "./AuditEventTypes.js";
+export { isAllowedWebPushEndpointUrl } from "./isAllowedWebPushEndpointUrl.js";
 export { ORG_ID } from "./ORG_ID.js";
 export { calculateSilcBalances } from "./silc/calculateSilcBalances.js";
 export { getAuecPerSilc } from "./silc/getAuecPerSilc.js";

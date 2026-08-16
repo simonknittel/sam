@@ -1,5 +1,8 @@
 import { NotificationChannel, prisma } from "@sam-monorepo/database";
-import { AuditEventType } from "@sam-monorepo/domain";
+import {
+  AuditEventType,
+  isAllowedWebPushEndpointUrl,
+} from "@sam-monorepo/domain";
 import {
   sendNotification,
   setVapidDetails,
@@ -89,20 +92,22 @@ export const publishWebPushNotifications = async (
     .flatMap((notification) => {
       const citizen = citizens.find((c) => c.id === notification.receiverId)!;
 
-      return citizen.webPushSubscriptions.map((sub) => ({
-        subscription: {
-          endpoint: sub.endpoint,
-          keys: {
-            p256dh: sub.p256dh,
-            auth: sub.auth,
+      return citizen.webPushSubscriptions
+        .filter((sub) => isAllowedWebPushEndpointUrl(sub.endpoint))
+        .map((sub) => ({
+          subscription: {
+            endpoint: sub.endpoint,
+            keys: {
+              p256dh: sub.p256dh,
+              auth: sub.auth,
+            },
           },
-        },
-        payload: JSON.stringify({
-          title: `${notification.title} | SAM`,
-          body: notification.body,
-          url: notification.url,
-        }),
-      }));
+          payload: JSON.stringify({
+            title: `${notification.title} | SAM`,
+            body: notification.body,
+            url: notification.url,
+          }),
+        }));
     });
   if (filteredNotifications.length <= 0) return;
 
