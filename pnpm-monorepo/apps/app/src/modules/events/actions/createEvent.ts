@@ -5,12 +5,12 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
-import { buildBriefingRootPageSeed } from "@sam-monorepo/domain";
 import {
-  EventSource,
   EventActivityType,
+  EventSource,
   EventVisibility,
 } from "@sam-monorepo/database/client";
+import { buildBriefingRootPageSeed } from "@sam-monorepo/domain";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { berlinWallTimeToUtc } from "../utils/berlinWallTime";

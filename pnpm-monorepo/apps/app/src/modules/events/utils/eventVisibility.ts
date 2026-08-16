@@ -1,10 +1,7 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import {
-  EventVisibility,
-  type Prisma,
-} from "@sam-monorepo/database/client";
+import { EventVisibility, type Prisma } from "@sam-monorepo/database/client";
 import { resolveEffectiveRoles } from "@sam-monorepo/permissions";
 import { cache } from "react";
 import {

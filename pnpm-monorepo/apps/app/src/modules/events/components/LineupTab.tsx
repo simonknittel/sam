@@ -91,8 +91,7 @@ export const LineupTab = ({
             message={
               <p>
                 Du musst dich erst auf der Übersichtsseite bei diesem Event
-                anmelden, bevor du dich hier in der Aufstellung anmelden
-                kannst.
+                anmelden, bevor du dich hier in der Aufstellung anmelden kannst.
               </p>
             }
             className="max-w-none!"

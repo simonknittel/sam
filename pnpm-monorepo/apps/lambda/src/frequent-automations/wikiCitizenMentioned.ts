@@ -254,8 +254,7 @@ export const wikiCitizenMentioned = async () => {
         {
           isParticipant: event.participants.some(
             (participant) =>
-              (discordId !== null &&
-                participant.discordUserId === discordId) ||
+              (discordId !== null && participant.discordUserId === discordId) ||
               participant.citizenId === citizenId,
           ),
           isEventManager:

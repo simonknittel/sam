@@ -114,19 +114,28 @@ describe("resolveEventVisibility", () => {
 
   test("the creator always sees their restricted event", () => {
     expect(
-      resolveEventVisibility(baseEvent, { ...baseViewer, citizenId: "creator" }),
+      resolveEventVisibility(baseEvent, {
+        ...baseViewer,
+        citizenId: "creator",
+      }),
     ).toBe(true);
   });
 
   test("managers always see their restricted event", () => {
     expect(
-      resolveEventVisibility(baseEvent, { ...baseViewer, citizenId: "manager" }),
+      resolveEventVisibility(baseEvent, {
+        ...baseViewer,
+        citizenId: "manager",
+      }),
     ).toBe(true);
   });
 
   test("event;manage holders see every restricted event", () => {
     expect(
-      resolveEventVisibility(baseEvent, { ...baseViewer, hasEventManage: true }),
+      resolveEventVisibility(baseEvent, {
+        ...baseViewer,
+        hasEventManage: true,
+      }),
     ).toBe(true);
   });
 

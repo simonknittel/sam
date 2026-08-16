@@ -1,7 +1,7 @@
 import {
-  EventActivityType,
-  type Event,
+  type EventActivityType,
   type Entity,
+  type Event,
   type Prisma,
 } from "@sam-monorepo/database/client";
 

@@ -39,10 +39,7 @@ export const getEventParticipants = async (eventId: Event["id"]) => {
   const participants = await getNotifiableCitizens({
     AND: [
       {
-        OR: [
-          { discordId: { in: discordUserIds } },
-          { id: { in: citizenIds } },
-        ],
+        OR: [{ discordId: { in: discordUserIds } }, { id: { in: citizenIds } }],
       },
       recipientWhere,
     ],

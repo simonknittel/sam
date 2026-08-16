@@ -5,10 +5,7 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
-import {
-  EventActivityType,
-  EventSource,
-} from "@sam-monorepo/database/client";
+import { EventActivityType, EventSource } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createEventActivity } from "../utils/eventActivity";
@@ -65,7 +62,10 @@ export const updateEventLineupEnabled = createAuthenticatedAction(
        * The activity feed only exists on app events; recorded in both
        * directions, rendered as "published"/"withdrawn".
        */
-      if (event.source === EventSource.APP && event.lineupEnabled !== data.value)
+      if (
+        event.source === EventSource.APP &&
+        event.lineupEnabled !== data.value
+      )
         await createEventActivity(transaction, {
           eventId: event.id,
           citizenId: authentication.session.entity?.id ?? null,

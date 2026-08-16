@@ -2,7 +2,11 @@ import { requireAuthentication } from "@/modules/auth/server";
 import { SubNavigation } from "@/modules/common/components/SubNavigation";
 import { getEventWikiContext } from "@/modules/wiki/queries/getEventWikiContext";
 import { getEventWikiBasePath } from "@/modules/wiki/utils/wikiPageHref";
-import { EventSource, type Entity, type Event } from "@sam-monorepo/database/client";
+import {
+  EventSource,
+  type Entity,
+  type Event,
+} from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import { FaBook, FaCog, FaHistory, FaHome, FaUsers } from "react-icons/fa";
 import { MdWorkspaces } from "react-icons/md";
