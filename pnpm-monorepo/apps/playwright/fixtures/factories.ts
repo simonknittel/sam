@@ -9,11 +9,15 @@ import type {
 } from "@sam-monorepo/database/client";
 import {
   EventSource,
+  EventVisibility,
   OrganizationMembershipType,
   OrganizationMembershipVisibility,
   WikiPageAccessType,
   WikiPageEditability,
+  WikiPageEventScope,
+  WikiPageNamespace,
   WikiPageSidebarMode,
+  WikiPageUploadability,
   WikiPageVisibility,
 } from "@sam-monorepo/database/client";
 import { randomUUID } from "node:crypto";
@@ -339,6 +343,63 @@ export const createEvent = (
       lineupEnabled,
       location,
       discordGuildId: "playwright-guild",
+    },
+  });
+
+interface CreateAppEventOptions {
+  readonly name: string;
+  /** Entity id of the creating citizen — managing rights key off this. */
+  readonly createdById: string;
+  readonly startTime: Date;
+  readonly endTime: Date;
+  readonly description?: string;
+  readonly lineupEnabled?: boolean;
+  readonly visibility?: EventVisibility;
+  readonly visibilityRoleIds?: readonly Role["id"][];
+}
+
+/**
+ * An app-created event as the createEvent action writes it, including the
+ * manager-scoped briefing root page it seeds.
+ */
+export const createAppEvent = (
+  prisma: PrismaClient,
+  {
+    name,
+    createdById,
+    startTime,
+    endTime,
+    description,
+    lineupEnabled,
+    visibility = EventVisibility.PUBLIC,
+    visibilityRoleIds = [],
+  }: CreateAppEventOptions,
+) =>
+  prisma.event.create({
+    data: {
+      source: EventSource.APP,
+      name,
+      description,
+      startTime,
+      endTime,
+      lineupEnabled,
+      visibility,
+      createdById,
+      visibilityRoles: {
+        create: visibilityRoleIds.map((roleId) => ({ roleId })),
+      },
+      wikiPages: {
+        create: {
+          namespace: WikiPageNamespace.EVENT,
+          title: "BRIEFING",
+          slug: "briefing",
+          eventReadScope: WikiPageEventScope.MANAGERS,
+          eventEditScope: WikiPageEventScope.MANAGERS,
+          imageUploadability: WikiPageUploadability.RESTRICTED,
+          attachmentUploadability: WikiPageUploadability.RESTRICTED,
+          ownerId: createdById,
+        },
+      },
     },
   });
 

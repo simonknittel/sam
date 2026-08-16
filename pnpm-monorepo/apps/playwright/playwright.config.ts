@@ -12,6 +12,18 @@ export default defineConfig({
 
   globalSetup: "./setup/global-setup.ts",
 
+  build: {
+    /**
+     * Keep the workspace packages' compiled ESM out of Playwright's babel
+     * transform: it chokes on their `export * as` re-exports (e.g. the
+     * generated Prisma client). Whether these files resolve through an
+     * injected node_modules copy (skipped implicitly) or a plain workspace
+     * symlink depends on pnpm's dedupe heuristics, so exclude them
+     * explicitly and let Node load them natively.
+     */
+    external: ["**/packages/*/dist/**"],
+  },
+
   use: {
     trace: "on-first-retry",
     viewport: { width: 1280, height: 720 },
