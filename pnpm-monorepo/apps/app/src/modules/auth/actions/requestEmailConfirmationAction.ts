@@ -49,4 +49,8 @@ export const requestEmailConfirmationAction = createAuthenticatedAction(
       success: "Bestätigungs-E-Mail angefordert.",
     };
   },
+  {
+    // This action is how users get their email confirmed in the first place
+    skipEmailConfirmationAndClearanceGates: true,
+  },
 );

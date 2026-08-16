@@ -2,6 +2,7 @@ import {
   authenticate,
   type requireAuthentication,
 } from "@/modules/auth/server";
+import { requireConfirmedEmailForAction } from "@/modules/auth/utils/emailConfirmation";
 import { log } from "@/modules/logging";
 import { getTracer } from "@/modules/tracing/utils/getTracer";
 import { SpanStatusCode } from "@opentelemetry/api";
@@ -52,6 +53,13 @@ export const createAuthenticatedAction = <
      * (formData.getAll) or per-field normalization pass their own mapping.
      */
     parseFormData?: (formData: FormData) => unknown;
+    /**
+     * By default actions enforce the same confirmed-email and clearance
+     * (`login`/`manage`) gates as pages and API routes. The few actions
+     * which must be reachable before passing those gates (e.g. requesting
+     * the confirmation email itself) opt out with this flag.
+     */
+    skipEmailConfirmationAndClearanceGates?: boolean;
   },
 ): ((formData: FormData) => Promise<ActionResponse | Response>) => {
   return async (formData: FormData) => {
@@ -69,6 +77,30 @@ export const createAuthenticatedAction = <
               error: t("Common.forbidden"),
               requestPayload: formData,
             };
+
+          if (!options?.skipEmailConfirmationAndClearanceGates) {
+            try {
+              await requireConfirmedEmailForAction(authentication.session);
+            } catch {
+              return {
+                error: t("Common.forbidden"),
+                requestPayload: formData,
+              };
+            }
+
+            if (!(await authentication.authorize("login", "manage"))) {
+              log.info("Forbidden request to action", {
+                actionName: name,
+                userId: authentication.session.user.id,
+                reason: "Missing clearance",
+              });
+
+              return {
+                error: t("Common.forbidden"),
+                requestPayload: formData,
+              };
+            }
+          }
 
           /**
            * Validate the request
