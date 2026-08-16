@@ -107,7 +107,7 @@ services:
     environment:
       DATABASE_URL: postgres://postgres:admin@psql:5432/unleash
       DATABASE_SSL: "false"
-      INIT_BACKEND_API_TOKENS: default:development.unleash-insecure-api-token
+      INIT_BACKEND_API_TOKENS: default:development.sam-insecure-api-token
       INIT_ADMIN_API_TOKENS: "*:*.unleash-insecure-admin-token"
     ports:
       - ${SAM_UNLEASH_PORT:-4242}:4242

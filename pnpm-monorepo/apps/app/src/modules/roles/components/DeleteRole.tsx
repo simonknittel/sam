@@ -13,7 +13,16 @@ interface Props {
 
 export const DeleteRole = ({ className, role }: Props) => {
   return (
-    <section className={clsx("bg-secondary rounded-primary p-4", className)}>
+    <section
+      className={clsx(
+        "rounded-primary bg-red-500/10 border border-red-500/30 p-4",
+        className,
+      )}
+    >
+      <h2 className="font-bold mb-2 text-lg font-mono uppercase text-red-500">
+        Danger Zone
+      </h2>
+
       <ConfirmActionButton
         action={deleteRole}
         hiddenFields={[{ name: "id", value: role.id }]}

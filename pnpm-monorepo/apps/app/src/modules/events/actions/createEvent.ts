@@ -13,6 +13,7 @@ import {
 } from "@sam-monorepo/database/client";
 import { buildBriefingRootPageSeed } from "@sam-monorepo/domain";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { berlinWallTimeToUtc } from "../utils/berlinWallTime";
 import { createEventActivity } from "../utils/eventActivity";
@@ -163,11 +164,10 @@ export const createEvent = createAuthenticatedAction(
     revalidatePath("/app/dashboard");
 
     /**
-     * Respond with the result
+     * Redirect to the created event; the form's success hook closes the
+     * modal while the navigation is in flight (see useAction).
      */
-    return {
-      success: t("Common.successfullySaved"),
-    };
+    redirect(`/app/events/${createdEvent.id}`);
   },
   {
     parseFormData: (formData) => ({

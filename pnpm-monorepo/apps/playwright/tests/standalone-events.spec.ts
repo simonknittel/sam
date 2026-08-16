@@ -56,13 +56,13 @@ test("an authorized user creates a public event via the modal", async ({
   await page.getByLabel("Ende").fill("2027-03-05T22:00");
   await page.getByRole("button", { name: "Speichern" }).click();
 
-  await expect(page.getByText("Erfolgreich gespeichert")).toBeVisible({
+  // Creating redirects straight to the new event's overview
+  await expect(page).toHaveURL(/\/app\/events\/[a-z0-9]+$/, {
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
-
   await expect(
-    page.getByRole("heading", { name: "Operation Nachtwache" }),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+    page.getByRole("heading", { name: "Operation Nachtwache" }).first(),
+  ).toBeVisible();
 
   const event = await prisma.event.findFirst({
     where: { name: "Operation Nachtwache" },
@@ -77,7 +77,6 @@ test("an authorized user creates a public event via the modal", async ({
   expect(event!.wikiPages).toHaveLength(1);
   expect(event!.wikiPages[0]!.title).toBe("BRIEFING");
 
-  await page.getByRole("link", { name: "Details" }).click();
   await expect(page).toHaveURL(`/app/events/${event!.id}`);
   // Times render in Europe/Berlin
   await expect(page.getByText("20:00").first()).toBeVisible();

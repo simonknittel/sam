@@ -105,7 +105,7 @@ export const PersonalBriefing = async ({ className, event }: Props) => {
               </>
             ) : (
               <>
-                <FaTimes className="text-neutral-500" />
+                <FaTimes className="text-red-500" />
                 Nicht angemeldet
               </>
             )}
@@ -133,8 +133,8 @@ export const PersonalBriefing = async ({ className, event }: Props) => {
             Meine Posten
           </h3>
 
-          {/* One line per position, mirroring the lineup's rows: name left,
-              required ship right. The description travels in the tooltip. */}
+          {/* Mirrors the lineup's rows: name left, required ship right, the
+              description as its own bordered row below. */}
           <ul className="mt-1 flex flex-col gap-1">
             {assignedPositions.map((position) => (
               <li
@@ -142,7 +142,10 @@ export const PersonalBriefing = async ({ className, event }: Props) => {
                 className="rounded-secondary bg-neutral-800/50 p-2"
               >
                 <div className="flex items-center gap-2">
-                  <p className="flex-1 font-bold truncate" title={position.name}>
+                  <p
+                    className="flex-1 font-bold truncate"
+                    title={position.name}
+                  >
                     {position.name}
                   </p>
 

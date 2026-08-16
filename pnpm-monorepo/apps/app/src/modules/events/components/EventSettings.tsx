@@ -62,7 +62,7 @@ export const EventSettings = ({ className, event }: Props) => {
           <Textarea
             name="description"
             label="Kurzbeschreibung"
-            hint="optional, max. 2.000 Zeichen, keine Formatierungsmöglichkeiten. Ausführlichere Informationen gehören ins Briefing (Event-Wiki) des Events."
+            hint="optional, max. 2.000 Zeichen, keine Formatierungsmöglichkeiten. Ausführlichere Informationen gehören ins Briefing des Events."
             maxLength={2000}
             defaultValue={getDefaultValueWithFallback(
               "description",

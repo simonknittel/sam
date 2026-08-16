@@ -34,6 +34,10 @@ import image20260731LineupPositionActions from "@/modules/changelog/assets/2026-
 import image20260801WikiEditor from "@/modules/changelog/assets/2026-08-01-wiki-editor.png";
 import image20260801WikiPage from "@/modules/changelog/assets/2026-08-01-wiki-page.png";
 import image20260801WikiSearch from "@/modules/changelog/assets/2026-08-01-wiki-search.png";
+import image20260816Activity from "@/modules/changelog/assets/2026-08-16-activity.png";
+import image20260816CreateModal from "@/modules/changelog/assets/2026-08-16-create-modal.png";
+import image20260816PersonalBriefing from "@/modules/changelog/assets/2026-08-16-personal-briefing.png";
+import image20260816Settings from "@/modules/changelog/assets/2026-08-16-settings.png";
 import type { ChangelogEntry } from "@/modules/changelog/types";
 import { Link } from "@/modules/common/components/Link";
 import Image from "next/image";
@@ -44,7 +48,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     key: "2026-08-16-app-events",
     date: "2026-08-16",
-    title: "Events direkt in der App erstellen",
+    title: "Events direkt im SAM erstellen",
     tags: ["Events", "Neu"],
     isTracked: true,
     requiresAuth: { resource: "event", action: "read" },
@@ -52,26 +56,65 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
       <>
         <p>
           Events müssen nicht mehr über Discord angelegt werden: Mit der neuen
-          Berechtigung &bdquo;Events erstellen&ldquo; lassen sie sich direkt in
-          der App anlegen &ndash; über den Button auf der Eventliste oder das
-          &bdquo;Neu&ldquo;-Menü in der Kopfleiste. Titel, Kurzbeschreibung,
-          Titelbild, Start und Ende (Zeitzone Europe/Berlin) werden dabei
-          festgelegt; die Sichtbarkeit kann optional auf ausgewählte Rollen
-          eingeschränkt werden.
+          Berechtigung &bdquo;Events erstellen&ldquo; lassen sie sich direkt im
+          SAM anlegen &ndash; über den Button auf der Eventliste oder das
+          &bdquo;Neu&ldquo;-Menü in der Kopfleiste. Die Sichtbarkeit kann
+          optional auf ausgewählte Rollen eingeschränkt werden.
         </p>
 
+        <Link href={image20260816CreateModal.src}>
+          <Image
+            quality={100}
+            src={image20260816CreateModal}
+            alt=""
+            loading="eager"
+            className="max-h-full w-auto"
+          />
+        </Link>
+
         <p>
-          Bei App-Events meldet man sich direkt auf der Übersichtsseite an
+          Bei SAM-Events meldet man sich direkt auf der Übersichtsseite an
           &ndash; optional mit einem Kommentar, sichtbar für alle Teilnehmer.
-          Die neue Kachel &bdquo;Meine Teilnahme&ldquo; zeigt auf beiden
-          Event-Arten den eigenen Anmeldestatus und die eigenen Posten aus der
-          Aufstellung. Aufstellung, Briefing, Flotte und Manager funktionieren
-          wie gewohnt; zusätzlich zeigt der neue Reiter &bdquo;Aktivität&ldquo;,
-          was sich am Event getan hat, und über &bdquo;Einstellungen&ldquo;
-          bearbeiten Organisatoren ihr Event oder sagen es ab. In der Eventliste
-          filtert der neue Filter &bdquo;Typ&ldquo; zwischen App- und
-          Discord-Events.
+          Die neue Kachel &bdquo;Meine Teilnahme&ldquo; zeigt den eigenen
+          Anmeldestatus und die eigenen Posten aus der Aufstellung.
         </p>
+
+        <Link href={image20260816PersonalBriefing.src}>
+          <Image
+            quality={100}
+            src={image20260816PersonalBriefing}
+            alt=""
+            loading="eager"
+            className="max-h-full w-auto"
+          />
+        </Link>
+
+        <p>
+          Aufstellung, Briefing, Flotte und Manager funktionieren wie gewohnt;
+          zusätzlich zeigt der neue Reiter &bdquo;Aktivität&ldquo;, was sich am
+          Event getan hat, und über &bdquo;Einstellungen&ldquo; bearbeiten
+          Organisatoren ihr Event oder sagen es ab.
+        </p>
+
+        <Link href={image20260816Activity.src}>
+          <Image
+            quality={100}
+            src={image20260816Activity}
+            alt=""
+            loading="eager"
+            className="max-h-full w-auto"
+          />
+        </Link>
+
+        <Link href={image20260816Settings.src}>
+          <Image
+            quality={100}
+            src={image20260816Settings}
+            alt=""
+            loading="eager"
+            className="max-h-full w-auto"
+          />
+        </Link>
       </>
     ),
   },
