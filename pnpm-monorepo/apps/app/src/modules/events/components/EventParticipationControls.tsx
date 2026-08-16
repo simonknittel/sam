@@ -114,7 +114,9 @@ export const EventParticipationControls = ({
             hint="optional, max. 500 Zeichen"
             maxLength={500}
             value={signUpComment}
-            onChange={(changeEvent) => setSignUpComment(changeEvent.target.value)}
+            onChange={(changeEvent) =>
+              setSignUpComment(changeEvent.target.value)
+            }
             classNameTextarea="h-20"
           />
 
