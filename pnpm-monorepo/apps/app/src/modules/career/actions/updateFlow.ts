@@ -56,6 +56,25 @@ export const updateFlow = createAuthenticatedAction(
       };
 
     /**
+     * Edges are stored by node id only. Every endpoint must be one of the
+     * nodes being written for this flow, otherwise an edge could attach to
+     * another flow's nodes and cross the per-flow authorization boundary.
+     */
+    const nodeIds = new Set<string>(
+      // @ts-expect-error The career node definitions are too heterogeneous for TypeScript to unify
+      data.nodes.map((node) => node.id), // eslint-disable-line @typescript-eslint/no-unsafe-return -- same reason as the @ts-expect-error above
+    );
+    if (
+      data.edges.some(
+        (edge) => !nodeIds.has(edge.source) || !nodeIds.has(edge.target),
+      )
+    )
+      return {
+        error: t("Common.badRequest"),
+        requestPayload: formData,
+      };
+
+    /**
      * Update flow
      */
     await prisma.$transaction([
