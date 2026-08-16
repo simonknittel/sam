@@ -8,7 +8,8 @@ import { cache } from "react";
 export const getCitizenPopoverById = cache(
   withTrace("getCitizenPopoverById", async (id: Entity["id"]) => {
     const authentication = await requireAuthentication();
-    await authentication.authorize("citizen", "read");
+    if (!(await authentication.authorize("citizen", "read")))
+      throw new Error("Forbidden");
 
     const [citizen, assignableRoles] = await Promise.all([
       prisma.entity.findUnique({

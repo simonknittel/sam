@@ -4,7 +4,8 @@ import { withTrace } from "@/modules/tracing/utils/withTrace";
 
 export const getCitizens = withTrace("getCitizens", async () => {
   const authentication = await requireAuthentication();
-  await authentication.authorize("citizen", "read");
+  if (!(await authentication.authorize("citizen", "read")))
+    throw new Error("Forbidden");
 
   return prisma.entity.findMany({
     include: {

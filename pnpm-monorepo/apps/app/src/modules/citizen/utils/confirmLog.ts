@@ -20,12 +20,14 @@ export const confirmLog = async (
   switch (log.type) {
     case "handle":
     case "teamspeak-id":
-      await authentication.authorize(log.type, "confirm");
+      if (!(await authentication.authorize(log.type, "confirm")))
+        throw new Error("Forbidden");
       break;
     case "discord-id":
     case "citizen-id":
     case "community-moniker":
-      await authentication.authorize(log.type, "create");
+      if (!(await authentication.authorize(log.type, "create")))
+        throw new Error("Forbidden");
       break;
     case "note":
       const { noteTypeId, classificationLevelId } =
@@ -47,12 +49,15 @@ export const confirmLog = async (
         });
       }
 
-      await authentication.authorize(
-        "note",
-        "confirm",
-        // @ts-expect-error The authorization types need to get overhauled
-        authorizationAttributes,
-      );
+      if (
+        !(await authentication.authorize(
+          "note",
+          "confirm",
+          // @ts-expect-error The authorization types need to get overhauled
+          authorizationAttributes,
+        ))
+      )
+        throw new Error("Forbidden");
       break;
 
     default:
