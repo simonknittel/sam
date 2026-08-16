@@ -30,12 +30,13 @@ slot N ≥ 1 whose ports are free:
 | soketi metrics     | 9601          | 9601 + N |
 | collab (wiki)      | 5210          | 5210 + N |
 | rustfs S3          | 9000          | 9000 + N |
+| unleash flags      | 4242          | 4242 + N |
 
 ```bash
-lsof -nP -iTCP:3001,5433,6002,9602,5211,9001 -sTCP:LISTEN   # slot 1 free if no output
+lsof -nP -iTCP:3001,5433,6002,9602,5211,9001,4243 -sTCP:LISTEN   # slot 1 free if no output
 ```
 
-No output → the slot is free (bump all five ports by one and re-check
+No output → the slot is free (bump all the ports by one and re-check
 for slot 2, and so on). Ports of a stopped-but-existing worktree stack
 don't show up here — prefer reusing that stack (`docker compose start`)
 over claiming its slot for a different worktree.
@@ -110,6 +111,31 @@ worktree's `pnpm-monorepo/apps/collab` instead of reusing an image
 built from another branch's code. Each rebuild leaves the previous
 image dangling and grows the build cache — §7 covers reclaiming that
 space.
+
+### Feature flags
+
+To test flag-gated behavior, toggle a flag through the local Unleash
+admin API instead of pointing the user at the admin UI
+(http://localhost:4242, `admin` / `unleash4all`). Use the slot's port
+(`4242 + N`) in a worktree — 4242 addresses the MAIN stack's flags:
+
+```bash
+curl -s -X POST -H "Authorization: *:*.unleash-insecure-admin-token" \
+  http://localhost:4242/api/admin/projects/default/features/<flag>/environments/development/on   # or .../off
+```
+
+Flag names come from the app's `UNLEASH_FLAG` enum; the bootstrap
+pre-creates all of them, so a 404 means a typo or a brand-new flag
+(create it first: `POST .../features` with body `{"name":"<flag>"}`).
+The app caches flag definitions for up to ~30 s — wait or poll before
+concluding a toggle "didn't work".
+
+If the `psql` container gets RECREATED (e.g. by
+`scripts/mirror-database-production-to-local.sh`), the `unleash`
+container crashes with it, because the flag data lives in the same
+Postgres instance. `docker compose up -d unleash-bootstrap` from the
+affected checkout heals everything — but all flags are back to
+disabled, so re-toggle what you were testing.
 
 ## 3. Seed the worktree database from the main stack
 
@@ -198,7 +224,7 @@ directory is already gone, address the stack by project name instead:
 `docker compose -p <project> down --rmi local --volumes --remove-orphans`.
 
 **Main stack:** leave it running; stop with
-`docker stop sam-psql-1 sam-soketi-1 sam-sam-collab-1 sam-rustfs-1`
+`docker stop sam-psql-1 sam-soketi-1 sam-sam-collab-1 sam-rustfs-1 sam-unleash-1`
 only when the user asks. NEVER `docker compose down` the main stack — its containers
 hold the only copy of the dev data.
 
