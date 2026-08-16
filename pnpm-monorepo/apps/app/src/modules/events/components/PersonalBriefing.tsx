@@ -141,16 +141,20 @@ export const PersonalBriefing = async ({ className, event }: Props) => {
                 key={position.id}
                 className="flex items-center gap-2 rounded-secondary bg-neutral-800/50 p-2"
               >
-                <span
-                  className="flex-1 font-bold truncate"
-                  title={
-                    position.description
-                      ? `${position.name} — ${position.description}`
-                      : position.name
-                  }
-                >
-                  {position.name}
-                </span>
+                <div className="flex-1 flex flex-col overflow-hidden">
+                  <p className="font-bold truncate" title={position.name}>
+                    {position.name}
+                  </p>
+
+                  {position.description && (
+                    <p
+                      className="text-sm text-neutral-500 truncate"
+                      title={position.description}
+                    >
+                      {position.description}
+                    </p>
+                  )}
+                </div>
 
                 {position.requiredVariants.length > 0 ? (
                   <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1">

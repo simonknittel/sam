@@ -1,16 +1,19 @@
 import { requireAuthentication } from "@/modules/auth/server";
 import { getAssignedRoles } from "@/modules/roles/utils/getRoles";
-import type {
-  Entity,
-  Event,
-  EventParticipant,
-  Role,
-  Upload,
-  VariantTag,
+import {
+  EventSource,
+  type Entity,
+  type Event,
+  type EventParticipant,
+  type Role,
+  type Upload,
+  type VariantTag,
 } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import { getEventFleet } from "../utils/getEventFleet";
 import { getParticipants } from "../utils/getParticipants";
+import { isAllowedToManageEvent } from "../utils/isAllowedToManageEvent";
+import { isEventUpdatable } from "../utils/isEventUpdatable";
 import { OverviewTile } from "./OverviewTile";
 import { PersonalBriefing } from "./PersonalBriefing";
 import { RolesTable } from "./RolesTable";
@@ -27,6 +30,10 @@ interface Props {
 export const OverviewTab = async ({ className, event }: Props) => {
   const authentication = await requireAuthentication();
   const showFleetSummary = await authentication.authorize("orgFleet", "read");
+  const showCoverUpload =
+    event.source === EventSource.APP &&
+    isEventUpdatable(event) &&
+    (await isAllowedToManageEvent(event));
 
   return (
     <div
@@ -35,7 +42,11 @@ export const OverviewTab = async ({ className, event }: Props) => {
         className,
       )}
     >
-      <OverviewTile event={event} className="w-full max-w-120 flex-none" />
+      <OverviewTile
+        event={event}
+        showCoverUpload={showCoverUpload}
+        className="w-full max-w-120 flex-none"
+      />
 
       <div className="flex-1 w-full flex-col md:flex-row lg:flex-col xl:flex-row 2xl:flex-col 3xl:flex-row flex gap-2">
         <PersonalBriefing

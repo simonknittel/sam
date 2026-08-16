@@ -1,5 +1,6 @@
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { DiscordButton } from "@/modules/common/components/DiscordButton";
+import { ImageUpload } from "@/modules/common/components/ImageUpload";
 import { Markdown } from "@/modules/common/components/Markdown";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
@@ -19,9 +20,14 @@ interface Props {
     readonly createdBy?: Entity | null;
     readonly coverImage?: Upload | null;
   };
+  /**
+   * Renders the cover as a click-to-replace upload area (managers of app
+   * events while the event is still updatable).
+   */
+  readonly showCoverUpload?: boolean;
 }
 
-export const OverviewTile = ({ className, event }: Props) => {
+export const OverviewTile = ({ className, event, showCoverUpload }: Props) => {
   const showActions = event.startTime > new Date();
 
   return (
@@ -34,7 +40,28 @@ export const OverviewTile = ({ className, event }: Props) => {
         gridArea: "overview",
       }}
     >
-      {(event.coverImage || event.discordImage) && (
+      {showCoverUpload && (
+        <ImageUpload
+          resourceType="event"
+          resourceId={event.id}
+          resourceAttribute="coverImageId"
+          imageId={event.coverImage?.id}
+          imageMimeType={event.coverImage?.mimeType}
+          width={800}
+          height={320}
+          className={clsx(
+            "bg-black text-neutral-500 hover:text-neutral-300 transition-colors",
+            {
+              "h-40 after:content-['Titelbild_hochladen'] flex items-center justify-center":
+                !event.coverImage,
+            },
+          )}
+          imageClassName="w-full"
+          pendingClassName="h-40"
+        />
+      )}
+
+      {!showCoverUpload && (event.coverImage || event.discordImage) && (
         <Image
           src={
             event.coverImage

@@ -541,10 +541,7 @@ test("the personal briefing on a Discord event shows RSVP state and assigned pos
     page.getByText("Die Teilnahme wird über Discord verwaltet."),
   ).toBeVisible();
   await expect(page.getByText("Torpedoschütze")).toBeVisible();
-  // The position's description travels in the row's tooltip
-  await expect(
-    page.getByTitle("Torpedoschütze — Bedient die Torpedos im Bug."),
-  ).toBeVisible();
+  await expect(page.getByText("Bedient die Torpedos im Bug.")).toBeVisible();
   await expect(
     page.getByRole("link", { name: "Retaliator Bomber" }),
   ).toBeVisible();

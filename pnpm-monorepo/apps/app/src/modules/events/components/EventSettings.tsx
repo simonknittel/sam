@@ -77,24 +77,29 @@ export const EventSettings = ({ className, event }: Props) => {
             classNameTextarea="h-40"
           />
 
-          <EventDateTimeField
-            name="startTime"
-            label="Start"
-            defaultValue={getDefaultValueWithFallback(
-              "startTime",
-              event.startTime,
-            )}
-            className="mt-4"
-            required
-          />
+          <div className="mt-4 flex flex-col gap-4 md:flex-row">
+            <EventDateTimeField
+              name="startTime"
+              label="Start"
+              defaultValue={getDefaultValueWithFallback(
+                "startTime",
+                event.startTime,
+              )}
+              className="flex-1"
+              required
+            />
 
-          <EventDateTimeField
-            name="endTime"
-            label="Ende"
-            defaultValue={getDefaultValueWithFallback("endTime", event.endTime)}
-            className="mt-4"
-            required
-          />
+            <EventDateTimeField
+              name="endTime"
+              label="Ende"
+              defaultValue={getDefaultValueWithFallback(
+                "endTime",
+                event.endTime,
+              )}
+              className="flex-1"
+              required
+            />
+          </div>
 
           <p className="mt-4">Sichtbarkeit</p>
           <RadioGroup
