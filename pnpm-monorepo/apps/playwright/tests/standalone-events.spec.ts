@@ -318,8 +318,10 @@ test("the sign-up lifecycle: sign up with comment, edit, cancel, re-sign-up", as
     page.getByRole("link", { name: "anmelde-orga", exact: true }),
   ).toBeVisible();
 
-  // Edit the comment
+  // Edit the comment. Waiting for the prefilled value guards against
+  // filling before hydration, which would append the default to the input.
   await page.goto(`/app/events/${event.id}`);
+  await expect(page.getByLabel("Kommentar")).toHaveValue("Bringe Snacks mit");
   await page.getByLabel("Kommentar").fill("Bringe doch keine Snacks mit");
   await page.getByRole("button", { name: "Kommentar speichern" }).click();
   await expect(page.getByText("Erfolgreich gespeichert")).toBeVisible({
