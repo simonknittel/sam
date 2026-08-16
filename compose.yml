@@ -11,6 +11,30 @@ services:
       POSTGRES_DB: db
     ports:
       - ${SAM_PSQL_PORT:-5432}:5432
+    # Init scripts only run when the data directory is empty, i.e. when the
+    # container is created — which is every `docker compose up` here since no
+    # volume is mounted.
+    configs:
+      - source: psql-create-unleash-db
+        target: /docker-entrypoint-initdb.d/create-unleash-db.sql
+    # TCP (instead of the default Unix socket) so the temporary init-phase
+    # server — which only listens on the socket and may still be running the
+    # init scripts — never reports healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "--host",
+          "127.0.0.1",
+          "--username",
+          "postgres",
+          "--dbname",
+          "db",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 12
 
   soketi:
     image: quay.io/soketi/soketi:1.6.1-16-distroless@sha256:22486a3b4ac387a3c7ee97963cccf5189d38c0a54b0d75f10c0881d60437a77a
@@ -67,6 +91,54 @@ services:
       aws --endpoint-url http://rustfs:9000 s3api put-bucket-policy --bucket uploads --policy file:///bootstrap/policy.json
       && aws --endpoint-url http://rustfs:9000 s3api put-bucket-cors --bucket uploads --cors-configuration file:///bootstrap/cors.json"
 
+  # Local feature flag server (see docs/setup-local-machine.md for the
+  # app-side environment variables). Admin UI: http://localhost:4242 with
+  # the default credentials admin / unleash4all. Flags live in the extra
+  # `unleash` database of the psql service (see the psql-create-unleash-db
+  # config).
+  unleash:
+    image: unleashorg/unleash-server:8.1.0@sha256:16f3ffb914880e7d0f23629a0c1b77aebea3aa619b0305f76eb50b3fb75998a9
+    restart: no
+    depends_on:
+      psql:
+        condition: service_healthy
+    # Local-only tokens; the backend token must match UNLEASH_SERVER_API_TOKEN
+    # in pnpm-monorepo/apps/app/.env.example
+    environment:
+      DATABASE_URL: postgres://postgres:admin@psql:5432/unleash
+      DATABASE_SSL: "false"
+      INIT_BACKEND_API_TOKENS: default:development.unleash-insecure-api-token
+      INIT_ADMIN_API_TOKENS: "*:*.unleash-insecure-admin-token"
+    ports:
+      - ${SAM_UNLEASH_PORT:-4242}:4242
+    # The startup migrations of a fresh database take a while, hence the
+    # generous retries
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:4242/health').then((response) => process.exit(response.ok ? 0 : 1), () => process.exit(1))",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 36
+
+  # One-shot helper which creates the app's feature flags (all disabled) on
+  # startup so they can be toggled in the Unleash admin UI right away. Safe
+  # to re-run.
+  unleash-bootstrap:
+    image: unleashorg/unleash-server:8.1.0@sha256:16f3ffb914880e7d0f23629a0c1b77aebea3aa619b0305f76eb50b3fb75998a9
+    restart: no
+    depends_on:
+      unleash:
+        condition: service_healthy
+    configs:
+      - source: unleash-create-flags
+        target: /bootstrap/create-flags.mjs
+    entrypoint: ["node", "/bootstrap/create-flags.mjs"]
+
   # Wiki realtime collaboration backend (see docs/setup-local-machine.md for
   # the app-side environment variables). Rebuild after changing
   # pnpm-monorepo/apps/collab: `docker compose build sam-collab`
@@ -84,6 +156,43 @@ services:
       - ${SAM_COLLAB_PORT:-5210}:5210
 
 configs:
+  psql-create-unleash-db:
+    content: |
+      CREATE DATABASE unleash;
+  # The flag names must match the UNLEASH_FLAG enum in
+  # pnpm-monorepo/apps/app/src/modules/common/utils/UNLEASH_FLAG.ts
+  unleash-create-flags:
+    content: |
+      const flagNames = [
+        "DisableAlgolia",
+        "EnableCareBearShooter",
+        "DisableRoleNameSuggestions",
+        "CrashLogAnalyzer",
+      ];
+
+      const FLAG_ALREADY_EXISTS_STATUS = 409;
+
+      for (const flagName of flagNames) {
+        const response = await fetch(
+          "http://unleash:4242/api/admin/projects/default/features",
+          {
+            method: "POST",
+            headers: {
+              Authorization: "*:*.unleash-insecure-admin-token",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ name: flagName }),
+            signal: AbortSignal.timeout(5000),
+          },
+        );
+
+        // No template literals — Docker Compose would interpolate their $${...} placeholders
+        if (!response.ok && response.status !== FLAG_ALREADY_EXISTS_STATUS)
+          throw new Error(
+            "Creating the flag " + flagName + " failed: " + response.status,
+          );
+      }
+
   # Unauthenticated reads of uploaded files — public by unguessable URL,
   # like the real bucket
   rustfs-anonymous-read-policy:

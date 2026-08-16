@@ -9,7 +9,7 @@
 
 1. Clone the repository
 2. Configure environment variables: Duplicate [pnpm-monorepo/apps/app/.env.example](../pnpm-monorepo/apps/app/.env.example) to `pnpm-monorepo/apps/app/.env` (and [pnpm-monorepo/packages/database/.env.example](../pnpm-monorepo/packages/database/.env.example) to `.env` likewise) and fill in the blanks.
-3. Start up the database (plus Soketi, the wiki collaboration server and the S3-compatible upload storage): `docker compose up`
+3. Start up the database (plus Soketi, the wiki collaboration server, the S3-compatible upload storage and the Unleash feature flag server): `docker compose up`
 4. Open a second terminal and change to the `pnpm-monorepo` directory: `cd pnpm-monorepo`
 5. Install required Node.js version: `nvm install`
 6. Enable pnpm: `corepack enable && corepack install`
@@ -42,6 +42,18 @@ rules) is created automatically on `docker compose up` by the one-shot
 Alternatively point the variables at any S3-compatible provider (e.g.
 Cloudflare R2, see the comments in `.env.example`).
 
+### Feature flags (Unleash)
+
+Feature flags are read from the `unleash` container from
+[compose.yml](../compose.yml). The `UNLEASH_*` defaults from
+`pnpm-monorepo/apps/app/.env.example` match the container's backend token —
+keep them. On `docker compose up` the one-shot `unleash-bootstrap` service
+creates all flags of the app's `UNLEASH_FLAG` enum (disabled). Toggle them
+in the Unleash admin UI at <http://localhost:4242> (login: `admin` /
+`unleash4all`). Without the `UNLEASH_*` variables all flags evaluate to
+disabled. Alternatively point the variables at any Unleash-compatible
+provider (e.g. GitLab feature flags).
+
 ### Optional environment tweaks
 
 - `SKIP_VALIDATION=1` skips the app's environment variable validation
@@ -51,7 +63,8 @@ Cloudflare R2, see the comments in `.env.example`).
 - The Docker services' host ports can be overridden so multiple checkouts
   (e.g. git worktrees) can run their stacks side by side: set
   `SAM_PSQL_PORT`, `SAM_SOKETI_PORT`, `SAM_SOKETI_METRICS_PORT`,
-  `SAM_COLLAB_PORT` and/or `SAM_RUSTFS_PORT` in a gitignored `.env` next to
+  `SAM_COLLAB_PORT`, `SAM_RUSTFS_PORT` and/or `SAM_UNLEASH_PORT` in a
+  gitignored `.env` next to
   [compose.yml](../compose.yml).
 
 ## Bot Invite Link with required scopes
