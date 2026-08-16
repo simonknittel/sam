@@ -8,7 +8,6 @@ import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionBu
 import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
 import { Textarea } from "@/modules/common/components/form/Textarea";
 import { TextInput } from "@/modules/common/components/form/TextInput";
-import { ImageUpload } from "@/modules/common/components/ImageUpload";
 import { deleteEvent } from "@/modules/events/actions/deleteEvent";
 import { updateEvent } from "@/modules/events/actions/updateEvent";
 import { WikiRoleSelector } from "@/modules/wiki/components/WikiRoleSelector";
@@ -31,10 +30,6 @@ interface Props {
     readonly endTime: string;
     readonly visibility: EventVisibility;
     readonly visibilityRoleIds: string[];
-    readonly coverImage: {
-      readonly id: string;
-      readonly mimeType: string;
-    } | null;
   };
 }
 
@@ -138,29 +133,6 @@ export const EventSettings = ({ className, event }: Props) => {
 
           <ActionErrorNote className="mt-4" state={state} />
         </form>
-      </section>
-
-      <section className="rounded-primary bg-neutral-800/50 p-4">
-        <h2 className="font-bold mb-2 text-lg font-mono uppercase">
-          Titelbild
-        </h2>
-
-        <p className="mb-4 text-sm text-neutral-500">
-          Empfohlen 800x320 Pixel. Klicke auf das Bild, um es zu ersetzen.
-        </p>
-
-        <ImageUpload
-          resourceType="event"
-          resourceId={event.id}
-          resourceAttribute="coverImageId"
-          imageId={event.coverImage?.id}
-          imageMimeType={event.coverImage?.mimeType}
-          width={800}
-          height={320}
-          className="w-full max-w-120 min-h-24 rounded-secondary border border-dashed border-neutral-700"
-          imageClassName="w-full rounded-secondary"
-          pendingClassName="h-24"
-        />
       </section>
 
       <section className="rounded-primary bg-red-500/10 border border-red-500/30 p-4">
