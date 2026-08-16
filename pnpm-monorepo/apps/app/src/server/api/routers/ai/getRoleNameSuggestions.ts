@@ -1,4 +1,5 @@
 import { env } from "@/env";
+import { authorize } from "@/modules/auth/server";
 import { isOpenAIEnabled } from "@/modules/common/utils/isOpenAIEnabled";
 import { log } from "@/modules/logging";
 import { getRoles } from "@/modules/roles/queries/getRoles";
@@ -9,83 +10,88 @@ import { serializeError } from "serialize-error";
 import { z } from "zod";
 import { protectedProcedure } from "../../trpc";
 
-export const getRoleNameSuggestions = protectedProcedure.query(async () => {
-  if (!(await isOpenAIEnabled()))
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "Generation is disabled",
+export const getRoleNameSuggestions = protectedProcedure.query(
+  async ({ ctx }) => {
+    if (!(await authorize(ctx.session, "role", "manage")))
+      throw new TRPCError({ code: "FORBIDDEN" });
+
+    if (!(await isOpenAIEnabled()))
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Generation is disabled",
+      });
+
+    const existingRoles = await getRoles();
+    const existingRoleNames = existingRoles.map((role) => role.name);
+
+    const defaultHeaders = new Headers();
+    if (env.OPENAI_EXTRA_API_KEY)
+      defaultHeaders.set("X-Api-Key", env.OPENAI_EXTRA_API_KEY);
+
+    const openai = new OpenAI({
+      baseURL: env.OPENAI_BASE_URL,
+      apiKey: env.OPENAI_API_KEY,
+      defaultHeaders: {
+        ...Object.fromEntries(defaultHeaders.entries()),
+      },
     });
 
-  const existingRoles = await getRoles();
-  const existingRoleNames = existingRoles.map((role) => role.name);
+    const messages = [
+      {
+        role: "system",
+        content:
+          'We are a military organization in a sci-fi setting. We want to set up the organization structure. Generate four new role names based on the given ones. Also, generate an additional one which is not based on the other ones. Only respond with the role names. Don\'t include a description or similar. Respond using the JSON format. The JSON key should be named "roleNames".',
+      },
+      { role: "user", content: existingRoleNames.join(", ") },
+    ] satisfies ChatCompletionMessageParam[];
 
-  const defaultHeaders = new Headers();
-  if (env.OPENAI_EXTRA_API_KEY)
-    defaultHeaders.set("X-Api-Key", env.OPENAI_EXTRA_API_KEY);
+    const chatCompletion = await openai.chat.completions.create({
+      messages,
+      model: "openai/gpt-5.4-mini",
+      max_tokens: 1024,
+      response_format: {
+        type: "json_object",
+      },
+    });
 
-  const openai = new OpenAI({
-    baseURL: env.OPENAI_BASE_URL,
-    apiKey: env.OPENAI_API_KEY,
-    defaultHeaders: {
-      ...Object.fromEntries(defaultHeaders.entries()),
-    },
-  });
+    log.info("Role name suggestions", {
+      messages,
+      usage: chatCompletion.usage,
+    });
 
-  const messages = [
-    {
-      role: "system",
-      content:
-        'We are a military organization in a sci-fi setting. We want to set up the organization structure. Generate four new role names based on the given ones. Also, generate an additional one which is not based on the other ones. Only respond with the role names. Don\'t include a description or similar. Respond using the JSON format. The JSON key should be named "roleNames".',
-    },
-    { role: "user", content: existingRoleNames.join(", ") },
-  ] satisfies ChatCompletionMessageParam[];
+    try {
+      if (!chatCompletion.choices[0]?.message.content)
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to generate role names",
+        });
 
-  const chatCompletion = await openai.chat.completions.create({
-    messages,
-    model: "openai/gpt-5.4-mini",
-    max_tokens: 1024,
-    response_format: {
-      type: "json_object",
-    },
-  });
+      const parsedJson: unknown = JSON.parse(
+        chatCompletion.choices[0].message.content,
+      );
 
-  log.info("Role name suggestions", {
-    messages,
-    usage: chatCompletion.usage,
-  });
+      const response = z
+        .object({
+          roleNames: z.array(z.string()),
+        })
+        .parse(parsedJson);
 
-  try {
-    if (!chatCompletion.choices[0]?.message.content)
+      return {
+        prompt: {
+          system: messages[0].content,
+          user: messages[1].content,
+        },
+        roleNames: response.roleNames,
+      };
+    } catch (error) {
+      log.error("Failed to parse role names", {
+        error: serializeError(error),
+      });
+
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message: "Failed to generate role names",
       });
-
-    const parsedJson: unknown = JSON.parse(
-      chatCompletion.choices[0].message.content,
-    );
-
-    const response = z
-      .object({
-        roleNames: z.array(z.string()),
-      })
-      .parse(parsedJson);
-
-    return {
-      prompt: {
-        system: messages[0].content,
-        user: messages[1].content,
-      },
-      roleNames: response.roleNames,
-    };
-  } catch (error) {
-    log.error("Failed to parse role names", {
-      error: serializeError(error),
-    });
-
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Failed to generate role names",
-    });
-  }
-});
+    }
+  },
+);
