@@ -10,6 +10,7 @@ import { cancelEventParticipation } from "@/modules/events/actions/cancelEventPa
 import { signUpForEvent } from "@/modules/events/actions/signUpForEvent";
 import { updateEventParticipationComment } from "@/modules/events/actions/updateEventParticipationComment";
 import clsx from "clsx";
+import { useState } from "react";
 import { FaCheck, FaSave, FaSignInAlt, FaTimes } from "react-icons/fa";
 
 interface Props {
@@ -33,6 +34,25 @@ export const EventParticipationControls = ({
   const updateComment = useAction(updateEventParticipationComment, {
     errorToast: false,
   });
+
+  /**
+   * Controlled on purpose: router refreshes re-render this tile in the
+   * background (e.g. after signing up), and an uncontrolled textarea's
+   * displayed value can get clobbered by the incoming default while the
+   * user is typing.
+   */
+  const [signUpComment, setSignUpComment] = useState("");
+  const [commentDraft, setCommentDraft] = useState(comment ?? "");
+
+  /**
+   * Re-seed the draft when the stored comment changes (e.g. a fresh
+   * sign-up after a cancellation) — same render-time pattern as RadioGroup.
+   */
+  const [previousComment, setPreviousComment] = useState(comment);
+  if (comment !== previousComment) {
+    setPreviousComment(comment);
+    setCommentDraft(comment ?? "");
+  }
 
   return (
     <div className={clsx(className)}>
@@ -93,7 +113,8 @@ export const EventParticipationControls = ({
             label="Kommentar"
             hint="optional, max. 500 Zeichen"
             maxLength={500}
-            defaultValue={signUp.getDefaultValueWithFallback("comment", "")}
+            value={signUpComment}
+            onChange={(changeEvent) => setSignUpComment(changeEvent.target.value)}
             classNameTextarea="h-20"
           />
 
@@ -120,10 +141,10 @@ export const EventParticipationControls = ({
               label="Kommentar"
               hint="optional, max. 500 Zeichen"
               maxLength={500}
-              defaultValue={updateComment.getDefaultValueWithFallback(
-                "comment",
-                comment ?? "",
-              )}
+              value={commentDraft}
+              onChange={(changeEvent) =>
+                setCommentDraft(changeEvent.target.value)
+              }
               classNameTextarea="h-20"
             />
 
