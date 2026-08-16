@@ -15,7 +15,9 @@ export const getEventById = cache(
         id,
       },
       include: {
-        discordParticipants: true,
+        participants: {
+          where: { cancelledAt: null },
+        },
         positions: {
           where: {
             parentPositionId: null,

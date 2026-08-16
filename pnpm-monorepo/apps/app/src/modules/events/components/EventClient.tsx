@@ -8,7 +8,7 @@ import { RelativeDate } from "@/modules/common/components/RelativeDate";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import type {
   Entity,
-  EventDiscordParticipant,
+  EventParticipant,
   Event as PrismaEvent,
 } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
@@ -29,7 +29,7 @@ import styles from "./EventClient.module.css";
 interface Props {
   readonly className?: string;
   readonly event: PrismaEvent & {
-    discordParticipants: EventDiscordParticipant[];
+    participants: EventParticipant[];
     managers: Entity[];
   };
   readonly index: number;
@@ -65,7 +65,7 @@ export const EventClient = ({
 
   const formattedStartTime = formatDate(event.startTime, "long");
 
-  const isCurrentCitizenParticipating = event.discordParticipants.some(
+  const isCurrentCitizenParticipating = event.participants.some(
     (participant) =>
       authentication &&
       participant.discordUserId === authentication.session.discordId,
@@ -137,7 +137,7 @@ export const EventClient = ({
 
             <Badge
               label="Teilnehmer"
-              value={event.discordParticipants.length.toString()}
+              value={event.participants.length.toString()}
               icon={<FaUser />}
             />
 

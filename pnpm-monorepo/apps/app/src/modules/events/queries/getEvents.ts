@@ -51,8 +51,11 @@ export const getEvents = cache(
       }
 
       if (participating === "me") {
-        where.discordParticipants = {
-          some: { discordUserId: authentication.session.discordId },
+        where.participants = {
+          some: {
+            discordUserId: authentication.session.discordId,
+            cancelledAt: null,
+          },
         };
       }
 
@@ -68,7 +71,9 @@ export const getEvents = cache(
       const rows = await prisma.event.findMany({
         where,
         include: {
-          discordParticipants: true,
+          participants: {
+            where: { cancelledAt: null },
+          },
           managers: true,
         },
         orderBy,

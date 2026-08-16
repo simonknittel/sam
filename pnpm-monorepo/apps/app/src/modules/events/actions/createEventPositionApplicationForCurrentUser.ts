@@ -39,11 +39,11 @@ export const createEventPositionApplicationForCurrentUser =
           requestPayload: formData,
         };
 
-      const participant = await prisma.eventDiscordParticipant.findUnique({
+      const participant = await prisma.eventParticipant.findUnique({
         where: {
-          eventId_discordUserId: {
+          eventId_activeDiscordUserId: {
             eventId: position.event.id,
-            discordUserId: authentication.session.discordId,
+            activeDiscordUserId: authentication.session.discordId,
           },
         },
       });

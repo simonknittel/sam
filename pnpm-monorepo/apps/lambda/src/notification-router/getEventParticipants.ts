@@ -12,20 +12,23 @@ export const getEventParticipants = async (eventId: Event["id"]) => {
     select: {
       id: true,
       name: true,
-      discordParticipants: {
+      participants: {
+        where: { cancelledAt: null },
         select: {
           discordUserId: true,
         },
       },
     },
   });
-  if (!event || event.discordParticipants.length <= 0) return;
+  if (!event || event.participants.length <= 0) return;
 
   const participants = await getNotifiableCitizens({
     discordId: {
-      in: event.discordParticipants.map(
-        (participant) => participant.discordUserId,
-      ),
+      in: event.participants
+        .map((participant) => participant.discordUserId)
+        .filter(
+          (discordUserId): discordUserId is string => discordUserId !== null,
+        ),
     },
   });
   if (!participants || participants.length <= 0) return;

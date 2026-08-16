@@ -16,14 +16,15 @@ export const EventDeletedHandler = async (payload: Payload) => {
     select: {
       id: true,
       name: true,
-      discordParticipants: {
+      participants: {
+        where: { cancelledAt: null },
         select: {
           discordUserId: true,
         },
       },
     },
   });
-  if (!event || event.discordParticipants.length <= 0) return;
+  if (!event || event.participants.length <= 0) return;
 
   const permissionStrings = await prisma.permissionString.findMany({
     where: {
@@ -61,9 +62,11 @@ export const EventDeletedHandler = async (payload: Payload) => {
   const citizensWithRoles = await prisma.entity.findMany({
     where: {
       discordId: {
-        in: event.discordParticipants.map(
-          (participant) => participant.discordUserId,
-        ),
+        in: event.participants
+          .map((participant) => participant.discordUserId)
+          .filter(
+            (discordUserId): discordUserId is string => discordUserId !== null,
+          ),
       },
       roleAssignments: {
         some: {},

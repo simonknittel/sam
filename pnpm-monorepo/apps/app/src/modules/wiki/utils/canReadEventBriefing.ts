@@ -6,7 +6,7 @@ import {
   WikiPageNamespace,
   type Entity,
   type Event,
-  type EventDiscordParticipant,
+  type EventParticipant,
 } from "@sam-monorepo/database/client";
 import { collectPositionScopeIdsForCitizen } from "@sam-monorepo/permissions";
 
@@ -28,7 +28,7 @@ import { collectPositionScopeIdsForCitizen } from "@sam-monorepo/permissions";
 export const canReadEventBriefing = async (
   event: Pick<Event, "id" | "discordCreatorId"> & {
     readonly managers: Entity[];
-    readonly discordParticipants: EventDiscordParticipant[];
+    readonly participants: EventParticipant[];
   },
 ): Promise<boolean> => {
   const authentication = await authenticate();
@@ -53,7 +53,7 @@ export const canReadEventBriefing = async (
       return true;
 
     case WikiPageEventScope.PARTICIPANTS:
-      return event.discordParticipants.some(
+      return event.participants.some(
         (participant) =>
           participant.discordUserId === authentication.session.discordId,
       );

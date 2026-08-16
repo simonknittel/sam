@@ -117,9 +117,12 @@ export const getEventWikiContext = cache(
           },
         }),
         discordUserId
-          ? prisma.eventDiscordParticipant.findUnique({
+          ? prisma.eventParticipant.findUnique({
               where: {
-                eventId_discordUserId: { eventId, discordUserId },
+                eventId_activeDiscordUserId: {
+                  eventId,
+                  activeDiscordUserId: discordUserId,
+                },
               },
               select: { id: true },
             })

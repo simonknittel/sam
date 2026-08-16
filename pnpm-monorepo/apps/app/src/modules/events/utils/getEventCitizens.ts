@@ -3,20 +3,21 @@ import type { Event } from "@sam-monorepo/database/client";
 import { cache } from "react";
 
 export const getEventCitizens = cache(async (eventId: Event["id"]) => {
-  const databaseParticipants = await prisma.eventDiscordParticipant.findMany({
+  const databaseParticipants = await prisma.eventParticipant.findMany({
     where: {
-      event: {
-        id: eventId,
-      },
+      eventId,
+      cancelledAt: null,
     },
   });
 
   const citizens = await prisma.entity.findMany({
     where: {
       discordId: {
-        in: databaseParticipants.map(
-          (participant) => participant.discordUserId,
-        ),
+        in: databaseParticipants
+          .map((participant) => participant.discordUserId)
+          .filter(
+            (discordUserId): discordUserId is string => discordUserId !== null,
+          ),
       },
     },
   });

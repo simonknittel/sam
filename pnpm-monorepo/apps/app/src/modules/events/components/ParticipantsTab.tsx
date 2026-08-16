@@ -15,7 +15,7 @@ import { CreateOrUpdateSilcTransaction } from "@/modules/silc/components/CreateO
 import type {
   Entity,
   Event,
-  EventDiscordParticipant,
+  EventParticipant,
 } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import { forbidden } from "next/navigation";
@@ -37,7 +37,7 @@ const GRID_COLS = "grid-cols-[160px_160px_1fr]";
 interface Props {
   readonly className?: string;
   readonly event: Event & {
-    readonly discordParticipants: EventDiscordParticipant[];
+    readonly participants: EventParticipant[];
     readonly managers: Entity[];
   };
   readonly urlSearchParams: URLSearchParams;
@@ -86,9 +86,9 @@ export const ParticipantsTab = async ({
     }
   });
 
-  const resolvedCreatorCitizen = await getCitizenByDiscordId(
-    event.discordCreatorId,
-  );
+  const resolvedCreatorCitizen = event.discordCreatorId
+    ? await getCitizenByDiscordId(event.discordCreatorId)
+    : null;
 
   return (
     <div className={clsx("flex flex-col gap-2", className)}>

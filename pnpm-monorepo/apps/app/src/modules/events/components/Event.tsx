@@ -1,7 +1,7 @@
 import { canReadEventBriefing } from "@/modules/wiki/utils/canReadEventBriefing";
 import type {
   Entity,
-  EventDiscordParticipant,
+  EventParticipant,
   Event as PrismaEvent,
 } from "@sam-monorepo/database/client";
 import { isLineupVisible } from "../utils/isLineupVisible";
@@ -18,7 +18,7 @@ import { EventClient } from "./EventClient";
 interface Props {
   readonly className?: string;
   readonly event: PrismaEvent & {
-    discordParticipants: EventDiscordParticipant[];
+    participants: EventParticipant[];
     managers: Entity[];
   };
   readonly index: number;

@@ -1,7 +1,7 @@
 import { FleetTable } from "@/modules/fleet/components/FleetTable";
 import type {
   Event,
-  EventDiscordParticipant,
+  EventParticipant,
 } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import { getEventFleet } from "../utils/getEventFleet";
@@ -9,7 +9,7 @@ import { getEventFleet } from "../utils/getEventFleet";
 interface Props {
   readonly className?: string;
   readonly event: Event & {
-    discordParticipants: EventDiscordParticipant[];
+    participants: EventParticipant[];
   };
 }
 

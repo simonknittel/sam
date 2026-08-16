@@ -8,6 +8,7 @@ import type {
   WikiPage,
 } from "@sam-monorepo/database/client";
 import {
+  EventSource,
   OrganizationMembershipType,
   OrganizationMembershipVisibility,
   WikiPageAccessType,
@@ -313,9 +314,10 @@ interface CreateEventOptions {
 }
 
 /**
- * Events are only ever written by the Discord-scraping lambda, so seeding
- * them directly is the intended route in tests. discordImage stays unset on
- * purpose — it would make the page fetch from the Discord CDN.
+ * Discord-sourced events are only ever written by the Discord-scraping
+ * lambda, so seeding them directly is the intended route in tests.
+ * discordImage stays unset on purpose — it would make the page fetch from
+ * the Discord CDN.
  */
 export const createEvent = (
   prisma: PrismaClient,
@@ -329,6 +331,7 @@ export const createEvent = (
 ) =>
   prisma.event.create({
     data: {
+      source: EventSource.DISCORD,
       discordId: randomUUID(),
       discordCreatorId,
       name,

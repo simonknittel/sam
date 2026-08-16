@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@sam-monorepo/database/client";
+import { EventSource, type PrismaClient } from "@sam-monorepo/database/client";
 import {
   createCitizen,
   createEvent,
@@ -18,8 +18,15 @@ const addParticipant = (
   eventId: string,
   citizen: Citizen,
 ) =>
-  prisma.eventDiscordParticipant.create({
-    data: { eventId, discordUserId: citizen.entity.discordId! },
+  prisma.eventParticipant.create({
+    data: {
+      eventId,
+      source: EventSource.DISCORD,
+      citizenId: citizen.entity.id,
+      discordUserId: citizen.entity.discordId!,
+      activeCitizenId: citizen.entity.id,
+      activeDiscordUserId: citizen.entity.discordId!,
+    },
   });
 
 test("the event list and detail subpages render", async ({

@@ -189,7 +189,10 @@ export const wikiCitizenMentioned = async () => {
               endTime: true,
               discordCreatorId: true,
               managers: { select: { id: true } },
-              discordParticipants: { select: { discordUserId: true } },
+              participants: {
+                where: { cancelledAt: null },
+                select: { discordUserId: true },
+              },
               positions: {
                 select: { id: true, parentPositionId: true, citizenId: true },
               },
@@ -251,7 +254,7 @@ export const wikiCitizenMentioned = async () => {
         {
           isParticipant:
             discordId !== null &&
-            event.discordParticipants.some(
+            event.participants.some(
               (participant) => participant.discordUserId === discordId,
             ),
           isEventManager:

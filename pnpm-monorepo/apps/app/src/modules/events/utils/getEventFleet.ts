@@ -2,19 +2,21 @@ import { prisma } from "@/db";
 import {
   VariantStatus,
   type Event,
-  type EventDiscordParticipant,
+  type EventParticipant,
 } from "@sam-monorepo/database/client";
 import { cache } from "react";
 
 export const getEventFleet = cache(
   async (
     event: Event & {
-      discordParticipants: EventDiscordParticipant[];
+      participants: EventParticipant[];
     },
   ) => {
-    const discordUserIds = event.discordParticipants.map(
-      (user) => user.discordUserId,
-    );
+    const discordUserIds = event.participants
+      .map((participant) => participant.discordUserId)
+      .filter(
+        (discordUserId): discordUserId is string => discordUserId !== null,
+      );
 
     const ships = await prisma.ship.findMany({
       where: {
