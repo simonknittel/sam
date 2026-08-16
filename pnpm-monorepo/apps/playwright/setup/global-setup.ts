@@ -32,6 +32,11 @@ import {
   stateDirectory,
   stateFilePath,
   templateDatabase,
+  unleashAdminToken,
+  unleashBackendToken,
+  unleashContainerPort,
+  unleashDatabase,
+  unleashImage,
   type StackState,
 } from "./stack";
 
@@ -159,6 +164,20 @@ const globalSetup = async () => {
 
   const templateDatabaseUrl = postgres.getConnectionUri();
 
+  const createUnleashDatabase = await postgres.exec([
+    "psql",
+    "--username",
+    postgresUser,
+    "--dbname",
+    templateDatabase,
+    "--command",
+    `CREATE DATABASE "${unleashDatabase}"`,
+  ]);
+  if (createUnleashDatabase.exitCode !== 0)
+    throw new Error(
+      `Creating the Unleash database failed: ${createUnleashDatabase.output}`,
+    );
+
   console.log("[stack] Applying migrations to the template database…");
   await runCommand(
     "pnpm",
@@ -196,13 +215,29 @@ const globalSetup = async () => {
     builds.push(buildApp(templateDatabaseUrl, s3Port), buildCollabImage());
   }
 
-  await Promise.all(builds);
+  // Its startup migrations take a while, so it starts alongside the builds
+  console.log("[stack] Starting Unleash…");
+  const unleashStart = new GenericContainer(unleashImage)
+    .withNetwork(network)
+    .withEnvironment({
+      DATABASE_URL: `postgres://${postgresUser}:${postgresPassword}@${postgresNetworkAlias}:5432/${unleashDatabase}`,
+      DATABASE_SSL: "false",
+      INIT_BACKEND_API_TOKENS: unleashBackendToken,
+      INIT_ADMIN_API_TOKENS: unleashAdminToken,
+    })
+    .withExposedPorts(unleashContainerPort)
+    .withWaitStrategy(Wait.forHttp("/health", unleashContainerPort))
+    .withStartupTimeout(120_000)
+    .start();
+
+  const [unleash] = await Promise.all([unleashStart, ...builds]);
 
   const state: StackState = {
     postgresHost: postgres.getHost(),
     postgresPort: postgres.getMappedPort(5432),
     networkName: network.getName(),
     s3Port,
+    unleashPort: unleash.getMappedPort(unleashContainerPort),
   };
   mkdirSync(stateDirectory, { recursive: true });
   writeFileSync(stateFilePath, JSON.stringify(state, null, 2));
@@ -210,6 +245,7 @@ const globalSetup = async () => {
   console.log("[stack] Ready");
 
   return async () => {
+    await unleash.stop();
     await postgres.stop();
     await rustfs.stop();
     await network.stop();

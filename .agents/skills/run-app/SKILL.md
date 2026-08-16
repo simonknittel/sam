@@ -65,15 +65,18 @@ In a worktree, adjust them to the slot's ports (slot 1 shown):
 - `COLLAB_URL` → `ws://localhost:5211`
 - `S3_ENDPOINT` → `http://localhost:9001` and
   `S3_PUBLIC_URL` → `http://localhost:9001/uploads`
+- `UNLEASH_SERVER_API_URL` → `http://localhost:4243/api`
 - append `NEXT_PUBLIC_PUSHER_CHANNELS_PORT="6002"` (not present in the
   main `.env`; the app defaults to 6001)
 
 ## 2. Backing services (Docker)
 
 `compose.yml` at the repo root defines `psql` (Postgres), `soketi`
-(websockets), `sam-collab` (wiki realtime backend) and `rustfs`
+(websockets), `sam-collab` (wiki realtime backend), `rustfs`
 (S3-compatible upload storage; the bucket incl. anonymous-read policy
-and CORS rules is created by the one-shot `rustfs-bootstrap` service).
+and CORS rules is created by the one-shot `rustfs-bootstrap` service)
+and `unleash` (feature flags; the app's flags are created disabled by
+the one-shot `unleash-bootstrap` service).
 Host ports interpolate `SAM_*_PORT` variables from a gitignored `.env`
 next to `compose.yml` — absent variables fall back to the slot-0
 defaults.
@@ -81,7 +84,7 @@ defaults.
 **Main checkout** — no root `.env`; just start the existing containers:
 
 ```bash
-docker start sam-psql-1 sam-soketi-1 sam-sam-collab-1 sam-rustfs-1
+docker start sam-psql-1 sam-soketi-1 sam-sam-collab-1 sam-rustfs-1 sam-unleash-1
 docker exec sam-psql-1 pg_isready -U postgres   # wait for "accepting connections"
 ```
 
@@ -95,6 +98,7 @@ SAM_SOKETI_PORT=6002
 SAM_SOKETI_METRICS_PORT=9602
 SAM_COLLAB_PORT=5211
 SAM_RUSTFS_PORT=9001
+SAM_UNLEASH_PORT=4243
 EOF
 cd <worktree>
 docker compose up -d --build

@@ -8,12 +8,14 @@ database per test case.
 
 - **Global setup** (`setup/global-setup.ts`): starts one Postgres container
   (via testcontainers), applies the Prisma migrations to a template
-  database, builds the collab image from `apps/collab/Dockerfile` and runs
+  database, starts one RustFS (S3) and one Unleash (feature flags)
+  container, builds the collab image from `apps/collab/Dockerfile` and runs
   `next build` for the app.
 - **Per worker** (`fixtures/test.ts`): each Playwright worker clones its own
   database from the template, starts its own collab container and its own
   `next start` instance. Tests of different workers can never interfere with
-  each other.
+  each other — except through the shared Unleash server: tests may only
+  toggle flags (via `fixtures/unleash.ts`) no other test depends on.
 - **Per test**: an automatic fixture truncates all tables, so every test
   starts from an empty database and seeds exactly what it needs via the
   factories in `fixtures/factories.ts`.

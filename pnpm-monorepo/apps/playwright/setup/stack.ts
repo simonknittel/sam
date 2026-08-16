@@ -69,6 +69,30 @@ export const s3Environment = (s3Port: number) =>
     S3_PUBLIC_URL: `http://localhost:${s3Port}/${s3BucketName}`,
   }) as const;
 
+/** Same pinned image as compose.yml (feature flag server). */
+export const unleashImage =
+  "unleashorg/unleash-server:8.1.0@sha256:16f3ffb914880e7d0f23629a0c1b77aebea3aa619b0305f76eb50b3fb75998a9";
+
+export const unleashContainerPort = 4242;
+/** Lives next to the app databases in the stack's Postgres container. */
+export const unleashDatabase = "unleash";
+/** Reads the flags of the default project's development environment. */
+export const unleashBackendToken =
+  "default:development.playwright-insecure-backend-token";
+/** Used by tests to create and toggle flags (see fixtures/unleash.ts). */
+export const unleashAdminToken = "*:*.playwright-insecure-admin-token";
+
+/**
+ * Unleash environment of the app — runtime-read server variables like
+ * s3Environment. All workers share one Unleash container, so tests must
+ * only toggle flags no other test depends on.
+ */
+export const unleashEnvironment = (unleashPort: number) =>
+  ({
+    UNLEASH_SERVER_API_URL: `http://localhost:${unleashPort}/api`,
+    UNLEASH_SERVER_API_TOKEN: unleashBackendToken,
+  }) as const;
+
 /**
  * The collab image tag is unique per checkout so parallel worktrees don't
  * overwrite each other's image between building and starting containers.
@@ -94,6 +118,8 @@ export interface StackState {
   readonly networkName: string;
   /** Host port of the RustFS S3 endpoint (see s3Environment) */
   readonly s3Port: number;
+  /** Host port of the Unleash server (see unleashEnvironment) */
+  readonly unleashPort: number;
 }
 
 export const readStackState = (): StackState =>
@@ -108,8 +134,14 @@ export const containerDatabaseUrl = (database: string) =>
 /**
  * The app validates its environment with non-empty strings for services the
  * test stack doesn't provide (Discord OAuth, Algolia). The features degrade
- * gracefully at runtime; tests must not depend on them. S3 is real though —
- * uploads go to the stack's RustFS container (see s3Environment).
+ * gracefully at runtime; tests must not depend on them. S3 and Unleash are
+ * real though — uploads go to the stack's RustFS container (see
+ * s3Environment) and feature flags come from the stack's Unleash container
+ * (see unleashEnvironment).
+ *
+ * The Care Bear Shooter build URL is a NEXT_PUBLIC_ variable, so it must be
+ * present at build time for the flag-released page to render at all; the
+ * Unity build behind it never loads in tests.
  */
 export const appDummyEnvironment = {
   DISCORD_CLIENT_ID: "playwright-dummy",
@@ -119,5 +151,7 @@ export const appDummyEnvironment = {
   NEXT_PUBLIC_ALGOLIA_APP_ID: "playwright-dummy",
   ALGOLIA_ADMIN_API_KEY: "playwright-dummy",
   NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY: "playwright-dummy",
+  NEXT_PUBLIC_CARE_BEAR_SHOOTER_BUILD_URL:
+    "http://localhost:9/playwright-dummy-care-bear-shooter",
   NEXTAUTH_SECRET: "playwright-insecure-auth-secret",
 } as const;
