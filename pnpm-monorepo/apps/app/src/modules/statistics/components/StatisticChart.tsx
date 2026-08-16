@@ -2,6 +2,7 @@
 
 // @refresh reset
 
+import { escapeHtml } from "@/modules/common/utils/escapeHtml";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import type { SetOptionOpts } from "echarts";
 import { LineChart } from "echarts/charts";
@@ -136,7 +137,7 @@ export const StatisticChart = ({ chart }: Props) => {
               return `
                 <div class="text-white" style="display: flex; align-items: center; gap: 0.5rem;">
                   <span style="width: 0.65rem; height: 0.65rem; border-radius: 9999px; background: ${color}; display: inline-block;"></span>
-                  <span style="flex: 1;">${item.seriesName ?? ""}</span>
+                  <span style="flex: 1;">${escapeHtml(item.seriesName ?? "")}</span>
                   <strong>${formattedValue}</strong>
                 </div>`.trim();
             })

@@ -18,7 +18,7 @@ import {
 
 const schema = z.object({
   seriesId: z.string(),
-  name: z.string().trim().min(1),
+  name: z.string().trim().min(1).max(255),
   status: z
     .enum([VariantStatus.FLIGHT_READY, VariantStatus.NOT_FLIGHT_READY])
     .optional(),
