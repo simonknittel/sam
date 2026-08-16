@@ -67,7 +67,7 @@ export const EventSettings = ({ className, event }: Props) => {
           <Textarea
             name="description"
             label="Kurzbeschreibung"
-            hint="optional, max. 2.000 Zeichen, kein Markdown. Ausführlichere Informationen gehören ins Briefing (Event-Wiki) des Events."
+            hint="optional, max. 2.000 Zeichen, keine Formatierungsmöglichkeiten. Ausführlichere Informationen gehören ins Briefing (Event-Wiki) des Events."
             maxLength={2000}
             defaultValue={getDefaultValueWithFallback(
               "description",
@@ -165,12 +165,8 @@ export const EventSettings = ({ className, event }: Props) => {
 
       <section className="rounded-primary bg-red-500/10 border border-red-500/30 p-4">
         <h2 className="font-bold mb-2 text-lg font-mono uppercase text-red-500">
-          Event löschen
+          Danger Zone
         </h2>
-
-        <p className="mb-4">
-          Das Event verschwindet aus allen Listen und ist nicht mehr aufrufbar.
-        </p>
 
         <ConfirmActionButton
           action={deleteEvent}

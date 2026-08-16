@@ -55,14 +55,15 @@ export const EventDateTimeField = ({
       <DateTimeInput
         name={name}
         label={label}
-        hint="Zeitzone: Europe/Berlin"
         value={value}
         onChange={(changeEvent) => setValue(changeEvent.target.value)}
         required={required}
       />
 
+      <p className="text-xs mt-1 text-white/40">Zeitzone: Europe/Berlin</p>
+
       {localTimeHint && (
-        <p className="text-xs mt-1 text-gray-400">
+        <p className="text-xs mt-1 text-white/40">
           In deiner Zeitzone ({browserTimeZone}): {localTimeHint}
         </p>
       )}

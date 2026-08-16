@@ -139,38 +139,35 @@ export const PersonalBriefing = async ({ className, event }: Props) => {
             {assignedPositions.map((position) => (
               <li
                 key={position.id}
-                className="flex items-center gap-2 rounded-secondary bg-neutral-800/50 p-2"
+                className="rounded-secondary bg-neutral-800/50 p-2"
               >
-                <div className="flex-1 flex flex-col overflow-hidden">
-                  <p className="font-bold truncate" title={position.name}>
+                <div className="flex items-center gap-2">
+                  <p className="flex-1 font-bold truncate" title={position.name}>
                     {position.name}
                   </p>
 
-                  {position.description && (
-                    <p
-                      className="text-sm text-neutral-500 truncate"
-                      title={position.description}
-                    >
-                      {position.description}
-                    </p>
+                  {position.requiredVariants.length > 0 ? (
+                    <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1">
+                      {position.requiredVariants.map((requiredVariant) => (
+                        <VariantWithLogo
+                          key={requiredVariant.id}
+                          variant={requiredVariant.variant}
+                          manufacturer={
+                            requiredVariant.variant.series.manufacturer
+                          }
+                          size={32}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-neutral-500">-</span>
                   )}
                 </div>
 
-                {position.requiredVariants.length > 0 ? (
-                  <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1">
-                    {position.requiredVariants.map((requiredVariant) => (
-                      <VariantWithLogo
-                        key={requiredVariant.id}
-                        variant={requiredVariant.variant}
-                        manufacturer={
-                          requiredVariant.variant.series.manufacturer
-                        }
-                        size={32}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <span className="text-neutral-500">-</span>
+                {position.description && (
+                  <p className="mt-2 border-t border-white/10 pt-2 text-sm whitespace-pre-wrap">
+                    {position.description}
+                  </p>
                 )}
               </li>
             ))}

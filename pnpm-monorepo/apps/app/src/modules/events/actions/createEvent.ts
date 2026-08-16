@@ -83,11 +83,11 @@ export const createEvent = createAuthenticatedAction(
         where: { id: data.coverImageId },
         select: { createdById: true, mimeType: true },
       });
-      if (
-        !coverImage ||
-        coverImage.createdById !== authentication.session.user.id ||
-        !coverImage.mimeType.startsWith("image/")
-      )
+      const isOwnImageUpload =
+        coverImage !== null &&
+        coverImage.createdById === authentication.session.user.id &&
+        coverImage.mimeType.startsWith("image/");
+      if (!isOwnImageUpload)
         return {
           error: "Ungültiges Titelbild",
           requestPayload: formData,
