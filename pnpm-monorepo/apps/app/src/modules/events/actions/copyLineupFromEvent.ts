@@ -60,6 +60,13 @@ export const copyLineupFromEvent = createAuthenticatedAction(
         where: { id: data.sourceEventId },
         select: {
           id: true,
+          lineupEnabled: true,
+          discordCreatorId: true,
+          managers: {
+            select: {
+              discordId: true,
+            },
+          },
         },
       }),
     ]);
@@ -80,6 +87,19 @@ export const copyLineupFromEvent = createAuthenticatedAction(
         requestPayload: formData,
       };
     if (!(await isAllowedToManagePositions(targetEvent)))
+      return { error: t("Common.forbidden"), requestPayload: formData };
+
+    /**
+     * The caller must be allowed to view the source lineup (same gate as the
+     * lineup page: general event read permission plus an enabled lineup or
+     * position-management rights on the source event).
+     */
+    if (!(await authentication.authorize("event", "read")))
+      return { error: t("Common.forbidden"), requestPayload: formData };
+    if (
+      !sourceEvent.lineupEnabled &&
+      !(await isAllowedToManagePositions(sourceEvent))
+    )
       return { error: t("Common.forbidden"), requestPayload: formData };
 
     /**
