@@ -17,6 +17,7 @@ import {
   readStackState,
   s3Environment,
   templateDatabase,
+  unleashEnvironment,
 } from "../setup/stack";
 
 interface WorkerStack {
@@ -144,6 +145,9 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
             ...process.env,
             ...appDummyEnvironment,
             ...s3Environment(state.s3Port),
+            // Also overrides any UNLEASH_* variables of the dev shell — the
+            // suite must never talk to a live flag provider
+            ...unleashEnvironment(state.unleashPort),
             DATABASE_URL: workerDatabaseUrl,
             NEXTAUTH_URL: baseURL,
             COLLAB_URL: `ws://localhost:${collabContainer.getMappedPort(collabPort)}`,
