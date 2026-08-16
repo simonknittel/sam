@@ -2,7 +2,8 @@
   "name": "@sam-monorepo/lambda",
   "private": true,
   "scripts": {
-    "build": "./scripts/build.sh"
+    "build": "./scripts/build.sh",
+    "test": "vitest run"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "3.1103.0",
@@ -33,6 +34,7 @@
     "@types/node": "24.13.3",
     "@types/web-push": "3.6.4",
     "esbuild": "0.28.1",
-    "typescript": "7.0.2"
+    "typescript": "7.0.2",
+    "vitest": "4.1.10"
   }
 }

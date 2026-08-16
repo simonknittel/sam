@@ -1,25 +1,35 @@
 import { prisma } from "@sam-monorepo/database";
+import { EventSource } from "@sam-monorepo/database/client";
 import { AuditEventType } from "@sam-monorepo/domain";
 import { createAuditEvents } from "../common/audit";
 import type { getEvents } from "./discord/utils/getEvents";
 import { triggerNotifications } from "./notifications";
+import { selectCancelledDiscordEvents } from "./reconciliation";
 
 export const deleteCancelledEvents = async (
   futureEventsFromDiscord: Awaited<ReturnType<typeof getEvents>>["data"],
 ) => {
+  /**
+   * Scoped to Discord-sourced rows: app events share the table but have no
+   * Discord counterpart, so without this filter every future app event
+   * would be treated as cancelled and deleted. selectCancelledDiscordEvents
+   * repeats the source check as a defense in depth.
+   */
   const futureEventsFromDatabase = await prisma.event.findMany({
     where: {
       startTime: {
         gte: new Date(),
       },
+      source: EventSource.DISCORD,
+      discordId: {
+        not: null,
+      },
     },
   });
 
-  const cancelledEvents = futureEventsFromDatabase.filter(
-    (event) =>
-      !futureEventsFromDiscord.some(
-        (discordEvent) => discordEvent.id === event.discordId,
-      ),
+  const cancelledEvents = selectCancelledDiscordEvents(
+    futureEventsFromDatabase,
+    new Set(futureEventsFromDiscord.map((discordEvent) => discordEvent.id)),
   );
 
   if (cancelledEvents.length <= 0) return;
@@ -29,6 +39,7 @@ export const deleteCancelledEvents = async (
       id: {
         in: cancelledEvents.map((event) => event.id),
       },
+      source: EventSource.DISCORD,
     },
   });
 

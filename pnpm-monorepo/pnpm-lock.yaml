@@ -412,7 +412,7 @@ importers:
         version: 4.5.0(srvx@0.11.16)(y-protocols@1.0.7(yjs@13.6.32))(yjs@13.6.32)
       '@sam-monorepo/database':
         specifier: workspace:*
-        version: file:packages/database(prisma@7.9.1(@types/react@19.2.18)(magicast@0.5.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@7.0.2))(typescript@7.0.2)
+        version: link:../../packages/database
       '@sam-monorepo/wiki-editor':
         specifier: workspace:*
         version: link:../../packages/wiki-editor
@@ -458,7 +458,7 @@ importers:
         version: 3.3.0
       '@sam-monorepo/database':
         specifier: workspace:*
-        version: file:packages/database(prisma@7.9.1(@types/react@19.2.18)(magicast@0.5.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@7.0.2))(typescript@7.0.2)
+        version: link:../../packages/database
       '@sam-monorepo/domain':
         specifier: workspace:*
         version: link:../../packages/domain
@@ -523,6 +523,9 @@ importers:
       typescript:
         specifier: 7.0.2
         version: 7.0.2
+      vitest:
+        specifier: 4.1.10
+        version: 4.1.10(@edge-runtime/vm@3.2.0)(@opentelemetry/api@1.9.1)(@types/node@24.13.3)(@vitest/coverage-v8@4.1.10)(vite@8.1.5(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.8)(yaml@2.9.0))
 
   apps/playwright:
     devDependencies:
@@ -537,7 +540,7 @@ importers:
         version: 7.9.1
       '@sam-monorepo/database':
         specifier: workspace:*
-        version: file:packages/database(prisma@7.9.1(@types/react@19.2.18)(magicast@0.5.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@7.0.2))(typescript@7.0.2)
+        version: link:../../packages/database
       '@testcontainers/postgresql':
         specifier: 12.1.0
         version: 12.1.0(supports-color@7.2.0)
@@ -555,7 +558,7 @@ importers:
     dependencies:
       '@sam-monorepo/database':
         specifier: workspace:*
-        version: file:packages/database(prisma@7.9.1(@types/react@19.2.18)(magicast@0.5.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@7.0.2))(typescript@7.0.2)
+        version: link:../../packages/database
       '@sam-monorepo/wiki-editor':
         specifier: workspace:*
         version: link:../../packages/wiki-editor
@@ -617,7 +620,7 @@ importers:
     dependencies:
       '@sam-monorepo/database':
         specifier: workspace:*
-        version: file:packages/database(prisma@7.9.1(@types/react@19.2.18)(magicast@0.5.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@7.0.2))(typescript@7.0.2)
+        version: link:../database
     devDependencies:
       '@types/node':
         specifier: 24.13.3
@@ -662,7 +665,7 @@ importers:
     dependencies:
       '@sam-monorepo/database':
         specifier: workspace:*
-        version: file:packages/database(prisma@7.9.1(@types/react@19.2.18)(magicast@0.5.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@7.0.2))(typescript@7.0.2)
+        version: link:../database
     devDependencies:
       '@types/node':
         specifier: 24.13.3
@@ -11872,13 +11875,6 @@ snapshots:
       prisma: 7.9.1(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(magicast@0.5.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@7.0.2)
       typescript: 7.0.2
 
-  '@prisma/client@7.9.1(prisma@7.9.1(@types/react@19.2.18)(magicast@0.5.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@7.0.2))(typescript@7.0.2)':
-    dependencies:
-      '@prisma/client-runtime-utils': 7.9.1
-    optionalDependencies:
-      prisma: 7.9.1(@types/react@19.2.18)(magicast@0.5.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@7.0.2)
-      typescript: 7.0.2
-
   '@prisma/config@7.9.1(magicast@0.5.3)':
     dependencies:
       c12: 3.3.4(magicast@0.5.3)
@@ -12707,16 +12703,6 @@ snapshots:
     dependencies:
       '@prisma/adapter-pg': 7.9.1
       '@prisma/client': 7.9.1(prisma@7.9.1(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(magicast@0.5.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3))(typescript@6.0.3)
-      zod: 4.4.3
-    transitivePeerDependencies:
-      - pg-native
-      - prisma
-      - typescript
-
-  '@sam-monorepo/database@file:packages/database(prisma@7.9.1(@types/react@19.2.18)(magicast@0.5.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@7.0.2))(typescript@7.0.2)':
-    dependencies:
-      '@prisma/adapter-pg': 7.9.1
-      '@prisma/client': 7.9.1(prisma@7.9.1(@types/react@19.2.18)(magicast@0.5.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@7.0.2))(typescript@7.0.2)
       zod: 4.4.3
     transitivePeerDependencies:
       - pg-native
@@ -17659,24 +17645,6 @@ snapshots:
       - magicast
       - react
       - react-dom
-
-  prisma@7.9.1(@types/react@19.2.18)(magicast@0.5.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@7.0.2):
-    dependencies:
-      '@prisma/config': 7.9.1(magicast@0.5.3)
-      '@prisma/dev': 0.24.17(typescript@7.0.2)
-      '@prisma/engines': 7.9.1
-      '@prisma/studio-core': 0.33.0(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      mysql2: 3.15.3
-      postgres: 3.4.7
-    optionalDependencies:
-      typescript: 7.0.2
-    transitivePeerDependencies:
-      - '@types/react'
-      - '@types/react-dom'
-      - magicast
-      - react
-      - react-dom
-    optional: true
 
   prismjs@1.30.0: {}
 

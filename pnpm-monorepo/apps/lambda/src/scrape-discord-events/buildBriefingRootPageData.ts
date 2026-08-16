@@ -13,15 +13,19 @@ import {
  * becomes the page's owner; if no citizen matches their Discord id, the page
  * starts without an owner.
  */
-export const buildBriefingRootPageData = async (discordCreatorId: string) => {
-  const organizer = await prisma.entity.findUnique({
-    where: {
-      discordId: discordCreatorId,
-    },
-    select: {
-      id: true,
-    },
-  });
+export const buildBriefingRootPageData = async (
+  discordCreatorId: string | null,
+) => {
+  const organizer = discordCreatorId
+    ? await prisma.entity.findUnique({
+        where: {
+          discordId: discordCreatorId,
+        },
+        select: {
+          id: true,
+        },
+      })
+    : null;
 
   return {
     namespace: WikiPageNamespace.EVENT,

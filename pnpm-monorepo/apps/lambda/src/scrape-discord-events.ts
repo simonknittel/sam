@@ -2,6 +2,7 @@ import { AuditEventType } from "@sam-monorepo/domain";
 import "./scrape-discord-events/setup"; // must be first
 
 import { prisma } from "@sam-monorepo/database";
+import { EventSource } from "@sam-monorepo/database/client";
 import type { ScheduledHandler } from "aws-lambda";
 import { shuffle } from "lodash";
 import { createAuditEvents } from "./common/audit";
@@ -141,6 +142,7 @@ export const handler: ScheduledHandler = async (event, context) => {
         } else {
           const newEvent = await prisma.event.create({
             data: {
+              source: EventSource.DISCORD,
               discordId: futureEventFromDiscord.id,
               discordCreatorId: futureEventFromDiscord.creator_id,
               name: futureEventFromDiscord.name,
