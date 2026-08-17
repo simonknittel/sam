@@ -20,11 +20,20 @@ model Account {
 }
 
 model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
+  id           String    @id @default(cuid())
+  sessionToken String    @unique
   userId       String
   expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Deliberately without a database default: sessions created before this
+  /// column existed must stay NULL rather than claim the timestamp of the
+  /// migration. Set by the NextAuth adapter, the only writer.
+  createdAt    DateTime?
+  /// User agent of the browser the session was created from. NULL for
+  /// sessions predating this column and for sign-ins without the header.
+  userAgent    String?
+
+  @@index([userId])
 }
 
 model User {

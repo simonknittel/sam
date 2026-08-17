@@ -23,11 +23,11 @@ import {
   type DefaultSession,
   type NextAuthOptions,
 } from "next-auth";
-import type { AdapterUser } from "next-auth/adapters";
+import type { AdapterSession, AdapterUser } from "next-auth/adapters";
 import DiscordProvider, {
   type DiscordProfile,
 } from "next-auth/providers/discord";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { serializeError } from "serialize-error";
 import { type UserRole } from "../../../types";
 
@@ -68,6 +68,12 @@ declare module "next-auth" {
 const adapter = PrismaAdapter(prisma);
 
 const maxAge = 60 * 60 * 24 * 31; // 31 days
+
+/**
+ * A user agent is client-controlled and unbounded in length, so it gets
+ * capped before it reaches the database. Real ones stay well below this.
+ */
+const MAX_USER_AGENT_LENGTH = 512;
 
 /**
  * Admins can assume another user via the `assume_user` cookie (set by the
@@ -376,6 +382,23 @@ export const authOptions: NextAuthOptions = {
       }
 
       return createdUser;
+    },
+
+    /**
+     * Replaces the adapter's own `createSession` so the session gets the two
+     * columns the account's session list shows. The adapter writes only the
+     * fields NextAuth knows about, so there is nothing to delegate to.
+     */
+    createSession: async (session): Promise<AdapterSession> => {
+      const userAgent = (await headers()).get("user-agent");
+
+      return prisma.session.create({
+        data: {
+          ...session,
+          createdAt: new Date(),
+          userAgent: userAgent?.slice(0, MAX_USER_AGENT_LENGTH) ?? null,
+        },
+      });
     },
   },
 
