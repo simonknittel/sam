@@ -1,4 +1,3 @@
-import { SmallBadge } from "@/modules/common/components/SmallBadge";
 import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import clsx from "clsx";
@@ -15,7 +14,7 @@ import {
 import { DeleteSessionButton } from "./DeleteSessionButton";
 
 const TABLE_MIN_WIDTH = "min-w-200";
-const GRID_CLASSES = "grid-cols-[200px_150px_1fr_200px_130px]";
+const GRID_CLASSES = "grid-cols-[256px_130px_150px_1fr_150px_130px]";
 const UNKNOWN = "Unbekannt";
 
 const loadSearchParams = createLoader({
@@ -52,6 +51,7 @@ export const SessionsTable = async ({ className, searchParams }: Props) => {
         >
           <THead className={GRID_CLASSES}>
             <th>Session-ID</th>
+            <th>Status</th>
             <th>Erstellt</th>
             <th>Browser</th>
             <th>Läuft ab</th>
@@ -82,12 +82,20 @@ const SessionRow = ({ session }: SessionRowProps) => {
 
   return (
     <TRow className={clsx("h-10", GRID_CLASSES)}>
-      <td className="flex items-center gap-2 overflow-hidden font-mono text-neutral-400">
-        <span className="truncate" title={session.id}>
+      <td className="overflow-hidden font-mono text-neutral-400">
+        <span className="block truncate" title={session.id}>
           {session.id}
         </span>
+      </td>
 
-        {session.isCurrent && <SmallBadge value="Aktuell" />}
+      <td>
+        {session.isCurrent && (
+          <StatusBadge tone={StatusTone.Current}>Aktuell</StatusBadge>
+        )}
+
+        {session.isExpired && (
+          <StatusBadge tone={StatusTone.Expired}>Abgelaufen</StatusBadge>
+        )}
       </td>
 
       <td className={clsx({ "text-neutral-500": !session.createdAt })}>
@@ -101,11 +109,7 @@ const SessionRow = ({ session }: SessionRowProps) => {
         {userAgent ?? UNKNOWN}
       </td>
 
-      <td className="flex items-center gap-2">
-        <span className="truncate">{formatDate(session.expires)}</span>
-
-        {session.isExpired && <SmallBadge value="Abgelaufen" />}
-      </td>
+      <td>{formatDate(session.expires)}</td>
 
       <td>
         <DeleteSessionButton
@@ -114,5 +118,29 @@ const SessionRow = ({ session }: SessionRowProps) => {
         />
       </td>
     </TRow>
+  );
+};
+
+enum StatusTone {
+  Current = "current",
+  Expired = "expired",
+}
+
+interface StatusBadgeProps {
+  readonly tone: StatusTone;
+  readonly children: string;
+}
+
+const StatusBadge = ({ tone, children }: StatusBadgeProps) => {
+  return (
+    <span
+      className={clsx("rounded-secondary border px-2 py-1 text-xs", {
+        "border-me/30 bg-me/10 text-me": tone === StatusTone.Current,
+        "border-white/10 bg-white/5 text-neutral-400":
+          tone === StatusTone.Expired,
+      })}
+    >
+      {children}
+    </span>
   );
 };
