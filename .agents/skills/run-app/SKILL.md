@@ -33,8 +33,11 @@ slot N ≥ 1 whose ports are free:
 | unleash flags      | 4242          | 4242 + N |
 
 ```bash
-lsof -nP -iTCP:3001,5433,6002,9602,5211,9001,4243 -sTCP:LISTEN   # slot 1 free if no output
+ss -ltn '( sport = :3001 or sport = :5433 or sport = :6002 or sport = :9602 or sport = :5211 or sport = :9001 or sport = :4243 )'
 ```
+
+(`lsof` crashes on this machine — use `ss`. Slot 1 is free if only the
+header line comes back.)
 
 No output → the slot is free (bump all the ports by one and re-check
 for slot 2, and so on). Ports of a stopped-but-existing worktree stack
@@ -58,6 +61,12 @@ from the main checkout:
 
 - `pnpm-monorepo/apps/app/.env`
 - `pnpm-monorepo/packages/database/.env` (read by Prisma CLI commands)
+
+`packages/database/.env` is usually HARDLINKED to the main checkout's
+copy (`ls -la` shows link count 2). Editing it in place — `sed -i`, a
+Python `open(…, "w")` — rewrites the main checkout's file too and
+silently points the main stack at the worktree's database. Break the
+link first: read the contents, `rm` the file, then write it fresh.
 
 In a worktree, adjust them to the slot's ports (slot 1 shown):
 
@@ -150,22 +159,47 @@ cd <worktree>
 docker exec sam-psql-1 pg_dump -U postgres db | docker compose exec -T psql psql -q -U postgres db
 ```
 
-If the worktree branch adds migrations, apply them afterwards:
+ALWAYS run migrations afterwards — not just when the branch adds them.
+The dump carries whatever schema main's DB had at that moment, and the
+main checkout's dev DB is regularly BEHIND its own branch (nobody
+migrates it until a feature needs it). A seeded worktree therefore
+starts out missing migrations that are already merged:
 
 ```bash
 cd <worktree>/pnpm-monorepo/packages/database
-pnpm run migrate:dev
+pnpm exec prisma migrate deploy
 ```
 
-To re-seed later (fresh copy of the main data), drop and recreate the
-database first, restart the collab server (it held connections to the
-dropped database), then repeat the copy:
+Use `migrate deploy`, not the `migrate:dev` script: deploy only applies
+pending migrations, while `migrate dev` offers to RESET the database on
+drift and trips the destructive-command consent guard anyway.
+
+Symptom of skipping this: queries fail on columns that exist in the
+Prisma schema, and the row copy below dies with `ERROR: extra data
+after last expected column`. Diff the two sides instead of guessing:
+
+```bash
+docker exec sam-psql-1 psql -U postgres -d db -tAc "SELECT migration_name FROM _prisma_migrations ORDER BY finished_at DESC LIMIT 5"
+docker compose exec -T psql psql -U postgres -d db -tAc "SELECT migration_name FROM _prisma_migrations ORDER BY finished_at DESC LIMIT 5"
+```
+
+### Re-seeding is blocked — copy rows instead
+
+`DROP DATABASE`, `TRUNCATE` and friends are refused by the permission
+classifier, so there is no supported "wipe and re-copy" path — don't
+burn turns rediscovering that. Copy only the rows you need; `COPY … TO
+STDOUT` piped into `COPY … FROM STDIN` is additive and allowed:
 
 ```bash
 cd <worktree>
-docker compose exec psql psql -U postgres -d postgres -c 'DROP DATABASE db WITH (FORCE)' -c 'CREATE DATABASE db'
-docker compose restart sam-collab
+docker exec sam-psql-1 psql -U postgres -d db \
+  -c "COPY (SELECT * FROM \"Session\" WHERE id = '<id>') TO STDOUT" \
+  | docker compose exec -T psql psql -U postgres -d db -c "COPY \"Session\" FROM STDIN"
 ```
+
+Both schemas must already match (see above) and the target row must not
+exist yet — compare ids first. Quoting like this survives fish poorly;
+write it to a scratchpad `.sh` and run it with `bash`.
 
 ## 4. Dev server
 
@@ -199,6 +233,35 @@ cookies are shared across ports. If a FRESH Discord login on a worktree
 port fails with a redirect_uri error, the Discord application needs
 `http://localhost:<port>/api/auth/callback/discord` added to its OAuth2
 redirect URIs — a one-time manual step for the user.
+
+### The user has no active session
+
+Discord OAuth can't be driven programmatically, and the callback is
+pinned to `NEXTAUTH_URL`, so the user must sign in on the MAIN checkout
+(port 3000) and the resulting row gets carried over. Run it as one
+pass — each round trip costs the user a wait:
+
+1. Stop the worktree dev server (frees attention, not the port) and
+   start the main stack plus `pnpm run dev` in
+   `<main>/pnpm-monorepo/apps/app`. Hand the user
+   `http://localhost:3000` and say the main checkout does NOT contain
+   the branch's changes — it is only for getting a session.
+2. When they confirm, stop the main dev server and read the new row's
+   id: `SELECT id, expires > now() FROM "Session"`. Sign-in creates a
+   NEW row, so compare against what the worktree already has.
+3. `prisma migrate deploy` on the worktree DB (§3) — the schemas must
+   match before the copy, and main is usually the migrated one.
+4. Copy that one `Session` row across (§3), restart the worktree dev
+   server, and verify before handing the URL back:
+
+```bash
+TOKEN=$(docker compose exec -T psql psql -U postgres -d db -tAc "SELECT \"sessionToken\" FROM \"Session\" WHERE id = '<id>'")
+curl -s -o /dev/null -w '%{http_code}\n' --cookie "next-auth.session-token=${TOKEN}" http://localhost:3001/app   # 200
+```
+
+Print only the status code — the token is a credential and must never
+reach the transcript. The user's browser needs no action: the cookie is
+set on `localhost` and cookies ignore the port.
 
 ## 6. Shutdown
 
