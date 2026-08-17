@@ -1,4 +1,4 @@
-export type NextjsSearchParams = Promise<
+type NextjsSearchParams = Promise<
   Record<string, string | string[] | undefined>
 >;
 

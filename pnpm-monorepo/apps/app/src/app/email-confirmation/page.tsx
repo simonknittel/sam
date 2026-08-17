@@ -9,24 +9,26 @@ import { authenticate } from "@/modules/auth/server";
 import { requiresEmailConfirmation } from "@/modules/auth/utils/emailConfirmation";
 import { getAssumedUserLabel } from "@/modules/auth/utils/getAssumedUserLabel";
 import { Link } from "@/modules/common/components/Link";
-import type { NextjsSearchParams } from "@/modules/common/utils/searchParamsNextjsToURLSearchParams";
 import { log } from "@/modules/logging";
 import { Footer } from "@/modules/shell/components/Footer";
 import { type Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { createLoader, parseAsBoolean } from "nuqs/server";
 import { RiInformationLine } from "react-icons/ri";
 
 export const metadata: Metadata = {
   title: "E-Mail-Adresse und Datenschutzerklärung bestätigen",
 };
 
-interface Props {
-  searchParams: NextjsSearchParams;
-}
+const loadSearchParams = createLoader({
+  "new-user": parseAsBoolean.withDefault(false),
+});
 
-export default async function Page(props: Readonly<Props>) {
-  const searchParams = await props.searchParams;
+export default async function Page({
+  searchParams,
+}: PageProps<"/email-confirmation">) {
+  const { "new-user": newUser } = await loadSearchParams(searchParams);
   const authentication = await authenticate();
 
   if (!authentication) {
@@ -42,11 +44,6 @@ export default async function Page(props: Readonly<Props>) {
     redirect("/clearance");
 
   if (authentication.session.user.emailVerified) redirect("/clearance");
-
-  const newUser =
-    (Array.isArray(searchParams["new-user"])
-      ? searchParams["new-user"][0]
-      : searchParams["new-user"]) === "true";
 
   const formAction = async (formData: FormData) => {
     "use server";
