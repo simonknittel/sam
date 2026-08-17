@@ -18,6 +18,7 @@ import { RolesContextProvider } from "@/modules/roles/components/RolesContext";
 import { getVisibleRoles } from "@/modules/roles/utils/getRoles";
 import { CmdKProvider } from "@/modules/shell/components/CmdK/CmdKContext";
 import { MobileActionBarLoader } from "@/modules/shell/components/Sidebar/MobileActionBarLoader";
+import { SkipToContentLink } from "@/modules/shell/components/SkipToContentLink";
 import { TopBar } from "@/modules/shell/components/TopBar";
 import { getOpenWikiReportCount } from "@/modules/wiki/queries/getOpenWikiReportCount";
 import { TRPCReactProvider } from "@/trpc/react";
@@ -54,6 +55,8 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
                 <NextIntlClientProvider>
                   <RolesContextProvider roles={visibleRoles}>
                     <div className="min-h-dvh background-primary">
+                      <SkipToContentLink />
+
                       <AppsContextProvider
                         apps={apps}
                         appDotBadgeCounts={{

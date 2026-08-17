@@ -1,5 +1,6 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { Hero } from "@/modules/common/components/Hero";
+import { MainContent } from "@/modules/common/components/layouts/MainContent";
 import { getLeaderboard } from "@/modules/leaderboards/queries/getLeaderboard";
 import clsx from "clsx";
 import { type Metadata } from "next";
@@ -17,7 +18,7 @@ export default async function Page() {
   const leaderboard = await getLeaderboard("SB", "47", 15);
 
   return (
-    <main className="p-4 pb-20 lg:p-6">
+    <MainContent className="p-4 pb-20 lg:p-6">
       <div className="flex justify-center">
         <Hero text="Leaderboards" withGlitch size="md" />
       </div>
@@ -54,6 +55,6 @@ export default async function Page() {
           </tbody>
         </table>
       </section>
-    </main>
+    </MainContent>
   );
 }

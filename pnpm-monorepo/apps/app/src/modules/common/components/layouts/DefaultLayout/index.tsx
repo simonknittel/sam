@@ -1,6 +1,7 @@
 import { Hero } from "@/modules/common/components/Hero";
 import { type ComponentProps, type ReactNode } from "react";
 import { Link } from "../../Link";
+import { MainContent } from "../MainContent";
 import { Navigation } from "./Navigation";
 
 interface Props {
@@ -30,7 +31,7 @@ export const DefaultLayout = ({ title, pages, cta, children, slug }: Props) => {
         </div>
       </div>
 
-      <main>{children}</main>
+      <MainContent>{children}</MainContent>
     </>
   );
 };
