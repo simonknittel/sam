@@ -69,6 +69,44 @@
     var(--radius-primary);
 }
 
+/**
+ * Surface tinted with the accent colour from `--tile-accent-color`, fading
+ * top-to-bottom into the regular surface colour, framed by a 1px border that
+ * fades out along with it — same treatment as the event lineup positions.
+ */
+@utility tile-accent-surface {
+  position: relative;
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--tile-accent-color) 20%, transparent) 0%,
+    var(--background-color-secondary) 200%
+  );
+
+  /**
+   * The positions get their border from `border-image`, which ignores
+   * `corner-shape` and would square off the beveled corner. Hence an overlay
+   * masked down to the outermost pixel, which follows the corners.
+   */
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    corner-shape: inherit;
+    background: linear-gradient(
+      to bottom,
+      var(--tile-accent-color),
+      transparent
+    );
+    mask:
+      linear-gradient(#000, #000) content-box,
+      linear-gradient(#000, #000);
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+}
+
 @utility prose {
   & a {
     color: var(--color-interaction-500);
