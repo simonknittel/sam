@@ -3,8 +3,7 @@
 import { runAction } from "@/modules/actions/utils/runAction";
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
-import Button from "@/modules/common/components/Button";
-import { Button2 } from "@/modules/common/components/Button2";
+import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
 import type { Event } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
@@ -37,14 +36,15 @@ export const CreateManagers = (props: Props) => {
 
   return (
     <>
-      <Button
+      <Button2
         onClick={handleClick}
-        variant="tertiary"
+        variant={Button2Variant.Secondary}
         className={clsx(props.className)}
         title="Manager hinzufügen"
       >
         <FaPlus />
-      </Button>
+        <span className="hidden md:inline">Hinzufügen</span>
+      </Button2>
 
       <Modal
         isOpen={isOpen}
