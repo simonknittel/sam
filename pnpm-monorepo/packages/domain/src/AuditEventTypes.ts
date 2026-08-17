@@ -9,6 +9,7 @@ export enum AuditEventType {
   USER_LOGIN = "USER_LOGIN",
   USER_LOGIN_V2 = "USER_LOGIN_V2",
   USER_LOGOUT = "USER_LOGOUT",
+  USER_SESSION_DELETED = "USER_SESSION_DELETED",
   USER_FIRST_VISIT_OF_THE_DAY = "USER_FIRST_VISIT_OF_THE_DAY",
   USER_FIRST_VISIT_OF_THE_DAY_V2 = "USER_FIRST_VISIT_OF_THE_DAY_V2",
   SHIP_CREATED = "SHIP_CREATED",
@@ -194,6 +195,11 @@ export interface AuditEventDataByType {
   };
 
   [AuditEventType.USER_LOGOUT]: {
+    sessionId: string;
+    userId: string;
+  };
+
+  [AuditEventType.USER_SESSION_DELETED]: {
     sessionId: string;
     userId: string;
   };

@@ -14,6 +14,11 @@ export const getNavigationItems = createNavigationItems(
       url: "/app/account/notifications",
     });
 
+    pages.push({
+      title: "Sitzungen",
+      url: "/app/account/sessions",
+    });
+
     if (permissions[0]) {
       pages.push({
         title: "Analytics",

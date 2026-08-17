@@ -66,6 +66,16 @@ export const AuditEventDefinitions: {
     message: (data) => `User ${data.userId} logged out`,
   },
 
+  [AuditEventType.USER_SESSION_DELETED]: {
+    type: AuditEventType.USER_SESSION_DELETED,
+    data: {
+      sessionId: "string",
+      userId: "string",
+    },
+    message: (data) =>
+      `User ${data.userId} deleted their session ${data.sessionId}`,
+  },
+
   [AuditEventType.USER_FIRST_VISIT_OF_THE_DAY]: {
     type: AuditEventType.USER_FIRST_VISIT_OF_THE_DAY,
     data: {
