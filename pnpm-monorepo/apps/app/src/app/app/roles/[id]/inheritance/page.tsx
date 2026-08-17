@@ -1,4 +1,5 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
+import { Tile } from "@/modules/common/components/Tile";
 import { InheritanceForm } from "@/modules/roles/components/InheritanceForm";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import { getRoleById } from "@/modules/roles/queries/getRoleById";
@@ -28,8 +29,7 @@ export default async function Page({
     .toSorted((a, b) => a.name.localeCompare(b.name));
 
   return (
-    <section className="rounded-primary bg-neutral-800/50 p-4">
-      <h2 className="text-xl font-bold mb-2">Vererbungen</h2>
+    <Tile heading="Vererbungen">
       <p className="max-w-prose">
         Die Rolle{" "}
         <SingleRoleBadge roleId={roleId} className="inline-flex align-sub" />{" "}
@@ -39,6 +39,6 @@ export default async function Page({
       </p>
 
       <InheritanceForm currentRole={role} roles={_roles} className="mt-4" />
-    </section>
+    </Tile>
   );
 }

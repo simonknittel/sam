@@ -1,8 +1,8 @@
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionButton";
+import { Tile, TileVariant } from "@/modules/common/components/Tile";
 import type { Role } from "@sam-monorepo/database/client";
-import clsx from "clsx";
 import { FaTrash } from "react-icons/fa";
 import { deleteRole } from "../actions/deleteRole";
 
@@ -13,16 +13,11 @@ interface Props {
 
 export const DeleteRole = ({ className, role }: Props) => {
   return (
-    <section
-      className={clsx(
-        "rounded-primary bg-red-500/10 border border-red-500/30 p-4",
-        className,
-      )}
+    <Tile
+      heading="Danger Zone"
+      variant={TileVariant.Danger}
+      className={className}
     >
-      <h2 className="font-bold mb-2 text-lg font-mono uppercase text-red-500">
-        Danger Zone
-      </h2>
-
       <ConfirmActionButton
         action={deleteRole}
         hiddenFields={[{ name: "id", value: role.id }]}
@@ -41,6 +36,6 @@ export const DeleteRole = ({ className, role }: Props) => {
         }
         confirmLabel="Löschen"
       />
-    </section>
+    </Tile>
   );
 };

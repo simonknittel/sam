@@ -8,6 +8,7 @@ import { NumberInput } from "@/modules/common/components/form/NumberInput";
 import { Textarea } from "@/modules/common/components/form/Textarea";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import { ImageUpload } from "@/modules/common/components/ImageUpload";
+import { Tile } from "@/modules/common/components/Tile";
 import type { Role, Upload } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { FaSave } from "react-icons/fa";
@@ -32,75 +33,72 @@ export const OverviewTab = ({ className, role }: Props) => {
 
   return (
     <div className={clsx("flex flex-col gap-2", className)}>
-      <form
-        action={updateFormAction}
-        className={clsx("bg-secondary rounded-primary p-4", className)}
-      >
-        <input type="hidden" name="id" value={role.id} />
+      <Tile heading="Rolle bearbeiten">
+        <form action={updateFormAction}>
+          <input type="hidden" name="id" value={role.id} />
 
-        <TextInput label="Name" name="name" defaultValue={role.name} />
+          <TextInput label="Name" name="name" defaultValue={role.name} />
 
-        <Textarea
-          label="Beschreibung"
-          name="description"
-          defaultValue={role.description ?? undefined}
-          maxLength={2048}
-          hint="(Optional) Markdown wird unterstützt"
-          className="mt-4"
-        />
+          <Textarea
+            label="Beschreibung"
+            name="description"
+            defaultValue={role.description ?? undefined}
+            maxLength={2048}
+            hint="(Optional) Markdown wird unterstützt"
+            className="mt-4"
+          />
 
-        <div className="grid grid-cols-2 gap-8">
-          <div>
-            <NumberInput
-              label="Entfernung nach (in Tagen)"
-              name="maxAgeDays"
-              defaultValue={role.maxAgeDays ?? undefined}
-              min={1}
-              step={1}
-              hint="(Optional) Citizen, die sich innerhalb dieses Zeitraums nicht einloggen, wird automatisch diese Rolle entfernt"
-              labelClassName="mt-4"
-            />
+          <div className="grid grid-cols-2 gap-8">
+            <div>
+              <NumberInput
+                label="Entfernung nach (in Tagen)"
+                name="maxAgeDays"
+                defaultValue={role.maxAgeDays ?? undefined}
+                min={1}
+                step={1}
+                hint="(Optional) Citizen, die sich innerhalb dieses Zeitraums nicht einloggen, wird automatisch diese Rolle entfernt"
+                labelClassName="mt-4"
+              />
+            </div>
+
+            <div>
+              <NumberInput
+                label="Zuweisung nach (in Tagen)"
+                name="assignAfterInactiveDays"
+                defaultValue={role.assignAfterInactiveDays ?? undefined}
+                min={1}
+                step={1}
+                hint="(Optional) Citizen, die sich innerhalb dieses Zeitraums nicht einloggen, wird automatisch diese Rolle zugewiesen"
+                labelClassName="mt-4"
+              />
+            </div>
           </div>
 
-          <div>
-            <NumberInput
-              label="Zuweisung nach (in Tagen)"
-              name="assignAfterInactiveDays"
-              defaultValue={role.assignAfterInactiveDays ?? undefined}
-              min={1}
-              step={1}
-              hint="(Optional) Citizen, die sich innerhalb dieses Zeitraums nicht einloggen, wird automatisch diese Rolle zugewiesen"
-              labelClassName="mt-4"
-            />
-          </div>
-        </div>
+          <NumberInput
+            label="Level"
+            name="maxLevel"
+            defaultValue={role.maxLevel ?? undefined}
+            min={1}
+            step={1}
+            hint="(Optional) Die Anzahl an Level, die ein Citizen erreichen muss, um die Berechtigungen dieser Rolle zu erhalten"
+            labelClassName="mt-4"
+          />
 
-        <NumberInput
-          label="Level"
-          name="maxLevel"
-          defaultValue={role.maxLevel ?? undefined}
-          min={1}
-          step={1}
-          hint="(Optional) Die Anzahl an Level, die ein Citizen erreichen muss, um die Berechtigungen dieser Rolle zu erhalten"
-          labelClassName="mt-4"
-        />
+          <Button2
+            type="submit"
+            disabled={updateIsPending}
+            className="ml-auto mt-4"
+          >
+            {updateIsPending ? <AsciiSpinner /> : <FaSave />}
+            Speichern
+          </Button2>
 
-        <Button2
-          type="submit"
-          disabled={updateIsPending}
-          className="ml-auto mt-4"
-        >
-          {updateIsPending ? <AsciiSpinner /> : <FaSave />}
-          Speichern
-        </Button2>
+          <ActionErrorNote className="mt-4" state={updateState} />
+        </form>
+      </Tile>
 
-        <ActionErrorNote className="mt-4" state={updateState} />
-      </form>
-
-      <section className={clsx("bg-secondary rounded-primary p-4", className)}>
-        <h2 className="font-bold">Bilder</h2>
-
-        <div className="flex flex-col md:flex-row gap-4 mt-4">
+      <Tile heading="Bilder">
+        <div className="flex flex-col md:flex-row gap-4">
           <div>
             <label className="block font-bold">Icon</label>
 
@@ -152,7 +150,7 @@ export const OverviewTab = ({ className, role }: Props) => {
             </p>
           </div>
         </div>
-      </section>
+      </Tile>
 
       <DeleteRole role={role} />
     </div>
