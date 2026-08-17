@@ -51,7 +51,7 @@ export default async function Page(props: Props) {
   if (!series || !manufacturer) notFound();
 
   return (
-    <main className="flex gap-8 items-start flex-col xl:flex-row">
+    <div className="flex gap-8 items-start flex-col xl:flex-row">
       <section className="p-8 bg-neutral-800/50 rounded-primary w-full xl:w-100">
         <p className="font-bold mb-4">Serie</p>
 
@@ -70,6 +70,6 @@ export default async function Page(props: Props) {
           className="w-full flex-1"
         />
       </SuspenseWithErrorBoundaryTile>
-    </main>
+    </div>
   );
 }

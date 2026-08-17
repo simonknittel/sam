@@ -46,7 +46,7 @@ export default async function Page(props: Props) {
   if (!manufacturer) notFound();
 
   return (
-    <main className="flex gap-8 items-start flex-col xl:flex-row">
+    <div className="flex gap-8 items-start flex-col xl:flex-row">
       <section className="rounded-primary overflow-hidden w-full xl:w-100">
         <ImageUpload
           resourceType="manufacturer"
@@ -85,6 +85,6 @@ export default async function Page(props: Props) {
           className="w-full flex-1"
         />
       </SuspenseWithErrorBoundaryTile>
-    </main>
+    </div>
   );
 }
