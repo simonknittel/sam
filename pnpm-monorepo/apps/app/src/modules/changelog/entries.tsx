@@ -46,6 +46,27 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-08-17-sitzungen",
+    date: "2026-08-17",
+    title: "Angemeldete Geräte einsehen und abmelden",
+    tags: ["Neu"],
+    body: () => (
+      <p>
+        Unter{" "}
+        <Link
+          href="/app/account/sessions"
+          className="text-interaction-500 hover:underline focus-visible:underline"
+        >
+          Account &rarr; Sitzungen
+        </Link>{" "}
+        sind ab sofort alle eigenen Anmeldungen aufgelistet &ndash; mit Browser,
+        Anmeldedatum und Ablaufdatum. Wer ein Gerät nicht mehr nutzt oder nicht
+        wiedererkennt, meldet es dort ab.
+      </p>
+    ),
+  },
+
+  {
     key: "2026-08-16-app-events",
     date: "2026-08-16",
     title: "Events direkt im SAM erstellen",
