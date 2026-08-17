@@ -68,6 +68,20 @@ export const fillUntilUrl = (
   }).toPass({ timeout: HYDRATION_TIMEOUT });
 
 /**
+ * Key presses are swallowed before hydration just like clicks, but blindly
+ * retrying a Tab would walk past the element under test. Pressing only while
+ * the body still holds focus keeps every attempt at the start of the tab
+ * order, so this can never advance more than one stop.
+ */
+export const tabUntilFocused = (page: Page, target: Locator) =>
+  expect(async () => {
+    if (await page.evaluate(() => document.activeElement === document.body)) {
+      await page.keyboard.press("Tab");
+    }
+    await expect(target).toBeFocused({ timeout: REACTION_TIMEOUT });
+  }).toPass({ timeout: HYDRATION_TIMEOUT });
+
+/**
  * EditableField wraps its display button and its save form in an inline
  * <span>; Playwright's hit-target validation misattributes clicks on them
  * to that span ("<span> intercepts pointer events") although real clicks
