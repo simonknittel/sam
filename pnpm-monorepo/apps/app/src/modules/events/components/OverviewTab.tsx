@@ -1,4 +1,5 @@
 import { requireAuthentication } from "@/modules/auth/server";
+import { Tile } from "@/modules/common/components/Tile";
 import { getAssignedRoles } from "@/modules/roles/utils/getRoles";
 import {
   EventSource,
@@ -99,18 +100,15 @@ const FleetSummary = async ({ className, event }: FleetSummaryProps) => {
   }
 
   return (
-    <section
-      className={clsx("rounded-primary bg-neutral-800/50 p-4", className)}
+    <Tile
+      heading="Flotte der Teilnehmer"
+      subheading="Summe aller Tags. Nur flight ready."
+      className={clsx(className)}
     >
-      <h2 className="font-bold font-mono uppercase">Flotte der Teilnehmer</h2>
-      <p className="mb-4 text-neutral-500 text-sm">
-        Summe aller Tags. Nur flight ready.
-      </p>
-
       <div className="flex gap-2 flex-wrap overflow-x-auto">
         <VariantTagsTable rows={Array.from(countedTags.values())} />
       </div>
-    </section>
+    </Tile>
   );
 };
 
@@ -156,19 +154,14 @@ const ParticipantsSummary = async ({
   }
 
   return (
-    <section
-      className={clsx("rounded-primary bg-neutral-800/50 p-4", className)}
+    <Tile
+      heading="Rollen/Zertifikate der Teilnehmer"
+      subheading="Summe aller Rollen/Zertifikate"
+      className={clsx(className)}
     >
-      <h2 className="font-bold font-mono uppercase">
-        Rollen/Zertifikate der Teilnehmer
-      </h2>
-      <p className="mb-4 text-neutral-500 text-sm">
-        Summe aller Rollen/Zertifikate
-      </p>
-
       <div className="flex gap-2 flex-wrap overflow-x-auto">
         <RolesTable rows={Array.from(countedRoles.values())} />
       </div>
-    </section>
+    </Tile>
   );
 };

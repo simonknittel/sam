@@ -4,6 +4,7 @@ import { RolesCell } from "@/modules/citizen/components/RolesCell";
 import { getCitizenByDiscordId } from "@/modules/citizen/queries/getCitizenByDiscordId";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { Link } from "@/modules/common/components/Link";
+import { Tile } from "@/modules/common/components/Tile";
 import { Tooltip } from "@/modules/common/components/Tooltip";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import {
@@ -99,20 +100,18 @@ export const ParticipantsTab = async ({
 
   return (
     <div className={clsx("flex flex-col gap-2", className)}>
-      <section className="rounded-primary bg-neutral-800/50 p-4">
-        <h2 className="font-bold mb-2 text-lg font-mono uppercase">
-          Organisator
-        </h2>
+      <Tile heading="Organisator">
         {resolvedCreatorCitizen ? (
           <CitizenLink citizen={resolvedCreatorCitizen} />
         ) : (
           "-"
         )}
+      </Tile>
 
-        <div className="flex items-center gap-2 mt-4 mb-2">
-          <h2 className="font-bold text-lg font-mono uppercase">Manager</h2>
-          {isAllowedToManageEvent && <CreateManagers event={event} />}
-        </div>
+      <Tile
+        heading="Manager"
+        cta={isAllowedToManageEvent ? <CreateManagers event={event} /> : null}
+      >
         {event.managers.length > 0 ? (
           <div className="flex gap-x-3 gap-y-1 flex-wrap">
             {event.managers
@@ -160,36 +159,33 @@ export const ParticipantsTab = async ({
         ) : (
           <span className="text-neutral-500">-</span>
         )}
-      </section>
+      </Tile>
 
       {showCreateSilcTransactionButton && (
-        <section className="rounded-primary bg-neutral-800/50 p-4">
-          <h2 className="font-bold text-lg font-mono uppercase">
-            SILC-Belohnung
-          </h2>
+        <Tile heading="SILC-Belohnung">
           <CreateOrUpdateSilcTransaction
             initialReceiverIds={resolvedParticipants.map(
               (participant) => participant.citizen.id,
             )}
             initialDescription={`Event: ${event.name}`}
-            className="mt-4"
           />
-        </section>
+        </Tile>
       )}
 
-      <section className="rounded-primary bg-neutral-800/50 p-4 overflow-auto">
-        <h2 className="font-bold mb-4 flex items-center gap-2 text-lg">
-          <span className="font-mono uppercase">
+      <Tile
+        heading={
+          <span className="flex items-center gap-2">
             Teilnehmer ({sortedResolvedParticipants.length})
+            {!isAppEvent && (
+              <Tooltip triggerChildren={<FaInfoCircle />}>
+                Es werden nur Discord-Anmeldungen mit einem Spynet-Eintrag
+                angezeigt.
+              </Tooltip>
+            )}
           </span>
-          {!isAppEvent && (
-            <Tooltip triggerChildren={<FaInfoCircle />}>
-              Es werden nur Discord-Anmeldungen mit einem Spynet-Eintrag
-              angezeigt.
-            </Tooltip>
-          )}
-        </h2>
-
+        }
+        childrenClassName="overflow-auto"
+      >
         {sortedResolvedParticipants.length > 0 ? (
           <table className="w-full min-w-180">
             <thead>
@@ -342,7 +338,7 @@ export const ParticipantsTab = async ({
               : "Zu den gemeldeten Teilnehmern gibt es keine Spynet-Einträge."}
           </p>
         )}
-      </section>
+      </Tile>
     </div>
   );
 };

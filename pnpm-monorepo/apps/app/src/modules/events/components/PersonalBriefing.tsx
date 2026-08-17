@@ -1,5 +1,6 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
+import { Tile, TileVariant } from "@/modules/common/components/Tile";
 import { VariantWithLogo } from "@/modules/fleet/components/VariantWithLogo";
 import {
   EventSource,
@@ -7,7 +8,6 @@ import {
   type Event,
   type EventParticipant,
 } from "@sam-monorepo/database/client";
-import clsx from "clsx";
 import { FaCheck, FaTimes } from "react-icons/fa";
 import { isLineupVisible } from "../utils/isLineupVisible";
 import { EventParticipationControls } from "./EventParticipationControls";
@@ -87,17 +87,14 @@ export const PersonalBriefing = async ({ className, event }: Props) => {
       : [];
 
   return (
-    <section
-      className={clsx(
-        "rounded-primary bg-me/10 border border-me/30 p-4",
-        className,
-      )}
+    <Tile
+      heading="Meine Teilnahme"
+      variant={TileVariant.Me}
+      className={className}
     >
-      <h2 className="font-bold font-mono uppercase text-me">Meine Teilnahme</h2>
-
       {event.source === EventSource.DISCORD ? (
         <>
-          <p className="mt-2 flex items-center gap-2">
+          <p className="flex items-center gap-2">
             {activeParticipation ? (
               <>
                 <FaCheck className="text-green-500" />
@@ -116,7 +113,6 @@ export const PersonalBriefing = async ({ className, event }: Props) => {
         </>
       ) : (
         <EventParticipationControls
-          className="mt-2"
           eventId={event.id}
           isSignedUp={activeParticipation !== null}
           hasCancelled={hasCancelledParticipation}
@@ -177,6 +173,6 @@ export const PersonalBriefing = async ({ className, event }: Props) => {
           </ul>
         </div>
       )}
-    </section>
+    </Tile>
   );
 };

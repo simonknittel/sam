@@ -8,6 +8,7 @@ import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionBu
 import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
 import { Textarea } from "@/modules/common/components/form/Textarea";
 import { TextInput } from "@/modules/common/components/form/TextInput";
+import { Tile, TileVariant } from "@/modules/common/components/Tile";
 import { deleteEvent } from "@/modules/events/actions/deleteEvent";
 import { updateEvent } from "@/modules/events/actions/updateEvent";
 import { WikiRoleSelector } from "@/modules/wiki/components/WikiRoleSelector";
@@ -43,11 +44,7 @@ export const EventSettings = ({ className, event }: Props) => {
 
   return (
     <div className={clsx("flex flex-col gap-2", className)}>
-      <section className="rounded-primary bg-neutral-800/50 p-4">
-        <h2 className="font-bold mb-2 text-lg font-mono uppercase">
-          Event bearbeiten
-        </h2>
-
+      <Tile heading="Event bearbeiten">
         <form action={formAction}>
           <input type="hidden" name="eventId" value={event.id} />
 
@@ -133,13 +130,9 @@ export const EventSettings = ({ className, event }: Props) => {
 
           <ActionErrorNote className="mt-4" state={state} />
         </form>
-      </section>
+      </Tile>
 
-      <section className="rounded-primary bg-red-500/10 border border-red-500/30 p-4">
-        <h2 className="font-bold mb-2 text-lg font-mono uppercase text-red-500">
-          Danger Zone
-        </h2>
-
+      <Tile heading="Danger Zone" variant={TileVariant.Danger}>
         <ConfirmActionButton
           action={deleteEvent}
           hiddenFields={[{ name: "eventId", value: event.id }]}
@@ -159,7 +152,7 @@ export const EventSettings = ({ className, event }: Props) => {
           confirmLabel="Löschen"
           onSuccess={() => router.push("/app/events")}
         />
-      </section>
+      </Tile>
     </div>
   );
 };
