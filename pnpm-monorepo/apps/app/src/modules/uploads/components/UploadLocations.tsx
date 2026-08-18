@@ -22,7 +22,7 @@ export const UploadLocations = ({ usages }: Props) => {
           {UPLOAD_USAGE_TYPE_LABELS[UploadUsageType.Unused]}
         </span>
 
-        <span className="text-xs text-neutral-500">
+        <span className="text-xs text-white/40">
           Wird bei der nächtlichen Bereinigung gelöscht.
         </span>
       </div>
@@ -32,7 +32,7 @@ export const UploadLocations = ({ usages }: Props) => {
     <ul className="flex flex-col gap-1">
       {usages.map((usage) => (
         <li key={usage.key} className="flex min-w-0 items-baseline gap-2">
-          <span className="flex-none text-xs text-neutral-500">
+          <span className="flex-none text-xs text-white/40">
             {UPLOAD_USAGE_TYPE_LABELS[usage.type]}
           </span>
 
