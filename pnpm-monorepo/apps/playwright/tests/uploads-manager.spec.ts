@@ -1,6 +1,7 @@
 import type { PrismaClient, User } from "@sam-monorepo/database/client";
 import path from "node:path";
 import {
+  createAppEvent,
   createCitizen,
   createRole,
   createWikiPage,
@@ -24,6 +25,9 @@ const imagePath = path.join(
 
 /** Deleting the object in the bucket happens after the action responded. */
 const BUCKET_TIMEOUT = 15_000;
+
+const ONE_HOUR_MS = 60 * 60 * 1000;
+const ONE_DAY_MS = 24 * ONE_HOUR_MS;
 
 /**
  * `Upload.fileName` is stored URI-encoded, so seeded rows have to encode
@@ -101,6 +105,51 @@ test("a user's own uploads are listed with the place they are used", async ({
     page.getByRole("columnheader", { name: "Hochgeladen von" }),
   ).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Löschen" })).toHaveCount(0);
+});
+
+/**
+ * Event covers were the relation the nightly cleanup forgot, which deleted
+ * them a day after upload — so the manager listing them is worth pinning
+ * down explicitly.
+ */
+test("an event cover shows up as a usage of its upload", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const organizer = await createCitizen(prisma, {
+    handle: "event-organisator",
+    permissionStrings: ["event;read"],
+  });
+  const event = await createAppEvent(prisma, {
+    name: "Operation Pitchfork",
+    createdById: organizer.entity.id,
+    startTime: new Date(Date.now() + ONE_DAY_MS),
+    endTime: new Date(Date.now() + ONE_DAY_MS + 2 * ONE_HOUR_MS),
+  });
+  const cover = await createUpload(prisma, organizer.user, {
+    fileName: "Titelbild Pitchfork.png",
+    mimeType: "image/png",
+    size: 4096,
+  });
+  await prisma.event.update({
+    where: { id: event.id },
+    data: { coverImageId: cover.id },
+  });
+
+  await signIn(organizer.user);
+  await page.goto("/app/uploads");
+
+  const row = page
+    .getByRole("row")
+    .filter({ hasText: "Titelbild Pitchfork.png" });
+  await expect(row.getByText("Event-Titelbild")).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+  await expect(
+    row.getByRole("link", { name: "Operation Pitchfork" }),
+  ).toHaveAttribute("href", `/app/events/${event.id}`);
+  await expect(row.getByText("Unbenutzt", { exact: true })).toHaveCount(0);
 });
 
 test("uploads of other users stay hidden without the permission", async ({
