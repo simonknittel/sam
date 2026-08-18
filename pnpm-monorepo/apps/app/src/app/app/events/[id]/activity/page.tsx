@@ -1,7 +1,10 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
+import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
-import { ActivityTab } from "@/modules/events/components/ActivityTab";
+import { EventActivityFilters } from "@/modules/events/components/EventActivityFilters";
+import { EventActivityTable } from "@/modules/events/components/EventActivityTable";
+import { getEventActivityActors } from "@/modules/events/queries/getEventActivityActors";
 import { getEventById } from "@/modules/events/queries/getEventById";
 import { EventSource } from "@sam-monorepo/database/client";
 import { notFound } from "next/navigation";
@@ -23,6 +26,7 @@ export const generateMetadata = generateMetadataWithTryCatch(
 
 export default async function Page({
   params,
+  searchParams,
 }: PageProps<"/app/events/[id]/activity">) {
   const authentication = await requireAuthenticationPage(
     "/app/events/[id]/activity",
@@ -34,9 +38,13 @@ export default async function Page({
   if (!event) notFound();
   if (event.source !== EventSource.APP) notFound();
 
+  const actors = await getEventActivityActors(event.id);
+
   return (
-    <SuspenseWithErrorBoundaryTile>
-      <ActivityTab event={event} />
-    </SuspenseWithErrorBoundaryTile>
+    <SidebarLayout sidebar={<EventActivityFilters actors={actors} />}>
+      <SuspenseWithErrorBoundaryTile>
+        <EventActivityTable event={event} searchParams={searchParams} />
+      </SuspenseWithErrorBoundaryTile>
+    </SidebarLayout>
   );
 }
