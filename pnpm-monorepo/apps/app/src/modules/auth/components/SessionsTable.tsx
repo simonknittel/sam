@@ -1,4 +1,8 @@
-import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
+import { TRow } from "@/modules/common/components/Table";
+import {
+  TableTile,
+  type TableColumn,
+} from "@/modules/common/components/TableTile";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import clsx from "clsx";
 import { createLoader, type SearchParams } from "nuqs/server";
@@ -13,7 +17,20 @@ import {
 } from "../utils/sessionFilterParams";
 import { DeleteSessionButton } from "./DeleteSessionButton";
 
-const COLUMNS = "256px 130px 150px 1fr 150px 130px";
+const COLUMNS: TableColumn[] = [
+  { key: "id", label: "Session-ID", track: "256px", minWidth: 256 },
+  { key: "status", label: "Status", track: "130px", minWidth: 130 },
+  { key: "createdAt", label: "Erstellt", track: "150px", minWidth: 150 },
+  { key: "userAgent", label: "Browser", track: "1fr", minWidth: 120 },
+  { key: "expires", label: "Läuft ab", track: "150px", minWidth: 150 },
+  {
+    key: "actions",
+    label: "Aktionen",
+    track: "130px",
+    minWidth: 130,
+    headerClassName: "sr-only",
+  },
+];
 const UNKNOWN = "Unbekannt";
 
 const loadSearchParams = createLoader({
@@ -38,38 +55,22 @@ export const SessionsTable = async ({ className, searchParams }: Props) => {
   const sessions = await getMySessions(status, sort);
 
   return (
-    <div className={clsx("flex flex-col gap-4", className)}>
-      {sessions.length === 0 ? (
-        <div className="rounded-primary bg-secondary p-4 grid place-content-center">
-          <p>{EMPTY_MESSAGE_BY_STATUS[status]}</p>
-        </div>
-      ) : (
-        <Table
-          className="bg-secondary rounded-primary p-4"
-          columns={COLUMNS}
-          minWidth={800}
-        >
-          <THead>
-            <th>Session-ID</th>
-            <th>Status</th>
-            <th>Erstellt</th>
-            <th>Browser</th>
-            <th>Läuft ab</th>
-            <th className="sr-only">Aktionen</th>
-          </THead>
-
-          <TBody className="text-sm">
-            {sessions.map((session) => (
-              <SessionRow key={session.id} session={session} />
-            ))}
-          </TBody>
-        </Table>
-      )}
-
-      <p className="text-center text-sm text-neutral-500">
-        Eine Sitzung entsteht bei jeder Anmeldung und läuft nach 31 Tagen ab.
-      </p>
-    </div>
+    <TableTile
+      className={className}
+      columns={COLUMNS}
+      isEmpty={sessions.length === 0}
+      emptyMessage={EMPTY_MESSAGE_BY_STATUS[status]}
+      bodyClassName="text-sm"
+      footer={
+        <p className="text-center text-sm text-neutral-500">
+          Eine Sitzung entsteht bei jeder Anmeldung und läuft nach 31 Tagen ab.
+        </p>
+      }
+    >
+      {sessions.map((session) => (
+        <SessionRow key={session.id} session={session} />
+      ))}
+    </TableTile>
   );
 };
 
