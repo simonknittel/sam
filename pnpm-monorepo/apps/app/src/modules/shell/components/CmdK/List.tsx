@@ -20,6 +20,7 @@ import {
 } from "react-icons/fa";
 import {
   FaCodePullRequest,
+  FaFileArrowUp,
   FaScaleBalanced,
   FaTableList,
 } from "react-icons/fa6";
@@ -342,6 +343,14 @@ export const List = () => {
         icon: <FaClock />,
         type: MenuItemType.Link,
         href: "/app/timezones",
+      },
+      {
+        id: "uploads",
+        label: "Uploads",
+        keywords: ["Uploads", "Dateien", "Bilder", "Anhänge"],
+        icon: <FaFileArrowUp />,
+        type: MenuItemType.Link,
+        href: "/app/uploads",
       },
 
       ...externalApps.map((app): LinkMenuItem => ({

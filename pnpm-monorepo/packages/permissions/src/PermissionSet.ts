@@ -70,6 +70,7 @@ export interface PermissionSet {
     | "profitDistributionCycle"
     | "globalStatistics"
     | "systemLog"
+    | "upload"
     | "wiki";
   operation:
     | "create"

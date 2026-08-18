@@ -195,6 +195,13 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
       "Helfer für die Umrechnung von Zeiten zwischen verschiedenen Zeitzonen",
   },
   {
+    name: "Uploads",
+    slug: "uploads",
+    href: "/app/uploads",
+    description:
+      "Übersicht der von dir hochgeladenen Dateien und wo sie verwendet werden",
+  },
+  {
     name: "Wiki",
     slug: "wiki",
     href: "/app/wiki",

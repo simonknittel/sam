@@ -84,6 +84,18 @@ const OtherTab = ({ roles, flows }: Readonly<Props>) => {
         <YesNoCheckbox {...register("globalStatistics;read")} />
       </div>
 
+      <div className="py-2 flex justify-between items-center">
+        <div>
+          <h4 className="font-bold">Uploads verwalten</h4>
+          <p className="text-sm">
+            Zeigt in der Uploads-App die Uploads aller Benutzer inkl. Urheber an
+            und erlaubt das Löschen beliebiger Uploads.
+          </p>
+        </div>
+
+        <YesNoCheckbox {...register("upload;manage")} />
+      </div>
+
       <CareerSection flows={flows} className="mt-2" />
 
       <SpynetSection className="mt-2" />

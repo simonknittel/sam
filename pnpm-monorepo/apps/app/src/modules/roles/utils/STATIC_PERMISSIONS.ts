@@ -530,4 +530,9 @@ export const STATIC_PERMISSIONS = [
     title: "System Log lesen",
     string: "systemLog;read",
   },
+  {
+    section: "Sonstiges",
+    title: "Uploads verwalten",
+    string: "upload;manage",
+  },
 ];
