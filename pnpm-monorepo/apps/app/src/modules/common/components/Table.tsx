@@ -5,8 +5,8 @@ interface TableProps {
   readonly className?: string;
   /**
    * Class(es) for the `<table>` itself. Mainly an escape hatch for
-   * breakpoint-specific column sets: a `sm:[--table-columns:…]` here sits
-   * closer to the cells than the wrapper below and therefore wins.
+   * breakpoint-specific column sets: redefining the columns custom property
+   * here sits closer to the cells than the wrapper below and therefore wins.
    */
   readonly tableClassName?: string;
   /**

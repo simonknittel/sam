@@ -1,19 +1,14 @@
 import { CursorPaginationControls } from "@/modules/common/CursorPagination/CursorPaginationControls";
-import { cursorPaginationParsers } from "@/modules/common/CursorPagination/cursorPaginationParsers";
+import { createCursorPaginationLoader } from "@/modules/common/CursorPagination/createCursorPaginationLoader";
 import clsx from "clsx";
-import {
-  createLoader,
-  parseAsStringLiteral,
-  type SearchParams,
-} from "nuqs/server";
+import { parseAsStringLiteral, type SearchParams } from "nuqs/server";
 import { getEvents } from "../queries/getEvents";
 import { Event } from "./Event";
 
-const loadSearchParams = createLoader({
+const loadSearchParams = createCursorPaginationLoader({
   status: parseAsStringLiteral(["open", "closed", "all"]).withDefault("open"),
   participating: parseAsStringLiteral(["all", "me"]).withDefault("all"),
   type: parseAsStringLiteral(["all", "app", "discord"]).withDefault("all"),
-  ...cursorPaginationParsers,
 });
 
 interface Props {

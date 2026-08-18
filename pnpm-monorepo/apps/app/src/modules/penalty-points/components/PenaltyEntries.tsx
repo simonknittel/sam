@@ -1,22 +1,17 @@
 import { requireAuthentication } from "@/modules/auth/server";
 import { Tile } from "@/modules/common/components/Tile";
+import { createCursorPaginationLoader } from "@/modules/common/CursorPagination/createCursorPaginationLoader";
 import { CursorPaginationControls } from "@/modules/common/CursorPagination/CursorPaginationControls";
-import { cursorPaginationParsers } from "@/modules/common/CursorPagination/cursorPaginationParsers";
 import clsx from "clsx";
-import {
-  createLoader,
-  parseAsStringLiteral,
-  type SearchParams,
-} from "nuqs/server";
+import { parseAsStringLiteral, type SearchParams } from "nuqs/server";
 import { getPenaltyEntriesPaginated } from "../queries/getPenaltyEntriesPaginated";
 import { CreatePenaltyEntryButton } from "./CreatePenaltyEntry/CreatePenaltyEntryButton";
 import { PenaltyEntriesTable } from "./PenaltyEntriesTable";
 
-const loadSearchParams = createLoader({
+const loadSearchParams = createCursorPaginationLoader({
   status: parseAsStringLiteral(["active", "inactive", "deleted"]).withDefault(
     "active",
   ),
-  ...cursorPaginationParsers,
 });
 
 interface Props {

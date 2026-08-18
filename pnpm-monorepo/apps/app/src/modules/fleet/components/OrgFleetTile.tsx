@@ -1,9 +1,8 @@
 import { CursorPaginationControls } from "@/modules/common/CursorPagination/CursorPaginationControls";
-import { cursorPaginationParsers } from "@/modules/common/CursorPagination/cursorPaginationParsers";
+import { createCursorPaginationLoader } from "@/modules/common/CursorPagination/createCursorPaginationLoader";
 import { ScrambleIn } from "@/modules/common/components/ScrambleIn";
 import { StatisticTile } from "@/modules/common/components/StatisticTile";
 import {
-  createLoader,
   parseAsArrayOf,
   parseAsString,
   parseAsStringLiteral,
@@ -12,7 +11,7 @@ import {
 import { getOrgFleet } from "../queries/getOrgFleet";
 import { FleetTable } from "./FleetTable";
 
-const loadSearchParams = createLoader({
+const loadSearchParams = createCursorPaginationLoader({
   flight_ready: parseAsStringLiteral(["all", "flight_ready"]).withDefault(
     "all",
   ),
@@ -25,7 +24,6 @@ const loadSearchParams = createLoader({
   variantTags: parseAsArrayOf(parseAsString),
   manufacturerIds: parseAsArrayOf(parseAsString),
   q: parseAsString,
-  ...cursorPaginationParsers,
 });
 
 interface Props {

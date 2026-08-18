@@ -1,19 +1,14 @@
 import { requireAuthentication } from "@/modules/auth/server";
 import { Tile } from "@/modules/common/components/Tile";
+import { createCursorPaginationLoader } from "@/modules/common/CursorPagination/createCursorPaginationLoader";
 import { CursorPaginationControls } from "@/modules/common/CursorPagination/CursorPaginationControls";
-import { cursorPaginationParsers } from "@/modules/common/CursorPagination/cursorPaginationParsers";
 import clsx from "clsx";
-import {
-  createLoader,
-  parseAsStringLiteral,
-  type SearchParams,
-} from "nuqs/server";
+import { parseAsStringLiteral, type SearchParams } from "nuqs/server";
 import { getSilcTransactionsPaginated } from "../queries/getSilcTransactionsPaginated";
 import { SilcTransactionsTable } from "./SilcTransactionsTable";
 
-const loadSearchParams = createLoader({
+const loadSearchParams = createCursorPaginationLoader({
   showDeleted: parseAsStringLiteral(["alle", "deleted"]).withDefault("alle"),
-  ...cursorPaginationParsers,
 });
 
 interface Props {

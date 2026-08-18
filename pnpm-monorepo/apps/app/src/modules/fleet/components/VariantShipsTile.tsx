@@ -1,11 +1,11 @@
 import { Tile } from "@/modules/common/components/Tile";
+import { createCursorPaginationLoader } from "@/modules/common/CursorPagination/createCursorPaginationLoader";
 import { CursorPaginationControls } from "@/modules/common/CursorPagination/CursorPaginationControls";
-import { cursorPaginationParsers } from "@/modules/common/CursorPagination/cursorPaginationParsers";
-import { createLoader, type SearchParams } from "nuqs/server";
+import { type SearchParams } from "nuqs/server";
 import { getVariantShips } from "../queries/getVariantShips";
 import { VariantShipsTable } from "./VariantShipsTable";
 
-const loadSearchParams = createLoader(cursorPaginationParsers);
+const loadSearchParams = createCursorPaginationLoader({});
 
 interface Props {
   readonly className?: string;

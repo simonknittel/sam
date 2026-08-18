@@ -181,12 +181,10 @@ test("the organizer edits the event via the settings tab", async ({
   // The feed renders the changes
   await page.goto(`/app/events/${event.id}/activity`);
   await expect(
-    page.getByText("hat den Titel von Operation Alter Name zu Operation"),
+    page.getByText("Titel von Operation Alter Name zu Operation"),
   ).toBeVisible();
-  await expect(
-    page.getByText("hat die Beschreibung aktualisiert"),
-  ).toBeVisible();
-  await expect(page.getByText("hat den Zeitraum geändert:")).toBeVisible();
+  await expect(page.getByText("Beschreibung aktualisiert")).toBeVisible();
+  await expect(page.getByText("Zeitraum geändert:")).toBeVisible();
 });
 
 test("deleting an event hides it everywhere", async ({
@@ -383,13 +381,13 @@ test("the sign-up lifecycle: sign up with comment, edit, cancel, re-sign-up", as
   // The activity feed recorded the whole lifecycle
   await page.goto(`/app/events/${event.id}/activity`);
   await expect(
-    page.getByText("hat sich angemeldet", { exact: false }).first(),
+    page.getByText("Angemeldet", { exact: true }).first(),
   ).toBeVisible();
   await expect(
     page.getByText("Bringe Snacks mit", { exact: true }),
   ).toBeVisible();
-  await expect(page.getByText("hat den Kommentar aktualisiert")).toBeVisible();
-  await expect(page.getByText("hat sich abgemeldet")).toBeVisible();
+  await expect(page.getByText("Kommentar aktualisiert")).toBeVisible();
+  await expect(page.getByText("Abgemeldet", { exact: true })).toBeVisible();
 });
 
 test("sign-up closes at the event's end and past events show synthetic activity", async ({

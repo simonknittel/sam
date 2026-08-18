@@ -27,6 +27,15 @@ export const ActivityTile = async ({ className, id, searchParams }: Props) => {
   const authentication = await requireAuthentication();
   if (!(await authentication.authorize("organization", "read"))) forbidden();
 
+  /**
+   * Only confirmers ever see an entry awaiting confirmation, so for everyone
+   * else the status column would stay empty.
+   */
+  const canConfirm = await authentication.authorize(
+    "organizationMembership",
+    "confirm",
+  );
+
   const { cursor, direction } = await loadSearchParams(searchParams);
 
   const { entries, nextCursor, prevCursor } = await paginateMergedSources({
@@ -36,7 +45,7 @@ export const ActivityTile = async ({ className, id, searchParams }: Props) => {
       createOrganizationMembershipSource({
         organizationId: id,
         withTarget: true,
-        withConfirmation: true,
+        withConfirmation: canConfirm,
       }),
     ],
     pageSize: ACTIVITY_PAGE_SIZE,
@@ -49,7 +58,11 @@ export const ActivityTile = async ({ className, id, searchParams }: Props) => {
       className={className}
       heading="Aktivität"
       entries={entries}
-      columns={[ActivityColumn.Target, ActivityColumn.Confirmation]}
+      columns={
+        canConfirm
+          ? [ActivityColumn.Target, ActivityColumn.Confirmation]
+          : [ActivityColumn.Target]
+      }
       targetLabel="Citizen"
       emptyMessage="Keine Aktivität vorhanden."
       nextCursor={nextCursor}
