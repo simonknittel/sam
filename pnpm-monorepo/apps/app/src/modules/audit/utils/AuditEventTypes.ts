@@ -1671,6 +1671,21 @@ export const AuditEventDefinitions: {
       `Deleted ${data.databaseCount} unused upload(s) and ${data.bucketCount} orphaned bucket object(s)`,
   },
 
+  [AuditEventType.UPLOAD_DELETED]: {
+    type: AuditEventType.UPLOAD_DELETED,
+    data: {
+      uploadId: "string",
+      fileName: "file.png",
+      mimeType: "image/png",
+      uploadedById: "string",
+      locations: ["Rollen-Icon: Aufklärer"],
+    },
+    message: (data) =>
+      `Deleted upload "${data.fileName}" (${data.mimeType}) of user ${data.uploadedById}, used at: ${
+        data.locations.length > 0 ? data.locations.join(", ") : "nowhere"
+      }`,
+  },
+
   [AuditEventType.EVENT_IMPORTED_FROM_DISCORD]: {
     type: AuditEventType.EVENT_IMPORTED_FROM_DISCORD,
     data: {

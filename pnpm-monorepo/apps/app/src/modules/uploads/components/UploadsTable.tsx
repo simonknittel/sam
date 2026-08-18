@@ -44,12 +44,22 @@ const COLUMNS: TableColumn[] = [
   },
 ];
 
-const AUTHOR_COLUMN: TableColumn = {
-  key: "createdBy",
-  label: "Hochgeladen von",
-  track: "150px",
-  minWidth: 150,
-};
+/** Only the manager scope has an author and something to act on. */
+const MANAGER_COLUMNS: TableColumn[] = [
+  {
+    key: "createdBy",
+    label: "Hochgeladen von",
+    track: "150px",
+    minWidth: 150,
+  },
+  {
+    key: "actions",
+    label: "Aktionen",
+    track: "130px",
+    minWidth: 130,
+    headerClassName: "sr-only",
+  },
+];
 
 const loadSearchParams = createCursorPaginationLoader(uploadFilterParsers);
 
@@ -90,7 +100,7 @@ export const UploadsTable = async ({ className, searchParams }: Props) => {
   return (
     <TableTile
       className={className}
-      columns={canManage ? [...COLUMNS, AUTHOR_COLUMN] : COLUMNS}
+      columns={canManage ? [...COLUMNS, ...MANAGER_COLUMNS] : COLUMNS}
       isEmpty={uploads.length === 0}
       emptyMessage={
         hasActiveFilters
@@ -108,7 +118,7 @@ export const UploadsTable = async ({ className, searchParams }: Props) => {
       }
     >
       {uploads.map((upload) => (
-        <UploadRow key={upload.id} upload={upload} showAuthor={canManage} />
+        <UploadRow key={upload.id} upload={upload} canManage={canManage} />
       ))}
     </TableTile>
   );

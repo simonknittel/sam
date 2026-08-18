@@ -5,6 +5,7 @@ import clsx from "clsx";
 import type { getUploads } from "../queries/getUploads";
 import { decodeUploadFileName } from "../utils/decodeUploadFileName";
 import { getUploadUsages } from "../utils/uploadUsage";
+import { DeleteUploadButton } from "./DeleteUploadButton";
 import { UploadLocations } from "./UploadLocations";
 import { UploadPreview } from "./UploadPreview";
 
@@ -14,13 +15,14 @@ type Upload = Awaited<ReturnType<typeof getUploads>>["uploads"][number];
 
 interface Props {
   readonly upload: Upload;
-  /** Renders the author column, which only the manager scope has. */
-  readonly showAuthor: boolean;
+  /** Renders the author and actions columns, which only managers have. */
+  readonly canManage: boolean;
 }
 
-export const UploadRow = ({ upload, showAuthor }: Props) => {
+export const UploadRow = ({ upload, canManage }: Props) => {
   const fileName = decodeUploadFileName(upload.fileName);
   const author = upload.createdBy.name ?? upload.createdBy.id;
+  const usages = getUploadUsages(upload);
 
   return (
     <TRow alignment={TableRowAlignment.Top} className="py-2">
@@ -48,15 +50,25 @@ export const UploadRow = ({ upload, showAuthor }: Props) => {
       <td>{formatDate(upload.createdAt)}</td>
 
       <td className="min-w-0">
-        <UploadLocations usages={getUploadUsages(upload)} />
+        <UploadLocations usages={usages} />
       </td>
 
-      {showAuthor && (
-        <td className="min-w-0">
-          <span className="block truncate" title={author}>
-            {author}
-          </span>
-        </td>
+      {canManage && (
+        <>
+          <td className="min-w-0">
+            <span className="block truncate" title={author}>
+              {author}
+            </span>
+          </td>
+
+          <td>
+            <DeleteUploadButton
+              uploadId={upload.id}
+              fileName={fileName}
+              usages={usages}
+            />
+          </td>
+        </>
       )}
     </TRow>
   );

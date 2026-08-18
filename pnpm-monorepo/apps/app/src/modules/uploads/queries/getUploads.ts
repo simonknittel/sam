@@ -23,7 +23,7 @@ const MAX_QUERY_LENGTH = 255;
  * The usage relations of an upload, resolved into the labels and ids the
  * location links need (see `getUploadUsages`).
  */
-const USAGE_SELECT = {
+export const USAGE_SELECT = {
   roleIcons: { select: { id: true, name: true } },
   roleThumbnails: { select: { id: true, name: true } },
   manufacturers: { select: { id: true, name: true } },

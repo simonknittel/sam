@@ -159,6 +159,7 @@ export enum AuditEventType {
   WEB_PUSH_SUBSCRIPTIONS_PRUNED = "WEB_PUSH_SUBSCRIPTIONS_PRUNED",
   CHANGELOG_ENTRIES_SEEN = "CHANGELOG_ENTRIES_SEEN",
   UNUSED_UPLOADS_DELETED = "UNUSED_UPLOADS_DELETED",
+  UPLOAD_DELETED = "UPLOAD_DELETED",
   EVENT_IMPORTED_FROM_DISCORD = "EVENT_IMPORTED_FROM_DISCORD",
   EVENT_UPDATED_FROM_DISCORD = "EVENT_UPDATED_FROM_DISCORD",
   EVENT_DELETED_FROM_DISCORD = "EVENT_DELETED_FROM_DISCORD",
@@ -1129,6 +1130,20 @@ export interface AuditEventDataByType {
   [AuditEventType.UNUSED_UPLOADS_DELETED]: {
     databaseCount: number;
     bucketCount: number;
+  };
+
+  [AuditEventType.UPLOAD_DELETED]: {
+    uploadId: string;
+    fileName: string;
+    mimeType: string;
+    /** Who uploaded the file, which is rarely who deleted it. */
+    uploadedById: string;
+    /**
+     * Where the upload was still embedded when it was deleted, as
+     * "<kind>: <name>". Empty when it was unused. Capped by the deleting
+     * action so one upload on many wiki pages can't bloat the entry.
+     */
+    locations: string[];
   };
 
   [AuditEventType.EVENT_IMPORTED_FROM_DISCORD]: {
