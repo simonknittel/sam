@@ -1,24 +1,27 @@
 import { CursorPaginationControls } from "@/modules/common/CursorPagination/CursorPaginationControls";
-import { cursorPaginationParsers } from "@/modules/common/CursorPagination/cursorPaginationParsers";
+import { createCursorPaginationLoader } from "@/modules/common/CursorPagination/createCursorPaginationLoader";
 import {
-  createLoader,
-  parseAsArrayOf,
-  parseAsString,
-  parseAsStringLiteral,
-  type SearchParams,
-} from "nuqs/server";
+  TableTile,
+  type TableColumn,
+} from "@/modules/common/components/TableTile";
+import { parseAsStringLiteral, type SearchParams } from "nuqs/server";
 import { getShipChanges } from "../queries/getShipChanges";
-import { ShipChangesTable } from "./ShipChangesTable";
+import { ShipChangeRow } from "./ShipChangeRow";
 
-const loadSearchParams = createLoader({
+const COLUMNS: TableColumn[] = [
+  { key: "date", label: "Datum", track: "160px", minWidth: 160 },
+  { key: "changeType", label: "Typ", track: "100px", minWidth: 100 },
+  { key: "variant", label: "Variant", track: "256px", minWidth: 256 },
+  { key: "ship", label: "Schiff", track: "1fr", minWidth: 120 },
+  { key: "actor", label: "Akteur", track: "1fr", minWidth: 120 },
+];
+
+const loadSearchParams = createCursorPaginationLoader({
   changeType: parseAsStringLiteral([
     "both",
     "creation",
     "deletion",
   ]).withDefault("both"),
-  variantIds: parseAsArrayOf(parseAsString),
-  actorId: parseAsString,
-  ...cursorPaginationParsers,
 });
 
 interface Props {
@@ -27,35 +30,34 @@ interface Props {
 }
 
 export const ShipChangesTile = async ({ className, searchParams }: Props) => {
-  const { changeType, variantIds, cursor, direction } =
+  const { changeType, cursor, direction } =
     await loadSearchParams(searchParams);
 
   const { changes, nextCursor, prevCursor } = await getShipChanges({
     changeType,
-    variantIds: variantIds?.length ? variantIds : [],
     cursor,
     direction,
   });
 
   return (
-    <section className={className}>
-      <div className="rounded-primary bg-neutral-800/50 p-4 overflow-x-auto">
-        {changes.length === 0 ? (
-          <div className="grid place-content-center">
-            <p className="text-white/90">Keine Änderungen gefunden</p>
-          </div>
-        ) : (
-          <>
-            <ShipChangesTable changes={changes} />
-
-            <CursorPaginationControls
-              nextCursor={nextCursor}
-              prevCursor={prevCursor}
-              className="mt-4"
-            />
-          </>
-        )}
-      </div>
-    </section>
+    <TableTile
+      className={className}
+      columns={COLUMNS}
+      isEmpty={changes.length === 0}
+      emptyMessage="Keine Änderungen gefunden"
+      footer={
+        <CursorPaginationControls
+          nextCursor={nextCursor}
+          prevCursor={prevCursor}
+        />
+      }
+    >
+      {changes.map((change, index) => (
+        <ShipChangeRow
+          key={`${change.ship.id}:${change.changeType}:${index}`}
+          change={change}
+        />
+      ))}
+    </TableTile>
   );
 };

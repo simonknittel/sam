@@ -34,12 +34,10 @@ export const getShipChanges = cache(
   withTrace(
     "getShipChanges",
     async ({
-      variantIds = [],
       changeType = "both",
       cursor,
       direction = CursorDirection.Next,
     }: {
-      variantIds?: string[];
       changeType?: "both" | "creation" | "deletion";
       cursor?: string | null;
       direction?: CursorDirection;
@@ -47,17 +45,12 @@ export const getShipChanges = cache(
       const authentication = await requireAuthentication();
       if (!(await authentication.authorize("otherShips", "read"))) forbidden();
 
-      const baseVariantWhere: Record<string, unknown> = {
-        ...(variantIds.length > 0 ? { id: { in: variantIds } } : {}),
-      };
-
       const [createdShips, deletedShips] = await Promise.all([
         changeType === "deletion"
           ? Promise.resolve([])
           : prisma.ship.findMany({
               where: {
                 deletedAt: null,
-                variant: baseVariantWhere,
               },
               include: {
                 variant: {
@@ -86,8 +79,6 @@ export const getShipChanges = cache(
           : prisma.ship.findMany({
               where: {
                 deletedAt: { not: null },
-
-                variant: baseVariantWhere,
               },
               include: {
                 variant: {
