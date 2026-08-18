@@ -1,8 +1,9 @@
 import { parseAsStringEnum } from "nuqs/server";
 
 /**
- * Expired sessions stay in the database until they are cleaned up, so the
- * list defaults to the ones that still grant access.
+ * Expired sessions stay in the database for another 30 days before the
+ * midnight automation deletes them, so the list defaults to the ones that
+ * still grant access.
  */
 export enum SessionStatus {
   Active = "active",
