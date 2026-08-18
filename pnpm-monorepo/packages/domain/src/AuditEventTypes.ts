@@ -10,6 +10,7 @@ export enum AuditEventType {
   USER_LOGIN_V2 = "USER_LOGIN_V2",
   USER_LOGOUT = "USER_LOGOUT",
   USER_SESSION_DELETED = "USER_SESSION_DELETED",
+  EXPIRED_AUTHENTICATION_RECORDS_PURGED = "EXPIRED_AUTHENTICATION_RECORDS_PURGED",
   USER_FIRST_VISIT_OF_THE_DAY = "USER_FIRST_VISIT_OF_THE_DAY",
   USER_FIRST_VISIT_OF_THE_DAY_V2 = "USER_FIRST_VISIT_OF_THE_DAY_V2",
   SHIP_CREATED = "SHIP_CREATED",
@@ -202,6 +203,12 @@ export interface AuditEventDataByType {
   [AuditEventType.USER_SESSION_DELETED]: {
     sessionId: string;
     userId: string;
+  };
+
+  [AuditEventType.EXPIRED_AUTHENTICATION_RECORDS_PURGED]: {
+    sessionCount: number;
+    verificationTokenCount: number;
+    emailConfirmationTokenCount: number;
   };
 
   [AuditEventType.USER_FIRST_VISIT_OF_THE_DAY]: {

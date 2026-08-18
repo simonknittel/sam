@@ -76,6 +76,17 @@ export const AuditEventDefinitions: {
       `User ${data.userId} deleted their session ${data.sessionId}`,
   },
 
+  [AuditEventType.EXPIRED_AUTHENTICATION_RECORDS_PURGED]: {
+    type: AuditEventType.EXPIRED_AUTHENTICATION_RECORDS_PURGED,
+    data: {
+      sessionCount: 0,
+      verificationTokenCount: 0,
+      emailConfirmationTokenCount: 0,
+    },
+    message: (data) =>
+      `Deleted ${data.sessionCount} expired session(s), ${data.verificationTokenCount} expired verification token(s) and ${data.emailConfirmationTokenCount} expired email confirmation token(s)`,
+  },
+
   [AuditEventType.USER_FIRST_VISIT_OF_THE_DAY]: {
     type: AuditEventType.USER_FIRST_VISIT_OF_THE_DAY,
     data: {
