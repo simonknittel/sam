@@ -91,7 +91,7 @@ export const deleteUnusedUploads = async () => {
          * `eventCovers`). The one deliberate omission is `wikiReports`:
          * report evidence is meant to expire with its upload, and the
          * report keeps the `uploadFileName` snapshot. The upload manager
-         * mirrors this list, see UPLOAD_USAGE_RELATIONS.
+         * mirrors this list, see `UploadUsageType` and `UNUSED_WHERE`.
          */
         where: {
           createdAt: { lt: cutoff },
