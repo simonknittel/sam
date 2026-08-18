@@ -5,6 +5,7 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
+import { decodeUploadFileName } from "@/modules/uploads/utils/decodeUploadFileName";
 import { z } from "zod";
 import {
   getWikiPageScopedContext,
@@ -20,19 +21,6 @@ const schema = z.object({
   uploadId: z.cuid().optional(),
   message: z.string().trim().min(1).max(2048),
 });
-
-/**
- * Upload.fileName is stored URI-encoded (see uploadWikiPageFile); the
- * report snapshots the display name. Malformed encodings fall back to the
- * stored value.
- */
-const decodeUploadFileName = (fileName: string): string => {
-  try {
-    return decodeURIComponent(fileName);
-  } catch {
-    return fileName;
-  }
-};
 
 export const createWikiPageReport = createAuthenticatedAction(
   "createWikiPageReport",
