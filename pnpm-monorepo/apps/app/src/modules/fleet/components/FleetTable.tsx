@@ -24,8 +24,7 @@ interface FleetRow {
   count: number;
 }
 
-const TABLE_MIN_WIDTH = "min-w-140";
-const GRID_COLS = "grid-cols-[256px_1fr_80px_80px]";
+const COLUMNS = "256px 1fr 80px 80px";
 
 interface Props {
   readonly className?: string;
@@ -34,8 +33,8 @@ interface Props {
 
 export const FleetTable = ({ className, fleet }: Props) => {
   return (
-    <Table className={className} tableClassName={TABLE_MIN_WIDTH}>
-      <THead className={GRID_COLS}>
+    <Table className={className} columns={COLUMNS} minWidth={560}>
+      <THead>
         <th>Schiff</th>
         <th>Tags</th>
         <th className="text-center">Status</th>
@@ -44,7 +43,7 @@ export const FleetTable = ({ className, fleet }: Props) => {
 
       <TBody>
         {fleet.map((row) => (
-          <TRow key={row.variant.id} className={GRID_COLS}>
+          <TRow key={row.variant.id}>
             <td className="overflow-hidden">
               <VariantWithLogo
                 variant={row.variant}

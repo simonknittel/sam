@@ -13,8 +13,7 @@ import {
 } from "../utils/sessionFilterParams";
 import { DeleteSessionButton } from "./DeleteSessionButton";
 
-const TABLE_MIN_WIDTH = "min-w-200";
-const GRID_CLASSES = "grid-cols-[256px_130px_150px_1fr_150px_130px]";
+const COLUMNS = "256px 130px 150px 1fr 150px 130px";
 const UNKNOWN = "Unbekannt";
 
 const loadSearchParams = createLoader({
@@ -47,9 +46,10 @@ export const SessionsTable = async ({ className, searchParams }: Props) => {
       ) : (
         <Table
           className="bg-secondary rounded-primary p-4"
-          tableClassName={TABLE_MIN_WIDTH}
+          columns={COLUMNS}
+          minWidth={800}
         >
-          <THead className={GRID_CLASSES}>
+          <THead>
             <th>Session-ID</th>
             <th>Status</th>
             <th>Erstellt</th>
@@ -81,7 +81,7 @@ const SessionRow = ({ session }: SessionRowProps) => {
   const userAgent = formatUserAgent(session.userAgent) ?? session.userAgent;
 
   return (
-    <TRow className={clsx("h-10", GRID_CLASSES)}>
+    <TRow className="h-10">
       <td className="overflow-hidden font-mono text-neutral-400">
         <span className="block truncate" title={session.id}>
           {session.id}

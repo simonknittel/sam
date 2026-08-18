@@ -11,7 +11,8 @@ export enum TileVariant {
 
 interface Props {
   readonly className?: string;
-  readonly heading: ReactNode;
+  /** Omitted on tiles whose page already names their content, e.g. the system log */
+  readonly heading?: ReactNode;
   readonly subheading?: ReactNode;
   readonly cta?: ReactNode;
   readonly children: ReactNode;
@@ -42,30 +43,34 @@ export const Tile = ({
         className,
       )}
     >
-      <div
-        className={clsx("flex justify-between items-center border-b", {
-          "border-white/5": variant === TileVariant.Default,
-          "border-red-500/30": variant === TileVariant.Danger,
-          "border-me/30": variant === TileVariant.Me,
-        })}
-      >
-        <div className="flex-1 p-4">
-          <h2
-            className={clsx("font-bold text-lg font-mono uppercase", {
-              "text-red-500": variant === TileVariant.Danger,
-              "text-me": variant === TileVariant.Me,
-            })}
-          >
-            {heading}
-          </h2>
+      {(heading || cta) && (
+        <div
+          className={clsx("flex justify-between items-center border-b", {
+            "border-white/5": variant === TileVariant.Default,
+            "border-red-500/30": variant === TileVariant.Danger,
+            "border-me/30": variant === TileVariant.Me,
+          })}
+        >
+          <div className="flex-1 p-4">
+            {heading && (
+              <h2
+                className={clsx("font-bold text-lg font-mono uppercase", {
+                  "text-red-500": variant === TileVariant.Danger,
+                  "text-me": variant === TileVariant.Me,
+                })}
+              >
+                {heading}
+              </h2>
+            )}
 
-          {subheading && (
-            <p className="mt-1 text-neutral-500 text-sm">{subheading}</p>
-          )}
+            {subheading && (
+              <p className="mt-1 text-neutral-500 text-sm">{subheading}</p>
+            )}
+          </div>
+
+          {cta && <div className="pr-4 flex-initial">{cta}</div>}
         </div>
-
-        {cta && <div className="pr-4 flex-initial">{cta}</div>}
-      </div>
+      )}
 
       <div className={clsx("p-4", childrenClassName)}>{children}</div>
     </section>

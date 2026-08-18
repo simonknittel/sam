@@ -11,11 +11,9 @@ type Row = PenaltyEntry & {
   createdBy: Entity;
 };
 
-const TABLE_MIN_WIDTH = "min-w-[624px]";
-const GRID_COLS_WITH_CITIZEN =
-  "grid-cols-[140px_64px_140px_140px_140px_minmax(300px,1fr)_32px]";
-const GRID_COLS_WITHOUT_CITIZEN =
-  "grid-cols-[64px_140px_140px_140px_minmax(300px,1fr)_32px]";
+const COLUMNS_WITH_CITIZEN =
+  "140px 64px 140px 140px 140px minmax(300px,1fr) 32px";
+const COLUMNS_WITHOUT_CITIZEN = "64px 140px 140px 140px minmax(300px,1fr) 32px";
 
 interface Props {
   readonly className?: string;
@@ -31,13 +29,14 @@ export const PenaltyEntriesTable = ({
   hideCitizenColumn,
 }: Props) => {
   return (
-    <Table className={className} tableClassName={TABLE_MIN_WIDTH}>
-      <THead
-        className={clsx({
-          [GRID_COLS_WITHOUT_CITIZEN]: hideCitizenColumn,
-          [GRID_COLS_WITH_CITIZEN]: !hideCitizenColumn,
-        })}
-      >
+    <Table
+      className={className}
+      columns={
+        hideCitizenColumn ? COLUMNS_WITHOUT_CITIZEN : COLUMNS_WITH_CITIZEN
+      }
+      minWidth={624}
+    >
+      <THead>
         {!hideCitizenColumn && <th>Citizen</th>}
         <th>Punkte</th>
         <th>Erstellt</th>
@@ -49,13 +48,7 @@ export const PenaltyEntriesTable = ({
 
       <TBody>
         {rows.map((entry) => (
-          <TRow
-            key={entry.id}
-            className={clsx({
-              [GRID_COLS_WITHOUT_CITIZEN]: hideCitizenColumn,
-              [GRID_COLS_WITH_CITIZEN]: !hideCitizenColumn,
-            })}
-          >
+          <TRow key={entry.id}>
             {!hideCitizenColumn && (
               <td className="overflow-hidden">
                 <CitizenPopover citizenId={entry.citizen.id}>

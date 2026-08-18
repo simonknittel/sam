@@ -18,8 +18,7 @@ import {
   systemLogVolumeParser,
 } from "../utils/systemLogFilterParams";
 
-const TABLE_MIN_WIDTH = "min-w-200";
-const GRID_CLASSES = "grid-cols-[150px_250px_150px_1fr]";
+const COLUMNS = "150px 250px 150px 1fr";
 
 const loadSearchParams = createLoader({
   type: parseAsArrayOf(parseAsString),
@@ -70,9 +69,10 @@ export const SystemLogTable = async ({ className, searchParams }: Props) => {
       ) : (
         <Table
           className="bg-secondary rounded-primary p-4"
-          tableClassName={TABLE_MIN_WIDTH}
+          columns={COLUMNS}
+          minWidth={800}
         >
-          <THead className={GRID_CLASSES}>
+          <THead>
             <th>Date</th>
             <th>Type</th>
             <th>User</th>
@@ -86,7 +86,7 @@ export const SystemLogTable = async ({ className, searchParams }: Props) => {
               const createdBy = event.createdBy?.name || event.createdBy?.id;
 
               return (
-                <TRow key={event.id} className={clsx("h-8", GRID_CLASSES)}>
+                <TRow key={event.id} className="h-8">
                   <td>{formatDate(event.createdAt)}</td>
 
                   <td

@@ -16,9 +16,7 @@ import {
 import { getWikiPageRouteHref } from "../utils/wikiPageHref";
 import { WikiPageIcon } from "./WikiPageIcon";
 
-const TABLE_MIN_WIDTH = "min-w-230";
-const GRID_COLS =
-  "grid-cols-[minmax(200px,_1fr)_200px_160px_160px_140px_110px]";
+const COLUMNS = "minmax(200px,1fr) 200px 160px 160px 140px 110px";
 
 const loadSearchParams = createLoader({
   status: parseAsStringLiteral(["open", "resolved", "all"]).withDefault("open"),
@@ -75,8 +73,8 @@ export const WikiReportsTable = async ({ className, searchParams }: Props) => {
 
   return (
     <section className={clsx("p-4 bg-secondary rounded-primary", className)}>
-      <Table tableClassName={TABLE_MIN_WIDTH}>
-        <THead className={GRID_COLS}>
+      <Table columns={COLUMNS} minWidth={920}>
+        <THead>
           <th>Grund</th>
 
           <th>Seite</th>
@@ -110,7 +108,7 @@ interface ReportRowProps {
 
 const ReportRow = ({ report }: ReportRowProps) => {
   return (
-    <TRow className={clsx("h-10", GRID_COLS)}>
+    <TRow className="h-10">
       <td className="overflow-hidden">
         <Link
           href={`/app/wiki/reports/${report.id}`}

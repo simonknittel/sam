@@ -1,10 +1,11 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
+import { CursorDirection } from "@/modules/common/CursorPagination/cursorPaginationParsers";
+import { getDateRangeFilter } from "@/modules/common/utils/getDateRangeFilter";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
 import { HIGH_VOLUME_AUDIT_EVENT_TYPES } from "../utils/AuditEventTypes";
-import { getSystemLogDateRange } from "../utils/systemLogDateRange";
 import { SystemLogVolume } from "../utils/systemLogFilterParams";
 
 const AUDIT_EVENTS_PAGE_SIZE = 50;
@@ -21,7 +22,7 @@ export const getAuditEvents = cache(
       type?: string[] | null,
       createdById?: string[] | null,
       cursor?: string | null,
-      direction: "next" | "prev" = "next",
+      direction: CursorDirection = CursorDirection.Next,
       volume: SystemLogVolume = SystemLogVolume.WithoutHighVolume,
       from?: string | null,
       to?: string | null,
@@ -29,7 +30,7 @@ export const getAuditEvents = cache(
       const authentication = await requireAuthentication();
       if (!(await authentication.authorize("systemLog", "read"))) forbidden();
 
-      const createdAt = getSystemLogDateRange(from, to);
+      const createdAt = getDateRangeFilter(from, to);
 
       /**
        * An explicit type filter always wins, so picking a high-volume type
@@ -48,7 +49,7 @@ export const getAuditEvents = cache(
       };
 
       const take =
-        direction === "prev"
+        direction === CursorDirection.Prev
           ? -(AUDIT_EVENTS_PAGE_SIZE + 1)
           : AUDIT_EVENTS_PAGE_SIZE + 1;
 
@@ -85,7 +86,7 @@ export const getAuditEvents = cache(
 
       let events;
       if (hasMore) {
-        if (direction === "prev") {
+        if (direction === CursorDirection.Prev) {
           events = rows.slice(1);
         } else {
           events = rows.slice(0, AUDIT_EVENTS_PAGE_SIZE);
@@ -94,8 +95,10 @@ export const getAuditEvents = cache(
         events = rows;
       }
 
-      const hasNextPage = direction === "next" ? hasMore : !!cursor;
-      const hasPrevPage = direction === "prev" ? hasMore : !!cursor;
+      const hasNextPage =
+        direction === CursorDirection.Next ? hasMore : !!cursor;
+      const hasPrevPage =
+        direction === CursorDirection.Prev ? hasMore : !!cursor;
 
       return {
         events,

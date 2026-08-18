@@ -5,8 +5,7 @@ import type { ShipChangeRow } from "@/modules/fleet/queries/getShipChanges";
 import { clsx } from "clsx";
 import { VariantWithLogo } from "./VariantWithLogo";
 
-const TABLE_MIN_WIDTH = "min-w-160";
-const GRID_COLS = "grid-cols-[160px_100px_256px_1fr_1fr]";
+const COLUMNS = "160px 100px 256px 1fr 1fr";
 
 interface Props {
   readonly className?: string;
@@ -15,8 +14,8 @@ interface Props {
 
 export const ShipChangesTable = ({ className, changes }: Props) => {
   return (
-    <Table className={className} tableClassName={TABLE_MIN_WIDTH}>
-      <THead className={GRID_COLS}>
+    <Table className={className} columns={COLUMNS} minWidth={640}>
+      <THead>
         <th>Datum</th>
         <th>Typ</th>
         <th>Variant</th>
@@ -26,10 +25,7 @@ export const ShipChangesTable = ({ className, changes }: Props) => {
 
       <TBody>
         {changes.map((change, index) => (
-          <TRow
-            key={`${change.ship.id}:${change.changeType}:${index}`}
-            className={GRID_COLS}
-          >
+          <TRow key={`${change.ship.id}:${change.changeType}:${index}`}>
             <td>{formatDate(change.changeDate)}</td>
 
             <td

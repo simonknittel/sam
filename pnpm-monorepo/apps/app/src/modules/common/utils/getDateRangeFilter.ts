@@ -24,15 +24,15 @@ const startOfDayInDisplayZone = (value?: string | null) => {
 };
 
 /**
- * Turns the `YYYY-MM-DD` bounds of the date filter into the instants they
- * name in the zone the log is read in. Picking a day has to cover that whole
- * day as it appears in the table, so `to` resolves to the start of the
- * following day and is compared exclusively.
+ * Turns the `YYYY-MM-DD` bounds of a date filter into the instants they name
+ * in the zone the table is read in. Picking a day has to cover that whole day
+ * as it appears in the table, so `to` resolves to the start of the following
+ * day and is compared exclusively.
  *
  * A missing or malformed bound is dropped rather than throwing: these come
  * from the URL and are trivially editable.
  */
-export const getSystemLogDateRange = (
+export const getDateRangeFilter = (
   from?: string | null,
   to?: string | null,
 ) => {

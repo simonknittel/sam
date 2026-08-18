@@ -11,13 +11,13 @@ import { BanUser } from "@/modules/users/components/BanUser";
 import { UnbanUser } from "@/modules/users/components/UnbanUser";
 import { VerifyEmailButton } from "@/modules/users/components/VerifyEmailButton";
 import { type Entity, type User } from "@sam-monorepo/database/browser";
-import clsx from "clsx";
 import { FaExternalLinkAlt } from "react-icons/fa";
 import { FaCircleXmark } from "react-icons/fa6";
 
-const TABLE_MIN_WIDTH = "min-w-200";
-const GRID_COLS =
-  "grid-cols-[240px_240px_150px_200px_150px_150px_24px] sm:grid-cols-[240px_240px_150px_200px_150px_150px_110px]";
+const COLUMNS = "240px 240px 150px 200px 150px 150px 24px";
+/** The actions column only fits its labels from `sm` upwards */
+const SM_COLUMNS =
+  "sm:[--table-columns:240px_240px_150px_200px_150px_150px_110px]";
 
 interface Props {
   readonly className?: string;
@@ -39,8 +39,13 @@ export const UsersTable = ({
   ownUserId,
 }: Props) => {
   return (
-    <Table className={className} tableClassName={TABLE_MIN_WIDTH}>
-      <THead className={GRID_COLS}>
+    <Table
+      className={className}
+      columns={COLUMNS}
+      tableClassName={SM_COLUMNS}
+      minWidth={800}
+    >
+      <THead>
         <th>Discord ID</th>
         <th>User ID</th>
         <th>Registriert am</th>
@@ -54,7 +59,7 @@ export const UsersTable = ({
 
       <TBody>
         {users.map(({ user, discordId, entity }) => (
-          <TRow key={user.id} className={clsx("h-14", GRID_COLS)}>
+          <TRow key={user.id} className="h-14">
             <td className="overflow-hidden">
               <div className="flex gap-2 items-center">
                 <Avatar

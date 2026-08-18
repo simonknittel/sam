@@ -11,8 +11,7 @@ import { getWikiPageRouteHref } from "../utils/wikiPageHref";
 import { WikiPageIcon } from "./WikiPageIcon";
 import { WikiSnapshotRestoreButton } from "./WikiSnapshotRestoreButton";
 
-const TABLE_MIN_WIDTH = "min-w-190";
-const GRID_COLS = "grid-cols-[minmax(200px,_1fr)_120px_160px_160px_180px]";
+const COLUMNS = "minmax(200px,1fr) 120px 160px 160px 180px";
 
 interface Props {
   readonly className?: string;
@@ -68,8 +67,8 @@ export const WikiSnapshotsTable = async ({
         dauerhafte Sicherung festgehalten.
       </p>
 
-      <Table tableClassName={TABLE_MIN_WIDTH}>
-        <THead className={GRID_COLS}>
+      <Table columns={COLUMNS} minWidth={760}>
+        <THead>
           <th>Name</th>
 
           <th>Typ</th>
@@ -117,7 +116,7 @@ const SnapshotRow = ({ snapshot, canRestore }: SnapshotRowProps) => {
   const name = snapshot.name || "Automatischer Snapshot";
 
   return (
-    <TRow className={clsx("h-10", GRID_COLS)}>
+    <TRow className="h-10">
       <td className="overflow-hidden">
         <p className="truncate px-2" title={name}>
           {name}

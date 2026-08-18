@@ -25,8 +25,7 @@ export interface VariantShipRow {
   };
 }
 
-const TABLE_MIN_WIDTH = "min-w-140";
-const GRID_COLS = "grid-cols-[160px_256px]";
+const COLUMNS = "160px 256px";
 
 interface Props {
   readonly className?: string;
@@ -35,15 +34,15 @@ interface Props {
 
 export const VariantShipsTable = ({ className, ships }: Props) => {
   return (
-    <Table className={className} tableClassName={TABLE_MIN_WIDTH}>
-      <THead className={GRID_COLS}>
+    <Table className={className} columns={COLUMNS} minWidth={560}>
+      <THead>
         <th>Citizen</th>
         <th>Name</th>
       </THead>
 
       <TBody>
         {ships.map((ship) => (
-          <TRow key={ship.id} className={GRID_COLS}>
+          <TRow key={ship.id}>
             <td className="overflow-hidden">
               {ship.citizenId && (
                 <CitizenLink

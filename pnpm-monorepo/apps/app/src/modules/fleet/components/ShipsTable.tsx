@@ -31,10 +31,8 @@ interface ShipsTableRow {
   };
 }
 
-const TABLE_MIN_WIDTH = "min-w-140";
-const EDITABLE_GRID_COLS =
-  "grid-cols-[256px_256px_minmax(256px,1fr)_80px_80px]";
-const READONLY_GRID_COLS = "grid-cols-[256px_256px_minmax(256px,1fr)_80px]";
+const EDITABLE_COLUMNS = "256px 256px minmax(256px,1fr) 80px 80px";
+const READONLY_COLUMNS = "256px 256px minmax(256px,1fr) 80px";
 
 interface Props {
   readonly className?: string;
@@ -44,11 +42,11 @@ interface Props {
 }
 
 export const ShipsTable = ({ className, ships, editable = false }: Props) => {
-  const gridCols = editable ? EDITABLE_GRID_COLS : READONLY_GRID_COLS;
+  const columns = editable ? EDITABLE_COLUMNS : READONLY_COLUMNS;
 
   return (
-    <Table className={className} tableClassName={TABLE_MIN_WIDTH}>
-      <THead className={gridCols}>
+    <Table className={className} columns={columns} minWidth={560}>
+      <THead>
         <th>Schiff</th>
         <th>Name</th>
         <th>Tags</th>
@@ -58,7 +56,7 @@ export const ShipsTable = ({ className, ships, editable = false }: Props) => {
 
       <TBody>
         {ships.map((ship) => (
-          <TRow key={ship.id} className={gridCols}>
+          <TRow key={ship.id}>
             <td className="overflow-hidden">
               <VariantWithLogo
                 variant={ship.variant}

@@ -1,5 +1,6 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
+import { CursorDirection } from "@/modules/common/CursorPagination/cursorPaginationParsers";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import {
   type Manufacturer,
@@ -36,12 +37,12 @@ export const getShipChanges = cache(
       variantIds = [],
       changeType = "both",
       cursor,
-      direction = "next",
+      direction = CursorDirection.Next,
     }: {
       variantIds?: string[];
       changeType?: "both" | "creation" | "deletion";
       cursor?: string | null;
-      direction?: "next" | "prev";
+      direction?: CursorDirection;
     } = {}) => {
       const authentication = await requireAuthentication();
       if (!(await authentication.authorize("otherShips", "read"))) forbidden();
@@ -143,7 +144,7 @@ export const getShipChanges = cache(
 
       if (!cursor) {
         pageItems = sorted.slice(0, SHIP_CHANGES_PAGE_SIZE + 1);
-      } else if (direction === "next") {
+      } else if (direction === CursorDirection.Next) {
         const fromIndex = cursorIndex !== -1 ? cursorIndex + 1 : 0;
         pageItems = sorted.slice(
           fromIndex,
@@ -160,15 +161,17 @@ export const getShipChanges = cache(
       let items: ShipChangeRow[];
       if (hasMore) {
         items =
-          direction === "next"
+          direction === CursorDirection.Next
             ? pageItems.slice(0, SHIP_CHANGES_PAGE_SIZE)
             : pageItems.slice(1);
       } else {
         items = pageItems;
       }
 
-      const hasNextPage = direction === "next" ? hasMore : !!cursor;
-      const hasPrevPage = direction === "prev" ? hasMore : !!cursor;
+      const hasNextPage =
+        direction === CursorDirection.Next ? hasMore : !!cursor;
+      const hasPrevPage =
+        direction === CursorDirection.Prev ? hasMore : !!cursor;
 
       return {
         changes: items,

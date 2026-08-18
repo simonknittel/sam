@@ -16,8 +16,7 @@ import {
 import { WikiPageIcon } from "./WikiPageIcon";
 import { WikiTrashActions } from "./WikiTrashActions";
 
-const TABLE_MIN_WIDTH = "min-w-160";
-const GRID_COLS = "grid-cols-[minmax(200px,_1fr)_140px_300px]";
+const COLUMNS = "minmax(200px,1fr) 140px 300px";
 
 const loadSearchParams = createLoader({
   sort: parseAsStringLiteral(["deleted-desc", "deleted-asc"]).withDefault(
@@ -87,8 +86,8 @@ export const WikiTrashTable = async ({
         Gelöschte Seiten werden nach 30 Tagen endgültig entfernt.
       </p>
 
-      <Table tableClassName={TABLE_MIN_WIDTH}>
-        <THead className={GRID_COLS}>
+      <Table columns={COLUMNS} minWidth={640}>
+        <THead>
           <th>Seite</th>
 
           <th>Gelöscht am</th>
@@ -117,7 +116,7 @@ interface TrashRowProps {
 
 const TrashRow = ({ page, canRestore }: TrashRowProps) => {
   return (
-    <TRow className={clsx("h-10", GRID_COLS)}>
+    <TRow className="h-10">
       <td className="overflow-hidden">
         <p
           className="flex items-center gap-2 px-2 font-bold"

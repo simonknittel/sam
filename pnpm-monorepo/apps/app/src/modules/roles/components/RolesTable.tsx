@@ -15,9 +15,7 @@ import {
 } from "nuqs/server";
 import { getRoles } from "../queries/getRoles";
 
-const TABLE_MIN_WIDTH = "min-w-210";
-const GRID_COLS =
-  "grid-cols-[300px_minmax(200px,_1fr)_128px_128px_128px_80px_80px]";
+const COLUMNS = "300px minmax(200px,1fr) 128px 128px 128px 80px 80px";
 
 const loadSearchParams = createLoader({
   filter: parseAsStringLiteral([
@@ -93,8 +91,8 @@ export const RolesTable = async ({ className, searchParams }: Props) => {
 
   return (
     <section className={clsx("p-4 bg-secondary rounded-primary", className)}>
-      <Table tableClassName={TABLE_MIN_WIDTH}>
-        <THead className={GRID_COLS}>
+      <Table columns={COLUMNS} minWidth={840}>
+        <THead>
           <th>Rolle</th>
 
           <th>Beschreibung</th>
@@ -120,7 +118,7 @@ export const RolesTable = async ({ className, searchParams }: Props) => {
 
         <TBody>
           {sortedRoles.map((role) => (
-            <TRow key={role.id} className={clsx("h-10", GRID_COLS)}>
+            <TRow key={role.id} className="h-10">
               <td className="overflow-hidden">
                 <Link
                   href={`/app/roles/${role.id}`}

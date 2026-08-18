@@ -5,7 +5,6 @@ import clsx from "clsx";
 import { memo } from "react";
 import { PATTERNS, type IEntry } from "../utils/PATTERNS";
 import styles from "./Entry.module.css";
-import { GRID_COLS } from "./LogAnalyzerTable";
 
 interface Props {
   readonly entry: IEntry;
@@ -20,10 +19,7 @@ export const Entry = memo(
 
     return (
       <TRow
-        className={clsx(
-          { [styles.Row]: entry.isNew, relative: entry.isNew },
-          GRID_COLS,
-        )}
+        className={clsx({ [styles.Row]: entry.isNew, relative: entry.isNew })}
       >
         <td>
           {showRelativeDate ? (

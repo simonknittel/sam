@@ -6,7 +6,10 @@ import { useTopLoader } from "nextjs-toploader";
 import { useQueryStates } from "nuqs";
 import { useEffect, useTransition } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
-import { cursorPaginationParsers } from "./cursorPaginationParsers";
+import {
+  CursorDirection,
+  cursorPaginationParsers,
+} from "./cursorPaginationParsers";
 
 interface Props {
   readonly className?: string;
@@ -46,7 +49,7 @@ export const CursorPaginationControls = ({
         onClick={() =>
           void setPagination({
             cursor: prevCursor,
-            direction: "prev",
+            direction: CursorDirection.Prev,
           })
         }
       >
@@ -61,7 +64,7 @@ export const CursorPaginationControls = ({
         onClick={() =>
           void setPagination({
             cursor: nextCursor,
-            direction: "next",
+            direction: CursorDirection.Next,
           })
         }
       >

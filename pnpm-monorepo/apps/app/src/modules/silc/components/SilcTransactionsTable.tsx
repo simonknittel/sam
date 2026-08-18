@@ -15,8 +15,7 @@ type Row = SilcTransaction & {
   updatedBy: Pick<Entity, "id" | "handle"> | null;
 };
 
-const TABLE_MIN_WIDTH = "min-w-200";
-const GRID_COLS = "grid-cols-[144px_160px_88px_minmax(100px,1fr)_160px_64px]";
+const COLUMNS = "144px 160px 88px minmax(100px,1fr) 160px 64px";
 
 interface Props {
   readonly className?: string;
@@ -32,8 +31,8 @@ export const SilcTransactionsTable = ({
   showDelete,
 }: Props) => {
   return (
-    <Table className={className} tableClassName={TABLE_MIN_WIDTH}>
-      <THead className={GRID_COLS}>
+    <Table className={className} columns={COLUMNS} minWidth={800}>
+      <THead>
         <th>Datum</th>
         <th>Empfänger</th>
         <th>Wert</th>
@@ -47,7 +46,7 @@ export const SilcTransactionsTable = ({
           const citizen = transaction.updatedBy || transaction.createdBy;
 
           return (
-            <TRow key={transaction.id} className={GRID_COLS}>
+            <TRow key={transaction.id}>
               <td>{formatDate(transaction.createdAt)}</td>
 
               <td className="overflow-hidden flex items-center h-8">
