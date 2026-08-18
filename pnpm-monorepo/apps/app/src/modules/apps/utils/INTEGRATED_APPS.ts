@@ -26,6 +26,7 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
     href: "/app/account",
     imageSrc: accountScreenshot,
     description: "Einstellungen zu deinem Account",
+    tags: ["System"],
   },
   {
     name: "Avatar Creator",
@@ -41,6 +42,7 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
     href: "/app/changelog",
     imageSrc: changelogScreenshot,
     description: "Übersicht der letzten Änderungen im SAM",
+    tags: ["System"],
   },
   {
     name: "Cornerstone Image Browser",
@@ -111,6 +113,7 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
     imageSrc: iamScreenshot,
     description: "Übersicht und Verwaltung der Rollen und Benutzer.",
     permissionStrings: ["role;manage", "user;read"],
+    tags: ["System"],
   },
   {
     name: "Karriere",
@@ -152,6 +155,7 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
     href: "/app/statistics",
     description: "Diverse Statistiken zur Nutzung vom SAM",
     permissionStrings: ["globalStatistics;read"],
+    tags: ["System"],
   },
   {
     name: "Spynet",
@@ -176,6 +180,7 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
     href: "/app/system-log",
     description: "Systemprotokoll aller Ereignisse",
     permissionStrings: ["systemLog;read"],
+    tags: ["System"],
   },
   {
     name: "Tasks",
@@ -200,6 +205,7 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
     href: "/app/uploads",
     description:
       "Übersicht der von dir hochgeladenen Dateien und wo sie verwendet werden",
+    tags: ["System"],
   },
   {
     name: "Wiki",
