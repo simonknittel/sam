@@ -20,20 +20,10 @@ import {
   type Prisma,
 } from "@sam-monorepo/database/client";
 import { z } from "zod";
-
-export enum EventActivitySourceKey {
-  Activity = "event-activity",
-  Schedule = "event-schedule",
-}
-
-/**
- * The event's start and end are not stored as activity — they are read off
- * the event itself, which is why they filter like a source of their own.
- */
-export enum EventScheduleEntry {
-  Start = "start",
-  End = "end",
-}
+import {
+  EventActivitySourceKey,
+  EventScheduleEntry,
+} from "./eventActivityTypes";
 
 const titleUpdatedPayloadSchema = z.object({
   previousName: z.string(),

@@ -18,12 +18,7 @@ import {
 } from "@sam-monorepo/database/client";
 import { ConfirmMembership } from "../components/ConfirmMembership";
 import { OrganizationLink } from "../components/OrganizationLink";
-
-export enum OrganizationActivitySourceKey {
-  Created = "organization-created",
-  Renamed = "organization-renamed",
-  Membership = "organization-membership",
-}
+import { OrganizationActivitySourceKey } from "./organizationActivityTypes";
 
 interface Input {
   /** Restricts the source to one organization's history. */

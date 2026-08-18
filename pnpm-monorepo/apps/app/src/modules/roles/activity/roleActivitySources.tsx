@@ -16,11 +16,7 @@ import {
 } from "@sam-monorepo/database/client";
 import { SingleRoleBadge } from "../components/SingleRoleBadge";
 import { getVisibleRoles } from "../utils/getRoles";
-
-export enum RoleActivitySourceKey {
-  Assignment = "role-assignment",
-  AssignmentLevel = "role-assignment-level",
-}
+import { RoleActivitySourceKey } from "./roleActivityTypes";
 
 interface Input {
   /** Restricts the source to one citizen's history. */
