@@ -46,6 +46,31 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-08-18-uploads",
+    date: "2026-08-18",
+    title: "Eigene Uploads einsehen",
+    tags: ["Neu"],
+    isTracked: false,
+    body: () => (
+      <p>
+        Die neue App{" "}
+        <Link
+          href="/app/uploads"
+          className="text-interaction-500 hover:underline focus-visible:underline"
+        >
+          Uploads
+        </Link>{" "}
+        listet alle Dateien auf, die du irgendwo im SAM hochgeladen hast &ndash;
+        Rollenbilder, Herstellerbilder, Event-Titelbilder sowie Wiki-Icons,
+        -Bilder und -Anhänge. Jeder Eintrag verlinkt die Stelle, an der die
+        Datei eingebunden ist; Dateien, die nirgendwo mehr verwendet werden,
+        sind als &bdquo;Unbenutzt&ldquo; markiert und werden bei der nächtlichen
+        Bereinigung gelöscht.
+      </p>
+    ),
+  },
+
+  {
     key: "2026-08-17-sitzungen",
     date: "2026-08-17",
     title: "Angemeldete Geräte einsehen und abmelden",

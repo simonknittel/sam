@@ -1,5 +1,6 @@
 import { TRow, TableRowAlignment } from "@/modules/common/components/Table";
 import { formatDate } from "@/modules/common/utils/formatDate";
+import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
 import { formatWikiAttachmentSize } from "@sam-monorepo/wiki-editor";
 import clsx from "clsx";
 import type { getUploads } from "../queries/getUploads";
@@ -31,9 +32,20 @@ export const UploadRow = ({ upload, canManage }: Props) => {
       </td>
 
       <td className="min-w-0">
-        <span className="block truncate" title={fileName}>
+        {/*
+          Straight to the object in the bucket, which is publicly readable —
+          not through the app. A new tab because most of these render inline
+          and would otherwise replace the table.
+        */}
+        <a
+          href={getPublicUploadUrl(upload.id)}
+          target="_blank"
+          rel="noreferrer"
+          title={fileName}
+          className="block truncate text-interaction-500 hover:underline focus-visible:underline active:text-interaction-300"
+        >
           {fileName}
-        </span>
+        </a>
 
         <span
           className="block truncate font-mono text-xs text-neutral-500"
