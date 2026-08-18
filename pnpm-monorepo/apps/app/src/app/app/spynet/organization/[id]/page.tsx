@@ -8,6 +8,7 @@ import { ActivityTile } from "@/modules/organizations/components/ActivityTile";
 import { MembershipsTile } from "@/modules/organizations/components/MembershipsTile";
 import { OverviewTile } from "@/modules/organizations/components/OverviewTile";
 import { notFound } from "next/navigation";
+import type { SearchParams } from "nuqs/server";
 import { cache } from "react";
 
 const getOrganization = cache(async (id: string) => {
@@ -40,6 +41,7 @@ export const generateMetadata = generateMetadataWithTryCatch(
 
 interface Props {
   readonly params: Params;
+  readonly searchParams: Promise<SearchParams>;
 }
 
 export default async function Page(props: Props) {
@@ -89,7 +91,11 @@ export default async function Page(props: Props) {
         </div>
 
         <SuspenseWithErrorBoundaryTile className="flex-1">
-          <ActivityTile className="flex-1 3xl:self-start" id={params.id} />
+          <ActivityTile
+            className="flex-1 3xl:self-start"
+            id={params.id}
+            searchParams={props.searchParams}
+          />
         </SuspenseWithErrorBoundaryTile>
       </div>
     </MaxWidthContent>
