@@ -1,66 +1,45 @@
-import { prisma } from "@/db";
-import { Tile } from "@/modules/common/components/Tile";
-import { formatDate } from "@/modules/common/utils/formatDate";
-import { mapOrganizationMembershipHistoryEntries } from "@/modules/spynet/components/ActivityTile/mapOrganizationMembershipHistoryEntries";
-import { ConfirmationStatus } from "@sam-monorepo/database/client";
-import clsx from "clsx";
+import { ActivityTable } from "@/modules/activity/components/ActivityTable";
+import {
+  ACTIVITY_PAGE_SIZE,
+  ActivityColumn,
+} from "@/modules/activity/utils/activityEntry";
+import { createCursorPaginationLoader } from "@/modules/common/CursorPagination/createCursorPaginationLoader";
+import { paginateMergedSources } from "@/modules/common/CursorPagination/mergedCursor";
+import { createOrganizationMembershipSource } from "@/modules/organizations/activity/organizationActivitySources";
+import type { Entity } from "@sam-monorepo/database/client";
+import type { SearchParams } from "nuqs/server";
+
+const loadSearchParams = createCursorPaginationLoader({});
 
 interface Props {
   readonly className?: string;
-  readonly id: string;
+  readonly id: Entity["id"];
+  readonly searchParams: Promise<SearchParams>;
 }
 
 export const OrganizationMembershipHistory = async ({
   className,
   id,
+  searchParams,
 }: Props) => {
-  const result = await prisma.organizationMembershipHistoryEntry.findMany({
-    orderBy: [
-      {
-        confirmedAt: "desc",
-      },
-      {
-        createdAt: "desc",
-      },
-    ],
-    where: {
-      confirmed: ConfirmationStatus.CONFIRMED,
-      citizenId: id,
-    },
-    take: 15,
-    include: {
-      organization: true,
-      citizen: true,
-    },
+  const { cursor, direction } = await loadSearchParams(searchParams);
+
+  const { entries, nextCursor, prevCursor } = await paginateMergedSources({
+    sources: [createOrganizationMembershipSource({ citizenId: id })],
+    pageSize: ACTIVITY_PAGE_SIZE,
+    cursor,
+    direction,
   });
 
-  const entries = await mapOrganizationMembershipHistoryEntries(result);
-
-  const sortedEntries = entries.toSorted(
-    (a, b) => b.date.getTime() - a.date.getTime(),
-  );
-
   return (
-    <Tile heading="Verlauf" className={clsx(className)}>
-      {sortedEntries.length > 0 ? (
-        <ul className="flex flex-col gap-8">
-          {sortedEntries.map((entry) => (
-            <li key={entry.key}>
-              <div className="text-sm flex gap-2 border-b pb-2 mb-2 items-center border-neutral-800/50 flex-wrap text-neutral-500">
-                <p>
-                  <time dateTime={entry.date.toISOString()}>
-                    {formatDate(entry.date)}
-                  </time>
-                </p>
-              </div>
-
-              <div>{entry.message}</div>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="text-neutral-500">Keine Aktivität vorhanden</p>
-      )}
-    </Tile>
+    <ActivityTable
+      className={className}
+      heading="Verlauf"
+      entries={entries}
+      columns={[ActivityColumn.Actor]}
+      emptyMessage="Keine Aktivität vorhanden."
+      nextCursor={nextCursor}
+      prevCursor={prevCursor}
+    />
   );
 };

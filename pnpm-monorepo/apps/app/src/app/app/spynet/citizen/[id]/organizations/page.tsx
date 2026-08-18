@@ -25,6 +25,7 @@ export const generateMetadata = generateMetadataWithTryCatch(
 
 export default async function Page({
   params,
+  searchParams,
 }: PageProps<"/app/spynet/citizen/[id]/organizations">) {
   const authentication = await requireAuthenticationPage(
     "/app/spynet/citizen/[id]/organizations",
@@ -41,7 +42,10 @@ export default async function Page({
       </SuspenseWithErrorBoundaryTile>
 
       <SuspenseWithErrorBoundaryTile>
-        <OrganizationMembershipHistory id={entity.id} />
+        <OrganizationMembershipHistory
+          id={entity.id}
+          searchParams={searchParams}
+        />
       </SuspenseWithErrorBoundaryTile>
     </div>
   );
