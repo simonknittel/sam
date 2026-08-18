@@ -20,11 +20,8 @@ const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 const dateParam = (date: Date) => date.toISOString().slice(0, 10);
 
-/**
- * Reading role history needs both the unscoped permission gating the source
- * and a per-role one, since only roles the reader may see contribute rows.
- */
-const ROLE_HISTORY_PERMISSIONS = ["otherRole;read", "otherRole;read;roleId=*"];
+/** Only roles the reader may see contribute role history rows */
+const ROLE_HISTORY_PERMISSIONS = ["otherRole;read;roleId=*"];
 
 test("the spynet activity table paginates and filters", async ({
   page,
@@ -136,7 +133,7 @@ test("the spynet activity table paginates and filters", async ({
   await expect(page.locator("tbody tr").first()).toContainText("Rolle");
 });
 
-test("the citizen's role history needs the role read permission", async ({
+test("the citizen's role history only shows for readable roles", async ({
   page,
   prisma,
   signIn,
@@ -149,7 +146,7 @@ test("the citizen's role history needs the role read permission", async ({
   });
   const outsider = await createCitizen(prisma, {
     handle: "ohne-rollenrecht",
-    permissionStrings: ["citizen;read", "otherRole;read;roleId=*"],
+    permissionStrings: ["citizen;read"],
   });
 
   await prisma.roleAssignmentChange.create({

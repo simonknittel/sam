@@ -73,16 +73,31 @@ export const TBody = ({ className, children }: TBodyProps) => {
   return <tbody className={clsx(className)}>{children}</tbody>;
 };
 
+export enum TableRowAlignment {
+  Center = "center",
+  /** For tables whose rows differ in height, e.g. because a cell wraps */
+  Top = "top",
+}
+
 interface TRowProps {
   readonly className?: string;
+  readonly alignment?: TableRowAlignment;
   readonly children: ReactNode;
 }
 
-export const TRow = ({ className, children }: TRowProps) => {
+export const TRow = ({
+  className,
+  alignment = TableRowAlignment.Center,
+  children,
+}: TRowProps) => {
   return (
     <tr
       className={clsx(
-        "grid grid-cols-(--table-columns) items-center gap-2 border-t border-white/5 py-1 hover:bg-white/5",
+        "grid grid-cols-(--table-columns) gap-2 border-t border-white/5 py-1 hover:bg-white/5",
+        {
+          "items-center": alignment === TableRowAlignment.Center,
+          "items-start": alignment === TableRowAlignment.Top,
+        },
         className,
       )}
     >

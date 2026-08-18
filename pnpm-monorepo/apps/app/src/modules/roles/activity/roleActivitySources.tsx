@@ -1,7 +1,6 @@
 import { prisma } from "@/db";
 import type { ActivitySource } from "@/modules/activity/utils/activityEntry";
 import type { ActivityFilters } from "@/modules/activity/utils/activityFilterParams";
-import { requireAuthentication } from "@/modules/auth/server";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import {
   buildCursorConditions,
@@ -46,36 +45,39 @@ const CHANGE_SELECT = {
 } as const;
 
 /**
- * The conditions both role sources share. The visible-roles check runs as
- * part of the query rather than afterwards so a page never comes back short
- * of entries just because the reader may not see some roles.
+ * The conditions both role sources share. Which roles the reader may see is
+ * the whole permission gate here, and it runs as part of the query rather
+ * than afterwards so a page never comes back short of entries.
  */
-const buildWhere = async ({ citizenId, filters }: Input) => {
-  const visibleRoles = await getVisibleRoles();
+const buildWhere = (
+  visibleRoleIds: string[],
+  { citizenId, filters }: Input,
+) => ({
+  roleId: { in: visibleRoleIds },
+  ...(citizenId ? { citizenId } : {}),
+  ...(filters?.actorIds ? { createdById: { in: filters.actorIds } } : {}),
+  ...(filters && Object.keys(filters.createdAt).length > 0
+    ? { createdAt: filters.createdAt }
+    : {}),
+});
 
-  return {
-    roleId: { in: visibleRoles.map((role) => role.id) },
-    ...(citizenId ? { citizenId } : {}),
-    ...(filters?.actorIds ? { createdById: { in: filters.actorIds } } : {}),
-    ...(filters && Object.keys(filters.createdAt).length > 0
-      ? { createdAt: filters.createdAt }
-      : {}),
-  };
+/** `null` when the reader may not see a single role — nothing to query then. */
+const getVisibleRoleIds = async () => {
+  const visibleRoles = await getVisibleRoles();
+  return visibleRoles.length > 0 ? visibleRoles.map((role) => role.id) : null;
 };
 
 export const createRoleAssignmentSource = (input: Input = {}): ActivitySource =>
   withTrace(
     "roleAssignmentActivitySource",
     async ({ position, direction, take }: MergedCursorSourceInput) => {
-      const authentication = await requireAuthentication();
-      if (!(await authentication.authorize("otherRole", "read"))) return [];
-
-      const where = await buildWhere(input);
+      const visibleRoleIds = await getVisibleRoleIds();
+      if (!visibleRoleIds) return [];
 
       const changes = await prisma.roleAssignmentChange.findMany({
         where: {
           AND: [
-            where,
+            buildWhere(visibleRoleIds, input),
             ...buildCursorConditions(
               position,
               RoleActivitySourceKey.Assignment,
@@ -107,15 +109,13 @@ export const createRoleAssignmentLevelSource = (
   withTrace(
     "roleAssignmentLevelActivitySource",
     async ({ position, direction, take }: MergedCursorSourceInput) => {
-      const authentication = await requireAuthentication();
-      if (!(await authentication.authorize("otherRole", "read"))) return [];
-
-      const where = await buildWhere(input);
+      const visibleRoleIds = await getVisibleRoleIds();
+      if (!visibleRoleIds) return [];
 
       const changes = await prisma.roleAssignmentLevelChange.findMany({
         where: {
           AND: [
-            where,
+            buildWhere(visibleRoleIds, input),
             ...buildCursorConditions(
               position,
               RoleActivitySourceKey.AssignmentLevel,

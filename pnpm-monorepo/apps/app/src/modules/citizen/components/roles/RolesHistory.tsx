@@ -3,13 +3,13 @@ import {
   ACTIVITY_PAGE_SIZE,
   ActivityColumn,
 } from "@/modules/activity/utils/activityEntry";
-import { requireAuthentication } from "@/modules/auth/server";
 import { createCursorPaginationLoader } from "@/modules/common/CursorPagination/createCursorPaginationLoader";
 import { paginateMergedSources } from "@/modules/common/CursorPagination/mergedCursor";
 import {
   createRoleAssignmentLevelSource,
   createRoleAssignmentSource,
 } from "@/modules/roles/activity/roleActivitySources";
+import { getVisibleRoles } from "@/modules/roles/utils/getRoles";
 import { type Entity } from "@sam-monorepo/database/client";
 import type { SearchParams } from "nuqs/server";
 
@@ -26,8 +26,9 @@ export const RolesHistory = async ({
   entity,
   searchParams,
 }: Props) => {
-  const authentication = await requireAuthentication();
-  if (!(await authentication.authorize("otherRole", "read"))) return null;
+  /** Nothing this section could ever show, so it stays away entirely */
+  const visibleRoles = await getVisibleRoles();
+  if (visibleRoles.length === 0) return null;
 
   const { cursor, direction } = await loadSearchParams(searchParams);
 
