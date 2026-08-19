@@ -44,6 +44,21 @@ export const clickUntilUrl = (
     await expect(page).toHaveURL(url, { timeout: REACTION_TIMEOUT });
   }).toPass({ timeout: HYDRATION_TIMEOUT });
 
+/**
+ * A fill swallowed by the hydration race still leaves its value in the DOM,
+ * and React adopts exactly that value into the input's value tracker while
+ * hydrating. Every later fill of the same value is then a no-op as far as
+ * React is concerned — no change event, no state update — so a plain retry
+ * loop can never recover and burns the full HYDRATION_TIMEOUT instead.
+ * Clearing the leftover first turns the retry back into a real value
+ * transition. Only done when the value is already there, so filling a field
+ * that holds something else stays a single edit.
+ */
+const refill = async (input: Locator, value: string) => {
+  if ((await input.inputValue()) === value) await input.fill("");
+  await input.fill(value);
+};
+
 /** Retries the fill until the reaction becomes visible. */
 export const fillUntilVisible = (
   input: Locator,
@@ -51,7 +66,7 @@ export const fillUntilVisible = (
   reaction: Locator,
 ) =>
   expect(async () => {
-    await input.fill(value);
+    await refill(input, value);
     await expect(reaction).toBeVisible({ timeout: REACTION_TIMEOUT });
   }).toPass({ timeout: HYDRATION_TIMEOUT });
 
@@ -63,7 +78,7 @@ export const fillUntilUrl = (
   url: string | RegExp,
 ) =>
   expect(async () => {
-    await input.fill(value);
+    await refill(input, value);
     await expect(page).toHaveURL(url, { timeout: REACTION_TIMEOUT });
   }).toPass({ timeout: HYDRATION_TIMEOUT });
 
