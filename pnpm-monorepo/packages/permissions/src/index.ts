@@ -30,4 +30,5 @@ export {
   resolveWikiPageReadRoleIds,
   type WikiPermissionRole,
 } from "./resolveWikiPageRolePermissions.js";
+export { transformPermissionSetToPermissionString } from "./transformPermissionSetToPermissionString.js";
 export { transformPermissionStringToPermissionSet } from "./transformPermissionStringToPermissionSet.js";
