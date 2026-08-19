@@ -94,6 +94,17 @@ export const env = createEnv({
      * (used by the Playwright test stack).
      */
     COLLAB_URL: z.url({ protocol: /^wss?$/ }).optional(),
+    /**
+     * Base64-encoded PKCS#8 PEM of the ES256 (P-256) private key the app
+     * signs the identity tokens of authenticated iframe embeds with (see
+     * docs/embedded-app-authentication.md). Embed authentication is
+     * disabled if unset: no token is appended to an embed URL and
+     * /.well-known/jwks.json publishes an empty key set. Every environment
+     * needs its own key, otherwise a token minted by a preview deployment
+     * verifies as a production one. Generate one with:
+     * `openssl ecparam -name prime256v1 -genkey -noout | openssl pkcs8 -topk8 -nocrypt | base64 -w0`
+     */
+    EMBED_JWT_PRIVATE_KEY: z.string().optional(),
   },
 
   /*
@@ -201,6 +212,7 @@ export const env = createEnv({
     PUSHER_CHANNELS_APP_SECRET: process.env.PUSHER_CHANNELS_APP_SECRET,
     COLLAB_JWT_SECRET: process.env.COLLAB_JWT_SECRET,
     COLLAB_URL: process.env.COLLAB_URL,
+    EMBED_JWT_PRIVATE_KEY: process.env.EMBED_JWT_PRIVATE_KEY,
     NEXT_PUBLIC_PUSHER_CHANNELS_HOST:
       process.env.NEXT_PUBLIC_PUSHER_CHANNELS_HOST,
     NEXT_PUBLIC_PUSHER_CHANNELS_PORT:
