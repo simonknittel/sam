@@ -54,6 +54,25 @@ in the Unleash admin UI at <http://localhost:4242> (login: `admin` /
 disabled. Alternatively point the variables at any Unleash-compatible
 provider (e.g. GitLab feature flags).
 
+### Embedded app authentication
+
+External apps embedded under `/app/external/…` can receive a signed JWT
+identifying the current user (see
+[Embedded App Authentication](./embedded-app-authentication.md)). The
+feature is disabled without `EMBED_JWT_PRIVATE_KEY`: no token is appended to
+an embed URL and <http://localhost:3000/.well-known/jwks.json> publishes an
+empty key set. Generate a key and put it in
+`pnpm-monorepo/apps/app/.env` to work on the feature:
+
+```sh
+openssl ecparam -name prime256v1 -genkey -noout | openssl pkcs8 -topk8 -nocrypt | base64 -w0
+```
+
+**Every environment needs its own key** — local, preview and production.
+Sharing one would let a token minted by a preview deployment verify as a
+production token. Deployments read the variable from Vercel (see
+[Test and Production](./setup-test-and-production.md#7-set-up-vercel)).
+
 ### Optional environment tweaks
 
 - `SKIP_VALIDATION=1` skips the app's environment variable validation

@@ -83,6 +83,7 @@
 4. Create the frozen `production-gate` branch and a ruleset that blocks all pushes to it (no bypass actors). Vercel requires the Production Branch to exist in the repository, but this branch must never move: an accidental push to it would trigger a git-driven production deployment
 5. Set `Production Branch` (Settings > Environments > Production) to `production-gate`: pushes to `main` then only create preview deployments, and production deployments are only created by the [Release workflow](./releasing.md)
 6. Create an access token (Account Settings > Tokens) and store it together with the IDs from the project's settings as the `VERCEL_TOKEN`, `VERCEL_ORG_ID` (team ID) and `VERCEL_PROJECT_ID` secrets of the `Production` GitHub environment
+7. Generate a **separate** `EMBED_JWT_PRIVATE_KEY` for the Production and the Preview environment (see [Embedded App Authentication](./embedded-app-authentication.md) and the generation command in [Setup Local Machine](./setup-local-machine.md#embedded-app-authentication)). Sharing one key across environments would let a token minted by a preview deployment verify as a production token. Leaving the variable unset disables the feature for that environment
 
 ## 8. Left over
 

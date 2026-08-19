@@ -12,6 +12,12 @@ See [Test and Production](./docs/setup-test-and-production.md)
 
 See [Releasing](./docs/releasing.md)
 
+## Embedded app authentication
+
+The contract for external apps embedded under `/app/external/…`, to hand to
+the teams implementing verification on their side: see
+[Embedded App Authentication](./docs/embedded-app-authentication.md)
+
 ## Running tests
 
 Unit tests (run from `pnpm-monorepo`):
