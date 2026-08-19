@@ -154,4 +154,11 @@ export const appDummyEnvironment = {
   NEXT_PUBLIC_CARE_BEAR_SHOOTER_BUILD_URL:
     "http://localhost:9/playwright-dummy-care-bear-shooter",
   NEXTAUTH_SECRET: "playwright-insecure-auth-secret",
+  /**
+   * Throwaway ES256 key so the suite exercises the configured path of the
+   * embed authentication (see docs/embedded-app-authentication.md) rather
+   * than the disabled one. Never used outside this stack.
+   */
+  EMBED_JWT_PRIVATE_KEY:
+    "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR0hBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEJHMHdhd0lCQVFRZzhSVWJ1VHIwcjRJUmdNSi8KQ3FxRlRYMnJWQW41ZDBXbjBCbkpxTXFnMFZTaFJBTkNBQVNwTlpuekQxZXh5NkdDMWVBM2xmYWVSam4vRGNpVAptRkxyVnVWZjJTZ3hHZXdkWkRLS3FWMTVteVJoaWxmT1lXcmNRNEYvKzFaTDFDMU9uUDYrVm9ocAotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0tCg==",
 } as const;
