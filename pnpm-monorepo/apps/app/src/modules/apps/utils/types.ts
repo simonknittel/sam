@@ -1,3 +1,4 @@
+import type { EmbedAuthentication } from "@/modules/embed-authentication/utils/types";
 import type { StaticImageData } from "next/image";
 import type { ReactElement } from "react";
 
@@ -58,6 +59,11 @@ export interface ExternalApp extends BaseApp {
   team: TeamMember[];
   iframeSandbox?: string;
   icon: ReactElement;
+  /**
+   * Set only for apps that can verify our tokens and that we control. All
+   * iframe URLs of the app receive one.
+   */
+  embedAuthentication?: EmbedAuthentication;
 }
 
 export type RedactedApp = Pick<BaseApp, "name" | "tags"> & {

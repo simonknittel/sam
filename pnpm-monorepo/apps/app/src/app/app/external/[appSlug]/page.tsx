@@ -2,6 +2,7 @@ import { getExternalAppBySlug } from "@/modules/apps/utils/queries/getExternalAp
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { IframeLayout } from "@/modules/common/components/layouts/IframeLayout";
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
+import { resolveEmbedUrl } from "@/modules/embed-authentication/utils/resolveEmbedUrl";
 import { notFound, redirect } from "next/navigation";
 
 type Params = Promise<{
@@ -24,7 +25,9 @@ export const generateMetadata = generateMetadataWithTryCatch(
 export default async function Page({
   params,
 }: PageProps<"/app/external/[appSlug]">) {
-  await requireAuthenticationPage("/app/external/[appSlug]");
+  const { session } = await requireAuthenticationPage(
+    "/app/external/[appSlug]",
+  );
 
   const { appSlug } = await params;
   const app = await getExternalAppBySlug(appSlug);
@@ -32,5 +35,13 @@ export default async function Page({
 
   if ("externalUrl" in app.defaultPage) redirect(app.defaultPage.externalUrl);
 
-  return <IframeLayout src={app.defaultPage.iframeUrl} />;
+  return (
+    <IframeLayout
+      src={await resolveEmbedUrl(
+        app.defaultPage.iframeUrl,
+        session,
+        app.embedAuthentication,
+      )}
+    />
+  );
 }
