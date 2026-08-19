@@ -46,6 +46,31 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-08-19-eingebettete-apps-authentifizierung",
+    date: "2026-08-19",
+    title: "Eingebettete Apps erkennen dich",
+    tags: ["Neu", "Apps"],
+    isTracked: false,
+    body: () => (
+      <p>
+        Unter{" "}
+        <Link
+          href="/app/apps"
+          className="text-interaction-500 hover:underline focus-visible:underline"
+        >
+          Apps
+        </Link>{" "}
+        eingebettete externe Apps können ab sofort erfahren, wer sie gerade
+        aufruft: Das SAM übergibt ihnen dafür einen kurzlebigen, signierten
+        Nachweis über deinen Account und deine Berechtigungen. Sie müssen dich
+        also nicht mehr separat anmelden und können Inhalte zeigen, die nicht
+        für jeden sichtbar sein sollen. Das passiert nur bei Apps, für die wir
+        das ausdrücklich freischalten &ndash; aktuell bei keiner.
+      </p>
+    ),
+  },
+
+  {
     key: "2026-08-18-uploads",
     date: "2026-08-18",
     title: "Eigene Uploads einsehen",
