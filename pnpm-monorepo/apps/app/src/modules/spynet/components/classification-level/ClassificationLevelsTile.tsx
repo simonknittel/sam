@@ -1,4 +1,7 @@
 import { getAllClassificationLevels } from "@/modules/spynet/queries/getAllClassificationLevels";
+import { createClassificationLevel } from "../../actions/createClassificationLevel";
+import { deleteClassificationLevel } from "../../actions/deleteClassificationLevel";
+import { updateClassificationLevel } from "../../actions/updateClassificationLevel";
 import { SettingsRecordTile } from "../settings-record/SettingsRecordTile";
 
 interface Props {
@@ -14,7 +17,11 @@ const ClassificationLevelsTile = async ({ className }: Props) => {
       heading="Geheimhaltungsstufen"
       description="Jeder Notiz kann eine Geheimhaltungsstufe zugewiesen werden. Anhand dieser können Berechtigungen vergeben werden."
       emptyLabel="Keine Geheimhaltungsstufen vorhanden"
-      apiPath="/api/classification-level"
+      actions={{
+        create: createClassificationLevel,
+        update: updateClassificationLevel,
+        delete: deleteClassificationLevel,
+      }}
       records={classificationLevels}
     />
   );

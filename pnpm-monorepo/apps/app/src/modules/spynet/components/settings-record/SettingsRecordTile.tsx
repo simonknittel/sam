@@ -1,3 +1,4 @@
+import type { ActionResponse } from "@/modules/actions/utils/createAction";
 import { Actions } from "@/modules/common/components/Actions";
 import { Tile } from "@/modules/common/components/Tile";
 import type { ReactNode } from "react";
@@ -6,12 +7,19 @@ import { DeleteSettingsRecord } from "./DeleteSettingsRecord";
 import type { SettingsRecord } from "./SettingsRecord";
 import { UpdateSettingsRecord } from "./UpdateSettingsRecord";
 
+type SettingsRecordAction = (formData: FormData) => Promise<ActionResponse>;
+
 interface Props {
   readonly className?: string;
   readonly heading: string;
   readonly description: ReactNode;
   readonly emptyLabel: string;
-  readonly apiPath: string;
+  /** The record type's own CRUD actions — see NoteTypesTile for an example */
+  readonly actions: {
+    readonly create: SettingsRecordAction;
+    readonly update: SettingsRecordAction;
+    readonly delete: SettingsRecordAction;
+  };
   readonly records: SettingsRecord[];
 }
 
@@ -20,7 +28,7 @@ export const SettingsRecordTile = ({
   heading,
   description,
   emptyLabel,
-  apiPath,
+  actions,
   records,
 }: Props) => {
   const sortedRecords = records.toSorted((first, second) =>
@@ -30,7 +38,7 @@ export const SettingsRecordTile = ({
   return (
     <Tile
       heading={heading}
-      cta={<CreateSettingsRecord apiPath={apiPath} />}
+      cta={<CreateSettingsRecord action={actions.create} />}
       className={className}
     >
       <p className="mb-4 text-sm">{description}</p>
@@ -47,8 +55,8 @@ export const SettingsRecordTile = ({
 
           <div className="flex gap-4 items-center">
             <Actions>
-              <UpdateSettingsRecord apiPath={apiPath} record={record} />
-              <DeleteSettingsRecord apiPath={apiPath} record={record} />
+              <UpdateSettingsRecord action={actions.update} record={record} />
+              <DeleteSettingsRecord action={actions.delete} record={record} />
             </Actions>
           </div>
         </div>

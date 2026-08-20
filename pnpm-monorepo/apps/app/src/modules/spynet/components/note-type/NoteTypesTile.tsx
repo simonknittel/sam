@@ -1,4 +1,7 @@
 import { getAllNoteTypes } from "@/modules/spynet/queries/getAllNoteTypes";
+import { createNoteType } from "../../actions/createNoteType";
+import { deleteNoteType } from "../../actions/deleteNoteType";
+import { updateNoteType } from "../../actions/updateNoteType";
 import { SettingsRecordTile } from "../settings-record/SettingsRecordTile";
 
 interface Props {
@@ -14,7 +17,11 @@ const NoteTypesTile = async ({ className }: Props) => {
       heading="Notizarten"
       description="Jeder Notiz kann eine Art zugewiesen werden. Anhand dieser können Berechtigungen vergeben werden."
       emptyLabel="Keine Notizarten vorhanden"
-      apiPath="/api/note-type"
+      actions={{
+        create: createNoteType,
+        update: updateNoteType,
+        delete: deleteNoteType,
+      }}
       records={noteTypes}
     />
   );

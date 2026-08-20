@@ -1,58 +1,29 @@
 "use client";
 
+import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
+import type { ActionResponse } from "@/modules/actions/utils/createAction";
+import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
 import clsx from "clsx";
-import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
-import { useForm, type SubmitHandler } from "react-hook-form";
-import toast from "react-hot-toast";
 import { FaPlus, FaSave } from "react-icons/fa";
-
-interface FormValues {
-  name: string;
-}
 
 interface Props {
   readonly className?: string;
-  readonly apiPath: string;
+  readonly action: (formData: FormData) => Promise<ActionResponse>;
 }
 
-export const CreateSettingsRecord = ({ className, apiPath }: Props) => {
+export const CreateSettingsRecord = ({ className, action }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
-
-  const router = useRouter();
-  const { register, handleSubmit, reset } = useForm<FormValues>();
-  const [isLoading, setIsLoading] = useState(false);
   const inputId = useId();
 
-  const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    setIsLoading(true);
-
-    try {
-      const response = await fetch(apiPath, {
-        method: "POST",
-        body: JSON.stringify({
-          name: data.name,
-        }),
-      });
-
-      if (response.ok) {
-        router.refresh();
-        toast.success("Erfolgreich hinzugefügt");
-        reset();
-        setIsOpen(false);
-      } else {
-        toast.error("Beim Hinzufügen ist ein Fehler aufgetreten.");
-      }
-    } catch (error) {
-      toast.error("Beim Hinzufügen ist ein Fehler aufgetreten.");
-      console.error(error);
-    }
-
-    setIsLoading(false);
-  };
+  const { state, formAction, isPending, getDefaultValueWithFallback } =
+    useAction(action, {
+      errorToast: false,
+      onSuccess: () => setIsOpen(false),
+    });
 
   return (
     <>
@@ -71,7 +42,7 @@ export const CreateSettingsRecord = ({ className, apiPath }: Props) => {
         className="w-120"
         heading={<h2>Hinzufügen</h2>}
       >
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form action={formAction}>
           <label className="block" htmlFor={inputId}>
             Name
           </label>
@@ -79,16 +50,20 @@ export const CreateSettingsRecord = ({ className, apiPath }: Props) => {
           <input
             className="p-2 rounded-secondary bg-neutral-900 w-full mt-2"
             id={inputId}
-            {...register("name", { required: true })}
+            name="name"
+            defaultValue={getDefaultValueWithFallback("name", "")}
+            required
             autoFocus
           />
 
           <div className="flex justify-end mt-8">
-            <Button2 type="submit" disabled={isLoading}>
-              {isLoading ? <AsciiSpinner /> : <FaSave />}
+            <Button2 type="submit" disabled={isPending}>
+              {isPending ? <AsciiSpinner /> : <FaSave />}
               Speichern
             </Button2>
           </div>
+
+          <ActionErrorNote className="mt-4" state={state} />
         </form>
       </Modal>
     </>

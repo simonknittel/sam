@@ -1,37 +1,22 @@
 "use client";
 
+import type { ActionResponse } from "@/modules/actions/utils/createAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionButton";
-import { useRouter } from "next/navigation";
 import { FaTrash } from "react-icons/fa";
 import type { SettingsRecord } from "./SettingsRecord";
 
 interface Props {
-  readonly apiPath: string;
+  readonly action: (formData: FormData) => Promise<ActionResponse>;
   readonly record: SettingsRecord;
 }
 
-export const DeleteSettingsRecord = ({ apiPath, record }: Props) => {
-  const router = useRouter();
-
-  const deleteRecord = async (formData: FormData) => {
-    const response = await fetch(`${apiPath}/${record.id}`, {
-      method: "DELETE",
-    });
-
-    if (!response.ok)
-      return {
-        error: "Beim Löschen ist ein Fehler aufgetreten.",
-        requestPayload: formData,
-      };
-
-    return { success: "Erfolgreich gelöscht" };
-  };
-
+export const DeleteSettingsRecord = ({ action, record }: Props) => {
   return (
     <ConfirmActionButton
-      action={deleteRecord}
+      action={action}
+      hiddenFields={[{ name: "id", value: record.id }]}
       trigger={(isPending) => (
         <Button disabled={isPending} variant="tertiary">
           {isPending ? <AsciiSpinner /> : <FaTrash />} Löschen
@@ -44,7 +29,6 @@ export const DeleteSettingsRecord = ({ apiPath, record }: Props) => {
         </>
       }
       confirmLabel="Löschen"
-      onSuccess={() => router.refresh()}
     />
   );
 };
