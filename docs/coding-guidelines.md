@@ -2,29 +2,31 @@
 
 ## General
 
-- When reviewing code, don't list any positive things. Only list things which need fixing.
-- When you think a change may cause issues, go and check that. For example: when a function signature changes, go and find all references to this function and check if they got adapted accordingly.
-- When suggesting changes, avoid premature optimization. For example, if an abstraction could reduce code duplication, only suggest it if it saves a significant amount of code or meaningfully improves maintainability.
-- Implement tests which primarily focus on end-to-end testing of the respective feature. Add unit tests only for critical or complex logic. Don't add tests just for the sake of increasing code coverage.
+- Avoid premature optimization. For example, if an abstraction could reduce code duplication, only suggest it if it eliminates significant lines of duplication or removes a non-obvious coupling that would otherwise require coordinated changes in multiple places.
 - Stay close to conventions and defaults. Don't try to reinvent the wheel.
+- Use conventional commits if not specified otherwise.
+- When working on a larger set of changes, break it down into smaller commits. They don't need to work on their own, but each commit should be a logical step in the implementation. Example: If a change requires a database change, a backend change, a frontend change and E2E tests, break it down into 4 commits, one for each part. This split in database, backend, frontend and tests is only an example. Choose a split which makes most sense for the changes. It's not required that the app is in a working state after each commit, but it should be in a working state after the last commit.
 
 ## Security
 
-- Suggest use of `timingSafeEqual()` for comparing secrets.
+- Use `timingSafeEqual()` for comparing secrets.
 - Check if loops could be exploited for denial of service attacks. For example: Zod schema validating arrays should have a `max(...)` limit.
 - Don't output anything security sensitive or Personally Identifiable Information (PII) to logs
 - When redirecting, make sure user input can't redirect to some unexpected place (open redirect vulnerability)
 - Avoid Server-side request forgery (SSRF) when using user input in a server-side `fetch()` request or similar
-- When adding any kind of new dependencies (npm package, Docker image, etc.), make sure to use the latest stable version available. Fetch the corresponding registries when necessary.
-- Use fixed version for dependencies (use digests if possible)
+- When adding any kind of new dependencies (npm package, Docker image, etc.), use the latest stable version that was published at least 7 days ago. If the most recent stable release is newer than 7 days, use the most recent stable version that is at least 7 days old. The same 7-day rule applies when upgrading existing dependencies to a newer version.
+- Always integrate dependencies with a fixed version: use full SemVer (e.g. `1.2.3` instead of `1`, `^1.2.3` or `latest`) for npm packages, and prefer a digest pin over a tag for Docker images.
 - Look out for any other security-related best practices.
 
 ## Reliability
 
 - Input from third party sources (e.g. response of an API) always need to get validated with Zod or similar
-- `fetch()` calls should always have a timeout configured (using `signal: AbortSignal.timeout(5000)`). If the timeout was omitted on purpose, a comment describing the reasoning should get added.
+- `fetch()` calls should always have a timeout configured (using `signal: AbortSignal.timeout(5000)`). If the timeout was omitted on purpose, a comment describing the reasoning must be added.
 - When a new environment variable gets introduced, if possible, it should be optional during runtime. If the variable is missing, either a good default value should be used or the respective feature should get disabled.
 - If the project has tracing implemented, suggest custom spans for new code if it makes sense (e.g. async/await or big loops).
+- Implement tests which primarily focus on end-to-end and behavior. Add unit tests only for critical or complex logic. Don't add tests just for the sake of increasing code coverage. Prefer tests higher up in the pyramid (e.g. end-to-end or integration tests) over unit tests.
+- When implementing E2E tests, highlight potential actual app errors to the user instead of trying to implement a workaround for the test.
+- Use `encodeURI()` and `decodeURI()` or preferably `new URL()` instead of string concatenation when handling URLs.
 - Look out for any other reliability-related best practices.
 
 ## Next.js / React
@@ -65,7 +67,7 @@
   };
   ```
 
-- Always use `clsx` when combining CSS classes. Don't use string concatenation or similar. Also, don't use ternary operators for this.
+- You must use `clsx` when combining CSS classes. Do not use string concatenation, ternary operators or similar.
 - Prefer server actions for mutations over API endpoints when possible.
 - Look out for any other Next.js and React-related best practices.
 
@@ -102,6 +104,7 @@
   }
   ```
 
+- Prefer enums over union types of string literals
 - Look out for any other TypeScript-related best practices.
 
 ## Database design / Prisma ORM Client
@@ -121,12 +124,16 @@
 
 ## Code style
 
-- No single character variable or function names
-- Don't use abbreviations
-- Don't write unnecessary comments, code should be readable on its own. Use them to explain intentions which may not be recognizable on first view
-  - Example: Don't write comments like: `myString.split(",") // Splits the string into an array using , as delimiter`
-- Document magic numbers
-- Always use `encodeURI()` and `decodeURI()` or preferably `new URL()`
-- Always integrate dependencies (npm packages, Docker images, etc.) with a fixed version number (full SemVer, e.g. `1.2.3` instead of `1`, `^1.2.3` or `latest`)
-  - Don't use outdated versions. Always check at the respective package registry (e.g. <https://www.npmjs.com/>) what the latest version of a dependency is and use that.
+- Do not use single character variable or function names
+- Do not use abbreviations
 - Look out for any other style-related best practices.
+
+## Documentation
+
+- Do not write unnecessary comments, code should be readable on it's own. Use them to explain intentions which may not be recognizable on first view
+  - Example: Do not write comments like: `myString.split(",") // Splits the string into an array using , as delimiter`
+- Document magic numbers
+- Do not use abbreviations
+- Don't repeat yourself in documentation. If a piece of information is already documented somewhere else, don't repeat it in another place. Instead, link to the original documentation.
+- When writing descriptions for Merge Requests or Pull Requests, don't duplicate any detail which is already covered in code comments.
+- Look out for any other documentation-related best practices.
