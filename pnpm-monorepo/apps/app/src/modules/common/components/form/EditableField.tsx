@@ -118,8 +118,14 @@ export const EditableField = <Value,>({
   };
 
   return (
+    /**
+     * inline-flex, not the default inline: both children are flex boxes, so
+     * an inline wrapper generates line boxes of its own next to them and
+     * takes the hit test for clicks aimed at the button inside.
+     */
     <span
       className={clsx(
+        "inline-flex",
         {
           "w-full": isEditing,
         },
