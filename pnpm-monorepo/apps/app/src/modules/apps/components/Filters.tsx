@@ -19,14 +19,26 @@ export const Filters = ({
   selectedTags,
   setSelectedTags,
 }: Props) => {
-  const filters = new Map<string, string>([["all", "Alle"]]);
+  const tags = new Set<string>();
   for (const appLink of appLinks || []) {
     if ("tags" in appLink && appLink.tags?.length) {
       for (const tag of appLink.tags) {
-        filters.set(tag, tag);
+        tags.add(tag);
       }
     }
   }
+
+  /**
+   * "Alle" is not a tag but the reset, so it stays ahead of the alphabetically
+   * sorted ones. `localeCompare` sorts the mixed-case tags by letter rather
+   * than by case, which is what the uppercased labels look like.
+   */
+  const filters: { key: string; label: string }[] = [
+    { key: "all", label: "Alle" },
+    ...Array.from(tags)
+      .toSorted((first, second) => first.localeCompare(second))
+      .map((tag) => ({ key: tag, label: tag })),
+  ];
 
   const handleClick = useCallback(
     (event: MouseEvent, tag: string) => {
@@ -39,7 +51,7 @@ export const Filters = ({
 
   return (
     <div className={clsx("flex flex-wrap gap-2 justify-center", className)}>
-      {Array.from(filters).map(([key, label]) => (
+      {filters.map(({ key, label }) => (
         <Button2
           as={Link}
           href={`/app/apps?tag=${key}`}
