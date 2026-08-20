@@ -2,7 +2,7 @@
 
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Link } from "@/modules/common/components/Link";
-import { usePopover } from "@/modules/common/components/Popover";
+import { usePopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
 import clsx from "clsx";
 import { FaUserSecret } from "react-icons/fa";
 
@@ -12,7 +12,7 @@ interface Props {
 }
 
 export const SpynetProfileLink = ({ className, entityId }: Props) => {
-  const { closePopover } = usePopover();
+  const { closePopover } = usePopoverBaseUI();
 
   return (
     <Button2

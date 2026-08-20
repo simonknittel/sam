@@ -7,7 +7,10 @@ import { RedactedAppTile } from "@/modules/apps/components/RedactedAppTile";
 import { groupByFeatured } from "@/modules/apps/utils/groupByFeatured";
 import type { App, RedactedApp } from "@/modules/apps/utils/types";
 import { Link } from "@/modules/common/components/Link";
-import { Popover, usePopover } from "@/modules/common/components/Popover";
+import {
+  PopoverBaseUI,
+  usePopoverBaseUI,
+} from "@/modules/common/components/PopoverBaseUI";
 import { UnreadDot } from "@/modules/common/components/UnreadDot";
 import clsx from "clsx";
 import { AiFillAppstore } from "react-icons/ai";
@@ -25,14 +28,9 @@ export const Apps = ({ className }: Props) => {
   );
 
   return (
-    <Popover
+    <PopoverBaseUI
       trigger={
-        <button
-          className={clsx(
-            "border-r border-neutral-700 rounded-l-primary hover:bg-tertiary cursor-pointer focus-visible:bg-tertiary px-6 inline-flex items-center gap-1 h-full text-neutral-500",
-            className,
-          )}
-        >
+        <>
           <AiFillAppstore className="text-xl" />
 
           <span className="text-xs font-mono uppercase relative top-px leading-px">
@@ -40,13 +38,16 @@ export const Apps = ({ className }: Props) => {
           </span>
 
           {hasDotBadge && <UnreadDot className="ml-1" />}
-        </button>
+        </>
       }
-      enableHover
+      triggerClassName={clsx(
+        "border-r border-neutral-700 rounded-l-primary hover:bg-tertiary cursor-pointer focus-visible:bg-tertiary px-6 inline-flex items-center gap-1 h-full text-neutral-500",
+        className,
+      )}
       childrenClassName="w-96"
     >
       <PopoverChildren apps={apps} appDotBadgeCounts={appDotBadgeCounts} />
-    </Popover>
+    </PopoverBaseUI>
   );
 };
 
@@ -56,7 +57,7 @@ interface PopoverChildrenProps {
 }
 
 const PopoverChildren = ({ apps, appDotBadgeCounts }: PopoverChildrenProps) => {
-  const { closePopover } = usePopover();
+  const { closePopover } = usePopoverBaseUI();
 
   const { featured, other } = groupByFeatured(apps);
 

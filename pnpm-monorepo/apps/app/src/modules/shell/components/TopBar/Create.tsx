@@ -13,7 +13,10 @@ import {
   type createForms,
 } from "@/modules/common/components/CreateContext";
 import { Link } from "@/modules/common/components/Link";
-import { Popover, usePopover } from "@/modules/common/components/Popover";
+import {
+  PopoverBaseUI,
+  usePopoverBaseUI,
+} from "@/modules/common/components/PopoverBaseUI";
 import clsx from "clsx";
 import { FaPlus } from "react-icons/fa";
 
@@ -67,19 +70,21 @@ export const Create = ({ className }: Props) => {
 
   return (
     <div className={clsx("h-full p-2", className)}>
-      <Popover
+      <PopoverBaseUI
         trigger={
+          <>
+            <FaPlus />
+            Neu
+          </>
+        }
+        triggerRender={
           <Button2
             variant={Button2Variant.Secondary}
             colorSchema={Button2ColorSchema.InteractionMuted}
-            className="h-full px-6"
-          >
-            <FaPlus />
-            Neu
-          </Button2>
+          />
         }
+        triggerClassName="h-full px-6"
         childrenClassName="flex flex-col gap-px w-52"
-        enableHover
       >
         <PopoverChildren
           showCreateCitizen={showCreateCitizen}
@@ -92,7 +97,7 @@ export const Create = ({ className }: Props) => {
           showCreateSilcTransaction={showCreateSilcTransaction}
           showCreateWikiPage={showCreateWikiPage}
         />
-      </Popover>
+      </PopoverBaseUI>
     </div>
   );
 };
@@ -120,7 +125,7 @@ const PopoverChildren = ({
   showCreateSilcTransaction,
   showCreateWikiPage,
 }: PopoverChildrenProps) => {
-  const { closePopover } = usePopover();
+  const { closePopover } = usePopoverBaseUI();
   const { openCreateModal } = useCreateContext();
   const { apps } = useAppsContext();
 

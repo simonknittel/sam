@@ -1,6 +1,6 @@
 import { requireAuthentication } from "@/modules/auth/server";
 import Avatar from "@/modules/common/components/Avatar";
-import { Popover } from "@/modules/common/components/Popover";
+import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
 import clsx from "clsx";
 import { AccountSettings } from "./AccountSettings";
 import { Logout } from "./Logout";
@@ -19,22 +19,18 @@ export const Account = async ({ className }: Props) => {
   const image = authentication ? authentication.session.user.image : undefined;
 
   return (
-    <Popover
+    <PopoverBaseUI
       trigger={
-        <button
-          type="button"
-          className={clsx(
-            "p-2 rounded-r-primary cursor-pointer hover:bg-tertiary focus-visible:bg-tertiary",
-            className,
-          )}
-        >
-          <div className="overflow-hidden rounded-secondary">
-            <Avatar name={name} image={image} size={32} />
-          </div>
-        </button>
+        <div className="overflow-hidden rounded-secondary">
+          <Avatar name={name} image={image} size={32} />
+        </div>
       }
+      triggerClassName={clsx(
+        "p-2 rounded-r-primary cursor-pointer hover:bg-tertiary focus-visible:bg-tertiary",
+        className,
+      )}
+      triggerTitle="Account"
       childrenClassName="w-64"
-      enableHover
     >
       <div className="flex items-center gap-4">
         <div className="overflow-hidden rounded-secondary">
@@ -56,6 +52,6 @@ export const Account = async ({ className }: Props) => {
       <AccountSettings className="w-full mt-2" />
 
       <Logout className="w-full mt-2" />
-    </Popover>
+    </PopoverBaseUI>
   );
 };
