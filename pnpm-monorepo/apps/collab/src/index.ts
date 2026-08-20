@@ -384,6 +384,16 @@ const server = new Server<ConnectionContext>({
   },
 
   async onRequest(data) {
+    /**
+     * Readiness probe. An open port only means Node bound the socket —
+     * this answers once the server is actually serving, which is what an
+     * orchestrator (and the Playwright stack) needs to wait for.
+     */
+    if (data.request.method === "GET" && data.request.url === "/health") {
+      respondJson(data.response, 200, { status: "ok" });
+      throw null;
+    }
+
     if (data.request.method === "POST" && data.request.url === "/replace") {
       try {
         await handleReplaceRequest(data.request, data.response);
@@ -594,3 +604,29 @@ const server = new Server<ConnectionContext>({
 
 await server.listen();
 console.log(`[collab] Listening on port ${env.PORT}`);
+
+/**
+ * Edits are persisted on a debounce, so an abrupt exit drops up to
+ * `maxDebounce` worth of them. Hocuspocus' destroy() closes the
+ * connections and awaits the store hooks for every open document, so a
+ * deploy or a container restart lands after the writes instead of on top
+ * of them.
+ */
+let isShuttingDown = false;
+
+const shutDown = async (signal: NodeJS.Signals) => {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+  console.log(`[collab] ${signal} received, flushing open documents`);
+
+  try {
+    await server.destroy();
+    console.log("[collab] Shutdown complete");
+  } catch (error) {
+    console.error("[collab] Shutdown failed", error);
+    process.exitCode = 1;
+  }
+};
+
+process.on("SIGTERM", (signal) => void shutDown(signal));
+process.on("SIGINT", (signal) => void shutDown(signal));
