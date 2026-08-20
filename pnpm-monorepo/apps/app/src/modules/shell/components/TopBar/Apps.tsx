@@ -44,75 +44,53 @@ export const Apps = ({ className }: Props) => {
         "border-r border-neutral-700 rounded-l-primary hover:bg-tertiary cursor-pointer focus-visible:bg-tertiary px-6 inline-flex items-center gap-1 h-full text-neutral-500",
         className,
       )}
-      childrenClassName="w-96"
+      /**
+       * The max height is a safety net for short viewports only — at normal
+       * sizes the popover is shorter than the space Base UI reports.
+       */
+      childrenClassName="w-[30rem] max-h-[var(--available-height)] overflow-y-auto"
     >
-      <PopoverChildren apps={apps} appDotBadgeCounts={appDotBadgeCounts} />
+      <PopoverChildren />
     </PopoverBaseUI>
   );
 };
 
-interface PopoverChildrenProps {
-  apps: App[];
-  appDotBadgeCounts: Record<string, number>;
-}
-
-const PopoverChildren = ({ apps, appDotBadgeCounts }: PopoverChildrenProps) => {
+const PopoverChildren = () => {
   const { closePopover } = usePopoverBaseUI();
+  const { apps, appDotBadgeCounts, favoriteAppKeys } = useAppsContext();
 
-  const { featured, other } = groupByFeatured(apps);
+  const { favorites, featured, other } = groupByFeatured(apps, favoriteAppKeys);
+  const hasFavorites = Boolean(favorites && favorites.length > 0);
 
   return (
     <>
-      {featured && (
-        <>
-          <p className="font-bold text-sm text-center font-mono uppercase">
-            Featured
-          </p>
+      {favorites && hasFavorites && (
+        <AppsSection
+          title="Favoriten"
+          apps={favorites}
+          appDotBadgeCounts={appDotBadgeCounts}
+          onNavigate={closePopover}
+        />
+      )}
 
-          <AppTileGrid variant="compact" className="mt-2">
-            {featured.map((app) =>
-              "redacted" in app && app.redacted ? (
-                <RedactedAppTile key={app.name} variant="compact" />
-              ) : (
-                <AppTile
-                  key={app.name}
-                  app={app as Exclude<App, RedactedApp>}
-                  variant="compact"
-                  onClick={closePopover}
-                  dotBadgeCount={
-                    ("slug" in app && appDotBadgeCounts[app.slug]) || undefined
-                  }
-                />
-              ),
-            )}
-          </AppTileGrid>
-        </>
+      {featured && (
+        <AppsSection
+          title="Featured"
+          apps={featured}
+          appDotBadgeCounts={appDotBadgeCounts}
+          onNavigate={closePopover}
+          className={clsx({ "mt-4": hasFavorites })}
+        />
       )}
 
       {other && (
-        <>
-          <p className="font-bold text-sm text-center mt-4 font-mono uppercase">
-            Weitere
-          </p>
-
-          <AppTileGrid variant="compact" className="mt-2">
-            {other.map((app) =>
-              "redacted" in app && app.redacted ? (
-                <RedactedAppTile key={app.name} variant="compact" />
-              ) : (
-                <AppTile
-                  key={app.name}
-                  app={app as Exclude<App, RedactedApp>}
-                  variant="compact"
-                  onClick={closePopover}
-                  dotBadgeCount={
-                    ("slug" in app && appDotBadgeCounts[app.slug]) || undefined
-                  }
-                />
-              ),
-            )}
-          </AppTileGrid>
-        </>
+        <AppsSection
+          title="Weitere"
+          apps={other}
+          appDotBadgeCounts={appDotBadgeCounts}
+          onNavigate={closePopover}
+          className="mt-4"
+        />
       )}
 
       <div className="flex justify-center">
@@ -125,5 +103,47 @@ const PopoverChildren = ({ apps, appDotBadgeCounts }: PopoverChildrenProps) => {
         </Link>
       </div>
     </>
+  );
+};
+
+interface AppsSectionProps {
+  readonly className?: string;
+  readonly title: string;
+  readonly apps: App[];
+  readonly appDotBadgeCounts: Record<string, number>;
+  readonly onNavigate: () => void;
+}
+
+const AppsSection = ({
+  className,
+  title,
+  apps,
+  appDotBadgeCounts,
+  onNavigate,
+}: AppsSectionProps) => {
+  return (
+    <div className={className}>
+      <p className="font-bold text-sm text-center font-mono uppercase">
+        {title}
+      </p>
+
+      <AppTileGrid variant="compact" className="mt-2">
+        {apps.map((app) =>
+          "redacted" in app && app.redacted ? (
+            <RedactedAppTile key={app.name} variant="compact" />
+          ) : (
+            <AppTile
+              key={app.name}
+              app={app as Exclude<App, RedactedApp>}
+              variant="compact"
+              onClick={onNavigate}
+              dotBadgeCount={
+                ("slug" in app && appDotBadgeCounts[app.slug]) || undefined
+              }
+            />
+          ),
+        )}
+      </AppTileGrid>
+    </div>
   );
 };
