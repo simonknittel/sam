@@ -5,6 +5,12 @@ import { type InputHTMLAttributes, type ReactNode } from "react";
 import { FaCheck } from "react-icons/fa";
 
 interface Props extends InputHTMLAttributes<HTMLInputElement> {
+  /**
+   * Drops the Ja/Nein text. That text is the checkbox's STATE, never its
+   * name, so hiding it leaves the input nameless unless the caller supplies
+   * one — either an `aria-label` here or an own `<label htmlFor>` pointing
+   * at `id`.
+   */
   hideLabel?: boolean;
   yesLabel?: ReactNode;
   noLabel?: ReactNode;

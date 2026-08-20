@@ -208,6 +208,7 @@ export const CitizenTable = ({ className, cycleData }: Props) => {
               <YesNoCheckbox
                 key={`ceded_${cycleData.cycle.id}_${row.row.original.citizen.id}`}
                 name={`ceded_${cycleData.cycle.id}_${row.row.original.citizen.id}`}
+                aria-label={`Abgetreten: ${row.row.original.handle}`}
                 defaultChecked={Boolean(row.getValue())}
                 disabled={
                   ![
@@ -231,6 +232,7 @@ export const CitizenTable = ({ className, cycleData }: Props) => {
               <YesNoCheckbox
                 key={`accepted_${cycleData.cycle.id}_${row.row.original.citizen.id}`}
                 name={`accepted_${cycleData.cycle.id}_${row.row.original.citizen.id}`}
+                aria-label={`Zugestimmt: ${row.row.original.handle}`}
                 defaultChecked={Boolean(row.getValue())}
                 disabled={cycleData.currentPhase !== CyclePhase.Payout}
                 hideLabel
@@ -249,6 +251,7 @@ export const CitizenTable = ({ className, cycleData }: Props) => {
               <YesNoCheckbox
                 key={`disbursed_${cycleData.cycle.id}_${row.row.original.citizen.id}`}
                 name={`disbursed_${cycleData.cycle.id}_${row.row.original.citizen.id}`}
+                aria-label={`Ausgezahlt: ${row.row.original.handle}`}
                 defaultChecked={Boolean(row.getValue())}
                 disabled={cycleData.currentPhase !== CyclePhase.Payout}
                 hideLabel

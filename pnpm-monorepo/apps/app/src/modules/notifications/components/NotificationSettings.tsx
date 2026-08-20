@@ -126,6 +126,7 @@ const SingleNotificationSettings = ({
         <YesNoCheckbox
           key={`ONSITE_${notificationType.id}`}
           name={`ONSITE_${notificationType.id}`}
+          aria-label={`On-site: ${notificationType.title}`}
           defaultChecked
           hideLabel
           disabled
@@ -136,6 +137,7 @@ const SingleNotificationSettings = ({
         <YesNoCheckbox
           key={`${NotificationChannel.WEB_PUSH}_${notificationType.id}`}
           name={`${NotificationChannel.WEB_PUSH}_${notificationType.id}`}
+          aria-label={`Browser: ${notificationType.title}`}
           defaultChecked={!isWebDisabled}
           hideLabel
         />
