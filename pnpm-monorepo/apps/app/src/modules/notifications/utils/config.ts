@@ -6,7 +6,7 @@ export const ON_SITE_NOTIFICATIONS_PAGE_SIZE = 25;
  */
 export const READ_ON_VIEW_VISIBILITY_THRESHOLD = 0.5;
 
-export const READ_ON_VIEW_DWELL_MILLISECONDS = 2_000;
+export const READ_ON_VIEW_DWELL_MILLISECONDS = 500;
 
 /**
  * Viewed notifications are collected and marked read in batches to avoid one
