@@ -58,7 +58,6 @@ export const AppFavoriteButton = ({
       disabled={isPending}
       title={label}
       aria-label={label}
-      aria-pressed={isFavorite}
       className={clsx(
         "flex-none cursor-pointer disabled:cursor-progress transition motion-reduce:transition-none enabled:active:scale-95",
         {
