@@ -8,6 +8,7 @@ import {
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useState,
   type ComponentProps,
   type ReactNode,
@@ -132,9 +133,29 @@ export const PopoverBaseUI = ({
 }: PopoverBaseUIContextProviderProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
+  /**
+   * Moving the pointer onto a hover-opening trigger already opens the popup,
+   * so the click that usually follows would toggle it straight back closed —
+   * the opposite of what someone reaching for the button wants. That first
+   * press is swallowed; pressing again closes as expected.
+   */
+  const wasOpenedByHoverRef = useRef(false);
+
   const handleOpenChange = useCallback(
     (open: boolean, eventDetails: PopoverRoot.ChangeEventDetails) => {
       if (hoverOnly && open && eventDetails.reason !== "trigger-hover") return;
+
+      if (
+        !open &&
+        wasOpenedByHoverRef.current &&
+        eventDetails.reason === "trigger-press"
+      ) {
+        wasOpenedByHoverRef.current = false;
+        return;
+      }
+
+      wasOpenedByHoverRef.current =
+        open && eventDetails.reason === "trigger-hover";
 
       setIsOpen(open);
       onOpenChange?.(open);
