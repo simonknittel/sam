@@ -18,7 +18,7 @@ export const generateMetadata = generateMetadataWithTryCatch(
     if (!app) notFound();
 
     return {
-      title: `Info - ${app.name}`,
+      title: `Über diese App - ${app.name}`,
       description: app.description || undefined,
     };
   },
@@ -26,8 +26,8 @@ export const generateMetadata = generateMetadataWithTryCatch(
 
 export default async function Page({
   params,
-}: PageProps<"/app/external/[appSlug]/info">) {
-  await requireAuthenticationPage("/app/external/[appSlug]/info");
+}: PageProps<"/app/external/[appSlug]/about">) {
+  await requireAuthenticationPage("/app/external/[appSlug]/about");
 
   const { appSlug } = await params;
   const [app, supportTarget] = await Promise.all([
@@ -39,17 +39,24 @@ export default async function Page({
   return (
     <MaxWidthContent maxWidth="prose">
       <section className="bg-secondary rounded-primary p-4">
-        <h1 className="sr-only">Info</h1>
+        <h1 className="sr-only">Über diese App</h1>
 
         <RichText>
-          <h2>Hinweis</h2>
+          <h2>Externe App</h2>
+
           <p>
-            Diese App wird extern entwickelt und betrieben. Bei Fragen oder
-            Problemen, melde dich bitte bei dem verantwortlichen Team.
+            Diese App wird außerhalb des SAM entwickelt und betrieben. Das SAM
+            hat keinen Einfluss auf die Funktionalität oder Korrektheit der
+            Inhalte.
           </p>
+
           <p>
-            Wenn das verantwortliche Team nicht weiterhelfen kann, melde dich im
-            Zweifel beim Support des SAM
+            Bei Fragen oder Problemen, melde dich bei dem verantwortlichen Team.
+          </p>
+
+          <p>
+            Wenn das Team nicht weiterhelfen kann, melde dich im Zweifel beim
+            Support des SAM
             {supportTarget && (
               <>
                 {" "}
@@ -59,7 +66,8 @@ export default async function Page({
             .
           </p>
 
-          <h2>Team</h2>
+          <h2>Verantwortliche</h2>
+
           <ul>
             {app.team.map((member) => (
               <li key={member.handle}>{member.handle}</li>

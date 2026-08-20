@@ -38,8 +38,8 @@ export default async function Layout({
       }) || [];
 
   pages?.push({
-    title: "Info",
-    url: `/app/external/${app.slug}/info`,
+    title: "Über diese App",
+    url: `/app/external/${app.slug}/about`,
     icon: <FaInfoCircle />,
   });
 
