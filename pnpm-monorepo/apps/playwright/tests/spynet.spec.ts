@@ -211,16 +211,20 @@ const exerciseSettingsRecordCrud = async (
       .filter({ hasText: record })
       .getByRole("button", { name: "Aktionen" })
       .last();
+  /**
+   * The menu stays open behind the modal it opened, so by the delete step it
+   * is already showing — opening it again would toggle it shut and detach
+   * the button before the click lands.
+   */
   const openRowAction = async (
     record: string,
     actionLabel: string,
     reaction: Locator,
   ) => {
-    await clickUntilVisible(
-      actionsTrigger(record),
-      page.getByRole("button", { name: actionLabel }),
-    );
-    await page.getByRole("button", { name: actionLabel }).click();
+    const actionButton = page.getByRole("button", { name: actionLabel });
+    if (!(await actionButton.isVisible()))
+      await clickUntilVisible(actionsTrigger(record), actionButton);
+    await actionButton.click();
     await expect(reaction).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
   };
 
