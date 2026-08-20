@@ -148,7 +148,11 @@ export const SingleRoleBadge = ({
   if (!withPopover) return badge;
 
   return (
-    <PopoverBaseUI trigger={badge} childrenClassName="w-[400px]">
+    <PopoverBaseUI
+      title="Rollendetails"
+      trigger={badge}
+      childrenClassName="w-[400px]"
+    >
       <div>
         <div className="inline-flex align-middle gap-4 items-center">
           {role.icon ? (

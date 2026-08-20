@@ -20,6 +20,7 @@ export const Account = async ({ className }: Props) => {
 
   return (
     <PopoverBaseUI
+      title="Account"
       trigger={
         <div className="overflow-hidden rounded-secondary">
           <Avatar name={name} image={image} size={32} />

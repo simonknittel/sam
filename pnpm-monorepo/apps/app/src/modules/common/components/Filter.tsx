@@ -13,6 +13,7 @@ interface Props {
 export const Filter = ({ name, children }: Props) => {
   return (
     <PopoverBaseUI
+      title={name}
       trigger={
         <>
           <FaChevronDown /> {name}

@@ -258,6 +258,7 @@ const Multiple = ({
         </Combobox>
 
         <PopoverBaseUI
+          title="Citizens einer Rolle auswählen"
           trigger={<FaUsers />}
           triggerRender={
             <Button

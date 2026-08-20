@@ -40,6 +40,7 @@ export const CitizenPopover = ({ children, citizenId }: Props) => {
 
   return (
     <PopoverBaseUI
+      title="Citizen-Details"
       trigger={children}
       onOpenChange={handleOpenChange}
       childrenClassName="w-[400px]"

@@ -26,6 +26,8 @@ const PopoverBaseUIContext = createContext<PopoverBaseUIContext | undefined>(
 interface PopoverChromeProps {
   readonly children: ReactNode;
   readonly childrenClassName?: string;
+  /** Accessible name of the popup, see PopoverBaseUI's `title` */
+  readonly title: string;
   /**
    * Invisible strips bridging the sideOffset gap so the pointer can
    * travel from a hover trigger into the popup — omitted for detached
@@ -38,10 +40,17 @@ interface PopoverChromeProps {
 const PopoverChrome = ({
   children,
   childrenClassName,
+  title,
   hoverBridges = false,
 }: PopoverChromeProps) => {
   return (
     <>
+      {/* Rendered as a span so naming the popup doesn't add an entry to the
+          page's heading outline — same trade-off as Modal's Dialog.Title. */}
+      <Popover.Title render={<span />} className="sr-only">
+        {title}
+      </Popover.Title>
+
       <Popover.Arrow className="data-[side=bottom]:-top-3.75 data-[side=left]:-right-3.25 data-[side=left]:rotate-90 data-[side=right]:-left-3.25 data-[side=right]:-rotate-90 data-[side=top]:-bottom-3.75 data-[side=top]:rotate-180">
         <IoMdArrowDropup className="fill-neutral-700 size-6" />
       </Popover.Arrow>
@@ -67,6 +76,12 @@ const PopoverChrome = ({
 };
 
 interface PopoverBaseUIContextProviderProps {
+  /**
+   * Accessible name of the popup. Base UI renders the popup with
+   * `role="dialog"`, which is announced as an unnamed dialog without one.
+   * Required so a new popover can't silently ship without a name.
+   */
+  readonly title: string;
   readonly trigger: ReactNode;
   /** Applied to the button element Base UI renders around `trigger` */
   readonly triggerClassName?: string;
@@ -100,6 +115,7 @@ interface PopoverBaseUIContextProviderProps {
 }
 
 export const PopoverBaseUI = ({
+  title,
   trigger,
   triggerClassName,
   triggerRender,
@@ -161,7 +177,11 @@ export const PopoverBaseUI = ({
             className={positionerClassName ?? "z-30"}
           >
             <Popover.Popup className="z-30 outline-hidden" initialFocus={false}>
-              <PopoverChrome childrenClassName={childrenClassName} hoverBridges>
+              <PopoverChrome
+                title={title}
+                childrenClassName={childrenClassName}
+                hoverBridges
+              >
                 {children}
               </PopoverChrome>
             </Popover.Popup>
@@ -173,6 +193,8 @@ export const PopoverBaseUI = ({
 };
 
 interface PopoverBaseUIDetachedProps {
+  /** Accessible name of the popup, see PopoverBaseUI's `title` */
+  readonly title: string;
   readonly open: boolean;
   /**
    * Reports Base UI's own dismissals (outside press, Escape). `open` is
@@ -194,6 +216,7 @@ interface PopoverBaseUIDetachedProps {
  * never takes focus.
  */
 export const PopoverBaseUIDetached = ({
+  title,
   open,
   onOpenChange,
   anchor,
@@ -226,7 +249,10 @@ export const PopoverBaseUIDetached = ({
             className="z-30"
           >
             <Popover.Popup className="z-30 outline-hidden" initialFocus={false}>
-              <PopoverChrome childrenClassName={childrenClassName}>
+              <PopoverChrome
+                title={title}
+                childrenClassName={childrenClassName}
+              >
                 {children}
               </PopoverChrome>
             </Popover.Popup>

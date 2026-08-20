@@ -124,6 +124,7 @@ export const UsersTable = ({
             <td className="overflow-hidden flex items-center gap-2">
               {user.bannedAt && (
                 <PopoverBaseUI
+                  title="Details zur Sperre"
                   trigger={
                     <span className="flex items-center gap-1 ml-2">
                       <FaCircleXmark className="text-red-500" /> Gesperrt

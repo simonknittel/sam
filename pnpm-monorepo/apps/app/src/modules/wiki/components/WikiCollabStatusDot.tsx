@@ -76,6 +76,7 @@ export const WikiCollabStatusDot = ({ className, status, users }: Props) => {
   return (
     <span className={clsx("flex items-center", className)}>
       <PopoverBaseUI
+        title="Aktive Bearbeiter"
         hoverOnly
         trigger={
           <span className="flex cursor-help items-center gap-1.5 p-1">

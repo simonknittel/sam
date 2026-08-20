@@ -51,6 +51,7 @@ export const WikiPageDetailsPopover = ({ pageId }: Props) => {
 
   return (
     <PopoverBaseUI
+      title="Seitendetails"
       trigger={
         <span
           aria-label="Details anzeigen"

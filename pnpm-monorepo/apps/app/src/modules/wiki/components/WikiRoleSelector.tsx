@@ -65,6 +65,7 @@ export const WikiRoleSelector = ({
   return (
     <div className={clsx(className)}>
       <PopoverBaseUI
+        title="Rolle auswählen"
         trigger={
           <span
             className={clsx(

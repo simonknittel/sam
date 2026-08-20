@@ -20,8 +20,10 @@ export const Actions = ({ children }: Readonly<Props>) => {
 
   return (
     <PopoverBaseUI
+      title="Aktionen"
       trigger={isOpen ? <FaTimes /> : <FaEllipsisH />}
       triggerRender={<Button variant="secondary" iconOnly={true} />}
+      triggerTitle="Aktionen"
       onOpenChange={setIsOpen}
       openOnHover={false}
       side="left"

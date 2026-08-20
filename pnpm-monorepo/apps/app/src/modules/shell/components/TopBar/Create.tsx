@@ -71,6 +71,7 @@ export const Create = ({ className }: Props) => {
   return (
     <div className={clsx("h-full p-2", className)}>
       <PopoverBaseUI
+        title="Neu erstellen"
         trigger={
           <>
             <FaPlus />

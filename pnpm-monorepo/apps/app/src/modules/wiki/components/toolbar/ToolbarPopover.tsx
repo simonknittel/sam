@@ -21,6 +21,7 @@ export const ToolbarPopover = ({
 }: Props) => {
   return (
     <PopoverBaseUI
+      title={title}
       disabled={disabled}
       trigger={
         <span

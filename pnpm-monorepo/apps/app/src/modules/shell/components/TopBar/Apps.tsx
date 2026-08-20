@@ -29,6 +29,7 @@ export const Apps = ({ className }: Props) => {
 
   return (
     <PopoverBaseUI
+      title="Apps"
       trigger={
         <>
           <AiFillAppstore className="text-xl" />

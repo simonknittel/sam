@@ -34,6 +34,7 @@ export const RequiredRoles = ({ className, defaultValue }: Props) => {
       <p className="mb-1">Erforderliche Rolle(n)</p>
 
       <PopoverBaseUI
+        title="Rolle auswählen"
         trigger={
           <>
             <FaUsers /> Rolle auswählen

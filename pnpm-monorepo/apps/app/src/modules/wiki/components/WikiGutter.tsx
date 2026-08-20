@@ -209,6 +209,7 @@ export const WikiGutter = ({
         onMouseLeave={() => setControlsHovered(false)}
       >
         <PopoverBaseUI
+          title="Block einfügen"
           openOnHover={false}
           side="bottom"
           onOpenChange={handleOpenChange}

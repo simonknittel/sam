@@ -225,6 +225,7 @@ const WikiSuggestionPopover = <Item extends WikiSuggestionMenuItem>({
 
   return (
     <PopoverBaseUIDetached
+      title="Vorschläge"
       open={open && anchor !== null}
       onOpenChange={(nextOpen) => {
         if (!nextOpen) onDismiss();

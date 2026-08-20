@@ -17,6 +17,7 @@ export const Notifications = () => {
 
   return (
     <PopoverBaseUI
+      title="Benachrichtigungen"
       trigger={
         <>
           <FaBell />

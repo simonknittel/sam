@@ -39,6 +39,7 @@ export const RoleSelector = ({ style, defaultValue, onChange }: Props) => {
       )}
 
       <PopoverBaseUI
+        title="Rolle auswählen"
         trigger={
           data && selectedRole ? (
             <span className="flex items-center justify-between gap-1">
