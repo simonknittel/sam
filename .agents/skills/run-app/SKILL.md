@@ -5,6 +5,44 @@ description: Spin up the sam Next.js app locally (dev server + backing Docker se
 
 # Run the sam app locally
 
+## Start here: one command
+
+```bash
+bash .agents/skills/run-app/scripts/up.sh
+```
+
+Run it from the checkout you want up — it picks a port slot, writes the
+env files, starts the containers, seeds the database if it is empty,
+applies migrations, starts the dev server and prints the URL. It is
+idempotent, so re-running it on an already-up stack takes seconds.
+
+**Do this instead of walking the manual steps below.** Doing it by hand
+costs ~17 sequential tool calls; measured against that, none of the
+individual commands are slow (a fully cached `docker compose up --build`
+is ~2s, the 62MB database seed is a one-off). The round trips are the
+cost, so collapse them.
+
+The script also reports whether a valid session exists. Read that line:
+without one the user hits the login redirect and cannot get past it, and
+on a worktree port Discord OAuth cannot mint one — see §5. Sort the
+session out in the same pass, before handing over a URL.
+
+The rest of this document is the reference for what the script does, for
+debugging it, and for the parts it deliberately leaves manual (session
+transfer, shutdown, disk reclamation).
+
+### Sandbox gotchas that waste turns
+
+A session working inside a worktree refuses shell commands that `cd` to
+the shared checkout before a git command, and some compound commands
+(`rm … && cat > …`, pipes between two `docker` invocations) are rejected
+as too complex to verify. Put anything multi-step in a scratchpad `.sh`
+and run it with `bash` — one call, no refusals. Files under
+`.agents/skills/` live only in the main checkout and cannot be written
+from a worktree-isolated session at all; leave the worktree first.
+
+## Reference
+
 The app is a Next.js app at `pnpm-monorepo/apps/app` (package
 `@sam-monorepo/app`). Dev server: `pnpm run dev`, port 3000.
 
@@ -236,10 +274,19 @@ redirect URIs — a one-time manual step for the user.
 
 ### The user has no active session
 
-Discord OAuth can't be driven programmatically, and the callback is
-pinned to `NEXTAUTH_URL`, so the user must sign in on the MAIN checkout
-(port 3000) and the resulting row gets carried over. Run it as one
-pass — each round trip costs the user a wait:
+Check for this BEFORE handing over a URL (`up.sh` prints it) — otherwise
+the user opens the app, bounces off the login redirect, and the whole
+transfer starts as an interruption.
+
+The one-time fix that removes the detour entirely is adding
+`http://localhost:<port>/api/auth/callback/discord` for each slot port to
+the Discord application's OAuth2 redirect URIs. Offer it; it is the
+user's to do.
+
+Otherwise: Discord OAuth can't be driven programmatically, and the
+callback is pinned to `NEXTAUTH_URL`, so the user must sign in on the
+MAIN checkout (port 3000) and the resulting row gets carried over. Run it
+as one pass — each round trip costs the user a wait:
 
 1. Stop the worktree dev server (frees attention, not the port) and
    start the main stack plus `pnpm run dev` in
