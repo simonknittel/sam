@@ -48,25 +48,35 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     key: "2026-08-19-eingebettete-apps-authentifizierung",
     date: "2026-08-19",
-    title: "Eingebettete Apps erkennen dich",
+    title: "Authentifizierung für Iframes von externen Apps",
     tags: ["Neu", "Apps"],
     isTracked: false,
     body: () => (
-      <p>
-        Unter{" "}
-        <Link
-          href="/app/apps"
-          className="text-interaction-500 hover:underline focus-visible:underline"
-        >
-          Apps
-        </Link>{" "}
-        eingebettete externe Apps können ab sofort erfahren, wer sie gerade
-        aufruft: Das SAM übergibt ihnen dafür einen kurzlebigen, signierten
-        Nachweis über deinen Account und deine Berechtigungen. Sie müssen dich
-        also nicht mehr separat anmelden und können Inhalte zeigen, die nicht
-        für jeden sichtbar sein sollen. Das passiert nur bei Apps, für die wir
-        das ausdrücklich freischalten &ndash; aktuell bei keiner.
-      </p>
+      <>
+        <p>
+          Unter{" "}
+          <Link
+            href="/app/apps"
+            className="text-interaction-500 hover:underline focus-visible:underline"
+          >
+            Apps
+          </Link>{" "}
+          als Iframe eingebettete externe Apps können ab sofort den SAM-Benutzer
+          authentifizieren und damit ihrerseits eine Zugriffsbeschränkung
+          implementieren.
+        </p>
+
+        <p>
+          Mehr Informationen dazu findest du im{" "}
+          <Link
+            href="/app/wiki"
+            className="text-interaction-500 hover:underline focus-visible:underline"
+          >
+            Wiki
+          </Link>{" "}
+          auf der Seite &ldquo;Support &gt; SAM &gt; Mithilfe&rdquo;
+        </p>
+      </>
     ),
   },
 
