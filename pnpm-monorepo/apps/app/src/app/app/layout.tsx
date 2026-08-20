@@ -1,4 +1,5 @@
 import { AppsContextProvider } from "@/modules/apps/components/AppsContext";
+import { getAppFavoriteKeys } from "@/modules/apps/utils/queries/getAppFavoriteKeys";
 import { getAppLinks } from "@/modules/apps/utils/queries/getAppLinks";
 import { AdminEnabler } from "@/modules/auth/components/AdminEnabler";
 import { SessionProviderContainer } from "@/modules/auth/components/SessionProviderContainer";
@@ -31,6 +32,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
     authentication,
     disableAlgolia,
     apps,
+    favoriteAppKeys,
     visibleRoles,
     changelogUnseenKeys,
     openWikiReportCount,
@@ -39,6 +41,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
     requireAuthenticationPage(),
     getUnleashFlag(UNLEASH_FLAG.DisableAlgolia),
     getAppLinks(),
+    getAppFavoriteKeys(),
     getVisibleRoles(),
     getUnseenChangelogEntryKeys(),
     getOpenWikiReportCount(),
@@ -63,6 +66,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
                           changelog: changelogUnseenKeys.size,
                           wiki: openWikiReportCount,
                         }}
+                        favoriteAppKeys={[...favoriteAppKeys]}
                       >
                         <OnSiteNotificationsProvider
                           initialUnreadCount={unreadOnSiteNotificationCount}
