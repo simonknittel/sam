@@ -1825,4 +1825,22 @@ export const AuditEventDefinitions: {
     },
     message: (data) => `Counted ${data.count} unique login(s) on ${data.date}`,
   },
+
+  [AuditEventType.APP_FAVORITE_ADDED]: {
+    type: AuditEventType.APP_FAVORITE_ADDED,
+    data: {
+      appKey: "string",
+      citizenId: "string",
+    },
+    message: (data) => `App saved as a favorite (${data.appKey})`,
+  },
+
+  [AuditEventType.APP_FAVORITE_REMOVED]: {
+    type: AuditEventType.APP_FAVORITE_REMOVED,
+    data: {
+      appKey: "string",
+      citizenId: "string",
+    },
+    message: (data) => `App removed from favorites (${data.appKey})`,
+  },
 };

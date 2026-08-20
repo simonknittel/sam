@@ -174,6 +174,8 @@ export enum AuditEventType {
   CITIZENS_PER_ROLE_COUNTED = "CITIZENS_PER_ROLE_COUNTED",
   SHIPS_PER_VARIANT_COUNTED = "SHIPS_PER_VARIANT_COUNTED",
   UNIQUE_LOGINS_COUNTED = "UNIQUE_LOGINS_COUNTED",
+  APP_FAVORITE_ADDED = "APP_FAVORITE_ADDED",
+  APP_FAVORITE_REMOVED = "APP_FAVORITE_REMOVED",
 }
 
 /**
@@ -1215,6 +1217,17 @@ export interface AuditEventDataByType {
   [AuditEventType.UNIQUE_LOGINS_COUNTED]: {
     date: string;
     count: number;
+  };
+
+  [AuditEventType.APP_FAVORITE_ADDED]: {
+    /** Namespaced key of the app, see the apps module's `getAppKey` */
+    appKey: string;
+    citizenId: string;
+  };
+
+  [AuditEventType.APP_FAVORITE_REMOVED]: {
+    appKey: string;
+    citizenId: string;
   };
 }
 
