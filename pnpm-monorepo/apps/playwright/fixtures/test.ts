@@ -128,7 +128,9 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
           COLLAB_JWT_SECRET: collabJwtSecret,
         })
         .withExposedPorts(collabPort)
-        .withWaitStrategy(Wait.forListeningPorts())
+        // An open port only means the socket is bound; /health answers once
+        // the server is actually serving requests.
+        .withWaitStrategy(Wait.forHttp("/health", collabPort))
         .start();
 
       const appPort = await getFreePort();

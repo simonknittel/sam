@@ -47,40 +47,38 @@ test("a programmatic /replace creates suppressed links only", async ({
   });
 
   /**
-   * Node's fetch instead of Playwright's request fixture (whose client
-   * trips over Hocuspocus' plain-HTTP handling), retried in case the
-   * freshly started collab container isn't serving HTTP yet. A genuinely
-   * broken endpoint still fails every attempt.
+   * Node's fetch instead of Playwright's request fixture, whose client
+   * trips over Hocuspocus' plain-HTTP handling. The container is waited on
+   * with its /health route, so the endpoint is serving by now.
    */
-  await expect(async () => {
-    const response = await fetch(`${collabHttpUrl}/replace`, {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${signReplaceToken(wikiPage.id, author.entity.id)}`,
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        content: {
-          type: "doc",
-          content: [
-            {
-              type: "paragraph",
-              content: [
-                {
-                  type: "wikiCitizenMention",
-                  attrs: {
-                    citizenId: mentioned.entity.id,
-                    handle: "Zielperson",
-                  },
+  const response = await fetch(`${collabHttpUrl}/replace`, {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${signReplaceToken(wikiPage.id, author.entity.id)}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      content: {
+        type: "doc",
+        content: [
+          {
+            type: "paragraph",
+            content: [
+              {
+                type: "wikiCitizenMention",
+                attrs: {
+                  citizenId: mentioned.entity.id,
+                  handle: "Zielperson",
                 },
-              ],
-            },
-          ],
-        },
-      }),
-    });
-    expect(response.ok).toBe(true);
-  }).toPass({ timeout: 15_000 });
+              },
+            ],
+          },
+        ],
+      },
+    }),
+    signal: AbortSignal.timeout(15_000),
+  });
+  expect(response.ok).toBe(true);
 
   await expect
     .poll(
