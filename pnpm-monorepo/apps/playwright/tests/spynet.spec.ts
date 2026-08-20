@@ -205,29 +205,24 @@ const exerciseSettingsRecordCrud = async (
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
 
-  /**
-   * The record's actions menu is an icon-only popover trigger, and a late
-   * router.refresh() re-render can unmount the open popover — so opening
-   * an action retries the whole open-popover-then-click sequence.
-   */
   const actionsTrigger = (record: string) =>
     tile
       .locator("li, tr, article, div")
       .filter({ hasText: record })
       .getByRole("button", { name: "Aktionen" })
       .last();
-  const openRowAction = (
+  const openRowAction = async (
     record: string,
     actionLabel: string,
     reaction: Locator,
-  ) =>
-    expect(async () => {
-      const actionButton = page.getByRole("button", { name: actionLabel });
-      if (!(await actionButton.isVisible()))
-        await actionsTrigger(record).click({ timeout: 1_000 });
-      await actionButton.click({ timeout: 1_000 });
-      await expect(reaction).toBeVisible({ timeout: 1_000 });
-    }).toPass({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ) => {
+    await clickUntilVisible(
+      actionsTrigger(record),
+      page.getByRole("button", { name: actionLabel }),
+    );
+    await page.getByRole("button", { name: actionLabel }).click();
+    await expect(reaction).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  };
 
   // Update
   const updateModal = modal(page, "Bearbeiten");
