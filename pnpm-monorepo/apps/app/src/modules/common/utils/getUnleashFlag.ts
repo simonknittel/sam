@@ -22,7 +22,7 @@ export const getUnleashFlag = cache(
 
       const definitions = await getDefinitions({
         fetchOptions: {
-          next: { revalidate: 30 },
+          next: { revalidate: env.UNLEASH_REVALIDATE_SECONDS },
         },
       });
 

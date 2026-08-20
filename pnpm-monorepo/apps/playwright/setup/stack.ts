@@ -91,6 +91,9 @@ export const unleashEnvironment = (unleashPort: number) =>
   ({
     UNLEASH_SERVER_API_URL: `http://localhost:${unleashPort}/api`,
     UNLEASH_SERVER_API_TOKEN: unleashBackendToken,
+    // Production caches the flag definitions for 30s; a toggle in a test
+    // must not wait that out (see tests/unleash.spec.ts).
+    UNLEASH_REVALIDATE_SECONDS: "1",
   }) as const;
 
 /**

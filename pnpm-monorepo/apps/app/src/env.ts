@@ -48,6 +48,12 @@ export const env = createEnv({
     UNLEASH_SERVER_API_URL: z.url().optional(),
     /** Unleash (or any other Unleash-compatible feature flag provider like GitLab) */
     UNLEASH_SERVER_API_TOKEN: z.string().optional(),
+    /**
+     * Seconds the fetched flag definitions are cached for. Lets the
+     * Playwright stack pick up a toggled flag without waiting out the
+     * production window.
+     */
+    UNLEASH_REVALIDATE_SECONDS: z.coerce.number().int().positive().default(30),
     COMMIT_SHA: z.preprocess(
       // Uses VERCEL_GIT_COMMIT_SHA if COMMIT_SHA is not set
       (str) => str || process.env.VERCEL_GIT_COMMIT_SHA,
@@ -188,6 +194,7 @@ export const env = createEnv({
     S3_PUBLIC_URL: process.env.S3_PUBLIC_URL,
     UNLEASH_SERVER_API_URL: process.env.UNLEASH_SERVER_API_URL,
     UNLEASH_SERVER_API_TOKEN: process.env.UNLEASH_SERVER_API_TOKEN,
+    UNLEASH_REVALIDATE_SECONDS: process.env.UNLEASH_REVALIDATE_SECONDS,
     NEXT_PUBLIC_HOST: process.env.NEXT_PUBLIC_HOST,
     COMMIT_SHA: process.env.COMMIT_SHA,
     NEXT_PUBLIC_CARE_BEAR_SHOOTER_BUILD_URL:

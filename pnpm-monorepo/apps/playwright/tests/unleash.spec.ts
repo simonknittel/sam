@@ -4,16 +4,16 @@ import { expect, test } from "../fixtures/test";
 import { setUnleashFlag, UNLEASH_FLAG } from "../fixtures/unleash";
 
 /**
- * Flag changes reach the app only after its 30 second definitions cache
- * expires (see the app's getUnleashFlag), so every state assertion polls
- * with a timeout well above that. Both flag states are asserted, so a
- * timeout here means the app did not pick up the change from the stack's
- * Unleash container — not that the default kicked in.
+ * The stack runs the app with a one second flag cache
+ * (UNLEASH_REVALIDATE_SECONDS, see setup/stack.ts), so a toggle shows up
+ * after roughly one navigation. The headroom is for suite load. Both flag
+ * states are asserted, so a timeout here means the app did not pick up the
+ * change from the stack's Unleash container — not that the default kicked in.
  */
-const FLAG_PROPAGATION_TIMEOUT = 90_000;
-const FLAG_PROPAGATION_INTERVALS = [2_000];
+const FLAG_PROPAGATION_TIMEOUT = 30_000;
+const FLAG_PROPAGATION_INTERVALS = [1_000];
 /** Two polled flag states plus navigations per test */
-const FLAG_TEST_TIMEOUT = 300_000;
+const FLAG_TEST_TIMEOUT = 120_000;
 
 /**
  * Navigates and reports whether the element shows up. The wait covers
