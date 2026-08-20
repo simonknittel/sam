@@ -45,13 +45,18 @@ export const EventParticipationControls = ({
   const [commentDraft, setCommentDraft] = useState(comment ?? "");
 
   /**
-   * Re-seed the draft when the stored comment changes (e.g. a fresh
-   * sign-up after a cancellation) — same render-time pattern as RadioGroup.
+   * Adopt the stored comment when it changes (e.g. a fresh sign-up after a
+   * cancellation) — same render-time pattern as RadioGroup.
+   *
+   * Only while the draft is untouched, though: those same background
+   * refreshes arrive whenever anything revalidates the event, and adopting
+   * unconditionally would discard whatever the user had typed by then.
    */
   const [previousComment, setPreviousComment] = useState(comment);
   if (comment !== previousComment) {
+    const isDraftUntouched = commentDraft === (previousComment ?? "");
     setPreviousComment(comment);
-    setCommentDraft(comment ?? "");
+    if (isDraftUntouched) setCommentDraft(comment ?? "");
   }
 
   return (
