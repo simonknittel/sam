@@ -53,35 +53,45 @@ export const AppTile = ({
           className,
         )}
       >
-        <Link
-          href={href}
-          className="flex-1 truncate outline-hidden after:absolute after:inset-0"
-          title={app.name}
-          onClick={onClick}
-        >
-          {app.name}
-        </Link>
+        {/* The dot belongs to the name, so it follows it directly instead of
+        joining the trailing icons; the leftover space sits behind it. */}
+        <div className="flex flex-1 items-center gap-1.5">
+          <Link
+            href={href}
+            className="truncate outline-hidden after:absolute after:inset-0"
+            title={app.name}
+            onClick={onClick}
+          >
+            {app.name}
+          </Link>
+
+          {dotBadgeCount > 0 && <UnreadDot />}
+        </div>
 
         <div className="relative flex flex-none items-center gap-1.5 text-sm">
-          {dotBadgeCount > 0 && <UnreadDot />}
-
-          {aboutHref && (
-            <Link
-              href={aboutHref}
-              className="flex-none text-neutral-500 hover:text-interaction-500 focus-visible:text-interaction-500 transition-colors motion-reduce:transition-none"
-              title="Über diese App"
-              aria-label="Über diese App"
-              onClick={onClick}
-            >
-              <FaInfoCircle />
-            </Link>
-          )}
-
           {isExternal && (
             <FaExternalLinkAlt className="flex-none text-neutral-500 text-xs" />
           )}
 
-          {appKey && <AppFavoriteButton appKey={appKey} revealOnHover />}
+          {/* Both controls appear together, and only on hover or focus —
+          including the star of an already favorited app, so the rows stay
+          quiet. They keep their space in the layout and in the accessibility
+          tree, so nothing shifts and both stay keyboard reachable. */}
+          <div className="flex flex-none items-center gap-1.5 opacity-0 group-hover/app-tile:opacity-100 group-focus-within/app-tile:opacity-100">
+            {aboutHref && (
+              <Link
+                href={aboutHref}
+                className="flex-none text-neutral-500 hover:text-interaction-500 focus-visible:text-interaction-500 transition-colors motion-reduce:transition-none"
+                title="Über diese App"
+                aria-label="Über diese App"
+                onClick={onClick}
+              >
+                <FaInfoCircle />
+              </Link>
+            )}
+
+            {appKey && <AppFavoriteButton appKey={appKey} />}
+          </div>
         </div>
       </div>
     );

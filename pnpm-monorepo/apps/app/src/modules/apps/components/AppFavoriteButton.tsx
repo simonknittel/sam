@@ -10,13 +10,6 @@ import { useAppsContext } from "./AppsContext";
 interface Props {
   readonly className?: string;
   readonly appKey: string;
-  /**
-   * Fades the star out until the surrounding `group/app-tile` is hovered or
-   * holds focus, so long app names keep the full tile width. An already
-   * favorited star stays visible. The star keeps its space in the layout and
-   * in the accessibility tree either way.
-   */
-  readonly revealOnHover?: boolean;
 }
 
 /**
@@ -25,11 +18,7 @@ interface Props {
  * failed toggle reverts and reports itself through the action's error toast —
  * success stays silent, since the star already says it.
  */
-export const AppFavoriteButton = ({
-  className,
-  appKey,
-  revealOnHover = false,
-}: Props) => {
+export const AppFavoriteButton = ({ className, appKey }: Props) => {
   const { favoriteAppKeys, setAppFavorite } = useAppsContext();
   const [isPending, startTransition] = useTransition();
 
@@ -65,8 +54,6 @@ export const AppFavoriteButton = ({
             isFavorite,
           "text-neutral-500 enabled:hover:text-interaction-500 enabled:focus-visible:text-interaction-500":
             !isFavorite,
-          "opacity-0 group-hover/app-tile:opacity-100 group-focus-within/app-tile:opacity-100":
-            revealOnHover && !isFavorite,
         },
         className,
       )}

@@ -40,7 +40,10 @@ test("favoriting an app adds it to the popover's favorites section and persists"
   await expect(favoritesHeading(page)).toHaveCount(0);
   await expect(appLinks(page)).toHaveCount(1);
 
-  const tile = appLinks(page).locator("xpath=..");
+  // The star is revealed by hovering the tile the link belongs to
+  const tile = appLinks(page).locator(
+    "xpath=ancestor::div[contains(@class, 'group/app-tile')][1]",
+  );
   await tile.hover();
   await tile.getByRole("button", { name: "Als Favorit speichern" }).click();
 
