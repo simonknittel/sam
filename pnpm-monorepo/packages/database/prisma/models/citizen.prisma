@@ -73,6 +73,7 @@ model Entity {
   updatedWikiSettings                          WikiSetting[]                        @relation("updatedBy")
   wikiPageMentions                             WikiPageCitizenMention[]             @relation("citizen")
   createdWikiPageCitizenMentions               WikiPageCitizenMention[]             @relation("createdBy")
+  appFavorites                                 CitizenAppFavorite[]
 
   // Holds the latest confirmed values
   spectrumId                String?

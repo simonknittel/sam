@@ -1,0 +1,16 @@
+/// An app a citizen marked as a favorite. Unfavoriting hard-deletes the row —
+/// the system log records both directions.
+model CitizenAppFavorite {
+  id        String   @id @default(cuid(2))
+  citizenId String
+  citizen   Entity   @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  /// Namespaced key of the app, e.g. `integrated:dashboard`. Integrated and
+  /// external apps have separate slug namespaces, and external apps aren't
+  /// database rows yet, so there is nothing to reference with a foreign key.
+  /// Keys that no longer resolve to an app are ignored when reading but kept,
+  /// in case the app returns.
+  appKey    String
+  createdAt DateTime @default(now())
+
+  @@unique([citizenId, appKey])
+}
