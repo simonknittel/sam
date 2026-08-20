@@ -8,9 +8,10 @@ const bellButton = (page: Page) =>
 /**
  * The notification center is mounted twice (top bar popover and the hidden
  * mobile flyout), so desktop assertions are scoped to the open popover —
- * Base UI renders its popup with `role="dialog"`.
+ * Base UI renders its popup with `role="dialog"`, named after its trigger.
  */
-const popover = (page: Page) => page.getByRole("dialog");
+const popover = (page: Page) =>
+  page.getByRole("dialog", { name: "Benachrichtigungen" });
 
 const openNotificationCenter = async (page: Page) => {
   await bellButton(page).click();

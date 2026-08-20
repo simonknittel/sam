@@ -6,7 +6,6 @@ import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
   modal,
-  openInlineEditor,
   saveInlineEditor,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
@@ -80,7 +79,7 @@ test("a task can be created and two of its fields edited through the shared fact
   // Two different fields of the shared field-update factory: title …
   await page.getByRole("link", { name: /Erztransport eskortieren/ }).click();
   const titleInput = page.locator('input[name="title"]');
-  await openInlineEditor(editButtons(page).first(), titleInput);
+  await clickUntilVisible(editButtons(page).first(), titleInput);
   await titleInput.fill("Titan-Erz eskortieren");
   await saveInlineEditor(page);
   await expect(editButtons(page).first()).toContainText(
@@ -91,7 +90,7 @@ test("a task can be created and two of its fields edited through the shared fact
   // … and description
   const descriptionSection = tileSection(page, "Beschreibung");
   const descriptionInput = page.locator('textarea[name="description"]');
-  await openInlineEditor(editButtons(descriptionSection), descriptionInput);
+  await clickUntilVisible(editButtons(descriptionSection), descriptionInput);
   await descriptionInput.fill("Begleitschutz von Lorville nach Everus Harbor.");
   await saveInlineEditor(page);
   await expect(descriptionSection).toContainText(

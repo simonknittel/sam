@@ -70,7 +70,7 @@ test("the slash palette opens and inserts a block", async ({
   // the empty page starts with an empty paragraph, so this is a block start
   await page.keyboard.type("/");
 
-  const palette = page.getByRole("dialog");
+  const palette = page.getByRole("dialog", { name: "Vorschläge" });
   await expect(
     palette.locator("[data-suggestion-index]:visible").first(),
   ).toBeVisible();

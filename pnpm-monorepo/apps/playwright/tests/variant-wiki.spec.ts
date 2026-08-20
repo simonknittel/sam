@@ -344,13 +344,15 @@ test("the update variant modal links a wiki page", async ({
   await page.goto(
     `/app/fleet/settings/manufacturer/${manufacturer.id}/series/${series.id}`,
   );
-  // The row's unnamed ellipsis button opens the actions popover
   const editButton = page.getByRole("button", {
     name: "Bearbeiten",
     exact: true,
   });
   await clickUntilVisible(
-    page.getByRole("row").filter({ hasText: variant.name }).getByRole("button"),
+    page
+      .getByRole("row")
+      .filter({ hasText: variant.name })
+      .getByRole("button", { name: "Aktionen" }),
     editButton,
   );
 

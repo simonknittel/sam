@@ -214,7 +214,7 @@ const exerciseSettingsRecordCrud = async (
     tile
       .locator("li, tr, article, div")
       .filter({ hasText: record })
-      .getByRole("button")
+      .getByRole("button", { name: "Aktionen" })
       .last();
   const openRowAction = (
     record: string,

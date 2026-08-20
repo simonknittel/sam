@@ -11,7 +11,6 @@ import {
   clickUntilVisible,
   fillUntilUrl,
   modal,
-  openInlineEditor,
   saveInlineEditor,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
@@ -150,7 +149,7 @@ test("my ships can be added, renamed and deleted with consistent org counts", as
   // Rename
   await page.goto("/app/fleet/my-ships");
   const nameInput = page.locator('input[name="name"]');
-  await openInlineEditor(
+  await clickUntilVisible(
     shipRow.locator('button[title="Klicken, um zu bearbeiten"]'),
     nameInput,
   );
@@ -223,7 +222,7 @@ test("manufacturers and series can be managed through the REST-backed settings",
     `/app/fleet/settings/manufacturer/${manufacturer!.id}`,
   );
   const nameInput = page.locator('input[name="name"]');
-  await openInlineEditor(
+  await clickUntilVisible(
     page.locator('button[title="Klicken, um zu bearbeiten"]'),
     nameInput,
   );

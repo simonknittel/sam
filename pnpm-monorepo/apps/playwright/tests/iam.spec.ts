@@ -1,22 +1,6 @@
-import type { Page } from "@playwright/test";
 import { createCitizen } from "../fixtures/factories";
+import { ACTION_FEEDBACK_TIMEOUT, modal } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
-
-/**
- * The app's Modal renders as a portal without dialog semantics (the Base UI
- * rewrite is planned), so modals are located by their heading instead of
- * getByRole("dialog").
- */
-const modal = (page: Page, heading: string) =>
-  page
-    .locator("body > div")
-    .filter({ has: page.getByRole("heading", { name: heading }) });
-
-/**
- * Mutations run as server actions against a worker stack under full-suite
- * load — their success feedback regularly needs more than the 5s default.
- */
-const ACTION_FEEDBACK_TIMEOUT = 15_000;
 
 test("a role created and assigned through the UI grants its permission", async ({
   page,

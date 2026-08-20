@@ -8,9 +8,10 @@ import {
 import { expect, test } from "../fixtures/test";
 
 /**
- * The checkbox inputs are sr-only without an accessible name — they are
- * located by their form field name (ONSITE_<type> / WEB_PUSH_<type>) and
- * toggled through their wrapping label.
+ * The checkbox input itself is sr-only — the visible control is the box its
+ * wrapping label draws, so toggling goes through the label the way a click
+ * does. State is read off the input, located by its form field name
+ * (ONSITE_<type> / WEB_PUSH_<type>) so the cases stay written in ids.
  */
 const browserCheckbox = (page: Page, notificationType: string) =>
   page.locator(`input[name="WEB_PUSH_${notificationType}"]`);
@@ -35,6 +36,15 @@ test("browser notifications are enabled by default", async ({
 
   await expect(browserCheckbox(page, "event_created")).toBeChecked();
   await expect(browserCheckbox(page, "wiki_page_reported")).toBeChecked();
+
+  // Each box names its channel and its notification type; the visible
+  // Ja/Nein text is the state, never the name
+  await expect(
+    page.getByRole("checkbox", { name: "Browser: Neues Event" }),
+  ).toBeChecked();
+  await expect(
+    page.getByRole("checkbox", { name: "On-site: Neues Event" }),
+  ).toBeDisabled();
 
   const settingsCount = await prisma.notificationSetting.count({
     where: { citizenId: citizen.entity.id },

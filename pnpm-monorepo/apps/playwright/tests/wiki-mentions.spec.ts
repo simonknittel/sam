@@ -13,7 +13,7 @@ const insertMention = async (
   handle: string,
 ) => {
   await page.keyboard.type(`@${handle.slice(0, 5)}`);
-  const menu = page.getByRole("dialog");
+  const menu = page.getByRole("dialog", { name: "Vorschläge" });
   await menu
     .locator("[data-suggestion-index]:visible", { hasText: handle })
     .first()

@@ -1,23 +1,20 @@
 import type { Page } from "@playwright/test";
 import { createCitizen } from "../fixtures/factories";
+import { clickUntilVisible } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 /**
- * Base UI renders the popup with `role="dialog"`. Scoping to it keeps the
+ * Base UI renders the popup with `role="dialog"`; its name keeps the
  * assertions away from the mobile flyout, which lists the same apps.
  */
-const appsPopover = (page: Page) => page.getByRole("dialog");
+const appsPopover = (page: Page) =>
+  page.getByRole("dialog", { name: "Apps", exact: true });
 
-/**
- * The popover opens on hover — clicking the trigger would race the hover
- * delay and could toggle it straight back closed.
- */
-const openAppsPopover = async (page: Page) => {
-  await page.getByRole("button", { name: "Apps" }).hover();
-  await expect(
+const openAppsPopover = (page: Page) =>
+  clickUntilVisible(
+    page.getByRole("button", { name: "Apps" }),
     appsPopover(page).getByText("Featured", { exact: true }),
-  ).toBeVisible({ timeout: 15_000 });
-};
+  );
 
 const favoritesHeading = (page: Page) =>
   appsPopover(page).getByText("Favoriten", { exact: true });

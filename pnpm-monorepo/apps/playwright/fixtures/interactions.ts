@@ -7,12 +7,12 @@ import { expect, type Locator, type Page } from "@playwright/test";
 export const ACTION_FEEDBACK_TIMEOUT = 15_000;
 
 /**
- * The app's Modal (Base UI dialog) renders in a portal with role="dialog",
- * but its heading is not always a heading element — so modals are located
- * by their heading text instead of an accessible name.
+ * The app's Modal (Base UI dialog) renders in a portal with role="dialog"
+ * and takes its accessible name from the heading it is given. Popovers use
+ * the same role but carry their own name, so this never matches one.
  */
 export const modal = (page: Page, heading: string | RegExp) =>
-  page.getByRole("dialog").filter({ hasText: heading });
+  page.getByRole("dialog", { name: heading });
 
 /**
  * Interactions landing before React hydrates are swallowed: clicks fall on
@@ -97,21 +97,11 @@ export const tabUntilFocused = (page: Page, target: Locator) =>
   }).toPass({ timeout: HYDRATION_TIMEOUT });
 
 /**
- * EditableField wraps its display button and its save form in an inline
- * <span>; Playwright's hit-target validation misattributes clicks on them
- * to that span ("<span> intercepts pointer events") although real clicks
- * do reach the button — force skips only that validation. The reaction
- * check keeps the pre-hydration retry honest.
+ * Submits the open inline editor (EditableField). Only one can be open at a
+ * time, so the icon-only save button is unambiguous without scoping.
  */
-export const openInlineEditor = (editButton: Locator, editorInput: Locator) =>
-  expect(async () => {
-    await editButton.click({ force: true, timeout: REACTION_TIMEOUT });
-    await expect(editorInput).toBeVisible({ timeout: REACTION_TIMEOUT });
-  }).toPass({ timeout: HYDRATION_TIMEOUT });
-
-/** See openInlineEditor — the save button sits in the same inline wrapper. */
 export const saveInlineEditor = (page: Page) =>
-  page.locator('button[title="Speichern"]').click({ force: true });
+  page.locator('button[title="Speichern"]').click();
 
 /**
  * Proves the page has hydrated by opening and closing the notification
@@ -122,7 +112,7 @@ export const saveInlineEditor = (page: Page) =>
  */
 export const waitForAppShellHydration = async (page: Page) => {
   const bellButton = page.getByRole("button", { name: "Benachrichtigungen" });
-  const popover = page.getByRole("dialog");
+  const popover = page.getByRole("dialog", { name: "Benachrichtigungen" });
   await clickUntilVisible(bellButton, popover);
   await page.keyboard.press("Escape");
   await expect(popover).not.toBeVisible();
