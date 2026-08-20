@@ -3,8 +3,10 @@ import { Link } from "@/modules/common/components/Link";
 import { UnreadDot } from "@/modules/common/components/UnreadDot";
 import clsx from "clsx";
 import Image from "next/image";
-import { FaExternalLinkAlt } from "react-icons/fa";
+import { FaExternalLinkAlt, FaInfoCircle } from "react-icons/fa";
+import { getAppKey } from "../utils/getAppKey";
 import type { App, RedactedApp } from "../utils/types";
+import { AppFavoriteButton } from "./AppFavoriteButton";
 
 interface Props {
   readonly className?: string;
@@ -14,6 +16,12 @@ interface Props {
   readonly dotBadgeCount?: number;
 }
 
+/**
+ * The tile is a container rather than one big anchor: the star and the about
+ * link are interactive in their own right and can't be nested inside it. The
+ * navigation link is stretched across the whole tile with a pseudo-element
+ * instead, with the two controls stacked above it.
+ */
 export const AppTile = ({
   className,
   app,
@@ -29,48 +37,70 @@ export const AppTile = ({
         : `/app/external/${app.slug}`;
 
   const isExternal = "defaultPage" in app && "externalUrl" in app.defaultPage;
+  const aboutHref =
+    "defaultPage" in app ? `/app/external/${app.slug}/about` : undefined;
+  const appKey = getAppKey(app);
+
+  const containerClassName =
+    "relative group/app-tile bg-secondary rounded-primary outline outline-transparent outline-offset-4 transition-colors motion-reduce:transition-none hover:outline-interaction-700 focus-within:outline-interaction-700 active:outline-interaction-500";
 
   if (variant === "compact") {
     return (
-      <Link
-        href={href}
+      <div
         className={clsx(
-          "flex items-center justify-between gap-2 hover:outline-interaction-700 focus-visible:outline-interaction-700 active:outline-interaction-500 outline-offset-4 outline outline-transparent transition-colors rounded-primary overflow-hidden bg-secondary group p-2 text-xs",
+          containerClassName,
+          "flex items-center gap-2 p-2 text-xs",
           className,
         )}
-        onClick={onClick}
       >
-        <span title={app.name} className="flex-1 truncate">
+        <Link
+          href={href}
+          className="flex-1 truncate outline-hidden after:absolute after:inset-0"
+          title={app.name}
+          onClick={onClick}
+        >
           {app.name}
-        </span>
+        </Link>
 
-        {dotBadgeCount > 0 && <UnreadDot className="ml-1" />}
+        <div className="relative flex flex-none items-center gap-1.5 text-sm">
+          {dotBadgeCount > 0 && <UnreadDot />}
 
-        {isExternal && (
-          <FaExternalLinkAlt className="flex-none text-neutral-500" />
-        )}
-      </Link>
+          {aboutHref && (
+            <Link
+              href={aboutHref}
+              className="flex-none text-neutral-500 hover:text-interaction-500 focus-visible:text-interaction-500 transition-colors motion-reduce:transition-none"
+              title="Über diese App"
+              aria-label="Über diese App"
+              onClick={onClick}
+            >
+              <FaInfoCircle />
+            </Link>
+          )}
+
+          {isExternal && (
+            <FaExternalLinkAlt className="flex-none text-neutral-500 text-xs" />
+          )}
+
+          {appKey && <AppFavoriteButton appKey={appKey} revealOnHover />}
+        </div>
+      </div>
     );
   }
 
   return (
-    <Link
-      href={href}
-      className={clsx(
-        "flex flex-col hover:outline-interaction-700 focus-visible:outline-interaction-700 active:outline-interaction-500 outline-offset-4 outline outline-transparent transition-colors rounded-primary overflow-hidden bg-secondary group",
-        className,
-      )}
-    >
-      {app.imageSrc ? (
-        <Image
-          src={app.imageSrc}
-          alt={`Screenshot der ${app.name} App`}
-          priority
-          className="aspect-video object-cover object-top grayscale group-hover:grayscale-0 group-focus-visible:grayscale-0 transition flex-initial"
-        />
-      ) : (
-        <div className="aspect-video bg-black" />
-      )}
+    <div className={clsx(containerClassName, "flex flex-col", className)}>
+      <div className="overflow-hidden rounded-t-primary">
+        {app.imageSrc ? (
+          <Image
+            src={app.imageSrc}
+            alt={`Screenshot der ${app.name} App`}
+            priority
+            className="aspect-video object-cover object-top grayscale group-hover/app-tile:grayscale-0 group-focus-within/app-tile:grayscale-0 transition motion-reduce:transition-none flex-initial"
+          />
+        ) : (
+          <div className="aspect-video bg-black" />
+        )}
+      </div>
 
       <div className="p-2 sm:p-4 flex flex-col gap-2 flex-1">
         <div className="flex gap-2 items-center">
@@ -78,17 +108,39 @@ export const AppTile = ({
             title={app.name}
             className="font-bold truncate font-mono uppercase"
           >
-            {app.name}
+            <Link
+              href={href}
+              className="outline-hidden after:absolute after:inset-0"
+            >
+              {app.name}
+            </Link>
           </h2>
-          {dotBadgeCount > 0 && (
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-interaction-700 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-interaction-500" />
-            </span>
-          )}
-          {isExternal && (
-            <FaExternalLinkAlt className="flex-none text-neutral-500 text-sm" />
-          )}
+
+          <div className="relative flex flex-none items-center gap-1.5 ml-auto text-sm">
+            {dotBadgeCount > 0 && (
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping motion-reduce:hidden absolute inline-flex h-full w-full rounded-full bg-interaction-700 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-interaction-500" />
+              </span>
+            )}
+
+            {aboutHref && (
+              <Link
+                href={aboutHref}
+                className="flex-none text-neutral-500 hover:text-interaction-500 focus-visible:text-interaction-500 transition-colors motion-reduce:transition-none"
+                title="Über diese App"
+                aria-label="Über diese App"
+              >
+                <FaInfoCircle />
+              </Link>
+            )}
+
+            {isExternal && (
+              <FaExternalLinkAlt className="flex-none text-neutral-500" />
+            )}
+
+            {appKey && <AppFavoriteButton appKey={appKey} />}
+          </div>
         </div>
 
         {"description" in app && app.description && (
@@ -108,6 +160,6 @@ export const AppTile = ({
           </div>
         )}
       </div>
-    </Link>
+    </div>
   );
 };
