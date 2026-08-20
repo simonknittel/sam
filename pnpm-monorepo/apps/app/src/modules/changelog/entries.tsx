@@ -46,6 +46,36 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-08-20-app-favoriten",
+    date: "2026-08-20",
+    title: "Apps als Favoriten speichern",
+    tags: ["Apps", "Neu"],
+    isTracked: false,
+    body: () => (
+      <>
+        <p>
+          Jede App lässt sich ab sofort über den Stern als Favorit speichern
+          &ndash; entweder in der Übersicht unter{" "}
+          <Link
+            href="/app/apps"
+            className="text-interaction-500 hover:underline focus-visible:underline"
+          >
+            Apps
+          </Link>{" "}
+          oder direkt im Apps-Menü der Kopfleiste. Favoriten erscheinen dort in
+          einem eigenen Abschnitt ganz oben, bleiben aber zusätzlich in ihrem
+          bisherigen Abschnitt stehen.
+        </p>
+
+        <p>
+          Außerdem führt bei externen Apps ein neues Info-Symbol direkt zur
+          Seite &bdquo;Über diese App&ldquo; mit dem verantwortlichen Team.
+        </p>
+      </>
+    ),
+  },
+
+  {
     key: "2026-08-19-eingebettete-apps-authentifizierung",
     date: "2026-08-19",
     title: "Authentifizierung für Iframes von externen Apps",
