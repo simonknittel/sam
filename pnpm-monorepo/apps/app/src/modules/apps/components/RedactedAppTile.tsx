@@ -1,12 +1,36 @@
 import clsx from "clsx";
-import { random } from "lodash";
+
+/**
+ * A random angle per render makes the server and the client disagree, which
+ * mismatches on hydration for every redacted tile — so the angle is derived
+ * from the app's name instead. Each tile still gets its own tilt, and it stays
+ * the same across renders.
+ */
+const getRotationInDegrees = (name: string, maximumDegrees: number) => {
+  let hash = 0;
+  for (let index = 0; index < name.length; index++) {
+    hash = (hash * 31 + name.charCodeAt(index)) | 0;
+  }
+
+  const rangeInDegrees = maximumDegrees * 2 + 1;
+  return (Math.abs(hash) % rangeInDegrees) - maximumDegrees;
+};
 
 interface Props {
   readonly className?: string;
+  /**
+   * The app's name. Only ever used to derive the rotation — a redacted tile
+   * never renders it.
+   */
+  readonly name: string;
   readonly variant?: "default" | "compact";
 }
 
-export const RedactedAppTile = ({ className, variant = "default" }: Props) => {
+export const RedactedAppTile = ({
+  className,
+  name,
+  variant = "default",
+}: Props) => {
   if (variant === "compact") {
     return (
       <div
@@ -20,7 +44,7 @@ export const RedactedAppTile = ({ className, variant = "default" }: Props) => {
           <p
             className="text-brand-red-700 border border-brand-red-700 rounded-secondary px-2 py-1 text-xs relative"
             style={{
-              transform: `rotate(${random(-8, 8)}deg)`,
+              transform: `rotate(${getRotationInDegrees(name, 8)}deg)`,
             }}
           >
             Redacted
@@ -50,7 +74,7 @@ export const RedactedAppTile = ({ className, variant = "default" }: Props) => {
           <p
             className="text-brand-red-500 font-bold border-2 border-brand-red-500 rounded-secondary px-2 py-1 text-lg relative"
             style={{
-              transform: `rotate(${random(-15, 15)}deg)`,
+              transform: `rotate(${getRotationInDegrees(name, 15)}deg)`,
             }}
           >
             Redacted

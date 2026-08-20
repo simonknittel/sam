@@ -130,7 +130,7 @@ const AppsSection = ({
       <AppTileGrid variant="compact" className="mt-2">
         {apps.map((app) =>
           "redacted" in app && app.redacted ? (
-            <RedactedAppTile key={app.name} variant="compact" />
+            <RedactedAppTile key={app.name} name={app.name} variant="compact" />
           ) : (
             <AppTile
               key={app.name}

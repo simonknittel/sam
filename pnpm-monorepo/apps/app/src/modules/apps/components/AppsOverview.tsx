@@ -43,7 +43,7 @@ export const AppsOverview = ({ allApps }: Props) => {
           <AppTileGrid>
             {featured?.map((app) =>
               "redacted" in app && app.redacted ? (
-                <RedactedAppTile key={app.name} />
+                <RedactedAppTile key={app.name} name={app.name} />
               ) : (
                 <AppTile
                   key={app.name}
@@ -56,7 +56,7 @@ export const AppsOverview = ({ allApps }: Props) => {
           <AppTileGrid className="mt-8">
             {other?.map((app) =>
               "redacted" in app && app.redacted ? (
-                <RedactedAppTile key={app.name} />
+                <RedactedAppTile key={app.name} name={app.name} />
               ) : (
                 <AppTile
                   key={app.name}
@@ -72,7 +72,7 @@ export const AppsOverview = ({ allApps }: Props) => {
             ?.sort((a, b) => a.name.localeCompare(b.name))
             .map((app) =>
               "redacted" in app && app.redacted ? (
-                <RedactedAppTile key={app.name} />
+                <RedactedAppTile key={app.name} name={app.name} />
               ) : (
                 <AppTile
                   key={app.name}
