@@ -49,9 +49,8 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
     key: "2026-08-21-karrierebaeume-verwalten",
     date: "2026-08-21",
     title: "Karrierebäume verwalten",
-    tags: ["Karriere", "Neu"],
+    tags: ["Karriere", "Änderung"],
     isTracked: false,
-    requiresAuth: { resource: "career", action: "manage" },
     body: () => (
       <>
         <p>
@@ -63,9 +62,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
             Karriere &gt; Einstellungen
           </Link>{" "}
           anlegen, duplizieren, umbenennen, sortieren und löschen &ndash; ohne
-          Umweg über die Datenbank. Ein gelöschter Karrierebaum bleibt
-          wiederherstellbar, und eine Kopie übernimmt zwar alle Knoten und
-          Verbindungen, aber bewusst keine Berechtigungen.
+          Umweg über die Datenbank.
         </p>
 
         <p>
@@ -75,9 +72,9 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
             href="/app/roles"
             className="text-interaction-500 hover:underline focus-visible:underline"
           >
-            Rollen
+            IAM &gt; Rollen
           </Link>
-          . Dort gibt es dafür nur noch die übergreifende Berechtigung
+          . Dort gibt es dafür nur noch die neue übergreifende Berechtigung
           &ldquo;Karrierebäume verwalten&rdquo;.
         </p>
       </>
