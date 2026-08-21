@@ -74,6 +74,9 @@ model Entity {
   wikiPageMentions                             WikiPageCitizenMention[]             @relation("citizen")
   createdWikiPageCitizenMentions               WikiPageCitizenMention[]             @relation("createdBy")
   appFavorites                                 CitizenAppFavorite[]
+  createdFlows                                 Flow[]                               @relation("createdFlows")
+  updatedFlows                                 Flow[]                               @relation("updatedFlows")
+  deletedFlows                                 Flow[]                               @relation("deletedFlows")
 
   // Holds the latest confirmed values
   spectrumId                String?

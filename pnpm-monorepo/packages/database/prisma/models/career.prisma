@@ -1,8 +1,53 @@
+/// A career tree. The id is opaque and stable — renaming never touches it —
+/// while `slug` is the URL segment and changes with a rename.
 model Flow {
-  id       String     @id
+  id       String     @id @default(cuid(2))
   name     String
+  /// URL segment of the flow. Uniqueness is enforced by a hand-written
+  /// partial unique index over non-deleted rows only, so a soft-deleted flow
+  /// never blocks its slug (see migration career_flow_management). Prisma
+  /// cannot express partial indexes.
+  slug     String
   nodes    FlowNode[]
-  position Int        @unique @default(autoincrement())
+  /// Manual ordering in the career navigation and the management list.
+  /// Deliberately not unique: a reorder renumbers all affected rows inside
+  /// one transaction and would otherwise need placeholder values. Assigned
+  /// explicitly by the create, duplicate and reorder actions.
+  position Int        @default(0)
+
+  /// Per-role access to this flow. A tier of UPDATE implies READ, so one
+  /// role never needs a second row to express both.
+  roleAccess FlowRoleAccess[]
+
+  createdAt   DateTime  @default(now())
+  createdById String?
+  createdBy   Entity?   @relation("createdFlows", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedAt   DateTime  @updatedAt
+  updatedById String?
+  updatedBy   Entity?   @relation("updatedFlows", fields: [updatedById], references: [id], onDelete: SetNull)
+  deletedAt   DateTime?
+  deletedById String?
+  deletedBy   Entity?   @relation("deletedFlows", fields: [deletedById], references: [id], onDelete: SetNull)
+
+  @@index([deletedAt])
+}
+
+/// UPDATE implies READ (see Flow.roleAccess).
+enum FlowRoleAccessType {
+  READ
+  UPDATE
+}
+
+model FlowRoleAccess {
+  id     String             @id @default(cuid(2))
+  flowId String
+  flow   Flow               @relation(fields: [flowId], references: [id], onDelete: Cascade)
+  roleId String
+  role   Role               @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  type   FlowRoleAccessType
+
+  @@unique([flowId, roleId])
+  @@index([roleId])
 }
 
 model FlowNode {
