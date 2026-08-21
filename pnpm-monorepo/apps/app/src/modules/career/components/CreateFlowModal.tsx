@@ -77,8 +77,8 @@ export const CreateFlowModal = ({ onRequestClose, source }: Props) => {
 
         {source && (
           <p className="mb-4 text-sm text-neutral-400">
-            Die Kopie übernimmt alle Knoten und Verbindungen von „{source.name}
-            “, aber keine Berechtigungen. Sie ist damit zunächst nur für
+            {`Die Kopie übernimmt alle Knoten und Verbindungen von „${source.name}“, `}
+            aber keine Berechtigungen. Sie ist damit zunächst nur für
             Verwaltende sichtbar.
           </p>
         )}
