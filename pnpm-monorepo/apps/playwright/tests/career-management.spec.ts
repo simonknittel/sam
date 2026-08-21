@@ -46,6 +46,17 @@ const accessForm = (page: Page) =>
 const dragNarration = async (page: Page) =>
   (await page.getByRole("status").allTextContents()).join(" ");
 
+/**
+ * Whether the page as a whole scrolls sideways. Wide content is supposed to
+ * scroll inside its own container, never to drag the document with it.
+ */
+const hasHorizontalPageOverflow = (page: Page) =>
+  page.evaluate(
+    () =>
+      document.documentElement.scrollWidth >
+      document.documentElement.clientWidth,
+  );
+
 /** Every management mutation has to leave a trace in the system log. */
 const auditEventTypes = async (prisma: PrismaClient) => {
   const events = await prisma.auditEvent.findMany({ select: { type: true } });
@@ -123,8 +134,12 @@ test("a manager creates a flow, renames it, deletes it and restores it", async (
   const deleteDialog = page.getByRole("alertdialog", {
     name: "Karrierebaum löschen?",
   });
+  /** Scoped to the tile, so it never collides with the dialog's own button */
+  const dangerZone = page
+    .locator("section")
+    .filter({ has: page.getByRole("heading", { name: "Danger Zone" }) });
   await clickUntilVisible(
-    page.getByRole("button", { name: "Löschen" }),
+    dangerZone.getByRole("button", { name: "Löschen" }),
     deleteDialog,
   );
   await deleteDialog.getByRole("button", { name: "Löschen" }).click();
@@ -145,7 +160,7 @@ test("a manager creates a flow, renames it, deletes it and restores it", async (
     name: "Karrierebaum wiederherstellen?",
   });
   await clickUntilVisible(
-    page.getByRole("button", { name: "Wiederherstellen" }),
+    page.getByRole("table").getByRole("button", { name: "Wiederherstellen" }),
     restoreDialog,
   );
   await expect(restoreDialog.getByLabel("Slug")).toHaveValue("flotte");
@@ -168,6 +183,101 @@ test("a manager creates a flow, renames it, deletes it and restores it", async (
       "CAREER_FLOW_RESTORED",
     ]),
   );
+});
+
+test("the top bar's Neu menu creates a flow for managers only", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createManager(prisma);
+  await signIn(manager.user);
+
+  /** Somewhere outside the career app, since the menu sits in the shell */
+  await page.goto("/app/apps");
+
+  const createMenu = page.getByRole("dialog", { name: "Neu erstellen" });
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Neu", exact: true }),
+    createMenu,
+  );
+  await createMenu.getByRole("button", { name: "Karrierebaum" }).click();
+
+  const dialog = modal(page, "Neuer Karrierebaum");
+  await expect(dialog).toBeVisible();
+  await dialog.getByLabel("Name").fill("Aus der Kopfleiste");
+  await expect(dialog.getByLabel("Slug")).toHaveValue("aus-der-kopfleiste");
+  await dialog.getByRole("button", { name: "Speichern" }).click();
+
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+  await expect
+    .poll(() => prisma.flow.count({ where: { slug: "aus-der-kopfleiste" } }))
+    .toBe(1);
+
+  /** Without the permission the entry is not offered */
+  await page.context().clearCookies();
+  const outsider = await createCitizen(prisma, { handle: "aussenstehender" });
+  await signIn(outsider.user);
+  await page.goto("/app/apps");
+
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Neu", exact: true }),
+    createMenu,
+  );
+  await expect(
+    createMenu.getByRole("button", { name: "Karrierebaum" }),
+  ).toHaveCount(0);
+});
+
+test("the settings pages hydrate cleanly and never scroll the page sideways", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createManager(prisma);
+  /** A name long enough to push the access editor's controls out of its tile */
+  const wideRole = await createRole(prisma, {
+    name: "abteilung-fuer-ausbildung-und-zertifizierung-langer-name",
+  });
+  const flow = await createFlow(prisma, {
+    name: "Academy",
+    slug: "academy",
+    roleAccess: [{ roleId: wideRole.id, type: FlowRoleAccessType.UPDATE }],
+  });
+  await createFlow(prisma, { name: "Team", slug: "team", position: 1 });
+  await signIn(manager.user);
+
+  const browserErrors: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error") browserErrors.push(message.text());
+  });
+  page.on("pageerror", (error) => browserErrors.push(String(error)));
+
+  /**
+   * dnd-kit numbers its accessibility ids from a module-level counter that
+   * survives across server renders, so without an explicit DndContext id the
+   * server and the browser disagree on every visit but the first.
+   */
+  const hydrationErrors = () =>
+    browserErrors.filter((message) => /hydrat/i.test(message));
+
+  await page.goto("/app/career/settings");
+  await waitForAppShellHydration(page);
+  expect(hydrationErrors()).toEqual([]);
+  expect(await hasHorizontalPageOverflow(page)).toBe(false);
+
+  /** Again, because the mismatch only showed from the second render on */
+  await page.goto("/app/career/settings");
+  await waitForAppShellHydration(page);
+  expect(hydrationErrors()).toEqual([]);
+
+  await page.goto(`/app/career/settings/${flow.id}`);
+  await waitForAppShellHydration(page);
+  await expect(page.getByRole("combobox", { name: "Zugriff" })).toBeVisible();
+  expect(hydrationErrors()).toEqual([]);
+  expect(await hasHorizontalPageOverflow(page)).toBe(false);
 });
 
 test("a taken, reserved or malformed slug is rejected with a readable error", async ({
@@ -371,6 +481,9 @@ test("reordering by mouse survives a reload", async ({
     targetBox.y + targetBox.height,
     { steps: 10 },
   );
+  /** The dragged row is pinned to its column and its container mid-drag */
+  expect(await hasHorizontalPageOverflow(page)).toBe(false);
+
   await page.mouse.up();
 
   await expect
@@ -483,6 +596,72 @@ test("granting access in the management UI lets a role read the flow", async ({
   expect(await auditEventTypes(prisma)).toContain(
     "CAREER_FLOW_ROLE_ACCESS_UPDATED",
   );
+});
+
+test("saving access keeps every role's tier on its own row", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createManager(prisma);
+  /**
+   * Names chosen so alphabetical order and "reads first, then edits" order
+   * disagree: saving rewrites every row, so the server answers in the latter
+   * order and the editor must not follow it.
+   */
+  const alpha = await createRole(prisma, { name: "alpha-bearbeitet" });
+  const beta = await createRole(prisma, { name: "beta-liest" });
+  const gamma = await createRole(prisma, { name: "gamma-bearbeitet" });
+
+  const flow = await createFlow(prisma, {
+    name: "Academy",
+    slug: "academy",
+    roleAccess: [
+      { roleId: alpha.id, type: FlowRoleAccessType.UPDATE },
+      { roleId: beta.id, type: FlowRoleAccessType.READ },
+      { roleId: gamma.id, type: FlowRoleAccessType.UPDATE },
+    ],
+  });
+
+  await signIn(manager.user);
+  await page.goto(`/app/career/settings/${flow.id}`);
+  /** The select is controlled, so a change before hydration is discarded */
+  await waitForAppShellHydration(page);
+
+  const rows = page.getByRole("listitem").filter({
+    has: page.getByRole("combobox", { name: "Zugriff" }),
+  });
+  const tierOf = async (roleName: string) =>
+    rows
+      .filter({ hasText: roleName })
+      .getByRole("combobox", { name: "Zugriff" })
+      .inputValue();
+
+  await expect(rows).toHaveCount(3);
+  expect(await tierOf("alpha-bearbeitet")).toBe("update");
+  expect(await tierOf("beta-liest")).toBe("read");
+  expect(await tierOf("gamma-bearbeitet")).toBe("update");
+
+  /** Flip one role, save, and confirm nothing else moved or changed */
+  await rows
+    .filter({ hasText: "beta-liest" })
+    .getByRole("combobox", { name: "Zugriff" })
+    .selectOption("update");
+  await accessForm(page).getByRole("button", { name: "Speichern" }).click();
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+
+  await expect(rows).toHaveCount(3);
+  expect(await tierOf("alpha-bearbeitet")).toBe("update");
+  expect(await tierOf("beta-liest")).toBe("update");
+  expect(await tierOf("gamma-bearbeitet")).toBe("update");
+
+  /** And a reload agrees with what the editor showed */
+  await page.reload();
+  expect(await tierOf("alpha-bearbeitet")).toBe("update");
+  expect(await tierOf("beta-liest")).toBe("update");
+  expect(await tierOf("gamma-bearbeitet")).toBe("update");
 });
 
 test("career;manage alone grants access to every flow", async ({

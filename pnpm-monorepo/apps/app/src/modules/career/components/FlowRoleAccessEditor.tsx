@@ -1,14 +1,13 @@
 "use client";
 
-import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
-import { useAction } from "@/modules/actions/utils/useAction";
+import { runAction } from "@/modules/actions/utils/runAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
 import { Select } from "@/modules/common/components/form/Select";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import { FlowRoleAccessType } from "@sam-monorepo/database/browser";
-import { useId, useState } from "react";
+import { useId, useState, useTransition, type FormEventHandler } from "react";
 import { FaSave, FaTrash, FaUsers } from "react-icons/fa";
 import { updateFlowRoleAccess } from "../actions/updateFlowRoleAccess";
 
@@ -29,6 +28,27 @@ interface Entry {
   readonly roleId: string;
   readonly choice: AccessChoice;
 }
+
+type StoredAccess = readonly {
+  readonly roleId: string;
+  readonly type: FlowRoleAccessType;
+}[];
+
+const toEntries = (roleAccess: StoredAccess): Entry[] =>
+  roleAccess.map((access) => ({
+    roleId: access.roleId,
+    choice:
+      access.type === FlowRoleAccessType.UPDATE
+        ? AccessChoice.Update
+        : AccessChoice.Read,
+  }));
+
+/** Identifies the stored grants regardless of the order they arrive in */
+const signatureOf = (roleAccess: StoredAccess) =>
+  roleAccess
+    .map((access) => `${access.roleId}:${access.type}`)
+    .toSorted()
+    .join(",");
 
 interface SelectableRole {
   readonly id: string;
@@ -55,22 +75,62 @@ export const FlowRoleAccessEditor = ({
    * grant to a role the current user cannot see stays listed instead of
    * being dropped on the next save.
    */
-  const [entries, setEntries] = useState<Entry[]>(() =>
-    roleAccess.map((access) => ({
-      roleId: access.roleId,
-      choice:
-        access.type === FlowRoleAccessType.UPDATE
-          ? AccessChoice.Update
-          : AccessChoice.Read,
-    })),
-  );
+  const [entries, setEntries] = useState<Entry[]>(() => toEntries(roleAccess));
 
-  const { state, formAction, isPending } = useAction(updateFlowRoleAccess, {
-    errorToast: false,
-  });
+  /**
+   * A save rewrites every row, so the server comes back with the same grants
+   * in a different order. Adopt its answer, but only when the grants really
+   * changed — otherwise a re-render would discard edits in progress.
+   */
+  const serverSignature = signatureOf(roleAccess);
+  const [renderedSignature, setRenderedSignature] = useState(serverSignature);
+  if (renderedSignature !== serverSignature) {
+    setRenderedSignature(serverSignature);
+    setEntries(toEntries(roleAccess));
+  }
+
+  const [isPending, startTransition] = useTransition();
+
+  /**
+   * Submitted by hand rather than through `<form action>`: React resets a
+   * form once its action resolves, which snaps every select back to the
+   * option the server rendered as selected. The component's state does not
+   * change with it, so React never writes the DOM back and the selects end
+   * up showing the tiers the flow had before the save.
+   */
+  const handleSubmit: FormEventHandler<HTMLFormElement> = (event) => {
+    event.preventDefault();
+
+    const formData = new FormData();
+    formData.append("flowId", flowId);
+    for (const entry of entries) {
+      if (entry.choice === AccessChoice.Read)
+        formData.append("readRoleId[]", entry.roleId);
+      if (entry.choice === AccessChoice.Update)
+        formData.append("updateRoleId[]", entry.roleId);
+    }
+
+    startTransition(async () => {
+      await runAction(updateFlowRoleAccess, formData);
+    });
+  };
 
   const addableRoles = selectableRoles.filter(
     (role) => !entries.some((entry) => entry.roleId === role.id),
+  );
+
+  /**
+   * Sorted for display rather than kept in state, so the list reads the same
+   * before and after a save and a newly added role lands where it belongs
+   * instead of at the bottom. Roles this user cannot see sort by their id.
+   */
+  const roleNameById = new Map(
+    selectableRoles.map((role) => [role.id, role.name]),
+  );
+  const sortedEntries = entries.toSorted((a, b) =>
+    (roleNameById.get(a.roleId) ?? a.roleId).localeCompare(
+      roleNameById.get(b.roleId) ?? b.roleId,
+    ),
   );
 
   const handleAdd = (roleId: string) =>
@@ -92,9 +152,7 @@ export const FlowRoleAccessEditor = ({
     );
 
   return (
-    <form action={formAction}>
-      <input type="hidden" name="flowId" value={flowId} />
-
+    <form onSubmit={handleSubmit}>
       {entries.length === 0 ? (
         <p className="text-neutral-500">
           Keine Rolle hat Zugriff. Der Karrierebaum ist damit nur für Nutzer mit
@@ -102,7 +160,7 @@ export const FlowRoleAccessEditor = ({
         </p>
       ) : (
         <ul className="flex flex-col gap-2">
-          {entries.map((entry) => (
+          {sortedEntries.map((entry) => (
             <AccessRow
               key={entry.roleId}
               entry={entry}
@@ -153,8 +211,6 @@ export const FlowRoleAccessEditor = ({
         </div>
       </PopoverBaseUI>
 
-      <ActionErrorNote className="mt-4" state={state} />
-
       <div className="mt-4 flex justify-end">
         <Button2 type="submit" disabled={isPending}>
           {isPending ? <AsciiSpinner /> : <FaSave />}
@@ -181,8 +237,13 @@ const AccessRow = ({
   const selectId = useId();
 
   return (
-    <li className="flex items-center gap-2">
-      <span className="min-w-0 flex-1">
+    /*
+      Wrapping instead of shrinking: the role badge sizes to its name, so a
+      long one would otherwise push the controls out of the tile and scroll
+      the whole page sideways.
+    */
+    <li className="flex flex-wrap items-center gap-2">
+      <span className="min-w-0 flex-1 basis-48 overflow-hidden">
         {isRoleVisible ? (
           <SingleRoleBadge roleId={entry.roleId} showPlaceholder />
         ) : (
@@ -196,41 +257,37 @@ const AccessRow = ({
         )}
       </span>
 
-      <label htmlFor={selectId} className="sr-only">
-        Zugriff
-      </label>
+      <div className="flex flex-none items-center gap-2">
+        <label htmlFor={selectId} className="sr-only">
+          Zugriff
+        </label>
 
-      <Select
-        id={selectId}
-        className="w-48 flex-none"
-        value={entry.choice}
-        onChange={(event) =>
-          onChange(entry.roleId, event.target.value as AccessChoice)
-        }
-      >
-        {Object.values(AccessChoice).map((choice) => (
-          <option key={choice} value={choice}>
-            {ACCESS_CHOICE_LABELS[choice]}
-          </option>
-        ))}
-      </Select>
+        {/* Select is a full-width field, so its width comes from this wrapper */}
+        <div className="w-44">
+          <Select
+            id={selectId}
+            value={entry.choice}
+            onChange={(event) =>
+              onChange(entry.roleId, event.target.value as AccessChoice)
+            }
+          >
+            {Object.values(AccessChoice).map((choice) => (
+              <option key={choice} value={choice}>
+                {ACCESS_CHOICE_LABELS[choice]}
+              </option>
+            ))}
+          </Select>
+        </div>
 
-      {entry.choice === AccessChoice.Read && (
-        <input type="hidden" name="readRoleId[]" value={entry.roleId} />
-      )}
-      {entry.choice === AccessChoice.Update && (
-        <input type="hidden" name="updateRoleId[]" value={entry.roleId} />
-      )}
-
-      <Button2
-        type="button"
-        variant={Button2Variant.IconOnly}
-        tooltip="Rolle entfernen"
-        onClick={() => onRemove(entry.roleId)}
-        className="flex-none"
-      >
-        <FaTrash />
-      </Button2>
+        <Button2
+          type="button"
+          variant={Button2Variant.IconOnly}
+          tooltip="Rolle entfernen"
+          onClick={() => onRemove(entry.roleId)}
+        >
+          <FaTrash />
+        </Button2>
+      </div>
     </li>
   );
 };

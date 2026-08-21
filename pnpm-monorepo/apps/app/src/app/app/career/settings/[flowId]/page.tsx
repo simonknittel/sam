@@ -6,7 +6,7 @@ import { getManageableFlow } from "@/modules/career/queries/getManageableFlows";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { Link } from "@/modules/common/components/Link";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
-import { Tile } from "@/modules/common/components/Tile";
+import { Tile, TileVariant } from "@/modules/common/components/Tile";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
 import { getVisibleRoles } from "@/modules/roles/utils/getRoles";
@@ -61,14 +61,7 @@ const FlowSettings = async ({ flowId }: FlowSettingsProps) => {
 
   return (
     <div className="flex flex-col gap-4">
-      <Tile
-        heading={flow.name}
-        cta={
-          isDeleted ? undefined : (
-            <DeleteFlowButton flowId={flow.id} name={flow.name} />
-          )
-        }
-      >
+      <Tile heading={flow.name}>
         {isDeleted ? (
           <p className="text-neutral-500">
             Dieser Karrierebaum wurde gelöscht. Er lässt sich in der Übersicht
@@ -134,6 +127,12 @@ const FlowSettings = async ({ flowId }: FlowSettingsProps) => {
           )}
         </dl>
       </Tile>
+
+      {!isDeleted && (
+        <Tile heading="Danger Zone" variant={TileVariant.Danger}>
+          <DeleteFlowButton flowId={flow.id} name={flow.name} />
+        </Tile>
+      )}
     </div>
   );
 };

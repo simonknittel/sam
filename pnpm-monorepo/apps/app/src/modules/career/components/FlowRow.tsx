@@ -3,11 +3,10 @@
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { Link } from "@/modules/common/components/Link";
-import { TRow, TableRowAlignment } from "@/modules/common/components/Table";
+import { TRow } from "@/modules/common/components/Table";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { FlowRoleAccessType } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { FaGripVertical, FaRegCopy } from "react-icons/fa";
 import type { ManageableFlow } from "../queries/getManageableFlows";
@@ -37,17 +36,9 @@ export const FlowRow = ({
     isDragging,
   } = useSortable({ id: flow.id, disabled: !isSortable });
 
-  const readCount = flow.roleAccess.filter(
-    (access) => access.type === FlowRoleAccessType.READ,
-  ).length;
-  const updateCount = flow.roleAccess.filter(
-    (access) => access.type === FlowRoleAccessType.UPDATE,
-  ).length;
-
   return (
     <TRow
       ref={setNodeRef}
-      alignment={TableRowAlignment.Top}
       style={{
         transform: CSS.Transform.toString(transform),
         transition: prefersReducedMotion ? undefined : transition,
@@ -103,18 +94,6 @@ export const FlowRow = ({
           </Link>
         )}
       </td>
-
-      <td className="min-w-0 text-sm">
-        {readCount + updateCount === 0 ? (
-          <span className="text-neutral-500">Kein Rollenzugriff</span>
-        ) : (
-          <span>
-            {readCount} × Lesen, {updateCount} × Bearbeiten
-          </span>
-        )}
-      </td>
-
-      <td className="min-w-0 text-sm">{flow._count.nodes}</td>
 
       <td className="min-w-0 text-sm">
         <span className="block">{formatDate(flow.createdAt)}</span>

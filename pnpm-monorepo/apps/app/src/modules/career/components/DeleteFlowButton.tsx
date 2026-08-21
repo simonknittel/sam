@@ -1,11 +1,7 @@
 "use client";
 
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
-import {
-  Button2,
-  Button2ColorSchema,
-  Button2Variant,
-} from "@/modules/common/components/Button2";
+import { Button2 } from "@/modules/common/components/Button2";
 import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionButton";
 import { FaTrash } from "react-icons/fa";
 import { deleteFlow } from "../actions/deleteFlow";
@@ -21,12 +17,7 @@ export const DeleteFlowButton = ({ flowId, name }: Props) => {
       action={deleteFlow}
       hiddenFields={[{ name: "flowId", value: flowId }]}
       trigger={(isPending) => (
-        <Button2
-          type="button"
-          variant={Button2Variant.Secondary}
-          colorSchema={Button2ColorSchema.InteractionMuted}
-          disabled={isPending}
-        >
+        <Button2 type="button" disabled={isPending}>
           {isPending ? <AsciiSpinner /> : <FaTrash />}
           Löschen
         </Button2>

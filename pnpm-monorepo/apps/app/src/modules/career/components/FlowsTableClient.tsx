@@ -17,6 +17,10 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import {
+  restrictToParentElement,
+  restrictToVerticalAxis,
+} from "@dnd-kit/modifiers";
+import {
   SortableContext,
   arrayMove,
   sortableKeyboardCoordinates,
@@ -44,8 +48,6 @@ const HANDLE_COLUMN: TableColumn = {
 const COLUMNS: TableColumn[] = [
   { key: "name", label: "Name", track: "minmax(180px,1.5fr)", minWidth: 180 },
   { key: "slug", label: "Slug", track: "minmax(140px,1fr)", minWidth: 140 },
-  { key: "access", label: "Zugriff", track: "180px", minWidth: 180 },
-  { key: "nodes", label: "Knoten", track: "80px", minWidth: 80 },
   { key: "createdAt", label: "Erstellt", track: "160px", minWidth: 160 },
   { key: "updatedAt", label: "Geändert", track: "160px", minWidth: 160 },
   {
@@ -119,9 +121,7 @@ export const FlowsTableClient = ({
     for (const flow of nextFlows) formData.append("flowId[]", flow.id);
 
     startTransition(async () => {
-      const succeeded = await runAction(reorderFlows, formData, {
-        successToast: false,
-      });
+      const succeeded = await runAction(reorderFlows, formData);
       /** Put the rows back where they were rather than lying about the order */
       if (!succeeded) setOrderedFlows(previousFlows);
     });
@@ -143,9 +143,21 @@ export const FlowsTableClient = ({
 
   return (
     <>
+      {/*
+        The `id` is required, not cosmetic: without it dnd-kit derives its
+        `aria-describedby` from a module-level counter that keeps climbing for
+        the lifetime of the server process, while the browser's copy always
+        restarts at 0 — so every server render disagreed with hydration.
+
+        Without the modifiers the dragged row follows the pointer on both
+        axes and past the table's edges, which grows the scroll container and
+        pops its scrollbars up mid-drag.
+      */}
       <DndContext
+        id="career-flows"
         sensors={sensors}
         collisionDetection={closestCenter}
+        modifiers={[restrictToVerticalAxis, restrictToParentElement]}
         onDragEnd={handleDragEnd}
       >
         <TableTile
