@@ -46,6 +46,12 @@ const accessForm = (page: Page) =>
 const dragNarration = async (page: Page) =>
   (await page.getByRole("status").allTextContents()).join(" ");
 
+/** Every management mutation has to leave a trace in the system log. */
+const auditEventTypes = async (prisma: PrismaClient) => {
+  const events = await prisma.auditEvent.findMany({ select: { type: true } });
+  return events.map((event) => event.type);
+};
+
 test("a manager creates a flow, renames it, deletes it and restores it", async ({
   page,
   prisma,
@@ -153,6 +159,15 @@ test("a manager creates a flow, renames it, deletes it and restores it", async (
   await expect(
     page.getByRole("link", { name: "Flotte" }).first(),
   ).toBeVisible();
+
+  expect(await auditEventTypes(prisma)).toEqual(
+    expect.arrayContaining([
+      "CAREER_FLOW_CREATED",
+      "CAREER_FLOW_RENAMED",
+      "CAREER_FLOW_DELETED",
+      "CAREER_FLOW_RESTORED",
+    ]),
+  );
 });
 
 test("a taken, reserved or malformed slug is rejected with a readable error", async ({
@@ -273,6 +288,8 @@ test("duplicating copies the diagram but grants nobody access", async ({
 
   await page.goto("/app/career/academy-kopie");
   await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible();
+
+  expect(await auditEventTypes(prisma)).toContain("CAREER_FLOW_DUPLICATED");
 });
 
 test("reordering by keyboard changes the order of the career navigation", async ({
@@ -316,6 +333,8 @@ test("reordering by keyboard changes the order of the career navigation", async 
   await expect(
     page.getByRole("navigation").getByRole("link").first(),
   ).toHaveText("Zweiter");
+
+  expect(await auditEventTypes(prisma)).toContain("CAREER_FLOWS_REORDERED");
 });
 
 test("reordering by mouse survives a reload", async ({
@@ -460,6 +479,10 @@ test("granting access in the management UI lets a role read the flow", async ({
   await expect(
     page.getByRole("button", { name: "Bearbeiten de-/aktivieren" }),
   ).toHaveCount(0);
+
+  expect(await auditEventTypes(prisma)).toContain(
+    "CAREER_FLOW_ROLE_ACCESS_UPDATED",
+  );
 });
 
 test("career;manage alone grants access to every flow", async ({
