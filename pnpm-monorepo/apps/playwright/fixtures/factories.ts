@@ -10,6 +10,9 @@ import type {
 import {
   EventSource,
   EventVisibility,
+  FlowNodeMarkdownPosition,
+  FlowNodeType,
+  FlowRoleAccessType,
   OrganizationMembershipType,
   OrganizationMembershipVisibility,
   WikiPageAccessType,
@@ -20,7 +23,7 @@ import {
   WikiPageUploadability,
   WikiPageVisibility,
 } from "@sam-monorepo/database/client";
-import { randomUUID } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 
 /**
  * The base permission every signed-in user needs to get past the clearance
@@ -473,7 +476,95 @@ export const addCitizenToOrganization = async (
   });
 };
 
+const CUID2_LENGTH = 24;
+const LETTERS = "abcdefghijklmnopqrstuvwxyz";
+const ALPHANUMERICS = `${LETTERS}0123456789`;
+
+/**
+ * Career node ids have to pass the update action's `z.cuid2()` check —
+ * a seeded flow whose ids look different could never be saved again.
+ */
+const cuid2Like = () =>
+  Array.from(randomBytes(CUID2_LENGTH), (byte, index) =>
+    index === 0
+      ? LETTERS[byte % LETTERS.length]
+      : ALPHANUMERICS[byte % ALPHANUMERICS.length],
+  ).join("");
+
+interface CreateFlowOptions {
+  readonly name: string;
+  readonly slug: string;
+  readonly position?: number;
+  readonly roleAccess?: readonly {
+    readonly roleId: string;
+    readonly type: FlowRoleAccessType;
+  }[];
+  /**
+   * Markdown nodes stacked in a column and connected top to bottom, so a
+   * flow has something recognizable to render, copy and save again.
+   */
+  readonly markdownNodes?: readonly string[];
+}
+
+export const createFlow = async (
+  prisma: PrismaClient,
+  {
+    name,
+    slug,
+    position = 0,
+    roleAccess = [],
+    markdownNodes = [],
+  }: CreateFlowOptions,
+) => {
+  const flow = await prisma.flow.create({
+    data: {
+      name,
+      slug,
+      position,
+      roleAccess: {
+        create: roleAccess.map(({ roleId, type }) => ({ roleId, type })),
+      },
+    },
+  });
+
+  if (markdownNodes.length === 0) return flow;
+
+  const nodeIds = markdownNodes.map(() => cuid2Like());
+
+  await prisma.flowNode.createMany({
+    data: markdownNodes.map((markdown, index) => ({
+      id: nodeIds[index]!,
+      flowId: flow.id,
+      type: FlowNodeType.MARKDOWN,
+      positionX: 0,
+      positionY: index * 200,
+      width: 300,
+      height: 120,
+      markdown,
+      markdownPosition: FlowNodeMarkdownPosition.CENTER,
+      // The update action's schema rejects nulls here, so a saved-again
+      // flow needs real values
+      backgroundColor: "#000000",
+      backgroundTransparency: 0.5,
+    })),
+  });
+
+  await prisma.flowEdge.createMany({
+    data: nodeIds.slice(1).map((targetId, index) => ({
+      id: cuid2Like(),
+      type: "smoothstep",
+      sourceId: nodeIds[index]!,
+      sourceHandle: "bottom",
+      targetId,
+      targetHandle: "top",
+    })),
+  });
+
+  return flow;
+};
+
 export {
+  FlowRoleAccessType,
   WikiPageAccessType,
   WikiPageEditability,
   WikiPageSidebarMode,
