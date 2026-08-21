@@ -1,9 +1,10 @@
 import { TaskRewardType, TaskVisibility } from "@sam-monorepo/database/client";
 
 /**
- * The static permission matrix rows: every non-career permission the roles
- * settings page offers, grouped by section. Career rows are appended at
- * request time from the configured flows.
+ * The permission matrix rows: every permission the roles settings page
+ * offers, grouped by section. Per-flow career access is no longer among them
+ * — it lives in `FlowRoleAccess` and is granted under Karriere →
+ * Einstellungen.
  */
 export const STATIC_PERMISSIONS = [
   // Citizen
@@ -310,7 +311,11 @@ export const STATIC_PERMISSIONS = [
   },
 
   // Career
-  // TODO
+  {
+    section: "Karriere",
+    title: "Karrierebäume verwalten",
+    string: "career;manage",
+  },
 
   // Organizations
   {

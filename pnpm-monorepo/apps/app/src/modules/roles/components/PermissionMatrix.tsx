@@ -1,4 +1,3 @@
-import { getAllFlows } from "@/modules/career/queries/getAllFlows";
 import { Link } from "@/modules/common/components/Link";
 import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
 import type {
@@ -19,23 +18,15 @@ interface Props {
 }
 
 export const PermissionMatrix = async ({ className }: Props) => {
-  const [roles, flows] = await Promise.all([getRoles(true), getAllFlows()]);
+  const roles = await getRoles(true);
 
-  const permissions = [
-    ...STATIC_PERMISSIONS,
-    ...flows.flatMap((flow) => [
-      {
-        section: "Karriere",
-        title: `${flow.name} lesen`,
-        string: `career;read;flowId=${flow.id}`,
-      },
-      {
-        section: "Karriere",
-        title: `${flow.name} bearbeiten`,
-        string: `career;update;flowId=${flow.id}`,
-      },
-    ]),
-  ];
+  /**
+   * Sorted here rather than while rendering the header, so the columns and
+   * every row agree on the order without mutating the shared constant.
+   */
+  const permissions = STATIC_PERMISSIONS.toSorted((a, b) =>
+    a.section.localeCompare(b.section),
+  );
 
   const gridTemplateColumns = `240px repeat(${permissions.length}, 32px)`;
 
@@ -61,23 +52,21 @@ export const PermissionMatrix = async ({ className }: Props) => {
                 </div>
               </th>
 
-              {permissions
-                .sort((a, b) => a.section.localeCompare(b.section))
-                .map((permission) => (
-                  <th
-                    key={permission.string}
-                    className="font-normal whitespace-nowrap flex justify-center items-end"
-                  >
-                    <div className="-rotate-45 w-0">
-                      {permission.section && (
-                        <span className="text-neutral-700">
-                          {permission.section} /{" "}
-                        </span>
-                      )}
-                      <span>{permission.title}</span>
-                    </div>
-                  </th>
-                ))}
+              {permissions.map((permission) => (
+                <th
+                  key={permission.string}
+                  className="font-normal whitespace-nowrap flex justify-center items-end"
+                >
+                  <div className="-rotate-45 w-0">
+                    {permission.section && (
+                      <span className="text-neutral-700">
+                        {permission.section} /{" "}
+                      </span>
+                    )}
+                    <span>{permission.title}</span>
+                  </div>
+                </th>
+              ))}
             </tr>
           </thead>
 

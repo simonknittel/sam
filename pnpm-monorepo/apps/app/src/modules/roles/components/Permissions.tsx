@@ -9,7 +9,6 @@ import TabList from "@/modules/common/components/tabs/TabList";
 import { TabsProvider } from "@/modules/common/components/tabs/TabsContext";
 import {
   type ClassificationLevel,
-  type Flow,
   type NoteType,
   type Role,
 } from "@sam-monorepo/database/browser";
@@ -42,7 +41,6 @@ interface Props {
   readonly noteTypes: NoteType[];
   readonly classificationLevels: ClassificationLevel[];
   readonly allRoles: Role[];
-  readonly flows: Flow[];
 }
 
 export const Permissions = ({
@@ -50,7 +48,6 @@ export const Permissions = ({
   noteTypes,
   classificationLevels,
   allRoles,
-  flows,
 }: Props) => {
   const { state, formAction, isPending } = useAction(updateRolePermissions, {
     errorToast: false,
@@ -115,7 +112,7 @@ export const Permissions = ({
         <PenaltyPointsTab />
         <TasksTab />
         <WikiTab />
-        <OtherTab roles={allRoles} flows={flows} />
+        <OtherTab roles={allRoles} />
       </TabsProvider>
 
       <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">

@@ -2,18 +2,18 @@
 
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
 import TabPanel from "@/modules/common/components/tabs/TabPanel";
-import { type Flow, type Role } from "@sam-monorepo/database/browser";
+import { Tooltip } from "@/modules/common/components/Tooltip";
+import { type Role } from "@sam-monorepo/database/browser";
+import { FaInfoCircle } from "react-icons/fa";
 import { usePermissionsContext } from "../PermissionsContext";
-import { CareerSection } from "./components/CareerSection";
 import { RoleSection } from "./components/RoleSection";
 import { SpynetSection } from "./components/SpynetSection";
 
 interface Props {
   readonly roles: Role[];
-  readonly flows: Flow[];
 }
 
-const OtherTab = ({ roles, flows }: Readonly<Props>) => {
+const OtherTab = ({ roles }: Readonly<Props>) => {
   const { register } = usePermissionsContext();
 
   return (
@@ -96,7 +96,20 @@ const OtherTab = ({ roles, flows }: Readonly<Props>) => {
         <YesNoCheckbox {...register("upload;manage")} />
       </div>
 
-      <CareerSection flows={flows} className="mt-2" />
+      <div className="py-2 flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <h4 className="font-bold">Karrierebäume verwalten</h4>
+
+          <Tooltip triggerChildren={<FaInfoCircle />}>
+            Nutzer mit dieser Berechtigung können unter Karriere → Einstellungen
+            Karrierebäume anlegen, duplizieren, umbenennen, sortieren und
+            löschen sowie deren Berechtigungen vergeben. Zusätzlich können sie
+            jeden Karrierebaum lesen und bearbeiten.
+          </Tooltip>
+        </div>
+
+        <YesNoCheckbox {...register("career;manage")} />
+      </div>
 
       <SpynetSection className="mt-2" />
 

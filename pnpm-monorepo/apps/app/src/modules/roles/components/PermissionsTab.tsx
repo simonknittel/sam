@@ -3,7 +3,6 @@
 import { Tile } from "@/modules/common/components/Tile";
 import type {
   ClassificationLevel,
-  Flow,
   NoteType,
   PermissionString,
   Role,
@@ -19,7 +18,6 @@ interface Props {
   readonly noteTypes: NoteType[];
   readonly classificationLevels: ClassificationLevel[];
   readonly allRoles: Role[];
-  readonly flows: Flow[];
 }
 
 export const PermissionsTab = ({
@@ -28,7 +26,6 @@ export const PermissionsTab = ({
   noteTypes,
   classificationLevels,
   allRoles,
-  flows,
 }: Props) => {
   return (
     <Tile heading="Berechtigungen" className={className}>
@@ -38,7 +35,6 @@ export const PermissionsTab = ({
           noteTypes={noteTypes}
           classificationLevels={classificationLevels}
           allRoles={allRoles}
-          flows={flows}
         />
       </PermissionsProvider>
     </Tile>
