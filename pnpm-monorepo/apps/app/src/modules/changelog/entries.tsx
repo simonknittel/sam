@@ -46,6 +46,45 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-08-21-karrierebaeume-verwalten",
+    date: "2026-08-21",
+    title: "Karrierebäume verwalten",
+    tags: ["Karriere", "Neu"],
+    isTracked: false,
+    requiresAuth: { resource: "career", action: "manage" },
+    body: () => (
+      <>
+        <p>
+          Karrierebäume lassen sich ab sofort unter{" "}
+          <Link
+            href="/app/career/settings"
+            className="text-interaction-500 hover:underline focus-visible:underline"
+          >
+            Karriere &gt; Einstellungen
+          </Link>{" "}
+          anlegen, duplizieren, umbenennen, sortieren und löschen &ndash; ohne
+          Umweg über die Datenbank. Ein gelöschter Karrierebaum bleibt
+          wiederherstellbar, und eine Kopie übernimmt zwar alle Knoten und
+          Verbindungen, aber bewusst keine Berechtigungen.
+        </p>
+
+        <p>
+          Die Berechtigungen für einzelne Karrierebäume werden ebenfalls dort
+          vergeben und nicht mehr unter{" "}
+          <Link
+            href="/app/roles"
+            className="text-interaction-500 hover:underline focus-visible:underline"
+          >
+            Rollen
+          </Link>
+          . Dort gibt es dafür nur noch die übergreifende Berechtigung
+          &ldquo;Karrierebäume verwalten&rdquo;.
+        </p>
+      </>
+    ),
+  },
+
+  {
     key: "2026-08-20-app-favoriten",
     date: "2026-08-20",
     title: "App-Favoriten",
