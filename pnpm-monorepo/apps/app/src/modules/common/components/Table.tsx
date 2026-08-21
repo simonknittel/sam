@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties, ReactNode, Ref } from "react";
 
 interface TableProps {
   readonly className?: string;
@@ -82,16 +82,23 @@ export enum TableRowAlignment {
 interface TRowProps {
   readonly className?: string;
   readonly alignment?: TableRowAlignment;
+  /** For rows a library positions itself, e.g. while being dragged */
+  readonly style?: CSSProperties;
+  readonly ref?: Ref<HTMLTableRowElement>;
   readonly children: ReactNode;
 }
 
 export const TRow = ({
   className,
   alignment = TableRowAlignment.Center,
+  style,
+  ref,
   children,
 }: TRowProps) => {
   return (
     <tr
+      ref={ref}
+      style={style}
       className={clsx(
         "grid grid-cols-(--table-columns) gap-2 border-t border-white/5 py-1 hover:bg-white/5",
         {

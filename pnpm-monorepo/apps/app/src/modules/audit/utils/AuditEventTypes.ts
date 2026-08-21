@@ -1518,6 +1518,85 @@ export const AuditEventDefinitions: {
       `Career flow updated to ${data.nodeCount} node(s) and ${data.edgeCount} edge(s) (${data.flowId})`,
   },
 
+  [AuditEventType.CAREER_FLOW_CREATED]: {
+    type: AuditEventType.CAREER_FLOW_CREATED,
+    data: {
+      flowId: "string",
+      name: "string",
+      slug: "string",
+    },
+    message: (data) =>
+      `Career flow "${data.name}" created with slug "${data.slug}" (${data.flowId})`,
+  },
+
+  [AuditEventType.CAREER_FLOW_DUPLICATED]: {
+    type: AuditEventType.CAREER_FLOW_DUPLICATED,
+    data: {
+      flowId: "string",
+      name: "string",
+      slug: "string",
+      sourceFlowId: "string",
+      nodeCount: 0,
+      edgeCount: 0,
+    },
+    message: (data) =>
+      `Career flow ${data.sourceFlowId} duplicated as "${data.name}" with slug "${data.slug}", ${data.nodeCount} node(s) and ${data.edgeCount} edge(s) (${data.flowId})`,
+  },
+
+  [AuditEventType.CAREER_FLOW_RENAMED]: {
+    type: AuditEventType.CAREER_FLOW_RENAMED,
+    data: {
+      flowId: "string",
+      previousName: "string",
+      name: "string",
+      previousSlug: "string",
+      slug: "string",
+    },
+    message: (data) =>
+      `Career flow renamed from "${data.previousName}" (${data.previousSlug}) to "${data.name}" (${data.slug}) (${data.flowId})`,
+  },
+
+  [AuditEventType.CAREER_FLOWS_REORDERED]: {
+    type: AuditEventType.CAREER_FLOWS_REORDERED,
+    data: {
+      flowIds: ["string"],
+    },
+    message: (data) => `Career flows reordered to ${data.flowIds.join(", ")}`,
+  },
+
+  [AuditEventType.CAREER_FLOW_DELETED]: {
+    type: AuditEventType.CAREER_FLOW_DELETED,
+    data: {
+      flowId: "string",
+      name: "string",
+      slug: "string",
+    },
+    message: (data) =>
+      `Career flow "${data.name}" (${data.slug}) deleted (${data.flowId})`,
+  },
+
+  [AuditEventType.CAREER_FLOW_RESTORED]: {
+    type: AuditEventType.CAREER_FLOW_RESTORED,
+    data: {
+      flowId: "string",
+      name: "string",
+      slug: "string",
+    },
+    message: (data) =>
+      `Career flow "${data.name}" restored with slug "${data.slug}" (${data.flowId})`,
+  },
+
+  [AuditEventType.CAREER_FLOW_ROLE_ACCESS_UPDATED]: {
+    type: AuditEventType.CAREER_FLOW_ROLE_ACCESS_UPDATED,
+    data: {
+      flowId: "string",
+      readRoleIds: ["string"],
+      updateRoleIds: ["string"],
+    },
+    message: (data) =>
+      `Career flow role access updated to ${data.readRoleIds.length} reading and ${data.updateRoleIds.length} editing role(s) (${data.flowId})`,
+  },
+
   [AuditEventType.SILC_SETTING_UPDATED]: {
     type: AuditEventType.SILC_SETTING_UPDATED,
     data: {

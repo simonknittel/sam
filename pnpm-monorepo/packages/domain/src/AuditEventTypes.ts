@@ -143,6 +143,13 @@ export enum AuditEventType {
   SERIES_CREATED = "SERIES_CREATED",
   ENTITY_LOG_CONFIRMED = "ENTITY_LOG_CONFIRMED",
   CAREER_FLOW_UPDATED = "CAREER_FLOW_UPDATED",
+  CAREER_FLOW_CREATED = "CAREER_FLOW_CREATED",
+  CAREER_FLOW_DUPLICATED = "CAREER_FLOW_DUPLICATED",
+  CAREER_FLOW_RENAMED = "CAREER_FLOW_RENAMED",
+  CAREER_FLOWS_REORDERED = "CAREER_FLOWS_REORDERED",
+  CAREER_FLOW_DELETED = "CAREER_FLOW_DELETED",
+  CAREER_FLOW_RESTORED = "CAREER_FLOW_RESTORED",
+  CAREER_FLOW_ROLE_ACCESS_UPDATED = "CAREER_FLOW_ROLE_ACCESS_UPDATED",
   SILC_SETTING_UPDATED = "SILC_SETTING_UPDATED",
   SILC_ALL_EXPIRED = "SILC_ALL_EXPIRED",
   SILC_BALANCES_REFRESHED = "SILC_BALANCES_REFRESHED",
@@ -1050,6 +1057,51 @@ export interface AuditEventDataByType {
     flowId: string;
     nodeCount: number;
     edgeCount: number;
+  };
+
+  [AuditEventType.CAREER_FLOW_CREATED]: {
+    flowId: string;
+    name: string;
+    slug: string;
+  };
+
+  [AuditEventType.CAREER_FLOW_DUPLICATED]: {
+    flowId: string;
+    name: string;
+    slug: string;
+    sourceFlowId: string;
+    nodeCount: number;
+    edgeCount: number;
+  };
+
+  [AuditEventType.CAREER_FLOW_RENAMED]: {
+    flowId: string;
+    previousName: string;
+    name: string;
+    previousSlug: string;
+    slug: string;
+  };
+
+  [AuditEventType.CAREER_FLOWS_REORDERED]: {
+    flowIds: string[];
+  };
+
+  [AuditEventType.CAREER_FLOW_DELETED]: {
+    flowId: string;
+    name: string;
+    slug: string;
+  };
+
+  [AuditEventType.CAREER_FLOW_RESTORED]: {
+    flowId: string;
+    name: string;
+    slug: string;
+  };
+
+  [AuditEventType.CAREER_FLOW_ROLE_ACCESS_UPDATED]: {
+    flowId: string;
+    readRoleIds: string[];
+    updateRoleIds: string[];
   };
 
   [AuditEventType.SILC_SETTING_UPDATED]: {
