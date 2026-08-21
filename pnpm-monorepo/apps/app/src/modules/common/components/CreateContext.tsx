@@ -67,6 +67,12 @@ const CreateWikiPageGlobalForm = dynamic(() =>
   ),
 );
 
+const CreateFlowForm = dynamic(() =>
+  import("@/modules/career/components/CreateFlowForm").then(
+    (mod) => mod.CreateFlowForm,
+  ),
+);
+
 export const createForms = {
   citizen: {
     formComponent: CreateCitizenForm,
@@ -111,6 +117,11 @@ export const createForms = {
   wikiPage: {
     formComponent: CreateWikiPageGlobalForm,
     modalHeading: "Neue Seite",
+    modalWidth: "w-120",
+  },
+  flow: {
+    formComponent: CreateFlowForm,
+    modalHeading: "Neuer Karrierebaum",
     modalWidth: "w-120",
   },
 };

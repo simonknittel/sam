@@ -54,8 +54,12 @@ export const Create = ({ className }: Props) => {
     authentication.authorize("silcTransactionOfOtherCitizen", "create"),
   );
   const showCreateWikiPage = Boolean(authentication);
+  const showCreateFlow = Boolean(
+    authentication && authentication.authorize("career", "manage"),
+  );
 
   if (
+    !showCreateFlow &&
     !showCreateCitizen &&
     !showCreateDistributionCycle &&
     !showCreateOrganization &&
@@ -97,6 +101,7 @@ export const Create = ({ className }: Props) => {
           showCreateEvent={showCreateEvent}
           showCreateSilcTransaction={showCreateSilcTransaction}
           showCreateWikiPage={showCreateWikiPage}
+          showCreateFlow={showCreateFlow}
         />
       </PopoverBaseUI>
     </div>
@@ -113,6 +118,7 @@ interface PopoverChildrenProps {
   readonly showCreateEvent: boolean;
   readonly showCreateSilcTransaction: boolean;
   readonly showCreateWikiPage: boolean;
+  readonly showCreateFlow: boolean;
 }
 
 const PopoverChildren = ({
@@ -125,6 +131,7 @@ const PopoverChildren = ({
   showCreateEvent,
   showCreateSilcTransaction,
   showCreateWikiPage,
+  showCreateFlow,
 }: PopoverChildrenProps) => {
   const { closePopover } = usePopoverBaseUI();
   const { openCreateModal } = useCreateContext();
@@ -201,6 +208,8 @@ const PopoverChildren = ({
       type: "button",
       modalId: "wikiPage",
     });
+  if (showCreateFlow)
+    items.push({ label: "Karrierebaum", type: "button", modalId: "flow" });
 
   items = items.toSorted((a, b) => a.label.localeCompare(b.label));
 
