@@ -95,7 +95,6 @@ export interface PermissionSetAttribute {
     | "alsoUnconfirmed"
     | "roleId"
     | "alsoVisibilityRedacted"
-    | "flowId"
     | "taskVisibility"
     | "taskRewardType"
     | "taskDeleted";

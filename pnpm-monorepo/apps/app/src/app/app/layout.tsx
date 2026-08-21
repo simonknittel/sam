@@ -5,6 +5,7 @@ import { AdminEnabler } from "@/modules/auth/components/AdminEnabler";
 import { SessionProviderContainer } from "@/modules/auth/components/SessionProviderContainer";
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { getAssumedUserLabel } from "@/modules/auth/utils/getAssumedUserLabel";
+import { hasAnyReadableFlow } from "@/modules/career/queries/getMyReadableFlows";
 import { getUnseenChangelogEntryKeys } from "@/modules/changelog/queries/getUnseenChangelogEntryKeys";
 import { CreateContextProvider } from "@/modules/common/components/CreateContext";
 import { NewReleaseToast } from "@/modules/common/components/NewReleaseToast";
@@ -37,6 +38,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
     changelogUnseenKeys,
     openWikiReportCount,
     unreadOnSiteNotificationCount,
+    canReadCareer,
   ] = await Promise.all([
     requireAuthenticationPage(),
     getUnleashFlag(UNLEASH_FLAG.DisableAlgolia),
@@ -46,6 +48,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
     getUnseenChangelogEntryKeys(),
     getOpenWikiReportCount(),
     getUnreadOnSiteNotificationCount(),
+    hasAnyReadableFlow(),
   ]);
 
   return (
@@ -72,7 +75,10 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
                           initialUnreadCount={unreadOnSiteNotificationCount}
                         >
                           <CreateContextProvider>
-                            <CmdKProvider disableAlgolia={disableAlgolia}>
+                            <CmdKProvider
+                              disableAlgolia={disableAlgolia}
+                              canReadCareer={canReadCareer}
+                            >
                               <TopBar />
                               <MobileActionBarLoader />
                             </CmdKProvider>

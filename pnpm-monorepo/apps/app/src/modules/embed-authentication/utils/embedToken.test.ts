@@ -32,7 +32,7 @@ describe("collect embed permission strings", () => {
     {
       resource: "event",
       operation: "manage",
-      attributes: [{ key: "flowId", value: "some-flow" }],
+      attributes: [{ key: "roleId", value: "some-role" }],
     },
     { resource: "citizen", operation: "read" },
   ];
@@ -40,7 +40,7 @@ describe("collect embed permission strings", () => {
   test("keeps only the resources the app declared", () => {
     expect(
       collectEmbedPermissionStrings(givenPermissionSets, ["event"]),
-    ).toEqual(["event;manage;flowId=some-flow", "event;read"]);
+    ).toEqual(["event;manage;roleId=some-role", "event;read"]);
   });
 
   test("returns an empty array for a user without matching permissions", () => {

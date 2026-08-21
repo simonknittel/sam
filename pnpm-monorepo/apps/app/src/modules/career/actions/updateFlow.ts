@@ -8,6 +8,7 @@ import { log } from "@/modules/logging";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { nodeDefinitions } from "../nodes/server";
+import { getFlowContext } from "../queries/getFlowContext";
 
 const nodesSchema = z
   .array(
@@ -42,14 +43,13 @@ export const updateFlow = createAuthenticatedAction(
   "updateFlow",
   schema,
   async (formData, authentication, data, t) => {
-    if (
-      !(await authentication.authorize("career", "update", [
-        {
-          key: "flowId",
-          value: data.flowId,
-        },
-      ]))
-    )
+    /**
+     * The only write path into a flow's contents, so it keeps authorizing per
+     * flow — the edge-crossing check below depends on that boundary.
+     */
+    const context = await getFlowContext();
+    const flow = context?.flowsById.get(data.flowId);
+    if (!flow || !context?.permissions.get(flow.id)?.canUpdate)
       return {
         error: t("Common.forbidden"),
         requestPayload: formData,
@@ -115,6 +115,16 @@ export const updateFlow = createAuthenticatedAction(
           targetHandle: edge.targetHandle,
         })),
       }),
+
+      /**
+       * Nodes and edges live in their own tables, so the flow row has to be
+       * touched explicitly for the management list to show who last changed
+       * the diagram and when.
+       */
+      prisma.flow.update({
+        where: { id: data.flowId },
+        data: { updatedById: authentication.session.entity?.id ?? null },
+      }),
     ]);
 
     await createAuditEvents([
@@ -132,7 +142,7 @@ export const updateFlow = createAuthenticatedAction(
     /**
      * Revalidate cache(s)
      */
-    revalidatePath(`/app/career/${data.flowId}`);
+    revalidatePath(`/app/career/${flow.slug}`);
 
     /**
      * Respond with the result

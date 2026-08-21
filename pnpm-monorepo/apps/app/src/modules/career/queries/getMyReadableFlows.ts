@@ -1,41 +1,27 @@
-import { prisma } from "@/db";
-import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { cache } from "react";
+import { getFlowContext } from "./getFlowContext";
 
+/**
+ * The non-deleted flows the current viewer may read, in display order.
+ */
 export const getMyReadableFlows = cache(
   withTrace("getMyReadableFlows", async () => {
-    const authentication = await requireAuthentication();
+    const context = await getFlowContext();
+    if (!context) return [];
 
-    const allFlows = await prisma.flow.findMany({
-      include: {
-        nodes: {
-          include: {
-            sources: true,
-            targets: true,
-          },
-        },
-      },
-    });
-
-    const readableFlows = (
-      await Promise.all(
-        allFlows.map(async (flow) => {
-          return {
-            flow,
-            include: await authentication.authorize("career", "read", [
-              {
-                key: "flowId",
-                value: flow.id,
-              },
-            ]),
-          };
-        }),
-      )
-    )
-      .filter(({ include }) => include)
-      .map(({ flow }) => flow);
-
-    return readableFlows;
+    return context.flows.filter(
+      (flow) => context.permissions.get(flow.id)?.canRead,
+    );
   }),
 );
+
+/**
+ * Whether the career app has anything to show the current viewer. Drives the
+ * entry points (navigation, command palette, mobile action bar, Apps tile),
+ * which used to name the four hardcoded flow ids.
+ */
+export const hasAnyReadableFlow = cache(async () => {
+  const flows = await getMyReadableFlows();
+  return flows.length > 0;
+});

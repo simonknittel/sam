@@ -16,6 +16,14 @@ export interface IntegratedApp extends BaseApp {
    * Either of these permission strings must be permitted in order to access the app.
    */
   permissionStrings?: string[];
+  /**
+   * Access check for apps whose permission is not expressible as a permission
+   * string, e.g. the career app, whose per-flow access lives in a table and is
+   * answered by a resolver. Evaluated in addition to `permissionStrings`, so
+   * an app declaring both needs both. Server-only: `getAppLinks` strips it
+   * before the app reaches a client component.
+   */
+  hasAccess?: () => Promise<boolean>;
 }
 
 interface DefaultPageIframe {

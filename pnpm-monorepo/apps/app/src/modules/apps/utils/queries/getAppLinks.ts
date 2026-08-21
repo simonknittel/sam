@@ -18,7 +18,7 @@ export const getAppLinks = cache(
     // TODO: Implement fetching apps from database
 
     const integratedApps = await Promise.all(
-      INTEGRATED_APPS.map(async (app) => {
+      INTEGRATED_APPS.map(async ({ hasAccess, ...app }) => {
         let redacted = false;
 
         if (app.permissionStrings && app.permissionStrings.length > 0) {
@@ -38,6 +38,12 @@ export const getAppLinks = cache(
           if (!permissions.some((permission) => permission === true))
             redacted = true;
         }
+
+        /**
+         * The callback is stripped above so it never reaches a client
+         * component — functions cannot cross that boundary.
+         */
+        if (!redacted && hasAccess && !(await hasAccess())) redacted = true;
 
         if (redacted) {
           return {

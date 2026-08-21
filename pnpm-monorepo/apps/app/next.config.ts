@@ -117,11 +117,6 @@ const nextConfig: NextConfig = {
   // eslint-disable-next-line @typescript-eslint/require-await
   redirects: async () => [
     {
-      source: "/app/career",
-      destination: "/app/career/security",
-      permanent: false,
-    },
-    {
       source: "/app/external/schwarzmarkt-ankauf",
       destination: "/app/external/scrappers-codex",
       permanent: true,

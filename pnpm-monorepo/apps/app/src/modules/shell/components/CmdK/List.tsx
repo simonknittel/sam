@@ -69,7 +69,8 @@ export const List = () => {
   if (!authentication || !authentication.session.entity)
     throw new Error("Forbidden");
 
-  const { setOpen, search, setSearch, pages, setPages } = useCmdKContext();
+  const { setOpen, search, setSearch, pages, setPages, canReadCareer } =
+    useCmdKContext();
 
   const [
     citizenRead,
@@ -84,10 +85,6 @@ export const List = () => {
     penaltyEntryCreate,
     logAnalyzerRead,
     eventRead,
-    careerSecurityRead,
-    careerEconomicRead,
-    careerManagementRead,
-    careerTeamRead,
     globalStatisticsRead,
     systemLogRead,
   ] = [
@@ -103,38 +100,10 @@ export const List = () => {
     authentication.authorize("penaltyEntry", "create"),
     authentication.authorize("logAnalyzer", "read"),
     authentication.authorize("event", "read"),
-    authentication.authorize("career", "read", [
-      {
-        key: "flowId",
-        value: "security",
-      },
-    ]),
-    authentication.authorize("career", "read", [
-      {
-        key: "flowId",
-        value: "economic",
-      },
-    ]),
-    authentication.authorize("career", "read", [
-      {
-        key: "flowId",
-        value: "management",
-      },
-    ]),
-    authentication.authorize("career", "read", [
-      {
-        key: "flowId",
-        value: "team",
-      },
-    ]),
     authentication.authorize("globalStatistics", "read"),
     authentication.authorize("systemLog", "read"),
   ];
-  const careerRead =
-    careerSecurityRead ||
-    careerEconomicRead ||
-    careerManagementRead ||
-    careerTeamRead;
+  const careerRead = canReadCareer ?? false;
   const fleetRead = orgFleetRead || shipManage;
   const iamRead = userRead || roleManage;
   const spynetRead = citizenRead || organizationRead;

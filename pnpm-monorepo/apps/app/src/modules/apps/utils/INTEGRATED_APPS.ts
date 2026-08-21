@@ -1,6 +1,7 @@
 import accountScreenshot from "@/modules/account/assets/screenshot.png";
 import avatarCreatorScreenshot from "@/modules/avatar-creator/assets/screenshot.png";
 import careerScreenshot from "@/modules/career/assets/screenshot.png";
+import { hasAnyReadableFlow } from "@/modules/career/queries/getMyReadableFlows";
 import changelogScreenshot from "@/modules/changelog/assets/screenshot.png";
 import cornerstoneImageBrowserScreenshot from "@/modules/cornerstone-image-browser/assets/screenshot.png";
 import dashboardScreenshot from "@/modules/dashboard/assets/screenshot.png";
@@ -123,12 +124,7 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
     description:
       "Org-interner Karrierebaum in unseren Bereichen Security und Economics",
     tags: ["featured", "security", "economics"],
-    permissionStrings: [
-      "career;read;flowId=security",
-      "career;read;flowId=economic",
-      "career;read;flowId=management",
-      "career;read;flowId=team",
-    ],
+    hasAccess: hasAnyReadableFlow,
   },
   {
     name: "Log Analyzer",

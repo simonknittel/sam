@@ -15,9 +15,14 @@ import { RedBar } from "./RedBar";
 
 interface Props {
   readonly supportHref: string | null;
+  /** Whether the viewer may read at least one career flow */
+  readonly canReadCareer: boolean;
 }
 
-export const MobileActionBarClient = ({ supportHref }: Props) => {
+export const MobileActionBarClient = ({
+  supportHref,
+  canReadCareer,
+}: Props) => {
   const authentication = useAuthentication();
   if (!authentication) throw new Error("Unauthorized");
 
@@ -25,51 +30,15 @@ export const MobileActionBarClient = ({ supportHref }: Props) => {
   if (!apps) return null;
   const { featured, other } = groupByFeatured(apps);
 
-  const [
-    canTasksRead,
-    canFleetRead,
-    canShipManage,
-    canCareerReadSecurity,
-    canCareerReadEconomic,
-    canCareerReadManagement,
-    canCareerReadTeam,
-  ] = [
+  const [canTasksRead, canFleetRead, canShipManage] = [
     authentication.authorize("task", "read"),
     authentication.authorize("orgFleet", "read"),
     authentication.authorize("ship", "manage"),
-    authentication.authorize("career", "read", [
-      {
-        key: "flowId",
-        value: "security",
-      },
-    ]),
-    authentication.authorize("career", "read", [
-      {
-        key: "flowId",
-        value: "economic",
-      },
-    ]),
-    authentication.authorize("career", "read", [
-      {
-        key: "flowId",
-        value: "management",
-      },
-    ]),
-    authentication.authorize("career", "read", [
-      {
-        key: "flowId",
-        value: "team",
-      },
-    ]),
   ];
 
   const showTasks = canTasksRead;
   const showFleet = canFleetRead || canShipManage;
-  const showCareer =
-    canCareerReadSecurity ||
-    canCareerReadEconomic ||
-    canCareerReadManagement ||
-    canCareerReadTeam;
+  const showCareer = canReadCareer;
 
   return (
     <ul className="h-full flex justify-evenly">
