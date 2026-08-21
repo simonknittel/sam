@@ -11,6 +11,7 @@ import { FlowRoleAccessType } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { FaGripVertical, FaRegCopy } from "react-icons/fa";
 import type { ManageableFlow } from "../queries/getManageableFlows";
+import { RestoreFlowButton } from "./RestoreFlowButton";
 
 interface Props {
   readonly flow: ManageableFlow;
@@ -126,7 +127,13 @@ export const FlowRow = ({
       </td>
 
       <td>
-        {!flow.deletedAt && (
+        {flow.deletedAt ? (
+          <RestoreFlowButton
+            flowId={flow.id}
+            name={flow.name}
+            slug={flow.slug}
+          />
+        ) : (
           <Button2
             type="button"
             variant={Button2Variant.IconOnly}

@@ -4,6 +4,22 @@ import type { Prisma } from "@sam-monorepo/database/client";
 import { cache } from "react";
 import { FlowStatus } from "../utils/flowFilterParams";
 
+/** Everything the management list and the management detail page show */
+const MANAGEABLE_FLOW_SELECT = {
+  id: true,
+  name: true,
+  slug: true,
+  position: true,
+  createdAt: true,
+  updatedAt: true,
+  deletedAt: true,
+  createdBy: { select: { id: true, handle: true } },
+  updatedBy: { select: { id: true, handle: true } },
+  deletedBy: { select: { id: true, handle: true } },
+  roleAccess: { select: { roleId: true, type: true } },
+  _count: { select: { nodes: true } },
+} satisfies Prisma.FlowSelect;
+
 const deletedAtFilter = (status: FlowStatus): Prisma.FlowWhereInput => {
   switch (status) {
     case FlowStatus.Active:
@@ -18,9 +34,8 @@ const deletedAtFilter = (status: FlowStatus): Prisma.FlowWhereInput => {
 };
 
 /**
- * The flows of the management list, with everything its table shows. Carries
- * no permission check of its own — every caller is gated on `career;manage`,
- * which reads every flow.
+ * The flows of the management list. Carries no permission check of its own —
+ * every caller is gated on `career;manage`, which reads every flow.
  */
 export const getManageableFlows = cache(
   withTrace(
@@ -38,22 +53,19 @@ export const getManageableFlows = cache(
               }
             : {}),
         },
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          position: true,
-          createdAt: true,
-          updatedAt: true,
-          deletedAt: true,
-          createdBy: { select: { id: true, handle: true } },
-          updatedBy: { select: { id: true, handle: true } },
-          deletedBy: { select: { id: true, handle: true } },
-          roleAccess: { select: { roleId: true, type: true } },
-          _count: { select: { nodes: true } },
-        },
+        select: MANAGEABLE_FLOW_SELECT,
         orderBy: [{ position: "asc" }, { name: "asc" }],
       }),
+  ),
+);
+
+/** One flow for the management detail page. See getManageableFlows on gating. */
+export const getManageableFlow = cache(
+  withTrace("getManageableFlow", async (flowId: string) =>
+    prisma.flow.findUnique({
+      where: { id: flowId },
+      select: MANAGEABLE_FLOW_SELECT,
+    }),
   ),
 );
 
