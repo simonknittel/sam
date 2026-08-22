@@ -31,8 +31,11 @@ import {
 } from "react-icons/fa";
 import { getParticipants } from "../utils/getParticipants";
 import { isAllowedToManageEvent as _isAllowedToManageEvent } from "../utils/isAllowedToManageEvent";
+import { isEventUpdatable } from "../utils/isEventUpdatable";
+import { AddEventParticipants } from "./AddEventParticipants";
 import { CreateManagers } from "./CreateManagers";
 import { DeleteManager } from "./DeleteManager";
+import { RemoveEventParticipant } from "./RemoveEventParticipant";
 
 interface Props {
   readonly className?: string;
@@ -58,8 +61,16 @@ export const ParticipantsTab = async ({
   );
 
   const isAppEvent = event.source === EventSource.APP;
+  /**
+   * Participation is managed in Discord for Discord events, and the same
+   * time gate as every other manager-driven mutation applies.
+   */
+  const canManageParticipants =
+    isAppEvent && isAllowedToManageEvent && isEventUpdatable(event);
   const gridCols = isAppEvent
-    ? "grid-cols-[160px_160px_240px_1fr]"
+    ? canManageParticipants
+      ? "grid-cols-[160px_160px_240px_1fr_32px]"
+      : "grid-cols-[160px_160px_240px_1fr]"
     : "grid-cols-[160px_160px_1fr]";
 
   const resolvedParticipants = await getParticipants(event);
@@ -184,6 +195,11 @@ export const ParticipantsTab = async ({
             )}
           </span>
         }
+        cta={
+          canManageParticipants ? (
+            <AddEventParticipants eventId={event.id} />
+          ) : null
+        }
         childrenClassName="overflow-auto"
       >
         {sortedResolvedParticipants.length > 0 ? (
@@ -241,6 +257,12 @@ export const ParticipantsTab = async ({
                 <th className="truncate" title="Rollen/Zertifikate">
                   Rollen/Zertifikate
                 </th>
+
+                {canManageParticipants && (
+                  <th>
+                    <span className="sr-only">Aktionen</span>
+                  </th>
+                )}
               </tr>
             </thead>
 
@@ -326,6 +348,16 @@ export const ParticipantsTab = async ({
                         />
                       </Suspense>
                     </td>
+
+                    {canManageParticipants && (
+                      <td className="min-h-8 flex items-center">
+                        <RemoveEventParticipant
+                          eventId={event.id}
+                          citizenId={resolvedParticipant.citizen.id}
+                          citizenHandle={resolvedParticipant.citizen.handle}
+                        />
+                      </td>
+                    )}
                   </tr>
                 );
               })}
