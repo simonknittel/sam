@@ -99,7 +99,7 @@ const getRecipients = async (payload: Payload) => {
       const citizens = await getNotifiableCitizens({
         AND: [{ id: { in: citizenIds } }, recipientWhere],
       });
-      if (!citizens || citizens.length <= 0) return;
+      if (citizens.length <= 0) return;
 
       return { event: { id: event.id, name: event.name }, citizens };
     }
@@ -115,7 +115,7 @@ const getRecipients = async (payload: Payload) => {
       if (!recipientWhere) return;
 
       const citizens = await getNotifiableCitizens(recipientWhere);
-      if (!citizens || citizens.length <= 0) return;
+      if (citizens.length <= 0) return;
 
       return { event, citizens };
     }

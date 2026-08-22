@@ -73,6 +73,24 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   },
 
   {
+    key: "2026-08-22-teilnehmer-verwalten",
+    date: "2026-08-22",
+    title: "Teilnehmer manuell verwalten",
+    tags: ["Events", "Neu"],
+    isTracked: true,
+    body: () => (
+      <>
+        <p>
+          Manager eines Events können unter &ldquo;Teilnehmer&rdquo; ab sofort
+          selbst Citizen anmelden und wieder abmelden.
+        </p>
+
+        <p>Die betroffenen Citizen werden benachrichtigt.</p>
+      </>
+    ),
+  },
+
+  {
     key: "2026-08-22-event-vorlagen",
     date: "2026-08-22",
     title: "Event-Vorlagen",

@@ -30,6 +30,18 @@ export interface EventActivityPayloadByType {
     comment: string | null;
   };
   [EventActivityType.PARTICIPATION_CANCELLED]: null;
+  /**
+   * Manager-driven participation changes: the row's own citizen column holds
+   * the acting manager, so the affected citizen goes into the payload.
+   */
+  [EventActivityType.PARTICIPATION_ADDED_BY_MANAGER]: {
+    citizenId: string;
+    comment: string | null;
+  };
+  [EventActivityType.PARTICIPATION_REMOVED_BY_MANAGER]: {
+    citizenId: string;
+    reason: string | null;
+  };
   [EventActivityType.LINEUP_TOGGLED]: {
     enabled: boolean;
   };

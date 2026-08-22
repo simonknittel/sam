@@ -62,7 +62,7 @@ export const EventActivityTable = async ({
       className={className}
       heading="Aktivität"
       entries={entries}
-      columns={[ActivityColumn.Actor]}
+      columns={[ActivityColumn.Actor, ActivityColumn.Target]}
       emptyMessage={
         hasActiveActivityFilters(filters)
           ? "Keine Aktivität für diese Filter."

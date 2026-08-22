@@ -61,6 +61,18 @@ export const NOTIFICATIONS_APPS: NotificationApp[] = [
         description: "Nur bei eigener Teilnahme. 15 Minuten vor Event-Start.",
         category: "Events",
       },
+      {
+        id: "event_participation_added",
+        title: "Anmeldung durch Manager",
+        description: "Wenn mich ein Manager zu einem Event hinzufügt",
+        category: "Events",
+      },
+      {
+        id: "event_participation_removed",
+        title: "Abmeldung durch Manager",
+        description: "Wenn mich ein Manager von einem Event entfernt",
+        category: "Events",
+      },
     ],
   },
 

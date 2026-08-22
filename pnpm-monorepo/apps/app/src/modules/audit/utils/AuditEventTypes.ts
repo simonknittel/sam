@@ -2100,6 +2100,26 @@ export const AuditEventDefinitions: {
       `Citizen ${data.citizenId} cancelled their participation in event ${data.eventId}`,
   },
 
+  [AuditEventType.EVENT_PARTICIPANT_ADDED_BY_MANAGER]: {
+    type: AuditEventType.EVENT_PARTICIPANT_ADDED_BY_MANAGER,
+    data: {
+      eventId: "string",
+      citizenId: "string",
+    },
+    message: (data) =>
+      `Citizen ${data.citizenId} was added as a participant to event ${data.eventId} by a manager`,
+  },
+
+  [AuditEventType.EVENT_PARTICIPANT_REMOVED_BY_MANAGER]: {
+    type: AuditEventType.EVENT_PARTICIPANT_REMOVED_BY_MANAGER,
+    data: {
+      eventId: "string",
+      citizenId: "string",
+    },
+    message: (data) =>
+      `Citizen ${data.citizenId} was removed as a participant from event ${data.eventId} by a manager`,
+  },
+
   [AuditEventType.CITIZENS_PER_ROLE_COUNTED]: {
     type: AuditEventType.CITIZENS_PER_ROLE_COUNTED,
     data: {

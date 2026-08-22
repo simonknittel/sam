@@ -12,10 +12,12 @@ import {
   isBeyondCursorPosition,
   type MergedCursorSourceInput,
 } from "@/modules/common/CursorPagination/mergedCursor";
+import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import {
   EventActivityType,
+  type Entity,
   type Event,
   type Prisma,
 } from "@sam-monorepo/database/client";
@@ -44,6 +46,33 @@ const commentPayloadSchema = z.object({
 const lineupToggledPayloadSchema = z.object({
   enabled: z.boolean(),
 });
+
+const participantAddedPayloadSchema = z.object({
+  citizenId: z.string(),
+  comment: z.string().nullable(),
+});
+
+const participantRemovedPayloadSchema = z.object({
+  citizenId: z.string(),
+  reason: z.string().nullable(),
+});
+
+/** The types whose payload names a citizen other than the row's own actor */
+const TYPES_WITH_AFFECTED_CITIZEN: ReadonlySet<EventActivityType> = new Set([
+  EventActivityType.PARTICIPATION_ADDED_BY_MANAGER,
+  EventActivityType.PARTICIPATION_REMOVED_BY_MANAGER,
+]);
+
+const affectedCitizenPayloadSchema = z.object({ citizenId: z.string() });
+
+const getAffectedCitizenId = (activity: {
+  type: EventActivityType;
+  payload: Prisma.JsonValue;
+}): string | null =>
+  TYPES_WITH_AFFECTED_CITIZEN.has(activity.type)
+    ? (affectedCitizenPayloadSchema.safeParse(activity.payload).data
+        ?.citizenId ?? null)
+    : null;
 
 interface Input {
   readonly eventId: Event["id"];
@@ -92,9 +121,31 @@ export const createEventActivitySource = ({
         },
       });
 
-      return activities.map(buildActivityEntry);
+      const affectedCitizens = await resolveAffectedCitizens(activities);
+
+      return activities.map((activity) =>
+        buildActivityEntry(activity, affectedCitizens),
+      );
     },
   );
+
+type CitizenById = ReadonlyMap<string, Pick<Entity, "id" | "handle">>;
+
+const resolveAffectedCitizens = async (
+  activities: readonly ActivityRow[],
+): Promise<CitizenById> => {
+  const citizenIds = activities
+    .map(getAffectedCitizenId)
+    .filter((citizenId): citizenId is string => citizenId !== null);
+  if (citizenIds.length <= 0) return new Map();
+
+  const citizens = await prisma.entity.findMany({
+    where: { id: { in: citizenIds } },
+    select: { id: true, handle: true },
+  });
+
+  return new Map(citizens.map((citizen) => [citizen.id, citizen]));
+};
 
 interface ScheduleInput {
   readonly event: Pick<Event, "startTime" | "endTime">;
@@ -165,7 +216,10 @@ type ActivityRow = Prisma.EventActivityGetPayload<{
   include: { citizen: { select: { id: true; handle: true } } };
 }>;
 
-const buildActivityEntry = (activity: ActivityRow): ActivityEntry => {
+const buildActivityEntry = (
+  activity: ActivityRow,
+  affectedCitizens: CitizenById,
+): ActivityEntry => {
   const base = {
     sourceKey: EventActivitySourceKey.Activity,
     id: activity.id,
@@ -228,6 +282,46 @@ const buildActivityEntry = (activity: ActivityRow): ActivityEntry => {
 
     case EventActivityType.PARTICIPATION_CANCELLED:
       return { ...base, message: "Abgemeldet" };
+
+    case EventActivityType.PARTICIPATION_ADDED_BY_MANAGER: {
+      const payload = participantAddedPayloadSchema.safeParse(activity.payload);
+      return {
+        ...base,
+        message: "Teilnehmer hinzugefügt",
+        target: (
+          <CitizenLink
+            citizen={
+              payload.success
+                ? affectedCitizens.get(payload.data.citizenId)
+                : null
+            }
+            className="truncate"
+          />
+        ),
+        comment: payload.success ? payload.data.comment : null,
+      };
+    }
+
+    case EventActivityType.PARTICIPATION_REMOVED_BY_MANAGER: {
+      const payload = participantRemovedPayloadSchema.safeParse(
+        activity.payload,
+      );
+      return {
+        ...base,
+        message: "Teilnehmer entfernt",
+        target: (
+          <CitizenLink
+            citizen={
+              payload.success
+                ? affectedCitizens.get(payload.data.citizenId)
+                : null
+            }
+            className="truncate"
+          />
+        ),
+        comment: payload.success ? payload.data.reason : null,
+      };
+    }
 
     case EventActivityType.LINEUP_TOGGLED: {
       const payload = lineupToggledPayloadSchema.safeParse(activity.payload);

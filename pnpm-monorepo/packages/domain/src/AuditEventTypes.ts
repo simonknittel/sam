@@ -205,6 +205,8 @@ export enum AuditEventType {
   EVENT_PARTICIPATION_SIGNED_UP = "EVENT_PARTICIPATION_SIGNED_UP",
   EVENT_PARTICIPATION_COMMENT_UPDATED = "EVENT_PARTICIPATION_COMMENT_UPDATED",
   EVENT_PARTICIPATION_CANCELLED = "EVENT_PARTICIPATION_CANCELLED",
+  EVENT_PARTICIPANT_ADDED_BY_MANAGER = "EVENT_PARTICIPANT_ADDED_BY_MANAGER",
+  EVENT_PARTICIPANT_REMOVED_BY_MANAGER = "EVENT_PARTICIPANT_REMOVED_BY_MANAGER",
   CITIZENS_PER_ROLE_COUNTED = "CITIZENS_PER_ROLE_COUNTED",
   SHIPS_PER_VARIANT_COUNTED = "SHIPS_PER_VARIANT_COUNTED",
   UNIQUE_LOGINS_COUNTED = "UNIQUE_LOGINS_COUNTED",
@@ -1418,6 +1420,22 @@ export interface AuditEventDataByType {
   };
 
   [AuditEventType.EVENT_PARTICIPATION_CANCELLED]: {
+    eventId: string;
+    citizenId: string;
+  };
+
+  /**
+   * One event per added citizen. The manager's optional comment stays out of
+   * the immutable log — it lives on the participation row and in the event's
+   * activity feed.
+   */
+  [AuditEventType.EVENT_PARTICIPANT_ADDED_BY_MANAGER]: {
+    eventId: string;
+    citizenId: string;
+  };
+
+  /** The manager's optional reason stays out of the immutable log. */
+  [AuditEventType.EVENT_PARTICIPANT_REMOVED_BY_MANAGER]: {
     eventId: string;
     citizenId: string;
   };

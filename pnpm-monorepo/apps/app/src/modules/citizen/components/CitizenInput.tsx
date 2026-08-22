@@ -23,6 +23,11 @@ interface BaseProps {
   readonly name: string;
   readonly disabled?: boolean;
   readonly autoFocus?: boolean;
+  /**
+   * Narrows the offered citizens to this set, including the role shortcuts.
+   * Omit to offer every citizen.
+   */
+  readonly selectableCitizenIds?: readonly Entity["id"][];
 }
 
 interface SingleProps extends BaseProps {
@@ -44,6 +49,7 @@ export const CitizenInput = ({
   multiple,
   defaultValue,
   autoFocus,
+  selectableCitizenIds,
 }: Props) => {
   const [query, setQuery] = useState("");
 
@@ -61,7 +67,14 @@ export const CitizenInput = ({
       </div>
     );
 
-  const fuse = new Fuse(dataAllCitizens, {
+  const selectableIds = selectableCitizenIds
+    ? new Set(selectableCitizenIds)
+    : null;
+  const selectableCitizens = selectableIds
+    ? dataAllCitizens.filter((citizen) => selectableIds.has(citizen.id))
+    : dataAllCitizens;
+
+  const fuse = new Fuse(selectableCitizens, {
     keys: ["handle"],
     includeMatches: true,
   });
@@ -82,11 +95,12 @@ export const CitizenInput = ({
             defaultValue
               ? (defaultValue
                   .map((id) =>
-                    dataAllCitizens?.find((citizen) => citizen.id === id),
+                    selectableCitizens.find((citizen) => citizen.id === id),
                   )
                   .filter(Boolean) as Entity[])
               : undefined
           }
+          selectableIds={selectableIds}
           autoFocus={autoFocus}
         />
       ) : (
@@ -97,7 +111,9 @@ export const CitizenInput = ({
           disabled={disabled}
           defaultValue={
             defaultValue
-              ? dataAllCitizens?.find((citizen) => citizen.id === defaultValue)
+              ? selectableCitizens.find(
+                  (citizen) => citizen.id === defaultValue,
+                )
               : undefined
           }
           autoFocus={autoFocus}
@@ -197,6 +213,7 @@ type MultipleComponentProps = Readonly<{
   setQuery: (query: string) => void;
   filterResult: FuseResult<Entity>[];
   defaultValue?: Entity[];
+  selectableIds: ReadonlySet<Entity["id"]> | null;
   autoFocus?: boolean;
 }>;
 
@@ -206,6 +223,7 @@ const Multiple = ({
   setQuery,
   filterResult,
   defaultValue,
+  selectableIds,
   autoFocus,
 }: MultipleComponentProps) => {
   const { isPending, data: dataCitizensGroupedByVisibleRoles } =
@@ -221,8 +239,13 @@ const Multiple = ({
   const handleSelectRole = (roleId: string) => {
     if (!dataCitizensGroupedByVisibleRoles) return;
 
+    const citizensOfRole =
+      dataCitizensGroupedByVisibleRoles.get(roleId)?.citizens || [];
+
     setSelectedCitizens(
-      dataCitizensGroupedByVisibleRoles.get(roleId)?.citizens || [],
+      selectableIds
+        ? citizensOfRole.filter((citizen) => selectableIds.has(citizen.id))
+        : citizensOfRole,
     );
   };
   return (

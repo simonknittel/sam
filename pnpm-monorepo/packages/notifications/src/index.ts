@@ -53,6 +53,18 @@ export const eventStartingPayloadSchema = z.object({
   eventName: z.string(),
 });
 
+export const eventParticipationAddedPayloadSchema = z.object({
+  eventId: z.string(),
+  eventName: z.string(),
+});
+
+export const eventParticipationRemovedPayloadSchema = z.object({
+  eventId: z.string(),
+  eventName: z.string(),
+  /** The manager's optional reason, shown to the removed citizen */
+  reason: z.string().nullable(),
+});
+
 export const roleAddedPayloadSchema = z.object({
   roleId: z.string(),
   roleName: z.string(),
@@ -107,6 +119,8 @@ export const onSiteNotificationPayloadSchemas = {
   event_lineup_enabled: eventLineupEnabledPayloadSchema,
   event_briefing_published: eventBriefingPublishedPayloadSchema,
   event_starting: eventStartingPayloadSchema,
+  event_participation_added: eventParticipationAddedPayloadSchema,
+  event_participation_removed: eventParticipationRemovedPayloadSchema,
   role_added: roleAddedPayloadSchema,
   silc_transaction_created: silcTransactionCreatedPayloadSchema,
   sincome_payout_started: sincomePayoutStartedPayloadSchema,
@@ -133,6 +147,8 @@ export const ON_SITE_NOTIFICATION_PAYLOAD_VERSIONS: Record<
   event_lineup_enabled: 1,
   event_briefing_published: 1,
   event_starting: 1,
+  event_participation_added: 1,
+  event_participation_removed: 1,
   role_added: 1,
   silc_transaction_created: 1,
   sincome_payout_started: 1,
