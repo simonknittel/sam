@@ -46,6 +46,39 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-08-22-teilnehmer-verwalten",
+    date: "2026-08-22",
+    title: "Teilnehmer manuell verwalten",
+    tags: ["Events", "Neu"],
+    isTracked: true,
+    body: () => (
+      <>
+        <p>
+          Manager eines Events können unter &ldquo;Teilnehmer&rdquo; ab sofort
+          selbst Citizen anmelden und wieder abmelden. Beim Hinzufügen lassen
+          sich mehrere Citizen auf einmal auswählen und mit einem gemeinsamen
+          Kommentar versehen, den die Teilnehmer danach selbst ändern können.
+          Beim Entfernen kann ein Grund angegeben werden.
+        </p>
+
+        <p>
+          Die betroffenen Citizen werden benachrichtigt &ndash; die beiden neuen
+          Benachrichtigungen lassen sich in den{" "}
+          <Link
+            href="/app/account/notifications"
+            className="text-interaction-500 hover:underline focus-visible:underline"
+          >
+            Benachrichtigungseinstellungen
+          </Link>{" "}
+          abschalten. Beide Aktionen landen außerdem in der Aktivität des
+          Events. Angeboten werden nur Citizen, die das Event auch sehen können;
+          Discord-Events werden weiterhin über Discord verwaltet.
+        </p>
+      </>
+    ),
+  },
+
+  {
     key: "2026-08-22-event-vorlagen",
     date: "2026-08-22",
     title: "Event-Vorlagen",
