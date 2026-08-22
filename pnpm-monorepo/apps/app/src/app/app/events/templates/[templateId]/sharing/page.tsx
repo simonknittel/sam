@@ -58,11 +58,11 @@ const EventTemplateSharing = async ({ templateId }: Props) => {
           <>
             <p className="mb-4 text-sm text-neutral-400">
               „Lesen und verwenden“ erlaubt, die Vorlage anzusehen und ein Event
-              daraus zu erstellen. „Bearbeiten“ schließt das ein und erlaubt
-              zusätzlich, Stammdaten, Aufstellung und Briefing zu ändern —
-              Freigaben, Besitz und Löschen bleiben beim Besitzer. Nutzer mit
-              der Berechtigung „Events verwalten“ können jede Vorlage unabhängig
-              hiervon sehen und bearbeiten.
+              daraus zu erstellen. „Bearbeiten“ erlaubt zusätzlich, Stammdaten,
+              Aufstellung und Briefing zu ändern. Freigaben, Besitz und Löschen
+              bleiben beim Besitzer. Nutzer mit der globalen Berechtigung
+              „Events verwalten“ können jede Vorlage unabhängig hiervon sehen
+              und bearbeiten.
             </p>
 
             <EventTemplateRoleAccessEditor

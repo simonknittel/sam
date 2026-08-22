@@ -85,14 +85,6 @@ export const CreateEventForm = ({
               </option>
             ))}
           </Select>
-
-          {selectedTemplate && (
-            <p className="mt-2 text-sm text-neutral-400">
-              Aufstellung und Briefing der Vorlage werden übernommen. Die
-              Aufstellung startet unbesetzt und unveröffentlicht. Alle Felder
-              hier kannst du vor dem Speichern noch ändern.
-            </p>
-          )}
         </div>
       )}
 

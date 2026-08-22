@@ -6,7 +6,6 @@ import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
-import Note from "@/modules/common/components/Note";
 import { useState } from "react";
 import { FaExchangeAlt } from "react-icons/fa";
 import { transferEventTemplateOwnership } from "../actions/transferEventTemplateOwnership";
@@ -29,11 +28,11 @@ export const TransferEventTemplateOwnership = ({
 
   return (
     <>
-      <Note
-        type="warning"
-        className="mb-4"
-        message="Die Freigaben bleiben unverändert. Wenn du selbst keine Rolle mit Zugriff hast und die Berechtigung „Events verwalten“ fehlt, verlierst du mit der Übertragung jeden Zugriff auf diese Vorlage."
-      />
+      <p className="mb-4 text-sm text-neutral-400">
+        Die Freigaben bleiben unverändert. Wenn du selbst keine Rolle mit
+        Zugriff hast und die Berechtigung „Events verwalten“ fehlt, verlierst du
+        mit der Übertragung jeden Zugriff auf diese Vorlage.
+      </p>
 
       <Button2 type="button" onClick={() => setIsOpen(true)}>
         <FaExchangeAlt />

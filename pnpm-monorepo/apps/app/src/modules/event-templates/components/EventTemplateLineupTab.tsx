@@ -72,8 +72,8 @@ export const EventTemplateLineupTab = ({
         />
       ) : (
         <p className="rounded-primary bg-neutral-800/50 p-4">
-          Keine Posten vorhanden. Events, die aus dieser Vorlage erstellt
-          werden, starten dann ohne Aufstellung.
+          Keine Posten vorhanden. Diese können vom Organisator des Events
+          angelegt und zugeordnet werden.
         </p>
       )}
     </section>
