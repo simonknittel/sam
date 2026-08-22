@@ -22,6 +22,9 @@ export const EVENT_ACTIVITY_TYPE_LABELS: Record<EventActivityType, string> = {
   [EventActivityType.PARTICIPATION_SIGNED_UP]: "Anmeldung",
   [EventActivityType.PARTICIPATION_COMMENT_UPDATED]: "Kommentar geändert",
   [EventActivityType.PARTICIPATION_CANCELLED]: "Abmeldung",
+  [EventActivityType.PARTICIPATION_ADDED_BY_MANAGER]: "Anmeldung durch Manager",
+  [EventActivityType.PARTICIPATION_REMOVED_BY_MANAGER]:
+    "Abmeldung durch Manager",
   [EventActivityType.LINEUP_TOGGLED]: "Aufstellung",
 };
 

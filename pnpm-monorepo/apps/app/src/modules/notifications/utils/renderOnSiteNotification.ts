@@ -91,6 +91,24 @@ export const renderOnSiteNotification = (
         appTitle,
       };
 
+    case "event_participation_added":
+      return {
+        title: "Zum Event hinzugefügt",
+        body: `Du wurdest zum Event "${parsed.payload.eventName}" hinzugefügt.`,
+        url: `/app/events/${parsed.payload.eventId}`,
+        appTitle,
+      };
+
+    case "event_participation_removed":
+      return {
+        title: "Vom Event entfernt",
+        body: parsed.payload.reason
+          ? `Du wurdest vom Event "${parsed.payload.eventName}" entfernt. Grund: ${parsed.payload.reason}`
+          : `Du wurdest vom Event "${parsed.payload.eventName}" entfernt.`,
+        url: `/app/events/${parsed.payload.eventId}`,
+        appTitle,
+      };
+
     case "role_added":
       return {
         title: "Neue Rolle",
