@@ -53,7 +53,7 @@ export const RemoveEventParticipant = ({
         <div>
           <Textarea
             label="Grund (optional)"
-            hint="max. 500 Zeichen, wird dem Citizen mitgeteilt"
+            hint="max. 500 Zeichen, wird dem Citizen mitgeteilt und in der Aktivität des Events angezeigt"
             name="reason"
             maxLength={500}
             classNameTextarea="h-20"

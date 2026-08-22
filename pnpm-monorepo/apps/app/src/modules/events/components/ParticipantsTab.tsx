@@ -67,11 +67,12 @@ export const ParticipantsTab = async ({
    */
   const canManageParticipants =
     isAppEvent && isAllowedToManageEvent && isEventUpdatable(event);
-  const gridCols = isAppEvent
-    ? canManageParticipants
-      ? "grid-cols-[160px_160px_240px_1fr_32px]"
-      : "grid-cols-[160px_160px_240px_1fr]"
-    : "grid-cols-[160px_160px_1fr]";
+  const gridCols = clsx({
+    "grid-cols-[160px_160px_1fr]": !isAppEvent,
+    "grid-cols-[160px_160px_240px_1fr]": isAppEvent && !canManageParticipants,
+    "grid-cols-[160px_160px_240px_1fr_32px]":
+      isAppEvent && canManageParticipants,
+  });
 
   const resolvedParticipants = await getParticipants(event);
 

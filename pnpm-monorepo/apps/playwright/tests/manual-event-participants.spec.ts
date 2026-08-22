@@ -1,7 +1,14 @@
-import { EventActivityType, EventSource } from "@sam-monorepo/database/client";
+import type { Locator, Page } from "@playwright/test";
 import {
+  EventActivityType,
+  EventSource,
+  EventVisibility,
+} from "@sam-monorepo/database/client";
+import {
+  assignRole,
   createAppEvent,
   createCitizen,
+  createRole,
   type Citizen,
 } from "../fixtures/factories";
 import {
@@ -28,11 +35,7 @@ const futureEvent = (name: string, createdById: string) => ({
   endTime: new Date(Date.now() + ONE_DAY_MS + 2 * ONE_HOUR_MS),
 });
 
-const pickCitizen = async (
-  dialog: ReturnType<typeof modal>,
-  page: Parameters<typeof modal>[0],
-  handle: string,
-) => {
+const pickCitizen = async (dialog: Locator, page: Page, handle: string) => {
   await dialog.getByRole("combobox", { name: "Citizens" }).fill(handle);
   const option = page.getByRole("option", { name: new RegExp(handle) });
   await expect(option).toBeVisible();
@@ -40,19 +43,21 @@ const pickCitizen = async (
   await expect(dialog.getByRole("link", { name: handle })).toBeVisible();
 };
 
-const openAddModal = async (page: Parameters<typeof modal>[0]) => {
+const openAddModal = async (page: Page) => {
   const addModal = modal(page, "Teilnehmer hinzufügen");
-  await clickUntilVisible(
-    page.getByTitle("Teilnehmer hinzufügen"),
+  /**
+   * The dialog is the click's immediate reaction — the picker inside it is
+   * not, since it waits for the addable citizens to come back. Retrying the
+   * click on the picker would toggle the dialog shut again under load.
+   */
+  await clickUntilVisible(page.getByTitle("Teilnehmer hinzufügen"), addModal);
+  await expect(
     addModal.getByRole("combobox", { name: "Citizens" }),
-  );
+  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
   return addModal;
 };
 
-const removeButtonOf = (
-  page: Parameters<typeof modal>[0],
-  participant: Citizen,
-) =>
+const removeButtonOf = (page: Page, participant: Citizen) =>
   page
     .getByRole("row")
     .filter({ hasText: participant.entity.handle! })
@@ -95,9 +100,9 @@ test("a manager adds citizens with a shared comment", async ({
   await expect(page.getByText("Teilnehmer (2)")).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
-  await expect(
-    page.getByText("Vom Manager nachgetragen").first(),
-  ).toBeVisible();
+  await expect(page.getByText("Vom Manager nachgetragen").first()).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
 
   const rows = await prisma.eventParticipant.findMany({
     where: { eventId: event.id },
@@ -378,6 +383,64 @@ test("a non-manager gets no participant controls", async ({
   await expect(page.getByText("Teilnehmer (1)")).toBeVisible();
   await expect(page.getByTitle("Teilnehmer hinzufügen")).toHaveCount(0);
   await expect(removeButtonOf(page, participant)).toHaveCount(0);
+});
+
+/**
+ * The shared where-fragments cannot express the role-level gate, so the
+ * offered set is narrowed in memory afterwards. Without that a manager could
+ * enroll someone the event 404s for — who then cannot even cancel, because
+ * cancelling needs to see the event too.
+ */
+test("a citizen below their role's max level is not addable to a restricted event", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createCitizen(prisma, {
+    handle: "stufen-manager",
+    permissionStrings: MANAGER_PERMISSIONS,
+  });
+  const leveledRole = await createRole(prisma, {
+    name: "stufenrolle",
+    permissionStrings: ["event;read"],
+  });
+  await prisma.role.update({
+    where: { id: leveledRole.id },
+    data: { maxLevel: 3 },
+  });
+  const climber = await createCitizen(prisma, { handle: "aufsteiger" });
+  const assignment = await assignRole(prisma, climber.entity, leveledRole);
+
+  const event = await createAppEvent(prisma, {
+    ...futureEvent("Operation Verschlusssache", manager.entity.id),
+    visibility: EventVisibility.RESTRICTED,
+    visibilityRoleIds: [leveledRole.id],
+  });
+
+  await signIn(manager.user);
+  await page.goto(`/app/events/${event.id}/participants`);
+
+  /** Below the max level the role grants nothing, so the event stays hidden */
+  const belowMaxModal = await openAddModal(page);
+  await belowMaxModal
+    .getByRole("combobox", { name: "Citizens" })
+    .fill("aufsteiger");
+  await expect(page.getByRole("option", { name: /aufsteiger/ })).toHaveCount(0);
+
+  /** Reaching the max level makes the same citizen addable */
+  await prisma.roleAssignment.update({
+    where: { id: assignment.id },
+    data: { currentLevel: 3 },
+  });
+  await page.reload();
+
+  const atMaxModal = await openAddModal(page);
+  await pickCitizen(atMaxModal, page, "aufsteiger");
+  await atMaxModal.getByRole("button", { name: "Speichern" }).click();
+
+  await expect(page.getByText("1 Teilnehmer hinzugefügt.")).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
 });
 
 test("a Discord event keeps its participant list read-only", async ({

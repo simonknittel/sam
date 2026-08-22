@@ -5,15 +5,12 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
-import {
-  EventActivityType,
-  EventSource,
-  Prisma,
-} from "@sam-monorepo/database/client";
+import { EventActivityType, EventSource } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getAddableParticipantIds } from "../queries/getAddableParticipantIds";
 import { createEventActivity } from "../utils/eventActivity";
+import { getParticipatableAppEvent } from "../utils/getParticipatableAppEvent";
 import { isAllowedToManageEvent } from "../utils/isAllowedToManageEvent";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
 
@@ -30,17 +27,7 @@ export const addEventParticipants = createAuthenticatedAction(
     /**
      * Authorize the request
      */
-    const event = await prisma.event.findUnique({
-      where: {
-        id: data.eventId,
-        source: EventSource.APP,
-        deletedAt: null,
-      },
-      include: {
-        managers: true,
-        visibilityRoles: true,
-      },
-    });
+    const event = await getParticipatableAppEvent(data.eventId);
     if (!event)
       return { error: "Event nicht gefunden", requestPayload: formData };
     if (!isEventUpdatable(event))
@@ -65,23 +52,25 @@ export const addEventParticipants = createAuthenticatedAction(
         requestPayload: formData,
       };
 
-    const addableCitizenIds = new Set(await getAddableParticipantIds(event));
-    const activeCitizenIds = new Set(
-      (
-        await prisma.eventParticipant.findMany({
-          where: {
-            eventId: event.id,
-            cancelledAt: null,
-            activeCitizenId: { in: requestedCitizenIds },
-          },
-          select: { activeCitizenId: true },
-        })
-      ).map((participant) => participant.activeCitizenId!),
+    const [addableCitizenIds, activeParticipants] = await Promise.all([
+      getAddableParticipantIds(event, requestedCitizenIds),
+      prisma.eventParticipant.findMany({
+        where: {
+          eventId: event.id,
+          cancelledAt: null,
+          activeCitizenId: { in: requestedCitizenIds },
+        },
+        select: { activeCitizenId: true },
+      }),
+    ]);
+
+    const addable = new Set(addableCitizenIds);
+    const alreadyActive = new Set(
+      activeParticipants.map((participant) => participant.activeCitizenId!),
     );
 
     const unknownCitizenId = requestedCitizenIds.find(
-      (citizenId) =>
-        !addableCitizenIds.has(citizenId) && !activeCitizenIds.has(citizenId),
+      (citizenId) => !addable.has(citizenId) && !alreadyActive.has(citizenId),
     );
     if (unknownCitizenId)
       return {
@@ -90,53 +79,45 @@ export const addEventParticipants = createAuthenticatedAction(
       };
 
     const citizenIdsToAdd = requestedCitizenIds.filter(
-      (citizenId) => !activeCitizenIds.has(citizenId),
+      (citizenId) => !alreadyActive.has(citizenId),
     );
     if (citizenIdsToAdd.length <= 0)
       return { success: "Alle ausgewählten Citizen sind bereits angemeldet." };
 
     /**
-     * Add the participants
+     * Add the participants. One transaction, so a failure part-way through
+     * cannot leave participations behind that never reach the audit log or
+     * the affected citizens. `skipDuplicates` absorbs the one race the
+     * pre-check cannot close — a citizen signing themselves up in between —
+     * and the returned rows say who was actually added.
      */
     const comment = data.comment || null;
-    const addedCitizenIds: string[] = [];
 
-    for (const citizenId of citizenIdsToAdd) {
-      try {
-        await prisma.$transaction(async (transaction) => {
-          await transaction.eventParticipant.create({
-            data: {
-              eventId: event.id,
-              source: EventSource.APP,
-              citizenId,
-              activeCitizenId: citizenId,
-              comment,
-            },
-          });
+    const addedCitizenIds = await prisma.$transaction(async (transaction) => {
+      const created = await transaction.eventParticipant.createManyAndReturn({
+        data: citizenIdsToAdd.map((citizenId) => ({
+          eventId: event.id,
+          source: EventSource.APP,
+          citizenId,
+          activeCitizenId: citizenId,
+          comment,
+        })),
+        skipDuplicates: true,
+        select: { citizenId: true },
+      });
 
-          await createEventActivity(transaction, {
-            eventId: event.id,
-            citizenId: managerId,
-            type: EventActivityType.PARTICIPATION_ADDED_BY_MANAGER,
-            payload: { citizenId, comment },
-          });
+      const citizenIds = created.map((participant) => participant.citizenId!);
+
+      for (const citizenId of citizenIds)
+        await createEventActivity(transaction, {
+          eventId: event.id,
+          citizenId: managerId,
+          type: EventActivityType.PARTICIPATION_ADDED_BY_MANAGER,
+          payload: { citizenId, comment },
         });
 
-        addedCitizenIds.push(citizenId);
-      } catch (error) {
-        /**
-         * The citizen signed themselves up between the check above and here —
-         * the active-key unique constraint caught it. Their participation is
-         * the outcome we wanted, so the batch carries on without them.
-         */
-        if (
-          error instanceof Prisma.PrismaClientKnownRequestError &&
-          error.code === "P2002"
-        )
-          continue;
-        throw error;
-      }
-    }
+      return citizenIds;
+    });
 
     if (addedCitizenIds.length <= 0)
       return { success: "Alle ausgewählten Citizen sind bereits angemeldet." };

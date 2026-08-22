@@ -74,7 +74,11 @@ export const AddEventParticipants = ({ className, eventId }: Props) => {
           <input type="hidden" name="eventId" value={eventId} />
 
           {isPending || !addableCitizenIds ? (
-            <div className="h-10 animate-pulse rounded-secondary bg-neutral-900" />
+            /** Mirrors CitizenInput's own pending state, label included */
+            <div>
+              <span className="block mb-1">Citizen (Handle)</span>
+              <div className="h-10 animate-pulse rounded-secondary bg-neutral-900" />
+            </div>
           ) : (
             <CitizenInput
               name="citizenId"

@@ -57,31 +57,22 @@ const participantRemovedPayloadSchema = z.object({
   reason: z.string().nullable(),
 });
 
-/**
- * The citizen a manager-driven entry is about — the row's own citizen column
- * holds the acting manager, so the affected one lives in the payload.
- */
+/** The types whose payload names a citizen other than the row's own actor */
+const TYPES_WITH_AFFECTED_CITIZEN: ReadonlySet<EventActivityType> = new Set([
+  EventActivityType.PARTICIPATION_ADDED_BY_MANAGER,
+  EventActivityType.PARTICIPATION_REMOVED_BY_MANAGER,
+]);
+
+const affectedCitizenPayloadSchema = z.object({ citizenId: z.string() });
+
 const getAffectedCitizenId = (activity: {
   type: EventActivityType;
   payload: Prisma.JsonValue;
-}): string | null => {
-  switch (activity.type) {
-    case EventActivityType.PARTICIPATION_ADDED_BY_MANAGER: {
-      const payload = participantAddedPayloadSchema.safeParse(activity.payload);
-      return payload.success ? payload.data.citizenId : null;
-    }
-
-    case EventActivityType.PARTICIPATION_REMOVED_BY_MANAGER: {
-      const payload = participantRemovedPayloadSchema.safeParse(
-        activity.payload,
-      );
-      return payload.success ? payload.data.citizenId : null;
-    }
-
-    default:
-      return null;
-  }
-};
+}): string | null =>
+  TYPES_WITH_AFFECTED_CITIZEN.has(activity.type)
+    ? (affectedCitizenPayloadSchema.safeParse(activity.payload).data
+        ?.citizenId ?? null)
+    : null;
 
 interface Input {
   readonly eventId: Event["id"];

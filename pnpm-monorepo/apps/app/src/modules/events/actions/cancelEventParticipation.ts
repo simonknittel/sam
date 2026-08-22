@@ -7,6 +7,7 @@ import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { EventActivityType } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { cancelParticipation } from "../utils/cancelParticipation";
 import { createEventActivity } from "../utils/eventActivity";
 import {
   getParticipatableAppEvent,
@@ -54,42 +55,12 @@ export const cancelEventParticipation = createAuthenticatedAction(
         requestPayload: formData,
       };
 
-    /**
-     * Soft-cancel the participation (nulling the active keys releases the
-     * unique slot for a later re-sign-up) and, like the Discord sync on an
-     * RSVP withdrawal, drop the citizen's position applications and lineup
-     * assignments — all in one transaction.
-     */
     await prisma.$transaction(async (transaction) => {
-      await transaction.eventParticipant.update({
-        where: {
-          id: participant.id,
-        },
-        data: {
-          cancelledAt: new Date(),
-          cancelledById: citizenId,
-          activeCitizenId: null,
-          activeDiscordUserId: null,
-        },
-      });
-
-      await transaction.eventPositionApplication.deleteMany({
-        where: {
-          position: {
-            eventId: event.id,
-          },
-          citizenId,
-        },
-      });
-
-      await transaction.eventPosition.updateMany({
-        where: {
-          eventId: event.id,
-          citizenId,
-        },
-        data: {
-          citizenId: null,
-        },
+      await cancelParticipation(transaction, {
+        participantId: participant.id,
+        eventId: event.id,
+        citizenId,
+        cancelledById: citizenId,
       });
 
       await createEventActivity(transaction, {

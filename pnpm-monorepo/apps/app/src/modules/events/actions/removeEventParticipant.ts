@@ -5,10 +5,12 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
-import { EventActivityType, EventSource } from "@sam-monorepo/database/client";
+import { EventActivityType } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { cancelParticipation } from "../utils/cancelParticipation";
 import { createEventActivity } from "../utils/eventActivity";
+import { getParticipatableAppEvent } from "../utils/getParticipatableAppEvent";
 import { isAllowedToManageEvent } from "../utils/isAllowedToManageEvent";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
 
@@ -25,16 +27,7 @@ export const removeEventParticipant = createAuthenticatedAction(
     /**
      * Authorize the request
      */
-    const event = await prisma.event.findUnique({
-      where: {
-        id: data.eventId,
-        source: EventSource.APP,
-        deletedAt: null,
-      },
-      include: {
-        managers: true,
-      },
-    });
+    const event = await getParticipatableAppEvent(data.eventId);
     if (!event)
       return { error: "Event nicht gefunden", requestPayload: formData };
     if (!isEventUpdatable(event))
@@ -44,6 +37,8 @@ export const removeEventParticipant = createAuthenticatedAction(
       };
     if (!(await isAllowedToManageEvent(event)))
       return { error: t("Common.forbidden"), requestPayload: formData };
+
+    const managerId = authentication.session.entity?.id ?? null;
 
     const participant = await prisma.eventParticipant.findUnique({
       where: {
@@ -60,47 +55,22 @@ export const removeEventParticipant = createAuthenticatedAction(
       };
 
     /**
-     * Soft-cancel the participation with the manager as the canceller — the
-     * only thing on the row telling a manager removal from a self-cancel.
-     * The side effects mirror `cancelEventParticipation` exactly.
+     * The manager as the canceller is the only thing on the row telling a
+     * manager removal from a self-cancel.
      */
     const reason = data.reason || null;
 
     await prisma.$transaction(async (transaction) => {
-      await transaction.eventParticipant.update({
-        where: {
-          id: participant.id,
-        },
-        data: {
-          cancelledAt: new Date(),
-          cancelledById: authentication.session.entity?.id ?? null,
-          activeCitizenId: null,
-          activeDiscordUserId: null,
-        },
-      });
-
-      await transaction.eventPositionApplication.deleteMany({
-        where: {
-          position: {
-            eventId: event.id,
-          },
-          citizenId: data.citizenId,
-        },
-      });
-
-      await transaction.eventPosition.updateMany({
-        where: {
-          eventId: event.id,
-          citizenId: data.citizenId,
-        },
-        data: {
-          citizenId: null,
-        },
+      await cancelParticipation(transaction, {
+        participantId: participant.id,
+        eventId: event.id,
+        citizenId: data.citizenId,
+        cancelledById: managerId,
       });
 
       await createEventActivity(transaction, {
         eventId: event.id,
-        citizenId: authentication.session.entity?.id ?? null,
+        citizenId: managerId,
         type: EventActivityType.PARTICIPATION_REMOVED_BY_MANAGER,
         payload: { citizenId: data.citizenId, reason },
       });
