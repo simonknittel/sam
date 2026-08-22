@@ -12,6 +12,7 @@ import { buildBriefingRootPageData } from "./scrape-discord-events/buildBriefing
 import { deleteCancelledEvents } from "./scrape-discord-events/deleteCancelledEvents";
 import { getEvents } from "./scrape-discord-events/discord/utils/getEvents";
 import { triggerNotifications } from "./scrape-discord-events/notifications";
+import { excludeAppPublishedEvents } from "./scrape-discord-events/reconciliation";
 import { updateParticipants } from "./scrape-discord-events/updateParticipants";
 
 export const handler: ScheduledHandler = async (event, context) => {
@@ -23,8 +24,26 @@ export const handler: ScheduledHandler = async (event, context) => {
         eventIds: _futureEventsFromDiscord.map((event) => event.id),
       });
 
+      /**
+       * Everything the app published to the guild itself is invisible to
+       * this sync — those events already live in the database as APP rows
+       * and the app keeps them up to date from its own side.
+       */
+      const appPublishedEvents = await prisma.event.findMany({
+        where: { discordPublishedId: { not: null } },
+        select: { discordPublishedId: true },
+      });
+      const ownEventsFromDiscord = excludeAppPublishedEvents(
+        _futureEventsFromDiscord,
+        new Set(appPublishedEvents.map((event) => event.discordPublishedId!)),
+      );
+      if (ownEventsFromDiscord.length !== _futureEventsFromDiscord.length)
+        void log.info("Skipped guild events the app published itself", {
+          count: _futureEventsFromDiscord.length - ownEventsFromDiscord.length,
+        });
+
       // Shuffle array so rate limits not always hitting the same events
-      const futureEventsFromDiscord = shuffle(_futureEventsFromDiscord);
+      const futureEventsFromDiscord = shuffle(ownEventsFromDiscord);
       // // Limit to 5 events to avoid rate limits
       // futureEventsFromDiscord = futureEventsFromDiscord.slice(0, 5);
 

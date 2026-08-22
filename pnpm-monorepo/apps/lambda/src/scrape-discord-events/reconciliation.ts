@@ -1,5 +1,24 @@
 import { EventSource } from "@sam-monorepo/database/client";
 
+interface DiscordEvent {
+  readonly id: string;
+}
+
+/**
+ * Drops the guild scheduled events the app published itself. Without this
+ * every published app event would come back as a duplicate `source: DISCORD`
+ * row on the next run — the app tracks its publications in
+ * `Event.discordPublishedId`, deliberately apart from the `discordId` this
+ * sync upserts on.
+ */
+export const excludeAppPublishedEvents = <Event extends DiscordEvent>(
+  eventsFromDiscord: readonly Event[],
+  appPublishedDiscordIds: ReadonlySet<string>,
+): Event[] =>
+  eventsFromDiscord.filter(
+    (discordEvent) => !appPublishedDiscordIds.has(discordEvent.id),
+  );
+
 interface SyncableEvent {
   readonly source: EventSource;
   readonly discordId: string | null;
