@@ -46,14 +46,14 @@ export const RemoveEventParticipant = ({
         </button>
       )}
       title="Teilnehmer entfernen?"
-      description={`${citizenHandle || citizenId} wird vom Event abgemeldet und benachrichtigt. Posten in der Aufstellung und Bewerbungen werden dabei entfernt.`}
+      description={`${citizenHandle || citizenId} wird vom Event abgemeldet und benachrichtigt.`}
       confirmLabel="Entfernen"
     >
       {(formId) => (
         <div>
           <Textarea
             label="Grund (optional)"
-            hint="max. 500 Zeichen, wird dem Citizen mitgeteilt und in der Aktivität des Events angezeigt"
+            hint="max. 500 Zeichen"
             name="reason"
             maxLength={500}
             classNameTextarea="h-20"

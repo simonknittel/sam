@@ -92,7 +92,7 @@ export const AddEventParticipants = ({ className, eventId }: Props) => {
             className="mt-4"
             name="comment"
             label="Kommentar"
-            hint="optional, max. 500 Zeichen, gilt für alle hinzugefügten Teilnehmer und kann von ihnen selbst geändert werden"
+            hint="optional, max. 500 Zeichen"
             maxLength={500}
             classNameTextarea="h-20"
           />

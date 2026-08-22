@@ -55,25 +55,10 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
       <>
         <p>
           Manager eines Events können unter &ldquo;Teilnehmer&rdquo; ab sofort
-          selbst Citizen anmelden und wieder abmelden. Beim Hinzufügen lassen
-          sich mehrere Citizen auf einmal auswählen und mit einem gemeinsamen
-          Kommentar versehen, den die Teilnehmer danach selbst ändern können.
-          Beim Entfernen kann ein Grund angegeben werden.
+          selbst Citizen anmelden und wieder abmelden.
         </p>
 
-        <p>
-          Die betroffenen Citizen werden benachrichtigt &ndash; die beiden neuen
-          Benachrichtigungen lassen sich in den{" "}
-          <Link
-            href="/app/account/notifications"
-            className="text-interaction-500 hover:underline focus-visible:underline"
-          >
-            Benachrichtigungseinstellungen
-          </Link>{" "}
-          abschalten. Beide Aktionen landen außerdem in der Aktivität des
-          Events. Angeboten werden nur Citizen, die das Event auch sehen können;
-          Discord-Events werden weiterhin über Discord verwaltet.
-        </p>
+        <p>Die betroffenen Citizen werden benachrichtigt.</p>
       </>
     ),
   },
