@@ -1,6 +1,20 @@
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
 
+const LOOPBACK_HOSTNAMES: readonly string[] = ["localhost", "127.0.0.1", "::1"];
+
+/**
+ * Whether a URL either encrypts its traffic or never leaves the machine.
+ * Used for endpoints the app sends credentials to.
+ */
+const isEncryptedOrLoopbackUrl = (value: string) => {
+  const { protocol, hostname } = new URL(value);
+  return (
+    protocol === "https:" ||
+    LOOPBACK_HOSTNAMES.includes(hostname.replace(/^\[|\]$/g, ""))
+  );
+};
+
 export const env = createEnv({
   /*
    * Serverside Environment variables, not available on the client.
@@ -25,7 +39,24 @@ export const env = createEnv({
     DISCORD_CLIENT_ID: z.string(),
     DISCORD_CLIENT_SECRET: z.string(),
     DISCORD_GUILD_ID: z.string(),
+    /**
+     * Bot token of the app's Discord bot, sent as `Authorization: Bot …`.
+     * Publishing events to Discord needs the bot to hold CREATE_EVENTS and
+     * MANAGE_EVENTS in the guild — no OAuth2 scope lets a user token manage
+     * guild scheduled events, so this always acts as the bot.
+     */
     DISCORD_TOKEN: z.string(),
+    /**
+     * Base URL of the Discord REST API, without a trailing slash. Only
+     * overridden by the Playwright stack, which points the app at its own
+     * mock server instead of talking to Discord. Plain HTTP is refused
+     * unless it points at the local machine: every request carries the bot
+     * token, and a misconfigured host would ship it in cleartext.
+     */
+    DISCORD_API_BASE_URL: z
+      .url()
+      .refine(isEncryptedOrLoopbackUrl, "must use https unless it is loopback")
+      .default("https://discord.com/api/v10"),
     ALGOLIA_ADMIN_API_KEY: z.string(),
     /**
      * Cloudflare R2 account id, used to derive the bucket endpoint when
@@ -182,6 +213,7 @@ export const env = createEnv({
     DISCORD_CLIENT_SECRET: process.env.DISCORD_CLIENT_SECRET,
     DISCORD_GUILD_ID: process.env.DISCORD_GUILD_ID,
     DISCORD_TOKEN: process.env.DISCORD_TOKEN,
+    DISCORD_API_BASE_URL: process.env.DISCORD_API_BASE_URL,
     NEXT_PUBLIC_ALGOLIA_APP_ID: process.env.NEXT_PUBLIC_ALGOLIA_APP_ID,
     ALGOLIA_ADMIN_API_KEY: process.env.ALGOLIA_ADMIN_API_KEY,
     NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY:

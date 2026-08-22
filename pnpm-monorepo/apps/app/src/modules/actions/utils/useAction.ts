@@ -3,6 +3,7 @@ import { unstable_rethrow } from "next/navigation";
 import { useActionState } from "react";
 import toast from "react-hot-toast";
 import type { ActionResponse } from "./createAction";
+import { toastWarning } from "./toastWarning";
 
 export const useAction = (
   action: (formData: FormData) => Promise<ActionResponse | void>,
@@ -40,6 +41,12 @@ export const useAction = (
         }
 
         toast.success(response.success);
+        /**
+         * A second toast rather than an appendix to the success message: the
+         * work did succeed, and the part that did not should not be read as
+         * green.
+         */
+        if (response.warning) toastWarning(response.warning);
         options?.onSuccess?.(formData);
         return response;
       } catch (error) {

@@ -46,6 +46,33 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-08-22-events-auf-discord-veroeffentlichen",
+    date: "2026-08-22",
+    title: "Events auf Discord veröffentlichen",
+    tags: ["Events", "Neu"],
+    isTracked: true,
+    body: () => (
+      <>
+        <p>
+          Events, die im SAM erstellt werden, lassen sich ab sofort zusätzlich
+          in Discord veröffentlichen. Die Option findest du beim Erstellen eines
+          Events sowie jederzeit danach unter Einstellungen des Events.
+        </p>
+
+        <p>
+          Titel, Kurzbeschreibung, Zeitraum und Titelbild werden danach
+          automatisch nach Discord übertragen.
+        </p>
+
+        <p>
+          Anmeldungen bleiben getrennt: wer auf Discord zusagt, ist damit nicht
+          hier angemeldet und umgekehrt.
+        </p>
+      </>
+    ),
+  },
+
+  {
     key: "2026-08-22-teilnehmer-verwalten",
     date: "2026-08-22",
     title: "Teilnehmer manuell verwalten",

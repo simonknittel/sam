@@ -47,7 +47,7 @@ export const CreateEventTemplateForm = ({ className, onSuccess }: Props) => {
       <Textarea
         name="description"
         label="Kurzbeschreibung"
-        hint="optional. Wird als Kurzbeschreibung in das Event übernommen."
+        hint="optional, max. 1.000 Zeichen. Wird als Kurzbeschreibung in das Event übernommen."
         maxLength={EVENT_TEMPLATE_DESCRIPTION_MAX_LENGTH}
         defaultValue={getDefaultValueWithFallback("description", "")}
         className="mt-4"

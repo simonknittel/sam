@@ -8,15 +8,25 @@ import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
 import { Select } from "@/modules/common/components/form/Select";
 import { Textarea } from "@/modules/common/components/form/Textarea";
 import { TextInput } from "@/modules/common/components/form/TextInput";
+import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
 import { api } from "@/modules/common/utils/api";
 import { createEvent } from "@/modules/events/actions/createEvent";
 import { WikiRoleSelector } from "@/modules/wiki/components/WikiRoleSelector";
-import { EventVisibility } from "@sam-monorepo/database/browser";
+import {
+  EventVisibility,
+  type EventDiscordPublishTarget,
+} from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useId, useState } from "react";
 import { FaGlobe, FaLock, FaSave } from "react-icons/fa";
+import {
+  EVENT_DESCRIPTION_MAX_LENGTH,
+  EVENT_NAME_MAX_LENGTH,
+} from "../../utils/eventConstraints";
+import { DiscordPublishTargetFields } from "../DiscordPublishTargetFields";
 import { EventCoverImageField } from "../EventCoverImageField";
 import { EventDateTimeField } from "../EventDateTimeField";
+import { RestrictedDiscordPublishDialog } from "../RestrictedDiscordPublishDialog";
 
 /** The "no template" option of the picker */
 const NO_TEMPLATE = "";
@@ -39,6 +49,7 @@ export const CreateEventForm = ({
       onSuccess,
     });
   const templateSelectId = useId();
+  const formId = useId();
   const [selectedTemplateId, setSelectedTemplateId] = useState(
     templateId ?? NO_TEMPLATE,
   );
@@ -64,8 +75,31 @@ export const CreateEventForm = ({
    */
   const prefillKey = selectedTemplate?.id ?? NO_TEMPLATE;
 
+  /**
+   * Visibility and publishing are read by the submit button (a restricted
+   * event published to Discord takes a confirmation), so unlike the other
+   * prefilled fields they live here rather than in their own section. The
+   * template switch resets them the way React documents it — adjusting
+   * state during render instead of an effect, like `RadioGroup` does.
+   */
+  const [visibility, setVisibility] = useState<string>(
+    selectedTemplate?.visibility ?? EventVisibility.PUBLIC,
+  );
+  const [isPublishing, setIsPublishing] = useState(
+    selectedTemplate?.discordPublishTarget != null,
+  );
+  const [previousPrefillKey, setPreviousPrefillKey] = useState(prefillKey);
+  if (prefillKey !== previousPrefillKey) {
+    setPreviousPrefillKey(prefillKey);
+    setVisibility(selectedTemplate?.visibility ?? EventVisibility.PUBLIC);
+    setIsPublishing(selectedTemplate?.discordPublishTarget != null);
+  }
+
+  const needsRestrictedConfirmation =
+    visibility === EventVisibility.RESTRICTED && isPublishing;
+
   return (
-    <form action={formAction} className={clsx(className)}>
+    <form action={formAction} id={formId} className={clsx(className)}>
       {templates && templates.length > 0 && (
         <div className="mb-4">
           <label htmlFor={templateSelectId} className="mb-1 block">
@@ -92,7 +126,7 @@ export const CreateEventForm = ({
         <TextInput
           name="name"
           label="Titel"
-          maxLength={128}
+          maxLength={EVENT_NAME_MAX_LENGTH}
           defaultValue={getDefaultValueWithFallback(
             "name",
             selectedTemplate?.name ?? "",
@@ -104,8 +138,8 @@ export const CreateEventForm = ({
         <Textarea
           name="description"
           label="Kurzbeschreibung"
-          hint="optional, max. 2.000 Zeichen, keine Formatierungsmöglichkeiten. Ausführlichere Informationen gehören ins Briefing des Events."
-          maxLength={2000}
+          hint="optional, max. 1.000 Zeichen, keine Formatierungsmöglichkeiten. Ausführlichere Informationen gehören ins Briefing des Events."
+          maxLength={EVENT_DESCRIPTION_MAX_LENGTH}
           defaultValue={getDefaultValueWithFallback(
             "description",
             selectedTemplate?.description ?? "",
@@ -139,17 +173,44 @@ export const CreateEventForm = ({
 
       <div key={`visibility-${prefillKey}`}>
         <VisibilityFields
-          defaultVisibility={
-            selectedTemplate?.visibility ?? EventVisibility.PUBLIC
-          }
+          visibility={visibility}
+          onVisibilityChange={setVisibility}
           defaultRoleIds={selectedTemplate?.visibilityRoleIds ?? []}
         />
       </div>
 
-      <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
-        {isPending ? <AsciiSpinner /> : <FaSave />}
-        Speichern
-      </Button2>
+      <div key={`discord-${prefillKey}`}>
+        <DiscordPublishFields
+          isPublishing={isPublishing}
+          onIsPublishingChange={setIsPublishing}
+          defaultTarget={selectedTemplate?.discordPublishTarget ?? null}
+          defaultChannelId={selectedTemplate?.discordPublishChannelId ?? null}
+          defaultLocation={selectedTemplate?.discordPublishLocation ?? null}
+        />
+      </div>
+
+      {needsRestrictedConfirmation ? (
+        <RestrictedDiscordPublishDialog
+          formId={formId}
+          trigger={
+            <Button2
+              type="button"
+              disabled={isPending}
+              className="mt-4 ml-auto"
+            >
+              {isPending ? <AsciiSpinner /> : <FaSave />}
+              Speichern
+            </Button2>
+          }
+          description="Das Event ist in dieser App nur für ausgewählte Rollen sichtbar. Auf Discord sehen es alle Mitglieder des Servers — inklusive Titel, Beschreibung und Zeitraum."
+          confirmLabel="Erstellen und veröffentlichen"
+        />
+      ) : (
+        <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
+          {isPending ? <AsciiSpinner /> : <FaSave />}
+          Speichern
+        </Button2>
+      )}
 
       <ActionErrorNote className="mt-4" state={state} />
     </form>
@@ -193,17 +254,87 @@ const TemplateCoverField = ({ uploadId }: TemplateCoverFieldProps) => {
   );
 };
 
+interface DiscordPublishFieldsProps {
+  readonly isPublishing: boolean;
+  readonly onIsPublishingChange: (isPublishing: boolean) => void;
+  readonly defaultTarget: EventDiscordPublishTarget | null;
+  readonly defaultChannelId: string | null;
+  readonly defaultLocation: string | null;
+}
+
+/**
+ * Publishing the new event to Discord right after creation, off by default.
+ * A template that carries a publish preference switches it on and prefills
+ * the target; clearing the checkbox still wins, so the template never
+ * publishes behind the organizer's back.
+ */
+const DiscordPublishFields = ({
+  isPublishing,
+  onIsPublishingChange,
+  defaultTarget,
+  defaultChannelId,
+  defaultLocation,
+}: DiscordPublishFieldsProps) => {
+  const checkboxId = useId();
+
+  /**
+   * Fetched lazily like the templates above, and only while the section is
+   * open — a manager who does not publish never waits on Discord.
+   */
+  const { data: channels, isPending } =
+    api.events.getPublishableDiscordChannels.useQuery(undefined, {
+      enabled: isPublishing,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+    });
+
+  return (
+    <>
+      <label htmlFor={checkboxId} className="mt-4 block">
+        Auf Discord veröffentlichen
+      </label>
+      <p className="text-xs mt-1 text-white/40">
+        Legt das Event zusätzlich als Termin auf dem Discord-Server an.
+        Anmeldungen werden nicht übertragen.
+      </p>
+
+      <YesNoCheckbox
+        id={checkboxId}
+        className="mt-2"
+        checked={isPublishing}
+        onChange={(changeEvent) =>
+          onIsPublishingChange(changeEvent.target.checked)
+        }
+      />
+
+      {isPublishing &&
+        (isPending ? (
+          <AsciiSpinner className="mt-2 text-brand-red-500" />
+        ) : (
+          <DiscordPublishTargetFields
+            channels={channels ?? null}
+            defaultTarget={defaultTarget ?? undefined}
+            defaultChannelId={defaultChannelId}
+            defaultLocation={defaultLocation}
+            locationPlaceholder="Link zum Event in dieser App"
+            className="mt-2"
+          />
+        ))}
+    </>
+  );
+};
+
 interface VisibilityFieldsProps {
-  readonly defaultVisibility: EventVisibility;
+  readonly visibility: string;
+  readonly onVisibilityChange: (visibility: string) => void;
   readonly defaultRoleIds: readonly string[];
 }
 
 const VisibilityFields = ({
-  defaultVisibility,
+  visibility,
+  onVisibilityChange,
   defaultRoleIds,
 }: VisibilityFieldsProps) => {
-  const [visibility, setVisibility] = useState<string>(defaultVisibility);
-
   return (
     <>
       <p className="mt-4">Sichtbarkeit</p>
@@ -224,7 +355,7 @@ const VisibilityFields = ({
           },
         ]}
         value={visibility}
-        onChange={setVisibility}
+        onChange={onVisibilityChange}
         className="mt-2"
       />
 

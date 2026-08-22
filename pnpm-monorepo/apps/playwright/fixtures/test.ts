@@ -19,18 +19,25 @@ import {
   templateDatabase,
   unleashEnvironment,
 } from "../setup/stack";
+import { startDiscordMock, type DiscordMock } from "./discord-mock";
 
 interface WorkerStack {
   readonly baseURL: string;
   readonly prisma: PrismaClient;
   /** HTTP base of the worker's collab container (e.g. for /replace) */
   readonly collabHttpUrl: string;
+  readonly discordMock: DiscordMock;
 }
 
 interface Fixtures {
   readonly prisma: PrismaClient;
   /** HTTP base of the worker's collab container (e.g. for /replace) */
   readonly collabHttpUrl: string;
+  /**
+   * The worker's stand-in for Discord's REST API, reset between tests like
+   * the database.
+   */
+  readonly discordMock: DiscordMock;
   /**
    * Signs the given user in by inserting a database session and setting the
    * session cookie (next-auth v4 database sessions).
@@ -137,6 +144,7 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
       const baseURL = `http://localhost:${appPort}`;
       const workerDatabaseUrl = hostDatabaseUrl(state, databaseName);
       const collabHttpUrl = `http://localhost:${collabContainer.getMappedPort(collabPort)}`;
+      const discordMock = await startDiscordMock();
 
       const appProcess = spawn(
         "pnpm",
@@ -154,6 +162,8 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
             NEXTAUTH_URL: baseURL,
             COLLAB_URL: `ws://localhost:${collabContainer.getMappedPort(collabPort)}`,
             COLLAB_JWT_SECRET: collabJwtSecret,
+            // Publishing events talks to the worker's mock, never to Discord
+            DISCORD_API_BASE_URL: discordMock.baseUrl,
           },
           stdio: "inherit",
         },
@@ -163,11 +173,12 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
         await waitForHttpOk(baseURL, appProcess);
 
         const prisma = createPrismaClient(workerDatabaseUrl);
-        await use({ baseURL, prisma, collabHttpUrl });
+        await use({ baseURL, prisma, collabHttpUrl, discordMock });
         await prisma.$disconnect();
       } finally {
         await stopProcess(appProcess);
         await collabContainer.stop();
+        await discordMock.close();
       }
     },
     { scope: "worker", timeout: 240_000 },
@@ -185,9 +196,14 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
     await use(stack.collabHttpUrl);
   },
 
+  discordMock: async ({ stack }, use) => {
+    await use(stack.discordMock);
+  },
+
   databaseReset: [
     async ({ stack }, use) => {
       await truncateAllTables(stack.prisma);
+      stack.discordMock.reset();
       await use(undefined);
     },
     { auto: true },

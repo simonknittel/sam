@@ -5,6 +5,7 @@ import { getCitizensGroupedByVisibleRoles } from "./routers/citizens/getCitizens
 import { getHistory } from "./routers/entityLog/getHistory";
 import { getAddableParticipantIds } from "./routers/events/getAddableParticipantIds";
 import { getAllEvents } from "./routers/events/getAllEvents";
+import { getPublishableDiscordChannels } from "./routers/events/getPublishableDiscordChannels";
 import { getUsableEventTemplates } from "./routers/events/getUsableEventTemplates";
 import { getAllManufacturers } from "./routers/manufacturer/getAll";
 import { getManufacturerById } from "./routers/manufacturer/getById";
@@ -44,6 +45,7 @@ export const appRouter = createTRPCRouter({
   events: createTRPCRouter({
     getAddableParticipantIds,
     getAllEvents,
+    getPublishableDiscordChannels,
     getUsableEventTemplates,
   }),
   manufacturer: createTRPCRouter({

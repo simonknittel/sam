@@ -5,6 +5,7 @@ import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/Suspe
 import { Tile, TileVariant } from "@/modules/common/components/Tile";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
+import { getPublishableGuildChannels } from "@/modules/discord/utils/getPublishableGuildChannels";
 import { DeleteEventTemplateButton } from "@/modules/event-templates/components/DeleteEventTemplateButton";
 import { DuplicateEventTemplateButton } from "@/modules/event-templates/components/DuplicateEventTemplateButton";
 import { RestoreEventTemplateButton } from "@/modules/event-templates/components/RestoreEventTemplateButton";
@@ -54,6 +55,15 @@ const EventTemplateDetails = async ({ templateId }: DetailsProps) => {
   const { template, permissions } = context;
   const isDeleted = template.deletedAt !== null;
   const isShared = template.roleAccess.length > 0;
+  const isEditable = !isDeleted && permissions.canEdit;
+
+  /**
+   * A live Discord call, so it only runs for the viewers who actually get
+   * the form it feeds — everyone else would wait on it for nothing.
+   */
+  const discordChannels = isEditable
+    ? await getPublishableGuildChannels()
+    : null;
 
   return (
     <div className="flex flex-col gap-4">
@@ -64,7 +74,7 @@ const EventTemplateDetails = async ({ templateId }: DetailsProps) => {
             in keiner Eventerstellung mehr; bis zur Wiederherstellung lässt sie
             sich nicht bearbeiten.
           </p>
-        ) : permissions.canEdit ? (
+        ) : isEditable ? (
           <UpdateEventTemplateForm
             template={{
               id: template.id,
@@ -75,7 +85,11 @@ const EventTemplateDetails = async ({ templateId }: DetailsProps) => {
               visibilityRoleIds: template.visibilityRoles.map(
                 (visibilityRole) => visibilityRole.roleId,
               ),
+              discordPublishTarget: template.discordPublishTarget,
+              discordPublishChannelId: template.discordPublishChannelId,
+              discordPublishLocation: template.discordPublishLocation,
             }}
+            channels={discordChannels}
           />
         ) : (
           <p className="text-neutral-500">

@@ -14,7 +14,16 @@ import type { AuditEventInput } from "@sam-monorepo/domain";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { berlinWallTimeToUtc } from "../utils/berlinWallTime";
+import {
+  getDiscordSyncWarning,
+  syncDiscordEventPublication,
+} from "../utils/discordPublishing";
 import { createEventActivity } from "../utils/eventActivity";
+import {
+  EVENT_DESCRIPTION_MAX_LENGTH,
+  EVENT_MAX_VISIBILITY_ROLES,
+  EVENT_NAME_MAX_LENGTH,
+} from "../utils/eventConstraints";
 import { isAllowedToManageEvent } from "../utils/isAllowedToManageEvent";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
 
@@ -24,12 +33,15 @@ const WALL_TIME_SCHEMA = z
 
 const schema = z.object({
   eventId: z.cuid(),
-  name: z.string().trim().min(1).max(128),
-  description: z.string().trim().max(2000).optional(),
+  name: z.string().trim().min(1).max(EVENT_NAME_MAX_LENGTH),
+  description: z.string().trim().max(EVENT_DESCRIPTION_MAX_LENGTH).optional(),
   startTime: WALL_TIME_SCHEMA,
   endTime: WALL_TIME_SCHEMA,
   visibility: z.enum(EventVisibility),
-  visibilityRoleIds: z.array(z.cuid()).max(50).optional(),
+  visibilityRoleIds: z
+    .array(z.cuid())
+    .max(EVENT_MAX_VISIBILITY_ROLES)
+    .optional(),
 });
 
 export const updateEvent = createAuthenticatedAction(
@@ -210,6 +222,32 @@ export const updateEvent = createAuthenticatedAction(
     }
 
     /**
+     * Carry the change over to Discord if the event is published there. A
+     * no-op otherwise, and never able to undo the save above — a Discord
+     * problem only comes back as a warning next to the success message.
+     */
+    const discordSyncWarning =
+      nameChanged || descriptionChanged || scheduleChanged
+        ? getDiscordSyncWarning(await syncDiscordEventPublication(event.id))
+        : null;
+
+    /**
+     * Narrowing a published event's visibility does not narrow it on
+     * Discord — the guild keeps seeing it. Said out loud rather than
+     * silently unpublishing, which would be a surprise of its own.
+     */
+    const becameRestrictedWhilePublished =
+      event.discordPublishedId !== null &&
+      visibilityChanged &&
+      data.visibility === EventVisibility.RESTRICTED;
+
+    const warning =
+      discordSyncWarning ??
+      (becameRestrictedWhilePublished
+        ? "Das Event bleibt auf Discord für alle Mitglieder des Servers sichtbar. Entferne es dort, wenn das nicht gewollt ist."
+        : null);
+
+    /**
      * Revalidate cache(s)
      */
     revalidatePath("/app/events");
@@ -220,6 +258,7 @@ export const updateEvent = createAuthenticatedAction(
      */
     return {
       success: t("Common.successfullySaved"),
+      ...(warning ? { warning } : {}),
     };
   },
   {

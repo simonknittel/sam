@@ -88,4 +88,46 @@ production token. Deployments read the variable from Vercel (see
 
 ## Bot Invite Link with required scopes
 
-- <https://discord.com/api/oauth2/authorize?client_id=XXX&permissions=0&scope=bot>
+Replace `XXX` with the application's client id (`DISCORD_CLIENT_ID`):
+
+```
+https://discord.com/oauth2/authorize?client_id=XXX&scope=bot&permissions=17600777028608
+```
+
+The `bot` scope covers everything the app asks of the bot; the permission
+integer is the sum of four flags:
+
+| Permission      | Bit       | Value          | Needed for                                                                        |
+| --------------- | --------- | -------------- | --------------------------------------------------------------------------------- |
+| `VIEW_CHANNEL`  | `1 << 10` | 1024           | Listing the voice and stage channels an event can be published into                |
+| `CONNECT`       | `1 << 20` | 1048576        | Creating an event in a voice channel — Discord requires it alongside `VIEW_CHANNEL` |
+| `MANAGE_EVENTS` | `1 << 33` | 8589934592     | Editing and deleting guild scheduled events, including ones the bot didn't create   |
+| `CREATE_EVENTS` | `1 << 44` | 17592186044416 | Creating guild scheduled events                                                     |
+
+These are what
+[publishing app events to Discord](../pnpm-monorepo/apps/app/src/modules/events/utils/discordPublishing.ts)
+needs; without them publishing fails with `Missing Permissions` while
+everything else keeps working. `VIEW_CHANNEL` is usually already covered by
+the guild's `@everyone` role, but granting it to the bot's own role keeps it
+working if that baseline is ever tightened.
+
+Discord requires
+[different permissions per event entity type](https://docs.discord.com/developers/resources/guild-scheduled-event):
+an external event needs only `CREATE_EVENTS`, a voice event adds
+`VIEW_CHANNEL` and `CONNECT`, and a **stage** event additionally needs
+`MANAGE_CHANNELS`, `MUTE_MEMBERS` and `MOVE_MEMBERS` (`permissions=17600798000144`).
+The link above omits those three: they are moderation-grade permissions, and
+guilds without stage channels never need them. Grant them only if the guild
+actually has stage channels, since the channel picker does offer them.
+
+`MANAGE_EVENTS` is strictly redundant — the app only ever edits events the bot
+created itself, which `CREATE_EVENTS` already covers. It is included so that
+rotating `DISCORD_TOKEN` to a different Discord application does not leave every
+already-published event unmanageable.
+
+Re-inviting a bot that is already in the guild is safe and is how permissions
+are added later — it updates the bot's managed role rather than adding a
+second membership. Check what it actually holds first (`Server Settings →
+Roles`, or the guild's `roles` endpoint): a bot with no managed role runs on
+`@everyone` alone, so the invite link must carry every permission it needs
+rather than only the new ones.

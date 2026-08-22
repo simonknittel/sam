@@ -15,8 +15,12 @@ import { WikiRoleSelector } from "@/modules/wiki/components/WikiRoleSelector";
 import { EventVisibility } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { FaGlobe, FaLock, FaSave, FaTrash } from "react-icons/fa";
+import {
+  EVENT_DESCRIPTION_MAX_LENGTH,
+  EVENT_NAME_MAX_LENGTH,
+} from "../utils/eventConstraints";
 import { EventDateTimeField } from "./EventDateTimeField";
 
 interface Props {
@@ -32,9 +36,14 @@ interface Props {
     readonly visibility: EventVisibility;
     readonly visibilityRoleIds: string[];
   };
+  /**
+   * The Discord publishing card, rendered by the page: it needs a live
+   * channel list from Discord and therefore stays a Server Component.
+   */
+  readonly discordCard?: ReactNode;
 }
 
-export const EventSettings = ({ className, event }: Props) => {
+export const EventSettings = ({ className, event, discordCard }: Props) => {
   const router = useRouter();
   const { state, formAction, isPending, getDefaultValueWithFallback } =
     useAction(updateEvent, {
@@ -51,7 +60,7 @@ export const EventSettings = ({ className, event }: Props) => {
           <TextInput
             name="name"
             label="Titel"
-            maxLength={128}
+            maxLength={EVENT_NAME_MAX_LENGTH}
             defaultValue={getDefaultValueWithFallback("name", event.name)}
             required
           />
@@ -59,8 +68,8 @@ export const EventSettings = ({ className, event }: Props) => {
           <Textarea
             name="description"
             label="Kurzbeschreibung"
-            hint="optional, max. 2.000 Zeichen, keine Formatierungsmöglichkeiten. Ausführlichere Informationen gehören ins Briefing des Events."
-            maxLength={2000}
+            hint="optional, max. 1.000 Zeichen, keine Formatierungsmöglichkeiten. Ausführlichere Informationen gehören ins Briefing des Events."
+            maxLength={EVENT_DESCRIPTION_MAX_LENGTH}
             defaultValue={getDefaultValueWithFallback(
               "description",
               event.description ?? "",
@@ -131,6 +140,8 @@ export const EventSettings = ({ className, event }: Props) => {
           <ActionErrorNote className="mt-4" state={state} />
         </form>
       </Tile>
+
+      {discordCard}
 
       <Tile heading="Danger Zone" variant={TileVariant.Danger}>
         <ConfirmActionButton

@@ -1,5 +1,6 @@
 import type {
   Entity,
+  EventDiscordPublishTarget,
   Prisma,
   PrismaClient,
   Role,
@@ -580,6 +581,10 @@ interface CreateEventTemplateOptions {
   readonly positionNames?: readonly string[];
   /** Additional briefing pages under the seeded root */
   readonly briefingPageTitles?: readonly string[];
+  /** Prefills the created event's Discord publishing */
+  readonly discordPublishTarget?: EventDiscordPublishTarget;
+  readonly discordPublishChannelId?: string;
+  readonly discordPublishLocation?: string;
 }
 
 /**
@@ -598,6 +603,9 @@ export const createEventTemplate = async (
     deletedAt,
     positionNames = [],
     briefingPageTitles = [],
+    discordPublishTarget,
+    discordPublishChannelId,
+    discordPublishLocation,
   }: CreateEventTemplateOptions,
 ) => {
   const template = await prisma.eventTemplate.create({
@@ -606,6 +614,9 @@ export const createEventTemplate = async (
       description,
       visibility,
       deletedAt,
+      discordPublishTarget,
+      discordPublishChannelId,
+      discordPublishLocation,
       createdById: ownedById,
       updatedById: ownedById,
       ownedById,

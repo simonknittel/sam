@@ -4,10 +4,16 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { log } from "@/modules/logging";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { EventSource } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
+import { serializeError } from "serialize-error";
 import { z } from "zod";
+import {
+  DiscordSyncOutcome,
+  removeDiscordEventPublication,
+} from "../utils/discordPublishing";
 import { isAllowedToManageEvent } from "../utils/isAllowedToManageEvent";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
 
@@ -44,6 +50,23 @@ export const deleteEvent = createAuthenticatedAction(
         error: t("Common.forbidden"),
         requestPayload: formData,
       };
+
+    /**
+     * Take the event off Discord first: once the row is soft-deleted it no
+     * longer surfaces anywhere the manager could retry from, so a leftover
+     * guild scheduled event would advertise an event that is gone. Nothing
+     * about it may stop the deletion, though — hence the catch.
+     */
+    const discordResult = await removeDiscordEventPublication(event.id, {
+      userId: authentication.session.user.id,
+      citizenId: authentication.session.entity?.id ?? null,
+    }).catch((error: unknown) => {
+      log.error("Failed to remove a deleted event from Discord", {
+        eventId: event.id,
+        error: serializeError(error),
+      });
+      return { outcome: DiscordSyncOutcome.Failed } as const;
+    });
 
     /**
      * Soft-delete the event. The row stays resolvable, so the notification
@@ -93,6 +116,12 @@ export const deleteEvent = createAuthenticatedAction(
      */
     return {
       success: "Das Event wurde gelöscht.",
+      ...(discordResult.outcome === DiscordSyncOutcome.Failed
+        ? {
+            warning:
+              "Das Event konnte nicht von Discord entfernt werden und muss dort von Hand gelöscht werden.",
+          }
+        : {}),
     };
   },
 );

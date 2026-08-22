@@ -1,12 +1,17 @@
-/** Same bounds the event form uses, so a prefill can never exceed them */
-export const EVENT_TEMPLATE_NAME_MAX_LENGTH = 128;
-export const EVENT_TEMPLATE_DESCRIPTION_MAX_LENGTH = 2000;
+import {
+  EVENT_DESCRIPTION_MAX_LENGTH,
+  EVENT_MAX_VISIBILITY_ROLES,
+  EVENT_NAME_MAX_LENGTH,
+} from "@/modules/events/utils/eventConstraints";
 
 /**
- * Arbitrary (untested) caps so a hostile client cannot make one request
- * write thousands of rows.
+ * A template's bounds are the event's bounds, so a prefill can never exceed
+ * them — including the description cap Discord imposes on published events.
  */
-export const EVENT_TEMPLATE_MAX_ROLES = 50;
+export const EVENT_TEMPLATE_NAME_MAX_LENGTH = EVENT_NAME_MAX_LENGTH;
+export const EVENT_TEMPLATE_DESCRIPTION_MAX_LENGTH =
+  EVENT_DESCRIPTION_MAX_LENGTH;
+export const EVENT_TEMPLATE_MAX_ROLES = EVENT_MAX_VISIBILITY_ROLES;
 
 export const EVENT_TEMPLATES_PATH = "/app/events/templates";
 
