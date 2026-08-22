@@ -25,6 +25,12 @@ import {
 import { Position, type PositionType } from "../Position";
 
 interface LineupOrderContext {
+  /**
+   * The event the rendered lineup belongs to. Positions carry a nullable
+   * `eventId` since the table also holds template blueprints, so the id
+   * comes from the page rather than from a row.
+   */
+  eventId: string;
   positions: PositionType[];
   handleDragStart: (
     e: MouseEvent<HTMLButtonElement>,
@@ -44,6 +50,7 @@ const LineupOrderContext = createContext<LineupOrderContext | undefined>(
 
 interface Props {
   readonly className?: string;
+  readonly eventId: string;
   readonly positions: PositionType[];
   readonly showManage?: boolean;
   readonly variants: (Manufacturer & {
@@ -58,6 +65,7 @@ interface Props {
 
 export const LineupOrderProvider = ({
   className,
+  eventId,
   positions,
   showManage,
   variants,
@@ -172,7 +180,7 @@ export const LineupOrderProvider = ({
          * Save to database
          */
         const formData = new FormData();
-        formData.append("eventId", positions[0].eventId);
+        formData.append("eventId", eventId);
         const mapPosition = (position: MappedPosition): MappedPosition => ({
           id: position.id,
           order: position.order,
@@ -186,17 +194,18 @@ export const LineupOrderProvider = ({
         await runAction(updateEventLineupOrder, formData);
       });
     },
-    [handleCancel, isDragging, positions],
+    [eventId, handleCancel, isDragging, positions],
   );
 
   const value = useMemo(
     () => ({
+      eventId,
       positions,
       handleDragStart,
       handleDragEnd,
       isDragging,
     }),
-    [positions, handleDragStart, handleDragEnd, isDragging],
+    [eventId, positions, handleDragStart, handleDragEnd, isDragging],
   );
 
   return (

@@ -100,6 +100,7 @@ export const LineupTab = ({
 
       {event.positions.length > 0 ? (
         <Positions
+          eventId={event.id}
           positions={event.positions}
           canManagePositions={canManagePositions}
           variants={variants}

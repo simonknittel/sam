@@ -4,7 +4,7 @@ import type { getTranslations } from "next-intl/server";
 import { isAllowedToManagePositions } from "./isAllowedToManagePositions";
 import { isEventUpdatable } from "./isEventUpdatable";
 
-type PositionWithEvent = Prisma.EventPositionGetPayload<{
+type LoadedPosition = Prisma.EventPositionGetPayload<{
   include: {
     event: {
       include: {
@@ -14,6 +14,11 @@ type PositionWithEvent = Prisma.EventPositionGetPayload<{
   };
 }>;
 
+/** The position of an event, as opposed to a template blueprint */
+type PositionWithEvent = LoadedPosition & {
+  event: NonNullable<LoadedPosition["event"]>;
+};
+
 type RequireManageablePositionResult =
   | { position: PositionWithEvent; failure?: never }
   | {
@@ -22,10 +27,11 @@ type RequireManageablePositionResult =
     };
 
 /**
- * The shared guard of the event position mutations: the position must
- * exist, its event must still be updatable, and the current user must be
- * allowed to manage the event's positions. Returns the position with its
- * event, or the error response the action should return as-is.
+ * The shared guard of the event position mutations: the position must exist
+ * and belong to an event (not to a template), its event must still be
+ * updatable, and the current user must be allowed to manage the event's
+ * positions. Returns the position with its event, or the error response the
+ * action should return as-is.
  */
 export const requireManageablePosition = async (
   positionId: EventPosition["id"],
@@ -45,12 +51,13 @@ export const requireManageablePosition = async (
     },
   });
 
-  if (!position)
+  const event = position?.event;
+  if (!position || !event)
     return {
       failure: { error: "Posten nicht gefunden", requestPayload: formData },
     };
 
-  if (!isEventUpdatable(position.event))
+  if (!isEventUpdatable(event))
     return {
       failure: {
         error: "Das Event ist bereits vorbei.",
@@ -58,10 +65,10 @@ export const requireManageablePosition = async (
       },
     };
 
-  if (!(await isAllowedToManagePositions(position.event)))
+  if (!(await isAllowedToManagePositions(event)))
     return {
       failure: { error: t("Common.forbidden"), requestPayload: formData },
     };
 
-  return { position };
+  return { position: { ...position, event } };
 };

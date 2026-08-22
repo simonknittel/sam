@@ -1,28 +1,29 @@
 model Upload {
-  id             String           @id @default(cuid())
-  fileName       String
-  mimeType       String
+  id                  String           @id @default(cuid())
+  fileName            String
+  mimeType            String
   /// File size in bytes. NULL for uploads created before this column existed.
-  size           Int?
+  size                Int?
   /// Intrinsic image width in pixels, after EXIF orientation. Probed
   /// server-side after upload. NULL for non-images and for uploads whose
   /// probe failed or hasn't run yet — consumers must fall back gracefully.
-  width          Int?
+  width               Int?
   /// Intrinsic image height in pixels, after EXIF orientation. See `width`.
-  height         Int?
-  createdAt      DateTime         @default(now())
-  createdById    String
-  createdBy      User             @relation(fields: [createdById], references: [id], onDelete: Cascade)
-  roleIcons      Role[]           @relation("icon")
-  roleThumbnails Role[]           @relation("thumbnail")
-  manufacturers  Manufacturer[]
-  eventCovers    Event[]          @relation("eventCoverImage")
+  height              Int?
+  createdAt           DateTime         @default(now())
+  createdById         String
+  createdBy           User             @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  roleIcons           Role[]           @relation("icon")
+  roleThumbnails      Role[]           @relation("thumbnail")
+  manufacturers       Manufacturer[]
+  eventCovers         Event[]          @relation("eventCoverImage")
+  eventTemplateCovers EventTemplate[]  @relation("eventTemplateCoverImage")
   /// Wiki pages this upload is embedded in as an image or attachment.
   /// Linked at upload time, on page duplication and whenever persisted
   /// content references the upload; the nightly upload cleanup drops links
   /// whose page content no longer references the upload. Used to
   /// permission-check attachment downloads against the pages' visibility.
-  wikiPages      WikiPage[]       @relation("attachments")
-  wikiPageIcons  WikiPage[]       @relation("icon")
-  wikiReports    WikiPageReport[]
+  wikiPages           WikiPage[]       @relation("attachments")
+  wikiPageIcons       WikiPage[]       @relation("icon")
+  wikiReports         WikiPageReport[]
 }

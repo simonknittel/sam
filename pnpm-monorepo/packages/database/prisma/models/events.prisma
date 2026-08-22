@@ -145,10 +145,108 @@ model EventActivity {
   @@index([eventId, createdAt])
 }
 
+/// A reusable blueprint for standalone app events. Holds everything an event
+/// creator would otherwise retype — title, description, cover, visibility
+/// prefill, lineup and briefing — and stays detached from the events created
+/// from it: nothing on an Event references its template.
+///
+/// Templates are personal by default and shared to roles via
+/// EventTemplateRoleAccess. `ownedById` is the live permission-bearing owner
+/// and transferable; `createdById` is a pure audit fact without permission
+/// implications (wiki precedent, see WikiPage.ownerId).
+model EventTemplate {
+  id String @id @default(cuid(2))
+
+  /// Name of the template itself, not of the events created from it — those
+  /// take `eventNamePrefill` as their prefilled title.
+  name        String
+  /// Prefills the created event's description
+  description String?
+
+  /// Prefills the created event's cover image. Creating an event from the
+  /// template copies the S3 object into a fresh Upload owned by the event
+  /// creator, so the template keeps its own cover.
+  coverImageId String?
+  coverImage   Upload? @relation("eventTemplateCoverImage", fields: [coverImageId], references: [id], onDelete: SetNull)
+
+  /// Prefills the created event's visibility and — for RESTRICTED — its
+  /// visibility roles. Unrelated to who may see the template itself.
+  visibility      EventVisibility               @default(PUBLIC)
+  visibilityRoles EventTemplateVisibilityRole[]
+
+  /// Who may use and edit the template (see EventTemplateAccessType)
+  roleAccess EventTemplateRoleAccess[]
+
+  /// The lineup and briefing blueprints, generalized to the event-or-template
+  /// container (see EventPosition.templateId and WikiPage.templateId)
+  positions EventPosition[]
+  wikiPages WikiPage[]
+  wikiTags  WikiTag[]
+
+  createdAt   DateTime  @default(now())
+  createdById String?
+  createdBy   Entity?   @relation("createdEventTemplates", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedAt   DateTime  @updatedAt
+  updatedById String?
+  updatedBy   Entity?   @relation("updatedEventTemplates", fields: [updatedById], references: [id], onDelete: SetNull)
+  /// The live owner. NULL only when the owning citizen was deleted, which
+  /// leaves the template manageable by `event;manage` holders alone.
+  ownedById   String?
+  ownedBy     Entity?   @relation("ownedEventTemplates", fields: [ownedById], references: [id], onDelete: SetNull)
+  deletedAt   DateTime?
+  deletedById String?
+  deletedBy   Entity?   @relation("deletedEventTemplates", fields: [deletedById], references: [id], onDelete: SetNull)
+
+  @@index([ownedById])
+  @@index([deletedAt])
+}
+
+/// The roles prefilled into a RESTRICTED event created from the template.
+/// Mirrors EventVisibilityRole and says nothing about template access.
+model EventTemplateVisibilityRole {
+  id         String        @id @default(cuid(2))
+  templateId String
+  template   EventTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  roleId     String
+  role       Role          @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  createdAt  DateTime      @default(now())
+
+  @@unique([templateId, roleId])
+  @@index([roleId])
+}
+
+/// EDIT implies READ (see EventTemplate.roleAccess), so one role never needs
+/// a second row. READ is "read and use", EDIT adds content editing —
+/// sharing, ownership transfer and deletion stay with the owner.
+enum EventTemplateAccessType {
+  READ
+  EDIT
+}
+
+model EventTemplateRoleAccess {
+  id         String                  @id @default(cuid(2))
+  templateId String
+  template   EventTemplate           @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  roleId     String
+  role       Role                    @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  type       EventTemplateAccessType
+
+  @@unique([templateId, roleId])
+  @@index([roleId])
+}
+
 model EventPosition {
-  id               String                         @id @default(cuid())
-  eventId          String
-  event            Event                          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  id String @id @default(cuid())
+
+  /// The container this position belongs to: exactly one of `eventId` and
+  /// `templateId` is set (enforced by a CHECK constraint, see migration
+  /// event_templates). Template positions are blueprints — they are never
+  /// assigned a citizen and never carry applications.
+  eventId    String?
+  event      Event?         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  templateId String?
+  template   EventTemplate? @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
   name             String
   description      String?
   requiredVariants EventPositionRequiredVariant[]
@@ -168,6 +266,9 @@ model EventPosition {
   /// subtree (see WikiPage.eventReadScopePosition)
   wikiReadScopePages WikiPage[] @relation("wikiReadScopePages")
   wikiEditScopePages WikiPage[] @relation("wikiEditScopePages")
+
+  @@index([eventId])
+  @@index([templateId])
 }
 
 model EventPositionRequiredVariant {

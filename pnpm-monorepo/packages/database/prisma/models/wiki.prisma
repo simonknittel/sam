@@ -115,21 +115,28 @@ model WikiPage {
   imageUploadability      WikiPageUploadability @default(INHERIT)
   attachmentUploadability WikiPageUploadability @default(INHERIT)
 
-  /// The owning event for namespace EVENT, NULL for namespace WIKI (enforced
-  /// by a CHECK constraint, see migration event_wiki_scoping). The cascade
-  /// removes the whole event wiki with its event. It passes the parent
-  /// relation's Restrict above because all of an event's pages go in the
-  /// same statement — Postgres queues the constraint triggers until the
-  /// statement (including its cascades) is done.
-  eventId String?
-  event   Event?  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  /// The owning container for namespace EVENT: an event or an event template
+  /// blueprint, exactly one of the two (enforced by a CHECK constraint, see
+  /// migrations event_wiki_scoping and event_templates); both are NULL for
+  /// namespace WIKI. The cascade removes the whole briefing with its
+  /// container. It passes the parent relation's Restrict above because all
+  /// pages of one container go in the same statement — Postgres queues the
+  /// constraint triggers until the statement (including its cascades) is
+  /// done.
+  eventId    String?
+  event      Event?         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  templateId String?
+  template   EventTemplate? @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
   /// Permission configuration for namespace EVENT (see WikiPageEventScope);
-  /// ignored in namespace WIKI. The position references are only meaningful
-  /// while the matching scope is POSITION; SetNull on a deleted position
-  /// intentionally degrades that scope to managers-only. The edit scope is
-  /// validated to stay a subset of the read scope, and an edit scope
-  /// POSITION always stores the read scope's position.
+  /// ignored in namespace WIKI. Inside a template these scopes are stored
+  /// metadata only — access to a template's briefing follows the template's
+  /// own ACL — and take effect once the tree is copied into an event. The
+  /// position references are only meaningful while the matching scope is
+  /// POSITION; SetNull on a deleted position intentionally degrades that
+  /// scope to managers-only. The edit scope is validated to stay a subset of
+  /// the read scope, and an edit scope POSITION always stores the read
+  /// scope's position.
   eventReadScope           WikiPageEventScope @default(INHERIT)
   eventReadScopePositionId String?
   eventReadScopePosition   EventPosition?     @relation("wikiReadScopePages", fields: [eventReadScopePositionId], references: [id], onDelete: SetNull)
@@ -178,6 +185,7 @@ model WikiPage {
   @@index([parentId])
   @@index([deletedAt])
   @@index([eventId])
+  @@index([templateId])
 }
 
 enum WikiPageAccessType {
@@ -268,23 +276,28 @@ model WikiPageReport {
 }
 
 /// Free-form label shared by all wiki pages of one scope. Tags live in the
-/// same scopes as pages — the global wiki (eventId NULL) or a single event —
-/// and never leak across scopes. They live only while they are used:
-/// removing a tag's last assignment deletes it, and the midnight automations
-/// sweep orphans left behind by permanent page deletion.
+/// same scopes as pages — the global wiki (no container) or a single event
+/// or event template — and never leak across scopes. They live only while
+/// they are used: removing a tag's last assignment deletes it, and the
+/// midnight automations sweep orphans left behind by permanent page
+/// deletion.
 model WikiTag {
   id   String @id @default(cuid(2))
   /// Display casing from first use. Uniqueness is per scope and effectively
   /// case-insensitive: actions match existing names case-insensitively
-  /// (find-or-create) before creating. Enforced by two partial unique
-  /// indexes Prisma cannot express (see migration event_wiki_scoping):
-  /// (name) WHERE eventId IS NULL and (eventId, name) WHERE eventId IS NOT
-  /// NULL — a plain compound unique would treat NULL eventIds as distinct.
+  /// (find-or-create) before creating. Enforced by partial unique indexes
+  /// Prisma cannot express (see migrations event_wiki_scoping and
+  /// event_templates): (name) WHERE both container columns are NULL, plus
+  /// one per container column — a plain compound unique would treat every
+  /// NULL container as distinct.
   name String
 
-  /// The owning event, NULL for the global wiki (mirrors WikiPage.eventId).
-  eventId String?
-  event   Event?  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  /// The owning container, both NULL for the global wiki (mirrors
+  /// WikiPage.eventId/templateId, and likewise at most one of the two).
+  eventId    String?
+  event      Event?         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  templateId String?
+  template   EventTemplate? @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
   createdAt   DateTime @default(now())
   createdById String?
@@ -293,6 +306,7 @@ model WikiTag {
   pages WikiPageTag[]
 
   @@index([eventId])
+  @@index([templateId])
 }
 
 model WikiPageTag {

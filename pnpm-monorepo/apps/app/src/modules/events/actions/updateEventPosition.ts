@@ -39,7 +39,7 @@ export const updateEventPosition = createAuthenticatedAction(
         requiredVariants: true,
       },
     });
-    if (!position)
+    if (!position?.event)
       return { error: "Posten nicht gefunden", requestPayload: formData };
     if (!isEventUpdatable(position.event))
       return {

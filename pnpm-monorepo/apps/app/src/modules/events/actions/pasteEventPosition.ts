@@ -49,7 +49,6 @@ export const pasteEventPosition = createAuthenticatedAction(
         select: {
           id: true,
           name: true,
-          eventId: true,
           event: { select: eventSelect },
         },
       }),
@@ -60,37 +59,44 @@ export const pasteEventPosition = createAuthenticatedAction(
           id: true,
           order: true,
           parentPositionId: true,
-          eventId: true,
           event: { select: eventSelect },
         },
       }),
     ]);
-    if (!sourcePosition || !targetPosition)
+    /**
+     * Copying in or out of a template blueprint is not offered — the lineup
+     * clipboard is event-scoped (see EventPosition.eventId).
+     */
+    const sourceEvent = sourcePosition?.event;
+    const targetEvent = targetPosition?.event;
+    if (!sourcePosition || !sourceEvent || !targetPosition || !targetEvent)
       return {
         error: "Posten nicht gefunden",
         requestPayload: formData,
       };
+    const sourceEventId = sourceEvent.id;
+    const targetEventId = targetEvent.id;
 
     /**
      * Authorize the request. The source event doesn't need to be updatable
      * since copying out of an event which is already over is the whole point of
      * pasting into another event.
      */
-    if (!(await isAllowedToManagePositions(sourcePosition.event)))
+    if (!(await isAllowedToManagePositions(sourceEvent)))
       return { error: t("Common.forbidden"), requestPayload: formData };
-    if (!isEventUpdatable(targetPosition.event))
+    if (!isEventUpdatable(targetEvent))
       return {
         error: "Das Event ist bereits vorbei.",
         requestPayload: formData,
       };
-    if (!(await isAllowedToManagePositions(targetPosition.event)))
+    if (!(await isAllowedToManagePositions(targetEvent)))
       return { error: t("Common.forbidden"), requestPayload: formData };
 
     /**
      * Make sure the paste doesn't break the lineup
      */
     const sourceEventPositions = await prisma.eventPosition.findMany({
-      where: { eventId: sourcePosition.eventId },
+      where: { eventId: sourceEventId },
       orderBy: { order: "asc" },
       select: {
         id: true,
@@ -120,10 +126,10 @@ export const pasteEventPosition = createAuthenticatedAction(
       return { error: "Posten nicht gefunden", requestPayload: formData };
 
     const targetEventPositions =
-      targetPosition.eventId === sourcePosition.eventId
+      targetEventId === sourceEventId
         ? sourceEventPositions
         : await prisma.eventPosition.findMany({
-            where: { eventId: targetPosition.eventId },
+            where: { eventId: targetEventId },
             select: {
               id: true,
               parentPositionId: true,
@@ -149,7 +155,7 @@ export const pasteEventPosition = createAuthenticatedAction(
 
     const siblings = await prisma.eventPosition.count({
       where: {
-        eventId: targetPosition.eventId,
+        eventId: targetEventId,
         parentPositionId,
       },
     });
@@ -168,7 +174,7 @@ export const pasteEventPosition = createAuthenticatedAction(
       if (data.placement === "inside") {
         const { _max } = await transaction.eventPosition.aggregate({
           where: {
-            eventId: targetPosition.eventId,
+            eventId: targetEventId,
             parentPositionId: targetPosition.id,
           },
           _max: { order: true },
@@ -180,7 +186,7 @@ export const pasteEventPosition = createAuthenticatedAction(
 
         await transaction.eventPosition.updateMany({
           where: {
-            eventId: targetPosition.eventId,
+            eventId: targetEventId,
             parentPositionId: targetPosition.parentPositionId,
             order: { gte: startOrder },
           },
@@ -191,7 +197,7 @@ export const pasteEventPosition = createAuthenticatedAction(
       }
 
       return clonePositions(transaction, [subtree], {
-        eventId: targetPosition.eventId,
+        eventId: targetEventId,
         parentPositionId,
         startOrder,
       });
@@ -201,9 +207,9 @@ export const pasteEventPosition = createAuthenticatedAction(
       {
         type: AuditEventType.EVENT_POSITION_COPIED,
         data: {
-          sourceEventId: sourcePosition.eventId,
+          sourceEventId,
           sourcePositionId: sourcePosition.id,
-          targetEventId: targetPosition.eventId,
+          targetEventId,
           targetPositionId: targetPosition.id,
           placement: data.placement,
           positionCount: createdPositions,
@@ -215,7 +221,7 @@ export const pasteEventPosition = createAuthenticatedAction(
     /**
      * Revalidate cache(s)
      */
-    revalidatePath(`/app/events/${targetPosition.eventId}/lineup`);
+    revalidatePath(`/app/events/${targetEventId}/lineup`);
 
     /**
      * Respond with the result

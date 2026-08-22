@@ -80,33 +80,35 @@ model EmailConfirmationToken {
 }
 
 model Role {
-  id                      String                 @id @default(cuid())
-  name                    String                 @unique
-  iconId                  String?                @map("imageId")
-  icon                    Upload?                @relation(name: "icon", fields: [iconId], references: [id], onDelete: SetNull)
-  thumbnailId             String?                @map("thumbnailId")
-  thumbnail               Upload?                @relation(name: "thumbnail", fields: [thumbnailId], references: [id], onDelete: SetNull)
-  permissionStrings       PermissionString[]
-  flowNodes               FlowNode[]             @relation("flowNodes")
-  inherits                Role[]                 @relation("inheritance")
-  inheritedBy             Role[]                 @relation("inheritance")
-  eventPositions          EventPosition[]
-  eventVisibilities       EventVisibilityRole[]
-  tasksRequiredIn         Task[]                 @relation("requiredRoles")
-  silcSalaries            SilcRoleSalary[]
+  id                        String                        @id @default(cuid())
+  name                      String                        @unique
+  iconId                    String?                       @map("imageId")
+  icon                      Upload?                       @relation(name: "icon", fields: [iconId], references: [id], onDelete: SetNull)
+  thumbnailId               String?                       @map("thumbnailId")
+  thumbnail                 Upload?                       @relation(name: "thumbnail", fields: [thumbnailId], references: [id], onDelete: SetNull)
+  permissionStrings         PermissionString[]
+  flowNodes                 FlowNode[]                    @relation("flowNodes")
+  inherits                  Role[]                        @relation("inheritance")
+  inheritedBy               Role[]                        @relation("inheritance")
+  eventPositions            EventPosition[]
+  eventVisibilities         EventVisibilityRole[]
+  eventTemplateVisibilities EventTemplateVisibilityRole[]
+  eventTemplateAccess       EventTemplateRoleAccess[]
+  tasksRequiredIn           Task[]                        @relation("requiredRoles")
+  silcSalaries              SilcRoleSalary[]
   /// Number of days after which this role gets removed from a citizen due to
   /// their inactivity. NULL if inactivity is not tracked for this role. This
   /// is handled by application logic.
-  maxAgeDays              Int?
+  maxAgeDays                Int?
   /// Number of days of inactivity after which this role is automatically
   /// assigned to a citizen. NULL if auto-assignment is not configured. This
   /// is handled by application logic.
-  assignAfterInactiveDays Int?
-  assignments             RoleAssignment[]       @relation("role")
-  assignmentChanges       RoleAssignmentChange[] @relation("role")
-  citizenCounts           RoleCitizenCount[]
-  wikiPageAccess          WikiPageRoleAccess[]
-  flowAccess              FlowRoleAccess[]
+  assignAfterInactiveDays   Int?
+  assignments               RoleAssignment[]              @relation("role")
+  assignmentChanges         RoleAssignmentChange[]        @relation("role")
+  citizenCounts             RoleCitizenCount[]
+  wikiPageAccess            WikiPageRoleAccess[]
+  flowAccess                FlowRoleAccess[]
 
   /// Human-readable description of the role (markdown).
   description            String?

@@ -85,7 +85,7 @@ export const Position = ({
   const authentication = useAuthentication();
   if (!authentication) throw new Error("Unauthorized");
 
-  const { isDragging } = useLineupOrder();
+  const { eventId, isDragging } = useLineupOrder();
 
   const { openItems, open, close } = useLineupVisibility();
   const isOpen = openItems.includes(position.id);
@@ -297,7 +297,7 @@ export const Position = ({
                 <div className="flex items-center justify-center gap-2">
                   {groupLevel < MAX_LINEUP_DEPTH && (
                     <CreateOrUpdateEventPosition
-                      eventId={position.eventId}
+                      eventId={eventId}
                       parentPositionId={position.id}
                       variants={variants}
                       className="flex-none"

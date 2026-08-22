@@ -31,7 +31,7 @@ export const deleteEventPositionApplicationForCurrentUser =
           event: true,
         },
       });
-      if (!position)
+      if (!position?.event)
         return { error: "Posten nicht gefunden", requestPayload: formData };
       if (!isEventUpdatable(position.event))
         return {
@@ -49,12 +49,10 @@ export const deleteEventPositionApplicationForCurrentUser =
             positionId: data.positionId,
           },
         },
-        include: {
-          position: {
-            include: {
-              event: true,
-            },
-          },
+        select: {
+          id: true,
+          positionId: true,
+          citizenId: true,
         },
       });
 
@@ -62,7 +60,7 @@ export const deleteEventPositionApplicationForCurrentUser =
         {
           type: AuditEventType.EVENT_POSITION_APPLICATION_DELETED,
           data: {
-            eventId: deletedApplication.position.event.id,
+            eventId: position.event.id,
             positionId: deletedApplication.positionId,
             citizenId: deletedApplication.citizenId,
             applicationId: deletedApplication.id,
@@ -74,9 +72,7 @@ export const deleteEventPositionApplicationForCurrentUser =
       /**
        * Revalidate cache(s)
        */
-      revalidatePath(
-        `/app/events/${deletedApplication.position.event.id}/lineup`,
-      );
+      revalidatePath(`/app/events/${position.event.id}/lineup`);
 
       /**
        * Respond with the result
