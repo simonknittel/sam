@@ -8,13 +8,22 @@ import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
 import { Select } from "@/modules/common/components/form/Select";
 import { Textarea } from "@/modules/common/components/form/Textarea";
 import { TextInput } from "@/modules/common/components/form/TextInput";
+import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
 import { api } from "@/modules/common/utils/api";
 import { createEvent } from "@/modules/events/actions/createEvent";
 import { WikiRoleSelector } from "@/modules/wiki/components/WikiRoleSelector";
-import { EventVisibility } from "@sam-monorepo/database/browser";
+import {
+  EventVisibility,
+  type EventDiscordPublishTarget,
+} from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useId, useState } from "react";
 import { FaGlobe, FaLock, FaSave } from "react-icons/fa";
+import {
+  EVENT_DESCRIPTION_MAX_LENGTH,
+  EVENT_NAME_MAX_LENGTH,
+} from "../../utils/eventConstraints";
+import { DiscordPublishTargetFields } from "../DiscordPublishTargetFields";
 import { EventCoverImageField } from "../EventCoverImageField";
 import { EventDateTimeField } from "../EventDateTimeField";
 
@@ -92,7 +101,7 @@ export const CreateEventForm = ({
         <TextInput
           name="name"
           label="Titel"
-          maxLength={128}
+          maxLength={EVENT_NAME_MAX_LENGTH}
           defaultValue={getDefaultValueWithFallback(
             "name",
             selectedTemplate?.name ?? "",
@@ -104,8 +113,8 @@ export const CreateEventForm = ({
         <Textarea
           name="description"
           label="Kurzbeschreibung"
-          hint="optional, max. 2.000 Zeichen, keine Formatierungsmöglichkeiten. Ausführlichere Informationen gehören ins Briefing des Events."
-          maxLength={2000}
+          hint="optional, max. 1.000 Zeichen, keine Formatierungsmöglichkeiten. Ausführlichere Informationen gehören ins Briefing des Events."
+          maxLength={EVENT_DESCRIPTION_MAX_LENGTH}
           defaultValue={getDefaultValueWithFallback(
             "description",
             selectedTemplate?.description ?? "",
@@ -143,6 +152,14 @@ export const CreateEventForm = ({
             selectedTemplate?.visibility ?? EventVisibility.PUBLIC
           }
           defaultRoleIds={selectedTemplate?.visibilityRoleIds ?? []}
+        />
+      </div>
+
+      <div key={`discord-${prefillKey}`}>
+        <DiscordPublishFields
+          defaultTarget={selectedTemplate?.discordPublishTarget ?? null}
+          defaultChannelId={selectedTemplate?.discordPublishChannelId ?? null}
+          defaultLocation={selectedTemplate?.discordPublishLocation ?? null}
         />
       </div>
 
@@ -190,6 +207,70 @@ const TemplateCoverField = ({ uploadId }: TemplateCoverFieldProps) => {
         Titelbild der Vorlage ersetzen oder entfernen
       </button>
     </div>
+  );
+};
+
+interface DiscordPublishFieldsProps {
+  readonly defaultTarget: EventDiscordPublishTarget | null;
+  readonly defaultChannelId: string | null;
+  readonly defaultLocation: string | null;
+}
+
+/**
+ * Publishing the new event to Discord right after creation, off by default.
+ * A template that carries a publish preference switches it on and prefills
+ * the target; clearing the checkbox still wins, so the template never
+ * publishes behind the organizer's back.
+ */
+const DiscordPublishFields = ({
+  defaultTarget,
+  defaultChannelId,
+  defaultLocation,
+}: DiscordPublishFieldsProps) => {
+  const [isPublishing, setIsPublishing] = useState(defaultTarget !== null);
+  const checkboxId = useId();
+
+  /**
+   * Fetched lazily like the templates above, and only while the section is
+   * open — a manager who does not publish never waits on Discord.
+   */
+  const { data: channels, isPending } =
+    api.events.getPublishableDiscordChannels.useQuery(undefined, {
+      enabled: isPublishing,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+    });
+
+  return (
+    <>
+      <p className="mt-4">Auf Discord veröffentlichen</p>
+      <p className="text-xs mt-1 text-white/40">
+        Legt das Event zusätzlich als Termin auf dem Discord-Server an.
+        Anmeldungen werden nicht übertragen.
+      </p>
+
+      <YesNoCheckbox
+        id={checkboxId}
+        className="mt-2"
+        checked={isPublishing}
+        onChange={(changeEvent) => setIsPublishing(changeEvent.target.checked)}
+        aria-label="Auf Discord veröffentlichen"
+      />
+
+      {isPublishing &&
+        (isPending ? (
+          <AsciiSpinner className="mt-2 text-brand-red-500" />
+        ) : (
+          <DiscordPublishTargetFields
+            channels={channels ?? null}
+            defaultTarget={defaultTarget ?? undefined}
+            defaultChannelId={defaultChannelId}
+            defaultLocation={defaultLocation}
+            locationPlaceholder="Link zum Event in dieser App"
+            className="mt-2"
+          />
+        ))}
+    </>
   );
 };
 

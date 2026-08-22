@@ -22,6 +22,9 @@ export const getUsableEventTemplates = protectedProcedure.query(async () => {
         (visibilityRole) => visibilityRole.roleId,
       ),
       coverImageId: template.coverImageId,
+      discordPublishTarget: template.discordPublishTarget,
+      discordPublishChannelId: template.discordPublishChannelId,
+      discordPublishLocation: template.discordPublishLocation,
     }));
   } catch (error) {
     log.error("Failed to fetch usable event templates", {

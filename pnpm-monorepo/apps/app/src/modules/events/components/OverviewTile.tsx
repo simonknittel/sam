@@ -1,3 +1,4 @@
+import { env } from "@/env";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { DiscordButton } from "@/modules/common/components/DiscordButton";
 import { ImageUpload } from "@/modules/common/components/ImageUpload";
@@ -162,6 +163,13 @@ export const OverviewTile = ({ className, event, showCoverUpload }: Props) => {
             {event.discordGuildId && event.discordId && (
               <DiscordButton
                 path={`events/${event.discordGuildId}/${event.discordId}`}
+              />
+            )}
+
+            {/* App events the organizer published to the guild themselves */}
+            {event.discordPublishedId && (
+              <DiscordButton
+                path={`events/${env.DISCORD_GUILD_ID}/${event.discordPublishedId}`}
               />
             )}
           </div>

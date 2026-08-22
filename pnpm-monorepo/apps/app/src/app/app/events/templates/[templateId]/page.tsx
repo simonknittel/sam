@@ -5,6 +5,7 @@ import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/Suspe
 import { Tile, TileVariant } from "@/modules/common/components/Tile";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
+import { getPublishableGuildChannels } from "@/modules/discord/utils/getPublishableGuildChannels";
 import { DeleteEventTemplateButton } from "@/modules/event-templates/components/DeleteEventTemplateButton";
 import { DuplicateEventTemplateButton } from "@/modules/event-templates/components/DuplicateEventTemplateButton";
 import { RestoreEventTemplateButton } from "@/modules/event-templates/components/RestoreEventTemplateButton";
@@ -43,11 +44,12 @@ interface DetailsProps {
 
 const EventTemplateDetails = async ({ templateId }: DetailsProps) => {
   const authentication = await authenticate();
-  const [context, canCreate] = await Promise.all([
+  const [context, canCreate, discordChannels] = await Promise.all([
     getEventTemplateById(templateId),
     authentication
       ? authentication.authorize("event", "create")
       : Promise.resolve(false),
+    getPublishableGuildChannels(),
   ]);
   if (!context) notFound();
 
@@ -75,7 +77,11 @@ const EventTemplateDetails = async ({ templateId }: DetailsProps) => {
               visibilityRoleIds: template.visibilityRoles.map(
                 (visibilityRole) => visibilityRole.roleId,
               ),
+              discordPublishTarget: template.discordPublishTarget,
+              discordPublishChannelId: template.discordPublishChannelId,
+              discordPublishLocation: template.discordPublishLocation,
             }}
+            channels={discordChannels}
           />
         ) : (
           <p className="text-neutral-500">
