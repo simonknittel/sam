@@ -34,7 +34,7 @@ export const EventTemplatesFilters = async () => {
 
       <RadioFilter
         name={EVENT_TEMPLATE_SHARING_PARAM}
-        label="Typ"
+        label="Freigabe"
         items={[
           { value: EventTemplateSharing.All, label: "Alle", default: true },
           { value: EventTemplateSharing.Personal, label: "Persönlich" },

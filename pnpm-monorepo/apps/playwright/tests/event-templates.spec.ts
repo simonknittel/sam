@@ -420,6 +420,33 @@ test("`event;manage` manages a foreign personal template", async ({
   ).toBeVisible();
 });
 
+test("the whole name cell of a row opens the template", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const owner = await createOwner(prisma);
+  const { template } = await createEventTemplate(prisma, {
+    name: "Kaperfahrt",
+    ownedById: owner.entity.id,
+  });
+
+  await signIn(owner.user);
+  await page.goto("/app/events/templates");
+
+  const nameCell = page
+    .getByRole("row", { name: "Kaperfahrt" })
+    .getByRole("cell")
+    .first();
+  const cell = await nameCell.boundingBox();
+  if (!cell) throw new Error("The name cell is not rendered");
+
+  /** The bottom right corner, clear of the name's own box */
+  await page.mouse.click(cell.x + cell.width - 8, cell.y + cell.height - 4);
+
+  await expect(page).toHaveURL(new RegExp(`/templates/${template.id}$`));
+});
+
 test("an event created from a template gets its lineup, briefing and prefill", async ({
   page,
   prisma,

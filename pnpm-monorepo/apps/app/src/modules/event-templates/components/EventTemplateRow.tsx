@@ -25,11 +25,13 @@ export const EventTemplateRow = ({ entry, showOwner, canCreate }: Props) => {
 
   return (
     <TRow className="py-2">
-      <td className="min-w-0">
+      {/* Stretched so the link's `after` below covers the cell's full height */}
+      <td className="relative flex min-w-0 flex-col justify-center self-stretch">
         <Link
           href={getEventTemplatePath(template.id)}
           title={template.name}
-          className="block truncate text-interaction-500 hover:underline focus-visible:underline active:text-interaction-300"
+          /* `after` turns the whole cell — deletion note and padding included — into the hit target */
+          className="block truncate text-interaction-500 after:absolute after:inset-0 hover:underline focus-visible:underline active:text-interaction-300"
         >
           {template.name}
         </Link>

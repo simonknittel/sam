@@ -21,7 +21,7 @@ const OWNER_COLUMN: TableColumn = {
 
 const COLUMNS: TableColumn[] = [
   { key: "name", label: "Name", track: "minmax(200px,2fr)", minWidth: 200 },
-  { key: "sharing", label: "Typ", track: "120px", minWidth: 120 },
+  { key: "sharing", label: "Freigabe", track: "120px", minWidth: 120 },
   { key: "updatedAt", label: "Aktualisiert", track: "160px", minWidth: 160 },
   {
     key: "actions",
