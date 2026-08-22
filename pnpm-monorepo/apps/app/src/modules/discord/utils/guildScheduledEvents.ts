@@ -12,7 +12,10 @@ import {
   type GuildScheduledEventContent,
   type GuildScheduledEventTarget,
 } from "./guildScheduledEventPayload";
-import { guildScheduledEventResponseSchema } from "./schemas";
+import {
+  DISCORD_ERROR_UNKNOWN_GUILD_SCHEDULED_EVENT,
+  guildScheduledEventResponseSchema,
+} from "./schemas";
 
 const guildScheduledEventsPath = () =>
   `/guilds/${encodeURIComponent(env.DISCORD_GUILD_ID)}/scheduled-events`;
@@ -20,9 +23,11 @@ const guildScheduledEventsPath = () =>
 const guildScheduledEventPath = (scheduledEventId: string) =>
   `${guildScheduledEventsPath()}/${encodeURIComponent(scheduledEventId)}`;
 
-/** The guild scheduled event's page on Discord */
-export const getGuildScheduledEventUrl = (scheduledEventId: string) =>
-  `https://discord.com/events/${encodeURIComponent(env.DISCORD_GUILD_ID)}/${encodeURIComponent(scheduledEventId)}`;
+/**
+ * The one error that means this event is gone from the guild, as opposed to
+ * the guild itself being out of reach.
+ */
+const NOT_FOUND_ERROR_CODES = [DISCORD_ERROR_UNKNOWN_GUILD_SCHEDULED_EVENT];
 
 /** Creates the guild scheduled event and resolves with its Discord id. */
 export const createGuildScheduledEvent = async (
@@ -46,10 +51,12 @@ export const modifyGuildScheduledEvent = async (
     path: guildScheduledEventPath(scheduledEventId),
     method: DiscordRequestMethod.Patch,
     body: buildModifyGuildScheduledEventPayload(content, now),
+    notFoundErrorCodes: NOT_FOUND_ERROR_CODES,
   });
 
 export const deleteGuildScheduledEvent = async (scheduledEventId: string) =>
   discordBotRequest({
     path: guildScheduledEventPath(scheduledEventId),
     method: DiscordRequestMethod.Delete,
+    notFoundErrorCodes: NOT_FOUND_ERROR_CODES,
   });

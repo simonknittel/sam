@@ -87,6 +87,20 @@ describe("buildCreateGuildScheduledEventPayload", () => {
     });
   });
 
+  /**
+   * Unlike modify, Discord's create endpoint types `description` as a plain
+   * optional string — a null would be rejected, which would make every
+   * description-less event unpublishable.
+   */
+  it("omits the description instead of sending null", () => {
+    const payload = buildCreateGuildScheduledEventPayload(
+      content({ description: null }),
+      CHANNEL_TARGET,
+    );
+
+    expect(payload).not.toHaveProperty("description");
+  });
+
   it("omits the image when the cover could not be read", () => {
     const payload = buildCreateGuildScheduledEventPayload(
       content({ imageDataUri: undefined }),
@@ -128,7 +142,12 @@ describe("buildModifyGuildScheduledEventPayload", () => {
     expect(payload).not.toHaveProperty("image");
   });
 
-  it("leaves out the start time of an event that already began", () => {
+  /**
+   * Sending only the end would have Discord validate it against the start
+   * it still holds, which can reject the whole PATCH — and with it the
+   * title and description edits in the same save.
+   */
+  it("leaves out the whole schedule of an event that already began", () => {
     const payload = buildModifyGuildScheduledEventPayload(
       content({
         startTime: new Date("2027-02-28T19:00:00.000Z"),
@@ -138,7 +157,8 @@ describe("buildModifyGuildScheduledEventPayload", () => {
     );
 
     expect(payload).not.toHaveProperty("scheduled_start_time");
-    expect(payload.scheduled_end_time).toBe("2027-03-01T19:00:00.000Z");
+    expect(payload).not.toHaveProperty("scheduled_end_time");
+    expect(payload.name).toBe("Operation Nachtwache");
   });
 });
 

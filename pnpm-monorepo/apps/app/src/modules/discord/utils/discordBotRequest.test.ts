@@ -70,18 +70,53 @@ describe("discordBotRequest", () => {
     expect(request.body).toBe(JSON.stringify({ name: "Operation" }));
   });
 
-  it("reports a 404 as its own outcome so callers can self-heal", async () => {
+  it("reports a named not-found error code as its own outcome so callers can self-heal", async () => {
     const { discordBotRequest, DiscordOutcome, DiscordRequestMethod } =
       await importDiscordBotRequest();
+    // 10070 = Unknown Guild Scheduled Event
     fetchMock.mockResolvedValue(jsonResponse(404, { code: 10070 }));
 
     const result = await discordBotRequest({
       path: "/guilds/1/scheduled-events/2",
       method: DiscordRequestMethod.Patch,
       body: {},
+      notFoundErrorCodes: [10070],
     });
 
     expect(result).toEqual({ outcome: DiscordOutcome.NotFound });
+  });
+
+  /**
+   * The self-heal is destructive, so it must not fire on a 404 that means
+   * the bot lost the guild rather than the event being gone.
+   */
+  it("reports a 404 with a different error code as a plain failure", async () => {
+    const { discordBotRequest, DiscordOutcome, DiscordRequestMethod } =
+      await importDiscordBotRequest();
+    // 10004 = Unknown Guild
+    fetchMock.mockResolvedValue(jsonResponse(404, { code: 10004 }));
+
+    const result = await discordBotRequest({
+      path: "/guilds/1/scheduled-events/2",
+      method: DiscordRequestMethod.Patch,
+      body: {},
+      notFoundErrorCodes: [10070],
+    });
+
+    expect(result).toEqual({ outcome: DiscordOutcome.Failed });
+  });
+
+  it("reports a 404 as a plain failure when the caller names no codes", async () => {
+    const { discordBotRequest, DiscordOutcome, DiscordRequestMethod } =
+      await importDiscordBotRequest();
+    fetchMock.mockResolvedValue(jsonResponse(404, { code: 10070 }));
+
+    const result = await discordBotRequest({
+      path: "/guilds/1/channels",
+      method: DiscordRequestMethod.Get,
+    });
+
+    expect(result).toEqual({ outcome: DiscordOutcome.Failed });
   });
 
   it("reports any other rejection as a plain failure", async () => {

@@ -4,6 +4,17 @@ import {
   DiscordScheduledEventPrivacyLevel,
 } from "./schemas";
 
+/**
+ * The guild scheduled event's page on Discord, as a path for `DiscordButton`.
+ * Lives in this client-safe module because both the event overview (a Server
+ * Component) and the settings card (a Client one) link there.
+ */
+export const getGuildScheduledEventPath = (
+  guildId: string,
+  scheduledEventId: string,
+) =>
+  `events/${encodeURIComponent(guildId)}/${encodeURIComponent(scheduledEventId)}`;
+
 /** https://discord.com/developers/docs/resources/guild-scheduled-event */
 export const DISCORD_EVENT_NAME_MAX_LENGTH = 100;
 export const DISCORD_EVENT_DESCRIPTION_MAX_LENGTH = 1000;
@@ -80,13 +91,17 @@ export interface GuildScheduledEventContent {
  * `POST /guilds/{guild.id}/scheduled-events`. `channel_id` must be absent
  * for EXTERNAL events and `entity_metadata` for the channel-bound ones —
  * Discord rejects the payload otherwise.
+ *
+ * `description` is omitted rather than sent as null: unlike modify, create
+ * declares it as a plain optional string, so a null would be rejected. The
+ * event simply starts out without a description.
  */
 export const buildCreateGuildScheduledEventPayload = (
   content: GuildScheduledEventContent,
   target: GuildScheduledEventTarget,
 ) => ({
   name: content.name,
-  description: content.description,
+  ...(content.description === null ? {} : { description: content.description }),
   scheduled_start_time: content.startTime.toISOString(),
   scheduled_end_time: content.endTime.toISOString(),
   ...(content.imageDataUri === undefined
@@ -105,9 +120,12 @@ export const buildCreateGuildScheduledEventPayload = (
  * `entity_type` would have to carry the matching channel or location with
  * it.
  *
- * `scheduled_start_time` is left out once the event has started — Discord
- * refuses to move an active event's start, and the app would otherwise turn
- * every later edit into a failed sync.
+ * The schedule is left out entirely once the event has started. Discord
+ * refuses to move an active event's start, and sending only the end would
+ * have it validated against the start Discord still holds — a manager who
+ * moves a running event's times would then get the whole PATCH rejected,
+ * losing the title and description edits in the same save. The times on
+ * Discord are left as they are instead (the plan accepts drift).
  */
 export const buildModifyGuildScheduledEventPayload = (
   content: GuildScheduledEventContent,
@@ -116,9 +134,11 @@ export const buildModifyGuildScheduledEventPayload = (
   name: content.name,
   description: content.description,
   ...(content.startTime > now
-    ? { scheduled_start_time: content.startTime.toISOString() }
+    ? {
+        scheduled_start_time: content.startTime.toISOString(),
+        scheduled_end_time: content.endTime.toISOString(),
+      }
     : {}),
-  scheduled_end_time: content.endTime.toISOString(),
   ...(content.imageDataUri === undefined
     ? {}
     : { image: content.imageDataUri }),

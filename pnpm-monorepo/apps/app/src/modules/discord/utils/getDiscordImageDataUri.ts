@@ -22,8 +22,12 @@ const SUPPORTED_MIME_TYPES: readonly string[] = [
  */
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 
-/** Same bound the dimension probe uses for its bucket reads */
-const S3_REQUEST_TIMEOUT_MS = 30_000;
+/**
+ * Shorter than the dimension probe's 30s: that runs after the response has
+ * been sent, while this sits inside an interactive save that also waits on
+ * Discord afterwards.
+ */
+const S3_REQUEST_TIMEOUT_MS = 10_000;
 
 interface Upload {
   readonly id: string;

@@ -2,6 +2,7 @@ import "server-only";
 
 import { env } from "@/env";
 import { log } from "@/modules/logging";
+import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { serializeError } from "serialize-error";
 import type { z } from "zod";
 import { discordErrorResponseSchema } from "./schemas";
@@ -22,8 +23,10 @@ const MAX_RETRY_AFTER_SECONDS = 5;
 export enum DiscordOutcome {
   Success = "SUCCESS",
   /**
-   * The resource no longer exists on Discord — the app treats this as
-   * "someone deleted it there" and clears its own publish state.
+   * Discord named one of the caller's `notFoundErrorCodes`, i.e. this exact
+   * resource is gone. Callers treat it as "someone deleted it there" and
+   * drop their own state, so it is deliberately narrower than "the response
+   * was a 404" — see the codes' doc comment.
    */
   NotFound = "NOT_FOUND",
   /** Anything else: unreachable, rate-limited, rejected, malformed. */
@@ -53,6 +56,12 @@ interface RequestOptions<Schema extends z.ZodType> {
    * described by what the app just sent.
    */
   readonly responseSchema?: Schema;
+  /**
+   * Discord JSON error codes that mean "the resource this call addresses no
+   * longer exists" and nothing broader. Omitted where the caller has no
+   * self-healing to do, in which case every error is a plain failure.
+   */
+  readonly notFoundErrorCodes?: readonly number[];
 }
 
 /**
@@ -62,6 +71,13 @@ interface RequestOptions<Schema extends z.ZodType> {
  */
 const buildUrl = (path: string) =>
   `${env.DISCORD_API_BASE_URL.replace(/\/+$/, "")}${path}`;
+
+/**
+ * Discord requires this exact shape and may block requests without it at
+ * the Cloudflare layer.
+ * https://discord.com/developers/docs/reference#user-agent
+ */
+const USER_AGENT = `DiscordBot (${env.NEXT_PUBLIC_BASE_URL}, ${env.COMMIT_SHA ?? "0.0.0"})`;
 
 const parseErrorBody = async (response: Response) => {
   try {
@@ -99,13 +115,17 @@ const sleep = (milliseconds: number) =>
  * decide between self-healing (404) and warning the user, without a Discord
  * outage ever taking an app-side mutation with it.
  */
-export const discordBotRequest = async <
-  Schema extends z.ZodType = z.ZodUnknown,
->({
+export const discordBotRequest = <Schema extends z.ZodType = z.ZodUnknown>(
+  options: RequestOptions<Schema>,
+): Promise<DiscordResult<z.infer<Schema>>> =>
+  withTrace(`discord ${options.method}`, () => sendRequest(options))();
+
+const sendRequest = async <Schema extends z.ZodType>({
   path,
   method,
   body,
   responseSchema,
+  notFoundErrorCodes,
 }: RequestOptions<Schema>): Promise<DiscordResult<z.infer<Schema>>> => {
   for (let attempt = 1; ; attempt++) {
     let response: Response;
@@ -115,6 +135,7 @@ export const discordBotRequest = async <
         method,
         headers: {
           Authorization: `Bot ${env.DISCORD_TOKEN}`,
+          "User-Agent": USER_AGENT,
           ...(body === undefined ? {} : { "Content-Type": "application/json" }),
         },
         body: body === undefined ? undefined : JSON.stringify(body),
@@ -130,13 +151,26 @@ export const discordBotRequest = async <
       return { outcome: DiscordOutcome.Failed };
     }
 
-    if (response.status === 404) {
-      log.warn("Discord API reported the resource as gone", { path, method });
-      return { outcome: DiscordOutcome.NotFound };
-    }
-
     if (!response.ok) {
       const errorBody = await parseErrorBody(response);
+
+      /**
+       * Keyed on Discord's own error code rather than the status: a 404
+       * alone can just as well mean the bot lost the guild, and callers act
+       * destructively on this outcome.
+       */
+      if (
+        errorBody?.code !== undefined &&
+        notFoundErrorCodes?.includes(errorBody.code)
+      ) {
+        log.warn("Discord API reported the resource as gone", {
+          path,
+          method,
+          discordErrorCode: errorBody.code,
+        });
+        return { outcome: DiscordOutcome.NotFound };
+      }
+
       const retryAfterSeconds =
         response.status === 429
           ? getRetryAfterSeconds(response, errorBody?.retry_after)

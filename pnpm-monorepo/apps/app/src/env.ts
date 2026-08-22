@@ -1,6 +1,20 @@
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
 
+const LOOPBACK_HOSTNAMES: readonly string[] = ["localhost", "127.0.0.1", "::1"];
+
+/**
+ * Whether a URL either encrypts its traffic or never leaves the machine.
+ * Used for endpoints the app sends credentials to.
+ */
+const isEncryptedOrLoopbackUrl = (value: string) => {
+  const { protocol, hostname } = new URL(value);
+  return (
+    protocol === "https:" ||
+    LOOPBACK_HOSTNAMES.includes(hostname.replace(/^\[|\]$/g, ""))
+  );
+};
+
 export const env = createEnv({
   /*
    * Serverside Environment variables, not available on the client.
@@ -35,9 +49,14 @@ export const env = createEnv({
     /**
      * Base URL of the Discord REST API, without a trailing slash. Only
      * overridden by the Playwright stack, which points the app at its own
-     * mock server instead of talking to Discord.
+     * mock server instead of talking to Discord. Plain HTTP is refused
+     * unless it points at the local machine: every request carries the bot
+     * token, and a misconfigured host would ship it in cleartext.
      */
-    DISCORD_API_BASE_URL: z.url().default("https://discord.com/api/v10"),
+    DISCORD_API_BASE_URL: z
+      .url()
+      .refine(isEncryptedOrLoopbackUrl, "must use https unless it is loopback")
+      .default("https://discord.com/api/v10"),
     ALGOLIA_ADMIN_API_KEY: z.string(),
     /**
      * Cloudflare R2 account id, used to derive the bucket endpoint when
