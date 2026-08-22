@@ -211,7 +211,7 @@ Wire the generalized editors into the template detail as Aufstellung and Briefin
 
 #### Status
 
-Not started.
+Done.
 
 #### Steps
 
@@ -222,6 +222,8 @@ Not started.
 #### Notes
 
 - Read/use viewers see Aufstellung and Briefing read-only (they need to judge a template before using it); edit affordances render only with `canEdit` — same pattern the event lineup uses for non-managers.
+- A position row derives "is this staffed at all" from its container, so the template lineup drops the Citizen column and the application control without a prop of its own. The drag targets moved from `showActions && showManage` to plain `showManage` — identical for events, since an event's `showManage` already implies it is not over.
+- The four-level position include is now a shared constant instead of being spelled out again for the template lineup.
 
 #### Verification
 

@@ -5,6 +5,7 @@ import { withTrace } from "@/modules/tracing/utils/withTrace";
 import type { Event } from "@sam-monorepo/database/client";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
+import { POSITION_TREE_INCLUDE } from "./positionTreeInclude";
 
 export const getEventById = cache(
   withTrace("getEventById", async (id: Event["id"]) => {
@@ -29,133 +30,7 @@ export const getEventById = cache(
           orderBy: {
             order: "asc",
           },
-          include: {
-            applications: {
-              include: {
-                citizen: true,
-              },
-            },
-            citizen: true,
-            requiredVariants: {
-              orderBy: {
-                order: "asc",
-              },
-              include: {
-                variant: {
-                  include: {
-                    series: {
-                      include: {
-                        manufacturer: {
-                          include: {
-                            image: true,
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-            childPositions: {
-              orderBy: {
-                order: "asc",
-              },
-              include: {
-                applications: {
-                  include: {
-                    citizen: true,
-                  },
-                },
-                citizen: true,
-                requiredVariants: {
-                  orderBy: {
-                    order: "asc",
-                  },
-                  include: {
-                    variant: {
-                      include: {
-                        series: {
-                          include: {
-                            manufacturer: {
-                              include: {
-                                image: true,
-                              },
-                            },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-                childPositions: {
-                  orderBy: {
-                    order: "asc",
-                  },
-                  include: {
-                    applications: {
-                      include: {
-                        citizen: true,
-                      },
-                    },
-                    citizen: true,
-                    requiredVariants: {
-                      orderBy: {
-                        order: "asc",
-                      },
-                      include: {
-                        variant: {
-                          include: {
-                            series: {
-                              include: {
-                                manufacturer: {
-                                  include: {
-                                    image: true,
-                                  },
-                                },
-                              },
-                            },
-                          },
-                        },
-                      },
-                    },
-                    childPositions: {
-                      orderBy: {
-                        order: "asc",
-                      },
-                      include: {
-                        applications: {
-                          include: {
-                            citizen: true,
-                          },
-                        },
-                        citizen: true,
-                        requiredVariants: {
-                          orderBy: {
-                            order: "asc",
-                          },
-                          include: {
-                            variant: {
-                              include: {
-                                series: {
-                                  include: {
-                                    manufacturer: {
-                                      include: {
-                                        image: true,
-                                      },
-                                    },
-                                  },
-                                },
-                              },
-                            },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
+          include: POSITION_TREE_INCLUDE,
         },
         managers: true,
       },

@@ -17,6 +17,7 @@ import {
 import clsx from "clsx";
 import { updateEventPositionName } from "../actions/updateEventPositionName";
 import { checkRequirements } from "../utils/checkRequirements";
+import { EventContainerKind } from "../utils/eventContainer";
 import { MAX_LINEUP_DEPTH } from "../utils/positionTree";
 import { CopyEventPositionButton } from "./CopyEventPositionButton";
 import { CreateOrUpdateEventPosition } from "./CreateOrUpdateEventPosition";
@@ -86,6 +87,11 @@ export const Position = ({
   if (!authentication) throw new Error("Unauthorized");
 
   const { container, isDragging } = useLineupOrder();
+  /**
+   * A template blueprint is never staffed: it has no participants to
+   * apply and nobody to assign, so both columns stay out of its lineup.
+   */
+  const supportsStaffing = container.kind === EventContainerKind.Event;
 
   const { openItems, open, close } = useLineupVisibility();
   const isOpen = openItems.includes(position.id);
@@ -135,7 +141,7 @@ export const Position = ({
         className,
       )}
     >
-      {showActions && showManage && (
+      {showManage && (
         <DragTarget
           position={position}
           order="before"
@@ -156,7 +162,14 @@ export const Position = ({
       >
         {showActions && showManage && <DragHandle position={position} />}
 
-        <div className="flex-1 flex flex-col @3xl:grid @3xl:grid-cols-[1fr_256px_256px] gap-2">
+        <div
+          className={clsx(
+            "flex-1 flex flex-col @3xl:grid gap-2",
+            supportsStaffing
+              ? "@3xl:grid-cols-[1fr_256px_256px]"
+              : "@3xl:grid-cols-[1fr_256px]",
+          )}
+        >
           <div className="flex flex-col justify-center overflow-hidden pl-2">
             <h3
               className={clsx("text-white/40 font-mono uppercase text-xs", {
@@ -223,36 +236,40 @@ export const Position = ({
             )}
           </div>
 
-          <div className="flex flex-col justify-center py-1">
-            <h3
-              className={clsx("text-white/40 font-mono uppercase text-xs", {
-                "sr-only": !isOpen,
-              })}
-            >
-              Citizen
-            </h3>
+          {supportsStaffing && (
+            <div className="flex flex-col justify-center py-1">
+              <h3
+                className={clsx("text-white/40 font-mono uppercase text-xs", {
+                  "sr-only": !isOpen,
+                })}
+              >
+                Citizen
+              </h3>
 
-            {showManage ? (
-              <UpdateEventPositionCitizenId
-                position={position}
-                className="mt-1"
-                citizensSatisfyingRequirements={citizensSatisfyingRequirements}
-                citizensNotSatisfyingRequirements={
-                  citizensNotSatisfyingRequirements
-                }
-                applicationsSatisfyingRequirements={
-                  applicationsSatisfyingRequirements
-                }
-                applicationsNotSatisfyingRequirements={
-                  applicationsNotSatisfyingRequirements
-                }
-              />
-            ) : position.citizen ? (
-              <CitizenLink citizen={position.citizen} />
-            ) : (
-              <p className="text-neutral-500">-</p>
-            )}
-          </div>
+              {showManage ? (
+                <UpdateEventPositionCitizenId
+                  position={position}
+                  className="mt-1"
+                  citizensSatisfyingRequirements={
+                    citizensSatisfyingRequirements
+                  }
+                  citizensNotSatisfyingRequirements={
+                    citizensNotSatisfyingRequirements
+                  }
+                  applicationsSatisfyingRequirements={
+                    applicationsSatisfyingRequirements
+                  }
+                  applicationsNotSatisfyingRequirements={
+                    applicationsNotSatisfyingRequirements
+                  }
+                />
+              ) : position.citizen ? (
+                <CitizenLink citizen={position.citizen} />
+              ) : (
+                <p className="text-neutral-500">-</p>
+              )}
+            </div>
+          )}
         </div>
 
         <AccordeonToggle onClick={handleToggleOpen} isOpen={isOpen} />
@@ -280,18 +297,20 @@ export const Position = ({
             {/* TODO: Implement (multiple) role requirements */}
           </div>
 
-          {(showActions || showManage) && (
+          {((supportsStaffing && showActions) || showManage) && (
             <div className="flex flex-row-reverse justify-between border-t border-white/10 p-2">
-              <div className="justify-self-end">
-                <ToggleEventPositionApplicationForCurrentUser
-                  position={position}
-                  hasCurrentUserAlreadyApplied={hasCurrentUserAlreadyApplied}
-                  doesCurrentUserSatisfyRequirements={
-                    doesCurrentUserSatisfyRequirements
-                  }
-                  showDiscordWarning={!isCurrentUserEventCitizen}
-                />
-              </div>
+              {supportsStaffing && (
+                <div className="justify-self-end">
+                  <ToggleEventPositionApplicationForCurrentUser
+                    position={position}
+                    hasCurrentUserAlreadyApplied={hasCurrentUserAlreadyApplied}
+                    doesCurrentUserSatisfyRequirements={
+                      doesCurrentUserSatisfyRequirements
+                    }
+                    showDiscordWarning={!isCurrentUserEventCitizen}
+                  />
+                </div>
+              )}
 
               {showManage && (
                 <div className="flex items-center justify-center gap-2">
@@ -332,7 +351,7 @@ export const Position = ({
         </div>
       )}
 
-      {showActions && showManage && (
+      {showManage && (
         <DragTarget
           position={position}
           order="after"

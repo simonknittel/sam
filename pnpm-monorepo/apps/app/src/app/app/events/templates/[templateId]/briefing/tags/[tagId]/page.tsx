@@ -1,0 +1,94 @@
+import { prisma } from "@/db";
+import { requireAuthenticationPage } from "@/modules/auth/server";
+import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
+import { toTemplateContainer } from "@/modules/events/utils/eventContainer";
+import { WikiTagPageContent } from "@/modules/wiki/components/WikiTagPageContent";
+import {
+  getEventWikiContext,
+  hasReadableEventWikiRoot,
+} from "@/modules/wiki/queries/getEventWikiContext";
+import { buildVisibleWikiBreadcrumb } from "@/modules/wiki/utils/buildVisibleWikiBreadcrumb";
+import { getAccessibleWikiPage } from "@/modules/wiki/utils/getAccessibleWikiPage";
+import {
+  buildWikiPageHref,
+  createEventWikiHrefMode,
+} from "@/modules/wiki/utils/wikiPageHref";
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+
+type Params =
+  PageProps<"/app/events/templates/[templateId]/briefing/tags/[tagId]">["params"];
+
+const getTag = async (params: Params) => {
+  const { templateId, tagId } = await params;
+  return prisma.wikiTag.findFirst({
+    where: { id: tagId, templateId },
+    select: { id: true, name: true, pages: { select: { pageId: true } } },
+  });
+};
+
+/**
+ * Metadata runs independently of the layout's 404 gate, so it applies the
+ * briefing gate itself — otherwise the tag name would reach the document
+ * title for viewers the layout turns away.
+ */
+export const generateMetadata = async (
+  props: PageProps<"/app/events/templates/[templateId]/briefing/tags/[tagId]">,
+): Promise<Metadata> => {
+  const { templateId } = await props.params;
+  const context = await getEventWikiContext(toTemplateContainer(templateId));
+  if (!context || !hasReadableEventWikiRoot(context)) return {};
+
+  const tag = await getTag(props.params);
+  if (!tag) return {};
+  return { title: `Tag: ${tag.name}` };
+};
+
+/** Pages of one tag inside a template's briefing blueprint */
+export default async function Page(
+  props: PageProps<"/app/events/templates/[templateId]/briefing/tags/[tagId]">,
+) {
+  await requireAuthenticationPage(
+    "/app/events/templates/[templateId]/briefing/tags/[tagId]",
+  );
+
+  return (
+    <SuspenseWithErrorBoundaryTile>
+      <TagPageList params={props.params} />
+    </SuspenseWithErrorBoundaryTile>
+  );
+}
+
+interface TagPageListProps {
+  readonly params: Params;
+}
+
+const TagPageList = async ({ params }: TagPageListProps) => {
+  const { templateId } = await params;
+  const [context, tag] = await Promise.all([
+    getEventWikiContext(toTemplateContainer(templateId)),
+    getTag(params),
+  ]);
+  if (!context || !hasReadableEventWikiRoot(context)) notFound();
+  if (!tag) notFound();
+
+  const hrefMode = createEventWikiHrefMode(
+    context.container,
+    context.rootPage?.id ?? null,
+  );
+
+  const pages = tag.pages
+    .map((assignment) =>
+      getAccessibleWikiPage(context, assignment.pageId, "read"),
+    )
+    .filter((page) => page !== null)
+    .toSorted((a, b) => a.title.localeCompare(b.title))
+    .map((page) => ({
+      href: buildWikiPageHref(hrefMode, page),
+      title: page.title,
+      iconId: page.iconId,
+      breadcrumb: buildVisibleWikiBreadcrumb(context, page),
+    }));
+
+  return <WikiTagPageContent tagName={tag.name} pages={pages} />;
+};
