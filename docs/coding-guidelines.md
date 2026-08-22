@@ -6,6 +6,7 @@
 - Stay close to conventions and defaults. Don't try to reinvent the wheel.
 - Use conventional commits if not specified otherwise.
 - When working on a larger set of changes, break it down into smaller commits. They don't need to work on their own, but each commit should be a logical step in the implementation. Example: If a change requires a database change, a backend change, a frontend change and E2E tests, break it down into 4 commits, one for each part. This split in database, backend, frontend and tests is only an example. Choose a split which makes most sense for the changes. It's not required that the app is in a working state after each commit, but it should be in a working state after the last commit.
+- If a change would benefit from a refactoring or migration, do so. We should not build up workarounds or technical debt. I favour implementing proper solutions, simplifications, unifications and generalization over workarounds and hacks. I don't want to build upon "shaky grounds".
 
 ## Security
 
