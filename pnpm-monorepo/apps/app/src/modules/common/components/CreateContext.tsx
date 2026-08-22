@@ -73,6 +73,12 @@ const CreateFlowForm = dynamic(() =>
   ),
 );
 
+const CreateEventTemplateForm = dynamic(() =>
+  import("@/modules/event-templates/components/CreateEventTemplateForm").then(
+    (mod) => mod.CreateEventTemplateForm,
+  ),
+);
+
 export const createForms = {
   citizen: {
     formComponent: CreateCitizenForm,
@@ -122,6 +128,11 @@ export const createForms = {
   flow: {
     formComponent: CreateFlowForm,
     modalHeading: "Neuer Karrierebaum",
+    modalWidth: "w-120",
+  },
+  eventTemplate: {
+    formComponent: CreateEventTemplateForm,
+    modalHeading: "Neue Event-Vorlage",
     modalWidth: "w-120",
   },
 };

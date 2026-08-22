@@ -157,7 +157,7 @@ The templates section: list with sidebar/table layout, create modal, Stammdaten 
 
 #### Status
 
-Not started.
+Done.
 
 #### Steps
 
@@ -169,8 +169,11 @@ Not started.
 
 #### Notes
 
-- The Status filter (Aktiv/Gelöscht/Alle) is only offered to viewers who can see deleted templates (owner sees own deleted ones, `event;manage` sees all).
+- The Status filter (Aktiv/Gelöscht/Alle) is offered to everyone, but only ever surfaces rows the visibility fragment already allows: a viewer without a deleted template of their own gets an empty Gelöscht list rather than a hidden filter.
 - Duplicating requires the source's positions + briefing loaded through the read path so deleted templates can't be a source.
+- The list is unpaginated for now, like the career flow list it follows; templates are per-organizer artefacts, so the row count stays in the tens.
+- `EventCoverImageField` learned a `defaultUploadId`, so the same field serves the create form and the template's edit form, where removing the cover has to be expressible.
+- The sub-navigation already links Aufstellung, Briefing and Freigabe; those routes land in phases 5 and 6.
 
 #### Verification
 

@@ -57,6 +57,8 @@ export const Create = ({ className }: Props) => {
   const showCreateFlow = Boolean(
     authentication && authentication.authorize("career", "manage"),
   );
+  /** Same gate as creating an event: a template is a blueprint of one */
+  const showCreateEventTemplate = showCreateEvent;
 
   if (
     !showCreateFlow &&
@@ -67,6 +69,7 @@ export const Create = ({ className }: Props) => {
     !showCreatePenaltyEntry &&
     !showCreateTask &&
     !showCreateEvent &&
+    !showCreateEventTemplate &&
     !showCreateSilcTransaction &&
     !showCreateWikiPage
   )
@@ -99,6 +102,7 @@ export const Create = ({ className }: Props) => {
           showCreatePenaltyEntry={showCreatePenaltyEntry}
           showCreateTask={showCreateTask}
           showCreateEvent={showCreateEvent}
+          showCreateEventTemplate={showCreateEventTemplate}
           showCreateSilcTransaction={showCreateSilcTransaction}
           showCreateWikiPage={showCreateWikiPage}
           showCreateFlow={showCreateFlow}
@@ -116,6 +120,7 @@ interface PopoverChildrenProps {
   readonly showCreatePenaltyEntry: boolean;
   readonly showCreateTask: boolean;
   readonly showCreateEvent: boolean;
+  readonly showCreateEventTemplate: boolean;
   readonly showCreateSilcTransaction: boolean;
   readonly showCreateWikiPage: boolean;
   readonly showCreateFlow: boolean;
@@ -129,6 +134,7 @@ const PopoverChildren = ({
   showCreatePenaltyEntry,
   showCreateTask,
   showCreateEvent,
+  showCreateEventTemplate,
   showCreateSilcTransaction,
   showCreateWikiPage,
   showCreateFlow,
@@ -196,6 +202,12 @@ const PopoverChildren = ({
     items.push({ label: "Task", type: "button", modalId: "task" });
   if (showCreateEvent)
     items.push({ label: "Event", type: "button", modalId: "event" });
+  if (showCreateEventTemplate)
+    items.push({
+      label: "Event-Vorlage",
+      type: "button",
+      modalId: "eventTemplate",
+    });
   if (showCreateSilcTransaction)
     items.push({
       label: "SILC-Transaktion",
