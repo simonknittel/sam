@@ -5,7 +5,10 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { probeUploadImageDimensions } from "@/modules/common/utils/probeUploadImageDimensions";
-import { DISCORD_EVENT_LOCATION_MAX_LENGTH } from "@/modules/discord/utils/guildScheduledEventPayload";
+import {
+  discordPublishFieldsSchema,
+  parseDiscordPublishFields,
+} from "@/modules/events/utils/discordPublishFields";
 import {
   EventDiscordPublishTarget,
   EventVisibility,
@@ -39,13 +42,7 @@ const schema = z.object({
    * The Discord publishing an event created from this template starts with.
    * Absent means "do not publish".
    */
-  discordPublishTarget: z.enum(EventDiscordPublishTarget).optional(),
-  discordPublishChannelId: z.string().max(64).optional(),
-  discordPublishLocation: z
-    .string()
-    .trim()
-    .max(DISCORD_EVENT_LOCATION_MAX_LENGTH)
-    .optional(),
+  ...discordPublishFieldsSchema.shape,
 });
 
 export const updateEventTemplate = createAuthenticatedAction(
@@ -166,11 +163,7 @@ export const updateEventTemplate = createAuthenticatedAction(
       coverImageId: formData.get("coverImageId") ?? NO_COVER,
       visibility: formData.get("visibility"),
       visibilityRoleIds: formData.getAll("visibilityRole[]"),
-      discordPublishTarget: formData.get("discordPublishTarget") || undefined,
-      discordPublishChannelId:
-        formData.get("discordPublishChannelId") || undefined,
-      discordPublishLocation:
-        formData.get("discordPublishLocation") || undefined,
+      ...parseDiscordPublishFields(formData),
     }),
   },
 );

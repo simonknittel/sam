@@ -1,5 +1,7 @@
+import { authorize } from "@/modules/auth/server";
 import { getPublishableGuildChannels } from "@/modules/discord/utils/getPublishableGuildChannels";
 import { log } from "@/modules/logging";
+import { TRPCError } from "@trpc/server";
 import { serializeError } from "serialize-error";
 import { protectedProcedure } from "../../trpc";
 
@@ -9,11 +11,15 @@ import { protectedProcedure } from "../../trpc";
  * is open. Null means Discord could not be asked — the form says so rather
  * than showing an empty picker.
  *
- * No permission of its own: the channel names are already visible to every
- * guild member, and creating an event is what the form itself is gated on.
+ * Gated on `event;create`, the permission the form itself needs: the bot
+ * sees channels the caller may not, and every call is an uncached request
+ * against the bot's shared Discord rate limit.
  */
 export const getPublishableDiscordChannels = protectedProcedure.query(
-  async () => {
+  async ({ ctx }) => {
+    if (!(await authorize(ctx.session, "event", "create")))
+      throw new TRPCError({ code: "FORBIDDEN" });
+
     try {
       return await getPublishableGuildChannels();
     } catch (error) {

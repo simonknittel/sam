@@ -1,7 +1,6 @@
 import { env } from "@/env";
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import Note from "@/modules/common/components/Note";
-import { SkeletonTile } from "@/modules/common/components/SkeletonTile";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
 import { getPublishableGuildChannels } from "@/modules/discord/utils/getPublishableGuildChannels";
@@ -14,7 +13,6 @@ import { isAllowedToManageEvent } from "@/modules/events/utils/isAllowedToManage
 import { isEventUpdatable } from "@/modules/events/utils/isEventUpdatable";
 import { EventSource } from "@sam-monorepo/database/client";
 import { forbidden, notFound } from "next/navigation";
-import { Suspense } from "react";
 
 type Params = Promise<{
   id: string;
@@ -71,13 +69,14 @@ export default async function Page({
           ),
         }}
         /**
-         * Its own boundary: the channel list is a live Discord call, and the
-         * rest of the settings must not wait for it.
+         * Its own boundary: the channel list is a live Discord call, so the
+         * rest of the settings must neither wait for it nor disappear with
+         * it when Discord misbehaves.
          */
         discordCard={
-          <Suspense fallback={<SkeletonTile className="h-64" />}>
+          <SuspenseWithErrorBoundaryTile>
             <DiscordCard event={event} />
-          </Suspense>
+          </SuspenseWithErrorBoundaryTile>
         }
       />
     </SuspenseWithErrorBoundaryTile>

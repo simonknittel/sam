@@ -2,17 +2,6 @@
 
 import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/modules/common/components/AlertDialog";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionButton";
@@ -20,7 +9,10 @@ import { DiscordButton } from "@/modules/common/components/DiscordButton";
 import Note from "@/modules/common/components/Note";
 import { Tile } from "@/modules/common/components/Tile";
 import { formatDate } from "@/modules/common/utils/formatDate";
-import type { PublishableGuildChannel } from "@/modules/discord/utils/guildScheduledEventPayload";
+import {
+  getGuildScheduledEventPath,
+  type PublishableGuildChannel,
+} from "@/modules/discord/utils/guildScheduledEventPayload";
 import { EventVisibility } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useId } from "react";
@@ -28,6 +20,7 @@ import { FaDiscord, FaTrash } from "react-icons/fa";
 import { publishEventToDiscord } from "../actions/publishEventToDiscord";
 import { unpublishEventFromDiscord } from "../actions/unpublishEventFromDiscord";
 import { DiscordPublishTargetFields } from "./DiscordPublishTargetFields";
+import { RestrictedDiscordPublishDialog } from "./RestrictedDiscordPublishDialog";
 
 interface Props {
   readonly className?: string;
@@ -131,7 +124,7 @@ const PublishedState = ({
 
       <div className="mt-4 flex flex-wrap gap-2">
         <DiscordButton
-          path={`events/${discordGuildId}/${discordPublishedId}`}
+          path={getGuildScheduledEventPath(discordGuildId, discordPublishedId)}
         />
 
         <ConfirmActionButton
@@ -199,10 +192,27 @@ const UnpublishedState = ({
         />
 
         {isRestricted ? (
-          <RestrictedPublishConfirmation
+          <RestrictedDiscordPublishDialog
             formId={formId}
-            isPending={isPending}
-            eventName={event.name}
+            trigger={
+              <Button2
+                type="button"
+                disabled={isPending}
+                className="mt-4 ml-auto"
+              >
+                {isPending ? <AsciiSpinner /> : <FaDiscord />}
+                Auf Discord veröffentlichen
+              </Button2>
+            }
+            description={
+              <>
+                Das Event <span className="font-bold">{event.name}</span> ist in
+                dieser App nur für ausgewählte Rollen sichtbar. Auf Discord
+                sehen es alle Mitglieder des Servers — inklusive Titel,
+                Beschreibung und Zeitraum.
+              </>
+            }
+            confirmLabel="Trotzdem veröffentlichen"
           />
         ) : (
           <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
@@ -216,48 +226,3 @@ const UnpublishedState = ({
     </Tile>
   );
 };
-
-interface RestrictedPublishConfirmationProps {
-  readonly formId: string;
-  readonly isPending: boolean;
-  readonly eventName: string;
-}
-
-/**
- * A restricted event is visible to selected roles in the app but to the
- * whole guild on Discord, so publishing one takes an explicit confirmation.
- */
-const RestrictedPublishConfirmation = ({
-  formId,
-  isPending,
-  eventName,
-}: RestrictedPublishConfirmationProps) => (
-  <AlertDialog>
-    <AlertDialogTrigger asChild>
-      <Button2 type="button" disabled={isPending} className="mt-4 ml-auto">
-        {isPending ? <AsciiSpinner /> : <FaDiscord />}
-        Auf Discord veröffentlichen
-      </Button2>
-    </AlertDialogTrigger>
-
-    <AlertDialogContent>
-      <AlertDialogHeader>
-        <AlertDialogTitle>
-          Eingeschränktes Event veröffentlichen?
-        </AlertDialogTitle>
-        <AlertDialogDescription>
-          Das Event <span className="font-bold">{eventName}</span> ist in dieser
-          App nur für ausgewählte Rollen sichtbar. Auf Discord sehen es alle
-          Mitglieder des Servers — inklusive Titel, Beschreibung und Zeitraum.
-        </AlertDialogDescription>
-      </AlertDialogHeader>
-
-      <AlertDialogFooter>
-        <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-        <AlertDialogAction type="submit" form={formId}>
-          Trotzdem veröffentlichen
-        </AlertDialogAction>
-      </AlertDialogFooter>
-    </AlertDialogContent>
-  </AlertDialog>
-);

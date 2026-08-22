@@ -44,18 +44,26 @@ interface DetailsProps {
 
 const EventTemplateDetails = async ({ templateId }: DetailsProps) => {
   const authentication = await authenticate();
-  const [context, canCreate, discordChannels] = await Promise.all([
+  const [context, canCreate] = await Promise.all([
     getEventTemplateById(templateId),
     authentication
       ? authentication.authorize("event", "create")
       : Promise.resolve(false),
-    getPublishableGuildChannels(),
   ]);
   if (!context) notFound();
 
   const { template, permissions } = context;
   const isDeleted = template.deletedAt !== null;
   const isShared = template.roleAccess.length > 0;
+  const isEditable = !isDeleted && permissions.canEdit;
+
+  /**
+   * A live Discord call, so it only runs for the viewers who actually get
+   * the form it feeds — everyone else would wait on it for nothing.
+   */
+  const discordChannels = isEditable
+    ? await getPublishableGuildChannels()
+    : null;
 
   return (
     <div className="flex flex-col gap-4">
@@ -66,7 +74,7 @@ const EventTemplateDetails = async ({ templateId }: DetailsProps) => {
             in keiner Eventerstellung mehr; bis zur Wiederherstellung lässt sie
             sich nicht bearbeiten.
           </p>
-        ) : permissions.canEdit ? (
+        ) : isEditable ? (
           <UpdateEventTemplateForm
             template={{
               id: template.id,

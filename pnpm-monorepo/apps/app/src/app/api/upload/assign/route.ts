@@ -5,6 +5,7 @@ import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import { probeUploadImageDimensions } from "@/modules/common/utils/probeUploadImageDimensions";
 import {
+  getDiscordCoverImageWarning,
   getDiscordSyncWarning,
   syncDiscordEventPublication,
 } from "@/modules/events/utils/discordPublishing";
@@ -198,9 +199,10 @@ export async function PATCH(request: Request) {
        * already assigned above, so a Discord problem only travels back as a
        * warning the uploader sees.
        */
-      const discordWarning = getDiscordSyncWarning(
-        await syncDiscordEventPublication(event.id),
-      );
+      const discordResult = await syncDiscordEventPublication(event.id);
+      const discordWarning =
+        getDiscordSyncWarning(discordResult) ??
+        getDiscordCoverImageWarning(discordResult);
 
       revalidatePath("/app/events");
       revalidatePath(`/app/events/${event.id}`, "layout");

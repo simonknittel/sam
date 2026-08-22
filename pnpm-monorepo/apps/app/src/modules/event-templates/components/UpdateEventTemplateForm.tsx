@@ -124,7 +124,9 @@ export const UpdateEventTemplateForm = ({
         />
       )}
 
-      <p className="mt-4">Auf Discord veröffentlichen</p>
+      <label htmlFor={discordCheckboxId} className="mt-4 block">
+        Auf Discord veröffentlichen
+      </label>
       <p className="text-xs mt-1 text-white/40">
         Events aus dieser Vorlage werden zusätzlich als Termin auf dem
         Discord-Server angelegt.
@@ -135,7 +137,6 @@ export const UpdateEventTemplateForm = ({
         className="mt-2"
         checked={isPublishing}
         onChange={(changeEvent) => setIsPublishing(changeEvent.target.checked)}
-        aria-label="Auf Discord veröffentlichen"
       />
 
       {isPublishing && (

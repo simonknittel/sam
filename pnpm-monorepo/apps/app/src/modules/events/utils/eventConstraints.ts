@@ -1,12 +1,14 @@
+import { DISCORD_EVENT_DESCRIPTION_MAX_LENGTH } from "@/modules/discord/utils/guildScheduledEventPayload";
+
 export const EVENT_NAME_MAX_LENGTH = 128;
 
 /**
- * Matches Discord's cap for a guild scheduled event's description, so an
- * event published to Discord never has to be truncated silently. Rows
- * written before this limit existed stay valid; publishing one is blocked
- * until its description is shortened.
+ * Discord's own cap, adopted app-wide so an event published there never has
+ * to be truncated silently. Rows written before this limit existed stay
+ * valid; publishing one is blocked until its description is shortened.
  */
-export const EVENT_DESCRIPTION_MAX_LENGTH = 1000;
+export const EVENT_DESCRIPTION_MAX_LENGTH =
+  DISCORD_EVENT_DESCRIPTION_MAX_LENGTH;
 
 /**
  * Arbitrary (untested) cap so a hostile client cannot make one request write

@@ -5,6 +5,7 @@ import { ImageUpload } from "@/modules/common/components/ImageUpload";
 import { Markdown } from "@/modules/common/components/Markdown";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
+import { getGuildScheduledEventPath } from "@/modules/discord/utils/guildScheduledEventPayload";
 import {
   EventSource,
   type Entity,
@@ -169,7 +170,10 @@ export const OverviewTile = ({ className, event, showCoverUpload }: Props) => {
             {/* App events the organizer published to the guild themselves */}
             {event.discordPublishedId && (
               <DiscordButton
-                path={`events/${env.DISCORD_GUILD_ID}/${event.discordPublishedId}`}
+                path={getGuildScheduledEventPath(
+                  env.DISCORD_GUILD_ID,
+                  event.discordPublishedId,
+                )}
               />
             )}
           </div>

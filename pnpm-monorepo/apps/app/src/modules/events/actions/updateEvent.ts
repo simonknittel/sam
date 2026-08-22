@@ -226,10 +226,26 @@ export const updateEvent = createAuthenticatedAction(
      * no-op otherwise, and never able to undo the save above — a Discord
      * problem only comes back as a warning next to the success message.
      */
-    const discordWarning =
+    const discordSyncWarning =
       nameChanged || descriptionChanged || scheduleChanged
         ? getDiscordSyncWarning(await syncDiscordEventPublication(event.id))
         : null;
+
+    /**
+     * Narrowing a published event's visibility does not narrow it on
+     * Discord — the guild keeps seeing it. Said out loud rather than
+     * silently unpublishing, which would be a surprise of its own.
+     */
+    const becameRestrictedWhilePublished =
+      event.discordPublishedId !== null &&
+      visibilityChanged &&
+      data.visibility === EventVisibility.RESTRICTED;
+
+    const warning =
+      discordSyncWarning ??
+      (becameRestrictedWhilePublished
+        ? "Das Event bleibt auf Discord für alle Mitglieder des Servers sichtbar. Entferne es dort, wenn das nicht gewollt ist."
+        : null);
 
     /**
      * Revalidate cache(s)
@@ -242,7 +258,7 @@ export const updateEvent = createAuthenticatedAction(
      */
     return {
       success: t("Common.successfullySaved"),
-      ...(discordWarning ? { warning: discordWarning } : {}),
+      ...(warning ? { warning } : {}),
     };
   },
   {

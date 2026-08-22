@@ -25,6 +25,7 @@ import {
 import { DiscordScheduledEventEntityType } from "@/modules/discord/utils/schemas";
 import { log } from "@/modules/logging";
 import { EventDiscordPublishTarget } from "@sam-monorepo/database/client";
+import type { DiscordPublishFields } from "./discordPublishFields";
 import { getEventPath } from "./eventConstraints";
 
 export enum DiscordSyncOutcome {
@@ -44,7 +45,16 @@ export enum DiscordSyncOutcome {
 
 export type DiscordSyncResult =
   | { readonly outcome: DiscordSyncOutcome.Skipped }
-  | { readonly outcome: DiscordSyncOutcome.Done }
+  | {
+      readonly outcome: DiscordSyncOutcome.Done;
+      /**
+       * The event has a cover the app could not hand to Discord (an
+       * unsupported format, an oversized object, an unreachable bucket).
+       * Everything else went through; Discord simply keeps whatever cover it
+       * already had.
+       */
+      readonly isCoverImageSkipped?: boolean;
+    }
   | { readonly outcome: DiscordSyncOutcome.Cleared }
   | {
       readonly outcome: DiscordSyncOutcome.Rejected;
@@ -74,25 +84,41 @@ const getPublishState = (eventId: string) =>
 
 type PublishStateRow = NonNullable<Awaited<ReturnType<typeof getPublishState>>>;
 
-const buildContent = async (
-  event: PublishStateRow,
-): Promise<GuildScheduledEventContent | null> => {
+const buildContent = async (event: PublishStateRow) => {
   if (!event.endTime) return null;
 
+  /**
+   * No cover means "clear it on Discord" (null); a cover that could not be
+   * encoded means "leave Discord's alone" (undefined).
+   */
+  const imageDataUri = event.coverImage
+    ? await getDiscordImageDataUri(event.coverImage)
+    : null;
+
   return {
-    name: event.name,
-    description: event.description,
-    startTime: event.startTime,
-    endTime: event.endTime,
-    /**
-     * No cover means "clear it on Discord" (null); a cover that could not be
-     * encoded means "leave Discord's alone" (undefined).
-     */
-    imageDataUri: event.coverImage
-      ? await getDiscordImageDataUri(event.coverImage)
-      : null,
+    content: {
+      name: event.name,
+      description: event.description,
+      startTime: event.startTime,
+      endTime: event.endTime,
+      imageDataUri,
+    } satisfies GuildScheduledEventContent,
+    isCoverImageSkipped:
+      event.coverImage !== null && imageDataUri === undefined,
   };
 };
+
+/**
+ * All five publish columns at once — the CHECK constraint rejects any
+ * partial reset, so the two places that unpublish write the same set.
+ */
+const NO_PUBLICATION = {
+  discordPublishedId: null,
+  discordPublishedAt: null,
+  discordPublishedById: null,
+  discordPublishedChannelId: null,
+  discordPublishedLocation: null,
+} as const;
 
 /**
  * Drops the publish state after Discord reported the guild scheduled event
@@ -104,13 +130,7 @@ const clearPublishState = async (
 ) => {
   await prisma.event.update({
     where: { id: eventId },
-    data: {
-      discordPublishedId: null,
-      discordPublishedAt: null,
-      discordPublishedById: null,
-      discordPublishedChannelId: null,
-      discordPublishedLocation: null,
-    },
+    data: NO_PUBLICATION,
   });
 
   await createAuditEvents([
@@ -128,12 +148,6 @@ const clearPublishState = async (
 export const getDefaultExternalLocation = (eventId: string) =>
   `${env.NEXT_PUBLIC_BASE_URL}${getEventPath(eventId)}`;
 
-export interface DiscordPublishTargetInput {
-  readonly target: EventDiscordPublishTarget;
-  readonly channelId: string | null;
-  readonly location: string | null;
-}
-
 /**
  * Turns the manager's choice into the shape Discord expects. A picked
  * channel is matched against the guild's own voice and stage channels —
@@ -141,16 +155,18 @@ export interface DiscordPublishTargetInput {
  * channel's type — so an unknown or unusable channel resolves to null.
  */
 export const resolveDiscordPublishTarget = async (
-  input: DiscordPublishTargetInput,
+  fields: DiscordPublishFields & {
+    readonly discordPublishTarget: EventDiscordPublishTarget;
+  },
   eventId: string,
 ): Promise<GuildScheduledEventTarget | null> => {
-  switch (input.target) {
+  switch (fields.discordPublishTarget) {
     case EventDiscordPublishTarget.CHANNEL: {
-      if (!input.channelId) return null;
+      if (!fields.discordPublishChannelId) return null;
 
       const channels = await getPublishableGuildChannels();
       const channel = channels?.find(
-        (candidate) => candidate.id === input.channelId,
+        (candidate) => candidate.id === fields.discordPublishChannelId,
       );
       if (!channel) return null;
 
@@ -160,11 +176,14 @@ export const resolveDiscordPublishTarget = async (
     case EventDiscordPublishTarget.EXTERNAL:
       return {
         entityType: DiscordScheduledEventEntityType.External,
-        location: input.location?.trim() || getDefaultExternalLocation(eventId),
+        location:
+          fields.discordPublishLocation || getDefaultExternalLocation(eventId),
       };
 
     default:
-      throw new Error(`Unknown target: ${input.target satisfies never}`);
+      throw new Error(
+        `Unknown target: ${fields.discordPublishTarget satisfies never}`,
+      );
   }
 };
 
@@ -186,17 +205,17 @@ export const createDiscordEventPublication = async (
   if (!event) return { outcome: DiscordSyncOutcome.Skipped };
   if (event.discordPublishedId) return { outcome: DiscordSyncOutcome.Done };
 
-  const content = await buildContent(event);
-  if (!content)
+  const built = await buildContent(event);
+  if (!built)
     return {
       outcome: DiscordSyncOutcome.Rejected,
       problem: GuildScheduledEventContentProblem.MissingEndTime,
     };
 
-  const problem = findPublishProblem(content, target, new Date());
+  const problem = findPublishProblem(built.content, target, new Date());
   if (problem) return { outcome: DiscordSyncOutcome.Rejected, problem };
 
-  const result = await createGuildScheduledEvent(content, target);
+  const result = await createGuildScheduledEvent(built.content, target);
   if (result.outcome !== DiscordOutcome.Success)
     return { outcome: DiscordSyncOutcome.Failed };
 
@@ -240,7 +259,10 @@ export const createDiscordEventPublication = async (
     },
   ]);
 
-  return { outcome: DiscordSyncOutcome.Done };
+  return {
+    outcome: DiscordSyncOutcome.Done,
+    isCoverImageSkipped: built.isCoverImageSkipped,
+  };
 };
 
 /**
@@ -255,19 +277,19 @@ export const syncDiscordEventPublication = async (
   if (!event?.discordPublishedId)
     return { outcome: DiscordSyncOutcome.Skipped };
 
-  const content = await buildContent(event);
-  if (!content)
+  const built = await buildContent(event);
+  if (!built)
     return {
       outcome: DiscordSyncOutcome.Rejected,
       problem: GuildScheduledEventContentProblem.MissingEndTime,
     };
 
-  const problem = findContentProblem(content);
+  const problem = findContentProblem(built.content);
   if (problem) return { outcome: DiscordSyncOutcome.Rejected, problem };
 
   const result = await modifyGuildScheduledEvent(
     event.discordPublishedId,
-    content,
+    built.content,
     new Date(),
   );
 
@@ -277,7 +299,10 @@ export const syncDiscordEventPublication = async (
   }
 
   return result.outcome === DiscordOutcome.Success
-    ? { outcome: DiscordSyncOutcome.Done }
+    ? {
+        outcome: DiscordSyncOutcome.Done,
+        isCoverImageSkipped: built.isCoverImageSkipped,
+      }
     : { outcome: DiscordSyncOutcome.Failed };
 };
 
@@ -309,13 +334,7 @@ export const removeDiscordEventPublication = async (
 
   await prisma.event.update({
     where: { id: eventId },
-    data: {
-      discordPublishedId: null,
-      discordPublishedAt: null,
-      discordPublishedById: null,
-      discordPublishedChannelId: null,
-      discordPublishedLocation: null,
-    },
+    data: NO_PUBLICATION,
   });
 
   await createAuditEvents([
@@ -377,6 +396,17 @@ export const getDiscordSyncWarning = (result: DiscordSyncResult) => {
       throw new Error(`Unknown outcome: ${result satisfies never}`);
   }
 };
+
+/**
+ * Reported where the cover image is what the manager just acted on —
+ * publishing, or replacing the cover. Deliberately not part of
+ * `getDiscordSyncWarning`: an unsupported cover would otherwise nag on every
+ * unrelated edit of the event.
+ */
+export const getDiscordCoverImageWarning = (result: DiscordSyncResult) =>
+  result.outcome === DiscordSyncOutcome.Done && result.isCoverImageSkipped
+    ? "Das Titelbild konnte nicht an Discord übertragen werden. Discord akzeptiert nur JPEG, PNG und GIF, und das Bild darf nicht zu groß sein."
+    : null;
 
 /** The error a failed publish is reported with, since nothing was saved. */
 export const getDiscordPublishError = (result: DiscordSyncResult) => {

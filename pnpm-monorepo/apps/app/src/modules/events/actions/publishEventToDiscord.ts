@@ -2,7 +2,6 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
-import { DISCORD_EVENT_LOCATION_MAX_LENGTH } from "@/modules/discord/utils/guildScheduledEventPayload";
 import {
   EventDiscordPublishTarget,
   EventSource,
@@ -10,7 +9,12 @@ import {
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import {
+  discordPublishFieldsSchema,
+  parseDiscordPublishFields,
+} from "../utils/discordPublishFields";
+import {
   createDiscordEventPublication,
+  getDiscordCoverImageWarning,
   getDiscordPublishError,
   resolveDiscordPublishTarget,
 } from "../utils/discordPublishing";
@@ -18,17 +22,10 @@ import { getEventPath } from "../utils/eventConstraints";
 import { isAllowedToManageEvent } from "../utils/isAllowedToManageEvent";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
 
-/** Field names come from the shared DiscordPublishTargetFields component */
-const schema = z.object({
+/** Publishing always has a target, unlike the forms that merely offer one */
+const schema = discordPublishFieldsSchema.extend({
   eventId: z.cuid(),
   discordPublishTarget: z.enum(EventDiscordPublishTarget),
-  /** Validated against the guild's own channels when the target is CHANNEL */
-  discordPublishChannelId: z.string().max(64).optional(),
-  discordPublishLocation: z
-    .string()
-    .trim()
-    .max(DISCORD_EVENT_LOCATION_MAX_LENGTH)
-    .optional(),
 });
 
 export const publishEventToDiscord = createAuthenticatedAction(
@@ -65,14 +62,7 @@ export const publishEventToDiscord = createAuthenticatedAction(
     /**
      * Validate the request
      */
-    const target = await resolveDiscordPublishTarget(
-      {
-        target: data.discordPublishTarget,
-        channelId: data.discordPublishChannelId ?? null,
-        location: data.discordPublishLocation ?? null,
-      },
-      event.id,
-    );
+    const target = await resolveDiscordPublishTarget(data, event.id);
     if (!target)
       return {
         error:
@@ -93,16 +83,17 @@ export const publishEventToDiscord = createAuthenticatedAction(
      */
     revalidatePath(getEventPath(event.id), "layout");
 
-    return { success: "Das Event wurde auf Discord veröffentlicht." };
+    const coverImageWarning = getDiscordCoverImageWarning(result);
+
+    return {
+      success: "Das Event wurde auf Discord veröffentlicht.",
+      ...(coverImageWarning ? { warning: coverImageWarning } : {}),
+    };
   },
   {
     parseFormData: (formData) => ({
+      ...parseDiscordPublishFields(formData),
       eventId: formData.get("eventId"),
-      discordPublishTarget: formData.get("discordPublishTarget"),
-      discordPublishChannelId:
-        formData.get("discordPublishChannelId") || undefined,
-      discordPublishLocation:
-        formData.get("discordPublishLocation") || undefined,
     }),
   },
 );

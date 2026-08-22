@@ -5,7 +5,6 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { probeUploadImageDimensions } from "@/modules/common/utils/probeUploadImageDimensions";
-import { DISCORD_EVENT_LOCATION_MAX_LENGTH } from "@/modules/discord/utils/guildScheduledEventPayload";
 import { getEventTemplateById } from "@/modules/event-templates/queries/getEventTemplateById";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { copyUpload } from "@/modules/uploads/utils/copyUpload";
@@ -13,7 +12,6 @@ import { getEventWikiContext } from "@/modules/wiki/queries/getEventWikiContext"
 import { copyBriefingTree } from "@/modules/wiki/utils/copyBriefingTree";
 import {
   EventActivityType,
-  EventDiscordPublishTarget,
   EventSource,
   EventVisibility,
   WikiPageEventScope,
@@ -25,6 +23,10 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { berlinWallTimeToUtc } from "../utils/berlinWallTime";
 import { clonePositions } from "../utils/clonePositions";
+import {
+  discordPublishFieldsSchema,
+  parseDiscordPublishFields,
+} from "../utils/discordPublishFields";
 import {
   createDiscordEventPublication,
   DiscordSyncOutcome,
@@ -75,13 +77,7 @@ const schema = z.object({
    * "do not publish"; a template's preference reaches the action by
    * prefilling these fields, so clearing them in the form still wins.
    */
-  discordPublishTarget: z.enum(EventDiscordPublishTarget).optional(),
-  discordPublishChannelId: z.string().max(64).optional(),
-  discordPublishLocation: z
-    .string()
-    .trim()
-    .max(DISCORD_EVENT_LOCATION_MAX_LENGTH)
-    .optional(),
+  ...discordPublishFieldsSchema.shape,
 });
 
 export const createEvent = createAuthenticatedAction(
@@ -349,11 +345,7 @@ export const createEvent = createAuthenticatedAction(
     let publishFailed = false;
     if (data.discordPublishTarget) {
       const target = await resolveDiscordPublishTarget(
-        {
-          target: data.discordPublishTarget,
-          channelId: data.discordPublishChannelId ?? null,
-          location: data.discordPublishLocation ?? null,
-        },
+        { ...data, discordPublishTarget: data.discordPublishTarget },
         createdEvent.id,
       );
 
@@ -393,11 +385,7 @@ export const createEvent = createAuthenticatedAction(
       coverImageId: formData.get("coverImageId") || undefined,
       templateId: formData.get("templateId") || undefined,
       keepTemplateCover: formData.get("keepTemplateCover") === "1",
-      discordPublishTarget: formData.get("discordPublishTarget") || undefined,
-      discordPublishChannelId:
-        formData.get("discordPublishChannelId") || undefined,
-      discordPublishLocation:
-        formData.get("discordPublishLocation") || undefined,
+      ...parseDiscordPublishFields(formData),
     }),
   },
 );

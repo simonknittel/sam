@@ -1,5 +1,6 @@
 "use client";
 
+import { toastWarning } from "@/modules/actions/utils/toastWarning";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
 import clsx from "clsx";
@@ -11,6 +12,15 @@ import { z } from "zod";
 import useUpload from "../utils/useUpload";
 
 const assignResponseSchema = z.object({ warning: z.string().optional() });
+
+const readAssignWarning = async (response: Response) => {
+  try {
+    const body: unknown = await response.json();
+    return assignResponseSchema.safeParse(body).data?.warning ?? null;
+  } catch {
+    return null;
+  }
+};
 
 interface Props {
   readonly className?: string;
@@ -56,16 +66,18 @@ export const ImageUpload = ({
     })
       .then(async (response) => {
         if (!response.ok) throw new Error("Assigning the upload failed");
-        const body: unknown = await response.json();
-        router.refresh();
-        toast.success("Erfolgreich hochgeladen");
 
         /**
-         * The image was assigned; a warning only reports follow-up work the
-         * route could not finish (e.g. updating a published Discord event).
+         * The image is assigned by now; a warning only reports follow-up
+         * work the route could not finish (e.g. updating a published Discord
+         * event). An unreadable body must therefore never turn the finished
+         * upload into an error.
          */
-        const { warning } = assignResponseSchema.parse(body);
-        if (warning) toast(warning, { icon: "⚠️", duration: 8000 });
+        const warning = await readAssignWarning(response);
+
+        router.refresh();
+        toast.success("Erfolgreich hochgeladen");
+        if (warning) toastWarning(warning);
       })
       .catch((error) => {
         console.error(error);
