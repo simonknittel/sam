@@ -10,6 +10,7 @@ const emptyUpload: UploadUsageSource = {
   roleThumbnails: [],
   manufacturers: [],
   eventCovers: [],
+  eventTemplateCovers: [],
   wikiPageIcons: [],
   wikiPages: [],
 };
@@ -17,6 +18,26 @@ const emptyUpload: UploadUsageSource = {
 describe("get upload usages", () => {
   test("an upload nothing references is unused", () => {
     expect(getUploadUsages(emptyUpload)).toEqual([]);
+  });
+
+  /**
+   * A usage relation missing here reads as "unused" and the nightly cleanup
+   * then deletes the upload — which is how event covers were lost once.
+   */
+  test("an event template cover counts as a usage", () => {
+    expect(
+      getUploadUsages({
+        ...emptyUpload,
+        eventTemplateCovers: [{ id: "template-1", name: "Patrouille" }],
+      }),
+    ).toEqual([
+      {
+        type: UploadUsageType.EventTemplateCover,
+        key: "eventTemplateCover:template-1",
+        label: "Patrouille",
+        href: "/app/events/templates/template-1",
+      },
+    ]);
   });
 
   test("links each usage to the page owning the reference", () => {

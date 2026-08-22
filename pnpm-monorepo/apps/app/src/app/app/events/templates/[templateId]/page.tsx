@@ -1,4 +1,4 @@
-import { requireAuthenticationPage } from "@/modules/auth/server";
+import { authenticate, requireAuthenticationPage } from "@/modules/auth/server";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { SmallBadge } from "@/modules/common/components/SmallBadge";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
@@ -42,7 +42,13 @@ interface DetailsProps {
 }
 
 const EventTemplateDetails = async ({ templateId }: DetailsProps) => {
-  const context = await getEventTemplateById(templateId);
+  const authentication = await authenticate();
+  const [context, canCreate] = await Promise.all([
+    getEventTemplateById(templateId),
+    authentication
+      ? authentication.authorize("event", "create")
+      : Promise.resolve(false),
+  ]);
   if (!context) notFound();
 
   const { template, permissions } = context;
@@ -107,7 +113,8 @@ const EventTemplateDetails = async ({ templateId }: DetailsProps) => {
         </dl>
       </Tile>
 
-      {!isDeleted && (
+      {/* Both actions end in a create the viewer may not be allowed */}
+      {!isDeleted && canCreate && (
         <Tile heading="Aktionen">
           <div className="flex flex-wrap gap-2">
             <UseEventTemplateButton templateId={template.id} withLabel />

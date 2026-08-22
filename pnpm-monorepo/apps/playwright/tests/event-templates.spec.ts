@@ -580,3 +580,35 @@ test("a template position is edited through the shared lineup editor", async ({
     expect.arrayContaining(["EVENT_TEMPLATE_POSITION_CREATED"]),
   );
 });
+
+test("a template's briefing root page is locked like an event's", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const owner = await createOwner(prisma);
+  const { template } = await createEventTemplate(prisma, {
+    name: "Briefingvorlage",
+    ownedById: owner.entity.id,
+    briefingPageTitles: ["Anflug"],
+  });
+
+  await signIn(owner.user);
+  await page.goto(`/app/events/templates/${template.id}/briefing`);
+  await expect(page.getByRole("heading", { name: "BRIEFING" })).toBeVisible();
+
+  /**
+   * Losing the root would take the whole briefing with it — including the
+   * trash route, which lives under the same layout.
+   */
+  await expect(page.getByRole("button", { name: "Löschen" })).toBeHidden();
+
+  /** A child page stays deletable, so the absence above is the lock */
+  const child = await prisma.wikiPage.findFirstOrThrow({
+    where: { templateId: template.id, title: "Anflug" },
+  });
+  await page.goto(
+    `/app/events/templates/${template.id}/briefing/${child.id}/anflug`,
+  );
+  await expect(page.getByRole("button", { name: "Löschen" })).toBeVisible();
+});

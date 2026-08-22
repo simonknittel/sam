@@ -4,6 +4,7 @@ import { CursorDirection } from "@/modules/common/CursorPagination/cursorPaginat
 import { getDateRangeFilter } from "@/modules/common/utils/getDateRangeFilter";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import type { Prisma } from "@sam-monorepo/database/client";
+import { UNUSED_UPLOAD_WHERE } from "@sam-monorepo/domain";
 import { cache } from "react";
 import { UploadUsageType } from "../utils/uploadUsage";
 
@@ -28,6 +29,7 @@ export const USAGE_SELECT = {
   roleThumbnails: { select: { id: true, name: true } },
   manufacturers: { select: { id: true, name: true } },
   eventCovers: { select: { id: true, name: true } },
+  eventTemplateCovers: { select: { id: true, name: true } },
   wikiPageIcons: {
     select: {
       id: true,
@@ -48,16 +50,6 @@ export const USAGE_SELECT = {
   },
 } satisfies Prisma.UploadSelect;
 
-/** Matches uploads which are not referenced anywhere (see UploadUsageType). */
-const UNUSED_WHERE: Prisma.UploadWhereInput = {
-  roleIcons: { none: {} },
-  roleThumbnails: { none: {} },
-  manufacturers: { none: {} },
-  eventCovers: { none: {} },
-  wikiPageIcons: { none: {} },
-  wikiPages: { none: {} },
-};
-
 const getUsageWhere = (usage: UploadUsageType): Prisma.UploadWhereInput => {
   switch (usage) {
     case UploadUsageType.RoleIcon:
@@ -72,6 +64,9 @@ const getUsageWhere = (usage: UploadUsageType): Prisma.UploadWhereInput => {
     case UploadUsageType.EventCover:
       return { eventCovers: { some: {} } };
 
+    case UploadUsageType.EventTemplateCover:
+      return { eventTemplateCovers: { some: {} } };
+
     case UploadUsageType.WikiPageIcon:
       return { wikiPageIcons: { some: {} } };
 
@@ -79,7 +74,7 @@ const getUsageWhere = (usage: UploadUsageType): Prisma.UploadWhereInput => {
       return { wikiPages: { some: {} } };
 
     case UploadUsageType.Unused:
-      return UNUSED_WHERE;
+      return UNUSED_UPLOAD_WHERE;
 
     default:
       throw new Error(`Unknown upload usage: ${usage satisfies never}`);

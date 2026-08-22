@@ -199,7 +199,7 @@ Done.
 - An owner without `eventTemplateShare;manage` gets no Freigabe tab; existing shares keep functioning — only `event;manage` can then change them.
 - Transferring to a citizen without `event;create` is allowed (documented decision).
 - The Freigabe route 404s rather than 403s without `canManageShares`, so the tab's absence and its inaccessibility look the same.
-- `CitizenInput` gained a `form` prop: the transfer picker lives inside the confirm dialog's portal, outside the form element it submits to.
+- The transfer uses a plain modal, not the confirm dialog: the citizen picker opens its option list in a portal the alert dialog's overlay swallows the clicks of.
 
 #### Verification
 
@@ -287,7 +287,7 @@ Fresh subagents verify the implementation against this plan and the original goa
 
 #### Status
 
-Not started.
+Done — two fresh reviews ran (plan conformance and security). Both independently found the same two high-severity defects; those and every medium finding are fixed. The remaining findings are recorded below for Simon to accept or reject.
 
 #### Steps
 
@@ -295,15 +295,37 @@ Not started.
 - One fresh security-focused subagent reviews authorization (direct-submission bypasses, IDOR on template/position/page ids across containers, S3 copy path, Zod caps) and the guidelines checklist.
 - Findings are triaged with the user and fixed; re-review the fixes.
 
+#### Findings and what was done
+
+Fixed:
+
+1. **The nightly upload cleanup would have deleted every template cover** within ~48 hours, row and S3 object, silently — `Upload.eventTemplateCovers` was missing from the three places that enumerate usage relations. Fixed at the root: the list now lives once in the domain package (`UPLOAD_USAGE_RELATIONS` / `UNUSED_UPLOAD_WHERE`) and both the lambda and the upload manager read it, so the failure mode its own comment warned about ("as happened to `eventCovers`") cannot recur. Covered by a unit test.
+2. **A template's briefing root page was not locked.** `isEventWikiRootPage` tested `eventId !== null`, so for templates it said "not a root" and the UI offered rename, move and delete on it — to every EDIT-share holder. Deleting it would have 404'd the whole briefing *including its trash route*, with no way back, and produced broken duplicates and briefing-less events. The check is container-aware now, which also restores the root's INHERIT-scope guard. Covered by an E2E test.
+3. **A template with a trashed briefing root produced events with no briefing at all** — `createEvent` skipped the root seed whenever a template context existed, rather than when there was something to copy.
+4. **Template lineups could not be reordered.** The drag targets had moved to `showManage` but the drag handle had not, so nothing was draggable and the template branch of the reorder action was unreachable.
+5. A copied briefing that is already open now records `briefingPublishedAt` at creation, so a later scope change cannot fire the one-time "briefing published" notification long after the fact.
+6. "Verwenden" and "Duplizieren" are hidden from viewers without `event;create`, who could otherwise only reach a forbidden error.
+7. The list search term is capped at 255 characters, like the upload manager's.
+8. Removed the `CitizenInput` `form` prop again — the transfer ended up not needing it.
+
+Left as they are, for Simon to accept or reject:
+
+- **Duplicating takes only read access, not `event;create`** (the decision log says so), which lets a read-share holder mint templates they own and keep section access after the share is revoked. Both reviewers flagged the tension with "everyone with `event;create` can create personal templates". Adding the gate is a one-line change if you want it.
+- **Briefing images and attachments are shared, not copied**, between a template and the events created from it — that is `copyWikiPageSubtree`'s documented behavior everywhere; only the cover is copied because the plan called for it. A template editor deleting such an upload affects events already created.
+- **`EventTemplateRoleAccess` has no created/updated-by columns** (and `EventTemplateVisibilityRole` only `createdAt`), matching `FlowRoleAccess` and `EventVisibilityRole` exactly but not the plan's blanket "all new tables follow the created/updated/deleted-by guidelines". The shares-updated audit type carries the diff instead.
+- **No database constraint keeps `parentPositionId` inside one container** — the application enforces it at every write, but the CHECK constraints do not. A self-referential constraint would need a trigger.
+- **Role ids in the share and prefill editors are existence-checked, not visibility-checked**, exactly as `updateFlowRoleAccess` does it. It only ever widens access to the sharer's own template.
+- **`CitizenInput` spins forever when its query fails**, which is what a viewer without `citizen;read` sees. Pre-existing and shared by every citizen picker in the app.
+
 #### Verification
 
 - Both reviews report no open findings that the user has not explicitly accepted.
 
 ## Final end-to-end verification
 
-- Fresh local stack: run all migrations, seed sessions, run the complete Playwright suite.
-- Manual smoke pass as three users (owner with both permissions, role-shared editor without `eventTemplateShare;manage`, plain `event;read` user): build a full template (fields, cover, nested lineup, multi-page briefing with a position-scoped page), share it in both tiers, transfer ownership, duplicate it, create an event from it and run one sign-up/lineup/briefing cycle on that event; verify Discord events and plain app events behave exactly as before.
-- Production-mirrored database: run the migration and spot-check that existing events, positions and wiki pages are untouched and both CHECK constraints are active.
+- Fresh local stack: run all migrations, seed sessions, run the complete Playwright suite. — **Done.** Every Playwright run builds its own stack from an empty database and replays all 88 migrations, and the full suite is green with the twelve new template specs alongside the 131 pre-existing ones. Typecheck, lint, both unit suites and the lambda build are green too.
+- Manual smoke pass as three users (owner with both permissions, role-shared editor without `eventTemplateShare;manage`, plain `event;read` user): build a full template (fields, cover, nested lineup, multi-page briefing with a position-scoped page), share it in both tiers, transfer ownership, duplicate it, create an event from it and run one sign-up/lineup/briefing cycle on that event; verify Discord events and plain app events behave exactly as before. — **Automated instead of manual:** the E2E specs cover all three viewpoints, both share tiers, the transfer, the duplicate and the creation incl. the remapped position scope, and the pre-existing event, Discord-event and wiki suites prove the untouched behavior. A human pass on the cover upload and the drag-reorder is still worth doing, since neither is exercised end to end.
+- Production-mirrored database: run the migration and spot-check that existing events, positions and wiki pages are untouched and both CHECK constraints are active. — **Done locally** against the seeded copy of the production data: the migration applied cleanly and all three CHECK constraints plus the three WikiTag partial indexes are present and reject the invalid row shapes. Production itself is step 2 of the rollout.
 
 ## Rollout plan
 

@@ -1,3 +1,4 @@
+import { getEventTemplatePath } from "@/modules/event-templates/utils/eventTemplateConstraints";
 import { getWikiPageRouteHref } from "@/modules/wiki/utils/wikiPageHref";
 
 /**
@@ -5,7 +6,7 @@ import { getWikiPageRouteHref } from "@/modules/wiki/utils/wikiPageHref";
  * it never comes out of `getUploadUsages`, only out of the usage filter and
  * the badge an upload without any reference gets.
  *
- * The six real kinds are exactly the usage relations of the `Upload` model,
+ * The real kinds are exactly the usage relations of the `Upload` model,
  * and exactly the relations the nightly cleanup lambda checks before
  * deleting an upload (see `deleteUnusedUploads`). `wikiReports` is
  * deliberately not among them: report evidence is meant to expire with the
@@ -16,6 +17,7 @@ export enum UploadUsageType {
   RoleThumbnail = "roleThumbnail",
   ManufacturerLogo = "manufacturerLogo",
   EventCover = "eventCover",
+  EventTemplateCover = "eventTemplateCover",
   WikiPageIcon = "wikiPageIcon",
   WikiPageAttachment = "wikiPageAttachment",
   Unused = "unused",
@@ -26,6 +28,7 @@ export const UPLOAD_USAGE_TYPE_LABELS: Record<UploadUsageType, string> = {
   [UploadUsageType.RoleThumbnail]: "Rollen-Thumbnail",
   [UploadUsageType.ManufacturerLogo]: "Hersteller-Bild",
   [UploadUsageType.EventCover]: "Event-Titelbild",
+  [UploadUsageType.EventTemplateCover]: "Vorlagen-Titelbild",
   [UploadUsageType.WikiPageIcon]: "Wiki-Icon",
   [UploadUsageType.WikiPageAttachment]: "Wiki-Bild/-Anhang",
   [UploadUsageType.Unused]: "Unbenutzt",
@@ -60,6 +63,7 @@ export interface UploadUsageSource {
   readonly roleThumbnails: readonly NamedResource[];
   readonly manufacturers: readonly NamedResource[];
   readonly eventCovers: readonly NamedResource[];
+  readonly eventTemplateCovers: readonly NamedResource[];
   readonly wikiPageIcons: readonly WikiPageReference[];
   readonly wikiPages: readonly WikiPageReference[];
 }
@@ -100,6 +104,13 @@ export const getUploadUsages = (upload: UploadUsageSource): UploadUsage[] => [
     key: `${UploadUsageType.EventCover}:${event.id}`,
     label: event.name,
     href: `/app/events/${event.id}`,
+  })),
+
+  ...upload.eventTemplateCovers.map((template) => ({
+    type: UploadUsageType.EventTemplateCover,
+    key: `${UploadUsageType.EventTemplateCover}:${template.id}`,
+    label: template.name,
+    href: getEventTemplatePath(template.id),
   })),
 
   ...upload.wikiPageIcons.map((page) => ({

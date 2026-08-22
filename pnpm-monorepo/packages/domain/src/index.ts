@@ -16,3 +16,8 @@ export { calculateSilcBalances } from "./silc/calculateSilcBalances.js";
 export { getAuecPerSilc } from "./silc/getAuecPerSilc.js";
 export { getTotalSilc } from "./silc/getTotalSilc.js";
 export { SILC_TRANSACTIONS_OF_ALL_CITIZENS_QUERY } from "./silc/silcTransactionsOfAllCitizensQuery.js";
+export {
+  UNUSED_UPLOAD_WHERE,
+  UPLOAD_USAGE_RELATIONS,
+  type UploadUsageRelation,
+} from "./uploadUsageRelations.js";

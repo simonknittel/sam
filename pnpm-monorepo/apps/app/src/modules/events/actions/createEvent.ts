@@ -14,6 +14,7 @@ import {
   EventActivityType,
   EventSource,
   EventVisibility,
+  WikiPageEventScope,
 } from "@sam-monorepo/database/client";
 import type { AuditEventInput } from "@sam-monorepo/domain";
 import { buildBriefingRootPageSeed } from "@sam-monorepo/domain";
@@ -174,6 +175,22 @@ export const createEvent = createAuthenticatedAction(
           ])
         : [[], null, null];
 
+    const copiedRootPage = templateBriefing?.rootPage ?? null;
+    const copiesBriefing = copiedRootPage !== null;
+    /**
+     * A template whose briefing root already left the managers produces an
+     * event whose briefing is readable from the first second. Recording
+     * that as the publication keeps a later scope change from firing the
+     * one-time "briefing published" notification long after the fact —
+     * the event's own creation notification already announced it.
+     */
+    const briefingPublishedAt =
+      copiedRootPage &&
+      copiedRootPage.eventReadScope !== WikiPageEventScope.MANAGERS &&
+      copiedRootPage.eventReadScope !== WikiPageEventScope.INHERIT
+        ? new Date()
+        : null;
+
     /**
      * Create the event with its briefing and activity entry
      */
@@ -204,11 +221,14 @@ export const createEvent = createAuthenticatedAction(
             },
             createdById: citizenId,
             coverImageId: data.coverImageId ?? copiedCover?.id ?? null,
+            briefingPublishedAt,
             /**
-             * A template brings its own briefing, copied below; without one
-             * the event starts from the same seeded root page as always.
+             * A template brings its own briefing, copied below. Keyed on the
+             * root page, not on the context: a template whose root was
+             * trashed has a context but nothing to copy, and an event
+             * without a root page has no briefing and no way back to one.
              */
-            ...(templateBriefing
+            ...(copiesBriefing
               ? {}
               : {
                   wikiPages: { create: buildBriefingRootPageSeed(citizenId) },
@@ -235,7 +255,7 @@ export const createEvent = createAuthenticatedAction(
            * Copied after the lineup, so the pages' POSITION scopes can be
            * remapped onto the event's own positions.
            */
-          if (templateBriefing)
+          if (templateBriefing && copiesBriefing)
             await copyBriefingTree(transaction, {
               sourcePages: templateBriefing.pages,
               targetContainer: toEventContainer(event.id),

@@ -160,7 +160,7 @@ export const Position = ({
           borderImage,
         }}
       >
-        {showActions && showManage && <DragHandle position={position} />}
+        {showManage && <DragHandle position={position} />}
 
         <div
           className={clsx(

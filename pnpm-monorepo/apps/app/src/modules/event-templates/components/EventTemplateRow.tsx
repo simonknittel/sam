@@ -15,9 +15,11 @@ interface Props {
   readonly entry: EventTemplateListEntry;
   /** The owner column only exists for viewers who see foreign templates */
   readonly showOwner: boolean;
+  /** Using and duplicating both end in a create the viewer may not do */
+  readonly canCreate: boolean;
 }
 
-export const EventTemplateRow = ({ entry, showOwner }: Props) => {
+export const EventTemplateRow = ({ entry, showOwner, canCreate }: Props) => {
   const { template, permissions } = entry;
   const isShared = template.roleAccess.length > 0;
 
@@ -55,23 +57,23 @@ export const EventTemplateRow = ({ entry, showOwner }: Props) => {
       </td>
 
       <td className="flex items-center gap-1">
-        {template.deletedAt ? (
-          permissions.canManage && (
-            <RestoreEventTemplateButton
-              templateId={template.id}
-              name={template.name}
-            />
-          )
-        ) : (
-          <>
-            <UseEventTemplateButton templateId={template.id} />
+        {template.deletedAt
+          ? permissions.canManage && (
+              <RestoreEventTemplateButton
+                templateId={template.id}
+                name={template.name}
+              />
+            )
+          : canCreate && (
+              <>
+                <UseEventTemplateButton templateId={template.id} />
 
-            <DuplicateEventTemplateButton
-              templateId={template.id}
-              name={template.name}
-            />
-          </>
-        )}
+                <DuplicateEventTemplateButton
+                  templateId={template.id}
+                  name={template.name}
+                />
+              </>
+            )}
       </td>
     </TRow>
   );

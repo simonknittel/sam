@@ -14,6 +14,9 @@ import {
 import { visibleEventTemplatesWhere } from "../utils/visibleEventTemplatesWhere";
 import { getEventTemplateViewer } from "./getEventTemplateViewer";
 
+/** Longer terms are pointless — the name is capped at 128 characters */
+const MAX_QUERY_LENGTH = 255;
+
 /** Everything the list table and the picker need about one template */
 const LIST_SELECT = {
   id: true,
@@ -86,6 +89,9 @@ export const getEventTemplates = cache(
       const viewer = await getEventTemplateViewer();
       if (!viewer) return [];
 
+      /** The search term comes straight from the URL */
+      const query = filters.query?.slice(0, MAX_QUERY_LENGTH);
+
       const templates = await prisma.eventTemplate.findMany({
         where: {
           AND: [
@@ -95,13 +101,13 @@ export const getEventTemplates = cache(
             viewer.hasEventManage && filters.ownerId
               ? { ownedById: filters.ownerId }
               : {},
-            filters.query
+            query
               ? {
                   OR: [
-                    { name: { contains: filters.query, mode: "insensitive" } },
+                    { name: { contains: query, mode: "insensitive" } },
                     {
                       description: {
-                        contains: filters.query,
+                        contains: query,
                         mode: "insensitive",
                       },
                     },

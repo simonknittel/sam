@@ -36,7 +36,10 @@ interface Props {
   readonly entries: readonly EventTemplateListEntry[];
   /** Only viewers who see foreign templates get the owner column */
   readonly showOwner: boolean;
-  /** Creating takes `event;create`, which not every viewer of the list has */
+  /**
+   * `event;create` — which not every viewer of the list holds, and which
+   * creating, using and duplicating a template all end in.
+   */
   readonly canCreate: boolean;
   readonly emptyMessage: string;
 }
@@ -74,6 +77,7 @@ export const EventTemplatesTableClient = ({
             key={entry.template.id}
             entry={entry}
             showOwner={showOwner}
+            canCreate={canCreate}
           />
         ))}
       </TableTile>

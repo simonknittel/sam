@@ -4,7 +4,7 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import { prisma } from "@sam-monorepo/database";
-import { AuditEventType } from "@sam-monorepo/domain";
+import { AuditEventType, UNUSED_UPLOAD_WHERE } from "@sam-monorepo/domain";
 import { createAuditEvents } from "../common/audit";
 import { log } from "../common/logger";
 import { captureAsyncFunc } from "../common/xray";
@@ -30,11 +30,10 @@ const DELETE_BATCH_SIZE = 1000;
  * persists only ever add links (see syncWikiPageUploadLinks), so links
  * whose page content no longer references the upload are dropped here.
  *
- * An upload counts as used while it is referenced as a role icon or
- * thumbnail, manufacturer image, event cover, wiki page icon or wiki page
- * attachment. As a safety net, uploads whose id still appears in some wiki
- * page content or snapshot (e.g. an image copy-pasted into another page)
- * are kept as well.
+ * An upload counts as used while any of the model's usage relations
+ * references it (see UPLOAD_USAGE_RELATIONS). As a safety net, uploads whose
+ * id still appears in some wiki page content or snapshot (e.g. an image
+ * copy-pasted into another page) are kept as well.
  *
  * Afterwards the bucket is swept for objects without an Upload row: deleting
  * a user cascade-deletes their Upload rows without touching S3, so such
@@ -85,22 +84,15 @@ export const deleteUnusedUploads = async () => {
     const unusedUploads = await captureAsyncFunc("find unused uploads", () =>
       prisma.upload.findMany({
         /**
-         * One condition per usage relation of the Upload model. When a
-         * relation is added there it must be added here too — a missing one
-         * silently deletes uploads which are in use (as happened to
-         * `eventCovers`). The one deliberate omission is `wikiReports`:
-         * report evidence is meant to expire with its upload, and the
-         * report keeps the `uploadFileName` snapshot. The upload manager
-         * mirrors this list, see `UploadUsageType` and `UNUSED_WHERE`.
+         * The usage relations live in one shared list so this query and
+         * the upload manager can no longer drift apart — a relation added
+         * to the model but missing here silently deletes uploads which
+         * are in use (as happened to `eventCovers`). See
+         * `UPLOAD_USAGE_RELATIONS`.
          */
         where: {
           createdAt: { lt: cutoff },
-          wikiPages: { none: {} },
-          roleIcons: { none: {} },
-          roleThumbnails: { none: {} },
-          manufacturers: { none: {} },
-          eventCovers: { none: {} },
-          wikiPageIcons: { none: {} },
+          ...UNUSED_UPLOAD_WHERE,
         },
         select: { id: true },
       }),
