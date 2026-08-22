@@ -33,6 +33,18 @@ const EventsTab = () => {
         <YesNoCheckbox {...register("event;manage")} />
       </div>
 
+      <div className="py-2 flex justify-between items-center gap-2">
+        <div>
+          <h4 className="font-bold">Event-Vorlagen teilen</h4>
+          <p className="text-sm">
+            Citizen mit dieser Berechtigung können ihre eigenen Event-Vorlagen
+            für Rollen freigeben und den Besitz an andere Citizen übertragen.
+          </p>
+        </div>
+
+        <YesNoCheckbox {...register("eventTemplateShare;manage")} />
+      </div>
+
       <div className="py-2 flex justify-between items-center">
         <h4 className="font-bold">Event-Flotte lesen</h4>
 

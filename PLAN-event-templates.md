@@ -99,7 +99,7 @@ The new permission resource, the pure template-permission resolver, and the quer
 
 #### Status
 
-Not started.
+Done.
 
 #### Steps
 
@@ -111,6 +111,9 @@ Not started.
 #### Notes
 
 - Roles are matched via effective roles (level gate + inheritance), consistent with events and wiki.
+- The template code lives in its own module (`modules/event-templates`) rather than inside the already flat `modules/events`.
+- `visibleEventTemplatesWhere()` is ANDed into every query instead of spread, so a caller's own `OR` can never widen it. The owner filter is only honored for `event;manage` holders, who see everything anyway.
+- The resolver answers the owner before the deleted check, so a deleted template stays visible and restorable to them; the share branch below it fails closed.
 
 #### Verification
 

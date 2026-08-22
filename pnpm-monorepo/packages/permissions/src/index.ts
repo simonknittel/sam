@@ -1,14 +1,22 @@
 /**
  * Pure permission logic shared between the Next.js app and the Lambdas:
  * the permission-set vocabulary, role → permission-set resolution and the
- * career flow and wiki/event page permission resolvers. Everything here is
- * session-free and side-effect-free — the consumers load the data (session,
- * role assignments, flows, pages) and pass it in.
+ * career flow, event template and wiki/event page permission resolvers.
+ * Everything here is session-free and side-effect-free — the consumers load
+ * the data (session, role assignments, flows, templates, pages) and pass it
+ * in.
  */
 export { comparePermissionSets } from "./comparePermissionSets.js";
 export { getPermissionSetsByRoles } from "./getPermissionSetsByRoles.js";
 export type { GenericEntityLogType, PermissionSet } from "./PermissionSet.js";
 export { resolveEffectiveRoles } from "./resolveEffectiveRoles.js";
+export {
+  createEventTemplatePermissionResolver,
+  resolveEventTemplatePermissions,
+  type EventTemplatePermissionSource,
+  type EventTemplateViewer,
+  type ResolvedEventTemplatePermissions,
+} from "./resolveEventTemplatePermissions.js";
 export {
   collectPositionScopeIdsForCitizen,
   createEventWikiPagePermissionResolver,

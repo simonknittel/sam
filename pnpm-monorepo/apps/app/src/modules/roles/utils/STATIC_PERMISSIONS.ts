@@ -279,6 +279,11 @@ export const STATIC_PERMISSIONS = [
   },
   {
     section: "Events",
+    title: "Event-Vorlagen teilen",
+    string: "eventTemplateShare;manage",
+  },
+  {
+    section: "Events",
     title: "Event-Flotte lesen",
     string: "eventFleet;read",
   },

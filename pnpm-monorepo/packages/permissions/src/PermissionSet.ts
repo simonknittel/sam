@@ -6,6 +6,7 @@ export interface PermissionSet {
     | GenericEntityLogType
     | "login"
     | "event"
+    | "eventTemplateShare"
     | "orgFleet"
     | "ship"
     | "otherShips"
