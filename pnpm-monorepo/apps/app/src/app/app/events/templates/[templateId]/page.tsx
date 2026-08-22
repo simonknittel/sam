@@ -9,6 +9,7 @@ import { DeleteEventTemplateButton } from "@/modules/event-templates/components/
 import { DuplicateEventTemplateButton } from "@/modules/event-templates/components/DuplicateEventTemplateButton";
 import { RestoreEventTemplateButton } from "@/modules/event-templates/components/RestoreEventTemplateButton";
 import { UpdateEventTemplateForm } from "@/modules/event-templates/components/UpdateEventTemplateForm";
+import { UseEventTemplateButton } from "@/modules/event-templates/components/UseEventTemplateButton";
 import { getEventTemplateById } from "@/modules/event-templates/queries/getEventTemplateById";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
@@ -108,11 +109,15 @@ const EventTemplateDetails = async ({ templateId }: DetailsProps) => {
 
       {!isDeleted && (
         <Tile heading="Aktionen">
-          <DuplicateEventTemplateButton
-            templateId={template.id}
-            name={template.name}
-            withLabel
-          />
+          <div className="flex flex-wrap gap-2">
+            <UseEventTemplateButton templateId={template.id} withLabel />
+
+            <DuplicateEventTemplateButton
+              templateId={template.id}
+              name={template.name}
+              withLabel
+            />
+          </div>
         </Tile>
       )}
 

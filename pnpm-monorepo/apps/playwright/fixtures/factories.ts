@@ -9,6 +9,7 @@ import type {
 } from "@sam-monorepo/database/client";
 import {
   EventSource,
+  EventTemplateAccessType,
   EventVisibility,
   FlowNodeMarkdownPosition,
   FlowNodeType,
@@ -563,7 +564,107 @@ export const createFlow = async (
   return flow;
 };
 
+interface CreateEventTemplateOptions {
+  readonly name: string;
+  /** Entity id of the owner — every permission but `event;manage` keys off this */
+  readonly ownedById: string;
+  readonly description?: string;
+  readonly visibility?: EventVisibility;
+  readonly visibilityRoleIds?: readonly Role["id"][];
+  readonly roleAccess?: readonly {
+    readonly roleId: Role["id"];
+    readonly type: EventTemplateAccessType;
+  }[];
+  readonly deletedAt?: Date;
+  /** Top-level position names, in order */
+  readonly positionNames?: readonly string[];
+  /** Additional briefing pages under the seeded root */
+  readonly briefingPageTitles?: readonly string[];
+}
+
+/**
+ * An event template as the createEventTemplate action writes it, including
+ * the manager-scoped briefing root page it seeds.
+ */
+export const createEventTemplate = async (
+  prisma: PrismaClient,
+  {
+    name,
+    ownedById,
+    description,
+    visibility = EventVisibility.PUBLIC,
+    visibilityRoleIds = [],
+    roleAccess = [],
+    deletedAt,
+    positionNames = [],
+    briefingPageTitles = [],
+  }: CreateEventTemplateOptions,
+) => {
+  const template = await prisma.eventTemplate.create({
+    data: {
+      name,
+      description,
+      visibility,
+      deletedAt,
+      createdById: ownedById,
+      updatedById: ownedById,
+      ownedById,
+      visibilityRoles: {
+        create: visibilityRoleIds.map((roleId) => ({ roleId })),
+      },
+      roleAccess: {
+        create: roleAccess.map(({ roleId, type }) => ({ roleId, type })),
+      },
+      wikiPages: {
+        create: {
+          namespace: WikiPageNamespace.EVENT,
+          title: "BRIEFING",
+          slug: "briefing",
+          eventReadScope: WikiPageEventScope.MANAGERS,
+          eventEditScope: WikiPageEventScope.MANAGERS,
+          imageUploadability: WikiPageUploadability.RESTRICTED,
+          attachmentUploadability: WikiPageUploadability.RESTRICTED,
+          ownerId: ownedById,
+        },
+      },
+    },
+    include: { wikiPages: true },
+  });
+
+  const positions = [];
+  for (const [index, positionName] of positionNames.entries()) {
+    positions.push(
+      await prisma.eventPosition.create({
+        data: { templateId: template.id, name: positionName, order: index },
+      }),
+    );
+  }
+
+  const rootPage = template.wikiPages[0]!;
+  const briefingPages = [];
+  for (const [index, title] of briefingPageTitles.entries()) {
+    briefingPages.push(
+      await prisma.wikiPage.create({
+        data: {
+          namespace: WikiPageNamespace.EVENT,
+          templateId: template.id,
+          parentId: rootPage.id,
+          title,
+          slug: title.toLowerCase().replaceAll(/[^a-z0-9]+/g, "-"),
+          sortOrder: index,
+          eventReadScope: WikiPageEventScope.INHERIT,
+          eventEditScope: WikiPageEventScope.INHERIT,
+          createdById: ownedById,
+        },
+      }),
+    );
+  }
+
+  return { template, rootPage, positions, briefingPages };
+};
+
 export {
+  EventTemplateAccessType,
   FlowRoleAccessType,
   WikiPageAccessType,
   WikiPageEditability,

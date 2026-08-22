@@ -3,6 +3,7 @@
 import { wikiPageLinkHref } from "@/modules/wiki/utils/wikiPageLinks";
 import clsx from "clsx";
 import { useTranslations } from "next-intl";
+import { unstable_rethrow } from "next/navigation";
 import { type ReactNode } from "react";
 import { ErrorBoundary as _ErrorBoundary } from "react-error-boundary";
 import { BsExclamationOctagonFill } from "react-icons/bs";
@@ -16,8 +17,18 @@ interface Props {
 export const ErrorBoundary = ({ className, children }: Props) => {
   return (
     <_ErrorBoundary
-      // @ts-expect-error react-error-boundary's fallbackRender props don't match Fallback's stricter props
-      fallbackRender={(props) => <Fallback {...props} className={className} />}
+      fallbackRender={(props) => {
+        /**
+         * `notFound()`, `forbidden()` and `redirect()` reach a boundary as
+         * thrown errors. Rendering the generic tile for them would turn a
+         * 404 into "an unexpected error occurred" and swallow a redirect, so
+         * they are passed on to the framework's own handling.
+         */
+        unstable_rethrow(props.error);
+
+        // @ts-expect-error react-error-boundary's fallbackRender props don't match Fallback's stricter props
+        return <Fallback {...props} className={className} />;
+      }}
     >
       {children}
     </_ErrorBoundary>

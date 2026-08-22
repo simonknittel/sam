@@ -91,7 +91,7 @@ const DuplicateEventTemplateForm = ({
 
       <TextInput
         name="name"
-        label="Name der Vorlage"
+        label="Name"
         defaultValue={`${name} (Kopie)`}
         maxLength={EVENT_TEMPLATE_NAME_MAX_LENGTH}
         required

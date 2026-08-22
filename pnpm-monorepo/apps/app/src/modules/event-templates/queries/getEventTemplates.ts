@@ -124,6 +124,23 @@ export const getEventTemplates = cache(
   ),
 );
 
+/** Everything the create-event form prefills from a template */
+const PICKER_SELECT = {
+  id: true,
+  name: true,
+  description: true,
+  visibility: true,
+  coverImageId: true,
+  ownedById: true,
+  deletedAt: true,
+  roleAccess: { select: { roleId: true, type: true } },
+  visibilityRoles: { select: { roleId: true } },
+} satisfies Prisma.EventTemplateSelect;
+
+export type UsableEventTemplate = Prisma.EventTemplateGetPayload<{
+  select: typeof PICKER_SELECT;
+}>;
+
 /**
  * The non-deleted templates the viewer may use when creating an event, for
  * the picker. Deliberately not filtered by `canEdit` — using a template is
@@ -138,7 +155,7 @@ export const getUsableEventTemplates = cache(
       where: {
         AND: [visibleEventTemplatesWhere(viewer), { deletedAt: null }],
       },
-      select: LIST_SELECT,
+      select: PICKER_SELECT,
       orderBy: [{ name: "asc" }],
     });
 

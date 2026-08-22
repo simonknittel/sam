@@ -157,8 +157,9 @@ model EventActivity {
 model EventTemplate {
   id String @id @default(cuid(2))
 
-  /// Name of the template itself, not of the events created from it — those
-  /// take `eventNamePrefill` as their prefilled title.
+  /// Names the template in every list and prefills the created event's
+  /// title, which the organizer then adjusts — one field, because a template
+  /// is recognized by the kind of event it produces.
   name        String
   /// Prefills the created event's description
   description String?

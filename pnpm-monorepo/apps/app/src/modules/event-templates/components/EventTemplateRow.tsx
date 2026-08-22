@@ -9,6 +9,7 @@ import type { EventTemplateListEntry } from "../queries/getEventTemplates";
 import { getEventTemplatePath } from "../utils/eventTemplateConstraints";
 import { DuplicateEventTemplateButton } from "./DuplicateEventTemplateButton";
 import { RestoreEventTemplateButton } from "./RestoreEventTemplateButton";
+import { UseEventTemplateButton } from "./UseEventTemplateButton";
 
 interface Props {
   readonly entry: EventTemplateListEntry;
@@ -62,10 +63,14 @@ export const EventTemplateRow = ({ entry, showOwner }: Props) => {
             />
           )
         ) : (
-          <DuplicateEventTemplateButton
-            templateId={template.id}
-            name={template.name}
-          />
+          <>
+            <UseEventTemplateButton templateId={template.id} />
+
+            <DuplicateEventTemplateButton
+              templateId={template.id}
+              name={template.name}
+            />
+          </>
         )}
       </td>
     </TRow>

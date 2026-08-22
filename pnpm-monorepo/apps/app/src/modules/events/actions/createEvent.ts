@@ -5,22 +5,37 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { probeUploadImageDimensions } from "@/modules/common/utils/probeUploadImageDimensions";
+import { getEventTemplateById } from "@/modules/event-templates/queries/getEventTemplateById";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
+import { copyUpload } from "@/modules/uploads/utils/copyUpload";
+import { getEventWikiContext } from "@/modules/wiki/queries/getEventWikiContext";
+import { copyBriefingTree } from "@/modules/wiki/utils/copyBriefingTree";
 import {
   EventActivityType,
   EventSource,
   EventVisibility,
 } from "@sam-monorepo/database/client";
+import type { AuditEventInput } from "@sam-monorepo/domain";
 import { buildBriefingRootPageSeed } from "@sam-monorepo/domain";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { berlinWallTimeToUtc } from "../utils/berlinWallTime";
+import { clonePositions } from "../utils/clonePositions";
 import { createEventActivity } from "../utils/eventActivity";
+import {
+  eventContainerColumns,
+  toEventContainer,
+  toTemplateContainer,
+} from "../utils/eventContainer";
+import { buildPositionTree } from "../utils/positionTree";
 
 const WALL_TIME_SCHEMA = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, "Ungültiges Datum");
+
+/** The briefing copy dominates the runtime — same bound the wiki copy uses */
+const TRANSACTION_TIMEOUT_MS = 30_000;
 
 const schema = z.object({
   name: z.string().trim().min(1).max(128),
@@ -30,6 +45,13 @@ const schema = z.object({
   visibility: z.enum(EventVisibility),
   visibilityRoleIds: z.array(z.cuid()).max(50).optional(),
   coverImageId: z.cuid().optional(),
+  /** Set when the form was prefilled from a template (see the picker) */
+  templateId: z.cuid2().optional(),
+  /**
+   * The prefilled cover comes from the template and is not an upload of the
+   * submitter's own, so it travels as this flag instead of an upload id.
+   */
+  keepTemplateCover: z.boolean().optional(),
 });
 
 export const createEvent = createAuthenticatedAction(
@@ -96,45 +118,147 @@ export const createEvent = createAuthenticatedAction(
     }
 
     /**
-     * Create the event with its briefing root page and activity entry
+     * Re-check the template at action time: it may have been deleted or
+     * unshared since the form loaded, and the id itself is client input.
      */
-    const createdEvent = await prisma.$transaction(async (transaction) => {
-      const event = await transaction.event.create({
-        data: {
-          source: EventSource.APP,
-          name: data.name,
-          description: data.description || null,
-          startTime,
-          endTime,
-          visibility: data.visibility,
-          visibilityRoles: {
-            create: visibilityRoleIds.map((roleId) => ({ roleId })),
-          },
-          createdById: citizenId,
-          coverImageId: data.coverImageId ?? null,
-          wikiPages: {
-            create: buildBriefingRootPageSeed(citizenId),
-          },
-        },
-        select: {
-          id: true,
-          name: true,
-        },
-      });
+    const template = data.templateId
+      ? await getEventTemplateById(data.templateId)
+      : null;
+    if (data.templateId && template?.template.deletedAt !== null)
+      return {
+        error: "Vorlage nicht gefunden",
+        requestPayload: formData,
+      };
 
-      await createEventActivity(transaction, {
-        eventId: event.id,
-        citizenId,
-        type: EventActivityType.CREATED,
-        payload: null,
-      });
+    const templateContainer = template
+      ? toTemplateContainer(template.template.id)
+      : null;
 
-      return event;
-    });
+    const [templatePositions, templateBriefing, templateCover] =
+      templateContainer
+        ? await Promise.all([
+            prisma.eventPosition.findMany({
+              where: eventContainerColumns(templateContainer),
+              orderBy: { order: "asc" },
+              select: {
+                id: true,
+                parentPositionId: true,
+                name: true,
+                description: true,
+                fontSize: true,
+                backgroundColor: true,
+                textColor: true,
+                requiredRoles: { select: { id: true } },
+                requiredVariants: {
+                  select: { variantId: true, order: true },
+                  orderBy: { order: "asc" },
+                },
+              },
+            }),
+            getEventWikiContext(templateContainer),
+            data.keepTemplateCover &&
+            !data.coverImageId &&
+            template?.template.coverImageId
+              ? prisma.upload.findUnique({
+                  where: { id: template.template.coverImageId },
+                  select: {
+                    id: true,
+                    fileName: true,
+                    mimeType: true,
+                    size: true,
+                    width: true,
+                    height: true,
+                  },
+                })
+              : Promise.resolve(null),
+          ])
+        : [[], null, null];
+
+    /**
+     * Create the event with its briefing and activity entry
+     */
+    const createdEvent = await prisma.$transaction(
+      async (transaction) => {
+        /**
+         * The event gets its own copy of the template's cover, so editing or
+         * deleting one never touches the other.
+         */
+        const copiedCover = templateCover
+          ? await copyUpload(
+              transaction,
+              templateCover,
+              authentication.session.user.id,
+            )
+          : null;
+
+        const event = await transaction.event.create({
+          data: {
+            source: EventSource.APP,
+            name: data.name,
+            description: data.description || null,
+            startTime,
+            endTime,
+            visibility: data.visibility,
+            visibilityRoles: {
+              create: visibilityRoleIds.map((roleId) => ({ roleId })),
+            },
+            createdById: citizenId,
+            coverImageId: data.coverImageId ?? copiedCover?.id ?? null,
+            /**
+             * A template brings its own briefing, copied below; without one
+             * the event starts from the same seeded root page as always.
+             */
+            ...(templateBriefing
+              ? {}
+              : {
+                  wikiPages: { create: buildBriefingRootPageSeed(citizenId) },
+                }),
+          },
+          select: {
+            id: true,
+            name: true,
+          },
+        });
+
+        if (templateContainer) {
+          const positionIdBySourceId = await clonePositions(
+            transaction,
+            buildPositionTree(templatePositions),
+            {
+              container: toEventContainer(event.id),
+              parentPositionId: null,
+              startOrder: 0,
+            },
+          );
+
+          /**
+           * Copied after the lineup, so the pages' POSITION scopes can be
+           * remapped onto the event's own positions.
+           */
+          if (templateBriefing)
+            await copyBriefingTree(transaction, {
+              sourcePages: templateBriefing.pages,
+              targetContainer: toEventContainer(event.id),
+              createdByEntityId: citizenId,
+              positionIdBySourceId,
+            });
+        }
+
+        await createEventActivity(transaction, {
+          eventId: event.id,
+          citizenId,
+          type: EventActivityType.CREATED,
+          payload: null,
+        });
+
+        return event;
+      },
+      { timeout: TRANSACTION_TIMEOUT_MS },
+    );
 
     if (data.coverImageId) probeUploadImageDimensions(data.coverImageId);
 
-    await createAuditEvents([
+    const auditEvents: AuditEventInput[] = [
       {
         type: AuditEventType.EVENT_CREATED_IN_APP,
         data: {
@@ -143,7 +267,18 @@ export const createEvent = createAuthenticatedAction(
         },
         createdById: authentication.session.user.id,
       },
-    ]);
+    ];
+    if (template)
+      auditEvents.push({
+        type: AuditEventType.EVENT_CREATED_FROM_TEMPLATE,
+        data: {
+          eventId: createdEvent.id,
+          templateId: template.template.id,
+          templateName: template.template.name,
+        },
+        createdById: authentication.session.user.id,
+      });
+    await createAuditEvents(auditEvents);
 
     /**
      * Trigger notifications
@@ -178,6 +313,8 @@ export const createEvent = createAuthenticatedAction(
       visibility: formData.get("visibility"),
       visibilityRoleIds: formData.getAll("visibilityRole[]"),
       coverImageId: formData.get("coverImageId") || undefined,
+      templateId: formData.get("templateId") || undefined,
+      keepTemplateCover: formData.get("keepTemplateCover") === "1",
     }),
   },
 );

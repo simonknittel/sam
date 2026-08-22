@@ -235,7 +235,7 @@ The picker in the create-event modal, prefill, server-side seeding, and the Verw
 
 #### Status
 
-Not started.
+Done.
 
 #### Steps
 
@@ -248,6 +248,9 @@ Not started.
 
 - The template stays detached: no FK, nothing on the event references it afterwards.
 - Picker lists only non-deleted, readable templates; a template deleted between prefill and submit fails the action-time check gracefully.
+- The template's `name` is both its label in every list and the prefilled event title — the plan's "a template holds a title" and "a template has a name" are the same field, and a second one would only ever drift.
+- The prefilled cover cannot travel as an upload id (it belongs to the template, and the action only accepts the submitter's own uploads), so it travels as a `keepTemplateCover` flag; replacing it submits a real id, which wins.
+- `CreateContext` gained an optional per-open payload, which is what the "Verwenden" buttons use to preselect a template in the app-wide create-event modal.
 
 #### Verification
 
@@ -259,7 +262,7 @@ Playwright coverage for the new flows and final polish.
 
 #### Status
 
-Not started.
+Done.
 
 #### Steps
 
@@ -270,6 +273,9 @@ Not started.
 #### Notes
 
 - Unit tests exist only where logic is critical: the permission resolver, the clone id map, the scope-remapped copy (per test-pyramid guideline).
+- The E2E run surfaced a pre-existing app defect rather than a test problem: `SuspenseWithErrorBoundaryTile` caught `notFound()` and rendered its generic error tile, so every 404 raised inside it (the career flow settings page has the same shape) showed "Ein unerwarteter Fehler ist aufgetreten" instead of the 404 page. The boundary now passes Next's control-flow errors on via `unstable_rethrow`.
+- Second finding, left alone as out of scope: `CitizenInput` stays in its loading skeleton forever when `citizens.getAllCitizens` fails, which is what a viewer without `citizen;read` gets. Every citizen picker in the app shares this — the ownership transfer is only the newest one.
+- No screenshots in the changelog entry: the feature has no single screen that carries it, and the entry links straight to the section.
 
 #### Verification
 

@@ -46,6 +46,45 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-08-22-event-vorlagen",
+    date: "2026-08-22",
+    title: "Event-Vorlagen",
+    tags: ["Events", "Neu"],
+    isTracked: true,
+    requiresAuth: { resource: "event", action: "create" },
+    body: () => (
+      <>
+        <p>
+          Wiederkehrende Events lassen sich ab sofort als Vorlage speichern:
+          unter{" "}
+          <Link
+            href="/app/events/templates"
+            className="text-interaction-500 hover:underline focus-visible:underline"
+          >
+            Events &gt; Vorlagen
+          </Link>{" "}
+          legst du eine Vorlage mit Titel, Kurzbeschreibung, Titelbild,
+          Sichtbarkeit, kompletter Aufstellung und komplettem Briefing an.
+        </p>
+
+        <p>
+          Beim Erstellen eines Events wählst du die Vorlage oben im Dialog aus
+          &ndash; oder klickst in der Vorlagenübersicht auf
+          &ldquo;Verwenden&rdquo;. Alle Felder bleiben danach änderbar; die
+          übernommene Aufstellung startet unbesetzt und unveröffentlicht.
+        </p>
+
+        <p>
+          Vorlagen gehören zunächst nur dir. Mit der Berechtigung
+          &ldquo;Event-Vorlagen teilen&rdquo; kannst du sie für Rollen freigeben
+          &ndash; entweder zum Verwenden oder zum gemeinsamen Bearbeiten &ndash;
+          und den Besitz an andere Citizen übertragen.
+        </p>
+      </>
+    ),
+  },
+
+  {
     key: "2026-08-21-karrierebaeume-verwalten",
     date: "2026-08-21",
     title: "Karrierebäume verwalten",

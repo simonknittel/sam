@@ -36,8 +36,8 @@ export const CreateEventTemplateForm = ({ className, onSuccess }: Props) => {
     <form action={formAction} className={clsx(className)}>
       <TextInput
         name="name"
-        label="Name der Vorlage"
-        hint="Nur für die Vorlagenübersicht — der Titel des Events wird beim Erstellen gesetzt."
+        label="Name"
+        hint="Benennt die Vorlage und wird als Titel in das Event übernommen."
         maxLength={EVENT_TEMPLATE_NAME_MAX_LENGTH}
         defaultValue={getDefaultValueWithFallback("name", "")}
         required

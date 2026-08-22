@@ -137,8 +137,20 @@ export const createForms = {
   },
 };
 
+/**
+ * Per-open input for the form behind a modal id, e.g. the template a
+ * create-event modal starts from. Every form ignores what it does not
+ * declare, so the payload stays a plain optional prop bag.
+ */
+export interface CreateFormPayload {
+  readonly templateId?: string;
+}
+
 interface CreateContext {
-  readonly openCreateModal: (modalId: keyof typeof createForms) => void;
+  readonly openCreateModal: (
+    modalId: keyof typeof createForms,
+    payload?: CreateFormPayload,
+  ) => void;
 }
 
 const CreateContext = createContext<CreateContext | undefined>(undefined);
@@ -148,12 +160,14 @@ interface Props {
 }
 
 export const CreateContextProvider = ({ children }: Props) => {
-  const [currentlyOpenForm, setCurrentlyOpenForm] = useState<
-    keyof typeof createForms | null
-  >(null);
+  const [currentlyOpenForm, setCurrentlyOpenForm] = useState<{
+    readonly modalId: keyof typeof createForms;
+    readonly payload?: CreateFormPayload;
+  } | null>(null);
 
   const openCreateModal = useCallback(
-    (modalId: keyof typeof createForms) => setCurrentlyOpenForm(modalId),
+    (modalId: keyof typeof createForms, payload?: CreateFormPayload) =>
+      setCurrentlyOpenForm({ modalId, payload }),
     [],
   );
 
@@ -168,9 +182,10 @@ export const CreateContextProvider = ({ children }: Props) => {
     <CreateContext.Provider value={value}>
       {children}
 
-      {currentlyOpenForm && createForms[currentlyOpenForm] && (
+      {currentlyOpenForm && createForms[currentlyOpenForm.modalId] && (
         <ModalWithFormComponent
-          form={createForms[currentlyOpenForm]}
+          form={createForms[currentlyOpenForm.modalId]}
+          payload={currentlyOpenForm.payload}
           onRequestClose={() => setCurrentlyOpenForm(null)}
         />
       )}
@@ -180,11 +195,13 @@ export const CreateContextProvider = ({ children }: Props) => {
 
 interface ModalWithFormComponentProps {
   readonly form: (typeof createForms)[keyof typeof createForms];
+  readonly payload?: CreateFormPayload;
   readonly onRequestClose: () => void;
 }
 
 const ModalWithFormComponent = ({
   form,
+  payload,
   onRequestClose,
 }: ModalWithFormComponentProps) => {
   return (
@@ -201,7 +218,7 @@ const ModalWithFormComponent = ({
           </div>
         }
       >
-        <form.formComponent onSuccess={onRequestClose} />
+        <form.formComponent {...payload} onSuccess={onRequestClose} />
       </Suspense>
     </Modal>
   );
