@@ -54,27 +54,19 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
     body: () => (
       <>
         <p>
-          Events aus dieser App lassen sich ab sofort zusätzlich als Termin auf
-          dem Discord-Server anlegen &ndash; die umgekehrte Richtung des
-          bisherigen Imports. Die Option findest du beim Erstellen eines Events
-          sowie jederzeit danach unter Einstellungen des Events.
+          Events, die im SAM erstellt werden, lassen sich ab sofort zusätzlich
+          in Discord veröffentlichen. Die Option findest du beim Erstellen eines
+          Events sowie jederzeit danach unter Einstellungen des Events.
         </p>
 
         <p>
-          Du wählst dabei, ob der Termin auf einen Sprach- oder Bühnenkanal
-          zeigt oder auf einen frei wählbaren Ort &ndash; standardmäßig den Link
-          zum Event in dieser App. Titel, Kurzbeschreibung, Zeitraum und
-          Titelbild werden danach automatisch nach Discord übertragen; wird das
-          Event hier gelöscht oder wieder von Discord entfernt, verschwindet
-          auch der Termin dort.
+          Titel, Kurzbeschreibung, Zeitraum und Titelbild werden danach
+          automatisch nach Discord übertragen.
         </p>
 
         <p>
           Anmeldungen bleiben getrennt: wer auf Discord zusagt, ist damit nicht
-          hier angemeldet und umgekehrt. Bei eingeschränkten Events wirst du vor
-          dem Veröffentlichen gefragt &ndash; auf Discord sehen den Termin alle
-          Mitglieder des Servers. Event-Vorlagen können die Einstellung
-          mitbringen, sodass Events daraus direkt veröffentlicht werden.
+          hier angemeldet und umgekehrt.
         </p>
       </>
     ),
