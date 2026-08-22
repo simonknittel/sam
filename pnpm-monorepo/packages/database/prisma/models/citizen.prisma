@@ -21,6 +21,7 @@ model Entity {
   eventManagers                                Event[]                              @relation("eventManagers")
   createdEvents                                Event[]                              @relation("createdEvents")
   deletedEvents                                Event[]                              @relation("deletedEvents")
+  discordPublishedEvents                       Event[]                              @relation("discordPublishedEvents")
   eventParticipations                          EventParticipant[]                   @relation("citizen")
   cancelledEventParticipations                 EventParticipant[]                   @relation("cancelledBy")
   eventActivities                              EventActivity[]                      @relation("citizen")

@@ -15,6 +15,14 @@ enum EventVisibility {
   RESTRICTED
 }
 
+/// Where a guild scheduled event published by the app points on Discord.
+/// CHANNEL maps to Discord's VOICE/STAGE_INSTANCE entity types (derived from
+/// the picked channel's own type), EXTERNAL to a free-text location.
+enum EventDiscordPublishTarget {
+  CHANNEL
+  EXTERNAL
+}
+
 model Event {
   id     String      @id @default(cuid())
   source EventSource
@@ -24,6 +32,22 @@ model Event {
   discordCreatorId String?
   discordImage     String?
   discordGuildId   String?
+
+  /// App events published to the guild as a Discord scheduled event — the
+  /// reverse direction of the sync. Deliberately NOT discordId: that column
+  /// is the sync's upsert key, so reusing it would make the sync re-import
+  /// the app's own event as a duplicate DISCORD row. The sync skips these
+  /// ids instead (see the scrape-discord-events Lambda).
+  discordPublishedId   String?   @unique
+  discordPublishedAt   DateTime?
+  discordPublishedById String?
+  discordPublishedBy   Entity?   @relation("discordPublishedEvents", fields: [discordPublishedById], references: [id], onDelete: SetNull)
+
+  /// The publish target. Exactly one is set while the event is published and
+  /// both are NULL otherwise (enforced by a CHECK constraint, see migration
+  /// publish_events_to_discord).
+  discordPublishedChannelId String?
+  discordPublishedLocation  String?
 
   name        String
   startTime   DateTime
@@ -174,6 +198,15 @@ model EventTemplate {
   /// visibility roles. Unrelated to who may see the template itself.
   visibility      EventVisibility               @default(PUBLIC)
   visibilityRoles EventTemplateVisibilityRole[]
+
+  /// Publishes the created event to Discord. NULL means "do not publish".
+  /// EXTERNAL without a location falls back to the created event's URL in
+  /// the app, which the template cannot know upfront. A CHECK constraint
+  /// keeps the three columns consistent (see migration
+  /// publish_events_to_discord).
+  discordPublishTarget    EventDiscordPublishTarget?
+  discordPublishChannelId String?
+  discordPublishLocation  String?
 
   /// Who may use and edit the template (see EventTemplateAccessType)
   roleAccess EventTemplateRoleAccess[]
