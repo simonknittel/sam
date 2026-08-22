@@ -44,7 +44,7 @@ export const getEventParticipants = async (eventId: Event["id"]) => {
       recipientWhere,
     ],
   });
-  if (!participants || participants.length <= 0) return;
+  if (participants.length <= 0) return;
 
   return { event, participants };
 };

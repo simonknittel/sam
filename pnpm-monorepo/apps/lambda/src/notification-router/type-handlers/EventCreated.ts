@@ -26,7 +26,7 @@ export const EventCreatedHandler = async (payload: Payload) => {
   if (!recipientWhere) return;
 
   const citizens = await getNotifiableCitizens(recipientWhere);
-  if (!citizens || citizens.length <= 0) return;
+  if (citizens.length <= 0) return;
 
   /**
    * Publish notifications

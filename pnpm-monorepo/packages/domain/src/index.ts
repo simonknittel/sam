@@ -10,6 +10,11 @@ export {
   type AuditEventInput,
 } from "./AuditEventTypes.js";
 export { buildBriefingRootPageSeed } from "./buildBriefingRootPageSeed.js";
+export {
+  NOTIFIABLE_CITIZEN_WHERE,
+  buildEventRecipientWhere,
+  type EventRecipientInput,
+} from "./events/eventRecipients.js";
 export { isAllowedWebPushEndpointUrl } from "./isAllowedWebPushEndpointUrl.js";
 export { ORG_ID } from "./ORG_ID.js";
 export { calculateSilcBalances } from "./silc/calculateSilcBalances.js";
