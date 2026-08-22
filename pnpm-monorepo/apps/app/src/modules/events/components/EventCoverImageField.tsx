@@ -65,6 +65,15 @@ export const EventCoverImageField = ({
         optional, empfohlen 800x320 Pixel
       </p>
 
+      {/*
+        Carries "no cover" while none is selected — including mid-upload, so
+        submitting during one is a removal rather than a silent no-op the
+        update action would read as "field not part of this form".
+      */}
+      {!currentUpload && emptyValue !== undefined && (
+        <input type="hidden" name={name} value={emptyValue} />
+      )}
+
       {currentUpload ? (
         <div className="mt-2 flex flex-col gap-2">
           <input type="hidden" name={name} value={currentUpload} />
@@ -103,18 +112,12 @@ export const EventCoverImageField = ({
           </button>
         </div>
       ) : (
-        <>
-          {emptyValue !== undefined && (
-            <input type="hidden" name={name} value={emptyValue} />
-          )}
-
-          <input
-            type="file"
-            onChange={changeHandler}
-            accept="image/*"
-            className="mt-2 block w-full cursor-pointer rounded-secondary border border-neutral-800 bg-neutral-900 p-2 text-sm file:mr-2 file:cursor-pointer"
-          />
-        </>
+        <input
+          type="file"
+          onChange={changeHandler}
+          accept="image/*"
+          className="mt-2 block w-full cursor-pointer rounded-secondary border border-neutral-800 bg-neutral-900 p-2 text-sm file:mr-2 file:cursor-pointer"
+        />
       )}
     </div>
   );
