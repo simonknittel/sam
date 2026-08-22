@@ -88,4 +88,31 @@ production token. Deployments read the variable from Vercel (see
 
 ## Bot Invite Link with required scopes
 
-- <https://discord.com/api/oauth2/authorize?client_id=XXX&permissions=0&scope=bot>
+Replace `XXX` with the application's client id (`DISCORD_CLIENT_ID`):
+
+```
+https://discord.com/oauth2/authorize?client_id=XXX&scope=bot&permissions=17600775980032
+```
+
+The `bot` scope covers everything the app asks of the bot; the permission
+integer is the sum of three flags:
+
+| Permission      | Bit       | Value          | Needed for                                                                   |
+| --------------- | --------- | -------------- | ---------------------------------------------------------------------------- |
+| `VIEW_CHANNEL`  | `1 << 10` | 1024           | Listing the voice and stage channels an event can be published into           |
+| `MANAGE_EVENTS` | `1 << 33` | 8589934592     | Editing and deleting guild scheduled events, including ones the bot didn't create |
+| `CREATE_EVENTS` | `1 << 44` | 17592186044416 | Creating guild scheduled events                                               |
+
+The event permissions are what
+[publishing app events to Discord](../pnpm-monorepo/apps/app/src/modules/events/utils/discordPublishing.ts)
+needs; without them publishing fails with `Missing Permissions` while
+everything else keeps working. `VIEW_CHANNEL` is usually already covered by
+the guild's `@everyone` role, but granting it to the bot's own role keeps it
+working if that baseline is ever tightened.
+
+Re-inviting a bot that is already in the guild is safe and is how permissions
+are added later — it updates the bot's managed role rather than adding a
+second membership. Check what it actually holds first (`Server Settings →
+Roles`, or the guild's `roles` endpoint): a bot with no managed role runs on
+`@everyone` alone, so the invite link must carry every permission it needs
+rather than only the new ones.
