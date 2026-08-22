@@ -1,10 +1,13 @@
+// See buildBriefingRootPageSeed: enum values come from the browser-safe
+// entry so the Prisma runtime stays out of client bundles. The type-only
+// imports below are erased, so they may use the full client entry.
+import { EventVisibility } from "@sam-monorepo/database/browser";
 import type {
   Entity,
   Event,
   EventVisibilityRole,
   Prisma,
 } from "@sam-monorepo/database/client";
-import { EventVisibility } from "@sam-monorepo/database/client";
 
 export type EventRecipientInput = Pick<Event, "visibility" | "createdById"> & {
   readonly visibilityRoles: readonly Pick<EventVisibilityRole, "roleId">[];

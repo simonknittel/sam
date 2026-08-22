@@ -3,6 +3,7 @@
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionButton";
 import { Textarea } from "@/modules/common/components/form/Textarea";
+import { api } from "@/trpc/react";
 import { type Entity, type Event } from "@sam-monorepo/database/browser";
 import { FaTrash } from "react-icons/fa";
 import { removeEventParticipant } from "../actions/removeEventParticipant";
@@ -20,10 +21,16 @@ export const RemoveEventParticipant = ({
   citizenId,
   citizenHandle,
 }: Props) => {
+  const utils = api.useUtils();
+
   return (
     <ConfirmActionButton
       className={className}
       action={removeEventParticipant}
+      /** The removed citizen becomes addable again */
+      onSuccess={() =>
+        void utils.events.getAddableParticipantIds.invalidate({ eventId })
+      }
       hiddenFields={[
         { name: "eventId", value: eventId },
         { name: "citizenId", value: citizenId },

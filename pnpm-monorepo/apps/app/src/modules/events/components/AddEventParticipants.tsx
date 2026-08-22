@@ -21,6 +21,7 @@ interface Props {
 export const AddEventParticipants = ({ className, eventId }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const [submitIsPending, startSubmitTransition] = useTransition();
+  const utils = api.useUtils();
 
   /**
    * Only the citizens who can see the event and are not participating yet.
@@ -43,7 +44,11 @@ export const AddEventParticipants = ({ className, eventId }: Props) => {
 
   const formAction = (formData: FormData) => {
     startSubmitTransition(async () => {
-      if (await runAction(addEventParticipants, formData)) setIsOpen(false);
+      if (!(await runAction(addEventParticipants, formData))) return;
+
+      setIsOpen(false);
+      /** Whoever was just added must not show up in the next opening */
+      await utils.events.getAddableParticipantIds.invalidate({ eventId });
     });
   };
 
