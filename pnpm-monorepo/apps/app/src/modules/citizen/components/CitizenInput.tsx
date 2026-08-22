@@ -23,6 +23,11 @@ interface BaseProps {
   readonly name: string;
   readonly disabled?: boolean;
   readonly autoFocus?: boolean;
+  /**
+   * Id of the form the value belongs to. Needed when the input sits in
+   * a portal outside its form, e.g. inside a ConfirmActionButton dialog.
+   */
+  readonly form?: string;
 }
 
 interface SingleProps extends BaseProps {
@@ -44,6 +49,7 @@ export const CitizenInput = ({
   multiple,
   defaultValue,
   autoFocus,
+  form,
 }: Props) => {
   const [query, setQuery] = useState("");
 
@@ -88,6 +94,7 @@ export const CitizenInput = ({
               : undefined
           }
           autoFocus={autoFocus}
+          form={form}
         />
       ) : (
         <Single
@@ -101,6 +108,7 @@ export const CitizenInput = ({
               : undefined
           }
           autoFocus={autoFocus}
+          form={form}
         />
       )}
     </div>
@@ -137,6 +145,7 @@ type SingleComponentProps = Readonly<{
   defaultValue?: Entity;
   disabled?: boolean;
   autoFocus?: boolean;
+  form?: string;
 }>;
 
 const Single = ({
@@ -146,6 +155,7 @@ const Single = ({
   defaultValue,
   disabled,
   autoFocus,
+  form,
 }: SingleComponentProps) => {
   const [selectedCitizen, setSelectedCitizen] = useState<Entity | null>(
     defaultValue || null,
@@ -185,7 +195,12 @@ const Single = ({
       </Combobox>
 
       {selectedCitizen && (
-        <input type="hidden" name={name} value={selectedCitizen.id} />
+        <input
+          type="hidden"
+          name={name}
+          value={selectedCitizen.id}
+          form={form}
+        />
       )}
     </>
   );
@@ -198,6 +213,7 @@ type MultipleComponentProps = Readonly<{
   filterResult: FuseResult<Entity>[];
   defaultValue?: Entity[];
   autoFocus?: boolean;
+  form?: string;
 }>;
 
 const Multiple = ({
@@ -207,6 +223,7 @@ const Multiple = ({
   filterResult,
   defaultValue,
   autoFocus,
+  form,
 }: MultipleComponentProps) => {
   const { isPending, data: dataCitizensGroupedByVisibleRoles } =
     api.citizens.getCitizensGroupedByVisibleRoles.useQuery(undefined, {
@@ -323,6 +340,7 @@ const Multiple = ({
                 type="hidden"
                 name={`${name}[]`}
                 value={citizen.id}
+                form={form}
               />
             </li>
           ))}

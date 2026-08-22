@@ -185,7 +185,7 @@ The Freigabe tab: role shares in two tiers and ownership transfer that keeps the
 
 #### Status
 
-Not started.
+Done.
 
 #### Steps
 
@@ -198,6 +198,8 @@ Not started.
 
 - An owner without `eventTemplateShare;manage` gets no Freigabe tab; existing shares keep functioning — only `event;manage` can then change them.
 - Transferring to a citizen without `event;create` is allowed (documented decision).
+- The Freigabe route 404s rather than 403s without `canManageShares`, so the tab's absence and its inaccessibility look the same.
+- `CitizenInput` gained a `form` prop: the transfer picker lives inside the confirm dialog's portal, outside the form element it submits to.
 
 #### Verification
 
