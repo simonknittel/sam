@@ -1,5 +1,6 @@
 import { ScrollToTopOnNavigation } from "@/modules/common/components/ScrollToTopOnNavigation";
 import { SidebarLayout } from "@/modules/common/components/layouts/SidebarLayout";
+import { toEventContainer } from "@/modules/events/utils/eventContainer";
 import { CreateWikiPageProvider } from "@/modules/wiki/components/CreateWikiPageProvider";
 import { EventWikiSidebar } from "@/modules/wiki/components/EventWikiSidebar";
 import { WikiPageHrefModeProvider } from "@/modules/wiki/components/WikiPageHrefModeProvider";
@@ -22,7 +23,8 @@ export default async function Layout({
   params,
 }: LayoutProps<"/app/events/[id]/briefing">) {
   const { id } = await params;
-  const context = await getEventWikiContext(id);
+  const container = toEventContainer(id);
+  const context = await getEventWikiContext(container);
 
   /**
    * The gate: events without a root page (created before the briefing
@@ -31,7 +33,7 @@ export default async function Layout({
    */
   if (!context || !hasReadableEventWikiRoot(context)) notFound();
 
-  const hrefMode = createEventWikiHrefMode(id, context.rootPage.id);
+  const hrefMode = createEventWikiHrefMode(container, context.rootPage.id);
   const createTargets = getManageableWikiPageTargets(context);
 
   return (
@@ -39,10 +41,10 @@ export default async function Layout({
       <CreateWikiPageProvider
         targets={createTargets}
         allowTopLevel={false}
-        eventId={id}
+        container={container}
       >
         <SidebarLayout
-          sidebar={<EventWikiSidebar eventId={id} />}
+          sidebar={<EventWikiSidebar container={container} />}
           mobileToggleLabel="Seiten"
           mobileToggleIcon={<FaSitemap />}
           sidebarWidthClassName="md:w-80"

@@ -58,12 +58,14 @@ describe("get upload usages", () => {
           title: "Erste Seite",
           slug: "erste-seite",
           eventId: null,
+          templateId: null,
         },
         {
           id: "page-2",
           title: "Zweite Seite",
           slug: "zweite-seite",
           eventId: null,
+          templateId: null,
         },
       ],
     });
@@ -83,6 +85,7 @@ describe("get upload usages", () => {
           title: "BRIEFING",
           slug: "briefing",
           eventId: "event-1",
+          templateId: null,
         },
       ],
     });
@@ -99,6 +102,7 @@ describe("get upload usages", () => {
       title: "Seite",
       slug: "seite",
       eventId: null,
+      templateId: null,
     };
 
     const usages = getUploadUsages({

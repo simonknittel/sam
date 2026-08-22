@@ -22,15 +22,19 @@ import {
   useState,
   useTransition,
 } from "react";
+import {
+  eventContainerFormValues,
+  type EventContainer,
+} from "../../utils/eventContainer";
 import { Position, type PositionType } from "../Position";
 
 interface LineupOrderContext {
   /**
-   * The event the rendered lineup belongs to. Positions carry a nullable
-   * `eventId` since the table also holds template blueprints, so the id
-   * comes from the page rather than from a row.
+   * The event or template the rendered lineup belongs to. A position row
+   * carries only one of the two container columns, so the container comes
+   * from the page rather than from a row.
    */
-  eventId: string;
+  container: EventContainer;
   positions: PositionType[];
   handleDragStart: (
     e: MouseEvent<HTMLButtonElement>,
@@ -50,7 +54,7 @@ const LineupOrderContext = createContext<LineupOrderContext | undefined>(
 
 interface Props {
   readonly className?: string;
-  readonly eventId: string;
+  readonly container: EventContainer;
   readonly positions: PositionType[];
   readonly showManage?: boolean;
   readonly variants: (Manufacturer & {
@@ -65,7 +69,7 @@ interface Props {
 
 export const LineupOrderProvider = ({
   className,
-  eventId,
+  container,
   positions,
   showManage,
   variants,
@@ -180,7 +184,10 @@ export const LineupOrderProvider = ({
          * Save to database
          */
         const formData = new FormData();
-        formData.append("eventId", eventId);
+        for (const [name, value] of Object.entries(
+          eventContainerFormValues(container),
+        ))
+          formData.append(name, value);
         const mapPosition = (position: MappedPosition): MappedPosition => ({
           id: position.id,
           order: position.order,
@@ -194,18 +201,18 @@ export const LineupOrderProvider = ({
         await runAction(updateEventLineupOrder, formData);
       });
     },
-    [eventId, handleCancel, isDragging, positions],
+    [container, handleCancel, isDragging, positions],
   );
 
   const value = useMemo(
     () => ({
-      eventId,
+      container,
       positions,
       handleDragStart,
       handleDragEnd,
       isDragging,
     }),
-    [eventId, positions, handleDragStart, handleDragEnd, isDragging],
+    [container, positions, handleDragStart, handleDragEnd, isDragging],
   );
 
   return (

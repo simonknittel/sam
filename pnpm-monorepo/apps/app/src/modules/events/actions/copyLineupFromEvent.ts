@@ -7,6 +7,7 @@ import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { clonePositions } from "../utils/clonePositions";
+import { toEventContainer } from "../utils/eventContainer";
 import { isAllowedToManagePositions } from "../utils/isAllowedToManagePositions";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
 import { buildPositionTree } from "../utils/positionTree";
@@ -135,7 +136,7 @@ export const copyLineupFromEvent = createAuthenticatedAction(
 
     await prisma.$transaction((transaction) =>
       clonePositions(transaction, buildPositionTree(sourcePositions), {
-        eventId: targetEvent.id,
+        container: toEventContainer(targetEvent.id),
         parentPositionId: null,
         startOrder: targetEvent.positions.length,
       }),

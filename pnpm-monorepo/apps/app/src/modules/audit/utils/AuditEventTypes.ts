@@ -954,6 +954,177 @@ export const AuditEventDefinitions: {
       `${data.positionCount} event position(s) copied from ${data.sourcePositionId} (event: ${data.sourceEventId}) ${data.placement} ${data.targetPositionId} (event: ${data.targetEventId})`,
   },
 
+  [AuditEventType.EVENT_TEMPLATE_POSITION_CREATED]: {
+    type: AuditEventType.EVENT_TEMPLATE_POSITION_CREATED,
+    data: {
+      templateId: "string",
+      positionId: "string",
+      name: "string",
+      variantIds: ["string"],
+      parentPositionId: "string",
+    },
+    message: (data) =>
+      `Event template position "${data.name}" created (template: ${data.templateId})`,
+  },
+
+  [AuditEventType.EVENT_TEMPLATE_POSITION_UPDATED]: {
+    type: AuditEventType.EVENT_TEMPLATE_POSITION_UPDATED,
+    data: {
+      templateId: "string",
+      positionId: "string",
+      previousName: "string",
+      newName: "string",
+      previousFontSize: "string",
+      newFontSize: "string",
+      previousBackgroundColor: "string",
+      newBackgroundColor: "string",
+      previousTextColor: "string",
+      newTextColor: "string",
+    },
+    message: (data) =>
+      `Event template position updated (template: ${data.templateId}, position: ${data.positionId})`,
+  },
+
+  [AuditEventType.EVENT_TEMPLATE_POSITION_NAME_UPDATED]: {
+    type: AuditEventType.EVENT_TEMPLATE_POSITION_NAME_UPDATED,
+    data: {
+      templateId: "string",
+      positionId: "string",
+      previousName: "string",
+      newName: "string",
+    },
+    message: (data) =>
+      `Event template position name updated: "${data.previousName}" → "${data.newName}" (template: ${data.templateId})`,
+  },
+
+  [AuditEventType.EVENT_TEMPLATE_POSITION_DELETED]: {
+    type: AuditEventType.EVENT_TEMPLATE_POSITION_DELETED,
+    data: {
+      templateId: "string",
+      positionId: "string",
+      name: "string",
+    },
+    message: (data) =>
+      `Event template position deleted (template: ${data.templateId}, position: ${data.positionId})`,
+  },
+
+  [AuditEventType.EVENT_TEMPLATE_LINEUP_ORDER_CHANGED]: {
+    type: AuditEventType.EVENT_TEMPLATE_LINEUP_ORDER_CHANGED,
+    data: {
+      templateId: "string",
+    },
+    message: (data) =>
+      `Event template lineup order changed (template: ${data.templateId})`,
+  },
+
+  [AuditEventType.EVENT_TEMPLATE_POSITION_COPIED]: {
+    type: AuditEventType.EVENT_TEMPLATE_POSITION_COPIED,
+    data: {
+      sourceEventId: "string",
+      sourceTemplateId: "string",
+      sourcePositionId: "string",
+      targetEventId: "string",
+      targetTemplateId: "string",
+      targetPositionId: "string",
+      placement: "after",
+      positionCount: 0,
+    },
+    message: (data) =>
+      `${data.positionCount} position(s) copied from ${data.sourcePositionId} (${data.sourceTemplateId ? `template: ${data.sourceTemplateId}` : `event: ${data.sourceEventId}`}) ${data.placement} ${data.targetPositionId} (${data.targetTemplateId ? `template: ${data.targetTemplateId}` : `event: ${data.targetEventId}`})`,
+  },
+
+  [AuditEventType.EVENT_TEMPLATE_CREATED]: {
+    type: AuditEventType.EVENT_TEMPLATE_CREATED,
+    data: {
+      templateId: "string",
+      name: "string",
+    },
+    message: (data) =>
+      `Event template "${data.name}" created (${data.templateId})`,
+  },
+
+  [AuditEventType.EVENT_TEMPLATE_UPDATED]: {
+    type: AuditEventType.EVENT_TEMPLATE_UPDATED,
+    data: {
+      templateId: "string",
+      previousName: "string",
+      name: "string",
+      visibility: "PUBLIC",
+      visibilityRoleIds: ["string"],
+      coverImageChanged: false,
+    },
+    message: (data) =>
+      `Event template "${data.name}" updated (${data.templateId})`,
+  },
+
+  [AuditEventType.EVENT_TEMPLATE_DUPLICATED]: {
+    type: AuditEventType.EVENT_TEMPLATE_DUPLICATED,
+    data: {
+      templateId: "string",
+      name: "string",
+      sourceTemplateId: "string",
+      sourceName: "string",
+      positionCount: 0,
+      pageCount: 0,
+    },
+    message: (data) =>
+      `Event template "${data.sourceName}" (${data.sourceTemplateId}) duplicated as "${data.name}" (${data.templateId})`,
+  },
+
+  [AuditEventType.EVENT_TEMPLATE_DELETED]: {
+    type: AuditEventType.EVENT_TEMPLATE_DELETED,
+    data: {
+      templateId: "string",
+      name: "string",
+    },
+    message: (data) =>
+      `Event template "${data.name}" deleted (${data.templateId})`,
+  },
+
+  [AuditEventType.EVENT_TEMPLATE_RESTORED]: {
+    type: AuditEventType.EVENT_TEMPLATE_RESTORED,
+    data: {
+      templateId: "string",
+      name: "string",
+    },
+    message: (data) =>
+      `Event template "${data.name}" restored (${data.templateId})`,
+  },
+
+  [AuditEventType.EVENT_TEMPLATE_ROLE_ACCESS_UPDATED]: {
+    type: AuditEventType.EVENT_TEMPLATE_ROLE_ACCESS_UPDATED,
+    data: {
+      templateId: "string",
+      readRoleIds: ["string"],
+      editRoleIds: ["string"],
+    },
+    message: (data) =>
+      `Event template shares updated (${data.templateId}): ${data.readRoleIds.length} read, ${data.editRoleIds.length} edit`,
+  },
+
+  [AuditEventType.EVENT_TEMPLATE_OWNERSHIP_TRANSFERRED]: {
+    type: AuditEventType.EVENT_TEMPLATE_OWNERSHIP_TRANSFERRED,
+    data: {
+      templateId: "string",
+      name: "string",
+      previousOwnerId: "string",
+      newOwnerId: "string",
+    },
+    message: (data) =>
+      `Event template "${data.name}" (${data.templateId}) transferred from ${data.previousOwnerId ?? "nobody"} to ${data.newOwnerId}`,
+  },
+
+  [AuditEventType.EVENT_CREATED_FROM_TEMPLATE]: {
+    type: AuditEventType.EVENT_CREATED_FROM_TEMPLATE,
+    data: {
+      eventId: "string",
+      templateId: "string",
+      templateName: "string",
+    },
+    message: (data) =>
+      `Event ${data.eventId} created from template "${data.templateName}" (${data.templateId})`,
+  },
+
   [AuditEventType.CITIZEN_CREATED]: {
     type: AuditEventType.CITIZEN_CREATED,
     data: {
@@ -1276,6 +1447,22 @@ export const AuditEventDefinitions: {
     },
     message: (data) =>
       `Event wiki page scopes updated (${data.pageId}, event ${data.eventId})`,
+  },
+
+  [AuditEventType.WIKI_PAGE_TEMPLATE_SCOPES_UPDATED]: {
+    type: AuditEventType.WIKI_PAGE_TEMPLATE_SCOPES_UPDATED,
+    data: {
+      pageId: "string",
+      templateId: "string",
+      readScope: "PARTICIPANTS",
+      readScopePositionId: null,
+      editScope: "MANAGERS",
+      editScopePositionId: null,
+      imageUploadability: "INHERIT",
+      attachmentUploadability: "INHERIT",
+    },
+    message: (data) =>
+      `Event template briefing page scopes updated (${data.pageId}, template ${data.templateId})`,
   },
 
   [AuditEventType.WIKI_PAGE_ROLE_ACCESS_PRUNED]: {

@@ -37,6 +37,7 @@ export type WikiSharedContextPage = Pick<
   | "deletedAt"
   | "deletedById"
   | "eventId"
+  | "templateId"
 >;
 
 export type WikiContextPage = WikiSharedContextPage &
@@ -115,6 +116,7 @@ export const getWikiContext = cache(
           deletedAt: true,
           deletedById: true,
           eventId: true,
+          templateId: true,
           roleAccess: { select: { roleId: true, type: true } },
         },
       }),

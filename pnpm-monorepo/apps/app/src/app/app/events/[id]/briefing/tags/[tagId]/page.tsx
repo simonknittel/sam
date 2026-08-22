@@ -1,6 +1,7 @@
 import { prisma } from "@/db";
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
+import { toEventContainer } from "@/modules/events/utils/eventContainer";
 import { WikiTagPageContent } from "@/modules/wiki/components/WikiTagPageContent";
 import {
   getEventWikiContext,
@@ -34,7 +35,7 @@ export const generateMetadata = async (
   props: PageProps<"/app/events/[id]/briefing/tags/[tagId]">,
 ): Promise<Metadata> => {
   const { id } = await props.params;
-  const context = await getEventWikiContext(id);
+  const context = await getEventWikiContext(toEventContainer(id));
   if (!context || !hasReadableEventWikiRoot(context)) return {};
 
   const tag = await getTag(props.params);
@@ -65,14 +66,14 @@ interface TagPageListProps {
 const TagPageList = async ({ params }: TagPageListProps) => {
   const { id } = await params;
   const [context, tag] = await Promise.all([
-    getEventWikiContext(id),
+    getEventWikiContext(toEventContainer(id)),
     getTag(params),
   ]);
   if (!context || !hasReadableEventWikiRoot(context)) notFound();
   if (!tag) notFound();
 
   const hrefMode = createEventWikiHrefMode(
-    context.event.id,
+    context.container,
     context.rootPage?.id ?? null,
   );
 

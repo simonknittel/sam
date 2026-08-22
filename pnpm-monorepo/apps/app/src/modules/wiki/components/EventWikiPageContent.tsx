@@ -62,7 +62,7 @@ export const EventWikiPageContent = async ({
   ]);
 
   const hrefMode = createEventWikiHrefMode(
-    context.event.id,
+    context.container,
     context.rootPage?.id ?? null,
   );
   const isRootPage = isEventWikiRootPage(page);

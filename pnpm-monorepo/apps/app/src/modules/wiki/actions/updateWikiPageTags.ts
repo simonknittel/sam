@@ -4,12 +4,14 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { getWikiPageContainer } from "@/modules/events/utils/eventContainer";
 import { z } from "zod";
 import {
   getWikiPageScopedContext,
   isWikiScopeFrozen,
   revalidateWikiScope,
 } from "../queries/getWikiPageScopedContext";
+import { findOrCreateWikiTags } from "../utils/findOrCreateWikiTags";
 
 const tagNameSchema = z
   .string()
@@ -90,26 +92,18 @@ export const updateWikiPageTags = createAuthenticatedAction(
 
     /**
      * Case-insensitive find-or-create per added name, scoped to the page's
-     * event (or the global wiki). The display casing of an existing tag wins
-     * over the submitted one.
+     * container (or the global wiki). The display casing of an existing tag
+     * wins over the submitted one.
      */
-    const addedTags = [];
-    for (const name of addedNames) {
-      const existing = await prisma.wikiTag.findFirst({
-        where: {
-          name: { equals: name, mode: "insensitive" },
-          eventId: page.eventId,
-        },
-        select: { id: true, name: true },
-      });
-      addedTags.push(
-        existing ??
-          (await prisma.wikiTag.create({
-            data: { name, eventId: page.eventId, createdById: citizenId },
-            select: { id: true, name: true },
-          })),
-      );
-    }
+    const addedTagsByLower = await findOrCreateWikiTags(
+      prisma,
+      addedNames,
+      getWikiPageContainer(page),
+      citizenId,
+    );
+    const addedTags = addedNames.map((name) =>
+      addedTagsByLower.get(name.toLocaleLowerCase())!,
+    );
 
     const removedTagIds = removedAssignments.map(
       (assignment) => assignment.tagId,

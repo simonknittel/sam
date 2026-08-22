@@ -2,10 +2,11 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
-import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { getLineupPath } from "../utils/eventContainer";
+import { buildPositionNameUpdatedAuditEvent } from "../utils/lineupAuditEvents";
 import { requireManageablePosition } from "../utils/requireManageablePosition";
 
 const schema = z.object({
@@ -20,7 +21,7 @@ export const updateEventPositionName = createAuthenticatedAction(
     /**
      * Authorize the request
      */
-    const { position, failure } = await requireManageablePosition(
+    const { position, container, failure } = await requireManageablePosition(
       data.id,
       formData,
       t,
@@ -40,22 +41,21 @@ export const updateEventPositionName = createAuthenticatedAction(
     });
 
     await createAuditEvents([
-      {
-        type: AuditEventType.EVENT_POSITION_NAME_UPDATED,
-        data: {
-          eventId: position.event.id,
+      buildPositionNameUpdatedAuditEvent(
+        container,
+        {
           positionId: position.id,
           previousName: position.name,
           newName: data.name,
         },
-        createdById: authentication.session.user.id,
-      },
+        authentication.session.user.id,
+      ),
     ]);
 
     /**
      * Revalidate cache(s)
      */
-    revalidatePath(`/app/events/${position.event.id}/lineup`);
+    revalidatePath(getLineupPath(container));
 
     /**
      * Respond with the result

@@ -1,7 +1,10 @@
 import { requireAuthentication } from "@/modules/auth/server";
 import { SubNavigation } from "@/modules/common/components/SubNavigation";
+import {
+  getBriefingPath,
+  toEventContainer,
+} from "@/modules/events/utils/eventContainer";
 import { getEventWikiContext } from "@/modules/wiki/queries/getEventWikiContext";
-import { getEventWikiBasePath } from "@/modules/wiki/utils/wikiPageHref";
 import {
   EventSource,
   type Entity,
@@ -26,7 +29,7 @@ export const Navigation = async ({ className, event }: Props) => {
     await Promise.all([
       isLineupVisible(event),
       authentication.authorize("orgFleet", "read"),
-      getEventWikiContext(event.id),
+      getEventWikiContext(toEventContainer(event.id)),
       event.source === EventSource.APP
         ? isAllowedToManageEvent(event)
         : Promise.resolve(false),
@@ -52,7 +55,7 @@ export const Navigation = async ({ className, event }: Props) => {
           {
             name: "Briefing",
             icon: <FaBook />,
-            path: getEventWikiBasePath(event.id),
+            path: getBriefingPath(toEventContainer(event.id)),
             matchesSubpaths: true,
           },
         ]

@@ -1,3 +1,4 @@
+import { eventContainerSchema } from "@/modules/events/utils/eventContainer";
 import { log } from "@/modules/logging";
 import {
   getEventWikiContext,
@@ -17,21 +18,21 @@ import { protectedProcedure } from "../../trpc";
 /**
  * Pages in depth-first tree order for hierarchy selects: managed ones for
  * the global "Neue Seite" form (default), readable ones e.g. for the
- * page-index config. An eventId scopes the tree to that event's wiki,
- * gated like the other event surfaces; a variantId to the subtree embedded
- * on that variant's page, gated like its routes — this is what keeps the
- * embed's create/move targets inside the subtree.
+ * page-index config. A container scopes the tree to that event's or
+ * template's briefing, gated like the other briefing surfaces; a variantId
+ * to the subtree embedded on that variant's page, gated like its routes —
+ * this is what keeps the embed's create/move targets inside the subtree.
  */
 export const getPageTargets = protectedProcedure
   .input(
     z
       .object({
         permission: z.enum(["manage", "read"]),
-        eventId: z.cuid().optional(),
+        container: eventContainerSchema.optional(),
         variantId: z.cuid().optional(),
       })
-      .refine((input) => !(input.eventId && input.variantId), {
-        message: "eventId and variantId are mutually exclusive",
+      .refine((input) => !(input.container && input.variantId), {
+        message: "container and variantId are mutually exclusive",
       })
       .optional(),
   )
@@ -53,8 +54,8 @@ export const getPageTargets = protectedProcedure
             );
       }
 
-      const context = input?.eventId
-        ? await getEventWikiContext(input.eventId).then((eventContext) =>
+      const context = input?.container
+        ? await getEventWikiContext(input.container).then((eventContext) =>
             eventContext && hasReadableEventWikiRoot(eventContext)
               ? eventContext
               : null,

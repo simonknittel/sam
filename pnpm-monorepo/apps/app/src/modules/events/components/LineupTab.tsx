@@ -13,6 +13,7 @@ import {
 } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import dynamic from "next/dynamic";
+import { toEventContainer } from "../utils/eventContainer";
 import { CopyLineupFromEventButton } from "./CopyLineupFromEventButton";
 import { CreateOrUpdateEventPosition } from "./CreateOrUpdateEventPosition";
 import { DiscordWarning } from "./DiscordWarning";
@@ -68,7 +69,7 @@ export const LineupTab = ({
             <UpdateEventLineupEnabled event={event} />
 
             <CreateOrUpdateEventPosition
-              eventId={event.id}
+              container={toEventContainer(event.id)}
               variants={variants}
             />
 
@@ -100,7 +101,7 @@ export const LineupTab = ({
 
       {event.positions.length > 0 ? (
         <Positions
-          eventId={event.id}
+          container={toEventContainer(event.id)}
           positions={event.positions}
           canManagePositions={canManagePositions}
           variants={variants}

@@ -4,6 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { getEventContainerPath } from "@/modules/events/utils/eventContainer";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import {
   WikiPageEventScope,
@@ -188,39 +189,51 @@ export const updateEventWikiPagePermissions = createAuthenticatedAction(
         updatedById: authentication.session.entity?.id ?? null,
       },
     });
-    const [publishClaim] = leavesManagers
-      ? await prisma.$transaction([
-          prisma.event.updateMany({
-            where: { id: context.event.id, briefingPublishedAt: null },
-            data: { briefingPublishedAt: new Date() },
-          }),
-          scopeUpdate,
-        ])
-      : [null, await scopeUpdate];
+    /**
+     * Only a real event publishes: inside a template the scopes are stored
+     * metadata for the future event, with nobody to notify yet.
+     */
+    const event = context.event;
+    const [publishClaim] =
+      leavesManagers && event
+        ? await prisma.$transaction([
+            prisma.event.updateMany({
+              where: { id: event.id, briefingPublishedAt: null },
+              data: { briefingPublishedAt: new Date() },
+            }),
+            scopeUpdate,
+          ])
+        : [null, await scopeUpdate];
 
+    const scopePayload = {
+      pageId: page.id,
+      readScope: data.readScope,
+      readScopePositionId: readPosition.value,
+      editScope: data.editScope,
+      editScopePositionId: editPositionId,
+      imageUploadability: data.imageUploadability,
+      attachmentUploadability: data.attachmentUploadability,
+    };
     await createAuditEvents([
-      {
-        type: AuditEventType.WIKI_PAGE_EVENT_SCOPES_UPDATED,
-        data: {
-          pageId: page.id,
-          eventId: context.event.id,
-          readScope: data.readScope,
-          readScopePositionId: readPosition.value,
-          editScope: data.editScope,
-          editScopePositionId: editPositionId,
-          imageUploadability: data.imageUploadability,
-          attachmentUploadability: data.attachmentUploadability,
-        },
-        createdById: authentication.session.user.id,
-      },
+      event
+        ? {
+            type: AuditEventType.WIKI_PAGE_EVENT_SCOPES_UPDATED,
+            data: { ...scopePayload, eventId: event.id },
+            createdById: authentication.session.user.id,
+          }
+        : {
+            type: AuditEventType.WIKI_PAGE_TEMPLATE_SCOPES_UPDATED,
+            data: { ...scopePayload, templateId: context.container.id },
+            createdById: authentication.session.user.id,
+          },
     ]);
 
-    if (publishClaim?.count === 1) {
+    if (event && publishClaim?.count === 1) {
       await triggerNotifications([
         {
           type: "EventBriefingPublished",
           payload: {
-            eventId: context.event.id,
+            eventId: event.id,
             readScope: data.readScope,
             readScopePositionId: readPosition.value,
           },
@@ -229,10 +242,10 @@ export const updateEventWikiPagePermissions = createAuthenticatedAction(
     }
 
     /**
-     * The event layout (an ancestor of /briefing) revalidates so the tab
-     * and tile gates pick up a widened root scope immediately.
+     * The container's layout (an ancestor of /briefing) revalidates so the
+     * tab and tile gates pick up a widened root scope immediately.
      */
-    revalidatePath(`/app/events/${context.event.id}`, "layout");
+    revalidatePath(getEventContainerPath(context.container), "layout");
 
     return { success: t("Common.successfullySaved") };
   },

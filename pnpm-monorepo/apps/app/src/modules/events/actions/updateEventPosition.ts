@@ -2,12 +2,12 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
-import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { isAllowedToManagePositions } from "../utils/isAllowedToManagePositions";
-import { isEventUpdatable } from "../utils/isEventUpdatable";
+import { getLineupPath } from "../utils/eventContainer";
+import { buildPositionUpdatedAuditEvent } from "../utils/lineupAuditEvents";
+import { requireManageablePosition } from "../utils/requireManageablePosition";
 
 const schema = z.object({
   positionId: z.cuid(),
@@ -26,28 +26,12 @@ export const updateEventPosition = createAuthenticatedAction(
     /**
      * Authorize the request
      */
-    const position = await prisma.eventPosition.findUnique({
-      where: {
-        id: data.positionId,
-      },
-      include: {
-        event: {
-          include: {
-            managers: true,
-          },
-        },
-        requiredVariants: true,
-      },
-    });
-    if (!position?.event)
-      return { error: "Posten nicht gefunden", requestPayload: formData };
-    if (!isEventUpdatable(position.event))
-      return {
-        error: "Das Event ist bereits vorbei.",
-        requestPayload: formData,
-      };
-    if (!(await isAllowedToManagePositions(position.event)))
-      return { error: t("Common.forbidden"), requestPayload: formData };
+    const { position, container, failure } = await requireManageablePosition(
+      data.positionId,
+      formData,
+      t,
+    );
+    if (failure) return failure;
 
     /**
      * Update position
@@ -82,10 +66,9 @@ export const updateEventPosition = createAuthenticatedAction(
     ]);
 
     await createAuditEvents([
-      {
-        type: AuditEventType.EVENT_POSITION_UPDATED_V2,
-        data: {
-          eventId: position.event.id,
+      buildPositionUpdatedAuditEvent(
+        container,
+        {
           positionId: position.id,
           previousName: position.name,
           newName: data.name,
@@ -96,14 +79,14 @@ export const updateEventPosition = createAuthenticatedAction(
           previousTextColor: position.textColor || null,
           newTextColor: data.textColor || null,
         },
-        createdById: authentication.session.user.id,
-      },
+        authentication.session.user.id,
+      ),
     ]);
 
     /**
      * Revalidate cache(s)
      */
-    revalidatePath(`/app/events/${position.event.id}/lineup`);
+    revalidatePath(getLineupPath(container));
 
     /**
      * Respond with the result

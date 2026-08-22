@@ -107,7 +107,7 @@ const TagsModal = ({
   selectedNames,
   setSelectedNames,
 }: TagsModalProps) => {
-  const { eventId } = useWikiPageHrefMode();
+  const { container } = useWikiPageHrefMode();
   const inputId = useId();
   const [query, setQuery] = useState("");
   const { state, formAction, isPending } = useAction(updateWikiPageTags, {
@@ -116,7 +116,7 @@ const TagsModal = ({
   });
 
   const { data: existingTags } = api.wiki.getTags.useQuery(
-    { eventId: eventId ?? undefined },
+    { container: container ?? undefined },
     {
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,

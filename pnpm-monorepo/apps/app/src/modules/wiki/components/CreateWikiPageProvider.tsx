@@ -1,6 +1,7 @@
 "use client";
 
 import Modal from "@/modules/common/components/Modal";
+import type { EventContainer } from "@/modules/events/utils/eventContainer";
 import { usePathname } from "next/navigation";
 import {
   createContext,
@@ -43,15 +44,15 @@ interface Props {
   readonly children: ReactNode;
   readonly targets: WikiPageTargetOption[];
   readonly allowTopLevel: boolean;
-  /** Set inside an event wiki — scopes the form's "copy from" options */
-  readonly eventId?: string;
+  /** Set inside a briefing — scopes the form's "copy from" options */
+  readonly container?: EventContainer;
 }
 
 export const CreateWikiPageProvider = ({
   children,
   targets,
   allowTopLevel,
-  eventId,
+  container,
 }: Props) => {
   const pathname = usePathname();
   const hrefMode = useWikiPageHrefMode();
@@ -114,7 +115,7 @@ export const CreateWikiPageProvider = ({
           targets={targets}
           allowTopLevel={allowTopLevel}
           defaultParentId={openState?.parentId}
-          eventId={eventId}
+          container={container}
           onSuccess={() => setOpenState(null)}
         />
       </Modal>

@@ -1,5 +1,6 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
+import { toEventContainer } from "@/modules/events/utils/eventContainer";
 import { EventWikiPageContent } from "@/modules/wiki/components/EventWikiPageContent";
 import { getEventWikiContext } from "@/modules/wiki/queries/getEventWikiContext";
 import { getAccessibleWikiPage } from "@/modules/wiki/utils/getAccessibleWikiPage";
@@ -20,7 +21,7 @@ export default async function Page({
   await requireAuthenticationPage("/app/events/[id]/briefing");
 
   const { id } = await params;
-  const context = await getEventWikiContext(id);
+  const context = await getEventWikiContext(toEventContainer(id));
   if (!context) notFound();
 
   const page = getAccessibleWikiPage(context, context.rootPage?.id, "read");

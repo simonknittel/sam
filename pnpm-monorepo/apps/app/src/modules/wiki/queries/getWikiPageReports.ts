@@ -21,6 +21,7 @@ const wikiPageReportSelect = {
       iconId: true,
       deletedAt: true,
       eventId: true,
+      templateId: true,
     },
   },
 } satisfies Prisma.WikiPageReportSelect;

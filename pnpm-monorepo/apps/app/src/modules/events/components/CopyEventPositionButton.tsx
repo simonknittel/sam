@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import { FaRegCopy } from "react-icons/fa";
 import { getSubtreeDepth, getSubtreeSize } from "../utils/positionTree";
 import { useLineupClipboard } from "./LineupClipboardContext";
+import { useLineupOrder } from "./LineupOrderContext/Context";
 import type { PositionType } from "./Position";
 
 const LABEL = "Posten kopieren";
@@ -18,12 +19,13 @@ interface Props {
 
 export const CopyEventPositionButton = ({ className, position }: Props) => {
   const { copy } = useLineupClipboard();
+  const { container } = useLineupOrder();
 
   const handleClick = () => {
     copy({
       positionId: position.id,
       positionName: position.name,
-      eventId: position.eventId,
+      container,
       subtreeDepth: getSubtreeDepth(position),
     });
 

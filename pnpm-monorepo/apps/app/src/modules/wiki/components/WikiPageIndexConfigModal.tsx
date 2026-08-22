@@ -38,11 +38,11 @@ export const WikiPageIndexConfigModal = ({
   onRequestClose,
 }: Props) => {
   /**
-   * Scopes tag and page pickers to the event wiki on briefing pages, and
-   * the page picker to the subtree inside variant embeds (tags stay global
-   * there — the WIKI namespace has one shared tag scope)
+   * Scopes tag and page pickers to the briefing's container on briefing
+   * pages, and the page picker to the subtree inside variant embeds (tags
+   * stay global there — the WIKI namespace has one shared tag scope)
    */
-  const { eventId, variantId } = useWikiPageHrefMode();
+  const { container, variantId } = useWikiPageHrefMode();
   const depthInputId = useId();
   const initial = normalizeWikiPageIndexConfig(attrs);
 
@@ -55,7 +55,7 @@ export const WikiPageIndexConfigModal = ({
   const [matchMode, setMatchMode] = useState<string>(initial.matchMode);
 
   const { data: existingTags } = api.wiki.getTags.useQuery(
-    { eventId: eventId ?? undefined },
+    { container: container ?? undefined },
     {
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
@@ -69,7 +69,7 @@ export const WikiPageIndexConfigModal = ({
   const { data: pageTargets } = api.wiki.getPageTargets.useQuery(
     {
       permission: "read",
-      eventId: eventId ?? undefined,
+      container: container ?? undefined,
       variantId: variantId ?? undefined,
     },
     { refetchOnWindowFocus: false, refetchOnReconnect: false },

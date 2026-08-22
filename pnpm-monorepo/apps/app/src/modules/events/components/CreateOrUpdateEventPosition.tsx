@@ -9,7 +9,6 @@ import { TextInput } from "@/modules/common/components/form/TextInput";
 import Modal from "@/modules/common/components/Modal";
 import { Tooltip } from "@/modules/common/components/Tooltip";
 import type {
-  Event,
   EventPosition,
   EventPositionRequiredVariant,
   Manufacturer,
@@ -35,6 +34,10 @@ import {
 } from "react-icons/fa";
 import { createEventPosition } from "../actions/createEventPosition";
 import { updateEventPosition } from "../actions/updateEventPosition";
+import {
+  eventContainerFormValues,
+  type EventContainer,
+} from "../utils/eventContainer";
 
 const ADD_LABEL = "Posten hinzufügen";
 const EDIT_LABEL = "Posten bearbeiten";
@@ -49,7 +52,8 @@ interface BaseProps {
 }
 
 interface CreateProps {
-  readonly eventId: Event["id"];
+  /** The event or template the new position is added to */
+  readonly container: EventContainer;
   readonly parentPositionId?: EventPosition["id"] | null;
 }
 
@@ -94,7 +98,7 @@ export const CreateOrUpdateEventPosition = (props: Props) => {
 
   return (
     <>
-      {"eventId" in props && !("parentPositionId" in props) && (
+      {"container" in props && !("parentPositionId" in props) && (
         <Tooltip
           asChild
           triggerChildren={
@@ -112,7 +116,7 @@ export const CreateOrUpdateEventPosition = (props: Props) => {
         </Tooltip>
       )}
 
-      {"eventId" in props && "parentPositionId" in props && (
+      {"container" in props && "parentPositionId" in props && (
         <Tooltip
           asChild
           triggerChildren={
@@ -162,9 +166,12 @@ export const CreateOrUpdateEventPosition = (props: Props) => {
           {"position" in props && props.position && (
             <input type="hidden" name="positionId" value={props.position.id} />
           )}
-          {"eventId" in props && props.eventId && (
-            <input type="hidden" name="eventId" value={props.eventId} />
-          )}
+          {"container" in props &&
+            Object.entries(eventContainerFormValues(props.container)).map(
+              ([name, value]) => (
+                <input key={name} type="hidden" name={name} value={value} />
+              ),
+            )}
           {"parentPositionId" in props && props.parentPositionId && (
             <input
               type="hidden"
@@ -226,7 +233,7 @@ export const CreateOrUpdateEventPosition = (props: Props) => {
               Speichern
             </Button2>
 
-            {"eventId" in props && (
+            {"container" in props && (
               <Button
                 type="submit"
                 disabled={isPending}

@@ -125,7 +125,7 @@ Refactor the lineup editor/actions and the wiki scoped context to operate on an 
 
 #### Status
 
-Not started.
+Done.
 
 #### Steps
 
@@ -138,6 +138,14 @@ Not started.
 
 - This is the phase where the no-workarounds principle earns its cost: after it, templates get the entire editing UX for free.
 - Existing event-scoped audit emission stays byte-identical for event containers.
+- The container type is `EventContainer` (`modules/events/utils/eventContainer.ts`) and serves both the lineup and the briefing; `authorizeEventContainer()` is the single seam every lineup mutation passes through.
+- `WikiScope.Event` now means "a briefing" — of an event or of a template — so the seventeen existing scope switches needed no third case. `EventWikiContext.event` is null inside a template, which is what the briefing-publish notification and the freeze key off.
+- Inside a template the resolver runs with `isEventManager = canEdit(template)` and the read grant is then overridden to true, so the per-page scopes still resolve their inheritance sources for the scope editor while the template ACL decides access.
+- Claude decision: the lineup clipboard carries a container, so a position travels between events, between templates and in either direction between the two. Blocking cross-container pastes would have meant hiding paste targets and an extra error path for no security gain — a read share already lets someone copy the whole lineup by creating an event from the template.
+- Two container leaks found and closed while auditing: the global wiki's tag route and the global search matched a template's tags (both container columns are what makes a tag global), and `updateWikiPageTags` would have filed a template page's tags globally. `updateWikiPageTags` now reuses `findOrCreateWikiTags`, which the copy path already used.
+- A page's briefing scopes are a per-container audit type (`WIKI_PAGE_TEMPLATE_SCOPES_UPDATED`) because the existing one requires an event id; every other wiki page mutation stays container-agnostic as planned.
+- @citizen mentions inside a template briefing are suppressed rather than notified: the mention sweep resolves briefing pages through their event and fails closed without one.
+- `createEventPosition` gained the parent-container check it never had — a parent from another event used to be accepted and would have stranded the position in the wrong tree.
 
 #### Verification
 

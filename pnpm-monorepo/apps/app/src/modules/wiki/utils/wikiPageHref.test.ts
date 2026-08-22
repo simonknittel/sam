@@ -1,3 +1,4 @@
+import { toEventContainer } from "@/modules/events/utils/eventContainer";
 import { describe, expect, test } from "vitest";
 import {
   buildWikiPageHref,
@@ -14,7 +15,7 @@ const page = { id: "page000000000000000000ab", slug: "some-page" };
 const rootPage = { id: "root000000000000000000cd", slug: "root-page" };
 
 const eventMode = createEventWikiHrefMode(
-  "event0000000000000000001",
+  toEventContainer("event0000000000000000001"),
   rootPage.id,
 );
 const variantMode = createVariantWikiHrefMode("variant1", rootPage.id);
@@ -113,8 +114,8 @@ describe("buildWikiPageSnapshotsHref", () => {
 
 describe("getWikiPageRouteHref", () => {
   test("routes WIKI pages to the global wiki regardless of variant links", () => {
-    expect(getWikiPageRouteHref({ ...page, eventId: null })).toBe(
-      `/app/wiki/${page.id}/${page.slug}`,
-    );
+    expect(
+      getWikiPageRouteHref({ ...page, eventId: null, templateId: null }),
+    ).toBe(`/app/wiki/${page.id}/${page.slug}`);
   });
 });

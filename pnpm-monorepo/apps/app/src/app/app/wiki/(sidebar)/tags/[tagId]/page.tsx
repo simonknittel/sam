@@ -17,7 +17,8 @@ type Params = PageProps<"/app/wiki/tags/[tagId]">["params"];
 const getTag = async (params: Params) => {
   const { tagId } = await params;
   return prisma.wikiTag.findFirst({
-    where: { id: tagId, eventId: null },
+    /** Both container columns NULL is what makes a tag global */
+    where: { id: tagId, eventId: null, templateId: null },
     select: { id: true, name: true, pages: { select: { pageId: true } } },
   });
 };

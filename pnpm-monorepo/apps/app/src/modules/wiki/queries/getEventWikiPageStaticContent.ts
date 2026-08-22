@@ -30,7 +30,7 @@ export const getEventWikiPageStaticContent = cache(
       pageId: string,
     ): Promise<WikiPageStaticContent> => {
       const eventHrefMode = createEventWikiHrefMode(
-        context.event.id,
+        context.container,
         context.rootPage?.id ?? null,
       );
 

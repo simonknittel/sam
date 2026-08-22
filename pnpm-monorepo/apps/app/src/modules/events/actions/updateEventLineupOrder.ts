@@ -2,16 +2,24 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
-import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { isAllowedToManagePositions } from "../utils/isAllowedToManagePositions";
-import { isEventUpdatable } from "../utils/isEventUpdatable";
+import { authorizeEventContainer } from "../utils/authorizeEventContainer";
+import {
+  EVENT_CONTAINER_ID_FIELD,
+  EVENT_CONTAINER_KIND_FIELD,
+  eventContainerColumns,
+  EventContainerKind,
+  getLineupPath,
+  type EventContainer,
+} from "../utils/eventContainer";
+import { buildLineupOrderChangedAuditEvent } from "../utils/lineupAuditEvents";
 
 // TODO: Simplify recursion
 const schema = z.object({
-  eventId: z.cuid(),
+  containerKind: z.enum(EventContainerKind),
+  containerId: z.string().min(1).max(64),
   order: z
     .array(
       z.object({
@@ -62,39 +70,27 @@ export const updateEventLineupOrder = createAuthenticatedAction(
     /**
      * Authorize the request
      */
-    const event = await prisma.event.findUnique({
-      where: {
-        id: data.eventId,
-      },
-      include: {
-        managers: true,
-      },
-    });
-    if (!event)
-      return { error: "Event nicht gefunden", requestPayload: formData };
-    if (!isEventUpdatable(event))
-      return {
-        error: "Das Event ist bereits vorbei.",
-        requestPayload: formData,
-      };
-    if (!(await isAllowedToManagePositions(event)))
-      return { error: t("Common.forbidden"), requestPayload: formData };
+    const container: EventContainer = {
+      kind: data.containerKind,
+      id: data.containerId,
+    };
+    const authorization = await authorizeEventContainer(container, t);
+    if (!authorization.allowed)
+      return { error: authorization.error, requestPayload: formData };
 
     /**
-     * Make sure every submitted position belongs to the authorized event.
+     * Make sure every submitted position belongs to the authorized container.
      * Parent assignments are derived from the submitted tree, so this also
-     * keeps every new parentPositionId within the event.
+     * keeps every new parentPositionId inside the container.
      */
-    const eventPositions = await prisma.eventPosition.findMany({
-      where: {
-        eventId: event.id,
-      },
+    const containerPositions = await prisma.eventPosition.findMany({
+      where: eventContainerColumns(container),
       select: {
         id: true,
       },
     });
-    const eventPositionIds = new Set(
-      eventPositions.map((position) => position.id),
+    const containerPositionIds = new Set(
+      containerPositions.map((position) => position.id),
     );
     const flattenPositionIds = (positions: MappedPosition[]): string[] =>
       positions.flatMap((position) => [
@@ -105,7 +101,7 @@ export const updateEventLineupOrder = createAuthenticatedAction(
       ]);
     if (
       flattenPositionIds(data.order).some(
-        (positionId) => !eventPositionIds.has(positionId),
+        (positionId) => !containerPositionIds.has(positionId),
       )
     )
       return { error: t("Common.badRequest"), requestPayload: formData };
@@ -142,19 +138,16 @@ export const updateEventLineupOrder = createAuthenticatedAction(
     await prisma.$transaction(transactions);
 
     await createAuditEvents([
-      {
-        type: AuditEventType.EVENT_LINEUP_ORDER_CHANGED,
-        data: {
-          eventId: event.id,
-        },
-        createdById: authentication.session.user.id,
-      },
+      buildLineupOrderChangedAuditEvent(
+        container,
+        authentication.session.user.id,
+      ),
     ]);
 
     /**
      * Revalidate cache(s)
      */
-    revalidatePath(`/app/events/${event.id}/lineup`);
+    revalidatePath(getLineupPath(container));
 
     /**
      * Respond with the result
@@ -165,7 +158,8 @@ export const updateEventLineupOrder = createAuthenticatedAction(
   },
   {
     parseFormData: (formData) => ({
-      eventId: formData.get("eventId"),
+      containerKind: formData.get(EVENT_CONTAINER_KIND_FIELD),
+      containerId: formData.get(EVENT_CONTAINER_ID_FIELD),
       order: JSON.parse(formData.get("order") as string) as unknown,
     }),
   },

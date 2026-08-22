@@ -51,6 +51,7 @@ interface WikiPageReference {
   readonly title: string;
   readonly slug: string;
   readonly eventId: string | null;
+  readonly templateId: string | null;
 }
 
 /** The usage relations of an upload, as `getUploads` selects them. */

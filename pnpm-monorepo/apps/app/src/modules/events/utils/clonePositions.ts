@@ -1,10 +1,8 @@
-import type {
-  Event,
-  EventPosition,
-  Prisma,
-} from "@sam-monorepo/database/client";
+import type { EventPosition, Prisma } from "@sam-monorepo/database/client";
+import { eventContainerColumns, type EventContainer } from "./eventContainer";
 
 interface ClonablePosition {
+  id: EventPosition["id"];
   name: EventPosition["name"];
   description: EventPosition["description"];
   fontSize: EventPosition["fontSize"];
@@ -16,7 +14,7 @@ interface ClonablePosition {
 }
 
 interface Target {
-  eventId: Event["id"];
+  container: EventContainer;
   parentPositionId: EventPosition["parentPositionId"];
   /**
    * `order` of the first cloned position. The following positions of the same
@@ -26,23 +24,26 @@ interface Target {
 }
 
 /**
- * Recreates the given positions including their child positions. Assigned
- * citizens and applications are intentionally left behind since a copy is
- * meant to start out unassigned.
+ * Recreates the given positions including their child positions in the target
+ * container. Assigned citizens and applications are intentionally left behind
+ * since a copy is meant to start out unassigned — and a template blueprint
+ * never has either.
  *
- * @returns Number of created positions
+ * @returns The new position id of every source position, keyed by source id.
+ *   Callers that copy a briefing alongside the lineup need it to remap the
+ *   pages' position scopes (see copyWikiPageSubtree).
  */
 export const clonePositions = async (
   transaction: Prisma.TransactionClient,
   positions: ClonablePosition[],
   target: Target,
-): Promise<number> => {
-  let createdPositions = 0;
-
+  /** Filled in by the recursion; callers pass nothing */
+  newIdBySourceId = new Map<string, string>(),
+): Promise<Map<string, string>> => {
   for (const [index, position] of positions.entries()) {
     const createdPosition = await transaction.eventPosition.create({
       data: {
-        eventId: target.eventId,
+        ...eventContainerColumns(target.container),
         parentPositionId: target.parentPositionId,
         name: position.name,
         description: position.description,
@@ -77,20 +78,21 @@ export const clonePositions = async (
       },
     });
 
-    createdPositions += 1;
+    newIdBySourceId.set(position.id, createdPosition.id);
 
     if (position.childPositions.length > 0) {
-      createdPositions += await clonePositions(
+      await clonePositions(
         transaction,
         position.childPositions,
         {
-          eventId: target.eventId,
+          container: target.container,
           parentPositionId: createdPosition.id,
           startOrder: 0,
         },
+        newIdBySourceId,
       );
     }
   }
 
-  return createdPositions;
+  return newIdBySourceId;
 };

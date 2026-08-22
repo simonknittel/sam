@@ -8,11 +8,13 @@ import type { EventPosition } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { FaPaste } from "react-icons/fa";
 import { pasteEventPosition } from "../actions/pasteEventPosition";
+import { EventContainerKind } from "../utils/eventContainer";
 import { canPasteSubtree, MAX_LINEUP_DEPTH } from "../utils/positionTree";
 import {
   useLineupClipboard,
   type LineupClipboardEntry,
 } from "./LineupClipboardContext";
+import { useLineupOrder } from "./LineupOrderContext/Context";
 
 interface Props {
   readonly className?: string;
@@ -68,8 +70,21 @@ interface PasteMenuProps {
 
 const TOO_DEEP_TITLE = "Der Posten würde zu tief verschachtelt werden.";
 
+/** Names where a copied position came from when that isn't the lineup at hand */
+const getOriginHint = (
+  source: LineupClipboardEntry["container"],
+  target: LineupClipboardEntry["container"],
+) => {
+  if (source.kind === target.kind && source.id === target.id) return null;
+
+  return source.kind === EventContainerKind.Template
+    ? "Aus einer Vorlage kopiert. "
+    : "Aus einem anderen Event kopiert. ";
+};
+
 const PasteMenu = ({ clipboard, position, groupLevel }: PasteMenuProps) => {
   const { clear } = useLineupClipboard();
+  const { container } = useLineupOrder();
   const { closePopover } = usePopover();
   const { isPending, formAction } = useAction(pasteEventPosition, {
     onSuccess: closePopover,
@@ -101,8 +116,7 @@ const PasteMenu = ({ clipboard, position, groupLevel }: PasteMenuProps) => {
       </p>
 
       <p className="text-neutral-500 text-sm">
-        {clipboard.eventId !== position.eventId &&
-          "Aus einem anderen Event kopiert. "}
+        {getOriginHint(clipboard.container, container)}
         Zugewiesene Citizen und Bewerbungen werden nicht mitkopiert.
       </p>
 

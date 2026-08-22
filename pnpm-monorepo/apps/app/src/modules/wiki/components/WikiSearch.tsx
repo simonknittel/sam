@@ -55,7 +55,7 @@ export const WikiSearch = ({ className, compact }: Props) => {
   const { data, isFetching } = api.wiki.search.useQuery(
     {
       query: debouncedQuery,
-      eventId: hrefMode.eventId ?? undefined,
+      container: hrefMode.container ?? undefined,
       variantId: hrefMode.variantId ?? undefined,
     },
     {

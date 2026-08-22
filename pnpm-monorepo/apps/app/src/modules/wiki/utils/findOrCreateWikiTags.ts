@@ -1,3 +1,7 @@
+import {
+  wikiContainerColumns,
+  type EventContainer,
+} from "@/modules/events/utils/eventContainer";
 import type { Prisma } from "@sam-monorepo/database/client";
 
 /**
@@ -11,8 +15,8 @@ import type { Prisma } from "@sam-monorepo/database/client";
 export const findOrCreateWikiTags = async (
   transaction: Prisma.TransactionClient,
   names: readonly string[],
-  eventId: string | null,
-  createdById: string,
+  container: EventContainer | null,
+  createdById: string | null,
 ): Promise<Map<string, { id: string; name: string }>> => {
   const uniqueNamesByLower = new Map<string, string>();
   for (const name of names) {
@@ -20,17 +24,22 @@ export const findOrCreateWikiTags = async (
     if (!uniqueNamesByLower.has(lower)) uniqueNamesByLower.set(lower, name);
   }
 
+  const scopeColumns = wikiContainerColumns(container);
+
   const tagsByLower = new Map<string, { id: string; name: string }>();
   for (const [lower, name] of uniqueNamesByLower) {
     const existing = await transaction.wikiTag.findFirst({
-      where: { name: { equals: name, mode: "insensitive" }, eventId },
+      where: {
+        name: { equals: name, mode: "insensitive" },
+        ...scopeColumns,
+      },
       select: { id: true, name: true },
     });
     tagsByLower.set(
       lower,
       existing ??
         (await transaction.wikiTag.create({
-          data: { name, eventId, createdById },
+          data: { name, ...scopeColumns, createdById },
           select: { id: true, name: true },
         })),
     );

@@ -1,24 +1,25 @@
 import { Link } from "@/modules/common/components/Link";
+import type { EventContainer } from "@/modules/events/utils/eventContainer";
 import { FaTrash } from "react-icons/fa";
 import { getEventWikiContext } from "../queries/getEventWikiContext";
 import { createEventWikiHrefMode } from "../utils/wikiPageHref";
 import { WikiSidebarPanels } from "./WikiSidebarPanels";
 
 interface Props {
-  readonly eventId: string;
+  readonly container: EventContainer;
 }
 
 /**
  * The briefing sidebar: favourites and the page tree, limited to this
- * event's pages. Rendered inside the briefing layout's
+ * container's pages. Rendered inside the briefing layout's
  * WikiPageHrefModeProvider, which points the shared tree components at the
- * event routes.
+ * container's routes.
  */
-export const EventWikiSidebar = async ({ eventId }: Props) => {
-  const context = await getEventWikiContext(eventId);
+export const EventWikiSidebar = async ({ container }: Props) => {
+  const context = await getEventWikiContext(container);
   if (!context?.rootPage) return null;
 
-  const hrefMode = createEventWikiHrefMode(eventId, context.rootPage.id);
+  const hrefMode = createEventWikiHrefMode(container, context.rootPage.id);
 
   return (
     <WikiSidebarPanels

@@ -8,6 +8,7 @@ import Note from "@/modules/common/components/Note";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
 import { api } from "@/modules/common/utils/api";
+import type { EventContainer } from "@/modules/events/utils/eventContainer";
 import { useState } from "react";
 import { FaSave } from "react-icons/fa";
 import { createWikiPage } from "../actions/createWikiPage";
@@ -20,8 +21,8 @@ interface Props {
   readonly targets: WikiPageTargetOption[];
   readonly allowTopLevel: boolean;
   readonly defaultParentId?: string;
-  /** Set inside an event wiki — scopes the "copy from" options */
-  readonly eventId?: string;
+  /** Set inside a briefing — scopes the "copy from" options */
+  readonly container?: EventContainer;
   readonly onSuccess?: () => void;
 }
 
@@ -34,7 +35,7 @@ export const CreateWikiPageForm = ({
   targets,
   allowTopLevel,
   defaultParentId,
-  eventId,
+  container,
   onSuccess,
 }: Props) => {
   /** Inside a variant embed the action redirects back into the embed */
@@ -56,7 +57,7 @@ export const CreateWikiPageForm = ({
    * while the modal is open.
    */
   const { data: copySourceTargets } = api.wiki.getPageTargets.useQuery(
-    { permission: "read", eventId },
+    { permission: "read", container },
     { refetchOnWindowFocus: false, refetchOnReconnect: false },
   );
 

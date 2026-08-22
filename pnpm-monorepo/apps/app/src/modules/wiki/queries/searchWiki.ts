@@ -1,6 +1,10 @@
 import { prisma } from "@/db";
+import {
+  EventContainerKind,
+  type EventContainer,
+} from "@/modules/events/utils/eventContainer";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import type { Event, Variant } from "@sam-monorepo/database/client";
+import type { Variant } from "@sam-monorepo/database/client";
 import { Prisma } from "@sam-monorepo/database/client";
 import { buildVisibleWikiBreadcrumb } from "../utils/buildVisibleWikiBreadcrumb";
 import {
@@ -155,7 +159,7 @@ const runWikiSearch = async (
   return { tags, pages };
 };
 
-/** Full-text search over the global wiki (event wikis search separately) */
+/** Full-text search over the global wiki (briefings search separately) */
 export const searchWiki = withTrace(
   "searchWiki",
   async (query: string): Promise<WikiSearchResults> => {
@@ -163,22 +167,25 @@ export const searchWiki = withTrace(
     if (!context) return EMPTY_RESULTS;
 
     return runWikiSearch(context, query, {
-      tagsFilter: Prisma.sql`"eventId" IS NULL`,
+      tagsFilter: Prisma.sql`"eventId" IS NULL AND "templateId" IS NULL`,
       /**
-       * The namespace alone excludes event pages (a CHECK constraint ties
-       * namespace EVENT to a non-null eventId); the eventId filter makes
-       * the exclusion explicit and index-friendly regardless.
+       * The namespace alone excludes briefing pages (a CHECK constraint
+       * ties namespace EVENT to exactly one container); the container
+       * filters make the exclusion explicit and index-friendly regardless.
        */
-      pagesFilter: Prisma.sql`"namespace" = 'WIKI' AND "eventId" IS NULL`,
+      pagesFilter: Prisma.sql`"namespace" = 'WIKI' AND "eventId" IS NULL AND "templateId" IS NULL`,
     });
   },
 );
 
-/** Full-text search limited to one event's wiki pages and tags */
+/** Full-text search limited to one container's briefing pages and tags */
 export const searchEventWiki = withTrace(
   "searchEventWiki",
-  async (eventId: Event["id"], query: string): Promise<WikiSearchResults> => {
-    const context = await getEventWikiContext(eventId);
+  async (
+    container: EventContainer,
+    query: string,
+  ): Promise<WikiSearchResults> => {
+    const context = await getEventWikiContext(container);
     if (!context) return EMPTY_RESULTS;
     /**
      * Without the briefing gate the page results would come back empty
@@ -187,9 +194,14 @@ export const searchEventWiki = withTrace(
      */
     if (!hasReadableEventWikiRoot(context)) return EMPTY_RESULTS;
 
+    const containerColumn =
+      container.kind === EventContainerKind.Event
+        ? Prisma.sql`"eventId"`
+        : Prisma.sql`"templateId"`;
+
     return runWikiSearch(context, query, {
-      tagsFilter: Prisma.sql`"eventId" = ${eventId}`,
-      pagesFilter: Prisma.sql`"namespace" = 'EVENT' AND "eventId" = ${eventId}`,
+      tagsFilter: Prisma.sql`${containerColumn} = ${container.id}`,
+      pagesFilter: Prisma.sql`"namespace" = 'EVENT' AND ${containerColumn} = ${container.id}`,
     });
   },
 );
@@ -215,8 +227,8 @@ export const searchVariantWiki = withTrace(
     const subtreeIds = [...context.subtreePageIds];
 
     return runWikiSearch(context, query, {
-      tagsFilter: Prisma.sql`"eventId" IS NULL AND "id" IN (SELECT "tagId" FROM "WikiPageTag" WHERE "pageId" IN (${Prisma.join(subtreeIds)}))`,
-      pagesFilter: Prisma.sql`"namespace" = 'WIKI' AND "eventId" IS NULL AND "id" IN (${Prisma.join(subtreeIds)})`,
+      tagsFilter: Prisma.sql`"eventId" IS NULL AND "templateId" IS NULL AND "id" IN (SELECT "tagId" FROM "WikiPageTag" WHERE "pageId" IN (${Prisma.join(subtreeIds)}))`,
+      pagesFilter: Prisma.sql`"namespace" = 'WIKI' AND "eventId" IS NULL AND "templateId" IS NULL AND "id" IN (${Prisma.join(subtreeIds)})`,
     });
   },
 );

@@ -1,5 +1,6 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
+import { toEventContainer } from "@/modules/events/utils/eventContainer";
 import { WikiSnapshotsTable } from "@/modules/wiki/components/WikiSnapshotsTable";
 import { getEventWikiContext } from "@/modules/wiki/queries/getEventWikiContext";
 import { getAccessibleWikiPage } from "@/modules/wiki/utils/getAccessibleWikiPage";
@@ -15,7 +16,7 @@ type Params =
 
 const getAdministrablePage = async (params: Params) => {
   const { id, pageId } = await params;
-  const context = await getEventWikiContext(id);
+  const context = await getEventWikiContext(toEventContainer(id));
   if (!context) return null;
 
   const page = getAccessibleWikiPage(context, pageId, "admin");
@@ -47,7 +48,7 @@ export default async function Page(
   if (!result) notFound();
 
   const hrefMode = createEventWikiHrefMode(
-    result.context.event.id,
+    result.context.container,
     result.context.rootPage?.id ?? null,
   );
 

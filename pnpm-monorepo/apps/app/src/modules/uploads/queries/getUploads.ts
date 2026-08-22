@@ -29,9 +29,23 @@ export const USAGE_SELECT = {
   manufacturers: { select: { id: true, name: true } },
   eventCovers: { select: { id: true, name: true } },
   wikiPageIcons: {
-    select: { id: true, title: true, slug: true, eventId: true },
+    select: {
+      id: true,
+      title: true,
+      slug: true,
+      eventId: true,
+      templateId: true,
+    },
   },
-  wikiPages: { select: { id: true, title: true, slug: true, eventId: true } },
+  wikiPages: {
+    select: {
+      id: true,
+      title: true,
+      slug: true,
+      eventId: true,
+      templateId: true,
+    },
+  },
 } satisfies Prisma.UploadSelect;
 
 /** Matches uploads which are not referenced anywhere (see UploadUsageType). */

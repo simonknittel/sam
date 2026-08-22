@@ -88,6 +88,24 @@ export enum AuditEventType {
   EVENT_POSITION_APPLICATION_DELETED = "EVENT_POSITION_APPLICATION_DELETED",
   EVENT_LINEUP_COPIED = "EVENT_LINEUP_COPIED",
   EVENT_POSITION_COPIED = "EVENT_POSITION_COPIED",
+  EVENT_TEMPLATE_POSITION_CREATED = "EVENT_TEMPLATE_POSITION_CREATED",
+  EVENT_TEMPLATE_POSITION_UPDATED = "EVENT_TEMPLATE_POSITION_UPDATED",
+  EVENT_TEMPLATE_POSITION_NAME_UPDATED = "EVENT_TEMPLATE_POSITION_NAME_UPDATED",
+  EVENT_TEMPLATE_POSITION_DELETED = "EVENT_TEMPLATE_POSITION_DELETED",
+  EVENT_TEMPLATE_LINEUP_ORDER_CHANGED = "EVENT_TEMPLATE_LINEUP_ORDER_CHANGED",
+  /**
+   * Pasting a position where at least one side is a template. Event-to-event
+   * pastes keep emitting EVENT_POSITION_COPIED unchanged.
+   */
+  EVENT_TEMPLATE_POSITION_COPIED = "EVENT_TEMPLATE_POSITION_COPIED",
+  EVENT_TEMPLATE_CREATED = "EVENT_TEMPLATE_CREATED",
+  EVENT_TEMPLATE_UPDATED = "EVENT_TEMPLATE_UPDATED",
+  EVENT_TEMPLATE_DUPLICATED = "EVENT_TEMPLATE_DUPLICATED",
+  EVENT_TEMPLATE_DELETED = "EVENT_TEMPLATE_DELETED",
+  EVENT_TEMPLATE_RESTORED = "EVENT_TEMPLATE_RESTORED",
+  EVENT_TEMPLATE_ROLE_ACCESS_UPDATED = "EVENT_TEMPLATE_ROLE_ACCESS_UPDATED",
+  EVENT_TEMPLATE_OWNERSHIP_TRANSFERRED = "EVENT_TEMPLATE_OWNERSHIP_TRANSFERRED",
+  EVENT_CREATED_FROM_TEMPLATE = "EVENT_CREATED_FROM_TEMPLATE",
   CITIZEN_CREATED = "CITIZEN_CREATED",
   CITIZEN_DELETED = "CITIZEN_DELETED",
   ENTITY_LOG_CREATED = "ENTITY_LOG_CREATED",
@@ -119,6 +137,12 @@ export enum AuditEventType {
   WIKI_PAGE_COPIED = "WIKI_PAGE_COPIED",
   WIKI_PAGE_PERMISSIONS_UPDATED = "WIKI_PAGE_PERMISSIONS_UPDATED",
   WIKI_PAGE_EVENT_SCOPES_UPDATED = "WIKI_PAGE_EVENT_SCOPES_UPDATED",
+  /**
+   * The same edit on a page of an event template's briefing blueprint, where
+   * the scopes are stored metadata for the future event (see
+   * WikiPage.templateId).
+   */
+  WIKI_PAGE_TEMPLATE_SCOPES_UPDATED = "WIKI_PAGE_TEMPLATE_SCOPES_UPDATED",
   WIKI_PAGE_ROLE_ACCESS_PRUNED = "WIKI_PAGE_ROLE_ACCESS_PRUNED",
   WIKI_PAGE_PERMISSIONS_RESET_BY_MOVE = "WIKI_PAGE_PERMISSIONS_RESET_BY_MOVE",
   WIKI_PAGE_OWNERSHIP_TRANSFERRED = "WIKI_PAGE_OWNERSHIP_TRANSFERRED",
@@ -704,6 +728,109 @@ export interface AuditEventDataByType {
     positionCount: number;
   };
 
+  [AuditEventType.EVENT_TEMPLATE_POSITION_CREATED]: {
+    templateId: string;
+    positionId: string;
+    name: string;
+    variantIds: string[];
+    parentPositionId?: string;
+  };
+
+  [AuditEventType.EVENT_TEMPLATE_POSITION_UPDATED]: {
+    templateId: string;
+    positionId: string;
+    previousName: string;
+    newName: string;
+    previousFontSize: string | null;
+    newFontSize: string | null;
+    previousBackgroundColor: string | null;
+    newBackgroundColor: string | null;
+    previousTextColor: string | null;
+    newTextColor: string | null;
+  };
+
+  [AuditEventType.EVENT_TEMPLATE_POSITION_NAME_UPDATED]: {
+    templateId: string;
+    positionId: string;
+    previousName: string;
+    newName: string;
+  };
+
+  [AuditEventType.EVENT_TEMPLATE_POSITION_DELETED]: {
+    templateId: string;
+    positionId: string;
+    name: string;
+  };
+
+  [AuditEventType.EVENT_TEMPLATE_LINEUP_ORDER_CHANGED]: {
+    templateId: string;
+  };
+
+  [AuditEventType.EVENT_TEMPLATE_POSITION_COPIED]: {
+    /** Exactly one of the two source ids is set, likewise for the target */
+    sourceEventId: string | null;
+    sourceTemplateId: string | null;
+    sourcePositionId: string;
+    targetEventId: string | null;
+    targetTemplateId: string | null;
+    targetPositionId: string;
+    placement: "after" | "inside";
+    positionCount: number;
+  };
+
+  [AuditEventType.EVENT_TEMPLATE_CREATED]: {
+    templateId: string;
+    name: string;
+  };
+
+  [AuditEventType.EVENT_TEMPLATE_UPDATED]: {
+    templateId: string;
+    previousName: string;
+    name: string;
+    visibility: string;
+    visibilityRoleIds: string[];
+    coverImageChanged: boolean;
+  };
+
+  [AuditEventType.EVENT_TEMPLATE_DUPLICATED]: {
+    templateId: string;
+    name: string;
+    sourceTemplateId: string;
+    sourceName: string;
+    positionCount: number;
+    pageCount: number;
+  };
+
+  [AuditEventType.EVENT_TEMPLATE_DELETED]: {
+    templateId: string;
+    name: string;
+  };
+
+  [AuditEventType.EVENT_TEMPLATE_RESTORED]: {
+    templateId: string;
+    name: string;
+  };
+
+  [AuditEventType.EVENT_TEMPLATE_ROLE_ACCESS_UPDATED]: {
+    templateId: string;
+    readRoleIds: string[];
+    editRoleIds: string[];
+  };
+
+  [AuditEventType.EVENT_TEMPLATE_OWNERSHIP_TRANSFERRED]: {
+    templateId: string;
+    name: string;
+    previousOwnerId: string | null;
+    newOwnerId: string;
+  };
+
+  [AuditEventType.EVENT_CREATED_FROM_TEMPLATE]: {
+    eventId: string;
+    templateId: string;
+    /** The template's name at creation time, a historical fact */
+    templateName: string;
+  };
+
   [AuditEventType.CITIZEN_CREATED]: {
     citizenId: string;
     spectrumId: string;
@@ -909,6 +1036,17 @@ export interface AuditEventDataByType {
      */
     imageUploadability?: string;
     attachmentUploadability?: string;
+  };
+
+  [AuditEventType.WIKI_PAGE_TEMPLATE_SCOPES_UPDATED]: {
+    pageId: string;
+    templateId: string;
+    readScope: string;
+    readScopePositionId: string | null;
+    editScope: string;
+    editScopePositionId: string | null;
+    imageUploadability: string;
+    attachmentUploadability: string;
   };
 
   /**

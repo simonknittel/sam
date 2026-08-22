@@ -9,14 +9,16 @@ import {
   useMemo,
   type ReactNode,
 } from "react";
+import type { EventContainer } from "../utils/eventContainer";
 
 export interface LineupClipboardEntry {
   positionId: EventPosition["id"];
   positionName: EventPosition["name"];
   /**
-   * Used to point out that the position originates from another event.
+   * Used to point out that the position originates from another event or
+   * template.
    */
-  eventId: EventPosition["eventId"];
+  container: EventContainer;
   /**
    * Used to hide paste targets which would nest the position too deeply.
    * `pasteEventPosition()` checks this again since the clipboard is stored in
@@ -41,7 +43,7 @@ interface Props {
 
 /**
  * Keeps a copied position around in the local storage so it can be pasted into
- * the lineup of another event.
+ * the lineup of another event or template.
  */
 export const LineupClipboardProvider = ({ children }: Props) => {
   const [clipboard, setClipboard] =
@@ -60,7 +62,12 @@ export const LineupClipboardProvider = ({ children }: Props) => {
 
   const value = useMemo(
     () => ({
-      clipboard,
+      /**
+       * Entries copied before the clipboard learned about containers name
+       * their event in a since-removed field, so they are dropped instead of
+       * rendering a paste menu that cannot work.
+       */
+      clipboard: clipboard?.container ? clipboard : null,
       copy,
       clear,
     }),

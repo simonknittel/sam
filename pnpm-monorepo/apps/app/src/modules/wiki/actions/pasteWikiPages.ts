@@ -4,6 +4,11 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import {
+  EventContainerKind,
+  getBriefingPath,
+  wikiContainerColumns,
+} from "@/modules/events/utils/eventContainer";
 import { log } from "@/modules/logging";
 import { WikiPageSnapshotKind } from "@sam-monorepo/database/client";
 import { cookies } from "next/headers";
@@ -36,11 +41,7 @@ import {
   WIKI_CLIPBOARD_COOKIE,
   WIKI_CLIPBOARD_COOKIE_PATH,
 } from "../utils/wikiClipboardCookie";
-import {
-  getEventWikiBasePath,
-  getWikiPageRouteHref,
-  WikiScope,
-} from "../utils/wikiPageHref";
+import { getWikiPageRouteHref, WikiScope } from "../utils/wikiPageHref";
 
 const TITLE_MAX_LENGTH = 128;
 const TITLE_SUFFIX = " (Kopie)";
@@ -143,10 +144,10 @@ export const pasteWikiPages = createAuthenticatedAction(
         return { error: t("Common.forbidden"), requestPayload: formData };
     }
 
-    const targetEventId =
+    const targetContainer =
       targetScoped.scope === WikiScope.Event
-        ? targetScoped.context.event.id
-        : undefined;
+        ? targetScoped.context.container
+        : null;
 
     let root: { id: string; slug: string };
     let copiedPages: CopiedWikiPage[];
@@ -222,7 +223,7 @@ export const pasteWikiPages = createAuthenticatedAction(
         const tagsByLower = await findOrCreateWikiTags(
           transaction,
           sourceTagAssignments.map((assignment) => assignment.tag.name),
-          targetEventId ?? null,
+          targetContainer,
           entity.id,
         );
         const tags = [...tagsByLower.values()];
@@ -288,9 +289,9 @@ export const pasteWikiPages = createAuthenticatedAction(
         ...copiedPages,
       ];
 
-      /** A replaced event root's canonical URL is the briefing base path */
-      if (targetEventId && targetPage.parentId === null) {
-        redirectHref = getEventWikiBasePath(targetEventId);
+      /** A replaced briefing root's canonical URL is the base path */
+      if (targetContainer && targetPage.parentId === null) {
+        redirectHref = getBriefingPath(targetContainer);
       } else {
         const variantHref = await resolveVariantWikiRedirectHref(
           targetScoped,
@@ -303,7 +304,7 @@ export const pasteWikiPages = createAuthenticatedAction(
           getWikiPageRouteHref({
             id: root.id,
             slug: root.slug,
-            eventId: targetEventId ?? null,
+            ...wikiContainerColumns(targetContainer),
           });
       }
     } else {
@@ -336,7 +337,7 @@ export const pasteWikiPages = createAuthenticatedAction(
         getWikiPageRouteHref({
           id: root.id,
           slug: root.slug,
-          eventId: targetEventId ?? null,
+          ...wikiContainerColumns(targetContainer),
         });
     }
 
@@ -345,7 +346,10 @@ export const pasteWikiPages = createAuthenticatedAction(
         type: AuditEventType.WIKI_PAGE_COPIED as const,
         data: {
           pageId: page.id,
-          eventId: targetEventId,
+          eventId:
+            targetContainer?.kind === EventContainerKind.Event
+              ? targetContainer.id
+              : undefined,
           sourcePageId: page.sourcePageId,
           title: page.title,
           parentId: page.parentId,

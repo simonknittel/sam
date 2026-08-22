@@ -1,9 +1,12 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
+import {
+  getBriefingPath,
+  toEventContainer,
+} from "@/modules/events/utils/eventContainer";
 import { EventWikiPageContent } from "@/modules/wiki/components/EventWikiPageContent";
 import { getEventWikiContext } from "@/modules/wiki/queries/getEventWikiContext";
 import { getAccessibleWikiPage } from "@/modules/wiki/utils/getAccessibleWikiPage";
-import { getEventWikiBasePath } from "@/modules/wiki/utils/wikiPageHref";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
@@ -12,7 +15,7 @@ type Params =
 
 const getVisiblePage = async (params: Params) => {
   const { id, pageId } = await params;
-  const context = await getEventWikiContext(id);
+  const context = await getEventWikiContext(toEventContainer(id));
   if (!context) return null;
 
   const page = getAccessibleWikiPage(context, pageId, "read");
@@ -46,7 +49,7 @@ export default async function Page(
 
   const { context, page, permissions } = result;
   const { id, slug } = await props.params;
-  const basePath = getEventWikiBasePath(id);
+  const basePath = getBriefingPath(toEventContainer(id));
 
   /** The root page's canonical URL is the bare briefing path */
   if (page.id === context.rootPage?.id) redirect(basePath);

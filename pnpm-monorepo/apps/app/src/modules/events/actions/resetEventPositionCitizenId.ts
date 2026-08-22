@@ -6,7 +6,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireManageablePosition } from "../utils/requireManageablePosition";
+import { requireManageableEventPosition } from "../utils/requireManageablePosition";
 
 const schema = z.object({
   positionId: z.cuid(),
@@ -19,7 +19,7 @@ export const resetEventPositionCitizenId = createAuthenticatedAction(
     /**
      * Authorize the request
      */
-    const { position, failure } = await requireManageablePosition(
+    const { position, eventId, failure } = await requireManageableEventPosition(
       data.positionId,
       formData,
       t,
@@ -45,7 +45,7 @@ export const resetEventPositionCitizenId = createAuthenticatedAction(
         {
           type: AuditEventType.EVENT_POSITION_CITIZEN_REMOVED,
           data: {
-            eventId: position.event.id,
+            eventId,
             positionId: position.id,
             previousCitizenId: position.citizenId,
           },
@@ -57,7 +57,7 @@ export const resetEventPositionCitizenId = createAuthenticatedAction(
     /**
      * Revalidate cache(s)
      */
-    revalidatePath(`/app/events/${position.event.id}/lineup`);
+    revalidatePath(`/app/events/${eventId}/lineup`);
 
     /**
      * Respond with the result

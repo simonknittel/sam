@@ -2,15 +2,23 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
-import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { isAllowedToManagePositions } from "../utils/isAllowedToManagePositions";
-import { isEventUpdatable } from "../utils/isEventUpdatable";
+import { authorizeEventContainer } from "../utils/authorizeEventContainer";
+import {
+  EVENT_CONTAINER_ID_FIELD,
+  EVENT_CONTAINER_KIND_FIELD,
+  eventContainerColumns,
+  EventContainerKind,
+  getLineupPath,
+  type EventContainer,
+} from "../utils/eventContainer";
+import { buildPositionCreatedAuditEvent } from "../utils/lineupAuditEvents";
 
 const schema = z.object({
-  eventId: z.cuid(),
+  containerKind: z.enum(EventContainerKind),
+  containerId: z.string().min(1).max(64),
   name: z.string().trim().max(256),
   description: z.string().trim().max(512).optional(),
   variantIds: z.array(z.cuid()).max(250), // Arbitrary (untested) limit to prevent DDoS
@@ -27,41 +35,47 @@ export const createEventPosition = createAuthenticatedAction(
     /**
      * Authorize the request
      */
-    const event = await prisma.event.findUnique({
-      where: {
-        id: data.eventId,
-      },
-      include: {
-        managers: true,
-        positions: true,
-      },
-    });
-    if (!event)
-      return { error: "Event nicht gefunden", requestPayload: formData };
-    if (!isEventUpdatable(event))
-      return {
-        error: "Das Event ist bereits vorbei.",
-        requestPayload: formData,
-      };
-    if (!(await isAllowedToManagePositions(event)))
-      return { error: t("Common.forbidden"), requestPayload: formData };
+    const container: EventContainer = {
+      kind: data.containerKind,
+      id: data.containerId,
+    };
+    const authorization = await authorizeEventContainer(container, t);
+    if (!authorization.allowed)
+      return { error: authorization.error, requestPayload: formData };
 
     /**
-     * Create entry
+     * A parent must live in the same container, or the position would leak
+     * into another lineup — the tree is walked by parentPositionId alone.
      */
+    if (data.parentPositionId) {
+      const parentPosition = await prisma.eventPosition.findFirst({
+        where: {
+          id: data.parentPositionId,
+          ...eventContainerColumns(container),
+        },
+        select: { id: true },
+      });
+      if (!parentPosition)
+        return { error: t("Common.badRequest"), requestPayload: formData };
+    }
+
+    /**
+     * Create entry. The order value the lineup always used is the container's
+     * total position count, which is at least as large as any sibling's order.
+     */
+    const positionCount = await prisma.eventPosition.count({
+      where: eventContainerColumns(container),
+    });
+
     const createdPosition = await prisma.eventPosition.create({
       data: {
-        event: {
-          connect: {
-            id: data.eventId,
-          },
-        },
+        ...eventContainerColumns(container),
         name: data.name,
         description: data.description,
         fontSize: data.fontSize,
         backgroundColor: data.backgroundColor,
         textColor: data.textColor,
-        order: event.positions.length,
+        order: positionCount,
         requiredVariants: {
           createMany: {
             data: data.variantIds.map((id, index) => ({
@@ -70,15 +84,7 @@ export const createEventPosition = createAuthenticatedAction(
             })),
           },
         },
-        ...(data.parentPositionId
-          ? {
-              parentPosition: {
-                connect: {
-                  id: data.parentPositionId,
-                },
-              },
-            }
-          : {}),
+        parentPositionId: data.parentPositionId ?? null,
       },
       select: {
         id: true,
@@ -86,23 +92,22 @@ export const createEventPosition = createAuthenticatedAction(
     });
 
     await createAuditEvents([
-      {
-        type: AuditEventType.EVENT_POSITION_CREATED,
-        data: {
-          eventId: event.id,
+      buildPositionCreatedAuditEvent(
+        container,
+        {
           positionId: createdPosition.id,
           name: data.name,
           variantIds: data.variantIds,
           parentPositionId: data.parentPositionId,
         },
-        createdById: authentication.session.user.id,
-      },
+        authentication.session.user.id,
+      ),
     ]);
 
     /**
      * Revalidate cache(s)
      */
-    revalidatePath(`/app/events/${event.id}/lineup`);
+    revalidatePath(getLineupPath(container));
 
     /**
      * Respond with the result
@@ -113,7 +118,8 @@ export const createEventPosition = createAuthenticatedAction(
   },
   {
     parseFormData: (formData) => ({
-      eventId: formData.get("eventId"),
+      containerKind: formData.get(EVENT_CONTAINER_KIND_FIELD),
+      containerId: formData.get(EVENT_CONTAINER_ID_FIELD),
       name: formData.get("name"),
       description: formData.has("description")
         ? formData.get("description")

@@ -2,13 +2,18 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
-import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { authorizeEventContainer } from "../utils/authorizeEventContainer";
 import { clonePositions } from "../utils/clonePositions";
-import { isAllowedToManagePositions } from "../utils/isAllowedToManagePositions";
-import { isEventUpdatable } from "../utils/isEventUpdatable";
+import {
+  eventContainerColumns,
+  getLineupPath,
+  getPositionContainer,
+  type EventContainer,
+} from "../utils/eventContainer";
+import { buildPositionCopiedAuditEvent } from "../utils/lineupAuditEvents";
 import {
   canPasteSubtree,
   getPositionLevel,
@@ -23,18 +28,8 @@ const schema = z.object({
   placement: z.enum(["after", "inside"]),
 });
 
-const eventSelect = {
-  id: true,
-  startTime: true,
-  endTime: true,
-  discordCreatorId: true,
-  createdById: true,
-  managers: {
-    select: {
-      id: true,
-    },
-  },
-} as const;
+const isSameContainer = (first: EventContainer, second: EventContainer) =>
+  first.kind === second.kind && first.id === second.id;
 
 export const pasteEventPosition = createAuthenticatedAction(
   "pasteEventPosition",
@@ -49,7 +44,8 @@ export const pasteEventPosition = createAuthenticatedAction(
         select: {
           id: true,
           name: true,
-          event: { select: eventSelect },
+          eventId: true,
+          templateId: true,
         },
       }),
 
@@ -59,44 +55,55 @@ export const pasteEventPosition = createAuthenticatedAction(
           id: true,
           order: true,
           parentPositionId: true,
-          event: { select: eventSelect },
+          eventId: true,
+          templateId: true,
         },
       }),
     ]);
-    /**
-     * Copying in or out of a template blueprint is not offered — the lineup
-     * clipboard is event-scoped (see EventPosition.eventId).
-     */
-    const sourceEvent = sourcePosition?.event;
-    const targetEvent = targetPosition?.event;
-    if (!sourcePosition || !sourceEvent || !targetPosition || !targetEvent)
+    const sourceContainer = sourcePosition
+      ? getPositionContainer(sourcePosition)
+      : null;
+    const targetContainer = targetPosition
+      ? getPositionContainer(targetPosition)
+      : null;
+    if (
+      !sourcePosition ||
+      !sourceContainer ||
+      !targetPosition ||
+      !targetContainer
+    )
       return {
         error: "Posten nicht gefunden",
         requestPayload: formData,
       };
-    const sourceEventId = sourceEvent.id;
-    const targetEventId = targetEvent.id;
 
     /**
-     * Authorize the request. The source event doesn't need to be updatable
-     * since copying out of an event which is already over is the whole point of
-     * pasting into another event.
+     * Authorize the request. Both sides go through the same guard, so a
+     * lineup travels between events, between templates and in either
+     * direction between the two — which is what makes the clipboard useful.
+     * The source doesn't need to be updatable since copying out of an event
+     * which is already over is the whole point of pasting it into another.
      */
-    if (!(await isAllowedToManagePositions(sourceEvent)))
-      return { error: t("Common.forbidden"), requestPayload: formData };
-    if (!isEventUpdatable(targetEvent))
-      return {
-        error: "Das Event ist bereits vorbei.",
-        requestPayload: formData,
-      };
-    if (!(await isAllowedToManagePositions(targetEvent)))
-      return { error: t("Common.forbidden"), requestPayload: formData };
+    const sourceAuthorization = await authorizeEventContainer(
+      sourceContainer,
+      t,
+      { ignoreFreeze: true },
+    );
+    if (!sourceAuthorization.allowed)
+      return { error: sourceAuthorization.error, requestPayload: formData };
+
+    const targetAuthorization = await authorizeEventContainer(
+      targetContainer,
+      t,
+    );
+    if (!targetAuthorization.allowed)
+      return { error: targetAuthorization.error, requestPayload: formData };
 
     /**
      * Make sure the paste doesn't break the lineup
      */
-    const sourceEventPositions = await prisma.eventPosition.findMany({
-      where: { eventId: sourceEventId },
+    const sourcePositions = await prisma.eventPosition.findMany({
+      where: eventContainerColumns(sourceContainer),
       orderBy: { order: "asc" },
       select: {
         id: true,
@@ -121,25 +128,21 @@ export const pasteEventPosition = createAuthenticatedAction(
       },
     });
 
-    const subtree = getPositionSubtree(sourceEventPositions, sourcePosition.id);
+    const subtree = getPositionSubtree(sourcePositions, sourcePosition.id);
     if (!subtree)
       return { error: "Posten nicht gefunden", requestPayload: formData };
 
-    const targetEventPositions =
-      targetEventId === sourceEventId
-        ? sourceEventPositions
-        : await prisma.eventPosition.findMany({
-            where: { eventId: targetEventId },
-            select: {
-              id: true,
-              parentPositionId: true,
-            },
-          });
+    const targetPositions = isSameContainer(sourceContainer, targetContainer)
+      ? sourcePositions
+      : await prisma.eventPosition.findMany({
+          where: eventContainerColumns(targetContainer),
+          select: {
+            id: true,
+            parentPositionId: true,
+          },
+        });
 
-    const targetLevel = getPositionLevel(
-      targetEventPositions,
-      targetPosition.id,
-    );
+    const targetLevel = getPositionLevel(targetPositions, targetPosition.id);
     const parentLevel =
       data.placement === "inside" ? targetLevel : targetLevel - 1;
     if (!canPasteSubtree(parentLevel, getSubtreeDepth(subtree)))
@@ -155,7 +158,7 @@ export const pasteEventPosition = createAuthenticatedAction(
 
     const siblings = await prisma.eventPosition.count({
       where: {
-        eventId: targetEventId,
+        ...eventContainerColumns(targetContainer),
         parentPositionId,
       },
     });
@@ -174,7 +177,7 @@ export const pasteEventPosition = createAuthenticatedAction(
       if (data.placement === "inside") {
         const { _max } = await transaction.eventPosition.aggregate({
           where: {
-            eventId: targetEventId,
+            ...eventContainerColumns(targetContainer),
             parentPositionId: targetPosition.id,
           },
           _max: { order: true },
@@ -186,7 +189,7 @@ export const pasteEventPosition = createAuthenticatedAction(
 
         await transaction.eventPosition.updateMany({
           where: {
-            eventId: targetEventId,
+            ...eventContainerColumns(targetContainer),
             parentPositionId: targetPosition.parentPositionId,
             order: { gte: startOrder },
           },
@@ -196,32 +199,29 @@ export const pasteEventPosition = createAuthenticatedAction(
         });
       }
 
-      return clonePositions(transaction, [subtree], {
-        eventId: targetEventId,
+      return await clonePositions(transaction, [subtree], {
+        container: targetContainer,
         parentPositionId,
         startOrder,
       });
     });
 
     await createAuditEvents([
-      {
-        type: AuditEventType.EVENT_POSITION_COPIED,
-        data: {
-          sourceEventId,
-          sourcePositionId: sourcePosition.id,
-          targetEventId,
-          targetPositionId: targetPosition.id,
+      buildPositionCopiedAuditEvent(
+        { container: sourceContainer, positionId: sourcePosition.id },
+        { container: targetContainer, positionId: targetPosition.id },
+        {
           placement: data.placement,
-          positionCount: createdPositions,
+          positionCount: createdPositions.size,
         },
-        createdById: authentication.session.user.id,
-      },
+        authentication.session.user.id,
+      ),
     ]);
 
     /**
      * Revalidate cache(s)
      */
-    revalidatePath(`/app/events/${targetEventId}/lineup`);
+    revalidatePath(getLineupPath(targetContainer));
 
     /**
      * Respond with the result

@@ -156,6 +156,7 @@ export const createWikiPage = createAuthenticatedAction(
             id: root.id,
             slug: root.slug,
             eventId: parent?.eventId ?? null,
+            templateId: parent?.templateId ?? null,
           }),
       );
     }
@@ -171,18 +172,20 @@ export const createWikiPage = createAuthenticatedAction(
     /**
      * Defaults: top-level pages are "private" (RESTRICTED without roles) and
      * owned by their creator; child pages inherit everything including the
-     * owner. Event pages inherit their scopes (the column defaults) and use
-     * no owner — the fixed manage tier replaces it.
+     * owner. Briefing pages inherit their scopes (the column defaults) and
+     * use no owner — the fixed manage tier replaces it.
      */
     const page = await prisma.wikiPage.create({
       data: {
         title: data.title,
         slug: slugifyWikiPageTitle(data.title),
         parentId: data.parentId ?? null,
-        namespace: parent?.eventId
-          ? WikiPageNamespace.EVENT
-          : WikiPageNamespace.WIKI,
+        namespace:
+          parent?.eventId || parent?.templateId
+            ? WikiPageNamespace.EVENT
+            : WikiPageNamespace.WIKI,
         eventId: parent?.eventId ?? null,
+        templateId: parent?.templateId ?? null,
         sortOrder,
         visibility: data.parentId
           ? WikiPageVisibility.INHERIT
@@ -197,7 +200,7 @@ export const createWikiPage = createAuthenticatedAction(
           ? WikiPageUploadability.INHERIT
           : WikiPageUploadability.RESTRICTED,
         ownerId:
-          data.parentId || parent?.eventId
+          data.parentId || parent?.eventId || parent?.templateId
             ? null
             : authentication.session.entity.id,
         createdById: authentication.session.entity.id,
@@ -232,6 +235,7 @@ export const createWikiPage = createAuthenticatedAction(
           id: page.id,
           slug: page.slug,
           eventId: parent?.eventId ?? null,
+          templateId: parent?.templateId ?? null,
         }),
     );
   },

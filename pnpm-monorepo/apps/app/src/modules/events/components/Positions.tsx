@@ -11,7 +11,7 @@ interface Props extends ComponentProps<typeof LineupOrderProvider> {
 }
 
 export const Positions = ({
-  eventId,
+  container,
   positions,
   canManagePositions,
   variants,
@@ -25,7 +25,7 @@ export const Positions = ({
 
       <LineupClipboardProvider>
         <LineupOrderProvider
-          eventId={eventId}
+          container={container}
           positions={positions}
           showManage={canManagePositions}
           variants={variants}
