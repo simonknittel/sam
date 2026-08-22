@@ -4,6 +4,8 @@ import { EventBriefingPublishedHandler } from "./type-handlers/EventBriefingPubl
 import { EventCreatedHandler } from "./type-handlers/EventCreated";
 import { EventDeletedHandler } from "./type-handlers/EventDeleted";
 import { EventLineupEnabledHandler } from "./type-handlers/EventLineupEnabled";
+import { EventParticipationAddedHandler } from "./type-handlers/EventParticipationAdded";
+import { EventParticipationRemovedHandler } from "./type-handlers/EventParticipationRemoved";
 import { EventStartingHandler } from "./type-handlers/EventStarting";
 import { EventUpdatedHandler } from "./type-handlers/EventUpdated";
 import { PenaltyEntryCreatedHandler } from "./type-handlers/PenaltyEntryCreated";
@@ -42,6 +44,12 @@ export const notificationRouterHandler = async (
       break;
     case "EventStarting":
       await EventStartingHandler(body.payload);
+      break;
+    case "EventParticipationAdded":
+      await EventParticipationAddedHandler(body.payload);
+      break;
+    case "EventParticipationRemoved":
+      await EventParticipationRemovedHandler(body.payload);
       break;
     case "TaskCreated":
       await TaskCreatedHandler(body.payload);
@@ -113,6 +121,25 @@ export const bodySchema = z.discriminatedUnion("type", [
     type: z.literal("EventStarting"),
     payload: z.object({
       eventId: z.cuid(),
+    }),
+    requestId: z.cuid2(),
+  }),
+
+  z.object({
+    type: z.literal("EventParticipationAdded"),
+    payload: z.object({
+      eventId: z.cuid(),
+      citizenId: z.cuid(),
+    }),
+    requestId: z.cuid2(),
+  }),
+
+  z.object({
+    type: z.literal("EventParticipationRemoved"),
+    payload: z.object({
+      eventId: z.cuid(),
+      citizenId: z.cuid(),
+      reason: z.string().max(500).nullable(),
     }),
     requestId: z.cuid2(),
   }),
