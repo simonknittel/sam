@@ -2035,6 +2035,41 @@ export const AuditEventDefinitions: {
       } (event: ${data.eventId})`,
   },
 
+  [AuditEventType.EVENT_PUBLISHED_TO_DISCORD]: {
+    type: AuditEventType.EVENT_PUBLISHED_TO_DISCORD,
+    data: {
+      eventId: "string",
+      discordScheduledEventId: "string",
+      discordChannelId: "string",
+    },
+    message: (data) =>
+      `Event published to Discord as ${data.discordScheduledEventId} (${
+        data.discordChannelId
+          ? `channel ${data.discordChannelId}`
+          : "external location"
+      }) (event: ${data.eventId})`,
+  },
+
+  [AuditEventType.EVENT_UNPUBLISHED_FROM_DISCORD]: {
+    type: AuditEventType.EVENT_UNPUBLISHED_FROM_DISCORD,
+    data: {
+      eventId: "string",
+      discordScheduledEventId: "string",
+    },
+    message: (data) =>
+      `Event unpublished from Discord (${data.discordScheduledEventId}) (event: ${data.eventId})`,
+  },
+
+  [AuditEventType.EVENT_DISCORD_PUBLICATION_CLEARED]: {
+    type: AuditEventType.EVENT_DISCORD_PUBLICATION_CLEARED,
+    data: {
+      eventId: "string",
+      discordScheduledEventId: "string",
+    },
+    message: (data) =>
+      `Discord no longer knows the published event ${data.discordScheduledEventId}; publish state cleared (event: ${data.eventId})`,
+  },
+
   [AuditEventType.EVENT_PARTICIPATION_SIGNED_UP]: {
     type: AuditEventType.EVENT_PARTICIPATION_SIGNED_UP,
     data: {

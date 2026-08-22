@@ -4,6 +4,10 @@ import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import { probeUploadImageDimensions } from "@/modules/common/utils/probeUploadImageDimensions";
+import {
+  getDiscordSyncWarning,
+  syncDiscordEventPublication,
+} from "@/modules/events/utils/discordPublishing";
 import { isAllowedToManageEvent } from "@/modules/events/utils/isAllowedToManageEvent";
 import { isEventUpdatable } from "@/modules/events/utils/isEventUpdatable";
 import {
@@ -189,10 +193,21 @@ export async function PATCH(request: Request) {
 
       if (data.imageId) probeUploadImageDimensions(data.imageId);
 
+      /**
+       * A published event carries its cover on Discord too. The upload is
+       * already assigned above, so a Discord problem only travels back as a
+       * warning the uploader sees.
+       */
+      const discordWarning = getDiscordSyncWarning(
+        await syncDiscordEventPublication(event.id),
+      );
+
       revalidatePath("/app/events");
       revalidatePath(`/app/events/${event.id}`, "layout");
 
-      return NextResponse.json({});
+      return NextResponse.json(
+        discordWarning ? { warning: discordWarning } : {},
+      );
     }
 
     if (data.resourceType === "wikiPage") {

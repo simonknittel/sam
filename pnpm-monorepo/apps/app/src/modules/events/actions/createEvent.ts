@@ -5,6 +5,7 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { probeUploadImageDimensions } from "@/modules/common/utils/probeUploadImageDimensions";
+import { DISCORD_EVENT_LOCATION_MAX_LENGTH } from "@/modules/discord/utils/guildScheduledEventPayload";
 import { getEventTemplateById } from "@/modules/event-templates/queries/getEventTemplateById";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { copyUpload } from "@/modules/uploads/utils/copyUpload";
@@ -12,6 +13,7 @@ import { getEventWikiContext } from "@/modules/wiki/queries/getEventWikiContext"
 import { copyBriefingTree } from "@/modules/wiki/utils/copyBriefingTree";
 import {
   EventActivityType,
+  EventDiscordPublishTarget,
   EventSource,
   EventVisibility,
   WikiPageEventScope,
@@ -23,7 +25,19 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { berlinWallTimeToUtc } from "../utils/berlinWallTime";
 import { clonePositions } from "../utils/clonePositions";
+import {
+  createDiscordEventPublication,
+  DiscordSyncOutcome,
+  resolveDiscordPublishTarget,
+} from "../utils/discordPublishing";
 import { createEventActivity } from "../utils/eventActivity";
+import {
+  DISCORD_PUBLISH_FAILED_PARAM,
+  EVENT_DESCRIPTION_MAX_LENGTH,
+  EVENT_MAX_VISIBILITY_ROLES,
+  EVENT_NAME_MAX_LENGTH,
+  getEventPath,
+} from "../utils/eventConstraints";
 import {
   eventContainerColumns,
   toEventContainer,
@@ -39,12 +53,15 @@ const WALL_TIME_SCHEMA = z
 const TRANSACTION_TIMEOUT_MS = 30_000;
 
 const schema = z.object({
-  name: z.string().trim().min(1).max(128),
-  description: z.string().trim().max(2000).optional(),
+  name: z.string().trim().min(1).max(EVENT_NAME_MAX_LENGTH),
+  description: z.string().trim().max(EVENT_DESCRIPTION_MAX_LENGTH).optional(),
   startTime: WALL_TIME_SCHEMA,
   endTime: WALL_TIME_SCHEMA,
   visibility: z.enum(EventVisibility),
-  visibilityRoleIds: z.array(z.cuid()).max(50).optional(),
+  visibilityRoleIds: z
+    .array(z.cuid())
+    .max(EVENT_MAX_VISIBILITY_ROLES)
+    .optional(),
   coverImageId: z.cuid().optional(),
   /** Set when the form was prefilled from a template (see the picker) */
   templateId: z.cuid2().optional(),
@@ -53,6 +70,18 @@ const schema = z.object({
    * submitter's own, so it travels as this flag instead of an upload id.
    */
   keepTemplateCover: z.boolean().optional(),
+  /**
+   * Publishes the new event to Discord right after creation. Absent means
+   * "do not publish"; a template's preference reaches the action by
+   * prefilling these fields, so clearing them in the form still wins.
+   */
+  discordPublishTarget: z.enum(EventDiscordPublishTarget).optional(),
+  discordPublishChannelId: z.string().max(64).optional(),
+  discordPublishLocation: z
+    .string()
+    .trim()
+    .max(DISCORD_EVENT_LOCATION_MAX_LENGTH)
+    .optional(),
 });
 
 export const createEvent = createAuthenticatedAction(
@@ -313,6 +342,31 @@ export const createEvent = createAuthenticatedAction(
     ]);
 
     /**
+     * Publish to Discord if the form (or the template it was prefilled from)
+     * asked for it. A failure never undoes the created event — the manager
+     * is told on the event page and can retry from its settings.
+     */
+    let publishFailed = false;
+    if (data.discordPublishTarget) {
+      const target = await resolveDiscordPublishTarget(
+        {
+          target: data.discordPublishTarget,
+          channelId: data.discordPublishChannelId ?? null,
+          location: data.discordPublishLocation ?? null,
+        },
+        createdEvent.id,
+      );
+
+      const result = target
+        ? await createDiscordEventPublication(createdEvent.id, target, {
+            userId: authentication.session.user.id,
+            citizenId,
+          })
+        : null;
+      publishFailed = result?.outcome !== DiscordSyncOutcome.Done;
+    }
+
+    /**
      * Revalidate cache(s)
      */
     revalidatePath("/app/events");
@@ -322,7 +376,11 @@ export const createEvent = createAuthenticatedAction(
      * Redirect to the created event; the form's success hook closes the
      * modal while the navigation is in flight (see useAction).
      */
-    redirect(`/app/events/${createdEvent.id}`);
+    redirect(
+      publishFailed
+        ? `${getEventPath(createdEvent.id)}?${DISCORD_PUBLISH_FAILED_PARAM}=1`
+        : getEventPath(createdEvent.id),
+    );
   },
   {
     parseFormData: (formData) => ({
@@ -335,6 +393,11 @@ export const createEvent = createAuthenticatedAction(
       coverImageId: formData.get("coverImageId") || undefined,
       templateId: formData.get("templateId") || undefined,
       keepTemplateCover: formData.get("keepTemplateCover") === "1",
+      discordPublishTarget: formData.get("discordPublishTarget") || undefined,
+      discordPublishChannelId:
+        formData.get("discordPublishChannelId") || undefined,
+      discordPublishLocation:
+        formData.get("discordPublishLocation") || undefined,
     }),
   },
 );

@@ -40,6 +40,13 @@ export const useAction = (
         }
 
         toast.success(response.success);
+        /**
+         * A second, longer-lived toast rather than an appendix to the
+         * success message: the work did succeed, and the part that did not
+         * deserves to be read rather than skimmed past in green.
+         */
+        if (response.warning)
+          toast(response.warning, { icon: "⚠️", duration: 8000 });
         options?.onSuccess?.(formData);
         return response;
       } catch (error) {

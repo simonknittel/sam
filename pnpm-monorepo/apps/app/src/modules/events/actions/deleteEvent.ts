@@ -8,6 +8,10 @@ import { triggerNotifications } from "@/modules/notifications/utils/triggerNotif
 import { EventSource } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import {
+  DiscordSyncOutcome,
+  removeDiscordEventPublication,
+} from "../utils/discordPublishing";
 import { isAllowedToManageEvent } from "../utils/isAllowedToManageEvent";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
 
@@ -44,6 +48,16 @@ export const deleteEvent = createAuthenticatedAction(
         error: t("Common.forbidden"),
         requestPayload: formData,
       };
+
+    /**
+     * Take the event off Discord first: once the row is soft-deleted it no
+     * longer surfaces anywhere the manager could retry from, so a leftover
+     * guild scheduled event would advertise an event that is gone.
+     */
+    const discordResult = await removeDiscordEventPublication(event.id, {
+      userId: authentication.session.user.id,
+      citizenId: authentication.session.entity?.id ?? null,
+    });
 
     /**
      * Soft-delete the event. The row stays resolvable, so the notification
@@ -93,6 +107,12 @@ export const deleteEvent = createAuthenticatedAction(
      */
     return {
       success: "Das Event wurde gelöscht.",
+      ...(discordResult.outcome === DiscordSyncOutcome.Failed
+        ? {
+            warning:
+              "Das Event konnte nicht von Discord entfernt werden und muss dort von Hand gelöscht werden.",
+          }
+        : {}),
     };
   },
 );

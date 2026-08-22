@@ -5,7 +5,11 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { probeUploadImageDimensions } from "@/modules/common/utils/probeUploadImageDimensions";
-import { EventVisibility } from "@sam-monorepo/database/client";
+import { DISCORD_EVENT_LOCATION_MAX_LENGTH } from "@/modules/discord/utils/guildScheduledEventPayload";
+import {
+  EventDiscordPublishTarget,
+  EventVisibility,
+} from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getEventTemplateById } from "../queries/getEventTemplateById";
@@ -31,6 +35,17 @@ const schema = z.object({
   coverImageId: z.union([z.cuid(), z.literal(NO_COVER)]),
   visibility: z.enum(EventVisibility),
   visibilityRoleIds: z.array(z.cuid()).max(EVENT_TEMPLATE_MAX_ROLES).optional(),
+  /**
+   * The Discord publishing an event created from this template starts with.
+   * Absent means "do not publish".
+   */
+  discordPublishTarget: z.enum(EventDiscordPublishTarget).optional(),
+  discordPublishChannelId: z.string().max(64).optional(),
+  discordPublishLocation: z
+    .string()
+    .trim()
+    .max(DISCORD_EVENT_LOCATION_MAX_LENGTH)
+    .optional(),
 });
 
 export const updateEventTemplate = createAuthenticatedAction(
@@ -86,6 +101,18 @@ export const updateEventTemplate = createAuthenticatedAction(
         return { error: "Ungültiges Titelbild", requestPayload: formData };
     }
 
+    /**
+     * The three publish columns only make sense together — a CHECK
+     * constraint enforces that — so they are always written as one set.
+     */
+    const publishesToChannel =
+      data.discordPublishTarget === EventDiscordPublishTarget.CHANNEL;
+    if (publishesToChannel && !data.discordPublishChannelId)
+      return {
+        error: "Wähle einen Discord-Kanal aus.",
+        requestPayload: formData,
+      };
+
     await prisma.eventTemplate.update({
       where: { id: context.template.id },
       data: {
@@ -97,6 +124,14 @@ export const updateEventTemplate = createAuthenticatedAction(
           deleteMany: {},
           create: visibilityRoleIds.map((roleId) => ({ roleId })),
         },
+        discordPublishTarget: data.discordPublishTarget ?? null,
+        discordPublishChannelId: publishesToChannel
+          ? (data.discordPublishChannelId ?? null)
+          : null,
+        discordPublishLocation:
+          data.discordPublishTarget === EventDiscordPublishTarget.EXTERNAL
+            ? data.discordPublishLocation || null
+            : null,
         updatedById: citizenId,
       },
     });
@@ -131,6 +166,11 @@ export const updateEventTemplate = createAuthenticatedAction(
       coverImageId: formData.get("coverImageId") ?? NO_COVER,
       visibility: formData.get("visibility"),
       visibilityRoleIds: formData.getAll("visibilityRole[]"),
+      discordPublishTarget: formData.get("discordPublishTarget") || undefined,
+      discordPublishChannelId:
+        formData.get("discordPublishChannelId") || undefined,
+      discordPublishLocation:
+        formData.get("discordPublishLocation") || undefined,
     }),
   },
 );

@@ -199,6 +199,9 @@ export enum AuditEventType {
   EVENT_UPDATED_IN_APP = "EVENT_UPDATED_IN_APP",
   EVENT_DELETED_IN_APP = "EVENT_DELETED_IN_APP",
   EVENT_VISIBILITY_UPDATED = "EVENT_VISIBILITY_UPDATED",
+  EVENT_PUBLISHED_TO_DISCORD = "EVENT_PUBLISHED_TO_DISCORD",
+  EVENT_UNPUBLISHED_FROM_DISCORD = "EVENT_UNPUBLISHED_FROM_DISCORD",
+  EVENT_DISCORD_PUBLICATION_CLEARED = "EVENT_DISCORD_PUBLICATION_CLEARED",
   EVENT_PARTICIPATION_SIGNED_UP = "EVENT_PARTICIPATION_SIGNED_UP",
   EVENT_PARTICIPATION_COMMENT_UPDATED = "EVENT_PARTICIPATION_COMMENT_UPDATED",
   EVENT_PARTICIPATION_CANCELLED = "EVENT_PARTICIPATION_CANCELLED",
@@ -1379,6 +1382,29 @@ export interface AuditEventDataByType {
     eventId: string;
     visibility: string;
     roleIds: string[];
+  };
+
+  [AuditEventType.EVENT_PUBLISHED_TO_DISCORD]: {
+    eventId: string;
+    /** The guild scheduled event Discord created */
+    discordScheduledEventId: string;
+    /** The Discord channel it points at, or null for an external location */
+    discordChannelId: string | null;
+  };
+
+  [AuditEventType.EVENT_UNPUBLISHED_FROM_DISCORD]: {
+    eventId: string;
+    discordScheduledEventId: string;
+  };
+
+  /**
+   * The guild scheduled event was gone when the app next talked to Discord
+   * about it (someone deleted it there), so the app dropped its own publish
+   * state and the event can be published again.
+   */
+  [AuditEventType.EVENT_DISCORD_PUBLICATION_CLEARED]: {
+    eventId: string;
+    discordScheduledEventId: string;
   };
 
   [AuditEventType.EVENT_PARTICIPATION_SIGNED_UP]: {

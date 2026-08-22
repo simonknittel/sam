@@ -12,7 +12,15 @@ import { serializeError } from "serialize-error";
 import type { z } from "zod";
 
 export type ActionResponse =
-  | { success: string }
+  | {
+      success: string;
+      /**
+       * Shown next to the success message when part of the work did not go
+       * through but the app-side save stands — e.g. a published event whose
+       * Discord counterpart could not be updated.
+       */
+      warning?: string;
+    }
   | {
       error: string;
       errorDetails?: unknown;

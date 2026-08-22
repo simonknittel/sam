@@ -7,7 +7,10 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type ChangeEventHandler } from "react";
 import toast from "react-hot-toast";
+import { z } from "zod";
 import useUpload from "../utils/useUpload";
+
+const assignResponseSchema = z.object({ warning: z.string().optional() });
 
 interface Props {
   readonly className?: string;
@@ -51,10 +54,18 @@ export const ImageUpload = ({
       }),
       signal: AbortSignal.timeout(10_000),
     })
-      .then((response) => {
+      .then(async (response) => {
         if (!response.ok) throw new Error("Assigning the upload failed");
+        const body: unknown = await response.json();
         router.refresh();
         toast.success("Erfolgreich hochgeladen");
+
+        /**
+         * The image was assigned; a warning only reports follow-up work the
+         * route could not finish (e.g. updating a published Discord event).
+         */
+        const { warning } = assignResponseSchema.parse(body);
+        if (warning) toast(warning, { icon: "⚠️", duration: 8000 });
       })
       .catch((error) => {
         console.error(error);
