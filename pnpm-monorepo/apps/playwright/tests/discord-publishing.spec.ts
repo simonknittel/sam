@@ -370,6 +370,56 @@ test("a legacy description longer than Discord allows blocks publishing", async 
   expect(stillUnpublished!.discordPublishedId).toBeNull();
 });
 
+test("a cover image Discord cannot take is reported but does not stop publishing", async ({
+  page,
+  prisma,
+  signIn,
+  discordMock,
+}) => {
+  const creator = await createCitizen(prisma, {
+    handle: "titelbild-orga",
+    permissionStrings: ["event;read"],
+  });
+  // Discord's image data only accepts JPEG, PNG and GIF
+  const cover = await prisma.upload.create({
+    data: {
+      fileName: "cover.webp",
+      mimeType: "image/webp",
+      createdById: creator.user.id,
+    },
+  });
+  const event = await createAppEvent(prisma, {
+    name: "Operation Bildfehler",
+    createdById: creator.entity.id,
+    ...futureEvent(),
+  });
+  await prisma.event.update({
+    where: { id: event.id },
+    data: { coverImageId: cover.id },
+  });
+
+  await signIn(creator.user);
+  await page.goto(`/app/events/${event.id}/settings`);
+  await waitForAppShellHydration(page);
+  await page
+    .getByRole("button", { name: "Auf Discord veröffentlichen" })
+    .click();
+
+  await expect(
+    page.getByText("Das Event wurde auf Discord veröffentlicht."),
+  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(
+    page.getByText("Das Titelbild konnte nicht an Discord übertragen werden."),
+  ).toBeVisible();
+
+  const published = await prisma.event.findUnique({ where: { id: event.id } });
+  expect(published!.discordPublishedId).not.toBeNull();
+  // No image key at all, so Discord keeps whatever it has rather than clearing
+  expect(
+    discordMock.scheduledEvents.get(published!.discordPublishedId!),
+  ).not.toHaveProperty("image");
+});
+
 test("publishing a restricted event needs an explicit confirmation", async ({
   page,
   prisma,
@@ -473,6 +523,64 @@ test("a template's publish preference prefills the create form and publishes the
     entity_type: VOICE_ENTITY_TYPE,
     channel_id: MOCK_VOICE_CHANNEL.id,
   });
+});
+
+/**
+ * The create form widens the audience the same way the settings card does,
+ * so it asks the same question. That the confirmation's own button submits
+ * is covered by the settings-card test above — they share the dialog.
+ */
+test("creating a restricted event with publishing needs the same confirmation", async ({
+  page,
+  prisma,
+  signIn,
+  discordMock,
+}) => {
+  const creator = await createCitizen(prisma, {
+    handle: "geheim-ersteller",
+    permissionStrings: ["event;read", "event;create"],
+  });
+
+  await signIn(creator.user);
+  await page.goto("/app/events");
+  await page.getByRole("button", { name: "Event erstellen" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Neues Event" }),
+  ).toBeVisible();
+
+  await page.getByLabel("Titel").fill("Operation Doppelt Geheim");
+  await page.getByLabel("Start").fill("2027-06-01T20:00");
+  await page.getByLabel("Ende").fill("2027-06-01T22:00");
+
+  // The checkbox itself is visually hidden; its label is what users click
+  await page
+    .locator("label", { hasText: /^Auf Discord veröffentlichen$/ })
+    .click();
+  await expect(page.getByRole("textbox", { name: "Ort" })).toBeVisible();
+
+  // Publishing a public event still saves in one click
+  await expect(page.getByRole("alertdialog")).toHaveCount(0);
+
+  await page.locator("label", { hasText: /^Eingeschränkt$/ }).click();
+  await page.getByRole("button", { name: "Speichern" }).click();
+
+  const dialog = page.getByRole("alertdialog");
+  await expect(
+    dialog.getByText("Auf Discord sehen es alle Mitglieder des Servers"),
+  ).toBeVisible();
+
+  await dialog.getByRole("button", { name: "Abbrechen" }).click();
+  expect(await prisma.event.count()).toBe(0);
+  expect(discordMock.scheduledEvents.size).toBe(0);
+
+  // Back to public: the plain submit button is back and creates the event
+  await page.locator("label", { hasText: /^Öffentlich$/ }).click();
+  await page.getByRole("button", { name: "Speichern" }).click();
+
+  await expect(page).toHaveURL(/\/app\/events\/[a-z0-9]+$/, {
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+  expect(discordMock.scheduledEvents.size).toBe(1);
 });
 
 test("a Discord-sourced event offers no publishing at all", async ({
