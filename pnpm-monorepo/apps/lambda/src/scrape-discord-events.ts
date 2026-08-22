@@ -15,27 +15,42 @@ import { triggerNotifications } from "./scrape-discord-events/notifications";
 import { excludeAppPublishedEvents } from "./scrape-discord-events/reconciliation";
 import { updateParticipants } from "./scrape-discord-events/updateParticipants";
 
+/** The guild scheduled event ids the app itself owns, right now. */
+const getAppPublishedDiscordIds = async () => {
+  const events = await prisma.event.findMany({
+    where: { discordPublishedId: { not: null } },
+    select: { discordPublishedId: true },
+  });
+
+  return events.map((event) => event.discordPublishedId!);
+};
+
 export const handler: ScheduledHandler = async (event, context) => {
   return initializeRequestContext(context.awsRequestId, async () => {
     try {
+      /**
+       * Everything the app published to the guild itself is invisible to
+       * this sync — those events already live in the database as APP rows
+       * and the app keeps them up to date from its own side.
+       *
+       * Read on both sides of the fetch and unioned, because either order
+       * alone loses a race: an event published after the DB read would not
+       * be excluded, and one unpublished after it would be excluded by the
+       * later read but had already been fetched. Both cases would import it
+       * as a duplicate — and the second would then have the participant
+       * sync call a scheduled event that no longer exists, aborting the run.
+       */
+      const publishedIdsBeforeFetch = await getAppPublishedDiscordIds();
       const { data: _futureEventsFromDiscord } = await getEvents();
       void log.info("Fetched events from Discord", {
         count: _futureEventsFromDiscord.length,
         eventIds: _futureEventsFromDiscord.map((event) => event.id),
       });
+      const publishedIdsAfterFetch = await getAppPublishedDiscordIds();
 
-      /**
-       * Everything the app published to the guild itself is invisible to
-       * this sync — those events already live in the database as APP rows
-       * and the app keeps them up to date from its own side.
-       */
-      const appPublishedEvents = await prisma.event.findMany({
-        where: { discordPublishedId: { not: null } },
-        select: { discordPublishedId: true },
-      });
       const ownEventsFromDiscord = excludeAppPublishedEvents(
         _futureEventsFromDiscord,
-        new Set(appPublishedEvents.map((event) => event.discordPublishedId!)),
+        new Set([...publishedIdsBeforeFetch, ...publishedIdsAfterFetch]),
       );
       if (ownEventsFromDiscord.length !== _futureEventsFromDiscord.length)
         void log.info("Skipped guild events the app published itself", {
