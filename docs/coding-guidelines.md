@@ -1,38 +1,38 @@
-# Coding Guidelines
+# Code Guidelines
 
 ## General
 
-- Avoid premature optimization. For example, if an abstraction could reduce code duplication, only suggest it if it eliminates significant lines of duplication or removes a non-obvious coupling that would otherwise require coordinated changes in multiple places.
-- Stay close to conventions and defaults. Don't try to reinvent the wheel.
-- Use conventional commits if not specified otherwise.
-- When working on a larger set of changes, break it down into smaller commits. They don't need to work on their own, but each commit should be a logical step in the implementation. Example: If a change requires a database change, a backend change, a frontend change and E2E tests, break it down into 4 commits, one for each part. This split in database, backend, frontend and tests is only an example. Choose a split which makes most sense for the changes. It's not required that the app is in a working state after each commit, but it should be in a working state after the last commit.
-- If a change would benefit from a refactoring or migration, do so. We should not build up workarounds or technical debt. I favour implementing proper solutions, simplifications, unifications and generalization over workarounds and hacks. I don't want to build upon "shaky grounds".
+- Do not do optimization too early. Example: An abstraction can decrease duplicated code. Suggest this abstraction only if it removes many duplicated lines, or if it removes a coupling that is not obvious. Such a coupling causes related changes in more than one location.
+- Obey the usual conventions and the default configurations. Do not make a new solution for a problem that has a known solution.
+- Use Conventional Commits if there is no different instruction.
+- Divide a large set of changes into smaller commits. Each commit alone does not have to work. But each commit must be one logical step of the implementation. Example: A change has a database part, a backend part, a frontend part, and end-to-end (E2E) tests. Then make 4 commits, one commit for each part. This division into database, backend, frontend, and tests is only an example. Select the division that is best for the changes. The app does not have to work after each commit. But the app must work after the last commit.
+- If a refactoring or a migration makes a change better, do the refactoring or the migration. Do not collect workarounds or technical debt. I want correct solutions, simplifications, unifications, and generalizations. I do not want workarounds or hacks. Do not build on weak foundations.
 
 ## Security
 
-- Use `timingSafeEqual()` for comparing secrets.
-- Check if loops could be exploited for denial of service attacks. For example: Zod schema validating arrays should have a `max(...)` limit.
-- Don't output anything security sensitive or Personally Identifiable Information (PII) to logs
-- When redirecting, make sure user input can't redirect to some unexpected place (open redirect vulnerability)
-- Avoid Server-side request forgery (SSRF) when using user input in a server-side `fetch()` request or similar
-- When adding any kind of new dependencies (npm package, Docker image, etc.), use the latest stable version that was published at least 7 days ago. If the most recent stable release is newer than 7 days, use the most recent stable version that is at least 7 days old. The same 7-day rule applies when upgrading existing dependencies to a newer version.
-- Always integrate dependencies with a fixed version: use full SemVer (e.g. `1.2.3` instead of `1`, `^1.2.3` or `latest`) for npm packages, and prefer a digest pin over a tag for Docker images.
-- Look out for any other security-related best practices.
+- Use `timingSafeEqual()` to compare secrets.
+- Make sure that attackers cannot use loops for denial-of-service attacks. Example: A Zod schema that does validation of an array must have a `max(...)` limit.
+- Do not write security-sensitive data or Personally Identifiable Information (PII) to the logs.
+- When you do a redirect, make sure that user input cannot cause a redirect to an unwanted location (an open-redirect vulnerability).
+- Prevent Server-Side Request Forgery (SSRF) when you use user input in a server-side `fetch()` request or an equivalent request.
+- When you add a new dependency (an npm package, a Docker image, or an equivalent item), use the latest stable version that is 7 days old or older. If the latest stable release is less than 7 days old, use the most recent stable version that is 7 days old or older. Obey the same 7-day rule when you upgrade a dependency.
+- Always set a fixed version for each dependency. For an npm package, use the full SemVer version (example: `1.2.3`, not `1`, `^1.2.3`, or `latest`). For a Docker image, use a digest pin, not a tag, when possible.
+- Obey all other applicable security best practices.
 
 ## Reliability
 
-- Input from third party sources (e.g. response of an API) always need to get validated with Zod or similar
-- `fetch()` calls should always have a timeout configured (using `signal: AbortSignal.timeout(5000)`). If the timeout was omitted on purpose, a comment describing the reasoning must be added.
-- When a new environment variable gets introduced, if possible, it should be optional during runtime. If the variable is missing, either a good default value should be used or the respective feature should get disabled.
-- If the project has tracing implemented, suggest custom spans for new code if it makes sense (e.g. async/await or big loops).
-- Implement tests which primarily focus on end-to-end and behavior. Add unit tests only for critical or complex logic. Don't add tests just for the sake of increasing code coverage. Prefer tests higher up in the pyramid (e.g. end-to-end or integration tests) over unit tests.
-- When implementing E2E tests, highlight potential actual app errors to the user instead of trying to implement a workaround for the test.
-- Use `encodeURI()` and `decodeURI()` or preferably `new URL()` instead of string concatenation when handling URLs.
-- Look out for any other reliability-related best practices.
+- Always do validation of input from third-party sources (example: the response of an API). Use Zod or an equivalent tool.
+- Always configure a timeout for `fetch()` calls (use `signal: AbortSignal.timeout(5000)`). If you do not set a timeout intentionally, add a comment that gives the reason.
+- Make each new environment variable optional at runtime, if possible. If the variable is not set, use a good default value, or disable the related feature.
+- If the project has tracing, suggest custom spans for new code where they are useful (examples: async/await code, large loops).
+- Write tests that primarily examine end-to-end behavior. Add unit tests only for critical or complex logic. Do not add tests only to increase the code coverage. When possible, write E2E tests or integration tests, not unit tests.
+- When you write E2E tests, tell the user about possible errors in the app. Do not write a workaround in the test to hide an app error.
+- Use `encodeURI()` and `decodeURI()`, or better `new URL()`, when you make URLs. Do not use string concatenation.
+- Obey all other applicable reliability best practices.
 
 ## Next.js / React
 
-- The type of props should be explicitly defined using TypeScript interfaces and always be `readonly`.
+- Define the type of the props with an explicit TypeScript interface. Make each property `readonly`.
 
   Example:
 
@@ -46,8 +46,8 @@
   };
   ```
 
-- Components shouldn't be too large. Split them into smaller, reusable components. A looped component should most of the time get split into a separate component.
-- Component properties which are a union of string literals should use a TypeScript `enum` instead.
+- Do not make components too large. Divide them into smaller components that you can use again. Usually, move a component that you use in a loop into a separate component.
+- If a component property is a union of string literals, use a TypeScript `enum`.
 
   Example:
 
@@ -68,13 +68,13 @@
   };
   ```
 
-- You must use `clsx` when combining CSS classes. Do not use string concatenation, ternary operators or similar.
-- Prefer server actions for mutations over API endpoints when possible.
-- Look out for any other Next.js and React-related best practices.
+- You must use `clsx` to combine CSS classes. Do not use string concatenation, ternary operators, or equivalent constructions.
+- For mutations, use server actions, not API endpoints, when possible.
+- Obey all other applicable Next.js and React best practices.
 
 ## TypeScript
 
-- Switch statements which do exhaustive checks should have a default case which throws an error. Use the `never` type to ensure that all cases are handled.
+- A switch statement that does an exhaustive check must have a default case that throws an error. Use the `never` type to make sure that the switch statement includes all cases.
 
   Example:
 
@@ -105,36 +105,37 @@
   }
   ```
 
-- Prefer enums over union types of string literals
-- Look out for any other TypeScript-related best practices.
+- Use enums, not union types of string literals.
+- Obey all other applicable TypeScript best practices.
 
 ## Database design / Prisma ORM Client
 
-- Prefer using a timestamp over a simple boolean
-- Add `created_by`, `created_at`, `updated_by`, `updated_at`, `deleted_by` and `deleted_at` if possible
-- Add an id column to tables which even could work only using a combination of two columns as unique identifier
-- Always import TypeScript types for Prisma schema models from the generated Prisma client instead of redefining them
-- Look out for any other database design-related best practices.
+- Use a timestamp, not a simple boolean, when possible.
+- Add the columns `created_by`, `created_at`, `updated_by`, `updated_at`, `deleted_by`, and `deleted_at` if possible.
+- Add an `id` column to each table. Do this also when a combination of two columns could be a unique identifier for the table.
+- Always import the TypeScript types for Prisma schema models from the generated Prisma client. Do not define these types again.
+- Obey all other applicable database-design best practices.
 
 ## Visual design / CSS / UI / UX / accessibility
 
-- Interactive elements should always have a hover, focus, and active state.
-- If an element truncates text (e.g. using `text-overflow: ellipsis`), the element should have a `title` attribute which shows the full text on hover.
-- Any animation or transition should be disabled when the user's browser has `prefers-reduced-motion` enabled.
-- Look out for any other visual design, CSS, UI/UX and accessibility-related best practices.
+- Each interactive element must have a hover state, a focus state, and an active state.
+- If an element truncates text (example: with `text-overflow: ellipsis`), add a `title` attribute to the element. The `title` attribute shows the full text on hover.
+- Disable all animations and transitions when `prefers-reduced-motion` is set in the user's browser.
+- Obey all other applicable best practices for visual design, CSS, UI/UX, and accessibility.
 
 ## Code style
 
-- Do not use single character variable or function names
-- Do not use abbreviations
-- Look out for any other style-related best practices.
+- Do not use a variable name or a function name that has only one character.
+- Do not use abbreviations.
+- Obey all other applicable code-style best practices.
 
 ## Documentation
 
-- Do not write unnecessary comments, code should be readable on it's own. Use them to explain intentions which may not be recognizable on first view
-  - Example: Do not write comments like: `myString.split(",") // Splits the string into an array using , as delimiter`
-- Document magic numbers
-- Do not use abbreviations
-- Don't repeat yourself in documentation. If a piece of information is already documented somewhere else, don't repeat it in another place. Instead, link to the original documentation.
-- When writing descriptions for Merge Requests or Pull Requests, don't duplicate any detail which is already covered in code comments.
-- Look out for any other documentation-related best practices.
+- Do not write unnecessary comments. Code must be clear without comments. Use comments to explain intentions that are not immediately clear.
+  - Example: Do not write a comment such as: `myString.split(",") // Splits the string into an array using , as delimiter`
+- Document magic numbers.
+- Do not use abbreviations.
+- Do not write the same information in two locations. If the information is in one document, do not write it again in a different location. Add a link to the initial location.
+- When you write the description for a Merge Request or a Pull Request, do not include details that the code comments already give.
+- Use ASD-STE100 Simplified Technical English for documentation and comments.
+- Obey all other applicable documentation best practices.
