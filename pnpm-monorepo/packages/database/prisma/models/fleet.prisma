@@ -65,10 +65,10 @@ model VariantTag {
 
   createdAt   DateTime @default(now())
   createdById String
-  createdBy   User     @relation("createdBy", fields: [createdById], references: [id])
+  createdBy   Entity   @relation("createdBy", fields: [createdById], references: [id])
   updatedAt   DateTime @updatedAt
   updatedById String?
-  updatedBy   User?    @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedBy   Entity?  @relation("updatedBy", fields: [updatedById], references: [id])
 
   @@unique([key, value])
 }
@@ -81,7 +81,7 @@ enum VariantStatus {
 model Ship {
   id        String  @id @default(cuid())
   ownerId   String
-  owner     User    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  owner     Entity  @relation("owner", fields: [ownerId], references: [id], onDelete: Cascade)
   variantId String
   variant   Variant @relation(fields: [variantId], references: [id], onDelete: Cascade)
   name      String?
