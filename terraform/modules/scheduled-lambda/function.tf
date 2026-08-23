@@ -22,7 +22,7 @@ resource "aws_lambda_function" "main" {
   ]
 
   lifecycle {
-    # Changes to the function's source code are deployed using `.github/workflows/deploy-email-function.yml`
+    # Changes to the function's source code are deployed using `.github/workflows/deploy-lambda-functions.yml`
     ignore_changes = [
       filename,
       source_code_hash
