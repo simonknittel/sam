@@ -1,4 +1,8 @@
 import { authenticate } from "@/modules/auth/server";
+import {
+  REDIRECT_TO_SEARCH_PARAM,
+  validateRedirectTo,
+} from "@/modules/auth/utils/redirectTo";
 import { Hero } from "@/modules/common/components/Hero";
 import { LoginButtons } from "@/modules/common/components/LoginButtons";
 import Note from "@/modules/common/components/Note";
@@ -19,16 +23,22 @@ const BANNED_ERROR = "UserBanned";
 const loadSearchParams = createLoader({
   uwu: parseAsString,
   error: parseAsString,
+  [REDIRECT_TO_SEARCH_PARAM]: parseAsString,
 });
 
 export default async function Page({ searchParams }: PageProps<"/">) {
+  const {
+    uwu,
+    error,
+    [REDIRECT_TO_SEARCH_PARAM]: redirectToParam,
+  } = await loadSearchParams(searchParams);
+  const redirectTo = validateRedirectTo(redirectToParam);
+
   const authentication = await authenticate();
   // TODO: Instead of the static /dashboard, get redirect target from user settings once implemented
-  if (authentication) redirect("/app/dashboard");
+  if (authentication) redirect(redirectTo ?? "/app/dashboard");
 
   const activeProviders = authOptions.providers.map((provider) => provider.id);
-
-  const { uwu, error } = await loadSearchParams(searchParams);
 
   return (
     <div className="min-h-dvh flex-col flex justify-center items-center background-primary">
@@ -36,7 +46,10 @@ export default async function Page({ searchParams }: PageProps<"/">) {
         {uwu ? <UwuHero /> : <Hero text="SAM" withGlitch />}
 
         <div className="flex flex-col gap-2 max-w-xs">
-          <LoginButtons activeProviders={activeProviders} />
+          <LoginButtons
+            activeProviders={activeProviders}
+            redirectTo={redirectTo}
+          />
         </div>
 
         {error && (
