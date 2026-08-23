@@ -2,7 +2,7 @@ import { requireAuthenticationPage } from "@/modules/auth/server";
 import { Day } from "@/modules/changelog/components/Day";
 import { DayItem } from "@/modules/changelog/components/DayItem";
 import { Navigation } from "@/modules/changelog/components/Navigation";
-import { getChangelogEntriesByYear } from "@/modules/changelog/queries/getChangelogEntriesByYear";
+import { getChangelogEntriesByQuarter } from "@/modules/changelog/queries/getChangelogEntriesByQuarter";
 import { updateUnseenChangelogEntries } from "@/modules/changelog/queries/updateUnseenChangelogEntries";
 import { notFound } from "next/navigation";
 
@@ -21,26 +21,26 @@ function groupByDate<T extends { date: string }>(items: T[]): Map<string, T[]> {
 
 export default async function Page({
   params,
-}: PageProps<"/app/changelog/[year]">) {
-  await requireAuthenticationPage("/app/changelog/[year]");
+}: PageProps<"/app/changelog/[quarter]">) {
+  await requireAuthenticationPage("/app/changelog/[quarter]");
 
-  const { year } = await params;
+  const { quarter } = await params;
 
-  const yearEntries = await getChangelogEntriesByYear(year);
-  if (yearEntries.length === 0) notFound();
+  const quarterEntries = await getChangelogEntriesByQuarter(quarter);
+  if (quarterEntries.length === 0) notFound();
 
   const unseenKeys = await updateUnseenChangelogEntries();
 
   const isUnseen = (key: string) => unseenKeys.has(key);
 
-  const grouped = groupByDate(yearEntries);
+  const grouped = groupByDate(quarterEntries);
   const dates = [...grouped.keys()].toSorted(
     (a, b) => new Date(b).getTime() - new Date(a).getTime(),
   );
 
   return (
     <div className="flex flex-col gap-4">
-      <Navigation activeYear={year} />
+      <Navigation activeQuarterSlug={quarter} />
 
       {dates.map((date) => {
         const parsedDate = new Date(`${date}T00:00:00.000Z`);

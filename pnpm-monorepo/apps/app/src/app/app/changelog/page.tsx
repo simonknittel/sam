@@ -1,14 +1,13 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
-import { getChangelogYears } from "@/modules/changelog/queries/getChangelogYears";
+import { getChangelogQuarters } from "@/modules/changelog/queries/getChangelogQuarters";
 import { notFound, redirect } from "next/navigation";
 
 export default async function Page() {
   await requireAuthenticationPage("/app/iam");
 
-  const years = await getChangelogYears();
-  if (!years[0]) notFound();
+  const quarters = await getChangelogQuarters();
+  const latestQuarter = quarters[0];
+  if (!latestQuarter) notFound();
 
-  const latestYear = years[0];
-
-  redirect(`/app/changelog/${latestYear}`);
+  redirect(`/app/changelog/${latestQuarter.slug}`);
 }
