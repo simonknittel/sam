@@ -42,7 +42,7 @@ export const OrgFleetTile = async ({ className, searchParams }: Props) => {
     direction,
   } = await loadSearchParams(searchParams);
 
-  const { fleet, totalUsers, totalShips, nextCursor, prevCursor } =
+  const { fleet, totalCitizens, totalShips, nextCursor, prevCursor } =
     await getOrgFleet({
       flightReady: flight_ready,
       variantTagIds: variantTags?.length ? variantTags : [],
@@ -65,7 +65,7 @@ export const OrgFleetTile = async ({ className, searchParams }: Props) => {
 
         <StatisticTile label="Citizen" className="flex-1">
           <ScrambleIn
-            text={totalUsers.toLocaleString("de-de")}
+            text={totalCitizens.toLocaleString("de-de")}
             characters="1234567890."
           />
         </StatisticTile>

@@ -8,7 +8,7 @@ import { deleteShipAction } from "../actions/deleteShipAction";
 
 interface Props {
   readonly className?: string;
-  readonly ship: Pick<Ship, "id" | "ownerId" | "variantId" | "name"> & {
+  readonly ship: Pick<Ship, "id" | "name"> & {
     variant: Variant;
   };
 }

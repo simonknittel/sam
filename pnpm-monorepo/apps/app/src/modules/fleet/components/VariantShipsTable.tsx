@@ -1,27 +1,13 @@
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
-import {
-  type Entity,
-  type Manufacturer,
-  type Series,
-  type Ship,
-  type Upload,
-  type Variant,
-} from "@sam-monorepo/database/client";
+import { type Entity, type Ship } from "@sam-monorepo/database/client";
 
-export interface VariantShipRow {
+interface VariantShipRow {
   id: Ship["id"];
   ownerId: Ship["ownerId"];
-  variantId: Ship["variantId"];
   name: Ship["name"];
-  citizenHandle: Entity["handle"] | null;
-  citizenId: Entity["id"] | null;
-  variant: Variant & {
-    series: Series & {
-      manufacturer: Manufacturer & {
-        image: Upload | null;
-      };
-    };
+  owner: {
+    handle: Entity["handle"];
   };
 }
 
@@ -44,12 +30,10 @@ export const VariantShipsTable = ({ className, ships }: Props) => {
         {ships.map((ship) => (
           <TRow key={ship.id}>
             <td className="overflow-hidden">
-              {ship.citizenId && (
-                <CitizenLink
-                  citizen={{ id: ship.citizenId, handle: ship.citizenHandle }}
-                  className="hover:bg-white/10 focus-visible:bg-white/10 hover:no-underline! rounded-secondary p-2 block"
-                />
-              )}
+              <CitizenLink
+                citizen={{ id: ship.ownerId, handle: ship.owner.handle }}
+                className="hover:bg-white/10 focus-visible:bg-white/10 hover:no-underline! rounded-secondary p-2 block"
+              />
             </td>
 
             <td title={ship.name || ""} className="truncate">
