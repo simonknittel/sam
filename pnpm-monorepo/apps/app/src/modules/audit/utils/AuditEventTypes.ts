@@ -140,6 +140,41 @@ export const AuditEventDefinitions: {
     message: (data) => `Ship deleted: "${data.name}" (owner: ${data.ownerId})`,
   },
 
+  [AuditEventType.SHIP_CREATED_V2]: {
+    type: AuditEventType.SHIP_CREATED_V2,
+    data: {
+      shipId: "string",
+      ownerId: "string",
+      variantId: "string",
+    },
+    message: (data) =>
+      `Ship created (owner citizen: ${data.ownerId}, variant: ${data.variantId})`,
+  },
+
+  [AuditEventType.SHIP_UPDATED_V2]: {
+    type: AuditEventType.SHIP_UPDATED_V2,
+    data: {
+      shipId: "string",
+      ownerId: "string",
+      previousName: "string",
+      newName: "string",
+    },
+    message: (data) =>
+      `Ship updated: "${data.previousName}" → "${data.newName}"`,
+  },
+
+  [AuditEventType.SHIP_DELETED_V2]: {
+    type: AuditEventType.SHIP_DELETED_V2,
+    data: {
+      shipId: "string",
+      ownerId: "string",
+      name: "string",
+      variantId: "string",
+    },
+    message: (data) =>
+      `Ship deleted: "${data.name}" (owner citizen: ${data.ownerId})`,
+  },
+
   [AuditEventType.VARIANT_CREATED]: {
     type: AuditEventType.VARIANT_CREATED,
     data: {
