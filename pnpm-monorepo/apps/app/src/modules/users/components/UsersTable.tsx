@@ -22,7 +22,17 @@ const SM_COLUMNS =
 interface Props {
   readonly className?: string;
   readonly users: {
-    readonly user: User & {
+    readonly user: Pick<
+      User,
+      | "id"
+      | "name"
+      | "image"
+      | "createdAt"
+      | "emailVerified"
+      | "bannedAt"
+      | "bannedReason"
+      | "role"
+    > & {
       readonly bannedBy: Pick<Entity, "id" | "handle"> | null;
     };
     readonly discordId: string;
