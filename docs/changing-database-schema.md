@@ -1,12 +1,12 @@
-# Changing database schema
+# Change the database schema
 
-1. Update the schema in `pnpm-monorepo/packages/database/prisma/models/` as required (one `.prisma` file per domain; `schema.prisma` only holds the datasource and generator)
-2. Change to the database package: `cd pnpm-monorepo/packages/database`
+1. Update the schema in `pnpm-monorepo/packages/database/prisma/models/` (one `.prisma` file for each domain; `schema.prisma` only holds the datasource and the generator)
+2. Go to the database package: `cd pnpm-monorepo/packages/database`
 3. Run `pnpm exec prisma db push`
-4. Create migration: `pnpm run migrate:dev` (wraps `prisma migrate dev` and rebuilds the package so all consumers see the new client)
-   - `prisma migrate dev` will prompt to reset the local database — this is expected: `db push` (step 3) made the local schema drift from the migration history, and the reset re-applies all migrations including the new one
+4. Create the migration: `pnpm run migrate:dev` (this script runs `prisma migrate dev` and then builds the package again, so that all consumers get the new client)
+   - `prisma migrate dev` asks to reset the local database. This is correct: `db push` (step 3) made the local schema different from the migration history. The reset applies all migrations again, together with the new one.
 5. Commit
-6. Apply to other developer databases: `pnpm run migrate:dev`
-7. Apply to production databases via either option:
+6. Apply the migration to the other developer databases: `pnpm run migrate:dev`
+7. Apply the migration to the production database with one of these options:
    - ~~Run the "Production database migrations" GitHub workflow~~ (currently disabled)
    - `bwu && bw sync && DATABASE_URL=(bw get password "SAM (Prod) | PostgreSQL") pnpm exec prisma migrate deploy; bw lock`
