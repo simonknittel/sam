@@ -28,7 +28,8 @@ export const GET = async () => {
     headers: {
       // RFC 7517 registers this type for a key set
       "Content-Type": "application/jwk-set+json",
-      "Cache-Control": `public, max-age=${CACHE_MAX_AGE_IN_SECONDS}`,
+      // s-maxage lets the CDN answer repeat fetches without a function invocation
+      "Cache-Control": `public, max-age=${CACHE_MAX_AGE_IN_SECONDS}, s-maxage=${CACHE_MAX_AGE_IN_SECONDS}`,
       // Verification may happen in the browser of an embedded app
       "Access-Control-Allow-Origin": "*",
     },

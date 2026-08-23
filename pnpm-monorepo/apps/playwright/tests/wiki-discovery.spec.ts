@@ -156,8 +156,9 @@ test("recently visited counts opened pages, not prefetched ones", async ({
 
   await page.goto("/app/wiki");
   // The landing page lists use the common <Link>, whose hover-triggered
-  // prefetch fully renders the target page server-side — without a visit
-  // (the sidebar tree can't serve here, it disables prefetching entirely)
+  // prefetch renders the target route server-side up to the root loading
+  // boundary — without a visit (the sidebar tree can't serve here, it
+  // disables prefetching entirely)
   const recentlyUpdatedSection = page.locator("section").filter({
     has: page.getByRole("heading", { name: "Zuletzt aktualisiert" }),
   });
@@ -188,10 +189,9 @@ test("recently visited counts opened pages, not prefetched ones", async ({
     await prisma.wikiPageVisit.count({ where: { pageId: prefetchedPage.id } }),
   ).toBe(0);
 
-  // Actually opening the page counts, even when the navigation is served
-  // from the prefetch cache without another server render — hovering first
-  // and awaiting the prefetch makes the click use the cache (the reload
-  // above emptied it)
+  // Actually opening the page counts, even when the navigation starts from
+  // a prefetched entry — hovering first and awaiting the prefetch makes the
+  // click go through the prefetch cache (the reload above emptied it)
   const repeatedPrefetchResponse = page.waitForResponse((response) =>
     response.url().includes(prefetchedPage.id),
   );

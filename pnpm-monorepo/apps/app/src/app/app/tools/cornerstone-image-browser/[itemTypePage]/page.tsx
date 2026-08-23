@@ -18,8 +18,6 @@ const schema = z.array(
   }),
 );
 
-export const revalidate = 86400; // 24 hours
-
 type Params = Promise<{
   itemTypePage: string;
 }>;

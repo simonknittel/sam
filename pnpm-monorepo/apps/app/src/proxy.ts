@@ -19,8 +19,11 @@ export function proxy(request: NextRequest) {
   return NextResponse.next();
 }
 
+/**
+ * Only /app is gated, so the proxy is limited to it. On Vercel, every request
+ * passing through the proxy counts toward Fast Origin Transfer a second time,
+ * so running it on routes it never acts on only adds cost.
+ */
 export const config = {
-  matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
-  ],
+  matcher: ["/app/:path*"],
 };
