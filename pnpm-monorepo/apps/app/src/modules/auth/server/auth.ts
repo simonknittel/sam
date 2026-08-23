@@ -121,6 +121,9 @@ export const authOptions: NextAuthOptions = {
         where: {
           userId: effectiveUser.id,
         },
+        select: {
+          providerAccountId: true,
+        },
       });
 
       const entity = await prisma.entity.findUnique({
