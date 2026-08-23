@@ -15,4 +15,4 @@ The Lambda function code lives in `pnpm-monorepo/apps/lambda` and is deployed by
 
 ## Usage
 
-See [docs/setup-test-and-production.md](../docs/setup-test-and-production.md) for the backend and variable setup. Changes are planned and applied through the terraform-plan and terraform-apply GitHub workflows.
+See [docs/setup-test-and-production.md](../docs/setup-test-and-production.md) for the backend and variable setup. Changes are validated, planned and applied through the terraform-validate, terraform-plan and terraform-apply GitHub workflows.

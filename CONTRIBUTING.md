@@ -24,6 +24,7 @@ Unit tests (run from `pnpm-monorepo`):
 
 ```sh
 pnpm --filter @sam-monorepo/app run test
+pnpm --filter @sam-monorepo/lambda run test
 pnpm --filter @sam-monorepo/permissions run test
 pnpm --filter @sam-monorepo/wiki-editor run test
 ```
@@ -41,15 +42,17 @@ The `pnpm-monorepo` directory is formatted with Prettier. Run `pnpm run format` 
 
 ## Commit messages
 
-Commit messages must follow [Conventional Commits](https://www.conventionalcommits.org/). This is enforced on pull requests by the commitlint workflow.
+Commit messages must follow [Conventional Commits](https://www.conventionalcommits.org/). The "Validate commit messages" workflow can enforce this on pull requests, but it is currently disabled.
 
 ## CI workflows
 
-- **Validate app**: lint, Prettier check, unit tests (app and packages) and typecheck (app, packages and scripts) — runs on pull requests and pushes touching the monorepo, all jobs blocking
+- **Validate app**: lint, Prettier check, unit tests (app, Lambda functions and packages) and typecheck (app, packages and scripts) — runs on pull requests and pushes touching the monorepo, all jobs blocking
 - **Playwright tests**: the full end-to-end suite against a self-contained stack — runs on changes to the app, the collab server, the workspace packages or the workspace plumbing
-- **commitlint**: enforces Conventional Commits on pull request commits
+- **Validate commit messages**: enforces Conventional Commits on pull request commits (currently disabled)
 - **CodeQL**: static security analysis
 - **Build collab server**: builds and pushes the collab server image on pushes to `main` (see [docs/releasing.md](./docs/releasing.md))
 - **terraform validate / plan / apply**: infrastructure changes (see [docs/setup-test-and-production.md](./docs/setup-test-and-production.md))
 - **Renovate**: automated dependency updates
-- **Release**, **Deploy Lambda functions**, **Production database migrations**: production deployments (see [docs/releasing.md](./docs/releasing.md))
+- **Release**, **Deploy Lambda functions**: production deployments (see [docs/releasing.md](./docs/releasing.md))
+- **Production database migrations**: production database migrations (currently disabled, see [docs/changing-database-schema.md](./docs/changing-database-schema.md))
+- **Build Lambda functions**, **Send release event**: reusable helper workflows called by Deploy Lambda functions and Release

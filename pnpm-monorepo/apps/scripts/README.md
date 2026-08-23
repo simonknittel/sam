@@ -1,6 +1,6 @@
 # Scripts
 
-This app contains one-time database migration scripts, game-data import scripts and content-generation scripts.
+This app contains one-time database migration scripts, game-data import scripts, search-index scripts (Algolia) and content-generation scripts.
 
 ## Usage
 
@@ -18,7 +18,7 @@ The scripts in `src/game_data/` import ship and vehicle data extracted from the 
 
 ## Wiki demo page
 
-Generates the Tiptap JSON for the wiki's "live demo page" exercising every formatting option and embed. Import the output file via the wiki's JSON import (page menu, requires `wiki;manage`).
+Generates the Tiptap JSON for the wiki's "live demo page" exercising every formatting option and embed. Import the output file via the wiki's JSON import (page menu; requires `wiki;manage` for global wiki pages, while event wiki pages check the page's admin access instead).
 
 ```sh
 pnpm run build:scripts

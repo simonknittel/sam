@@ -1,6 +1,6 @@
 # Changing database schema
 
-1. Update the schema in `pnpm-monorepo/packages/database/prisma/` as required
+1. Update the schema in `pnpm-monorepo/packages/database/prisma/models/` as required (one `.prisma` file per domain; `schema.prisma` only holds the datasource and generator)
 2. Change to the database package: `cd pnpm-monorepo/packages/database`
 3. Run `pnpm exec prisma db push`
 4. Create migration: `pnpm run migrate:dev` (wraps `prisma migrate dev` and rebuilds the package so all consumers see the new client)

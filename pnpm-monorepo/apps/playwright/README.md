@@ -12,13 +12,14 @@ database per test case.
   container, builds the collab image from `apps/collab/Dockerfile` and runs
   `next build` for the app.
 - **Per worker** (`fixtures/test.ts`): each Playwright worker clones its own
-  database from the template, starts its own collab container and its own
-  `next start` instance. Tests of different workers can never interfere with
-  each other — except through the shared Unleash server: tests may only
-  toggle flags (via `fixtures/unleash.ts`) no other test depends on.
-- **Per test**: an automatic fixture truncates all tables, so every test
-  starts from an empty database and seeds exactly what it needs via the
-  factories in `fixtures/factories.ts`.
+  database from the template, starts its own collab container, its own
+  Discord mock and its own `next start` instance. Workers share only the
+  Unleash server and the RustFS container with its `uploads` bucket: tests
+  may only toggle flags (via `fixtures/unleash.ts`) no other test depends
+  on.
+- **Per test**: an automatic fixture truncates all tables and resets the
+  Discord mock, so every test starts from an empty database and seeds
+  exactly what it needs via the factories in `fixtures/factories.ts`.
 - **Auth**: `signIn(user)` inserts a next-auth database session and sets the
   session cookie — no OAuth flow involved. Users come from
   `createCitizen()`, which wires up User, Discord account, Entity, role and

@@ -29,6 +29,7 @@ A non-exhaustive overview:
 - Social login via Discord integration
 - Dogfight Trainer: Asteroids-like mini game
 - Cornerstone Image Browser: Simple way to compare Star Citizen item skins based on Cornerstone's database
+- More: file uploads, in-app changelog, penalty points, leaderboards, statistics, avatar creator, cargo container calculator and timezone tools
 
 ## Core technologies
 

@@ -30,4 +30,4 @@ Trigger the Release workflow manually. The `git_ref` input selects what gets dep
 - Leave it empty to release the latest commit of `main`
 - Pass an older commit SHA to roll back
 
-Database migrations are not part of the Release workflow and are triggered manually via the [Production database migrations workflow](../.github/workflows/production-database-migrations.yml).
+Database migrations are not part of the Release workflow. The [Production database migrations workflow](../.github/workflows/production-database-migrations.yml) is currently disabled — apply migrations manually instead (see [Changing database schema](./changing-database-schema.md)).

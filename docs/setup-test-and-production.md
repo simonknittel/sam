@@ -17,7 +17,7 @@
    | Environment             | Variables                                        | Secrets                                                                                                                                                    |
    | ----------------------- | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
    | `terraform-test`        | `IAM_ROLE_ARN`, `TFVARS`                         |                                                                                                                                                            |
-   | `terraform-prod`        | `IAM_ROLE_ARN`, `TFVARS`                         |                                                                                                                                                            |
+   | `terraform-prod`        | `IAM_ROLE_ARN`, `TFVARS` (prepared for later use; no workflow can target it yet, see [5. Set up AWS](#5-set-up-aws)) |                                                                                                                                                            |
    | `lambda-functions-test` | `IAM_ROLE_ARN`                                   |                                                                                                                                                            |
    | `Production`            | `SOKETI_APP_ID`, `SOKETI_APP_KEY`, `SOKETI_HOST` | `DATABASE_URL`, `SOKETI_APP_SECRET`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` (for the Vercel values see [7. Set up Vercel](#7-set-up-vercel)) |
 
