@@ -14,18 +14,22 @@ type Props = ComponentProps<typeof NextLink>;
  * increased data usage, especially on pages with many links.
  *
  * This custom `<Link>` component changes the default behavior to only prefetch
- * when the user hovers over the link.
+ * when the user hovers over the link. The hover upgrades to Next.js' default
+ * ("auto") prefetching instead of a full prefetch: our routes are all
+ * dynamically rendered, so "auto" only fetches the route tree up to the nearest
+ * `loading.tsx` boundary instead of fully server-rendering the target page for
+ * every hovered link.
  */
 export const Link = (props: Props) => {
   const { prefetch, onMouseEnter, ...rest } = props;
 
-  const [_prefetch, setPrefetch] = useState(
+  const [_prefetch, setPrefetch] = useState<Props["prefetch"]>(
     prefetch === undefined ? false : prefetch,
   );
 
   const _onMouseEnter =
     prefetch === undefined && onMouseEnter === undefined
-      ? () => setPrefetch(true)
+      ? () => setPrefetch(null)
       : onMouseEnter;
 
   return (
