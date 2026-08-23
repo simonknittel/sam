@@ -1,7 +1,12 @@
-import { EventSource, type PrismaClient } from "@sam-monorepo/database/client";
+import {
+  EventSource,
+  VariantStatus,
+  type PrismaClient,
+} from "@sam-monorepo/database/client";
 import {
   createCitizen,
   createEvent,
+  createVariant,
   type Citizen,
 } from "../fixtures/factories";
 import {
@@ -80,6 +85,79 @@ test("the event list and detail subpages render", async ({
   await expect(page.getByText("teilnehmer-eins")).toBeVisible();
   await expect(page.getByText("teilnehmer-zwei")).toBeVisible();
   await expect(page.getByText("organisator", { exact: true })).toBeVisible();
+});
+
+test("the fleet tab counts the ships of both participation kinds", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const organizer = await createCitizen(prisma, { handle: "organisator" });
+  /**
+   * The two ways a participation row identifies its citizen: an app sign-up
+   * carries the citizen id, a Discord RSVP only the Discord id. The fleet
+   * has to find the owner through either one.
+   */
+  const appSignUp = await createCitizen(prisma, { handle: "app-anmeldung" });
+  const discordRsvp = await createCitizen(prisma, { handle: "discord-zusage" });
+  const viewer = await createCitizen(prisma, {
+    handle: "flotten-gast",
+    permissionStrings: ["event;read", "orgFleet;read"],
+  });
+
+  const polaris = await createVariant(prisma, {
+    manufacturerName: "Roberts Space Industries",
+    seriesName: "Polaris",
+    variantName: "Polaris",
+    status: VariantStatus.FLIGHT_READY,
+  });
+  // Not flight ready, thus the fleet must leave it out
+  const carrack = await createVariant(prisma, {
+    manufacturerName: "Anvil Aerospace",
+    seriesName: "Carrack",
+    variantName: "Carrack",
+    status: VariantStatus.NOT_FLIGHT_READY,
+  });
+  await prisma.ship.createMany({
+    data: [
+      { ownerId: appSignUp.entity.id, variantId: polaris.variant.id },
+      { ownerId: discordRsvp.entity.id, variantId: polaris.variant.id },
+      { ownerId: discordRsvp.entity.id, variantId: carrack.variant.id },
+    ],
+  });
+
+  const event = await createEvent(prisma, {
+    name: "Flottenübung",
+    discordCreatorId: organizer.entity.discordId!,
+    startTime: new Date(Date.now() + ONE_DAY_MS),
+    location: "Port Olisar",
+  });
+  await prisma.eventParticipant.create({
+    data: {
+      eventId: event.id,
+      source: EventSource.APP,
+      citizenId: appSignUp.entity.id,
+      activeCitizenId: appSignUp.entity.id,
+    },
+  });
+  await prisma.eventParticipant.create({
+    data: {
+      eventId: event.id,
+      source: EventSource.DISCORD,
+      discordUserId: discordRsvp.entity.discordId!,
+      activeDiscordUserId: discordRsvp.entity.discordId!,
+    },
+  });
+
+  await signIn(viewer.user);
+  await page.goto(`/app/events/${event.id}/fleet`);
+
+  const polarisRow = page.getByRole("row").filter({ hasText: "Polaris" });
+  await expect(polarisRow).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(polarisRow).toContainText("2");
+  await expect(
+    page.getByRole("row").filter({ hasText: "Carrack" }),
+  ).toHaveCount(0);
 });
 
 test("a participant can toggle their interest in a position", async ({

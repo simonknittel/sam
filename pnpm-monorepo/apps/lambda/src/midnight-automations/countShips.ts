@@ -13,11 +13,7 @@ const getActiveOrganizationMemberships = async (id: Organization["id"]) => {
           organizationId: id,
         },
         select: {
-          citizen: {
-            select: {
-              discordId: true,
-            },
-          },
+          citizenId: true,
         },
       });
 
@@ -26,19 +22,13 @@ const getActiveOrganizationMemberships = async (id: Organization["id"]) => {
   );
 };
 
-const getVariantCounts = async (discordIds: string[]) => {
+const getVariantCounts = async (citizenIds: string[]) => {
   return await captureAsyncFunc("getVariantCounts", async () => {
     const variantCounts = await prisma.ship.groupBy({
       where: {
         deletedAt: null,
-        owner: {
-          accounts: {
-            some: {
-              providerAccountId: {
-                in: discordIds,
-              },
-            },
-          },
+        ownerId: {
+          in: citizenIds,
         },
       },
       by: ["variantId"],
@@ -66,17 +56,15 @@ const getAllVariants = async () => {
 export const countShips = async () => {
   await captureAsyncFunc("countShips", async () => {
     const memberships = await getActiveOrganizationMemberships(ORG_ID);
-    const discordIds = memberships
-      .map((membership) => membership.citizen.discordId)
-      .filter(Boolean) as string[];
-    if (discordIds.length === 0) {
-      log.info("No active organization memberships with discord IDs found");
+    const citizenIds = memberships.map((membership) => membership.citizenId);
+    if (citizenIds.length === 0) {
+      log.info("No active organization memberships found");
       return;
     }
 
     const [allVariants, variantCounts] = await Promise.all([
       getAllVariants(),
-      getVariantCounts(discordIds),
+      getVariantCounts(citizenIds),
     ]);
 
     const variantCountMap = new Map(

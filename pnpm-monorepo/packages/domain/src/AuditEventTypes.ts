@@ -13,9 +13,15 @@ export enum AuditEventType {
   EXPIRED_AUTHENTICATION_RECORDS_PURGED = "EXPIRED_AUTHENTICATION_RECORDS_PURGED",
   USER_FIRST_VISIT_OF_THE_DAY = "USER_FIRST_VISIT_OF_THE_DAY",
   USER_FIRST_VISIT_OF_THE_DAY_V2 = "USER_FIRST_VISIT_OF_THE_DAY_V2",
+  /** @deprecated Superseded by SHIP_CREATED_V2 (ownerId became a citizen id) */
   SHIP_CREATED = "SHIP_CREATED",
+  /** @deprecated Superseded by SHIP_UPDATED_V2 (ownerId became a citizen id) */
   SHIP_UPDATED = "SHIP_UPDATED",
+  /** @deprecated Superseded by SHIP_DELETED_V2 (ownerId became a citizen id) */
   SHIP_DELETED = "SHIP_DELETED",
+  SHIP_CREATED_V2 = "SHIP_CREATED_V2",
+  SHIP_UPDATED_V2 = "SHIP_UPDATED_V2",
+  SHIP_DELETED_V2 = "SHIP_DELETED_V2",
   VARIANT_CREATED = "VARIANT_CREATED",
   /** @deprecated Superseded by VARIANT_CREATED_V3 (adds the wiki page link) */
   VARIANT_CREATED_V2 = "VARIANT_CREATED_V2",
@@ -275,6 +281,29 @@ export interface AuditEventDataByType {
 
   [AuditEventType.SHIP_DELETED]: {
     shipId: string;
+    ownerId: string;
+    name: string | null;
+    variantId: string;
+  };
+
+  [AuditEventType.SHIP_CREATED_V2]: {
+    shipId: string;
+    /** Citizen id, unlike the user id of the V1 type */
+    ownerId: string;
+    variantId: string;
+  };
+
+  [AuditEventType.SHIP_UPDATED_V2]: {
+    shipId: string;
+    /** Citizen id, unlike the user id of the V1 type */
+    ownerId: string;
+    previousName: string | null;
+    newName: string | null;
+  };
+
+  [AuditEventType.SHIP_DELETED_V2]: {
+    shipId: string;
+    /** Citizen id, unlike the user id of the V1 type */
     ownerId: string;
     name: string | null;
     variantId: string;

@@ -17,8 +17,6 @@ import { VariantWithLogo } from "./VariantWithLogo";
 
 interface ShipsTableRow {
   id: Ship["id"];
-  ownerId: Ship["ownerId"];
-  variantId: Ship["variantId"];
   name: Ship["name"];
   deletedAt?: Date | null;
   variant: Variant & {
@@ -111,8 +109,6 @@ export const ShipsTable = ({ className, ships, editable = false }: Props) => {
                   <DeleteShip
                     ship={{
                       id: ship.id,
-                      ownerId: ship.ownerId,
-                      variantId: ship.variantId,
                       name: ship.name,
                       variant: ship.variant,
                     }}

@@ -49,9 +49,9 @@ test("the org fleet filters narrow the server-rendered table", async ({
   });
   await prisma.ship.createMany({
     data: [
-      { ownerId: owner.user.id, variantId: polaris.variant.id },
-      { ownerId: owner.user.id, variantId: polaris.variant.id },
-      { ownerId: owner.user.id, variantId: carrack.variant.id },
+      { ownerId: owner.entity.id, variantId: polaris.variant.id },
+      { ownerId: owner.entity.id, variantId: polaris.variant.id },
+      { ownerId: owner.entity.id, variantId: carrack.variant.id },
     ],
   });
 
@@ -160,6 +160,7 @@ test("my ships can be added, renamed and deleted with consistent org counts", as
   });
   const ship = await prisma.ship.findFirst();
   expect(ship?.name).toBe("Sternenhammer");
+  expect(ship?.ownerId).toBe(owner.entity.id);
 
   // Delete (soft) — the list empties and the org count follows
   await clickUntilVisible(
@@ -183,6 +184,75 @@ test("my ships can be added, renamed and deleted with consistent org counts", as
 
   await page.goto("/app/fleet/org");
   await expect(statisticTile(page, "Schiffe")).toContainText("0");
+
+  // The three writes log the V2 event types, whose ownerId is a citizen id
+  const auditEvents = await prisma.auditEvent.findMany({
+    where: {
+      type: {
+        in: ["SHIP_CREATED_V2", "SHIP_UPDATED_V2", "SHIP_DELETED_V2"],
+      },
+    },
+    orderBy: { createdAt: "asc" },
+  });
+  expect(auditEvents.map((auditEvent) => auditEvent.type)).toEqual([
+    "SHIP_CREATED_V2",
+    "SHIP_UPDATED_V2",
+    "SHIP_DELETED_V2",
+  ]);
+  for (const auditEvent of auditEvents) {
+    // createAuditEvents stores the payload JSON-encoded inside the column
+    expect(JSON.parse(auditEvent.data as string)).toMatchObject({
+      shipId: ship!.id,
+      ownerId: owner.entity.id,
+    });
+  }
+});
+
+test("a variant tag records the creating citizen as its author", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createCitizen(prisma, {
+    handle: "varianten-manager",
+    permissionStrings: ["manufacturersSeriesAndVariants;manage"],
+  });
+  const { manufacturer, series } = await createVariant(prisma, {
+    manufacturerName: "Aegis Dynamics",
+    seriesName: "Avenger",
+    variantName: "Avenger Titan",
+  });
+
+  await signIn(manager.user);
+  await page.goto(
+    `/app/fleet/settings/manufacturer/${manufacturer.id}/series/${series.id}`,
+  );
+
+  const createModal = modal(page, "Variante anlegen");
+  await clickUntilVisible(
+    page.getByRole("main").getByRole("button", { name: "Anlegen" }),
+    createModal,
+  );
+  await createModal.getByLabel("Name", { exact: true }).fill("Avenger Stalker");
+
+  // The tag rows and the external-link rows share the "Hinzufügen" label
+  await clickUntilVisible(
+    createModal.getByRole("button", { name: "Hinzufügen" }).first(),
+    createModal.getByPlaceholder("Key"),
+  );
+  await createModal.getByPlaceholder("Key").fill("Class");
+  await createModal.getByPlaceholder("Value").fill("Light");
+
+  await createModal.getByRole("button", { name: "Speichern" }).click();
+  await expect(createModal).toHaveCount(0);
+
+  await expect
+    .poll(async () => prisma.variantTag.findFirst())
+    .toMatchObject({
+      key: "Class",
+      value: "Light",
+      createdById: manager.entity.id,
+    });
 });
 
 test("manufacturers and series can be managed through the REST-backed settings", async ({

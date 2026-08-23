@@ -15,12 +15,10 @@ export const updateShipAction = createAuthenticatedAction(
   "updateShipAction",
   schema,
   async (formData, authentication, data, t) => {
-    if (!(await authentication.authorize("ship", "manage")))
-      return {
-        error: t("Common.forbidden"),
-        requestPayload: formData,
-      };
-    if (!authentication.session.entity)
+    if (
+      !(await authentication.authorize("ship", "manage")) ||
+      !authentication.session.entity
+    )
       return {
         error: t("Common.forbidden"),
         requestPayload: formData,
@@ -34,11 +32,9 @@ export const updateShipAction = createAuthenticatedAction(
     const existingShip = await prisma.ship.findUnique({
       where: {
         id,
-        ownerId: authentication.session.user.id,
+        ownerId: authentication.session.entity.id,
       },
       select: {
-        id: true,
-        ownerId: true,
         name: true,
         deletedAt: true,
       },
@@ -52,7 +48,7 @@ export const updateShipAction = createAuthenticatedAction(
     const updatedShip = await prisma.ship.update({
       where: {
         id,
-        ownerId: authentication.session.user.id,
+        ownerId: authentication.session.entity.id,
       },
       data: {
         ...updateData,
@@ -67,7 +63,7 @@ export const updateShipAction = createAuthenticatedAction(
 
     await createAuditEvents([
       {
-        type: AuditEventType.SHIP_UPDATED,
+        type: AuditEventType.SHIP_UPDATED_V2,
         data: {
           shipId: updatedShip.id,
           ownerId: updatedShip.ownerId,

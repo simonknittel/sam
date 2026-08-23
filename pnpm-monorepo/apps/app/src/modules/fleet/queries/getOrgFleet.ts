@@ -14,17 +14,9 @@ import {
   FLEET_PAGE_SIZE,
   paginateByCursor,
   SHIP_VARIANT_INCLUDE,
-  type ShipVariant,
 } from "./shipQuery";
 
 type OrgFleetSort = "name-asc" | "name-desc" | "count-asc" | "count-desc";
-
-interface OrgFleetShip {
-  id: string;
-  ownerId: string;
-  variantId: string;
-  variant: ShipVariant;
-}
 
 export const getOrgFleet = cache(
   withTrace(
@@ -49,21 +41,18 @@ export const getOrgFleet = cache(
       const authentication = await requireAuthentication();
       if (!(await authentication.authorize("orgFleet", "read"))) forbidden();
 
-      // Get discord IDs of all citizens with an active membership in the org
       const memberships = await getActiveOrganizationMemberships(ORG_ID);
-      const discordIds = memberships
-        .map((membership) => membership.citizen.discordId)
-        .filter(Boolean) as string[];
-      if (discordIds.length === 0)
+      const citizenIds = memberships.map((membership) => membership.citizen.id);
+      if (citizenIds.length === 0)
         return {
           fleet: [],
-          totalUsers: 0,
+          totalCitizens: 0,
           totalShips: 0,
           nextCursor: null,
           prevCursor: null,
         };
 
-      // Build where clause for variants (shared between ship subquery and all-variants query)
+      // Shared by the ship filter and the all-variants query below
       const variantWhere = buildVariantFilterWhere({
         flightReady,
         variantTagIds,
@@ -71,74 +60,32 @@ export const getOrgFleet = cache(
         searchQuery,
       });
 
-      // Get ships for all those citizens
-      const accounts = await prisma.account.findMany({
+      // The variant payload comes from the query below, thus the ships
+      // themselves are only counted and attributed
+      const allShips = await prisma.ship.findMany({
         where: {
-          providerAccountId: {
-            in: discordIds,
-          },
+          ownerId: { in: citizenIds },
+          deletedAt: null,
+          variant: variantWhere,
         },
         select: {
-          user: {
-            select: {
-              id: true,
-              ships: {
-                where: {
-                  deletedAt: null,
-                  variant: variantWhere,
-                },
-                include: {
-                  variant: {
-                    include: SHIP_VARIANT_INCLUDE,
-                  },
-                },
-              },
-            },
-          },
+          ownerId: true,
+          variantId: true,
         },
       });
 
-      const allShips = accounts.flatMap(
-        (account) => account.user.ships,
-      ) as OrgFleetShip[];
+      const shipsByVariantId = Map.groupBy(allShips, (ship) => ship.variantId);
 
-      // Group owned ships by variant ID
-      const groupedShips = Map.groupBy(allShips, (ship) => ship.variant.id);
-      const ownedVariants = new Map<string, OrgFleetShip & { count: number }>(
-        Array.from(groupedShips, ([variantId, ships]) => [
-          variantId,
-          { ...ships[0], count: ships.length },
-        ]),
-      );
-
-      // Fetch ALL variants matching the same filters
+      // ALL variants matching the same filters, so unowned ones show a zero
       const allVariants = await prisma.variant.findMany({
         where: variantWhere,
         include: SHIP_VARIANT_INCLUDE,
       });
 
-      // Merge: owned variants with count + unowned variants with count 0
-      const countedFleet = allVariants.map((variant) => {
-        const owned = ownedVariants.get(variant.id);
-        if (owned) return owned;
-
-        return {
-          id: "",
-          ownerId: "",
-          variantId: variant.id,
-          variant: {
-            ...variant,
-            series: {
-              ...variant.series,
-              manufacturer: {
-                ...variant.series.manufacturer,
-                image: variant.series.manufacturer.image ?? null,
-              },
-            },
-          },
-          count: 0,
-        };
-      });
+      const countedFleet = allVariants.map((variant) => ({
+        variant,
+        count: shipsByVariantId.get(variant.id)?.length ?? 0,
+      }));
 
       // Apply sorting
       const [sortField, sortDirection] = sort.split("-") as [
@@ -171,12 +118,12 @@ export const getOrgFleet = cache(
         getCursor: (item) => item.variant.id,
       });
 
-      const totalUsers = new Set(allShips.map((ship) => ship.ownerId)).size;
+      const totalCitizens = new Set(allShips.map((ship) => ship.ownerId)).size;
       const totalShips = allShips.length;
 
       return {
         fleet,
-        totalUsers,
+        totalCitizens,
         totalShips,
         nextCursor,
         prevCursor,

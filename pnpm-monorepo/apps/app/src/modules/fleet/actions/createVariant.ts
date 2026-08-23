@@ -46,7 +46,8 @@ export const createVariant = createAuthenticatedAction(
       !(await authentication.authorize(
         "manufacturersSeriesAndVariants",
         "manage",
-      ))
+      )) ||
+      !authentication.session.entity
     )
       return {
         error: t("Common.forbidden"),
@@ -77,6 +78,7 @@ export const createVariant = createAuthenticatedAction(
     const tagsToConnect = await createAndReturnTags(
       data.tagKeys,
       data.tagValues,
+      authentication.session.entity.id,
     );
 
     const createdVariant = await prisma.variant.create({
@@ -104,7 +106,11 @@ export const createVariant = createAuthenticatedAction(
       }))
       .filter((link) => Boolean(link.serviceName && link.url)) as
       IncomingLink[] | undefined;
-    await syncVariantExternalLinks(createdVariant.id, incomingLinks);
+    await syncVariantExternalLinks(
+      createdVariant.id,
+      incomingLinks,
+      authentication.session.entity.id,
+    );
 
     await createAuditEvents([
       {

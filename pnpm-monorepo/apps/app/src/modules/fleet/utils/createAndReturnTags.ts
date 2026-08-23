@@ -1,14 +1,12 @@
 import { prisma } from "@/db";
-import { requireAuthentication } from "@/modules/auth/server";
-import type { VariantTag } from "@sam-monorepo/database/client";
+import type { Entity, VariantTag } from "@sam-monorepo/database/client";
 
 export const createAndReturnTags = async (
   tagKeys: string[] | undefined,
   tagValues: string[] | undefined,
+  authorCitizenId: Entity["id"],
 ) => {
   let tagsToConnect: VariantTag["id"][] = [];
-
-  const authentication = await requireAuthentication();
 
   const givenTags = tagKeys
     ?.map((key, index) => ({
@@ -40,7 +38,7 @@ export const createAndReturnTags = async (
       data: nonExistingTags.map((nonExistingTag) => ({
         key: nonExistingTag.key,
         value: nonExistingTag.value!,
-        createdById: authentication.session.user.id,
+        createdById: authorCitizenId,
       })),
     });
 
