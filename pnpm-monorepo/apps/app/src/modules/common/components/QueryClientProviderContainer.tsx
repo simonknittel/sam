@@ -8,7 +8,22 @@ interface Props {
 }
 
 const QueryClientProviderContainer = ({ children }: Readonly<Props>) => {
-  const [queryClient] = useState(() => new QueryClient());
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            /**
+             * The library default refetches every mounted query when the tab
+             * regains focus. All queries hit uncached serverless functions, so
+             * this produces redundant traffic; mutations invalidate explicitly
+             * where freshness matters.
+             */
+            refetchOnWindowFocus: false,
+          },
+        },
+      }),
+  );
 
   return (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
