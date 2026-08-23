@@ -1,3 +1,4 @@
+import { REDIRECT_TO_SEARCH_PARAM } from "@/modules/auth/utils/redirectTo";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
@@ -11,9 +12,17 @@ export function proxy(request: NextRequest) {
    * This is only an early return. Actual verification of the session is done
    * on the individual pages. Use `authenticatePage()` in order to fully
    * authenticate the user.
+   *
+   * The `redirect-to` search param preserves the deep link, so that the login
+   * page can send the user back to it after the login.
    */
   if (pathname.startsWith("/app") && !sessionCookie) {
-    return NextResponse.redirect(new URL(`/`, request.url));
+    const loginUrl = new URL(`/`, request.url);
+    loginUrl.searchParams.set(
+      REDIRECT_TO_SEARCH_PARAM,
+      pathname + request.nextUrl.search,
+    );
+    return NextResponse.redirect(loginUrl);
   }
 
   return NextResponse.next();
