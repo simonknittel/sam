@@ -5,29 +5,29 @@ description: Refine a rough idea into actionable engineering ticket(s) with user
 
 # Refine idea
 
-Use this skill when you receive an idea that is incomplete, vague, or not implementation-ready.
+Use this skill when you receive an idea that is incomplete, vague, or not ready for implementation.
 
 The skill supports feature requests, tasks, bugs, and other technical improvements.
 
 ## Goal
 
-Transform a rough idea into a clear, buildable ticket(s) and create GitHub issues for them.
+Transform a rough idea into one or more clear, buildable tickets and create GitHub issues for them.
 
 ## Inputs
 
-The idea will be given in the form of either an existing GitHub issue or a free-form description.
+The idea comes in the form of an existing GitHub issue or a free-form description.
 
 ## Process
 
-Follow these steps in order.
+Do these steps in this sequence.
 
-### 1) Understand the idea and inspect the codebase
+### 1) Understand the idea and examine the codebase
 
-- Classify idea type: `feature`, `bug`, `task` or `investigation`.
-- Restate the idea in one sentence to confirm understanding.
-- Search for relevant code paths, modules, APIs, UI screens, event handlers, and data models.
-- Identify existing behavior and nearby patterns already used in the codebase.
-- Capture concrete references (file paths, symbols, services, tables, endpoints).
+- Classify the idea type: `feature`, `bug`, `task` or `investigation`.
+- Repeat the idea in one sentence to confirm that you understand it.
+- Search for applicable code paths, modules, APIs, UI screens, event handlers, and data models.
+- Identify the current behavior and the patterns that the codebase already uses in the applicable areas.
+- Record concrete references (file paths, symbols, services, tables, endpoints).
 - Do not invent codebase facts.
 
 Minimum output from this step:
@@ -38,60 +38,60 @@ Minimum output from this step:
 
 ### 2) Interview me
 
-Before continuing with the refinement, use the `question`/`vscode_askQuestions` tool to ask clarifying questions. Do a thorough interview with me to extract all necessary details before moving on to the next step. Continue asking clarifying questions until everything can be answered without guessing. Then explicitly state: "I have enough information to proceed" before moving to the next step.
+Before you continue with the refinement, use the `question`/`vscode_askQuestions` tool to ask clarification questions. Do a thorough interview with me to get all necessary details before you continue to the next step. Continue to ask clarification questions until you can answer everything without a guess. Then explicitly say: "I have enough information to proceed" before you continue to the next step.
 
-- Ask only high-value questions that unblock implementation.
-- Prefer grouped questions by topic (product, UX, data, security, rollout, testing).
-- Highlight vague phrases from the issue and ask for explicit decisions.
-- Ask for clarification on terms and wording that could be interpreted in multiple ways.
-- If the issue is a bug, ask for reproduction details, expected behavior, and environment.
+- Only ask high-value questions that unblock the implementation.
+- Prefer questions grouped by topic (product, UX, data, security, rollout, testing).
+- Point out vague phrases from the issue and ask for explicit decisions.
+- Ask for clarification of terms and wording that permit more than one interpretation.
+- If the issue is a bug, ask for reproduction details, the expected behavior, and the environment.
 - Do not combine questions. Bad example: "Should we do X or Y? Also, do we need to consider Z?"
 
 Question quality rules:
 
-- No yes/no-only questions when nuance is needed.
-- No duplicate questions.
-- If there are too many unknowns, ask for priority order.
+- Do not ask a yes/no-only question when the answer needs nuance.
+- Do not ask duplicate questions.
+- If there are too many unknowns, ask for a priority order.
 
 ### 3) Assess and improve the proposed direction
 
-- Reconcile any Step 1 findings that were superseded by interview answers. Update the known constraints and likely change areas accordingly before producing the ticket.
-- Check if the request is coherent and technically feasible with the current architecture.
-- Suggest better/common alternatives if they reduce risk or complexity.
+- Reconcile the findings from step 1 with the interview answers that replace them. Update the known constraints and the likely change areas before you produce the ticket.
+- Check that the request is coherent and technically feasible with the current architecture.
+- Suggest better or more common alternatives if they decrease risk or complexity.
 - Identify missing scope boundaries and out-of-scope items.
-- Add dependencies, migration implications, permissions, observability, and rollback considerations when relevant.
-- Call out risks and assumptions explicitly.
+- Add dependencies, migration implications, permissions, observability, and rollback considerations when applicable.
+- Explicitly identify risks and assumptions.
 
 Assessment checklist:
 
-- Problem is clear
-- User impact is clear
-- Scope is bounded
-- Edge cases considered
-- Testing approach defined
-- Monitoring/alerts/logging considered (if applicable)
-- Security/privacy/performance considerations included (if applicable)
+- The problem is clear
+- The user impact is clear
+- The scope is bounded
+- Edge cases are considered
+- The test approach is defined
+- Monitoring/alerts/logging are considered (if applicable)
+- Security/privacy/performance considerations are included (if applicable)
 
 ### 4) Produce refined GitHub issues
 
-Split the idea into one or more actionable GitHub issues (common splits: backend vs frontend). Create separate issues when: (a) the work can be assigned to different teams/disciplines independently, (b) one part could ship without the other, or (c) the combined scope exceeds roughly 3-5 days of work. Otherwise keep as one issue. Add the label "AI-candidate" to each new issue. Each new issue should link to each other. Add an implementation order if applicable. Also, they should link to the original parent idea/issue if applicable. The links should be added to the "Context" section of the ticket template (see below). You can update the issue description later on if you don't have created the other issues yet.
+Divide the idea into one or more actionable GitHub issues (a common division: backend and frontend). Create separate issues when: (a) different teams or disciplines can do the work independently, (b) one part can ship without the other, or (c) the combined scope is more than approximately 3-5 days of work. In the other cases, keep the idea as one issue. Add the label "AI-candidate" to each new issue. Link each new issue to the other new issues. Add an implementation order if applicable. The issues must also link to the original parent idea or issue if applicable. Add the links to the "Context" section of the ticket template (see below). You can update the issue description later if you have not created the other issues yet.
 
-Add a comment to the original issue with links to the new refined issue(s) and close it afterwards. If the input is a free-form description with no associated GitHub issue number, skip the comment and close steps.
+Add a comment with links to the new refined issue(s) to the original issue, then close the original issue. If the input is a free-form description without a GitHub issue number, skip the comment and close steps.
 
-For each ticket, prepare a refined ticket body using the template below.
+For each ticket, prepare a refined ticket body with the template below.
 
-- Keep acceptance criteria testable and observable.
-- Keep scope tight enough for one implementation cycle.
-- Don't include code snippets.
+- Keep the acceptance criteria testable and observable.
+- Keep the scope small enough for one implementation cycle.
+- Do not include code snippets.
 
 ## Refined ticket template
 
-Use this format and adapt sections to issue type.
+Use this format and adapt the sections to the issue type.
 
 ```md
 ## Goal
 
-<Describe in one concise sentence what you want to achieve with the task or the improvement. Make sure not to describe a solution already but the outcome.>
+<Describe in one concise sentence what you want to achieve with the task or the improvement. Make sure to describe the outcome, not a solution.>
 
 ## Problem
 
@@ -105,7 +105,7 @@ Use this format and adapt sections to issue type.
 
 - Notes from codebase: <relevant findings>
 - Parent issue: <link to original issue if applicable>
-- Links to related issues incl. implementation order: <links to other new issues created from the same idea>
+- Links to related issues together with the implementation order: <links to other new issues created from the same idea>
 
 ## Scope
 
@@ -147,15 +147,15 @@ MUST use method: GitHub CLI
 Examples:
 
 ```sh
-# View issue details (incl. comments):
+# Show the details of an issue together with its comments:
 gh issue view <issue-number> --repo <owner/repo> --json title,body,labels,number,url,comments
 
-# Post comment:
+# Post a comment:
 gh issue comment <issue-number> --repo <owner/repo> --body-file <refined-ticket.md>
 ```
 
-- If `gh` is not available or returns an authentication error, stop and notify the user rather than falling back to another method.
-- Before executing any `gh` command, confirm the target repo by running `gh repo view --json nameWithOwner` in the current directory. If the result is ambiguous or the working directory is not a git repo, ask the user to specify `<owner/repo>` explicitly.
+- If `gh` is not available or returns an authentication error, stop and tell the user. Do not fall back to a different method.
+- Before you execute a `gh` command, confirm the target repo with `gh repo view --json nameWithOwner` in the current directory. If the result is ambiguous or the working directory is not a git repo, ask the user to specify `<owner/repo>` explicitly.
 
 ## Final output
 

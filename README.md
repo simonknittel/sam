@@ -14,21 +14,22 @@
 
 ## Features
 
-A non-exhaustive overview:
+A selection of the features:
 
 - Spynet: ERP- and CRM-like citizen and organization management
-- Wiki: Org-internal wiki with realtime collaborative editing and per-page permissions
-- Fully dynamic role and attribute based access control
-- Fleet: Org-wide management of the member's Star Citizen fleet
-- Events: Prepare complex operations based on the event participant's roles and fleet. Synchronized with Discord events
-- Career: Interactive org-internal career path graph synchronized to the member's roles
+- Wiki: Org-internal wiki with realtime collaboration and per-page permissions
+- Access control: Fully dynamic role-based and attribute-based access control
+- Fleet: Org-wide management of the members' Star Citizen fleet
+- Events: Prepare complex operations with the roles and fleet of the participants. Synchronized with Discord events
+- Career: Interactive org-internal career path graph, synchronized with the roles of the member
 - Log Analyzer: Star Citizen game log analysis. Kill feed with overlay
-- Documents: Access important org documents based on the member's roles
+- Documents: Access to important org documents, based on the roles of the member
 - Tasks: Org-internal quest system
-- Org-internal reward system for participating in events, tasks and monthly salary based on the members's roles
-- Social login via Discord integration
+- Rewards: Org-internal reward system for event and task participation, and a monthly salary based on the roles of the member
+- Social login with Discord
 - Dogfight Trainer: Asteroids-like mini game
-- Cornerstone Image Browser: Simple way to compare Star Citizen item skins based on Cornerstone's database
+- Cornerstone Image Browser: Compare Star Citizen item skins with data from the Cornerstone database
+- More: file uploads, in-app changelog, penalty points, leaderboards, statistics, avatar creator, cargo container calculator and timezone tools
 
 ## Core technologies
 

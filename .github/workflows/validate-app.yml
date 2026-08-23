@@ -8,6 +8,7 @@ on:
       - .github/workflows/validate-app.yml
       - pnpm-monorepo/.nvmrc
       - pnpm-monorepo/apps/app/**
+      - pnpm-monorepo/apps/lambda/**
       - pnpm-monorepo/apps/scripts/**
       - pnpm-monorepo/packages/**
       - pnpm-monorepo/pnpm-lock.yaml
@@ -19,6 +20,7 @@ on:
       - .github/workflows/validate-app.yml
       - pnpm-monorepo/.nvmrc
       - pnpm-monorepo/apps/app/**
+      - pnpm-monorepo/apps/lambda/**
       - pnpm-monorepo/apps/scripts/**
       - pnpm-monorepo/packages/**
       - pnpm-monorepo/pnpm-lock.yaml
@@ -112,7 +114,7 @@ jobs:
         working-directory: pnpm-monorepo
 
       - name: Install dependencies
-        run: pnpm install --filter @sam-monorepo/app...
+        run: pnpm install --filter @sam-monorepo/app... --filter @sam-monorepo/lambda...
         working-directory: pnpm-monorepo
         env:
           # See the lint job's install step
@@ -124,6 +126,10 @@ jobs:
 
       - name: Test packages
         run: pnpm --filter @sam-monorepo/permissions --filter @sam-monorepo/wiki-editor run test
+        working-directory: pnpm-monorepo
+
+      - name: Test Lambda functions
+        run: pnpm --filter @sam-monorepo/lambda run test
         working-directory: pnpm-monorepo
 
   typecheck:

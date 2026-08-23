@@ -5,7 +5,7 @@ description: Validates the correct implementation of a GitHub issue
 
 # Validate GitHub issue implementation
 
-Use this skill to validate the implementation of a GitHub issue. This includes checking if the implementation meets the acceptance criteria, if the code follows this project's coding guidelines, and if the implementation is complete and correct.
+Use this skill to validate the implementation of a GitHub issue. The validation includes these checks: the implementation satisfies the acceptance criteria, the code obeys the coding guidelines of this project, and the implementation is complete and correct.
 
 ## Process
 
@@ -13,11 +13,11 @@ Use this skill to validate the implementation of a GitHub issue. This includes c
 
 ### 2) Review the implementation against the issue details and acceptance criteria
 
-The implementation can be found in the currently staged or unstaged changes of the local git repository.
+The implementation is in the currently staged or unstaged changes of the local git repository.
 
-### 3) Review the implementation against this project's coding guidelines
+### 3) Review the implementation against the coding guidelines of this project
 
-The coding guidelines can be found in `docs/coding-guidelines.md`.
+The coding guidelines are in `docs/coding-guidelines.md`.
 
 ## Communication with GitHub
 
@@ -26,13 +26,13 @@ MUST use method: GitHub CLI
 Examples:
 
 ```sh
-# View issue details (incl. comments):
+# Show the details of an issue together with its comments:
 gh issue view <issue-number> --repo <owner/repo> --json title,body,labels,number,url,comments
 
-# Post comment:
+# Post a comment:
 gh issue comment <issue-number> --repo <owner/repo> --body-file <refined-ticket.md>
 ```
 
-If `gh` is not available or returns an authentication error, stop and notify the user rather than falling back to another method.
+If `gh` is not available or returns an authentication error, stop and tell the user. Do not fall back to a different method.
 
 ## The GitHub issue in question:

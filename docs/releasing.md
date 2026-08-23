@@ -1,33 +1,33 @@
-# Releasing
+# Releases
 
-There is a single branch (`main`). Pushes to `main` never deploy to production on their own:
+There is a single branch (`main`). A push to `main` alone never deploys to production:
 
-- Vercel only creates _preview_ deployments for pushes (the project's Production Branch points to `production-gate`, a frozen branch whose ruleset blocks all pushes — Vercel requires the Production Branch to exist in the repository)
-- The Lambda functions are only deployed by the [Release workflow](../.github/workflows/release.yml) (or manually via the [Deploy Lambda functions workflow](../.github/workflows/deploy-lambda-functions.yml))
+- Vercel only creates _preview_ deployments for pushes. The Production Branch of the project points to `production-gate`, a frozen branch with a ruleset that blocks all pushes. Vercel requires that the Production Branch exists in the repository.
+- Only the [Release workflow](../.github/workflows/release.yml) deploys the Lambda functions. As an alternative, start the [Deploy Lambda functions workflow](../.github/workflows/deploy-lambda-functions.yml) manually.
 
 ## Release workflow
 
-The [Release workflow](../.github/workflows/release.yml) is the only path to production. It runs three jobs in parallel:
+The [Release workflow](../.github/workflows/release.yml) is the only procedure that deploys to production. It runs three jobs in parallel:
 
-- Sends the `deploying` event to the `releases` channel of Soketi
-- Deploys the Lambda functions to AWS
-- Deploys the app to Vercel (via `vercel deploy --prod`, built on Vercel's infrastructure with production environment variables)
+- Send the `deploying` event to the `releases` channel of Soketi
+- Deploy the Lambda functions to AWS
+- Deploy the app to Vercel (through `vercel deploy --prod`; Vercel builds the app on its infrastructure with the production environment variables)
 
-Once both deployments have finished, it sends the `new` event to the `releases` channel of Soketi.
+When the two deployments are complete, the workflow sends the `new` event to the `releases` channel of Soketi.
 
-The Lambda functions deploy to the **test** AWS environment: there is no production AWS account (yet), so the test environment intentionally doubles as production (see [setup-test-and-production.md](./setup-test-and-production.md)).
+The workflow deploys the Lambda functions to the **test** AWS environment. A production AWS account does not exist yet, thus the test environment intentionally also operates as production (see [setup-test-and-production.md](./setup-test-and-production.md)).
 
-The workflow runs automatically every Tuesday at 8am UTC and can be triggered manually via `Actions > Release > Run workflow`.
+The workflow starts automatically each Tuesday at 8am UTC. You can also start it manually through `Actions > Release > Run workflow`.
 
 ## Collab server
 
-The wiki collaboration server is not part of the Release workflow. The [Build collab server workflow](../.github/workflows/build-collab-server.yml) builds and pushes the `ghcr.io/simonknittel/sam-collab` image on every push to `main` that touches the collab server or its workspace dependencies (it can also be triggered manually). Production runs on an externally managed host which pulls this image.
+The wiki collaboration server is not part of the Release workflow. The [Build collab server workflow](../.github/workflows/build-collab-server.yml) builds and pushes the `ghcr.io/simonknittel/sam-collab` image on each push to `main` that changes the collab server or its workspace dependencies. You can also start this workflow manually. In production, an externally managed host pulls this image and runs the server.
 
 ## Ad-hoc releases and rollbacks
 
-Trigger the Release workflow manually. The `git_ref` input selects what gets deployed:
+Start the Release workflow manually. The `git_ref` input selects the commit that the workflow deploys:
 
-- Leave it empty to release the latest commit of `main`
-- Pass an older commit SHA to roll back
+- Keep the input empty to release the latest commit of `main`
+- Enter an older commit SHA to roll back
 
-Database migrations are not part of the Release workflow and are triggered manually via the [Production database migrations workflow](../.github/workflows/production-database-migrations.yml).
+Database migrations are not part of the Release workflow. The [Production database migrations workflow](../.github/workflows/production-database-migrations.yml) is currently disabled. Apply migrations manually (see [Change the database schema](./changing-database-schema.md)).
