@@ -4,8 +4,6 @@ import { searchParamsNextjsToURLSearchParams } from "@/modules/common/utils/sear
 import { type Metadata } from "next";
 import { CitizenTableTile } from "../../../../modules/citizen/components/CitizenTableTile";
 
-export const revalidate = 0;
-
 export const metadata: Metadata = {
   title: "Citizen",
 };

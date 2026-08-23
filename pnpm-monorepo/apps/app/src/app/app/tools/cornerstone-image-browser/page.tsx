@@ -5,8 +5,6 @@ import { RichText } from "@/modules/common/components/RichText";
 import { Tile } from "@/modules/common/components/Tile";
 import { cornerstoneImageBrowserItemTypes } from "@/modules/cornerstone-image-browser/utils/config";
 
-export const revalidate = 86400; // 24 hours
-
 export default async function Page() {
   await requireAuthenticationPage("/app/tools/cornerstone-image-browser");
 

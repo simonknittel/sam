@@ -4,8 +4,6 @@ import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMet
 import { getDocuments } from "@/modules/documents/utils/queries/getDocuments";
 import { notFound } from "next/navigation";
 
-export const revalidate = 86400; // 24 hours
-
 type Params = Promise<{
   slug: string[];
 }>;

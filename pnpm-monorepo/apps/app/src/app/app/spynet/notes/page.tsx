@@ -4,8 +4,6 @@ import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/Suspe
 import { searchParamsNextjsToURLSearchParams } from "@/modules/common/utils/searchParamsNextjsToURLSearchParams";
 import { type Metadata } from "next";
 
-export const revalidate = 0;
-
 export const metadata: Metadata = {
   title: "Notizen",
 };
