@@ -43,7 +43,6 @@ export const getActiveOrganizationMemberships = withTrace(
           select: {
             id: true,
             handle: true,
-            discordId: true,
           },
         },
       },

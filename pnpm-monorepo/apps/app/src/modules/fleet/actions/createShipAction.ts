@@ -16,23 +16,21 @@ export const createShipAction = createAuthenticatedAction(
   "createShipAction",
   schema,
   async (formData, authentication, data, t) => {
-    if (!(await authentication.authorize("ship", "manage")))
-      return {
-        error: t("Common.forbidden"),
-        requestPayload: formData,
-      };
-    if (!authentication.session.entity)
+    if (
+      !(await authentication.authorize("ship", "manage")) ||
+      !authentication.session.entity
+    )
       return {
         error: t("Common.forbidden"),
         requestPayload: formData,
       };
 
     /**
-     * Assign the ship to the user
+     * Assign the ship to the citizen of the session
      */
     const ship = await prisma.ship.create({
       data: {
-        ownerId: authentication.session.user.id,
+        ownerId: authentication.session.entity.id,
         createdById: authentication.session.entity.id,
         ...data,
       },
@@ -42,10 +40,10 @@ export const createShipAction = createAuthenticatedAction(
     });
     await createAuditEvents([
       {
-        type: AuditEventType.SHIP_CREATED,
+        type: AuditEventType.SHIP_CREATED_V2,
         data: {
           shipId: ship.id,
-          ownerId: authentication.session.user.id,
+          ownerId: authentication.session.entity.id,
           variantId: data.variantId,
         },
         createdById: authentication.session.user.id,

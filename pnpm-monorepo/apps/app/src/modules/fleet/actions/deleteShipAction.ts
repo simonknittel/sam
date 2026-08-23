@@ -30,7 +30,10 @@ export const deleteShipAction = createAuthenticatedAction(
     const existingShip = await prisma.ship.findFirst({
       where: {
         id: data.id,
-        ownerId: authentication.session.user.id,
+        ownerId: authentication.session.entity.id,
+      },
+      select: {
+        deletedAt: true,
       },
     });
     if (existingShip?.deletedAt !== null) {
@@ -46,7 +49,7 @@ export const deleteShipAction = createAuthenticatedAction(
     const deletedShip = await prisma.ship.update({
       where: {
         id: data.id,
-        ownerId: authentication.session.user.id,
+        ownerId: authentication.session.entity.id,
       },
       data: {
         deletedAt: new Date(),
@@ -56,7 +59,7 @@ export const deleteShipAction = createAuthenticatedAction(
 
     await createAuditEvents([
       {
-        type: AuditEventType.SHIP_DELETED,
+        type: AuditEventType.SHIP_DELETED_V2,
         data: {
           shipId: deletedShip.id,
           ownerId: deletedShip.ownerId,

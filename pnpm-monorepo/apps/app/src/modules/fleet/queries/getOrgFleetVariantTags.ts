@@ -10,7 +10,6 @@ export const getOrgFleetVariantTags = cache(
     if (!(await authentication.authorize("orgFleet", "read"))) forbidden();
 
     return prisma.variantTag.findMany({
-      distinct: ["id"],
       orderBy: [{ key: "asc" }, { value: "asc" }],
     });
   }),

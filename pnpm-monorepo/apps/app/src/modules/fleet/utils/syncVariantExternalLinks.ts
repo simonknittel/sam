@@ -1,6 +1,6 @@
 import { prisma } from "@/db";
-import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
+import type { Entity } from "@sam-monorepo/database/client";
 
 export interface IncomingLink {
   serviceName: string;
@@ -9,10 +9,11 @@ export interface IncomingLink {
 
 export const syncVariantExternalLinks = withTrace(
   "syncVariantExternalLinks",
-  async (variantId: string, incomingLinks: IncomingLink[] | undefined) => {
-    const authentication = await requireAuthentication();
-    if (!authentication.session.entity) throw new Error("Unauthorized");
-
+  async (
+    variantId: string,
+    incomingLinks: IncomingLink[] | undefined,
+    authorCitizenId: Entity["id"],
+  ) => {
     await prisma.$transaction(async (tx) => {
       if (!incomingLinks || incomingLinks.length === 0) {
         await tx.variantExternalLink.deleteMany({
@@ -51,7 +52,7 @@ export const syncVariantExternalLinks = withTrace(
             where: { id: existing.id },
             data: {
               url: incoming.url,
-              updatedById: authentication.session.entity!.id,
+              updatedById: authorCitizenId,
             },
           });
         } else {
@@ -60,8 +61,8 @@ export const syncVariantExternalLinks = withTrace(
               variantId,
               serviceName: incoming.serviceName,
               url: incoming.url,
-              createdById: authentication.session.entity!.id,
-              updatedById: authentication.session.entity!.id,
+              createdById: authorCitizenId,
+              updatedById: authorCitizenId,
             },
           });
         }
