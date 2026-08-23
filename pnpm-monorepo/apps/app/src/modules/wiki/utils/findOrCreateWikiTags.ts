@@ -2,6 +2,7 @@ import {
   wikiContainerColumns,
   type EventContainer,
 } from "@/modules/events/utils/eventContainer";
+import type { PrismaClientType } from "@sam-monorepo/database";
 import type { Prisma } from "@sam-monorepo/database/client";
 
 /**
@@ -13,7 +14,7 @@ import type { Prisma } from "@sam-monorepo/database/client";
  * name.
  */
 export const findOrCreateWikiTags = async (
-  transaction: Prisma.TransactionClient,
+  transaction: PrismaClientType | Prisma.TransactionClient,
   names: readonly string[],
   container: EventContainer | null,
   createdById: string | null,

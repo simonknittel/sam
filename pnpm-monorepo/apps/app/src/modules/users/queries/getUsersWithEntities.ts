@@ -11,12 +11,24 @@ export const getUsersWithEntities = withTrace(
 
     const [users, entities] = await Promise.all([
       prisma.user.findMany({
-        include: {
-          accounts: true,
+        select: {
+          id: true,
+          name: true,
+          image: true,
+          createdAt: true,
+          emailVerified: true,
+          bannedAt: true,
+          bannedReason: true,
+          role: true,
           bannedBy: {
             select: {
               id: true,
               handle: true,
+            },
+          },
+          accounts: {
+            select: {
+              providerAccountId: true,
             },
           },
         },
