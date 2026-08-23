@@ -4,6 +4,7 @@ import { sendNotification, setVapidDetails, WebPushError } from "web-push";
 import { createAuditEvents } from "../../common/audit";
 import { log } from "../../common/logger";
 import { env } from "../setup";
+import { toLoggableWebPushError } from "../toLoggableWebPushError";
 
 setVapidDetails(env.BASE_URL, env.PUBLIC_VAPID_KEY, env.PRIVATE_VAPID_KEY);
 
@@ -88,7 +89,7 @@ export const WebPushSubscribedHandler = async (payload: Payload) => {
       ]);
     } else {
       log.error("Error sending test notification", {
-        error,
+        error: toLoggableWebPushError(error),
         subscriptionId: subscription.id,
       });
     }

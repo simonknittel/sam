@@ -13,6 +13,7 @@ import { createAuditEvents } from "../common/audit";
 import { log } from "../common/logger";
 import { type Notification } from "./notification";
 import { env } from "./setup";
+import { toLoggableWebPushError } from "./toLoggableWebPushError";
 
 setVapidDetails(env.BASE_URL, env.PUBLIC_VAPID_KEY, env.PRIVATE_VAPID_KEY);
 
@@ -64,7 +65,15 @@ export const publishWebPushNotifications = async (
           notificationType: true,
         },
       },
-      webPushSubscriptions: true,
+      // The keys are omitted globally, so the send path selects them back in.
+      webPushSubscriptions: {
+        select: {
+          id: true,
+          endpoint: true,
+          p256dh: true,
+          auth: true,
+        },
+      },
     },
   });
   if (citizens.length <= 0) return;
@@ -95,6 +104,7 @@ export const publishWebPushNotifications = async (
       return citizen.webPushSubscriptions
         .filter((sub) => isAllowedWebPushEndpointUrl(sub.endpoint))
         .map((sub) => ({
+          id: sub.id,
           subscription: {
             endpoint: sub.endpoint,
             keys: {
@@ -116,7 +126,7 @@ export const publishWebPushNotifications = async (
   });
 
   const subscriptionsToRemove: string[] = [];
-  for (const { subscription, payload } of filteredNotifications) {
+  for (const { id, subscription, payload } of filteredNotifications) {
     for (let attempt = 0; attempt <= RATE_LIMIT_MAX_RETRIES; attempt += 1) {
       try {
         await sendNotification(subscription, payload, {
@@ -140,7 +150,7 @@ export const publishWebPushNotifications = async (
             void log.warn(
               "Rate limited sending web push notification, retrying",
               {
-                endpoint: subscription.endpoint,
+                subscriptionId: id,
                 retryDelayMs,
                 attempt: attempt + 1,
               },
@@ -152,7 +162,7 @@ export const publishWebPushNotifications = async (
           void log.error(
             "Exceeded retries after rate limit for web push notification",
             {
-              endpoint: subscription.endpoint,
+              subscriptionId: id,
               statusCode: error.statusCode,
               attempts: attempt + 1,
             },
@@ -161,8 +171,8 @@ export const publishWebPushNotifications = async (
         }
 
         void log.error("Error sending web push notification", {
-          error,
-          subscription,
+          error: toLoggableWebPushError(error),
+          subscriptionId: id,
         });
         break;
       }
