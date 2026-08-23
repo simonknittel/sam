@@ -38,7 +38,7 @@ Minimum output from this step:
 
 ### 2) Interview me
 
-Before you continue with the refinement, use the `question`/`vscode_askQuestions` tool to ask questions. Do a thorough interview with me to get all necessary details before you continue to the next step. Continue to ask questions until you can answer everything without a guess. Then explicitly say: "I have enough information to proceed" before you continue to the next step.
+Before you continue with the refinement, use the `question`/`vscode_askQuestions` tool to ask clarification questions. Do a thorough interview with me to get all necessary details before you continue to the next step. Continue to ask clarification questions until you can answer everything without a guess. Then explicitly say: "I have enough information to proceed" before you continue to the next step.
 
 - Only ask high-value questions that unblock the implementation.
 - Prefer questions grouped by topic (product, UX, data, security, rollout, testing).
@@ -74,7 +74,7 @@ Assessment checklist:
 
 ### 4) Produce refined GitHub issues
 
-Divide the idea into one or more actionable GitHub issues (a common division: backend and frontend). Create separate issues when: (a) different teams or disciplines can do the work independently, (b) one part can ship without the other, or (c) the combined scope is more than approximately 3-5 days of work. In the other cases, keep the idea as one issue. Add the label "AI-candidate" to each new issue. Each new issue must link to the other new issues. Add an implementation order if applicable. The issues must also link to the original parent idea or issue if applicable. Add the links to the "Context" section of the ticket template (see below). You can update the issue description later if you have not created the other issues yet.
+Divide the idea into one or more actionable GitHub issues (a common division: backend and frontend). Create separate issues when: (a) different teams or disciplines can do the work independently, (b) one part can ship without the other, or (c) the combined scope is more than approximately 3-5 days of work. In the other cases, keep the idea as one issue. Add the label "AI-candidate" to each new issue. Link each new issue to the other new issues. Add an implementation order if applicable. The issues must also link to the original parent idea or issue if applicable. Add the links to the "Context" section of the ticket template (see below). You can update the issue description later if you have not created the other issues yet.
 
 Add a comment with links to the new refined issue(s) to the original issue, then close the original issue. If the input is a free-form description without a GitHub issue number, skip the comment and close steps.
 

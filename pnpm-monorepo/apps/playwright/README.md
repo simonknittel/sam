@@ -13,10 +13,11 @@ database for each test case.
   `apps/collab/Dockerfile` and runs `next build` for the app.
 - **Per worker** (`fixtures/test.ts`): each Playwright worker clones its own
   database from the template. It also starts its own collab container, its
-  own Discord mock and its own `next start` instance. Workers only share
-  the Unleash server and the RustFS container with its `uploads` bucket:
-  tests may only toggle flags (through `fixtures/unleash.ts`) that no other
-  test depends on.
+  own Discord mock and its own `next start` instance. Tests of different
+  workers can never interfere with each other — except through the shared
+  Unleash server and the shared RustFS container with its `uploads` bucket.
+  For the flags, the rule is: tests may only toggle flags (through
+  `fixtures/unleash.ts`) that no other test depends on.
 - **Per test**: an automatic fixture truncates all tables and resets the
   Discord mock. Thus each test starts from an empty database and seeds
   exactly what it needs through the factories in `fixtures/factories.ts`.

@@ -12,7 +12,7 @@ key of SAM.
 > [!IMPORTANT]
 > This is an interim solution. A full OAuth 2.0 / OIDC flow will replace it
 > later. The claim names below were selected so that most of your
-> verification code stays applicable after that migration.
+> verification code survives that migration without changes.
 
 ## Overview
 
@@ -175,7 +175,7 @@ Exchange the token for your own session immediately:
    with a redirect to the clean URL.
 
 Thus the expiry only limits that first load, not the time that the iframe
-can stay open: when you have your own session, the token has done its work.
+can stay open: when you have your own session, the token is used up.
 SAM does not refresh the token and never will. A new token would mean a new
 iframe `src`, which reloads the frame and destroys form state that is in
 progress.
@@ -194,7 +194,7 @@ If you add it, one rule is critical. If you do not obey this rule, you lock
 users out:
 
 > Reject a repeated `jti` only when a requester exchanges it for a **new**
-> session. Let a requester through that already has a valid session.
+> session. Let through a requester that already has a valid session.
 
 A page reload _inside_ the iframe requests the identical URL with the
 identical token. A simple "`jti` was seen → reject" rule makes that reload
@@ -225,8 +225,8 @@ an unknown `kid`.
 - No encryption (JWE). The claims are the identity and the permissions of
   the user, shown to an app that will operate on them.
 - No token for a user without a linked SAM entity (an admin can be in this
-  state). The iframe then renders without the parameter, and your app must
-  fall back to its anonymous behavior.
+  state). The iframe then renders without the parameter. We recommend that
+  your app then shows its anonymous behavior.
 - No token when the signing key of SAM is not configured in an
   environment. The JWKS then serves `{"keys":[]}`. This is a valid document
   with the meaning "this issuer currently publishes no keys".

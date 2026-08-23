@@ -35,15 +35,14 @@ This command uses `pnpm-monorepo/apps/collab/.env` (see its
 
 ### Uploads (S3-compatible storage)
 
-The app sends file uploads (role icons, wiki images, attachments) to the
-`rustfs` container from [compose.yml](../compose.yml). The `S3_*` defaults
+The app sends file uploads (for example role icons, wiki images and
+attachments) to the `rustfs` container from [compose.yml](../compose.yml). The `S3_*` defaults
 from `pnpm-monorepo/apps/app/.env.example` match the credentials and the
 bucket of the container. Keep these defaults. On `docker compose up`, the
 one-shot `rustfs-bootstrap` service creates the bucket together with its
 anonymous-read policy and its CORS rules. Uploaded files stay only inside
-the container. As an alternative, point the variables to a different
-S3-compatible provider (for example Cloudflare R2, see the comments in
-`.env.example`).
+the container. As an alternative, point the variables to any S3-compatible
+provider (for example Cloudflare R2, see the comments in `.env.example`).
 
 ### Feature flags (Unleash)
 
@@ -55,8 +54,8 @@ container. Keep these defaults. On `docker compose up`, the one-shot
 enum in the disabled state. Toggle the flags in the Unleash admin UI at
 <http://localhost:4242> (login: `admin` / `unleash4all`). Without the
 `UNLEASH_*` variables, all flags are disabled. As an alternative, point the
-variables to a different Unleash-compatible provider (for example GitLab
-feature flags).
+variables to any Unleash-compatible provider (for example GitLab feature
+flags).
 
 ### Embedded app authentication
 
@@ -122,8 +121,9 @@ an external event needs only `CREATE_EVENTS`; a voice event also needs
 `MANAGE_CHANNELS`, `MUTE_MEMBERS` and `MOVE_MEMBERS`
 (`permissions=17600798000144`). The link above does not include these three
 permissions. They are moderation permissions, and guilds without stage
-channels never need them. The channel picker does offer stage channels.
-Thus grant these permissions only if the guild has stage channels.
+channels never need them. The channel picker does offer stage channels, and
+an event publication into a stage channel needs these permissions. Thus
+grant them only if the guild has stage channels.
 
 `MANAGE_EVENTS` is redundant: the app only edits events that the bot
 created, and `CREATE_EVENTS` already permits that. The link includes

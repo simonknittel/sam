@@ -4,7 +4,7 @@
 2. Go to the database package: `cd pnpm-monorepo/packages/database`
 3. Run `pnpm exec prisma db push`
 4. Create the migration: `pnpm run migrate:dev` (this script runs `prisma migrate dev` and then builds the package again, so that all consumers get the new client)
-   - `prisma migrate dev` asks to reset the local database. This is correct: `db push` (step 3) made the local schema different from the migration history. The reset applies all migrations again, together with the new one.
+   - `prisma migrate dev` asks to reset the local database. This is the expected behavior: `db push` (step 3) made the local schema different from the migration history. The reset applies all migrations again, together with the new one.
 5. Commit
 6. Apply the migration to the other developer databases: `pnpm run migrate:dev`
 7. Apply the migration to the production database with one of these options:
