@@ -106,6 +106,18 @@ export const fillUntilVisible = (
     await expect(reaction).toBeVisible({ timeout: REACTION_TIMEOUT });
   }).toPass({ timeout: HYDRATION_TIMEOUT });
 
+/**
+ * Retries the fill until the field actually holds the value. Forms whose
+ * other controls re-render while they load — the citizen pickers above a
+ * value field, say — drop a fill that lands in that window, and the form
+ * then submits its default instead.
+ */
+export const fillUntilValue = (input: Locator, value: string) =>
+  expect(async () => {
+    await refill(input, value);
+    await expect(input).toHaveValue(value, { timeout: REACTION_TIMEOUT });
+  }).toPass({ timeout: HYDRATION_TIMEOUT });
+
 /** Retries the fill until the URL reflects it (nuqs-managed filters). */
 export const fillUntilUrl = (
   page: Page,

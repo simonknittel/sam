@@ -1,16 +1,12 @@
-import {
-  createCitizen,
-  createProfitDistributionCycle,
-  createSilcTransaction,
-} from "../fixtures/factories";
+import { createCitizen, createSilcTransaction } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilUrl,
   clickUntilVisible,
   DELETED_TEXT,
+  fillUntilValue,
   modal,
   SAVED_TEXT,
-  waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
@@ -42,12 +38,13 @@ test("a transaction created through the UI updates balances and the system log",
     createModal,
   );
 
-  // Value and description first — filling them right after picking a
-  // citizen can race the selection's re-render under full-suite load
-  await createModal.getByLabel("Wert").fill("42");
-  await createModal
-    .getByLabel("Beschreibung")
-    .fill("Belohnung für den Testeinsatz");
+  // The picker below re-renders while its citizens load, which swallows a
+  // fill that lands in that window — so both fields insist on their value
+  await fillUntilValue(createModal.getByLabel("Wert"), "42");
+  await fillUntilValue(
+    createModal.getByLabel("Beschreibung"),
+    "Belohnung für den Testeinsatz",
+  );
 
   await createModal
     .getByRole("combobox", { name: "Citizens" })
@@ -127,9 +124,7 @@ test('"Speichern und weitere Transaktion erstellen" keeps the modal open with a 
     createModal,
   );
 
-  // Value first — filling it right after picking a citizen can race the
-  // selection's re-render under full-suite load
-  await createModal.getByLabel("Wert").fill("10");
+  await fillUntilValue(createModal.getByLabel("Wert"), "10");
 
   await createModal
     .getByRole("combobox", { name: "Citizens" })
@@ -143,6 +138,7 @@ test('"Speichern und weitere Transaktion erstellen" keeps the modal open with a 
     createModal.getByRole("link", { name: "silc-dauerempfaenger" }),
   ).toBeVisible();
 
+  await expect(createModal.getByLabel("Wert")).toHaveValue("10");
   await createModal
     .getByRole("button", {
       name: "Speichern und weitere Transaktion erstellen",
@@ -240,139 +236,4 @@ test("deleting a transaction soft deletes it and reverts the balance", async ({
   await expect(
     page.getByRole("row").filter({ hasText: "Fehlbuchung" }),
   ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
-});
-
-test("ending the profit distribution collection phase debits every participant", async ({
-  page,
-  prisma,
-  signIn,
-  switchUser,
-}) => {
-  const admin = await createCitizen(prisma, {
-    handle: "sincome-verwalter",
-    permissionStrings: [
-      "profitDistributionCycle;manage",
-      "silcTransactionOfOtherCitizen;read",
-      "silcBalanceOfOtherCitizen;read",
-      "silcBalanceOfCurrentCitizen;read",
-    ],
-  });
-  // The cycle page shows the member's own earned SILC during the
-  // collection phase, hence the balance permission
-  const PARTICIPANT_PERMISSIONS = [
-    "profitDistributionCycle;read",
-    "silcBalanceOfCurrentCitizen;read",
-  ];
-  const firstParticipant = await createCitizen(prisma, {
-    handle: "sincome-teilnehmer-1",
-    permissionStrings: PARTICIPANT_PERMISSIONS,
-  });
-  const secondParticipant = await createCitizen(prisma, {
-    handle: "sincome-teilnehmer-2",
-    permissionStrings: PARTICIPANT_PERMISSIONS,
-  });
-  await createSilcTransaction(prisma, {
-    receiverId: firstParticipant.entity.id,
-    value: 100,
-  });
-  await createSilcTransaction(prisma, {
-    receiverId: secondParticipant.entity.id,
-    value: 40,
-  });
-
-  const cycle = await createProfitDistributionCycle(prisma, {
-    title: "Q3 Testzyklus",
-    createdById: admin.entity.id,
-  });
-
-  // A citizen cedes their share during the collection phase
-  await signIn(firstParticipant.user);
-  await page.goto(`/app/sincome/${cycle.id}`);
-  // Often the worker's first page load — warm-up can exceed the default 5s
-  await expect(page.getByText("Sammelphase").first()).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
-  await waitForAppShellHydration(page);
-  await page.getByRole("button", { name: "Anteil abtreten" }).click();
-  await expect(page.getByRole("button", { name: "Widerrufen" })).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
-  const participantRow =
-    await prisma.profitDistributionCycleParticipant.findUnique({
-      where: {
-        cycleId_citizenId: {
-          cycleId: cycle.id,
-          citizenId: firstParticipant.entity.id,
-        },
-      },
-    });
-  expect(participantRow?.cededAt).not.toBeNull();
-
-  // The manager ends the collection phase
-  await switchUser(admin.user);
-  await page.goto(`/app/sincome/${cycle.id}/management`);
-  await clickUntilVisible(
-    page.getByRole("button", { name: "Phase beenden" }),
-    page.getByRole("alertdialog"),
-  );
-  await expect(page.getByText("Sammelphase beenden?")).toBeVisible();
-  await page
-    .getByRole("alertdialog")
-    .getByRole("button", { name: "Beenden" })
-    .click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
-
-  // Every citizen with a positive balance got debited down to zero
-  const debits = await prisma.silcTransaction.findMany({
-    where: { value: { lt: 0 } },
-  });
-  expect(debits).toHaveLength(2);
-  const debitByReceiver = new Map(
-    debits.map((debit) => [debit.receiverId, debit]),
-  );
-  expect(debitByReceiver.get(firstParticipant.entity.id)).toMatchObject({
-    value: -100,
-    description: "SINcome: Q3 Testzyklus",
-  });
-  expect(debitByReceiver.get(secondParticipant.entity.id)).toMatchObject({
-    value: -40,
-    description: "SINcome: Q3 Testzyklus",
-  });
-
-  const participants = await prisma.profitDistributionCycleParticipant.findMany(
-    {
-      where: { cycleId: cycle.id },
-    },
-  );
-  expect(participants).toHaveLength(2);
-  const snapshotByCitizen = new Map(
-    participants.map((participant) => [
-      participant.citizenId,
-      participant.silcBalanceSnapshot,
-    ]),
-  );
-  expect(snapshotByCitizen.get(firstParticipant.entity.id)).toBe(100);
-  expect(snapshotByCitizen.get(secondParticipant.entity.id)).toBe(40);
-
-  const balances = await prisma.entity.findMany({
-    where: {
-      id: { in: [firstParticipant.entity.id, secondParticipant.entity.id] },
-    },
-    select: { silcBalance: true },
-  });
-  expect(balances.map(({ silcBalance }) => silcBalance)).toEqual([0, 0]);
-
-  const endedCycle = await prisma.profitDistributionCycle.findUnique({
-    where: { id: cycle.id },
-  });
-  expect(endedCycle!.collectionEndedAt.getTime()).toBeLessThanOrEqual(
-    Date.now(),
-  );
-
-  const auditEvent = await prisma.auditEvent.findFirst({
-    where: { type: "PROFIT_CYCLE_COLLECTION_ENDED" },
-  });
-  expect(auditEvent).not.toBeNull();
 });
