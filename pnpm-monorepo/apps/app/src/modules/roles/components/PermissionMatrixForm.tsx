@@ -13,7 +13,14 @@ interface Props {
 export const PermissionMatrixForm = ({ children, className }: Props) => {
   const handleChange: ChangeEventHandler<HTMLFormElement> = (event) => {
     const input = event.target as unknown as HTMLInputElement;
-    const [roleId, permissionString] = input.name.split("_");
+    /**
+     * Split at the first underscore only: role ids are cuids and contain no
+     * underscore, but permission strings can (example:
+     * `taskRewardType=NEW_SILC`).
+     */
+    const separatorIndex = input.name.indexOf("_");
+    const roleId = input.name.slice(0, separatorIndex);
+    const permissionString = input.name.slice(separatorIndex + 1);
     const checked = input.checked ? "true" : "";
 
     const formData = new FormData();
