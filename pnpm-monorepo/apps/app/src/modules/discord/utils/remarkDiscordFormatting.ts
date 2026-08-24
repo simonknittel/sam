@@ -1,4 +1,4 @@
-import type { ListItem, Nodes, Paragraph, Parents, RootContent } from "mdast";
+import type { ListItem, Nodes, Root, RootContent } from "mdast";
 import { SKIP, visit } from "unist-util-visit";
 
 /**
@@ -29,6 +29,12 @@ const DISCORD_NODE_TYPES: ReadonlySet<string> = new Set([
 /** Discord renders `#`, `##` and `###`. A deeper heading stays normal text. */
 const DISCORD_MAX_HEADING_DEPTH = 3;
 
+/**
+ * The multi-line quote of Discord. Standard Markdown reads it as three block
+ * quotes inside each other, thus the characters need an explicit rule.
+ */
+const DISCORD_MULTI_LINE_QUOTE_MARKER = ">>>";
+
 /** These parents hold blocks, thus a replacement needs a paragraph around it. */
 const BLOCK_PARENT_TYPES: ReadonlySet<string> = new Set([
   "blockquote",
@@ -39,12 +45,6 @@ const BLOCK_PARENT_TYPES: ReadonlySet<string> = new Set([
 /** Matches the list marker and the check box of a task list item. */
 const TASK_LIST_ITEM_PATTERN = /^\s*(?:[-*+]|\d+[.)])\s+(\[[ xX]\]\s*)/;
 
-/**
- * Standard Markdown makes bold text from `__text__`, Discord makes underlined
- * text from it.
- */
-const UNDERLINE_MARKER = "__";
-
 const getOriginalText = (node: Nodes, source: string): string => {
   const start = node.position?.start.offset;
   const end = node.position?.end.offset;
@@ -52,18 +52,15 @@ const getOriginalText = (node: Nodes, source: string): string => {
   return source.slice(start, end);
 };
 
-const isRenderedByDiscord = (node: Nodes): boolean => {
+const isRenderedByDiscord = (node: Nodes, source: string): boolean => {
   if (node.type === "heading") return node.depth <= DISCORD_MAX_HEADING_DEPTH;
-  return DISCORD_NODE_TYPES.has(node.type);
-};
 
-const replaceChild = (
-  parent: Parents,
-  index: number,
-  replacement: RootContent,
-) => {
-  const children: RootContent[] = parent.children;
-  children.splice(index, 1, replacement);
+  if (node.type === "blockquote")
+    return !getOriginalText(node, source).startsWith(
+      DISCORD_MULTI_LINE_QUOTE_MARKER,
+    );
+
+  return DISCORD_NODE_TYPES.has(node.type);
 };
 
 /**
@@ -73,18 +70,13 @@ const replaceChild = (
 const flattenTaskListItem = (item: ListItem, source: string) => {
   const checkBox = TASK_LIST_ITEM_PATTERN.exec(getOriginalText(item, source));
   item.checked = null;
-  if (!checkBox) return;
 
-  const checkBoxText = { type: "text" as const, value: checkBox[1] };
+  // A task list item always starts with a paragraph, thus the check box has a
+  // place to go.
   const firstBlock = item.children.at(0);
+  if (!checkBox || firstBlock?.type !== "paragraph") return;
 
-  if (firstBlock?.type === "paragraph") {
-    firstBlock.children.unshift(checkBoxText);
-    return;
-  }
-
-  const paragraph: Paragraph = { type: "paragraph", children: [checkBoxText] };
-  item.children.unshift(paragraph);
+  firstBlock.children.unshift({ type: "text", value: checkBox[1] });
 };
 
 /**
@@ -93,13 +85,15 @@ const flattenTaskListItem = (item: ListItem, source: string) => {
  * that Discord does not know keeps its original characters.
  */
 export const remarkDiscordFormatting =
-  () => (tree: Nodes, file: { toString(): string }) => {
+  () => (tree: Root, file: { toString(): string }) => {
     const source = file.toString();
 
     visit(tree, (node, index, parent) => {
+      // Standard Markdown makes bold text from `__text__`, Discord makes
+      // underlined text from it.
       if (
         node.type === "strong" &&
-        getOriginalText(node, source).startsWith(UNDERLINE_MARKER)
+        getOriginalText(node, source).startsWith("__")
       ) {
         node.data = { ...node.data, hName: "u" };
         return;
@@ -110,15 +104,17 @@ export const remarkDiscordFormatting =
         return;
       }
 
-      if (!parent || index === undefined || isRenderedByDiscord(node)) return;
+      if (!parent || index === undefined || isRenderedByDiscord(node, source))
+        return;
 
       const text = {
         type: "text" as const,
         value: getOriginalText(node, source),
       };
-      replaceChild(
-        parent,
+      const children: RootContent[] = parent.children;
+      children.splice(
         index,
+        1,
         BLOCK_PARENT_TYPES.has(parent.type)
           ? { type: "paragraph", children: [text] }
           : text,

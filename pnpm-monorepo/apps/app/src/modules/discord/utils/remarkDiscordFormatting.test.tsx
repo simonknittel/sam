@@ -108,6 +108,21 @@ describe("formats that Discord does not render", () => {
     expect(html).toContain("&lt;b&gt;not bold&lt;/b&gt;");
   });
 
+  test("shows the characters of the formats that only Discord has", () => {
+    // The app has no parser code for these three formats, thus they stay text
+    expect(render("||spoiler||")).toContain("||spoiler||");
+    expect(render("-# subtext")).toContain("-# subtext");
+
+    const multiLineQuote = render(">>> first\nsecond");
+    expect(multiLineQuote).not.toContain("<blockquote>");
+    expect(multiLineQuote).toContain("&gt;&gt;&gt; first");
+  });
+
+  test("still shows a block quote with one or two characters", () => {
+    expect(render("> quoted")).toContain("<blockquote>");
+    expect(render("> > quoted")).toContain("<blockquote>");
+  });
+
   test("shows the characters of a reference link and its definition", () => {
     const html = render("[label][target]\n\n[target]: https://example.com/");
     expect(html).not.toContain("<a ");
@@ -129,7 +144,9 @@ describe("text without a format", () => {
     );
   });
 
-  test("does not show a dangerous URL scheme", () => {
-    expect(render("[click](javascript:alert(1))")).not.toContain("javascript:");
+  test("does not show a dangerous URL scheme but keeps the label", () => {
+    const html = render("[click](javascript:alert(1))");
+    expect(html).not.toContain("javascript:");
+    expect(html).toContain("click");
   });
 });
