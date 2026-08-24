@@ -1,12 +1,7 @@
-import clsx from "clsx";
 import { getRolesWithPermissionStrings } from "../queries/getRoles";
 import { PermissionMatrixGrid } from "./PermissionMatrixGrid";
 
-interface Props {
-  readonly className?: string;
-}
-
-export const PermissionMatrix = async ({ className }: Props) => {
+export const PermissionMatrix = async () => {
   const roles = await getRolesWithPermissionStrings();
 
   /**
@@ -23,12 +18,7 @@ export const PermissionMatrix = async ({ className }: Props) => {
   }));
 
   return (
-    <section
-      className={clsx(
-        "p-4 lg:p-6 rounded-primary bg-secondary overflow-x-scroll",
-        className,
-      )}
-    >
+    <section className="p-4 lg:p-6 rounded-primary bg-secondary overflow-x-scroll">
       <PermissionMatrixGrid roles={matrixRoles} />
     </section>
   );

@@ -9,28 +9,22 @@ import type { ChangeEventHandler } from "react";
 import { updateSingleRolePermission } from "../actions/updateSingleRolePermission";
 import { STATIC_PERMISSIONS } from "../utils/STATIC_PERMISSIONS";
 
-export interface MatrixRole extends Pick<Role, "id" | "name"> {
+interface MatrixRole extends Readonly<Pick<Role, "id" | "name">> {
   readonly icon: Pick<Upload, "id" | "mimeType"> | null;
   readonly permissionStrings: readonly string[];
 }
 
 /**
  * Sorted once at module scope, so the columns and every row agree on the
- * order without mutating the shared constant.
+ * order without mutating the shared constant. The locale is pinned because
+ * this module renders on the server and in the browser, and the two must
+ * not disagree on the order (a hydration mismatch).
  */
-const permissions = STATIC_PERMISSIONS.toSorted((a, b) =>
-  a.section.localeCompare(b.section),
+const permissions = STATIC_PERMISSIONS.toSorted((first, second) =>
+  first.section.localeCompare(second.section, "de"),
 );
 
 const gridTemplateColumns = `240px repeat(${permissions.length}, 32px)`;
-
-const getPermissionLabel = (
-  permission: (typeof STATIC_PERMISSIONS)[number],
-) => {
-  return permission.section
-    ? `${permission.section} / ${permission.title}`
-    : permission.title;
-};
 
 interface Props {
   readonly roles: readonly MatrixRole[];
@@ -85,11 +79,9 @@ export const PermissionMatrixGrid = ({ roles }: Props) => {
                 className="font-normal whitespace-nowrap flex justify-center items-end"
               >
                 <div className="-rotate-45 w-0">
-                  {permission.section && (
-                    <span className="text-neutral-700">
-                      {permission.section} /{" "}
-                    </span>
-                  )}
+                  <span className="text-neutral-700">
+                    {permission.section} /{" "}
+                  </span>
                   <span>{permission.title}</span>
                 </div>
               </th>
@@ -157,9 +149,8 @@ const MatrixRow = ({ role }: MatrixRowProps) => {
       {permissions.map((permission) => (
         <MatrixCell
           key={permission.string}
-          roleId={role.id}
-          permissionString={permission.string}
-          label={`${getPermissionLabel(permission)} – ${role.name}`}
+          name={`${role.id}_${permission.string}`}
+          label={`${permission.section} / ${permission.title} – ${role.name}`}
           defaultChecked={grantedPermissionStrings.has(permission.string)}
         />
       ))}
@@ -168,8 +159,7 @@ const MatrixRow = ({ role }: MatrixRowProps) => {
 };
 
 interface MatrixCellProps {
-  readonly roleId: MatrixRole["id"];
-  readonly permissionString: string;
+  readonly name: string;
   readonly label: string;
   readonly defaultChecked: boolean;
 }
@@ -180,19 +170,14 @@ interface MatrixCellProps {
  * the states live in the permission-matrix-cell utility, and the label
  * and title name the cell, which the matrix cannot do visually.
  */
-const MatrixCell = ({
-  roleId,
-  permissionString,
-  label,
-  defaultChecked,
-}: MatrixCellProps) => {
+const MatrixCell = ({ name, label, defaultChecked }: MatrixCellProps) => {
   return (
     <td>
       <label className="permission-matrix-cell" title={label}>
         <input
           type="checkbox"
           className="sr-only"
-          name={`${roleId}_${permissionString}`}
+          name={name}
           defaultChecked={defaultChecked}
           aria-label={label}
         />

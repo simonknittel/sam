@@ -39,8 +39,10 @@ export const getRoles = cache(
 );
 
 /**
- * The badge shape plus the permission strings, for the permission
- * administration surfaces that render a checkbox per role and permission.
+ * The permission matrix: the role link column plus the permission strings
+ * behind its checkboxes. Narrower than the badge shape on purpose — the
+ * matrix is the only consumer, and it renders neither description, level
+ * nor thumbnail.
  */
 export const getRolesWithPermissionStrings = cache(
   withTrace("getRolesWithPermissionStrings", async () =>
@@ -49,7 +51,9 @@ export const getRolesWithPermissionStrings = cache(
         name: "asc",
       },
       select: {
-        ...ROLE_BADGE_SELECT,
+        id: true,
+        name: true,
+        icon: { select: { id: true, mimeType: true } },
         permissionStrings: { select: { permissionString: true } },
       },
     }),
