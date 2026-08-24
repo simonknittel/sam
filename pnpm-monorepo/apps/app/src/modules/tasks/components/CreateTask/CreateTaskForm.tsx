@@ -14,10 +14,12 @@ import { TextInput } from "@/modules/common/components/form/TextInput";
 import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
 import { Link } from "@/modules/common/components/Link";
 import { createTask } from "@/modules/tasks/actions/createTask";
+import { TASK_DESCRIPTION_MAX_LENGTH } from "@/modules/tasks/utils/taskConstraints";
 import { TaskRewardType, TaskVisibility } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useState } from "react";
 import { FaChevronRight, FaSave } from "react-icons/fa";
+import { TaskDescriptionHint } from "../TaskDescriptionHint";
 import { RequiredRoles } from "./RequiredRoles";
 
 enum Step {
@@ -139,19 +141,8 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
         <Textarea
           name="description"
           label="Beschreibung"
-          hint={
-            <>
-              optional, max. 2048 Zeichen,{" "}
-              <Link
-                href="https://github.github.com/gfm/"
-                target="_blank"
-                className="text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300"
-              >
-                GitHub Flavored Markdown-Support
-              </Link>
-            </>
-          }
-          maxLength={2048}
+          hint={<TaskDescriptionHint />}
+          maxLength={TASK_DESCRIPTION_MAX_LENGTH}
           defaultValue={getDefaultValueWithFallback("description", "")}
           className="mt-4"
           classNameTextarea="h-64"

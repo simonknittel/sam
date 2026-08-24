@@ -3,10 +3,11 @@
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { z } from "zod";
 import { createTaskFieldUpdateAction } from "../utils/createTaskFieldUpdateAction";
+import { TASK_DESCRIPTION_MAX_LENGTH } from "../utils/taskConstraints";
 
 const schema = z.object({
   id: z.union([z.cuid(), z.cuid2()]),
-  description: z.string().trim().max(2048),
+  description: z.string().trim().max(TASK_DESCRIPTION_MAX_LENGTH),
 });
 
 export const updateTaskDescription = createTaskFieldUpdateAction(

@@ -12,13 +12,14 @@ import {
 } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { TASK_DESCRIPTION_MAX_LENGTH } from "../utils/taskConstraints";
 
 const schema = z.object({
   visibility: z.enum(TaskVisibility),
   assignmentLimit: z.coerce.number().min(1).nullable(),
   assignedToIds: z.array(z.cuid()).max(250).optional(), // Arbitrary (untested) limit to prevent DDoS
   title: z.string().trim().max(64),
-  description: z.string().trim().max(2048).optional(),
+  description: z.string().trim().max(TASK_DESCRIPTION_MAX_LENGTH).optional(),
   expiresAt: z.coerce.date().optional(),
   rewardType: z.enum(TaskRewardType),
   rewardTypeTextValue: z.string().trim().max(2048).optional(),
