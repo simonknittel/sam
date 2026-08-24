@@ -14,65 +14,6 @@ import {
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
-test("the event list and detail subpages render", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const organizer = await createCitizen(prisma, { handle: "organisator" });
-  const firstParticipant = await createCitizen(prisma, {
-    handle: "teilnehmer-eins",
-  });
-  const secondParticipant = await createCitizen(prisma, {
-    handle: "teilnehmer-zwei",
-  });
-  const viewer = await createCitizen(prisma, {
-    handle: "event-gast",
-    permissionStrings: ["event;read"],
-  });
-
-  const event = await createEvent(prisma, {
-    name: "Operation Morgenröte",
-    discordCreatorId: organizer.entity.discordId!,
-    startTime: new Date(Date.now() + ONE_DAY_MS),
-    location: "Port Olisar",
-  });
-  await createParticipant(prisma, {
-    eventId: event.id,
-    citizen: firstParticipant,
-  });
-  await createParticipant(prisma, {
-    eventId: event.id,
-    citizen: secondParticipant,
-  });
-
-  await signIn(viewer.user);
-  await page.goto("/app/events");
-
-  await expect(
-    page.getByRole("heading", { name: "Operation Morgenröte" }),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
-  await expect(page.getByTitle("Teilnehmer: 2")).toBeVisible();
-
-  await page.getByRole("link", { name: "Details" }).click();
-  await expect(page).toHaveURL(`/app/events/${event.id}`);
-  await expect(page.getByText("Port Olisar")).toBeVisible();
-  await expect(page.getByText("Start", { exact: true })).toBeVisible();
-
-  // Without lineup and fleet permission only Übersicht and Teilnehmer exist
-  await expect(page.getByRole("link", { name: "Übersicht" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Teilnehmer" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Aufstellung" })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "Flotte" })).toHaveCount(0);
-
-  await page.getByRole("link", { name: "Teilnehmer" }).click();
-  await expect(page).toHaveURL(`/app/events/${event.id}/participants`);
-  await expect(page.getByText("Teilnehmer (2)")).toBeVisible();
-  await expect(page.getByText("teilnehmer-eins")).toBeVisible();
-  await expect(page.getByText("teilnehmer-zwei")).toBeVisible();
-  await expect(page.getByText("organisator", { exact: true })).toBeVisible();
-});
-
 test("the fleet tab counts the ships of both participation kinds", async ({
   page,
   prisma,
@@ -140,37 +81,43 @@ test("the fleet tab counts the ships of both participation kinds", async ({
   ).toHaveCount(0);
 });
 
-test("a participant can toggle their interest in a position", async ({
+test("a position application travels from the participant to the manager's assignment", async ({
   page,
   prisma,
   signIn,
+  switchUser,
 }) => {
   /**
    * ship;read is required because the lineup page loads the viewer's fleet
    * (getMyFleet) for the requirement checks — without it the whole lineup
    * is forbidden. This is intended behavior.
    */
-  const participant = await createCitizen(prisma, {
-    handle: "posteninteressent",
-    permissionStrings: ["event;read", "ship;read"],
+  const LINEUP_PERMISSIONS = ["event;read", "ship;read"];
+  const manager = await createCitizen(prisma, {
+    handle: "event-leiter",
+    permissionStrings: LINEUP_PERMISSIONS,
+  });
+  const applicant = await createCitizen(prisma, {
+    handle: "bewerber",
+    permissionStrings: LINEUP_PERMISSIONS,
   });
   const event = await createEvent(prisma, {
-    name: "Operation Staubwolke",
-    discordCreatorId: "unrelated-organizer",
+    name: "Operation Eisensturm",
+    discordCreatorId: manager.entity.discordId!,
     startTime: new Date(Date.now() + ONE_DAY_MS),
     lineupEnabled: true,
   });
-  await createParticipant(prisma, { eventId: event.id, citizen: participant });
+  await createParticipant(prisma, { eventId: event.id, citizen: applicant });
   const position = await prisma.eventPosition.create({
-    data: { eventId: event.id, name: "Bordschütze" },
+    data: { eventId: event.id, name: "Navigator" },
   });
 
-  await signIn(participant.user);
+  await signIn(applicant.user);
   await page.goto(`/app/events/${event.id}/lineup`);
 
   // The positions list renders client-side only — once the accordion toggle
   // is there, the page is interactive
-  await expect(page.getByText("Bordschütze")).toBeVisible({
+  await expect(page.getByText("Navigator")).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await clickUntilVisible(
@@ -190,12 +137,12 @@ test("a participant can toggle their interest in a position", async ({
   await expect
     .poll(() =>
       prisma.eventPositionApplication.count({
-        where: { positionId: position.id, citizenId: participant.entity.id },
+        where: { positionId: position.id, citizenId: applicant.entity.id },
       }),
     )
     .toBe(1);
 
-  // The mirror action takes the application back
+  // The mirror action takes the application back …
   await page.getByRole("button", { name: "Abmelden" }).click();
   await expect(
     page.getByRole("button", { name: "Interesse anmelden" }),
@@ -207,40 +154,26 @@ test("a participant can toggle their interest in a position", async ({
       }),
     )
     .toBe(0);
-});
 
-test("the event manager sees applications and can assign the position", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  // ship;read: the lineup page loads the viewer's fleet, see above
-  const manager = await createCitizen(prisma, {
-    handle: "event-leiter",
-    permissionStrings: ["event;read", "ship;read"],
-  });
-  const applicant = await createCitizen(prisma, { handle: "bewerber" });
-  const event = await createEvent(prisma, {
-    name: "Operation Eisensturm",
-    discordCreatorId: manager.entity.discordId!,
-    startTime: new Date(Date.now() + ONE_DAY_MS),
-    lineupEnabled: true,
-  });
-  await createParticipant(prisma, { eventId: event.id, citizen: applicant });
-  const position = await prisma.eventPosition.create({
-    data: { eventId: event.id, name: "Navigator" },
-  });
-  await prisma.eventPositionApplication.create({
-    data: { positionId: position.id, citizenId: applicant.entity.id },
-  });
+  // … so the manager only gets to see it once it is back
+  await page.getByRole("button", { name: "Interesse anmelden" }).click();
+  await expect
+    .poll(() =>
+      prisma.eventPositionApplication.count({
+        where: { positionId: position.id },
+      }),
+    )
+    .toBe(1);
 
-  await signIn(manager.user);
+  await switchUser(manager.user);
   await page.goto(`/app/events/${event.id}/lineup`);
 
   await expect(page.getByText("Navigator")).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
-  const assignmentSelect = page.locator("select");
+  const assignmentSelect = page.getByRole("combobox", {
+    name: "Citizen für Navigator",
+  });
   await expect(assignmentSelect).toBeVisible();
   // The application shows up in the applicants optgroup
   await expect(

@@ -33,6 +33,27 @@ const objectUrl = (uploadId: string) => {
   return `http://localhost:${s3Port}/${s3BucketName}/${uploadId}`;
 };
 
+/**
+ * A role icon without the S3 round trip. The bucket only matters where the
+ * object itself is under test (see the delete test below); everything else
+ * cares about the row and the usage it renders.
+ */
+const seedRoleIcon = async (
+  prisma: Parameters<typeof createUpload>[0],
+  user: Parameters<typeof createUpload>[1],
+  roleId: string,
+) => {
+  const upload = await createUpload(prisma, user, {
+    fileName: "upload.png",
+    mimeType: "image/png",
+  });
+  await prisma.role.update({
+    where: { id: roleId },
+    data: { iconId: upload.id },
+  });
+  return upload;
+};
+
 test("a user's own uploads are listed with the place they are used", async ({
   page,
   prisma,
@@ -43,15 +64,8 @@ test("a user's own uploads are listed with the place they are used", async ({
     permissionStrings: ["role;manage"],
   });
   const role = await createRole(prisma, { name: "Bildrolle" });
+  const upload = await seedRoleIcon(prisma, citizen.user, role.id);
   await signIn(citizen.user);
-
-  // Upload a role icon through the existing flow
-  await page.goto(`/app/roles/${role.id}`);
-  await waitForAppShellHydration(page);
-  await page.locator('input[type="file"]').first().setInputFiles(imagePath);
-  await expect(page.getByText("Erfolgreich hochgeladen")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
 
   await page.goto("/app/uploads");
 
@@ -60,7 +74,6 @@ test("a user's own uploads are listed with the place they are used", async ({
   await expect(row.getByText("Rollen-Icon")).toBeVisible();
 
   // The file name opens the object in the bucket
-  const upload = await prisma.upload.findFirstOrThrow();
   await expect(row.getByRole("link", { name: "upload.png" })).toHaveAttribute(
     "href",
     objectUrl(upload.id),
@@ -291,16 +304,8 @@ test("deleting is forbidden without the permission", async ({
     permissionStrings: ["role;manage"],
   });
   const role = await createRole(prisma, { name: "Bildrolle" });
+  const upload = await seedRoleIcon(prisma, citizen.user, role.id);
   await signIn(citizen.user);
-
-  await page.goto(`/app/roles/${role.id}`);
-  await waitForAppShellHydration(page);
-  await page.locator('input[type="file"]').first().setInputFiles(imagePath);
-  await expect(page.getByText("Erfolgreich hochgeladen")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
-
-  const upload = await prisma.upload.findFirstOrThrow();
 
   await page.goto("/app/uploads");
   await expect(

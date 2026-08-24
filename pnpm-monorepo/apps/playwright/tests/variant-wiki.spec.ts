@@ -60,7 +60,9 @@ const seedLinkedVariant = async (
   return { rootPage, childPage, outsidePage, manufacturer, series, variant };
 };
 
-const sidebarSearch = (page: Page) => page.getByRole("combobox");
+/** The wiki sidebar's search box, i.e. the marker of a rendered embed */
+const sidebarSearch = (page: Page) =>
+  page.getByRole("combobox", { name: "Seiten durchsuchen" });
 
 test("the linked subtree renders on the variant page, limited to the subtree", async ({
   page,
@@ -139,25 +141,6 @@ test("the embed search only finds subtree pages", async ({
   );
 });
 
-test("pages outside the subtree 404 under the variant routes", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const citizen = await createCitizen(prisma, {
-    handle: "leser",
-    permissionStrings: ["orgFleet;read"],
-  });
-  const { outsidePage, variant } = await seedLinkedVariant(prisma);
-  await signIn(citizen.user);
-
-  await page.goto(
-    `/app/fleet/variant/${variant.id}/wiki/${outsidePage.id}/${outsidePage.slug}`,
-  );
-
-  await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
-});
-
 test("a variant without a linked page shows no wiki section", async ({
   page,
   prisma,
@@ -167,10 +150,11 @@ test("a variant without a linked page shows no wiki section", async ({
     handle: "leser",
     permissionStrings: ["orgFleet;read"],
   });
+  const { outsidePage } = await seedLinkedVariant(prisma);
   const { variant } = await createVariant(prisma, {
-    manufacturerName: "RSI",
-    seriesName: "Polaris",
-    variantName: "Polaris",
+    manufacturerName: "Anvil Aerospace",
+    seriesName: "Carrack",
+    variantName: "Carrack",
   });
   await signIn(citizen.user);
 
@@ -178,6 +162,12 @@ test("a variant without a linked page shows no wiki section", async ({
 
   await expect(page.getByTitle(variant.name, { exact: true })).toBeVisible();
   await expect(sidebarSearch(page)).toHaveCount(0);
+
+  // A readable page outside any linked subtree stays out of the embed routes
+  await page.goto(
+    `/app/fleet/variant/${variant.id}/wiki/${outsidePage.id}/${outsidePage.slug}`,
+  );
+  await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
 });
 
 test("an unreadable linked page hides the embed and 404s its routes", async ({
@@ -374,11 +364,13 @@ test("linked root pages show fleet-gated backlink chips in the global wiki", asy
   page,
   prisma,
   signIn,
+  switchUser,
 }) => {
   const fleetViewer = await createCitizen(prisma, {
     handle: "flottenleser",
     permissionStrings: ["orgFleet;read"],
   });
+  const plainReader = await createCitizen(prisma, { handle: "leser" });
   const { rootPage, childPage, variant } = await seedLinkedVariant(prisma);
   await signIn(fleetViewer.user);
 
@@ -391,17 +383,9 @@ test("linked root pages show fleet-gated backlink chips in the global wiki", asy
   // Root only — descendants stay chip-free
   await page.goto(`/app/wiki/${childPage.id}/${childPage.slug}`);
   await expect(page.getByText("Eingebunden bei:")).toHaveCount(0);
-});
 
-test("backlink chips stay hidden without the fleet permissions", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const plainReader = await createCitizen(prisma, { handle: "leser" });
-  const { rootPage } = await seedLinkedVariant(prisma);
-  await signIn(plainReader.user);
-
+  // Without the fleet permissions the chip is gone from the root as well
+  await switchUser(plainReader.user);
   await page.goto(`/app/wiki/${rootPage.id}/${rootPage.slug}`);
   await expect(
     page.getByRole("heading", { name: rootPage.title }),

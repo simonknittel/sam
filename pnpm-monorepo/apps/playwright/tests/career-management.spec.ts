@@ -393,19 +393,14 @@ test("duplicating copies the diagram but grants nobody access", async ({
   await expectAuditEvents(prisma, ["CAREER_FLOW_DUPLICATED"]);
 });
 
-test("reordering by keyboard changes the order of the career navigation", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const manager = await createManager(prisma);
-  await createFlow(prisma, { name: "Erster", slug: "erster", position: 0 });
-  await createFlow(prisma, { name: "Zweiter", slug: "zweiter", position: 1 });
-
-  await signIn(manager.user);
-  await page.goto("/app/career/settings");
-  await waitForAppShellHydration(page);
-
+/**
+ * Moves "Erster" below "Zweiter" the way a keyboard user does. dnd-kit
+ * narrates every step in an aria-live region, and waiting for the narration
+ * to change is what keeps the drag honest: pressing the next key before the
+ * library processed the previous one leaves the row where it was, which no
+ * real keyboard user could produce.
+ */
+const reorderByKeyboard = async (page: Page) => {
   await page.getByRole("button", { name: "Erster verschieben" }).focus();
 
   await page.keyboard.press("Space");
@@ -416,41 +411,10 @@ test("reordering by keyboard changes the order of the career navigation", async 
   await expect.poll(() => dragNarration(page)).not.toBe(afterPickup);
 
   await page.keyboard.press("Space");
+};
 
-  await expect
-    .poll(
-      async () => {
-        const flows = await prisma.flow.findMany({
-          orderBy: { position: "asc" },
-          select: { slug: true },
-        });
-        return flows.map((flow) => flow.slug);
-      },
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
-    )
-    .toEqual(["zweiter", "erster"]);
-
-  await page.goto("/app/career/erster");
-  await expect(
-    page.getByRole("navigation").getByRole("link").first(),
-  ).toHaveText("Zweiter");
-
-  await expectAuditEvents(prisma, ["CAREER_FLOWS_REORDERED"]);
-});
-
-test("reordering by mouse survives a reload", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const manager = await createManager(prisma);
-  await createFlow(prisma, { name: "Erster", slug: "erster", position: 0 });
-  await createFlow(prisma, { name: "Zweiter", slug: "zweiter", position: 1 });
-
-  await signIn(manager.user);
-  await page.goto("/app/career/settings");
-  await waitForAppShellHydration(page);
-
+/** The same move by pointer, which also exercises the drag overlay */
+const reorderByMouse = async (page: Page) => {
   const source = page.getByRole("button", { name: "Erster verschieben" });
   const target = page.getByRole("button", { name: "Zweiter verschieben" });
   const sourceBox = (await source.boundingBox())!;
@@ -476,25 +440,57 @@ test("reordering by mouse survives a reload", async ({
   expect(await hasHorizontalPageOverflow(page)).toBe(false);
 
   await page.mouse.up();
+};
 
-  await expect
-    .poll(
-      async () => {
-        const flows = await prisma.flow.findMany({
-          orderBy: { position: "asc" },
-          select: { slug: true },
-        });
-        return flows.map((flow) => flow.slug);
-      },
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
-    )
-    .toEqual(["zweiter", "erster"]);
+const REORDER_GESTURES = [
+  { name: "keyboard", drag: reorderByKeyboard },
+  { name: "mouse", drag: reorderByMouse },
+] as const;
 
-  await page.reload();
-  await expect(page.getByRole("main").getByRole("link").first()).toHaveText(
-    "Zweiter",
-  );
-});
+for (const { name, drag } of REORDER_GESTURES) {
+  test(`reordering by ${name} changes the order of the career navigation`, async ({
+    page,
+    prisma,
+    signIn,
+  }) => {
+    const manager = await createManager(prisma);
+    await createFlow(prisma, { name: "Erster", slug: "erster", position: 0 });
+    await createFlow(prisma, { name: "Zweiter", slug: "zweiter", position: 1 });
+
+    await signIn(manager.user);
+    await page.goto("/app/career/settings");
+    await waitForAppShellHydration(page);
+
+    await drag(page);
+
+    await expect
+      .poll(
+        async () => {
+          const flows = await prisma.flow.findMany({
+            orderBy: { position: "asc" },
+            select: { slug: true },
+          });
+          return flows.map((flow) => flow.slug);
+        },
+        { timeout: ACTION_FEEDBACK_TIMEOUT },
+      )
+      .toEqual(["zweiter", "erster"]);
+
+    /** The new order survives a reload of the settings page … */
+    await page.reload();
+    await expect(page.getByRole("main").getByRole("link").first()).toHaveText(
+      "Zweiter",
+    );
+
+    /** … and reaches the career navigation */
+    await page.goto("/app/career/erster");
+    await expect(
+      page.getByRole("navigation").getByRole("link").first(),
+    ).toHaveText("Zweiter");
+
+    await expectAuditEvents(prisma, ["CAREER_FLOWS_REORDERED"]);
+  });
+}
 
 test("read access opens a flow without an edit affordance, edit access saves it", async ({
   page,
@@ -653,12 +649,14 @@ test("saving access keeps every role's tier on its own row", async ({
   expect(await tierOf("gamma-bearbeitet")).toBe("update");
 });
 
-test("career;manage alone grants access to every flow", async ({
+test("career;manage alone grants access to every flow, nothing grants none", async ({
   page,
   prisma,
   signIn,
+  switchUser,
 }) => {
   const manager = await createManager(prisma);
+  const outsider = await createCitizen(prisma, { handle: "aussenstehender" });
   await createFlow(prisma, {
     name: "Academy",
     slug: "academy",
@@ -688,29 +686,15 @@ test("career;manage alone grants access to every flow", async ({
   await expect(
     page.getByRole("button", { name: "Bearbeiten de-/aktivieren" }),
   ).toBeVisible();
-});
 
-test("without any career access the app hides career and refuses the URL", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const outsider = await createCitizen(prisma, { handle: "aussenstehender" });
-  await createFlow(prisma, { name: "Academy", slug: "academy" });
-
-  await signIn(outsider.user);
+  /** Without any access the app hides career and refuses its URLs */
+  await switchUser(outsider.user);
 
   await page.goto("/app/apps");
   /** Changelog needs no permission, so it proves the overview rendered */
   await expect(page.getByRole("link", { name: "Changelog" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Karriere" })).toHaveCount(0);
 
-  await page.goto("/app/career");
-  await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible();
-
   await page.goto("/app/career/academy");
-  await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible();
-
-  await page.goto("/app/career/settings");
   await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible();
 });

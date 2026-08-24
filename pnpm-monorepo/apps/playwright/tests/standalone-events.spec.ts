@@ -106,6 +106,13 @@ test("a user without event;create sees no create button and cannot open foreign 
   await expect(page.getByRole("link", { name: "Einstellungen" })).toHaveCount(
     0,
   );
+
+  // Without the lineup and fleet permissions those tabs do not exist either
+  await expect(page.getByRole("link", { name: "Übersicht" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Teilnehmer" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Aufstellung" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Flotte" })).toHaveCount(0);
+
   await page.goto(`/app/events/${event.id}/settings`);
   await expect(page.getByRole("heading", { name: "Redacted" })).toBeVisible();
   await expect(page.getByText("Event bearbeiten")).toHaveCount(0);

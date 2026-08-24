@@ -26,100 +26,111 @@ const VOICE_ENTITY_TYPE = 2;
 const STAGE_ENTITY_TYPE = 1;
 const EXTERNAL_ENTITY_TYPE = 3;
 
-test("the organizer publishes the event into a voice channel and unpublishes it again", async ({
-  page,
-  prisma,
-  signIn,
-  discordMock,
-}) => {
-  const creator = await createCitizen(prisma, {
-    handle: "discord-orga",
-    permissionStrings: ["event;read"],
+/**
+ * The two channel kinds Discord can host an event in. They differ only in
+ * the entity type the app derives from the picked channel.
+ */
+const CHANNEL_KINDS = [
+  { channel: MOCK_VOICE_CHANNEL, entityType: VOICE_ENTITY_TYPE },
+  { channel: MOCK_STAGE_CHANNEL, entityType: STAGE_ENTITY_TYPE },
+] as const;
+
+for (const { channel, entityType } of CHANNEL_KINDS) {
+  test(`the organizer publishes the event into a ${channel.name} channel and unpublishes it again`, async ({
+    page,
+    prisma,
+    signIn,
+    discordMock,
+  }) => {
+    const creator = await createCitizen(prisma, {
+      handle: "discord-orga",
+      permissionStrings: ["event;read"],
+    });
+    const event = await createAppEvent(prisma, {
+      name: "Operation Kanalfunk",
+      description: "Wir treffen uns im Einsatzraum.",
+      createdById: creator.entity.id,
+      ...futureEvent(),
+    });
+
+    await signIn(creator.user);
+    await page.goto(`/app/events/${event.id}/settings`);
+    await waitForAppShellHydration(page);
+
+    // Only voice and stage channels are offered — text channels cannot host an event
+    await page.locator("label", { hasText: /^Sprachkanal$/ }).click();
+    const channelSelect = page.getByLabel("Kanal", { exact: true });
+    await expect(channelSelect).toBeVisible();
+    await expect(
+      channelSelect.getByRole("option", { name: MOCK_TEXT_CHANNEL.name }),
+    ).toHaveCount(0);
+    await channelSelect.selectOption({ label: channel.name });
+
+    await page
+      .getByRole("button", { name: "Auf Discord veröffentlichen" })
+      .click();
+    await expect(
+      page.getByText("Das Event wurde auf Discord veröffentlicht."),
+    ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+
+    const published = await prisma.event.findUnique({
+      where: { id: event.id },
+    });
+    expect(published!.discordPublishedId).not.toBeNull();
+    expect(published!.discordPublishedChannelId).toBe(channel.id);
+    expect(published!.discordPublishedLocation).toBeNull();
+    expect(published!.discordPublishedById).toBe(creator.entity.id);
+
+    const scheduledEvent = discordMock.scheduledEvents.get(
+      published!.discordPublishedId!,
+    );
+    expect(scheduledEvent).toMatchObject({
+      name: "Operation Kanalfunk",
+      description: "Wir treffen uns im Einsatzraum.",
+      entity_type: entityType,
+      channel_id: channel.id,
+      privacy_level: 2,
+    });
+    expect(scheduledEvent).not.toHaveProperty("entity_metadata");
+
+    // The published state replaces the form and links to the Discord event
+    await expect(page.getByText(`Sprachkanal: ${channel.name}`)).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Discord" }).first(),
+    ).toHaveAttribute(
+      "href",
+      new RegExp(`/events/.+/${published!.discordPublishedId}$`),
+    );
+
+    // The system log records the publication
+    expect(
+      await prisma.auditEvent.count({
+        where: { type: "EVENT_PUBLISHED_TO_DISCORD" },
+      }),
+    ).toBe(1);
+
+    await page.getByRole("button", { name: "Von Discord entfernen" }).click();
+    await page
+      .getByRole("alertdialog")
+      .getByRole("button", { name: "Entfernen" })
+      .click();
+    await expect(
+      page.getByText("Das Event wurde von Discord entfernt."),
+    ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+
+    expect(discordMock.scheduledEvents.size).toBe(0);
+    const unpublished = await prisma.event.findUnique({
+      where: { id: event.id },
+    });
+    expect(unpublished!.discordPublishedId).toBeNull();
+    expect(unpublished!.discordPublishedChannelId).toBeNull();
+    expect(
+      await prisma.auditEvent.count({
+        where: { type: "EVENT_UNPUBLISHED_FROM_DISCORD" },
+      }),
+    ).toBe(1);
   });
-  const event = await createAppEvent(prisma, {
-    name: "Operation Kanalfunk",
-    description: "Wir treffen uns im Einsatzraum.",
-    createdById: creator.entity.id,
-    ...futureEvent(),
-  });
-
-  await signIn(creator.user);
-  await page.goto(`/app/events/${event.id}/settings`);
-  await waitForAppShellHydration(page);
-
-  // Only voice and stage channels are offered — text channels cannot host an event
-  await page.locator("label", { hasText: /^Sprachkanal$/ }).click();
-  const channelSelect = page.getByLabel("Kanal", { exact: true });
-  await expect(channelSelect).toBeVisible();
-  await expect(
-    channelSelect.getByRole("option", { name: MOCK_TEXT_CHANNEL.name }),
-  ).toHaveCount(0);
-  await channelSelect.selectOption({ label: MOCK_VOICE_CHANNEL.name });
-
-  await page
-    .getByRole("button", { name: "Auf Discord veröffentlichen" })
-    .click();
-  await expect(
-    page.getByText("Das Event wurde auf Discord veröffentlicht."),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
-
-  const published = await prisma.event.findUnique({ where: { id: event.id } });
-  expect(published!.discordPublishedId).not.toBeNull();
-  expect(published!.discordPublishedChannelId).toBe(MOCK_VOICE_CHANNEL.id);
-  expect(published!.discordPublishedLocation).toBeNull();
-  expect(published!.discordPublishedById).toBe(creator.entity.id);
-
-  const scheduledEvent = discordMock.scheduledEvents.get(
-    published!.discordPublishedId!,
-  );
-  expect(scheduledEvent).toMatchObject({
-    name: "Operation Kanalfunk",
-    description: "Wir treffen uns im Einsatzraum.",
-    entity_type: VOICE_ENTITY_TYPE,
-    channel_id: MOCK_VOICE_CHANNEL.id,
-    privacy_level: 2,
-  });
-  expect(scheduledEvent).not.toHaveProperty("entity_metadata");
-
-  // The published state replaces the form and links to the Discord event
-  await expect(
-    page.getByText(`Sprachkanal: ${MOCK_VOICE_CHANNEL.name}`),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("link", { name: "Discord" }).first(),
-  ).toHaveAttribute(
-    "href",
-    new RegExp(`/events/.+/${published!.discordPublishedId}$`),
-  );
-
-  // The system log records the publication
-  expect(
-    await prisma.auditEvent.count({
-      where: { type: "EVENT_PUBLISHED_TO_DISCORD" },
-    }),
-  ).toBe(1);
-
-  await page.getByRole("button", { name: "Von Discord entfernen" }).click();
-  await page
-    .getByRole("alertdialog")
-    .getByRole("button", { name: "Entfernen" })
-    .click();
-  await expect(
-    page.getByText("Das Event wurde von Discord entfernt."),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
-
-  expect(discordMock.scheduledEvents.size).toBe(0);
-  const unpublished = await prisma.event.findUnique({
-    where: { id: event.id },
-  });
-  expect(unpublished!.discordPublishedId).toBeNull();
-  expect(unpublished!.discordPublishedChannelId).toBeNull();
-  expect(
-    await prisma.auditEvent.count({
-      where: { type: "EVENT_UNPUBLISHED_FROM_DISCORD" },
-    }),
-  ).toBe(1);
-});
+}
 
 test("publishing to an external location defaults to the event's own URL", async ({
   page,
@@ -169,46 +180,6 @@ test("publishing to an external location defaults to the event's own URL", async
   });
   // Discord rejects an external event without an end time
   expect(scheduledEvent!.scheduled_end_time).toBeTruthy();
-});
-
-test("a stage channel publishes as a stage event", async ({
-  page,
-  prisma,
-  signIn,
-  discordMock,
-}) => {
-  const creator = await createCitizen(prisma, {
-    handle: "buehnen-orga",
-    permissionStrings: ["event;read"],
-  });
-  const event = await createAppEvent(prisma, {
-    name: "Operation Bühnenreif",
-    createdById: creator.entity.id,
-    ...futureEvent(),
-  });
-
-  await signIn(creator.user);
-  await page.goto(`/app/events/${event.id}/settings`);
-  await waitForAppShellHydration(page);
-
-  await page.locator("label", { hasText: /^Sprachkanal$/ }).click();
-  await page
-    .getByLabel("Kanal", { exact: true })
-    .selectOption({ label: MOCK_STAGE_CHANNEL.name });
-  await page
-    .getByRole("button", { name: "Auf Discord veröffentlichen" })
-    .click();
-  await expect(
-    page.getByText("Das Event wurde auf Discord veröffentlicht."),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
-
-  const published = await prisma.event.findUnique({ where: { id: event.id } });
-  expect(
-    discordMock.scheduledEvents.get(published!.discordPublishedId!),
-  ).toMatchObject({
-    entity_type: STAGE_ENTITY_TYPE,
-    channel_id: MOCK_STAGE_CHANNEL.id,
-  });
 });
 
 test("editing a published event updates it on Discord, deleting it removes it", async ({

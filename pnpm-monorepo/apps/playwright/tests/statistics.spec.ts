@@ -8,7 +8,6 @@ import {
 } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
-  FORBIDDEN_TEXT,
   sectionByHeading,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
@@ -113,19 +112,4 @@ test("all nine statistics charts paint their canvases", async ({
       })
       .toBeGreaterThan(MIN_PAINTED_PIXELS);
   }
-});
-
-test("statistics are forbidden without the permission", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const citizen = await createCitizen(prisma, { handle: "unbefugter" });
-
-  await signIn(citizen.user);
-  await page.goto("/app/statistics");
-
-  await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
 });

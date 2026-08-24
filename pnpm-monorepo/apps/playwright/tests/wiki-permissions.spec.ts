@@ -12,44 +12,33 @@ import {
 import { NOT_FOUND_TEXT } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
-test("a RESTRICTED page is only readable for its role members", async ({
+test("a RESTRICTED page is readable for its role members and invisible to the rest", async ({
   page,
   prisma,
   signIn,
+  switchUser,
 }) => {
   const readerRole = await createRole(prisma, { name: "geheim-leser" });
   const member = await createCitizen(prisma, { handle: "member" });
   await assignRole(prisma, member.entity, readerRole);
+  const outsider = await createCitizen(prisma, { handle: "outsider" });
   const restrictedPage = await createWikiPage(prisma, {
     title: "Geheimplan",
     visibility: WikiPageVisibility.RESTRICTED,
     roleAccess: [{ roleId: readerRole.id, type: WikiPageAccessType.READ }],
     content: wikiDocument(wikiParagraph("Streng vertraulicher Inhalt.")),
   });
-
-  await signIn(member.user);
-  await page.goto(`/app/wiki/${restrictedPage.id}/${restrictedPage.slug}`);
-  await expect(page.getByText("Streng vertraulicher Inhalt.")).toBeVisible();
-});
-
-test("a RESTRICTED page 404s for non-members and stays out of the sidebar", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const readerRole = await createRole(prisma, { name: "geheim-leser" });
-  const outsider = await createCitizen(prisma, { handle: "outsider" });
-  const restrictedPage = await createWikiPage(prisma, {
-    title: "Geheimplan",
-    visibility: WikiPageVisibility.RESTRICTED,
-    roleAccess: [{ roleId: readerRole.id, type: WikiPageAccessType.READ }],
-  });
   const publicPage = await createWikiPage(prisma, {
     title: "Öffentlich",
     visibility: WikiPageVisibility.PUBLIC,
   });
 
-  await signIn(outsider.user);
+  await signIn(member.user);
+  await page.goto(`/app/wiki/${restrictedPage.id}/${restrictedPage.slug}`);
+  await expect(page.getByText("Streng vertraulicher Inhalt.")).toBeVisible();
+
+  // For everyone else the page 404s and stays out of the sidebar tree
+  await switchUser(outsider.user);
 
   await page.goto(`/app/wiki/${restrictedPage.id}/${restrictedPage.slug}`);
   await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();

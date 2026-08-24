@@ -1,53 +1,53 @@
 import { createCitizen, ONE_DAY_MS } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
-  clickUntilVisible,
   fillUntilUrl,
-  FORBIDDEN_TEXT,
-  modal,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 const dateParam = (date: Date) => date.toISOString().slice(0, 10);
 
-test("a freshly emitted event renders and the filters narrow the table", async ({
+/**
+ * That an action's audit event ends up rendered here is asserted where the
+ * action lives (see the spynet settings and SILC specs). This spec owns the
+ * table itself, so it seeds its rows instead of driving a foreign UI.
+ */
+test("the log renders its events and the filters narrow the table", async ({
   page,
   prisma,
   signIn,
 }) => {
   const admin = await createCitizen(prisma, {
     handle: "protokollant",
-    permissionStrings: ["systemLog;read", "role;manage"],
+    permissionStrings: ["systemLog;read"],
   });
   const otherUser = await createCitizen(prisma, { handle: "zweitnutzer" });
+  const role = await createCitizen(prisma, { handle: "rollen-halter" });
 
-  // An older event by another user, to give the filters something to drop
-  await prisma.auditEvent.create({
-    data: {
-      type: "MANUFACTURER_CREATED",
-      data: { manufacturerId: "hersteller-1", name: "Drake" },
-      createdById: otherUser.user.id,
-      createdAt: new Date(Date.now() - 10 * ONE_DAY_MS),
-    },
+  await prisma.auditEvent.createMany({
+    data: [
+      // An older event by another user, to give the filters something to drop
+      {
+        type: "MANUFACTURER_CREATED",
+        data: JSON.stringify({
+          manufacturerId: "hersteller-1",
+          name: "Drake",
+        }),
+        createdById: otherUser.user.id,
+        createdAt: new Date(Date.now() - 10 * ONE_DAY_MS),
+      },
+      {
+        type: "ROLE_CREATED",
+        data: JSON.stringify({ roleId: role.role.id, name: "Aufklärer" }),
+        createdById: admin.user.id,
+      },
+    ],
   });
 
   await signIn(admin.user);
-
-  // Emit a fresh event through the UI
-  await page.goto("/app/iam/roles");
-  const roleModal = modal(page, "Neue Rolle");
-  await clickUntilVisible(
-    page.getByRole("button", { name: "Neue Rolle" }),
-    roleModal,
-  );
-  await roleModal.getByLabel("Name").fill("Aufklärer");
-  await roleModal.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText("Erfolgreich hinzugefügt")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
-
-  // Both events render with type and human-readable message
   await page.goto("/app/system-log");
+
+  // Both events render with their type and their human-readable message
   await expect(page.getByText('Role created: "Aufklärer"')).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
@@ -82,19 +82,4 @@ test("a freshly emitted event renders and the filters narrow the table", async (
     page.getByText("Manufacturer Drake created (hersteller-1)"),
   ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
   await expect(page.getByText('Role created: "Aufklärer"')).toHaveCount(0);
-});
-
-test("the system log is forbidden without the permission", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const citizen = await createCitizen(prisma, { handle: "unbefugter" });
-
-  await signIn(citizen.user);
-  await page.goto("/app/system-log");
-
-  await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
 });

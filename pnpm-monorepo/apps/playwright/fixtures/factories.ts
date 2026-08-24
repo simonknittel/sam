@@ -283,6 +283,37 @@ export const createOnSiteNotification = (
     },
   });
 
+interface CreateOnSiteNotificationsOptions {
+  readonly citizenId: string;
+  readonly count: number;
+  readonly readAt?: Date | null;
+}
+
+/**
+ * A batch of event notifications named "Event 1" … "Event n", newest first
+ * — one insert instead of one per row, which matters at list-length counts.
+ */
+export const createOnSiteNotifications = (
+  prisma: PrismaClient,
+  { citizenId, count, readAt = null }: CreateOnSiteNotificationsOptions,
+) => {
+  const now = Date.now();
+
+  return prisma.onSiteNotification.createMany({
+    data: Array.from({ length: count }, (unused, index) => ({
+      citizenId,
+      notificationType: "event_created",
+      payload: {
+        eventId: `evt-${index + 1}`,
+        eventName: `Event ${index + 1}`,
+      },
+      payloadVersion: 1,
+      createdAt: new Date(now - (index + 1) * 1_000),
+      readAt,
+    })),
+  });
+};
+
 export const WIKI_SETTING_FEATURED_PAGES = "featuredPages";
 
 export const setWikiFeaturedPages = (

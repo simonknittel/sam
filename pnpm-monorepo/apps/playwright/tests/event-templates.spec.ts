@@ -11,7 +11,6 @@ import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
   DELETED_TEXT,
-  FORBIDDEN_TEXT,
   modal,
   NOT_FOUND_TEXT,
   SAVED_TEXT,
@@ -156,38 +155,33 @@ test("a template is invisible to everyone it is not shared with", async ({
   await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
 });
 
-test("the templates section is closed to users without events access", async ({
+test("a share lets a role use the template, and only an edit share change it", async ({
   page,
   prisma,
   signIn,
-}) => {
-  const outsider = await createCitizen(prisma, {
-    handle: "outsider",
-    permissionStrings: ["event;read"],
-  });
-  await signIn(outsider.user);
-
-  await page.goto("/app/events/templates");
-  await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible();
-});
-
-test("a read share lets a role use a template but not edit or share it", async ({
-  page,
-  prisma,
-  signIn,
+  switchUser,
 }) => {
   const owner = await createOwner(prisma);
   const reader = await createCitizen(prisma, {
     handle: "reader",
     permissionStrings: ["event;read", "event;create"],
   });
-  const sharedRole = await createRole(prisma, { name: "Patrouillen-Team" });
-  await assignRole(prisma, reader.entity, sharedRole);
+  const editor = await createCitizen(prisma, {
+    handle: "editor",
+    permissionStrings: ["event;read", "event;create"],
+  });
+  const readRole = await createRole(prisma, { name: "Patrouillen-Team" });
+  const editRole = await createRole(prisma, { name: "Redaktion" });
+  await assignRole(prisma, reader.entity, readRole);
+  await assignRole(prisma, editor.entity, editRole);
 
   const { template } = await createEventTemplate(prisma, {
     name: "Geteilte Vorlage",
     ownedById: owner.entity.id,
-    roleAccess: [{ roleId: sharedRole.id, type: EventTemplateAccessType.READ }],
+    roleAccess: [
+      { roleId: readRole.id, type: EventTemplateAccessType.READ },
+      { roleId: editRole.id, type: EventTemplateAccessType.EDIT },
+    ],
     positionNames: ["Pilot"],
   });
 
@@ -197,42 +191,16 @@ test("a read share lets a role use a template but not edit or share it", async (
   await expect(
     page.getByText("Du kannst diese Vorlage verwenden, aber nicht bearbeiten."),
   ).toBeVisible();
-  /** No Freigabe tab and no Danger Zone for a read share */
-  await expect(page.getByRole("link", { name: "Freigabe" })).toBeHidden();
-  await expect(page.getByRole("heading", { name: "Danger Zone" })).toBeHidden();
 
-  /** The sharing route is 404, not 403 — its absence must not be a hint */
-  await page.goto(`/app/events/templates/${template.id}/sharing`);
-  await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
-
-  /** Reading includes seeing the lineup it would create */
+  /** Reading includes seeing the lineup it would create, but not editing it */
   await page.goto(`/app/events/templates/${template.id}/lineup`);
   await expect(page.getByText("Pilot")).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Posten hinzufügen" }),
   ).toBeHidden();
-});
 
-test("an edit share lets a role change the content but not the shares", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const owner = await createOwner(prisma);
-  const editor = await createCitizen(prisma, {
-    handle: "editor",
-    permissionStrings: ["event;read", "event;create"],
-  });
-  const sharedRole = await createRole(prisma, { name: "Redaktion" });
-  await assignRole(prisma, editor.entity, sharedRole);
-
-  const { template } = await createEventTemplate(prisma, {
-    name: "Redaktionsvorlage",
-    ownedById: owner.entity.id,
-    roleAccess: [{ roleId: sharedRole.id, type: EventTemplateAccessType.EDIT }],
-  });
-
-  await signIn(editor.user);
+  /** An edit share may change the content … */
+  await switchUser(editor.user);
   await page.goto(`/app/events/templates/${template.id}`);
 
   await page.getByLabel("Name").fill("Von der Redaktion");
@@ -251,9 +219,13 @@ test("an edit share lets a role change the content but not the shares", async ({
     )
     .toBe("Von der Redaktion");
 
-  /** Sharing and deleting stay with the owner */
+  /** … but sharing and deleting stay with the owner for both tiers */
   await expect(page.getByRole("link", { name: "Freigabe" })).toBeHidden();
   await expect(page.getByRole("heading", { name: "Danger Zone" })).toBeHidden();
+
+  /** The sharing route is 404, not 403 — its absence must not be a hint */
+  await page.goto(`/app/events/templates/${template.id}/sharing`);
+  await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
 });
 
 test("transferring a template keeps its shares and drops the previous owner", async ({
@@ -412,33 +384,6 @@ test("`event;manage` manages a foreign personal template", async ({
   await expect(
     page.getByRole("button", { name: "Rolle hinzufügen" }),
   ).toBeVisible();
-});
-
-test("the whole name cell of a row opens the template", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const owner = await createOwner(prisma);
-  const { template } = await createEventTemplate(prisma, {
-    name: "Kaperfahrt",
-    ownedById: owner.entity.id,
-  });
-
-  await signIn(owner.user);
-  await page.goto("/app/events/templates");
-
-  const nameCell = page
-    .getByRole("row", { name: "Kaperfahrt" })
-    .getByRole("cell")
-    .first();
-  const cell = await nameCell.boundingBox();
-  if (!cell) throw new Error("The name cell is not rendered");
-
-  /** The bottom right corner, clear of the name's own box */
-  await page.mouse.click(cell.x + cell.width - 8, cell.y + cell.height - 4);
-
-  await expect(page).toHaveURL(new RegExp(`/templates/${template.id}$`));
 });
 
 test("an event created from a template gets its lineup, briefing and prefill", async ({

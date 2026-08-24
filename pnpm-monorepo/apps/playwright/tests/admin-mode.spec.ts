@@ -25,6 +25,17 @@ test("an admin's pages stay redacted until admin mode is enabled", async ({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
 
+  // Only the exact value counts — a truthy-looking one changes nothing
+  await page
+    .context()
+    .addCookies([
+      { name: "enable_admin", value: "true", domain: "localhost", path: "/" },
+    ]);
+  await page.reload();
+  await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+
   // The button fully reloads the page so the forbidden() boundary
   // re-renders with the new cookie
   await waitForAppShellHydration(page);
@@ -43,35 +54,6 @@ test("an admin's pages stay redacted until admin mode is enabled", async ({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
-});
-
-test("the admin cookie only counts on an exact value match", async ({
-  page,
-  prisma,
-  signIn,
-  enableAdminMode,
-}) => {
-  const admin = await createCitizen(prisma, {
-    handle: "systemadmin",
-    admin: true,
-  });
-
-  await signIn(admin.user);
-  await page
-    .context()
-    .addCookies([
-      { name: "enable_admin", value: "true", domain: "localhost", path: "/" },
-    ]);
-  await page.goto("/app/statistics");
-  await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
-
-  await enableAdminMode();
-  await page.reload();
-  await expect(page.getByText("Zeitraum:")).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
 });

@@ -86,9 +86,17 @@ test("a manager adds citizens with a shared comment", async ({
   await page.goto(`/app/events/${event.id}/participants`);
 
   const addModal = await openAddModal(page);
+  /**
+   * The comment first: filling it right after picking a citizen can race the
+   * selection's re-render under full-suite load, which swallows the fill
+   * (same order as the SILC transaction modal).
+   */
+  await addModal.getByLabel("Kommentar").fill("Vom Manager nachgetragen");
   await pickCitizen(addModal, page, "nachzuegler-eins");
   await pickCitizen(addModal, page, "nachzuegler-zwei");
-  await addModal.getByLabel("Kommentar").fill("Vom Manager nachgetragen");
+  await expect(addModal.getByLabel("Kommentar")).toHaveValue(
+    "Vom Manager nachgetragen",
+  );
   await addModal.getByRole("button", { name: "Speichern" }).click();
 
   await expect(page.getByText("2 Teilnehmer hinzugefügt.")).toBeVisible({

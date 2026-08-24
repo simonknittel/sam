@@ -23,6 +23,18 @@ const favoritesHeading = (page: Page) =>
 const appLinks = (page: Page) =>
   appsPopover(page).getByRole("link", { name: "Dashboard", exact: true });
 
+/**
+ * The tile carrying the app's link — every app is one item of a list. The
+ * `has` locator is resolved against each list item, so it must not carry
+ * the popover scope of appLinks().
+ */
+const appTile = (page: Page) =>
+  appsPopover(page)
+    .getByRole("listitem")
+    .filter({
+      has: page.getByRole("link", { name: "Dashboard", exact: true }),
+    });
+
 test("favoriting an app adds it to the popover's favorites section and persists", async ({
   page,
   prisma,
@@ -38,9 +50,7 @@ test("favoriting an app adds it to the popover's favorites section and persists"
   await expect(appLinks(page)).toHaveCount(1);
 
   // The star is revealed by hovering the tile the link belongs to
-  const tile = appLinks(page).locator(
-    "xpath=ancestor::div[contains(@class, 'group/app-tile')][1]",
-  );
+  const tile = appTile(page);
   await tile.hover();
   await tile.getByRole("button", { name: "Als Favorit speichern" }).click();
 

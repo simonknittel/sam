@@ -209,14 +209,21 @@ test("completing a task with a SILC reward pays the completionists", async ({
   expect(auditEvent).not.toBeNull();
 });
 
-test("the dashboard works for citizens without task permission", async ({
+test("the dashboard shows its task tiles exactly to those with task permission", async ({
   page,
   prisma,
   signIn,
+  switchUser,
 }) => {
-  const citizen = await createCitizen(prisma, { handle: "einfacher-buerger" });
+  const creator = await createCitizen(prisma, { handle: "task-ersteller" });
+  const outsider = await createCitizen(prisma, { handle: "einfacher-buerger" });
+  const worker = await createCitizen(prisma, {
+    handle: "task-arbeiter",
+    permissionStrings: ["task;read"],
+  });
+  await createSilcTask(prisma, creator, worker, "Patrouille fliegen");
 
-  await signIn(citizen.user);
+  await signIn(outsider.user);
   await page.goto("/app/dashboard");
 
   // Regression test for the ungated tiles that called forbidden(): the page
@@ -227,21 +234,8 @@ test("the dashboard works for citizens without task permission", async ({
   await expect(page.getByText(FORBIDDEN_TEXT)).not.toBeVisible();
   await expect(page.getByText("Meine Tasks")).toHaveCount(0);
   await expect(page.getByText("Neue Tasks")).toHaveCount(0);
-});
 
-test("the dashboard shows the task tiles to citizens with task permission", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const creator = await createCitizen(prisma, { handle: "task-ersteller" });
-  const worker = await createCitizen(prisma, {
-    handle: "task-arbeiter",
-    permissionStrings: ["task;read"],
-  });
-  await createSilcTask(prisma, creator, worker, "Patrouille fliegen");
-
-  await signIn(worker.user);
+  await switchUser(worker.user);
   await page.goto("/app/dashboard");
 
   const myTasksTile = sectionByHeading(page, "Meine Tasks");

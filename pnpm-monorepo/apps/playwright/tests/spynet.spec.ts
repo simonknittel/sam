@@ -271,31 +271,27 @@ const SETTINGS_ADMIN_PERMISSIONS = [
   "systemLog;read",
 ];
 
-test("note types can be managed through the settings records", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const admin = await createCitizen(prisma, {
-    handle: "spynet-admin",
-    permissionStrings: SETTINGS_ADMIN_PERMISSIONS,
-  });
-
-  await signIn(admin.user);
-  await page.goto("/app/spynet/settings");
-  await waitForAppShellHydration(page);
-
-  await exerciseSettingsRecordCrud(page, prisma, {
+/** Both record types of the settings page, in the order they render */
+const SETTINGS_RECORD_SCENARIOS: SettingsRecordScenario[] = [
+  {
     tileHeading: "Notizarten",
     createdName: "Verdacht",
     updatedName: "Verdachtsfall",
     deletedAuditEventType: "NOTE_TYPE_DELETED",
     deletedLogMessage: 'Note type deleted: "Verdachtsfall"',
     countRecords: (prismaClient) => prismaClient.noteType.count(),
-  });
-});
+  },
+  {
+    tileHeading: "Geheimhaltungsstufen",
+    createdName: "Vertraulich",
+    updatedName: "Streng vertraulich",
+    deletedAuditEventType: "CLASSIFICATION_LEVEL_DELETED",
+    deletedLogMessage: 'Classification level deleted: "Streng vertraulich"',
+    countRecords: (prismaClient) => prismaClient.classificationLevel.count(),
+  },
+];
 
-test("classification levels can be managed through the settings records", async ({
+test("the settings records can be managed through their tiles", async ({
   page,
   prisma,
   signIn,
@@ -309,14 +305,10 @@ test("classification levels can be managed through the settings records", async 
   await page.goto("/app/spynet/settings");
   await waitForAppShellHydration(page);
 
-  await exerciseSettingsRecordCrud(page, prisma, {
-    tileHeading: "Geheimhaltungsstufen",
-    createdName: "Vertraulich",
-    updatedName: "Streng vertraulich",
-    deletedAuditEventType: "CLASSIFICATION_LEVEL_DELETED",
-    deletedLogMessage: 'Classification level deleted: "Streng vertraulich"',
-    countRecords: (prismaClient) => prismaClient.classificationLevel.count(),
-  });
+  for (const scenario of SETTINGS_RECORD_SCENARIOS) {
+    await page.goto("/app/spynet/settings");
+    await exerciseSettingsRecordCrud(page, prisma, scenario);
+  }
 });
 
 test("the citizen table paginates and filters", async ({

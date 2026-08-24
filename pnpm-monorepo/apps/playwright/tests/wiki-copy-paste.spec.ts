@@ -33,12 +33,13 @@ const openCreatePageModal = async (page: Page) => {
   );
 };
 
-test("copy'n'paste inserts a page with its children under another page", async ({
+test("copy'n'paste inserts a page with its readable children under another page", async ({
   page,
   prisma,
   signIn,
 }) => {
   const member = await createCitizen(prisma, { handle: "kopierer" });
+  const secretRole = await createRole(prisma, { name: "geheim" });
   const source = await createWikiPage(prisma, {
     title: "Handbuch",
     visibility: WikiPageVisibility.PUBLIC,
@@ -48,6 +49,13 @@ test("copy'n'paste inserts a page with its children under another page", async (
     title: "Kapitel",
     parentId: source.id,
     content: wikiDocument(wikiParagraph("Erstes Kapitel.")),
+  });
+  /** Unreadable for the copier, thus neither counted nor copied */
+  await createWikiPage(prisma, {
+    title: "Geheim",
+    parentId: source.id,
+    visibility: WikiPageVisibility.RESTRICTED,
+    roleAccess: [{ roleId: secretRole.id, type: WikiPageAccessType.READ }],
   });
   const target = await createWikiPage(prisma, {
     title: "Zielbereich",
@@ -85,6 +93,8 @@ test("copy'n'paste inserts a page with its children under another page", async (
   });
   expect(chapterCopy.content).toEqual(chapter.content);
   expect(chapterCopy.visibility).toBe(WikiPageVisibility.INHERIT);
+  /** The unreadable child was left where it was — only the original exists */
+  expect(await prisma.wikiPage.count({ where: { title: "Geheim" } })).toBe(1);
 
   // The insert consumed the clipboard
   const cookies = await page.context().cookies();
@@ -139,60 +149,6 @@ test("a new page can start as a copy of an existing page", async ({
     where: { title: "Vorlagen-Detail", parentId: created.id },
   });
   expect(childCopy.visibility).toBe(WikiPageVisibility.INHERIT);
-});
-
-test("copying skips children the user cannot read", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const member = await createCitizen(prisma, { handle: "leser" });
-  const secretRole = await createRole(prisma, { name: "geheim" });
-  const source = await createWikiPage(prisma, {
-    title: "Übersicht",
-    visibility: WikiPageVisibility.PUBLIC,
-    content: wikiDocument(wikiParagraph("Überblick über alles.")),
-  });
-  await createWikiPage(prisma, {
-    title: "Offen",
-    parentId: source.id,
-    content: wikiDocument(wikiParagraph("Für alle lesbar.")),
-  });
-  await createWikiPage(prisma, {
-    title: "Geheim",
-    parentId: source.id,
-    visibility: WikiPageVisibility.RESTRICTED,
-    roleAccess: [{ roleId: secretRole.id, type: WikiPageAccessType.READ }],
-  });
-  const target = await createWikiPage(prisma, {
-    title: "Ziel",
-    visibility: WikiPageVisibility.PUBLIC,
-    ownerId: member.entity.id,
-  });
-  await signIn(member.user);
-
-  await page.goto(`/app/wiki/${source.id}/${source.slug}`);
-  await copyPageToClipboard(page);
-
-  await page.goto(`/app/wiki/${target.id}/${target.slug}`);
-  await openCreatePageModal(page);
-  // Only the readable child counts
-  await expect(page.getByText("„Übersicht“ + 1 Unterseiten")).toBeVisible();
-  await page.getByRole("button", { name: "Einfügen", exact: true }).click();
-  await expect(page).toHaveURL(/bersicht-kopie$/, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
-
-  const rootCopy = await prisma.wikiPage.findFirstOrThrow({
-    where: { title: "Übersicht (Kopie)" },
-  });
-  expect(
-    await prisma.wikiPage.count({
-      where: { title: "Offen", parentId: rootCopy.id },
-    }),
-  ).toBe(1);
-  // The unreadable child was not copied — only the original exists
-  expect(await prisma.wikiPage.count({ where: { title: "Geheim" } })).toBe(1);
 });
 
 test("replace mode transplants the copy onto an existing page", async ({

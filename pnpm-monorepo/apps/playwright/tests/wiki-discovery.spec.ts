@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 import {
+  assignRole,
   createCitizen,
   createRole,
   createWikiPage,
@@ -15,14 +16,13 @@ import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilUrl,
   fillUntilVisible,
+  sectionByHeading,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
+/** The sidebar carries a second, compact search box of the same name */
 const landingSearch = (page: Page) =>
-  page
-    .locator("section")
-    .filter({ has: page.getByRole("heading", { name: "Seiten durchsuchen" }) })
-    .getByRole("combobox");
+  sectionByHeading(page, "Seiten durchsuchen").getByRole("combobox");
 
 const searchUntilReaction = (
   page: Page,
@@ -30,14 +30,29 @@ const searchUntilReaction = (
   reaction: ReturnType<Page["locator"]>,
 ) => fillUntilVisible(landingSearch(page), query, reaction);
 
-test("search finds a page by its content", async ({ page, prisma, signIn }) => {
-  const citizen = await createCitizen(prisma, { handle: "searcher" });
-  const wikiPage = await createWikiPage(prisma, {
+test("search finds readable pages and never the others", async ({
+  page,
+  prisma,
+  signIn,
+  switchUser,
+}) => {
+  const readerRole = await createRole(prisma, { name: "vorstand" });
+  const member = await createCitizen(prisma, { handle: "searcher" });
+  await assignRole(prisma, member.entity, readerRole);
+  const outsider = await createCitizen(prisma, { handle: "outsider" });
+
+  const openPage = await createWikiPage(prisma, {
     title: "Bergbau",
     visibility: WikiPageVisibility.PUBLIC,
     content: wikiDocument(wikiParagraph("Quantanium sicher abbauen.")),
   });
-  await signIn(citizen.user);
+  await createWikiPage(prisma, {
+    title: "Vorstandsprotokoll",
+    visibility: WikiPageVisibility.RESTRICTED,
+    roleAccess: [{ roleId: readerRole.id, type: WikiPageAccessType.READ }],
+    content: wikiDocument(wikiParagraph("Vertrauliche Beschlüsse.")),
+  });
+  await signIn(member.user);
 
   await page.goto("/app/wiki");
   const results = page.getByRole("listbox", { name: "Suchergebnisse" });
@@ -47,25 +62,18 @@ test("search finds a page by its content", async ({ page, prisma, signIn }) => {
     results.getByRole("link", { name: /Bergbau/ }),
   );
   await results.getByRole("link", { name: /Bergbau/ }).click();
+  await expect(page).toHaveURL(`/app/wiki/${openPage.id}/${openPage.slug}`);
 
-  await expect(page).toHaveURL(`/app/wiki/${wikiPage.id}/${wikiPage.slug}`);
-});
+  // The role member finds the restricted page too …
+  await page.goto("/app/wiki");
+  await searchUntilReaction(
+    page,
+    "Vorstandsprotokoll",
+    results.getByRole("link", { name: /Vorstandsprotokoll/ }),
+  );
 
-test("search never returns pages the user cannot read", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const readerRole = await createRole(prisma, { name: "vorstand" });
-  const outsider = await createCitizen(prisma, { handle: "outsider" });
-  await createWikiPage(prisma, {
-    title: "Vorstandsprotokoll",
-    visibility: WikiPageVisibility.RESTRICTED,
-    roleAccess: [{ roleId: readerRole.id, type: WikiPageAccessType.READ }],
-    content: wikiDocument(wikiParagraph("Vertrauliche Beschlüsse.")),
-  });
-  await signIn(outsider.user);
-
+  // … while everyone else gets nothing, not even a hint that it exists
+  await switchUser(outsider.user);
   await page.goto("/app/wiki");
   await searchUntilReaction(
     page,
@@ -120,13 +128,20 @@ test("featured pages show on the landing page, filtered by read access", async (
 
   await page.goto("/app/wiki");
 
-  const featuredSection = page
-    .locator("section")
-    .filter({ has: page.getByRole("heading", { name: "Featured" }) });
+  const featuredSection = sectionByHeading(page, "Featured");
   await expect(
     featuredSection.getByRole("link", { name: /Einsteigerguide/ }),
   ).toBeVisible();
   await expect(page.getByRole("link", { name: /Interna/ })).toHaveCount(0);
+
+  // The landing page's other list is filtered the same way
+  const recentlyUpdated = sectionByHeading(page, "Zuletzt aktualisiert");
+  await expect(
+    recentlyUpdated.getByRole("link", { name: /Einsteigerguide/ }),
+  ).toBeVisible();
+  await expect(
+    recentlyUpdated.getByRole("link", { name: /Interna/ }),
+  ).toHaveCount(0);
 });
 
 test("recently visited counts opened pages, not prefetched ones", async ({
@@ -159,9 +174,7 @@ test("recently visited counts opened pages, not prefetched ones", async ({
   // prefetch renders the target route server-side up to the root loading
   // boundary — without a visit (the sidebar tree can't serve here, it
   // disables prefetching entirely)
-  const recentlyUpdatedSection = page.locator("section").filter({
-    has: page.getByRole("heading", { name: "Zuletzt aktualisiert" }),
-  });
+  const recentlyUpdatedSection = sectionByHeading(page, "Zuletzt aktualisiert");
   const prefetchedLink = recentlyUpdatedSection.getByRole("link", {
     name: "Scannerbetrieb",
   });
@@ -176,9 +189,7 @@ test("recently visited counts opened pages, not prefetched ones", async ({
   // later re-hover emits fresh mouse events.
   await page.mouse.move(0, 0);
   await page.reload();
-  const recentlyVisitedSection = page
-    .locator("section")
-    .filter({ has: page.getByRole("heading", { name: "Zuletzt besucht" }) });
+  const recentlyVisitedSection = sectionByHeading(page, "Zuletzt besucht");
   await expect(
     recentlyVisitedSection.getByRole("link", { name: "Sprungpunkte" }),
   ).toBeVisible();

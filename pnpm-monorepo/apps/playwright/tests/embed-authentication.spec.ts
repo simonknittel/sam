@@ -27,10 +27,7 @@ test("JWKS is publicly readable without a session", async ({ request }) => {
     use: "sig",
     kid: expect.any(String),
   });
-});
 
-test("JWKS exposes no private key material", async ({ request }) => {
-  const response = await request.get("/.well-known/jwks.json");
-
-  expect(await response.text()).not.toContain('"d"');
+  // "d" is the private scalar of an EC key and must never be published
+  expect(Object.keys(body.keys[0]!)).not.toContain("d");
 });
