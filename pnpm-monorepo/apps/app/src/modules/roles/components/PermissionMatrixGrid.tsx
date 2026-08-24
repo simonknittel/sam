@@ -176,9 +176,9 @@ interface MatrixCellProps {
 
 /**
  * A deliberately minimal checkbox: the matrix renders thousands of these
- * cells, so every element counts. The check mark comes from the mask-check
- * utility instead of the two inline SVGs that YesNoCheckbox renders, and
- * the label and title name the cell, which the matrix cannot do visually.
+ * cells, so every element and every attribute byte counts. The styles and
+ * the states live in the permission-matrix-cell utility, and the label
+ * and title name the cell, which the matrix cannot do visually.
  */
 const MatrixCell = ({
   roleId,
@@ -188,15 +188,15 @@ const MatrixCell = ({
 }: MatrixCellProps) => {
   return (
     <td>
-      <label className="group flex cursor-pointer" title={label}>
+      <label className="permission-matrix-cell" title={label}>
         <input
           type="checkbox"
-          className="peer sr-only"
+          className="sr-only"
           name={`${roleId}_${permissionString}`}
           defaultChecked={defaultChecked}
           aria-label={label}
         />
-        <span className="size-8 rounded-secondary bg-neutral-700 group-active:bg-neutral-600 peer-focus-visible:outline-solid peer-focus-visible:outline-1 peer-focus-visible:outline-offset-1 after:block after:size-full after:mask-check after:bg-green-500 after:opacity-0 peer-checked:after:opacity-100 group-hover:peer-[:not(:checked)]:after:opacity-50 peer-focus:peer-[:not(:checked)]:after:opacity-50" />
+        <span />
       </label>
     </td>
   );
