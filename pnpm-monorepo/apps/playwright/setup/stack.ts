@@ -145,8 +145,12 @@ export const containerDatabaseUrl = (database: string) =>
  * The Care Bear Shooter build URL is a NEXT_PUBLIC_ variable, so it must be
  * present at build time for the flag-released page to render at all; the
  * Unity build behind it never loads in tests.
+ *
+ * RSI_BASE_URL points the organization logo scrape at a dead port: creating
+ * an organization must never reach out to the real website from a test.
  */
 export const appDummyEnvironment = {
+  RSI_BASE_URL: "http://localhost:9",
   DISCORD_CLIENT_ID: "playwright-dummy",
   DISCORD_CLIENT_SECRET: "playwright-dummy",
   DISCORD_GUILD_ID: "playwright-dummy",
