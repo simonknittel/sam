@@ -6,7 +6,10 @@ import {
   createOnSiteNotifications,
   futureEvent,
 } from "../fixtures/factories";
-import { ACTION_FEEDBACK_TIMEOUT } from "../fixtures/interactions";
+import {
+  ACTION_FEEDBACK_TIMEOUT,
+  clickUntilVisible,
+} from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 const bellButton = (page: Page) =>
@@ -23,12 +26,11 @@ const bellDot = (page: Page) => bellButton(page).locator("[data-unread-dot]");
 const popover = (page: Page) =>
   page.getByRole("dialog", { name: "Benachrichtigungen" });
 
-const openNotificationCenter = async (page: Page) => {
-  await bellButton(page).click();
-  await expect(
+const openNotificationCenter = (page: Page) =>
+  clickUntilVisible(
+    bellButton(page),
     popover(page).getByRole("tab", { name: "Posteingang" }),
-  ).toBeVisible();
-};
+  );
 
 /**
  * exact — "Ungelesen" would otherwise also match the read rows'
@@ -266,27 +268,30 @@ test("the bulk actions mark everything read and archive what is read", async ({
   signIn,
 }) => {
   const citizen = await createCitizen(prisma, { handle: "bulk-reader" });
+  /**
+   * More rows than the popover shows at once: read-on-view would otherwise
+   * mark the whole list read on its own, and the bulk button — which
+   * disables itself once nothing is unread — could never be clicked.
+   */
   await createOnSiteNotifications(prisma, {
     citizenId: citizen.entity.id,
-    count: 3,
+    count: 30,
   });
   await signIn(citizen.user);
 
   await page.goto("/app");
   await openNotificationCenter(page);
 
-  /**
-   * Straight away: the button disables itself once nothing is unread, and
-   * read-on-view gets there on its own after a moment.
-   */
   await popover(page)
     .getByRole("button", { name: "Alle als gelesen markieren", exact: true })
     .click();
 
   await expect(unreadRowDots(page)).toHaveCount(0);
-  await expect(page).toHaveTitle(/^[^(]/);
+  await expect(page).toHaveTitle(/^[^(]/, { timeout: ACTION_FEEDBACK_TIMEOUT });
   await expect
-    .poll(() => prisma.onSiteNotification.count({ where: { readAt: null } }))
+    .poll(() => prisma.onSiteNotification.count({ where: { readAt: null } }), {
+      timeout: ACTION_FEEDBACK_TIMEOUT,
+    })
     .toBe(0);
 
   // Everything is read by now, so archiving the read ones empties the inbox

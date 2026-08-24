@@ -1,3 +1,4 @@
+import type { Page } from "@playwright/test";
 import type { PrismaClient } from "@sam-monorepo/database/client";
 import { expectAuditEvents } from "../fixtures/audit";
 import {
@@ -11,8 +12,10 @@ import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
   DELETED_TEXT,
+  fillUntilValue,
   modal,
   NOT_FOUND_TEXT,
+  pickFromSearch,
   SAVED_TEXT,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
@@ -76,14 +79,11 @@ test("an owner creates a template, edits it, deletes it and restores it", async 
   });
   await expect
     .poll(
-      async () =>
-        (
-          await prisma.eventTemplate.findUniqueOrThrow({
-            where: { id: template.id },
-          })
-        ).name,
+      () =>
+        prisma.eventTemplate.findUniqueOrThrow({ where: { id: template.id } }),
+      { timeout: ACTION_FEEDBACK_TIMEOUT },
     )
-    .toBe("Patrouille");
+    .toMatchObject({ name: "Patrouille" });
 
   /**
    * Delete and restore through the status filter
@@ -101,6 +101,10 @@ test("an owner creates a template, edits it, deletes it and restores it", async 
   });
 
   await page.goto("/app/events/templates");
+  /** The empty state proves the list rendered before its absence is judged */
+  await expect(page.getByText("Es gibt noch keine Event-Vorlage")).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
   await expect(page.getByRole("link", { name: "Patrouille" })).toBeHidden();
 
   await page.goto("/app/events/templates?status=deleted");
@@ -155,6 +159,27 @@ test("a template is invisible to everyone it is not shared with", async ({
   await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
 });
 
+/**
+ * Neither share tier may hand the template on or destroy it. The sharing
+ * route answers 404 rather than 403 — its absence must not be a hint that
+ * there is something to find.
+ */
+const expectSharingAndDeletingStayWithTheOwner = async (
+  page: Page,
+  templateId: string,
+) => {
+  await page.goto(`/app/events/templates/${templateId}`);
+  /** Every tier gets this tab, so it anchors the two that are absent */
+  await expect(page.getByRole("link", { name: "Aufstellung" })).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+  await expect(page.getByRole("link", { name: "Freigabe" })).toBeHidden();
+  await expect(page.getByRole("heading", { name: "Danger Zone" })).toBeHidden();
+
+  await page.goto(`/app/events/templates/${templateId}/sharing`);
+  await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
+};
+
 test("a share lets a role use the template, and only an edit share change it", async ({
   page,
   prisma,
@@ -199,33 +224,27 @@ test("a share lets a role use the template, and only an edit share change it", a
     page.getByRole("button", { name: "Posten hinzufügen" }),
   ).toBeHidden();
 
+  await expectSharingAndDeletingStayWithTheOwner(page, template.id);
+
   /** An edit share may change the content … */
   await switchUser(editor.user);
   await page.goto(`/app/events/templates/${template.id}`);
 
-  await page.getByLabel("Name").fill("Von der Redaktion");
+  await fillUntilValue(page.getByLabel("Name"), "Von der Redaktion");
   await page.getByRole("button", { name: "Speichern" }).click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await expect
     .poll(
-      async () =>
-        (
-          await prisma.eventTemplate.findUniqueOrThrow({
-            where: { id: template.id },
-          })
-        ).name,
+      () =>
+        prisma.eventTemplate.findUniqueOrThrow({ where: { id: template.id } }),
+      { timeout: ACTION_FEEDBACK_TIMEOUT },
     )
-    .toBe("Von der Redaktion");
+    .toMatchObject({ name: "Von der Redaktion" });
 
-  /** … but sharing and deleting stay with the owner for both tiers */
-  await expect(page.getByRole("link", { name: "Freigabe" })).toBeHidden();
-  await expect(page.getByRole("heading", { name: "Danger Zone" })).toBeHidden();
-
-  /** The sharing route is 404, not 403 — its absence must not be a hint */
-  await page.goto(`/app/events/templates/${template.id}/sharing`);
-  await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
+  /** … but sharing and deleting stay with the owner, for both tiers */
+  await expectSharingAndDeletingStayWithTheOwner(page, template.id);
 });
 
 test("transferring a template keeps its shares and drops the previous owner", async ({
@@ -255,29 +274,20 @@ test("transferring a template keeps its shares and drops the previous owner", as
     transferDialog,
   );
 
-  /** The citizen list loads through tRPC before it becomes searchable */
-  const citizenSearch = transferDialog.getByRole("combobox", {
-    name: "Citizen",
-  });
-  await expect(citizenSearch).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
-  await citizenSearch.fill("successor");
-  const successorOption = page.getByRole("option", { name: /successor/ });
-  await expect(successorOption).toBeVisible();
-  await successorOption.click();
+  await pickFromSearch(
+    page,
+    transferDialog.getByRole("combobox", { name: "Citizen" }),
+    "successor",
+  );
   await transferDialog.getByRole("button", { name: "Übertragen" }).click();
 
   await expect
     .poll(
-      async () =>
-        (
-          await prisma.eventTemplate.findUniqueOrThrow({
-            where: { id: template.id },
-          })
-        ).ownedById,
+      () =>
+        prisma.eventTemplate.findUniqueOrThrow({ where: { id: template.id } }),
+      { timeout: ACTION_FEEDBACK_TIMEOUT },
     )
-    .toBe(successor.entity.id);
+    .toMatchObject({ ownedById: successor.entity.id });
 
   /** The share survived the transfer */
   expect(
@@ -423,10 +433,12 @@ test("an event created from a template gets its lineup, briefing and prefill", a
   await expect(createDialog.getByLabel("Kurzbeschreibung")).toHaveValue(
     "Standardablauf",
   );
-  await createDialog.getByLabel("Titel").fill("Patrouille am Freitag");
-
-  await createDialog.getByLabel("Start").fill("2999-01-01T18:00");
-  await createDialog.getByLabel("Ende").fill("2999-01-01T20:00");
+  await fillUntilValue(
+    createDialog.getByLabel("Titel"),
+    "Patrouille am Freitag",
+  );
+  await fillUntilValue(createDialog.getByLabel("Start"), "2999-01-01T18:00");
+  await fillUntilValue(createDialog.getByLabel("Ende"), "2999-01-01T20:00");
   await createDialog.getByRole("button", { name: "Speichern" }).click();
 
   await expect(page).toHaveURL(/\/app\/events\/[^/]+$/);

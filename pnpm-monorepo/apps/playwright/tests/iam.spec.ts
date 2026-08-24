@@ -2,11 +2,13 @@ import { expectAuditEvents } from "../fixtures/audit";
 import { createCitizen, createRole } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
+  clickUntilUrl,
   clickUntilVisible,
   FORBIDDEN_TEXT,
   modal,
   SAVED_TEXT,
   sectionByHeading,
+  toggleLabel,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
@@ -39,7 +41,10 @@ test("a role created and assigned through the UI grants its permission", async (
   // The admin creates a new role through the IAM UI
   await switchUser(admin.user);
   await page.goto("/app/iam/roles");
-  await page.getByRole("button", { name: "Neue Rolle" }).click();
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Neue Rolle" }),
+    modal(page, "Neue Rolle"),
+  );
   await modal(page, "Neue Rolle").getByLabel("Name").fill("Aufgabenleser");
   await modal(page, "Neue Rolle")
     .getByRole("button", { name: "Speichern" })
@@ -49,13 +54,25 @@ test("a role created and assigned through the UI grants its permission", async (
   });
 
   // ... and grants it the task-read permission
-  await page.getByRole("link", { name: "Aufgabenleser" }).click();
-  await page.getByRole("link", { name: "Berechtigungen" }).click();
-  await page.getByRole("tab", { name: "Tasks" }).click();
-  await page
-    .locator("label")
-    .filter({ has: page.locator('input[name="task;read"]') })
-    .click();
+  await clickUntilUrl(
+    page,
+    page.getByRole("link", { name: "Aufgabenleser" }),
+    /\/app\/roles\/[a-z0-9]+$/,
+  );
+  await clickUntilUrl(
+    page,
+    page.getByRole("link", { name: "Berechtigungen" }),
+    /\/permissions$/,
+  );
+  const taskReadLabel = toggleLabel(
+    page,
+    page.locator('input[name="task;read"]'),
+  );
+  await clickUntilVisible(
+    page.getByRole("tab", { name: "Tasks" }),
+    taskReadLabel,
+  );
+  await taskReadLabel.click();
   await page.getByRole("button", { name: "Speichern" }).click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
@@ -71,7 +88,10 @@ test("a role created and assigned through the UI grants its permission", async (
 
   // ... and assigns the role to the member on their citizen page
   await page.goto(`/app/spynet/citizen/${member.entity.id}/roles`);
-  await page.getByRole("button", { name: "Bearbeiten" }).click();
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Bearbeiten" }),
+    modal(page, "Rollen hinzufügen oder entfernen"),
+  );
   await modal(page, "Rollen hinzufügen oder entfernen")
     .getByText("Aufgabenleser")
     .click();
@@ -172,10 +192,10 @@ test("an inherited role hands its permissions down to the inheriting one", async
    */
   await switchUser(admin.user);
   await page.goto(`/app/roles/${member.role.id}/inheritance`);
-  await page
-    .locator("label")
-    .filter({ has: page.locator(`input[value="${taskRole.id}"]`) })
-    .click();
+  await toggleLabel(
+    page,
+    page.locator(`input[value="${taskRole.id}"]`),
+  ).click();
   await page.getByRole("button", { name: "Speichern" }).click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
@@ -219,7 +239,7 @@ test("the permission matrix grants a permission with a single checkbox", async (
   const taskReadCheckbox = page.locator(
     `input[name="${member.role.id}_task;read"]`,
   );
-  await page.locator("label").filter({ has: taskReadCheckbox }).click();
+  await toggleLabel(page, taskReadCheckbox).click();
   await expect(taskReadCheckbox).toBeChecked();
 
   await expect

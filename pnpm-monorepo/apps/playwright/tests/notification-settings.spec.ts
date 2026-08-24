@@ -4,6 +4,7 @@ import { createCitizen } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
   SAVED_TEXT,
+  toggleLabel,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
@@ -18,9 +19,7 @@ const browserCheckbox = (page: Page, notificationType: string) =>
   page.locator(`input[name="WEB_PUSH_${notificationType}"]`);
 
 const browserCheckboxLabel = (page: Page, notificationType: string) =>
-  page
-    .locator("label")
-    .filter({ has: browserCheckbox(page, notificationType) });
+  toggleLabel(page, browserCheckbox(page, notificationType));
 
 test("browser notifications are enabled by default", async ({
   page,

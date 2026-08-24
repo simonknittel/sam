@@ -14,8 +14,11 @@ import {
 } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
+  clickUntilVisible,
+  fillUntilValue,
   NOT_FOUND_TEXT,
   SAVED_TEXT,
+  toggleLabel,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
@@ -33,16 +36,23 @@ test("an authorized user creates a public event via the modal", async ({
   await signIn(creator.user);
   await page.goto("/app/events");
 
-  await page.getByRole("button", { name: "Event erstellen" }).click();
-  await expect(
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Event erstellen" }),
     page.getByRole("heading", { name: "Neues Event" }),
-  ).toBeVisible();
+  );
 
-  await page.getByLabel("Titel").fill("Operation Nachtwache");
-  await page.getByLabel("Beschreibung").fill("Wir treffen uns am Sammelpunkt.");
+  /**
+   * The dialog mounts its lazily loaded template picker while these are
+   * filled, and a fill landing in that re-render is dropped.
+   */
+  await fillUntilValue(page.getByLabel("Titel"), "Operation Nachtwache");
+  await fillUntilValue(
+    page.getByLabel("Beschreibung"),
+    "Wir treffen uns am Sammelpunkt.",
+  );
   // Wall time is interpreted as Europe/Berlin (2027-03-05 is CET, UTC+1)
-  await page.getByLabel("Start").fill("2027-03-05T20:00");
-  await page.getByLabel("Ende").fill("2027-03-05T22:00");
+  await fillUntilValue(page.getByLabel("Start"), "2027-03-05T20:00");
+  await fillUntilValue(page.getByLabel("Ende"), "2027-03-05T22:00");
   await page.getByRole("button", { name: "Speichern" }).click();
 
   // Creating redirects straight to the new event's overview
@@ -196,7 +206,10 @@ test("deleting an event hides it everywhere", async ({
   await signIn(creator.user);
   await page.goto(`/app/events/${event.id}/settings`);
 
-  await page.getByRole("button", { name: "Event löschen" }).click();
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Event löschen" }),
+    page.getByRole("alertdialog"),
+  );
   await page
     .getByRole("alertdialog")
     .getByRole("button", { name: "Löschen" })
@@ -468,7 +481,7 @@ test("the type filter narrows the list to app or Discord events", async ({
     page.getByRole("heading", { name: "Operation Discord-Event" }),
   ).toBeVisible();
 
-  await page.locator("label", { hasText: /^App$/ }).click();
+  await toggleLabel(page, /^App$/).click();
   await expect(
     page.getByRole("heading", { name: "Operation Discord-Event" }),
   ).toHaveCount(0, { timeout: ACTION_FEEDBACK_TIMEOUT });
@@ -476,7 +489,7 @@ test("the type filter narrows the list to app or Discord events", async ({
     page.getByRole("heading", { name: "Operation App-Event" }),
   ).toBeVisible();
 
-  await page.locator("label", { hasText: /^Discord$/ }).click();
+  await toggleLabel(page, /^Discord$/).click();
   await expect(
     page.getByRole("heading", { name: "Operation App-Event" }),
   ).toHaveCount(0, { timeout: ACTION_FEEDBACK_TIMEOUT });

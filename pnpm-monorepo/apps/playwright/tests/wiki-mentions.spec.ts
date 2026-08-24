@@ -1,3 +1,4 @@
+import type { Page } from "@playwright/test";
 import { createCitizen } from "../fixtures/factories";
 import { COLLAB_PERSISTENCE_TIMEOUT } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
@@ -11,10 +12,7 @@ import {
  * Types "@<handle>" and picks the suggestion showing it. The full handle is
  * typed on purpose: a prefix would also offer everyone sharing it.
  */
-const insertMention = async (
-  page: import("@playwright/test").Page,
-  handle: string,
-) => {
+const insertMention = async (page: Page, handle: string) => {
   await page.keyboard.type(`@${handle}`);
   const menu = page.getByRole("dialog", { name: "Vorschläge" });
   await menu
@@ -76,7 +74,15 @@ test("@mentions link the mentioned citizens, a self-mention already suppressed",
       suppressedAt: expect.any(Date),
     });
 
+  /** What the mention is for: the reader gets a link to the citizen */
+  await page.goto(`/app/wiki/${wikiPage.id}/${wikiPage.slug}`);
+  await expect(
+    page.getByRole("link", { name: "@Zielperson", exact: true }),
+  ).toHaveAttribute("href", `/app/spynet/citizen/${mentioned.entity.id}`);
+
   // Removing the mentions again cancels the pending links
+  await enterEditMode(page);
+  await focusEditor(page);
   await page.keyboard.press("ControlOrMeta+a");
   await page.keyboard.press("Backspace");
 

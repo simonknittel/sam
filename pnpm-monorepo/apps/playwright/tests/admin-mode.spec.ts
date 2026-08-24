@@ -3,6 +3,7 @@ import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
   FORBIDDEN_TEXT,
+  pickFromSearch,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
@@ -79,14 +80,7 @@ test("assuming a user switches the effective citizen", async ({
     page.getByRole("button", { name: "Assume user" }),
     userSearch,
   );
-  // The user list loads through tRPC before it becomes searchable
-  await expect(page.getByPlaceholder("Search user")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
-  await userSearch.fill("zielnutzer");
-  const targetOption = page.getByRole("option", { name: /zielnutzer/ });
-  await expect(targetOption).toBeVisible();
-  await targetOption.click();
+  await pickFromSearch(page, userSearch, "zielnutzer");
 
   await expect(page.getByText("Assuming zielnutzer")).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,

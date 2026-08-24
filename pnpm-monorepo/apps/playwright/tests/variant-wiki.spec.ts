@@ -13,6 +13,7 @@ import {
   type Citizen,
 } from "../fixtures/factories";
 import {
+  ACTION_FEEDBACK_TIMEOUT,
   clickUntilUrl,
   clickUntilVisible,
   fillUntilVisible,
@@ -355,6 +356,13 @@ test("the update variant modal links a wiki page", async ({
     .selectOption({ value: rootPage.id });
   await updateModal.getByRole("button", { name: "Speichern" }).click();
   await expect(updateModal).toHaveCount(0);
+
+  await expect
+    .poll(
+      () => prisma.variant.findUniqueOrThrow({ where: { id: variant.id } }),
+      { timeout: ACTION_FEEDBACK_TIMEOUT },
+    )
+    .toMatchObject({ wikiPageId: rootPage.id });
 
   await page.goto(`/app/fleet/variant/${variant.id}`);
   await expect(page.getByText("Alles über die Polaris.")).toBeVisible();

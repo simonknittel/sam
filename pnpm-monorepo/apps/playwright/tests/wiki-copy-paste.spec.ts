@@ -11,6 +11,7 @@ import {
 import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
+  toggleLabel,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 import { expectPersisted } from "../fixtures/wiki-editor";
@@ -132,7 +133,7 @@ test("a new page can start as a copy of an existing page", async ({
   await page.locator('input[name="title"]').fill("Neu aus Vorlage");
   // The select waits for the lazily fetched readable pages
   await page
-    .locator('select[name="copyFromPageId"]')
+    .getByLabel("Inhalt kopieren von (optional)")
     .selectOption({ label: "Vorlage" });
   await page.getByRole("button", { name: "Erstellen", exact: true }).click();
 
@@ -181,7 +182,11 @@ test("replace mode transplants the copy onto an existing page", async ({
 
   await page.goto(`/app/wiki/${target.id}/${target.slug}`);
   await openCreatePageModal(page);
-  await page.getByText("Seite ersetzen", { exact: true }).click();
+  /** The label is the visible half of the radio, which is `sr-only` */
+  await toggleLabel(page, /^Seite ersetzen$/).click();
+  await expect(
+    page.getByRole("radio", { name: "Seite ersetzen" }),
+  ).toBeChecked();
   await page.getByRole("button", { name: "Einfügen", exact: true }).click();
 
   // The page keeps its identity; only its content is transplanted

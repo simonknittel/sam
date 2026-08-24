@@ -137,6 +137,13 @@ export const assignRole = (
     },
   });
 
+/**
+ * Managing or reading a lineup. ship;read is part of it because the lineup
+ * page loads the viewer's own fleet for the requirement checks — without it
+ * the whole tab is forbidden.
+ */
+export const LINEUP_PERMISSIONS = ["event;read", "ship;read"];
+
 interface TiptapNode {
   readonly type: string;
   readonly attrs?: Readonly<Record<string, unknown>>;
@@ -153,6 +160,16 @@ export const wikiHeading = (level: number, text: string): TiptapNode => ({
   type: "heading",
   attrs: { level },
   content: [{ type: "text", text }],
+});
+
+/**
+ * A generic website embed — the kind the iframe allowlist of the wiki
+ * settings decides about. The dedicated providers (YouTube, Twitch, …) carry
+ * their host patterns in the app and never consult the allowlist.
+ */
+export const wikiEmbed = (src: string): TiptapNode => ({
+  type: "wikiEmbed",
+  attrs: { provider: "iframe", src },
 });
 
 export const wikiDocument = (...blocks: readonly TiptapNode[]): TiptapNode => ({

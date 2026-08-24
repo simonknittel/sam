@@ -12,14 +12,13 @@ import {
 import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilUrl,
+  dateParam,
   fillUntilUrl,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 /** Mirrors ACTIVITY_PAGE_SIZE of the app's activity module */
 const ACTIVITY_PAGE_SIZE = 50;
-
-const dateParam = (date: Date) => date.toISOString().slice(0, 10);
 
 /** Only roles the reader may see contribute role history rows */
 const ROLE_HISTORY_PERMISSIONS = ["otherRole;read;roleId=*"];

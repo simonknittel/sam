@@ -7,6 +7,7 @@ import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
   FORBIDDEN_TEXT,
+  inlineEditorTrigger,
   modal,
   SAVED_TEXT,
   saveInlineEditor,
@@ -14,8 +15,7 @@ import {
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
-const editButtons = (scope: Locator | Page) =>
-  scope.locator('button[title="Klicken, um zu bearbeiten"]');
+const editButtons = (scope: Locator | Page) => inlineEditorTrigger(scope);
 
 const createSilcTask = (
   prisma: PrismaClient,
@@ -306,16 +306,10 @@ test("a citizen takes a task on, gives it up, and a manager cancels and deletes 
   await cancelDialog.getByRole("button", { name: "Speichern" }).click();
 
   await expect
-    .poll(
-      async () => {
-        const cancelled = await prisma.task.findUniqueOrThrow({
-          where: { id: task.id },
-        });
-        return cancelled.cancelledAt !== null;
-      },
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
-    )
-    .toBe(true);
+    .poll(() => prisma.task.findUniqueOrThrow({ where: { id: task.id } }), {
+      timeout: ACTION_FEEDBACK_TIMEOUT,
+    })
+    .toMatchObject({ cancelledAt: expect.any(Date) });
 
   await page.goto("/app/tasks");
   await expect(page.getByText("Keine Tasks gefunden")).toBeVisible({
@@ -338,16 +332,10 @@ test("a citizen takes a task on, gives it up, and a manager cancels and deletes 
   await deleteDialog.getByRole("button", { name: "Löschen" }).click();
 
   await expect
-    .poll(
-      async () => {
-        const deleted = await prisma.task.findUniqueOrThrow({
-          where: { id: task.id },
-        });
-        return deleted.deletedAt !== null;
-      },
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
-    )
-    .toBe(true);
+    .poll(() => prisma.task.findUniqueOrThrow({ where: { id: task.id } }), {
+      timeout: ACTION_FEEDBACK_TIMEOUT,
+    })
+    .toMatchObject({ deletedAt: expect.any(Date) });
 
   await page.goto("/app/tasks?status=closed");
   await expect(page.getByText("Keine Tasks gefunden")).toBeVisible({

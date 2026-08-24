@@ -88,14 +88,9 @@ test("a log entry is confirmed, and a second one marked a false report", async (
   await signIn(admin.user);
   await page.goto(`/app/spynet/citizen/${target.entity.id}`);
 
-  const historyDialog = modal(page, "History");
-  const handleSection = page
-    .locator("dd")
-    .filter({ has: page.getByRole("button", { name: "History" }) });
-
-  /** The Handle section is the second entry with a history of its own */
+  const historyDialog = modal(page, "Handle History");
   await clickUntilVisible(
-    handleSection.nth(1).getByRole("button", { name: "History" }),
+    page.getByRole("button", { name: "Handle History" }),
     historyDialog,
   );
 

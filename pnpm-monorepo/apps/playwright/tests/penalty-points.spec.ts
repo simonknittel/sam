@@ -5,6 +5,7 @@ import {
   clickUntilVisible,
   DELETED_TEXT,
   modal,
+  pickFromSearch,
   SAVED_TEXT,
   sectionByHeading,
 } from "../fixtures/interactions";
@@ -44,12 +45,11 @@ test("an entry is booked on a citizen, shows on their tab and is deleted again",
     createDialog,
   );
 
-  const citizenInput = createDialog.getByRole("combobox", { name: "Citizen" });
-  await expect(citizenInput).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
-  await citizenInput.fill("delinquent");
-  const offenderOption = page.getByRole("option", { name: /delinquent/ });
-  await expect(offenderOption).toBeVisible();
-  await offenderOption.click();
+  await pickFromSearch(
+    page,
+    createDialog.getByRole("combobox", { name: "Citizen" }),
+    "delinquent",
+  );
 
   await createDialog.getByLabel("Strafpunkte").fill("3");
   await createDialog.getByLabel("Begründung").fill("Beschuss eines Members");
@@ -71,7 +71,9 @@ test("an entry is booked on a citizen, shows on their tab and is deleted again",
   const entryRow = page.getByRole("row").filter({ hasText: "delinquent" });
   await expect(entryRow).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
   await expect(entryRow).toContainText("Beschuss eines Members");
-  await expect(entryRow).toContainText("3");
+  await expect(
+    entryRow.getByRole("cell", { name: "3", exact: true }),
+  ).toBeVisible();
 
   /**
    * The citizen's own tab lists it without repeating their name

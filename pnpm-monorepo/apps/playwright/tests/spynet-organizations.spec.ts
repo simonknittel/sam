@@ -5,6 +5,8 @@ import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
   modal,
+  SAVED_TEXT,
+  sectionByHeading,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
@@ -63,9 +65,8 @@ test("an organization is created, staffed and cleared out again", async ({
   /**
    * A confirmed membership, entered by its internal id
    */
-  const membershipsTile = page
-    .locator("section")
-    .filter({ hasText: "Mitglieder" });
+  /** The tile counts its members in its heading, so it is matched loosely */
+  const membershipsTile = sectionByHeading(page, /^Mitglieder/);
   const membershipDialog = modal(page, "Citizen hinzufügen");
   await clickUntilVisible(
     membershipsTile.getByRole("button", { name: "Hinzufügen" }),
@@ -78,7 +79,7 @@ test("an organization is created, staffed and cleared out again", async ({
     .getByRole("button", { name: "Speichern und bestätigen" })
     .click();
 
-  await expect(page.getByText("Erfolgreich gespeichert")).toBeVisible({
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await expect(page.getByText("Mitglieder (1)")).toBeVisible({

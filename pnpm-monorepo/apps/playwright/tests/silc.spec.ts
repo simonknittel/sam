@@ -6,6 +6,7 @@ import {
   DELETED_TEXT,
   fillUntilValue,
   modal,
+  pickFromSearch,
   SAVED_TEXT,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
@@ -46,12 +47,11 @@ test("a transaction created through the UI updates balances and the system log",
     "Belohnung für den Testeinsatz",
   );
 
-  await createModal
-    .getByRole("combobox", { name: "Citizens" })
-    .fill("silc-empfaenger");
-  const receiverOption = page.getByRole("option", { name: /silc-empfaenger/ });
-  await expect(receiverOption).toBeVisible();
-  await receiverOption.click();
+  await pickFromSearch(
+    page,
+    createModal.getByRole("combobox", { name: "Citizens" }),
+    "silc-empfaenger",
+  );
   await expect(
     createModal.getByRole("link", { name: "silc-empfaenger" }),
   ).toBeVisible();
@@ -126,14 +126,11 @@ test('"Speichern und weitere Transaktion erstellen" keeps the modal open with a 
 
   await fillUntilValue(createModal.getByLabel("Wert"), "10");
 
-  await createModal
-    .getByRole("combobox", { name: "Citizens" })
-    .fill("silc-dauerempfaenger");
-  const receiverOption = page.getByRole("option", {
-    name: /silc-dauerempfaenger/,
-  });
-  await expect(receiverOption).toBeVisible();
-  await receiverOption.click();
+  await pickFromSearch(
+    page,
+    createModal.getByRole("combobox", { name: "Citizens" }),
+    "silc-dauerempfaenger",
+  );
   await expect(
     createModal.getByRole("link", { name: "silc-dauerempfaenger" }),
   ).toBeVisible();

@@ -8,8 +8,10 @@ import {
 import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
+  dateParam,
   modal,
   SAVED_TEXT,
+  toggleLabel,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
@@ -29,8 +31,6 @@ const PARTICIPANT_PERMISSIONS = [
   "profitDistributionCycle;read",
   "silcBalanceOfCurrentCitizen;read",
 ];
-
-const dateParam = (date: Date) => date.toISOString().slice(0, 10);
 
 test("ending the collection phase debits every participant", async ({
   page,
@@ -297,7 +297,7 @@ test("a manager runs a cycle from its creation to a closed payout", async ({
   const disbursedCheckbox = page.getByRole("checkbox", {
     name: "Ausgezahlt: sincome-teilnehmer",
   });
-  await page.locator("label").filter({ has: disbursedCheckbox }).click();
+  await toggleLabel(page, disbursedCheckbox).click();
   await expect(disbursedCheckbox).toBeChecked();
   await expect
     .poll(

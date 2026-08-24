@@ -10,13 +10,17 @@ import {
   createEvent,
   createEventTemplate,
   createRole,
+  createUpload,
   EventVisibility,
   futureEvent,
 } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
+  clickUntilVisible,
+  fillUntilValue,
   NOT_FOUND_TEXT,
   SAVED_TEXT,
+  toggleLabel,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
@@ -58,7 +62,7 @@ for (const { channel, entityType } of CHANNEL_KINDS) {
     await waitForAppShellHydration(page);
 
     // Only voice and stage channels are offered — text channels cannot host an event
-    await page.locator("label", { hasText: /^Sprachkanal$/ }).click();
+    await toggleLabel(page, /^Sprachkanal$/).click();
     const channelSelect = page.getByLabel("Kanal", { exact: true });
     await expect(channelSelect).toBeVisible();
     await expect(
@@ -348,12 +352,9 @@ test("a cover image Discord cannot take is reported but does not stop publishing
     permissionStrings: ["event;read"],
   });
   // Discord's image data only accepts JPEG, PNG and GIF
-  const cover = await prisma.upload.create({
-    data: {
-      fileName: "cover.webp",
-      mimeType: "image/webp",
-      createdById: creator.user.id,
-    },
+  const cover = await createUpload(prisma, creator.user, {
+    fileName: "cover.webp",
+    mimeType: "image/webp",
   });
   const event = await createAppEvent(prisma, {
     name: "Operation Bildfehler",
@@ -456,10 +457,10 @@ test("a template's publish preference prefills the create form and publishes the
 
   await signIn(creator.user);
   await page.goto("/app/events");
-  await page.getByRole("button", { name: "Event erstellen" }).click();
-  await expect(
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Event erstellen" }),
     page.getByRole("heading", { name: "Neues Event" }),
-  ).toBeVisible();
+  );
 
   await page
     .getByLabel("Vorlage")
@@ -470,9 +471,9 @@ test("a template's publish preference prefills the create form and publishes the
     MOCK_VOICE_CHANNEL.id,
   );
 
-  await page.getByLabel("Titel").fill("Patrouille Alpha");
-  await page.getByLabel("Start").fill("2027-05-05T20:00");
-  await page.getByLabel("Ende").fill("2027-05-05T22:00");
+  await fillUntilValue(page.getByLabel("Titel"), "Patrouille Alpha");
+  await fillUntilValue(page.getByLabel("Start"), "2027-05-05T20:00");
+  await fillUntilValue(page.getByLabel("Ende"), "2027-05-05T22:00");
   await page.getByRole("button", { name: "Speichern" }).click();
 
   await expect(page).toHaveURL(/\/app\/events\/[a-z0-9]+$/, {
@@ -510,25 +511,22 @@ test("creating a restricted event with publishing needs the same confirmation", 
 
   await signIn(creator.user);
   await page.goto("/app/events");
-  await page.getByRole("button", { name: "Event erstellen" }).click();
-  await expect(
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Event erstellen" }),
     page.getByRole("heading", { name: "Neues Event" }),
-  ).toBeVisible();
+  );
 
-  await page.getByLabel("Titel").fill("Operation Doppelt Geheim");
-  await page.getByLabel("Start").fill("2027-06-01T20:00");
-  await page.getByLabel("Ende").fill("2027-06-01T22:00");
+  await fillUntilValue(page.getByLabel("Titel"), "Operation Doppelt Geheim");
+  await fillUntilValue(page.getByLabel("Start"), "2027-06-01T20:00");
+  await fillUntilValue(page.getByLabel("Ende"), "2027-06-01T22:00");
 
-  // The checkbox itself is visually hidden; its label is what users click
-  await page
-    .locator("label", { hasText: /^Auf Discord veröffentlichen$/ })
-    .click();
+  await toggleLabel(page, /^Auf Discord veröffentlichen$/).click();
   await expect(page.getByRole("textbox", { name: "Ort" })).toBeVisible();
 
   // Publishing a public event still saves in one click
   await expect(page.getByRole("alertdialog")).toHaveCount(0);
 
-  await page.locator("label", { hasText: /^Eingeschränkt$/ }).click();
+  await toggleLabel(page, /^Eingeschränkt$/).click();
   await page.getByRole("button", { name: "Speichern" }).click();
 
   const dialog = page.getByRole("alertdialog");
@@ -541,7 +539,7 @@ test("creating a restricted event with publishing needs the same confirmation", 
   expect(discordMock.scheduledEvents.size).toBe(0);
 
   // Back to public: the plain submit button is back and creates the event
-  await page.locator("label", { hasText: /^Öffentlich$/ }).click();
+  await toggleLabel(page, /^Öffentlich$/).click();
   await page.getByRole("button", { name: "Speichern" }).click();
 
   await expect(page).toHaveURL(/\/app\/events\/[a-z0-9]+$/, {

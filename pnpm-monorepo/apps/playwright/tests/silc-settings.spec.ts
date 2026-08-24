@@ -47,18 +47,19 @@ test("the aUEC conversion rate and the role salaries are edited through the sett
   const rateTile = sectionByHeading(page, "aUEC Umrechnungskurs");
   await rateTile.getByLabel("Wie viel aUEC entspricht ein SILC?").fill("2500");
   await rateTile.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText(SAVED_TEXT).first()).toBeVisible({
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
 
   await expect
-    .poll(async () => {
-      const setting = await prisma.silcSetting.findUnique({
-        where: { key: "AUEC_CONVERSION_RATE" },
-      });
-      return setting?.value;
-    })
-    .toBe("2500");
+    .poll(
+      () =>
+        prisma.silcSetting.findUnique({
+          where: { key: "AUEC_CONVERSION_RATE" },
+        }),
+      { timeout: ACTION_FEEDBACK_TIMEOUT },
+    )
+    .toMatchObject({ value: "2500" });
 
   /**
    * A salary for a role, which the tile prices with the rate above
@@ -76,15 +77,15 @@ test("the aUEC conversion rate and the role salaries are edited through the sett
   );
   await rolePicker.getByText("Bezahlte Rolle").click();
 
-  await salaryTile.locator('input[name="value[]"]').fill("40");
-  await salaryTile.locator('input[name="dayOfMonth[]"]').fill("15");
+  await salaryTile.getByLabel("SILC").fill("40");
+  await salaryTile.getByLabel("Tag im Monat").fill("15");
   await salaryTile.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText(SAVED_TEXT).first()).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
 
+  /** The rate above already left a success toast, so the row is the proof */
   await expect
-    .poll(() => prisma.silcRoleSalary.findFirst())
+    .poll(() => prisma.silcRoleSalary.findFirst(), {
+      timeout: ACTION_FEEDBACK_TIMEOUT,
+    })
     .toMatchObject({ roleId: paidRole.id, value: 40, dayOfMonth: 15 });
 
   await expectAuditEvents(prisma, [
@@ -118,20 +119,21 @@ test("expiring all SILC zeroes every balance, and the refresh recomputes them", 
 
   const otherTile = sectionByHeading(page, "Other");
   await otherTile.getByRole("button", { name: "Expire all SILC" }).click();
-  await expect(page.getByText(SAVED_TEXT).first()).toBeVisible({
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
 
   // Every positive balance is booked away, the untouched one stays as it is
   await expect
-    .poll(async () => {
-      const entity = await prisma.entity.findUniqueOrThrow({
-        where: { id: rich.entity.id },
-        select: { silcBalance: true },
-      });
-      return entity.silcBalance;
-    })
-    .toBe(0);
+    .poll(
+      () =>
+        prisma.entity.findUniqueOrThrow({
+          where: { id: rich.entity.id },
+          select: { silcBalance: true },
+        }),
+      { timeout: ACTION_FEEDBACK_TIMEOUT },
+    )
+    .toMatchObject({ silcBalance: 0 });
   const expiry = await prisma.silcTransaction.findFirstOrThrow({
     where: { receiverId: rich.entity.id, value: { lt: 0 } },
   });
@@ -154,18 +156,18 @@ test("expiring all SILC zeroes every balance, and the refresh recomputes them", 
   await otherTile
     .getByRole("button", { name: "Refresh SILC balances" })
     .click();
-  await expect(page.getByText(SAVED_TEXT).first()).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+
+  /** The expiry above already left a success toast, so the balance is it */
   await expect
-    .poll(async () => {
-      const entity = await prisma.entity.findUniqueOrThrow({
-        where: { id: rich.entity.id },
-        select: { silcBalance: true },
-      });
-      return entity.silcBalance;
-    })
-    .toBe(0);
+    .poll(
+      () =>
+        prisma.entity.findUniqueOrThrow({
+          where: { id: rich.entity.id },
+          select: { silcBalance: true },
+        }),
+      { timeout: ACTION_FEEDBACK_TIMEOUT },
+    )
+    .toMatchObject({ silcBalance: 0 });
 
   await page.goto("/app/silc/transactions");
   await expect(

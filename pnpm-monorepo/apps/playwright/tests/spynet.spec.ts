@@ -10,6 +10,7 @@ import {
   modal,
   SAVED_TEXT,
   sectionByHeading,
+  toggleLabel,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
@@ -52,10 +53,18 @@ test("the citizen detail tabs render for a fully permitted viewer", async ({
   }
 
   for (const tab of tabs.slice(1)) {
-    await page.getByRole("link", { name: tab.label }).click();
-    await expect(page).toHaveURL(
+    await clickUntilUrl(
+      page,
+      page.getByRole("link", { name: tab.label }),
       `/app/spynet/citizen/${target.entity.id}${tab.path}`,
     );
+    /**
+     * Every tab renders the citizen's header, so waiting for it is what
+     * separates "nothing forbidden here" from "nothing rendered yet".
+     */
+    await expect(
+      page.getByRole("heading", { name: target.entity.handle! }),
+    ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
     await expect(page.getByText(FORBIDDEN_TEXT)).toHaveCount(0);
   }
 });
@@ -203,14 +212,13 @@ const exerciseSettingsRecordCrud = async (
 
   const actionsTrigger = (record: string) =>
     tile
-      .locator("li, tr, article, div")
+      .getByRole("listitem")
       .filter({ hasText: record })
-      .getByRole("button", { name: "Aktionen" })
-      .last();
+      .getByRole("button", { name: "Aktionen" });
   /**
-   * The menu stays open behind the modal it opened, so by the delete step it
-   * is already showing — opening it again would toggle it shut and detach
-   * the button before the click lands.
+   * The row menu stays open behind the modal it opens and is still open once
+   * that modal closes again (reported as a finding) — so Escape closes it
+   * first, because clicking the trigger of an open menu shuts it instead.
    */
   const openRowAction = async (
     record: string,
@@ -218,8 +226,10 @@ const exerciseSettingsRecordCrud = async (
     reaction: Locator,
   ) => {
     const actionButton = page.getByRole("button", { name: actionLabel });
-    if (!(await actionButton.isVisible()))
-      await clickUntilVisible(actionsTrigger(record), actionButton);
+    await page.keyboard.press("Escape");
+    await expect(actionButton).toHaveCount(0);
+
+    await clickUntilVisible(actionsTrigger(record), actionButton);
     await actionButton.click();
     await expect(reaction).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
   };
@@ -359,7 +369,7 @@ test("the citizen table paginates and filters", async ({
   );
   await clickUntilUrl(
     page,
-    page.locator("label").filter({ hasText: "Handles" }),
+    toggleLabel(page, "Handles"),
     /filters=unknown-handle/,
   );
   await expect(page.locator("tbody tr")).toHaveCount(UNNAMED_CITIZENS, {

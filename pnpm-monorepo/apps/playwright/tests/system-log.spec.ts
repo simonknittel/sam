@@ -1,11 +1,10 @@
 import { createCitizen, ONE_DAY_MS } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
+  dateParam,
   fillUntilUrl,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
-
-const dateParam = (date: Date) => date.toISOString().slice(0, 10);
 
 /**
  * That an action's audit event ends up rendered here is asserted where the

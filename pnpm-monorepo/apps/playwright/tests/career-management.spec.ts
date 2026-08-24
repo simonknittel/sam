@@ -393,13 +393,7 @@ test("duplicating copies the diagram but grants nobody access", async ({
   await expectAuditEvents(prisma, ["CAREER_FLOW_DUPLICATED"]);
 });
 
-/**
- * Moves "Erster" below "Zweiter" the way a keyboard user does. dnd-kit
- * narrates every step in an aria-live region, and waiting for the narration
- * to change is what keeps the drag honest: pressing the next key before the
- * library processed the previous one leaves the row where it was, which no
- * real keyboard user could produce.
- */
+/** Moves "Erster" below "Zweiter" the way a keyboard user does. */
 const reorderByKeyboard = async (page: Page) => {
   await page.getByRole("button", { name: "Erster verschieben" }).focus();
 
@@ -532,6 +526,12 @@ test("read access opens a flow without an edit affordance, edit access saves it"
   await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
+  /** The write went through as the member, not just as a toast */
+  await expect
+    .poll(() => prisma.flow.findUniqueOrThrow({ where: { id: flow.id } }), {
+      timeout: ACTION_FEEDBACK_TIMEOUT,
+    })
+    .toMatchObject({ updatedById: member.entity.id });
 
   /** Revoking hides the flow again, direct URL included */
   await prisma.flowRoleAccess.deleteMany({ where: { flowId: flow.id } });

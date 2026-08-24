@@ -5,6 +5,7 @@ import {
   createParticipant,
   createVariant,
   EventSource,
+  LINEUP_PERMISSIONS,
   ONE_DAY_MS,
 } from "../fixtures/factories";
 import {
@@ -75,7 +76,9 @@ test("the fleet tab counts the ships of both participation kinds", async ({
 
   const polarisRow = page.getByRole("row").filter({ hasText: "Polaris" });
   await expect(polarisRow).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
-  await expect(polarisRow).toContainText("2");
+  await expect(
+    polarisRow.getByRole("cell", { name: "2", exact: true }),
+  ).toBeVisible();
   await expect(
     page.getByRole("row").filter({ hasText: "Carrack" }),
   ).toHaveCount(0);
@@ -87,12 +90,6 @@ test("a position application travels from the participant to the manager's assig
   signIn,
   switchUser,
 }) => {
-  /**
-   * ship;read is required because the lineup page loads the viewer's fleet
-   * (getMyFleet) for the requirement checks — without it the whole lineup
-   * is forbidden. This is intended behavior.
-   */
-  const LINEUP_PERMISSIONS = ["event;read", "ship;read"];
   const manager = await createCitizen(prisma, {
     handle: "event-leiter",
     permissionStrings: LINEUP_PERMISSIONS,

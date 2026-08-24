@@ -8,7 +8,9 @@ import {
 import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
+  inlineEditorTrigger,
   modal,
+  saveInlineEditor,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
@@ -40,23 +42,19 @@ test("a page is renamed, which moves it to a new URL, and moved to a new parent"
    */
   const titleInput = page.locator('input[name="title"]');
   await clickUntilVisible(
-    page
-      .getByRole("heading", { level: 1 })
-      .getByTitle("Klicken, um zu bearbeiten"),
+    inlineEditorTrigger(page.getByRole("heading", { level: 1 })),
     titleInput,
   );
   await titleInput.fill("Neuer Titel");
-  await page.locator('button[title="Speichern"]').click();
+  await saveInlineEditor(page);
 
   await expect
     .poll(
-      async () => {
-        const renamed = await prisma.wikiPage.findUniqueOrThrow({
+      () =>
+        prisma.wikiPage.findUniqueOrThrow({
           where: { id: wikiPage.id },
           select: { title: true, slug: true },
-        });
-        return renamed;
-      },
+        }),
       { timeout: ACTION_FEEDBACK_TIMEOUT },
     )
     .toEqual({ title: "Neuer Titel", slug: "neuer-titel" });
@@ -81,16 +79,14 @@ test("a page is renamed, which moves it to a new URL, and moved to a new parent"
 
   await expect
     .poll(
-      async () =>
-        (
-          await prisma.wikiPage.findUniqueOrThrow({
-            where: { id: wikiPage.id },
-            select: { parentId: true },
-          })
-        ).parentId,
+      () =>
+        prisma.wikiPage.findUniqueOrThrow({
+          where: { id: wikiPage.id },
+          select: { parentId: true },
+        }),
       { timeout: ACTION_FEEDBACK_TIMEOUT },
     )
-    .toBe(target.id);
+    .toMatchObject({ parentId: target.id });
 
   // The sidebar tree now reaches it through its new parent
   await page.goto(`/app/wiki/${target.id}/${target.slug}`);

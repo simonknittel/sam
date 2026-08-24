@@ -4,20 +4,18 @@ import {
   createCitizen,
   createVariant,
   futureEvent,
+  LINEUP_PERMISSIONS,
 } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
+  inlineEditorTrigger,
   modal,
+  saveInlineEditor,
+  toggleLabel,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
-
-/**
- * ship;read: the lineup page loads the viewer's own fleet for the
- * requirement checks, so without it the whole tab is forbidden.
- */
-const LINEUP_PERMISSIONS = ["event;read", "ship;read"];
 
 test("a manager builds a lineup: create, rename, require a ship, duplicate, delete", async ({
   page,
@@ -66,9 +64,8 @@ test("a manager builds a lineup: create, rename, require a ship, duplicate, dele
   await createDialog
     .getByRole("button", { name: "Hinzufügen", exact: true })
     .click();
-  /** The formatting fields below carry names, the variant picker does not */
   await createDialog
-    .locator("select:not([name])")
+    .getByLabel("Benötigtes Schiff")
     .selectOption({ value: variant.id });
   await createDialog
     .getByRole("button", { name: "Speichern", exact: true })
@@ -100,23 +97,15 @@ test("a manager builds a lineup: create, rename, require a ship, duplicate, dele
    * while the lineup holds a single position.
    */
   const nameInput = page.locator('input[name="name"]');
-  await clickUntilVisible(
-    page.getByTitle("Klicken, um zu bearbeiten"),
-    nameInput,
-  );
+  await clickUntilVisible(inlineEditorTrigger(page), nameInput);
   await nameInput.fill("Chefpilot");
-  await page.locator('button[title="Speichern"]').click();
+  await saveInlineEditor(page);
   await expect
     .poll(
-      async () =>
-        (
-          await prisma.eventPosition.findUniqueOrThrow({
-            where: { id: pilot.id },
-          })
-        ).name,
+      () => prisma.eventPosition.findUniqueOrThrow({ where: { id: pilot.id } }),
       { timeout: ACTION_FEEDBACK_TIMEOUT },
     )
-    .toBe("Chefpilot");
+    .toMatchObject({ name: "Chefpilot" });
 
   /**
    * A position's actions live behind its accordion, so only an opened one
@@ -216,20 +205,139 @@ test("the lineup toggle publishes the aufstellung to the participants", async ({
   await switchUser(manager.user);
   await page.goto(`/app/events/${event.id}/lineup`);
   await waitForAppShellHydration(page);
-  await page.locator("label").filter({ hasText: "Deaktiviert" }).click();
+  await toggleLabel(page, "Deaktiviert").click();
 
   await expect
-    .poll(
-      async () =>
-        (await prisma.event.findUniqueOrThrow({ where: { id: event.id } }))
-          .lineupEnabled,
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
-    )
-    .toBe(true);
+    .poll(() => prisma.event.findUniqueOrThrow({ where: { id: event.id } }), {
+      timeout: ACTION_FEEDBACK_TIMEOUT,
+    })
+    .toMatchObject({ lineupEnabled: true });
 
   await switchUser(viewer.user);
   await page.goto(`/app/events/${event.id}`);
   await expect(
     page.getByRole("link", { name: "Aufstellung", exact: true }),
   ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+});
+
+test("positions are reordered by dragging and copied into another lineup", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createCitizen(prisma, {
+    handle: "posten-leiter",
+    permissionStrings: LINEUP_PERMISSIONS,
+  });
+  const event = await createAppEvent(prisma, {
+    name: "Operation Reihenfolge",
+    createdById: manager.entity.id,
+    ...futureEvent(),
+  });
+  const target = await createAppEvent(prisma, {
+    name: "Operation Ziel",
+    createdById: manager.entity.id,
+    ...futureEvent(),
+  });
+  await prisma.eventPosition.create({
+    data: { eventId: event.id, name: "Erster Posten", order: 0 },
+  });
+  await prisma.eventPosition.create({
+    data: { eventId: event.id, name: "Zweiter Posten", order: 1 },
+  });
+  const host = await prisma.eventPosition.create({
+    data: { eventId: target.id, name: "Gastgeber", order: 0 },
+  });
+
+  const lineupOf = async (eventId: string) => {
+    const positions = await prisma.eventPosition.findMany({
+      where: { eventId },
+      orderBy: { order: "asc" },
+      select: { name: true, parentPositionId: true },
+    });
+    return positions.map(({ name, parentPositionId }) =>
+      parentPositionId ? `${name} (untergeordnet)` : name,
+    );
+  };
+
+  await signIn(manager.user);
+  await page.goto(`/app/events/${event.id}/lineup`);
+  await waitForAppShellHydration(page);
+  await expect(page.getByText("Erster Posten")).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+
+  /**
+   * The lineup drags with the pointer only — its handles start the drag on
+   * mousedown, and the drop bands exist only while one is running. The band
+   * above a row takes the dragged position in front of it.
+   */
+  const handles = page.getByTitle("Posten verschieben");
+  const secondHandle = (await handles.nth(1).boundingBox())!;
+  await page.mouse.move(
+    secondHandle.x + secondHandle.width / 2,
+    secondHandle.y + secondHandle.height / 2,
+  );
+  await page.mouse.down();
+
+  const dropBefore = page.locator('[data-drop-target="before"]').first();
+  await expect(dropBefore).toBeVisible();
+  const band = (await dropBefore.boundingBox())!;
+  await page.mouse.move(band.x + band.width / 2, band.y + band.height / 2, {
+    steps: 10,
+  });
+  await page.mouse.up();
+
+  await expect
+    .poll(() => lineupOf(event.id), { timeout: ACTION_FEEDBACK_TIMEOUT })
+    .toEqual(["Zweiter Posten", "Erster Posten"]);
+  await expect(page.getByTitle("Posten verschieben").first()).toBeVisible();
+
+  /**
+   * Copying puts a position on a clipboard that survives the walk to
+   * another event, where every position offers to take it in.
+   */
+  await page.reload();
+  await waitForAppShellHydration(page);
+  await clickUntilVisible(
+    page.getByTitle("Details öffnen").first(),
+    page.getByRole("button", { name: "Posten kopieren" }),
+  );
+  await page.getByRole("button", { name: "Posten kopieren" }).click();
+  await expect(page.getByText("„Zweiter Posten“ kopiert.")).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+
+  await page.goto(`/app/events/${target.id}/lineup`);
+  await waitForAppShellHydration(page);
+
+  const pasteLabel = "„Zweiter Posten“ einfügen";
+  await clickUntilVisible(
+    page.getByTitle("Details öffnen"),
+    page.getByRole("button", { name: pasteLabel }),
+  );
+  await clickUntilVisible(
+    page.getByRole("button", { name: pasteLabel }),
+    page.getByRole("button", { name: "In diese Gruppe einfügen" }),
+  );
+  /** The menu names where the copy came from */
+  await expect(
+    page.getByText("Aus einem anderen Event kopiert."),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "In diese Gruppe einfügen" }).click();
+
+  await expect
+    .poll(() => lineupOf(target.id), { timeout: ACTION_FEEDBACK_TIMEOUT })
+    .toEqual(["Gastgeber", "Zweiter Posten (untergeordnet)"]);
+  const pasted = await prisma.eventPosition.findFirstOrThrow({
+    where: { eventId: target.id, parentPositionId: host.id },
+  });
+  expect(pasted.name).toBe("Zweiter Posten");
+  /** The source keeps its own copy — pasting never moves a position */
+  expect(await lineupOf(event.id)).toEqual(["Zweiter Posten", "Erster Posten"]);
+
+  await expectAuditEvents(prisma, [
+    "EVENT_LINEUP_ORDER_CHANGED",
+    "EVENT_POSITION_COPIED",
+  ]);
 });

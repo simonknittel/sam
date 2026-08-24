@@ -247,9 +247,17 @@ test("a manager deletes an upload from the database and the bucket", async ({
 
   const upload = await prisma.upload.findFirstOrThrow();
   await expect
-    .poll(async () => (await fetch(objectUrl(upload.id))).status, {
-      timeout: BUCKET_TIMEOUT,
-    })
+    .poll(
+      async () =>
+        (
+          await fetch(objectUrl(upload.id), {
+            signal: AbortSignal.timeout(5_000),
+          })
+        ).status,
+      {
+        timeout: BUCKET_TIMEOUT,
+      },
+    )
     .toBe(200);
 
   await page.goto("/app/uploads");
@@ -283,9 +291,17 @@ test("a manager deletes an upload from the database and the bucket", async ({
 
   // The object is gone from the bucket too
   await expect
-    .poll(async () => (await fetch(objectUrl(upload.id))).status, {
-      timeout: BUCKET_TIMEOUT,
-    })
+    .poll(
+      async () =>
+        (
+          await fetch(objectUrl(upload.id), {
+            signal: AbortSignal.timeout(5_000),
+          })
+        ).status,
+      {
+        timeout: BUCKET_TIMEOUT,
+      },
+    )
     .toBe(404);
 
   const auditEvent = await prisma.auditEvent.findFirst({

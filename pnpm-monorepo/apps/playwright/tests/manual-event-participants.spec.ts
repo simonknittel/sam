@@ -17,6 +17,7 @@ import {
   clickUntilVisible,
   fillUntilValue,
   modal,
+  pickFromSearch,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
@@ -34,10 +35,12 @@ const appEvent = (name: string, createdById: string) => ({
 });
 
 const pickCitizen = async (dialog: Locator, page: Page, handle: string) => {
-  await dialog.getByRole("combobox", { name: "Citizens" }).fill(handle);
-  const option = page.getByRole("option", { name: new RegExp(handle) });
-  await expect(option).toBeVisible();
-  await option.click();
+  await pickFromSearch(
+    page,
+    dialog.getByRole("combobox", { name: "Citizens" }),
+    handle,
+  );
+  /** The picked citizen becomes a chip linking to their profile */
   await expect(dialog.getByRole("link", { name: handle })).toBeVisible();
 };
 
@@ -308,11 +311,14 @@ test("adding an already signed-up citizen neither duplicates nor fails the batch
 
   /** The picker does not even offer an active participant */
   const addModal = await openAddModal(page);
-  await addModal
-    .getByRole("combobox", { name: "Citizens" })
-    .fill("schon-angemeldet");
+  const citizenSearch = addModal.getByRole("combobox", { name: "Citizens" });
+  /** A citizen it does offer proves the list is loaded and searched */
+  await citizenSearch.fill("angemeldet");
   await expect(
-    page.getByRole("option", { name: /schon-angemeldet/ }),
+    page.getByRole("option", { name: "noch-nicht-angemeldet" }),
+  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(
+    page.getByRole("option", { name: "schon-angemeldet" }),
   ).toHaveCount(0);
 
   await pickCitizen(addModal, page, "noch-nicht-angemeldet");

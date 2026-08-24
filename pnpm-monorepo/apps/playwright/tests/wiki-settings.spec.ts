@@ -2,6 +2,7 @@ import {
   createCitizen,
   createWikiPage,
   wikiDocument,
+  wikiEmbed,
   WikiPageVisibility,
   wikiParagraph,
 } from "../fixtures/factories";
@@ -49,9 +50,6 @@ test("the settings curate the featured pages, the dashboard page and the support
     .selectOption({ value: featured.id });
   await featuredTile.getByRole("button", { name: "Hinzufügen" }).click();
   await featuredTile.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText(SAVED_TEXT).first()).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
 
   /**
    * The dashboard tile renders the picked page's content
@@ -59,9 +57,6 @@ test("the settings curate the featured pages, the dashboard page and the support
   const dashboardTile = sectionByHeading(page, "Dashboard");
   await dashboardTile.getByLabel("Seite").selectOption({ value: dashboard.id });
   await dashboardTile.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText(SAVED_TEXT).first()).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
 
   /**
    * The support link resolves through its stable URL
@@ -71,11 +66,11 @@ test("the settings curate the featured pages, the dashboard page and the support
     .getByLabel("Support-Seite")
     .selectOption({ value: support.id });
   await linkTile.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText(SAVED_TEXT).first()).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
 
-  /** Every tile stores through its own form, so the last one gets polled */
+  /**
+   * Each tile stores through a form of its own, and their success toasts
+   * stack — so what they stored is what gets asserted, not the toasts.
+   */
   await expect
     .poll(
       async () => {
@@ -116,6 +111,13 @@ test("the settings curate the featured pages, the dashboard page and the support
   await expect(page).toHaveURL("/app/wiki");
 });
 
+/**
+ * Reserved by RFC 2606, so neither the browser nor a resolver ever reaches
+ * anything: the test is about what the page renders, not about a live embed.
+ */
+const ALLOWED_DOMAIN = "eingebettet.invalid";
+const BLOCKED_DOMAIN = "fremd.invalid";
+
 test("the iframe allowlist decides which domains a page may embed", async ({
   page,
   prisma,
@@ -138,44 +140,61 @@ test("the iframe allowlist decides which domains a page may embed", async ({
     allowlistTile.getByText("Keine Domains freigegeben."),
   ).toBeVisible();
 
-  await allowlistTile.getByLabel("Domain hinzufügen").fill("example.com");
+  await allowlistTile.getByLabel("Domain hinzufügen").fill(ALLOWED_DOMAIN);
   await allowlistTile.getByRole("button", { name: "Hinzufügen" }).click();
-  await expect(allowlistTile.getByText("example.com")).toBeVisible();
+  await expect(allowlistTile.getByText(ALLOWED_DOMAIN)).toBeVisible();
 
   await allowlistTile.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText(SAVED_TEXT).first()).toBeVisible({
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
 
   await expect
-    .poll(async () => {
-      const setting = await prisma.wikiSetting.findUnique({
-        where: { key: "iframeAllowlist" },
-      });
-      return setting?.value;
-    })
-    .toEqual(["example.com"]);
+    .poll(() =>
+      prisma.wikiSetting.findUnique({ where: { key: "iframeAllowlist" } }),
+    )
+    .toMatchObject({ value: [ALLOWED_DOMAIN] });
+
+  /**
+   * What the list is for: a page embedding both domains renders only the
+   * allowed one, and names the other in its place.
+   */
+  const embedPage = await createWikiPage(prisma, {
+    title: "Eingebettetes",
+    content: wikiDocument(
+      wikiEmbed(`https://${ALLOWED_DOMAIN}/eingebettet`),
+      wikiEmbed(`https://${BLOCKED_DOMAIN}/eingebettet`),
+    ),
+  });
+  await page.goto(`/app/wiki/${embedPage.id}/${embedPage.slug}`);
+
+  await expect(page.locator("iframe")).toHaveAttribute(
+    "src",
+    `https://${ALLOWED_DOMAIN}/eingebettet`,
+  );
+  await expect(
+    page.getByText(
+      `Eingebettete Inhalte von dieser Domain sind nicht erlaubt: https://${BLOCKED_DOMAIN}/eingebettet`,
+    ),
+  ).toBeVisible();
 
   /**
    * Removing it again empties the list — the editor keeps the whole list in
    * local state until it is stored, so this proves the round trip.
    */
-  await page.reload();
+  await page.goto("/app/wiki/settings");
   await waitForAppShellHydration(page);
   await allowlistTile
-    .getByRole("button", { name: '"example.com" entfernen' })
+    .getByRole("button", { name: `"${ALLOWED_DOMAIN}" entfernen` })
     .click();
   await allowlistTile.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText(SAVED_TEXT).first()).toBeVisible({
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
 
   await expect
-    .poll(async () => {
-      const setting = await prisma.wikiSetting.findUnique({
-        where: { key: "iframeAllowlist" },
-      });
-      return setting?.value;
-    })
-    .toEqual([]);
+    .poll(() =>
+      prisma.wikiSetting.findUnique({ where: { key: "iframeAllowlist" } }),
+    )
+    .toMatchObject({ value: [] });
 });

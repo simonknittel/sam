@@ -28,10 +28,13 @@ export const DELETED_TEXT = "Erfolgreich gelöscht";
  * statistic tiles and chart cards all render as a `section` named by their
  * heading, so one helper covers them all.
  */
-export const sectionByHeading = (page: Page, heading: string) =>
-  page
-    .locator("section")
-    .filter({ has: page.getByRole("heading", { name: heading, exact: true }) });
+export const sectionByHeading = (page: Page, heading: string | RegExp) =>
+  page.locator("section").filter({
+    has: page.getByRole("heading", {
+      name: heading,
+      exact: typeof heading === "string",
+    }),
+  });
 
 /**
  * Scopes a lookup to a StatisticTile, which carries no heading — its label
@@ -145,11 +148,60 @@ export const tabUntilFocused = (page: Page, target: Locator) =>
   }).toPass({ timeout: HYDRATION_TIMEOUT });
 
 /**
+ * Opens an inline editor (EditableField). The whole field is the trigger and
+ * carries the hint as its title, which is also its accessible name.
+ */
+export const inlineEditorTrigger = (scope: Page | Locator) =>
+  scope.getByTitle("Klicken, um zu bearbeiten");
+
+/**
  * Submits the open inline editor (EditableField). Only one can be open at a
  * time, so the icon-only save button is unambiguous without scoping.
  */
 export const saveInlineEditor = (page: Page) =>
-  page.locator('button[title="Speichern"]').click();
+  page.getByTitle("Speichern").click();
+
+/**
+ * The label of a switch or checkbox, addressed either by its own text or —
+ * for the ones whose label holds nothing but the control — by the input
+ * inside it. Clicking the label is what toggles such a control: the inputs
+ * are `sr-only`, so a click on one is blocked by the styled span drawn in
+ * front of it.
+ */
+export const toggleLabel = (
+  scope: Page | Locator,
+  labelOrInput: string | RegExp | Locator,
+) =>
+  scope
+    .locator("label")
+    .filter(
+      typeof labelOrInput === "string" || labelOrInput instanceof RegExp
+        ? { hasText: labelOrInput }
+        : { has: labelOrInput },
+    );
+
+/**
+ * Picks an entry from one of the app's search pickers (citizens, users).
+ * Their options render in a portal outside the picker and carry the entry's
+ * id next to its handle, so they are looked up on the page and matched by
+ * substring — as a plain string, which Playwright never reads as a pattern.
+ */
+export const pickFromSearch = async (
+  page: Page,
+  combobox: Locator,
+  handle: string,
+) => {
+  /** The list loads through tRPC before the picker becomes searchable */
+  await expect(combobox).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await combobox.fill(handle);
+
+  const option = page.getByRole("option", { name: handle });
+  await expect(option).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await option.click();
+};
+
+/** The date format every filter and date input of the app expects. */
+export const dateParam = (date: Date) => date.toISOString().slice(0, 10);
 
 /**
  * Proves the page has hydrated by opening and closing the notification
