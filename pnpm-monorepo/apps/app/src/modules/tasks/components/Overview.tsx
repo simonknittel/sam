@@ -22,7 +22,6 @@ import {
 import clsx from "clsx";
 import { forbidden } from "next/navigation";
 import { FaEye, FaInfoCircle } from "react-icons/fa";
-import { updateTaskDescription } from "../actions/updateTaskDescription";
 import { updateTaskExpiresAt } from "../actions/updateTaskExpiresAt";
 import { updateTaskRewardTypeNewSilcValue } from "../actions/updateTaskRewardTypeNewSilcValue";
 import { updateTaskRewardTypeSilcValue } from "../actions/updateTaskRewardTypeSilcValue";
@@ -34,6 +33,7 @@ import { DeleteTask } from "./DeleteTask";
 import { ToggleAssignmentForCurrentUser } from "./ToggleAssignmentForCurrentUser";
 import { UpdateRequiredRoles } from "./UpdateRequiredRoles";
 import { UpdateTaskAssignments } from "./UpdateTaskAssignments";
+import { UpdateTaskDescription } from "./UpdateTaskDescription";
 import { UpdateTaskRepeatable } from "./UpdateTaskRepeatable";
 
 interface TaskWithIncludes extends Task {
@@ -86,12 +86,7 @@ export const Overview = ({
 
       <Tile heading="Beschreibung">
         {isTaskUpdatable && isAllowedToManageTask ? (
-          <EditableTextarea
-            rowId={task.id}
-            columnName="description"
-            initialValue={task.description}
-            action={updateTaskDescription}
-          />
+          <UpdateTaskDescription task={task} />
         ) : (
           <Markdown>{task.description || "-"}</Markdown>
         )}
