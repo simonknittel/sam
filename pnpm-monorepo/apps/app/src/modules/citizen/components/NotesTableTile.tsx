@@ -1,5 +1,9 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
+import {
+  ENTITY_LOG_ATTRIBUTE_SELECT,
+  ENTITY_LOG_TABLE_SELECT,
+} from "@/modules/citizen/queries/entityLogTableSelect";
 import getLatestNoteAttributes from "@/modules/citizen/utils/getLatestNoteAttributes";
 import Pagination from "@/modules/common/components/Pagination";
 import {
@@ -34,19 +38,16 @@ export const NotesTableTile = async ({ className, searchParams }: Props) => {
       where: {
         type: "note",
       },
-      include: {
-        entity: true,
+      select: {
+        ...ENTITY_LOG_TABLE_SELECT,
         attributes: {
           where: {
             key: {
               in: ["noteTypeId", "classificationLevelId", "confirmed"],
             },
           },
-          include: {
-            createdBy: true,
-          },
+          select: ENTITY_LOG_ATTRIBUTE_SELECT,
         },
-        submittedBy: true,
       },
     }),
 
@@ -84,8 +85,6 @@ export const NotesTableTile = async ({ className, searchParams }: Props) => {
         )!,
         confirmationState: confirmed?.value as EntityLogConfirmationState,
         confirmedAt: confirmed?.createdAt,
-        // @ts-expect-error createdBy is loaded by the query but missing from the narrowed type
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         confirmedBy: confirmed?.createdBy,
         entityLog,
       };

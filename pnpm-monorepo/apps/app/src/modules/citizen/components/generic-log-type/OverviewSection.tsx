@@ -9,7 +9,7 @@ interface Props {
   type: GenericEntityLogType;
   icon?: ReactNode;
   name: string;
-  entity: Entity;
+  entity: Pick<Entity, "id">;
 }
 
 export const OverviewSection = async ({

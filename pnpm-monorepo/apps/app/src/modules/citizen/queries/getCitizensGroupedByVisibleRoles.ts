@@ -16,8 +16,14 @@ export const getCitizensGroupedByVisibleRoles = cache(
       orderBy: {
         handle: "asc",
       },
-      include: {
-        roleAssignments: true,
+      select: {
+        id: true,
+        handle: true,
+        roleAssignments: {
+          select: {
+            roleId: true,
+          },
+        },
       },
     });
 
@@ -27,7 +33,7 @@ export const getCitizensGroupedByVisibleRoles = cache(
       string,
       {
         role: BadgeRole;
-        citizens: Entity[];
+        citizens: Pick<Entity, "id" | "handle">[];
       }
     >();
 

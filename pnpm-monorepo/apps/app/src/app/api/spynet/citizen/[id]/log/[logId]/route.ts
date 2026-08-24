@@ -47,9 +47,13 @@ export async function PATCH(request: Request, props: { params: Params }) {
       where: {
         id: paramsData.logId,
       },
-      include: {
-        entity: true,
-        attributes: true,
+      select: {
+        id: true,
+        type: true,
+        entityId: true,
+        attributes: {
+          select: { id: true, key: true, value: true, createdAt: true },
+        },
       },
     });
 
@@ -156,9 +160,13 @@ export async function DELETE(request: Request, props: { params: Params }) {
       where: {
         id: paramsData.logId,
       },
-      include: {
-        entity: true,
-        attributes: true,
+      select: {
+        id: true,
+        type: true,
+        entityId: true,
+        attributes: {
+          select: { id: true, key: true, value: true, createdAt: true },
+        },
       },
     });
 

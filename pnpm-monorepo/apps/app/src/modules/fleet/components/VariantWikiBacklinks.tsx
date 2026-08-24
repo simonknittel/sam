@@ -28,7 +28,10 @@ export const VariantWikiBacklinks = async ({ pageId }: Props) => {
       series: {
         select: {
           manufacturer: {
-            select: { name: true, image: true },
+            select: {
+              name: true,
+              image: { select: { id: true, mimeType: true } },
+            },
           },
         },
       },

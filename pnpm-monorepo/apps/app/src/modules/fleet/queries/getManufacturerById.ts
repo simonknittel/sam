@@ -10,7 +10,7 @@ export const getManufacturerById = withTrace(
         id: manufacturerId,
       },
       include: {
-        image: true,
+        image: { select: { id: true, mimeType: true } },
       },
     });
   },

@@ -1,13 +1,13 @@
 import { type requireAuthentication } from "@/modules/auth/server";
 import getLatestNoteAttributes from "@/modules/citizen/utils/getLatestNoteAttributes";
-import {
-  type EntityLog,
-  type EntityLogAttribute,
-} from "@sam-monorepo/database/client";
+import { type EntityLogAttribute } from "@sam-monorepo/database/client";
 
 export default function isAllowedToReadRedacted(
-  note: EntityLog & {
-    attributes: EntityLogAttribute[];
+  note: {
+    readonly attributes: readonly Pick<
+      EntityLogAttribute,
+      "key" | "value" | "createdAt"
+    >[];
   },
   authentication: Awaited<ReturnType<typeof requireAuthentication>>,
 ) {

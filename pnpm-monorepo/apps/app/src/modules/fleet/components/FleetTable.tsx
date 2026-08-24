@@ -1,26 +1,13 @@
 import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
-import {
-  VariantStatus,
-  type Manufacturer,
-  type Series,
-  type Upload,
-  type Variant,
-  type VariantTag,
-} from "@sam-monorepo/database/client";
+import { VariantStatus } from "@sam-monorepo/database/client";
 import { FaRegCheckCircle } from "react-icons/fa";
 import { FaRegCircleXmark } from "react-icons/fa6";
+import type { ShipVariant } from "../queries/shipQuery";
 import { VariantTagBadge } from "./VariantTagBadge";
 import { VariantWithLogo } from "./VariantWithLogo";
 
 interface FleetRow {
-  variant: Variant & {
-    series: Series & {
-      manufacturer: Manufacturer & {
-        image: Upload | null;
-      };
-    };
-    tags: VariantTag[];
-  };
+  variant: ShipVariant;
   count: number;
 }
 

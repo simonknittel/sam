@@ -9,7 +9,7 @@ import { deleteShipAction } from "../actions/deleteShipAction";
 interface Props {
   readonly className?: string;
   readonly ship: Pick<Ship, "id" | "name"> & {
-    variant: Variant;
+    variant: Pick<Variant, "name">;
   };
 }
 

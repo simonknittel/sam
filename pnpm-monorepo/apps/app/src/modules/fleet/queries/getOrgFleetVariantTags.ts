@@ -11,6 +11,7 @@ export const getOrgFleetVariantTags = cache(
 
     return prisma.variantTag.findMany({
       orderBy: [{ key: "asc" }, { value: "asc" }],
+      select: { id: true, key: true, value: true },
     });
   }),
 );

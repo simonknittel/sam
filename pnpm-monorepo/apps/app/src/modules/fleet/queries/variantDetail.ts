@@ -28,7 +28,7 @@ export const getVariantDetail = cache(
             include: {
               manufacturer: {
                 include: {
-                  image: true,
+                  image: { select: { id: true, mimeType: true } },
                 },
               },
             },

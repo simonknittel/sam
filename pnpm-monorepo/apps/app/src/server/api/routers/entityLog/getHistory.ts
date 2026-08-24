@@ -24,16 +24,25 @@ export const getHistory = protectedProcedure
       orderBy: {
         createdAt: "desc",
       },
-      include: {
+      select: {
+        id: true,
+        entityId: true,
+        type: true,
+        content: true,
+        createdAt: true,
         attributes: {
           orderBy: {
             createdAt: "desc",
           },
-          include: {
-            createdBy: true,
+          select: {
+            id: true,
+            key: true,
+            value: true,
+            createdAt: true,
+            createdBy: { select: { name: true } },
           },
         },
-        submittedBy: true,
+        submittedBy: { select: { name: true } },
       },
     });
 

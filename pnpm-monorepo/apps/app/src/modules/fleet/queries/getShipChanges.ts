@@ -2,30 +2,43 @@ import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import { CursorDirection } from "@/modules/common/CursorPagination/cursorPaginationParsers";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import {
-  type Manufacturer,
-  type Series,
-  type Ship,
-  type Upload,
-  type Variant,
-} from "@sam-monorepo/database/client";
+import type { Prisma } from "@sam-monorepo/database/client";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
 
 const SHIP_CHANGES_PAGE_SIZE = 100;
 
+/** What one row of the changes table renders */
+const CHANGED_SHIP_SELECT = {
+  id: true,
+  name: true,
+  createdAt: true,
+  createdById: true,
+  deletedAt: true,
+  deletedById: true,
+  variant: {
+    select: {
+      id: true,
+      name: true,
+      status: true,
+      series: {
+        select: {
+          manufacturer: {
+            select: {
+              name: true,
+              image: { select: { id: true, mimeType: true } },
+            },
+          },
+        },
+      },
+    },
+  },
+} as const satisfies Prisma.ShipSelect;
+
 export interface ShipChangeRow {
   changeDate: Date;
   changeType: "creation" | "deletion";
-  ship: Ship & {
-    variant: Variant & {
-      series: Series & {
-        manufacturer: Manufacturer & {
-          image: Upload | null;
-        };
-      };
-    };
-  };
+  ship: Prisma.ShipGetPayload<{ select: typeof CHANGED_SHIP_SELECT }>;
   actorId?: string | null;
   actorHandle?: string | null;
 }
@@ -45,6 +58,16 @@ export const getShipChanges = cache(
       const authentication = await requireAuthentication();
       if (!(await authentication.authorize("otherShips", "read"))) forbidden();
 
+      /**
+       * Without a cursor the answer is the newest page of the merged
+       * streams, and a row can only reach it by being among the newest
+       * page of its own stream — so each query stops there. A cursor page
+       * can sit arbitrarily deep in either stream, and the composite
+       * cursor (`shipId:changeType`) addresses the merged list rather than
+       * one stream, so those still merge the full set in memory.
+       */
+      const streamTake = cursor ? undefined : SHIP_CHANGES_PAGE_SIZE + 1;
+
       const [createdShips, deletedShips] = await Promise.all([
         changeType === "deletion"
           ? Promise.resolve([])
@@ -52,23 +75,19 @@ export const getShipChanges = cache(
               where: {
                 deletedAt: null,
               },
-              include: {
-                variant: {
-                  include: {
-                    series: {
-                      include: {
-                        manufacturer: {
-                          include: {
-                            image: true,
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
+              /**
+               * `Ship.createdAt` is nullable, and Postgres sorts NULLs
+               * first in DESC — those rows have no change date to show and
+               * would otherwise fill the bounded page.
+               */
+              orderBy: {
+                createdAt: { sort: "desc", nulls: "last" },
+              },
+              take: streamTake,
+              select: {
+                ...CHANGED_SHIP_SELECT,
                 createdBy: {
                   select: {
-                    id: true,
                     handle: true,
                   },
                 },
@@ -80,23 +99,14 @@ export const getShipChanges = cache(
               where: {
                 deletedAt: { not: null },
               },
-              include: {
-                variant: {
-                  include: {
-                    series: {
-                      include: {
-                        manufacturer: {
-                          include: {
-                            image: true,
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
+              orderBy: {
+                deletedAt: "desc",
+              },
+              take: streamTake,
+              select: {
+                ...CHANGED_SHIP_SELECT,
                 deletedBy: {
                   select: {
-                    id: true,
                     handle: true,
                   },
                 },

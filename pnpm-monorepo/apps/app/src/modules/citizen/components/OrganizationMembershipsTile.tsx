@@ -42,7 +42,9 @@ export const OrganizationMembershipsTile = async ({ className, id }: Props) => {
         },
       },
       include: {
-        organization: true,
+        organization: {
+          select: { id: true, name: true, logo: true },
+        },
       },
     });
 

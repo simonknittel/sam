@@ -23,6 +23,7 @@ export const createAndReturnTags = async (
           value: givenTag.value!,
         })),
       },
+      select: { id: true, key: true, value: true },
     });
 
     const nonExistingTags = givenTags.filter(

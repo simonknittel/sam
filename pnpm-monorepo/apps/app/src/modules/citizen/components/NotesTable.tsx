@@ -1,3 +1,4 @@
+import type { EntityLogTableRow } from "@/modules/citizen/queries/entityLogTableSelect";
 import { Actions } from "@/modules/common/components/Actions";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
@@ -9,8 +10,6 @@ import { type EntityLogConfirmationState } from "@/types";
 import {
   type ClassificationLevel,
   type Entity,
-  type EntityLog,
-  type EntityLogAttribute,
   type NoteType,
   type User,
 } from "@sam-monorepo/database/client";
@@ -21,16 +20,13 @@ import { DeleteLog } from "./DeleteLog";
 import { UpdateNote } from "./notes/UpdateNote";
 
 export type Row = Readonly<{
-  entity: Entity;
+  entity: Pick<Entity, "id" | "handle">;
   noteType: NoteType;
   classificationLevel: ClassificationLevel;
   confirmationState?: EntityLogConfirmationState;
   confirmedAt?: Date;
-  confirmedBy?: User;
-  entityLog: EntityLog & {
-    attributes: EntityLogAttribute[];
-    submittedBy?: User | null;
-  };
+  confirmedBy?: Pick<User, "name"> | null;
+  entityLog: EntityLogTableRow;
 }>;
 
 interface Props {

@@ -3,7 +3,7 @@ import type { VariantTag } from "@sam-monorepo/database/client";
 
 interface Props {
   readonly className?: string;
-  readonly tag: VariantTag;
+  readonly tag: Pick<VariantTag, "key" | "value">;
 }
 
 export const VariantTagBadge = ({ className, tag }: Props) => {

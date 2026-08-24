@@ -1,5 +1,6 @@
 "use client";
 
+import type { CitizenNote } from "@/modules/citizen/queries/entityLogTableSelect";
 import getLatestNoteAttributes from "@/modules/citizen/utils/getLatestNoteAttributes";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
@@ -8,8 +9,6 @@ import Modal from "@/modules/common/components/Modal";
 import { Select } from "@/modules/common/components/form/Select";
 import {
   type ClassificationLevel,
-  type EntityLog,
-  type EntityLogAttribute,
   type NoteType,
 } from "@sam-monorepo/database/browser";
 import { useRouter } from "next/navigation";
@@ -20,9 +19,7 @@ import { FaPen, FaSave } from "react-icons/fa";
 
 interface Props {
   readonly className?: string;
-  readonly note: EntityLog & {
-    attributes: EntityLogAttribute[];
-  };
+  readonly note: CitizenNote;
   readonly noteTypes: NoteType[];
   readonly classificationLevels: ClassificationLevel[];
 }

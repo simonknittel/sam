@@ -6,7 +6,7 @@ export const getManufacturers = withTrace("getManufacturers", async () => {
     select: {
       id: true,
       imageId: true,
-      image: true,
+      image: { select: { id: true, mimeType: true } },
       name: true,
       series: {
         select: {

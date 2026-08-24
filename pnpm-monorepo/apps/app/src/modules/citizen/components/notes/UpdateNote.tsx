@@ -1,16 +1,11 @@
+import type { CitizenNote } from "@/modules/citizen/queries/entityLogTableSelect";
 import getLatestNoteAttributes from "@/modules/citizen/utils/getLatestNoteAttributes";
 import { getAllNoteTypes } from "@/modules/spynet/queries/getAllNoteTypes";
 import { getCreatableClassificationLevelsDeduped } from "@/modules/spynet/utils/getAllClassificationLevels";
-import {
-  type EntityLog,
-  type EntityLogAttribute,
-} from "@sam-monorepo/database/client";
 import { UpdateNoteModal } from "./UpdateNoteModal";
 
 interface Props {
-  readonly note: EntityLog & {
-    attributes: EntityLogAttribute[];
-  };
+  readonly note: CitizenNote;
   readonly withBullet?: boolean;
 }
 

@@ -68,7 +68,7 @@ interface Props {
   readonly position: PositionType;
   readonly showManage?: boolean;
   readonly variants: readonly VariantCatalogManufacturer[];
-  readonly myShips: Ship[];
+  readonly myShips: readonly Pick<Ship, "variantId">[];
   readonly allEventCitizens: EventCitizenWithShips[];
   readonly showActions?: boolean;
   readonly groupLevel: number;

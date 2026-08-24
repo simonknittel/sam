@@ -5,8 +5,8 @@ import {
 } from "@sam-monorepo/database/client";
 
 export default async function isAllowedToRead(
-  entityLog: EntityLog & {
-    attributes: EntityLogAttribute[];
+  entityLog: Pick<EntityLog, "type"> & {
+    readonly attributes: readonly Pick<EntityLogAttribute, "key" | "value">[];
   },
   authentication: Awaited<ReturnType<typeof requireAuthentication>>,
 ) {

@@ -10,7 +10,12 @@ export const getCitizenById = cache(
         id,
       },
       include: {
-        roleAssignments: true,
+        roleAssignments: {
+          select: {
+            roleId: true,
+            currentLevel: true,
+          },
+        },
       },
     });
   }),

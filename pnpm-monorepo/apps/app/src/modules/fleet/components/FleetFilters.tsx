@@ -5,7 +5,7 @@ import { TextSearchFilter } from "@/modules/common/components/layouts/SidebarLay
 import type { Manufacturer, VariantTag } from "@sam-monorepo/database/browser";
 
 interface Props {
-  readonly variantTags: VariantTag[];
+  readonly variantTags: readonly Pick<VariantTag, "id" | "key" | "value">[];
   readonly manufacturers: Manufacturer[];
   /** Ship lists offer filtering by deleted ships; the org's variant list has none */
   readonly showDeletedFilter?: boolean;

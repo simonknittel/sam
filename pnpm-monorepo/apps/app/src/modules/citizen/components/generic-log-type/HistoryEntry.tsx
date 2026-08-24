@@ -15,9 +15,11 @@ import ConfirmLog from "../ConfirmLog";
 import { DeleteLog } from "../DeleteLog";
 
 interface Props {
-  log: EntityLog & {
-    attributes: (EntityLogAttribute & { createdBy?: User | null })[];
-    submittedBy?: User | null;
+  log: Pick<EntityLog, "id" | "entityId" | "type" | "content" | "createdAt"> & {
+    attributes: (Pick<EntityLogAttribute, "id" | "key" | "value"> & {
+      createdBy?: Pick<User, "name"> | null;
+    })[];
+    submittedBy?: Pick<User, "name"> | null;
   };
   showDelete?: boolean;
   showConfirm?: boolean;

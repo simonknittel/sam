@@ -1,5 +1,5 @@
 import { requireAuthentication } from "@/modules/auth/server";
-import { getCitizens } from "@/modules/citizen/queries/getCitizens";
+import { getCitizensForTable } from "@/modules/citizen/queries/getCitizens";
 import { getLastSeenAt } from "@/modules/citizen/utils/getLastSeenAt";
 import Pagination from "@/modules/common/components/Pagination";
 import {
@@ -26,7 +26,7 @@ export const CitizenTableTile = async ({ className, searchParams }: Props) => {
 
   const currentPage = getCurrentPageFromSearchParams(searchParams);
 
-  const entities = await getCitizens();
+  const entities = await getCitizensForTable();
 
   const filters = searchParams.get("filters")?.split(",");
 

@@ -13,7 +13,7 @@ import {
   buildVariantFilterWhere,
   FLEET_PAGE_SIZE,
   paginateByCursor,
-  SHIP_VARIANT_INCLUDE,
+  SHIP_VARIANT_SELECT,
 } from "./shipQuery";
 
 type OrgFleetSort = "name-asc" | "name-desc" | "count-asc" | "count-desc";
@@ -79,7 +79,7 @@ export const getOrgFleet = cache(
       // ALL variants matching the same filters, so unowned ones show a zero
       const allVariants = await prisma.variant.findMany({
         where: variantWhere,
-        include: SHIP_VARIANT_INCLUDE,
+        select: SHIP_VARIANT_SELECT,
       });
 
       const countedFleet = allVariants.map((variant) => ({

@@ -4,7 +4,7 @@ import type { PositionType } from "../components/Position";
 
 export const checkRequirements = (
   position: PositionType,
-  myShips: Ship[],
+  myShips: readonly Pick<Ship, "variantId">[],
   allEventCitizens: EventCitizenWithShips[],
 ) => {
   let doesCurrentUserSatisfyRequirements = true;
