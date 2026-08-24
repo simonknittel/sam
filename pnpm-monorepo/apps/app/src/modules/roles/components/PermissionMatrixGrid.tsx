@@ -116,7 +116,12 @@ const MatrixRow = ({ role }: MatrixRowProps) => {
 
   return (
     <tr
-      className="grid items-center gap-2 -mx-2"
+      /**
+       * content-visibility lets the browser skip layout and paint for the
+       * rows outside the viewport; the intrinsic height keeps the scrollbar
+       * stable and must agree with the h-8 cells.
+       */
+      className="grid items-center gap-2 -mx-2 [contain-intrinsic-height:2rem] [content-visibility:auto]"
       style={{
         gridTemplateColumns,
       }}
