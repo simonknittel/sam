@@ -1,4 +1,4 @@
-import { TaskRewardType, TaskVisibility } from "@sam-monorepo/database/client";
+import { TaskRewardType, TaskVisibility } from "@sam-monorepo/database/browser";
 
 /**
  * The permission matrix rows: every permission the roles settings page
