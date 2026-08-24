@@ -5,6 +5,7 @@ import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { Button2 } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
+import clsx from "clsx";
 import { useState } from "react";
 import { FaHistory } from "react-icons/fa";
 import { restoreWikiPageSnapshot } from "../actions/restoreWikiPageSnapshot";
@@ -26,7 +27,12 @@ export const WikiSnapshotRestoreButton = ({
   });
 
   return (
-    <span className={className}>
+    /**
+     * inline-flex, not a bare inline span: the button inside is a flex box,
+     * which would otherwise split the span into anonymous block boxes whose
+     * border box covers the button.
+     */
+    <span className={clsx("inline-flex", className)}>
       <Button
         type="button"
         variant="tertiary"
