@@ -3,6 +3,12 @@ import { captureAsyncFunc } from "../common/xray";
 
 export const getRoleSalaries = async () => {
   return captureAsyncFunc("getRoleSalaries", async () => {
-    return await prisma.silcRoleSalary.findMany();
+    return await prisma.silcRoleSalary.findMany({
+      select: {
+        roleId: true,
+        value: true,
+        dayOfMonth: true,
+      },
+    });
   });
 };

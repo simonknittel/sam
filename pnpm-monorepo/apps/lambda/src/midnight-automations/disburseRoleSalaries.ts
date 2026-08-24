@@ -23,11 +23,13 @@ export const disburseRoleSalaries = async () => {
           some: {},
         },
       },
-      orderBy: {
-        handle: "asc",
-      },
-      include: {
-        roleAssignments: true,
+      select: {
+        id: true,
+        roleAssignments: {
+          select: {
+            roleId: true,
+          },
+        },
       },
     });
 
@@ -39,12 +41,17 @@ export const disburseRoleSalaries = async () => {
     const citizensGroupedByRole = new Map<
       string,
       {
-        role: Role;
-        citizens: Entity[];
+        role: Pick<Role, "id" | "name">;
+        citizens: Pick<Entity, "id">[];
       }
     >();
 
-    const allRoles = await prisma.role.findMany();
+    const allRoles = await prisma.role.findMany({
+      select: {
+        id: true,
+        name: true,
+      },
+    });
 
     if (allRoles.length <= 0) {
       log.info("No roles found");

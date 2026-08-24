@@ -29,6 +29,9 @@ export const updateCitizensSilcBalances = async (
           silcBalance: balance,
           totalEarnedSilc: totalEarned,
         },
+        select: {
+          id: true,
+        },
       });
     }
   });

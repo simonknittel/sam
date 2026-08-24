@@ -25,6 +25,11 @@ export const deleteCancelledEvents = async (
         not: null,
       },
     },
+    select: {
+      id: true,
+      source: true,
+      discordId: true,
+    },
   });
 
   const cancelledEvents = selectCancelledDiscordEvents(

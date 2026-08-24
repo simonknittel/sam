@@ -69,7 +69,15 @@ export const handler: ScheduledHandler = async (event, context) => {
           where: {
             discordId: futureEventFromDiscord.id,
           },
-          include: {
+          select: {
+            id: true,
+            name: true,
+            startTime: true,
+            endTime: true,
+            description: true,
+            location: true,
+            discordImage: true,
+            discordCreatorId: true,
             wikiPages: {
               where: {
                 parentId: null,
@@ -113,6 +121,9 @@ export const handler: ScheduledHandler = async (event, context) => {
                 location:
                   futureEventFromDiscord.entity_metadata.location || null,
                 discordImage: futureEventFromDiscord.image,
+              },
+              select: {
+                id: true,
               },
             });
 

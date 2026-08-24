@@ -16,6 +16,9 @@ export const updateParticipants = async (
       source: EventSource.DISCORD,
       deletedAt: null,
     },
+    select: {
+      id: true,
+    },
   });
   if (!databaseEvent) return;
 
@@ -28,6 +31,11 @@ export const updateParticipants = async (
       eventId: databaseEvent.id,
       source: EventSource.DISCORD,
       cancelledAt: null,
+    },
+    select: {
+      id: true,
+      citizenId: true,
+      discordUserId: true,
     },
   });
 
