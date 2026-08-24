@@ -64,6 +64,11 @@ const OPEN_ROUTES: readonly [route: string, marker: (page: Page) => Locator][] =
       "/app/uploads",
       (page) => page.getByText("Du hast bisher keine Dateien hochgeladen."),
     ],
+    /** The wiki only closes for a viewer without a citizen of their own */
+    [
+      "/app/wiki",
+      (page) => page.getByRole("heading", { name: "Seiten durchsuchen" }),
+    ],
   ];
 
 test("permission-gated routes are closed to a citizen without permissions", async ({
@@ -94,10 +99,11 @@ test("permission-gated routes are closed to a citizen without permissions", asyn
 });
 
 /**
- * The spynet settings are the one gate that sends visitors to the landing
- * page instead of rendering the forbidden boundary.
+ * The spynet settings are the one gate that redirects instead of rendering
+ * the forbidden boundary: it sends visitors to the landing page, which then
+ * bounces a signed-in one on to their dashboard.
  */
-test("the spynet settings send an unauthorized citizen to the landing page", async ({
+test("the spynet settings send an unauthorized citizen away", async ({
   page,
   prisma,
   signIn,
@@ -107,7 +113,10 @@ test("the spynet settings send an unauthorized citizen to the landing page", asy
 
   await page.goto("/app/spynet/settings");
 
-  await expect(page).toHaveURL("/", { timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(page).toHaveURL("/app/dashboard", {
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+  await expect(page.getByText(FORBIDDEN_TEXT)).toHaveCount(0);
 });
 
 test("an unknown route answers with 404", async ({ request }) => {
