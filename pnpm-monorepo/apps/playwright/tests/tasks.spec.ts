@@ -86,16 +86,22 @@ test("a task can be created and two of its fields edited through the shared fact
     { timeout: ACTION_FEEDBACK_TIMEOUT },
   );
 
-  // … and description
+  // … and description, which is edited through its own toggled textarea
   const descriptionSection = sectionByHeading(page, "Beschreibung");
-  const descriptionInput = page.locator('textarea[name="description"]');
-  await clickUntilVisible(editButtons(descriptionSection), descriptionInput);
+  const descriptionInput = descriptionSection.locator(
+    'textarea[name="description"]',
+  );
+  await clickUntilVisible(
+    descriptionSection.getByRole("button", { name: "Bearbeiten" }),
+    descriptionInput,
+  );
   await descriptionInput.fill("Begleitschutz von Lorville nach Everus Harbor.");
-  await saveInlineEditor(page);
+  await descriptionSection.getByRole("button", { name: "Speichern" }).click();
   await expect(descriptionSection).toContainText(
     "Begleitschutz von Lorville nach Everus Harbor.",
     { timeout: ACTION_FEEDBACK_TIMEOUT },
   );
+  await expect(descriptionInput).not.toBeVisible();
 
   const task = await prisma.task.findFirst();
   expect(task).toMatchObject({
@@ -133,8 +139,9 @@ test("a citizen without management permission cannot edit a task", async ({
   ).toBeVisible();
   // The self-service block of the Aktionen tile is there …
   await expect(page.getByRole("button", { name: "Aufgeben" })).toBeVisible();
-  // … but no inline editors and no management actions are rendered
+  // … but no editors and no management actions are rendered
   await expect(editButtons(page)).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Bearbeiten" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Abschließen" })).toHaveCount(
     0,
   );
