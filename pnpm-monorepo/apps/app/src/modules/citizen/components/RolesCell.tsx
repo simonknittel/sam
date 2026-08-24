@@ -1,23 +1,23 @@
 import { requireAuthentication } from "@/modules/auth/server";
 import { AddRoles } from "@/modules/citizen/components/roles/AddRoles";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
+import type { BadgeRole } from "@/modules/roles/queries/getRoles";
 import { getAssignedRoles } from "@/modules/roles/utils/getRoles";
 import {
   type Entity,
-  type Role,
   type RoleAssignment,
-  type Upload,
 } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 
 interface Props {
   readonly className?: string;
-  readonly entity: Entity & {
-    readonly roleAssignments: RoleAssignment[];
+  readonly entity: Pick<Entity, "id"> & {
+    readonly roleAssignments: readonly Pick<
+      RoleAssignment,
+      "roleId" | "currentLevel"
+    >[];
   };
-  readonly assignableRoles: (Role & {
-    icon: Upload | null;
-  })[];
+  readonly assignableRoles: readonly BadgeRole[];
 }
 
 export const RolesCell = async ({
@@ -52,11 +52,7 @@ export const RolesCell = async ({
               key={role.id}
               roleId={role.id}
               citizenId={entity.id}
-              citizenLevel={
-                role.assignments.find(
-                  (assignment) => assignment.citizenId === entity.id,
-                )!.currentLevel
-              }
+              citizenLevel={role.currentLevel}
             />
           ))}
         </div>

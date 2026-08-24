@@ -22,15 +22,23 @@ export const updateRoleInheritance = createAuthenticatedAction(
         requestPayload: formData,
       };
 
-    /**
-     * Update role
-     */
-    await prisma.role.findUnique({
+    const role = await prisma.role.findUnique({
       where: {
         id: data.id,
       },
+      select: {
+        id: true,
+      },
     });
+    if (!role)
+      return {
+        error: t("Common.notFound"),
+        requestPayload: formData,
+      };
 
+    /**
+     * Update role
+     */
     await prisma.role.update({
       where: {
         id: data.id,

@@ -13,10 +13,10 @@ export const getRoleById = cache(
         id,
       },
       include: {
-        permissionStrings: true,
-        inherits: true,
-        icon: true,
-        thumbnail: true,
+        permissionStrings: { select: { permissionString: true } },
+        inherits: { select: { id: true } },
+        icon: { select: { id: true, mimeType: true } },
+        thumbnail: { select: { id: true, mimeType: true } },
       },
     });
   }),

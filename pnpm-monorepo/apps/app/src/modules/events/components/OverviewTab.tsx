@@ -1,13 +1,12 @@
 import { requireAuthentication } from "@/modules/auth/server";
 import { Tile } from "@/modules/common/components/Tile";
+import type { BadgeRole } from "@/modules/roles/queries/getRoles";
 import { getAssignedRoles } from "@/modules/roles/utils/getRoles";
 import {
   EventSource,
   type Entity,
   type Event,
   type EventParticipant,
-  type Role,
-  type Upload,
   type VariantTag,
 } from "@sam-monorepo/database/client";
 import clsx from "clsx";
@@ -128,9 +127,7 @@ const ParticipantsSummary = async ({
   const countedRoles = new Map<
     string,
     {
-      role: Role & {
-        icon: Upload | null;
-      };
+      role: BadgeRole;
       count: number;
     }
   >();

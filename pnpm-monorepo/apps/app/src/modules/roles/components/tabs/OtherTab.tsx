@@ -10,7 +10,7 @@ import { RoleSection } from "./components/RoleSection";
 import { SpynetSection } from "./components/SpynetSection";
 
 interface Props {
-  readonly roles: Role[];
+  readonly roles: readonly Pick<Role, "id" | "name">[];
 }
 
 const OtherTab = ({ roles }: Readonly<Props>) => {

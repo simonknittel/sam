@@ -1,3 +1,4 @@
+import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import type { RoleAssignment } from "@sam-monorepo/database/client";
@@ -34,19 +35,28 @@ export const getVisibleRoles = cache(
   }),
 );
 
+/**
+ * The visible roles of one citizen, each carrying that citizen's level.
+ * The level comes from the citizen's own assignments, so the roles
+ * themselves never have to carry an assignment row per citizen.
+ */
 export const getAssignedRoles = cache(
   async (entity: {
-    readonly roleAssignments: readonly Pick<RoleAssignment, "roleId">[];
+    readonly roleAssignments: readonly Pick<
+      RoleAssignment,
+      "roleId" | "currentLevel"
+    >[];
   }) => {
     const visibleRoles = await getVisibleRoles();
 
-    const assignedRoles = visibleRoles.filter((role) =>
-      entity.roleAssignments.some(
+    return visibleRoles.flatMap((role) => {
+      const assignment = entity.roleAssignments.find(
         (assignment) => assignment.roleId === role.id,
-      ),
-    );
+      );
+      if (!assignment) return [];
 
-    return assignedRoles;
+      return [{ ...role, currentLevel: assignment.currentLevel }];
+    });
   },
 );
 
@@ -56,6 +66,32 @@ export const getMyAssignedRoles = cache(
     if (!authentication.session.entity) forbidden();
 
     return getAssignedRoles(authentication.session.entity);
+  }),
+);
+
+/**
+ * The viewer's assigned roles, each with the ids of the roles it inherits.
+ * Only the career flow needs the inheritance, to mark a node unlocked when
+ * the viewer reaches its role through another one — so the inherited ids
+ * are fetched for these few roles instead of riding along on every role in
+ * the app-wide roles context.
+ */
+export const getMyAssignedRolesWithInheritance = cache(
+  withTrace("getMyAssignedRolesWithInheritance", async () => {
+    const assignedRoles = await getMyAssignedRoles();
+
+    const inheritances = await prisma.role.findMany({
+      where: { id: { in: assignedRoles.map((role) => role.id) } },
+      select: { id: true, inherits: { select: { id: true } } },
+    });
+    const inheritsByRoleId = new Map(
+      inheritances.map((role) => [role.id, role.inherits]),
+    );
+
+    return assignedRoles.map((role) => ({
+      ...role,
+      inherits: inheritsByRoleId.get(role.id) ?? [],
+    }));
   }),
 );
 

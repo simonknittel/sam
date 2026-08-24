@@ -5,7 +5,6 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
-import { getRoles } from "@/modules/roles/queries/getRoles";
 import { RoleAssignmentChangeType } from "@sam-monorepo/database/client";
 import { z } from "zod";
 
@@ -43,7 +42,11 @@ export const updateRoleAssignments = createAuthenticatedAction(
      *
      */
     const [allRoles, currentRoleAssignments] = await Promise.all([
-      getRoles(),
+      prisma.role.findMany({
+        select: {
+          id: true,
+        },
+      }),
 
       prisma.roleAssignment.findMany({
         where: {

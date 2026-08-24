@@ -2,7 +2,7 @@
 
 import { SortableTable } from "@/modules/common/components/SortableTable";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
-import type { Role, Upload } from "@sam-monorepo/database/browser";
+import type { BadgeRole } from "@/modules/roles/queries/getRoles";
 import {
   createColumnHelper,
   getCoreRowModel,
@@ -14,9 +14,7 @@ import clsx from "clsx";
 import { useMemo, useState } from "react";
 
 interface Row {
-  role: Role & {
-    icon: Upload | null;
-  };
+  role: BadgeRole;
   count: number;
 }
 

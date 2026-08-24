@@ -22,16 +22,17 @@ export const resolveWikiRoleCitizens = withTrace(
      * Deliberately direct assignments only: a role inherited through
      * another one is not "assigned" to anybody.
      */
-    const citizenIds = role.assignments
-      .filter(
-        (assignment) =>
-          !role.maxLevel || (assignment.currentLevel ?? 0) >= role.maxLevel,
-      )
-      .map((assignment) => assignment.citizenId);
-    if (citizenIds.length <= 0) return [];
-
     const citizens = await prisma.entity.findMany({
-      where: { id: { in: citizenIds } },
+      where: {
+        roleAssignments: {
+          some: {
+            roleId: role.id,
+            ...(role.maxLevel
+              ? { currentLevel: { gte: role.maxLevel } }
+              : undefined),
+          },
+        },
+      },
       select: { id: true, handle: true },
     });
 

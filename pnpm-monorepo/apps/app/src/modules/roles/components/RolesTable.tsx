@@ -13,7 +13,7 @@ import {
   parseAsStringLiteral,
   type SearchParams,
 } from "nuqs/server";
-import { getRoles } from "../queries/getRoles";
+import { getRolesForTable } from "../queries/getRoles";
 
 const COLUMNS = "300px minmax(200px,1fr) 128px 128px 128px 80px 80px";
 
@@ -44,7 +44,7 @@ interface Props {
 export const RolesTable = async ({ className, searchParams }: Props) => {
   const { filter, sort, q } = await loadSearchParams(searchParams);
 
-  const roles = await getRoles(true);
+  const roles = await getRolesForTable();
 
   const filteredRoles = roles.filter((role) => {
     if (q) {
@@ -55,13 +55,13 @@ export const RolesTable = async ({ className, searchParams }: Props) => {
     }
     switch (filter) {
       case "has-inheritance":
-        return role.inherits.length > 0;
+        return role._count.inherits > 0;
       case "has-level":
         return role.maxLevel != null;
       case "has-citizen":
-        return role.assignments.length > 0;
+        return role._count.assignments > 0;
       case "no-citizen":
-        return role.assignments.length === 0;
+        return role._count.assignments === 0;
       default:
         return true;
     }
@@ -74,15 +74,15 @@ export const RolesTable = async ({ className, searchParams }: Props) => {
       case "name-desc":
         return sortDescAndNullLast(a.name, b.name);
       case "inherits-desc":
-        return sortDescAndNullLast(a.inherits.length, b.inherits.length);
+        return sortDescAndNullLast(a._count.inherits, b._count.inherits);
       case "inherits-asc":
-        return sortAscWithAndNullLast(a.inherits.length, b.inherits.length);
+        return sortAscWithAndNullLast(a._count.inherits, b._count.inherits);
       case "citizen-desc":
-        return sortDescAndNullLast(a.assignments.length, b.assignments.length);
+        return sortDescAndNullLast(a._count.assignments, b._count.assignments);
       case "citizen-asc":
         return sortAscWithAndNullLast(
-          a.assignments.length,
-          b.assignments.length,
+          a._count.assignments,
+          b._count.assignments,
         );
       default:
         throw new Error(`Unknown sort: ${sort satisfies never}`);
@@ -160,7 +160,7 @@ export const RolesTable = async ({ className, searchParams }: Props) => {
                   className="flex items-center justify-center gap-2 hover:bg-white/10 px-2 rounded-secondary h-8"
                   prefetch={false}
                 >
-                  {role.inherits.length > 0 ? role.inherits.length : null}
+                  {role._count.inherits > 0 ? role._count.inherits : null}
                 </Link>
               </td>
 
@@ -176,7 +176,7 @@ export const RolesTable = async ({ className, searchParams }: Props) => {
                   className="flex items-center justify-center gap-2 hover:bg-white/10 px-2 rounded-secondary h-8"
                   prefetch={false}
                 >
-                  {role.assignments.length > 0 ? role.assignments.length : null}
+                  {role._count.assignments > 0 ? role._count.assignments : null}
                 </Link>
               </td>
             </TRow>

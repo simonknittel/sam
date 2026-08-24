@@ -1,25 +1,18 @@
 "use client";
 
-import type { Role, Upload } from "@sam-monorepo/database/browser";
+import type { BadgeRole } from "@/modules/roles/queries/getRoles";
 import type { ReactNode } from "react";
 import { createContext, useContext, useMemo } from "react";
 
 interface RolesContext {
-  readonly roles: (Role & {
-    icon: Upload | null;
-    thumbnail: Upload | null;
-  })[];
+  readonly roles: readonly BadgeRole[];
 }
 
 const RolesContext = createContext<RolesContext | undefined>(undefined);
 
 interface Props {
   readonly children: ReactNode;
-  readonly roles: (Role & {
-    icon: Upload | null;
-    thumbnail: Upload | null;
-    inherits: Role[];
-  })[];
+  readonly roles: readonly BadgeRole[];
 }
 
 export const RolesContextProvider = ({ children, roles }: Props) => {

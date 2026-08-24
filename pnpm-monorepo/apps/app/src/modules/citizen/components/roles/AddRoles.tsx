@@ -4,11 +4,8 @@ import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import Modal from "@/modules/common/components/Modal";
-import {
-  type Entity,
-  type Role,
-  type Upload,
-} from "@sam-monorepo/database/browser";
+import type { BadgeRole } from "@/modules/roles/queries/getRoles";
+import { type Entity, type Role } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import Fuse, { type FuseResult } from "fuse.js";
 
@@ -20,7 +17,7 @@ import { FaPen } from "react-icons/fa";
 import { RoleCheckbox } from "./RoleCheckbox";
 import { UpdateRolesForm } from "./UpdateRolesForm";
 
-type RoleWithIcon = Role & { icon: Upload | null };
+type RoleWithIcon = BadgeRole;
 
 interface Props {
   readonly className?: string;

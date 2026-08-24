@@ -1,7 +1,8 @@
 import { prisma } from "@/db";
+import type { BadgeRole } from "@/modules/roles/queries/getRoles";
 import { getVisibleRoles } from "@/modules/roles/utils/getRoles";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import type { Entity, Role, Upload } from "@sam-monorepo/database/client";
+import type { Entity } from "@sam-monorepo/database/client";
 import { cache } from "react";
 
 export const getCitizensGroupedByVisibleRoles = cache(
@@ -25,9 +26,7 @@ export const getCitizensGroupedByVisibleRoles = cache(
     const groupedCitizens = new Map<
       string,
       {
-        role: Role & {
-          icon: Upload | null;
-        };
+        role: BadgeRole;
         citizens: Entity[];
       }
     >();
