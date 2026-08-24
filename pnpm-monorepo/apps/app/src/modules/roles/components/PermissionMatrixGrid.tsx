@@ -2,7 +2,6 @@
 
 import { runAction } from "@/modules/actions/utils/runAction";
 import { Link } from "@/modules/common/components/Link";
-import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
 import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
 import type { Role, Upload } from "@sam-monorepo/database/browser";
 import Image from "next/image";
@@ -24,6 +23,14 @@ const permissions = STATIC_PERMISSIONS.toSorted((a, b) =>
 );
 
 const gridTemplateColumns = `240px repeat(${permissions.length}, 32px)`;
+
+const getPermissionLabel = (
+  permission: (typeof STATIC_PERMISSIONS)[number],
+) => {
+  return permission.section
+    ? `${permission.section} / ${permission.title}`
+    : permission.title;
+};
 
 interface Props {
   readonly roles: readonly MatrixRole[];
@@ -143,15 +150,49 @@ const MatrixRow = ({ role }: MatrixRowProps) => {
       </td>
 
       {permissions.map((permission) => (
-        <td key={permission.string}>
-          <YesNoCheckbox
-            name={`${role.id}_${permission.string}`}
-            defaultChecked={grantedPermissionStrings.has(permission.string)}
-            yesLabel=""
-            noLabel=""
-          />
-        </td>
+        <MatrixCell
+          key={permission.string}
+          roleId={role.id}
+          permissionString={permission.string}
+          label={`${getPermissionLabel(permission)} – ${role.name}`}
+          defaultChecked={grantedPermissionStrings.has(permission.string)}
+        />
       ))}
     </tr>
+  );
+};
+
+interface MatrixCellProps {
+  readonly roleId: MatrixRole["id"];
+  readonly permissionString: string;
+  readonly label: string;
+  readonly defaultChecked: boolean;
+}
+
+/**
+ * A deliberately minimal checkbox: the matrix renders thousands of these
+ * cells, so every element counts. The check mark comes from the mask-check
+ * utility instead of the two inline SVGs that YesNoCheckbox renders, and
+ * the label and title name the cell, which the matrix cannot do visually.
+ */
+const MatrixCell = ({
+  roleId,
+  permissionString,
+  label,
+  defaultChecked,
+}: MatrixCellProps) => {
+  return (
+    <td>
+      <label className="group flex cursor-pointer" title={label}>
+        <input
+          type="checkbox"
+          className="peer sr-only"
+          name={`${roleId}_${permissionString}`}
+          defaultChecked={defaultChecked}
+          aria-label={label}
+        />
+        <span className="size-8 rounded-secondary bg-neutral-700 group-active:bg-neutral-600 peer-focus-visible:outline-solid peer-focus-visible:outline-1 peer-focus-visible:outline-offset-1 after:block after:size-full after:mask-check after:bg-green-500 after:opacity-0 peer-checked:after:opacity-100 group-hover:peer-[:not(:checked)]:after:opacity-50 peer-focus:peer-[:not(:checked)]:after:opacity-50" />
+      </label>
+    </td>
   );
 };

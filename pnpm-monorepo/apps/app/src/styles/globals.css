@@ -107,6 +107,19 @@
   }
 }
 
+/**
+ * Check mark carved out of the element's background color. The path is
+ * react-icons' FaCheck, so the shape agrees with the YesNoCheckbox icon;
+ * 1.5rem agrees with its size-6 icon. The permission matrix renders
+ * thousands of these cells, which rules out one inline SVG per cell.
+ */
+@utility mask-check {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M173.898%20439.404l-166.4-166.4c-9.997-9.997-9.997-26.206%200-36.204l36.203-36.204c9.997-9.998%2026.207-9.998%2036.204%200L192%20312.69%20432.095%2072.596c9.997-9.997%2026.207-9.997%2036.204%200l36.203%2036.204c9.997%209.997%209.997%2026.206%200%2036.204l-294.4%20294.401c-9.998%209.997-26.207%209.997-36.204-.001z'/%3E%3C/svg%3E");
+  mask-size: 1.5rem;
+  mask-position: center;
+  mask-repeat: no-repeat;
+}
+
 @utility prose {
   & a {
     color: var(--color-interaction-500);
