@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 import { createCitizen, createOnSiteNotification } from "../fixtures/factories";
+import { ACTION_FEEDBACK_TIMEOUT } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 const bellButton = (page: Page) =>
@@ -43,7 +44,9 @@ test("unread notifications drive the bell dot and the tab title", async ({
   await page.goto("/app");
 
   // Often the worker's first page load — warm-up can exceed the default 5s
-  await expect(page).toHaveTitle(/^\(2\)/, { timeout: 15_000 });
+  await expect(page).toHaveTitle(/^\(2\)/, {
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
   await expect(bellButton(page).locator(".bg-amber-500").first()).toBeVisible();
 });
 

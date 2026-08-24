@@ -4,7 +4,11 @@ import {
   OrganizationMembershipVisibility,
   RoleAssignmentChangeType,
 } from "@sam-monorepo/database/client";
-import { createCitizen } from "../fixtures/factories";
+import {
+  createCitizen,
+  ONE_DAY_MS,
+  ONE_MINUTE_MS,
+} from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilUrl,
@@ -14,9 +18,6 @@ import { expect, test } from "../fixtures/test";
 
 /** Mirrors ACTIVITY_PAGE_SIZE of the app's activity module */
 const ACTIVITY_PAGE_SIZE = 50;
-
-const ONE_MINUTE_MS = 60_000;
-const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 const dateParam = (date: Date) => date.toISOString().slice(0, 10);
 
@@ -137,6 +138,7 @@ test("the citizen's role history only shows for readable roles", async ({
   page,
   prisma,
   signIn,
+  switchUser,
 }) => {
   const target = await createCitizen(prisma, { handle: "zielperson" });
 
@@ -165,8 +167,7 @@ test("the citizen's role history only shows for readable roles", async ({
   });
   await expect(page.locator("tbody tr")).toHaveCount(1);
 
-  await page.context().clearCookies();
-  await signIn(outsider.user);
+  await switchUser(outsider.user);
   await page.goto(`/app/spynet/citizen/${target.entity.id}/roles`);
   await expect(page.getByRole("heading", { name: "Rollen" })).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,

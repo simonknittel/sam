@@ -6,7 +6,7 @@ import {
   WikiPageVisibility,
   wikiParagraph,
 } from "../fixtures/factories";
-import { clickUntilUrl } from "../fixtures/interactions";
+import { clickUntilUrl, NOT_FOUND_TEXT } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 test("a seeded page renders its title and content", async ({
@@ -65,7 +65,7 @@ test("an unknown page id renders the 404 page", async ({
   // 200 — the rendered 404 UI is the observable behavior
   await page.goto("/app/wiki/does-not-exist");
 
-  await expect(page.getByText("Page not found")).toBeVisible();
+  await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
 });
 
 test("the sidebar tree links between pages", async ({

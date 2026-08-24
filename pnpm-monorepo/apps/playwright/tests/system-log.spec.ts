@@ -1,13 +1,12 @@
-import { createCitizen } from "../fixtures/factories";
+import { createCitizen, ONE_DAY_MS } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
   fillUntilUrl,
+  FORBIDDEN_TEXT,
   modal,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
-
-const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 const dateParam = (date: Date) => date.toISOString().slice(0, 10);
 
@@ -95,7 +94,7 @@ test("the system log is forbidden without the permission", async ({
   await signIn(citizen.user);
   await page.goto("/app/system-log");
 
-  await expect(
-    page.getByText("Du bist nicht berechtigt dies zu sehen."),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
 });

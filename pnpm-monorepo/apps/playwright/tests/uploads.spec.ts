@@ -1,17 +1,16 @@
 import path from "node:path";
-import {
-  createCitizen,
-  createRole,
-  createWikiPage,
-  WikiPageEditability,
-  WikiPageVisibility,
-} from "../fixtures/factories";
+import { createCitizen, createRole } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
-import { enterEditMode, focusEditor } from "../fixtures/wiki-editor";
+import {
+  enterEditMode,
+  expectPersisted,
+  focusEditor,
+  seedEditablePage,
+} from "../fixtures/wiki-editor";
 
 /** 64x48 PNG — the dimension probe persists these on the Upload row. */
 const imagePath = path.join(
@@ -97,11 +96,7 @@ test("an image uploaded to a wiki page is stored, displayed and persisted", asyn
     handle: "wiki-manager",
     permissionStrings: ["wiki;manage"],
   });
-  const wikiPage = await createWikiPage(prisma, {
-    title: "Bilderseite",
-    visibility: WikiPageVisibility.PUBLIC,
-    editability: WikiPageEditability.ALL,
-  });
+  const wikiPage = await seedEditablePage(prisma, { title: "Bilderseite" });
   await signIn(manager.user);
 
   await page.goto(`/app/wiki/${wikiPage.id}/${wikiPage.slug}`);
@@ -154,19 +149,7 @@ test("an image uploaded to a wiki page is stored, displayed and persisted", asyn
     )
     .toEqual({ width: IMAGE_WIDTH, height: IMAGE_HEIGHT });
 
-  // The collab server persists the content with a 2s store debounce
-  await expect
-    .poll(
-      async () => {
-        const stored = await prisma.wikiPage.findUniqueOrThrow({
-          where: { id: wikiPage.id },
-          select: { content: true },
-        });
-        return JSON.stringify(stored.content);
-      },
-      { timeout: 20_000 },
-    )
-    .toContain(upload.id);
+  await expectPersisted(prisma, wikiPage.id, "content").toContain(upload.id);
 
   // The read view renders the persisted image
   await page.reload();

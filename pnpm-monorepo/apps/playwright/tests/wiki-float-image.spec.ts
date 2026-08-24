@@ -1,12 +1,10 @@
-import {
-  createCitizen,
-  createWikiPage,
-  wikiDocument,
-  WikiPageEditability,
-  WikiPageVisibility,
-} from "../fixtures/factories";
+import { createCitizen, wikiDocument } from "../fixtures/factories";
 import { expect, test } from "../fixtures/test";
-import { enterEditMode } from "../fixtures/wiki-editor";
+import {
+  enterEditMode,
+  expectPersisted,
+  seedEditablePage,
+} from "../fixtures/wiki-editor";
 
 /**
  * Self-contained image so the tests need no upload stack — data srcs are
@@ -36,10 +34,8 @@ test("the image menu floats a block image into the neighboring paragraph", async
   signIn,
 }) => {
   const editor = await createCitizen(prisma, { handle: "editor" });
-  const wikiPage = await createWikiPage(prisma, {
+  const wikiPage = await seedEditablePage(prisma, {
     title: "Umflossene Bilder",
-    visibility: WikiPageVisibility.PUBLIC,
-    editability: WikiPageEditability.ALL,
     content: wikiDocument(
       { type: "image", attrs: { src: IMAGE_SRC, widthPx: 240 } },
       narrowParagraph(),
@@ -81,19 +77,9 @@ test("the image menu floats a block image into the neighboring paragraph", async
     page.getByRole("separator", { name: "Breite ändern" }),
   ).toHaveCount(2);
 
-  // The collab server persists the converted document with a 2s debounce
-  await expect
-    .poll(
-      async () => {
-        const stored = await prisma.wikiPage.findUniqueOrThrow({
-          where: { id: wikiPage.id },
-          select: { content: true },
-        });
-        return JSON.stringify(stored.content);
-      },
-      { timeout: 20_000 },
-    )
-    .toContain('"wikiFloatImage"');
+  await expectPersisted(prisma, wikiPage.id, "content").toContain(
+    '"wikiFloatImage"',
+  );
 
   // The static read view renders the same float
   await page.reload();
@@ -108,10 +94,8 @@ test("a floated image switches sides and unfloats back into a block image", asyn
   signIn,
 }) => {
   const editor = await createCitizen(prisma, { handle: "editor" });
-  const wikiPage = await createWikiPage(prisma, {
+  const wikiPage = await seedEditablePage(prisma, {
     title: "Umfluss wechseln",
-    visibility: WikiPageVisibility.PUBLIC,
-    editability: WikiPageEditability.ALL,
     content: wikiDocument({
       type: "paragraph",
       attrs: { widthPx: 480 },

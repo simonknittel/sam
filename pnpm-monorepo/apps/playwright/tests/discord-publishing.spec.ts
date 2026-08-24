@@ -1,4 +1,3 @@
-import { EventVisibility } from "@sam-monorepo/database/client";
 import {
   MOCK_STAGE_CHANNEL,
   MOCK_TEXT_CHANNEL,
@@ -8,27 +7,24 @@ import {
   assignRole,
   createAppEvent,
   createCitizen,
+  createEvent,
   createEventTemplate,
   createRole,
+  EventVisibility,
+  futureEvent,
 } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
+  NOT_FOUND_TEXT,
+  SAVED_TEXT,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
-
-const ONE_HOUR_MS = 60 * 60 * 1000;
-const ONE_DAY_MS = 24 * ONE_HOUR_MS;
 
 /** Discord's guild scheduled event entity types */
 const VOICE_ENTITY_TYPE = 2;
 const STAGE_ENTITY_TYPE = 1;
 const EXTERNAL_ENTITY_TYPE = 3;
-
-const futureEvent = () => ({
-  startTime: new Date(Date.now() + ONE_DAY_MS),
-  endTime: new Date(Date.now() + ONE_DAY_MS + 2 * ONE_HOUR_MS),
-});
 
 test("the organizer publishes the event into a voice channel and unpublishes it again", async ({
   page,
@@ -249,7 +245,7 @@ test("editing a published event updates it on Discord, deleting it removes it", 
   await page.getByLabel("Titel").fill("Operation Zweitfassung");
   await page.getByLabel("Beschreibung").fill("Jetzt mit Beschreibung.");
   await page.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText("Erfolgreich gespeichert")).toBeVisible({
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
 
@@ -309,7 +305,7 @@ test("an event deleted on Discord's side is marked as unpublished again", async 
   await waitForAppShellHydration(page);
   await page.getByLabel("Titel").fill("Operation Abdrift II");
   await page.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText("Erfolgreich gespeichert")).toBeVisible({
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await expect(
@@ -592,19 +588,15 @@ test("a Discord-sourced event offers no publishing at all", async ({
     handle: "discord-event-manager",
     permissionStrings: ["event;read", "event;manage"],
   });
-  const event = await prisma.event.create({
-    data: {
-      source: "DISCORD",
-      discordId: "some-discord-event",
-      discordCreatorId: "some-discord-organizer",
-      name: "Operation Fremdimport",
-      ...futureEvent(),
-    },
+  const event = await createEvent(prisma, {
+    name: "Operation Fremdimport",
+    discordCreatorId: "some-discord-organizer",
+    startTime: futureEvent().startTime,
   });
 
   await signIn(manager.user);
   await page.goto(`/app/events/${event.id}/settings`);
 
   // Discord events have no settings tab at all
-  await expect(page.getByText("Page not found")).toBeVisible();
+  await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
 });

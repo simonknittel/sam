@@ -4,6 +4,7 @@ import {
   createWikiPage,
   WikiPageVisibility,
 } from "../fixtures/factories";
+import { COLLAB_PERSISTENCE_TIMEOUT } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 import { collabJwtSecret } from "../setup/stack";
 
@@ -92,7 +93,7 @@ test("a programmatic /replace creates suppressed links only", async ({
           },
           select: { suppressedAt: true, notifiedAt: true },
         }),
-      { timeout: 20_000 },
+      { timeout: COLLAB_PERSISTENCE_TIMEOUT },
     )
     .toEqual({ suppressedAt: expect.any(Date), notifiedAt: null });
 

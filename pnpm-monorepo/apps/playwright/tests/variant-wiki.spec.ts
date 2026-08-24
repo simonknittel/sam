@@ -17,6 +17,7 @@ import {
   clickUntilVisible,
   fillUntilVisible,
   modal,
+  NOT_FOUND_TEXT,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
@@ -154,7 +155,7 @@ test("pages outside the subtree 404 under the variant routes", async ({
     `/app/fleet/variant/${variant.id}/wiki/${outsidePage.id}/${outsidePage.slug}`,
   );
 
-  await expect(page.getByText("Page not found")).toBeVisible();
+  await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
 });
 
 test("a variant without a linked page shows no wiki section", async ({
@@ -216,7 +217,7 @@ test("an unreadable linked page hides the embed and 404s its routes", async ({
   await page.goto(
     `/app/fleet/variant/${variant.id}/wiki/${childPage.id}/${childPage.slug}`,
   );
-  await expect(page.getByText("Page not found")).toBeVisible();
+  await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
 });
 
 test("the linked root is locked inside the embed, its children are not", async ({

@@ -1,22 +1,21 @@
 import type { Locator, Page } from "@playwright/test";
 import type { PrismaClient } from "@sam-monorepo/database/client";
 import { TaskRewardType, TaskVisibility } from "@sam-monorepo/database/client";
+import { expectAuditEvents } from "../fixtures/audit";
 import { createCitizen, type Citizen } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
+  FORBIDDEN_TEXT,
   modal,
+  SAVED_TEXT,
   saveInlineEditor,
+  sectionByHeading,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 const editButtons = (scope: Locator | Page) =>
   scope.locator('button[title="Klicken, um zu bearbeiten"]');
-
-const tileSection = (page: Page, heading: string) =>
-  page
-    .locator("section")
-    .filter({ has: page.getByRole("heading", { name: heading, exact: true }) });
 
 const createSilcTask = (
   prisma: PrismaClient,
@@ -68,7 +67,7 @@ test("a task can be created and two of its fields edited through the shared fact
   await createModal.getByRole("button", { name: "Weiter" }).click();
   await createModal.getByRole("button", { name: "Speichern" }).click();
 
-  await expect(page.getByText("Erfolgreich gespeichert.")).toBeVisible({
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await expect(createModal).not.toBeVisible();
@@ -88,7 +87,7 @@ test("a task can be created and two of its fields edited through the shared fact
   );
 
   // … and description
-  const descriptionSection = tileSection(page, "Beschreibung");
+  const descriptionSection = sectionByHeading(page, "Beschreibung");
   const descriptionInput = page.locator('textarea[name="description"]');
   await clickUntilVisible(editButtons(descriptionSection), descriptionInput);
   await descriptionInput.fill("Begleitschutz von Lorville nach Everus Harbor.");
@@ -103,11 +102,10 @@ test("a task can be created and two of its fields edited through the shared fact
     title: "Titan-Erz eskortieren",
     description: "Begleitschutz von Lorville nach Everus Harbor.",
   });
-  const auditEventTypes = (await prisma.auditEvent.findMany()).map(
-    (auditEvent) => auditEvent.type,
-  );
-  expect(auditEventTypes).toContain("TASK_TITLE_UPDATED");
-  expect(auditEventTypes).toContain("TASK_DESCRIPTION_UPDATED");
+  await expectAuditEvents(prisma, [
+    "TASK_TITLE_UPDATED",
+    "TASK_DESCRIPTION_UPDATED",
+  ]);
 });
 
 test("a citizen without management permission cannot edit a task", async ({
@@ -226,9 +224,7 @@ test("the dashboard works for citizens without task permission", async ({
   await expect(page.getByRole("heading", { name: "Spynet" })).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
-  await expect(
-    page.getByText("Du bist nicht berechtigt dies zu sehen."),
-  ).not.toBeVisible();
+  await expect(page.getByText(FORBIDDEN_TEXT)).not.toBeVisible();
   await expect(page.getByText("Meine Tasks")).toHaveCount(0);
   await expect(page.getByText("Neue Tasks")).toHaveCount(0);
 });
@@ -248,7 +244,7 @@ test("the dashboard shows the task tiles to citizens with task permission", asyn
   await signIn(worker.user);
   await page.goto("/app/dashboard");
 
-  const myTasksTile = tileSection(page, "Meine Tasks");
+  const myTasksTile = sectionByHeading(page, "Meine Tasks");
   await expect(myTasksTile).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
   await expect(myTasksTile).toContainText("Patrouille fliegen");
 });

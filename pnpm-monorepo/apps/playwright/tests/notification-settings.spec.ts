@@ -3,6 +3,7 @@ import { NotificationChannel } from "@sam-monorepo/database/client";
 import { createCitizen } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
+  SAVED_TEXT,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
@@ -66,7 +67,7 @@ test("disabling a browser notification persists a disabled setting", async ({
   await expect(browserCheckbox(page, "event_created")).toBeChecked();
   await browserCheckboxLabel(page, "event_created").click();
   await expect(browserCheckbox(page, "event_created")).not.toBeChecked();
-  await expect(page.getByText("Erfolgreich gespeichert")).toBeVisible({
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
 
@@ -106,7 +107,7 @@ test("re-enabling a browser notification deletes the disabled setting", async ({
   await expect(browserCheckbox(page, "event_created")).not.toBeChecked();
   await browserCheckboxLabel(page, "event_created").click();
   await expect(browserCheckbox(page, "event_created")).toBeChecked();
-  await expect(page.getByText("Erfolgreich gespeichert")).toBeVisible({
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
 

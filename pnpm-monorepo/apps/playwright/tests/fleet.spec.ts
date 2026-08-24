@@ -1,4 +1,3 @@
-import type { Page } from "@playwright/test";
 import { VariantStatus } from "@sam-monorepo/database/client";
 import {
   addCitizenToOrganization,
@@ -9,19 +8,14 @@ import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilUrl,
   clickUntilVisible,
+  DELETED_TEXT,
   fillUntilUrl,
   modal,
+  SAVED_TEXT,
   saveInlineEditor,
+  statisticTile,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
-
-/**
- * The StatisticTile value animates through random digits (ScrambleIn), but
- * an sr-only span carries the real value from the start — the label's
- * parent is the tile, and toContainText reads text content including it.
- */
-const statisticTile = (page: Page, label: string) =>
-  page.getByText(label, { exact: true }).locator("..");
 
 test("the org fleet filters narrow the server-rendered table", async ({
   page,
@@ -129,7 +123,7 @@ test("my ships can be added, renamed and deleted with consistent org counts", as
   await addModal.locator("select").selectOption({ label: "Polaris" });
   await addModal.getByLabel("Schiffsname").fill("Sternenfaust");
   await addModal.getByRole("button", { name: "Hinzufügen" }).click();
-  await expect(page.getByText("Erfolgreich gespeichert")).toBeVisible({
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await expect(addModal).not.toBeVisible();
@@ -172,7 +166,7 @@ test("my ships can be added, renamed and deleted with consistent org counts", as
     .getByRole("alertdialog")
     .getByRole("button", { name: "Löschen" })
     .click();
-  await expect(page.getByText("Erfolgreich gelöscht")).toBeVisible({
+  await expect(page.getByText(DELETED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await expect(page.getByText("Keine Schiffe gefunden")).toBeVisible({
@@ -298,7 +292,7 @@ test("manufacturers and series can be managed through the REST-backed settings",
   );
   await nameInput.fill("Aegis Dynamics GmbH");
   await saveInlineEditor(page);
-  await expect(page.getByText("Erfolgreich gespeichert")).toBeVisible({
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await expect
@@ -317,7 +311,7 @@ test("manufacturers and series can be managed through the REST-backed settings",
   });
   await expect(saveSeriesButton).toBeEnabled();
   await saveSeriesButton.click();
-  await expect(page.getByText("Erfolgreich gespeichert")).toBeVisible({
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await expect(page.getByRole("link", { name: "Avenger" })).toBeVisible({

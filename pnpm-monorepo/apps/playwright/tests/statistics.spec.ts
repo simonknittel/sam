@@ -1,7 +1,16 @@
 import type { Page } from "@playwright/test";
 import { VariantStatus } from "@sam-monorepo/database/client";
-import { createCitizen, createVariant } from "../fixtures/factories";
-import { ACTION_FEEDBACK_TIMEOUT } from "../fixtures/interactions";
+import {
+  createCitizen,
+  createVariant,
+  ONE_DAY_MS,
+  ONE_HOUR_MS,
+} from "../fixtures/factories";
+import {
+  ACTION_FEEDBACK_TIMEOUT,
+  FORBIDDEN_TEXT,
+  sectionByHeading,
+} from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 const CHART_TITLES = [
@@ -16,17 +25,12 @@ const CHART_TITLES = [
   "SILC",
 ];
 
-const chartSection = (page: Page, title: string) =>
-  page
-    .locator("section")
-    .filter({ has: page.getByRole("heading", { name: title, exact: true }) });
-
 /**
  * Counts non-transparent pixels. An empty-but-mounted canvas passes
  * DOM-only checks — this catches the "flatlined chart" class of bug.
  */
 const countPaintedPixels = (page: Page, title: string) =>
-  chartSection(page, title)
+  sectionByHeading(page, title)
     .locator("canvas")
     .first()
     .evaluate((element) => {
@@ -65,7 +69,7 @@ test("all nine statistics charts paint their canvases", async ({
    * shifted back 12 hours before bucketing — 30 hours ago is safely on a
    * past axis day.
    */
-  const THIRTY_HOURS_MS = 30 * 60 * 60 * 1000;
+  const THIRTY_HOURS_MS = 30 * ONE_HOUR_MS;
   const snapshotDate = new Date(Date.now() - THIRTY_HOURS_MS);
   const { variant } = await createVariant(prisma, {
     manufacturerName: "Roberts Space Industries",
@@ -79,7 +83,6 @@ test("all nine statistics charts paint their canvases", async ({
   await prisma.roleCitizenCount.create({
     data: { roleId: viewer.role.id, count: 3, createdAt: snapshotDate },
   });
-  const ONE_DAY_MS = 24 * 60 * 60 * 1000;
   await prisma.dailyLoginCount.create({
     data: { date: new Date(Date.now() - ONE_DAY_MS), count: 5 },
   });
@@ -101,7 +104,7 @@ test("all nine statistics charts paint their canvases", async ({
 
   for (const title of CHART_TITLES) {
     await expect(
-      chartSection(page, title).locator("canvas").first(),
+      sectionByHeading(page, title).locator("canvas").first(),
     ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
     await expect
       .poll(() => countPaintedPixels(page, title), {
@@ -122,7 +125,7 @@ test("statistics are forbidden without the permission", async ({
   await signIn(citizen.user);
   await page.goto("/app/statistics");
 
-  await expect(
-    page.getByText("Du bist nicht berechtigt dies zu sehen."),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
 });

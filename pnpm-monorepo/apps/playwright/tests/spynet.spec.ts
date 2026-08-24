@@ -5,15 +5,14 @@ import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilUrl,
   clickUntilVisible,
+  DELETED_TEXT,
+  FORBIDDEN_TEXT,
   modal,
+  SAVED_TEXT,
+  sectionByHeading,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
-
-const tileSection = (page: Page, heading: string) =>
-  page
-    .locator("section")
-    .filter({ has: page.getByRole("heading", { name: heading, exact: true }) });
 
 test("the citizen detail tabs render for a fully permitted viewer", async ({
   page,
@@ -57,9 +56,7 @@ test("the citizen detail tabs render for a fully permitted viewer", async ({
     await expect(page).toHaveURL(
       `/app/spynet/citizen/${target.entity.id}${tab.path}`,
     );
-    await expect(
-      page.getByText("Du bist nicht berechtigt dies zu sehen."),
-    ).toHaveCount(0);
+    await expect(page.getByText(FORBIDDEN_TEXT)).toHaveCount(0);
   }
 });
 
@@ -67,6 +64,7 @@ test("notes respect their classification level", async ({
   page,
   prisma,
   signIn,
+  switchUser,
 }) => {
   const noteType = await prisma.noteType.create({
     data: { name: "Beobachtung" },
@@ -121,7 +119,7 @@ test("notes respect their classification level", async ({
   await notePanel("Beobachtung")
     .getByRole("button", { name: "Speichern" })
     .click();
-  await expect(page.getByText("Erfolgreich gespeichert")).toBeVisible({
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await expect(page.getByText(noteContent)).toBeVisible({
@@ -153,16 +151,14 @@ test("notes respect their classification level", async ({
   await expect(notePanel("Gerücht").getByRole("textbox")).toHaveValue(draft);
 
   // A reader with only readRedacted sees a redacted note, not the content
-  await page.context().clearCookies();
-  await signIn(redactedReader.user);
+  await switchUser(redactedReader.user);
   await page.goto(`/app/spynet/citizen/${target.entity.id}/notes`);
   await page.getByRole("tab", { name: "Beobachtung" }).click();
   await expect(page.getByText("Redacted").first()).toBeVisible();
   await expect(page.getByText(noteContent)).toHaveCount(0);
 
   // A citizen without the classification does not get the note at all
-  await page.context().clearCookies();
-  await signIn(outsider.user);
+  await switchUser(outsider.user);
   await page.goto(`/app/spynet/citizen/${target.entity.id}/notes`);
   await expect(page.getByRole("heading", { name: "zielperson" })).toBeVisible();
   await expect(page.getByText(noteContent)).toHaveCount(0);
@@ -187,7 +183,7 @@ const exerciseSettingsRecordCrud = async (
   prisma: PrismaClient,
   scenario: SettingsRecordScenario,
 ) => {
-  const tile = tileSection(page, scenario.tileHeading);
+  const tile = sectionByHeading(page, scenario.tileHeading);
   await expect(tile).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
 
   // Create
@@ -251,7 +247,7 @@ const exerciseSettingsRecordCrud = async (
     .getByRole("alertdialog")
     .getByRole("button", { name: "Löschen" })
     .click();
-  await expect(page.getByText("Erfolgreich gelöscht")).toBeVisible({
+  await expect(page.getByText(DELETED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await expect(tile.getByText(scenario.updatedName)).toHaveCount(0, {

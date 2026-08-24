@@ -1,15 +1,17 @@
-import type { PrismaClient, User } from "@sam-monorepo/database/client";
 import path from "node:path";
 import {
   createAppEvent,
   createCitizen,
   createRole,
+  createUpload,
   createWikiPage,
+  futureEvent,
   WikiPageVisibility,
 } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
+  DELETED_TEXT,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
@@ -25,38 +27,6 @@ const imagePath = path.join(
 
 /** Deleting the object in the bucket happens after the action responded. */
 const BUCKET_TIMEOUT = 15_000;
-
-const ONE_HOUR_MS = 60 * 60 * 1000;
-const ONE_DAY_MS = 24 * ONE_HOUR_MS;
-
-/**
- * `Upload.fileName` is stored URI-encoded, so seeded rows have to encode
- * like the upload endpoints do — the table decodes it for display again.
- */
-const createUpload = (
-  prisma: PrismaClient,
-  user: Pick<User, "id">,
-  {
-    fileName,
-    mimeType,
-    size,
-    wikiPageId,
-  }: {
-    fileName: string;
-    mimeType: string;
-    size: number;
-    wikiPageId?: string;
-  },
-) =>
-  prisma.upload.create({
-    data: {
-      fileName: encodeURIComponent(fileName),
-      mimeType,
-      size,
-      createdById: user.id,
-      ...(wikiPageId ? { wikiPages: { connect: { id: wikiPageId } } } : {}),
-    },
-  });
 
 const objectUrl = (uploadId: string) => {
   const { s3Port } = readStackState();
@@ -124,8 +94,7 @@ test("an event cover shows up as a usage of its upload", async ({
   const event = await createAppEvent(prisma, {
     name: "Operation Pitchfork",
     createdById: organizer.entity.id,
-    startTime: new Date(Date.now() + ONE_DAY_MS),
-    endTime: new Date(Date.now() + ONE_DAY_MS + 2 * ONE_HOUR_MS),
+    ...futureEvent(),
   });
   const cover = await createUpload(prisma, organizer.user, {
     fileName: "Titelbild Pitchfork.png",
@@ -284,7 +253,7 @@ test("a manager deletes an upload from the database and the bucket", async ({
   await expect(dialog.getByText("Bildrolle")).toBeVisible();
 
   await dialog.getByRole("button", { name: "Löschen" }).click();
-  await expect(page.getByText("Erfolgreich gelöscht")).toBeVisible({
+  await expect(page.getByText(DELETED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await expect(row).toHaveCount(0);

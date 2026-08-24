@@ -8,8 +8,12 @@ import {
   WikiPageVisibility,
   wikiParagraph,
 } from "../fixtures/factories";
-import { clickUntilVisible } from "../fixtures/interactions";
+import {
+  ACTION_FEEDBACK_TIMEOUT,
+  clickUntilVisible,
+} from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
+import { expectPersisted } from "../fixtures/wiki-editor";
 
 const copyPageToClipboard = async (page: Page) => {
   await clickUntilVisible(
@@ -64,7 +68,9 @@ test("copy'n'paste inserts a page with its children under another page", async (
   await expect(page.getByText("„Handbuch“ + 1 Unterseiten")).toBeVisible();
   await page.getByRole("button", { name: "Einfügen", exact: true }).click();
 
-  await expect(page).toHaveURL(/handbuch-kopie$/, { timeout: 15_000 });
+  await expect(page).toHaveURL(/handbuch-kopie$/, {
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
   await expect(page.getByText("Grundlagen des Bergbaus.")).toBeVisible();
 
   const rootCopy = await prisma.wikiPage.findFirstOrThrow({
@@ -121,7 +127,7 @@ test("a new page can start as a copy of an existing page", async ({
   await page.getByRole("button", { name: "Erstellen", exact: true }).click();
 
   await expect(page.getByText("Struktur der Vorlage.")).toBeVisible({
-    timeout: 15_000,
+    timeout: ACTION_FEEDBACK_TIMEOUT,
   });
 
   const created = await prisma.wikiPage.findFirstOrThrow({
@@ -173,7 +179,9 @@ test("copying skips children the user cannot read", async ({
   // Only the readable child counts
   await expect(page.getByText("„Übersicht“ + 1 Unterseiten")).toBeVisible();
   await page.getByRole("button", { name: "Einfügen", exact: true }).click();
-  await expect(page).toHaveURL(/bersicht-kopie$/, { timeout: 15_000 });
+  await expect(page).toHaveURL(/bersicht-kopie$/, {
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
 
   const rootCopy = await prisma.wikiPage.findFirstOrThrow({
     where: { title: "Übersicht (Kopie)" },
@@ -222,7 +230,7 @@ test("replace mode transplants the copy onto an existing page", async ({
 
   // The page keeps its identity; only its content is transplanted
   await expect(page).toHaveURL(new RegExp(`/app/wiki/${target.id}/`), {
-    timeout: 15_000,
+    timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await expect(page.getByText("Muster-Inhalt.")).toBeVisible();
 
@@ -232,20 +240,9 @@ test("replace mode transplants the copy onto an existing page", async ({
   });
   expect(targetRow.title).toBe("Bestehend");
 
-  // The transplanted content reaches searchText with the collab server's
-  // store debounce — poll instead of reading once
-  await expect
-    .poll(
-      async () => {
-        const stored = await prisma.wikiPage.findUniqueOrThrow({
-          where: { id: target.id },
-          select: { searchText: true },
-        });
-        return stored.searchText;
-      },
-      { timeout: 20_000 },
-    )
-    .toContain("Muster-Inhalt.");
+  await expectPersisted(prisma, target.id, "searchText").toContain(
+    "Muster-Inhalt.",
+  );
 
   // The old content survives as an automatic snapshot
   expect(
@@ -272,7 +269,7 @@ test("replace mode transplants the copy onto an existing page", async ({
         prisma.wikiPage.count({
           where: { title: "Muster-Kind", parentId: target.id },
         }),
-      { timeout: 15_000 },
+      { timeout: ACTION_FEEDBACK_TIMEOUT },
     )
     .toBe(1);
   // No "(Kopie)" page was created — the target itself was replaced

@@ -1,38 +1,18 @@
-import {
-  EventSource,
-  VariantStatus,
-  type PrismaClient,
-} from "@sam-monorepo/database/client";
+import { VariantStatus } from "@sam-monorepo/database/client";
 import {
   createCitizen,
   createEvent,
+  createParticipant,
   createVariant,
-  type Citizen,
+  EventSource,
+  ONE_DAY_MS,
 } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
+  SAVED_TEXT,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
-
-const ONE_DAY_MS = 24 * 60 * 60 * 1000;
-
-/** Attendance is mirrored from Discord, so tests seed it directly. */
-const addParticipant = (
-  prisma: PrismaClient,
-  eventId: string,
-  citizen: Citizen,
-) =>
-  prisma.eventParticipant.create({
-    data: {
-      eventId,
-      source: EventSource.DISCORD,
-      citizenId: citizen.entity.id,
-      discordUserId: citizen.entity.discordId!,
-      activeCitizenId: citizen.entity.id,
-      activeDiscordUserId: citizen.entity.discordId!,
-    },
-  });
 
 test("the event list and detail subpages render", async ({
   page,
@@ -57,8 +37,14 @@ test("the event list and detail subpages render", async ({
     startTime: new Date(Date.now() + ONE_DAY_MS),
     location: "Port Olisar",
   });
-  await addParticipant(prisma, event.id, firstParticipant);
-  await addParticipant(prisma, event.id, secondParticipant);
+  await createParticipant(prisma, {
+    eventId: event.id,
+    citizen: firstParticipant,
+  });
+  await createParticipant(prisma, {
+    eventId: event.id,
+    citizen: secondParticipant,
+  });
 
   await signIn(viewer.user);
   await page.goto("/app/events");
@@ -132,21 +118,15 @@ test("the fleet tab counts the ships of both participation kinds", async ({
     startTime: new Date(Date.now() + ONE_DAY_MS),
     location: "Port Olisar",
   });
-  await prisma.eventParticipant.create({
-    data: {
-      eventId: event.id,
-      source: EventSource.APP,
-      citizenId: appSignUp.entity.id,
-      activeCitizenId: appSignUp.entity.id,
-    },
+  await createParticipant(prisma, {
+    eventId: event.id,
+    citizen: appSignUp,
+    source: EventSource.APP,
   });
-  await prisma.eventParticipant.create({
-    data: {
-      eventId: event.id,
-      source: EventSource.DISCORD,
-      discordUserId: discordRsvp.entity.discordId!,
-      activeDiscordUserId: discordRsvp.entity.discordId!,
-    },
+  await createParticipant(prisma, {
+    eventId: event.id,
+    citizen: discordRsvp,
+    citizenResolved: false,
   });
 
   await signIn(viewer.user);
@@ -180,7 +160,7 @@ test("a participant can toggle their interest in a position", async ({
     startTime: new Date(Date.now() + ONE_DAY_MS),
     lineupEnabled: true,
   });
-  await addParticipant(prisma, event.id, participant);
+  await createParticipant(prisma, { eventId: event.id, citizen: participant });
   const position = await prisma.eventPosition.create({
     data: { eventId: event.id, name: "Bordschütze" },
   });
@@ -246,7 +226,7 @@ test("the event manager sees applications and can assign the position", async ({
     startTime: new Date(Date.now() + ONE_DAY_MS),
     lineupEnabled: true,
   });
-  await addParticipant(prisma, event.id, applicant);
+  await createParticipant(prisma, { eventId: event.id, citizen: applicant });
   const position = await prisma.eventPosition.create({
     data: { eventId: event.id, name: "Navigator" },
   });
@@ -270,7 +250,7 @@ test("the event manager sees applications and can assign the position", async ({
   ).toHaveCount(1);
 
   await assignmentSelect.selectOption({ label: "bewerber" });
-  await expect(page.getByText("Erfolgreich gespeichert")).toBeVisible({
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
 

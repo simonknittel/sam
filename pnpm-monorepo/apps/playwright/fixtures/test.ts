@@ -44,6 +44,12 @@ interface Fixtures {
    */
   readonly signIn: (user: Pick<User, "id">) => Promise<void>;
   /**
+   * Signs the given user in instead of the current one. Only the session
+   * cookie is dropped, so everything else the test set up — admin mode, the
+   * wiki clipboard — survives the switch.
+   */
+  readonly switchUser: (user: Pick<User, "id">) => Promise<void>;
+  /**
    * Sets the cookie the AdminEnabler uses. Only effective for users whose
    * `User.role` is "admin".
    */
@@ -54,6 +60,11 @@ interface Fixtures {
 interface WorkerFixtures {
   readonly stack: WorkerStack;
 }
+
+/** next-auth v4 database sessions, unprefixed because the stack is HTTP. */
+const SESSION_COOKIE_NAME = "next-auth.session-token";
+
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 const createPrismaClient = (databaseUrl: string) =>
   new PrismaClient({
@@ -212,7 +223,6 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
   signIn: async ({ stack, context }, use) => {
     await use(async (user) => {
       const sessionToken = randomBytes(32).toString("hex");
-      const ONE_DAY_MS = 24 * 60 * 60 * 1000;
       await stack.prisma.session.create({
         data: {
           sessionToken,
@@ -223,12 +233,24 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
 
       await context.addCookies([
         {
-          name: "next-auth.session-token",
+          name: SESSION_COOKIE_NAME,
           value: sessionToken,
           domain: "localhost",
           path: "/",
         },
       ]);
+    });
+  },
+
+  switchUser: async ({ context, signIn }, use) => {
+    await use(async (user) => {
+      const preserved = (await context.cookies()).filter(
+        (cookie) => cookie.name !== SESSION_COOKIE_NAME,
+      );
+      await context.clearCookies();
+      if (preserved.length > 0) await context.addCookies(preserved);
+
+      await signIn(user);
     });
   },
 

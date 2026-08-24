@@ -1,38 +1,24 @@
-import type { PrismaClient } from "@sam-monorepo/database/client";
-import { EventSource, EventVisibility } from "@sam-monorepo/database/client";
 import {
   assignRole,
   createAppEvent,
   createCitizen,
   createEvent,
+  createParticipant,
   createRole,
   createVariant,
-  type Citizen,
+  EventSource,
+  EventVisibility,
+  futureEvent,
+  ONE_DAY_MS,
+  ONE_HOUR_MS,
 } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
+  NOT_FOUND_TEXT,
+  SAVED_TEXT,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
-
-const ONE_HOUR_MS = 60 * 60 * 1000;
-const ONE_DAY_MS = 24 * ONE_HOUR_MS;
-
-const addAppParticipant = (
-  prisma: PrismaClient,
-  eventId: string,
-  citizen: Citizen,
-  comment?: string,
-) =>
-  prisma.eventParticipant.create({
-    data: {
-      eventId,
-      source: EventSource.APP,
-      citizenId: citizen.entity.id,
-      activeCitizenId: citizen.entity.id,
-      comment,
-    },
-  });
 
 test("an authorized user creates a public event via the modal", async ({
   page,
@@ -104,8 +90,7 @@ test("a user without event;create sees no create button and cannot open foreign 
   const event = await createAppEvent(prisma, {
     name: "Operation Fremdes Event",
     createdById: creator.entity.id,
-    startTime: new Date(Date.now() + ONE_DAY_MS),
-    endTime: new Date(Date.now() + ONE_DAY_MS + 2 * ONE_HOUR_MS),
+    ...futureEvent(),
   });
 
   await signIn(viewer.user);
@@ -138,8 +123,7 @@ test("the organizer edits the event via the settings tab", async ({
   const event = await createAppEvent(prisma, {
     name: "Operation Alter Name",
     createdById: creator.entity.id,
-    startTime: new Date(Date.now() + ONE_DAY_MS),
-    endTime: new Date(Date.now() + ONE_DAY_MS + 2 * ONE_HOUR_MS),
+    ...futureEvent(),
   });
 
   await signIn(creator.user);
@@ -151,7 +135,7 @@ test("the organizer edits the event via the settings tab", async ({
   await page.getByLabel("Start").fill("2027-07-10T18:30");
   await page.getByLabel("Ende").fill("2027-07-10T21:30");
   await page.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText("Erfolgreich gespeichert")).toBeVisible({
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
 
@@ -199,8 +183,7 @@ test("deleting an event hides it everywhere", async ({
   const event = await createAppEvent(prisma, {
     name: "Operation Kurzlebig",
     createdById: creator.entity.id,
-    startTime: new Date(Date.now() + ONE_DAY_MS),
-    endTime: new Date(Date.now() + ONE_DAY_MS + 2 * ONE_HOUR_MS),
+    ...futureEvent(),
   });
 
   await signIn(creator.user);
@@ -224,7 +207,7 @@ test("deleting an event hides it everywhere", async ({
   expect(deletedEvent!.deletedById).toBe(creator.entity.id);
 
   await page.goto(`/app/events/${event.id}`);
-  await expect(page.getByText("Page not found")).toBeVisible();
+  await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
 });
 
 test("a restricted event is invisible to non-eligible users", async ({
@@ -253,8 +236,7 @@ test("a restricted event is invisible to non-eligible users", async ({
   const event = await createAppEvent(prisma, {
     name: "Operation Geheimsache",
     createdById: creator.entity.id,
-    startTime: new Date(Date.now() + ONE_DAY_MS),
-    endTime: new Date(Date.now() + ONE_DAY_MS + 2 * ONE_HOUR_MS),
+    ...futureEvent(),
     visibility: EventVisibility.RESTRICTED,
     visibilityRoleIds: [allowedRole.id],
   });
@@ -265,7 +247,7 @@ test("a restricted event is invisible to non-eligible users", async ({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await page.goto(`/app/events/${event.id}`);
-  await expect(page.getByText("Page not found")).toBeVisible();
+  await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
 
   await signIn(eligibleViewer.user);
   await page.goto(`/app/events/${event.id}`);
@@ -293,8 +275,7 @@ test("the sign-up lifecycle: sign up with comment, edit, cancel, re-sign-up", as
   const event = await createAppEvent(prisma, {
     name: "Operation Anmeldung",
     createdById: creator.entity.id,
-    startTime: new Date(Date.now() + ONE_DAY_MS),
-    endTime: new Date(Date.now() + ONE_DAY_MS + 2 * ONE_HOUR_MS),
+    ...futureEvent(),
     lineupEnabled: true,
   });
 
@@ -330,7 +311,7 @@ test("the sign-up lifecycle: sign up with comment, edit, cancel, re-sign-up", as
   await expect(page.getByLabel("Kommentar")).toHaveValue("Bringe Snacks mit");
   await page.getByLabel("Kommentar").fill("Bringe doch keine Snacks mit");
   await page.getByRole("button", { name: "Kommentar speichern" }).click();
-  await expect(page.getByText("Erfolgreich gespeichert")).toBeVisible({
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
 
@@ -447,7 +428,7 @@ test("Discord events have no activity tab and manage participation in Discord", 
   ).toBeVisible();
 
   await page.goto(`/app/events/${event.id}/activity`);
-  await expect(page.getByText("Page not found")).toBeVisible();
+  await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
 });
 
 test("the type filter narrows the list to app or Discord events", async ({
@@ -463,8 +444,7 @@ test("the type filter narrows the list to app or Discord events", async ({
   await createAppEvent(prisma, {
     name: "Operation App-Event",
     createdById: creator.entity.id,
-    startTime: new Date(Date.now() + ONE_DAY_MS),
-    endTime: new Date(Date.now() + ONE_DAY_MS + 2 * ONE_HOUR_MS),
+    ...futureEvent(),
   });
   await createEvent(prisma, {
     name: "Operation Discord-Event",
@@ -513,16 +493,7 @@ test("the personal briefing on a Discord event shows RSVP state and assigned pos
     startTime: new Date(Date.now() + ONE_DAY_MS),
     lineupEnabled: true,
   });
-  await prisma.eventParticipant.create({
-    data: {
-      eventId: event.id,
-      source: EventSource.DISCORD,
-      citizenId: participant.entity.id,
-      discordUserId: participant.entity.discordId!,
-      activeCitizenId: participant.entity.id,
-      activeDiscordUserId: participant.entity.discordId!,
-    },
-  });
+  await createParticipant(prisma, { eventId: event.id, citizen: participant });
   const { variant } = await createVariant(prisma, {
     manufacturerName: "Aegis",
     seriesName: "Retaliator",

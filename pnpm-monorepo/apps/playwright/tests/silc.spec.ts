@@ -1,9 +1,15 @@
-import { createCitizen, createSilcTransaction } from "../fixtures/factories";
+import {
+  createCitizen,
+  createProfitDistributionCycle,
+  createSilcTransaction,
+} from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilUrl,
   clickUntilVisible,
+  DELETED_TEXT,
   modal,
+  SAVED_TEXT,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
@@ -57,7 +63,7 @@ test("a transaction created through the UI updates balances and the system log",
     .getByRole("button", { name: "Speichern", exact: true })
     .click();
 
-  await expect(page.getByText("Erfolgreich gespeichert.")).toBeVisible({
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await expect(createModal).not.toBeVisible();
@@ -143,7 +149,7 @@ test('"Speichern und weitere Transaktion erstellen" keeps the modal open with a 
     })
     .click();
 
-  await expect(page.getByText("Erfolgreich gespeichert.")).toBeVisible({
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   // The modal must stay open with a reset form (this rides on onSuccess
@@ -207,7 +213,7 @@ test("deleting a transaction soft deletes it and reverts the balance", async ({
     .getByRole("button", { name: "Löschen" })
     .click();
 
-  await expect(page.getByText("Erfolgreich gelöscht")).toBeVisible({
+  await expect(page.getByText(DELETED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await expect(transactionRow).not.toBeVisible();
@@ -240,6 +246,7 @@ test("ending the profit distribution collection phase debits every participant",
   page,
   prisma,
   signIn,
+  switchUser,
 }) => {
   const admin = await createCitizen(prisma, {
     handle: "sincome-verwalter",
@@ -273,13 +280,9 @@ test("ending the profit distribution collection phase debits every participant",
     value: 40,
   });
 
-  const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
-  const cycle = await prisma.profitDistributionCycle.create({
-    data: {
-      title: "Q3 Testzyklus",
-      collectionEndedAt: new Date(Date.now() + TWO_DAYS_MS),
-      createdById: admin.entity.id,
-    },
+  const cycle = await createProfitDistributionCycle(prisma, {
+    title: "Q3 Testzyklus",
+    createdById: admin.entity.id,
   });
 
   // A citizen cedes their share during the collection phase
@@ -306,8 +309,7 @@ test("ending the profit distribution collection phase debits every participant",
   expect(participantRow?.cededAt).not.toBeNull();
 
   // The manager ends the collection phase
-  await page.context().clearCookies();
-  await signIn(admin.user);
+  await switchUser(admin.user);
   await page.goto(`/app/sincome/${cycle.id}/management`);
   await clickUntilVisible(
     page.getByRole("button", { name: "Phase beenden" }),
@@ -318,7 +320,7 @@ test("ending the profit distribution collection phase debits every participant",
     .getByRole("alertdialog")
     .getByRole("button", { name: "Beenden" })
     .click();
-  await expect(page.getByText("Erfolgreich gespeichert")).toBeVisible({
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
 

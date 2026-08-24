@@ -1,13 +1,12 @@
 import type { PrismaClient, User } from "@sam-monorepo/database/client";
 import { randomUUID } from "node:crypto";
-import { createCitizen } from "../fixtures/factories";
+import { createCitizen, ONE_DAY_MS } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
+  DELETED_TEXT,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
-
-const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 const CHROME_ON_WINDOWS =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36";
@@ -124,7 +123,7 @@ test("deleting a session logs that device out", async ({
     .getByRole("button", { name: "Löschen" })
     .click();
 
-  await expect(page.getByText("Erfolgreich gelöscht")).toBeVisible({
+  await expect(page.getByText(DELETED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await expect(otherRow).toHaveCount(0);

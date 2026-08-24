@@ -2,11 +2,10 @@ import { createCitizen } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
+  FORBIDDEN_TEXT,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
-
-const FORBIDDEN_TEXT = "Du bist nicht berechtigt dies zu sehen.";
 
 test("an admin's pages stay redacted until admin mode is enabled", async ({
   page,

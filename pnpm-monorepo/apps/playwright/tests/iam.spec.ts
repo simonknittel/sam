@@ -1,11 +1,17 @@
 import { createCitizen } from "../fixtures/factories";
-import { ACTION_FEEDBACK_TIMEOUT, modal } from "../fixtures/interactions";
+import {
+  ACTION_FEEDBACK_TIMEOUT,
+  FORBIDDEN_TEXT,
+  modal,
+  SAVED_TEXT,
+} from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 test("a role created and assigned through the UI grants its permission", async ({
   page,
   prisma,
   signIn,
+  switchUser,
 }) => {
   const admin = await createCitizen(prisma, {
     handle: "iam-admin",
@@ -22,13 +28,12 @@ test("a role created and assigned through the UI grants its permission", async (
   await signIn(member.user);
   await page.goto("/app/tasks");
   // Often the worker's first page load — warm-up can exceed the default 5s
-  await expect(
-    page.getByText("Du bist nicht berechtigt dies zu sehen."),
-  ).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
 
   // The admin creates a new role through the IAM UI
-  await page.context().clearCookies();
-  await signIn(admin.user);
+  await switchUser(admin.user);
   await page.goto("/app/iam/roles");
   await page.getByRole("button", { name: "Neue Rolle" }).click();
   await modal(page, "Neue Rolle").getByLabel("Name").fill("Aufgabenleser");
@@ -48,7 +53,7 @@ test("a role created and assigned through the UI grants its permission", async (
     .filter({ has: page.locator('input[name="task;read"]') })
     .click();
   await page.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText("Erfolgreich gespeichert")).toBeVisible({
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
 
@@ -67,7 +72,7 @@ test("a role created and assigned through the UI grants its permission", async (
     .getByText("Aufgabenleser")
     .click();
   // The role checkboxes save through a debounced form (1s)
-  await expect(page.getByText("Erfolgreich gespeichert")).toBeVisible({
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await page.getByRole("button", { name: "Schließen" }).click();
@@ -78,11 +83,8 @@ test("a role created and assigned through the UI grants its permission", async (
   await expect(page.getByText("Aufgabenleser").first()).toBeVisible();
 
   // With the assigned role the member passes the permission gate
-  await page.context().clearCookies();
-  await signIn(member.user);
+  await switchUser(member.user);
   await page.goto("/app/tasks");
   await expect(page.getByText("Keine Tasks gefunden")).toBeVisible();
-  await expect(
-    page.getByText("Du bist nicht berechtigt dies zu sehen."),
-  ).not.toBeVisible();
+  await expect(page.getByText(FORBIDDEN_TEXT)).not.toBeVisible();
 });

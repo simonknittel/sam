@@ -1,14 +1,15 @@
 import type { Locator, Page } from "@playwright/test";
-import {
-  EventActivityType,
-  EventSource,
-  EventVisibility,
-} from "@sam-monorepo/database/client";
+import { EventActivityType } from "@sam-monorepo/database/client";
 import {
   assignRole,
   createAppEvent,
   createCitizen,
+  createEvent,
+  createParticipant,
   createRole,
+  EventSource,
+  EventVisibility,
+  futureEvent,
   type Citizen,
 } from "../fixtures/factories";
 import {
@@ -19,20 +20,16 @@ import {
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
-const ONE_HOUR_MS = 60 * 60 * 1000;
-const ONE_DAY_MS = 24 * ONE_HOUR_MS;
-
 /**
  * The picker resolves its options through the citizen list, so a manager
  * needs `citizen;read` on top of the event permissions.
  */
 const MANAGER_PERMISSIONS = ["event;read", "citizen;read"];
 
-const futureEvent = (name: string, createdById: string) => ({
+const appEvent = (name: string, createdById: string) => ({
   name,
   createdById,
-  startTime: new Date(Date.now() + ONE_DAY_MS),
-  endTime: new Date(Date.now() + ONE_DAY_MS + 2 * ONE_HOUR_MS),
+  ...futureEvent(),
 });
 
 const pickCitizen = async (dialog: Locator, page: Page, handle: string) => {
@@ -82,7 +79,7 @@ test("a manager adds citizens with a shared comment", async ({
   });
   const event = await createAppEvent(
     prisma,
-    futureEvent("Operation Nachmeldung", manager.entity.id),
+    appEvent("Operation Nachmeldung", manager.entity.id),
   );
 
   await signIn(manager.user);
@@ -159,16 +156,13 @@ test("a manager removes a participant with a reason and clears their lineup", as
     permissionStrings: ["event;read"],
   });
   const event = await createAppEvent(prisma, {
-    ...futureEvent("Operation Abmeldung", manager.entity.id),
+    ...appEvent("Operation Abmeldung", manager.entity.id),
     lineupEnabled: true,
   });
-  await prisma.eventParticipant.create({
-    data: {
-      eventId: event.id,
-      source: EventSource.APP,
-      citizenId: participant.entity.id,
-      activeCitizenId: participant.entity.id,
-    },
+  await createParticipant(prisma, {
+    eventId: event.id,
+    citizen: participant,
+    source: EventSource.APP,
   });
   const position = await prisma.eventPosition.create({
     data: {
@@ -250,26 +244,14 @@ test("a removed citizen can sign up again", async ({
   });
   const event = await createAppEvent(
     prisma,
-    futureEvent("Operation Wiederanmeldung", manager.entity.id),
+    appEvent("Operation Wiederanmeldung", manager.entity.id),
   );
-  await prisma.eventParticipant.create({
-    data: {
-      eventId: event.id,
-      source: EventSource.APP,
-      citizenId: participant.entity.id,
-      activeCitizenId: participant.entity.id,
-      cancelledAt: new Date(),
-      cancelledById: manager.entity.id,
-    },
-  });
-  await prisma.eventParticipant.update({
-    where: {
-      eventId_activeCitizenId: {
-        eventId: event.id,
-        activeCitizenId: participant.entity.id,
-      },
-    },
-    data: { activeCitizenId: null },
+  await createParticipant(prisma, {
+    eventId: event.id,
+    citizen: participant,
+    source: EventSource.APP,
+    cancelled: true,
+    cancelledById: manager.entity.id,
   });
 
   await signIn(participant.user);
@@ -308,16 +290,13 @@ test("adding an already signed-up citizen neither duplicates nor fails the batch
   });
   const event = await createAppEvent(
     prisma,
-    futureEvent("Operation Doppelanmeldung", manager.entity.id),
+    appEvent("Operation Doppelanmeldung", manager.entity.id),
   );
-  await prisma.eventParticipant.create({
-    data: {
-      eventId: event.id,
-      source: EventSource.APP,
-      citizenId: alreadySignedUp.entity.id,
-      activeCitizenId: alreadySignedUp.entity.id,
-      comment: "Eigene Anmeldung",
-    },
+  await createParticipant(prisma, {
+    eventId: event.id,
+    citizen: alreadySignedUp,
+    source: EventSource.APP,
+    comment: "Eigene Anmeldung",
   });
 
   await signIn(manager.user);
@@ -366,15 +345,12 @@ test("a non-manager gets no participant controls", async ({
   });
   const event = await createAppEvent(
     prisma,
-    futureEvent("Operation Zuschauer", creator.entity.id),
+    appEvent("Operation Zuschauer", creator.entity.id),
   );
-  await prisma.eventParticipant.create({
-    data: {
-      eventId: event.id,
-      source: EventSource.APP,
-      citizenId: participant.entity.id,
-      activeCitizenId: participant.entity.id,
-    },
+  await createParticipant(prisma, {
+    eventId: event.id,
+    citizen: participant,
+    source: EventSource.APP,
   });
 
   await signIn(viewer.user);
@@ -412,7 +388,7 @@ test("a citizen below their role's max level is not addable to a restricted even
   const assignment = await assignRole(prisma, climber.entity, leveledRole);
 
   const event = await createAppEvent(prisma, {
-    ...futureEvent("Operation Verschlusssache", manager.entity.id),
+    ...appEvent("Operation Verschlusssache", manager.entity.id),
     visibility: EventVisibility.RESTRICTED,
     visibilityRoleIds: [leveledRole.id],
   });
@@ -452,15 +428,10 @@ test("a Discord event keeps its participant list read-only", async ({
     handle: "discord-manager",
     permissionStrings: [...MANAGER_PERMISSIONS, "event;manage"],
   });
-  const event = await prisma.event.create({
-    data: {
-      source: EventSource.DISCORD,
-      discordId: "manual-participants-discord-event",
-      discordCreatorId: "manual-participants-organizer",
-      discordGuildId: "playwright-guild",
-      name: "Operation Discord-Teilnehmer",
-      startTime: new Date(Date.now() + ONE_DAY_MS),
-    },
+  const event = await createEvent(prisma, {
+    name: "Operation Discord-Teilnehmer",
+    discordCreatorId: "manual-participants-organizer",
+    startTime: futureEvent().startTime,
   });
 
   await signIn(manager.user);

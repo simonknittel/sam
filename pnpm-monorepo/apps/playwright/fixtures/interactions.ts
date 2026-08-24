@@ -7,6 +7,42 @@ import { expect, type Locator, type Page } from "@playwright/test";
 export const ACTION_FEEDBACK_TIMEOUT = 15_000;
 
 /**
+ * Writes that travel through the collab server reach the database on its 2s
+ * store debounce, and a page load has to happen first — so every assertion
+ * on persisted editor content polls for this long.
+ */
+export const COLLAB_PERSISTENCE_TIMEOUT = 20_000;
+
+/** The forbidden() boundary of /app (see app/app/forbidden.tsx). */
+export const FORBIDDEN_TEXT = "Du bist nicht berechtigt dies zu sehen.";
+
+/** Next.js' notFound() boundary. */
+export const NOT_FOUND_TEXT = "Page not found";
+
+/** Success feedback of the shared action helpers. */
+export const SAVED_TEXT = "Erfolgreich gespeichert";
+export const DELETED_TEXT = "Erfolgreich gelöscht";
+
+/**
+ * Scopes a lookup to the tile/section carrying the given heading. Tiles,
+ * statistic tiles and chart cards all render as a `section` named by their
+ * heading, so one helper covers them all.
+ */
+export const sectionByHeading = (page: Page, heading: string) =>
+  page
+    .locator("section")
+    .filter({ has: page.getByRole("heading", { name: heading, exact: true }) });
+
+/**
+ * Scopes a lookup to a StatisticTile, which carries no heading — its label
+ * is a plain paragraph next to the value, so the tile is that label's
+ * parent. The value animates through random digits (ScrambleIn), but an
+ * sr-only span holds the real one from the start, which toContainText reads.
+ */
+export const statisticTile = (page: Page, label: string) =>
+  page.getByText(label, { exact: true }).locator("..");
+
+/**
  * The app's Modal (Base UI dialog) renders in a portal with role="dialog"
  * and takes its accessible name from the heading it is given. Popovers use
  * the same role but carry their own name, so this never matches one.

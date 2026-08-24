@@ -1,11 +1,11 @@
-import {
-  createCitizen,
-  createWikiPage,
-  WikiPageEditability,
-  WikiPageVisibility,
-} from "../fixtures/factories";
+import { createCitizen } from "../fixtures/factories";
+import { COLLAB_PERSISTENCE_TIMEOUT } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
-import { enterEditMode, focusEditor } from "../fixtures/wiki-editor";
+import {
+  enterEditMode,
+  focusEditor,
+  seedEditablePage,
+} from "../fixtures/wiki-editor";
 
 /** Types "@<query>" and picks the suggestion showing the given handle */
 const insertMention = async (
@@ -31,11 +31,7 @@ test("an @mention creates a pending link, removing it deletes the link", async (
     permissionStrings: ["citizen;read"],
   });
   const mentioned = await createCitizen(prisma, { handle: "Zielperson" });
-  const wikiPage = await createWikiPage(prisma, {
-    title: "Erwähnungen",
-    visibility: WikiPageVisibility.PUBLIC,
-    editability: WikiPageEditability.ALL,
-  });
+  const wikiPage = await seedEditablePage(prisma, { title: "Erwähnungen" });
   await signIn(editor.user);
 
   await page.goto(`/app/wiki/${wikiPage.id}/${wikiPage.slug}`);
@@ -55,7 +51,7 @@ test("an @mention creates a pending link, removing it deletes the link", async (
             },
           },
         }),
-      { timeout: 20_000 },
+      { timeout: COLLAB_PERSISTENCE_TIMEOUT },
     )
     .toMatchObject({
       createdById: editor.entity.id,
@@ -71,7 +67,7 @@ test("an @mention creates a pending link, removing it deletes the link", async (
     .poll(
       () =>
         prisma.wikiPageCitizenMention.count({ where: { pageId: wikiPage.id } }),
-      { timeout: 20_000 },
+      { timeout: COLLAB_PERSISTENCE_TIMEOUT },
     )
     .toBe(0);
 });
@@ -85,10 +81,8 @@ test("a self-mention is created suppressed", async ({
     handle: "Selbstnenner",
     permissionStrings: ["citizen;read"],
   });
-  const wikiPage = await createWikiPage(prisma, {
+  const wikiPage = await seedEditablePage(prisma, {
     title: "Selbsterwähnung",
-    visibility: WikiPageVisibility.PUBLIC,
-    editability: WikiPageEditability.ALL,
   });
   await signIn(editor.user);
 
@@ -109,7 +103,7 @@ test("a self-mention is created suppressed", async ({
           },
           select: { suppressedAt: true, notifiedAt: true },
         }),
-      { timeout: 20_000 },
+      { timeout: COLLAB_PERSISTENCE_TIMEOUT },
     )
     .toEqual({ suppressedAt: expect.any(Date), notifiedAt: null });
 });

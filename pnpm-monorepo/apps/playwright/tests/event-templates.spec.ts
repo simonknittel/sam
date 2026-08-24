@@ -1,4 +1,5 @@
 import type { PrismaClient } from "@sam-monorepo/database/client";
+import { expectAuditEvents } from "../fixtures/audit";
 import {
   assignRole,
   createCitizen,
@@ -9,13 +10,13 @@ import {
 import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
+  DELETED_TEXT,
+  FORBIDDEN_TEXT,
   modal,
+  NOT_FOUND_TEXT,
+  SAVED_TEXT,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
-
-const FORBIDDEN_TEXT = "Du bist nicht berechtigt dies zu sehen.";
-const NOT_FOUND_TEXT = "Page not found";
-const SAVED_TEXT = "Erfolgreich gespeichert";
 
 /**
  * Sharing additionally needs the roles to be visible in the access editor
@@ -31,11 +32,6 @@ const OWNER_PERMISSIONS = [
 
 const createOwner = (prisma: PrismaClient, handle = "owner") =>
   createCitizen(prisma, { handle, permissionStrings: OWNER_PERMISSIONS });
-
-const auditEventTypes = async (prisma: PrismaClient) => {
-  const events = await prisma.auditEvent.findMany({ select: { type: true } });
-  return events.map((event) => event.type);
-};
 
 test("an owner creates a template, edits it, deletes it and restores it", async ({
   page,
@@ -101,7 +97,7 @@ test("an owner creates a template, edits it, deletes it and restores it", async 
     deleteDialog,
   );
   await deleteDialog.getByRole("button", { name: "Löschen" }).click();
-  await expect(page.getByText("Erfolgreich gelöscht")).toBeVisible({
+  await expect(page.getByText(DELETED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
 
@@ -126,14 +122,12 @@ test("an owner creates a template, edits it, deletes it and restores it", async 
   await page.goto("/app/events/templates");
   await expect(page.getByRole("link", { name: "Patrouille" })).toBeVisible();
 
-  expect(await auditEventTypes(prisma)).toEqual(
-    expect.arrayContaining([
-      "EVENT_TEMPLATE_CREATED",
-      "EVENT_TEMPLATE_UPDATED",
-      "EVENT_TEMPLATE_DELETED",
-      "EVENT_TEMPLATE_RESTORED",
-    ]),
-  );
+  await expectAuditEvents(prisma, [
+    "EVENT_TEMPLATE_CREATED",
+    "EVENT_TEMPLATE_UPDATED",
+    "EVENT_TEMPLATE_DELETED",
+    "EVENT_TEMPLATE_RESTORED",
+  ]);
 });
 
 test("a template is invisible to everyone it is not shared with", async ({
@@ -514,12 +508,10 @@ test("an event created from a template gets its lineup, briefing and prefill", a
 
   /** Nothing on the event references the template afterwards */
   expect(await prisma.eventTemplate.count()).toBe(1);
-  expect(await auditEventTypes(prisma)).toEqual(
-    expect.arrayContaining([
-      "EVENT_CREATED_IN_APP",
-      "EVENT_CREATED_FROM_TEMPLATE",
-    ]),
-  );
+  await expectAuditEvents(prisma, [
+    "EVENT_CREATED_IN_APP",
+    "EVENT_CREATED_FROM_TEMPLATE",
+  ]);
 });
 
 test("the picker offers neither deleted nor inaccessible templates", async ({
@@ -603,9 +595,7 @@ test("a template position is edited through the shared lineup editor", async ({
   expect(position.eventId).toBeNull();
   expect(position.citizenId).toBeNull();
 
-  expect(await auditEventTypes(prisma)).toEqual(
-    expect.arrayContaining(["EVENT_TEMPLATE_POSITION_CREATED"]),
-  );
+  await expectAuditEvents(prisma, ["EVENT_TEMPLATE_POSITION_CREATED"]);
 });
 
 test("a template's briefing root page is locked like an event's", async ({

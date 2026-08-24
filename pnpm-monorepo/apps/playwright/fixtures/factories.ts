@@ -27,6 +27,19 @@ import {
 } from "@sam-monorepo/database/client";
 import { randomBytes, randomUUID } from "node:crypto";
 
+export const ONE_MINUTE_MS = 60 * 1000;
+export const ONE_HOUR_MS = 60 * ONE_MINUTE_MS;
+export const ONE_DAY_MS = 24 * ONE_HOUR_MS;
+
+/**
+ * Start and end of an event far enough ahead that sign-up is still open,
+ * spread for createAppEvent()/createEventTemplate() call sites.
+ */
+export const futureEvent = () => ({
+  startTime: new Date(Date.now() + ONE_DAY_MS),
+  endTime: new Date(Date.now() + ONE_DAY_MS + 2 * ONE_HOUR_MS),
+});
+
 /**
  * The base permission every signed-in user needs to get past the clearance
  * gate (see requireAuthenticationPage).
@@ -417,6 +430,119 @@ export const createAppEvent = (
     },
   });
 
+interface CreateParticipantOptions {
+  readonly eventId: string;
+  readonly citizen: Citizen;
+  /**
+   * APP mirrors an in-app sign-up (identified by the citizen id), DISCORD an
+   * RSVP mirrored from Discord (identified by the Discord user id, with the
+   * citizen id filled in once the Discord account is known).
+   */
+  readonly source?: EventSource;
+  readonly comment?: string;
+  /**
+   * Cancels the participation the way the app does: the row stays as
+   * history and gives up its `active…` claim on the event.
+   */
+  readonly cancelled?: boolean;
+  /** Entity id of whoever cancelled; defaults to the participant themselves. */
+  readonly cancelledById?: string;
+  /**
+   * Set to false for a Discord RSVP whose Discord account the app has not
+   * matched to a citizen yet — such a row carries the Discord id alone.
+   */
+  readonly citizenResolved?: boolean;
+}
+
+/**
+ * Attendance is written either by the Discord-scraping lambda or by the
+ * app's own sign-up action, so seeding it directly is the intended route in
+ * tests.
+ */
+export const createParticipant = (
+  prisma: PrismaClient,
+  {
+    eventId,
+    citizen,
+    source = EventSource.DISCORD,
+    comment,
+    cancelled = false,
+    cancelledById,
+    citizenResolved = true,
+  }: CreateParticipantOptions,
+) => {
+  const isDiscord = source === EventSource.DISCORD;
+  const citizenId = citizenResolved ? citizen.entity.id : null;
+  const discordUserId = isDiscord ? citizen.entity.discordId : null;
+
+  return prisma.eventParticipant.create({
+    data: {
+      eventId,
+      source,
+      citizenId,
+      discordUserId,
+      activeCitizenId: cancelled ? null : citizenId,
+      activeDiscordUserId: cancelled ? null : discordUserId,
+      comment,
+      ...(cancelled
+        ? {
+            cancelledAt: new Date(),
+            cancelledById: cancelledById ?? citizen.entity.id,
+          }
+        : {}),
+    },
+  });
+};
+
+interface CreateProfitDistributionCycleOptions {
+  readonly title: string;
+  /** Entity id of the creating manager */
+  readonly createdById: string;
+  /** Defaults to two days out, i.e. the cycle is in its collection phase. */
+  readonly collectionEndedAt?: Date;
+}
+
+export const createProfitDistributionCycle = (
+  prisma: PrismaClient,
+  {
+    title,
+    createdById,
+    collectionEndedAt = new Date(Date.now() + 2 * ONE_DAY_MS),
+  }: CreateProfitDistributionCycleOptions,
+) =>
+  prisma.profitDistributionCycle.create({
+    data: { title, collectionEndedAt, createdById },
+  });
+
+interface CreateUploadOptions {
+  readonly fileName: string;
+  readonly mimeType: string;
+  readonly size?: number;
+  /** Links the upload as an attachment of that wiki page */
+  readonly wikiPageId?: string;
+}
+
+/**
+ * A row of the uploads table without an object in the bucket — enough for
+ * everything that only lists or filters uploads. `Upload.fileName` is stored
+ * URI-encoded, so seeded rows have to encode like the upload endpoints do;
+ * the table decodes it for display again.
+ */
+export const createUpload = (
+  prisma: PrismaClient,
+  user: Pick<User, "id">,
+  { fileName, mimeType, size = 1024, wikiPageId }: CreateUploadOptions,
+) =>
+  prisma.upload.create({
+    data: {
+      fileName: encodeURIComponent(fileName),
+      mimeType,
+      size,
+      createdById: user.id,
+      ...(wikiPageId ? { wikiPages: { connect: { id: wikiPageId } } } : {}),
+    },
+  });
+
 interface CreateVariantOptions {
   readonly manufacturerName: string;
   readonly seriesName: string;
@@ -675,7 +801,9 @@ export const createEventTemplate = async (
 };
 
 export {
+  EventSource,
   EventTemplateAccessType,
+  EventVisibility,
   FlowRoleAccessType,
   WikiPageAccessType,
   WikiPageEditability,
