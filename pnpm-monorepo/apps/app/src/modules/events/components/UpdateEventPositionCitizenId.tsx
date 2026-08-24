@@ -56,6 +56,8 @@ export const UpdateEventPositionCitizenId = ({
       <input type="hidden" name="positionId" value={position.id} />
       <select
         name="citizenId"
+        /** A lineup holds one of these per position, so it names its own */
+        aria-label={`Citizen für ${position.name}`}
         className={clsx(
           "block w-full p-2 bg-white/10 text-neutral-100 rounded-secondary cursor-pointer",
           styles.select,

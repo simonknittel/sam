@@ -27,7 +27,7 @@ export const DeleteSessionButton = ({
   if (isCurrent)
     return (
       <span className={className} title={CURRENT_SESSION_HINT}>
-        <Button type="button" variant="tertiary" disabled>
+        <Button type="button" variant="tertiary" disabled aria-label={LABEL}>
           <FaTrash /> Löschen
         </Button>
       </span>

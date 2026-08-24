@@ -12,6 +12,8 @@ interface Props {
 export const UnreadDot = ({ className }: Props) => {
   return (
     <span
+      /** Marks the dot independently of the classes drawing it */
+      data-unread-dot=""
       className={clsx(
         "inline-block rounded-full size-2 bg-amber-500 relative",
         className,

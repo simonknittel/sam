@@ -33,7 +33,7 @@ export const RedactedAppTile = ({
 }: Props) => {
   if (variant === "compact") {
     return (
-      <div
+      <li
         className={clsx(
           "bg-secondary rounded-primary overflow-hidden relative p-2 text-xs",
           className,
@@ -50,12 +50,12 @@ export const RedactedAppTile = ({
             Redacted
           </p>
         </div>
-      </div>
+      </li>
     );
   }
 
   return (
-    <div
+    <li
       className={clsx(
         "bg-secondary rounded-primary overflow-hidden",
         className,
@@ -81,6 +81,6 @@ export const RedactedAppTile = ({
           </p>
         </div>
       </div>
-    </div>
+    </li>
   );
 };
