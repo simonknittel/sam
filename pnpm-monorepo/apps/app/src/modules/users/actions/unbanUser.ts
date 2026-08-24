@@ -25,6 +25,10 @@ export const unbanUserAction = createAuthenticatedAction(
       where: {
         id: data.userId,
       },
+      select: {
+        id: true,
+        bannedAt: true,
+      },
     });
 
     if (!user)

@@ -17,6 +17,10 @@ export const getDailyLoginStatisticChart = cache(
       orderBy: {
         date: "asc",
       },
+      select: {
+        date: true,
+        count: true,
+      },
     });
 
     const orderedLogins = rows.map((row) => ({

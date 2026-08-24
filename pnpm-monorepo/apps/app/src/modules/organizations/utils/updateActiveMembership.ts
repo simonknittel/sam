@@ -20,11 +20,19 @@ export const updateActiveMembership = async (citizenId: Entity["id"]) => {
       orderBy: {
         createdAt: "asc",
       },
+      select: {
+        organizationId: true,
+        type: true,
+        visibility: true,
+      },
     });
 
   const activeMemberships = new Map<
     Organization["id"],
-    OrganizationMembershipHistoryEntry
+    Pick<
+      OrganizationMembershipHistoryEntry,
+      "organizationId" | "type" | "visibility"
+    >
   >();
 
   for (const entry of confirmedHistoryEntries) {

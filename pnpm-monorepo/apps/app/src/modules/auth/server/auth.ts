@@ -351,6 +351,9 @@ export const authOptions: NextAuthOptions = {
             orderBy: {
               createdAt: "desc",
             },
+            select: {
+              entityId: true,
+            },
           });
 
         if (latestConfirmedDiscordIdEntityLog) {
@@ -368,6 +371,9 @@ export const authOptions: NextAuthOptions = {
               },
               orderBy: {
                 createdAt: "desc",
+              },
+              select: {
+                content: true,
               },
             });
 
