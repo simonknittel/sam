@@ -1,9 +1,9 @@
-import { prisma } from "@/db";
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
 import { EventTemplateLineupTab } from "@/modules/event-templates/components/EventTemplateLineupTab";
 import { getEventTemplateById } from "@/modules/event-templates/queries/getEventTemplateById";
 import { getEventTemplateLineup } from "@/modules/event-templates/queries/getEventTemplateLineup";
+import { getVariantCatalog } from "@/modules/fleet/queries/getVariantCatalog";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -34,16 +34,7 @@ const EventTemplateLineup = async ({ templateId }: Props) => {
 
   const [positions, variants] = await Promise.all([
     getEventTemplateLineup(templateId),
-    prisma.manufacturer.findMany({
-      include: {
-        image: true,
-        series: {
-          include: {
-            variants: true,
-          },
-        },
-      },
-    }),
+    getVariantCatalog(),
   ]);
 
   return (

@@ -2,6 +2,7 @@
 
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { underlineCharacters } from "@/modules/common/utils/underlineCharacters";
+import type { EventOption } from "@/modules/events/types/eventShapes";
 import { api } from "@/trpc/react";
 import {
   Combobox,
@@ -81,7 +82,7 @@ export const EventSelectionInput = ({
             defaultValue
               ? (defaultValue
                   .map((id) => dataAllEvents?.find((event) => event.id === id))
-                  .filter(Boolean) as Event[])
+                  .filter(Boolean) as EventOption[])
               : undefined
           }
           autoFocus={autoFocus}
@@ -105,7 +106,7 @@ export const EventSelectionInput = ({
 };
 
 interface ComboboxOptionProps {
-  readonly result: FuseResult<Event>;
+  readonly result: FuseResult<EventOption>;
   readonly multiple?: boolean;
 }
 
@@ -146,8 +147,8 @@ const ComboboxOptionItem = ({
 type SingleComponentProps = Readonly<{
   name: string;
   setQuery: (query: string) => void;
-  filterResult: FuseResult<Event>[];
-  defaultValue?: Event;
+  filterResult: FuseResult<EventOption>[];
+  defaultValue?: EventOption;
   disabled?: boolean;
   autoFocus?: boolean;
 }>;
@@ -160,7 +161,9 @@ const Single = ({
   disabled,
   autoFocus,
 }: SingleComponentProps) => {
-  const [selected, setSelected] = useState<Event | null>(defaultValue || null);
+  const [selected, setSelected] = useState<EventOption | null>(
+    defaultValue || null,
+  );
 
   return (
     <>
@@ -199,8 +202,8 @@ type MultipleComponentProps = Readonly<{
   name: string;
   query: string;
   setQuery: (query: string) => void;
-  filterResult: FuseResult<Event>[];
-  defaultValue?: Event[];
+  filterResult: FuseResult<EventOption>[];
+  defaultValue?: EventOption[];
   autoFocus?: boolean;
 }>;
 
@@ -212,7 +215,7 @@ const Multiple = ({
   defaultValue,
   autoFocus,
 }: MultipleComponentProps) => {
-  const [selected, setSelected] = useState<Event[]>(defaultValue || []);
+  const [selected, setSelected] = useState<EventOption[]>(defaultValue || []);
 
   const popoverPortalRef = useRef<HTMLDivElement | null>(null);
 

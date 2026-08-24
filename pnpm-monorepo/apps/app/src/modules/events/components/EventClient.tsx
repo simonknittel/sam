@@ -8,11 +8,11 @@ import { RelativeDate } from "@/modules/common/components/RelativeDate";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
 import type {
-  Entity,
-  EventParticipant,
-  Event as PrismaEvent,
-  Upload,
-} from "@sam-monorepo/database/browser";
+  EventCitizenReference,
+  EventCoverImage,
+  EventParticipantRow,
+} from "@/modules/events/types/eventShapes";
+import type { Event as PrismaEvent } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useNow } from "next-intl";
 import Image from "next/image";
@@ -31,9 +31,9 @@ import styles from "./EventClient.module.css";
 interface Props {
   readonly className?: string;
   readonly event: PrismaEvent & {
-    participants: EventParticipant[];
-    managers: Entity[];
-    coverImage?: Upload | null;
+    participants: EventParticipantRow[];
+    managers: EventCitizenReference[];
+    coverImage?: EventCoverImage | null;
   };
   readonly index: number;
   readonly showLineupButton?: boolean;

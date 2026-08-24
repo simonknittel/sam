@@ -1,16 +1,13 @@
 import { prisma } from "@/db";
-import {
-  VariantStatus,
-  type Event,
-  type EventParticipant,
-} from "@sam-monorepo/database/client";
+import type { EventParticipantRow } from "@/modules/events/types/eventShapes";
+import { VariantStatus, type Event } from "@sam-monorepo/database/client";
 import { cache } from "react";
 import { collectParticipantOwners } from "./collectParticipantOwners";
 
 export const getEventFleet = cache(
   async (
     event: Event & {
-      participants: EventParticipant[];
+      participants: EventParticipantRow[];
     },
   ) => {
     const { citizenIds, discordUserIds } = collectParticipantOwners(

@@ -9,10 +9,12 @@ import { TextInput } from "@/modules/common/components/form/TextInput";
 import Modal from "@/modules/common/components/Modal";
 import { Tooltip } from "@/modules/common/components/Tooltip";
 import type {
+  VariantCatalogManufacturer,
+  VariantCatalogVariant,
+} from "@/modules/fleet/queries/getVariantCatalog";
+import type {
   EventPosition,
   EventPositionRequiredVariant,
-  Manufacturer,
-  Series,
   Variant,
 } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
@@ -44,11 +46,7 @@ const EDIT_LABEL = "Posten bearbeiten";
 
 interface BaseProps {
   readonly className?: string;
-  readonly variants: (Manufacturer & {
-    series: (Series & {
-      variants: Variant[];
-    })[];
-  })[];
+  readonly variants: readonly VariantCatalogManufacturer[];
 }
 
 interface CreateProps {
@@ -253,11 +251,7 @@ export const CreateOrUpdateEventPosition = (props: Props) => {
 
 interface RequiredVariantsProps {
   readonly className?: string;
-  readonly variants: (Manufacturer & {
-    series: (Series & {
-      variants: Variant[];
-    })[];
-  })[];
+  readonly variants: readonly VariantCatalogManufacturer[];
   readonly defaultValue?: Variant["id"][];
 }
 
@@ -269,17 +263,17 @@ const RequiredVariants = ({
   const [items, setItems] = useState<Variant["id"][]>(defaultValue || []);
 
   const variantOptions: {
-    manufacturer: Manufacturer;
-    variants: Variant[];
+    manufacturer: VariantCatalogManufacturer;
+    variants: VariantCatalogVariant[];
   }[] = variants
     .toSorted((a, b) => a.name.localeCompare(b.name))
     .map((manufacturer) => {
       return {
         manufacturer,
         variants: manufacturer.series
-          .sort((a, b) => a.name.localeCompare(b.name))
+          .toSorted((a, b) => a.name.localeCompare(b.name))
           .map((series) =>
-            series.variants.sort((a, b) => a.name.localeCompare(b.name)),
+            series.variants.toSorted((a, b) => a.name.localeCompare(b.name)),
           )
           .flat(),
       };

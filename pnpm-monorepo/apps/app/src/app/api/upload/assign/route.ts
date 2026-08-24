@@ -4,6 +4,7 @@ import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import { probeUploadImageDimensions } from "@/modules/common/utils/probeUploadImageDimensions";
+import { EVENT_MANAGE_GUARD_SELECT } from "@/modules/events/queries/eventManageGuardSelect";
 import {
   getDiscordCoverImageWarning,
   getDiscordSyncWarning,
@@ -156,7 +157,7 @@ export async function PATCH(request: Request) {
             source: EventSource.APP,
             deletedAt: null,
           },
-          include: { managers: true },
+          select: EVENT_MANAGE_GUARD_SELECT,
         }),
         data.imageId
           ? prisma.upload.findUnique({

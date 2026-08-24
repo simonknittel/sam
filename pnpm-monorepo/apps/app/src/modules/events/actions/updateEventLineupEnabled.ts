@@ -8,6 +8,7 @@ import { triggerNotifications } from "@/modules/notifications/utils/triggerNotif
 import { EventActivityType, EventSource } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { EVENT_MANAGE_GUARD_SELECT } from "../queries/eventManageGuardSelect";
 import { createEventActivity } from "../utils/eventActivity";
 import { isAllowedToManagePositions } from "../utils/isAllowedToManagePositions";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
@@ -28,8 +29,10 @@ export const updateEventLineupEnabled = createAuthenticatedAction(
       where: {
         id: data.eventId,
       },
-      include: {
-        managers: true,
+      select: {
+        ...EVENT_MANAGE_GUARD_SELECT,
+        source: true,
+        lineupEnabled: true,
       },
     });
     if (!event)

@@ -15,6 +15,11 @@ export const getAllEvents = cache(
       orderBy: {
         name: "asc",
       },
+      select: {
+        id: true,
+        name: true,
+        startTime: true,
+      },
     });
   }),
 );

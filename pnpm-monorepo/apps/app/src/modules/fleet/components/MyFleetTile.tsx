@@ -1,9 +1,9 @@
-import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import { CursorPaginationControls } from "@/modules/common/CursorPagination/CursorPaginationControls";
 import { forbidden } from "next/navigation";
 import { type SearchParams } from "nuqs/server";
 import { getMyFleet } from "../queries/getMyFleet";
+import { getVariantCatalog } from "../queries/getVariantCatalog";
 import { loadFleetListSearchParams } from "../utils/loadFleetListSearchParams";
 import { AssignShip } from "./AssignShip";
 import { ShipsTable } from "./ShipsTable";
@@ -40,15 +40,7 @@ export const MyFleetTile = async ({ className, searchParams }: Props) => {
         cursor,
         direction,
       }),
-      prisma.manufacturer.findMany({
-        include: {
-          series: {
-            include: {
-              variants: true,
-            },
-          },
-        },
-      }),
+      getVariantCatalog(),
     ]);
 
   return (

@@ -27,8 +27,9 @@ export const deleteEventPositionApplicationForCurrentUser =
         where: {
           id: data.positionId,
         },
-        include: {
-          event: true,
+        select: {
+          id: true,
+          event: { select: { id: true, startTime: true, endTime: true } },
         },
       });
       if (!position?.event)

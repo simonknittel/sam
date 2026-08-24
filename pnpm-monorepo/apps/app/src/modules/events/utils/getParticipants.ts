@@ -1,5 +1,6 @@
 import { prisma } from "@/db";
-import type { Event, EventParticipant } from "@sam-monorepo/database/client";
+import type { EventParticipantRow } from "@/modules/events/types/eventShapes";
+import type { Event } from "@sam-monorepo/database/client";
 import { cache } from "react";
 
 /**
@@ -11,7 +12,7 @@ import { cache } from "react";
 export const getParticipants = cache(
   async (
     event: Event & {
-      participants: EventParticipant[];
+      participants: EventParticipantRow[];
     },
   ) => {
     const citizenIds = new Set<string>();
@@ -32,8 +33,11 @@ export const getParticipants = cache(
           { discordId: { in: Array.from(discordUserIds) } },
         ],
       },
-      include: {
-        roleAssignments: true,
+      select: {
+        id: true,
+        handle: true,
+        discordId: true,
+        roleAssignments: { select: { roleId: true, currentLevel: true } },
       },
     });
 

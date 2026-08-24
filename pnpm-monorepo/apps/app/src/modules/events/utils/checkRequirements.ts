@@ -1,10 +1,11 @@
-import type { Entity, Ship } from "@sam-monorepo/database/client";
+import type { EventCitizenWithShips } from "@/modules/events/types/eventShapes";
+import type { Ship } from "@sam-monorepo/database/client";
 import type { PositionType } from "../components/Position";
 
 export const checkRequirements = (
   position: PositionType,
   myShips: Ship[],
-  allEventCitizens: { citizen: Entity; ships: Ship[] }[],
+  allEventCitizens: EventCitizenWithShips[],
 ) => {
   let doesCurrentUserSatisfyRequirements = true;
   if (
@@ -33,13 +34,14 @@ export const checkRequirements = (
       ),
   );
 
-  const applicationsSatisfyingRequirements = position.applications.filter(
+  const applications = position.applications ?? [];
+  const applicationsSatisfyingRequirements = applications.filter(
     (application) =>
       citizensSatisfyingRequirements.some(
         (citizen) => citizen.citizen.id === application.citizen.id,
       ),
   );
-  const applicationsNotSatisfyingRequirements = position.applications.filter(
+  const applicationsNotSatisfyingRequirements = applications.filter(
     (application) =>
       citizensNotSatisfyingRequirements.some(
         (citizen) => citizen.citizen.id === application.citizen.id,

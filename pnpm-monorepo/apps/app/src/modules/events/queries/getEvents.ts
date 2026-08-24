@@ -91,9 +91,16 @@ export const getEvents = cache(
         include: {
           participants: {
             where: { cancelledAt: null },
+            select: {
+              id: true,
+              citizenId: true,
+              discordUserId: true,
+              comment: true,
+              createdAt: true,
+            },
           },
-          managers: true,
-          coverImage: true,
+          managers: { select: { id: true, handle: true } },
+          coverImage: { select: { id: true, mimeType: true } },
         },
         orderBy,
         ...(cursor

@@ -27,8 +27,9 @@ export const createEventPositionApplicationForCurrentUser =
         where: {
           id: data.positionId,
         },
-        include: {
-          event: true,
+        select: {
+          id: true,
+          event: { select: { id: true, startTime: true, endTime: true } },
         },
       });
       if (!position?.event)
@@ -47,6 +48,9 @@ export const createEventPositionApplicationForCurrentUser =
             { discordUserId: authentication.session.discordId },
             { citizenId: authentication.session.entity.id },
           ],
+        },
+        select: {
+          id: true,
         },
       });
       if (!participant)

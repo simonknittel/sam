@@ -1,12 +1,13 @@
+import type { EventParticipantRow } from "@/modules/events/types/eventShapes";
 import { FleetTable } from "@/modules/fleet/components/FleetTable";
-import type { Event, EventParticipant } from "@sam-monorepo/database/client";
+import type { Event } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import { getEventFleet } from "../utils/getEventFleet";
 
 interface Props {
   readonly className?: string;
   readonly event: Event & {
-    participants: EventParticipant[];
+    participants: EventParticipantRow[];
   };
 }
 

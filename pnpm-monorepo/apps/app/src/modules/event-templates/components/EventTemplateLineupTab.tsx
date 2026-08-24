@@ -4,11 +4,7 @@ import { CreateOrUpdateEventPosition } from "@/modules/events/components/CreateO
 import type { PositionType } from "@/modules/events/components/Position";
 import { PositionSkeleton } from "@/modules/events/components/PositionSkeleton";
 import { toTemplateContainer } from "@/modules/events/utils/eventContainer";
-import type {
-  Manufacturer,
-  Series,
-  Variant,
-} from "@sam-monorepo/database/browser";
+import type { VariantCatalogManufacturer } from "@/modules/fleet/queries/getVariantCatalog";
 import clsx from "clsx";
 import dynamic from "next/dynamic";
 
@@ -25,11 +21,7 @@ interface Props {
   readonly templateId: string;
   readonly positions: PositionType[];
   readonly canEdit: boolean;
-  readonly variants: (Manufacturer & {
-    series: (Series & {
-      variants: Variant[];
-    })[];
-  })[];
+  readonly variants: readonly VariantCatalogManufacturer[];
 }
 
 /**

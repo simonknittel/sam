@@ -1,13 +1,12 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import { Tile, TileVariant } from "@/modules/common/components/Tile";
+import type {
+  EventCitizenReference,
+  EventParticipantRow,
+} from "@/modules/events/types/eventShapes";
 import { VariantWithLogo } from "@/modules/fleet/components/VariantWithLogo";
-import {
-  EventSource,
-  type Entity,
-  type Event,
-  type EventParticipant,
-} from "@sam-monorepo/database/client";
+import { EventSource, type Event } from "@sam-monorepo/database/client";
 import { FaCheck, FaTimes } from "react-icons/fa";
 import { isLineupVisible } from "../utils/isLineupVisible";
 import { EventParticipationControls } from "./EventParticipationControls";
@@ -15,8 +14,8 @@ import { EventParticipationControls } from "./EventParticipationControls";
 interface Props {
   readonly className?: string;
   readonly event: Event & {
-    readonly participants: EventParticipant[];
-    readonly managers: Entity[];
+    readonly participants: EventParticipantRow[];
+    readonly managers: EventCitizenReference[];
   };
 }
 
@@ -63,17 +62,25 @@ export const PersonalBriefing = async ({ className, event }: Props) => {
             citizenId,
           },
           orderBy: { order: "asc" },
-          include: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
             requiredVariants: {
               orderBy: { order: "asc" },
-              include: {
+              select: {
+                id: true,
                 variant: {
-                  include: {
+                  select: {
+                    id: true,
+                    name: true,
                     series: {
-                      include: {
+                      select: {
                         manufacturer: {
-                          include: {
-                            image: true,
+                          select: {
+                            id: true,
+                            name: true,
+                            image: { select: { id: true, mimeType: true } },
                           },
                         },
                       },

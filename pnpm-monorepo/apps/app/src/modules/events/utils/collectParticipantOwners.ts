@@ -7,7 +7,10 @@ import type { EventParticipant } from "@sam-monorepo/database/client";
  * resolve the same set of citizens, thus both go through this function.
  */
 export const collectParticipantOwners = (
-  participants: readonly EventParticipant[],
+  participants: readonly Pick<
+    EventParticipant,
+    "citizenId" | "discordUserId"
+  >[],
 ) => {
   const citizenIds = new Set<string>();
   const discordUserIds = new Set<string>();

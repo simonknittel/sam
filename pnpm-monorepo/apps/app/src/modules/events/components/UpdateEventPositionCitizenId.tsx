@@ -1,11 +1,11 @@
 "use client";
 
 import { runAction } from "@/modules/actions/utils/runAction";
+import type { EventCitizenWithShips } from "@/modules/events/types/eventShapes";
 import type {
   Entity,
   EventPosition,
   EventPositionApplication,
-  Ship,
 } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useTransition, type ChangeEventHandler } from "react";
@@ -16,16 +16,13 @@ import styles from "./UpdateEventPositionCitizenId.module.css";
 interface Props {
   readonly className?: string;
   readonly position: EventPosition;
-  readonly citizensSatisfyingRequirements: { citizen: Entity; ships: Ship[] }[];
-  readonly citizensNotSatisfyingRequirements: {
-    citizen: Entity;
-    ships: Ship[];
-  }[];
+  readonly citizensSatisfyingRequirements: EventCitizenWithShips[];
+  readonly citizensNotSatisfyingRequirements: EventCitizenWithShips[];
   readonly applicationsSatisfyingRequirements: (EventPositionApplication & {
-    citizen: Entity;
+    citizen: Pick<Entity, "id" | "handle">;
   })[];
   readonly applicationsNotSatisfyingRequirements: (EventPositionApplication & {
-    citizen: Entity;
+    citizen: Pick<Entity, "id" | "handle">;
   })[];
 }
 

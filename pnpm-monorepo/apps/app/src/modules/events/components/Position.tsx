@@ -2,7 +2,9 @@ import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { AccordeonToggle } from "@/modules/common/components/Accordeon";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { EditableInput } from "@/modules/common/components/form/EditableInput";
+import type { EventCitizenWithShips } from "@/modules/events/types/eventShapes";
 import { VariantWithLogo } from "@/modules/fleet/components/VariantWithLogo";
+import type { VariantCatalogManufacturer } from "@/modules/fleet/queries/getVariantCatalog";
 import {
   type Entity,
   type EventPosition,
@@ -39,20 +41,25 @@ const hexToRgba = (hex: string, alpha: number): string => {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
+/**
+ * One rendered position. `applications` and `citizen` are optional because
+ * a template blueprint's positions can never have either — its query omits
+ * both joins rather than always resolving them to nothing.
+ */
 export type PositionType = EventPosition & {
-  applications: (EventPositionApplication & {
-    citizen: Entity;
+  applications?: (EventPositionApplication & {
+    citizen: Pick<Entity, "id" | "handle">;
   })[];
   requiredVariants: (EventPositionRequiredVariant & {
     variant: Variant & {
       series: Series & {
         manufacturer: Manufacturer & {
-          image: Upload | null;
+          image: Pick<Upload, "id" | "mimeType"> | null;
         };
       };
     };
   })[];
-  citizen: Entity | null;
+  citizen?: Pick<Entity, "id" | "handle"> | null;
   childPositions?: PositionType[];
 };
 
@@ -60,13 +67,9 @@ interface Props {
   readonly className?: string;
   readonly position: PositionType;
   readonly showManage?: boolean;
-  readonly variants: (Manufacturer & {
-    series: (Series & {
-      variants: Variant[];
-    })[];
-  })[];
+  readonly variants: readonly VariantCatalogManufacturer[];
   readonly myShips: Ship[];
-  readonly allEventCitizens: { citizen: Entity; ships: Ship[] }[];
+  readonly allEventCitizens: EventCitizenWithShips[];
   readonly showActions?: boolean;
   readonly groupLevel: number;
   readonly parentPositions: PositionType["id"][];
@@ -96,9 +99,11 @@ export const Position = ({
   const { openItems, open, close } = useLineupVisibility();
   const isOpen = openItems.includes(position.id);
 
-  const hasCurrentUserAlreadyApplied = position.applications.some(
-    (application) =>
-      application.citizen.id === authentication.session.entity?.id,
+  const hasCurrentUserAlreadyApplied = Boolean(
+    position.applications?.some(
+      (application) =>
+        application.citizen.id === authentication.session.entity?.id,
+    ),
   );
 
   const handleToggleOpen = () => {

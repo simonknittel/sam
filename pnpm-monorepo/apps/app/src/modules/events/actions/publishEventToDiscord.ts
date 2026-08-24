@@ -8,6 +8,7 @@ import {
 } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { EVENT_MANAGE_GUARD_SELECT } from "../queries/eventManageGuardSelect";
 import {
   discordPublishFieldsSchema,
   parseDiscordPublishFields,
@@ -42,7 +43,10 @@ export const publishEventToDiscord = createAuthenticatedAction(
         source: EventSource.APP,
         deletedAt: null,
       },
-      include: { managers: true },
+      select: {
+        ...EVENT_MANAGE_GUARD_SELECT,
+        discordPublishedId: true,
+      },
     });
     if (!event)
       return { error: "Event nicht gefunden", requestPayload: formData };

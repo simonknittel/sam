@@ -47,6 +47,9 @@ export const removeEventParticipant = createAuthenticatedAction(
           activeCitizenId: data.citizenId,
         },
       },
+      select: {
+        id: true,
+      },
     });
     if (!participant)
       return {

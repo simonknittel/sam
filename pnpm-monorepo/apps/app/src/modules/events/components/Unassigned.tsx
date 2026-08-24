@@ -1,22 +1,19 @@
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import Note from "@/modules/common/components/Note";
-import type {
-  Entity,
-  EventPosition,
-  Ship,
-} from "@sam-monorepo/database/client";
+import type { EventCitizenWithShips } from "@/modules/events/types/eventShapes";
+import type { Entity, EventPosition } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 
 type Position = EventPosition & {
-  citizen: Entity | null;
+  citizen?: Pick<Entity, "id" | "handle"> | null;
   childPositions?: Position[];
 };
 
 interface Props {
   readonly className?: string;
   readonly positions: Position[];
-  readonly allEventCitizens: { citizen: Entity; ships: Ship[] }[];
+  readonly allEventCitizens: EventCitizenWithShips[];
 }
 
 export const Unassigned = ({
@@ -27,9 +24,7 @@ export const Unassigned = ({
   const authentication = useAuthentication();
   if (!authentication) throw new Error("Unauthorized");
 
-  const allPositions: (EventPosition & {
-    citizen: Entity | null;
-  })[] = [];
+  const allPositions: Position[] = [];
   const loop = (positions: Position[]) => {
     for (const position of positions) {
       allPositions.push(position);
