@@ -19,10 +19,9 @@ export const UnbanUser = ({ userId }: Props) => {
         <Button2
           variant={Button2Variant.IconOnly}
           disabled={isPending}
-          title="Benutzer entsperren"
+          tooltip="Benutzer entsperren"
         >
-          {isPending ? <AsciiSpinner /> : <FaUnlock />}{" "}
-          <span className="sr-only">Entsperren</span>
+          {isPending ? <AsciiSpinner /> : <FaUnlock />}
         </Button2>
       )}
       title="Benutzer entsperren?"

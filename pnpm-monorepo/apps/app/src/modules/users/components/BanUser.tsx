@@ -20,10 +20,9 @@ export const BanUser = ({ userId }: Props) => {
         <Button2
           variant={Button2Variant.IconOnly}
           disabled={isPending}
-          title="Benutzer sperren"
+          tooltip="Benutzer sperren"
         >
-          {isPending ? <AsciiSpinner /> : <FaBan />}{" "}
-          <span className="sr-only">Sperren</span>
+          {isPending ? <AsciiSpinner /> : <FaBan />}
         </Button2>
       )}
       title="Benutzer sperren?"
