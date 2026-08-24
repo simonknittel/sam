@@ -32,17 +32,27 @@ export const MarkdownRenderer = ({
         remarkPlugins={remarkPlugins}
         components={{
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          a: ({ href, node, ...props }) => {
-            if (!href) return null;
+          a: ({ href, node, children, ...props }) => {
+            /**
+             * `react-markdown` empties the address of a scheme that it does
+             * not trust. The label stays as text, so that no content is lost.
+             */
+            if (!href) return <>{children}</>;
 
             const isExternal = /^https?:\/\//.test(href);
 
             if (isExternal)
               return (
-                <a href={href} target="_blank" rel="noreferrer" {...props} />
+                <a href={href} target="_blank" rel="noreferrer" {...props}>
+                  {children}
+                </a>
               );
 
-            return <Link href={href} {...props} />;
+            return (
+              <Link href={href} {...props}>
+                {children}
+              </Link>
+            );
           },
         }}
       >
