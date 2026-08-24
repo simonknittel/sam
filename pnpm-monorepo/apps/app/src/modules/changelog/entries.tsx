@@ -46,6 +46,32 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-08-24-formatierung-in-eventbeschreibungen",
+    date: "2026-08-24",
+    title: "Formatierung in Eventbeschreibungen",
+    tags: ["Events", "Änderung"],
+    isTracked: false,
+    body: () => (
+      <>
+        <p>
+          Die Kurzbeschreibung eines Events und einer Eventvorlage lässt sich ab
+          sofort formatieren. Möglich sind genau die Formatierungen, die auch
+          Discord kennt: fett, kursiv, unterstrichen, durchgestrichen, Code,
+          Überschriften, Zitate, Listen und Links. Alles andere &ndash; zum
+          Beispiel eine Tabelle &ndash; bleibt als Zeichen stehen, genau wie auf
+          Discord.
+        </p>
+
+        <p>
+          Der Kalenderexport (ICS-Datei, Google Calendar, Microsoft Outlook)
+          entfernt die Formatierungszeichen wieder. Im Kalendereintrag steht
+          also weiterhin reiner Text.
+        </p>
+      </>
+    ),
+  },
+
+  {
     key: "2026-08-22-events-auf-discord-veroeffentlichen",
     date: "2026-08-22",
     title: "Events auf Discord veröffentlichen",

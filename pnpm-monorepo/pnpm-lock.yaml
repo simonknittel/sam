@@ -298,6 +298,9 @@ importers:
       react-number-format:
         specifier: 5.4.5
         version: 5.4.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      remark:
+        specifier: 15.0.1
+        version: 15.0.1(supports-color@7.2.0)
       remark-breaks:
         specifier: 4.0.0
         version: 4.0.0
@@ -316,6 +319,9 @@ importers:
       slug:
         specifier: 12.0.1
         version: 12.0.1
+      strip-markdown:
+        specifier: 6.0.0
+        version: 6.0.0
       superjson:
         specifier: 2.2.6
         version: 2.2.6
@@ -325,6 +331,9 @@ importers:
       ua-parser-js:
         specifier: 2.0.10
         version: 2.0.10
+      unist-util-visit:
+        specifier: 5.1.0
+        version: 5.1.0
       yjs:
         specifier: 13.6.32
         version: 13.6.32
@@ -353,6 +362,9 @@ importers:
       '@types/lodash':
         specifier: 4.17.25
         version: 4.17.25
+      '@types/mdast':
+        specifier: 4.0.4
+        version: 4.0.4
       '@types/node':
         specifier: 24.13.3
         version: 24.13.3
@@ -8563,6 +8575,9 @@ packages:
   remark-stringify@11.0.0:
     resolution: {integrity: sha512-1OSmLd3awB/t8qdoEOMazZkNsfVTeY4fTsgzcQFdXNq8ToTN4ZGwrMnlda4K6smTFKD+GRV6O48i6Z4iKgPPpw==}
 
+  remark@15.0.1:
+    resolution: {integrity: sha512-Eht5w30ruCXgFmxVUSlNWQ9iiimq07URKeFS3hNc8cUWy1llX4KDWfyEDZRycMc+znsN9Ux5/tJ/BFdgdOwA3A==}
+
   remeda@2.33.4:
     resolution: {integrity: sha512-ygHswjlc/opg2VrtiYvUOPLjxjtdKvjGz1/plDhkG66hjNjFr1xmfrs2ClNFo/E6TyUFiwYNh53bKV26oBoMGQ==}
 
@@ -8949,6 +8964,9 @@ packages:
   strip-json-comments@3.1.1:
     resolution: {integrity: sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==}
     engines: {node: '>=8'}
+
+  strip-markdown@6.0.0:
+    resolution: {integrity: sha512-mSa8FtUoX3ExJYDkjPUTC14xaBAn4Ik5GPQD45G5E2egAmeV3kHgVSTfIoSDggbF6Pk9stahVgqsLCNExv6jHw==}
 
   strnum@2.4.1:
     resolution: {integrity: sha512-M9eUSMT2dCB2cTNPG7UYj6KuK7RJR2SN2+yCV/fTW3xzTCS6EaGZ5pSMgDIjB7r8zSfTGk+dvvn9rTjpVS9Mwg==}
@@ -18104,6 +18122,15 @@ snapshots:
       mdast-util-to-markdown: 2.1.2
       unified: 11.0.5
 
+  remark@15.0.1(supports-color@7.2.0):
+    dependencies:
+      '@types/mdast': 4.0.4
+      remark-parse: 11.0.0(supports-color@7.2.0)
+      remark-stringify: 11.0.0
+      unified: 11.0.5
+    transitivePeerDependencies:
+      - supports-color
+
   remeda@2.33.4: {}
 
   require-directory@2.1.1: {}
@@ -18615,6 +18642,10 @@ snapshots:
   strip-final-newline@2.0.0: {}
 
   strip-json-comments@3.1.1: {}
+
+  strip-markdown@6.0.0:
+    dependencies:
+      '@types/mdast': 4.0.4
 
   strnum@2.4.1:
     dependencies:

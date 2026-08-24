@@ -9,6 +9,7 @@ import { Textarea } from "@/modules/common/components/form/Textarea";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
 import type { PublishableGuildChannel } from "@/modules/discord/utils/guildScheduledEventPayload";
+import { EventTemplateDescriptionHint } from "@/modules/event-templates/components/EventTemplateDescriptionHint";
 import { DiscordPublishTargetFields } from "@/modules/events/components/DiscordPublishTargetFields";
 import { EventCoverImageField } from "@/modules/events/components/EventCoverImageField";
 import { WikiRoleSelector } from "@/modules/wiki/components/WikiRoleSelector";
@@ -80,7 +81,7 @@ export const UpdateEventTemplateForm = ({
       <Textarea
         name="description"
         label="Kurzbeschreibung"
-        hint="optional, max. 1.000 Zeichen. Wird als Kurzbeschreibung in das Event übernommen."
+        hint={<EventTemplateDescriptionHint />}
         maxLength={EVENT_TEMPLATE_DESCRIPTION_MAX_LENGTH}
         defaultValue={template.description ?? ""}
         className="mt-4"

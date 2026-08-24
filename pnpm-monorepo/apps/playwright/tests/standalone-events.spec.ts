@@ -555,6 +555,80 @@ test("the personal briefing on a Discord event shows RSVP state and assigned pos
   ).toBeVisible();
 });
 
+test("the description renders the formats of Discord and exports plain text", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const creator = await createCitizen(prisma, {
+    handle: "formatierungs-orga",
+    permissionStrings: ["event;read", "event;create"],
+  });
+
+  const description = [
+    "**Sammelpunkt** um 20 Uhr.",
+    "",
+    "- Erster Punkt",
+    "- Zweiter Punkt",
+    "",
+    "| Schiff | Rolle |",
+    "| --- | --- |",
+    "| Carrack | Aufklaerung |",
+  ].join("\n");
+
+  await signIn(creator.user);
+  await page.goto("/app/events");
+
+  await page.getByRole("button", { name: "Event erstellen" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Neues Event" }),
+  ).toBeVisible();
+
+  // The hint names the formats instead of denying them
+  await expect(page.getByText("Formatierungen wie auf Discord")).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Hilfe von Discord" }),
+  ).toBeVisible();
+
+  await page.getByLabel("Titel").fill("Operation Formatierung");
+  await page.getByLabel("Beschreibung").fill(description);
+  await page.getByLabel("Start").fill("2027-04-08T20:00");
+  await page.getByLabel("Ende").fill("2027-04-08T22:00");
+  await page.getByRole("button", { name: "Speichern" }).click();
+
+  await expect(page).toHaveURL(/\/app\/events\/[a-z0-9]+$/, {
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+
+  // Bold text and the list become elements, not characters
+  await expect(
+    page.locator("strong", { hasText: "Sammelpunkt" }),
+  ).toBeVisible();
+  await expect(page.getByText("**Sammelpunkt**")).toHaveCount(0);
+  await expect(
+    page.getByRole("listitem").filter({ hasText: "Erster Punkt" }),
+  ).toBeVisible();
+
+  // Discord does not know tables, thus the characters stay
+  await expect(page.getByRole("cell", { name: "Carrack" })).toHaveCount(0);
+  await expect(page.getByText("| Schiff | Rolle |")).toBeVisible();
+
+  // The calendar export gets the same text without the format characters
+  await page
+    .getByRole("button", { name: "Zum eigenen Kalender hinzufügen" })
+    .click();
+  const icsHref = await page
+    .getByRole("menuitem", { name: "ICS-Datei herunterladen" })
+    .getAttribute("href");
+  // RFC 5545 folds a long line; unfold it before the text assertions
+  const icsFile = decodeURIComponent(
+    icsHref!.replace("data:text/calendar;charset=utf-8,", ""),
+  ).replaceAll(/\r\n[\t ]/g, "");
+  expect(icsFile).toContain("Sammelpunkt um 20 Uhr.");
+  expect(icsFile).not.toContain("**Sammelpunkt**");
+  expect(icsFile).toContain("- Erster Punkt");
+});
+
 /**
  * Sync safety ("a sync cycle leaves app events untouched") is covered at
  * the unit level in the lambda's reconciliation tests — the sync itself

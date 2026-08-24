@@ -11,6 +11,7 @@ import { TextInput } from "@/modules/common/components/form/TextInput";
 import { Tile, TileVariant } from "@/modules/common/components/Tile";
 import { deleteEvent } from "@/modules/events/actions/deleteEvent";
 import { updateEvent } from "@/modules/events/actions/updateEvent";
+import { EventDescriptionHint } from "@/modules/events/components/EventDescriptionHint";
 import { WikiRoleSelector } from "@/modules/wiki/components/WikiRoleSelector";
 import { EventVisibility } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
@@ -68,7 +69,7 @@ export const EventSettings = ({ className, event, discordCard }: Props) => {
           <Textarea
             name="description"
             label="Kurzbeschreibung"
-            hint="optional, max. 1.000 Zeichen, keine Formatierungsmöglichkeiten. Ausführlichere Informationen gehören ins Briefing des Events."
+            hint={<EventDescriptionHint />}
             maxLength={EVENT_DESCRIPTION_MAX_LENGTH}
             defaultValue={getDefaultValueWithFallback(
               "description",

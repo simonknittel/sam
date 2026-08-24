@@ -1,8 +1,11 @@
+import { markdownToPlainText } from "@/modules/common/utils/markdownToPlainText";
 import type { Event } from "@sam-monorepo/database/client";
 import { format } from "date-fns";
 import { createEvent, type DateTime } from "ics";
 
 export const getIcsFile = (event: Event) => {
+  const description = markdownToPlainText(event.description);
+
   const start = format(event.startTime, "yyyy-MM-dd-HH-mm")
     .split("-")
     .map(Number) as DateTime;
@@ -15,7 +18,7 @@ export const getIcsFile = (event: Event) => {
     title: event.name,
     start,
     end,
-    ...(event.description && { description: event.description }),
+    ...(description && { description }),
     ...(event.location && {
       location: event.location,
     }),

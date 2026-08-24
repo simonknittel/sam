@@ -11,6 +11,7 @@ import { TextInput } from "@/modules/common/components/form/TextInput";
 import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
 import { api } from "@/modules/common/utils/api";
 import { createEvent } from "@/modules/events/actions/createEvent";
+import { EventDescriptionHint } from "@/modules/events/components/EventDescriptionHint";
 import { WikiRoleSelector } from "@/modules/wiki/components/WikiRoleSelector";
 import {
   EventVisibility,
@@ -138,7 +139,7 @@ export const CreateEventForm = ({
         <Textarea
           name="description"
           label="Kurzbeschreibung"
-          hint="optional, max. 1.000 Zeichen, keine Formatierungsmöglichkeiten. Ausführlichere Informationen gehören ins Briefing des Events."
+          hint={<EventDescriptionHint />}
           maxLength={EVENT_DESCRIPTION_MAX_LENGTH}
           defaultValue={getDefaultValueWithFallback(
             "description",
