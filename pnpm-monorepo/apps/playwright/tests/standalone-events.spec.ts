@@ -323,13 +323,16 @@ test("the sign-up lifecycle: sign up with comment, edit, cancel, re-sign-up", as
   ).toBeVisible();
 
   // Edit the comment. The stored value is already in the SSR markup, so
-  // asserting it proves nothing about hydration — filling the controlled
-  // textarea any earlier lets React re-seed the draft mid-fill, which leaves
-  // the typed text prepended to the restored one.
+  // asserting it proves nothing about hydration — React re-seeds the draft of
+  // the controlled textarea after the fill, which leaves the typed text
+  // prepended to the restored one. Only insisting on the value survives that.
   await page.goto(`/app/events/${event.id}`);
   await waitForAppShellHydration(page);
   await expect(page.getByLabel("Kommentar")).toHaveValue("Bringe Snacks mit");
-  await page.getByLabel("Kommentar").fill("Bringe doch keine Snacks mit");
+  await fillUntilValue(
+    page.getByLabel("Kommentar"),
+    "Bringe doch keine Snacks mit",
+  );
   await page.getByRole("button", { name: "Kommentar speichern" }).click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
