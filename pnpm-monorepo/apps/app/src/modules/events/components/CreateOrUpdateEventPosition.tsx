@@ -362,6 +362,7 @@ const RequiredVariants = ({
           </div>
 
           <select
+            aria-label="Benötigtes Schiff"
             className="p-2 rounded-secondary bg-neutral-900 w-full"
             defaultValue={item}
             onChange={(e) => handleChange(e, index)}

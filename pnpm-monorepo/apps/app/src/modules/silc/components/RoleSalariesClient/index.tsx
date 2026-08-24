@@ -82,6 +82,7 @@ export const RoleSalariesClient = ({
 
                 <input
                   name="value[]"
+                  aria-label="SILC"
                   value={salary.value}
                   onChange={(e) => {
                     const newValue = parseInt(e.target.value) || 0;
@@ -100,6 +101,7 @@ export const RoleSalariesClient = ({
 
                 <input
                   name="dayOfMonth[]"
+                  aria-label="Tag im Monat"
                   value={salary.dayOfMonth}
                   onChange={(e) => {
                     const newValue = parseInt(e.target.value) || 0;

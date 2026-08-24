@@ -17,6 +17,18 @@ interface Props {
   showConfirm?: boolean;
 }
 
+/**
+ * A citizen carries one history per log type, and several of them sit next
+ * to each other — so each names itself after what it is a history of.
+ */
+const LOG_TYPE_LABELS: Record<GenericEntityLogType, string> = {
+  handle: "Handle",
+  "discord-id": "Discord ID",
+  "teamspeak-id": "TeamSpeak ID",
+  "citizen-id": "Citizen ID",
+  "community-moniker": "Community Moniker",
+};
+
 export const HistoryModal = ({
   type,
   entity,
@@ -26,13 +38,15 @@ export const HistoryModal = ({
   showConfirm,
 }: Readonly<Props>) => {
   const [isOpen, setIsOpen] = useState(false);
+  const label = `${LOG_TYPE_LABELS[type]} History`;
 
   return (
     <>
       <Button
         onClick={() => setIsOpen(true)}
         variant="tertiary"
-        title="History"
+        title={label}
+        aria-label={label}
       >
         <FaHistory /> {!iconOnly && <>History</>}
       </Button>
@@ -41,7 +55,7 @@ export const HistoryModal = ({
         isOpen={isOpen}
         onRequestClose={() => setIsOpen(false)}
         className="w-3xl"
-        heading={<h2>History</h2>}
+        heading={<h2>{label}</h2>}
       >
         <ModalContent
           type={type}

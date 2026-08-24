@@ -9,7 +9,7 @@ import { TextInput } from "@/modules/common/components/form/TextInput";
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
 import { api } from "@/modules/common/utils/api";
 import type { EventContainer } from "@/modules/events/utils/eventContainer";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { FaSave } from "react-icons/fa";
 import { createWikiPage } from "../actions/createWikiPage";
 import type { WikiPageTargetOption } from "../utils/getWikiPageTargets";
@@ -50,6 +50,8 @@ export const CreateWikiPageForm = ({
     return targets[0].id;
   });
   const [copyFromPageId, setCopyFromPageId] = useState("");
+  const parentSelectId = useId();
+  const copySourceSelectId = useId();
   const [copyChildren, setCopyChildren] = useState(true);
 
   /**
@@ -90,8 +92,11 @@ export const CreateWikiPageForm = ({
         autoFocus
       />
 
-      <label className="mt-4 mb-1 block">Übergeordnete Seite</label>
+      <label className="mt-4 mb-1 block" htmlFor={parentSelectId}>
+        Übergeordnete Seite
+      </label>
       <WikiPageSelect
+        id={parentSelectId}
         name="parentId"
         value={parentId}
         onChange={(event) => setParentId(event.target.value)}
@@ -108,8 +113,11 @@ export const CreateWikiPageForm = ({
         </p>
       )}
 
-      <label className="mt-4 mb-1 block">Inhalt kopieren von (optional)</label>
+      <label className="mt-4 mb-1 block" htmlFor={copySourceSelectId}>
+        Inhalt kopieren von (optional)
+      </label>
       <WikiPageSelect
+        id={copySourceSelectId}
         name="copyFromPageId"
         value={copyFromPageId}
         onChange={(event) => setCopyFromPageId(event.target.value)}
