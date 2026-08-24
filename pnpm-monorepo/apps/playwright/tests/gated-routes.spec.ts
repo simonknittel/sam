@@ -56,17 +56,15 @@ const GATED_ROUTES = [
  * purpose: everyone manages their own files, and `upload;manage` widens the
  * query instead of opening the route.
  */
-const OPEN_ROUTES: readonly [
-  route: string,
-  marker: (page: Page) => Locator,
-][] = [
-  ["/app/dashboard", (page) => page.getByRole("heading", { name: "Spynet" })],
-  ["/app/apps", (page) => page.getByRole("link", { name: "Changelog" })],
+const OPEN_ROUTES: readonly [route: string, marker: (page: Page) => Locator][] =
   [
-    "/app/uploads",
-    (page) => page.getByText("Du hast bisher keine Dateien hochgeladen."),
-  ],
-];
+    ["/app/dashboard", (page) => page.getByRole("heading", { name: "Spynet" })],
+    ["/app/apps", (page) => page.getByRole("link", { name: "Changelog" })],
+    [
+      "/app/uploads",
+      (page) => page.getByText("Du hast bisher keine Dateien hochgeladen."),
+    ],
+  ];
 
 test("permission-gated routes are closed to a citizen without permissions", async ({
   page,

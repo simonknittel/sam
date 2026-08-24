@@ -71,9 +71,9 @@ test("a page travels to the trash, back out of it and finally out of existence",
   await page.goto("/app/wiki/trash");
   const trashRow = page.getByRole("row").filter({ hasText: "Handbuch" });
   await expect(trashRow).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
-  await expect(page.getByRole("row").filter({ hasText: "Kapitel" })).toHaveCount(
-    0,
-  );
+  await expect(
+    page.getByRole("row").filter({ hasText: "Kapitel" }),
+  ).toHaveCount(0);
 
   /**
    * Restore

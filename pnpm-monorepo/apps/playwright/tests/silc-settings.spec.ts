@@ -47,7 +47,7 @@ test("the aUEC conversion rate and the role salaries are edited through the sett
   const rateTile = sectionByHeading(page, "aUEC Umrechnungskurs");
   await rateTile.getByLabel("Wie viel aUEC entspricht ein SILC?").fill("2500");
   await rateTile.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
+  await expect(page.getByText(SAVED_TEXT).first()).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
 
@@ -79,7 +79,7 @@ test("the aUEC conversion rate and the role salaries are edited through the sett
   await salaryTile.locator('input[name="value[]"]').fill("40");
   await salaryTile.locator('input[name="dayOfMonth[]"]').fill("15");
   await salaryTile.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
+  await expect(page.getByText(SAVED_TEXT).first()).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
 
@@ -118,7 +118,7 @@ test("expiring all SILC zeroes every balance, and the refresh recomputes them", 
 
   const otherTile = sectionByHeading(page, "Other");
   await otherTile.getByRole("button", { name: "Expire all SILC" }).click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
+  await expect(page.getByText(SAVED_TEXT).first()).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
 
@@ -154,7 +154,7 @@ test("expiring all SILC zeroes every balance, and the refresh recomputes them", 
   await otherTile
     .getByRole("button", { name: "Refresh SILC balances" })
     .click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
+  await expect(page.getByText(SAVED_TEXT).first()).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await expect

@@ -1,8 +1,10 @@
 import type { Page } from "@playwright/test";
 import {
+  createAppEvent,
   createCitizen,
   createOnSiteNotification,
   createOnSiteNotifications,
+  futureEvent,
 } from "../fixtures/factories";
 import { ACTION_FEEDBACK_TIMEOUT } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
@@ -337,6 +339,42 @@ test("long lists page with Mehr laden", async ({ page, prisma, signIn }) => {
   await expect(
     popover(page).getByRole("button", { name: "Mehr laden" }),
   ).not.toBeAttached();
+});
+
+test("a notification leads to the entity it is about", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const citizen = await createCitizen(prisma, {
+    handle: "durchklicker",
+    permissionStrings: ["event;read"],
+  });
+  const event = await createAppEvent(prisma, {
+    name: "Operation Zielsprung",
+    createdById: citizen.entity.id,
+    ...futureEvent(),
+  });
+  await createOnSiteNotification(prisma, {
+    citizenId: citizen.entity.id,
+    notificationType: "event_created",
+    payload: { eventId: event.id, eventName: event.name },
+  });
+  await signIn(citizen.user);
+
+  await page.goto("/app");
+  await openNotificationCenter(page);
+
+  await popover(page).getByRole("link", { name: "Neues Event" }).click();
+
+  await expect(page).toHaveURL(`/app/events/${event.id}`, {
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+  await expect(
+    page.getByRole("heading", { name: "Operation Zielsprung" }).first(),
+  ).toBeVisible();
+  /** Following a notification closes the popover it came from */
+  await expect(popover(page)).toHaveCount(0);
 });
 
 test.describe("mobile", () => {

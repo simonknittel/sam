@@ -62,9 +62,7 @@ test("editing a page snapshots its previous state, which can be restored again",
     snapshotRow.getByRole("button", { name: "Wiederherstellen" }),
     restoreDialog,
   );
-  await restoreDialog
-    .getByRole("button", { name: "Wiederherstellen" })
-    .click();
+  await restoreDialog.getByRole("button", { name: "Wiederherstellen" }).click();
 
   await expect(page.getByText("Snapshot wiederhergestellt.")).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,

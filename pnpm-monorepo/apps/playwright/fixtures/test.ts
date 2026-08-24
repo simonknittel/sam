@@ -20,6 +20,7 @@ import {
   unleashEnvironment,
 } from "../setup/stack";
 import { startDiscordMock, type DiscordMock } from "./discord-mock";
+import { ONE_DAY_MS } from "./factories";
 
 interface WorkerStack {
   readonly baseURL: string;
@@ -63,8 +64,6 @@ interface WorkerFixtures {
 
 /** next-auth v4 database sessions, unprefixed because the stack is HTTP. */
 const SESSION_COOKIE_NAME = "next-auth.session-token";
-
-const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 const createPrismaClient = (databaseUrl: string) =>
   new PrismaClient({
