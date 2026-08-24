@@ -25,7 +25,22 @@ test("the login page sends an authenticated user to the preserved deep link", as
   await expect(page).toHaveURL("/app/account");
 });
 
-test("the login page rejects an external redirect target", async ({
+/**
+ * Every shape of "not a path on this origin" the guard has to catch. Each of
+ * them would otherwise hand an attacker a login-flavoured redirect to a site
+ * of their choosing. One sign-in walks all of them.
+ */
+const OPEN_REDIRECT_VECTORS: readonly [name: string, target: string][] = [
+  ["absolute URL", "https://evil.example.com/app"],
+  ["protocol-relative URL", "//evil.example.com/app"],
+  ["backslash-prefixed URL", "\\\\evil.example.com/app"],
+  ["mixed slash URL", "/\\evil.example.com/app"],
+  ["javascript: URL", "javascript:alert(1)"],
+  ["double-encoded absolute URL", "%2Fhttps%3A%2F%2Fevil.example.com"],
+  ["path outside /app", "/imprint"],
+];
+
+test("the login page rejects every redirect target that leaves /app", async ({
   page,
   prisma,
   signIn,
@@ -33,24 +48,8 @@ test("the login page rejects an external redirect target", async ({
   const citizen = await createCitizen(prisma, { handle: "open-redirect" });
   await signIn(citizen.user);
 
-  await page.goto(
-    `/?redirect-to=${encodeURIComponent("https://evil.example.com/app")}`,
-  );
-
-  await expect(page).toHaveURL("/app/dashboard");
-});
-
-test("the login page rejects a protocol-relative redirect target", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const citizen = await createCitizen(prisma, { handle: "schema-relative" });
-  await signIn(citizen.user);
-
-  await page.goto(
-    `/?redirect-to=${encodeURIComponent("//evil.example.com/app")}`,
-  );
-
-  await expect(page).toHaveURL("/app/dashboard");
+  for (const [name, target] of OPEN_REDIRECT_VECTORS) {
+    await page.goto(`/?redirect-to=${encodeURIComponent(target)}`);
+    await expect(page, `${name} must be refused`).toHaveURL("/app/dashboard");
+  }
 });

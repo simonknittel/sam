@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import { createCitizen } from "../fixtures/factories";
+import { ACTION_FEEDBACK_TIMEOUT } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 import { setUnleashFlag, UNLEASH_FLAG } from "../fixtures/unleash";
 
@@ -56,7 +57,7 @@ test("the care bear shooter is released by its feature flag", async ({
     )
     .toBe(true);
   // The heading belongs to the landing page the disabled flag redirects to
-  await expect(page).toHaveURL("/", { timeout: 15_000 });
+  await expect(page).toHaveURL("/", { timeout: ACTION_FEEDBACK_TIMEOUT });
 
   await setUnleashFlag(UNLEASH_FLAG.EnableCareBearShooter, true);
   // The Unity build behind the dummy build URL never loads — the page

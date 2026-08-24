@@ -1,4 +1,3 @@
-import type { Page } from "@playwright/test";
 import { VariantStatus } from "@sam-monorepo/database/client";
 import {
   addCitizenToOrganization,
@@ -9,19 +8,16 @@ import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilUrl,
   clickUntilVisible,
+  DELETED_TEXT,
   fillUntilUrl,
+  inlineEditorTrigger,
   modal,
+  SAVED_TEXT,
   saveInlineEditor,
+  statisticTile,
+  toggleLabel,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
-
-/**
- * The StatisticTile value animates through random digits (ScrambleIn), but
- * an sr-only span carries the real value from the start — the label's
- * parent is the tile, and toContainText reads text content including it.
- */
-const statisticTile = (page: Page, label: string) =>
-  page.getByText(label, { exact: true }).locator("..");
 
 test("the org fleet filters narrow the server-rendered table", async ({
   page,
@@ -61,9 +57,13 @@ test("the org fleet filters narrow the server-rendered table", async ({
   const polarisRow = page.getByRole("row").filter({ hasText: "Polaris" });
   const carrackRow = page.getByRole("row").filter({ hasText: "Carrack" });
   await expect(polarisRow).toBeVisible();
-  await expect(polarisRow).toContainText("2");
+  await expect(
+    polarisRow.getByRole("cell", { name: "2", exact: true }),
+  ).toBeVisible();
   await expect(carrackRow).toBeVisible();
-  await expect(carrackRow).toContainText("1");
+  await expect(
+    carrackRow.getByRole("cell", { name: "1", exact: true }),
+  ).toBeVisible();
 
   // Default sort is count-desc, so Polaris (2 ships) leads
   await expect(page.locator("tbody tr").first()).toContainText("Polaris");
@@ -80,7 +80,7 @@ test("the org fleet filters narrow the server-rendered table", async ({
   await expect(carrackRow).toBeVisible();
   await clickUntilUrl(
     page,
-    page.locator("label").filter({ hasText: "Flight ready" }),
+    toggleLabel(page, "Flight ready"),
     /flight_ready=flight_ready/,
   );
   await expect(carrackRow).not.toBeVisible({
@@ -126,10 +126,12 @@ test("my ships can be added, renamed and deleted with consistent org counts", as
     page.getByRole("button", { name: "Hinzufügen" }).first(),
     addModal,
   );
-  await addModal.locator("select").selectOption({ label: "Polaris" });
+  await addModal.getByLabel("Schiff", { exact: true }).selectOption({
+    label: "Polaris",
+  });
   await addModal.getByLabel("Schiffsname").fill("Sternenfaust");
   await addModal.getByRole("button", { name: "Hinzufügen" }).click();
-  await expect(page.getByText("Erfolgreich gespeichert")).toBeVisible({
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await expect(addModal).not.toBeVisible();
@@ -143,16 +145,16 @@ test("my ships can be added, renamed and deleted with consistent org counts", as
   await expect(statisticTile(page, "Schiffe")).toContainText("1");
   await expect(statisticTile(page, "Citizen")).toContainText("1");
   await expect(
-    page.getByRole("row").filter({ hasText: "Polaris" }),
-  ).toContainText("1");
+    page
+      .getByRole("row")
+      .filter({ hasText: "Polaris" })
+      .getByRole("cell", { name: "1", exact: true }),
+  ).toBeVisible();
 
   // Rename
   await page.goto("/app/fleet/my-ships");
   const nameInput = page.locator('input[name="name"]');
-  await clickUntilVisible(
-    shipRow.locator('button[title="Klicken, um zu bearbeiten"]'),
-    nameInput,
-  );
+  await clickUntilVisible(inlineEditorTrigger(shipRow), nameInput);
   await nameInput.fill("Sternenhammer");
   await saveInlineEditor(page);
   await expect(shipRow).toContainText("Sternenhammer", {
@@ -172,7 +174,7 @@ test("my ships can be added, renamed and deleted with consistent org counts", as
     .getByRole("alertdialog")
     .getByRole("button", { name: "Löschen" })
     .click();
-  await expect(page.getByText("Erfolgreich gelöscht")).toBeVisible({
+  await expect(page.getByText(DELETED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await expect(page.getByText("Keine Schiffe gefunden")).toBeVisible({
@@ -247,12 +249,23 @@ test("a variant tag records the creating citizen as its author", async ({
   await expect(createModal).toHaveCount(0);
 
   await expect
-    .poll(async () => prisma.variantTag.findFirst())
+    .poll(() => prisma.variantTag.findFirst(), {
+      timeout: ACTION_FEEDBACK_TIMEOUT,
+    })
     .toMatchObject({
       key: "Class",
       value: "Light",
       createdById: manager.entity.id,
     });
+
+  /** … and the series lists the new variant with the tag on it */
+  const stalkerRow = page
+    .getByRole("row")
+    .filter({ hasText: "Avenger Stalker" });
+  await expect(stalkerRow.getByText("Class", { exact: true })).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+  await expect(stalkerRow.getByText("Light", { exact: true })).toBeVisible();
 });
 
 test("manufacturers and series can be managed through the REST-backed settings", async ({
@@ -292,13 +305,10 @@ test("manufacturers and series can be managed through the REST-backed settings",
     `/app/fleet/settings/manufacturer/${manufacturer!.id}`,
   );
   const nameInput = page.locator('input[name="name"]');
-  await clickUntilVisible(
-    page.locator('button[title="Klicken, um zu bearbeiten"]'),
-    nameInput,
-  );
+  await clickUntilVisible(inlineEditorTrigger(page), nameInput);
   await nameInput.fill("Aegis Dynamics GmbH");
   await saveInlineEditor(page);
-  await expect(page.getByText("Erfolgreich gespeichert")).toBeVisible({
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await expect
@@ -317,7 +327,7 @@ test("manufacturers and series can be managed through the REST-backed settings",
   });
   await expect(saveSeriesButton).toBeEnabled();
   await saveSeriesButton.click();
-  await expect(page.getByText("Erfolgreich gespeichert")).toBeVisible({
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await expect(page.getByRole("link", { name: "Avenger" })).toBeVisible({

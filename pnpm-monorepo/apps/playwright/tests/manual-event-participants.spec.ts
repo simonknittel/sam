@@ -1,26 +1,26 @@
 import type { Locator, Page } from "@playwright/test";
-import {
-  EventActivityType,
-  EventSource,
-  EventVisibility,
-} from "@sam-monorepo/database/client";
+import { EventActivityType } from "@sam-monorepo/database/client";
 import {
   assignRole,
   createAppEvent,
   createCitizen,
+  createEvent,
+  createParticipant,
   createRole,
+  EventSource,
+  EventVisibility,
+  futureEvent,
   type Citizen,
 } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
+  fillUntilValue,
   modal,
+  pickFromSearch,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
-
-const ONE_HOUR_MS = 60 * 60 * 1000;
-const ONE_DAY_MS = 24 * ONE_HOUR_MS;
 
 /**
  * The picker resolves its options through the citizen list, so a manager
@@ -28,18 +28,19 @@ const ONE_DAY_MS = 24 * ONE_HOUR_MS;
  */
 const MANAGER_PERMISSIONS = ["event;read", "citizen;read"];
 
-const futureEvent = (name: string, createdById: string) => ({
+const appEvent = (name: string, createdById: string) => ({
   name,
   createdById,
-  startTime: new Date(Date.now() + ONE_DAY_MS),
-  endTime: new Date(Date.now() + ONE_DAY_MS + 2 * ONE_HOUR_MS),
+  ...futureEvent(),
 });
 
 const pickCitizen = async (dialog: Locator, page: Page, handle: string) => {
-  await dialog.getByRole("combobox", { name: "Citizens" }).fill(handle);
-  const option = page.getByRole("option", { name: new RegExp(handle) });
-  await expect(option).toBeVisible();
-  await option.click();
+  await pickFromSearch(
+    page,
+    dialog.getByRole("combobox", { name: "Citizens" }),
+    handle,
+  );
+  /** The picked citizen becomes a chip linking to their profile */
   await expect(dialog.getByRole("link", { name: handle })).toBeVisible();
 };
 
@@ -82,7 +83,7 @@ test("a manager adds citizens with a shared comment", async ({
   });
   const event = await createAppEvent(
     prisma,
-    futureEvent("Operation Nachmeldung", manager.entity.id),
+    appEvent("Operation Nachmeldung", manager.entity.id),
   );
 
   await signIn(manager.user);
@@ -91,7 +92,10 @@ test("a manager adds citizens with a shared comment", async ({
   const addModal = await openAddModal(page);
   await pickCitizen(addModal, page, "nachzuegler-eins");
   await pickCitizen(addModal, page, "nachzuegler-zwei");
-  await addModal.getByLabel("Kommentar").fill("Vom Manager nachgetragen");
+  await fillUntilValue(
+    addModal.getByLabel("Kommentar"),
+    "Vom Manager nachgetragen",
+  );
   await addModal.getByRole("button", { name: "Speichern" }).click();
 
   await expect(page.getByText("2 Teilnehmer hinzugefügt.")).toBeVisible({
@@ -159,16 +163,13 @@ test("a manager removes a participant with a reason and clears their lineup", as
     permissionStrings: ["event;read"],
   });
   const event = await createAppEvent(prisma, {
-    ...futureEvent("Operation Abmeldung", manager.entity.id),
+    ...appEvent("Operation Abmeldung", manager.entity.id),
     lineupEnabled: true,
   });
-  await prisma.eventParticipant.create({
-    data: {
-      eventId: event.id,
-      source: EventSource.APP,
-      citizenId: participant.entity.id,
-      activeCitizenId: participant.entity.id,
-    },
+  await createParticipant(prisma, {
+    eventId: event.id,
+    citizen: participant,
+    source: EventSource.APP,
   });
   const position = await prisma.eventPosition.create({
     data: {
@@ -250,26 +251,14 @@ test("a removed citizen can sign up again", async ({
   });
   const event = await createAppEvent(
     prisma,
-    futureEvent("Operation Wiederanmeldung", manager.entity.id),
+    appEvent("Operation Wiederanmeldung", manager.entity.id),
   );
-  await prisma.eventParticipant.create({
-    data: {
-      eventId: event.id,
-      source: EventSource.APP,
-      citizenId: participant.entity.id,
-      activeCitizenId: participant.entity.id,
-      cancelledAt: new Date(),
-      cancelledById: manager.entity.id,
-    },
-  });
-  await prisma.eventParticipant.update({
-    where: {
-      eventId_activeCitizenId: {
-        eventId: event.id,
-        activeCitizenId: participant.entity.id,
-      },
-    },
-    data: { activeCitizenId: null },
+  await createParticipant(prisma, {
+    eventId: event.id,
+    citizen: participant,
+    source: EventSource.APP,
+    cancelled: true,
+    cancelledById: manager.entity.id,
   });
 
   await signIn(participant.user);
@@ -308,16 +297,13 @@ test("adding an already signed-up citizen neither duplicates nor fails the batch
   });
   const event = await createAppEvent(
     prisma,
-    futureEvent("Operation Doppelanmeldung", manager.entity.id),
+    appEvent("Operation Doppelanmeldung", manager.entity.id),
   );
-  await prisma.eventParticipant.create({
-    data: {
-      eventId: event.id,
-      source: EventSource.APP,
-      citizenId: alreadySignedUp.entity.id,
-      activeCitizenId: alreadySignedUp.entity.id,
-      comment: "Eigene Anmeldung",
-    },
+  await createParticipant(prisma, {
+    eventId: event.id,
+    citizen: alreadySignedUp,
+    source: EventSource.APP,
+    comment: "Eigene Anmeldung",
   });
 
   await signIn(manager.user);
@@ -325,11 +311,14 @@ test("adding an already signed-up citizen neither duplicates nor fails the batch
 
   /** The picker does not even offer an active participant */
   const addModal = await openAddModal(page);
-  await addModal
-    .getByRole("combobox", { name: "Citizens" })
-    .fill("schon-angemeldet");
+  const citizenSearch = addModal.getByRole("combobox", { name: "Citizens" });
+  /** A citizen it does offer proves the list is loaded and searched */
+  await citizenSearch.fill("angemeldet");
   await expect(
-    page.getByRole("option", { name: /schon-angemeldet/ }),
+    page.getByRole("option", { name: "noch-nicht-angemeldet" }),
+  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(
+    page.getByRole("option", { name: "schon-angemeldet" }),
   ).toHaveCount(0);
 
   await pickCitizen(addModal, page, "noch-nicht-angemeldet");
@@ -366,15 +355,12 @@ test("a non-manager gets no participant controls", async ({
   });
   const event = await createAppEvent(
     prisma,
-    futureEvent("Operation Zuschauer", creator.entity.id),
+    appEvent("Operation Zuschauer", creator.entity.id),
   );
-  await prisma.eventParticipant.create({
-    data: {
-      eventId: event.id,
-      source: EventSource.APP,
-      citizenId: participant.entity.id,
-      activeCitizenId: participant.entity.id,
-    },
+  await createParticipant(prisma, {
+    eventId: event.id,
+    citizen: participant,
+    source: EventSource.APP,
   });
 
   await signIn(viewer.user);
@@ -412,7 +398,7 @@ test("a citizen below their role's max level is not addable to a restricted even
   const assignment = await assignRole(prisma, climber.entity, leveledRole);
 
   const event = await createAppEvent(prisma, {
-    ...futureEvent("Operation Verschlusssache", manager.entity.id),
+    ...appEvent("Operation Verschlusssache", manager.entity.id),
     visibility: EventVisibility.RESTRICTED,
     visibilityRoleIds: [leveledRole.id],
   });
@@ -452,15 +438,10 @@ test("a Discord event keeps its participant list read-only", async ({
     handle: "discord-manager",
     permissionStrings: [...MANAGER_PERMISSIONS, "event;manage"],
   });
-  const event = await prisma.event.create({
-    data: {
-      source: EventSource.DISCORD,
-      discordId: "manual-participants-discord-event",
-      discordCreatorId: "manual-participants-organizer",
-      discordGuildId: "playwright-guild",
-      name: "Operation Discord-Teilnehmer",
-      startTime: new Date(Date.now() + ONE_DAY_MS),
-    },
+  const event = await createEvent(prisma, {
+    name: "Operation Discord-Teilnehmer",
+    discordCreatorId: "manual-participants-organizer",
+    startTime: futureEvent().startTime,
   });
 
   await signIn(manager.user);

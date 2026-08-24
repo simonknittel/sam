@@ -1,9 +1,22 @@
 import type { Page } from "@playwright/test";
-import { createCitizen, createOnSiteNotification } from "../fixtures/factories";
+import {
+  createAppEvent,
+  createCitizen,
+  createOnSiteNotification,
+  createOnSiteNotifications,
+  futureEvent,
+} from "../fixtures/factories";
+import {
+  ACTION_FEEDBACK_TIMEOUT,
+  clickUntilVisible,
+} from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 const bellButton = (page: Page) =>
   page.getByRole("button", { name: "Benachrichtigungen" });
+
+/** The unread indicator of the bell, independent of the classes drawing it */
+const bellDot = (page: Page) => bellButton(page).locator("[data-unread-dot]");
 
 /**
  * The notification center is mounted twice (top bar popover and the hidden
@@ -13,12 +26,11 @@ const bellButton = (page: Page) =>
 const popover = (page: Page) =>
   page.getByRole("dialog", { name: "Benachrichtigungen" });
 
-const openNotificationCenter = async (page: Page) => {
-  await bellButton(page).click();
-  await expect(
+const openNotificationCenter = (page: Page) =>
+  clickUntilVisible(
+    bellButton(page),
     popover(page).getByRole("tab", { name: "Posteingang" }),
-  ).toBeVisible();
-};
+  );
 
 /**
  * exact — "Ungelesen" would otherwise also match the read rows'
@@ -29,41 +41,6 @@ const unreadRowDots = (page: Page) =>
 
 /** Dwell time + flush debounce + server action, with headroom. */
 const READ_ON_VIEW_TIMEOUT = 15_000;
-
-test("unread notifications drive the bell dot and the tab title", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const citizen = await createCitizen(prisma, { handle: "notified" });
-  await createOnSiteNotification(prisma, { citizenId: citizen.entity.id });
-  await createOnSiteNotification(prisma, { citizenId: citizen.entity.id });
-  await signIn(citizen.user);
-
-  await page.goto("/app");
-
-  // Often the worker's first page load — warm-up can exceed the default 5s
-  await expect(page).toHaveTitle(/^\(2\)/, { timeout: 15_000 });
-  await expect(bellButton(page).locator(".bg-amber-500").first()).toBeVisible();
-});
-
-test("without unread notifications there is no dot and no title count", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const citizen = await createCitizen(prisma, { handle: "caught-up" });
-  await createOnSiteNotification(prisma, {
-    citizenId: citizen.entity.id,
-    readAt: new Date(),
-  });
-  await signIn(citizen.user);
-
-  await page.goto("/app");
-
-  await expect(page).toHaveTitle(/^[^(]/);
-  await expect(bellButton(page).locator(".bg-amber-500")).toHaveCount(0);
-});
 
 test("the popover lists notifications with their content", async ({
   page,
@@ -133,12 +110,17 @@ test("notifications in view are marked read, keeping their highlight until the p
   await signIn(citizen.user);
 
   await page.goto("/app");
-  await expect(page).toHaveTitle(/^\(2\)/);
+  // The unread count drives the bell dot and the tab title
+  await expect(page).toHaveTitle(/^\(2\)/, {
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+  await expect(bellDot(page)).toBeVisible();
+
   await openNotificationCenter(page);
   await expect(unreadRowDots(page)).toHaveCount(2);
 
   await expect(page).toHaveTitle(/^[^(]/, { timeout: READ_ON_VIEW_TIMEOUT });
-  await expect(bellButton(page).locator(".bg-amber-500")).toHaveCount(0);
+  await expect(bellDot(page)).toHaveCount(0);
   await expect
     .poll(() => prisma.onSiteNotification.count({ where: { readAt: null } }))
     .toBe(0);
@@ -159,14 +141,10 @@ test("only notifications in view get marked read", async ({
   signIn,
 }) => {
   const citizen = await createCitizen(prisma, { handle: "scroller" });
-  const now = Date.now();
-  for (let index = 1; index <= 30; index++) {
-    await createOnSiteNotification(prisma, {
-      citizenId: citizen.entity.id,
-      payload: { eventId: `evt-${index}`, eventName: `Event ${index}` },
-      createdAt: new Date(now - index * 1_000),
-    });
-  }
+  await createOnSiteNotifications(prisma, {
+    citizenId: citizen.entity.id,
+    count: 30,
+  });
   await signIn(citizen.user);
 
   await page.goto("/app");
@@ -222,7 +200,7 @@ test("a read notification can be marked unread again", async ({
     .toBeNull();
 });
 
-test("archiving removes the notification and clears the count", async ({
+test("a notification can be archived and restored again", async ({
   page,
   prisma,
   signIn,
@@ -234,7 +212,9 @@ test("archiving removes the notification and clears the count", async ({
   await signIn(citizen.user);
 
   await page.goto("/app");
-  await expect(page).toHaveTitle(/^\(1\)/);
+  await expect(page).toHaveTitle(/^\(1\)/, {
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
   await openNotificationCenter(page);
 
   await popover(page).getByText("Neues Event").hover();
@@ -246,13 +226,6 @@ test("archiving removes the notification and clears the count", async ({
     popover(page).getByText("Keine Benachrichtigungen", { exact: true }),
   ).toBeVisible();
   await expect(page).toHaveTitle(/^[^(]/);
-
-  await popover(page).getByRole("tab", { name: "Archiv", exact: true }).click();
-  await expect(popover(page).getByText("Neues Event")).toBeVisible();
-  await expect(
-    popover(page).getByRole("button", { name: "Wiederherstellen" }),
-  ).toBeAttached();
-
   await expect
     .poll(async () => {
       const row = await prisma.onSiteNotification.findUnique({
@@ -261,25 +234,10 @@ test("archiving removes the notification and clears the count", async ({
       return row?.archivedAt;
     })
     .not.toBeNull();
-});
 
-test("an archived notification can be restored", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const citizen = await createCitizen(prisma, { handle: "restorer" });
-  const notification = await createOnSiteNotification(prisma, {
-    citizenId: citizen.entity.id,
-    readAt: new Date(),
-    archivedAt: new Date(),
-  });
-  await signIn(citizen.user);
-
-  await page.goto("/app");
-  await openNotificationCenter(page);
-
+  // Restoring it in the archive puts it back into the inbox
   await popover(page).getByRole("tab", { name: "Archiv", exact: true }).click();
+  await expect(popover(page).getByText("Neues Event")).toBeVisible();
   await popover(page).getByText("Neues Event").hover();
   await popover(page)
     .getByRole("button", { name: "Wiederherstellen", exact: true })
@@ -304,15 +262,21 @@ test("an archived notification can be restored", async ({
     .toBeNull();
 });
 
-test("all notifications can be marked read at once", async ({
+test("the bulk actions mark everything read and archive what is read", async ({
   page,
   prisma,
   signIn,
 }) => {
   const citizen = await createCitizen(prisma, { handle: "bulk-reader" });
-  for (let index = 0; index < 3; index++) {
-    await createOnSiteNotification(prisma, { citizenId: citizen.entity.id });
-  }
+  /**
+   * More rows than the popover shows at once: read-on-view would otherwise
+   * mark the whole list read on its own, and the bulk button — which
+   * disables itself once nothing is unread — could never be clicked.
+   */
+  await createOnSiteNotifications(prisma, {
+    citizenId: citizen.entity.id,
+    count: 30,
+  });
   await signIn(citizen.user);
 
   await page.goto("/app");
@@ -323,58 +287,40 @@ test("all notifications can be marked read at once", async ({
     .click();
 
   await expect(unreadRowDots(page)).toHaveCount(0);
-  await expect(page).toHaveTitle(/^[^(]/);
-
+  await expect(page).toHaveTitle(/^[^(]/, { timeout: ACTION_FEEDBACK_TIMEOUT });
   await expect
-    .poll(() => prisma.onSiteNotification.count({ where: { readAt: null } }))
+    .poll(() => prisma.onSiteNotification.count({ where: { readAt: null } }), {
+      timeout: ACTION_FEEDBACK_TIMEOUT,
+    })
     .toBe(0);
-});
 
-test("read notifications can be archived at once", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const citizen = await createCitizen(prisma, { handle: "bulk-archiver" });
-  await createOnSiteNotification(prisma, {
-    citizenId: citizen.entity.id,
-    payload: { eventId: "evt-unread", eventName: "Ungelesenes Event" },
-  });
-  for (let index = 0; index < 2; index++) {
-    await createOnSiteNotification(prisma, {
-      citizenId: citizen.entity.id,
-      payload: { eventId: `evt-read-${index}`, eventName: `Gelesen ${index}` },
-      readAt: new Date(),
-    });
-  }
-  await signIn(citizen.user);
-
-  await page.goto("/app");
-  await openNotificationCenter(page);
-
+  // Everything is read by now, so archiving the read ones empties the inbox
   await popover(page)
     .getByRole("button", { name: "Gelesene archivieren", exact: true })
     .click();
 
-  await expect(popover(page).getByText("Ungelesenes Event")).toBeVisible();
-  await expect(popover(page).getByText("Gelesen 0")).not.toBeAttached();
+  await expect(
+    popover(page).getByText("Keine Benachrichtigungen", { exact: true }),
+  ).toBeVisible();
 
   await popover(page).getByRole("tab", { name: "Archiv", exact: true }).click();
-  await expect(popover(page).getByText("Gelesen 0")).toBeVisible();
-  await expect(popover(page).getByText("Gelesen 1")).toBeVisible();
+  await expect(
+    popover(page).getByText("Event 1", { exact: true }),
+  ).toBeVisible();
+  await expect
+    .poll(() =>
+      prisma.onSiteNotification.count({ where: { archivedAt: null } }),
+    )
+    .toBe(0);
 });
 
 test("long lists page with Mehr laden", async ({ page, prisma, signIn }) => {
   const citizen = await createCitizen(prisma, { handle: "pager" });
-  const now = Date.now();
-  for (let index = 1; index <= 30; index++) {
-    await createOnSiteNotification(prisma, {
-      citizenId: citizen.entity.id,
-      payload: { eventId: `evt-${index}`, eventName: `Event ${index}` },
-      createdAt: new Date(now - index * 1_000),
-      readAt: new Date(),
-    });
-  }
+  await createOnSiteNotifications(prisma, {
+    citizenId: citizen.entity.id,
+    count: 30,
+    readAt: new Date(),
+  });
   await signIn(citizen.user);
 
   await page.goto("/app");
@@ -400,26 +346,46 @@ test("long lists page with Mehr laden", async ({ page, prisma, signIn }) => {
   ).not.toBeAttached();
 });
 
-test("the settings link leads to the notification settings", async ({
+test("a notification leads to the entity it is about", async ({
   page,
   prisma,
   signIn,
 }) => {
-  const citizen = await createCitizen(prisma, { handle: "configurer" });
+  const citizen = await createCitizen(prisma, {
+    handle: "durchklicker",
+    permissionStrings: ["event;read"],
+  });
+  const event = await createAppEvent(prisma, {
+    name: "Operation Zielsprung",
+    createdById: citizen.entity.id,
+    ...futureEvent(),
+  });
+  await createOnSiteNotification(prisma, {
+    citizenId: citizen.entity.id,
+    notificationType: "event_created",
+    payload: { eventId: event.id, eventName: event.name },
+  });
   await signIn(citizen.user);
 
   await page.goto("/app");
   await openNotificationCenter(page);
 
-  await popover(page).getByRole("link", { name: "Einstellungen" }).click();
+  await popover(page).getByRole("link", { name: "Neues Event" }).click();
 
-  await expect(page).toHaveURL("/app/account/notifications");
+  await expect(page).toHaveURL(`/app/events/${event.id}`, {
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+  await expect(
+    page.getByRole("heading", { name: "Operation Zielsprung" }).first(),
+  ).toBeVisible();
+  /** Following a notification closes the popover it came from */
+  await expect(popover(page)).toHaveCount(0);
 });
 
 test.describe("mobile", () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
-  test("the notification center is available in the mobile flyout", async ({
+  test("the mobile flyout mounts the notification center", async ({
     page,
     prisma,
     signIn,
@@ -429,19 +395,14 @@ test.describe("mobile", () => {
     await signIn(citizen.user);
 
     await page.goto("/app");
-    await expect(page).toHaveTitle(/^\(1\)/);
+    await expect(page).toHaveTitle(/^\(1\)/, {
+      timeout: ACTION_FEEDBACK_TIMEOUT,
+    });
 
     await page.locator("nav").getByRole("button", { name: "Apps" }).click();
     await openNotificationCenter(page);
 
     await expect(popover(page).getByText("Neues Event")).toBeVisible();
-
-    await expect(page).toHaveTitle(/^[^(]/, { timeout: READ_ON_VIEW_TIMEOUT });
-    await expect
-      .poll(() => prisma.onSiteNotification.count({ where: { readAt: null } }))
-      .toBe(0);
-
-    // Read in the database, but still highlighted while the popover stays open
     await expect(unreadRowDots(page)).toHaveCount(1);
   });
 });

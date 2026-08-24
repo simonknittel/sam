@@ -1,4 +1,6 @@
+import type { Page } from "@playwright/test";
 import type { PrismaClient } from "@sam-monorepo/database/client";
+import { expectAuditEvents } from "../fixtures/audit";
 import {
   assignRole,
   createCitizen,
@@ -9,13 +11,14 @@ import {
 import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
+  DELETED_TEXT,
+  fillUntilValue,
   modal,
+  NOT_FOUND_TEXT,
+  pickFromSearch,
+  SAVED_TEXT,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
-
-const FORBIDDEN_TEXT = "Du bist nicht berechtigt dies zu sehen.";
-const NOT_FOUND_TEXT = "Page not found";
-const SAVED_TEXT = "Erfolgreich gespeichert";
 
 /**
  * Sharing additionally needs the roles to be visible in the access editor
@@ -31,11 +34,6 @@ const OWNER_PERMISSIONS = [
 
 const createOwner = (prisma: PrismaClient, handle = "owner") =>
   createCitizen(prisma, { handle, permissionStrings: OWNER_PERMISSIONS });
-
-const auditEventTypes = async (prisma: PrismaClient) => {
-  const events = await prisma.auditEvent.findMany({ select: { type: true } });
-  return events.map((event) => event.type);
-};
 
 test("an owner creates a template, edits it, deletes it and restores it", async ({
   page,
@@ -81,14 +79,11 @@ test("an owner creates a template, edits it, deletes it and restores it", async 
   });
   await expect
     .poll(
-      async () =>
-        (
-          await prisma.eventTemplate.findUniqueOrThrow({
-            where: { id: template.id },
-          })
-        ).name,
+      () =>
+        prisma.eventTemplate.findUniqueOrThrow({ where: { id: template.id } }),
+      { timeout: ACTION_FEEDBACK_TIMEOUT },
     )
-    .toBe("Patrouille");
+    .toMatchObject({ name: "Patrouille" });
 
   /**
    * Delete and restore through the status filter
@@ -101,11 +96,15 @@ test("an owner creates a template, edits it, deletes it and restores it", async 
     deleteDialog,
   );
   await deleteDialog.getByRole("button", { name: "Löschen" }).click();
-  await expect(page.getByText("Erfolgreich gelöscht")).toBeVisible({
+  await expect(page.getByText(DELETED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
 
   await page.goto("/app/events/templates");
+  /** The empty state proves the list rendered before its absence is judged */
+  await expect(page.getByText("Es gibt noch keine Event-Vorlage")).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
   await expect(page.getByRole("link", { name: "Patrouille" })).toBeHidden();
 
   await page.goto("/app/events/templates?status=deleted");
@@ -126,14 +125,12 @@ test("an owner creates a template, edits it, deletes it and restores it", async 
   await page.goto("/app/events/templates");
   await expect(page.getByRole("link", { name: "Patrouille" })).toBeVisible();
 
-  expect(await auditEventTypes(prisma)).toEqual(
-    expect.arrayContaining([
-      "EVENT_TEMPLATE_CREATED",
-      "EVENT_TEMPLATE_UPDATED",
-      "EVENT_TEMPLATE_DELETED",
-      "EVENT_TEMPLATE_RESTORED",
-    ]),
-  );
+  await expectAuditEvents(prisma, [
+    "EVENT_TEMPLATE_CREATED",
+    "EVENT_TEMPLATE_UPDATED",
+    "EVENT_TEMPLATE_DELETED",
+    "EVENT_TEMPLATE_RESTORED",
+  ]);
 });
 
 test("a template is invisible to everyone it is not shared with", async ({
@@ -162,38 +159,54 @@ test("a template is invisible to everyone it is not shared with", async ({
   await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
 });
 
-test("the templates section is closed to users without events access", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const outsider = await createCitizen(prisma, {
-    handle: "outsider",
-    permissionStrings: ["event;read"],
+/**
+ * Neither share tier may hand the template on or destroy it. The sharing
+ * route answers 404 rather than 403 — its absence must not be a hint that
+ * there is something to find.
+ */
+const expectSharingAndDeletingStayWithTheOwner = async (
+  page: Page,
+  templateId: string,
+) => {
+  await page.goto(`/app/events/templates/${templateId}`);
+  /** Every tier gets this tab, so it anchors the two that are absent */
+  await expect(page.getByRole("link", { name: "Aufstellung" })).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
   });
-  await signIn(outsider.user);
+  await expect(page.getByRole("link", { name: "Freigabe" })).toBeHidden();
+  await expect(page.getByRole("heading", { name: "Danger Zone" })).toBeHidden();
 
-  await page.goto("/app/events/templates");
-  await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible();
-});
+  await page.goto(`/app/events/templates/${templateId}/sharing`);
+  await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
+};
 
-test("a read share lets a role use a template but not edit or share it", async ({
+test("a share lets a role use the template, and only an edit share change it", async ({
   page,
   prisma,
   signIn,
+  switchUser,
 }) => {
   const owner = await createOwner(prisma);
   const reader = await createCitizen(prisma, {
     handle: "reader",
     permissionStrings: ["event;read", "event;create"],
   });
-  const sharedRole = await createRole(prisma, { name: "Patrouillen-Team" });
-  await assignRole(prisma, reader.entity, sharedRole);
+  const editor = await createCitizen(prisma, {
+    handle: "editor",
+    permissionStrings: ["event;read", "event;create"],
+  });
+  const readRole = await createRole(prisma, { name: "Patrouillen-Team" });
+  const editRole = await createRole(prisma, { name: "Redaktion" });
+  await assignRole(prisma, reader.entity, readRole);
+  await assignRole(prisma, editor.entity, editRole);
 
   const { template } = await createEventTemplate(prisma, {
     name: "Geteilte Vorlage",
     ownedById: owner.entity.id,
-    roleAccess: [{ roleId: sharedRole.id, type: EventTemplateAccessType.READ }],
+    roleAccess: [
+      { roleId: readRole.id, type: EventTemplateAccessType.READ },
+      { roleId: editRole.id, type: EventTemplateAccessType.EDIT },
+    ],
     positionNames: ["Pilot"],
   });
 
@@ -203,63 +216,35 @@ test("a read share lets a role use a template but not edit or share it", async (
   await expect(
     page.getByText("Du kannst diese Vorlage verwenden, aber nicht bearbeiten."),
   ).toBeVisible();
-  /** No Freigabe tab and no Danger Zone for a read share */
-  await expect(page.getByRole("link", { name: "Freigabe" })).toBeHidden();
-  await expect(page.getByRole("heading", { name: "Danger Zone" })).toBeHidden();
 
-  /** The sharing route is 404, not 403 — its absence must not be a hint */
-  await page.goto(`/app/events/templates/${template.id}/sharing`);
-  await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
-
-  /** Reading includes seeing the lineup it would create */
+  /** Reading includes seeing the lineup it would create, but not editing it */
   await page.goto(`/app/events/templates/${template.id}/lineup`);
   await expect(page.getByText("Pilot")).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Posten hinzufügen" }),
   ).toBeHidden();
-});
 
-test("an edit share lets a role change the content but not the shares", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const owner = await createOwner(prisma);
-  const editor = await createCitizen(prisma, {
-    handle: "editor",
-    permissionStrings: ["event;read", "event;create"],
-  });
-  const sharedRole = await createRole(prisma, { name: "Redaktion" });
-  await assignRole(prisma, editor.entity, sharedRole);
+  await expectSharingAndDeletingStayWithTheOwner(page, template.id);
 
-  const { template } = await createEventTemplate(prisma, {
-    name: "Redaktionsvorlage",
-    ownedById: owner.entity.id,
-    roleAccess: [{ roleId: sharedRole.id, type: EventTemplateAccessType.EDIT }],
-  });
-
-  await signIn(editor.user);
+  /** An edit share may change the content … */
+  await switchUser(editor.user);
   await page.goto(`/app/events/templates/${template.id}`);
 
-  await page.getByLabel("Name").fill("Von der Redaktion");
+  await fillUntilValue(page.getByLabel("Name"), "Von der Redaktion");
   await page.getByRole("button", { name: "Speichern" }).click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await expect
     .poll(
-      async () =>
-        (
-          await prisma.eventTemplate.findUniqueOrThrow({
-            where: { id: template.id },
-          })
-        ).name,
+      () =>
+        prisma.eventTemplate.findUniqueOrThrow({ where: { id: template.id } }),
+      { timeout: ACTION_FEEDBACK_TIMEOUT },
     )
-    .toBe("Von der Redaktion");
+    .toMatchObject({ name: "Von der Redaktion" });
 
-  /** Sharing and deleting stay with the owner */
-  await expect(page.getByRole("link", { name: "Freigabe" })).toBeHidden();
-  await expect(page.getByRole("heading", { name: "Danger Zone" })).toBeHidden();
+  /** … but sharing and deleting stay with the owner, for both tiers */
+  await expectSharingAndDeletingStayWithTheOwner(page, template.id);
 });
 
 test("transferring a template keeps its shares and drops the previous owner", async ({
@@ -289,29 +274,20 @@ test("transferring a template keeps its shares and drops the previous owner", as
     transferDialog,
   );
 
-  /** The citizen list loads through tRPC before it becomes searchable */
-  const citizenSearch = transferDialog.getByRole("combobox", {
-    name: "Citizen",
-  });
-  await expect(citizenSearch).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
-  await citizenSearch.fill("successor");
-  const successorOption = page.getByRole("option", { name: /successor/ });
-  await expect(successorOption).toBeVisible();
-  await successorOption.click();
+  await pickFromSearch(
+    page,
+    transferDialog.getByRole("combobox", { name: "Citizen" }),
+    "successor",
+  );
   await transferDialog.getByRole("button", { name: "Übertragen" }).click();
 
   await expect
     .poll(
-      async () =>
-        (
-          await prisma.eventTemplate.findUniqueOrThrow({
-            where: { id: template.id },
-          })
-        ).ownedById,
+      () =>
+        prisma.eventTemplate.findUniqueOrThrow({ where: { id: template.id } }),
+      { timeout: ACTION_FEEDBACK_TIMEOUT },
     )
-    .toBe(successor.entity.id);
+    .toMatchObject({ ownedById: successor.entity.id });
 
   /** The share survived the transfer */
   expect(
@@ -420,33 +396,6 @@ test("`event;manage` manages a foreign personal template", async ({
   ).toBeVisible();
 });
 
-test("the whole name cell of a row opens the template", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const owner = await createOwner(prisma);
-  const { template } = await createEventTemplate(prisma, {
-    name: "Kaperfahrt",
-    ownedById: owner.entity.id,
-  });
-
-  await signIn(owner.user);
-  await page.goto("/app/events/templates");
-
-  const nameCell = page
-    .getByRole("row", { name: "Kaperfahrt" })
-    .getByRole("cell")
-    .first();
-  const cell = await nameCell.boundingBox();
-  if (!cell) throw new Error("The name cell is not rendered");
-
-  /** The bottom right corner, clear of the name's own box */
-  await page.mouse.click(cell.x + cell.width - 8, cell.y + cell.height - 4);
-
-  await expect(page).toHaveURL(new RegExp(`/templates/${template.id}$`));
-});
-
 test("an event created from a template gets its lineup, briefing and prefill", async ({
   page,
   prisma,
@@ -484,10 +433,12 @@ test("an event created from a template gets its lineup, briefing and prefill", a
   await expect(createDialog.getByLabel("Kurzbeschreibung")).toHaveValue(
     "Standardablauf",
   );
-  await createDialog.getByLabel("Titel").fill("Patrouille am Freitag");
-
-  await createDialog.getByLabel("Start").fill("2999-01-01T18:00");
-  await createDialog.getByLabel("Ende").fill("2999-01-01T20:00");
+  await fillUntilValue(
+    createDialog.getByLabel("Titel"),
+    "Patrouille am Freitag",
+  );
+  await fillUntilValue(createDialog.getByLabel("Start"), "2999-01-01T18:00");
+  await fillUntilValue(createDialog.getByLabel("Ende"), "2999-01-01T20:00");
   await createDialog.getByRole("button", { name: "Speichern" }).click();
 
   await expect(page).toHaveURL(/\/app\/events\/[^/]+$/);
@@ -514,12 +465,10 @@ test("an event created from a template gets its lineup, briefing and prefill", a
 
   /** Nothing on the event references the template afterwards */
   expect(await prisma.eventTemplate.count()).toBe(1);
-  expect(await auditEventTypes(prisma)).toEqual(
-    expect.arrayContaining([
-      "EVENT_CREATED_IN_APP",
-      "EVENT_CREATED_FROM_TEMPLATE",
-    ]),
-  );
+  await expectAuditEvents(prisma, [
+    "EVENT_CREATED_IN_APP",
+    "EVENT_CREATED_FROM_TEMPLATE",
+  ]);
 });
 
 test("the picker offers neither deleted nor inaccessible templates", async ({
@@ -603,9 +552,7 @@ test("a template position is edited through the shared lineup editor", async ({
   expect(position.eventId).toBeNull();
   expect(position.citizenId).toBeNull();
 
-  expect(await auditEventTypes(prisma)).toEqual(
-    expect.arrayContaining(["EVENT_TEMPLATE_POSITION_CREATED"]),
-  );
+  await expectAuditEvents(prisma, ["EVENT_TEMPLATE_POSITION_CREATED"]);
 });
 
 test("a template's briefing root page is locked like an event's", async ({

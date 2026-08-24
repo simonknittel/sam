@@ -43,24 +43,26 @@ export const SettingsRecordTile = ({
     >
       <p className="mb-4 text-sm">{description}</p>
 
-      {sortedRecords.map((record) => (
-        <div
-          key={record.id}
-          className="flex justify-between gap-2 py-2 items-center"
-        >
-          <div className="flex flex-col">
-            <p className="font-bold">{record.name}</p>
-            <p className="text-neutral-500 text-sm">{record.id}</p>
-          </div>
+      <ul>
+        {sortedRecords.map((record) => (
+          <li
+            key={record.id}
+            className="flex justify-between gap-2 py-2 items-center"
+          >
+            <div className="flex flex-col">
+              <p className="font-bold">{record.name}</p>
+              <p className="text-neutral-500 text-sm">{record.id}</p>
+            </div>
 
-          <div className="flex gap-4 items-center">
-            <Actions>
-              <UpdateSettingsRecord action={actions.update} record={record} />
-              <DeleteSettingsRecord action={actions.delete} record={record} />
-            </Actions>
-          </div>
-        </div>
-      ))}
+            <div className="flex gap-4 items-center">
+              <Actions>
+                <UpdateSettingsRecord action={actions.update} record={record} />
+                <DeleteSettingsRecord action={actions.delete} record={record} />
+              </Actions>
+            </div>
+          </li>
+        ))}
+      </ul>
 
       {sortedRecords.length <= 0 && (
         <p className="text-neutral-500 italic">{emptyLabel}</p>

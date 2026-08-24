@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 import type { PrismaClient } from "@sam-monorepo/database/client";
+import { expectAuditEvents } from "../fixtures/audit";
 import {
   assignRole,
   createCitizen,
@@ -10,14 +11,14 @@ import {
 import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
+  FORBIDDEN_TEXT,
   modal,
+  NOT_FOUND_TEXT,
+  SAVED_TEXT,
+  sectionByHeading,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
-
-const FORBIDDEN_TEXT = "Du bist nicht berechtigt dies zu sehen.";
-const NOT_FOUND_TEXT = "Page not found";
-const SAVED_TEXT = "Erfolgreich gespeichert";
 
 /**
  * Managing flows also means granting access to arbitrary roles, so the
@@ -56,12 +57,6 @@ const hasHorizontalPageOverflow = (page: Page) =>
       document.documentElement.scrollWidth >
       document.documentElement.clientWidth,
   );
-
-/** Every management mutation has to leave a trace in the system log. */
-const auditEventTypes = async (prisma: PrismaClient) => {
-  const events = await prisma.auditEvent.findMany({ select: { type: true } });
-  return events.map((event) => event.type);
-};
 
 test("a manager creates a flow, renames it, deletes it and restores it", async ({
   page,
@@ -135,9 +130,7 @@ test("a manager creates a flow, renames it, deletes it and restores it", async (
     name: "Karrierebaum löschen?",
   });
   /** Scoped to the tile, so it never collides with the dialog's own button */
-  const dangerZone = page
-    .locator("section")
-    .filter({ has: page.getByRole("heading", { name: "Danger Zone" }) });
+  const dangerZone = sectionByHeading(page, "Danger Zone");
   await clickUntilVisible(
     dangerZone.getByRole("button", { name: "Löschen" }),
     deleteDialog,
@@ -175,20 +168,19 @@ test("a manager creates a flow, renames it, deletes it and restores it", async (
     page.getByRole("link", { name: "Flotte" }).first(),
   ).toBeVisible();
 
-  expect(await auditEventTypes(prisma)).toEqual(
-    expect.arrayContaining([
-      "CAREER_FLOW_CREATED",
-      "CAREER_FLOW_RENAMED",
-      "CAREER_FLOW_DELETED",
-      "CAREER_FLOW_RESTORED",
-    ]),
-  );
+  await expectAuditEvents(prisma, [
+    "CAREER_FLOW_CREATED",
+    "CAREER_FLOW_RENAMED",
+    "CAREER_FLOW_DELETED",
+    "CAREER_FLOW_RESTORED",
+  ]);
 });
 
 test("the top bar's Neu menu creates a flow for managers only", async ({
   page,
   prisma,
   signIn,
+  switchUser,
 }) => {
   const manager = await createManager(prisma);
   await signIn(manager.user);
@@ -217,9 +209,8 @@ test("the top bar's Neu menu creates a flow for managers only", async ({
     .toBe(1);
 
   /** Without the permission the entry is not offered */
-  await page.context().clearCookies();
   const outsider = await createCitizen(prisma, { handle: "aussenstehender" });
-  await signIn(outsider.user);
+  await switchUser(outsider.user);
   await page.goto("/app/apps");
 
   await clickUntilVisible(
@@ -322,6 +313,7 @@ test("duplicating copies the diagram but grants nobody access", async ({
   page,
   prisma,
   signIn,
+  switchUser,
 }) => {
   const readerRole = await createRole(prisma, { name: "academy-leser" });
   const manager = await createManager(prisma);
@@ -385,8 +377,7 @@ test("duplicating copies the diagram but grants nobody access", async ({
    * The reader sees the source but never the copy — neither in the
    * navigation nor through a direct URL.
    */
-  await page.context().clearCookies();
-  await signIn(reader.user);
+  await switchUser(reader.user);
 
   await page.goto("/app/career/academy");
   await expect(
@@ -399,22 +390,11 @@ test("duplicating copies the diagram but grants nobody access", async ({
   await page.goto("/app/career/academy-kopie");
   await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible();
 
-  expect(await auditEventTypes(prisma)).toContain("CAREER_FLOW_DUPLICATED");
+  await expectAuditEvents(prisma, ["CAREER_FLOW_DUPLICATED"]);
 });
 
-test("reordering by keyboard changes the order of the career navigation", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const manager = await createManager(prisma);
-  await createFlow(prisma, { name: "Erster", slug: "erster", position: 0 });
-  await createFlow(prisma, { name: "Zweiter", slug: "zweiter", position: 1 });
-
-  await signIn(manager.user);
-  await page.goto("/app/career/settings");
-  await waitForAppShellHydration(page);
-
+/** Moves "Erster" below "Zweiter" the way a keyboard user does. */
+const reorderByKeyboard = async (page: Page) => {
   await page.getByRole("button", { name: "Erster verschieben" }).focus();
 
   await page.keyboard.press("Space");
@@ -425,41 +405,10 @@ test("reordering by keyboard changes the order of the career navigation", async 
   await expect.poll(() => dragNarration(page)).not.toBe(afterPickup);
 
   await page.keyboard.press("Space");
+};
 
-  await expect
-    .poll(
-      async () => {
-        const flows = await prisma.flow.findMany({
-          orderBy: { position: "asc" },
-          select: { slug: true },
-        });
-        return flows.map((flow) => flow.slug);
-      },
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
-    )
-    .toEqual(["zweiter", "erster"]);
-
-  await page.goto("/app/career/erster");
-  await expect(
-    page.getByRole("navigation").getByRole("link").first(),
-  ).toHaveText("Zweiter");
-
-  expect(await auditEventTypes(prisma)).toContain("CAREER_FLOWS_REORDERED");
-});
-
-test("reordering by mouse survives a reload", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const manager = await createManager(prisma);
-  await createFlow(prisma, { name: "Erster", slug: "erster", position: 0 });
-  await createFlow(prisma, { name: "Zweiter", slug: "zweiter", position: 1 });
-
-  await signIn(manager.user);
-  await page.goto("/app/career/settings");
-  await waitForAppShellHydration(page);
-
+/** The same move by pointer, which also exercises the drag overlay */
+const reorderByMouse = async (page: Page) => {
   const source = page.getByRole("button", { name: "Erster verschieben" });
   const target = page.getByRole("button", { name: "Zweiter verschieben" });
   const sourceBox = (await source.boundingBox())!;
@@ -485,25 +434,57 @@ test("reordering by mouse survives a reload", async ({
   expect(await hasHorizontalPageOverflow(page)).toBe(false);
 
   await page.mouse.up();
+};
 
-  await expect
-    .poll(
-      async () => {
-        const flows = await prisma.flow.findMany({
-          orderBy: { position: "asc" },
-          select: { slug: true },
-        });
-        return flows.map((flow) => flow.slug);
-      },
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
-    )
-    .toEqual(["zweiter", "erster"]);
+const REORDER_GESTURES = [
+  { name: "keyboard", drag: reorderByKeyboard },
+  { name: "mouse", drag: reorderByMouse },
+] as const;
 
-  await page.reload();
-  await expect(page.getByRole("main").getByRole("link").first()).toHaveText(
-    "Zweiter",
-  );
-});
+for (const { name, drag } of REORDER_GESTURES) {
+  test(`reordering by ${name} changes the order of the career navigation`, async ({
+    page,
+    prisma,
+    signIn,
+  }) => {
+    const manager = await createManager(prisma);
+    await createFlow(prisma, { name: "Erster", slug: "erster", position: 0 });
+    await createFlow(prisma, { name: "Zweiter", slug: "zweiter", position: 1 });
+
+    await signIn(manager.user);
+    await page.goto("/app/career/settings");
+    await waitForAppShellHydration(page);
+
+    await drag(page);
+
+    await expect
+      .poll(
+        async () => {
+          const flows = await prisma.flow.findMany({
+            orderBy: { position: "asc" },
+            select: { slug: true },
+          });
+          return flows.map((flow) => flow.slug);
+        },
+        { timeout: ACTION_FEEDBACK_TIMEOUT },
+      )
+      .toEqual(["zweiter", "erster"]);
+
+    /** The new order survives a reload of the settings page … */
+    await page.reload();
+    await expect(page.getByRole("main").getByRole("link").first()).toHaveText(
+      "Zweiter",
+    );
+
+    /** … and reaches the career navigation */
+    await page.goto("/app/career/erster");
+    await expect(
+      page.getByRole("navigation").getByRole("link").first(),
+    ).toHaveText("Zweiter");
+
+    await expectAuditEvents(prisma, ["CAREER_FLOWS_REORDERED"]);
+  });
+}
 
 test("read access opens a flow without an edit affordance, edit access saves it", async ({
   page,
@@ -545,6 +526,12 @@ test("read access opens a flow without an edit affordance, edit access saves it"
   await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
+  /** The write went through as the member, not just as a toast */
+  await expect
+    .poll(() => prisma.flow.findUniqueOrThrow({ where: { id: flow.id } }), {
+      timeout: ACTION_FEEDBACK_TIMEOUT,
+    })
+    .toMatchObject({ updatedById: member.entity.id });
 
   /** Revoking hides the flow again, direct URL included */
   await prisma.flowRoleAccess.deleteMany({ where: { flowId: flow.id } });
@@ -557,6 +544,7 @@ test("granting access in the management UI lets a role read the flow", async ({
   page,
   prisma,
   signIn,
+  switchUser,
 }) => {
   const accessRole = await createRole(prisma, { name: "academy-zugriff" });
   const manager = await createManager(prisma);
@@ -585,17 +573,14 @@ test("granting access in the management UI lets a role read the flow", async ({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
 
-  await page.context().clearCookies();
-  await signIn(member.user);
+  await switchUser(member.user);
   await page.goto("/app/career/academy");
   await expect(page.getByText("Erster Knoten")).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Bearbeiten de-/aktivieren" }),
   ).toHaveCount(0);
 
-  expect(await auditEventTypes(prisma)).toContain(
-    "CAREER_FLOW_ROLE_ACCESS_UPDATED",
-  );
+  await expectAuditEvents(prisma, ["CAREER_FLOW_ROLE_ACCESS_UPDATED"]);
 });
 
 test("saving access keeps every role's tier on its own row", async ({
@@ -664,12 +649,14 @@ test("saving access keeps every role's tier on its own row", async ({
   expect(await tierOf("gamma-bearbeitet")).toBe("update");
 });
 
-test("career;manage alone grants access to every flow", async ({
+test("career;manage alone grants access to every flow, nothing grants none", async ({
   page,
   prisma,
   signIn,
+  switchUser,
 }) => {
   const manager = await createManager(prisma);
+  const outsider = await createCitizen(prisma, { handle: "aussenstehender" });
   await createFlow(prisma, {
     name: "Academy",
     slug: "academy",
@@ -699,29 +686,15 @@ test("career;manage alone grants access to every flow", async ({
   await expect(
     page.getByRole("button", { name: "Bearbeiten de-/aktivieren" }),
   ).toBeVisible();
-});
 
-test("without any career access the app hides career and refuses the URL", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const outsider = await createCitizen(prisma, { handle: "aussenstehender" });
-  await createFlow(prisma, { name: "Academy", slug: "academy" });
-
-  await signIn(outsider.user);
+  /** Without any access the app hides career and refuses its URLs */
+  await switchUser(outsider.user);
 
   await page.goto("/app/apps");
   /** Changelog needs no permission, so it proves the overview rendered */
   await expect(page.getByRole("link", { name: "Changelog" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Karriere" })).toHaveCount(0);
 
-  await page.goto("/app/career");
-  await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible();
-
   await page.goto("/app/career/academy");
-  await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible();
-
-  await page.goto("/app/career/settings");
   await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible();
 });

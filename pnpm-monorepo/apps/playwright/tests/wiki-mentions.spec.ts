@@ -1,18 +1,19 @@
-import {
-  createCitizen,
-  createWikiPage,
-  WikiPageEditability,
-  WikiPageVisibility,
-} from "../fixtures/factories";
+import type { Page } from "@playwright/test";
+import { createCitizen } from "../fixtures/factories";
+import { COLLAB_PERSISTENCE_TIMEOUT } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
-import { enterEditMode, focusEditor } from "../fixtures/wiki-editor";
+import {
+  enterEditMode,
+  focusEditor,
+  seedEditablePage,
+} from "../fixtures/wiki-editor";
 
-/** Types "@<query>" and picks the suggestion showing the given handle */
-const insertMention = async (
-  page: import("@playwright/test").Page,
-  handle: string,
-) => {
-  await page.keyboard.type(`@${handle.slice(0, 5)}`);
+/**
+ * Types "@<handle>" and picks the suggestion showing it. The full handle is
+ * typed on purpose: a prefix would also offer everyone sharing it.
+ */
+const insertMention = async (page: Page, handle: string) => {
+  await page.keyboard.type(`@${handle}`);
   const menu = page.getByRole("dialog", { name: "Vorschläge" });
   await menu
     .locator("[data-suggestion-index]:visible", { hasText: handle })
@@ -20,50 +21,68 @@ const insertMention = async (
     .click();
 };
 
-test("an @mention creates a pending link, removing it deletes the link", async ({
+test("@mentions link the mentioned citizens, a self-mention already suppressed", async ({
   page,
   prisma,
   signIn,
 }) => {
   // citizen;read gates the mention suggestion list
   const editor = await createCitizen(prisma, {
-    handle: "editor",
+    handle: "Selbstnenner",
     permissionStrings: ["citizen;read"],
   });
   const mentioned = await createCitizen(prisma, { handle: "Zielperson" });
-  const wikiPage = await createWikiPage(prisma, {
-    title: "Erwähnungen",
-    visibility: WikiPageVisibility.PUBLIC,
-    editability: WikiPageEditability.ALL,
-  });
+  const wikiPage = await seedEditablePage(prisma, { title: "Erwähnungen" });
   await signIn(editor.user);
 
   await page.goto(`/app/wiki/${wikiPage.id}/${wikiPage.slug}`);
   await enterEditMode(page);
   await focusEditor(page);
   await insertMention(page, "Zielperson");
+  await page.keyboard.type(" ");
+  await insertMention(page, "Selbstnenner");
+
+  const mentionOf = (citizenId: string) =>
+    prisma.wikiPageCitizenMention.findUnique({
+      where: { pageId_citizenId: { pageId: wikiPage.id, citizenId } },
+      select: {
+        createdById: true,
+        notifiedAt: true,
+        suppressedAt: true,
+      },
+    });
 
   // The collab server persists and syncs with a 2s store debounce
   await expect
-    .poll(
-      () =>
-        prisma.wikiPageCitizenMention.findUnique({
-          where: {
-            pageId_citizenId: {
-              pageId: wikiPage.id,
-              citizenId: mentioned.entity.id,
-            },
-          },
-        }),
-      { timeout: 20_000 },
-    )
-    .toMatchObject({
+    .poll(() => mentionOf(mentioned.entity.id), {
+      timeout: COLLAB_PERSISTENCE_TIMEOUT,
+    })
+    .toEqual({
       createdById: editor.entity.id,
       notifiedAt: null,
       suppressedAt: null,
     });
 
-  // Removing the mention again cancels the pending link
+  // Mentioning yourself never notifies you, so its link starts suppressed
+  await expect
+    .poll(() => mentionOf(editor.entity.id), {
+      timeout: COLLAB_PERSISTENCE_TIMEOUT,
+    })
+    .toEqual({
+      createdById: editor.entity.id,
+      notifiedAt: null,
+      suppressedAt: expect.any(Date),
+    });
+
+  /** What the mention is for: the reader gets a link to the citizen */
+  await page.goto(`/app/wiki/${wikiPage.id}/${wikiPage.slug}`);
+  await expect(
+    page.getByRole("link", { name: "@Zielperson", exact: true }),
+  ).toHaveAttribute("href", `/app/spynet/citizen/${mentioned.entity.id}`);
+
+  // Removing the mentions again cancels the pending links
+  await enterEditMode(page);
+  await focusEditor(page);
   await page.keyboard.press("ControlOrMeta+a");
   await page.keyboard.press("Backspace");
 
@@ -71,45 +90,7 @@ test("an @mention creates a pending link, removing it deletes the link", async (
     .poll(
       () =>
         prisma.wikiPageCitizenMention.count({ where: { pageId: wikiPage.id } }),
-      { timeout: 20_000 },
+      { timeout: COLLAB_PERSISTENCE_TIMEOUT },
     )
     .toBe(0);
-});
-
-test("a self-mention is created suppressed", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const editor = await createCitizen(prisma, {
-    handle: "Selbstnenner",
-    permissionStrings: ["citizen;read"],
-  });
-  const wikiPage = await createWikiPage(prisma, {
-    title: "Selbsterwähnung",
-    visibility: WikiPageVisibility.PUBLIC,
-    editability: WikiPageEditability.ALL,
-  });
-  await signIn(editor.user);
-
-  await page.goto(`/app/wiki/${wikiPage.id}/${wikiPage.slug}`);
-  await enterEditMode(page);
-  await focusEditor(page);
-  await insertMention(page, "Selbstnenner");
-
-  await expect
-    .poll(
-      () =>
-        prisma.wikiPageCitizenMention.findUnique({
-          where: {
-            pageId_citizenId: {
-              pageId: wikiPage.id,
-              citizenId: editor.entity.id,
-            },
-          },
-          select: { suppressedAt: true, notifiedAt: true },
-        }),
-      { timeout: 20_000 },
-    )
-    .toEqual({ suppressedAt: expect.any(Date), notifiedAt: null });
 });

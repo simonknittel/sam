@@ -3,6 +3,8 @@ import { NotificationChannel } from "@sam-monorepo/database/client";
 import { createCitizen } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
+  SAVED_TEXT,
+  toggleLabel,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
@@ -17,9 +19,7 @@ const browserCheckbox = (page: Page, notificationType: string) =>
   page.locator(`input[name="WEB_PUSH_${notificationType}"]`);
 
 const browserCheckboxLabel = (page: Page, notificationType: string) =>
-  page
-    .locator("label")
-    .filter({ has: browserCheckbox(page, notificationType) });
+  toggleLabel(page, browserCheckbox(page, notificationType));
 
 test("browser notifications are enabled by default", async ({
   page,
@@ -42,9 +42,13 @@ test("browser notifications are enabled by default", async ({
   await expect(
     page.getByRole("checkbox", { name: "Browser: Neues Event" }),
   ).toBeChecked();
-  await expect(
-    page.getByRole("checkbox", { name: "On-site: Neues Event" }),
-  ).toBeDisabled();
+
+  // The on-site channel is always on and cannot be turned off
+  const onSiteCheckbox = page.getByRole("checkbox", {
+    name: "On-site: Neues Event",
+  });
+  await expect(onSiteCheckbox).toBeChecked();
+  await expect(onSiteCheckbox).toBeDisabled();
 
   const settingsCount = await prisma.notificationSetting.count({
     where: { citizenId: citizen.entity.id },
@@ -52,7 +56,7 @@ test("browser notifications are enabled by default", async ({
   expect(settingsCount).toBe(0);
 });
 
-test("disabling a browser notification persists a disabled setting", async ({
+test("toggling a browser notification off and on again is a round trip", async ({
   page,
   prisma,
   signIn,
@@ -63,10 +67,11 @@ test("disabling a browser notification persists a disabled setting", async ({
   await page.goto("/app/account/notifications");
   await waitForAppShellHydration(page);
 
+  // Disabling persists a "disabled" row …
   await expect(browserCheckbox(page, "event_created")).toBeChecked();
   await browserCheckboxLabel(page, "event_created").click();
   await expect(browserCheckbox(page, "event_created")).not.toBeChecked();
-  await expect(page.getByText("Erfolgreich gespeichert")).toBeVisible({
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
 
@@ -83,32 +88,10 @@ test("disabling a browser notification persists a disabled setting", async ({
     where: { type: "NOTIFICATION_SETTINGS_UPDATED" },
   });
   expect(auditEvent).not.toBeNull();
-});
 
-test("re-enabling a browser notification deletes the disabled setting", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const citizen = await createCitizen(prisma, { handle: "notification-tuner" });
-  await prisma.notificationSetting.create({
-    data: {
-      citizenId: citizen.entity.id,
-      notificationType: "event_created",
-      channel: NotificationChannel.WEB_PUSH,
-    },
-  });
-  await signIn(citizen.user);
-
-  await page.goto("/app/account/notifications");
-  await waitForAppShellHydration(page);
-
-  await expect(browserCheckbox(page, "event_created")).not.toBeChecked();
+  // … and re-enabling deletes it again, back to the default
   await browserCheckboxLabel(page, "event_created").click();
   await expect(browserCheckbox(page, "event_created")).toBeChecked();
-  await expect(page.getByText("Erfolgreich gespeichert")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
 
   await expect
     .poll(() =>
@@ -117,21 +100,6 @@ test("re-enabling a browser notification deletes the disabled setting", async ({
       }),
     )
     .toBe(0);
-});
-
-test("the on-site channel is always on and cannot be disabled", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const citizen = await createCitizen(prisma, { handle: "onsite-checker" });
-  await signIn(citizen.user);
-
-  await page.goto("/app/account/notifications");
-
-  const onSiteCheckbox = page.locator('input[name="ONSITE_event_created"]');
-  await expect(onSiteCheckbox).toBeChecked();
-  await expect(onSiteCheckbox).toBeDisabled();
 });
 
 test("disabling web push entirely removes all subscriptions", async ({

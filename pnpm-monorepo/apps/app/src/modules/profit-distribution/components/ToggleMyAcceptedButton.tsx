@@ -39,12 +39,16 @@ export const ToggleMyAcceptedButton = ({ className, cycleData }: Props) => {
       ) : (
         <>
           <input type="hidden" name="value" value="true" />
+          {/*
+            No name/value on the button: a submitter's entry is appended to
+            the form data, and the action reads the last entry per key — so
+            it would override the hidden field above with something the
+            schema rejects.
+          */}
           <Button2
             variant={Button2Variant.Secondary}
             disabled={cycleData.currentPhase !== CyclePhase.Payout}
             type="submit"
-            name="value"
-            value={1}
           >
             {isPending && <AsciiSpinner />}
             Auszahlung zustimmen

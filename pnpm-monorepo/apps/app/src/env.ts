@@ -53,6 +53,13 @@ export const env = createEnv({
      * unless it points at the local machine: every request carries the bot
      * token, and a misconfigured host would ship it in cleartext.
      */
+    /**
+     * Base URL of the Star Citizen website the organization logos are
+     * scraped from, without a trailing slash. Only overridden by the
+     * Playwright stack, which points it at a dead port so creating an
+     * organization never leaves the machine.
+     */
+    RSI_BASE_URL: z.url().default("https://robertsspaceindustries.com"),
     DISCORD_API_BASE_URL: z
       .url()
       .refine(isEncryptedOrLoopbackUrl, "must use https unless it is loopback")
@@ -213,6 +220,7 @@ export const env = createEnv({
     DISCORD_CLIENT_SECRET: process.env.DISCORD_CLIENT_SECRET,
     DISCORD_GUILD_ID: process.env.DISCORD_GUILD_ID,
     DISCORD_TOKEN: process.env.DISCORD_TOKEN,
+    RSI_BASE_URL: process.env.RSI_BASE_URL,
     DISCORD_API_BASE_URL: process.env.DISCORD_API_BASE_URL,
     NEXT_PUBLIC_ALGOLIA_APP_ID: process.env.NEXT_PUBLIC_ALGOLIA_APP_ID,
     ALGOLIA_ADMIN_API_KEY: process.env.ALGOLIA_ADMIN_API_KEY,

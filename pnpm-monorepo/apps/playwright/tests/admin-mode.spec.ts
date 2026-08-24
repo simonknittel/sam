@@ -2,11 +2,11 @@ import { createCitizen } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
+  FORBIDDEN_TEXT,
+  pickFromSearch,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
-
-const FORBIDDEN_TEXT = "Du bist nicht berechtigt dies zu sehen.";
 
 test("an admin's pages stay redacted until admin mode is enabled", async ({
   page,
@@ -22,6 +22,17 @@ test("an admin's pages stay redacted until admin mode is enabled", async ({
   await page.goto("/app/statistics");
 
   // Without the cookie the admin is an ordinary user
+  await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+
+  // Only the exact value counts — a truthy-looking one changes nothing
+  await page
+    .context()
+    .addCookies([
+      { name: "enable_admin", value: "true", domain: "localhost", path: "/" },
+    ]);
+  await page.reload();
   await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
@@ -48,35 +59,6 @@ test("an admin's pages stay redacted until admin mode is enabled", async ({
   });
 });
 
-test("the admin cookie only counts on an exact value match", async ({
-  page,
-  prisma,
-  signIn,
-  enableAdminMode,
-}) => {
-  const admin = await createCitizen(prisma, {
-    handle: "systemadmin",
-    admin: true,
-  });
-
-  await signIn(admin.user);
-  await page
-    .context()
-    .addCookies([
-      { name: "enable_admin", value: "true", domain: "localhost", path: "/" },
-    ]);
-  await page.goto("/app/statistics");
-  await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
-
-  await enableAdminMode();
-  await page.reload();
-  await expect(page.getByText("Zeitraum:")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
-});
-
 test("assuming a user switches the effective citizen", async ({
   page,
   prisma,
@@ -98,14 +80,7 @@ test("assuming a user switches the effective citizen", async ({
     page.getByRole("button", { name: "Assume user" }),
     userSearch,
   );
-  // The user list loads through tRPC before it becomes searchable
-  await expect(page.getByPlaceholder("Search user")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
-  await userSearch.fill("zielnutzer");
-  const targetOption = page.getByRole("option", { name: /zielnutzer/ });
-  await expect(targetOption).toBeVisible();
-  await targetOption.click();
+  await pickFromSearch(page, userSearch, "zielnutzer");
 
   await expect(page.getByText("Assuming zielnutzer")).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,

@@ -1,22 +1,21 @@
 import type { Locator, Page } from "@playwright/test";
 import type { PrismaClient } from "@sam-monorepo/database/client";
 import { TaskRewardType, TaskVisibility } from "@sam-monorepo/database/client";
+import { expectAuditEvents } from "../fixtures/audit";
 import { createCitizen, type Citizen } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
+  FORBIDDEN_TEXT,
+  inlineEditorTrigger,
   modal,
+  SAVED_TEXT,
   saveInlineEditor,
+  sectionByHeading,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
-const editButtons = (scope: Locator | Page) =>
-  scope.locator('button[title="Klicken, um zu bearbeiten"]');
-
-const tileSection = (page: Page, heading: string) =>
-  page
-    .locator("section")
-    .filter({ has: page.getByRole("heading", { name: heading, exact: true }) });
+const editButtons = (scope: Locator | Page) => inlineEditorTrigger(scope);
 
 const createSilcTask = (
   prisma: PrismaClient,
@@ -68,7 +67,7 @@ test("a task can be created and two of its fields edited through the shared fact
   await createModal.getByRole("button", { name: "Weiter" }).click();
   await createModal.getByRole("button", { name: "Speichern" }).click();
 
-  await expect(page.getByText("Erfolgreich gespeichert.")).toBeVisible({
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await expect(createModal).not.toBeVisible();
@@ -88,7 +87,7 @@ test("a task can be created and two of its fields edited through the shared fact
   );
 
   // … and description
-  const descriptionSection = tileSection(page, "Beschreibung");
+  const descriptionSection = sectionByHeading(page, "Beschreibung");
   const descriptionInput = page.locator('textarea[name="description"]');
   await clickUntilVisible(editButtons(descriptionSection), descriptionInput);
   await descriptionInput.fill("Begleitschutz von Lorville nach Everus Harbor.");
@@ -103,11 +102,10 @@ test("a task can be created and two of its fields edited through the shared fact
     title: "Titan-Erz eskortieren",
     description: "Begleitschutz von Lorville nach Everus Harbor.",
   });
-  const auditEventTypes = (await prisma.auditEvent.findMany()).map(
-    (auditEvent) => auditEvent.type,
-  );
-  expect(auditEventTypes).toContain("TASK_TITLE_UPDATED");
-  expect(auditEventTypes).toContain("TASK_DESCRIPTION_UPDATED");
+  await expectAuditEvents(prisma, [
+    "TASK_TITLE_UPDATED",
+    "TASK_DESCRIPTION_UPDATED",
+  ]);
 });
 
 test("a citizen without management permission cannot edit a task", async ({
@@ -211,14 +209,21 @@ test("completing a task with a SILC reward pays the completionists", async ({
   expect(auditEvent).not.toBeNull();
 });
 
-test("the dashboard works for citizens without task permission", async ({
+test("the dashboard shows its task tiles exactly to those with task permission", async ({
   page,
   prisma,
   signIn,
+  switchUser,
 }) => {
-  const citizen = await createCitizen(prisma, { handle: "einfacher-buerger" });
+  const creator = await createCitizen(prisma, { handle: "task-ersteller" });
+  const outsider = await createCitizen(prisma, { handle: "einfacher-buerger" });
+  const worker = await createCitizen(prisma, {
+    handle: "task-arbeiter",
+    permissionStrings: ["task;read"],
+  });
+  await createSilcTask(prisma, creator, worker, "Patrouille fliegen");
 
-  await signIn(citizen.user);
+  await signIn(outsider.user);
   await page.goto("/app/dashboard");
 
   // Regression test for the ungated tiles that called forbidden(): the page
@@ -226,29 +231,121 @@ test("the dashboard works for citizens without task permission", async ({
   await expect(page.getByRole("heading", { name: "Spynet" })).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
-  await expect(
-    page.getByText("Du bist nicht berechtigt dies zu sehen."),
-  ).not.toBeVisible();
+  await expect(page.getByText(FORBIDDEN_TEXT)).not.toBeVisible();
   await expect(page.getByText("Meine Tasks")).toHaveCount(0);
   await expect(page.getByText("Neue Tasks")).toHaveCount(0);
+
+  await switchUser(worker.user);
+  await page.goto("/app/dashboard");
+
+  const myTasksTile = sectionByHeading(page, "Meine Tasks");
+  await expect(myTasksTile).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(myTasksTile).toContainText("Patrouille fliegen");
 });
 
-test("the dashboard shows the task tiles to citizens with task permission", async ({
+test("a citizen takes a task on, gives it up, and a manager cancels and deletes it", async ({
   page,
   prisma,
   signIn,
+  switchUser,
 }) => {
-  const creator = await createCitizen(prisma, { handle: "task-ersteller" });
+  const manager = await createCitizen(prisma, {
+    handle: "task-verwalter",
+    permissionStrings: ["task;read", "task;manage"],
+  });
   const worker = await createCitizen(prisma, {
-    handle: "task-arbeiter",
+    handle: "task-annehmer",
     permissionStrings: ["task;read"],
   });
-  await createSilcTask(prisma, creator, worker, "Patrouille fliegen");
+  const task = await prisma.task.create({
+    data: {
+      title: "Frachter eskortieren",
+      visibility: TaskVisibility.PUBLIC,
+      rewardType: TaskRewardType.NEW_SILC,
+      createdById: manager.entity.id,
+    },
+  });
 
+  /**
+   * Taking it on and giving it up again
+   */
   await signIn(worker.user);
-  await page.goto("/app/dashboard");
+  await page.goto(`/app/tasks/${task.id}`);
 
-  const myTasksTile = tileSection(page, "Meine Tasks");
-  await expect(myTasksTile).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
-  await expect(myTasksTile).toContainText("Patrouille fliegen");
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Annehmen" }),
+    page.getByRole("button", { name: "Aufgeben" }),
+  );
+  await expect
+    .poll(() =>
+      prisma.taskAssignment.count({
+        where: { taskId: task.id, citizenId: worker.entity.id },
+      }),
+    )
+    .toBe(1);
+
+  await page.getByRole("button", { name: "Aufgeben" }).click();
+  await expect(page.getByRole("button", { name: "Annehmen" })).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+  await expect
+    .poll(() => prisma.taskAssignment.count({ where: { taskId: task.id } }))
+    .toBe(0);
+
+  /**
+   * A cancelled task leaves the open list for the closed one
+   */
+  await switchUser(manager.user);
+  await page.goto(`/app/tasks/${task.id}`);
+
+  const cancelDialog = page.getByRole("alertdialog");
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Task abbrechen" }),
+    cancelDialog,
+  );
+  await cancelDialog.getByRole("button", { name: "Speichern" }).click();
+
+  await expect
+    .poll(() => prisma.task.findUniqueOrThrow({ where: { id: task.id } }), {
+      timeout: ACTION_FEEDBACK_TIMEOUT,
+    })
+    .toMatchObject({ cancelledAt: expect.any(Date) });
+
+  await page.goto("/app/tasks");
+  await expect(page.getByText("Keine Tasks gefunden")).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+  await page.goto("/app/tasks?status=closed");
+  await expect(
+    page.getByRole("link", { name: /Frachter eskortieren/ }),
+  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+
+  /**
+   * Deleting takes it out of both
+   */
+  await page.goto(`/app/tasks/${task.id}`);
+  const deleteDialog = page.getByRole("alertdialog");
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Task löschen" }),
+    deleteDialog,
+  );
+  await deleteDialog.getByRole("button", { name: "Löschen" }).click();
+
+  await expect
+    .poll(() => prisma.task.findUniqueOrThrow({ where: { id: task.id } }), {
+      timeout: ACTION_FEEDBACK_TIMEOUT,
+    })
+    .toMatchObject({ deletedAt: expect.any(Date) });
+
+  await page.goto("/app/tasks?status=closed");
+  await expect(page.getByText("Keine Tasks gefunden")).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+
+  await expectAuditEvents(prisma, [
+    "TASK_SELF_ASSIGNMENT_CREATED",
+    "TASK_SELF_ASSIGNMENT_DELETED",
+    "TASK_CANCELLED",
+    "TASK_DELETED",
+  ]);
 });

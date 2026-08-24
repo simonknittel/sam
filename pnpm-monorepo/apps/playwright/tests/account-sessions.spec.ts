@@ -1,13 +1,12 @@
 import type { PrismaClient, User } from "@sam-monorepo/database/client";
 import { randomUUID } from "node:crypto";
-import { createCitizen } from "../fixtures/factories";
+import { createCitizen, ONE_DAY_MS } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
+  DELETED_TEXT,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
-
-const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 const CHROME_ON_WINDOWS =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36";
@@ -44,7 +43,7 @@ const findCurrentSession = async (
   return session!;
 };
 
-test("the list shows every session and the filters narrow it", async ({
+test("the list shows every session of the citizen and the filters narrow it", async ({
   page,
   prisma,
   signIn,
@@ -56,6 +55,11 @@ test("the list shows every session and the filters narrow it", async ({
   });
   const expiredDevice = await createSession(prisma, citizen.user, {
     expires: new Date(Date.now() - ONE_DAY_MS),
+  });
+  const stranger = await createCitizen(prisma, { handle: "sitzungs-fremder" });
+  const strangerDevice = await createSession(prisma, stranger.user, {
+    expires: new Date(Date.now() + ONE_DAY_MS),
+    userAgent: CHROME_ON_WINDOWS,
   });
 
   await signIn(citizen.user);
@@ -74,6 +78,10 @@ test("the list shows every session and the filters narrow it", async ({
   await expect(currentRow).toBeVisible();
   await expect(currentRow.getByText("Aktuell")).toBeVisible();
   await expect(currentRow.getByText("Unbekannt").first()).toBeVisible();
+  // … and it is the one session that cannot be revoked from here
+  await expect(
+    currentRow.getByRole("button", { name: "Sitzung löschen" }),
+  ).toBeDisabled();
 
   // The other device shows its parsed user agent
   const otherRow = page.getByRole("row").filter({ hasText: otherDevice.id });
@@ -82,6 +90,11 @@ test("the list shows every session and the filters narrow it", async ({
 
   // The session token is never rendered
   await expect(page.getByText(otherDevice.sessionToken)).toHaveCount(0);
+
+  // Another citizen's sessions are none of this list's business
+  await expect(
+    page.getByRole("row").filter({ hasText: strangerDevice.id }),
+  ).toHaveCount(0);
 
   // The status filter defaults to active, so the expired session is hidden
   await expect(
@@ -124,7 +137,7 @@ test("deleting a session logs that device out", async ({
     .getByRole("button", { name: "Löschen" })
     .click();
 
-  await expect(page.getByText("Erfolgreich gelöscht")).toBeVisible({
+  await expect(page.getByText(DELETED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await expect(otherRow).toHaveCount(0);
@@ -136,46 +149,4 @@ test("deleting a session logs that device out", async ({
     where: { type: "USER_SESSION_DELETED" },
   });
   expect(auditEvent).not.toBeNull();
-});
-
-test("the current session cannot be deleted from the list", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const citizen = await createCitizen(prisma, { handle: "sitzungs-bewahrer" });
-
-  await signIn(citizen.user);
-  const currentSession = await findCurrentSession(prisma, citizen.user, []);
-
-  await page.goto("/app/account/sessions");
-
-  const currentRow = page
-    .getByRole("row")
-    .filter({ hasText: currentSession.id });
-  await expect(
-    currentRow.getByRole("button", { name: "Löschen" }),
-  ).toBeDisabled();
-});
-
-test("another user's sessions are not listed", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const citizen = await createCitizen(prisma, {
-    handle: "sitzungs-neugieriger",
-  });
-  const stranger = await createCitizen(prisma, { handle: "sitzungs-fremder" });
-  const strangerDevice = await createSession(prisma, stranger.user, {
-    expires: new Date(Date.now() + ONE_DAY_MS),
-    userAgent: CHROME_ON_WINDOWS,
-  });
-
-  await signIn(citizen.user);
-  await page.goto("/app/account/sessions");
-
-  await expect(
-    page.getByRole("row").filter({ hasText: strangerDevice.id }),
-  ).toHaveCount(0);
 });

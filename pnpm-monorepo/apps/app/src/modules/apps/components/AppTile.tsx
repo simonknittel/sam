@@ -46,7 +46,7 @@ export const AppTile = ({
 
   if (variant === "compact") {
     return (
-      <div
+      <li
         className={clsx(
           containerClassName,
           "flex items-center gap-2 p-2 text-xs",
@@ -93,12 +93,12 @@ export const AppTile = ({
             {appKey && <AppFavoriteButton appKey={appKey} />}
           </div>
         </div>
-      </div>
+      </li>
     );
   }
 
   return (
-    <div className={clsx(containerClassName, "flex flex-col", className)}>
+    <li className={clsx(containerClassName, "flex flex-col", className)}>
       <div className="overflow-hidden rounded-t-primary">
         {app.imageSrc ? (
           <Image
@@ -170,6 +170,6 @@ export const AppTile = ({
           </div>
         )}
       </div>
-    </div>
+    </li>
   );
 };

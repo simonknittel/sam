@@ -5,15 +5,15 @@ import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilUrl,
   clickUntilVisible,
+  DELETED_TEXT,
+  FORBIDDEN_TEXT,
   modal,
+  SAVED_TEXT,
+  sectionByHeading,
+  toggleLabel,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
-
-const tileSection = (page: Page, heading: string) =>
-  page
-    .locator("section")
-    .filter({ has: page.getByRole("heading", { name: heading, exact: true }) });
 
 test("the citizen detail tabs render for a fully permitted viewer", async ({
   page,
@@ -53,13 +53,19 @@ test("the citizen detail tabs render for a fully permitted viewer", async ({
   }
 
   for (const tab of tabs.slice(1)) {
-    await page.getByRole("link", { name: tab.label }).click();
-    await expect(page).toHaveURL(
+    await clickUntilUrl(
+      page,
+      page.getByRole("link", { name: tab.label }),
       `/app/spynet/citizen/${target.entity.id}${tab.path}`,
     );
+    /**
+     * Every tab renders the citizen's header, so waiting for it is what
+     * separates "nothing forbidden here" from "nothing rendered yet".
+     */
     await expect(
-      page.getByText("Du bist nicht berechtigt dies zu sehen."),
-    ).toHaveCount(0);
+      page.getByRole("heading", { name: target.entity.handle! }),
+    ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+    await expect(page.getByText(FORBIDDEN_TEXT)).toHaveCount(0);
   }
 });
 
@@ -67,6 +73,7 @@ test("notes respect their classification level", async ({
   page,
   prisma,
   signIn,
+  switchUser,
 }) => {
   const noteType = await prisma.noteType.create({
     data: { name: "Beobachtung" },
@@ -121,7 +128,7 @@ test("notes respect their classification level", async ({
   await notePanel("Beobachtung")
     .getByRole("button", { name: "Speichern" })
     .click();
-  await expect(page.getByText("Erfolgreich gespeichert")).toBeVisible({
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await expect(page.getByText(noteContent)).toBeVisible({
@@ -153,16 +160,14 @@ test("notes respect their classification level", async ({
   await expect(notePanel("Gerücht").getByRole("textbox")).toHaveValue(draft);
 
   // A reader with only readRedacted sees a redacted note, not the content
-  await page.context().clearCookies();
-  await signIn(redactedReader.user);
+  await switchUser(redactedReader.user);
   await page.goto(`/app/spynet/citizen/${target.entity.id}/notes`);
   await page.getByRole("tab", { name: "Beobachtung" }).click();
   await expect(page.getByText("Redacted").first()).toBeVisible();
   await expect(page.getByText(noteContent)).toHaveCount(0);
 
   // A citizen without the classification does not get the note at all
-  await page.context().clearCookies();
-  await signIn(outsider.user);
+  await switchUser(outsider.user);
   await page.goto(`/app/spynet/citizen/${target.entity.id}/notes`);
   await expect(page.getByRole("heading", { name: "zielperson" })).toBeVisible();
   await expect(page.getByText(noteContent)).toHaveCount(0);
@@ -187,7 +192,7 @@ const exerciseSettingsRecordCrud = async (
   prisma: PrismaClient,
   scenario: SettingsRecordScenario,
 ) => {
-  const tile = tileSection(page, scenario.tileHeading);
+  const tile = sectionByHeading(page, scenario.tileHeading);
   await expect(tile).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
 
   // Create
@@ -207,14 +212,13 @@ const exerciseSettingsRecordCrud = async (
 
   const actionsTrigger = (record: string) =>
     tile
-      .locator("li, tr, article, div")
+      .getByRole("listitem")
       .filter({ hasText: record })
-      .getByRole("button", { name: "Aktionen" })
-      .last();
+      .getByRole("button", { name: "Aktionen" });
   /**
-   * The menu stays open behind the modal it opened, so by the delete step it
-   * is already showing — opening it again would toggle it shut and detach
-   * the button before the click lands.
+   * The row menu stays open behind the modal it opens and is still open once
+   * that modal closes again (reported as a finding) — so Escape closes it
+   * first, because clicking the trigger of an open menu shuts it instead.
    */
   const openRowAction = async (
     record: string,
@@ -222,8 +226,10 @@ const exerciseSettingsRecordCrud = async (
     reaction: Locator,
   ) => {
     const actionButton = page.getByRole("button", { name: actionLabel });
-    if (!(await actionButton.isVisible()))
-      await clickUntilVisible(actionsTrigger(record), actionButton);
+    await page.keyboard.press("Escape");
+    await expect(actionButton).toHaveCount(0);
+
+    await clickUntilVisible(actionsTrigger(record), actionButton);
     await actionButton.click();
     await expect(reaction).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
   };
@@ -251,7 +257,7 @@ const exerciseSettingsRecordCrud = async (
     .getByRole("alertdialog")
     .getByRole("button", { name: "Löschen" })
     .click();
-  await expect(page.getByText("Erfolgreich gelöscht")).toBeVisible({
+  await expect(page.getByText(DELETED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await expect(tile.getByText(scenario.updatedName)).toHaveCount(0, {
@@ -275,31 +281,27 @@ const SETTINGS_ADMIN_PERMISSIONS = [
   "systemLog;read",
 ];
 
-test("note types can be managed through the settings records", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const admin = await createCitizen(prisma, {
-    handle: "spynet-admin",
-    permissionStrings: SETTINGS_ADMIN_PERMISSIONS,
-  });
-
-  await signIn(admin.user);
-  await page.goto("/app/spynet/settings");
-  await waitForAppShellHydration(page);
-
-  await exerciseSettingsRecordCrud(page, prisma, {
+/** Both record types of the settings page, in the order they render */
+const SETTINGS_RECORD_SCENARIOS: SettingsRecordScenario[] = [
+  {
     tileHeading: "Notizarten",
     createdName: "Verdacht",
     updatedName: "Verdachtsfall",
     deletedAuditEventType: "NOTE_TYPE_DELETED",
     deletedLogMessage: 'Note type deleted: "Verdachtsfall"',
     countRecords: (prismaClient) => prismaClient.noteType.count(),
-  });
-});
+  },
+  {
+    tileHeading: "Geheimhaltungsstufen",
+    createdName: "Vertraulich",
+    updatedName: "Streng vertraulich",
+    deletedAuditEventType: "CLASSIFICATION_LEVEL_DELETED",
+    deletedLogMessage: 'Classification level deleted: "Streng vertraulich"',
+    countRecords: (prismaClient) => prismaClient.classificationLevel.count(),
+  },
+];
 
-test("classification levels can be managed through the settings records", async ({
+test("the settings records can be managed through their tiles", async ({
   page,
   prisma,
   signIn,
@@ -313,14 +315,10 @@ test("classification levels can be managed through the settings records", async 
   await page.goto("/app/spynet/settings");
   await waitForAppShellHydration(page);
 
-  await exerciseSettingsRecordCrud(page, prisma, {
-    tileHeading: "Geheimhaltungsstufen",
-    createdName: "Vertraulich",
-    updatedName: "Streng vertraulich",
-    deletedAuditEventType: "CLASSIFICATION_LEVEL_DELETED",
-    deletedLogMessage: 'Classification level deleted: "Streng vertraulich"',
-    countRecords: (prismaClient) => prismaClient.classificationLevel.count(),
-  });
+  for (const scenario of SETTINGS_RECORD_SCENARIOS) {
+    await page.goto("/app/spynet/settings");
+    await exerciseSettingsRecordCrud(page, prisma, scenario);
+  }
 });
 
 test("the citizen table paginates and filters", async ({
@@ -371,7 +369,7 @@ test("the citizen table paginates and filters", async ({
   );
   await clickUntilUrl(
     page,
-    page.locator("label").filter({ hasText: "Handles" }),
+    toggleLabel(page, "Handles"),
     /filters=unknown-handle/,
   );
   await expect(page.locator("tbody tr")).toHaveCount(UNNAMED_CITIZENS, {

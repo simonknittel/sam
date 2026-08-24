@@ -8,8 +8,13 @@ import {
   WikiPageVisibility,
   wikiParagraph,
 } from "../fixtures/factories";
-import { clickUntilVisible } from "../fixtures/interactions";
+import {
+  ACTION_FEEDBACK_TIMEOUT,
+  clickUntilVisible,
+  toggleLabel,
+} from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
+import { expectPersisted } from "../fixtures/wiki-editor";
 
 const copyPageToClipboard = async (page: Page) => {
   await clickUntilVisible(
@@ -29,12 +34,13 @@ const openCreatePageModal = async (page: Page) => {
   );
 };
 
-test("copy'n'paste inserts a page with its children under another page", async ({
+test("copy'n'paste inserts a page with its readable children under another page", async ({
   page,
   prisma,
   signIn,
 }) => {
   const member = await createCitizen(prisma, { handle: "kopierer" });
+  const secretRole = await createRole(prisma, { name: "geheim" });
   const source = await createWikiPage(prisma, {
     title: "Handbuch",
     visibility: WikiPageVisibility.PUBLIC,
@@ -44,6 +50,13 @@ test("copy'n'paste inserts a page with its children under another page", async (
     title: "Kapitel",
     parentId: source.id,
     content: wikiDocument(wikiParagraph("Erstes Kapitel.")),
+  });
+  /** Unreadable for the copier, thus neither counted nor copied */
+  await createWikiPage(prisma, {
+    title: "Geheim",
+    parentId: source.id,
+    visibility: WikiPageVisibility.RESTRICTED,
+    roleAccess: [{ roleId: secretRole.id, type: WikiPageAccessType.READ }],
   });
   const target = await createWikiPage(prisma, {
     title: "Zielbereich",
@@ -64,7 +77,9 @@ test("copy'n'paste inserts a page with its children under another page", async (
   await expect(page.getByText("„Handbuch“ + 1 Unterseiten")).toBeVisible();
   await page.getByRole("button", { name: "Einfügen", exact: true }).click();
 
-  await expect(page).toHaveURL(/handbuch-kopie$/, { timeout: 15_000 });
+  await expect(page).toHaveURL(/handbuch-kopie$/, {
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
   await expect(page.getByText("Grundlagen des Bergbaus.")).toBeVisible();
 
   const rootCopy = await prisma.wikiPage.findFirstOrThrow({
@@ -79,6 +94,8 @@ test("copy'n'paste inserts a page with its children under another page", async (
   });
   expect(chapterCopy.content).toEqual(chapter.content);
   expect(chapterCopy.visibility).toBe(WikiPageVisibility.INHERIT);
+  /** The unreadable child was left where it was — only the original exists */
+  expect(await prisma.wikiPage.count({ where: { title: "Geheim" } })).toBe(1);
 
   // The insert consumed the clipboard
   const cookies = await page.context().cookies();
@@ -116,12 +133,12 @@ test("a new page can start as a copy of an existing page", async ({
   await page.locator('input[name="title"]').fill("Neu aus Vorlage");
   // The select waits for the lazily fetched readable pages
   await page
-    .locator('select[name="copyFromPageId"]')
+    .getByLabel("Inhalt kopieren von (optional)")
     .selectOption({ label: "Vorlage" });
   await page.getByRole("button", { name: "Erstellen", exact: true }).click();
 
   await expect(page.getByText("Struktur der Vorlage.")).toBeVisible({
-    timeout: 15_000,
+    timeout: ACTION_FEEDBACK_TIMEOUT,
   });
 
   const created = await prisma.wikiPage.findFirstOrThrow({
@@ -133,58 +150,6 @@ test("a new page can start as a copy of an existing page", async ({
     where: { title: "Vorlagen-Detail", parentId: created.id },
   });
   expect(childCopy.visibility).toBe(WikiPageVisibility.INHERIT);
-});
-
-test("copying skips children the user cannot read", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  const member = await createCitizen(prisma, { handle: "leser" });
-  const secretRole = await createRole(prisma, { name: "geheim" });
-  const source = await createWikiPage(prisma, {
-    title: "Übersicht",
-    visibility: WikiPageVisibility.PUBLIC,
-    content: wikiDocument(wikiParagraph("Überblick über alles.")),
-  });
-  await createWikiPage(prisma, {
-    title: "Offen",
-    parentId: source.id,
-    content: wikiDocument(wikiParagraph("Für alle lesbar.")),
-  });
-  await createWikiPage(prisma, {
-    title: "Geheim",
-    parentId: source.id,
-    visibility: WikiPageVisibility.RESTRICTED,
-    roleAccess: [{ roleId: secretRole.id, type: WikiPageAccessType.READ }],
-  });
-  const target = await createWikiPage(prisma, {
-    title: "Ziel",
-    visibility: WikiPageVisibility.PUBLIC,
-    ownerId: member.entity.id,
-  });
-  await signIn(member.user);
-
-  await page.goto(`/app/wiki/${source.id}/${source.slug}`);
-  await copyPageToClipboard(page);
-
-  await page.goto(`/app/wiki/${target.id}/${target.slug}`);
-  await openCreatePageModal(page);
-  // Only the readable child counts
-  await expect(page.getByText("„Übersicht“ + 1 Unterseiten")).toBeVisible();
-  await page.getByRole("button", { name: "Einfügen", exact: true }).click();
-  await expect(page).toHaveURL(/bersicht-kopie$/, { timeout: 15_000 });
-
-  const rootCopy = await prisma.wikiPage.findFirstOrThrow({
-    where: { title: "Übersicht (Kopie)" },
-  });
-  expect(
-    await prisma.wikiPage.count({
-      where: { title: "Offen", parentId: rootCopy.id },
-    }),
-  ).toBe(1);
-  // The unreadable child was not copied — only the original exists
-  expect(await prisma.wikiPage.count({ where: { title: "Geheim" } })).toBe(1);
 });
 
 test("replace mode transplants the copy onto an existing page", async ({
@@ -217,12 +182,16 @@ test("replace mode transplants the copy onto an existing page", async ({
 
   await page.goto(`/app/wiki/${target.id}/${target.slug}`);
   await openCreatePageModal(page);
-  await page.getByText("Seite ersetzen", { exact: true }).click();
+  /** The label is the visible half of the radio, which is `sr-only` */
+  await toggleLabel(page, /^Seite ersetzen$/).click();
+  await expect(
+    page.getByRole("radio", { name: "Seite ersetzen" }),
+  ).toBeChecked();
   await page.getByRole("button", { name: "Einfügen", exact: true }).click();
 
   // The page keeps its identity; only its content is transplanted
   await expect(page).toHaveURL(new RegExp(`/app/wiki/${target.id}/`), {
-    timeout: 15_000,
+    timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await expect(page.getByText("Muster-Inhalt.")).toBeVisible();
 
@@ -232,20 +201,9 @@ test("replace mode transplants the copy onto an existing page", async ({
   });
   expect(targetRow.title).toBe("Bestehend");
 
-  // The transplanted content reaches searchText with the collab server's
-  // store debounce — poll instead of reading once
-  await expect
-    .poll(
-      async () => {
-        const stored = await prisma.wikiPage.findUniqueOrThrow({
-          where: { id: target.id },
-          select: { searchText: true },
-        });
-        return stored.searchText;
-      },
-      { timeout: 20_000 },
-    )
-    .toContain("Muster-Inhalt.");
+  await expectPersisted(prisma, target.id, "searchText").toContain(
+    "Muster-Inhalt.",
+  );
 
   // The old content survives as an automatic snapshot
   expect(
@@ -272,7 +230,7 @@ test("replace mode transplants the copy onto an existing page", async ({
         prisma.wikiPage.count({
           where: { title: "Muster-Kind", parentId: target.id },
         }),
-      { timeout: 15_000 },
+      { timeout: ACTION_FEEDBACK_TIMEOUT },
     )
     .toBe(1);
   // No "(Kopie)" page was created — the target itself was replaced

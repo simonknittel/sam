@@ -1,15 +1,17 @@
-import type { PrismaClient, User } from "@sam-monorepo/database/client";
 import path from "node:path";
 import {
   createAppEvent,
   createCitizen,
   createRole,
+  createUpload,
   createWikiPage,
+  futureEvent,
   WikiPageVisibility,
 } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
+  DELETED_TEXT,
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
@@ -26,41 +28,30 @@ const imagePath = path.join(
 /** Deleting the object in the bucket happens after the action responded. */
 const BUCKET_TIMEOUT = 15_000;
 
-const ONE_HOUR_MS = 60 * 60 * 1000;
-const ONE_DAY_MS = 24 * ONE_HOUR_MS;
-
-/**
- * `Upload.fileName` is stored URI-encoded, so seeded rows have to encode
- * like the upload endpoints do — the table decodes it for display again.
- */
-const createUpload = (
-  prisma: PrismaClient,
-  user: Pick<User, "id">,
-  {
-    fileName,
-    mimeType,
-    size,
-    wikiPageId,
-  }: {
-    fileName: string;
-    mimeType: string;
-    size: number;
-    wikiPageId?: string;
-  },
-) =>
-  prisma.upload.create({
-    data: {
-      fileName: encodeURIComponent(fileName),
-      mimeType,
-      size,
-      createdById: user.id,
-      ...(wikiPageId ? { wikiPages: { connect: { id: wikiPageId } } } : {}),
-    },
-  });
-
 const objectUrl = (uploadId: string) => {
   const { s3Port } = readStackState();
   return `http://localhost:${s3Port}/${s3BucketName}/${uploadId}`;
+};
+
+/**
+ * A role icon without the S3 round trip. The bucket only matters where the
+ * object itself is under test (see the delete test below); everything else
+ * cares about the row and the usage it renders.
+ */
+const seedRoleIcon = async (
+  prisma: Parameters<typeof createUpload>[0],
+  user: Parameters<typeof createUpload>[1],
+  roleId: string,
+) => {
+  const upload = await createUpload(prisma, user, {
+    fileName: "upload.png",
+    mimeType: "image/png",
+  });
+  await prisma.role.update({
+    where: { id: roleId },
+    data: { iconId: upload.id },
+  });
+  return upload;
 };
 
 test("a user's own uploads are listed with the place they are used", async ({
@@ -73,15 +64,8 @@ test("a user's own uploads are listed with the place they are used", async ({
     permissionStrings: ["role;manage"],
   });
   const role = await createRole(prisma, { name: "Bildrolle" });
+  const upload = await seedRoleIcon(prisma, citizen.user, role.id);
   await signIn(citizen.user);
-
-  // Upload a role icon through the existing flow
-  await page.goto(`/app/roles/${role.id}`);
-  await waitForAppShellHydration(page);
-  await page.locator('input[type="file"]').first().setInputFiles(imagePath);
-  await expect(page.getByText("Erfolgreich hochgeladen")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
 
   await page.goto("/app/uploads");
 
@@ -90,7 +74,6 @@ test("a user's own uploads are listed with the place they are used", async ({
   await expect(row.getByText("Rollen-Icon")).toBeVisible();
 
   // The file name opens the object in the bucket
-  const upload = await prisma.upload.findFirstOrThrow();
   await expect(row.getByRole("link", { name: "upload.png" })).toHaveAttribute(
     "href",
     objectUrl(upload.id),
@@ -124,8 +107,7 @@ test("an event cover shows up as a usage of its upload", async ({
   const event = await createAppEvent(prisma, {
     name: "Operation Pitchfork",
     createdById: organizer.entity.id,
-    startTime: new Date(Date.now() + ONE_DAY_MS),
-    endTime: new Date(Date.now() + ONE_DAY_MS + 2 * ONE_HOUR_MS),
+    ...futureEvent(),
   });
   const cover = await createUpload(prisma, organizer.user, {
     fileName: "Titelbild Pitchfork.png",
@@ -265,9 +247,17 @@ test("a manager deletes an upload from the database and the bucket", async ({
 
   const upload = await prisma.upload.findFirstOrThrow();
   await expect
-    .poll(async () => (await fetch(objectUrl(upload.id))).status, {
-      timeout: BUCKET_TIMEOUT,
-    })
+    .poll(
+      async () =>
+        (
+          await fetch(objectUrl(upload.id), {
+            signal: AbortSignal.timeout(5_000),
+          })
+        ).status,
+      {
+        timeout: BUCKET_TIMEOUT,
+      },
+    )
     .toBe(200);
 
   await page.goto("/app/uploads");
@@ -284,7 +274,7 @@ test("a manager deletes an upload from the database and the bucket", async ({
   await expect(dialog.getByText("Bildrolle")).toBeVisible();
 
   await dialog.getByRole("button", { name: "Löschen" }).click();
-  await expect(page.getByText("Erfolgreich gelöscht")).toBeVisible({
+  await expect(page.getByText(DELETED_TEXT)).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await expect(row).toHaveCount(0);
@@ -301,9 +291,17 @@ test("a manager deletes an upload from the database and the bucket", async ({
 
   // The object is gone from the bucket too
   await expect
-    .poll(async () => (await fetch(objectUrl(upload.id))).status, {
-      timeout: BUCKET_TIMEOUT,
-    })
+    .poll(
+      async () =>
+        (
+          await fetch(objectUrl(upload.id), {
+            signal: AbortSignal.timeout(5_000),
+          })
+        ).status,
+      {
+        timeout: BUCKET_TIMEOUT,
+      },
+    )
     .toBe(404);
 
   const auditEvent = await prisma.auditEvent.findFirst({
@@ -322,16 +320,8 @@ test("deleting is forbidden without the permission", async ({
     permissionStrings: ["role;manage"],
   });
   const role = await createRole(prisma, { name: "Bildrolle" });
+  const upload = await seedRoleIcon(prisma, citizen.user, role.id);
   await signIn(citizen.user);
-
-  await page.goto(`/app/roles/${role.id}`);
-  await waitForAppShellHydration(page);
-  await page.locator('input[type="file"]').first().setInputFiles(imagePath);
-  await expect(page.getByText("Erfolgreich hochgeladen")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
-
-  const upload = await prisma.upload.findFirstOrThrow();
 
   await page.goto("/app/uploads");
   await expect(

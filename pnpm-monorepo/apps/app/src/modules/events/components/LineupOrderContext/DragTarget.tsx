@@ -26,6 +26,7 @@ export const DragTarget = ({
   return (
     <div className={clsx("relative", className)}>
       <div
+        data-drop-target={order}
         className={clsx(
           "h-8 hover:border-green-500 hover:from-green-900 absolute left-0 right-0",
           {
@@ -41,6 +42,7 @@ export const DragTarget = ({
 
       {order === "after" && groupLevel < 4 && (
         <div
+          data-drop-target="inside"
           className="h-8 hover:border-green-500 hover:from-green-900 absolute left-[calc(50%+1px)] right-0 hover:border-b-2 bottom-0 bg-linear-to-t"
           onMouseUp={(e) => handleDragEnd(e, position, "inside")}
         />

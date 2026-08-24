@@ -1,11 +1,11 @@
-import {
-  createCitizen,
-  createWikiPage,
-  WikiPageEditability,
-  WikiPageVisibility,
-} from "../fixtures/factories";
+import { createCitizen } from "../fixtures/factories";
 import { expect, test } from "../fixtures/test";
-import { enterEditMode, focusEditor } from "../fixtures/wiki-editor";
+import {
+  enterEditMode,
+  expectPersisted,
+  focusEditor,
+  seedEditablePage,
+} from "../fixtures/wiki-editor";
 
 test("typed content persists through the collab server", async ({
   page,
@@ -13,11 +13,7 @@ test("typed content persists through the collab server", async ({
   signIn,
 }) => {
   const editor = await createCitizen(prisma, { handle: "editor" });
-  const wikiPage = await createWikiPage(prisma, {
-    title: "Notizen",
-    visibility: WikiPageVisibility.PUBLIC,
-    editability: WikiPageEditability.ALL,
-  });
+  const wikiPage = await seedEditablePage(prisma, { title: "Notizen" });
   await signIn(editor.user);
 
   await page.goto(`/app/wiki/${wikiPage.id}/${wikiPage.slug}`);
@@ -29,19 +25,9 @@ test("typed content persists through the collab server", async ({
     "Kollaboratives Tippen funktioniert.",
   );
 
-  // The collab server persists content/searchText with a 2s store debounce
-  await expect
-    .poll(
-      async () => {
-        const stored = await prisma.wikiPage.findUniqueOrThrow({
-          where: { id: wikiPage.id },
-          select: { searchText: true },
-        });
-        return stored.searchText;
-      },
-      { timeout: 20_000 },
-    )
-    .toContain("Kollaboratives Tippen funktioniert.");
+  await expectPersisted(prisma, wikiPage.id, "searchText").toContain(
+    "Kollaboratives Tippen funktioniert.",
+  );
 
   await page.reload();
   await expect(
@@ -55,11 +41,7 @@ test("the slash palette opens and inserts a block", async ({
   signIn,
 }) => {
   const editor = await createCitizen(prisma, { handle: "editor" });
-  const wikiPage = await createWikiPage(prisma, {
-    title: "Palette",
-    visibility: WikiPageVisibility.PUBLIC,
-    editability: WikiPageEditability.ALL,
-  });
+  const wikiPage = await seedEditablePage(prisma, { title: "Palette" });
   await signIn(editor.user);
 
   await page.goto(`/app/wiki/${wikiPage.id}/${wikiPage.slug}`);
