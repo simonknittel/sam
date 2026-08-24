@@ -11,7 +11,6 @@ import {
   type Role,
   type Task,
   type TaskAssignment,
-  type Upload,
 } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useId, useTransition } from "react";
@@ -22,10 +21,8 @@ import { deleteTaskAssignmentForCurrentUser } from "../actions/deleteTaskAssignm
 interface Props {
   readonly className?: string;
   readonly task: Task & {
-    readonly assignments: TaskAssignment[];
-    readonly requiredRoles: (Role & {
-      readonly icon: Upload | null;
-    })[];
+    readonly assignments: readonly Pick<TaskAssignment, "citizenId">[];
+    readonly requiredRoles: readonly Pick<Role, "id">[];
   };
   readonly isCurrentUserAssigned?: boolean;
 }

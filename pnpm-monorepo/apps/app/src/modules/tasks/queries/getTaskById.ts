@@ -18,17 +18,15 @@ export const getTaskById = cache(
       },
       include: {
         assignments: {
-          include: {
-            citizen: true,
+          select: {
+            id: true,
+            citizenId: true,
+            citizen: { select: { id: true, handle: true } },
           },
         },
-        requiredRoles: {
-          include: {
-            icon: true,
-          },
-        },
-        completionists: true,
-        createdBy: true,
+        requiredRoles: { select: { id: true } },
+        completionists: { select: { id: true, handle: true } },
+        createdBy: { select: { id: true, handle: true } },
       },
     });
 

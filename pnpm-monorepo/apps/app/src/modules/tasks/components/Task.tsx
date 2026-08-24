@@ -5,11 +5,7 @@ import { AccordeonLink } from "@/modules/common/components/Accordeon";
 import { Badge } from "@/modules/common/components/Badge";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
-import {
-  type Entity,
-  type TaskAssignment,
-  type Task as TaskType,
-} from "@sam-monorepo/database/browser";
+import type { TaskListRow } from "@/modules/tasks/queries/taskListSelect";
 import clsx from "clsx";
 import type { ReactNode } from "react";
 import { BsExclamationOctagonFill } from "react-icons/bs";
@@ -17,16 +13,9 @@ import { FaCheck, FaCheckSquare, FaClock, FaInfoCircle } from "react-icons/fa";
 import { IoPerson } from "react-icons/io5";
 import { TbRepeatOnce } from "react-icons/tb";
 
-interface TaskWithIncludes extends TaskType {
-  assignments: (Pick<TaskAssignment, "citizenId"> & {
-    citizen: Pick<Entity, "id" | "handle">;
-  })[];
-  completionists?: Pick<Entity, "id">[];
-}
-
 interface Props {
   readonly className?: string;
-  readonly task: TaskWithIncludes;
+  readonly task: TaskListRow;
 }
 
 export const Task = ({ className, task }: Props) => {

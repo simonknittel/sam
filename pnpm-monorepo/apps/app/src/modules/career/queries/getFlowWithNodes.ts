@@ -12,7 +12,8 @@ export const getFlowWithNodes = cache(
   withTrace("getFlowWithNodes", async (flowId: string) =>
     prisma.flow.findUnique({
       where: { id: flowId },
-      include: {
+      select: {
+        id: true,
         nodes: {
           include: {
             sources: true,

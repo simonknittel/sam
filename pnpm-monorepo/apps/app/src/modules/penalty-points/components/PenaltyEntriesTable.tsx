@@ -7,8 +7,8 @@ import clsx from "clsx";
 import { DeletePenaltyEntry } from "./DeletePenaltyEntry";
 
 type Row = PenaltyEntry & {
-  citizen: Entity;
-  createdBy: Entity;
+  citizen: Pick<Entity, "id" | "handle">;
+  createdBy: Pick<Entity, "id" | "handle">;
 };
 
 const COLUMNS_WITH_CITIZEN =

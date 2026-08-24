@@ -31,7 +31,12 @@ export const getProfitDistributionCycleById = cache(
         },
         include: {
           participants: {
-            include: {
+            select: {
+              citizenId: true,
+              silcBalanceSnapshot: true,
+              cededAt: true,
+              acceptedAt: true,
+              disbursedAt: true,
               citizen: {
                 select: {
                   id: true,

@@ -26,7 +26,10 @@ interface CreateProps extends BaseProps {
 }
 
 interface UpdateProps extends BaseProps {
-  transaction: SilcTransaction;
+  transaction: Pick<
+    SilcTransaction,
+    "id" | "receiverId" | "value" | "description"
+  >;
 }
 
 type Props = CreateProps | UpdateProps;

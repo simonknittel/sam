@@ -17,7 +17,7 @@ import { updateTaskAssignments } from "../actions/updateTaskAssignments";
 interface Props {
   readonly className?: string;
   readonly task: Task & {
-    readonly assignments: TaskAssignment[];
+    readonly assignments: readonly Pick<TaskAssignment, "citizenId">[];
   };
 }
 

@@ -17,7 +17,13 @@ export enum PayoutState {
 
 export const getPayoutState = (
   cycle: ProfitDistributionCycle,
-  myParticipant: ProfitDistributionCycleParticipant | null | undefined,
+  myParticipant:
+    | Pick<
+        ProfitDistributionCycleParticipant,
+        "cededAt" | "acceptedAt" | "disbursedAt"
+      >
+    | null
+    | undefined,
 ) => {
   if (!myParticipant) return PayoutState.NOT_PARTICIPATING;
 

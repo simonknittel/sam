@@ -4,6 +4,7 @@ import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
 import { isVisibleForCurrentUser } from "../utils/isVisibleForCurrentUser";
+import { TASK_LIST_SELECT } from "./taskListSelect";
 
 export const getTasks = cache(
   withTrace(
@@ -46,29 +47,7 @@ export const getTasks = cache(
               createdById: authentication.session.entity?.id,
             }),
           },
-          include: {
-            assignments: {
-              select: {
-                citizenId: true,
-                citizen: {
-                  select: {
-                    id: true,
-                    handle: true,
-                  },
-                },
-              },
-            },
-            requiredRoles: {
-              select: {
-                id: true,
-              },
-            },
-            completionists: {
-              select: {
-                id: true,
-              },
-            },
-          },
+          select: TASK_LIST_SELECT,
           orderBy: { createdAt: "desc" },
         });
       } else {
@@ -98,29 +77,7 @@ export const getTasks = cache(
               createdById: authentication.session.entity?.id,
             }),
           },
-          include: {
-            assignments: {
-              select: {
-                citizenId: true,
-                citizen: {
-                  select: {
-                    id: true,
-                    handle: true,
-                  },
-                },
-              },
-            },
-            requiredRoles: {
-              select: {
-                id: true,
-              },
-            },
-            completionists: {
-              select: {
-                id: true,
-              },
-            },
-          },
+          select: TASK_LIST_SELECT,
           orderBy: {
             createdAt: "desc",
           },

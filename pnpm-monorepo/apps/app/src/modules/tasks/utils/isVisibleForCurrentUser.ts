@@ -6,10 +6,13 @@ import type {
   TaskAssignment,
 } from "@sam-monorepo/database/client";
 
-interface TaskForVisibility extends Task {
-  assignments: Pick<TaskAssignment, "citizenId">[];
-  completionists?: Pick<Entity, "id">[];
-  requiredRoles: Pick<Role, "id">[];
+interface TaskForVisibility extends Pick<
+  Task,
+  "createdById" | "hiddenForOtherRoles" | "visibility"
+> {
+  assignments: readonly Pick<TaskAssignment, "citizenId">[];
+  completionists?: readonly Pick<Entity, "id">[];
+  requiredRoles: readonly Pick<Role, "id">[];
 }
 
 export const isVisibleForCurrentUser = async (task: TaskForVisibility) => {

@@ -36,7 +36,15 @@ export const getProfitDistributionCycles = cache(
         collectionEndedAt: "desc",
       },
       include: {
-        participants: true,
+        participants: {
+          select: {
+            citizenId: true,
+            silcBalanceSnapshot: true,
+            cededAt: true,
+            acceptedAt: true,
+            disbursedAt: true,
+          },
+        },
       },
     });
 

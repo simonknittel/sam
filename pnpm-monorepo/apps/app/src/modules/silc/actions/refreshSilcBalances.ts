@@ -25,7 +25,11 @@ export const refreshSilcBalances = createAuthenticatedAction(
     /**
      * Update citizens' balances
      */
-    const citizens = await prisma.entity.findMany();
+    const citizens = await prisma.entity.findMany({
+      select: {
+        id: true,
+      },
+    });
     await updateCitizensSilcBalances(citizens.map((citizen) => citizen.id));
 
     await createAuditEvents([

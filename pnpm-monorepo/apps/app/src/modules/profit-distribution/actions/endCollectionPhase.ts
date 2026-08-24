@@ -53,6 +53,10 @@ export const endCollectionPhase = createAuthenticatedAction(
           gt: 0,
         },
       },
+      select: {
+        id: true,
+        silcBalance: true,
+      },
     });
 
     await createSilcTransactions(
