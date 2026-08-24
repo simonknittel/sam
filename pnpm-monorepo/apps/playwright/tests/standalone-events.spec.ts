@@ -620,9 +620,10 @@ test("the description renders the formats of Discord and exports plain text", as
   const icsHref = await page
     .getByRole("menuitem", { name: "ICS-Datei herunterladen" })
     .getAttribute("href");
+  // RFC 5545 folds a long line; unfold it before the text assertions
   const icsFile = decodeURIComponent(
     icsHref!.replace("data:text/calendar;charset=utf-8,", ""),
-  );
+  ).replaceAll(/\r\n[\t ]/g, "");
   expect(icsFile).toContain("Sammelpunkt um 20 Uhr.");
   expect(icsFile).not.toContain("**Sammelpunkt**");
   expect(icsFile).toContain("- Erster Punkt");
