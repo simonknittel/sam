@@ -4,6 +4,7 @@ import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
+import { DiscordFormattingHint } from "@/modules/common/components/form/DiscordFormattingHint";
 import { Textarea } from "@/modules/common/components/form/Textarea";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import { EventCoverImageField } from "@/modules/events/components/EventCoverImageField";
@@ -47,7 +48,12 @@ export const CreateEventTemplateForm = ({ className, onSuccess }: Props) => {
       <Textarea
         name="description"
         label="Kurzbeschreibung"
-        hint="optional, max. 1.000 Zeichen. Wird als Kurzbeschreibung in das Event übernommen."
+        hint={
+          <>
+            optional, max. 1.000 Zeichen. <DiscordFormattingHint />. Wird als
+            Kurzbeschreibung in das Event übernommen.
+          </>
+        }
         maxLength={EVENT_TEMPLATE_DESCRIPTION_MAX_LENGTH}
         defaultValue={getDefaultValueWithFallback("description", "")}
         className="mt-4"

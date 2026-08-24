@@ -4,6 +4,7 @@ import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
+import { DiscordFormattingHint } from "@/modules/common/components/form/DiscordFormattingHint";
 import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
 import { Textarea } from "@/modules/common/components/form/Textarea";
 import { TextInput } from "@/modules/common/components/form/TextInput";
@@ -80,7 +81,12 @@ export const UpdateEventTemplateForm = ({
       <Textarea
         name="description"
         label="Kurzbeschreibung"
-        hint="optional, max. 1.000 Zeichen. Wird als Kurzbeschreibung in das Event übernommen."
+        hint={
+          <>
+            optional, max. 1.000 Zeichen. <DiscordFormattingHint />. Wird als
+            Kurzbeschreibung in das Event übernommen.
+          </>
+        }
         maxLength={EVENT_TEMPLATE_DESCRIPTION_MAX_LENGTH}
         defaultValue={template.description ?? ""}
         className="mt-4"
