@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { createEvent, type DateTime } from "ics";
 
 export const getIcsFile = (event: Event) => {
-  const description = markdownToPlainText(event.description || "");
+  const description = markdownToPlainText(event.description);
 
   const start = format(event.startTime, "yyyy-MM-dd-HH-mm")
     .split("-")

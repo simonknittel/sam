@@ -13,7 +13,7 @@ export const getGoogleCalendarUrl = (event: Event) => {
   url.searchParams.set("text", event.name);
   url.searchParams.set("dates", `${start}/${end}`);
   url.searchParams.set("ctz", "UTC");
-  const description = markdownToPlainText(event.description || "");
+  const description = markdownToPlainText(event.description);
   if (description) url.searchParams.set("details", description);
   if (event.location) url.searchParams.set("location", event.location);
 

@@ -21,10 +21,21 @@ describe("markdownToPlainText", () => {
     );
   });
 
-  test("writes a bare URL only once", () => {
+  test("writes a bare address only once", () => {
     expect(markdownToPlainText("visit https://example.com/ now")).toBe(
       "visit https://example.com/ now",
     );
+    // `remark-gfm` adds a scheme to these two, but the user never typed it
+    expect(markdownToPlainText("besuche www.example.com")).toBe(
+      "besuche www.example.com",
+    );
+    expect(markdownToPlainText("schreib an mail@example.com")).toBe(
+      "schreib an mail@example.com",
+    );
+  });
+
+  test("keeps the characters of the multi-line quote of Discord", () => {
+    expect(markdownToPlainText(">>> first\nsecond")).toBe(">>> first\nsecond");
   });
 
   test("removes the characters of a heading", () => {
@@ -67,7 +78,9 @@ describe("markdownToPlainText", () => {
     );
   });
 
-  test("gives an empty result for an empty description", () => {
+  test("gives an empty result for a description that is not set", () => {
     expect(markdownToPlainText("")).toBe("");
+    expect(markdownToPlainText(null)).toBe("");
+    expect(markdownToPlainText(undefined)).toBe("");
   });
 });

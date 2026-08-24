@@ -20,7 +20,7 @@ export const getOutlookUrl = (event: Event) => {
   url.searchParams.set("subject", event.name);
   url.searchParams.set("startdt", start);
   url.searchParams.set("enddt", end);
-  const description = markdownToPlainText(event.description || "");
+  const description = markdownToPlainText(event.description);
   if (description) url.searchParams.set("body", description);
   if (event.location) url.searchParams.set("location", event.location);
 
