@@ -242,3 +242,122 @@ test("the dashboard shows its task tiles exactly to those with task permission",
   await expect(myTasksTile).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
   await expect(myTasksTile).toContainText("Patrouille fliegen");
 });
+
+test("a citizen takes a task on, gives it up, and a manager cancels and deletes it", async ({
+  page,
+  prisma,
+  signIn,
+  switchUser,
+}) => {
+  const manager = await createCitizen(prisma, {
+    handle: "task-verwalter",
+    permissionStrings: ["task;read", "task;manage"],
+  });
+  const worker = await createCitizen(prisma, {
+    handle: "task-annehmer",
+    permissionStrings: ["task;read"],
+  });
+  const task = await prisma.task.create({
+    data: {
+      title: "Frachter eskortieren",
+      visibility: TaskVisibility.PUBLIC,
+      rewardType: TaskRewardType.NEW_SILC,
+      createdById: manager.entity.id,
+    },
+  });
+
+  /**
+   * Taking it on and giving it up again
+   */
+  await signIn(worker.user);
+  await page.goto(`/app/tasks/${task.id}`);
+
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Annehmen" }),
+    page.getByRole("button", { name: "Aufgeben" }),
+  );
+  await expect
+    .poll(() =>
+      prisma.taskAssignment.count({
+        where: { taskId: task.id, citizenId: worker.entity.id },
+      }),
+    )
+    .toBe(1);
+
+  await page.getByRole("button", { name: "Aufgeben" }).click();
+  await expect(page.getByRole("button", { name: "Annehmen" })).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+  await expect
+    .poll(() => prisma.taskAssignment.count({ where: { taskId: task.id } }))
+    .toBe(0);
+
+  /**
+   * A cancelled task leaves the open list for the closed one
+   */
+  await switchUser(manager.user);
+  await page.goto(`/app/tasks/${task.id}`);
+
+  const cancelDialog = page.getByRole("alertdialog");
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Task abbrechen" }),
+    cancelDialog,
+  );
+  await cancelDialog.getByRole("button", { name: "Speichern" }).click();
+
+  await expect
+    .poll(
+      async () => {
+        const cancelled = await prisma.task.findUniqueOrThrow({
+          where: { id: task.id },
+        });
+        return cancelled.cancelledAt !== null;
+      },
+      { timeout: ACTION_FEEDBACK_TIMEOUT },
+    )
+    .toBe(true);
+
+  await page.goto("/app/tasks");
+  await expect(page.getByText("Keine Tasks gefunden")).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+  await page.goto("/app/tasks?status=closed");
+  await expect(
+    page.getByRole("link", { name: /Frachter eskortieren/ }),
+  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+
+  /**
+   * Deleting takes it out of both
+   */
+  await page.goto(`/app/tasks/${task.id}`);
+  const deleteDialog = page.getByRole("alertdialog");
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Task löschen" }),
+    deleteDialog,
+  );
+  await deleteDialog.getByRole("button", { name: "Löschen" }).click();
+
+  await expect
+    .poll(
+      async () => {
+        const deleted = await prisma.task.findUniqueOrThrow({
+          where: { id: task.id },
+        });
+        return deleted.deletedAt !== null;
+      },
+      { timeout: ACTION_FEEDBACK_TIMEOUT },
+    )
+    .toBe(true);
+
+  await page.goto("/app/tasks?status=closed");
+  await expect(page.getByText("Keine Tasks gefunden")).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+
+  await expectAuditEvents(prisma, [
+    "TASK_SELF_ASSIGNMENT_CREATED",
+    "TASK_SELF_ASSIGNMENT_DELETED",
+    "TASK_CANCELLED",
+    "TASK_DELETED",
+  ]);
+});
