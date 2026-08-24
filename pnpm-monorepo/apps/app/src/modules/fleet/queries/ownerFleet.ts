@@ -9,6 +9,7 @@ import {
   FLEET_PAGE_SIZE,
   paginateByCursor,
   SHIP_SELECT,
+  VARIANT_TAG_SELECT,
 } from "./shipQuery";
 
 interface OwnerFleetOptions {
@@ -101,5 +102,5 @@ export const getOwnerFleetVariantTags = (ownerId: Entity["id"]) =>
       },
     },
     orderBy: [{ key: "asc" }, { value: "asc" }],
-    select: { id: true, key: true, value: true },
+    select: VARIANT_TAG_SELECT,
   });

@@ -5,7 +5,7 @@ import {
   updateEventLineupOrder,
   type MappedPosition,
 } from "@/modules/events/actions/updateEventLineupOrder";
-import type { EventCitizenWithShips } from "@/modules/events/types/eventShapes";
+import type { EventCitizenWithShips } from "@/modules/events/queries/eventRelationSelects";
 import type { VariantCatalogManufacturer } from "@/modules/fleet/queries/getVariantCatalog";
 import type { Ship } from "@sam-monorepo/database/browser";
 import clsx from "clsx";

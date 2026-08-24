@@ -1,15 +1,22 @@
 import type { Prisma } from "@sam-monorepo/database/client";
 
 /**
- * One attribute of a log as the note and log tables read it: the key and
- * value they match on, the timestamp they pick the latest by, and the name
- * of whoever set it.
+ * One attribute of a log as the code that decides on it reads it: the key
+ * and value it matches on, and the timestamp it picks the latest by.
  */
-export const ENTITY_LOG_ATTRIBUTE_SELECT = {
+export const ENTITY_LOG_ATTRIBUTE_VALUE_SELECT = {
   id: true,
   key: true,
   value: true,
   createdAt: true,
+} as const satisfies Prisma.EntityLogAttributeSelect;
+
+/**
+ * The same, plus the name of whoever set the attribute, which the note and
+ * identity tables show in their "confirmed by" column.
+ */
+export const ENTITY_LOG_ATTRIBUTE_SELECT = {
+  ...ENTITY_LOG_ATTRIBUTE_VALUE_SELECT,
   createdBy: { select: { name: true } },
 } as const satisfies Prisma.EntityLogAttributeSelect;
 
@@ -47,7 +54,7 @@ export const CITIZEN_NOTE_SELECT = {
   content: true,
   createdAt: true,
   attributes: {
-    select: { id: true, key: true, value: true, createdAt: true },
+    select: ENTITY_LOG_ATTRIBUTE_VALUE_SELECT,
   },
 } as const satisfies Prisma.EntityLogSelect;
 
@@ -60,3 +67,14 @@ export type EntityLogTableRow = Prisma.EntityLogGetPayload<{
     attributes: { select: typeof ENTITY_LOG_ATTRIBUTE_SELECT };
   };
 }>;
+
+/**
+ * One log as the spynet API routes guard on it: the identity of the log and
+ * the attributes their permission checks read.
+ */
+export const ENTITY_LOG_GUARD_SELECT = {
+  id: true,
+  type: true,
+  entityId: true,
+  attributes: { select: ENTITY_LOG_ATTRIBUTE_VALUE_SELECT },
+} as const satisfies Prisma.EntityLogSelect;

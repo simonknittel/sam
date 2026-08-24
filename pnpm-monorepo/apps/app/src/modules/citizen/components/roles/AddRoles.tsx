@@ -17,8 +17,6 @@ import { FaPen } from "react-icons/fa";
 import { RoleCheckbox } from "./RoleCheckbox";
 import { UpdateRolesForm } from "./UpdateRolesForm";
 
-type RoleWithIcon = BadgeRole;
-
 interface Props {
   readonly className?: string;
   readonly citizenId: Entity["id"];
@@ -56,7 +54,7 @@ export const AddRoles = ({
 
   const fuse = useMemo(() => {
     if (!assignableRoles) return null;
-    return new Fuse<RoleWithIcon>(assignableRoles, {
+    return new Fuse<BadgeRole>(assignableRoles, {
       keys: ["name"],
       includeMatches: true,
       threshold: 0.2,
@@ -70,7 +68,7 @@ export const AddRoles = ({
 
   const resultsById = useMemo(
     () =>
-      new Map<Role["id"], FuseResult<RoleWithIcon>>(
+      new Map<Role["id"], FuseResult<BadgeRole>>(
         searchResults.map((result) => [result.item.id, result] as const),
       ),
     [searchResults],

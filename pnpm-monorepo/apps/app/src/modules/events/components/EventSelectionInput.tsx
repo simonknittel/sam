@@ -2,7 +2,7 @@
 
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { underlineCharacters } from "@/modules/common/utils/underlineCharacters";
-import type { EventOption } from "@/modules/events/types/eventShapes";
+import type { EventOption } from "@/modules/events/queries/getAllEvents";
 import { api } from "@/trpc/react";
 import {
   Combobox,

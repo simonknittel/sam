@@ -1,5 +1,6 @@
 import { prisma } from "@/db";
 import type { Entity, VariantTag } from "@sam-monorepo/database/client";
+import { VARIANT_TAG_SELECT } from "../queries/shipQuery";
 
 export const createAndReturnTags = async (
   tagKeys: string[] | undefined,
@@ -23,7 +24,7 @@ export const createAndReturnTags = async (
           value: givenTag.value!,
         })),
       },
-      select: { id: true, key: true, value: true },
+      select: VARIANT_TAG_SELECT,
     });
 
     const nonExistingTags = givenTags.filter(

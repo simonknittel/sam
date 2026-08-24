@@ -39,6 +39,17 @@ export const buildVariantFilterWhere = ({
  * tag badges. The fleet queries scan every ship or variant and paginate in
  * memory, so each unused column here is multiplied by the whole table.
  */
+/** A variant tag as the badges and the fleet filters render it */
+export const VARIANT_TAG_SELECT = {
+  id: true,
+  key: true,
+  value: true,
+} as const satisfies Prisma.VariantTagSelect;
+
+export type VariantTagBadgeItem = Prisma.VariantTagGetPayload<{
+  select: typeof VARIANT_TAG_SELECT;
+}>;
+
 export const SHIP_VARIANT_SELECT = {
   id: true,
   name: true,
@@ -53,7 +64,7 @@ export const SHIP_VARIANT_SELECT = {
       },
     },
   },
-  tags: { select: { id: true, key: true, value: true } },
+  tags: { select: VARIANT_TAG_SELECT },
 } as const satisfies Prisma.VariantSelect;
 
 export type ShipVariant = Prisma.VariantGetPayload<{
@@ -125,7 +136,3 @@ export const paginateByCursor = <Item>(
     prevCursor: hasPrevPage && items.length > 0 ? getCursor(items[0]) : null,
   };
 };
-
-export type FleetShip = Prisma.ShipGetPayload<{
-  select: typeof SHIP_SELECT;
-}>;

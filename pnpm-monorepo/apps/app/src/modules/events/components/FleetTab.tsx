@@ -1,4 +1,4 @@
-import type { EventParticipantRow } from "@/modules/events/types/eventShapes";
+import type { EventParticipantRow } from "@/modules/events/queries/eventRelationSelects";
 import { FleetTable } from "@/modules/fleet/components/FleetTable";
 import type { Event } from "@sam-monorepo/database/client";
 import clsx from "clsx";

@@ -2,7 +2,7 @@ import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { AccordeonToggle } from "@/modules/common/components/Accordeon";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { EditableInput } from "@/modules/common/components/form/EditableInput";
-import type { EventCitizenWithShips } from "@/modules/events/types/eventShapes";
+import type { EventCitizenWithShips } from "@/modules/events/queries/eventRelationSelects";
 import { VariantWithLogo } from "@/modules/fleet/components/VariantWithLogo";
 import type { VariantCatalogManufacturer } from "@/modules/fleet/queries/getVariantCatalog";
 import {
@@ -99,11 +99,9 @@ export const Position = ({
   const { openItems, open, close } = useLineupVisibility();
   const isOpen = openItems.includes(position.id);
 
-  const hasCurrentUserAlreadyApplied = Boolean(
-    position.applications?.some(
-      (application) =>
-        application.citizen.id === authentication.session.entity?.id,
-    ),
+  const hasCurrentUserAlreadyApplied = position.applications?.some(
+    (application) =>
+      application.citizen.id === authentication.session.entity?.id,
   );
 
   const handleToggleOpen = () => {

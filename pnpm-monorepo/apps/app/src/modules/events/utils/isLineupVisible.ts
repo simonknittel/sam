@@ -1,4 +1,4 @@
-import type { EventCitizenReference } from "@/modules/events/types/eventShapes";
+import type { EventCitizenReference } from "@/modules/events/queries/eventRelationSelects";
 import type { Event } from "@sam-monorepo/database/client";
 import { isAllowedToManagePositions } from "./isAllowedToManagePositions";
 

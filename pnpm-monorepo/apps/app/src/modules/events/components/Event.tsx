@@ -1,7 +1,7 @@
 import type {
   EventCitizenReference,
   EventParticipantRow,
-} from "@/modules/events/types/eventShapes";
+} from "@/modules/events/queries/eventRelationSelects";
 import { canReadEventBriefing } from "@/modules/wiki/utils/canReadEventBriefing";
 import type { Event as PrismaEvent } from "@sam-monorepo/database/client";
 import { isLineupVisible } from "../utils/isLineupVisible";

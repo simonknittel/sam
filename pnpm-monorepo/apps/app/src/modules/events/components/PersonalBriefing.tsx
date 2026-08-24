@@ -4,7 +4,7 @@ import { Tile, TileVariant } from "@/modules/common/components/Tile";
 import type {
   EventCitizenReference,
   EventParticipantRow,
-} from "@/modules/events/types/eventShapes";
+} from "@/modules/events/queries/eventRelationSelects";
 import { VariantWithLogo } from "@/modules/fleet/components/VariantWithLogo";
 import { EventSource, type Event } from "@sam-monorepo/database/client";
 import { FaCheck, FaTimes } from "react-icons/fa";

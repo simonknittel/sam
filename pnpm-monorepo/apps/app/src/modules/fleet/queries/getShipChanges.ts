@@ -77,8 +77,9 @@ export const getShipChanges = cache(
               },
               /**
                * `Ship.createdAt` is nullable, and Postgres sorts NULLs
-               * first in DESC — those rows have no change date to show and
-               * would otherwise fill the bounded page.
+               * first in DESC. Those rows carry no change date, so sorting
+               * them last keeps them out of every page that has real
+               * changes to show.
                */
               orderBy: {
                 createdAt: { sort: "desc", nulls: "last" },

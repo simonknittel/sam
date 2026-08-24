@@ -5,6 +5,7 @@ import { withTrace } from "@/modules/tracing/utils/withTrace";
 import type { Event } from "@sam-monorepo/database/client";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
+import { EVENT_PAGE_RELATIONS_SELECT } from "./eventRelationSelects";
 
 /**
  * One event with everything its layout and its subpages share. The position
@@ -22,20 +23,9 @@ export const getEventById = cache(
         id,
       },
       include: {
+        ...EVENT_PAGE_RELATIONS_SELECT,
         visibilityRoles: { select: { roleId: true } },
         createdBy: { select: { id: true, handle: true } },
-        coverImage: { select: { id: true, mimeType: true } },
-        participants: {
-          where: { cancelledAt: null },
-          select: {
-            id: true,
-            citizenId: true,
-            discordUserId: true,
-            comment: true,
-            createdAt: true,
-          },
-        },
-        managers: { select: { id: true, handle: true } },
       },
     });
     if (!event) return null;

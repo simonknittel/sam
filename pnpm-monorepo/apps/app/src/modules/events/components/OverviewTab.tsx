@@ -3,14 +3,11 @@ import { Tile } from "@/modules/common/components/Tile";
 import type {
   EventCitizenReference,
   EventParticipantRow,
-} from "@/modules/events/types/eventShapes";
+} from "@/modules/events/queries/eventRelationSelects";
+import type { VariantTagBadgeItem } from "@/modules/fleet/queries/shipQuery";
 import type { BadgeRole } from "@/modules/roles/queries/getRoles";
 import { getAssignedRoles } from "@/modules/roles/utils/getRoles";
-import {
-  EventSource,
-  type Event,
-  type VariantTag,
-} from "@sam-monorepo/database/client";
+import { EventSource, type Event } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import { getEventFleet } from "../utils/getEventFleet";
 import { getParticipants } from "../utils/getParticipants";
@@ -82,7 +79,10 @@ type FleetSummaryProps = Readonly<{
 const FleetSummary = async ({ className, event }: FleetSummaryProps) => {
   const eventFleet = await getEventFleet(event);
 
-  const countedTags = new Map<string, { tag: VariantTag; count: number }>();
+  const countedTags = new Map<
+    string,
+    { tag: VariantTagBadgeItem; count: number }
+  >();
 
   for (const fleetVariant of eventFleet) {
     for (const tag of fleetVariant.variant.tags) {

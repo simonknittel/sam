@@ -1,5 +1,5 @@
 import { prisma } from "@/db";
-import type { EventParticipantRow } from "@/modules/events/types/eventShapes";
+import type { EventParticipantRow } from "@/modules/events/queries/eventRelationSelects";
 import type { Event } from "@sam-monorepo/database/client";
 import { cache } from "react";
 

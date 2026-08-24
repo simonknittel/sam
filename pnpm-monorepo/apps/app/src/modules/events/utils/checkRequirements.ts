@@ -1,4 +1,4 @@
-import type { EventCitizenWithShips } from "@/modules/events/types/eventShapes";
+import type { EventCitizenWithShips } from "@/modules/events/queries/eventRelationSelects";
 import type { Ship } from "@sam-monorepo/database/client";
 import type { PositionType } from "../components/Position";
 

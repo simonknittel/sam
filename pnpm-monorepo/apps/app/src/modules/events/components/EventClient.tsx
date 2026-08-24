@@ -11,7 +11,7 @@ import type {
   EventCitizenReference,
   EventCoverImage,
   EventParticipantRow,
-} from "@/modules/events/types/eventShapes";
+} from "@/modules/events/queries/eventRelationSelects";
 import type { Event as PrismaEvent } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useNow } from "next-intl";

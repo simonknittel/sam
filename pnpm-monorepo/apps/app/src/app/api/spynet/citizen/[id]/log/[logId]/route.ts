@@ -2,6 +2,7 @@ import { prisma } from "@/db";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
+import { ENTITY_LOG_GUARD_SELECT } from "@/modules/citizen/queries/entityLogTableSelect";
 import getLatestNoteAttributes from "@/modules/citizen/utils/getLatestNoteAttributes";
 import { syncCitizenIdentityAfterLogChange } from "@/modules/citizen/utils/syncCitizenIdentityAfterLogChange";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
@@ -47,14 +48,7 @@ export async function PATCH(request: Request, props: { params: Params }) {
       where: {
         id: paramsData.logId,
       },
-      select: {
-        id: true,
-        type: true,
-        entityId: true,
-        attributes: {
-          select: { id: true, key: true, value: true, createdAt: true },
-        },
-      },
+      select: ENTITY_LOG_GUARD_SELECT,
     });
 
     if (!entityLog) throw new Error("Not found");
@@ -160,14 +154,7 @@ export async function DELETE(request: Request, props: { params: Params }) {
       where: {
         id: paramsData.logId,
       },
-      select: {
-        id: true,
-        type: true,
-        entityId: true,
-        attributes: {
-          select: { id: true, key: true, value: true, createdAt: true },
-        },
-      },
+      select: ENTITY_LOG_GUARD_SELECT,
     });
 
     if (!entityLog) throw new Error("Not found");

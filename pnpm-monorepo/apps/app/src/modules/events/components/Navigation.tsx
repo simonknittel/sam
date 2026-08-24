@@ -1,6 +1,6 @@
 import { requireAuthentication } from "@/modules/auth/server";
 import { SubNavigation } from "@/modules/common/components/SubNavigation";
-import type { EventCitizenReference } from "@/modules/events/types/eventShapes";
+import type { EventCitizenReference } from "@/modules/events/queries/eventRelationSelects";
 import {
   getBriefingPath,
   toEventContainer,

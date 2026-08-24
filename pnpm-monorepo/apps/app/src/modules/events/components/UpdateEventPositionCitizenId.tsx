@@ -1,7 +1,7 @@
 "use client";
 
 import { runAction } from "@/modules/actions/utils/runAction";
-import type { EventCitizenWithShips } from "@/modules/events/types/eventShapes";
+import type { EventCitizenWithShips } from "@/modules/events/queries/eventRelationSelects";
 import type {
   Entity,
   EventPosition,

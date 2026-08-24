@@ -9,7 +9,7 @@ import { cache } from "react";
  * so the shape stays at badge level: no permission strings, no inherited
  * roles, and no assignment row per citizen and role.
  */
-export const ROLE_BADGE_SELECT = {
+const ROLE_BADGE_SELECT = {
   id: true,
   name: true,
   description: true,
@@ -24,7 +24,8 @@ export type BadgeRole = Prisma.RoleGetPayload<{
 }>;
 
 /**
- * Use the methods from `getRoles.ts` preferably for correct permission management.
+ * Prefer the wrappers in `modules/roles/utils/getRoles.ts`: they apply the
+ * viewer's `otherRole;read` permission, which this query does not.
  */
 export const getRoles = cache(
   withTrace("getRoles", async () =>

@@ -1,5 +1,6 @@
 import { prisma } from "@/db";
 import { requireAuthenticationApi } from "@/modules/auth/server";
+import { ENTITY_LOG_GUARD_SELECT } from "@/modules/citizen/queries/entityLogTableSelect";
 import { confirmLog } from "@/modules/citizen/utils/confirmLog";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import { NextResponse } from "next/server";
@@ -39,14 +40,7 @@ export async function PATCH(request: Request, props: { params: Params }) {
       where: {
         id: paramsData.logId,
       },
-      select: {
-        id: true,
-        type: true,
-        entityId: true,
-        attributes: {
-          select: { id: true, key: true, value: true, createdAt: true },
-        },
-      },
+      select: ENTITY_LOG_GUARD_SELECT,
     });
     if (!entityLog) throw new Error("Not found");
 

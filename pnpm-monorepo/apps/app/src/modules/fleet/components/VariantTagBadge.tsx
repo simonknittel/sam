@@ -1,9 +1,9 @@
 import { Badge } from "@/modules/common/components/Badge";
-import type { VariantTag } from "@sam-monorepo/database/client";
+import type { VariantTagBadgeItem } from "../queries/shipQuery";
 
 interface Props {
   readonly className?: string;
-  readonly tag: Pick<VariantTag, "key" | "value">;
+  readonly tag: Pick<VariantTagBadgeItem, "key" | "value">;
 }
 
 export const VariantTagBadge = ({ className, tag }: Props) => {

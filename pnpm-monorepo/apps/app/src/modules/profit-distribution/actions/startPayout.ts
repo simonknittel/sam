@@ -42,13 +42,6 @@ export const startPayout = createAuthenticatedAction(
      */
     const cycle = await prisma.profitDistributionCycle.findUnique({
       where: { id: data.id },
-      include: {
-        participants: {
-          select: {
-            citizenId: true,
-          },
-        },
-      },
     });
     if (!cycle)
       return {

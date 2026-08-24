@@ -1,7 +1,7 @@
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import Note from "@/modules/common/components/Note";
-import type { EventCitizenWithShips } from "@/modules/events/types/eventShapes";
+import type { EventCitizenWithShips } from "@/modules/events/queries/eventRelationSelects";
 import type { Entity, EventPosition } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 

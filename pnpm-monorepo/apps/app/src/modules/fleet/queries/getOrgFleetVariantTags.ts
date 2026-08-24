@@ -3,6 +3,7 @@ import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
+import { VARIANT_TAG_SELECT } from "./shipQuery";
 
 export const getOrgFleetVariantTags = cache(
   withTrace("getOrgFleetVariantTags", async () => {
@@ -11,7 +12,7 @@ export const getOrgFleetVariantTags = cache(
 
     return prisma.variantTag.findMany({
       orderBy: [{ key: "asc" }, { value: "asc" }],
-      select: { id: true, key: true, value: true },
+      select: VARIANT_TAG_SELECT,
     });
   }),
 );

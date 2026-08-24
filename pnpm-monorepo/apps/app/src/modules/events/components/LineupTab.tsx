@@ -2,7 +2,7 @@
 
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import Note from "@/modules/common/components/Note";
-import type { EventCitizenWithShips } from "@/modules/events/types/eventShapes";
+import type { EventCitizenWithShips } from "@/modules/events/queries/eventRelationSelects";
 import type { VariantCatalogManufacturer } from "@/modules/fleet/queries/getVariantCatalog";
 import {
   EventSource,

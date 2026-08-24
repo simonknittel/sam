@@ -3,7 +3,7 @@ import { authenticate } from "@/modules/auth/server";
 import type {
   EventCitizenReference,
   EventParticipantRow,
-} from "@/modules/events/types/eventShapes";
+} from "@/modules/events/queries/eventRelationSelects";
 import { isAllowedToManageEvent } from "@/modules/events/utils/isAllowedToManageEvent";
 import {
   WikiPageEventScope,

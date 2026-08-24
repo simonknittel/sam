@@ -15,7 +15,7 @@ import { toggleSortParam } from "@/modules/common/utils/toggleSortParam";
 import type {
   EventCitizenReference,
   EventParticipantRow,
-} from "@/modules/events/types/eventShapes";
+} from "@/modules/events/queries/eventRelationSelects";
 import { CreateOrUpdateSilcTransaction } from "@/modules/silc/components/CreateOrUpdateSilcTransaction";
 import { EventSource, type Event } from "@sam-monorepo/database/client";
 import clsx from "clsx";

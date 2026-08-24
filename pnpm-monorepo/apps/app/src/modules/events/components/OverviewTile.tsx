@@ -9,7 +9,7 @@ import { getGuildScheduledEventPath } from "@/modules/discord/utils/guildSchedul
 import type {
   EventCitizenReference,
   EventCoverImage,
-} from "@/modules/events/types/eventShapes";
+} from "@/modules/events/queries/eventRelationSelects";
 import { EventSource, type Event } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import Image from "next/image";
