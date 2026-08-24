@@ -9,7 +9,7 @@ import { FaTrash } from "react-icons/fa";
 
 interface Props {
   readonly className?: string;
-  readonly entity: Entity;
+  readonly entity: Pick<Entity, "id">;
 }
 
 export const DeleteCitizen = ({ className, entity }: Props) => {

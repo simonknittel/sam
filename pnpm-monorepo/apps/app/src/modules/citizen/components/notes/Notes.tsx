@@ -20,7 +20,7 @@ import isAllowedToReadRedacted from "./lib/isAllowedToReadRedacted";
 
 interface Props {
   readonly className?: string;
-  readonly entity: Entity;
+  readonly entity: Pick<Entity, "id">;
 }
 
 export const Notes = async ({ className, entity }: Props) => {

@@ -13,7 +13,7 @@ import { OverviewSection } from "./generic-log-type/OverviewSection";
 
 interface Props {
   readonly className?: string;
-  readonly entity: Entity;
+  readonly entity: Pick<Entity, "id" | "handle" | "spectrumId" | "discordId">;
 }
 
 export const Overview = async ({ className, entity }: Props) => {
