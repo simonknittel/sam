@@ -1,7 +1,10 @@
 import { createId } from "@paralleldrive/cuid2";
 import { prisma } from "@sam-monorepo/database";
 import { WikiPageNamespace } from "@sam-monorepo/database/client";
-import { AuditEventType } from "@sam-monorepo/domain";
+import {
+  AuditEventType,
+  EFFECTIVE_ROLE_PERMISSIONS_SELECT,
+} from "@sam-monorepo/domain";
 import {
   collectPositionScopeIdsForCitizen,
   comparePermissionSets,
@@ -51,13 +54,7 @@ const loadCitizenGrants = async (citizenIds: readonly string[]) => {
     where: { citizenId: { in: [...citizenIds] } },
     select: {
       citizenId: true,
-      currentLevel: true,
-      role: {
-        include: {
-          permissionStrings: true,
-          inherits: { include: { permissionStrings: true } },
-        },
-      },
+      ...EFFECTIVE_ROLE_PERMISSIONS_SELECT,
     },
   });
 

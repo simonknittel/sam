@@ -10,7 +10,7 @@ import toast from "react-hot-toast";
 import { FaCheck, FaTimes } from "react-icons/fa";
 
 interface Props {
-  readonly log: EntityLog;
+  readonly log: Pick<EntityLog, "id" | "entityId" | "type">;
   readonly compact?: boolean;
 }
 

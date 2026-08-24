@@ -24,7 +24,9 @@ export const updateIndices = createAuthenticatedAction(
       getOrganizations(),
 
       prisma.entity.findMany({
-        include: {
+        select: {
+          id: true,
+          spectrumId: true,
           logs: {
             where: {
               type: {
@@ -39,6 +41,10 @@ export const updateIndices = createAuthenticatedAction(
             },
             orderBy: {
               createdAt: "desc",
+            },
+            select: {
+              type: true,
+              content: true,
             },
           },
         },

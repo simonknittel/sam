@@ -40,7 +40,7 @@ interface Props {
   readonly role: Role;
   readonly noteTypes: NoteType[];
   readonly classificationLevels: ClassificationLevel[];
-  readonly allRoles: Role[];
+  readonly allRoles: readonly Pick<Role, "id" | "name">[];
 }
 
 export const Permissions = ({

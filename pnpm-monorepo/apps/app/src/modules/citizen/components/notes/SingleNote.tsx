@@ -1,15 +1,11 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
+import type { CitizenNote } from "@/modules/citizen/queries/entityLogTableSelect";
 import getLatestNoteAttributes from "@/modules/citizen/utils/getLatestNoteAttributes";
 import styles from "@/modules/common/components/ConfirmationGradient.module.css";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
-import {
-  type Entity,
-  type EntityLog,
-  type EntityLogAttribute,
-  type Organization,
-} from "@sam-monorepo/database/client";
+import { type Entity, type Organization } from "@sam-monorepo/database/client";
 import { type PermissionSet } from "@sam-monorepo/permissions";
 import clsx from "clsx";
 import Image from "next/image";
@@ -24,9 +20,7 @@ import ClassificationLevelSkeleton from "./ClassificationLevelSkeleton";
 import { UpdateNote } from "./UpdateNote";
 
 interface Props {
-  readonly note: EntityLog & {
-    attributes: EntityLogAttribute[];
-  };
+  readonly note: CitizenNote;
 }
 
 export const SingleNote = async ({ note }: Props) => {

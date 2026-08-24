@@ -8,7 +8,8 @@ import {
   buildVariantFilterWhere,
   FLEET_PAGE_SIZE,
   paginateByCursor,
-  SHIP_INCLUDE,
+  SHIP_SELECT,
+  VARIANT_TAG_SELECT,
 } from "./shipQuery";
 
 interface OwnerFleetOptions {
@@ -56,7 +57,7 @@ export const getOwnerFleet = async (
 
   const allShips = await prisma.ship.findMany({
     where: shipWhere,
-    include: SHIP_INCLUDE,
+    select: SHIP_SELECT,
   });
 
   const [, sortDirection] = sort.split("-") as [string, "asc" | "desc"];
@@ -101,4 +102,5 @@ export const getOwnerFleetVariantTags = (ownerId: Entity["id"]) =>
       },
     },
     orderBy: [{ key: "asc" }, { value: "asc" }],
+    select: VARIANT_TAG_SELECT,
   });

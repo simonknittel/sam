@@ -1,13 +1,14 @@
-import { prisma } from "@/db";
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
 import { LineupTab } from "@/modules/events/components/LineupTab";
 import { getEventById } from "@/modules/events/queries/getEventById";
+import { getEventPositions } from "@/modules/events/queries/getEventPositions";
 import { getEventCitizens } from "@/modules/events/utils/getEventCitizens";
 import { isAllowedToManagePositions } from "@/modules/events/utils/isAllowedToManagePositions";
 import { isEventUpdatable } from "@/modules/events/utils/isEventUpdatable";
 import { isLineupVisible } from "@/modules/events/utils/isLineupVisible";
 import { getMyFleet } from "@/modules/fleet/queries/getMyFleet";
+import { getVariantCatalog } from "@/modules/fleet/queries/getVariantCatalog";
 import { forbidden, notFound } from "next/navigation";
 
 type Params = Promise<{
@@ -42,17 +43,10 @@ export default async function Page({
 
   if (!(await isLineupVisible(event))) forbidden();
 
-  const [variants, myShips, allEventCitizens] = await Promise.all([
-    prisma.manufacturer.findMany({
-      include: {
-        image: true,
-        series: {
-          include: {
-            variants: true,
-          },
-        },
-      },
-    }),
+  const [positions, variants, myShips, allEventCitizens] = await Promise.all([
+    getEventPositions(event.id),
+
+    getVariantCatalog(),
 
     getMyFleet().then((result) => result.ships),
 
@@ -62,6 +56,7 @@ export default async function Page({
   return (
     <LineupTab
       event={event}
+      positions={positions}
       canManagePositions={showManagePositions}
       variants={variants}
       myShips={myShips}

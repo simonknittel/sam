@@ -9,7 +9,7 @@ import { HistoryEntrySkelton } from "./HistoryEntrySkeleton";
 
 interface Props {
   type: GenericEntityLogType;
-  entity: Entity;
+  entity: Pick<Entity, "id">;
   showCreate?: boolean;
   showDelete?: boolean;
   showConfirm?: boolean;

@@ -21,6 +21,9 @@ export const endPayoutPhases = async () => {
         payoutEndedById: null,
         payoutEndedByAutomation: null,
       },
+      select: {
+        id: true,
+      },
     });
 
     void log.info("Found payout phases to end", {

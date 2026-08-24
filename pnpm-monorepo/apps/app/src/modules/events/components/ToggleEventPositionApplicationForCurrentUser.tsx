@@ -26,7 +26,7 @@ interface Props {
       variant: Variant & {
         series: Series & {
           manufacturer: Manufacturer & {
-            image: Upload | null;
+            image: Pick<Upload, "id" | "mimeType"> | null;
           };
         };
       };

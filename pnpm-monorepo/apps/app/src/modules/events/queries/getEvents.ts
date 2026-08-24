@@ -5,6 +5,7 @@ import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { EventSource, type Prisma } from "@sam-monorepo/database/client";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
+import { EVENT_PAGE_RELATIONS_SELECT } from "./eventRelationSelects";
 
 const EVENTS_PAGE_SIZE = 10;
 
@@ -88,13 +89,7 @@ export const getEvents = cache(
         where: {
           AND: [where, await getVisibleEventsWhere()],
         },
-        include: {
-          participants: {
-            where: { cancelledAt: null },
-          },
-          managers: true,
-          coverImage: true,
-        },
+        include: EVENT_PAGE_RELATIONS_SELECT,
         orderBy,
         ...(cursor
           ? {

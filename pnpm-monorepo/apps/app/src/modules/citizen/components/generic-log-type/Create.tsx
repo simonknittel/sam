@@ -13,7 +13,7 @@ import { type GenericEntityLogType } from "../../../../types";
 
 interface Props {
   type: GenericEntityLogType;
-  entity: Entity;
+  entity: Pick<Entity, "id">;
 }
 
 interface FormValues {

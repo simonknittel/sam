@@ -4,6 +4,7 @@ import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
 import { isVisibleForCurrentUser } from "../utils/isVisibleForCurrentUser";
+import { TASK_LIST_SELECT } from "./taskListSelect";
 
 export const getLatestVisibleTasks = cache(
   withTrace("getLatestVisibleTasks", async () => {
@@ -41,29 +42,7 @@ export const getLatestVisibleTasks = cache(
           },
         ],
       },
-      include: {
-        assignments: {
-          select: {
-            citizenId: true,
-            citizen: {
-              select: {
-                id: true,
-                handle: true,
-              },
-            },
-          },
-        },
-        requiredRoles: {
-          select: {
-            id: true,
-          },
-        },
-        completionists: {
-          select: {
-            id: true,
-          },
-        },
-      },
+      select: TASK_LIST_SELECT,
       orderBy: {
         createdAt: "desc",
       },

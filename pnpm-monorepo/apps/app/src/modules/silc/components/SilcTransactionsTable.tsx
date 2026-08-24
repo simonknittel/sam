@@ -4,16 +4,12 @@ import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
 import { Link } from "@/modules/common/components/Link";
 import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
 import { formatDate } from "@/modules/common/utils/formatDate";
-import type { Entity, SilcTransaction } from "@sam-monorepo/database/browser";
+import type { SilcTransactionTableRow } from "@/modules/silc/queries/silcTransactionTableSelect";
 import clsx from "clsx";
 import { CreateOrUpdateSilcTransaction } from "./CreateOrUpdateSilcTransaction";
 import { DeleteSilcTransaction } from "./DeleteSilcTransaction";
 
-type Row = SilcTransaction & {
-  receiver: Pick<Entity, "id" | "handle">;
-  createdBy: Pick<Entity, "id" | "handle"> | null;
-  updatedBy: Pick<Entity, "id" | "handle"> | null;
-};
+type Row = SilcTransactionTableRow;
 
 const COLUMNS = "144px 160px 88px minmax(100px,1fr) 160px 64px";
 

@@ -24,7 +24,7 @@ export default async function Page({
   if (!role) notFound();
 
   const [allRoles, noteTypes, classificationLevels] = await Promise.all([
-    getRoles(true),
+    getRoles(),
     getAllNoteTypes(),
     getAllClassificationLevels(),
   ]);

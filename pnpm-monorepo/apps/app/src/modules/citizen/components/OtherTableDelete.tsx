@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { FaTrash } from "react-icons/fa";
 
 interface Props {
-  readonly log: EntityLog;
+  readonly log: Pick<EntityLog, "id" | "entityId">;
 }
 
 export const OtherTableDelete = ({ log }: Props) => {

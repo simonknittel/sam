@@ -5,8 +5,14 @@ import { withTrace } from "@/modules/tracing/utils/withTrace";
 import type { Event } from "@sam-monorepo/database/client";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
-import { POSITION_TREE_INCLUDE } from "./positionTreeInclude";
+import { EVENT_PAGE_RELATIONS_SELECT } from "./eventRelationSelects";
 
+/**
+ * One event with everything its layout and its subpages share. The position
+ * tree is deliberately not part of it: only the lineup page renders it, and
+ * this query sits behind the layout of all seven subpages — see
+ * `getEventPositions()`.
+ */
 export const getEventById = cache(
   withTrace("getEventById", async (id: Event["id"]) => {
     const authentication = await requireAuthentication();
@@ -17,22 +23,9 @@ export const getEventById = cache(
         id,
       },
       include: {
-        visibilityRoles: true,
-        createdBy: true,
-        coverImage: true,
-        participants: {
-          where: { cancelledAt: null },
-        },
-        positions: {
-          where: {
-            parentPositionId: null,
-          },
-          orderBy: {
-            order: "asc",
-          },
-          include: POSITION_TREE_INCLUDE,
-        },
-        managers: true,
+        ...EVENT_PAGE_RELATIONS_SELECT,
+        visibilityRoles: { select: { roleId: true } },
+        createdBy: { select: { id: true, handle: true } },
       },
     });
     if (!event) return null;

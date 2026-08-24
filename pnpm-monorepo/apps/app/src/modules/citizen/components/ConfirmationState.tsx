@@ -6,7 +6,7 @@ import ConfirmLog from "./ConfirmLog";
 
 interface Props {
   readonly confirmationState?: EntityLogConfirmationState;
-  readonly entityLog: EntityLog;
+  readonly entityLog: Pick<EntityLog, "id" | "entityId" | "type">;
 }
 
 export const ConfirmationState = ({ confirmationState, entityLog }: Props) => {

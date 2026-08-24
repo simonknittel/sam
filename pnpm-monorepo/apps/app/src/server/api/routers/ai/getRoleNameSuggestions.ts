@@ -2,7 +2,6 @@ import { env } from "@/env";
 import { authorize } from "@/modules/auth/server";
 import { isOpenAIEnabled } from "@/modules/common/utils/isOpenAIEnabled";
 import { log } from "@/modules/logging";
-import { getRoles } from "@/modules/roles/queries/getRoles";
 import { TRPCError } from "@trpc/server";
 import OpenAI from "openai";
 import { type ChatCompletionMessageParam } from "openai/resources/index.mjs";
@@ -21,7 +20,11 @@ export const getRoleNameSuggestions = protectedProcedure.query(
         message: "Generation is disabled",
       });
 
-    const existingRoles = await getRoles();
+    const existingRoles = await ctx.prisma.role.findMany({
+      select: {
+        name: true,
+      },
+    });
     const existingRoleNames = existingRoles.map((role) => role.name);
 
     const defaultHeaders = new Headers();

@@ -2,10 +2,11 @@ import { MultiSelectComboboxFilter } from "@/modules/common/components/layouts/S
 import { RadioFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/RadioFilter";
 import { SingleSelectComboboxFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/SingleSelectComboboxFilter";
 import { TextSearchFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/TextSearchFilter";
-import type { Manufacturer, VariantTag } from "@sam-monorepo/database/browser";
+import type { Manufacturer } from "@sam-monorepo/database/browser";
+import type { VariantTagBadgeItem } from "../queries/shipQuery";
 
 interface Props {
-  readonly variantTags: VariantTag[];
+  readonly variantTags: readonly VariantTagBadgeItem[];
   readonly manufacturers: Manufacturer[];
   /** Ship lists offer filtering by deleted ships; the org's variant list has none */
   readonly showDeletedFilter?: boolean;

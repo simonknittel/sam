@@ -39,6 +39,10 @@ export async function PATCH(request: Request) {
         where: {
           id: data.id,
         },
+        select: {
+          id: true,
+          citizenId: true,
+        },
       });
     if (!membership) throw new Error("Not found");
 

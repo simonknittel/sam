@@ -1,7 +1,10 @@
 import type { ProfitDistributionCycleParticipant } from "@sam-monorepo/database/client";
 
 export const getOpenAuecPayout = (
-  participants: ProfitDistributionCycleParticipant[],
+  participants: readonly Pick<
+    ProfitDistributionCycleParticipant,
+    "silcBalanceSnapshot" | "cededAt" | "disbursedAt"
+  >[],
   auecPerSilc: number,
 ) => {
   return participants

@@ -13,11 +13,14 @@ import { PermissionsProvider } from "./PermissionsContext";
 interface Props {
   readonly className?: string;
   readonly role: Role & {
-    permissionStrings: PermissionString[];
+    readonly permissionStrings: readonly Pick<
+      PermissionString,
+      "permissionString"
+    >[];
   };
   readonly noteTypes: NoteType[];
   readonly classificationLevels: ClassificationLevel[];
-  readonly allRoles: Role[];
+  readonly allRoles: readonly Pick<Role, "id" | "name">[];
 }
 
 export const PermissionsTab = ({

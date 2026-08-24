@@ -2,6 +2,7 @@ import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { EventVisibility, type Prisma } from "@sam-monorepo/database/client";
+import { EFFECTIVE_ROLE_IDS_SELECT } from "@sam-monorepo/domain";
 import { resolveEffectiveRoles } from "@sam-monorepo/permissions";
 import { cache } from "react";
 import {
@@ -19,7 +20,7 @@ export const getEventViewer = cache(
     const roleAssignments = citizenId
       ? await prisma.roleAssignment.findMany({
           where: { citizenId },
-          include: { role: { include: { inherits: true } } },
+          select: EFFECTIVE_ROLE_IDS_SELECT,
         })
       : [];
 

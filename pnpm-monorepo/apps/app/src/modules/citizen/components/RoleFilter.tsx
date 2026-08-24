@@ -2,13 +2,11 @@
 
 import { FilterCheckboxList } from "@/modules/common/components/FilterCheckboxList";
 import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
-import { type Role, type Upload } from "@sam-monorepo/database/browser";
+import type { BadgeRole } from "@/modules/roles/queries/getRoles";
 import Image from "next/image";
 
 interface Props {
-  readonly roles: (Role & {
-    icon: Upload | null;
-  })[];
+  readonly roles: readonly BadgeRole[];
 }
 
 export const RoleFilter = ({ roles }: Props) => {

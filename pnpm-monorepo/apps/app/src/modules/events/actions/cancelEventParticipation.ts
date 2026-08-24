@@ -48,6 +48,9 @@ export const cancelEventParticipation = createAuthenticatedAction(
           activeCitizenId: citizenId,
         },
       },
+      select: {
+        id: true,
+      },
     });
     if (!participant)
       return {

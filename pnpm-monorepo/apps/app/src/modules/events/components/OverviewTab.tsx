@@ -1,15 +1,13 @@
 import { requireAuthentication } from "@/modules/auth/server";
 import { Tile } from "@/modules/common/components/Tile";
+import type {
+  EventCitizenReference,
+  EventParticipantRow,
+} from "@/modules/events/queries/eventRelationSelects";
+import type { VariantTagBadgeItem } from "@/modules/fleet/queries/shipQuery";
+import type { BadgeRole } from "@/modules/roles/queries/getRoles";
 import { getAssignedRoles } from "@/modules/roles/utils/getRoles";
-import {
-  EventSource,
-  type Entity,
-  type Event,
-  type EventParticipant,
-  type Role,
-  type Upload,
-  type VariantTag,
-} from "@sam-monorepo/database/client";
+import { EventSource, type Event } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import { getEventFleet } from "../utils/getEventFleet";
 import { getParticipants } from "../utils/getParticipants";
@@ -23,8 +21,8 @@ import { VariantTagsTable } from "./VariantTagsTable";
 interface Props {
   readonly className?: string;
   readonly event: Event & {
-    readonly participants: EventParticipant[];
-    readonly managers: Entity[];
+    readonly participants: EventParticipantRow[];
+    readonly managers: EventCitizenReference[];
   };
 }
 
@@ -74,14 +72,17 @@ export const OverviewTab = async ({ className, event }: Props) => {
 type FleetSummaryProps = Readonly<{
   className?: string;
   event: Event & {
-    participants: EventParticipant[];
+    participants: EventParticipantRow[];
   };
 }>;
 
 const FleetSummary = async ({ className, event }: FleetSummaryProps) => {
   const eventFleet = await getEventFleet(event);
 
-  const countedTags = new Map<string, { tag: VariantTag; count: number }>();
+  const countedTags = new Map<
+    string,
+    { tag: VariantTagBadgeItem; count: number }
+  >();
 
   for (const fleetVariant of eventFleet) {
     for (const tag of fleetVariant.variant.tags) {
@@ -115,7 +116,7 @@ const FleetSummary = async ({ className, event }: FleetSummaryProps) => {
 type ParticipantsSummaryProps = Readonly<{
   className?: string;
   event: Event & {
-    participants: EventParticipant[];
+    participants: EventParticipantRow[];
   };
 }>;
 
@@ -128,9 +129,7 @@ const ParticipantsSummary = async ({
   const countedRoles = new Map<
     string,
     {
-      role: Role & {
-        icon: Upload | null;
-      };
+      role: BadgeRole;
       count: number;
     }
   >();

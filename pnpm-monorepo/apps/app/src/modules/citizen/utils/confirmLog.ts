@@ -10,8 +10,11 @@ import type {
 import { syncCitizenIdentityAfterLogChange } from "./syncCitizenIdentityAfterLogChange";
 
 export const confirmLog = async (
-  log: EntityLog & {
-    attributes: EntityLogAttribute[];
+  log: Pick<EntityLog, "id" | "entityId" | "type"> & {
+    readonly attributes: readonly Pick<
+      EntityLogAttribute,
+      "key" | "value" | "createdAt"
+    >[];
   },
   value: "confirmed" | "false-report",
 ) => {

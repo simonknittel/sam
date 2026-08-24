@@ -6,7 +6,7 @@ import {
 import { nodeDefinitions } from "../nodes/client";
 
 export const getInitialNodesAndEdges = (
-  flow: Flow & {
+  flow: Pick<Flow, "id"> & {
     nodes: (FlowNode & {
       sources: FlowEdge[];
       targets: FlowEdge[];

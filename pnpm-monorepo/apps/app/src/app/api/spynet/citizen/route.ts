@@ -37,12 +37,13 @@ export async function POST(request: Request) {
         type: "spectrum-id",
         content: data.spectrumId,
       },
-      include: {
-        entity: true,
+      select: {
+        entityId: true,
       },
     });
 
-    if (log) return NextResponse.json(log.entity);
+    /** The client parses the id alone, so the whole citizen never crosses */
+    if (log) return NextResponse.json({ id: log.entityId });
 
     const item = await prisma.entityLog.create({
       data: {
@@ -64,8 +65,10 @@ export async function POST(request: Request) {
           },
         },
       },
-      include: {
-        entity: true,
+      select: {
+        id: true,
+        type: true,
+        entityId: true,
       },
     });
 
@@ -100,7 +103,7 @@ export async function POST(request: Request) {
     /**
      * Respond with the result
      */
-    return NextResponse.json(item.entity);
+    return NextResponse.json({ id: item.entityId });
   } catch (error) {
     /**
      * Respond with an error

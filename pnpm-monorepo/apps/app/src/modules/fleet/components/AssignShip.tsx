@@ -7,22 +7,17 @@ import { Button2 } from "@/modules/common/components/Button2";
 import { Select } from "@/modules/common/components/form/Select";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import Modal from "@/modules/common/components/Modal";
-import {
-  type Manufacturer,
-  type Series,
-  type Variant,
-} from "@sam-monorepo/database/browser";
 import { useId, useState, useTransition } from "react";
 import { FaPlus, FaSave } from "react-icons/fa";
 import { createShipAction } from "../actions/createShipAction";
+import type {
+  VariantCatalogManufacturer,
+  VariantCatalogVariant,
+} from "../queries/getVariantCatalog";
 
 interface Props {
   readonly className?: string;
-  readonly data?: (Manufacturer & {
-    series: (Series & {
-      variants: Variant[];
-    })[];
-  })[];
+  readonly data?: readonly VariantCatalogManufacturer[];
 }
 
 export const AssignShip = ({ className, data = [] }: Props) => {
@@ -38,17 +33,17 @@ export const AssignShip = ({ className, data = [] }: Props) => {
   };
 
   const options: {
-    manufacturer: Manufacturer;
-    variants: Variant[];
+    manufacturer: VariantCatalogManufacturer;
+    variants: VariantCatalogVariant[];
   }[] = data
     .toSorted((a, b) => a.name.localeCompare(b.name))
     .map((manufacturer) => {
       return {
         manufacturer,
         variants: manufacturer.series
-          .sort((a, b) => a.name.localeCompare(b.name))
+          .toSorted((a, b) => a.name.localeCompare(b.name))
           .map((series) =>
-            series.variants.sort((a, b) => a.name.localeCompare(b.name)),
+            series.variants.toSorted((a, b) => a.name.localeCompare(b.name)),
           )
           .flat(),
       };

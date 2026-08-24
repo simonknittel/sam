@@ -13,7 +13,10 @@ import { LastSeenAt } from "./LastSeenAt";
 import { HistoryModal } from "./generic-log-type/HistoryModal";
 
 type Row = Readonly<{
-  entity: Entity;
+  entity: Pick<
+    Entity,
+    "id" | "handle" | "spectrumId" | "discordId" | "teamspeakId" | "createdAt"
+  >;
 }>;
 
 interface Props {

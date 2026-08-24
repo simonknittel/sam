@@ -10,7 +10,7 @@ import { ModalContent } from "./ModalContent";
 
 interface Props {
   type: GenericEntityLogType;
-  entity: Entity;
+  entity: Pick<Entity, "id">;
   iconOnly?: boolean;
   showCreate?: boolean;
   showDelete?: boolean;

@@ -1,7 +1,10 @@
 import type { ProfitDistributionCycleParticipant } from "@sam-monorepo/database/client";
 
 export const getPaidAuec = (
-  participants: ProfitDistributionCycleParticipant[],
+  participants: readonly Pick<
+    ProfitDistributionCycleParticipant,
+    "silcBalanceSnapshot" | "disbursedAt"
+  >[],
   auecPerSilc: number,
 ) => {
   return participants

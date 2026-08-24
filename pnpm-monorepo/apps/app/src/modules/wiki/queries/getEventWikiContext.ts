@@ -178,9 +178,18 @@ const loadEventBriefingContext = async (
   const [event, participant, allPages] = await Promise.all([
     prisma.event.findUnique({
       where: { id: container.id },
-      include: {
-        managers: true,
-        visibilityRoles: true,
+      select: {
+        id: true,
+        name: true,
+        visibility: true,
+        deletedAt: true,
+        createdById: true,
+        discordCreatorId: true,
+        startTime: true,
+        endTime: true,
+        briefingPublishedAt: true,
+        managers: { select: { id: true } },
+        visibilityRoles: { select: { roleId: true } },
         positions: { select: POSITION_SELECT },
       },
     }),

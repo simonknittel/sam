@@ -13,6 +13,7 @@ import {
 import type { AuditEventInput } from "@sam-monorepo/domain";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { EVENT_MANAGE_GUARD_SELECT } from "../queries/eventManageGuardSelect";
 import { berlinWallTimeToUtc } from "../utils/berlinWallTime";
 import {
   getDiscordSyncWarning,
@@ -57,9 +58,13 @@ export const updateEvent = createAuthenticatedAction(
         source: EventSource.APP,
         deletedAt: null,
       },
-      include: {
-        managers: true,
-        visibilityRoles: true,
+      select: {
+        ...EVENT_MANAGE_GUARD_SELECT,
+        name: true,
+        description: true,
+        visibility: true,
+        discordPublishedId: true,
+        visibilityRoles: { select: { roleId: true } },
       },
     });
     if (!event)

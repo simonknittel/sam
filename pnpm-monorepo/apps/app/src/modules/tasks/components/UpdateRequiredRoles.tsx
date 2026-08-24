@@ -17,7 +17,7 @@ import { RequiredRoles } from "./CreateTask/RequiredRoles";
 interface Props {
   readonly className?: string;
   readonly task: Task & {
-    readonly requiredRoles: Role[];
+    readonly requiredRoles: readonly Pick<Role, "id">[];
   };
 }
 

@@ -29,7 +29,9 @@ export const getById = protectedProcedure
         id: input.id,
       },
       include: {
-        externalLinks: true,
+        externalLinks: {
+          select: { id: true, serviceName: true, url: true },
+        },
       },
     });
 

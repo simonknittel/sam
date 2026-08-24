@@ -1,3 +1,4 @@
+import type { EntityLogTableRow } from "@/modules/citizen/queries/entityLogTableSelect";
 import { entityLogTypeTranslations } from "@/modules/citizen/utils/entityLogTypeTranslations";
 import { Actions } from "@/modules/common/components/Actions";
 import { Link } from "@/modules/common/components/Link";
@@ -7,25 +8,17 @@ import {
   toggleSortParam,
 } from "@/modules/common/utils/toggleSortParam";
 import type { EntityLogConfirmationState } from "@/types";
-import {
-  type Entity,
-  type EntityLog,
-  type EntityLogAttribute,
-  type User,
-} from "@sam-monorepo/database/client";
+import { type Entity, type User } from "@sam-monorepo/database/client";
 import { FaSortDown, FaSortUp } from "react-icons/fa";
 import { ConfirmationState } from "./ConfirmationState";
 import { OtherTableDelete } from "./OtherTableDelete";
 
 export interface Row {
-  readonly entity: Entity;
+  readonly entity: Pick<Entity, "id" | "handle">;
   readonly confirmationState?: EntityLogConfirmationState;
   readonly confirmedAt?: Date;
-  readonly confirmedBy?: User | null;
-  readonly entityLog: EntityLog & {
-    attributes: EntityLogAttribute[];
-    submittedBy?: User | null;
-  };
+  readonly confirmedBy?: Pick<User, "name"> | null;
+  readonly entityLog: EntityLogTableRow;
 }
 
 interface Props {

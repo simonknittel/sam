@@ -13,8 +13,11 @@ import { AddRoles } from "./AddRoles";
 
 interface Props {
   readonly className?: string;
-  readonly entity: Entity & {
-    roleAssignments: RoleAssignment[];
+  readonly entity: Pick<Entity, "id"> & {
+    readonly roleAssignments: readonly Pick<
+      RoleAssignment,
+      "roleId" | "currentLevel"
+    >[];
   };
 }
 
@@ -36,11 +39,7 @@ export const Roles = async ({ className, entity }: Props) => {
               key={role.id}
               roleId={role.id}
               citizenId={entity.id}
-              citizenLevel={
-                role.assignments.find(
-                  (assignment) => assignment.citizenId === entity.id,
-                )!.currentLevel
-              }
+              citizenLevel={role.currentLevel}
             />
           ))}
         </div>

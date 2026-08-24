@@ -3,7 +3,7 @@ import { updateObject } from "@/modules/algolia";
 import { type EntityLog } from "@sam-monorepo/database/client";
 
 export async function updateAlgoliaWithGenericLogType(
-  log: EntityLog,
+  log: Pick<EntityLog, "entityId" | "type">,
   algoliaKey: string,
 ) {
   const logs = await prisma.entityLog.findMany({
@@ -19,6 +19,9 @@ export async function updateAlgoliaWithGenericLogType(
     },
     orderBy: {
       createdAt: "desc",
+    },
+    select: {
+      content: true,
     },
   });
 

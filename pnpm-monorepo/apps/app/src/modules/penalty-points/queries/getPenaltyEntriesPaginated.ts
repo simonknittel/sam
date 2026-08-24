@@ -46,8 +46,8 @@ export const getPenaltyEntriesPaginated = cache(
           createdAt: "desc",
         },
         include: {
-          citizen: true,
-          createdBy: true,
+          citizen: { select: { id: true, handle: true } },
+          createdBy: { select: { id: true, handle: true } },
         },
         ...(cursor
           ? {

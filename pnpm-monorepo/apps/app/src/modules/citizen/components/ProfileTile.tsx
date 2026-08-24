@@ -64,13 +64,7 @@ export const ProfileTile = async ({ className }: Props) => {
                 key={role.id}
                 roleId={role.id}
                 citizenId={authentication.session.entity?.id}
-                citizenLevel={
-                  role.assignments.find(
-                    (assignment) =>
-                      assignment.citizenId ===
-                      authentication.session.entity!.id,
-                  )!.currentLevel
-                }
+                citizenLevel={role.currentLevel}
               />
             ))}
           </div>

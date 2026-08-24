@@ -12,6 +12,10 @@ export const getEventCitizens = cache(async (eventId: Event["id"]) => {
       eventId,
       cancelledAt: null,
     },
+    select: {
+      citizenId: true,
+      discordUserId: true,
+    },
   });
 
   const { citizenIds, discordUserIds } =
@@ -21,10 +25,16 @@ export const getEventCitizens = cache(async (eventId: Event["id"]) => {
     where: {
       OR: [{ id: { in: citizenIds } }, { discordId: { in: discordUserIds } }],
     },
-    include: {
+    select: {
+      id: true,
+      handle: true,
       ships: {
         where: {
           deletedAt: null,
+        },
+        select: {
+          id: true,
+          variantId: true,
         },
       },
     },

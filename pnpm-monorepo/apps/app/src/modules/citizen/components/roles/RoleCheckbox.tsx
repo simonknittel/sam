@@ -4,14 +4,14 @@ import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
 import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
 import { underlineCharacters } from "@/modules/common/utils/underlineCharacters";
-import { type Role, type Upload } from "@sam-monorepo/database/browser";
+import type { BadgeRole } from "@/modules/roles/queries/getRoles";
 import { clsx } from "clsx";
 import type { FuseResultMatch } from "fuse.js";
 import Image from "next/image";
 import { useId } from "react";
 
 interface Props {
-  readonly role: Role & { icon: Upload | null };
+  readonly role: BadgeRole;
   readonly isChecked?: boolean;
   readonly isVisible?: boolean;
   readonly match?: FuseResultMatch;

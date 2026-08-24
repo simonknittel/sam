@@ -207,6 +207,7 @@ const syncUploadLinks = async (pageId: string, content: unknown) => {
     data: {
       attachments: { connect: existing.map(({ id }) => ({ id })) },
     },
+    select: { id: true },
   });
 };
 
@@ -517,6 +518,10 @@ const server = new Server<ConnectionContext>({
     }
 
     try {
+      /**
+       * `select` so Postgres does not echo the ydoc, content and searchText
+       * that were just written back on every debounced store.
+       */
       await prisma.wikiPage.update({
         where: { id: data.documentName },
         data: {
@@ -525,6 +530,7 @@ const server = new Server<ConnectionContext>({
           searchText: extractWikiPageText(content).slice(0, 200_000),
           ...(lastEditorEntityId ? { updatedById: lastEditorEntityId } : {}),
         },
+        select: { id: true },
       });
     } catch (error) {
       /**

@@ -27,6 +27,9 @@ export const getPenaltyEntriesOfCurrentUser = cache(
         ],
         citizenId: authentication.session.entity.id,
       },
+      select: {
+        points: true,
+      },
     });
   }),
 );

@@ -2,7 +2,9 @@ import { prisma } from "@/db";
 import { type EntityLog } from "@sam-monorepo/database/client";
 import { camelCase } from "change-case";
 
-export const updateEntityCaches = async (entityLog: EntityLog) => {
+export const updateEntityCaches = async (
+  entityLog: Pick<EntityLog, "entityId" | "type">,
+) => {
   if (
     [
       "handle",
@@ -29,6 +31,9 @@ export const updateEntityCaches = async (entityLog: EntityLog) => {
     orderBy: {
       createdAt: "desc",
     },
+    select: {
+      content: true,
+    },
   });
 
   await prisma.entity.update({
@@ -37,6 +42,9 @@ export const updateEntityCaches = async (entityLog: EntityLog) => {
     },
     data: {
       [camelCase(entityLog.type)]: latestConfirmed?.content || null,
+    },
+    select: {
+      id: true,
     },
   });
 };

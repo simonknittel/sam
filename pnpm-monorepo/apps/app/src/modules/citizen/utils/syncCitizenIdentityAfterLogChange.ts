@@ -9,7 +9,9 @@ import { updateEntityCaches } from "./updateEntityCaches";
  * linked user account, the entity's cached attribute columns and the
  * Algolia search records.
  */
-export const syncCitizenIdentityAfterLogChange = async (log: EntityLog) => {
+export const syncCitizenIdentityAfterLogChange = async (
+  log: Pick<EntityLog, "entityId" | "type">,
+) => {
   if (["handle", "discord-id"].includes(log.type)) {
     const entityLogs = await prisma.entityLog.findMany({
       where: {
@@ -26,6 +28,10 @@ export const syncCitizenIdentityAfterLogChange = async (log: EntityLog) => {
       },
       orderBy: {
         createdAt: "desc",
+      },
+      select: {
+        type: true,
+        content: true,
       },
     });
 
@@ -44,6 +50,9 @@ export const syncCitizenIdentityAfterLogChange = async (log: EntityLog) => {
             providerAccountId: latestConfirmedDiscordIdLog.content!,
           },
         },
+        select: {
+          userId: true,
+        },
       });
 
       if (account) {
@@ -53,6 +62,9 @@ export const syncCitizenIdentityAfterLogChange = async (log: EntityLog) => {
           },
           data: {
             name: latestConfirmedHandleLog?.content || log.entityId,
+          },
+          select: {
+            id: true,
           },
         });
       }

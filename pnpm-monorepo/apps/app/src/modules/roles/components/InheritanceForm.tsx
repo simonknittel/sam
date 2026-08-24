@@ -5,19 +5,17 @@ import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
-import type { Role, Upload } from "@sam-monorepo/database/browser";
+import type { Role } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { FaSave } from "react-icons/fa";
 import { updateRoleInheritance } from "../actions/updateRoleInheritance";
 
 interface Props {
   readonly className?: string;
-  readonly currentRole: Role & {
-    readonly inherits: Role[];
+  readonly currentRole: Pick<Role, "id"> & {
+    readonly inherits: readonly Pick<Role, "id">[];
   };
-  readonly roles: (Role & {
-    readonly icon: Upload | null;
-  })[];
+  readonly roles: readonly Pick<Role, "id" | "name">[];
 }
 
 export const InheritanceForm = ({ className, currentRole, roles }: Props) => {

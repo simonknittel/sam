@@ -10,6 +10,7 @@ import { EventSource } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
 import { serializeError } from "serialize-error";
 import { z } from "zod";
+import { EVENT_MANAGE_GUARD_SELECT } from "../queries/eventManageGuardSelect";
 import {
   DiscordSyncOutcome,
   removeDiscordEventPublication,
@@ -34,8 +35,9 @@ export const deleteEvent = createAuthenticatedAction(
         source: EventSource.APP,
         deletedAt: null,
       },
-      include: {
-        managers: true,
+      select: {
+        ...EVENT_MANAGE_GUARD_SELECT,
+        name: true,
       },
     });
     if (!event)

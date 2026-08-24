@@ -1,15 +1,12 @@
 import { requireAuthentication } from "@/modules/auth/server";
 import { SubNavigation } from "@/modules/common/components/SubNavigation";
+import type { EventCitizenReference } from "@/modules/events/queries/eventRelationSelects";
 import {
   getBriefingPath,
   toEventContainer,
 } from "@/modules/events/utils/eventContainer";
 import { getEventWikiContext } from "@/modules/wiki/queries/getEventWikiContext";
-import {
-  EventSource,
-  type Entity,
-  type Event,
-} from "@sam-monorepo/database/client";
+import { EventSource, type Event } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import { FaBook, FaCog, FaHistory, FaHome, FaUsers } from "react-icons/fa";
 import { MdWorkspaces } from "react-icons/md";
@@ -19,7 +16,7 @@ import { isLineupVisible } from "../utils/isLineupVisible";
 interface Props {
   readonly className?: string;
   readonly event: Event & {
-    readonly managers: Entity[];
+    readonly managers: EventCitizenReference[];
   };
 }
 

@@ -2,14 +2,12 @@
 
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import Note from "@/modules/common/components/Note";
+import type { EventCitizenWithShips } from "@/modules/events/queries/eventRelationSelects";
+import type { VariantCatalogManufacturer } from "@/modules/fleet/queries/getVariantCatalog";
 import {
   EventSource,
-  type Entity,
   type Event,
-  type Manufacturer,
-  type Series,
   type Ship,
-  type Variant,
 } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import dynamic from "next/dynamic";
@@ -29,23 +27,19 @@ const Positions = dynamic(
 
 interface Props {
   readonly className?: string;
-  readonly event: Event & {
-    positions: PositionType[];
-  };
+  readonly event: Event;
+  readonly positions: PositionType[];
   readonly canManagePositions?: boolean;
-  readonly variants: (Manufacturer & {
-    series: (Series & {
-      variants: Variant[];
-    })[];
-  })[];
-  readonly myShips: Ship[];
-  readonly allEventCitizens: { citizen: Entity; ships: Ship[] }[];
+  readonly variants: readonly VariantCatalogManufacturer[];
+  readonly myShips: readonly Pick<Ship, "variantId">[];
+  readonly allEventCitizens: EventCitizenWithShips[];
   readonly showActions?: boolean;
 }
 
 export const LineupTab = ({
   className,
   event,
+  positions,
   canManagePositions,
   variants,
   myShips,
@@ -78,10 +72,7 @@ export const LineupTab = ({
         )}
       </div>
 
-      <Unassigned
-        positions={event.positions}
-        allEventCitizens={allEventCitizens}
-      />
+      <Unassigned positions={positions} allEventCitizens={allEventCitizens} />
 
       {!isCurrentUserEventCitizen &&
         (event.source === EventSource.DISCORD ? (
@@ -99,10 +90,10 @@ export const LineupTab = ({
           />
         ))}
 
-      {event.positions.length > 0 ? (
+      {positions.length > 0 ? (
         <Positions
           container={toEventContainer(event.id)}
-          positions={event.positions}
+          positions={positions}
           canManagePositions={canManagePositions}
           variants={variants}
           myShips={myShips}

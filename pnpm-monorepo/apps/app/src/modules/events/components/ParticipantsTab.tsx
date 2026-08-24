@@ -12,13 +12,12 @@ import {
   sortDescAndNullLast,
 } from "@/modules/common/utils/sorting";
 import { toggleSortParam } from "@/modules/common/utils/toggleSortParam";
+import type {
+  EventCitizenReference,
+  EventParticipantRow,
+} from "@/modules/events/queries/eventRelationSelects";
 import { CreateOrUpdateSilcTransaction } from "@/modules/silc/components/CreateOrUpdateSilcTransaction";
-import {
-  EventSource,
-  type Entity,
-  type Event,
-  type EventParticipant,
-} from "@sam-monorepo/database/client";
+import { EventSource, type Event } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import { forbidden } from "next/navigation";
 import { Suspense } from "react";
@@ -40,9 +39,9 @@ import { RemoveEventParticipant } from "./RemoveEventParticipant";
 interface Props {
   readonly className?: string;
   readonly event: Event & {
-    readonly participants: EventParticipant[];
-    readonly managers: Entity[];
-    readonly createdBy?: Entity | null;
+    readonly participants: EventParticipantRow[];
+    readonly managers: EventCitizenReference[];
+    readonly createdBy?: EventCitizenReference | null;
   };
   readonly urlSearchParams: URLSearchParams;
 }

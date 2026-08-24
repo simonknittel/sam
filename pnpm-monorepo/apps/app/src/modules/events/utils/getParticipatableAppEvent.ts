@@ -14,9 +14,16 @@ export const getParticipatableAppEvent = async (eventId: string) => {
       source: EventSource.APP,
       deletedAt: null,
     },
-    include: {
-      visibilityRoles: true,
-      managers: true,
+    select: {
+      id: true,
+      visibility: true,
+      createdById: true,
+      deletedAt: true,
+      discordCreatorId: true,
+      startTime: true,
+      endTime: true,
+      visibilityRoles: { select: { roleId: true } },
+      managers: { select: { id: true } },
     },
   });
   if (!event) return null;

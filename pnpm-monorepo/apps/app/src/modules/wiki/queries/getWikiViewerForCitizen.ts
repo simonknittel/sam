@@ -1,4 +1,5 @@
 import { prisma } from "@/db";
+import { EFFECTIVE_ROLE_PERMISSIONS_SELECT } from "@sam-monorepo/domain";
 import {
   comparePermissionSets,
   getPermissionSetsByRoles,
@@ -16,14 +17,7 @@ export const getWikiViewerForCitizen = async (
 ): Promise<WikiPageViewer> => {
   const roleAssignments = await prisma.roleAssignment.findMany({
     where: { citizenId },
-    include: {
-      role: {
-        include: {
-          permissionStrings: true,
-          inherits: { include: { permissionStrings: true } },
-        },
-      },
-    },
+    select: EFFECTIVE_ROLE_PERMISSIONS_SELECT,
   });
 
   const effectiveRoles = resolveEffectiveRoles(roleAssignments);

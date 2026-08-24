@@ -13,6 +13,7 @@ import type {
   Entity,
   RoleAssignment,
 } from "@sam-monorepo/database/client";
+import { EFFECTIVE_ROLE_PERMISSIONS_SELECT } from "@sam-monorepo/domain";
 import {
   getPermissionSetsByRoles,
   resolveEffectiveRoles,
@@ -22,6 +23,7 @@ import {
   getServerSession,
   type DefaultSession,
   type NextAuthOptions,
+  type Session,
 } from "next-auth";
 import type { AdapterSession, AdapterUser } from "next-auth/adapters";
 import DiscordProvider, {
@@ -46,9 +48,16 @@ declare module "next-auth" {
     } & DefaultSession["user"];
     discordId: string;
     givenPermissionSets: PermissionSet[];
+    /**
+     * Kept deliberately minimal: the session is serialized into the payload
+     * of every page, so it carries only what its consumers read — the
+     * citizen id, the handle (embed tokens) and the raw role assignments
+     * (career level progress, SILC salaries). Permission decisions go
+     * through `givenPermissionSets`, never through this.
+     */
     entity:
-      | (Entity & {
-          roleAssignments: RoleAssignment[];
+      | (Pick<Entity, "id" | "handle"> & {
+          roleAssignments: Pick<RoleAssignment, "roleId" | "currentLevel">[];
         })
       | null;
     /**
@@ -126,34 +135,44 @@ export const authOptions: NextAuthOptions = {
         },
       });
 
-      const entity = await prisma.entity.findUnique({
+      const entityWithRoleGraph = await prisma.entity.findUnique({
         where: {
           discordId: discordAccount!.providerAccountId,
         },
-        include: {
+        select: {
+          id: true,
+          handle: true,
           roleAssignments: {
-            include: {
-              role: {
-                include: {
-                  permissionStrings: true,
-                  inherits: {
-                    include: {
-                      permissionStrings: true,
-                    },
-                  },
-                },
-              },
+            select: {
+              roleId: true,
+              ...EFFECTIVE_ROLE_PERMISSIONS_SELECT,
             },
           },
         },
       });
 
       let givenPermissionSets: PermissionSet[] = [];
-      if (entity) {
+      if (entityWithRoleGraph) {
         givenPermissionSets = getPermissionSetsByRoles(
-          resolveEffectiveRoles(entity.roleAssignments),
+          resolveEffectiveRoles(entityWithRoleGraph.roleAssignments),
         );
       }
+
+      /**
+       * The role graph exists only to resolve `givenPermissionSets` above.
+       * Everything on the session is serialized into every page's payload,
+       * so the assignments are mapped down to what the session's consumers
+       * actually read.
+       */
+      const entity: Session["entity"] = entityWithRoleGraph
+        ? {
+            id: entityWithRoleGraph.id,
+            handle: entityWithRoleGraph.handle,
+            roleAssignments: entityWithRoleGraph.roleAssignments.map(
+              ({ roleId, currentLevel }) => ({ roleId, currentLevel }),
+            ),
+          }
+        : null;
 
       // Only update lastSeenAt once a day. Skipped while assuming another
       // user so their presence data doesn't get falsified.
@@ -332,6 +351,9 @@ export const authOptions: NextAuthOptions = {
             orderBy: {
               createdAt: "desc",
             },
+            select: {
+              entityId: true,
+            },
           });
 
         if (latestConfirmedDiscordIdEntityLog) {
@@ -349,6 +371,9 @@ export const authOptions: NextAuthOptions = {
               },
               orderBy: {
                 createdAt: "desc",
+              },
+              select: {
+                content: true,
               },
             });
 

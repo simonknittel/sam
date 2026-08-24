@@ -18,6 +18,10 @@ export const endCollectionPhases = async () => {
         collectionEndedById: null,
         collectionEndedByAutomation: null,
       },
+      select: {
+        id: true,
+        title: true,
+      },
     });
 
     void log.info("Found collection phases to end", {
@@ -28,11 +32,20 @@ export const endCollectionPhases = async () => {
     if (cycles.length === 0) return;
 
     for (const cycle of cycles) {
+      /**
+       * Deliberately re-read per cycle: ending a cycle books the balances
+       * away again below, so a later cycle in the same run must see the
+       * balances as they are then, not as they were at the start.
+       */
       const allSilcBalances = await prisma.entity.findMany({
         where: {
           silcBalance: {
             gt: 0,
           },
+        },
+        select: {
+          id: true,
+          silcBalance: true,
         },
       });
 

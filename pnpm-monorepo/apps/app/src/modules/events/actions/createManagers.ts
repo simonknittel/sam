@@ -6,6 +6,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { EVENT_MANAGE_GUARD_SELECT } from "../queries/eventManageGuardSelect";
 import { isAllowedToManageEvent } from "../utils/isAllowedToManageEvent";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
 
@@ -25,9 +26,7 @@ export const createManagers = createAuthenticatedAction(
       where: {
         id: data.eventId,
       },
-      include: {
-        managers: true,
-      },
+      select: EVENT_MANAGE_GUARD_SELECT,
     });
     if (!event)
       return { error: "Event nicht gefunden", requestPayload: formData };

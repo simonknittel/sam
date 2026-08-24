@@ -9,6 +9,12 @@ export const getOrganizations = cache(
     const authentication = await requireAuthentication();
     if (!(await authentication.authorize("organization", "read"))) forbidden();
 
-    return prisma.organization.findMany();
+    return prisma.organization.findMany({
+      select: {
+        id: true,
+        spectrumId: true,
+        name: true,
+      },
+    });
   }),
 );

@@ -1,13 +1,12 @@
 import { Link } from "@/modules/common/components/Link";
 import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
-import type {
-  PermissionString,
-  Role,
-  Upload,
-} from "@sam-monorepo/database/client";
+import type { PermissionString } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import Image from "next/image";
-import { getRoles } from "../queries/getRoles";
+import {
+  getRolesWithPermissionStrings,
+  type BadgeRole,
+} from "../queries/getRoles";
 import { STATIC_PERMISSIONS } from "../utils/STATIC_PERMISSIONS";
 import { PermissionCheckbox } from "./PermissionCheckbox";
 import { PermissionMatrixForm } from "./PermissionMatrixForm";
@@ -18,7 +17,7 @@ interface Props {
 }
 
 export const PermissionMatrix = async ({ className }: Props) => {
-  const roles = await getRoles(true);
+  const roles = await getRolesWithPermissionStrings();
 
   /**
    * Sorted here rather than while rendering the header, so the columns and
@@ -87,9 +86,11 @@ export const PermissionMatrix = async ({ className }: Props) => {
 };
 
 interface RowProps {
-  readonly role: Role & {
-    icon: Upload | null;
-    permissionStrings: PermissionString[];
+  readonly role: BadgeRole & {
+    readonly permissionStrings: readonly Pick<
+      PermissionString,
+      "permissionString"
+    >[];
   };
   readonly permissions: typeof STATIC_PERMISSIONS;
   readonly gridTemplateColumns: string;

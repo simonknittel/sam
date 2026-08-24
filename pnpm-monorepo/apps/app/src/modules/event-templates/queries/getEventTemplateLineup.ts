@@ -1,5 +1,5 @@
 import { prisma } from "@/db";
-import { POSITION_TREE_INCLUDE } from "@/modules/events/queries/positionTreeInclude";
+import { TEMPLATE_POSITION_TREE_INCLUDE } from "@/modules/events/queries/positionTreeInclude";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { cache } from "react";
 
@@ -18,7 +18,7 @@ export const getEventTemplateLineup = cache(
       orderBy: {
         order: "asc",
       },
-      include: POSITION_TREE_INCLUDE,
+      include: TEMPLATE_POSITION_TREE_INCLUDE,
     }),
   ),
 );

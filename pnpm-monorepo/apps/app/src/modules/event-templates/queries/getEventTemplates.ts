@@ -17,11 +17,15 @@ import { getEventTemplateViewer } from "./getEventTemplateViewer";
 /** Longer terms are pointless — the name is capped at 128 characters */
 const MAX_QUERY_LENGTH = 255;
 
-/** Everything the list table and the picker need about one template */
+/**
+ * Everything the list table renders about one template. The list searches
+ * the description but never shows it, so it stays out of the rows that
+ * reach the browser; the picker's own query keeps it, because it prefills a
+ * new event from it.
+ */
 const LIST_SELECT = {
   id: true,
   name: true,
-  description: true,
   visibility: true,
   coverImageId: true,
   createdAt: true,

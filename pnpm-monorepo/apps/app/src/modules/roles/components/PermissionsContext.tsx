@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  type PermissionString,
-  type Role,
-} from "@sam-monorepo/database/browser";
+import { type PermissionString } from "@sam-monorepo/database/browser";
 import type { ReactNode } from "react";
 import { createContext, useCallback, useContext, useMemo } from "react";
 
@@ -21,8 +18,11 @@ const PermissionsContext = createContext<
 
 interface Props {
   readonly children: ReactNode;
-  readonly role: Role & {
-    permissionStrings: PermissionString[];
+  readonly role: {
+    readonly permissionStrings: readonly Pick<
+      PermissionString,
+      "permissionString"
+    >[];
   };
 }
 

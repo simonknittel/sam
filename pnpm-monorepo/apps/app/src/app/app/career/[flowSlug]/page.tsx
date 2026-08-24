@@ -8,7 +8,7 @@ import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMet
 import { log } from "@/modules/logging";
 import { getRoles } from "@/modules/roles/queries/getRoles";
 import {
-  getMyAssignedRoles,
+  getMyAssignedRolesWithInheritance,
   getVisibleRoles,
 } from "@/modules/roles/utils/getRoles";
 import { cookies } from "next/headers";
@@ -72,7 +72,7 @@ export default async function Page({
   const [roles, assignedRoles, citizensGroupedByVisibleRoles] =
     await Promise.all([
       isUpdating ? getRoles() : getVisibleRoles(),
-      getMyAssignedRoles(),
+      getMyAssignedRolesWithInheritance(),
       getCitizensGroupedByVisibleRoles(),
     ]);
 

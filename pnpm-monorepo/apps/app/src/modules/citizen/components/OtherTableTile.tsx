@@ -1,5 +1,9 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
+import {
+  ENTITY_LOG_ATTRIBUTE_SELECT,
+  ENTITY_LOG_TABLE_SELECT,
+} from "@/modules/citizen/queries/entityLogTableSelect";
 import isAllowedToRead from "@/modules/citizen/utils/isAllowedToRead";
 import Pagination from "@/modules/common/components/Pagination";
 import {
@@ -38,17 +42,14 @@ const OtherTableTile = async ({ className, searchParams }: Props) => {
         ],
       },
     },
-    include: {
-      entity: true,
+    select: {
+      ...ENTITY_LOG_TABLE_SELECT,
       attributes: {
         where: {
           key: "confirmed",
         },
-        include: {
-          createdBy: true,
-        },
+        select: ENTITY_LOG_ATTRIBUTE_SELECT,
       },
-      submittedBy: true,
     },
   });
 

@@ -3,7 +3,7 @@ import { formatDate } from "@/modules/common/utils/formatDate";
 import { type Entity } from "@sam-monorepo/database/client";
 
 interface Props {
-  entity: Entity;
+  entity: Pick<Entity, "discordId">;
 }
 
 export const LastSeenAt = async ({ entity }: Readonly<Props>) => {

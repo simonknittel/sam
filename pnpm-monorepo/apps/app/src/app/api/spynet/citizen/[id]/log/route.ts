@@ -107,6 +107,9 @@ export async function POST(request: Request, props: { params: Params }) {
       where: {
         id: paramsData,
       },
+      select: {
+        id: true,
+      },
     });
 
     if (!entity) throw new Error("Not found");

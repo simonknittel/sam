@@ -8,6 +8,10 @@ export const getCitizenByDiscordId = cache(
       where: {
         discordId, // TODO: Respect history
       },
+      select: {
+        id: true,
+        handle: true,
+      },
     });
   }),
 );

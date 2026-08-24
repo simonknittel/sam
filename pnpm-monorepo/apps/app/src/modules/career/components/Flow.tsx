@@ -42,7 +42,7 @@ import { FlowProvider } from "./FlowContext";
 
 interface Props {
   readonly className?: string;
-  readonly flow: FlowPrisma & {
+  readonly flow: Pick<FlowPrisma, "id"> & {
     nodes: (FlowNode & {
       sources: FlowEdge[];
       targets: FlowEdge[];

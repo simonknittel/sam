@@ -1,12 +1,14 @@
 import { prisma } from "@/db";
 import { authenticate } from "@/modules/auth/server";
+import type {
+  EventCitizenReference,
+  EventParticipantRow,
+} from "@/modules/events/queries/eventRelationSelects";
 import { isAllowedToManageEvent } from "@/modules/events/utils/isAllowedToManageEvent";
 import {
   WikiPageEventScope,
   WikiPageNamespace,
-  type Entity,
   type Event,
-  type EventParticipant,
 } from "@sam-monorepo/database/client";
 import { collectPositionScopeIdsForCitizen } from "@sam-monorepo/permissions";
 
@@ -27,8 +29,8 @@ import { collectPositionScopeIdsForCitizen } from "@sam-monorepo/permissions";
  */
 export const canReadEventBriefing = async (
   event: Pick<Event, "id" | "discordCreatorId" | "createdById"> & {
-    readonly managers: Entity[];
-    readonly participants: EventParticipant[];
+    readonly managers: EventCitizenReference[];
+    readonly participants: EventParticipantRow[];
   },
 ): Promise<boolean> => {
   const authentication = await authenticate();

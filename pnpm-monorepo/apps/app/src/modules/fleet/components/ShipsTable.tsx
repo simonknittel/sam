@@ -1,15 +1,8 @@
 import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
-import {
-  VariantStatus,
-  type Manufacturer,
-  type Series,
-  type Ship,
-  type Upload,
-  type Variant,
-  type VariantTag,
-} from "@sam-monorepo/database/client";
+import { VariantStatus, type Ship } from "@sam-monorepo/database/client";
 import { FaRegCheckCircle } from "react-icons/fa";
 import { FaRegCircleXmark } from "react-icons/fa6";
+import type { ShipVariant } from "../queries/shipQuery";
 import { DeleteShip } from "./DeleteShip";
 import { EditableShipName } from "./EditableShipName";
 import { VariantTagBadge } from "./VariantTagBadge";
@@ -19,14 +12,7 @@ interface ShipsTableRow {
   id: Ship["id"];
   name: Ship["name"];
   deletedAt?: Date | null;
-  variant: Variant & {
-    series: Series & {
-      manufacturer: Manufacturer & {
-        image: Upload | null;
-      };
-    };
-    tags: VariantTag[];
-  };
+  variant: ShipVariant;
 }
 
 const EDITABLE_COLUMNS = "256px 256px minmax(256px,1fr) 80px 80px";

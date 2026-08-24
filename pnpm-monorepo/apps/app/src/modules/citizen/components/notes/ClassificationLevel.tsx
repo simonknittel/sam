@@ -1,16 +1,11 @@
+import type { CitizenNote } from "@/modules/citizen/queries/entityLogTableSelect";
 import getLatestNoteAttributes from "@/modules/citizen/utils/getLatestNoteAttributes";
 import { getAllClassificationLevels } from "@/modules/spynet/queries/getAllClassificationLevels";
-import {
-  type EntityLog,
-  type EntityLogAttribute,
-} from "@sam-monorepo/database/client";
 import clsx from "clsx";
 
 interface Props {
   readonly className?: string;
-  readonly note: EntityLog & {
-    readonly attributes: EntityLogAttribute[];
-  };
+  readonly note: CitizenNote;
 }
 
 export const ClassificationLevel = async ({ className, note }: Props) => {

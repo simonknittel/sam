@@ -1,6 +1,7 @@
 import { prisma } from "@/db";
 import { authenticate } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
+import { EFFECTIVE_ROLE_IDS_SELECT } from "@sam-monorepo/domain";
 import {
   resolveEffectiveRoles,
   type EventTemplateViewer,
@@ -31,7 +32,7 @@ export const getEventTemplateViewer = cache(
           citizenId
             ? prisma.roleAssignment.findMany({
                 where: { citizenId },
-                include: { role: { include: { inherits: true } } },
+                select: EFFECTIVE_ROLE_IDS_SELECT,
               })
             : Promise.resolve([]),
         ]);

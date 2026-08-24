@@ -18,7 +18,7 @@ import { DeleteRole } from "./DeleteRole";
 interface Props {
   readonly className?: string;
   readonly role: Role & {
-    icon: Upload | null;
+    readonly icon: Pick<Upload, "id" | "mimeType"> | null;
   };
 }
 

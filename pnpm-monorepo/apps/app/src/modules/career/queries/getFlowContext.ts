@@ -2,6 +2,7 @@ import { prisma } from "@/db";
 import { authenticate } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import type { Flow, FlowRoleAccessType } from "@sam-monorepo/database/client";
+import { EFFECTIVE_ROLE_IDS_SELECT } from "@sam-monorepo/domain";
 import {
   resolveEffectiveRoles,
   resolveFlowPermissions,
@@ -70,7 +71,7 @@ export const getFlowContext = cache(
       citizenId
         ? prisma.roleAssignment.findMany({
             where: { citizenId },
-            include: { role: { include: { inherits: true } } },
+            select: EFFECTIVE_ROLE_IDS_SELECT,
           })
         : Promise.resolve([]),
       prisma.flow.findMany({

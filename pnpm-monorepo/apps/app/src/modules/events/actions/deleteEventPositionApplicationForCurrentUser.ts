@@ -6,6 +6,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { EVENT_FREEZE_WINDOW_SELECT } from "../queries/eventRelationSelects";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
 
 const schema = z.object({
@@ -27,8 +28,9 @@ export const deleteEventPositionApplicationForCurrentUser =
         where: {
           id: data.positionId,
         },
-        include: {
-          event: true,
+        select: {
+          id: true,
+          event: { select: EVENT_FREEZE_WINDOW_SELECT },
         },
       });
       if (!position?.event)

@@ -7,7 +7,7 @@ import { usePermissionsContext } from "../../PermissionsContext";
 
 interface Props {
   readonly className?: string;
-  readonly roles: Role[];
+  readonly roles: readonly Pick<Role, "id" | "name">[];
 }
 
 export const RoleSection = ({ className, roles }: Props) => {
@@ -62,7 +62,7 @@ export const RoleSection = ({ className, roles }: Props) => {
 
 type RuleProps = Readonly<{
   ruleString: string;
-  roles: Role[];
+  roles: readonly Pick<Role, "id" | "name">[];
   handleDelete: () => void;
 }>;
 
@@ -99,7 +99,7 @@ const Rule = ({ ruleString, roles, handleDelete }: RuleProps) => {
         <option value="*">Alle</option>
 
         {roles
-          .sort((a, b) => a.name.localeCompare(b.name))
+          .toSorted((a, b) => a.name.localeCompare(b.name))
           .map((role) => (
             <option key={role.id} value={role.id}>
               {role.name}

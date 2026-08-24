@@ -1,16 +1,14 @@
 import { prisma } from "@/db";
-import {
-  VariantStatus,
-  type Event,
-  type EventParticipant,
-} from "@sam-monorepo/database/client";
+import type { EventParticipantRow } from "@/modules/events/queries/eventRelationSelects";
+import { SHIP_VARIANT_SELECT } from "@/modules/fleet/queries/shipQuery";
+import { VariantStatus, type Event } from "@sam-monorepo/database/client";
 import { cache } from "react";
 import { collectParticipantOwners } from "./collectParticipantOwners";
 
 export const getEventFleet = cache(
   async (
     event: Event & {
-      participants: EventParticipant[];
+      participants: EventParticipantRow[];
     },
   ) => {
     const { citizenIds, discordUserIds } = collectParticipantOwners(
@@ -30,20 +28,9 @@ export const getEventFleet = cache(
           status: VariantStatus.FLIGHT_READY,
         },
       },
-      include: {
+      select: {
         variant: {
-          include: {
-            series: {
-              include: {
-                manufacturer: {
-                  include: {
-                    image: true,
-                  },
-                },
-              },
-            },
-            tags: true,
-          },
+          select: SHIP_VARIANT_SELECT,
         },
       },
     });

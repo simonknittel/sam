@@ -2,7 +2,7 @@
 
 import { SortableTable } from "@/modules/common/components/SortableTable";
 import { VariantTagBadge } from "@/modules/fleet/components/VariantTagBadge";
-import type { VariantTag } from "@sam-monorepo/database/browser";
+import type { VariantTagBadgeItem } from "@/modules/fleet/queries/shipQuery";
 import {
   createColumnHelper,
   getCoreRowModel,
@@ -14,7 +14,7 @@ import clsx from "clsx";
 import { useMemo, useState } from "react";
 
 interface Row {
-  tag: VariantTag;
+  tag: VariantTagBadgeItem;
   count: number;
 }
 

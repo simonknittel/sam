@@ -3,6 +3,7 @@ import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
+import { SILC_TRANSACTION_TABLE_SELECT } from "./silcTransactionTableSelect";
 
 const SILC_TRANSACTIONS_PAGE_SIZE = 100;
 
@@ -40,26 +41,7 @@ export const getSilcTransactionsPaginated = cache(
         orderBy: {
           createdAt: "desc",
         },
-        include: {
-          receiver: {
-            select: {
-              id: true,
-              handle: true,
-            },
-          },
-          createdBy: {
-            select: {
-              id: true,
-              handle: true,
-            },
-          },
-          updatedBy: {
-            select: {
-              id: true,
-              handle: true,
-            },
-          },
-        },
+        select: SILC_TRANSACTION_TABLE_SELECT,
         ...(cursor
           ? {
               cursor: {

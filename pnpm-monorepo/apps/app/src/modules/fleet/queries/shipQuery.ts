@@ -33,24 +33,53 @@ export const buildVariantFilterWhere = ({
     : {}),
 });
 
-export const SHIP_VARIANT_INCLUDE = {
+/**
+ * A variant as the fleet tables render it: the name and status, the
+ * manufacturer's logo (a `VariantWithLogo`, i.e. {id, mimeType}) and the
+ * tag badges. The fleet queries scan every ship or variant and paginate in
+ * memory, so each unused column here is multiplied by the whole table.
+ */
+/** A variant tag as the badges and the fleet filters render it */
+export const VARIANT_TAG_SELECT = {
+  id: true,
+  key: true,
+  value: true,
+} as const satisfies Prisma.VariantTagSelect;
+
+export type VariantTagBadgeItem = Prisma.VariantTagGetPayload<{
+  select: typeof VARIANT_TAG_SELECT;
+}>;
+
+export const SHIP_VARIANT_SELECT = {
+  id: true,
+  name: true,
+  status: true,
   series: {
-    include: {
+    select: {
       manufacturer: {
-        include: {
-          image: true,
+        select: {
+          name: true,
+          image: { select: { id: true, mimeType: true } },
         },
       },
     },
   },
-  tags: true,
-} as const satisfies Prisma.VariantInclude;
+  tags: { select: VARIANT_TAG_SELECT },
+} as const satisfies Prisma.VariantSelect;
 
-export const SHIP_INCLUDE = {
+export type ShipVariant = Prisma.VariantGetPayload<{
+  select: typeof SHIP_VARIANT_SELECT;
+}>;
+
+export const SHIP_SELECT = {
+  id: true,
+  name: true,
+  variantId: true,
+  deletedAt: true,
   variant: {
-    include: SHIP_VARIANT_INCLUDE,
+    select: SHIP_VARIANT_SELECT,
   },
-} as const satisfies Prisma.ShipInclude;
+} as const satisfies Prisma.ShipSelect;
 
 interface CursorPageOptions<Item> {
   readonly cursor?: string | null;

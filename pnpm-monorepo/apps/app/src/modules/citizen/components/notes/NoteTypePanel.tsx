@@ -1,10 +1,10 @@
 import { requireAuthentication } from "@/modules/auth/server";
+import type { CitizenNote } from "@/modules/citizen/queries/entityLogTableSelect";
 import TabPanel from "@/modules/common/components/tabs/TabPanel";
 import { getCreatableClassificationLevelsDeduped } from "@/modules/spynet/utils/getAllClassificationLevels";
 import {
   type Entity,
   type EntityLog,
-  type EntityLogAttribute,
   type NoteType,
 } from "@sam-monorepo/database/client";
 import { AddNote } from "./AddNote";
@@ -13,12 +13,7 @@ import SingleNoteRedacted from "./SingleNoteRedacted";
 
 interface Props {
   readonly noteType: NoteType;
-  readonly notes: (
-    | (EntityLog & {
-        attributes: EntityLogAttribute[];
-      })
-    | { id: EntityLog["id"]; redacted: true }
-  )[];
+  readonly notes: (CitizenNote | { id: EntityLog["id"]; redacted: true })[];
   readonly entityId: Entity["id"];
 }
 

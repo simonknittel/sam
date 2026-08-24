@@ -6,12 +6,11 @@ import { Markdown } from "@/modules/common/components/Markdown";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
 import { getGuildScheduledEventPath } from "@/modules/discord/utils/guildScheduledEventPayload";
-import {
-  EventSource,
-  type Entity,
-  type Event,
-  type Upload,
-} from "@sam-monorepo/database/client";
+import type {
+  EventCitizenReference,
+  EventCoverImage,
+} from "@/modules/events/queries/eventRelationSelects";
+import { EventSource, type Event } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import Image from "next/image";
 import { DownloadEventButton } from "./DownloadEventButton";
@@ -19,8 +18,8 @@ import { DownloadEventButton } from "./DownloadEventButton";
 interface Props {
   readonly className?: string;
   readonly event: Event & {
-    readonly createdBy?: Entity | null;
-    readonly coverImage?: Upload | null;
+    readonly createdBy?: EventCitizenReference | null;
+    readonly coverImage?: EventCoverImage | null;
   };
   /**
    * Renders the cover as a click-to-replace upload area (managers of app

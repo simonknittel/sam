@@ -17,7 +17,7 @@ const loadSearchParams = createCursorPaginationLoader({});
 
 interface Props {
   readonly className?: string;
-  readonly entity: Entity;
+  readonly entity: Pick<Entity, "id">;
   readonly searchParams: Promise<SearchParams>;
 }
 

@@ -34,7 +34,14 @@ export const getUsersWithEntities = withTrace(
         },
       }),
 
-      prisma.entity.findMany(),
+      /** Matched to a user by Discord id; the table links by citizen id */
+      prisma.entity.findMany({
+        select: {
+          id: true,
+          handle: true,
+          discordId: true,
+        },
+      }),
     ]);
 
     const enrichedUsers = users.map((user) => {

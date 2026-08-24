@@ -18,6 +18,9 @@ import Fuse, { type FuseResult } from "fuse.js";
 import { useState } from "react";
 import { FaCheck, FaTrash, FaUsers } from "react-icons/fa";
 
+/** What the picker offers: `getCitizens()` returns exactly this */
+type CitizenOption = Pick<Entity, "id" | "handle">;
+
 interface BaseProps {
   readonly className?: string;
   readonly name: string;
@@ -97,7 +100,7 @@ export const CitizenInput = ({
                   .map((id) =>
                     selectableCitizens.find((citizen) => citizen.id === id),
                   )
-                  .filter(Boolean) as Entity[])
+                  .filter(Boolean) as CitizenOption[])
               : undefined
           }
           selectableIds={selectableIds}
@@ -124,7 +127,7 @@ export const CitizenInput = ({
 };
 
 interface ComboboxOptionProps {
-  readonly result: FuseResult<Entity>;
+  readonly result: FuseResult<CitizenOption>;
 }
 
 const ComboboxOptionItem = ({ result }: ComboboxOptionProps) => {
@@ -149,8 +152,8 @@ const ComboboxOptionItem = ({ result }: ComboboxOptionProps) => {
 type SingleComponentProps = Readonly<{
   name: string;
   setQuery: (query: string) => void;
-  filterResult: FuseResult<Entity>[];
-  defaultValue?: Entity;
+  filterResult: FuseResult<CitizenOption>[];
+  defaultValue?: CitizenOption;
   disabled?: boolean;
   autoFocus?: boolean;
 }>;
@@ -163,7 +166,7 @@ const Single = ({
   disabled,
   autoFocus,
 }: SingleComponentProps) => {
-  const [selectedCitizen, setSelectedCitizen] = useState<Entity | null>(
+  const [selectedCitizen, setSelectedCitizen] = useState<CitizenOption | null>(
     defaultValue || null,
   );
 
@@ -179,7 +182,7 @@ const Single = ({
         <ComboboxInput
           autoFocus={autoFocus}
           aria-label="Citizen"
-          displayValue={(citizen: Entity) => citizen?.handle || ""}
+          displayValue={(citizen: CitizenOption) => citizen?.handle || ""}
           onChange={(event) => setQuery(event.target.value)}
           className="w-full rounded-secondary bg-neutral-900 py-2 pr-8 pl-2 focus:outline-hidden data-focus:outline-2 data-focus:-outline-offset-2 data-focus:outline-white/25 disabled:opacity-50"
           disabled={disabled}
@@ -211,8 +214,8 @@ type MultipleComponentProps = Readonly<{
   name: string;
   query: string;
   setQuery: (query: string) => void;
-  filterResult: FuseResult<Entity>[];
-  defaultValue?: Entity[];
+  filterResult: FuseResult<CitizenOption>[];
+  defaultValue?: CitizenOption[];
   selectableIds: ReadonlySet<Entity["id"]> | null;
   autoFocus?: boolean;
 }>;
@@ -232,7 +235,7 @@ const Multiple = ({
       refetchOnReconnect: false,
     });
 
-  const [selectedCitizens, setSelectedCitizens] = useState<Entity[]>(
+  const [selectedCitizens, setSelectedCitizens] = useState<CitizenOption[]>(
     defaultValue || [],
   );
 

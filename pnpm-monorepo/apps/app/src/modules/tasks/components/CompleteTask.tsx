@@ -19,7 +19,7 @@ import { completeTask } from "../actions/completeTask";
 interface Props {
   readonly className?: string;
   readonly task: Task & {
-    assignments: TaskAssignment[];
+    readonly assignments: readonly Pick<TaskAssignment, "citizenId">[];
   };
 }
 

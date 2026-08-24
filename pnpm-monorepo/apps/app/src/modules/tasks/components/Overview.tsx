@@ -18,7 +18,6 @@ import {
   type Role,
   type Task,
   type TaskAssignment,
-  type Upload,
 } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { forbidden } from "next/navigation";
@@ -38,22 +37,12 @@ import { UpdateTaskAssignments } from "./UpdateTaskAssignments";
 import { UpdateTaskRepeatable } from "./UpdateTaskRepeatable";
 
 interface TaskWithIncludes extends Task {
-  createdBy: Entity | null;
-  assignments: (TaskAssignment & {
-    citizen: Entity;
+  createdBy: Pick<Entity, "id" | "handle"> | null;
+  assignments: (Pick<TaskAssignment, "id" | "citizenId"> & {
+    citizen: Pick<Entity, "id" | "handle">;
   })[];
-  completedBy?: Entity | null;
-  completionists?: Entity[];
-  cancelledBy?: Entity | null;
-  deletedBy?: Entity | null;
-  requiredRoles: (Role & {
-    icon: Upload | null;
-  })[];
-}
-
-interface Props {
-  readonly className?: string;
-  readonly task: TaskWithIncludes;
+  completionists?: Pick<Entity, "id" | "handle">[];
+  requiredRoles: Pick<Role, "id">[];
 }
 
 interface Props {
@@ -311,88 +300,20 @@ export const Overview = ({
             </div>
           </div>
 
-          {(task.completedBy ||
-            task.cancelledBy ||
-            task.deletedBy ||
-            (task.completionists && task.completionists.length > 0)) && (
+          {task.completionists && task.completionists.length > 0 && (
             <div className="flex gap-2">
-              {task.completedBy && (
-                <>
-                  <div className="flex flex-col items-start">
-                    <span className="text-neutral-400 text-sm">
-                      Abgeschlossen von
-                    </span>
-                    <div className="flex gap-2 items-center">
-                      <CitizenLink citizen={task.completedBy} />
-                    </div>
-                  </div>
+              <div className="flex flex-col items-start">
+                <span className="text-neutral-400 text-sm">Erfüllt durch</span>
 
-                  <div className="flex flex-col items-start">
-                    <span className="text-neutral-400 text-sm">
-                      Abgeschlossen am
-                    </span>
-                    <div className="flex gap-2 items-center">
-                      {formatDate(task.completedAt)}
-                    </div>
-                  </div>
-                </>
-              )}
-              {task.cancelledBy && (
-                <>
-                  <div className="flex flex-col items-start">
-                    <span className="text-neutral-400 text-sm">
-                      Abgebrochen von
-                    </span>
-                    <div className="flex gap-2 items-center">
-                      <CitizenLink citizen={task.cancelledBy} />
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-start">
-                    <span className="text-neutral-400 text-sm">
-                      Abgebrochen am
-                    </span>
-                    <div className="flex gap-2 items-center">
-                      {formatDate(task.cancelledAt)}
-                    </div>
-                  </div>
-                </>
-              )}
-              {task.deletedBy && (
-                <>
-                  <div className="flex flex-col items-start">
-                    <span className="text-neutral-400 text-sm">
-                      Gelöscht von
-                    </span>
-                    <div className="flex gap-2 items-center">
-                      <CitizenLink citizen={task.deletedBy} />
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-start">
-                    <span className="text-neutral-400 text-sm">
-                      Gelöscht am
-                    </span>
-                    <div className="flex gap-2 items-center">
-                      {formatDate(task.deletedAt)}
-                    </div>
-                  </div>
-                </>
-              )}
-              {task.completionists && task.completionists.length > 0 && (
-                <div className="flex flex-col items-start">
-                  <span className="text-neutral-400 text-sm">
-                    Erfüllt durch
-                  </span>
-
-                  <div className="flex flex-wrap gap-x-3 gap-y-1">
-                    {task.completionists.map((completionist) => (
-                      <CitizenLink
-                        key={completionist.id}
-                        citizen={completionist}
-                      />
-                    ))}
-                  </div>
+                <div className="flex flex-wrap gap-x-3 gap-y-1">
+                  {task.completionists.map((completionist) => (
+                    <CitizenLink
+                      key={completionist.id}
+                      citizen={completionist}
+                    />
+                  ))}
                 </div>
-              )}
+              </div>
             </div>
           )}
         </div>

@@ -5,6 +5,7 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { EventSource } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { EVENT_MANAGE_GUARD_SELECT } from "../queries/eventManageGuardSelect";
 import {
   DiscordSyncOutcome,
   removeDiscordEventPublication,
@@ -30,7 +31,7 @@ export const unpublishEventFromDiscord = createAuthenticatedAction(
         source: EventSource.APP,
         deletedAt: null,
       },
-      include: { managers: true },
+      select: EVENT_MANAGE_GUARD_SELECT,
     });
     if (!event)
       return { error: "Event nicht gefunden", requestPayload: formData };
