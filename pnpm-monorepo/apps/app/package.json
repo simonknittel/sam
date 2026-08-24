@@ -70,7 +70,6 @@
     "@trpc/server": "11.18.0",
     "@uidotdev/usehooks": "2.4.1",
     "@unleash/nextjs": "1.6.7",
-    "@vercel/speed-insights": "2.0.0",
     "@xyflow/react": "12.11.2",
     "algoliasearch": "5.56.0",
     "change-case": "5.4.4",

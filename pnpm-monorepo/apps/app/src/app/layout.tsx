@@ -5,7 +5,6 @@ import {
   getPublicUploadBaseUrl,
   PUBLIC_UPLOAD_BASE_URL_ATTRIBUTE,
 } from "@/modules/common/utils/getPublicUploadUrl";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import clsx from "clsx";
 import { type Metadata } from "next";
 import { getLocale } from "next-intl/server";
@@ -38,7 +37,6 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <TooltipProvider>{children}</TooltipProvider>
         <NextTopLoader color="#c22424" showSpinner={false} />
         <ToasterContainer />
-        <SpeedInsights sampleRate={0.5} />
       </body>
     </html>
   );
