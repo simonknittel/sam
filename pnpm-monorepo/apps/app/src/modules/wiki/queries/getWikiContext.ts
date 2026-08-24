@@ -6,6 +6,7 @@ import {
   type WikiPage,
   type WikiPageAccessType,
 } from "@sam-monorepo/database/client";
+import { EFFECTIVE_ROLE_IDS_SELECT } from "@sam-monorepo/domain";
 import {
   resolveEffectiveRoles,
   resolveWikiPagePermissions,
@@ -93,7 +94,7 @@ export const getWikiContext = cache(
       citizenId
         ? prisma.roleAssignment.findMany({
             where: { citizenId },
-            include: { role: { include: { inherits: true } } },
+            select: EFFECTIVE_ROLE_IDS_SELECT,
           })
         : Promise.resolve([]),
       prisma.wikiPage.findMany({

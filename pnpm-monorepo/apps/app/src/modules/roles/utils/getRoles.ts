@@ -1,6 +1,6 @@
 import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import type { Entity, RoleAssignment } from "@sam-monorepo/database/client";
+import type { RoleAssignment } from "@sam-monorepo/database/client";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
 import { getRoles } from "../queries/getRoles";
@@ -35,11 +35,9 @@ export const getVisibleRoles = cache(
 );
 
 export const getAssignedRoles = cache(
-  async (
-    entity: Entity & {
-      roleAssignments: RoleAssignment[];
-    },
-  ) => {
+  async (entity: {
+    readonly roleAssignments: readonly Pick<RoleAssignment, "roleId">[];
+  }) => {
     const visibleRoles = await getVisibleRoles();
 
     const assignedRoles = visibleRoles.filter((role) =>

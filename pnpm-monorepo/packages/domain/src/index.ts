@@ -17,6 +17,10 @@ export {
 } from "./events/eventRecipients.js";
 export { isAllowedWebPushEndpointUrl } from "./isAllowedWebPushEndpointUrl.js";
 export { ORG_ID } from "./ORG_ID.js";
+export {
+  EFFECTIVE_ROLE_IDS_SELECT,
+  EFFECTIVE_ROLE_PERMISSIONS_SELECT,
+} from "./permissions/roleAssignmentSelects.js";
 export { calculateSilcBalances } from "./silc/calculateSilcBalances.js";
 export { getAuecPerSilc } from "./silc/getAuecPerSilc.js";
 export { getTotalSilc } from "./silc/getTotalSilc.js";
