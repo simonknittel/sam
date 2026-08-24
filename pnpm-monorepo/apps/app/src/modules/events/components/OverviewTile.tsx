@@ -1,8 +1,8 @@
 import { env } from "@/env";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { DiscordButton } from "@/modules/common/components/DiscordButton";
+import { DiscordMarkdown } from "@/modules/common/components/DiscordMarkdown";
 import { ImageUpload } from "@/modules/common/components/ImageUpload";
-import { Markdown } from "@/modules/common/components/Markdown";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
 import { getGuildScheduledEventPath } from "@/modules/discord/utils/guildScheduledEventPayload";
@@ -88,16 +88,11 @@ export const OverviewTile = ({ className, event, showCoverUpload }: Props) => {
       <div className="p-4">
         <h1 className="font-bold font-mono uppercase">{event.name}</h1>
 
-        {event.description &&
-          (event.source === EventSource.DISCORD ? (
-            <Markdown className="mt-4">{event.description}</Markdown>
-          ) : (
-            /**
-             * Deliberately plain text: app events keep a short description
-             * here, everything longer belongs into the event's briefing.
-             */
-            <p className="mt-4 whitespace-pre-line">{event.description}</p>
-          ))}
+        {event.description && (
+          <DiscordMarkdown className="mt-4">
+            {event.description}
+          </DiscordMarkdown>
+        )}
 
         <dl className="mt-4">
           <dt className="text-neutral-500 font-mono uppercase text-xs">
