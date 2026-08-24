@@ -89,8 +89,9 @@ test("the organizer publishes the event into a voice channel and unpublishes it 
   await expect(
     page.getByText(`Sprachkanal: ${MOCK_VOICE_CHANNEL.name}`),
   ).toBeVisible();
+  // Exact: the description field's hint links to "Hilfe von Discord"
   await expect(
-    page.getByRole("link", { name: "Discord" }).first(),
+    page.getByRole("link", { name: "Discord", exact: true }).first(),
   ).toHaveAttribute(
     "href",
     new RegExp(`/events/.+/${published!.discordPublishedId}$`),
