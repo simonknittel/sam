@@ -1,138 +1,25 @@
 import { requireAuthentication } from "@/modules/auth/server";
-import Avatar from "@/modules/common/components/Avatar";
 import { Link } from "@/modules/common/components/Link";
-import { ScrambleIn } from "@/modules/common/components/ScrambleIn";
-import { getPenaltyEntriesOfCurrentUser } from "@/modules/penalty-points/queries/getPenaltyEntriesOfCurrentUser";
-import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
-import { getMyAssignedRoles } from "@/modules/roles/utils/getRoles";
-import { getMonthlySalaryOfCurrentCitizen } from "@/modules/silc/queries/getMonthlySalaryOfCurrentCitizen";
-import { getSilcBalanceOfCurrentCitizen } from "@/modules/silc/queries/getSilcBalanceOfCurrentCitizen";
-import clsx from "clsx";
 import { forbidden } from "next/navigation";
-import { FaPiggyBank } from "react-icons/fa";
-import { FaScaleBalanced } from "react-icons/fa6";
+import { getCitizenProfile } from "../queries/getCitizenProfile";
+import { ProfileContent } from "./ProfileContent";
 
-interface Props {
-  readonly className?: string;
-}
-
-export const ProfileTile = async ({ className }: Props) => {
+export const ProfileTile = async () => {
   const authentication = await requireAuthentication();
   if (!authentication.session.entity) forbidden();
 
-  const name =
-    authentication.session.user.name || authentication.session.discordId;
-  const image = authentication.session.user.image;
-  const roles = await getMyAssignedRoles();
-
-  const [showSpynetLink, showPenaltyPoints, showSilcBalance] =
-    await Promise.all([
-      authentication.authorize("citizen", "read"),
-      authentication.authorize("ownPenaltyEntry", "read"),
-      authentication.authorize("silcBalanceOfCurrentCitizen", "read"),
-    ]);
-
-  const [silcBalance, monthlySalary] = showSilcBalance
-    ? await Promise.all([
-        getSilcBalanceOfCurrentCitizen(),
-        getMonthlySalaryOfCurrentCitizen(),
-      ])
-    : [undefined, undefined];
-  const penaltyPoints = showPenaltyPoints
-    ? (await getPenaltyEntriesOfCurrentUser()).reduce(
-        (previous, current) => (previous += current.points),
-        0,
-      )
-    : undefined;
+  const profile = await getCitizenProfile(authentication.session.entity.id);
+  if (!profile) throw new Error("The citizen of the session does not exist");
 
   return (
     <div className="flex flex-col gap-0.5 items-center">
-      <section
-        className={clsx(
-          className,
-          "p-4 bg-secondary flex flex-col gap-4 items-center w-full corners-primary",
-        )}
-      >
-        <Avatar name={name} image={image} size={128} />
-
-        <h2 className="font-thin">{name}</h2>
-
-        {roles.length > 0 && (
-          <div className="flex gap-1 flex-wrap justify-center">
-            {roles.map((role) => (
-              <SingleRoleBadge
-                key={role.id}
-                roleId={role.id}
-                citizenId={authentication.session.entity?.id}
-                citizenLevel={role.currentLevel}
-              />
-            ))}
-          </div>
-        )}
+      <section className="p-4 bg-secondary w-full corners-primary">
+        <ProfileContent profile={profile} />
       </section>
 
-      {(showSilcBalance || showPenaltyPoints) && (
-        <div className="flex gap-0.5 w-full">
-          {showSilcBalance && (
-            <Link
-              href={`/app/spynet/citizen/${authentication.session.entity.id}/silc`}
-              title="Übersicht öffnen"
-              className="flex-initial w-1/2 bg-secondary hover:bg-neutral-600/50 focus-visible:bg-neutral-600/50 flex flex-col justify-center items-center p-4 corners-primary font-mono"
-            >
-              <span
-                className={clsx("font-black text-4xl", {
-                  "text-green-500": silcBalance && silcBalance > 0,
-                  "text-red-500": silcBalance && silcBalance < 0,
-                })}
-              >
-                <ScrambleIn
-                  text={silcBalance?.toLocaleString("de-de") || "0"}
-                  characters="1234567890."
-                />
-              </span>
-
-              {monthlySalary ? (
-                <p className="text-neutral-500 text-xs">
-                  {monthlySalary >= 0 ? "+" : "-"}
-                  {monthlySalary} monatlich
-                </p>
-              ) : null}
-
-              <p className="text-neutral-500 flex gap-2 items-center">
-                <FaPiggyBank className="text-neutral-500" />
-                SILC
-              </p>
-            </Link>
-          )}
-
-          {showPenaltyPoints && (
-            <Link
-              href={`/app/spynet/citizen/${authentication.session.entity.id}/penalty-points`}
-              title="Übersicht öffnen"
-              className="flex-initial w-1/2 bg-secondary hover:bg-neutral-600/50 focus-visible:bg-neutral-600/50 flex flex-col justify-center items-center p-4 corners-primary font-mono"
-            >
-              <span
-                className={clsx("font-black text-4xl", {
-                  "text-red-500": penaltyPoints && penaltyPoints > 0,
-                })}
-              >
-                <ScrambleIn
-                  text={penaltyPoints?.toLocaleString("de-de") || "0"}
-                  characters="1234567890."
-                />
-              </span>
-              <p className="text-neutral-500 flex gap-2 items-center">
-                <FaScaleBalanced className="text-neutral-500" />
-                Strafpunkte
-              </p>
-            </Link>
-          )}
-        </div>
-      )}
-
-      {showSpynetLink && (
+      {profile.canOpenSpynet && (
         <Link
-          href={`/app/spynet/citizen/${authentication.session.entity.id}`}
+          href={`/app/spynet/citizen/${profile.citizen.id}`}
           className="text-interaction-500 hover:underline focus-visible:underline font-mono uppercase text-sm mt-2"
         >
           Vollständiges Profil
