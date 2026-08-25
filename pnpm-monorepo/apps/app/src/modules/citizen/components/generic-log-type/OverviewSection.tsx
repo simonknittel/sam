@@ -2,6 +2,7 @@ import { requireAuthentication } from "@/modules/auth/server";
 import type { GenericEntityLogType } from "@/types";
 import { type Entity } from "@sam-monorepo/database/client";
 import { type ReactNode } from "react";
+import { ProfileAttribute } from "../ProfileAttribute";
 import { HistoryModal } from "./HistoryModal";
 
 interface Props {
@@ -26,24 +27,22 @@ export const OverviewSection = async ({
   const showConfirm = await authentication.authorize(type, "confirm");
 
   return (
-    <>
-      <dt className="text-neutral-500 mt-4 flex gap-2 items-center">
-        {icon} {name}
-      </dt>
-
-      <dd className="flex gap-4 items-center">
-        <span className="whitespace-nowrap overflow-hidden text-ellipsis">
-          {value || <span className="italic">-</span>}
+    <ProfileAttribute icon={icon} name={name}>
+      {value ? (
+        <span className="truncate" title={value}>
+          {value}
         </span>
+      ) : (
+        <span className="italic">-</span>
+      )}
 
-        <HistoryModal
-          type={type}
-          entity={entity}
-          showCreate={showCreate}
-          showDelete={showDelete}
-          showConfirm={showConfirm}
-        />
-      </dd>
-    </>
+      <HistoryModal
+        type={type}
+        entity={entity}
+        showCreate={showCreate}
+        showDelete={showDelete}
+        showConfirm={showConfirm}
+      />
+    </ProfileAttribute>
   );
 };

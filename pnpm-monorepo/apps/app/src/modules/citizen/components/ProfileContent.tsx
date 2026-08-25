@@ -7,6 +7,7 @@ import { FaScaleBalanced } from "react-icons/fa6";
 import type { CitizenProfile } from "../queries/getCitizenProfile";
 import { formatBirthday } from "../utils/birthday";
 import { LocalTime } from "./LocalTime";
+import { ProfileAttribute } from "./ProfileAttribute";
 import { ProfileMetric, ProfileMetricTone } from "./ProfileMetric";
 import { AddRoles } from "./roles/AddRoles";
 
@@ -162,29 +163,17 @@ export const ProfileContent = ({
       {(citizen.timezone || birthday) && (
         <dl className="border-t border-neutral-700 pt-2 mt-2 flex flex-col gap-1 text-sm">
           {citizen.timezone && (
-            <div className="flex gap-4 justify-between items-baseline min-w-0">
-              <dt className="flex-none text-white/40 font-mono uppercase text-xs">
-                Zeitzone
-              </dt>
+            <ProfileAttribute name="Zeitzone">
+              <span className="truncate" title={citizen.timezone}>
+                {citizen.timezone}
+              </span>
 
-              <dd className="flex gap-2 items-baseline min-w-0">
-                <span className="truncate" title={citizen.timezone}>
-                  {citizen.timezone}
-                </span>
-
-                <LocalTime timezone={citizen.timezone} />
-              </dd>
-            </div>
+              <LocalTime timezone={citizen.timezone} />
+            </ProfileAttribute>
           )}
 
           {birthday && (
-            <div className="flex gap-4 justify-between items-baseline">
-              <dt className="flex-none text-white/40 font-mono uppercase text-xs">
-                Geburtstag
-              </dt>
-
-              <dd>{birthday}</dd>
-            </div>
+            <ProfileAttribute name="Geburtstag">{birthday}</ProfileAttribute>
           )}
         </dl>
       )}
