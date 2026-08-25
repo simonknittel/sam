@@ -170,7 +170,15 @@ test("a citizen sets, keeps and clears their time zone and birthday", async ({
   await expectAuditEvents(prisma, ["CITIZEN_PROFILE_UPDATED"]);
 
   /**
-   * The values survive a reload …
+   * The selects keep the saved values instead of falling back to
+   * "Nicht angegeben" …
+   */
+  await expect(timezoneSelect(page)).toHaveValue("Europe/Berlin");
+  await expect(monthSelect(page)).toHaveValue("12");
+  await expect(daySelect(page)).toHaveValue("24");
+
+  /**
+   * … the values survive a reload …
    */
   await page.reload();
   await expect(timezoneSelect(page)).toHaveValue("Europe/Berlin");
@@ -226,6 +234,9 @@ test("a birthday without a month is rejected", async ({
   await expect(
     page.getByText("Gib für den Geburtstag den Tag und den Monat an."),
   ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+
+  /** The rejected input stays in the form, ready to be corrected */
+  await expect(daySelect(page)).toHaveValue("15");
 
   expect(
     await prisma.entity.findUniqueOrThrow({
