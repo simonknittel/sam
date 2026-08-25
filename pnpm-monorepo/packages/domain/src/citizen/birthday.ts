@@ -10,10 +10,10 @@ const LEAP_DAY = 29;
 const MARCH = 3;
 const FIRST_DAY_OF_MONTH = 1;
 
-export const isLeapYear = (year: number) =>
+const isLeapYear = (year: number) =>
   (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
 
-export interface CelebrationDate {
+interface CelebrationDate {
   readonly month: number;
   readonly day: number;
 }

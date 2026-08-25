@@ -28,7 +28,7 @@ export const UpcomingBirthdayRow = ({ birthday }: Props) => {
 
   return (
     <TRow>
-      <td className={clsx({ "text-me": isToday })}>
+      <td className={clsx({ "font-bold": isToday })}>
         {dateFormatter.format(birthday.date)}
       </td>
 
@@ -36,7 +36,7 @@ export const UpcomingBirthdayRow = ({ birthday }: Props) => {
         <CitizenLink citizen={birthday.citizen} />
       </td>
 
-      <td className={clsx("font-mono", { "text-me": isToday })}>
+      <td className={clsx("font-mono", { "font-bold": isToday })}>
         {formatDaysUntil(birthday.daysUntil)}
       </td>
     </TRow>

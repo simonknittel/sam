@@ -30,7 +30,7 @@ const getDateInListTimezone = (moment: Date) => {
   );
 };
 
-export interface NextBirthday {
+interface NextBirthday {
   /** Midnight UTC of the day the birthday is celebrated next */
   readonly date: Date;
   /** Whole days from today, thus 0 while the birthday is today */
