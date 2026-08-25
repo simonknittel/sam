@@ -11,6 +11,11 @@ export {
 } from "./AuditEventTypes.js";
 export { buildBriefingRootPageSeed } from "./buildBriefingRootPageSeed.js";
 export {
+  getCelebrationDate,
+  isLeapYear,
+  type CelebrationDate,
+} from "./citizen/birthday.js";
+export {
   CAN_LOGIN_CITIZEN_WHERE,
   NOTIFIABLE_CITIZEN_WHERE,
   buildEventRecipientWhere,

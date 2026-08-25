@@ -1,8 +1,9 @@
 /**
  * Decides whether a citizen has their birthday right now, in their own time
- * zone. The birthday is stored as a day and a month without a year, see the
- * `Entity` model.
+ * zone. Which day a birthday falls on is the shared rule
+ * `getCelebrationDate`.
  */
+import { getCelebrationDate } from "@sam-monorepo/domain";
 
 /** Citizens without a time zone are greeted at midnight in this zone. */
 const DEFAULT_TIMEZONE = "Europe/Berlin";
@@ -37,33 +38,6 @@ const getLocalDate = (moment: Date, timezone: string): LocalDate => {
     month: readNumber("month"),
     day: readNumber("day"),
   };
-};
-
-const isLeapYear = (year: number) =>
-  (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-
-const FEBRUARY = 2;
-const LEAP_DAY = 29;
-const MARCH = 3;
-const FIRST_DAY_OF_MONTH = 1;
-
-/**
- * The day on which a birthday is celebrated in the given year. A birthday on
- * February 29 moves to March 1 in a year without a February 29.
- */
-const getCelebrationDate = (
-  birthdayDay: number,
-  birthdayMonth: number,
-  year: number,
-) => {
-  if (
-    birthdayMonth === FEBRUARY &&
-    birthdayDay === LEAP_DAY &&
-    !isLeapYear(year)
-  )
-    return { month: MARCH, day: FIRST_DAY_OF_MONTH };
-
-  return { month: birthdayMonth, day: birthdayDay };
 };
 
 const MILLISECONDS_PER_HOUR = 60 * 60 * 1000;
