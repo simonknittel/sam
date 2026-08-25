@@ -39,6 +39,13 @@ export const getNavigationItems = createNavigationItems(
       });
     }
 
+    if (permissions[0]) {
+      pages.push({
+        title: "Geburtstage",
+        url: "/app/spynet/birthdays",
+      });
+    }
+
     if (permissions[0] && permissions[6]) {
       pages.push({
         title: "Notizen",
