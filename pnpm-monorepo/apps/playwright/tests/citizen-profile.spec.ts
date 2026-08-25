@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import type { PrismaClient } from "@sam-monorepo/database/client";
+import { randomUUID } from "node:crypto";
 import { expectAuditEvents } from "../fixtures/audit";
 import {
   createAppEvent,
@@ -427,6 +428,20 @@ test("the birthday list names every citizen once, sorted by the next birthday", 
   /** Without a birthday nobody appears in the list */
   await createCitizen(prisma, { handle: "ohne-geburtstag" });
 
+  /**
+   * A citizen without a role that grants the login permission never gets a
+   * greeting either, thus the list leaves them out.
+   */
+  const lockedOut = await prisma.entity.create({
+    data: {
+      handle: "ohne-zugang",
+      discordId: randomUUID(),
+      createdById: viewer.user.id,
+      birthdayDay: today.day,
+      birthdayMonth: today.month,
+    },
+  });
+
   await signIn(viewer.user);
   await page.goto("/app/spynet/birthdays");
 
@@ -442,6 +457,7 @@ test("the birthday list names every citizen once, sorted by the next birthday", 
   ).toContainText("in 10 Tagen");
 
   await expect(page.getByText("ohne-geburtstag")).toHaveCount(0);
+  await expect(page.getByText(lockedOut.handle!)).toHaveCount(0);
 
   /** Every citizen stands in the list exactly once, the nearest one first */
   const handles = await rows.allInnerTexts();

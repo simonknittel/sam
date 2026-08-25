@@ -43,6 +43,7 @@ export const UpcomingBirthdaysTile = async ({
         <p className="text-xs text-neutral-500 px-4">
           Alle Angaben in der Zeitzone {BIRTHDAY_LIST_TIMEZONE}. Jeder Citizen
           steht genau einmal in der Liste, mit seinem nächsten Geburtstag.
+          Citizens ohne Zugang zur App sind nicht aufgeführt.
         </p>
       }
     >
