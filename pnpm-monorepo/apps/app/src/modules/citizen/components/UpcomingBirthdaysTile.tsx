@@ -1,10 +1,10 @@
+import { Link } from "@/modules/common/components/Link";
 import {
   TableTile,
   type TableColumn,
 } from "@/modules/common/components/TableTile";
 import { createLoader, parseAsString, type SearchParams } from "nuqs/server";
 import { getUpcomingBirthdays } from "../queries/getUpcomingBirthdays";
-import { BIRTHDAY_LIST_TIMEZONE } from "../utils/upcomingBirthdays";
 import { UpcomingBirthdayRow } from "./UpcomingBirthdayRow";
 
 const COLUMNS: TableColumn[] = [
@@ -37,13 +37,18 @@ export const UpcomingBirthdaysTile = async ({
       emptyMessage={
         q
           ? "Kein Citizen mit diesem Handle hat einen Geburtstag angegeben."
-          : "Kein Citizen hat bisher einen Geburtstag angegeben. Citizens tragen ihn selbst unter Account / Profil ein."
+          : "Kein Citizen hat bisher einen Geburtstag angegeben."
       }
       footer={
         <p className="text-xs text-neutral-500 px-4">
-          Alle Angaben in der Zeitzone {BIRTHDAY_LIST_TIMEZONE}. Jeder Citizen
-          steht genau einmal in der Liste, mit seinem nächsten Geburtstag.
-          Citizens ohne Zugang zur App sind nicht aufgeführt.
+          Du kannst deinen Geburtstag unter{" "}
+          <Link
+            href="/app/account/profile"
+            className="text-interaction-500 hover:underline focus-visible:underline font-mono uppercase"
+          >
+            Account &gt; Profil
+          </Link>{" "}
+          eintragen.
         </p>
       }
     >
