@@ -61,6 +61,11 @@ const seedProfile = async (prisma: PrismaClient, citizen: Citizen) => {
     value: 1234,
   });
 
+  /** The SILC box carries the monthly salary of the citizen's roles */
+  await prisma.silcRoleSalary.create({
+    data: { roleId: citizen.role.id, value: 50, dayOfMonth: 1 },
+  });
+
   await prisma.penaltyEntry.createMany({
     data: [
       {
@@ -234,6 +239,7 @@ test("the popover shows the profile of another citizen", async ({
 
   await expect(popover).toContainText(owner.entity.handle!);
   await expect(popover).toContainText("1.234");
+  await expect(popover).toContainText("+50 monatlich");
   await expect(popover).toContainText("SILC");
   await expect(popover).toContainText("Strafpunkte");
   await expect(popover).toContainText("7");
@@ -297,6 +303,7 @@ test("the dashboard tile shows the profile of the own citizen", async ({
   const spynetSection = sectionByHeading(page, "Spynet");
   await expect(spynetSection).toContainText(citizen.entity.handle!);
   await expect(spynetSection).toContainText("1.234");
+  await expect(spynetSection).toContainText("+50 monatlich");
   await expect(spynetSection).toContainText("SILC");
   await expect(spynetSection).toContainText("Strafpunkte");
   await expect(spynetSection).toContainText("Flotte");
