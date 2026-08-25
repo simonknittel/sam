@@ -181,6 +181,14 @@ export const renderOnSiteNotification = (
         appTitle,
       };
 
+    case "birthday":
+      return {
+        title: "Alles Gute zum Geburtstag!",
+        body: "Wir wünschen dir einen schönen Tag.",
+        url: null,
+        appTitle,
+      };
+
     default:
       throw new Error(`Unknown notification type: ${parsed satisfies never}`);
   }

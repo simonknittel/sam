@@ -86,6 +86,15 @@ export const getOwnerFleet = async (
   };
 };
 
+/** How many ships the citizen owns. */
+export const countOwnerShips = (ownerId: Entity["id"]) =>
+  prisma.ship.count({
+    where: {
+      ownerId,
+      deletedAt: null,
+    },
+  });
+
 /** The tags of every variant that the citizen owns a ship of. */
 export const getOwnerFleetVariantTags = (ownerId: Entity["id"]) =>
   prisma.variantTag.findMany({

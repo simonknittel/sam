@@ -5,19 +5,43 @@ import { Tile } from "@/modules/common/components/Tile";
 import { type Entity } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import { Suspense } from "react";
-import { FaDiscord, FaTeamspeak } from "react-icons/fa";
+import {
+  FaBirthdayCake,
+  FaDiscord,
+  FaGlobe,
+  FaTeamspeak,
+} from "react-icons/fa";
 import { RiTimeLine } from "react-icons/ri";
+import { formatBirthday } from "../utils/birthday";
 import { DeleteCitizen } from "./DeleteCitizen";
 import { LastSeenAt } from "./LastSeenAt";
+import { LocalTime } from "./LocalTime";
 import { OverviewSection } from "./generic-log-type/OverviewSection";
 
 interface Props {
   readonly className?: string;
-  readonly entity: Pick<Entity, "id" | "handle" | "spectrumId" | "discordId">;
+  readonly entity: Pick<
+    Entity,
+    | "id"
+    | "handle"
+    | "spectrumId"
+    | "discordId"
+    | "timezone"
+    | "birthdayDay"
+    | "birthdayMonth"
+  >;
 }
 
 export const Overview = async ({ className, entity }: Props) => {
   const authentication = await requireAuthentication();
+  /**
+   * Both attributes are set by the citizen themselves and need no permission
+   * of their own, the same rule the citizen popover follows.
+   */
+  const birthday =
+    entity.birthdayDay !== null && entity.birthdayMonth !== null
+      ? formatBirthday(entity.birthdayDay, entity.birthdayMonth)
+      : null;
   const [showDiscordId, showTeamspeakId, showLastSeen, showDelete] =
     await Promise.all([
       authentication.authorize("discord-id", "read"),
@@ -88,6 +112,26 @@ export const Overview = async ({ className, entity }: Props) => {
               </dd>
             </>
           )}
+          <dt className="text-neutral-500 mt-4 flex gap-2 items-center">
+            <FaGlobe />
+            Zeitzone
+          </dt>
+          <dd className="flex gap-2 items-center">
+            {entity.timezone ? (
+              <>
+                {entity.timezone}
+                <LocalTime timezone={entity.timezone} />
+              </>
+            ) : (
+              <span className="italic">-</span>
+            )}
+          </dd>
+
+          <dt className="text-neutral-500 mt-4 flex gap-2 items-center">
+            <FaBirthdayCake />
+            Geburtstag
+          </dt>
+          <dd>{birthday || <span className="italic">-</span>}</dd>
         </dl>
 
         {entity.handle && (
@@ -98,7 +142,7 @@ export const Overview = async ({ className, entity }: Props) => {
         )}
       </Tile>
 
-      {showDelete && <DeleteCitizen entity={entity} className="mx-auto mt-2" />}
+      {showDelete && <DeleteCitizen entity={entity} className="mt-4" />}
     </div>
   );
 };

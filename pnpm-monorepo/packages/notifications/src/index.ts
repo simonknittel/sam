@@ -104,6 +104,12 @@ export const wikiPageReportedPayloadSchema = z.object({
   reportedByHandle: z.string().nullable(),
 });
 
+/**
+ * A birthday greeting is addressed to the citizen themselves and points at
+ * nothing, thus it carries no data.
+ */
+export const birthdayPayloadSchema = z.object({});
+
 export const wikiCitizenMentionedPayloadSchema = z.object({
   pageId: z.string(),
   pageTitle: z.string(),
@@ -129,6 +135,7 @@ export const onSiteNotificationPayloadSchemas = {
   task_assignment_updated: taskAssignmentUpdatedPayloadSchema,
   wiki_page_reported: wikiPageReportedPayloadSchema,
   wiki_citizen_mentioned: wikiCitizenMentionedPayloadSchema,
+  birthday: birthdayPayloadSchema,
 } as const;
 
 export type OnSiteNotificationType =
@@ -157,6 +164,7 @@ export const ON_SITE_NOTIFICATION_PAYLOAD_VERSIONS: Record<
   task_assignment_updated: 1,
   wiki_page_reported: 1,
   wiki_citizen_mentioned: 1,
+  birthday: 1,
 };
 
 export type ParsedOnSiteNotificationPayload = {

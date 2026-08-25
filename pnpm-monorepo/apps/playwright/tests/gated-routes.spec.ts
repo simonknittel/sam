@@ -38,6 +38,7 @@ const GATED_ROUTES = [
   "/app/silc/transactions",
   "/app/sincome",
   "/app/spynet/activity",
+  "/app/spynet/birthdays",
   "/app/spynet/citizen",
   "/app/spynet/notes",
   "/app/spynet/other",

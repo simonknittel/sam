@@ -1,33 +1,23 @@
-import { getCitizenPopoverById } from "@/modules/citizen/queries/getCitizenPopoverById";
-import { log } from "@/modules/logging";
+import { getCitizenProfile } from "@/modules/citizen/queries/getCitizenProfile";
 import { TRPCError } from "@trpc/server";
-import { serializeError } from "serialize-error";
 import { z } from "zod";
-import { protectedProcedure } from "../../trpc";
+import { protectedProcedure, toTrpcError } from "../../trpc";
 
 export const getCitizenById = protectedProcedure
   .input(z.object({ id: z.cuid() }))
   .query(async ({ input }) => {
     try {
-      const citizen = await getCitizenPopoverById(input.id);
+      const profile = await getCitizenProfile(input.id);
 
-      if (!citizen) {
+      if (!profile) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Citizen not found",
         });
       }
 
-      return citizen;
+      return profile;
     } catch (error) {
-      log.error("Failed to fetch citizen by ID", {
-        error: serializeError(error),
-        citizenId: input.id,
-      });
-
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to fetch citizen by ID",
-      });
+      throw toTrpcError(error, "Failed to fetch citizen by ID");
     }
   });

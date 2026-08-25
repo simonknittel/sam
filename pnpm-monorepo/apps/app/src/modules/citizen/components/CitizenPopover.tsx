@@ -1,16 +1,12 @@
 "use client";
 
-import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
-import { CopyToClipboard } from "@/modules/common/components/CopyToClipboard";
-import { Link } from "@/modules/common/components/Link";
 import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
-import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import { api } from "@/trpc/react";
 import type { Entity } from "@sam-monorepo/database/browser";
 import { useCallback, useState, type ReactNode } from "react";
 import { BsExclamationOctagonFill } from "react-icons/bs";
-import { AddRoles } from "./roles/AddRoles";
+import { ProfileContent } from "./ProfileContent";
 
 interface Props {
   readonly children?: ReactNode;
@@ -28,15 +24,14 @@ export const CitizenPopover = ({ children, citizenId }: Props) => {
         enabled: isEnabled,
       },
     );
-  const authentication = useAuthentication();
-  const isCitizenCurrentUser =
-    authentication && authentication.session.entity
-      ? citizenId === authentication.session.entity.id
-      : false;
 
   const handleOpenChange = useCallback((open: boolean) => {
     setIsEnabled(open);
   }, []);
+
+  const handleRoleAssignmentsChanged = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   return (
     <PopoverBaseUI
@@ -60,65 +55,11 @@ export const CitizenPopover = ({ children, citizenId }: Props) => {
         </p>
       )}
 
-      {data?.citizen && (
-        <>
-          <div className="pb-2">
-            <p className="opacity-50 font-mono uppercase text-xs">Citizen</p>
-
-            <p
-              className="font-mono uppercase text-lg font-bold flex items-center gap-2"
-              title={data.citizen.handle || data.citizen.id}
-            >
-              {isCitizenCurrentUser && (
-                <>
-                  <span
-                    className="inline-block rounded-full size-3 bg-green-500 relative"
-                    title="Dies bist du"
-                  >
-                    <span className="absolute inline-block rounded-full size-3 bg-green-500 animate-ping motion-reduce:hidden" />
-                  </span>{" "}
-                </>
-              )}
-              {data.citizen.handle || data.citizen.id}
-              <CopyToClipboard value={data.citizen.handle || data.citizen.id} />
-            </p>
-
-            <Link
-              href={`/app/spynet/citizen/${data.citizen.id}`}
-              className="text-interaction-500 hover:underline focus-visible:underline font-mono uppercase text-xs"
-              prefetch={false}
-            >
-              Spynet öffnen
-            </Link>
-          </div>
-
-          <div className="border-t border-neutral-700 pt-2">
-            <div className="flex flex-wrap gap-1">
-              {data.citizen.roleAssignments.map((roleAssignment) => (
-                <SingleRoleBadge
-                  key={roleAssignment.roleId}
-                  roleId={roleAssignment.roleId}
-                  citizenId={data.citizen.id}
-                  citizenLevel={roleAssignment.currentLevel}
-                  onSuccess={refetch}
-                />
-              ))}
-            </div>
-
-            {data.canUpdateAnyRoleAssignment && (
-              <AddRoles
-                citizenId={data.citizen.id}
-                assignedRoleIds={data.citizen.roleAssignments.map(
-                  (role) => role.roleId,
-                )}
-                className="mt-1"
-                onRequestClose={refetch}
-              />
-            )}
-          </div>
-
-          {/* TODO: Show active organization memberships */}
-        </>
+      {data && (
+        <ProfileContent
+          profile={data}
+          onRoleAssignmentsChanged={handleRoleAssignmentsChanged}
+        />
       )}
     </PopoverBaseUI>
   );

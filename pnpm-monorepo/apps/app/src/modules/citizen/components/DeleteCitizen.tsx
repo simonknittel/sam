@@ -1,15 +1,16 @@
 "use client";
 
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
-import Button from "@/modules/common/components/Button";
+import { Button2 } from "@/modules/common/components/Button2";
 import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionButton";
+import { Tile, TileVariant } from "@/modules/common/components/Tile";
 import { type Entity } from "@sam-monorepo/database/browser";
 import { useRouter } from "next/navigation";
 import { FaTrash } from "react-icons/fa";
 
 interface Props {
   readonly className?: string;
-  readonly entity: Pick<Entity, "id">;
+  readonly entity: Pick<Entity, "id" | "handle">;
 }
 
 export const DeleteCitizen = ({ className, entity }: Props) => {
@@ -30,19 +31,31 @@ export const DeleteCitizen = ({ className, entity }: Props) => {
   };
 
   return (
-    <ConfirmActionButton
+    <Tile
+      heading="Danger Zone"
+      variant={TileVariant.Danger}
       className={className}
-      action={deleteCitizen}
-      trigger={(isPending) => (
-        <Button disabled={isPending} variant="tertiary">
-          {isPending ? <AsciiSpinner /> : <FaTrash />}
-          Löschen
-        </Button>
-      )}
-      title="Citizen löschen?"
-      description="Willst du diesen Citizen komplett löschen?"
-      confirmLabel="Löschen"
-      onSuccess={() => router.push("/app/spynet")}
-    />
+    >
+      <ConfirmActionButton
+        action={deleteCitizen}
+        trigger={(isPending) => (
+          <Button2 disabled={isPending}>
+            {isPending ? <AsciiSpinner /> : <FaTrash />}
+            Löschen
+          </Button2>
+        )}
+        title="Citizen löschen?"
+        description={
+          <>
+            Willst du den Citizen{" "}
+            <span className="font-bold">{entity.handle || entity.id}</span>{" "}
+            komplett löschen? Alle Einträge zu diesem Citizen gehen dabei
+            verloren.
+          </>
+        }
+        confirmLabel="Löschen"
+        onSuccess={() => router.push("/app/spynet")}
+      />
+    </Tile>
   );
 };

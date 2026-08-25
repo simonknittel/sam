@@ -2199,4 +2199,23 @@ export const AuditEventDefinitions: {
     },
     message: (data) => `App removed from favorites (${data.appKey})`,
   },
+
+  [AuditEventType.CITIZEN_PROFILE_UPDATED]: {
+    type: AuditEventType.CITIZEN_PROFILE_UPDATED,
+    data: {
+      citizenId: "string",
+      timezoneSet: true,
+      birthdaySet: true,
+    },
+    message: (data) =>
+      `Citizen ${data.citizenId} updated their profile (time zone ${data.timezoneSet ? "set" : "not set"}, birthday ${data.birthdaySet ? "set" : "not set"})`,
+  },
+
+  [AuditEventType.BIRTHDAY_GREETINGS_SENT]: {
+    type: AuditEventType.BIRTHDAY_GREETINGS_SENT,
+    data: {
+      citizenCount: 0,
+    },
+    message: (data) => `Sent ${data.citizenCount} birthday greeting(s)`,
+  },
 };

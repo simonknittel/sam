@@ -116,6 +116,19 @@ export const NOTIFICATIONS_APPS: NotificationApp[] = [
   },
 
   {
+    appTitle: "Spynet",
+    notificationTypes: [
+      {
+        id: "birthday",
+        title: "Geburtstag",
+        description:
+          "Ein Gruß an deinem Geburtstag. Nur wenn du den Geburtstag in deinem Profil angegeben hast.",
+        category: "Spynet",
+      },
+    ],
+  },
+
+  {
     appTitle: "Strafpunkte",
     notificationTypes: [
       {

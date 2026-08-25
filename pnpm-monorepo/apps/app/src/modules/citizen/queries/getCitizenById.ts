@@ -19,6 +19,9 @@ export const getCitizenById = cache(
         handle: true,
         spectrumId: true,
         discordId: true,
+        timezone: true,
+        birthdayDay: true,
+        birthdayMonth: true,
         roleAssignments: {
           select: {
             roleId: true,

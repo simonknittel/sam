@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { log } from "../common/logger";
+import { BirthdayGreetingHandler } from "./type-handlers/BirthdayGreeting";
 import { EventBriefingPublishedHandler } from "./type-handlers/EventBriefingPublished";
 import { EventCreatedHandler } from "./type-handlers/EventCreated";
 import { EventDeletedHandler } from "./type-handlers/EventDeleted";
@@ -80,6 +81,9 @@ export const notificationRouterHandler = async (
       break;
     case "WikiCitizenMentioned":
       await WikiCitizenMentionedHandler(body.payload);
+      break;
+    case "BirthdayGreeting":
+      await BirthdayGreetingHandler(body.payload);
       break;
   }
 };
@@ -238,6 +242,14 @@ export const bodySchema = z.discriminatedUnion("type", [
     type: z.literal("WikiCitizenMentioned"),
     payload: z.object({
       mentionId: z.cuid2(),
+    }),
+    requestId: z.cuid2(),
+  }),
+
+  z.object({
+    type: z.literal("BirthdayGreeting"),
+    payload: z.object({
+      citizenId: z.cuid(),
     }),
     requestId: z.cuid2(),
   }),

@@ -218,6 +218,8 @@ export enum AuditEventType {
   UNIQUE_LOGINS_COUNTED = "UNIQUE_LOGINS_COUNTED",
   APP_FAVORITE_ADDED = "APP_FAVORITE_ADDED",
   APP_FAVORITE_REMOVED = "APP_FAVORITE_REMOVED",
+  CITIZEN_PROFILE_UPDATED = "CITIZEN_PROFILE_UPDATED",
+  BIRTHDAY_GREETINGS_SENT = "BIRTHDAY_GREETINGS_SENT",
 }
 
 /**
@@ -1491,6 +1493,20 @@ export interface AuditEventDataByType {
   [AuditEventType.APP_FAVORITE_REMOVED]: {
     appKey: string;
     citizenId: string;
+  };
+
+  /**
+   * The time zone and the birthday are personal data of the citizen. Thus
+   * the log records only whether they are set, not their values.
+   */
+  [AuditEventType.CITIZEN_PROFILE_UPDATED]: {
+    citizenId: string;
+    timezoneSet: boolean;
+    birthdaySet: boolean;
+  };
+
+  [AuditEventType.BIRTHDAY_GREETINGS_SENT]: {
+    citizenCount: number;
   };
 }
 

@@ -3,23 +3,20 @@ import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
+import { buildActivePenaltyEntryWhere } from "../utils/penaltyEntryFilters";
 
 const PENALTY_ENTRIES_PAGE_SIZE = 50;
 
 const buildStatusWhereClause = (status: "active" | "inactive" | "deleted") => {
-  const now = new Date();
   if (status === "deleted") {
     return { deletedAt: { not: null } };
   }
   if (status === "active") {
-    return {
-      deletedAt: null,
-      OR: [{ expiresAt: { gte: now } }, { expiresAt: null }],
-    };
+    return buildActivePenaltyEntryWhere();
   }
   return {
     deletedAt: null,
-    expiresAt: { lt: now },
+    expiresAt: { lt: new Date() },
   };
 };
 

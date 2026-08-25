@@ -9,6 +9,13 @@ export const getNavigationItems = createNavigationItems(
 
     const pages: Page[] = [];
 
+    if (authentication.session.entity) {
+      pages.push({
+        title: "Profil",
+        url: "/app/account/profile",
+      });
+    }
+
     pages.push({
       title: "Benachrichtigungen",
       url: "/app/account/notifications",
