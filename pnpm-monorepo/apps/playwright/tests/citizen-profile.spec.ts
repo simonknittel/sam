@@ -369,3 +369,73 @@ test("the dashboard tile hides what the own permissions do not cover", async ({
     0,
   );
 });
+
+/** The birthday list reads the day in the time zone of the organization */
+const BIRTHDAY_LIST_TIMEZONE = "Europe/Berlin";
+
+const berlinDate = (daysFromToday: number) => {
+  const moment = new Date(Date.now() + daysFromToday * ONE_DAY_MS);
+  const readNumber = (part: "day" | "month") =>
+    Number(
+      new Intl.DateTimeFormat("en-US", {
+        timeZone: BIRTHDAY_LIST_TIMEZONE,
+        [part]: "numeric",
+      }).format(moment),
+    );
+
+  return { day: readNumber("day"), month: readNumber("month") };
+};
+
+test("the birthday list names every citizen once, sorted by the next birthday", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const viewer = await createCitizen(prisma, {
+    handle: "geburtstags-betrachter",
+    permissionStrings: ["citizen;read"],
+  });
+
+  const today = berlinDate(0);
+  const tomorrow = berlinDate(1);
+  const inTenDays = berlinDate(10);
+
+  const setBirthday = async (handle: string, day: number, month: number) => {
+    const citizen = await createCitizen(prisma, { handle });
+    await prisma.entity.update({
+      where: { id: citizen.entity.id },
+      data: { birthdayDay: day, birthdayMonth: month },
+    });
+    return citizen;
+  };
+
+  await setBirthday("geburtstagskind-heute", today.day, today.month);
+  await setBirthday("geburtstagskind-morgen", tomorrow.day, tomorrow.month);
+  await setBirthday("geburtstagskind-spaeter", inTenDays.day, inTenDays.month);
+  /** Without a birthday nobody appears in the list */
+  await createCitizen(prisma, { handle: "ohne-geburtstag" });
+
+  await signIn(viewer.user);
+  await page.goto("/app/spynet/birthdays");
+
+  const rows = page.getByRole("row");
+  await expect(rows.filter({ hasText: "geburtstagskind-heute" })).toContainText(
+    "heute",
+  );
+  await expect(
+    rows.filter({ hasText: "geburtstagskind-morgen" }),
+  ).toContainText("morgen");
+  await expect(
+    rows.filter({ hasText: "geburtstagskind-spaeter" }),
+  ).toContainText("in 10 Tagen");
+
+  await expect(page.getByText("ohne-geburtstag")).toHaveCount(0);
+
+  /** Every citizen stands in the list exactly once, the nearest one first */
+  const handles = await rows.allInnerTexts();
+  const listed = handles.filter((row) => row.includes("geburtstagskind"));
+  expect(listed).toHaveLength(3);
+  expect(listed[0]).toContain("geburtstagskind-heute");
+  expect(listed[1]).toContain("geburtstagskind-morgen");
+  expect(listed[2]).toContain("geburtstagskind-spaeter");
+});
