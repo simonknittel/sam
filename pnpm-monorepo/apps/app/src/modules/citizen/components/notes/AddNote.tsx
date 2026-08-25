@@ -83,7 +83,7 @@ export const AddNote = ({
       </div>
 
       <textarea
-        className="p-2 rounded-l bg-neutral-800 w-full"
+        className="p-2 rounded-l bg-neutral-800 w-full field-sizing-content min-h-32"
         id={contentInputId}
         {...register("content", { required: true })}
       />
