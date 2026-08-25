@@ -68,6 +68,21 @@ export const buildEventRecipientWhere = (
 };
 
 /**
+ * Entity where-fragment for citizens who can open the app at all: they hold
+ * `login;manage` through one of their roles. It is the minimum condition for
+ * every notification — a citizen who cannot log in can read none of them.
+ */
+export const CAN_LOGIN_CITIZEN_WHERE: Prisma.EntityWhereInput = {
+  roleAssignments: {
+    some: {
+      role: {
+        permissionStrings: { some: { permissionString: "login;manage" } },
+      },
+    },
+  },
+};
+
+/**
  * Entity where-fragment for citizens who can act on an event at all: they
  * hold both `login;manage` and `event;read` through their roles. Combined
  * with `buildEventRecipientWhere()` this is the reachability rule for event
@@ -76,15 +91,7 @@ export const buildEventRecipientWhere = (
  */
 export const NOTIFIABLE_CITIZEN_WHERE: Prisma.EntityWhereInput = {
   AND: [
-    {
-      roleAssignments: {
-        some: {
-          role: {
-            permissionStrings: { some: { permissionString: "login;manage" } },
-          },
-        },
-      },
-    },
+    CAN_LOGIN_CITIZEN_WHERE,
     {
       roleAssignments: {
         some: {
