@@ -336,9 +336,10 @@ test("the dashboard tile shows the profile of the own citizen", async ({
   await expect(spynetSection).toContainText("Flotte");
   await expect(spynetSection).toContainText("Europe/Berlin");
   await expect(spynetSection).toContainText("24. Dezember");
+  /** The header of the tile is the way into Spynet */
   await expect(
-    spynetSection.getByRole("link", { name: "Vollständiges Profil" }),
-  ).toBeVisible();
+    spynetSection.getByRole("link", { name: "Spynet öffnen" }),
+  ).toHaveAttribute("href", `/app/spynet/citizen/${citizen.entity.id}`);
 
   await expectMetricLinks(spynetSection, citizen.entity.id);
 });
@@ -373,17 +374,28 @@ test("the dashboard tile hides what the own permissions do not cover", async ({
 /** The birthday list reads the day in the time zone of the organization */
 const BIRTHDAY_LIST_TIMEZONE = "Europe/Berlin";
 
+/**
+ * Whole calendar days from today, the way the page counts them. Adding
+ * `ONE_DAY_MS` to the current moment instead would land one day off across
+ * a daylight-saving transition of Europe/Berlin.
+ */
 const berlinDate = (daysFromToday: number) => {
-  const moment = new Date(Date.now() + daysFromToday * ONE_DAY_MS);
-  const readNumber = (part: "day" | "month") =>
-    Number(
-      new Intl.DateTimeFormat("en-US", {
-        timeZone: BIRTHDAY_LIST_TIMEZONE,
-        [part]: "numeric",
-      }).format(moment),
-    );
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: BIRTHDAY_LIST_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
 
-  return { day: readNumber("day"), month: readNumber("month") };
+  const readNumber = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((part) => part.type === type)?.value);
+
+  const target = new Date(
+    Date.UTC(readNumber("year"), readNumber("month") - 1, readNumber("day")) +
+      daysFromToday * ONE_DAY_MS,
+  );
+
+  return { day: target.getUTCDate(), month: target.getUTCMonth() + 1 };
 };
 
 test("the birthday list names every citizen once, sorted by the next birthday", async ({
