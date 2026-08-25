@@ -2,6 +2,7 @@
 
 import avatarFrame from "@/modules/avatar-creator/assets/avatar-frame.png";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
+import { OnboardingTargetId } from "@/modules/onboarding/utils/targets";
 import clsx from "clsx";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -353,6 +354,7 @@ export const AvatarCreatorClient = ({ className }: Props) => {
         "flex flex-col items-center md:flex-row justify-center md:items-start gap-4",
         className,
       )}
+      data-onboarding-target={OnboardingTargetId.AvatarCreator}
     >
       <div className="w-80 bg-secondary rounded-primary p-4 flex flex-col gap-6">
         <div className="overflow-hidden">

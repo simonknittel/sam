@@ -2,6 +2,7 @@ import { CursorPaginationControls } from "@/modules/common/CursorPagination/Curs
 import { createCursorPaginationLoader } from "@/modules/common/CursorPagination/createCursorPaginationLoader";
 import { ScrambleIn } from "@/modules/common/components/ScrambleIn";
 import { StatisticTile } from "@/modules/common/components/StatisticTile";
+import { OnboardingTargetId } from "@/modules/onboarding/utils/targets";
 import {
   parseAsArrayOf,
   parseAsString,
@@ -54,7 +55,10 @@ export const OrgFleetTile = async ({ className, searchParams }: Props) => {
     });
 
   return (
-    <section className={className}>
+    <section
+      className={className}
+      data-onboarding-target={OnboardingTargetId.OrgFleet}
+    >
       <section className="flex flex-wrap gap-0.5 mb-0.5">
         <StatisticTile label="Schiffe" className="flex-1">
           <ScrambleIn

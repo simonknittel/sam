@@ -4,6 +4,7 @@ import { Account } from "./Account";
 import { Apps } from "./Apps";
 import { Create } from "./Create";
 import { Notifications } from "./Notifications";
+import { Onboarding } from "./Onboarding";
 import { Support } from "./Support";
 
 interface Props {
@@ -28,6 +29,7 @@ export const TopBar = ({ className }: Props) => {
 
         <div className="flex-1 flex justify-end">
           <Support />
+          <Onboarding />
           <Notifications />
           <Account />
         </div>

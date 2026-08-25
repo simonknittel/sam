@@ -15,6 +15,9 @@ import { getUnleashFlag } from "@/modules/common/utils/getUnleashFlag";
 import { UNLEASH_FLAG } from "@/modules/common/utils/UNLEASH_FLAG";
 import { OnSiteNotificationsProvider } from "@/modules/notifications/components/OnSiteNotificationsProvider";
 import { getUnreadOnSiteNotificationCount } from "@/modules/notifications/utils/queries/getUnreadOnSiteNotificationCount";
+import { OnboardingProvider } from "@/modules/onboarding/components/OnboardingProvider";
+import { OnboardingTour } from "@/modules/onboarding/components/OnboardingTour";
+import { getOnboardingState } from "@/modules/onboarding/utils/queries/getOnboardingState";
 import { ChannelsProvider } from "@/modules/pusher/components/ChannelsContext";
 import { RolesContextProvider } from "@/modules/roles/components/RolesContext";
 import { getVisibleRoles } from "@/modules/roles/utils/getRoles";
@@ -39,6 +42,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
     openWikiReportCount,
     unreadOnSiteNotificationCount,
     canReadCareer,
+    onboardingState,
   ] = await Promise.all([
     requireAuthenticationPage(),
     getUnleashFlag(UNLEASH_FLAG.DisableAlgolia),
@@ -49,6 +53,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
     getOpenWikiReportCount(),
     getUnreadOnSiteNotificationCount(),
     hasAnyReadableFlow(),
+    getOnboardingState(),
   ]);
 
   return (
@@ -74,19 +79,23 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
                         <OnSiteNotificationsProvider
                           initialUnreadCount={unreadOnSiteNotificationCount}
                         >
-                          <CreateContextProvider>
-                            <CmdKProvider
-                              disableAlgolia={disableAlgolia}
-                              canReadCareer={canReadCareer}
-                            >
-                              <TopBar />
-                              <MobileActionBarLoader />
-                            </CmdKProvider>
+                          <OnboardingProvider initialState={onboardingState}>
+                            <CreateContextProvider>
+                              <CmdKProvider
+                                disableAlgolia={disableAlgolia}
+                                canReadCareer={canReadCareer}
+                              >
+                                <TopBar />
+                                <MobileActionBarLoader />
+                              </CmdKProvider>
 
-                            <div className="pt-12 lg:pt-28 pb-16 lg:pb-0 min-h-dvh">
-                              {children}
-                            </div>
-                          </CreateContextProvider>
+                              <div className="pt-12 lg:pt-28 pb-16 lg:pb-0 min-h-dvh">
+                                {children}
+                              </div>
+
+                              <OnboardingTour />
+                            </CreateContextProvider>
+                          </OnboardingProvider>
                         </OnSiteNotificationsProvider>
                       </AppsContextProvider>
                     </div>
