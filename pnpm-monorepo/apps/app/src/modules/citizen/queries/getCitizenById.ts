@@ -6,9 +6,9 @@ import { cache } from "react";
 export const getCitizenById = cache(
   withTrace("getCitizenById", async (id: Entity["id"]) => {
     /**
-     * The citizen's identity columns other than these are not read from the
-     * entity: the overview renders each of them from its log history
-     * instead, through its own query.
+     * The identity columns hold the content of the latest confirmed log entry
+     * of their type. The overview shows them; their history stays behind the
+     * history modal, which reads the logs with its own query.
      */
     return prisma.entity.findUnique({
       where: {
@@ -19,6 +19,9 @@ export const getCitizenById = cache(
         handle: true,
         spectrumId: true,
         discordId: true,
+        teamspeakId: true,
+        citizenId: true,
+        communityMoniker: true,
         timezone: true,
         birthdayDay: true,
         birthdayMonth: true,

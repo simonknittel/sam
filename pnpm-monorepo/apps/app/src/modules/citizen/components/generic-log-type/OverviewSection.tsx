@@ -1,23 +1,25 @@
 import { requireAuthentication } from "@/modules/auth/server";
 import type { GenericEntityLogType } from "@/types";
 import { type Entity } from "@sam-monorepo/database/client";
-import { camelCase } from "change-case";
 import { type ReactNode } from "react";
 import { HistoryModal } from "./HistoryModal";
 
 interface Props {
-  type: GenericEntityLogType;
-  icon?: ReactNode;
-  name: string;
-  entity: Pick<Entity, "id">;
+  readonly type: GenericEntityLogType;
+  readonly icon?: ReactNode;
+  readonly name: string;
+  /** The content of the latest confirmed log entry of this type */
+  readonly value: string | null;
+  readonly entity: Pick<Entity, "id">;
 }
 
 export const OverviewSection = async ({
   type,
   icon,
   name,
+  value,
   entity,
-}: Readonly<Props>) => {
+}: Props) => {
   const authentication = await requireAuthentication();
   const showCreate = await authentication.authorize(type, "create");
   const showDelete = await authentication.authorize(type, "delete");
@@ -31,8 +33,7 @@ export const OverviewSection = async ({
 
       <dd className="flex gap-4 items-center">
         <span className="whitespace-nowrap overflow-hidden text-ellipsis">
-          {/* @ts-expect-error Don't know how to improve this */}
-          {entity[camelCase(type)] || <span className="italic">-</span>}
+          {value || <span className="italic">-</span>}
         </span>
 
         <HistoryModal

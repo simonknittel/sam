@@ -26,6 +26,9 @@ interface Props {
     | "handle"
     | "spectrumId"
     | "discordId"
+    | "teamspeakId"
+    | "citizenId"
+    | "communityMoniker"
     | "timezone"
     | "birthdayDay"
     | "birthdayMonth"
@@ -66,14 +69,21 @@ export const Overview = async ({ className, entity }: Props) => {
           <OverviewSection
             type="citizen-id"
             name="Citizen ID"
+            value={entity.citizenId}
             entity={entity}
           />
 
-          <OverviewSection type="handle" name="Handle" entity={entity} />
+          <OverviewSection
+            type="handle"
+            name="Handle"
+            value={entity.handle}
+            entity={entity}
+          />
 
           <OverviewSection
             type="community-moniker"
             name="Community Moniker"
+            value={entity.communityMoniker}
             entity={entity}
           />
 
@@ -82,6 +92,7 @@ export const Overview = async ({ className, entity }: Props) => {
               type="discord-id"
               icon={<FaDiscord />}
               name="Discord ID"
+              value={entity.discordId}
               entity={entity}
             />
           )}
@@ -91,6 +102,7 @@ export const Overview = async ({ className, entity }: Props) => {
               type="teamspeak-id"
               icon={<FaTeamspeak />}
               name="TeamSpeak ID"
+              value={entity.teamspeakId}
               entity={entity}
             />
           )}
