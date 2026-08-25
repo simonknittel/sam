@@ -6,7 +6,14 @@ import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import { Select } from "@/modules/common/components/form/Select";
 import { Tile } from "@/modules/common/components/Tile";
-import { useId, useMemo, useState, type ChangeEvent } from "react";
+import {
+  startTransition,
+  useId,
+  useMemo,
+  useState,
+  type ChangeEvent,
+  type FormEventHandler,
+} from "react";
 import { FaSave } from "react-icons/fa";
 import { updateMyProfile } from "../actions/updateMyProfile";
 import {
@@ -121,12 +128,25 @@ export const ProfileForm = ({
       setCurrentDay(String(nextMaximumDay));
   };
 
+  /**
+   * Submitted by hand rather than through `<form action>`: React resets a
+   * form once its action resolves, which snaps every select back to the
+   * option the server rendered as selected. The component's state does not
+   * change with it, so React never writes the DOM back and the selects end
+   * up showing the values the profile had before the save.
+   */
+  const handleSubmit: FormEventHandler<HTMLFormElement> = (event) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    startTransition(() => formAction(formData));
+  };
+
   return (
     <Tile
       heading="Profil"
       subheading="Diese Angaben sehen alle Citizens, die dein Profil öffnen können."
     >
-      <form action={formAction}>
+      <form onSubmit={handleSubmit}>
         <label htmlFor={timezoneInputId} className="block mb-2 text-white/90">
           Zeitzone
         </label>
