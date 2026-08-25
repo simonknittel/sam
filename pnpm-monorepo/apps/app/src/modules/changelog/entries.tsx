@@ -46,6 +46,58 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-08-25-profil-zeitzone-und-geburtstag",
+    date: "2026-08-25",
+    title: "Zeitzone, Geburtstag und ein größeres Citizen-Profil",
+    tags: ["Spynet", "Neu"],
+    isTracked: true,
+    body: () => (
+      <>
+        <p>
+          Unter{" "}
+          <Link
+            href="/app/account/profile"
+            className="text-interaction-500 hover:underline focus-visible:underline"
+          >
+            Account / Profil
+          </Link>{" "}
+          kannst du ab sofort deine Zeitzone und deinen Geburtstag angeben.
+          Beides ist freiwillig und jederzeit wieder löschbar. Vom Geburtstag
+          werden nur Tag und Monat gespeichert, kein Jahr.
+        </p>
+
+        <p>
+          Das Citizen-Popover &ndash; das kleine Fenster, das beim Hover
+          eines Citizen-Handles aufgeht &ndash; zeigt jetzt zusätzlich: das
+          Discord-Avatar, den SILC-Kontostand mit dem monatlichen Gehalt, die
+          Strafpunkte, die Anzahl der Schiffe sowie Zeitzone samt aktueller
+          Ortszeit und Geburtstag. Was du davon siehst, hängt wie gewohnt von
+          deinen Berechtigungen ab.
+        </p>
+
+        <p>
+          Neu ist außerdem die Übersicht{" "}
+          <Link
+            href="/app/spynet/birthdays"
+            className="text-interaction-500 hover:underline focus-visible:underline"
+          >
+            Spynet / Geburtstage
+          </Link>
+          . Dort steht jeder Citizen mit seinem nächsten Geburtstag, sortiert
+          nach dem, der als Nächstes dran ist.
+        </p>
+
+        <p>
+          Wer seinen Geburtstag angibt, bekommt an diesem Tag um Mitternacht in
+          der eigenen Zeitzone einen Geburtstagsgruß. Die Benachrichtigung lässt
+          sich unter Account / Benachrichtigungen in der Gruppe
+          &bdquo;Spynet&ldquo; abschalten.
+        </p>
+      </>
+    ),
+  },
+
+  {
     key: "2026-08-24-formatierung-in-eventbeschreibungen",
     date: "2026-08-24",
     title: "Formatierung in Eventbeschreibungen",
