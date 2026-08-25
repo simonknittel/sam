@@ -100,6 +100,18 @@ model Entity {
   eventPositions            EventPosition[]            @relation("citizen")
   silcBalance               Int                        @default(0)
   totalEarnedSilc           Int                        @default(0)
+
+  /// IANA time zone name of the citizen, for example "Europe/Berlin". The
+  /// citizen sets it themselves. NULL if the citizen did not set it.
+  timezone               String?
+  /// Day of the birthday, 1 to 31. The year is not stored, thus the app
+  /// cannot show an age. Set together with `birthdayMonth`, or both are NULL.
+  birthdayDay            Int?
+  /// Month of the birthday, 1 to 12. See `birthdayDay`.
+  birthdayMonth          Int?
+  /// Time of the last birthday greeting. The greeting job uses it to send
+  /// only one greeting for each year.
+  birthdayGreetingSentAt DateTime?
 }
 
 model EntityLog {
