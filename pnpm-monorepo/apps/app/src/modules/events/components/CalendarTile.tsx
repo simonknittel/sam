@@ -3,6 +3,7 @@ import {
   getEvents,
   getOpenEventCount,
 } from "@/modules/events/queries/getEvents";
+import { OnboardingTargetId } from "@/modules/onboarding/utils/targets";
 import clsx from "clsx";
 import { Event } from "./Event";
 
@@ -30,6 +31,7 @@ export const CalendarTile = async ({ className }: Props) => {
         "flex flex-col gap-0.5 items-center @4xl/events:overflow-hidden",
         className,
       )}
+      data-onboarding-target={OnboardingTargetId.DashboardCalendar}
     >
       <h2 className="font-thin text-2xl mb-2 w-full font-mono uppercase">
         Events

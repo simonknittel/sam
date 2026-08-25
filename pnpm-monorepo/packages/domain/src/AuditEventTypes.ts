@@ -220,6 +220,7 @@ export enum AuditEventType {
   APP_FAVORITE_REMOVED = "APP_FAVORITE_REMOVED",
   CITIZEN_PROFILE_UPDATED = "CITIZEN_PROFILE_UPDATED",
   BIRTHDAY_GREETINGS_SENT = "BIRTHDAY_GREETINGS_SENT",
+  ONBOARDING_TASK_COMPLETED = "ONBOARDING_TASK_COMPLETED",
 }
 
 /**
@@ -1507,6 +1508,13 @@ export interface AuditEventDataByType {
 
   [AuditEventType.BIRTHDAY_GREETINGS_SENT]: {
     citizenCount: number;
+  };
+
+  [AuditEventType.ONBOARDING_TASK_COMPLETED]: {
+    citizenId: string;
+    taskKey: string;
+    /** `TOUR` (finished the tour) or `SKIPPED` (marked as done manually) */
+    completionMethod: string;
   };
 }
 

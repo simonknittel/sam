@@ -6,6 +6,7 @@ import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import { Select } from "@/modules/common/components/form/Select";
 import { Tile } from "@/modules/common/components/Tile";
+import { OnboardingTargetId } from "@/modules/onboarding/utils/targets";
 import {
   startTransition,
   useId,
@@ -146,7 +147,10 @@ export const ProfileForm = ({
       heading="Profil"
       subheading="Diese Angaben sehen alle Citizens, die dein Profil öffnen können."
     >
-      <form onSubmit={handleSubmit}>
+      <form
+        onSubmit={handleSubmit}
+        data-onboarding-target={OnboardingTargetId.ProfileForm}
+      >
         <label htmlFor={timezoneInputId} className="block mb-2 text-white/90">
           Zeitzone
         </label>

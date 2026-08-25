@@ -5,6 +5,7 @@ import { runAction } from "@/modules/actions/utils/runAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Tile } from "@/modules/common/components/Tile";
+import { OnboardingTargetId } from "@/modules/onboarding/utils/targets";
 import clsx from "clsx";
 import { useState } from "react";
 import toast from "react-hot-toast";
@@ -127,6 +128,7 @@ export const WebPushSubscriberClient = ({
           disabled={isPending}
           variant={Button2Variant.Secondary}
           className="mt-2"
+          data-onboarding-target={OnboardingTargetId.NotificationsEnable}
         >
           {isPending && <AsciiSpinner />}
           Genehmigung anfordern

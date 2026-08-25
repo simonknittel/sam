@@ -7,6 +7,7 @@ import { Button2 } from "@/modules/common/components/Button2";
 import { Select } from "@/modules/common/components/form/Select";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import Modal from "@/modules/common/components/Modal";
+import { OnboardingTargetId } from "@/modules/onboarding/utils/targets";
 import { useId, useState, useTransition } from "react";
 import { FaPlus, FaSave } from "react-icons/fa";
 import { createShipAction } from "../actions/createShipAction";
@@ -55,6 +56,7 @@ export const AssignShip = ({ className, data = [] }: Props) => {
         onClick={() => setIsOpen(true)}
         variant="tertiary"
         className={className}
+        data-onboarding-target={OnboardingTargetId.FleetAddShip}
       >
         Hinzufügen <FaPlus />
       </Button>

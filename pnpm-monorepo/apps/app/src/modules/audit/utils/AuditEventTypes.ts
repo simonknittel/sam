@@ -2218,4 +2218,19 @@ export const AuditEventDefinitions: {
     },
     message: (data) => `Sent ${data.citizenCount} birthday greeting(s)`,
   },
+
+  [AuditEventType.ONBOARDING_TASK_COMPLETED]: {
+    type: AuditEventType.ONBOARDING_TASK_COMPLETED,
+    data: {
+      citizenId: "string",
+      taskKey: "string",
+      completionMethod: "string",
+    },
+    message: (data) =>
+      `Onboarding task ${data.taskKey} completed (${
+        data.completionMethod === "SKIPPED"
+          ? "marked as done manually"
+          : "finished the tour"
+      })`,
+  },
 };

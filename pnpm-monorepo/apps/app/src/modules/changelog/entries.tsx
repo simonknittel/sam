@@ -46,6 +46,32 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-08-25-erste-schritte",
+    date: "2026-08-25",
+    title: "Erste Schritte: Lerne das SAM mit kurzen Touren kennen",
+    tags: ["Neu"],
+    isTracked: true,
+    body: () => (
+      <>
+        <p>
+          Oben in der Leiste gibt es einen neuen Bereich &bdquo;Erste
+          Schritte&ldquo; (auf dem Handy im Apps-Menü). Dort findest du kurze
+          Touren, die dir ausgewählte Teile des SAM erklären &ndash; zum
+          Beispiel unsere Events, das Flottenmanagement, die
+          Browserbenachrichtigungen, den Avatar Creator und dein Profil.
+        </p>
+
+        <p>
+          Jede Tour besteht aus wenigen Schritten und zeigt dir direkt auf der
+          jeweiligen Seite, wo du klicken musst. Du kannst jede Tour jederzeit
+          beenden und später fortsetzen, einzelne oder alle Aufgaben
+          überspringen und abgeschlossene Touren beliebig oft wiederholen.
+          Welche Aufgaben du siehst, hängt von deinen Berechtigungen ab.
+        </p>
+      </>
+    ),
+  },
+  {
     key: "2026-08-25-profil-zeitzone-und-geburtstag",
     date: "2026-08-25",
     title: "Zeitzone, Geburtstag und ein größeres Citizen-Profil",

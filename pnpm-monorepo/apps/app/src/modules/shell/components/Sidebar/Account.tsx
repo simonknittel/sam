@@ -6,6 +6,7 @@ import clsx from "clsx";
 import { FaQuestionCircle, FaUser } from "react-icons/fa";
 import { LogoutButton } from "../LogoutButton";
 import { Notifications } from "./Notifications";
+import { Onboarding } from "./Onboarding";
 
 interface Props {
   readonly supportHref: string | null;
@@ -47,6 +48,8 @@ export const Account = ({ supportHref }: Props) => {
             <FaQuestionCircle />
           </Button2>
         )}
+
+        <Onboarding />
 
         <Notifications />
 

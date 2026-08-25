@@ -82,6 +82,8 @@ model Entity {
   wikiPageMentions                             WikiPageCitizenMention[]             @relation("citizen")
   createdWikiPageCitizenMentions               WikiPageCitizenMention[]             @relation("createdBy")
   appFavorites                                 CitizenAppFavorite[]
+  onboardingTaskProgresses                     OnboardingTaskProgress[]
+  onboardingStepProgresses                     OnboardingStepProgress[]
   createdFlows                                 Flow[]                               @relation("createdFlows")
   updatedFlows                                 Flow[]                               @relation("updatedFlows")
   deletedFlows                                 Flow[]                               @relation("deletedFlows")

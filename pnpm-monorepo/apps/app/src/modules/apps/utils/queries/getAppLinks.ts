@@ -1,6 +1,6 @@
 import { authenticate } from "@/modules/auth/server";
+import { satisfiesAnyPermissionString } from "@/modules/auth/utils/satisfiesAnyPermissionString";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import { transformPermissionStringToPermissionSet } from "@sam-monorepo/permissions";
 import { cache } from "react";
 import { externalApps } from "../externalApps";
 import { INTEGRATED_APPS } from "../INTEGRATED_APPS";
@@ -19,25 +19,10 @@ export const getAppLinks = cache(
 
     const integratedApps = await Promise.all(
       INTEGRATED_APPS.map(async ({ hasAccess, ...app }) => {
-        let redacted = false;
-
-        if (app.permissionStrings && app.permissionStrings.length > 0) {
-          const permissions = await Promise.all(
-            app.permissionStrings.map(async (permissionString) => {
-              const permissionSet =
-                transformPermissionStringToPermissionSet(permissionString);
-
-              return authentication.authorize(
-                permissionSet.resource,
-                permissionSet.operation,
-                permissionSet.attributes,
-              );
-            }),
-          );
-
-          if (!permissions.some((permission) => permission === true))
-            redacted = true;
-        }
+        let redacted = !(await satisfiesAnyPermissionString(
+          authentication,
+          app.permissionStrings,
+        ));
 
         /**
          * The callback is stripped above so it never reaches a client
