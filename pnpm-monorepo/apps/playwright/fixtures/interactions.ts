@@ -72,6 +72,16 @@ export const clickUntilVisible = (target: Locator, reaction: Locator) =>
     await expect(reaction).toBeVisible({ timeout: REACTION_TIMEOUT });
   }).toPass({ timeout: HYDRATION_TIMEOUT });
 
+/**
+ * Retries the hover until the reaction becomes visible. For the popovers
+ * which only open on hover (`hoverOnly`), where a click would do nothing.
+ */
+export const hoverUntilVisible = (target: Locator, reaction: Locator) =>
+  expect(async () => {
+    await target.hover({ timeout: REACTION_TIMEOUT });
+    await expect(reaction).toBeVisible({ timeout: REACTION_TIMEOUT });
+  }).toPass({ timeout: HYDRATION_TIMEOUT });
+
 /** Retries the click until the navigation actually happens. */
 export const clickUntilUrl = (
   page: Page,
