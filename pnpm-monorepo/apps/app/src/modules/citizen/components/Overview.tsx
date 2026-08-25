@@ -56,7 +56,7 @@ export const Overview = async ({ className, entity }: Props) => {
 
   return (
     <div className={clsx(className)}>
-      <Tile heading="Übersicht">
+      <Tile heading="Übersicht" childrenClassName="max-w-lg">
         <dl className="flex flex-col gap-1 text-sm">
           <ProfileAttribute name="Internal ID">
             <span className="truncate" title={entity.id}>

@@ -4,6 +4,7 @@ import { type Entity } from "@sam-monorepo/database/client";
 import { type ReactNode } from "react";
 import { ProfileAttribute } from "../ProfileAttribute";
 import { HistoryModal } from "./HistoryModal";
+import { HistoryModalVariant } from "./HistoryModalVariant";
 
 interface Props {
   readonly type: GenericEntityLogType;
@@ -39,6 +40,7 @@ export const OverviewSection = async ({
       <HistoryModal
         type={type}
         entity={entity}
+        variant={HistoryModalVariant.Inline}
         showCreate={showCreate}
         showDelete={showDelete}
         showConfirm={showConfirm}
