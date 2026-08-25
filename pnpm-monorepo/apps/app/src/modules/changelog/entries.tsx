@@ -67,8 +67,8 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
         </p>
 
         <p>
-          Das Citizen-Popover &ndash; das kleine Fenster, das beim Hover
-          eines Citizen-Handles aufgeht &ndash; zeigt jetzt zusätzlich: das
+          Das Citizen-Popover &ndash; das kleine Fenster, das beim Hover eines
+          Citizen-Handles aufgeht &ndash; zeigt jetzt zusätzlich: das
           Discord-Avatar, den SILC-Kontostand mit dem monatlichen Gehalt, die
           Strafpunkte, die Anzahl der Schiffe sowie Zeitzone samt aktueller
           Ortszeit und Geburtstag. Was du davon siehst, hängt wie gewohnt von
