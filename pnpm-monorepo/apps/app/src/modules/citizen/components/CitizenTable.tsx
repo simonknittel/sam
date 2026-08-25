@@ -139,11 +139,7 @@ export const CitizenTable = ({
                     <span className="text-neutral-500 italic">-</span>
                   )}
                 </span>
-                <HistoryModal
-                  type="handle"
-                  entity={row.entity}
-                  iconOnly={true}
-                />
+                <HistoryModal type="handle" entity={row.entity} />
               </td>
 
               <td
@@ -164,11 +160,7 @@ export const CitizenTable = ({
                       <span className="text-neutral-500 italic">-</span>
                     )}
                   </span>
-                  <HistoryModal
-                    type="discord-id"
-                    entity={row.entity}
-                    iconOnly={true}
-                  />
+                  <HistoryModal type="discord-id" entity={row.entity} />
                 </td>
               )}
 
@@ -183,11 +175,7 @@ export const CitizenTable = ({
                       <span className="text-neutral-500 italic">-</span>
                     )}
                   </span>
-                  <HistoryModal
-                    type="teamspeak-id"
-                    entity={row.entity}
-                    iconOnly={true}
-                  />
+                  <HistoryModal type="teamspeak-id" entity={row.entity} />
                 </td>
               )}
 

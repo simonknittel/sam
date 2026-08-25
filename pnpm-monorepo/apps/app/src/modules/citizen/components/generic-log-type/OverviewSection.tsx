@@ -1,48 +1,50 @@
 import { requireAuthentication } from "@/modules/auth/server";
 import type { GenericEntityLogType } from "@/types";
 import { type Entity } from "@sam-monorepo/database/client";
-import { camelCase } from "change-case";
 import { type ReactNode } from "react";
+import { ProfileAttribute } from "../ProfileAttribute";
 import { HistoryModal } from "./HistoryModal";
+import { HistoryModalVariant } from "./HistoryModalVariant";
 
 interface Props {
-  type: GenericEntityLogType;
-  icon?: ReactNode;
-  name: string;
-  entity: Pick<Entity, "id">;
+  readonly type: GenericEntityLogType;
+  readonly icon?: ReactNode;
+  readonly name: string;
+  /** The content of the latest confirmed log entry of this type */
+  readonly value: string | null;
+  readonly entity: Pick<Entity, "id">;
 }
 
 export const OverviewSection = async ({
   type,
   icon,
   name,
+  value,
   entity,
-}: Readonly<Props>) => {
+}: Props) => {
   const authentication = await requireAuthentication();
   const showCreate = await authentication.authorize(type, "create");
   const showDelete = await authentication.authorize(type, "delete");
   const showConfirm = await authentication.authorize(type, "confirm");
 
   return (
-    <>
-      <dt className="text-neutral-500 mt-4 flex gap-2 items-center">
-        {icon} {name}
-      </dt>
-
-      <dd className="flex gap-4 items-center">
-        <span className="whitespace-nowrap overflow-hidden text-ellipsis">
-          {/* @ts-expect-error Don't know how to improve this */}
-          {entity[camelCase(type)] || <span className="italic">-</span>}
+    <ProfileAttribute icon={icon} name={name}>
+      {value ? (
+        <span className="truncate" title={value}>
+          {value}
         </span>
+      ) : (
+        <span className="italic">-</span>
+      )}
 
-        <HistoryModal
-          type={type}
-          entity={entity}
-          showCreate={showCreate}
-          showDelete={showDelete}
-          showConfirm={showConfirm}
-        />
-      </dd>
-    </>
+      <HistoryModal
+        type={type}
+        entity={entity}
+        variant={HistoryModalVariant.Inline}
+        showCreate={showCreate}
+        showDelete={showDelete}
+        showConfirm={showConfirm}
+      />
+    </ProfileAttribute>
   );
 };

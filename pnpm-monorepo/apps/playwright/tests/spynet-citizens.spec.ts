@@ -1,3 +1,4 @@
+import type { Page } from "@playwright/test";
 import { expectAuditEvents } from "../fixtures/audit";
 import { createCitizen } from "../fixtures/factories";
 import {
@@ -5,8 +6,19 @@ import {
   clickUntilVisible,
   DELETED_TEXT,
   modal,
+  sectionByHeading,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
+
+/**
+ * The value of one row of the Übersicht tile. Each row names the attribute
+ * on the left and holds its value on the right.
+ */
+const overviewAttribute = (page: Page, name: string) =>
+  sectionByHeading(page, "Übersicht")
+    .locator("dl > div")
+    .filter({ has: page.getByText(name, { exact: true }) })
+    .locator("dd");
 
 test("a citizen is created from a Spectrum ID and deleted again", async ({
   page,
@@ -157,4 +169,46 @@ test("a log entry is confirmed, and a second one marked a false report", async (
       return entity.handle;
     })
     .toBe("zweiterhandle");
+});
+
+test("the overview shows the confirmed value of every identity attribute", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "spynet-leser",
+    permissionStrings: ["citizen;read", "discord-id;read", "teamspeak-id;read"],
+  });
+  /**
+   * The columns hold what the confirmation of a log entry wrote into them
+   * (see the test above), which is what the overview reads.
+   */
+  const target = await createCitizen(prisma, { handle: "beobachteter" });
+  await prisma.entity.update({
+    where: { id: target.entity.id },
+    data: {
+      spectrumId: "BEOBACHTETER",
+      citizenId: "9876543",
+      communityMoniker: "Der Beobachtete",
+      teamspeakId: "ts-4711",
+    },
+  });
+
+  await signIn(admin.user);
+  await page.goto(`/app/spynet/citizen/${target.entity.id}`);
+
+  const expectedAttributes: Record<string, string> = {
+    "Internal ID": target.entity.id,
+    "Spectrum ID": "BEOBACHTETER",
+    "Citizen ID": "9876543",
+    Handle: "beobachteter",
+    "Community Moniker": "Der Beobachtete",
+    "Discord ID": target.entity.discordId!,
+    "TeamSpeak ID": "ts-4711",
+  };
+
+  for (const [name, value] of Object.entries(expectedAttributes)) {
+    await expect(overviewAttribute(page, name)).toContainText(value);
+  }
 });

@@ -16,6 +16,7 @@ import { formatBirthday } from "../utils/birthday";
 import { DeleteCitizen } from "./DeleteCitizen";
 import { LastSeenAt } from "./LastSeenAt";
 import { LocalTime } from "./LocalTime";
+import { ProfileAttribute } from "./ProfileAttribute";
 import { OverviewSection } from "./generic-log-type/OverviewSection";
 
 interface Props {
@@ -26,6 +27,9 @@ interface Props {
     | "handle"
     | "spectrumId"
     | "discordId"
+    | "teamspeakId"
+    | "citizenId"
+    | "communityMoniker"
     | "timezone"
     | "birthdayDay"
     | "birthdayMonth"
@@ -52,28 +56,44 @@ export const Overview = async ({ className, entity }: Props) => {
 
   return (
     <div className={clsx(className)}>
-      <Tile heading="Übersicht">
-        <dl>
-          <dt className="text-neutral-500">Internal ID</dt>
-          <dd className="flex items-center gap-2">
-            {entity.id}
-            <CopyToClipboard value={entity.id} />
-          </dd>
+      <Tile heading="Übersicht" childrenClassName="max-w-lg">
+        <dl className="flex flex-col gap-1 text-sm">
+          <ProfileAttribute name="Internal ID">
+            <span className="truncate" title={entity.id}>
+              {entity.id}
+            </span>
 
-          <dt className="text-neutral-500 mt-4">Spectrum ID</dt>
-          <dd>{entity.spectrumId || <span className="italic">-</span>}</dd>
+            <CopyToClipboard value={entity.id} />
+          </ProfileAttribute>
+
+          <ProfileAttribute name="Spectrum ID">
+            {entity.spectrumId ? (
+              <span className="truncate" title={entity.spectrumId}>
+                {entity.spectrumId}
+              </span>
+            ) : (
+              <span className="italic">-</span>
+            )}
+          </ProfileAttribute>
 
           <OverviewSection
             type="citizen-id"
             name="Citizen ID"
+            value={entity.citizenId}
             entity={entity}
           />
 
-          <OverviewSection type="handle" name="Handle" entity={entity} />
+          <OverviewSection
+            type="handle"
+            name="Handle"
+            value={entity.handle}
+            entity={entity}
+          />
 
           <OverviewSection
             type="community-moniker"
             name="Community Moniker"
+            value={entity.communityMoniker}
             entity={entity}
           />
 
@@ -82,6 +102,7 @@ export const Overview = async ({ className, entity }: Props) => {
               type="discord-id"
               icon={<FaDiscord />}
               name="Discord ID"
+              value={entity.discordId}
               entity={entity}
             />
           )}
@@ -91,47 +112,40 @@ export const Overview = async ({ className, entity }: Props) => {
               type="teamspeak-id"
               icon={<FaTeamspeak />}
               name="TeamSpeak ID"
+              value={entity.teamspeakId}
               entity={entity}
             />
           )}
 
           {showLastSeen && (
-            <>
-              <dt className="text-neutral-500 mt-4 flex gap-2 items-center">
-                <RiTimeLine />
-                Zuletzt gesehen
-              </dt>
-              <dd className="flex gap-4 items-center">
-                <Suspense
-                  fallback={
-                    <div className="bg-neutral-800 animate-pulse rounded-secondary h-6 w-20" />
-                  }
-                >
-                  <LastSeenAt entity={entity} />
-                </Suspense>
-              </dd>
-            </>
+            <ProfileAttribute icon={<RiTimeLine />} name="Zuletzt gesehen">
+              <Suspense
+                fallback={
+                  <div className="bg-neutral-800 animate-pulse rounded-secondary h-5 w-20" />
+                }
+              >
+                <LastSeenAt entity={entity} />
+              </Suspense>
+            </ProfileAttribute>
           )}
-          <dt className="text-neutral-500 mt-4 flex gap-2 items-center">
-            <FaGlobe />
-            Zeitzone
-          </dt>
-          <dd className="flex gap-2 items-center">
+
+          <ProfileAttribute icon={<FaGlobe />} name="Zeitzone">
             {entity.timezone ? (
               <>
-                {entity.timezone}
+                <span className="truncate" title={entity.timezone}>
+                  {entity.timezone}
+                </span>
+
                 <LocalTime timezone={entity.timezone} />
               </>
             ) : (
               <span className="italic">-</span>
             )}
-          </dd>
+          </ProfileAttribute>
 
-          <dt className="text-neutral-500 mt-4 flex gap-2 items-center">
-            <FaBirthdayCake />
-            Geburtstag
-          </dt>
-          <dd>{birthday || <span className="italic">-</span>}</dd>
+          <ProfileAttribute icon={<FaBirthdayCake />} name="Geburtstag">
+            {birthday || <span className="italic">-</span>}
+          </ProfileAttribute>
         </dl>
 
         {entity.handle && (

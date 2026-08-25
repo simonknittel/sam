@@ -6,15 +6,16 @@ import type { GenericEntityLogType } from "@/types";
 import { type Entity } from "@sam-monorepo/database/browser";
 import { useState } from "react";
 import { FaHistory } from "react-icons/fa";
+import { HistoryModalVariant } from "./HistoryModalVariant";
 import { ModalContent } from "./ModalContent";
 
 interface Props {
-  type: GenericEntityLogType;
-  entity: Pick<Entity, "id">;
-  iconOnly?: boolean;
-  showCreate?: boolean;
-  showDelete?: boolean;
-  showConfirm?: boolean;
+  readonly type: GenericEntityLogType;
+  readonly entity: Pick<Entity, "id">;
+  readonly variant?: HistoryModalVariant;
+  readonly showCreate?: boolean;
+  readonly showDelete?: boolean;
+  readonly showConfirm?: boolean;
 }
 
 /**
@@ -32,24 +33,36 @@ const LOG_TYPE_LABELS: Record<GenericEntityLogType, string> = {
 export const HistoryModal = ({
   type,
   entity,
-  iconOnly = false,
+  variant = HistoryModalVariant.Button,
   showCreate,
   showDelete,
   showConfirm,
-}: Readonly<Props>) => {
+}: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const label = `${LOG_TYPE_LABELS[type]} History`;
 
   return (
     <>
-      <Button
-        onClick={() => setIsOpen(true)}
-        variant="tertiary"
-        title={label}
-        aria-label={label}
-      >
-        <FaHistory /> {!iconOnly && <>History</>}
-      </Button>
+      {variant === HistoryModalVariant.Button ? (
+        <Button
+          onClick={() => setIsOpen(true)}
+          variant="tertiary"
+          title={label}
+          aria-label={label}
+        >
+          <FaHistory />
+        </Button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setIsOpen(true)}
+          title={label}
+          aria-label={label}
+          className="cursor-pointer text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300 active:text-interaction-300"
+        >
+          <FaHistory />
+        </button>
+      )}
 
       <Modal
         isOpen={isOpen}
