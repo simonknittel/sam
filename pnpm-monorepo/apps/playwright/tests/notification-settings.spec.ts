@@ -37,6 +37,15 @@ test("browser notifications are enabled by default", async ({
   await expect(browserCheckbox(page, "event_created")).toBeChecked();
   await expect(browserCheckbox(page, "wiki_page_reported")).toBeChecked();
 
+  // The birthday greeting sits in its own "Spynet" group
+  await expect(
+    page.getByRole("heading", { name: "Spynet", exact: true }),
+  ).toBeVisible();
+  await expect(browserCheckbox(page, "birthday")).toBeChecked();
+  await expect(
+    page.getByRole("checkbox", { name: "Browser: Geburtstag" }),
+  ).toBeChecked();
+
   // Each box names its channel and its notification type; the visible
   // Ja/Nein text is the state, never the name
   await expect(
