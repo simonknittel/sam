@@ -65,7 +65,7 @@ export const ProfileContent = ({
         <div className="min-w-0">
           <p className="opacity-50 font-mono uppercase text-xs">Citizen</p>
 
-          <p className="font-mono uppercase text-lg font-bold flex items-center gap-2 min-w-0">
+          <h2 className="font-mono uppercase text-lg font-bold flex items-center gap-2 min-w-0">
             {profile.isCurrentCitizen && (
               <span
                 className="flex-none inline-block rounded-full size-3 bg-green-500 relative"
@@ -80,7 +80,7 @@ export const ProfileContent = ({
             </span>
 
             <CopyToClipboard value={name} />
-          </p>
+          </h2>
 
           {profile.canOpenSpynet && (
             <Link
