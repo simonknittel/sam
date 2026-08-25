@@ -19,12 +19,8 @@ const formatLocalTime = (timezone: string, now: Date) => {
   }
 };
 
-const unsubscribeFromNothing = () => {
-  return;
-};
-
 /** The value never changes, thus nothing has to subscribe to it. */
-const subscribeToNothing = () => unsubscribeFromNothing;
+const subscribeToNothing = () => () => undefined;
 
 interface Props {
   readonly timezone: string;

@@ -24,8 +24,6 @@ import { captureAsyncFunc } from "../common/xray";
  * rows simply roll into the next run 15 minutes later.
  */
 const MAX_MENTIONS_PER_RUN = 200;
-/** PutEvents accepts at most 10 entries per call */
-const EVENTBRIDGE_BATCH_SIZE = 10;
 
 interface CitizenGrants {
   readonly roleIds: ReadonlySet<string>;
@@ -326,27 +324,19 @@ export const wikiCitizenMentioned = async () => {
     }
     if (notifiable.length === 0) return;
 
-    for (
-      let index = 0;
-      index < notifiable.length;
-      index += EVENTBRIDGE_BATCH_SIZE
-    ) {
-      await emitEvents(
-        notifiable
-          .slice(index, index + EVENTBRIDGE_BATCH_SIZE)
-          .map((mention) => ({
-            Source: "frequent-automations",
-            DetailType: "NotificationRequested",
-            Detail: JSON.stringify({
-              type: "WikiCitizenMentioned",
-              payload: {
-                mentionId: mention.id,
-              },
-              requestId: createId(),
-            }),
-          })),
-      );
-    }
+    await emitEvents(
+      notifiable.map((mention) => ({
+        Source: "frequent-automations",
+        DetailType: "NotificationRequested",
+        Detail: JSON.stringify({
+          type: "WikiCitizenMentioned",
+          payload: {
+            mentionId: mention.id,
+          },
+          requestId: createId(),
+        }),
+      })),
+    );
 
     await prisma.wikiPageCitizenMention.updateMany({
       where: { id: { in: notifiable.map((mention) => mention.id) } },

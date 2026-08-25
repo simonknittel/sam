@@ -15,14 +15,6 @@ export const BIRTHDAY_DAY_MAX = Math.max(...DAYS_PER_MONTH);
 export const getMaximumDayOfMonth = (month: number) =>
   DAYS_PER_MONTH[month - 1] ?? BIRTHDAY_DAY_MAX;
 
-export const isValidBirthday = (day: number, month: number) =>
-  Number.isInteger(month) &&
-  month >= BIRTHDAY_MONTH_MIN &&
-  month <= BIRTHDAY_MONTH_MAX &&
-  Number.isInteger(day) &&
-  day >= BIRTHDAY_DAY_MIN &&
-  day <= getMaximumDayOfMonth(month);
-
 /**
  * A leap year, so that February 29 can be formatted. The year is never
  * shown, and UTC keeps the date from moving across a day boundary.

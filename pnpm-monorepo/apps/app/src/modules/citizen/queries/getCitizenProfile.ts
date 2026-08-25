@@ -41,6 +41,11 @@ const getAvatarUrl = async (discordId: Entity["discordId"]) => {
  * The permission for each metric depends on whether the viewer looks at
  * their own citizen or at a different one. Reading the own profile needs no
  * `citizen;read`, because the dashboard tile shows it to every citizen.
+ *
+ * A metric also carries the Spynet page behind it, but only when the viewer
+ * can open that page. Each of these pages asks for its own permission, which
+ * is not always the one that shows the metric — a link the viewer cannot
+ * follow is worse than no link.
  */
 export const getCitizenProfile = cache(
   withTrace("getCitizenProfile", async (id: Entity["id"]) => {
@@ -65,7 +70,6 @@ export const getCitizenProfile = cache(
         roleAssignments: {
           select: {
             roleId: true,
-            citizenId: true,
             currentLevel: true,
           },
         },
@@ -78,6 +82,8 @@ export const getCitizenProfile = cache(
       canReadSilcBalance,
       canReadPenaltyPoints,
       canReadShips,
+      canOpenSilcPage,
+      canOpenFleetPage,
       assignableRoles,
       avatarUrl,
     ] = await Promise.all([
@@ -95,6 +101,14 @@ export const getCitizenProfile = cache(
         isCurrentCitizen ? "ship" : "otherShips",
         "read",
       ),
+      authentication.authorize(
+        isCurrentCitizen
+          ? "silcTransactionOfCurrentCitizen"
+          : "silcTransactionOfOtherCitizen",
+        "read",
+      ),
+      /** The fleet page asks for `otherShips;read`, also for the own fleet */
+      authentication.authorize("otherShips", "read"),
       getAssignableRoles(),
       getAvatarUrl(citizen.discordId),
     ]);
@@ -109,6 +123,10 @@ export const getCitizenProfile = cache(
       canReadShips ? countOwnerShips(citizen.id) : null,
     ]);
 
+    const spynetHref = `/app/spynet/citizen/${citizen.id}`;
+    const buildMetricHref = (canOpenPage: boolean, subPage: string) =>
+      canOpenSpynet && canOpenPage ? `${spynetHref}/${subPage}` : null;
+
     return {
       citizen: {
         id: citizen.id,
@@ -120,14 +138,30 @@ export const getCitizenProfile = cache(
       },
       avatarUrl,
       isCurrentCitizen,
-      canOpenSpynet,
+      spynetHref: canOpenSpynet ? spynetHref : null,
       canUpdateAnyRoleAssignment: assignableRoles.length > 0,
       metrics: {
         silc: canReadSilcBalance
-          ? { balance: citizen.silcBalance, monthlySalary: monthlySalary ?? 0 }
+          ? {
+              balance: citizen.silcBalance,
+              monthlySalary: monthlySalary ?? 0,
+              href: buildMetricHref(canOpenSilcPage, "silc"),
+            }
           : null,
-        penaltyPoints,
-        fleetCount,
+        penaltyPoints:
+          penaltyPoints === null
+            ? null
+            : {
+                value: penaltyPoints,
+                href: buildMetricHref(canReadPenaltyPoints, "penalty-points"),
+              },
+        fleet:
+          fleetCount === null
+            ? null
+            : {
+                count: fleetCount,
+                href: buildMetricHref(canOpenFleetPage, "fleet"),
+              },
       },
     };
   }),

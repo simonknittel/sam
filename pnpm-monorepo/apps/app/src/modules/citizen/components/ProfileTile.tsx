@@ -17,9 +17,9 @@ export const ProfileTile = async () => {
         <ProfileContent profile={profile} />
       </section>
 
-      {profile.canOpenSpynet && (
+      {profile.spynetHref && (
         <Link
-          href={`/app/spynet/citizen/${profile.citizen.id}`}
+          href={profile.spynetHref}
           className="text-interaction-500 hover:underline focus-visible:underline font-mono uppercase text-sm mt-2"
         >
           Vollständiges Profil

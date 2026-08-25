@@ -1,7 +1,7 @@
 import { prisma } from "@/db";
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { ProfileForm } from "@/modules/citizen/components/ProfileForm";
-import { getSupportedTimezones } from "@/modules/citizen/utils/timezones";
+import { SUPPORTED_TIMEZONES } from "@/modules/citizen/utils/timezones";
 import { type Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -22,7 +22,7 @@ export default async function Page() {
 
   return (
     <ProfileForm
-      timezones={getSupportedTimezones()}
+      timezones={SUPPORTED_TIMEZONES}
       timezone={citizen.timezone}
       birthdayDay={citizen.birthdayDay}
       birthdayMonth={citizen.birthdayMonth}

@@ -42,15 +42,13 @@ export const ProfileContent = ({
 }: Props) => {
   const { citizen, metrics } = profile;
   const name = citizen.handle || citizen.id;
-  const spynetHref = `/app/spynet/citizen/${citizen.id}`;
   const birthday =
     citizen.birthdayDay !== null && citizen.birthdayMonth !== null
       ? formatBirthday(citizen.birthdayDay, citizen.birthdayMonth)
       : null;
-  const hasMetrics =
-    Boolean(metrics.silc) ||
-    metrics.penaltyPoints !== null ||
-    metrics.fleetCount !== null;
+  const hasMetrics = Boolean(
+    metrics.silc || metrics.penaltyPoints || metrics.fleet,
+  );
 
   return (
     <>
@@ -82,9 +80,9 @@ export const ProfileContent = ({
             <CopyToClipboard value={name} />
           </h2>
 
-          {profile.canOpenSpynet && (
+          {profile.spynetHref && (
             <Link
-              href={spynetHref}
+              href={profile.spynetHref}
               className="text-interaction-500 hover:underline focus-visible:underline font-mono uppercase text-xs"
               prefetch={false}
             >
@@ -132,34 +130,30 @@ export const ProfileContent = ({
                   : formatMonthlySalary(metrics.silc.monthlySalary)
               }
               tone={getSilcTone(metrics.silc.balance)}
-              href={profile.canOpenSpynet ? `${spynetHref}/silc` : undefined}
+              href={metrics.silc.href}
             />
           )}
 
-          {metrics.penaltyPoints !== null && (
+          {metrics.penaltyPoints && (
             <ProfileMetric
               label="Strafpunkte"
               icon={<FaScaleBalanced />}
-              value={metrics.penaltyPoints}
+              value={metrics.penaltyPoints.value}
               tone={
-                metrics.penaltyPoints > 0
+                metrics.penaltyPoints.value > 0
                   ? ProfileMetricTone.Negative
                   : ProfileMetricTone.Neutral
               }
-              href={
-                profile.canOpenSpynet
-                  ? `${spynetHref}/penalty-points`
-                  : undefined
-              }
+              href={metrics.penaltyPoints.href}
             />
           )}
 
-          {metrics.fleetCount !== null && (
+          {metrics.fleet && (
             <ProfileMetric
               label="Flotte"
               icon={<FaSpaceShuttle />}
-              value={metrics.fleetCount}
-              href={profile.canOpenSpynet ? `${spynetHref}/fleet` : undefined}
+              value={metrics.fleet.count}
+              href={metrics.fleet.href}
             />
           )}
         </div>

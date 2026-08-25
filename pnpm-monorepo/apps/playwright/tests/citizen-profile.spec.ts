@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import type { PrismaClient } from "@sam-monorepo/database/client";
 import { expectAuditEvents } from "../fixtures/audit";
 import {
@@ -21,11 +21,16 @@ import { expect, test } from "../fixtures/test";
 
 const NOT_SET_LABEL = "Nicht angegeben";
 
-/** Everything the profile of another citizen can show */
+/**
+ * Everything the profile of another citizen can show. The `…Transaction…`
+ * permission shows no metric of its own; it opens the Spynet page behind the
+ * SILC box.
+ */
 const FULL_VIEWER_PERMISSIONS = [
   "event;read",
   "citizen;read",
   "silcBalanceOfOtherCitizen;read",
+  "silcTransactionOfOtherCitizen;read",
   "penaltyEntry;read",
   "otherShips;read",
 ];
@@ -34,8 +39,11 @@ const FULL_VIEWER_PERMISSIONS = [
 const OWN_PROFILE_PERMISSIONS = [
   "citizen;read",
   "silcBalanceOfCurrentCitizen;read",
+  "silcTransactionOfCurrentCitizen;read",
   "ownPenaltyEntry;read",
   "ship;read",
+  /** The Spynet fleet page asks for this, also for the own fleet */
+  "otherShips;read",
 ];
 
 const timezoneSelect = (page: Page) =>
@@ -50,6 +58,22 @@ const saveButton = (page: Page) =>
  * attributes they set themselves. The counted values are seeded next to
  * deleted and expired ones, which none of the metrics may count.
  */
+/** Every metric box links to the Spynet page which holds its details */
+const expectMetricLinks = async (scope: Locator, citizenId: string) => {
+  const spynetHref = `/app/spynet/citizen/${citizenId}`;
+
+  for (const [label, subPage] of [
+    ["SILC", "silc"],
+    ["Strafpunkte", "penalty-points"],
+    ["Flotte", "fleet"],
+  ]) {
+    await expect(scope.getByRole("link", { name: label })).toHaveAttribute(
+      "href",
+      `${spynetHref}/${subPage}`,
+    );
+  }
+};
+
 const seedProfile = async (prisma: PrismaClient, citizen: Citizen) => {
   await prisma.entity.update({
     where: { id: citizen.entity.id },
@@ -247,6 +271,9 @@ test("the popover shows the profile of another citizen", async ({
   await expect(popover).toContainText("Europe/Berlin");
   await expect(popover).toContainText(/\d{2}:\d{2} Uhr/);
   await expect(popover).toContainText("24. Dezember");
+
+  /** Every metric opens its Spynet page */
+  await expectMetricLinks(popover, owner.entity.id);
 });
 
 test("the popover hides the metrics a viewer must not see", async ({
@@ -312,4 +339,33 @@ test("the dashboard tile shows the profile of the own citizen", async ({
   await expect(
     spynetSection.getByRole("link", { name: "Vollständiges Profil" }),
   ).toBeVisible();
+
+  await expectMetricLinks(spynetSection, citizen.entity.id);
+});
+
+test("the dashboard tile hides what the own permissions do not cover", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const citizen = await createCitizen(prisma, {
+    handle: "eingeschraenkter-profilinhaber",
+    /** `ship;read` shows the fleet count, `otherShips;read` opens its page */
+    permissionStrings: ["citizen;read", "ship;read"],
+  });
+  await seedProfile(prisma, citizen);
+
+  await signIn(citizen.user);
+  await page.goto("/app/dashboard");
+
+  const spynetSection = sectionByHeading(page, "Spynet");
+  await expect(spynetSection).toContainText(citizen.entity.handle!);
+  await expect(spynetSection).not.toContainText("SILC");
+  await expect(spynetSection).not.toContainText("Strafpunkte");
+
+  /** The metric shows, but it stays a plain box: its page stays closed */
+  await expect(spynetSection).toContainText("Flotte");
+  await expect(spynetSection.getByRole("link", { name: "Flotte" })).toHaveCount(
+    0,
+  );
 });

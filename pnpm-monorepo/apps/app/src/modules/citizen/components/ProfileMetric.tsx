@@ -19,8 +19,8 @@ interface Props {
   /** Second line below the value, for example the monthly SILC salary */
   readonly hint?: string;
   readonly tone?: ProfileMetricTone;
-  /** The Spynet page of the metric. Omitted when the viewer cannot open it. */
-  readonly href?: string;
+  /** The Spynet page of the metric. Null when the viewer cannot open it. */
+  readonly href: string | null;
 }
 
 /**
@@ -61,12 +61,7 @@ export const ProfileMetric = ({
   const className =
     "flex-1 min-w-0 bg-white/5 flex flex-col justify-center items-center text-center p-2 rounded-secondary font-mono";
 
-  if (!href)
-    return (
-      <span className={className} title={label}>
-        {content}
-      </span>
-    );
+  if (!href) return <span className={className}>{content}</span>;
 
   return (
     <Link

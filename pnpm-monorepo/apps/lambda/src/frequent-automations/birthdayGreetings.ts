@@ -12,8 +12,6 @@ import { shouldGreetCitizen } from "./birthdayMatching";
  * limit keep their unset marker and are greeted by one of the next runs.
  */
 const MAX_GREETINGS_PER_RUN = 100;
-/** PutEvents accepts at most 10 entries per call */
-const EVENTBRIDGE_BATCH_SIZE = 10;
 
 /**
  * Greets every citizen whose birthday starts in their own time zone. The run
@@ -72,27 +70,19 @@ export const birthdayGreetings = async () => {
       data: { birthdayGreetingSentAt: now },
     });
 
-    for (
-      let index = 0;
-      index < greetable.length;
-      index += EVENTBRIDGE_BATCH_SIZE
-    ) {
-      await emitEvents(
-        greetable
-          .slice(index, index + EVENTBRIDGE_BATCH_SIZE)
-          .map((citizen) => ({
-            Source: "frequent-automations",
-            DetailType: "NotificationRequested",
-            Detail: JSON.stringify({
-              type: "BirthdayGreeting",
-              payload: {
-                citizenId: citizen.id,
-              },
-              requestId: createId(),
-            }),
-          })),
-      );
-    }
+    await emitEvents(
+      greetable.map((citizen) => ({
+        Source: "frequent-automations",
+        DetailType: "NotificationRequested",
+        Detail: JSON.stringify({
+          type: "BirthdayGreeting",
+          payload: {
+            citizenId: citizen.id,
+          },
+          requestId: createId(),
+        }),
+      })),
+    );
 
     await createAuditEvents([
       {

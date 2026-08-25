@@ -11,7 +11,7 @@ import {
   BIRTHDAY_DAY_MIN,
   BIRTHDAY_MONTH_MAX,
   BIRTHDAY_MONTH_MIN,
-  isValidBirthday,
+  getMaximumDayOfMonth,
 } from "../utils/birthday";
 import { isSupportedTimezone, TIMEZONE_MAX_LENGTH } from "../utils/timezones";
 
@@ -64,7 +64,7 @@ export const updateMyProfile = createAuthenticatedAction(
     if (
       birthdayDay !== null &&
       birthdayMonth !== null &&
-      !isValidBirthday(birthdayDay, birthdayMonth)
+      birthdayDay > getMaximumDayOfMonth(birthdayMonth)
     )
       return {
         error: "Diesen Tag gibt es in dem gewählten Monat nicht.",

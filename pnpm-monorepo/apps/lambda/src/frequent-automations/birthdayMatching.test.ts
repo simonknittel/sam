@@ -129,6 +129,32 @@ describe("shouldGreetCitizen", () => {
     ).toBe(true);
   });
 
+  test("does not greet twice when the citizen moves across the turn of the year", () => {
+    // Greeted at the local midnight of Pacific/Kiritimati (UTC+14) …
+    const greeted = candidate({
+      timezone: "Pacific/Kiritimati",
+      birthdayDay: 1,
+      birthdayMonth: 1,
+      birthdayGreetingSentAt: new Date("2025-12-31T10:05:00Z"),
+    });
+
+    // … and the marker still falls into 2025 after a move to Europe/Berlin
+    expect(
+      shouldGreetCitizen(
+        { ...greeted, timezone: "Europe/Berlin" },
+        new Date("2026-01-01T09:00:00Z"),
+      ),
+    ).toBe(false);
+
+    // The next birthday is a year away and is greeted again
+    expect(
+      shouldGreetCitizen(
+        { ...greeted, timezone: "Europe/Berlin" },
+        new Date("2027-01-01T09:00:00Z"),
+      ),
+    ).toBe(true);
+  });
+
   test("throws for a time zone the runtime does not know", () => {
     expect(() =>
       shouldGreetCitizen(

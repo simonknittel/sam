@@ -2,25 +2,7 @@ import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { type Entity } from "@sam-monorepo/database/client";
-
-const buildExpiredWhereClause = (expired: "active" | "all") => {
-  if (expired === "active") {
-    const now = new Date();
-    return {
-      OR: [
-        {
-          expiresAt: {
-            gte: now,
-          },
-        },
-        {
-          expiresAt: null,
-        },
-      ],
-    };
-  }
-  return {};
-};
+import { buildActivePenaltyEntryWhere } from "../utils/penaltyEntryFilters";
 
 export const getEntriesOfCitizen = withTrace(
   "getEntriesOfCitizen",
@@ -39,8 +21,9 @@ export const getEntriesOfCitizen = withTrace(
     return prisma.penaltyEntry.findMany({
       where: {
         citizenId,
-        deletedAt: null,
-        ...buildExpiredWhereClause(expired),
+        ...(expired === "active"
+          ? buildActivePenaltyEntryWhere()
+          : { deletedAt: null }),
       },
       orderBy: {
         createdAt: "desc",

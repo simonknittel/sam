@@ -5,9 +5,9 @@
  */
 
 /** Citizens without a time zone are greeted at midnight in this zone. */
-export const DEFAULT_TIMEZONE = "Europe/Berlin";
+const DEFAULT_TIMEZONE = "Europe/Berlin";
 
-export interface BirthdayCandidate {
+interface BirthdayCandidate {
   readonly timezone: string | null;
   readonly birthdayDay: number | null;
   readonly birthdayMonth: number | null;
@@ -44,7 +44,7 @@ const isLeapYear = (year: number) =>
 
 const FEBRUARY = 2;
 const LEAP_DAY = 29;
-const MARCH = 1 + FEBRUARY;
+const MARCH = 3;
 const FIRST_DAY_OF_MONTH = 1;
 
 /**
@@ -65,6 +65,17 @@ const getCelebrationDate = (
 
   return { month: birthdayMonth, day: birthdayDay };
 };
+
+const MILLISECONDS_PER_HOUR = 60 * 60 * 1000;
+
+/**
+ * The greeting window of one citizen is a single local day, thus two
+ * greetings can only ever land within little more than one day of each
+ * other. This happens when the citizen moves their time zone across the turn
+ * of the year shortly after a greeting: the same marker then falls into the
+ * previous local year. A minimum distance closes that gap.
+ */
+const MINIMUM_HOURS_BETWEEN_GREETINGS = 48;
 
 /**
  * True while it is the birthday of the citizen in their time zone and they
@@ -89,6 +100,11 @@ export const shouldGreetCitizen = (
     return false;
 
   if (!candidate.birthdayGreetingSentAt) return true;
+
+  const hoursSinceGreeting =
+    (now.getTime() - candidate.birthdayGreetingSentAt.getTime()) /
+    MILLISECONDS_PER_HOUR;
+  if (hoursSinceGreeting < MINIMUM_HOURS_BETWEEN_GREETINGS) return false;
 
   return (
     getLocalDate(candidate.birthdayGreetingSentAt, timezone).year !== today.year

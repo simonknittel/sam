@@ -20,7 +20,7 @@ import {
 /** Both selects submit this when the citizen did not choose a value. */
 const NOT_SET = "";
 
-/** Group of the time zone names which have no area, for example "UTC" */
+/** Group of the time zone names which have no area, that is UTC */
 const OTHER_AREA = "Andere";
 
 interface TimezoneOption {
@@ -68,8 +68,7 @@ const TimezoneOptionGroup = ({ area, options }: TimezoneOptionGroupProps) => (
 );
 
 interface Props {
-  readonly className?: string;
-  /** The allowlist the server validates against, see `getSupportedTimezones` */
+  /** The allowlist the server validates against, see `SUPPORTED_TIMEZONES` */
   readonly timezones: readonly string[];
   readonly timezone: string | null;
   readonly birthdayDay: number | null;
@@ -77,7 +76,6 @@ interface Props {
 }
 
 export const ProfileForm = ({
-  className,
   timezones,
   timezone,
   birthdayDay,
@@ -125,7 +123,6 @@ export const ProfileForm = ({
 
   return (
     <Tile
-      className={className}
       heading="Profil"
       subheading="Diese Angaben sehen alle Citizens, die dein Profil öffnen können."
     >
