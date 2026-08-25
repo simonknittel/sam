@@ -1,8 +1,8 @@
-import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
+import { getMonthlySalaryOfRoles } from "./getMonthlySalaryOfRoles";
 
 export const getMonthlySalaryOfCurrentCitizen = cache(
   withTrace("monthlySalaryOfCurrentCitizen", async () => {
@@ -13,16 +13,10 @@ export const getMonthlySalaryOfCurrentCitizen = cache(
     )
       forbidden();
 
-    const roleSalaries = await prisma.silcRoleSalary.findMany({
-      where: {
-        roleId: {
-          in: authentication.session.entity.roleAssignments.map(
-            (assignment) => assignment.roleId,
-          ),
-        },
-      },
-    });
-
-    return roleSalaries.reduce((total, salary) => total + salary.value, 0);
+    return getMonthlySalaryOfRoles(
+      authentication.session.entity.roleAssignments.map(
+        (assignment) => assignment.roleId,
+      ),
+    );
   }),
 );

@@ -1,4 +1,4 @@
-import { getCitizenPopoverById } from "@/modules/citizen/queries/getCitizenPopoverById";
+import { getCitizenProfile } from "@/modules/citizen/queries/getCitizenProfile";
 import { log } from "@/modules/logging";
 import { TRPCError } from "@trpc/server";
 import { serializeError } from "serialize-error";
@@ -9,16 +9,16 @@ export const getCitizenById = protectedProcedure
   .input(z.object({ id: z.cuid() }))
   .query(async ({ input }) => {
     try {
-      const citizen = await getCitizenPopoverById(input.id);
+      const profile = await getCitizenProfile(input.id);
 
-      if (!citizen) {
+      if (!profile) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Citizen not found",
         });
       }
 
-      return citizen;
+      return profile;
     } catch (error) {
       log.error("Failed to fetch citizen by ID", {
         error: serializeError(error),
