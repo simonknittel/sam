@@ -61,6 +61,27 @@ export const getRolesWithPermissionStrings = cache(
 );
 
 /**
+ * The inheritance matrix: the role link column plus the ids of the roles
+ * behind its checkboxes. The same role list carries the rows and the
+ * columns, so both axes always agree on the order.
+ */
+export const getRolesWithInheritance = cache(
+  withTrace("getRolesWithInheritance", async () =>
+    prisma.role.findMany({
+      orderBy: {
+        name: "asc",
+      },
+      select: {
+        id: true,
+        name: true,
+        icon: { select: { id: true, mimeType: true } },
+        inherits: { select: { id: true } },
+      },
+    }),
+  ),
+);
+
+/**
  * The role administration table: its own columns plus the two relation
  * counts it filters and sorts by. Counting in SQL keeps the assignment rows
  * of every citizen out of the page.

@@ -258,3 +258,63 @@ test("the permission matrix grants a permission with a single checkbox", async (
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
 });
+
+test("the inheritance matrix wires two roles together with a single checkbox", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "iam-admin",
+    permissionStrings: ["role;manage", "otherRole;read;roleId=*"],
+  });
+  const member = await createCitizen(prisma, { handle: "task-worker" });
+  const taskRole = await createRole(prisma, {
+    name: "Aufgabenleser",
+    permissionStrings: ["task;read"],
+  });
+
+  await signIn(admin.user);
+  await page.goto("/app/iam/inheritance-matrix");
+  await waitForAppShellHydration(page);
+
+  /**
+   * The matrix has no visible labels — its checkboxes carry the inheriting
+   * and the inherited role in the name the form submits.
+   */
+  const cell = page.locator(`input[name="${member.role.id}_${taskRole.id}"]`);
+  await toggleLabel(page, cell).click();
+  await expect(cell).toBeChecked();
+
+  const inheritedRoleIds = () =>
+    prisma.role
+      .findUniqueOrThrow({
+        where: { id: member.role.id },
+        select: { inherits: { select: { id: true } } },
+      })
+      .then(({ inherits }) => inherits.map(({ id }) => id));
+
+  await expect
+    .poll(inheritedRoleIds, { timeout: ACTION_FEEDBACK_TIMEOUT })
+    .toEqual([taskRole.id]);
+
+  /** The per-role tab is the second edit surface and must agree */
+  await page.goto(`/app/roles/${member.role.id}/inheritance`);
+  await expect(page.locator(`input[value="${taskRole.id}"]`)).toBeChecked();
+
+  /** Unchecking the same cell takes the inheritance away again */
+  await page.goto("/app/iam/inheritance-matrix");
+  await waitForAppShellHydration(page);
+  await toggleLabel(page, cell).click();
+  await expect(cell).not.toBeChecked();
+  await expect
+    .poll(inheritedRoleIds, { timeout: ACTION_FEEDBACK_TIMEOUT })
+    .toEqual([]);
+
+  /** A role cannot inherit itself, thus the diagonal carries no control */
+  await expect(
+    page.locator(`input[name="${member.role.id}_${member.role.id}"]`),
+  ).toHaveCount(0);
+
+  await expectAuditEvents(prisma, ["ROLE_INHERITANCE_TOGGLED"]);
+});

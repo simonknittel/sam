@@ -1,13 +1,12 @@
 "use client";
 
 import { runAction } from "@/modules/actions/utils/runAction";
-import { Link } from "@/modules/common/components/Link";
-import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
 import type { Role, Upload } from "@sam-monorepo/database/browser";
-import Image from "next/image";
 import type { ChangeEventHandler } from "react";
 import { updateSingleRolePermission } from "../actions/updateSingleRolePermission";
 import { STATIC_PERMISSIONS } from "../utils/STATIC_PERMISSIONS";
+import { MatrixCell } from "./MatrixCell";
+import { MatrixRoleCell } from "./MatrixRoleCell";
 
 interface MatrixRole extends Readonly<Pick<Role, "id" | "name">> {
   readonly icon: Pick<Upload, "id" | "mimeType"> | null;
@@ -118,33 +117,7 @@ const MatrixRow = ({ role }: MatrixRowProps) => {
         gridTemplateColumns,
       }}
     >
-      <td className="h-8 overflow-hidden sticky -left-2 z-10 bg-secondary rounded-secondary">
-        <Link
-          href={`/app/roles/${role.id}`}
-          className="flex items-center gap-2 hover:bg-neutral-800 px-2 rounded-secondary h-full"
-          prefetch={false}
-        >
-          {role.icon ? (
-            <div className="aspect-square size-4 flex items-center justify-center rounded-secondary overflow-hidden flex-none">
-              <Image
-                src={getPublicUploadUrl(role.icon.id)}
-                alt=""
-                width={16}
-                height={16}
-                className="max-w-full max-h-full"
-                unoptimized={["image/svg+xml", "image/gif"].includes(
-                  role.icon.mimeType,
-                )}
-                loading="lazy"
-              />
-            </div>
-          ) : (
-            <div className="size-4 flex-none" />
-          )}
-
-          <p className="truncate text-sm">{role.name}</p>
-        </Link>
-      </td>
+      <MatrixRoleCell role={role} href={`/app/roles/${role.id}`} />
 
       {permissions.map((permission) => (
         <MatrixCell
@@ -155,34 +128,5 @@ const MatrixRow = ({ role }: MatrixRowProps) => {
         />
       ))}
     </tr>
-  );
-};
-
-interface MatrixCellProps {
-  readonly name: string;
-  readonly label: string;
-  readonly defaultChecked: boolean;
-}
-
-/**
- * A deliberately minimal checkbox: the matrix renders thousands of these
- * cells, so every element and every attribute byte counts. The styles and
- * the states live in the permission-matrix-cell utility, and the label
- * and title name the cell, which the matrix cannot do visually.
- */
-const MatrixCell = ({ name, label, defaultChecked }: MatrixCellProps) => {
-  return (
-    <td>
-      <label className="permission-matrix-cell" title={label}>
-        <input
-          type="checkbox"
-          className="sr-only"
-          name={name}
-          defaultChecked={defaultChecked}
-          aria-label={label}
-        />
-        <span />
-      </label>
-    </td>
   );
 };

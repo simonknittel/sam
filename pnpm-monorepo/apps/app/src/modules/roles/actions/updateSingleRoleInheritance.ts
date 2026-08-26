@@ -9,19 +9,21 @@ import { z } from "zod";
 
 const schema = z
   .object({
-    id: z.cuid(),
-    roles: z.array(z.cuid()).max(250), // Arbitrary (untested) limit to prevent DDoS
+    roleId: z.cuid(),
+    inheritedRoleId: z.cuid(),
+    checked: z.coerce.boolean().default(false),
   })
   /**
-   * A role that inherits itself adds nothing. The form leaves the role out
-   * of its own list, and the database rejects the row either way.
+   * A role that inherits itself adds nothing. The matrix leaves the diagonal
+   * without a checkbox, the database rejects the row, and this keeps the
+   * action from writing an audit event for a write that cannot happen.
    */
-  .refine((data) => !data.roles.includes(data.id), {
+  .refine((data) => data.roleId !== data.inheritedRoleId, {
     error: "A role cannot inherit itself",
   });
 
-export const updateRoleInheritance = createAuthenticatedAction(
-  "updateRoleInheritance",
+export const updateSingleRoleInheritance = createAuthenticatedAction(
+  "updateSingleRoleInheritance",
   schema,
   async (formData, authentication, data, t) => {
     if (!(await authentication.authorize("role", "manage")))
@@ -30,39 +32,27 @@ export const updateRoleInheritance = createAuthenticatedAction(
         requestPayload: formData,
       };
 
-    const role = await prisma.role.findUnique({
-      where: {
-        id: data.id,
-      },
-      select: {
-        id: true,
-      },
-    });
-    if (!role)
-      return {
-        error: t("Common.notFound"),
-        requestPayload: formData,
-      };
-
     /**
      * Update role
      */
     await prisma.role.update({
       where: {
-        id: data.id,
+        id: data.roleId,
       },
       data: {
-        inherits: {
-          set: data.roles.map((id) => ({ id })),
-        },
+        inherits: data.checked
+          ? { connect: { id: data.inheritedRoleId } }
+          : { disconnect: { id: data.inheritedRoleId } },
       },
     });
 
     await createAuditEvents([
       {
-        type: AuditEventType.ROLE_INHERITANCE_UPDATED,
+        type: AuditEventType.ROLE_INHERITANCE_TOGGLED,
         data: {
-          roleId: data.id,
+          roleId: data.roleId,
+          inheritedRoleId: data.inheritedRoleId,
+          enabled: data.checked,
         },
         createdById: authentication.session.user.id,
       },
@@ -71,8 +61,7 @@ export const updateRoleInheritance = createAuthenticatedAction(
     /**
      * Revalidate cache(s)
      */
-    revalidatePath(`/app/roles/${data.id}`);
-    revalidatePath(`/app/roles/${data.id}/inheritance`);
+    revalidatePath(`/app/roles/${data.roleId}/inheritance`);
     revalidatePath("/app/iam/inheritance-matrix");
 
     /**
@@ -81,11 +70,5 @@ export const updateRoleInheritance = createAuthenticatedAction(
     return {
       success: t("Common.successfullySaved"),
     };
-  },
-  {
-    parseFormData: (formData) => ({
-      id: formData.get("id"),
-      roles: formData.getAll("roles"),
-    }),
   },
 );

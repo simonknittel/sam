@@ -458,6 +458,17 @@ export const AuditEventDefinitions: {
     message: (data) => `Role inheritance updated for role ${data.roleId}`,
   },
 
+  [AuditEventType.ROLE_INHERITANCE_TOGGLED]: {
+    type: AuditEventType.ROLE_INHERITANCE_TOGGLED,
+    data: {
+      roleId: "string",
+      inheritedRoleId: "string",
+      enabled: true,
+    },
+    message: (data) =>
+      `Inheritance of role ${data.inheritedRoleId} ${data.enabled ? "enabled" : "disabled"} for role ${data.roleId}`,
+  },
+
   [AuditEventType.ROLE_ASSIGNMENTS_UPDATED]: {
     type: AuditEventType.ROLE_ASSIGNMENTS_UPDATED,
     data: {

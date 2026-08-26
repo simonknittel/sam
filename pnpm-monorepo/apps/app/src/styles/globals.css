@@ -108,15 +108,16 @@
 }
 
 /**
- * One checkbox cell of the permission matrix: a label that wraps a
- * visually hidden input and one span, which draws the box and the check.
- * A single utility instead of per-element Tailwind classes on purpose —
- * the matrix repeats this markup more than ten thousand times, and the
- * class strings dominated the size of the served page. The check mark is
- * a CSS mask with react-icons' FaCheck path, so the shape agrees with
- * the YesNoCheckbox icon; 1.5rem agrees with its size-6 icon.
+ * One checkbox cell of the permission matrix and of the inheritance
+ * matrix: a label that wraps a visually hidden input and one span, which
+ * draws the box and the check. A single utility instead of per-element
+ * Tailwind classes on purpose — each matrix repeats this markup more than
+ * ten thousand times, and the class strings dominated the size of the
+ * served page. The check mark is a CSS mask with react-icons' FaCheck
+ * path, so the shape agrees with the YesNoCheckbox icon; 1.5rem agrees
+ * with its size-6 icon.
  */
-@utility permission-matrix-cell {
+@utility matrix-cell {
   display: flex;
   cursor: pointer;
 
@@ -153,6 +154,19 @@
     outline: 1px solid currentColor;
     outline-offset: 1px;
   }
+}
+
+/**
+ * A cell which carries no control, for a combination the matrix forbids
+ * (a role inheriting itself). It repeats the box of matrix-cell so the two
+ * always agree on the size of a cell, and only the darker fill sets it
+ * apart as unavailable.
+ */
+@utility matrix-cell-blocked {
+  width: --spacing(8);
+  height: --spacing(8);
+  border-radius: var(--radius-secondary);
+  background-color: var(--color-neutral-800);
 }
 
 @utility prose {

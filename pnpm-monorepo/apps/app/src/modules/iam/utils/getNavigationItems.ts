@@ -20,6 +20,10 @@ export const getNavigationItems = createNavigationItems(
           title: "Berechtigungsmatrix",
           url: "/app/iam/permission-matrix",
         },
+        {
+          title: "Vererbungsmatrix",
+          url: "/app/iam/inheritance-matrix",
+        },
       );
     }
 
