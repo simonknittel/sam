@@ -6,8 +6,8 @@ import { FlushOnRootSpanEndProcessor } from "./FlushOnRootSpanEndProcessor";
 const createWrappedProcessor = () => ({
   onStart: vi.fn(),
   onEnd: vi.fn(),
-  forceFlush: vi.fn(async () => undefined),
-  shutdown: vi.fn(async () => undefined),
+  forceFlush: vi.fn(() => Promise.resolve()),
+  shutdown: vi.fn(() => Promise.resolve()),
 });
 
 const createSpan = (parentSpanContext?: Partial<SpanContext>) =>
@@ -31,7 +31,7 @@ describe("FlushOnRootSpanEndProcessor", () => {
 
   it("flushes when a span without a parent ends", () => {
     const wrappedProcessor = createWrappedProcessor();
-    const logRecordProcessor = { forceFlush: vi.fn(async () => undefined) };
+    const logRecordProcessor = { forceFlush: vi.fn(() => Promise.resolve()) };
     const processor = new FlushOnRootSpanEndProcessor(wrappedProcessor, [
       logRecordProcessor,
     ]);

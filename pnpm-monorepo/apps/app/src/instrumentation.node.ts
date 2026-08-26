@@ -14,11 +14,15 @@ import { BatchLogRecordProcessor } from "@opentelemetry/sdk-logs";
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import {
   BatchSpanProcessor,
+  ParentBasedSampler,
   SamplingDecision,
   type Sampler,
   type SamplingResult,
 } from "@opentelemetry/sdk-trace-node";
-import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
+import {
+  ATTR_SERVICE_NAME,
+  ATTR_URL_PATH,
+} from "@opentelemetry/semantic-conventions";
 import { PrismaInstrumentation } from "@prisma/instrumentation";
 import { env } from "./env";
 import { FlushOnRootSpanEndProcessor } from "./modules/tracing/utils/FlushOnRootSpanEndProcessor";
@@ -33,7 +37,10 @@ const resource = resourceFromAttributes({
   [ATTR_SERVICE_NAME]: "sam",
 });
 
-class MySampler implements Sampler {
+/** Vercel requests this path to keep the function warm. */
+const PING_PATH = "/_vercel/ping";
+
+class IgnorePingSampler implements Sampler {
   shouldSample(
     context: Context,
     traceId: string,
@@ -43,14 +50,14 @@ class MySampler implements Sampler {
   ): SamplingResult {
     return {
       decision:
-        attributes["http.target"] === "/_vercel/ping"
+        attributes[ATTR_URL_PATH] === PING_PATH
           ? SamplingDecision.NOT_RECORD
           : SamplingDecision.RECORD_AND_SAMPLED,
     };
   }
 
   toString(): string {
-    return "My Sampler";
+    return "IgnorePingSampler";
   }
 }
 
@@ -76,10 +83,16 @@ const sdk = new NodeSDK({
   ],
   logRecordProcessors: [logRecordProcessor],
   instrumentations: [
-    getNodeAutoInstrumentations(),
+    getNodeAutoInstrumentations({
+      // Prisma instruments the same queries and its spans carry the SQL, thus
+      // the spans of the driver only double the volume of each trace.
+      "@opentelemetry/instrumentation-pg": { enabled: false },
+    }),
     new PrismaInstrumentation(),
   ],
-  sampler: new MySampler(),
+  // Only the root span of a request carries the path. The wrapper hands the
+  // decision of the root to all children, thus a ping creates no span at all.
+  sampler: new ParentBasedSampler({ root: new IgnorePingSampler() }),
 });
 
 sdk.start();
