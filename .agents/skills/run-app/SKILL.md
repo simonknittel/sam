@@ -42,7 +42,9 @@ the parts that are intentionally manual.
 The app is a Next.js app at `pnpm-monorepo/apps/app` (package
 `@sam-monorepo/app`). `compose.yml` at the repo root defines `psql` (Postgres),
 `soketi` (websockets), `sam-collab` (wiki realtime backend), `rustfs`
-(S3-compatible upload storage) and `unleash` (feature flags). The one-shot
+(S3-compatible upload storage), `unleash` (feature flags) and
+`otel-collector` (headless OpenTelemetry sink, see
+`docs/setup-local-machine.md`). The one-shot
 `rustfs-bootstrap` and `unleash-bootstrap` services create the bucket —
 together with the anonymous-read policy and the CORS rules — and the flags of
 the app, all disabled.
@@ -53,10 +55,11 @@ checkout directory, thus the container sets never collide — only the host
 ports must differ. Always run `docker compose` from the root of the checkout
 that you want to address.
 
-`compose.yml` declares no named volumes, thus the data of each stack lives
-inside its own `psql` container. Two consequences: a fresh worktree stack
-starts with an EMPTY database, and a recreation of the `psql` container of
-the main checkout destroys the only copy of the dev data.
+The database has no named volume, thus the data of each stack lives inside
+its own `psql` container. Two consequences: a fresh worktree stack starts
+with an EMPTY database, and a recreation of the `psql` container of the main
+checkout destroys the only copy of the dev data. (The one named volume,
+`otel-collector-output`, holds throw-away telemetry.)
 
 ### Port slots
 
@@ -74,6 +77,7 @@ defaults apply.
 | collab (wiki)      | 5210          | 5210 + N |
 | rustfs S3          | 9000          | 9000 + N |
 | unleash flags      | 4242          | 4242 + N |
+| otel collector     | 4318          | 4318 + N |
 
 `NEXTAUTH_URL` is pinned to the port of the dev server, thus auth breaks if
 Next moves to the next free port. Therefore the script refuses to continue

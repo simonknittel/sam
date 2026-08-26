@@ -155,6 +155,33 @@ services:
     ports:
       - ${SAM_COLLAB_PORT:-5210}:5210
 
+  # Headless OpenTelemetry collector for local tracing work (see
+  # docs/setup-local-machine.md for the app-side environment variables). It
+  # receives OTLP over HTTP and writes everything it receives to files inside
+  # the otel-collector-output volume; scripts/check-telemetry-export.mjs reads
+  # them. There is no UI. Without the OTEL_* variables, the app sends nothing
+  # and the container idles.
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.159.0@sha256:1f2c54a30e713fac6b3ae77a1ec84010c2007e29ced8ec666214fc2f6739c1cc
+    restart: no
+    # The image runs as uid 10001, which cannot write to the volume below: a
+    # named volume of a path that the image does not contain belongs to root.
+    # This container is local-only and holds no data of value.
+    user: "0:0"
+    configs:
+      - source: otel-collector-config
+        target: /etc/otelcol-contrib/config.yaml
+    volumes:
+      - otel-collector-output:/output
+    ports:
+      - ${SAM_OTEL_COLLECTOR_PORT:-4318}:4318
+
+volumes:
+  # Holds the received telemetry. The file exporter truncates both files on
+  # every start of the container, thus `docker compose restart otel-collector`
+  # is the way to begin a clean measurement.
+  otel-collector-output:
+
 configs:
   psql-create-unleash-db:
     content: |
@@ -221,3 +248,33 @@ configs:
           }
         ]
       }
+
+  # Everything that arrives goes into a file, unchanged: one JSON line per
+  # received OTLP request. `append: false` truncates the file when the
+  # container starts.
+  otel-collector-config:
+    content: |
+      receivers:
+        otlp:
+          protocols:
+            http:
+              endpoint: 0.0.0.0:4318
+
+      exporters:
+        file/traces:
+          path: /output/traces.jsonl
+          append: false
+          flush_interval: 1s
+        file/logs:
+          path: /output/logs.jsonl
+          append: false
+          flush_interval: 1s
+
+      service:
+        pipelines:
+          traces:
+            receivers: [otlp]
+            exporters: [file/traces]
+          logs:
+            receivers: [otlp]
+            exporters: [file/logs]

@@ -57,6 +57,38 @@ enum in the disabled state. Toggle the flags in the Unleash admin UI at
 variables to any Unleash-compatible provider (for example GitLab feature
 flags).
 
+### Tracing and logs (OpenTelemetry)
+
+The app sends spans and log records over OTLP when
+`ENABLE_INSTRUMENTATION`, `OTEL_EXPORTER_OTLP_PROTOCOL` and
+`OTEL_EXPORTER_OTLP_ENDPOINT` are all set (see the comments in
+`pnpm-monorepo/apps/app/.env.example`). Without these variables, the app
+creates no spans and sends no log records. Deployments send to Grafana
+Cloud; locally, the `otel-collector` container from
+[compose.yml](../compose.yml) receives the data.
+
+The container has no user interface. It writes every received OTLP request
+as one JSON line to `/output/traces.jsonl` and `/output/logs.jsonl` in its
+volume. This script copies the files out of the container and examines
+them:
+
+```sh
+node scripts/check-telemetry-export.mjs
+```
+
+It prints the number of spans of each trace, the span names and the
+received log records. It fails when a span references a parent span that
+the collector never received. Such an orphan span is the symptom of an
+export problem: a trace viewer cannot find the parent and shows the span at
+the root of the trace.
+
+The two files only grow. To begin a clean measurement, restart the
+container — this truncates them:
+
+```sh
+docker compose restart otel-collector
+```
+
 ### Embedded app authentication
 
 External apps embedded under `/app/external/…` can receive a signed JWT
@@ -85,8 +117,9 @@ production token. Deployments read the variable from Vercel (see
 - You can override the host ports of the Docker services, so that multiple
   checkouts (for example git worktrees) can run their stacks at the same
   time. Set `SAM_PSQL_PORT`, `SAM_SOKETI_PORT`, `SAM_SOKETI_METRICS_PORT`,
-  `SAM_COLLAB_PORT`, `SAM_RUSTFS_PORT` and/or `SAM_UNLEASH_PORT` in a
-  gitignored `.env` file next to [compose.yml](../compose.yml).
+  `SAM_COLLAB_PORT`, `SAM_RUSTFS_PORT`, `SAM_UNLEASH_PORT` and/or
+  `SAM_OTEL_COLLECTOR_PORT` in a gitignored `.env` file next to
+  [compose.yml](../compose.yml).
 
 ## Bot invite link with required scopes
 
