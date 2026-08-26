@@ -58,6 +58,11 @@ interface CreateCitizenOptions {
   readonly permissionStrings?: readonly string[];
   /** Grants the all-permissions override once enableAdminMode() is used. */
   readonly admin?: boolean;
+  /**
+   * When the citizen confirmed their email. Features which treat older
+   * content as not new to a citizen (the changelog) read this.
+   */
+  readonly emailVerified?: Date;
 }
 
 /**
@@ -67,7 +72,12 @@ interface CreateCitizenOptions {
  */
 export const createCitizen = async (
   prisma: PrismaClient,
-  { handle, permissionStrings = [], admin = false }: CreateCitizenOptions,
+  {
+    handle,
+    permissionStrings = [],
+    admin = false,
+    emailVerified = new Date(),
+  }: CreateCitizenOptions,
 ): Promise<Citizen> => {
   const suffix = randomUUID().slice(0, 8);
   const discordId = randomUUID();
@@ -76,7 +86,7 @@ export const createCitizen = async (
     data: {
       name: handle,
       email: `${handle}-${suffix}@example.com`,
-      emailVerified: new Date(),
+      emailVerified,
       role: admin ? "admin" : null,
       accounts: {
         create: {
