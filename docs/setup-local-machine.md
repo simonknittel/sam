@@ -60,9 +60,8 @@ flags).
 ### Tracing and logs (OpenTelemetry)
 
 The app sends spans and log records over OTLP when
-`ENABLE_INSTRUMENTATION`, `OTEL_EXPORTER_OTLP_PROTOCOL` and
-`OTEL_EXPORTER_OTLP_ENDPOINT` are all set (see the comments in
-`pnpm-monorepo/apps/app/.env.example`). Without these variables, the app
+`ENABLE_INSTRUMENTATION` and the `OTEL_EXPORTER_OTLP_*` variables from
+`pnpm-monorepo/apps/app/.env.example` are all set. Without them, the app
 creates no spans and sends no log records. A deployment sends the data to
 the endpoint of its own variables; locally, the `otel-collector` container
 from [compose.yml](../compose.yml) receives it.
@@ -81,8 +80,7 @@ received log records. It fails when a span references a parent span that
 the collector never received. Such an orphan span is the symptom of an
 export problem: a trace viewer cannot find the parent and shows the span at
 the root of the trace. Wait some seconds after the last request before you
-run the check — a few spans of the framework end after the response and
-leave the app with the next scheduled batch.
+run the check.
 
 The files only grow. To begin a clean measurement, restart the container —
 this truncates them:

@@ -156,11 +156,8 @@ services:
       - ${SAM_COLLAB_PORT:-5210}:5210
 
   # Headless OpenTelemetry collector for local tracing work (see
-  # docs/setup-local-machine.md for the app-side environment variables). It
-  # receives OTLP over HTTP and writes everything it receives to files inside
-  # the otel-collector-output volume; scripts/check-telemetry-export.mjs reads
-  # them. There is no UI. Without the OTEL_* variables, the app sends nothing
-  # and the container idles.
+  # docs/setup-local-machine.md). Without the OTEL_* variables of the app, it
+  # receives nothing and idles.
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.159.0@sha256:1f2c54a30e713fac6b3ae77a1ec84010c2007e29ced8ec666214fc2f6739c1cc
     restart: no
@@ -177,9 +174,7 @@ services:
       - ${SAM_OTEL_COLLECTOR_PORT:-4318}:4318
 
 volumes:
-  # Holds the received telemetry. The file exporter truncates both files on
-  # every start of the container, thus `docker compose restart otel-collector`
-  # is the way to begin a clean measurement.
+  # Holds the received telemetry (see docs/setup-local-machine.md).
   otel-collector-output:
 
 configs:
@@ -250,8 +245,8 @@ configs:
       }
 
   # Everything that arrives goes into a file, unchanged: one JSON line per
-  # received OTLP request. `append: false` truncates the file when the
-  # container starts.
+  # received OTLP request. The file exporter truncates its file when the
+  # container starts, which is how a measurement begins clean.
   otel-collector-config:
     content: |
       receivers:
@@ -263,16 +258,10 @@ configs:
       exporters:
         file/traces:
           path: /output/traces.jsonl
-          append: false
-          flush_interval: 1s
         file/logs:
           path: /output/logs.jsonl
-          append: false
-          flush_interval: 1s
         file/metrics:
           path: /output/metrics.jsonl
-          append: false
-          flush_interval: 1s
 
       service:
         pipelines:
