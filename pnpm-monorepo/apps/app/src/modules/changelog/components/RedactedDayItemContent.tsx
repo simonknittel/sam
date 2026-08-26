@@ -1,16 +1,10 @@
 import { LOREM_IPSUM_PLACEHOLDER } from "@/modules/common/utils/loremIpsumPlaceholder";
 import { random } from "lodash";
 
-export const RedactedDayItem = () => {
+export const RedactedDayItemContent = () => {
   return (
-    <li className="border-l-2 border-neutral-800/80 pl-5 relative py-3 pr-3">
-      <strong className="block font-bold font-mono uppercase">
-        Lorem ipsum
-      </strong>
-
-      <div className="mt-1 flex flex-col gap-2">
-        <p>{LOREM_IPSUM_PLACEHOLDER}</p>
-      </div>
+    <>
+      <p>{LOREM_IPSUM_PLACEHOLDER}</p>
 
       <div className="absolute inset-0 flex items-center justify-center backdrop-blur-sm">
         <p
@@ -23,6 +17,6 @@ export const RedactedDayItem = () => {
           Redacted
         </p>
       </div>
-    </li>
+    </>
   );
 };

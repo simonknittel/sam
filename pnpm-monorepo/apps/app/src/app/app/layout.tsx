@@ -7,6 +7,7 @@ import { requireAuthenticationPage } from "@/modules/auth/server";
 import { getAssumedUserLabel } from "@/modules/auth/utils/getAssumedUserLabel";
 import { hasAnyReadableFlow } from "@/modules/career/queries/getMyReadableFlows";
 import { getUnseenChangelogEntryKeys } from "@/modules/changelog/queries/getUnseenChangelogEntryKeys";
+import { CHANGELOG_APP_SLUG } from "@/modules/changelog/utils/CHANGELOG_APP_SLUG";
 import { CreateContextProvider } from "@/modules/common/components/CreateContext";
 import { NewReleaseToast } from "@/modules/common/components/NewReleaseToast";
 import QueryClientProviderContainer from "@/modules/common/components/QueryClientProviderContainer";
@@ -71,7 +72,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
                       <AppsContextProvider
                         apps={apps}
                         appDotBadgeCounts={{
-                          changelog: changelogUnseenKeys.size,
+                          [CHANGELOG_APP_SLUG]: changelogUnseenKeys.size,
                           wiki: openWikiReportCount,
                         }}
                         favoriteAppKeys={[...favoriteAppKeys]}
