@@ -6,27 +6,28 @@ import type {
 } from "@opentelemetry/sdk-trace-node";
 
 /**
- * Anything which holds telemetry back and can send it before its own
- * schedule, for example a `BatchLogRecordProcessor`.
- */
-interface Flushable {
-  forceFlush: () => Promise<void>;
-}
-
-/**
- * Sends the telemetry which is on hold as soon as a root span ends, thus at
- * the end of a request. The serverless function of a deployment freezes
- * directly after the response, usually before the next scheduled send. All
- * other calls go to the wrapped span processor without a change.
+ * Sends the spans which are on hold as soon as a root span ends, thus at the
+ * end of a request. Without this, the serverless function of a deployment
+ * freezes after the response and the spans of the request wait in the buffer
+ * until the function operates again.
+ *
+ * The send starts before the freeze, but nothing keeps the function alive
+ * until it is complete: `after()` of Next.js does that, and it refuses a call
+ * from here, because `onEnd` runs outside the scope of the request. Spans
+ * which end after the root span thus stay on hold — see the note about
+ * `scheduledDelayMillis` in instrumentation.node.ts.
+ *
+ * All calls go to the wrapped span processor without a change.
  */
 export class FlushOnRootSpanEndProcessor implements SpanProcessor {
-  constructor(
-    private readonly spanProcessor: SpanProcessor,
-    private readonly additionalFlushTargets: readonly Flushable[] = [],
-  ) {}
+  constructor(private readonly spanProcessor: SpanProcessor) {}
 
   onStart(span: Span, parentContext: Context): void {
     this.spanProcessor.onStart(span, parentContext);
+  }
+
+  onEnding(span: Span): void {
+    this.spanProcessor.onEnding?.(span);
   }
 
   onEnd(span: ReadableSpan): void {
@@ -38,27 +39,20 @@ export class FlushOnRootSpanEndProcessor implements SpanProcessor {
 
     // `onEnd` is synchronous and in the hot path of the request, thus the
     // flush must neither be awaited nor let an error through.
-    try {
-      void this.forceFlush().catch(logFlushError);
-    } catch (error) {
-      logFlushError(error);
-    }
+    void this.forceFlush().catch((error: unknown) => {
+      diag.warn(
+        `Flushing the spans of a finished root span failed: ${String(error)}`,
+      );
+    });
   }
 
-  forceFlush(): Promise<void> {
-    return Promise.all([
-      this.spanProcessor.forceFlush(),
-      ...this.additionalFlushTargets.map((target) => target.forceFlush()),
-    ]).then(() => undefined);
+  // `async` and not a plain delegation, so that a wrapped processor which
+  // throws immediately also becomes a rejected promise for `onEnd`.
+  async forceFlush(): Promise<void> {
+    await this.spanProcessor.forceFlush();
   }
 
   shutdown(): Promise<void> {
     return this.spanProcessor.shutdown();
   }
 }
-
-const logFlushError = (error: unknown) => {
-  diag.warn(
-    `Flushing the telemetry of a finished root span failed: ${String(error)}`,
-  );
-};

@@ -5,6 +5,7 @@ import { FlushOnRootSpanEndProcessor } from "./FlushOnRootSpanEndProcessor";
 
 const createWrappedProcessor = () => ({
   onStart: vi.fn(),
+  onEnding: vi.fn(),
   onEnd: vi.fn(),
   forceFlush: vi.fn(() => Promise.resolve()),
   shutdown: vi.fn(() => Promise.resolve()),
@@ -21,25 +22,25 @@ describe("FlushOnRootSpanEndProcessor", () => {
     const context = {} as Context;
 
     processor.onStart(span as unknown as Span, context);
+    processor.onEnding(span as unknown as Span);
     processor.onEnd(span);
+    await processor.forceFlush();
     await processor.shutdown();
 
     expect(wrappedProcessor.onStart).toHaveBeenCalledWith(span, context);
+    expect(wrappedProcessor.onEnding).toHaveBeenCalledWith(span);
     expect(wrappedProcessor.onEnd).toHaveBeenCalledWith(span);
+    expect(wrappedProcessor.forceFlush).toHaveBeenCalledOnce();
     expect(wrappedProcessor.shutdown).toHaveBeenCalledOnce();
   });
 
   it("flushes when a span without a parent ends", () => {
     const wrappedProcessor = createWrappedProcessor();
-    const logRecordProcessor = { forceFlush: vi.fn(() => Promise.resolve()) };
-    const processor = new FlushOnRootSpanEndProcessor(wrappedProcessor, [
-      logRecordProcessor,
-    ]);
+    const processor = new FlushOnRootSpanEndProcessor(wrappedProcessor);
 
     processor.onEnd(createSpan());
 
     expect(wrappedProcessor.forceFlush).toHaveBeenCalledOnce();
-    expect(logRecordProcessor.forceFlush).toHaveBeenCalledOnce();
   });
 
   it("flushes when a span with a remote parent ends", () => {

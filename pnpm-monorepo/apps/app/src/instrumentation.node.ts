@@ -48,9 +48,13 @@ class IgnorePingSampler implements Sampler {
     spanKind: SpanKind,
     attributes: Attributes,
   ): SamplingResult {
+    // The HTTP instrumentation uses the stable attribute; the tracer of
+    // Next.js, which makes its own root spans, still uses the legacy one.
+    const path = attributes[ATTR_URL_PATH] ?? attributes["http.target"];
+
     return {
       decision:
-        attributes[ATTR_URL_PATH] === PING_PATH
+        path === PING_PATH
           ? SamplingDecision.NOT_RECORD
           : SamplingDecision.RECORD_AND_SAMPLED,
     };
@@ -61,27 +65,30 @@ class IgnorePingSampler implements Sampler {
   }
 }
 
-const logRecordProcessor = new BatchLogRecordProcessor({
-  exporter: new OTLPLogExporter({
-    url: `${env.OTEL_EXPORTER_OTLP_ENDPOINT}/v1/logs`,
-  }),
-});
-
 const sdk = new NodeSDK({
   resource,
   spanProcessors: [
-    // One request creates hundreds of spans, and a per-span export discards
-    // whichever span ends while 30 sends are already in flight.
     new FlushOnRootSpanEndProcessor(
+      // One request creates hundreds of spans, and a per-span export discards
+      // whichever span ends while 30 sends are already in flight.
       new BatchSpanProcessor(
         new OTLPTraceExporter({
           url: `${env.OTEL_EXPORTER_OTLP_ENDPOINT}/v1/traces`,
         }),
+        // Some spans of Next.js end after the root span, thus after the flush
+        // of the request. The default of 5 seconds keeps them on hold long
+        // enough for a freeze of the function to catch them.
+        { scheduledDelayMillis: 1000 },
       ),
-      [logRecordProcessor],
     ),
   ],
-  logRecordProcessors: [logRecordProcessor],
+  logRecordProcessors: [
+    new BatchLogRecordProcessor({
+      exporter: new OTLPLogExporter({
+        url: `${env.OTEL_EXPORTER_OTLP_ENDPOINT}/v1/logs`,
+      }),
+    }),
+  ],
   instrumentations: [
     getNodeAutoInstrumentations({
       // Prisma instruments the same queries and its spans carry the SQL, thus
@@ -92,7 +99,12 @@ const sdk = new NodeSDK({
   ],
   // Only the root span of a request carries the path. The wrapper hands the
   // decision of the root to all children, thus a ping creates no span at all.
-  sampler: new ParentBasedSampler({ root: new IgnorePingSampler() }),
+  // A caller which sends a sampled traceparent must not lift the filter,
+  // therefore the same sampler also decides for a remote parent.
+  sampler: new ParentBasedSampler({
+    root: new IgnorePingSampler(),
+    remoteParentSampled: new IgnorePingSampler(),
+  }),
 });
 
 sdk.start();
