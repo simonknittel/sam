@@ -68,9 +68,9 @@ Cloud; locally, the `otel-collector` container from
 [compose.yml](../compose.yml) receives the data.
 
 The container has no user interface. It writes every received OTLP request
-as one JSON line to `/output/traces.jsonl` and `/output/logs.jsonl` in its
-volume. This script copies the files out of the container and examines
-them:
+as one JSON line to `/output/traces.jsonl`, `/output/logs.jsonl` and
+`/output/metrics.jsonl` in its volume. This script copies the traces and the
+log records out of the container and examines them:
 
 ```sh
 node scripts/check-telemetry-export.mjs
@@ -84,8 +84,8 @@ the root of the trace. Wait some seconds after the last request before you
 run the check — a few spans of the framework end after the response and
 leave the app with the next scheduled batch.
 
-The two files only grow. To begin a clean measurement, restart the
-container — this truncates them:
+The files only grow. To begin a clean measurement, restart the container —
+this truncates them:
 
 ```sh
 docker compose restart otel-collector

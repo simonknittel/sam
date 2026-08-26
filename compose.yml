@@ -269,6 +269,10 @@ configs:
           path: /output/logs.jsonl
           append: false
           flush_interval: 1s
+        file/metrics:
+          path: /output/metrics.jsonl
+          append: false
+          flush_interval: 1s
 
       service:
         pipelines:
@@ -278,3 +282,8 @@ configs:
           logs:
             receivers: [otlp]
             exporters: [file/logs]
+          # The SDK sends metrics as well. Without this pipeline, the
+          # collector answers each send with 404 and the app logs an error.
+          metrics:
+            receivers: [otlp]
+            exporters: [file/metrics]
