@@ -5,7 +5,6 @@ import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import { FaPiggyBank, FaSpaceShuttle } from "react-icons/fa";
 import { FaScaleBalanced } from "react-icons/fa6";
 import type { CitizenProfile } from "../queries/getCitizenProfile";
-import { formatBirthday } from "../utils/birthday";
 import { LocalTime } from "./LocalTime";
 import { ProfileAttribute } from "./ProfileAttribute";
 import { ProfileMetric, ProfileMetricTone } from "./ProfileMetric";
@@ -43,10 +42,6 @@ export const ProfileContent = ({
 }: Props) => {
   const { citizen, metrics } = profile;
   const name = citizen.handle || citizen.id;
-  const birthday =
-    citizen.birthdayDay !== null && citizen.birthdayMonth !== null
-      ? formatBirthday(citizen.birthdayDay, citizen.birthdayMonth)
-      : null;
   const hasMetrics = Boolean(
     metrics.silc || metrics.penaltyPoints || metrics.fleet,
   );
@@ -160,21 +155,15 @@ export const ProfileContent = ({
         </div>
       )}
 
-      {(citizen.timezone || birthday) && (
+      {citizen.timezone && (
         <dl className="border-t border-neutral-700 pt-2 mt-2 flex flex-col gap-1 text-sm">
-          {citizen.timezone && (
-            <ProfileAttribute name="Zeitzone">
-              <span className="truncate" title={citizen.timezone}>
-                {citizen.timezone}
-              </span>
+          <ProfileAttribute name="Zeitzone">
+            <span className="truncate" title={citizen.timezone}>
+              {citizen.timezone}
+            </span>
 
-              <LocalTime timezone={citizen.timezone} />
-            </ProfileAttribute>
-          )}
-
-          {birthday && (
-            <ProfileAttribute name="Geburtstag">{birthday}</ProfileAttribute>
-          )}
+            <LocalTime timezone={citizen.timezone} />
+          </ProfileAttribute>
         </dl>
       )}
 

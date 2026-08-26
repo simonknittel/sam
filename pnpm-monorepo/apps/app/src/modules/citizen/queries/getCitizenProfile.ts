@@ -65,8 +65,6 @@ export const getCitizenProfile = cache(
         discordId: true,
         silcBalance: true,
         timezone: true,
-        birthdayDay: true,
-        birthdayMonth: true,
         roleAssignments: {
           select: {
             roleId: true,
@@ -132,8 +130,6 @@ export const getCitizenProfile = cache(
         id: citizen.id,
         handle: citizen.handle,
         timezone: citizen.timezone,
-        birthdayDay: citizen.birthdayDay,
-        birthdayMonth: citizen.birthdayMonth,
         roleAssignments: citizen.roleAssignments,
       },
       avatarUrl,
