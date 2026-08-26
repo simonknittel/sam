@@ -63,9 +63,9 @@ The app sends spans and log records over OTLP when
 `ENABLE_INSTRUMENTATION`, `OTEL_EXPORTER_OTLP_PROTOCOL` and
 `OTEL_EXPORTER_OTLP_ENDPOINT` are all set (see the comments in
 `pnpm-monorepo/apps/app/.env.example`). Without these variables, the app
-creates no spans and sends no log records. Deployments send to Grafana
-Cloud; locally, the `otel-collector` container from
-[compose.yml](../compose.yml) receives the data.
+creates no spans and sends no log records. A deployment sends the data to
+the endpoint of its own variables; locally, the `otel-collector` container
+from [compose.yml](../compose.yml) receives it.
 
 The container has no user interface. It writes every received OTLP request
 as one JSON line to `/output/traces.jsonl`, `/output/logs.jsonl` and

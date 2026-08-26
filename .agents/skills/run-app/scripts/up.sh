@@ -117,9 +117,9 @@ fi
 
 echo "==> starting containers"
 if [ "$SLOT" -eq 0 ]; then
-  # Deliberately `docker start` and not `docker compose up`: compose.yml
-  # declares no named volumes, so recreating psql would destroy the only copy
-  # of the main checkout's dev data.
+  # Deliberately `docker start` and not `docker compose up`: the database has
+  # no named volume, so recreating psql would destroy the only copy of the
+  # main checkout's dev data.
   docker start sam-psql-1 sam-soketi-1 sam-sam-collab-1 sam-rustfs-1 sam-unleash-1 >/dev/null
   # Only exists after someone worked on tracing here
   # (`docker compose up -d otel-collector`), thus never fatal.
