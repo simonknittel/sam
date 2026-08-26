@@ -2,6 +2,7 @@ import Avatar from "@/modules/common/components/Avatar";
 import { CopyToClipboard } from "@/modules/common/components/CopyToClipboard";
 import { Link } from "@/modules/common/components/Link";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
+import clsx from "clsx";
 import { FaPiggyBank, FaSpaceShuttle } from "react-icons/fa";
 import { FaScaleBalanced } from "react-icons/fa6";
 import type { CitizenProfile } from "../queries/getCitizenProfile";
@@ -60,18 +61,18 @@ export const ProfileContent = ({
           <p className="opacity-50 font-mono uppercase text-xs">Citizen</p>
 
           <h2 className="font-mono uppercase text-lg font-bold flex items-center gap-2 min-w-0">
-            {profile.isCurrentCitizen && (
-              <span
-                className="flex-none inline-block rounded-full size-3 bg-green-500 relative"
-                title="Dies bist du"
-              >
-                <span className="absolute inline-block rounded-full size-3 bg-green-500 animate-ping motion-reduce:hidden" />
-              </span>
-            )}
-
-            <span className="truncate" title={name}>
+            <span
+              className={clsx("truncate", {
+                "text-me": profile.isCurrentCitizen,
+              })}
+              title={name}
+            >
               {name}
             </span>
+
+            {profile.isCurrentCitizen && (
+              <span className="sr-only">Dies bist du</span>
+            )}
 
             <CopyToClipboard value={name} />
           </h2>
