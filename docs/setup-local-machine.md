@@ -80,7 +80,9 @@ It prints the number of spans of each trace, the span names and the
 received log records. It fails when a span references a parent span that
 the collector never received. Such an orphan span is the symptom of an
 export problem: a trace viewer cannot find the parent and shows the span at
-the root of the trace.
+the root of the trace. Wait some seconds after the last request before you
+run the check — a few spans of the framework end after the response and
+leave the app with the next scheduled batch.
 
 The two files only grow. To begin a clean measurement, restart the
 container — this truncates them:

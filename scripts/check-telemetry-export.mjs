@@ -182,6 +182,11 @@ try {
     );
   if (orphans.length > MAXIMUM_LISTED_ORPHANS)
     console.error(`  … and ${orphans.length - MAXIMUM_LISTED_ORPHANS} more`);
+  console.error(
+    "\nA few spans of the framework end after the response, thus they leave " +
+      "the app with the next scheduled batch. Wait some seconds after the " +
+      "last request, then run the check again.",
+  );
   process.exit(1);
 } finally {
   if (temporaryDirectory)
