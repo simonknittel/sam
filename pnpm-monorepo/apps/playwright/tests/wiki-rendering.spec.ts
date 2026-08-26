@@ -48,12 +48,16 @@ test("a page is reached through its canonical URL and through the sidebar tree",
   await expect(page.getByText("Liste aller Schiffe.")).toBeVisible();
 });
 
-test("an unknown page id renders the 404 page", async ({
+test("an unknown page id renders the 404 next to the sidebar", async ({
   page,
   prisma,
   signIn,
 }) => {
   const citizen = await createCitizen(prisma, { handle: "reader" });
+  const existingPage = await createWikiPage(prisma, {
+    title: "Flotte",
+    visibility: WikiPageVisibility.PUBLIC,
+  });
   await signIn(citizen.user);
 
   // The layout streams before the page 404s, so the HTTP status is already
@@ -61,4 +65,12 @@ test("an unknown page id renders the 404 page", async ({
   await page.goto("/app/wiki/does-not-exist");
 
   await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
+
+  // Only the page content 404s — the wiki keeps its table of contents
+  await expect(
+    page.getByRole("combobox", { name: "Seiten durchsuchen" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: existingPage.title }).first(),
+  ).toBeVisible();
 });
