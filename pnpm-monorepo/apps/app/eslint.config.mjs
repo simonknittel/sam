@@ -18,7 +18,9 @@ const __dirname = dirname(__filename);
 // rule-context APIs removed in v10). fixupPluginRules bridges exactly these
 // three until upstream catches up. The preset's other plugins (including
 // @typescript-eslint, which is also registered directly below) must stay
-// unwrapped, or ESLint rejects the config as a plugin redefinition.
+// unwrapped, or ESLint rejects the config as a plugin redefinition. Both sides
+// must also resolve to the same copy of @typescript-eslint, which the
+// `typescript-eslint` override in pnpm-workspace.yaml takes care of.
 const pluginsWithoutEslint10Support = ["react", "jsx-a11y", "import"];
 const nextCoreWebVitalsFixedUp = nextCoreWebVitals.map((configEntry) => {
   if (!configEntry.plugins) return configEntry;

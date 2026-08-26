@@ -24,6 +24,13 @@ overrides:
   "@types/react-dom": 19.2.4
   tar: 7.5.22
   zod-validation-error: 5.0.0
+  # eslint-config-next depends on `typescript-eslint: ^8.46.0`, which resolves
+  # to a second copy of the package next to the exact version that apps/app
+  # depends on. ESLint then refuses the app config, because the Next.js preset
+  # and apps/app/eslint.config.mjs register two different plugin objects under
+  # the name `@typescript-eslint`. Keep this in sync with the version in
+  # apps/app/package.json.
+  typescript-eslint: 8.67.0
 
 preferFrozenLockfile: true
 legacyPeerDeps: true
@@ -61,3 +68,20 @@ allowBuilds:
   cpu-features: false
   ssh2: false
 auditLevel: critical
+# Versions that `pnpm install` was allowed to resolve before they reached
+# `minimumReleaseAge`. pnpm appends to this list on its own. Next.js 16.3.3 is
+# here on request: it fixes two critical remote-code-execution advisories, so
+# it must not wait out the 7-day cooldown.
+minimumReleaseAgeExclude:
+  - "@next/env@16.3.3"
+  - "@next/eslint-plugin-next@16.3.3"
+  - "@next/swc-darwin-arm64@16.3.3"
+  - "@next/swc-darwin-x64@16.3.3"
+  - "@next/swc-linux-arm64-gnu@16.3.3"
+  - "@next/swc-linux-arm64-musl@16.3.3"
+  - "@next/swc-linux-x64-gnu@16.3.3"
+  - "@next/swc-linux-x64-musl@16.3.3"
+  - "@next/swc-win32-arm64-msvc@16.3.3"
+  - "@next/swc-win32-x64-msvc@16.3.3"
+  - eslint-config-next@16.3.3
+  - next@16.3.3
