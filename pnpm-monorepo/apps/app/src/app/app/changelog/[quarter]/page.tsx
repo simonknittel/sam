@@ -3,7 +3,7 @@ import { Day } from "@/modules/changelog/components/Day";
 import { DayItem } from "@/modules/changelog/components/DayItem";
 import { Navigation } from "@/modules/changelog/components/Navigation";
 import { getChangelogEntriesByQuarter } from "@/modules/changelog/queries/getChangelogEntriesByQuarter";
-import { updateUnseenChangelogEntries } from "@/modules/changelog/queries/updateUnseenChangelogEntries";
+import { getUnseenChangelogEntryKeys } from "@/modules/changelog/queries/getUnseenChangelogEntryKeys";
 import { notFound } from "next/navigation";
 
 function groupByDate<T extends { date: string }>(items: T[]): Map<string, T[]> {
@@ -29,9 +29,7 @@ export default async function Page({
   const quarterEntries = await getChangelogEntriesByQuarter(quarter);
   if (quarterEntries.length === 0) notFound();
 
-  const unseenKeys = await updateUnseenChangelogEntries();
-
-  const isUnseen = (key: string) => unseenKeys.has(key);
+  const unseenKeys = await getUnseenChangelogEntryKeys();
 
   const grouped = groupByDate(quarterEntries);
   const dates = [...grouped.keys()].toSorted(
@@ -58,7 +56,7 @@ export default async function Page({
               <DayItem
                 key={entry.key}
                 entry={entry}
-                isNew={entry.isTracked ? isUnseen(entry.key) : undefined}
+                isUnseen={unseenKeys.has(entry.key)}
               />
             ))}
           </Day>

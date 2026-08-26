@@ -2,16 +2,12 @@
 
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { useTabsContext } from "@/modules/common/components/tabs/TabsContext";
+import { useReadOnView } from "@/modules/common/utils/useReadOnView";
 import { api } from "@/trpc/react";
 import clsx from "clsx";
 import { useCallback, useEffect, useRef } from "react";
 import { BsExclamationOctagonFill } from "react-icons/bs";
 import { useOnSiteNotificationMutations } from "../hooks/useOnSiteNotificationMutations";
-import {
-  READ_ON_VIEW_DWELL_MILLISECONDS,
-  READ_ON_VIEW_FLUSH_DEBOUNCE_MILLISECONDS,
-  READ_ON_VIEW_VISIBILITY_THRESHOLD,
-} from "../utils/config";
 import { NotificationCenterTab } from "../utils/types";
 import { NotificationListItem } from "./NotificationListItem";
 
@@ -77,83 +73,25 @@ export const NotificationList = ({
   }, [onRetainHighlights]);
 
   /**
-   * Read-on-view: an unread notification which stays sufficiently visible in
-   * the scroll container for the dwell time is collected, and collected ids
-   * are flushed as one batched mark-read call which also retains their
-   * highlight. Pending ids survive closing the popover (flush on cleanup);
-   * pending dwell timers do not.
+   * Read-on-view marks an unread notification read once it has dwelled in the
+   * scroll container, and retains its highlight so the user doesn't lose
+   * track of what is new while the popover is still open. Only enabled once
+   * the list is rendered, because the observer needs the scroll container as
+   * its root.
    */
-  const notificationIds = notifications.map((item) => item.id).join(",");
-  useEffect(() => {
-    if (!isActive || tab !== NotificationCenterTab.Inbox) return;
+  const handleRead = useCallback((notificationIds: string[]) => {
+    onRetainHighlightsRef.current?.(notificationIds);
+    void markReadRef.current(notificationIds);
+  }, []);
 
-    const scrollContainer = scrollContainerRef.current;
-    if (!scrollContainer) return;
-
-    const dwellTimers = new Map<string, number>();
-    const pendingReadIds = new Set<string>();
-    let flushTimer: number | null = null;
-
-    const flush = () => {
-      if (pendingReadIds.size <= 0) return;
-      const idsToMark = Array.from(pendingReadIds);
-      pendingReadIds.clear();
-      onRetainHighlightsRef.current?.(idsToMark);
-      void markReadRef.current(idsToMark);
-    };
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          const notificationId = (entry.target as HTMLElement).dataset
-            .unreadNotificationId;
-          if (!notificationId) continue;
-
-          if (entry.intersectionRatio >= READ_ON_VIEW_VISIBILITY_THRESHOLD) {
-            if (dwellTimers.has(notificationId)) continue;
-            dwellTimers.set(
-              notificationId,
-              window.setTimeout(() => {
-                dwellTimers.delete(notificationId);
-                observer.unobserve(entry.target);
-                pendingReadIds.add(notificationId);
-                if (flushTimer !== null) window.clearTimeout(flushTimer);
-                flushTimer = window.setTimeout(
-                  flush,
-                  READ_ON_VIEW_FLUSH_DEBOUNCE_MILLISECONDS,
-                );
-              }, READ_ON_VIEW_DWELL_MILLISECONDS),
-            );
-          } else {
-            const dwellTimer = dwellTimers.get(notificationId);
-            if (dwellTimer !== undefined) {
-              window.clearTimeout(dwellTimer);
-              dwellTimers.delete(notificationId);
-            }
-          }
-        }
-      },
-      {
-        root: scrollContainer,
-        threshold: READ_ON_VIEW_VISIBILITY_THRESHOLD,
-      },
-    );
-
-    for (const element of scrollContainer.querySelectorAll(
-      "[data-unread-notification-id]",
-    )) {
-      observer.observe(element);
-    }
-
-    return () => {
-      observer.disconnect();
-      for (const dwellTimer of dwellTimers.values()) {
-        window.clearTimeout(dwellTimer);
-      }
-      if (flushTimer !== null) window.clearTimeout(flushTimer);
-      flush();
-    };
-  }, [isActive, tab, notificationIds]);
+  const observeNotification = useReadOnView({
+    enabled:
+      isActive &&
+      tab === NotificationCenterTab.Inbox &&
+      notifications.length > 0,
+    rootRef: scrollContainerRef,
+    onRead: handleRead,
+  });
 
   const handleNavigateToTarget = useCallback(
     (notificationId: string, isUnread: boolean) => {
@@ -211,6 +149,7 @@ export const NotificationList = ({
           keepUnreadHighlight={
             retainedHighlightIds?.has(notification.id) ?? false
           }
+          observeReadOnView={observeNotification}
           onArchive={archive}
           onUnarchive={unarchive}
           onMarkUnread={markUnread}

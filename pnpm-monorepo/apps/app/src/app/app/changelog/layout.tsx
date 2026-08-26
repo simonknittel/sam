@@ -1,4 +1,4 @@
-import { Refresher } from "@/modules/changelog/components/Refresher";
+import { UnseenEntriesProvider } from "@/modules/changelog/components/UnseenEntriesProvider";
 import { DefaultLayout } from "@/modules/common/components/layouts/DefaultLayout";
 import { MaxWidthContent } from "@/modules/common/components/layouts/MaxWidthContent";
 import type { Metadata } from "next";
@@ -12,12 +12,10 @@ export const metadata: Metadata = {
 
 export default function Layout({ children }: LayoutProps<"/app/changelog">) {
   return (
-    <>
-      <DefaultLayout title="Changelog" slug="changelog">
-        <MaxWidthContent maxWidth="prose">{children}</MaxWidthContent>
-      </DefaultLayout>
-
-      <Refresher />
-    </>
+    <DefaultLayout title="Changelog" slug="changelog">
+      <MaxWidthContent maxWidth="prose">
+        <UnseenEntriesProvider>{children}</UnseenEntriesProvider>
+      </MaxWidthContent>
+    </DefaultLayout>
   );
 }
