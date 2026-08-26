@@ -16,7 +16,9 @@ const schema = z
    * A role that inherits itself adds nothing. The form leaves the role out
    * of its own list, and the database rejects the row either way.
    */
-  .refine((data) => !data.roles.includes(data.id));
+  .refine((data) => !data.roles.includes(data.id), {
+    error: "A role cannot inherit itself",
+  });
 
 export const updateRoleInheritance = createAuthenticatedAction(
   "updateRoleInheritance",

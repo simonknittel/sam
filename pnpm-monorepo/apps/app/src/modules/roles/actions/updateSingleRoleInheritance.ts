@@ -18,7 +18,9 @@ const schema = z
    * without a checkbox, the database rejects the row, and this keeps the
    * action from writing an audit event for a write that cannot happen.
    */
-  .refine((data) => data.roleId !== data.inheritedRoleId);
+  .refine((data) => data.roleId !== data.inheritedRoleId, {
+    error: "A role cannot inherit itself",
+  });
 
 export const updateSingleRoleInheritance = createAuthenticatedAction(
   "updateSingleRoleInheritance",
