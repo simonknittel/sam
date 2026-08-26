@@ -2,6 +2,7 @@
 
 import { Link } from "@/modules/common/components/Link";
 import { RelativeDate } from "@/modules/common/components/RelativeDate";
+import type { ReadOnViewRef } from "@/modules/common/utils/useReadOnView";
 import { FaArchive, FaEnvelope, FaUndo } from "react-icons/fa";
 import { renderOnSiteNotification } from "../utils/renderOnSiteNotification";
 import {
@@ -18,6 +19,8 @@ interface Props {
    * but their highlight should only disappear once the popover closes.
    */
   readonly keepUnreadHighlight: boolean;
+  /** Registers unread rows for the read-on-view tracking of the list */
+  readonly observeReadOnView: ReadOnViewRef;
   readonly onArchive: (notification: OnSiteNotificationRow) => void;
   readonly onUnarchive: (notification: OnSiteNotificationRow) => void;
   readonly onMarkUnread: (notification: OnSiteNotificationRow) => void;
@@ -31,6 +34,7 @@ export const NotificationListItem = ({
   notification,
   tab,
   keepUnreadHighlight,
+  observeReadOnView,
   onArchive,
   onUnarchive,
   onMarkUnread,
@@ -43,10 +47,9 @@ export const NotificationListItem = ({
 
   return (
     <li
+      ref={trackReadOnView ? observeReadOnView : undefined}
       className="relative group/notification px-4 py-2 hover:bg-neutral-800/50 focus-within:bg-neutral-800/50"
-      data-unread-notification-id={
-        trackReadOnView ? notification.id : undefined
-      }
+      data-read-on-view-id={trackReadOnView ? notification.id : undefined}
     >
       {showsUnreadHighlight && (
         <div
