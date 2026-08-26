@@ -55,8 +55,8 @@ const saveButton = (page: Page) =>
   page.getByRole("button", { name: "Speichern" });
 
 /**
- * Gives the citizen one of every metric the profile shows, plus the two
- * attributes they set themselves. The counted values are seeded next to
+ * Gives the citizen one of every metric the profile shows, plus the time
+ * zone they set themselves. The counted values are seeded next to
  * deleted and expired ones, which none of the metrics may count.
  */
 /** Every metric box links to the Spynet page which holds its details */
@@ -78,7 +78,7 @@ const expectMetricLinks = async (scope: Locator, citizenId: string) => {
 const seedProfile = async (prisma: PrismaClient, citizen: Citizen) => {
   await prisma.entity.update({
     where: { id: citizen.entity.id },
-    data: { timezone: "Europe/Berlin", birthdayDay: 24, birthdayMonth: 12 },
+    data: { timezone: "Europe/Berlin" },
   });
 
   await createSilcTransaction(prisma, {
@@ -282,7 +282,6 @@ test("the popover shows the profile of another citizen", async ({
   await expect(popover).toContainText("Flotte");
   await expect(popover).toContainText("Europe/Berlin");
   await expect(popover).toContainText(/\d{2}:\d{2} Uhr/);
-  await expect(popover).toContainText("24. Dezember");
 
   /** Every metric opens its Spynet page */
   await expectMetricLinks(popover, owner.entity.id);
@@ -315,9 +314,8 @@ test("the popover hides the metrics a viewer must not see", async ({
     popover,
   );
 
-  /** The attributes need no permission of their own … */
+  /** The time zone needs no permission of its own … */
   await expect(popover).toContainText("Europe/Berlin");
-  await expect(popover).toContainText("24. Dezember");
 
   /** … but every metric does, and none of them is shown as a zero */
   await expect(popover).not.toContainText("SILC");
@@ -347,7 +345,6 @@ test("the dashboard tile shows the profile of the own citizen", async ({
   await expect(spynetSection).toContainText("Strafpunkte");
   await expect(spynetSection).toContainText("Flotte");
   await expect(spynetSection).toContainText("Europe/Berlin");
-  await expect(spynetSection).toContainText("24. Dezember");
   /** The header of the tile is the way into Spynet */
   await expect(
     spynetSection.getByRole("link", { name: "Spynet öffnen" }),
