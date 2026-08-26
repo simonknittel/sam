@@ -5,6 +5,19 @@
     ":semanticCommits",
     ":dependencyDashboard"
   ],
+  "customManagers": [
+    {
+      "description": "The Playwright stack pins the same container images as compose.yml, but as TypeScript constants that no built-in manager reads.",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "pnpm-monorepo/apps/playwright/setup/stack.ts"
+      ],
+      "matchStrings": [
+        "\"(?<depName>[^\"@:]+):(?<currentValue>[^\"@]+)@(?<currentDigest>sha256:[0-9a-f]{64})\""
+      ],
+      "datasourceTemplate": "docker"
+    }
+  ],
   "packageRules": [
     {
       "groupName": "Patch Tuesday",
