@@ -46,6 +46,31 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-08-26-vererbungsmatrix",
+    date: "2026-08-26",
+    title: "Vererbungsmatrix",
+    tags: ["Rollen", "Neu"],
+    isTracked: true,
+    requiresAuth: { resource: "role", action: "manage" },
+    body: () => (
+      <p>
+        Unter{" "}
+        <Link
+          href="/app/iam/inheritance-matrix"
+          className="text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300"
+        >
+          IAM &gt; Vererbungsmatrix
+        </Link>{" "}
+        gibt es nun eine Darstellung aller Rollen und ihrer Vererbungen in
+        Matrixform. Wie in der Berechtigungsmatrix lässt sich jede Vererbung
+        direkt in der Matrix setzen und wieder entfernen. Eine markierte Zelle
+        bedeutet: Die Rolle der Zeile erhält alle Berechtigungen der Rolle der
+        Spalte.
+      </p>
+    ),
+  },
+
+  {
     key: "2026-08-25-erste-schritte",
     date: "2026-08-25",
     title: "Erste Schritte: Lerne das SAM mit kurzen Touren kennen",
