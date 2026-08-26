@@ -457,36 +457,34 @@ const IAMPage = ({ userRead, roleManage }: IAMPageProps) => {
       )}
 
       {roleManage && (
-        <LinkItem
-          label="Berechtigungsmatrix"
-          keywords={["Berechtigungen", "Permissions"]}
-          icon={<FaLock />}
-          href="/app/iam/permission-matrix"
-          setOpen={setOpen}
-          setSearch={setSearch}
-        />
-      )}
+        <>
+          <LinkItem
+            label="Berechtigungsmatrix"
+            keywords={["Berechtigungen", "Permissions"]}
+            icon={<FaLock />}
+            href="/app/iam/permission-matrix"
+            setOpen={setOpen}
+            setSearch={setSearch}
+          />
 
-      {roleManage && (
-        <LinkItem
-          label="Vererbungsmatrix"
-          keywords={["Vererbungen", "Inheritance"]}
-          icon={<FaLock />}
-          href="/app/iam/inheritance-matrix"
-          setOpen={setOpen}
-          setSearch={setSearch}
-        />
-      )}
+          <LinkItem
+            label="Vererbungsmatrix"
+            keywords={["Vererbungen", "Inheritance"]}
+            icon={<FaLock />}
+            href="/app/iam/inheritance-matrix"
+            setOpen={setOpen}
+            setSearch={setSearch}
+          />
 
-      {roleManage && (
-        <LinkItem
-          label="Rollen"
-          keywords={["Berechtigungen", "Permissions"]}
-          icon={<FaLock />}
-          href="/app/iam/roles"
-          setOpen={setOpen}
-          setSearch={setSearch}
-        />
+          <LinkItem
+            label="Rollen"
+            keywords={["Berechtigungen", "Permissions"]}
+            icon={<FaLock />}
+            href="/app/iam/roles"
+            setOpen={setOpen}
+            setSearch={setSearch}
+          />
+        </>
       )}
     </Command.Group>
   );

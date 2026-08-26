@@ -156,6 +156,19 @@
   }
 }
 
+/**
+ * A cell which carries no control, for a combination the matrix forbids
+ * (a role inheriting itself). It repeats the box of matrix-cell so the two
+ * always agree on the size of a cell, and only the darker fill sets it
+ * apart as unavailable.
+ */
+@utility matrix-cell-blocked {
+  width: --spacing(8);
+  height: --spacing(8);
+  border-radius: var(--radius-secondary);
+  background-color: var(--color-neutral-800);
+}
+
 @utility prose {
   & a {
     color: var(--color-interaction-500);

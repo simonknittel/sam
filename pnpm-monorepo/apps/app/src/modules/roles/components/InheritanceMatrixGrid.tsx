@@ -1,12 +1,11 @@
 "use client";
 
 import { runAction } from "@/modules/actions/utils/runAction";
-import { Link } from "@/modules/common/components/Link";
-import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
 import type { Role, Upload } from "@sam-monorepo/database/browser";
-import Image from "next/image";
 import type { ChangeEventHandler } from "react";
 import { updateSingleRoleInheritance } from "../actions/updateSingleRoleInheritance";
+import { MatrixCell } from "./MatrixCell";
+import { MatrixRoleCell } from "./MatrixRoleCell";
 
 interface MatrixRole extends Readonly<Pick<Role, "id" | "name">> {
   readonly icon: Pick<Upload, "id" | "mimeType"> | null;
@@ -75,7 +74,12 @@ export const InheritanceMatrixGrid = ({ roles }: Props) => {
                 title={role.name}
               >
                 <div className="-rotate-45 w-0">
-                  <span>{role.name}</span>
+                  {/* The zero-width parent anchors the rotation, so the name
+                      is bounded on the span instead — a long role name would
+                      otherwise reach past the top of the header row. */}
+                  <span className="block w-max max-w-48 truncate">
+                    {role.name}
+                  </span>
                 </div>
               </th>
             ))}
@@ -118,39 +122,11 @@ const MatrixRow = ({ role, roles, gridTemplateColumns }: MatrixRowProps) => {
         gridTemplateColumns,
       }}
     >
-      <td className="h-8 overflow-hidden sticky -left-2 z-10 bg-secondary rounded-secondary">
-        <Link
-          href={`/app/roles/${role.id}/inheritance`}
-          className="flex items-center gap-2 hover:bg-neutral-800 px-2 rounded-secondary h-full"
-          prefetch={false}
-        >
-          {role.icon ? (
-            <div className="aspect-square size-4 flex items-center justify-center rounded-secondary overflow-hidden flex-none">
-              <Image
-                src={getPublicUploadUrl(role.icon.id)}
-                alt=""
-                width={16}
-                height={16}
-                className="max-w-full max-h-full"
-                unoptimized={["image/svg+xml", "image/gif"].includes(
-                  role.icon.mimeType,
-                )}
-                loading="lazy"
-              />
-            </div>
-          ) : (
-            <div className="size-4 flex-none" />
-          )}
-
-          <p className="truncate text-sm" title={role.name}>
-            {role.name}
-          </p>
-        </Link>
-      </td>
+      <MatrixRoleCell role={role} href={`/app/roles/${role.id}/inheritance`} />
 
       {roles.map((inheritedRole) =>
         inheritedRole.id === role.id ? (
-          <SelfInheritanceCell key={inheritedRole.id} />
+          <SelfInheritanceCell key={inheritedRole.id} roleName={role.name} />
         ) : (
           <MatrixCell
             key={inheritedRole.id}
@@ -164,47 +140,23 @@ const MatrixRow = ({ role, roles, gridTemplateColumns }: MatrixRowProps) => {
   );
 };
 
-interface MatrixCellProps {
-  readonly name: string;
-  readonly label: string;
-  readonly defaultChecked: boolean;
+interface SelfInheritanceCellProps {
+  readonly roleName: string;
 }
 
 /**
- * A deliberately minimal checkbox: the matrix renders thousands of these
- * cells, so every element and every attribute byte counts. The styles and
- * the states live in the matrix-cell utility, and the label and title name
- * the cell, which the matrix cannot do visually.
- */
-const MatrixCell = ({ name, label, defaultChecked }: MatrixCellProps) => {
-  return (
-    <td>
-      <label className="matrix-cell" title={label}>
-        <input
-          type="checkbox"
-          className="sr-only"
-          name={name}
-          defaultChecked={defaultChecked}
-          aria-label={label}
-        />
-        <span />
-      </label>
-    </td>
-  );
-};
-
-/**
  * The cell on the diagonal. It carries no control at all, so neither the
- * keyboard nor a screen reader lands on something that cannot be switched;
- * the title says why the cell is dead.
+ * keyboard nor a screen reader lands on something that cannot be switched.
+ * The title says why the cell is dead for a mouse; the hidden text does the
+ * same for a screen reader, which does not announce a title on a plain
+ * element. One extra span per row is negligible, unlike one per cell.
  */
-const SelfInheritanceCell = () => {
+const SelfInheritanceCell = ({ roleName }: SelfInheritanceCellProps) => {
   return (
     <td>
-      <div
-        className="size-8 rounded-secondary bg-neutral-800"
-        title={SELF_INHERITANCE_TITLE}
-      />
+      <div className="matrix-cell-blocked" title={SELF_INHERITANCE_TITLE}>
+        <span className="sr-only">{`${roleName}: ${SELF_INHERITANCE_TITLE}`}</span>
+      </div>
     </td>
   );
 };
