@@ -469,6 +469,17 @@ const IAMPage = ({ userRead, roleManage }: IAMPageProps) => {
 
       {roleManage && (
         <LinkItem
+          label="Vererbungsmatrix"
+          keywords={["Vererbungen", "Inheritance"]}
+          icon={<FaLock />}
+          href="/app/iam/inheritance-matrix"
+          setOpen={setOpen}
+          setSearch={setSearch}
+        />
+      )}
+
+      {roleManage && (
+        <LinkItem
           label="Rollen"
           keywords={["Berechtigungen", "Permissions"]}
           icon={<FaLock />}

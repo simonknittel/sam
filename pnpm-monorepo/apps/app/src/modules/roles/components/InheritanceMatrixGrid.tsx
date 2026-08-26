@@ -6,25 +6,14 @@ import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
 import type { Role, Upload } from "@sam-monorepo/database/browser";
 import Image from "next/image";
 import type { ChangeEventHandler } from "react";
-import { updateSingleRolePermission } from "../actions/updateSingleRolePermission";
-import { STATIC_PERMISSIONS } from "../utils/STATIC_PERMISSIONS";
+import { updateSingleRoleInheritance } from "../actions/updateSingleRoleInheritance";
 
 interface MatrixRole extends Readonly<Pick<Role, "id" | "name">> {
   readonly icon: Pick<Upload, "id" | "mimeType"> | null;
-  readonly permissionStrings: readonly string[];
+  readonly inheritedRoleIds: readonly string[];
 }
 
-/**
- * Sorted once at module scope, so the columns and every row agree on the
- * order without mutating the shared constant. The locale is pinned because
- * this module renders on the server and in the browser, and the two must
- * not disagree on the order (a hydration mismatch).
- */
-const permissions = STATIC_PERMISSIONS.toSorted((first, second) =>
-  first.section.localeCompare(second.section, "de"),
-);
-
-const gridTemplateColumns = `240px repeat(${permissions.length}, 32px)`;
+const SELF_INHERITANCE_TITLE = "Eine Rolle kann sich nicht selbst erben.";
 
 interface Props {
   readonly roles: readonly MatrixRole[];
@@ -33,28 +22,34 @@ interface Props {
 /**
  * The matrix is a single client component on purpose: one hydration island
  * that receives the roles as a compact prop. One client-component reference
- * per checkbox dominated the RSC payload and the hydration time of this
- * page.
+ * per checkbox dominated the RSC payload and the hydration time of the
+ * permission matrix, which this one mirrors.
+ *
+ * Rows and columns come from the same array, so both axes always agree on
+ * the order. A checked cell means: the role of the row inherits the role of
+ * the column.
  */
-export const PermissionMatrixGrid = ({ roles }: Props) => {
+export const InheritanceMatrixGrid = ({ roles }: Props) => {
+  const gridTemplateColumns = `240px repeat(${roles.length}, 32px)`;
+
   const handleChange: ChangeEventHandler<HTMLFormElement> = (event) => {
     const input = event.target as unknown as HTMLInputElement;
     /**
      * Split at the first underscore only: role ids are cuids and contain no
-     * underscore, but permission strings can (example:
-     * `taskRewardType=NEW_SILC`).
+     * underscore. The rule matches the permission matrix, whose permission
+     * strings do (example: `taskRewardType=NEW_SILC`).
      */
     const separatorIndex = input.name.indexOf("_");
     const roleId = input.name.slice(0, separatorIndex);
-    const permissionString = input.name.slice(separatorIndex + 1);
+    const inheritedRoleId = input.name.slice(separatorIndex + 1);
     const checked = input.checked ? "true" : "";
 
     const formData = new FormData();
     formData.set("roleId", roleId);
-    formData.set("permissionString", permissionString);
+    formData.set("inheritedRoleId", inheritedRoleId);
     formData.set("checked", checked);
 
-    void runAction(updateSingleRolePermission, formData);
+    void runAction(updateSingleRoleInheritance, formData);
   };
 
   return (
@@ -69,20 +64,18 @@ export const PermissionMatrixGrid = ({ roles }: Props) => {
           >
             <th className="font-normal whitespace-nowrap flex justify-center items-end">
               <div className="-rotate-45 w-0">
-                <span>Rolle</span>
+                <span>Erbt …</span>
               </div>
             </th>
 
-            {permissions.map((permission) => (
+            {roles.map((role) => (
               <th
-                key={permission.string}
+                key={role.id}
                 className="font-normal whitespace-nowrap flex justify-center items-end"
+                title={role.name}
               >
                 <div className="-rotate-45 w-0">
-                  <span className="text-neutral-700">
-                    {permission.section} /{" "}
-                  </span>
-                  <span>{permission.title}</span>
+                  <span>{role.name}</span>
                 </div>
               </th>
             ))}
@@ -91,7 +84,12 @@ export const PermissionMatrixGrid = ({ roles }: Props) => {
 
         <tbody className="flex flex-col gap-2">
           {roles.map((role) => (
-            <MatrixRow key={role.id} role={role} />
+            <MatrixRow
+              key={role.id}
+              role={role}
+              roles={roles}
+              gridTemplateColumns={gridTemplateColumns}
+            />
           ))}
         </tbody>
       </table>
@@ -101,10 +99,12 @@ export const PermissionMatrixGrid = ({ roles }: Props) => {
 
 interface MatrixRowProps {
   readonly role: MatrixRole;
+  readonly roles: readonly MatrixRole[];
+  readonly gridTemplateColumns: string;
 }
 
-const MatrixRow = ({ role }: MatrixRowProps) => {
-  const grantedPermissionStrings = new Set(role.permissionStrings);
+const MatrixRow = ({ role, roles, gridTemplateColumns }: MatrixRowProps) => {
+  const inheritedRoleIds = new Set(role.inheritedRoleIds);
 
   return (
     <tr
@@ -120,7 +120,7 @@ const MatrixRow = ({ role }: MatrixRowProps) => {
     >
       <td className="h-8 overflow-hidden sticky -left-2 z-10 bg-secondary rounded-secondary">
         <Link
-          href={`/app/roles/${role.id}`}
+          href={`/app/roles/${role.id}/inheritance`}
           className="flex items-center gap-2 hover:bg-neutral-800 px-2 rounded-secondary h-full"
           prefetch={false}
         >
@@ -142,18 +142,24 @@ const MatrixRow = ({ role }: MatrixRowProps) => {
             <div className="size-4 flex-none" />
           )}
 
-          <p className="truncate text-sm">{role.name}</p>
+          <p className="truncate text-sm" title={role.name}>
+            {role.name}
+          </p>
         </Link>
       </td>
 
-      {permissions.map((permission) => (
-        <MatrixCell
-          key={permission.string}
-          name={`${role.id}_${permission.string}`}
-          label={`${permission.section} / ${permission.title} – ${role.name}`}
-          defaultChecked={grantedPermissionStrings.has(permission.string)}
-        />
-      ))}
+      {roles.map((inheritedRole) =>
+        inheritedRole.id === role.id ? (
+          <SelfInheritanceCell key={inheritedRole.id} />
+        ) : (
+          <MatrixCell
+            key={inheritedRole.id}
+            name={`${role.id}_${inheritedRole.id}`}
+            label={`${role.name} erbt ${inheritedRole.name}`}
+            defaultChecked={inheritedRoleIds.has(inheritedRole.id)}
+          />
+        ),
+      )}
     </tr>
   );
 };
@@ -167,8 +173,8 @@ interface MatrixCellProps {
 /**
  * A deliberately minimal checkbox: the matrix renders thousands of these
  * cells, so every element and every attribute byte counts. The styles and
- * the states live in the matrix-cell utility, and the label and title
- * name the cell, which the matrix cannot do visually.
+ * the states live in the matrix-cell utility, and the label and title name
+ * the cell, which the matrix cannot do visually.
  */
 const MatrixCell = ({ name, label, defaultChecked }: MatrixCellProps) => {
   return (
@@ -183,6 +189,22 @@ const MatrixCell = ({ name, label, defaultChecked }: MatrixCellProps) => {
         />
         <span />
       </label>
+    </td>
+  );
+};
+
+/**
+ * The cell on the diagonal. It carries no control at all, so neither the
+ * keyboard nor a screen reader lands on something that cannot be switched;
+ * the title says why the cell is dead.
+ */
+const SelfInheritanceCell = () => {
+  return (
+    <td>
+      <div
+        className="size-8 rounded-secondary bg-neutral-800"
+        title={SELF_INHERITANCE_TITLE}
+      />
     </td>
   );
 };
