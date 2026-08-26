@@ -39,7 +39,7 @@ elif [ -z "$SLOT" ]; then
       ports="( sport = :$((3000 + candidate)) or sport = :$((5432 + candidate)) \
 or sport = :$((6001 + candidate)) or sport = :$((9601 + candidate)) \
 or sport = :$((5210 + candidate)) or sport = :$((9000 + candidate)) \
-or sport = :$((4242 + candidate)) )"
+or sport = :$((4242 + candidate)) or sport = :$((4318 + candidate)) )"
       if [ -z "$(ss -ltn "$ports" | tail -n +2)" ]; then SLOT=$candidate; break; fi
     done
   fi
@@ -53,6 +53,7 @@ SOKETI_METRICS_PORT=$((9601 + SLOT))
 COLLAB_PORT=$((5210 + SLOT))
 RUSTFS_PORT=$((9000 + SLOT))
 UNLEASH_PORT=$((4242 + SLOT))
+OTEL_COLLECTOR_PORT=$((4318 + SLOT))
 echo "==> slot $SLOT (app :$APP_PORT, psql :$PSQL_PORT)"
 
 # ------------------------------------------------------------------- config
@@ -70,6 +71,7 @@ SAM_SOKETI_METRICS_PORT=$SOKETI_METRICS_PORT
 SAM_COLLAB_PORT=$COLLAB_PORT
 SAM_RUSTFS_PORT=$RUSTFS_PORT
 SAM_UNLEASH_PORT=$UNLEASH_PORT
+SAM_OTEL_COLLECTOR_PORT=$OTEL_COLLECTOR_PORT
 EOF
 
   write_fresh "$CHECKOUT/pnpm-monorepo/packages/database/.env" <<EOF
@@ -89,6 +91,7 @@ EOF
     -e "s|^(S3_PUBLIC_URL=.*localhost:)[0-9]+|\1$RUSTFS_PORT|" \
     -e "s|^(UNLEASH_SERVER_API_URL=.*localhost:)[0-9]+|\1$UNLEASH_PORT|" \
     -e "s|^(COLLAB_URL=.*localhost:)[0-9]+|\1$COLLAB_PORT|" \
+    -e "s|^(OTEL_EXPORTER_OTLP_ENDPOINT=.*localhost:)[0-9]+|\1$OTEL_COLLECTOR_PORT|" \
     -e "s|^(NEXT_PUBLIC_PUSHER_CHANNELS_PORT=\")[0-9]+|\1$SOKETI_PORT|" \
     "$APP_ENV")"
   printf '%s\n' "$PATCHED" | write_fresh "$APP_ENV"
@@ -114,10 +117,13 @@ fi
 
 echo "==> starting containers"
 if [ "$SLOT" -eq 0 ]; then
-  # Deliberately `docker start` and not `docker compose up`: compose.yml
-  # declares no named volumes, so recreating psql would destroy the only copy
-  # of the main checkout's dev data.
+  # Deliberately `docker start` and not `docker compose up`: the database has
+  # no named volume, so recreating psql would destroy the only copy of the
+  # main checkout's dev data.
   docker start sam-psql-1 sam-soketi-1 sam-sam-collab-1 sam-rustfs-1 sam-unleash-1 >/dev/null
+  # Only exists after someone worked on tracing here
+  # (`docker compose up -d otel-collector`), thus never fatal.
+  docker start sam-otel-collector-1 >/dev/null 2>&1 || true
 else
   # --build is ~2s once the layers are cached and guarantees the collab image
   # comes from THIS checkout's source, so it is not worth making conditional.

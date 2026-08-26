@@ -1,6 +1,20 @@
 import { env } from "@/env";
-import { logs, SeverityNumber } from "@opentelemetry/api-logs";
+import {
+  logs,
+  SeverityNumber,
+  type LoggerProvider,
+} from "@opentelemetry/api-logs";
 import { LogLevel, type LogEntry, type LogOutput } from "./types";
+
+/**
+ * The provider of the API has no `forceFlush`; the provider which the SDK
+ * registers (`@opentelemetry/sdk-logs`) has one.
+ */
+const canForceFlush = (
+  loggerProvider: LoggerProvider,
+): loggerProvider is LoggerProvider & { forceFlush: () => Promise<void> } =>
+  "forceFlush" in loggerProvider &&
+  typeof loggerProvider.forceFlush === "function";
 
 const getSeverityNumber = (level: LogEntry["level"]): SeverityNumber => {
   switch (level) {
@@ -15,7 +29,7 @@ const getSeverityNumber = (level: LogEntry["level"]): SeverityNumber => {
   }
 };
 
-export const logToOTel: LogOutput = (logEntry) => {
+export const logToOTel: LogOutput = async (logEntry) => {
   if (
     env.ENABLE_INSTRUMENTATION !== "true" ||
     !env.OTEL_EXPORTER_OTLP_PROTOCOL ||
@@ -43,6 +57,12 @@ export const logToOTel: LogOutput = (logEntry) => {
         ...attributes,
       },
     });
+
+    // The app writes its log records in `after()`, thus after the response
+    // and after the flush which the end of the root span triggers. A
+    // serverless function freezes directly after the response, thus a record
+    // which waits for the next scheduled send can be lost.
+    if (canForceFlush(loggerProvider)) await loggerProvider.forceFlush();
   } catch (error) {
     console.error("Failed to emit log to OTel:", error);
   }
