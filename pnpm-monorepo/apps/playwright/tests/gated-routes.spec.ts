@@ -28,6 +28,7 @@ const GATED_ROUTES = [
   "/app/fleet/my-ships",
   "/app/fleet/org",
   "/app/fleet/settings/manufacturer",
+  "/app/iam/inheritance-matrix",
   "/app/iam/permission-matrix",
   "/app/iam/roles",
   "/app/iam/users",
