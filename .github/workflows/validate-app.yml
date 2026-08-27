@@ -26,6 +26,12 @@ on:
       - pnpm-monorepo/pnpm-lock.yaml
       - pnpm-monorepo/pnpm-workspace.yaml
 
+# Only one run per branch at a time. A new run cancels the run that is still
+# in progress, because only the result for the latest commit matters.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint:
     runs-on: ubuntu-24.04
