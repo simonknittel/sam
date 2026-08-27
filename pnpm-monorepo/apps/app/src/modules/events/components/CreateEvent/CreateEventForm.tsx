@@ -20,10 +20,8 @@ import {
 import clsx from "clsx";
 import { useId, useState } from "react";
 import { FaGlobe, FaLock, FaSave } from "react-icons/fa";
-import {
-  EVENT_DESCRIPTION_MAX_LENGTH,
-  EVENT_NAME_MAX_LENGTH,
-} from "../../utils/eventConstraints";
+import { EVENT_DESCRIPTION_MAX_LENGTH } from "../../utils/discordEventDescription";
+import { EVENT_NAME_MAX_LENGTH } from "../../utils/eventConstraints";
 import { DiscordPublishTargetFields } from "../DiscordPublishTargetFields";
 import { EventCoverImageField } from "../EventCoverImageField";
 import { EventDateTimeField } from "../EventDateTimeField";

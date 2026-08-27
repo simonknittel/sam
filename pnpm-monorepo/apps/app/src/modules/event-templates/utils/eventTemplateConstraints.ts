@@ -1,5 +1,5 @@
+import { EVENT_DESCRIPTION_MAX_LENGTH } from "@/modules/events/utils/discordEventDescription";
 import {
-  EVENT_DESCRIPTION_MAX_LENGTH,
   EVENT_MAX_VISIBILITY_ROLES,
   EVENT_NAME_MAX_LENGTH,
 } from "@/modules/events/utils/eventConstraints";

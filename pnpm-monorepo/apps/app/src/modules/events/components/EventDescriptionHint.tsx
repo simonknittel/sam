@@ -1,5 +1,5 @@
 import { DiscordFormattingHint } from "@/modules/common/components/form/DiscordFormattingHint";
-import { EVENT_DESCRIPTION_MAX_LENGTH } from "@/modules/events/utils/eventConstraints";
+import { EVENT_DESCRIPTION_MAX_LENGTH } from "@/modules/events/utils/discordEventDescription";
 
 /** The hint below the description field of an event. */
 export const EventDescriptionHint = () => {

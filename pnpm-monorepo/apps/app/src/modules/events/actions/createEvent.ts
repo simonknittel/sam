@@ -23,6 +23,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { berlinWallTimeToUtc } from "../utils/berlinWallTime";
 import { clonePositions } from "../utils/clonePositions";
+import { EVENT_DESCRIPTION_MAX_LENGTH } from "../utils/discordEventDescription";
 import {
   discordPublishFieldsSchema,
   parseDiscordPublishFields,
@@ -35,7 +36,6 @@ import {
 import { createEventActivity } from "../utils/eventActivity";
 import {
   DISCORD_PUBLISH_FAILED_PARAM,
-  EVENT_DESCRIPTION_MAX_LENGTH,
   EVENT_MAX_VISIBILITY_ROLES,
   EVENT_NAME_MAX_LENGTH,
   getEventPath,

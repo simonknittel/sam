@@ -18,10 +18,8 @@ import clsx from "clsx";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { FaGlobe, FaLock, FaSave, FaTrash } from "react-icons/fa";
-import {
-  EVENT_DESCRIPTION_MAX_LENGTH,
-  EVENT_NAME_MAX_LENGTH,
-} from "../utils/eventConstraints";
+import { EVENT_DESCRIPTION_MAX_LENGTH } from "../utils/discordEventDescription";
+import { EVENT_NAME_MAX_LENGTH } from "../utils/eventConstraints";
 import { EventDateTimeField } from "./EventDateTimeField";
 
 interface Props {

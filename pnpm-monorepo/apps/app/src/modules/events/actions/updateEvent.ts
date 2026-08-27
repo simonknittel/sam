@@ -15,13 +15,13 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { EVENT_MANAGE_GUARD_SELECT } from "../queries/eventManageGuardSelect";
 import { berlinWallTimeToUtc } from "../utils/berlinWallTime";
+import { EVENT_DESCRIPTION_MAX_LENGTH } from "../utils/discordEventDescription";
 import {
   getDiscordSyncWarning,
   syncDiscordEventPublication,
 } from "../utils/discordPublishing";
 import { createEventActivity } from "../utils/eventActivity";
 import {
-  EVENT_DESCRIPTION_MAX_LENGTH,
   EVENT_MAX_VISIBILITY_ROLES,
   EVENT_NAME_MAX_LENGTH,
 } from "../utils/eventConstraints";

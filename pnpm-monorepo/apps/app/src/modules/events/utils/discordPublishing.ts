@@ -1,7 +1,6 @@
 import "server-only";
 
 import { prisma } from "@/db";
-import { env } from "@/env";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { DiscordOutcome } from "@/modules/discord/utils/discordBotRequest";
@@ -26,7 +25,7 @@ import { DiscordScheduledEventEntityType } from "@/modules/discord/utils/schemas
 import { log } from "@/modules/logging";
 import { EventDiscordPublishTarget } from "@sam-monorepo/database/client";
 import type { DiscordPublishFields } from "./discordPublishFields";
-import { getEventPath } from "./eventConstraints";
+import { getEventUrl } from "./eventConstraints";
 
 export enum DiscordSyncOutcome {
   /** The event is not published — nothing to do. */
@@ -146,7 +145,7 @@ const clearPublishState = async (
  * is what a guild member reading the Discord entry actually wants.
  */
 export const getDefaultExternalLocation = (eventId: string) =>
-  `${env.NEXT_PUBLIC_BASE_URL}${getEventPath(eventId)}`;
+  getEventUrl(eventId);
 
 /**
  * Turns the manager's choice into the shape Discord expects. A picked
