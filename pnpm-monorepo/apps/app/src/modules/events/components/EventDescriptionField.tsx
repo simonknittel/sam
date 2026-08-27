@@ -88,12 +88,14 @@ export const EventDescriptionField = ({
               <span
                 id={counterId}
                 className={clsx(
-                  "shrink-0 tabular-nums",
+                  "ml-auto shrink-0 tabular-nums",
                   isOverLimit && "text-brand-red-500",
                 )}
               >
                 {description.length.toLocaleString("de-DE")} /{" "}
                 {maxLength.toLocaleString("de-DE")}
+                {/* Never the colour alone — it says what is wrong as well */}
+                {isOverLimit && " – zu lang"}
               </span>
             </span>
           }
