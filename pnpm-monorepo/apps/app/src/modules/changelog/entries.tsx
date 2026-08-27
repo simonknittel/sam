@@ -48,14 +48,15 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     key: "2026-08-27-wiki-blockmenue-per-klick",
     date: "2026-08-27",
-    title: "Wiki: Blockmenü öffnet per Klick",
+    title: "Wiki: Menüs öffnen per Klick",
     tags: ["Änderung", "Wiki"],
     isTracked: false,
     body: () => (
       <>
         <p>
-          Im Wiki-Editor erscheint das Menü eines Blocks jetzt erst, wenn du ihn
-          anklickst &ndash; nicht mehr schon beim Überfahren mit der Maus.
+          Im Wiki-Editor erscheinen sämtliche Menüs jetzt erst, wenn du das
+          dazugehörige Element anklickst &ndash; nicht mehr schon beim
+          Überfahren mit der Maus.
         </p>
       </>
     ),
