@@ -20,13 +20,8 @@ export const EventsTile = async ({ className, searchParams }: Props) => {
   const { status, participating, type, cursor, direction } =
     await loadSearchParams(searchParams);
 
-  const { events, nextCursor, prevCursor } = await getEvents(
-    status,
-    participating,
-    type,
-    cursor,
-    direction,
-  );
+  const { events, cancelledParticipationEventIds, nextCursor, prevCursor } =
+    await getEvents(status, participating, type, cursor, direction);
 
   if (events.length <= 0)
     return (
@@ -40,7 +35,14 @@ export const EventsTile = async ({ className, searchParams }: Props) => {
   return (
     <section className={clsx("flex flex-col gap-px", className)}>
       {events.map((event, index) => (
-        <Event key={event.id} event={event} index={index} />
+        <Event
+          key={event.id}
+          event={event}
+          index={index}
+          hasCancelledParticipation={cancelledParticipationEventIds.includes(
+            event.id,
+          )}
+        />
       ))}
 
       <CursorPaginationControls

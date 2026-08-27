@@ -19,10 +19,10 @@ interface Props {
 const MAX_EVENTS = 5;
 
 export const CalendarTile = async ({ className }: Props) => {
-  const [{ events: allEvents }, openEventCount] = await Promise.all([
-    getEvents("open"),
-    getOpenEventCount(),
-  ]);
+  const [
+    { events: allEvents, cancelledParticipationEventIds },
+    openEventCount,
+  ] = await Promise.all([getEvents("open"), getOpenEventCount()]);
   const events = allEvents.slice(0, MAX_EVENTS);
 
   return (
@@ -39,7 +39,14 @@ export const CalendarTile = async ({ className }: Props) => {
 
       {events.length > 0 ? (
         events.map((event, index) => (
-          <Event key={event.id} event={event} index={index} />
+          <Event
+            key={event.id}
+            event={event}
+            index={index}
+            hasCancelledParticipation={cancelledParticipationEventIds.includes(
+              event.id,
+            )}
+          />
         ))
       ) : (
         <div className="bg-secondary p-4 w-full corners-secondary">

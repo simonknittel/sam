@@ -22,9 +22,15 @@ interface Props {
     managers: EventCitizenReference[];
   };
   readonly index: number;
+  readonly hasCancelledParticipation?: boolean;
 }
 
-export const Event = async ({ className, event, index }: Props) => {
+export const Event = async ({
+  className,
+  event,
+  index,
+  hasCancelledParticipation,
+}: Props) => {
   const [showLineupButton, showBriefingButton] = await Promise.all([
     isLineupVisible(event),
     canReadEventBriefing(event),
@@ -37,6 +43,7 @@ export const Event = async ({ className, event, index }: Props) => {
       index={index}
       showLineupButton={showLineupButton}
       showBriefingButton={showBriefingButton}
+      hasCancelledParticipation={hasCancelledParticipation}
     />
   );
 };

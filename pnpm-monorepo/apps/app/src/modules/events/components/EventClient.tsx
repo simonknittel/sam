@@ -12,13 +12,17 @@ import type {
   EventCoverImage,
   EventParticipantRow,
 } from "@/modules/events/queries/eventRelationSelects";
-import type { Event as PrismaEvent } from "@sam-monorepo/database/browser";
+import {
+  EventSource,
+  type Event as PrismaEvent,
+} from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useNow } from "next-intl";
 import Image from "next/image";
 import { FaBook, FaCheck, FaClock, FaUser } from "react-icons/fa";
 import { MdWorkspaces } from "react-icons/md";
 import styles from "./EventClient.module.css";
+import { EventParticipationButton } from "./EventParticipationButton";
 
 /**
  * Image size:
@@ -38,6 +42,7 @@ interface Props {
   readonly index: number;
   readonly showLineupButton?: boolean;
   readonly showBriefingButton?: boolean;
+  readonly hasCancelledParticipation?: boolean;
 }
 
 export const EventClient = ({
@@ -46,6 +51,7 @@ export const EventClient = ({
   index,
   showLineupButton,
   showBriefingButton,
+  hasCancelledParticipation = false,
 }: Props) => {
   const authentication = useAuthentication();
   /**
@@ -68,14 +74,26 @@ export const EventClient = ({
 
   const formattedStartTime = formatDate(event.startTime, "long");
 
-  const isCurrentCitizenParticipating = event.participants.some(
-    (participant) =>
-      authentication &&
-      ((participant.discordUserId !== null &&
-        participant.discordUserId === authentication.session.discordId) ||
-        (participant.citizenId !== null &&
-          participant.citizenId === authentication.session.entity?.id)),
-  );
+  const currentCitizenParticipation =
+    event.participants.find(
+      (participant) =>
+        authentication &&
+        ((participant.discordUserId !== null &&
+          participant.discordUserId === authentication.session.discordId) ||
+          (participant.citizenId !== null &&
+            participant.citizenId === authentication.session.entity?.id)),
+    ) ?? null;
+  const isCurrentCitizenParticipating = currentCitizenParticipation !== null;
+
+  /**
+   * Mirrors `isParticipationOpen()` on the server. Sign-up stays open until
+   * the event ends, and only citizens can sign up at all.
+   */
+  const showParticipationButton =
+    event.source === EventSource.APP &&
+    Boolean(authentication && authentication.session.entity) &&
+    event.endTime !== null &&
+    event.endTime > now;
 
   return (
     <article
@@ -168,37 +186,49 @@ export const EventClient = ({
             )}
           </div>
 
-          <div className="flex flex-wrap">
-            <Link
-              href={`/app/events/${event.id}`}
-              className="first:rounded-l-secondary border border-interaction-700 last:rounded-r-secondary h-8 flex items-center justify-center px-3 gap-2 uppercase text-interaction-500 hover:text-interaction-300 hover:border-interaction-300 font-mono"
-            >
-              Details
-            </Link>
-
-            {showBriefingButton && (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <div className="flex flex-wrap">
               <Link
-                href={`/app/events/${event.id}/briefing`}
+                href={`/app/events/${event.id}`}
                 className="first:rounded-l-secondary border border-interaction-700 last:rounded-r-secondary h-8 flex items-center justify-center px-3 gap-2 uppercase text-interaction-500 hover:text-interaction-300 hover:border-interaction-300 font-mono"
               >
-                <FaBook />
-                Briefing
+                Details
               </Link>
-            )}
 
-            {showLineupButton && (
-              <Link
-                href={`/app/events/${event.id}/lineup`}
-                className="first:rounded-l-secondary border border-interaction-700 last:rounded-r-secondary h-8 flex items-center justify-center px-3 gap-2 uppercase text-interaction-500 hover:text-interaction-300 hover:border-interaction-300 font-mono"
-              >
-                <MdWorkspaces />
-                Aufstellung
-              </Link>
-            )}
+              {showBriefingButton && (
+                <Link
+                  href={`/app/events/${event.id}/briefing`}
+                  className="first:rounded-l-secondary border border-interaction-700 last:rounded-r-secondary h-8 flex items-center justify-center px-3 gap-2 uppercase text-interaction-500 hover:text-interaction-300 hover:border-interaction-300 font-mono"
+                >
+                  <FaBook />
+                  Briefing
+                </Link>
+              )}
 
-            {event.discordGuildId && event.discordId && (
-              <DiscordNavigationButton
-                path={`events/${event.discordGuildId}/${event.discordId}`}
+              {showLineupButton && (
+                <Link
+                  href={`/app/events/${event.id}/lineup`}
+                  className="first:rounded-l-secondary border border-interaction-700 last:rounded-r-secondary h-8 flex items-center justify-center px-3 gap-2 uppercase text-interaction-500 hover:text-interaction-300 hover:border-interaction-300 font-mono"
+                >
+                  <MdWorkspaces />
+                  Aufstellung
+                </Link>
+              )}
+
+              {event.discordGuildId && event.discordId && (
+                <DiscordNavigationButton
+                  path={`events/${event.discordGuildId}/${event.discordId}`}
+                />
+              )}
+            </div>
+
+            {showParticipationButton && (
+              <EventParticipationButton
+                eventId={event.id}
+                eventName={event.name}
+                isSignedUp={isCurrentCitizenParticipating}
+                hasCancelled={hasCancelledParticipation}
+                comment={currentCitizenParticipation?.comment ?? null}
               />
             )}
           </div>
