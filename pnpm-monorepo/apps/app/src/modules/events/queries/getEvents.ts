@@ -31,6 +31,31 @@ export const getOpenEventCount = cache(
   }),
 );
 
+/**
+ * Of the listed events, the ones the viewer has cancelled their
+ * participation for. Batched into a single query on purpose: every event
+ * preview needs the flag, and asking per event would turn the dashboard
+ * tile and the events list into N+1 queries.
+ */
+const getCancelledParticipationEventIds = async (
+  eventIds: string[],
+  citizenId: string | null,
+): Promise<string[]> => {
+  if (citizenId === null || eventIds.length <= 0) return [];
+
+  const rows = await prisma.eventParticipant.findMany({
+    where: {
+      eventId: { in: eventIds },
+      citizenId,
+      cancelledAt: { not: null },
+    },
+    select: { eventId: true },
+    distinct: ["eventId"],
+  });
+
+  return rows.map((row) => row.eventId);
+};
+
 export const getEvents = cache(
   withTrace(
     "getEvents",
@@ -124,6 +149,10 @@ export const getEvents = cache(
 
       return {
         events,
+        cancelledParticipationEventIds: await getCancelledParticipationEventIds(
+          events.map((event) => event.id),
+          authentication.session.entity?.id ?? null,
+        ),
         nextCursor:
           hasNextPage && events.length > 0
             ? events[events.length - 1].id
