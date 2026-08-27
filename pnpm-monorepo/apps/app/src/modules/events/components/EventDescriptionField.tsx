@@ -53,6 +53,7 @@ export const EventDescriptionField = ({
   eventId,
 }: Props) => {
   const counterId = useId();
+  const previewLabelId = useId();
   const defaultText = toText(defaultValue);
   const [description, setDescription] = useState(defaultText);
 
@@ -104,12 +105,15 @@ export const EventDescriptionField = ({
         />
       </div>
 
-      <div
+      <section
+        aria-labelledby={previewLabelId}
         className={clsx(
           isBeside ? "mt-4 md:mt-0 md:min-w-0 md:flex-1" : "mt-4",
         )}
       >
-        <p className="block text-white/90">Vorschau</p>
+        <p id={previewLabelId} className="block text-white/90">
+          Vorschau
+        </p>
 
         <div className="mt-2 max-h-96 overflow-y-auto rounded-secondary border border-neutral-800 bg-neutral-900 p-2 md:min-h-40">
           {description.trim() ? (
@@ -133,7 +137,7 @@ export const EventDescriptionField = ({
             </p>
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 };

@@ -25,6 +25,20 @@ import {
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
+/**
+ * The note the app appends to every description it hands to Discord, so that
+ * a reader signs up in the app instead of pressing Discord's own button.
+ */
+const SIGN_UP_NOTE = "Anmeldung nur über SAM, nicht über Discord:";
+
+/**
+ * The address in the note. The suite starts the app without a base address,
+ * thus the app falls back to its own default — the port of the worker does
+ * not appear in it.
+ */
+const eventUrl = (eventId: string) =>
+  `http://localhost:3000/app/events/${eventId}`;
+
 /** Discord's guild scheduled event entity types */
 const VOICE_ENTITY_TYPE = 2;
 const STAGE_ENTITY_TYPE = 1;
@@ -90,12 +104,16 @@ for (const { channel, entityType } of CHANNEL_KINDS) {
     );
     expect(scheduledEvent).toMatchObject({
       name: "Operation Kanalfunk",
-      description: "Wir treffen uns im Einsatzraum.",
       entity_type: entityType,
       channel_id: channel.id,
       privacy_level: 2,
     });
     expect(scheduledEvent).not.toHaveProperty("entity_metadata");
+
+    // The sign-up note follows the description of the organizer
+    expect(String(scheduledEvent!.description)).toBe(
+      `Wir treffen uns im Einsatzraum.\n\n${SIGN_UP_NOTE}\n${eventUrl(event.id)}`,
+    );
 
     // The published state replaces the form and links to the Discord event
     await expect(page.getByText(`Sprachkanal: ${channel.name}`)).toBeVisible();
@@ -216,6 +234,11 @@ test("editing a published event updates it on Discord, deleting it removes it", 
   const published = await prisma.event.findUnique({ where: { id: event.id } });
   const scheduledEventId = published!.discordPublishedId!;
 
+  // An event without a description of its own carries the note alone
+  expect(
+    String(discordMock.scheduledEvents.get(scheduledEventId)!.description),
+  ).toBe(`${SIGN_UP_NOTE}\n${eventUrl(event.id)}`);
+
   await page.reload();
   await waitForAppShellHydration(page);
   await page.getByLabel("Titel").fill("Operation Zweitfassung");
@@ -227,7 +250,7 @@ test("editing a published event updates it on Discord, deleting it removes it", 
 
   expect(discordMock.scheduledEvents.get(scheduledEventId)).toMatchObject({
     name: "Operation Zweitfassung",
-    description: "Jetzt mit Beschreibung.",
+    description: `Jetzt mit Beschreibung.\n\n${SIGN_UP_NOTE}\n${eventUrl(event.id)}`,
   });
   expect(
     discordMock.requests.some(
@@ -332,7 +355,9 @@ test("a legacy description longer than Discord allows blocks publishing", async 
     .click();
 
   await expect(
-    page.getByText("Die Kurzbeschreibung ist länger als die 1000 Zeichen"),
+    page.getByText(
+      /Die Kurzbeschreibung ist länger als die [\d.]+ Zeichen, die zusammen mit dem Hinweis zur Anmeldung auf Discord passen/,
+    ),
   ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
 
   expect(discordMock.scheduledEvents.size).toBe(0);
