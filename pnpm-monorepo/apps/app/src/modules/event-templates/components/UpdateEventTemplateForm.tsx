@@ -5,13 +5,13 @@ import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
-import { Textarea } from "@/modules/common/components/form/Textarea";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
 import type { PublishableGuildChannel } from "@/modules/discord/utils/guildScheduledEventPayload";
 import { EventTemplateDescriptionHint } from "@/modules/event-templates/components/EventTemplateDescriptionHint";
 import { DiscordPublishTargetFields } from "@/modules/events/components/DiscordPublishTargetFields";
 import { EventCoverImageField } from "@/modules/events/components/EventCoverImageField";
+import { EventDescriptionField } from "@/modules/events/components/EventDescriptionField";
 import { WikiRoleSelector } from "@/modules/wiki/components/WikiRoleSelector";
 import {
   EventVisibility,
@@ -21,10 +21,7 @@ import clsx from "clsx";
 import { useId, useState } from "react";
 import { FaGlobe, FaLock, FaSave } from "react-icons/fa";
 import { updateEventTemplate } from "../actions/updateEventTemplate";
-import {
-  EVENT_TEMPLATE_DESCRIPTION_MAX_LENGTH,
-  EVENT_TEMPLATE_NAME_MAX_LENGTH,
-} from "../utils/eventTemplateConstraints";
+import { EVENT_TEMPLATE_NAME_MAX_LENGTH } from "../utils/eventTemplateConstraints";
 
 interface Props {
   readonly className?: string;
@@ -78,14 +75,10 @@ export const UpdateEventTemplateForm = ({
         required
       />
 
-      <Textarea
-        name="description"
-        label="Kurzbeschreibung"
+      <EventDescriptionField
         hint={<EventTemplateDescriptionHint />}
-        maxLength={EVENT_TEMPLATE_DESCRIPTION_MAX_LENGTH}
         defaultValue={template.description ?? ""}
         className="mt-4"
-        classNameTextarea="h-40"
       />
 
       <EventCoverImageField

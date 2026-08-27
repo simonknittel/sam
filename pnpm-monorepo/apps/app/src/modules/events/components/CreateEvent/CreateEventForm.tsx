@@ -6,11 +6,11 @@ import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
 import { Select } from "@/modules/common/components/form/Select";
-import { Textarea } from "@/modules/common/components/form/Textarea";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
 import { api } from "@/modules/common/utils/api";
 import { createEvent } from "@/modules/events/actions/createEvent";
+import { EventDescriptionField } from "@/modules/events/components/EventDescriptionField";
 import { EventDescriptionHint } from "@/modules/events/components/EventDescriptionHint";
 import { WikiRoleSelector } from "@/modules/wiki/components/WikiRoleSelector";
 import {
@@ -20,10 +20,7 @@ import {
 import clsx from "clsx";
 import { useId, useState } from "react";
 import { FaGlobe, FaLock, FaSave } from "react-icons/fa";
-import {
-  EVENT_DESCRIPTION_MAX_LENGTH,
-  EVENT_NAME_MAX_LENGTH,
-} from "../../utils/eventConstraints";
+import { EVENT_NAME_MAX_LENGTH } from "../../utils/eventConstraints";
 import { DiscordPublishTargetFields } from "../DiscordPublishTargetFields";
 import { EventCoverImageField } from "../EventCoverImageField";
 import { EventDateTimeField } from "../EventDateTimeField";
@@ -136,17 +133,13 @@ export const CreateEventForm = ({
           autoFocus
         />
 
-        <Textarea
-          name="description"
-          label="Kurzbeschreibung"
+        <EventDescriptionField
           hint={<EventDescriptionHint />}
-          maxLength={EVENT_DESCRIPTION_MAX_LENGTH}
           defaultValue={getDefaultValueWithFallback(
             "description",
             selectedTemplate?.description ?? "",
           )}
           className="mt-4"
-          classNameTextarea="h-40"
         />
 
         {selectedTemplate?.coverImageId ? (

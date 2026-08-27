@@ -1,14 +1,6 @@
-import { DISCORD_EVENT_DESCRIPTION_MAX_LENGTH } from "@/modules/discord/utils/guildScheduledEventPayload";
+import { env } from "@/env";
 
 export const EVENT_NAME_MAX_LENGTH = 128;
-
-/**
- * Discord's own cap, adopted app-wide so an event published there never has
- * to be truncated silently. Rows written before this limit existed stay
- * valid; publishing one is blocked until its description is shortened.
- */
-export const EVENT_DESCRIPTION_MAX_LENGTH =
-  DISCORD_EVENT_DESCRIPTION_MAX_LENGTH;
 
 /**
  * Arbitrary (untested) cap so a hostile client cannot make one request write
@@ -17,6 +9,14 @@ export const EVENT_DESCRIPTION_MAX_LENGTH =
 export const EVENT_MAX_VISIBILITY_ROLES = 50;
 
 export const getEventPath = (eventId: string) => `/app/events/${eventId}`;
+
+/**
+ * The event's page as an absolute address, for a reader outside the app —
+ * the location of an external guild scheduled event, and the link in the
+ * sign-up note (see `discordEventDescription`).
+ */
+export const getEventUrl = (eventId: string) =>
+  new URL(getEventPath(eventId), env.NEXT_PUBLIC_BASE_URL).toString();
 
 /**
  * Search param the create action redirects with when the new event could not

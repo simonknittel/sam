@@ -5,6 +5,8 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { probeUploadImageDimensions } from "@/modules/common/utils/probeUploadImageDimensions";
+import { DISCORD_EVENT_DESCRIPTION_MAX_LENGTH } from "@/modules/discord/utils/guildScheduledEventPayload";
+import { findDescriptionProblem } from "@/modules/events/utils/discordEventDescription";
 import {
   discordPublishFieldsSchema,
   parseDiscordPublishFields,
@@ -17,7 +19,6 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getEventTemplateById } from "../queries/getEventTemplateById";
 import {
-  EVENT_TEMPLATE_DESCRIPTION_MAX_LENGTH,
   EVENT_TEMPLATE_MAX_ROLES,
   EVENT_TEMPLATE_NAME_MAX_LENGTH,
   EVENT_TEMPLATES_PATH,
@@ -30,10 +31,11 @@ const NO_COVER = "";
 const schema = z.object({
   templateId: z.cuid2(),
   name: z.string().trim().min(1).max(EVENT_TEMPLATE_NAME_MAX_LENGTH),
+  /** See `updateEvent` for why this is Discord's limit and not the app's. */
   description: z
     .string()
     .trim()
-    .max(EVENT_TEMPLATE_DESCRIPTION_MAX_LENGTH)
+    .max(DISCORD_EVENT_DESCRIPTION_MAX_LENGTH)
     .optional(),
   coverImageId: z.union([z.cuid(), z.literal(NO_COVER)]),
   visibility: z.enum(EventVisibility),
@@ -60,6 +62,10 @@ export const updateEventTemplate = createAuthenticatedAction(
     if (!context.permissions.canEdit)
       return { error: t("Common.forbidden"), requestPayload: formData };
     const citizenId = authentication.session.entity?.id ?? null;
+
+    const descriptionProblem = findDescriptionProblem(data.description);
+    if (descriptionProblem)
+      return { error: descriptionProblem, requestPayload: formData };
 
     /**
      * Validate the request

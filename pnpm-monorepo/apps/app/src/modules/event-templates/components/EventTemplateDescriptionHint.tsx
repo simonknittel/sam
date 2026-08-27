@@ -1,14 +1,7 @@
-import { DiscordFormattingHint } from "@/modules/common/components/form/DiscordFormattingHint";
-import { EVENT_TEMPLATE_DESCRIPTION_MAX_LENGTH } from "@/modules/event-templates/utils/eventTemplateConstraints";
-
-/** The hint below the description field of an event template. */
+/**
+ * What the description of an event template is for. `EventDescriptionField`
+ * says the limit and the formats before it.
+ */
 export const EventTemplateDescriptionHint = () => {
-  return (
-    <>
-      optional, max.{" "}
-      {EVENT_TEMPLATE_DESCRIPTION_MAX_LENGTH.toLocaleString("de-DE")} Zeichen.{" "}
-      <DiscordFormattingHint />. Wird als Kurzbeschreibung in das Event
-      übernommen.
-    </>
-  );
+  return <>Wird als Kurzbeschreibung in das Event übernommen.</>;
 };

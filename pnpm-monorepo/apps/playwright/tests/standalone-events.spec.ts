@@ -87,6 +87,50 @@ test("an authorized user creates a public event via the modal", async ({
   await expect(page.getByRole("link", { name: "Einstellungen" })).toBeVisible();
 });
 
+test("the description field previews the text and the sign-up note", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const creator = await createCitizen(prisma, {
+    handle: "vorschau-ersteller",
+    permissionStrings: ["event;read", "event;create"],
+  });
+
+  await signIn(creator.user);
+  await page.goto("/app/events");
+
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Event erstellen" }),
+    page.getByRole("heading", { name: "Neues Event" }),
+  );
+
+  const description = "**Sammelpunkt** um 20 Uhr";
+  await fillUntilValue(page.getByLabel("Beschreibung"), description);
+
+  const preview = page.getByRole("region", { name: "Vorschau" });
+  // The formats of Discord are rendered, not shown as characters
+  await expect(preview.getByText("Sammelpunkt")).toHaveJSProperty(
+    "tagName",
+    "STRONG",
+  );
+  await expect(preview).toContainText("um 20 Uhr");
+
+  /**
+   * The note is not editable and the event does not exist yet, thus its
+   * address stands in the preview without an identifier.
+   */
+  await expect(preview).toContainText(
+    "Anmeldung nur über SAM, nicht über Discord:",
+  );
+  await expect(preview).toContainText("/app/events/…");
+
+  // The counter measures what the organizer wrote, not what Discord receives
+  await expect(
+    page.getByText(new RegExp(`^${description.length} / [\\d.]+$`)),
+  ).toBeVisible();
+});
+
 test("a user without event;create sees no create button and cannot open foreign settings", async ({
   page,
   prisma,

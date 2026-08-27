@@ -5,6 +5,7 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { probeUploadImageDimensions } from "@/modules/common/utils/probeUploadImageDimensions";
+import { DISCORD_EVENT_DESCRIPTION_MAX_LENGTH } from "@/modules/discord/utils/guildScheduledEventPayload";
 import { getEventTemplateById } from "@/modules/event-templates/queries/getEventTemplateById";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { copyUpload } from "@/modules/uploads/utils/copyUpload";
@@ -23,6 +24,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { berlinWallTimeToUtc } from "../utils/berlinWallTime";
 import { clonePositions } from "../utils/clonePositions";
+import { findDescriptionProblem } from "../utils/discordEventDescription";
 import {
   discordPublishFieldsSchema,
   parseDiscordPublishFields,
@@ -35,7 +37,6 @@ import {
 import { createEventActivity } from "../utils/eventActivity";
 import {
   DISCORD_PUBLISH_FAILED_PARAM,
-  EVENT_DESCRIPTION_MAX_LENGTH,
   EVENT_MAX_VISIBILITY_ROLES,
   EVENT_NAME_MAX_LENGTH,
   getEventPath,
@@ -56,7 +57,12 @@ const TRANSACTION_TIMEOUT_MS = 30_000;
 
 const schema = z.object({
   name: z.string().trim().min(1).max(EVENT_NAME_MAX_LENGTH),
-  description: z.string().trim().max(EVENT_DESCRIPTION_MAX_LENGTH).optional(),
+  /** See `updateEvent` for why this is Discord's limit and not the app's. */
+  description: z
+    .string()
+    .trim()
+    .max(DISCORD_EVENT_DESCRIPTION_MAX_LENGTH)
+    .optional(),
   startTime: WALL_TIME_SCHEMA,
   endTime: WALL_TIME_SCHEMA,
   visibility: z.enum(EventVisibility),
@@ -122,6 +128,10 @@ export const createEvent = createAuthenticatedAction(
         error: "Wähle mindestens eine Rolle aus.",
         requestPayload: formData,
       };
+
+    const descriptionProblem = findDescriptionProblem(data.description);
+    if (descriptionProblem)
+      return { error: descriptionProblem, requestPayload: formData };
 
     /**
      * The cover was uploaded by the form before submitting; it must be the

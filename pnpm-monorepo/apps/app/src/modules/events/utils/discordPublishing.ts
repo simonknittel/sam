@@ -1,14 +1,12 @@
 import "server-only";
 
 import { prisma } from "@/db";
-import { env } from "@/env";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { DiscordOutcome } from "@/modules/discord/utils/discordBotRequest";
 import { getDiscordImageDataUri } from "@/modules/discord/utils/getDiscordImageDataUri";
 import { getPublishableGuildChannels } from "@/modules/discord/utils/getPublishableGuildChannels";
 import {
-  DISCORD_EVENT_DESCRIPTION_MAX_LENGTH,
   DISCORD_EVENT_LOCATION_MAX_LENGTH,
   DISCORD_EVENT_NAME_MAX_LENGTH,
   findContentProblem,
@@ -25,8 +23,12 @@ import {
 import { DiscordScheduledEventEntityType } from "@/modules/discord/utils/schemas";
 import { log } from "@/modules/logging";
 import { EventDiscordPublishTarget } from "@sam-monorepo/database/client";
+import {
+  buildDiscordEventDescription,
+  EVENT_DESCRIPTION_MAX_LENGTH,
+} from "./discordEventDescription";
 import type { DiscordPublishFields } from "./discordPublishFields";
-import { getEventPath } from "./eventConstraints";
+import { getEventUrl } from "./eventConstraints";
 
 export enum DiscordSyncOutcome {
   /** The event is not published — nothing to do. */
@@ -98,7 +100,10 @@ const buildContent = async (event: PublishStateRow) => {
   return {
     content: {
       name: event.name,
-      description: event.description,
+      description: buildDiscordEventDescription(
+        event.description,
+        getEventUrl(event.id),
+      ),
       startTime: event.startTime,
       endTime: event.endTime,
       imageDataUri,
@@ -146,7 +151,7 @@ const clearPublishState = async (
  * is what a guild member reading the Discord entry actually wants.
  */
 export const getDefaultExternalLocation = (eventId: string) =>
-  `${env.NEXT_PUBLIC_BASE_URL}${getEventPath(eventId)}`;
+  getEventUrl(eventId);
 
 /**
  * Turns the manager's choice into the shape Discord expects. A picked
@@ -357,7 +362,7 @@ const getProblemMessage = (problem: GuildScheduledEventContentProblem) => {
       return `Der Titel ist länger als die ${DISCORD_EVENT_NAME_MAX_LENGTH} Zeichen, die Discord erlaubt. Kürze ihn, um das Event auf Discord zu veröffentlichen.`;
 
     case GuildScheduledEventContentProblem.DescriptionTooLong:
-      return `Die Kurzbeschreibung ist länger als die ${DISCORD_EVENT_DESCRIPTION_MAX_LENGTH} Zeichen, die Discord erlaubt. Kürze sie, um das Event auf Discord zu veröffentlichen.`;
+      return `Die Kurzbeschreibung ist länger als die ${EVENT_DESCRIPTION_MAX_LENGTH.toLocaleString("de-DE")} Zeichen, die zusammen mit dem Hinweis zur Anmeldung auf Discord passen. Kürze sie, um das Event auf Discord zu veröffentlichen.`;
 
     case GuildScheduledEventContentProblem.LocationTooLong:
       return `Der Ort ist länger als die ${DISCORD_EVENT_LOCATION_MAX_LENGTH} Zeichen, die Discord erlaubt.`;

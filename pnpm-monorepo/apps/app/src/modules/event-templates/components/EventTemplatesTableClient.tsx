@@ -6,11 +6,21 @@ import {
   TableTile,
   type TableColumn,
 } from "@/modules/common/components/TableTile";
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import { FaPlus } from "react-icons/fa";
 import type { EventTemplateListEntry } from "../queries/getEventTemplates";
-import { CreateEventTemplateForm } from "./CreateEventTemplateForm";
 import { EventTemplateRow } from "./EventTemplateRow";
+
+/**
+ * Lazily loaded like the other create forms: the form carries the Markdown
+ * renderer of the description preview, which the table itself never needs.
+ */
+const CreateEventTemplateForm = dynamic(() =>
+  import("./CreateEventTemplateForm").then(
+    (mod) => mod.CreateEventTemplateForm,
+  ),
+);
 
 const OWNER_COLUMN: TableColumn = {
   key: "owner",
