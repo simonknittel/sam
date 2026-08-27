@@ -98,6 +98,22 @@
   margin-top: 0;
 }
 
+/*
+ * Tiptap wraps a list item's text in a paragraph, so the typography
+ * plugin's paragraph margins (up to 1.25em) set the gap between items
+ * instead of the li's own 0.5em rhythm. Dropping the outer margins of
+ * the edge paragraphs hands the gap back to the li margins — the same
+ * spacing the task lists below get by zeroing their paragraph margins.
+ * Paragraphs in the middle of an item keep their margins.
+ */
+.prose li > p:first-child {
+  margin-top: 0;
+}
+
+.prose li > p:last-child {
+  margin-bottom: 0;
+}
+
 /* Task lists (editor and static render) */
 .prose ul[data-type="taskList"] {
   list-style: none;
@@ -333,14 +349,15 @@
 }
 
 /*
- * Content column aligns with the header text. No vertical padding: the
- * blocks' own margins already space them off the divider and the card's
- * bottom border, and adding padding would stop them from collapsing and
- * double the gaps.
+ * Content column aligns with the header text, and the right padding
+ * mirrors it so the content sits centered in the card. No vertical
+ * padding: the blocks' own margins already space them off the divider
+ * and the card's bottom border, and adding padding would stop them from
+ * collapsing and double the gaps.
  */
 .prose details > [data-type="detailsContent"],
 .tiptap [data-type="details"] > div > [data-type="detailsContent"] {
-  padding-inline: 3.25rem 1rem;
+  padding-inline: 3.25rem;
 }
 
 /*
@@ -484,9 +501,14 @@
   --wiki-callout-color: var(--color-red-500);
 }
 
-/* Images: block-level so the alignment margins take effect */
+/*
+ * Images: block-level so the alignment margins take effect. The block
+ * margins replace the typography plugin's 2em with the 1.25em the other
+ * block cards (callouts, grids, collapsibles) use.
+ */
 .prose img {
   display: block;
+  margin-block: 1.25em;
   border-radius: var(--radius-secondary);
 }
 
@@ -536,7 +558,7 @@
 }
 
 /*
- * The typography plugin's 2em block-image margins collapse away through
+ * The block-image margins (see .prose img above) collapse away through
  * the block image's anchor, but the floated anchor is a formatting
  * context of its own — there they push the image down inside the anchor
  * and pad it below, so the float would not sit flush with the
