@@ -18,7 +18,6 @@ import { WikiCalloutMenuActions } from "./editMenu/WikiCalloutMenuActions";
 import {
   wikiMenuFromElement,
   wikiMenuFromSelection,
-  wikiMenuHighlightRange,
   wikiMenuLabel,
   type WikiEditMenuState,
 } from "./editMenu/wikiEditMenuState";
@@ -27,7 +26,6 @@ import { WikiNodeMenuActions } from "./editMenu/WikiNodeMenuActions";
 import { WikiTextNodeMenuActions } from "./editMenu/WikiTextNodeMenuActions";
 import { WikiTextSelectionMenuActions } from "./editMenu/WikiTextSelectionMenuActions";
 import { ToolbarDivider } from "./toolbar/ToolbarDivider";
-import { setWikiActiveNodeHighlight } from "./WikiActiveNodeHighlight";
 import { WikiPageIndexConfigModal } from "./WikiPageIndexConfigModal";
 import { WikiRoleCitizensConfigModal } from "./WikiRoleCitizensConfigModal";
 import { WikiVariantLinkModal } from "./WikiVariantLinkModal";
@@ -53,27 +51,27 @@ const setViewDragging = (
 
 interface Props {
   readonly editor: Editor | null;
-  /** Shared hover state, see WikiEditorOverlays */
-  readonly hoveredElement: HTMLElement | null;
+  /** Shared focused-block state, see WikiEditorOverlays */
+  readonly focusedElement: HTMLElement | null;
   /** Opens the link dialog (selection menu's link button) */
   readonly onRequestLink: () => void;
 }
 
 /**
- * Contextual edit menu centered above its target. Hover (or, on touch
- * devices, selection) raises it for embeds, media, links, callouts,
- * container blocks and text blocks — for paragraphs/headings it is the
- * block menu (headings, alignment). Text selected inside a single block
- * raises the formatting menu (marks, text color, highlight) centered
- * over the selection instead — exclusively: while the selection exists,
- * hovering other blocks does not swap the menu out. Every block type
- * gets at least a delete button, and all but the formatting menu the
- * drag handle; the per-kind actions live in editMenu/. Companion of
- * WikiResizeHandles inside the shared overlay root.
+ * Contextual edit menu centered above its target. Clicking a block
+ * focuses it and raises the menu — for embeds, media, links, callouts,
+ * container blocks and text blocks, where it is the block menu
+ * (headings, alignment). Text selected inside a single block raises the
+ * formatting menu (marks, text color, highlight) centered over the
+ * selection instead — exclusively: while the selection exists, no block
+ * menu shows. Every block type gets at least a delete button, and all but
+ * the formatting menu the drag handle; the per-kind actions live in
+ * editMenu/. Companion of WikiResizeHandles inside the shared overlay
+ * root.
  */
 export const WikiEditMenu = ({
   editor,
-  hoveredElement,
+  focusedElement,
   onRequestLink,
 }: Props) => {
   const [menu, setMenu] = useState<WikiEditMenuState>(null);
@@ -85,8 +83,8 @@ export const WikiEditMenu = ({
    */
   const editorBlurredRef = useRef(false);
   /**
-   * Lifted out of the menu itself: the hover menu unmounts when the pointer
-   * moves onto the (portaled) dialogs, so they must not live inside it.
+   * Lifted out of the menu itself: the menu unmounts when its block loses
+   * the focus, so the dialogs it opens must not live inside it.
    */
   const [nodeConfig, setNodeConfig] = useState<{
     readonly typeName: string;
@@ -132,15 +130,15 @@ export const WikiEditMenu = ({
       }
 
       /**
-       * A transaction that redraws the hovered node detaches the element;
-       * the hover hook re-anchors (or clears) it right after — skip the
+       * A transaction that redraws the focused node detaches the element;
+       * the focus hook re-anchors (or clears) it right after — skip the
        * tick instead of flashing the menu closed, the prop change re-runs
        * the update.
        */
-      if (hoveredElement && !hoveredElement.isConnected) return;
+      if (focusedElement && !focusedElement.isConnected) return;
 
-      const hoverMenu = hoveredElement
-        ? wikiMenuFromElement(editor, hoveredElement)
+      const focusMenu = focusedElement
+        ? wikiMenuFromElement(editor, focusedElement)
         : null;
       const selectionMenu = wikiMenuFromSelection(
         editor,
@@ -148,23 +146,15 @@ export const WikiEditMenu = ({
       );
 
       /**
-       * While text is selected, the formatting menu is exclusive —
-       * hovering other blocks must not swap it out; deselecting brings
-       * the hover menus back. Otherwise hover wins over the
-       * selection-raised menus.
+       * While text is selected, the formatting menu is exclusive — the
+       * focused block gives up its own menu for it (and does not get it
+       * back when the selection collapses, see useWikiFocusedElement).
+       * Otherwise the focused block wins over the link menu.
        */
-      const nextMenu =
+      setMenu(
         selectionMenu?.kind === "textSelection"
           ? selectionMenu
-          : (hoverMenu ?? selectionMenu);
-
-      setMenu(nextMenu);
-      setWikiActiveNodeHighlight(
-        editor,
-        nextMenu && nextMenu === hoverMenu
-          ? wikiMenuHighlightRange(editor, nextMenu)
-          : null,
-        "menu",
+          : (focusMenu ?? selectionMenu),
       );
     };
 
@@ -173,9 +163,9 @@ export const WikiEditMenu = ({
      * blurring the editor — such blurs into the menu must not close it,
      * or the button would unmount under the pointer and swallow the
      * click. The button's command refocuses the editor afterwards. Only
-     * the formatting menu closes on blur: the NodeSelection-raised block
-     * menu has to survive gutter drags (see wikiMenuFromSelection), whose
-     * drag handle also steals focus.
+     * the formatting menu closes on blur: it stands on a selection that
+     * survives the blur, while the block menus stand on the focused
+     * block, which a click outside the editor clears on its own.
      */
     const handleBlur = ({ event }: { event: FocusEvent }) => {
       if (
@@ -200,9 +190,8 @@ export const WikiEditMenu = ({
       editor.off("transaction", update);
       editor.off("blur", handleBlur);
       editor.off("focus", handleFocus);
-      setWikiActiveNodeHighlight(editor, null, "menu");
     };
-  }, [editor, hoveredElement, refs]);
+  }, [editor, focusedElement, refs]);
 
   if (!editor) return null;
 
@@ -282,19 +271,15 @@ export const WikiEditMenu = ({
    * The menu is rendered conditionally INSIDE this tree, never by
    * returning early: swapping the returned tree would move the dialogs to
    * another position and remount them — a dialog opened from the menu
-   * must survive the menu closing when the pointer moves off its target.
+   * must survive the menu closing when its block loses the focus.
    */
   return (
     <>
       {configModals}
 
       {/*
-        Only the actions row keeps the hover (and with it the menu) alive:
-        an invisible strip (::after) on it bridges the visual gap to the
-        target so the pointer can cross without losing the hover, while
-        the label row lets the hover fall through. Reversing the column
-        when the menu flips below the target keeps the actions row the one
-        facing it.
+        Reversing the column when the menu flips below the target keeps
+        the actions row the one facing it.
       */}
       {menu && (
         <div
@@ -314,13 +299,7 @@ export const WikiEditMenu = ({
               {wikiMenuLabel(menu)}
             </span>
 
-            <div
-              className={clsx(
-                "pointer-events-auto relative flex items-center gap-1 rounded-secondary border border-neutral-700 bg-neutral-900 p-1 shadow-lg",
-                "after:absolute after:inset-x-0 after:h-2 after:content-['']",
-                flippedBelow ? "after:bottom-full" : "after:top-full",
-              )}
-            >
+            <div className="pointer-events-auto flex items-center gap-1 rounded-secondary border border-neutral-700 bg-neutral-900 p-1 shadow-lg">
               {menu.kind !== "link" && menu.kind !== "textSelection" && (
                 <>
                   <span

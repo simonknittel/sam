@@ -14,15 +14,14 @@ import {
   type WikiTextSize,
 } from "@sam-monorepo/wiki-editor";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
-import { NodeSelection, TextSelection } from "@tiptap/pm/state";
+import { TextSelection } from "@tiptap/pm/state";
 import type { Editor } from "@tiptap/react";
 import { getWikiNodeTypeLabel } from "../../utils/getWikiNodeTypeLabel";
 import { TEXT_FORMAT_OPTIONS } from "../toolbar/textFormats";
-import type { WikiHighlightRange } from "../WikiActiveNodeHighlight";
 import {
   resolveWikiNodeFromElement,
-  wikiHoverTargetKey,
-} from "../wikiEditorHover";
+  wikiTargetKey,
+} from "../wikiEditorTargets";
 
 /** Node types with an editable src URL */
 export const URL_NODE_TYPES = ["wikiEmbed"];
@@ -60,7 +59,7 @@ const BLOCK_NODE_TYPES = [
   "wikiGrid",
 ];
 
-/** Text blocks with the hover-raised block menu and the selection-raised formatting menu */
+/** Text blocks with the click-raised block menu and the selection-raised formatting menu */
 const TEXT_MENU_NODE_TYPES = ["paragraph", "heading"];
 
 /**
@@ -173,7 +172,7 @@ export type WikiTextSelectionMenuState = {
   readonly hasLink: boolean;
 } & WikiMenuTarget;
 
-/** Block menu of the hovered (or whole-selected) paragraph/heading */
+/** Block menu of the focused paragraph/heading */
 export type WikiTextNodeMenuState = {
   readonly kind: "textNode";
   readonly position: number;
@@ -305,10 +304,10 @@ const textNodeMenu = (
 });
 
 /**
- * The menu of a hovered element, or NULL when it has none. Nodes rendering
- * their own content (page index, role members, …) arrive as their node-view
- * root — the hover never points inside them, see useWikiHoveredElement — and
- * fall through to the node menu below.
+ * The menu of the focused element, or NULL when it has none. Nodes
+ * rendering their own content (page index, role members, …) arrive as their
+ * node-view root — the focus never points inside them, see
+ * useWikiFocusedElement — and fall through to the node menu below.
  */
 export const wikiMenuFromElement = (
   editor: Editor,
@@ -316,7 +315,7 @@ export const wikiMenuFromElement = (
 ): WikiEditMenuState => {
   const target: WikiMenuTarget = {
     reference: element,
-    key: wikiHoverTargetKey(element),
+    key: wikiTargetKey(element),
   };
 
   /**
@@ -388,49 +387,23 @@ export const wikiMenuFromElement = (
   return nodeMenu(editor, resolved.node, resolved.position, target);
 };
 
-/** The menu the current selection raises, or NULL when it raises none */
+/**
+ * The menu the current selection raises, or NULL when it raises none.
+ * Everything a block itself offers hangs off the focused block instead
+ * (wikiMenuFromElement) — only the two menus that target a stretch of
+ * text rather than a block are raised from here.
+ */
 export const wikiMenuFromSelection = (
   editor: Editor,
   editorBlurred: boolean,
 ): WikiEditMenuState => {
   const { selection } = editor.state;
 
-  if (
-    selection instanceof NodeSelection &&
-    MENU_NODE_TYPES.includes(selection.node.type.name)
-  ) {
-    const nodeDom = editor.view.nodeDOM(selection.from);
-    if (!(nodeDom instanceof HTMLElement)) return null;
-    return nodeMenu(editor, selection.node, selection.from, {
-      reference: nodeDom,
-      key: `selection:${selection.from}`,
-    });
-  }
-
   /**
-   * A text block's own NodeSelection (the gutter's drag handle
-   * creates one on dragstart) also raises the block menu, so it
-   * shows through and after such drags while the pointer is off the
-   * document.
-   */
-  if (
-    selection instanceof NodeSelection &&
-    TEXT_MENU_NODE_TYPES.includes(selection.node.type.name)
-  ) {
-    const blockDom = editor.view.nodeDOM(selection.from);
-    if (!(blockDom instanceof HTMLElement)) return null;
-    return textNodeMenu(editor, selection.node, selection.from, {
-      reference: blockDom,
-      key: wikiHoverTargetKey(blockDom),
-    });
-  }
-
-  /**
-   * Only a CARET inside a link raises the link menu (the touch fallback
-   * for editing an existing link; deliberately blur-proof — focus moves
-   * into its URL form while editing). A non-empty selection over a link
-   * falls through to the formatting menu below, whose link button opens
-   * the link dialog prefilled.
+   * Only a CARET inside a link raises the link menu (deliberately
+   * blur-proof — focus moves into its URL form while editing). A
+   * non-empty selection over a link falls through to the formatting menu
+   * below, whose link button opens the link dialog prefilled.
    */
   if (selection.empty && editor.isActive("link")) {
     const domAtPos = editor.view.domAtPos(selection.from).node;
@@ -472,23 +445,7 @@ export const wikiMenuFromSelection = (
         selection.from,
         selection.to,
       ),
-      key: wikiHoverTargetKey(blockDom),
-    });
-  }
-
-  if (selection.empty && editor.isActive("wikiCallout")) {
-    const domAtPos = editor.view.domAtPos(selection.from).node;
-    const element =
-      domAtPos instanceof HTMLElement ? domAtPos : domAtPos.parentElement;
-    const calloutDom = element?.closest("[data-wiki-callout]");
-    if (!(calloutDom instanceof HTMLElement)) return null;
-    const resolved = resolveWikiNodeFromElement(editor, calloutDom, [
-      "wikiCallout",
-    ]);
-    if (!resolved) return null;
-    return calloutMenu(editor, resolved.node, resolved.position, {
-      reference: calloutDom,
-      key: `selection:${resolved.position}`,
+      key: wikiTargetKey(blockDom),
     });
   }
 
@@ -510,29 +467,5 @@ export const wikiMenuLabel = (menu: NonNullable<WikiEditMenuState>): string => {
       );
     default:
       return getWikiNodeTypeLabel(menu.typeName);
-  }
-};
-
-/**
- * Block washed while its hover menu is up — the menu's own (deepest
- * hovered) node, so nested blocks win over their containers. Inline
- * targets (links) get no wash.
- */
-export const wikiMenuHighlightRange = (
-  editor: Editor,
-  menu: NonNullable<WikiEditMenuState>,
-): WikiHighlightRange | null => {
-  switch (menu.kind) {
-    case "node":
-    case "block":
-    case "textNode":
-      return { from: menu.position, to: menu.position + menu.nodeSize };
-    case "callout": {
-      const node = editor.state.doc.nodeAt(menu.position);
-      if (node?.type.name !== "wikiCallout") return null;
-      return { from: menu.position, to: menu.position + node.nodeSize };
-    }
-    default:
-      return null;
   }
 };

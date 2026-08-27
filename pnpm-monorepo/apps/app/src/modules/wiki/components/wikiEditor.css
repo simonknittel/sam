@@ -620,12 +620,24 @@
 }
 
 /*
- * Light wash over the block the gutter or the contextual edit menu
- * currently targets, so it's clear which node their actions affect.
+ * Light wash over the block under the pointer, and over the one the
+ * gutter targets while it is in use.
  */
 .tiptap .wiki-active-node-highlight {
   background-color: rgb(255 255 255 / 0.06);
   border-radius: var(--radius-secondary);
+}
+
+/*
+ * The clicked block, whose contextual edit menu is open: a stronger wash
+ * plus an outline, so it stands out from the hover wash — the two show at
+ * the same time whenever the pointer rests on a different block.
+ */
+.tiptap .wiki-focused-node-highlight {
+  background-color: rgb(255 255 255 / 0.1);
+  border-radius: var(--radius-secondary);
+  outline: 1px solid var(--color-interaction-700);
+  outline-offset: 2px;
 }
 
 /*

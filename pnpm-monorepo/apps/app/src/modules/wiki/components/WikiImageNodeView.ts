@@ -20,7 +20,7 @@ interface WikiImageNodeViewOptions extends WikiImageOptions {
  * original file around the image), then swaps the img's src for the Next.js
  * image optimizer's srcset when the upload's dimensions are known. Not a
  * React node view on purpose: the DOM stays identical to the schema
- * rendering, so the resize handles (which size the anchor), the hover menu
+ * rendering, so the resize handles (which size the anchor), the edit menu
  * and the static read view all see the same structure.
  */
 const findImageElement = (element: HTMLElement): HTMLElement | null =>
@@ -99,8 +99,8 @@ const createWikiImageNodeView =
        * img mid-drag would blank it while a not yet cached optimizer
        * candidate loads. Decoration-only updates leave the DOM entirely
        * alone — recreating on them would loop, because the active-node
-       * highlight decorates the hovered block and the overlays re-anchor
-       * on every redraw.
+       * highlight decorates the hovered and the focused block, and the
+       * overlays re-anchor on every redraw.
        */
       update: (updatedNode) => {
         if (updatedNode.type !== renderedNode.type) return false;

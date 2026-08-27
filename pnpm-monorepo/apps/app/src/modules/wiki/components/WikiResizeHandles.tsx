@@ -7,10 +7,10 @@ import {
   isWikiHeightResizable,
   WIKI_RESIZABLE_NODE_TYPES,
 } from "@sam-monorepo/wiki-editor";
-import { NodeSelection, type Transaction } from "@tiptap/pm/state";
+import type { Transaction } from "@tiptap/pm/state";
 import type { Editor } from "@tiptap/react";
 import { useEffect, useRef, useState, type RefObject } from "react";
-import { resolveWikiNodeByElement } from "./wikiEditorHover";
+import { resolveWikiNodeByElement } from "./wikiEditorTargets";
 
 interface DragState {
   readonly side: "left" | "right" | "bottom";
@@ -72,31 +72,29 @@ const resizableNodeAt = (editor: Editor, position: number) => {
 
 interface Props {
   readonly editor: Editor | null;
-  /** Shared hover state, see WikiEditorOverlays */
-  readonly hoveredElement: HTMLElement | null;
+  /** Shared focused-block state, see WikiEditorOverlays */
+  readonly focusedElement: HTMLElement | null;
   /** The overlay root — reference frame for the handle positions */
   readonly overlayRef: RefObject<HTMLDivElement | null>;
-  /** Suppresses hover hiding while a resize drag is running */
+  /** Freezes the hover wash while a resize drag is running */
   readonly setDragLock: (locked: boolean) => void;
 }
 
 /**
- * Drag handles on the edges of the hovered (or, on touch devices,
- * selected) resizable node: left/right for the width on all resizable
- * nodes, bottom for the height on the generic iframe. The hitboxes overlap
- * the element's edges, so the pointer never leaves the hover containment
- * (see WikiEditorOverlays) on its way to a handle.
+ * Drag handles on the edges of the focused resizable node: left/right for
+ * the width on all resizable nodes, bottom for the height on the generic
+ * iframe.
  *
  * Dragging writes `widthPx`/`heightPx` to the document instead of
  * previewing the size on the DOM: ProseMirror owns the editor's DOM and
  * re-renders any node whose markup changed behind its back, which detached
  * the previewed element mid-drag and left the block at its old size until
  * the drag ended. Driven by the document, the block, the handles and the
- * hover wash resize together — and remote editors see the drag live.
+ * focus highlight resize together — and remote editors see the drag live.
  */
 export const WikiResizeHandles = ({
   editor,
-  hoveredElement,
+  focusedElement,
   overlayRef,
   setDragLock,
 }: Props) => {
@@ -153,12 +151,12 @@ export const WikiResizeHandles = ({
       }
 
       /**
-       * A transaction that redraws the hovered node detaches the element;
-       * the hover hook re-anchors (or clears) it right after — skip the
+       * A transaction that redraws the focused node detaches the element;
+       * the focus hook re-anchors (or clears) it right after — skip the
        * tick instead of flashing the handles away, the prop change re-runs
        * the update.
        */
-      if (hoveredElement && !hoveredElement.isConnected) return;
+      if (focusedElement && !focusedElement.isConnected) return;
 
       stopMeasuring?.();
       stopMeasuring = null;
@@ -169,26 +167,13 @@ export const WikiResizeHandles = ({
         return;
       }
 
-      /**
-       * The hovered node wins; a node-selected node (tap on touch
-       * devices) is the fallback.
-       */
-      let position: number | null = null;
-
-      if (hoveredElement) {
-        const hovered = resolveWikiNodeByElement(editor, hoveredElement);
-        if (hovered && resizableNodeAt(editor, hovered.position))
-          position = hovered.position;
-      }
-
-      if (position === null) {
-        const { selection } = editor.state;
-        if (
-          selection instanceof NodeSelection &&
-          resizableNodeAt(editor, selection.from)
-        )
-          position = selection.from;
-      }
+      const focused = focusedElement
+        ? resolveWikiNodeByElement(editor, focusedElement)
+        : null;
+      const position =
+        focused && resizableNodeAt(editor, focused.position)
+          ? focused.position
+          : null;
 
       const element = position === null ? null : nodeElement(position);
       if (position === null || !element) {
@@ -221,7 +206,7 @@ export const WikiResizeHandles = ({
       stopMeasuring?.();
       editor.off("transaction", handleTransaction);
     };
-  }, [editor, hoveredElement, overlayRef]);
+  }, [editor, focusedElement, overlayRef]);
 
   const startDrag = (
     side: "left" | "right" | "bottom",

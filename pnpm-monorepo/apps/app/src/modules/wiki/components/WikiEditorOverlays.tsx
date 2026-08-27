@@ -3,17 +3,20 @@
 import type { Editor } from "@tiptap/react";
 import { useCallback, useRef } from "react";
 import { WikiEditMenu } from "./WikiEditMenu";
-import { useWikiHoveredElement } from "./wikiEditorHover";
+import {
+  useWikiFocusedElement,
+  useWikiHoverHighlight,
+} from "./wikiEditorTargets";
 import { WikiResizeHandles } from "./WikiResizeHandles";
 import { WikiTableControls } from "./WikiTableControls";
 
 /**
- * Everything the edit menu reacts to; the handles use a subset of it.
+ * Everything a click can focus; the hover wash uses the same list.
  * closest() picks the deepest match, so container blocks (lists, tables,
- * grids, …) only take the hover on their own chrome — their children keep
+ * grids, …) only take the focus on their own chrome — their children keep
  * their more specific menus.
  */
-const HOVER_SELECTOR = [
+const TARGET_SELECTOR = [
   "img",
   "[data-wiki-embed]",
   "[data-wiki-embed-blocked]",
@@ -48,19 +51,21 @@ interface Props {
 }
 
 /**
- * Shares one hover state between the edit menu, the resize handles, the
- * table controls and the hover outline, so all of them appear and
- * disappear together. The overlay
- * root is the hover hook's containment boundary: the pointer may roam over
- * the menu's actions row and the handles (including the invisible hit-area
- * strips bridging the gaps to the element) without losing the hover;
- * anywhere else — including the menu's label row — hiding is immediate.
+ * Shares one focused-block state between the edit menu and the resize
+ * handles, so both appear and disappear together; the table controls
+ * follow the selection instead. The overlay root is the boundary both the
+ * focus state and the hover wash treat as "not outside": the pointer may
+ * roam over the menu's actions row and the handles without clearing
+ * either.
  */
 export const WikiEditorOverlays = ({ editor, onRequestLink }: Props) => {
   const overlayRef = useRef<HTMLDivElement>(null);
   const dragLockRef = useRef(false);
 
-  const hoveredElement = useWikiHoveredElement(editor, HOVER_SELECTOR, {
+  const focusedElement = useWikiFocusedElement(editor, TARGET_SELECTOR, {
+    overlayRef,
+  });
+  useWikiHoverHighlight(editor, TARGET_SELECTOR, {
     overlayRef,
     lockRef: dragLockRef,
   });
@@ -73,18 +78,14 @@ export const WikiEditorOverlays = ({ editor, onRequestLink }: Props) => {
     <div ref={overlayRef} className="pointer-events-none absolute inset-0">
       <WikiResizeHandles
         editor={editor}
-        hoveredElement={hoveredElement}
+        focusedElement={focusedElement}
         overlayRef={overlayRef}
         setDragLock={setDragLock}
       />
-      <WikiTableControls
-        editor={editor}
-        hoveredElement={hoveredElement}
-        overlayRef={overlayRef}
-      />
+      <WikiTableControls editor={editor} overlayRef={overlayRef} />
       <WikiEditMenu
         editor={editor}
-        hoveredElement={hoveredElement}
+        focusedElement={focusedElement}
         onRequestLink={onRequestLink}
       />
     </div>
