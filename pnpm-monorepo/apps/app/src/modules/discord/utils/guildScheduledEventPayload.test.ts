@@ -87,20 +87,6 @@ describe("buildCreateGuildScheduledEventPayload", () => {
     });
   });
 
-  /**
-   * Unlike modify, Discord's create endpoint types `description` as a plain
-   * optional string — a null would be rejected, which would make every
-   * description-less event unpublishable.
-   */
-  it("omits the description instead of sending null", () => {
-    const payload = buildCreateGuildScheduledEventPayload(
-      content({ description: null }),
-      CHANNEL_TARGET,
-    );
-
-    expect(payload).not.toHaveProperty("description");
-  });
-
   it("omits the image when the cover could not be read", () => {
     const payload = buildCreateGuildScheduledEventPayload(
       content({ imageDataUri: undefined }),

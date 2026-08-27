@@ -75,7 +75,13 @@ export const getEntityTypeForChannelType = (channelType: number) =>
 
 export interface GuildScheduledEventContent {
   readonly name: string;
-  readonly description: string | null;
+  /**
+   * Never absent: the app appends the sign-up note to every description it
+   * sends, so an event without a description of its own still carries the
+   * note. This also avoids the asymmetry of the two endpoints — modify
+   * accepts a null, create does not.
+   */
+  readonly description: string;
   readonly startTime: Date;
   readonly endTime: Date;
   /**
@@ -91,17 +97,13 @@ export interface GuildScheduledEventContent {
  * `POST /guilds/{guild.id}/scheduled-events`. `channel_id` must be absent
  * for EXTERNAL events and `entity_metadata` for the channel-bound ones —
  * Discord rejects the payload otherwise.
- *
- * `description` is omitted rather than sent as null: unlike modify, create
- * declares it as a plain optional string, so a null would be rejected. The
- * event simply starts out without a description.
  */
 export const buildCreateGuildScheduledEventPayload = (
   content: GuildScheduledEventContent,
   target: GuildScheduledEventTarget,
 ) => ({
   name: content.name,
-  ...(content.description === null ? {} : { description: content.description }),
+  description: content.description,
   scheduled_start_time: content.startTime.toISOString(),
   scheduled_end_time: content.endTime.toISOString(),
   ...(content.imageDataUri === undefined
@@ -160,10 +162,11 @@ export enum GuildScheduledEventContentProblem {
 
 /**
  * Caps Discord enforces on every request that carries the app's content.
- * The app's own name limit is higher, and its description limit only became
- * Discord's from the publishing feature onwards, so older rows can exceed
- * both. Also the check for a published event's later edits: a start time now
- * in the past is fine there, since the modify payload leaves it out.
+ * The app's own name limit is higher, and the description measured here is
+ * the composed one — the manager's text plus the sign-up note — so a row
+ * written before the app reserved room for the note can exceed the cap.
+ * Also the check for a published event's later edits: a start time now in
+ * the past is fine there, since the modify payload leaves it out.
  */
 export const findContentProblem = (
   content: GuildScheduledEventContent,
@@ -171,10 +174,7 @@ export const findContentProblem = (
   if (content.name.length > DISCORD_EVENT_NAME_MAX_LENGTH)
     return GuildScheduledEventContentProblem.NameTooLong;
 
-  if (
-    content.description !== null &&
-    content.description.length > DISCORD_EVENT_DESCRIPTION_MAX_LENGTH
-  )
+  if (content.description.length > DISCORD_EVENT_DESCRIPTION_MAX_LENGTH)
     return GuildScheduledEventContentProblem.DescriptionTooLong;
 
   return null;

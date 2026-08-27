@@ -7,7 +7,6 @@ import { DiscordOutcome } from "@/modules/discord/utils/discordBotRequest";
 import { getDiscordImageDataUri } from "@/modules/discord/utils/getDiscordImageDataUri";
 import { getPublishableGuildChannels } from "@/modules/discord/utils/getPublishableGuildChannels";
 import {
-  DISCORD_EVENT_DESCRIPTION_MAX_LENGTH,
   DISCORD_EVENT_LOCATION_MAX_LENGTH,
   DISCORD_EVENT_NAME_MAX_LENGTH,
   findContentProblem,
@@ -24,6 +23,10 @@ import {
 import { DiscordScheduledEventEntityType } from "@/modules/discord/utils/schemas";
 import { log } from "@/modules/logging";
 import { EventDiscordPublishTarget } from "@sam-monorepo/database/client";
+import {
+  buildDiscordEventDescription,
+  EVENT_DESCRIPTION_MAX_LENGTH,
+} from "./discordEventDescription";
 import type { DiscordPublishFields } from "./discordPublishFields";
 import { getEventUrl } from "./eventConstraints";
 
@@ -97,7 +100,10 @@ const buildContent = async (event: PublishStateRow) => {
   return {
     content: {
       name: event.name,
-      description: event.description,
+      description: buildDiscordEventDescription(
+        event.description,
+        getEventUrl(event.id),
+      ),
       startTime: event.startTime,
       endTime: event.endTime,
       imageDataUri,
@@ -356,7 +362,7 @@ const getProblemMessage = (problem: GuildScheduledEventContentProblem) => {
       return `Der Titel ist länger als die ${DISCORD_EVENT_NAME_MAX_LENGTH} Zeichen, die Discord erlaubt. Kürze ihn, um das Event auf Discord zu veröffentlichen.`;
 
     case GuildScheduledEventContentProblem.DescriptionTooLong:
-      return `Die Kurzbeschreibung ist länger als die ${DISCORD_EVENT_DESCRIPTION_MAX_LENGTH} Zeichen, die Discord erlaubt. Kürze sie, um das Event auf Discord zu veröffentlichen.`;
+      return `Die Kurzbeschreibung ist länger als die ${EVENT_DESCRIPTION_MAX_LENGTH.toLocaleString("de-DE")} Zeichen, die zusammen mit dem Hinweis zur Anmeldung auf Discord passen. Kürze sie, um das Event auf Discord zu veröffentlichen.`;
 
     case GuildScheduledEventContentProblem.LocationTooLong:
       return `Der Ort ist länger als die ${DISCORD_EVENT_LOCATION_MAX_LENGTH} Zeichen, die Discord erlaubt.`;
