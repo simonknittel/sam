@@ -46,6 +46,23 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-08-27-wiki-blockmenue-per-klick",
+    date: "2026-08-27",
+    title: "Wiki: Menüs öffnen per Klick",
+    tags: ["Änderung", "Wiki"],
+    isTracked: false,
+    body: () => (
+      <>
+        <p>
+          Im Wiki-Editor erscheinen sämtliche Menüs jetzt erst, wenn du das
+          dazugehörige Element anklickst &ndash; nicht mehr schon beim
+          Überfahren mit der Maus.
+        </p>
+      </>
+    ),
+  },
+
+  {
     key: "2026-08-26-vererbungsmatrix",
     date: "2026-08-26",
     title: "Vererbungsmatrix",

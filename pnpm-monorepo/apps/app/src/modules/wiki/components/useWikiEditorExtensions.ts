@@ -12,6 +12,7 @@ import { getWikiTwitchParentHost } from "../utils/getWikiTwitchParentHost";
 import type { WikiImageDimensions } from "../utils/wikiImageRendering";
 import { WikiActiveNodeHighlight } from "./WikiActiveNodeHighlight";
 import { withWikiAttachmentReportButton } from "./WikiAttachmentCard";
+import { WikiBlockClick } from "./WikiBlockClick";
 import { withWikiCitizenMentionPopover } from "./WikiCitizenMentionNodeView";
 import { WikiCitizenMentionSuggestion } from "./WikiCitizenMentionSuggestion";
 import { WikiDetailsSummaryToggle } from "./WikiDetailsSummaryToggle";
@@ -134,6 +135,7 @@ export const useWikiEditorExtensions = ({
           WikiCitizenMentionSuggestion.configure({
             fetchCitizens: () => trpcUtils.citizens.getAllCitizens.ensureData(),
           }),
+          WikiBlockClick,
           WikiNodeClickSelection,
           WikiActiveNodeHighlight,
           createWikiFileHandler(pageId, {

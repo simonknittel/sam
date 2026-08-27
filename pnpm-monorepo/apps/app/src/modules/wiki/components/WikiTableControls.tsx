@@ -25,26 +25,19 @@ interface TableControlsTarget {
 
 interface Props {
   readonly editor: Editor | null;
-  /** Shared hover state, see WikiEditorOverlays */
-  readonly hoveredElement: HTMLElement | null;
   /** The overlay root — reference frame for the button positions */
   readonly overlayRef: RefObject<HTMLDivElement | null>;
 }
 
 /**
- * Row/column controls for the hovered table (or, on touch devices and
- * while typing, the table the cursor is in): plus buttons on the column
- * boundaries along the top edge and the row boundaries along the left
- * edge insert a column/row there; trash buttons on the column/row centers
- * delete that column/row. The buttons straddle the table edges, so the
- * pointer never leaves the hover containment (see WikiEditorOverlays) on
- * its way to them.
+ * Row/column controls for the table the cursor is in: plus buttons on the
+ * column boundaries along the top edge and the row boundaries along the
+ * left edge insert a column/row there; trash buttons on the column/row
+ * centers delete that column/row. They follow the selection rather than
+ * the focused block, because clicking a cell focuses the paragraph inside
+ * it — the deepest block, as everywhere else.
  */
-export const WikiTableControls = ({
-  editor,
-  hoveredElement,
-  overlayRef,
-}: Props) => {
+export const WikiTableControls = ({ editor, overlayRef }: Props) => {
   const [target, setTarget] = useState<TableControlsTarget | null>(null);
 
   useEffect(() => {
@@ -52,14 +45,6 @@ export const WikiTableControls = ({
     let stopMeasuring: (() => void) | null = null;
 
     const update = () => {
-      /**
-       * A transaction that redraws the hovered node detaches the element;
-       * the hover hook re-anchors (or clears) it right after — skip the
-       * tick instead of flashing the controls away, the prop change
-       * re-runs the update.
-       */
-      if (hoveredElement && !hoveredElement.isConnected) return;
-
       stopMeasuring?.();
       stopMeasuring = null;
 
@@ -69,27 +54,22 @@ export const WikiTableControls = ({
         return;
       }
 
-      let tableDom: Element | null = hoveredElement?.closest("table") ?? null;
-
-      /**
-       * Touch devices don't hover, and typing dismisses the hover — fall
-       * back to the table the selection sits in.
-       */
-      if (!tableDom && editor.isActive("table")) {
-        const domAtPos = editor.view.domAtPos(editor.state.selection.from).node;
-        const element =
-          domAtPos instanceof HTMLElement ? domAtPos : domAtPos.parentElement;
-        tableDom = element?.closest("table") ?? null;
+      if (!editor.isActive("table")) {
+        setTarget(null);
+        return;
       }
 
+      const domAtPos = editor.view.domAtPos(editor.state.selection.from).node;
+      const element =
+        domAtPos instanceof HTMLElement ? domAtPos : domAtPos.parentElement;
+      const table = element?.closest("table");
       if (
-        !(tableDom instanceof HTMLTableElement) ||
-        !editor.view.dom.contains(tableDom)
+        !(table instanceof HTMLTableElement) ||
+        !editor.view.dom.contains(table)
       ) {
         setTarget(null);
         return;
       }
-      const table = tableDom;
 
       const measure = () => {
         const rows = Array.from(table.rows);
@@ -145,7 +125,7 @@ export const WikiTableControls = ({
       stopMeasuring?.();
       editor.off("transaction", update);
     };
-  }, [editor, hoveredElement, overlayRef]);
+  }, [editor, overlayRef]);
 
   if (!editor || !target) return null;
 
@@ -267,8 +247,8 @@ interface ControlButtonProps {
 /**
  * The invisible p-1 padding enlarges the click target. No z-index: the
  * sticky editor toolbar (z-10) must cover the buttons when the table
- * scrolls underneath it — in exchange the edit menu's invisible hit-area
- * padding (z-20) wins where the two overlap.
+ * scrolls underneath it — in exchange the edit menu (z-20) wins where the
+ * two overlap.
  */
 const ControlButton = ({
   title,

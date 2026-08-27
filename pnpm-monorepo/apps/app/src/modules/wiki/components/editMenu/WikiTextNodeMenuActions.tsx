@@ -19,9 +19,9 @@ interface Props {
 }
 
 /**
- * Actions of the paragraph/heading block menu. The menu is hover-raised,
- * so the live selection can sit in a different block — heading, paragraph
- * and alignment commands move the cursor into the menu's block first.
+ * Actions of the paragraph/heading block menu. Heading, paragraph and
+ * alignment commands move the cursor into the menu's block first, so they
+ * apply to it and not to wherever inside it the caret happens to sit.
  */
 export const WikiTextNodeMenuActions = ({ editor, menu }: Props) => {
   const toggleTextHeading = (level: 1 | 2 | 3) => {

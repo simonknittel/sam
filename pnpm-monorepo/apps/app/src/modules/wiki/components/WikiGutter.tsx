@@ -25,7 +25,10 @@ import {
 } from "react";
 import { FaPlus, FaSearch } from "react-icons/fa";
 import { MdDragIndicator } from "react-icons/md";
-import { setWikiActiveNodeHighlight } from "./WikiActiveNodeHighlight";
+import {
+  setWikiActiveNodeHighlight,
+  WikiHighlightOwner,
+} from "./WikiActiveNodeHighlight";
 import {
   applyWikiUploadRestrictions,
   getWikiCopiedBlockItem,
@@ -174,9 +177,9 @@ export const WikiGutter = ({
   /**
    * Highlights the gutter's block while the gutter is in use (pointer
    * over its controls or the insert palette open), so it's clear which
-   * node it affects. Merely hovering block content washes the edit
-   * menu's target instead — for nested content that is the inner block,
-   * not this top-level one.
+   * node it affects. Merely hovering block content washes the hovered
+   * block instead — for nested content that is the inner block, not this
+   * top-level one.
    */
   const gutterInUse = controlsHovered || paletteOpen;
   const highlightFrom = gutterInUse ? (block?.pos ?? null) : null;
@@ -190,11 +193,12 @@ export const WikiGutter = ({
       highlightFrom !== null && highlightTo !== null
         ? { from: highlightFrom, to: highlightTo }
         : null,
-      "gutter",
+      WikiHighlightOwner.Gutter,
     );
   }, [editor, highlightFrom, highlightTo]);
   useEffect(() => {
-    return () => setWikiActiveNodeHighlight(editor, null, "gutter");
+    return () =>
+      setWikiActiveNodeHighlight(editor, null, WikiHighlightOwner.Gutter);
   }, [editor]);
 
   return (
@@ -203,7 +207,9 @@ export const WikiGutter = ({
       computePositionConfig={COMPUTE_POSITION_CONFIG}
       onNodeChange={handleNodeChange}
     >
+      {/* data-wiki-editor-chrome: clicks here keep the focused block */}
       <div
+        data-wiki-editor-chrome
         className="flex items-center"
         onMouseEnter={() => setControlsHovered(true)}
         onMouseLeave={() => setControlsHovered(false)}

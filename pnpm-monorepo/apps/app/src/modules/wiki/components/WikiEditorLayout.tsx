@@ -50,7 +50,11 @@ export const WikiEditorLayout = ({
   return (
     <div className={clsx(className)}>
       {isEditing && (
-        <div className="flex flex-wrap items-center gap-1 border border-neutral-800 rounded-secondary p-1 sticky top-0 z-10 bg-neutral-900">
+        /* data-wiki-editor-chrome: clicks here keep the focused block */
+        <div
+          data-wiki-editor-chrome
+          className="flex flex-wrap items-center gap-1 border border-neutral-800 rounded-secondary p-1 sticky top-0 z-10 bg-neutral-900"
+        >
           <WikiEditorToolbar
             editor={editor}
             pageId={pageId}
