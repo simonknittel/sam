@@ -15,7 +15,7 @@ import { getAccessibleWikiPage } from "@/modules/wiki/utils/getAccessibleWikiPag
 import { resolveWikiFeaturedPages } from "@/modules/wiki/utils/wikiFeaturedPages";
 import { forbidden } from "next/navigation";
 
-const RECENT_LIMIT = 8;
+const RECENT_LIMIT = 20;
 
 export default async function Page() {
   await requireAuthenticationPage("/app/wiki");
