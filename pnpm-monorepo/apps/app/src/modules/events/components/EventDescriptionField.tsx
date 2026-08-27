@@ -1,29 +1,23 @@
 "use client";
 
 import { DiscordMarkdown } from "@/modules/common/components/DiscordMarkdown";
+import { DiscordFormattingHint } from "@/modules/common/components/form/DiscordFormattingHint";
 import { Textarea } from "@/modules/common/components/form/Textarea";
 import clsx from "clsx";
-import { useId, useState, type ComponentProps, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import {
+  EVENT_DESCRIPTION_MAX_LENGTH,
   getDiscordEventDescriptionFooter,
   PLACEHOLDER_EVENT_URL,
 } from "../utils/discordEventDescription";
 import { getEventUrl } from "../utils/eventConstraints";
 
-export enum EventDescriptionPreviewLayout {
-  /** For a narrow container, e.g. a modal. */
-  Below = "below",
-  /** Beside the field from the `md` breakpoint, below it before that. */
-  Beside = "beside",
-}
-
 interface Props {
   readonly className?: string;
+  /** What this description is used for, said after the shared hint. */
   readonly hint: ReactNode;
-  readonly maxLength: number;
-  /** What the DOM accepts, so that `getDefaultValueWithFallback` fits. */
-  readonly defaultValue: ComponentProps<"textarea">["defaultValue"];
-  readonly previewLayout: EventDescriptionPreviewLayout;
+  /** Accepts the union returned by `getDefaultValueWithFallback` */
+  readonly defaultValue?: string | number | readonly string[];
   /**
    * The event the note links to. Absent while the event does not exist yet —
    * the creation of an event, and both template forms — where the preview
@@ -33,36 +27,50 @@ interface Props {
 }
 
 /**
- * The text of the field, which the preview renders and the counter measures.
- * A form gives what the DOM accepts, and only a string can be either.
- */
-const toText = (value: Props["defaultValue"]) =>
-  typeof value === "string" ? value : (value?.toString() ?? "");
-
-/**
  * The description of an event or of a template, with a preview of the text as
  * Discord shows it. The preview also shows the sign-up note that the app
  * appends, which the manager cannot change.
+ *
+ * The preview goes beside the field where there is room for two columns and
+ * below it where there is not. A container query decides that, because a
+ * modal stays narrow however wide the window is.
  */
 export const EventDescriptionField = ({
   className,
   hint,
-  maxLength,
   defaultValue,
-  previewLayout,
   eventId,
 }: Props) => {
   const counterId = useId();
   const previewLabelId = useId();
-  const defaultText = toText(defaultValue);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const defaultText = typeof defaultValue === "string" ? defaultValue : "";
   const [description, setDescription] = useState(defaultText);
 
   /**
-   * React puts the form back to its default values after an action, and a
-   * saved event arrives as a new default value. The field is uncontrolled —
-   * a controlled one loses its text at that reset — thus the preview follows
-   * the default value the way React documents it, with an adjustment during
-   * the render instead of an effect.
+   * The field is uncontrolled, because a controlled one loses its text when
+   * React puts the form back to its default values after an action. The
+   * preview therefore follows the field in two steps. First the reset, which
+   * gives the field the default value of that moment — the event comes
+   * before the values change, thus the field is read after the browser has
+   * finished.
+   */
+  useEffect(() => {
+    const form = textareaRef.current?.form;
+    if (!form) return;
+
+    const handleReset = () =>
+      setTimeout(() => {
+        if (textareaRef.current) setDescription(textareaRef.current.value);
+      });
+
+    form.addEventListener("reset", handleReset);
+    return () => form.removeEventListener("reset", handleReset);
+  }, []);
+
+  /**
+   * And second a new default value, which a saved event brings a moment
+   * after the reset. Adjusting during the render is how React documents it.
    */
   const [previousDefaultText, setPreviousDefaultText] = useState(defaultText);
   if (defaultText !== previousDefaultText) {
@@ -70,76 +78,82 @@ export const EventDescriptionField = ({
     setDescription(defaultText);
   }
 
-  const isBeside = previewLayout === EventDescriptionPreviewLayout.Beside;
-  const isOverLimit = description.length > maxLength;
+  const isOverLimit = description.length > EVENT_DESCRIPTION_MAX_LENGTH;
 
   return (
-    <div
-      className={clsx(className, isBeside && "md:flex md:items-start md:gap-4")}
-    >
-      <div className={clsx(isBeside && "md:min-w-0 md:flex-1")}>
-        <Textarea
-          name="description"
-          label="Kurzbeschreibung"
-          hint={
-            <span className="flex flex-wrap items-baseline justify-between gap-x-4">
-              <span>{hint}</span>
+    /* The query measures this element, thus the two columns are one inside it */
+    <div className={clsx("@container", className)}>
+      <div className="@3xl:flex @3xl:items-start @3xl:gap-4">
+        <div className="@3xl:min-w-0 @3xl:flex-1">
+          <Textarea
+            name="description"
+            label="Kurzbeschreibung"
+            hint={
+              <span className="flex flex-wrap items-baseline gap-x-4">
+                <span>
+                  optional, max.{" "}
+                  {EVENT_DESCRIPTION_MAX_LENGTH.toLocaleString("de-DE")} Zeichen
+                  &ndash; der Rest ist für den Hinweis zur Anmeldung reserviert,
+                  den Discord automatisch erhält. <DiscordFormattingHint />.{" "}
+                  {hint}
+                </span>
 
-              <span
-                id={counterId}
-                className={clsx(
-                  "ml-auto shrink-0 tabular-nums",
-                  isOverLimit && "text-brand-red-500",
-                )}
-              >
-                {description.length.toLocaleString("de-DE")} /{" "}
-                {maxLength.toLocaleString("de-DE")}
-                {/* Never the colour alone — it says what is wrong as well */}
-                {isOverLimit && " – zu lang"}
+                <span
+                  id={counterId}
+                  className={clsx(
+                    "ml-auto shrink-0 tabular-nums",
+                    isOverLimit && "text-brand-red-500",
+                  )}
+                >
+                  {description.length.toLocaleString("de-DE")} /{" "}
+                  {EVENT_DESCRIPTION_MAX_LENGTH.toLocaleString("de-DE")}
+                  {/* Never the colour alone — it says what is wrong as well */}
+                  {isOverLimit && " – zu lang"}
+                </span>
               </span>
-            </span>
-          }
-          aria-describedby={counterId}
-          maxLength={maxLength}
-          defaultValue={defaultValue}
-          onChange={(event) => setDescription(event.target.value)}
-          classNameTextarea="h-40"
-        />
-      </div>
-
-      <section
-        aria-labelledby={previewLabelId}
-        className={clsx(
-          isBeside ? "mt-4 md:mt-0 md:min-w-0 md:flex-1" : "mt-4",
-        )}
-      >
-        <p id={previewLabelId} className="block text-white/90">
-          Vorschau
-        </p>
-
-        <div className="mt-2 max-h-96 overflow-y-auto rounded-secondary border border-neutral-800 bg-neutral-900 p-2 md:min-h-40">
-          {description.trim() ? (
-            <DiscordMarkdown>{description}</DiscordMarkdown>
-          ) : (
-            <p className="text-white/40">Noch keine Kurzbeschreibung.</p>
-          )}
-
-          <div className="mt-4 border-t border-dashed border-neutral-700 pt-2">
-            <p className="font-mono text-xs uppercase text-neutral-500">
-              Wird auf Discord automatisch angehängt
-            </p>
-
-            <p
-              className="mt-1 whitespace-pre-line text-white/60"
-              style={{ overflowWrap: "anywhere" }}
-            >
-              {getDiscordEventDescriptionFooter(
-                eventId ? getEventUrl(eventId) : PLACEHOLDER_EVENT_URL,
-              )}
-            </p>
-          </div>
+            }
+            aria-describedby={counterId}
+            maxLength={EVENT_DESCRIPTION_MAX_LENGTH}
+            ref={textareaRef}
+            defaultValue={defaultValue}
+            onChange={(event) => setDescription(event.target.value)}
+            classNameTextarea="h-40"
+          />
         </div>
-      </section>
+
+        <section
+          aria-labelledby={previewLabelId}
+          className="mt-4 @3xl:mt-0 @3xl:min-w-0 @3xl:flex-1"
+        >
+          <p id={previewLabelId} className="text-white/90">
+            Vorschau
+          </p>
+
+          {/* Focusable: the box scrolls, and only a pointer can scroll it otherwise */}
+          <div
+            tabIndex={0}
+            className="mt-2 max-h-96 overflow-y-auto rounded-secondary border border-neutral-800 bg-neutral-900 p-2 outline-interaction-700 outline-offset-4 focus-visible:outline-2 @3xl:min-h-40"
+          >
+            {description.trim() ? (
+              <DiscordMarkdown>{description}</DiscordMarkdown>
+            ) : (
+              <p className="text-white/40">Noch keine Kurzbeschreibung.</p>
+            )}
+
+            <div className="mt-4 border-t border-dashed border-neutral-700 pt-2">
+              <p className="font-mono text-xs uppercase text-neutral-500">
+                Wird auf Discord automatisch angehängt
+              </p>
+
+              <p className="mt-1 whitespace-pre-line wrap-anywhere text-white/60">
+                {getDiscordEventDescriptionFooter(
+                  eventId ? getEventUrl(eventId) : PLACEHOLDER_EVENT_URL,
+                )}
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
   );
 };

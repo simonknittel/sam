@@ -11,10 +11,7 @@ import type { PublishableGuildChannel } from "@/modules/discord/utils/guildSched
 import { EventTemplateDescriptionHint } from "@/modules/event-templates/components/EventTemplateDescriptionHint";
 import { DiscordPublishTargetFields } from "@/modules/events/components/DiscordPublishTargetFields";
 import { EventCoverImageField } from "@/modules/events/components/EventCoverImageField";
-import {
-  EventDescriptionField,
-  EventDescriptionPreviewLayout,
-} from "@/modules/events/components/EventDescriptionField";
+import { EventDescriptionField } from "@/modules/events/components/EventDescriptionField";
 import { WikiRoleSelector } from "@/modules/wiki/components/WikiRoleSelector";
 import {
   EventVisibility,
@@ -24,10 +21,7 @@ import clsx from "clsx";
 import { useId, useState } from "react";
 import { FaGlobe, FaLock, FaSave } from "react-icons/fa";
 import { updateEventTemplate } from "../actions/updateEventTemplate";
-import {
-  EVENT_TEMPLATE_DESCRIPTION_MAX_LENGTH,
-  EVENT_TEMPLATE_NAME_MAX_LENGTH,
-} from "../utils/eventTemplateConstraints";
+import { EVENT_TEMPLATE_NAME_MAX_LENGTH } from "../utils/eventTemplateConstraints";
 
 interface Props {
   readonly className?: string;
@@ -83,9 +77,7 @@ export const UpdateEventTemplateForm = ({
 
       <EventDescriptionField
         hint={<EventTemplateDescriptionHint />}
-        maxLength={EVENT_TEMPLATE_DESCRIPTION_MAX_LENGTH}
         defaultValue={template.description ?? ""}
-        previewLayout={EventDescriptionPreviewLayout.Beside}
         className="mt-4"
       />
 

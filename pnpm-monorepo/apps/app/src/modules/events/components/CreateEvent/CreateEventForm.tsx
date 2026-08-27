@@ -10,10 +10,7 @@ import { TextInput } from "@/modules/common/components/form/TextInput";
 import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
 import { api } from "@/modules/common/utils/api";
 import { createEvent } from "@/modules/events/actions/createEvent";
-import {
-  EventDescriptionField,
-  EventDescriptionPreviewLayout,
-} from "@/modules/events/components/EventDescriptionField";
+import { EventDescriptionField } from "@/modules/events/components/EventDescriptionField";
 import { EventDescriptionHint } from "@/modules/events/components/EventDescriptionHint";
 import { WikiRoleSelector } from "@/modules/wiki/components/WikiRoleSelector";
 import {
@@ -23,7 +20,6 @@ import {
 import clsx from "clsx";
 import { useId, useState } from "react";
 import { FaGlobe, FaLock, FaSave } from "react-icons/fa";
-import { EVENT_DESCRIPTION_MAX_LENGTH } from "../../utils/discordEventDescription";
 import { EVENT_NAME_MAX_LENGTH } from "../../utils/eventConstraints";
 import { DiscordPublishTargetFields } from "../DiscordPublishTargetFields";
 import { EventCoverImageField } from "../EventCoverImageField";
@@ -139,12 +135,10 @@ export const CreateEventForm = ({
 
         <EventDescriptionField
           hint={<EventDescriptionHint />}
-          maxLength={EVENT_DESCRIPTION_MAX_LENGTH}
           defaultValue={getDefaultValueWithFallback(
             "description",
             selectedTemplate?.description ?? "",
           )}
-          previewLayout={EventDescriptionPreviewLayout.Below}
           className="mt-4"
         />
 

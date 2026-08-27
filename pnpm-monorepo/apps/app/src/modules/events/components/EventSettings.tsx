@@ -10,10 +10,7 @@ import { TextInput } from "@/modules/common/components/form/TextInput";
 import { Tile, TileVariant } from "@/modules/common/components/Tile";
 import { deleteEvent } from "@/modules/events/actions/deleteEvent";
 import { updateEvent } from "@/modules/events/actions/updateEvent";
-import {
-  EventDescriptionField,
-  EventDescriptionPreviewLayout,
-} from "@/modules/events/components/EventDescriptionField";
+import { EventDescriptionField } from "@/modules/events/components/EventDescriptionField";
 import { EventDescriptionHint } from "@/modules/events/components/EventDescriptionHint";
 import { WikiRoleSelector } from "@/modules/wiki/components/WikiRoleSelector";
 import { EventVisibility } from "@sam-monorepo/database/browser";
@@ -21,7 +18,6 @@ import clsx from "clsx";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { FaGlobe, FaLock, FaSave, FaTrash } from "react-icons/fa";
-import { EVENT_DESCRIPTION_MAX_LENGTH } from "../utils/discordEventDescription";
 import { EVENT_NAME_MAX_LENGTH } from "../utils/eventConstraints";
 import { EventDateTimeField } from "./EventDateTimeField";
 
@@ -69,12 +65,10 @@ export const EventSettings = ({ className, event, discordCard }: Props) => {
 
           <EventDescriptionField
             hint={<EventDescriptionHint />}
-            maxLength={EVENT_DESCRIPTION_MAX_LENGTH}
             defaultValue={getDefaultValueWithFallback(
               "description",
               event.description ?? "",
             )}
-            previewLayout={EventDescriptionPreviewLayout.Beside}
             eventId={event.id}
             className="mt-4"
           />
