@@ -134,13 +134,21 @@ test("featured pages show on the landing page, filtered by read access", async (
   ).toBeVisible();
   await expect(page.getByRole("link", { name: /Interna/ })).toHaveCount(0);
 
-  // The landing page's other list is filtered the same way
+  // The landing page's other lists are filtered the same way
   const recentlyUpdated = sectionByHeading(page, "Zuletzt aktualisiert");
   await expect(
     recentlyUpdated.getByRole("link", { name: /Einsteigerguide/ }),
   ).toBeVisible();
   await expect(
     recentlyUpdated.getByRole("link", { name: /Interna/ }),
+  ).toHaveCount(0);
+
+  const recentlyCreated = sectionByHeading(page, "Zuletzt erstellt");
+  await expect(
+    recentlyCreated.getByRole("link", { name: /Einsteigerguide/ }),
+  ).toBeVisible();
+  await expect(
+    recentlyCreated.getByRole("link", { name: /Interna/ }),
   ).toHaveCount(0);
 });
 
