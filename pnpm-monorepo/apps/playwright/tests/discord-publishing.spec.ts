@@ -32,12 +32,14 @@ import { expect, test } from "../fixtures/test";
 const SIGN_UP_NOTE = "Anmeldung nur über SAM, nicht über Discord:";
 
 /**
- * The address in the note. The suite starts the app without a base address,
- * thus the app falls back to its own default — the port of the worker does
- * not appear in it.
+ * The description Discord receives: the text of the organizer, if there is
+ * one, and the note below it. The origin comes from NEXT_PUBLIC_BASE_URL,
+ * which Next.js inlines at build time, so only the path is asserted.
  */
-const eventUrl = (eventId: string) =>
-  `http://localhost:3000/app/events/${eventId}`;
+const signUpNotePattern = (eventId: string, text?: string) =>
+  new RegExp(
+    `^${text ? `${text}\n\n` : ""}${SIGN_UP_NOTE}\nhttps?://[^/]+/app/events/${eventId}$`,
+  );
 
 /** Discord's guild scheduled event entity types */
 const VOICE_ENTITY_TYPE = 2;
@@ -104,16 +106,15 @@ for (const { channel, entityType } of CHANNEL_KINDS) {
     );
     expect(scheduledEvent).toMatchObject({
       name: "Operation Kanalfunk",
+      // The sign-up note follows the description of the organizer
+      description: expect.stringMatching(
+        signUpNotePattern(event.id, "Wir treffen uns im Einsatzraum."),
+      ),
       entity_type: entityType,
       channel_id: channel.id,
       privacy_level: 2,
     });
     expect(scheduledEvent).not.toHaveProperty("entity_metadata");
-
-    // The sign-up note follows the description of the organizer
-    expect(String(scheduledEvent!.description)).toBe(
-      `Wir treffen uns im Einsatzraum.\n\n${SIGN_UP_NOTE}\n${eventUrl(event.id)}`,
-    );
 
     // The published state replaces the form and links to the Discord event
     await expect(page.getByText(`Sprachkanal: ${channel.name}`)).toBeVisible();
@@ -235,9 +236,9 @@ test("editing a published event updates it on Discord, deleting it removes it", 
   const scheduledEventId = published!.discordPublishedId!;
 
   // An event without a description of its own carries the note alone
-  expect(
-    String(discordMock.scheduledEvents.get(scheduledEventId)!.description),
-  ).toBe(`${SIGN_UP_NOTE}\n${eventUrl(event.id)}`);
+  expect(discordMock.scheduledEvents.get(scheduledEventId)).toMatchObject({
+    description: expect.stringMatching(signUpNotePattern(event.id)),
+  });
 
   await page.reload();
   await waitForAppShellHydration(page);
@@ -250,7 +251,9 @@ test("editing a published event updates it on Discord, deleting it removes it", 
 
   expect(discordMock.scheduledEvents.get(scheduledEventId)).toMatchObject({
     name: "Operation Zweitfassung",
-    description: `Jetzt mit Beschreibung.\n\n${SIGN_UP_NOTE}\n${eventUrl(event.id)}`,
+    description: expect.stringMatching(
+      signUpNotePattern(event.id, "Jetzt mit Beschreibung."),
+    ),
   });
   expect(
     discordMock.requests.some(

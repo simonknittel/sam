@@ -4,6 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { DISCORD_EVENT_DESCRIPTION_MAX_LENGTH } from "@/modules/discord/utils/guildScheduledEventPayload";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import {
   EventActivityType,
@@ -15,7 +16,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { EVENT_MANAGE_GUARD_SELECT } from "../queries/eventManageGuardSelect";
 import { berlinWallTimeToUtc } from "../utils/berlinWallTime";
-import { EVENT_DESCRIPTION_MAX_LENGTH } from "../utils/discordEventDescription";
+import { findDescriptionProblem } from "../utils/discordEventDescription";
 import {
   getDiscordSyncWarning,
   syncDiscordEventPublication,
@@ -35,7 +36,16 @@ const WALL_TIME_SCHEMA = z
 const schema = z.object({
   eventId: z.cuid(),
   name: z.string().trim().min(1).max(EVENT_NAME_MAX_LENGTH),
-  description: z.string().trim().max(EVENT_DESCRIPTION_MAX_LENGTH).optional(),
+  /**
+   * Bounded by what Discord accepts, not by the app's own smaller limit: a
+   * description stored before that limit existed must reach the action, so
+   * that it can name the field instead of refusing the whole request.
+   */
+  description: z
+    .string()
+    .trim()
+    .max(DISCORD_EVENT_DESCRIPTION_MAX_LENGTH)
+    .optional(),
   startTime: WALL_TIME_SCHEMA,
   endTime: WALL_TIME_SCHEMA,
   visibility: z.enum(EventVisibility),
@@ -104,6 +114,10 @@ export const updateEvent = createAuthenticatedAction(
         error: "Wähle mindestens eine Rolle aus.",
         requestPayload: formData,
       };
+
+    const descriptionProblem = findDescriptionProblem(data.description);
+    if (descriptionProblem)
+      return { error: descriptionProblem, requestPayload: formData };
 
     /**
      * Diff the fields

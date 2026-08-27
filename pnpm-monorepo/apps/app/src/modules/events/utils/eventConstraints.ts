@@ -16,7 +16,7 @@ export const getEventPath = (eventId: string) => `/app/events/${eventId}`;
  * sign-up note (see `discordEventDescription`).
  */
 export const getEventUrl = (eventId: string) =>
-  `${env.NEXT_PUBLIC_BASE_URL}${getEventPath(eventId)}`;
+  new URL(getEventPath(eventId), env.NEXT_PUBLIC_BASE_URL).toString();
 
 /**
  * Search param the create action redirects with when the new event could not

@@ -36,23 +36,32 @@ describe("buildDiscordEventDescription", () => {
       `Anmeldung nur über SAM, nicht über Discord:\n${EVENT_URL}`,
     );
   });
+});
 
-  test("treats a description of spaces as no description", async () => {
-    const { buildDiscordEventDescription } = await importModule();
+describe("findDescriptionProblem", () => {
+  test("passes a description inside the limit", async () => {
+    const { EVENT_DESCRIPTION_MAX_LENGTH, findDescriptionProblem } =
+      await importModule();
 
-    expect(buildDiscordEventDescription("   \n  ", EVENT_URL)).toBe(
-      buildDiscordEventDescription(null, EVENT_URL),
-    );
+    expect(
+      findDescriptionProblem("a".repeat(EVENT_DESCRIPTION_MAX_LENGTH)),
+    ).toBeNull();
+    expect(findDescriptionProblem(undefined)).toBeNull();
   });
 
-  test("keeps the formatting of the manager", async () => {
-    const { buildDiscordEventDescription } = await importModule();
+  /**
+   * The browser keeps a field inside `maxLength` only while somebody types
+   * in it, thus a description stored before the limit became smaller reaches
+   * the actions untouched. The message must name the field, or the manager
+   * reads only "bad request" and cannot save a changed title either.
+   */
+  test("names the field for a description from before the smaller limit", async () => {
+    const { EVENT_DESCRIPTION_MAX_LENGTH, findDescriptionProblem } =
+      await importModule();
 
-    const description = "**Fleet-Op**\n- Treffpunkt: Port Olisar\n- 20 Uhr";
-
-    expect(buildDiscordEventDescription(description, EVENT_URL)).toContain(
-      description,
-    );
+    expect(
+      findDescriptionProblem("a".repeat(EVENT_DESCRIPTION_MAX_LENGTH + 1)),
+    ).toContain("Kurzbeschreibung");
   });
 });
 
