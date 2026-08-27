@@ -89,6 +89,7 @@ export const cancelEventParticipation = createAuthenticatedAction(
      * Revalidate cache(s)
      */
     revalidatePath("/app/events");
+    revalidatePath("/app/dashboard");
     revalidatePath(`/app/events/${event.id}`, "layout");
 
     /**
