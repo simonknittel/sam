@@ -49,9 +49,16 @@ const Landing = async () => {
     .filter((page) => page !== null)
     .slice(0, RECENT_LIMIT);
 
-  const recentlyUpdated = context.pages
-    .filter((page) => context.permissions.get(page.id)?.canRead)
+  const readablePages = context.pages.filter(
+    (page) => context.permissions.get(page.id)?.canRead,
+  );
+
+  const recentlyUpdated = readablePages
     .toSorted((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
+    .slice(0, RECENT_LIMIT);
+
+  const recentlyCreated = readablePages
+    .toSorted((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
     .slice(0, RECENT_LIMIT);
 
   return (
@@ -62,8 +69,10 @@ const Landing = async () => {
 
       {featuredPages.length > 0 && <WikiFeaturedPages pages={featuredPages} />}
 
-      {(recentlyVisited.length > 0 || recentlyUpdated.length > 0) && (
-        <div className="grid gap-0.5 lg:grid-cols-2">
+      {(recentlyVisited.length > 0 ||
+        recentlyUpdated.length > 0 ||
+        recentlyCreated.length > 0) && (
+        <div className="grid gap-0.5 lg:grid-cols-2 xl:grid-cols-3">
           {recentlyVisited.length > 0 && (
             <PageListSection
               heading="Zuletzt besucht"
@@ -75,7 +84,15 @@ const Landing = async () => {
             <PageListSection
               heading="Zuletzt aktualisiert"
               pages={recentlyUpdated}
-              showUpdatedAt
+              timestamp={PageListTimestamp.UpdatedAt}
+            />
+          )}
+
+          {recentlyCreated.length > 0 && (
+            <PageListSection
+              heading="Zuletzt erstellt"
+              pages={recentlyCreated}
+              timestamp={PageListTimestamp.CreatedAt}
             />
           )}
         </div>
@@ -84,16 +101,21 @@ const Landing = async () => {
   );
 };
 
+enum PageListTimestamp {
+  CreatedAt = "createdAt",
+  UpdatedAt = "updatedAt",
+}
+
 interface PageListSectionProps {
   readonly heading: string;
   readonly pages: WikiContextPage[];
-  readonly showUpdatedAt?: boolean;
+  readonly timestamp?: PageListTimestamp;
 }
 
 const PageListSection = ({
   heading,
   pages,
-  showUpdatedAt = false,
+  timestamp,
 }: PageListSectionProps) => {
   return (
     <section className="bg-secondary rounded-primary p-4">
@@ -113,9 +135,9 @@ const PageListSection = ({
               {page.title}
             </Link>
 
-            {showUpdatedAt && (
+            {timestamp && (
               <span className="text-sm text-neutral-500">
-                {formatDate(page.updatedAt)}
+                {formatDate(page[timestamp])}
               </span>
             )}
           </li>
