@@ -628,3 +628,82 @@ test("the description renders the formats of Discord and exports plain text", as
  * the unit level in the lambda's reconciliation tests — the sync itself
  * needs Discord credentials and cannot run against the local stack.
  */
+
+test("the events list preview manages participation without leaving the list", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const creator = await createCitizen(prisma, { handle: "listen-orga" });
+  const participant = await createCitizen(prisma, {
+    handle: "listen-anmelder",
+    permissionStrings: ["event;read"],
+  });
+  const appEvent = await createAppEvent(prisma, {
+    name: "Operation Schnellanmeldung",
+    createdById: creator.entity.id,
+    ...futureEvent(),
+  });
+  // Discord events keep managing their participation in Discord
+  await createEvent(prisma, {
+    name: "Operation Discord-Only",
+    discordCreatorId: "some-discord-organizer",
+    startTime: new Date(Date.now() + ONE_DAY_MS),
+  });
+
+  await signIn(participant.user);
+  await page.goto("/app/events");
+  await waitForAppShellHydration(page);
+
+  const appEventPreview = page
+    .getByRole("article")
+    .filter({ hasText: "Operation Schnellanmeldung" });
+  const discordEventPreview = page
+    .getByRole("article")
+    .filter({ hasText: "Operation Discord-Only" });
+  await expect(
+    discordEventPreview.getByRole("button", { name: "Anmelden" }),
+  ).toHaveCount(0);
+
+  await clickUntilVisible(
+    appEventPreview.getByRole("button", { name: "Anmelden" }),
+    page.getByRole("heading", {
+      name: "Teilnahme - Operation Schnellanmeldung",
+    }),
+  );
+
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByText("Nicht angemeldet")).toBeVisible();
+  await fillUntilValue(dialog.getByLabel("Kommentar"), "Bin dabei");
+  await dialog.getByRole("button", { name: "Anmelden", exact: true }).click();
+  await expect(page.getByText("Du bist angemeldet.")).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+
+  // The modal stays open and re-renders into the signed-up state
+  await expect(dialog.getByText("Zugesagt")).toBeVisible();
+  await expect(dialog.getByLabel("Kommentar")).toHaveValue("Bin dabei");
+
+  await dialog.getByRole("button", { name: "Abmelden", exact: true }).click();
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: "Abmelden" })
+    .click();
+  await expect(page.getByText("Du hast dich abgemeldet.")).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+  // The batched cancelled-participation query reaches the preview
+  await expect(dialog.getByText("Abgemeldet", { exact: true })).toBeVisible();
+
+  await dialog.getByRole("button", { name: "Schließen" }).click();
+  await expect(
+    appEventPreview.getByRole("button", { name: "Anmelden" }),
+  ).toBeVisible();
+
+  const rows = await prisma.eventParticipant.findMany({
+    where: { eventId: appEvent.id, citizenId: participant.entity.id },
+  });
+  expect(rows).toHaveLength(1);
+  expect(rows[0]!.comment).toBe("Bin dabei");
+  expect(rows[0]!.cancelledAt).not.toBeNull();
+});
