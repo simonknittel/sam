@@ -8,10 +8,10 @@ import {
 import { clickUntilVisible, COLLAB_PERSISTENCE_TIMEOUT } from "./interactions";
 
 /**
- * The editor swallows clicks near block edges (invisible hover-menu
- * corridors) and element.focus() alone gives ProseMirror no selection —
- * focusing the contenteditable via JS and typing right away is the reliable
- * way in.
+ * Puts the caret into the editor without clicking a block — a click would
+ * also open that block's contextual menu. element.focus() alone gives
+ * ProseMirror no selection, so focusing the contenteditable via JS and
+ * typing right away is the way in.
  */
 export const focusEditor = async (page: Page) => {
   const editor = page.locator('.tiptap[contenteditable="true"]');

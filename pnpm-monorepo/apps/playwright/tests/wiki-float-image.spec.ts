@@ -1,4 +1,5 @@
 import { createCitizen, wikiDocument } from "../fixtures/factories";
+import { clickUntilVisible } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 import {
   enterEditMode,
@@ -47,10 +48,11 @@ test("the image menu floats a block image into the neighboring paragraph", async
   await enterEditMode(page);
 
   const editorRoot = page.locator('.tiptap[contenteditable="true"]');
-  await editorRoot.locator("img").hover();
-  await page
-    .getByRole("button", { name: "Vom Text umflossen (links)" })
-    .click();
+  const floatLeftButton = page.getByRole("button", {
+    name: "Vom Text umflossen (links)",
+  });
+  await clickUntilVisible(editorRoot.locator("img"), floatLeftButton);
+  await floatLeftButton.click();
 
   const floatedImage = editorRoot.locator("p a[data-wiki-float-image]");
   await expect(floatedImage).toHaveAttribute("data-float-side", "left");
@@ -71,8 +73,11 @@ test("the image menu floats a block image into the neighboring paragraph", async
   expect(Math.abs(imageBox.x - paragraphBox.x)).toBeLessThan(2);
   expect(paragraphBox.x).toBeGreaterThan(editorBox.x + 50);
 
-  // The floated image keeps its own resize handles
-  await floatedImage.hover();
+  /**
+   * The popover follows the image into its new home — floating rebuilds
+   * the node instead of changing it — so the floated image has its own
+   * resize handles without being clicked again.
+   */
   await expect(
     page.getByRole("separator", { name: "Breite ändern" }),
   ).toHaveCount(2);
@@ -116,14 +121,15 @@ test("a floated image switches sides and unfloats back into a block image", asyn
   const editorRoot = page.locator('.tiptap[contenteditable="true"]');
   const floatedImage = editorRoot.locator("a[data-wiki-float-image]");
 
-  await floatedImage.locator("img").hover();
-  await page
-    .getByRole("button", { name: "Vom Text umflossen (rechts)" })
-    .click();
+  const floatRightButton = page.getByRole("button", {
+    name: "Vom Text umflossen (rechts)",
+  });
+  await clickUntilVisible(floatedImage.locator("img"), floatRightButton);
+  await floatRightButton.click();
   await expect(floatedImage).toHaveAttribute("data-float-side", "right");
   await expect(floatedImage).toHaveCSS("float", "right");
 
-  await floatedImage.locator("img").hover();
+  // The popover stays on the block it just changed
   await page
     .getByRole("button", { name: "Nicht mehr vom Text umfließen" })
     .click();
