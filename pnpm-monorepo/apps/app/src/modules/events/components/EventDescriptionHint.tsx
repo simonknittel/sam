@@ -6,8 +6,9 @@ export const EventDescriptionHint = () => {
   return (
     <>
       optional, max. {EVENT_DESCRIPTION_MAX_LENGTH.toLocaleString("de-DE")}{" "}
-      Zeichen. <DiscordFormattingHint />. Ausführlichere Informationen gehören
-      ins Briefing des Events.
+      Zeichen &ndash; der Rest ist für den Hinweis zur Anmeldung reserviert, den
+      Discord automatisch erhält. <DiscordFormattingHint />. Ausführlichere
+      Informationen gehören ins Briefing des Events.
     </>
   );
 };

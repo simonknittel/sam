@@ -6,9 +6,10 @@ export const EventTemplateDescriptionHint = () => {
   return (
     <>
       optional, max.{" "}
-      {EVENT_TEMPLATE_DESCRIPTION_MAX_LENGTH.toLocaleString("de-DE")} Zeichen.{" "}
-      <DiscordFormattingHint />. Wird als Kurzbeschreibung in das Event
-      übernommen.
+      {EVENT_TEMPLATE_DESCRIPTION_MAX_LENGTH.toLocaleString("de-DE")} Zeichen
+      &ndash; der Rest ist für den Hinweis zur Anmeldung reserviert, den Discord
+      automatisch erhält. <DiscordFormattingHint />. Wird als Kurzbeschreibung
+      in das Event übernommen.
     </>
   );
 };

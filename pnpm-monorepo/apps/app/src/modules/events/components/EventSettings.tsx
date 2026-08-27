@@ -6,11 +6,14 @@ import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionButton";
 import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
-import { Textarea } from "@/modules/common/components/form/Textarea";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import { Tile, TileVariant } from "@/modules/common/components/Tile";
 import { deleteEvent } from "@/modules/events/actions/deleteEvent";
 import { updateEvent } from "@/modules/events/actions/updateEvent";
+import {
+  EventDescriptionField,
+  EventDescriptionPreviewLayout,
+} from "@/modules/events/components/EventDescriptionField";
 import { EventDescriptionHint } from "@/modules/events/components/EventDescriptionHint";
 import { WikiRoleSelector } from "@/modules/wiki/components/WikiRoleSelector";
 import { EventVisibility } from "@sam-monorepo/database/browser";
@@ -64,17 +67,16 @@ export const EventSettings = ({ className, event, discordCard }: Props) => {
             required
           />
 
-          <Textarea
-            name="description"
-            label="Kurzbeschreibung"
+          <EventDescriptionField
             hint={<EventDescriptionHint />}
             maxLength={EVENT_DESCRIPTION_MAX_LENGTH}
             defaultValue={getDefaultValueWithFallback(
               "description",
               event.description ?? "",
             )}
+            previewLayout={EventDescriptionPreviewLayout.Beside}
+            eventId={event.id}
             className="mt-4"
-            classNameTextarea="h-40"
           />
 
           <div className="mt-4 flex flex-col gap-4 md:flex-row">
