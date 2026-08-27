@@ -53,21 +53,47 @@ const liftToSelfRenderedNode = (element: HTMLElement): HTMLElement =>
 
 /**
  * Surfaces outside the editor content whose clicks must not clear the
- * focused block: the editing chrome (sticky toolbar, gutter controls) and
- * every portaled Base UI popup — the node configuration dialogs, the
- * link/embed dialogs and the suggestion popups all render as a dialog.
+ * focused block: the editing chrome (overlay root, sticky toolbar, gutter
+ * controls) and every portaled Base UI popup — the node configuration
+ * dialogs, the link/embed dialogs and the suggestion popups all render as
+ * a dialog.
  */
 const KEEP_FOCUS_SELECTOR = '[data-wiki-editor-chrome], [role="dialog"]';
 
 /**
- * Resolves the node an element RENDERS — the one whose `nodeDOM` is that
- * element (or, for node views, contains it). Unlike
- * resolveWikiNodeFromElement it does not guess by node type, so container
- * blocks whose first child is itself a candidate type (a callout or quote
- * around a paragraph) resolve to the container instead of that child.
- * Returns NULL when the element renders no node of its own, e.g. a
- * mark-rendered link or a node view's inner markup that sits below the
- * node's own element.
+ * The first of `candidates` at which a node's `nodeDOM` is `element` (or,
+ * for node views, contains it) — i.e. the node that element RENDERS.
+ * `posAtDOM` answers with the position before the node for leafs and with
+ * the one inside it for elements with content, so a caller has to offer
+ * both.
+ */
+const findRenderedNode = (
+  editor: Editor,
+  element: HTMLElement,
+  candidates: readonly number[],
+): { position: number; node: ProseMirrorNode } | null => {
+  const document = editor.state.doc;
+  for (const position of candidates) {
+    if (position < 0 || position > document.content.size) continue;
+    const node = document.nodeAt(position);
+    if (!node) continue;
+    const dom = editor.view.nodeDOM(position);
+    if (
+      dom instanceof HTMLElement &&
+      (dom === element || dom.contains(element))
+    )
+      return { position, node };
+  }
+  return null;
+};
+
+/**
+ * Resolves the node an element RENDERS. Unlike resolveWikiNodeFromElement
+ * it does not guess by node type, so container blocks whose first child is
+ * itself a candidate type (a callout or quote around a paragraph) resolve
+ * to the container instead of that child. Returns NULL when the element
+ * renders no node of its own: a mark-rendered link, or a node view's inner
+ * markup that sits below the node's own element.
  */
 export const resolveWikiNodeByElement = (
   editor: Editor,
@@ -82,33 +108,26 @@ export const resolveWikiNodeByElement = (
 
   const document = editor.state.doc;
   if (basePosition < 0 || basePosition > document.content.size) return null;
-  const $base = document.resolve(basePosition);
 
-  /**
-   * posAtDOM answers with the position before the node for leafs and with
-   * the one inside it for elements with content, hence the three
-   * candidates — the third one covers content elements whose first child
-   * starts further in (a callout's paragraph).
-   */
-  const candidates = [
+  const own = findRenderedNode(editor, element, [
     basePosition,
     basePosition - 1,
-    $base.depth > 0 ? $base.before() : -1,
-  ];
+  ]);
+  if (own) return own;
 
-  for (const position of candidates) {
-    if (position < 0 || position > document.content.size) continue;
-    const node = document.nodeAt(position);
-    if (!node) continue;
-    const dom = editor.view.nodeDOM(position);
-    if (
-      dom instanceof HTMLElement &&
-      (dom === element || dom.contains(element))
-    )
-      return { position, node };
-  }
-
-  return null;
+  /**
+   * Content elements whose first child starts further in (a callout's
+   * paragraph) render the node one level up. Only an EXACT match counts
+   * there: a mark-rendered link lands on the same level, and the block
+   * around it is not what the link renders.
+   */
+  const $base = document.resolve(basePosition);
+  if ($base.depth === 0) return null;
+  const position = $base.before();
+  const node = document.nodeAt(position);
+  return node && editor.view.nodeDOM(position) === element
+    ? { position, node }
+    : null;
 };
 
 /**
@@ -141,11 +160,11 @@ export const resolveWikiNodeFromElement = (
 };
 
 /**
- * The document range of the block an element renders — the range washed
- * while it is hovered or focused. NULL for inline targets (mark-rendered
- * links), which get no wash.
+ * The document range of the block an element renders — the range it is
+ * washed over while hovered or focused. NULL for inline targets
+ * (mark-rendered links), which get no wash.
  */
-export const wikiBlockRange = (
+const wikiBlockRange = (
   editor: Editor,
   element: HTMLElement,
 ): WikiHighlightRange | null => {
@@ -160,7 +179,8 @@ export const wikiBlockRange = (
 
 /**
  * The document range an element covers, block or inline: the block range
- * above, or the extent of a mark-rendered link's text.
+ * above, or the extent of a mark-rendered link's text — the range the
+ * selection has to stay inside to keep the element focused.
  */
 const wikiElementRange = (
   editor: Editor,
@@ -192,6 +212,21 @@ const selectionLeftElement = (
   const range = wikiElementRange(editor, element);
   if (!range) return false;
   return selection.from < range.from || selection.to > range.to;
+};
+
+/**
+ * The element a pointer event points at, or NULL when it points outside
+ * the editor content or at nothing the overlays can target.
+ */
+const wikiTargetFromEvent = (
+  editor: Editor,
+  selector: string,
+  target: EventTarget | null,
+): HTMLElement | null => {
+  const match = target instanceof Element ? target.closest(selector) : null;
+  if (!(match instanceof HTMLElement) || !editor.view.dom.contains(match))
+    return null;
+  return liftToSelfRenderedNode(match);
 };
 
 /**
@@ -244,22 +279,20 @@ const createWikiTargetTracker = (
    */
   let position: number | null = null;
 
+  /**
+   * Deliberately not resolveWikiNodeByElement: that one also answers for
+   * an element one level up, and re-anchoring to the block around a link
+   * would move the target to a different link in the same block.
+   */
   const resolvePosition = (target: HTMLElement): number | null => {
+    let base: number;
     try {
-      const base = editor.view.posAtDOM(target, 0);
-      for (const candidate of [base, base - 1]) {
-        if (candidate < 0) continue;
-        const dom = editor.view.nodeDOM(candidate);
-        if (
-          dom === target ||
-          (dom instanceof HTMLElement && dom.contains(target))
-        )
-          return candidate;
-      }
+      base = editor.view.posAtDOM(target, 0);
     } catch {
       // posAtDOM throws on out-of-range positions
+      return null;
     }
-    return null;
+    return findRenderedNode(editor, target, [base, base - 1])?.position ?? null;
   };
 
   /** The element matching `selector` that renders the node at `candidate` */
@@ -363,7 +396,6 @@ export const useWikiHoverHighlight = (
 
   useEffect(() => {
     if (!editor || editor.isDestroyed) return;
-    const editorDom = editor.view.dom;
 
     /**
      * The washed element. Only the pointer moves it — a redraw needs no
@@ -380,17 +412,11 @@ export const useWikiHoverHighlight = (
     const handleMouseMove = (event: MouseEvent) => {
       if (lockRef.current) return;
       const target = event.target;
-      if (!(target instanceof Element)) return;
-      if (overlayRef.current?.contains(target)) return;
-
-      const match = target.closest(selector);
-      if (match instanceof HTMLElement && editorDom.contains(match)) {
-        const next = liftToSelfRenderedNode(match);
-        if (next !== hovered) wash(next);
+      if (target instanceof Element && overlayRef.current?.contains(target))
         return;
-      }
 
-      if (hovered) wash(null);
+      const next = wikiTargetFromEvent(editor, selector, target);
+      if (next !== hovered) wash(next);
     };
 
     const handleTransaction = () =>
@@ -417,10 +443,8 @@ export const useWikiHoverHighlight = (
 export const useWikiFocusedElement = (
   editor: Editor | null,
   selector: string,
-  options: { readonly overlayRef: RefObject<HTMLElement | null> },
 ): HTMLElement | null => {
   const [element, setElement] = useState<HTMLElement | null>(null);
-  const { overlayRef } = options;
 
   useEffect(() => {
     if (!editor || editor.isDestroyed) return;
@@ -434,19 +458,21 @@ export const useWikiFocusedElement = (
     };
 
     const handleClick = (event: MouseEvent) => {
-      const target = event.target;
-      const match = target instanceof Element ? target.closest(selector) : null;
-      if (!(match instanceof HTMLElement) || !editorDom.contains(match)) {
-        focus(null);
-        return;
-      }
-
-      const next = liftToSelfRenderedNode(match);
+      const next = wikiTargetFromEvent(editor, selector, event.target);
       focus(next === tracker.element ? null : next);
     };
 
+    /**
+     * On the window, not on the editor: while a popover's own input has
+     * the focus (an embed's URL form), the editor sees no key events. A
+     * dialog handles its own Escape.
+     */
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && tracker.element) focus(null);
+      if (event.key !== "Escape" || !tracker.element) return;
+      const target = event.target;
+      if (target instanceof Element && target.closest('[role="dialog"]'))
+        return;
+      focus(null);
     };
 
     const handleMouseDown = (event: MouseEvent) => {
@@ -455,7 +481,6 @@ export const useWikiFocusedElement = (
       if (!(target instanceof Element)) return;
       /** Clicks on the content are the click handler's business */
       if (editorDom.contains(target)) return;
-      if (overlayRef.current?.contains(target)) return;
       if (target.closest(KEEP_FOCUS_SELECTOR)) return;
       focus(null);
     };
@@ -484,19 +509,19 @@ export const useWikiFocusedElement = (
     };
 
     const unsubscribeClick = onWikiBlockClick(editor, handleClick);
-    editorDom.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("mousedown", handleMouseDown);
     editor.on("transaction", handleTransaction);
     editor.on("selectionUpdate", handleSelectionUpdate);
     return () => {
       unsubscribeClick();
-      editorDom.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("mousedown", handleMouseDown);
       editor.off("transaction", handleTransaction);
       editor.off("selectionUpdate", handleSelectionUpdate);
       setWikiActiveNodeHighlight(editor, null, WikiHighlightOwner.Focus);
     };
-  }, [editor, selector, overlayRef]);
+  }, [editor, selector]);
 
   /**
    * A transaction can detach the element between two render ticks; the

@@ -54,22 +54,22 @@ export const WikiTableControls = ({ editor, overlayRef }: Props) => {
         return;
       }
 
-      let tableDom: Element | null = null;
-      if (editor.isActive("table")) {
-        const domAtPos = editor.view.domAtPos(editor.state.selection.from).node;
-        const element =
-          domAtPos instanceof HTMLElement ? domAtPos : domAtPos.parentElement;
-        tableDom = element?.closest("table") ?? null;
+      if (!editor.isActive("table")) {
+        setTarget(null);
+        return;
       }
 
+      const domAtPos = editor.view.domAtPos(editor.state.selection.from).node;
+      const element =
+        domAtPos instanceof HTMLElement ? domAtPos : domAtPos.parentElement;
+      const table = element?.closest("table");
       if (
-        !(tableDom instanceof HTMLTableElement) ||
-        !editor.view.dom.contains(tableDom)
+        !(table instanceof HTMLTableElement) ||
+        !editor.view.dom.contains(table)
       ) {
         setTarget(null);
         return;
       }
-      const table = tableDom;
 
       const measure = () => {
         const rows = Array.from(table.rows);

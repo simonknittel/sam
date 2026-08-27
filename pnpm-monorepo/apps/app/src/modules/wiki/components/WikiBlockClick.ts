@@ -53,11 +53,25 @@ export const WikiBlockClick = Extension.create({
      * the event object identifies it.
      */
     let reportedEvent: MouseEvent | null = null;
+
+    /**
+     * Reported after the click, never during it: while these props run,
+     * the caret still sits where it was before — ProseMirror leaves the
+     * placement to the browser and only picks it up from the following
+     * selectionchange. A subscriber writing to the editor (or rendering
+     * over it) in between makes ProseMirror re-sync the DOM selection to
+     * that stale position, and the click never moves the caret at all —
+     * which stops the cursor from entering table cells.
+     */
     const report = (event: MouseEvent): false => {
       if (event.button !== 0 || event === reportedEvent) return false;
       reportedEvent = event;
-      for (const listener of listenersByEditor.get(editor) ?? [])
-        listener(event);
+      window.setTimeout(() => {
+        reportedEvent = null;
+        if (editor.isDestroyed) return;
+        for (const listener of listenersByEditor.get(editor) ?? [])
+          listener(event);
+      }, 0);
       return false;
     };
 

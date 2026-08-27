@@ -131,6 +131,53 @@ test("a click outside the editor closes the popover", async ({
   await expect(blockMenu(page)).toBeHidden();
 });
 
+test("clicking a table cell places the caret and raises both the popover and the table controls", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const editor = await createCitizen(prisma, { handle: "editor" });
+  const cell = (text: string) => ({
+    type: "tableCell",
+    content: [wikiParagraph(text)],
+  });
+  const wikiPage = await seedEditablePage(prisma, {
+    title: "Tabelle",
+    content: wikiDocument(wikiParagraph(FIRST_TEXT), {
+      type: "table",
+      content: [
+        {
+          type: "tableRow",
+          content: [
+            { type: "tableHeader", content: [wikiParagraph("A")] },
+            { type: "tableHeader", content: [wikiParagraph("B")] },
+          ],
+        },
+        { type: "tableRow", content: [cell("1"), cell("2")] },
+      ],
+    }),
+  });
+  await signIn(editor.user);
+
+  await page.goto(`/app/wiki/${wikiPage.id}/${wikiPage.slug}`);
+  await enterEditMode(page);
+  const editorRoot = page.locator('.tiptap[contenteditable="true"]');
+  const firstCell = editorRoot.locator("td").first();
+
+  await clickUntilVisible(firstCell.locator("p"), blockMenu(page));
+  await expect(
+    page.getByRole("button", { name: "Spalte einfügen" }).first(),
+  ).toBeVisible();
+
+  /**
+   * The click has to leave the caret in the cell — the popovers must not
+   * take that over, or the table stops being editable by mouse.
+   */
+  await page.keyboard.press("End");
+  await page.keyboard.type("2");
+  await expect(firstCell).toHaveText("12");
+});
+
 test("selecting text replaces the block popover with the formatting menu", async ({
   page,
   prisma,

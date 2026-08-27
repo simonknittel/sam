@@ -62,9 +62,7 @@ export const WikiEditorOverlays = ({ editor, onRequestLink }: Props) => {
   const overlayRef = useRef<HTMLDivElement>(null);
   const dragLockRef = useRef(false);
 
-  const focusedElement = useWikiFocusedElement(editor, TARGET_SELECTOR, {
-    overlayRef,
-  });
+  const focusedElement = useWikiFocusedElement(editor, TARGET_SELECTOR);
   useWikiHoverHighlight(editor, TARGET_SELECTOR, {
     overlayRef,
     lockRef: dragLockRef,
@@ -75,7 +73,12 @@ export const WikiEditorOverlays = ({ editor, onRequestLink }: Props) => {
   }, []);
 
   return (
-    <div ref={overlayRef} className="pointer-events-none absolute inset-0">
+    /* data-wiki-editor-chrome: clicks here keep the focused block */
+    <div
+      ref={overlayRef}
+      data-wiki-editor-chrome
+      className="pointer-events-none absolute inset-0"
+    >
       <WikiResizeHandles
         editor={editor}
         focusedElement={focusedElement}

@@ -219,7 +219,7 @@ const nodeMenu = (
   node: ProseMirrorNode,
   position: number,
   target: WikiMenuTarget,
-): WikiEditMenuState => ({
+): WikiNodeMenuState => ({
   kind: "node",
   typeName: node.type.name,
   position,
@@ -241,7 +241,7 @@ const calloutMenu = (
   node: ProseMirrorNode,
   position: number,
   target: WikiMenuTarget,
-): WikiEditMenuState => ({
+): WikiCalloutMenuState => ({
   kind: "callout",
   position,
   color: (node.attrs.color ?? "blue") as WikiCalloutColor,
@@ -262,7 +262,7 @@ const textSelectionMenu = (
   editor: Editor,
   node: ProseMirrorNode,
   target: WikiMenuTarget,
-): WikiEditMenuState => ({
+): WikiTextSelectionMenuState => ({
   kind: "textSelection",
   headingLevel: textHeadingLevel(node),
   activeMarks: TEXT_FORMAT_OPTIONS.filter((option) =>
@@ -288,7 +288,7 @@ const textNodeMenu = (
   node: ProseMirrorNode,
   position: number,
   target: WikiMenuTarget,
-): WikiEditMenuState => ({
+): WikiTextNodeMenuState => ({
   kind: "textNode",
   position,
   nodeSize: node.nodeSize,
@@ -396,7 +396,7 @@ export const wikiMenuFromElement = (
 export const wikiMenuFromSelection = (
   editor: Editor,
   editorBlurred: boolean,
-): WikiEditMenuState => {
+): WikiLinkMenuState | WikiTextSelectionMenuState | null => {
   const { selection } = editor.state;
 
   /**
