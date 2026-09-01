@@ -1,12 +1,23 @@
 import type { Page } from "@playwright/test";
 import type { PrismaClient } from "@sam-monorepo/database/client";
+import {
+  EventDiscordPublishTarget,
+  EventVisibility,
+  WikiPageEventScope,
+  WikiPageNamespace,
+} from "@sam-monorepo/database/client";
 import { expectAuditEvents } from "../fixtures/audit";
 import {
   assignRole,
+  createAppEvent,
   createCitizen,
+  createEvent,
   createEventTemplate,
   createRole,
   EventTemplateAccessType,
+  futureEvent,
+  ONE_DAY_MS,
+  ONE_HOUR_MS,
 } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
@@ -17,6 +28,7 @@ import {
   NOT_FOUND_TEXT,
   pickFromSearch,
   SAVED_TEXT,
+  waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
@@ -599,4 +611,269 @@ test("a template's briefing root page is locked like an event's", async ({
     page.getByRole("combobox", { name: "Seiten durchsuchen" }),
   ).toBeVisible();
   await expect(page.getByRole("link", { name: "Aufstellung" })).toBeVisible();
+});
+
+test("a manager saves a past event as a template", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const owner = await createOwner(prisma);
+  const pilot = await createCitizen(prisma, { handle: "pilot" });
+  const visibilityRole = await createRole(prisma, { name: "Patrouillen-Team" });
+
+  const event = await createAppEvent(prisma, {
+    name: "Patrouille am Freitag",
+    createdById: owner.entity.id,
+    description: "Standardablauf",
+    startTime: new Date(Date.now() - 2 * ONE_DAY_MS),
+    endTime: new Date(Date.now() - 2 * ONE_DAY_MS + 2 * ONE_HOUR_MS),
+    visibility: EventVisibility.RESTRICTED,
+    visibilityRoleIds: [visibilityRole.id],
+  });
+
+  /** Published to a channel — the template prefills the same target */
+  await prisma.event.update({
+    where: { id: event.id },
+    data: {
+      discordPublishedId: "discord-scheduled-event",
+      discordPublishedAt: new Date(),
+      discordPublishedChannelId: "channel-123",
+    },
+  });
+
+  /** A staffed position with an open application: neither may travel */
+  const position = await prisma.eventPosition.create({
+    data: {
+      eventId: event.id,
+      name: "Pilot",
+      order: 0,
+      citizenId: pilot.entity.id,
+    },
+  });
+  await prisma.eventPositionApplication.create({
+    data: { positionId: position.id, citizenId: pilot.entity.id },
+  });
+
+  const rootPage = await prisma.wikiPage.findFirstOrThrow({
+    where: { eventId: event.id },
+  });
+  await prisma.wikiPage.create({
+    data: {
+      namespace: WikiPageNamespace.EVENT,
+      eventId: event.id,
+      parentId: rootPage.id,
+      title: "Anflug",
+      slug: "anflug",
+      sortOrder: 0,
+      eventReadScope: WikiPageEventScope.POSITION,
+      eventReadScopePositionId: position.id,
+      eventEditScope: WikiPageEventScope.INHERIT,
+      createdById: owner.entity.id,
+    },
+  });
+
+  await signIn(owner.user);
+  await page.goto(`/app/events/${event.id}/settings`);
+
+  /** The event is over: the form is gone, the action stays */
+  await expect(page.getByText("Das Event ist bereits vorbei")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Aktionen" })).toBeVisible();
+
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Als Vorlage speichern" }),
+    modal(page, "Event als Vorlage speichern"),
+  );
+
+  const dialog = modal(page, "Event als Vorlage speichern");
+  await expect(dialog.getByLabel("Name")).toHaveValue("Patrouille am Freitag");
+  await fillUntilValue(dialog.getByLabel("Name"), "Patrouille");
+  await dialog.getByRole("button", { name: "Speichern" }).click();
+
+  /** The action redirects to the new template's Stammdaten page */
+  await expect(page.getByRole("heading", { name: "Stammdaten" })).toBeVisible();
+
+  const template = await prisma.eventTemplate.findFirstOrThrow({
+    include: { positions: true, wikiPages: true, visibilityRoles: true },
+  });
+  await expect(page).toHaveURL(new RegExp(`/templates/${template.id}$`));
+  expect(template.name).toBe("Patrouille");
+  expect(template.description).toBe("Standardablauf");
+  expect(template.ownedById).toBe(owner.entity.id);
+  expect(template.discordPublishTarget).toBe(EventDiscordPublishTarget.CHANNEL);
+  expect(template.discordPublishChannelId).toBe("channel-123");
+  expect(template.discordPublishLocation).toBeNull();
+
+  /** The visibility of the event becomes the prefill of the template */
+  expect(template.visibility).toBe(EventVisibility.RESTRICTED);
+  expect(template.visibilityRoles.map((role) => role.roleId)).toEqual([
+    visibilityRole.id,
+  ]);
+
+  /** A blueprint position is never staffed and carries no applications */
+  expect(template.positions).toHaveLength(1);
+  const copiedPosition = template.positions[0]!;
+  expect(copiedPosition.name).toBe("Pilot");
+  expect(copiedPosition.citizenId).toBeNull();
+  expect(
+    await prisma.eventPositionApplication.count({
+      where: { positionId: copiedPosition.id },
+    }),
+  ).toBe(0);
+
+  expect(
+    template.wikiPages.map((wikiPage) => wikiPage.title).toSorted(),
+  ).toEqual(["Anflug", "BRIEFING"]);
+  /** The copied page points at the template's own position */
+  const copiedPage = template.wikiPages.find(
+    (wikiPage) => wikiPage.title === "Anflug",
+  )!;
+  expect(copiedPage.eventReadScopePositionId).toBe(copiedPosition.id);
+
+  /** The source event is untouched */
+  expect(
+    await prisma.eventPosition.count({ where: { eventId: event.id } }),
+  ).toBe(1);
+
+  await expectAuditEvents(prisma, ["EVENT_TEMPLATE_CREATED_FROM_EVENT"]);
+});
+
+/**
+ * Publishing with an empty location stores the event's own URL (see
+ * `resolveDiscordPublishTarget`). Carried over verbatim, every event made
+ * from the template would announce the old event's address on Discord.
+ */
+test("a template drops the source event's own URL from its Discord prefill", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const owner = await createOwner(prisma);
+  await signIn(owner.user);
+
+  /**
+   * Published through the app, so the location column holds whatever
+   * `resolveDiscordPublishTarget` really stores — the test never has to
+   * reconstruct the app's own base URL.
+   */
+  const saveAsTemplate = async (eventName: string, location?: string) => {
+    const event = await createAppEvent(prisma, {
+      name: eventName,
+      createdById: owner.entity.id,
+      ...futureEvent(),
+    });
+
+    await page.goto(`/app/events/${event.id}/settings`);
+    await waitForAppShellHydration(page);
+    // EXTERNAL is the default target, so only a location has to be typed.
+    // By role, because "Ort" also names the "Externer Ort" radio.
+    if (location)
+      await fillUntilValue(
+        page.getByRole("textbox", { name: "Ort" }),
+        location,
+      );
+    await page
+      .getByRole("button", { name: "Auf Discord veröffentlichen" })
+      .click();
+    await expect(
+      page.getByText("Das Event wurde auf Discord veröffentlicht."),
+    ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+
+    await clickUntilVisible(
+      page.getByRole("button", { name: "Als Vorlage speichern" }),
+      modal(page, "Event als Vorlage speichern"),
+    );
+    await modal(page, "Event als Vorlage speichern")
+      .getByRole("button", { name: "Speichern" })
+      .click();
+    await expect(
+      page.getByRole("heading", { name: "Stammdaten" }),
+    ).toBeVisible();
+
+    return prisma.eventTemplate.findFirstOrThrow({
+      where: { name: eventName },
+    });
+  };
+
+  const fromDefault = await saveAsTemplate("Treffpunkt SAM");
+  expect(fromDefault.discordPublishTarget).toBe(
+    EventDiscordPublishTarget.EXTERNAL,
+  );
+  /** NULL is how the template says "the created event's own URL" */
+  expect(fromDefault.discordPublishLocation).toBeNull();
+
+  const fromOwn = await saveAsTemplate(
+    "Treffpunkt Port Olisar",
+    "Port Olisar, Crusader",
+  );
+  expect(fromOwn.discordPublishTarget).toBe(EventDiscordPublishTarget.EXTERNAL);
+  expect(fromOwn.discordPublishLocation).toBe("Port Olisar, Crusader");
+});
+
+test("saving an event as a template follows the settings gate", async ({
+  page,
+  prisma,
+  signIn,
+  switchUser,
+}) => {
+  const owner = await createOwner(prisma);
+  const event = await createAppEvent(prisma, {
+    name: "Operation Blaupause",
+    createdById: owner.entity.id,
+    ...futureEvent(),
+  });
+
+  /**
+   * Managing the event is not enough — creating events is the second half.
+   * A co-manager holds the manage tier through the event itself, so unlike
+   * `event;manage` it does not drag `event;create` along.
+   */
+  const coManager = await createCitizen(prisma, {
+    handle: "verwalter",
+    permissionStrings: ["event;read"],
+  });
+  await prisma.event.update({
+    where: { id: event.id },
+    data: { managers: { connect: { id: coManager.entity.id } } },
+  });
+  await signIn(coManager.user);
+  await page.goto(`/app/events/${event.id}/settings`);
+  await expect(
+    page.getByRole("heading", { name: "Event bearbeiten" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Als Vorlage speichern" }),
+  ).toHaveCount(0);
+
+  /**
+   * …and creating events is not enough either: the copy carries the
+   * manager-only briefing pages and the unpublished lineup with it.
+   */
+  const bystander = await createCitizen(prisma, {
+    handle: "zuschauer",
+    permissionStrings: ["event;read", "event;create"],
+  });
+  await switchUser(bystander.user);
+  await page.goto(`/app/events/${event.id}`);
+  await expect(page.getByRole("link", { name: "Einstellungen" })).toHaveCount(
+    0,
+  );
+  await page.goto(`/app/events/${event.id}/settings`);
+  await expect(page.getByRole("heading", { name: "Redacted" })).toBeVisible();
+
+  /** A Discord event has neither an app briefing nor a settings tab */
+  const discordEvent = await createEvent(prisma, {
+    name: "Discord-Event",
+    discordCreatorId: owner.entity.discordId!,
+    startTime: futureEvent().startTime,
+  });
+  await switchUser(owner.user);
+  await page.goto(`/app/events/${discordEvent.id}`);
+  await expect(page.getByRole("link", { name: "Einstellungen" })).toHaveCount(
+    0,
+  );
+  await page.goto(`/app/events/${discordEvent.id}/settings`);
+  await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
+
+  expect(await prisma.eventTemplate.count()).toBe(0);
 });

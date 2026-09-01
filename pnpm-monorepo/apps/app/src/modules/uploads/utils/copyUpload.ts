@@ -12,6 +12,16 @@ export type CopyableUpload = Pick<
   "id" | "fileName" | "mimeType" | "size" | "width" | "height"
 >;
 
+/** Loads exactly a `CopyableUpload`, so the two can never drift apart */
+export const COPYABLE_UPLOAD_SELECT = {
+  id: true,
+  fileName: true,
+  mimeType: true,
+  size: true,
+  width: true,
+  height: true,
+} as const satisfies Prisma.UploadSelect;
+
 /**
  * Duplicates an upload: a new `Upload` row owned by the acting user plus a
  * copy of the stored object under the new row's id, which is the S3 key.

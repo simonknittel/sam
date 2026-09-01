@@ -46,6 +46,29 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-09-01-event-als-vorlage-speichern",
+    date: "2026-09-01",
+    title: "Event als Vorlage speichern",
+    tags: ["Events", "Neu"],
+    isTracked: true,
+    body: () => (
+      <>
+        <p>
+          Ein Event lässt sich nun in eine Event-Vorlage überführen. Unter
+          &ldquo;Einstellungen&rdquo; findest du dazu im Bereich
+          &ldquo;Aktionen&rdquo; den Button &ldquo;Als Vorlage speichern&rdquo;.
+        </p>
+
+        <p>
+          Die neue Vorlage übernimmt Beschreibung, Titelbild, Sichtbarkeit,
+          Aufstellung, Briefing und die Discord-Veröffentlichung des Events.
+          Teilnehmer und die Besetzung der Aufstellung werden nicht übernommen.
+        </p>
+      </>
+    ),
+  },
+
+  {
     key: "2026-09-01-event-manager-aktivitaet",
     date: "2026-09-01",
     title: "Events: Managerwechsel in der Aktivität",

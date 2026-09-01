@@ -39,9 +39,20 @@ interface Props {
    * channel list from Discord and therefore stays a Server Component.
    */
   readonly discordCard?: ReactNode;
+  /**
+   * The "Aktionen" tile, rendered by the page: its contents are permission
+   * gated, and the page shows the same tile on events that are over — where
+   * the settings form itself is gone.
+   */
+  readonly actionsTile?: ReactNode;
 }
 
-export const EventSettings = ({ className, event, discordCard }: Props) => {
+export const EventSettings = ({
+  className,
+  event,
+  discordCard,
+  actionsTile,
+}: Props) => {
   const router = useRouter();
   const { state, formAction, isPending, getDefaultValueWithFallback } =
     useAction(updateEvent, {
@@ -137,6 +148,8 @@ export const EventSettings = ({ className, event, discordCard }: Props) => {
       </Tile>
 
       {discordCard}
+
+      {actionsTile}
 
       <Tile heading="Danger Zone" variant={TileVariant.Danger}>
         <ConfirmActionButton

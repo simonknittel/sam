@@ -1117,6 +1117,20 @@ export const AuditEventDefinitions: {
       `Event template "${data.sourceName}" (${data.sourceTemplateId}) duplicated as "${data.name}" (${data.templateId})`,
   },
 
+  [AuditEventType.EVENT_TEMPLATE_CREATED_FROM_EVENT]: {
+    type: AuditEventType.EVENT_TEMPLATE_CREATED_FROM_EVENT,
+    data: {
+      templateId: "string",
+      name: "string",
+      sourceEventId: "string",
+      sourceEventName: "string",
+      positionCount: 0,
+      pageCount: 0,
+    },
+    message: (data) =>
+      `Event "${data.sourceEventName}" (${data.sourceEventId}) saved as event template "${data.name}" (${data.templateId})`,
+  },
+
   [AuditEventType.EVENT_TEMPLATE_DELETED]: {
     type: AuditEventType.EVENT_TEMPLATE_DELETED,
     data: {
