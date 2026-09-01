@@ -27,6 +27,7 @@ export const HIGH_VOLUME_AUDIT_EVENT_TYPES: ReadonlySet<AuditEventType> =
     AuditEventType.ON_SITE_NOTIFICATIONS_READ_ARCHIVED,
     AuditEventType.ON_SITE_NOTIFICATION_UNARCHIVED,
     AuditEventType.CHANGELOG_ENTRIES_SEEN,
+    AuditEventType.LOG_ANALYZER_ENTRIES_UPLOADED,
   ]);
 
 interface AuditEventDefinition<Type extends AuditEventType> {
@@ -2257,5 +2258,16 @@ export const AuditEventDefinitions: {
           ? "marked as done manually"
           : "finished the tour"
       })`,
+  },
+
+  [AuditEventType.LOG_ANALYZER_ENTRIES_UPLOADED]: {
+    type: AuditEventType.LOG_ANALYZER_ENTRIES_UPLOADED,
+    data: {
+      citizenId: "string",
+      entryCount: 0,
+      newEntryCount: 0,
+    },
+    message: (data) =>
+      `Citizen ${data.citizenId} uploaded ${data.entryCount} log analyzer entries (${data.newEntryCount} new)`,
   },
 };

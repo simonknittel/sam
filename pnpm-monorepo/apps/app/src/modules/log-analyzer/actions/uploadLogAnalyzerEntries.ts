@@ -2,6 +2,8 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { getUnleashFlag } from "@/modules/common/utils/getUnleashFlag";
 import { UNLEASH_FLAG } from "@/modules/common/utils/UNLEASH_FLAG";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
@@ -44,7 +46,7 @@ export const uploadLogAnalyzerEntries = createAuthenticatedAction(
     if (!entries)
       return { error: t("Common.badRequest"), requestPayload: formData };
 
-    await prisma.logAnalyzerEntry.createMany({
+    const { count: newEntryCount } = await prisma.logAnalyzerEntry.createMany({
       data: entries.map((entry) => ({
         type: entry.type,
         rawLine: entry.rawLine,
@@ -54,6 +56,18 @@ export const uploadLogAnalyzerEntries = createAuthenticatedAction(
       })),
       skipDuplicates: true,
     });
+
+    await createAuditEvents([
+      {
+        type: AuditEventType.LOG_ANALYZER_ENTRIES_UPLOADED,
+        data: {
+          citizenId,
+          entryCount: entries.length,
+          newEntryCount,
+        },
+        createdById: authentication.session.user.id,
+      },
+    ]);
 
     return { success: "Einträge geteilt." };
   },

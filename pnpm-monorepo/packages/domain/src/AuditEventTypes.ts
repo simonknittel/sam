@@ -227,6 +227,7 @@ export enum AuditEventType {
   CITIZEN_PROFILE_UPDATED = "CITIZEN_PROFILE_UPDATED",
   BIRTHDAY_GREETINGS_SENT = "BIRTHDAY_GREETINGS_SENT",
   ONBOARDING_TASK_COMPLETED = "ONBOARDING_TASK_COMPLETED",
+  LOG_ANALYZER_ENTRIES_UPLOADED = "LOG_ANALYZER_ENTRIES_UPLOADED",
 }
 
 /**
@@ -1537,6 +1538,17 @@ export interface AuditEventDataByType {
     taskKey: string;
     /** `TOUR` (finished the tour) or `SKIPPED` (marked as done manually) */
     completionMethod: string;
+  };
+
+  /**
+   * The raw lines and their hashes hold data of other players, thus the log
+   * records only the counts. `newEntryCount` counts the entries the server
+   * stored; the rest were duplicates it already held.
+   */
+  [AuditEventType.LOG_ANALYZER_ENTRIES_UPLOADED]: {
+    citizenId: string;
+    entryCount: number;
+    newEntryCount: number;
   };
 }
 
