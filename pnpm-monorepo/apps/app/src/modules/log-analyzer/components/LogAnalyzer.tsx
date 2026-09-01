@@ -11,8 +11,16 @@ import clsx from "clsx";
 import { get, set } from "idb-keyval";
 import { useCallback, useEffect, useRef, type MouseEvent } from "react";
 import { FaFileArrowUp } from "react-icons/fa6";
+import { useEntryUpload } from "../hooks/useEntryUpload";
+import { useSharedEntries } from "../hooks/useSharedEntries";
 import { getFilesRecursively } from "../utils/getFilesRecursively";
-import { EntryType, PATTERNS, type IEntry } from "../utils/PATTERNS";
+import { LIVE_MODE_INTERVAL_MS } from "../utils/liveMode";
+import {
+  createEntryKey,
+  EntryType,
+  PATTERNS,
+  type IEntry,
+} from "../utils/PATTERNS";
 import type { RawMatch, ResultMessage } from "../utils/types";
 import { Introduction } from "./Introduction";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
@@ -26,7 +34,6 @@ interface Props {
 
 export const LogAnalyzer = ({ className }: Props) => {
   const directoryHandleRef = useRef<FileSystemDirectoryHandle | null>(null);
-  const liveModeIntervalRef = useRef<number | null>(null);
 
   const {
     isPending,
@@ -41,6 +48,10 @@ export const LogAnalyzer = ({ className }: Props) => {
 
   const authentication = useAuthentication();
   const { pipWindow } = useOverlay();
+  const uploadEntries = useEntryUpload();
+  const refreshSharedEntries = useSharedEntries();
+
+  const ownCitizen = authentication ? authentication.session.entity : null;
 
   // Reusable Web Worker for background log parsing
   const workerRef = useRef<Worker | null>(null);
@@ -151,24 +162,34 @@ export const LogAnalyzer = ({ className }: Props) => {
             const newEntries = new Map<string, IEntry>(previousEntries);
 
             for (const rawMatch of rawMatches) {
-              const pattern =
-                PATTERNS[rawMatch.patternKey as keyof typeof PATTERNS];
-              if (!pattern) continue;
-
-              const key = `${rawMatch.patternKey}_${rawMatch.fullMatch}`;
-              if (newEntries.has(key)) continue;
+              const key = createEntryKey(rawMatch.type, rawMatch.fullMatch);
+              const existingEntry = newEntries.get(key);
+              /**
+               * A local entry replaces a shared one of the same line, because
+               * it belongs to the user and not to whoever shared it first. It
+               * keeps the highlight state of the entry it replaces.
+               */
+              if (existingEntry && !existingEntry.isShared) continue;
 
               newEntries.set(key, {
                 key,
-                type: rawMatch.patternKey as EntryType,
+                type: rawMatch.type,
                 isoDate: new Date(rawMatch.isoDate),
-                isNew,
-                message: pattern.renderMessage?.(rawMatch.groups) ?? null,
+                isNew: existingEntry?.isNew ?? isNew,
+                message:
+                  PATTERNS[rawMatch.type].renderMessage?.(rawMatch.groups) ??
+                  null,
+                citizen: ownCitizen,
+                isShared: false,
+                isUploaded: false,
               });
             }
 
             return newEntries;
           });
+
+          /** Sharing must not hold up the rendering of the new entries */
+          void uploadEntries(rawMatches);
         } catch (error) {
           console.error("[Log Analyzer] Error reading files:", error);
         }
@@ -180,31 +201,33 @@ export const LogAnalyzer = ({ className }: Props) => {
       entryFilters,
       isAutostartEnabled,
       isLiveModeEnabled,
+      ownCitizen,
       pipWindow,
       setEntries,
       startTransition,
+      uploadEntries,
     ],
   );
 
+  /**
+   * The interval reads the newest `parseLogs` from a ref. Reading it from the
+   * dependencies instead would restart the interval on every render — and
+   * every arrival of shared entries causes one.
+   */
+  const parseLogsRef = useRef(parseLogs);
   useEffect(() => {
-    if (isLiveModeEnabled) {
-      liveModeIntervalRef.current = window.setInterval(() => {
-        parseLogs(true);
-      }, 10_000);
-    } else {
-      if (liveModeIntervalRef.current) {
-        window.clearInterval(liveModeIntervalRef.current);
-        liveModeIntervalRef.current = null;
-      }
-    }
+    parseLogsRef.current = parseLogs;
+  }, [parseLogs]);
 
-    return () => {
-      if (liveModeIntervalRef.current) {
-        window.clearInterval(liveModeIntervalRef.current);
-        liveModeIntervalRef.current = null;
-      }
-    };
-  }, [isLiveModeEnabled, parseLogs]);
+  useEffect(() => {
+    if (!isLiveModeEnabled) return;
+
+    const interval = window.setInterval(() => {
+      parseLogsRef.current(true);
+    }, LIVE_MODE_INTERVAL_MS);
+
+    return () => window.clearInterval(interval);
+  }, [isLiveModeEnabled]);
 
   const handlePreviousDirectorySelect = useCallback(
     (event?: MouseEvent<HTMLButtonElement>) => {
@@ -274,6 +297,11 @@ export const LogAnalyzer = ({ className }: Props) => {
     handlePreviousDirectorySelect();
   }, [isAutostartEnabled, handlePreviousDirectorySelect]);
 
+  const handleRefresh = useCallback(() => {
+    parseLogs(true);
+    refreshSharedEntries();
+  }, [parseLogs, refreshSharedEntries]);
+
   return (
     <div className={clsx(className)}>
       <div className="flex flex-col lg:flex-row gap-4 lg:gap-0 items-baseline justify-end">
@@ -300,11 +328,12 @@ export const LogAnalyzer = ({ className }: Props) => {
         </div>
       </div>
 
+      {/* The toolbar also holds the sharing settings, thus it stays reachable
+          before a folder is chosen — the shared entries need no folder. */}
+      <Toolbar onRefresh={handleRefresh} className="mt-1" />
+
       {entries.size > 0 ? (
-        <>
-          <Toolbar onRefresh={() => parseLogs(true)} className="mt-1" />
-          <LogAnalyzerTable className="mt-0.5" />
-        </>
+        <LogAnalyzerTable className="mt-0.5" />
       ) : (
         <Introduction className="mt-1" />
       )}

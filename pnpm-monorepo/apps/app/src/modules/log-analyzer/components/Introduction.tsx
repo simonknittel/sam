@@ -1,18 +1,23 @@
+"use client";
+
 import { RichText } from "@/modules/common/components/RichText";
 import clsx from "clsx";
-import { PATTERNS } from "../utils/PATTERNS";
+import { PATTERNS, SORTED_ENTRY_TYPES } from "../utils/PATTERNS";
+import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 
 interface Props {
   readonly className?: string;
 }
 
 export const Introduction = ({ className }: Props) => {
+  const { isSharingAvailable } = useLogAnalyzerContext();
+
   return (
     <section className={clsx(className)}>
       <div className="bg-secondary rounded-primary p-4">
         <RichText>
           <p>
-            Der Log Analyzer wertet die Game Logs von Star Citizen aus um
+            Der Log Analyzer wertet die Game Logs von Star Citizen aus, um
             wichtige Ereignisse zu erkennen.
           </p>
 
@@ -21,17 +26,19 @@ export const Introduction = ({ className }: Props) => {
       </div>
 
       <ul className="mt-0.5 grid grid-cols-2 md:grid-cols-4 gap-0.5">
-        {Object.entries(PATTERNS)
-          .toSorted((a, b) => a[1].title.localeCompare(b[1].title))
-          .map(([key, { title, icon: Icon }]) => (
+        {SORTED_ENTRY_TYPES.map((type) => {
+          const { title, icon: Icon } = PATTERNS[type];
+
+          return (
             <li
-              key={key}
+              key={type}
               className="flex items-center text-center justify-center gap-2 bg-tertiary rounded-secondary p-4 font-mono uppercase font-bold"
             >
               <Icon className="shrink-0" />
               {title}
             </li>
-          ))}
+          );
+        })}
       </ul>
 
       <div className="bg-secondary rounded-primary p-4 mt-4">
@@ -61,9 +68,21 @@ export const Introduction = ({ className }: Props) => {
 
           <h3>Info</h3>
           <p>
-            Keine Dateien werden auf den Server hochgeladen. Die Logs werden
-            ausschließlich client-seitig in deinem Browser lokal ausgewertet.
+            Die Logs werden ausschließlich client-seitig in deinem Browser
+            ausgewertet. Es werden keine Log-Dateien auf den Server hochgeladen.
           </p>
+
+          {/* The kill switch removes the button the copy describes */}
+          {isSharingAvailable && (
+            <p>
+              Über <span className="font-mono uppercase">Teilen</span> kannst du
+              das Teilen aktivieren. Dann werden die erkannten Events der von
+              dir ausgewählten Typen auf den Server hochgeladen und sind für
+              andere mit Zugriff auf den Log Analyzer sichtbar. Ebenfalls über{" "}
+              <span className="font-mono uppercase">Teilen</span> kannst du dir
+              die Einträge anderer anzeigen lassen.
+            </p>
+          )}
 
           <p>
             Es können aktuell nur die Logs der letzten 14 Tage ausgewertet

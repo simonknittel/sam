@@ -1,3 +1,4 @@
+import type { Entity } from "@sam-monorepo/database/browser";
 import type { ReactNode } from "react";
 import type { IconType } from "react-icons";
 import {
@@ -9,8 +10,12 @@ import {
   FaRightToBracket,
   FaSkull,
 } from "react-icons/fa6";
-import type { PatternConfig } from "./types";
 
+/**
+ * A new log pattern needs a value here and an entry in `PATTERNS` below.
+ * Nothing else: the database keeps the value of this enum verbatim, thus a
+ * new type needs no migration.
+ */
 export enum EntryType {
   JoinPu = "joinPu",
   OwnDeath = "ownDeath",
@@ -27,20 +32,36 @@ export interface IEntry {
   readonly isoDate: Date;
   readonly isNew?: boolean;
   readonly message: ReactNode;
+  /**
+   * The citizen the entry belongs to: the citizen who shared it, or the
+   * current user for a local one. Null when the user has no linked citizen.
+   */
+  readonly citizen: Pick<Entity, "id" | "handle"> | null;
+  /** True when another citizen shared the entry instead of the local parser. */
+  readonly isShared: boolean;
+  /**
+   * True once the entry reached the server, whether this visit shared it or
+   * an earlier one did. The upload learns the difference from the hashes the
+   * server already holds.
+   */
+  readonly isUploaded: boolean;
 }
 
 const shardRegex = /^pub_(?<region>[a-z0-9]+)_\w+_(?<number>\d+)$/m;
 
-type Patterns = Record<EntryType, Pattern>;
-
 interface Pattern {
   title: string;
   icon: IconType;
+  /**
+   * The expression scans whole log files, thus it carries the global and the
+   * multiline flag. It must have an `isoDate` group, which gives the time of
+   * the event.
+   */
   regex: RegExp;
   renderMessage?: (groups: Record<string, string>) => ReactNode;
 }
 
-export const PATTERNS: Patterns = {
+export const PATTERNS: Record<EntryType, Pattern> = {
   joinPu: {
     title: "Shard-Beitritt",
     icon: FaRightToBracket,
@@ -163,13 +184,53 @@ export const PATTERNS: Patterns = {
   },
 };
 
-/**
- * Serializable pattern configs for Web Worker (regex source + flags, without renderMessage which contains JSX)
- */
-export const PATTERN_CONFIGS: PatternConfig[] = Object.entries(PATTERNS).map(
-  ([key, pattern]) => ({
-    key,
-    regexSource: pattern.regex.source,
-    regexFlags: pattern.regex.flags,
-  }),
+/** The order in which every list of the entry types shows them. */
+export const SORTED_ENTRY_TYPES = Object.values(EntryType).toSorted(
+  (first, second) =>
+    PATTERNS[first].title.localeCompare(PATTERNS[second].title),
 );
+
+const ENTRY_TYPES_BY_VALUE = new Map<string, EntryType>(
+  Object.values(EntryType).map((type) => [type, type]),
+);
+
+/**
+ * Reads a type back which the database keeps as text. Returns undefined for a
+ * value which no longer belongs to a pattern, thus a removed pattern leaves
+ * its shared entries in place without breaking the table.
+ */
+export const toEntryType = (value: string) => ENTRY_TYPES_BY_VALUE.get(value);
+
+/**
+ * The expressions of `PATTERNS` without the global flag and thus without a
+ * `lastIndex`, so a single match never moves the state of a shared
+ * expression. Compiled once: `matchEntryLine` runs for every shared entry of
+ * a response.
+ */
+const SINGLE_LINE_REGEXES = Object.fromEntries(
+  Object.values(EntryType).map((type) => {
+    const { regex } = PATTERNS[type];
+    return [type, new RegExp(regex.source, regex.flags.replaceAll("g", ""))];
+  }),
+) as Record<EntryType, RegExp>;
+
+/**
+ * Matches one single log line against the pattern of the given type and gives
+ * back its capture groups. Returns null when the line is not of that type.
+ */
+export const matchEntryLine = (
+  type: EntryType,
+  rawLine: string,
+): Record<string, string> | null =>
+  SINGLE_LINE_REGEXES[type].exec(rawLine)?.groups ?? null;
+
+/**
+ * Identifies one entry in the entries map. The same line of the same type is
+ * one entry, no matter whether the local parser or another citizen delivered
+ * it.
+ *
+ * No value of `EntryType` holds an underscore, thus the separator cannot make
+ * two different entries collide.
+ */
+export const createEntryKey = (type: EntryType, rawLine: string) =>
+  `${type}_${rawLine}`;

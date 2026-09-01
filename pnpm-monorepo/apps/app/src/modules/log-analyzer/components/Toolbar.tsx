@@ -5,9 +5,11 @@ import { Tooltip } from "@/modules/common/components/Tooltip";
 import clsx from "clsx";
 import { FaInfoCircle } from "react-icons/fa";
 import { TfiReload } from "react-icons/tfi";
+import { CitizenFilters } from "./CitizenFilters";
 import { EntryFilters } from "./EntryFilters";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 import { OverlayButton } from "./OverlayButton";
+import { SharingSettings } from "./SharingSettings";
 
 interface Props {
   readonly className?: string;
@@ -21,12 +23,13 @@ export const Toolbar = ({ className, onRefresh }: Props) => {
     setIsAutostartEnabled,
     isLiveModeEnabled,
     setIsLiveModeEnabled,
+    isSharingAvailable,
   } = useLogAnalyzerContext();
 
   return (
     <div
       className={clsx(
-        "bg-secondary rounded-primary p-2 flex items-center gap-4",
+        "bg-secondary rounded-primary p-2 flex flex-wrap items-center gap-4",
         className,
       )}
     >
@@ -99,6 +102,16 @@ export const Toolbar = ({ className, onRefresh }: Props) => {
       <OverlayButton />
 
       <EntryFilters />
+
+      {/* Without the sharing there are no entries of other citizens, thus
+          the citizen filter has nothing to narrow. */}
+      {isSharingAvailable && (
+        <>
+          <CitizenFilters />
+
+          <SharingSettings />
+        </>
+      )}
     </div>
   );
 };

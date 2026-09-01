@@ -87,6 +87,7 @@ model Entity {
   createdFlows                                 Flow[]                               @relation("createdFlows")
   updatedFlows                                 Flow[]                               @relation("updatedFlows")
   deletedFlows                                 Flow[]                               @relation("deletedFlows")
+  createdLogAnalyzerEntries                    LogAnalyzerEntry[]                   @relation("createdLogAnalyzerEntries")
 
   // Holds the latest confirmed values
   spectrumId                String?
