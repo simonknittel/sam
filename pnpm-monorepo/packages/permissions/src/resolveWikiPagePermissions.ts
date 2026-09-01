@@ -27,6 +27,16 @@ export interface WikiPagePermissionSource {
   }[];
 }
 
+/**
+ * The id lookup the hierarchy walk needs. Building it is the dominant cost
+ * of resolving one page for every role of the org, and it is identical for
+ * all of those resolvers — so build it once and hand it to each of them.
+ */
+export const buildWikiPageMap = (
+  pages: readonly WikiPagePermissionSource[],
+): ReadonlyMap<string, WikiPagePermissionSource> =>
+  new Map(pages.map((page) => [page.id, page]));
+
 export interface WikiPageViewer {
   readonly citizenId: string | null;
   readonly roleIds: ReadonlySet<string>;
@@ -180,8 +190,15 @@ const isGrantedUpload = (
 export const createWikiPagePermissionResolver = (
   pages: readonly WikiPagePermissionSource[],
   viewer: WikiPageViewer,
+  /**
+   * The lookup of `pages` — pass a shared one where many resolvers run over
+   * the same page set (see `buildWikiPageMap()`). Only the lookup is
+   * shared; the caches below hold one viewer's results and stay private.
+   */
+  pagesById: ReadonlyMap<string, WikiPagePermissionSource> = buildWikiPageMap(
+    pages,
+  ),
 ) => {
-  const pagesById = new Map(pages.map((page) => [page.id, page]));
   const visibilityCache = new Map<string, WikiPagePermissionSource>();
   const editabilityCache = new Map<string, WikiPagePermissionSource>();
   const imageUploadabilityCache = new Map<string, WikiPagePermissionSource>();

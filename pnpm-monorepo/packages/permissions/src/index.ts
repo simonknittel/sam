@@ -33,6 +33,7 @@ export {
   type ResolvedFlowPermissions,
 } from "./resolveFlowPermissions.js";
 export {
+  buildWikiPageMap,
   createWikiPagePermissionResolver,
   resolveWikiPagePermissions,
   type ResolvedWikiPagePermissions,

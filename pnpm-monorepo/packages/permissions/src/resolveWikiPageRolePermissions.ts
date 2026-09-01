@@ -1,4 +1,5 @@
 import {
+  buildWikiPageMap,
   createWikiPagePermissionResolver,
   type WikiPagePermissionSource,
 } from "./resolveWikiPagePermissions.js";
@@ -31,14 +32,22 @@ export interface WikiPermissionRole {
 export const createWikiPageRoleResolvers = (
   pages: readonly WikiPagePermissionSource[],
   roles: readonly WikiPermissionRole[],
+  /** Pass a shared lookup when the same pages are resolved more than once */
+  pagesById: ReadonlyMap<string, WikiPagePermissionSource> = buildWikiPageMap(
+    pages,
+  ),
 ) =>
   roles.map((role) => ({
     role,
-    resolver: createWikiPagePermissionResolver(pages, {
-      citizenId: null,
-      roleIds: new Set(role.effectiveRoleIds),
-      hasWikiManage: role.hasWikiManage,
-    }),
+    resolver: createWikiPagePermissionResolver(
+      pages,
+      {
+        citizenId: null,
+        roleIds: new Set(role.effectiveRoleIds),
+        hasWikiManage: role.hasWikiManage,
+      },
+      pagesById,
+    ),
   }));
 
 /** Ids of the roles that may read the given page on their own */
@@ -46,9 +55,10 @@ export const resolveWikiPageReadRoleIds = (
   pages: readonly WikiPagePermissionSource[],
   roles: readonly WikiPermissionRole[],
   pageId: string,
+  pagesById?: ReadonlyMap<string, WikiPagePermissionSource>,
 ) =>
   new Set(
-    createWikiPageRoleResolvers(pages, roles)
+    createWikiPageRoleResolvers(pages, roles, pagesById)
       .filter(({ resolver }) => resolver.get(pageId)?.canRead)
       .map(({ role }) => role.id),
   );
