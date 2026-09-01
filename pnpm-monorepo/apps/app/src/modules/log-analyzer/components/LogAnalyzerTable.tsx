@@ -3,7 +3,7 @@ import clsx from "clsx";
 import { Entry } from "./Entry";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 
-const COLUMNS = "160px 160px 1fr";
+const COLUMNS = "160px 160px 160px 1fr";
 
 interface Props {
   readonly className?: string;
@@ -18,10 +18,11 @@ export const LogAnalyzerTable = ({ className }: Props) => {
 
   return (
     <div className={clsx("p-4 bg-secondary rounded-primary", className)}>
-      <Table columns={COLUMNS} minWidth={640}>
+      <Table columns={COLUMNS} minWidth={800}>
         <THead>
           <th>Datum</th>
           <th>Typ</th>
+          <th>Citizen</th>
           <th>Nachricht</th>
         </THead>
 

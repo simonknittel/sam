@@ -1,3 +1,4 @@
+import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { RelativeDate } from "@/modules/common/components/RelativeDate";
 import { TRow } from "@/modules/common/components/Table";
 import { formatDate } from "@/modules/common/utils/formatDate";
@@ -50,9 +51,26 @@ export const Entry = memo(
           <span className="truncate">{title}</span>
         </td>
 
+        <td
+          className="truncate"
+          title={entry.citizen?.handle ?? entry.citizen?.id}
+        >
+          {entry.citizen ? (
+            <CitizenLink citizen={entry.citizen} />
+          ) : (
+            <span className="text-white/40">-</span>
+          )}
+        </td>
+
         <td className="truncate">{entry.message}</td>
       </TRow>
     );
   },
-  (previousProps, nextProps) => previousProps.entry.key === nextProps.entry.key,
+  /**
+   * The citizen belongs to the comparison too: a local entry replaces a
+   * shared one under the same key and brings its own citizen with it.
+   */
+  (previousProps, nextProps) =>
+    previousProps.entry.key === nextProps.entry.key &&
+    previousProps.entry.citizen?.id === nextProps.entry.citizen?.id,
 );
