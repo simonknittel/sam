@@ -1,0 +1,38 @@
+/// One matched log line a citizen shared with the other citizens. Rows are
+/// immutable and are never deleted, thus there are no update or delete
+/// columns: an opt-out only stops new uploads.
+///
+/// The capture groups and the rendered message are not stored. Every viewer
+/// runs the type's regex on `rawLine` again, so one pattern change applies to
+/// the whole history at once.
+model LogAnalyzerEntry {
+  id        String   @id @default(cuid(2))
+  /// A value of the `EntryType` enum of the app, for example "joinPu". The
+  /// types come from the static pattern config of the Log Analyzer and are not
+  /// an enum of the database, so that a new pattern needs no migration. A
+  /// value which no longer belongs to a pattern is ignored when read, but
+  /// kept, in case the pattern returns.
+  type      String
+  /// The full log line the regex matched. Contains data of other players
+  /// (nicknames, IP addresses), thus it must never be written to the logs.
+  rawLine   String
+  /// Time of the event, parsed from `rawLine` by the upload action. Stored as
+  /// a column because the fetch query windows and sorts on it.
+  eventAt   DateTime
+  /// SHA-256 of `type + "\n" + rawLine`, hex encoded. Together with
+  /// `createdById` it prevents duplicates. The scope is one uploader, because
+  /// two citizens can produce the same line at the same second.
+  hash      String
+  createdAt DateTime @default(now())
+
+  /// The uploading citizen. A deleted citizen leaves the entry in place
+  /// without an uploader.
+  createdById String?
+  createdBy   Entity? @relation("createdLogAnalyzerEntries", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@unique([createdById, hash])
+  /// Serves the initial load (window on `eventAt`) and the polling cursor
+  /// (`createdAt`).
+  @@index([eventAt])
+  @@index([createdAt])
+}
