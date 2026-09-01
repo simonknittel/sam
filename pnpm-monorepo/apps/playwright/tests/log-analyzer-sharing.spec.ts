@@ -89,16 +89,6 @@ const openSharingPopover = (page: Page) =>
     sharingPopover(page),
   );
 
-const citizenPopover = (page: Page) =>
-  page.getByRole("dialog", { name: "Citizens", exact: true });
-
-/** The trigger appends the number of selected citizens to its name */
-const openCitizenPopover = (page: Page) =>
-  clickUntilVisible(
-    page.getByRole("button", { name: "Citizens" }),
-    citizenPopover(page),
-  );
-
 const closePopover = async (page: Page) => {
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
@@ -213,15 +203,16 @@ test("shared entries mix into the table with a citizen column and a citizen filt
   await expect(tableRows(page).nth(1)).toContainText("Blueprint erhalten");
   await expect(tableRows(page).nth(3)).toContainText("Shard-Beitritt");
 
-  await openCitizenPopover(page);
-  await toggleLabel(citizenPopover(page), "log-teiler-1").click();
+  /** Every reporter starts checked; an unchecked box hides its entries */
+  await openSharingPopover(page);
+  await toggleLabel(sharingPopover(page), "log-teiler-2").click();
   await closePopover(page);
 
   await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 2);
   await expect(page.getByText("Blueprint erhalten")).toHaveCount(0);
 
-  await openCitizenPopover(page);
-  await citizenPopover(page)
+  await openSharingPopover(page);
+  await sharingPopover(page)
     .getByRole("button", { name: "Alle anzeigen" })
     .click();
   await closePopover(page);
