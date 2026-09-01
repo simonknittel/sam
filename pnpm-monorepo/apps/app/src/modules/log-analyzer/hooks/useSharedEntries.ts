@@ -4,7 +4,7 @@ import type { RouterOutputs } from "@/modules/common/utils/api";
 import { api } from "@/trpc/react";
 import { useCallback, useEffect, useRef } from "react";
 import { useLogAnalyzerContext } from "../components/LogAnalyzerContext";
-import { LIVE_MODE_INTERVAL_MS } from "../utils/liveMode";
+import { LIVE_MODE_DOWNLOAD_INTERVAL_MS } from "../utils/liveMode";
 import {
   createEntryKey,
   matchEntryLine,
@@ -138,7 +138,7 @@ export const useSharedEntries = () => {
 
     const interval = window.setInterval(() => {
       void fetchSharedEntriesRef.current();
-    }, LIVE_MODE_INTERVAL_MS);
+    }, LIVE_MODE_DOWNLOAD_INTERVAL_MS);
 
     return () => window.clearInterval(interval);
   }, [isLiveModeEnabled, isSharedViewEnabled]);

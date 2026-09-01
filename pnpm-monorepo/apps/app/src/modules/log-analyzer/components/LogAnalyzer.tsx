@@ -14,7 +14,7 @@ import { FaFileArrowUp } from "react-icons/fa6";
 import { useEntryUpload } from "../hooks/useEntryUpload";
 import { useSharedEntries } from "../hooks/useSharedEntries";
 import { getFilesRecursively } from "../utils/getFilesRecursively";
-import { LIVE_MODE_INTERVAL_MS } from "../utils/liveMode";
+import { LIVE_MODE_PARSE_INTERVAL_MS } from "../utils/liveMode";
 import {
   createEntryKey,
   EntryType,
@@ -224,7 +224,7 @@ export const LogAnalyzer = ({ className }: Props) => {
 
     const interval = window.setInterval(() => {
       parseLogsRef.current(true);
-    }, LIVE_MODE_INTERVAL_MS);
+    }, LIVE_MODE_PARSE_INTERVAL_MS);
 
     return () => window.clearInterval(interval);
   }, [isLiveModeEnabled]);
