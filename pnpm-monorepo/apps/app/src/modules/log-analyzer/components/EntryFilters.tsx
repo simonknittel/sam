@@ -1,9 +1,10 @@
+"use client";
+
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
-import { Popover } from "@/modules/common/components/Popover";
-import clsx from "clsx";
+import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
 import { FaFilter } from "react-icons/fa";
-import { type EntryType, PATTERNS } from "../utils/PATTERNS";
+import { PATTERNS, SORTED_ENTRY_TYPES } from "../utils/PATTERNS";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 
 interface Props {
@@ -14,39 +15,40 @@ export const EntryFilters = ({ className }: Props) => {
   const { entryFilters, setEntryFilters } = useLogAnalyzerContext();
 
   return (
-    <Popover
+    <PopoverBaseUI
+      title="Filter"
       trigger={
-        <Button2 variant={Button2Variant.Secondary} className={clsx(className)}>
+        <>
           <FaFilter />
           Filter
-        </Button2>
+        </>
       }
+      triggerRender={<Button2 variant={Button2Variant.Secondary} />}
+      triggerClassName={className}
       childrenClassName="flex flex-col gap-1 w-80"
-      enableHover
+      openOnHover={false}
     >
-      {Object.entries(PATTERNS)
-        .toSorted((a, b) => a[1].title.localeCompare(b[1].title))
-        .map(([key, pattern]) => {
-          const label = (
-            <span className="flex items-center gap-2">
-              <pattern.icon className="shrink-0" />
-              {pattern.title}
-            </span>
-          );
+      {SORTED_ENTRY_TYPES.map((type) => {
+        const { title, icon: Icon } = PATTERNS[type];
 
-          return (
-            <YesNoCheckbox
-              key={pattern.title}
-              yesLabel={label}
-              noLabel={label}
-              labelClassName="text-sm flex-1"
-              checked={!entryFilters[key as EntryType]}
-              onChange={(e) =>
-                setEntryFilters(key as EntryType, !e.target.checked)
-              }
-            />
-          );
-        })}
-    </Popover>
+        const label = (
+          <span className="flex items-center gap-2">
+            <Icon className="shrink-0" />
+            {title}
+          </span>
+        );
+
+        return (
+          <YesNoCheckbox
+            key={type}
+            yesLabel={label}
+            noLabel={label}
+            labelClassName="text-sm flex-1"
+            checked={!entryFilters[type]}
+            onChange={(event) => setEntryFilters(type, !event.target.checked)}
+          />
+        );
+      })}
+    </PopoverBaseUI>
   );
 };
