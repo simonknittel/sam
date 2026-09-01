@@ -597,4 +597,6 @@ test("a Discord-sourced event offers no publishing at all", async ({
 
   // Discord events have no settings tab at all
   await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
+  // The event around the missing tab stays navigable
+  await expect(page.getByRole("link", { name: "Übersicht" })).toBeVisible();
 });
