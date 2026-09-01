@@ -9,6 +9,7 @@ import { readStackState, unleashAdminToken } from "../setup/stack";
 export enum UNLEASH_FLAG {
   EnableCareBearShooter = "EnableCareBearShooter",
   CrashLogAnalyzer = "CrashLogAnalyzer",
+  DisableLogAnalyzerSharing = "DisableLogAnalyzerSharing",
 }
 
 /** The environment the backend token (see stack.ts) reads its flags from. */

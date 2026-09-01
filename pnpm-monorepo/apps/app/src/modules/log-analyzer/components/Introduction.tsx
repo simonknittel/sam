@@ -1,12 +1,17 @@
+"use client";
+
 import { RichText } from "@/modules/common/components/RichText";
 import clsx from "clsx";
 import { PATTERNS, SORTED_ENTRY_TYPES } from "../utils/PATTERNS";
+import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 
 interface Props {
   readonly className?: string;
 }
 
 export const Introduction = ({ className }: Props) => {
+  const { isSharingAvailable } = useLogAnalyzerContext();
+
   return (
     <section className={clsx(className)}>
       <div className="bg-secondary rounded-primary p-4">
@@ -67,14 +72,17 @@ export const Introduction = ({ className }: Props) => {
             ausgewertet. Es werden keine Log-Dateien auf den Server hochgeladen.
           </p>
 
-          <p>
-            Über <span className="font-mono uppercase">Teilen</span> kannst du
-            das Teilen aktivieren. Dann werden die erkannten Events der von dir
-            ausgewählten Typen auf den Server hochgeladen und sind für andere
-            mit Zugriff auf den Log Analyzer sichtbar. Ebenfalls über{" "}
-            <span className="font-mono uppercase">Teilen</span> kannst du dir
-            die Einträge anderer anzeigen lassen.
-          </p>
+          {/* The kill switch removes the button the copy describes */}
+          {isSharingAvailable && (
+            <p>
+              Über <span className="font-mono uppercase">Teilen</span> kannst du
+              das Teilen aktivieren. Dann werden die erkannten Events der von
+              dir ausgewählten Typen auf den Server hochgeladen und sind für
+              andere mit Zugriff auf den Log Analyzer sichtbar. Ebenfalls über{" "}
+              <span className="font-mono uppercase">Teilen</span> kannst du dir
+              die Einträge anderer anzeigen lassen.
+            </p>
+          )}
 
           <p>
             Es können aktuell nur die Logs der letzten 14 Tage ausgewertet

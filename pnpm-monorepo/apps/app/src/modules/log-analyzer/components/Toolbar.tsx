@@ -23,6 +23,7 @@ export const Toolbar = ({ className, onRefresh }: Props) => {
     setIsAutostartEnabled,
     isLiveModeEnabled,
     setIsLiveModeEnabled,
+    isSharingAvailable,
   } = useLogAnalyzerContext();
 
   return (
@@ -102,9 +103,15 @@ export const Toolbar = ({ className, onRefresh }: Props) => {
 
       <EntryFilters />
 
-      <CitizenFilters />
+      {/* Without the sharing there are no entries of other citizens, thus
+          the citizen filter has nothing to narrow. */}
+      {isSharingAvailable && (
+        <>
+          <CitizenFilters />
 
-      <SharingSettings />
+          <SharingSettings />
+        </>
+      )}
     </div>
   );
 };

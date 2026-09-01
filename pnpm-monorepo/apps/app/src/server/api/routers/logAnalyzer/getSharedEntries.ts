@@ -1,4 +1,6 @@
 import { authorize } from "@/modules/auth/server";
+import { getUnleashFlag } from "@/modules/common/utils/getUnleashFlag";
+import { UNLEASH_FLAG } from "@/modules/common/utils/UNLEASH_FLAG";
 import {
   eventAtWindow,
   MAXIMUM_DAYS_TO_LOAD,
@@ -34,6 +36,13 @@ export const getSharedEntries = protectedProcedure
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Missing log analyzer permission",
+        });
+
+      /** The kill switch closes the read path of the sharing */
+      if (await getUnleashFlag(UNLEASH_FLAG.DisableLogAnalyzerSharing))
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Log analyzer sharing is disabled",
         });
 
       const isIncremental = Boolean(input.cursorId);

@@ -2,6 +2,8 @@
 
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import { getUnleashFlag } from "@/modules/common/utils/getUnleashFlag";
+import { UNLEASH_FLAG } from "@/modules/common/utils/UNLEASH_FLAG";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import {
   parseUploadFormData,
@@ -28,6 +30,10 @@ export const uploadLogAnalyzerEntries = createAuthenticatedAction(
   uploadEntriesSchema,
   async (formData, authentication, data, t) => {
     if (!(await authentication.authorize("logAnalyzer", "read")))
+      return { error: t("Common.forbidden"), requestPayload: formData };
+
+    /** The kill switch stops the uploads of every client */
+    if (await getUnleashFlag(UNLEASH_FLAG.DisableLogAnalyzerSharing))
       return { error: t("Common.forbidden"), requestPayload: formData };
 
     const citizenId = authentication.session.entity?.id;

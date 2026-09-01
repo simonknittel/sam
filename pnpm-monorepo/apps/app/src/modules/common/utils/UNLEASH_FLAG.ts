@@ -7,4 +7,6 @@ export enum UNLEASH_FLAG {
   EnableCareBearShooter = "EnableCareBearShooter",
   DisableRoleNameSuggestions = "DisableRoleNameSuggestions",
   CrashLogAnalyzer = "CrashLogAnalyzer",
+  /** Stops the upload and the download of shared log analyzer entries. */
+  DisableLogAnalyzerSharing = "DisableLogAnalyzerSharing",
 }

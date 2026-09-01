@@ -10,11 +10,17 @@ export default async function Page() {
   );
   await authentication.authorizePage("logAnalyzer", "read");
 
-  const crashLogAnalyzer = await getUnleashFlag(UNLEASH_FLAG.CrashLogAnalyzer);
+  const [crashLogAnalyzer, disableLogAnalyzerSharing] = await Promise.all([
+    getUnleashFlag(UNLEASH_FLAG.CrashLogAnalyzer),
+    getUnleashFlag(UNLEASH_FLAG.DisableLogAnalyzerSharing),
+  ]);
 
   return (
     <SuspenseWithErrorBoundaryTile>
-      <BundleLoader crashLogAnalyzer={crashLogAnalyzer} />
+      <BundleLoader
+        crashLogAnalyzer={crashLogAnalyzer}
+        isSharingAvailable={!disableLogAnalyzerSharing}
+      />
     </SuspenseWithErrorBoundaryTile>
   );
 }

@@ -19,6 +19,11 @@ import type { IEntry } from "../utils/PATTERNS";
 import { EntryType } from "../utils/PATTERNS";
 
 interface Context {
+  /**
+   * False when the kill switch flag turned the sharing off. The toolbar then
+   * hides the sharing UI, and the two settings below read as off.
+   */
+  readonly isSharingAvailable: boolean;
   readonly isPending: boolean;
   readonly startTransition: TransitionStartFunction;
   readonly isLiveModeEnabled: boolean;
@@ -54,9 +59,10 @@ const Context = createContext<Context | undefined>(undefined);
 
 interface Props {
   readonly children: ReactNode;
+  readonly isSharingAvailable: boolean;
 }
 
-export const LogAnalyzerContext = ({ children }: Props) => {
+export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
   const [isPending, startTransition] = useTransition();
 
   const [entryFilters, _setEntryFilters] = useLocalStorage(
@@ -81,7 +87,7 @@ export const LogAnalyzerContext = ({ children }: Props) => {
     false,
   );
 
-  const [isSharingEnabled, setIsSharingEnabled] = useLocalStorage(
+  const [storedIsSharingEnabled, setIsSharingEnabled] = useLocalStorage(
     "log_analyzer_is_sharing_enabled",
     false,
   );
@@ -93,10 +99,18 @@ export const LogAnalyzerContext = ({ children }: Props) => {
     ) as Record<EntryType, boolean>,
   );
 
-  const [isSharedViewEnabled, _setIsSharedViewEnabled] = useLocalStorage(
+  const [storedIsSharedViewEnabled, _setIsSharedViewEnabled] = useLocalStorage(
     "log_analyzer_is_shared_view_enabled",
     false,
   );
+
+  /**
+   * The kill switch wins over the stored settings, so that no hook uploads
+   * or fetches while it is set. The stored values stay untouched: the
+   * settings come back when the switch is lifted.
+   */
+  const isSharingEnabled = isSharingAvailable && storedIsSharingEnabled;
+  const isSharedViewEnabled = isSharingAvailable && storedIsSharedViewEnabled;
 
   const [daysToLoad] = useLocalStorage<number>("log_analyzer_days_to_load", 14);
 
@@ -143,17 +157,22 @@ export const LogAnalyzerContext = ({ children }: Props) => {
   const entryFilterFn = useCallback(
     (entry: IEntry) => {
       if (entryFilters[entry.type]) return false;
-      if (citizenFilters.length <= 0) return true;
+      /**
+       * Without the sharing there is no citizen filter UI, thus a stored
+       * selection must not hide the local entries.
+       */
+      if (!isSharingAvailable || citizenFilters.length <= 0) return true;
       return Boolean(
         entry.citizen && citizenFilters.includes(entry.citizen.id),
       );
     },
-    [entryFilters, citizenFilters],
+    [entryFilters, citizenFilters, isSharingAvailable],
   );
 
   /** Prevent unnecessary rerenders */
   const value = useMemo(
     () => ({
+      isSharingAvailable,
       isPending,
       startTransition,
       isLiveModeEnabled,
@@ -176,6 +195,7 @@ export const LogAnalyzerContext = ({ children }: Props) => {
       setEntries,
     }),
     [
+      isSharingAvailable,
       isPending,
       startTransition,
       isLiveModeEnabled,

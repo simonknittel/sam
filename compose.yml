@@ -190,6 +190,7 @@ configs:
         "EnableCareBearShooter",
         "DisableRoleNameSuggestions",
         "CrashLogAnalyzer",
+        "DisableLogAnalyzerSharing",
       ];
 
       const FLAG_ALREADY_EXISTS_STATUS = 409;

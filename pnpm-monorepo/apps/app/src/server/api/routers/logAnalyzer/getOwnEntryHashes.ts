@@ -1,4 +1,6 @@
 import { authorize } from "@/modules/auth/server";
+import { getUnleashFlag } from "@/modules/common/utils/getUnleashFlag";
+import { UNLEASH_FLAG } from "@/modules/common/utils/UNLEASH_FLAG";
 import { ENTRY_HASH_PATTERN } from "@/modules/log-analyzer/utils/createEntryHash";
 import {
   eventAtWindow,
@@ -44,6 +46,13 @@ export const getOwnEntryHashes = protectedProcedure
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Missing log analyzer permission",
+        });
+
+      /** The kill switch closes the read path of the sharing */
+      if (await getUnleashFlag(UNLEASH_FLAG.DisableLogAnalyzerSharing))
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Log analyzer sharing is disabled",
         });
 
       const citizenId = ctx.session.entity?.id;
