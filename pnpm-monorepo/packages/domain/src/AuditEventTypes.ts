@@ -108,6 +108,11 @@ export enum AuditEventType {
   EVENT_TEMPLATE_CREATED = "EVENT_TEMPLATE_CREATED",
   EVENT_TEMPLATE_UPDATED = "EVENT_TEMPLATE_UPDATED",
   EVENT_TEMPLATE_DUPLICATED = "EVENT_TEMPLATE_DUPLICATED",
+  /**
+   * The reverse direction of EVENT_CREATED_FROM_TEMPLATE: a manager turned
+   * one of their events back into a template.
+   */
+  EVENT_TEMPLATE_CREATED_FROM_EVENT = "EVENT_TEMPLATE_CREATED_FROM_EVENT",
   EVENT_TEMPLATE_DELETED = "EVENT_TEMPLATE_DELETED",
   EVENT_TEMPLATE_RESTORED = "EVENT_TEMPLATE_RESTORED",
   EVENT_TEMPLATE_ROLE_ACCESS_UPDATED = "EVENT_TEMPLATE_ROLE_ACCESS_UPDATED",
@@ -841,6 +846,16 @@ export interface AuditEventDataByType {
     name: string;
     sourceTemplateId: string;
     sourceName: string;
+    positionCount: number;
+    pageCount: number;
+  };
+
+  [AuditEventType.EVENT_TEMPLATE_CREATED_FROM_EVENT]: {
+    templateId: string;
+    name: string;
+    sourceEventId: string;
+    /** The event's name at creation time, a historical fact */
+    sourceEventName: string;
     positionCount: number;
     pageCount: number;
   };
