@@ -25,7 +25,7 @@ import {
   WikiPageUploadability,
   WikiPageVisibility,
 } from "@sam-monorepo/database/client";
-import { randomBytes, randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 
 export const ONE_MINUTE_MS = 60 * 1000;
 export const ONE_HOUR_MS = 60 * ONE_MINUTE_MS;
@@ -114,6 +114,38 @@ export const createCitizen = async (
 
   return { user, entity, role };
 };
+
+interface CreateUserWithoutCitizenOptions {
+  readonly name: string;
+  /** Grants the all-permissions override once enableAdminMode() is used. */
+  readonly admin?: boolean;
+}
+
+/**
+ * A user whose Discord account matches no Entity, thus `session.entity` stays
+ * null. Such a user gets no permissions from roles, so only an admin in admin
+ * mode gets past the clearance gate — which is what makes the state testable
+ * at all.
+ */
+export const createUserWithoutCitizen = (
+  prisma: PrismaClient,
+  { name, admin = false }: CreateUserWithoutCitizenOptions,
+) =>
+  prisma.user.create({
+    data: {
+      name,
+      email: `${name}-${randomUUID().slice(0, 8)}@example.com`,
+      emailVerified: new Date(),
+      role: admin ? "admin" : null,
+      accounts: {
+        create: {
+          type: "oauth",
+          provider: "discord",
+          providerAccountId: randomUUID(),
+        },
+      },
+    },
+  });
 
 interface CreateRoleOptions {
   readonly name?: string;
@@ -898,6 +930,49 @@ export const createEventTemplate = async (
 
   return { template, rootPage, positions, briefingPages };
 };
+
+/**
+ * The types of the Log Analyzer, stored as text. They mirror the `EntryType`
+ * enum of the app, which the database keeps verbatim — this package cannot
+ * import it, thus the values live here a second time.
+ */
+export enum LogAnalyzerEntryType {
+  JoinPu = "joinPu",
+  OwnDeath = "ownDeath",
+  BlueprintReceivedNotification = "blueprintReceivedNotification",
+  ContractAcceptedNotification = "contractAcceptedNotification",
+  ContractCompleteNotification = "contractCompleteNotification",
+  ContractFailedNotification = "contractFailedNotification",
+  Disconnection = "disconnection",
+}
+
+interface CreateLogAnalyzerEntryOptions {
+  readonly type: LogAnalyzerEntryType;
+  /** The full log line the pattern of the type matched */
+  readonly rawLine: string;
+  readonly eventAt: Date;
+  /** Entity id of the citizen who shared the entry */
+  readonly createdById: string;
+}
+
+/**
+ * A log entry as the upload action of the Log Analyzer writes it. The hash
+ * only has to be unique for one citizen — a seeded entry never has to match
+ * the value the app computes.
+ */
+export const createLogAnalyzerEntry = (
+  prisma: PrismaClient,
+  { type, rawLine, eventAt, createdById }: CreateLogAnalyzerEntryOptions,
+) =>
+  prisma.logAnalyzerEntry.create({
+    data: {
+      type,
+      rawLine,
+      eventAt,
+      hash: createHash("sha256").update(`${type}\n${rawLine}`).digest("hex"),
+      createdById,
+    },
+  });
 
 export {
   EventSource,
