@@ -25,6 +25,8 @@ export const EVENT_ACTIVITY_TYPE_LABELS: Record<EventActivityType, string> = {
   [EventActivityType.PARTICIPATION_ADDED_BY_MANAGER]: "Anmeldung durch Manager",
   [EventActivityType.PARTICIPATION_REMOVED_BY_MANAGER]:
     "Abmeldung durch Manager",
+  [EventActivityType.MANAGER_ADDED]: "Manager hinzugefügt",
+  [EventActivityType.MANAGER_REMOVED]: "Manager entfernt",
   [EventActivityType.LINEUP_TOGGLED]: "Aufstellung",
 };
 

@@ -61,6 +61,8 @@ const participantRemovedPayloadSchema = z.object({
 const TYPES_WITH_AFFECTED_CITIZEN: ReadonlySet<EventActivityType> = new Set([
   EventActivityType.PARTICIPATION_ADDED_BY_MANAGER,
   EventActivityType.PARTICIPATION_REMOVED_BY_MANAGER,
+  EventActivityType.MANAGER_ADDED,
+  EventActivityType.MANAGER_REMOVED,
 ]);
 
 const affectedCitizenPayloadSchema = z.object({ citizenId: z.string() });
@@ -227,6 +229,18 @@ const buildActivityEntry = (
     actor: activity.citizen,
   };
 
+  /**
+   * The target column of the types whose payload names an affected citizen.
+   * An unparsable payload leaves the id undefined, which the link renders as
+   * "Unbekannt".
+   */
+  const affectedCitizenTarget = (citizenId?: string) => (
+    <CitizenLink
+      citizen={citizenId ? affectedCitizens.get(citizenId) : null}
+      className="truncate"
+    />
+  );
+
   switch (activity.type) {
     case EventActivityType.CREATED:
       return { ...base, message: "Event erstellt" };
@@ -288,17 +302,8 @@ const buildActivityEntry = (
       return {
         ...base,
         message: "Teilnehmer hinzugefügt",
-        target: (
-          <CitizenLink
-            citizen={
-              payload.success
-                ? affectedCitizens.get(payload.data.citizenId)
-                : null
-            }
-            className="truncate"
-          />
-        ),
-        comment: payload.success ? payload.data.comment : null,
+        target: affectedCitizenTarget(payload.data?.citizenId),
+        comment: payload.data?.comment ?? null,
       };
     }
 
@@ -309,17 +314,26 @@ const buildActivityEntry = (
       return {
         ...base,
         message: "Teilnehmer entfernt",
-        target: (
-          <CitizenLink
-            citizen={
-              payload.success
-                ? affectedCitizens.get(payload.data.citizenId)
-                : null
-            }
-            className="truncate"
-          />
-        ),
-        comment: payload.success ? payload.data.reason : null,
+        target: affectedCitizenTarget(payload.data?.citizenId),
+        comment: payload.data?.reason ?? null,
+      };
+    }
+
+    case EventActivityType.MANAGER_ADDED: {
+      const payload = affectedCitizenPayloadSchema.safeParse(activity.payload);
+      return {
+        ...base,
+        message: "Manager hinzugefügt",
+        target: affectedCitizenTarget(payload.data?.citizenId),
+      };
+    }
+
+    case EventActivityType.MANAGER_REMOVED: {
+      const payload = affectedCitizenPayloadSchema.safeParse(activity.payload);
+      return {
+        ...base,
+        message: "Manager entfernt",
+        target: affectedCitizenTarget(payload.data?.citizenId),
       };
     }
 

@@ -42,6 +42,17 @@ export interface EventActivityPayloadByType {
     citizenId: string;
     reason: string | null;
   };
+  /**
+   * Manager assignments follow the same convention: the row's citizen column
+   * holds the acting manager, the payload the manager who was added or
+   * removed.
+   */
+  [EventActivityType.MANAGER_ADDED]: {
+    citizenId: string;
+  };
+  [EventActivityType.MANAGER_REMOVED]: {
+    citizenId: string;
+  };
   [EventActivityType.LINEUP_TOGGLED]: {
     enabled: boolean;
   };

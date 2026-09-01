@@ -4,9 +4,11 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { EventActivityType } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { EVENT_MANAGE_GUARD_SELECT } from "../queries/eventManageGuardSelect";
+import { createEventActivity } from "../utils/eventActivity";
 import { isAllowedToManageEvent } from "../utils/isAllowedToManageEvent";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
 
@@ -38,20 +40,44 @@ export const createManagers = createAuthenticatedAction(
     if (!(await isAllowedToManageEvent(event)))
       return { error: t("Common.forbidden"), requestPayload: formData };
 
+    const actingManagerId = authentication.session.entity?.id ?? null;
+
     /**
-     * Create managers
+     * `connect` is idempotent, so a citizen who already manages the event
+     * would otherwise get an activity entry for a change that never happened.
      */
-    await prisma.event.update({
-      where: {
-        id: event.id,
-      },
-      data: {
-        managers: {
-          connect: data.managerIds.map((id) => ({
-            id,
-          })),
+    const existingManagerIds = new Set(
+      event.managers.map((manager) => manager.id),
+    );
+    const managerIdsToAdd = Array.from(new Set(data.managerIds)).filter(
+      (managerId) => !existingManagerIds.has(managerId),
+    );
+
+    /**
+     * Create managers. One transaction, so the activity entries cannot get
+     * lost while the assignment goes through.
+     */
+    await prisma.$transaction(async (transaction) => {
+      await transaction.event.update({
+        where: {
+          id: event.id,
         },
-      },
+        data: {
+          managers: {
+            connect: managerIdsToAdd.map((managerId) => ({
+              id: managerId,
+            })),
+          },
+        },
+      });
+
+      for (const managerId of managerIdsToAdd)
+        await createEventActivity(transaction, {
+          eventId: event.id,
+          citizenId: actingManagerId,
+          type: EventActivityType.MANAGER_ADDED,
+          payload: { citizenId: managerId },
+        });
     });
 
     await createAuditEvents([
@@ -68,7 +94,7 @@ export const createManagers = createAuthenticatedAction(
     /**
      * Revalidate cache(s)
      */
-    revalidatePath(`/app/events/${event.id}/participants`);
+    revalidatePath(`/app/events/${event.id}`, "layout");
 
     /**
      * Respond with the result

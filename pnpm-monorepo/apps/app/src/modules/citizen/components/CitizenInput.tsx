@@ -82,7 +82,15 @@ export const CitizenInput = ({
     includeMatches: true,
   });
 
-  const filteredCitizens = fuse.search(query, { limit: 10 });
+  /**
+   * Fuse answers an empty pattern with every record, which would leave the
+   * option list permanently open on top of whatever sits below the picker —
+   * a pick clears the query, so the list would refill right after each one.
+   * An empty result is what the list's `empty:invisible` expects.
+   */
+  const filteredCitizens = query.trim()
+    ? fuse.search(query, { limit: 10 })
+    : [];
 
   return (
     <div className={clsx(className)}>
