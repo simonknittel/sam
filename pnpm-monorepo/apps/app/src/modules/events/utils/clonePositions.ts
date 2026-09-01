@@ -1,6 +1,26 @@
 import type { EventPosition, Prisma } from "@sam-monorepo/database/client";
 import { eventContainerColumns, type EventContainer } from "./eventContainer";
 
+/**
+ * Loads exactly the columns a clone carries over, plus the id and parent the
+ * caller needs to rebuild the tree. It lives next to `ClonablePosition` so a
+ * new clonable column is added in one place instead of once per copy action.
+ */
+export const CLONABLE_POSITION_SELECT = {
+  id: true,
+  parentPositionId: true,
+  name: true,
+  description: true,
+  fontSize: true,
+  backgroundColor: true,
+  textColor: true,
+  requiredRoles: { select: { id: true } },
+  requiredVariants: {
+    select: { variantId: true, order: true },
+    orderBy: { order: "asc" },
+  },
+} as const satisfies Prisma.EventPositionSelect;
+
 interface ClonablePosition {
   id: EventPosition["id"];
   name: EventPosition["name"];

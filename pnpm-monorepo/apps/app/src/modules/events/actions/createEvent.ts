@@ -8,7 +8,10 @@ import { probeUploadImageDimensions } from "@/modules/common/utils/probeUploadIm
 import { DISCORD_EVENT_DESCRIPTION_MAX_LENGTH } from "@/modules/discord/utils/guildScheduledEventPayload";
 import { getEventTemplateById } from "@/modules/event-templates/queries/getEventTemplateById";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
-import { copyUpload } from "@/modules/uploads/utils/copyUpload";
+import {
+  COPYABLE_UPLOAD_SELECT,
+  copyUpload,
+} from "@/modules/uploads/utils/copyUpload";
 import { getEventWikiContext } from "@/modules/wiki/queries/getEventWikiContext";
 import { copyBriefingTree } from "@/modules/wiki/utils/copyBriefingTree";
 import {
@@ -23,7 +26,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { berlinWallTimeToUtc } from "../utils/berlinWallTime";
-import { clonePositions } from "../utils/clonePositions";
+import {
+  CLONABLE_POSITION_SELECT,
+  clonePositions,
+} from "../utils/clonePositions";
 import { findDescriptionProblem } from "../utils/discordEventDescription";
 import {
   discordPublishFieldsSchema,
@@ -176,20 +182,7 @@ export const createEvent = createAuthenticatedAction(
             prisma.eventPosition.findMany({
               where: eventContainerColumns(templateContainer),
               orderBy: { order: "asc" },
-              select: {
-                id: true,
-                parentPositionId: true,
-                name: true,
-                description: true,
-                fontSize: true,
-                backgroundColor: true,
-                textColor: true,
-                requiredRoles: { select: { id: true } },
-                requiredVariants: {
-                  select: { variantId: true, order: true },
-                  orderBy: { order: "asc" },
-                },
-              },
+              select: CLONABLE_POSITION_SELECT,
             }),
             getEventWikiContext(templateContainer),
             data.keepTemplateCover &&
@@ -197,14 +190,7 @@ export const createEvent = createAuthenticatedAction(
             template?.template.coverImageId
               ? prisma.upload.findUnique({
                   where: { id: template.template.coverImageId },
-                  select: {
-                    id: true,
-                    fileName: true,
-                    mimeType: true,
-                    size: true,
-                    width: true,
-                    height: true,
-                  },
+                  select: COPYABLE_UPLOAD_SELECT,
                 })
               : Promise.resolve(null),
           ])

@@ -4,13 +4,19 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { clonePositions } from "@/modules/events/utils/clonePositions";
+import {
+  CLONABLE_POSITION_SELECT,
+  clonePositions,
+} from "@/modules/events/utils/clonePositions";
 import {
   eventContainerColumns,
   toTemplateContainer,
 } from "@/modules/events/utils/eventContainer";
 import { buildPositionTree } from "@/modules/events/utils/positionTree";
-import { copyUpload } from "@/modules/uploads/utils/copyUpload";
+import {
+  COPYABLE_UPLOAD_SELECT,
+  copyUpload,
+} from "@/modules/uploads/utils/copyUpload";
 import { getEventWikiContext } from "@/modules/wiki/queries/getEventWikiContext";
 import { copyBriefingTree } from "@/modules/wiki/utils/copyBriefingTree";
 import { revalidatePath } from "next/cache";
@@ -59,33 +65,13 @@ export const duplicateEventTemplate = createAuthenticatedAction(
       prisma.eventPosition.findMany({
         where: eventContainerColumns(sourceContainer),
         orderBy: { order: "asc" },
-        select: {
-          id: true,
-          parentPositionId: true,
-          name: true,
-          description: true,
-          fontSize: true,
-          backgroundColor: true,
-          textColor: true,
-          requiredRoles: { select: { id: true } },
-          requiredVariants: {
-            select: { variantId: true, order: true },
-            orderBy: { order: "asc" },
-          },
-        },
+        select: CLONABLE_POSITION_SELECT,
       }),
       getEventWikiContext(sourceContainer),
       source.template.coverImageId
         ? prisma.upload.findUnique({
             where: { id: source.template.coverImageId },
-            select: {
-              id: true,
-              fileName: true,
-              mimeType: true,
-              size: true,
-              width: true,
-              height: true,
-            },
+            select: COPYABLE_UPLOAD_SELECT,
           })
         : Promise.resolve(null),
     ]);
