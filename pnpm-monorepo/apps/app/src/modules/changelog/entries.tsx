@@ -46,6 +46,41 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-09-01-log-analyzer-teilen",
+    date: "2026-09-01",
+    title: "Log Analyzer: Einträge teilen",
+    tags: ["Log Analyzer", "Neu"],
+    isTracked: true,
+    requiresAuth: { resource: "logAnalyzer", action: "read" },
+    body: () => (
+      <>
+        <p>
+          Im Log Analyzer findest du jetzt den Button &bdquo;Teilen&ldquo;. Dort
+          kannst du zwei Dinge unabhängig voneinander aktivieren: das Teilen
+          deiner eigenen Einträge und die Anzeige der Einträge anderer Citizens.
+        </p>
+
+        <p>
+          Beim Teilen werden ausschließlich die erkannten Log-Zeilen der von dir
+          ausgewählten Ereignis-Typen auf den Server hochgeladen. Deine
+          Log-Dateien selbst verlassen deinen Browser nicht. Geteilte Einträge
+          sind für alle Citizens mit Zugriff auf den Log Analyzer sichtbar und
+          können nicht wieder entfernt werden &ndash; das Deaktivieren stoppt
+          nur weitere Uploads.
+        </p>
+
+        <p>
+          Mit aktivierter Anzeige siehst du die Einträge anderer Citizens
+          zusammen mit deinen eigenen in einer gemeinsamen Historie, auch ohne
+          einen ausgewählten Ordner. Die neue Spalte &bdquo;Citizen&ldquo;
+          zeigt, von wem ein Eintrag stammt, und über &bdquo;Citizens&ldquo;
+          kannst du die Tabelle auf einzelne Citizens einschränken.
+        </p>
+      </>
+    ),
+  },
+
+  {
     key: "2026-09-01-event-als-vorlage-speichern",
     date: "2026-09-01",
     title: "Event als Vorlage speichern",
