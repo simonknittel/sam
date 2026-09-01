@@ -7,6 +7,7 @@ import { getAddableParticipantIds } from "./routers/events/getAddableParticipant
 import { getAllEvents } from "./routers/events/getAllEvents";
 import { getPublishableDiscordChannels } from "./routers/events/getPublishableDiscordChannels";
 import { getUsableEventTemplates } from "./routers/events/getUsableEventTemplates";
+import { getSharedEntries } from "./routers/logAnalyzer/getSharedEntries";
 import { getAllManufacturers } from "./routers/manufacturer/getAll";
 import { getManufacturerById } from "./routers/manufacturer/getById";
 import { getSeriesByManufacturerId } from "./routers/manufacturer/getSeriesByManufacturerId";
@@ -47,6 +48,9 @@ export const appRouter = createTRPCRouter({
     getAllEvents,
     getPublishableDiscordChannels,
     getUsableEventTemplates,
+  }),
+  logAnalyzer: createTRPCRouter({
+    getSharedEntries,
   }),
   manufacturer: createTRPCRouter({
     getAll: getAllManufacturers,
