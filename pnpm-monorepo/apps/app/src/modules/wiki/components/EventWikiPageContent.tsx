@@ -34,9 +34,9 @@ import { WikiPageExportImportModal } from "./WikiPageExportImportModal";
 import { WikiPageFavoriteButton } from "./WikiPageFavoriteButton";
 import { WikiPageIconButton } from "./WikiPageIconButton";
 import { WikiPagePermissionsButton } from "./WikiPagePermissionsButton";
+import { WikiPageReadAudienceBadge } from "./WikiPageReadAudienceBadge";
 import { WikiPageSidebarModeModal } from "./WikiPageSidebarModeModal";
 import { WikiPageTags } from "./WikiPageTags";
-import { WikiPageVisibilityBadge } from "./WikiPageVisibilityBadge";
 
 interface Props {
   readonly context: EventWikiContext;
@@ -134,7 +134,7 @@ export const EventWikiPageContent = async ({
             <span className="uppercase font-mono">Aktualisiert:</span>{" "}
             {formatDate(page.updatedAt)}
             {" · "}
-            <WikiPageVisibilityBadge label={readAudienceLabel} />
+            <WikiPageReadAudienceBadge label={readAudienceLabel} />
           </p>
         </div>
 
@@ -181,7 +181,7 @@ export const EventWikiPageContent = async ({
             </>
           )}
 
-          <WikiPagePermissionsButton />
+          {canManagePermissions && <WikiPagePermissionsButton />}
 
           {canMutateStructure && (
             <DeleteWikiPageModal

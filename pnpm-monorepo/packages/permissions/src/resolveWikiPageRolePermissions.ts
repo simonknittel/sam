@@ -32,12 +32,15 @@ export interface WikiPermissionRole {
 export const createWikiPageRoleResolvers = (
   pages: readonly WikiPagePermissionSource[],
   roles: readonly WikiPermissionRole[],
-  /** Pass a shared lookup when the same pages are resolved more than once */
-  pagesById: ReadonlyMap<string, WikiPagePermissionSource> = buildWikiPageMap(
-    pages,
-  ),
-) =>
-  roles.map((role) => ({
+) => {
+  /**
+   * The one place the page lookup is shared: it is identical for every role
+   * and building it per resolver dominates the cost of asking about a page
+   * for all roles of the org.
+   */
+  const pagesById = buildWikiPageMap(pages);
+
+  return roles.map((role) => ({
     role,
     resolver: createWikiPagePermissionResolver(
       pages,
@@ -49,16 +52,16 @@ export const createWikiPageRoleResolvers = (
       pagesById,
     ),
   }));
+};
 
 /** Ids of the roles that may read the given page on their own */
 export const resolveWikiPageReadRoleIds = (
   pages: readonly WikiPagePermissionSource[],
   roles: readonly WikiPermissionRole[],
   pageId: string,
-  pagesById?: ReadonlyMap<string, WikiPagePermissionSource>,
 ) =>
   new Set(
-    createWikiPageRoleResolvers(pages, roles, pagesById)
+    createWikiPageRoleResolvers(pages, roles)
       .filter(({ resolver }) => resolver.get(pageId)?.canRead)
       .map(({ role }) => role.id),
   );

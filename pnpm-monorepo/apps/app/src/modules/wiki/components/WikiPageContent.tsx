@@ -25,7 +25,10 @@ import {
   getManageableWikiPageTargets,
   type WikiPageTargetOption,
 } from "../utils/getWikiPageTargets";
-import { resolveWikiPageEffectivePermissions } from "../utils/resolveWikiPageEffectivePermissions";
+import {
+  resolveWikiPageEffectivePermissions,
+  resolveWikiPageReadAudience,
+} from "../utils/resolveWikiPageEffectivePermissions";
 import {
   buildWikiPageSnapshotsHref,
   getWikiPageRouteHref,
@@ -48,9 +51,9 @@ import { WikiPageFavoriteButton } from "./WikiPageFavoriteButton";
 import { WikiPageIconButton } from "./WikiPageIconButton";
 import { WikiPagePermissionsButton } from "./WikiPagePermissionsButton";
 import { WikiPagePermissionsProvider } from "./WikiPagePermissionsProvider";
+import { WikiPageReadAudienceBadge } from "./WikiPageReadAudienceBadge";
 import { WikiPageSidebarModeModal } from "./WikiPageSidebarModeModal";
 import { WikiPageTags } from "./WikiPageTags";
-import { WikiPageVisibilityBadge } from "./WikiPageVisibilityBadge";
 
 interface Props {
   /** Always the global context — variant embeds keep the role model */
@@ -100,8 +103,8 @@ export const WikiPageContent = async ({
     pageTags,
     /**
      * Resolving permissions role by role needs every role of the org. The
-     * visibility badge in the header needs the result for every reader, so
-     * this is on the path of every page view.
+     * badge in the header needs it for every reader, so this is on the path
+     * of every page view.
      */
     permissionRoles,
   ] = await Promise.all([
@@ -153,18 +156,25 @@ export const WikiPageContent = async ({
       ? roleIdsOf(type).filter((roleId) => parentReadRoleIds.includes(roleId))
       : roleIdsOf(type);
 
-  /** Feeds the visibility badge; the dialog reuses the very same result */
-  const effectivePermissions = resolveWikiPageEffectivePermissions(
+  const readAudience = resolveWikiPageReadAudience(
     context.allPages,
     permissionRoles,
     page.id,
-    {
-      ownerHandle: effectiveOwner?.handle ?? null,
-      ownerInheritedFrom: sourceTitle(permissions.ownerSourceId),
-      titleOf: (pageId) => context.pagesById.get(pageId)?.title,
-    },
   );
-  /** Only the dialog narrows the role selectors by the parent's readers */
+
+  /** The dialog's own input — only page managers ever receive it */
+  const effectivePermissions = permissions.canAdmin
+    ? resolveWikiPageEffectivePermissions(
+        context.allPages,
+        permissionRoles,
+        page.id,
+        {
+          ownerHandle: effectiveOwner?.handle ?? null,
+          ownerInheritedFrom: sourceTitle(permissions.ownerSourceId),
+          titleOf: (pageId) => context.pagesById.get(pageId)?.title,
+        },
+      )
+    : { read: [], edit: [], inheritedAdmin: [] };
   const parentReadRoleIds =
     permissions.canAdmin && page.parentId
       ? [
@@ -172,7 +182,6 @@ export const WikiPageContent = async ({
             context.allPages,
             permissionRoles,
             page.parentId,
-            context.pagesById,
           ),
         ]
       : [];
@@ -220,10 +229,8 @@ export const WikiPageContent = async ({
               </>
             )}
             {" · "}
-            <WikiPageVisibilityBadge
-              label={getWikiRoleReadAudienceLabel(
-                effectivePermissions.readAudience,
-              )}
+            <WikiPageReadAudienceBadge
+              label={getWikiRoleReadAudienceLabel(readAudience)}
             />
           </p>
 

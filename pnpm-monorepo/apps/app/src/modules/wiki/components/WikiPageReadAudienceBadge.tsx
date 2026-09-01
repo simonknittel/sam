@@ -20,7 +20,7 @@ const BADGE_CLASSES =
  * reader sees it; whoever may change the setting opens the permissions
  * dialog from here, next to the lock button they already know.
  */
-export const WikiPageVisibilityBadge = ({ label }: Props) => {
+export const WikiPageReadAudienceBadge = ({ label }: Props) => {
   const openPermissions = useWikiPagePermissionsOpener();
 
   const content = (
