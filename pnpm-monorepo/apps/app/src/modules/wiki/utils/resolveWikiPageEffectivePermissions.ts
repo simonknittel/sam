@@ -1,10 +1,12 @@
 import { WikiPageAccessType } from "@sam-monorepo/database/browser";
 import {
+  buildWikiPageMap,
   createWikiPagePermissionResolver,
   createWikiPageRoleResolvers,
   type WikiPagePermissionSource,
   type WikiPermissionRole,
 } from "@sam-monorepo/permissions";
+import type { WikiRoleReadAudience } from "./wikiReadAudienceLabel";
 
 export interface WikiEffectivePermissionEntry {
   /** Rendered as a role badge; without it `label` is rendered as plain text */
@@ -23,6 +25,8 @@ export interface WikiEffectivePermissions {
    * `wiki;manage`.
    */
   readonly inheritedAdmin: WikiEffectivePermissionEntry[];
+  /** The same read audience, condensed for the header badge */
+  readonly readAudience: WikiRoleReadAudience;
 }
 
 interface Options {
@@ -81,16 +85,22 @@ export const resolveWikiPageEffectivePermissions = (
   pageId: string,
   { ownerHandle, ownerInheritedFrom, titleOf }: Options,
 ): WikiEffectivePermissions => {
-  const pagesById = new Map(pages.map((page) => [page.id, page]));
+  const pagesById = buildWikiPageMap(pages);
   const page = pagesById.get(pageId);
-  if (!page) return { read: [], edit: [], inheritedAdmin: [] };
+  if (!page)
+    return {
+      read: [],
+      edit: [],
+      inheritedAdmin: [],
+      readAudience: { isEverybody: false, roleCount: 0 },
+    };
 
   /** A citizen without any role and without ownership */
-  const anyone = createWikiPagePermissionResolver(pages, {
-    citizenId: null,
-    roleIds: new Set(),
-    hasWikiManage: false,
-  }).get(pageId);
+  const anyone = createWikiPagePermissionResolver(
+    pages,
+    { citizenId: null, roleIds: new Set(), hasWikiManage: false },
+    pagesById,
+  ).get(pageId);
 
   const ownerEntry: WikiEffectivePermissionEntry | undefined = ownerHandle
     ? {
@@ -109,7 +119,11 @@ export const resolveWikiPageEffectivePermissions = (
     inheritedAdmin.push(ownerEntry);
   }
 
-  for (const { role, resolver } of createWikiPageRoleResolvers(pages, roles)) {
+  for (const { role, resolver } of createWikiPageRoleResolvers(
+    pages,
+    roles,
+    pagesById,
+  )) {
     const permissions = resolver.get(pageId);
     if (!permissions) continue;
 
@@ -169,5 +183,35 @@ export const resolveWikiPageEffectivePermissions = (
     read: anyone?.canRead ? [{ label: "Alle mit Wiki-Zugriff" }] : read,
     edit: anyone?.canEdit ? [{ label: "Alle mit Wiki-Zugriff" }] : edit,
     inheritedAdmin,
+    readAudience: {
+      isEverybody: anyone?.canRead === true,
+      roleCount: countReadRolesWithoutWikiManage(
+        pages,
+        roles,
+        pageId,
+        pagesById,
+      ),
+    },
   };
 };
+
+/**
+ * Roles that read the page for a reason this page can influence. Roles
+ * holding `wiki;manage` read every page, so counting them would hide
+ * exactly the difference the badge exists to show — a restricted page would
+ * never fall below their number. The exclusion goes by the source of the
+ * access, not by the role: whoever also has explicit access here is counted
+ * again. The `Wiki-Management` note above is no substitute, because a role
+ * carries it even when it has such explicit access.
+ */
+const countReadRolesWithoutWikiManage = (
+  pages: readonly WikiPagePermissionSource[],
+  roles: readonly WikiPermissionRole[],
+  pageId: string,
+  pagesById: ReadonlyMap<string, WikiPagePermissionSource>,
+) =>
+  createWikiPageRoleResolvers(
+    pages,
+    roles.map((role) => ({ ...role, hasWikiManage: false })),
+    pagesById,
+  ).filter(({ resolver }) => resolver.get(pageId)?.canRead).length;
