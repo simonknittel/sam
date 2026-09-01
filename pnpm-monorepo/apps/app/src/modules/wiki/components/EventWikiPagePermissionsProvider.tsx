@@ -3,7 +3,7 @@
 import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
-import { Button2, Button2Variant } from "@/modules/common/components/Button2";
+import { Button2 } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
 import Note from "@/modules/common/components/Note";
 import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
@@ -11,10 +11,9 @@ import {
   WikiPageEventScope,
   WikiPageUploadability,
 } from "@sam-monorepo/database/browser";
-import { useState } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import {
   FaGlobe,
-  FaLock,
   FaPen,
   FaSave,
   FaSitemap,
@@ -28,6 +27,7 @@ import {
   isEventWikiScopeSubset,
   type EventWikiScopeSelection,
 } from "../utils/isEventWikiScopeSubset";
+import { WikiPagePermissionsOpenerProvider } from "./WikiPagePermissionsOpener";
 import { WikiPageSelect } from "./WikiPageSelect";
 
 interface FlatPosition {
@@ -36,7 +36,8 @@ interface FlatPosition {
 }
 
 interface Props {
-  readonly className?: string;
+  /** The page view the dialog's triggers live in */
+  readonly children: ReactNode;
   readonly pageId: string;
   readonly isRootPage: boolean;
   readonly readScope: WikiPageEventScope;
@@ -66,16 +67,18 @@ const MANAGERS_ONLY: EventWikiScopeSelection = {
 };
 
 /**
- * The event-mode permissions dialog: read and edit scopes plus the upload
- * tiers, instead of the global wiki's role lists. Styled like
- * `WikiPagePermissionsModal` so both dialogs read as one. The manage tier
+ * The event-mode permissions dialog together with its open state: read and
+ * edit scopes plus the upload tiers, instead of the global wiki's role
+ * lists. Styled like the role-model dialog so both read as one, and like it
+ * rendered only where the viewer may change the scopes — a frozen event has
+ * no dialog, so the visibility badge stays plain text there. The manage tier
  * is not configurable — the organizer, the event managers and
  * `event;manage` always manage every page. The edit scope only offers
  * subsets of the read scope (and resets to the managers when narrowing the
  * read scope invalidates it), mirroring the server-side validation.
  */
-export const EventWikiPagePermissionsModal = ({
-  className,
+export const EventWikiPagePermissionsProvider = ({
+  children,
   pageId,
   isRootPage,
   readScope: initialReadScope,
@@ -90,6 +93,7 @@ export const EventWikiPagePermissionsModal = ({
   parentEditScope,
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
+  const openPermissions = useCallback(() => setIsOpen(true), []);
   const [readScope, setReadScope] =
     useState<WikiPageEventScope>(initialReadScope);
   const [readPositionId, setReadPositionId] = useState(
@@ -169,16 +173,8 @@ export const EventWikiPagePermissionsModal = ({
   };
 
   return (
-    <>
-      <Button2
-        type="button"
-        onClick={() => setIsOpen(true)}
-        variant={Button2Variant.IconOnly}
-        className={className}
-        tooltip="Berechtigungen bearbeiten"
-      >
-        <FaLock />
-      </Button2>
+    <WikiPagePermissionsOpenerProvider onOpen={openPermissions}>
+      {children}
 
       <Modal
         isOpen={isOpen}
@@ -274,7 +270,7 @@ export const EventWikiPagePermissionsModal = ({
           <ActionErrorNote className="mt-4" state={state} />
         </form>
       </Modal>
-    </>
+    </WikiPagePermissionsOpenerProvider>
   );
 };
 

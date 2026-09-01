@@ -1,4 +1,5 @@
 import {
+  buildWikiPageMap,
   createWikiPagePermissionResolver,
   type WikiPagePermissionSource,
 } from "./resolveWikiPagePermissions.js";
@@ -31,15 +32,27 @@ export interface WikiPermissionRole {
 export const createWikiPageRoleResolvers = (
   pages: readonly WikiPagePermissionSource[],
   roles: readonly WikiPermissionRole[],
-) =>
-  roles.map((role) => ({
+) => {
+  /**
+   * The one place the page lookup is shared: it is identical for every role
+   * and building it per resolver dominates the cost of asking about a page
+   * for all roles of the org.
+   */
+  const pagesById = buildWikiPageMap(pages);
+
+  return roles.map((role) => ({
     role,
-    resolver: createWikiPagePermissionResolver(pages, {
-      citizenId: null,
-      roleIds: new Set(role.effectiveRoleIds),
-      hasWikiManage: role.hasWikiManage,
-    }),
+    resolver: createWikiPagePermissionResolver(
+      pages,
+      {
+        citizenId: null,
+        roleIds: new Set(role.effectiveRoleIds),
+        hasWikiManage: role.hasWikiManage,
+      },
+      pagesById,
+    ),
   }));
+};
 
 /** Ids of the roles that may read the given page on their own */
 export const resolveWikiPageReadRoleIds = (

@@ -25,7 +25,10 @@ import {
   getManageableWikiPageTargets,
   type WikiPageTargetOption,
 } from "../utils/getWikiPageTargets";
-import { resolveWikiPageEffectivePermissions } from "../utils/resolveWikiPageEffectivePermissions";
+import {
+  resolveWikiPageEffectivePermissions,
+  resolveWikiPageReadAudience,
+} from "../utils/resolveWikiPageEffectivePermissions";
 import {
   buildWikiPageSnapshotsHref,
   getWikiPageRouteHref,
@@ -33,6 +36,7 @@ import {
   WikiScope,
   type WikiPageHrefMode,
 } from "../utils/wikiPageHref";
+import { getWikiRoleReadAudienceLabel } from "../utils/wikiReadAudienceLabel";
 import { CopyWikiPageModal } from "./CopyWikiPageModal";
 import { DeleteWikiPageModal } from "./DeleteWikiPageModal";
 import { MoveWikiPageModal } from "./MoveWikiPageModal";
@@ -45,7 +49,9 @@ import { WikiPageEditorSection } from "./WikiPageEditorSection";
 import { WikiPageExportImportModal } from "./WikiPageExportImportModal";
 import { WikiPageFavoriteButton } from "./WikiPageFavoriteButton";
 import { WikiPageIconButton } from "./WikiPageIconButton";
-import { WikiPagePermissionsModal } from "./WikiPagePermissionsModal";
+import { WikiPagePermissionsButton } from "./WikiPagePermissionsButton";
+import { WikiPagePermissionsProvider } from "./WikiPagePermissionsProvider";
+import { WikiPageReadAudienceBadge } from "./WikiPageReadAudienceBadge";
 import { WikiPageSidebarModeModal } from "./WikiPageSidebarModeModal";
 import { WikiPageTags } from "./WikiPageTags";
 
@@ -90,22 +96,33 @@ export const WikiPageContent = async ({
   const isVariantScope = hrefMode.scope === WikiScope.Variant;
   const isLockedRoot = page.id === hrefMode.rootPageId;
 
-  const [effectiveOwner, resolvedStaticContent, favoritePageIds, pageTags] =
-    await Promise.all([
-      permissions.effectiveOwnerId
-        ? prisma.entity.findUnique({
-            where: { id: permissions.effectiveOwnerId },
-            select: { id: true, handle: true },
-          })
-        : Promise.resolve(null),
-      staticContent ?? getWikiPageStaticContent(context, page.id),
-      getWikiFavoritePageIds(),
-      prisma.wikiPageTag.findMany({
-        where: { pageId: page.id },
-        select: { tag: { select: { id: true, name: true } } },
-        orderBy: { tag: { name: "asc" } },
-      }),
-    ]);
+  const [
+    effectiveOwner,
+    resolvedStaticContent,
+    favoritePageIds,
+    pageTags,
+    /**
+     * Resolving permissions role by role needs every role of the org. The
+     * badge in the header needs it for every reader, so this is on the path
+     * of every page view.
+     */
+    permissionRoles,
+  ] = await Promise.all([
+    permissions.effectiveOwnerId
+      ? prisma.entity.findUnique({
+          where: { id: permissions.effectiveOwnerId },
+          select: { id: true, handle: true },
+        })
+      : Promise.resolve(null),
+    staticContent ?? getWikiPageStaticContent(context, page.id),
+    getWikiFavoritePageIds(),
+    prisma.wikiPageTag.findMany({
+      where: { pageId: page.id },
+      select: { tag: { select: { id: true, name: true } } },
+      orderBy: { tag: { name: "asc" } },
+    }),
+    getWikiPermissionRoles(),
+  ]);
 
   const descendantIds = collectWikiPageDescendants(context.pages, page.id);
   /** What the copy dialog's "Unterseiten mitkopieren" would copy */
@@ -139,14 +156,13 @@ export const WikiPageContent = async ({
       ? roleIdsOf(type).filter((roleId) => parentReadRoleIds.includes(roleId))
       : roleIdsOf(type);
 
-  /**
-   * Input of the permissions dialog. Resolving permissions role by role
-   * needs every role of the org, so it only happens for page admins — the
-   * only ones who get the dialog.
-   */
-  const permissionRoles = permissions.canAdmin
-    ? await getWikiPermissionRoles()
-    : [];
+  const readAudience = resolveWikiPageReadAudience(
+    context.allPages,
+    permissionRoles,
+    page.id,
+  );
+
+  /** The dialog's own input — only page managers ever receive it */
   const effectivePermissions = permissions.canAdmin
     ? resolveWikiPageEffectivePermissions(
         context.allPages,
@@ -178,6 +194,139 @@ export const WikiPageContent = async ({
 
   const collabUrl = getWikiCollabUrl();
 
+  const article = (
+    <article className="bg-secondary rounded-primary p-4">
+      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+        <div>
+          <h1 className="flex items-center gap-2 font-bold text-2xl">
+            <WikiPageIconButton
+              pageId={page.id}
+              iconId={page.iconId}
+              canAdmin={permissions.canAdmin}
+            />
+
+            {permissions.canAdmin && !isLockedRoot ? (
+              <EditableInput
+                rowId={page.id}
+                columnName="title"
+                initialValue={page.title}
+                action={renameWikiPage}
+              />
+            ) : (
+              page.title
+            )}
+          </h1>
+
+          <p className="mt-1 text-xs text-white/20">
+            <WikiPageDetailsPopover pageId={page.id} />{" "}
+            <span className="uppercase font-mono">Aktualisiert:</span>{" "}
+            {formatDate(page.updatedAt)}
+            {effectiveOwner && (
+              <>
+                {" · "}
+                <span className="uppercase font-mono">Besitzer:</span>{" "}
+                <CitizenLink citizen={effectiveOwner} />
+              </>
+            )}
+            {" · "}
+            <WikiPageReadAudienceBadge
+              label={getWikiRoleReadAudienceLabel(readAudience)}
+            />
+          </p>
+
+          {headerExtra}
+        </div>
+
+        <div className="flex flex-wrap gap-1">
+          {permissions.canEdit && collabUrl && <WikiEditModeToggle />}
+
+          {isVariantScope && (
+            <Button2
+              as={Link}
+              href={getWikiPageRouteHref(page)}
+              variant={Button2Variant.IconOnly}
+              tooltip="Im Wiki öffnen"
+            >
+              <FaExternalLinkAlt />
+            </Button2>
+          )}
+
+          <WikiPageFavoriteButton
+            pageId={page.id}
+            isFavorite={favoritePageIds.has(page.id)}
+          />
+
+          <ReportWikiPageModal pageId={page.id} title={page.title} />
+
+          <CopyWikiPageModal
+            pageId={page.id}
+            title={page.title}
+            visibleDescendantCount={visibleDescendantCount}
+          />
+
+          {permissions.canAdmin && (
+            <>
+              <Button2
+                as={Link}
+                href={buildWikiPageSnapshotsHref(hrefMode, page.id)}
+                variant={Button2Variant.IconOnly}
+                tooltip="Snapshots"
+              >
+                <FaHistory />
+              </Button2>
+              {!isLockedRoot && (
+                <MoveWikiPageModal
+                  pageId={page.id}
+                  targets={resolvedMoveTargets}
+                  allowTopLevel={canCreateTopLevel}
+                  currentParentId={page.parentId}
+                />
+              )}
+              <WikiPageSidebarModeModal
+                pageId={page.id}
+                sidebarMode={page.sidebarMode}
+              />
+              <WikiPagePermissionsButton />
+
+              {!isLockedRoot && (
+                <DeleteWikiPageModal
+                  pageId={page.id}
+                  title={page.title}
+                  descendantCount={descendantIds.length}
+                />
+              )}
+            </>
+          )}
+
+          {context.viewer.hasWikiManage && (
+            <WikiPageExportImportModal
+              pageId={page.id}
+              title={page.title}
+              canImport
+            />
+          )}
+        </div>
+      </div>
+
+      <WikiPageTags
+        className="mt-1"
+        pageId={page.id}
+        tags={pageTags.map((entry) => entry.tag)}
+        canEdit={permissions.canEdit}
+      />
+
+      <div className="mt-4">
+        <WikiPageEditorSection
+          pageId={page.id}
+          canEdit={permissions.canEdit}
+          canUploadImages={permissions.canUploadImages}
+          canUploadAttachments={permissions.canUploadAttachments}
+          staticContent={resolvedStaticContent}
+        />
+      </div>
+    </article>
+  );
+
   return (
     /**
      * Keyed by page so navigating to another page always starts back in
@@ -186,164 +335,50 @@ export const WikiPageContent = async ({
     <WikiEditModeProvider key={page.id}>
       <TrackWikiPageVisit pageId={page.id} />
 
-      <article className="bg-secondary rounded-primary p-4">
-        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
-          <div>
-            <h1 className="flex items-center gap-2 font-bold text-2xl">
-              <WikiPageIconButton
-                pageId={page.id}
-                iconId={page.iconId}
-                canAdmin={permissions.canAdmin}
-              />
-
-              {permissions.canAdmin && !isLockedRoot ? (
-                <EditableInput
-                  rowId={page.id}
-                  columnName="title"
-                  initialValue={page.title}
-                  action={renameWikiPage}
-                />
-              ) : (
-                page.title
-              )}
-            </h1>
-
-            <p className="mt-1 text-xs text-white/20">
-              <WikiPageDetailsPopover pageId={page.id} />{" "}
-              <span className="uppercase font-mono">Aktualisiert:</span>{" "}
-              {formatDate(page.updatedAt)}
-              {effectiveOwner && (
-                <>
-                  {" · "}
-                  <span className="uppercase font-mono">Besitzer:</span>{" "}
-                  <CitizenLink citizen={effectiveOwner} />
-                </>
-              )}
-            </p>
-
-            {headerExtra}
-          </div>
-
-          <div className="flex flex-wrap gap-1">
-            {permissions.canEdit && collabUrl && <WikiEditModeToggle />}
-
-            {isVariantScope && (
-              <Button2
-                as={Link}
-                href={getWikiPageRouteHref(page)}
-                variant={Button2Variant.IconOnly}
-                tooltip="Im Wiki öffnen"
-              >
-                <FaExternalLinkAlt />
-              </Button2>
-            )}
-
-            <WikiPageFavoriteButton
-              pageId={page.id}
-              isFavorite={favoritePageIds.has(page.id)}
-            />
-
-            <ReportWikiPageModal pageId={page.id} title={page.title} />
-
-            <CopyWikiPageModal
-              pageId={page.id}
-              title={page.title}
-              visibleDescendantCount={visibleDescendantCount}
-            />
-
-            {permissions.canAdmin && (
-              <>
-                <Button2
-                  as={Link}
-                  href={buildWikiPageSnapshotsHref(hrefMode, page.id)}
-                  variant={Button2Variant.IconOnly}
-                  tooltip="Snapshots"
-                >
-                  <FaHistory />
-                </Button2>
-                {!isLockedRoot && (
-                  <MoveWikiPageModal
-                    pageId={page.id}
-                    targets={resolvedMoveTargets}
-                    allowTopLevel={canCreateTopLevel}
-                    currentParentId={page.parentId}
-                  />
-                )}
-                <WikiPageSidebarModeModal
-                  pageId={page.id}
-                  sidebarMode={page.sidebarMode}
-                />
-                <WikiPagePermissionsModal
-                  page={{
-                    id: page.id,
-                    parentId: page.parentId,
-                    ownerId: page.ownerId,
-                    visibility: page.visibility,
-                    editability: page.editability,
-                    imageUploadability: page.imageUploadability,
-                    attachmentUploadability: page.attachmentUploadability,
-                  }}
-                  effectiveOwnerHandle={effectiveOwner?.handle ?? null}
-                  readRoleIds={grantingRoleIdsOf(WikiPageAccessType.READ)}
-                  editRoleIds={grantingRoleIdsOf(WikiPageAccessType.EDIT)}
-                  adminRoleIds={grantingRoleIdsOf(WikiPageAccessType.ADMIN)}
-                  inheritedFrom={{
-                    visibility: sourceTitle(permissions.visibilitySourceId),
-                    editability: sourceTitle(permissions.editabilitySourceId),
-                    imageUploadability: sourceTitle(
-                      permissions.imageUploadabilitySourceId,
-                    ),
-                    attachmentUploadability: sourceTitle(
-                      permissions.attachmentUploadabilitySourceId,
-                    ),
-                  }}
-                  parentTitle={
-                    page.parentId
-                      ? context.pagesById.get(page.parentId)?.title
-                      : undefined
-                  }
-                  parentReadRoleIds={parentReadRoleIds}
-                  effectivePermissions={effectivePermissions}
-                  hasDescendants={descendantIds.length > 0}
-                />
-
-                {!isLockedRoot && (
-                  <DeleteWikiPageModal
-                    pageId={page.id}
-                    title={page.title}
-                    descendantCount={descendantIds.length}
-                  />
-                )}
-              </>
-            )}
-
-            {context.viewer.hasWikiManage && (
-              <WikiPageExportImportModal
-                pageId={page.id}
-                title={page.title}
-                canImport
-              />
-            )}
-          </div>
-        </div>
-
-        <WikiPageTags
-          className="mt-1"
-          pageId={page.id}
-          tags={pageTags.map((entry) => entry.tag)}
-          canEdit={permissions.canEdit}
-        />
-
-        <div className="mt-4">
-          <WikiPageEditorSection
-            pageId={page.id}
-            canEdit={permissions.canEdit}
-            canUploadImages={permissions.canUploadImages}
-            canUploadAttachments={permissions.canUploadAttachments}
-            staticContent={resolvedStaticContent}
-          />
-        </div>
-      </article>
+      {/**
+       * Only page managers get the dialog — its role ids must not reach
+       * anybody else — so for every other reader the visibility badge
+       * stays plain text.
+       */}
+      {permissions.canAdmin ? (
+        <WikiPagePermissionsProvider
+          page={{
+            id: page.id,
+            parentId: page.parentId,
+            ownerId: page.ownerId,
+            visibility: page.visibility,
+            editability: page.editability,
+            imageUploadability: page.imageUploadability,
+            attachmentUploadability: page.attachmentUploadability,
+          }}
+          effectiveOwnerHandle={effectiveOwner?.handle ?? null}
+          readRoleIds={grantingRoleIdsOf(WikiPageAccessType.READ)}
+          editRoleIds={grantingRoleIdsOf(WikiPageAccessType.EDIT)}
+          adminRoleIds={grantingRoleIdsOf(WikiPageAccessType.ADMIN)}
+          inheritedFrom={{
+            visibility: sourceTitle(permissions.visibilitySourceId),
+            editability: sourceTitle(permissions.editabilitySourceId),
+            imageUploadability: sourceTitle(
+              permissions.imageUploadabilitySourceId,
+            ),
+            attachmentUploadability: sourceTitle(
+              permissions.attachmentUploadabilitySourceId,
+            ),
+          }}
+          parentTitle={
+            page.parentId
+              ? context.pagesById.get(page.parentId)?.title
+              : undefined
+          }
+          parentReadRoleIds={parentReadRoleIds}
+          effectivePermissions={effectivePermissions}
+          hasDescendants={descendantIds.length > 0}
+        >
+          {article}
+        </WikiPagePermissionsProvider>
+      ) : (
+        article
+      )}
     </WikiEditModeProvider>
   );
 };
