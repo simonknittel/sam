@@ -4,9 +4,11 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { EventActivityType } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { EVENT_MANAGE_GUARD_SELECT } from "../queries/eventManageGuardSelect";
+import { createEventActivity } from "../utils/eventActivity";
 import { isAllowedToManageEvent } from "../utils/isAllowedToManageEvent";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
 
@@ -41,20 +43,45 @@ export const deleteManager = createAuthenticatedAction(
         requestPayload: formData,
       };
 
+    const actingManagerId = authentication.session.entity?.id ?? null;
+
     /**
-     * Delete manager
+     * `disconnect` is idempotent, so without this check a repeated removal
+     * would get an activity entry for a change that never happened.
      */
-    await prisma.event.update({
-      where: {
-        id: event.id,
-      },
-      data: {
-        managers: {
-          disconnect: {
-            id: data.managerId,
+    const isManager = event.managers.some(
+      (manager) => manager.id === data.managerId,
+    );
+    if (!isManager)
+      return {
+        error: "Der Citizen ist kein Manager des Events.",
+        requestPayload: formData,
+      };
+
+    /**
+     * Delete manager. One transaction, so the activity entry cannot get lost
+     * while the removal goes through.
+     */
+    await prisma.$transaction(async (transaction) => {
+      await transaction.event.update({
+        where: {
+          id: event.id,
+        },
+        data: {
+          managers: {
+            disconnect: {
+              id: data.managerId,
+            },
           },
         },
-      },
+      });
+
+      await createEventActivity(transaction, {
+        eventId: event.id,
+        citizenId: actingManagerId,
+        type: EventActivityType.MANAGER_REMOVED,
+        payload: { citizenId: data.managerId },
+      });
     });
 
     await createAuditEvents([
@@ -71,7 +98,7 @@ export const deleteManager = createAuthenticatedAction(
     /**
      * Revalidate cache(s)
      */
-    revalidatePath(`/app/events/${event.id}/participants`);
+    revalidatePath(`/app/events/${event.id}`, "layout");
 
     /**
      * Respond with the result
