@@ -10,7 +10,7 @@
 1. Clone the repository
 2. Copy [pnpm-monorepo/apps/app/.env.example](../pnpm-monorepo/apps/app/.env.example) to `pnpm-monorepo/apps/app/.env`
 3. Copy [pnpm-monorepo/packages/database/.env.example](../pnpm-monorepo/packages/database/.env.example) to `pnpm-monorepo/packages/database/.env`
-4. Set the values in the two `.env` files
+4. Set the values in the two `.env` files. If you have a copy of your `.env` files in Bitwarden, you can download them instead (see [Sync the .env files with Bitwarden](./sync-env-files-with-bitwarden.md)).
 5. Start the database, Soketi, the wiki collaboration server, the S3-compatible upload storage and the Unleash feature flag server: `docker compose up`
 6. Open a second terminal and go to the `pnpm-monorepo` directory: `cd pnpm-monorepo`
 7. Install the necessary Node.js version: `nvm install`
