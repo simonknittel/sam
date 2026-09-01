@@ -55,15 +55,16 @@ const resolveAnyonePermissions = (
  * Who may read the page, condensed for the header badge. Every reader of
  * every wiki page pays for this, so it stays separate from the dialog's
  * lists above and does the least it can: a page everybody may read needs no
- * role resolution at all.
+ * role resolution at all, and one reading role already answers the
+ * question.
  *
  * Roles that read the page only because they hold `wiki;manage` are left
- * out. Those read every page, so counting them would hide exactly the
- * difference the badge exists to show — a restricted page could never fall
- * below their number. The exclusion goes by the source of the access, not
- * by the role: a role that also has explicit access here is counted again.
- * The `Wiki-Management` note below is no substitute, because a role carries
- * it even when it has such explicit access.
+ * out. Those read every page, so they would make every restricted page look
+ * shared and the "nobody but the owner and the managers" case would never
+ * appear. The exclusion goes by the source of the access, not by the role:
+ * a role that also has explicit access here still counts. The
+ * `Wiki-Management` note below is no substitute, because a role carries it
+ * even when it has such explicit access.
  */
 export const resolveWikiPageReadAudience = (
   pages: readonly WikiPagePermissionSource[],
@@ -71,7 +72,7 @@ export const resolveWikiPageReadAudience = (
   pageId: string,
 ): WikiRoleReadAudience => {
   if (resolveAnyonePermissions(pages, pageId)?.canRead)
-    return { isEverybody: true, roleCount: 0 };
+    return { isEverybody: true, hasReadRoles: false };
 
   const rolesWithoutWikiManage = roles.map((role) => ({
     ...role,
@@ -80,10 +81,10 @@ export const resolveWikiPageReadAudience = (
 
   return {
     isEverybody: false,
-    roleCount: createWikiPageRoleResolvers(
+    hasReadRoles: createWikiPageRoleResolvers(
       pages,
       rolesWithoutWikiManage,
-    ).filter(({ resolver }) => resolver.get(pageId)?.canRead).length,
+    ).some(({ resolver }) => resolver.get(pageId)?.canRead),
   };
 };
 

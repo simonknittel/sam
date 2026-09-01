@@ -3,30 +3,33 @@ import type { EventWikiScopeSelection } from "./isEventWikiScopeSubset";
 
 /**
  * Who may read a page of the global wiki, condensed for the header badge.
- * The count deliberately leaves out roles that read only because they hold
- * `wiki;manage` — those read every page and say nothing about this one.
+ * Roles that read only because they hold `wiki;manage` deliberately do not
+ * count as an audience — those read every page and say nothing about this
+ * one, so they must not make a private page look shared.
  */
 export interface WikiRoleReadAudience {
   /** Everybody with wiki access may read the page */
   readonly isEverybody: boolean;
-  readonly roleCount: number;
+  /** At least one role may read the page */
+  readonly hasReadRoles: boolean;
 }
 
 /** The widest audience, worded the same in both wiki models */
 const EVERYBODY_LABEL = "alle";
 
 /**
- * The read audience of a global wiki page. Roles are counted rather than
- * named: the role data behind the count is not filtered by the viewer's
- * `otherRole;read` permission, so the names must not reach the page.
+ * The read audience of a global wiki page. The roles are neither named nor
+ * counted: their names must not reach a viewer who may not browse them, and
+ * a number would mislead more than it says — role inheritance and the
+ * higher tiers put roles into the audience that the page itself never
+ * mentions. The dialog stays the exact view.
  */
 export const getWikiRoleReadAudienceLabel = ({
   isEverybody,
-  roleCount,
+  hasReadRoles,
 }: WikiRoleReadAudience): string => {
   if (isEverybody) return EVERYBODY_LABEL;
-  if (roleCount === 0) return "nur Besitzer & Manager";
-  return roleCount === 1 ? "1 Rolle" : `${roleCount} Rollen`;
+  return hasReadRoles ? "ausgewählte Rollen" : "nur Besitzer & Manager";
 };
 
 /**

@@ -9,31 +9,25 @@ const positionNameOf = (positionId: string) =>
   positionId === "marine" ? "Marine" : undefined;
 
 describe("global wiki read audience label", () => {
-  test("everybody with wiki access wins over the role count", () => {
+  test("everybody with wiki access wins over the reading roles", () => {
     expect(
-      getWikiRoleReadAudienceLabel({ isEverybody: true, roleCount: 0 }),
+      getWikiRoleReadAudienceLabel({ isEverybody: true, hasReadRoles: false }),
     ).toBe("alle");
     expect(
-      getWikiRoleReadAudienceLabel({ isEverybody: true, roleCount: 4 }),
+      getWikiRoleReadAudienceLabel({ isEverybody: true, hasReadRoles: true }),
     ).toBe("alle");
   });
 
   test("without a reading role only the owner and the managers are left", () => {
     expect(
-      getWikiRoleReadAudienceLabel({ isEverybody: false, roleCount: 0 }),
+      getWikiRoleReadAudienceLabel({ isEverybody: false, hasReadRoles: false }),
     ).toBe("nur Besitzer & Manager");
   });
 
-  test("one role is named in the singular, more in the plural", () => {
+  test("reading roles are reported without naming or counting them", () => {
     expect(
-      getWikiRoleReadAudienceLabel({ isEverybody: false, roleCount: 1 }),
-    ).toBe("1 Rolle");
-    expect(
-      getWikiRoleReadAudienceLabel({ isEverybody: false, roleCount: 2 }),
-    ).toBe("2 Rollen");
-    expect(
-      getWikiRoleReadAudienceLabel({ isEverybody: false, roleCount: 13 }),
-    ).toBe("13 Rollen");
+      getWikiRoleReadAudienceLabel({ isEverybody: false, hasReadRoles: true }),
+    ).toBe("ausgewählte Rollen");
   });
 });
 

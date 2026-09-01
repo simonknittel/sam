@@ -39,14 +39,6 @@ const audienceBadgeButton = (page: Page) =>
 const permissionsButton = (page: Page) =>
   page.getByRole("button", { name: "Berechtigungen bearbeiten" });
 
-/**
- * Ends the label at a non-word character, so that a broken singular
- * ("1 Rollen") cannot satisfy an assertion on "1 Rolle". The labels carry
- * no regular expression syntax, so they go in as they are.
- */
-const audienceLabel = (label: string) =>
-  new RegExp(`Sichtbar für: ${label}(?!\\w)`);
-
 test("a RESTRICTED page is readable for its role members and invisible to the rest", async ({
   page,
   prisma,
@@ -195,15 +187,12 @@ test("the header badge names who may read the page", async ({
     visibility: WikiPageVisibility.RESTRICTED,
     roleAccess: [{ roleId: readerRole.id, type: WikiPageAccessType.READ }],
   });
-  /** Editing implies reading, so the editor role counts as an audience too */
+  /** Editing implies reading, so an editor role alone is an audience too */
   const editablePage = await createWikiPage(prisma, {
     title: "Einsatzjournal",
     visibility: WikiPageVisibility.RESTRICTED,
     editability: WikiPageEditability.RESTRICTED,
-    roleAccess: [
-      { roleId: readerRole.id, type: WikiPageAccessType.READ },
-      { roleId: editorRole.id, type: WikiPageAccessType.EDIT },
-    ],
+    roleAccess: [{ roleId: editorRole.id, type: WikiPageAccessType.EDIT }],
   });
   const privatePage = await createWikiPage(prisma, {
     title: "Notizen",
@@ -213,19 +202,23 @@ test("the header badge names who may read the page", async ({
   await signIn(manager.user);
 
   await page.goto(`/app/wiki/${publicPage.id}/${publicPage.slug}`);
-  await expect(audienceBadge(page)).toContainText(audienceLabel("alle"));
+  await expect(audienceBadge(page)).toContainText("Sichtbar für: alle");
 
   await page.goto(
     `/app/wiki/${roleRestrictedPage.id}/${roleRestrictedPage.slug}`,
   );
-  await expect(audienceBadge(page)).toContainText(audienceLabel("1 Rolle"));
+  await expect(audienceBadge(page)).toContainText(
+    "Sichtbar für: ausgewählte Rollen",
+  );
 
   await page.goto(`/app/wiki/${editablePage.id}/${editablePage.slug}`);
-  await expect(audienceBadge(page)).toContainText(audienceLabel("2 Rollen"));
+  await expect(audienceBadge(page)).toContainText(
+    "Sichtbar für: ausgewählte Rollen",
+  );
 
   await page.goto(`/app/wiki/${privatePage.id}/${privatePage.slug}`);
   await expect(audienceBadge(page)).toContainText(
-    audienceLabel("nur Besitzer & Manager"),
+    "Sichtbar für: nur Besitzer & Manager",
   );
 });
 
@@ -253,7 +246,9 @@ test("only page managers open the permissions from the badge", async ({
   // A reader sees how wide the audience is, but cannot change it
   await signIn(reader.user);
   await page.goto(href);
-  await expect(audienceBadge(page)).toHaveText("Sichtbar für: 1 Rolle");
+  await expect(audienceBadge(page)).toHaveText(
+    "Sichtbar für: ausgewählte Rollen",
+  );
   await expect(audienceBadgeButton(page)).toHaveCount(0);
   await expect(permissionsButton(page)).toHaveCount(0);
 
@@ -265,7 +260,7 @@ test("only page managers open the permissions from the badge", async ({
   );
 });
 
-test("a role reading only through wiki;manage is left out of the count", async ({
+test("a role reading only through wiki;manage is no audience of its own", async ({
   page,
   prisma,
   signIn,
@@ -274,20 +269,21 @@ test("a role reading only through wiki;manage is left out of the count", async (
     handle: "global-manager",
     permissionStrings: ["wiki;manage"],
   });
-  const readerRole = await createRole(prisma, { name: "einsatz" });
 
   const wikiPage = await createWikiPage(prisma, {
     title: "Einsatzbefehl",
     visibility: WikiPageVisibility.RESTRICTED,
-    roleAccess: [{ roleId: readerRole.id, type: WikiPageAccessType.READ }],
   });
   const href = `/app/wiki/${wikiPage.id}/${wikiPage.slug}`;
 
+  // The manager's role reads the page, but only because it manages the wiki
   await signIn(manager.user);
   await page.goto(href);
-  await expect(audienceBadge(page)).toContainText(audienceLabel("1 Rolle"));
+  await expect(audienceBadge(page)).toContainText(
+    "Sichtbar für: nur Besitzer & Manager",
+  );
 
-  // The very same role counts as soon as it reads this page in its own right
+  // The very same role is an audience once it reads the page in its own right
   await prisma.wikiPageRoleAccess.create({
     data: {
       pageId: wikiPage.id,
@@ -296,7 +292,9 @@ test("a role reading only through wiki;manage is left out of the count", async (
     },
   });
   await page.reload();
-  await expect(audienceBadge(page)).toContainText(audienceLabel("2 Rollen"));
+  await expect(audienceBadge(page)).toContainText(
+    "Sichtbar für: ausgewählte Rollen",
+  );
 });
 
 test("the briefing badge names the event scope of the page", async ({
@@ -340,7 +338,7 @@ test("the briefing badge names the event scope of the page", async ({
 
   await page.goto(`/app/events/${event.id}/briefing`);
   await expect(audienceBadge(page)).toContainText(
-    audienceLabel("Event-Manager"),
+    "Sichtbar für: Event-Manager",
   );
   await expect(permissionsButton(page)).toBeVisible();
 
@@ -348,7 +346,7 @@ test("the briefing badge names the event scope of the page", async ({
     `/app/events/${event.id}/briefing/${participantsPage.id}/${participantsPage.slug}`,
   );
   await expect(audienceBadge(page)).toContainText(
-    audienceLabel("Eventteilnehmer"),
+    "Sichtbar für: Eventteilnehmer",
   );
 
   /** An inheriting page reports what it inherits, not "Manager" */
@@ -356,14 +354,14 @@ test("the briefing badge names the event scope of the page", async ({
     `/app/events/${event.id}/briefing/${inheritingPage.id}/${inheritingPage.slug}`,
   );
   await expect(audienceBadge(page)).toContainText(
-    audienceLabel("Eventteilnehmer"),
+    "Sichtbar für: Eventteilnehmer",
   );
 
   await page.goto(
     `/app/events/${event.id}/briefing/${positionPage.id}/${positionPage.slug}`,
   );
   await expect(audienceBadge(page)).toContainText(
-    audienceLabel("Aufstellung „Marine“"),
+    "Sichtbar für: Aufstellung „Marine“",
   );
 });
 
