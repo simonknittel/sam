@@ -13,7 +13,7 @@ export const ACTION_FEEDBACK_TIMEOUT = 15_000;
  */
 export const COLLAB_PERSISTENCE_TIMEOUT = 20_000;
 
-/** The forbidden() boundary of /app (see app/app/forbidden.tsx). */
+/** Text of both 403 boundaries: app/app/forbidden.tsx and ForbiddenCard. */
 export const FORBIDDEN_TEXT = "Du bist nicht berechtigt dies zu sehen.";
 
 /** Next.js' notFound() boundary. */

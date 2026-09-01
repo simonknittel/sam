@@ -6,8 +6,9 @@ export const metadata: Metadata = {
 };
 
 /**
- * Keeps the wiki chrome — above all the sidebar's table of contents — around a
- * missing page, so a dead link does not throw the reader out of the wiki.
+ * Keeps the briefing sidebar around a briefing page that does not exist. The
+ * event navigation above the sidebar also stays. This is the behavior of the
+ * wiki.
  */
 export default function NotFound() {
   return <NotFoundCard />;

@@ -170,6 +170,46 @@ test("a user without event;create sees no create button and cannot open foreign 
   await page.goto(`/app/events/${event.id}/settings`);
   await expect(page.getByRole("heading", { name: "Redacted" })).toBeVisible();
   await expect(page.getByText("Event bearbeiten")).toHaveCount(0);
+
+  // Only the tab content is rejected — the event stays navigable
+  await expect(page.getByRole("link", { name: "Übersicht" })).toBeVisible();
+});
+
+test("a dead briefing link keeps the event chrome, an unknown event does not", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const creator = await createCitizen(prisma, {
+    handle: "briefing-ersteller",
+    permissionStrings: ["event;read", "event;create"],
+  });
+  const event = await createAppEvent(prisma, {
+    name: "Operation Totes Briefing",
+    createdById: creator.entity.id,
+    ...futureEvent(),
+  });
+
+  await signIn(creator.user);
+  await page.goto(`/app/events/${event.id}/briefing/gibt-es-nicht`);
+
+  await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+  // Both layers of chrome survive: the event tabs and the briefing sidebar
+  await expect(page.getByRole("link", { name: "Übersicht" })).toBeVisible();
+  await expect(
+    page.getByRole("combobox", { name: "Seiten durchsuchen" }),
+  ).toBeVisible();
+
+  /**
+   * An unknown event is rejected by the layout that renders those tabs, so
+   * there is no event name to keep — this one stays a full-page 404.
+   */
+  await page.goto("/app/events/gibt-es-nicht");
+
+  await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
+  await expect(page.getByRole("link", { name: "Übersicht" })).toHaveCount(0);
 });
 
 test("the organizer edits the event via the settings tab", async ({

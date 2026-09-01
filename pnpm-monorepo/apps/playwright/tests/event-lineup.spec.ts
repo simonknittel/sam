@@ -9,6 +9,7 @@ import {
 import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
+  FORBIDDEN_TEXT,
   inlineEditorTrigger,
   modal,
   saveInlineEditor,
@@ -201,6 +202,11 @@ test("the lineup toggle publishes the aufstellung to the participants", async ({
   await expect(
     page.getByRole("link", { name: "Aufstellung", exact: true }),
   ).toHaveCount(0);
+
+  /** The URL is rejected too, but the event around it stays navigable */
+  await page.goto(`/app/events/${event.id}/lineup`);
+  await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible();
+  await expect(page.getByRole("link", { name: "Übersicht" })).toBeVisible();
 
   await switchUser(manager.user);
   await page.goto(`/app/events/${event.id}/lineup`);

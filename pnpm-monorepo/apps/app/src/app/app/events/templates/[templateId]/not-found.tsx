@@ -6,8 +6,9 @@ export const metadata: Metadata = {
 };
 
 /**
- * Keeps the wiki chrome — above all the sidebar's table of contents — around a
- * missing page, so a dead link does not throw the reader out of the wiki.
+ * Keeps the template heading and the tab navigation around a subpage that does
+ * not exist. If the layout rejects the request, for example for an unknown or
+ * an invisible template, the app shows the full-page 404.
  */
 export default function NotFound() {
   return <NotFoundCard />;

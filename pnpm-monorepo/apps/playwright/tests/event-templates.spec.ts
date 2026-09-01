@@ -157,6 +157,8 @@ test("a template is invisible to everyone it is not shared with", async ({
 
   await page.goto(`/app/events/templates/${template.id}`);
   await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
+  /** The layout itself rejects, so not even the tabs are rendered */
+  await expect(page.getByRole("link", { name: "Aufstellung" })).toHaveCount(0);
 });
 
 /**
@@ -178,6 +180,8 @@ const expectSharingAndDeletingStayWithTheOwner = async (
 
   await page.goto(`/app/events/templates/${templateId}/sharing`);
   await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
+  /** Only the tab is missing — the template stays navigable around it */
+  await expect(page.getByRole("link", { name: "Aufstellung" })).toBeVisible();
 };
 
 test("a share lets a role use the template, and only an edit share change it", async ({
@@ -585,4 +589,14 @@ test("a template's briefing root page is locked like an event's", async ({
     `/app/events/templates/${template.id}/briefing/${child.id}/anflug`,
   );
   await expect(page.getByRole("button", { name: "Löschen" })).toBeVisible();
+
+  /** A dead link inside the briefing keeps both the sidebar and the tabs */
+  await page.goto(
+    `/app/events/templates/${template.id}/briefing/gibt-es-nicht`,
+  );
+  await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
+  await expect(
+    page.getByRole("combobox", { name: "Seiten durchsuchen" }),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Aufstellung" })).toBeVisible();
 });
