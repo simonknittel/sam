@@ -4,7 +4,7 @@ import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { CitizenInput } from "@/modules/citizen/components/CitizenInput";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
-import { Button2, Button2Variant } from "@/modules/common/components/Button2";
+import { Button2 } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
 import Note from "@/modules/common/components/Note";
 import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
@@ -14,7 +14,7 @@ import {
   WikiPageUploadability,
   WikiPageVisibility,
 } from "@sam-monorepo/database/browser";
-import { useState } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import {
   FaGlobe,
   FaLock,
@@ -28,10 +28,12 @@ import {
 import { updateWikiPagePermissions } from "../actions/updateWikiPagePermissions";
 import type { WikiEffectivePermissions } from "../utils/resolveWikiPageEffectivePermissions";
 import { WikiEffectivePermissionList } from "./WikiEffectivePermissionList";
+import { WikiPagePermissionsOpenerProvider } from "./WikiPagePermissionsOpener";
 import { WikiRoleSelector } from "./WikiRoleSelector";
 
 interface Props {
-  readonly className?: string;
+  /** The page view the dialog's triggers live in */
+  readonly children: ReactNode;
   readonly page: {
     readonly id: string;
     readonly parentId: string | null;
@@ -64,8 +66,14 @@ const CASCADE_LABEL = "Auch auf alle Unterseiten anwenden";
 const EFFECTIVE_HEADING = "Effektiv (gespeicherter Stand):";
 const NOBODY_LABEL = "Niemand außer den Wiki-Managern.";
 
-export const WikiPagePermissionsModal = ({
-  className,
+/**
+ * The role-model permissions dialog together with its open state. Rendered
+ * only for viewers who may change the permissions — its role ids must not
+ * reach anybody else — so its absence is what turns the visibility badge
+ * into plain text.
+ */
+export const WikiPagePermissionsProvider = ({
+  children,
   page,
   effectiveOwnerHandle,
   readRoleIds,
@@ -78,6 +86,7 @@ export const WikiPagePermissionsModal = ({
   hasDescendants,
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
+  const openPermissions = useCallback(() => setIsOpen(true), []);
   const isRoot = page.parentId === null;
 
   const [visibility, setVisibility] = useState<string>(page.visibility);
@@ -102,16 +111,8 @@ export const WikiPagePermissionsModal = ({
       : "Wie die übergeordnete Seite.";
 
   return (
-    <>
-      <Button2
-        type="button"
-        onClick={() => setIsOpen(true)}
-        variant={Button2Variant.IconOnly}
-        className={className}
-        tooltip="Berechtigungen bearbeiten"
-      >
-        <FaLock />
-      </Button2>
+    <WikiPagePermissionsOpenerProvider onOpen={openPermissions}>
+      {children}
 
       <Modal
         isOpen={isOpen}
@@ -462,6 +463,6 @@ export const WikiPagePermissionsModal = ({
           <ActionErrorNote className="mt-4" state={state} />
         </form>
       </Modal>
-    </>
+    </WikiPagePermissionsOpenerProvider>
   );
 };
