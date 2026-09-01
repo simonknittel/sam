@@ -7,9 +7,9 @@ export const metadata: Metadata = {
 
 /**
  * Keeps the event heading and the tab navigation around a subpage that does
- * not exist, so the reader can switch to another tab instead of landing on a
- * full-page 404. A rejection by the layout itself — an unknown event — still
- * renders the full-page 404, because there is no event name to show then.
+ * not exist. The reader can go to a different tab. If the layout rejects the
+ * request, for example for an unknown event, the app shows the full-page 404.
+ * There is no event name to show in that condition.
  */
 export default function NotFound() {
   return <NotFoundCard />;

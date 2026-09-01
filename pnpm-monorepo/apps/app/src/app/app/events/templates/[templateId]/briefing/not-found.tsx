@@ -6,8 +6,9 @@ export const metadata: Metadata = {
 };
 
 /**
- * Keeps the briefing sidebar — and with it the template navigation above it —
- * around a missing briefing page, matching the wiki.
+ * Keeps the briefing sidebar around a briefing page that does not exist. The
+ * template navigation above the sidebar also stays. This is the behavior of
+ * the wiki.
  */
 export default function NotFound() {
   return <NotFoundCard />;

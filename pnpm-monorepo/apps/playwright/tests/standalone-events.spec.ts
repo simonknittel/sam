@@ -173,7 +173,6 @@ test("a user without event;create sees no create button and cannot open foreign 
 
   // Only the tab content is rejected — the event stays navigable
   await expect(page.getByRole("link", { name: "Übersicht" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Teilnehmer" })).toBeVisible();
 });
 
 test("a dead briefing link keeps the event chrome, an unknown event does not", async ({

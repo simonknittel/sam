@@ -1,8 +1,8 @@
 import { Hero } from "./Hero";
 
 /**
- * Inline "Redacted" card for a `forbidden.tsx` boundary that sits inside
- * chrome the layout keeps around it — the counterpart of `NotFoundCard`.
+ * Inline "Redacted" card for a `forbidden.tsx` boundary. This card is the
+ * counterpart of `NotFoundCard` and has the same layout.
  */
 export const ForbiddenCard = () => {
   return (
