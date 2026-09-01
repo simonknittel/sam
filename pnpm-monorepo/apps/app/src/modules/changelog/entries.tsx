@@ -51,20 +51,11 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
     title: "Events: Managerwechsel in der Aktivität",
     tags: ["Events", "Änderung"],
     isTracked: false,
-    requiresAuth: { resource: "event", action: "read" },
     body: () => (
       <>
         <p>
           Der Reiter &bdquo;Aktivität&ldquo; eines Events zeigt jetzt auch, wer
-          einen Manager hinzugefügt oder entfernt hat &ndash; mit einem Eintrag
-          je Änderung, genau wie bei den Teilnehmern. Über den Typ-Filter lässt
-          sich die Ansicht auf &bdquo;Manager hinzugefügt&ldquo; und
-          &bdquo;Manager entfernt&ldquo; eingrenzen.
-        </p>
-
-        <p>
-          Außerdem klappt die Citizen-Auswahl erst auf, sobald du etwas
-          eintippst. Vorher verdeckte die Liste den Speichern-Button.
+          einen Manager hinzugefügt oder entfernt hat.
         </p>
       </>
     ),
