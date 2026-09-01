@@ -51,12 +51,11 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
     title: "Event als Vorlage speichern",
     tags: ["Events", "Neu"],
     isTracked: true,
-    requiresAuth: { resource: "event", action: "create" },
     body: () => (
       <>
         <p>
-          Ein gelungenes Event lässt sich ab sofort in eine Event-Vorlage
-          zurückverwandeln: Unter &ldquo;Einstellungen&rdquo; findest du dazu im
+          Ein Event lässt sich nun in eine Event-Vorlage
+          überführen. Unter &ldquo;Einstellungen&rdquo; findest du dazu im
           Bereich &ldquo;Aktionen&rdquo; den Button &ldquo;Als Vorlage
           speichern&rdquo;.
         </p>
@@ -64,15 +63,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
         <p>
           Die neue Vorlage übernimmt Beschreibung, Titelbild, Sichtbarkeit,
           Aufstellung, Briefing und die Discord-Veröffentlichung des Events.
-          Teilnehmer und die Besetzung der Aufstellung bleiben zurück &ndash;
-          die Vorlage startet unbesetzt.
-        </p>
-
-        <p>
-          Der Button steht auch bei Events zur Verfügung, die schon vorbei sind.
-          Du benötigst dafür die Berechtigung zum Erstellen von Events und musst
-          das Event verwalten dürfen. Die Vorlage gehört anschließend dir und
-          ist damit zunächst nur für dich sichtbar.
+          Teilnehmer und die Besetzung der Aufstellung werden nicht übernommen.
         </p>
       </>
     ),
