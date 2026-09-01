@@ -181,6 +181,7 @@ export const LogAnalyzer = ({ className }: Props) => {
                   null,
                 citizen: ownCitizen,
                 isShared: false,
+                isUploaded: false,
               });
             }
 

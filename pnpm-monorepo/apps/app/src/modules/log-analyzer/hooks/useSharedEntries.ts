@@ -12,7 +12,7 @@ import {
   toEntryType,
   type IEntry,
 } from "../utils/PATTERNS";
-import { MAXIMUM_DAYS_TO_LOAD } from "../utils/sharedEntries";
+import { clampDaysToLoad } from "../utils/sharedEntries";
 
 type SharedEntry =
   RouterOutputs["logAnalyzer"]["getSharedEntries"]["entries"][number];
@@ -37,6 +37,7 @@ const toEntry = (row: SharedEntry, isNew: boolean): IEntry | null => {
     message: PATTERNS[type].renderMessage?.(groups) ?? null,
     citizen: row.createdBy,
     isShared: true,
+    isUploaded: false,
   };
 };
 
@@ -78,7 +79,7 @@ export const useSharedEntries = () => {
 
     try {
       const data = await utils.logAnalyzer.getSharedEntries.fetch({
-        daysToLoad: Math.min(Math.max(daysToLoad, 0), MAXIMUM_DAYS_TO_LOAD),
+        daysToLoad: clampDaysToLoad(daysToLoad),
         cursorId: cursorRef.current,
       });
 

@@ -1,5 +1,8 @@
 import { authorize } from "@/modules/auth/server";
-import { MAXIMUM_DAYS_TO_LOAD } from "@/modules/log-analyzer/utils/sharedEntries";
+import {
+  eventAtWindow,
+  MAXIMUM_DAYS_TO_LOAD,
+} from "@/modules/log-analyzer/utils/sharedEntries";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -10,8 +13,6 @@ import { protectedProcedure, toTrpcError } from "../../trpc";
  * which were shared last, then the cursor keeps them up to date.
  */
 const MAXIMUM_ENTRIES_PER_REQUEST = 500;
-
-const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
 /**
  * The log entries other citizens shared. The cursor moves along the creation
@@ -40,16 +41,7 @@ export const getSharedEntries = protectedProcedure
 
       const fetchEntries = withTrace("getSharedLogAnalyzerEntries", () =>
         ctx.prisma.logAnalyzerEntry.findMany({
-          where:
-            input.daysToLoad > 0
-              ? {
-                  eventAt: {
-                    gte: new Date(
-                      Date.now() - input.daysToLoad * MILLISECONDS_PER_DAY,
-                    ),
-                  },
-                }
-              : undefined,
+          where: { eventAt: eventAtWindow(input.daysToLoad) },
           /**
            * The id breaks the tie of two entries of the same moment, so the
            * cursor cannot step over one of them.

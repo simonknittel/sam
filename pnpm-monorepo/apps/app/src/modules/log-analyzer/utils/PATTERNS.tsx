@@ -39,6 +39,12 @@ export interface IEntry {
   readonly citizen: Pick<Entity, "id" | "handle"> | null;
   /** True when another citizen shared the entry instead of the local parser. */
   readonly isShared: boolean;
+  /**
+   * True once the entry reached the server, whether this visit shared it or
+   * an earlier one did. The upload learns the difference from the hashes the
+   * server already holds.
+   */
+  readonly isUploaded: boolean;
 }
 
 const shardRegex = /^pub_(?<region>[a-z0-9]+)_\w+_(?<number>\d+)$/m;
@@ -196,25 +202,27 @@ const ENTRY_TYPES_BY_VALUE = new Map<string, EntryType>(
 export const toEntryType = (value: string) => ENTRY_TYPES_BY_VALUE.get(value);
 
 /**
+ * The expressions of `PATTERNS` without the global flag and thus without a
+ * `lastIndex`, so a single match never moves the state of a shared
+ * expression. Compiled once: `matchEntryLine` runs for every shared entry of
+ * a response.
+ */
+const SINGLE_LINE_REGEXES = Object.fromEntries(
+  Object.values(EntryType).map((type) => {
+    const { regex } = PATTERNS[type];
+    return [type, new RegExp(regex.source, regex.flags.replaceAll("g", ""))];
+  }),
+) as Record<EntryType, RegExp>;
+
+/**
  * Matches one single log line against the pattern of the given type and gives
  * back its capture groups. Returns null when the line is not of that type.
- *
- * The expressions carry the global flag and thus a `lastIndex`. This function
- * uses a copy without that flag, so a single match never moves the state of a
- * shared expression.
  */
 export const matchEntryLine = (
   type: EntryType,
   rawLine: string,
-): Record<string, string> | null => {
-  const { regex } = PATTERNS[type];
-  const singleLineRegex = new RegExp(
-    regex.source,
-    regex.flags.replaceAll("g", ""),
-  );
-
-  return singleLineRegex.exec(rawLine)?.groups ?? null;
-};
+): Record<string, string> | null =>
+  SINGLE_LINE_REGEXES[type].exec(rawLine)?.groups ?? null;
 
 /**
  * Identifies one entry in the entries map. The same line of the same type is

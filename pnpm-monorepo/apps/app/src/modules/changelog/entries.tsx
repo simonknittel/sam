@@ -48,10 +48,9 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     key: "2026-09-01-log-analyzer-teilen",
     date: "2026-09-01",
-    title: "Log Analyzer: Einträge teilen",
+    title: "Log Analyzer: Einträge mit anderen teilen",
     tags: ["Log Analyzer", "Neu"],
     isTracked: true,
-    requiresAuth: { resource: "logAnalyzer", action: "read" },
     body: () => (
       <>
         <p>
@@ -61,20 +60,17 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
         </p>
 
         <p>
-          Beim Teilen werden ausschließlich die erkannten Log-Zeilen der von dir
-          ausgewählten Ereignis-Typen auf den Server hochgeladen. Deine
-          Log-Dateien selbst verlassen deinen Browser nicht. Geteilte Einträge
-          sind für alle Citizens mit Zugriff auf den Log Analyzer sichtbar und
-          können nicht wieder entfernt werden &ndash; das Deaktivieren stoppt
-          nur weitere Uploads.
+          Beim Teilen werden die erkannten Events der von dir ausgewählten Typen
+          auf den Server hochgeladen. Die restlichen Events in deinen Logs
+          verlassen deinen Computer nicht. Geteilte Einträge sind für andere mit
+          Zugriff auf den Log Analyzer sichtbar. Das Deaktivieren stoppt weitere
+          Uploads.
         </p>
 
         <p>
           Mit aktivierter Anzeige siehst du die Einträge anderer Citizens
-          zusammen mit deinen eigenen in einer gemeinsamen Historie, auch ohne
-          einen ausgewählten Ordner. Die neue Spalte &bdquo;Citizen&ldquo;
-          zeigt, von wem ein Eintrag stammt, und über &bdquo;Citizens&ldquo;
-          kannst du die Tabelle auf einzelne Citizens einschränken.
+          zusammen mit deinen eigenen in einer gemeinsamen Historie. Die Spalte
+          &bdquo;Reporter&ldquo; zeigt, von wem ein Eintrag stammt.
         </p>
       </>
     ),

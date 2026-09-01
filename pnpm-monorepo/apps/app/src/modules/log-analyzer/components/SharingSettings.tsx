@@ -48,8 +48,8 @@ export const SharingSettings = ({ className }: Props) => {
 
       <p className="text-sm text-white/60">
         {hasLinkedCitizen
-          ? "Die erkannten Log-Zeilen der ausgewählten Typen werden auf den Server hochgeladen und sind für alle Citizens mit Zugriff auf den Log Analyzer sichtbar. Geteilte Einträge können nicht wieder entfernt werden. Das Deaktivieren stoppt nur weitere Uploads."
-          : "Zum Teilen muss dein Account mit einem Citizen verknüpft sein."}
+          ? "Die unten aktivierten Events werden auf den Server hochgeladen und sind für andere sichtbar."
+          : "Zum Teilen muss dein Account mit einem Spynet-Citizen verknüpft sein."}
       </p>
 
       <div className="flex flex-col gap-1 border-t border-white/20 pt-2">
@@ -64,6 +64,7 @@ export const SharingSettings = ({ className }: Props) => {
 
       <div className="border-t border-white/20 pt-2">
         <YesNoCheckbox
+          className="w-full"
           yesLabel={
             <span className="text-sm">Einträge anderer Citizens anzeigen</span>
           }

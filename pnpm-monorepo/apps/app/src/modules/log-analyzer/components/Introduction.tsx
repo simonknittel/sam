@@ -12,7 +12,7 @@ export const Introduction = ({ className }: Props) => {
       <div className="bg-secondary rounded-primary p-4">
         <RichText>
           <p>
-            Der Log Analyzer wertet die Game Logs von Star Citizen aus um
+            Der Log Analyzer wertet die Game Logs von Star Citizen aus, um
             wichtige Ereignisse zu erkennen.
           </p>
 
@@ -69,12 +69,11 @@ export const Introduction = ({ className }: Props) => {
 
           <p>
             Über <span className="font-mono uppercase">Teilen</span> kannst du
-            das Teilen aktivieren. Dann werden die erkannten Log-Zeilen der von
-            dir ausgewählten Typen auf den Server hochgeladen und sind für alle
-            Citizens mit Zugriff auf den Log Analyzer sichtbar. Geteilte
-            Einträge können nicht wieder entfernt werden. Ebenfalls über{" "}
+            das Teilen aktivieren. Dann werden die erkannten Events der von dir
+            ausgewählten Typen auf den Server hochgeladen und sind für andere
+            mit Zugriff auf den Log Analyzer sichtbar. Ebenfalls über{" "}
             <span className="font-mono uppercase">Teilen</span> kannst du dir
-            die Einträge anderer Citizens anzeigen lassen.
+            die Einträge anderer anzeigen lassen.
           </p>
 
           <p>

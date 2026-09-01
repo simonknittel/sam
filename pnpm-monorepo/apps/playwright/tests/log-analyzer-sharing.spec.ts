@@ -123,6 +123,25 @@ const selectFolder = (page: Page) =>
 const refresh = (page: Page) =>
   page.getByRole("button", { name: "Aktualisieren" }).click();
 
+/**
+ * Collects the uploads the page sends from now on. A server action posts to
+ * the address of the page it runs on, and the upload is the only action this
+ * page sends by itself, thus such a request stands for a share.
+ *
+ * The listener records instead of racing a timeout, so the assertion holds no
+ * matter how long the steps in between take.
+ */
+const recordUploads = (page: Page) => {
+  const uploads: string[] = [];
+
+  page.on("request", (request) => {
+    if (request.method() === "POST" && request.url().includes(PAGE_PATH))
+      uploads.push(request.url());
+  });
+
+  return uploads;
+};
+
 test("shared entries mix into the table with a citizen column and a citizen filter", async ({
   page,
   prisma,
@@ -264,22 +283,17 @@ test("sharing uploads the matched entries of the selected types exactly once", a
     ]);
   await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 3);
 
-  /**
-   * A second cycle finds nothing new, thus it sends nothing. Server actions
-   * post to the address of the page they run on.
-   */
-  const NO_UPLOAD_WINDOW_MS = 3_000;
-  const uploadRequest = page
-    .waitForRequest(
-      (request) =>
-        request.method() === "POST" && request.url().includes(PAGE_PATH),
-      { timeout: NO_UPLOAD_WINDOW_MS },
-    )
-    .then(() => true)
-    .catch(() => false);
+  /** A second cycle finds nothing new, thus it sends nothing */
+  const secondCycleUploads = recordUploads(page);
 
   await refresh(page);
-  expect(await uploadRequest).toBe(false);
+  await expect
+    .poll(sharedTypes, { timeout: ACTION_FEEDBACK_TIMEOUT })
+    .toEqual([
+      LogAnalyzerEntryType.BlueprintReceivedNotification,
+      LogAnalyzerEntryType.Disconnection,
+    ]);
+  expect(secondCycleUploads).toEqual([]);
 
   /** Turning a type on shares the entries of that type which are parsed */
   await openSharingPopover(page);
@@ -298,19 +312,24 @@ test("sharing uploads the matched entries of the selected types exactly once", a
     .toEqual(allThreeTypes);
 
   /**
-   * The set of sent entries lives in memory, thus a reload sends the whole
-   * window one more time. The unique index of the database absorbs it and no
-   * entry appears twice.
+   * A reload empties the set of sent entries, but the upload asks the server
+   * for the hashes it already holds. None of the window goes out a second
+   * time, and every row carries its badge again.
    */
   await page.reload();
+  const reloadUploads = recordUploads(page);
   await selectFolder(page);
 
   await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 3, {
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
+  await expect(
+    rowOf(page, "Shard-Beitritt").getByText("Hochgeladen"),
+  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
   await expect
     .poll(sharedTypes, { timeout: ACTION_FEEDBACK_TIMEOUT })
     .toEqual(allThreeTypes);
+  expect(reloadUploads).toEqual([]);
 });
 
 test("a user without a linked citizen cannot share", async ({
@@ -351,7 +370,7 @@ test("a user without a linked citizen cannot share", async ({
   ).toBeDisabled();
   await expect(
     sharingPopover(page).getByText(
-      "Zum Teilen muss dein Account mit einem Citizen verknüpft sein.",
+      "Zum Teilen muss dein Account mit einem Spynet-Citizen verknüpft sein.",
     ),
   ).toBeVisible();
   await closePopover(page);

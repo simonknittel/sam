@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { createEntryHash } from "./createEntryHash";
+import { createEntryHash, ENTRY_HASH_PATTERN } from "./createEntryHash";
 import { EntryType, toEntryType } from "./PATTERNS";
 import {
   MAXIMUM_RAW_LINE_LENGTH,
@@ -27,16 +27,16 @@ const SAMPLE_LINES: Record<EntryType, string> = {
 };
 
 describe("validateUploadEntries", () => {
-  test.each(Object.values(EntryType))("accepts a %s line", (type) => {
-    const entries = validateUploadEntries([
+  test.each(Object.values(EntryType))("accepts a %s line", async (type) => {
+    const entries = await validateUploadEntries([
       { type, rawLine: SAMPLE_LINES[type] },
     ]);
 
     expect(entries).toHaveLength(1);
   });
 
-  test("rejects the whole request when a line is of another type", () => {
-    expect(
+  test("rejects the whole request when a line is of another type", async () => {
+    await expect(
       validateUploadEntries([
         {
           type: EntryType.JoinPu,
@@ -47,22 +47,22 @@ describe("validateUploadEntries", () => {
           rawLine: SAMPLE_LINES[EntryType.JoinPu],
         },
       ]),
-    ).toBeNull();
+    ).resolves.toBeNull();
   });
 
-  test("rejects a line the app cannot read a time from", () => {
-    expect(
+  test("rejects a line the app cannot read a time from", async () => {
+    await expect(
       validateUploadEntries([
         {
           type: EntryType.OwnDeath,
           rawLine: "<not-a-date> <[ActorState] Dead>",
         },
       ]),
-    ).toBeNull();
+    ).resolves.toBeNull();
   });
 
-  test("takes the time of the event from the line", () => {
-    const entries = validateUploadEntries([
+  test("takes the time of the event from the line", async () => {
+    const entries = await validateUploadEntries([
       {
         type: EntryType.JoinPu,
         rawLine: SAMPLE_LINES[EntryType.JoinPu],
@@ -72,8 +72,8 @@ describe("validateUploadEntries", () => {
     expect(entries?.[0]?.eventAt).toEqual(new Date("2025-06-22T09:59:12.293Z"));
   });
 
-  test("keeps the type of the entry", () => {
-    const entries = validateUploadEntries([
+  test("keeps the type of the entry", async () => {
+    const entries = await validateUploadEntries([
       {
         type: EntryType.Disconnection,
         rawLine: SAMPLE_LINES[EntryType.Disconnection],
@@ -95,20 +95,29 @@ describe("toEntryType", () => {
 });
 
 describe("createEntryHash", () => {
-  test("gives the same hash for the same entry", () => {
+  test("gives the same hash for the same entry", async () => {
     const rawLine = SAMPLE_LINES[EntryType.JoinPu];
 
-    expect(createEntryHash(EntryType.JoinPu, rawLine)).toBe(
-      createEntryHash(EntryType.JoinPu, rawLine),
+    await expect(createEntryHash(EntryType.JoinPu, rawLine)).resolves.toBe(
+      await createEntryHash(EntryType.JoinPu, rawLine),
     );
   });
 
-  test("gives another hash for another type of the same line", () => {
+  test("gives another hash for another type of the same line", async () => {
     const rawLine = SAMPLE_LINES[EntryType.JoinPu];
 
-    expect(createEntryHash(EntryType.JoinPu, rawLine)).not.toBe(
-      createEntryHash(EntryType.OwnDeath, rawLine),
+    await expect(createEntryHash(EntryType.JoinPu, rawLine)).resolves.not.toBe(
+      await createEntryHash(EntryType.OwnDeath, rawLine),
     );
+  });
+
+  test("matches the shape the dedup query accepts", async () => {
+    const hash = await createEntryHash(
+      EntryType.JoinPu,
+      SAMPLE_LINES[EntryType.JoinPu],
+    );
+
+    expect(hash).toMatch(ENTRY_HASH_PATTERN);
   });
 });
 

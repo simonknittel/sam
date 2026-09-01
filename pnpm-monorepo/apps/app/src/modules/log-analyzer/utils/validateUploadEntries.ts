@@ -15,9 +15,9 @@ export interface ValidatedUploadEntry {
  * match its type or carries a time the app cannot read — the whole request is
  * then refused, so malformed input never reaches the database.
  */
-export const validateUploadEntries = (
+export const validateUploadEntries = async (
   entries: readonly UploadEntry[],
-): ValidatedUploadEntry[] | null => {
+): Promise<ValidatedUploadEntry[] | null> => {
   const validatedEntries: ValidatedUploadEntry[] = [];
 
   for (const { type, rawLine } of entries) {
@@ -31,7 +31,7 @@ export const validateUploadEntries = (
       type,
       rawLine,
       eventAt,
-      hash: createEntryHash(type, rawLine),
+      hash: await createEntryHash(type, rawLine),
     });
   }
 

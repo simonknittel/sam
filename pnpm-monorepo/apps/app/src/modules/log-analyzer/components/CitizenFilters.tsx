@@ -4,6 +4,7 @@ import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
 import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
 import type { Entity } from "@sam-monorepo/database/browser";
+import { useMemo } from "react";
 import { FaUsers } from "react-icons/fa6";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 
@@ -20,14 +21,17 @@ export const CitizenFilters = ({ className }: Props) => {
   const { entries, citizenFilters, setCitizenFilters } =
     useLogAnalyzerContext();
 
-  const citizens = new Map<Entity["id"], Pick<Entity, "id" | "handle">>();
-  for (const entry of entries.values()) {
-    if (entry.citizen) citizens.set(entry.citizen.id, entry.citizen);
-  }
+  /** The walk over all entries runs once per change, not once per render */
+  const sortedCitizens = useMemo(() => {
+    const citizens = new Map<Entity["id"], Pick<Entity, "id" | "handle">>();
+    for (const entry of entries.values()) {
+      if (entry.citizen) citizens.set(entry.citizen.id, entry.citizen);
+    }
 
-  const sortedCitizens = Array.from(citizens.values()).toSorted(
-    (first, second) => (first.handle ?? "").localeCompare(second.handle ?? ""),
-  );
+    return Array.from(citizens.values()).toSorted((first, second) =>
+      (first.handle ?? "").localeCompare(second.handle ?? ""),
+    );
+  }, [entries]);
 
   const handleChange = (citizenId: Entity["id"], isChecked: boolean) => {
     setCitizenFilters((previous) =>
