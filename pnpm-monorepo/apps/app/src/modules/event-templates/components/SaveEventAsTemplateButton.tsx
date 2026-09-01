@@ -65,7 +65,7 @@ const SaveEventAsTemplateForm = ({ eventId, name, onSuccess }: FormProps) => {
       <input type="hidden" name="sourceEventId" value={eventId} />
 
       <p className="mb-4 text-sm text-neutral-400">
-        {`Die Vorlage übernimmt Beschreibung, Titelbild, Sichtbarkeit, Aufstellung und Briefing von „${name}“, aber weder Teilnehmer noch Besetzung der Aufstellung. Sie gehört dir und ist damit zunächst nur für dich sichtbar.`}
+        {`Die Vorlage übernimmt Beschreibung, Titelbild, Sichtbarkeit, Discord-Einstellungen, Aufstellung und Briefing von „${name}“, aber weder Teilnehmer noch Besetzung der Aufstellung. Sie gehört dir und ist damit zunächst nur für dich sichtbar.`}
       </p>
 
       <TextInput

@@ -5,7 +5,11 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { EVENT_MANAGE_GUARD_SELECT } from "@/modules/events/queries/eventManageGuardSelect";
-import { clonePositions } from "@/modules/events/utils/clonePositions";
+import {
+  CLONABLE_POSITION_SELECT,
+  clonePositions,
+} from "@/modules/events/utils/clonePositions";
+import { getDefaultExternalLocation } from "@/modules/events/utils/discordPublishing";
 import {
   eventContainerColumns,
   toEventContainer,
@@ -13,14 +17,16 @@ import {
 } from "@/modules/events/utils/eventContainer";
 import { isAllowedToManageEvent } from "@/modules/events/utils/isAllowedToManageEvent";
 import { buildPositionTree } from "@/modules/events/utils/positionTree";
-import { copyUpload } from "@/modules/uploads/utils/copyUpload";
+import {
+  COPYABLE_UPLOAD_SELECT,
+  copyUpload,
+} from "@/modules/uploads/utils/copyUpload";
 import { getEventWikiContext } from "@/modules/wiki/queries/getEventWikiContext";
 import { copyBriefingTree } from "@/modules/wiki/utils/copyBriefingTree";
 import {
   EventDiscordPublishTarget,
   EventSource,
   type Event,
-  type Prisma,
 } from "@sam-monorepo/database/client";
 import { buildBriefingRootPageSeed } from "@sam-monorepo/domain";
 import { revalidatePath } from "next/cache";
@@ -49,7 +55,10 @@ const schema = z.object({
  * (see migration publish_events_to_discord).
  */
 const toDiscordPublishPrefill = (
-  event: Pick<Event, "discordPublishedChannelId" | "discordPublishedLocation">,
+  event: Pick<
+    Event,
+    "id" | "discordPublishedChannelId" | "discordPublishedLocation"
+  >,
 ) => {
   if (event.discordPublishedChannelId)
     return {
@@ -62,7 +71,17 @@ const toDiscordPublishPrefill = (
     return {
       discordPublishTarget: EventDiscordPublishTarget.EXTERNAL,
       discordPublishChannelId: null,
-      discordPublishLocation: event.discordPublishedLocation,
+      /**
+       * A manager who left the location empty published to the event's own
+       * URL, which `resolveDiscordPublishTarget` filled in and stored. Kept
+       * verbatim, every event created from the template would point back at
+       * this one — NULL is how the template says "the created event's own
+       * URL" (see EventTemplate.discordPublishLocation).
+       */
+      discordPublishLocation:
+        event.discordPublishedLocation === getDefaultExternalLocation(event.id)
+          ? null
+          : event.discordPublishedLocation,
     };
 
   return {
@@ -71,21 +90,6 @@ const toDiscordPublishPrefill = (
     discordPublishLocation: null,
   };
 };
-
-const SOURCE_POSITION_SELECT = {
-  id: true,
-  parentPositionId: true,
-  name: true,
-  description: true,
-  fontSize: true,
-  backgroundColor: true,
-  textColor: true,
-  requiredRoles: { select: { id: true } },
-  requiredVariants: {
-    select: { variantId: true, order: true },
-    orderBy: { order: "asc" },
-  },
-} as const satisfies Prisma.EventPositionSelect;
 
 /**
  * Turns a past or upcoming app event into a personal template of the acting
@@ -144,20 +148,13 @@ export const createEventTemplateFromEvent = createAuthenticatedAction(
       prisma.eventPosition.findMany({
         where: eventContainerColumns(sourceContainer),
         orderBy: { order: "asc" },
-        select: SOURCE_POSITION_SELECT,
+        select: CLONABLE_POSITION_SELECT,
       }),
       getEventWikiContext(sourceContainer),
       sourceEvent.coverImageId
         ? prisma.upload.findUnique({
             where: { id: sourceEvent.coverImageId },
-            select: {
-              id: true,
-              fileName: true,
-              mimeType: true,
-              size: true,
-              width: true,
-              height: true,
-            },
+            select: COPYABLE_UPLOAD_SELECT,
           })
         : Promise.resolve(null),
     ]);
