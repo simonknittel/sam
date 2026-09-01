@@ -486,6 +486,47 @@ export const createAppEvent = (
         },
       },
     },
+    include: { wikiPages: true },
+  });
+
+interface CreateEventBriefingPageOptions {
+  readonly eventId: string;
+  /** Briefing pages always hang below the root page */
+  readonly parentId: string;
+  readonly title: string;
+  readonly readScope?: WikiPageEventScope;
+  /** Required by the POSITION read scope, ignored by the other scopes */
+  readonly readScopePositionId?: string;
+  readonly editScope?: WikiPageEventScope;
+}
+
+/** A child page of an event's briefing, as the create action writes it. */
+export const createEventBriefingPage = (
+  prisma: PrismaClient,
+  {
+    eventId,
+    parentId,
+    title,
+    readScope = WikiPageEventScope.INHERIT,
+    readScopePositionId,
+    editScope = WikiPageEventScope.INHERIT,
+  }: CreateEventBriefingPageOptions,
+) =>
+  prisma.wikiPage.create({
+    data: {
+      namespace: WikiPageNamespace.EVENT,
+      eventId,
+      parentId,
+      title,
+      // Cosmetic only — pages are resolved by id
+      slug: title
+        .toLowerCase()
+        .replaceAll(/[^a-z0-9]+/g, "-")
+        .replaceAll(/^-|-$/g, ""),
+      eventReadScope: readScope,
+      eventReadScopePositionId: readScopePositionId,
+      eventEditScope: editScope,
+    },
   });
 
 interface CreateParticipantOptions {
@@ -865,6 +906,7 @@ export {
   FlowRoleAccessType,
   WikiPageAccessType,
   WikiPageEditability,
+  WikiPageEventScope,
   WikiPageSidebarMode,
   WikiPageVisibility,
 };
