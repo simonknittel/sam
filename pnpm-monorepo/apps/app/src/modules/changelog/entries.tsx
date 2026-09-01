@@ -46,6 +46,39 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-09-01-event-als-vorlage-speichern",
+    date: "2026-09-01",
+    title: "Event als Vorlage speichern",
+    tags: ["Events", "Neu"],
+    isTracked: true,
+    requiresAuth: { resource: "event", action: "create" },
+    body: () => (
+      <>
+        <p>
+          Ein gelungenes Event lässt sich ab sofort in eine Event-Vorlage
+          zurückverwandeln: Unter &ldquo;Einstellungen&rdquo; findest du dazu im
+          Bereich &ldquo;Aktionen&rdquo; den Button &ldquo;Als Vorlage
+          speichern&rdquo;.
+        </p>
+
+        <p>
+          Die neue Vorlage übernimmt Beschreibung, Titelbild, Sichtbarkeit,
+          Aufstellung, Briefing und die Discord-Veröffentlichung des Events.
+          Teilnehmer und die Besetzung der Aufstellung bleiben zurück &ndash;
+          die Vorlage startet unbesetzt.
+        </p>
+
+        <p>
+          Der Button steht auch bei Events zur Verfügung, die schon vorbei sind.
+          Du benötigst dafür die Berechtigung zum Erstellen von Events und musst
+          das Event verwalten dürfen. Die Vorlage gehört anschließend dir und
+          ist damit zunächst nur für dich sichtbar.
+        </p>
+      </>
+    ),
+  },
+
+  {
     key: "2026-08-27-wiki-blockmenue-per-klick",
     date: "2026-08-27",
     title: "Wiki: Menüs öffnen per Klick",
