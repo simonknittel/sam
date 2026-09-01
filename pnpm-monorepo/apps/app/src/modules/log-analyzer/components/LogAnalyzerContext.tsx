@@ -36,9 +36,9 @@ interface Context {
     key: keyof Context["entryFilters"],
     value: boolean,
   ) => void;
-  /** The citizens whose entries the table shows. Empty shows all of them. */
-  readonly citizenFilters: string[];
-  readonly setCitizenFilters: Dispatch<SetStateAction<string[]>>;
+  /** The citizens whose entries the table hides. Empty shows all of them. */
+  readonly hiddenCitizenIds: string[];
+  readonly setHiddenCitizenIds: Dispatch<SetStateAction<string[]>>;
   readonly entryFilterFn: (entry: IEntry) => boolean;
   /** Uploads the matched entries of the selected types to the server. */
   readonly isSharingEnabled: boolean;
@@ -72,8 +72,8 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
     ) as Record<EntryType, boolean>,
   );
 
-  const [citizenFilters, setCitizenFilters] = useLocalStorage<string[]>(
-    "log_analyzer_citizen_filters",
+  const [hiddenCitizenIds, setHiddenCitizenIds] = useLocalStorage<string[]>(
+    "log_analyzer_hidden_citizens",
     [],
   );
 
@@ -159,14 +159,12 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
       if (entryFilters[entry.type]) return false;
       /**
        * Without the sharing there is no citizen filter UI, thus a stored
-       * selection must not hide the local entries.
+       * list of hidden citizens must not hide the local entries.
        */
-      if (!isSharingAvailable || citizenFilters.length <= 0) return true;
-      return Boolean(
-        entry.citizen && citizenFilters.includes(entry.citizen.id),
-      );
+      if (!isSharingAvailable || !entry.citizen) return true;
+      return !hiddenCitizenIds.includes(entry.citizen.id);
     },
-    [entryFilters, citizenFilters, isSharingAvailable],
+    [entryFilters, hiddenCitizenIds, isSharingAvailable],
   );
 
   /** Prevent unnecessary rerenders */
@@ -182,8 +180,8 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
       daysToLoad,
       entryFilters,
       setEntryFilters,
-      citizenFilters,
-      setCitizenFilters,
+      hiddenCitizenIds,
+      setHiddenCitizenIds,
       entryFilterFn,
       isSharingEnabled,
       setIsSharingEnabled,
@@ -205,8 +203,8 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
       daysToLoad,
       entryFilters,
       setEntryFilters,
-      citizenFilters,
-      setCitizenFilters,
+      hiddenCitizenIds,
+      setHiddenCitizenIds,
       entryFilterFn,
       isSharingEnabled,
       setIsSharingEnabled,

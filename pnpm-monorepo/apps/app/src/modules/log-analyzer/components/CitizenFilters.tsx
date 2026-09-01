@@ -2,10 +2,9 @@
 
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
-import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
 import type { Entity } from "@sam-monorepo/database/browser";
+import clsx from "clsx";
 import { useMemo } from "react";
-import { FaUsers } from "react-icons/fa6";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 
 interface Props {
@@ -13,12 +12,13 @@ interface Props {
 }
 
 /**
- * Narrows the table down to single citizens. The list holds the citizens of
- * the loaded entries, thus it needs no permission to read citizens and no
- * request of its own. No selection shows the entries of everybody.
+ * Hides the entries of single citizens. The list holds the citizens of the
+ * loaded entries, thus it needs no permission to read citizens and no
+ * request of its own. Everybody starts checked — like the type filter, an
+ * unchecked box hides its entries.
  */
 export const CitizenFilters = ({ className }: Props) => {
-  const { entries, citizenFilters, setCitizenFilters } =
+  const { entries, hiddenCitizenIds, setHiddenCitizenIds } =
     useLogAnalyzerContext();
 
   /** The walk over all entries runs once per change, not once per render */
@@ -34,28 +34,17 @@ export const CitizenFilters = ({ className }: Props) => {
   }, [entries]);
 
   const handleChange = (citizenId: Entity["id"], isChecked: boolean) => {
-    setCitizenFilters((previous) =>
+    setHiddenCitizenIds((previous) =>
       isChecked
-        ? [...previous, citizenId]
-        : previous.filter((id) => id !== citizenId),
+        ? previous.filter((id) => id !== citizenId)
+        : [...previous, citizenId],
     );
   };
 
   return (
-    <PopoverBaseUI
-      title="Citizens"
-      trigger={
-        <>
-          <FaUsers />
-          Citizens
-          {citizenFilters.length > 0 && ` (${citizenFilters.length})`}
-        </>
-      }
-      triggerRender={<Button2 variant={Button2Variant.Secondary} />}
-      triggerClassName={className}
-      childrenClassName="flex flex-col gap-1 w-80"
-      openOnHover={false}
-    >
+    <div className={clsx("flex flex-col gap-1", className)}>
+      <p className="text-sm text-white/60">Nach Reportern filtern</p>
+
       {sortedCitizens.length > 0 ? (
         sortedCitizens.map((citizen) => {
           const label = (
@@ -70,7 +59,7 @@ export const CitizenFilters = ({ className }: Props) => {
               yesLabel={label}
               noLabel={label}
               labelClassName="text-sm flex-1 min-w-0"
-              checked={citizenFilters.includes(citizen.id)}
+              checked={!hiddenCitizenIds.includes(citizen.id)}
               onChange={(event) =>
                 handleChange(citizen.id, event.target.checked)
               }
@@ -83,18 +72,18 @@ export const CitizenFilters = ({ className }: Props) => {
         </p>
       )}
 
-      {/* A selected citizen can disappear from the list, for example after a
-          reload. Without this the filter could not be undone any more. */}
-      {citizenFilters.length > 0 && (
+      {/* A hidden citizen can disappear from the list, for example after a
+          reload. Without this their entries could not be shown again. */}
+      {hiddenCitizenIds.length > 0 && (
         <Button2
           type="button"
           variant={Button2Variant.Secondary}
-          onClick={() => setCitizenFilters([])}
+          onClick={() => setHiddenCitizenIds([])}
           className="mt-1"
         >
           Alle anzeigen
         </Button2>
       )}
-    </PopoverBaseUI>
+    </div>
   );
 };

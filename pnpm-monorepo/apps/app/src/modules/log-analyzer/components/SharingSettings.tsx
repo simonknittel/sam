@@ -6,6 +6,7 @@ import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
 import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
 import { FaShareNodes } from "react-icons/fa6";
 import { SORTED_ENTRY_TYPES } from "../utils/PATTERNS";
+import { CitizenFilters } from "./CitizenFilters";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 import { SharingEntryTypeCheckbox } from "./SharingEntryTypeCheckbox";
 
@@ -76,6 +77,8 @@ export const SharingSettings = ({ className }: Props) => {
           onChange={(event) => setIsSharedViewEnabled(event.target.checked)}
         />
       </div>
+
+      <CitizenFilters className="border-t border-white/20 pt-2" />
     </PopoverBaseUI>
   );
 };

@@ -5,7 +5,6 @@ import { Tooltip } from "@/modules/common/components/Tooltip";
 import clsx from "clsx";
 import { FaInfoCircle } from "react-icons/fa";
 import { TfiReload } from "react-icons/tfi";
-import { CitizenFilters } from "./CitizenFilters";
 import { EntryFilters } from "./EntryFilters";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 import { OverlayButton } from "./OverlayButton";
@@ -103,15 +102,7 @@ export const Toolbar = ({ className, onRefresh }: Props) => {
 
       <EntryFilters />
 
-      {/* Without the sharing there are no entries of other citizens, thus
-          the citizen filter has nothing to narrow. */}
-      {isSharingAvailable && (
-        <>
-          <CitizenFilters />
-
-          <SharingSettings />
-        </>
-      )}
+      {isSharingAvailable && <SharingSettings />}
     </div>
   );
 };
