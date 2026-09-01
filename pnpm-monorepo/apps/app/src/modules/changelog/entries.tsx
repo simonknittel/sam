@@ -46,6 +46,31 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-09-01-event-manager-aktivitaet",
+    date: "2026-09-01",
+    title: "Events: Managerwechsel in der Aktivität",
+    tags: ["Events", "Änderung"],
+    isTracked: false,
+    requiresAuth: { resource: "event", action: "read" },
+    body: () => (
+      <>
+        <p>
+          Der Reiter &bdquo;Aktivität&ldquo; eines Events zeigt jetzt auch, wer
+          einen Manager hinzugefügt oder entfernt hat &ndash; mit einem Eintrag
+          je Änderung, genau wie bei den Teilnehmern. Über den Typ-Filter lässt
+          sich die Ansicht auf &bdquo;Manager hinzugefügt&ldquo; und
+          &bdquo;Manager entfernt&ldquo; eingrenzen.
+        </p>
+
+        <p>
+          Außerdem klappt die Citizen-Auswahl erst auf, sobald du etwas
+          eintippst. Vorher verdeckte die Liste den Speichern-Button.
+        </p>
+      </>
+    ),
+  },
+
+  {
     key: "2026-08-27-wiki-blockmenue-per-klick",
     date: "2026-08-27",
     title: "Wiki: Menüs öffnen per Klick",
