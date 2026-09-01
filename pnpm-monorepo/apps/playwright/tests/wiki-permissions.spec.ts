@@ -7,6 +7,8 @@ import {
   createRole,
   createWikiPage,
   futureEvent,
+  ONE_DAY_MS,
+  ONE_HOUR_MS,
   wikiDocument,
   WikiPageAccessType,
   WikiPageEditability,
@@ -22,10 +24,28 @@ import {
 import { expect, test } from "../fixtures/test";
 
 /**
- * The read-visibility badge in the metadata line of the page header. The
+ * The read-audience badge in the metadata line of the page header. The
  * trailing space keeps the caption span inside the badge out of the match.
  */
-const visibilityBadge = (page: Page) => page.getByText(/^Sichtbar für: /);
+const audienceBadge = (page: Page) => page.getByText(/^Sichtbar für: /);
+
+/**
+ * The badge as its clickable form. A plain reader gets the text above but
+ * never this.
+ */
+const audienceBadgeButton = (page: Page) =>
+  page.getByRole("button", { name: /^Sichtbar für: / });
+
+const permissionsButton = (page: Page) =>
+  page.getByRole("button", { name: "Berechtigungen bearbeiten" });
+
+/**
+ * Ends the label at a non-word character, so that a broken singular
+ * ("1 Rollen") cannot satisfy an assertion on "1 Rolle". The labels carry
+ * no regular expression syntax, so they go in as they are.
+ */
+const audienceLabel = (label: string) =>
+  new RegExp(`Sichtbar für: ${label}(?!\\w)`);
 
 test("a RESTRICTED page is readable for its role members and invisible to the rest", async ({
   page,
@@ -164,6 +184,7 @@ test("the header badge names who may read the page", async ({
     permissionStrings: ["wiki;manage"],
   });
   const readerRole = await createRole(prisma, { name: "logistik" });
+  const editorRole = await createRole(prisma, { name: "redaktion" });
 
   const publicPage = await createWikiPage(prisma, {
     title: "Handbuch",
@@ -174,6 +195,16 @@ test("the header badge names who may read the page", async ({
     visibility: WikiPageVisibility.RESTRICTED,
     roleAccess: [{ roleId: readerRole.id, type: WikiPageAccessType.READ }],
   });
+  /** Editing implies reading, so the editor role counts as an audience too */
+  const editablePage = await createWikiPage(prisma, {
+    title: "Einsatzjournal",
+    visibility: WikiPageVisibility.RESTRICTED,
+    editability: WikiPageEditability.RESTRICTED,
+    roleAccess: [
+      { roleId: readerRole.id, type: WikiPageAccessType.READ },
+      { roleId: editorRole.id, type: WikiPageAccessType.EDIT },
+    ],
+  });
   const privatePage = await createWikiPage(prisma, {
     title: "Notizen",
     visibility: WikiPageVisibility.RESTRICTED,
@@ -182,16 +213,19 @@ test("the header badge names who may read the page", async ({
   await signIn(manager.user);
 
   await page.goto(`/app/wiki/${publicPage.id}/${publicPage.slug}`);
-  await expect(visibilityBadge(page)).toContainText("Sichtbar für: alle");
+  await expect(audienceBadge(page)).toContainText(audienceLabel("alle"));
 
   await page.goto(
     `/app/wiki/${roleRestrictedPage.id}/${roleRestrictedPage.slug}`,
   );
-  await expect(visibilityBadge(page)).toContainText("Sichtbar für: 1 Rolle");
+  await expect(audienceBadge(page)).toContainText(audienceLabel("1 Rolle"));
+
+  await page.goto(`/app/wiki/${editablePage.id}/${editablePage.slug}`);
+  await expect(audienceBadge(page)).toContainText(audienceLabel("2 Rollen"));
 
   await page.goto(`/app/wiki/${privatePage.id}/${privatePage.slug}`);
-  await expect(visibilityBadge(page)).toContainText(
-    "Sichtbar für: nur Besitzer & Manager",
+  await expect(audienceBadge(page)).toContainText(
+    audienceLabel("nur Besitzer & Manager"),
   );
 });
 
@@ -219,15 +253,14 @@ test("only page managers open the permissions from the badge", async ({
   // A reader sees how wide the audience is, but cannot change it
   await signIn(reader.user);
   await page.goto(href);
-  await expect(visibilityBadge(page)).toContainText("Sichtbar für: 1 Rolle");
-  await expect(
-    page.getByRole("button", { name: /^Sichtbar für: / }),
-  ).toHaveCount(0);
+  await expect(audienceBadge(page)).toHaveText("Sichtbar für: 1 Rolle");
+  await expect(audienceBadgeButton(page)).toHaveCount(0);
+  await expect(permissionsButton(page)).toHaveCount(0);
 
   await switchUser(manager.user);
   await page.goto(href);
   await clickUntilVisible(
-    page.getByRole("button", { name: /^Sichtbar für: / }),
+    audienceBadgeButton(page),
     modal(page, "Berechtigungen"),
   );
 });
@@ -252,7 +285,7 @@ test("a role reading only through wiki;manage is left out of the count", async (
 
   await signIn(manager.user);
   await page.goto(href);
-  await expect(visibilityBadge(page)).toContainText("Sichtbar für: 1 Rolle");
+  await expect(audienceBadge(page)).toContainText(audienceLabel("1 Rolle"));
 
   // The very same role counts as soon as it reads this page in its own right
   await prisma.wikiPageRoleAccess.create({
@@ -263,7 +296,7 @@ test("a role reading only through wiki;manage is left out of the count", async (
     },
   });
   await page.reload();
-  await expect(visibilityBadge(page)).toContainText("Sichtbar für: 2 Rollen");
+  await expect(audienceBadge(page)).toContainText(audienceLabel("2 Rollen"));
 });
 
 test("the briefing badge names the event scope of the page", async ({
@@ -290,6 +323,11 @@ test("the briefing badge names the event scope of the page", async ({
     title: "Ablauf",
     readScope: WikiPageEventScope.PARTICIPANTS,
   });
+  const inheritingPage = await createEventBriefingPage(prisma, {
+    eventId: event.id,
+    parentId: participantsPage.id,
+    title: "Zeitplan",
+  });
   const positionPage = await createEventBriefingPage(prisma, {
     eventId: event.id,
     parentId: rootPage.id,
@@ -301,21 +339,55 @@ test("the briefing badge names the event scope of the page", async ({
   await signIn(manager.user);
 
   await page.goto(`/app/events/${event.id}/briefing`);
-  await expect(visibilityBadge(page)).toContainText(
-    "Sichtbar für: Event-Manager",
+  await expect(audienceBadge(page)).toContainText(
+    audienceLabel("Event-Manager"),
   );
+  await expect(permissionsButton(page)).toBeVisible();
 
   await page.goto(
     `/app/events/${event.id}/briefing/${participantsPage.id}/${participantsPage.slug}`,
   );
-  await expect(visibilityBadge(page)).toContainText(
-    "Sichtbar für: Eventteilnehmer",
+  await expect(audienceBadge(page)).toContainText(
+    audienceLabel("Eventteilnehmer"),
+  );
+
+  /** An inheriting page reports what it inherits, not "Manager" */
+  await page.goto(
+    `/app/events/${event.id}/briefing/${inheritingPage.id}/${inheritingPage.slug}`,
+  );
+  await expect(audienceBadge(page)).toContainText(
+    audienceLabel("Eventteilnehmer"),
   );
 
   await page.goto(
     `/app/events/${event.id}/briefing/${positionPage.id}/${positionPage.slug}`,
   );
-  await expect(visibilityBadge(page)).toContainText(
-    "Sichtbar für: Aufstellung „Marine“",
+  await expect(audienceBadge(page)).toContainText(
+    audienceLabel("Aufstellung „Marine“"),
   );
+});
+
+test("a finished event leaves its managers the badge without the dialog", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createCitizen(prisma, {
+    handle: "rueckblick-leiter",
+    permissionStrings: ["event;read"],
+  });
+  const event = await createAppEvent(prisma, {
+    name: "Operation Rückblick",
+    createdById: manager.entity.id,
+    startTime: new Date(Date.now() - ONE_DAY_MS),
+    endTime: new Date(Date.now() - ONE_DAY_MS + 2 * ONE_HOUR_MS),
+  });
+
+  await signIn(manager.user);
+  await page.goto(`/app/events/${event.id}/briefing`);
+
+  // The freeze takes the dialog away, so both of its triggers go with it
+  await expect(audienceBadge(page)).toHaveText("Sichtbar für: Event-Manager");
+  await expect(audienceBadgeButton(page)).toHaveCount(0);
+  await expect(permissionsButton(page)).toHaveCount(0);
 });
