@@ -9,4 +9,5 @@
 6. Apply the migration to the other developer databases: `pnpm run migrate:dev`
 7. Apply the migration to the production database with one of these options:
    - ~~Run the "Production database migrations" GitHub workflow~~ (currently disabled)
-   - `bwu && bw sync && DATABASE_URL=(bw get password "SAM (Prod) | PostgreSQL") pnpm exec prisma migrate deploy; bw lock`
+   - fish: `bwu && bw sync && DATABASE_URL=(bw get password "SAM (Prod) | PostgreSQL") pnpm exec prisma migrate deploy; bw lock`
+   - bash: `bwu && bw sync && DATABASE_URL=$(bw get password "SAM (Prod) | PostgreSQL") pnpm exec prisma migrate deploy; bw lock`
