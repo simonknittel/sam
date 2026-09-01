@@ -2,8 +2,10 @@ import { env } from "@/env";
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import Note from "@/modules/common/components/Note";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
+import { Tile } from "@/modules/common/components/Tile";
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
 import { getPublishableGuildChannels } from "@/modules/discord/utils/getPublishableGuildChannels";
+import { SaveEventAsTemplateButton } from "@/modules/event-templates/components/SaveEventAsTemplateButton";
 import { EventDiscordSettings } from "@/modules/events/components/EventDiscordSettings";
 import { EventSettings } from "@/modules/events/components/EventSettings";
 import { getEventById } from "@/modules/events/queries/getEventById";
@@ -43,18 +45,33 @@ export default async function Page({
   if (event.source !== EventSource.APP) notFound();
   if (!(await isAllowedToManageEvent(event))) forbidden();
 
+  /**
+   * Also offered for events that are over — "that one went well, save it as
+   * a template" is the main reason to reach for it.
+   */
+  const actionsTile = (await authentication.authorize("event", "create")) ? (
+    <Tile heading="Aktionen">
+      <SaveEventAsTemplateButton eventId={event.id} name={event.name} />
+    </Tile>
+  ) : null;
+
   if (!isEventUpdatable(event)) {
     return (
-      <Note
-        type="info"
-        message="Das Event ist bereits vorbei und kann nicht mehr bearbeitet werden."
-      />
+      <div className="flex flex-col gap-2">
+        <Note
+          type="info"
+          message="Das Event ist bereits vorbei und kann nicht mehr bearbeitet werden."
+        />
+
+        {actionsTile}
+      </div>
     );
   }
 
   return (
     <SuspenseWithErrorBoundaryTile>
       <EventSettings
+        actionsTile={actionsTile}
         event={{
           id: event.id,
           name: event.name,
