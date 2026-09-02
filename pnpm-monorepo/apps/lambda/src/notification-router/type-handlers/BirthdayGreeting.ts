@@ -19,10 +19,6 @@ const WORDINGS = [
     body: "Wir wünschen dir alles Gute und ein weiteres Jahr voller sanfter Landungen.",
   },
   {
-    title: "Happy Birthday!",
-    body: "Heute wird gefeiert. Wir hoffen, du hast einen großartigen Tag.",
-  },
-  {
     title: "Alles Gute!",
     body: "Lass dich feiern. Das Verse kommt heute auch mal ohne dich aus.",
   },
@@ -31,12 +27,68 @@ const WORDINGS = [
     body: "Zum Geburtstag wünschen wir dir nur das Beste und immer volle Tanks.",
   },
   {
-    title: "Zeit zu feiern!",
-    body: "Heute ist dein Tag. Wir wünschen dir viel Freude und einen entspannten Geburtstag.",
-  },
-  {
     title: "Die Crew gratuliert!",
     body: "Alles Gute zum Geburtstag. Schön, dass du an Bord bist.",
+  },
+  {
+    title: "o7, Citizen!",
+    body: "Alles Gute zum Geburtstag. Die ganze Org salutiert dir heute.",
+  },
+  {
+    title: "Auf dein neues Jahr!",
+    body: "Möge dein Quantum-Antrieb immer kalibriert und dein Kurs immer frei sein.",
+  },
+  {
+    title: "Feiertag im Stanton-System!",
+    body: "Heute ist dein Ehrentag. Lass es dir gut gehen, Citizen.",
+  },
+  {
+    title: "Herzlichen Glückwunsch!",
+    body: "Wir wünschen dir ein Jahr ohne 30k und mit immer freier Landeplattform.",
+  },
+  {
+    title: "Happy Birthday, Citizen!",
+    body: "Mögen all deine Claims sofort durchgehen und deine Fracht heil ankommen.",
+  },
+  {
+    title: "Ein Toast auf dich!",
+    body: "Die erste Runde geht heute aufs Haus, irgendwo zwischen New Babbage und Area18.",
+  },
+  {
+    title: "Glückwunsch, Pilot!",
+    body: "Wir wünschen dir einen großartigen Tag und freie Bahn bis nach Terra.",
+  },
+  {
+    title: "Alles Gute, Commander!",
+    body: "Mögen deine Aufzüge heute immer kommen und deine Türen sich öffnen.",
+  },
+  {
+    title: "Dein Hangar ist reserviert!",
+    body: "Herzlichen Glückwunsch zum Geburtstag. Wir wünschen dir einen großartigen Tag.",
+  },
+  {
+    title: "Ein Jahr weiter!",
+    body: "Möge dein Med-Bed heute unbenutzt bleiben und dein Schiff ohne Kratzer.",
+  },
+  {
+    title: "Ruhige Sprünge!",
+    body: "Alles Gute zum Geburtstag. Wir wünschen dir eine sichere Reise durch den Aaron Halo.",
+  },
+  {
+    title: "Party auf Daymar!",
+    body: "Heute ist dein Tag. Wir wünschen dir einen unvergesslichen Geburtstag.",
+  },
+  {
+    title: "Salut, Citizen!",
+    body: "Alles Gute zum Geburtstag. Heute gehört dir das ganze System.",
+  },
+  {
+    title: "Grüße aus Pyro!",
+    body: "Sogar im gefährlichsten System wird heute für dich gefeiert.",
+  },
+  {
+    title: "Volle Kraft voraus!",
+    body: "Wir wünschen dir ein neues Lebensjahr mit gutem Kurs und stabilen Servern.",
   },
 ] as const;
 
