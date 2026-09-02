@@ -2,6 +2,7 @@
 
 import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
 import { api } from "@/modules/common/utils/api";
+import { useRolesContext } from "@/modules/roles/components/RolesContext";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import type { Role } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
@@ -45,7 +46,6 @@ export const WikiRoleSelector = ({
     },
   );
 
-  const data = allRoles;
   const selectableRoles = selectableRoleIds
     ? allRoles?.filter((role) => selectableRoleIds.includes(role.id))
     : allRoles;
@@ -102,38 +102,69 @@ export const WikiRoleSelector = ({
         </div>
       </PopoverBaseUI>
 
-      {data && selectedRoles.length > 0 && (
+      {selectedRoles.length > 0 && (
         <div className="flex gap-1 flex-wrap mt-2">
-          {selectedRoles
-            .map((selectedRoleId) =>
-              data.find((role) => role.id === selectedRoleId),
-            )
-            .filter(Boolean)
-            .map((role) => (
-              <div key={role!.id}>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setSelectedRoles((previous) =>
-                      previous.filter((id) => id !== role!.id),
-                    )
-                  }
-                  className="flex items-center gap-1 bg-neutral-700/50 pr-2 rounded-secondary"
-                >
-                  <SingleRoleBadge
-                    className="bg-transparent"
-                    roleId={role!.id}
-                    showPlaceholder
-                    withPopover={false}
-                  />
-                  <FaTrash className="text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300 flex-none" />
-                </button>
-
-                <input type="hidden" name={inputName} value={role!.id} />
-              </div>
-            ))}
+          {selectedRoles.map((selectedRoleId) => (
+            <SelectedRole
+              key={selectedRoleId}
+              roleId={selectedRoleId}
+              inputName={inputName}
+              onRemove={() =>
+                setSelectedRoles((previous) =>
+                  previous.filter((id) => id !== selectedRoleId),
+                )
+              }
+            />
+          ))}
         </div>
       )}
+    </div>
+  );
+};
+
+interface SelectedRoleProps {
+  readonly roleId: Role["id"];
+  readonly inputName: string;
+  readonly onRemove: () => void;
+}
+
+/**
+ * One selected role, with the hidden input that submits it. The input never
+ * waits for the role list and never depends on the viewer being allowed to
+ * read the role: a role the viewer cannot name still belongs to the record,
+ * and leaving it out of the submission would delete it on the next save.
+ */
+const SelectedRole = ({ roleId, inputName, onRemove }: SelectedRoleProps) => {
+  const { roles } = useRolesContext();
+  const isNameable = roles.some((role) => role.id === roleId);
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={onRemove}
+        className="flex items-center gap-1 bg-neutral-700/50 pr-2 rounded-secondary"
+      >
+        {isNameable ? (
+          <SingleRoleBadge
+            className="bg-transparent"
+            roleId={roleId}
+            showPlaceholder
+            withPopover={false}
+          />
+        ) : (
+          <span
+            className="px-2 h-8 inline-flex items-center text-neutral-500"
+            title="Diese Rolle ist ausgewählt, du darfst sie aber nicht sehen."
+          >
+            Verborgene Rolle
+          </span>
+        )}
+
+        <FaTrash className="text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300 flex-none" />
+      </button>
+
+      <input type="hidden" name={inputName} value={roleId} />
     </div>
   );
 };
