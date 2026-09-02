@@ -5,11 +5,21 @@ import {
 import { NOTIFICATIONS_APPS } from "./NotificationTypes";
 import type { OnSiteNotificationRow } from "./types";
 
+/**
+ * An effect which the notification list draws into the row. The switch below
+ * is the single place which knows the notification types, thus it names the
+ * decoration as well and the list only maps it to a component.
+ */
+export enum NotificationDecoration {
+  Confetti = "confetti",
+}
+
 interface OnSiteNotificationRendering {
   readonly title: string;
   readonly body: string | null;
   readonly url: string | null;
   readonly appTitle: string | null;
+  readonly decoration: NotificationDecoration | null;
 }
 
 const appTitleByNotificationTypeId = new Map(
@@ -43,6 +53,7 @@ export const renderOnSiteNotification = (
       body: null,
       url: null,
       appTitle,
+      decoration: null,
     };
 
   switch (parsed.notificationType) {
@@ -52,6 +63,7 @@ export const renderOnSiteNotification = (
         body: parsed.payload.eventName,
         url: `/app/events/${parsed.payload.eventId}`,
         appTitle,
+        decoration: null,
       };
 
     case "event_updated":
@@ -60,6 +72,7 @@ export const renderOnSiteNotification = (
         body: parsed.payload.eventName,
         url: `/app/events/${parsed.payload.eventId}`,
         appTitle,
+        decoration: null,
       };
 
     case "event_deleted":
@@ -68,6 +81,7 @@ export const renderOnSiteNotification = (
         body: parsed.payload.eventName,
         url: null,
         appTitle,
+        decoration: null,
       };
 
     case "event_lineup_enabled":
@@ -76,6 +90,7 @@ export const renderOnSiteNotification = (
         body: parsed.payload.eventName,
         url: `/app/events/${parsed.payload.eventId}/lineup`,
         appTitle,
+        decoration: null,
       };
 
     case "event_briefing_published":
@@ -84,6 +99,7 @@ export const renderOnSiteNotification = (
         body: parsed.payload.eventName,
         url: `/app/events/${parsed.payload.eventId}/briefing`,
         appTitle,
+        decoration: null,
       };
 
     case "event_starting":
@@ -92,6 +108,7 @@ export const renderOnSiteNotification = (
         body: parsed.payload.eventName,
         url: `/app/events/${parsed.payload.eventId}`,
         appTitle,
+        decoration: null,
       };
 
     case "event_participation_added":
@@ -100,6 +117,7 @@ export const renderOnSiteNotification = (
         body: `Du wurdest zum Event "${parsed.payload.eventName}" hinzugefügt.`,
         url: `/app/events/${parsed.payload.eventId}`,
         appTitle,
+        decoration: null,
       };
 
     case "event_participation_removed":
@@ -110,6 +128,7 @@ export const renderOnSiteNotification = (
           : `Du wurdest vom Event "${parsed.payload.eventName}" entfernt.`,
         url: `/app/events/${parsed.payload.eventId}`,
         appTitle,
+        decoration: null,
       };
 
     case "role_added":
@@ -118,6 +137,7 @@ export const renderOnSiteNotification = (
         body: `Dir wurde eine neue Rolle zugewiesen: ${parsed.payload.roleName}`,
         url: null,
         appTitle,
+        decoration: null,
       };
 
     case "silc_transaction_created":
@@ -126,6 +146,7 @@ export const renderOnSiteNotification = (
         body: `${parsed.payload.value >= 0 ? "+" : "-"}${Math.abs(parsed.payload.value).toLocaleString("de")} SILC${parsed.payload.description ? ` - ${parsed.payload.description}` : ""}`,
         url: null,
         appTitle,
+        decoration: null,
       };
 
     case "sincome_payout_started":
@@ -134,6 +155,7 @@ export const renderOnSiteNotification = (
         body: `Die Auszahlungsphase für den Zeitraum ${parsed.payload.cycleTitle} wurde gestartet. Bitte stimme der Auszahlung zu.`,
         url: `/app/sincome/${parsed.payload.cycleId}`,
         appTitle,
+        decoration: null,
       };
 
     case "sincome_payout_disbursed":
@@ -142,6 +164,7 @@ export const renderOnSiteNotification = (
         body: `Für den Zeitraum ${parsed.payload.cycleTitle} hast du eine Auszahlung in Höhe von ${parsed.payload.auecAmount.toLocaleString("de-DE")} aUEC erhalten.`,
         url: `/app/sincome/${parsed.payload.cycleId}`,
         appTitle,
+        decoration: null,
       };
 
     case "penalty_entry_created":
@@ -152,6 +175,7 @@ export const renderOnSiteNotification = (
           : `Du hast ${parsed.payload.points} Strafpunkte erhalten`,
         url: null,
         appTitle,
+        decoration: null,
       };
 
     case "task_assignment_updated":
@@ -160,6 +184,7 @@ export const renderOnSiteNotification = (
         body: `Dir wurde ein Task zugewiesen: ${parsed.payload.taskTitle}`,
         url: `/app/tasks/${parsed.payload.taskId}`,
         appTitle,
+        decoration: null,
       };
 
     case "wiki_page_reported":
@@ -170,6 +195,7 @@ export const renderOnSiteNotification = (
           : `${parsed.payload.reportedByHandle ?? "Unbekannt"} hat die Seite "${parsed.payload.pageTitle}" gemeldet`,
         url: "/app/wiki/reports",
         appTitle,
+        decoration: null,
       };
 
     case "wiki_citizen_mentioned":
@@ -182,6 +208,7 @@ export const renderOnSiteNotification = (
           ? `/app/events/${parsed.payload.eventId}/briefing/${parsed.payload.pageId}`
           : `/app/wiki/${parsed.payload.pageId}`,
         appTitle,
+        decoration: null,
       };
 
     case "birthday":
@@ -190,6 +217,7 @@ export const renderOnSiteNotification = (
         body: parsed.payload.body ?? BIRTHDAY_FALLBACK_WORDING.body,
         url: null,
         appTitle,
+        decoration: NotificationDecoration.Confetti,
       };
 
     default:
