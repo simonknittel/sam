@@ -3,6 +3,7 @@
  * instead of inside it, so that the unit test can read them without pulling
  * the AWS clients of the publisher into the test run.
  */
+
 /**
  * Star Citizen plays 930 years ahead of the real calendar, thus the night
  * from December 31, 2026 to January 1, 2027 starts the year 2957 in the
@@ -19,94 +20,94 @@ const IN_GAME_YEAR_OFFSET = 930;
  * travels in the payload as the finished strings.
  */
 export const NEW_YEAR_WORDINGS = [
-  (year: number) => ({
+  (inGameYear: number) => ({
     title: "Frohes neues Jahr, Citizen!",
-    body: `Willkommen in ${year}. Wir wünschen dir ein Jahr voller sanfter Landungen.`,
+    body: `Willkommen in ${inGameYear}. Wir wünschen dir ein Jahr voller sanfter Landungen.`,
   }),
-  (year: number) => ({
-    title: `Willkommen in ${year}!`,
+  (inGameYear: number) => ({
+    title: `Willkommen in ${inGameYear}!`,
     body: "Ein neues Jahr, ein neues Verse. Auf viele gemeinsame Flüge.",
   }),
-  (year: number) => ({
+  (inGameYear: number) => ({
     title: "o7 zum Jahreswechsel!",
-    body: `Die ganze Org salutiert dir. Auf ein großartiges ${year}.`,
+    body: `Die ganze Org salutiert dir. Auf ein großartiges ${inGameYear}.`,
   }),
-  (year: number) => ({
+  (inGameYear: number) => ({
     title: "Ein neues Jahr im Stanton-System!",
-    body: `Frohes neues Jahr ${year}. Möge dein Kurs immer frei sein.`,
+    body: `Frohes neues Jahr ${inGameYear}. Möge dein Kurs immer frei sein.`,
   }),
-  (year: number) => ({
-    title: `Auf ${year}!`,
+  (inGameYear: number) => ({
+    title: `Auf ${inGameYear}!`,
     body: "Wir wünschen dir ein Jahr ohne 30k und mit immer freier Landeplattform.",
   }),
-  (year: number) => ({
+  (inGameYear: number) => ({
     title: "Prost Neujahr, Pilot!",
-    body: `${year} ist da. Möge dein Quantum-Antrieb kalibriert und dein Tank voll sein.`,
+    body: `${inGameYear} ist da. Möge dein Quantum-Antrieb kalibriert und dein Tank voll sein.`,
   }),
-  (year: number) => ({
+  (inGameYear: number) => ({
     title: "Die Crew wünscht ein frohes neues Jahr!",
-    body: `Schön, dass du auch ${year} an Bord bist.`,
+    body: `Schön, dass du auch ${inGameYear} an Bord bist.`,
   }),
-  (year: number) => ({
+  (inGameYear: number) => ({
     title: "Frohes neues Jahr!",
-    body: `Möge ${year} dir volle Frachträume und Claims bringen, die sofort durchgehen.`,
+    body: `Möge ${inGameYear} dir volle Frachträume und Claims bringen, die sofort durchgehen.`,
   }),
-  (year: number) => ({
+  (inGameYear: number) => ({
     title: "Ein neues Jahr, ein neuer Kurs!",
-    body: `Wir wünschen dir für ${year} freie Bahn bis nach Terra.`,
+    body: `Wir wünschen dir für ${inGameYear} freie Bahn bis nach Terra.`,
   }),
-  (_year: number) => ({
+  (_inGameYear: number) => ({
     title: "Feuerwerk über Orison!",
     body: "Frohes neues Jahr. Heute leuchtet das ganze Verse für dich.",
   }),
-  (year: number) => ({
+  (inGameYear: number) => ({
     title: "Grüße aus Pyro!",
-    body: `Auch im gefährlichsten System wird ${year} gefeiert. Frohes neues Jahr!`,
+    body: `Auch im gefährlichsten System wird ${inGameYear} gefeiert. Frohes neues Jahr!`,
   }),
-  (year: number) => ({
-    title: `${year} ist gelandet!`,
+  (inGameYear: number) => ({
+    title: `${inGameYear} ist gelandet!`,
     body: "Wir wünschen dir ein Jahr mit stabilen Servern und ruhigen Sprüngen.",
   }),
-  (year: number) => ({
+  (inGameYear: number) => ({
     title: "Der Countdown ist vorbei!",
-    body: `Willkommen in ${year}. Auf ein Jahr ohne Kratzer am Schiff.`,
+    body: `Willkommen in ${inGameYear}. Auf ein Jahr ohne Kratzer am Schiff.`,
   }),
-  (year: number) => ({
+  (inGameYear: number) => ({
     title: "Frohes neues Jahr, Commander!",
-    body: `Mögen deine Aufzüge in ${year} immer kommen und deine Türen sich öffnen.`,
+    body: `Mögen deine Aufzüge in ${inGameYear} immer kommen und deine Türen sich öffnen.`,
   }),
-  (year: number) => ({
+  (inGameYear: number) => ({
     title: "Auf ein neues Jahr voller Sprünge!",
-    body: `Frohes neues Jahr ${year}. Ruhige Reise durch den Aaron Halo.`,
+    body: `Frohes neues Jahr ${inGameYear}. Ruhige Reise durch den Aaron Halo.`,
   }),
-  (year: number) => ({
+  (inGameYear: number) => ({
     title: "Party auf Daymar!",
-    body: `Das neue Jahr ist da. Wir wünschen dir ein unvergessliches ${year}.`,
+    body: `Das neue Jahr ist da. Wir wünschen dir ein unvergessliches ${inGameYear}.`,
   }),
-  (year: number) => ({
-    title: `Die erste Runde in ${year} geht aufs Haus!`,
+  (inGameYear: number) => ({
+    title: `Die erste Runde in ${inGameYear} geht aufs Haus!`,
     body: "Irgendwo zwischen New Babbage und Area18. Frohes neues Jahr!",
   }),
-  (year: number) => ({
-    title: `Volle Kraft voraus in ${year}!`,
+  (inGameYear: number) => ({
+    title: `Volle Kraft voraus in ${inGameYear}!`,
     body: "Wir wünschen dir ein neues Jahr mit gutem Kurs und guter Crew.",
   }),
-  (year: number) => ({
+  (inGameYear: number) => ({
     title: "Frohes neues Jahr, Citizen!",
-    body: `Möge dein Med-Bed in ${year} unbenutzt bleiben.`,
+    body: `Möge dein Med-Bed in ${inGameYear} unbenutzt bleiben.`,
   }),
-  (year: number) => ({
-    title: `Ein Hoch auf ${year}!`,
+  (inGameYear: number) => ({
+    title: `Ein Hoch auf ${inGameYear}!`,
     body: "Frohes neues Jahr. Schön, dass du Teil der Org bist.",
   }),
 ] as const;
 
 /** The wording of one citizen, with the in-game year filled in */
-export const buildWording = (year: number, index: number) =>
+export const buildWording = (realYear: number, index: number) =>
   (NEW_YEAR_WORDINGS[index] ?? NEW_YEAR_WORDINGS[0])(
-    year + IN_GAME_YEAR_OFFSET,
+    realYear + IN_GAME_YEAR_OFFSET,
   );
 
 /** The wording for one citizen, picked at random */
-export const pickWording = (year: number) =>
-  buildWording(year, Math.floor(Math.random() * NEW_YEAR_WORDINGS.length));
+export const pickWording = (realYear: number) =>
+  buildWording(realYear, Math.floor(Math.random() * NEW_YEAR_WORDINGS.length));

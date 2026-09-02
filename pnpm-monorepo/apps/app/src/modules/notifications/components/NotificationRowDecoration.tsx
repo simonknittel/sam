@@ -5,6 +5,7 @@ import { useMediaQuery } from "@base-ui/react/unstable-use-media-query";
 import type { Options } from "canvas-confetti";
 import clsx from "clsx";
 import type { ReactNode } from "react";
+import type { NotificationDecoration } from "../utils/renderOnSiteNotification";
 
 /**
  * Milliseconds between two bursts while the row is in view. The particles
@@ -35,7 +36,7 @@ const SHOT = {
  * array on every render would start the animation again.
  */
 export const buildConfettiShots = (
-  appearance: Pick<Options, "colors" | "shapes">,
+  appearance: Pick<Options, "colors" | "shapes"> = {},
 ): readonly Options[] => [
   { ...SHOT, ...appearance, angle: 20, origin: { x: 0, y: 1 } },
   { ...SHOT, ...appearance, angle: 160, origin: { x: 1, y: 1 } },
@@ -44,9 +45,9 @@ export const buildConfettiShots = (
 interface Props {
   /**
    * Names the two marks the end-to-end suite selects the decoration by:
-   * `data-<name>-background` and `data-<name>-confetti-static`.
+   * `data-<decoration>-background` and `data-<decoration>-confetti-static`.
    */
-  readonly name: string;
+  readonly decoration: NotificationDecoration;
   /** The utility which paints the colour clouds of the surface */
   readonly surfaceClassName: string;
   readonly shots: readonly Options[];
@@ -63,7 +64,7 @@ interface Props {
  * prefers reduced motion gets a static mark instead of the confetti.
  */
 export const NotificationRowDecoration = ({
-  name,
+  decoration,
   surfaceClassName,
   shots,
   staticIcon,
@@ -76,7 +77,7 @@ export const NotificationRowDecoration = ({
   return (
     <>
       <span
-        {...{ [`data-${name}-background`]: true }}
+        {...{ [`data-${decoration}-background`]: true }}
         aria-hidden="true"
         className={clsx(
           surfaceClassName,
@@ -86,7 +87,7 @@ export const NotificationRowDecoration = ({
 
       {prefersReducedMotion ? (
         <span
-          {...{ [`data-${name}-confetti-static`]: true }}
+          {...{ [`data-${decoration}-confetti-static`]: true }}
           aria-hidden="true"
           className="pointer-events-none absolute inset-y-0 right-4 -z-10 flex items-center text-3xl text-amber-400/20"
         >

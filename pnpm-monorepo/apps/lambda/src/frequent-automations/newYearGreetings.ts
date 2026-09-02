@@ -78,11 +78,7 @@ export const newYearGreetings = async () => {
           type: "NewYearGreeting",
           payload: {
             citizenId: citizen.id,
-            /**
-             * The year the citizen just entered. It travels with the event,
-             * so that the wording of the router does not have to resolve the
-             * time zone of the citizen again.
-             */
+            // Saves the router from resolving the time zone a second time
             year: getLocalDate(now, citizen.timezone ?? ORGANIZATION_TIMEZONE)
               .year,
           },

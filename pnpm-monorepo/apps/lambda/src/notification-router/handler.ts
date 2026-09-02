@@ -262,8 +262,12 @@ export const bodySchema = z.discriminatedUnion("type", [
     type: z.literal("NewYearGreeting"),
     payload: z.object({
       citizenId: z.cuid(),
-      /** The calendar year the citizen just entered in their own time zone */
-      year: z.int().positive(),
+      /**
+       * The calendar year the citizen just entered in their own time zone.
+       * Four digits, which is what the wordings are written and measured
+       * against — see their unit test.
+       */
+      year: z.int().positive().max(9999),
     }),
     requestId: z.cuid2(),
   }),

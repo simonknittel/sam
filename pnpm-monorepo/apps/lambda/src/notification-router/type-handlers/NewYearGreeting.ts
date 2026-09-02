@@ -5,7 +5,6 @@ import { pickWording } from "./newYearWordings";
 
 interface Payload {
   citizenId: Entity["id"];
-  /** The calendar year the citizen just entered in their own time zone */
   year: number;
 }
 

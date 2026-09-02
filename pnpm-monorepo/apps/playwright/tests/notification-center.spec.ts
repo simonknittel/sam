@@ -84,9 +84,9 @@ const confettiCanvas = (page: Page) =>
 const staticConfetti = (page: Page) =>
   popover(page).locator("[data-birthday-confetti-static]");
 const newYearBackground = (page: Page) =>
-  popover(page).locator("[data-new-year-background]");
+  popover(page).locator("[data-new_year-background]");
 const staticNewYearConfetti = (page: Page) =>
-  popover(page).locator("[data-new-year-confetti-static]");
+  popover(page).locator("[data-new_year-confetti-static]");
 
 test("a birthday greeting reads its wording and sprinkles confetti", async ({
   page,
