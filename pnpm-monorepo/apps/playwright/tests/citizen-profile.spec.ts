@@ -407,6 +407,36 @@ const berlinDate = (daysFromToday: number) => {
   return { day: target.getUTCDate(), month: target.getUTCMonth() + 1 };
 };
 
+interface BirthdayCitizenOptions {
+  readonly handle: string;
+  readonly day: number;
+  readonly month: number;
+  readonly permissionStrings?: readonly string[];
+}
+
+/**
+ * A citizen who can sign in and whose birthday falls on the given day. The
+ * time zone is the one of the organization, thus the list and the avatar of
+ * the citizen name the same day.
+ */
+const createCitizenWithBirthday = async (
+  prisma: PrismaClient,
+  { handle, day, month, permissionStrings }: BirthdayCitizenOptions,
+) => {
+  const citizen = await createCitizen(prisma, { handle, permissionStrings });
+
+  await prisma.entity.update({
+    where: { id: citizen.entity.id },
+    data: {
+      timezone: BIRTHDAY_LIST_TIMEZONE,
+      birthdayDay: day,
+      birthdayMonth: month,
+    },
+  });
+
+  return citizen;
+};
+
 test("the birthday list names every citizen once, sorted by the next birthday", async ({
   page,
   prisma,
@@ -421,18 +451,18 @@ test("the birthday list names every citizen once, sorted by the next birthday", 
   const tomorrow = berlinDate(1);
   const inTenDays = berlinDate(10);
 
-  const setBirthday = async (handle: string, day: number, month: number) => {
-    const citizen = await createCitizen(prisma, { handle });
-    await prisma.entity.update({
-      where: { id: citizen.entity.id },
-      data: { birthdayDay: day, birthdayMonth: month },
-    });
-    return citizen;
-  };
-
-  await setBirthday("geburtstagskind-heute", today.day, today.month);
-  await setBirthday("geburtstagskind-morgen", tomorrow.day, tomorrow.month);
-  await setBirthday("geburtstagskind-spaeter", inTenDays.day, inTenDays.month);
+  await createCitizenWithBirthday(prisma, {
+    handle: "geburtstagskind-heute",
+    ...today,
+  });
+  await createCitizenWithBirthday(prisma, {
+    handle: "geburtstagskind-morgen",
+    ...tomorrow,
+  });
+  await createCitizenWithBirthday(prisma, {
+    handle: "geburtstagskind-spaeter",
+    ...inTenDays,
+  });
   /** Without a birthday nobody appears in the list */
   await createCitizen(prisma, { handle: "ohne-geburtstag" });
 
@@ -488,32 +518,16 @@ test("the party hat marks the citizen whose birthday is today", async ({
   const today = berlinDate(0);
   const tomorrow = berlinDate(1);
 
-  const withBirthday = async (handle: string, day: number, month: number) => {
-    const citizen = await createCitizen(prisma, {
-      handle,
-      permissionStrings: ["citizen;read"],
-    });
-    await prisma.entity.update({
-      where: { id: citizen.entity.id },
-      data: {
-        timezone: BIRTHDAY_LIST_TIMEZONE,
-        birthdayDay: day,
-        birthdayMonth: month,
-      },
-    });
-    return citizen;
-  };
-
-  const birthdayChild = await withBirthday(
-    "hut-traeger",
-    today.day,
-    today.month,
-  );
-  const nextInLine = await withBirthday(
-    "morgen-dran",
-    tomorrow.day,
-    tomorrow.month,
-  );
+  const birthdayChild = await createCitizenWithBirthday(prisma, {
+    handle: "hut-traeger",
+    ...today,
+    permissionStrings: ["citizen;read"],
+  });
+  const nextInLine = await createCitizenWithBirthday(prisma, {
+    handle: "morgen-dran",
+    ...tomorrow,
+    permissionStrings: ["citizen;read"],
+  });
 
   await signIn(birthdayChild.user);
 
@@ -547,29 +561,14 @@ test("the popover carries the party hat of the citizen it is about", async ({
   const today = berlinDate(0);
   const tomorrow = berlinDate(1);
 
-  const withBirthday = async (handle: string, day: number, month: number) => {
-    const citizen = await createCitizen(prisma, { handle });
-    await prisma.entity.update({
-      where: { id: citizen.entity.id },
-      data: {
-        timezone: BIRTHDAY_LIST_TIMEZONE,
-        birthdayDay: day,
-        birthdayMonth: month,
-      },
-    });
-    return citizen;
-  };
-
-  const birthdayChild = await withBirthday(
-    "hut-im-popover",
-    today.day,
-    today.month,
-  );
-  const nextInLine = await withBirthday(
-    "morgen-im-popover",
-    tomorrow.day,
-    tomorrow.month,
-  );
+  const birthdayChild = await createCitizenWithBirthday(prisma, {
+    handle: "hut-im-popover",
+    ...today,
+  });
+  const nextInLine = await createCitizenWithBirthday(prisma, {
+    handle: "morgen-im-popover",
+    ...tomorrow,
+  });
 
   const viewer = await createCitizen(prisma, {
     handle: "hut-betrachter",
@@ -606,15 +605,9 @@ test.describe("mobile", () => {
     prisma,
     signIn,
   }) => {
-    const today = berlinDate(0);
-    const citizen = await createCitizen(prisma, { handle: "mobiler-hut" });
-    await prisma.entity.update({
-      where: { id: citizen.entity.id },
-      data: {
-        timezone: BIRTHDAY_LIST_TIMEZONE,
-        birthdayDay: today.day,
-        birthdayMonth: today.month,
-      },
+    const citizen = await createCitizenWithBirthday(prisma, {
+      handle: "mobiler-hut",
+      ...berlinDate(0),
     });
 
     await signIn(citizen.user);

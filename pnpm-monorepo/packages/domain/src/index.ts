@@ -15,7 +15,6 @@ export {
   getCelebrationDate,
   getLocalDate,
   isBirthdayToday,
-  type LocalDate,
 } from "./citizen/birthday.js";
 export {
   CAN_LOGIN_CITIZEN_WHERE,
