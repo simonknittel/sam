@@ -3,13 +3,18 @@ import { getLocalDate } from "@sam-monorepo/domain";
 const MILLISECONDS_PER_HOUR = 60 * 60 * 1000;
 
 /**
+ * A citizen who moves their time zone shortly after a greeting can carry the
+ * marker into the previous local year, which would earn them a second
+ * greeting. A minimum distance closes that gap.
+ *
  * The greeting window of one citizen is a single local day, thus two
- * greetings can only ever land within little more than one day of each
- * other. This happens when the citizen moves their time zone across the turn
- * of the year shortly after a greeting: the same marker then falls into the
- * previous local year. A minimum distance closes that gap.
+ * greetings for the same date lie at most 24 hours plus the offset spread of
+ * the two time zones apart. The allowlist of the app spans UTC-11
+ * (Pacific/Niue) to UTC+14 (Pacific/Kiritimati), which makes 49 hours. The
+ * value below keeps one hour of headroom for a zone further west entering
+ * the time zone database.
  */
-const MINIMUM_HOURS_BETWEEN_GREETINGS = 48;
+const MINIMUM_HOURS_BETWEEN_GREETINGS = 50;
 
 /**
  * True while the marker of a greeting counts as "already sent this year".

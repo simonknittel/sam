@@ -122,6 +122,24 @@ describe("shouldGreetCitizen", () => {
     ).toBe(true);
   });
 
+  test("does not greet twice when the citizen moves west across the date line", () => {
+    // Greeted at the local midnight of Pacific/Kiritimati (UTC+14) …
+    const greeted = candidate({
+      timezone: "Pacific/Niue",
+      newYearGreetingSentAt: new Date("2026-12-31T10:00:00Z"),
+    });
+
+    // … and it is still January 1 in Pacific/Niue (UTC-11) 48 hours later,
+    // where the marker falls into 2026. This is the widest gap the allowlist
+    // of the app can produce.
+    expect(shouldGreetCitizen(greeted, new Date("2027-01-02T10:00:00Z"))).toBe(
+      false,
+    );
+    expect(shouldGreetCitizen(greeted, new Date("2027-01-02T10:45:00Z"))).toBe(
+      false,
+    );
+  });
+
   test("throws for a time zone the runtime does not know", () => {
     expect(() =>
       shouldGreetCitizen(
@@ -129,5 +147,54 @@ describe("shouldGreetCitizen", () => {
         new Date("2027-01-01T12:00:00Z"),
       ),
     ).toThrow();
+  });
+});
+
+/**
+ * The run of the job walks around the globe: every 15 minutes it greets the
+ * citizens whose local January 1 has just started, over the 25 hours the
+ * time zones of the app span.
+ */
+describe("the runs around the turn of the year", () => {
+  const inZone = (timezone: string | null) => candidate({ timezone });
+
+  test("greets the first time zone 14 hours before Berlin", () => {
+    const now = new Date("2026-12-31T10:00:00Z");
+
+    expect(shouldGreetCitizen(inZone("Pacific/Kiritimati"), now)).toBe(true);
+    expect(shouldGreetCitizen(inZone("Asia/Tokyo"), now)).toBe(false);
+    expect(shouldGreetCitizen(inZone("Europe/Berlin"), now)).toBe(false);
+    expect(shouldGreetCitizen(inZone(null), now)).toBe(false);
+    expect(shouldGreetCitizen(inZone("Pacific/Honolulu"), now)).toBe(false);
+  });
+
+  test("greets Berlin and the citizens without a time zone at their midnight", () => {
+    const now = new Date("2026-12-31T23:05:00Z");
+
+    expect(shouldGreetCitizen(inZone("Europe/Berlin"), now)).toBe(true);
+    expect(shouldGreetCitizen(inZone(null), now)).toBe(true);
+    expect(shouldGreetCitizen(inZone("America/New_York"), now)).toBe(false);
+    expect(shouldGreetCitizen(inZone("Pacific/Honolulu"), now)).toBe(false);
+  });
+
+  test("greets the last time zone 10 hours after Berlin", () => {
+    const now = new Date("2027-01-01T10:05:00Z");
+
+    expect(shouldGreetCitizen(inZone("Pacific/Honolulu"), now)).toBe(true);
+  });
+
+  test("greets nobody a second time on the same local day", () => {
+    const berlinCitizen = candidate({
+      timezone: "Europe/Berlin",
+      newYearGreetingSentAt: new Date("2026-12-31T23:05:00Z"),
+    });
+
+    expect(
+      shouldGreetCitizen(berlinCitizen, new Date("2026-12-31T23:20:00Z")),
+    ).toBe(false);
+    // 2027-01-01 23:50 in Europe/Berlin, the last run of the local day
+    expect(
+      shouldGreetCitizen(berlinCitizen, new Date("2027-01-01T22:50:00Z")),
+    ).toBe(false);
   });
 });
