@@ -125,6 +125,12 @@ export const NOTIFICATIONS_APPS: NotificationApp[] = [
           "Ein Gruß an deinem Geburtstag. Nur wenn du den Geburtstag in deinem Profil angegeben hast.",
         category: "Spynet",
       },
+      {
+        id: "new_year",
+        title: "Neujahr",
+        description: "Ein Gruß zum Jahreswechsel.",
+        category: "Spynet",
+      },
     ],
   },
 

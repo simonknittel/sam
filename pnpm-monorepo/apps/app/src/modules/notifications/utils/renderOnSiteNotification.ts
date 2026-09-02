@@ -12,6 +12,7 @@ import type { OnSiteNotificationRow } from "./types";
  */
 export enum NotificationDecoration {
   Birthday = "birthday",
+  NewYear = "new_year",
 }
 
 interface OnSiteNotificationRendering {
@@ -224,6 +225,16 @@ export const renderOnSiteNotification = (
          */
         appTitle: null,
         decoration: NotificationDecoration.Birthday,
+      };
+
+    case "new_year":
+      return {
+        title: parsed.payload.title,
+        body: parsed.payload.body,
+        url: null,
+        /** A personal message without an app, see the birthday greeting */
+        appTitle: null,
+        decoration: NotificationDecoration.NewYear,
       };
 
     default:

@@ -115,6 +115,9 @@ model Entity {
   /// Time of the last birthday greeting. The greeting job uses it to send
   /// only one greeting for each year.
   birthdayGreetingSentAt DateTime?
+  /// Time of the last New Year greeting. The greeting job uses it to send
+  /// only one greeting for each year.
+  newYearGreetingSentAt  DateTime?
 }
 
 model EntityLog {

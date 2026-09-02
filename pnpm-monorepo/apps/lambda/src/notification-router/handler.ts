@@ -9,6 +9,7 @@ import { EventParticipationAddedHandler } from "./type-handlers/EventParticipati
 import { EventParticipationRemovedHandler } from "./type-handlers/EventParticipationRemoved";
 import { EventStartingHandler } from "./type-handlers/EventStarting";
 import { EventUpdatedHandler } from "./type-handlers/EventUpdated";
+import { NewYearGreetingHandler } from "./type-handlers/NewYearGreeting";
 import { PenaltyEntryCreatedHandler } from "./type-handlers/PenaltyEntryCreated";
 import { ProfitDistributionPayoutDisbursedHandler } from "./type-handlers/ProfitDistributionPayoutDisbursed";
 import { ProfitDistributionPayoutStartedHandler } from "./type-handlers/ProfitDistributionPayoutStarted";
@@ -84,6 +85,9 @@ export const notificationRouterHandler = async (
       break;
     case "BirthdayGreeting":
       await BirthdayGreetingHandler(body.payload);
+      break;
+    case "NewYearGreeting":
+      await NewYearGreetingHandler(body.payload);
       break;
   }
 };
@@ -250,6 +254,20 @@ export const bodySchema = z.discriminatedUnion("type", [
     type: z.literal("BirthdayGreeting"),
     payload: z.object({
       citizenId: z.cuid(),
+    }),
+    requestId: z.cuid2(),
+  }),
+
+  z.object({
+    type: z.literal("NewYearGreeting"),
+    payload: z.object({
+      citizenId: z.cuid(),
+      /**
+       * The calendar year the citizen just entered in their own time zone.
+       * Four digits, which is what the wordings are written and measured
+       * against — see their unit test.
+       */
+      year: z.int().positive().max(9999),
     }),
     requestId: z.cuid2(),
   }),

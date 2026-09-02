@@ -2245,6 +2245,14 @@ export const AuditEventDefinitions: {
     message: (data) => `Sent ${data.citizenCount} birthday greeting(s)`,
   },
 
+  [AuditEventType.NEW_YEAR_GREETINGS_SENT]: {
+    type: AuditEventType.NEW_YEAR_GREETINGS_SENT,
+    data: {
+      citizenCount: 0,
+    },
+    message: (data) => `Sent ${data.citizenCount} New Year greeting(s)`,
+  },
+
   [AuditEventType.ONBOARDING_TASK_COMPLETED]: {
     type: AuditEventType.ONBOARDING_TASK_COMPLETED,
     data: {

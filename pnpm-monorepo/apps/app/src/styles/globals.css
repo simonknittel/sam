@@ -133,6 +133,34 @@
     );
 }
 
+/**
+ * The surface of a New Year greeting: the same four colour clouds as
+ * `background-birthday`, but in gold, orange and yellow only.
+ */
+@utility background-new-year {
+  background-image:
+    radial-gradient(
+      ellipse 70% 140% at 8% 115%,
+      hsl(38 95% 50% / 0.3),
+      transparent 68%
+    ),
+    radial-gradient(
+      ellipse 60% 150% at 36% -25%,
+      hsl(52 95% 55% / 0.24),
+      transparent 68%
+    ),
+    radial-gradient(
+      ellipse 65% 145% at 66% 120%,
+      hsl(28 90% 50% / 0.28),
+      transparent 68%
+    ),
+    radial-gradient(
+      ellipse 55% 135% at 95% -15%,
+      hsl(45 90% 50% / 0.22),
+      transparent 68%
+    );
+}
+
 @utility corners-primary {
   corner-shape: round round bevel round;
   border-radius: var(--radius-primary) var(--radius-primary) 2rem
