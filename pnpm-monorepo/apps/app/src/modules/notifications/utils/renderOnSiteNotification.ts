@@ -1,4 +1,7 @@
-import { parseOnSiteNotificationPayload } from "@sam-monorepo/notifications";
+import {
+  BIRTHDAY_FALLBACK_WORDING,
+  parseOnSiteNotificationPayload,
+} from "@sam-monorepo/notifications";
 import { NOTIFICATIONS_APPS } from "./NotificationTypes";
 import type { OnSiteNotificationRow } from "./types";
 
@@ -183,8 +186,8 @@ export const renderOnSiteNotification = (
 
     case "birthday":
       return {
-        title: "Alles Gute zum Geburtstag!",
-        body: "Wir wünschen dir einen schönen Tag.",
+        title: parsed.payload.title ?? BIRTHDAY_FALLBACK_WORDING.title,
+        body: parsed.payload.body ?? BIRTHDAY_FALLBACK_WORDING.body,
         url: null,
         appTitle,
       };
