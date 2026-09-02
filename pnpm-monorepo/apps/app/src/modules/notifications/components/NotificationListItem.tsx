@@ -13,14 +13,14 @@ import {
   NotificationCenterTab,
   type OnSiteNotificationRow,
 } from "../utils/types";
-import { BirthdayConfetti } from "./BirthdayConfetti";
+import { BirthdayDecoration } from "./BirthdayDecoration";
 
 /**
- * The effect a decorated row draws behind its text. The record is total,
- * thus a new decoration cannot stay without a component.
+ * What a decorated row draws behind its text. The record is total, thus a
+ * new decoration cannot stay without a component.
  */
 const decorationComponents: Record<NotificationDecoration, ComponentType> = {
-  [NotificationDecoration.Confetti]: BirthdayConfetti,
+  [NotificationDecoration.Birthday]: BirthdayDecoration,
 };
 
 interface Props {
@@ -107,10 +107,7 @@ export const NotificationListItem = ({
       </div>
 
       {rendering.body && (
-        <p
-          className="text-sm text-neutral-300 truncate mt-0.5"
-          title={rendering.body}
-        >
+        <p className="text-sm text-neutral-300 break-words mt-0.5">
           {rendering.body}
         </p>
       )}

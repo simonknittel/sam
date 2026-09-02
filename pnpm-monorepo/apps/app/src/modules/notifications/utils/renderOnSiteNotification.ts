@@ -6,12 +6,12 @@ import { NOTIFICATIONS_APPS } from "./NotificationTypes";
 import type { OnSiteNotificationRow } from "./types";
 
 /**
- * An effect which the notification list draws into the row. The switch below
- * is the single place which knows the notification types, thus it names the
- * decoration as well and the list only maps it to a component.
+ * A decoration which the notification list draws into the row. The switch
+ * below is the single place which knows the notification types, thus it
+ * names the decoration as well and the list only maps it to a component.
  */
 export enum NotificationDecoration {
-  Confetti = "confetti",
+  Birthday = "birthday",
 }
 
 interface OnSiteNotificationRendering {
@@ -216,8 +216,14 @@ export const renderOnSiteNotification = (
         title: parsed.payload.title ?? BIRTHDAY_FALLBACK_WORDING.title,
         body: parsed.payload.body ?? BIRTHDAY_FALLBACK_WORDING.body,
         url: null,
-        appTitle,
-        decoration: NotificationDecoration.Confetti,
+        /**
+         * The greeting is a personal message and belongs to no app of the
+         * notification settings, thus the row carries no app name. The type
+         * keeps its place under Spynet in `NotificationTypes`, where the
+         * citizen switches the greeting on and off.
+         */
+        appTitle: null,
+        decoration: NotificationDecoration.Birthday,
       };
 
     default:

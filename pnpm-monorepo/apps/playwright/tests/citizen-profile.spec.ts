@@ -529,14 +529,21 @@ test("the party hat marks the citizen whose birthday is today", async ({
     permissionStrings: ["citizen;read"],
   });
 
+  /** The whole suite runs with reduced motion, see playwright.config.ts */
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+
   await signIn(birthdayChild.user);
 
   /** The own profile tile of the dashboard and the account avatar above it */
   await page.goto("/app/dashboard");
-  await expect(birthdayHats(sectionByHeading(page, "Spynet"))).toBeVisible();
+  const profileTile = sectionByHeading(page, "Spynet");
+  await expect(birthdayHats(profileTile)).toBeVisible();
   await expect(
     birthdayHats(page.getByRole("button", { name: "Account" })),
   ).toBeVisible();
+
+  /** The avatar of the birthday child celebrates with confetti */
+  await expect(profileTile.locator("[data-confetti-canvas]")).toBeVisible();
 
   /** The list marks the row of today, and only that row */
   await page.goto("/app/spynet/birthdays");

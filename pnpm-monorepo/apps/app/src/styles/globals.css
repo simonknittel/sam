@@ -73,6 +73,36 @@
     100% 100%;
 }
 
+/**
+ * The surface of a birthday greeting: four wide colour clouds which overlap
+ * each other. Every colour stays far below full brightness, thus the surface
+ * reads as a dark surface with a colour cast and the text above it keeps its
+ * contrast.
+ */
+@utility background-birthday {
+  background-image:
+    radial-gradient(
+      ellipse 70% 140% at 8% 115%,
+      hsl(275 70% 45% / 0.3),
+      transparent 68%
+    ),
+    radial-gradient(
+      ellipse 60% 150% at 36% -25%,
+      hsl(190 80% 45% / 0.24),
+      transparent 68%
+    ),
+    radial-gradient(
+      ellipse 65% 145% at 66% 120%,
+      hsl(330 75% 50% / 0.28),
+      transparent 68%
+    ),
+    radial-gradient(
+      ellipse 55% 135% at 95% -15%,
+      hsl(40 90% 50% / 0.22),
+      transparent 68%
+    );
+}
+
 @utility corners-primary {
   corner-shape: round round bevel round;
   border-radius: var(--radius-primary) var(--radius-primary) 2rem

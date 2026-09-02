@@ -1,6 +1,7 @@
 import clsx from "clsx";
 import Image from "next/image";
 import { BirthdayHat } from "./BirthdayHat";
+import { ConfettiCanvas } from "./ConfettiCanvas";
 
 // https://stackoverflow.com/questions/3426404/create-a-hexadecimal-colour-based-on-a-string-with-javascript/21682946#21682946
 function stringToColor(str: string) {
@@ -18,6 +19,30 @@ function stringToColor(str: string) {
 export enum AvatarDecoration {
   BirthdayHat = "birthday-hat",
 }
+
+/** Milliseconds between two bursts while the avatar is in view */
+const CONFETTI_INTERVAL = 1000;
+
+/**
+ * An avatar is small, thus the particles are small as well and they travel
+ * slowly. The smallest avatar the app shows is 32 pixels wide, which the
+ * values below still fill.
+ */
+const CONFETTI_SHOT = {
+  particleCount: 4,
+  spread: 55,
+  startVelocity: 5,
+  gravity: 0.3,
+  decay: 0.9,
+  scalar: 0.4,
+  ticks: 110,
+};
+
+/** One shot from each lower corner, both towards the middle of the avatar */
+const CONFETTI_SHOTS = [
+  { ...CONFETTI_SHOT, angle: 60, origin: { x: 0, y: 1 } },
+  { ...CONFETTI_SHOT, angle: 120, origin: { x: 1, y: 1 } },
+];
 
 interface Props {
   readonly className?: string;
@@ -42,7 +67,7 @@ const Avatar = ({ className, name, image, size, decoration }: Props) => {
     >
       <span
         className={clsx(
-          "flex size-full items-center justify-center overflow-hidden uppercase",
+          "relative flex size-full items-center justify-center overflow-hidden uppercase",
           {
             "text-sm": size === 32,
             "text-2xl": !size || size === 64,
@@ -70,6 +95,16 @@ const Avatar = ({ className, name, image, size, decoration }: Props) => {
         ) : name ? (
           name.replace(/\s/g, "").substring(0, 2)
         ) : null}
+
+        {/* Inside the clipped element, thus the confetti follows the
+        rounded corners of the avatar and stays over its image. */}
+        {decoration === AvatarDecoration.BirthdayHat && (
+          <ConfettiCanvas
+            shots={CONFETTI_SHOTS}
+            intervalMilliseconds={CONFETTI_INTERVAL}
+            className="absolute inset-0 size-full"
+          />
+        )}
       </span>
 
       {decoration === AvatarDecoration.BirthdayHat && (

@@ -80,7 +80,7 @@ test("the popover lists notifications with their content", async ({
 
 /** The elements the birthday row is decorated with, whatever styles them */
 const confettiCanvas = (page: Page) =>
-  popover(page).locator("[data-birthday-confetti]");
+  popover(page).locator("[data-confetti-canvas]");
 const staticConfetti = (page: Page) =>
   popover(page).locator("[data-birthday-confetti-static]");
 
