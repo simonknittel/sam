@@ -85,3 +85,5 @@ minimumReleaseAgeExclude:
   - "@next/swc-win32-x64-msvc@16.3.3"
   - eslint-config-next@16.3.3
   - next@16.3.3
+  # Renovate security update: @tiptap/core@3.30.4
+  - "@tiptap/core@3.30.4"
