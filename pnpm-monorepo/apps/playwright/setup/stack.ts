@@ -148,8 +148,17 @@ export const containerDatabaseUrl = (database: string) =>
  *
  * RSI_BASE_URL points the organization logo scrape at a dead port: creating
  * an organization must never reach out to the real website from a test.
+ *
+ * The AWS variables of a developer's `.env` point at the production event
+ * bus, and `next start` loads that file. An empty value here wins over the
+ * file (Next never overrides a variable which the process already has), and
+ * the app treats an empty value as unset, thus the EventBridge client stays
+ * off and no test sends a notification event to production.
  */
 export const appDummyEnvironment = {
+  AWS_ACCESS_KEY_ID: "",
+  AWS_SECRET_ACCESS_KEY: "",
+  AWS_EVENT_BUS_ARN: "",
   RSI_BASE_URL: "http://localhost:9",
   DISCORD_CLIENT_ID: "playwright-dummy",
   DISCORD_CLIENT_SECRET: "playwright-dummy",
