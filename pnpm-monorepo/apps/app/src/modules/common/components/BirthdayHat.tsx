@@ -5,7 +5,7 @@ interface Props {
 /**
  * The party hat of a citizen who has their birthday today. The hat is drawn
  * inline instead of loaded as an icon, so that it can follow the size of the
- * avatar it sits on.
+ * avatar which carries it.
  */
 export const BirthdayHat = ({ className }: Props) => (
   <svg

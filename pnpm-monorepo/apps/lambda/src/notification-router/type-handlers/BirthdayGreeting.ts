@@ -9,8 +9,8 @@ interface Payload {
 
 /**
  * The greeting picks one of these for each citizen, so that a citizen does
- * not read the same sentence every year. The greeting keeps no memory of
- * the previous year, thus the same wording can come up twice in a row.
+ * not read the same sentence every year. The greeting keeps no memory of the
+ * previous year, thus the same wording can occur twice in sequence.
  */
 const WORDINGS = [
   BIRTHDAY_FALLBACK_WORDING,

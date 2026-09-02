@@ -34,8 +34,12 @@ export const UpcomingBirthdayRow = ({ birthday }: Props) => {
       </td>
 
       <td className="overflow-hidden">
-        <span className="flex items-center gap-2 overflow-hidden">
-          <CitizenLink citizen={birthday.citizen} />
+        <span className="flex items-center gap-2">
+          {/* A long handle must give way to the hat, not push it out of the
+          cell. The popover of the link shows the full handle. */}
+          <span className="min-w-0 truncate">
+            <CitizenLink citizen={birthday.citizen} />
+          </span>
 
           {isToday && <BirthdayHat className="size-4 flex-none" />}
         </span>

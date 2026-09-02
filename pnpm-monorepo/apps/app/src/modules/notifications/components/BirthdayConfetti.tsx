@@ -6,15 +6,16 @@ import { useEffect, useRef } from "react";
 import { TbConfetti } from "react-icons/tb";
 
 /**
- * Milliseconds between two bursts while the row is in view. One burst lasts
- * a little longer than this, thus the bursts overlap and the row keeps
- * sprinkling instead of blinking.
+ * Milliseconds between two bursts while the row is in view. The particles
+ * live longer than this, thus the bursts overlap and the row shows a
+ * continuous animation.
  */
 const BURST_INTERVAL = 1200;
 
 /**
- * A gentle sprinkle inside one list row, not a fireworks display: a handful
- * of small particles which drift down over the height of the row.
+ * A small number of particles which drift down over the height of one row.
+ * The values keep the animation calm: a row in a long list must not draw the
+ * attention away from the other rows.
  */
 const BURST_OPTIONS = {
   particleCount: 7,
@@ -29,9 +30,8 @@ const BURST_OPTIONS = {
 };
 
 /**
- * The birthday greeting celebrates itself: the row of the notification keeps
- * dropping confetti while it is in view. The animation lives inside the row,
- * behind its text — see the `isolate` of the list item.
+ * Confetti for the row of a birthday greeting. The animation stays inside
+ * the row and behind its text — see the `isolate` of the list item.
  */
 export const BirthdayConfetti = () => {
   const prefersReducedMotion = useMediaQuery(
@@ -80,15 +80,21 @@ export const BirthdayConfetti = () => {
      * so that the animation behaves the same in the browser and in the
      * Playwright suite.
      */
-    void import("canvas-confetti").then((module) => {
-      if (isCancelled) return;
+    void import("canvas-confetti")
+      .then((module) => {
+        if (isCancelled) return;
 
-      fireConfetti = module.default.create(canvas, {
-        resize: true,
-        useWorker: false,
+        fireConfetti = module.default.create(canvas, {
+          resize: true,
+          useWorker: false,
+        });
+        observer.observe(canvas);
+      })
+      .catch(() => {
+        // A chunk which does not load leaves the row without its
+        // decoration. An unhandled rejection would open the error overlay
+        // and reach the error tracking, which a decoration must not do.
       });
-      observer.observe(canvas);
-    });
 
     return () => {
       isCancelled = true;

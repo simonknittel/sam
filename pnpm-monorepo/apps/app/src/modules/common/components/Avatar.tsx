@@ -14,7 +14,7 @@ function stringToColor(str: string) {
   return `hsl(${hash % 360}, 100%, 25%)`;
 }
 
-/** A mark which sits on the corner of the avatar, outside of its clipping */
+/** A mark on the corner of the avatar, outside of the clipped image */
 export enum AvatarDecoration {
   BirthdayHat = "birthday-hat",
 }
@@ -32,7 +32,7 @@ const Avatar = ({ className, name, image, size, decoration }: Props) => {
 
   return (
     /* The outer element carries the size and does not clip, thus a
-    decoration can reach past the corner of the image. */
+    decoration can extend past the corner of the image. */
     <span
       className={clsx(className, "relative block")}
       style={{

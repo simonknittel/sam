@@ -106,8 +106,8 @@ export const wikiPageReportedPayloadSchema = z.object({
 
 /**
  * The wording of the greeting a citizen received before the greeting picked
- * a wording at random. Rows written back then hold an empty payload, and the
- * app renders them with this wording. The list of wordings in the
+ * a wording at random. Rows from that time hold an empty payload, and the
+ * app shows this wording for them. The list of wordings in the
  * notification-router Lambda starts with the same entry.
  */
 export const BIRTHDAY_FALLBACK_WORDING = {
@@ -122,8 +122,8 @@ const BIRTHDAY_BODY_MAX_LENGTH = 200;
 /**
  * A birthday greeting is addressed to the citizen themselves and points at
  * nothing, thus it carries no target — only the wording which the greeting
- * picked for this citizen, so that the on-site row reads like the web push
- * notification the citizen got at the same moment.
+ * picked for this citizen, so that the on-site row shows the same text as
+ * the web push notification.
  *
  * Both fields are optional and the version stays 1, because the addition
  * does not break the older rows: their empty payload still parses, and the
