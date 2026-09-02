@@ -1,3 +1,5 @@
+import clsx from "clsx";
+
 interface Props {
   readonly className?: string;
 }
@@ -6,13 +8,20 @@ interface Props {
  * The party hat of a citizen who has their birthday today. The hat is drawn
  * inline instead of loaded as an icon, so that it can follow the size of the
  * avatar which carries it.
+ *
+ * The hat rocks on its base. A caller which tilts the hat keeps its tilt,
+ * because the animation writes the `transform` property and the utility
+ * class of the caller writes the `rotate` property.
  */
 export const BirthdayHat = ({ className }: Props) => (
   <svg
     viewBox="0 0 24 24"
     role="img"
     data-birthday-hat
-    className={className}
+    className={clsx(
+      className,
+      "origin-bottom animate-birthday-hat-wiggle motion-reduce:animate-none",
+    )}
     fill="none"
   >
     <title>Hat heute Geburtstag</title>

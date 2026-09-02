@@ -32,6 +32,22 @@
   --background-color-tertiary: hsla(0, 0%, 25%, 0.5);
 
   --breakpoint-3xl: 1920px;
+
+  /* The party hat of a citizen who has their birthday rocks on its base.
+     The base tilt of the hat stays in the `rotate` property of its utility
+     class, thus the two compose. */
+  --animate-birthday-hat-wiggle: birthday-hat-wiggle 2.5s ease-in-out infinite;
+
+  @keyframes birthday-hat-wiggle {
+    0%,
+    100% {
+      transform: rotate(-7deg);
+    }
+
+    50% {
+      transform: rotate(7deg);
+    }
+  }
 }
 
 @theme inline {

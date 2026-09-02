@@ -13,21 +13,26 @@ import { TbConfetti } from "react-icons/tb";
 const BURST_INTERVAL = 1200;
 
 /**
- * A small number of particles which drift down over the height of one row.
- * The values keep the animation calm: a row in a long list must not draw the
- * attention away from the other rows.
+ * A small number of particles per shot. The values keep the animation calm:
+ * a row in a long list must not draw the attention away from the other rows.
+ * A row is much wider than it is high, thus the shots stay flat and the
+ * particles reach the middle without leaving the row at the top.
  */
 const BURST_OPTIONS = {
-  particleCount: 7,
-  angle: 270,
-  spread: 140,
-  startVelocity: 6,
-  gravity: 0.22,
-  decay: 0.93,
+  particleCount: 4,
+  spread: 30,
+  startVelocity: 17,
+  gravity: 0.55,
+  decay: 0.91,
   scalar: 0.6,
-  ticks: 200,
-  origin: { x: 0.5, y: 0 },
+  ticks: 120,
 };
+
+/** One shot from each lower corner, both towards the middle of the row */
+const CANNONS = [
+  { angle: 20, origin: { x: 0, y: 1 } },
+  { angle: 160, origin: { x: 1, y: 1 } },
+];
 
 /**
  * Confetti for the row of a birthday greeting. The animation stays inside
@@ -54,13 +59,17 @@ export const BirthdayConfetti = () => {
       burstTimer = undefined;
     };
 
+    const fireBurst = () => {
+      for (const cannon of CANNONS) {
+        void fireConfetti?.({ ...BURST_OPTIONS, ...cannon });
+      }
+    };
+
     const start = () => {
       if (burstTimer || !fireConfetti) return;
 
-      void fireConfetti(BURST_OPTIONS);
-      burstTimer = setInterval(() => {
-        void fireConfetti?.(BURST_OPTIONS);
-      }, BURST_INTERVAL);
+      fireBurst();
+      burstTimer = setInterval(fireBurst, BURST_INTERVAL);
     };
 
     /**
