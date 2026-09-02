@@ -475,3 +475,154 @@ test("the birthday list names every citizen once, sorted by the next birthday", 
   expect(listed[1]).toContain("geburtstagskind-morgen");
   expect(listed[2]).toContain("geburtstagskind-spaeter");
 });
+
+/** The mark of a citizen who has their birthday today, wherever it sits */
+const birthdayHats = (scope: Page | Locator) =>
+  scope.getByRole("img", { name: "Hat heute Geburtstag" });
+
+test("the party hat marks the citizen whose birthday is today", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const today = berlinDate(0);
+  const tomorrow = berlinDate(1);
+
+  const withBirthday = async (handle: string, day: number, month: number) => {
+    const citizen = await createCitizen(prisma, {
+      handle,
+      permissionStrings: ["citizen;read"],
+    });
+    await prisma.entity.update({
+      where: { id: citizen.entity.id },
+      data: {
+        timezone: BIRTHDAY_LIST_TIMEZONE,
+        birthdayDay: day,
+        birthdayMonth: month,
+      },
+    });
+    return citizen;
+  };
+
+  const birthdayChild = await withBirthday(
+    "hut-traeger",
+    today.day,
+    today.month,
+  );
+  const nextInLine = await withBirthday(
+    "morgen-dran",
+    tomorrow.day,
+    tomorrow.month,
+  );
+
+  await signIn(birthdayChild.user);
+
+  /** The own profile tile of the dashboard and the account avatar above it */
+  await page.goto("/app/dashboard");
+  await expect(birthdayHats(sectionByHeading(page, "Spynet"))).toBeVisible();
+  await expect(
+    birthdayHats(page.getByRole("button", { name: "Account" })),
+  ).toBeVisible();
+
+  /** The list marks the row of today, and only that row */
+  await page.goto("/app/spynet/birthdays");
+  const rows = page.getByRole("row");
+  await expect(
+    birthdayHats(rows.filter({ hasText: birthdayChild.entity.handle! })),
+  ).toBeVisible();
+  await expect(
+    birthdayHats(rows.filter({ hasText: nextInLine.entity.handle! })),
+  ).toHaveCount(0);
+});
+
+/**
+ * The hat of another citizen, which travels through the profile query
+ * instead of through the session.
+ */
+test("the popover carries the party hat of the citizen it is about", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const today = berlinDate(0);
+  const tomorrow = berlinDate(1);
+
+  const withBirthday = async (handle: string, day: number, month: number) => {
+    const citizen = await createCitizen(prisma, { handle });
+    await prisma.entity.update({
+      where: { id: citizen.entity.id },
+      data: {
+        timezone: BIRTHDAY_LIST_TIMEZONE,
+        birthdayDay: day,
+        birthdayMonth: month,
+      },
+    });
+    return citizen;
+  };
+
+  const birthdayChild = await withBirthday(
+    "hut-im-popover",
+    today.day,
+    today.month,
+  );
+  const nextInLine = await withBirthday(
+    "morgen-im-popover",
+    tomorrow.day,
+    tomorrow.month,
+  );
+
+  const viewer = await createCitizen(prisma, {
+    handle: "hut-betrachter",
+    permissionStrings: ["citizen;read"],
+  });
+  await signIn(viewer.user);
+
+  await page.goto("/app/spynet/birthdays");
+  const popover = page.getByRole("dialog", { name: "Citizen-Details" });
+
+  await hoverUntilVisible(
+    page.getByRole("link", { name: birthdayChild.entity.handle! }).first(),
+    popover,
+  );
+  await expect(birthdayHats(popover)).toBeVisible();
+
+  /** The popover closes with the pointer, thus the next one stands alone */
+  await page.mouse.move(0, 0);
+  await expect(popover).toHaveCount(0);
+
+  await hoverUntilVisible(
+    page.getByRole("link", { name: nextInLine.entity.handle! }).first(),
+    popover,
+  );
+  await expect(popover).toContainText(nextInLine.entity.handle!);
+  await expect(birthdayHats(popover)).toHaveCount(0);
+});
+
+test.describe("mobile", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test("the account avatar of the flyout wears the party hat", async ({
+    page,
+    prisma,
+    signIn,
+  }) => {
+    const today = berlinDate(0);
+    const citizen = await createCitizen(prisma, { handle: "mobiler-hut" });
+    await prisma.entity.update({
+      where: { id: citizen.entity.id },
+      data: {
+        timezone: BIRTHDAY_LIST_TIMEZONE,
+        birthdayDay: today.day,
+        birthdayMonth: today.month,
+      },
+    });
+
+    await signIn(citizen.user);
+    await page.goto("/app");
+
+    const actionBar = page.locator("nav");
+    await actionBar.getByRole("button", { name: "Apps" }).click();
+
+    await expect(birthdayHats(actionBar)).toBeVisible();
+  });
+});
