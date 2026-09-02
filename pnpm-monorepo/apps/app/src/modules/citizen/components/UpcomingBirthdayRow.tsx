@@ -1,4 +1,3 @@
-import { BirthdayHat } from "@/modules/common/components/BirthdayHat";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { TRow } from "@/modules/common/components/Table";
 import clsx from "clsx";
@@ -34,15 +33,7 @@ export const UpcomingBirthdayRow = ({ birthday }: Props) => {
       </td>
 
       <td className="overflow-hidden">
-        <span className="flex items-center gap-2">
-          {/* A long handle must give way to the hat, not push it out of the
-          cell. The popover of the link shows the full handle. */}
-          <span className="min-w-0 truncate">
-            <CitizenLink citizen={birthday.citizen} />
-          </span>
-
-          {isToday && <BirthdayHat className="size-4 flex-none" />}
-        </span>
+        <CitizenLink citizen={birthday.citizen} />
       </td>
 
       <td className={clsx("font-mono", { "font-bold": isToday })}>

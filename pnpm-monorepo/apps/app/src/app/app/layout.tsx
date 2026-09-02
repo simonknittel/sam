@@ -8,6 +8,8 @@ import { getAssumedUserLabel } from "@/modules/auth/utils/getAssumedUserLabel";
 import { hasAnyReadableFlow } from "@/modules/career/queries/getMyReadableFlows";
 import { getUnseenChangelogEntryKeys } from "@/modules/changelog/queries/getUnseenChangelogEntryKeys";
 import { CHANGELOG_APP_SLUG } from "@/modules/changelog/utils/CHANGELOG_APP_SLUG";
+import { BirthdayCitizensProvider } from "@/modules/citizen/components/BirthdayCitizensProvider";
+import { getCitizenIdsWithBirthdayToday } from "@/modules/citizen/queries/getCitizenIdsWithBirthdayToday";
 import { CreateContextProvider } from "@/modules/common/components/CreateContext";
 import { NewReleaseToast } from "@/modules/common/components/NewReleaseToast";
 import QueryClientProviderContainer from "@/modules/common/components/QueryClientProviderContainer";
@@ -44,6 +46,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
     unreadOnSiteNotificationCount,
     canReadCareer,
     onboardingState,
+    birthdayCitizenIds,
   ] = await Promise.all([
     requireAuthenticationPage(),
     getUnleashFlag(UNLEASH_FLAG.DisableAlgolia),
@@ -55,6 +58,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
     getUnreadOnSiteNotificationCount(),
     hasAnyReadableFlow(),
     getOnboardingState(),
+    getCitizenIdsWithBirthdayToday(),
   ]);
 
   return (
@@ -66,54 +70,56 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
               <ChannelsProvider userId={authentication.session.user.id}>
                 <NextIntlClientProvider>
                   <RolesContextProvider roles={visibleRoles}>
-                    <div className="min-h-dvh background-primary">
-                      <SkipToContentLink />
+                    <BirthdayCitizensProvider citizenIds={birthdayCitizenIds}>
+                      <div className="min-h-dvh background-primary">
+                        <SkipToContentLink />
 
-                      <AppsContextProvider
-                        apps={apps}
-                        appDotBadgeCounts={{
-                          [CHANGELOG_APP_SLUG]: changelogUnseenKeys.size,
-                          wiki: openWikiReportCount,
-                        }}
-                        favoriteAppKeys={[...favoriteAppKeys]}
-                      >
-                        <OnSiteNotificationsProvider
-                          initialUnreadCount={unreadOnSiteNotificationCount}
+                        <AppsContextProvider
+                          apps={apps}
+                          appDotBadgeCounts={{
+                            [CHANGELOG_APP_SLUG]: changelogUnseenKeys.size,
+                            wiki: openWikiReportCount,
+                          }}
+                          favoriteAppKeys={[...favoriteAppKeys]}
                         >
-                          <OnboardingProvider initialState={onboardingState}>
-                            <CreateContextProvider>
-                              <CmdKProvider
-                                disableAlgolia={disableAlgolia}
-                                canReadCareer={canReadCareer}
-                              >
-                                <TopBar />
-                                <MobileActionBarLoader />
-                              </CmdKProvider>
+                          <OnSiteNotificationsProvider
+                            initialUnreadCount={unreadOnSiteNotificationCount}
+                          >
+                            <OnboardingProvider initialState={onboardingState}>
+                              <CreateContextProvider>
+                                <CmdKProvider
+                                  disableAlgolia={disableAlgolia}
+                                  canReadCareer={canReadCareer}
+                                >
+                                  <TopBar />
+                                  <MobileActionBarLoader />
+                                </CmdKProvider>
 
-                              <div className="pt-12 lg:pt-28 pb-16 lg:pb-0 min-h-dvh">
-                                {children}
-                              </div>
+                                <div className="pt-12 lg:pt-28 pb-16 lg:pb-0 min-h-dvh">
+                                  {children}
+                                </div>
 
-                              <OnboardingTour />
-                            </CreateContextProvider>
-                          </OnboardingProvider>
-                        </OnSiteNotificationsProvider>
-                      </AppsContextProvider>
-                    </div>
+                                <OnboardingTour />
+                              </CreateContextProvider>
+                            </OnboardingProvider>
+                          </OnSiteNotificationsProvider>
+                        </AppsContextProvider>
+                      </div>
 
-                    {(authentication.session.user.role === "admin" ||
-                      authentication.session.assumedByAdmin) && (
-                      <AdminEnabler
-                        enabled={
-                          (await cookies()).get("enable_admin")?.value === "1"
-                        }
-                        assumedUserLabel={getAssumedUserLabel(
-                          authentication.session,
-                        )}
-                      />
-                    )}
+                      {(authentication.session.user.role === "admin" ||
+                        authentication.session.assumedByAdmin) && (
+                        <AdminEnabler
+                          enabled={
+                            (await cookies()).get("enable_admin")?.value === "1"
+                          }
+                          assumedUserLabel={getAssumedUserLabel(
+                            authentication.session,
+                          )}
+                        />
+                      )}
 
-                    <NewReleaseToast />
+                      <NewReleaseToast />
+                    </BirthdayCitizensProvider>
                   </RolesContextProvider>
                 </NextIntlClientProvider>
               </ChannelsProvider>

@@ -11,17 +11,16 @@ interface Props {
  *
  * The hat rocks on its base. A caller which tilts the hat keeps its tilt,
  * because the animation writes the `transform` property and the utility
- * class of the caller writes the `rotate` property.
+ * class of the caller writes the `rotate` property. The animation stops for
+ * a viewer who prefers reduced motion, wherever the hat is drawn — see
+ * `--animate-birthday-hat-wiggle` in the stylesheet.
  */
 export const BirthdayHat = ({ className }: Props) => (
   <svg
     viewBox="0 0 24 24"
     role="img"
     data-birthday-hat
-    className={clsx(
-      className,
-      "origin-bottom animate-birthday-hat-wiggle motion-reduce:animate-none",
-    )}
+    className={clsx(className, "origin-bottom animate-birthday-hat-wiggle")}
     fill="none"
   >
     <title>Hat heute Geburtstag</title>

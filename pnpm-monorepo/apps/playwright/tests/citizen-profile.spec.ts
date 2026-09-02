@@ -506,7 +506,11 @@ test("the birthday list names every citizen once, sorted by the next birthday", 
   expect(listed[2]).toContain("geburtstagskind-spaeter");
 });
 
-/** The mark of a citizen who has their birthday today, wherever it sits */
+/**
+ * The mark of a citizen who has their birthday today, wherever it sits. A
+ * profile carries more than one: the avatar wears a hat and the header
+ * repeats it next to "Happy Birthday".
+ */
 const birthdayHats = (scope: Page | Locator) =>
   scope.getByRole("img", { name: "Hat heute Geburtstag" });
 
@@ -537,13 +541,14 @@ test("the party hat marks the citizen whose birthday is today", async ({
   /** The own profile tile of the dashboard and the account avatar above it */
   await page.goto("/app/dashboard");
   const profileTile = sectionByHeading(page, "Spynet");
-  await expect(birthdayHats(profileTile)).toBeVisible();
+  await expect(birthdayHats(profileTile).first()).toBeVisible();
+  await expect(profileTile).toContainText("Happy Birthday");
   await expect(
     birthdayHats(page.getByRole("button", { name: "Account" })),
   ).toBeVisible();
 
-  /** The avatar of the birthday child celebrates with confetti */
-  await expect(profileTile.locator("[data-confetti-canvas]")).toBeVisible();
+  /** The profile and the avatar in it both celebrate with confetti */
+  await expect(profileTile.locator("[data-confetti-canvas]")).toHaveCount(2);
 
   /** The list marks the row of today, and only that row */
   await page.goto("/app/spynet/birthdays");
@@ -590,7 +595,8 @@ test("the popover carries the party hat of the citizen it is about", async ({
     page.getByRole("link", { name: birthdayChild.entity.handle! }).first(),
     popover,
   );
-  await expect(birthdayHats(popover)).toBeVisible();
+  await expect(birthdayHats(popover).first()).toBeVisible();
+  await expect(popover).toContainText("Happy Birthday");
 
   /** The popover closes with the pointer, thus the next one stands alone */
   await page.mouse.move(0, 0);

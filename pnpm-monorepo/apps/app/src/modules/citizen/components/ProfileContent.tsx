@@ -109,7 +109,9 @@ export const ProfileContent = ({
           <h2 className="font-mono uppercase text-lg font-bold flex items-center gap-2 min-w-0">
             <span
               className={clsx("truncate", {
-                "text-me": profile.isCurrentCitizen,
+                "text-birthday": citizen.hasBirthdayToday,
+                "text-me":
+                  !citizen.hasBirthdayToday && profile.isCurrentCitizen,
               })}
               title={name}
             >

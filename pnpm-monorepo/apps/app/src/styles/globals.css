@@ -54,6 +54,19 @@
   --font-mono: var(--font-roboto-mono), monospace;
 }
 
+/**
+ * Every decoration of a birthday stops for a viewer who prefers reduced
+ * motion. The animation of the party hat is switched off here, at its own
+ * definition, thus no place which draws the hat can forget it. The confetti
+ * has no CSS animation: `ConfettiCanvas` reads the same preference and
+ * renders no canvas at all.
+ */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --animate-birthday-hat-wiggle: none;
+  }
+}
+
 /* Dark scrollbars to match the theme (thin thumb on a transparent track). */
 * {
   scrollbar-width: thin;
@@ -79,6 +92,23 @@
  * reads as a dark surface with a colour cast and the text above it keeps its
  * contrast.
  */
+/**
+ * The handle of a citizen who has their birthday today. The gradient
+ * replaces the colour of the text, thus the underline of a link needs its
+ * own colour.
+ */
+@utility text-birthday {
+  background-image: linear-gradient(
+    to right,
+    var(--color-amber-300),
+    var(--color-pink-400),
+    var(--color-violet-400)
+  );
+  background-clip: text;
+  color: transparent;
+  text-decoration-color: var(--color-pink-400);
+}
+
 @utility background-birthday {
   background-image:
     radial-gradient(
