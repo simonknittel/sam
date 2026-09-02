@@ -4,6 +4,7 @@ import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
 import { api } from "@/trpc/react";
 import type { Entity } from "@sam-monorepo/database/browser";
+import clsx from "clsx";
 import { useCallback, useState, type ReactNode } from "react";
 import { BsExclamationOctagonFill } from "react-icons/bs";
 import { ProfileContent } from "./ProfileContent";
@@ -38,7 +39,12 @@ export const CitizenPopover = ({ children, citizenId }: Props) => {
       title="Citizen-Details"
       trigger={children}
       onOpenChange={handleOpenChange}
-      childrenClassName="w-[400px]"
+      childrenClassName={clsx("w-[400px]", {
+        /** The whole popup celebrates with the citizen: the colour clouds
+        of the surface, and an isolated box for the confetti behind the
+        profile. */
+        "background-birthday relative isolate": data?.citizen.hasBirthdayToday,
+      })}
       hoverOnly
     >
       {isPending && (
