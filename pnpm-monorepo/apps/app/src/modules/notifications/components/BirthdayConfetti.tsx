@@ -5,8 +5,12 @@ import type { CreateTypes } from "canvas-confetti";
 import { useEffect, useRef } from "react";
 import { TbConfetti } from "react-icons/tb";
 
-/** Milliseconds between two bursts while the row is in view */
-const BURST_INTERVAL = 1600;
+/**
+ * Milliseconds between two bursts while the row is in view. One burst lasts
+ * a little longer than this, thus the bursts overlap and the row keeps
+ * sprinkling instead of blinking.
+ */
+const BURST_INTERVAL = 1200;
 
 /**
  * A gentle sprinkle inside one list row, not a fireworks display: a handful
@@ -16,11 +20,11 @@ const BURST_OPTIONS = {
   particleCount: 7,
   angle: 270,
   spread: 140,
-  startVelocity: 8,
-  gravity: 0.6,
-  decay: 0.9,
+  startVelocity: 6,
+  gravity: 0.22,
+  decay: 0.93,
   scalar: 0.6,
-  ticks: 110,
+  ticks: 200,
   origin: { x: 0.5, y: 0 },
 };
 
@@ -61,9 +65,9 @@ export const BirthdayConfetti = () => {
 
     /**
      * A list of many rows must not animate the rows nobody looks at. The
-     * viewport is the root: the popover unmounts its list when it closes,
-     * thus a row which is only scrolled out of the list keeps its timer,
-     * which is what the short list of the popover needs.
+     * root is the viewport, and the scroll container of the list clips the
+     * intersection with it, thus a row which is scrolled out of the list
+     * stops as well.
      */
     const observer = new IntersectionObserver(([entry]) => {
       if (entry?.isIntersecting) start();
@@ -110,7 +114,7 @@ export const BirthdayConfetti = () => {
       ref={canvasRef}
       data-birthday-confetti
       aria-hidden="true"
-      className="pointer-events-none absolute inset-0 -z-10 h-full w-full"
+      className="pointer-events-none absolute inset-0 -z-10 size-full"
     />
   );
 };
