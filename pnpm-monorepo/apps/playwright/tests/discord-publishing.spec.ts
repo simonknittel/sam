@@ -1,3 +1,4 @@
+import { EventDiscordPublishTarget } from "@sam-monorepo/database/client";
 import {
   MOCK_STAGE_CHANNEL,
   MOCK_TEXT_CHANNEL,
@@ -520,6 +521,189 @@ test("a template's publish preference prefills the create form and publishes the
     entity_type: VOICE_ENTITY_TYPE,
     channel_id: MOCK_VOICE_CHANNEL.id,
   });
+});
+
+/**
+ * The publish preference the test above reads is edited in the template's
+ * Stammdaten form — the only place it is written by hand.
+ */
+test("the owner switches a template's publishing on and picks its channel", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const owner = await createCitizen(prisma, {
+    handle: "vorlagen-besitzer",
+    permissionStrings: ["event;read", "event;create"],
+  });
+  const { template } = await createEventTemplate(prisma, {
+    name: "Patrouille ohne Discord",
+    ownedById: owner.entity.id,
+  });
+
+  await signIn(owner.user);
+  await page.goto(`/app/events/templates/${template.id}`);
+  await waitForAppShellHydration(page);
+
+  await toggleLabel(page, /^Auf Discord veröffentlichen$/).click();
+  await toggleLabel(page, /^Sprachkanal$/).click();
+  /** Not the first option, which a reset to the field's default would pick */
+  await page
+    .getByLabel("Kanal", { exact: true })
+    .selectOption({ label: MOCK_STAGE_CHANNEL.name });
+
+  await page.getByRole("button", { name: "Speichern" }).click();
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+
+  await expect
+    .poll(
+      () =>
+        prisma.eventTemplate.findUniqueOrThrow({ where: { id: template.id } }),
+      { timeout: ACTION_FEEDBACK_TIMEOUT },
+    )
+    .toMatchObject({
+      discordPublishTarget: EventDiscordPublishTarget.CHANNEL,
+      discordPublishChannelId: MOCK_STAGE_CHANNEL.id,
+      discordPublishLocation: null,
+    });
+
+  /**
+   * The form keeps showing what was just saved. React puts a form back to
+   * its default values after the action, which used to leave the checkbox,
+   * the target and the channel saying something else than the database.
+   */
+  await expect(
+    page.getByLabel("Auf Discord veröffentlichen", { exact: true }),
+  ).toBeChecked();
+  await expect(page.getByRole("textbox", { name: "Ort" })).toBeHidden();
+  await expect(page.getByLabel("Kanal", { exact: true })).toHaveValue(
+    MOCK_STAGE_CHANNEL.id,
+  );
+
+  /** And brings it back on the next visit */
+  await page.reload();
+  await expect(page.getByLabel("Kanal", { exact: true })).toHaveValue(
+    MOCK_STAGE_CHANNEL.id,
+  );
+});
+
+/**
+ * A template that already carries a preference brings it back into the form,
+ * where it survives an unrelated edit, can be switched and can be cleared.
+ */
+test("a template's saved publish preference is edited, switched and cleared", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const owner = await createCitizen(prisma, {
+    handle: "vorlagen-pflegerin",
+    permissionStrings: ["event;read", "event;create"],
+  });
+  const { template } = await createEventTemplate(prisma, {
+    name: "Patrouille mit Discord",
+    ownedById: owner.entity.id,
+    discordPublishTarget: EventDiscordPublishTarget.EXTERNAL,
+  });
+  const readTemplate = () =>
+    prisma.eventTemplate.findUniqueOrThrow({ where: { id: template.id } });
+
+  await signIn(owner.user);
+  await page.goto(`/app/events/templates/${template.id}`);
+  await waitForAppShellHydration(page);
+
+  /** The preference comes back switched on, with its target preselected */
+  await expect(page.getByRole("textbox", { name: "Ort" })).toBeVisible();
+
+  /** An edit that does not touch publishing leaves the preference alone */
+  await fillUntilValue(page.getByLabel("Name"), "Patrouille Bravo");
+  await page.getByRole("button", { name: "Speichern" }).click();
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+  await expect
+    .poll(readTemplate, { timeout: ACTION_FEEDBACK_TIMEOUT })
+    .toMatchObject({
+      name: "Patrouille Bravo",
+      discordPublishTarget: EventDiscordPublishTarget.EXTERNAL,
+    });
+
+  /** Switching the target to a channel */
+  await toggleLabel(page, /^Sprachkanal$/).click();
+  await page
+    .getByLabel("Kanal", { exact: true })
+    .selectOption({ label: MOCK_VOICE_CHANNEL.name });
+  await page.getByRole("button", { name: "Speichern" }).click();
+  await expect
+    .poll(readTemplate, { timeout: ACTION_FEEDBACK_TIMEOUT })
+    .toMatchObject({
+      discordPublishTarget: EventDiscordPublishTarget.CHANNEL,
+      discordPublishChannelId: MOCK_VOICE_CHANNEL.id,
+      discordPublishLocation: null,
+    });
+
+  /** Switching publishing off clears all three columns */
+  await page.reload();
+  await waitForAppShellHydration(page);
+  await toggleLabel(page, /^Auf Discord veröffentlichen$/).click();
+  await page.getByRole("button", { name: "Speichern" }).click();
+  await expect
+    .poll(readTemplate, { timeout: ACTION_FEEDBACK_TIMEOUT })
+    .toMatchObject({
+      discordPublishTarget: null,
+      discordPublishChannelId: null,
+      discordPublishLocation: null,
+    });
+});
+
+/**
+ * A restricted template carries visibility roles the editor may not be
+ * allowed to read. Switching publishing on must not make the save depend on
+ * them.
+ */
+test("a restricted template keeps its roles while publishing is switched on", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const audienceRole = await createRole(prisma, { name: "Sicherheitsdienst" });
+  /** Deliberately without `otherRole;read`: the picker cannot name the role */
+  const owner = await createCitizen(prisma, {
+    handle: "restriktive-besitzerin",
+    permissionStrings: ["event;read", "event;create"],
+  });
+  const { template } = await createEventTemplate(prisma, {
+    name: "Vertrauliche Patrouille",
+    ownedById: owner.entity.id,
+    visibility: EventVisibility.RESTRICTED,
+    visibilityRoleIds: [audienceRole.id],
+  });
+
+  await signIn(owner.user);
+  await page.goto(`/app/events/templates/${template.id}`);
+  await waitForAppShellHydration(page);
+
+  await toggleLabel(page, /^Auf Discord veröffentlichen$/).click();
+  await page.getByRole("button", { name: "Speichern" }).click();
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+
+  await expect
+    .poll(
+      () =>
+        prisma.eventTemplate.findUniqueOrThrow({
+          where: { id: template.id },
+          include: { visibilityRoles: { select: { roleId: true } } },
+        }),
+      { timeout: ACTION_FEEDBACK_TIMEOUT },
+    )
+    .toMatchObject({
+      discordPublishTarget: EventDiscordPublishTarget.EXTERNAL,
+      visibilityRoles: [{ roleId: audienceRole.id }],
+    });
 });
 
 /**
