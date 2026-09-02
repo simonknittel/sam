@@ -134,6 +134,24 @@ export const birthdayPayloadSchema = z.object({
   body: z.string().max(BIRTHDAY_BODY_MAX_LENGTH).optional(),
 });
 
+/** Room for a wording well above the length of the drafted ones */
+const NEW_YEAR_TITLE_MAX_LENGTH = 100;
+const NEW_YEAR_BODY_MAX_LENGTH = 200;
+
+/**
+ * A New Year greeting is addressed to the citizen themselves and points at
+ * nothing, thus it carries no target — only the wording which the greeting
+ * picked for this citizen, so that the on-site row shows the same text as
+ * the web push notification.
+ *
+ * Both fields are required: no row of this type is older than the wording in
+ * the payload, thus the app needs no fallback.
+ */
+export const newYearPayloadSchema = z.object({
+  title: z.string().max(NEW_YEAR_TITLE_MAX_LENGTH),
+  body: z.string().max(NEW_YEAR_BODY_MAX_LENGTH),
+});
+
 export const wikiCitizenMentionedPayloadSchema = z.object({
   pageId: z.string(),
   pageTitle: z.string(),
@@ -160,6 +178,7 @@ export const onSiteNotificationPayloadSchemas = {
   wiki_page_reported: wikiPageReportedPayloadSchema,
   wiki_citizen_mentioned: wikiCitizenMentionedPayloadSchema,
   birthday: birthdayPayloadSchema,
+  new_year: newYearPayloadSchema,
 } as const;
 
 export type OnSiteNotificationType =
@@ -189,6 +208,7 @@ export const ON_SITE_NOTIFICATION_PAYLOAD_VERSIONS: Record<
   wiki_page_reported: 1,
   wiki_citizen_mentioned: 1,
   birthday: 1,
+  new_year: 1,
 };
 
 export type ParsedOnSiteNotificationPayload = {
