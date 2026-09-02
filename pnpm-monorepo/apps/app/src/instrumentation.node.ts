@@ -89,6 +89,12 @@ const sdk = new NodeSDK({
       }),
     }),
   ],
+  // Without this option, the SDK makes an OTLP metrics pipeline from the
+  // environment variables. That pipeline sends to `/v1/metrics` of the
+  // configured endpoint, which the backend does not serve, thus each send
+  // fails with a 404. The app records no metrics of its own, and an empty
+  // list registers no meter provider.
+  metricReaders: [],
   instrumentations: [
     getNodeAutoInstrumentations({
       // Prisma instruments the same queries and its spans carry the SQL, thus
