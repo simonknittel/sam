@@ -14,6 +14,7 @@ import {
   type OnSiteNotificationRow,
 } from "../utils/types";
 import { BirthdayDecoration } from "./BirthdayDecoration";
+import { NewYearDecoration } from "./NewYearDecoration";
 
 /**
  * What a decorated row draws behind its text. The record is total, thus a
@@ -21,6 +22,7 @@ import { BirthdayDecoration } from "./BirthdayDecoration";
  */
 const decorationComponents: Record<NotificationDecoration, ComponentType> = {
   [NotificationDecoration.Birthday]: BirthdayDecoration,
+  [NotificationDecoration.NewYear]: NewYearDecoration,
 };
 
 interface Props {
