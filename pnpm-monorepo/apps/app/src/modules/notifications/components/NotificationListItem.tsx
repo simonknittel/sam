@@ -3,12 +3,25 @@
 import { Link } from "@/modules/common/components/Link";
 import { RelativeDate } from "@/modules/common/components/RelativeDate";
 import type { ReadOnViewRef } from "@/modules/common/utils/useReadOnView";
+import type { ComponentType } from "react";
 import { FaArchive, FaEnvelope, FaUndo } from "react-icons/fa";
-import { renderOnSiteNotification } from "../utils/renderOnSiteNotification";
+import {
+  NotificationDecoration,
+  renderOnSiteNotification,
+} from "../utils/renderOnSiteNotification";
 import {
   NotificationCenterTab,
   type OnSiteNotificationRow,
 } from "../utils/types";
+import { BirthdayDecoration } from "./BirthdayDecoration";
+
+/**
+ * What a decorated row draws behind its text. The record is total, thus a
+ * new decoration cannot stay without a component.
+ */
+const decorationComponents: Record<NotificationDecoration, ComponentType> = {
+  [NotificationDecoration.Birthday]: BirthdayDecoration,
+};
 
 interface Props {
   readonly notification: OnSiteNotificationRow;
@@ -44,13 +57,21 @@ export const NotificationListItem = ({
   const isUnread = !notification.readAt;
   const showsUnreadHighlight = isUnread || keepUnreadHighlight;
   const trackReadOnView = isUnread && tab === NotificationCenterTab.Inbox;
+  const Decoration = rendering.decoration
+    ? decorationComponents[rendering.decoration]
+    : null;
 
   return (
     <li
       ref={trackReadOnView ? observeReadOnView : undefined}
-      className="relative group/notification px-4 py-2 hover:bg-neutral-800/50 focus-within:bg-neutral-800/50"
+      /* `isolate` keeps the decoration between the row's background and its
+      text. Without it, the negative z-index of the decoration would put it
+      behind the background of the popover. */
+      className="relative isolate group/notification px-4 py-2 hover:bg-neutral-800/50 focus-within:bg-neutral-800/50"
       data-read-on-view-id={trackReadOnView ? notification.id : undefined}
     >
+      {Decoration && <Decoration />}
+
       {showsUnreadHighlight && (
         <div
           className="absolute left-0 top-0 bottom-0 w-0.5"
@@ -86,10 +107,7 @@ export const NotificationListItem = ({
       </div>
 
       {rendering.body && (
-        <p
-          className="text-sm text-neutral-300 truncate mt-0.5"
-          title={rendering.body}
-        >
+        <p className="text-sm text-neutral-300 break-words mt-0.5">
           {rendering.body}
         </p>
       )}

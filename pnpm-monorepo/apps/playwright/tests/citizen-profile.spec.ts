@@ -407,6 +407,36 @@ const berlinDate = (daysFromToday: number) => {
   return { day: target.getUTCDate(), month: target.getUTCMonth() + 1 };
 };
 
+interface BirthdayCitizenOptions {
+  readonly handle: string;
+  readonly day: number;
+  readonly month: number;
+  readonly permissionStrings?: readonly string[];
+}
+
+/**
+ * A citizen who can sign in and whose birthday falls on the given day. The
+ * time zone is the one of the organization, thus the list and the avatar of
+ * the citizen name the same day.
+ */
+const createCitizenWithBirthday = async (
+  prisma: PrismaClient,
+  { handle, day, month, permissionStrings }: BirthdayCitizenOptions,
+) => {
+  const citizen = await createCitizen(prisma, { handle, permissionStrings });
+
+  await prisma.entity.update({
+    where: { id: citizen.entity.id },
+    data: {
+      timezone: BIRTHDAY_LIST_TIMEZONE,
+      birthdayDay: day,
+      birthdayMonth: month,
+    },
+  });
+
+  return citizen;
+};
+
 test("the birthday list names every citizen once, sorted by the next birthday", async ({
   page,
   prisma,
@@ -421,18 +451,18 @@ test("the birthday list names every citizen once, sorted by the next birthday", 
   const tomorrow = berlinDate(1);
   const inTenDays = berlinDate(10);
 
-  const setBirthday = async (handle: string, day: number, month: number) => {
-    const citizen = await createCitizen(prisma, { handle });
-    await prisma.entity.update({
-      where: { id: citizen.entity.id },
-      data: { birthdayDay: day, birthdayMonth: month },
-    });
-    return citizen;
-  };
-
-  await setBirthday("geburtstagskind-heute", today.day, today.month);
-  await setBirthday("geburtstagskind-morgen", tomorrow.day, tomorrow.month);
-  await setBirthday("geburtstagskind-spaeter", inTenDays.day, inTenDays.month);
+  await createCitizenWithBirthday(prisma, {
+    handle: "geburtstagskind-heute",
+    ...today,
+  });
+  await createCitizenWithBirthday(prisma, {
+    handle: "geburtstagskind-morgen",
+    ...tomorrow,
+  });
+  await createCitizenWithBirthday(prisma, {
+    handle: "geburtstagskind-spaeter",
+    ...inTenDays,
+  });
   /** Without a birthday nobody appears in the list */
   await createCitizen(prisma, { handle: "ohne-geburtstag" });
 
@@ -474,4 +504,131 @@ test("the birthday list names every citizen once, sorted by the next birthday", 
   expect(listed[0]).toContain("geburtstagskind-heute");
   expect(listed[1]).toContain("geburtstagskind-morgen");
   expect(listed[2]).toContain("geburtstagskind-spaeter");
+});
+
+/**
+ * The mark of a citizen who has their birthday today, wherever it sits. A
+ * profile carries more than one: the avatar wears a hat and the header
+ * repeats it next to "Happy Birthday".
+ */
+const birthdayHats = (scope: Page | Locator) =>
+  scope.getByRole("img", { name: "Hat heute Geburtstag" });
+
+test("the party hat marks the citizen whose birthday is today", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const today = berlinDate(0);
+  const tomorrow = berlinDate(1);
+
+  const birthdayChild = await createCitizenWithBirthday(prisma, {
+    handle: "hut-traeger",
+    ...today,
+    permissionStrings: ["citizen;read"],
+  });
+  const nextInLine = await createCitizenWithBirthday(prisma, {
+    handle: "morgen-dran",
+    ...tomorrow,
+    permissionStrings: ["citizen;read"],
+  });
+
+  /** The whole suite runs with reduced motion, see playwright.config.ts */
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+
+  await signIn(birthdayChild.user);
+
+  /** The own profile tile of the dashboard and the account avatar above it */
+  await page.goto("/app/dashboard");
+  const profileTile = sectionByHeading(page, "Spynet");
+  await expect(birthdayHats(profileTile).first()).toBeVisible();
+  await expect(profileTile).toContainText("Happy Birthday");
+  await expect(
+    birthdayHats(page.getByRole("button", { name: "Account" })),
+  ).toBeVisible();
+
+  /** The profile and the avatar in it both celebrate with confetti */
+  await expect(profileTile.locator("[data-confetti-canvas]")).toHaveCount(2);
+
+  /** The list marks the row of today, and only that row */
+  await page.goto("/app/spynet/birthdays");
+  const rows = page.getByRole("row");
+  await expect(
+    birthdayHats(rows.filter({ hasText: birthdayChild.entity.handle! })),
+  ).toBeVisible();
+  await expect(
+    birthdayHats(rows.filter({ hasText: nextInLine.entity.handle! })),
+  ).toHaveCount(0);
+});
+
+/**
+ * The hat of another citizen, which travels through the profile query
+ * instead of through the session.
+ */
+test("the popover carries the party hat of the citizen it is about", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const today = berlinDate(0);
+  const tomorrow = berlinDate(1);
+
+  const birthdayChild = await createCitizenWithBirthday(prisma, {
+    handle: "hut-im-popover",
+    ...today,
+  });
+  const nextInLine = await createCitizenWithBirthday(prisma, {
+    handle: "morgen-im-popover",
+    ...tomorrow,
+  });
+
+  const viewer = await createCitizen(prisma, {
+    handle: "hut-betrachter",
+    permissionStrings: ["citizen;read"],
+  });
+  await signIn(viewer.user);
+
+  await page.goto("/app/spynet/birthdays");
+  const popover = page.getByRole("dialog", { name: "Citizen-Details" });
+
+  await hoverUntilVisible(
+    page.getByRole("link", { name: birthdayChild.entity.handle! }).first(),
+    popover,
+  );
+  await expect(birthdayHats(popover).first()).toBeVisible();
+  await expect(popover).toContainText("Happy Birthday");
+
+  /** The popover closes with the pointer, thus the next one stands alone */
+  await page.mouse.move(0, 0);
+  await expect(popover).toHaveCount(0);
+
+  await hoverUntilVisible(
+    page.getByRole("link", { name: nextInLine.entity.handle! }).first(),
+    popover,
+  );
+  await expect(popover).toContainText(nextInLine.entity.handle!);
+  await expect(birthdayHats(popover)).toHaveCount(0);
+});
+
+test.describe("mobile", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test("the account avatar of the flyout wears the party hat", async ({
+    page,
+    prisma,
+    signIn,
+  }) => {
+    const citizen = await createCitizenWithBirthday(prisma, {
+      handle: "mobiler-hut",
+      ...berlinDate(0),
+    });
+
+    await signIn(citizen.user);
+    await page.goto("/app");
+
+    const actionBar = page.locator("nav");
+    await actionBar.getByRole("button", { name: "Apps" }).click();
+
+    await expect(birthdayHats(actionBar)).toBeVisible();
+  });
 });

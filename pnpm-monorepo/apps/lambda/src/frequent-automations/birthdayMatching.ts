@@ -1,12 +1,14 @@
 /**
- * Decides whether a citizen has their birthday right now, in their own time
- * zone. Which day a birthday falls on is the shared rule
- * `getCelebrationDate`.
+ * Decides whether a citizen has to be greeted right now. Which day the
+ * birthday of a citizen falls on in their own time zone is the shared rule
+ * `isBirthdayToday`; the "only once per local year" part below belongs to
+ * the greeting job alone.
  */
-import { getCelebrationDate } from "@sam-monorepo/domain";
-
-/** Citizens without a time zone are greeted at midnight in this zone. */
-const DEFAULT_TIMEZONE = "Europe/Berlin";
+import {
+  getLocalDate,
+  isBirthdayToday,
+  ORGANIZATION_TIMEZONE,
+} from "@sam-monorepo/domain";
 
 interface BirthdayCandidate {
   readonly timezone: string | null;
@@ -14,31 +16,6 @@ interface BirthdayCandidate {
   readonly birthdayMonth: number | null;
   readonly birthdayGreetingSentAt: Date | null;
 }
-
-interface LocalDate {
-  readonly year: number;
-  readonly month: number;
-  readonly day: number;
-}
-
-/** Throws for a time zone the runtime does not know. */
-const getLocalDate = (moment: Date, timezone: string): LocalDate => {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: timezone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(moment);
-
-  const readNumber = (type: Intl.DateTimeFormatPartTypes) =>
-    Number(parts.find((part) => part.type === type)?.value);
-
-  return {
-    year: readNumber("year"),
-    month: readNumber("month"),
-    day: readNumber("day"),
-  };
-};
 
 const MILLISECONDS_PER_HOUR = 60 * 60 * 1000;
 
@@ -59,19 +36,7 @@ export const shouldGreetCitizen = (
   candidate: BirthdayCandidate,
   now: Date,
 ): boolean => {
-  if (candidate.birthdayDay === null || candidate.birthdayMonth === null)
-    return false;
-
-  const timezone = candidate.timezone ?? DEFAULT_TIMEZONE;
-  const today = getLocalDate(now, timezone);
-  const celebration = getCelebrationDate(
-    candidate.birthdayDay,
-    candidate.birthdayMonth,
-    today.year,
-  );
-
-  if (today.month !== celebration.month || today.day !== celebration.day)
-    return false;
+  if (!isBirthdayToday(candidate, now)) return false;
 
   if (!candidate.birthdayGreetingSentAt) return true;
 
@@ -80,7 +45,10 @@ export const shouldGreetCitizen = (
     MILLISECONDS_PER_HOUR;
   if (hoursSinceGreeting < MINIMUM_HOURS_BETWEEN_GREETINGS) return false;
 
+  const timezone = candidate.timezone ?? ORGANIZATION_TIMEZONE;
+
   return (
-    getLocalDate(candidate.birthdayGreetingSentAt, timezone).year !== today.year
+    getLocalDate(candidate.birthdayGreetingSentAt, timezone).year !==
+    getLocalDate(now, timezone).year
   );
 };

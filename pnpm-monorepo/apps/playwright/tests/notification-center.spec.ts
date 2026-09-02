@@ -78,6 +78,85 @@ test("the popover lists notifications with their content", async ({
   ).toBeVisible();
 });
 
+/** The elements the birthday row is decorated with, whatever styles them */
+const confettiCanvas = (page: Page) =>
+  popover(page).locator("[data-confetti-canvas]");
+const staticConfetti = (page: Page) =>
+  popover(page).locator("[data-birthday-confetti-static]");
+
+test("a birthday greeting reads its wording and sprinkles confetti", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  /** The whole suite runs with reduced motion, see playwright.config.ts */
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+
+  const citizen = await createCitizen(prisma, { handle: "geburtstagskind" });
+  await createOnSiteNotification(prisma, {
+    citizenId: citizen.entity.id,
+    notificationType: "birthday",
+    payload: {
+      title: "Ein Hoch auf dich!",
+      body: "Zum Geburtstag wünschen wir dir nur das Beste und immer volle Tanks.",
+    },
+  });
+  /** A greeting from before the greeting picked a wording at random */
+  await createOnSiteNotification(prisma, {
+    citizenId: citizen.entity.id,
+    notificationType: "birthday",
+    payload: {},
+  });
+  /** Every other notification stays undecorated */
+  await createOnSiteNotification(prisma, { citizenId: citizen.entity.id });
+  await signIn(citizen.user);
+
+  await page.goto("/app");
+  await openNotificationCenter(page);
+
+  await expect(popover(page).getByText("Ein Hoch auf dich!")).toBeVisible();
+  await expect(
+    popover(page).getByText(
+      "Zum Geburtstag wünschen wir dir nur das Beste und immer volle Tanks.",
+    ),
+  ).toBeVisible();
+
+  await expect(
+    popover(page).getByText("Alles Gute zum Geburtstag!"),
+  ).toBeVisible();
+  await expect(
+    popover(page).getByText("Wir wünschen dir einen schönen Tag."),
+  ).toBeVisible();
+
+  await expect(confettiCanvas(page)).toHaveCount(2);
+  await expect(staticConfetti(page)).toHaveCount(0);
+});
+
+test("a birthday greeting stays still for a viewer who asks for it", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+
+  const citizen = await createCitizen(prisma, {
+    handle: "ruhiges-geburtstagskind",
+  });
+  await createOnSiteNotification(prisma, {
+    citizenId: citizen.entity.id,
+    notificationType: "birthday",
+    payload: {},
+  });
+  await createOnSiteNotification(prisma, { citizenId: citizen.entity.id });
+  await signIn(citizen.user);
+
+  await page.goto("/app");
+  await openNotificationCenter(page);
+
+  await expect(staticConfetti(page)).toHaveCount(1);
+  await expect(confettiCanvas(page)).toHaveCount(0);
+});
+
 test("unknown notification types render a generic fallback", async ({
   page,
   prisma,

@@ -1,5 +1,5 @@
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
-import Avatar from "@/modules/common/components/Avatar";
+import Avatar, { AvatarDecoration } from "@/modules/common/components/Avatar";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Link } from "@/modules/common/components/Link";
 import clsx from "clsx";
@@ -28,9 +28,16 @@ export const Account = ({ supportHref }: Props) => {
       )}
     >
       <div className="flex items-center gap-4">
-        <div className="overflow-hidden rounded-secondary">
-          <Avatar name={name} image={image} size={48} />
-        </div>
+        <Avatar
+          name={name}
+          image={image}
+          size={48}
+          decoration={
+            authentication.session.entity?.hasBirthdayToday
+              ? AvatarDecoration.BirthdayHat
+              : undefined
+          }
+        />
 
         <div>
           <p>{name}</p>

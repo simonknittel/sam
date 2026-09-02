@@ -1,9 +1,11 @@
 "use client";
 
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
+import { useHasBirthdayToday } from "@/modules/citizen/components/BirthdayCitizensProvider";
 import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
 import type { Entity } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
+import { BirthdayHat } from "./BirthdayHat";
 import { Link } from "./Link";
 
 interface Props {
@@ -19,6 +21,8 @@ export const CitizenLink = ({ className, citizen, page = "" }: Props) => {
       ? citizen.id === authentication.session.entity.id
       : false;
 
+  const hasBirthdayToday = useHasBirthdayToday(citizen?.id);
+
   if (!citizen) return <span className="text-neutral-500">Unbekannt</span>;
 
   return (
@@ -28,8 +32,10 @@ export const CitizenLink = ({ className, citizen, page = "" }: Props) => {
         className={clsx(
           "hover:underline",
           {
-            "text-me": isCitizenCurrentUser,
-            "text-interaction-500": !isCitizenCurrentUser,
+            /** The birthday of a citizen outranks both other colours */
+            "text-birthday": hasBirthdayToday,
+            "text-me": !hasBirthdayToday && isCitizenCurrentUser,
+            "text-interaction-500": !hasBirthdayToday && !isCitizenCurrentUser,
           },
           className,
         )}
@@ -37,6 +43,14 @@ export const CitizenLink = ({ className, citizen, page = "" }: Props) => {
       >
         {citizen.handle || citizen.id}
       </Link>
+
+      {hasBirthdayToday && (
+        <BirthdayHat
+          /* The ink of the hat sits above the middle of its box, thus the
+          box goes one pixel below the middle of the text. */
+          className="ml-1 inline-block size-4 -translate-y-px align-middle"
+        />
+      )}
     </CitizenPopover>
   );
 };

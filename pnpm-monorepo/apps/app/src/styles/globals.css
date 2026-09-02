@@ -32,10 +32,39 @@
   --background-color-tertiary: hsla(0, 0%, 25%, 0.5);
 
   --breakpoint-3xl: 1920px;
+
+  /* The party hat of a citizen who has their birthday rocks on its base.
+     The base tilt of the hat stays in the `rotate` property of its utility
+     class, thus the two compose. */
+  --animate-birthday-hat-wiggle: birthday-hat-wiggle 2.5s ease-in-out infinite;
+
+  @keyframes birthday-hat-wiggle {
+    0%,
+    100% {
+      transform: rotate(-7deg);
+    }
+
+    50% {
+      transform: rotate(7deg);
+    }
+  }
 }
 
 @theme inline {
   --font-mono: var(--font-roboto-mono), monospace;
+}
+
+/**
+ * Every decoration of a birthday stops for a viewer who prefers reduced
+ * motion. The animation of the party hat is switched off here, at its own
+ * definition, thus no place which draws the hat can forget it. The confetti
+ * has no CSS animation: `ConfettiCanvas` reads the same preference and
+ * renders no canvas at all.
+ */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --animate-birthday-hat-wiggle: none;
+  }
 }
 
 /* Dark scrollbars to match the theme (thin thumb on a transparent track). */
@@ -55,6 +84,53 @@
   background-size:
     15px 15px,
     100% 100%;
+}
+
+/**
+ * The surface of a birthday greeting: four wide colour clouds which overlap
+ * each other. Every colour stays far below full brightness, thus the surface
+ * reads as a dark surface with a colour cast and the text above it keeps its
+ * contrast.
+ */
+/**
+ * The handle of a citizen who has their birthday today. The gradient
+ * replaces the colour of the text, thus the underline of a link needs its
+ * own colour.
+ */
+@utility text-birthday {
+  background-image: linear-gradient(
+    to right,
+    var(--color-amber-300),
+    var(--color-pink-400),
+    var(--color-violet-400)
+  );
+  background-clip: text;
+  color: transparent;
+  text-decoration-color: var(--color-pink-400);
+}
+
+@utility background-birthday {
+  background-image:
+    radial-gradient(
+      ellipse 70% 140% at 8% 115%,
+      hsl(275 70% 45% / 0.3),
+      transparent 68%
+    ),
+    radial-gradient(
+      ellipse 60% 150% at 36% -25%,
+      hsl(190 80% 45% / 0.24),
+      transparent 68%
+    ),
+    radial-gradient(
+      ellipse 65% 145% at 66% 120%,
+      hsl(330 75% 50% / 0.28),
+      transparent 68%
+    ),
+    radial-gradient(
+      ellipse 55% 135% at 95% -15%,
+      hsl(40 90% 50% / 0.22),
+      transparent 68%
+    );
 }
 
 @utility corners-primary {
