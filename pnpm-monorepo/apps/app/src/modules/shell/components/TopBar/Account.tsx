@@ -1,5 +1,5 @@
 import { requireAuthentication } from "@/modules/auth/server";
-import Avatar from "@/modules/common/components/Avatar";
+import Avatar, { AvatarDecoration } from "@/modules/common/components/Avatar";
 import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
 import clsx from "clsx";
 import { AccountSettings } from "./AccountSettings";
@@ -18,13 +18,15 @@ export const Account = async ({ className }: Props) => {
 
   const image = authentication ? authentication.session.user.image : undefined;
 
+  const decoration = authentication.session.entity?.hasBirthdayToday
+    ? AvatarDecoration.BirthdayHat
+    : undefined;
+
   return (
     <PopoverBaseUI
       title="Account"
       trigger={
-        <div className="overflow-hidden rounded-secondary">
-          <Avatar name={name} image={image} size={32} />
-        </div>
+        <Avatar name={name} image={image} size={32} decoration={decoration} />
       }
       triggerClassName={clsx(
         "p-2 rounded-r-primary cursor-pointer hover:bg-tertiary focus-visible:bg-tertiary",
@@ -34,9 +36,7 @@ export const Account = async ({ className }: Props) => {
       childrenClassName="w-64"
     >
       <div className="flex items-center gap-4">
-        <div className="overflow-hidden rounded-secondary">
-          <Avatar name={name} image={image} size={64} />
-        </div>
+        <Avatar name={name} image={image} size={64} decoration={decoration} />
 
         <div>
           <p className="text-lg">{name}</p>

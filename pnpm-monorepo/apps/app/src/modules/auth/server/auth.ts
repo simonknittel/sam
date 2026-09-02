@@ -2,6 +2,7 @@ import { prisma } from "@/db";
 import { env } from "@/env";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { hasBirthdayToday } from "@/modules/citizen/utils/hasBirthdayToday";
 import { getDiscordAvatar } from "@/modules/discord/utils/getDiscordAvatar";
 import { getGuildMember } from "@/modules/discord/utils/getGuildMember";
 import { log } from "@/modules/logging";
@@ -57,6 +58,13 @@ declare module "next-auth" {
      */
     entity:
       | (Pick<Entity, "id" | "handle"> & {
+          /**
+           * Whether the citizen has their birthday today, in their own time
+           * zone. Only this answer travels; the day and the month of the
+           * birthday stay on the server. Both account avatars read it, thus
+           * it belongs on the session and not into a query of its own.
+           */
+          hasBirthdayToday: boolean;
           roleAssignments: Pick<RoleAssignment, "roleId" | "currentLevel">[];
         })
       | null;
@@ -142,6 +150,9 @@ export const authOptions: NextAuthOptions = {
         select: {
           id: true,
           handle: true,
+          timezone: true,
+          birthdayDay: true,
+          birthdayMonth: true,
           roleAssignments: {
             select: {
               roleId: true,
@@ -168,6 +179,7 @@ export const authOptions: NextAuthOptions = {
         ? {
             id: entityWithRoleGraph.id,
             handle: entityWithRoleGraph.handle,
+            hasBirthdayToday: hasBirthdayToday(entityWithRoleGraph, new Date()),
             roleAssignments: entityWithRoleGraph.roleAssignments.map(
               ({ roleId, currentLevel }) => ({ roleId, currentLevel }),
             ),

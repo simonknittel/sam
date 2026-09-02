@@ -7,6 +7,7 @@ import { getMonthlySalaryOfRoles } from "@/modules/silc/queries/getMonthlySalary
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import type { Entity } from "@sam-monorepo/database/client";
 import { cache } from "react";
+import { hasBirthdayToday } from "../utils/hasBirthdayToday";
 
 /**
  * The avatar of a citizen is the Discord avatar of the user behind it, which
@@ -65,6 +66,9 @@ export const getCitizenProfile = cache(
         discordId: true,
         silcBalance: true,
         timezone: true,
+        /** Read for the party hat below; only the answer leaves the server */
+        birthdayDay: true,
+        birthdayMonth: true,
         roleAssignments: {
           select: {
             roleId: true,
@@ -130,6 +134,7 @@ export const getCitizenProfile = cache(
         id: citizen.id,
         handle: citizen.handle,
         timezone: citizen.timezone,
+        hasBirthdayToday: hasBirthdayToday(citizen, new Date()),
         roleAssignments: citizen.roleAssignments,
       },
       avatarUrl,

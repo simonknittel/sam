@@ -1,4 +1,4 @@
-import Avatar from "@/modules/common/components/Avatar";
+import Avatar, { AvatarDecoration } from "@/modules/common/components/Avatar";
 import { CopyToClipboard } from "@/modules/common/components/CopyToClipboard";
 import { Link } from "@/modules/common/components/Link";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
@@ -55,6 +55,9 @@ export const ProfileContent = ({
           image={profile.avatarUrl}
           size={AVATAR_SIZE}
           className="flex-none"
+          decoration={
+            citizen.hasBirthdayToday ? AvatarDecoration.BirthdayHat : undefined
+          }
         />
 
         <div className="min-w-0">
