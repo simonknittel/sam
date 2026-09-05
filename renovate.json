@@ -20,6 +20,13 @@
   ],
   "packageRules": [
     {
+      "description": "A .terraform-version file holds a bare version string, so it cannot carry a digest pin. The terraform manager defaults pinDigests to false for the same reason; the terraform-version manager does not, and a failed digest lookup makes Renovate drop the version update silently.",
+      "matchManagers": [
+        "terraform-version"
+      ],
+      "pinDigests": false
+    },
+    {
       "groupName": "Patch Tuesday",
       "groupSlug": "patch-tuesday",
       "matchUpdateTypes": [
