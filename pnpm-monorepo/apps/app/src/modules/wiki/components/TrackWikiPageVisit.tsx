@@ -17,8 +17,8 @@ interface Props {
 export const TrackWikiPageVisit = ({ pageId }: Props) => {
   const trackedPageIdRef = useRef<string | null>(null);
 
-  // eslint-disable-next-line react-you-might-not-need-an-effect/no-event-handler -- There is no user event: mounting in the browser IS the visit, so the effect reports it to the server.
   useEffect(() => {
+    // eslint-disable-next-line react-you-might-not-need-an-effect/no-event-handler -- There is no user event: mounting in the browser IS the visit, so the effect reports it to the server.
     if (trackedPageIdRef.current === pageId) return;
     trackedPageIdRef.current = pageId;
 
