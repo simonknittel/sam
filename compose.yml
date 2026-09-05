@@ -70,7 +70,7 @@ services:
   # the anonymous-read policy and the CORS rules (the browser PUTs to
   # presigned URLs cross-origin). Safe to re-run.
   rustfs-bootstrap:
-    image: amazon/aws-cli:2.36.25@sha256:d5b61bcb558149739b6d17410bdff21ec66518f3c921f0b8fc8ffa725f3f1b00
+    image: amazon/aws-cli:2.36.34@sha256:cf1f5e5741c33f3fee383296ba8045b96b9eb93c3de017be6688fb00356352d7
     restart: no
     depends_on:
       rustfs:
@@ -159,7 +159,7 @@ services:
   # docs/setup-local-machine.md). Without the OTEL_* variables of the app, it
   # receives nothing and idles.
   otel-collector:
-    image: otel/opentelemetry-collector-contrib:0.159.0@sha256:1f2c54a30e713fac6b3ae77a1ec84010c2007e29ced8ec666214fc2f6739c1cc
+    image: otel/opentelemetry-collector-contrib:0.160.0@sha256:799dc6cf12c96192af37b5bdba804da8c10b3bc563b43cb90c3f3c58d9572ad6
     restart: no
     # The image runs as uid 10001, which cannot write to the volume below: a
     # named volume of a path that the image does not contain belongs to root.
