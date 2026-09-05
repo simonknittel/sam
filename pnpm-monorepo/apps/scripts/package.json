@@ -11,9 +11,9 @@
     "algoliasearch": "5.57.0",
     "csv": "6.6.3",
     "date-fns": "4.4.0",
-    "fast-xml-parser": "5.11.0",
-    "sharp": "0.35.3",
-    "zod": "4.4.3"
+    "fast-xml-parser": "5.11.1",
+    "sharp": "0.35.4",
+    "zod": "4.5.2"
   },
   "devDependencies": {
     "@types/node": "24.13.3",
