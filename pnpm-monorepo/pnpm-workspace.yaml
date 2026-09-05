@@ -33,7 +33,6 @@ overrides:
   typescript-eslint: 8.68.0
 
 preferFrozenLockfile: true
-legacyPeerDeps: true
 saveExact: true
 # Equivalent of the former `min-release-age=7` (days) in apps/app's .npmrc;
 # pnpm measures in minutes. Renovate mirrors this with `minimumReleaseAge`.
