@@ -430,7 +430,7 @@ export const PATTERNS: Record<EntryType, Pattern> = {
   },
 
   privatePropertyNotification: {
-    title: "Privatgelände",
+    title: "Private Property",
     icon: FaHouseLock,
     category: EntryCategory.Zones,
     // <2026-08-26T19:06:02.117Z> [Notice] <SHUDEvent_OnNotification> Added notification "Entering Private Property: " [4] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
