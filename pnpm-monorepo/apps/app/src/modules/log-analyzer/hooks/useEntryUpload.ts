@@ -9,7 +9,7 @@ import { useLogAnalyzerContext } from "../components/LogAnalyzerContext";
 import { createEntryHash } from "../utils/createEntryHash";
 import {
   createEntryKey,
-  isShareableEntryType,
+  takesTimeOfPrecedingLine,
   type IEntry,
 } from "../utils/PATTERNS";
 import { clampDaysToLoad } from "../utils/sharedEntries";
@@ -125,7 +125,6 @@ export const useEntryUpload = () => {
       /** One entry can arrive more than once, for example from two files */
       const newMatchesByKey = new Map<string, RawMatch>();
       for (const rawMatch of rawMatches) {
-        if (!isShareableEntryType(rawMatch.type)) continue;
         if (!sharingEntryTypes[rawMatch.type]) continue;
 
         const key = createEntryKey(rawMatch.type, rawMatch.fullMatch);
@@ -163,6 +162,9 @@ export const useEntryUpload = () => {
           hash,
           type: rawMatch.type,
           rawLine: rawMatch.fullMatch,
+          eventAt: takesTimeOfPrecedingLine(rawMatch.type)
+            ? rawMatch.isoDate
+            : undefined,
         });
       }
 

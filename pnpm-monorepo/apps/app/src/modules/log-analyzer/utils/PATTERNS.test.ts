@@ -4,7 +4,7 @@ import {
   EntryType,
   matchEntryLine,
   PATTERNS,
-  SHAREABLE_ENTRY_TYPES,
+  takesTimeOfPrecedingLine,
 } from "./PATTERNS";
 import { SAMPLE_LINES } from "./sampleLines";
 
@@ -35,10 +35,9 @@ describe("PATTERNS", () => {
   );
 
   test("only the crash takes its time from the preceding line", () => {
-    expect(SHAREABLE_ENTRY_TYPES).not.toContain(EntryType.GameCrash);
-    expect(SHAREABLE_ENTRY_TYPES).toHaveLength(
-      Object.values(EntryType).length - 1,
-    );
+    expect(
+      Object.values(EntryType).filter(takesTimeOfPrecedingLine),
+    ).toEqual([EntryType.GameCrash]);
   });
 
   test("reads the destroyed vehicle of a death", () => {

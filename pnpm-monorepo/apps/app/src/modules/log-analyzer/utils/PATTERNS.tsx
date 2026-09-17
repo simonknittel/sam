@@ -177,13 +177,14 @@ interface Pattern {
   /**
    * The game writes some blocks without a timestamp, for example the crash
    * report. The parser then takes the time of the last timestamped line
-   * before the match. Such an entry cannot be shared: the server reads the
-   * time of a shared entry from its raw line.
+   * before the match, and the upload sends that time along, because the
+   * server cannot read it from the raw line.
    */
   takesTimeOfPrecedingLine?: true;
   /**
    * The sharing setting of the type when the user has not set it. Off for
-   * the types whose entries carry the handles of other players.
+   * the types whose entries carry the handles of other players, for the
+   * purchase and for the crash.
    */
   isSharedByDefault?: false;
   renderMessage?: (groups: Record<string, string>) => ReactNode;
@@ -385,6 +386,7 @@ export const PATTERNS: Record<EntryType, Pattern> = {
     // <2026-08-26T19:26:18.919Z> [Notice] <CEntityComponentShopUIProvider::SendShopBuyRequest> Sending SShopBuyRequest - playerId[...] shopId[783648035105] shopName[SCShop_Orison_KelTo] kioskId[783648035110] client_price[18117.000000] itemClassGUID[90adb28a-049e-4357-8000-a4bb75bb7f6f] itemName[behr_smg_ballistic_01_mag] quantity[61]  [Team_CoreGameplayFeatures][Shops][UI]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>.*\<CEntityComponentShopUIProvider::SendShopBuyRequest\>.*shopName\[(?<shop>[^\]]+)\].*client_price\[(?<price>[\d.]+)\].*itemName\[(?<item>[^\]]+)\] quantity\[(?<quantity>\d+)\].*$/gm,
+    isSharedByDefault: false,
     renderMessage: (groups) => (
       <TruncatedText>
         {`${groups.quantity}× ${groups.item} für ${priceFormat.format(Number(groups.price))} aUEC (${groups.shop.replace(/^SCShop_/, "")})`}
@@ -546,6 +548,7 @@ export const PATTERNS: Record<EntryType, Pattern> = {
     // Exception STATUS_CRYENGINE_OUT_OF_SYSMEM(0x2BADFF61) addr=0x00007FFE2CE13CFA digest=114a1cfe538433f07c4a87c536ae0528
     regex: /^Exception (?<exception>STATUS_\w+)\(0x[0-9A-Fa-f]+\).*$/gm,
     takesTimeOfPrecedingLine: true,
+    isSharedByDefault: false,
     renderMessage: (groups) => (
       <TruncatedText>
         {CRASH_EXCEPTION_LABELS[groups.exception] ?? groups.exception}
@@ -569,11 +572,8 @@ export const ENTRY_TYPES_BY_CATEGORY = Object.fromEntries(
 ) as Record<EntryCategory, EntryType[]>;
 
 /** See `Pattern.takesTimeOfPrecedingLine` */
-export const isShareableEntryType = (type: EntryType) =>
-  !PATTERNS[type].takesTimeOfPrecedingLine;
-
-export const SHAREABLE_ENTRY_TYPES =
-  SORTED_ENTRY_TYPES.filter(isShareableEntryType);
+export const takesTimeOfPrecedingLine = (type: EntryType) =>
+  PATTERNS[type].takesTimeOfPrecedingLine === true;
 
 /** See `Pattern.isSharedByDefault` */
 export const DEFAULT_SHARING_ENTRY_TYPES = Object.fromEntries(

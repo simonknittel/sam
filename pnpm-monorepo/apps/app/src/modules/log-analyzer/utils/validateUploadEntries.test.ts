@@ -1,29 +1,65 @@
 import { describe, expect, test } from "vitest";
 import { createEntryHash, ENTRY_HASH_PATTERN } from "./createEntryHash";
-import { EntryType, SHAREABLE_ENTRY_TYPES, toEntryType } from "./PATTERNS";
+import {
+  EntryType,
+  takesTimeOfPrecedingLine,
+  toEntryType,
+} from "./PATTERNS";
 import { SAMPLE_LINES } from "./sampleLines";
 import {
+  createUploadFormData,
   MAXIMUM_RAW_LINE_LENGTH,
   MAXIMUM_UPLOAD_ENTRIES,
+  parseUploadFormData,
   uploadEntriesSchema,
 } from "./uploadEntries";
 import { validateUploadEntries } from "./validateUploadEntries";
 
+const CRASH_EVENT_AT = "2026-09-01T16:15:11.246Z";
+
 describe("validateUploadEntries", () => {
-  test.each(SHAREABLE_ENTRY_TYPES)("accepts a %s line", async (type) => {
+  test.each(Object.values(EntryType))("accepts a %s line", async (type) => {
     const entries = await validateUploadEntries([
-      { type, rawLine: SAMPLE_LINES[type] },
+      {
+        type,
+        rawLine: SAMPLE_LINES[type],
+        eventAt: takesTimeOfPrecedingLine(type) ? CRASH_EVENT_AT : undefined,
+      },
     ]);
 
     expect(entries).toHaveLength(1);
   });
 
-  test("refuses a type whose lines carry no time of their own", async () => {
+  test("takes the sent time for a line which carries no time of its own", async () => {
+    const entries = await validateUploadEntries([
+      {
+        type: EntryType.GameCrash,
+        rawLine: SAMPLE_LINES[EntryType.GameCrash],
+        eventAt: CRASH_EVENT_AT,
+      },
+    ]);
+
+    expect(entries?.[0]?.eventAt).toEqual(new Date(CRASH_EVENT_AT));
+  });
+
+  test("rejects a line without a time of its own when no time is sent", async () => {
     await expect(
       validateUploadEntries([
         {
           type: EntryType.GameCrash,
           rawLine: SAMPLE_LINES[EntryType.GameCrash],
+        },
+      ]),
+    ).resolves.toBeNull();
+  });
+
+  test("rejects a sent time for a line which carries its own", async () => {
+    await expect(
+      validateUploadEntries([
+        {
+          type: EntryType.JoinPu,
+          rawLine: SAMPLE_LINES[EntryType.JoinPu],
+          eventAt: CRASH_EVENT_AT,
         },
       ]),
     ).resolves.toBeNull();
@@ -177,6 +213,35 @@ describe("uploadEntriesSchema", () => {
         ],
       }).success,
     ).toBe(true);
+  });
+
+  test("rejects a sent time which is not a date", () => {
+    expect(
+      uploadEntriesSchema.safeParse({
+        entries: [
+          {
+            type: EntryType.GameCrash,
+            rawLine: SAMPLE_LINES[EntryType.GameCrash],
+            eventAt: "yesterday",
+          },
+        ],
+      }).success,
+    ).toBe(false);
+  });
+
+  test("carries the sent time through the form data", () => {
+    const entries = [
+      {
+        type: EntryType.GameCrash,
+        rawLine: SAMPLE_LINES[EntryType.GameCrash],
+        eventAt: CRASH_EVENT_AT,
+      },
+      { type: EntryType.JoinPu, rawLine: SAMPLE_LINES[EntryType.JoinPu] },
+    ];
+
+    expect(parseUploadFormData(createUploadFormData(entries))).toEqual({
+      entries,
+    });
   });
 
   test("rejects an unknown type", () => {
