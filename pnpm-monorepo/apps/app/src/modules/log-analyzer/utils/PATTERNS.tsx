@@ -181,12 +181,6 @@ interface Pattern {
    * server cannot read it from the raw line.
    */
   takesTimeOfPrecedingLine?: true;
-  /**
-   * The sharing setting of the type when the user has not set it. Off for
-   * the types whose entries carry the handles of other players, for the
-   * purchase and for the crash.
-   */
-  isSharedByDefault?: false;
   renderMessage?: (groups: Record<string, string>) => ReactNode;
   /**
    * The game repeats some lines: every zone notification on a shard change,
@@ -386,7 +380,6 @@ export const PATTERNS: Record<EntryType, Pattern> = {
     // <2026-08-26T19:26:18.919Z> [Notice] <CEntityComponentShopUIProvider::SendShopBuyRequest> Sending SShopBuyRequest - playerId[...] shopId[783648035105] shopName[SCShop_Orison_KelTo] kioskId[783648035110] client_price[18117.000000] itemClassGUID[90adb28a-049e-4357-8000-a4bb75bb7f6f] itemName[behr_smg_ballistic_01_mag] quantity[61]  [Team_CoreGameplayFeatures][Shops][UI]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>.*\<CEntityComponentShopUIProvider::SendShopBuyRequest\>.*shopName\[(?<shop>[^\]]+)\].*client_price\[(?<price>[\d.]+)\].*itemName\[(?<item>[^\]]+)\] quantity\[(?<quantity>\d+)\].*$/gm,
-    isSharedByDefault: false,
     renderMessage: (groups) => (
       <TruncatedText>
         {`${groups.quantity}× ${groups.item} für ${priceFormat.format(Number(groups.price))} aUEC (${groups.shop.replace(/^SCShop_/, "")})`}
@@ -445,8 +438,7 @@ export const PATTERNS: Record<EntryType, Pattern> = {
   /**
    * The party notifications span two log lines: the headline of the
    * notification, then its text with the handle. The game writes the files
-   * with CRLF line ends. The handle belongs to another player, thus the
-   * user must turn the sharing of these types on.
+   * with CRLF line ends.
    */
   partyInviteReceivedNotification: {
     title: "Party-Einladung",
@@ -456,7 +448,6 @@ export const PATTERNS: Record<EntryType, Pattern> = {
     // <2026-08-26T18:50:40.373Z> Party Invite Received: Accept Invitation?: " [2] to queue. New queue size: 2, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>.*\<SHUDEvent_OnNotification\> Added notification "(?<handle>[^"\r\n]+)\r?\n<[\d\-T:.Z]+> Party Invite Received: Accept Invitation\?: ".*$/gm,
-    isSharedByDefault: false,
     renderMessage: (groups) => <TruncatedText>{groups.handle}</TruncatedText>,
   },
 
@@ -468,7 +459,6 @@ export const PATTERNS: Record<EntryType, Pattern> = {
     // <2026-05-25T16:49:39.043Z> SomeHandle has joined the party.: " [4] to queue. New queue size: 2, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>.*\<SHUDEvent_OnNotification\> Added notification "New Member Joined\r?\n<[\d\-T:.Z]+> (?<handle>.+?) has joined the party\.: ".*$/gm,
-    isSharedByDefault: false,
     renderMessage: (groups) => <TruncatedText>{groups.handle}</TruncatedText>,
   },
 
@@ -480,7 +470,6 @@ export const PATTERNS: Record<EntryType, Pattern> = {
     // <2026-05-25T18:36:38.835Z> SomeHandle has left the party.: " [285] to queue. New queue size: 3, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>.*\<SHUDEvent_OnNotification\> Added notification "Member Left\r?\n<[\d\-T:.Z]+> (?<handle>.+?) has left the party\.: ".*$/gm,
-    isSharedByDefault: false,
     renderMessage: (groups) => <TruncatedText>{groups.handle}</TruncatedText>,
   },
 
@@ -492,7 +481,6 @@ export const PATTERNS: Record<EntryType, Pattern> = {
     // <2026-05-25T18:39:22.607Z> SomeHandle is now party leader.: " [311] to queue. New queue size: 10, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>.*\<SHUDEvent_OnNotification\> Added notification "New Party Leader\r?\n<[\d\-T:.Z]+> (?<handle>.+?) is now party leader\.: ".*$/gm,
-    isSharedByDefault: false,
     renderMessage: (groups) => <TruncatedText>{groups.handle}</TruncatedText>,
   },
 
@@ -548,7 +536,6 @@ export const PATTERNS: Record<EntryType, Pattern> = {
     // Exception STATUS_CRYENGINE_OUT_OF_SYSMEM(0x2BADFF61) addr=0x00007FFE2CE13CFA digest=114a1cfe538433f07c4a87c536ae0528
     regex: /^Exception (?<exception>STATUS_\w+)\(0x[0-9A-Fa-f]+\).*$/gm,
     takesTimeOfPrecedingLine: true,
-    isSharedByDefault: false,
     renderMessage: (groups) => (
       <TruncatedText>
         {CRASH_EXCEPTION_LABELS[groups.exception] ?? groups.exception}
@@ -575,18 +562,11 @@ export const ENTRY_TYPES_BY_CATEGORY = Object.fromEntries(
 export const takesTimeOfPrecedingLine = (type: EntryType) =>
   PATTERNS[type].takesTimeOfPrecedingLine === true;
 
-/** See `Pattern.isSharedByDefault` */
-export const DEFAULT_SHARING_ENTRY_TYPES = Object.fromEntries(
-  Object.values(EntryType).map((type) => [
-    type,
-    PATTERNS[type].isSharedByDefault ?? true,
-  ]),
-) as Record<EntryType, boolean>;
-
-/** Every type shows until the user hides it */
-export const DEFAULT_ENTRY_FILTERS = Object.fromEntries(
-  Object.values(EntryType).map((type) => [type, false]),
-) as Record<EntryType, boolean>;
+/** A record with the given value for every entry type, for the settings. */
+export const createEntryTypeRecord = (value: boolean) =>
+  Object.fromEntries(
+    Object.values(EntryType).map((type) => [type, value]),
+  ) as Record<EntryType, boolean>;
 
 const ENTRY_TYPES_BY_VALUE = new Map<string, EntryType>(
   Object.values(EntryType).map((type) => [type, type]),

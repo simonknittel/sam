@@ -5,10 +5,9 @@ import { Tooltip } from "@/modules/common/components/Tooltip";
 import clsx from "clsx";
 import { FaInfoCircle } from "react-icons/fa";
 import { TfiReload } from "react-icons/tfi";
-import { EntryFilters } from "./EntryFilters";
+import { EntrySettings } from "./EntrySettings";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 import { OverlayButton } from "./OverlayButton";
-import { SharingSettings } from "./SharingSettings";
 
 interface Props {
   readonly className?: string;
@@ -22,7 +21,6 @@ export const Toolbar = ({ className, onRefresh }: Props) => {
     setIsAutostartEnabled,
     isLiveModeEnabled,
     setIsLiveModeEnabled,
-    isSharingAvailable,
   } = useLogAnalyzerContext();
 
   return (
@@ -100,9 +98,7 @@ export const Toolbar = ({ className, onRefresh }: Props) => {
 
       <OverlayButton />
 
-      <EntryFilters />
-
-      {isSharingAvailable && <SharingSettings />}
+      <EntrySettings />
     </div>
   );
 };

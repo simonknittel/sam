@@ -41,7 +41,7 @@ export const LogAnalyzer = ({ className }: Props) => {
     isAutostartEnabled,
     isLiveModeEnabled,
     daysToLoad,
-    entryFilters,
+    ownEntryTypes,
     entries,
     setEntries,
   } = useLogAnalyzerContext();
@@ -77,7 +77,7 @@ export const LogAnalyzer = ({ className }: Props) => {
           const filterProps = Object.fromEntries(
             Object.values(EntryType).map((type) => [
               `log_analyzer_filter_${type}`,
-              !entryFilters[type],
+              ownEntryTypes[type],
             ]),
           );
 
@@ -196,7 +196,7 @@ export const LogAnalyzer = ({ className }: Props) => {
     [
       authentication,
       daysToLoad,
-      entryFilters,
+      ownEntryTypes,
       isAutostartEnabled,
       isLiveModeEnabled,
       ownCitizen,

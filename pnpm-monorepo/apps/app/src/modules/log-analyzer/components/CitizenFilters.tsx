@@ -12,10 +12,10 @@ interface Props {
 }
 
 /**
- * Hides the entries of single citizens. The list holds the citizens of the
- * loaded entries, thus it needs no permission to read citizens and no
- * request of its own. Everybody starts checked — like the type filter, an
- * unchecked box hides its entries.
+ * Hides the shared entries of single citizens. The list holds the citizens
+ * of the loaded shared entries, thus it needs no permission to read citizens
+ * and no request of its own. Everybody starts checked — like the type
+ * settings, an unchecked box hides its entries.
  */
 export const CitizenFilters = ({ className }: Props) => {
   const { entries, hiddenCitizenIds, setHiddenCitizenIds } =
@@ -25,7 +25,8 @@ export const CitizenFilters = ({ className }: Props) => {
   const sortedCitizens = useMemo(() => {
     const citizens = new Map<Entity["id"], Pick<Entity, "id" | "handle">>();
     for (const entry of entries.values()) {
-      if (entry.citizen) citizens.set(entry.citizen.id, entry.citizen);
+      if (entry.isShared && entry.citizen)
+        citizens.set(entry.citizen.id, entry.citizen);
     }
 
     return Array.from(citizens.values()).toSorted((first, second) =>
@@ -43,7 +44,7 @@ export const CitizenFilters = ({ className }: Props) => {
 
   return (
     <div className={clsx("flex flex-col gap-1", className)}>
-      <p className="text-sm text-white/60">Nach Reportern filtern</p>
+      <p className="text-sm text-white/60">Reporter der Einträge anderer</p>
 
       {sortedCitizens.length > 0 ? (
         sortedCitizens.map((citizen) => {
@@ -68,7 +69,7 @@ export const CitizenFilters = ({ className }: Props) => {
         })
       ) : (
         <p className="text-sm text-white/60">
-          Noch keine Citizens in den geladenen Einträgen.
+          Noch keine Einträge anderer Citizens geladen.
         </p>
       )}
 
