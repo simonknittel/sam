@@ -1,6 +1,7 @@
 import { Table, TBody, THead } from "@/modules/common/components/Table";
 import clsx from "clsx";
 import { useMemo } from "react";
+import { collapseRepeatedEntries } from "../utils/collapseRepeatedEntries";
 import { Entry } from "./Entry";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 
@@ -16,11 +17,14 @@ export const LogAnalyzerTable = ({ className }: Props) => {
   /** The filter runs first, so the sort works on the smaller list */
   const sortedFilteredEntries = useMemo(
     () =>
-      Array.from(entries.values())
-        .filter(entryFilterFn)
-        .toSorted(
-          (first, second) => second.isoDate.getTime() - first.isoDate.getTime(),
-        ),
+      collapseRepeatedEntries(
+        Array.from(entries.values())
+          .filter(entryFilterFn)
+          .toSorted(
+            (first, second) =>
+              second.isoDate.getTime() - first.isoDate.getTime(),
+          ),
+      ),
     [entries, entryFilterFn],
   );
 
