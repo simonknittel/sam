@@ -161,6 +161,11 @@ interface Pattern {
    * time of a shared entry from its raw line.
    */
   takesTimeOfPrecedingLine?: true;
+  /**
+   * The sharing setting of the type when the user has not set it. Off for
+   * the types whose entries carry the handles of other players.
+   */
+  isSharedByDefault?: false;
   renderMessage?: (groups: Record<string, string>) => ReactNode;
   /**
    * The game repeats some lines: every zone notification on a shard change,
@@ -402,7 +407,8 @@ export const PATTERNS: Record<EntryType, Pattern> = {
   /**
    * The party notifications span two log lines: the headline of the
    * notification, then its text with the handle. The game writes the files
-   * with CRLF line ends.
+   * with CRLF line ends. The handle belongs to another player, thus the
+   * user must turn the sharing of these types on.
    */
   partyInviteReceivedNotification: {
     title: "Party-Einladung",
@@ -411,6 +417,7 @@ export const PATTERNS: Record<EntryType, Pattern> = {
     // <2026-08-26T18:50:40.373Z> Party Invite Received: Accept Invitation?: " [2] to queue. New queue size: 2, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>.*\<SHUDEvent_OnNotification\> Added notification "(?<handle>[^"\r\n]+)\r?\n<[\d\-T:.Z]+> Party Invite Received: Accept Invitation\?: ".*$/gm,
+    isSharedByDefault: false,
     renderMessage: (groups) => <TruncatedText>{groups.handle}</TruncatedText>,
   },
 
@@ -421,6 +428,7 @@ export const PATTERNS: Record<EntryType, Pattern> = {
     // <2026-05-25T16:49:39.043Z> SomeHandle has joined the party.: " [4] to queue. New queue size: 2, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>.*\<SHUDEvent_OnNotification\> Added notification "New Member Joined\r?\n<[\d\-T:.Z]+> (?<handle>.+?) has joined the party\.: ".*$/gm,
+    isSharedByDefault: false,
     renderMessage: (groups) => <TruncatedText>{groups.handle}</TruncatedText>,
   },
 
@@ -431,6 +439,7 @@ export const PATTERNS: Record<EntryType, Pattern> = {
     // <2026-05-25T18:36:38.835Z> SomeHandle has left the party.: " [285] to queue. New queue size: 3, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>.*\<SHUDEvent_OnNotification\> Added notification "Member Left\r?\n<[\d\-T:.Z]+> (?<handle>.+?) has left the party\.: ".*$/gm,
+    isSharedByDefault: false,
     renderMessage: (groups) => <TruncatedText>{groups.handle}</TruncatedText>,
   },
 
@@ -441,6 +450,7 @@ export const PATTERNS: Record<EntryType, Pattern> = {
     // <2026-05-25T18:39:22.607Z> SomeHandle is now party leader.: " [311] to queue. New queue size: 10, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>.*\<SHUDEvent_OnNotification\> Added notification "New Party Leader\r?\n<[\d\-T:.Z]+> (?<handle>.+?) is now party leader\.: ".*$/gm,
+    isSharedByDefault: false,
     renderMessage: (groups) => <TruncatedText>{groups.handle}</TruncatedText>,
   },
 
@@ -512,6 +522,19 @@ export const isShareableEntryType = (type: EntryType) =>
 
 export const SHAREABLE_ENTRY_TYPES =
   SORTED_ENTRY_TYPES.filter(isShareableEntryType);
+
+/** See `Pattern.isSharedByDefault` */
+export const DEFAULT_SHARING_ENTRY_TYPES = Object.fromEntries(
+  Object.values(EntryType).map((type) => [
+    type,
+    PATTERNS[type].isSharedByDefault ?? true,
+  ]),
+) as Record<EntryType, boolean>;
+
+/** Every type shows until the user hides it */
+export const DEFAULT_ENTRY_FILTERS = Object.fromEntries(
+  Object.values(EntryType).map((type) => [type, false]),
+) as Record<EntryType, boolean>;
 
 const ENTRY_TYPES_BY_VALUE = new Map<string, EntryType>(
   Object.values(EntryType).map((type) => [type, type]),

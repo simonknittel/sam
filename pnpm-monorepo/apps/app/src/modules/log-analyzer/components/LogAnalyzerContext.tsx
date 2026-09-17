@@ -15,8 +15,12 @@ import {
   useState,
   useTransition,
 } from "react";
-import type { IEntry } from "../utils/PATTERNS";
-import { EntryType } from "../utils/PATTERNS";
+import {
+  DEFAULT_ENTRY_FILTERS,
+  DEFAULT_SHARING_ENTRY_TYPES,
+  type EntryType,
+  type IEntry,
+} from "../utils/PATTERNS";
 
 interface Context {
   /**
@@ -65,11 +69,16 @@ interface Props {
 export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
   const [isPending, startTransition] = useTransition();
 
-  const [entryFilters, _setEntryFilters] = useLocalStorage(
-    "entry_filters",
-    Object.fromEntries(
-      Object.values(EntryType).map((type) => [type, false]),
-    ) as Record<EntryType, boolean>,
+  /**
+   * The stored settings of both records lack the types which came after the
+   * user stored them, thus the defaults fill them up on every read.
+   */
+  const [storedEntryFilters, _setEntryFilters] = useLocalStorage<
+    Partial<Record<EntryType, boolean>>
+  >("entry_filters", DEFAULT_ENTRY_FILTERS);
+  const entryFilters = useMemo(
+    () => ({ ...DEFAULT_ENTRY_FILTERS, ...storedEntryFilters }),
+    [storedEntryFilters],
   );
 
   const [hiddenCitizenIds, setHiddenCitizenIds] = useLocalStorage<string[]>(
@@ -92,11 +101,12 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
     false,
   );
 
-  const [sharingEntryTypes, _setSharingEntryTypes] = useLocalStorage(
-    "log_analyzer_sharing_entry_types",
-    Object.fromEntries(
-      Object.values(EntryType).map((type) => [type, true]),
-    ) as Record<EntryType, boolean>,
+  const [storedSharingEntryTypes, _setSharingEntryTypes] = useLocalStorage<
+    Partial<Record<EntryType, boolean>>
+  >("log_analyzer_sharing_entry_types", DEFAULT_SHARING_ENTRY_TYPES);
+  const sharingEntryTypes = useMemo(
+    () => ({ ...DEFAULT_SHARING_ENTRY_TYPES, ...storedSharingEntryTypes }),
+    [storedSharingEntryTypes],
   );
 
   const [storedIsSharedViewEnabled, _setIsSharedViewEnabled] = useLocalStorage(
