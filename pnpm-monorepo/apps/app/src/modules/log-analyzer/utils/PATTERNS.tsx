@@ -61,6 +61,25 @@ export enum EntryType {
   GameCrash = "gameCrash",
 }
 
+/** The groups of the entry types, in the order the lists show them. */
+export enum EntryCategory {
+  Session = "session",
+  Contracts = "contracts",
+  Character = "character",
+  Zones = "zones",
+  Party = "party",
+  Commerce = "commerce",
+}
+
+export const ENTRY_CATEGORY_TITLES: Record<EntryCategory, string> = {
+  [EntryCategory.Session]: "Session",
+  [EntryCategory.Contracts]: "Contracts",
+  [EntryCategory.Character]: "Charakter",
+  [EntryCategory.Zones]: "Zonen",
+  [EntryCategory.Party]: "Party",
+  [EntryCategory.Commerce]: "Handel",
+};
+
 export interface IEntry {
   readonly key: string;
   readonly type: EntryType;
@@ -148,6 +167,7 @@ const priceFormat = new Intl.NumberFormat("de-DE", {
 interface Pattern {
   title: string;
   icon: IconType;
+  category: EntryCategory;
   /**
    * The expression scans whole log files, thus it carries the global and the
    * multiline flag. It has an `isoDate` group, which gives the time of the
@@ -180,6 +200,7 @@ export const PATTERNS: Record<EntryType, Pattern> = {
   joinPu: {
     title: "Shard-Beitritt",
     icon: FaRightToBracket,
+    category: EntryCategory.Session,
     // <2025-06-22T09:59:12.293Z> [Notice] <Join PU> address[35.187.166.216] port[64336] shard[pub_euw1b_9873572_100] locationId[-281470681677823] [Team_GameServices][GIM][Matchmaking]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>.+<Join PU>.+shard\[(?<shard>[\d\w_]+)\].+$/gm,
@@ -211,6 +232,7 @@ export const PATTERNS: Record<EntryType, Pattern> = {
   ownDeath: {
     title: "Gestorben",
     icon: FaSkull,
+    category: EntryCategory.Character,
     /**
      * The game writes this line only for a death inside a vehicle which was
      * destroyed with a detached interior. A death on foot leaves no line.
@@ -226,6 +248,7 @@ export const PATTERNS: Record<EntryType, Pattern> = {
   blueprintReceivedNotification: {
     title: "Blueprint erhalten",
     icon: FaCompassDrafting,
+    category: EntryCategory.Contracts,
     // <2026-05-14T14:45:40.207Z> [Notice] <SHUDEvent_OnNotification> Added notification "Received Blueprint: Morozov-SH Helmet Thule: " [25] to queue. New queue size: 3, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     // <2026-05-25T17:28:05.820Z> [Notice] <SHUDEvent_OnNotification> Added notification "<EM4>Received Blueprint: Arbor MH1 Mining Laser [BP]</EM4>: " [15] to queue. New queue size: 2, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
@@ -238,6 +261,7 @@ export const PATTERNS: Record<EntryType, Pattern> = {
   contractAcceptedNotification: {
     title: "Contract angenommen",
     icon: FaFileSignature,
+    category: EntryCategory.Contracts,
     // <2026-05-25T07:45:33.982Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Accepted:  Wikelo Arrive to System: " [4] to queue. New queue size: 1, MissionId: [bf7d2465-cf1e-480b-ae5c-25040d716e5f], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>.*\<SHUDEvent_OnNotification\> Added notification ".*Contract Accepted: (?<contract>.+): ".*$/gm,
@@ -249,6 +273,7 @@ export const PATTERNS: Record<EntryType, Pattern> = {
   contractCompleteNotification: {
     title: "Contract abgeschlossen",
     icon: FaFileCircleCheck,
+    category: EntryCategory.Contracts,
     // <2026-06-01T10:15:20.123Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Complete:  Wikelo Arrive to System: " [5] to queue. New queue size: 2, MissionId: [bf7d2465-cf1e-480b-ae5c-25040d716e5f], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>.*\<SHUDEvent_OnNotification\> Added notification ".*Contract Complete: (?<contract>.+): ".*$/gm,
@@ -260,6 +285,7 @@ export const PATTERNS: Record<EntryType, Pattern> = {
   contractFailedNotification: {
     title: "Contract fehlgeschlagen",
     icon: FaFileCircleXmark,
+    category: EntryCategory.Contracts,
     // <2026-05-25T18:03:03.012Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Failed: CRITICAL REFUEL REQUEST: Crusader Ares Star Fighter Ion <EM4>[200 Rep] [BP]*</EM4>: " [189] to queue. New queue size: 2, MissionId: [c54aa278-06e1-4c83-86d2-9e795f7691f3], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>.*\<SHUDEvent_OnNotification\> Added notification ".*Contract Failed: (?<contract>.+): ".*$/gm,
@@ -271,6 +297,7 @@ export const PATTERNS: Record<EntryType, Pattern> = {
   contractSharedNotification: {
     title: "Contract geteilt",
     icon: FaShareFromSquare,
+    category: EntryCategory.Contracts,
     // <2026-05-21T18:32:20.325Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Shared: Tactical Strike Group Needed <EM4>[300 Rep] [BP]</EM4>: " [109] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>.*\<SHUDEvent_OnNotification\> Added notification ".*Contract Shared: (?<contract>.+): ".*$/gm,
@@ -282,6 +309,7 @@ export const PATTERNS: Record<EntryType, Pattern> = {
   contractWithdrawnNotification: {
     title: "Contract zurückgezogen",
     icon: FaFileCircleMinus,
+    category: EntryCategory.Contracts,
     // <2026-05-21T19:02:11.481Z> [Notice] <SHUDEvent_OnNotification> Added notification "Contract Withdrawn:  A Call to Arms: " [231] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>.*\<SHUDEvent_OnNotification\> Added notification ".*Contract Withdrawn: (?<contract>.+): ".*$/gm,
@@ -293,6 +321,7 @@ export const PATTERNS: Record<EntryType, Pattern> = {
   disconnection: {
     title: "Verbindung getrennt",
     icon: FaPlugCircleXmark,
+    category: EntryCategory.Session,
     /**
      * The other reason the game writes is "Nub destroyed", an internal
      * teardown on every server change, which is no event of the player.
@@ -312,6 +341,7 @@ export const PATTERNS: Record<EntryType, Pattern> = {
   injuryDetectedNotification: {
     title: "Verletzung",
     icon: FaUserInjured,
+    category: EntryCategory.Character,
     // <2026-08-27T10:22:35.005Z> [Notice] <SHUDEvent_OnNotification> Added notification "Minor Injury Detected - Left arm - Tier 3 Treatment Required : " [20] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>.*\<SHUDEvent_OnNotification\> Added notification "(?<severity>\w+) Injury Detected - (?<bodyPart>[^-]+) - Tier (?<tier>\d+) Treatment Required ?: ".*$/gm,
@@ -325,6 +355,7 @@ export const PATTERNS: Record<EntryType, Pattern> = {
   medBedHeal: {
     title: "Behandlung",
     icon: FaBedPulse,
+    category: EntryCategory.Character,
     // <2026-08-27T11:08:44.651Z> [Notice] <MED BED HEAL> Actor: ... (Non-Authoritative CLIENT: ...) | [CEntityComponentMedBed::HandleComponentEvent:1101] | -> Perform surgery event Success, med bed name: Bed_Single_Medical_Instance_Hospital_SOO003, vehicle name: none, head: true torso: false leftArm: true rightArm: false leftLeg: false rightLeg: false [Team_ActorFeatures][Actor]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>.*\<MED BED HEAL\>.*-> Perform surgery event (?<result>\w+), med bed name: (?<medBed>[^,]+), vehicle name: (?<vehicle>[^,]+), head: (?<head>\w+) torso: (?<torso>\w+) leftArm: (?<leftArm>\w+) rightArm: (?<rightArm>\w+) leftLeg: (?<leftLeg>\w+) rightLeg: (?<rightLeg>\w+).*$/gm,
@@ -345,6 +376,7 @@ export const PATTERNS: Record<EntryType, Pattern> = {
   shopPurchase: {
     title: "Einkauf",
     icon: FaCartShopping,
+    category: EntryCategory.Commerce,
     /**
      * The line is the request of the client. The answer of the server,
      * `<CEntityComponentShopUIProvider::RmShopFlowResponse>`, names neither
@@ -363,6 +395,7 @@ export const PATTERNS: Record<EntryType, Pattern> = {
   armisticeZoneNotification: {
     title: "Armistice Zone",
     icon: FaPeace,
+    category: EntryCategory.Zones,
     // <2026-08-26T18:59:25.029Z> [Notice] <SHUDEvent_OnNotification> Added notification "Entering Armistice Zone - Combat Prohibited: " [3] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     // <2026-08-26T19:34:51.380Z> [Notice] <SHUDEvent_OnNotification> Added notification "Leaving Armistice Zone - Caution Advised: " [6] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
@@ -374,6 +407,7 @@ export const PATTERNS: Record<EntryType, Pattern> = {
   jurisdictionNotification: {
     title: "Jurisdiktion",
     icon: FaGavel,
+    category: EntryCategory.Zones,
     /** The game writes no line for leaving a jurisdiction */
     // <2026-08-26T18:50:32.801Z> [Notice] <SHUDEvent_OnNotification> Added notification "Entered Crusader Industries Jurisdiction: " [1] to queue. New queue size: 2, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
@@ -387,6 +421,7 @@ export const PATTERNS: Record<EntryType, Pattern> = {
   monitoredSpaceNotification: {
     title: "Monitored Space",
     icon: FaSatelliteDish,
+    category: EntryCategory.Zones,
     // <2026-08-27T10:07:25.302Z> [Notice] <SHUDEvent_OnNotification> Added notification "Exited Monitored Space: " [15] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>.*\<SHUDEvent_OnNotification\> Added notification "(?<direction>Entered|Exited) Monitored Space: ".*$/gm,
@@ -397,6 +432,7 @@ export const PATTERNS: Record<EntryType, Pattern> = {
   privatePropertyNotification: {
     title: "Privatgelände",
     icon: FaHouseLock,
+    category: EntryCategory.Zones,
     // <2026-08-26T19:06:02.117Z> [Notice] <SHUDEvent_OnNotification> Added notification "Entering Private Property: " [4] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>.*\<SHUDEvent_OnNotification\> Added notification "(?<direction>Entering|Leaving) Private Property: ".*$/gm,
@@ -413,6 +449,7 @@ export const PATTERNS: Record<EntryType, Pattern> = {
   partyInviteReceivedNotification: {
     title: "Party-Einladung",
     icon: FaEnvelope,
+    category: EntryCategory.Party,
     // <2026-08-26T18:50:40.373Z> [Notice] <SHUDEvent_OnNotification> Added notification "SomeHandle
     // <2026-08-26T18:50:40.373Z> Party Invite Received: Accept Invitation?: " [2] to queue. New queue size: 2, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
@@ -424,6 +461,7 @@ export const PATTERNS: Record<EntryType, Pattern> = {
   partyMemberJoinedNotification: {
     title: "Party-Mitglied beigetreten",
     icon: FaUserPlus,
+    category: EntryCategory.Party,
     // <2026-05-25T16:49:39.043Z> [Notice] <SHUDEvent_OnNotification> Added notification "New Member Joined
     // <2026-05-25T16:49:39.043Z> SomeHandle has joined the party.: " [4] to queue. New queue size: 2, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
@@ -435,6 +473,7 @@ export const PATTERNS: Record<EntryType, Pattern> = {
   partyMemberLeftNotification: {
     title: "Party-Mitglied gegangen",
     icon: FaUserMinus,
+    category: EntryCategory.Party,
     // <2026-05-25T18:36:38.835Z> [Notice] <SHUDEvent_OnNotification> Added notification "Member Left
     // <2026-05-25T18:36:38.835Z> SomeHandle has left the party.: " [285] to queue. New queue size: 3, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
@@ -446,6 +485,7 @@ export const PATTERNS: Record<EntryType, Pattern> = {
   partyLeaderChangedNotification: {
     title: "Party-Leader",
     icon: FaCrown,
+    category: EntryCategory.Party,
     // <2026-05-25T18:39:22.607Z> [Notice] <SHUDEvent_OnNotification> Added notification "New Party Leader
     // <2026-05-25T18:39:22.607Z> SomeHandle is now party leader.: " [311] to queue. New queue size: 10, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
     regex:
@@ -457,6 +497,7 @@ export const PATTERNS: Record<EntryType, Pattern> = {
   instanceEntered: {
     title: "Instanz betreten",
     icon: FaArrowRightToBracket,
+    category: EntryCategory.Zones,
     // <2026-08-27T10:05:56.047Z> [Notice] <[Instancing] Player entered instance> [Instancing][CEntityComponentBrokeredInstance::OnPlayerEnterInstance] Player SomeHandle[...] entered instance StreamingSOC_inst_dogleg_ht_a_siege_a[788400312747], which is NOT authoritative [Team_CGP5][Code][Instancing]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>.*\<\[Instancing\] Player entered instance\> .*Player (?<handle>.+?)\[\d+\] entered instance (?<instance>[^\[]+)\[(?<instanceId>\d+)\].*$/gm,
@@ -471,6 +512,7 @@ export const PATTERNS: Record<EntryType, Pattern> = {
   instanceExited: {
     title: "Instanz verlassen",
     icon: FaArrowRightFromBracket,
+    category: EntryCategory.Zones,
     // <2026-08-27T10:08:16.735Z> [Notice] <[Instancing] Player exited instance> [Instancing][CEntityComponentBrokeredInstance::OnPlayerExitInstance] Player SomeHandle[...] left instance StreamingSOC_inst_dogleg_ht_a_siege_a[788400312747], which is NOT authoritative [Team_CGP5][Code][Instancing]
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>.*\<\[Instancing\] Player exited instance\> .*Player (?<handle>.+?)\[\d+\] left instance (?<instance>[^\[]+)\[(?<instanceId>\d+)\].*$/gm,
@@ -485,6 +527,7 @@ export const PATTERNS: Record<EntryType, Pattern> = {
   gameQuit: {
     title: "Spiel beendet",
     icon: FaPowerOff,
+    category: EntryCategory.Session,
     /** A session which crashed has no such line, see `gameCrash` */
     // <2026-08-27T12:22:53.922Z> [Notice] <SystemQuit> CSystem::Quit invoked with - cause=30016, reason=Quit via console command, exitCode=0, thread id=2188, main thread id=2188 [Team_Unknown][System]
     regex: /^<(?<isoDate>[\d\-T:.Z]+)> \[Notice\] \<SystemQuit\>.*$/gm,
@@ -493,6 +536,7 @@ export const PATTERNS: Record<EntryType, Pattern> = {
   gameCrash: {
     title: "Spiel abgestürzt",
     icon: FaBomb,
+    category: EntryCategory.Session,
     /**
      * The crash report at the end of a log file carries no timestamps. The
      * exception line names the kind of the crash.
@@ -515,6 +559,14 @@ export const SORTED_ENTRY_TYPES = Object.values(EntryType).toSorted(
   (first, second) =>
     PATTERNS[first].title.localeCompare(PATTERNS[second].title),
 );
+
+/** The entry types of each category, in the order of `SORTED_ENTRY_TYPES`. */
+export const ENTRY_TYPES_BY_CATEGORY = Object.fromEntries(
+  Object.values(EntryCategory).map((category) => [
+    category,
+    SORTED_ENTRY_TYPES.filter((type) => PATTERNS[type].category === category),
+  ]),
+) as Record<EntryCategory, EntryType[]>;
 
 /** See `Pattern.takesTimeOfPrecedingLine` */
 export const isShareableEntryType = (type: EntryType) =>

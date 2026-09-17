@@ -7,6 +7,7 @@ import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
 import { FaShareNodes } from "react-icons/fa6";
 import { SHAREABLE_ENTRY_TYPES } from "../utils/PATTERNS";
 import { CitizenFilters } from "./CitizenFilters";
+import { EntryTypeGroups } from "./EntryTypeGroups";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 import { SharingEntryTypeCheckbox } from "./SharingEntryTypeCheckbox";
 
@@ -35,7 +36,7 @@ export const SharingSettings = ({ className }: Props) => {
       }
       triggerRender={<Button2 variant={Button2Variant.Secondary} />}
       triggerClassName={className}
-      childrenClassName="flex flex-col gap-2 w-96"
+      childrenClassName="flex flex-col gap-2 w-96 max-h-[80vh] overflow-y-auto"
       openOnHover={false}
     >
       <YesNoCheckbox
@@ -53,14 +54,16 @@ export const SharingSettings = ({ className }: Props) => {
           : "Zum Teilen muss dein Account mit einem Spynet-Citizen verknüpft sein."}
       </p>
 
-      <div className="flex flex-col gap-1 border-t border-white/20 pt-2">
-        {SHAREABLE_ENTRY_TYPES.map((type) => (
-          <SharingEntryTypeCheckbox
-            key={type}
-            type={type}
-            disabled={!isSharingEnabled || !hasLinkedCitizen}
-          />
-        ))}
+      <div className="flex flex-col gap-3 border-t border-white/20 pt-2">
+        <EntryTypeGroups types={SHAREABLE_ENTRY_TYPES}>
+          {(type) => (
+            <SharingEntryTypeCheckbox
+              key={type}
+              type={type}
+              disabled={!isSharingEnabled || !hasLinkedCitizen}
+            />
+          )}
+        </EntryTypeGroups>
       </div>
 
       <div className="border-t border-white/20 pt-2">

@@ -5,6 +5,7 @@ import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
 import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
 import { FaFilter } from "react-icons/fa";
 import { PATTERNS, SORTED_ENTRY_TYPES } from "../utils/PATTERNS";
+import { EntryTypeGroups } from "./EntryTypeGroups";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 
 interface Props {
@@ -25,30 +26,32 @@ export const EntryFilters = ({ className }: Props) => {
       }
       triggerRender={<Button2 variant={Button2Variant.Secondary} />}
       triggerClassName={className}
-      childrenClassName="flex flex-col gap-1 w-80"
+      childrenClassName="flex flex-col gap-3 w-80 max-h-[70vh] overflow-y-auto"
       openOnHover={false}
     >
-      {SORTED_ENTRY_TYPES.map((type) => {
-        const { title, icon: Icon } = PATTERNS[type];
+      <EntryTypeGroups types={SORTED_ENTRY_TYPES}>
+        {(type) => {
+          const { title, icon: Icon } = PATTERNS[type];
 
-        const label = (
-          <span className="flex items-center gap-2">
-            <Icon className="shrink-0" />
-            {title}
-          </span>
-        );
+          const label = (
+            <span className="flex items-center gap-2">
+              <Icon className="shrink-0" />
+              {title}
+            </span>
+          );
 
-        return (
-          <YesNoCheckbox
-            key={type}
-            yesLabel={label}
-            noLabel={label}
-            labelClassName="text-sm flex-1"
-            checked={!entryFilters[type]}
-            onChange={(event) => setEntryFilters(type, !event.target.checked)}
-          />
-        );
-      })}
+          return (
+            <YesNoCheckbox
+              key={type}
+              yesLabel={label}
+              noLabel={label}
+              labelClassName="text-sm flex-1"
+              checked={!entryFilters[type]}
+              onChange={(event) => setEntryFilters(type, !event.target.checked)}
+            />
+          );
+        }}
+      </EntryTypeGroups>
     </PopoverBaseUI>
   );
 };
