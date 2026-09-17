@@ -5,7 +5,7 @@ import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
 import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
 import { FaShareNodes } from "react-icons/fa6";
-import { SORTED_ENTRY_TYPES } from "../utils/PATTERNS";
+import { SHAREABLE_ENTRY_TYPES } from "../utils/PATTERNS";
 import { CitizenFilters } from "./CitizenFilters";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 import { SharingEntryTypeCheckbox } from "./SharingEntryTypeCheckbox";
@@ -54,7 +54,7 @@ export const SharingSettings = ({ className }: Props) => {
       </p>
 
       <div className="flex flex-col gap-1 border-t border-white/20 pt-2">
-        {SORTED_ENTRY_TYPES.map((type) => (
+        {SHAREABLE_ENTRY_TYPES.map((type) => (
           <SharingEntryTypeCheckbox
             key={type}
             type={type}

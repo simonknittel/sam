@@ -7,7 +7,11 @@ import { useCallback, useRef } from "react";
 import { uploadLogAnalyzerEntries } from "../actions/uploadLogAnalyzerEntries";
 import { useLogAnalyzerContext } from "../components/LogAnalyzerContext";
 import { createEntryHash } from "../utils/createEntryHash";
-import { createEntryKey, type IEntry } from "../utils/PATTERNS";
+import {
+  createEntryKey,
+  isShareableEntryType,
+  type IEntry,
+} from "../utils/PATTERNS";
 import { clampDaysToLoad } from "../utils/sharedEntries";
 import type { RawMatch } from "../utils/types";
 import {
@@ -121,6 +125,7 @@ export const useEntryUpload = () => {
       /** One entry can arrive more than once, for example from two files */
       const newMatchesByKey = new Map<string, RawMatch>();
       for (const rawMatch of rawMatches) {
+        if (!isShareableEntryType(rawMatch.type)) continue;
         if (!sharingEntryTypes[rawMatch.type]) continue;
 
         const key = createEntryKey(rawMatch.type, rawMatch.fullMatch);

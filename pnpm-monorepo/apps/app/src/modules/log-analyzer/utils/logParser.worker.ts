@@ -1,3 +1,4 @@
+import { findPrecedingIsoDate } from "./findPrecedingIsoDate";
 import { EntryType, PATTERNS } from "./PATTERNS";
 import type { RawMatch, ResultMessage } from "./types";
 
@@ -13,13 +14,20 @@ self.onmessage = (event: MessageEvent<ParseMessage>) => {
 
   for (const fileContent of fileContents) {
     for (const type of Object.values(EntryType)) {
-      const regexMatches = fileContent.matchAll(PATTERNS[type].regex);
+      const { regex, takesTimeOfPrecedingLine } = PATTERNS[type];
+
+      const regexMatches = fileContent.matchAll(regex);
       for (const match of regexMatches) {
         if (!match.groups) continue;
 
+        const isoDate = takesTimeOfPrecedingLine
+          ? findPrecedingIsoDate(fileContent, match.index)
+          : match.groups.isoDate;
+        if (!isoDate) continue;
+
         matches.push({
           type,
-          isoDate: match.groups.isoDate,
+          isoDate,
           fullMatch: match[0],
           groups: match.groups,
         });
