@@ -138,21 +138,15 @@ const formatDuration = (seconds: number) => {
   return hours > 0 ? `${hours} h ${minutes} min` : `${minutes} min`;
 };
 
-const DISCONNECTION_REASON_LABELS: Record<string, string> = {
-  "Remote Disconnect - Player requested disconnect": "Vom Spieler getrennt",
-  "DisconnectCmd: disconnect light ExitToMenu": "Zurück zum Hauptmenü",
-  "Remote Disconnect - player inactive": "Inaktivität",
-};
-
-/** The body parts of a med bed line, in the order the game lists them */
-const BODY_PART_LABELS: Record<string, string> = {
-  head: "Kopf",
-  torso: "Torso",
-  leftArm: "Linker Arm",
-  rightArm: "Rechter Arm",
-  leftLeg: "Linkes Bein",
-  rightLeg: "Rechtes Bein",
-};
+/** The body parts of a med bed line, as the game names them and in its order */
+const BODY_PARTS = [
+  "head",
+  "torso",
+  "leftArm",
+  "rightArm",
+  "leftLeg",
+  "rightLeg",
+];
 
 const priceFormat = new Intl.NumberFormat("de-DE", {
   maximumFractionDigits: 0,
@@ -322,7 +316,7 @@ export const PATTERNS: Record<EntryType, Pattern> = {
       /^<(?<isoDate>[\d\-T:.Z]+)> \[Notice\] \<Channel Disconnected\> cause=\d+ reason="(?<reason>Remote Disconnect - Player requested disconnect|DisconnectCmd: disconnect light ExitToMenu|Remote Disconnect - player inactive)".*uptime_secs=(?<uptimeSeconds>[\d.]+).*$/gm,
     renderMessage: (groups) => (
       <TruncatedText>
-        {`${DISCONNECTION_REASON_LABELS[groups.reason] ?? groups.reason} nach ${formatDuration(Number(groups.uptimeSeconds))}`}
+        {`${groups.reason} nach ${formatDuration(Number(groups.uptimeSeconds))}`}
       </TruncatedText>
     ),
   },
@@ -349,9 +343,9 @@ export const PATTERNS: Record<EntryType, Pattern> = {
     regex:
       /^<(?<isoDate>[\d\-T:.Z]+)>.*\<MED BED HEAL\>.*-> Perform surgery event (?<result>\w+), med bed name: (?<medBed>[^,]+), vehicle name: (?<vehicle>[^,]+), head: (?<head>\w+) torso: (?<torso>\w+) leftArm: (?<leftArm>\w+) rightArm: (?<rightArm>\w+) leftLeg: (?<leftLeg>\w+) rightLeg: (?<rightLeg>\w+).*$/gm,
     renderMessage: (groups) => {
-      const treatedBodyParts = Object.entries(BODY_PART_LABELS)
-        .filter(([group]) => groups[group] === "true")
-        .map(([, label]) => label);
+      const treatedBodyParts = BODY_PARTS.filter(
+        (bodyPart) => groups[bodyPart] === "true",
+      );
       /** A bed of a station has no vehicle name */
       const vehicle =
         groups.vehicle === "none" ? "" : ` (${toEntityClass(groups.vehicle)})`;
