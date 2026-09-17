@@ -23,16 +23,12 @@ export const uploadEntriesSchema = z.object({
     .array(
       z.object({
         type: z.enum(EntryType),
-        rawLine: z
-          .string()
-          .min(1)
-          .max(MAXIMUM_RAW_LINE_LENGTH)
-          /**
-           * One entry is one line. A line break would let a request smuggle
-           * unmatched content past the pattern check, because the patterns
-           * match one line inside a longer text.
-           */
-          .refine((value) => !value.includes("\n") && !value.includes("\r")),
+        /**
+         * The whole text a pattern matched, which spans two log lines for
+         * some patterns. `validateUploadEntries` makes sure that the pattern
+         * covers the whole text.
+         */
+        rawLine: z.string().min(1).max(MAXIMUM_RAW_LINE_LENGTH),
       }),
     )
     .min(1)
