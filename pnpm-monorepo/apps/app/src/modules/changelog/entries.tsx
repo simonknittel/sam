@@ -53,28 +53,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
     body: () => (
       <>
         <p>
-          Der Log Analyzer erkennt jetzt deutlich mehr Ereignisse aus den Game
-          Logs: geteilte und zurückgezogene Contracts, Verletzungen und
-          Behandlungen im Med Bed, Einkäufe in Shops, das Betreten und
-          Verlassen von Armistice Zones, Jurisdiktionen, Monitored Space und
-          Privatgelände, Party-Einladungen, Beitritte, Austritte und
-          Leader-Wechsel, das Betreten und Verlassen von Instanzen sowie das
-          Beenden und Abstürzen des Spiels.
-        </p>
-
-        <p>
-          Der Eintrag &bdquo;Gestorben&ldquo; zeigt jetzt das zerstörte Schiff.
-          Der Eintrag &bdquo;Verbindung getrennt&ldquo; erkennt zusätzlich die
-          Rückkehr ins Hauptmenü und die Trennung wegen Inaktivität und zeigt
-          den Grund sowie die Zeit auf dem Shard.
-        </p>
-
-        <p>
-          Wiederholungen eines Eintrags, die das Spiel zum Beispiel bei jedem
-          Shard-Wechsel erneut schreibt, werden zu einem Eintrag
-          zusammengefasst. Die Party-Events enthalten die Handles anderer
-          Spieler und werden deshalb erst geteilt, wenn du sie unter
-          &bdquo;Teilen&ldquo; aktivierst. Ein Absturz wird nie geteilt.
+          Der Log Analyzer erkennt nun diverse weitere Events.
         </p>
       </>
     ),
