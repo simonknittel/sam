@@ -154,12 +154,6 @@ const BODY_PART_LABELS: Record<string, string> = {
   rightLeg: "Rechtes Bein",
 };
 
-const CRASH_EXCEPTION_LABELS: Record<string, string> = {
-  STATUS_CRYENGINE_OUT_OF_SYSMEM: "Arbeitsspeicher voll",
-  STATUS_CRYENGINE_GPU_CRASH: "GPU-Absturz",
-  STATUS_CRYENGINE_WATCH_DOG: "Watchdog-Timeout",
-};
-
 const priceFormat = new Intl.NumberFormat("de-DE", {
   maximumFractionDigits: 0,
 });
@@ -537,9 +531,7 @@ export const PATTERNS: Record<EntryType, Pattern> = {
     regex: /^Exception (?<exception>STATUS_\w+)\(0x[0-9A-Fa-f]+\).*$/gm,
     takesTimeOfPrecedingLine: true,
     renderMessage: (groups) => (
-      <TruncatedText>
-        {CRASH_EXCEPTION_LABELS[groups.exception] ?? groups.exception}
-      </TruncatedText>
+      <TruncatedText>{groups.exception}</TruncatedText>
     ),
   },
 };
