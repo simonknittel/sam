@@ -17,8 +17,8 @@ import { getFilesRecursively } from "../utils/getFilesRecursively";
 import { LIVE_MODE_PARSE_INTERVAL_MS } from "../utils/liveMode";
 import {
   createEntryKey,
+  deriveEntryFields,
   EntryType,
-  PATTERNS,
   type IEntry,
 } from "../utils/PATTERNS";
 import type { RawMatch, ResultMessage } from "../utils/types";
@@ -41,7 +41,7 @@ export const LogAnalyzer = ({ className }: Props) => {
     isAutostartEnabled,
     isLiveModeEnabled,
     daysToLoad,
-    entryFilters,
+    ownEntryTypes,
     entries,
     setEntries,
   } = useLogAnalyzerContext();
@@ -77,7 +77,7 @@ export const LogAnalyzer = ({ className }: Props) => {
           const filterProps = Object.fromEntries(
             Object.values(EntryType).map((type) => [
               `log_analyzer_filter_${type}`,
-              !entryFilters[type],
+              ownEntryTypes[type],
             ]),
           );
 
@@ -176,9 +176,7 @@ export const LogAnalyzer = ({ className }: Props) => {
                 type: rawMatch.type,
                 isoDate: new Date(rawMatch.isoDate),
                 isNew: existingEntry?.isNew ?? isNew,
-                message:
-                  PATTERNS[rawMatch.type].renderMessage?.(rawMatch.groups) ??
-                  null,
+                ...deriveEntryFields(rawMatch.type, rawMatch.groups),
                 citizen: ownCitizen,
                 isShared: false,
                 isUploaded: false,
@@ -198,7 +196,7 @@ export const LogAnalyzer = ({ className }: Props) => {
     [
       authentication,
       daysToLoad,
-      entryFilters,
+      ownEntryTypes,
       isAutostartEnabled,
       isLiveModeEnabled,
       ownCitizen,

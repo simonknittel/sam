@@ -75,12 +75,12 @@ export const Introduction = ({ className }: Props) => {
           {/* The kill switch removes the button the copy describes */}
           {isSharingAvailable && (
             <p>
-              Über <span className="font-mono uppercase">Teilen</span> kannst du
-              das Teilen aktivieren. Dann werden die erkannten Events der von
-              dir ausgewählten Typen auf den Server hochgeladen und sind für
-              andere mit Zugriff auf den Log Analyzer sichtbar. Ebenfalls über{" "}
-              <span className="font-mono uppercase">Teilen</span> kannst du dir
-              die Einträge anderer anzeigen lassen.
+              Über{" "}
+              <span className="font-mono uppercase">Filter &amp; Teilen</span>{" "}
+              legst du für jeden Event-Typ fest, ob deine Einträge auf den
+              Server hochgeladen werden und ob du die Einträge anderer siehst.
+              Hochgeladene Einträge sind für andere mit Zugriff auf den Log
+              Analyzer sichtbar.
             </p>
           )}
 

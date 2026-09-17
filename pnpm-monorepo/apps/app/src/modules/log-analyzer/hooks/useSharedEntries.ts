@@ -7,8 +7,8 @@ import { useLogAnalyzerContext } from "../components/LogAnalyzerContext";
 import { LIVE_MODE_DOWNLOAD_INTERVAL_MS } from "../utils/liveMode";
 import {
   createEntryKey,
+  deriveEntryFields,
   matchEntryLine,
-  PATTERNS,
   toEntryType,
   type IEntry,
 } from "../utils/PATTERNS";
@@ -26,7 +26,7 @@ const toEntry = (row: SharedEntry, isNew: boolean): IEntry | null => {
   const type = toEntryType(row.type);
   if (!type) return null;
 
-  const groups = matchEntryLine(type, row.rawLine);
+  const groups = matchEntryLine(type, row.rawLine)?.groups;
   if (!groups) return null;
 
   return {
@@ -34,7 +34,7 @@ const toEntry = (row: SharedEntry, isNew: boolean): IEntry | null => {
     type,
     isoDate: row.eventAt,
     isNew,
-    message: PATTERNS[type].renderMessage?.(groups) ?? null,
+    ...deriveEntryFields(type, groups),
     citizen: row.createdBy,
     isShared: true,
     isUploaded: false,

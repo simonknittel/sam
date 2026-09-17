@@ -2,9 +2,9 @@ import type { EntryType } from "./PATTERNS";
 
 /**
  * The value of `LogAnalyzerEntry.hash`. Together with the uploading citizen
- * it stops the same line from being stored twice. A raw line never holds a
- * line break (the upload action rejects one), thus the separator cannot make
- * two different entries collide.
+ * it stops the same line from being stored twice. No type holds a line break,
+ * thus the first line break is always the separator and two different entries
+ * cannot collide, even though a raw line can span two log lines.
  *
  * The Web Crypto API serves the upload action and the browser alike, so that
  * the client compares against the very hashes the server stores.

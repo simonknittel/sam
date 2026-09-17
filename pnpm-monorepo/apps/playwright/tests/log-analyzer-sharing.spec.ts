@@ -80,19 +80,56 @@ const stubDirectoryPicker = (page: Page, lines: readonly string[]) =>
     [...lines],
   );
 
-const sharingPopover = (page: Page) =>
-  page.getByRole("dialog", { name: "Teilen", exact: true });
+const settingsDialog = (page: Page) =>
+  page.getByRole("dialog", { name: "Filter & Teilen", exact: true });
 
-const openSharingPopover = (page: Page) =>
+const openSettings = (page: Page) =>
   clickUntilVisible(
-    page.getByRole("button", { name: "Teilen", exact: true }),
-    sharingPopover(page),
+    page.getByRole("button", { name: "Filter & Teilen", exact: true }),
+    settingsDialog(page),
   );
 
-const closePopover = async (page: Page) => {
+const closeSettings = async (page: Page) => {
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
 };
+
+/** The columns of the settings table, as the checkboxes name them */
+enum SettingsColumn {
+  ShowOwn = "Eigene anzeigen",
+  Share = "Teilen",
+  ShowOthers = "Andere anzeigen",
+}
+
+const settingCheckbox = (
+  page: Page,
+  typeTitle: string,
+  column: SettingsColumn,
+) =>
+  settingsDialog(page).getByRole("checkbox", {
+    name: `${typeTitle}: ${column}`,
+    exact: true,
+  });
+
+/**
+ * The label around the checkbox, because the checkbox itself is `sr-only`.
+ * The inner locator is queried inside each label, thus it must not carry the
+ * dialog in its chain.
+ */
+const settingToggle = (page: Page, typeTitle: string, column: SettingsColumn) =>
+  toggleLabel(
+    settingsDialog(page),
+    page.getByRole("checkbox", {
+      name: `${typeTitle}: ${column}`,
+      exact: true,
+    }),
+  );
+
+const SHARED_TYPE_TITLES = [
+  "Shard-Beitritt",
+  "Gestorben",
+  "Blueprint erhalten",
+];
 
 const tableRows = (page: Page) => page.getByRole("row");
 
@@ -178,12 +215,11 @@ test("shared entries mix into the table with a citizen column and a citizen filt
   });
   await expect(tableRows(page)).toHaveCount(0);
 
-  await openSharingPopover(page);
-  await toggleLabel(
-    sharingPopover(page),
-    "Einträge anderer Citizens anzeigen",
-  ).click();
-  await closePopover(page);
+  /** Every type of the others starts hidden; a checked box shows it */
+  await openSettings(page);
+  for (const typeTitle of SHARED_TYPE_TITLES)
+    await settingToggle(page, typeTitle, SettingsColumn.ShowOthers).click();
+  await closeSettings(page);
 
   /** No folder was ever chosen: the shared entries stand on their own */
   await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 3, {
@@ -204,28 +240,41 @@ test("shared entries mix into the table with a citizen column and a citizen filt
   await expect(tableRows(page).nth(3)).toContainText("Shard-Beitritt");
 
   /** Every reporter starts checked; an unchecked box hides its entries */
-  await openSharingPopover(page);
-  await toggleLabel(sharingPopover(page), "log-teiler-2").click();
-  await closePopover(page);
+  await openSettings(page);
+  await toggleLabel(settingsDialog(page), "log-teiler-2").click();
+  await closeSettings(page);
 
   await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 2);
-  await expect(page.getByText("Blueprint erhalten")).toHaveCount(0);
+  await expect(rowOf(page, "Blueprint erhalten")).toHaveCount(0);
 
-  await openSharingPopover(page);
-  await sharingPopover(page)
+  await openSettings(page);
+  await settingsDialog(page)
     .getByRole("button", { name: "Alle anzeigen" })
     .click();
-  await closePopover(page);
+  await closeSettings(page);
 
   await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 3);
 
-  /** Switching the setting off takes the entries of the others away again */
-  await openSharingPopover(page);
-  await toggleLabel(
-    sharingPopover(page),
-    "Einträge anderer Citizens anzeigen",
+  /** Hiding a type hides its entries, hiding the last type empties the table */
+  await openSettings(page);
+  await settingToggle(page, "Gestorben", SettingsColumn.ShowOthers).click();
+  await closeSettings(page);
+
+  await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 2);
+  await expect(rowOf(page, "Gestorben")).toHaveCount(0);
+
+  await openSettings(page);
+  await settingToggle(
+    page,
+    "Shard-Beitritt",
+    SettingsColumn.ShowOthers,
   ).click();
-  await closePopover(page);
+  await settingToggle(
+    page,
+    "Blueprint erhalten",
+    SettingsColumn.ShowOthers,
+  ).click();
+  await closeSettings(page);
 
   await expect(tableRows(page)).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Anleitung" })).toBeVisible();
@@ -249,11 +298,15 @@ test("sharing uploads the matched entries of the selected types exactly once", a
   ]);
   await page.goto(PAGE_PATH);
 
-  await openSharingPopover(page);
-  await toggleLabel(sharingPopover(page), "Eigene Einträge teilen").click();
   /** One type stays out, to prove the selection decides what goes out */
-  await toggleLabel(sharingPopover(page), "Shard-Beitritt").click();
-  await closePopover(page);
+  await openSettings(page);
+  await settingToggle(page, "Blueprint erhalten", SettingsColumn.Share).click();
+  await settingToggle(
+    page,
+    "Verbindung getrennt",
+    SettingsColumn.Share,
+  ).click();
+  await closeSettings(page);
 
   await selectFolder(page);
 
@@ -287,9 +340,9 @@ test("sharing uploads the matched entries of the selected types exactly once", a
   expect(secondCycleUploads).toEqual([]);
 
   /** Turning a type on shares the entries of that type which are parsed */
-  await openSharingPopover(page);
-  await toggleLabel(sharingPopover(page), "Shard-Beitritt").click();
-  await closePopover(page);
+  await openSettings(page);
+  await settingToggle(page, "Shard-Beitritt", SettingsColumn.Share).click();
+  await closeSettings(page);
 
   await refresh(page);
 
@@ -345,7 +398,10 @@ test("a user without a linked citizen cannot share", async ({
    * client must refuse the upload all the same.
    */
   await page.addInitScript(() => {
-    window.localStorage.setItem("log_analyzer_is_sharing_enabled", "true");
+    window.localStorage.setItem(
+      "log_analyzer_share_types",
+      JSON.stringify({ joinPu: true, blueprintReceivedNotification: true }),
+    );
   });
   await stubDirectoryPicker(page, [
     joinPuLine(hoursAgo(2)),
@@ -353,18 +409,16 @@ test("a user without a linked citizen cannot share", async ({
   ]);
   await page.goto(PAGE_PATH);
 
-  await openSharingPopover(page);
+  await openSettings(page);
   await expect(
-    sharingPopover(page).getByRole("checkbox", {
-      name: "Eigene Einträge teilen",
-    }),
+    settingCheckbox(page, "Shard-Beitritt", SettingsColumn.Share),
   ).toBeDisabled();
   await expect(
-    sharingPopover(page).getByText(
+    settingsDialog(page).getByText(
       "Zum Teilen muss dein Account mit einem Spynet-Citizen verknüpft sein.",
     ),
   ).toBeVisible();
-  await closePopover(page);
+  await closeSettings(page);
 
   await selectFolder(page);
 

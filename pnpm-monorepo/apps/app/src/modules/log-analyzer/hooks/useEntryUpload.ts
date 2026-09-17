@@ -7,7 +7,11 @@ import { useCallback, useRef } from "react";
 import { uploadLogAnalyzerEntries } from "../actions/uploadLogAnalyzerEntries";
 import { useLogAnalyzerContext } from "../components/LogAnalyzerContext";
 import { createEntryHash } from "../utils/createEntryHash";
-import { createEntryKey, type IEntry } from "../utils/PATTERNS";
+import {
+  createEntryKey,
+  takesTimeOfPrecedingLine,
+  type IEntry,
+} from "../utils/PATTERNS";
 import { clampDaysToLoad } from "../utils/sharedEntries";
 import type { RawMatch } from "../utils/types";
 import {
@@ -158,6 +162,9 @@ export const useEntryUpload = () => {
           hash,
           type: rawMatch.type,
           rawLine: rawMatch.fullMatch,
+          eventAt: takesTimeOfPrecedingLine(rawMatch.type)
+            ? rawMatch.isoDate
+            : undefined,
         });
       }
 

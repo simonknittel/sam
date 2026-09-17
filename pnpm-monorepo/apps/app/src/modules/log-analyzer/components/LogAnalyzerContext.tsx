@@ -15,13 +15,18 @@ import {
   useState,
   useTransition,
 } from "react";
-import type { IEntry } from "../utils/PATTERNS";
-import { EntryType } from "../utils/PATTERNS";
+import {
+  createEntryTypeRecord,
+  EntryType,
+  type IEntry,
+} from "../utils/PATTERNS";
+
+type EntryTypeRecord = Record<EntryType, boolean>;
 
 interface Context {
   /**
-   * False when the kill switch flag turned the sharing off. The toolbar then
-   * hides the sharing UI, and the two settings below read as off.
+   * False when the kill switch flag turned the sharing off. The settings
+   * then hide the sharing UI, and the two flags of the sharing read as off.
    */
   readonly isSharingAvailable: boolean;
   readonly isPending: boolean;
@@ -31,31 +36,56 @@ interface Context {
   readonly isAutostartEnabled: boolean;
   readonly setIsAutostartEnabled: Dispatch<SetStateAction<boolean>>;
   readonly daysToLoad: number;
-  readonly entryFilters: Record<EntryType, boolean>;
-  readonly setEntryFilters: (
-    key: keyof Context["entryFilters"],
-    value: boolean,
-  ) => void;
-  /** The citizens whose entries the table hides. Empty shows all of them. */
+  /** The types whose own entries the table shows. */
+  readonly ownEntryTypes: EntryTypeRecord;
+  readonly setOwnEntryType: (type: EntryType, value: boolean) => void;
+  /** The types whose own entries the upload sends to the server. */
+  readonly sharingEntryTypes: EntryTypeRecord;
+  readonly setSharingEntryType: (type: EntryType, value: boolean) => void;
+  /** True while the upload sends at least one type. */
+  readonly isSharingEnabled: boolean;
+  /** The types whose entries of the other citizens the table shows. */
+  readonly othersEntryTypes: EntryTypeRecord;
+  readonly setOthersEntryType: (type: EntryType, value: boolean) => void;
+  /** True while the table shows at least one type of the other citizens. */
+  readonly isSharedViewEnabled: boolean;
+  /** The citizens whose shared entries the table hides. Empty shows all. */
   readonly hiddenCitizenIds: string[];
   readonly setHiddenCitizenIds: Dispatch<SetStateAction<string[]>>;
   readonly entryFilterFn: (entry: IEntry) => boolean;
-  /** Uploads the matched entries of the selected types to the server. */
-  readonly isSharingEnabled: boolean;
-  readonly setIsSharingEnabled: Dispatch<SetStateAction<boolean>>;
-  readonly sharingEntryTypes: Record<EntryType, boolean>;
-  readonly setSharingEntryTypes: (
-    key: keyof Context["sharingEntryTypes"],
-    value: boolean,
-  ) => void;
-  /** Mixes the entries other citizens shared into the table. */
-  readonly isSharedViewEnabled: boolean;
-  readonly setIsSharedViewEnabled: (isEnabled: boolean) => void;
   readonly entries: Map<string, IEntry>;
   readonly setEntries: Dispatch<SetStateAction<Map<string, IEntry>>>;
 }
 
 const Context = createContext<Context | undefined>(undefined);
+
+const ALL_TYPES_ON = createEntryTypeRecord(true);
+const ALL_TYPES_OFF = createEntryTypeRecord(false);
+
+/**
+ * A stored record of the entry types. The stored value lacks the types which
+ * came after the user stored it, thus the default fills them up on every
+ * read.
+ */
+const useStoredEntryTypes = (key: string, defaultValue: EntryTypeRecord) => {
+  const [storedValue, setStoredValue] = useLocalStorage<
+    Partial<EntryTypeRecord>
+  >(key, defaultValue);
+
+  const value = useMemo(
+    () => ({ ...defaultValue, ...storedValue }),
+    [defaultValue, storedValue],
+  );
+
+  const setType = useCallback(
+    (type: EntryType, isEnabled: boolean) => {
+      setStoredValue((previous) => ({ ...previous, [type]: isEnabled }));
+    },
+    [setStoredValue],
+  );
+
+  return [value, setType] as const;
+};
 
 interface Props {
   readonly children: ReactNode;
@@ -65,11 +95,19 @@ interface Props {
 export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
   const [isPending, startTransition] = useTransition();
 
-  const [entryFilters, _setEntryFilters] = useLocalStorage(
-    "entry_filters",
-    Object.fromEntries(
-      Object.values(EntryType).map((type) => [type, false]),
-    ) as Record<EntryType, boolean>,
+  const [ownEntryTypes, setOwnEntryType] = useStoredEntryTypes(
+    "log_analyzer_show_own_types",
+    ALL_TYPES_ON,
+  );
+
+  const [sharingEntryTypes, setSharingEntryType] = useStoredEntryTypes(
+    "log_analyzer_share_types",
+    ALL_TYPES_OFF,
+  );
+
+  const [othersEntryTypes, setStoredOthersEntryType] = useStoredEntryTypes(
+    "log_analyzer_show_others_types",
+    ALL_TYPES_OFF,
   );
 
   const [hiddenCitizenIds, setHiddenCitizenIds] = useLocalStorage<string[]>(
@@ -87,84 +125,47 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
     false,
   );
 
-  const [storedIsSharingEnabled, setIsSharingEnabled] = useLocalStorage(
-    "log_analyzer_is_sharing_enabled",
-    false,
-  );
-
-  const [sharingEntryTypes, _setSharingEntryTypes] = useLocalStorage(
-    "log_analyzer_sharing_entry_types",
-    Object.fromEntries(
-      Object.values(EntryType).map((type) => [type, true]),
-    ) as Record<EntryType, boolean>,
-  );
-
-  const [storedIsSharedViewEnabled, _setIsSharedViewEnabled] = useLocalStorage(
-    "log_analyzer_is_shared_view_enabled",
-    false,
-  );
-
   /**
    * The kill switch wins over the stored settings, so that no hook uploads
    * or fetches while it is set. The stored values stay untouched: the
    * settings come back when the switch is lifted.
    */
-  const isSharingEnabled = isSharingAvailable && storedIsSharingEnabled;
-  const isSharedViewEnabled = isSharingAvailable && storedIsSharedViewEnabled;
+  const isSharingEnabled =
+    isSharingAvailable && Object.values(sharingEntryTypes).some(Boolean);
+  const isSharedViewEnabled =
+    isSharingAvailable && Object.values(othersEntryTypes).some(Boolean);
 
   const [daysToLoad] = useLocalStorage<number>("log_analyzer_days_to_load", 14);
 
   const [entries, setEntries] = useState<Map<string, IEntry>>(new Map());
 
-  const setEntryFilters = useCallback(
-    (key: keyof typeof entryFilters, value: boolean) => {
-      _setEntryFilters((previous) => ({
-        ...previous,
-        [key]: value,
-      }));
-    },
-    [_setEntryFilters],
-  );
+  const setOthersEntryType = useCallback(
+    (type: EntryType, isEnabled: boolean) => {
+      setStoredOthersEntryType(type, isEnabled);
 
-  const setSharingEntryTypes = useCallback(
-    (key: keyof typeof sharingEntryTypes, value: boolean) => {
-      _setSharingEntryTypes((previous) => ({
-        ...previous,
-        [key]: value,
-      }));
-    },
-    [_setSharingEntryTypes],
-  );
+      /** The entries of the other citizens leave the table with the last type */
+      const isAnotherTypeEnabled = Object.values(EntryType).some(
+        (otherType) => otherType !== type && othersEntryTypes[otherType],
+      );
+      if (isEnabled || isAnotherTypeEnabled) return;
 
-  const setIsSharedViewEnabled = useCallback(
-    (isEnabled: boolean) => {
-      _setIsSharedViewEnabled(isEnabled);
-
-      /** The entries of the other citizens leave the table with the setting */
-      if (!isEnabled)
-        setEntries(
-          (previousEntries) =>
-            new Map(
-              Array.from(previousEntries).filter(
-                ([, entry]) => !entry.isShared,
-              ),
-            ),
-        );
+      setEntries(
+        (previousEntries) =>
+          new Map(
+            Array.from(previousEntries).filter(([, entry]) => !entry.isShared),
+          ),
+      );
     },
-    [_setIsSharedViewEnabled],
+    [othersEntryTypes, setStoredOthersEntryType],
   );
 
   const entryFilterFn = useCallback(
     (entry: IEntry) => {
-      if (entryFilters[entry.type]) return false;
-      /**
-       * Without the sharing there is no citizen filter UI, thus a stored
-       * list of hidden citizens must not hide the local entries.
-       */
-      if (!isSharingAvailable || !entry.citizen) return true;
-      return !hiddenCitizenIds.includes(entry.citizen.id);
+      if (!entry.isShared) return ownEntryTypes[entry.type];
+      if (!othersEntryTypes[entry.type]) return false;
+      return !entry.citizen || !hiddenCitizenIds.includes(entry.citizen.id);
     },
-    [entryFilters, hiddenCitizenIds, isSharingAvailable],
+    [hiddenCitizenIds, othersEntryTypes, ownEntryTypes],
   );
 
   /** Prevent unnecessary rerenders */
@@ -178,17 +179,17 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
       isAutostartEnabled,
       setIsAutostartEnabled,
       daysToLoad,
-      entryFilters,
-      setEntryFilters,
+      ownEntryTypes,
+      setOwnEntryType,
+      sharingEntryTypes,
+      setSharingEntryType,
+      isSharingEnabled,
+      othersEntryTypes,
+      setOthersEntryType,
+      isSharedViewEnabled,
       hiddenCitizenIds,
       setHiddenCitizenIds,
       entryFilterFn,
-      isSharingEnabled,
-      setIsSharingEnabled,
-      sharingEntryTypes,
-      setSharingEntryTypes,
-      isSharedViewEnabled,
-      setIsSharedViewEnabled,
       entries,
       setEntries,
     }),
@@ -201,17 +202,17 @@ export const LogAnalyzerContext = ({ children, isSharingAvailable }: Props) => {
       isAutostartEnabled,
       setIsAutostartEnabled,
       daysToLoad,
-      entryFilters,
-      setEntryFilters,
+      ownEntryTypes,
+      setOwnEntryType,
+      sharingEntryTypes,
+      setSharingEntryType,
+      isSharingEnabled,
+      othersEntryTypes,
+      setOthersEntryType,
+      isSharedViewEnabled,
       hiddenCitizenIds,
       setHiddenCitizenIds,
       entryFilterFn,
-      isSharingEnabled,
-      setIsSharingEnabled,
-      sharingEntryTypes,
-      setSharingEntryTypes,
-      isSharedViewEnabled,
-      setIsSharedViewEnabled,
       entries,
       setEntries,
     ],

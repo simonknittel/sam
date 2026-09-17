@@ -23,12 +23,15 @@ export const Entry = memo(function Entry({ entry }: Props) {
   const showRelativeDate =
     entry.isoDate.getTime() > now.getTime() - 1000 * 60 * 60 * 24;
 
-  /** An entry is either one the user received or one they sent, never both */
+  /**
+   * An entry is either one the user received or one they sent, never both.
+   * One which is neither stays on this computer.
+   */
   const sharingLabel = entry.isShared
     ? "Geteilt"
     : entry.isUploaded
       ? "Hochgeladen"
-      : null;
+      : "Lokal";
 
   return (
     <TRow
@@ -70,11 +73,7 @@ export const Entry = memo(function Entry({ entry }: Props) {
       </td>
 
       <td>
-        {sharingLabel ? (
-          <SmallBadge value={sharingLabel} className="text-white/40" />
-        ) : (
-          <span className="text-white/40">-</span>
-        )}
+        <SmallBadge value={sharingLabel} className="text-white/40" />
       </td>
 
       <td className="flex items-center gap-2 text-white/40">

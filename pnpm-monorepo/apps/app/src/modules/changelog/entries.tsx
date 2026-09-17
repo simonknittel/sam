@@ -46,6 +46,20 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-09-17-log-analyzer-neue-events",
+    date: "2026-09-17",
+    title: "Log Analyzer: Neue Events",
+    tags: ["Log Analyzer", "Neu"],
+    body: () => (
+      <>
+        <p>
+          Der Log Analyzer erkennt nun diverse weitere Events.
+        </p>
+      </>
+    ),
+  },
+
+  {
     key: "2026-09-01-log-analyzer-teilen",
     date: "2026-09-01",
     title: "Log Analyzer: Einträge mit anderen teilen",
