@@ -23,7 +23,7 @@
     "pusher": "5.3.4",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "react-email": "6.9.3",
+    "react-email": "6.9.5",
     "serialize-error": "13.0.1",
     "web-push": "3.6.7",
     "zod": "4.5.3"
