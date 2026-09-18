@@ -14,7 +14,7 @@ export { stateFilePath };
  * the dev stack and production use.
  */
 export const postgresImage =
-  "postgres:18.6-alpine3.23@sha256:697c180dbf244d3ce4a8f4cbc0156cde840af055c1bf8b76aebe422a4822086f";
+  "postgres:18.6-alpine3.23@sha256:8c80c49c67052d82f9aaf4ee1f1881c8926b445a1cc916892934845eb8c24204";
 
 /** Same pinned image as compose.yml (S3-compatible upload storage). */
 export const rustfsImage =
@@ -71,7 +71,7 @@ export const s3Environment = (s3Port: number) =>
 
 /** Same pinned image as compose.yml (feature flag server). */
 export const unleashImage =
-  "unleashorg/unleash-server:8.1.0@sha256:16f3ffb914880e7d0f23629a0c1b77aebea3aa619b0305f76eb50b3fb75998a9";
+  "unleashorg/unleash-server:8.2.0@sha256:5020013b7a9a93c8ed3686d36b5025399714020b3fb5ef41afd84ba37a88c050";
 
 export const unleashContainerPort = 4242;
 /** Lives next to the app databases in the stack's Postgres container. */
