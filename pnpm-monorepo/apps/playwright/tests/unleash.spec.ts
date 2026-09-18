@@ -140,23 +140,30 @@ test.describe(() => {
   }
 
   /**
-   * Navigates and reports which buttons the toolbar of the log analyzer shows.
+   * Navigates and reports which label the settings button of the log analyzer
+   * toolbar shows: "Filter & Teilen" with the sharing, "Filter" without it.
    * The toolbar itself has to appear first — its absence stays a state of its
    * own, so a page which did not render cannot pass for the removed sharing.
    */
   const sharingToolbarState = async (page: Page) => {
     await page.goto("/app/tools/log-analyzer");
+    const withSharing = page.getByRole("button", {
+      name: "Filter & Teilen",
+      exact: true,
+    });
+    const withoutSharing = page.getByRole("button", {
+      name: "Filter",
+      exact: true,
+    });
     try {
-      await page
-        .getByRole("button", { name: "Filter" })
+      await withSharing
+        .or(withoutSharing)
         .waitFor({ state: "visible", timeout: 5_000 });
     } catch {
       return SharingToolbarState.NoToolbar;
     }
 
-    return (await page
-      .getByRole("button", { name: "Teilen", exact: true })
-      .isVisible())
+    return (await withSharing.isVisible())
       ? SharingToolbarState.WithSharing
       : SharingToolbarState.WithoutSharing;
   };
