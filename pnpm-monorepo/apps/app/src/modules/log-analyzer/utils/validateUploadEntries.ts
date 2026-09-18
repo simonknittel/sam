@@ -39,7 +39,9 @@ export const validateUploadEntries = async (
     const takesSentTime = takesTimeOfPrecedingLine(type);
     if (takesSentTime !== (sentEventAt !== undefined)) return null;
 
-    const eventAt = new Date(takesSentTime ? sentEventAt! : match.groups.isoDate);
+    const eventAt = new Date(
+      takesSentTime ? sentEventAt! : match.groups.isoDate,
+    );
     if (Number.isNaN(eventAt.getTime())) return null;
 
     validatedEntries.push({

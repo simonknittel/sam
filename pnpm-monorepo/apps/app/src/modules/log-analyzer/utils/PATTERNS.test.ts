@@ -35,9 +35,9 @@ describe("PATTERNS", () => {
   );
 
   test("only the crash takes its time from the preceding line", () => {
-    expect(
-      Object.values(EntryType).filter(takesTimeOfPrecedingLine),
-    ).toEqual([EntryType.GameCrash]);
+    expect(Object.values(EntryType).filter(takesTimeOfPrecedingLine)).toEqual([
+      EntryType.GameCrash,
+    ]);
   });
 
   test("reads the destroyed vehicle of a death", () => {

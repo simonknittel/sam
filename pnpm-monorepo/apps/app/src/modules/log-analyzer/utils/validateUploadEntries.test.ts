@@ -1,10 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { createEntryHash, ENTRY_HASH_PATTERN } from "./createEntryHash";
-import {
-  EntryType,
-  takesTimeOfPrecedingLine,
-  toEntryType,
-} from "./PATTERNS";
+import { EntryType, takesTimeOfPrecedingLine, toEntryType } from "./PATTERNS";
 import { SAMPLE_LINES } from "./sampleLines";
 import {
   createUploadFormData,

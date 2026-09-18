@@ -52,9 +52,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
     tags: ["Log Analyzer", "Neu"],
     body: () => (
       <>
-        <p>
-          Der Log Analyzer erkennt nun diverse weitere Events.
-        </p>
+        <p>Der Log Analyzer erkennt nun diverse weitere Events.</p>
       </>
     ),
   },
