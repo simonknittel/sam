@@ -50,7 +50,7 @@ jobs:
 
   deploy_app:
     name: Deploy app to Vercel
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
 
     environment: Production
 
