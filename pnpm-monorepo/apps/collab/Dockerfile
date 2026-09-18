@@ -1,6 +1,6 @@
 # Build context is the pnpm-monorepo directory:
 #   docker build -f apps/collab/Dockerfile .
-FROM node:24.20.0-alpine@sha256:e67514e5d0f6c46656005e1b693b2ec9d52e80b641307de684d4a015ba7a4eaf AS build
+FROM node:24.21.0-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1 AS build
 RUN corepack enable
 WORKDIR /monorepo
 
@@ -21,7 +21,7 @@ RUN pnpm --filter "@sam-monorepo/collab..." run build
 # scripts, which are not in allowBuilds.
 RUN pnpm --filter "@sam-monorepo/collab" deploy --prod --ignore-scripts /deploy
 
-FROM node:24.20.0-alpine@sha256:e67514e5d0f6c46656005e1b693b2ec9d52e80b641307de684d4a015ba7a4eaf
+FROM node:24.21.0-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1
 ENV NODE_ENV=production
 WORKDIR /app
 COPY --from=build /deploy ./

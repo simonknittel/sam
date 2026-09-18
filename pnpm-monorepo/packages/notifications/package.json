@@ -13,10 +13,10 @@
     "build": "tsc"
   },
   "dependencies": {
-    "zod": "4.5.3"
+    "zod": "4.6.2"
   },
   "devDependencies": {
-    "@types/node": "24.13.3",
+    "@types/node": "24.13.4",
     "typescript": "7.0.2"
   }
 }
