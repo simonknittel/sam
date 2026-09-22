@@ -13,7 +13,7 @@
     "date-fns": "4.4.0",
     "fast-xml-parser": "5.11.1",
     "sharp": "0.35.4",
-    "zod": "4.6.2"
+    "zod": "4.6.5"
   },
   "devDependencies": {
     "@types/node": "24.13.4",

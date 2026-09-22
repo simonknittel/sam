@@ -4,7 +4,7 @@
 services:
 
   psql:
-    image: postgres:18.6-alpine3.23@sha256:8c80c49c67052d82f9aaf4ee1f1881c8926b445a1cc916892934845eb8c24204
+    image: postgres:18.6-alpine3.23@sha256:885cf05d376c7cf27afef02073e6bdac3841252537f16e244fd1c1e6a7c99fb1
     restart: no
     environment:
       POSTGRES_PASSWORD: admin
@@ -70,7 +70,7 @@ services:
   # the anonymous-read policy and the CORS rules (the browser PUTs to
   # presigned URLs cross-origin). Safe to re-run.
   rustfs-bootstrap:
-    image: amazon/aws-cli:2.36.43@sha256:d948ee299a7ffcaec0d6052a00b9f4c513c61cacfaedfe68b098c85808394441
+    image: amazon/aws-cli:2.36.45@sha256:de71ba5460023cdafb0b163b8ba4553e221a5c23e4b851ab5543d29a85c98ef4
     restart: no
     depends_on:
       rustfs:

@@ -14,7 +14,7 @@ export { stateFilePath };
  * the dev stack and production use.
  */
 export const postgresImage =
-  "postgres:18.6-alpine3.23@sha256:8c80c49c67052d82f9aaf4ee1f1881c8926b445a1cc916892934845eb8c24204";
+  "postgres:18.6-alpine3.23@sha256:885cf05d376c7cf27afef02073e6bdac3841252537f16e244fd1c1e6a7c99fb1";
 
 /** Same pinned image as compose.yml (S3-compatible upload storage). */
 export const rustfsImage =
