@@ -3,13 +3,7 @@
  * instead of inside it, so that the unit test can read them without pulling
  * the AWS clients of the publisher into the test run.
  */
-
-/**
- * Star Citizen plays 930 years ahead of the real calendar, thus the night
- * from December 31, 2026 to January 1, 2027 starts the year 2957 in the
- * game. The greeting names that year, not the real one.
- */
-const IN_GAME_YEAR_OFFSET = 930;
+import { getInGameYear } from "@sam-monorepo/domain";
 
 /**
  * The greeting picks one of these for each citizen, so that a citizen does
@@ -104,9 +98,7 @@ export const NEW_YEAR_WORDINGS = [
 
 /** The wording of one citizen, with the in-game year filled in */
 export const buildWording = (realYear: number, index: number) =>
-  (NEW_YEAR_WORDINGS[index] ?? NEW_YEAR_WORDINGS[0])(
-    realYear + IN_GAME_YEAR_OFFSET,
-  );
+  (NEW_YEAR_WORDINGS[index] ?? NEW_YEAR_WORDINGS[0])(getInGameYear(realYear));
 
 /** The wording for one citizen, picked at random */
 export const pickWording = (realYear: number) =>

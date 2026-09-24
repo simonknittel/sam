@@ -24,6 +24,21 @@ describe("shouldGreetCitizen", () => {
     expect(shouldGreetCitizen(candidate({}), now)).toBe(true);
   });
 
+  /**
+   * The New Year theme of the app starts on December 27 already. The
+   * greeting keeps to the greeting day of the event.
+   */
+  test("stays silent on the theme days before January 1", () => {
+    // 2026-12-27 12:00 in Europe/Berlin
+    expect(
+      shouldGreetCitizen(candidate({}), new Date("2026-12-27T11:00:00Z")),
+    ).toBe(false);
+    // 2026-12-29 12:00 in Europe/Berlin
+    expect(
+      shouldGreetCitizen(candidate({}), new Date("2026-12-29T11:00:00Z")),
+    ).toBe(false);
+  });
+
   test("stays silent on the evening of December 31", () => {
     // 2026-12-31 23:30 in Europe/Berlin
     const beforeBerlinMidnight = new Date("2026-12-31T22:30:00Z");
