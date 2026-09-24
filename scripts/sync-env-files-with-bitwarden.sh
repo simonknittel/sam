@@ -105,6 +105,7 @@ upload_file() {
 		update)
 			item=$(vault_item "$1")
 			id=$(printf '%s' "$item" | jq -r '.id')
+			# `bw edit` replaces all fields (also the folder and the favorite), thus send the full item
 			encoded=$(printf '%s' "$item" | jq --rawfile notes "$1" '.notes = $notes' | bw encode)
 			# The output of the Bitwarden CLI contains the notes (the content of the .env file)
 			bw edit item "$id" "$encoded" > /dev/null

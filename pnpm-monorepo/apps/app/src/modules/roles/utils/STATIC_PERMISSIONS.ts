@@ -282,6 +282,7 @@ export const STATIC_PERMISSIONS = [
     title: "Event-Vorlagen teilen",
     string: "eventTemplateShare;manage",
   },
+  // This permission controls nothing yet: the fleet of an event uses `orgFleet;read`.
   {
     section: "Events",
     title: "Event-Flotte lesen",

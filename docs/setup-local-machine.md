@@ -89,6 +89,13 @@ this truncates them:
 docker compose restart otel-collector
 ```
 
+### Notifications (EventBridge)
+
+The app sends notification events to AWS EventBridge only when
+`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_EVENT_BUS_ARN` are all
+set. Do not set them locally. The only event bus is the production bus, thus
+a local action can send real notifications to real users.
+
 ### Embedded app authentication
 
 External apps embedded under `/app/external/…` can receive a signed JWT
