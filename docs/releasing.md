@@ -15,6 +15,8 @@ The [Release workflow](../.github/workflows/release.yml) is the only procedure t
 
 When the two deployments are complete, the workflow sends the `new` event to the `releases` channel of Soketi.
 
+The two deployments do not depend on each other. If the Lambda job fails, the app deployment can still succeed. Thus examine each job, not only the status of the run.
+
 The workflow deploys the Lambda functions to the **test** AWS environment. A production AWS account does not exist yet, thus the test environment intentionally also operates as production (see [setup-test-and-production.md](./setup-test-and-production.md)).
 
 The workflow starts automatically each Tuesday at 8am UTC. You can also start it manually through `Actions > Release > Run workflow`.
@@ -30,4 +32,6 @@ Start the Release workflow manually. The `git_ref` input selects the commit that
 - Keep the input empty to release the latest commit of `main`
 - Enter an older commit SHA to roll back
 
-Database migrations are not part of the Release workflow. The [Production database migrations workflow](../.github/workflows/production-database-migrations.yml) is currently disabled. Apply migrations manually (see [Change the database schema](./changing-database-schema.md)).
+Database migrations are not part of the Release workflow. The [Production database migrations workflow](../.github/workflows/production-database-migrations.yml) is currently disabled, because GitHub runners cannot connect to the production database. Apply migrations manually (see [Change the database schema](./changing-database-schema.md)).
+
+Apply the migration before the release if a layout reads the new schema. Example: `app/app/layout.tsx` runs on each page under `/app`, thus a missing column breaks all these pages.

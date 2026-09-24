@@ -11,3 +11,12 @@
    - ~~Run the "Production database migrations" GitHub workflow~~ (currently disabled)
    - fish: `bwu && bw sync && DATABASE_URL=(bw get password "SAM (Prod) | PostgreSQL") pnpm exec prisma migrate deploy; bw lock`
    - bash: `bwu && bw sync && DATABASE_URL=$(bw get password "SAM (Prod) | PostgreSQL") pnpm exec prisma migrate deploy; bw lock`
+
+## Create a migration and keep the local data
+
+Step 4 resets the local database. To keep the data, use one of these options:
+
+- Create an empty database in the `psql` container (`CREATE DATABASE <name>`), set `DATABASE_URL` to it, and run step 4 there. Skip step 3.
+- Do step 3. Then create the SQL with `pnpm exec prisma migrate diff --from-migrations prisma/migrations --to-schema prisma --script -o <temporary file>`. This command requires a shadow database in the Prisma config. Move the file to `prisma/migrations/<name>/migration.sql`. Then mark the migration as applied: `pnpm exec prisma migrate resolve --applied <name>`.
+
+Do not change a migration that a database already applied. `prisma migrate deploy` compares the checksums and fails.
