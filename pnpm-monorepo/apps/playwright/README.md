@@ -35,8 +35,44 @@ PLAYWRIGHT_SKIP_BUILD=1 pnpm test  # reuse the previous app build and collab ima
 pnpm exec playwright test tests/wiki-editing.spec.ts   # single file
 ```
 
+`PLAYWRIGHT_SKIP_BUILD=1` also reuses an old build after a change to the app
+or after a branch switch. Then the tests do not test your change.
+
 Requirements: Docker runs, and the Playwright browsers are installed
 (`pnpm exec playwright install chromium`).
 
 The suite is fully independent of the dev stack (`compose.yml`) — both can
 run at the same time.
+
+## Write a test
+
+Use the helpers in `fixtures/`, first of all `interactions.ts`. They repeat
+an action until the page reacts, because a fill or a click before hydration
+can have no effect.
+
+- Add each permission check as a row in `tests/gated-routes.spec.ts`, not as
+  a new spec.
+- Assert the page content, then the URL. The app sends 404, 403 and
+  redirects with HTTP status 200.
+- Assert the saved values immediately after the save, before
+  `page.reload()`. A reload can hide a form error.
+- Make sure that a filter test can fail: also seed rows of a different type
+  and of a different user.
+- `page.goto()` always loads the page again from the server. Thus it cannot
+  test `revalidatePath()` or the client router cache.
+- The suite sets `reducedMotion: "reduce"`. A test of an animation must call
+  `page.emulateMedia({ reducedMotion: "no-preference" })`.
+- The stack runs no Lambda functions and sends no EventBridge events. Test
+  the delivery of notifications with unit tests.
+
+## Examine a flaky test
+
+- Run the test with `--repeat-each=3` or more. The first test of a new
+  worker most frequently loses a fill before hydration.
+- Do not trust a full run while the dev stack or a Docker build also runs.
+- To reproduce a hydration problem, make the CPU slower in a temporary spec:
+
+  ```ts
+  const cdpSession = await page.context().newCDPSession(page);
+  await cdpSession.send("Emulation.setCPUThrottlingRate", { rate: 20 });
+  ```
