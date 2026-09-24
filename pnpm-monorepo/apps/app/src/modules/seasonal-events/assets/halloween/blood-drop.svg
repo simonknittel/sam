@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="6" height="8" viewBox="0 0 6 8">
+  <defs>
+    <linearGradient id="blood" x2="0" y2="1">
+      <stop offset="0" stop-color="#721313"/>
+      <stop offset="1" stop-color="#811818"/>
+    </linearGradient>
+    <radialGradient id="gloss" cx=".45" cy=".68" r=".5">
+      <stop offset="0" stop-color="#b92222" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#811818" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="side">
+      <stop offset="0" stop-color="#110909" stop-opacity=".4"/>
+      <stop offset=".45" stop-color="#110909" stop-opacity="0"/>
+      <stop offset=".6" stop-color="#110909" stop-opacity="0"/>
+      <stop offset="1" stop-color="#110909" stop-opacity=".5"/>
+    </linearGradient>
+  </defs>
+
+  <path d="M3 .3C3.2 2.2 5.4 3.4 5.4 5.4A2.4 2.4 0 0 1 .6 5.4C.6 3.4 2.8 2.2 3 .3Z" fill="url(#blood)"/>
+  <path d="M3 .3C3.2 2.2 5.4 3.4 5.4 5.4A2.4 2.4 0 0 1 .6 5.4C.6 3.4 2.8 2.2 3 .3Z" fill="url(#side)"/>
+  <circle cx="2.9" cy="5.3" r="2.2" fill="url(#gloss)"/>
+  <path d="M1.2 6.4A2 2 0 0 0 4.8 6.4" fill="none" stroke="#b92222" stroke-opacity=".7" stroke-width=".6" stroke-linecap="round"/>
+  <path d="M1.5 4.2Q1.4 5 1.6 5.6" fill="none" stroke="#df5353" stroke-opacity=".35" stroke-width=".5" stroke-linecap="round"/>
+</svg>

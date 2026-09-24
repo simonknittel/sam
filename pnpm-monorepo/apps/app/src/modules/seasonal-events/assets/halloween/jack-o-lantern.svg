@@ -1,0 +1,157 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="halo" cx="32" cy="37.5" r="31" gradientTransform="matrix(1 0 0 .84 0 6)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffb13d" stop-opacity=".45"/>
+      <stop offset=".55" stop-color="#ef5406" stop-opacity=".16"/>
+      <stop offset="1" stop-color="#ef5406" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="contact" cx="32" cy="59" r="24" gradientTransform="matrix(1 0 0 .2 0 47.2)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#110909" stop-opacity=".7"/>
+      <stop offset="1" stop-color="#110909" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="body" x1="0" y1="18" x2="0" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#361408"/>
+      <stop offset=".1" stop-color="#6e2d0c"/>
+      <stop offset=".55" stop-color="#b05111"/>
+      <stop offset=".85" stop-color="#ec7813"/>
+    </linearGradient>
+    <radialGradient id="form" cx="31" cy="41" r="28" gradientUnits="userSpaceOnUse">
+      <stop offset=".6" stop-color="#110909" stop-opacity="0"/>
+      <stop offset="1" stop-color="#110909" stop-opacity=".45"/>
+    </radialGradient>
+    <linearGradient id="side" x1="34" y1="0" x2="58" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#110909" stop-opacity="0"/>
+      <stop offset="1" stop-color="#110909" stop-opacity=".35"/>
+    </linearGradient>
+    <radialGradient id="rib">
+      <stop offset=".62" stop-color="#361408" stop-opacity="0"/>
+      <stop offset="1" stop-color="#361408" stop-opacity=".55"/>
+    </radialGradient>
+    <radialGradient id="sheen">
+      <stop offset="0" stop-color="#ffb13d" stop-opacity=".35"/>
+      <stop offset="1" stop-color="#ffb13d" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="rim" x1="7" y1="0" x2="57" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f5913f" stop-opacity="0"/>
+      <stop offset=".14" stop-color="#f5913f" stop-opacity=".9"/>
+      <stop offset=".42" stop-color="#f5913f" stop-opacity=".85"/>
+      <stop offset=".58" stop-color="#b92222" stop-opacity=".8"/>
+      <stop offset=".86" stop-color="#b92222" stop-opacity=".75"/>
+      <stop offset="1" stop-color="#b92222" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="spill">
+      <stop offset="0" stop-color="#ffb13d" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#ffb13d" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="wall" x2="0" y2="1">
+      <stop offset="0" stop-color="#6e2d0c"/>
+      <stop offset="1" stop-color="#b05111"/>
+    </linearGradient>
+    <radialGradient id="glow" cy=".85" r=".85">
+      <stop offset="0" stop-color="#ffedb8"/>
+      <stop offset=".35" stop-color="#ffedb8"/>
+      <stop offset=".7" stop-color="#ffb13d"/>
+      <stop offset="1" stop-color="#ef5406"/>
+    </radialGradient>
+    <radialGradient id="seam">
+      <stop offset="0" stop-color="#ffb13d" stop-opacity=".6"/>
+      <stop offset="1" stop-color="#ffb13d" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="spark">
+      <stop offset="0" stop-color="#ffedb8"/>
+      <stop offset=".3" stop-color="#ffb13d" stop-opacity=".8"/>
+      <stop offset="1" stop-color="#ef5406" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="stem" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#6c6441"/>
+      <stop offset=".5" stop-color="#423c24"/>
+      <stop offset="1" stop-color="#211412"/>
+    </linearGradient>
+    <linearGradient id="leaf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3a462b"/>
+      <stop offset="1" stop-color="#5a6845"/>
+    </linearGradient>
+    <ellipse id="lobe-outer-left" cx="14" cy="38.5" rx="8" ry="16.5"/>
+    <ellipse id="lobe-outer-right" cx="50" cy="38.5" rx="8" ry="16.5"/>
+    <ellipse id="lobe-inner-left" cx="22" cy="38" rx="10.5" ry="19"/>
+    <ellipse id="lobe-inner-right" cx="42" cy="38" rx="10.5" ry="19"/>
+    <ellipse id="lobe-center" cx="32" cy="38" rx="9" ry="19.5"/>
+    <path id="eye-left" d="M21.6 26.8Q22.6 25.4 23.6 26.8L28 33.2Q28.6 34.4 27.3 34.3Q22.8 31.6 18.3 34.3Q17 34.4 17.6 33.2Z"/>
+    <path id="eye-right" d="M42.4 26.8Q41.4 25.4 40.4 26.8L36 33.2Q35.4 34.4 36.7 34.3Q41.2 31.6 45.7 34.3Q47 34.4 46.4 33.2Z"/>
+    <path id="nose" d="M31.3 36.6Q32 35.7 32.7 36.6L34.3 38.9Q34.6 39.6 33.8 39.6H30.2Q29.4 39.6 29.7 38.9Z"/>
+    <path id="mouth" d="M16.5 40.5Q21 42.3 25.6 43L25.9 46.2Q27.3 47.2 28.7 46.3L29 43.4Q32 43.8 35 43.4L35.3 46Q36.7 46.9 38.1 46L38.4 43Q43 42.3 47.5 40.5Q43.8 45.6 40 48.2Q37 50.4 33.8 50.9L33.5 48.1Q32 47.3 30.5 48.1L30.2 50.9Q27 50.4 24 48.2Q20.2 45.6 16.5 40.5Z"/>
+    <clipPath id="cuts">
+      <use href="#eye-left"/>
+      <use href="#eye-right"/>
+      <use href="#nose"/>
+      <use href="#mouth"/>
+    </clipPath>
+  </defs>
+
+  <ellipse cx="32" cy="37.5" rx="31" ry="26" fill="url(#halo)"/>
+  <rect x="6" y="54" width="52" height="10" fill="url(#contact)"/>
+
+  <g transform="rotate(-4 32 40) translate(-1.9 -2.2) scale(1.06)">
+    <path d="M30 22C30 17.5 30.3 13.8 30.9 11.4C31.5 9 33.6 7.9 35.7 8.5C37.5 9 38.4 10.8 37.9 12.4C37.6 13.3 36.5 13.2 36.4 12.3C36.3 11.3 35.7 10.8 35 10.9C34.2 11 33.9 11.8 33.9 13C33.9 15.8 34.4 18.8 35.2 22Z" fill="url(#stem)"/>
+    <path d="M31.4 20C31.2 16.4 31.4 13.6 32 11.6M32.9 20.2C32.7 17.2 32.7 14.6 33 12.4" fill="none" stroke="#6c6441" stroke-width=".45" stroke-opacity=".7" stroke-linecap="round"/>
+    <ellipse cx="36.3" cy="12" rx="1.4" ry=".8" transform="rotate(-20 36.3 12)" fill="#6c6441"/>
+
+    <use href="#lobe-outer-left" fill="url(#body)"/>
+    <use href="#lobe-outer-left" fill="url(#form)"/>
+    <use href="#lobe-outer-left" fill="url(#rib)"/>
+    <use href="#lobe-outer-right" fill="url(#body)"/>
+    <use href="#lobe-outer-right" fill="url(#form)"/>
+    <use href="#lobe-outer-right" fill="url(#side)"/>
+    <use href="#lobe-outer-right" fill="url(#rib)"/>
+    <use href="#lobe-inner-left" fill="url(#body)"/>
+    <use href="#lobe-inner-left" fill="url(#form)"/>
+    <use href="#lobe-inner-left" fill="url(#rib)"/>
+    <use href="#lobe-inner-right" fill="url(#body)"/>
+    <use href="#lobe-inner-right" fill="url(#form)"/>
+    <use href="#lobe-inner-right" fill="url(#side)"/>
+    <use href="#lobe-inner-right" fill="url(#rib)"/>
+    <use href="#lobe-center" fill="url(#body)"/>
+    <use href="#lobe-center" fill="url(#form)"/>
+    <use href="#lobe-center" fill="url(#rib)"/>
+
+    <ellipse cx="32" cy="50" rx="12" ry="6" fill="url(#sheen)"/>
+    <path d="M7.1 46.8A8 16.5 0 0 0 16.5 54.2A10.5 19 0 0 0 27.2 54.5A9 19.5 0 0 0 32 57.5A9 19.5 0 0 0 36.8 54.5A10.5 19 0 0 0 47.5 54.2A8 16.5 0 0 0 56.9 46.8" fill="none" stroke="url(#rim)" stroke-width=".9" stroke-linecap="round" stroke-linejoin="round"/>
+    <g fill="none" stroke="#361408" stroke-opacity=".35" stroke-width=".45" stroke-linecap="round">
+      <path d="M28.4 21.3C27.8 22.8 27.3 24.4 27 26M35.6 21.3C36.2 22.8 36.7 24.4 37 26M26.7 50.2C27.1 52.4 27.7 54 28.6 55.5M37.3 50.2C36.9 52.4 36.3 54 35.4 55.5"/>
+      <path d="M17.4 25C15.4 31 15.4 45 17.8 52M46.6 25C48.6 31 48.6 45 46.2 52"/>
+      <path d="M10.4 30C9.6 35 9.8 43 11 48M53.6 30C54.4 35 54.2 43 53 48"/>
+    </g>
+
+    <ellipse cx="32" cy="38.6" rx="15" ry="4.6" fill="url(#spill)"/>
+    <ellipse cx="22.6" cy="31" rx="8.5" ry="6.5" fill="url(#spill)"/>
+    <ellipse cx="41.4" cy="31" rx="8.5" ry="6.5" fill="url(#spill)"/>
+    <ellipse cx="32" cy="47" rx="19" ry="8" fill="url(#spill)" fill-opacity=".7"/>
+
+    <use href="#eye-left" fill="url(#wall)"/>
+    <use href="#eye-right" fill="url(#wall)"/>
+    <use href="#nose" fill="url(#wall)"/>
+    <use href="#mouth" fill="url(#wall)"/>
+    <g clip-path="url(#cuts)">
+      <use href="#eye-left" transform="translate(0 1.1)" fill="url(#glow)"/>
+      <use href="#eye-right" transform="translate(0 1.1)" fill="url(#glow)"/>
+      <use href="#nose" transform="translate(0 1)" fill="url(#glow)"/>
+      <use href="#mouth" transform="translate(0 1)" fill="url(#glow)"/>
+    </g>
+    <g fill="#ffedb8">
+      <ellipse cx="23.4" cy="29.6" rx=".8" ry="1.1"/>
+      <ellipse cx="40.6" cy="29.6" rx=".8" ry="1.1"/>
+    </g>
+
+    <ellipse cx="32" cy="21.2" rx="6.5" ry="2.2" fill="url(#seam)"/>
+    <path d="M25.6 20.2L26.6 21.4L27.8 20.9L29 22.2L30.4 21.6L32 22.8L33.6 21.6L35 22.2L36.2 20.9L37.4 21.4L38.4 20.2" fill="none" stroke="#ffedb8" stroke-width=".6" stroke-linejoin="round" stroke-linecap="round"/>
+
+    <circle cx="40.6" cy="13.2" r="1.6" fill="url(#spark)"/>
+    <circle cx="44.2" cy="8.4" r="1.2" fill="url(#spark)"/>
+    <circle cx="26.2" cy="10.8" r="1.1" fill="url(#spark)"/>
+
+    <path d="M29.6 19.4C28.4 17 26.6 15.8 24.8 16.2C24.2 15 22.8 14.6 21.6 15.2C20.4 14.6 18.8 15 18.2 16.2C19.2 16.8 19.6 17.8 19.4 18.8C20.6 19.6 22 19.6 23 19C24.6 20.2 27.4 20.4 29.6 19.4Z" fill="url(#leaf)"/>
+    <path d="M29.2 19.2C26.4 18.2 23.6 17.6 19.2 16.4M24.8 17.6L24.6 16.6M22.2 17L21.6 15.8M22.6 17.2L21.6 18.6" fill="none" stroke="#211412" stroke-opacity=".6" stroke-width=".4" stroke-linecap="round"/>
+    <path d="M19.6 18.8C21 19.4 22 19.5 23 19C24.6 20 27 20.3 29.2 19.6" fill="none" stroke="#5a6845" stroke-width=".45" stroke-linecap="round"/>
+    <path d="M35.4 19.6C37.2 17.6 39.8 16.8 41.2 18.2C42.2 19.2 41.6 20.8 40.4 20.6C39.4 20.4 39.4 19.2 40.2 19" fill="none" stroke="#5a6845" stroke-width=".6" stroke-linecap="round"/>
+  </g>
+</svg>

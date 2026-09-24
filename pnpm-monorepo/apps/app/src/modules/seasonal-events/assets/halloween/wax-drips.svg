@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="104" viewBox="0 0 64 104">
+  <defs>
+    <path id="puddle" d="M8.6 56.4C9 55.8 10 55.5 11.4 55.3C13.4 55 15.2 54.5 16.4 53.6C17.4 52.8 18.4 51.3 19.9 51C22.4 51.6 27.6 51.8 30.1 51C30.8 51 31.2 51.5 31.6 52.2C32.4 53.4 33.6 54 35.2 53.9C36.6 53.8 37.6 52.6 38.4 51.6C38.8 51.1 39.2 50.9 39.8 50.9C41.8 51.3 45 51.3 47 50.9C47.8 50.9 48.6 51.4 49.4 52.2C50.6 53.2 52.6 53.8 54.2 54.6C55.2 55.1 55.8 55.8 55.8 56.6C55.8 57.8 55.2 58.8 54.4 59.4C53 60.2 51.2 60.4 49.4 60.5C47.4 60.6 45.6 60.6 43.8 60.6C41.8 60.6 40 60 38.2 59.7C36.4 59.4 34.8 59.8 33 59.8C31 59.8 29.2 59.4 27.2 59.4C25.2 59.4 23.4 59.8 21.4 59.6C19.4 59.4 17.8 59 16 58.8C14 58.6 12.2 58.4 10.6 58C9.6 57.8 8.8 57.2 8.6 56.4Z"/>
+    <path id="drip-long" d="M46.8 59.8C48.6 60 49.3 61 49.4 62.8C49.4 66.6 49.1 70.2 49.3 73.4C49.4 75.2 48.8 76.2 48.9 78C49 79.8 49.6 81 49.6 83.4C49.6 85.4 48.9 86.6 48.9 88.8C48.9 90.8 50 92.2 51.3 92.2C52.6 92.2 53.4 91 53.3 89.2C53.2 87.2 52.4 86 52.4 84.2C52.4 81.6 52.9 80.2 52.8 78C52.7 75.6 52.3 74 52.3 71.4C52.3 67.6 52.5 64.4 52.5 62.6C52.5 60.8 53.4 59.9 55 59.2Z"/>
+    <path id="drip-second" d="M42.6 60.2C43.8 60.5 44.1 61.4 44.1 63C44.1 66.4 43.9 69 44 71.6C44.1 73.4 43.6 74.4 43.6 75.8C43.6 77.4 44.4 78.4 45.4 78.4C46.4 78.4 47.1 77.4 47 75.8C46.9 74.2 46.4 73.2 46.4 71.4C46.4 68.6 46.5 66 46.4 63C46.4 61.4 46.8 60.6 47.8 60.2Z"/>
+    <path id="drip-mid" d="M31.2 59.6C32.2 59.9 32.4 60.8 32.3 62C32.2 63.4 31.9 64.2 32 65C32.1 65.9 32.6 66.4 33.3 66.4C34.1 66.4 34.6 65.8 34.6 64.9C34.6 63.9 34.2 63.2 34.2 62C34.2 60.9 34.5 60 35.4 59.6Z"/>
+    <path id="drip-left" d="M13.8 58.6C15 58.9 15.3 59.8 15.3 61.4C15.3 64.2 15 66.4 15 68.8C15 70.2 14.7 71 14.8 71.8C14.9 72.9 15.6 73.4 16.4 73.4C17.3 73.4 18 72.8 18 71.6C18 70.4 17.6 69.6 17.6 68.2C17.6 65.8 17.7 63.4 17.7 61.4C17.7 60 18.2 59.2 19.4 58.9Z"/>
+    <path id="drip-tiny" d="M21 59.5C21.6 59.7 21.7 60.6 21.7 61.2C21.7 62 22.1 62.4 22.6 62.4C23.2 62.4 23.5 61.9 23.5 61.2C23.5 60.5 23.6 59.8 24.2 59.5Z"/>
+    <path id="new-drip" d="M36.6 59.6C37.2 59.8 37.3 61.8 38.2 61.8C39.1 61.8 39.2 59.8 39.8 59.6Z"/>
+    <g id="wax-shape">
+      <use href="#puddle"/>
+      <use href="#drip-long"/>
+      <use href="#drip-second"/>
+      <use href="#drip-mid"/>
+      <use href="#drip-left"/>
+      <use href="#drip-tiny"/>
+      <use href="#new-drip"/>
+    </g>
+    <clipPath id="wax-clip">
+      <use href="#puddle"/>
+      <use href="#drip-long"/>
+      <use href="#drip-second"/>
+      <use href="#drip-mid"/>
+      <use href="#drip-left"/>
+      <use href="#drip-tiny"/>
+      <use href="#new-drip"/>
+    </clipPath>
+    <filter id="soft" x="-.2" y="-.2" width="1.4" height="1.4">
+      <feGaussianBlur stdDeviation=".8"/>
+    </filter>
+    <linearGradient id="body" x1="0" y1="50.6" x2="0" y2="92" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#e4dbc8"/>
+      <stop offset=".07" stop-color="#d0bc95"/>
+      <stop offset=".62" stop-color="#796149"/>
+    </linearGradient>
+    <radialGradient id="falloff" cx="36" cy="53" r="28" gradientTransform="matrix(1 0 0 1.4 0 -21.2)" gradientUnits="userSpaceOnUse">
+      <stop offset=".4" stop-color="#110909" stop-opacity="0"/>
+      <stop offset="1" stop-color="#110909" stop-opacity=".45"/>
+    </radialGradient>
+    <linearGradient id="bend" x1="0" y1="55.4" x2="0" y2="59.4" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#211412" stop-opacity="0"/>
+      <stop offset=".4" stop-color="#211412" stop-opacity=".45"/>
+      <stop offset="1" stop-color="#211412" stop-opacity=".15"/>
+    </linearGradient>
+    <radialGradient id="heap">
+      <stop offset="0" stop-color="#e4dbc8" stop-opacity=".7"/>
+      <stop offset="1" stop-color="#e4dbc8" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="reflection">
+      <stop offset="0" stop-color="#ffb13d" stop-opacity=".7"/>
+      <stop offset="1" stop-color="#ffb13d" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="sheen">
+      <stop offset="0" stop-color="#ffb13d" stop-opacity=".4"/>
+      <stop offset="1" stop-color="#ffb13d" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="glint" x2="0" y2="1">
+      <stop offset="0" stop-color="#e4dbc8" stop-opacity=".85"/>
+      <stop offset="1" stop-color="#e4dbc8" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="far-side" x2="0" y2="1">
+      <stop offset="0" stop-color="#110909" stop-opacity=".1"/>
+      <stop offset="1" stop-color="#110909" stop-opacity=".35"/>
+    </linearGradient>
+  </defs>
+
+  <use href="#wax-shape" transform="translate(.5 1.6)" fill="#110909" filter="url(#soft)"/>
+  <use href="#wax-shape" fill="url(#body)"/>
+  <g clip-path="url(#wax-clip)">
+    <rect x="0" y="50" width="64" height="44" fill="url(#falloff)"/>
+    <rect x="0" y="55.4" width="64" height="4" fill="url(#bend)"/>
+    <ellipse cx="25" cy="52" rx="7.5" ry="2" fill="url(#heap)"/>
+    <ellipse cx="43.4" cy="51.9" rx="6.8" ry="2" fill="url(#heap)"/>
+    <path d="M52 62.8C52 68 51.9 74 52.3 78.4C52.5 82 52 85.4 52.6 88.6" fill="none" stroke="url(#far-side)" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M46.2 63C46.1 66.6 46.1 69.4 46.2 72.4C46.3 73.8 46.6 74.8 46.6 76" fill="none" stroke="url(#far-side)" stroke-width="1" stroke-linecap="round"/>
+    <path d="M15.4 62C15.4 64.6 15.2 67 15.1 69.4" fill="none" stroke="url(#far-side)" stroke-width=".8" stroke-linecap="round"/>
+  </g>
+
+  <ellipse cx="25" cy="51.8" rx="4.6" ry="1" fill="url(#reflection)"/>
+  <ellipse cx="43.4" cy="51.7" rx="4.2" ry="1" fill="url(#reflection)"/>
+  <circle cx="50.4" cy="88.8" r="2" fill="url(#sheen)"/>
+  <circle cx="44.8" cy="75.6" r="1.6" fill="url(#sheen)"/>
+  <circle cx="16.8" cy="71.2" r="1.5" fill="url(#sheen)"/>
+
+  <path d="M10 55.5C12.4 55.2 14.8 54.8 16.4 53.6" fill="none" stroke="#e4dbc8" stroke-opacity=".7" stroke-width=".6" stroke-linecap="round"/>
+  <path d="M31.6 52.2C32.4 53.4 33.6 54 35.2 53.9C36.6 53.8 37.6 52.6 38.4 51.6" fill="none" stroke="#e4dbc8" stroke-width=".6" stroke-linecap="round"/>
+  <path d="M49.4 52.2C50.6 53.2 52.6 53.8 54.2 54.6" fill="none" stroke="#e4dbc8" stroke-opacity=".8" stroke-width=".6" stroke-linecap="round"/>
+  <path d="M50.1 61.4C50.2 65.8 50 69.8 50.1 74" fill="none" stroke="url(#glint)" stroke-width=".6" stroke-linecap="round"/>
+  <path d="M44.8 62.2C44.8 65 44.7 67.6 44.7 70" fill="none" stroke="url(#glint)" stroke-width=".5" stroke-linecap="round"/>
+  <path d="M17 61C17 63.4 16.9 65.6 16.9 67.6" fill="none" stroke="url(#glint)" stroke-width=".5" stroke-linecap="round"/>
+
+  <path d="M49 89.6C49.1 91.2 49.9 92 50.8 92.1" fill="none" stroke="#b92222" stroke-opacity=".5" stroke-width=".6" stroke-linecap="round"/>
+  <path d="M43.7 76.4C43.9 77.8 44.5 78.4 45.3 78.4" fill="none" stroke="#b92222" stroke-opacity=".5" stroke-width=".6" stroke-linecap="round"/>
+  <path d="M14.9 72C15.1 73 15.6 73.4 16.3 73.4" fill="none" stroke="#b92222" stroke-opacity=".5" stroke-width=".5" stroke-linecap="round"/>
+  <path d="M8.8 57C9.4 57.6 10.2 58 11.2 58.2" fill="none" stroke="#b92222" stroke-opacity=".5" stroke-width=".6" stroke-linecap="round"/>
+</svg>

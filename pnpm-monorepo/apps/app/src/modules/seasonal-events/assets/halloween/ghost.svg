@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="112" height="128" viewBox="0 0 112 128">
+  <defs>
+    <g id="silhouette">
+      <path d="M61 6C71 6 77.5 13.5 78 24C78.4 31 77.4 37 76 42C79.4 53 82.4 64 82.2 76C82 86 79.6 94 76.4 101C77.4 105 79 108 81 110.6C76.4 111 72.4 108.6 70.4 105C69.4 110 67.6 115 64.4 118.6C62 115 60.4 111.4 59.6 107.6C57.6 113 54.4 118.8 49.6 123C47.6 118.4 46.6 114 46.4 109.4C43 114.4 38 119 31.6 121.4C32.4 116.4 33.6 112 35.4 107.6C29.6 111.4 22 113.4 12.6 112.6C19.6 107.6 26 101.6 30.8 94C36.6 84.6 40.2 74 41.8 62C42.8 54 43.8 48 44.6 42C43 36.4 42.4 30.6 42.8 24.6C43.4 13.6 51 6 61 6Z"/>
+      <path d="M75.4 38.4C83 34.6 89.6 27.4 94 17.6C95.6 13.4 99 10.4 102.8 11.2C106 11.8 107.8 14.6 107.4 18C107.2 19.6 106.6 21 105.6 22C105 20.4 103.8 19.6 102.4 19.8C100.8 27.6 101 36.4 103.4 45.8C100.6 45.4 98.6 44 97.2 42C96.2 47.2 94 51.4 90.4 54.6C89.8 50.6 88.6 47.6 86.8 45.2C84.8 49.4 82.4 52.2 79.2 54.2Z"/>
+      <path d="M45.6 38.6C38.8 36.2 32.4 31 27.6 24.2C26.2 21.2 23.4 19 20.2 19.4C17.2 19.8 15.4 22.4 15.8 25.6C16 27 16.6 28.4 17.6 29.4C18 28 19 27.2 20.4 27.2C22 33.4 22 40.6 19.6 48.6C22.4 48.2 24.6 46.8 25.8 44.6C27.4 49.4 30 53 33.8 55.6C34.2 51.8 35.2 48.8 36.8 46.4C38.8 50.4 41.2 52.8 44.2 54.4Z"/>
+    </g>
+    <mask id="shape" mask-type="alpha">
+      <use href="#silhouette" filter="url(#soft)"/>
+    </mask>
+    <filter id="soft" x="-.1" y="-.1" width="1.2" height="1.2">
+      <feGaussianBlur stdDeviation=".6"/>
+    </filter>
+    <filter id="blur" x="-.2" y="-.2" width="1.4" height="1.4">
+      <feGaussianBlur stdDeviation="1.4"/>
+    </filter>
+    <filter id="aura" x="-.2" y="-.2" width="1.4" height="1.4">
+      <feGaussianBlur stdDeviation="3.5"/>
+    </filter>
+    <linearGradient id="tail-fade" x1="62" y1="8" x2="36" y2="124" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#d7e8ea" stop-opacity=".32"/>
+      <stop offset=".45" stop-color="#d7e8ea" stop-opacity=".26"/>
+      <stop offset=".78" stop-color="#d7e8ea" stop-opacity=".13"/>
+      <stop offset="1" stop-color="#d7e8ea" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="core" cx="61" cy="34" r="36" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#b0e2e8" stop-opacity=".34"/>
+      <stop offset=".55" stop-color="#b0e2e8" stop-opacity=".15"/>
+      <stop offset="1" stop-color="#b0e2e8" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="rim" x1="81" y1="104" x2="12" y2="113" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#b92222" stop-opacity=".25"/>
+      <stop offset=".6" stop-color="#b92222" stop-opacity=".2"/>
+      <stop offset="1" stop-color="#b92222" stop-opacity=".04"/>
+    </linearGradient>
+    <linearGradient id="hole" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#110909" stop-opacity=".86"/>
+      <stop offset=".7" stop-color="#110909" stop-opacity=".76"/>
+      <stop offset="1" stop-color="#211412" stop-opacity=".6"/>
+    </linearGradient>
+    <radialGradient id="glint">
+      <stop offset="0" stop-color="#7ef8ff" stop-opacity=".6"/>
+      <stop offset="1" stop-color="#7ef8ff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="mouth-glow" cx=".5" cy="1" r=".7">
+      <stop offset="0" stop-color="#b0e2e8" stop-opacity=".4"/>
+      <stop offset="1" stop-color="#b0e2e8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <use href="#silhouette" fill="#b0e2e8" fill-opacity=".14" filter="url(#aura)"/>
+  <g mask="url(#shape)">
+    <rect width="112" height="128" fill="url(#tail-fade)"/>
+    <rect width="112" height="128" fill="url(#core)"/>
+    <path d="M99 24C94 38 86 50 76 60M22 30C28 42 36 51 46 58M72 64C74 78 72 92 67 104M52 66C52 80 48 94 41 108" fill="none" stroke="#110909" stroke-opacity=".16" stroke-width="1.6" stroke-linecap="round" filter="url(#blur)"/>
+    <path d="M64 58C66 74 64 90 59 104" fill="none" stroke="#d7e8ea" stroke-opacity=".14" stroke-width="2.4" stroke-linecap="round" filter="url(#blur)"/>
+    <path d="M12.6 112.6C19.6 113.4 26 111.8 31.4 109.2M31.6 121.4C35 119.4 37.8 117.2 40.2 114.6M49.6 123C51.6 121.2 53.4 119 54.8 116.6M64.4 118.6C66 116.6 67.4 114.2 68.4 111.6M70.4 105C72.8 108.6 76.6 111 81 110.6" fill="none" stroke="url(#rim)" stroke-width="1.4" stroke-linecap="round"/>
+    <path d="M19.6 48.6C22.4 48.2 24.6 46.8 25.8 44.6M33.8 55.6C34.2 52.4 35.4 49.4 36.8 46.8M90.4 54.6C92.6 52.4 94.2 49.8 95.2 46.8M103.4 45.8C100.8 45.4 98.8 44.2 97.4 42.4" fill="none" stroke="#b92222" stroke-opacity=".22" stroke-width="1.4" stroke-linecap="round"/>
+  </g>
+
+  <path d="M48.6 25.6C52.4 26.2 55.8 27.6 58.6 29.8C57.8 32.6 55.8 34.2 53 34.4C50.2 33.8 48.4 30.8 48.6 25.6Z" fill="url(#hole)"/>
+  <path d="M74 24.8C70.2 25.6 67 27 64.2 29.4C65 32.2 67 33.8 69.8 34C72.6 33.4 74.2 30.2 74 24.8Z" fill="url(#hole)"/>
+  <path d="M48.4 38C50.6 39.1 52.6 39.8 54.6 40.2L54.9 43.4H57.7L57.9 40.7C62 41.1 68 40 74.2 37.2C73.6 42.6 70.8 47 67.2 48.2L67 45.4H64.2V48.8C57 49 50.2 45 48.4 38Z" fill="url(#hole)"/>
+  <ellipse cx="61.6" cy="46.2" rx="7" ry="2.8" fill="url(#mouth-glow)"/>
+  <ellipse cx="55.4" cy="31.2" rx="2.6" ry="2.2" fill="url(#glint)"/>
+  <ellipse cx="67.6" cy="30.8" rx="2.6" ry="2.2" fill="url(#glint)"/>
+  <g fill="#7ef8ff" fill-opacity=".6">
+    <circle cx="55.6" cy="31" r=".8"/>
+    <circle cx="67.8" cy="30.6" r=".8"/>
+  </g>
+</svg>

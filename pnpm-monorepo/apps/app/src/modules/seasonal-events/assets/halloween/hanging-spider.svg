@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="64" viewBox="0 0 32 64">
+  <defs>
+    <radialGradient id="halo" cx="16" cy="44" r="15" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#b92222" stop-opacity=".1"/>
+      <stop offset="1" stop-color="#b92222" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="silk" x1="0" y1="0" x2="0" y2="29" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#c0b8af" stop-opacity=".5"/>
+      <stop offset="1" stop-color="#c0b8af" stop-opacity=".4"/>
+    </linearGradient>
+    <linearGradient id="leg" x1="0" y1="26" x2="0" y2="62" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1b1313"/>
+      <stop offset=".55" stop-color="#462a2a"/>
+    </linearGradient>
+    <linearGradient id="chitin" x2="0" y2="1">
+      <stop offset="0" stop-color="#1b1313"/>
+      <stop offset=".6" stop-color="#462a2a"/>
+    </linearGradient>
+    <radialGradient id="underglow" cy="1" r=".7">
+      <stop offset="0" stop-color="#b92222" stop-opacity=".4"/>
+      <stop offset="1" stop-color="#b92222" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="shade" cy=".4" r=".62">
+      <stop offset=".5" stop-color="#110909" stop-opacity="0"/>
+      <stop offset="1" stop-color="#110909" stop-opacity=".6"/>
+    </radialGradient>
+    <radialGradient id="sheen">
+      <stop offset="0" stop-color="#df5353" stop-opacity=".35"/>
+      <stop offset="1" stop-color="#df5353" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glint">
+      <stop offset="0" stop-color="#e4dbc8" stop-opacity=".3"/>
+      <stop offset="1" stop-color="#e4dbc8" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="blush">
+      <stop offset="0" stop-color="#df5353" stop-opacity=".3"/>
+      <stop offset="1" stop-color="#df5353" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="eye" cy=".3" r=".75">
+      <stop offset="0" stop-color="#110909"/>
+      <stop offset=".65" stop-color="#211412"/>
+      <stop offset="1" stop-color="#611306"/>
+    </radialGradient>
+  </defs>
+
+  <ellipse cx="16" cy="44" rx="15" ry="17" fill="url(#halo)"/>
+
+  <path d="M16 0V28.8" fill="none" stroke="url(#silk)" stroke-width=".6" stroke-linecap="round"/>
+
+  <g fill="none" stroke="url(#leg)" stroke-linecap="round">
+    <path d="M11.4 43.6Q7.8 41.2 6 36.8M10.6 45.8Q6.6 43.4 3.8 42.4M10.6 48.4Q7.2 48.8 4.6 50.2M12 50.8Q9.8 53.2 8.2 55.2M20.6 43.6Q24.4 41.4 26 37.2M21.4 45.8Q25.4 43.8 28.2 43M21.4 48.4Q24.8 49 27.4 50.6M20 50.8Q22.2 53 23.8 55" stroke-width=".9"/>
+    <path d="M6 36.8Q5 33.8 5.8 31.2M3.8 42.4Q1.9 44 2.2 46.2M4.6 50.2Q2.9 52.2 3.6 54.6M8.2 55.2Q6.9 57.3 7.6 59.6M26 37.2Q26.8 33 24.6 30.2M28.2 43Q30.1 44.6 29.8 46.8M27.4 50.6Q29 52.6 28.2 55M23.8 55Q25.2 57 24.8 59.2" stroke-width=".7"/>
+    <path d="M5.8 31.2Q6.2 29.4 7.4 28.6M2.2 46.2Q2.3 47.5 3 48.2M3.6 54.6Q3.9 55.8 4.8 56.4M7.6 59.6Q7.8 60.7 8.8 61.2M24.6 30.2Q21.4 26.2 16.4 26.2M29.8 46.8Q29.7 48.1 29 48.8M28.2 55Q27.8 56.2 27 56.6M24.8 59.2Q24.6 60.5 23.6 60.8" stroke-width=".5"/>
+  </g>
+  <g fill="#462a2a">
+    <circle cx="6" cy="36.8" r=".6"/>
+    <circle cx="3.8" cy="42.4" r=".5"/>
+    <circle cx="4.6" cy="50.2" r=".5"/>
+    <circle cx="8.2" cy="55.2" r=".5"/>
+    <circle cx="26" cy="37.2" r=".6"/>
+    <circle cx="28.2" cy="43" r=".5"/>
+    <circle cx="27.4" cy="50.6" r=".5"/>
+    <circle cx="23.8" cy="55" r=".5"/>
+  </g>
+  <path d="M4 50.9Q2.7 52.5 3.3 54.5M7.6 56Q6.7 57.4 7.3 59.4M2.4 43.6Q1.7 44.8 1.9 46.2M28 51.3Q29.3 52.9 28.7 54.9M24.4 55.8Q25.5 57.1 25.2 58.9M29.6 44Q30.3 45.2 30.1 46.6" fill="none" stroke="#b92222" stroke-opacity=".4" stroke-width=".35" stroke-linecap="round"/>
+
+  <ellipse cx="16" cy="35.8" rx="7.4" ry="7.6" fill="url(#chitin)"/>
+  <ellipse cx="13.2" cy="39" rx="4.4" ry="4" fill="url(#sheen)"/>
+  <ellipse cx="16" cy="35.8" rx="7.4" ry="7.6" fill="url(#underglow)"/>
+  <ellipse cx="16" cy="35.8" rx="7.4" ry="7.6" fill="url(#shade)"/>
+  <ellipse cx="13.2" cy="39.4" rx="1.7" ry="1.1" fill="url(#glint)"/>
+  <path d="M9.9 34.7A6.2 6.4 0 0 0 11.3 39.9" fill="none" stroke="#df5353" stroke-opacity=".3" stroke-width=".6" stroke-linecap="round"/>
+  <path d="M12.8 30.8L16 33.6L19.2 30.8" fill="none" stroke="#ffb13d" stroke-opacity=".75" stroke-width=".6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M9.2 36.4Q16 41.4 22.8 36.4" fill="none" stroke="#ffb13d" stroke-opacity=".9" stroke-width=".95" stroke-dasharray="0 2.3" stroke-linecap="round"/>
+  <g fill="#ec7813">
+    <circle cx="13.4" cy="41.4" r=".5"/>
+    <circle cx="18.6" cy="41.4" r=".5"/>
+  </g>
+  <path d="M16 28.3V29.4" fill="none" stroke="#462a2a" stroke-width="1.1" stroke-linecap="round"/>
+  <path d="M9 37.1A7.1 7.3 0 0 0 11.9 41.8M23 37.1A7.1 7.3 0 0 1 20.1 41.8" fill="none" stroke="#b92222" stroke-opacity=".55" stroke-width=".45" stroke-linecap="round"/>
+
+  <ellipse cx="16" cy="47.4" rx="6.2" ry="5.2" fill="url(#chitin)"/>
+  <ellipse cx="16" cy="47.4" rx="6.2" ry="5.2" fill="url(#underglow)"/>
+  <ellipse cx="16" cy="47.4" rx="6.2" ry="5.2" fill="url(#shade)"/>
+  <ellipse cx="11.5" cy="49.8" rx="1.5" ry="1" fill="url(#blush)"/>
+  <ellipse cx="20.5" cy="49.8" rx="1.5" ry="1" fill="url(#blush)"/>
+  <circle cx="13.7" cy="47.6" r="2" fill="url(#eye)"/>
+  <circle cx="18.3" cy="47.6" r="2" fill="url(#eye)"/>
+  <circle cx="11.2" cy="45.2" r=".7" fill="url(#eye)"/>
+  <circle cx="20.8" cy="45.2" r=".7" fill="url(#eye)"/>
+  <path d="M11.9 48.3A1.8 1.8 0 0 0 15.5 48.3M16.5 48.3A1.8 1.8 0 0 0 20.1 48.3" fill="none" stroke="#b92222" stroke-opacity=".55" stroke-width=".4" stroke-linecap="round"/>
+  <g fill="#e4dbc8">
+    <circle cx="12.9" cy="46.8" r=".7"/>
+    <circle cx="17.5" cy="46.8" r=".7"/>
+    <circle cx="14.5" cy="48.5" r=".3"/>
+    <circle cx="19.1" cy="48.5" r=".3"/>
+    <circle cx="11" cy="45" r=".3"/>
+    <circle cx="20.6" cy="45" r=".3"/>
+  </g>
+  <path d="M14.9 50.7Q16.1 51.5 17.3 50.3" fill="none" stroke="#110909" stroke-width=".55" stroke-linecap="round"/>
+  <path d="M10.3 48.7A5.9 4.9 0 0 0 21.7 48.7" fill="none" stroke="#b92222" stroke-opacity=".5" stroke-width=".5" stroke-linecap="round"/>
+</svg>

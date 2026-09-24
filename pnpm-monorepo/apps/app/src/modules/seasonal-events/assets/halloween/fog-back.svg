@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="96" viewBox="0 0 960 96">
+  <defs>
+    <filter id="body" x="-14" y="-14" width="988" height="124" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="3.5"/>
+    </filter>
+    <filter id="strata" x="-8" y="-8" width="976" height="112" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="2"/>
+    </filter>
+    <linearGradient id="density" x1="0" y1="8" x2="0" y2="96" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#c0b8af" stop-opacity=".3"/>
+      <stop offset=".5" stop-color="#c0b8af" stop-opacity=".65"/>
+      <stop offset="1" stop-color="#c0b8af" stop-opacity="1"/>
+    </linearGradient>
+  </defs>
+  <g filter="url(#body)" fill="url(#density)" opacity=".11">
+    <path d="M-60.6 110L-60.6 34.3A33.4 19.7 0 0 1 6.2 26.7A20.2 8.7 0 0 1 46.6 23.9A22.9 8.7 0 0 1 92.4 29.5A72.1 31.5 0 0 1 236.6 38.1A57.2 33.9 0 0 1 350.9 26.9A47.6 26.5 0 0 1 446.2 33.9A41.4 12.4 0 0 1 528.9 47.2A44.6 15.7 0 0 1 618.2 57.4A32.5 16.8 0 0 1 683.1 55.9A49.3 28.1 0 0 1 781.7 54.3A58.8 27.5 0 0 1 899.4 34.3A33.4 19.7 0 0 1 966.2 26.7A20.2 8.7 0 0 1 1006.6 23.9L1006.6 110Z" fill-opacity=".45"/>
+    <path d="M-55.2 110L-55.2 59.1A39.3 14.3 0 0 1 23.4 60.1A36.7 13.8 0 0 1 96.9 58.8A46.3 13.7 0 0 1 189.5 74.9A43.3 15.7 0 0 1 276.1 76.2A17.9 8.4 0 0 1 311.9 72.3A22.2 5.9 0 0 1 356.4 67A28.1 16.1 0 0 1 412.6 63.5A30.3 16.4 0 0 1 473.3 69.6A17.3 9.9 0 0 1 507.8 68.2A19.4 8.5 0 0 1 546.7 69.2A41.4 23.2 0 0 1 629.4 57.4A28.5 15.5 0 0 1 686.4 51.3A30.4 17.8 0 0 1 747.2 55.8A31.7 14 0 0 1 810.6 57.4A47.1 11.9 0 0 1 904.8 59.1A39.3 14.3 0 0 1 983.4 60.1L983.4 110Z" fill-opacity=".85"/>
+  </g>
+  <g filter="url(#strata)" fill="#c0b8af" opacity=".07">
+    <path d="M-120.5 76.3Q-27.1 73.8 66.3 74.3Q-27.1 78.1 -120.5 76.3Z" fill-opacity=".79"/>
+    <path d="M-47.7 73.9Q65.2 72.5 178.1 76.5Q65.2 76.8 -47.7 73.9Z" fill-opacity=".86"/>
+    <path d="M154.6 77.1Q236.4 76.3 318.3 73.3Q236.4 82.1 154.6 77.1Z" fill-opacity=".93"/>
+    <path d="M292.5 60.4Q395.8 59.2 499.1 64.3Q395.8 63 292.5 60.4Z" fill-opacity=".99"/>
+    <path d="M453.6 79.3Q557.3 79.9 661 83.3Q557.3 84.4 453.6 79.3Z" fill-opacity=".83"/>
+    <path d="M590.2 70.6Q665 67.9 739.7 72.5Q665 72.9 590.2 70.6Z"/>
+    <path d="M695.1 79.3Q822 81.4 948.9 80Q822 86.8 695.1 79.3Z" fill-opacity=".94"/>
+    <path d="M839.5 76.3Q932.9 73.8 1026.3 74.3Q932.9 78.1 839.5 76.3Z" fill-opacity=".79"/>
+    <path d="M912.3 73.9Q1025.2 72.5 1138.1 76.5Q1025.2 76.8 912.3 73.9Z" fill-opacity=".86"/>
+  </g>
+</svg>

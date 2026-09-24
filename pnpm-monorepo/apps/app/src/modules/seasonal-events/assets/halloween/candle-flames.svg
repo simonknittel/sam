@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="104" viewBox="0 0 64 104">
+  <defs>
+    <radialGradient id="halo">
+      <stop offset="0" stop-color="#ffb13d" stop-opacity=".34"/>
+      <stop offset=".45" stop-color="#ffb13d" stop-opacity=".12"/>
+      <stop offset="1" stop-color="#ffb13d" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="ambient" cx="35" cy="26" r="26" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffb13d" stop-opacity=".14"/>
+      <stop offset=".5" stop-color="#ffb13d" stop-opacity=".05"/>
+      <stop offset="1" stop-color="#ffb13d" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="spill" cx="36" cy="56" r="28" gradientTransform="matrix(1 0 0 .8 0 11.2)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffb13d" stop-opacity=".36"/>
+      <stop offset=".45" stop-color="#ffb13d" stop-opacity=".12"/>
+      <stop offset="1" stop-color="#ffb13d" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="flame" x2="0" y2="1">
+      <stop offset="0" stop-color="#ef5406" stop-opacity="0"/>
+      <stop offset=".3" stop-color="#ef5406" stop-opacity=".85"/>
+      <stop offset=".6" stop-color="#ffb13d"/>
+      <stop offset="1" stop-color="#ffb13d" stop-opacity=".85"/>
+    </linearGradient>
+    <radialGradient id="core" cy=".7" r=".6">
+      <stop offset="0" stop-color="#ffedb8"/>
+      <stop offset=".6" stop-color="#ffedb8" stop-opacity=".9"/>
+      <stop offset="1" stop-color="#ffb13d" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect x="0" y="0" width="64" height="56" fill="url(#ambient)"/>
+  <rect x="0" y="56" width="64" height="48" fill="url(#spill)"/>
+  <circle cx="43.6" cy="11" r="10.5" fill="url(#halo)"/>
+  <circle cx="24.8" cy="28" r="9" fill="url(#halo)"/>
+
+  <path d="M43.8 2.8C45.3 6.6 46.1 9.6 46 12.2C45.9 14.8 44.9 16.6 43.4 16.6C41.9 16.6 40.9 15.2 40.9 12.9C40.9 10.2 42.1 6.8 43.8 2.8Z" fill="url(#flame)"/>
+  <path d="M43.6 8.2C44.5 10.2 44.9 11.8 44.8 13.1C44.7 14.4 44.1 15.2 43.4 15.2C42.7 15.2 42.2 14.5 42.2 13.3C42.2 11.9 42.8 10.2 43.6 8.2Z" fill="url(#core)"/>
+
+  <path d="M24.7 21.4C26.1 24.6 26.9 27.2 26.8 29.2C26.7 31.4 25.9 32.8 24.8 32.8C23.6 32.8 22.9 31.7 22.9 30C22.9 27.8 23.5 25 24.7 21.4Z" fill="url(#flame)"/>
+  <path d="M24.9 26C25.7 27.6 26 28.9 25.9 30C25.8 31.1 25.4 31.8 24.8 31.8C24.2 31.8 23.8 31.1 23.8 30.2C23.8 29 24.2 27.6 24.9 26Z" fill="url(#core)"/>
+</svg>
