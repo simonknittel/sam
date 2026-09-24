@@ -15,6 +15,7 @@ export {
   getCelebrationDate,
   getLocalDate,
   isBirthdayToday,
+  type LocalDate,
 } from "./citizen/birthday.js";
 export {
   CAN_LOGIN_CITIZEN_WHERE,
@@ -28,6 +29,13 @@ export {
   EFFECTIVE_ROLE_IDS_SELECT,
   EFFECTIVE_ROLE_PERMISSIONS_SELECT,
 } from "./permissions/roleAssignmentSelects.js";
+export { getInGameYear } from "./seasonal/inGameYear.js";
+export {
+  SEASONAL_EVENT_DEFINITIONS,
+  SeasonalEventKey,
+  getActiveSeasonalEvent,
+  isSeasonalGreetingDay,
+} from "./seasonal/seasonalCalendar.js";
 export { calculateSilcBalances } from "./silc/calculateSilcBalances.js";
 export { getAuecPerSilc } from "./silc/getAuecPerSilc.js";
 export { getTotalSilc } from "./silc/getTotalSilc.js";
