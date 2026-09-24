@@ -53,6 +53,9 @@ export const statisticTile = (page: Page, label: string) =>
 export const modal = (page: Page, heading: string | RegExp) =>
   page.getByRole("dialog", { name: heading });
 
+/** The element which wears the theme of the active seasonal event. */
+export const themeRoot = (page: Page) => page.locator("[data-seasonal-event]");
+
 /**
  * Interactions landing before React hydrates are swallowed: clicks fall on
  * dead DOM and fill() never reaches a controlled input's state. These

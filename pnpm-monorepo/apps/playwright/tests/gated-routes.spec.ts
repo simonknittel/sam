@@ -62,6 +62,11 @@ const OPEN_ROUTES: readonly [route: string, marker: (page: Page) => Locator][] =
   [
     ["/app/dashboard", (page) => page.getByRole("heading", { name: "Spynet" })],
     ["/app/apps", (page) => page.getByRole("link", { name: "Changelog" })],
+    /** Every citizen switches the seasonal events off for themselves */
+    [
+      "/app/account/appearance",
+      (page) => page.getByRole("heading", { name: "Saisonale Events" }),
+    ],
     [
       "/app/uploads",
       (page) => page.getByText("Du hast bisher keine Dateien hochgeladen."),

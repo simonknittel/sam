@@ -55,6 +55,13 @@ interface Fixtures {
    * `User.role` is "admin".
    */
   readonly enableAdminMode: () => Promise<void>;
+  /**
+   * Names the local calendar date (`YYYY-MM-DD`) the seasonal themes resolve
+   * for, which lets a test walk a date range without waiting for it. The app
+   * honours the cookie only while `SEASONAL_DATE_OVERRIDE_ENABLED` is set,
+   * which the stack does (see setup/stack.ts).
+   */
+  readonly setSeasonalDate: (date: string) => Promise<void>;
   readonly databaseReset: undefined;
 }
 
@@ -64,6 +71,9 @@ interface WorkerFixtures {
 
 /** next-auth v4 database sessions, unprefixed because the stack is HTTP. */
 const SESSION_COOKIE_NAME = "next-auth.session-token";
+
+/** The date override of the seasonal themes (see setSeasonalDate). */
+const SEASONAL_DATE_COOKIE_NAME = "seasonal-date";
 
 const createPrismaClient = (databaseUrl: string) =>
   new PrismaClient({
@@ -257,6 +267,19 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
     await use(async () => {
       await context.addCookies([
         { name: "enable_admin", value: "1", domain: "localhost", path: "/" },
+      ]);
+    });
+  },
+
+  setSeasonalDate: async ({ context }, use) => {
+    await use(async (date) => {
+      await context.addCookies([
+        {
+          name: SEASONAL_DATE_COOKIE_NAME,
+          value: date,
+          domain: "localhost",
+          path: "/",
+        },
       ]);
     });
   },
