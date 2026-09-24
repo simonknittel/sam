@@ -149,6 +149,14 @@ export const env = createEnv({
      * `openssl ecparam -name prime256v1 -genkey -noout | openssl pkcs8 -topk8 -nocrypt | base64 -w0`
      */
     EMBED_JWT_PRIVATE_KEY: z.string().optional(),
+    /**
+     * Lets the `seasonal-date` cookie name the calendar date the seasonal
+     * themes resolve for. Accepts "1" and "true", and belongs to
+     * development and the test stack only: with the variable set, every
+     * visitor can put the app into any season. Production never sets it,
+     * thus the cookie has no effect there.
+     */
+    SEASONAL_DATE_OVERRIDE_ENABLED: z.string().optional(),
   },
 
   /*
@@ -260,6 +268,7 @@ export const env = createEnv({
     COLLAB_JWT_SECRET: process.env.COLLAB_JWT_SECRET,
     COLLAB_URL: process.env.COLLAB_URL,
     EMBED_JWT_PRIVATE_KEY: process.env.EMBED_JWT_PRIVATE_KEY,
+    SEASONAL_DATE_OVERRIDE_ENABLED: process.env.SEASONAL_DATE_OVERRIDE_ENABLED,
     NEXT_PUBLIC_PUSHER_CHANNELS_HOST:
       process.env.NEXT_PUBLIC_PUSHER_CHANNELS_HOST,
     NEXT_PUBLIC_PUSHER_CHANNELS_PORT:
