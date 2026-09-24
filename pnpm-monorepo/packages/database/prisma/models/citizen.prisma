@@ -88,6 +88,7 @@ model Entity {
   updatedFlows                                 Flow[]                               @relation("updatedFlows")
   deletedFlows                                 Flow[]                               @relation("deletedFlows")
   createdLogAnalyzerEntries                    LogAnalyzerEntry[]                   @relation("createdLogAnalyzerEntries")
+  seasonalThemeSettings                        SeasonalThemeSetting[]
 
   // Holds the latest confirmed values
   spectrumId                String?
@@ -209,5 +210,21 @@ model RoleAssignmentLevelChange {
   createdById String?
   createdBy   Entity?                       @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
 
+  @@index([citizenId])
+}
+
+/// Opt-out model for the seasonal themes: the existence of a row means the
+/// seasonal event is switched off for the citizen. The absence of a row means
+/// the event is switched on. Seasonal events introduced in the future are
+/// therefore switched on by default for everyone. The event key is a string,
+/// thus a new event needs no migration.
+model SeasonalThemeSetting {
+  id         String   @id @default(cuid(2))
+  citizenId  String
+  citizen    Entity   @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  eventKey   String
+  disabledAt DateTime @default(now())
+
+  @@unique([citizenId, eventKey])
   @@index([citizenId])
 }
