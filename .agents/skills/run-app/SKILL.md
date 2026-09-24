@@ -127,6 +127,8 @@ curl -s -o /dev/null -w '%{http_code}\n' --cookie "next-auth.session-token=${TOK
 Print only the status code — the token is a credential and must never go
 into the transcript. The browser of the user needs no action.
 
+Admin pages also require the cookie `enable_admin=1`.
+
 ## Copy rows between stacks
 
 The permission classifier refuses `DROP DATABASE`, `TRUNCATE` and similar
@@ -148,6 +150,21 @@ migrations are applied, then compare:
 
 ```bash
 docker exec sam-psql-1 psql -U postgres -d db -tAc "SELECT migration_name FROM _prisma_migrations ORDER BY finished_at DESC LIMIT 5"
+```
+
+## Uploads
+
+The seed copies the database rows, but not the files. Thus the `uploads`
+bucket of a new worktree stack is empty: images of seeded rows do not show,
+and an action that copies an upload fails with `NoSuchKey` (example: "save
+event as template" for an event with a cover). The id of an `Upload` row is
+its S3 key. To repair one row, upload a placeholder to this key with the
+`S3_*` values from `pnpm-monorepo/apps/app/.env`:
+
+```bash
+magick -size 500x200 gradient:'#1b2838-#c8442b' placeholder.webp
+AWS_ACCESS_KEY_ID=<S3_ACCESS_KEY_ID> AWS_SECRET_ACCESS_KEY=<S3_SECRET_ACCESS_KEY> AWS_DEFAULT_REGION=us-east-1 \
+  aws --endpoint-url <S3_ENDPOINT> s3 cp placeholder.webp "s3://<S3_BUCKET_NAME>/<upload id>" --content-type image/webp
 ```
 
 ## Feature flags
@@ -219,6 +236,13 @@ rebuildable, but tell the user.
 - **Hundreds of incorrect type errors** — the postinstall steps (Prisma
   client generation, `next typegen`) never ran; `corepack pnpm install` in
   `pnpm-monorepo` repairs this.
+- **Type errors after a merge** (`Property 'X' does not exist`,
+  `does not satisfy AppRoutes`, `has no exported member`) — generated code
+  is old. Run `pnpm run build` in `packages/database`, `pnpm exec next
+  typegen` in `apps/app`, or
+  `pnpm run --filter "@sam-monorepo/app^..." build` in `pnpm-monorepo`.
+- **An event URL has port 3000 in a worktree** — `NEXT_PUBLIC_BASE_URL` is
+  not set locally, thus the app uses `http://localhost:3000` in each slot.
 - **Queries fail on columns that exist in the Prisma schema** — the
   migrations are behind. `up.sh` applies them on every run in the checkout
   that it runs from, also in the main checkout, whose dev DB otherwise stays
