@@ -12,6 +12,10 @@ See [Set up test and production](./docs/setup-test-and-production.md)
 
 See [Releases](./docs/releasing.md)
 
+## Permissions
+
+See [Permissions](./docs/permissions.md)
+
 ## Embedded app authentication
 
 The contract for external apps embedded under `/app/external/…`. Give it to
