@@ -1,6 +1,11 @@
 import { LOREM_IPSUM_PLACEHOLDER } from "@/modules/common/utils/loremIpsumPlaceholder";
 import { random } from "lodash";
 
+/**
+ * Keep this a server component. `random()` gives different values on the
+ * server and in the browser, thus a client component causes a hydration
+ * mismatch.
+ */
 export const RedactedDayItemContent = () => {
   return (
     <>

@@ -4,7 +4,7 @@ import clsx from "clsx";
 import { useWikiPagePermissionsOpener } from "./WikiPagePermissionsOpener";
 
 interface Props {
-  /** Who may read the page, e.g. `alle` or `3 Rollen` */
+  /** Who may read the page, e.g. `alle` or `ausgewählte Rollen` */
   readonly label: string;
 }
 
