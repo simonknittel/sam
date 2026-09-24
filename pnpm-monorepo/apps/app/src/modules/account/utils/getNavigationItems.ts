@@ -14,6 +14,13 @@ export const getNavigationItems = createNavigationItems(
         title: "Profil",
         url: "/app/account/profile",
       });
+
+      // The seasonal themes are switched off per citizen, thus a viewer
+      // without a citizen has nothing to set on that page.
+      pages.push({
+        title: "Darstellung",
+        url: "/app/account/appearance",
+      });
     }
 
     pages.push({

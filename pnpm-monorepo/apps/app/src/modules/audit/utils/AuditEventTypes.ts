@@ -2278,4 +2278,17 @@ export const AuditEventDefinitions: {
     message: (data) =>
       `Citizen ${data.citizenId} uploaded ${data.entryCount} log analyzer entries (${data.newEntryCount} new)`,
   },
+
+  [AuditEventType.SEASONAL_THEME_SETTINGS_UPDATED]: {
+    type: AuditEventType.SEASONAL_THEME_SETTINGS_UPDATED,
+    data: {
+      citizenId: "string",
+      enabled: ["string"],
+      disabled: [],
+    },
+    message: (data) =>
+      `Citizen ${data.citizenId} updated their seasonal theme settings (switched on: ${
+        data.enabled.join(", ") || "none"
+      }, switched off: ${data.disabled.join(", ") || "none"})`,
+  },
 };

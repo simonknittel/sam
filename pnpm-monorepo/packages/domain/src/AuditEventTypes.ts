@@ -229,6 +229,7 @@ export enum AuditEventType {
   NEW_YEAR_GREETINGS_SENT = "NEW_YEAR_GREETINGS_SENT",
   ONBOARDING_TASK_COMPLETED = "ONBOARDING_TASK_COMPLETED",
   LOG_ANALYZER_ENTRIES_UPLOADED = "LOG_ANALYZER_ENTRIES_UPLOADED",
+  SEASONAL_THEME_SETTINGS_UPDATED = "SEASONAL_THEME_SETTINGS_UPDATED",
 }
 
 /**
@@ -1554,6 +1555,17 @@ export interface AuditEventDataByType {
     citizenId: string;
     entryCount: number;
     newEntryCount: number;
+  };
+
+  /**
+   * Both lists hold keys of seasonal events, and both hold only the events
+   * the citizen really changed. `enabled` names the events which show their
+   * theme again, `disabled` the events the citizen switched off.
+   */
+  [AuditEventType.SEASONAL_THEME_SETTINGS_UPDATED]: {
+    citizenId: string;
+    enabled: string[];
+    disabled: string[];
   };
 }
 
