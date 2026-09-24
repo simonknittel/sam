@@ -16,6 +16,10 @@ See [Releases](./docs/releasing.md)
 
 See [Permissions](./docs/permissions.md)
 
+## Dependency updates
+
+See [Dependency updates](./docs/dependency-updates.md)
+
 ## Embedded app authentication
 
 The contract for external apps embedded under `/app/external/…`. Give it to
