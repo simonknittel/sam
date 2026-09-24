@@ -1,3 +1,4 @@
+import { SeasonalTopBarSlot } from "@/modules/seasonal-events/components/SeasonalTopBarSlot";
 import clsx from "clsx";
 import { CmdKLoader } from "../CmdK/CmdKLoader";
 import { Account } from "./Account";
@@ -16,7 +17,7 @@ export const TopBar = ({ className }: Props) => {
     <div className="bg-black hidden lg:block fixed left-0 right-0 top-0 z-30 px-2 pt-2">
       <div
         className={clsx(
-          "flex bg-secondary-opaque rounded-primary h-12",
+          "flex bg-secondary-opaque rounded-primary h-12 relative",
           className,
         )}
       >
@@ -33,6 +34,8 @@ export const TopBar = ({ className }: Props) => {
           <Notifications />
           <Account />
         </div>
+
+        <SeasonalTopBarSlot />
       </div>
     </div>
   );

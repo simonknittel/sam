@@ -16,7 +16,7 @@ export const DefaultLayout = ({ title, pages, cta, children, slug }: Props) => {
   return (
     <>
       <div className="fixed left-0 right-0 top-0 lg:top-14 z-20 bg-black p-2 flex gap-2 justify-between lg:justify-start border-b border-neutral-800">
-        <Link href={`/app/${slug}`}>
+        <Link href={`/app/${slug}`} className="flex self-center">
           <Hero
             text={title}
             withGlitch

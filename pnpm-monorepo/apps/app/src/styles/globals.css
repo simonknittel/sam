@@ -48,22 +48,387 @@
       transform: rotate(7deg);
     }
   }
+
+  /* The motions of the seasonal decorations. A token names a motion, not an
+     event, thus a later event can reuse it. Every motion touches `transform`
+     and `opacity` only, and the reduced-motion block below switches all of
+     them off at once. */
+
+  /* A decoration which hangs on a thread swings around the point it hangs
+     on. The element sets that point with its own `transform-origin`. */
+  --animate-seasonal-sway: seasonal-sway 5s ease-in-out infinite;
+
+  @keyframes seasonal-sway {
+    0%,
+    100% {
+      transform: rotate(-6deg);
+    }
+
+    50% {
+      transform: rotate(6deg);
+    }
+  }
+
+  /* A decoration which crosses the viewport from left to right and then
+     waits out of sight. The element is invisible for most of the cycle, thus
+     it appears now and then instead of all the time. It starts and ends
+     outside the viewport, thus a viewer who keeps every motion off sees no
+     decoration which stands on the page. */
+  --animate-seasonal-drift: seasonal-drift 60s linear infinite;
+
+  @keyframes seasonal-drift {
+    0%,
+    80% {
+      opacity: 0;
+      transform: translateX(-25vw);
+    }
+
+    84%,
+    96% {
+      opacity: 1;
+    }
+
+    100% {
+      opacity: 0;
+      transform: translateX(110vw);
+    }
+  }
+
+  /* The height at which a drifting decoration crosses the viewport. It
+     changes between two crossings, thus the decoration comes at another
+     height each time. One cycle holds four cycles of the drift (4 × 60 s),
+     and the height jumps 20 s into each of them (8.33 %, 33.33 %, 58.33 % and
+     83.33 %), while the decoration waits out of sight. The jump takes 24 ms
+     (0.01 % of the cycle). Both motions start when the page shows the
+     decoration, thus they stay in step. The crossings go at 28 %, 58 %, 16 %
+     and 42 % of the height of the viewport. */
+  --animate-seasonal-drift-height: seasonal-drift-height 240s linear infinite;
+
+  @keyframes seasonal-drift-height {
+    0%,
+    8.33% {
+      transform: translateY(42vh);
+    }
+
+    8.34%,
+    33.33% {
+      transform: translateY(28vh);
+    }
+
+    33.34%,
+    58.33% {
+      transform: translateY(58vh);
+    }
+
+    58.34%,
+    83.33% {
+      transform: translateY(16vh);
+    }
+
+    83.34%,
+    100% {
+      transform: translateY(42vh);
+    }
+  }
+
+  /* A decoration which falls from above the viewport to below it and drifts
+     sideways on the way. The element starts at the top edge of its layer;
+     several elements share the motion through their own animation delay. */
+  --animate-seasonal-snowfall: seasonal-snowfall 16s linear infinite;
+
+  @keyframes seasonal-snowfall {
+    0% {
+      opacity: 0;
+      transform: translate(0, -10vh);
+    }
+
+    10% {
+      opacity: 1;
+    }
+
+    50% {
+      transform: translate(1.5rem, 50vh);
+    }
+
+    90% {
+      opacity: 1;
+    }
+
+    100% {
+      opacity: 0;
+      transform: translate(0, 110vh);
+    }
+  }
+
+  /* A decoration which pulses, for example a lamp of a string of lights. */
+  --animate-seasonal-twinkle: seasonal-twinkle 2.5s ease-in-out infinite;
+
+  @keyframes seasonal-twinkle {
+    0%,
+    100% {
+      opacity: 0.35;
+    }
+
+    50% {
+      opacity: 1;
+    }
+  }
+
+  /* A decoration which grows out of its centre and fades away, for example a
+     firework burst. The element sets its own animation delay if several
+     bursts must not fire at the same moment. */
+  --animate-seasonal-burst: seasonal-burst 3s ease-out infinite;
+
+  @keyframes seasonal-burst {
+    0% {
+      opacity: 0;
+      transform: scale(0);
+    }
+
+    15% {
+      opacity: 1;
+    }
+
+    70% {
+      opacity: 0.6;
+    }
+
+    100% {
+      opacity: 0;
+      transform: scale(1);
+    }
+  }
+
+  /* A decoration which forms at an edge, falls a short distance and fades
+     away, for example a drop of blood. The element stretches out of the point
+     it forms at and sets that point with its own `transform-origin`. It waits
+     out of sight for most of the cycle, thus it falls now and then instead of
+     all the time, and a viewer who keeps every motion off sees nothing which
+     hangs in the air. */
+  --animate-seasonal-drip: seasonal-drip 6s ease-in infinite;
+
+  @keyframes seasonal-drip {
+    0%,
+    65% {
+      opacity: 0;
+      transform: translateY(0) scaleY(0.3);
+    }
+
+    72% {
+      opacity: 1;
+      transform: translateY(0) scaleY(1);
+    }
+
+    92% {
+      opacity: 1;
+      transform: translateY(2.5rem) scaleY(1.2);
+    }
+
+    100% {
+      opacity: 0;
+      transform: translateY(3.25rem) scaleY(1.2);
+    }
+  }
+
+  /* A light which flickers like the flame of a candle: the brightness falls
+     and comes back at irregular steps, and never goes out. The element holds
+     the flame or the glow only, thus the rest of the drawing stays still. */
+  --animate-seasonal-flicker: seasonal-flicker 3s linear infinite;
+
+  @keyframes seasonal-flicker {
+    0%,
+    48%,
+    100% {
+      opacity: 1;
+    }
+
+    12% {
+      opacity: 0.82;
+    }
+
+    20% {
+      opacity: 0.95;
+    }
+
+    34% {
+      opacity: 0.76;
+    }
+
+    63% {
+      opacity: 0.88;
+    }
+
+    76% {
+      opacity: 0.97;
+    }
+
+    88% {
+      opacity: 0.8;
+    }
+  }
+
+  /* A light which fails now and then, like an old bulb. The element shows
+     the failed light, for example a dark sheet above the page or an unlit
+     bulb on the lit one. It rests invisible, and a dip makes it visible for
+     a short time. The element sets the depth of a dip itself, for example
+     with the colour of the sheet. One cycle holds two stutters which start
+     23 s and 27 s apart, thus the light does not fail at a fixed interval.
+     The light fails and comes back abruptly, like a tube with a loose
+     contact: each change of the opacity takes 5 ms (0.01 % of the cycle),
+     which is one frame or less. The times of a cycle of 50 s, with the
+     opacity of the element:
+       - 0 to 140 ms: dip to 0.6
+       - 250 to 510 ms: dip to 0.8, which jumps to 1 at 370 ms
+       - 620 to 750 ms: dip to 0.45
+       - 23 000 to 23 140 ms: dip to 0.65
+       - 23 270 to 23 540 ms: dip to 0.8, which jumps to 0.95 at 23 400 ms
+     The light burns in full at all other times.
+     The delay of -48 s starts the cycle 48 s in, thus the first stutter
+     comes 2 s after the page loads: soon enough that the viewer sees it,
+     but not at the moment the page loads, where it would look like an error
+     of the page. The token holds the delay, thus elements which the page
+     shows together also fail together.
+     Photosensitive safety (WCAG 2.3.1, three flashes or below threshold):
+     one dip is one flash, because the element only gets more visible in a
+     dip and only gets less visible at its end. A stutter has three dips or
+     less in less than one second, and the next stutter starts more than 20 s
+     later, thus no period of one second holds more than three flashes. At
+     most three flashes in any period of one second also covers red flashes,
+     because the limit for red flashes is the same count. */
+  --animate-seasonal-power-flicker: seasonal-power-flicker 50s linear -48s
+    infinite;
+
+  @keyframes seasonal-power-flicker {
+    0%,
+    0.28%,
+    0.5%,
+    1.02%,
+    1.24%,
+    1.5%,
+    46%,
+    46.28%,
+    46.54%,
+    47.08%,
+    100% {
+      opacity: 0;
+    }
+
+    0.01%,
+    0.27% {
+      opacity: 0.6;
+    }
+
+    0.51%,
+    0.74% {
+      opacity: 0.8;
+    }
+
+    0.75%,
+    1.01% {
+      opacity: 1;
+    }
+
+    1.25%,
+    1.49% {
+      opacity: 0.45;
+    }
+
+    46.01%,
+    46.27% {
+      opacity: 0.65;
+    }
+
+    46.55%,
+    46.8% {
+      opacity: 0.8;
+    }
+
+    46.81%,
+    47.07% {
+      opacity: 0.95;
+    }
+  }
+
+  /* A strip of colour clouds which flows sideways without a stop. The strip
+     is three times as wide as the surface it fills and starts at the left
+     edge of that surface. It holds three copies of the surface side by
+     side, the middle copy mirrored, thus two copies always meet with the
+     same colours and the strip shows no edge. One cycle moves the strip to
+     the left by two copies: the third copy then stands where the first
+     stood, thus the next cycle continues without a jump. A strip which flows
+     to the right plays the motion in reverse. Two strips which flow in
+     opposite directions let the colours swirl. The cycle of 48 s lets a
+     cloud cross the surface in 24 s. */
+  --animate-seasonal-swirl: seasonal-swirl 48s linear infinite;
+
+  @keyframes seasonal-swirl {
+    from {
+      transform: translateX(0);
+    }
+
+    to {
+      transform: translateX(calc(-200% / 3));
+    }
+  }
+
+  /* A strip which flows to the right without a stop, for example a bank of
+     fog. The element has the size of one tile of a drawing which repeats to
+     the side without a seam, and its content repeats the tile from the left
+     edge of the element to past the right edge of the viewport. One cycle
+     moves the element to the right by its own width, from one tile to the
+     left of its place to its place: the tile to its left then stands where
+     the tile stood at the start, thus the next cycle continues without a
+     jump. Without motion, the element stays at its place and its content
+     still fills the viewport. A strip with a wider tile flows faster, thus
+     strips with different tiles share the token and move at different
+     speeds. The cycle of 96 s moves a tile of 1440 pixels by 15 pixels per
+     second, which crosses a viewport of the same width in 96 s. */
+  --animate-seasonal-flow: seasonal-flow 96s linear infinite;
+
+  @keyframes seasonal-flow {
+    from {
+      transform: translateX(-100%);
+    }
+
+    to {
+      transform: translateX(0);
+    }
+  }
 }
 
 @theme inline {
   --font-mono: var(--font-roboto-mono), monospace;
+
+  /**
+   * The font of every hero. The theme root of a page points
+   * `--font-seasonal-hero` at the font of the active seasonal event; without
+   * such an event the hero keeps the default font of the app.
+   */
+  --font-hero: var(--font-seasonal-hero, var(--font-roboto-mono)), monospace;
 }
 
 /**
- * Every decoration of a birthday stops for a viewer who prefers reduced
- * motion. The animation of the party hat is switched off here, at its own
- * definition, thus no place which draws the hat can forget it. The confetti
- * has no CSS animation: `ConfettiCanvas` reads the same preference and
- * renders no canvas at all.
+ * Every decoration of a birthday and of a seasonal event stops for a viewer
+ * who prefers reduced motion. The animations are switched off here, at their
+ * own definition, thus no place which draws a decoration can forget it. The
+ * confetti has no CSS animation: `ConfettiCanvas` reads the same preference
+ * and renders no canvas at all.
  */
 @media (prefers-reduced-motion: reduce) {
   :root {
     --animate-birthday-hat-wiggle: none;
+
+    --animate-seasonal-sway: none;
+    --animate-seasonal-drift: none;
+    --animate-seasonal-drift-height: none;
+    --animate-seasonal-snowfall: none;
+    --animate-seasonal-twinkle: none;
+    --animate-seasonal-burst: none;
+    --animate-seasonal-drip: none;
+    --animate-seasonal-flicker: none;
+    --animate-seasonal-power-flicker: none;
+    --animate-seasonal-swirl: none;
+    --animate-seasonal-flow: none;
   }
 }
 
@@ -136,27 +501,92 @@
 /**
  * The surface of a New Year greeting: the same four colour clouds as
  * `background-birthday`, but in gold, orange and yellow only.
+ *
+ * `--seasonal-upper-clouds` sets the strength of the two clouds at the upper
+ * edge, and `--seasonal-lower-clouds` the strength of the two clouds at the
+ * lower edge: 1 (the default) shows a pair in full, 0 removes it. The
+ * greeting banner draws each pair on a strip of its own and moves the two
+ * strips against each other, see `SeasonalBannerClouds`. Every other surface
+ * keeps all four clouds.
  */
 @utility background-new-year {
   background-image:
     radial-gradient(
       ellipse 70% 140% at 8% 115%,
-      hsl(38 95% 50% / 0.3),
+      hsl(38 95% 50% / calc(0.3 * var(--seasonal-lower-clouds, 1))),
       transparent 68%
     ),
     radial-gradient(
       ellipse 60% 150% at 36% -25%,
-      hsl(52 95% 55% / 0.24),
+      hsl(52 95% 55% / calc(0.24 * var(--seasonal-upper-clouds, 1))),
       transparent 68%
     ),
     radial-gradient(
       ellipse 65% 145% at 66% 120%,
-      hsl(28 90% 50% / 0.28),
+      hsl(28 90% 50% / calc(0.28 * var(--seasonal-lower-clouds, 1))),
       transparent 68%
     ),
     radial-gradient(
       ellipse 55% 135% at 95% -15%,
-      hsl(45 90% 50% / 0.22),
+      hsl(45 90% 50% / calc(0.22 * var(--seasonal-upper-clouds, 1))),
+      transparent 68%
+    );
+}
+
+/**
+ * The surface of the greeting banner on the Day of the Vara: the same four
+ * colour clouds as `background-birthday`, but in orange, violet and green,
+ * with the two strengths of `background-new-year`.
+ */
+@utility background-halloween {
+  background-image:
+    radial-gradient(
+      ellipse 70% 140% at 8% 115%,
+      hsl(25 95% 48% / calc(0.3 * var(--seasonal-lower-clouds, 1))),
+      transparent 68%
+    ),
+    radial-gradient(
+      ellipse 60% 150% at 36% -25%,
+      hsl(278 70% 45% / calc(0.26 * var(--seasonal-upper-clouds, 1))),
+      transparent 68%
+    ),
+    radial-gradient(
+      ellipse 65% 145% at 66% 120%,
+      hsl(95 65% 38% / calc(0.22 * var(--seasonal-lower-clouds, 1))),
+      transparent 68%
+    ),
+    radial-gradient(
+      ellipse 55% 135% at 95% -15%,
+      hsl(35 95% 50% / calc(0.24 * var(--seasonal-upper-clouds, 1))),
+      transparent 68%
+    );
+}
+
+/**
+ * The surface of the greeting banner on the Luminalia days: the same four
+ * colour clouds as `background-birthday`, but in red, green and gold, with
+ * the two strengths of `background-new-year`.
+ */
+@utility background-christmas {
+  background-image:
+    radial-gradient(
+      ellipse 70% 140% at 8% 115%,
+      hsl(0 75% 45% / calc(0.3 * var(--seasonal-lower-clouds, 1))),
+      transparent 68%
+    ),
+    radial-gradient(
+      ellipse 60% 150% at 36% -25%,
+      hsl(145 60% 35% / calc(0.26 * var(--seasonal-upper-clouds, 1))),
+      transparent 68%
+    ),
+    radial-gradient(
+      ellipse 65% 145% at 66% 120%,
+      hsl(45 90% 50% / calc(0.22 * var(--seasonal-lower-clouds, 1))),
+      transparent 68%
+    ),
+    radial-gradient(
+      ellipse 55% 135% at 95% -15%,
+      hsl(355 70% 45% / calc(0.24 * var(--seasonal-upper-clouds, 1))),
       transparent 68%
     );
 }

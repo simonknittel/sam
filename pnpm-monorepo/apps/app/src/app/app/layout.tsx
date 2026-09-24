@@ -24,6 +24,9 @@ import { getOnboardingState } from "@/modules/onboarding/utils/queries/getOnboar
 import { ChannelsProvider } from "@/modules/pusher/components/ChannelsContext";
 import { RolesContextProvider } from "@/modules/roles/components/RolesContext";
 import { getVisibleRoles } from "@/modules/roles/utils/getRoles";
+import { SeasonalViewportLayer } from "@/modules/seasonal-events/components/SeasonalViewportLayer";
+import { getActiveSeasonalTheme } from "@/modules/seasonal-events/queries/getActiveSeasonalTheme";
+import { getSeasonalThemeRootProps } from "@/modules/seasonal-events/utils/getSeasonalThemeRootProps";
 import { CmdKProvider } from "@/modules/shell/components/CmdK/CmdKContext";
 import { MobileActionBarLoader } from "@/modules/shell/components/Sidebar/MobileActionBarLoader";
 import { SkipToContentLink } from "@/modules/shell/components/SkipToContentLink";
@@ -47,6 +50,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
     canReadCareer,
     onboardingState,
     birthdayCitizenIds,
+    seasonalTheme,
   ] = await Promise.all([
     requireAuthenticationPage(),
     getUnleashFlag(UNLEASH_FLAG.DisableAlgolia),
@@ -59,7 +63,13 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
     hasAnyReadableFlow(),
     getOnboardingState(),
     getCitizenIdsWithBirthdayToday(),
+    getActiveSeasonalTheme(),
   ]);
+
+  const seasonalThemeRootProps = getSeasonalThemeRootProps(
+    seasonalTheme,
+    "min-h-dvh background-primary",
+  );
 
   return (
     <>
@@ -71,7 +81,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
                 <NextIntlClientProvider>
                   <RolesContextProvider roles={visibleRoles}>
                     <BirthdayCitizensProvider citizenIds={birthdayCitizenIds}>
-                      <div className="min-h-dvh background-primary">
+                      <div {...seasonalThemeRootProps}>
                         <SkipToContentLink />
 
                         <AppsContextProvider
@@ -98,6 +108,8 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
                                 <div className="pt-12 lg:pt-28 pb-16 lg:pb-0 min-h-dvh">
                                   {children}
                                 </div>
+
+                                <SeasonalViewportLayer />
 
                                 <OnboardingTour />
                               </CreateContextProvider>

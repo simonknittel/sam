@@ -7,6 +7,13 @@ import { Hero } from "@/modules/common/components/Hero";
 import { LoginButtons } from "@/modules/common/components/LoginButtons";
 import Note from "@/modules/common/components/Note";
 import { UwuHero } from "@/modules/common/components/UwuHero";
+import {
+  SeasonalConfetti,
+  SeasonalConfettiPlacement,
+} from "@/modules/seasonal-events/components/SeasonalConfetti";
+import { SeasonalViewportLayer } from "@/modules/seasonal-events/components/SeasonalViewportLayer";
+import { getActiveSeasonalTheme } from "@/modules/seasonal-events/queries/getActiveSeasonalTheme";
+import { getSeasonalThemeRootProps } from "@/modules/seasonal-events/utils/getSeasonalThemeRootProps";
 import { Footer } from "@/modules/shell/components/Footer";
 import { type Metadata } from "next";
 import { redirect } from "next/navigation";
@@ -40,8 +47,18 @@ export default async function Page({ searchParams }: PageProps<"/">) {
 
   const activeProviders = authOptions.providers.map((provider) => provider.id);
 
+  const seasonalThemeRootProps = getSeasonalThemeRootProps(
+    await getActiveSeasonalTheme(),
+    // `relative isolate` gives the confetti canvas its box and its own
+    // stacking context, thus the canvas paints over the background of the
+    // page and below everything the viewer reads.
+    "relative isolate min-h-dvh flex-col flex justify-center items-center background-primary",
+  );
+
   return (
-    <div className="min-h-dvh flex-col flex justify-center items-center background-primary">
+    <div {...seasonalThemeRootProps}>
+      <SeasonalConfetti placement={SeasonalConfettiPlacement.LoginPage} />
+
       <main className="w-full max-w-md py-8 flex flex-col justify-center items-center gap-4 flex-1">
         {uwu ? <UwuHero /> : <Hero text="SAM" withGlitch />}
 
@@ -65,6 +82,8 @@ export default async function Page({ searchParams }: PageProps<"/">) {
       </main>
 
       <Footer className="p-4" />
+
+      <SeasonalViewportLayer />
     </div>
   );
 }
