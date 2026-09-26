@@ -160,6 +160,9 @@ interface Pattern {
    * The expression scans whole log files, thus it carries the global and the
    * multiline flag. It has an `isoDate` group, which gives the time of the
    * event, unless `takesTimeOfPrecedingLine` is set.
+   *
+   * A match spans two lines at most, because a read of a file which grew
+   * starts one line before the new lines (see `createLogFileReader`).
    */
   regex: RegExp;
   /**

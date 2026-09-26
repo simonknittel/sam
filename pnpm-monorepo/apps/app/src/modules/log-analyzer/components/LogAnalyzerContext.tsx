@@ -66,15 +66,24 @@ const ALL_TYPES_OFF = createEntryTypeRecord(false);
  * A stored record of the entry types. The stored value lacks the types which
  * came after the user stored it, thus the default fills them up on every
  * read.
+ *
+ * `useLocalStorage` parses the stored text on every render and gives a new
+ * object each time. The record stays the same object until the setting
+ * changes, thus the callbacks which read it change only then (see
+ * `requiresFullReadRef` in `LogAnalyzer`).
  */
 const useStoredEntryTypes = (key: string, defaultValue: EntryTypeRecord) => {
   const [storedValue, setStoredValue] = useLocalStorage<
     Partial<EntryTypeRecord>
   >(key, defaultValue);
 
+  const storedText = JSON.stringify(storedValue);
   const value = useMemo(
-    () => ({ ...defaultValue, ...storedValue }),
-    [defaultValue, storedValue],
+    () => ({
+      ...defaultValue,
+      ...(JSON.parse(storedText) as Partial<EntryTypeRecord>),
+    }),
+    [defaultValue, storedText],
   );
 
   const setType = useCallback(

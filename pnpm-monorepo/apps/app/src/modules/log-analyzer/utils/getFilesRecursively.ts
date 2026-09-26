@@ -1,10 +1,13 @@
+import type { LogFile } from "./types";
+
 export async function* getFilesRecursively(
   entry: FileSystemFileHandle | FileSystemDirectoryHandle,
-): AsyncGenerator<File | null> {
+  path = entry.name,
+): AsyncGenerator<LogFile | null> {
   if (entry.kind === "file") {
     try {
       const file = await entry.getFile();
-      if (file) yield file;
+      if (file) yield { path, file };
     } catch (error) {
       console.error(`[Log Analyzer] Error getting file: ${entry.name}`, error);
       yield null;
@@ -12,7 +15,7 @@ export async function* getFilesRecursively(
   } else if (entry.kind === "directory") {
     // TODO: Ignore subdirectories
     for await (const handle of entry.values()) {
-      yield* getFilesRecursively(handle);
+      yield* getFilesRecursively(handle, `${path}/${handle.name}`);
     }
   }
 }
