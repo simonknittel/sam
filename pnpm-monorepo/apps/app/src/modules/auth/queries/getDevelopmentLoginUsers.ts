@@ -1,5 +1,6 @@
 import { prisma } from "@/db";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
+import { ASSUMABLE_USER_WHERE } from "@/modules/users/queries/getAssumableUsers";
 import type { Prisma } from "@sam-monorepo/database/client";
 
 /**
@@ -9,15 +10,13 @@ import type { Prisma } from "@sam-monorepo/database/client";
 const MAX_DEVELOPMENT_LOGIN_USERS = 50;
 
 /**
- * The users that the development login accepts: admins with a Discord
- * account, because a session cannot be resolved without one. To test as a
+ * The users that the development login accepts: admins that a session can
+ * be resolved for, the same rule as for assuming a user. To test as a
  * different user, sign in as an admin and assume that user.
  */
 export const DEVELOPMENT_LOGIN_USER_WHERE = {
+  ...ASSUMABLE_USER_WHERE,
   role: "admin",
-  accounts: {
-    some: {},
-  },
 } satisfies Prisma.UserWhereInput;
 
 export const getDevelopmentLoginUsers = withTrace(
