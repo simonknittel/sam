@@ -2291,4 +2291,24 @@ export const AuditEventDefinitions: {
         data.enabled.join(", ") || "none"
       }, switched off: ${data.disabled.join(", ") || "none"})`,
   },
+
+  [AuditEventType.ASSUME_USER_STARTED]: {
+    type: AuditEventType.ASSUME_USER_STARTED,
+    data: {
+      assumedUserId: "string",
+      assumedUserName: "string",
+    },
+    message: (data) =>
+      `Admin started to assume user ${data.assumedUserName ?? data.assumedUserId}`,
+  },
+
+  [AuditEventType.ASSUME_USER_ENDED]: {
+    type: AuditEventType.ASSUME_USER_ENDED,
+    data: {
+      assumedUserId: "string",
+      assumedUserName: "string",
+    },
+    message: (data) =>
+      `Admin stopped to assume user ${data.assumedUserName ?? data.assumedUserId}`,
+  },
 };
