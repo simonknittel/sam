@@ -1,7 +1,29 @@
 import { prisma, type Entity } from "@sam-monorepo/database";
-import { calculateSilcBalances } from "@sam-monorepo/domain";
+import {
+  calculateSilcBalances,
+  getSilcTransactionSumQueries,
+  toSilcTransactionSums,
+} from "@sam-monorepo/domain";
 import { captureAsyncFunc } from "../common/xray";
-import { getSilcTransactionsOfAllCitizensWithoutAuthorization } from "./getSilcTransactionsOfAllCitizensWithoutAuthorization";
+
+const getSilcTransactionSumsWithoutAuthorization = async (
+  citizenIds: Entity["id"][],
+) => {
+  return captureAsyncFunc(
+    "getSilcTransactionSumsWithoutAuthorization",
+    async () => {
+      const [positiveQuery, otherQuery] =
+        getSilcTransactionSumQueries(citizenIds);
+
+      return toSilcTransactionSums(
+        await Promise.all([
+          prisma.silcTransaction.groupBy(positiveQuery),
+          prisma.silcTransaction.groupBy(otherQuery),
+        ]),
+      );
+    },
+  );
+};
 
 export const updateCitizensSilcBalances = async (
   citizenIds: Entity["id"][],
@@ -9,12 +31,12 @@ export const updateCitizensSilcBalances = async (
   return captureAsyncFunc("updateCitizensSilcBalances", async () => {
     if (citizenIds.length <= 0) return;
 
-    const transactions =
-      await getSilcTransactionsOfAllCitizensWithoutAuthorization();
+    const transactionSums =
+      await getSilcTransactionSumsWithoutAuthorization(citizenIds);
 
     const silcBalancePerCitizen = calculateSilcBalances(
       citizenIds,
-      transactions,
+      transactionSums,
     );
 
     for (const [
