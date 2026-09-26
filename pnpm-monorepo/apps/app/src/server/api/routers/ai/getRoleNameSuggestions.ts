@@ -3,8 +3,7 @@ import { authorize } from "@/modules/auth/server";
 import { isOpenAIEnabled } from "@/modules/common/utils/isOpenAIEnabled";
 import { log } from "@/modules/logging";
 import { TRPCError } from "@trpc/server";
-import OpenAI from "openai";
-import { type ChatCompletionMessageParam } from "openai/resources/index.mjs";
+import type { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 import { serializeError } from "serialize-error";
 import * as z from "zod";
 import { protectedProcedure } from "../../trpc";
@@ -31,6 +30,11 @@ export const getRoleNameSuggestions = protectedProcedure.query(
     if (env.OPENAI_EXTRA_API_KEY)
       defaultHeaders.set("X-Api-Key", env.OPENAI_EXTRA_API_KEY);
 
+    /**
+     * Loaded on demand: the tRPC route bundles all routers, and only this
+     * rarely used procedure needs the large SDK
+     */
+    const { default: OpenAI } = await import("openai");
     const openai = new OpenAI({
       baseURL: env.OPENAI_BASE_URL,
       apiKey: env.OPENAI_API_KEY,
