@@ -5,6 +5,10 @@ import {
   type PermissionSet,
 } from "@sam-monorepo/permissions";
 import { useSession } from "next-auth/react";
+import {
+  ADMIN_MODE_COOKIE,
+  ADMIN_MODE_COOKIE_VALUE,
+} from "../utils/adminCookies";
 
 export const useAuthentication = () => {
   const { data: session } = useSession();
@@ -28,7 +32,10 @@ export const useAuthentication = () => {
       typeof document !== "undefined" &&
       document.cookie
         .split(";")
-        .some((cookie) => cookie.trim() === "enable_admin=1");
+        .some(
+          (cookie) =>
+            cookie.trim() === `${ADMIN_MODE_COOKIE}=${ADMIN_MODE_COOKIE_VALUE}`,
+        );
 
     if (session.user.role === "admin" && adminEnabled) return session;
 

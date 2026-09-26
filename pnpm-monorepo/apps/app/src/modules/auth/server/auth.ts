@@ -7,6 +7,7 @@ import { getDiscordAvatar } from "@/modules/discord/utils/getDiscordAvatar";
 import { getGuildMember } from "@/modules/discord/utils/getGuildMember";
 import { log } from "@/modules/logging";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
+import { ASSUMABLE_USER_WHERE } from "@/modules/users/queries/getAssumableUsers";
 import { getUserById } from "@/modules/users/queries/getUserById";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import type {
@@ -33,6 +34,7 @@ import DiscordProvider, {
 import { cookies, headers } from "next/headers";
 import { serializeError } from "serialize-error";
 import { type UserRole } from "../../../types";
+import { ASSUME_USER_COOKIE } from "../utils/adminCookies";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -94,7 +96,7 @@ const MAX_USER_AGENT_LENGTH = 512;
 
 /**
  * Admins can assume another user via the `assume_user` cookie (set by the
- * AdminEnabler). The session is then built entirely from the assumed user,
+ * admin toolbar). The session is then built entirely from the assumed user,
  * so the whole app behaves as if they were logged in — including audit
  * attribution of mutations. The cookie is only honored when the user behind
  * the session token actually has the admin role.
@@ -104,21 +106,15 @@ const getAssumedUser = async (
 ): Promise<DatabaseUser | null> => {
   if (sessionUser.role !== "admin") return null;
 
-  const assumedUserId = (await cookies()).get("assume_user")?.value;
+  const assumedUserId = (await cookies()).get(ASSUME_USER_COOKIE)?.value;
   if (!assumedUserId || assumedUserId === sessionUser.id) return null;
 
-  /**
-   * The session below is resolved through the user's Discord account. A user
-   * without one can't be assumed and the cookie gets ignored, since a session
-   * failing to resolve would break every request of the admin until the
-   * cookie expires.
-   */
+  // A session that fails to resolve would break every request of the admin
+  // until the cookie expires, thus an unassumable user is ignored.
   return prisma.user.findFirst({
     where: {
       id: assumedUserId,
-      accounts: {
-        some: {},
-      },
+      ...ASSUMABLE_USER_WHERE,
     },
   });
 };

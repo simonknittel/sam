@@ -11,9 +11,9 @@ import {
   type PermissionSet,
 } from "@sam-monorepo/permissions";
 import { getServerSession, type Session } from "next-auth";
-import { cookies } from "next/headers";
 import { forbidden, redirect } from "next/navigation";
 import { cache } from "react";
+import { isAdminModeCookieSet } from "./utils/isAdminModeCookieSet";
 
 export const authenticate = cache(
   withTrace("authenticate", async () => {
@@ -183,10 +183,7 @@ export async function authorize(
   operation: PermissionSet["operation"],
   attributes?: PermissionSet["attributes"],
 ) {
-  if (
-    session.user.role === "admin" &&
-    (await cookies()).get("enable_admin")?.value === "1"
-  ) {
+  if (session.user.role === "admin" && (await isAdminModeCookieSet())) {
     return operation !== "negate";
   }
 
