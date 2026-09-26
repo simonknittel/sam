@@ -1,16 +1,8 @@
 import { prisma } from "@/db";
+import { SESSION_TOKEN_COOKIE_NAMES } from "@/modules/auth/utils/sessionTokenCookie";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { cookies } from "next/headers";
 import { cache } from "react";
-
-/**
- * NextAuth prefixes its cookie with `__Secure-` as soon as it runs on https,
- * so both spellings have to be looked at.
- */
-const SESSION_TOKEN_COOKIE_NAMES = [
-  "__Secure-next-auth.session-token",
-  "next-auth.session-token",
-];
 
 /**
  * Resolves the session behind the current request to its id. Going through

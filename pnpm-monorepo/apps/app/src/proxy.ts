@@ -1,12 +1,13 @@
 import { REDIRECT_TO_SEARCH_PARAM } from "@/modules/auth/utils/redirectTo";
+import { SESSION_TOKEN_COOKIE_NAMES } from "@/modules/auth/utils/sessionTokenCookie";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const sessionCookie =
-    request.cookies.get("next-auth.session-token") ||
-    request.cookies.get("__Secure-next-auth.session-token");
+  const hasSessionCookie = SESSION_TOKEN_COOKIE_NAMES.some((name) =>
+    request.cookies.has(name),
+  );
 
   /**
    * This is only an early return. Actual verification of the session is done
@@ -16,7 +17,7 @@ export function proxy(request: NextRequest) {
    * The `redirect-to` search param preserves the deep link, so that the login
    * page can send the user back to it after the login.
    */
-  if (pathname.startsWith("/app") && !sessionCookie) {
+  if (pathname.startsWith("/app") && !hasSessionCookie) {
     const loginUrl = new URL(`/`, request.url);
     loginUrl.searchParams.set(
       REDIRECT_TO_SEARCH_PARAM,

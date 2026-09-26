@@ -2,6 +2,7 @@ import { prisma } from "@/db";
 import { env } from "@/env";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { DEVELOPMENT_SESSION_TOKEN_COOKIE } from "@/modules/auth/utils/sessionTokenCookie";
 import { hasBirthdayToday } from "@/modules/citizen/utils/hasBirthdayToday";
 import { getDiscordAvatar } from "@/modules/discord/utils/getDiscordAvatar";
 import { getGuildMember } from "@/modules/discord/utils/getGuildMember";
@@ -460,6 +461,10 @@ export const authOptions: NextAuthOptions = {
     maxAge,
     updateAge: maxAge * 2, // Make sure `updateAge` is bigger than `maxAge` so that the session actually expires at some point and then a refreshed authentication with the identity provider is forced
   },
+
+  cookies: DEVELOPMENT_SESSION_TOKEN_COOKIE
+    ? { sessionToken: DEVELOPMENT_SESSION_TOKEN_COOKIE }
+    : undefined,
 
   events: {
     signIn: async (message) => {
