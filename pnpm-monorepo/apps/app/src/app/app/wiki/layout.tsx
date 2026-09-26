@@ -29,14 +29,20 @@ export default async function Layout({ children }: LayoutProps<"/app/wiki">) {
       ? authentication.authorize("wiki", "manage")
       : Promise.resolve(false),
   ]);
-  const targets = context ? getManageableWikiPageTargets(context) : [];
-  const canCreate = allowTopLevel || targets.length > 0;
+  /**
+   * Only whether targets exist matters here — the modal loads them itself
+   * when it opens (WikiPageTargetsLoader)
+   */
+  const hasTargets = context
+    ? getManageableWikiPageTargets(context).length > 0
+    : false;
+  const canCreate = allowTopLevel || hasTargets;
   const openWikiReportCount = hasWikiManage
     ? await getOpenWikiReportCount()
     : 0;
 
   return (
-    <CreateWikiPageProvider targets={targets} allowTopLevel={allowTopLevel}>
+    <CreateWikiPageProvider allowTopLevel={allowTopLevel}>
       <DefaultLayout
         title="Wiki"
         slug="wiki"

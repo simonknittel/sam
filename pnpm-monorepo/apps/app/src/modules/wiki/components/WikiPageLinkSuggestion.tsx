@@ -12,8 +12,12 @@ import {
 } from "./WikiSuggestionMenu";
 
 interface WikiPageLinkSuggestionOptions {
-  /** Pages the current viewer can see, by id */
-  pages: Readonly<Record<string, WikiPageLinkedPage>>;
+  /**
+   * Loads the pages the current viewer can link to, by id. Called on every
+   * keystroke of an open suggestion, thus the implementation must cache
+   * the result, for example with the `staleTime` of a tRPC fetch.
+   */
+  fetchPages: () => Promise<Readonly<Record<string, WikiPageLinkedPage>>>;
 }
 
 interface PageLinkSuggestionItem {
@@ -33,7 +37,7 @@ export const WikiPageLinkSuggestion =
 
     addOptions() {
       return {
-        pages: {},
+        fetchPages: () => Promise.resolve({}),
       };
     },
 
@@ -55,9 +59,10 @@ export const WikiPageLinkSuggestion =
               ])
               .run();
           },
-          items: ({ query }) =>
-            rankWikiSuggestionItems(
-              Object.entries(this.options.pages).map(([pageId, page]) => ({
+          items: async ({ query }) => {
+            const pages = await this.options.fetchPages();
+            return rankWikiSuggestionItems(
+              Object.entries(pages).map(([pageId, page]) => ({
                 id: pageId,
                 title: page.title,
                 icon: page.iconSrc ? (
@@ -72,7 +77,8 @@ export const WikiPageLinkSuggestion =
                 ) : undefined,
               })),
               query,
-            ),
+            );
+          },
           render: () => createWikiSuggestionRender<PageLinkSuggestionItem>(),
         }),
       ];

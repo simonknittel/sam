@@ -1,4 +1,5 @@
 import { withTrace } from "@/modules/tracing/utils/withTrace";
+import type { WikiPageLinkedPage } from "@sam-monorepo/wiki-editor";
 import { cache } from "react";
 import { GLOBAL_WIKI_HREF_MODE } from "../utils/wikiPageHref";
 import type { VariantWikiContext } from "./getVariantWikiContext";
@@ -9,12 +10,32 @@ import {
 } from "./getWikiPageStaticContent";
 
 /**
- * The variant-scoped counterpart of `getWikiPageStaticContent`. All pages
- * live in the global wiki, so every readable page stays linkable — subtree
- * pages carry embed hrefs (inserted last, so they win over their global
- * entry), everything else links out to the global wiki. Page-index nodes
- * resolve against the sliced context only, so they can never list pages
- * outside the subtree.
+ * All pages a page of a variant embed can link to, by id. All pages live in
+ * the global wiki, so every readable page stays linkable — subtree pages
+ * carry embed hrefs (inserted last, so they win over their global entry),
+ * everything else links out to the global wiki.
+ */
+export const getVariantWikiLinkablePages = (
+  context: VariantWikiContext,
+): Record<string, WikiPageLinkedPage> =>
+  Object.fromEntries([
+    ...collectLinkableWikiPages(
+      GLOBAL_WIKI_HREF_MODE,
+      context.globalContext.pages,
+      context.globalContext.permissions,
+    ),
+    ...collectLinkableWikiPages(
+      context.hrefMode,
+      context.pages,
+      context.permissions,
+    ),
+  ]);
+
+/**
+ * The variant-scoped counterpart of `getWikiPageStaticContent`, with the
+ * linkable pages of `getVariantWikiLinkablePages`. Page-index nodes resolve
+ * against the sliced context only, so they can never list pages outside
+ * the subtree.
  *
  * Callers must have checked the viewer's read permission for the page —
  * this resolves content, not access.
@@ -25,29 +46,12 @@ export const getVariantWikiPageStaticContent = cache(
     async (
       context: VariantWikiContext,
       pageId: string,
-    ): Promise<WikiPageStaticContent> => {
-      const loadLinkablePages = () =>
-        Promise.resolve(
-          Object.fromEntries([
-            ...collectLinkableWikiPages(
-              GLOBAL_WIKI_HREF_MODE,
-              context.globalContext.pages,
-              context.globalContext.permissions,
-            ),
-            ...collectLinkableWikiPages(
-              context.hrefMode,
-              context.pages,
-              context.permissions,
-            ),
-          ]),
-        );
-
-      return assembleWikiPageStaticContent(
+    ): Promise<WikiPageStaticContent> =>
+      assembleWikiPageStaticContent(
         context,
         pageId,
-        loadLinkablePages,
+        () => Promise.resolve(getVariantWikiLinkablePages(context)),
         context.hrefMode,
-      );
-    },
+      ),
   ),
 );

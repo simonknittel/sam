@@ -8,6 +8,8 @@ import type { WikiPageTierPermissions } from "@sam-monorepo/permissions";
 import {
   collectWikiImageUploadIds,
   collectWikiPageIndexConfigs,
+  collectWikiPageLinkIds,
+  type WikiLinkedPages,
   type WikiLinkedVariant,
   type WikiMentionedCitizen,
   type WikiPageLinkedPage,
@@ -34,7 +36,12 @@ export interface WikiPageStaticContent {
   /** Tiptap JSON of the page */
   readonly content: unknown;
   readonly iframeAllowlist: string[];
-  readonly linkablePages: Readonly<Record<string, WikiPageLinkedPage>>;
+  /**
+   * The pages the content links to, by id — null for the ones the viewer
+   * cannot see. Only these, not all linkable pages: the editor loads the
+   * others on demand (tRPC `wiki.getLinkablePages`).
+   */
+  readonly linkedPages: WikiLinkedPages;
   readonly mentionedCitizens: Readonly<Record<string, WikiMentionedCitizen>>;
   readonly linkedVariants: Readonly<Record<string, WikiLinkedVariant>>;
   readonly pageIndexes: Readonly<Record<string, WikiPageIndexEntry[]>>;
@@ -66,7 +73,7 @@ const toWikiLinkedPage = (
  * Linkable-pages entries of one scope, for rendering internal page links
  * and the "[[" suggestion: the given pages this viewer can read, each
  * linked under the given mode. Invisible pages stay out so their titles
- * never leak. The scoped builders spread several of these into one record,
+ * never leak. The scoped loaders spread several of these into one record,
  * later entries overriding earlier ones.
  */
 export const collectLinkableWikiPages = (
@@ -86,10 +93,25 @@ export const collectLinkableWikiPages = (
     );
 
 /**
+ * All pages a global wiki page can link to, by id — see
+ * `collectLinkableWikiPages`.
+ */
+export const getWikiLinkablePages = (
+  context: WikiContext,
+): Record<string, WikiPageLinkedPage> =>
+  Object.fromEntries(
+    collectLinkableWikiPages(
+      GLOBAL_WIKI_HREF_MODE,
+      context.pages,
+      context.permissions,
+    ),
+  );
+
+/**
  * The scope-independent part of resolving a page's content for the current
  * viewer: content, iframe allowlist, page-index lists and the referenced
- * citizens/variants/roles. Only the linkable-pages set differs between the
- * global wiki and the event wikis, so it comes in as a loader.
+ * pages/citizens/variants/roles. Only the linkable-pages set differs between
+ * the global wiki and the event wikis, so it comes in as a loader.
  */
 const assembleWikiPageStaticContent = async (
   context: WikiSharedContext,
@@ -114,6 +136,15 @@ const assembleWikiPageStaticContent = async (
   ]);
 
   const content = page?.content;
+
+  const linkedPages = Object.fromEntries(
+    collectWikiPageLinkIds(content).map((linkedPageId) => [
+      linkedPageId,
+      Object.hasOwn(linkablePages, linkedPageId)
+        ? linkablePages[linkedPageId]
+        : null,
+    ]),
+  );
 
   /**
    * Page lists of the page-index nodes on this page, resolved for this
@@ -169,7 +200,7 @@ const assembleWikiPageStaticContent = async (
   return {
     content,
     iframeAllowlist,
-    linkablePages,
+    linkedPages,
     mentionedCitizens,
     linkedVariants,
     pageIndexes,
@@ -196,15 +227,7 @@ export const getWikiPageStaticContent = cache(
       pageId: string,
     ): Promise<WikiPageStaticContent> =>
       assembleWikiPageStaticContent(context, pageId, () =>
-        Promise.resolve(
-          Object.fromEntries(
-            collectLinkableWikiPages(
-              GLOBAL_WIKI_HREF_MODE,
-              context.pages,
-              context.permissions,
-            ),
-          ),
-        ),
+        Promise.resolve(getWikiLinkablePages(context)),
       ),
   ),
 );

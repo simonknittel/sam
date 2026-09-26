@@ -3,15 +3,15 @@
 import { api } from "@/trpc/react";
 import {
   getWikiEditorExtensions,
+  type WikiLinkedPages,
   type WikiLinkedVariant,
   type WikiMentionedCitizen,
-  type WikiPageLinkedPage,
 } from "@sam-monorepo/wiki-editor";
 import type { AnyExtension } from "@tiptap/core";
 import { getWikiTwitchParentHost } from "../utils/getWikiTwitchParentHost";
 import type { WikiImageDimensions } from "../utils/wikiImageRendering";
 import { WikiActiveNodeHighlight } from "./WikiActiveNodeHighlight";
-import { withWikiAttachmentReportButton } from "./WikiAttachmentCard";
+import { withWikiAttachmentReportButton } from "./WikiAttachmentNodeView";
 import { WikiBlockClick } from "./WikiBlockClick";
 import { withWikiCitizenMentionPopover } from "./WikiCitizenMentionNodeView";
 import { WikiCitizenMentionSuggestion } from "./WikiCitizenMentionSuggestion";
@@ -19,9 +19,14 @@ import { WikiDetailsSummaryToggle } from "./WikiDetailsSummaryToggle";
 import { createWikiFileHandler } from "./wikiEditorFiles";
 import { WikiHiddenTrailingParagraph } from "./WikiHiddenTrailingParagraph";
 import { withWikiImageOptimization } from "./WikiImageNodeView";
+import {
+  useWikiLinkablePagesInput,
+  WIKI_LINKABLE_PAGES_STALE_TIME_MS,
+} from "./wikiLinkablePages";
 import { WikiNodeClickSelection } from "./WikiNodeClickSelection";
 import type { WikiPageIndexEntry } from "./WikiPageIndexList";
 import { withWikiPageIndexNodeView } from "./WikiPageIndexNodeView";
+import { withWikiPageLinkNodeView } from "./WikiPageLinkNodeView";
 import { WikiPageLinkSuggestion } from "./WikiPageLinkSuggestion";
 import type { WikiRoleCitizen } from "./WikiRoleCitizensList";
 import { withWikiRoleCitizensNodeView } from "./WikiRoleCitizensNodeView";
@@ -31,7 +36,11 @@ import { withWikiVariantLinkNodeView } from "./WikiVariantLinkNodeView";
 interface Options {
   readonly pageId: string;
   readonly iframeAllowlist: readonly string[];
-  readonly linkablePages: Readonly<Record<string, WikiPageLinkedPage>>;
+  /**
+   * The pages the content linked to when the page rendered, by id — the
+   * node views and the "[[" suggestion load the others on demand
+   */
+  readonly linkedPages: WikiLinkedPages;
   readonly mentionedCitizens: Readonly<Record<string, WikiMentionedCitizen>>;
   /** Current names and manufacturer logos of the variants linked on the page, by id */
   readonly linkedVariants: Readonly<Record<string, WikiLinkedVariant>>;
@@ -73,7 +82,7 @@ interface Options {
 export const useWikiEditorExtensions = ({
   pageId,
   iframeAllowlist,
-  linkablePages,
+  linkedPages,
   mentionedCitizens,
   linkedVariants,
   pageIndexes,
@@ -88,20 +97,23 @@ export const useWikiEditorExtensions = ({
   onRequestVariantLink,
 }: Options): AnyExtension[] => {
   const trpcUtils = api.useUtils();
+  const linkablePagesInput = useWikiLinkablePagesInput();
 
   const baseExtensions = withWikiImageOptimization(
     withWikiPageIndexNodeView(
       withWikiRoleCitizensNodeView(
         withWikiVariantLinkNodeView(
           withWikiCitizenMentionPopover(
-            getWikiEditorExtensions({
-              collaboration,
-              twitchParentHost: getWikiTwitchParentHost(),
-              iframeAllowlist,
-              pages: linkablePages,
-              citizens: mentionedCitizens,
-              variants: linkedVariants,
-            }),
+            withWikiPageLinkNodeView(
+              getWikiEditorExtensions({
+                collaboration,
+                twitchParentHost: getWikiTwitchParentHost(),
+                iframeAllowlist,
+                pages: linkedPages,
+                citizens: mentionedCitizens,
+                variants: linkedVariants,
+              }),
+            ),
           ),
         ),
         roleCitizens,
@@ -131,7 +143,12 @@ export const useWikiEditorExtensions = ({
             onRequestLink,
             onRequestVariantLink,
           }),
-          WikiPageLinkSuggestion.configure({ pages: linkablePages }),
+          WikiPageLinkSuggestion.configure({
+            fetchPages: () =>
+              trpcUtils.wiki.getLinkablePages.fetch(linkablePagesInput, {
+                staleTime: WIKI_LINKABLE_PAGES_STALE_TIME_MS,
+              }),
+          }),
           WikiCitizenMentionSuggestion.configure({
             fetchCitizens: () => trpcUtils.citizens.getAllCitizens.ensureData(),
           }),
