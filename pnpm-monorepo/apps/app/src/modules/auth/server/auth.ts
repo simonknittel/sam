@@ -2,6 +2,7 @@ import { prisma } from "@/db";
 import { env } from "@/env";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { DEVELOPMENT_SESSION_TOKEN_COOKIE } from "@/modules/auth/utils/sessionTokenCookie";
 import { hasBirthdayToday } from "@/modules/citizen/utils/hasBirthdayToday";
 import { getDiscordAvatar } from "@/modules/discord/utils/getDiscordAvatar";
 import { getGuildMember } from "@/modules/discord/utils/getGuildMember";
@@ -86,13 +87,32 @@ declare module "next-auth" {
 
 const adapter = PrismaAdapter(prisma);
 
-const maxAge = 60 * 60 * 24 * 31; // 31 days
+export const SESSION_MAX_AGE = 60 * 60 * 24 * 31; // 31 days, in seconds
 
 /**
  * A user agent is client-controlled and unbounded in length, so it gets
  * capped before it reaches the database. Real ones stay well below this.
  */
 const MAX_USER_AGENT_LENGTH = 512;
+
+/**
+ * Replaces the adapter's own `createSession` so the session gets the two
+ * columns the account's session list shows. The adapter writes only the
+ * fields NextAuth knows about, so there is nothing to delegate to.
+ */
+export const createSession = async (
+  session: AdapterSession,
+): Promise<AdapterSession> => {
+  const userAgent = (await headers()).get("user-agent");
+
+  return prisma.session.create({
+    data: {
+      ...session,
+      createdAt: new Date(),
+      userAgent: userAgent?.slice(0, MAX_USER_AGENT_LENGTH) ?? null,
+    },
+  });
+};
 
 /**
  * Admins can assume another user via the `assume_user` cookie (set by the
@@ -420,22 +440,7 @@ export const authOptions: NextAuthOptions = {
       return createdUser;
     },
 
-    /**
-     * Replaces the adapter's own `createSession` so the session gets the two
-     * columns the account's session list shows. The adapter writes only the
-     * fields NextAuth knows about, so there is nothing to delegate to.
-     */
-    createSession: async (session): Promise<AdapterSession> => {
-      const userAgent = (await headers()).get("user-agent");
-
-      return prisma.session.create({
-        data: {
-          ...session,
-          createdAt: new Date(),
-          userAgent: userAgent?.slice(0, MAX_USER_AGENT_LENGTH) ?? null,
-        },
-      });
-    },
+    createSession,
   },
 
   providers: [
@@ -453,9 +458,13 @@ export const authOptions: NextAuthOptions = {
   },
 
   session: {
-    maxAge,
-    updateAge: maxAge * 2, // Make sure `updateAge` is bigger than `maxAge` so that the session actually expires at some point and then a refreshed authentication with the identity provider is forced
+    maxAge: SESSION_MAX_AGE,
+    updateAge: SESSION_MAX_AGE * 2, // Make sure `updateAge` is bigger than `maxAge` so that the session actually expires at some point and then a refreshed authentication with the identity provider is forced
   },
+
+  cookies: DEVELOPMENT_SESSION_TOKEN_COOKIE
+    ? { sessionToken: DEVELOPMENT_SESSION_TOKEN_COOKIE }
+    : undefined,
 
   events: {
     signIn: async (message) => {

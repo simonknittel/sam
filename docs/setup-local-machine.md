@@ -19,6 +19,20 @@
 10. Update the database schema: `pnpm --filter @sam-monorepo/database run migrate:dev`
 11. Start the app (this command first builds the workspace packages of the app): `pnpm run dev:app`
 12. Open the app at: <http://localhost:3000>
+13. Log in with Discord. The Discord application must have
+    `http://localhost:3000/api/auth/callback/discord` in its OAuth2
+    redirects. To get access to the admin functions, set the `role` of your
+    user to `admin` in the database.
+
+### Development login
+
+In development, the login page has a "Dev login" control at the top. It
+signs in as an admin of the local database without Discord, for example on
+the dev server of a worktree or for an AI agent. It lists only admins that
+have a Discord account. On a fresh database, log in with Discord first (see
+step 13). To test as a different user, sign in as an admin and use "Assume
+user". The control and its server action do not operate outside of
+development.
 
 ### Wiki realtime collaboration
 
@@ -126,7 +140,9 @@ production token. Deployments read the variable from Vercel (see
   time. Set `SAM_PSQL_PORT`, `SAM_SOKETI_PORT`, `SAM_SOKETI_METRICS_PORT`,
   `SAM_COLLAB_PORT`, `SAM_RUSTFS_PORT`, `SAM_UNLEASH_PORT` and/or
   `SAM_OTEL_COLLECTOR_PORT` in a gitignored `.env` file next to
-  [compose.yml](../compose.yml).
+  [compose.yml](../compose.yml). Set `NEXTAUTH_URL` to the URL of the dev
+  server of the checkout. Each port has its own login, because in
+  development the name of the session cookie contains the port.
 
 ## Bot invite link with required scopes
 
