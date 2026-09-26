@@ -12,21 +12,12 @@ import {
   SeasonalEventKey,
   type LocalDate,
 } from "@sam-monorepo/domain";
-import { cookies } from "next/headers";
 import { unstable_rethrow } from "next/navigation";
 import { cache } from "react";
 import { serializeError } from "serialize-error";
 import { SEASONAL_THEMES } from "../utils/SEASONAL_THEMES";
-import {
-  parseSeasonalDateOverrideCookie,
-  SEASONAL_DATE_COOKIE,
-} from "../utils/seasonalDateOverrideCookie";
 import type { SeasonalThemeResolution } from "../utils/types";
-
-const readDateOverride = async () =>
-  parseSeasonalDateOverrideCookie(
-    (await cookies()).get(SEASONAL_DATE_COOKIE)?.value,
-  );
+import { getSeasonalDateOverride } from "./getSeasonalDateOverride";
 
 /** The values of a citizen which the resolution needs */
 interface ViewerCitizen {
@@ -120,7 +111,7 @@ export const getActiveSeasonalTheme = cache(
     async (): Promise<SeasonalThemeResolution | null> => {
       const [authentication, overrideDate] = await Promise.all([
         authenticate(),
-        readDateOverride(),
+        getSeasonalDateOverride(),
       ]);
 
       // `authenticate()` answers `false` without a session, which optional
