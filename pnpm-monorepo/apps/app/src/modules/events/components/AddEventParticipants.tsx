@@ -33,7 +33,6 @@ export const AddEventParticipants = ({ className, eventId }: Props) => {
       { eventId },
       {
         enabled: isOpen,
-        refetchOnReconnect: false,
       },
     );
 

@@ -33,7 +33,7 @@ export const WikiPageTargetsLoader = ({
       variantId: variantId ?? undefined,
       excludeSubtreeOf,
     },
-    { refetchOnReconnect: false, gcTime: 0 },
+    { gcTime: 0 },
   );
 
   if (isError)

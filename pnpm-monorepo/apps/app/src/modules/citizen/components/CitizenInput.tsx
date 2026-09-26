@@ -57,9 +57,7 @@ export const CitizenInput = ({
   const [query, setQuery] = useState("");
 
   const { isPending, data: dataAllCitizens } =
-    api.citizens.getAllCitizens.useQuery(undefined, {
-      refetchOnReconnect: false,
-    });
+    api.citizens.getAllCitizens.useQuery(undefined);
 
   if (isPending || !dataAllCitizens)
     return (
@@ -237,9 +235,7 @@ const Multiple = ({
   autoFocus,
 }: MultipleComponentProps) => {
   const { isPending, data: dataCitizensGroupedByVisibleRoles } =
-    api.citizens.getCitizensGroupedByVisibleRoles.useQuery(undefined, {
-      refetchOnReconnect: false,
-    });
+    api.citizens.getCitizensGroupedByVisibleRoles.useQuery(undefined);
 
   const [selectedCitizens, setSelectedCitizens] = useState<CitizenOption[]>(
     defaultValue || [],

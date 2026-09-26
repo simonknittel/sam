@@ -30,7 +30,6 @@ export const CitizenPopover = ({ children, citizenId }: Props) => {
     api.citizens.getCitizenById.useQuery(
       { id: citizenId },
       {
-        refetchOnReconnect: false,
         enabled: isEnabled,
       },
     );

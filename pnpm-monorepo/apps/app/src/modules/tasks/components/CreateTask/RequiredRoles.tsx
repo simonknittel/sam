@@ -13,9 +13,7 @@ interface Props {
 }
 
 export const RequiredRoles = ({ className, defaultValue }: Props) => {
-  const { isPending, data } = api.roles.getVisibleRoles.useQuery(undefined, {
-    refetchOnReconnect: false,
-  });
+  const { isPending, data } = api.roles.getVisibleRoles.useQuery(undefined);
 
   const [selectedRoles, setSelectedRoles] = useState<Role["id"][]>(
     defaultValue || [],

@@ -13,12 +13,13 @@ const createQueryClient = () =>
     defaultOptions: {
       queries: {
         /**
-         * The library default refetches every mounted query when the tab
-         * regains focus. All queries hit uncached serverless functions, so
-         * this produces redundant traffic; mutations invalidate explicitly
-         * where freshness matters.
+         * The library defaults refetch every mounted query when the tab
+         * regains focus or the network comes back. All queries hit uncached
+         * serverless functions, so this produces redundant traffic;
+         * mutations invalidate explicitly where freshness matters.
          */
         refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
       },
     },
   });

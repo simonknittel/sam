@@ -34,9 +34,7 @@ export const RoleSalariesClient = ({
     >(initialSalaries);
 
   const { isPending: isPendingRolesForSalaries, data } =
-    api.silc.getRolesForSalaries.useQuery(undefined, {
-      refetchOnReconnect: false,
-    });
+    api.silc.getRolesForSalaries.useQuery(undefined);
 
   const handleCreate = () => {
     setSalaries((prev) => [

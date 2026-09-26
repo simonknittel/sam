@@ -39,7 +39,6 @@ export const WikiPageDetailsPopover = ({ pageId }: Props) => {
   const { isPending, data, error } = api.wiki.getPageDetails.useQuery(
     { pageId },
     {
-      refetchOnReconnect: false,
       enabled: isEnabled,
     },
   );

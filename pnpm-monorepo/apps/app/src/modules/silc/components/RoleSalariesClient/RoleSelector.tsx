@@ -18,9 +18,7 @@ interface Props {
 type RolesForSalaries = RouterOutputs["silc"]["getRolesForSalaries"];
 
 export const RoleSelector = ({ style, defaultValue, onChange }: Props) => {
-  const { isPending, data } = api.silc.getRolesForSalaries.useQuery(undefined, {
-    refetchOnReconnect: false,
-  });
+  const { isPending, data } = api.silc.getRolesForSalaries.useQuery(undefined);
 
   const [selectedRole, setSelectedRole] = useState<Role["id"] | null>(
     defaultValue || null,

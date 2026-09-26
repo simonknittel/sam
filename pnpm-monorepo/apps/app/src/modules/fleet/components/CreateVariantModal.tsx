@@ -27,22 +27,12 @@ export const CreateVariantModal = ({
   const [isPending, startTransition] = useTransition();
   const nameField = useId();
 
-  const manufacturer = api.manufacturer.getById.useQuery(
-    {
-      id: manufacturerId,
-    },
-    {
-      refetchOnReconnect: false,
-    },
-  );
-  const series = api.manufacturer.getSeriesByManufacturerId.useQuery(
-    {
-      manufacturerId,
-    },
-    {
-      refetchOnReconnect: false,
-    },
-  );
+  const manufacturer = api.manufacturer.getById.useQuery({
+    id: manufacturerId,
+  });
+  const series = api.manufacturer.getSeriesByManufacturerId.useQuery({
+    manufacturerId,
+  });
 
   const formAction = (formData: FormData) => {
     startTransition(async () => {

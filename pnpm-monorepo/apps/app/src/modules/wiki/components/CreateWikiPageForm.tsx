@@ -58,10 +58,10 @@ export const CreateWikiPageForm = ({
    * Options of the "copy from" select. Fetched lazily: the form only mounts
    * while the modal is open.
    */
-  const { data: copySourceTargets } = api.wiki.getPageTargets.useQuery(
-    { permission: "read", container },
-    { refetchOnReconnect: false },
-  );
+  const { data: copySourceTargets } = api.wiki.getPageTargets.useQuery({
+    permission: "read",
+    container,
+  });
 
   /**
    * A successful creation redirects to the new page; onSuccess closes the

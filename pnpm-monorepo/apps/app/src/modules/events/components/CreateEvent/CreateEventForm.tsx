@@ -56,10 +56,8 @@ export const CreateEventForm = ({
    * Fetched lazily: the form only mounts while the modal is open. Templates
    * are the viewer's own plus those shared with them for reading.
    */
-  const { data: templates } = api.events.getUsableEventTemplates.useQuery(
-    undefined,
-    { refetchOnReconnect: false },
-  );
+  const { data: templates } =
+    api.events.getUsableEventTemplates.useQuery(undefined);
 
   const selectedTemplate =
     templates?.find((template) => template.id === selectedTemplateId) ?? null;
@@ -278,7 +276,6 @@ const DiscordPublishFields = ({
   const { data: channels, isPending } =
     api.events.getPublishableDiscordChannels.useQuery(undefined, {
       enabled: isPublishing,
-      refetchOnReconnect: false,
     });
 
   return (

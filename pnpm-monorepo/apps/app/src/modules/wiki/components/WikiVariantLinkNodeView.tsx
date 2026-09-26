@@ -33,7 +33,6 @@ const WikiVariantLinkNodeView = ({ node, extension }: NodeViewProps) => {
   const isMissing = Boolean(variantId) && !variants[variantId];
   const { data } = api.variant.getAll.useQuery(undefined, {
     enabled: isMissing,
-    refetchOnReconnect: false,
   });
 
   const fetched = isMissing

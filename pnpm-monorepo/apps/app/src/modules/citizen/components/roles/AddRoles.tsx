@@ -40,7 +40,6 @@ export const AddRoles = ({
     data: assignableRoles,
     error,
   } = api.roles.getAssignableRoles.useQuery(undefined, {
-    refetchOnReconnect: false,
     enabled: isOpen,
   });
 

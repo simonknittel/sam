@@ -17,12 +17,7 @@ interface Props {
  */
 export const VariantWikiPageField = ({ currentWikiPageId, loading }: Props) => {
   const selectId = useId();
-  const targets = api.wiki.getPageTargets.useQuery(
-    { permission: "read" },
-    {
-      refetchOnReconnect: false,
-    },
-  );
+  const targets = api.wiki.getPageTargets.useQuery({ permission: "read" });
 
   /**
    * A linked page the configuring user cannot read is missing from the

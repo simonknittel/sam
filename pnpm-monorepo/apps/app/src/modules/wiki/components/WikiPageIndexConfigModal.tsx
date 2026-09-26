@@ -54,25 +54,19 @@ export const WikiPageIndexConfigModal = ({
   const [tagIds, setTagIds] = useState<readonly string[]>(initial.tagIds);
   const [matchMode, setMatchMode] = useState<string>(initial.matchMode);
 
-  const { data: existingTags } = api.wiki.getTags.useQuery(
-    { container: container ?? undefined },
-    {
-      refetchOnReconnect: false,
-    },
-  );
+  const { data: existingTags } = api.wiki.getTags.useQuery({
+    container: container ?? undefined,
+  });
 
   /**
    * Readable pages in tree order for the root picker — permission-filtered
    * server-side, so invisible titles can never leak.
    */
-  const { data: pageTargets } = api.wiki.getPageTargets.useQuery(
-    {
-      permission: "read",
-      container: container ?? undefined,
-      variantId: variantId ?? undefined,
-    },
-    { refetchOnReconnect: false },
-  );
+  const { data: pageTargets } = api.wiki.getPageTargets.useQuery({
+    permission: "read",
+    container: container ?? undefined,
+    variantId: variantId ?? undefined,
+  });
 
   const toggleTag = (tagId: string) => {
     setTagIds((previous) =>

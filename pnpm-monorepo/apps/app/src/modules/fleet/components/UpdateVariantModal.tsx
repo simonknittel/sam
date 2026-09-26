@@ -26,12 +26,7 @@ interface Props {
 }
 
 export const UpdateVariantModal = ({ onRequestClose, variant }: Props) => {
-  const _variant = api.variant.getById.useQuery(
-    { id: variant.id },
-    {
-      refetchOnReconnect: false,
-    },
-  );
+  const _variant = api.variant.getById.useQuery({ id: variant.id });
   const [isPending, startTransition] = useTransition();
   const nameId = useId();
   const statusId = useId();

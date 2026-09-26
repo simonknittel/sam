@@ -61,7 +61,6 @@ export const WikiLinkModal = ({ editor, onRequestClose }: Props) => {
   const { data: pageTargets } = api.wiki.getPageTargets.useQuery(
     { permission: "read" },
     {
-      refetchOnReconnect: false,
       enabled: pageLinksAllowed,
     },
   );

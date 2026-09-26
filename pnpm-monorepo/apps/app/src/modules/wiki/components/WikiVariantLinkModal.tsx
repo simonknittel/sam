@@ -45,9 +45,7 @@ export const WikiVariantLinkModal = ({
   const [activeIndex, setActiveIndex] = useState(0);
   const listboxId = useId();
 
-  const { data, isPending } = api.variant.getAll.useQuery(undefined, {
-    refetchOnReconnect: false,
-  });
+  const { data, isPending } = api.variant.getAll.useQuery(undefined);
 
   const normalized = query.toLowerCase().trim();
   const matches = (data ?? []).filter(

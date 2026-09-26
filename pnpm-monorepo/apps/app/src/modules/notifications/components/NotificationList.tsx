@@ -50,7 +50,6 @@ export const NotificationList = ({
     { tab },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-      refetchOnReconnect: false,
       enabled: isActive,
     },
   );

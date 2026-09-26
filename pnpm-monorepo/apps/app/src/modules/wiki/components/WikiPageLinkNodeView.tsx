@@ -33,7 +33,6 @@ const WikiPageLinkNodeView = ({ node, extension }: NodeViewProps) => {
     linkablePagesInput,
     {
       enabled: isMissing,
-      refetchOnReconnect: false,
       /** A cached list without the page can be older than the page itself */
       staleTime: (query) =>
         query.state.data && Object.hasOwn(query.state.data, pageId)

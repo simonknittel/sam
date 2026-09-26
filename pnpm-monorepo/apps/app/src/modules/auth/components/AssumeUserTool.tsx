@@ -32,9 +32,7 @@ const AssumeUserCombobox = () => {
   const [isPending, startTransition] = useTransition();
 
   const { isPending: isLoading, data: users } =
-    api.users.getAssumableUsers.useQuery(undefined, {
-      refetchOnReconnect: false,
-    });
+    api.users.getAssumableUsers.useQuery(undefined);
 
   const handleChange = (user: AssumableUser | null) => {
     if (!user) return;

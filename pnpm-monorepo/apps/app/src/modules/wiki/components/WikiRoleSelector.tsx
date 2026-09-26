@@ -38,12 +38,8 @@ export const WikiRoleSelector = ({
   single = false,
   selectableRoleIds,
 }: Props) => {
-  const { isPending, data: allRoles } = api.roles.getVisibleRoles.useQuery(
-    undefined,
-    {
-      refetchOnReconnect: false,
-    },
-  );
+  const { isPending, data: allRoles } =
+    api.roles.getVisibleRoles.useQuery(undefined);
 
   const selectableRoles = selectableRoleIds
     ? allRoles?.filter((role) => selectableRoleIds.includes(role.id))
