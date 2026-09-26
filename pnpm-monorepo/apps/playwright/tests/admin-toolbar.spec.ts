@@ -23,6 +23,13 @@ const toolbarPanel = (page: Page) =>
 const openToolbar = (page: Page) =>
   clickUntilVisible(toolbarButton(page), toolbarPanel(page));
 
+/** A preset only fills the date field, thus "Set date" applies it */
+const applySeasonalPreset = async (page: Page, label: string) => {
+  const panel = toolbarPanel(page);
+  await panel.getByLabel("Preset").selectOption({ label });
+  await panel.getByRole("button", { name: "Set date" }).click();
+};
+
 test("an admin's pages stay redacted until admin mode is enabled", async ({
   page,
   prisma,
@@ -191,8 +198,10 @@ test("the seasonal theme tool sets and removes the date of the themes", async ({
 
   await openToolbar(page);
   await toolbarPanel(page)
-    .getByRole("button", { name: "Halloween greeting" })
-    .click();
+    .getByLabel("Preset")
+    .selectOption({ label: "Halloween greeting" });
+  await expect(toolbarPanel(page).getByLabel("Date")).toHaveValue(/-10-31$/);
+  await toolbarPanel(page).getByRole("button", { name: "Set date" }).click();
   await expect(themeRoot(page)).toHaveAttribute(
     "data-seasonal-event",
     "halloween",
@@ -211,7 +220,7 @@ test("the seasonal theme tool sets and removes the date of the themes", async ({
   await expect(toolbarButton(page)).toContainText("Weihnachten 2026-12-24");
 
   await openToolbar(page);
-  await toolbarPanel(page).getByRole("button", { name: "No theme" }).click();
+  await applySeasonalPreset(page, "No theme");
   await expect(themeRoot(page)).toHaveCount(0, {
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
@@ -221,7 +230,7 @@ test("the seasonal theme tool sets and removes the date of the themes", async ({
   // that the override is gone
   await openToolbar(page);
   await toolbarPanel(page)
-    .getByRole("button", { name: "Auto (today)" })
+    .getByRole("button", { name: "Auto", exact: true })
     .click();
   await expect(toolbarButton(page)).not.toContainText("No theme", {
     timeout: ACTION_FEEDBACK_TIMEOUT,
@@ -271,7 +280,7 @@ test("the seasonal theme tool works while the admin assumes a user who switched 
     0,
   );
 
-  await panel.getByRole("button", { name: "Weihnachten", exact: true }).click();
+  await applySeasonalPreset(page, "Weihnachten");
   await expect(themeRoot(page)).toHaveAttribute(
     "data-seasonal-event",
     "christmas",

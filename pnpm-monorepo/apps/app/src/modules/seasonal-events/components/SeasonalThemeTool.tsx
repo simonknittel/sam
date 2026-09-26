@@ -2,10 +2,14 @@
 
 import { runActionAndReload } from "@/modules/actions/utils/runActionAndReload";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
-import { useTransition, type FormEvent } from "react";
+import clsx from "clsx";
+import { useState, useTransition, type FormEvent } from "react";
 import { setSeasonalDateOverride } from "../actions/setSeasonalDateOverride";
 import type { SeasonalDatePreset } from "../queries/getSeasonalDatePresets";
 import type { SeasonalOverrideState } from "../queries/getSeasonalOverrideState";
+
+const FIELD_CLASS_NAME =
+  "rounded-secondary bg-neutral-900 py-1 px-2 text-sm [color-scheme:dark] hover:bg-neutral-800 focus:outline-hidden focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white/25 active:bg-neutral-800 disabled:opacity-50";
 
 interface Props {
   readonly presets: readonly SeasonalDatePreset[];
@@ -13,102 +17,82 @@ interface Props {
 }
 
 export const SeasonalThemeTool = ({ presets, override }: Props) => {
+  const [date, setDate] = useState(override?.date ?? "");
   const [isPending, startTransition] = useTransition();
 
-  const submit = (formData: FormData) => {
+  const submit = (value: string) => {
+    const formData = new FormData();
+    formData.set("date", value);
+
     startTransition(() =>
       runActionAndReload(setSeasonalDateOverride, formData),
     );
   };
 
-  const setDate = (date: string) => {
-    const formData = new FormData();
-    formData.set("date", date);
-    submit(formData);
-  };
-
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    submit(new FormData(event.currentTarget));
+    submit(date);
   };
+
+  // A preset only fills the date field; "Set date" applies it
+  const selectedPreset = presets.find((preset) => preset.date === date);
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-sm">{override?.label ?? "Auto (today)"}</p>
-
       {override?.isEventHidden && (
         <p className="text-xs text-amber-500">
           Hidden: the viewer switched this event off.
         </p>
       )}
 
-      <div className="flex flex-wrap gap-1">
-        {presets.map((preset) => (
-          <SeasonalPresetButton
-            key={preset.label}
-            preset={preset}
-            isActive={preset.date === override?.date}
-            disabled={isPending}
-            onSelect={setDate}
-          />
-        ))}
-      </div>
-
-      <form onSubmit={handleSubmit} className="flex gap-1">
-        <input
-          type="date"
-          name="date"
-          required
-          aria-label="Date"
-          defaultValue={override?.date}
+      <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+        <select
+          aria-label="Preset"
+          value={selectedPreset?.date ?? ""}
+          onChange={(event) => setDate(event.target.value)}
           disabled={isPending}
-          className="min-w-0 flex-1 rounded-secondary bg-neutral-900 py-1 px-2 text-sm [color-scheme:dark] hover:bg-neutral-800 focus:outline-hidden focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white/25 active:bg-neutral-800 disabled:opacity-50"
-        />
-
-        <Button2
-          type="submit"
-          variant={Button2Variant.Secondary}
-          disabled={isPending}
+          className={clsx(FIELD_CLASS_NAME, "w-full enabled:cursor-pointer")}
         >
-          Set date
-        </Button2>
+          <option value="" disabled>
+            Preset …
+          </option>
+
+          {presets.map((preset) => (
+            <option key={preset.label} value={preset.date}>
+              {preset.label}
+            </option>
+          ))}
+        </select>
+
+        <div className="flex gap-1">
+          <input
+            type="date"
+            aria-label="Date"
+            required
+            value={date}
+            onChange={(event) => setDate(event.target.value)}
+            disabled={isPending}
+            className={clsx(FIELD_CLASS_NAME, "min-w-0 flex-1")}
+          />
+
+          <Button2
+            type="submit"
+            variant={Button2Variant.Secondary}
+            disabled={isPending}
+          >
+            Set date
+          </Button2>
+
+          <Button2
+            type="button"
+            variant={Button2Variant.Secondary}
+            onClick={() => submit("")}
+            disabled={isPending || !override}
+          >
+            Auto
+          </Button2>
+        </div>
       </form>
-
-      <Button2
-        type="button"
-        variant={Button2Variant.Secondary}
-        onClick={() => setDate("")}
-        disabled={isPending || !override}
-      >
-        Auto (today)
-      </Button2>
     </div>
-  );
-};
-
-interface SeasonalPresetButtonProps {
-  readonly preset: SeasonalDatePreset;
-  readonly isActive: boolean;
-  readonly disabled: boolean;
-  readonly onSelect: (date: string) => void;
-}
-
-const SeasonalPresetButton = ({
-  preset,
-  isActive,
-  disabled,
-  onSelect,
-}: SeasonalPresetButtonProps) => {
-  return (
-    <Button2
-      type="button"
-      variant={isActive ? Button2Variant.Primary : Button2Variant.Secondary}
-      aria-pressed={isActive}
-      title={preset.date}
-      onClick={() => onSelect(preset.date)}
-      disabled={disabled}
-    >
-      {preset.label}
-    </Button2>
   );
 };
