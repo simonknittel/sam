@@ -12,8 +12,6 @@ import { getCitizenIdsWithBirthdayToday } from "@/modules/citizen/queries/getCit
 import { CreateContextProvider } from "@/modules/common/components/CreateContext";
 import { NewReleaseToast } from "@/modules/common/components/NewReleaseToast";
 import { ServiceWorkerLoader } from "@/modules/common/components/ServiceWorkerLoader";
-import { getUnleashFlag } from "@/modules/common/utils/getUnleashFlag";
-import { UNLEASH_FLAG } from "@/modules/common/utils/UNLEASH_FLAG";
 import { OnSiteNotificationsProvider } from "@/modules/notifications/components/OnSiteNotificationsProvider";
 import { getUnreadOnSiteNotificationCount } from "@/modules/notifications/utils/queries/getUnreadOnSiteNotificationCount";
 import { OnboardingProvider } from "@/modules/onboarding/components/OnboardingProvider";
@@ -37,7 +35,6 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 export default async function AppLayout({ children }: LayoutProps<"/app">) {
   const [
     authentication,
-    disableAlgolia,
     apps,
     favoriteAppKeys,
     visibleRoles,
@@ -50,7 +47,6 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
     seasonalTheme,
   ] = await Promise.all([
     requireAuthenticationPage(),
-    getUnleashFlag(UNLEASH_FLAG.DisableAlgolia),
     getAppLinks(),
     getAppFavoriteKeys(),
     getVisibleRoles(),
@@ -93,10 +89,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
                         >
                           <OnboardingProvider initialState={onboardingState}>
                             <CreateContextProvider>
-                              <CmdKProvider
-                                disableAlgolia={disableAlgolia}
-                                canReadCareer={canReadCareer}
-                              >
+                              <CmdKProvider canReadCareer={canReadCareer}>
                                 <TopBar />
                                 <MobileActionBarLoader />
                               </CmdKProvider>

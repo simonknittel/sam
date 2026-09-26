@@ -1,3 +1,7 @@
+export const SPYNET_SEARCH_QUERY_MINIMUM_LENGTH = 2;
+
+export const SPYNET_SEARCH_QUERY_MAXIMUM_LENGTH = 100;
+
 export enum SpynetSearchHitType {
   Citizen = "citizen",
   Organization = "organization",

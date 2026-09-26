@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { Search } from "./Search";
+import { SpynetSearchAutocomplete } from "./SpynetSearchAutocomplete";
 
 interface Props {
   readonly className?: string;
@@ -15,7 +15,7 @@ export const SpynetSearchTile = ({ className }: Props) => {
     >
       <h2 className="sr-only">Suche</h2>
 
-      <Search />
+      <SpynetSearchAutocomplete />
     </section>
   );
 };

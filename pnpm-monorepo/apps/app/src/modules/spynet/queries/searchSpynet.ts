@@ -4,7 +4,7 @@ import { Prisma } from "@sam-monorepo/database/client";
 import {
   SpynetSearchHitType,
   type SpynetSearchHit,
-} from "../utils/spynetSearchHit";
+} from "../utils/spynetSearch";
 
 /**
  * The lowest trigram word similarity that counts as a typo. Tuned on handles
@@ -15,7 +15,7 @@ const TYPO_SIMILARITY_THRESHOLD = 0.5;
 
 /**
  * A shorter term has too few trigrams, thus a partial overlap already passes
- * the threshold. Algolia also starts its typo tolerance at 4 characters.
+ * the threshold.
  */
 const TYPO_MINIMUM_TERM_LENGTH = 4;
 

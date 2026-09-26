@@ -1,8 +1,6 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { ProfileTile } from "@/modules/citizen/components/ProfileTile";
 import { SuspenseWithErrorBoundaryTile } from "@/modules/common/components/SuspenseWithErrorBoundaryTile";
-import { getUnleashFlag } from "@/modules/common/utils/getUnleashFlag";
-import { UNLEASH_FLAG } from "@/modules/common/utils/UNLEASH_FLAG";
 import { TileSkeleton } from "@/modules/dashboard/components/TileSkeleton";
 import { CalendarTile } from "@/modules/events/components/CalendarTile";
 import { SeasonalGreetingBanner } from "@/modules/seasonal-events/components/SeasonalGreetingBanner";
@@ -16,23 +14,16 @@ import { Suspense } from "react";
 export default async function Page() {
   const authentication = await requireAuthenticationPage("/app/dashboard");
 
-  const [
-    disableAlgolia,
-    canCitizenRead,
-    canOrgRead,
-    canEventRead,
-    canTaskRead,
-  ] = await Promise.all([
-    getUnleashFlag(UNLEASH_FLAG.DisableAlgolia),
-    authentication.authorize("citizen", "read"),
-    authentication.authorize("organization", "read"),
-    authentication.authorize("event", "read"),
-    authentication.authorize("task", "read"),
-  ]);
+  const [canCitizenRead, canOrgRead, canEventRead, canTaskRead] =
+    await Promise.all([
+      authentication.authorize("citizen", "read"),
+      authentication.authorize("organization", "read"),
+      authentication.authorize("event", "read"),
+      authentication.authorize("task", "read"),
+    ]);
 
   const showCalendar = canEventRead;
-  const showSpynetSearchTile =
-    !disableAlgolia && (canCitizenRead || canOrgRead);
+  const showSpynetSearchTile = canCitizenRead || canOrgRead;
 
   return (
     <div className="flex flex-col gap-6">

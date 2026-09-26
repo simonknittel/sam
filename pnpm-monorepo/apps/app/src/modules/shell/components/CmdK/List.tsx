@@ -491,7 +491,7 @@ const IAMPage = ({ userRead, roleManage }: IAMPageProps) => {
 };
 
 const SpynetPage = () => {
-  const { setOpen, setSearch, setPages, disableAlgolia } = useCmdKContext();
+  const { setOpen, setSearch, setPages } = useCmdKContext();
 
   const authentication = useAuthentication();
 
@@ -510,15 +510,13 @@ const SpynetPage = () => {
         />
       )}
 
-      {!disableAlgolia && (
-        <PageItem
-          label="Profil suchen"
-          icon={<RiSpyFill />}
-          section="Spynet"
-          setPages={() => setPages((pages) => [...pages, "spynet-search"])}
-          setSearch={setSearch}
-        />
-      )}
+      <PageItem
+        label="Profil suchen"
+        icon={<RiSpyFill />}
+        section="Spynet"
+        setPages={() => setPages((pages) => [...pages, "spynet-search"])}
+        setSearch={setSearch}
+      />
     </Command.Group>
   );
 };
