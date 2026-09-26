@@ -51,7 +51,7 @@ interface Fixtures {
    */
   readonly switchUser: (user: Pick<User, "id">) => Promise<void>;
   /**
-   * Sets the cookie the AdminEnabler uses. Only effective for users whose
+   * Sets the cookie of the admin mode tool. Only effective for users whose
    * `User.role` is "admin".
    */
   readonly enableAdminMode: () => Promise<void>;

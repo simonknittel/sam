@@ -1,11 +1,9 @@
+import { AdminToolbar } from "@/modules/admin-toolbar/components/AdminToolbar";
 import { AppsContextProvider } from "@/modules/apps/components/AppsContext";
 import { getAppFavoriteKeys } from "@/modules/apps/utils/queries/getAppFavoriteKeys";
 import { getAppLinks } from "@/modules/apps/utils/queries/getAppLinks";
-import { AdminEnabler } from "@/modules/auth/components/AdminEnabler";
 import { SessionProviderContainer } from "@/modules/auth/components/SessionProviderContainer";
 import { requireAuthenticationPage } from "@/modules/auth/server";
-import { getAssumedUserLabel } from "@/modules/auth/utils/getAssumedUserLabel";
-import { isAdminBehindSession } from "@/modules/auth/utils/isAdminBehindSession";
 import { hasAnyReadableFlow } from "@/modules/career/queries/getMyReadableFlows";
 import { getUnseenChangelogEntryKeys } from "@/modules/changelog/queries/getUnseenChangelogEntryKeys";
 import { CHANGELOG_APP_SLUG } from "@/modules/changelog/utils/CHANGELOG_APP_SLUG";
@@ -35,7 +33,6 @@ import { TopBar } from "@/modules/shell/components/TopBar";
 import { getOpenWikiReportCount } from "@/modules/wiki/queries/getOpenWikiReportCount";
 import { TRPCReactProvider } from "@/trpc/react";
 import { NextIntlClientProvider } from "next-intl";
-import { cookies } from "next/headers";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 export default async function AppLayout({ children }: LayoutProps<"/app">) {
@@ -119,16 +116,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
                         </AppsContextProvider>
                       </div>
 
-                      {isAdminBehindSession(authentication.session) && (
-                        <AdminEnabler
-                          enabled={
-                            (await cookies()).get("enable_admin")?.value === "1"
-                          }
-                          assumedUserLabel={getAssumedUserLabel(
-                            authentication.session,
-                          )}
-                        />
-                      )}
+                      <AdminToolbar />
 
                       <NewReleaseToast />
                     </BirthdayCitizensProvider>

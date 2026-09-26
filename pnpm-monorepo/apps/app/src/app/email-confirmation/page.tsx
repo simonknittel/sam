@@ -1,5 +1,5 @@
+import { AdminToolbar } from "@/modules/admin-toolbar/components/AdminToolbar";
 import { requestEmailConfirmationAction } from "@/modules/auth/actions/requestEmailConfirmationAction";
-import { AdminEnabler } from "@/modules/auth/components/AdminEnabler";
 import { PageRefresher } from "@/modules/auth/components/PageRefresher";
 import {
   RequestConfirmationEmailButton,
@@ -7,13 +7,10 @@ import {
 } from "@/modules/auth/components/RequestConfirmationEmail";
 import { authenticate } from "@/modules/auth/server";
 import { requiresEmailConfirmation } from "@/modules/auth/utils/emailConfirmation";
-import { getAssumedUserLabel } from "@/modules/auth/utils/getAssumedUserLabel";
-import { isAdminBehindSession } from "@/modules/auth/utils/isAdminBehindSession";
 import { Link } from "@/modules/common/components/Link";
 import { log } from "@/modules/logging";
 import { Footer } from "@/modules/shell/components/Footer";
 import { type Metadata } from "next";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createLoader, parseAsBoolean } from "nuqs/server";
 import { RiInformationLine } from "react-icons/ri";
@@ -101,12 +98,7 @@ export default async function Page({
       </main>
       <Footer className="mt-4" />
       <PageRefresher />
-      {isAdminBehindSession(authentication.session) && (
-        <AdminEnabler
-          enabled={(await cookies()).get("enable_admin")?.value === "1"}
-          assumedUserLabel={getAssumedUserLabel(authentication.session)}
-        />
-      )}
+      <AdminToolbar />
     </div>
   );
 }

@@ -1,14 +1,11 @@
-import { AdminEnabler } from "@/modules/auth/components/AdminEnabler";
+import { AdminToolbar } from "@/modules/admin-toolbar/components/AdminToolbar";
 import { authenticate } from "@/modules/auth/server";
 import { requireConfirmedEmailForPage } from "@/modules/auth/utils/emailConfirmation";
-import { getAssumedUserLabel } from "@/modules/auth/utils/getAssumedUserLabel";
-import { isAdminBehindSession } from "@/modules/auth/utils/isAdminBehindSession";
 import { ScrambleIn } from "@/modules/common/components/ScrambleIn";
 import { ClearanceLogout } from "@/modules/iam/components/ClearanceLogout";
 import { log } from "@/modules/logging";
 import { Footer } from "@/modules/shell/components/Footer";
 import { type Metadata } from "next";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { FaRegCheckCircle } from "react-icons/fa";
 
@@ -31,8 +28,6 @@ export default async function Page() {
   await requireConfirmedEmailForPage(authentication.session);
 
   if (await authentication.authorize("login", "manage")) redirect("/app");
-
-  const showAdminEnabler = isAdminBehindSession(authentication.session);
 
   return (
     <div className="min-h-dvh flex justify-center items-center flex-col py-8 background-primary">
@@ -123,12 +118,7 @@ export default async function Page() {
 
       <Footer className="mt-4" />
 
-      {showAdminEnabler && (
-        <AdminEnabler
-          enabled={(await cookies()).get("enable_admin")?.value === "1"}
-          assumedUserLabel={getAssumedUserLabel(authentication.session)}
-        />
-      )}
+      <AdminToolbar />
     </div>
   );
 }
