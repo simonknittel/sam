@@ -62,7 +62,12 @@ export const AssumeUserTool = () => {
         className="w-full rounded-secondary bg-neutral-900 py-1 px-2 text-sm focus:outline-hidden data-focus:outline-2 data-focus:-outline-offset-2 data-focus:outline-white/25 data-disabled:opacity-50"
       />
 
-      <ComboboxOptions className="mt-1 max-h-64 overflow-auto empty:hidden">
+      {/* The list opens inside the panel, thus the other tools of the panel
+          must stay usable and visible to assistive technology */}
+      <ComboboxOptions
+        modal={false}
+        className="mt-1 max-h-64 overflow-auto empty:hidden"
+      >
         {filteredUsers.map((user) => (
           <AssumableUserOption key={user.id} user={user} />
         ))}
