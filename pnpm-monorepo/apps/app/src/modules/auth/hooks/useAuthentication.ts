@@ -37,7 +37,13 @@ export const useAuthentication = () => {
             cookie.trim() === `${ADMIN_MODE_COOKIE}=${ADMIN_MODE_COOKIE_VALUE}`,
         );
 
-    if (session.user.role === "admin" && adminEnabled) return session;
+    // Same rule as `isAdminModeActive` on the server
+    if (
+      session.user.role === "admin" &&
+      !session.assumedByAdminId &&
+      adminEnabled
+    )
+      return session;
 
     const result = comparePermissionSets(
       {

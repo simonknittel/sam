@@ -1,6 +1,9 @@
 "use server";
 
-import { createAdminAction } from "@/modules/actions/utils/createAdminAction";
+import {
+  ActionGate,
+  createAuthenticatedAction,
+} from "@/modules/actions/utils/createAction";
 import { getServerCookieOptions } from "@/modules/common/utils/getServerCookieOptions";
 import { cookies } from "next/headers";
 import { z } from "zod";
@@ -14,10 +17,16 @@ const schema = z.object({
   enabled: z.stringbool(),
 });
 
-export const setAdminMode = createAdminAction(
+export const setAdminMode = createAuthenticatedAction(
   "setAdminMode",
   schema,
   async (formData, authentication, data, t) => {
+    if (authentication.session.assumedByAdminId)
+      return {
+        error: "Admin mode has no effect while you assume a user.",
+        requestPayload: formData,
+      };
+
     const cookieStore = await cookies();
 
     if (data.enabled) {
@@ -34,4 +43,5 @@ export const setAdminMode = createAdminAction(
       success: t("Common.successfullySaved"),
     };
   },
+  { gate: ActionGate.Admin },
 );

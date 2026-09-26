@@ -13,7 +13,7 @@ import {
 import { getServerSession, type Session } from "next-auth";
 import { forbidden, redirect } from "next/navigation";
 import { cache } from "react";
-import { isAdminModeCookieSet } from "./utils/isAdminModeCookieSet";
+import { isAdminModeActive } from "./utils/isAdminModeActive";
 
 export const authenticate = cache(
   withTrace("authenticate", async () => {
@@ -183,7 +183,7 @@ export async function authorize(
   operation: PermissionSet["operation"],
   attributes?: PermissionSet["attributes"],
 ) {
-  if (session.user.role === "admin" && (await isAdminModeCookieSet())) {
+  if (await isAdminModeActive(session)) {
     return operation !== "negate";
   }
 
