@@ -1,4 +1,4 @@
-import type { RouterOutputs } from "@/modules/common/utils/api";
+import type { RouterOutputs } from "@/trpc/react";
 
 export type OnSiteNotificationRow =
   RouterOutputs["onSiteNotifications"]["list"]["items"][number];

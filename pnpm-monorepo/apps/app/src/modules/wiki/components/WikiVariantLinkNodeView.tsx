@@ -1,7 +1,7 @@
 "use client";
 
-import { api } from "@/modules/common/utils/api";
 import { VariantWithLogo } from "@/modules/fleet/components/VariantWithLogo";
+import { api } from "@/trpc/react";
 import {
   WikiVariantLink,
   resolveWikiVariantLink,

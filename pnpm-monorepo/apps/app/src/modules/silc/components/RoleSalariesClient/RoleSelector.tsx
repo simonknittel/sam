@@ -3,8 +3,8 @@ import {
   PopoverBaseUI,
   usePopoverBaseUI,
 } from "@/modules/common/components/PopoverBaseUI";
-import { api, type RouterOutputs } from "@/modules/common/utils/api";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
+import { api, type RouterOutputs } from "@/trpc/react";
 import type { Role } from "@sam-monorepo/database/client";
 import { useState, type CSSProperties } from "react";
 import { FaPen, FaUsers } from "react-icons/fa";

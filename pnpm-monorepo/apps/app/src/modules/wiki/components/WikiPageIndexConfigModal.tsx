@@ -3,7 +3,7 @@
 import { Button2 } from "@/modules/common/components/Button2";
 import Modal from "@/modules/common/components/Modal";
 import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
-import { api } from "@/modules/common/utils/api";
+import { api } from "@/trpc/react";
 import {
   WIKI_PAGE_INDEX_MAX_DEPTH,
   WIKI_PAGE_INDEX_MAX_TAGS,

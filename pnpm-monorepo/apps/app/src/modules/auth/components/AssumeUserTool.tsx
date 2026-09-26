@@ -1,7 +1,7 @@
 "use client";
 
 import { runActionAndReload } from "@/modules/actions/utils/runActionAndReload";
-import type { RouterOutputs } from "@/modules/common/utils/api";
+import type { RouterOutputs } from "@/trpc/react";
 import { api, TRPCReactProvider } from "@/trpc/react";
 import {
   Combobox,

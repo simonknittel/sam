@@ -2,7 +2,7 @@
 
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
-import { api } from "@/modules/common/utils/api";
+import { api } from "@/trpc/react";
 import { usePathname } from "next/navigation";
 import { CreateWikiPageForm } from "./CreateWikiPageForm";
 

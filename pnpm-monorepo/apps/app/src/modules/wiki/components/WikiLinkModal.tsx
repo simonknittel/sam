@@ -3,7 +3,7 @@
 import { Button2 } from "@/modules/common/components/Button2";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import Modal from "@/modules/common/components/Modal";
-import { api } from "@/modules/common/utils/api";
+import { api } from "@/trpc/react";
 import { getWikiSelectionRestrictions } from "@sam-monorepo/wiki-editor";
 import type { Editor } from "@tiptap/react";
 import { useState } from "react";

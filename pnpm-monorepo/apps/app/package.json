@@ -65,7 +65,6 @@
     "@tiptap/static-renderer": "3.31.3",
     "@tiptap/suggestion": "3.31.3",
     "@trpc/client": "11.18.0",
-    "@trpc/next": "11.18.0",
     "@trpc/react-query": "11.18.0",
     "@trpc/server": "11.18.0",
     "@uidotdev/usehooks": "2.4.1",

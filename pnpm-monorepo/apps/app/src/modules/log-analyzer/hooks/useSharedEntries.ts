@@ -1,6 +1,6 @@
 "use client";
 
-import type { RouterOutputs } from "@/modules/common/utils/api";
+import type { RouterOutputs } from "@/trpc/react";
 import { api } from "@/trpc/react";
 import { useCallback, useEffect, useRef } from "react";
 import { useLogAnalyzerContext } from "../components/LogAnalyzerContext";

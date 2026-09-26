@@ -8,11 +8,11 @@ import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
 import { Select } from "@/modules/common/components/form/Select";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
-import { api } from "@/modules/common/utils/api";
 import { createEvent } from "@/modules/events/actions/createEvent";
 import { EventDescriptionField } from "@/modules/events/components/EventDescriptionField";
 import { EventDescriptionHint } from "@/modules/events/components/EventDescriptionHint";
 import { WikiRoleSelector } from "@/modules/wiki/components/WikiRoleSelector";
+import { api } from "@/trpc/react";
 import {
   EventVisibility,
   type EventDiscordPublishTarget,

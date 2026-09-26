@@ -1,6 +1,6 @@
 "use client";
 
-import { api } from "@/modules/common/utils/api";
+import { api } from "@/trpc/react";
 import {
   WikiRoleCitizens,
   normalizeWikiRoleCitizensConfig,

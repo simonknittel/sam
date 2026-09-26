@@ -1,9 +1,9 @@
 "use client";
 
 import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
-import { api } from "@/modules/common/utils/api";
 import { useRolesContext } from "@/modules/roles/components/RolesContext";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
+import { api } from "@/trpc/react";
 import type { Role } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useState } from "react";

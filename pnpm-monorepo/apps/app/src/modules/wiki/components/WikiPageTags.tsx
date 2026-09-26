@@ -7,7 +7,7 @@ import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Link } from "@/modules/common/components/Link";
 import Modal from "@/modules/common/components/Modal";
 import Note from "@/modules/common/components/Note";
-import { api } from "@/modules/common/utils/api";
+import { api } from "@/trpc/react";
 import clsx from "clsx";
 import { useId, useState } from "react";
 import { FaPen, FaSave, FaTag, FaTrash } from "react-icons/fa";
