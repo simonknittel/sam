@@ -31,7 +31,6 @@ export const CreateSeriesModal = ({
   });
   const [isLoading, setIsLoading] = useState(false);
   const manufacturers = api.manufacturer.getAll.useQuery(undefined, {
-    refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });
 

@@ -58,7 +58,6 @@ export const CitizenInput = ({
 
   const { isPending, data: dataAllCitizens } =
     api.citizens.getAllCitizens.useQuery(undefined, {
-      refetchOnWindowFocus: false,
       refetchOnReconnect: false,
     });
 
@@ -239,7 +238,6 @@ const Multiple = ({
 }: MultipleComponentProps) => {
   const { isPending, data: dataCitizensGroupedByVisibleRoles } =
     api.citizens.getCitizensGroupedByVisibleRoles.useQuery(undefined, {
-      refetchOnWindowFocus: false,
       refetchOnReconnect: false,
     });
 

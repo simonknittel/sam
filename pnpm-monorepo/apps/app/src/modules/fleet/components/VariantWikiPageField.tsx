@@ -20,7 +20,6 @@ export const VariantWikiPageField = ({ currentWikiPageId, loading }: Props) => {
   const targets = api.wiki.getPageTargets.useQuery(
     { permission: "read" },
     {
-      refetchOnWindowFocus: false,
       refetchOnReconnect: false,
     },
   );

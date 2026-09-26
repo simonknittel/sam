@@ -19,7 +19,6 @@ type RolesForSalaries = RouterOutputs["silc"]["getRolesForSalaries"];
 
 export const RoleSelector = ({ style, defaultValue, onChange }: Props) => {
   const { isPending, data } = api.silc.getRolesForSalaries.useQuery(undefined, {
-    refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });
 

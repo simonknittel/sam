@@ -57,7 +57,6 @@ export const WikiPageIndexConfigModal = ({
   const { data: existingTags } = api.wiki.getTags.useQuery(
     { container: container ?? undefined },
     {
-      refetchOnWindowFocus: false,
       refetchOnReconnect: false,
     },
   );
@@ -72,7 +71,7 @@ export const WikiPageIndexConfigModal = ({
       container: container ?? undefined,
       variantId: variantId ?? undefined,
     },
-    { refetchOnWindowFocus: false, refetchOnReconnect: false },
+    { refetchOnReconnect: false },
   );
 
   const toggleTag = (tagId: string) => {

@@ -118,7 +118,6 @@ const TagsModal = ({
   const { data: existingTags } = api.wiki.getTags.useQuery(
     { container: container ?? undefined },
     {
-      refetchOnWindowFocus: false,
       refetchOnReconnect: false,
       enabled: isOpen,
     },

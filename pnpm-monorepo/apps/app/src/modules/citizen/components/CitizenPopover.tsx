@@ -20,7 +20,6 @@ export const CitizenPopover = ({ children, citizenId }: Props) => {
     api.citizens.getCitizenById.useQuery(
       { id: citizenId },
       {
-        refetchOnWindowFocus: false,
         refetchOnReconnect: false,
         enabled: isEnabled,
       },

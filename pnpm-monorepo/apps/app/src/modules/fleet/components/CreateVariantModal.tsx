@@ -32,7 +32,6 @@ export const CreateVariantModal = ({
       id: manufacturerId,
     },
     {
-      refetchOnWindowFocus: false,
       refetchOnReconnect: false,
     },
   );
@@ -41,7 +40,6 @@ export const CreateVariantModal = ({
       manufacturerId,
     },
     {
-      refetchOnWindowFocus: false,
       refetchOnReconnect: false,
     },
   );

@@ -61,7 +61,6 @@ export const WikiSearch = ({ className, compact }: Props) => {
     {
       enabled,
       placeholderData: (previous) => previous,
-      refetchOnWindowFocus: false,
     },
   );
 

@@ -14,7 +14,6 @@ interface Props {
 
 export const RequiredRoles = ({ className, defaultValue }: Props) => {
   const { isPending, data } = api.roles.getVisibleRoles.useQuery(undefined, {
-    refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });
 

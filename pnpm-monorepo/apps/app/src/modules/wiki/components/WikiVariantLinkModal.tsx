@@ -46,7 +46,6 @@ export const WikiVariantLinkModal = ({
   const listboxId = useId();
 
   const { data, isPending } = api.variant.getAll.useQuery(undefined, {
-    refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });
 

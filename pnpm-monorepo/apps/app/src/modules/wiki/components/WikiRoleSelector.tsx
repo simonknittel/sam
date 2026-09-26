@@ -41,7 +41,6 @@ export const WikiRoleSelector = ({
   const { isPending, data: allRoles } = api.roles.getVisibleRoles.useQuery(
     undefined,
     {
-      refetchOnWindowFocus: false,
       refetchOnReconnect: false,
     },
   );

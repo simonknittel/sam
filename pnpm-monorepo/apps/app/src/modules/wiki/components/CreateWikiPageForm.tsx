@@ -60,7 +60,7 @@ export const CreateWikiPageForm = ({
    */
   const { data: copySourceTargets } = api.wiki.getPageTargets.useQuery(
     { permission: "read", container },
-    { refetchOnWindowFocus: false, refetchOnReconnect: false },
+    { refetchOnReconnect: false },
   );
 
   /**

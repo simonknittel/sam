@@ -8,7 +8,20 @@ import { useState } from "react";
 import SuperJSON from "superjson";
 import { type AppRouter } from "../server/api/root";
 
-const createQueryClient = () => new QueryClient();
+const createQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        /**
+         * The library default refetches every mounted query when the tab
+         * regains focus. All queries hit uncached serverless functions, so
+         * this produces redundant traffic; mutations invalidate explicitly
+         * where freshness matters.
+         */
+        refetchOnWindowFocus: false,
+      },
+    },
+  });
 
 let clientQueryClientSingleton: QueryClient | undefined = undefined;
 const getQueryClient = () => {

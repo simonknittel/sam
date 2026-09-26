@@ -29,7 +29,6 @@ export const UpdateVariantModal = ({ onRequestClose, variant }: Props) => {
   const _variant = api.variant.getById.useQuery(
     { id: variant.id },
     {
-      refetchOnWindowFocus: false,
       refetchOnReconnect: false,
     },
   );

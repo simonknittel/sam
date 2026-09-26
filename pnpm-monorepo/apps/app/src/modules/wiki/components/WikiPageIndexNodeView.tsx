@@ -49,7 +49,6 @@ const WikiPageIndexNodeView = ({ node, extension }: NodeViewProps) => {
       variantId: variantId ?? undefined,
     },
     {
-      refetchOnWindowFocus: false,
       placeholderData: (previous) =>
         previous ?? initialEntries[wikiPageIndexConfigKey(node.attrs)],
     },

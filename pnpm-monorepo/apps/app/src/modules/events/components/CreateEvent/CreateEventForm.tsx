@@ -58,7 +58,7 @@ export const CreateEventForm = ({
    */
   const { data: templates } = api.events.getUsableEventTemplates.useQuery(
     undefined,
-    { refetchOnWindowFocus: false, refetchOnReconnect: false },
+    { refetchOnReconnect: false },
   );
 
   const selectedTemplate =
@@ -278,7 +278,6 @@ const DiscordPublishFields = ({
   const { data: channels, isPending } =
     api.events.getPublishableDiscordChannels.useQuery(undefined, {
       enabled: isPublishing,
-      refetchOnWindowFocus: false,
       refetchOnReconnect: false,
     });
 

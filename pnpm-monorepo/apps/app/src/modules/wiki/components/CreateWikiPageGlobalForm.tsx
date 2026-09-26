@@ -19,7 +19,6 @@ export const CreateWikiPageGlobalForm = ({ onSuccess }: Props) => {
   const authentication = useAuthentication();
 
   const { isPending, data } = api.wiki.getPageTargets.useQuery(undefined, {
-    refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });
 

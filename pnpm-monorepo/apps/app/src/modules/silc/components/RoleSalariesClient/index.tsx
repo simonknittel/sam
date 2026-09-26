@@ -35,7 +35,6 @@ export const RoleSalariesClient = ({
 
   const { isPending: isPendingRolesForSalaries, data } =
     api.silc.getRolesForSalaries.useQuery(undefined, {
-      refetchOnWindowFocus: false,
       refetchOnReconnect: false,
     });
 

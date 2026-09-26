@@ -48,7 +48,6 @@ export const EventSelectionInput = ({
   const { isPending, data: dataAllEvents } = api.events.getAllEvents.useQuery(
     undefined,
     {
-      refetchOnWindowFocus: false,
       refetchOnReconnect: false,
     },
   );

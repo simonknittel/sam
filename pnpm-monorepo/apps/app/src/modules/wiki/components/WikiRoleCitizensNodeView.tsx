@@ -36,7 +36,6 @@ const WikiRoleCitizensNodeView = ({ node, extension }: NodeViewProps) => {
     { roleId: roleId ?? "" },
     {
       enabled: roleId !== null,
-      refetchOnWindowFocus: false,
       placeholderData: (previous) =>
         previous ?? (roleId ? initialCitizens[roleId] : undefined),
     },
