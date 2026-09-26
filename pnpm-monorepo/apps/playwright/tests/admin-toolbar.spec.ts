@@ -75,7 +75,7 @@ test("an admin's pages stay redacted until admin mode is enabled", async ({
   await expect(toolbarButton(page)).not.toContainText("Admin mode");
 });
 
-test("assuming a user switches the effective citizen and names the admin in the system log", async ({
+test("assuming users switches the effective citizen and names the admin in the system log", async ({
   page,
   prisma,
   signIn,
@@ -86,6 +86,9 @@ test("assuming a user switches the effective citizen and names the admin in the 
     admin: true,
   });
   const target = await createCitizen(prisma, { handle: "zielnutzer" });
+  const targetWithoutClearance = await createUserWithoutCitizen(prisma, {
+    name: "ohnefreigabe",
+  });
 
   await signIn(admin.user);
   await enableAdminMode();
@@ -113,10 +116,28 @@ test("assuming a user switches the effective citizen and names the admin in the 
   });
   await expect(toolbarButton(page)).not.toContainText("Admin mode");
 
-  // Exit returns to the admin's own (non-admin-mode) session
-  await waitForAppShellHydration(page);
+  // A switch to a user without clearance: the list still loads, and the
+  // gate page of that user still offers the tools
+  await openToolbar(page);
+  await pickFromSearch(
+    page,
+    toolbarPanel(page).getByRole("combobox", { name: "User" }),
+    "ohnefreigabe",
+  );
+  await expect(page.getByText("Assuming ohnefreigabe")).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+  await expect(
+    page.getByText("Bitte melde dich bei Human Resources"),
+  ).toBeVisible();
+  await expect(page).toHaveURL("/clearance");
+
+  // Exit returns to the admin's own (non-admin-mode) session. The toolbar
+  // opens only after hydration, thus it proves that the exit can react.
+  await openToolbar(page);
+  await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "Exit" }).click();
-  await expect(page.getByText("Assuming zielnutzer")).not.toBeVisible({
+  await expect(page.getByText("Assuming ohnefreigabe")).not.toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await openToolbar(page);
@@ -125,30 +146,33 @@ test("assuming a user switches the effective citizen and names the admin in the 
   ).toBeVisible();
 
   // While assuming, every other event names the assumed user, thus these
-  // two must name the admin
+  // must name the admin. The timestamps have millisecond precision only,
+  // thus the assertion does not depend on the order.
   const events = await prisma.auditEvent.findMany({
     where: { type: { in: ["ASSUME_USER_STARTED", "ASSUME_USER_ENDED"] } },
-    orderBy: { createdAt: "asc" },
     select: { type: true, createdById: true, data: true },
   });
-  const assumedUser = {
+  const firstUser = {
     assumedUserId: target.user.id,
     assumedUserName: "zielnutzer",
   };
-  expect(
-    events.map((event) => ({ ...event, data: JSON.parse(String(event.data)) })),
-  ).toEqual([
-    {
-      type: "ASSUME_USER_STARTED",
-      createdById: admin.user.id,
-      data: assumedUser,
-    },
-    {
-      type: "ASSUME_USER_ENDED",
-      createdById: admin.user.id,
-      data: assumedUser,
-    },
-  ]);
+  const secondUser = {
+    assumedUserId: targetWithoutClearance.id,
+    assumedUserName: "ohnefreigabe",
+  };
+  const expectedEvents = [
+    { type: "ASSUME_USER_STARTED", data: firstUser },
+    { type: "ASSUME_USER_ENDED", data: firstUser },
+    { type: "ASSUME_USER_STARTED", data: secondUser },
+    { type: "ASSUME_USER_ENDED", data: secondUser },
+  ].map((event) => ({ ...event, createdById: admin.user.id }));
+
+  const writtenEvents = events.map((event) => ({
+    ...event,
+    data: JSON.parse(String(event.data)),
+  }));
+  expect(writtenEvents).toHaveLength(expectedEvents.length);
+  expect(writtenEvents).toEqual(expect.arrayContaining(expectedEvents));
 });
 
 test("the seasonal theme tool sets and removes the date of the themes", async ({
@@ -193,7 +217,8 @@ test("the seasonal theme tool sets and removes the date of the themes", async ({
   });
   await expect(toolbarButton(page)).toContainText("No theme");
 
-  // What "Auto" shows depends on the real date, thus only the override goes
+  // What "Auto" shows depends on the real date, thus the test checks only
+  // that the override is gone
   await openToolbar(page);
   await toolbarPanel(page)
     .getByRole("button", { name: "Auto (today)" })
@@ -298,11 +323,23 @@ test("only an admin gets the toolbar and the list of users", async ({
   signIn,
 }) => {
   const citizen = await createCitizen(prisma, { handle: "normalo" });
+  const otherCitizen = await createCitizen(prisma, { handle: "anderer" });
 
   await signIn(citizen.user);
+  // Only the session of an admin follows the cookie
+  await page.context().addCookies([
+    {
+      name: "assume_user",
+      value: otherCitizen.user.id,
+      domain: "localhost",
+      path: "/",
+    },
+  ]);
   await page.goto("/app/dashboard");
   await waitForAppShellHydration(page);
 
+  await expect(page.getByRole("heading", { name: "normalo" })).toBeVisible();
+  await expect(page.getByText("Assuming")).toHaveCount(0);
   await expect(toolbarButton(page)).toHaveCount(0);
 
   const response = await page.request.get("/api/trpc/users.getAssumableUsers");
