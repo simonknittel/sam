@@ -1,5 +1,5 @@
 import { createEnv } from "@t3-oss/env-nextjs";
-import * as z from "zod";
+import * as z from "zod/mini";
 
 const LOOPBACK_HOSTNAMES: readonly string[] = ["localhost", "127.0.0.1", "::1"];
 
@@ -21,21 +21,23 @@ export const env = createEnv({
    * Will throw if you access these variables on the client.
    */
   server: {
-    DATABASE_URL: z
-      .url()
-      .default("postgresql://postgres:admin@localhost:5432/db"),
+    DATABASE_URL: z._default(
+      z.url(),
+      "postgresql://postgres:admin@localhost:5432/db",
+    ),
     NODE_ENV: z.enum(["development", "test", "production"]),
     NEXTAUTH_SECRET:
       process.env.NODE_ENV === "production"
-        ? z.string().min(1)
-        : z.string().min(1).optional(),
-    NEXTAUTH_URL: z
-      .preprocess(
+        ? z.string().check(z.minLength(1))
+        : z.optional(z.string().check(z.minLength(1))),
+    NEXTAUTH_URL: z._default(
+      z.pipe(
         // Uses VERCEL_URL if NEXTAUTH_URL is not set, e.g. on Vercel's preview deployments
-        (str) => str || `https://${process.env.VERCEL_URL}`,
+        z.transform((str) => str || `https://${process.env.VERCEL_URL}`),
         z.url(),
-      )
-      .default("http://localhost:3000"),
+      ),
+      "http://localhost:3000",
+    ),
     DISCORD_CLIENT_ID: z.string(),
     DISCORD_CLIENT_SECRET: z.string(),
     DISCORD_GUILD_ID: z.string(),
@@ -59,22 +61,29 @@ export const env = createEnv({
      * Playwright stack, which points it at a dead port so creating an
      * organization never leaves the machine.
      */
-    RSI_BASE_URL: z.url().default("https://robertsspaceindustries.com"),
-    DISCORD_API_BASE_URL: z
-      .url()
-      .refine(isEncryptedOrLoopbackUrl, "must use https unless it is loopback")
-      .default("https://discord.com/api/v10"),
+    RSI_BASE_URL: z._default(z.url(), "https://robertsspaceindustries.com"),
+    DISCORD_API_BASE_URL: z._default(
+      z
+        .url()
+        .check(
+          z.refine(
+            isEncryptedOrLoopbackUrl,
+            "must use https unless it is loopback",
+          ),
+        ),
+      "https://discord.com/api/v10",
+    ),
     /**
      * Cloudflare R2 account id, used to derive the bucket endpoint when
      * S3_ENDPOINT is unset
      */
-    S3_ACCOUNT_ID: z.string().optional(),
+    S3_ACCOUNT_ID: z.optional(z.string()),
     /**
      * Explicit endpoint of any S3-compatible provider (e.g. the local
      * RustFS container from compose.yml). Requests use path-style
      * addressing when set. Takes precedence over S3_ACCOUNT_ID.
      */
-    S3_ENDPOINT: z.url().optional(),
+    S3_ENDPOINT: z.optional(z.url()),
     /** Amazon S3 (or any other S3-compatible provider like Cloudflare R2) */
     S3_ACCESS_KEY_ID: z.string(),
     /** Amazon S3 (or any other S3-compatible provider like Cloudflare R2) */
@@ -82,34 +91,37 @@ export const env = createEnv({
     /** Amazon S3 (or any other S3-compatible provider like Cloudflare R2) */
     S3_BUCKET_NAME: z.string(),
     /** Unleash (or any other Unleash-compatible feature flag provider like GitLab) */
-    UNLEASH_SERVER_API_URL: z.url().optional(),
+    UNLEASH_SERVER_API_URL: z.optional(z.url()),
     /** Unleash (or any other Unleash-compatible feature flag provider like GitLab) */
-    UNLEASH_SERVER_API_TOKEN: z.string().optional(),
+    UNLEASH_SERVER_API_TOKEN: z.optional(z.string()),
     /**
      * Seconds the fetched flag definitions are cached for. Lets the
      * Playwright stack pick up a toggled flag without waiting out the
      * production window.
      */
-    UNLEASH_REVALIDATE_SECONDS: z.coerce.number().int().positive().default(30),
-    COMMIT_SHA: z.preprocess(
+    UNLEASH_REVALIDATE_SECONDS: z._default(
+      z.coerce.number().check(z.int(), z.positive()),
+      30,
+    ),
+    COMMIT_SHA: z.pipe(
       // Uses VERCEL_GIT_COMMIT_SHA if COMMIT_SHA is not set
-      (str) => str || process.env.VERCEL_GIT_COMMIT_SHA,
-      z.string().optional(),
+      z.transform((str) => str || process.env.VERCEL_GIT_COMMIT_SHA),
+      z.optional(z.string()),
     ),
     /** AWS_PROFILE=sam-test terraform output access_key_app_vercel */
-    AWS_ACCESS_KEY_ID: z.string().optional(),
+    AWS_ACCESS_KEY_ID: z.optional(z.string()),
     /** AWS_PROFILE=sam-test terraform output secret_key_app_vercel */
-    AWS_SECRET_ACCESS_KEY: z.string().optional(),
+    AWS_SECRET_ACCESS_KEY: z.optional(z.string()),
     /** AWS_PROFILE=sam-test terraform output event_bus_arn */
-    AWS_EVENT_BUS_ARN: z.string().optional(),
-    OPENAI_BASE_URL: z.url().optional(),
-    OPENAI_API_KEY: z.string().optional(),
-    OPENAI_EXTRA_API_KEY: z.string().optional(),
-    ENABLE_INSTRUMENTATION: z.string().optional(),
-    OTEL_EXPORTER_OTLP_PROTOCOL: z.string().optional(),
-    OTEL_EXPORTER_OTLP_ENDPOINT: z.string().optional(),
+    AWS_EVENT_BUS_ARN: z.optional(z.string()),
+    OPENAI_BASE_URL: z.optional(z.url()),
+    OPENAI_API_KEY: z.optional(z.string()),
+    OPENAI_EXTRA_API_KEY: z.optional(z.string()),
+    ENABLE_INSTRUMENTATION: z.optional(z.string()),
+    OTEL_EXPORTER_OTLP_PROTOCOL: z.optional(z.string()),
+    OTEL_EXPORTER_OTLP_ENDPOINT: z.optional(z.string()),
     /** Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
-    PUSHER_CHANNELS_APP_SECRET: z.string().default("app-secret"),
+    PUSHER_CHANNELS_APP_SECRET: z._default(z.string(), "app-secret"),
     /**
      * Public base of the uploads bucket: either a bare host (e.g. an R2
      * public bucket domain — https is implied and the upload id is the sole
@@ -127,7 +139,7 @@ export const env = createEnv({
      * Shared secret with the wiki collab server (apps/collab). Realtime
      * collaboration is disabled if unset.
      */
-    COLLAB_JWT_SECRET: z.string().optional(),
+    COLLAB_JWT_SECRET: z.optional(z.string()),
     /**
      * WebSocket URL of the wiki collab server (apps/collab), e.g.
      * wss://sam-collab.example.com. Realtime collaboration is disabled if
@@ -136,7 +148,7 @@ export const env = createEnv({
      * lets several instances of one build talk to different collab servers
      * (used by the Playwright test stack).
      */
-    COLLAB_URL: z.url({ protocol: /^wss?$/ }).optional(),
+    COLLAB_URL: z.optional(z.url({ protocol: /^wss?$/ })),
     /**
      * Base64-encoded PKCS#8 PEM of the ES256 (P-256) private key the app
      * signs the identity tokens of authenticated iframe embeds with (see
@@ -147,7 +159,7 @@ export const env = createEnv({
      * verifies as a production one. Generate one with:
      * `openssl ecparam -name prime256v1 -genkey -noout | openssl pkcs8 -topk8 -nocrypt | base64 -w0`
      */
-    EMBED_JWT_PRIVATE_KEY: z.string().optional(),
+    EMBED_JWT_PRIVATE_KEY: z.optional(z.string()),
   },
 
   /*
@@ -156,25 +168,25 @@ export const env = createEnv({
    * 💡 You'll get type errors if these are not prefixed with NEXT_PUBLIC_.
    */
   client: {
-    NEXT_PUBLIC_CARE_BEAR_SHOOTER_BUILD_URL: z.url().optional(),
-    NEXT_PUBLIC_DOWNLOADS_BASE_URL: z.url().optional(),
-    NEXT_PUBLIC_DOWNLOADS_BASE_URL_2: z.url().optional(),
+    NEXT_PUBLIC_CARE_BEAR_SHOOTER_BUILD_URL: z.optional(z.url()),
+    NEXT_PUBLIC_DOWNLOADS_BASE_URL: z.optional(z.url()),
+    NEXT_PUBLIC_DOWNLOADS_BASE_URL_2: z.optional(z.url()),
     /** Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
-    NEXT_PUBLIC_PUSHER_CHANNELS_APP_ID: z.string().default("app-id"),
+    NEXT_PUBLIC_PUSHER_CHANNELS_APP_ID: z._default(z.string(), "app-id"),
     /** Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
-    NEXT_PUBLIC_PUSHER_CHANNELS_APP_KEY: z.string().default("app-key"),
+    NEXT_PUBLIC_PUSHER_CHANNELS_APP_KEY: z._default(z.string(), "app-key"),
     /** Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
-    NEXT_PUBLIC_PUSHER_CHANNELS_HOST: z.string().default("localhost"),
+    NEXT_PUBLIC_PUSHER_CHANNELS_HOST: z._default(z.string(), "localhost"),
     /** Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
-    NEXT_PUBLIC_PUSHER_CHANNELS_PORT: z.coerce.number().default(6001),
+    NEXT_PUBLIC_PUSHER_CHANNELS_PORT: z._default(z.coerce.number(), 6001),
     /** Pusher Channels (or any other Pusher Channels-compatible provider like Soketi) */
-    NEXT_PUBLIC_PUSHER_CHANNELS_SECURE_PORT: z.coerce.number().optional(),
+    NEXT_PUBLIC_PUSHER_CHANNELS_SECURE_PORT: z.optional(z.coerce.number()),
     /** npx web-push generate-vapid-keys */
-    NEXT_PUBLIC_VAPID_KEY: z.string().optional(),
-    NEXT_PUBLIC_PLAUSIBLE_ENDPOINT: z.url().optional(),
-    NEXT_PUBLIC_HOST: z.preprocess(
+    NEXT_PUBLIC_VAPID_KEY: z.optional(z.string()),
+    NEXT_PUBLIC_PLAUSIBLE_ENDPOINT: z.optional(z.url()),
+    NEXT_PUBLIC_HOST: z.pipe(
       // Uses VERCEL_URL if HOST and BASE_URL are not set, e.g. on Vercel's preview deployments
-      (str) => {
+      z.transform((str) => {
         if (str) {
           return str;
         } else if (process.env.NEXT_PUBLIC_BASE_URL) {
@@ -184,12 +196,12 @@ export const env = createEnv({
         }
 
         return "localhost:3000";
-      },
+      }),
       z.string(),
     ),
-    NEXT_PUBLIC_BASE_URL: z.preprocess(
+    NEXT_PUBLIC_BASE_URL: z.pipe(
       // Uses VERCEL_URL if BASE_URL is not set, e.g. on Vercel's preview deployments
-      (str) => {
+      z.transform((str) => {
         if (str) {
           return str;
         } else if (process.env.VERCEL_URL) {
@@ -197,7 +209,7 @@ export const env = createEnv({
         }
 
         return "http://localhost:3000";
-      },
+      }),
       z.url(),
     ),
   },
