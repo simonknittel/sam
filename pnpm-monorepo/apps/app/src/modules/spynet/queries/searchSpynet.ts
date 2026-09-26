@@ -19,24 +19,6 @@ const TYPO_SIMILARITY_THRESHOLD = 0.5;
  */
 const TYPO_MINIMUM_TERM_LENGTH = 4;
 
-type Row =
-  | {
-      readonly type: SpynetSearchHitType.Citizen;
-      readonly id: string;
-      readonly name: string | null;
-      readonly communityMoniker: string | null;
-      readonly citizenId: string | null;
-      readonly spectrumId: string | null;
-    }
-  | {
-      readonly type: SpynetSearchHitType.Organization;
-      readonly id: string;
-      readonly name: string;
-      readonly communityMoniker: null;
-      readonly citizenId: null;
-      readonly spectrumId: string;
-    };
-
 interface Options {
   readonly term: string;
   readonly limit: number;
@@ -86,12 +68,16 @@ export const searchSpynet = withTrace(
     if (includeCitizens)
       parts.push(Prisma.sql`
         SELECT
-          ${SpynetSearchHitType.Citizen}::text AS "type",
           "id",
-          "handle" AS "name",
-          "communityMoniker",
-          "citizenId",
-          "spectrumId",
+          "handle" AS "sortName",
+          json_build_object(
+            'type', ${SpynetSearchHitType.Citizen}::text,
+            'id', "id",
+            'handle', "handle",
+            'communityMoniker', "communityMoniker",
+            'citizenId', "citizenId",
+            'spectrumId', "spectrumId"
+          ) AS "hit",
           GREATEST(
             ${scoreColumn(Prisma.sql`"handle"`, tolerateTypos)},
             ${scoreColumn(Prisma.sql`"communityMoniker"`, tolerateTypos)},
@@ -104,12 +90,14 @@ export const searchSpynet = withTrace(
     if (includeOrganizations)
       parts.push(Prisma.sql`
         SELECT
-          ${SpynetSearchHitType.Organization}::text AS "type",
           "id",
-          "name",
-          NULL AS "communityMoniker",
-          NULL AS "citizenId",
-          "spectrumId",
+          "name" AS "sortName",
+          json_build_object(
+            'type', ${SpynetSearchHitType.Organization}::text,
+            'id', "id",
+            'name', "name",
+            'spectrumId', "spectrumId"
+          ) AS "hit",
           GREATEST(
             ${scoreColumn(Prisma.sql`"name"`, tolerateTypos)},
             ${scoreColumn(Prisma.sql`"spectrumId"`, false)}
@@ -119,40 +107,17 @@ export const searchSpynet = withTrace(
 
     if (parts.length === 0) return [];
 
-    const rows = await prisma.$queryRaw<Row[]>`
+    const rows = await prisma.$queryRaw<{ readonly hit: SpynetSearchHit }[]>`
       WITH "query" AS (
         SELECT ${term}::text AS "term", ${escapeLikePattern(term)}::text AS "pattern"
       )
-      SELECT "type", "id", "name", "communityMoniker", "citizenId", "spectrumId"
+      SELECT "hit"
       FROM (${Prisma.join(parts, " UNION ALL ")}) AS "hits"
       WHERE "score" > 0
-      ORDER BY "score" DESC, lower("name") ASC NULLS LAST, "id" ASC
+      ORDER BY "score" DESC, lower("sortName") ASC NULLS LAST, "id" ASC
       LIMIT ${limit}
     `;
 
-    return rows.map((row): SpynetSearchHit => {
-      switch (row.type) {
-        case SpynetSearchHitType.Citizen:
-          return {
-            type: row.type,
-            id: row.id,
-            handle: row.name,
-            communityMoniker: row.communityMoniker,
-            citizenId: row.citizenId,
-            spectrumId: row.spectrumId,
-          };
-
-        case SpynetSearchHitType.Organization:
-          return {
-            type: row.type,
-            id: row.id,
-            name: row.name,
-            spectrumId: row.spectrumId,
-          };
-
-        default:
-          throw new Error(`Unknown hit type: ${row satisfies never}`);
-      }
-    });
+    return rows.map((row) => row.hit);
   },
 );

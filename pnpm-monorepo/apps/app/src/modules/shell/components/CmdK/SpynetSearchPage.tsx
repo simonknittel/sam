@@ -2,7 +2,10 @@ import {
   SpynetSearchStatus,
   useSpynetSearch,
 } from "@/modules/spynet/hooks/useSpynetSearch";
-import { type SpynetSearchHit } from "@/modules/spynet/utils/spynetSearch";
+import {
+  SPYNET_SEARCH_QUERY_MINIMUM_LENGTH,
+  type SpynetSearchHit,
+} from "@/modules/spynet/utils/spynetSearch";
 import { Command } from "cmdk";
 import { SpynetSearchResultEntry } from "./SpynetSearchResultEntry";
 
@@ -11,7 +14,7 @@ const RESULT_LIMIT = 5;
 
 interface Props {
   readonly search: string;
-  readonly onSelect?: () => void;
+  readonly onSelect: () => void;
 }
 
 export const SpynetSearchPage = ({ search, onSelect }: Props) => {
@@ -34,14 +37,16 @@ export const SpynetSearchPage = ({ search, onSelect }: Props) => {
 interface SearchResultsProps {
   readonly status: SpynetSearchStatus;
   readonly hits: readonly SpynetSearchHit[];
-  readonly onSelect?: () => void;
+  readonly onSelect: () => void;
 }
 
 const SearchResults = ({ status, hits, onSelect }: SearchResultsProps) => {
   switch (status) {
     case SpynetSearchStatus.Idle:
       return (
-        <Command.Item disabled>Mindestens 2 Zeichen eingeben</Command.Item>
+        <Command.Item disabled>
+          Mindestens {SPYNET_SEARCH_QUERY_MINIMUM_LENGTH} Zeichen eingeben
+        </Command.Item>
       );
 
     case SpynetSearchStatus.Loading:

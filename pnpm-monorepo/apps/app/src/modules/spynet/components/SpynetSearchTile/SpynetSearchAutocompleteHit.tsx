@@ -1,5 +1,3 @@
-"use client";
-
 import { Link } from "@/modules/common/components/Link";
 import {
   getSpynetSearchHitHref,

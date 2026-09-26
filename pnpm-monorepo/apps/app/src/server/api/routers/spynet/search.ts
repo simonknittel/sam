@@ -1,6 +1,8 @@
 import { authorize } from "@/modules/auth/server";
 import { searchSpynet } from "@/modules/spynet/queries/searchSpynet";
 import {
+  SPYNET_SEARCH_DEFAULT_LIMIT,
+  SPYNET_SEARCH_MAXIMUM_LIMIT,
   SPYNET_SEARCH_QUERY_MAXIMUM_LENGTH,
   SPYNET_SEARCH_QUERY_MINIMUM_LENGTH,
 } from "@/modules/spynet/utils/spynetSearch";
@@ -19,8 +21,14 @@ export const search = protectedProcedure
         .string()
         .trim()
         .min(SPYNET_SEARCH_QUERY_MINIMUM_LENGTH)
-        .max(SPYNET_SEARCH_QUERY_MAXIMUM_LENGTH),
-      limit: z.int().min(1).max(20).default(10),
+        .max(SPYNET_SEARCH_QUERY_MAXIMUM_LENGTH)
+        // PostgreSQL refuses a NUL character in a text parameter
+        .refine((query) => !query.includes("\0")),
+      limit: z
+        .int()
+        .min(1)
+        .max(SPYNET_SEARCH_MAXIMUM_LIMIT)
+        .default(SPYNET_SEARCH_DEFAULT_LIMIT),
     }),
   )
   .query(async ({ ctx, input }) => {

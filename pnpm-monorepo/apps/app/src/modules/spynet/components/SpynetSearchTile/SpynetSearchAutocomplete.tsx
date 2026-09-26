@@ -16,26 +16,19 @@ export const SpynetSearchAutocomplete = () => {
   const [isOpenRequested, setIsOpenRequested] = useState(false);
   const { status, hits } = useSpynetSearch(query);
 
-  const handleValueChange = (value: string) => {
-    setQuery(value);
-
-    // The search waits for the debounce, thus without this the popup shows the
-    // hits of the previous query for a short time after the input is cleared
-    if (value.trim() === "") setIsOpenRequested(false);
-  };
-
   return (
     <Autocomplete.Root
       items={hits}
       // The server sorts and filters the hits, thus Base UI must show all of them
       filter={null}
       value={query}
-      onValueChange={handleValueChange}
+      onValueChange={setQuery}
       open={isOpenRequested && status !== SpynetSearchStatus.Idle}
       onOpenChange={setIsOpenRequested}
       openOnInputClick
     >
-      <Autocomplete.InputGroup className="flex items-center w-full h-11 rounded-secondary bg-neutral-800 border border-transparent hover:border-neutral-600 focus-within:border-white focus-within:hover:border-white">
+      {/* The seasonal decorations of the tile are drawn for this height */}
+      <Autocomplete.InputGroup className="flex items-center w-full h-11.5 rounded-secondary bg-neutral-800 border border-transparent hover:border-neutral-600 focus-within:border-white focus-within:hover:border-white">
         <FaSearch
           aria-hidden
           className="flex-none size-4 ml-3 mr-2 text-brand-red-500"

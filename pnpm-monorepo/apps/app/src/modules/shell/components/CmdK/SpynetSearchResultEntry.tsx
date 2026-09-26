@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 
 interface Props {
   readonly hit: SpynetSearchHit;
-  readonly onSelect?: () => void;
+  readonly onSelect: () => void;
 }
 
 export const SpynetSearchResultEntry = ({ hit, onSelect }: Props) => {
@@ -20,9 +20,8 @@ export const SpynetSearchResultEntry = ({ hit, onSelect }: Props) => {
       value={hit.id}
       onSelect={() => {
         router.push(getSpynetSearchHitHref(hit));
-        onSelect?.();
+        onSelect();
       }}
-      className="flex flex-col gap-0!"
     >
       <SpynetSearchHitContent hit={hit} />
     </Command.Item>
