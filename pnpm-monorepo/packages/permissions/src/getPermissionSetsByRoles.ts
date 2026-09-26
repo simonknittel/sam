@@ -15,11 +15,21 @@ type Roles = readonly {
   >[];
 }[];
 
-export const getPermissionSetsByRoles = (roles: Roles): PermissionSet[] =>
-  roles.flatMap((role) =>
-    role.permissionStrings.map((permissionString) =>
-      transformPermissionStringToPermissionSet(
-        permissionString.permissionString,
+/**
+ * A permission string that more than one role grants gives one permission
+ * set only. The result goes into the session, which the app sends to the
+ * browser on every page.
+ */
+export const getPermissionSetsByRoles = (roles: Roles): PermissionSet[] => {
+  const permissionStrings = new Set(
+    roles.flatMap((role) =>
+      role.permissionStrings.map(
+        (permissionString) => permissionString.permissionString,
       ),
     ),
   );
+
+  return Array.from(permissionStrings, (permissionString) =>
+    transformPermissionStringToPermissionSet(permissionString),
+  );
+};

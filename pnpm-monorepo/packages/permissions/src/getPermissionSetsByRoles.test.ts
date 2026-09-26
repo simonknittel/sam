@@ -33,12 +33,36 @@ describe("get permission sets by roles", () => {
     ]);
   });
 
-  test("keeps permission sets granted by more than one role", () => {
+  test("returns a permission set granted by more than one role only once", () => {
     expect(
-      getPermissionSetsByRoles([roleWith("wiki;read"), roleWith("wiki;read")]),
+      getPermissionSetsByRoles([
+        roleWith("wiki;read", "task;read"),
+        roleWith("wiki;read"),
+        roleWith("task;read", "wiki;read"),
+      ]),
     ).toEqual([
       { resource: "wiki", operation: "read" },
-      { resource: "wiki", operation: "read" },
+      { resource: "task", operation: "read" },
+    ]);
+  });
+
+  test("keeps permission strings which differ only in their attributes", () => {
+    expect(
+      getPermissionSetsByRoles([
+        roleWith("note;manage;noteTypeId=1"),
+        roleWith("note;manage;noteTypeId=2"),
+      ]),
+    ).toEqual([
+      {
+        resource: "note",
+        operation: "manage",
+        attributes: [{ key: "noteTypeId", value: "1" }],
+      },
+      {
+        resource: "note",
+        operation: "manage",
+        attributes: [{ key: "noteTypeId", value: "2" }],
+      },
     ]);
   });
 
