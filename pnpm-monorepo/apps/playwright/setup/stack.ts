@@ -136,7 +136,7 @@ export const containerDatabaseUrl = (database: string) =>
 
 /**
  * The app validates its environment with non-empty strings for services the
- * test stack doesn't provide (Discord OAuth, Algolia). The features degrade
+ * test stack doesn't provide (Discord OAuth and bot). The features degrade
  * gracefully at runtime; tests must not depend on them. S3 and Unleash are
  * real though — uploads go to the stack's RustFS container (see
  * s3Environment) and feature flags come from the stack's Unleash container
@@ -164,9 +164,6 @@ export const appDummyEnvironment = {
   DISCORD_CLIENT_SECRET: "playwright-dummy",
   DISCORD_GUILD_ID: "playwright-dummy",
   DISCORD_TOKEN: "playwright-dummy",
-  NEXT_PUBLIC_ALGOLIA_APP_ID: "playwright-dummy",
-  ALGOLIA_ADMIN_API_KEY: "playwright-dummy",
-  NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY: "playwright-dummy",
   NEXT_PUBLIC_CARE_BEAR_SHOOTER_BUILD_URL:
     "http://localhost:9/playwright-dummy-care-bear-shooter",
   NEXTAUTH_SECRET: "playwright-insecure-auth-secret",

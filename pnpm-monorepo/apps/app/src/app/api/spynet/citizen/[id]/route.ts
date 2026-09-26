@@ -1,5 +1,4 @@
 import { prisma } from "@/db";
-import { deleteObject } from "@/modules/algolia";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
@@ -50,11 +49,6 @@ export async function DELETE(request: Request, props: { params: Params }) {
     ]);
 
     // TODO: Update name field of user corresponding use entry
-
-    /**
-     * Delete entity from Algolia
-     */
-    await deleteObject(paramsData);
 
     /**
      * Respond with the result

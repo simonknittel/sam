@@ -3,7 +3,6 @@
 		"**/.env",
 	],
 	"cSpell.words": [
-		"algoliasearch",
 		"behr",
 		"biomejs",
 		"buildx",

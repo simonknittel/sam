@@ -186,7 +186,6 @@ configs:
   unleash-create-flags:
     content: |
       const flagNames = [
-        "DisableAlgolia",
         "EnableCareBearShooter",
         "DisableRoleNameSuggestions",
         "CrashLogAnalyzer",
