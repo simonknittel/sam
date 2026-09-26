@@ -8,7 +8,7 @@ import { useId, useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import toast from "react-hot-toast";
 import { FaSave } from "react-icons/fa";
-import { z } from "zod";
+import * as z from "zod";
 
 const createdCitizenResponseSchema = z.object({ id: z.string() });
 

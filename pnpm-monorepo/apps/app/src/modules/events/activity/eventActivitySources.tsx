@@ -21,7 +21,7 @@ import {
   type Event,
   type Prisma,
 } from "@sam-monorepo/database/client";
-import { z } from "zod";
+import * as z from "zod";
 import {
   EventActivitySourceKey,
   EventScheduleEntry,

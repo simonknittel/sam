@@ -3,7 +3,7 @@
 import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { satisfiesAnyPermissionString } from "@/modules/auth/utils/satisfiesAnyPermissionString";
-import { z } from "zod";
+import * as z from "zod";
 import {
   getOnboardingTaskByKey,
   OnboardingStepKey,

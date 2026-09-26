@@ -10,7 +10,7 @@ import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { getServerCookieOptions } from "@/modules/common/utils/getServerCookieOptions";
 import { ASSUMABLE_USER_WHERE } from "@/modules/users/queries/getAssumableUsers";
 import { cookies } from "next/headers";
-import { z } from "zod";
+import * as z from "zod";
 import {
   ADMIN_MODE_COOKIE,
   ASSUME_USER_COOKIE,

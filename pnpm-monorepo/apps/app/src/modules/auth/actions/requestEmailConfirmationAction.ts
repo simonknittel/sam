@@ -10,7 +10,7 @@ import { log } from "@/modules/logging";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { redirect } from "next/navigation";
 import { serializeError } from "serialize-error";
-import { z } from "zod";
+import * as z from "zod";
 
 const schema = z.object({});
 

@@ -1,7 +1,7 @@
 import { prisma } from "@/db";
 import { ON_SITE_NOTIFICATIONS_PAGE_SIZE } from "@/modules/notifications/utils/config";
 import { TRPCError } from "@trpc/server";
-import { z } from "zod";
+import * as z from "zod";
 import { protectedProcedure, toTrpcError } from "../../trpc";
 
 /**

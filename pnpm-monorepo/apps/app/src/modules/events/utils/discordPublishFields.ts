@@ -1,6 +1,6 @@
 import { DISCORD_EVENT_LOCATION_MAX_LENGTH } from "@/modules/discord/utils/guildScheduledEventPayload";
 import { EventDiscordPublishTarget } from "@sam-monorepo/database/client";
-import { z } from "zod";
+import * as z from "zod";
 
 /**
  * Discord snowflakes are numeric strings well under this; the bound only

@@ -8,7 +8,7 @@ import {
   WIKI_PAGE_INDEX_MODES,
 } from "@sam-monorepo/wiki-editor";
 import { TRPCError } from "@trpc/server";
-import { z } from "zod";
+import * as z from "zod";
 import { protectedProcedure, toTrpcError } from "../../trpc";
 
 /**

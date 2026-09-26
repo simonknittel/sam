@@ -2,7 +2,7 @@ import { prisma } from "@/db";
 import { authenticate } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { cache } from "react";
-import { z } from "zod";
+import * as z from "zod";
 import { MAX_WIKI_FEATURED_PAGES } from "../utils/wikiFeaturedPages";
 import {
   wikiPageLinkSettingKey,

@@ -9,7 +9,7 @@ import { triggerNotifications } from "@/modules/notifications/utils/triggerNotif
 import { EventSource } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
 import { serializeError } from "serialize-error";
-import { z } from "zod";
+import * as z from "zod";
 import { EVENT_MANAGE_GUARD_SELECT } from "../queries/eventManageGuardSelect";
 import {
   DiscordSyncOutcome,

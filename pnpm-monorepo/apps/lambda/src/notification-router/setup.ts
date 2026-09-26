@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 import { fetchOptionalParameters, fetchParameters } from "../common/parameters";
 
 const parameterMap = {

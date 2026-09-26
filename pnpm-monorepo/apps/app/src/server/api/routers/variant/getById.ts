@@ -1,6 +1,6 @@
 import { authorize } from "@/modules/auth/server";
 import { TRPCError } from "@trpc/server";
-import { z } from "zod";
+import * as z from "zod";
 import { protectedProcedure } from "../../trpc";
 
 export const getById = protectedProcedure

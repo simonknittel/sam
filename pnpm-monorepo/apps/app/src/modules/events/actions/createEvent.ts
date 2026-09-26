@@ -24,7 +24,7 @@ import type { AuditEventInput } from "@sam-monorepo/domain";
 import { buildBriefingRootPageSeed } from "@sam-monorepo/domain";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { z } from "zod";
+import * as z from "zod";
 import { berlinWallTimeToUtc } from "../utils/berlinWallTime";
 import {
   CLONABLE_POSITION_SELECT,

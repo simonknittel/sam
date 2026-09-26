@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 import { log } from "../common/logger";
 import { fetchParameters } from "../common/parameters";
 

@@ -1,5 +1,5 @@
 import type { EventPosition } from "@sam-monorepo/database/browser";
-import { z } from "zod";
+import * as z from "zod";
 
 /**
  * A lineup and a briefing hang off either a real event or an event template

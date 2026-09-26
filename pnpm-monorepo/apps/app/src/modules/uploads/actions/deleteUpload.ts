@@ -10,7 +10,7 @@ import { log } from "@/modules/logging";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { revalidatePath } from "next/cache";
 import { serializeError } from "serialize-error";
-import { z } from "zod";
+import * as z from "zod";
 import { USAGE_SELECT } from "../queries/getUploads";
 import { decodeUploadFileName } from "../utils/decodeUploadFileName";
 import {

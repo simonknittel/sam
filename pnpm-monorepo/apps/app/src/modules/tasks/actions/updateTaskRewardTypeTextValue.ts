@@ -1,7 +1,7 @@
 "use server";
 
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
-import { z } from "zod";
+import * as z from "zod";
 import { createTaskFieldUpdateAction } from "../utils/createTaskFieldUpdateAction";
 
 const schema = z.object({

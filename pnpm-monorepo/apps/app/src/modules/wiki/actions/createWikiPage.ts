@@ -11,7 +11,7 @@ import {
   WikiPageVisibility,
 } from "@sam-monorepo/database/client";
 import { redirect } from "next/navigation";
-import { z } from "zod";
+import * as z from "zod";
 import {
   getWikiContext,
   type WikiSharedContextPage,

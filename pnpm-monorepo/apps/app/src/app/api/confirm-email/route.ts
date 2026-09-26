@@ -4,7 +4,7 @@ import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { getEmailConfirmationToken } from "@/modules/auth/queries/getEmailConfirmationToken";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import { NextResponse, type NextRequest } from "next/server";
-import { z } from "zod";
+import * as z from "zod";
 
 export const dynamic = "force-dynamic";
 

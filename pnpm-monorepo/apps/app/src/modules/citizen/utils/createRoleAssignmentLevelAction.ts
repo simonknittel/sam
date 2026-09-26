@@ -7,7 +7,7 @@ import type {
   RoleAssignmentLevelChangeType,
 } from "@sam-monorepo/database/client";
 import { refresh } from "next/cache";
-import { z } from "zod";
+import * as z from "zod";
 
 const schema = z.object({
   citizenId: z.cuid(),

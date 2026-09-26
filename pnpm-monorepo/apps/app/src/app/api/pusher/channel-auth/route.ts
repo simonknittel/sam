@@ -6,7 +6,7 @@ import { log } from "@/modules/logging";
 import { channelsClient } from "@/modules/pusher/utils/channelsClient";
 import { CITIZEN_CHANNEL_PREFIX } from "@sam-monorepo/notifications";
 import { NextResponse } from "next/server";
-import { z } from "zod";
+import * as z from "zod";
 
 const postBodySchema = z.object({
   socket_id: z.string(),

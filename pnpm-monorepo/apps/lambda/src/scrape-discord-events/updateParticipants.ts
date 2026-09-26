@@ -1,7 +1,7 @@
 import { prisma } from "@sam-monorepo/database";
 import { EventSource } from "@sam-monorepo/database/client";
 import { AuditEventType } from "@sam-monorepo/domain";
-import type { z } from "zod";
+import type * as z from "zod";
 import { createAuditEvents } from "../common/audit";
 import { getEventUsers } from "./discord/utils/getEventUsers";
 import type { eventSchema } from "./discord/utils/schemas";

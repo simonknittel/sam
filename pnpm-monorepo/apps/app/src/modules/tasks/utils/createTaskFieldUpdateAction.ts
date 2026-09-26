@@ -7,7 +7,7 @@ import type {
   AuditEventType,
 } from "@sam-monorepo/domain";
 import { revalidatePath } from "next/cache";
-import type { z } from "zod";
+import type * as z from "zod";
 import {
   requireManageableTask,
   type ManageableTask,

@@ -3,7 +3,7 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { type AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
+import * as z from "zod";
 import { type CyclePhase, getCurrentPhase } from "./getCurrentPhase";
 
 const schema = z.object({

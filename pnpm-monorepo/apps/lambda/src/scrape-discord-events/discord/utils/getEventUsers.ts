@@ -1,5 +1,5 @@
 import { setTimeout } from "node:timers/promises";
-import { z } from "zod";
+import * as z from "zod";
 import { log } from "../../../common/logger";
 import { checkResponseForError } from "./checkResponseForError";
 import { memberSchema, userSchema } from "./schemas";

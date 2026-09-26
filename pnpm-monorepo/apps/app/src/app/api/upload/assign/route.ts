@@ -19,7 +19,7 @@ import {
 import { EventSource } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
-import { z } from "zod";
+import * as z from "zod";
 
 const bodySchema = z.discriminatedUnion("resourceType", [
   z.object({

@@ -2,7 +2,7 @@
 
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { isWikiIframeSrcAllowed } from "@sam-monorepo/wiki-editor";
-import { z } from "zod";
+import * as z from "zod";
 import { getWikiContext } from "../queries/getWikiContext";
 import { getWikiIframeAllowlist } from "../queries/getWikiSettings";
 

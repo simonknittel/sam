@@ -11,7 +11,7 @@ import {
   type Task,
 } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
+import * as z from "zod";
 import { TASK_DESCRIPTION_MAX_LENGTH } from "../utils/taskConstraints";
 
 const schema = z.object({

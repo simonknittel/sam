@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 import { log } from "../common/logger";
 import { BirthdayGreetingHandler } from "./type-handlers/BirthdayGreeting";
 import { EventBriefingPublishedHandler } from "./type-handlers/EventBriefingPublished";

@@ -1,7 +1,7 @@
 "use client";
 
 import { FlowNodeMarkdownPosition } from "@sam-monorepo/database/browser";
-import z from "zod";
+import * as z from "zod";
 
 export const schema = z.object({
   id: z.cuid2(),

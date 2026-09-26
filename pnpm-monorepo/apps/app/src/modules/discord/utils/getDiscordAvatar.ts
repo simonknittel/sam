@@ -1,6 +1,6 @@
 import { env } from "@/env";
 import type { DiscordProfile } from "next-auth/providers/discord";
-import { type z } from "zod";
+import type * as z from "zod";
 import type { guildMemberResponseSchema } from "./schemas";
 
 export const getDiscordAvatar = (

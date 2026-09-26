@@ -21,7 +21,7 @@ import {
   yXmlFragmentToProseMirrorRootNode,
 } from "y-prosemirror";
 import * as Y from "yjs";
-import { z } from "zod";
+import * as z from "zod";
 import { env } from "./env.js";
 
 /**

@@ -7,7 +7,7 @@ import getLatestNoteAttributes from "@/modules/citizen/utils/getLatestNoteAttrib
 import { syncCitizenIdentityAfterLogChange } from "@/modules/citizen/utils/syncCitizenIdentityAfterLogChange";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import { NextResponse } from "next/server";
-import { z } from "zod";
+import * as z from "zod";
 
 type Params = Promise<{
   id: string;

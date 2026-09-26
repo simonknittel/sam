@@ -10,7 +10,7 @@ import {
   Prisma,
 } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
+import * as z from "zod";
 import { createEventActivity } from "../utils/eventActivity";
 import {
   getParticipatableAppEvent,

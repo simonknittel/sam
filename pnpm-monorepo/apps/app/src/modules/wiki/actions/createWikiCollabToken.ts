@@ -4,7 +4,7 @@ import { env } from "@/env";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import type { WikiCollabSessionTokenPayload } from "@sam-monorepo/wiki-editor";
 import { SignJWT } from "jose";
-import { z } from "zod";
+import * as z from "zod";
 import { getWikiPageScopedContext } from "../queries/getWikiPageScopedContext";
 
 const schema = z.object({

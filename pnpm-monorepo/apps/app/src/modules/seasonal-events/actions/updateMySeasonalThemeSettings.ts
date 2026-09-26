@@ -6,7 +6,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { SeasonalEventKey } from "@sam-monorepo/domain";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
+import * as z from "zod";
 import { getMySeasonalThemeSettings } from "../queries/getMySeasonalThemeSettings";
 
 /**

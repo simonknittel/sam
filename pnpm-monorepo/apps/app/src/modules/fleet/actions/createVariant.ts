@@ -8,7 +8,7 @@ import { getWikiContext } from "@/modules/wiki/queries/getWikiContext";
 import { getAccessibleWikiPage } from "@/modules/wiki/utils/getAccessibleWikiPage";
 import { VariantStatus } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
+import * as z from "zod";
 import { ExternalService } from "../types";
 import { createAndReturnTags } from "../utils/createAndReturnTags";
 import {

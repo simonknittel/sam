@@ -5,7 +5,7 @@ import { requireAuthenticationApi } from "@/modules/auth/server";
 import { confirmLog } from "@/modules/citizen/utils/confirmLog";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import { NextResponse } from "next/server";
-import { z } from "zod";
+import * as z from "zod";
 
 type Params = Promise<{
   id: string;

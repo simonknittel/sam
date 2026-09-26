@@ -137,6 +137,16 @@ const eslintConfig = defineConfig([
         },
       ],
 
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "ImportDeclaration[source.value='zod'] > :matches(ImportSpecifier[imported.name='z'], ImportDefaultSpecifier)",
+          message:
+            'Use `import * as z from "zod"`. With the named or default import, the client bundle keeps all Zod locales.',
+        },
+      ],
+
       "@typescript-eslint/restrict-template-expressions": [
         "error",
         {

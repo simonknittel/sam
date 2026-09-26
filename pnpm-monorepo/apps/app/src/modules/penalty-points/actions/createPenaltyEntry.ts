@@ -6,7 +6,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
+import * as z from "zod";
 
 const schema = z.object({
   citizenId: z.cuid(),

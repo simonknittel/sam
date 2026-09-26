@@ -6,7 +6,7 @@ import { TRPCError } from "@trpc/server";
 import OpenAI from "openai";
 import { type ChatCompletionMessageParam } from "openai/resources/index.mjs";
 import { serializeError } from "serialize-error";
-import { z } from "zod";
+import * as z from "zod";
 import { protectedProcedure } from "../../trpc";
 
 export const getRoleNameSuggestions = protectedProcedure.query(

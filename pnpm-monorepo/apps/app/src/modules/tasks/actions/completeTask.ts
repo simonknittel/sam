@@ -8,7 +8,7 @@ import { createSilcTransactions } from "@/modules/silc/utils/createSilcTransacti
 import { createId } from "@paralleldrive/cuid2";
 import { TaskRewardType, TaskVisibility } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
+import * as z from "zod";
 import { getTaskById } from "../queries/getTaskById";
 import { isAllowedToManageTask } from "../utils/isAllowedToTask";
 import { isTaskUpdatable } from "../utils/isTaskUpdatable";

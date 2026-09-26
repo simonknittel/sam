@@ -6,7 +6,7 @@ import {
 } from "@/modules/actions/utils/createAction";
 import { getServerCookieOptions } from "@/modules/common/utils/getServerCookieOptions";
 import { cookies } from "next/headers";
-import { z } from "zod";
+import * as z from "zod";
 import {
   ADMIN_MODE_COOKIE,
   ADMIN_MODE_COOKIE_MAX_AGE,

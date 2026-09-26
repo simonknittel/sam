@@ -10,7 +10,7 @@ import { scrapeOrganizationLogo } from "@/modules/organizations/utils/scrapeOrga
 import { ConfirmationStatus } from "@sam-monorepo/database/client";
 import { NextResponse } from "next/server";
 import { serializeError } from "serialize-error";
-import { z } from "zod";
+import * as z from "zod";
 
 const postBodySchema = z.object({
   spectrumId: z.string().trim().min(1),

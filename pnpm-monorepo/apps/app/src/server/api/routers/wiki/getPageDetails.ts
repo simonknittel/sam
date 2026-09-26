@@ -1,7 +1,7 @@
 import { prisma } from "@/db";
 import { getWikiContext } from "@/modules/wiki/queries/getWikiContext";
 import { TRPCError } from "@trpc/server";
-import { z } from "zod";
+import * as z from "zod";
 import { protectedProcedure, toTrpcError } from "../../trpc";
 
 /**

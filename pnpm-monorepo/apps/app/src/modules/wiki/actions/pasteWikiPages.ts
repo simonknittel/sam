@@ -14,7 +14,7 @@ import { WikiPageSnapshotKind } from "@sam-monorepo/database/client";
 import { cookies } from "next/headers";
 import { redirect, unstable_rethrow } from "next/navigation";
 import { serializeError } from "serialize-error";
-import { z } from "zod";
+import * as z from "zod";
 import {
   getWikiContext,
   type WikiSharedContextPage,

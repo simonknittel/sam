@@ -8,7 +8,7 @@ import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { FaChevronLeft } from "react-icons/fa";
 import { serializeError } from "serialize-error";
-import { z } from "zod";
+import * as z from "zod";
 
 const schema = z.array(
   z.object({

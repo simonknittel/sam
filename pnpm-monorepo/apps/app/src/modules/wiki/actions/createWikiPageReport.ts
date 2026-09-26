@@ -6,7 +6,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { decodeUploadFileName } from "@/modules/uploads/utils/decodeUploadFileName";
-import { z } from "zod";
+import * as z from "zod";
 import {
   getWikiPageScopedContext,
   revalidateWikiScope,

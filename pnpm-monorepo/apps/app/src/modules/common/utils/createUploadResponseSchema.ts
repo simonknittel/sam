@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 
 /** Response of POST /api/upload (create Upload record + presigned PUT URL) */
 export const createUploadResponseSchema = z.object({

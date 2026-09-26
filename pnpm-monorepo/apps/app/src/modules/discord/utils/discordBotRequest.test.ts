@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { z } from "zod";
+import * as z from "zod";
 
 const API_BASE_URL = "https://discord.example/api/v10";
 const BOT_TOKEN = "test-bot-token";
