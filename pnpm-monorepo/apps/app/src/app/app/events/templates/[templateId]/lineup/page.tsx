@@ -32,18 +32,21 @@ const EventTemplateLineup = async ({ templateId }: Props) => {
   const context = await getEventTemplateById(templateId);
   if (!context) notFound();
 
+  const canEdit =
+    context.permissions.canEdit && context.template.deletedAt === null;
+
   const [positions, variants] = await Promise.all([
     getEventTemplateLineup(templateId),
-    getVariantCatalog(),
+    // Only the position forms use the catalog. It is large, thus a viewer
+    // who cannot edit the template does not get it.
+    canEdit ? getVariantCatalog() : [],
   ]);
 
   return (
     <EventTemplateLineupTab
       templateId={templateId}
       positions={positions}
-      canEdit={
-        context.permissions.canEdit && context.template.deletedAt === null
-      }
+      canEdit={canEdit}
       variants={variants}
     />
   );

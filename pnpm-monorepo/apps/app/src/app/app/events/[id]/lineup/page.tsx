@@ -46,7 +46,9 @@ export default async function Page({
   const [positions, variants, myShips, allEventCitizens] = await Promise.all([
     getEventPositions(event.id),
 
-    getVariantCatalog(),
+    // Only the position forms use the catalog. It is large, thus a viewer
+    // who cannot manage the positions does not get it.
+    showManagePositions ? getVariantCatalog() : [],
 
     getMyFleet().then((result) => result.ships),
 
