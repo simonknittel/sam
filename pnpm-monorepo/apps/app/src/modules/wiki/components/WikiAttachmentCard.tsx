@@ -1,28 +1,14 @@
-"use client";
-
-import {
-  formatWikiAttachmentSize,
-  WikiAttachment,
-} from "@sam-monorepo/wiki-editor";
-import type { AnyExtension } from "@tiptap/core";
-import {
-  NodeViewWrapper,
-  ReactNodeViewRenderer,
-  type NodeViewProps,
-} from "@tiptap/react";
+import { formatWikiAttachmentSize } from "@sam-monorepo/wiki-editor/helpers";
 import type { CSSProperties } from "react";
 import { ReportWikiAttachmentModal } from "./ReportWikiAttachmentModal";
-import { wikiBlockLayoutStyle } from "./wikiBlockLayoutStyle";
 
-interface CardProps {
+interface ContentProps {
   readonly uploadId: string;
   readonly fileName: string;
   readonly size: number | null;
   readonly mimeType: string | null;
   /** Page containing the attachment — without it the report button is omitted */
   readonly pageId?: string;
-  /** The node's width/position styles (wikiBlockLayoutStyle) */
-  readonly style?: CSSProperties;
 }
 
 /**
@@ -30,15 +16,17 @@ interface CardProps {
  * live inside the download link, so a wrapper carries both (positioning:
  * wikiEditor.css, [data-wiki-attachment-card]). The anchor mirrors the
  * node's renderHTML incl. the data attributes, so copying the card from
- * the read view pastes back into the editor as an attachment node.
+ * the read view pastes back into the editor as an attachment node. Shared
+ * with the editor node view (WikiAttachmentNodeView), which supplies its
+ * own wrapper.
  */
-const WikiAttachmentCardContent = ({
+export const WikiAttachmentCardContent = ({
   uploadId,
   fileName,
   size,
   mimeType,
   pageId,
-}: Omit<CardProps, "style">) => (
+}: ContentProps) => (
   <>
     <a
       data-wiki-attachment=""
@@ -62,60 +50,17 @@ const WikiAttachmentCardContent = ({
   </>
 );
 
-/** Static render of an attachment card (readers' first paint). */
-export const WikiAttachmentCard = ({ style, ...props }: CardProps) => (
+interface Props extends ContentProps {
+  /** The node's width/position styles (wikiBlockLayoutStyle) */
+  readonly style?: CSSProperties;
+}
+
+/**
+ * Static render of an attachment card (readers' first paint). Loads no
+ * editor code, so pages that only show static content stay small.
+ */
+export const WikiAttachmentCard = ({ style, ...props }: Props) => (
   <div data-wiki-attachment-card="" style={style}>
     <WikiAttachmentCardContent {...props} />
   </div>
 );
-
-const WikiAttachmentNodeView = ({ node, extension }: NodeViewProps) => {
-  const { pageId } = extension.options as { pageId: string };
-
-  return (
-    <NodeViewWrapper
-      data-wiki-attachment-card=""
-      style={wikiBlockLayoutStyle(node.attrs)}
-    >
-      <WikiAttachmentCardContent
-        uploadId={String(node.attrs.uploadId ?? "")}
-        fileName={String(node.attrs.fileName ?? "")}
-        size={(node.attrs.size as number | null) ?? null}
-        mimeType={(node.attrs.mimeType as string | null) ?? null}
-        pageId={pageId}
-      />
-    </NodeViewWrapper>
-  );
-};
-
-/**
- * The shared package's attachment node plus a React node view adding the
- * report button. Same name, attributes and schema — only the in-editor
- * rendering differs. Used for the read-only live collab view; while
- * editing, the plain node keeps its native drag/selection behavior.
- */
-const WikiAttachmentWithReportButton = WikiAttachment.extend<{
-  pageId: string;
-}>({
-  addOptions() {
-    return { pageId: "" };
-  },
-
-  addNodeView() {
-    return ReactNodeViewRenderer(WikiAttachmentNodeView);
-  },
-});
-
-/**
- * Swaps the plain attachment node in an extension list for the
- * report-button variant, keeping its position in the list.
- */
-export const withWikiAttachmentReportButton = (
-  extensions: AnyExtension[],
-  pageId: string,
-): AnyExtension[] =>
-  extensions.map((extension) =>
-    extension.name === WikiAttachment.name
-      ? WikiAttachmentWithReportButton.configure({ pageId })
-      : extension,
-  );

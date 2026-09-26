@@ -14,12 +14,12 @@ import { Placeholder } from "@tiptap/extensions";
 import type { Schema } from "@tiptap/pm/model";
 import StarterKit from "@tiptap/starter-kit";
 import { common, createLowlight } from "lowlight";
+import type { WikiMentionedCitizen } from "./resolveWikiCitizenMention.js";
+import type { WikiLinkedPages } from "./resolveWikiPageLink.js";
+import type { WikiLinkedVariant } from "./resolveWikiVariantLink.js";
 import { WikiAttachment } from "./wikiAttachmentNode.js";
 import { WikiCallout } from "./wikiCalloutNode.js";
-import {
-  WikiCitizenMention,
-  type WikiMentionedCitizen,
-} from "./wikiCitizenMentionNode.js";
+import { WikiCitizenMention } from "./wikiCitizenMentionNode.js";
 import { WikiEmbed } from "./wikiEmbedNode.js";
 import { WikiFloatImage } from "./wikiFloatImageNode.js";
 import {
@@ -31,7 +31,7 @@ import { WikiHeadingIds } from "./wikiHeadingIds.js";
 import { WikiHighlight } from "./wikiHighlightMark.js";
 import { WikiImage } from "./wikiImageNode.js";
 import { WikiPageIndex } from "./wikiPageIndexNode.js";
-import { WikiPageLink, type WikiPageLinkedPage } from "./wikiPageLinkNode.js";
+import { WikiPageLink } from "./wikiPageLinkNode.js";
 import {
   WIKI_NARROW_WIDTH_PX,
   WIKI_WIDE_WIDTH_PX,
@@ -51,10 +51,7 @@ import {
   WikiTextOnlyBlockGuard,
 } from "./wikiTextOnlyBlocks.js";
 import { WikiTextSize, withWikiTextSize } from "./wikiTextSize.js";
-import {
-  WikiVariantLink,
-  type WikiLinkedVariant,
-} from "./wikiVariantLinkNode.js";
+import { WikiVariantLink } from "./wikiVariantLinkNode.js";
 
 export interface WikiEditorExtensionsOptions {
   /** Undo/redo comes from Yjs in the collab editor instead of StarterKit */
@@ -76,7 +73,7 @@ export interface WikiEditorExtensionsOptions {
    * links' labels and hrefs at render time. Only affects rendering, not
    * the schema.
    */
-  pages?: Readonly<Record<string, WikiPageLinkedPage>>;
+  pages?: WikiLinkedPages;
   /**
    * Current handles of the citizens mentioned on the page, by id — resolves
    * citizen mentions' labels at render time. Only affects rendering, not

@@ -1,4 +1,8 @@
 import { mergeAttributes, Node } from "@tiptap/core";
+import {
+  resolveWikiCitizenMention,
+  type WikiMentionedCitizen,
+} from "./resolveWikiCitizenMention.js";
 import { walkWikiContent } from "./walkWikiContent.js";
 
 declare module "@tiptap/core" {
@@ -13,10 +17,6 @@ declare module "@tiptap/core" {
   }
 }
 
-export interface WikiMentionedCitizen {
-  handle: string | null;
-}
-
 export interface WikiCitizenMentionOptions {
   /**
    * Current handles of the citizens mentioned on the page, by id. Labels
@@ -26,32 +26,6 @@ export interface WikiCitizenMentionOptions {
    */
   citizens: Readonly<Record<string, WikiMentionedCitizen>>;
 }
-
-export interface ResolvedWikiCitizenMention {
-  citizenId: string;
-  label: string;
-}
-
-/**
- * Resolves a mention's target and label from its attributes and the
- * citizens map — the current handle wins, the handle stored in the document
- * is the fallback. Null when neither is available.
- */
-export const resolveWikiCitizenMention = (
-  citizens: Readonly<Record<string, WikiMentionedCitizen>>,
-  attributes: Readonly<Record<string, unknown>>,
-): ResolvedWikiCitizenMention | null => {
-  const citizenId =
-    typeof attributes.citizenId === "string" ? attributes.citizenId : "";
-  const storedHandle =
-    typeof attributes.handle === "string" && attributes.handle
-      ? attributes.handle
-      : null;
-  const label = citizens[citizenId]?.handle ?? storedHandle;
-
-  if (!citizenId || label === null) return null;
-  return { citizenId, label };
-};
 
 /**
  * An inline mention of a citizen (spynet entity), rendered as a link to the

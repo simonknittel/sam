@@ -2,8 +2,10 @@
   "name": "@sam-monorepo/wiki-editor",
   "private": true,
   "type": "module",
+  "sideEffects": false,
   "exports": {
-    ".": "./dist/index.js"
+    ".": "./dist/index.js",
+    "./helpers": "./dist/helpers.js"
   },
   "scripts": {
     "postinstall": "tsc -p tsconfig.build.json",
