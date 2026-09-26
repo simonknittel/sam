@@ -6,9 +6,7 @@
 #
 #   bash .agents/skills/run-app/scripts/up.sh [--slot N] [--no-seed]
 #
-# Prints the URL to hand the user on the last line, plus whether a usable
-# session exists — without a session the user cannot get past the login
-# redirect, and on a worktree port Discord OAuth cannot create one.
+# Prints the URL to hand the user on the last lines, plus how to log in.
 set -euo pipefail
 
 CHECKOUT="$(git rev-parse --show-toplevel)"
@@ -205,20 +203,6 @@ fi
 STATUS=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:$APP_PORT/")
 [ "$STATUS" = "200" ] || { echo "smoke check returned $STATUS" >&2; exit 1; }
 
-# ------------------------------------------------------------------ session
-
-# Report this up front: no amount of stack tuning helps if the user cannot
-# get past the login redirect, and on a worktree port Discord OAuth cannot
-# mint a session (the callback is pinned to NEXTAUTH_URL).
-SESSIONS=$(psql_local -tAc 'SELECT count(*) FROM "Session" WHERE expires > now()')
-
 echo
 echo "READY: http://localhost:$APP_PORT"
-if [ "$SESSIONS" -gt 0 ]; then
-  echo "session: $SESSIONS valid — the user should already be signed in"
-else
-  echo "session: NONE — the user cannot sign in on this port."
-  echo "         See 'Sessions' in SKILL.md, or add"
-  echo "         http://localhost:$APP_PORT/api/auth/callback/discord to the"
-  echo "         Discord app's OAuth2 redirect URIs to remove the detour."
-fi
+echo "login: 'Dev login' at the top of the login page (see Sessions in SKILL.md)"

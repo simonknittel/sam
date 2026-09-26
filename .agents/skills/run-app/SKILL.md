@@ -24,10 +24,7 @@ procedure is the ~17 round trips, not one single step.
 Act on the last two lines:
 
 - `READY: http://localhost:<port>` — the URL to hand over.
-- `session: …` — **read this before you hand over the URL.** Without a valid
-  session, the user only gets the login redirect, and on a worktree port
-  Discord OAuth cannot create a session. Solve this in the same pass — see
-  [Sessions](#sessions).
+- `login: …` — how to log in; see [Sessions](#sessions).
 
 The one requirement that the script cannot supply is
 `pnpm-monorepo/apps/app/.env`. The file is gitignored, and you must copy it
@@ -91,41 +88,34 @@ restart that stack (`docker compose start`) or to remove it correctly (see
 
 ## Sessions
 
-Login is Discord OAuth, and a program cannot drive it. Thus authenticated
-pages are only reachable through the user's own browser session. A 307 to `/`
-on an authenticated path is the expected unauthenticated redirect, not a
-failure.
+A program cannot drive the Discord OAuth login. A 307 to `/` on an
+authenticated path is the expected unauthenticated redirect, not a failure.
 
-Sessions are in the database, and localhost cookies ignore the port. Thus a
-session that came with the seed dump usually works.
+In development, the login page has a **Dev login** control at the top. It
+lists the admins of the local database that have a Discord account, and a
+click signs in as that admin without Discord. To test as a different user,
+sign in as an admin and use "Assume user". The control and its server action
+do not operate outside of development.
 
-**The one-time fix that removes the problem completely** is to add
-`http://localhost:<port>/api/auth/callback/discord` for each slot port to the
-OAuth2 redirect URIs of the Discord application. Offer this fix — the user
-must do it. Without it, a fresh Discord login on a worktree port fails with a
-redirect_uri error.
+The name of the session cookie contains the port:
+`sam-dev-<port>.session-token`. Thus the logins of the stacks do not
+interfere, and the sessions that the seed copies from the main checkout do
+not log anybody in. On each new stack, sign in once with the dev login. When
+you hand over the URL of a new worktree stack, tell the user this.
 
-**In the other case, when `up.sh` reports `session: NONE`,** the user must
-sign in on the MAIN checkout (port 3000), and you copy the new row across. Do
-this as one pass; each round trip costs the user a wait:
-
-1. Stop the worktree dev server and run `up.sh` from the main checkout
-   instead. Hand over `http://localhost:3000` and say explicitly that the
-   main checkout does NOT contain the changes of the branch — it is only
-   there to get a session.
-2. When they confirm, read the id of the new row with
-   `SELECT id, expires > now() FROM "Session"`. The sign-in creates a NEW
-   row, thus compare against the rows that the worktree already has.
-3. Copy that one row across (below), restart the worktree dev server, and
-   verify before you hand the URL back:
+To examine an authenticated page yourself, click the dev login in a browser
+(see the `next-dev-loop` skill). For a plain HTTP request, send a valid
+session of the user (the user id is in `AGENTS.md`) from the database of
+the stack, with the cookie name of the port:
 
 ```bash
-TOKEN=$(docker compose exec -T psql psql -U postgres -d db -tAc "SELECT \"sessionToken\" FROM \"Session\" WHERE id = '<id>'")
-curl -s -o /dev/null -w '%{http_code}\n' --cookie "next-auth.session-token=${TOKEN}" http://localhost:3001/app   # 200
+TOKEN=$(docker compose exec -T psql psql -U postgres -d db -tAc "SELECT \"sessionToken\" FROM \"Session\" WHERE \"userId\" = '<user id>' AND expires > now() LIMIT 1")
+curl -s -o /dev/null -w '%{http_code}\n' --cookie "sam-dev-3001.session-token=${TOKEN}" http://localhost:3001/app   # 200
 ```
 
 Print only the status code — the token is a credential and must never go
-into the transcript. The browser of the user needs no action.
+into the transcript. If no valid session exists, sign in once with the dev
+login first.
 
 Admin pages also require the cookie `enable_admin=1`.
 
@@ -139,8 +129,8 @@ turns to discover that again. `COPY … TO STDOUT` piped into
 ```bash
 cd <worktree>
 docker exec sam-psql-1 psql -U postgres -d db \
-  -c "COPY (SELECT * FROM \"Session\" WHERE id = '<id>') TO STDOUT" \
-  | docker compose exec -T psql psql -U postgres -d db -c "COPY \"Session\" FROM STDIN"
+  -c "COPY (SELECT * FROM \"<Table>\" WHERE id = '<id>') TO STDOUT" \
+  | docker compose exec -T psql psql -U postgres -d db -c "COPY \"<Table>\" FROM STDIN"
 ```
 
 The two schemas must already match, and the target row must not exist yet —
