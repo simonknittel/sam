@@ -57,9 +57,7 @@ interface Fixtures {
   readonly enableAdminMode: () => Promise<void>;
   /**
    * Names the local calendar date (`YYYY-MM-DD`) the seasonal themes resolve
-   * for, which lets a test walk a date range without waiting for it. The app
-   * honours the cookie only while `SEASONAL_DATE_OVERRIDE_ENABLED` is set,
-   * which the stack does (see setup/stack.ts).
+   * for, which lets a test walk a date range without waiting for it.
    */
   readonly setSeasonalDate: (date: string) => Promise<void>;
   readonly databaseReset: undefined;

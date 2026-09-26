@@ -1,7 +1,6 @@
 import "server-only";
 
 import { prisma } from "@/db";
-import { env } from "@/env";
 import { authenticate } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
@@ -24,20 +23,10 @@ import {
 } from "../utils/seasonalDateOverrideCookie";
 import type { SeasonalThemeResolution } from "../utils/types";
 
-/** The values a `.env` file can use to switch the date override on */
-const OVERRIDE_ENABLED_VALUES: readonly string[] = ["1", "true"];
-
-const readDateOverride = async () => {
-  const overrideEnabled = OVERRIDE_ENABLED_VALUES.includes(
-    env.SEASONAL_DATE_OVERRIDE_ENABLED ?? "",
+const readDateOverride = async () =>
+  parseSeasonalDateOverrideCookie(
+    (await cookies()).get(SEASONAL_DATE_COOKIE)?.value,
   );
-
-  const cookieValue = overrideEnabled
-    ? (await cookies()).get(SEASONAL_DATE_COOKIE)?.value
-    : undefined;
-
-  return parseSeasonalDateOverrideCookie(cookieValue, overrideEnabled);
-};
 
 /** The values of a citizen which the resolution needs */
 interface ViewerCitizen {
