@@ -31,8 +31,8 @@ signs in as an admin of the local database without Discord, for example on
 the dev server of a worktree or for an AI agent. It lists only admins that
 have a Discord account. On a fresh database, log in with Discord first (see
 step 13). To test as a different user, sign in as an admin and use "Assume
-user". The control and its server action do not operate outside of
-development.
+user" in the admin toolbar. The control and its server action do not
+operate outside of development.
 
 ### Wiki realtime collaboration
 

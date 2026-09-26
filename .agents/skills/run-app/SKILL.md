@@ -94,8 +94,8 @@ authenticated path is the expected unauthenticated redirect, not a failure.
 In development, the login page has a **Dev login** control at the top. It
 lists the admins of the local database that have a Discord account, and a
 click signs in as that admin without Discord. To test as a different user,
-sign in as an admin and use "Assume user". The control and its server action
-do not operate outside of development.
+sign in as an admin and use "Assume user" in the admin toolbar. The control
+and its server action do not operate outside of development.
 
 The name of the session cookie contains the port:
 `sam-dev-<port>.session-token`. Thus the logins of the stacks do not
