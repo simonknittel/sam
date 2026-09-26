@@ -141,9 +141,15 @@ const eslintConfig = defineConfig([
         "error",
         {
           selector:
-            "ImportDeclaration[source.value='zod'] > :matches(ImportSpecifier[imported.name='z'], ImportDefaultSpecifier)",
+            "ImportDeclaration:matches([source.value='zod'], [source.value='zod/mini']) > :matches(ImportSpecifier[imported.name='z'], ImportDefaultSpecifier)",
           message:
-            'Use `import * as z from "zod"`. With the named or default import, the client bundle keeps all Zod locales.',
+            'Use `import * as z from "zod"` (or "zod/mini"). With the named or default import, the client bundle keeps all Zod locales.',
+        },
+        {
+          selector:
+            "Program:has(> ExpressionStatement[directive='use client']) ImportDeclaration[source.value='zod'][importKind!='type']",
+          message:
+            'Use `import * as z from "zod/mini"` in a client module. Full Zod adds about 100 KB to each page that loads the module.',
         },
       ],
 
