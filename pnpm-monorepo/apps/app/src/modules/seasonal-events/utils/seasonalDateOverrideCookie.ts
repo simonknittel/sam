@@ -9,8 +9,10 @@ import { z } from "zod";
  */
 export const SEASONAL_DATE_COOKIE = "seasonal-date";
 
+export const SEASONAL_DATE_COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
+
 /** `YYYY-MM-DD` has exactly 10 characters */
-const SEASONAL_DATE_LENGTH = 10;
+export const SEASONAL_DATE_LENGTH = 10;
 
 const cookieSchema = z
   .string()
