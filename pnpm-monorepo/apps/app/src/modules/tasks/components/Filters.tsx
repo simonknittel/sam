@@ -10,6 +10,7 @@ export const Filters = () => {
           { value: "open", label: "Offen", default: true },
           { value: "closed", label: "Geschlossen" },
         ]}
+        resetCursorPagination
       />
 
       <RadioFilter
@@ -19,6 +20,7 @@ export const Filters = () => {
           { value: "all", label: "Alle", default: true },
           { value: "yes", label: "Mir" },
         ]}
+        resetCursorPagination
       />
 
       <RadioFilter
@@ -28,6 +30,7 @@ export const Filters = () => {
           { value: "others", label: "Alle", default: true },
           { value: "me", label: "Mir" },
         ]}
+        resetCursorPagination
       />
     </>
   );

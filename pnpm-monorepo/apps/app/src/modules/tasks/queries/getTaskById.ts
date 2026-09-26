@@ -4,17 +4,16 @@ import { withTrace } from "@/modules/tracing/utils/withTrace";
 import type { Task } from "@sam-monorepo/database/client";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
-import { isVisibleForCurrentUser } from "../utils/isVisibleForCurrentUser";
+import { getVisibleTasksWhere } from "./getVisibleTasksWhere";
 
 export const getTaskById = cache(
   withTrace("getTaskById", async (id: Task["id"]) => {
     const authentication = await requireAuthentication();
     if (!(await authentication.authorize("task", "read"))) forbidden();
 
-    const task = await prisma.task.findUnique({
+    return prisma.task.findFirst({
       where: {
-        id,
-        deletedAt: null,
+        AND: [{ id, deletedAt: null }, await getVisibleTasksWhere()],
       },
       include: {
         assignments: {
@@ -29,11 +28,5 @@ export const getTaskById = cache(
         createdBy: { select: { id: true, handle: true } },
       },
     });
-
-    if (!task) return null;
-
-    if (!(await isVisibleForCurrentUser(task))) return null;
-
-    return task;
   }),
 );

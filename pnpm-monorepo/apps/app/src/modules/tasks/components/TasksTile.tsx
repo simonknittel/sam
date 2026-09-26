@@ -1,6 +1,7 @@
+import { CursorPaginationControls } from "@/modules/common/CursorPagination/CursorPaginationControls";
+import { createCursorPaginationLoader } from "@/modules/common/CursorPagination/createCursorPaginationLoader";
 import clsx from "clsx";
 import {
-  createLoader,
   parseAsString,
   parseAsStringLiteral,
   type SearchParams,
@@ -8,7 +9,7 @@ import {
 import { getTasks } from "../queries/getTasks";
 import { Task } from "./Task";
 
-const loadSearchParams = createLoader({
+const loadSearchParams = createCursorPaginationLoader({
   status: parseAsString.withDefault("open"),
   accepted: parseAsStringLiteral(["all", "yes"]).withDefault("all"),
   created_by: parseAsStringLiteral(["others", "me"]).withDefault("others"),
@@ -20,9 +21,16 @@ interface Props {
 }
 
 export const TasksTile = async ({ className, searchParams }: Props) => {
-  const { status, accepted, created_by } = await loadSearchParams(searchParams);
+  const { status, accepted, created_by, cursor, direction } =
+    await loadSearchParams(searchParams);
 
-  let tasks = await getTasks(status, accepted, created_by);
+  const { tasks, nextCursor, prevCursor } = await getTasks(
+    status,
+    accepted,
+    created_by,
+    cursor,
+    direction,
+  );
 
   if (tasks.length <= 0)
     return (
@@ -33,39 +41,17 @@ export const TasksTile = async ({ className, searchParams }: Props) => {
       </section>
     );
 
-  if (status === "closed") {
-    tasks = tasks.toSorted((a, b) => {
-      const aDate = a.completedAt
-        ? a.completedAt
-        : a.cancelledAt
-          ? a.cancelledAt
-          : a.deletedAt
-            ? a.deletedAt
-            : a.expiresAt
-              ? a.expiresAt
-              : a.createdAt;
-      const bDate = b.completedAt
-        ? b.completedAt
-        : b.cancelledAt
-          ? b.cancelledAt
-          : b.deletedAt
-            ? b.deletedAt
-            : b.expiresAt
-              ? b.expiresAt
-              : b.createdAt;
-
-      if (aDate > bDate) return -1;
-      if (aDate < bDate) return 1;
-
-      return 0;
-    });
-  }
-
   return (
     <section className={clsx("flex flex-col gap-px", className)}>
       {tasks.map((task) => (
         <Task key={task.id} task={task} />
       ))}
+
+      <CursorPaginationControls
+        nextCursor={nextCursor}
+        prevCursor={prevCursor}
+        className="mt-4"
+      />
     </section>
   );
 };
