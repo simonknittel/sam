@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  DiscordChannelType,
+  DiscordScheduledEventEntityType,
+  DiscordScheduledEventPrivacyLevel,
+} from "./enums";
+import {
   buildCreateGuildScheduledEventPayload,
   buildModifyGuildScheduledEventPayload,
   findContentProblem,
@@ -9,11 +14,6 @@ import {
   type GuildScheduledEventContent,
   type GuildScheduledEventTarget,
 } from "./guildScheduledEventPayload";
-import {
-  DiscordChannelType,
-  DiscordScheduledEventEntityType,
-  DiscordScheduledEventPrivacyLevel,
-} from "./schemas";
 
 const NOW = new Date("2027-03-01T12:00:00.000Z");
 

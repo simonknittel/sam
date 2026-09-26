@@ -1,4 +1,4 @@
-import { eventContainerSchema } from "@/modules/events/utils/eventContainer";
+import { eventContainerSchema } from "@/modules/events/utils/eventContainerSchema";
 import {
   getEventWikiContext,
   hasReadableEventWikiRoot,

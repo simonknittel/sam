@@ -7,8 +7,8 @@ import {
   MAXIMUM_RAW_LINE_LENGTH,
   MAXIMUM_UPLOAD_ENTRIES,
   parseUploadFormData,
-  uploadEntriesSchema,
 } from "./uploadEntries";
+import { uploadEntriesSchema } from "./uploadEntriesSchema";
 import { validateUploadEntries } from "./validateUploadEntries";
 
 const CRASH_EVENT_AT = "2026-09-01T16:15:11.246Z";

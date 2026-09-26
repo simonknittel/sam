@@ -2,7 +2,7 @@ import {
   DiscordChannelType,
   DiscordScheduledEventEntityType,
   DiscordScheduledEventPrivacyLevel,
-} from "./schemas";
+} from "./enums";
 
 /**
  * The guild scheduled event's page on Discord, as a path for `DiscordButton`.

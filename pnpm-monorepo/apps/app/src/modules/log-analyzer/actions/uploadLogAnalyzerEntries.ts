@@ -7,10 +7,8 @@ import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { getUnleashFlag } from "@/modules/common/utils/getUnleashFlag";
 import { UNLEASH_FLAG } from "@/modules/common/utils/UNLEASH_FLAG";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import {
-  parseUploadFormData,
-  uploadEntriesSchema,
-} from "../utils/uploadEntries";
+import { parseUploadFormData } from "../utils/uploadEntries";
+import { uploadEntriesSchema } from "../utils/uploadEntriesSchema";
 import { validateUploadEntries } from "../utils/validateUploadEntries";
 
 const validateEntries = withTrace(
