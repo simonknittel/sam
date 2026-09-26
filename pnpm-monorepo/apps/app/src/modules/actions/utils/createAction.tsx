@@ -3,6 +3,7 @@ import {
   type requireAuthentication,
 } from "@/modules/auth/server";
 import { requireConfirmedEmailForAction } from "@/modules/auth/utils/emailConfirmation";
+import { isAdminBehindSession } from "@/modules/auth/utils/isAdminBehindSession";
 import { log } from "@/modules/logging";
 import { getTracer } from "@/modules/tracing/utils/getTracer";
 import { SpanStatusCode } from "@opentelemetry/api";
@@ -33,6 +34,71 @@ export type ActionResponse =
       requestPayload: FormData;
     };
 
+type Authentication = Exclude<
+  Awaited<ReturnType<typeof requireAuthentication>>,
+  false
+>;
+
+/** The check an action runs on the session before it validates the request */
+export enum ActionGate {
+  /**
+   * The same confirmed-email and clearance (`login`/`manage`) gates as pages
+   * and API routes
+   */
+  Clearance = "clearance",
+  /**
+   * Only an admin, also while they assume a different user. The admin
+   * toolbar shows on the pages of the other gates, and an assumed user can
+   * be without clearance.
+   */
+  Admin = "admin",
+  /**
+   * For the few actions which must be reachable before the other gates, e.g.
+   * requesting the confirmation email itself
+   */
+  None = "none",
+}
+
+const passesGate = async (
+  gate: ActionGate,
+  authentication: Authentication,
+  actionName: string,
+) => {
+  switch (gate) {
+    case ActionGate.Clearance:
+      try {
+        await requireConfirmedEmailForAction(authentication.session);
+      } catch {
+        return false;
+      }
+
+      if (await authentication.authorize("login", "manage")) return true;
+
+      log.info("Forbidden request to action", {
+        actionName,
+        userId: authentication.session.user.id,
+        reason: "Missing clearance",
+      });
+      return false;
+
+    case ActionGate.Admin:
+      if (isAdminBehindSession(authentication.session)) return true;
+
+      log.info("Forbidden request to action", {
+        actionName,
+        userId: authentication.session.user.id,
+        reason: "No admin behind the session",
+      });
+      return false;
+
+    case ActionGate.None:
+      return true;
+
+    default:
+      throw new Error(`Unknown action gate: ${gate satisfies never}`);
+  }
+};
+
 /**
  * The `Response` generic widens the return type for actions that respond
  * with more than an ActionResponse (e.g. a minted token) — the wrapper's
@@ -47,10 +113,7 @@ export const createAuthenticatedAction = <
   zodSchema: T,
   action: (
     formData: FormData,
-    authentication: Exclude<
-      Awaited<ReturnType<typeof requireAuthentication>>,
-      false
-    >,
+    authentication: Authentication,
     data: z.infer<T>,
     t: Awaited<ReturnType<typeof getTranslations>>,
   ) => Promise<ActionResponse | NoInfer<Response>>,
@@ -61,13 +124,8 @@ export const createAuthenticatedAction = <
      * (formData.getAll) or per-field normalization pass their own mapping.
      */
     parseFormData?: (formData: FormData) => unknown;
-    /**
-     * By default actions enforce the same confirmed-email and clearance
-     * (`login`/`manage`) gates as pages and API routes. The few actions
-     * which must be reachable before passing those gates (e.g. requesting
-     * the confirmation email itself) opt out with this flag.
-     */
-    skipEmailConfirmationAndClearanceGates?: boolean;
+    /** `ActionGate.Clearance` by default */
+    gate?: ActionGate;
   },
 ): ((formData: FormData) => Promise<ActionResponse | Response>) => {
   return async (formData: FormData) => {
@@ -86,29 +144,17 @@ export const createAuthenticatedAction = <
               requestPayload: formData,
             };
 
-          if (!options?.skipEmailConfirmationAndClearanceGates) {
-            try {
-              await requireConfirmedEmailForAction(authentication.session);
-            } catch {
-              return {
-                error: t("Common.forbidden"),
-                requestPayload: formData,
-              };
-            }
-
-            if (!(await authentication.authorize("login", "manage"))) {
-              log.info("Forbidden request to action", {
-                actionName: name,
-                userId: authentication.session.user.id,
-                reason: "Missing clearance",
-              });
-
-              return {
-                error: t("Common.forbidden"),
-                requestPayload: formData,
-              };
-            }
-          }
+          if (
+            !(await passesGate(
+              options?.gate ?? ActionGate.Clearance,
+              authentication,
+              name,
+            ))
+          )
+            return {
+              error: t("Common.forbidden"),
+              requestPayload: formData,
+            };
 
           /**
            * Validate the request

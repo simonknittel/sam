@@ -109,7 +109,7 @@ export const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
 
 /**
  * Procedure of the admin toolbar, the tRPC counterpart of
- * `createAdminAction`: only an admin can call it, also while they assume a
+ * `ActionGate.Admin`: only an admin can call it, also while they assume a
  * different user. It skips the confirmed-email and clearance gates, because
  * the toolbar shows on the pages of these gates and an assumed user can be
  * without clearance.

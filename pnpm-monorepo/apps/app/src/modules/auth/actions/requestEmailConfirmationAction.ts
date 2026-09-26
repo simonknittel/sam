@@ -1,6 +1,9 @@
 "use server";
 
-import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
+import {
+  ActionGate,
+  createAuthenticatedAction,
+} from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { log } from "@/modules/logging";
@@ -51,6 +54,6 @@ export const requestEmailConfirmationAction = createAuthenticatedAction(
   },
   {
     // This action is how users get their email confirmed in the first place
-    skipEmailConfirmationAndClearanceGates: true,
+    gate: ActionGate.None,
   },
 );

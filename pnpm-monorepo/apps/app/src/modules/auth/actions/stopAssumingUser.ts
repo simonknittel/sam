@@ -1,6 +1,9 @@
 "use server";
 
-import { createAdminAction } from "@/modules/actions/utils/createAdminAction";
+import {
+  ActionGate,
+  createAuthenticatedAction,
+} from "@/modules/actions/utils/createAction";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { cookies } from "next/headers";
 import { z } from "zod";
@@ -9,7 +12,7 @@ import { getAssumeUserEndedEvent } from "../utils/getAssumeUserEndedEvent";
 
 const schema = z.object({});
 
-export const stopAssumingUser = createAdminAction(
+export const stopAssumingUser = createAuthenticatedAction(
   "stopAssumingUser",
   schema,
   async (formData, authentication, data, t) => {
@@ -22,4 +25,5 @@ export const stopAssumingUser = createAdminAction(
       success: t("Common.successfullySaved"),
     };
   },
+  { gate: ActionGate.Admin },
 );
