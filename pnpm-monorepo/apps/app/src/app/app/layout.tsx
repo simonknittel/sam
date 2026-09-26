@@ -5,6 +5,7 @@ import { AdminEnabler } from "@/modules/auth/components/AdminEnabler";
 import { SessionProviderContainer } from "@/modules/auth/components/SessionProviderContainer";
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { getAssumedUserLabel } from "@/modules/auth/utils/getAssumedUserLabel";
+import { isAdminBehindSession } from "@/modules/auth/utils/isAdminBehindSession";
 import { hasAnyReadableFlow } from "@/modules/career/queries/getMyReadableFlows";
 import { getUnseenChangelogEntryKeys } from "@/modules/changelog/queries/getUnseenChangelogEntryKeys";
 import { CHANGELOG_APP_SLUG } from "@/modules/changelog/utils/CHANGELOG_APP_SLUG";
@@ -118,8 +119,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
                         </AppsContextProvider>
                       </div>
 
-                      {(authentication.session.user.role === "admin" ||
-                        authentication.session.assumedByAdmin) && (
+                      {isAdminBehindSession(authentication.session) && (
                         <AdminEnabler
                           enabled={
                             (await cookies()).get("enable_admin")?.value === "1"

@@ -8,6 +8,7 @@ import {
 import { authenticate } from "@/modules/auth/server";
 import { requiresEmailConfirmation } from "@/modules/auth/utils/emailConfirmation";
 import { getAssumedUserLabel } from "@/modules/auth/utils/getAssumedUserLabel";
+import { isAdminBehindSession } from "@/modules/auth/utils/isAdminBehindSession";
 import { Link } from "@/modules/common/components/Link";
 import { log } from "@/modules/logging";
 import { Footer } from "@/modules/shell/components/Footer";
@@ -100,8 +101,7 @@ export default async function Page({
       </main>
       <Footer className="mt-4" />
       <PageRefresher />
-      {(authentication.session.user.role === "admin" ||
-        authentication.session.assumedByAdmin) && (
+      {isAdminBehindSession(authentication.session) && (
         <AdminEnabler
           enabled={(await cookies()).get("enable_admin")?.value === "1"}
           assumedUserLabel={getAssumedUserLabel(authentication.session)}

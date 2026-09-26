@@ -5,6 +5,6 @@ import type { Session } from "next-auth";
  * when the session is not an assumed one.
  */
 export const getAssumedUserLabel = (session: Session) =>
-  session.assumedByAdmin
+  session.assumedByAdminId
     ? (session.user.name ?? session.user.email ?? session.user.id)
     : undefined;

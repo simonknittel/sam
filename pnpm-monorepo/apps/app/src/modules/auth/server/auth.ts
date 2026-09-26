@@ -69,11 +69,11 @@ declare module "next-auth" {
         })
       | null;
     /**
-     * True when this session was built for another user which an admin is
-     * assuming via the `assume_user` cookie. The logged-in user behind the
-     * session token is still the admin.
+     * The id of the admin behind the session token when this session was
+     * built for another user which the admin assumes via the `assume_user`
+     * cookie. Null for a session of the own user.
      */
-    assumedByAdmin: boolean;
+    assumedByAdminId: string | null;
   }
 
   interface User {
@@ -241,7 +241,7 @@ export const authOptions: NextAuthOptions = {
         givenPermissionSets,
         entityId: entity?.id,
         entity,
-        assumedByAdmin: Boolean(assumedUser),
+        assumedByAdminId: assumedUser ? user.id : null,
       };
     },
 
