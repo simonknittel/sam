@@ -11,7 +11,7 @@ import {
   WikiPageUploadability,
 } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
+import * as z from "zod";
 import {
   getWikiPageScopedContext,
   isWikiScopeFrozen,

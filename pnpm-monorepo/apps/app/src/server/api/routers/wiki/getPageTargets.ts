@@ -12,16 +12,17 @@ import {
 } from "@/modules/wiki/utils/getWikiPageTargets";
 import { TRPCError } from "@trpc/server";
 import { serializeError } from "serialize-error";
-import { z } from "zod";
+import * as z from "zod";
 import { protectedProcedure } from "../../trpc";
 
 /**
  * Pages in depth-first tree order for hierarchy selects: managed ones for
- * the global "Neue Seite" form (default), readable ones e.g. for the
- * page-index config. A container scopes the tree to that event's or
- * template's briefing, gated like the other briefing surfaces; a variantId
- * to the subtree embedded on that variant's page, gated like its routes —
- * this is what keeps the embed's create/move targets inside the subtree.
+ * the "Neue Seite" and "Seite verschieben" dialogs (default), readable ones
+ * e.g. for the page-index config. A container scopes the tree to that
+ * event's or template's briefing, gated like the other briefing surfaces; a
+ * variantId to the subtree embedded on that variant's page, gated like its
+ * routes — this is what keeps the embed's create/move targets inside the
+ * subtree.
  */
 export const getPageTargets = protectedProcedure
   .input(
@@ -30,6 +31,8 @@ export const getPageTargets = protectedProcedure
         permission: z.enum(["manage", "read"]),
         container: eventContainerSchema.optional(),
         variantId: z.cuid().optional(),
+        /** The page to move — it and its subtree are no valid new parents */
+        excludeSubtreeOf: z.cuid2().optional(),
       })
       .refine((input) => !(input.container && input.variantId), {
         message: "container and variantId are mutually exclusive",
@@ -49,7 +52,7 @@ export const getPageTargets = protectedProcedure
             )
           : getManageableWikiPageTargets(
               variantContext,
-              undefined,
+              input.excludeSubtreeOf,
               variantContext.rootPage.id,
             );
       }
@@ -65,7 +68,7 @@ export const getPageTargets = protectedProcedure
 
       return input?.permission === "read"
         ? getReadableWikiPageTargets(context)
-        : getManageableWikiPageTargets(context);
+        : getManageableWikiPageTargets(context, input?.excludeSubtreeOf);
     } catch (error) {
       log.error("Failed to fetch wiki page targets", {
         error: serializeError(error),

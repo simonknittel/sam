@@ -4,7 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { z } from "zod";
+import * as z from "zod";
 import { getChangelogTrackedKeys } from "../queries/getChangelogTrackedKeys";
 
 const schema = z.object({

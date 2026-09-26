@@ -7,7 +7,7 @@ import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { EventActivityType } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
+import * as z from "zod";
 import { cancelParticipation } from "../utils/cancelParticipation";
 import { createEventActivity } from "../utils/eventActivity";
 import { getParticipatableAppEvent } from "../utils/getParticipatableAppEvent";

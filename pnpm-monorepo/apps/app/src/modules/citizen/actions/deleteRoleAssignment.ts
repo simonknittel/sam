@@ -6,7 +6,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { RoleAssignmentChangeType } from "@sam-monorepo/database/client";
 import { refresh } from "next/cache";
-import { z } from "zod";
+import * as z from "zod";
 
 const schema = z.object({
   citizenId: z.string(),

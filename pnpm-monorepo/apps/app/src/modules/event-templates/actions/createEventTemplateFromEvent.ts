@@ -31,7 +31,7 @@ import {
 import { buildBriefingRootPageSeed } from "@sam-monorepo/domain";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { z } from "zod";
+import * as z from "zod";
 import {
   EVENT_TEMPLATE_NAME_MAX_LENGTH,
   EVENT_TEMPLATES_PATH,

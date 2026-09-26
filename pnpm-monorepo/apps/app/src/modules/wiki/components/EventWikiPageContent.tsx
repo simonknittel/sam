@@ -17,7 +17,6 @@ import { collectWikiPageDescendants } from "../utils/collectWikiPageDescendants"
 import { getEffectiveEventWikiScope } from "../utils/getEffectiveEventWikiScope";
 import { getEventWikiPositionOptions } from "../utils/getEventWikiPositionOptions";
 import { getWikiCollabUrl } from "../utils/getWikiCollabUrl";
-import { getManageableWikiPageTargets } from "../utils/getWikiPageTargets";
 import { isEventWikiRootPage } from "../utils/isEventWikiRootPage";
 import { createEventWikiHrefMode } from "../utils/wikiPageHref";
 import { getEventWikiReadAudienceLabel } from "../utils/wikiReadAudienceLabel";
@@ -97,9 +96,6 @@ export const EventWikiPageContent = async ({
     !sourceId || sourceId === page.id
       ? undefined
       : context.pagesById.get(sourceId)?.title;
-  const moveTargets = canMutateStructure
-    ? getManageableWikiPageTargets(context, page.id)
-    : [];
   const collabUrl = getWikiCollabUrl();
 
   const article = (
@@ -170,7 +166,6 @@ export const EventWikiPageContent = async ({
             <>
               <MoveWikiPageModal
                 pageId={page.id}
-                targets={moveTargets}
                 allowTopLevel={false}
                 currentParentId={page.parentId}
               />

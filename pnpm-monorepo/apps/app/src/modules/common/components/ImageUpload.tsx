@@ -8,7 +8,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type ChangeEventHandler } from "react";
 import toast from "react-hot-toast";
-import { z } from "zod";
+import * as z from "zod";
 import useUpload from "../utils/useUpload";
 
 const assignResponseSchema = z.object({ warning: z.string().optional() });

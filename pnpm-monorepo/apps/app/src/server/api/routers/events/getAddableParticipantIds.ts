@@ -4,7 +4,7 @@ import { getParticipatableAppEvent } from "@/modules/events/utils/getParticipata
 import { isAllowedToManageEvent } from "@/modules/events/utils/isAllowedToManageEvent";
 import { isEventUpdatable } from "@/modules/events/utils/isEventUpdatable";
 import { TRPCError } from "@trpc/server";
-import { z } from "zod";
+import * as z from "zod";
 import { protectedProcedure, toTrpcError } from "../../trpc";
 
 /**

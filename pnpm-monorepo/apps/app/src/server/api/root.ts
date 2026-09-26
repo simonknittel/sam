@@ -19,6 +19,7 @@ import { getRolesForSalaries } from "./routers/silc/getRolesForSalaries";
 import { getAssumableUsers } from "./routers/users/getAssumableUsers";
 import { getAll as getAllVariants } from "./routers/variant/getAll";
 import { getById as getVariantById } from "./routers/variant/getById";
+import { getLinkablePages } from "./routers/wiki/getLinkablePages";
 import { getPageDetails } from "./routers/wiki/getPageDetails";
 import { getPageIndex } from "./routers/wiki/getPageIndex";
 import { getPageTargets } from "./routers/wiki/getPageTargets";
@@ -77,6 +78,7 @@ export const appRouter = createTRPCRouter({
     getById: getVariantById,
   }),
   wiki: createTRPCRouter({
+    getLinkablePages,
     getPageDetails,
     getPageIndex,
     getPageTargets,

@@ -4,7 +4,7 @@ import { env } from "@/env";
 import { log } from "@/modules/logging";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { serializeError } from "serialize-error";
-import type { z } from "zod";
+import type * as z from "zod";
 import { discordErrorResponseSchema } from "./schemas";
 
 /**

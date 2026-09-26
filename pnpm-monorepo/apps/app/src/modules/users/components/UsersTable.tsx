@@ -35,7 +35,7 @@ interface Props {
     > & {
       readonly bannedBy: Pick<Entity, "id" | "handle"> | null;
     };
-    readonly discordId: string;
+    readonly discordId: string | null;
     readonly entity?: Pick<Entity, "id" | "handle" | "discordId">;
   }[];
   readonly showBanActions?: boolean;
@@ -78,12 +78,16 @@ export const UsersTable = ({
                   size={32}
                   className="shrink-0"
                 />
-                <span
-                  title={discordId}
-                  className="text-ellipsis overflow-hidden whitespace-nowrap"
-                >
-                  {discordId}
-                </span>
+                {discordId ? (
+                  <span
+                    title={discordId}
+                    className="text-ellipsis overflow-hidden whitespace-nowrap"
+                  >
+                    {discordId}
+                  </span>
+                ) : (
+                  <span className="italic text-neutral-500">-</span>
+                )}
               </div>
             </td>
 

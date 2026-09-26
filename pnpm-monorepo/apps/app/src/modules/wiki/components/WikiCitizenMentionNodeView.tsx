@@ -1,10 +1,8 @@
 "use client";
 
-import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
 import {
   WikiCitizenMention,
   resolveWikiCitizenMention,
-  type ResolvedWikiCitizenMention,
   type WikiCitizenMentionOptions,
   type WikiMentionedCitizen,
 } from "@sam-monorepo/wiki-editor";
@@ -14,36 +12,7 @@ import {
   ReactNodeViewRenderer,
   type NodeViewProps,
 } from "@tiptap/react";
-
-/**
- * The rendered mention: the citizen hover popover (roles, Spynet link)
- * around a link to the citizen's spynet page. Shared between the static
- * render for readers and the editor node view so both look and behave the
- * same.
- */
-export const WikiCitizenMentionChip = ({
-  resolved,
-}: {
-  readonly resolved: ResolvedWikiCitizenMention | null;
-}) => {
-  if (!resolved)
-    return (
-      <span data-wiki-citizen-mention="" data-unavailable="">
-        @Unbekannt
-      </span>
-    );
-
-  return (
-    <CitizenPopover citizenId={resolved.citizenId}>
-      <a
-        data-wiki-citizen-mention={resolved.citizenId}
-        href={`/app/spynet/citizen/${encodeURIComponent(resolved.citizenId)}`}
-      >
-        @{resolved.label}
-      </a>
-    </CitizenPopover>
-  );
-};
+import { WikiCitizenMentionChip } from "./WikiCitizenMentionChip";
 
 const WikiCitizenMentionNodeView = ({ node, extension }: NodeViewProps) => {
   const { citizens } = extension.options as {

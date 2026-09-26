@@ -6,7 +6,7 @@ import {
 } from "@/modules/actions/utils/createAction";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { cookies } from "next/headers";
-import { z } from "zod";
+import * as z from "zod";
 import { ASSUME_USER_COOKIE } from "../utils/adminCookies";
 import { getAssumeUserEndedEvent } from "../utils/getAssumeUserEndedEvent";
 

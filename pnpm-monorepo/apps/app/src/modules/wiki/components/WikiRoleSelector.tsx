@@ -1,9 +1,9 @@
 "use client";
 
 import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
-import { api } from "@/modules/common/utils/api";
 import { useRolesContext } from "@/modules/roles/components/RolesContext";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
+import { api } from "@/trpc/react";
 import type { Role } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useState } from "react";
@@ -38,13 +38,8 @@ export const WikiRoleSelector = ({
   single = false,
   selectableRoleIds,
 }: Props) => {
-  const { isPending, data: allRoles } = api.roles.getVisibleRoles.useQuery(
-    undefined,
-    {
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: false,
-    },
-  );
+  const { isPending, data: allRoles } =
+    api.roles.getVisibleRoles.useQuery(undefined);
 
   const selectableRoles = selectableRoleIds
     ? allRoles?.filter((role) => selectableRoleIds.includes(role.id))

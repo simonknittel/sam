@@ -6,7 +6,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { RoleAssignmentChangeType } from "@sam-monorepo/database/client";
-import { z } from "zod";
+import * as z from "zod";
 
 export interface Change {
   citizenId: string;

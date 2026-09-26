@@ -7,6 +7,27 @@ import clsx from "clsx";
 import { memo } from "react";
 import { PATTERNS, type IEntry } from "../utils/PATTERNS";
 import styles from "./Entry.module.css";
+import { useEntryClock } from "./EntryClock";
+
+const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+
+interface EntryDateProps {
+  readonly date: Date;
+}
+
+/** The age of an entry of the last 24 hours, the date of an older one */
+const EntryDate = ({ date }: EntryDateProps) => {
+  const now = useEntryClock();
+
+  if (date.getTime() > now.getTime() - MILLISECONDS_PER_DAY)
+    return <RelativeDate date={date} now={now} />;
+
+  return (
+    <time dateTime={date.toISOString()} title={formatDate(date) || undefined}>
+      {formatDate(date)}
+    </time>
+  );
+};
 
 interface Props {
   readonly entry: IEntry;
@@ -19,9 +40,6 @@ interface Props {
  */
 export const Entry = memo(function Entry({ entry }: Props) {
   const { title, icon: Icon } = PATTERNS[entry.type];
-  const now = new Date();
-  const showRelativeDate =
-    entry.isoDate.getTime() > now.getTime() - 1000 * 60 * 60 * 24;
 
   /**
    * An entry is either one the user received or one they sent, never both.
@@ -38,16 +56,7 @@ export const Entry = memo(function Entry({ entry }: Props) {
       className={clsx({ [styles.Row]: entry.isNew, relative: entry.isNew })}
     >
       <td>
-        {showRelativeDate ? (
-          <RelativeDate date={entry.isoDate} updateInterval={10_000} />
-        ) : (
-          <time
-            dateTime={entry.isoDate.toISOString()}
-            title={formatDate(entry.isoDate) || undefined}
-          >
-            {formatDate(entry.isoDate)}
-          </time>
-        )}
+        <EntryDate date={entry.isoDate} />
 
         {entry.isNew && (
           <div

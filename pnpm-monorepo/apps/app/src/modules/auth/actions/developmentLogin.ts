@@ -11,7 +11,7 @@ import { getTranslations } from "next-intl/server";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { randomBytes } from "node:crypto";
-import { z } from "zod";
+import * as z from "zod";
 import { DEVELOPMENT_LOGIN_USER_WHERE } from "../queries/getDevelopmentLoginUsers";
 
 /** 256 bits, the same as the fallback token generator of NextAuth */

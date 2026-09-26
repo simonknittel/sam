@@ -7,7 +7,7 @@ import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { SLUG_MAX_LENGTH } from "@/modules/common/utils/slugify";
 import { Prisma } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
+import * as z from "zod";
 import { FLOW_SLUG_TAKEN_ERROR, validateFlowSlug } from "../utils/flowSlug";
 
 const schema = z.object({

@@ -1,9 +1,5 @@
-import type {
-  EventCitizenReference,
-  EventParticipantRow,
-} from "@/modules/events/queries/eventRelationSelects";
+import type { EventListItem } from "@/modules/events/queries/getEvents";
 import { canReadEventBriefing } from "@/modules/wiki/utils/canReadEventBriefing";
-import type { Event as PrismaEvent } from "@sam-monorepo/database/client";
 import { isLineupVisible } from "../utils/isLineupVisible";
 import { EventClient } from "./EventClient";
 
@@ -17,10 +13,7 @@ import { EventClient } from "./EventClient";
 
 interface Props {
   readonly className?: string;
-  readonly event: PrismaEvent & {
-    participants: EventParticipantRow[];
-    managers: EventCitizenReference[];
-  };
+  readonly event: EventListItem;
   readonly index: number;
   readonly hasCancelledParticipation?: boolean;
 }
@@ -33,13 +26,31 @@ export const Event = async ({
 }: Props) => {
   const [showLineupButton, showBriefingButton] = await Promise.all([
     isLineupVisible(event),
+    // The participants are the rows of the viewer only. That is sufficient
+    // for the check if the viewer takes part.
     canReadEventBriefing(event),
   ]);
+
+  const ownParticipation = event.participants.at(0);
 
   return (
     <EventClient
       className={className}
-      event={event}
+      event={{
+        id: event.id,
+        name: event.name,
+        startTime: event.startTime,
+        endTime: event.endTime,
+        source: event.source,
+        discordId: event.discordId,
+        discordGuildId: event.discordGuildId,
+        discordImage: event.discordImage,
+        coverImage: event.coverImage,
+        participantCount: event._count.participants,
+      }}
+      ownParticipation={
+        ownParticipation ? { comment: ownParticipation.comment } : null
+      }
       index={index}
       showLineupButton={showLineupButton}
       showBriefingButton={showBriefingButton}

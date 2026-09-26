@@ -5,7 +5,7 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { redirect } from "next/navigation";
-import { z } from "zod";
+import * as z from "zod";
 
 const schema = z.object({
   id: z.cuid(),

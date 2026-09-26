@@ -3,7 +3,7 @@
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { z } from "zod";
+import * as z from "zod";
 import { createSilcTransactions } from "../utils/createSilcTransactions";
 
 const schema = z.object({

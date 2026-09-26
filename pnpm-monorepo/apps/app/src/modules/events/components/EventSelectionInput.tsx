@@ -45,13 +45,8 @@ export const EventSelectionInput = ({
 }: Props) => {
   const [query, setQuery] = useState("");
 
-  const { isPending, data: dataAllEvents } = api.events.getAllEvents.useQuery(
-    undefined,
-    {
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: false,
-    },
-  );
+  const { isPending, data: dataAllEvents } =
+    api.events.getAllEvents.useQuery(undefined);
 
   if (isPending || !dataAllEvents)
     return (

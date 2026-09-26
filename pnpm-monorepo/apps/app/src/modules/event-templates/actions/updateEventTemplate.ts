@@ -16,7 +16,7 @@ import {
   EventVisibility,
 } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
+import * as z from "zod";
 import { getEventTemplateById } from "../queries/getEventTemplateById";
 import {
   EVENT_TEMPLATE_MAX_ROLES,

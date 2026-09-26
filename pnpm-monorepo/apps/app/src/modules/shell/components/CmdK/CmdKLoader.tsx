@@ -2,7 +2,7 @@
 
 import clsx from "clsx";
 import dynamic from "next/dynamic";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { useCmdKContext } from "./CmdKContext";
 
 const CmdK = dynamic(
@@ -17,7 +17,14 @@ interface Props {
 }
 
 export const CmdKLoader = ({ className }: Props) => {
-  const { setOpen } = useCmdKContext();
+  const { open, setOpen } = useCmdKContext();
+
+  /**
+   * The dialog and its chunk load only when the palette opens for the first
+   * time, not on each page. After that, the dialog stays mounted.
+   */
+  const [isDialogMounted, setIsDialogMounted] = useState(open);
+  if (open && !isDialogMounted) setIsDialogMounted(true);
 
   return (
     <>
@@ -34,9 +41,11 @@ export const CmdKLoader = ({ className }: Props) => {
         </button>
       </div>
 
-      <Suspense>
-        <CmdK />
-      </Suspense>
+      {isDialogMounted && (
+        <Suspense>
+          <CmdK />
+        </Suspense>
+      )}
     </>
   );
 };

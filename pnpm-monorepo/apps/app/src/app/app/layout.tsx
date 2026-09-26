@@ -11,7 +11,6 @@ import { BirthdayCitizensProvider } from "@/modules/citizen/components/BirthdayC
 import { getCitizenIdsWithBirthdayToday } from "@/modules/citizen/queries/getCitizenIdsWithBirthdayToday";
 import { CreateContextProvider } from "@/modules/common/components/CreateContext";
 import { NewReleaseToast } from "@/modules/common/components/NewReleaseToast";
-import QueryClientProviderContainer from "@/modules/common/components/QueryClientProviderContainer";
 import { ServiceWorkerLoader } from "@/modules/common/components/ServiceWorkerLoader";
 import { getUnleashFlag } from "@/modules/common/utils/getUnleashFlag";
 import { UNLEASH_FLAG } from "@/modules/common/utils/UNLEASH_FLAG";
@@ -73,58 +72,56 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
     <>
       <SessionProviderContainer session={authentication.session}>
         <NuqsAdapter>
-          <QueryClientProviderContainer>
-            <TRPCReactProvider>
-              <ChannelsProvider userId={authentication.session.user.id}>
-                <NextIntlClientProvider>
-                  <RolesContextProvider roles={visibleRoles}>
-                    <BirthdayCitizensProvider citizenIds={birthdayCitizenIds}>
-                      <div {...seasonalThemeRootProps}>
-                        <SkipToContentLink />
+          <TRPCReactProvider>
+            <ChannelsProvider userId={authentication.session.user.id}>
+              <NextIntlClientProvider>
+                <RolesContextProvider roles={visibleRoles}>
+                  <BirthdayCitizensProvider citizenIds={birthdayCitizenIds}>
+                    <div {...seasonalThemeRootProps}>
+                      <SkipToContentLink />
 
-                        <AppsContextProvider
-                          apps={apps}
-                          appDotBadgeCounts={{
-                            [CHANGELOG_APP_SLUG]: changelogUnseenKeys.size,
-                            wiki: openWikiReportCount,
-                          }}
-                          favoriteAppKeys={[...favoriteAppKeys]}
+                      <AppsContextProvider
+                        apps={apps}
+                        appDotBadgeCounts={{
+                          [CHANGELOG_APP_SLUG]: changelogUnseenKeys.size,
+                          wiki: openWikiReportCount,
+                        }}
+                        favoriteAppKeys={[...favoriteAppKeys]}
+                      >
+                        <OnSiteNotificationsProvider
+                          initialUnreadCount={unreadOnSiteNotificationCount}
                         >
-                          <OnSiteNotificationsProvider
-                            initialUnreadCount={unreadOnSiteNotificationCount}
-                          >
-                            <OnboardingProvider initialState={onboardingState}>
-                              <CreateContextProvider>
-                                <CmdKProvider
-                                  disableAlgolia={disableAlgolia}
-                                  canReadCareer={canReadCareer}
-                                >
-                                  <TopBar />
-                                  <MobileActionBarLoader />
-                                </CmdKProvider>
+                          <OnboardingProvider initialState={onboardingState}>
+                            <CreateContextProvider>
+                              <CmdKProvider
+                                disableAlgolia={disableAlgolia}
+                                canReadCareer={canReadCareer}
+                              >
+                                <TopBar />
+                                <MobileActionBarLoader />
+                              </CmdKProvider>
 
-                                <div className="pt-12 lg:pt-28 pb-16 lg:pb-0 min-h-dvh">
-                                  {children}
-                                </div>
+                              <div className="pt-12 lg:pt-28 pb-16 lg:pb-0 min-h-dvh">
+                                {children}
+                              </div>
 
-                                <SeasonalViewportLayer />
+                              <SeasonalViewportLayer />
 
-                                <OnboardingTour />
-                              </CreateContextProvider>
-                            </OnboardingProvider>
-                          </OnSiteNotificationsProvider>
-                        </AppsContextProvider>
-                      </div>
+                              <OnboardingTour />
+                            </CreateContextProvider>
+                          </OnboardingProvider>
+                        </OnSiteNotificationsProvider>
+                      </AppsContextProvider>
+                    </div>
 
-                      <AdminToolbar />
+                    <AdminToolbar />
 
-                      <NewReleaseToast />
-                    </BirthdayCitizensProvider>
-                  </RolesContextProvider>
-                </NextIntlClientProvider>
-              </ChannelsProvider>
-            </TRPCReactProvider>
-          </QueryClientProviderContainer>
+                    <NewReleaseToast />
+                  </BirthdayCitizensProvider>
+                </RolesContextProvider>
+              </NextIntlClientProvider>
+            </ChannelsProvider>
+          </TRPCReactProvider>
         </NuqsAdapter>
       </SessionProviderContainer>
 

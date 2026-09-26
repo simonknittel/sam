@@ -30,10 +30,7 @@ export const CreateSeriesModal = ({
     },
   });
   const [isLoading, setIsLoading] = useState(false);
-  const manufacturers = api.manufacturer.getAll.useQuery(undefined, {
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-  });
+  const manufacturers = api.manufacturer.getAll.useQuery(undefined);
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     setIsLoading(true);

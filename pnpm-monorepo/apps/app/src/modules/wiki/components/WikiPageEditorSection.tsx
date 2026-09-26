@@ -47,7 +47,7 @@ export const WikiPageEditorSection = async ({
         session?.entity?.id ?? session?.user.id ?? pageId,
       )}
       iframeAllowlist={staticContent.iframeAllowlist}
-      linkablePages={staticContent.linkablePages}
+      linkedPages={staticContent.linkedPages}
       mentionedCitizens={staticContent.mentionedCitizens}
       linkedVariants={staticContent.linkedVariants}
       pageIndexes={staticContent.pageIndexes}

@@ -1,6 +1,6 @@
 import formData from "form-data";
 import Mailgun from "mailgun.js";
-import { z } from "zod";
+import * as z from "zod";
 import { log } from "../common/logger";
 import { requestBodySchema } from "../email-function";
 import { env } from "./setup";

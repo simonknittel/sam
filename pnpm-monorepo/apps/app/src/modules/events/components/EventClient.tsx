@@ -8,7 +8,6 @@ import { RelativeDate } from "@/modules/common/components/RelativeDate";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
 import type {
-  EventCitizenReference,
   EventCoverImage,
   EventParticipantRow,
 } from "@/modules/events/queries/eventRelationSelects";
@@ -32,13 +31,33 @@ import { EventParticipationButton } from "./EventParticipationButton";
  * 800 / 320 * 160 = 400
  */
 
+/**
+ * The event as the card shows it. The server component `Event` builds this
+ * object field by field, thus the other columns of the event do not go to
+ * the browser.
+ */
+interface EventCard extends Readonly<
+  Pick<
+    PrismaEvent,
+    | "id"
+    | "name"
+    | "startTime"
+    | "endTime"
+    | "source"
+    | "discordId"
+    | "discordGuildId"
+    | "discordImage"
+  >
+> {
+  readonly coverImage: EventCoverImage | null;
+  readonly participantCount: number;
+}
+
 interface Props {
   readonly className?: string;
-  readonly event: PrismaEvent & {
-    participants: EventParticipantRow[];
-    managers: EventCitizenReference[];
-    coverImage?: EventCoverImage | null;
-  };
+  readonly event: EventCard;
+  /** The active participation of the viewer, if there is one */
+  readonly ownParticipation: Pick<EventParticipantRow, "comment"> | null;
   readonly index: number;
   readonly showLineupButton?: boolean;
   readonly showBriefingButton?: boolean;
@@ -48,6 +67,7 @@ interface Props {
 export const EventClient = ({
   className,
   event,
+  ownParticipation,
   index,
   showLineupButton,
   showBriefingButton,
@@ -74,16 +94,7 @@ export const EventClient = ({
 
   const formattedStartTime = formatDate(event.startTime, "long");
 
-  const currentCitizenParticipation =
-    event.participants.find(
-      (participant) =>
-        authentication &&
-        ((participant.discordUserId !== null &&
-          participant.discordUserId === authentication.session.discordId) ||
-          (participant.citizenId !== null &&
-            participant.citizenId === authentication.session.entity?.id)),
-    ) ?? null;
-  const isCurrentCitizenParticipating = currentCitizenParticipation !== null;
+  const isCurrentCitizenParticipating = ownParticipation !== null;
 
   /**
    * Mirrors `isParticipationOpen()` on the server. Sign-up stays open until
@@ -172,7 +183,7 @@ export const EventClient = ({
 
             <Badge
               label="Teilnehmer"
-              value={event.participants.length.toString()}
+              value={event.participantCount.toString()}
               icon={<FaUser />}
             />
 
@@ -228,7 +239,7 @@ export const EventClient = ({
                 eventName={event.name}
                 isSignedUp={isCurrentCitizenParticipating}
                 hasCancelled={hasCancelledParticipation}
-                comment={currentCitizenParticipation?.comment ?? null}
+                comment={ownParticipation?.comment ?? null}
               />
             )}
           </div>

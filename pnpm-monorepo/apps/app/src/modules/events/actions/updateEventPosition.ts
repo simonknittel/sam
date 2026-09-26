@@ -4,7 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
+import * as z from "zod";
 import { getLineupPath } from "../utils/eventContainer";
 import { buildPositionUpdatedAuditEvent } from "../utils/lineupAuditEvents";
 import { requireManageablePosition } from "../utils/requireManageablePosition";

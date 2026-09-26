@@ -5,7 +5,7 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { OnboardingTaskCompletionMethod } from "@sam-monorepo/database/client";
-import { z } from "zod";
+import * as z from "zod";
 import { getOnboardingState } from "../utils/queries/getOnboardingState";
 
 const schema = z.object({});

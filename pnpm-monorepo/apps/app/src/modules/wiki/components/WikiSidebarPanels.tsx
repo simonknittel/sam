@@ -49,10 +49,10 @@ export const WikiSidebarPanels = async ({
       href: buildWikiPageHref(hrefMode, page),
     }));
 
-  const filteredPages = filterWikiPagesBySidebarMode(pages);
-  const filteredPageIds = new Set(filteredPages.map((page) => page.id));
-  const tree = buildVisibleWikiTree(filteredPages, permissions);
-  const fullTree = buildVisibleWikiTree(pages, permissions);
+  const filteredPageIds = new Set(
+    filterWikiPagesBySidebarMode(pages).map((page) => page.id),
+  );
+  const tree = buildVisibleWikiTree(pages, permissions);
   /** Readable pages the sidebar mode hides — revealable via the tree's toggle */
   const sidebarHiddenPageIds = pages
     .filter(
@@ -82,7 +82,6 @@ export const WikiSidebarPanels = async ({
       <div className="bg-secondary px-2 py-4 corners-secondary flex flex-col gap-4">
         <WikiSidebarTree
           tree={tree}
-          fullTree={fullTree}
           hiddenPageIds={sidebarHiddenPageIds}
           initialShowHidden={showHidden}
           expandedPagesCookie={expandedPages}

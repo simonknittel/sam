@@ -2,7 +2,7 @@
 
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Link } from "@/modules/common/components/Link";
-import { api } from "@/modules/common/utils/api";
+import { api } from "@/trpc/react";
 import { useDebounce } from "@uidotdev/usehooks";
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
@@ -61,7 +61,6 @@ export const WikiSearch = ({ className, compact }: Props) => {
     {
       enabled,
       placeholderData: (previous) => previous,
-      refetchOnWindowFocus: false,
     },
   );
 

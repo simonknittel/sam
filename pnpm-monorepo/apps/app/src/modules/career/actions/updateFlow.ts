@@ -6,7 +6,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { log } from "@/modules/logging";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
+import * as z from "zod";
 import { nodeDefinitions } from "../nodes/server";
 import { getFlowContext } from "../queries/getFlowContext";
 

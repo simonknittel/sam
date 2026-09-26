@@ -9,7 +9,6 @@ import {
   getEventWikiContext,
   hasReadableEventWikiRoot,
 } from "@/modules/wiki/queries/getEventWikiContext";
-import { getManageableWikiPageTargets } from "@/modules/wiki/utils/getWikiPageTargets";
 import { createEventWikiHrefMode } from "@/modules/wiki/utils/wikiPageHref";
 import { notFound } from "next/navigation";
 import { FaSitemap } from "react-icons/fa";
@@ -38,15 +37,10 @@ export default async function Layout({
   if (!context || !hasReadableEventWikiRoot(context)) notFound();
 
   const hrefMode = createEventWikiHrefMode(container, context.rootPage.id);
-  const createTargets = getManageableWikiPageTargets(context);
 
   return (
     <WikiPageHrefModeProvider mode={hrefMode}>
-      <CreateWikiPageProvider
-        targets={createTargets}
-        allowTopLevel={false}
-        container={container}
-      >
+      <CreateWikiPageProvider allowTopLevel={false}>
         <SidebarLayout
           sidebar={<EventWikiSidebar container={container} />}
           mobileToggleLabel="Seiten"

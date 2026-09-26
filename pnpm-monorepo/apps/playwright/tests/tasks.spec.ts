@@ -1,14 +1,20 @@
 import type { Locator, Page } from "@playwright/test";
-import type { PrismaClient } from "@sam-monorepo/database/client";
+import type { Prisma, PrismaClient } from "@sam-monorepo/database/client";
 import { TaskRewardType, TaskVisibility } from "@sam-monorepo/database/client";
 import { expectAuditEvents } from "../fixtures/audit";
-import { createCitizen, type Citizen } from "../fixtures/factories";
+import {
+  assignRole,
+  createCitizen,
+  createRole,
+  type Citizen,
+} from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
   FORBIDDEN_TEXT,
   inlineEditorTrigger,
   modal,
+  NOT_FOUND_TEXT,
   SAVED_TEXT,
   saveInlineEditor,
   sectionByHeading,
@@ -355,4 +361,132 @@ test("a citizen takes a task on, gives it up, and a manager cancels and deletes 
     "TASK_CANCELLED",
     "TASK_DELETED",
   ]);
+});
+
+const createTextTask = (
+  prisma: PrismaClient,
+  creator: Citizen,
+  title: string,
+  data: Partial<Prisma.TaskUncheckedCreateInput> = {},
+) =>
+  prisma.task.create({
+    data: {
+      title,
+      visibility: TaskVisibility.PUBLIC,
+      rewardType: TaskRewardType.TEXT,
+      rewardTypeTextValue: "Ruhm und Ehre",
+      createdById: creator.entity.id,
+      ...data,
+    },
+  });
+
+test("a citizen sees exactly the tasks they may see, in each list and on the task page", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const creator = await createCitizen(prisma, {
+    handle: "task-auftraggeber",
+    permissionStrings: ["task;read"],
+  });
+  const viewer = await createCitizen(prisma, {
+    handle: "task-leser",
+    permissionStrings: ["task;read"],
+  });
+  const memberRole = await createRole(prisma);
+  await assignRole(prisma, viewer.entity, memberRole);
+  const outsiderRole = await createRole(prisma);
+
+  const visibleTitles = [
+    "Frachter bewachen",
+    "Mitglieder-Minenfeld",
+    "Offene Reparatur",
+  ];
+  await createTextTask(prisma, creator, "Frachter bewachen");
+  await createTextTask(prisma, creator, "Mitglieder-Minenfeld", {
+    hiddenForOtherRoles: true,
+    requiredRoles: { connect: { id: memberRole.id } },
+  });
+  await createTextTask(prisma, creator, "Offene Reparatur", {
+    hiddenForOtherRoles: false,
+    requiredRoles: { connect: { id: outsiderRole.id } },
+  });
+  const secretTask = await createTextTask(
+    prisma,
+    creator,
+    "Geheime Aufklaerung",
+    {
+      hiddenForOtherRoles: true,
+      requiredRoles: { connect: { id: outsiderRole.id } },
+    },
+  );
+  await createTextTask(prisma, viewer, "Eigene Patrouille", {
+    visibility: TaskVisibility.PERSONALIZED,
+  });
+  await createTextTask(prisma, creator, "Zugewiesene Eskorte", {
+    visibility: TaskVisibility.PERSONALIZED,
+    assignments: {
+      create: {
+        citizenId: viewer.entity.id,
+        createdById: creator.entity.id,
+      },
+    },
+  });
+  await createTextTask(prisma, creator, "Erledigter Transport", {
+    completedAt: new Date(),
+  });
+  await createTextTask(prisma, creator, "Erledigte Fremdbergung", {
+    visibility: TaskVisibility.PERSONALIZED,
+    completedAt: new Date(),
+  });
+  // The newest tasks are hidden: the "Neue Tasks" tile must still fill
+  // its five places with visible tasks
+  const hiddenTasks = [];
+  for (let taskNumber = 1; taskNumber <= 5; taskNumber++) {
+    hiddenTasks.push(
+      await createTextTask(
+        prisma,
+        creator,
+        `Verdeckter Auftrag ${taskNumber}`,
+        {
+          visibility: TaskVisibility.PERSONALIZED,
+        },
+      ),
+    );
+  }
+
+  await signIn(viewer.user);
+
+  await page.goto("/app/tasks");
+  for (const title of [
+    ...visibleTitles,
+    "Eigene Patrouille",
+    "Zugewiesene Eskorte",
+  ])
+    await expect(
+      page.getByRole("link", { name: new RegExp(title) }),
+    ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(
+    page.getByRole("link", { name: /Geheime Aufklaerung|Verdeckter Auftrag/ }),
+  ).toHaveCount(0);
+
+  await page.goto("/app/tasks?status=closed");
+  await expect(
+    page.getByRole("link", { name: /Erledigter Transport/ }),
+  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(
+    page.getByRole("link", { name: /Erledigte Fremdbergung/ }),
+  ).toHaveCount(0);
+
+  await page.goto("/app/dashboard");
+  const newTasksTile = sectionByHeading(page, "Neue Tasks");
+  await expect(newTasksTile).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  for (const title of visibleTitles)
+    await expect(newTasksTile).toContainText(title);
+  await expect(newTasksTile).not.toContainText("Verdeckter Auftrag");
+
+  for (const hiddenTask of [secretTask, ...hiddenTasks]) {
+    await page.goto(`/app/tasks/${hiddenTask.id}`);
+    await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
+  }
 });

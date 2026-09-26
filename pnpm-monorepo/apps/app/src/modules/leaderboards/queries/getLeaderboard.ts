@@ -1,7 +1,7 @@
 import { prisma } from "@/db";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { unstable_cache } from "next/cache";
-import { z } from "zod";
+import * as z from "zod";
 
 const schema = z.object({
   data: z.object({

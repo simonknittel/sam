@@ -1,40 +1,26 @@
-import { findPrecedingIsoDate } from "./findPrecedingIsoDate";
-import { EntryType, PATTERNS } from "./PATTERNS";
-import type { RawMatch, ResultMessage } from "./types";
+import { createLogFileReader } from "./logFileReader";
+import type { ParseRequest, ResultMessage } from "./types";
 
-interface ParseMessage {
-  readonly id: number;
-  readonly fileContents: string[];
-}
+const readLogFiles = createLogFileReader();
 
-self.onmessage = (event: MessageEvent<ParseMessage>) => {
-  const { id, fileContents } = event.data;
+/** One request at a time: a read continues where the last one stopped */
+let queue = Promise.resolve();
 
-  const matches: RawMatch[] = [];
+self.onmessage = (event: MessageEvent<ParseRequest>) => {
+  const { id, files, isFullRead } = event.data;
 
-  for (const fileContent of fileContents) {
-    for (const type of Object.values(EntryType)) {
-      const { regex, takesTimeOfPrecedingLine } = PATTERNS[type];
-
-      const regexMatches = fileContent.matchAll(regex);
-      for (const match of regexMatches) {
-        if (!match.groups) continue;
-
-        const isoDate = takesTimeOfPrecedingLine
-          ? findPrecedingIsoDate(fileContent, match.index)
-          : match.groups.isoDate;
-        if (!isoDate) continue;
-
-        matches.push({
-          type,
-          isoDate,
-          fullMatch: match[0],
-          groups: match.groups,
-        });
-      }
+  /**
+   * Each request gets an answer, also when `postMessage` fails. A rejected
+   * queue would skip all later requests.
+   */
+  queue = queue.then(async () => {
+    try {
+      self.postMessage({
+        id,
+        matches: await readLogFiles(files, isFullRead),
+      } satisfies ResultMessage);
+    } catch (error) {
+      self.postMessage({ id, error: String(error) } satisfies ResultMessage);
     }
-  }
-
-  const result: ResultMessage = { id, matches };
-  self.postMessage(result);
+  });
 };

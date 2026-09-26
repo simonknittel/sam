@@ -1,12 +1,9 @@
 "use client";
 
-import { api } from "@/modules/common/utils/api";
-import { VariantWithLogo } from "@/modules/fleet/components/VariantWithLogo";
+import { api } from "@/trpc/react";
 import {
   WikiVariantLink,
   resolveWikiVariantLink,
-  wikiVariantLinkHref,
-  type ResolvedWikiVariantLink,
   type WikiLinkedVariant,
   type WikiVariantLinkOptions,
 } from "@sam-monorepo/wiki-editor";
@@ -17,43 +14,7 @@ import {
   type NodeViewProps,
 } from "@tiptap/react";
 import { getWikiImageUrl } from "../utils/uploadWikiPageFile";
-
-/**
- * The rendered variant link: the fleet app's variant component scaled to
- * the surrounding text, inside a link to the variant's page. Shared
- * between the static render for readers and the editor node view so both
- * look the same. The anchor mirrors the node's renderHTML (data attribute
- * included) so copying it back into the editor still parses as the node —
- * and so the edit menu recognizes it as this node instead of a plain link.
- */
-export const WikiVariantLinkChip = ({
-  resolved,
-}: {
-  readonly resolved: ResolvedWikiVariantLink | null;
-}) => {
-  if (!resolved)
-    return (
-      <span data-wiki-variant-link="" data-unavailable="">
-        Nicht verfügbares Schiff
-      </span>
-    );
-
-  return (
-    <a
-      data-wiki-variant-link={resolved.variantId}
-      href={wikiVariantLinkHref(resolved.variantId)}
-    >
-      <VariantWithLogo
-        variant={{ id: resolved.variantId, name: resolved.name }}
-        manufacturer={{ name: resolved.manufacturerName ?? "" }}
-        logo={resolved.logo}
-        size="inline"
-        /** The chip's own anchor carries the node marker */
-        disableLink
-      />
-    </a>
-  );
-};
+import { WikiVariantLinkChip } from "./WikiVariantLinkChip";
 
 const WikiVariantLinkNodeView = ({ node, extension }: NodeViewProps) => {
   const { variants } = extension.options as {
@@ -72,8 +33,6 @@ const WikiVariantLinkNodeView = ({ node, extension }: NodeViewProps) => {
   const isMissing = Boolean(variantId) && !variants[variantId];
   const { data } = api.variant.getAll.useQuery(undefined, {
     enabled: isMissing,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
   });
 
   const fetched = isMissing

@@ -6,7 +6,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { NotificationChannel } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
+import * as z from "zod";
 import { NOTIFICATION_TYPES } from "../utils/NotificationTypes";
 import { getMyNotificationSettings } from "../utils/queries/getMyNotificationSettings";
 

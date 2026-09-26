@@ -6,7 +6,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { createSilcTransactions } from "@/modules/silc/utils/createSilcTransactions";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
+import * as z from "zod";
 import { CyclePhase, getCurrentPhase } from "../utils/getCurrentPhase";
 
 const schema = z.object({

@@ -3,7 +3,7 @@ import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import { log } from "@/modules/logging";
 import { channelsClient } from "@/modules/pusher/utils/channelsClient";
 import { NextResponse } from "next/server";
-import { z } from "zod";
+import * as z from "zod";
 
 const postBodySchema = z.object({
   socket_id: z.string(),

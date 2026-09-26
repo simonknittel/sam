@@ -2,6 +2,10 @@ import { addDays, startOfDay, subDays } from "date-fns";
 import { formatInTimeZone } from "date-fns-tz";
 
 interface ChartConfiguration {
+  /**
+   * The maximum number of series in the chart. The chart keeps the series
+   * with the highest last value.
+   */
   readonly top?: number;
   readonly filterEmpty?: boolean;
 }
@@ -55,7 +59,6 @@ export interface StatisticChartData {
 
 interface ChartOptions {
   days?: number;
-  seriesLimit?: number;
 }
 
 const DEFAULT_DAYS = 365;
@@ -206,13 +209,17 @@ export const buildChartData = (
     }
   }
 
-  const allSeries = Array.from(seriesMap.values());
-
-  const limitedSeries = allSeries.sort((a, b) => b.lastValue - a.lastValue);
+  /**
+   * The name breaks ties, thus the same series stay in the top list on each
+   * load, whatever order the database returns the records in.
+   */
+  const sortedSeries = Array.from(seriesMap.values()).toSorted(
+    (a, b) => b.lastValue - a.lastValue || a.name.localeCompare(b.name),
+  );
 
   const axisKeys = options.axisPoints.map((point) => point.key);
 
-  let series: StatisticSeries[] = limitedSeries.map((entry) => ({
+  let series: StatisticSeries[] = sortedSeries.map((entry) => ({
     name: entry.name,
     data: axisKeys.map((dateKey) => entry.values.get(dateKey) ?? null),
   }));
@@ -220,6 +227,9 @@ export const buildChartData = (
     series = series.filter((serie) =>
       serie.data.some((value) => typeof value === "number" && value > 0),
     );
+  }
+  if (configuration?.top) {
+    series = series.slice(0, configuration.top);
   }
 
   const hasData = series.some((serie) =>

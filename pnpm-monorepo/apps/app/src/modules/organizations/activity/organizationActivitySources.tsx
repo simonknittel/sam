@@ -80,10 +80,11 @@ export const createOrganizationCreatedSource = (
               position,
               OrganizationActivitySourceKey.Created,
               direction,
+              "createdAt",
             ),
           ],
         },
-        orderBy: cursorOrderBy(direction),
+        orderBy: cursorOrderBy(direction, "createdAt"),
         take,
         select: {
           id: true,
@@ -168,10 +169,11 @@ export const createOrganizationRenamedSource = (
               position,
               OrganizationActivitySourceKey.Renamed,
               direction,
+              "createdAt",
             ),
           ],
         },
-        orderBy: cursorOrderBy(direction),
+        orderBy: cursorOrderBy(direction, "createdAt"),
         take,
         select: {
           id: true,
@@ -262,10 +264,11 @@ export const createOrganizationMembershipSource = (
               position,
               OrganizationActivitySourceKey.Membership,
               direction,
+              "createdAt",
             ),
           ],
         },
-        orderBy: cursorOrderBy(direction),
+        orderBy: cursorOrderBy(direction, "createdAt"),
         take,
         include: {
           organization: {

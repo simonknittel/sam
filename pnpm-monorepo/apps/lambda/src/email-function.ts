@@ -1,7 +1,7 @@
 import "./email-function/setup";
 
 import type { SQSBatchItemFailure, SQSHandler } from "aws-lambda";
-import { z } from "zod";
+import * as z from "zod";
 import { isRequestProcessed, setRequestProcessed } from "./common/dynamodb";
 import { log } from "./common/logger";
 import { initializeRequestContext } from "./common/requestContext";

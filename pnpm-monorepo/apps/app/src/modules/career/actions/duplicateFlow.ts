@@ -8,7 +8,7 @@ import { SLUG_MAX_LENGTH } from "@/modules/common/utils/slugify";
 import { createId } from "@paralleldrive/cuid2";
 import { Prisma, type FlowEdge } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
+import * as z from "zod";
 import { getFlowContext } from "../queries/getFlowContext";
 import {
   FLOW_NAME_MAX_LENGTH,

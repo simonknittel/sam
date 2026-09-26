@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   FaAngleDoubleDown,
   FaAngleDoubleUp,
@@ -9,6 +9,7 @@ import {
   FaRegEyeSlash,
 } from "react-icons/fa";
 import type { WikiTreeNode } from "../utils/buildVisibleWikiTree";
+import { pruneWikiTree } from "../utils/pruneWikiTree";
 import { serializeWikiShowHiddenPagesCookie } from "../utils/wikiShowHiddenPagesCookie";
 import { useWikiPageHrefMode } from "./WikiPageHrefModeProvider";
 import { WikiPageTree } from "./WikiPageTree";
@@ -22,11 +23,12 @@ const HEADER_BUTTON_CLASS_NAME =
   "rounded-secondary p-1 cursor-pointer text-white/40 hover:text-interaction-500 hover:bg-neutral-800 focus-visible:text-interaction-500 focus-visible:bg-neutral-800 active:bg-neutral-700";
 
 interface Props {
-  /** The tree with sidebar-hidden pages filtered out (the default view) */
-  readonly tree: WikiTreeNode[];
   /** The tree including sidebar-hidden pages */
-  readonly fullTree: WikiTreeNode[];
-  /** Readable pages the sidebar mode hides — dimmed when shown */
+  readonly tree: WikiTreeNode[];
+  /**
+   * Readable pages the sidebar mode hides — pruned from the default view,
+   * dimmed when shown
+   */
   readonly hiddenPageIds: readonly string[];
   /** The toggle's remembered state, read from the cookie during SSR */
   readonly initialShowHidden: boolean;
@@ -39,20 +41,23 @@ interface Props {
  * revealing pages that a sidebar mode hides (shown dimmed). The button only
  * appears when hidden pages exist for this viewer.
  *
- * Both trees are rendered from props the server already sent, so toggling
- * needs no refetch — the cookie write only carries the choice into the next
- * server render.
+ * The server sends the full tree only once, and the default view is
+ * derived from it here, so toggling needs no refetch — the cookie write
+ * only carries the choice into the next server render.
  */
 export const WikiSidebarTree = ({
   tree,
-  fullTree,
   hiddenPageIds,
   initialShowHidden,
   expandedPagesCookie,
 }: Props) => {
   const hrefMode = useWikiPageHrefMode();
   const [showHidden, setShowHidden] = useState(initialShowHidden);
-  const nodes = showHidden ? fullTree : tree;
+  const defaultTree = useMemo(
+    () => pruneWikiTree(tree, new Set(hiddenPageIds)),
+    [tree, hiddenPageIds],
+  );
+  const nodes = showHidden ? tree : defaultTree;
   const hasCollapsiblePages = nodes.some((node) => node.children.length > 0);
 
   const handleClick = () => {

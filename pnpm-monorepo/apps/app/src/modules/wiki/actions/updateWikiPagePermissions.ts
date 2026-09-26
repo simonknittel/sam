@@ -14,7 +14,7 @@ import {
   createWikiPagePermissionResolver,
   resolveWikiPageReadRoleIds,
 } from "@sam-monorepo/permissions";
-import { z } from "zod";
+import * as z from "zod";
 import {
   getWikiContext,
   type WikiContextPage,

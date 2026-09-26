@@ -10,7 +10,7 @@ import { getWikiEditorSchema } from "@sam-monorepo/wiki-editor";
 import { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { unstable_rethrow } from "next/navigation";
 import { serializeError } from "serialize-error";
-import { z } from "zod";
+import * as z from "zod";
 import {
   getWikiPageScopedContext,
   isWikiScopeFrozen,

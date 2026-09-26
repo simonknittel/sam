@@ -5,7 +5,7 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { WikiPageSidebarMode } from "@sam-monorepo/database/client";
-import { z } from "zod";
+import * as z from "zod";
 import { revalidateWikiScope } from "../queries/getWikiPageScopedContext";
 import { requireAdminableWikiPage } from "../utils/requireAdminableWikiPage";
 

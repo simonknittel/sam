@@ -4,7 +4,7 @@ import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import { getWikiPageScopedContext } from "@/modules/wiki/queries/getWikiPageScopedContext";
 import { WikiScope } from "@/modules/wiki/utils/wikiPageHref";
 import { NextResponse } from "next/server";
-import { z } from "zod";
+import * as z from "zod";
 
 type Params = Promise<{
   pageId: string;

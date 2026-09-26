@@ -1,4 +1,9 @@
 import { mergeAttributes, Node, nodePasteRule } from "@tiptap/core";
+import {
+  resolveWikiPageLink,
+  type WikiLinkedPages,
+} from "./resolveWikiPageLink.js";
+import { walkWikiContent } from "./walkWikiContent.js";
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
@@ -9,28 +14,13 @@ declare module "@tiptap/core" {
   }
 }
 
-export interface WikiPageLinkedPage {
-  title: string;
-  slug: string;
-  /**
-   * Absolute URL of the page's icon, if it has one. Resolved by the app so
-   * this package needs no knowledge of the upload storage.
-   */
-  iconSrc?: string;
-  /**
-   * Route of the page, resolved by the app. Event wiki pages live under
-   * their event, not under the global wiki route this node falls back to.
-   */
-  href?: string;
-}
-
 export interface WikiPageLinkOptions {
   /**
    * Pages the current viewer can see, by id. Pages missing from the map
-   * (invisible or deleted) render as an unavailable placeholder without
-   * leaking their title.
+   * or null in it (invisible or deleted) render as an unavailable
+   * placeholder without leaking their title.
    */
-  pages: Readonly<Record<string, WikiPageLinkedPage>>;
+  pages: WikiLinkedPages;
 }
 
 /**
@@ -86,30 +76,23 @@ export const WikiPageLink = Node.create<WikiPageLinkOptions>({
   },
 
   renderHTML({ node, HTMLAttributes }) {
-    const pageId = String(node.attrs.pageId ?? "");
-    const page = this.options.pages[pageId];
+    const resolved = resolveWikiPageLink(this.options.pages, node.attrs);
 
-    if (!page)
+    if (!resolved)
       return [
         "span",
         mergeAttributes({ "data-unavailable": "" }, HTMLAttributes),
         "Nicht verfügbare Seite",
       ];
 
-    const children: (string | [string, Record<string, string>])[] = page.iconSrc
-      ? [["img", { src: page.iconSrc, alt: "" }], page.title]
-      : [page.title];
+    const children: (string | [string, Record<string, string>])[] =
+      resolved.iconSrc
+        ? [["img", { src: resolved.iconSrc, alt: "" }], resolved.title]
+        : [resolved.title];
 
     return [
       "a",
-      mergeAttributes(
-        {
-          href:
-            page.href ??
-            `/app/wiki/${encodeURIComponent(pageId)}/${encodeURIComponent(page.slug)}`,
-        },
-        HTMLAttributes,
-      ),
+      mergeAttributes({ href: resolved.href }, HTMLAttributes),
       ...children,
     ];
   },
@@ -135,3 +118,22 @@ export const WikiPageLink = Node.create<WikiPageLinkOptions>({
     );
   },
 });
+
+/**
+ * Collects the ids of all pages linked in a Tiptap JSON document, so only
+ * their labels and routes have to be resolved before rendering.
+ */
+export const collectWikiPageLinkIds = (content: unknown): string[] => {
+  const ids = new Set<string>();
+
+  walkWikiContent(content, (node) => {
+    if (
+      node.type === "wikiPageLink" &&
+      typeof node.attrs?.pageId === "string" &&
+      node.attrs.pageId
+    )
+      ids.add(node.attrs.pageId);
+  });
+
+  return [...ids];
+};

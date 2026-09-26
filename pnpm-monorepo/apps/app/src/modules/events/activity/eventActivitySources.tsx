@@ -21,7 +21,7 @@ import {
   type Event,
   type Prisma,
 } from "@sam-monorepo/database/client";
-import { z } from "zod";
+import * as z from "zod";
 import {
   EventActivitySourceKey,
   EventScheduleEntry,
@@ -108,10 +108,11 @@ export const createEventActivitySource = ({
               position,
               EventActivitySourceKey.Activity,
               direction,
+              "createdAt",
             ),
           ],
         },
-        orderBy: cursorOrderBy(direction),
+        orderBy: cursorOrderBy(direction, "createdAt"),
         take,
         include: {
           citizen: {

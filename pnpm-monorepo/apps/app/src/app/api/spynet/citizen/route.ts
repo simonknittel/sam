@@ -5,7 +5,7 @@ import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import { NextResponse } from "next/server";
-import { z } from "zod";
+import * as z from "zod";
 
 const postBodySchema = z.object({
   type: z.literal("citizen"),

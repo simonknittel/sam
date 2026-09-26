@@ -7,8 +7,8 @@ import { Button2 } from "@/modules/common/components/Button2";
 import Note from "@/modules/common/components/Note";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import YesNoCheckbox from "@/modules/common/components/form/YesNoCheckbox";
-import { api } from "@/modules/common/utils/api";
 import type { EventContainer } from "@/modules/events/utils/eventContainer";
+import { api } from "@/trpc/react";
 import { useId, useState } from "react";
 import { FaSave } from "react-icons/fa";
 import { createWikiPage } from "../actions/createWikiPage";
@@ -58,10 +58,10 @@ export const CreateWikiPageForm = ({
    * Options of the "copy from" select. Fetched lazily: the form only mounts
    * while the modal is open.
    */
-  const { data: copySourceTargets } = api.wiki.getPageTargets.useQuery(
-    { permission: "read", container },
-    { refetchOnWindowFocus: false, refetchOnReconnect: false },
-  );
+  const { data: copySourceTargets } = api.wiki.getPageTargets.useQuery({
+    permission: "read",
+    container,
+  });
 
   /**
    * A successful creation redirects to the new page; onSuccess closes the

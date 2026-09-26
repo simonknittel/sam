@@ -7,6 +7,7 @@ import { FaExternalLinkAlt, FaInfoCircle } from "react-icons/fa";
 import { getAppKey } from "../utils/getAppKey";
 import type { App, RedactedApp } from "../utils/types";
 import { AppFavoriteButton } from "./AppFavoriteButton";
+import { APP_TILE_IMAGE_SIZES } from "./AppTileGrid";
 
 interface Props {
   readonly className?: string;
@@ -14,6 +15,11 @@ interface Props {
   readonly variant?: "default" | "compact";
   readonly onClick?: () => void;
   readonly dotBadgeCount?: number;
+  /**
+   * The screenshot of a tile which is likely above the fold loads at once.
+   * All other screenshots load only when they come near the viewport.
+   */
+  readonly isAboveTheFold?: boolean;
 }
 
 /**
@@ -28,6 +34,7 @@ export const AppTile = ({
   variant = "default",
   onClick,
   dotBadgeCount = 0,
+  isAboveTheFold = false,
 }: Props) => {
   const href =
     "href" in app
@@ -104,7 +111,8 @@ export const AppTile = ({
           <Image
             src={app.imageSrc}
             alt={`Screenshot der ${app.name} App`}
-            priority
+            sizes={APP_TILE_IMAGE_SIZES}
+            loading={isAboveTheFold ? "eager" : "lazy"}
             className="aspect-video object-cover object-top grayscale group-hover/app-tile:grayscale-0 group-focus-within/app-tile:grayscale-0 transition motion-reduce:transition-none flex-initial"
           />
         ) : (

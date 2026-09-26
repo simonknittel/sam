@@ -9,6 +9,46 @@ import { EVENT_PAGE_RELATIONS_SELECT } from "./eventRelationSelects";
 
 const EVENTS_PAGE_SIZE = 10;
 
+/**
+ * An event card shows how many citizens take part and whether the viewer is
+ * one of them. Thus the query counts the participants and loads only the
+ * participation rows of the viewer, not a row for each participant.
+ */
+const eventListSelect = (
+  viewerParticipationWhere: Prisma.EventParticipantWhereInput,
+) =>
+  ({
+    id: true,
+    name: true,
+    startTime: true,
+    endTime: true,
+    source: true,
+    discordId: true,
+    discordGuildId: true,
+    discordImage: true,
+    // For the lineup and briefing checks
+    lineupEnabled: true,
+    discordCreatorId: true,
+    createdById: true,
+    managers: EVENT_PAGE_RELATIONS_SELECT.managers,
+    coverImage: EVENT_PAGE_RELATIONS_SELECT.coverImage,
+    participants: {
+      where: viewerParticipationWhere,
+      select: EVENT_PAGE_RELATIONS_SELECT.participants.select,
+    },
+    _count: {
+      select: {
+        participants: {
+          where: EVENT_PAGE_RELATIONS_SELECT.participants.where,
+        },
+      },
+    },
+  }) satisfies Prisma.EventSelect;
+
+export type EventListItem = Prisma.EventGetPayload<{
+  select: ReturnType<typeof eventListSelect>;
+}>;
+
 /** Events that have not ended yet — the filter behind the "open" status */
 const openEventsWhere = (now: Date): Prisma.EventWhereInput => ({
   OR: [{ startTime: { gte: now } }, { endTime: { gte: now } }],
@@ -88,16 +128,18 @@ export const getEvents = cache(
         where.source = EventSource.DISCORD;
       }
 
+      const citizenId = authentication.session.entity?.id;
+      const viewerParticipationWhere: Prisma.EventParticipantWhereInput = {
+        cancelledAt: null,
+        OR: [
+          { discordUserId: authentication.session.discordId },
+          ...(citizenId ? [{ citizenId }] : []),
+        ],
+      };
+
       if (participating === "me") {
-        const citizenId = authentication.session.entity?.id;
         where.participants = {
-          some: {
-            cancelledAt: null,
-            OR: [
-              { discordUserId: authentication.session.discordId },
-              ...(citizenId ? [{ citizenId }] : []),
-            ],
-          },
+          some: viewerParticipationWhere,
         };
       }
 
@@ -114,7 +156,7 @@ export const getEvents = cache(
         where: {
           AND: [where, await getVisibleEventsWhere()],
         },
-        include: EVENT_PAGE_RELATIONS_SELECT,
+        select: eventListSelect(viewerParticipationWhere),
         orderBy,
         ...(cursor
           ? {

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 import { env } from "../../setup";
 import { checkResponseForError } from "./checkResponseForError";
 import { eventSchema } from "./schemas";

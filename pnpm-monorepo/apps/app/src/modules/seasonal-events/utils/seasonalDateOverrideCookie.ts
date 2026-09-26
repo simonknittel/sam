@@ -1,5 +1,5 @@
 import type { LocalDate } from "@sam-monorepo/domain";
-import { z } from "zod";
+import * as z from "zod";
 
 /**
  * Names the calendar date the seasonal themes resolve for, as `YYYY-MM-DD`.

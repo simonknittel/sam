@@ -3,7 +3,7 @@ import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
-import { isVisibleForCurrentUser } from "../utils/isVisibleForCurrentUser";
+import { getVisibleTasksWhere } from "./getVisibleTasksWhere";
 import { TASK_LIST_SELECT } from "./taskListSelect";
 
 export const getLatestVisibleTasks = cache(
@@ -15,8 +15,9 @@ export const getLatestVisibleTasks = cache(
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    let tasks = await prisma.task.findMany({
+    return prisma.task.findMany({
       where: {
+        AND: [await getVisibleTasksWhere()],
         createdById: {
           not: authentication.session.entity.id,
         },
@@ -48,22 +49,5 @@ export const getLatestVisibleTasks = cache(
       },
       take: 5,
     });
-
-    tasks = (
-      await Promise.all(
-        tasks.map(async (task) => {
-          const include = await isVisibleForCurrentUser(task);
-
-          return {
-            include,
-            task,
-          };
-        }),
-      )
-    )
-      .filter(({ include }) => include)
-      .map(({ task }) => task);
-
-    return tasks;
   }),
 );

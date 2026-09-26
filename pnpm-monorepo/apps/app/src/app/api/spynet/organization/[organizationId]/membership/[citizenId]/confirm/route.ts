@@ -6,7 +6,7 @@ import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import { updateActiveMembership } from "@/modules/organizations/utils/updateActiveMembership";
 import { ConfirmationStatus } from "@sam-monorepo/database/client";
 import { NextResponse } from "next/server";
-import { z } from "zod";
+import * as z from "zod";
 
 const bodySchema = z.object({
   id: z.cuid(),

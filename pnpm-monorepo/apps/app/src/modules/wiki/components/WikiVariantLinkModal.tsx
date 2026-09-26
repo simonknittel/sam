@@ -3,8 +3,8 @@
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import Modal from "@/modules/common/components/Modal";
-import { api, type RouterOutputs } from "@/modules/common/utils/api";
 import { VariantWithLogo } from "@/modules/fleet/components/VariantWithLogo";
+import { api, type RouterOutputs } from "@/trpc/react";
 import type { Editor } from "@tiptap/react";
 import clsx from "clsx";
 import { useId, useState } from "react";
@@ -45,10 +45,7 @@ export const WikiVariantLinkModal = ({
   const [activeIndex, setActiveIndex] = useState(0);
   const listboxId = useId();
 
-  const { data, isPending } = api.variant.getAll.useQuery(undefined, {
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-  });
+  const { data, isPending } = api.variant.getAll.useQuery(undefined);
 
   const normalized = query.toLowerCase().trim();
   const matches = (data ?? []).filter(

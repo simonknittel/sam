@@ -7,9 +7,9 @@ import {
   resolveWikiVariantLink,
   WIKI_FULL_WIDTH,
   wikiPageIndexConfigKey,
+  type WikiLinkedPages,
   type WikiLinkedVariant,
   type WikiMentionedCitizen,
-  type WikiPageLinkedPage,
 } from "@sam-monorepo/wiki-editor";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { renderToReactElement } from "@tiptap/static-renderer";
@@ -20,7 +20,7 @@ import type { WikiImageDimensions } from "../utils/wikiImageRendering";
 import { withoutWikiTrailingEmptyParagraph } from "../utils/wikiTrailingParagraph";
 import { WikiAttachmentCard } from "./WikiAttachmentCard";
 import { wikiBlockLayoutStyle } from "./wikiBlockLayoutStyle";
-import { WikiCitizenMentionChip } from "./WikiCitizenMentionNodeView";
+import { WikiCitizenMentionChip } from "./WikiCitizenMentionChip";
 import { WikiContentImage } from "./WikiContentImage";
 import "./wikiEditor.css";
 import {
@@ -31,7 +31,7 @@ import {
   WikiRoleCitizensList,
   type WikiRoleCitizen,
 } from "./WikiRoleCitizensList";
-import { WikiVariantLinkChip } from "./WikiVariantLinkNodeView";
+import { WikiVariantLinkChip } from "./WikiVariantLinkChip";
 
 type StaticContent = Parameters<typeof renderToReactElement>[0]["content"];
 
@@ -62,7 +62,7 @@ const tableCellProps = (node: ProseMirrorNode) => {
 const renderWikiPageContent = (
   content: StaticContent,
   iframeAllowlist: readonly string[],
-  linkablePages: Readonly<Record<string, WikiPageLinkedPage>>,
+  linkedPages: WikiLinkedPages,
   mentionedCitizens: Readonly<Record<string, WikiMentionedCitizen>>,
   linkedVariants: Readonly<Record<string, WikiLinkedVariant>>,
   pageIndexes: Readonly<Record<string, readonly WikiPageIndexEntry[]>>,
@@ -79,7 +79,7 @@ const renderWikiPageContent = (
     extensions: getWikiEditorExtensions({
       twitchParentHost: getWikiTwitchParentHost(),
       iframeAllowlist,
-      pages: linkablePages,
+      pages: linkedPages,
       citizens: mentionedCitizens,
       variants: linkedVariants,
     }),
@@ -236,8 +236,7 @@ interface Props {
   readonly pageId?: string;
   /** Hostnames generic iframes may embed (WikiSetting.iframeAllowlist) */
   readonly iframeAllowlist: readonly string[];
-  /** Pages the viewer can see, by id — for internal page links */
-  readonly linkablePages: Readonly<Record<string, WikiPageLinkedPage>>;
+  readonly linkedPages: WikiLinkedPages;
   /** Current handles of the citizens mentioned on the page, by id */
   readonly mentionedCitizens: Readonly<Record<string, WikiMentionedCitizen>>;
   /** Current names and manufacturer logos of the variants linked on the page, by id */
@@ -270,7 +269,7 @@ export const WikiPageStaticContent = ({
   content,
   pageId,
   iframeAllowlist,
-  linkablePages,
+  linkedPages,
   mentionedCitizens,
   linkedVariants,
   pageIndexes = {},
@@ -292,7 +291,7 @@ export const WikiPageStaticContent = ({
   const rendered = renderWikiPageContent(
     withoutWikiTrailingEmptyParagraph(content),
     iframeAllowlist,
-    linkablePages,
+    linkedPages,
     mentionedCitizens,
     linkedVariants,
     pageIndexes,

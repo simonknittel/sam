@@ -33,8 +33,6 @@ export const AddEventParticipants = ({ className, eventId }: Props) => {
       { eventId },
       {
         enabled: isOpen,
-        refetchOnWindowFocus: false,
-        refetchOnReconnect: false,
       },
     );
 

@@ -21,7 +21,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { z } from "zod";
+import * as z from "zod";
 import {
   NotificationCenterTab,
   type OnSiteNotificationRow,

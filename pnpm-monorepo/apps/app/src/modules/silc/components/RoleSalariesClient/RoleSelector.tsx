@@ -3,8 +3,8 @@ import {
   PopoverBaseUI,
   usePopoverBaseUI,
 } from "@/modules/common/components/PopoverBaseUI";
-import { api, type RouterOutputs } from "@/modules/common/utils/api";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
+import { api, type RouterOutputs } from "@/trpc/react";
 import type { Role } from "@sam-monorepo/database/client";
 import { useState, type CSSProperties } from "react";
 import { FaPen, FaUsers } from "react-icons/fa";
@@ -18,10 +18,7 @@ interface Props {
 type RolesForSalaries = RouterOutputs["silc"]["getRolesForSalaries"];
 
 export const RoleSelector = ({ style, defaultValue, onChange }: Props) => {
-  const { isPending, data } = api.silc.getRolesForSalaries.useQuery(undefined, {
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-  });
+  const { isPending, data } = api.silc.getRolesForSalaries.useQuery(undefined);
 
   const [selectedRole, setSelectedRole] = useState<Role["id"] | null>(
     defaultValue || null,

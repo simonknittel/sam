@@ -3,13 +3,17 @@
  * Next.js app (editor, static rendering, server-side validation) and the
  * collab server (apps/collab, Yjs ⇄ ProseMirror conversion) so all
  * consumers always agree on the same schema.
+ *
+ * Importing this entry loads Tiptap, ProseMirror and lowlight. Client code
+ * that only renders content imports `@sam-monorepo/wiki-editor/helpers`
+ * instead (see helpers.ts).
  */
 export { extractWikiPageText } from "./extractWikiPageText.js";
+export * from "./helpers.js";
 export { isWikiPageContentEmpty } from "./isWikiPageContentEmpty.js";
 export {
   WikiAttachment,
   collectWikiAttachmentUploadIds,
-  formatWikiAttachmentSize,
 } from "./wikiAttachmentNode.js";
 export {
   WIKI_CALLOUT_COLORS,
@@ -18,10 +22,7 @@ export {
 export {
   WikiCitizenMention,
   collectWikiMentionedCitizenIds,
-  resolveWikiCitizenMention,
-  type ResolvedWikiCitizenMention,
   type WikiCitizenMentionOptions,
-  type WikiMentionedCitizen,
 } from "./wikiCitizenMentionNode.js";
 export {
   WikiSaveState,
@@ -79,7 +80,11 @@ export {
   type WikiPageIndexMatchMode,
   type WikiPageIndexMode,
 } from "./wikiPageIndexNode.js";
-export type { WikiPageLinkedPage } from "./wikiPageLinkNode.js";
+export {
+  WikiPageLink,
+  collectWikiPageLinkIds,
+  type WikiPageLinkOptions,
+} from "./wikiPageLinkNode.js";
 export {
   WIKI_FULL_WIDTH,
   WIKI_NARROW_WIDTH_PX,
@@ -115,10 +120,5 @@ export {
 export {
   WikiVariantLink,
   collectWikiVariantLinkIds,
-  resolveWikiVariantLink,
-  wikiVariantLinkHref,
-  type ResolvedWikiVariantLink,
-  type WikiLinkedVariant,
   type WikiVariantLinkOptions,
-  type WikiVariantLogo,
 } from "./wikiVariantLinkNode.js";

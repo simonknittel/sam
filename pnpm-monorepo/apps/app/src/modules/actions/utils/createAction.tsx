@@ -10,7 +10,7 @@ import { SpanStatusCode } from "@opentelemetry/api";
 import { getTranslations } from "next-intl/server";
 import { unstable_rethrow } from "next/navigation";
 import { serializeError } from "serialize-error";
-import type { z } from "zod";
+import type * as z from "zod";
 
 export type ActionResponse =
   | {

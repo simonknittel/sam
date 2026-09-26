@@ -1,9 +1,9 @@
 "use client";
 
-import type { RouterOutputs } from "@/modules/common/utils/api";
-import { api } from "@/trpc/react";
+import { api, type RouterOutputs } from "@/trpc/react";
 import { useCallback, useEffect, useRef } from "react";
 import { useLogAnalyzerContext } from "../components/LogAnalyzerContext";
+import { deleteEntriesBefore, getWindowStart } from "../utils/entryWindow";
 import { LIVE_MODE_DOWNLOAD_INTERVAL_MS } from "../utils/liveMode";
 import {
   createEntryKey,
@@ -78,7 +78,8 @@ export const useSharedEntries = () => {
     fetchingGenerationRef.current = generation;
 
     try {
-      const data = await utils.logAnalyzer.getSharedEntries.fetch({
+      /** The vanilla client keeps no copy of the response in the query cache */
+      const data = await utils.client.logAnalyzer.getSharedEntries.query({
         daysToLoad: clampDaysToLoad(daysToLoad),
         cursorId: cursorRef.current,
       });
@@ -99,6 +100,7 @@ export const useSharedEntries = () => {
             newEntries.set(entry.key, entry);
           }
 
+          deleteEntriesBefore(newEntries, getWindowStart(daysToLoad));
           return newEntries;
         });
       }

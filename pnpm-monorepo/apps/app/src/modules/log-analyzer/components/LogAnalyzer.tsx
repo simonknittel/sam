@@ -12,7 +12,9 @@ import { get, set } from "idb-keyval";
 import { useCallback, useEffect, useRef, type MouseEvent } from "react";
 import { FaFileArrowUp } from "react-icons/fa6";
 import { useEntryUpload } from "../hooks/useEntryUpload";
+import { useLogParser } from "../hooks/useLogParser";
 import { useSharedEntries } from "../hooks/useSharedEntries";
+import { deleteEntriesBefore, getWindowStart } from "../utils/entryWindow";
 import { getFilesRecursively } from "../utils/getFilesRecursively";
 import { LIVE_MODE_PARSE_INTERVAL_MS } from "../utils/liveMode";
 import {
@@ -21,7 +23,7 @@ import {
   EntryType,
   type IEntry,
 } from "../utils/PATTERNS";
-import type { RawMatch, ResultMessage } from "../utils/types";
+import type { LogFile } from "../utils/types";
 import { Introduction } from "./Introduction";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 import { LogAnalyzerTable } from "./LogAnalyzerTable";
@@ -53,25 +55,27 @@ export const LogAnalyzer = ({ className }: Props) => {
 
   const ownCitizen = authentication ? authentication.session.entity : null;
 
-  // Reusable Web Worker for background log parsing
-  const workerRef = useRef<Worker | null>(null);
+  const parseLogFiles = useLogParser();
 
+  /**
+   * A cycle reads only the lines which were added since the cycle before it.
+   * This flag makes the next cycle read the whole window again.
+   */
+  const requiresFullReadRef = useRef(true);
+
+  /**
+   * `uploadEntries` changes with each setting of the sharing. A type which is
+   * shared from now on needs the entries which were parsed before, and a
+   * larger window needs the older lines of the files.
+   */
   useEffect(() => {
-    workerRef.current = new Worker(
-      new URL("../utils/logParser.worker.ts", import.meta.url),
-      { type: "module" },
-    );
-    return () => {
-      workerRef.current?.terminate();
-      workerRef.current = null;
-    };
-  }, []);
+    requiresFullReadRef.current = true;
+  }, [daysToLoad, uploadEntries]);
 
   const parseLogs = useCallback(
     (isNew = false) => {
       startTransition(async () => {
         if (!directoryHandleRef.current) return;
-        if (!workerRef.current) return;
 
         try {
           const filterProps = Object.fromEntries(
@@ -98,62 +102,33 @@ export const LogAnalyzer = ({ className }: Props) => {
           // Tracking failure should not affect log parsing
         }
 
-        const files: File[] = [];
+        const logFiles: LogFile[] = [];
 
-        for await (const fileHandle of getFilesRecursively(
+        for await (const logFile of getFilesRecursively(
           directoryHandleRef.current,
         )) {
-          if (!fileHandle) continue;
-          if (!fileHandle.name.endsWith(".log")) continue;
-          files.push(fileHandle);
+          if (!logFile) continue;
+          if (!logFile.file.name.endsWith(".log")) continue;
+          logFiles.push(logFile);
         }
 
-        const cutoffDateEnd = new Date();
-        cutoffDateEnd.setHours(23, 59, 59, 999);
+        const windowStart = getWindowStart(daysToLoad);
+        const windowEnd = new Date();
+        windowEnd.setHours(23, 59, 59, 999);
 
-        const slicedFiles =
-          daysToLoad === 0
-            ? files
-            : files.filter((file) => {
-                const cutoffDateStart = new Date(cutoffDateEnd);
-                cutoffDateStart.setDate(cutoffDateStart.getDate() - daysToLoad);
-                cutoffDateStart.setHours(0, 0, 0, 0);
-                const lastModified = new Date(file.lastModified);
-                return (
-                  lastModified >= cutoffDateStart &&
-                  lastModified <= cutoffDateEnd
-                );
-              });
+        const logFilesInWindow = windowStart
+          ? logFiles.filter(
+              ({ file }) =>
+                file.lastModified >= windowStart.getTime() &&
+                file.lastModified <= windowEnd.getTime(),
+            )
+          : logFiles;
+
+        const isFullRead = requiresFullReadRef.current;
+        requiresFullReadRef.current = false;
 
         try {
-          const fileContents = await Promise.all(
-            slicedFiles.map((file: File) => file.text()),
-          );
-
-          /**
-           * Offload RegEx matching to Web Worker
-           */
-          const rawMatches = await new Promise<RawMatch[]>(
-            (resolve, reject) => {
-              const worker = workerRef.current!;
-
-              const handleMessage = (e: MessageEvent<ResultMessage>) => {
-                worker.removeEventListener("message", handleMessage);
-                resolve(e.data.matches);
-              };
-              worker.addEventListener("message", handleMessage);
-
-              worker.addEventListener("error", (e: ErrorEvent) => {
-                worker.removeEventListener("message", handleMessage);
-                reject(new Error(e.message));
-              });
-
-              worker.postMessage({
-                id: Date.now(),
-                fileContents,
-              });
-            },
-          );
+          const rawMatches = await parseLogFiles(logFilesInWindow, isFullRead);
 
           /**
            * Map raw matches to `IEntry` on the main thread (needed for JSX rendering)
@@ -162,6 +137,7 @@ export const LogAnalyzer = ({ className }: Props) => {
             const newEntries = new Map<string, IEntry>(previousEntries);
 
             for (const rawMatch of rawMatches) {
+              const isoDate = new Date(rawMatch.isoDate);
               const key = createEntryKey(rawMatch.type, rawMatch.fullMatch);
               const existingEntry = newEntries.get(key);
               /**
@@ -174,7 +150,7 @@ export const LogAnalyzer = ({ className }: Props) => {
               newEntries.set(key, {
                 key,
                 type: rawMatch.type,
-                isoDate: new Date(rawMatch.isoDate),
+                isoDate,
                 isNew: existingEntry?.isNew ?? isNew,
                 ...deriveEntryFields(rawMatch.type, rawMatch.groups),
                 citizen: ownCitizen,
@@ -183,12 +159,26 @@ export const LogAnalyzer = ({ className }: Props) => {
               });
             }
 
+            /** A file of the window can begin before the window */
+            deleteEntriesBefore(newEntries, windowStart);
+
             return newEntries;
           });
 
-          /** Sharing must not hold up the rendering of the new entries */
-          void uploadEntries(rawMatches);
+          /**
+           * Sharing must not hold up the rendering of the new entries. A
+           * failed upload tries again with the whole window next cycle.
+           */
+          void uploadEntries(rawMatches).then(
+            (isComplete) => {
+              if (!isComplete) requiresFullReadRef.current = true;
+            },
+            () => {
+              requiresFullReadRef.current = true;
+            },
+          );
         } catch (error) {
+          requiresFullReadRef.current = true;
           console.error("[Log Analyzer] Error reading files:", error);
         }
       });
@@ -200,11 +190,21 @@ export const LogAnalyzer = ({ className }: Props) => {
       isAutostartEnabled,
       isLiveModeEnabled,
       ownCitizen,
+      parseLogFiles,
       pipWindow,
       setEntries,
       startTransition,
       uploadEntries,
     ],
+  );
+
+  const openDirectory = useCallback(
+    (directoryHandle: FileSystemDirectoryHandle) => {
+      directoryHandleRef.current = directoryHandle;
+      requiresFullReadRef.current = true;
+      parseLogs();
+    },
+    [parseLogs],
   );
 
   /**
@@ -240,16 +240,14 @@ export const LogAnalyzer = ({ className }: Props) => {
               const permissionState =
                 await existingDirectoryHandle.requestPermission();
               if (permissionState === "granted") {
-                directoryHandleRef.current = existingDirectoryHandle;
-                parseLogs();
+                openDirectory(existingDirectoryHandle);
                 return;
               }
             }
 
             const newDirectoryHandle = await window.showDirectoryPicker();
             if (!newDirectoryHandle) return;
-            directoryHandleRef.current = newDirectoryHandle;
-            parseLogs();
+            openDirectory(newDirectoryHandle);
             await set("directory_handle", newDirectoryHandle);
           },
         )
@@ -260,7 +258,7 @@ export const LogAnalyzer = ({ className }: Props) => {
           );
         });
     },
-    [parseLogs],
+    [openDirectory],
   );
 
   const handleNewDirectorySelect = (event?: MouseEvent<HTMLButtonElement>) => {
@@ -270,8 +268,7 @@ export const LogAnalyzer = ({ className }: Props) => {
       .showDirectoryPicker()
       .then(async (newDirectoryHandle) => {
         if (!newDirectoryHandle) return;
-        directoryHandleRef.current = newDirectoryHandle;
-        parseLogs();
+        openDirectory(newDirectoryHandle);
         await set("directory_handle", newDirectoryHandle);
       })
       .catch((error) => {

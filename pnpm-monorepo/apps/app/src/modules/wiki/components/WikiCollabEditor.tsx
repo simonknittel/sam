@@ -2,9 +2,9 @@
 
 import { HocuspocusProvider, WebSocketStatus } from "@hocuspocus/provider";
 import type {
+  WikiLinkedPages,
   WikiLinkedVariant,
   WikiMentionedCitizen,
-  WikiPageLinkedPage,
 } from "@sam-monorepo/wiki-editor";
 import { Collaboration } from "@tiptap/extension-collaboration";
 import { CollaborationCaret } from "@tiptap/extension-collaboration-caret";
@@ -49,8 +49,7 @@ interface Props {
   readonly userColor: string;
   /** Hostnames generic iframes may embed (WikiSetting.iframeAllowlist) */
   readonly iframeAllowlist: readonly string[];
-  /** Pages the viewer can see, by id — for internal page links */
-  readonly linkablePages: Readonly<Record<string, WikiPageLinkedPage>>;
+  readonly linkedPages: WikiLinkedPages;
   /** Current handles of the citizens mentioned on the page, by id */
   readonly mentionedCitizens: Readonly<Record<string, WikiMentionedCitizen>>;
   /** Current names and manufacturer logos of the variants linked on the page, by id */
@@ -149,7 +148,7 @@ export const WikiCollabEditor = ({
   userName,
   userColor,
   iframeAllowlist,
-  linkablePages,
+  linkedPages,
   mentionedCitizens,
   linkedVariants,
   pageIndexes,
@@ -225,7 +224,7 @@ export const WikiCollabEditor = ({
       userName={userName}
       userColor={userColor}
       iframeAllowlist={iframeAllowlist}
-      linkablePages={linkablePages}
+      linkedPages={linkedPages}
       mentionedCitizens={mentionedCitizens}
       linkedVariants={linkedVariants}
       pageIndexes={pageIndexes}
@@ -249,7 +248,7 @@ interface ConnectedEditorProps {
   readonly userName: string;
   readonly userColor: string;
   readonly iframeAllowlist: readonly string[];
-  readonly linkablePages: Readonly<Record<string, WikiPageLinkedPage>>;
+  readonly linkedPages: WikiLinkedPages;
   readonly mentionedCitizens: Readonly<Record<string, WikiMentionedCitizen>>;
   readonly linkedVariants: Readonly<Record<string, WikiLinkedVariant>>;
   readonly pageIndexes: Readonly<Record<string, WikiPageIndexEntry[]>>;
@@ -268,7 +267,7 @@ const ConnectedEditor = ({
   userName,
   userColor,
   iframeAllowlist,
-  linkablePages,
+  linkedPages,
   mentionedCitizens,
   linkedVariants,
   pageIndexes,
@@ -389,7 +388,7 @@ const ConnectedEditor = ({
   const extensions = useWikiEditorExtensions({
     pageId,
     iframeAllowlist,
-    linkablePages,
+    linkedPages,
     mentionedCitizens,
     linkedVariants,
     pageIndexes,

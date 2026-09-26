@@ -5,7 +5,7 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { getOrganizations } from "@/modules/organizations/queries/getOrganizations";
 import { getTracer } from "@/modules/tracing/utils/getTracer";
 import { SpanStatusCode } from "@opentelemetry/api";
-import { z } from "zod";
+import * as z from "zod";
 import { getClient, indexName } from "..";
 
 const schema = z.object({});

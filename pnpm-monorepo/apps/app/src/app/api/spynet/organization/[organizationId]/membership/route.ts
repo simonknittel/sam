@@ -10,7 +10,7 @@ import {
   OrganizationMembershipVisibility,
 } from "@sam-monorepo/database/client";
 import { NextResponse } from "next/server";
-import { z } from "zod";
+import * as z from "zod";
 
 type Params = Promise<{
   organizationId: string;

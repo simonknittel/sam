@@ -7,7 +7,7 @@ import {
 } from "@/modules/log-analyzer/utils/sharedEntries";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { TRPCError } from "@trpc/server";
-import { z } from "zod";
+import * as z from "zod";
 import { protectedProcedure, toTrpcError } from "../../trpc";
 
 /**

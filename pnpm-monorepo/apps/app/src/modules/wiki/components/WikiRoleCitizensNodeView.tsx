@@ -1,6 +1,6 @@
 "use client";
 
-import { api } from "@/modules/common/utils/api";
+import { api } from "@/trpc/react";
 import {
   WikiRoleCitizens,
   normalizeWikiRoleCitizensConfig,
@@ -36,7 +36,6 @@ const WikiRoleCitizensNodeView = ({ node, extension }: NodeViewProps) => {
     { roleId: roleId ?? "" },
     {
       enabled: roleId !== null,
-      refetchOnWindowFocus: false,
       placeholderData: (previous) =>
         previous ?? (roleId ? initialCitizens[roleId] : undefined),
     },

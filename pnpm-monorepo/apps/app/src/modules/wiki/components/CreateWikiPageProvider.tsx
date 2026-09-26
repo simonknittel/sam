@@ -1,7 +1,6 @@
 "use client";
 
 import Modal from "@/modules/common/components/Modal";
-import type { EventContainer } from "@/modules/events/utils/eventContainer";
 import { usePathname } from "next/navigation";
 import {
   createContext,
@@ -11,7 +10,6 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { WikiPageTargetOption } from "../utils/getWikiPageTargets";
 import {
   parseWikiClipboardCookie,
   serializeWikiClipboardClearCookie,
@@ -21,6 +19,7 @@ import { getActiveWikiPageId } from "../utils/wikiPageHref";
 import { CreateWikiPageForm } from "./CreateWikiPageForm";
 import { PasteWikiPagesSection } from "./PasteWikiPagesSection";
 import { useWikiPageHrefMode } from "./WikiPageHrefModeProvider";
+import { WikiPageTargetsLoader } from "./WikiPageTargetsLoader";
 
 interface CreateWikiPageContext {
   /**
@@ -42,18 +41,15 @@ interface OpenState {
 
 interface Props {
   readonly children: ReactNode;
-  readonly targets: WikiPageTargetOption[];
   readonly allowTopLevel: boolean;
-  /** Set inside a briefing — scopes the form's "copy from" options */
-  readonly container?: EventContainer;
 }
 
-export const CreateWikiPageProvider = ({
-  children,
-  targets,
-  allowTopLevel,
-  container,
-}: Props) => {
+/**
+ * The "Neue Seite" modal of a wiki scope. The scope (and with it the parent
+ * candidates and the "copy from" options) comes from the surrounding
+ * WikiPageHrefModeProvider.
+ */
+export const CreateWikiPageProvider = ({ children, allowTopLevel }: Props) => {
   const pathname = usePathname();
   const hrefMode = useWikiPageHrefMode();
   const [openState, setOpenState] = useState<OpenState | null>(null);
@@ -89,37 +85,71 @@ export const CreateWikiPageProvider = ({
         className="w-120"
         heading={<h2>Neue Seite</h2>}
       >
-        {openState?.clipboard && (
-          <>
-            <PasteWikiPagesSection
-              clipboard={openState.clipboard}
-              targets={targets}
-              allowTopLevel={allowTopLevel}
-              defaultParentId={openState.parentId}
-              onDiscard={discardClipboard}
-              onSuccess={() => setOpenState(null)}
-            />
-
-            <div
-              className="my-4 flex items-center gap-4 text-sm text-neutral-500"
-              aria-hidden
-            >
-              <hr className="flex-1 border-white/5" />
-              oder neue Seite erstellen
-              <hr className="flex-1 border-white/5" />
-            </div>
-          </>
-        )}
-
-        <CreateWikiPageForm
-          targets={targets}
-          allowTopLevel={allowTopLevel}
+        <CreateWikiPageModalContent
+          clipboard={openState?.clipboard ?? null}
           defaultParentId={openState?.parentId}
-          container={container}
+          allowTopLevel={allowTopLevel}
+          onDiscardClipboard={discardClipboard}
           onSuccess={() => setOpenState(null)}
         />
       </Modal>
     </CreateWikiPageContext.Provider>
+  );
+};
+
+interface ModalContentProps {
+  readonly clipboard: WikiClipboardEntry | null;
+  readonly defaultParentId?: string;
+  readonly allowTopLevel: boolean;
+  readonly onDiscardClipboard: () => void;
+  readonly onSuccess: () => void;
+}
+
+const CreateWikiPageModalContent = ({
+  clipboard,
+  defaultParentId,
+  allowTopLevel,
+  onDiscardClipboard,
+  onSuccess,
+}: ModalContentProps) => {
+  const { container } = useWikiPageHrefMode();
+
+  return (
+    <WikiPageTargetsLoader>
+      {(targets) => (
+        <>
+          {clipboard && (
+            <>
+              <PasteWikiPagesSection
+                clipboard={clipboard}
+                targets={targets}
+                allowTopLevel={allowTopLevel}
+                defaultParentId={defaultParentId}
+                onDiscard={onDiscardClipboard}
+                onSuccess={onSuccess}
+              />
+
+              <div
+                className="my-4 flex items-center gap-4 text-sm text-neutral-500"
+                aria-hidden
+              >
+                <hr className="flex-1 border-white/5" />
+                oder neue Seite erstellen
+                <hr className="flex-1 border-white/5" />
+              </div>
+            </>
+          )}
+
+          <CreateWikiPageForm
+            targets={targets}
+            allowTopLevel={allowTopLevel}
+            defaultParentId={defaultParentId}
+            container={container ?? undefined}
+            onSuccess={onSuccess}
+          />
+        </>
+      )}
+    </WikiPageTargetsLoader>
   );
 };
 

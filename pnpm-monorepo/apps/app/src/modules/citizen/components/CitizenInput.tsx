@@ -57,10 +57,7 @@ export const CitizenInput = ({
   const [query, setQuery] = useState("");
 
   const { isPending, data: dataAllCitizens } =
-    api.citizens.getAllCitizens.useQuery(undefined, {
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: false,
-    });
+    api.citizens.getAllCitizens.useQuery(undefined);
 
   if (isPending || !dataAllCitizens)
     return (
@@ -238,10 +235,7 @@ const Multiple = ({
   autoFocus,
 }: MultipleComponentProps) => {
   const { isPending, data: dataCitizensGroupedByVisibleRoles } =
-    api.citizens.getCitizensGroupedByVisibleRoles.useQuery(undefined, {
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: false,
-    });
+    api.citizens.getCitizensGroupedByVisibleRoles.useQuery(undefined);
 
   const [selectedCitizens, setSelectedCitizens] = useState<CitizenOption[]>(
     defaultValue || [],
@@ -250,8 +244,13 @@ const Multiple = ({
   const handleSelectRole = (roleId: string) => {
     if (!dataCitizensGroupedByVisibleRoles) return;
 
-    const citizensOfRole =
-      dataCitizensGroupedByVisibleRoles.get(roleId)?.citizens || [];
+    const { citizens, roleGroups } = dataCitizensGroupedByVisibleRoles;
+    const citizenIdsOfRole = new Set(
+      roleGroups.find((group) => group.roleId === roleId)?.citizenIds,
+    );
+    const citizensOfRole = citizens.filter((citizen) =>
+      citizenIdsOfRole.has(citizen.id),
+    );
 
     setSelectedCitizens(
       selectableIds
@@ -309,24 +308,20 @@ const Multiple = ({
           childrenClassName="max-h-96 overflow-auto"
         >
           <div className="flex flex-col gap-2">
-            {dataCitizensGroupedByVisibleRoles
-              ? Array.from(dataCitizensGroupedByVisibleRoles.values())
-                  .toSorted((a, b) => a.role.name.localeCompare(b.role.name))
-                  .map(({ role }) => (
-                    <button
-                      key={role.id}
-                      type="button"
-                      onClick={() => handleSelectRole(role.id)}
-                      className="group"
-                    >
-                      <SingleRoleBadge
-                        roleId={role.id}
-                        showPlaceholder
-                        className="bg-transparent group-hover:bg-neutral-700/50 group-focus-visible:bg-neutral-700/50"
-                      />
-                    </button>
-                  ))
-              : null}
+            {dataCitizensGroupedByVisibleRoles?.roleGroups.map(({ roleId }) => (
+              <button
+                key={roleId}
+                type="button"
+                onClick={() => handleSelectRole(roleId)}
+                className="group"
+              >
+                <SingleRoleBadge
+                  roleId={roleId}
+                  showPlaceholder
+                  className="bg-transparent group-hover:bg-neutral-700/50 group-focus-visible:bg-neutral-700/50"
+                />
+              </button>
+            ))}
           </div>
         </PopoverBaseUI>
       </div>

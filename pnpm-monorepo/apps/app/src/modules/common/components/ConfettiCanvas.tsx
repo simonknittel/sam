@@ -44,6 +44,7 @@ export const ConfettiCanvas = ({
     let isCancelled = false;
     let fireConfetti: CreateTypes | undefined;
     let burstTimer: ReturnType<typeof setInterval> | undefined;
+    let isIntersecting = false;
 
     const stop = () => {
       clearInterval(burstTimer);
@@ -61,16 +62,35 @@ export const ConfettiCanvas = ({
       burstTimer = setInterval(fireBurst, intervalMilliseconds);
     };
 
+    const startOrStop = () => {
+      if (isIntersecting && document.visibilityState === "visible") start();
+      else stop();
+    };
+
     /**
      * A list of many rows must not animate the rows nobody looks at. The
      * root is the viewport, and a scroll container between them clips the
      * intersection with it, thus a canvas which is scrolled out of such a
-     * container stops as well.
+     * container stops as well. The last entry has the current state when
+     * the browser sends more than one change at a time.
      */
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry?.isIntersecting) start();
-      else stop();
+    const observer = new IntersectionObserver((entries) => {
+      isIntersecting = entries.at(-1)?.isIntersecting ?? false;
+      startOrStop();
     });
+
+    /**
+     * A hidden tab continues to run the timer, but not the animation frames.
+     * The library removes particles only in its animation frames, thus the
+     * bursts of a hidden tab collect until the user comes back. The reset
+     * drops the particles which are in the queue.
+     */
+    const handleVisibilityChange = () => {
+      startOrStop();
+      if (document.visibilityState === "hidden") fireConfetti?.reset();
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     /**
      * The library is loaded only for the elements which need it, and it
@@ -98,6 +118,7 @@ export const ConfettiCanvas = ({
       isCancelled = true;
       stop();
       observer.disconnect();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       fireConfetti?.reset();
     };
   }, [prefersReducedMotion, shots, intervalMilliseconds]);

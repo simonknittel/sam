@@ -1,6 +1,6 @@
 "use client";
 
-import { api } from "@/modules/common/utils/api";
+import { api } from "@/trpc/react";
 import {
   WikiPageIndex,
   normalizeWikiPageIndexConfig,
@@ -49,7 +49,6 @@ const WikiPageIndexNodeView = ({ node, extension }: NodeViewProps) => {
       variantId: variantId ?? undefined,
     },
     {
-      refetchOnWindowFocus: false,
       placeholderData: (previous) =>
         previous ?? initialEntries[wikiPageIndexConfigKey(node.attrs)],
     },

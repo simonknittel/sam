@@ -9,14 +9,12 @@ import Note from "@/modules/common/components/Note";
 import { useState } from "react";
 import { FaFolderOpen, FaSave } from "react-icons/fa";
 import { moveWikiPage } from "../actions/moveWikiPage";
-import type { WikiPageTargetOption } from "../utils/getWikiPageTargets";
 import { WikiPageSelect } from "./WikiPageSelect";
+import { WikiPageTargetsLoader } from "./WikiPageTargetsLoader";
 
 interface Props {
   readonly className?: string;
   readonly pageId: string;
-  /** Visible pages the viewer manages, excluding the page's own subtree */
-  readonly targets: readonly WikiPageTargetOption[];
   readonly allowTopLevel: boolean;
   readonly currentParentId: string | null;
 }
@@ -24,7 +22,6 @@ interface Props {
 export const MoveWikiPageModal = ({
   className,
   pageId,
-  targets,
   allowTopLevel,
   currentParentId,
 }: Props) => {
@@ -52,42 +49,46 @@ export const MoveWikiPageModal = ({
         className="w-120"
         heading={<h2>Seite verschieben</h2>}
       >
-        {!allowTopLevel && targets.length === 0 ? (
-          <Note
-            type="info"
-            message="Verschieben kannst du diese Seite nur in Seiten, die du verwaltest. Derzeit verwaltest du keine andere Seite."
-          />
-        ) : (
-          <form action={formAction}>
-            <input type="hidden" name="id" value={pageId} />
+        <WikiPageTargetsLoader excludeSubtreeOf={pageId}>
+          {(targets) =>
+            !allowTopLevel && targets.length === 0 ? (
+              <Note
+                type="info"
+                message="Verschieben kannst du diese Seite nur in Seiten, die du verwaltest. Derzeit verwaltest du keine andere Seite."
+              />
+            ) : (
+              <form action={formAction}>
+                <input type="hidden" name="id" value={pageId} />
 
-            <label className="mb-1 block">Neuer Ort</label>
-            <WikiPageSelect
-              name="newParentId"
-              defaultValue={currentParentId ?? ""}
-              required={!allowTopLevel}
-              targets={targets}
-              emptyOptionLabel={allowTopLevel ? "Oberste Ebene" : undefined}
-            />
+                <label className="mb-1 block">Neuer Ort</label>
+                <WikiPageSelect
+                  name="newParentId"
+                  defaultValue={currentParentId ?? ""}
+                  required={!allowTopLevel}
+                  targets={targets}
+                  emptyOptionLabel={allowTopLevel ? "Oberste Ebene" : undefined}
+                />
 
-            <Note
-              type="info"
-              className="mt-4"
-              message='Unterseiten und Einstellungen mit "Geerbt" übernehmen am neuen Ort die Berechtigungen der neuen übergeordneten Seiten. Dadurch kann sich die effektive Sichtbarkeit dieser Seite und ihrer Unterseiten ändern.'
-            />
+                <Note
+                  type="info"
+                  className="mt-4"
+                  message='Unterseiten und Einstellungen mit "Geerbt" übernehmen am neuen Ort die Berechtigungen der neuen übergeordneten Seiten. Dadurch kann sich die effektive Sichtbarkeit dieser Seite und ihrer Unterseiten ändern.'
+                />
 
-            <Button2
-              type="submit"
-              disabled={isPending}
-              className="mt-4 ml-auto"
-            >
-              {isPending ? <AsciiSpinner /> : <FaSave />}
-              Verschieben
-            </Button2>
+                <Button2
+                  type="submit"
+                  disabled={isPending}
+                  className="mt-4 ml-auto"
+                >
+                  {isPending ? <AsciiSpinner /> : <FaSave />}
+                  Verschieben
+                </Button2>
 
-            <ActionErrorNote className="mt-4" state={state} />
-          </form>
-        )}
+                <ActionErrorNote className="mt-4" state={state} />
+              </form>
+            )
+          }
+        </WikiPageTargetsLoader>
       </Modal>
     </>
   );

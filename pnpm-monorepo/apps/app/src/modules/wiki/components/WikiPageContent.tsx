@@ -22,10 +22,6 @@ import { collectVisibleWikiSubtree } from "../utils/collectVisibleWikiSubtree";
 import { collectWikiPageDescendants } from "../utils/collectWikiPageDescendants";
 import { getWikiCollabUrl } from "../utils/getWikiCollabUrl";
 import {
-  getManageableWikiPageTargets,
-  type WikiPageTargetOption,
-} from "../utils/getWikiPageTargets";
-import {
   resolveWikiPageEffectivePermissions,
   resolveWikiPageReadAudience,
 } from "../utils/resolveWikiPageEffectivePermissions";
@@ -67,11 +63,6 @@ interface Props {
    * defaults to the global resolution
    */
   readonly staticContent?: WikiPageStaticContent;
-  /**
-   * Variant embeds pass subtree-limited targets; defaults to all managed
-   * pages
-   */
-  readonly moveTargets?: WikiPageTargetOption[];
   /** Extra header content, e.g. the variant backlinks on the global route */
   readonly headerExtra?: ReactNode;
 }
@@ -90,7 +81,6 @@ export const WikiPageContent = async ({
   permissions,
   hrefMode = GLOBAL_WIKI_HREF_MODE,
   staticContent,
-  moveTargets,
   headerExtra,
 }: Props) => {
   const isVariantScope = hrefMode.scope === WikiScope.Variant;
@@ -133,10 +123,6 @@ export const WikiPageContent = async ({
   ).length;
 
   const authentication = await authenticate();
-
-  const resolvedMoveTargets: WikiPageTargetOption[] = permissions.canAdmin
-    ? (moveTargets ?? getManageableWikiPageTargets(context, page.id))
-    : [];
 
   const sourceTitle = (sourceId: string) =>
     sourceId === page.id ? undefined : context.pagesById.get(sourceId)?.title;
@@ -277,7 +263,6 @@ export const WikiPageContent = async ({
               {!isLockedRoot && (
                 <MoveWikiPageModal
                   pageId={page.id}
-                  targets={resolvedMoveTargets}
                   allowTopLevel={canCreateTopLevel}
                   currentParentId={page.parentId}
                 />

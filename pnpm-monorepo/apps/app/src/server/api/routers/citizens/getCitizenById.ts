@@ -1,6 +1,6 @@
 import { getCitizenProfile } from "@/modules/citizen/queries/getCitizenProfile";
 import { TRPCError } from "@trpc/server";
-import { z } from "zod";
+import * as z from "zod";
 import { protectedProcedure, toTrpcError } from "../../trpc";
 
 export const getCitizenById = protectedProcedure

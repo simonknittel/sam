@@ -21,7 +21,7 @@ import { getEventWikiContext } from "@/modules/wiki/queries/getEventWikiContext"
 import { copyBriefingTree } from "@/modules/wiki/utils/copyBriefingTree";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { z } from "zod";
+import * as z from "zod";
 import { getEventTemplateById } from "../queries/getEventTemplateById";
 import {
   EVENT_TEMPLATE_NAME_MAX_LENGTH,

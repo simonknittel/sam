@@ -6,9 +6,11 @@ import {
   type Context,
   type SpanKind,
 } from "@opentelemetry/api";
-import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
 import { OTLPLogExporter } from "@opentelemetry/exporter-logs-otlp-http";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+import { AwsInstrumentation } from "@opentelemetry/instrumentation-aws-sdk";
+import { HttpInstrumentation } from "@opentelemetry/instrumentation-http";
+import { UndiciInstrumentation } from "@opentelemetry/instrumentation-undici";
 import { resourceFromAttributes } from "@opentelemetry/resources";
 import { BatchLogRecordProcessor } from "@opentelemetry/sdk-logs";
 import { NodeSDK } from "@opentelemetry/sdk-node";
@@ -95,12 +97,15 @@ const sdk = new NodeSDK({
   // fails with a 404. The app records no metrics of its own, and an empty
   // list registers no meter provider.
   metricReaders: [],
+  // Only the libraries that the app uses. The auto-instrumentations package
+  // loads and hooks about 40 modules in each cold start. The driver of Prisma
+  // (`pg`) stays without an instrumentation: Prisma instruments the same
+  // queries and its spans carry the SQL, thus the spans of the driver only
+  // double the volume of each trace.
   instrumentations: [
-    getNodeAutoInstrumentations({
-      // Prisma instruments the same queries and its spans carry the SQL, thus
-      // the spans of the driver only double the volume of each trace.
-      "@opentelemetry/instrumentation-pg": { enabled: false },
-    }),
+    new HttpInstrumentation(),
+    new UndiciInstrumentation(),
+    new AwsInstrumentation(),
     new PrismaInstrumentation(),
   ],
   // Only the root span of a request carries the path. The wrapper hands the

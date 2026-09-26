@@ -9,6 +9,12 @@ import { useOverlay } from "./OverlayContext";
 import { OverlayEntry } from "./OverlayEntry";
 import { OverlayWindow } from "./OverlayWindow";
 
+/**
+ * Live mode marks entries as new for the whole session. The small overlay
+ * shows only the newest of them.
+ */
+const MAXIMUM_OVERLAY_ENTRIES = 200;
+
 interface Props {
   readonly className?: string;
 }
@@ -42,7 +48,9 @@ export const OverlayButton = ({ className }: Props) => {
     Array.from(entries.values().filter(entryFilterFn)).toSorted(
       (first, second) => second.isoDate.getTime() - first.isoDate.getTime(),
     ),
-  ).filter((entry) => entry.isNew);
+  )
+    .filter((entry) => entry.isNew)
+    .slice(0, MAXIMUM_OVERLAY_ENTRIES);
 
   return (
     <>

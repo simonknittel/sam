@@ -6,7 +6,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { satisfiesAnyPermissionString } from "@/modules/auth/utils/satisfiesAnyPermissionString";
 import { OnboardingTaskCompletionMethod } from "@sam-monorepo/database/client";
-import { z } from "zod";
+import * as z from "zod";
 import { getOnboardingTaskByKey, OnboardingTaskKey } from "../utils/config";
 
 const schema = z.object({

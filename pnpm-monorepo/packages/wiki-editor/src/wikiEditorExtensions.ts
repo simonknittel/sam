@@ -13,13 +13,18 @@ import { Table, TableKit } from "@tiptap/extension-table";
 import { Placeholder } from "@tiptap/extensions";
 import type { Schema } from "@tiptap/pm/model";
 import StarterKit from "@tiptap/starter-kit";
-import { common, createLowlight } from "lowlight";
+import json from "highlight.js/lib/languages/json";
+import markdown from "highlight.js/lib/languages/markdown";
+import plaintext from "highlight.js/lib/languages/plaintext";
+import xml from "highlight.js/lib/languages/xml";
+import yaml from "highlight.js/lib/languages/yaml";
+import { createLowlight } from "lowlight";
+import type { WikiMentionedCitizen } from "./resolveWikiCitizenMention.js";
+import type { WikiLinkedPages } from "./resolveWikiPageLink.js";
+import type { WikiLinkedVariant } from "./resolveWikiVariantLink.js";
 import { WikiAttachment } from "./wikiAttachmentNode.js";
 import { WikiCallout } from "./wikiCalloutNode.js";
-import {
-  WikiCitizenMention,
-  type WikiMentionedCitizen,
-} from "./wikiCitizenMentionNode.js";
+import { WikiCitizenMention } from "./wikiCitizenMentionNode.js";
 import { WikiEmbed } from "./wikiEmbedNode.js";
 import { WikiFloatImage } from "./wikiFloatImageNode.js";
 import {
@@ -31,7 +36,7 @@ import { WikiHeadingIds } from "./wikiHeadingIds.js";
 import { WikiHighlight } from "./wikiHighlightMark.js";
 import { WikiImage } from "./wikiImageNode.js";
 import { WikiPageIndex } from "./wikiPageIndexNode.js";
-import { WikiPageLink, type WikiPageLinkedPage } from "./wikiPageLinkNode.js";
+import { WikiPageLink } from "./wikiPageLinkNode.js";
 import {
   WIKI_NARROW_WIDTH_PX,
   WIKI_WIDE_WIDTH_PX,
@@ -51,10 +56,7 @@ import {
   WikiTextOnlyBlockGuard,
 } from "./wikiTextOnlyBlocks.js";
 import { WikiTextSize, withWikiTextSize } from "./wikiTextSize.js";
-import {
-  WikiVariantLink,
-  type WikiLinkedVariant,
-} from "./wikiVariantLinkNode.js";
+import { WikiVariantLink } from "./wikiVariantLinkNode.js";
 
 export interface WikiEditorExtensionsOptions {
   /** Undo/redo comes from Yjs in the collab editor instead of StarterKit */
@@ -76,7 +78,7 @@ export interface WikiEditorExtensionsOptions {
    * links' labels and hrefs at render time. Only affects rendering, not
    * the schema.
    */
-  pages?: Readonly<Record<string, WikiPageLinkedPage>>;
+  pages?: WikiLinkedPages;
   /**
    * Current handles of the citizens mentioned on the page, by id — resolves
    * citizen mentions' labels at render time. Only affects rendering, not
@@ -93,10 +95,10 @@ export interface WikiEditorExtensionsOptions {
 
 /**
  * Shared lowlight instance — a static grammar registry, so one instance can
- * serve every editor. `common` (~35 grammars) instead of `all` keeps ~150
- * unused grammars out of the client bundle.
+ * serve every editor. The wiki holds text and seldom code, and each grammar
+ * goes into the bundle of each wiki page, thus only a few basic ones.
  */
-const lowlight = createLowlight(common);
+const lowlight = createLowlight({ json, markdown, plaintext, xml, yaml });
 
 /**
  * The containers that hold grids next to regular blocks — grids live
@@ -235,7 +237,8 @@ export const getWikiEditorExtensions = (
     WikiBulletList,
     WikiOrderedList,
     WikiHorizontalRule,
-    WikiCodeBlock.configure({ lowlight }),
+    // A block without a language stays plain text instead of a guess
+    WikiCodeBlock.configure({ lowlight, defaultLanguage: "plaintext" }),
     WikiBlockquote,
     WikiHeading,
     WikiListItem,

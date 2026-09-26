@@ -2,7 +2,7 @@ import {
   FlowNodeMarkdownPosition,
   FlowNodeType,
 } from "@sam-monorepo/database/client";
-import z from "zod";
+import * as z from "zod";
 
 export const updateFlowSchema = z.object({
   type: z.literal(FlowNodeType.MARKDOWN),

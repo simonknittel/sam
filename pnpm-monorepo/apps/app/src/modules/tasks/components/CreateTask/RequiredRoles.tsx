@@ -1,7 +1,7 @@
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
-import { api } from "@/modules/common/utils/api";
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
+import { api } from "@/trpc/react";
 import type { Role } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import { useState } from "react";
@@ -13,10 +13,7 @@ interface Props {
 }
 
 export const RequiredRoles = ({ className, defaultValue }: Props) => {
-  const { isPending, data } = api.roles.getVisibleRoles.useQuery(undefined, {
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-  });
+  const { isPending, data } = api.roles.getVisibleRoles.useQuery(undefined);
 
   const [selectedRoles, setSelectedRoles] = useState<Role["id"][]>(
     defaultValue || [],

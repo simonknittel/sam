@@ -8,11 +8,11 @@ import { RadioGroup } from "@/modules/common/components/form/RadioGroup";
 import { Select } from "@/modules/common/components/form/Select";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
-import { api } from "@/modules/common/utils/api";
 import { createEvent } from "@/modules/events/actions/createEvent";
 import { EventDescriptionField } from "@/modules/events/components/EventDescriptionField";
 import { EventDescriptionHint } from "@/modules/events/components/EventDescriptionHint";
 import { WikiRoleSelector } from "@/modules/wiki/components/WikiRoleSelector";
+import { api } from "@/trpc/react";
 import {
   EventVisibility,
   type EventDiscordPublishTarget,
@@ -56,10 +56,8 @@ export const CreateEventForm = ({
    * Fetched lazily: the form only mounts while the modal is open. Templates
    * are the viewer's own plus those shared with them for reading.
    */
-  const { data: templates } = api.events.getUsableEventTemplates.useQuery(
-    undefined,
-    { refetchOnWindowFocus: false, refetchOnReconnect: false },
-  );
+  const { data: templates } =
+    api.events.getUsableEventTemplates.useQuery(undefined);
 
   const selectedTemplate =
     templates?.find((template) => template.id === selectedTemplateId) ?? null;
@@ -278,8 +276,6 @@ const DiscordPublishFields = ({
   const { data: channels, isPending } =
     api.events.getPublishableDiscordChannels.useQuery(undefined, {
       enabled: isPublishing,
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: false,
     });
 
   return (

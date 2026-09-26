@@ -1,5 +1,5 @@
 import { authorize } from "@/modules/auth/server";
-import { z } from "zod";
+import * as z from "zod";
 import { protectedProcedure } from "../../trpc";
 
 export const getHistory = protectedProcedure

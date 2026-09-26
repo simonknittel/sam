@@ -7,7 +7,7 @@ import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { isAllowedWebPushEndpointUrl } from "@sam-monorepo/domain";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
+import * as z from "zod";
 
 const schema = z.object({
   subscription: z.preprocess(

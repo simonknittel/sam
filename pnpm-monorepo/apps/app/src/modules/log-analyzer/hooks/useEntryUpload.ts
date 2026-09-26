@@ -33,16 +33,21 @@ interface PendingEntry extends UploadEntry {
  * missing there, thus a page load costs one query instead of one request per
  * hundred entries of the whole window.
  *
- * A parse cycle delivers every match of the whole window again. The keys of
- * the entries the server verifiably holds are therefore kept, and a cycle
- * only hashes and compares the matches it did not settle before — the cycle
- * of live mode costs nothing while nothing new happens.
+ * A parse cycle delivers the matches of the lines which were added since the
+ * cycle before it, and a cycle can deliver a match again. The keys of the
+ * entries the server verifiably holds are therefore kept, and a cycle only
+ * hashes and compares the matches it did not settle before — the cycle of
+ * live mode costs nothing while nothing new happens.
  *
  * Turning a type on shares the entries of that type which are already parsed,
- * because they are new to the server.
+ * because they are new to the server: the function changes with the settings,
+ * and the parser then delivers the whole window again.
  *
  * Every entry the server holds gets its badge in the table, whether this
  * cycle sent it or an earlier visit did.
+ *
+ * The function returns false when a match which it had to share did not reach
+ * the server. The next cycle then delivers the whole window again.
  */
 export const useEntryUpload = () => {
   const { isSharingEnabled, sharingEntryTypes, daysToLoad, setEntries } =
@@ -67,7 +72,8 @@ export const useEntryUpload = () => {
       let cursorHash: string | undefined;
 
       do {
-        const page = await utils.logAnalyzer.getOwnEntryHashes.fetch({
+        /** The vanilla client keeps no copy of the pages in the query cache */
+        const page = await utils.client.logAnalyzer.getOwnEntryHashes.query({
           daysToLoad: clampDaysToLoad(daysToLoad),
           cursorHash,
         });
@@ -118,7 +124,7 @@ export const useEntryUpload = () => {
 
   return useCallback(
     async (rawMatches: readonly RawMatch[]) => {
-      if (!isSharingEnabled || !hasLinkedCitizen) return;
+      if (!isSharingEnabled || !hasLinkedCitizen) return true;
 
       const settledKeys = settledKeysRef.current;
 
@@ -132,11 +138,11 @@ export const useEntryUpload = () => {
 
         newMatchesByKey.set(key, rawMatch);
       }
-      if (newMatchesByKey.size <= 0) return;
+      if (newMatchesByKey.size <= 0) return true;
 
       const storedHashes = await loadStoredHashes();
       /** Without the set the upload would offer the whole window again */
-      if (!storedHashes) return;
+      if (!storedHashes) return false;
 
       /** One batch, because a hash per await would walk thousands of turns */
       const hashedMatches = await Promise.all(
@@ -192,11 +198,13 @@ export const useEntryUpload = () => {
          * its entries again. Stopping here keeps one broken cycle down to
          * one message for the user.
          */
-        if (!succeeded) return;
+        if (!succeeded) return false;
 
         for (const entry of chunk) settledKeys.add(entry.key);
         markEntriesUploaded(chunk.map((entry) => entry.key));
       }
+
+      return true;
     },
     [
       hasLinkedCitizen,
