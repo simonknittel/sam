@@ -1,3 +1,4 @@
+import { DevelopmentLogin } from "@/modules/auth/components/DevelopmentLogin";
 import { authenticate } from "@/modules/auth/server";
 import {
   REDIRECT_TO_SEARCH_PARAM,
@@ -58,6 +59,8 @@ export default async function Page({ searchParams }: PageProps<"/">) {
   return (
     <div {...seasonalThemeRootProps}>
       <SeasonalConfetti placement={SeasonalConfettiPlacement.LoginPage} />
+
+      <DevelopmentLogin redirectTo={redirectTo} />
 
       <main className="w-full max-w-md py-8 flex flex-col justify-center items-center gap-4 flex-1">
         {uwu ? <UwuHero /> : <Hero text="SAM" withGlitch />}
