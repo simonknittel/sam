@@ -64,7 +64,6 @@ export const env = createEnv({
       .url()
       .refine(isEncryptedOrLoopbackUrl, "must use https unless it is loopback")
       .default("https://discord.com/api/v10"),
-    ALGOLIA_ADMIN_API_KEY: z.string(),
     /**
      * Cloudflare R2 account id, used to derive the bucket endpoint when
      * S3_ENDPOINT is unset
@@ -157,8 +156,6 @@ export const env = createEnv({
    * 💡 You'll get type errors if these are not prefixed with NEXT_PUBLIC_.
    */
   client: {
-    NEXT_PUBLIC_ALGOLIA_APP_ID: z.string(),
-    NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY: z.string(),
     NEXT_PUBLIC_CARE_BEAR_SHOOTER_BUILD_URL: z.url().optional(),
     NEXT_PUBLIC_DOWNLOADS_BASE_URL: z.url().optional(),
     NEXT_PUBLIC_DOWNLOADS_BASE_URL_2: z.url().optional(),
@@ -222,10 +219,6 @@ export const env = createEnv({
     DISCORD_TOKEN: process.env.DISCORD_TOKEN,
     RSI_BASE_URL: process.env.RSI_BASE_URL,
     DISCORD_API_BASE_URL: process.env.DISCORD_API_BASE_URL,
-    NEXT_PUBLIC_ALGOLIA_APP_ID: process.env.NEXT_PUBLIC_ALGOLIA_APP_ID,
-    ALGOLIA_ADMIN_API_KEY: process.env.ALGOLIA_ADMIN_API_KEY,
-    NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY:
-      process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY,
     S3_ACCOUNT_ID: process.env.S3_ACCOUNT_ID,
     S3_ENDPOINT: process.env.S3_ENDPOINT,
     S3_ACCESS_KEY_ID: process.env.S3_ACCESS_KEY_ID,

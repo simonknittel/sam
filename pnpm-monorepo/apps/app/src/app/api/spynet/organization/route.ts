@@ -1,5 +1,4 @@
 import { prisma } from "@/db";
-import { saveObject } from "@/modules/algolia";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
@@ -107,15 +106,6 @@ export async function POST(request: Request) {
         createdById: authentication.session.user.id,
       },
     ]);
-
-    /**
-     * Add new organization to Algolia
-     */
-    await saveObject(createdOrganization.id, {
-      type: "organization",
-      spectrumId: createdOrganization.spectrumId,
-      names: [createdOrganization.name],
-    });
 
     /**
      * Respond

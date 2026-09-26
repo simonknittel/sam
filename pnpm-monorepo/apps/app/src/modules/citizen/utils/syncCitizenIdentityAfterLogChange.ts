@@ -1,13 +1,11 @@
 import { prisma } from "@/db";
 import type { EntityLog } from "@sam-monorepo/database/client";
-import { updateAlgoliaWithGenericLogType } from "./updateAlgoliaWithGenericLogType";
 import { updateEntityCaches } from "./updateEntityCaches";
 
 /**
- * Re-derives everything that depends on a citizen's confirmed identity
- * logs after one of them was confirmed or deleted: the display name of the
- * linked user account, the entity's cached attribute columns and the
- * Algolia search records.
+ * Updates all data that depends on the confirmed identity logs of a citizen,
+ * after a user confirms or deletes one of these logs: the display name of
+ * the linked user account and the cached attribute columns of the entity.
  */
 export const syncCitizenIdentityAfterLogChange = async (
   log: Pick<EntityLog, "entityId" | "type">,
@@ -72,19 +70,4 @@ export const syncCitizenIdentityAfterLogChange = async (
   }
 
   await updateEntityCaches(log);
-
-  switch (log.type) {
-    case "handle":
-      await updateAlgoliaWithGenericLogType(log, "handles");
-      break;
-    case "citizen-id":
-      await updateAlgoliaWithGenericLogType(log, "citizenIds");
-      break;
-    case "community-moniker":
-      await updateAlgoliaWithGenericLogType(log, "communityMonikers");
-      break;
-
-    default:
-      break;
-  }
 };

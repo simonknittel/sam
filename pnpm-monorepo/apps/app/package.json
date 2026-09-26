@@ -13,8 +13,6 @@
     "format": "prettier --write ."
   },
   "dependencies": {
-    "@algolia/autocomplete-js": "1.19.10",
-    "@algolia/autocomplete-theme-classic": "1.19.10",
     "@auth/prisma-adapter": "2.11.3",
     "@aws-sdk/client-eventbridge": "3.1132.0",
     "@aws-sdk/client-s3": "3.1132.0",
@@ -72,7 +70,6 @@
     "@uidotdev/usehooks": "2.4.1",
     "@unleash/nextjs": "1.6.7",
     "@xyflow/react": "12.11.6",
-    "algoliasearch": "5.59.0",
     "canvas-confetti": "1.9.4",
     "change-case": "5.4.4",
     "clsx": "2.1.1",
@@ -112,7 +109,6 @@
     "slug": "12.0.1",
     "strip-markdown": "6.0.0",
     "superjson": "2.2.6",
-    "swr": "2.5.1",
     "ua-parser-js": "2.0.10",
     "unist-util-visit": "5.1.0",
     "yjs": "13.6.32",

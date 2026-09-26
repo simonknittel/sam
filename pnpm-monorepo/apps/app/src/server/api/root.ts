@@ -16,6 +16,7 @@ import { list as listOnSiteNotifications } from "./routers/onSiteNotifications/l
 import { getAssignableRoles } from "./routers/roles/getAssignableRoles";
 import { getVisibleRoles } from "./routers/roles/getVisibleRoles";
 import { getRolesForSalaries } from "./routers/silc/getRolesForSalaries";
+import { search as searchSpynet } from "./routers/spynet/search";
 import { getAssumableUsers } from "./routers/users/getAssumableUsers";
 import { getAll as getAllVariants } from "./routers/variant/getAll";
 import { getById as getVariantById } from "./routers/variant/getById";
@@ -69,6 +70,9 @@ export const appRouter = createTRPCRouter({
   }),
   silc: createTRPCRouter({
     getRolesForSalaries,
+  }),
+  spynet: createTRPCRouter({
+    search: searchSpynet,
   }),
   users: createTRPCRouter({
     getAssumableUsers,

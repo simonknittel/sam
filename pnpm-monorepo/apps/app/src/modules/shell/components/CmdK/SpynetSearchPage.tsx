@@ -1,41 +1,24 @@
-import { env } from "@/env";
-import { useDebounce } from "@uidotdev/usehooks";
+import {
+  SpynetSearchStatus,
+  useSpynetSearch,
+} from "@/modules/spynet/hooks/useSpynetSearch";
+import {
+  SPYNET_SEARCH_QUERY_MINIMUM_LENGTH,
+  type SpynetSearchHit,
+} from "@/modules/spynet/utils/spynetSearch";
 import { Command } from "cmdk";
-import useSWR from "swr";
-import { type Hit } from "../../../spynet/components/SpynetSearchTile/Search";
 import { SpynetSearchResultEntry } from "./SpynetSearchResultEntry";
 
-const fetcher = async (key: string) => {
-  const res = await fetch(key, {
-    headers: {
-      "X-Algolia-Application-Id": env.NEXT_PUBLIC_ALGOLIA_APP_ID,
-      "X-Algolia-API-Key": env.NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY,
-    },
-  });
-
-  return res.json() as unknown as AlgoliaResponse;
-};
-
-interface AlgoliaResponse {
-  readonly hits: Hit[];
-}
+/** Fewer hits than in the tile, because the dialog has less space */
+const RESULT_LIMIT = 5;
 
 interface Props {
   readonly search: string;
-  readonly onSelect?: () => void;
+  readonly onSelect: () => void;
 }
 
 export const SpynetSearchPage = ({ search, onSelect }: Props) => {
-  const debouncedSearch = useDebounce(search, 500);
-
-  const { data, isValidating } = useSWR<AlgoliaResponse>(
-    `https://${env.NEXT_PUBLIC_ALGOLIA_APP_ID}-dsn.algolia.net/1/indexes/spynet_entities?query=${debouncedSearch}&hitsPerPage=5`,
-    fetcher,
-    {
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-    },
-  );
+  const { status, hits } = useSpynetSearch(search, RESULT_LIMIT);
 
   return (
     <Command.Group
@@ -46,19 +29,45 @@ export const SpynetSearchPage = ({ search, onSelect }: Props) => {
         </div>
       }
     >
-      {isValidating || !data ? (
-        <div className="animate-pulse rounded-secondary bg-neutral-800 h-24 mx-2" />
-      ) : data.hits.length > 0 ? (
-        data.hits.map((result) => (
-          <SpynetSearchResultEntry
-            key={result.objectID}
-            hit={result}
-            onSelect={onSelect}
-          />
-        ))
-      ) : (
-        <Command.Item disabled>Keine Ergebnisse</Command.Item>
-      )}
+      <SearchResults status={status} hits={hits} onSelect={onSelect} />
     </Command.Group>
   );
+};
+
+interface SearchResultsProps {
+  readonly status: SpynetSearchStatus;
+  readonly hits: readonly SpynetSearchHit[];
+  readonly onSelect: () => void;
+}
+
+const SearchResults = ({ status, hits, onSelect }: SearchResultsProps) => {
+  switch (status) {
+    case SpynetSearchStatus.Idle:
+      return (
+        <Command.Item disabled>
+          Mindestens {SPYNET_SEARCH_QUERY_MINIMUM_LENGTH} Zeichen eingeben
+        </Command.Item>
+      );
+
+    case SpynetSearchStatus.Loading:
+      return (
+        <div className="motion-safe:animate-pulse rounded-secondary bg-neutral-800 h-24 mx-2" />
+      );
+
+    case SpynetSearchStatus.Error:
+      return (
+        <Command.Item disabled>Die Suche ist fehlgeschlagen.</Command.Item>
+      );
+
+    case SpynetSearchStatus.Success:
+      if (hits.length === 0)
+        return <Command.Item disabled>Keine Ergebnisse</Command.Item>;
+
+      return hits.map((hit) => (
+        <SpynetSearchResultEntry key={hit.id} hit={hit} onSelect={onSelect} />
+      ));
+
+    default:
+      throw new Error(`Unknown status: ${status satisfies never}`);
+  }
 };

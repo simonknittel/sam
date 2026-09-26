@@ -51,7 +51,6 @@ export interface PermissionSet {
     | "documentScavenger"
     | "documentMarketeer"
     | "documentPolaris"
-    | "algolia"
     | "spynetActivity"
     | "spynetCitizen"
     | "spynetNotes"

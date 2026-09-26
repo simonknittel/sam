@@ -10,7 +10,6 @@ interface CmdKContext {
   readonly setSearch: Dispatch<SetStateAction<string>>;
   readonly pages: string[];
   readonly setPages: Dispatch<SetStateAction<string[]>>;
-  readonly disableAlgolia?: Props["disableAlgolia"];
   readonly canReadCareer?: Props["canReadCareer"];
 }
 
@@ -18,7 +17,6 @@ const CmdKContext = createContext<CmdKContext | undefined>(undefined);
 
 interface Props {
   readonly children: ReactNode;
-  readonly disableAlgolia?: boolean;
   /**
    * Whether the viewer may read at least one career flow. Resolved on the
    * server because per-flow access lives in a table, not in the session's
@@ -27,11 +25,7 @@ interface Props {
   readonly canReadCareer?: boolean;
 }
 
-export const CmdKProvider = ({
-  children,
-  disableAlgolia,
-  canReadCareer,
-}: Props) => {
+export const CmdKProvider = ({ children, canReadCareer }: Props) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [pages, setPages] = useState<string[]>([]);
@@ -56,19 +50,9 @@ export const CmdKProvider = ({
       setSearch,
       pages,
       setPages,
-      disableAlgolia,
       canReadCareer,
     }),
-    [
-      open,
-      setOpen,
-      search,
-      setSearch,
-      pages,
-      setPages,
-      disableAlgolia,
-      canReadCareer,
-    ],
+    [open, setOpen, search, setSearch, pages, setPages, canReadCareer],
   );
 
   return <CmdKContext.Provider value={value}>{children}</CmdKContext.Provider>;
