@@ -15,6 +15,8 @@ export const ADMIN_MODE_COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 /** Holds the id of the user an admin assumes */
 export const ASSUME_USER_COOKIE = "assume_user";
 
-// Assuming a user swaps the whole session including audit attribution, so
-// the cookie shouldn't outlive a debugging session by much.
+/**
+ * Assuming a user swaps the whole session, also the creator of audit events.
+ * Thus the cookie must not live much longer than a debugging session.
+ */
 export const ASSUME_USER_COOKIE_MAX_AGE = 60 * 60; // 1 hour

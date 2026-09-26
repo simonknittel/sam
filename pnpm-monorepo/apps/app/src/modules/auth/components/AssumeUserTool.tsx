@@ -1,7 +1,8 @@
 "use client";
 
 import { runActionAndReload } from "@/modules/actions/utils/runActionAndReload";
-import { api } from "@/trpc/react";
+import type { RouterOutputs } from "@/modules/common/utils/api";
+import { api, TRPCReactProvider } from "@/trpc/react";
 import {
   Combobox,
   ComboboxInput,
@@ -14,13 +15,20 @@ import { assumeUser } from "../actions/assumeUser";
 
 const RESULT_LIMIT = 10;
 
-interface AssumableUser {
-  readonly id: string;
-  readonly name: string | null;
-  readonly email: string | null;
-}
+type AssumableUser = RouterOutputs["users"]["getAssumableUsers"][number];
 
+// The toolbar also shows outside of the app shell, for example on the
+// clearance page, where no tRPC provider exists. In the app shell, the second
+// provider shares the query client of the browser.
 export const AssumeUserTool = () => {
+  return (
+    <TRPCReactProvider>
+      <AssumeUserCombobox />
+    </TRPCReactProvider>
+  );
+};
+
+const AssumeUserCombobox = () => {
   const [query, setQuery] = useState("");
   const [isPending, startTransition] = useTransition();
 
@@ -59,7 +67,7 @@ export const AssumeUserTool = () => {
         aria-label="User"
         placeholder={isLoading ? "Loading users…" : "Search user"}
         onChange={(event) => setQuery(event.target.value)}
-        className="w-full rounded-secondary bg-neutral-900 py-1 px-2 text-sm focus:outline-hidden data-focus:outline-2 data-focus:-outline-offset-2 data-focus:outline-white/25 data-disabled:opacity-50"
+        className="w-full rounded-secondary bg-neutral-900 py-1 px-2 text-sm data-hover:bg-neutral-800 active:bg-neutral-800 focus:outline-hidden data-focus:outline-2 data-focus:-outline-offset-2 data-focus:outline-white/25 data-disabled:opacity-50"
       />
 
       {/* The list opens inside the panel, thus the other tools of the panel
@@ -86,7 +94,7 @@ const AssumableUserOption = ({ user }: AssumableUserOptionProps) => {
   return (
     <ComboboxOption
       value={user}
-      className="flex flex-col cursor-pointer rounded-secondary py-1 px-2 select-none data-focus:bg-white/20"
+      className="flex flex-col cursor-pointer rounded-secondary py-1 px-2 select-none data-focus:bg-white/20 active:bg-white/30"
     >
       <span className="text-white text-sm truncate" title={label}>
         {label}

@@ -12,16 +12,23 @@ export const ASSUMABLE_USER_WHERE = {
   },
 } satisfies Prisma.UserWhereInput;
 
-export const getAssumableUsers = withTrace("getAssumableUsers", async () => {
-  return prisma.user.findMany({
-    where: ASSUMABLE_USER_WHERE,
-    select: {
-      id: true,
-      name: true,
-      email: true,
-    },
-    orderBy: {
-      name: "asc",
-    },
-  });
-});
+/** Leaves out the own account of the admin, which the session ignores */
+export const getAssumableUsers = withTrace(
+  "getAssumableUsers",
+  async (adminId: string) => {
+    return prisma.user.findMany({
+      where: {
+        ...ASSUMABLE_USER_WHERE,
+        id: { not: adminId },
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+      orderBy: {
+        name: "asc",
+      },
+    });
+  },
+);

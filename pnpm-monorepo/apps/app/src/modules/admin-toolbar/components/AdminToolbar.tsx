@@ -2,12 +2,11 @@ import { AdminModeTool } from "@/modules/auth/components/AdminModeTool";
 import { AssumedUserBanner } from "@/modules/auth/components/AssumedUserBanner";
 import { AssumeUserTool } from "@/modules/auth/components/AssumeUserTool";
 import { authenticate } from "@/modules/auth/server";
-import { getAssumedUserLabel } from "@/modules/auth/utils/getAssumedUserLabel";
 import { isAdminBehindSession } from "@/modules/auth/utils/isAdminBehindSession";
-import { isAdminModeCookieSet } from "@/modules/auth/utils/isAdminModeCookieSet";
+import { isAdminModeActive } from "@/modules/auth/utils/isAdminModeActive";
 import { SeasonalThemeTool } from "@/modules/seasonal-events/components/SeasonalThemeTool";
+import { getSeasonalDatePresets } from "@/modules/seasonal-events/queries/getSeasonalDatePresets";
 import { getSeasonalOverrideState } from "@/modules/seasonal-events/queries/getSeasonalOverrideState";
-import { getSeasonalDatePresets } from "@/modules/seasonal-events/utils/getSeasonalDatePresets";
 import { AdminToolbarSection } from "./AdminToolbarSection";
 import { AdminToolbarShell } from "./AdminToolbarShell";
 
@@ -20,34 +19,33 @@ export const AdminToolbar = async () => {
   if (!authentication || !isAdminBehindSession(authentication.session))
     return null;
 
-  const [adminModeEnabled, seasonalOverride] = await Promise.all([
-    isAdminModeCookieSet(),
+  const { session } = authentication;
+
+  const [adminModeActive, seasonalOverride] = await Promise.all([
+    isAdminModeActive(session),
     getSeasonalOverrideState(),
   ]);
 
-  const assumedUserLabel = getAssumedUserLabel(authentication.session);
-
   const activeOverrides = [
-    ...(adminModeEnabled ? ["Admin mode"] : []),
-    ...(seasonalOverride
-      ? [
-          `${seasonalOverride.eventTitle ?? "No theme"} ${seasonalOverride.date}`,
-        ]
-      : []),
+    ...(adminModeActive ? ["Admin mode"] : []),
+    ...(seasonalOverride ? [seasonalOverride.label] : []),
   ];
 
   return (
     <div className="fixed top-2 left-1/2 -translate-x-1/2 z-50 flex max-w-[calc(100vw-1rem)] gap-2">
-      {assumedUserLabel && (
-        <AssumedUserBanner assumedUserLabel={assumedUserLabel} />
+      {session.assumedByAdminId && (
+        <AssumedUserBanner
+          assumedUserLabel={
+            session.user.name ?? session.user.email ?? session.user.id
+          }
+        />
       )}
 
       <AdminToolbarShell activeOverrides={activeOverrides}>
-        {/* Assuming a user clears admin mode, and the permissions of the
-            assumed user must apply */}
-        {!assumedUserLabel && (
+        {/* Admin mode has no effect while the admin assumes a user */}
+        {!session.assumedByAdminId && (
           <AdminToolbarSection title="Admin mode">
-            <AdminModeTool enabled={adminModeEnabled} />
+            <AdminModeTool enabled={adminModeActive} />
           </AdminToolbarSection>
         )}
 

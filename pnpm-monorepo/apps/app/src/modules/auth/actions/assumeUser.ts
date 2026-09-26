@@ -1,7 +1,10 @@
 "use server";
 
 import { prisma } from "@/db";
-import { createAdminAction } from "@/modules/actions/utils/createAdminAction";
+import {
+  ActionGate,
+  createAuthenticatedAction,
+} from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { getServerCookieOptions } from "@/modules/common/utils/getServerCookieOptions";
@@ -15,11 +18,14 @@ import {
 } from "../utils/adminCookies";
 import { getAssumeUserEndedEvent } from "../utils/getAssumeUserEndedEvent";
 
+/** A cuid has 25 characters; the limit only stops oversized input */
+const USER_ID_MAX_LENGTH = 32;
+
 const schema = z.object({
-  userId: z.cuid(),
+  userId: z.cuid().max(USER_ID_MAX_LENGTH),
 });
 
-export const assumeUser = createAdminAction(
+export const assumeUser = createAuthenticatedAction(
   "assumeUser",
   schema,
   async (formData, authentication, data, t) => {
@@ -30,7 +36,7 @@ export const assumeUser = createAdminAction(
     // log would record an assume without effect
     if (data.userId === adminId)
       return {
-        error: "You can't assume your own account.",
+        error: "You cannot assume your own account.",
         requestPayload: formData,
       };
 
@@ -50,10 +56,13 @@ export const assumeUser = createAdminAction(
         requestPayload: formData,
       };
 
+    // A separate write gives the end of the previous assume an earlier
+    // timestamp, thus the system log shows the two events in order
     const previousAssumeEndedEvent = getAssumeUserEndedEvent(session);
+    if (previousAssumeEndedEvent)
+      await createAuditEvents([previousAssumeEndedEvent]);
 
     await createAuditEvents([
-      ...(previousAssumeEndedEvent ? [previousAssumeEndedEvent] : []),
       {
         type: AuditEventType.ASSUME_USER_STARTED,
         data: {
@@ -77,4 +86,5 @@ export const assumeUser = createAdminAction(
       success: t("Common.successfullySaved"),
     };
   },
+  { gate: ActionGate.Admin },
 );

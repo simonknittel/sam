@@ -4,9 +4,11 @@ import { TRPCError } from "@trpc/server";
 import { serializeError } from "serialize-error";
 import { adminProcedure } from "../../trpc";
 
-export const getAssumableUsers = adminProcedure.query(async () => {
+export const getAssumableUsers = adminProcedure.query(async ({ ctx }) => {
   try {
-    return await getAssumableUsersQuery();
+    return await getAssumableUsersQuery(
+      ctx.session.assumedByAdminId ?? ctx.session.user.id,
+    );
   } catch (error) {
     log.error("Failed to fetch assumable users", {
       error: serializeError(error),
