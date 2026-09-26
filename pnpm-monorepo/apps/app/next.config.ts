@@ -52,7 +52,7 @@ const nextConfig: NextConfig = {
     contentDispositionType: "attachment",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
-    qualities: [75, 100],
+    qualities: [75],
   },
 
   poweredByHeader: false,

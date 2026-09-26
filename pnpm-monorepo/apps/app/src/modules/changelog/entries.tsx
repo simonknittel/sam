@@ -38,9 +38,12 @@ import image20260816Activity from "@/modules/changelog/assets/2026-08-16-activit
 import image20260816CreateModal from "@/modules/changelog/assets/2026-08-16-create-modal.png";
 import image20260816PersonalBriefing from "@/modules/changelog/assets/2026-08-16-personal-briefing.png";
 import image20260816Settings from "@/modules/changelog/assets/2026-08-16-settings.png";
+import {
+  ChangelogImage,
+  ChangelogImageWidth,
+} from "@/modules/changelog/components/ChangelogImage";
 import type { ChangelogEntry } from "@/modules/changelog/types";
 import { Link } from "@/modules/common/components/Link";
-import Image from "next/image";
 import { AiFillAppstore } from "react-icons/ai";
 import { FaCopy } from "react-icons/fa";
 
@@ -513,13 +516,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
         </p>
 
         <Link href={image20260816CreateModal.src}>
-          <Image
-            quality={100}
-            src={image20260816CreateModal}
-            alt=""
-            loading="eager"
-            className="max-h-full w-auto"
-          />
+          <ChangelogImage src={image20260816CreateModal} alt="" />
         </Link>
 
         <p>
@@ -530,13 +527,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
         </p>
 
         <Link href={image20260816PersonalBriefing.src}>
-          <Image
-            quality={100}
-            src={image20260816PersonalBriefing}
-            alt=""
-            loading="eager"
-            className="max-h-full w-auto"
-          />
+          <ChangelogImage src={image20260816PersonalBriefing} alt="" />
         </Link>
 
         <p>
@@ -547,23 +538,11 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
         </p>
 
         <Link href={image20260816Activity.src}>
-          <Image
-            quality={100}
-            src={image20260816Activity}
-            alt=""
-            loading="eager"
-            className="max-h-full w-auto"
-          />
+          <ChangelogImage src={image20260816Activity} alt="" />
         </Link>
 
         <Link href={image20260816Settings.src}>
-          <Image
-            quality={100}
-            src={image20260816Settings}
-            alt=""
-            loading="eager"
-            className="max-h-full w-auto"
-          />
+          <ChangelogImage src={image20260816Settings} alt="" />
         </Link>
       </>
     ),
@@ -997,13 +976,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
         </p>
 
         <Link href={image20260801WikiPage.src}>
-          <Image
-            quality={100}
-            src={image20260801WikiPage}
-            alt=""
-            loading="eager"
-            className="max-h-full w-auto"
-          />
+          <ChangelogImage src={image20260801WikiPage} alt="" />
         </Link>
 
         <p>
@@ -1015,13 +988,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
         </p>
 
         <Link href={image20260801WikiEditor.src}>
-          <Image
-            quality={100}
-            src={image20260801WikiEditor}
-            alt=""
-            loading="eager"
-            className="max-h-full w-auto"
-          />
+          <ChangelogImage src={image20260801WikiEditor} alt="" />
         </Link>
 
         <p>
@@ -1033,13 +1000,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
         </p>
 
         <Link href={image20260801WikiSearch.src}>
-          <Image
-            quality={100}
-            src={image20260801WikiSearch}
-            alt=""
-            loading="eager"
-            className="max-h-full w-auto"
-          />
+          <ChangelogImage src={image20260801WikiSearch} alt="" />
         </Link>
 
         <p>
@@ -1070,13 +1031,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
         </p>
 
         <Link href={image20260731LineupPositionActions.src}>
-          <Image
-            quality={100}
-            src={image20260731LineupPositionActions}
-            alt=""
-            loading="eager"
-            className="max-h-full w-auto"
-          />
+          <ChangelogImage src={image20260731LineupPositionActions} alt="" />
         </Link>
 
         <p>
@@ -1087,13 +1042,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
         </p>
 
         <Link href={image20260731LineupPastePopover.src}>
-          <Image
-            quality={100}
-            src={image20260731LineupPastePopover}
-            alt=""
-            loading="eager"
-            className="max-h-full w-auto"
-          />
+          <ChangelogImage src={image20260731LineupPastePopover} alt="" />
         </Link>
 
         <p>
@@ -1271,13 +1220,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
         </p>
 
         <Link href={image20260521Timezones.src}>
-          <Image
-            quality={100}
-            src={image20260521Timezones}
-            alt=""
-            loading="eager"
-            className="max-h-full w-auto"
-          />
+          <ChangelogImage src={image20260521Timezones} alt="" />
         </Link>
       </>
     ),
@@ -1473,38 +1416,38 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
 
         <div className="grid grid-cols-2 grid-rows-[128px_128px] gap-2">
           <Link href={image20260510CitizenPopover.src}>
-            <Image
-              quality={100}
+            <ChangelogImage
               src={image20260510CitizenPopover}
               alt=""
-              className="max-h-full w-auto"
+              className="max-h-full object-contain object-left"
+              width={ChangelogImageWidth.HalfColumn}
             />
           </Link>
 
           <Link href={image20260510ProfileTile.src}>
-            <Image
-              quality={100}
+            <ChangelogImage
               src={image20260510ProfileTile}
               alt=""
-              className="max-h-full w-auto"
+              className="max-h-full object-contain object-left"
+              width={ChangelogImageWidth.HalfColumn}
             />
           </Link>
 
           <Link href={image20260510Career.src}>
-            <Image
-              quality={100}
+            <ChangelogImage
               src={image20260510Career}
               alt=""
-              className="max-h-full w-auto"
+              className="max-h-full object-contain object-left"
+              width={ChangelogImageWidth.HalfColumn}
             />
           </Link>
 
           <Link href={image20260510OverviewTab.src}>
-            <Image
-              quality={100}
+            <ChangelogImage
               src={image20260510OverviewTab}
               alt=""
-              className="max-h-full w-auto"
+              className="max-h-full object-contain object-left"
+              width={ChangelogImageWidth.HalfColumn}
             />
           </Link>
         </div>
@@ -1693,7 +1636,11 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
         </p>
 
         <Link href={image20260301CitizenPopover.src}>
-          <Image quality={100} src={image20260301CitizenPopover} alt="" />
+          <ChangelogImage
+            src={image20260301CitizenPopover}
+            alt=""
+            isAboveTheFold
+          />
         </Link>
       </>
     ),
@@ -1718,12 +1665,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
         </p>
 
         <Link href={image20260214RoleTooltip.src}>
-          <Image
-            quality={100}
-            src={image20260214RoleTooltip}
-            alt=""
-            loading="lazy"
-          />
+          <ChangelogImage src={image20260214RoleTooltip} alt="" />
         </Link>
       </>
     ),
@@ -2099,12 +2041,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
         </p>
 
         <Link href={image20251013rolesHistory.src}>
-          <Image
-            quality={100}
-            src={image20251013rolesHistory}
-            alt=""
-            loading="lazy"
-          />
+          <ChangelogImage src={image20251013rolesHistory} alt="" />
         </Link>
       </>
     ),
@@ -2163,12 +2100,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
         </p>
 
         <Link href={image20251007sincome.src}>
-          <Image
-            quality={100}
-            src={image20251007sincome}
-            alt=""
-            loading="lazy"
-          />
+          <ChangelogImage src={image20251007sincome} alt="" />
         </Link>
       </>
     ),
@@ -2259,12 +2191,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
         </p>
 
         <Link href={image20250906NewLayout.src}>
-          <Image
-            quality={100}
-            src={image20250906NewLayout}
-            alt=""
-            loading="lazy"
-          />
+          <ChangelogImage src={image20250906NewLayout} alt="" />
         </Link>
       </>
     ),
@@ -2461,7 +2388,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
     body: () => (
       <>
         <p>Das Strg + K Menü wurde auf den aktuellen Stand gebracht.</p>
-        <Image quality={100} src={image20250614CmdK} alt="" loading="lazy" />
+        <ChangelogImage src={image20250614CmdK} alt="" isAboveTheFold />
       </>
     ),
   },
@@ -2482,21 +2409,11 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
 
         <div className="flex justify-between items-start gap-2">
           <div className="w-2/3">
-            <Image
-              quality={100}
-              src={image20250609Uncollapsed}
-              alt=""
-              loading="lazy"
-            />
+            <ChangelogImage src={image20250609Uncollapsed} alt="" />
           </div>
 
           <div className="w-1/3">
-            <Image
-              quality={100}
-              src={image20250609Collapsed}
-              alt=""
-              loading="lazy"
-            />
+            <ChangelogImage src={image20250609Collapsed} alt="" />
           </div>
         </div>
       </>
@@ -2567,11 +2484,9 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
           gezeigt, wenn automatisches aktualisieren aktiv ist.
         </p>
 
-        <Image
-          quality={100}
+        <ChangelogImage
           src={image20250531Overlay}
           alt=""
-          loading="lazy"
           className="self-center"
         />
       </>
@@ -2688,11 +2603,9 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
           filtern.
         </p>
 
-        <Image
-          quality={100}
+        <ChangelogImage
           src={image20250529LogAnalyzer}
           alt=""
-          loading="lazy"
           className="self-center"
         />
       </>
@@ -2778,11 +2691,9 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
           sie visuell einfach vergleichen zu können.
         </p>
 
-        <Image
-          quality={100}
+        <ChangelogImage
           src={image20250516CornerstoneImageBrowser}
           alt=""
-          loading="lazy"
           className="self-center"
         />
       </>
@@ -3082,12 +2993,11 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
           hinzugefügt werden anstatt der Internal ID.
         </p>
 
-        <Image
-          quality={100}
+        <ChangelogImage
           src={image20250329CitizenHandle}
           alt=""
-          loading="lazy"
           className="self-center"
+          isAboveTheFold
         />
       </>
     ),
@@ -3127,11 +3037,9 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
           gezogen, wird dieser Posten als Kindposten eingeordnet.
         </p>
 
-        <Image
-          quality={100}
+        <ChangelogImage
           src={image20250323LineupDragNDrop}
           alt=""
-          loading="lazy"
           className="self-center"
         />
       </>
@@ -3149,19 +3057,15 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
           Schiff hinzugefügt werden.
         </p>
 
-        <Image
-          quality={100}
+        <ChangelogImage
           src={image20250322RequiredVariantsTooltip}
           alt=""
-          loading="lazy"
           className="self-center"
         />
 
-        <Image
-          quality={100}
+        <ChangelogImage
           src={image20250322RequiredVariantsEdit}
           alt=""
-          loading="lazy"
           className="self-center"
         />
       </>
@@ -3193,11 +3097,9 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
           die gleichen Berechtigungen wie die Organisatoren.
         </p>
 
-        <Image
-          quality={100}
+        <ChangelogImage
           src={image20250315EventManagers}
           alt=""
-          loading="lazy"
           className="self-center"
         />
       </>
@@ -3216,11 +3118,9 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
           eingesehen und bearbeitet werden.
         </p>
 
-        <Image
-          quality={100}
+        <ChangelogImage
           src={image20250315LineupEnabled}
           alt=""
-          loading="lazy"
           className="self-center"
         />
 
@@ -3265,11 +3165,9 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
       <>
         <p>Die Eventaufstellung kann nun in Gruppen unterteilt werden.</p>
 
-        <Image
-          quality={100}
+        <ChangelogImage
           src={image20250309LineupGroups}
           alt=""
-          loading="lazy"
           className="self-center"
         />
 
@@ -3280,11 +3178,9 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
 
         <p>Zum Anlegen einer Kindgruppe, auf folgendes Plus-Icon klicken:</p>
 
-        <Image
-          quality={100}
+        <ChangelogImage
           src={image20250309LineupCreateChild}
           alt=""
-          loading="lazy"
           className="self-center"
         />
       </>
@@ -3443,19 +3339,15 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
           Zudem wird in der Übersicht nun angezeigt wie viel SILC im Umlauf ist.
         </p>
 
-        <Image
-          quality={100}
+        <ChangelogImage
           src={image20250303SilcAuecConversionRate}
           alt=""
-          loading="lazy"
           className="self-center"
         />
 
-        <Image
-          quality={100}
+        <ChangelogImage
           src={image20250303SilcStatistics}
           alt=""
-          loading="lazy"
           className="self-center"
         />
       </>
@@ -3495,29 +3387,23 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
           eingesehen werden.
         </p>
 
-        <Image
-          quality={100}
+        <ChangelogImage
           src={image20250302SilcOverview}
           alt=""
-          loading="lazy"
           className="self-center"
         />
 
-        <Image
-          quality={100}
+        <ChangelogImage
           src={image20250302SilcTransactions}
           alt=""
-          loading="lazy"
           className="self-center"
         />
 
         <p>In der Profilkachel können Citizen ihre eigenen SILC einsehen.</p>
 
-        <Image
-          quality={100}
+        <ChangelogImage
           src={image20250302SilcDashboard}
           alt=""
-          loading="lazy"
           className="self-center"
         />
 
@@ -3545,12 +3431,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
           sichtbar wird.
         </p>
 
-        <Image
-          quality={100}
-          src={image20250228PenaltyPoints}
-          alt=""
-          loading="lazy"
-        />
+        <ChangelogImage src={image20250228PenaltyPoints} alt="" />
       </>
     ),
   },
@@ -3579,12 +3460,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
           die Anforderungen erfüllen oder nicht.
         </p>
 
-        <Image
-          quality={100}
-          src={image20250227Dropdown}
-          alt=""
-          loading="lazy"
-        />
+        <ChangelogImage src={image20250227Dropdown} alt="" />
       </>
     ),
   },
