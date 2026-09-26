@@ -3,6 +3,7 @@ import { CursorDirection } from "./cursorPaginationParsers";
 import {
   buildCursorConditions,
   compareMergedCursorEntries,
+  cursorOrderBy,
   decodeCursor,
   encodeCursor,
   isBeyondCursorPosition,
@@ -270,14 +271,19 @@ describe("cursor query conditions", () => {
   };
 
   test("has no conditions without a position", () => {
-    expect(buildCursorConditions(null, "beta", CursorDirection.Next)).toEqual(
-      [],
-    );
+    expect(
+      buildCursorConditions(null, "beta", CursorDirection.Next, "createdAt"),
+    ).toEqual([]);
   });
 
   test("compares by id within the source the position came from", () => {
     expect(
-      buildCursorConditions(position, "beta", CursorDirection.Next),
+      buildCursorConditions(
+        position,
+        "beta",
+        CursorDirection.Next,
+        "createdAt",
+      ),
     ).toEqual([
       {
         OR: [
@@ -290,21 +296,64 @@ describe("cursor query conditions", () => {
 
   test("includes the position's instant only for sources ordered after it", () => {
     expect(
-      buildCursorConditions(position, "gamma", CursorDirection.Next),
+      buildCursorConditions(
+        position,
+        "gamma",
+        CursorDirection.Next,
+        "createdAt",
+      ),
     ).toEqual([{ createdAt: { lte: position.date } }]);
 
     expect(
-      buildCursorConditions(position, "alpha", CursorDirection.Next),
+      buildCursorConditions(
+        position,
+        "alpha",
+        CursorDirection.Next,
+        "createdAt",
+      ),
     ).toEqual([{ createdAt: { lt: position.date } }]);
   });
 
   test("mirrors the comparison when walking backwards", () => {
     expect(
-      buildCursorConditions(position, "alpha", CursorDirection.Prev),
+      buildCursorConditions(
+        position,
+        "alpha",
+        CursorDirection.Prev,
+        "createdAt",
+      ),
     ).toEqual([{ createdAt: { gte: position.date } }]);
 
     expect(
-      buildCursorConditions(position, "gamma", CursorDirection.Prev),
+      buildCursorConditions(
+        position,
+        "gamma",
+        CursorDirection.Prev,
+        "createdAt",
+      ),
     ).toEqual([{ createdAt: { gt: position.date } }]);
+  });
+
+  test("puts the conditions and the order on the date field of the source", () => {
+    expect(
+      buildCursorConditions(
+        position,
+        "beta",
+        CursorDirection.Next,
+        "completedAt",
+      ),
+    ).toEqual([
+      {
+        OR: [
+          { completedAt: { lt: position.date } },
+          { completedAt: position.date, id: { lt: "cuid-2" } },
+        ],
+      },
+    ]);
+
+    expect(cursorOrderBy(CursorDirection.Prev, "completedAt")).toEqual([
+      { completedAt: "asc" },
+      { id: "asc" },
+    ]);
   });
 });

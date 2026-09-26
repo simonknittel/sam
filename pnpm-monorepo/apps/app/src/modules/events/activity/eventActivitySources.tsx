@@ -108,10 +108,11 @@ export const createEventActivitySource = ({
               position,
               EventActivitySourceKey.Activity,
               direction,
+              "createdAt",
             ),
           ],
         },
-        orderBy: cursorOrderBy(direction),
+        orderBy: cursorOrderBy(direction, "createdAt"),
         take,
         include: {
           citizen: {

@@ -1,3 +1,4 @@
+import type { Prisma } from "@sam-monorepo/database/browser";
 import { CursorDirection } from "./cursorPaginationParsers";
 
 /**
@@ -106,13 +107,20 @@ interface DateFieldCondition {
 
 /**
  * Deliberately mutable and structural so it drops straight into a Prisma
- * `where`'s `AND` without a cast.
+ * `where`'s `AND` without a cast. `DateField` is the column the source
+ * orders by.
  */
-export interface CursorCondition {
-  createdAt?: Date | DateFieldCondition;
+export type CursorCondition<DateField extends string> = Partial<
+  Record<DateField, Date | DateFieldCondition>
+> & {
   id?: { lt?: string; gt?: string };
-  OR?: CursorCondition[];
-}
+  OR?: CursorCondition<DateField>[];
+};
+
+const onDateField = <DateField extends string>(
+  dateField: DateField,
+  condition: Date | DateFieldCondition,
+) => ({ [dateField]: condition }) as CursorCondition<DateField>;
 
 /**
  * The `where` conditions selecting the rows of one source that sit beyond
@@ -124,11 +132,12 @@ export interface CursorCondition {
  * decided by the source keys alone — that is what makes them comparable
  * without reading the other source's rows.
  */
-export const buildCursorConditions = (
+export const buildCursorConditions = <DateField extends string>(
   position: CursorPosition | null,
   sourceKey: string,
   direction: CursorDirection,
-): CursorCondition[] => {
+  dateField: DateField,
+): CursorCondition<DateField>[] => {
   if (!position) return [];
 
   const isNext = direction === CursorDirection.Next;
@@ -137,13 +146,16 @@ export const buildCursorConditions = (
     return [
       {
         OR: [
-          { createdAt: isNext ? { lt: position.date } : { gt: position.date } },
+          onDateField(
+            dateField,
+            isNext ? { lt: position.date } : { gt: position.date },
+          ),
           {
-            createdAt: position.date,
+            ...onDateField(dateField, position.date),
             id: isNext ? { lt: position.id } : { gt: position.id },
           },
         ],
-      },
+      } as CursorCondition<DateField>,
     ];
   }
 
@@ -153,21 +165,33 @@ export const buildCursorConditions = (
 
   if (includesPositionDate)
     return [
-      {
-        createdAt: isNext ? { lte: position.date } : { gte: position.date },
-      },
+      onDateField(
+        dateField,
+        isNext ? { lte: position.date } : { gte: position.date },
+      ),
     ];
 
   return [
-    { createdAt: isNext ? { lt: position.date } : { gt: position.date } },
+    onDateField(
+      dateField,
+      isNext ? { lt: position.date } : { gt: position.date },
+    ),
   ];
 };
 
 /** The `orderBy` a source has to use for the merging to line up. */
-export const cursorOrderBy = (direction: CursorDirection) =>
-  direction === CursorDirection.Next
-    ? [{ createdAt: "desc" as const }, { id: "desc" as const }]
-    : [{ createdAt: "asc" as const }, { id: "asc" as const }];
+export const cursorOrderBy = <DateField extends string>(
+  direction: CursorDirection,
+  dateField: DateField,
+) => {
+  const sortOrder: Prisma.SortOrder =
+    direction === CursorDirection.Next ? "desc" : "asc";
+
+  return [
+    { [dateField]: sortOrder } as Record<DateField, Prisma.SortOrder>,
+    { id: sortOrder },
+  ];
+};
 
 interface PaginateMergedSourcesInput<Entry extends MergedCursorEntry> {
   readonly sources: readonly MergedCursorSource<Entry>[];
