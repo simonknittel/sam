@@ -761,6 +761,9 @@ importers:
       '@tiptap/starter-kit':
         specifier: 3.31.3
         version: 3.31.3
+      highlight.js:
+        specifier: 11.11.2
+        version: 11.11.2
       lowlight:
         specifier: 3.3.0
         version: 3.3.0

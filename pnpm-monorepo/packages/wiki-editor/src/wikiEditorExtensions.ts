@@ -13,7 +13,12 @@ import { Table, TableKit } from "@tiptap/extension-table";
 import { Placeholder } from "@tiptap/extensions";
 import type { Schema } from "@tiptap/pm/model";
 import StarterKit from "@tiptap/starter-kit";
-import { common, createLowlight } from "lowlight";
+import json from "highlight.js/lib/languages/json";
+import markdown from "highlight.js/lib/languages/markdown";
+import plaintext from "highlight.js/lib/languages/plaintext";
+import xml from "highlight.js/lib/languages/xml";
+import yaml from "highlight.js/lib/languages/yaml";
+import { createLowlight } from "lowlight";
 import type { WikiMentionedCitizen } from "./resolveWikiCitizenMention.js";
 import type { WikiLinkedPages } from "./resolveWikiPageLink.js";
 import type { WikiLinkedVariant } from "./resolveWikiVariantLink.js";
@@ -90,10 +95,10 @@ export interface WikiEditorExtensionsOptions {
 
 /**
  * Shared lowlight instance — a static grammar registry, so one instance can
- * serve every editor. `common` (~35 grammars) instead of `all` keeps ~150
- * unused grammars out of the client bundle.
+ * serve every editor. The wiki holds text and seldom code, and each grammar
+ * goes into the bundle of each wiki page, thus only a few basic ones.
  */
-const lowlight = createLowlight(common);
+const lowlight = createLowlight({ json, markdown, plaintext, xml, yaml });
 
 /**
  * The containers that hold grids next to regular blocks — grids live
@@ -232,7 +237,8 @@ export const getWikiEditorExtensions = (
     WikiBulletList,
     WikiOrderedList,
     WikiHorizontalRule,
-    WikiCodeBlock.configure({ lowlight }),
+    // A block without a language stays plain text instead of a guess
+    WikiCodeBlock.configure({ lowlight, defaultLanguage: "plaintext" }),
     WikiBlockquote,
     WikiHeading,
     WikiListItem,
