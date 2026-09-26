@@ -1,5 +1,6 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { Flow } from "@/modules/career/components/Flow";
+import type { AdditionalDataType } from "@/modules/career/nodes/RoleCitizens/client/additionalDataType";
 import { getFlowContext } from "@/modules/career/queries/getFlowContext";
 import { getFlowWithNodes } from "@/modules/career/queries/getFlowWithNodes";
 import { getCitizensGroupedByVisibleRoles } from "@/modules/citizen/queries/getCitizensGroupedByVisibleRoles";
@@ -69,18 +70,31 @@ export default async function Page({
   const isUpdating =
     canUpdate && (await cookies()).get("is_updating_flow")?.value === flow.id;
 
-  const [roles, assignedRoles, citizensGroupedByVisibleRoles] =
-    await Promise.all([
-      isUpdating ? getRoles() : getVisibleRoles(),
-      getMyAssignedRolesWithInheritance(),
-      getCitizensGroupedByVisibleRoles(),
-    ]);
+  const [roles, assignedRoles, { citizens, roleGroups }] = await Promise.all([
+    isUpdating ? getRoles() : getVisibleRoles(),
+    getMyAssignedRolesWithInheritance(),
+    getCitizensGroupedByVisibleRoles(),
+  ]);
+
+  const citizensById = new Map(
+    citizens.map((citizen) => [citizen.id, citizen]),
+  );
 
   const additionalData = {
     roles,
     assignedRoles,
-    citizensGroupedByVisibleRoles,
-  };
+    citizensGroupedByVisibleRoles: new Map(
+      roleGroups.map(({ roleId, citizenIds }) => [
+        roleId,
+        {
+          citizens: citizenIds.flatMap((citizenId) => {
+            const citizen = citizensById.get(citizenId);
+            return citizen ? [citizen] : [];
+          }),
+        },
+      ]),
+    ),
+  } satisfies AdditionalDataType;
 
   return (
     <SuspenseWithErrorBoundaryTile className="h-[calc(100dvh-64px-48px)] lg:h-[calc(100dvh-112px)]">
