@@ -7,6 +7,13 @@ import type { RawMatch } from "./types";
 
 const PATH = "LIVE/Game.log";
 
+/**
+ * The walk reads and parses the sample log once per byte (about 7,700
+ * times). That takes about 2 s locally and more than the default of 5 s on
+ * the CI runners.
+ */
+const WHOLE_FILE_WALK_TIMEOUT_MS = 30_000;
+
 const LOG_CONTENT = [
   "<2026-09-01T10:00:00.000Z> Log started on 01/09/2026 10:00:00",
   ...Object.values(SAMPLE_LINES),
@@ -52,31 +59,38 @@ const createLogFile = (content: BlobPart, lastModified: number) => ({
 });
 
 describe("createLogFileReader", () => {
-  test("finds the matches of a read of the whole file while the file grows", async () => {
-    const bytes = new TextEncoder().encode(LOG_CONTENT);
-    const readLogFiles = createLogFileReader();
+  test(
+    "finds the matches of a read of the whole file while the file grows",
+    async () => {
+      const bytes = new TextEncoder().encode(LOG_CONTENT);
+      const readLogFiles = createLogFileReader();
 
-    const foundMatchKeys = new Set<string>();
-    const expectedMatchKeys = new Set<string>();
+      const foundMatchKeys = new Set<string>();
+      const expectedMatchKeys = new Set<string>();
 
-    /** Every byte, thus also inside a line break and inside a character */
-    for (let size = 1; size <= bytes.length; size += 1) {
-      const content = bytes.subarray(0, size);
+      /** Every byte, thus also inside a line break and inside a character */
+      for (let size = 1; size <= bytes.length; size += 1) {
+        const content = bytes.subarray(0, size);
 
-      const matches = await readLogFiles([createLogFile(content, size)], false);
-      for (const key of toMatchKeys(matches)) foundMatchKeys.add(key);
+        const matches = await readLogFiles(
+          [createLogFile(content, size)],
+          false,
+        );
+        for (const key of toMatchKeys(matches)) foundMatchKeys.add(key);
 
-      const wholeText = new TextDecoder().decode(content);
-      for (const key of toMatchKeys(matchWholeText(wholeText)))
-        expectedMatchKeys.add(key);
+        const wholeText = new TextDecoder().decode(content);
+        for (const key of toMatchKeys(matchWholeText(wholeText)))
+          expectedMatchKeys.add(key);
 
-      expect(foundMatchKeys).toEqual(expectedMatchKeys);
-    }
+        expect(foundMatchKeys).toEqual(expectedMatchKeys);
+      }
 
-    expect(foundMatchKeys.size).toBeGreaterThanOrEqual(
-      Object.values(EntryType).length,
-    );
-  });
+      expect(foundMatchKeys.size).toBeGreaterThanOrEqual(
+        Object.values(EntryType).length,
+      );
+    },
+    WHOLE_FILE_WALK_TIMEOUT_MS,
+  );
 
   test("reads only the lines which were added since the last read", async () => {
     const readLogFiles = createLogFileReader();
