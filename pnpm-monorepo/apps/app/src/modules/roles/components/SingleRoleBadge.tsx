@@ -19,16 +19,26 @@ import {
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Link } from "@/modules/common/components/Link";
-import { Markdown } from "@/modules/common/components/Markdown";
 import { Note } from "@/modules/common/components/Note";
 import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
 import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
 import { type Role } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useId } from "react";
 import { FaCog, FaMinus, FaPlus, FaTrash } from "react-icons/fa";
 import { useRolesContext } from "./RolesContext";
+
+/**
+ * Role badges show on many pages, but the description shows only in the
+ * popover. Thus the Markdown parser loads only when a popover opens.
+ */
+const Markdown = dynamic(
+  () =>
+    import("@/modules/common/components/Markdown").then((mod) => mod.Markdown),
+  { loading: () => <AsciiSpinner /> },
+);
 
 interface Props {
   readonly className?: string;

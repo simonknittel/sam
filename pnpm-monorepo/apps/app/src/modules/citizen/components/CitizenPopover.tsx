@@ -5,9 +5,19 @@ import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
 import { api } from "@/trpc/react";
 import type { Entity } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
+import dynamic from "next/dynamic";
 import { useCallback, useState, type ReactNode } from "react";
 import { BsExclamationOctagonFill } from "react-icons/bs";
-import { ProfileContent } from "./ProfileContent";
+
+/**
+ * Each citizen link has a popover, but the profile shows only after a hover.
+ * Thus its code (for example the role forms) loads only then, and not on
+ * each page with a citizen link.
+ */
+const ProfileContent = dynamic(
+  () => import("./ProfileContent").then((mod) => mod.ProfileContent),
+  { loading: () => <ProfileLoading /> },
+);
 
 interface Props {
   readonly children?: ReactNode;
@@ -27,6 +37,9 @@ export const CitizenPopover = ({ children, citizenId }: Props) => {
 
   const handleOpenChange = useCallback((open: boolean) => {
     setIsEnabled(open);
+
+    // Load the code of the profile at the same time as its data
+    if (open) void import("./ProfileContent");
   }, []);
 
   const handleRoleAssignmentsChanged = useCallback(() => {
@@ -46,12 +59,7 @@ export const CitizenPopover = ({ children, citizenId }: Props) => {
       })}
       hoverOnly
     >
-      {isPending && (
-        <p className="font-mono uppercase flex gap-2 justify-center items-center animate-pulse">
-          <AsciiSpinner />
-          Citizen wird geladen...
-        </p>
-      )}
+      {isPending && <ProfileLoading />}
 
       {error && (
         <p className="font-mono uppercase flex gap-2 justify-center items-center text-red-500">
@@ -67,5 +75,14 @@ export const CitizenPopover = ({ children, citizenId }: Props) => {
         />
       )}
     </PopoverBaseUI>
+  );
+};
+
+const ProfileLoading = () => {
+  return (
+    <p className="font-mono uppercase flex gap-2 justify-center items-center animate-pulse">
+      <AsciiSpinner />
+      Citizen wird geladen...
+    </p>
   );
 };
