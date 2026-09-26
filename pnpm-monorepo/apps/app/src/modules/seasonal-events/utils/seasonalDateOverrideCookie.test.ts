@@ -1,9 +1,12 @@
 import { describe, expect, test } from "vitest";
-import { parseSeasonalDateOverrideCookie } from "./seasonalDateOverrideCookie";
+import {
+  formatSeasonalDateOverrideCookie,
+  parseSeasonalDateOverrideCookie,
+} from "./seasonalDateOverrideCookie";
 
-describe("parseSeasonalDateOverrideCookie", () => {
+describe("the seasonal date override cookie", () => {
   test("reads a valid date", () => {
-    expect(parseSeasonalDateOverrideCookie("2026-10-15", true)).toEqual({
+    expect(parseSeasonalDateOverrideCookie("2026-10-15")).toEqual({
       year: 2026,
       month: 10,
       day: 15,
@@ -11,36 +14,41 @@ describe("parseSeasonalDateOverrideCookie", () => {
   });
 
   test("reads February 29 of a leap year", () => {
-    expect(parseSeasonalDateOverrideCookie("2028-02-29", true)).toEqual({
+    expect(parseSeasonalDateOverrideCookie("2028-02-29")).toEqual({
       year: 2028,
       month: 2,
       day: 29,
     });
   });
 
-  test("returns nothing while the override is switched off", () => {
-    expect(parseSeasonalDateOverrideCookie("2026-10-15", false)).toBeNull();
-  });
-
   test("returns nothing without a cookie", () => {
-    expect(parseSeasonalDateOverrideCookie(undefined, true)).toBeNull();
-    expect(parseSeasonalDateOverrideCookie("", true)).toBeNull();
+    expect(parseSeasonalDateOverrideCookie(undefined)).toBeNull();
+    expect(parseSeasonalDateOverrideCookie("")).toBeNull();
   });
 
   test("returns nothing for a malformed value", () => {
-    expect(parseSeasonalDateOverrideCookie("15.10.2026", true)).toBeNull();
-    expect(
-      parseSeasonalDateOverrideCookie("2026-10-15T00:00", true),
-    ).toBeNull();
-    expect(parseSeasonalDateOverrideCookie("2026-1-5", true)).toBeNull();
-    expect(parseSeasonalDateOverrideCookie("halloween", true)).toBeNull();
+    expect(parseSeasonalDateOverrideCookie("15.10.2026")).toBeNull();
+    expect(parseSeasonalDateOverrideCookie("2026-10-15T00:00")).toBeNull();
+    expect(parseSeasonalDateOverrideCookie("2026-1-5")).toBeNull();
+    expect(parseSeasonalDateOverrideCookie("halloween")).toBeNull();
   });
 
   test("returns nothing for a day the calendar does not have", () => {
-    expect(parseSeasonalDateOverrideCookie("2026-02-30", true)).toBeNull();
-    expect(parseSeasonalDateOverrideCookie("2026-13-01", true)).toBeNull();
-    expect(parseSeasonalDateOverrideCookie("2026-00-10", true)).toBeNull();
-    expect(parseSeasonalDateOverrideCookie("2026-10-32", true)).toBeNull();
-    expect(parseSeasonalDateOverrideCookie("2027-02-29", true)).toBeNull();
+    expect(parseSeasonalDateOverrideCookie("2026-02-30")).toBeNull();
+    expect(parseSeasonalDateOverrideCookie("2026-13-01")).toBeNull();
+    expect(parseSeasonalDateOverrideCookie("2026-00-10")).toBeNull();
+    expect(parseSeasonalDateOverrideCookie("2026-10-32")).toBeNull();
+    expect(parseSeasonalDateOverrideCookie("2027-02-29")).toBeNull();
+  });
+
+  test("reads back the value the formatter writes", () => {
+    const localDate = { year: 2027, month: 1, day: 5 };
+
+    expect(formatSeasonalDateOverrideCookie(localDate)).toBe("2027-01-05");
+    expect(
+      parseSeasonalDateOverrideCookie(
+        formatSeasonalDateOverrideCookie(localDate),
+      ),
+    ).toEqual(localDate);
   });
 });

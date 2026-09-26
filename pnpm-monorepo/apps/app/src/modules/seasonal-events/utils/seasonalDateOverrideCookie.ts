@@ -3,54 +3,42 @@ import { z } from "zod";
 
 /**
  * Names the calendar date the seasonal themes resolve for, as `YYYY-MM-DD`.
- * The cookie bypasses the time zone of the viewer and is only honoured while
- * `SEASONAL_DATE_OVERRIDE_ENABLED` is set, thus it belongs to development
- * and to the test stack.
+ * The cookie bypasses the time zone of the viewer. The server honours it for
+ * every viewer, because it changes nothing but the decorations of their own
+ * view.
  */
 export const SEASONAL_DATE_COOKIE = "seasonal-date";
 
-/** `YYYY-MM-DD` has exactly 10 characters */
-const SEASONAL_DATE_LENGTH = 10;
-
-const cookieSchema = z
-  .string()
-  .max(SEASONAL_DATE_LENGTH)
-  .regex(/^\d{4}-\d{2}-\d{2}$/);
+export const SEASONAL_DATE_COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
 /**
- * Whether the parts name a day the calendar has. `Date.UTC` accepts
- * February 30 and moves it to March 2, thus the parts must come back
- * unchanged.
+ * Decides what a valid override is: a day the calendar has, as
+ * `YYYY-MM-DD`. February 30 does not pass.
  */
-const isRealCalendarDate = ({ year, month, day }: LocalDate) => {
-  const moment = new Date(Date.UTC(year, month - 1, day));
+export const seasonalDateSchema = z.iso.date();
 
-  return (
-    moment.getUTCFullYear() === year &&
-    moment.getUTCMonth() + 1 === month &&
-    moment.getUTCDate() === day
-  );
-};
-
-/**
- * The date the cookie names, or nothing. This is the one place which decides
- * what a valid override is: everything but a real calendar date, and every
- * value while the override is switched off, yields nothing.
- */
+/** The date the cookie names, or nothing */
 export const parseSeasonalDateOverrideCookie = (
   cookieValue: string | undefined,
-  overrideEnabled: boolean,
 ): LocalDate | null => {
-  if (!overrideEnabled) return null;
-
-  const result = cookieSchema.safeParse(cookieValue);
+  const result = seasonalDateSchema.safeParse(cookieValue);
   if (!result.success) return null;
 
-  const localDate = {
+  return {
     year: Number(result.data.slice(0, 4)),
     month: Number(result.data.slice(5, 7)),
     day: Number(result.data.slice(8, 10)),
   };
-
-  return isRealCalendarDate(localDate) ? localDate : null;
 };
+
+/** The cookie value which names the date */
+export const formatSeasonalDateOverrideCookie = ({
+  year,
+  month,
+  day,
+}: LocalDate) =>
+  [
+    String(year).padStart(4, "0"),
+    String(month).padStart(2, "0"),
+    String(day).padStart(2, "0"),
+  ].join("-");

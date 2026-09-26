@@ -1,7 +1,6 @@
 import "server-only";
 
 import { prisma } from "@/db";
-import { env } from "@/env";
 import { authenticate } from "@/modules/auth/server";
 import { log } from "@/modules/logging";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
@@ -13,31 +12,12 @@ import {
   SeasonalEventKey,
   type LocalDate,
 } from "@sam-monorepo/domain";
-import { cookies } from "next/headers";
 import { unstable_rethrow } from "next/navigation";
 import { cache } from "react";
 import { serializeError } from "serialize-error";
 import { SEASONAL_THEMES } from "../utils/SEASONAL_THEMES";
-import {
-  parseSeasonalDateOverrideCookie,
-  SEASONAL_DATE_COOKIE,
-} from "../utils/seasonalDateOverrideCookie";
 import type { SeasonalThemeResolution } from "../utils/types";
-
-/** The values a `.env` file can use to switch the date override on */
-const OVERRIDE_ENABLED_VALUES: readonly string[] = ["1", "true"];
-
-const readDateOverride = async () => {
-  const overrideEnabled = OVERRIDE_ENABLED_VALUES.includes(
-    env.SEASONAL_DATE_OVERRIDE_ENABLED ?? "",
-  );
-
-  const cookieValue = overrideEnabled
-    ? (await cookies()).get(SEASONAL_DATE_COOKIE)?.value
-    : undefined;
-
-  return parseSeasonalDateOverrideCookie(cookieValue, overrideEnabled);
-};
+import { getSeasonalDateOverride } from "./getSeasonalDateOverride";
 
 /** The values of a citizen which the resolution needs */
 interface ViewerCitizen {
@@ -131,7 +111,7 @@ export const getActiveSeasonalTheme = cache(
     async (): Promise<SeasonalThemeResolution | null> => {
       const [authentication, overrideDate] = await Promise.all([
         authenticate(),
-        readDateOverride(),
+        getSeasonalDateOverride(),
       ]);
 
       // `authenticate()` answers `false` without a session, which optional

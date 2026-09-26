@@ -9,6 +9,7 @@
 import { prisma } from "@/db";
 import { authorize, getServerAuthSession } from "@/modules/auth/server";
 import { requireConfirmedEmailForTrpc } from "@/modules/auth/utils/emailConfirmation";
+import { isAdminBehindSession } from "@/modules/auth/utils/isAdminBehindSession";
 import { log } from "@/modules/logging";
 import { initTRPC, TRPCError } from "@trpc/server";
 import { serializeError } from "serialize-error";
@@ -101,6 +102,28 @@ export const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
   return next({
     ctx: {
       // infers the `session` as non-nullable
+      session: { ...ctx.session, user: ctx.session.user },
+    },
+  });
+});
+
+/**
+ * Procedure of the admin toolbar, the tRPC counterpart of
+ * `ActionGate.Admin`: only an admin can call it, also while they assume a
+ * different user. It skips the confirmed-email and clearance gates, because
+ * the toolbar shows on the pages of these gates and an assumed user can be
+ * without clearance.
+ */
+export const adminProcedure = t.procedure.use(async ({ ctx, next }) => {
+  if (!ctx.session?.user) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+
+  if (!isAdminBehindSession(ctx.session))
+    throw new TRPCError({ code: "FORBIDDEN" });
+
+  return next({
+    ctx: {
       session: { ...ctx.session, user: ctx.session.user },
     },
   });

@@ -170,9 +170,6 @@ export const appDummyEnvironment = {
   NEXT_PUBLIC_CARE_BEAR_SHOOTER_BUILD_URL:
     "http://localhost:9/playwright-dummy-care-bear-shooter",
   NEXTAUTH_SECRET: "playwright-insecure-auth-secret",
-  // Lets the seasonal themes follow the `seasonal-date` cookie of a test
-  // (see the setSeasonalDate fixture); production never sets this.
-  SEASONAL_DATE_OVERRIDE_ENABLED: "1",
   /**
    * Throwaway ES256 key so the suite exercises the configured path of the
    * embed authentication (see docs/embedded-app-authentication.md) rather

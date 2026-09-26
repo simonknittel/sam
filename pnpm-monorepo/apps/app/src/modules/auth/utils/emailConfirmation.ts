@@ -1,15 +1,11 @@
 import { log } from "@/modules/logging";
 import { TRPCError } from "@trpc/server";
 import { type Session } from "next-auth";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { isAdminModeActive } from "./isAdminModeActive";
 
 export const requiresEmailConfirmation = async (session: Session) => {
-  if (
-    session.user.role === "admin" &&
-    (await cookies()).get("enable_admin")?.value === "1"
-  )
-    return false;
+  if (await isAdminModeActive(session)) return false;
 
   return true;
 };

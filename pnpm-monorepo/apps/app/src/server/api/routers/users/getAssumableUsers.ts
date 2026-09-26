@@ -2,19 +2,13 @@ import { log } from "@/modules/logging";
 import { getAssumableUsers as getAssumableUsersQuery } from "@/modules/users/queries/getAssumableUsers";
 import { TRPCError } from "@trpc/server";
 import { serializeError } from "serialize-error";
-import { protectedProcedure } from "../../trpc";
+import { adminProcedure } from "../../trpc";
 
-export const getAssumableUsers = protectedProcedure.query(async ({ ctx }) => {
-  /**
-   * While assuming, the session carries the assumed user's role. The
-   * `assumedByAdmin` flag still proves the request comes from an admin, so
-   * they can switch to another user without exiting first.
-   */
-  if (ctx.session.user.role !== "admin" && !ctx.session.assumedByAdmin)
-    throw new TRPCError({ code: "FORBIDDEN" });
-
+export const getAssumableUsers = adminProcedure.query(async ({ ctx }) => {
   try {
-    return await getAssumableUsersQuery();
+    return await getAssumableUsersQuery(
+      ctx.session.assumedByAdminId ?? ctx.session.user.id,
+    );
   } catch (error) {
     log.error("Failed to fetch assumable users", {
       error: serializeError(error),

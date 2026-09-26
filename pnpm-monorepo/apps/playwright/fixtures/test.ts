@@ -51,15 +51,13 @@ interface Fixtures {
    */
   readonly switchUser: (user: Pick<User, "id">) => Promise<void>;
   /**
-   * Sets the cookie the AdminEnabler uses. Only effective for users whose
+   * Sets the cookie of the admin mode tool. Only effective for users whose
    * `User.role` is "admin".
    */
   readonly enableAdminMode: () => Promise<void>;
   /**
    * Names the local calendar date (`YYYY-MM-DD`) the seasonal themes resolve
-   * for, which lets a test walk a date range without waiting for it. The app
-   * honours the cookie only while `SEASONAL_DATE_OVERRIDE_ENABLED` is set,
-   * which the stack does (see setup/stack.ts).
+   * for, which lets a test walk a date range without waiting for it.
    */
   readonly setSeasonalDate: (date: string) => Promise<void>;
   readonly databaseReset: undefined;

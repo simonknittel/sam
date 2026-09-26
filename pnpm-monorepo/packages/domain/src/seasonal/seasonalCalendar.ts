@@ -138,6 +138,62 @@ export const isSeasonalGreetingDay = (
 ): boolean =>
   isInRange(SEASONAL_EVENT_DEFINITIONS[event].greetingRange, localDate);
 
+/**
+ * The next date with the month and day, `from` included. No range starts on
+ * February 29, thus the date always exists.
+ */
+const getNextOccurrence = (monthDay: MonthDay, from: LocalDate): LocalDate => ({
+  year:
+    toComparableDay(monthDay) >= toComparableDay(from)
+      ? from.year
+      : from.year + 1,
+  month: monthDay.month,
+  day: monthDay.day,
+});
+
+/** The next first day of the theme range of the event, `from` included */
+export const getNextSeasonalThemeStart = (
+  event: SeasonalEventKey,
+  from: LocalDate,
+): LocalDate =>
+  getNextOccurrence(SEASONAL_EVENT_DEFINITIONS[event].themeRange.start, from);
+
+/** The next first day of the greeting range of the event, `from` included */
+export const getNextSeasonalGreetingStart = (
+  event: SeasonalEventKey,
+  from: LocalDate,
+): LocalDate =>
+  getNextOccurrence(
+    SEASONAL_EVENT_DEFINITIONS[event].greetingRange.start,
+    from,
+  );
+
+/** One year holds every month/day pair */
+const DAYS_TO_SEARCH = 366;
+
+const addDays = (localDate: LocalDate, dayCount: number): LocalDate => {
+  const moment = new Date(
+    Date.UTC(localDate.year, localDate.month - 1, localDate.day + dayCount),
+  );
+
+  return {
+    year: moment.getUTCFullYear(),
+    month: moment.getUTCMonth() + 1,
+    day: moment.getUTCDate(),
+  };
+};
+
+/** The next day which no theme range holds, `from` included */
+export const getNextDayWithoutSeasonalEvent = (from: LocalDate): LocalDate => {
+  for (let offset = 0; offset < DAYS_TO_SEARCH; offset += 1) {
+    const date = addDays(from, offset);
+    if (getActiveSeasonalEvent(date) === null) return date;
+  }
+
+  // A unit test makes sure that the definitions leave such a day
+  throw new Error("Every day of the year has a seasonal theme");
+};
+
 export interface SeasonalEventOverlap extends MonthDay {
   readonly events: readonly SeasonalEventKey[];
 }

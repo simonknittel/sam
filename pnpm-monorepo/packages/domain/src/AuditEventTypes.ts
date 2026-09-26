@@ -230,6 +230,8 @@ export enum AuditEventType {
   ONBOARDING_TASK_COMPLETED = "ONBOARDING_TASK_COMPLETED",
   LOG_ANALYZER_ENTRIES_UPLOADED = "LOG_ANALYZER_ENTRIES_UPLOADED",
   SEASONAL_THEME_SETTINGS_UPDATED = "SEASONAL_THEME_SETTINGS_UPDATED",
+  ASSUME_USER_STARTED = "ASSUME_USER_STARTED",
+  ASSUME_USER_ENDED = "ASSUME_USER_ENDED",
 }
 
 /**
@@ -1566,6 +1568,25 @@ export interface AuditEventDataByType {
     citizenId: string;
     enabled: string[];
     disabled: string[];
+  };
+
+  /**
+   * The admin is the creator of the event. While the admin assumes a user,
+   * the app records all other events for the assumed user, thus these two
+   * events are the only link to the admin.
+   */
+  [AuditEventType.ASSUME_USER_STARTED]: {
+    assumedUserId: string;
+    assumedUserName: string | null;
+  };
+
+  /**
+   * Written only when the admin exits. An assume which ends because its
+   * cookie expires writes no event.
+   */
+  [AuditEventType.ASSUME_USER_ENDED]: {
+    assumedUserId: string;
+    assumedUserName: string | null;
   };
 }
 
