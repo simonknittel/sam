@@ -4,7 +4,7 @@ import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { subHours } from "date-fns";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
-import { buildChartData } from "../utils/chartData";
+import { buildChartData, normalizeOptions } from "../utils/chartData";
 
 export const getVariantShipStatisticChart = cache(
   withTrace("getVariantShipStatisticChart", async () => {
@@ -17,17 +17,23 @@ export const getVariantShipStatisticChart = cache(
       filterEmpty: true,
     };
 
+    const options = normalizeOptions();
+
     const rows = await prisma.variantShipCount.findMany({
-      include: {
+      where: {
+        // The snapshot of a day is written after that day. Thus each
+        // snapshot of a chart day is younger than the start of the chart.
+        createdAt: {
+          gte: options.fromDate,
+        },
+      },
+      select: {
+        variantId: true,
+        createdAt: true,
+        count: true,
         variant: {
           select: {
-            id: true,
             name: true,
-            series: {
-              select: {
-                name: true,
-              },
-            },
           },
         },
       },

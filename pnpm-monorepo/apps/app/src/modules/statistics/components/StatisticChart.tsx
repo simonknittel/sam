@@ -3,7 +3,6 @@
 // @refresh reset
 
 import { formatDate } from "@/modules/common/utils/formatDate";
-import DOMPurify from "dompurify";
 import type { SetOptionOpts } from "echarts";
 import { LineChart } from "echarts/charts";
 import {
@@ -18,6 +17,7 @@ import { CanvasRenderer } from "echarts/renderers";
 import type { CallbackDataParams } from "echarts/types/dist/shared";
 import { useEffect, useRef } from "react";
 import type { StatisticChartData } from "../utils/chartData";
+import { escapeHtml } from "../utils/escapeHtml";
 
 interface Props {
   readonly chart: StatisticChartData;
@@ -31,14 +31,6 @@ echarts.use([
   DataZoomComponent,
   CanvasRenderer,
 ]);
-
-/**
- * The tooltip formatter's return value is injected via innerHTML by ECharts,
- * and series names derive from user-editable variant/role names — strip all
- * markup so they render as plain text.
- */
-const sanitizeTooltipText = (value: string) =>
-  DOMPurify.sanitize(value, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] });
 
 const PALETTE = [
   "#38bdf8",
@@ -128,11 +120,7 @@ export const StatisticChart = ({ chart }: Props) => {
             return bValue - aValue;
           });
 
-          const limitedItems = chart.configuration?.top
-            ? sortedItems.slice(0, chart.configuration.top)
-            : sortedItems;
-
-          const rowsHtml = limitedItems
+          const rowsHtml = sortedItems
             .map((item) => {
               const color =
                 typeof item.color === "string" ? item.color : "#ffffff";
@@ -141,11 +129,14 @@ export const StatisticChart = ({ chart }: Props) => {
                 : item.value;
               const formattedValue =
                 typeof value === "number" ? value.toLocaleString("de-DE") : "—";
+              // ECharts puts the returned HTML into innerHTML, and the series
+              // names come from user-editable variant and role names
+              const seriesName = escapeHtml(item.seriesName ?? "");
 
               return `
                 <div class="text-white" style="display: flex; align-items: center; gap: 0.5rem;">
                   <span style="width: 0.65rem; height: 0.65rem; border-radius: 9999px; background: ${color}; display: inline-block;"></span>
-                  <span style="flex: 1;">${sanitizeTooltipText(item.seriesName ?? "")}</span>
+                  <span style="flex: 1;">${seriesName}</span>
                   <strong>${formattedValue}</strong>
                 </div>`.trim();
             })

@@ -3,7 +3,7 @@ import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
-import { buildTotalAndDeltaChart } from "../utils/chartData";
+import { buildTotalAndDeltaChart, normalizeOptions } from "../utils/chartData";
 
 export const getDailyLoginStatisticChart = cache(
   withTrace("getDailyLoginStatisticChart", async () => {
@@ -12,8 +12,29 @@ export const getDailyLoginStatisticChart = cache(
       forbidden();
 
     const configuration = {};
+    const options = normalizeOptions();
+
+    // The change of the first chart day compares with the last day before it
+    const previousDay = await prisma.dailyLoginCount.findFirst({
+      where: {
+        date: {
+          lt: options.fromDate,
+        },
+      },
+      orderBy: {
+        date: "desc",
+      },
+      select: {
+        date: true,
+      },
+    });
 
     const rows = await prisma.dailyLoginCount.findMany({
+      where: {
+        date: {
+          gte: previousDay?.date ?? options.fromDate,
+        },
+      },
       orderBy: {
         date: "asc",
       },
