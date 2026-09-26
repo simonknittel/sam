@@ -1,5 +1,4 @@
-import * as z from "zod";
-import { EntryType } from "./PATTERNS";
+import type { EntryType } from "./PATTERNS";
 
 /**
  * How many entries one upload request carries. The client splits a larger
@@ -23,24 +22,6 @@ export interface UploadEntry {
    */
   readonly eventAt?: string;
 }
-
-export const uploadEntriesSchema = z.object({
-  entries: z
-    .array(
-      z.object({
-        type: z.enum(EntryType),
-        /**
-         * The whole text a pattern matched, which spans two log lines for
-         * some patterns. `validateUploadEntries` makes sure that the pattern
-         * covers the whole text.
-         */
-        rawLine: z.string().min(1).max(MAXIMUM_RAW_LINE_LENGTH),
-        eventAt: z.iso.datetime().optional(),
-      }),
-    )
-    .min(1)
-    .max(MAXIMUM_UPLOAD_ENTRIES),
-});
 
 export const createUploadFormData = (entries: readonly UploadEntry[]) => {
   const formData = new FormData();

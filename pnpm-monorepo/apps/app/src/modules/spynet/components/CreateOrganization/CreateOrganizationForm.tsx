@@ -6,7 +6,7 @@ import { useId, useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import toast from "react-hot-toast";
 import { FaSave } from "react-icons/fa";
-import * as z from "zod";
+import * as z from "zod/mini";
 
 const createdOrganizationResponseSchema = z.object({ id: z.string() });
 

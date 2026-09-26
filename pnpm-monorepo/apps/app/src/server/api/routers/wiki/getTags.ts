@@ -1,8 +1,6 @@
 import { prisma } from "@/db";
-import {
-  eventContainerColumns,
-  eventContainerSchema,
-} from "@/modules/events/utils/eventContainer";
+import { eventContainerColumns } from "@/modules/events/utils/eventContainer";
+import { eventContainerSchema } from "@/modules/events/utils/eventContainerSchema";
 import {
   getEventWikiContext,
   hasReadableEventWikiRoot,

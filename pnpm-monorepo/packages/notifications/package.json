@@ -2,11 +2,13 @@
   "name": "@sam-monorepo/notifications",
   "private": true,
   "type": "module",
+  "sideEffects": false,
   "files": [
     "./dist/*"
   ],
   "exports": {
-    ".": "./dist/index.js"
+    ".": "./dist/index.js",
+    "./channels": "./dist/channels.js"
   },
   "scripts": {
     "postinstall": "tsc",

@@ -1,12 +1,12 @@
 "use client";
 
 import { FlowNodeMarkdownPosition } from "@sam-monorepo/database/browser";
-import * as z from "zod";
+import * as z from "zod/mini";
 
 export const schema = z.object({
   id: z.cuid2(),
-  markdown: z.string().max(5000),
+  markdown: z.string().check(z.maxLength(5000)),
   markdownPosition: z.enum(FlowNodeMarkdownPosition),
-  backgroundColor: z.string().optional(),
-  backgroundTransparency: z.coerce.number().min(0).max(1),
+  backgroundColor: z.optional(z.string()),
+  backgroundTransparency: z.coerce.number().check(z.gte(0), z.lte(1)),
 });

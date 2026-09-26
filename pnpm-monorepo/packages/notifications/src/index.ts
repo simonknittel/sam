@@ -1,4 +1,4 @@
-import * as z from "zod";
+import * as z from "zod/mini";
 
 /**
  * Payload schemas for on-site notifications, shared between the
@@ -12,17 +12,7 @@ import * as z from "zod";
  * generic renderer for unknown types, unknown versions and invalid payloads.
  */
 
-/**
- * Realtime channel/event vocabulary, shared between the notification-router
- * Lambda (publisher) and the app (subscriber + channel authorization).
- */
-export const CITIZEN_CHANNEL_PREFIX = "private-citizen-";
-
-export const getCitizenChannelName = (citizenId: string) =>
-  `${CITIZEN_CHANNEL_PREFIX}${citizenId}`;
-
-export const ON_SITE_NOTIFICATION_CREATED_EVENT =
-  "on-site-notification-created";
+export * from "./channels.js";
 
 export const eventCreatedPayloadSchema = z.object({
   eventId: z.string(),
@@ -62,7 +52,7 @@ export const eventParticipationRemovedPayloadSchema = z.object({
   eventId: z.string(),
   eventName: z.string(),
   /** The manager's optional reason, shown to the removed citizen */
-  reason: z.string().nullable(),
+  reason: z.nullable(z.string()),
 });
 
 export const roleAddedPayloadSchema = z.object({
@@ -73,7 +63,7 @@ export const roleAddedPayloadSchema = z.object({
 export const silcTransactionCreatedPayloadSchema = z.object({
   transactionId: z.string(),
   value: z.number(),
-  description: z.string().nullable(),
+  description: z.nullable(z.string()),
 });
 
 export const sincomePayoutStartedPayloadSchema = z.object({
@@ -89,7 +79,7 @@ export const sincomePayoutDisbursedPayloadSchema = z.object({
 
 export const penaltyEntryCreatedPayloadSchema = z.object({
   points: z.number(),
-  reason: z.string().nullable(),
+  reason: z.nullable(z.string()),
 });
 
 export const taskAssignmentUpdatedPayloadSchema = z.object({
@@ -100,8 +90,8 @@ export const taskAssignmentUpdatedPayloadSchema = z.object({
 export const wikiPageReportedPayloadSchema = z.object({
   reportId: z.string(),
   pageTitle: z.string(),
-  uploadFileName: z.string().nullable(),
-  reportedByHandle: z.string().nullable(),
+  uploadFileName: z.nullable(z.string()),
+  reportedByHandle: z.nullable(z.string()),
 });
 
 /**
@@ -130,8 +120,8 @@ const BIRTHDAY_BODY_MAX_LENGTH = 200;
  * app falls back to `BIRTHDAY_FALLBACK_WORDING`.
  */
 export const birthdayPayloadSchema = z.object({
-  title: z.string().max(BIRTHDAY_TITLE_MAX_LENGTH).optional(),
-  body: z.string().max(BIRTHDAY_BODY_MAX_LENGTH).optional(),
+  title: z.optional(z.string().check(z.maxLength(BIRTHDAY_TITLE_MAX_LENGTH))),
+  body: z.optional(z.string().check(z.maxLength(BIRTHDAY_BODY_MAX_LENGTH))),
 });
 
 /** Room for a wording well above the length of the drafted ones */
@@ -148,16 +138,16 @@ const NEW_YEAR_BODY_MAX_LENGTH = 200;
  * the payload, thus the app needs no fallback.
  */
 export const newYearPayloadSchema = z.object({
-  title: z.string().max(NEW_YEAR_TITLE_MAX_LENGTH),
-  body: z.string().max(NEW_YEAR_BODY_MAX_LENGTH),
+  title: z.string().check(z.maxLength(NEW_YEAR_TITLE_MAX_LENGTH)),
+  body: z.string().check(z.maxLength(NEW_YEAR_BODY_MAX_LENGTH)),
 });
 
 export const wikiCitizenMentionedPayloadSchema = z.object({
   pageId: z.string(),
   pageTitle: z.string(),
-  mentionedByHandle: z.string().nullable(),
+  mentionedByHandle: z.nullable(z.string()),
   /** Set for EVENT-namespace (briefing) pages, whose page URL needs it */
-  eventId: z.string().nullable(),
+  eventId: z.nullable(z.string()),
 });
 
 export const onSiteNotificationPayloadSchemas = {

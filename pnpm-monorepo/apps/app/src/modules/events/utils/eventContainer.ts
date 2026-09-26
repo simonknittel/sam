@@ -1,5 +1,4 @@
 import type { EventPosition } from "@sam-monorepo/database/browser";
-import * as z from "zod";
 
 /**
  * A lineup and a briefing hang off either a real event or an event template
@@ -63,16 +62,6 @@ export const getWikiPageContainer = (page: {
   if (page.templateId) return toTemplateContainer(page.templateId);
   return null;
 };
-
-/**
- * Container reference as it travels through a tRPC input. Ids are opaque
- * cuid/cuid2 strings; the length cap keeps a hostile client from sending
- * megabytes.
- */
-export const eventContainerSchema = z.object({
-  kind: z.enum(EventContainerKind),
-  id: z.string().min(1).max(64),
-});
 
 /** Where the container's briefing is rendered */
 export const getBriefingPath = (container: EventContainer) => {

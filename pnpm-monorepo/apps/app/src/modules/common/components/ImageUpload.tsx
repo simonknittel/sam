@@ -8,10 +8,10 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type ChangeEventHandler } from "react";
 import toast from "react-hot-toast";
-import * as z from "zod";
+import * as z from "zod/mini";
 import useUpload from "../utils/useUpload";
 
-const assignResponseSchema = z.object({ warning: z.string().optional() });
+const assignResponseSchema = z.object({ warning: z.optional(z.string()) });
 
 const readAssignWarning = async (response: Response) => {
   try {

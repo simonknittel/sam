@@ -1,4 +1,4 @@
-import * as z from "zod";
+import * as z from "zod/mini";
 
 /**
  * Holds the page "copied" by the copy dialog until it is inserted somewhere
@@ -20,9 +20,9 @@ const schema = z.object({
   pageId: z.cuid2(),
   includeChildren: z.boolean(),
   /** Display only — the source is re-resolved at insert time */
-  title: z.string().min(1).max(128),
+  title: z.string().check(z.minLength(1), z.maxLength(128)),
   /** Display only — readable descendants at copy time, 0 without children */
-  childCount: z.number().int().min(0).max(100_000),
+  childCount: z.int().check(z.gte(0), z.lte(100_000)),
 });
 
 export type WikiClipboardEntry = z.infer<typeof schema>;

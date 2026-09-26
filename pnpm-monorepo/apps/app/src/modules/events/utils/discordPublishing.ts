@@ -4,6 +4,7 @@ import { prisma } from "@/db";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { DiscordOutcome } from "@/modules/discord/utils/discordBotRequest";
+import { DiscordScheduledEventEntityType } from "@/modules/discord/utils/enums";
 import { getDiscordImageDataUri } from "@/modules/discord/utils/getDiscordImageDataUri";
 import { getPublishableGuildChannels } from "@/modules/discord/utils/getPublishableGuildChannels";
 import {
@@ -20,7 +21,6 @@ import {
   deleteGuildScheduledEvent,
   modifyGuildScheduledEvent,
 } from "@/modules/discord/utils/guildScheduledEvents";
-import { DiscordScheduledEventEntityType } from "@/modules/discord/utils/schemas";
 import { log } from "@/modules/logging";
 import { EventDiscordPublishTarget } from "@sam-monorepo/database/client";
 import {

@@ -10,7 +10,7 @@ import { api } from "@/trpc/react";
 import {
   getCitizenChannelName,
   ON_SITE_NOTIFICATION_CREATED_EVENT,
-} from "@sam-monorepo/notifications";
+} from "@sam-monorepo/notifications/channels";
 import {
   createContext,
   useCallback,
@@ -21,7 +21,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import * as z from "zod";
+import * as z from "zod/mini";
 import {
   NotificationCenterTab,
   type OnSiteNotificationRow,
