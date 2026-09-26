@@ -138,6 +138,64 @@ export const isSeasonalGreetingDay = (
 ): boolean =>
   isInRange(SEASONAL_EVENT_DEFINITIONS[event].greetingRange, localDate);
 
+/**
+ * The number of days a search for the next date looks at. One year holds
+ * every month/day pair except February 29, and no range starts on that day.
+ */
+const SEARCH_DAY_COUNT = 366;
+
+const addDays = (localDate: LocalDate, dayCount: number): LocalDate => {
+  const moment = new Date(
+    Date.UTC(localDate.year, localDate.month - 1, localDate.day + dayCount),
+  );
+
+  return {
+    year: moment.getUTCFullYear(),
+    month: moment.getUTCMonth() + 1,
+    day: moment.getUTCDate(),
+  };
+};
+
+/** The first date from `from` on, `from` included, which matches */
+const findNextDate = (
+  from: LocalDate,
+  matches: (date: LocalDate) => boolean,
+): LocalDate | null => {
+  for (let offset = 0; offset < SEARCH_DAY_COUNT; offset += 1) {
+    const date = addDays(from, offset);
+    if (matches(date)) return date;
+  }
+
+  return null;
+};
+
+const isSameMonthDay = (date: MonthDay, other: MonthDay) =>
+  date.month === other.month && date.day === other.day;
+
+/** The next first day of the theme range of the event, `from` included */
+export const getNextSeasonalThemeStart = (
+  event: SeasonalEventKey,
+  from: LocalDate,
+): LocalDate | null =>
+  findNextDate(from, (date) =>
+    isSameMonthDay(date, SEASONAL_EVENT_DEFINITIONS[event].themeRange.start),
+  );
+
+/** The next first day of the greeting range of the event, `from` included */
+export const getNextSeasonalGreetingStart = (
+  event: SeasonalEventKey,
+  from: LocalDate,
+): LocalDate | null =>
+  findNextDate(from, (date) =>
+    isSameMonthDay(date, SEASONAL_EVENT_DEFINITIONS[event].greetingRange.start),
+  );
+
+/** The next day which no theme range holds, `from` included */
+export const getNextDayWithoutSeasonalEvent = (
+  from: LocalDate,
+): LocalDate | null =>
+  findNextDate(from, (date) => getActiveSeasonalEvent(date) === null);
+
 export interface SeasonalEventOverlap extends MonthDay {
   readonly events: readonly SeasonalEventKey[];
 }

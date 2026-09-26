@@ -3,6 +3,9 @@ import type { LocalDate } from "../citizen/birthday.js";
 import {
   findSeasonalEventOverlaps,
   getActiveSeasonalEvent,
+  getNextDayWithoutSeasonalEvent,
+  getNextSeasonalGreetingStart,
+  getNextSeasonalThemeStart,
   isSeasonalGreetingDay,
   SEASONAL_EVENT_DEFINITIONS,
   SeasonalEventKey,
@@ -118,6 +121,35 @@ describe("the greeting days", () => {
     expect(
       isSeasonalGreetingDay(SeasonalEventKey.NewYear, localDate(10, 31)),
     ).toBe(false);
+  });
+});
+
+describe("the next dates", () => {
+  test("include the day the search starts on", () => {
+    expect(
+      getNextSeasonalThemeStart(SeasonalEventKey.Halloween, localDate(10, 1)),
+    ).toEqual(localDate(10, 1));
+  });
+
+  test("move to the next year after the day", () => {
+    expect(
+      getNextSeasonalThemeStart(SeasonalEventKey.Halloween, localDate(10, 2)),
+    ).toEqual(localDate(10, 1, DEFAULT_YEAR + 1));
+    expect(
+      getNextSeasonalGreetingStart(SeasonalEventKey.NewYear, localDate(9, 26)),
+    ).toEqual(localDate(1, 1, DEFAULT_YEAR + 1));
+  });
+
+  test("find the first day after the themes of the turn of the year", () => {
+    expect(getNextDayWithoutSeasonalEvent(localDate(12, 1))).toEqual(
+      localDate(1, 2, DEFAULT_YEAR + 1),
+    );
+  });
+
+  test("find the start day itself when no theme holds it", () => {
+    expect(getNextDayWithoutSeasonalEvent(localDate(9, 26))).toEqual(
+      localDate(9, 26),
+    );
   });
 });
 

@@ -34,6 +34,9 @@ export {
   SEASONAL_EVENT_DEFINITIONS,
   SeasonalEventKey,
   getActiveSeasonalEvent,
+  getNextDayWithoutSeasonalEvent,
+  getNextSeasonalGreetingStart,
+  getNextSeasonalThemeStart,
   isSeasonalGreetingDay,
 } from "./seasonal/seasonalCalendar.js";
 export { calculateSilcBalances } from "./silc/calculateSilcBalances.js";
