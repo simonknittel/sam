@@ -8,6 +8,12 @@ import { AppTileGrid } from "./AppTileGrid";
 import { Filters } from "./Filters";
 import { RedactedAppTile } from "./RedactedAppTile";
 
+/**
+ * The widest grid has six columns (see AppTileGrid), thus the first six tiles
+ * fill at least the first row on each viewport.
+ */
+const ABOVE_THE_FOLD_TILE_COUNT = 6;
+
 interface Props {
   readonly allApps: App[] | null;
 }
@@ -41,47 +47,57 @@ export const AppsOverview = ({ allApps }: Props) => {
       {selectedTags.includes("all") ? (
         <>
           <AppTileGrid>
-            {featured?.map((app) =>
-              "redacted" in app && app.redacted ? (
-                <RedactedAppTile key={app.name} name={app.name} />
-              ) : (
-                <AppTile
-                  key={app.name}
-                  app={app as Exclude<App, RedactedApp>}
-                />
-              ),
-            )}
+            {featured?.map((app, index) => (
+              <OverviewTile
+                key={app.name}
+                app={app}
+                isAboveTheFold={index < ABOVE_THE_FOLD_TILE_COUNT}
+              />
+            ))}
           </AppTileGrid>
 
           <AppTileGrid className="mt-8">
-            {other?.map((app) =>
-              "redacted" in app && app.redacted ? (
-                <RedactedAppTile key={app.name} name={app.name} />
-              ) : (
-                <AppTile
-                  key={app.name}
-                  app={app as Exclude<App, RedactedApp>}
-                />
-              ),
-            )}
+            {other?.map((app, index) => (
+              <OverviewTile
+                key={app.name}
+                app={app}
+                isAboveTheFold={
+                  (featured?.length ?? 0) + index < ABOVE_THE_FOLD_TILE_COUNT
+                }
+              />
+            ))}
           </AppTileGrid>
         </>
       ) : (
         <AppTileGrid>
           {filteredApps
             ?.sort((a, b) => a.name.localeCompare(b.name))
-            .map((app) =>
-              "redacted" in app && app.redacted ? (
-                <RedactedAppTile key={app.name} name={app.name} />
-              ) : (
-                <AppTile
-                  key={app.name}
-                  app={app as Exclude<App, RedactedApp>}
-                />
-              ),
-            )}
+            .map((app, index) => (
+              <OverviewTile
+                key={app.name}
+                app={app}
+                isAboveTheFold={index < ABOVE_THE_FOLD_TILE_COUNT}
+              />
+            ))}
         </AppTileGrid>
       )}
     </>
+  );
+};
+
+interface OverviewTileProps {
+  readonly app: App;
+  readonly isAboveTheFold: boolean;
+}
+
+const OverviewTile = ({ app, isAboveTheFold }: OverviewTileProps) => {
+  if ("redacted" in app && app.redacted)
+    return <RedactedAppTile name={app.name} />;
+
+  return (
+    <AppTile
+      app={app as Exclude<App, RedactedApp>}
+      isAboveTheFold={isAboveTheFold}
+    />
   );
 };
