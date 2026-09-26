@@ -139,10 +139,37 @@ export const isSeasonalGreetingDay = (
   isInRange(SEASONAL_EVENT_DEFINITIONS[event].greetingRange, localDate);
 
 /**
- * The number of days a search for the next date looks at. One year holds
- * every month/day pair except February 29, and no range starts on that day.
+ * The next date with the month and day, `from` included. No range starts on
+ * February 29, thus the date always exists.
  */
-const SEARCH_DAY_COUNT = 366;
+const getNextOccurrence = (monthDay: MonthDay, from: LocalDate): LocalDate => ({
+  year:
+    toComparableDay(monthDay) >= toComparableDay(from)
+      ? from.year
+      : from.year + 1,
+  month: monthDay.month,
+  day: monthDay.day,
+});
+
+/** The next first day of the theme range of the event, `from` included */
+export const getNextSeasonalThemeStart = (
+  event: SeasonalEventKey,
+  from: LocalDate,
+): LocalDate =>
+  getNextOccurrence(SEASONAL_EVENT_DEFINITIONS[event].themeRange.start, from);
+
+/** The next first day of the greeting range of the event, `from` included */
+export const getNextSeasonalGreetingStart = (
+  event: SeasonalEventKey,
+  from: LocalDate,
+): LocalDate =>
+  getNextOccurrence(
+    SEASONAL_EVENT_DEFINITIONS[event].greetingRange.start,
+    from,
+  );
+
+/** One year holds every month/day pair */
+const DAYS_TO_SEARCH = 366;
 
 const addDays = (localDate: LocalDate, dayCount: number): LocalDate => {
   const moment = new Date(
@@ -156,45 +183,16 @@ const addDays = (localDate: LocalDate, dayCount: number): LocalDate => {
   };
 };
 
-/** The first date from `from` on, `from` included, which matches */
-const findNextDate = (
-  from: LocalDate,
-  matches: (date: LocalDate) => boolean,
-): LocalDate | null => {
-  for (let offset = 0; offset < SEARCH_DAY_COUNT; offset += 1) {
+/** The next day which no theme range holds, `from` included */
+export const getNextDayWithoutSeasonalEvent = (from: LocalDate): LocalDate => {
+  for (let offset = 0; offset < DAYS_TO_SEARCH; offset += 1) {
     const date = addDays(from, offset);
-    if (matches(date)) return date;
+    if (getActiveSeasonalEvent(date) === null) return date;
   }
 
-  return null;
+  // A unit test makes sure that the definitions leave such a day
+  throw new Error("Every day of the year has a seasonal theme");
 };
-
-const isSameMonthDay = (date: MonthDay, other: MonthDay) =>
-  date.month === other.month && date.day === other.day;
-
-/** The next first day of the theme range of the event, `from` included */
-export const getNextSeasonalThemeStart = (
-  event: SeasonalEventKey,
-  from: LocalDate,
-): LocalDate | null =>
-  findNextDate(from, (date) =>
-    isSameMonthDay(date, SEASONAL_EVENT_DEFINITIONS[event].themeRange.start),
-  );
-
-/** The next first day of the greeting range of the event, `from` included */
-export const getNextSeasonalGreetingStart = (
-  event: SeasonalEventKey,
-  from: LocalDate,
-): LocalDate | null =>
-  findNextDate(from, (date) =>
-    isSameMonthDay(date, SEASONAL_EVENT_DEFINITIONS[event].greetingRange.start),
-  );
-
-/** The next day which no theme range holds, `from` included */
-export const getNextDayWithoutSeasonalEvent = (
-  from: LocalDate,
-): LocalDate | null =>
-  findNextDate(from, (date) => getActiveSeasonalEvent(date) === null);
 
 export interface SeasonalEventOverlap extends MonthDay {
   readonly events: readonly SeasonalEventKey[];

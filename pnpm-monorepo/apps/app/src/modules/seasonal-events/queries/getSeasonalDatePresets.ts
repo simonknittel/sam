@@ -7,22 +7,15 @@ import {
   getNextSeasonalThemeStart,
   ORGANIZATION_TIMEZONE,
   SeasonalEventKey,
-  type LocalDate,
 } from "@sam-monorepo/domain";
-import { SEASONAL_THEMES } from "./SEASONAL_THEMES";
-import { formatSeasonalDateOverrideCookie } from "./seasonalDateOverrideCookie";
+import { SEASONAL_THEMES } from "../utils/SEASONAL_THEMES";
+import { formatSeasonalDateOverrideCookie } from "../utils/seasonalDateOverrideCookie";
 
 export interface SeasonalDatePreset {
   readonly label: string;
   /** The value of the date override cookie */
   readonly date: string;
 }
-
-const toPresets = (
-  label: string,
-  date: LocalDate | null,
-): SeasonalDatePreset[] =>
-  date ? [{ label, date: formatSeasonalDateOverrideCookie(date) }] : [];
 
 /**
  * The dates the admin toolbar offers for the seasonal override: the first
@@ -38,13 +31,25 @@ export const getSeasonalDatePresets = (): readonly SeasonalDatePreset[] => {
       const { title } = SEASONAL_THEMES[event];
 
       return [
-        ...toPresets(title, getNextSeasonalThemeStart(event, today)),
-        ...toPresets(
-          `${title} greeting`,
-          getNextSeasonalGreetingStart(event, today),
-        ),
+        {
+          label: title,
+          date: formatSeasonalDateOverrideCookie(
+            getNextSeasonalThemeStart(event, today),
+          ),
+        },
+        {
+          label: `${title} greeting`,
+          date: formatSeasonalDateOverrideCookie(
+            getNextSeasonalGreetingStart(event, today),
+          ),
+        },
       ];
     }),
-    ...toPresets("No theme", getNextDayWithoutSeasonalEvent(today)),
+    {
+      label: "No theme",
+      date: formatSeasonalDateOverrideCookie(
+        getNextDayWithoutSeasonalEvent(today),
+      ),
+    },
   ];
 };

@@ -9,8 +9,8 @@ import { getSeasonalDateOverride } from "./getSeasonalDateOverride";
 export interface SeasonalOverrideState {
   /** The value of the date override cookie */
   readonly date: string;
-  /** The title of the event on the override date, or nothing without one */
-  readonly eventTitle: string | null;
+  /** The event of the override date and the date, for example "Halloween 2026-10-31" */
+  readonly label: string;
   /**
    * The override date has an event, but the viewer sees no theme. Usually
    * the viewer switched the event off in their settings.
@@ -28,10 +28,11 @@ export const getSeasonalOverrideState =
     if (!overrideDate) return null;
 
     const event = getActiveSeasonalEvent(overrideDate);
+    const date = formatSeasonalDateOverrideCookie(overrideDate);
 
     return {
-      date: formatSeasonalDateOverrideCookie(overrideDate),
-      eventTitle: event ? SEASONAL_THEMES[event].title : null,
+      date,
+      label: `${event ? SEASONAL_THEMES[event].title : "No theme"} ${date}`,
       isEventHidden: event !== null && resolution === null,
     };
   };

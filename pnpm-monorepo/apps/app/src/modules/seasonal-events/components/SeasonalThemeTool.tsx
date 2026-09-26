@@ -4,8 +4,8 @@ import { runActionAndReload } from "@/modules/actions/utils/runActionAndReload";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { useTransition, type FormEvent } from "react";
 import { setSeasonalDateOverride } from "../actions/setSeasonalDateOverride";
+import type { SeasonalDatePreset } from "../queries/getSeasonalDatePresets";
 import type { SeasonalOverrideState } from "../queries/getSeasonalOverrideState";
-import type { SeasonalDatePreset } from "../utils/getSeasonalDatePresets";
 
 interface Props {
   readonly presets: readonly SeasonalDatePreset[];
@@ -34,11 +34,7 @@ export const SeasonalThemeTool = ({ presets, override }: Props) => {
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-sm">
-        {override
-          ? `${override.eventTitle ?? "No theme"} on ${override.date}`
-          : "Auto (today)"}
-      </p>
+      <p className="text-sm">{override?.label ?? "Auto (today)"}</p>
 
       {override?.isEventHidden && (
         <p className="text-xs text-amber-500">
