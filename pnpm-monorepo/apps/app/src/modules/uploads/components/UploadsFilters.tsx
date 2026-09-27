@@ -15,7 +15,7 @@ import {
 
 interface Author {
   readonly id: string;
-  readonly name: string | null;
+  readonly handle: string | null;
 }
 
 interface Props {
@@ -31,7 +31,7 @@ export const UploadsFilters = ({ authors }: Props) => {
 
   const authorItems = authors.map((author) => ({
     value: author.id,
-    label: author.name ?? author.id,
+    label: author.handle || author.id,
   }));
 
   return (

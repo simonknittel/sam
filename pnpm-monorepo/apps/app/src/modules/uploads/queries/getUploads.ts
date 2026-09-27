@@ -20,6 +20,14 @@ const MAX_FILTER_VALUES = 100;
 /** Longest file name search accepted; `Upload.fileName` itself caps at 255. */
 const MAX_QUERY_LENGTH = 255;
 
+const WIKI_PAGE_REFERENCE_SELECT = {
+  id: true,
+  title: true,
+  slug: true,
+  eventId: true,
+  templateId: true,
+} satisfies Prisma.WikiPageSelect;
+
 /**
  * The usage relations of an upload, resolved into the labels and ids the
  * location links need (see `getUploadUsages`).
@@ -30,22 +38,15 @@ export const USAGE_SELECT = {
   manufacturers: { select: { id: true, name: true } },
   eventCovers: { select: { id: true, name: true } },
   eventTemplateCovers: { select: { id: true, name: true } },
-  wikiPageIcons: {
-    select: {
-      id: true,
-      title: true,
-      slug: true,
-      eventId: true,
-      templateId: true,
-    },
+  wikiPageIcons: { select: WIKI_PAGE_REFERENCE_SELECT },
+  /** A page that uses the upload as an image and as an attachment is one usage */
+  wikiPageLinks: {
+    distinct: ["pageId"],
+    select: { page: { select: WIKI_PAGE_REFERENCE_SELECT } },
   },
-  wikiPages: {
+  wikiPageSnapshotLinks: {
     select: {
-      id: true,
-      title: true,
-      slug: true,
-      eventId: true,
-      templateId: true,
+      snapshot: { select: { page: { select: WIKI_PAGE_REFERENCE_SELECT } } },
     },
   },
 } satisfies Prisma.UploadSelect;
@@ -71,7 +72,10 @@ const getUsageWhere = (usage: UploadUsageType): Prisma.UploadWhereInput => {
       return { wikiPageIcons: { some: {} } };
 
     case UploadUsageType.WikiPageAttachment:
-      return { wikiPages: { some: {} } };
+      return { wikiPageLinks: { some: {} } };
+
+    case UploadUsageType.WikiPageSnapshot:
+      return { wikiPageSnapshotLinks: { some: {} } };
 
     case UploadUsageType.Unused:
       return UNUSED_UPLOAD_WHERE;
@@ -97,6 +101,26 @@ const getFileNameWhere = (query: string): Prisma.UploadWhereInput => ({
 });
 
 /**
+ * Without the permission the scope is forced to the citizen of the signed-in
+ * user, which also makes a hand-written author filter pointless — it is only
+ * applied for managers, so it can never widen anyone's view. NULL when the
+ * viewer can see no upload at all: the author of an upload is a citizen, and
+ * the viewer has none.
+ */
+const getAuthorWhere = (
+  canManage: boolean,
+  createdById: readonly string[] | null | undefined,
+  citizenId: string | undefined,
+): Prisma.UploadWhereInput | null => {
+  if (canManage)
+    return createdById && createdById.length > 0
+      ? { createdById: { in: createdById.slice(0, MAX_FILTER_VALUES) } }
+      : {};
+
+  return citizenId ? { createdById: citizenId } : null;
+};
+
+/**
  * One page of uploads, newest first. Everyone sees their own uploads;
  * `upload;manage` widens the scope to all of them and adds the author, so
  * the permission changes what the page contains rather than whether it is
@@ -117,19 +141,21 @@ export const getUploads = cache(
       const authentication = await requireAuthentication();
       const canManage = await authentication.authorize("upload", "manage");
 
+      const authorWhere = getAuthorWhere(
+        canManage,
+        createdById,
+        authentication.session.entity?.id,
+      );
+      if (!authorWhere)
+        return {
+          uploads: [],
+          canManage,
+          nextCursor: null,
+          prevCursor: null,
+        };
+
       const createdAt = getDateRangeFilter(from, to);
       const trimmedQuery = query?.trim().slice(0, MAX_QUERY_LENGTH);
-
-      /**
-       * Without the permission the scope is forced to the signed-in user,
-       * which also makes a hand-written author filter pointless — it is only
-       * applied for managers, so it can never widen anyone's view.
-       */
-      const authorWhere: Prisma.UploadWhereInput = canManage
-        ? createdById && createdById.length > 0
-          ? { createdById: { in: createdById.slice(0, MAX_FILTER_VALUES) } }
-          : {}
-        : { createdById: authentication.session.user.id };
 
       /**
        * File name search and usage filter each bring an `OR` of their own,
@@ -176,7 +202,7 @@ export const getUploads = cache(
            * it: without the permission every row belongs to the signed-in
            * user anyway, so there is nothing here they could not see.
            */
-          createdBy: { select: { id: true, name: true } },
+          createdBy: { select: { id: true, handle: true, deletedAt: true } },
           ...USAGE_SELECT,
         },
       });

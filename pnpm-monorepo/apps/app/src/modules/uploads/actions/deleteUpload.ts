@@ -45,7 +45,7 @@ export const deleteUpload = createAuthenticatedAction(
         id: true,
         fileName: true,
         mimeType: true,
-        createdById: true,
+        createdBy: { select: { userId: true } },
         ...USAGE_SELECT,
       },
     });
@@ -93,7 +93,12 @@ export const deleteUpload = createAuthenticatedAction(
           uploadId: upload.id,
           fileName: decodeUploadFileName(upload.fileName),
           mimeType: upload.mimeType,
-          uploadedById: upload.createdById,
+          /**
+           * The payload of this version holds the user of the author. The
+           * author of an upload is a citizen now, thus the user comes
+           * through the citizen.
+           */
+          uploadedById: upload.createdBy?.userId ?? null,
           locations,
         },
         createdById: authentication.session.user.id,

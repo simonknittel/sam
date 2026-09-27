@@ -150,7 +150,7 @@ export const createEvent = createAuthenticatedAction(
       });
       const isOwnImageUpload =
         coverImage !== null &&
-        coverImage.createdById === authentication.session.user.id &&
+        coverImage.createdById === citizenId &&
         coverImage.mimeType.startsWith("image/");
       if (!isOwnImageUpload)
         return {
@@ -222,11 +222,7 @@ export const createEvent = createAuthenticatedAction(
          * deleting one never touches the other.
          */
         const copiedCover = templateCover
-          ? await copyUpload(
-              transaction,
-              templateCover,
-              authentication.session.user.id,
-            )
+          ? await copyUpload(transaction, templateCover, citizenId)
           : null;
 
         const event = await transaction.event.create({
