@@ -1,6 +1,6 @@
 import { prisma, type WikiPageReport } from "@sam-monorepo/database";
+import { getCitizenDisplayName } from "@sam-monorepo/domain";
 import { findCitizenIdsWithPermissions } from "../../common/effectivePermissions";
-import { getCitizenDisplayName } from "../citizenDisplayName";
 import { publishNotifications } from "../publish";
 
 interface Payload {
@@ -25,6 +25,7 @@ export const WikiPageReportedHandler = async (payload: Payload) => {
       },
       createdBy: {
         select: {
+          id: true,
           handle: true,
           deletedAt: true,
         },

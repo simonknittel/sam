@@ -1,7 +1,7 @@
 import { prisma } from "@/db";
 import { authenticate } from "@/modules/auth/server";
-import { getCitizenDisplayName } from "@/modules/citizen/utils/citizenDisplayName";
 import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
+import { getCitizenDisplayName } from "@sam-monorepo/domain";
 import {
   collectWikiMentionedCitizenIds,
   collectWikiRoleCitizensRoleIds,

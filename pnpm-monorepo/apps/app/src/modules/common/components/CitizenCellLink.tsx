@@ -1,9 +1,9 @@
 import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
+import type { Citizen } from "@sam-monorepo/database/browser";
 import {
   DELETED_CITIZEN_LABEL,
   getCitizenDisplayName,
-} from "@/modules/citizen/utils/citizenDisplayName";
-import type { Citizen } from "@sam-monorepo/database/browser";
+} from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { Link } from "./Link";
 

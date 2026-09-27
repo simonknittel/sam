@@ -1,4 +1,4 @@
-import { getCitizenDisplayName } from "@/modules/citizen/utils/citizenDisplayName";
+import { getCitizenDisplayName } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { PATTERNS, type IEntry } from "../utils/PATTERNS";
 import styles from "./Entry.module.css";

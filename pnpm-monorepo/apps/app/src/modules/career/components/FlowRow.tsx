@@ -1,6 +1,5 @@
 "use client";
 
-import { getCitizenDisplayName } from "@/modules/citizen/utils/citizenDisplayName";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { Link } from "@/modules/common/components/Link";
@@ -8,6 +7,7 @@ import { TRow } from "@/modules/common/components/Table";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { getCitizenDisplayName } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { FaGripVertical, FaRegCopy } from "react-icons/fa";
 import type { ManageableFlow } from "../queries/getManageableFlows";

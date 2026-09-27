@@ -1,8 +1,9 @@
 /**
  * Domain vocabulary and pure domain logic shared between the Next.js app
- * and the Lambdas. Everything here is side-effect-free: no database client,
- * no environment reads — consumers load the data and pass it in. Sharing
- * these definitions replaces the former copy-mirrored files in both apps.
+ * and the Lambdas. The package creates no database client and reads no
+ * environment: a function that reads or writes the database takes the
+ * client or the transaction of its caller. Sharing these definitions
+ * replaces the former copy-mirrored files in both apps.
  */
 export {
   AuditEventType,
@@ -22,6 +23,10 @@ export {
   isBirthdayToday,
   type LocalDate,
 } from "./citizen/birthday.js";
+export {
+  DELETED_CITIZEN_LABEL,
+  getCitizenDisplayName,
+} from "./citizen/citizenDisplayName.js";
 export {
   CAN_LOGIN_CITIZEN_WHERE,
   NOTIFIABLE_CITIZEN_WHERE,

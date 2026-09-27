@@ -1,12 +1,11 @@
 "use client";
 
-import { getCitizenDisplayName } from "@/modules/citizen/utils/citizenDisplayName";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
 import { SortableTable } from "@/modules/common/components/SortableTable";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import type { Citizen } from "@sam-monorepo/database/browser";
-import { CyclePhase } from "@sam-monorepo/domain";
+import { CyclePhase, getCitizenDisplayName } from "@sam-monorepo/domain";
 import {
   createColumnHelper,
   getCoreRowModel,

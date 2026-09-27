@@ -1,7 +1,6 @@
 import { requireAuthentication } from "@/modules/auth/server";
 import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
 import { RolesCell } from "@/modules/citizen/components/RolesCell";
-import { DELETED_CITIZEN_LABEL } from "@/modules/citizen/utils/citizenDisplayName";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { Link } from "@/modules/common/components/Link";
 import { Tile } from "@/modules/common/components/Tile";
@@ -18,6 +17,7 @@ import type {
 } from "@/modules/events/queries/eventRelationSelects";
 import { CreateOrUpdateSilcTransaction } from "@/modules/silc/components/CreateOrUpdateSilcTransaction";
 import { EventSource, type Event } from "@sam-monorepo/database/client";
+import { DELETED_CITIZEN_LABEL } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { forbidden } from "next/navigation";
 import { Suspense } from "react";

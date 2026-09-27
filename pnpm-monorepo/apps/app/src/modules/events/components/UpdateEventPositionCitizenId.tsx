@@ -1,13 +1,13 @@
 "use client";
 
 import { runAction } from "@/modules/actions/utils/runAction";
-import { getCitizenDisplayName } from "@/modules/citizen/utils/citizenDisplayName";
 import type { EventCitizenWithShips } from "@/modules/events/queries/eventRelationSelects";
 import type {
   Citizen,
   EventPosition,
   EventPositionApplication,
 } from "@sam-monorepo/database/browser";
+import { getCitizenDisplayName } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { useTransition, type ChangeEventHandler } from "react";
 import { resetEventPositionCitizenId } from "../actions/resetEventPositionCitizenId";

@@ -1,11 +1,11 @@
 "use client";
 
-import { getCitizenDisplayName } from "@/modules/citizen/utils/citizenDisplayName";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionButton";
 import { Textarea } from "@/modules/common/components/form/Textarea";
 import { api } from "@/trpc/react";
 import { type Citizen, type Event } from "@sam-monorepo/database/browser";
+import { getCitizenDisplayName } from "@sam-monorepo/domain";
 import { FaTrash } from "react-icons/fa";
 import { removeEventParticipant } from "../actions/removeEventParticipant";
 

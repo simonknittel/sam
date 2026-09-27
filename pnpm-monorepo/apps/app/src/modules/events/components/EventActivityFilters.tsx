@@ -4,10 +4,10 @@ import {
   ACTIVITY_TO_PARAM,
   ACTIVITY_TYPE_PARAM,
 } from "@/modules/activity/utils/activityFilterParams";
-import { getCitizenDisplayName } from "@/modules/citizen/utils/citizenDisplayName";
 import { DateRangeFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/DateRangeFilter";
 import { MultiSelectComboboxFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/MultiSelectComboboxFilter";
 import type { Citizen } from "@sam-monorepo/database/client";
+import { getCitizenDisplayName } from "@sam-monorepo/domain";
 import {
   EVENT_ACTIVITY_TYPE_LABELS,
   EVENT_SCHEDULE_TYPE_LABEL,

@@ -1,5 +1,5 @@
 import { prisma, type WikiPageCitizenMention } from "@sam-monorepo/database";
-import { getCitizenDisplayName } from "../citizenDisplayName";
+import { getCitizenDisplayName } from "@sam-monorepo/domain";
 import { publishNotifications } from "../publish";
 
 interface Payload {
@@ -18,7 +18,7 @@ export const WikiCitizenMentionedHandler = async (payload: Payload) => {
     where: { id: payload.mentionId },
     select: {
       citizenId: true,
-      createdBy: { select: { handle: true, deletedAt: true } },
+      createdBy: { select: { id: true, handle: true, deletedAt: true } },
       page: {
         select: { id: true, title: true, eventId: true, deletedAt: true },
       },

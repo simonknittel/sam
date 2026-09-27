@@ -1,9 +1,9 @@
 "use client";
 
-import { getCitizenDisplayName } from "@/modules/citizen/utils/citizenDisplayName";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
 import type { Citizen } from "@sam-monorepo/database/browser";
+import { getCitizenDisplayName } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { useMemo } from "react";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
