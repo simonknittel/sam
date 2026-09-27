@@ -53,3 +53,8 @@ export {
   UPLOAD_USAGE_RELATIONS,
   type UploadUsageRelation,
 } from "./uploadUsageRelations.js";
+export {
+  createWikiPageSnapshotUploadLinks,
+  replaceWikiPageUploadLinks,
+  type WikiUploadLinkCandidate,
+} from "./wiki/wikiUploadLinks.js";

@@ -11,10 +11,7 @@
 export { extractWikiPageText } from "./extractWikiPageText.js";
 export * from "./helpers.js";
 export { isWikiPageContentEmpty } from "./isWikiPageContentEmpty.js";
-export {
-  WikiAttachment,
-  collectWikiAttachmentUploadIds,
-} from "./wikiAttachmentNode.js";
+export { WikiAttachment } from "./wikiAttachmentNode.js";
 export {
   WIKI_CALLOUT_COLORS,
   type WikiCalloutColor,
@@ -117,6 +114,11 @@ export {
   WIKI_TEXT_SIZE_LIST_TYPES,
   type WikiTextSize,
 } from "./wikiTextSize.js";
+export {
+  WikiUploadReferenceKind,
+  collectWikiUploadReferences,
+  type WikiUploadReference,
+} from "./wikiUploadReferences.js";
 export {
   WikiVariantLink,
   collectWikiVariantLinkIds,
