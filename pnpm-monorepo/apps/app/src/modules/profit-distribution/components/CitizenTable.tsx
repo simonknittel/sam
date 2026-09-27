@@ -1,5 +1,6 @@
 "use client";
 
+import { getCitizenDisplayName } from "@/modules/citizen/utils/citizenDisplayName";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
 import { SortableTable } from "@/modules/common/components/SortableTable";
@@ -22,7 +23,7 @@ import { CitizenTableForm } from "./CitizenTableForm";
 interface Row {
   readonly id: string;
   readonly citizen: Pick<Citizen, "id" | "handle" | "deletedAt">;
-  readonly handle: string;
+  readonly displayName: string;
   readonly silc: number;
   readonly auec: number | null;
   readonly payoutState: PayoutState;
@@ -66,7 +67,7 @@ export const CitizenTable = ({ className, cycleData }: Props) => {
         rtn.set(citizen.id, {
           id: citizen.id,
           citizen,
-          handle: citizen.handle!,
+          displayName: getCitizenDisplayName(citizen),
           silc,
           auec: null,
           payoutState: PayoutState.PAYOUT_NOT_YET_STARTED,
@@ -104,7 +105,7 @@ export const CitizenTable = ({ className, cycleData }: Props) => {
       rtn.set(participant.citizen.id, {
         id: participant.citizen.id,
         citizen: participant.citizen,
-        handle: participant.citizen.handle!,
+        displayName: getCitizenDisplayName(participant.citizen),
         silc,
         auec,
         payoutState,
@@ -123,14 +124,14 @@ export const CitizenTable = ({ className, cycleData }: Props) => {
   ]);
 
   const [sorting, setSorting] = useState<SortingState>([
-    { id: "handle", desc: false },
+    { id: "displayName", desc: false },
   ]);
 
   const columns = useMemo(() => {
     return [
-      columnHelper.accessor("handle", {
+      columnHelper.accessor("displayName", {
         header: "Member",
-        id: "handle",
+        id: "displayName",
         cell: (row) => {
           return <CitizenLink citizen={row.row.original.citizen} />;
         },
@@ -205,7 +206,7 @@ export const CitizenTable = ({ className, cycleData }: Props) => {
               <YesNoCheckbox
                 key={`ceded_${cycleData.cycle.id}_${row.row.original.citizen.id}`}
                 name={`ceded_${cycleData.cycle.id}_${row.row.original.citizen.id}`}
-                aria-label={`Abgetreten: ${row.row.original.handle}`}
+                aria-label={`Abgetreten: ${row.row.original.displayName}`}
                 defaultChecked={Boolean(row.getValue())}
                 disabled={
                   ![
@@ -229,7 +230,7 @@ export const CitizenTable = ({ className, cycleData }: Props) => {
               <YesNoCheckbox
                 key={`accepted_${cycleData.cycle.id}_${row.row.original.citizen.id}`}
                 name={`accepted_${cycleData.cycle.id}_${row.row.original.citizen.id}`}
-                aria-label={`Zugestimmt: ${row.row.original.handle}`}
+                aria-label={`Zugestimmt: ${row.row.original.displayName}`}
                 defaultChecked={Boolean(row.getValue())}
                 disabled={cycleData.currentPhase !== CyclePhase.Payout}
                 hideLabel
@@ -248,7 +249,7 @@ export const CitizenTable = ({ className, cycleData }: Props) => {
               <YesNoCheckbox
                 key={`disbursed_${cycleData.cycle.id}_${row.row.original.citizen.id}`}
                 name={`disbursed_${cycleData.cycle.id}_${row.row.original.citizen.id}`}
-                aria-label={`Ausgezahlt: ${row.row.original.handle}`}
+                aria-label={`Ausgezahlt: ${row.row.original.displayName}`}
                 defaultChecked={Boolean(row.getValue())}
                 disabled={cycleData.currentPhase !== CyclePhase.Payout}
                 hideLabel
