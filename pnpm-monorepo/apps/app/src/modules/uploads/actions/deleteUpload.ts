@@ -88,7 +88,7 @@ export const deleteUpload = createAuthenticatedAction(
 
     await createAuditEvents([
       {
-        type: AuditEventType.UPLOAD_DELETED,
+        type: AuditEventType.UPLOAD_DELETED_V2,
         data: {
           uploadId: upload.id,
           fileName: decodeUploadFileName(upload.fileName),

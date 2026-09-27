@@ -14,23 +14,19 @@ export const getUploadAuthors = cache(
     const authentication = await requireAuthentication();
     if (!(await authentication.authorize("upload", "manage"))) forbidden();
 
-    const authors = await prisma.upload.findMany({
-      select: {
-        createdBy: {
-          select: {
-            id: true,
-            name: true,
-          },
+    return prisma.user.findMany({
+      where: {
+        uploads: {
+          some: {},
         },
       },
-      distinct: ["createdById"],
+      select: {
+        id: true,
+        name: true,
+      },
       orderBy: {
-        createdBy: {
-          name: "asc",
-        },
+        name: "asc",
       },
     });
-
-    return authors.map((upload) => upload.createdBy);
   }),
 );

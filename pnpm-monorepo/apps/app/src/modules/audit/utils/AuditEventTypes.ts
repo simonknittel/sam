@@ -2015,6 +2015,23 @@ export const AuditEventDefinitions: {
       }`,
   },
 
+  [AuditEventType.UPLOAD_DELETED_V2]: {
+    type: AuditEventType.UPLOAD_DELETED_V2,
+    data: {
+      uploadId: "string",
+      fileName: "file.png",
+      mimeType: "image/png",
+      uploadedById: "string",
+      locations: ["Rollen-Icon: Aufklärer"],
+    },
+    message: (data) =>
+      `Deleted upload "${data.fileName}" (${data.mimeType}) of ${
+        data.uploadedById ? `user ${data.uploadedById}` : "an unknown user"
+      }, used at: ${
+        data.locations.length > 0 ? data.locations.join(", ") : "nowhere"
+      }`,
+  },
+
   [AuditEventType.EVENT_IMPORTED_FROM_DISCORD]: {
     type: AuditEventType.EVENT_IMPORTED_FROM_DISCORD,
     data: {
