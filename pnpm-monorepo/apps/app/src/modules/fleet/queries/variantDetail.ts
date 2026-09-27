@@ -37,7 +37,11 @@ export const getVariantDetail = cache(
           externalLinks: true,
           _count: {
             select: {
-              ships: true,
+              ships: {
+                where: {
+                  deletedAt: null,
+                },
+              },
             },
           },
         },
