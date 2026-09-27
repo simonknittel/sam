@@ -1,6 +1,6 @@
 import type { Prisma } from "@sam-monorepo/database/client";
-import { ACTIVE_CITIZEN_WHERE } from "../citizen/activeCitizen.js";
-import { updateSilcBalances } from "../silc/updateSilcBalances.js";
+import { bookPositiveBalancesAway } from "../silc/bookPositiveBalancesAway.js";
+import { lockSilcLedger } from "../silc/lockSilcLedger.js";
 import { CYCLE_PHASE_WHERE, CyclePhase } from "./cyclePhase.js";
 
 interface Options {
@@ -17,10 +17,13 @@ interface Options {
  * this function.
  *
  * Call it in one interactive transaction:
- * - The guarded update claims the cycle first. Thus a second call for the
+ * - It takes the ledger lock first (see `lockSilcLedger()`), before the
+ *   claim. Thus a parallel ledger write, also "expire all" or the end of a
+ *   different cycle, cannot book the same balance a second time.
+ * - The guarded update then claims the cycle. Thus a second call for the
  *   same cycle, also a parallel call, changes nothing.
  * - The balances come from the ledger in the same transaction, not from the
- *   cached copy on the citizen.
+ *   cached copy on the citizen (see `bookPositiveBalancesAway()`).
  * - If a booking of the cycle exists already, the unique index
  *   `SilcTransaction_profitDistributionCycle_key` makes the whole
  *   transaction fail.
@@ -35,6 +38,8 @@ export const endCollectionPhaseInTransaction = async (
   transaction: Prisma.TransactionClient,
   { cycleId, endedById, endedAt }: Options,
 ) => {
+  await lockSilcLedger(transaction);
+
   const [cycle] = await transaction.profitDistributionCycle.updateManyAndReturn(
     {
       where: { id: cycleId, ...CYCLE_PHASE_WHERE[CyclePhase.Collection] },
@@ -44,29 +49,14 @@ export const endCollectionPhaseInTransaction = async (
   );
   if (!cycle) return null;
 
-  const sums = await transaction.silcTransaction.groupBy({
-    by: ["receiverId"],
-    where: { deletedAt: null, receiver: ACTIVE_CITIZEN_WHERE },
-    _sum: { value: true },
-    having: { value: { _sum: { gt: 0 } } },
-  });
-  const balances = sums.map((sum) => ({
-    citizenId: sum.receiverId,
-    value: sum._sum.value ?? 0,
-  }));
-  const citizenIds = balances.map(({ citizenId }) => citizenId);
-
-  const createdTransactions =
-    await transaction.silcTransaction.createManyAndReturn({
-      data: balances.map(({ citizenId, value }) => ({
-        receiverId: citizenId,
-        value: -value,
-        description: `SINcome: ${cycle.title}`,
-        createdById: endedById,
-        profitDistributionCycleId: cycleId,
-      })),
-      select: { id: true },
-    });
+  const { balances, transactionIds } = await bookPositiveBalancesAway(
+    transaction,
+    {
+      description: `SINcome: ${cycle.title}`,
+      createdById: endedById,
+      profitDistributionCycleId: cycleId,
+    },
+  );
 
   /**
    * Two statements for all snapshots, not one upsert for each citizen: the
@@ -85,14 +75,12 @@ export const endCollectionPhaseInTransaction = async (
     UPDATE "ProfitDistributionCycleParticipant" AS "participant"
     SET "silcBalanceSnapshot" = "balance"."value"
     FROM unnest(
-      ${citizenIds}::text[],
+      ${balances.map(({ citizenId }) => citizenId)}::text[],
       ${balances.map(({ value }) => value)}::integer[]
     ) AS "balance"("citizenId", "value")
     WHERE "participant"."cycleId" = ${cycleId}
       AND "participant"."citizenId" = "balance"."citizenId"
   `;
 
-  await updateSilcBalances(transaction, citizenIds);
-
-  return createdTransactions.map((created) => created.id);
+  return transactionIds;
 };

@@ -1,3 +1,4 @@
+import type { CitizenLogType } from "@/types";
 import {
   ConfirmationStatus,
   type Citizen,
@@ -7,7 +8,8 @@ import {
 
 /**
  * The column of `Citizen` that caches the latest confirmed value of each
- * identity log type
+ * identity log type. The type check makes sure that each log type except
+ * the note has a column.
  */
 const CACHE_COLUMN_BY_LOG_TYPE = {
   handle: "handle",
@@ -16,7 +18,7 @@ const CACHE_COLUMN_BY_LOG_TYPE = {
   "spectrum-id": "spectrumId",
   "citizen-id": "citizenRecord",
   "community-moniker": "communityMoniker",
-} as const satisfies Record<string, keyof Citizen>;
+} as const satisfies Record<Exclude<CitizenLogType, "note">, keyof Citizen>;
 
 const isCachedLogType = (
   type: string,

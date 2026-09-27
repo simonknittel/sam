@@ -1,7 +1,13 @@
 import type { Page } from "@playwright/test";
 import {
+  WikiPageSnapshotKind,
+  WikiPageUploadKind,
+} from "@sam-monorepo/database/client";
+import {
   createCitizen,
+  createEventTemplate,
   createRole,
+  createUpload,
   createWikiPage,
   wikiDocument,
   WikiPageAccessType,
@@ -11,10 +17,18 @@ import {
 import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
+  fillUntilValue,
+  modal,
   toggleLabel,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
-import { expectPersisted } from "../fixtures/wiki-editor";
+import {
+  enterEditMode,
+  expectPersisted,
+  focusEditor,
+  seedEditablePage,
+} from "../fixtures/wiki-editor";
+import { readStackState, s3BucketName } from "../setup/stack";
 
 const copyPageToClipboard = async (page: Page) => {
   await clickUntilVisible(
@@ -32,6 +46,18 @@ const openCreatePageModal = async (page: Page) => {
     page.getByRole("button", { name: "Neue Seite" }),
     page.getByRole("heading", { name: "Neue Seite" }),
   );
+};
+
+/** An image in the content refers to its upload with the last path segment */
+const uploadedImage = (uploadId: string) => {
+  const { s3Port } = readStackState();
+  return {
+    type: "image",
+    attrs: {
+      src: new URL(`/${s3BucketName}/${uploadId}`, `http://localhost:${s3Port}`)
+        .href,
+    },
+  };
 };
 
 test("copy'n'paste inserts a page with its readable children under another page", async ({
@@ -237,4 +263,153 @@ test("replace mode transplants the copy onto an existing page", async ({
   expect(
     await prisma.wikiPage.count({ where: { title: "Muster (Kopie)" } }),
   ).toBe(0);
+});
+
+/**
+ * A copy gets the upload links of its source. The nightly cleanup and the
+ * "unused" filter read these links, thus an image stays while a copy shows
+ * it, also when the source does not show it anymore.
+ */
+test("a pasted copy keeps an image in use after the source removes it", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const editor = await createCitizen(prisma, { handle: "bild-kopierer" });
+  const image = await createUpload(prisma, editor.entity, {
+    fileName: "Kopiertes Bild.png",
+    mimeType: "image/png",
+  });
+  const source = await seedEditablePage(prisma, {
+    title: "Bildvorlage",
+    content: wikiDocument(
+      wikiParagraph("Einleitung."),
+      uploadedImage(image.id),
+    ),
+  });
+  /** The link that the assign route writes right after the upload */
+  await prisma.wikiPageUpload.create({
+    data: {
+      pageId: source.id,
+      uploadId: image.id,
+      kind: WikiPageUploadKind.IMAGE,
+    },
+  });
+  /**
+   * With a recent snapshot, the edit below writes no automatic snapshot that
+   * keeps the image. Thus only the link of the copy keeps it.
+   */
+  await prisma.wikiPageSnapshot.create({
+    data: {
+      pageId: source.id,
+      kind: WikiPageSnapshotKind.MANUAL,
+      name: "Ohne Bild",
+      content: { type: "doc", content: [] },
+    },
+  });
+  const target = await createWikiPage(prisma, {
+    title: "Bildablage",
+    visibility: WikiPageVisibility.PUBLIC,
+    ownerId: editor.entity.id,
+  });
+  await signIn(editor.user);
+
+  await page.goto(`/app/wiki/${source.id}/${source.slug}`);
+  await copyPageToClipboard(page);
+
+  await page.goto(`/app/wiki/${target.id}/${target.slug}`);
+  await openCreatePageModal(page);
+  await page.getByRole("button", { name: "Einfügen", exact: true }).click();
+  await expect(page).toHaveURL(/bildvorlage-kopie$/, {
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+
+  const copy = await prisma.wikiPage.findFirstOrThrow({
+    where: { title: "Bildvorlage (Kopie)" },
+    select: {
+      id: true,
+      slug: true,
+      uploads: { select: { uploadId: true, kind: true } },
+    },
+  });
+  expect(copy.uploads).toEqual([
+    { uploadId: image.id, kind: WikiPageUploadKind.IMAGE },
+  ]);
+
+  await page.goto(`/app/wiki/${source.id}/${source.slug}`);
+  await enterEditMode(page);
+  await focusEditor(page);
+  await page.keyboard.press("ControlOrMeta+a");
+  await page.keyboard.type("Ohne Bild.");
+  await expectPersisted(prisma, source.id, "content").not.toContain(image.id);
+  expect(
+    await prisma.wikiPageUpload.count({ where: { pageId: source.id } }),
+  ).toBe(0);
+  expect(
+    await prisma.wikiPageSnapshotUpload.count({
+      where: { uploadId: image.id },
+    }),
+  ).toBe(0);
+
+  await page.goto("/app/uploads");
+  const row = page.getByRole("row").filter({ hasText: "Kopiertes Bild.png" });
+  await expect(
+    row.getByRole("link", { name: "Bildvorlage (Kopie)" }),
+  ).toHaveAttribute("href", `/app/wiki/${copy.id}/${copy.slug}`, {
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+  await expect(row.getByText("Wiki-Bild/-Anhang")).toBeVisible();
+
+  await page.goto("/app/uploads?usage=unused");
+  await expect(page.getByText("Keine Uploads für diese Filter.")).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+});
+
+test("an event created from a template links the uploads of its briefing copy", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const owner = await createCitizen(prisma, {
+    handle: "briefing-planer",
+    permissionStrings: ["event;read", "event;create"],
+  });
+  const { template, briefingPages } = await createEventTemplate(prisma, {
+    name: "Bildbriefing",
+    ownedById: owner.entity.id,
+    briefingPageTitles: ["Anflugkarte"],
+  });
+  const briefingPage = briefingPages[0]!;
+  const map = await createUpload(prisma, owner.entity, {
+    fileName: "Anflugkarte.png",
+    mimeType: "image/png",
+    wikiPageId: briefingPage.id,
+  });
+  await prisma.wikiPage.update({
+    where: { id: briefingPage.id },
+    data: { content: { type: "doc", content: [uploadedImage(map.id)] } },
+  });
+
+  await signIn(owner.user);
+  await page.goto(`/app/events/templates/${template.id}`);
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Verwenden" }),
+    modal(page, "Neues Event"),
+  );
+  const createDialog = modal(page, "Neues Event");
+  await fillUntilValue(createDialog.getByLabel("Start"), "2999-01-01T18:00");
+  await fillUntilValue(createDialog.getByLabel("Ende"), "2999-01-01T20:00");
+  await createDialog.getByRole("button", { name: "Speichern" }).click();
+  await expect(page).toHaveURL(/\/app\/events\/[^/]+$/, {
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+
+  const briefingCopy = await prisma.wikiPage.findFirstOrThrow({
+    where: { title: "Anflugkarte", eventId: { not: null } },
+    select: { uploads: { select: { uploadId: true, kind: true } } },
+  });
+  expect(briefingCopy.uploads).toEqual([
+    { uploadId: map.id, kind: WikiPageUploadKind.IMAGE },
+  ]);
 });

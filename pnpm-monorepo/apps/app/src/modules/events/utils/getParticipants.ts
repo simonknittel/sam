@@ -2,12 +2,12 @@ import { prisma } from "@/db";
 import type { EventParticipantRow } from "@/modules/events/queries/eventRelationSelects";
 import type { Event } from "@sam-monorepo/database/client";
 import { cache } from "react";
+import { buildParticipantCitizenWhere } from "./participantCitizenWhere";
 
 /**
- * Resolves the citizens behind an event's participation rows. App rows carry
- * the citizen id directly; Discord rows are matched via the citizen's
- * Discord id (covering rows whose citizen was created after the last sync
- * resolved them).
+ * Resolves the citizens behind an event's participation rows, see
+ * `buildParticipantCitizenWhere()`. A sign-up of a deleted citizen stays in
+ * the list and shows the deleted label.
  */
 export const getParticipants = cache(
   async (
@@ -15,24 +15,8 @@ export const getParticipants = cache(
       participants: EventParticipantRow[];
     },
   ) => {
-    const citizenIds = new Set<string>();
-    const discordUserIds = new Set<string>();
-
-    for (const participant of event.participants) {
-      if (participant.citizenId) {
-        citizenIds.add(participant.citizenId);
-      } else if (participant.discordUserId) {
-        discordUserIds.add(participant.discordUserId);
-      }
-    }
-
     const citizens = await prisma.citizen.findMany({
-      where: {
-        OR: [
-          { id: { in: Array.from(citizenIds) } },
-          { discordId: { in: Array.from(discordUserIds) } },
-        ],
-      },
+      where: buildParticipantCitizenWhere(event.participants),
       select: {
         id: true,
         handle: true,

@@ -4,7 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { updateSilcBalances } from "@sam-monorepo/domain";
+import { lockSilcLedger, updateSilcBalances } from "@sam-monorepo/domain";
 import { revalidatePath } from "next/cache";
 import * as z from "zod";
 
@@ -33,47 +33,41 @@ export const deleteSilcTransaction = createAuthenticatedAction(
       };
 
     /**
-     * Check if transaction exists and is not already deleted
-     */
-    const existingTransaction = await prisma.silcTransaction.findUnique({
-      where: {
-        id: data.id,
-      },
-      select: {
-        id: true,
-        deletedAt: true,
-      },
-    });
-    if (!existingTransaction || existingTransaction.deletedAt)
-      return {
-        error: t("Common.notFound"),
-        requestPayload: formData,
-      };
-
-    /**
-     * (Soft-)delete transaction
+     * (Soft-)delete the transaction. The claim after the ledger lock makes a
+     * parallel second delete change nothing.
      */
     const deletedById = authentication.session.entity.id;
     const deletedEntry = await prisma.$transaction(async (transaction) => {
-      const entry = await transaction.silcTransaction.update({
+      await lockSilcLedger(transaction);
+
+      const [entry] = await transaction.silcTransaction.updateManyAndReturn({
         where: {
           id: data.id,
+          deletedAt: null,
         },
         data: {
           deletedAt: new Date(),
-          deletedBy: {
-            connect: {
-              id: deletedById,
-            },
-          },
+          deletedById,
+        },
+        select: {
+          id: true,
+          receiverId: true,
+          value: true,
+          description: true,
         },
       });
+      if (!entry) return null;
 
       /** The balance changes in the same transaction as the ledger */
       await updateSilcBalances(transaction, [entry.receiverId]);
 
       return entry;
     });
+    if (!deletedEntry)
+      return {
+        error: t("Common.notFound"),
+        requestPayload: formData,
+      };
 
     await createAuditEvents([
       {

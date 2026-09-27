@@ -1,13 +1,15 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import type { CitizenNote } from "@/modules/citizen/queries/citizenLogTableSelect";
-import { toConfirmationState } from "@/modules/citizen/utils/citizenLogConfirmation";
 import { getNotePermissionAttributes } from "@/modules/citizen/utils/notePermissionAttributes";
 import styles from "@/modules/common/components/ConfirmationGradient.module.css";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
-import { type Organization } from "@sam-monorepo/database/client";
-import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
+import {
+  ConfirmationStatus,
+  type Organization,
+} from "@sam-monorepo/database/client";
+import { DELETED_CITIZEN_LABEL } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import Image from "next/image";
 import { Suspense, type ReactNode } from "react";
@@ -27,7 +29,8 @@ interface Props {
 export const SingleNote = async ({ note }: Props) => {
   const authentication = await requireAuthentication();
 
-  const confirmationState = toConfirmationState(note.confirmed);
+  const isUnconfirmed = note.confirmed === null;
+  const isFalseReport = note.confirmed === ConfirmationStatus.FALSE_REPORT;
   const authorizationAttributes = getNotePermissionAttributes(note);
 
   let content: ReactNode = note.content;
@@ -52,12 +55,17 @@ export const SingleNote = async ({ note }: Props) => {
               spectrumId: {
                 in: Array.from(uniqueCitizenSpectrumIds),
               },
-              ...ACTIVE_CITIZEN_WHERE,
             },
+            /**
+             * A deleted citizen can have the Spectrum ID of an active one,
+             * thus the active citizen comes first and wins
+             */
+            orderBy: { deletedAt: { sort: "asc", nulls: "first" } },
             select: {
               handle: true,
               spectrumId: true,
               id: true,
+              deletedAt: true,
             },
           })
         : [],
@@ -91,6 +99,13 @@ export const SingleNote = async ({ note }: Props) => {
             (citizen) => citizen.spectrumId === citizenMatch[1],
           );
           if (!citizen) return part;
+
+          if (citizen.deletedAt)
+            return (
+              <span className="text-neutral-500" key={index}>
+                {DELETED_CITIZEN_LABEL}
+              </span>
+            );
 
           return (
             <Link
@@ -154,14 +169,13 @@ export const SingleNote = async ({ note }: Props) => {
       <div
         className={clsx({
           "absolute w-full h-24 border-t-2 border-x-2 bg-linear-to-t from-neutral-900/0":
-            !confirmationState || confirmationState === "false-report",
-          [`${styles.blueBorder} to-blue-500/10`]: !confirmationState,
-          [`${styles.redBorder} to-red-500/10`]:
-            confirmationState === "false-report",
+            isUnconfirmed || isFalseReport,
+          [`${styles.blueBorder} to-blue-500/10`]: isUnconfirmed,
+          [`${styles.redBorder} to-red-500/10`]: isFalseReport,
         })}
       />
 
-      {!confirmationState && (
+      {isUnconfirmed && (
         <div className="px-4 pt-4 flex gap-2 relative z-10 items-start">
           <FaInfoCircle className="text-blue-500 shrink-0 mt-0.5" />
           <div className="flex gap-2 lg:gap-4 flex-wrap">
@@ -172,7 +186,7 @@ export const SingleNote = async ({ note }: Props) => {
         </div>
       )}
 
-      {confirmationState === "false-report" && (
+      {isFalseReport && (
         <div className="px-4 pt-4 flex items-start gap-2 relative z-10">
           <BsExclamationOctagonFill className="text-red-500 shrink-0 mt-1" />
           <p className="font-bold">Falschmeldung</p>
@@ -182,7 +196,7 @@ export const SingleNote = async ({ note }: Props) => {
       <div
         className={clsx("flex gap-2 relative z-10", {
           "px-4 pt-4 opacity-20 hover:opacity-100 transition-opacity":
-            !confirmationState || confirmationState === "false-report",
+            isUnconfirmed || isFalseReport,
         })}
       >
         <div className="h-5 flex items-center">

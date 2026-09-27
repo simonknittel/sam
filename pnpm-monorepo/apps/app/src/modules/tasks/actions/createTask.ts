@@ -5,6 +5,7 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
+import { MAX_SILC_VALUE } from "@/modules/silc/utils/silcValueLimit";
 import {
   TaskRewardType,
   TaskVisibility,
@@ -35,7 +36,7 @@ const schema = z.discriminatedUnion("rewardType", [
   }),
   baseSchema.extend({
     rewardType: z.literal([TaskRewardType.SILC, TaskRewardType.NEW_SILC]),
-    rewardSilcValue: z.coerce.number().int().min(1),
+    rewardSilcValue: z.coerce.number().int().min(1).max(MAX_SILC_VALUE),
   }),
 ]);
 

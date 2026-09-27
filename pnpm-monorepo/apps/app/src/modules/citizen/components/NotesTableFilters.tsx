@@ -1,5 +1,8 @@
 import { Filter } from "@/modules/common/components/Filter";
-import { type NoteType } from "@sam-monorepo/database/client";
+import {
+  type ConfirmationStatus,
+  type NoteType,
+} from "@sam-monorepo/database/client";
 import { ClassificationLevelFilter } from "./ClassificationLevelFilter";
 import { ConfirmationStateFilter } from "./ConfirmationStateFilter";
 import { NoteTypeFilter } from "./NoteTypeFilter";
@@ -7,7 +10,7 @@ import { NoteTypeFilter } from "./NoteTypeFilter";
 interface Props {
   readonly noteTypes: readonly NoteType[];
   readonly classificationLevels: readonly NoteType[];
-  readonly confirmationStates: readonly string[];
+  readonly confirmationStates: readonly (ConfirmationStatus | null)[];
 }
 
 export const NotesTableFilters = ({
@@ -33,9 +36,7 @@ export const NotesTableFilters = ({
 
       {confirmationStates.length > 0 && (
         <Filter name="Bestätigungsstatus">
-          <ConfirmationStateFilter
-            confirmationStates={[...confirmationStates]}
-          />
+          <ConfirmationStateFilter confirmationStates={confirmationStates} />
         </Filter>
       )}
     </div>

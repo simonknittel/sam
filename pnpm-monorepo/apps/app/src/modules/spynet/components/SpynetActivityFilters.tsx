@@ -4,12 +4,12 @@ import {
   ACTIVITY_TO_PARAM,
   ACTIVITY_TYPE_PARAM,
 } from "@/modules/activity/utils/activityFilterParams";
-import { getCitizenDisplayName } from "@/modules/citizen/utils/citizenDisplayName";
 import { DateRangeFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/DateRangeFilter";
 import { MultiSelectComboboxFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/MultiSelectComboboxFilter";
 import { ORGANIZATION_ACTIVITY_TYPE_LABELS } from "@/modules/organizations/activity/organizationActivityTypes";
 import { ROLE_ACTIVITY_TYPE_LABELS } from "@/modules/roles/activity/roleActivityTypes";
 import type { Citizen } from "@sam-monorepo/database/client";
+import { getCitizenDisplayName } from "@sam-monorepo/domain";
 
 const TYPE_GROUP_ORGANIZATIONS = "Organisationen";
 const TYPE_GROUP_ROLES = "Rollen";

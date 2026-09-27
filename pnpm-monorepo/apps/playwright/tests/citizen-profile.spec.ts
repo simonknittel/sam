@@ -474,7 +474,7 @@ test("the birthday list names every citizen once, sorted by the next birthday", 
     data: {
       handle: "ohne-zugang",
       discordId: randomUUID(),
-      createdById: viewer.user.id,
+      createdById: viewer.entity.id,
       birthdayDay: today.day,
       birthdayMonth: today.month,
     },

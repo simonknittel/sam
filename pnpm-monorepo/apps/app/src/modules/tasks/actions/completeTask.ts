@@ -5,6 +5,10 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import {
+  areActiveReceivers,
+  INACTIVE_RECEIVER_ERROR,
+} from "@/modules/silc/utils/activeReceivers";
+import {
   announceSilcTransactions,
   createSilcTransactionsInTransaction,
   type NewSilcTransaction,
@@ -15,6 +19,7 @@ import {
   type Citizen,
   type Prisma,
 } from "@sam-monorepo/database/client";
+import { lockSilcLedger } from "@sam-monorepo/domain";
 import { revalidatePath } from "next/cache";
 import * as z from "zod";
 import { getOpenTasksWhere } from "../queries/getOpenTasksWhere";
@@ -243,6 +248,11 @@ export const completeTask = createAuthenticatedAction(
           "Der Task kann nicht abgeschlossen werden, ohne dass ihn jemand erfüllt hat.",
         requestPayload: formData,
       };
+    if (!(await areActiveReceivers(completionistIds)))
+      return {
+        error: INACTIVE_RECEIVER_ERROR,
+        requestPayload: formData,
+      };
 
     /**
      * Complete the task, pay the reward and create the next repetition in
@@ -254,8 +264,14 @@ export const completeTask = createAuthenticatedAction(
     const silcTransactionIds = await prisma.$transaction(
       async (transaction) => {
         /**
+         * The reward writes the ledger, thus the ledger lock comes first,
+         * before the lock of the task row (see `lockSilcLedger()`)
+         */
+        await lockSilcLedger(transaction);
+
+        /**
          * Only one completion can claim the task. A parallel completion
-         * waits for the lock of the row and then finds no open task.
+         * waits for the locks and then finds no open task.
          */
         const { count } = await transaction.task.updateMany({
           where: {

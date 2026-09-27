@@ -4,6 +4,7 @@ import {
   ACTIVE_CITIZEN_WHERE,
   AuditEventType,
   getLocalDate,
+  lockSilcLedger,
   ORGANIZATION_TIMEZONE,
   toDateColumnValue,
   updateSilcBalances,
@@ -101,6 +102,8 @@ export const disburseRoleSalaries = async () => {
 
     const createdTransactions = await prisma.$transaction(
       async (transaction) => {
+        await lockSilcLedger(transaction);
+
         /**
          * A run that repeats (for example after an error in a later job)
          * skips the bookings that exist already, see

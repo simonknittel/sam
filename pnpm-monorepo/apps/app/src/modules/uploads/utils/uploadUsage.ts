@@ -12,11 +12,9 @@ import {
  * it never comes out of `getUploadUsages`, only out of the usage filter and
  * the badge an upload without any reference gets.
  *
- * The real kinds are exactly the usage relations of the `Upload` model,
- * and exactly the relations the nightly cleanup lambda checks before
- * deleting an upload (see `UPLOAD_USAGE_RELATIONS`). `wikiReports` is
- * deliberately not among them: report evidence is meant to expire with the
- * upload. Adding a relation to the model means adding it in both places.
+ * Each other kind is one usage relation of the `Upload` model. The rule of
+ * upload usage is in `UPLOAD_USAGE_RELATIONS`
+ * (packages/domain/src/uploadUsageRelations.ts).
  */
 export enum UploadUsageType {
   RoleIcon = "roleIcon",

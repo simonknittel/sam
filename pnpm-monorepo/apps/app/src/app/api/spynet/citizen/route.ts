@@ -22,6 +22,8 @@ export async function POST(request: Request) {
       "POST",
     );
     await authentication.authorizeApi("citizen", "create");
+    /** The creator of a citizen is a citizen, not a login */
+    if (!authentication.session.entity) throw new Error("Forbidden");
 
     /**
      * Validate the request
@@ -33,19 +35,18 @@ export async function POST(request: Request) {
      * Do the thing
      */
     /** A deleted citizen does not block a new one with the same Spectrum ID */
-    const log = await prisma.citizenLog.findFirst({
+    const existingCitizen = await prisma.citizen.findFirst({
       where: {
-        type: "spectrum-id",
-        content: data.spectrumId,
-        citizen: ACTIVE_CITIZEN_WHERE,
+        spectrumId: data.spectrumId,
+        ...ACTIVE_CITIZEN_WHERE,
       },
       select: {
-        citizenId: true,
+        id: true,
       },
     });
 
     /** The client parses the id alone, so the whole citizen never crosses */
-    if (log) return NextResponse.json({ id: log.citizenId });
+    if (existingCitizen) return NextResponse.json({ id: existingCitizen.id });
 
     const item = await prisma.citizenLog.create({
       data: {
@@ -60,7 +61,7 @@ export async function POST(request: Request) {
           create: {
             createdBy: {
               connect: {
-                id: authentication.session.user.id,
+                id: authentication.session.entity.id,
               },
             },
             spectrumId: data.spectrumId,

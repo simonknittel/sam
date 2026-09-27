@@ -1,6 +1,8 @@
 import { prisma } from "@sam-monorepo/database";
+import { AuditEventType } from "@sam-monorepo/domain";
 import { beforeEach, expect, test } from "vitest";
 import { truncateAllTables } from "../../test/database";
+import { runAgainstLockHolder } from "../../test/locks";
 import { removeExpiredRoles } from "./removeExpiredRoles";
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
@@ -97,4 +99,58 @@ test("keeps the role of an active citizen", async () => {
   await removeExpiredRoles();
 
   expect(await hasRole(citizen.id)).toBe(true);
+});
+
+test("uses the maximum age of each role", async () => {
+  const shortRole = await prisma.role.create({
+    data: { name: "Short", maxAgeDays: MAX_AGE_DAYS },
+  });
+  const longRole = await prisma.role.create({
+    data: { name: "Long", maxAgeDays: 3 * MAX_AGE_DAYS },
+  });
+  const citizen = await prisma.citizen.create({
+    data: {
+      handle: "two-roles",
+      user: { create: { lastSeenAt: daysAgo(2 * MAX_AGE_DAYS) } },
+      roleAssignments: {
+        create: [shortRole, longRole].map((role) => ({
+          roleId: role.id,
+          createdAt: daysAgo(4 * MAX_AGE_DAYS),
+        })),
+      },
+    },
+  });
+
+  await removeExpiredRoles();
+
+  expect(
+    await prisma.roleAssignment.findMany({
+      where: { citizenId: citizen.id },
+      select: { roleId: true },
+    }),
+  ).toEqual([{ roleId: longRole.id }]);
+});
+
+test("writes no history for a role that a parallel transaction removed first", async () => {
+  const citizen = await createAssignment({
+    handle: "removed-by-manager",
+    lastSeenAt: daysAgo(MAX_AGE_DAYS + 5),
+    assignedAt: daysAgo(MAX_AGE_DAYS + 10),
+  });
+
+  await runAgainstLockHolder(
+    (transaction) =>
+      transaction.roleAssignment.deleteMany({
+        where: { citizenId: citizen.id },
+      }),
+    removeExpiredRoles,
+  );
+
+  expect(await hasRole(citizen.id)).toBe(false);
+  expect(await prisma.roleAssignmentChange.count()).toBe(0);
+  expect(
+    await prisma.auditEvent.count({
+      where: { type: AuditEventType.ROLE_AUTO_REMOVED },
+    }),
+  ).toBe(0);
 });

@@ -3,8 +3,8 @@
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { useHasBirthdayToday } from "@/modules/citizen/components/BirthdayCitizensProvider";
 import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
-import { DELETED_CITIZEN_LABEL } from "@/modules/citizen/utils/citizenDisplayName";
 import type { Citizen } from "@sam-monorepo/database/browser";
+import { DELETED_CITIZEN_LABEL } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { BirthdayHat } from "./BirthdayHat";
 import { Link } from "./Link";

@@ -41,12 +41,17 @@ export const createEventPositionApplicationForCurrentUser =
           requestPayload: formData,
         };
 
+      const discordUserId = authentication.session.discordId;
+      /**
+       * Without a Discord id, `{ discordUserId: null }` would match every app
+       * sign-up
+       */
       const participant = await prisma.eventParticipant.findFirst({
         where: {
           eventId: position.event.id,
           cancelledAt: null,
           OR: [
-            { discordUserId: authentication.session.discordId },
+            ...(discordUserId ? [{ discordUserId }] : []),
             { citizenId: authentication.session.entity.id },
           ],
         },

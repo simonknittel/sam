@@ -4,6 +4,11 @@ import { PrismaClient } from "./generated/prisma/client.js";
 
 const adapter = new PrismaPg({
   connectionString: env.DATABASE_URL,
+  /**
+   * The adapter writes dates as UTC text without an offset and reads a
+   * timestamptz without a conversion, thus each connection must use UTC
+   */
+  options: "-c TimeZone=UTC",
 });
 
 const createPrismaClient = () =>

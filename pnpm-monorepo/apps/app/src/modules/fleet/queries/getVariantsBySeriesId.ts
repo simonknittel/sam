@@ -1,6 +1,7 @@
 import { prisma } from "@/db";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { type Series } from "@sam-monorepo/database/client";
+import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 
 export const getVariantsBySeriesId = withTrace(
   "getVariantsBySeriesId",
@@ -15,6 +16,7 @@ export const getVariantsBySeriesId = withTrace(
             ships: {
               where: {
                 deletedAt: null,
+                owner: ACTIVE_CITIZEN_WHERE,
               },
             },
           },

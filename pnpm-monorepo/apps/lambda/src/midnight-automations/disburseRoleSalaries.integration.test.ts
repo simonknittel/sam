@@ -129,6 +129,34 @@ describe("disburseRoleSalaries", () => {
     expect(receiverIds).toEqual([atMaximum?.id]);
   });
 
+  test("only a direct assignment gets the salary, not an inherited role", async () => {
+    const paidRole = await prisma.role.create({ data: { name: "Pilot" } });
+    const inheritingRole = await prisma.role.create({
+      data: { name: "Staffel", inherits: { connect: { id: paidRole.id } } },
+    });
+    const [directCitizen] = await Promise.all(
+      [paidRole, inheritingRole].map((role) =>
+        prisma.citizen.create({
+          data: {
+            handle: role.name,
+            roleAssignments: { create: { roleId: role.id } },
+          },
+        }),
+      ),
+    );
+    await prisma.silcRoleSalary.create({
+      data: { roleId: paidRole.id, value: SALARY, dayOfMonth: PAYOUT_DAY },
+    });
+
+    await disburseRoleSalaries();
+
+    expect(
+      await prisma.silcTransaction.findMany({
+        select: { receiverId: true, value: true },
+      }),
+    ).toEqual([{ receiverId: directCitizen?.id, value: SALARY }]);
+  });
+
   test("a salary on another day is not paid", async () => {
     const { role, citizen } = await createCitizenWithRole();
     await prisma.silcRoleSalary.create({

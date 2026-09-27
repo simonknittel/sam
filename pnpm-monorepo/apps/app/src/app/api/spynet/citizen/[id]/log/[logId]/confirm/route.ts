@@ -1,8 +1,13 @@
 import { prisma } from "@/db";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import { CITIZEN_LOG_GUARD_SELECT } from "@/modules/citizen/queries/citizenLogTableSelect";
+import {
+  ConfirmationValue,
+  toConfirmationStatus,
+} from "@/modules/citizen/utils/citizenLogConfirmation";
 import { confirmLog } from "@/modules/citizen/utils/confirmLog";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
+import { ConfirmationStatus } from "@sam-monorepo/database/client";
 import { NextResponse } from "next/server";
 import * as z from "zod";
 
@@ -17,7 +22,11 @@ const paramsSchema = z.object({
 });
 
 const patchBodySchema = z.object({
-  confirmed: z.enum(["confirmed", "false-report"]),
+  /** The body cannot remove a decision, thus "unconfirmed" fails the pipe */
+  confirmed: z
+    .enum(ConfirmationValue)
+    .transform(toConfirmationStatus)
+    .pipe(z.enum(ConfirmationStatus)),
 });
 
 export async function PATCH(request: Request, props: { params: Params }) {

@@ -383,11 +383,11 @@ test("the citizen table paginates and filters", async ({
     data: [
       ...Array.from({ length: NAMED_CITIZENS }, (unused, index) => ({
         handle: `bewohner-${String(index + 1).padStart(2, "0")}`,
-        createdById: viewer.user.id,
+        createdById: viewer.entity.id,
         createdAt: new Date(now - (index + 1) * 60_000),
       })),
       ...Array.from({ length: UNNAMED_CITIZENS }, (unused, index) => ({
-        createdById: viewer.user.id,
+        createdById: viewer.entity.id,
         createdAt: new Date(now - (NAMED_CITIZENS + index + 1) * 60_000),
       })),
     ],

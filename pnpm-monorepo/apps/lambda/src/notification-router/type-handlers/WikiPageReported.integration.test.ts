@@ -63,4 +63,31 @@ describe("WikiPageReportedHandler", () => {
       expect.objectContaining({ receiverId: atMaximumLevel.id }),
     ]);
   });
+
+  test("names a deleted reporter with the label, not with the handle", async () => {
+    await createCitizenWithInheritedPermissions(
+      "moderator",
+      PERMISSION_STRINGS,
+    );
+    const report = await prisma.wikiPageReport.create({
+      data: {
+        page: { create: { title: "Reported page", slug: "reported-page" } },
+        message: "Test",
+        createdBy: {
+          create: { handle: "deleted-reporter", deletedAt: new Date() },
+        },
+      },
+    });
+
+    await WikiPageReportedHandler({ reportId: report.id });
+
+    expect(publishNotifications).toHaveBeenCalledExactlyOnceWith([
+      expect.objectContaining({
+        payload: expect.objectContaining({
+          reportedByHandle: "Gelöschter Citizen",
+        }),
+        body: 'Gelöschter Citizen hat die Seite "Reported page" gemeldet',
+      }),
+    ]);
+  });
 });

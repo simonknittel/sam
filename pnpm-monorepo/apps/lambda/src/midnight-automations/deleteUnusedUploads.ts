@@ -26,11 +26,8 @@ const DELETE_BATCH_SIZE = 1000;
  * foreign key and deleting a resource only nulls it, so the previous upload
  * would otherwise be left behind forever.
  *
- * An upload counts as used while any of the model's usage relations
- * references it (see UPLOAD_USAGE_RELATIONS). The wiki relations are link
- * tables that follow the content: the collab server replaces the links of a
- * page at each store, and each new snapshot links the uploads of its
- * content. Thus the check needs no search in the content.
+ * The rule of upload usage is in `UPLOAD_USAGE_RELATIONS`
+ * (packages/domain/src/uploadUsageRelations.ts).
  *
  * Afterwards the bucket is swept for objects without an Upload row, which
  * the database cannot find: for example the object of an upload whose
@@ -56,12 +53,6 @@ export const deleteUnusedUploads = async () => {
     const cutoff = new Date();
     cutoff.setHours(cutoff.getHours() - GRACE_PERIOD_HOURS);
 
-    /**
-     * The usage relations live in one shared list so this query and the
-     * upload manager can no longer drift apart — a relation added to the
-     * model but missing here silently deletes uploads which are in use (as
-     * happened to `eventCovers`). See `UPLOAD_USAGE_RELATIONS`.
-     */
     const { count: databaseCount } = await captureAsyncFunc(
       "delete unused uploads from the database",
       () =>

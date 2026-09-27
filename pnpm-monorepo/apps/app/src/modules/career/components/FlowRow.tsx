@@ -7,6 +7,7 @@ import { TRow } from "@/modules/common/components/Table";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { getCitizenDisplayName } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { FaGripVertical, FaRegCopy } from "react-icons/fa";
 import type { ManageableFlow } from "../queries/getManageableFlows";
@@ -71,7 +72,9 @@ export const FlowRow = ({
         {flow.deletedAt && (
           <span className="text-xs text-neutral-500">
             Gelöscht am {formatDate(flow.deletedAt)} von{" "}
-            {flow.deletedBy?.handle ?? "Unbekannt"}
+            {flow.deletedBy
+              ? getCitizenDisplayName(flow.deletedBy)
+              : "Unbekannt"}
           </span>
         )}
       </td>

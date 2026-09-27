@@ -1,6 +1,5 @@
 import { NotificationChannel, prisma } from "@sam-monorepo/database";
 import {
-  ACTIVE_CITIZEN_WHERE,
   AuditEventType,
   isAllowedWebPushEndpointUrl,
 } from "@sam-monorepo/domain";
@@ -55,7 +54,6 @@ export const publishWebPushNotifications = async (
       id: {
         in: notifications.map((n) => n.receiverId),
       },
-      ...ACTIVE_CITIZEN_WHERE,
     },
     select: {
       id: true,

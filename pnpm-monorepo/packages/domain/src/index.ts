@@ -1,8 +1,9 @@
 /**
  * Domain vocabulary and pure domain logic shared between the Next.js app
- * and the Lambdas. Everything here is side-effect-free: no database client,
- * no environment reads — consumers load the data and pass it in. Sharing
- * these definitions replaces the former copy-mirrored files in both apps.
+ * and the Lambdas. The package creates no database client and reads no
+ * environment: a function that reads or writes the database takes the
+ * client or the transaction of its caller. Sharing these definitions
+ * replaces the former copy-mirrored files in both apps.
  */
 export {
   AuditEventType,
@@ -10,7 +11,10 @@ export {
   type AuditEventInput,
 } from "./AuditEventTypes.js";
 export { buildBriefingRootPageSeed } from "./buildBriefingRootPageSeed.js";
-export { toDateColumnValue } from "./calendarDate.js";
+export {
+  getYesterdayDateColumnValue,
+  toDateColumnValue,
+} from "./calendarDate.js";
 export { ACTIVE_CITIZEN_WHERE } from "./citizen/activeCitizen.js";
 export {
   ORGANIZATION_TIMEZONE,
@@ -19,6 +23,10 @@ export {
   isBirthdayToday,
   type LocalDate,
 } from "./citizen/birthday.js";
+export {
+  DELETED_CITIZEN_LABEL,
+  getCitizenDisplayName,
+} from "./citizen/citizenDisplayName.js";
 export {
   CAN_LOGIN_CITIZEN_WHERE,
   NOTIFIABLE_CITIZEN_WHERE,
@@ -45,13 +53,14 @@ export {
   getNextSeasonalThemeStart,
   isSeasonalGreetingDay,
 } from "./seasonal/seasonalCalendar.js";
+export { bookPositiveBalancesAway } from "./silc/bookPositiveBalancesAway.js";
 export { getAuecPerSilc } from "./silc/getAuecPerSilc.js";
 export { getTotalSilc } from "./silc/getTotalSilc.js";
+export { lockSilcLedger } from "./silc/lockSilcLedger.js";
 export { updateSilcBalances } from "./silc/updateSilcBalances.js";
 export {
   UNUSED_UPLOAD_WHERE,
   UPLOAD_USAGE_RELATIONS,
-  type UploadUsageRelation,
 } from "./uploadUsageRelations.js";
 export {
   createWikiPageSnapshotUploadLinks,

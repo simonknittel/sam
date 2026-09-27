@@ -1,7 +1,6 @@
 "use client";
 
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
-import { getCitizenDisplayName } from "@/modules/citizen/utils/citizenDisplayName";
 import { AccordeonLink } from "@/modules/common/components/Accordeon";
 import { Badge } from "@/modules/common/components/Badge";
 import { Link } from "@/modules/common/components/Link";
@@ -10,7 +9,7 @@ import { formatDate } from "@/modules/common/utils/formatDate";
 import { NewMarkerButton } from "@/modules/read-markers/components/NewMarkerButton";
 import { useMarkAsRead } from "@/modules/read-markers/hooks/useMarkAsRead";
 import type { TaskListRow } from "@/modules/tasks/queries/taskListSelect";
-import { ReadMarkerSubject } from "@sam-monorepo/domain";
+import { getCitizenDisplayName, ReadMarkerSubject } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import type { ReactNode } from "react";
 import { BsExclamationOctagonFill } from "react-icons/bs";

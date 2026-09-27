@@ -2,6 +2,7 @@ import { Server, type Document } from "@hocuspocus/server";
 import { prisma } from "@sam-monorepo/database";
 import { WikiPageSnapshotKind } from "@sam-monorepo/database/client";
 import {
+  ACTIVE_CITIZEN_WHERE,
   createWikiPageSnapshotUploadLinks,
   replaceWikiPageUploadLinks,
 } from "@sam-monorepo/domain";
@@ -234,7 +235,7 @@ const syncCitizenMentionLinks = async (
   const existingCitizens =
     newCitizenIds.length > 0
       ? await prisma.citizen.findMany({
-          where: { id: { in: newCitizenIds }, deletedAt: null },
+          where: { id: { in: newCitizenIds }, ...ACTIVE_CITIZEN_WHERE },
           select: { id: true },
         })
       : [];

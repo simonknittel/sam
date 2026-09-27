@@ -30,6 +30,21 @@ export const createPenaltyEntry = createAuthenticatedAction(
         requestPayload: formData,
       };
 
+    const citizen = await prisma.citizen.findUnique({
+      where: { id: data.citizenId },
+      select: { deletedAt: true },
+    });
+    if (!citizen)
+      return {
+        error: t("Common.notFound"),
+        requestPayload: formData,
+      };
+    if (citizen.deletedAt)
+      return {
+        error: "Der Citizen ist gelöscht.",
+        requestPayload: formData,
+      };
+
     /**
      * Create entry
      */

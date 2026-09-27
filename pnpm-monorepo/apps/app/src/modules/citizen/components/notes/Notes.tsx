@@ -22,51 +22,42 @@ interface Props {
   readonly entity: Pick<Citizen, "id">;
 }
 
+type VisibleNote = CitizenNote | { id: CitizenLog["id"]; redacted: true };
+
 export const Notes = async ({ className, entity }: Props) => {
   const authentication = await requireAuthentication();
 
-  const [notes, allNoteTypes] = await prisma.$transaction([
-    prisma.citizenLog.findMany({
-      where: {
-        citizenId: entity.id,
-        type: "note",
+  /**
+   * Each note shows in the tab of its note type, thus a note of a deleted
+   * note type does not show
+   */
+  const allNoteTypes = await prisma.noteType.findMany({
+    select: {
+      id: true,
+      name: true,
+      citizenLogs: {
+        where: {
+          citizenId: entity.id,
+          type: "note",
+        },
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        select: CITIZEN_NOTE_SELECT,
       },
-      select: CITIZEN_NOTE_SELECT,
-    }),
+    },
+  });
 
-    prisma.noteType.findMany(),
-  ]);
+  const tabs: Record<NoteType["id"], VisibleNote[]> = {};
 
-  const sortedNotes = notes.toSorted(
-    (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
-  );
+  for (const noteType of allNoteTypes) {
+    const notes: VisibleNote[] = [];
 
-  const tabs: Record<
-    NoteType["id"],
-    (
-      | CitizenNote
-      | {
-          id: CitizenLog["id"];
-          redacted: true;
-        }
-    )[]
-  > = {};
-
-  for (const note of sortedNotes) {
-    if (!note.noteTypeId) continue;
-
-    if (!(await isAllowedToRead(note, authentication))) {
-      if (!(await isAllowedToReadRedacted(note, authentication))) continue;
-
-      (tabs[note.noteTypeId] ??= []).push({
-        id: note.id,
-        redacted: true,
-      });
-
-      continue;
+    for (const note of noteType.citizenLogs) {
+      if (await isAllowedToRead(note, authentication)) notes.push(note);
+      else if (await isAllowedToReadRedacted(note, authentication))
+        notes.push({ id: note.id, redacted: true });
     }
 
-    (tabs[note.noteTypeId] ??= []).push(note);
+    tabs[noteType.id] = notes;
   }
 
   const filteredNoteTypes = (

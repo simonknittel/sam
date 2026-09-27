@@ -40,7 +40,7 @@ interface Props {
       readonly bannedBy: Pick<Citizen, "id" | "handle" | "deletedAt"> | null;
     };
     readonly discordId: string | null;
-    readonly entity?: Pick<Citizen, "id" | "handle" | "discordId">;
+    readonly entity?: Pick<Citizen, "id">;
   }[];
   readonly showBanActions?: boolean;
   readonly ownUserId?: string;

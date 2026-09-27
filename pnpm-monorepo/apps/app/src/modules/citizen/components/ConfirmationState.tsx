@@ -1,17 +1,21 @@
-import type { CitizenLogConfirmationState } from "@/types";
-import { type CitizenLog } from "@sam-monorepo/database/client";
+import {
+  ConfirmationStatus,
+  type CitizenLog,
+} from "@sam-monorepo/database/client";
 import { BsExclamationOctagonFill } from "react-icons/bs";
 import { FaCheckCircle, FaInfoCircle } from "react-icons/fa";
 import ConfirmLog from "./ConfirmLog";
 
 interface Props {
-  readonly confirmationState?: CitizenLogConfirmationState;
-  readonly citizenLog: Pick<CitizenLog, "id" | "citizenId" | "type">;
+  readonly citizenLog: Pick<
+    CitizenLog,
+    "id" | "citizenId" | "type" | "confirmed"
+  >;
 }
 
-export const ConfirmationState = ({ confirmationState, citizenLog }: Props) => {
-  switch (confirmationState) {
-    case "confirmed":
+export const ConfirmationState = ({ citizenLog }: Props) => {
+  switch (citizenLog.confirmed) {
+    case ConfirmationStatus.CONFIRMED:
       return (
         <div className="flex items-center gap-2 overflow-hidden">
           <FaCheckCircle className="shrink-0" />
@@ -19,7 +23,7 @@ export const ConfirmationState = ({ confirmationState, citizenLog }: Props) => {
         </div>
       );
 
-    case "false-report":
+    case ConfirmationStatus.FALSE_REPORT:
       return (
         <div className="flex items-center gap-2 overflow-hidden">
           <BsExclamationOctagonFill className="shrink-0" />
@@ -27,7 +31,7 @@ export const ConfirmationState = ({ confirmationState, citizenLog }: Props) => {
         </div>
       );
 
-    default:
+    case null:
       return (
         <div className="flex items-center gap-2 text-blue-500 overflow-hidden">
           <FaInfoCircle className="shrink-0" />
@@ -36,6 +40,11 @@ export const ConfirmationState = ({ confirmationState, citizenLog }: Props) => {
             <ConfirmLog log={citizenLog} compact={true} />
           </span>
         </div>
+      );
+
+    default:
+      throw new Error(
+        `Unknown confirmation: ${citizenLog.confirmed satisfies never}`,
       );
   }
 };

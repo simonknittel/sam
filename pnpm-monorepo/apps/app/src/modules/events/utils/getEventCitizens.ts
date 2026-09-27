@@ -1,12 +1,14 @@
 import { prisma } from "@/db";
 import type { Event } from "@sam-monorepo/database/client";
+import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import { cache } from "react";
 import { buildRequiredVariantShipWhere } from "../queries/eventRelationSelects";
-import { collectParticipantOwners } from "./collectParticipantOwners";
+import { buildParticipantCitizenWhere } from "./participantCitizenWhere";
 
 /**
  * The event's active participants as citizens with their ships of the
- * required variants.
+ * required variants. The lineup offers these citizens for its positions,
+ * thus a deleted citizen is not one of them.
  */
 export const getEventCitizens = cache(async (eventId: Event["id"]) => {
   const databaseParticipants = await prisma.eventParticipant.findMany({
@@ -20,12 +22,10 @@ export const getEventCitizens = cache(async (eventId: Event["id"]) => {
     },
   });
 
-  const { citizenIds, discordUserIds } =
-    collectParticipantOwners(databaseParticipants);
-
   const citizens = await prisma.citizen.findMany({
     where: {
-      OR: [{ id: { in: citizenIds } }, { discordId: { in: discordUserIds } }],
+      ...buildParticipantCitizenWhere(databaseParticipants),
+      ...ACTIVE_CITIZEN_WHERE,
     },
     select: {
       id: true,

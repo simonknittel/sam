@@ -6,11 +6,14 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import * as z from "zod";
+import { MAX_SILC_VALUE } from "../utils/silcValueLimit";
 
 const schema = z
   .object({
     roleIds: z.array(z.cuid()).max(250), // Arbitrary (untested) limit to prevent DDoS
-    values: z.array(z.coerce.number().int().min(1)).max(250), // Arbitrary (untested) limit to prevent DDoS
+    values: z
+      .array(z.coerce.number().int().min(1).max(MAX_SILC_VALUE))
+      .max(250), // Arbitrary (untested) limit to prevent DDoS
     dayOfMonths: z.array(z.coerce.number().int().min(1).max(31)).max(250), // Arbitrary (untested) limit to prevent DDoS
   })
   .refine(

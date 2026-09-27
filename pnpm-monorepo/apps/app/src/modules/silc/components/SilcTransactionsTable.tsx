@@ -1,8 +1,6 @@
 "use client";
 
-import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
-import { DELETED_CITIZEN_LABEL } from "@/modules/citizen/utils/citizenDisplayName";
-import { Link } from "@/modules/common/components/Link";
+import { CitizenCellLink } from "@/modules/common/components/CitizenCellLink";
 import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import type { SilcTransactionTableRow } from "@/modules/silc/queries/silcTransactionTableSelect";
@@ -47,24 +45,11 @@ export const SilcTransactionsTable = ({
               <td>{formatDate(transaction.createdAt)}</td>
 
               <td className="overflow-hidden flex items-center h-8">
-                {transaction.receiver.deletedAt ? (
-                  <span className="px-2 text-neutral-500 truncate">
-                    {DELETED_CITIZEN_LABEL}
-                  </span>
-                ) : (
-                  <CitizenPopover citizenId={transaction.receiver.id}>
-                    <Link
-                      href={`/app/spynet/citizen/${transaction.receiver.id}/silc`}
-                      className="hover:bg-white/10 flex items-center rounded-secondary px-2 h-full text-brand-red-500 truncate"
-                      prefetch={false}
-                      title={
-                        transaction.receiver.handle || transaction.receiver.id
-                      }
-                    >
-                      {transaction.receiver.handle || transaction.receiver.id}
-                    </Link>
-                  </CitizenPopover>
-                )}
+                <CitizenCellLink
+                  citizen={transaction.receiver}
+                  page="/silc"
+                  className="h-full"
+                />
               </td>
 
               <td
@@ -84,22 +69,8 @@ export const SilcTransactionsTable = ({
               </td>
 
               <td className="overflow-hidden flex items-center h-8">
-                {citizen?.deletedAt && (
-                  <span className="px-2 text-neutral-500 truncate">
-                    {DELETED_CITIZEN_LABEL}
-                  </span>
-                )}
-                {citizen && !citizen.deletedAt && (
-                  <CitizenPopover citizenId={citizen.id}>
-                    <Link
-                      href={`/app/spynet/citizen/${citizen.id}`}
-                      className="hover:bg-white/10 flex items-center rounded-secondary px-2 h-full text-brand-red-500 truncate"
-                      prefetch={false}
-                      title={citizen.handle || citizen.id}
-                    >
-                      {citizen.handle || citizen.id}
-                    </Link>
-                  </CitizenPopover>
+                {citizen && (
+                  <CitizenCellLink citizen={citizen} className="h-full" />
                 )}
               </td>
 

@@ -1,12 +1,12 @@
 import { prisma } from "@/db";
 import { authenticate } from "@/modules/auth/server";
-import { getCitizenDisplayName } from "@/modules/citizen/utils/citizenDisplayName";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { EditableInput } from "@/modules/common/components/form/EditableInput";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { WikiPageAccessType } from "@sam-monorepo/database/client";
+import { getCitizenDisplayName } from "@sam-monorepo/domain";
 import {
   resolveWikiPageReadRoleIds,
   type ResolvedWikiPagePermissions,

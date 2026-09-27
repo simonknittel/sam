@@ -2,10 +2,8 @@ import { prisma, type Organization } from "@sam-monorepo/database";
 import {
   ACTIVE_CITIZEN_WHERE,
   AuditEventType,
-  getLocalDate,
+  getYesterdayDateColumnValue,
   ORG_ID,
-  ORGANIZATION_TIMEZONE,
-  toDateColumnValue,
 } from "@sam-monorepo/domain";
 import { createAuditEvents } from "../common/audit";
 import { log } from "../common/logger";
@@ -63,12 +61,7 @@ const getAllVariants = async () => {
 
 export const countShips = async () => {
   await captureAsyncFunc("countShips", async () => {
-    /**
-     * The job runs at midnight and counts the day that just ended. Day 0 of
-     * a month is the last day of the month before, see `toDateColumnValue()`.
-     */
-    const today = getLocalDate(new Date(), ORGANIZATION_TIMEZONE);
-    const countedDay = toDateColumnValue({ ...today, day: today.day - 1 });
+    const countedDay = getYesterdayDateColumnValue(new Date());
 
     const memberships = await getActiveOrganizationMemberships(ORG_ID);
     const citizenIds = memberships.map((membership) => membership.citizenId);

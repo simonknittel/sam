@@ -7,6 +7,7 @@ import * as z from "zod";
 import { revalidateWikiScope } from "../queries/getWikiPageScopedContext";
 import { compareWikiPagesByOrder } from "../utils/compareWikiPagesByOrder";
 import { isEventWikiRootPage } from "../utils/isEventWikiRootPage";
+import { lockWikiPageTree } from "../utils/lockWikiPageTree";
 import {
   buildWikiPageReparentAuditEvents,
   buildWikiPageReparentReset,
@@ -107,7 +108,11 @@ export const updateWikiPagePosition = createAuthenticatedAction(
 
     if (updates.length > 0 || reset) {
       try {
-        await prisma.$transaction([...(reset?.statements ?? []), ...updates]);
+        await prisma.$transaction([
+          lockWikiPageTree(),
+          ...(reset?.statements ?? []),
+          ...updates,
+        ]);
       } catch (error) {
         if (isWikiPageReparentRefused(error))
           return {

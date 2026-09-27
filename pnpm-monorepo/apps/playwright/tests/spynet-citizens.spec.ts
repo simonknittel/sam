@@ -53,7 +53,8 @@ test("a citizen is created from a Spectrum ID and deleted again", async ({
   const created = await prisma.citizen.findFirstOrThrow({
     where: { spectrumId: "NEWCOMER" },
   });
-  expect(created.createdById).toBe(admin.user.id);
+  /** The creator of a citizen is the citizen of the login */
+  expect(created.createdById).toBe(admin.entity.id);
   /** The Spectrum ID is recorded as the citizen's first log entry */
   const spectrumIdLog = await prisma.citizenLog.findFirstOrThrow({
     where: { citizenId: created.id, type: "spectrum-id" },
@@ -94,23 +95,27 @@ test("a citizen is created from a Spectrum ID and deleted again", async ({
   await expectAuditEvents(prisma, ["CITIZEN_CREATED", "CITIZEN_DELETED"]);
 });
 
-test("deleting a citizen keeps what they recorded about others", async ({
+test("a deleted member leaves the member list of its organization", async ({
   page,
   prisma,
   signIn,
 }) => {
   const admin = await createCitizen(prisma, {
     handle: "spynet-admin",
-    permissionStrings: ["citizen;read", "citizen;delete"],
+    permissionStrings: [
+      "citizen;read",
+      "citizen;delete",
+      "organization;read",
+      "organizationMembership;read",
+    ],
   });
-  const recorder = await createCitizen(prisma, { handle: "chronist" });
   const member = await createCitizen(prisma, { handle: "mitglied" });
 
   const organization = await prisma.organization.create({
     data: {
       name: "Recorded Org",
       spectrumId: "RECORDEDORG",
-      createdById: recorder.entity.id,
+      createdById: admin.entity.id,
       activeMemberships: {
         create: {
           citizenId: member.entity.id,
@@ -118,23 +123,17 @@ test("deleting a citizen keeps what they recorded about others", async ({
           visibility: OrganizationMembershipVisibility.PUBLIC,
         },
       },
-      membershipHistoryEntries: {
-        create: {
-          citizenId: member.entity.id,
-          type: OrganizationMembershipType.MAIN,
-          visibility: OrganizationMembershipVisibility.PUBLIC,
-          createdById: recorder.entity.id,
-          confirmed: ConfirmationStatus.CONFIRMED,
-          confirmedAt: new Date(),
-          confirmedById: recorder.entity.id,
-        },
-      },
     },
   });
 
   await signIn(admin.user);
-  await page.goto(`/app/spynet/citizen/${recorder.entity.id}`);
+  await page.goto(`/app/spynet/organization/${organization.id}`);
+  await expect(page.getByText("Mitglieder (1)")).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+  await expect(page.getByRole("link", { name: "mitglied" })).toBeVisible();
 
+  await page.goto(`/app/spynet/citizen/${member.entity.id}`);
   const deleteDialog = page.getByRole("alertdialog");
   await clickUntilVisible(
     page.getByRole("button", { name: "Löschen" }),
@@ -145,33 +144,18 @@ test("deleting a citizen keeps what they recorded about others", async ({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
 
-  await expect
-    .poll(
-      async () =>
-        (
-          await prisma.citizen.findUniqueOrThrow({
-            where: { id: recorder.entity.id },
-            select: { deletedAt: true },
-          })
-        ).deletedAt,
-    )
-    .not.toBeNull();
-  expect(
-    await prisma.organization.findUnique({ where: { id: organization.id } }),
-  ).toMatchObject({ createdById: recorder.entity.id });
+  /** The membership stays in the database, only the list hides it */
   expect(
     await prisma.activeOrganizationMembership.count({
       where: { citizenId: member.entity.id },
     }),
   ).toBe(1);
-  expect(
-    await prisma.organizationMembershipHistoryEntry.findFirst({
-      where: { citizenId: member.entity.id },
-    }),
-  ).toMatchObject({
-    createdById: recorder.entity.id,
-    confirmedById: recorder.entity.id,
+
+  await page.goto(`/app/spynet/organization/${organization.id}`);
+  await expect(page.getByText("Keine Mitglieder")).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
   });
+  await expect(page.getByText("Mitglieder (0)")).toBeVisible();
 });
 
 test("a log entry is confirmed, and a second one marked a false report", async ({
@@ -312,6 +296,120 @@ test("confirming a Discord ID links the citizen to the login with that ID", asyn
       { timeout: ACTION_FEEDBACK_TIMEOUT },
     )
     .toBe(newcomer.id);
+});
+
+test("a false report of the confirmed Discord ID removes the link to the login", async ({
+  page,
+  prisma,
+  signIn,
+  switchUser,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "spynet-verknuepfer",
+    permissionStrings: ["citizen;read", "discord-id;create", "discord-id;read"],
+  });
+  const target = await createCitizen(prisma, { handle: "verknuepfter" });
+  const discordIdLog = await prisma.citizenLog.create({
+    data: {
+      citizenId: target.entity.id,
+      type: "discord-id",
+      content: target.entity.discordId,
+      confirmed: ConfirmationStatus.CONFIRMED,
+      confirmedAt: new Date(),
+    },
+  });
+
+  await signIn(admin.user);
+
+  /**
+   * The UI shows the decision buttons only for a log without a decision,
+   * thus the change of the decision goes through the API of these buttons
+   */
+  const response = await page.request.patch(
+    `/api/spynet/citizen/${target.entity.id}/log/${discordIdLog.id}/confirm`,
+    { data: { confirmed: "false-report" } },
+  );
+  expect(response.status()).toBe(200);
+
+  expect(
+    await prisma.citizen.findUniqueOrThrow({
+      where: { id: target.entity.id },
+      select: { discordId: true, userId: true },
+    }),
+  ).toEqual({ discordId: null, userId: null });
+  await expectAuditEvents(prisma, ["ENTITY_LOG_CONFIRMED"]);
+
+  await switchUser(target.user);
+  await page.goto("/app/dashboard");
+  await expect(page).toHaveURL("/clearance", {
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+});
+
+test("a new citizen gets the confirmed Discord ID of a deleted citizen and its login", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "spynet-verknuepfer",
+    permissionStrings: [
+      "citizen;read",
+      "discord-id;create",
+      "discord-id;read",
+      "discord-id;confirm",
+    ],
+  });
+  const former = await createCitizen(prisma, { handle: "ehemaliger" });
+  await prisma.citizen.update({
+    where: { id: former.entity.id },
+    data: { deletedAt: new Date(), userId: null },
+  });
+  const successor = await prisma.citizen.create({
+    data: { handle: "nachfolger" },
+  });
+  const discordId = former.entity.discordId!;
+
+  await signIn(admin.user);
+  await page.goto(`/app/spynet/citizen/${successor.id}`);
+
+  const historyDialog = modal(page, "Discord ID History");
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Discord ID History" }),
+    historyDialog,
+  );
+  await historyDialog.getByPlaceholder("Neuer Eintrag ...").fill(discordId);
+  await historyDialog.getByRole("button", { name: "Speichern" }).click();
+
+  const entry = historyDialog
+    .getByRole("listitem")
+    .filter({ hasText: discordId });
+  await entry.getByRole("button", { name: "Bestätigen" }).click();
+
+  await expect
+    .poll(
+      () =>
+        prisma.citizen.findUniqueOrThrow({
+          where: { id: successor.id },
+          select: { discordId: true, userId: true },
+        }),
+      { timeout: ACTION_FEEDBACK_TIMEOUT },
+    )
+    .toEqual({ discordId, userId: former.user.id });
+  /** The deleted citizen keeps its Discord ID, but not the login */
+  expect(
+    await prisma.citizen.findUniqueOrThrow({
+      where: { id: former.entity.id },
+      select: { discordId: true, userId: true },
+    }),
+  ).toEqual({ discordId, userId: null });
+  /** The login takes the handle of its new citizen */
+  expect(
+    await prisma.user.findUniqueOrThrow({
+      where: { id: former.user.id },
+      select: { name: true },
+    }),
+  ).toEqual({ name: "nachfolger" });
 });
 
 test("the overview shows the confirmed value of every identity attribute", async ({

@@ -38,10 +38,12 @@ export const updateRoleAssignments = createAuthenticatedAction(
         requestPayload: formData,
       };
 
-    /**
-     *
-     */
-    const [allRoles, currentRoleAssignments] = await Promise.all([
+    const [citizen, allRoles, currentRoleAssignments] = await Promise.all([
+      prisma.citizen.findUnique({
+        where: { id: data.citizenId },
+        select: { deletedAt: true },
+      }),
+
       prisma.role.findMany({
         select: {
           id: true,
@@ -58,6 +60,17 @@ export const updateRoleAssignments = createAuthenticatedAction(
         },
       }),
     ]);
+
+    if (!citizen)
+      return {
+        error: t("Common.notFound"),
+        requestPayload: formData,
+      };
+    if (citizen.deletedAt)
+      return {
+        error: "Der Citizen ist gelöscht.",
+        requestPayload: formData,
+      };
 
     const selectedRoleAssignments = Array.from(formData.keys())
       .filter((inputName) => {

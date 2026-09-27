@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { buildChartData, buildTotalAndDeltaChart } from "./chartData";
+import {
+  buildChartData,
+  buildTotalAndDeltaChart,
+  formatDateKey,
+} from "./chartData";
 
 /**
  * Noon UTC is the same calendar day in UTC and in Europe/Berlin, thus the
@@ -96,6 +100,20 @@ describe("buildChartData", () => {
     expect(polaris.data[0]).toBe(2);
     expect(polaris.data.at(-1)).toBe(3);
     expect(polaris.data.filter((value) => value !== null)).toEqual([2, 3]);
+  });
+
+  test("keys the value of a `@db.Date` column under its own day", () => {
+    /** A `@db.Date` column holds midnight UTC of its day */
+    const chart = buildChartData([
+      record("Polaris", new Date("2027-06-14T00:00:00Z"), 3),
+    ]);
+
+    const axisKeys = chart.axisTimestamps.map((timestamp) =>
+      formatDateKey(new Date(timestamp)),
+    );
+    const [polaris] = chart.series;
+    expect(polaris.data[axisKeys.indexOf("2027-06-14")]).toBe(3);
+    expect(polaris.data.filter((value) => value !== null)).toEqual([3]);
   });
 
   test("gives the same chart without the records before the chart days", () => {

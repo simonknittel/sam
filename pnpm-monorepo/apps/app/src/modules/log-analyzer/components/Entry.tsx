@@ -1,9 +1,9 @@
-import { getCitizenDisplayName } from "@/modules/citizen/utils/citizenDisplayName";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { RelativeDate } from "@/modules/common/components/RelativeDate";
 import { SmallBadge } from "@/modules/common/components/SmallBadge";
 import { TRow } from "@/modules/common/components/Table";
 import { formatDate } from "@/modules/common/utils/formatDate";
+import { getCitizenDisplayName } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { memo } from "react";
 import { PATTERNS, type IEntry } from "../utils/PATTERNS";

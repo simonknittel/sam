@@ -347,7 +347,9 @@ test("a restricted event is invisible to non-eligible users", async ({
 
   await signIn(outsider.user);
   await page.goto("/app/events");
-  await expect(page.getByText("Keine Events gefunden")).toBeVisible({
+  await expect(
+    page.getByText("Keine Events gefunden").filter({ visible: true }),
+  ).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await page.goto(`/app/events/${event.id}`);
@@ -387,13 +389,17 @@ test("the sign-up lifecycle: sign up with comment, edit, cancel, re-sign-up", as
   await page.goto(`/app/events/${event.id}`);
   await waitForAppShellHydration(page);
 
-  await expect(page.getByText("Nicht angemeldet")).toBeVisible();
+  /** A hidden copy of the streamed participation state can match too */
+  const participationState = (text: string) =>
+    page.getByText(text, { exact: true }).filter({ visible: true });
+
+  await expect(participationState("Nicht angemeldet")).toBeVisible();
   await page.getByLabel("Kommentar").fill("Bringe Snacks mit");
   await page.getByRole("button", { name: "Anmelden", exact: true }).click();
   await expect(page.getByText("Du bist angemeldet.")).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
-  await expect(page.getByText("Zugesagt")).toBeVisible();
+  await expect(participationState("Zugesagt")).toBeVisible();
 
   await page.goto(`/app/events/${event.id}/participants`);
   await expect(page.getByText("Teilnehmer (1)")).toBeVisible();
@@ -443,7 +449,7 @@ test("the sign-up lifecycle: sign up with comment, edit, cancel, re-sign-up", as
   await expect(page.getByText("Du hast dich abgemeldet.")).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
-  await expect(page.getByText("Abgemeldet", { exact: true })).toBeVisible();
+  await expect(participationState("Abgemeldet")).toBeVisible();
 
   const clearedPosition = await prisma.eventPosition.findUnique({
     where: { id: position.id },

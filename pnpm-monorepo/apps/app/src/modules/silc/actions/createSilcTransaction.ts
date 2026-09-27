@@ -4,11 +4,16 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import * as z from "zod";
+import {
+  areActiveReceivers,
+  INACTIVE_RECEIVER_ERROR,
+} from "../utils/activeReceivers";
 import { createSilcTransactions } from "../utils/createSilcTransactions";
+import { MAX_SILC_VALUE } from "../utils/silcValueLimit";
 
 const schema = z.object({
   receiverIds: z.array(z.string().trim().cuid()).min(1).max(250), // Arbitrary (untested) limit to prevent DDoS
-  value: z.coerce.number().int(),
+  value: z.coerce.number().int().min(-MAX_SILC_VALUE).max(MAX_SILC_VALUE),
   description: z.string().trim().max(512).optional(),
 });
 
@@ -29,6 +34,11 @@ export const createSilcTransaction = createAuthenticatedAction(
     if (!authentication.session.entity)
       return {
         error: t("Common.forbidden"),
+        requestPayload: formData,
+      };
+    if (!(await areActiveReceivers(data.receiverIds)))
+      return {
+        error: INACTIVE_RECEIVER_ERROR,
         requestPayload: formData,
       };
 

@@ -7,14 +7,13 @@ import {
   getFilterValues,
   getReadableCitizenLogWhere,
 } from "@/modules/citizen/queries/getCitizenLogTablePage";
-import { toConfirmationState } from "@/modules/citizen/utils/citizenLogConfirmation";
 import Pagination from "@/modules/common/components/Pagination";
 import { getCurrentPageFromSearchParams } from "@/modules/common/utils/pagination";
 import type { CitizenLogType } from "@/types";
 import type { Prisma } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import { OtherFilters } from "./OtherFilters";
-import { type Row, OtherTable } from "./OtherTable";
+import { OtherTable } from "./OtherTable";
 
 const IDENTITY_LOG_TYPES: readonly CitizenLogTableType[] = [
   "handle",
@@ -59,20 +58,8 @@ const OtherTableTile = async ({ className, searchParams }: Props) => {
     }),
   ]);
 
-  const rows = logs.map((citizenLog): Row => ({
-    entity: citizenLog.citizen,
-    confirmationState: toConfirmationState(citizenLog.confirmed),
-    confirmedAt: citizenLog.confirmedAt ?? undefined,
-    confirmedBy: citizenLog.confirmedBy,
-    citizenLog,
-  }));
-
   const confirmationStates = [
-    ...new Set(
-      options.map(
-        (option) => toConfirmationState(option.confirmed) ?? "unconfirmed",
-      ),
-    ),
+    ...new Set(options.map((option) => option.confirmed)),
   ];
   const optionTypes = [
     ...new Set(options.map((option) => option.type as CitizenLogType)),
@@ -92,7 +79,7 @@ const OtherTableTile = async ({ className, searchParams }: Props) => {
         />
       </div>
 
-      <OtherTable rows={rows} searchParams={searchParams} />
+      <OtherTable rows={logs} searchParams={searchParams} />
 
       <div className="flex justify-center mt-6">
         <Pagination

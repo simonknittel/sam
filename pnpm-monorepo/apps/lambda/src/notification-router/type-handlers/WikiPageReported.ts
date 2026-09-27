@@ -1,4 +1,5 @@
 import { prisma, type WikiPageReport } from "@sam-monorepo/database";
+import { getCitizenDisplayName } from "@sam-monorepo/domain";
 import { findCitizenIdsWithPermissions } from "../../common/effectivePermissions";
 import { publishNotifications } from "../publish";
 
@@ -24,12 +25,18 @@ export const WikiPageReportedHandler = async (payload: Payload) => {
       },
       createdBy: {
         select: {
+          id: true,
           handle: true,
+          deletedAt: true,
         },
       },
     },
   });
   if (!report) return;
+
+  const reportedByName = report.createdBy
+    ? getCitizenDisplayName(report.createdBy)
+    : null;
 
   const recipientIds = await findCitizenIdsWithPermissions({}, [
     { resource: "wiki", operation: "manage" },
@@ -47,12 +54,14 @@ export const WikiPageReportedHandler = async (payload: Payload) => {
         reportId: report.id,
         pageTitle: report.page.title,
         uploadFileName: report.uploadFileName,
-        reportedByHandle: report.createdBy?.handle ?? null,
+        // The app shows this value in the on-site text, thus it holds the
+        // label of a deleted citizen.
+        reportedByHandle: reportedByName,
       },
       title: "Neue Meldung im Wiki",
       body: report.uploadFileName
-        ? `${report.createdBy?.handle ?? "Unbekannt"} hat den Dateianhang "${report.uploadFileName}" auf der Seite "${report.page.title}" gemeldet`
-        : `${report.createdBy?.handle ?? "Unbekannt"} hat die Seite "${report.page.title}" gemeldet`,
+        ? `${reportedByName ?? "Unbekannt"} hat den Dateianhang "${report.uploadFileName}" auf der Seite "${report.page.title}" gemeldet`
+        : `${reportedByName ?? "Unbekannt"} hat die Seite "${report.page.title}" gemeldet`,
       url: "/app/wiki/reports",
     })),
   );

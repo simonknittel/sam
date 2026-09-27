@@ -11,6 +11,9 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { FaCheck, FaTimes } from "react-icons/fa";
 
+/** The route answers a second confirmation of the same entry with 409 */
+const HTTP_CONFLICT = 409;
+
 interface Props {
   readonly entry: OrganizationMembershipHistoryEntry;
   readonly compact?: boolean;
@@ -25,7 +28,9 @@ export const ConfirmMembership = ({ entry, compact }: Props) => {
 
     try {
       const response = await fetch(
-        `/api/spynet/organization/${entry.organizationId}/membership/${entry.citizenId}/confirm`,
+        encodeURI(
+          `/api/spynet/organization/${entry.organizationId}/membership/${entry.citizenId}/confirm`,
+        ),
         {
           method: "PATCH",
           body: JSON.stringify({
@@ -38,6 +43,9 @@ export const ConfirmMembership = ({ entry, compact }: Props) => {
       if (response.ok) {
         router.refresh();
         toast.success("Erfolgreich gespeichert");
+      } else if (response.status === HTTP_CONFLICT) {
+        router.refresh();
+        toast.error("Der Eintrag wurde bereits bestätigt.");
       } else {
         toast.error("Beim Speichern ist ein Fehler aufgetreten.");
       }

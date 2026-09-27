@@ -11,6 +11,8 @@ import {
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
+const DELETED_CITIZEN_LABEL = "Gelöschter Citizen";
+
 /** The citizen picker of the create form loads the roster through tRPC. */
 const KEEPER_PERMISSIONS = [
   "penaltyEntry;read",
@@ -175,7 +177,7 @@ test("the status filter separates the active entries from the expired ones", asy
   await expect(openRow).toHaveCount(0);
 });
 
-test("an entry stays with an unknown author after the author is deleted", async ({
+test("an entry names a deleted author as deleted, without a link", async ({
   page,
   prisma,
   signIn,
@@ -195,12 +197,22 @@ test("an entry stays with an unknown author after the author is deleted", async 
       reason: "Autor gelöscht",
     },
   });
-  await prisma.citizen.delete({ where: { id: author.entity.id } });
+  /** The Spynet delete is a soft delete, which also removes the login */
+  await prisma.citizen.update({
+    where: { id: author.entity.id },
+    data: { deletedAt: new Date(), userId: null },
+  });
 
   await signIn(keeper.user);
   await page.goto("/app/penalty-points");
 
   const row = page.getByRole("row").filter({ hasText: "Autor gelöscht" });
   await expect(row).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
-  await expect(row.getByText("Unbekannt")).toBeVisible();
+  /** The penalized citizen is active, thus a link */
+  await expect(row.getByRole("link", { name: "delinquent" })).toBeVisible();
+  await expect(row.getByText(DELETED_CITIZEN_LABEL)).toBeVisible();
+  await expect(
+    row.getByRole("link", { name: DELETED_CITIZEN_LABEL }),
+  ).toHaveCount(0);
+  await expect(row.getByText("ehemaliger")).toHaveCount(0);
 });

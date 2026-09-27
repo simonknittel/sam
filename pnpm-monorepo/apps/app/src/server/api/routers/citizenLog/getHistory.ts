@@ -1,5 +1,5 @@
 import { authorize } from "@/modules/auth/server";
-import { ConfirmationStatus } from "@sam-monorepo/database/client";
+import { getReadableCitizenLogWhere } from "@/modules/citizen/queries/getCitizenLogTablePage";
 import * as z from "zod";
 import { protectedProcedure } from "../../trpc";
 
@@ -17,14 +17,15 @@ export const getHistory = protectedProcedure
     }),
   )
   .query(async ({ ctx, input }) => {
-    /** A log that is not confirmed needs the permission to confirm it */
-    const canConfirm = await authorize(ctx.session, input.type, "confirm");
+    /** The same rule as the Spynet log tables */
+    const readableWhere = await getReadableCitizenLogWhere([input.type], {
+      authorize: (resource, operation, attributes) =>
+        authorize(ctx.session, resource, operation, attributes),
+    });
 
     return ctx.prisma.citizenLog.findMany({
       where: {
-        citizenId: input.citizenId,
-        type: input.type,
-        ...(canConfirm ? {} : { confirmed: ConfirmationStatus.CONFIRMED }),
+        AND: [{ citizenId: input.citizenId }, readableWhere],
       },
       orderBy: {
         createdAt: "desc",

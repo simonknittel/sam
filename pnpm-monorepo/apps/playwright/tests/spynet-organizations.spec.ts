@@ -211,3 +211,81 @@ test("a reported membership becomes active with its confirmation", async ({
 
   await expectAuditEvents(prisma, ["ORGANIZATION_MEMBERSHIP_CONFIRMED"]);
 });
+
+test("a second confirmation of a reported membership changes nothing", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "spynet-organisator",
+    permissionStrings: ORGANIZATION_ADMIN_PERMISSIONS,
+  });
+  const member = await createCitizen(prisma, { handle: "org-mitglied" });
+  const otherCitizen = await createCitizen(prisma, { handle: "org-fremder" });
+  const organization = await prisma.organization.create({
+    data: {
+      name: "Testorganisation",
+      spectrumId: "TESTORG",
+      createdById: admin.entity.id,
+    },
+  });
+  const historyEntry = await prisma.organizationMembershipHistoryEntry.create({
+    data: {
+      organizationId: organization.id,
+      citizenId: member.entity.id,
+      type: OrganizationMembershipType.AFFILIATE,
+      visibility: OrganizationMembershipVisibility.PUBLIC,
+      createdById: admin.entity.id,
+    },
+  });
+
+  await signIn(admin.user);
+
+  const confirm = (citizenId: string) =>
+    page.request.patch(
+      `/api/spynet/organization/${organization.id}/membership/${citizenId}/confirm`,
+      {
+        data: { id: historyEntry.id, confirmed: ConfirmationStatus.CONFIRMED },
+      },
+    );
+
+  /** The entry must belong to the citizen and the organization of the URL */
+  const mismatchedResponse = await confirm(otherCitizen.entity.id);
+  expect(mismatchedResponse.status()).toBe(404);
+
+  const responses = await Promise.all([
+    confirm(member.entity.id),
+    confirm(member.entity.id),
+  ]);
+  /** One confirmation wins. The other one finds the entry confirmed. */
+  expect(responses.map((response) => response.status()).toSorted()).toEqual([
+    200, 409,
+  ]);
+
+  expect(
+    await prisma.activeOrganizationMembership.findMany({
+      where: { organizationId: organization.id },
+      select: { citizenId: true, type: true },
+    }),
+  ).toEqual([
+    {
+      citizenId: member.entity.id,
+      type: OrganizationMembershipType.AFFILIATE,
+    },
+  ]);
+  expect(
+    await prisma.organizationMembershipHistoryEntry.findUniqueOrThrow({
+      where: { id: historyEntry.id },
+      select: { confirmed: true, confirmedById: true },
+    }),
+  ).toEqual({
+    confirmed: ConfirmationStatus.CONFIRMED,
+    confirmedById: admin.entity.id,
+  });
+  expect(
+    await prisma.auditEvent.count({
+      where: { type: "ORGANIZATION_MEMBERSHIP_CONFIRMED" },
+    }),
+  ).toBe(1);
+});

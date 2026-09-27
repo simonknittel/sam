@@ -5,21 +5,20 @@ import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionBu
 import { Textarea } from "@/modules/common/components/form/Textarea";
 import { api } from "@/trpc/react";
 import { type Citizen, type Event } from "@sam-monorepo/database/browser";
+import { getCitizenDisplayName } from "@sam-monorepo/domain";
 import { FaTrash } from "react-icons/fa";
 import { removeEventParticipant } from "../actions/removeEventParticipant";
 
 interface Props {
   readonly className?: string;
   readonly eventId: Event["id"];
-  readonly citizenId: Citizen["id"];
-  readonly citizenHandle: string | null;
+  readonly citizen: Pick<Citizen, "id" | "handle" | "deletedAt">;
 }
 
 export const RemoveEventParticipant = ({
   className,
   eventId,
-  citizenId,
-  citizenHandle,
+  citizen,
 }: Props) => {
   const utils = api.useUtils();
 
@@ -33,7 +32,7 @@ export const RemoveEventParticipant = ({
       }
       hiddenFields={[
         { name: "eventId", value: eventId },
-        { name: "citizenId", value: citizenId },
+        { name: "citizenId", value: citizen.id },
       ]}
       trigger={(isPending) => (
         <button
@@ -46,7 +45,7 @@ export const RemoveEventParticipant = ({
         </button>
       )}
       title="Teilnehmer entfernen?"
-      description={`${citizenHandle || citizenId} wird vom Event abgemeldet und benachrichtigt.`}
+      description={`${getCitizenDisplayName(citizen)} wird vom Event abgemeldet und benachrichtigt.`}
       confirmLabel="Entfernen"
     >
       {(formId) => (

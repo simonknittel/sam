@@ -158,10 +158,15 @@ export const getEvents = cache(
       }
 
       const citizenId = authentication.session.entity?.id;
+      const discordUserId = authentication.session.discordId;
+      /**
+       * Without a Discord id, `{ discordUserId: null }` would match every app
+       * sign-up
+       */
       const viewerParticipationWhere: Prisma.EventParticipantWhereInput = {
         cancelledAt: null,
         OR: [
-          { discordUserId: authentication.session.discordId },
+          ...(discordUserId ? [{ discordUserId }] : []),
           ...(citizenId ? [{ citizenId }] : []),
         ],
       };
