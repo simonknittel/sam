@@ -1,8 +1,7 @@
 import { Tile } from "@/modules/common/components/Tile";
-import { SilcSettingKey } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import { getSilcBalanceOfAllCitizens } from "../queries/getSilcBalanceOfAllCitizens";
-import { getSilcSetting } from "../queries/getSilcSetting";
+import { getAuecConversionRate } from "../queries/getAuecConversionRate";
 import { AuecConversionRateSettingClient } from "./AuecConversionRateSettingClient";
 
 interface Props {
@@ -11,7 +10,7 @@ interface Props {
 
 export const AuecConversionRateSetting = async ({ className }: Props) => {
   const [conversionRate, silcBalances] = await Promise.all([
-    getSilcSetting(SilcSettingKey.AUEC_CONVERSION_RATE),
+    getAuecConversionRate(),
     getSilcBalanceOfAllCitizens(),
   ]);
 

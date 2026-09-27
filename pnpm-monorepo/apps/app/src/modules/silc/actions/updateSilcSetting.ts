@@ -7,13 +7,11 @@ import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { SilcSettingKey } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
 import * as z from "zod";
+import { auecConversionRateSchema } from "../utils/auecConversionRate";
 
 const schema = z.object({
   key: z.literal(SilcSettingKey.AUEC_CONVERSION_RATE),
-  value: z.coerce
-    .number()
-    .min(1)
-    .transform((value) => value.toString()),
+  value: auecConversionRateSchema.transform((value) => value.toString()),
 });
 
 export const updateSilcSetting = createAuthenticatedAction(
