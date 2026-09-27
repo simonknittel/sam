@@ -6,7 +6,7 @@ import { getNotePermissionAttributes } from "@/modules/citizen/utils/notePermiss
 import styles from "@/modules/common/components/ConfirmationGradient.module.css";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
-import { type Citizen, type Organization } from "@sam-monorepo/database/client";
+import { type Organization } from "@sam-monorepo/database/client";
 import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import Image from "next/image";
@@ -31,7 +31,7 @@ export const SingleNote = async ({ note }: Props) => {
   const authorizationAttributes = getNotePermissionAttributes(note);
 
   let content: ReactNode = note.content;
-  const matches = note.content?.match(/@citizen:(\d+)|@org:([a-zA-Z]+)/g);
+  const matches = note.content?.match(/@citizen:(\d+)|@org:([a-zA-Z0-9_]+)/g);
   if (matches) {
     const uniqueCitizenSpectrumIds = new Set<string>(
       matches
@@ -45,53 +45,46 @@ export const SingleNote = async ({ note }: Props) => {
         .map((match) => match.slice(5)),
     );
 
-    let citizens: Pick<Citizen, "handle" | "spectrumId" | "id">[] = [];
-    let organizations: Pick<
-      Organization,
-      "name" | "spectrumId" | "id" | "logo"
-    >[] = [];
-
-    if (uniqueCitizenSpectrumIds.size > 0) {
-      const result = await prisma.$transaction([
-        prisma.citizen.findMany({
-          where: {
-            spectrumId: {
-              in: Array.from(uniqueCitizenSpectrumIds),
+    const [citizens, organizations] = await Promise.all([
+      uniqueCitizenSpectrumIds.size > 0
+        ? prisma.citizen.findMany({
+            where: {
+              spectrumId: {
+                in: Array.from(uniqueCitizenSpectrumIds),
+              },
+              ...ACTIVE_CITIZEN_WHERE,
             },
-            ...ACTIVE_CITIZEN_WHERE,
-          },
-          select: {
-            handle: true,
-            spectrumId: true,
-            id: true,
-          },
-        }),
-
-        prisma.organization.findMany({
-          where: {
-            spectrumId: {
-              in: Array.from(uniqueOrganizationSpectrumIds),
+            select: {
+              handle: true,
+              spectrumId: true,
+              id: true,
             },
-          },
-          select: {
-            name: true,
-            spectrumId: true,
-            id: true,
-            logo: true,
-          },
-        }),
-      ]);
+          })
+        : [],
 
-      citizens = result[0];
-      organizations = result[1];
-    }
+      uniqueOrganizationSpectrumIds.size > 0
+        ? prisma.organization.findMany({
+            where: {
+              spectrumId: {
+                in: Array.from(uniqueOrganizationSpectrumIds),
+              },
+            },
+            select: {
+              name: true,
+              spectrumId: true,
+              id: true,
+              logo: true,
+            },
+          })
+        : [],
+    ]);
 
     content = note.content
-      ?.split(/(@citizen:\d+)|(@org:[a-zA-Z]+)/g)
+      ?.split(/(@citizen:\d+)|(@org:[a-zA-Z0-9_]+)/g)
       .filter((part) => part !== undefined)
       .map((part, index) => {
         const citizenMatch = /@citizen:(\d+)/.exec(part);
-        const organizationMatch = /@org:([a-zA-Z]+)/.exec(part);
+        const organizationMatch = /@org:([a-zA-Z0-9_]+)/.exec(part);
 
         if (citizenMatch?.[1]) {
           const citizen = citizens.find(
