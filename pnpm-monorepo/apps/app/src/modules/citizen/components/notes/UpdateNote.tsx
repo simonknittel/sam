@@ -1,5 +1,4 @@
 import type { CitizenNote } from "@/modules/citizen/queries/citizenLogTableSelect";
-import getLatestNoteAttributes from "@/modules/citizen/utils/getLatestNoteAttributes";
 import { getAllNoteTypes } from "@/modules/spynet/queries/getAllNoteTypes";
 import { getCreatableClassificationLevelsDeduped } from "@/modules/spynet/utils/getAllClassificationLevels";
 import { UpdateNoteModal } from "./UpdateNoteModal";
@@ -10,11 +9,9 @@ interface Props {
 }
 
 export const UpdateNote = async ({ note, withBullet = false }: Props) => {
-  const { noteTypeId } = getLatestNoteAttributes(note);
-
   const [allNoteTypes, classificationLevels] = await Promise.all([
     getAllNoteTypes(),
-    getCreatableClassificationLevelsDeduped(noteTypeId!.value),
+    getCreatableClassificationLevelsDeduped(note.noteTypeId!),
   ]);
 
   const modal = (

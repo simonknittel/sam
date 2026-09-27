@@ -4,7 +4,6 @@ import {
   CITIZEN_NOTE_SELECT,
   type CitizenNote,
 } from "@/modules/citizen/queries/citizenLogTableSelect";
-import getLatestNoteAttributes from "@/modules/citizen/utils/getLatestNoteAttributes";
 import Tab from "@/modules/common/components/tabs/Tab";
 import TabList from "@/modules/common/components/tabs/TabList";
 import { TabsProvider } from "@/modules/common/components/tabs/TabsContext";
@@ -54,17 +53,12 @@ export const Notes = async ({ className, entity }: Props) => {
   > = {};
 
   for (const note of sortedNotes) {
-    const latestNoteAttributes = getLatestNoteAttributes(note);
-
-    if (!latestNoteAttributes.noteTypeId) continue;
+    if (!note.noteTypeId) continue;
 
     if (!(await isAllowedToRead(note, authentication))) {
       if (!(await isAllowedToReadRedacted(note, authentication))) continue;
 
-      if (!tabs[latestNoteAttributes.noteTypeId.value])
-        tabs[latestNoteAttributes.noteTypeId.value] = [];
-
-      tabs[latestNoteAttributes.noteTypeId.value].push({
+      (tabs[note.noteTypeId] ??= []).push({
         id: note.id,
         redacted: true,
       });
@@ -72,10 +66,7 @@ export const Notes = async ({ className, entity }: Props) => {
       continue;
     }
 
-    if (!tabs[latestNoteAttributes.noteTypeId.value])
-      tabs[latestNoteAttributes.noteTypeId.value] = [];
-
-    tabs[latestNoteAttributes.noteTypeId.value].push(note);
+    (tabs[note.noteTypeId] ??= []).push(note);
   }
 
   const filteredNoteTypes = (

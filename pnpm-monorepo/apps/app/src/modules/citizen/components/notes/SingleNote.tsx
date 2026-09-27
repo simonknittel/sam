@@ -1,13 +1,13 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import type { CitizenNote } from "@/modules/citizen/queries/citizenLogTableSelect";
-import getLatestNoteAttributes from "@/modules/citizen/utils/getLatestNoteAttributes";
+import { toConfirmationState } from "@/modules/citizen/utils/citizenLogConfirmation";
+import { getNotePermissionAttributes } from "@/modules/citizen/utils/notePermissionAttributes";
 import styles from "@/modules/common/components/ConfirmationGradient.module.css";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { type Citizen, type Organization } from "@sam-monorepo/database/client";
 import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
-import { type PermissionSet } from "@sam-monorepo/permissions";
 import clsx from "clsx";
 import Image from "next/image";
 import { Suspense, type ReactNode } from "react";
@@ -27,19 +27,8 @@ interface Props {
 export const SingleNote = async ({ note }: Props) => {
   const authentication = await requireAuthentication();
 
-  const { noteTypeId, classificationLevelId, confirmed } =
-    getLatestNoteAttributes(note);
-
-  // @ts-expect-error The authorization types need to get overhauled
-  const authorizationAttributes: PermissionSet["attributes"] = [
-    ...(noteTypeId ? [{ key: "noteTypeId", value: noteTypeId.value }] : []),
-    ...(classificationLevelId
-      ? [{ key: "classificationLevelId", value: classificationLevelId.value }]
-      : []),
-    ...(confirmed?.value !== "confirmed"
-      ? [{ key: "alsoUnconfirmed", value: true }]
-      : []),
-  ];
+  const confirmationState = toConfirmationState(note.confirmed);
+  const authorizationAttributes = getNotePermissionAttributes(note);
 
   let content: ReactNode = note.content;
   const matches = note.content?.match(/@citizen:(\d+)|@org:([a-zA-Z]+)/g);
@@ -172,14 +161,14 @@ export const SingleNote = async ({ note }: Props) => {
       <div
         className={clsx({
           "absolute w-full h-24 border-t-2 border-x-2 bg-linear-to-t from-neutral-900/0":
-            !confirmed || confirmed?.value === "false-report",
-          [`${styles.blueBorder} to-blue-500/10`]: !confirmed,
+            !confirmationState || confirmationState === "false-report",
+          [`${styles.blueBorder} to-blue-500/10`]: !confirmationState,
           [`${styles.redBorder} to-red-500/10`]:
-            confirmed?.value === "false-report",
+            confirmationState === "false-report",
         })}
       />
 
-      {!confirmed && (
+      {!confirmationState && (
         <div className="px-4 pt-4 flex gap-2 relative z-10 items-start">
           <FaInfoCircle className="text-blue-500 shrink-0 mt-0.5" />
           <div className="flex gap-2 lg:gap-4 flex-wrap">
@@ -190,7 +179,7 @@ export const SingleNote = async ({ note }: Props) => {
         </div>
       )}
 
-      {confirmed?.value === "false-report" && (
+      {confirmationState === "false-report" && (
         <div className="px-4 pt-4 flex items-start gap-2 relative z-10">
           <BsExclamationOctagonFill className="text-red-500 shrink-0 mt-1" />
           <p className="font-bold">Falschmeldung</p>
@@ -200,7 +189,7 @@ export const SingleNote = async ({ note }: Props) => {
       <div
         className={clsx("flex gap-2 relative z-10", {
           "px-4 pt-4 opacity-20 hover:opacity-100 transition-opacity":
-            !confirmed || confirmed.value === "false-report",
+            !confirmationState || confirmationState === "false-report",
         })}
       >
         <div className="h-5 flex items-center">

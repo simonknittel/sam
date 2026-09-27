@@ -1,7 +1,6 @@
 "use client";
 
 import type { CitizenNote } from "@/modules/citizen/queries/citizenLogTableSelect";
-import getLatestNoteAttributes from "@/modules/citizen/utils/getLatestNoteAttributes";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { Button2 } from "@/modules/common/components/Button2";
@@ -35,14 +34,12 @@ export const UpdateNoteModal = ({
   noteTypes = [],
   classificationLevels = [],
 }: Props) => {
-  const { noteTypeId, classificationLevelId } = getLatestNoteAttributes(note);
-
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const { register, handleSubmit } = useForm<FormValues>({
     defaultValues: {
-      noteTypeId: noteTypeId?.value,
-      classificationLevelId: classificationLevelId?.value,
+      noteTypeId: note.noteTypeId ?? undefined,
+      classificationLevelId: note.classificationLevelId ?? undefined,
     },
   });
   const [isLoading, setIsLoading] = useState(false);

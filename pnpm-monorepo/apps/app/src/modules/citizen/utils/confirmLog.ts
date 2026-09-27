@@ -2,20 +2,16 @@ import { prisma } from "@/db";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthentication } from "@/modules/auth/server";
-import getLatestNoteAttributes from "@/modules/citizen/utils/getLatestNoteAttributes";
-import type {
-  CitizenLog,
-  CitizenLogAttribute,
-} from "@sam-monorepo/database/client";
+import type { CitizenLog } from "@sam-monorepo/database/client";
+import { toConfirmationStatus } from "./citizenLogConfirmation";
+import { getNoteClassificationAttributes } from "./notePermissionAttributes";
 import { syncCitizenIdentityAfterLogChange } from "./syncCitizenIdentityAfterLogChange";
 
 export const confirmLog = async (
-  log: Pick<CitizenLog, "id" | "citizenId" | "type"> & {
-    readonly attributes: readonly Pick<
-      CitizenLogAttribute,
-      "key" | "value" | "createdAt"
-    >[];
-  },
+  log: Pick<
+    CitizenLog,
+    "id" | "citizenId" | "type" | "noteTypeId" | "classificationLevelId"
+  >,
   value: "confirmed" | "false-report",
 ) => {
   const authentication = await requireAuthentication();
@@ -33,31 +29,11 @@ export const confirmLog = async (
         throw new Error("Forbidden");
       break;
     case "note":
-      const { noteTypeId, classificationLevelId } =
-        getLatestNoteAttributes(log);
-
-      const authorizationAttributes = [];
-
-      if (noteTypeId) {
-        authorizationAttributes.push({
-          key: "noteTypeId",
-          value: noteTypeId.value,
-        });
-      }
-
-      if (classificationLevelId) {
-        authorizationAttributes.push({
-          key: "classificationLevelId",
-          value: classificationLevelId.value,
-        });
-      }
-
       if (
         !(await authentication.authorize(
           "note",
           "confirm",
-          // @ts-expect-error The authorization types need to get overhauled
-          authorizationAttributes,
+          getNoteClassificationAttributes(log),
         ))
       )
         throw new Error("Forbidden");
@@ -67,21 +43,21 @@ export const confirmLog = async (
       throw new Error("Bad request");
   }
 
-  const confirmedAttribute = await prisma.citizenLogAttribute.create({
-    data: {
-      citizenLog: {
-        connect: {
-          id: log.id,
-        },
+  /** The copies of the confirmed values change in the same transaction */
+  const confirmedLog = await prisma.$transaction(async (transaction) => {
+    const updatedLog = await transaction.citizenLog.update({
+      where: { id: log.id },
+      data: {
+        confirmed: toConfirmationStatus(value),
+        confirmedAt: new Date(),
+        confirmedById: authentication.session.user.id,
       },
-      key: "confirmed",
-      value,
-      createdBy: {
-        connect: {
-          id: authentication.session.user.id,
-        },
-      },
-    },
+      select: { id: true, confirmed: true, confirmedAt: true },
+    });
+
+    await syncCitizenIdentityAfterLogChange(log, transaction);
+
+    return updatedLog;
   });
 
   await createAuditEvents([
@@ -97,7 +73,5 @@ export const confirmLog = async (
     },
   ]);
 
-  await syncCitizenIdentityAfterLogChange(log);
-
-  return confirmedAttribute;
+  return confirmedLog;
 };

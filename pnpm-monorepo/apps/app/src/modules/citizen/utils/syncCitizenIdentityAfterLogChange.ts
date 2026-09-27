@@ -1,5 +1,4 @@
-import { prisma } from "@/db";
-import type { CitizenLog } from "@sam-monorepo/database/client";
+import type { CitizenLog, Prisma } from "@sam-monorepo/database/client";
 import { relinkCitizenUser } from "./citizenUserLink";
 import { updateCitizenCaches } from "./updateCitizenCaches";
 
@@ -11,19 +10,20 @@ import { updateCitizenCaches } from "./updateCitizenCaches";
  */
 export const syncCitizenIdentityAfterLogChange = async (
   log: Pick<CitizenLog, "citizenId" | "type">,
+  client: Prisma.TransactionClient,
 ) => {
-  await updateCitizenCaches(log);
+  await updateCitizenCaches(log, client);
 
-  if (log.type === "discord-id") await relinkCitizenUser(log.citizenId);
+  if (log.type === "discord-id") await relinkCitizenUser(log.citizenId, client);
 
   if (log.type === "handle" || log.type === "discord-id") {
-    const citizen = await prisma.citizen.findUniqueOrThrow({
+    const citizen = await client.citizen.findUniqueOrThrow({
       where: { id: log.citizenId },
       select: { handle: true, userId: true },
     });
 
     if (citizen.userId)
-      await prisma.user.update({
+      await client.user.update({
         where: { id: citizen.userId },
         data: { name: citizen.handle || log.citizenId },
         select: { id: true },

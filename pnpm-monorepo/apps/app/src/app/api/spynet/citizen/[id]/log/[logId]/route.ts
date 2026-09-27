@@ -3,7 +3,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import { CITIZEN_LOG_GUARD_SELECT } from "@/modules/citizen/queries/citizenLogTableSelect";
-import getLatestNoteAttributes from "@/modules/citizen/utils/getLatestNoteAttributes";
+import { getNoteClassificationAttributes } from "@/modules/citizen/utils/notePermissionAttributes";
 import { syncCitizenIdentityAfterLogChange } from "@/modules/citizen/utils/syncCitizenIdentityAfterLogChange";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import { NextResponse } from "next/server";
@@ -55,30 +55,10 @@ export async function PATCH(request: Request, props: { params: Params }) {
 
     if (citizenLog.type !== "note") throw new Error("Bad request");
 
-    const { noteTypeId, classificationLevelId } =
-      getLatestNoteAttributes(citizenLog);
-
-    const authorizationAttributes = [];
-
-    if (noteTypeId) {
-      authorizationAttributes.push({
-        key: "noteTypeId",
-        value: noteTypeId.value,
-      });
-    }
-
-    if (classificationLevelId) {
-      authorizationAttributes.push({
-        key: "classificationLevelId",
-        value: classificationLevelId.value,
-      });
-    }
-
     await authentication.authorizeApi(
       "note",
       "update",
-      // @ts-expect-error The authorization types need to get overhauled
-      authorizationAttributes,
+      getNoteClassificationAttributes(citizenLog),
     );
     await authentication.authorizeApi("note", "create", [
       {
@@ -91,21 +71,13 @@ export async function PATCH(request: Request, props: { params: Params }) {
       },
     ]);
 
-    const item = await prisma.citizenLogAttribute.createMany({
-      data: [
-        {
-          citizenLogId: paramsData.logId,
-          key: "noteTypeId",
-          value: data.noteTypeId,
-          createdById: authentication.session.user.id,
-        },
-        {
-          citizenLogId: paramsData.logId,
-          key: "classificationLevelId",
-          value: data.classificationLevelId,
-          createdById: authentication.session.user.id,
-        },
-      ],
+    const item = await prisma.citizenLog.update({
+      where: { id: paramsData.logId },
+      data: {
+        noteTypeId: data.noteTypeId,
+        classificationLevelId: data.classificationLevelId,
+      },
+      select: { id: true },
     });
 
     await createAuditEvents([
@@ -169,30 +141,10 @@ export async function DELETE(request: Request, props: { params: Params }) {
         break;
 
       case "note":
-        const { noteTypeId, classificationLevelId } =
-          getLatestNoteAttributes(citizenLog);
-
-        const authorizationAttributes = [];
-
-        if (noteTypeId) {
-          authorizationAttributes.push({
-            key: "noteTypeId",
-            value: noteTypeId.value,
-          });
-        }
-
-        if (classificationLevelId) {
-          authorizationAttributes.push({
-            key: "classificationLevelId",
-            value: classificationLevelId.value,
-          });
-        }
-
         await authentication.authorizeApi(
           "note",
           "delete",
-          // @ts-expect-error The authorization types need to get overhauled
-          authorizationAttributes,
+          getNoteClassificationAttributes(citizenLog),
         );
         break;
 
@@ -200,10 +152,15 @@ export async function DELETE(request: Request, props: { params: Params }) {
         throw new Error("Bad request");
     }
 
-    await prisma.citizenLog.delete({
-      where: {
-        id: paramsData.logId,
-      },
+    /** The copies of the confirmed values change in the same transaction */
+    await prisma.$transaction(async (transaction) => {
+      await transaction.citizenLog.delete({
+        where: {
+          id: paramsData.logId,
+        },
+      });
+
+      await syncCitizenIdentityAfterLogChange(citizenLog, transaction);
     });
 
     await createAuditEvents([
@@ -217,8 +174,6 @@ export async function DELETE(request: Request, props: { params: Params }) {
         createdById: authentication.session.user.id,
       },
     ]);
-
-    await syncCitizenIdentityAfterLogChange(citizenLog);
 
     /**
      * Respond with the result
