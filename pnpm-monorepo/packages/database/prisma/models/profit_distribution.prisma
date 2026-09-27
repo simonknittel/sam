@@ -1,23 +1,30 @@
 model ProfitDistributionCycle {
-  id                          String                               @id @default(cuid(2))
-  title                       String
-  collectionEndedAt           DateTime
-  collectionEndedById         String?
-  collectionEndedBy           Citizen?                             @relation("collectionEndedBy", fields: [collectionEndedById], references: [id], onDelete: SetNull)
-  collectionEndedByAutomation DateTime?
-  payoutStartedAt             DateTime?
-  payoutStartedBy             Citizen?                             @relation("payoutStartedBy", fields: [payoutStartedById], references: [id], onDelete: SetNull)
-  payoutStartedById           String?
-  payoutEndedAt               DateTime?
-  payoutEndedById             String?
-  payoutEndedBy               Citizen?                             @relation("payoutEndedBy", fields: [payoutEndedById], references: [id], onDelete: SetNull)
-  payoutEndedByAutomation     DateTime?
-  auecProfit                  BigInt?
-  participants                ProfitDistributionCycleParticipant[]
-  silcTransactions            SilcTransaction[]
-  createdAt                   DateTime                             @default(now())
-  createdById                 String?
-  createdBy                   Citizen?                             @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
+  id                  String                               @id @default(cuid(2))
+  title               String
+  /// The planned end of the collection phase. The midnight job ends the phase
+  /// when it is due and nobody ended it before.
+  collectionEndsAt    DateTime
+  /// The actual end of the collection phase, NULL until it ended. A NULL
+  /// actor with an actual end means the midnight job ended it.
+  collectionEndedAt   DateTime?
+  collectionEndedById String?
+  collectionEndedBy   Citizen?                             @relation("collectionEndedBy", fields: [collectionEndedById], references: [id], onDelete: SetNull)
+  payoutStartedAt     DateTime?
+  payoutStartedBy     Citizen?                             @relation("payoutStartedBy", fields: [payoutStartedById], references: [id], onDelete: SetNull)
+  payoutStartedById   String?
+  /// The planned end of the payout phase, set when the payout starts
+  payoutEndsAt        DateTime?
+  /// The actual end of the payout phase, NULL until it ended (see
+  /// `collectionEndedAt`)
+  payoutEndedAt       DateTime?
+  payoutEndedById     String?
+  payoutEndedBy       Citizen?                             @relation("payoutEndedBy", fields: [payoutEndedById], references: [id], onDelete: SetNull)
+  auecProfit          BigInt?
+  participants        ProfitDistributionCycleParticipant[]
+  silcTransactions    SilcTransaction[]
+  createdAt           DateTime                             @default(now())
+  createdById         String?
+  createdBy           Citizen?                             @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
 }
 
 model ProfitDistributionCycleParticipant {

@@ -49,5 +49,8 @@ model SilcRoleSalary {
   roleId     String
   role       Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
   value      Int
+  /// 1 to 31. In a shorter month, a day after its end pays on its last day.
   dayOfMonth Int
+
+  @@unique([roleId, dayOfMonth])
 }
