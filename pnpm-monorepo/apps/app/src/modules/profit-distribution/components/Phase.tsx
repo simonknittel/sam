@@ -1,7 +1,7 @@
+import { CyclePhase } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import type { ReactNode } from "react";
 import { FaArrowUp } from "react-icons/fa";
-import { CyclePhase } from "../utils/getCurrentPhase";
 
 interface Props {
   readonly className?: string;

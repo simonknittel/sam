@@ -1,7 +1,7 @@
 "use client";
 
+import { CyclePhase } from "@sam-monorepo/domain";
 import type { getProfitDistributionCycleById } from "../queries/getProfitDistributionCycleById";
-import { CyclePhase } from "../utils/getCurrentPhase";
 import { Phase } from "./Phase";
 
 interface Props {

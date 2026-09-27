@@ -1,5 +1,10 @@
 import { prisma } from "@sam-monorepo/database";
-import { AuditEventType } from "@sam-monorepo/domain";
+import {
+  AuditEventType,
+  CYCLE_PHASE_WHERE,
+  CyclePhase,
+} from "@sam-monorepo/domain";
+import { createAuditEvents } from "../common/audit";
 import { log } from "../common/logger";
 import { captureAsyncFunc } from "../common/xray";
 
@@ -9,51 +14,38 @@ export const endPayoutPhases = async () => {
 
     const now = new Date();
 
-    const cycles = await prisma.profitDistributionCycle.findMany({
+    /**
+     * The guarded update selects and claims the due cycles in one
+     * statement. Thus a payout that an admin or an earlier run ended stays
+     * as it is.
+     */
+    const cycles = await prisma.profitDistributionCycle.updateManyAndReturn({
       where: {
-        payoutEndedAt: {
-          not: null,
+        ...CYCLE_PHASE_WHERE[CyclePhase.Payout],
+        payoutEndsAt: {
           lte: now,
         },
-        payoutStartedAt: {
-          not: null,
-        },
-        payoutEndedById: null,
-        payoutEndedByAutomation: null,
+      },
+      data: {
+        payoutEndedAt: now,
       },
       select: {
         id: true,
       },
     });
 
-    void log.info("Found payout phases to end", {
+    await createAuditEvents(
+      cycles.map((cycle) => ({
+        type: AuditEventType.PROFIT_CYCLE_PAYOUT_ENDED,
+        data: {
+          cycleId: cycle.id,
+        },
+      })),
+    );
+
+    void log.info("Ended payout phases", {
       count: cycles.length,
-      cycleIds: cycles.map((c) => c.id),
+      cycleIds: cycles.map((cycle) => cycle.id),
     });
-
-    if (cycles.length === 0) return;
-
-    for (const cycle of cycles) {
-      await prisma.profitDistributionCycle.update({
-        where: {
-          id: cycle.id,
-        },
-        data: {
-          payoutEndedAt: now,
-          payoutEndedByAutomation: now,
-        },
-      });
-
-      await prisma.auditEvent.create({
-        data: {
-          type: AuditEventType.PROFIT_CYCLE_PAYOUT_ENDED,
-          data: JSON.stringify({
-            cycleId: cycle.id,
-          }),
-        },
-      });
-
-      void log.info("Ended payout phase", { cycleId: cycle.id });
-    }
   });
 };

@@ -4,10 +4,11 @@ import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { ScrambleIn } from "@/modules/common/components/ScrambleIn";
 import { StatisticTile } from "@/modules/common/components/StatisticTile";
 import { formatDate } from "@/modules/common/utils/formatDate";
+import { CyclePhase } from "@sam-monorepo/domain";
 import type { getProfitDistributionCycleById } from "../queries/getProfitDistributionCycleById";
-import { CyclePhase } from "../utils/getCurrentPhase";
 import { PayoutState } from "../utils/getMyPayoutStatus";
 import { Phase } from "./Phase";
+import { PhaseEndDate } from "./PhaseEndDate";
 import { ToggleMyAcceptedButton } from "./ToggleMyAcceptedButton";
 
 interface Props {
@@ -64,9 +65,6 @@ export const PhasePayout = ({ cycleData }: Props) => {
         {cycleData.myPayoutState === PayoutState.PAYOUT_OVERDUE && (
           <span className="text-red-500">Überfällig</span>
         )}
-        {cycleData.myPayoutState === PayoutState.UNKNOWN && (
-          <span className="text-red-500">Unbekannt</span>
-        )}
       </StatisticTile>
 
       {cycleData.myPayoutState === PayoutState.DISBURSED && (
@@ -119,15 +117,10 @@ export const PhasePayout = ({ cycleData }: Props) => {
       )}
 
       <div className="flex flex-col justify-center gap-4 border-t border-white/5 mt-4 pt-4">
-        <div className="flex flex-col justify-center items-center text-sm">
-          <h3 className="text-neutral-500">Endet am</h3>
-
-          {cycleData.cycle.payoutEndedAt ? (
-            <p>{formatDate(cycleData.cycle.payoutEndedAt, "short")}</p>
-          ) : (
-            <p className="text-neutral-500">-</p>
-          )}
-        </div>
+        <PhaseEndDate
+          plannedEnd={cycleData.cycle.payoutEndsAt}
+          actualEnd={cycleData.cycle.payoutEndedAt}
+        />
 
         <p className="text-center text-sm">
           Nachdem deine Auszahlung getätigt wurde, ist dieser SINcome-Zeitraum

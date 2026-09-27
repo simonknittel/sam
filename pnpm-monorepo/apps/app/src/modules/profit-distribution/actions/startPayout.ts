@@ -5,18 +5,19 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
+import { CYCLE_PHASE_WHERE, CyclePhase } from "@sam-monorepo/domain";
 import { revalidatePath } from "next/cache";
 import * as z from "zod";
-import { CyclePhase, getCurrentPhase } from "../utils/getCurrentPhase";
 
 const schema = z.object({
   id: z.cuid2(),
   auecProfit: z.coerce.number().min(0),
-  payoutEndedAt: z.preprocess((value) => {
+  /** Without a planned end, the payout continues until an admin ends it */
+  payoutEndsAt: z.preprocess((value) => {
     if (!value) return null;
     if (typeof value !== "string" && typeof value !== "number") return null;
     return new Date(value);
-  }, z.date().nullish()),
+  }, z.date().nullable()),
 });
 
 export const startPayout = createAuthenticatedAction(
@@ -38,37 +39,26 @@ export const startPayout = createAuthenticatedAction(
       };
 
     /**
-     * Validate the request
+     * Start the payout. The guarded update also validates that the cycle
+     * exists and is in its payout preparation phase.
      */
-    const cycle = await prisma.profitDistributionCycle.findUnique({
-      where: { id: data.id },
-    });
-    if (!cycle)
-      return {
-        error: t("Common.notFound"),
-        requestPayload: formData,
-      };
-    const currentPhase = getCurrentPhase(cycle);
-    if (currentPhase !== CyclePhase.PayoutPreparation)
-      return {
-        error: t("Common.badRequest"),
-        requestPayload: formData,
-      };
-
-    /**
-     *
-     */
-    await prisma.profitDistributionCycle.update({
+    const { count } = await prisma.profitDistributionCycle.updateMany({
       where: {
         id: data.id,
+        ...CYCLE_PHASE_WHERE[CyclePhase.PayoutPreparation],
       },
       data: {
         payoutStartedAt: new Date(),
         payoutStartedById: authentication.session.entity.id,
         auecProfit: data.auecProfit,
-        payoutEndedAt: data.payoutEndedAt,
+        payoutEndsAt: data.payoutEndsAt,
       },
     });
+    if (count === 0)
+      return {
+        error: t("Common.badRequest"),
+        requestPayload: formData,
+      };
 
     await createAuditEvents([
       {

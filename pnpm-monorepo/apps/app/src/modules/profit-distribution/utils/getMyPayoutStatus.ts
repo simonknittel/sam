@@ -2,6 +2,7 @@ import type {
   ProfitDistributionCycle,
   ProfitDistributionCycleParticipant,
 } from "@sam-monorepo/database/client";
+import { CyclePhase, getCurrentPhase } from "@sam-monorepo/domain";
 
 export enum PayoutState {
   NOT_PARTICIPATING,
@@ -10,13 +11,15 @@ export enum PayoutState {
   AWAITING_PAYOUT,
   DISBURSED,
   EXPIRED,
-  UNKNOWN,
   PAYOUT_OVERDUE,
   CEDED,
 }
 
 export const getPayoutState = (
-  cycle: ProfitDistributionCycle,
+  cycle: Pick<
+    ProfitDistributionCycle,
+    "collectionEndedAt" | "payoutStartedAt" | "payoutEndedAt"
+  >,
   myParticipant:
     | Pick<
         ProfitDistributionCycleParticipant,
@@ -31,39 +34,23 @@ export const getPayoutState = (
 
   if (myParticipant.cededAt) return PayoutState.CEDED;
 
-  const now = new Date();
-  if (!cycle.payoutStartedAt || cycle.payoutStartedAt > now)
-    return PayoutState.PAYOUT_NOT_YET_STARTED;
+  const phase = getCurrentPhase(cycle);
+  switch (phase) {
+    case CyclePhase.Collection:
+    case CyclePhase.PayoutPreparation:
+      return PayoutState.PAYOUT_NOT_YET_STARTED;
 
-  if (
-    cycle.payoutStartedAt <= now &&
-    (!cycle.payoutEndedAt || cycle.payoutEndedAt > now) &&
-    !myParticipant.acceptedAt
-  )
-    return PayoutState.AWAITING_ACCEPTANCE;
+    case CyclePhase.Payout:
+      return myParticipant.acceptedAt
+        ? PayoutState.AWAITING_PAYOUT
+        : PayoutState.AWAITING_ACCEPTANCE;
 
-  if (
-    cycle.payoutStartedAt <= now &&
-    myParticipant.acceptedAt &&
-    (!cycle.payoutEndedAt || cycle.payoutEndedAt > now) &&
-    !myParticipant.disbursedAt
-  )
-    return PayoutState.AWAITING_PAYOUT;
+    case CyclePhase.Completed:
+      return myParticipant.acceptedAt
+        ? PayoutState.PAYOUT_OVERDUE
+        : PayoutState.EXPIRED;
 
-  if (
-    cycle.payoutEndedAt &&
-    cycle.payoutEndedAt <= now &&
-    !myParticipant.acceptedAt
-  )
-    return PayoutState.EXPIRED;
-
-  if (
-    cycle.payoutEndedAt &&
-    cycle.payoutEndedAt <= now &&
-    myParticipant.acceptedAt &&
-    !myParticipant.disbursedAt
-  )
-    return PayoutState.PAYOUT_OVERDUE;
-
-  return PayoutState.UNKNOWN;
+    default:
+      throw new Error(`Unknown cycle phase: ${phase satisfies never}`);
+  }
 };

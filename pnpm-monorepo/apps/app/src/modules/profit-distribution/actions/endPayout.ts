@@ -4,9 +4,9 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { CYCLE_PHASE_WHERE, CyclePhase } from "@sam-monorepo/domain";
 import { revalidatePath } from "next/cache";
 import * as z from "zod";
-import { CyclePhase, getCurrentPhase } from "../utils/getCurrentPhase";
 
 const schema = z.object({
   id: z.cuid2(),
@@ -31,35 +31,24 @@ export const endPayout = createAuthenticatedAction(
       };
 
     /**
-     * Validate the request
+     * End the payout. The guarded update also validates that the cycle
+     * exists and is in its payout phase.
      */
-    const cycle = await prisma.profitDistributionCycle.findUnique({
-      where: { id: data.id },
-    });
-    if (!cycle)
-      return {
-        error: t("Common.notFound"),
-        requestPayload: formData,
-      };
-    const currentPhase = getCurrentPhase(cycle);
-    if (currentPhase !== CyclePhase.Payout)
-      return {
-        error: t("Common.badRequest"),
-        requestPayload: formData,
-      };
-
-    /**
-     *
-     */
-    await prisma.profitDistributionCycle.update({
+    const { count } = await prisma.profitDistributionCycle.updateMany({
       where: {
         id: data.id,
+        ...CYCLE_PHASE_WHERE[CyclePhase.Payout],
       },
       data: {
         payoutEndedAt: new Date(),
         payoutEndedById: authentication.session.entity.id,
       },
     });
+    if (count === 0)
+      return {
+        error: t("Common.badRequest"),
+        requestPayload: formData,
+      };
 
     await createAuditEvents([
       {

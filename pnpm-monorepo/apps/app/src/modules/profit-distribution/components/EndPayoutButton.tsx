@@ -4,8 +4,8 @@ import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionButton";
 import type { getProfitDistributionCycleById } from "@/modules/profit-distribution/queries/getProfitDistributionCycleById";
+import { CyclePhase } from "@sam-monorepo/domain";
 import { endPayout } from "../actions/endPayout";
-import { CyclePhase } from "../utils/getCurrentPhase";
 
 interface Props {
   readonly className?: string;

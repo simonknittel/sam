@@ -2,9 +2,9 @@ import { AccordeonLink } from "@/modules/common/components/Accordeon";
 import { Badge } from "@/modules/common/components/Badge";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
+import { CyclePhase } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import type { getProfitDistributionCycles } from "../queries/getProfitDistributionCycles";
-import { CyclePhase } from "../utils/getCurrentPhase";
 import { PayoutState } from "../utils/getMyPayoutStatus";
 
 interface Props {
@@ -70,12 +70,6 @@ export const ProfitDistributionCycleExcerpt = ({
       );
       break;
 
-    case PayoutState.UNKNOWN:
-      myPayoutStateBadge = (
-        <Badge label="Status deiner Auszahlung" showLabel value="Unbekannt" />
-      );
-      break;
-
     case PayoutState.PAYOUT_NOT_YET_STARTED:
       myPayoutStateBadge = (
         <Badge
@@ -117,7 +111,7 @@ export const ProfitDistributionCycleExcerpt = ({
                 label="Endet am"
                 showLabel
                 value={
-                  formatDate(cycleData.cycle.collectionEndedAt, "short") ?? "-"
+                  formatDate(cycleData.cycle.collectionEndsAt, "short") ?? "-"
                 }
               />
             </>
@@ -150,9 +144,7 @@ export const ProfitDistributionCycleExcerpt = ({
               <Badge
                 label="Endet am"
                 showLabel
-                value={
-                  formatDate(cycleData.cycle.payoutEndedAt, "short") ?? "-"
-                }
+                value={formatDate(cycleData.cycle.payoutEndsAt, "short") ?? "-"}
               />
             </>
           )}
@@ -171,7 +163,7 @@ export const ProfitDistributionCycleExcerpt = ({
               />
               {myPayoutStateBadge}
               <Badge
-                label="Endet am"
+                label="Endete am"
                 showLabel
                 value={
                   formatDate(cycleData.cycle.payoutEndedAt, "short") ?? "-"

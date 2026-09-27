@@ -104,7 +104,7 @@ export const CreateProfitDistributionCycleForm = ({
       />
 
       <DateInput
-        name="collectionEndedAt"
+        name="collectionEndsAt"
         label="Ende der Sammelphase"
         value={end}
         onChange={(e) => setEnd(e.target.value)}

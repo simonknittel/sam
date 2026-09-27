@@ -2,10 +2,15 @@ import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import { getSilcBalanceOfCurrentCitizen } from "@/modules/silc/queries/getSilcBalanceOfCurrentCitizen";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import { getAuecPerSilc, getTotalSilc } from "@sam-monorepo/domain";
+import {
+  CYCLE_PHASE_WHERE,
+  CyclePhase,
+  getAuecPerSilc,
+  getCurrentPhase,
+  getTotalSilc,
+} from "@sam-monorepo/domain";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
-import { CyclePhase, getCurrentPhase } from "../utils/getCurrentPhase";
 import { getPayoutState } from "../utils/getMyPayoutStatus";
 import { getMyShare } from "../utils/getMyShare";
 
@@ -19,21 +24,11 @@ export const getProfitDistributionCycles = cache(
       "manage",
     );
 
-    const now = new Date();
+    const completedWhere = CYCLE_PHASE_WHERE[CyclePhase.Completed];
     const cycles = await prisma.profitDistributionCycle.findMany({
-      where: {
-        ...(status === "open"
-          ? {
-              OR: [{ payoutEndedAt: null }, { payoutEndedAt: { gt: now } }],
-            }
-          : {
-              payoutEndedAt: {
-                lt: now,
-              },
-            }),
-      },
+      where: status === "open" ? { NOT: completedWhere } : completedWhere,
       orderBy: {
-        collectionEndedAt: "desc",
+        collectionEndsAt: "desc",
       },
       include: {
         participants: {

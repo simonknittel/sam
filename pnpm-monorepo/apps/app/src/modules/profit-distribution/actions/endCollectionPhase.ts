@@ -4,11 +4,10 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { createSilcTransactions } from "@/modules/silc/utils/createSilcTransactions";
-import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
+import { announceSilcTransactions } from "@/modules/silc/utils/createSilcTransactions";
+import { endCollectionPhaseInTransaction } from "@sam-monorepo/domain";
 import { revalidatePath } from "next/cache";
 import * as z from "zod";
-import { CyclePhase, getCurrentPhase } from "../utils/getCurrentPhase";
 
 const schema = z.object({
   id: z.cuid2(),
@@ -21,6 +20,11 @@ export const endCollectionPhase = createAuthenticatedAction(
     /**
      * Authorize the request
      */
+    if (!authentication.session.entity)
+      return {
+        error: t("Common.forbidden"),
+        requestPayload: formData,
+      };
     if (!(await authentication.authorize("profitDistributionCycle", "update")))
       return {
         error: t("Common.forbidden"),
@@ -28,83 +32,22 @@ export const endCollectionPhase = createAuthenticatedAction(
       };
 
     /**
-     * Validate the request
+     * End the phase. The guarded update in the transaction also validates
+     * that the cycle exists and is in its collection phase.
      */
-    const cycle = await prisma.profitDistributionCycle.findUnique({
-      where: { id: data.id },
-    });
-    if (!cycle)
-      return {
-        error: t("Common.notFound"),
-        requestPayload: formData,
-      };
-    const currentPhase = getCurrentPhase(cycle);
-    if (currentPhase !== CyclePhase.Collection)
+    const endedById = authentication.session.entity.id;
+    const transactionIds = await prisma.$transaction((transaction) =>
+      endCollectionPhaseInTransaction(transaction, {
+        cycleId: data.id,
+        endedById,
+        endedAt: new Date(),
+      }),
+    );
+    if (transactionIds === null)
       return {
         error: t("Common.badRequest"),
         requestPayload: formData,
       };
-
-    /**
-     *
-     */
-    const allSilcBalances = await prisma.citizen.findMany({
-      where: {
-        ...ACTIVE_CITIZEN_WHERE,
-        silcBalance: {
-          gt: 0,
-        },
-      },
-      select: {
-        id: true,
-        silcBalance: true,
-      },
-    });
-
-    await createSilcTransactions(
-      allSilcBalances.map((citizen) => ({
-        receiverId: citizen.id,
-        value: -citizen.silcBalance,
-        description: `SINcome: ${cycle.title}`,
-        createdById: authentication.session.entity!.id,
-        // A second booking of the same cycle fails on
-        // `SilcTransaction_profitDistributionCycle_key` and rolls back the
-        // whole transaction, including the snapshots below.
-        profitDistributionCycleId: cycle.id,
-      })),
-      {
-        additionalOperations: [
-          prisma.profitDistributionCycle.update({
-            where: {
-              id: data.id,
-            },
-            data: {
-              collectionEndedAt: new Date(),
-              collectionEndedById: authentication.session.entity?.id,
-            },
-          }),
-
-          ...allSilcBalances.map((entity) =>
-            prisma.profitDistributionCycleParticipant.upsert({
-              where: {
-                cycleId_citizenId: {
-                  cycleId: data.id,
-                  citizenId: entity.id,
-                },
-              },
-              update: {
-                silcBalanceSnapshot: entity.silcBalance,
-              },
-              create: {
-                cycleId: data.id,
-                citizenId: entity.id,
-                silcBalanceSnapshot: entity.silcBalance,
-              },
-            }),
-          ),
-        ],
-      },
-    );
 
     await createAuditEvents([
       {
@@ -115,6 +58,8 @@ export const endCollectionPhase = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
+
+    await announceSilcTransactions(transactionIds);
 
     /**
      * Revalidate cache(s)
