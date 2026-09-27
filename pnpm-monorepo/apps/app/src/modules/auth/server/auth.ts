@@ -3,6 +3,7 @@ import { env } from "@/env";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { DEVELOPMENT_SESSION_TOKEN_COOKIE } from "@/modules/auth/utils/sessionTokenCookie";
+import { linkCitizenOfSignedInUser } from "@/modules/citizen/utils/citizenUserLink";
 import { hasBirthdayToday } from "@/modules/citizen/utils/hasBirthdayToday";
 import { getDiscordAvatar } from "@/modules/discord/utils/getDiscordAvatar";
 import { getGuildMember } from "@/modules/discord/utils/getGuildMember";
@@ -50,7 +51,8 @@ declare module "next-auth" {
       role: UserRole;
       emailVerified: Date | null;
     } & DefaultSession["user"];
-    discordId: string;
+    /** NULL only for a user without a Discord account */
+    discordId: string | null;
     givenPermissionSets: PermissionSet[];
     /**
      * Kept deliberately minimal: the session is serialized into the payload
@@ -150,33 +152,34 @@ export const authOptions: NextAuthOptions = {
       const assumedUser = await getAssumedUser(user);
       const effectiveUser = assumedUser ?? user;
 
-      const discordAccount = await prisma.account.findFirst({
-        where: {
-          userId: effectiveUser.id,
-        },
-        select: {
-          providerAccountId: true,
-        },
-      });
-
-      const entityWithRoleGraph = await prisma.citizen.findUnique({
-        where: {
-          discordId: discordAccount!.providerAccountId,
-        },
-        select: {
-          id: true,
-          handle: true,
-          timezone: true,
-          birthdayDay: true,
-          birthdayMonth: true,
-          roleAssignments: {
-            select: {
-              roleId: true,
-              ...EFFECTIVE_ROLE_PERMISSIONS_SELECT,
+      const { accounts, citizen: entityWithRoleGraph } =
+        await prisma.user.findUniqueOrThrow({
+          where: {
+            id: effectiveUser.id,
+          },
+          select: {
+            accounts: {
+              where: { provider: "discord" },
+              select: { providerAccountId: true },
+              take: 1,
+            },
+            citizen: {
+              select: {
+                id: true,
+                handle: true,
+                timezone: true,
+                birthdayDay: true,
+                birthdayMonth: true,
+                roleAssignments: {
+                  select: {
+                    roleId: true,
+                    ...EFFECTIVE_ROLE_PERMISSIONS_SELECT,
+                  },
+                },
+              },
             },
           },
-        },
-      });
+        });
 
       let givenPermissionSets: PermissionSet[] = [];
       if (entityWithRoleGraph) {
@@ -253,7 +256,7 @@ export const authOptions: NextAuthOptions = {
           role: effectiveUser.role as UserRole,
           emailVerified: effectiveUser.emailVerified,
         },
-        discordId: discordAccount!.providerAccountId,
+        discordId: accounts[0]?.providerAccountId ?? null,
         givenPermissionSets,
         entityId: entity?.id,
         entity,
@@ -468,6 +471,12 @@ export const authOptions: NextAuthOptions = {
 
   events: {
     signIn: async (message) => {
+      if (message.account?.provider === "discord")
+        await linkCitizenOfSignedInUser(
+          message.user.id,
+          message.account.providerAccountId,
+        );
+
       await createAuditEvents([
         {
           type: AuditEventType.USER_LOGIN_V2,
