@@ -1,9 +1,14 @@
 import type { Locator, Page } from "@playwright/test";
 import type { Prisma, PrismaClient } from "@sam-monorepo/database/client";
-import { TaskRewardType, TaskVisibility } from "@sam-monorepo/database/client";
+import {
+  EventVisibility,
+  TaskRewardType,
+  TaskVisibility,
+} from "@sam-monorepo/database/client";
 import {
   createAppEvent,
   createCitizen,
+  createRole,
   futureEvent,
   ONE_DAY_MS,
   ONE_HOUR_MS,
@@ -62,11 +67,6 @@ const newBadge = (scope: Locator) => scope.locator("[data-new-badge]");
 const newMarkerButton = (scope: Locator) =>
   scope.getByRole("button", { name: "Neu – als gelesen markieren" });
 
-const readMarkerCount = (
-  prisma: PrismaClient,
-  where: Prisma.ReadMarkerWhereInput,
-) => prisma.readMarker.count({ where });
-
 const appsPopover = (page: Page) =>
   page.getByRole("dialog", { name: "Apps", exact: true });
 
@@ -77,13 +77,13 @@ const openAppsPopover = (page: Page) =>
   );
 
 /**
- * The dot badge of the Tasks app. Not the dot of the Apps button: it also
- * counts the unseen changelog entries.
+ * The dot badge of an app in the Apps popover. Not the dot of the Apps
+ * button: it also counts the unseen changelog entries.
  */
-const tasksAppDot = (page: Page) =>
+const appDot = (page: Page, appName: string) =>
   appsPopover(page)
     .getByRole("listitem")
-    .filter({ has: page.getByRole("link", { name: "Tasks", exact: true }) })
+    .filter({ has: page.getByRole("link", { name: appName, exact: true }) })
     .first()
     .locator("[data-unread-dot]");
 
@@ -111,7 +111,7 @@ test("a new task stays new until the viewer opens it, also after a back navigati
 
   await page.goto("/app/dashboard");
   await openAppsPopover(page);
-  await expect(tasksAppDot(page)).toBeVisible();
+  await expect(appDot(page, "Tasks")).toBeVisible();
   await page.keyboard.press("Escape");
 
   const newTasksTile = sectionByHeading(page, "Neue Tasks");
@@ -127,9 +127,11 @@ test("a new task stays new until the viewer opens it, also after a back navigati
   await expect
     .poll(
       () =>
-        readMarkerCount(prisma, {
-          taskId: task.id,
-          citizenId: viewer.entity.id,
+        prisma.readMarker.count({
+          where: {
+            taskId: task.id,
+            citizenId: viewer.entity.id,
+          },
         }),
       { timeout: ACTION_FEEDBACK_TIMEOUT },
     )
@@ -138,11 +140,13 @@ test("a new task stays new until the viewer opens it, also after a back navigati
   // The client router cache must not bring back the old state
   await page.goBack();
   await expect(page).toHaveURL(/\/app\/dashboard$/);
-  await expect(sectionByHeading(page, "Neue Tasks")).toHaveCount(0, {
+  // Only the dashboard shows it, thus the task page is gone
+  await expect(page.getByRole("heading", { name: "Spynet" })).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
+  await expect(sectionByHeading(page, "Neue Tasks")).toHaveCount(0);
   await openAppsPopover(page);
-  await expect(tasksAppDot(page)).toHaveCount(0);
+  await expect(appDot(page, "Tasks")).toHaveCount(0);
   await page.keyboard.press("Escape");
 
   await page.goto("/app/tasks");
@@ -160,7 +164,7 @@ test("a new task stays new until the viewer opens it, also after a back navigati
   await page.goto(`/app/tasks/${task.id}`);
   await waitForAppShellHydration(page);
   await page.waitForLoadState("networkidle");
-  expect(await readMarkerCount(prisma, { taskId: task.id })).toBe(1);
+  expect(await prisma.readMarker.count({ where: { taskId: task.id } })).toBe(1);
   expect(
     await prisma.auditEvent.count({ where: { type: "READ_MARKER_CREATED" } }),
   ).toBe(1);
@@ -206,9 +210,11 @@ test("the marker in the dashboard tile marks a task as read, and the next new ta
   await expect(newTasksTile).toContainText("Auftrag 1");
   await expect(newTasksTile.locator("article")).toHaveCount(5);
   expect(
-    await readMarkerCount(prisma, {
-      taskId: newestTask.id,
-      citizenId: viewer.entity.id,
+    await prisma.readMarker.count({
+      where: {
+        taskId: newestTask.id,
+        citizenId: viewer.entity.id,
+      },
     }),
   ).toBe(1);
 
@@ -221,7 +227,7 @@ test("the marker in the dashboard tile marks a task as read, and the next new ta
   }
   await expect(newTasksTile).toHaveCount(0);
   await openAppsPopover(page);
-  await expect(tasksAppDot(page)).toHaveCount(0);
+  await expect(appDot(page, "Tasks")).toHaveCount(0);
 });
 
 test("only open tasks of others created after the join date are new, and the tile leaves out assigned tasks", async ({
@@ -252,6 +258,12 @@ test("only open tasks of others created after the join date are new, and the til
   });
   await createTask(prisma, creator, "Erledigter Auftrag", {
     completedAt: new Date(),
+  });
+  await createTask(prisma, creator, "Abgebrochener Auftrag", {
+    cancelledAt: new Date(),
+  });
+  await createTask(prisma, creator, "Abgelaufener Auftrag", {
+    expiresAt: new Date(Date.now() - ONE_MINUTE_MS),
   });
 
   await signIn(viewer.user);
@@ -289,9 +301,10 @@ test("only open tasks of others created after the join date are new, and the til
     await expect(taskRow(page, page, title)).toBeVisible();
 
   await page.goto("/app/tasks?status=closed");
-  const closedTask = taskRow(page, page, "Erledigter Auftrag");
-  await expect(closedTask).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
-  await expect(newBadge(closedTask)).toHaveCount(0);
+  await expect(page.locator("article")).toHaveCount(3, {
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+  await expect(newBadge(page.locator("article"))).toHaveCount(0);
 });
 
 test("tasks from before the start of the read markers and invisible tasks are not new", async ({
@@ -324,13 +337,13 @@ test("tasks from before the start of the read markers and invisible tasks are no
   });
   await expect(sectionByHeading(page, "Neue Tasks")).toHaveCount(0);
   await openAppsPopover(page);
-  await expect(tasksAppDot(page)).toHaveCount(0);
+  await expect(appDot(page, "Tasks")).toHaveCount(0);
 
   // A visible new task lights up the dot badge of the Tasks app
   await createTask(prisma, creator, "Sichtbarer Auftrag");
   await page.reload();
   await openAppsPopover(page);
-  await expect(tasksAppDot(page)).toBeVisible();
+  await expect(appDot(page, "Tasks")).toBeVisible();
 });
 
 test("a new event stays new until one of its pages is opened", async ({
@@ -359,15 +372,19 @@ test("a new event stays new until one of its pages is opened", async ({
   await expect(
     newBadge(eventCard(page, page, "Operation Morgenrot")),
   ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await openAppsPopover(page);
+  await expect(appDot(page, "Events")).toBeVisible();
 
   // A subpage counts as well, not only the overview
   await page.goto(`/app/events/${event.id}/participants`);
   await expect
     .poll(
       () =>
-        readMarkerCount(prisma, {
-          eventId: event.id,
-          citizenId: viewer.entity.id,
+        prisma.readMarker.count({
+          where: {
+            eventId: event.id,
+            citizenId: viewer.entity.id,
+          },
         }),
       { timeout: ACTION_FEEDBACK_TIMEOUT },
     )
@@ -377,6 +394,8 @@ test("a new event stays new until one of its pages is opened", async ({
   const card = eventCard(page, page, "Operation Morgenrot");
   await expect(card).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
   await expect(newBadge(card)).toHaveCount(0);
+  await openAppsPopover(page);
+  await expect(appDot(page, "Events")).toHaveCount(0);
 });
 
 test("the marker on an event card marks it as read, and the Neu status lists only new events", async ({
@@ -412,6 +431,29 @@ test("the marker on an event card marks it as read, and the Neu status lists onl
     startTime: new Date(Date.now() - 3 * ONE_HOUR_MS),
     endTime: new Date(Date.now() - 2 * ONE_HOUR_MS),
   });
+  await createAppEvent(prisma, {
+    name: "Eigene Operation",
+    createdById: viewer.entity.id,
+    ...futureEvent(),
+  });
+  const oldEvent = await createAppEvent(prisma, {
+    name: "Alte Operation",
+    createdById: creator.entity.id,
+    ...futureEvent(),
+  });
+  await prisma.event.update({
+    where: { id: oldEvent.id },
+    // Before the email confirmation of the viewer
+    data: { createdAt: new Date(Date.now() - 2 * ONE_DAY_MS) },
+  });
+  const outsiderRole = await createRole(prisma);
+  await createAppEvent(prisma, {
+    name: "Geheime Operation",
+    createdById: creator.entity.id,
+    visibility: EventVisibility.RESTRICTED,
+    visibilityRoleIds: [outsiderRole.id],
+    ...futureEvent(),
+  });
 
   await signIn(viewer.user);
 
@@ -421,9 +463,11 @@ test("the marker on an event card marks it as read, and the Neu status lists onl
   await expect(newBadge(pastEvent)).toHaveCount(0);
 
   await page.goto("/app/events?status=new");
-  await waitForAppShellHydration(page);
-  await expect(page.locator("article")).toHaveCount(1);
   const card = eventCard(page, page, "Neue Operation");
+  await expect(card).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(page.locator("article")).toHaveCount(1);
+  // After the list streamed in, thus the marker button is hydrated too
+  await waitForAppShellHydration(page);
 
   await newMarkerButton(card).click();
 
@@ -431,9 +475,11 @@ test("the marker on an event card marks it as read, and the Neu status lists onl
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   expect(
-    await readMarkerCount(prisma, {
-      eventId: newEvent.id,
-      citizenId: viewer.entity.id,
+    await prisma.readMarker.count({
+      where: {
+        eventId: newEvent.id,
+        citizenId: viewer.entity.id,
+      },
     }),
   ).toBe(1);
 });
