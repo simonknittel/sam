@@ -12,12 +12,13 @@ import { triggerNotifications } from "@/modules/notifications/utils/triggerNotif
 import { ASSUMABLE_USER_WHERE } from "@/modules/users/queries/getAssumableUsers";
 import { getUserById } from "@/modules/users/queries/getUserById";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import type {
-  Citizen,
-  User as DatabaseUser,
-  RoleAssignment,
+import {
+  ConfirmationStatus,
+  UserRole,
+  type Citizen,
+  type User as DatabaseUser,
+  type RoleAssignment,
 } from "@sam-monorepo/database/client";
-import { ConfirmationStatus } from "@sam-monorepo/database/client";
 import {
   ACTIVE_CITIZEN_WHERE,
   EFFECTIVE_ROLE_PERMISSIONS_SELECT,
@@ -39,7 +40,6 @@ import DiscordProvider, {
 } from "next-auth/providers/discord";
 import { cookies, headers } from "next/headers";
 import { serializeError } from "serialize-error";
-import { type UserRole } from "../../../types";
 import { ASSUME_USER_COOKIE } from "../utils/adminCookies";
 
 /**
@@ -52,7 +52,7 @@ declare module "next-auth" {
   interface Session extends DefaultSession {
     user: {
       id: string;
-      role: UserRole;
+      role: UserRole | null;
       emailVerified: Date | null;
     } & DefaultSession["user"];
     /** NULL only for a user without a Discord account */
@@ -86,7 +86,7 @@ declare module "next-auth" {
   }
 
   interface User {
-    role?: UserRole;
+    role?: UserRole | null;
     lastSeenAt?: Date;
   }
 }
@@ -130,7 +130,7 @@ export const createSession = async (
 const getAssumedUser = async (
   sessionUser: AdapterUser,
 ): Promise<DatabaseUser | null> => {
-  if (sessionUser.role !== "admin") return null;
+  if (sessionUser.role !== UserRole.ADMIN) return null;
 
   const assumedUserId = (await cookies()).get(ASSUME_USER_COOKIE)?.value;
   if (!assumedUserId || assumedUserId === sessionUser.id) return null;
@@ -257,7 +257,7 @@ export const authOptions: NextAuthOptions = {
           name: effectiveUser.name,
           email: effectiveUser.email,
           image: effectiveUser.image,
-          role: effectiveUser.role as UserRole,
+          role: effectiveUser.role ?? null,
           emailVerified: effectiveUser.emailVerified,
         },
         discordId: accounts[0]?.providerAccountId ?? null,

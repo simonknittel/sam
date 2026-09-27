@@ -1,5 +1,6 @@
 import type { PermissionSet } from "@sam-monorepo/permissions";
 import { createLocalJWKSet, jwtVerify } from "jose";
+import { UserRole } from "@sam-monorepo/database/client";
 import type { Session } from "next-auth";
 import { generateKeyPairSync } from "node:crypto";
 import { beforeEach, describe, expect, test, vi } from "vitest";
@@ -29,7 +30,7 @@ const generateBase64EncodedPrivateKeyPem = () => {
 
 const buildSession = (entity: Session["entity"]): Session =>
   ({
-    user: { id: "clhaw95yi0000jr08ybuvy137", role: "admin" },
+    user: { id: "clhaw95yi0000jr08ybuvy137", role: UserRole.ADMIN },
     entity,
     givenPermissionSets: [
       { resource: "event", operation: "read" },

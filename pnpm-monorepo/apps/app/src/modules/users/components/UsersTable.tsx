@@ -10,7 +10,11 @@ import { formatDate } from "@/modules/common/utils/formatDate";
 import { BanUser } from "@/modules/users/components/BanUser";
 import { UnbanUser } from "@/modules/users/components/UnbanUser";
 import { VerifyEmailButton } from "@/modules/users/components/VerifyEmailButton";
-import { type Citizen, type User } from "@sam-monorepo/database/browser";
+import {
+  UserRole,
+  type Citizen,
+  type User,
+} from "@sam-monorepo/database/browser";
 import { FaExternalLinkAlt } from "react-icons/fa";
 import { FaCircleXmark } from "react-icons/fa6";
 
@@ -161,7 +165,7 @@ export const UsersTable = ({
 
               {showBanActions &&
               user.id !== ownUserId &&
-              user.role !== "admin" ? (
+              user.role !== UserRole.ADMIN ? (
                 user.bannedAt ? (
                   <UnbanUser userId={user.id} />
                 ) : (

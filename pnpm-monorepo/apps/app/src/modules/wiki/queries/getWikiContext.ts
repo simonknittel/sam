@@ -81,7 +81,7 @@ export const getWikiContext = cache(
     if (!authentication) return null;
 
     /**
-     * The admin escape hatch (user.role === "admin" + enable_admin cookie)
+     * The admin escape hatch (user.role ADMIN + enable_admin cookie)
      * is part of authorize() and therefore flows into hasWikiManage, which
      * grants all tiers on every page in the resolver. Enabled admins can
      * use all wiki features without any role-based restrictions.

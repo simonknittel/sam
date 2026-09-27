@@ -59,7 +59,7 @@ export const getFlowContext = cache(
     if (!authentication) return null;
 
     /**
-     * The admin escape hatch (user.role === "admin" + enable_admin cookie)
+     * The admin escape hatch (user.role ADMIN + enable_admin cookie)
      * is part of authorize() and therefore flows into hasCareerManage, which
      * grants read and edit on every flow in the resolver.
      */

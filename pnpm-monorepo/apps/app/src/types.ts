@@ -8,8 +8,6 @@ declare module "react" {
   }
 }
 
-export type UserRole = null | "confirmed" | "admin";
-
 export type CitizenLogConfirmationState =
   "confirmed" | "false-report" | undefined;
 

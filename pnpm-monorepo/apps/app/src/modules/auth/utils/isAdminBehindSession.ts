@@ -1,3 +1,4 @@
+import { UserRole } from "@sam-monorepo/database/browser";
 import type { Session } from "next-auth";
 
 /**
@@ -6,4 +7,4 @@ import type { Session } from "next-auth";
  * role of the assumed user, thus the role alone is not sufficient.
  */
 export const isAdminBehindSession = (session: Session) =>
-  session.user.role === "admin" || Boolean(session.assumedByAdminId);
+  session.user.role === UserRole.ADMIN || Boolean(session.assumedByAdminId);

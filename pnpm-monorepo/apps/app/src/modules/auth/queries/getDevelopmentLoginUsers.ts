@@ -1,7 +1,7 @@
 import { prisma } from "@/db";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { ASSUMABLE_USER_WHERE } from "@/modules/users/queries/getAssumableUsers";
-import type { Prisma } from "@sam-monorepo/database/client";
+import { UserRole, type Prisma } from "@sam-monorepo/database/client";
 
 /**
  * A local database has only a few admins. The limit only keeps the list
@@ -16,7 +16,7 @@ const MAX_DEVELOPMENT_LOGIN_USERS = 50;
  */
 export const DEVELOPMENT_LOGIN_USER_WHERE = {
   ...ASSUMABLE_USER_WHERE,
-  role: "admin",
+  role: UserRole.ADMIN,
 } satisfies Prisma.UserWhereInput;
 
 export const getDevelopmentLoginUsers = withTrace(

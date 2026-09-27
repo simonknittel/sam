@@ -17,6 +17,7 @@ import {
   FlowRoleAccessType,
   OrganizationMembershipType,
   OrganizationMembershipVisibility,
+  UserRole,
   WikiPageAccessType,
   WikiPageEditability,
   WikiPageEventScope,
@@ -86,7 +87,7 @@ export const createCitizen = async (
       name: handle,
       email: `${handle}-${suffix}@example.com`,
       emailVerified,
-      role: admin ? "admin" : null,
+      role: admin ? UserRole.ADMIN : null,
       accounts: {
         create: {
           type: "oauth",
@@ -136,7 +137,7 @@ export const createUserWithoutCitizen = (
       name,
       email: `${name}-${randomUUID().slice(0, 8)}@example.com`,
       emailVerified: new Date(),
-      role: admin ? "admin" : null,
+      role: admin ? UserRole.ADMIN : null,
       accounts: {
         create: {
           type: "oauth",
