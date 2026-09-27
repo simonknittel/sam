@@ -1,33 +1,46 @@
 import { createId } from "@paralleldrive/cuid2";
-import { prisma, type Citizen, type Role } from "@sam-monorepo/database";
+import { prisma } from "@sam-monorepo/database";
 import {
   ACTIVE_CITIZEN_WHERE,
   AuditEventType,
   getLocalDate,
   ORGANIZATION_TIMEZONE,
   toDateColumnValue,
+  updateSilcBalances,
+  type LocalDate,
 } from "@sam-monorepo/domain";
 import { createAuditEvents } from "../common/audit";
 import { emitEvents } from "../common/eventbridge";
 import { log } from "../common/logger";
 import { captureAsyncFunc } from "../common/xray";
 import { getRoleSalaries } from "./getRoleSalaries";
-import { updateCitizensSilcBalances } from "./updateCitizensSilcBalances";
+
+const getLastDayOfMonth = ({ year, month }: LocalDate) =>
+  toDateColumnValue({ year, month: month + 1, day: 0 }).getUTCDate();
+
+/**
+ * A salary is due on its day of the month. A short month does not have the
+ * day of each salary (for example the 31st), thus such a salary is due on
+ * the last day of the month.
+ */
+const isSalaryDue = (dayOfMonth: number, today: LocalDate) =>
+  dayOfMonth === today.day ||
+  (today.day === getLastDayOfMonth(today) && dayOfMonth > today.day);
 
 export const disburseRoleSalaries = async () => {
   await captureAsyncFunc("disburseRoleSalaries", async () => {
-    const salaries = await getRoleSalaries();
     const today = getLocalDate(new Date(), ORGANIZATION_TIMEZONE);
-    const salaryDate = toDateColumnValue(today);
+    const salaries = await getRoleSalaries();
 
     /**
      * One booking for each role and citizen and day: the unique index on the
-     * source columns allows no second one, thus several salaries of one role
-     * on the same day are added up.
+     * source columns allows no second one. On the last day of a short month,
+     * a role can have more than one due salary (for example on the 30th and
+     * the 31st), thus the due salaries of one role are added up.
      */
     const todaysValueByRoleId = new Map<string, number>();
     for (const salary of salaries) {
-      if (salary.dayOfMonth !== today.day) continue;
+      if (!isSalaryDue(salary.dayOfMonth, today)) continue;
 
       todaysValueByRoleId.set(
         salary.roleId,
@@ -35,140 +48,110 @@ export const disburseRoleSalaries = async () => {
       );
     }
 
-    const allCitizens = await prisma.citizen.findMany({
-      where: {
-        ...ACTIVE_CITIZEN_WHERE,
-        roleAssignments: {
-          some: {},
-        },
-      },
-      select: {
-        id: true,
-        roleAssignments: {
-          select: {
-            roleId: true,
-          },
-        },
-      },
-    });
-
-    if (allCitizens.length <= 0) {
-      log.info("No citizens with roles found");
+    if (todaysValueByRoleId.size <= 0) {
+      log.info("No salaries are due today");
       return;
     }
 
-    const citizensGroupedByRole = new Map<
-      string,
-      {
-        role: Pick<Role, "id" | "name">;
-        citizens: Pick<Citizen, "id">[];
-      }
-    >();
-
-    const allRoles = await prisma.role.findMany({
+    const roles = await prisma.role.findMany({
+      where: {
+        id: {
+          in: [...todaysValueByRoleId.keys()],
+        },
+      },
       select: {
         id: true,
         name: true,
+        assignments: {
+          where: {
+            citizen: ACTIVE_CITIZEN_WHERE,
+          },
+          select: {
+            citizenId: true,
+          },
+        },
       },
     });
 
-    if (allRoles.length <= 0) {
-      log.info("No roles found");
-      return;
-    }
+    const salaryDate = toDateColumnValue(today);
+    const bookings = roles.flatMap((role) => {
+      const value = todaysValueByRoleId.get(role.id);
+      if (value === undefined) return [];
 
-    for (const citizen of allCitizens) {
-      for (const roleAssignment of citizen.roleAssignments) {
-        const role = allRoles.find((r) => r.id === roleAssignment.roleId);
+      return role.assignments.map((assignment) => ({
+        receiverId: assignment.citizenId,
+        value,
+        description: `Gehalt: ${role.name}`,
+        salaryRoleId: role.id,
+        salaryDate,
+      }));
+    });
 
-        if (role) {
-          if (!citizensGroupedByRole.has(role.id)) {
-            citizensGroupedByRole.set(role.id, { role, citizens: [] });
-          }
-
-          citizensGroupedByRole.get(role.id)?.citizens.push(citizen);
-        }
-      }
-    }
-
-    const allTransactionIds: string[] = [];
-    const disbursedRoleIds: string[] = [];
-    let disbursedValue = 0;
-
-    const citizenIds = new Set<string>();
-
-    for (const [roleId, value] of todaysValueByRoleId) {
-      const group = citizensGroupedByRole.get(roleId);
-      if (!group) continue;
-
-      /**
-       * A run that repeats (for example after an error in a later job) skips
-       * the bookings that exist already, see `SilcTransaction_salary_key`.
-       */
-      const createdTransactions =
-        await prisma.silcTransaction.createManyAndReturn({
-          data: group.citizens.map((citizen) => ({
-            receiverId: citizen.id,
-            value,
-            description: `Gehalt: ${group.role.name}`,
-            salaryRoleId: roleId,
-            salaryDate,
-          })),
+    const createdTransactions = await prisma.$transaction(
+      async (transaction) => {
+        /**
+         * A run that repeats (for example after an error in a later job)
+         * skips the bookings that exist already, see
+         * `SilcTransaction_salary_key`.
+         */
+        const created = await transaction.silcTransaction.createManyAndReturn({
+          data: bookings,
           skipDuplicates: true,
           select: {
             id: true,
+            receiverId: true,
+            value: true,
+            salaryRoleId: true,
           },
         });
 
-      // Also after a skipped booking: an earlier run can have stopped
-      // between the booking and the balance update below.
-      for (const citizen of group.citizens) citizenIds.add(citizen.id);
+        await updateSilcBalances(
+          transaction,
+          created.map((booking) => booking.receiverId),
+        );
 
-      if (createdTransactions.length === 0) continue;
+        return created;
+      },
+    );
 
-      disbursedRoleIds.push(roleId);
-      disbursedValue += value * createdTransactions.length;
-      allTransactionIds.push(
-        ...createdTransactions.map((transaction) => transaction.id),
-      );
+    if (createdTransactions.length <= 0) {
+      log.info("The salaries of today are paid already");
+      return;
     }
 
-    /**
-     * Update citizens' balances
-     */
-    await updateCitizensSilcBalances([...citizenIds]);
+    await createAuditEvents([
+      {
+        type: AuditEventType.ROLE_SALARIES_DISBURSED,
+        data: {
+          roleIds: [
+            ...new Set(
+              createdTransactions.flatMap((booking) =>
+                booking.salaryRoleId ? [booking.salaryRoleId] : [],
+              ),
+            ),
+          ],
+          transactionCount: createdTransactions.length,
+          disbursedValue: createdTransactions.reduce(
+            (total, booking) => total + booking.value,
+            0,
+          ),
+        },
+      },
+    ]);
 
-    if (allTransactionIds.length > 0) {
-      await createAuditEvents([
-        {
-          type: AuditEventType.ROLE_SALARIES_DISBURSED,
-          data: {
-            roleIds: disbursedRoleIds,
-            transactionCount: allTransactionIds.length,
-            disbursedValue,
+    await emitEvents([
+      {
+        Source: "MidnightAutomations",
+        DetailType: "NotificationRequested",
+        Detail: JSON.stringify({
+          type: "SilcTransactionsCreated",
+          payload: {
+            transactionIds: createdTransactions.map((booking) => booking.id),
           },
-        },
-      ]);
-    }
-
-    /**
-     * Trigger notifications
-     */
-    if (allTransactionIds.length > 0) {
-      await emitEvents([
-        {
-          Source: "MidnightAutomations",
-          DetailType: "NotificationRequested",
-          Detail: JSON.stringify({
-            type: "SilcTransactionsCreated",
-            payload: {
-              transactionIds: allTransactionIds,
-            },
-            requestId: createId(),
-          }),
-        },
-      ]);
-    }
+          requestId: createId(),
+        }),
+      },
+    ]);
 
     log.info("Disbursed role salaries");
   });
