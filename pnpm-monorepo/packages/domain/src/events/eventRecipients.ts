@@ -8,6 +8,7 @@ import type {
   EventVisibilityRole,
   Prisma,
 } from "@sam-monorepo/database/client";
+import { ACTIVE_CITIZEN_WHERE } from "../citizen/activeCitizen.js";
 
 export type EventRecipientInput = Pick<Event, "visibility" | "createdById"> & {
   readonly visibilityRoles: readonly Pick<EventVisibilityRole, "roleId">[];
@@ -68,11 +69,13 @@ export const buildEventRecipientWhere = (
 };
 
 /**
- * Citizen where-fragment for citizens who can open the app at all: they hold
- * `login;manage` through one of their roles. It is the minimum condition for
- * every notification — a citizen who cannot log in can read none of them.
+ * Citizen where-fragment for citizens who can open the app at all: they are
+ * not deleted and hold `login;manage` through one of their roles. It is the
+ * minimum condition for every notification — a citizen who cannot log in can
+ * read none of them.
  */
 export const CAN_LOGIN_CITIZEN_WHERE: Prisma.CitizenWhereInput = {
+  ...ACTIVE_CITIZEN_WHERE,
   roleAssignments: {
     some: {
       role: {

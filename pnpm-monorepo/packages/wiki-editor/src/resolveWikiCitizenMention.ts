@@ -1,10 +1,13 @@
 export interface WikiMentionedCitizen {
   handle: string | null;
+  /** A deleted citizen keeps its mentions, without a link to its page */
+  deleted?: boolean;
 }
 
 export interface ResolvedWikiCitizenMention {
   citizenId: string;
   label: string;
+  deleted: boolean;
 }
 
 /**
@@ -29,5 +32,5 @@ export const resolveWikiCitizenMention = (
   const label = citizen?.handle ?? storedHandle;
 
   if (!citizenId || label === null) return null;
-  return { citizenId, label };
+  return { citizenId, label, deleted: citizen?.deleted ?? false };
 };
