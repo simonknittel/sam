@@ -47,7 +47,6 @@ model User {
   role                    UserRole?
   createdAt               DateTime?                @default(now()) @db.Timestamptz(3)
   updatedAt               DateTime?                @db.Timestamptz(3)
-  createdCitizens         Citizen[]                @relation("createdBy")
   submittedCitizenLogs    CitizenLog[]             @relation("submittedBy")
   confirmedCitizenLogs    CitizenLog[]             @relation("confirmedBy")
   lastSeenAt              DateTime?                @db.Timestamptz(3)

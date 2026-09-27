@@ -5,14 +5,16 @@ model Citizen {
   /// Soft delete: a deleted citizen is hidden from all lists, pickers,
   /// searches, statistics, notifications and payouts, and records that name
   /// it show "Deleted citizen". Nothing is deleted and there is no restore.
-  /// The delete also removes the link to the login (`userId`).
+  /// The delete also removes the link to the login (`userId`); a CHECK
+  /// constraint refuses a deleted citizen with a login.
   deletedAt                                    DateTime?                            @db.Timestamptz(3)
   deletedById                                  String?
   deletedBy                                    Citizen?                             @relation("deletedCitizens", fields: [deletedById], references: [id], onDelete: SetNull)
   deletedCitizens                              Citizen[]                            @relation("deletedCitizens")
   logs                                         CitizenLog[]
   createdById                                  String?
-  createdBy                                    User?                                @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdBy                                    Citizen?                             @relation("createdCitizens", fields: [createdById], references: [id], onDelete: SetNull)
+  createdCitizens                              Citizen[]                            @relation("createdCitizens")
   activeOrganizationsMemberships               ActiveOrganizationMembership[]
   organizationMembershipHistoryEntries         OrganizationMembershipHistoryEntry[] @relation(name: "OrganizationMembershipHistoryEntry")
   createdOrganizationMemberHistoryEntries      OrganizationMembershipHistoryEntry[] @relation(name: "CreatedOrganizationMemberHistoryEntries")

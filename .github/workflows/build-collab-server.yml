@@ -7,6 +7,7 @@ on:
     paths:
       - pnpm-monorepo/apps/collab/**
       - pnpm-monorepo/packages/database/**
+      - pnpm-monorepo/packages/domain/**
       - pnpm-monorepo/packages/wiki-editor/**
       - pnpm-monorepo/pnpm-lock.yaml
       - .github/workflows/build-collab-server.yml
