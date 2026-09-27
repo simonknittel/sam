@@ -3,6 +3,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
+import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import { NextResponse } from "next/server";
 import * as z from "zod";
 
@@ -31,10 +32,12 @@ export async function POST(request: Request) {
     /**
      * Do the thing
      */
+    /** A deleted citizen does not block a new one with the same Spectrum ID */
     const log = await prisma.citizenLog.findFirst({
       where: {
         type: "spectrum-id",
         content: data.spectrumId,
+        citizen: ACTIVE_CITIZEN_WHERE,
       },
       select: {
         citizenId: true,

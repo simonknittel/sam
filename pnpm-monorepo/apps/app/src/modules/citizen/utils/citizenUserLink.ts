@@ -1,5 +1,6 @@
 import { prisma } from "@/db";
 import type { Citizen, User } from "@sam-monorepo/database/client";
+import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 
 /**
  * A citizen belongs to the user whose Discord account has the Discord ID of
@@ -29,8 +30,8 @@ export const linkCitizenOfSignedInUser = async (
   userId: User["id"],
   discordId: string,
 ) => {
-  const citizen = await prisma.citizen.findUnique({
-    where: { discordId },
+  const citizen = await prisma.citizen.findFirst({
+    where: { discordId, ...ACTIVE_CITIZEN_WHERE },
     select: { id: true },
   });
 
@@ -49,20 +50,21 @@ export const linkCitizenOfSignedInUser = async (
 export const relinkCitizenUser = async (citizenId: Citizen["id"]) => {
   const citizen = await prisma.citizen.findUniqueOrThrow({
     where: { id: citizenId },
-    select: { discordId: true },
+    select: { discordId: true, deletedAt: true },
   });
 
-  const account = citizen.discordId
-    ? await prisma.account.findUnique({
-        where: {
-          provider_providerAccountId: {
-            provider: "discord",
-            providerAccountId: citizen.discordId,
+  const account =
+    citizen.discordId && !citizen.deletedAt
+      ? await prisma.account.findUnique({
+          where: {
+            provider_providerAccountId: {
+              provider: "discord",
+              providerAccountId: citizen.discordId,
+            },
           },
-        },
-        select: { userId: true },
-      })
-    : null;
+          select: { userId: true },
+        })
+      : null;
 
   await setCitizenUser(citizenId, account?.userId ?? null);
 };
