@@ -124,9 +124,8 @@ export const Task = ({ className, task, isNew: isNewOnServer }: Props) => {
   /**
    * The title link covers the whole row, thus the row opens the details like
    * before. Positioned elements later in the document paint above it: the
-   * marker, the badges (their tooltips show the full values), the strip and
-   * the edge. The strip and the edge come last for this reason; `order-first`
-   * keeps the strip on the left.
+   * marker, the badges (their tooltips show the full values) and the strip.
+   * The strip comes last for this reason; `order-first` keeps it on the left.
    */
   return (
     <article
@@ -135,6 +134,9 @@ export const Task = ({ className, task, isNew: isNewOnServer }: Props) => {
         className,
       )}
     >
+      {/* The strip of an assigned task already highlights the left side */}
+      {isNew && !isTaskAssignedToCurrentCitizen && <UnreadEdge />}
+
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-2 p-2">
           <h3 className="min-w-0 font-bold break-words">
@@ -175,8 +177,6 @@ export const Task = ({ className, task, isNew: isNewOnServer }: Props) => {
           <FaCheck className="text-sm" />
         </Link>
       )}
-
-      {isNew && <UnreadEdge />}
     </article>
   );
 };

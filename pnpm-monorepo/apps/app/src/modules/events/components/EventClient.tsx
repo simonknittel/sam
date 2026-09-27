@@ -263,8 +263,9 @@ export const EventClient = ({
           </div>
         </div>
 
-        {/* Last, thus it paints above the cover image */}
-        {isNew && <UnreadEdge />}
+        {/* Last, thus it paints above the cover image. A running event or an
+        event of today already highlights the left side. */}
+        {isNew && !isHappeningNow && !isToday && <UnreadEdge />}
       </div>
     </article>
   );
