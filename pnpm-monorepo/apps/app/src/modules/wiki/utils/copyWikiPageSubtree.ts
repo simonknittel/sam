@@ -175,9 +175,9 @@ export const remapBriefingScopePositions = (
  * and attachments keep referencing the source pages' uploads; each copy is
  * linked to its source page's uploads (Upload.wikiPages) so attachment
  * downloads are permission-checked against the copy itself. Tags carry over
- * by name: found-or-created case-insensitively in the target scope (like
- * updateWikiPageTags), which links the identical tag on a same-scope copy
- * and recreates it on a cross-scope one.
+ * by name: found or created in the target scope (see findOrCreateWikiTags),
+ * which links the identical tag on a same-scope copy and recreates it on a
+ * cross-scope one.
  */
 export const copyWikiPagesIntoContainer = async (
   transaction: Prisma.TransactionClient,
@@ -225,16 +225,12 @@ export const copyWikiPagesIntoContainer = async (
         templateId: null,
       };
 
-  const tagsByLower = await findOrCreateWikiTags(
-    transaction,
-    [...tagNamesByPageId.values()].flat(),
-    params.targetContainer,
-    params.createdByEntityId,
-  );
-
-  const tagsOf = (sourcePageId: string) => {
-    const tags = (tagNamesByPageId.get(sourcePageId) ?? []).map((name) =>
-      tagsByLower.get(name.toLocaleLowerCase())!,
+  const tagsOf = async (sourcePageId: string) => {
+    const tags = await findOrCreateWikiTags(
+      transaction,
+      tagNamesByPageId.get(sourcePageId) ?? [],
+      params.targetContainer,
+      params.createdByEntityId,
     );
     return {
       tagIds: tags.map((tag) => tag.id),
@@ -255,7 +251,7 @@ export const copyWikiPagesIntoContainer = async (
       ? (newIdBySourceId.get(entry.parentSourceId) ?? null)
       : params.rootParentId;
     const content = contentById.get(entry.source.id);
-    const { tagIds, tagsText } = tagsOf(entry.source.id);
+    const { tagIds, tagsText } = await tagsOf(entry.source.id);
 
     const copy = await transaction.wikiPage.create({
       data: {

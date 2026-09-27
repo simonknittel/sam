@@ -15,7 +15,9 @@ import {
 import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilUrl,
+  clickUntilVisible,
   fillUntilVisible,
+  modal,
   sectionByHeading,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
@@ -105,6 +107,91 @@ test("tags are shown on the page and list their pages", async ({
   await expect(
     page.locator("section").getByRole("link", { name: "Handelsrouten" }),
   ).toBeVisible();
+});
+
+test("search shows the tags of a page that match the query", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const citizen = await createCitizen(prisma, { handle: "reader" });
+  const wikiPage = await createWikiPage(prisma, {
+    title: "Handelsrouten",
+    visibility: WikiPageVisibility.PUBLIC,
+  });
+  await createWikiTag(prisma, wikiPage, "Wirtschaft");
+  await signIn(citizen.user);
+
+  await page.goto("/app/wiki");
+  const pageResult = page
+    .getByRole("listbox", { name: "Suchergebnisse" })
+    .getByRole("link", { name: /Handelsrouten/ });
+  await searchUntilReaction(page, "Wirtschaft", pageResult);
+  await expect(
+    pageResult.getByText("Wirtschaft", { exact: true }),
+  ).toBeVisible();
+});
+
+test("a tag name in other letter case uses the existing tag", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const editor = await createCitizen(prisma, {
+    handle: "wiki-autor",
+    permissionStrings: ["wiki;manage"],
+  });
+  const taggedPage = await createWikiPage(prisma, {
+    title: "Handelsrouten",
+    visibility: WikiPageVisibility.PUBLIC,
+  });
+  await createWikiTag(prisma, taggedPage, "Bergbau");
+  const wikiPage = await createWikiPage(prisma, {
+    title: "Frachtpreise",
+    visibility: WikiPageVisibility.PUBLIC,
+  });
+
+  await signIn(editor.user);
+  await page.goto(`/app/wiki/${wikiPage.id}/${wikiPage.slug}`);
+
+  const tagsDialog = modal(page, "Tags bearbeiten");
+  await clickUntilVisible(
+    page.getByRole("button", { name: /Tags bearbeiten/ }),
+    tagsDialog,
+  );
+  /** The dialog suggests the tags that existed when it opened */
+  await expect(tagsDialog.getByRole("button", { name: "Bergbau" })).toBeVisible(
+    { timeout: ACTION_FEEDBACK_TIMEOUT },
+  );
+
+  /**
+   * A different editor creates the tag after the dialog loaded the tags.
+   * Thus the dialog offers a new tag, and only the server can find the
+   * existing one.
+   */
+  const existingTag = await createWikiTag(prisma, taggedPage, "Wirtschaft");
+  const newTagButton = tagsDialog.getByRole("button", {
+    name: '"wirtschaft" neu anlegen',
+  });
+  await fillUntilVisible(
+    tagsDialog.getByLabel("Tag hinzufügen"),
+    "wirtschaft",
+    newTagButton,
+  );
+  await newTagButton.click();
+  await tagsDialog.getByRole("button", { name: "Speichern" }).click();
+
+  /** The letter case of the existing tag wins */
+  await expect(
+    page.getByRole("link", { name: "Wirtschaft", exact: true }),
+  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  expect(
+    await prisma.wikiPageTag.findMany({
+      where: { pageId: wikiPage.id },
+      select: { tag: { select: { id: true, name: true } } },
+    }),
+  ).toEqual([{ tag: { id: existingTag.id, name: "Wirtschaft" } }]);
+  expect(await prisma.wikiTag.count()).toBe(2);
 });
 
 test("featured pages show on the landing page, filtered by read access", async ({
