@@ -9,7 +9,10 @@
 export { comparePermissionSets } from "./comparePermissionSets.js";
 export { getPermissionSetsByRoles } from "./getPermissionSetsByRoles.js";
 export type { GenericCitizenLogType, PermissionSet } from "./PermissionSet.js";
-export { resolveEffectiveRoles } from "./resolveEffectiveRoles.js";
+export {
+  hasReachedMaxLevel,
+  resolveEffectiveRoles,
+} from "./resolveEffectiveRoles.js";
 export {
   createEventTemplatePermissionResolver,
   resolveEventTemplatePermissions,
