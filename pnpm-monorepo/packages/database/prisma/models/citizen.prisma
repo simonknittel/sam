@@ -90,6 +90,12 @@ model Citizen {
   seasonalThemeSettings                        SeasonalThemeSetting[]
   readMarkers                                  ReadMarker[]
 
+  /// The login of the citizen: the user whose Discord account has the
+  /// Discord ID of the citizen. Set at each sign-in and when the Discord ID
+  /// of the citizen changes. NULL for citizens who never signed in.
+  userId String? @unique
+  user   User?   @relation("citizen", fields: [userId], references: [id], onDelete: SetNull)
+
   // Holds the latest confirmed values
   spectrumId                String?
   handle                    String?

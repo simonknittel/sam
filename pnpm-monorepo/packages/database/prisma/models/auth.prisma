@@ -58,6 +58,7 @@ model User {
   bannedReason                String?
   bannedById                  String?
   bannedBy                    Citizen?                 @relation("bannedBy", fields: [bannedById], references: [id])
+  citizen                     Citizen?                 @relation("citizen")
 }
 
 model VerificationToken {
