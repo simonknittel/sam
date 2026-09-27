@@ -28,8 +28,6 @@ export const UPLOAD_USAGE_RELATIONS = [
   "wikiPageSnapshotLinks",
 ] as const satisfies readonly (keyof Prisma.UploadCountOutputTypeSelect)[];
 
-export type UploadUsageRelation = (typeof UPLOAD_USAGE_RELATIONS)[number];
-
 /**
  * Matches uploads no usage relation references. Both the cleanup's "may be
  * deleted" query and the upload manager's "Unbenutzt" filter are this.

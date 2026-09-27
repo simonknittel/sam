@@ -36,53 +36,54 @@ export const updateSilcTransaction = createAuthenticatedAction(
       };
 
     /**
-     * Update transaction
+     * Update the transaction. It is read after the ledger lock, thus a
+     * parallel delete or update cannot come between the read and the write.
      */
-    const existingTransaction = await prisma.silcTransaction.findUnique({
-      where: {
-        id: data.transactionId,
-      },
-      select: {
-        id: true,
-        value: true,
-        description: true,
-        receiverId: true,
-        deletedAt: true,
-      },
+    const updatedById = authentication.session.entity.id;
+    const result = await prisma.$transaction(async (transaction) => {
+      await lockSilcLedger(transaction);
+
+      const existingTransaction = await transaction.silcTransaction.findFirst({
+        where: {
+          id: data.transactionId,
+          deletedAt: null,
+        },
+        select: {
+          value: true,
+          description: true,
+        },
+      });
+      if (!existingTransaction) return null;
+
+      const updated = await transaction.silcTransaction.update({
+        where: {
+          id: data.transactionId,
+        },
+        data: {
+          value: data.value,
+          description: data.description,
+          updatedAt: new Date(),
+          updatedById,
+        },
+        select: {
+          id: true,
+          receiverId: true,
+          value: true,
+          description: true,
+        },
+      });
+
+      /** The balance changes in the same transaction as the ledger */
+      await updateSilcBalances(transaction, [updated.receiverId]);
+
+      return { existingTransaction, updatedTransaction: updated };
     });
-    if (!existingTransaction || existingTransaction.deletedAt)
+    if (!result)
       return {
         error: t("Common.notFound"),
         requestPayload: formData,
       };
-
-    const updatedById = authentication.session.entity.id;
-    const updatedTransaction = await prisma.$transaction(
-      async (transaction) => {
-        await lockSilcLedger(transaction);
-
-        const updated = await transaction.silcTransaction.update({
-          where: {
-            id: data.transactionId,
-          },
-          data: {
-            value: data.value,
-            description: data.description,
-            updatedAt: new Date(),
-            updatedBy: {
-              connect: {
-                id: updatedById,
-              },
-            },
-          },
-        });
-
-        /** The balance changes in the same transaction as the ledger */
-        await updateSilcBalances(transaction, [updated.receiverId]);
-
-        return updated;
-      },
-    );
+    const { existingTransaction, updatedTransaction } = result;
 
     await createAuditEvents([
       {
