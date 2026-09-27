@@ -1,10 +1,10 @@
 import { prisma } from "@/db";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import type { Prisma, SilcTransaction } from "@sam-monorepo/database/client";
+import { updateSilcBalances } from "@sam-monorepo/domain";
 import { revalidatePath } from "next/cache";
-import { updateCitizensSilcBalances } from "./updateCitizensSilcBalances";
 
-interface NewSilcTransaction {
+export interface NewSilcTransaction {
   receiverId: SilcTransaction["receiverId"];
   value: SilcTransaction["value"];
   description?: SilcTransaction["description"];
@@ -13,54 +13,44 @@ interface NewSilcTransaction {
   profitDistributionCycleId?: SilcTransaction["profitDistributionCycleId"];
 }
 
-interface Options {
-  /**
-   * Runs in the same database transaction as the created rows, e.g. the
-   * profit-distribution cycle updates that must be atomic with the debits.
-   */
-  readonly additionalOperations?: Prisma.PrismaPromise<unknown>[];
-}
-
 /**
- * Creates SILC transactions and maintains the invariant every SILC path
- * shares: create the rows, rebuild the receivers' balances, notify the
- * receivers and revalidate the SILC surfaces. Callers write their own
- * audit events and revalidate any caller-specific paths themselves.
- *
- * The lambda's salary disbursement performs the same sequence with its own
- * EventBridge transport and cannot import this module.
+ * Creates SILC transactions and rebuilds the balances of their receivers in
+ * the transaction of the caller, so that the cached balances can never
+ * differ from the ledger. After the commit, call
+ * `announceSilcTransactions()` with the returned ids.
  *
  * @returns The ids of the created transactions
  */
-export const createSilcTransactions = async (
-  transactions: NewSilcTransaction[],
-  options?: Options,
+export const createSilcTransactionsInTransaction = async (
+  transaction: Prisma.TransactionClient,
+  transactions: readonly NewSilcTransaction[],
 ) => {
-  const [createdTransactions] = await prisma.$transaction([
-    prisma.silcTransaction.createManyAndReturn({
-      data: transactions,
+  const createdTransactions =
+    await transaction.silcTransaction.createManyAndReturn({
+      data: [...transactions],
       select: {
         id: true,
       },
-    }),
-    ...(options?.additionalOperations ?? []),
-  ]);
+    });
 
-  const transactionIds = createdTransactions.map(
-    (transaction) => transaction.id,
+  await updateSilcBalances(
+    transaction,
+    transactions.map((newTransaction) => newTransaction.receiverId),
   );
 
-  const receiverIds = [
-    ...new Set(transactions.map((transaction) => transaction.receiverId)),
-  ];
-  if (receiverIds.length > 0) await updateCitizensSilcBalances(receiverIds);
+  return createdTransactions.map((created) => created.id);
+};
 
+/** Notifies the receivers and revalidates the SILC surfaces */
+export const announceSilcTransactions = async (
+  transactionIds: readonly string[],
+) => {
   if (transactionIds.length > 0) {
     await triggerNotifications([
       {
         type: "SilcTransactionsCreated",
         payload: {
-          transactionIds,
+          transactionIds: [...transactionIds],
         },
       },
     ]);
@@ -69,6 +59,28 @@ export const createSilcTransactions = async (
   revalidatePath("/app/silc");
   revalidatePath("/app/silc/transactions");
   revalidatePath("/app/dashboard");
+};
+
+/**
+ * Creates SILC transactions in their own transaction and maintains the
+ * invariant every SILC path shares: create the rows, rebuild the receivers'
+ * balances, notify the receivers and revalidate the SILC surfaces. Callers
+ * write their own audit events and revalidate any caller-specific paths
+ * themselves.
+ *
+ * The lambda's salary disbursement performs the same sequence with its own
+ * EventBridge transport and cannot import this module.
+ *
+ * @returns The ids of the created transactions
+ */
+export const createSilcTransactions = async (
+  transactions: readonly NewSilcTransaction[],
+) => {
+  const transactionIds = await prisma.$transaction((transaction) =>
+    createSilcTransactionsInTransaction(transaction, transactions),
+  );
+
+  await announceSilcTransactions(transactionIds);
 
   return transactionIds;
 };

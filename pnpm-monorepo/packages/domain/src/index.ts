@@ -42,13 +42,9 @@ export {
   getNextSeasonalThemeStart,
   isSeasonalGreetingDay,
 } from "./seasonal/seasonalCalendar.js";
-export { calculateSilcBalances } from "./silc/calculateSilcBalances.js";
 export { getAuecPerSilc } from "./silc/getAuecPerSilc.js";
 export { getTotalSilc } from "./silc/getTotalSilc.js";
-export {
-  getSilcTransactionSumQueries,
-  toSilcTransactionSums,
-} from "./silc/silcTransactionSumQueries.js";
+export { updateSilcBalances } from "./silc/updateSilcBalances.js";
 export {
   UNUSED_UPLOAD_WHERE,
   UPLOAD_USAGE_RELATIONS,

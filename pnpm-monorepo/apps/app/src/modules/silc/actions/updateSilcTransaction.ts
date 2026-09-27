@@ -6,7 +6,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import * as z from "zod";
-import { updateCitizensSilcBalances } from "../utils/updateCitizensSilcBalances";
+import { updateSilcBalances } from "@sam-monorepo/domain";
 
 const schema = z.object({
   transactionId: z.cuid(),
@@ -55,21 +55,31 @@ export const updateSilcTransaction = createAuthenticatedAction(
         requestPayload: formData,
       };
 
-    const updatedTransaction = await prisma.silcTransaction.update({
-      where: {
-        id: data.transactionId,
-      },
-      data: {
-        value: data.value,
-        description: data.description,
-        updatedAt: new Date(),
-        updatedBy: {
-          connect: {
-            id: authentication.session.entity.id,
+    const updatedById = authentication.session.entity.id;
+    const updatedTransaction = await prisma.$transaction(
+      async (transaction) => {
+        const updated = await transaction.silcTransaction.update({
+          where: {
+            id: data.transactionId,
           },
-        },
+          data: {
+            value: data.value,
+            description: data.description,
+            updatedAt: new Date(),
+            updatedBy: {
+              connect: {
+                id: updatedById,
+              },
+            },
+          },
+        });
+
+        /** The balance changes in the same transaction as the ledger */
+        await updateSilcBalances(transaction, [updated.receiverId]);
+
+        return updated;
       },
-    });
+    );
 
     await createAuditEvents([
       {
@@ -86,11 +96,6 @@ export const updateSilcTransaction = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    /**
-     * Update citizens' balances
-     */
-    await updateCitizensSilcBalances([updatedTransaction.receiverId]);
 
     /**
      * Revalidate cache(s)

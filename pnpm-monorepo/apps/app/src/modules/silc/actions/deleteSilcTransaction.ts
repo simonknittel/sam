@@ -6,7 +6,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import * as z from "zod";
-import { updateCitizensSilcBalances } from "../utils/updateCitizensSilcBalances";
+import { updateSilcBalances } from "@sam-monorepo/domain";
 
 const schema = z.object({
   id: z.cuid(),
@@ -53,18 +53,26 @@ export const deleteSilcTransaction = createAuthenticatedAction(
     /**
      * (Soft-)delete transaction
      */
-    const deletedEntry = await prisma.silcTransaction.update({
-      where: {
-        id: data.id,
-      },
-      data: {
-        deletedAt: new Date(),
-        deletedBy: {
-          connect: {
-            id: authentication.session.entity.id,
+    const deletedById = authentication.session.entity.id;
+    const deletedEntry = await prisma.$transaction(async (transaction) => {
+      const entry = await transaction.silcTransaction.update({
+        where: {
+          id: data.id,
+        },
+        data: {
+          deletedAt: new Date(),
+          deletedBy: {
+            connect: {
+              id: deletedById,
+            },
           },
         },
-      },
+      });
+
+      /** The balance changes in the same transaction as the ledger */
+      await updateSilcBalances(transaction, [entry.receiverId]);
+
+      return entry;
     });
 
     await createAuditEvents([
@@ -79,11 +87,6 @@ export const deleteSilcTransaction = createAuthenticatedAction(
         createdById: authentication.session.user.id,
       },
     ]);
-
-    /**
-     * Update citizens' balances
-     */
-    await updateCitizensSilcBalances([deletedEntry.receiverId]);
 
     /**
      * Revalidate cache(s)
