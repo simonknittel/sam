@@ -7,7 +7,7 @@ model Organization {
   activeMemberships        ActiveOrganizationMembership[]
   membershipHistoryEntries OrganizationMembershipHistoryEntry[]
   attributeHistoryEntries  OrganizationAttributeHistoryEntry[]
-  createdAt                DateTime                             @default(now())
+  createdAt                DateTime                             @default(now()) @db.Timestamptz(3)
   createdById              String?
   createdBy                Citizen?                             @relation(name: "CreatedOrganizations", fields: [createdById], references: [id], onDelete: SetNull)
 }
@@ -21,12 +21,12 @@ model OrganizationAttributeHistoryEntry {
   oldValue     String?
   newValue     String
 
-  createdAt   DateTime @default(now())
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
   createdById String?
   createdBy   Citizen? @relation(name: "CreatedOrganizationAttributeHistoryEntries", fields: [createdById], references: [id], onDelete: SetNull)
 
   confirmed     ConfirmationStatus?
-  confirmedAt   DateTime?
+  confirmedAt   DateTime?           @db.Timestamptz(3)
   confirmedById String?
   confirmedBy   Citizen?            @relation(name: "ConfirmedOrganizationAttributeHistoryEntries", fields: [confirmedById], references: [id], onDelete: SetNull)
 
@@ -68,12 +68,12 @@ model OrganizationMembershipHistoryEntry {
   type       OrganizationMembershipType
   visibility OrganizationMembershipVisibility
 
-  createdAt   DateTime @default(now())
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
   createdById String?
   createdBy   Citizen? @relation(name: "CreatedOrganizationMemberHistoryEntries", fields: [createdById], references: [id], onDelete: SetNull)
 
   confirmed     ConfirmationStatus?
-  confirmedAt   DateTime?
+  confirmedAt   DateTime?           @db.Timestamptz(3)
   confirmedById String?
   confirmedBy   Citizen?            @relation(name: "ConfirmedOrganizationMemberHistoryEntries", fields: [confirmedById], references: [id], onDelete: SetNull)
 

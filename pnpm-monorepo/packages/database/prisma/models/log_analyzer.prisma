@@ -18,12 +18,12 @@ model LogAnalyzerEntry {
   rawLine   String
   /// Time of the event, parsed from `rawLine` by the upload action. Stored as
   /// a column because the fetch query windows and sorts on it.
-  eventAt   DateTime
+  eventAt   DateTime @db.Timestamptz(3)
   /// SHA-256 of `type + "\n" + rawLine`, hex encoded. Together with
   /// `createdById` it prevents duplicates. The scope is one uploader, because
   /// two citizens can produce the same line at the same second.
   hash      String
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
 
   /// The uploading citizen. A deleted citizen leaves the entry in place
   /// without an uploader.

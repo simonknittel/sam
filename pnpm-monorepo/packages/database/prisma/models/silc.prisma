@@ -4,13 +4,13 @@ model SilcTransaction {
   receiver    Citizen   @relation("receiver", fields: [receiverId], references: [id], onDelete: Cascade)
   value       Int
   description String?
-  createdAt   DateTime  @default(now())
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
   createdById String?
   createdBy   Citizen?  @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
-  updatedAt   DateTime?
+  updatedAt   DateTime? @db.Timestamptz(3)
   updatedById String?
   updatedBy   Citizen?  @relation("updatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
-  deletedAt   DateTime?
+  deletedAt   DateTime? @db.Timestamptz(3)
   deletedById String?
   deletedBy   Citizen?  @relation("deletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
 
@@ -36,7 +36,7 @@ model SilcTransaction {
 model SilcSetting {
   key         SilcSettingKey @id
   value       String
-  updatedAt   DateTime?      @updatedAt
+  updatedAt   DateTime?      @updatedAt @db.Timestamptz(3)
   updatedBy   Citizen?       @relation("updatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
   updatedById String?
 }

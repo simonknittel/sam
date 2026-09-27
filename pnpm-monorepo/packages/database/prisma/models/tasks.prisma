@@ -20,7 +20,7 @@ model Task {
   id                  String            @id @default(cuid())
   title               String
   description         String?
-  createdAt           DateTime          @default(now())
+  createdAt           DateTime          @default(now()) @db.Timestamptz(3)
   createdById         String?
   createdBy           Citizen?          @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
   /// SILC: the creator of the task pays the reward. NEW_SILC: the reward is
@@ -31,16 +31,16 @@ model Task {
   /// The reward for each completionist of a SILC or NEW_SILC task
   rewardSilcValue     Int?
   rewardTypeTextValue String?
-  expiresAt           DateTime?
-  cancelledAt         DateTime?
+  expiresAt           DateTime?         @db.Timestamptz(3)
+  cancelledAt         DateTime?         @db.Timestamptz(3)
   cancelledById       String?
   cancelledBy         Citizen?          @relation("cancelledBy", fields: [cancelledById], references: [id], onDelete: SetNull)
-  deletedAt           DateTime?
+  deletedAt           DateTime?         @db.Timestamptz(3)
   deletedById         String?
   deletedBy           Citizen?          @relation("deletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
   visibility          TaskVisibility
   assignmentLimit     Int?
-  completedAt         DateTime?
+  completedAt         DateTime?         @db.Timestamptz(3)
   completedById       String?
   completedBy         Citizen?          @relation("completedBy", fields: [completedById], references: [id], onDelete: SetNull)
   completionists      Citizen[]         @relation("completionists")
@@ -59,7 +59,7 @@ model TaskAssignment {
   task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
   citizenId   String
   citizen     Citizen  @relation("citizen", fields: [citizenId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
   createdById String?
   createdBy   Citizen? @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
 

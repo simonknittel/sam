@@ -1,12 +1,12 @@
 model Citizen {
   id                                           String                               @id @default(cuid())
-  createdAt                                    DateTime                             @default(now())
-  updatedAt                                    DateTime                             @updatedAt
+  createdAt                                    DateTime                             @default(now()) @db.Timestamptz(3)
+  updatedAt                                    DateTime                             @updatedAt @db.Timestamptz(3)
   /// Soft delete: a deleted citizen is hidden from all lists, pickers,
   /// searches, statistics, notifications and payouts, and records that name
   /// it show "Deleted citizen". Nothing is deleted and there is no restore.
   /// The delete also removes the link to the login (`userId`).
-  deletedAt                                    DateTime?
+  deletedAt                                    DateTime?                            @db.Timestamptz(3)
   deletedById                                  String?
   deletedBy                                    Citizen?                             @relation("deletedCitizens", fields: [deletedById], references: [id], onDelete: SetNull)
   deletedCitizens                              Citizen[]                            @relation("deletedCitizens")
@@ -132,10 +132,10 @@ model Citizen {
   birthdayMonth          Int?
   /// Time of the last birthday greeting. The greeting job uses it to send
   /// only one greeting for each year.
-  birthdayGreetingSentAt DateTime?
+  birthdayGreetingSentAt DateTime? @db.Timestamptz(3)
   /// Time of the last New Year greeting. The greeting job uses it to send
   /// only one greeting for each year.
-  newYearGreetingSentAt  DateTime?
+  newYearGreetingSentAt  DateTime? @db.Timestamptz(3)
 
   /// A person whose citizen was deleted can be added again, thus the IDs are
   /// unique only among the citizens that are not deleted
@@ -149,8 +149,8 @@ model CitizenLog {
   id            String   @id @default(cuid())
   citizenId     String
   citizen       Citizen  @relation(fields: [citizenId], references: [id], onDelete: Cascade)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime @updatedAt @db.Timestamptz(3)
   /// One of "handle", "discord-id", "teamspeak-id", "citizen-id",
   /// "community-moniker", "spectrum-id" and "note" (a hand-written CHECK
   /// constraint, see the migration citizen_log_columns). Permission resources
@@ -162,7 +162,7 @@ model CitizenLog {
 
   /// NULL while nobody decided about the log
   confirmed     ConfirmationStatus?
-  confirmedAt   DateTime?
+  confirmedAt   DateTime?           @db.Timestamptz(3)
   confirmedById String?
   confirmedBy   User?               @relation("confirmedBy", fields: [confirmedById], references: [id], onDelete: SetNull)
 
@@ -187,7 +187,7 @@ model RoleAssignment {
   citizen               Citizen   @relation("citizen", fields: [citizenId], references: [id], onDelete: Cascade)
   roleId                String
   role                  Role      @relation("role", fields: [roleId], references: [id], onDelete: Cascade)
-  createdAt             DateTime  @default(now())
+  createdAt             DateTime  @default(now()) @db.Timestamptz(3)
   /// The current level of the citizen for this role. NULL if the role does not
   /// have levels. The citizen receives the permissions of this role only when
   /// their currentLevel equals the maximum level defined in Role.maxLevel.
@@ -195,7 +195,7 @@ model RoleAssignment {
   currentLevel          Int?
   /// Last time the current level was updated. NULL if the role does not have
   /// levels. This is used to determine the inactivity.
-  currentLevelUpdatedAt DateTime?
+  currentLevelUpdatedAt DateTime? @db.Timestamptz(3)
 
   @@unique([citizenId, roleId])
   @@index([roleId])
@@ -214,7 +214,7 @@ model RoleAssignmentChange {
   roleId      String
   role        Role                     @relation("role", fields: [roleId], references: [id], onDelete: Cascade)
   type        RoleAssignmentChangeType
-  createdAt   DateTime                 @default(now())
+  createdAt   DateTime                 @default(now()) @db.Timestamptz(3)
   createdById String?
   createdBy   Citizen?                 @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
 
@@ -236,7 +236,7 @@ model RoleAssignmentLevelChange {
   roleId      String
   role        Role                          @relation("role", fields: [roleId], references: [id], onDelete: Cascade)
   type        RoleAssignmentLevelChangeType
-  createdAt   DateTime                      @default(now())
+  createdAt   DateTime                      @default(now()) @db.Timestamptz(3)
   createdById String?
   createdBy   Citizen?                      @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
 
@@ -255,7 +255,7 @@ model SeasonalThemeSetting {
   citizenId  String
   citizen    Citizen  @relation(fields: [citizenId], references: [id], onDelete: Cascade)
   eventKey   String
-  disabledAt DateTime @default(now())
+  disabledAt DateTime @default(now()) @db.Timestamptz(3)
 
   @@unique([citizenId, eventKey])
 }

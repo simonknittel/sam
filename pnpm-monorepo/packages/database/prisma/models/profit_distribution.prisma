@@ -3,26 +3,26 @@ model ProfitDistributionCycle {
   title               String
   /// The planned end of the collection phase. The midnight job ends the phase
   /// when it is due and nobody ended it before.
-  collectionEndsAt    DateTime
+  collectionEndsAt    DateTime                             @db.Timestamptz(3)
   /// The actual end of the collection phase, NULL until it ended. A NULL
   /// actor with an actual end means the midnight job ended it.
-  collectionEndedAt   DateTime?
+  collectionEndedAt   DateTime?                            @db.Timestamptz(3)
   collectionEndedById String?
   collectionEndedBy   Citizen?                             @relation("collectionEndedBy", fields: [collectionEndedById], references: [id], onDelete: SetNull)
-  payoutStartedAt     DateTime?
+  payoutStartedAt     DateTime?                            @db.Timestamptz(3)
   payoutStartedBy     Citizen?                             @relation("payoutStartedBy", fields: [payoutStartedById], references: [id], onDelete: SetNull)
   payoutStartedById   String?
   /// The planned end of the payout phase, set when the payout starts
-  payoutEndsAt        DateTime?
+  payoutEndsAt        DateTime?                            @db.Timestamptz(3)
   /// The actual end of the payout phase, NULL until it ended (see
   /// `collectionEndedAt`)
-  payoutEndedAt       DateTime?
+  payoutEndedAt       DateTime?                            @db.Timestamptz(3)
   payoutEndedById     String?
   payoutEndedBy       Citizen?                             @relation("payoutEndedBy", fields: [payoutEndedById], references: [id], onDelete: SetNull)
   auecProfit          BigInt?
   participants        ProfitDistributionCycleParticipant[]
   silcTransactions    SilcTransaction[]
-  createdAt           DateTime                             @default(now())
+  createdAt           DateTime                             @default(now()) @db.Timestamptz(3)
   createdById         String?
   createdBy           Citizen?                             @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
 }
@@ -34,14 +34,14 @@ model ProfitDistributionCycleParticipant {
   citizenId           String
   citizen             Citizen                 @relation("citizen", fields: [citizenId], references: [id], onDelete: Cascade)
   silcBalanceSnapshot Int?
-  createdAt           DateTime                @default(now())
-  cededAt             DateTime?
+  createdAt           DateTime                @default(now()) @db.Timestamptz(3)
+  cededAt             DateTime?               @db.Timestamptz(3)
   cededById           String?
   cededBy             Citizen?                @relation("cededBy", fields: [cededById], references: [id], onDelete: SetNull)
-  acceptedAt          DateTime?
+  acceptedAt          DateTime?               @db.Timestamptz(3)
   acceptedById        String?
   acceptedBy          Citizen?                @relation("acceptedBy", fields: [acceptedById], references: [id], onDelete: SetNull)
-  disbursedAt         DateTime?
+  disbursedAt         DateTime?               @db.Timestamptz(3)
   disbursedById       String?
   disbursedBy         Citizen?                @relation("disbursedBy", fields: [disbursedById], references: [id], onDelete: SetNull)
 

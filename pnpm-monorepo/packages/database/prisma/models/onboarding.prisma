@@ -16,10 +16,10 @@ model OnboardingTaskProgress {
   citizenId        String
   citizen          Citizen                        @relation(fields: [citizenId], references: [id], onDelete: Cascade)
   taskKey          String
-  completedAt      DateTime
+  completedAt      DateTime                       @db.Timestamptz(3)
   completionMethod OnboardingTaskCompletionMethod
-  createdAt        DateTime                       @default(now())
-  updatedAt        DateTime                       @updatedAt
+  createdAt        DateTime                       @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime                       @updatedAt @db.Timestamptz(3)
 
   @@unique([citizenId, taskKey])
 }
@@ -35,9 +35,9 @@ model OnboardingStepProgress {
   citizen     Citizen  @relation(fields: [citizenId], references: [id], onDelete: Cascade)
   taskKey     String
   stepKey     String
-  completedAt DateTime @default(now())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  completedAt DateTime @default(now()) @db.Timestamptz(3)
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
 
   @@unique([citizenId, taskKey, stepKey])
 }

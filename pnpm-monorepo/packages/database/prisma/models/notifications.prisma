@@ -12,7 +12,7 @@ model NotificationSetting {
   citizen          Citizen             @relation(fields: [citizenId], references: [id], onDelete: Cascade)
   notificationType String
   channel          NotificationChannel
-  disabledAt       DateTime            @default(now())
+  disabledAt       DateTime            @default(now()) @db.Timestamptz(3)
 
   @@unique([citizenId, notificationType, channel])
 }
@@ -24,9 +24,9 @@ model OnSiteNotification {
   notificationType String
   payload          Json
   payloadVersion   Int       @default(1)
-  createdAt        DateTime  @default(now())
-  readAt           DateTime?
-  archivedAt       DateTime?
+  createdAt        DateTime  @default(now()) @db.Timestamptz(3)
+  readAt           DateTime? @db.Timestamptz(3)
+  archivedAt       DateTime? @db.Timestamptz(3)
 
   @@index([citizenId, archivedAt, createdAt(sort: Desc)])
 }
@@ -35,7 +35,7 @@ model WebPushSubscription {
   id        String   @id @default(cuid(2))
   citizenId String
   citizen   Citizen  @relation(fields: [citizenId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
 
   // Subscription details
   endpoint String @unique

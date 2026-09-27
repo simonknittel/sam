@@ -6,7 +6,7 @@ model RoleCitizenCount {
   /// The calendar day (Europe/Berlin) that the count is for. The midnight
   /// job writes the count of a day after its end.
   day       DateTime @db.Date
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
 
   @@unique([roleId, day])
   @@index([day])
@@ -20,7 +20,7 @@ model VariantShipCount {
   /// The calendar day (Europe/Berlin) that the count is for, see
   /// RoleCitizenCount.day
   day       DateTime @db.Date
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
 
   @@unique([variantId, day])
   @@index([day])
@@ -30,7 +30,7 @@ model DailyLoginCount {
   id        String   @id @default(cuid())
   date      DateTime @db.Date
   count     Int
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
 
   @@unique([date])
 }
