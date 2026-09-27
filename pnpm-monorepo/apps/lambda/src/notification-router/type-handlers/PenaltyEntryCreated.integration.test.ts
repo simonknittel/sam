@@ -41,17 +41,28 @@ describe("PenaltyEntryCreatedHandler", () => {
     ]);
   });
 
-  test("does not notify a citizen below the maximum level of the role", async () => {
-    const citizen = await createCitizenWithLeveledRole(
+  test("notifies only the citizen at the maximum level of the role", async () => {
+    const atMaximumLevel = await createCitizenWithLeveledRole(
+      "at-maximum-level",
+      PERMISSION_STRINGS,
+      MAXIMUM_LEVEL,
+    );
+    const belowMaximumLevel = await createCitizenWithLeveledRole(
       "below-maximum-level",
       PERMISSION_STRINGS,
       MAXIMUM_LEVEL - 1,
     );
-    const penaltyEntry = await createPenaltyEntry(citizen.id);
+    const penaltyEntries = await Promise.all([
+      createPenaltyEntry(atMaximumLevel.id),
+      createPenaltyEntry(belowMaximumLevel.id),
+    ]);
 
-    await PenaltyEntryCreatedHandler({ penaltyEntryId: penaltyEntry.id });
+    for (const penaltyEntry of penaltyEntries)
+      await PenaltyEntryCreatedHandler({ penaltyEntryId: penaltyEntry.id });
 
-    expect(publishNotifications).not.toHaveBeenCalled();
+    expect(publishNotifications).toHaveBeenCalledExactlyOnceWith([
+      expect.objectContaining({ receiverId: atMaximumLevel.id }),
+    ]);
   });
 
   test("does not notify a deleted citizen", async () => {
@@ -60,14 +71,21 @@ describe("PenaltyEntryCreatedHandler", () => {
       PERMISSION_STRINGS,
       MAXIMUM_LEVEL,
     );
-    await prisma.citizen.update({
-      where: { id: citizen.id },
-      data: { deletedAt: new Date() },
-    });
     const penaltyEntry = await createPenaltyEntry(citizen.id);
 
     await PenaltyEntryCreatedHandler({ penaltyEntryId: penaltyEntry.id });
 
-    expect(publishNotifications).not.toHaveBeenCalled();
+    expect(publishNotifications).toHaveBeenCalledExactlyOnceWith([
+      expect.objectContaining({ receiverId: citizen.id }),
+    ]);
+
+    await prisma.citizen.update({
+      where: { id: citizen.id },
+      data: { deletedAt: new Date() },
+    });
+
+    await PenaltyEntryCreatedHandler({ penaltyEntryId: penaltyEntry.id });
+
+    expect(publishNotifications).toHaveBeenCalledTimes(1);
   });
 });

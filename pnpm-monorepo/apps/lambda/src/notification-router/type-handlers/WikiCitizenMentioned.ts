@@ -1,4 +1,5 @@
 import { prisma, type WikiPageCitizenMention } from "@sam-monorepo/database";
+import { getCitizenDisplayName } from "../citizenDisplayName";
 import { publishNotifications } from "../publish";
 
 interface Payload {
@@ -17,7 +18,7 @@ export const WikiCitizenMentionedHandler = async (payload: Payload) => {
     where: { id: payload.mentionId },
     select: {
       citizenId: true,
-      createdBy: { select: { handle: true } },
+      createdBy: { select: { handle: true, deletedAt: true } },
       page: {
         select: { id: true, title: true, eventId: true, deletedAt: true },
       },
@@ -25,7 +26,9 @@ export const WikiCitizenMentionedHandler = async (payload: Payload) => {
   });
   if (!mention || mention.page.deletedAt) return;
 
-  const mentionedByHandle = mention.createdBy?.handle ?? null;
+  const mentionedByName = mention.createdBy
+    ? getCitizenDisplayName(mention.createdBy)
+    : null;
 
   await publishNotifications([
     {
@@ -34,12 +37,14 @@ export const WikiCitizenMentionedHandler = async (payload: Payload) => {
       payload: {
         pageId: mention.page.id,
         pageTitle: mention.page.title,
-        mentionedByHandle,
+        // The app shows this value in the on-site text, thus it holds the
+        // label of a deleted citizen.
+        mentionedByHandle: mentionedByName,
         eventId: mention.page.eventId,
       },
       title: "Du wurdest im Wiki erwähnt",
-      body: mentionedByHandle
-        ? `${mentionedByHandle} hat dich auf der Seite "${mention.page.title}" erwähnt`
+      body: mentionedByName
+        ? `${mentionedByName} hat dich auf der Seite "${mention.page.title}" erwähnt`
         : `Du wurdest auf der Seite "${mention.page.title}" erwähnt`,
       url: mention.page.eventId
         ? `/app/events/${mention.page.eventId}/briefing/${mention.page.id}`

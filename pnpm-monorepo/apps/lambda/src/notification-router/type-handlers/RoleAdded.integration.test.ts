@@ -43,17 +43,25 @@ describe("RoleAddedHandler", () => {
     ]);
   });
 
-  test("does not notify a citizen below the maximum level of the role", async () => {
+  test("notifies only the citizen at the maximum level of the role", async () => {
     const addedRole = await createAddedRole();
-    const citizen = await createCitizenWithLeveledRole(
+    const atMaximumLevel = await createCitizenWithLeveledRole(
+      "at-maximum-level",
+      getPermissionStrings(addedRole.id),
+      MAXIMUM_LEVEL,
+    );
+    const belowMaximumLevel = await createCitizenWithLeveledRole(
       "below-maximum-level",
       getPermissionStrings(addedRole.id),
       MAXIMUM_LEVEL - 1,
     );
 
-    await RoleAddedHandler({ citizenId: citizen.id, roleId: addedRole.id });
+    for (const citizen of [atMaximumLevel, belowMaximumLevel])
+      await RoleAddedHandler({ citizenId: citizen.id, roleId: addedRole.id });
 
-    expect(publishNotifications).not.toHaveBeenCalled();
+    expect(publishNotifications).toHaveBeenCalledExactlyOnceWith([
+      expect.objectContaining({ receiverId: atMaximumLevel.id }),
+    ]);
   });
 
   test("does not notify a deleted citizen", async () => {
@@ -63,6 +71,13 @@ describe("RoleAddedHandler", () => {
       getPermissionStrings(addedRole.id),
       MAXIMUM_LEVEL,
     );
+
+    await RoleAddedHandler({ citizenId: citizen.id, roleId: addedRole.id });
+
+    expect(publishNotifications).toHaveBeenCalledExactlyOnceWith([
+      expect.objectContaining({ receiverId: citizen.id }),
+    ]);
+
     await prisma.citizen.update({
       where: { id: citizen.id },
       data: { deletedAt: new Date() },
@@ -70,6 +85,6 @@ describe("RoleAddedHandler", () => {
 
     await RoleAddedHandler({ citizenId: citizen.id, roleId: addedRole.id });
 
-    expect(publishNotifications).not.toHaveBeenCalled();
+    expect(publishNotifications).toHaveBeenCalledTimes(1);
   });
 });
