@@ -10,6 +10,7 @@
   "dependencies": {
     "@hocuspocus/server": "4.7.0",
     "@sam-monorepo/database": "workspace:*",
+    "@sam-monorepo/domain": "workspace:*",
     "@sam-monorepo/wiki-editor": "workspace:*",
     "jose": "6.2.12",
     "y-prosemirror": "1.3.7",

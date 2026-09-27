@@ -433,6 +433,9 @@ importers:
       '@sam-monorepo/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@sam-monorepo/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
       '@sam-monorepo/wiki-editor':
         specifier: workspace:*
         version: link:../../packages/wiki-editor
