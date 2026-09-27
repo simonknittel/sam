@@ -27,7 +27,7 @@ export const Task = ({ className, task, isNew: isNewOnServer }: Props) => {
   const authentication = useAuthentication();
   if (!authentication) throw new Error("Unauthorized");
 
-  const { isNew, markAsRead } = useMarkAsRead(
+  const { isNew, markAsRead, focusTargetRef } = useMarkAsRead(
     ReadMarkerSubject.Task,
     task.id,
     isNewOnServer,
@@ -121,36 +121,25 @@ export const Task = ({ className, task, isNew: isNewOnServer }: Props) => {
     (assignment) => assignment.citizenId === authentication.session.entity?.id,
   );
 
+  /**
+   * The title link covers the whole row, thus the row opens the details like
+   * before. Positioned elements later in the document paint above it: the
+   * marker, the badges (their tooltips show the full values), the strip and
+   * the edge. The strip and the edge come last for this reason; `order-first`
+   * keeps the strip on the left.
+   */
   return (
     <article
       className={clsx(
-        "relative flex bg-secondary overflow-hidden hover:bg-neutral-800 focus-within:bg-neutral-800 active:bg-neutral-700 corners-secondary has-[a:focus-visible]:outline-2 outline-offset-2 outline-interaction-700",
+        "relative flex bg-secondary overflow-hidden hover:bg-neutral-800 focus-within:bg-neutral-800 has-[a:active]:bg-neutral-700 corners-secondary has-[a:focus-visible]:outline-2 outline-offset-2 outline-interaction-700",
         className,
       )}
     >
-      {isNew && <UnreadEdge />}
-
-      {isTaskAssignedToCurrentCitizen && (
-        /* A second link above the covering link keeps the tooltip of the
-        strip. It has the same target as the title link, thus the keyboard and
-        assistive technology skip it. */
-        <Link
-          href={`/app/tasks/${task.id}`}
-          tabIndex={-1}
-          aria-hidden="true"
-          title="Dieser Task ist mir zugewiesen"
-          className="relative bg-me flex items-center p-2"
-        >
-          <FaCheck className="text-sm" />
-        </Link>
-      )}
-
-      <div className="flex-1">
+      <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-2 p-2">
-          <h3 className="font-bold">
-            {/* The link covers the whole row, thus the row opens the details
-            like before. The marker button sits above it. */}
+          <h3 className="min-w-0 font-bold break-words">
             <Link
+              ref={focusTargetRef}
               href={`/app/tasks/${task.id}`}
               title="Details öffnen"
               className="outline-hidden after:absolute after:inset-0"
@@ -160,16 +149,34 @@ export const Task = ({ className, task, isNew: isNewOnServer }: Props) => {
           </h3>
 
           {isNew && (
-            <NewMarkerButton onClick={markAsRead} className="relative" />
+            <NewMarkerButton onClick={markAsRead} className="flex-none" />
           )}
         </div>
 
         {badges.length > 0 && (
-          <div className="flex flex-wrap gap-1 px-2 pb-2">{badges}</div>
+          <div className="flex flex-wrap gap-1 px-2 pb-2 *:relative">
+            {badges}
+          </div>
         )}
       </div>
 
       <AccordeonLink />
+
+      {isTaskAssignedToCurrentCitizen && (
+        /* A second link to the same target, thus a click on the strip still
+        opens the details. The keyboard and assistive technology skip it. */
+        <Link
+          href={`/app/tasks/${task.id}`}
+          tabIndex={-1}
+          aria-hidden="true"
+          title="Dieser Task ist mir zugewiesen"
+          className="relative order-first bg-me flex items-center p-2"
+        >
+          <FaCheck className="text-sm" />
+        </Link>
+      )}
+
+      {isNew && <UnreadEdge />}
     </article>
   );
 };
