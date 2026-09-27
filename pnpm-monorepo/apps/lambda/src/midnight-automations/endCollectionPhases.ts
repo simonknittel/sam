@@ -84,6 +84,10 @@ export const endCollectionPhases = async () => {
             receiverId: citizen.id,
             value: -citizen.silcBalance,
             description: `SINcome: ${cycle.title}`,
+            // A second booking of the same cycle fails on
+            // `SilcTransaction_profitDistributionCycle_key` and rolls back
+            // the whole transaction, including the snapshots above.
+            profitDistributionCycleId: cycle.id,
           })),
         }),
       ]);

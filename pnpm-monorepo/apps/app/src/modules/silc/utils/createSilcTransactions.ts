@@ -9,6 +9,8 @@ interface NewSilcTransaction {
   value: SilcTransaction["value"];
   description?: SilcTransaction["description"];
   createdById?: SilcTransaction["createdById"];
+  taskId?: SilcTransaction["taskId"];
+  profitDistributionCycleId?: SilcTransaction["profitDistributionCycleId"];
 }
 
 interface Options {

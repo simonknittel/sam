@@ -65,6 +65,10 @@ export const endCollectionPhase = createAuthenticatedAction(
         value: -citizen.silcBalance,
         description: `SINcome: ${cycle.title}`,
         createdById: authentication.session.entity!.id,
+        // A second booking of the same cycle fails on
+        // `SilcTransaction_profitDistributionCycle_key` and rolls back the
+        // whole transaction, including the snapshots below.
+        profitDistributionCycleId: cycle.id,
       })),
       {
         additionalOperations: [
