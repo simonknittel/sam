@@ -315,7 +315,7 @@ test("the overview shows the confirmed value of every identity attribute", async
     where: { id: target.entity.id },
     data: {
       spectrumId: "BEOBACHTETER",
-      citizenId: "9876543",
+      citizenRecord: "9876543",
       communityMoniker: "Der Beobachtete",
       teamspeakId: "ts-4711",
     },

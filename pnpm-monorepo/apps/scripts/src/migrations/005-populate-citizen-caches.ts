@@ -61,7 +61,7 @@ async function main() {
             ),
           )
           .find((log) => log.type === "teamspeak-id")?.content,
-        citizenId: entity.logs
+        citizenRecord: entity.logs
           .filter((log) =>
             log.attributes.find(
               (attribute) =>
