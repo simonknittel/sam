@@ -3,10 +3,8 @@
 model Flow {
   id       String     @id @default(cuid(2))
   name     String
-  /// URL segment of the flow. Uniqueness is enforced by a hand-written
-  /// partial unique index over non-deleted rows only, so a soft-deleted flow
-  /// never blocks its slug (see migration career_flow_management). Prisma
-  /// cannot express partial indexes.
+  /// URL segment of the flow. Unique only over non-deleted rows, so a
+  /// soft-deleted flow never blocks its slug.
   slug     String
   nodes    FlowNode[]
   /// Manual ordering in the career navigation and the management list.
@@ -29,6 +27,7 @@ model Flow {
   deletedById String?
   deletedBy   Entity?   @relation("deletedFlows", fields: [deletedById], references: [id], onDelete: SetNull)
 
+  @@unique([slug], map: "Flow_active_slug_key", where: { deletedAt: null })
   @@index([deletedAt])
 }
 

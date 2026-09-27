@@ -4,8 +4,8 @@ model Entity {
   createdAt                                    DateTime                             @default(now())
   updatedAt                                    DateTime                             @updatedAt
   logs                                         EntityLog[]
-  createdById                                  String
-  createdBy                                    User                                 @relation("createdBy", fields: [createdById], references: [id], onDelete: Cascade)
+  createdById                                  String?
+  createdBy                                    User?                                @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
   activeOrganizationsMemberships               ActiveOrganizationMembership[]
   organizationMembershipHistoryEntries         OrganizationMembershipHistoryEntry[] @relation(name: "OrganizationMembershipHistoryEntry")
   createdOrganizationMemberHistoryEntries      OrganizationMembershipHistoryEntry[] @relation(name: "CreatedOrganizationMemberHistoryEntries")
@@ -131,7 +131,7 @@ model EntityLog {
   type          String // TODO: types.ts
   content       String?              @db.Text
   submittedById String?
-  submittedBy   User?                @relation("submittedBy", fields: [submittedById], references: [id], onDelete: Cascade)
+  submittedBy   User?                @relation("submittedBy", fields: [submittedById], references: [id], onDelete: SetNull)
   attributes    EntityLogAttribute[]
 
   @@index([type]) // `type: Hash` isn't supported on MySQL
@@ -145,7 +145,7 @@ model EntityLogAttribute {
   value       String
   createdAt   DateTime  @default(now())
   createdById String?
-  createdBy   User?     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdBy   User?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
 
   @@index([key]) // `type: Hash` isn't supported on MySQL
 }

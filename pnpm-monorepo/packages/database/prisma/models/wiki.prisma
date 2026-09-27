@@ -285,10 +285,8 @@ model WikiTag {
   id   String @id @default(cuid(2))
   /// Display casing from first use. Uniqueness is per scope and effectively
   /// case-insensitive: actions match existing names case-insensitively
-  /// (find-or-create) before creating. Enforced by partial unique indexes
-  /// Prisma cannot express (see migrations event_wiki_scoping and
-  /// event_templates): (name) WHERE both container columns are NULL, plus
-  /// one per container column — a plain compound unique would treat every
+  /// (find-or-create) before creating. The partial unique indexes below give
+  /// one index per scope, because a plain compound unique would treat every
   /// NULL container as distinct.
   name String
 
@@ -305,6 +303,9 @@ model WikiTag {
 
   pages WikiPageTag[]
 
+  @@unique([name], map: "WikiTag_global_name_key", where: { eventId: null, templateId: null })
+  @@unique([eventId, name], map: "WikiTag_eventId_name_key", where: { eventId: { not: null } })
+  @@unique([templateId, name], map: "WikiTag_templateId_name_key", where: { templateId: { not: null } })
   @@index([eventId])
   @@index([templateId])
 }
@@ -330,9 +331,8 @@ model WikiPageTag {
 /// pending row, a removed mention deletes its row — which cancels a pending
 /// notification, and makes a later re-mention notify again. The 15-minute
 /// notification sweep turns pending rows (both timestamps NULL) into
-/// notifications. Also carries a hand-written partial index on the pending
-/// predicate Prisma cannot express (see migration
-/// wiki_page_citizen_mentions).
+/// notifications. The partial index on the pending predicate serves that
+/// sweep.
 model WikiPageCitizenMention {
   id        String   @id @default(cuid(2))
   pageId    String
@@ -358,6 +358,7 @@ model WikiPageCitizenMention {
   @@unique([pageId, citizenId])
   @@index([citizenId])
   @@index([createdById])
+  @@index([createdAt], map: "WikiPageCitizenMention_pending_idx", where: { notifiedAt: null, suppressedAt: null })
 }
 
 model WikiSetting {

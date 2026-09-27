@@ -8,8 +8,8 @@ model Organization {
   membershipHistoryEntries OrganizationMembershipHistoryEntry[]
   attributeHistoryEntries  OrganizationAttributeHistoryEntry[]
   createdAt                DateTime                             @default(now())
-  createdById              String
-  createdBy                Entity                               @relation(name: "CreatedOrganizations", fields: [createdById], references: [id], onDelete: Cascade)
+  createdById              String?
+  createdBy                Entity?                              @relation(name: "CreatedOrganizations", fields: [createdById], references: [id], onDelete: SetNull)
 }
 
 model OrganizationAttributeHistoryEntry {
@@ -22,13 +22,13 @@ model OrganizationAttributeHistoryEntry {
   newValue     String
 
   createdAt   DateTime @default(now())
-  createdById String
-  createdBy   Entity   @relation(name: "CreatedOrganizationAttributeHistoryEntries", fields: [createdById], references: [id], onDelete: Cascade)
+  createdById String?
+  createdBy   Entity?  @relation(name: "CreatedOrganizationAttributeHistoryEntries", fields: [createdById], references: [id], onDelete: SetNull)
 
   confirmed     ConfirmationStatus?
   confirmedAt   DateTime?
   confirmedById String?
-  confirmedBy   Entity?             @relation(name: "ConfirmedOrganizationAttributeHistoryEntries", fields: [confirmedById], references: [id], onDelete: Cascade)
+  confirmedBy   Entity?             @relation(name: "ConfirmedOrganizationAttributeHistoryEntries", fields: [confirmedById], references: [id], onDelete: SetNull)
 
   @@index([organizationId])
 }
@@ -68,13 +68,13 @@ model OrganizationMembershipHistoryEntry {
   visibility OrganizationMembershipVisibility
 
   createdAt   DateTime @default(now())
-  createdById String
-  createdBy   Entity   @relation(name: "CreatedOrganizationMemberHistoryEntries", fields: [createdById], references: [id], onDelete: Cascade)
+  createdById String?
+  createdBy   Entity?  @relation(name: "CreatedOrganizationMemberHistoryEntries", fields: [createdById], references: [id], onDelete: SetNull)
 
   confirmed     ConfirmationStatus?
   confirmedAt   DateTime?
   confirmedById String?
-  confirmedBy   Entity?             @relation(name: "ConfirmedOrganizationMemberHistoryEntries", fields: [confirmedById], references: [id], onDelete: Cascade)
+  confirmedBy   Entity?             @relation(name: "ConfirmedOrganizationMemberHistoryEntries", fields: [confirmedById], references: [id], onDelete: SetNull)
 
   @@index([organizationId])
   @@index([citizenId])

@@ -14,6 +14,21 @@ model SilcTransaction {
   deletedById String?
   deletedBy   Entity?   @relation("deletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
 
+  /// The source of an automatic booking. NULL for manual bookings and for
+  /// bookings created before these columns existed. The partial unique
+  /// indexes below make the automatic payouts idempotent: a job that runs a
+  /// second time cannot book the same salary or the same collection again.
+  taskId                    String?
+  task                      Task?                    @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  profitDistributionCycleId String?
+  profitDistributionCycle   ProfitDistributionCycle? @relation(fields: [profitDistributionCycleId], references: [id], onDelete: SetNull)
+  salaryRoleId              String?
+  salaryRole                Role?                    @relation(fields: [salaryRoleId], references: [id], onDelete: SetNull)
+  /// The calendar day (Europe/Berlin) of the salary payout
+  salaryDate                DateTime?                @db.Date
+
+  @@unique([receiverId, salaryRoleId, salaryDate], map: "SilcTransaction_salary_key", where: { deletedAt: null, salaryDate: { not: null } })
+  @@unique([receiverId, profitDistributionCycleId], map: "SilcTransaction_profitDistributionCycle_key", where: { deletedAt: null, profitDistributionCycleId: { not: null } })
   @@index([receiverId])
 }
 
