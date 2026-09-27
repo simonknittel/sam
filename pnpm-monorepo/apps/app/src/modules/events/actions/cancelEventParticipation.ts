@@ -41,12 +41,11 @@ export const cancelEventParticipation = createAuthenticatedAction(
         requestPayload: formData,
       };
 
-    const participant = await prisma.eventParticipant.findUnique({
+    const participant = await prisma.eventParticipant.findFirst({
       where: {
-        eventId_activeCitizenId: {
-          eventId: event.id,
-          activeCitizenId: citizenId,
-        },
+        eventId: event.id,
+        citizenId,
+        cancelledAt: null,
       },
       select: {
         id: true,
@@ -58,13 +57,16 @@ export const cancelEventParticipation = createAuthenticatedAction(
         requestPayload: formData,
       };
 
-    await prisma.$transaction(async (transaction) => {
-      await cancelParticipation(transaction, {
-        participantId: participant.id,
-        eventId: event.id,
-        citizenId,
-        cancelledById: citizenId,
-      });
+    const isCancelled = await prisma.$transaction(async (transaction) => {
+      if (
+        !(await cancelParticipation(transaction, {
+          participantId: participant.id,
+          eventId: event.id,
+          citizenId,
+          cancelledById: citizenId,
+        }))
+      )
+        return false;
 
       await createEventActivity(transaction, {
         eventId: event.id,
@@ -72,7 +74,13 @@ export const cancelEventParticipation = createAuthenticatedAction(
         type: EventActivityType.PARTICIPATION_CANCELLED,
         payload: null,
       });
+      return true;
     });
+    if (!isCancelled)
+      return {
+        error: "Du bist nicht angemeldet.",
+        requestPayload: formData,
+      };
 
     await createAuditEvents([
       {

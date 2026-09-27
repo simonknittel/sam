@@ -40,12 +40,11 @@ export const removeEventParticipant = createAuthenticatedAction(
 
     const managerId = authentication.session.entity?.id ?? null;
 
-    const participant = await prisma.eventParticipant.findUnique({
+    const participant = await prisma.eventParticipant.findFirst({
       where: {
-        eventId_activeCitizenId: {
-          eventId: event.id,
-          activeCitizenId: data.citizenId,
-        },
+        eventId: event.id,
+        citizenId: data.citizenId,
+        cancelledAt: null,
       },
       select: {
         id: true,
@@ -63,13 +62,16 @@ export const removeEventParticipant = createAuthenticatedAction(
      */
     const reason = data.reason || null;
 
-    await prisma.$transaction(async (transaction) => {
-      await cancelParticipation(transaction, {
-        participantId: participant.id,
-        eventId: event.id,
-        citizenId: data.citizenId,
-        cancelledById: managerId,
-      });
+    const isCancelled = await prisma.$transaction(async (transaction) => {
+      if (
+        !(await cancelParticipation(transaction, {
+          participantId: participant.id,
+          eventId: event.id,
+          citizenId: data.citizenId,
+          cancelledById: managerId,
+        }))
+      )
+        return false;
 
       await createEventActivity(transaction, {
         eventId: event.id,
@@ -77,7 +79,13 @@ export const removeEventParticipant = createAuthenticatedAction(
         type: EventActivityType.PARTICIPATION_REMOVED_BY_MANAGER,
         payload: { citizenId: data.citizenId, reason },
       });
+      return true;
     });
+    if (!isCancelled)
+      return {
+        error: "Der Citizen ist nicht angemeldet.",
+        requestPayload: formData,
+      };
 
     await createAuditEvents([
       {

@@ -46,7 +46,6 @@ interface SourcePosition {
   fontSize: null;
   backgroundColor: null;
   textColor: null;
-  requiredRoles: never[];
   requiredVariants: never[];
   childPositions: SourcePosition[];
 }
@@ -62,7 +61,6 @@ const position = (
   fontSize: null,
   backgroundColor: null,
   textColor: null,
-  requiredRoles: [],
   requiredVariants: [],
   childPositions,
 });

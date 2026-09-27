@@ -14,7 +14,6 @@ export const CLONABLE_POSITION_SELECT = {
   fontSize: true,
   backgroundColor: true,
   textColor: true,
-  requiredRoles: { select: { id: true } },
   requiredVariants: {
     select: { variantId: true, order: true },
     orderBy: { order: "asc" },
@@ -28,7 +27,6 @@ interface ClonablePosition {
   fontSize: EventPosition["fontSize"];
   backgroundColor: EventPosition["backgroundColor"];
   textColor: EventPosition["textColor"];
-  requiredRoles: { id: string }[];
   requiredVariants: { variantId: string; order: number }[];
   childPositions: ClonablePosition[];
 }
@@ -71,13 +69,6 @@ export const clonePositions = async (
         backgroundColor: position.backgroundColor,
         textColor: position.textColor,
         order: target.startOrder + index,
-        ...(position.requiredRoles.length > 0
-          ? {
-              requiredRoles: {
-                connect: position.requiredRoles.map(({ id }) => ({ id })),
-              },
-            }
-          : {}),
         ...(position.requiredVariants.length > 0
           ? {
               requiredVariants: {

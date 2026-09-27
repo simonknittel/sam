@@ -34,6 +34,12 @@ export const updateEventPosition = createAuthenticatedAction(
     if (failure) return failure;
 
     /**
+     * The database allows each variant one time for each position. Thus
+     * remove the variants that the form sends more than one time.
+     */
+    const variantIds = Array.from(new Set(data.variantIds));
+
+    /**
      * Update position
      */
     await prisma.$transaction([
@@ -55,8 +61,8 @@ export const updateEventPosition = createAuthenticatedAction(
           textColor: data.textColor,
           requiredVariants: {
             createMany: {
-              data: data.variantIds.map((id, index) => ({
-                variantId: id,
+              data: variantIds.map((variantId, index) => ({
+                variantId,
                 order: index,
               })),
             },

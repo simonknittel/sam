@@ -60,6 +60,12 @@ export const createEventPosition = createAuthenticatedAction(
     }
 
     /**
+     * The database allows each variant one time for each position. Thus
+     * remove the variants that the form sends more than one time.
+     */
+    const variantIds = Array.from(new Set(data.variantIds));
+
+    /**
      * Create entry. The order value the lineup always used is the container's
      * total position count, which is at least as large as any sibling's order.
      */
@@ -78,8 +84,8 @@ export const createEventPosition = createAuthenticatedAction(
         order: positionCount,
         requiredVariants: {
           createMany: {
-            data: data.variantIds.map((id, index) => ({
-              variantId: id,
+            data: variantIds.map((variantId, index) => ({
+              variantId,
               order: index,
             })),
           },
@@ -97,7 +103,7 @@ export const createEventPosition = createAuthenticatedAction(
         {
           positionId: createdPosition.id,
           name: data.name,
-          variantIds: data.variantIds,
+          variantIds,
           parentPositionId: data.parentPositionId,
         },
         authentication.session.user.id,
