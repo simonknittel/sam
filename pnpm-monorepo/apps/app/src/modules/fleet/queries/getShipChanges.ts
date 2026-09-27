@@ -75,15 +75,14 @@ export const getShipChanges = cache(
           : prisma.ship.findMany({
               where: {
                 deletedAt: null,
+                /**
+                 * Old ships have no known creation date. The log cannot put
+                 * their creation in the timeline, thus it does not show it.
+                 */
+                createdAt: { not: null },
               },
-              /**
-               * `Ship.createdAt` is nullable, and Postgres sorts NULLs
-               * first in DESC. Those rows carry no change date, so sorting
-               * them last keeps them out of every page that has real
-               * changes to show.
-               */
               orderBy: {
-                createdAt: { sort: "desc", nulls: "last" },
+                createdAt: "desc",
               },
               take: streamTake,
               select: {
@@ -118,23 +117,39 @@ export const getShipChanges = cache(
             }),
       ]);
 
+      /**
+       * The queries only load ships with a date. The checks below tell this
+       * to TypeScript without an assertion.
+       */
       const changes: ShipChangeRow[] = [
-        ...createdShips.map((ship) => ({
-          changeDate: ship.createdAt!,
-          changeType: "creation" as const,
-          ship,
-          actorId: ship.createdById,
-          actorHandle: ship.createdBy?.handle,
-          actorDeletedAt: ship.createdBy?.deletedAt,
-        })),
-        ...deletedShips.map((ship) => ({
-          changeDate: ship.deletedAt!,
-          changeType: "deletion" as const,
-          ship,
-          actorId: ship.deletedById,
-          actorHandle: ship.deletedBy?.handle,
-          actorDeletedAt: ship.deletedBy?.deletedAt,
-        })),
+        ...createdShips.flatMap((ship) =>
+          ship.createdAt
+            ? [
+                {
+                  changeDate: ship.createdAt,
+                  changeType: "creation" as const,
+                  ship,
+                  actorId: ship.createdById,
+                  actorHandle: ship.createdBy?.handle,
+                  actorDeletedAt: ship.createdBy?.deletedAt,
+                },
+              ]
+            : [],
+        ),
+        ...deletedShips.flatMap((ship) =>
+          ship.deletedAt
+            ? [
+                {
+                  changeDate: ship.deletedAt,
+                  changeType: "deletion" as const,
+                  ship,
+                  actorId: ship.deletedById,
+                  actorHandle: ship.deletedBy?.handle,
+                  actorDeletedAt: ship.deletedBy?.deletedAt,
+                },
+              ]
+            : [],
+        ),
       ];
 
       const sorted = changes.toSorted(
