@@ -41,12 +41,11 @@ export const updateEventParticipationComment = createAuthenticatedAction(
         requestPayload: formData,
       };
 
-    const participant = await prisma.eventParticipant.findUnique({
+    const participant = await prisma.eventParticipant.findFirst({
       where: {
-        eventId_activeCitizenId: {
-          eventId: event.id,
-          activeCitizenId: citizenId,
-        },
+        eventId: event.id,
+        citizenId,
+        cancelledAt: null,
       },
       select: {
         id: true,

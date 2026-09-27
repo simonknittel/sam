@@ -1,9 +1,20 @@
 /**
+ * The level gate: a role with levels counts only at its maximum level. A
+ * role without levels always counts.
+ */
+export const hasReachedMaxLevel = (roleAssignment: {
+  readonly currentLevel: number | null;
+  readonly role: { readonly maxLevel: number | null };
+}) =>
+  !roleAssignment.role.maxLevel ||
+  (roleAssignment.currentLevel ?? 0) >= roleAssignment.role.maxLevel;
+
+/**
  * Resolves the effective roles of a citizen from their role assignments:
  * leveled roles only count once the max level is reached, and inherited
- * roles are included. Security-critical and shared by the app's session
- * callback (permission sets), `getWikiContext()` (wiki permission
- * resolution) and the notification Lambda so none of them can drift apart.
+ * roles are included. Security-critical and shared by the app's per-request
+ * loader `getEffectiveRoles()` (the session and every viewer) and the
+ * Lambda's permission checks, so none of them can drift apart.
  */
 export const resolveEffectiveRoles = <
   AssignedRole extends { maxLevel: number | null },
@@ -17,11 +28,7 @@ export const resolveEffectiveRoles = <
   }[],
 ): (AssignedRole | InheritedRole)[] =>
   roleAssignments
-    .filter(
-      (roleAssignment) =>
-        !roleAssignment.role.maxLevel ||
-        (roleAssignment.currentLevel ?? 0) >= roleAssignment.role.maxLevel,
-    )
+    .filter(hasReachedMaxLevel)
     .flatMap((roleAssignment): (AssignedRole | InheritedRole)[] => [
       roleAssignment.role,
       ...roleAssignment.role.inherits,

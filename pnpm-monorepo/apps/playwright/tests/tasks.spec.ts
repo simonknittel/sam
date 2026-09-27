@@ -575,3 +575,115 @@ test("a citizen sees exactly the tasks they may see, in each list and on the tas
     await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
   }
 });
+
+test("a task that requires a role is visible and can be taken on through an inherited role", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const creator = await createCitizen(prisma, {
+    handle: "task-auftraggeber",
+    permissionStrings: ["task;read"],
+  });
+  const veteran = await createCitizen(prisma, {
+    handle: "task-veteran",
+    permissionStrings: ["task;read"],
+  });
+  const requiredRole = await createRole(prisma);
+  const inheritingRole = await createRole(prisma);
+  await prisma.role.update({
+    where: { id: inheritingRole.id },
+    data: { inherits: { connect: { id: requiredRole.id } } },
+  });
+  await assignRole(prisma, veteran.entity, inheritingRole);
+  const task = await createTextTask(prisma, creator, "Veteranen-Eskorte", {
+    hiddenForOtherRoles: true,
+    requiredRoles: { connect: { id: requiredRole.id } },
+  });
+
+  await signIn(veteran.user);
+  await page.goto("/app/tasks");
+  await expect(
+    page.getByRole("link", { name: /Veteranen-Eskorte/ }),
+  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+
+  await page.goto(`/app/tasks/${task.id}`);
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Annehmen" }),
+    page.getByRole("button", { name: "Aufgeben" }),
+  );
+  await expect
+    .poll(() =>
+      prisma.taskAssignment.count({
+        where: { taskId: task.id, citizenId: veteran.entity.id },
+      }),
+    )
+    .toBe(1);
+});
+
+test("a task that requires a role with levels is hidden and cannot be taken on below the maximum level", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const creator = await createCitizen(prisma, {
+    handle: "task-auftraggeber",
+    permissionStrings: ["task;read"],
+  });
+  const trainee = await createCitizen(prisma, {
+    handle: "task-anwaerter",
+    permissionStrings: ["task;read"],
+  });
+  const leveledRole = await createRole(prisma);
+  await prisma.role.update({
+    where: { id: leveledRole.id },
+    data: { maxLevel: 3 },
+  });
+  const assignment = await prisma.roleAssignment.create({
+    data: {
+      citizenId: trainee.entity.id,
+      roleId: leveledRole.id,
+      currentLevel: 1,
+    },
+  });
+  const hiddenTask = await createTextTask(prisma, creator, "Piloten-Pruefung", {
+    hiddenForOtherRoles: true,
+    requiredRoles: { connect: { id: leveledRole.id } },
+  });
+  const openTask = await createTextTask(prisma, creator, "Offener Testflug", {
+    hiddenForOtherRoles: false,
+    requiredRoles: { connect: { id: leveledRole.id } },
+  });
+
+  /**
+   * Level 1 of 3: the direct assignment does not count
+   */
+  await signIn(trainee.user);
+  await page.goto("/app/tasks");
+  await expect(
+    page.getByRole("link", { name: /Offener Testflug/ }),
+  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(
+    page.getByRole("link", { name: /Piloten-Pruefung/ }),
+  ).toHaveCount(0);
+
+  await page.goto(`/app/tasks/${hiddenTask.id}`);
+  await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
+
+  await page.goto(`/app/tasks/${openTask.id}`);
+  await expect(page.getByRole("button", { name: "Annehmen" })).toBeDisabled();
+
+  /**
+   * Level 3 of 3: the role counts
+   */
+  await prisma.roleAssignment.update({
+    where: { id: assignment.id },
+    data: { currentLevel: 3 },
+  });
+
+  await page.goto(`/app/tasks/${hiddenTask.id}`);
+  await expect(
+    page.getByText("Piloten-Pruefung", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Annehmen" })).toBeEnabled();
+});

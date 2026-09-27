@@ -1,5 +1,6 @@
 "use client";
 
+import { UserRole } from "@sam-monorepo/database/browser";
 import {
   comparePermissionSets,
   type PermissionSet,
@@ -39,7 +40,7 @@ export const useAuthentication = () => {
 
     // Same rule as `isAdminModeActive` on the server
     if (
-      session.user.role === "admin" &&
+      session.user.role === UserRole.ADMIN &&
       !session.assumedByAdminId &&
       adminEnabled
     )

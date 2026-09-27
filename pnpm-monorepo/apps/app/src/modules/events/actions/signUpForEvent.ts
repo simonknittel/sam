@@ -46,7 +46,7 @@ export const signUpForEvent = createAuthenticatedAction(
       };
 
     /**
-     * Create a fresh participation row; the active-key unique constraint
+     * Create a fresh participation row. The unique index for active sign-ups
      * rejects a second active sign-up.
      */
     const comment = data.comment || null;
@@ -57,7 +57,6 @@ export const signUpForEvent = createAuthenticatedAction(
             eventId: event.id,
             source: EventSource.APP,
             citizenId,
-            activeCitizenId: citizenId,
             comment,
           },
         });

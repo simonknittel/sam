@@ -6,7 +6,10 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import * as z from "zod";
-import { clonePositions } from "../utils/clonePositions";
+import {
+  CLONABLE_POSITION_SELECT,
+  clonePositions,
+} from "../utils/clonePositions";
 import { toEventContainer } from "../utils/eventContainer";
 import { isAllowedToManagePositions } from "../utils/isAllowedToManagePositions";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
@@ -111,27 +114,7 @@ export const copyLineupFromEvent = createAuthenticatedAction(
     const sourcePositions = await prisma.eventPosition.findMany({
       where: { eventId: sourceEvent.id },
       orderBy: { order: "asc" },
-      select: {
-        id: true,
-        parentPositionId: true,
-        name: true,
-        description: true,
-        fontSize: true,
-        backgroundColor: true,
-        textColor: true,
-        requiredRoles: {
-          select: {
-            id: true,
-          },
-        },
-        requiredVariants: {
-          select: {
-            variantId: true,
-            order: true,
-          },
-          orderBy: { order: "asc" },
-        },
-      },
+      select: CLONABLE_POSITION_SELECT,
     });
 
     await prisma.$transaction((transaction) =>

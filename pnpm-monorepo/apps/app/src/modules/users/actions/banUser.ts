@@ -4,6 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { UserRole } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
 import * as z from "zod";
 
@@ -47,7 +48,7 @@ export const banUserAction = createAuthenticatedAction(
       };
 
     // Admins bypass the permission checks and could unban themselves anyway
-    if (user.role === "admin")
+    if (user.role === UserRole.ADMIN)
       return {
         error: "Administratoren können nicht gesperrt werden.",
         requestPayload: formData,

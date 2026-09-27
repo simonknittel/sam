@@ -70,6 +70,8 @@ model FlowNode {
   showUnlocked           Boolean?
   backgroundColor        String?
   backgroundTransparency Float?
+
+  @@index([flowId])
 }
 
 enum FlowNodeType {
@@ -97,11 +99,13 @@ enum FlowNodeRoleCitizensAlignment {
 
 model FlowEdge {
   id           String   @id @default(cuid())
-  type         String
   sourceId     String
   source       FlowNode @relation("sources", fields: [sourceId], references: [id], onDelete: Cascade)
   sourceHandle String
   targetId     String
   target       FlowNode @relation("targets", fields: [targetId], references: [id], onDelete: Cascade)
   targetHandle String
+
+  @@index([sourceId])
+  @@index([targetId])
 }

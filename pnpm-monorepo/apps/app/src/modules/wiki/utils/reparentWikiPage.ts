@@ -1,6 +1,8 @@
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import type { authenticate } from "@/modules/auth/server";
+import { Prisma } from "@sam-monorepo/database/client";
 import type { getTranslations } from "next-intl/server";
+import * as z from "zod";
 import { buildEventWikiPageMoveReset } from "./buildEventWikiPageMoveReset";
 import { buildWikiPageMoveReset } from "./buildWikiPageMoveReset";
 import { collectWikiPageDescendants } from "./collectWikiPageDescendants";
@@ -63,9 +65,41 @@ export const validateWikiPageReparent = async (
   return null;
 };
 
+/** SQLSTATE `check_violation` */
+const CHECK_VIOLATION_CODE = "23514";
+
+/**
+ * Prisma reports a database error without its own Prisma code as a known
+ * request error and keeps the SQLSTATE in the error of the driver adapter.
+ */
+const checkViolationMetaSchema = z.object({
+  modelName: z.literal("WikiPage"),
+  driverAdapterError: z.object({
+    cause: z.object({ originalCode: z.literal(CHECK_VIOLATION_CODE) }),
+  }),
+});
+
+export const WIKI_PAGE_TREE_CHANGED_ERROR =
+  "Die Seite kann nicht dorthin verschoben werden, weil sich die Seitenstruktur in der Zwischenzeit geändert hat. Bitte lade die Seite neu und versuche es erneut.";
+
+/**
+ * True when the database refused a reparent (see WikiPage.parentId and
+ * WikiPage.visibility). The checks of validateWikiPageReparent use a context
+ * that can be out of date: when a different move changes the tree at the
+ * same time, only the database sees the cycle. A move does not change the
+ * namespace or the container, thus a check violation on a page during a move
+ * always comes from the rules of the page tree.
+ */
+export const isWikiPageReparentRefused = (error: unknown) =>
+  error instanceof Prisma.PrismaClientKnownRequestError &&
+  checkViolationMetaSchema.safeParse(error.meta).success;
+
 /**
  * A moved page and its subtree take the permissions of their new place —
- * the same reset on both reparent paths.
+ * the same reset on both reparent paths. Run the statements before the
+ * update that sets the new parent: the database allows PUBLIC only on a
+ * top-level page, and the reset removes PUBLIC from a page that gets a
+ * parent.
  */
 export const buildWikiPageReparentReset = (
   scoped: ScopedContext,

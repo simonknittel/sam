@@ -1,5 +1,5 @@
 import { prisma, type WikiPageReport } from "@sam-monorepo/database";
-import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
+import { findCitizenIdsWithPermissions } from "../../common/effectivePermissions";
 import { publishNotifications } from "../publish";
 
 interface Payload {
@@ -31,39 +31,17 @@ export const WikiPageReportedHandler = async (payload: Payload) => {
   });
   if (!report) return;
 
-  const permissionStrings = await prisma.permissionString.findMany({
-    where: {
-      permissionString: "wiki;manage",
-    },
-    select: {
-      roleId: true,
-    },
-  });
-  if (permissionStrings.length <= 0) return;
-
-  const recipients = await prisma.citizen.findMany({
-    where: {
-      ...ACTIVE_CITIZEN_WHERE,
-      roleAssignments: {
-        some: {
-          roleId: {
-            in: permissionStrings.map((item) => item.roleId),
-          },
-        },
-      },
-    },
-    select: {
-      id: true,
-    },
-  });
-  if (recipients.length <= 0) return;
+  const recipientIds = await findCitizenIdsWithPermissions({}, [
+    { resource: "wiki", operation: "manage" },
+  ]);
+  if (recipientIds.size === 0) return;
 
   /**
    * Publish notifications
    */
   await publishNotifications(
-    recipients.map((recipient) => ({
-      receiverId: recipient.id,
+    Array.from(recipientIds, (recipientId) => ({
+      receiverId: recipientId,
       notificationType: "wiki_page_reported" as const,
       payload: {
         reportId: report.id,

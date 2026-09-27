@@ -114,6 +114,9 @@ const runWikiSearch = async (
    * counts as matched when it satisfies the whole tsquery by itself: with
    * a multi-word query, a tag contributing just one of the words keeps
    * the page in the results (via tagsText) but is not returned as a chip.
+   *
+   * The tag name is cast to text: the driver adapter does not know the
+   * array type of `citext` and returns such an array as one string.
    */
   const candidates = await prisma.$queryRaw<
     { id: string; snippet: string; matchedTags: string[] }[]
@@ -122,7 +125,7 @@ const runWikiSearch = async (
       "id",
       ts_headline('german', "title" || ' ' || "searchText", ${tsquery}, ${headlineOptions}) AS "snippet",
       ARRAY(
-        SELECT "WikiTag"."name"
+        SELECT "WikiTag"."name"::text
         FROM "WikiPageTag"
         INNER JOIN "WikiTag" ON "WikiTag"."id" = "WikiPageTag"."tagId"
         WHERE "WikiPageTag"."pageId" = "WikiPage"."id"

@@ -1,21 +1,16 @@
 import { createId } from "@paralleldrive/cuid2";
 import { prisma } from "@sam-monorepo/database";
 import { WikiPageNamespace } from "@sam-monorepo/database/client";
-import {
-  ACTIVE_CITIZEN_WHERE,
-  AuditEventType,
-  EFFECTIVE_ROLE_PERMISSIONS_SELECT,
-} from "@sam-monorepo/domain";
+import { ACTIVE_CITIZEN_WHERE, AuditEventType } from "@sam-monorepo/domain";
 import {
   collectPositionScopeIdsForCitizen,
   comparePermissionSets,
   createEventWikiPagePermissionResolver,
   createWikiPagePermissionResolver,
-  getPermissionSetsByRoles,
-  resolveEffectiveRoles,
   type PermissionSet,
 } from "@sam-monorepo/permissions";
 import { createAuditEvents } from "../common/audit";
+import { loadEffectivePermissions } from "../common/effectivePermissions";
 import { emitEvents } from "../common/eventbridge";
 import { log } from "../common/logger";
 import { captureAsyncFunc } from "../common/xray";
@@ -43,24 +38,14 @@ const NO_GRANTS: CitizenGrants = {
 };
 
 /**
- * Effective role ids and app-level permissions per citizen, using the same
- * strict semantics as the app's session (`resolveEffectiveRoles`: level
- * gate + inheritance) — the wiki read gate must not be looser than the
- * page itself.
+ * Effective role ids and app-level permissions per citizen (see
+ * `loadEffectivePermissions()`): the wiki read gate must not be looser than
+ * the page itself. A deleted citizen gets no grants.
  */
 const loadCitizenGrants = async (citizenIds: readonly string[]) => {
-  const assignments = await prisma.roleAssignment.findMany({
-    where: { citizenId: { in: [...citizenIds] } },
-    select: {
-      citizenId: true,
-      ...EFFECTIVE_ROLE_PERMISSIONS_SELECT,
-    },
+  const permissionsByCitizenId = await loadEffectivePermissions({
+    id: { in: [...citizenIds] },
   });
-
-  const assignmentsByCitizenId = Map.groupBy(
-    assignments,
-    (assignment) => assignment.citizenId,
-  );
 
   const has = (
     permissionSets: PermissionSet[],
@@ -70,16 +55,15 @@ const loadCitizenGrants = async (citizenIds: readonly string[]) => {
 
   const grants = new Map<string, CitizenGrants>();
   for (const citizenId of citizenIds) {
-    const citizenAssignments = assignmentsByCitizenId.get(citizenId);
-    if (!citizenAssignments) {
+    const permissions = permissionsByCitizenId.get(citizenId);
+    if (!permissions) {
       grants.set(citizenId, NO_GRANTS);
       continue;
     }
 
-    const effectiveRoles = resolveEffectiveRoles(citizenAssignments);
-    const permissionSets = getPermissionSetsByRoles(effectiveRoles);
+    const { roleIds, permissionSets } = permissions;
     grants.set(citizenId, {
-      roleIds: new Set(effectiveRoles.map((role) => role.id)),
+      roleIds,
       hasLoginManage: has(permissionSets, "login", "manage"),
       hasWikiManage: has(permissionSets, "wiki", "manage"),
       hasEventRead: has(permissionSets, "event", "read"),

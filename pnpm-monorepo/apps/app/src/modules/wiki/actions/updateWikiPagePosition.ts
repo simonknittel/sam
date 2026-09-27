@@ -10,7 +10,9 @@ import { isEventWikiRootPage } from "../utils/isEventWikiRootPage";
 import {
   buildWikiPageReparentAuditEvents,
   buildWikiPageReparentReset,
+  isWikiPageReparentRefused,
   validateWikiPageReparent,
+  WIKI_PAGE_TREE_CHANGED_ERROR,
 } from "../utils/reparentWikiPage";
 import { requireAdminableWikiPage } from "../utils/requireAdminableWikiPage";
 
@@ -98,13 +100,23 @@ export const updateWikiPagePosition = createAuthenticatedAction(
         }),
       ];
     });
-    /** Same permission reset as moveWikiPage, see there */
+    /** Same permission reset as moveWikiPage, see buildWikiPageReparentReset */
     const reset = changesParent
       ? buildWikiPageReparentReset(scoped, page, newParentId, updatedById)
       : null;
 
-    if (updates.length > 0 || reset)
-      await prisma.$transaction([...updates, ...(reset?.statements ?? [])]);
+    if (updates.length > 0 || reset) {
+      try {
+        await prisma.$transaction([...(reset?.statements ?? []), ...updates]);
+      } catch (error) {
+        if (isWikiPageReparentRefused(error))
+          return {
+            error: WIKI_PAGE_TREE_CHANGED_ERROR,
+            requestPayload: formData,
+          };
+        throw error;
+      }
+    }
 
     if (reset)
       await createAuditEvents(

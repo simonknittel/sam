@@ -27,10 +27,7 @@ export {
 } from "./events/eventRecipients.js";
 export { isAllowedWebPushEndpointUrl } from "./isAllowedWebPushEndpointUrl.js";
 export { ORG_ID } from "./ORG_ID.js";
-export {
-  EFFECTIVE_ROLE_IDS_SELECT,
-  EFFECTIVE_ROLE_PERMISSIONS_SELECT,
-} from "./permissions/roleAssignmentSelects.js";
+export { EFFECTIVE_ROLE_PERMISSIONS_SELECT } from "./permissions/roleAssignmentSelects.js";
 export {
   CYCLE_PHASE_WHERE,
   CyclePhase,

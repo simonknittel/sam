@@ -18,6 +18,7 @@ import {
   Controls,
   MarkerType,
   ReactFlow,
+  type DefaultEdgeOptions,
   type Edge,
   type Node,
   type OnConnect,
@@ -39,6 +40,17 @@ import { getInitialNodesAndEdges } from "../utils/getInitialNodesAndEdges";
 import { nodeTypes } from "../utils/nodeTypes";
 import { CreateOrUpdateNodeModal } from "./CreateOrUpdateNodeModal";
 import { FlowProvider } from "./FlowContext";
+
+/**
+ * The database stores only the connection of an edge. All edges get the same
+ * look from these options.
+ */
+const DEFAULT_EDGE_OPTIONS: DefaultEdgeOptions = {
+  type: "smoothstep",
+  markerEnd: {
+    type: MarkerType.ArrowClosed,
+  },
+};
 
 interface Props {
   readonly className?: string;
@@ -139,12 +151,7 @@ export const Flow = ({
         onConnect={onConnect}
         fitView
         className={className}
-        defaultEdgeOptions={{
-          type: "smoothstep",
-          markerEnd: {
-            type: MarkerType.ArrowClosed,
-          },
-        }}
+        defaultEdgeOptions={DEFAULT_EDGE_OPTIONS}
         snapToGrid
         nodesDraggable={isUpdating}
         nodesConnectable={isUpdating}

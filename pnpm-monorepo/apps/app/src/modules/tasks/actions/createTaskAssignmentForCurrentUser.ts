@@ -49,14 +49,7 @@ export const createTaskAssignmentForCurrentUser = createAuthenticatedAction(
         requestPayload: formData,
       };
 
-    if (
-      task.requiredRoles.length > 0 &&
-      !task.requiredRoles.some((role) =>
-        authentication.session.entity!.roleAssignments.some(
-          (assignment) => assignment.roleId === role.id,
-        ),
-      )
-    )
+    if (!task.hasCurrentUserRequiredRole)
       return {
         error: "Du erfüllst nicht die Voraussetzungen für diesen Task.",
         requestPayload: formData,

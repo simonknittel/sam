@@ -33,8 +33,6 @@ export const updateParticipants = async (
       cancelledAt: null,
     },
     select: {
-      id: true,
-      citizenId: true,
       discordUserId: true,
     },
   });
@@ -45,11 +43,11 @@ export const updateParticipants = async (
   );
 
   /**
-   * A withdrawal soft-cancels the participation row (the active-key mirrors
-   * are nulled in the same update so the "one active row per person" unique
-   * constraints release the slot) and, like before the unification, drops
-   * the citizen's position applications and unassigns their lineup
-   * positions — all in one transaction.
+   * A withdrawal soft-cancels the participation row (the unique rule for
+   * active sign-ups ignores cancelled rows, thus a later re-RSVP gets a new
+   * row) and, like before the unification, drops the citizen's position
+   * applications and unassigns their lineup positions — all in one
+   * transaction.
    */
   if (removed.length > 0) {
     await prisma.$transaction([
@@ -64,8 +62,6 @@ export const updateParticipants = async (
         },
         data: {
           cancelledAt: new Date(),
-          activeCitizenId: null,
-          activeDiscordUserId: null,
         },
       }),
 
@@ -100,7 +96,9 @@ export const updateParticipants = async (
 
   /**
    * Every (re-)RSVP becomes a fresh row; the citizen is resolved at write
-   * time where possible.
+   * time where possible. A citizen with two Discord accounts can have an
+   * active row already: the unique rule for active sign-ups then skips the
+   * second row, so that one conflict does not stop the whole run.
    */
   if (added.length > 0) {
     const citizens = await prisma.citizen.findMany({
@@ -125,23 +123,27 @@ export const updateParticipants = async (
         source: EventSource.DISCORD,
         discordUserId,
         citizenId: citizenIdByDiscordId.get(discordUserId) ?? null,
-        activeDiscordUserId: discordUserId,
-        activeCitizenId: citizenIdByDiscordId.get(discordUserId) ?? null,
       })),
+      skipDuplicates: true,
     });
   }
 
   /**
-   * Participants who joined before their citizen existed in the database:
-   * re-resolve still-active rows without a citizen on every run so they
-   * eventually attach once the citizen is created.
+   * The citizen of a Discord user can come after the RSVP. Thus look for the
+   * citizens of all rows without a citizen again on each run, also of the
+   * cancelled rows, so that each row gets its citizen when one exists.
    */
-  const unresolvedParticipants = activeParticipants.filter(
-    (participant) =>
-      participant.citizenId === null &&
-      participant.discordUserId !== null &&
-      !removed.includes(participant.discordUserId),
-  );
+  const unresolvedParticipants = await prisma.eventParticipant.findMany({
+    where: {
+      eventId: databaseEvent.id,
+      source: EventSource.DISCORD,
+      citizenId: null,
+    },
+    select: {
+      discordUserId: true,
+    },
+    distinct: ["discordUserId"],
+  });
   if (unresolvedParticipants.length > 0) {
     const citizens = await prisma.citizen.findMany({
       where: {
@@ -157,25 +159,19 @@ export const updateParticipants = async (
         discordId: true,
       },
     });
-    const citizenIdByDiscordId = new Map(
-      citizens.map((citizen) => [citizen.discordId, citizen.id]),
-    );
 
-    const resolvableParticipants = unresolvedParticipants.filter(
-      (participant) => citizenIdByDiscordId.has(participant.discordUserId),
-    );
-    if (resolvableParticipants.length > 0) {
+    if (citizens.length > 0) {
       await prisma.$transaction(
-        resolvableParticipants.map((participant) =>
-          prisma.eventParticipant.update({
+        citizens.map((citizen) =>
+          prisma.eventParticipant.updateMany({
             where: {
-              id: participant.id,
+              eventId: databaseEvent.id,
+              source: EventSource.DISCORD,
+              citizenId: null,
+              discordUserId: citizen.discordId,
             },
             data: {
-              citizenId: citizenIdByDiscordId.get(participant.discordUserId),
-              activeCitizenId: citizenIdByDiscordId.get(
-                participant.discordUserId,
-              ),
+              citizenId: citizen.id,
             },
           }),
         ),

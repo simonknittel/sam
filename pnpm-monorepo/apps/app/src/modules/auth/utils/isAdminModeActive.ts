@@ -1,3 +1,4 @@
+import { UserRole } from "@sam-monorepo/database/browser";
 import type { Session } from "next-auth";
 import { cookies } from "next/headers";
 import { ADMIN_MODE_COOKIE, ADMIN_MODE_COOKIE_VALUE } from "./adminCookies";
@@ -8,6 +9,6 @@ import { ADMIN_MODE_COOKIE, ADMIN_MODE_COOKIE_VALUE } from "./adminCookies";
  * user is an admin.
  */
 export const isAdminModeActive = async (session: Session) =>
-  session.user.role === "admin" &&
+  session.user.role === UserRole.ADMIN &&
   !session.assumedByAdminId &&
   (await cookies()).get(ADMIN_MODE_COOKIE)?.value === ADMIN_MODE_COOKIE_VALUE;

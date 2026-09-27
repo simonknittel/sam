@@ -9,6 +9,7 @@ import {
   updateSilcBalances,
   type LocalDate,
 } from "@sam-monorepo/domain";
+import { hasReachedMaxLevel } from "@sam-monorepo/permissions";
 import { createAuditEvents } from "../common/audit";
 import { emitEvents } from "../common/eventbridge";
 import { log } from "../common/logger";
@@ -62,12 +63,14 @@ export const disburseRoleSalaries = async () => {
       select: {
         id: true,
         name: true,
+        maxLevel: true,
         assignments: {
           where: {
             citizen: ACTIVE_CITIZEN_WHERE,
           },
           select: {
             citizenId: true,
+            currentLevel: true,
           },
         },
       },
@@ -78,7 +81,16 @@ export const disburseRoleSalaries = async () => {
       const value = todaysValueByRoleId.get(role.id);
       if (value === undefined) return [];
 
-      return role.assignments.map((assignment) => ({
+      /**
+       * Only the direct assignments get a salary, not the inherited roles
+       * (decision of 2026-09-27). A role with levels pays only at its maximum
+       * level, the same level gate as for the permissions.
+       */
+      const paidAssignments = role.assignments.filter((assignment) =>
+        hasReachedMaxLevel({ currentLevel: assignment.currentLevel, role }),
+      );
+
+      return paidAssignments.map((assignment) => ({
         receiverId: assignment.citizenId,
         value,
         description: `Gehalt: ${role.name}`,

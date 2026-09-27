@@ -58,15 +58,15 @@ export const addEventParticipants = createAuthenticatedAction(
         where: {
           eventId: event.id,
           cancelledAt: null,
-          activeCitizenId: { in: requestedCitizenIds },
+          citizenId: { in: requestedCitizenIds },
         },
-        select: { activeCitizenId: true },
+        select: { citizenId: true },
       }),
     ]);
 
     const addable = new Set(addableCitizenIds);
     const alreadyActive = new Set(
-      activeParticipants.map((participant) => participant.activeCitizenId!),
+      activeParticipants.map((participant) => participant.citizenId!),
     );
 
     const unknownCitizenId = requestedCitizenIds.find(
@@ -99,7 +99,6 @@ export const addEventParticipants = createAuthenticatedAction(
           eventId: event.id,
           source: EventSource.APP,
           citizenId,
-          activeCitizenId: citizenId,
           comment,
         })),
         skipDuplicates: true,

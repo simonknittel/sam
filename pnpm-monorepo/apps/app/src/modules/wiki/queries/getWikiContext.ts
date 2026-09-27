@@ -1,14 +1,12 @@
 import { prisma } from "@/db";
-import { authenticate } from "@/modules/auth/server";
+import { authenticate, getEffectiveRoles } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import {
   WikiPageNamespace,
   type WikiPage,
   type WikiPageAccessType,
 } from "@sam-monorepo/database/client";
-import { EFFECTIVE_ROLE_IDS_SELECT } from "@sam-monorepo/domain";
 import {
-  resolveEffectiveRoles,
   resolveWikiPagePermissions,
   type ResolvedWikiPagePermissions,
   type WikiPageTierPermissions,
@@ -81,7 +79,7 @@ export const getWikiContext = cache(
     if (!authentication) return null;
 
     /**
-     * The admin escape hatch (user.role === "admin" + enable_admin cookie)
+     * The admin escape hatch (user.role ADMIN + enable_admin cookie)
      * is part of authorize() and therefore flows into hasWikiManage, which
      * grants all tiers on every page in the resolver. Enabled admins can
      * use all wiki features without any role-based restrictions.
@@ -90,13 +88,8 @@ export const getWikiContext = cache(
 
     const citizenId = authentication.session.entity?.id ?? null;
 
-    const [roleAssignments, allPages] = await Promise.all([
-      citizenId
-        ? prisma.roleAssignment.findMany({
-            where: { citizenId },
-            select: EFFECTIVE_ROLE_IDS_SELECT,
-          })
-        : Promise.resolve([]),
+    const [effectiveRoles, allPages] = await Promise.all([
+      citizenId ? getEffectiveRoles(citizenId) : null,
       prisma.wikiPage.findMany({
         where: { namespace: WikiPageNamespace.WIKI },
         select: {
@@ -123,18 +116,9 @@ export const getWikiContext = cache(
       }),
     ]);
 
-    /**
-     * Same semantics as the session callback — both use
-     * `resolveEffectiveRoles()`: leveled roles only count once the max level
-     * is reached, and inherited roles are included.
-     */
-    const roleIds = new Set(
-      resolveEffectiveRoles(roleAssignments).map((role) => role.id),
-    );
-
     const viewer: WikiPageViewer = {
       citizenId,
-      roleIds,
+      roleIds: effectiveRoles?.roleIds ?? new Set(),
       hasWikiManage,
     };
 

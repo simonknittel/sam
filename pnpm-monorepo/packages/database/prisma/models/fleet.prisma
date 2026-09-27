@@ -12,8 +12,6 @@ model Series {
   manufacturerId String
   manufacturer   Manufacturer @relation(fields: [manufacturerId], references: [id], onDelete: Cascade)
   variants       Variant[]
-
-  @@unique([name, manufacturerId])
 }
 
 model Variant {
@@ -95,4 +93,7 @@ model Ship {
   deletedAt   DateTime?
   deletedById String?
   deletedBy   Citizen?  @relation("deletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
+
+  @@index([ownerId])
+  @@index([variantId])
 }

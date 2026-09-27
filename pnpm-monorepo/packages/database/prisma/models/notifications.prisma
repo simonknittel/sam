@@ -15,7 +15,6 @@ model NotificationSetting {
   disabledAt       DateTime            @default(now())
 
   @@unique([citizenId, notificationType, channel])
-  @@index([citizenId])
 }
 
 model OnSiteNotification {

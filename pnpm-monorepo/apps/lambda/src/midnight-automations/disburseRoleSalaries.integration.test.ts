@@ -103,6 +103,32 @@ describe("disburseRoleSalaries", () => {
     ).toBe(0);
   });
 
+  test("a role with levels pays only at its maximum level", async () => {
+    const role = await prisma.role.create({
+      data: { name: "Staffelführer", maxLevel: 3 },
+    });
+    const [atMaximum] = await Promise.all(
+      [3, 2].map((currentLevel) =>
+        prisma.citizen.create({
+          data: {
+            handle: `level-${currentLevel}`,
+            roleAssignments: { create: { roleId: role.id, currentLevel } },
+          },
+        }),
+      ),
+    );
+    await prisma.silcRoleSalary.create({
+      data: { roleId: role.id, value: SALARY, dayOfMonth: PAYOUT_DAY },
+    });
+
+    await disburseRoleSalaries();
+
+    const receiverIds = (
+      await prisma.silcTransaction.findMany({ select: { receiverId: true } })
+    ).map((transaction) => transaction.receiverId);
+    expect(receiverIds).toEqual([atMaximum?.id]);
+  });
+
   test("a salary on another day is not paid", async () => {
     const { role, citizen } = await createCitizenWithRole();
     await prisma.silcRoleSalary.create({

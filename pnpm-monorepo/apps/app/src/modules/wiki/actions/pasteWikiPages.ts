@@ -220,13 +220,12 @@ export const pasteWikiPages = createAuthenticatedAction(
        * and parent stay — the page keeps its identity.
        */
       await prisma.$transaction(async (transaction) => {
-        const tagsByLower = await findOrCreateWikiTags(
+        const tags = await findOrCreateWikiTags(
           transaction,
           sourceTagAssignments.map((assignment) => assignment.tag.name),
           targetContainer,
           entity.id,
         );
-        const tags = [...tagsByLower.values()];
 
         await transaction.wikiPageTag.deleteMany({
           where: { pageId: targetPageId },

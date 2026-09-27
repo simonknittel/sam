@@ -77,20 +77,118 @@ test("a page is renamed, which moves it to a new URL, and moved to a new parent"
   });
   await moveDialog.getByRole("button", { name: "Verschieben" }).click();
 
+  /** A public page gives up PUBLIC below a parent, see WikiPage.visibility */
   await expect
     .poll(
       () =>
         prisma.wikiPage.findUniqueOrThrow({
           where: { id: wikiPage.id },
-          select: { parentId: true },
+          select: { parentId: true, visibility: true },
         }),
       { timeout: ACTION_FEEDBACK_TIMEOUT },
     )
-    .toMatchObject({ parentId: target.id });
+    .toEqual({ parentId: target.id, visibility: WikiPageVisibility.INHERIT });
 
   // The sidebar tree now reaches it through its new parent
   await page.goto(`/app/wiki/${target.id}/${target.slug}`);
   await expect(page.getByRole("link", { name: "Neuer Titel" })).toBeVisible();
+});
+
+test("two moves at the same time cannot put a page below itself", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createCitizen(prisma, {
+    handle: "wiki-verwalter",
+    permissionStrings: ["wiki;manage"],
+  });
+  const first = await createWikiPage(prisma, {
+    title: "Erste Seite",
+    visibility: WikiPageVisibility.PUBLIC,
+  });
+  const second = await createWikiPage(prisma, {
+    title: "Zweite Seite",
+    visibility: WikiPageVisibility.PUBLIC,
+  });
+
+  await signIn(manager.user);
+  await page.goto(`/app/wiki/${first.id}/${first.slug}`);
+
+  const moveDialog = modal(page, "Seite verschieben");
+  /** exact — the sidebar tree's drag handles carry a longer variant */
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Seite verschieben", exact: true }),
+    moveDialog,
+  );
+  await moveDialog.locator('select[name="newParentId"]').selectOption({
+    value: second.id,
+  });
+
+  /**
+   * A different manager moves the second page below the first page at the
+   * same time. The update takes the lock of the page tree (see the trigger
+   * WikiPage_check_parent), and the transaction keeps it until the test
+   * commits. The order is then certain: the move of the dialog passes the
+   * checks of the app, waits for the lock and sees the parallel move only
+   * after it.
+   */
+  let commitParallelMove = () => {};
+  const parallelMoveCanCommit = new Promise<void>((resolve) => {
+    commitParallelMove = resolve;
+  });
+  const parallelMove = prisma.$transaction(
+    async (transaction) => {
+      await transaction.wikiPage.update({
+        where: { id: second.id },
+        data: { parentId: first.id, visibility: WikiPageVisibility.INHERIT },
+      });
+      await parallelMoveCanCommit;
+    },
+    /** Longer than the click and the poll below, which wait for the lock */
+    { timeout: ACTION_FEEDBACK_TIMEOUT * 2 },
+  );
+
+  try {
+    await moveDialog.getByRole("button", { name: "Verschieben" }).click();
+    await expect
+      .poll(
+        async () => {
+          const waitingLocks = await prisma.$queryRaw<{ count: number }[]>`
+            SELECT count(*)::int AS "count"
+            FROM pg_locks
+            WHERE "locktype" = 'advisory'
+              AND NOT "granted"
+              AND "database" = (SELECT "oid" FROM pg_database WHERE "datname" = current_database())
+          `;
+          return waitingLocks[0]?.count;
+        },
+        { timeout: ACTION_FEEDBACK_TIMEOUT },
+      )
+      .toBe(1);
+  } finally {
+    commitParallelMove();
+    await parallelMove;
+  }
+
+  await expect(
+    moveDialog.getByText(
+      "Die Seite kann nicht dorthin verschoben werden, weil sich die Seitenstruktur in der Zwischenzeit geändert hat.",
+      { exact: false },
+    ),
+  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+
+  /** Only the parallel move is done: the tree has no cycle */
+  expect(
+    await prisma.wikiPage.findMany({
+      where: { id: { in: [first.id, second.id] } },
+      select: { id: true, parentId: true },
+      orderBy: { title: "asc" },
+    }),
+  ).toEqual([
+    { id: first.id, parentId: null },
+    { id: second.id, parentId: first.id },
+  ]);
 });
 
 test("a favorited page shows up in the sidebar's favorites", async ({

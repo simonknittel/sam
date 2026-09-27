@@ -1,7 +1,7 @@
 import { Tile } from "@/modules/common/components/Tile";
 import clsx from "clsx";
-import { getSilcBalanceOfAllCitizens } from "../queries/getSilcBalanceOfAllCitizens";
 import { getAuecConversionRate } from "../queries/getAuecConversionRate";
+import { getSilcBalanceOfAllCitizens } from "../queries/getSilcBalanceOfAllCitizens";
 import { AuecConversionRateSettingClient } from "./AuecConversionRateSettingClient";
 
 interface Props {

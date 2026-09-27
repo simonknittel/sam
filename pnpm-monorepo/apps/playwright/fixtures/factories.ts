@@ -17,6 +17,7 @@ import {
   FlowRoleAccessType,
   OrganizationMembershipType,
   OrganizationMembershipVisibility,
+  UserRole,
   WikiPageAccessType,
   WikiPageEditability,
   WikiPageEventScope,
@@ -86,7 +87,7 @@ export const createCitizen = async (
       name: handle,
       email: `${handle}-${suffix}@example.com`,
       emailVerified,
-      role: admin ? "admin" : null,
+      role: admin ? UserRole.ADMIN : null,
       accounts: {
         create: {
           type: "oauth",
@@ -136,7 +137,7 @@ export const createUserWithoutCitizen = (
       name,
       email: `${name}-${randomUUID().slice(0, 8)}@example.com`,
       emailVerified: new Date(),
-      role: admin ? "admin" : null,
+      role: admin ? UserRole.ADMIN : null,
       accounts: {
         create: {
           type: "oauth",
@@ -573,7 +574,7 @@ interface CreateParticipantOptions {
   readonly comment?: string;
   /**
    * Cancels the participation the way the app does: the row stays as
-   * history and gives up its `active…` claim on the event.
+   * history, and the unique rule for active sign-ups ignores it.
    */
   readonly cancelled?: boolean;
   /** Citizen id of whoever cancelled; defaults to the participant themselves. */
@@ -612,8 +613,6 @@ export const createParticipant = (
       source,
       citizenId,
       discordUserId,
-      activeCitizenId: cancelled ? null : citizenId,
-      activeDiscordUserId: cancelled ? null : discordUserId,
       comment,
       ...(cancelled
         ? {
@@ -814,7 +813,6 @@ export const createFlow = async (
   await prisma.flowEdge.createMany({
     data: nodeIds.slice(1).map((targetId, index) => ({
       id: cuid2Like(),
-      type: "smoothstep",
       sourceId: nodeIds[index]!,
       sourceHandle: "bottom",
       targetId,

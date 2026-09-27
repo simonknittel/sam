@@ -43,6 +43,15 @@ test("the ship change log lists creations and deletions and filters between them
       deletedAt: new Date(Date.now() - ONE_DAY_MS),
     },
   });
+  /** Old ships have no known creation date, thus the log has no row for them */
+  await prisma.ship.create({
+    data: {
+      ownerId: owner.entity.id,
+      variantId: variant.id,
+      name: "Altbestand",
+      createdAt: null,
+    },
+  });
 
   await signIn(viewer.user);
   await page.goto("/app/fleet/changes");
@@ -60,6 +69,9 @@ test("the ship change log lists creations and deletions and filters between them
   await expect(
     page.getByRole("row").filter({ hasText: "Sternenfaust" }),
   ).toContainText("Polaris");
+  await expect(
+    page.getByRole("row").filter({ hasText: "Altbestand" }),
+  ).toHaveCount(0);
 
   await page.goto("/app/fleet/changes?changeType=deletion");
   await expect(deletedRows).toHaveCount(1, {

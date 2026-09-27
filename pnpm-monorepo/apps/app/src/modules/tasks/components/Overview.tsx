@@ -42,6 +42,7 @@ interface TaskWithIncludes extends Task {
   })[];
   completionists?: Pick<Citizen, "id" | "handle" | "deletedAt">[];
   requiredRoles: Pick<Role, "id">[];
+  hasCurrentUserRequiredRole: boolean;
 }
 
 interface Props {
@@ -323,6 +324,7 @@ export const Overview = ({
               <ToggleAssignmentForCurrentUser
                 task={task}
                 isCurrentUserAssigned={isCurrentUserAssigned}
+                hasCurrentUserRequiredRole={task.hasCurrentUserRequiredRole}
               />
             )}
 

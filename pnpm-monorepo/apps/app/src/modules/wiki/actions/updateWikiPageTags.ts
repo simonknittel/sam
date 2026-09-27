@@ -25,9 +25,9 @@ const schema = z.object({
 });
 
 /**
- * Replaces the tags of a page with the submitted set. Tag names are matched
- * against existing tags case-insensitively (find-or-create) so duplicates
- * differing only in casing can never come into existence. A tag whose last
+ * Replaces the tags of a page with the submitted set. The tags are found or
+ * created in the scope of the page (see findOrCreateWikiTags), so a name
+ * that differs only in letter case uses the existing tag. A tag whose last
  * assignment is removed here is deleted right away to keep the autocomplete
  * clean.
  */
@@ -56,94 +56,75 @@ export const updateWikiPageTags = createAuthenticatedAction(
     if (!context.permissions.get(page.id)?.canEdit)
       return { error: t("Common.forbidden"), requestPayload: formData };
 
-    /**
-     * First submitted casing wins for names that only differ in casing.
-     */
-    const requestedNamesByLower = new Map<string, string>();
-    for (const name of data.tagNames) {
-      const lower = name.toLocaleLowerCase();
-      if (!requestedNamesByLower.has(lower))
-        requestedNamesByLower.set(lower, name);
-    }
-
-    const currentAssignments = await prisma.wikiPageTag.findMany({
-      where: { pageId: page.id },
-      select: { id: true, tagId: true, tag: { select: { name: true } } },
-    });
-    const currentByLower = new Map(
-      currentAssignments.map((assignment) => [
-        assignment.tag.name.toLocaleLowerCase(),
-        assignment,
-      ]),
-    );
-
-    const removedAssignments = currentAssignments.filter(
-      (assignment) =>
-        !requestedNamesByLower.has(assignment.tag.name.toLocaleLowerCase()),
-    );
-    const addedNames = [...requestedNamesByLower.entries()]
-      .filter(([lower]) => !currentByLower.has(lower))
-      .map(([, name]) => name);
-
-    if (removedAssignments.length === 0 && addedNames.length === 0)
-      return { success: t("Common.successfullySaved") };
-
     const citizenId = authentication.session.entity?.id ?? null;
 
-    /**
-     * Case-insensitive find-or-create per added name, scoped to the page's
-     * container (or the global wiki). The display casing of an existing tag
-     * wins over the submitted one.
-     */
-    const addedTagsByLower = await findOrCreateWikiTags(
-      prisma,
-      addedNames,
-      getWikiPageContainer(page),
-      citizenId,
-    );
-    const addedTags = addedNames.map((name) =>
-      addedTagsByLower.get(name.toLocaleLowerCase())!,
-    );
+    const changes = await prisma.$transaction(async (transaction) => {
+      const requestedTags = await findOrCreateWikiTags(
+        transaction,
+        data.tagNames,
+        getWikiPageContainer(page),
+        citizenId,
+      );
+      const currentAssignments = await transaction.wikiPageTag.findMany({
+        where: { pageId: page.id },
+        select: { id: true, tagId: true, tag: { select: { name: true } } },
+      });
 
-    const removedTagIds = removedAssignments.map(
-      (assignment) => assignment.tagId,
-    );
+      const requestedTagIds = new Set(requestedTags.map((tag) => tag.id));
+      const currentTagIds = new Set(
+        currentAssignments.map((assignment) => assignment.tagId),
+      );
+      const removedAssignments = currentAssignments.filter(
+        (assignment) => !requestedTagIds.has(assignment.tagId),
+      );
+      const addedTags = requestedTags.filter(
+        (tag) => !currentTagIds.has(tag.id),
+      );
+      if (removedAssignments.length === 0 && addedTags.length === 0)
+        return null;
 
-    const keptNames = currentAssignments
-      .filter((assignment) => !removedAssignments.includes(assignment))
-      .map((assignment) => assignment.tag.name);
-    const tagsText = [...keptNames, ...addedTags.map((tag) => tag.name)]
-      .sort((a, b) => a.localeCompare(b))
-      .join(" ");
-
-    await prisma.$transaction([
-      prisma.wikiPageTag.deleteMany({
-        where: { id: { in: removedAssignments.map((entry) => entry.id) } },
-      }),
-      prisma.wikiPageTag.createMany({
+      await transaction.wikiPageTag.deleteMany({
+        where: {
+          id: { in: removedAssignments.map((assignment) => assignment.id) },
+        },
+      });
+      await transaction.wikiPageTag.createMany({
         data: addedTags.map((tag) => ({
           pageId: page.id,
           tagId: tag.id,
           createdById: citizenId,
         })),
         skipDuplicates: true,
-      }),
+      });
       /**
        * Runs after the assignment delete above, so tags whose last usage was
        * just removed are swept immediately.
        */
-      prisma.wikiTag.deleteMany({
-        where: { id: { in: removedTagIds }, pages: { none: {} } },
-      }),
+      await transaction.wikiTag.deleteMany({
+        where: {
+          id: { in: removedAssignments.map((assignment) => assignment.tagId) },
+          pages: { none: {} },
+        },
+      });
       /**
        * Denormalized copy of the tag names for the full-text search (see
        * WikiPage.tagsText).
        */
-      prisma.wikiPage.update({
+      await transaction.wikiPage.update({
         where: { id: page.id },
-        data: { tagsText, updatedById: citizenId },
-      }),
-    ]);
+        data: {
+          tagsText: requestedTags
+            .map((tag) => tag.name)
+            .toSorted((first, second) => first.localeCompare(second))
+            .join(" "),
+          updatedById: citizenId,
+        },
+      });
+
+      return { addedTags, removedAssignments };
+    });
+
+    if (!changes) return { success: t("Common.successfullySaved") };
 
     await createAuditEvents([
       {
@@ -151,8 +132,8 @@ export const updateWikiPageTags = createAuthenticatedAction(
         data: {
           pageId: page.id,
           eventId: page.eventId ?? undefined,
-          addedTagNames: addedTags.map((tag) => tag.name),
-          removedTagNames: removedAssignments.map(
+          addedTagNames: changes.addedTags.map((tag) => tag.name),
+          removedTagNames: changes.removedAssignments.map(
             (assignment) => assignment.tag.name,
           ),
         },

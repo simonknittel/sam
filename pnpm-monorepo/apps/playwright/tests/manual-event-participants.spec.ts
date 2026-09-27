@@ -115,7 +115,6 @@ test("a manager adds citizens with a shared comment", async ({
   expect(rows).toHaveLength(2);
   for (const row of rows) {
     expect(row.source).toBe(EventSource.APP);
-    expect(row.citizenId).toBe(row.activeCitizenId);
     expect(row.comment).toBe("Vom Manager nachgetragen");
     expect(row.cancelledAt).toBeNull();
   }
@@ -204,8 +203,6 @@ test("a manager removes a participant with a reason and clears their lineup", as
   });
   expect(row.cancelledAt).not.toBeNull();
   expect(row.cancelledById).toBe(manager.entity.id);
-  expect(row.activeCitizenId).toBeNull();
-  expect(row.activeDiscordUserId).toBeNull();
 
   const clearedPosition = await prisma.eventPosition.findUniqueOrThrow({
     where: { id: position.id },
@@ -276,6 +273,63 @@ test("a removed citizen can sign up again", async ({
   });
   expect(rows).toHaveLength(2);
   expect(rows.filter((row) => row.cancelledAt === null)).toHaveLength(1);
+});
+
+/**
+ * The unique rule for active sign-ups ignores cancelled rows, but it stops a
+ * second active sign-up. A second tab still shows the old state, thus only
+ * the database can stop its sign-up.
+ */
+test("a citizen who cancelled signs up again, but a second tab cannot sign up a second time", async ({
+  context,
+  page,
+  prisma,
+  signIn,
+}) => {
+  const creator = await createCitizen(prisma, { handle: "rueckkehr-orga" });
+  const participant = await createCitizen(prisma, {
+    handle: "rueckkehrer",
+    permissionStrings: ["event;read"],
+  });
+  const event = await createAppEvent(
+    prisma,
+    appEvent("Operation Rückkehr", creator.entity.id),
+  );
+  await createParticipant(prisma, {
+    eventId: event.id,
+    citizen: participant,
+    source: EventSource.APP,
+    cancelled: true,
+  });
+
+  await signIn(participant.user);
+  const [firstTab, secondTab] = [page, await context.newPage()];
+  for (const tab of [firstTab, secondTab]) {
+    await tab.goto(`/app/events/${event.id}`);
+    await waitForAppShellHydration(tab);
+    await expect(tab.getByText("Abgemeldet", { exact: true })).toBeVisible();
+  }
+
+  await firstTab.getByRole("button", { name: "Anmelden", exact: true }).click();
+  await expect(firstTab.getByText("Du bist angemeldet.")).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+
+  await secondTab
+    .getByRole("button", { name: "Anmelden", exact: true })
+    .click();
+  await expect(secondTab.getByText("Du bist bereits angemeldet.")).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+
+  const rows = await prisma.eventParticipant.findMany({
+    where: { eventId: event.id, citizenId: participant.entity.id },
+    orderBy: { createdAt: "asc" },
+  });
+  expect(rows).toHaveLength(2);
+  expect(rows[0]!.cancelledAt).not.toBeNull();
+  expect(rows[0]!.cancelledById).toBe(participant.entity.id);
+  expect(rows[1]!.cancelledAt).toBeNull();
 });
 
 test("adding an already signed-up citizen neither duplicates nor fails the batch", async ({
