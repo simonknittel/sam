@@ -10,7 +10,10 @@ export {
   type AuditEventInput,
 } from "./AuditEventTypes.js";
 export { buildBriefingRootPageSeed } from "./buildBriefingRootPageSeed.js";
-export { toDateColumnValue } from "./calendarDate.js";
+export {
+  getYesterdayDateColumnValue,
+  toDateColumnValue,
+} from "./calendarDate.js";
 export { ACTIVE_CITIZEN_WHERE } from "./citizen/activeCitizen.js";
 export {
   ORGANIZATION_TIMEZONE,
@@ -45,13 +48,14 @@ export {
   getNextSeasonalThemeStart,
   isSeasonalGreetingDay,
 } from "./seasonal/seasonalCalendar.js";
+export { bookPositiveBalancesAway } from "./silc/bookPositiveBalancesAway.js";
 export { getAuecPerSilc } from "./silc/getAuecPerSilc.js";
 export { getTotalSilc } from "./silc/getTotalSilc.js";
+export { lockSilcLedger } from "./silc/lockSilcLedger.js";
 export { updateSilcBalances } from "./silc/updateSilcBalances.js";
 export {
   UNUSED_UPLOAD_WHERE,
   UPLOAD_USAGE_RELATIONS,
-  type UploadUsageRelation,
 } from "./uploadUsageRelations.js";
 export {
   createWikiPageSnapshotUploadLinks,

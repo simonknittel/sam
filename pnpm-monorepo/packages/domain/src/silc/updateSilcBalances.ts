@@ -1,11 +1,13 @@
 import type { Prisma } from "@sam-monorepo/database/client";
+import { lockSilcLedger } from "./lockSilcLedger.js";
 
 /**
  * Rebuilds the cached SILC balance and lifetime earnings of the given
  * citizens from the ledger in one statement: the balance sums all
  * transactions that are not deleted, the lifetime earnings sum the positive
- * ones. Call it with the client of the transaction that changes the ledger,
- * so that the copy can never differ from the ledger.
+ * ones. Call it with the client of the transaction that changes the ledger
+ * (after `lockSilcLedger()`), so that the copy can never differ from the
+ * ledger.
  *
  * It takes the client from the caller, thus this package still creates no
  * database client itself.
@@ -19,18 +21,13 @@ export const updateSilcBalances = async (
   const ids = [...new Set(citizenIds)];
 
   /**
-   * Lock the citizens before the sums are read. A parallel ledger write for
-   * the same citizen waits here until the other transaction commits. The
-   * next statement then reads the ledger again and includes its rows. The
-   * fixed order of the locks prevents a deadlock between two transactions
-   * with the same citizens.
+   * The callers take the ledger lock as their first statement already, thus
+   * this call does not wait for them. It keeps the balances correct also for
+   * a caller that forgets the lock: a parallel ledger write waits here until
+   * the other transaction commits, and the next statement then reads the
+   * ledger again with its rows.
    */
-  await client.$queryRaw`
-    SELECT "id" FROM "Citizen"
-    WHERE "id" = ANY(${ids}::text[])
-    ORDER BY "id"
-    FOR NO KEY UPDATE
-  `;
+  await lockSilcLedger(client);
 
   await client.$executeRaw`
     UPDATE "Citizen" AS "citizen"

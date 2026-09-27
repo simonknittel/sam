@@ -1,13 +1,14 @@
 "use server";
 
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { MAX_SILC_VALUE } from "@/modules/silc/utils/silcValueLimit";
 import { TaskRewardType } from "@sam-monorepo/database/client";
 import * as z from "zod";
 import { createTaskFieldUpdateAction } from "../utils/createTaskFieldUpdateAction";
 
 const schema = z.object({
   id: z.union([z.cuid(), z.cuid2()]),
-  rewardSilcValue: z.coerce.number().int().min(1),
+  rewardSilcValue: z.coerce.number().int().min(1).max(MAX_SILC_VALUE),
 });
 
 export const updateTaskRewardSilcValue = createTaskFieldUpdateAction(

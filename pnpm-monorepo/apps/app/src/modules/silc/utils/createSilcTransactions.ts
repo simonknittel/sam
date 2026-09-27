@@ -1,7 +1,7 @@
 import { prisma } from "@/db";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import type { Prisma, SilcTransaction } from "@sam-monorepo/database/client";
-import { updateSilcBalances } from "@sam-monorepo/domain";
+import { lockSilcLedger, updateSilcBalances } from "@sam-monorepo/domain";
 import { revalidatePath } from "next/cache";
 
 export interface NewSilcTransaction {
@@ -19,12 +19,18 @@ export interface NewSilcTransaction {
  * differ from the ledger. After the commit, call
  * `announceSilcTransactions()` with the returned ids.
  *
+ * It takes the ledger lock (see `lockSilcLedger()`). A caller that does more
+ * in the same transaction takes the lock first itself, before its other
+ * statements.
+ *
  * @returns The ids of the created transactions
  */
 export const createSilcTransactionsInTransaction = async (
   transaction: Prisma.TransactionClient,
   transactions: readonly NewSilcTransaction[],
 ) => {
+  await lockSilcLedger(transaction);
+
   const createdTransactions =
     await transaction.silcTransaction.createManyAndReturn({
       data: [...transactions],

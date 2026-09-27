@@ -4,13 +4,14 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { updateSilcBalances } from "@sam-monorepo/domain";
+import { lockSilcLedger, updateSilcBalances } from "@sam-monorepo/domain";
 import { revalidatePath } from "next/cache";
 import * as z from "zod";
+import { MAX_SILC_VALUE } from "../utils/silcValueLimit";
 
 const schema = z.object({
   transactionId: z.cuid(),
-  value: z.coerce.number().int(),
+  value: z.coerce.number().int().min(-MAX_SILC_VALUE).max(MAX_SILC_VALUE),
   description: z.string().trim().max(512).optional(),
 });
 
@@ -58,6 +59,8 @@ export const updateSilcTransaction = createAuthenticatedAction(
     const updatedById = authentication.session.entity.id;
     const updatedTransaction = await prisma.$transaction(
       async (transaction) => {
+        await lockSilcLedger(transaction);
+
         const updated = await transaction.silcTransaction.update({
           where: {
             id: data.transactionId,

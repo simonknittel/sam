@@ -4,7 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { updateSilcBalances } from "@sam-monorepo/domain";
+import { lockSilcLedger, updateSilcBalances } from "@sam-monorepo/domain";
 import { revalidatePath } from "next/cache";
 import * as z from "zod";
 
@@ -55,6 +55,8 @@ export const deleteSilcTransaction = createAuthenticatedAction(
      */
     const deletedById = authentication.session.entity.id;
     const deletedEntry = await prisma.$transaction(async (transaction) => {
+      await lockSilcLedger(transaction);
+
       const entry = await transaction.silcTransaction.update({
         where: {
           id: data.id,

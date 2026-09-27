@@ -223,8 +223,7 @@ test("completing a task with a SILC reward pays the completionists", async ({
   expect(auditEvent).not.toBeNull();
 });
 
-test("two parallel completions of a SILC task pay the reward one time", async ({
-  context,
+test("a completion that waits for a parallel completion pays no reward", async ({
   page,
   prisma,
   signIn,
@@ -238,72 +237,98 @@ test("two parallel completions of a SILC task pay the reward one time", async ({
     repeatable: 2,
   });
 
-  const completeModal = (tab: Page) => modal(tab, "Task abschließen");
-  const alreadyCompletedNote = (tab: Page) =>
-    completeModal(tab).getByText("Der Task ist bereits abgeschlossen.");
-
   await signIn(manager.user);
-  const tabs = [page, await context.newPage()];
-  for (const tab of tabs) {
-    await tab.goto(`/app/tasks/${task.id}`);
-    await clickUntilVisible(
-      tab.getByRole("button", { name: "Abschließen" }),
-      completeModal(tab),
-    );
-    await expect(completeModal(tab).getByText("silc-arbeiter")).toBeVisible();
-  }
-
-  await Promise.all(
-    tabs.map((tab) =>
-      completeModal(tab).getByRole("button", { name: "Speichern" }).click(),
-    ),
+  await page.goto(`/app/tasks/${task.id}`);
+  const completeModal = modal(page, "Task abschließen");
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Abschließen" }),
+    completeModal,
   );
+  await expect(completeModal.getByText("silc-arbeiter")).toBeVisible();
 
   /**
-   * One completion wins. The other one finds the task completed and keeps
-   * its modal open with the error.
+   * A parallel completion claims the task with the same guarded update as
+   * the action and keeps its transaction open until the test commits it. The
+   * order is then certain: the completion of the modal passes the checks of
+   * the app, waits for the lock of the task row and sees the parallel
+   * completion only after it.
    */
-  await Promise.all(
-    tabs.map((tab) =>
-      expect(
-        tab
-          .getByText("Erfolgreich abgeschlossen.")
-          .or(alreadyCompletedNote(tab)),
-      ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT }),
-    ),
-  );
-  const alreadyCompletedCounts = await Promise.all(
-    tabs.map((tab) => alreadyCompletedNote(tab).count()),
-  );
-  expect(alreadyCompletedCounts.toSorted()).toEqual([0, 1]);
+  let commitParallelCompletion = () => {};
+  const parallelCompletionCanCommit = new Promise<void>((resolve) => {
+    commitParallelCompletion = resolve;
+  });
+  let signalClaim: (sessionId: number) => void = () => {};
+  const claim = new Promise<number>((resolve) => {
+    signalClaim = resolve;
+  });
+  const parallelCompletion = prisma.$transaction(
+    async (transaction) => {
+      const { count } = await transaction.task.updateMany({
+        where: { id: task.id, completedAt: null },
+        data: { completedAt: new Date(), completedById: manager.entity.id },
+      });
+      if (count !== 1) throw new Error("The parallel completion found no task");
 
-  // The reward of the worker and the payment of the creator, one time each
+      const [session] = await transaction.$queryRaw<{ id: number }[]>`
+        SELECT pg_backend_pid() AS "id"
+      `;
+      signalClaim(session!.id);
+      await parallelCompletionCanCommit;
+    },
+    /** Longer than the click and the poll below, which wait for the lock */
+    { timeout: ACTION_FEEDBACK_TIMEOUT * 2 },
+  );
+
+  try {
+    /** The race ends the wait also when the parallel completion fails */
+    const parallelSessionId = await Promise.race([
+      claim,
+      parallelCompletion.then(() => {
+        throw new Error("The parallel completion ended before its claim");
+      }),
+    ]);
+
+    await completeModal.getByRole("button", { name: "Speichern" }).click();
+    await expect
+      .poll(
+        async () => {
+          const waitingLocks = await prisma.$queryRaw<{ count: number }[]>`
+            SELECT count(*)::int AS "count"
+            FROM pg_locks
+            WHERE NOT "granted"
+              AND ${parallelSessionId}::int = ANY(pg_blocking_pids("pid"))
+          `;
+          return waitingLocks[0]?.count;
+        },
+        { timeout: ACTION_FEEDBACK_TIMEOUT },
+      )
+      .toBe(1);
+  } finally {
+    commitParallelCompletion();
+    await parallelCompletion;
+  }
+
+  await expect(
+    completeModal.getByText("Der Task ist bereits abgeschlossen."),
+  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+
+  // The waiting completion paid no reward and created no repetition
   expect(
     await prisma.silcTransaction.count({ where: { taskId: task.id } }),
-  ).toBe(2);
+  ).toBe(0);
   const workerEntity = await prisma.citizen.findUniqueOrThrow({
     where: { id: worker.entity.id },
   });
-  expect(workerEntity.silcBalance).toBe(50);
-  const managerEntity = await prisma.citizen.findUniqueOrThrow({
-    where: { id: manager.entity.id },
-  });
-  expect(managerEntity.silcBalance).toBe(-50);
-
-  // One next repetition, and one completion in the system log
+  expect(workerEntity.silcBalance).toBe(0);
   expect(
     await prisma.task.findMany({
       where: { title: "Konvoi sichern" },
       select: { repeatable: true, completedAt: true },
-      orderBy: { repeatable: "desc" },
     }),
-  ).toEqual([
-    { repeatable: 2, completedAt: expect.any(Date) },
-    { repeatable: 1, completedAt: null },
-  ]);
+  ).toEqual([{ repeatable: 2, completedAt: expect.any(Date) }]);
   expect(
     await prisma.auditEvent.count({ where: { type: "TASK_COMPLETED" } }),
-  ).toBe(1);
+  ).toBe(0);
 });
 
 test("the dashboard shows its task tiles exactly to those with task permission", async ({
