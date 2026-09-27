@@ -51,7 +51,6 @@ model User {
   submittedCitizenLogs    CitizenLog[]             @relation("submittedBy")
   confirmedCitizenLogs    CitizenLog[]             @relation("confirmedBy")
   lastSeenAt              DateTime?
-  uploads                 Upload[]
   emailConfirmationTokens EmailConfirmationToken[]
   createdAuditEvents      AuditEvent[]             @relation("createdBy")
   bannedAt                DateTime?

@@ -19,7 +19,8 @@ export const UPLOAD_USAGE_RELATIONS = [
   "eventCovers",
   "eventTemplateCovers",
   "wikiPageIcons",
-  "wikiPages",
+  "wikiPageLinks",
+  "wikiPageSnapshotLinks",
 ] as const satisfies readonly (keyof Prisma.UploadCountOutputTypeSelect)[];
 
 export type UploadUsageRelation = (typeof UPLOAD_USAGE_RELATIONS)[number];

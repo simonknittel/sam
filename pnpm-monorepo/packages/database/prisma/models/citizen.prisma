@@ -68,6 +68,7 @@ model Citizen {
   createdVariantTags                           VariantTag[]                         @relation("createdBy")
   updatedVariantTags                           VariantTag[]                         @relation("updatedBy")
   ships                                        Ship[]                               @relation("owner")
+  uploads                                      Upload[]
   createdShips                                 Ship[]                               @relation("createdBy")
   updatedShips                                 Ship[]                               @relation("updatedBy")
   deletedShips                                 Ship[]                               @relation("deletedBy")

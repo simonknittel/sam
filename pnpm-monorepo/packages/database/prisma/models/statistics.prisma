@@ -3,11 +3,13 @@ model RoleCitizenCount {
   roleId    String
   role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
   count     Int
+  /// The calendar day (Europe/Berlin) that the count is for. The midnight
+  /// job writes the count of a day after its end.
+  day       DateTime @db.Date
   createdAt DateTime @default(now())
 
-  @@index([roleId])
-  @@index([createdAt])
-  @@index([roleId, createdAt])
+  @@unique([roleId, day])
+  @@index([day])
 }
 
 model VariantShipCount {
@@ -15,11 +17,13 @@ model VariantShipCount {
   variantId String
   variant   Variant  @relation(fields: [variantId], references: [id], onDelete: Cascade)
   count     Int
+  /// The calendar day (Europe/Berlin) that the count is for, see
+  /// RoleCitizenCount.day
+  day       DateTime @db.Date
   createdAt DateTime @default(now())
 
-  @@index([variantId])
-  @@index([createdAt])
-  @@index([variantId, createdAt])
+  @@unique([variantId, day])
+  @@index([day])
 }
 
 model DailyLoginCount {
@@ -29,6 +33,4 @@ model DailyLoginCount {
   createdAt DateTime @default(now())
 
   @@unique([date])
-  @@index([date])
-  @@index([createdAt])
 }
