@@ -1,7 +1,7 @@
 import { createId } from "@paralleldrive/cuid2";
 import { prisma } from "@sam-monorepo/database";
 import { WikiPageNamespace } from "@sam-monorepo/database/client";
-import { ACTIVE_CITIZEN_WHERE, AuditEventType } from "@sam-monorepo/domain";
+import { AuditEventType } from "@sam-monorepo/domain";
 import {
   collectPositionScopeIdsForCitizen,
   comparePermissionSets,
@@ -139,12 +139,8 @@ export const wikiCitizenMentioned = async () => {
       ),
     ];
 
-    const [grants, citizens, wikiPages, events] = await Promise.all([
+    const [grants, wikiPages, events] = await Promise.all([
       loadCitizenGrants(citizenIds),
-      prisma.citizen.findMany({
-        where: { id: { in: citizenIds }, ...ACTIVE_CITIZEN_WHERE },
-        select: { id: true, discordId: true },
-      }),
       wikiPageIds.size > 0
         ? prisma.wikiPage.findMany({
             where: { namespace: WikiPageNamespace.WIKI },
@@ -167,11 +163,11 @@ export const wikiCitizenMentioned = async () => {
               id: true,
               startTime: true,
               endTime: true,
-              discordCreatorId: true,
+              createdById: true,
               managers: { select: { id: true } },
               participants: {
                 where: { cancelledAt: null },
-                select: { discordUserId: true, citizenId: true },
+                select: { citizenId: true },
               },
               positions: {
                 select: { id: true, parentPositionId: true, citizenId: true },
@@ -193,9 +189,6 @@ export const wikiCitizenMentioned = async () => {
         : Promise.resolve([]),
     ]);
 
-    const discordIdByCitizenId = new Map(
-      citizens.map((citizen) => [citizen.id, citizen.discordId]),
-    );
     const eventsById = new Map(events.map((event) => [event.id, event]));
 
     /** One resolver per citizen covers every WIKI page */
@@ -228,18 +221,15 @@ export const wikiCitizenMentioned = async () => {
       const cached = eventResolvers.get(key);
       if (cached) return cached;
 
-      const discordId = discordIdByCitizenId.get(citizenId) ?? null;
       const resolver = createEventWikiPagePermissionResolver(
         event.wikiPages,
         {
           isParticipant: event.participants.some(
-            (participant) =>
-              (discordId !== null && participant.discordUserId === discordId) ||
-              participant.citizenId === citizenId,
+            (participant) => participant.citizenId === citizenId,
           ),
           isEventManager:
+            event.createdById === citizenId ||
             event.managers.some((manager) => manager.id === citizenId) ||
-            (discordId !== null && event.discordCreatorId === discordId) ||
             grant.hasEventManage,
           positionScopeIds: collectPositionScopeIdsForCitizen(
             event.positions,
