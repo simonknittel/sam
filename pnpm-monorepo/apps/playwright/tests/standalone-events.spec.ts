@@ -613,7 +613,7 @@ test("the personal briefing on a Discord event shows RSVP state and assigned pos
       description: "Bedient die Torpedos im Bug.",
       citizenId: participant.entity.id,
       requiredVariants: {
-        create: { variantId: variant.id },
+        create: { variantId: variant.id, order: 0 },
       },
     },
   });

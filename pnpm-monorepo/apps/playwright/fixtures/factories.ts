@@ -574,7 +574,7 @@ interface CreateParticipantOptions {
   readonly comment?: string;
   /**
    * Cancels the participation the way the app does: the row stays as
-   * history and gives up its `active…` claim on the event.
+   * history, and the unique rule for active sign-ups ignores it.
    */
   readonly cancelled?: boolean;
   /** Citizen id of whoever cancelled; defaults to the participant themselves. */
@@ -613,8 +613,6 @@ export const createParticipant = (
       source,
       citizenId,
       discordUserId,
-      activeCitizenId: cancelled ? null : citizenId,
-      activeDiscordUserId: cancelled ? null : discordUserId,
       comment,
       ...(cancelled
         ? {
