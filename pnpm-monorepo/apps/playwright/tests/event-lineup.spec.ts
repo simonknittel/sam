@@ -20,6 +20,8 @@ import {
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
+const DELETED_CITIZEN_LABEL = "Gelöschter Citizen";
+
 test("a manager builds a lineup: create, rename, require a ship, duplicate, delete", async ({
   page,
   prisma,
@@ -462,4 +464,85 @@ test("the requirement check finds a ship after the first page of the fleet, but 
   await expect(applyButton).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
   await applyButton.focus();
   await expect(unmetRequirementHint).toHaveCount(0);
+});
+
+test("a deleted participant is not a choice in the position picker", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createCitizen(prisma, {
+    handle: "posten-leiter",
+    permissionStrings: LINEUP_PERMISSIONS,
+  });
+  const activeParticipant = await createCitizen(prisma, {
+    handle: "aktiver-teilnehmer",
+  });
+  const deletedParticipant = await createCitizen(prisma, {
+    handle: "geloeschter-teilnehmer",
+  });
+  const event = await createAppEvent(prisma, {
+    name: "Operation Abwesenheit",
+    createdById: manager.entity.id,
+    ...futureEvent(),
+  });
+  for (const participant of [activeParticipant, deletedParticipant]) {
+    await createParticipant(prisma, {
+      eventId: event.id,
+      citizen: participant,
+      source: EventSource.APP,
+    });
+  }
+  await prisma.eventPosition.create({
+    data: {
+      eventId: event.id,
+      name: "Pilot",
+      order: 0,
+      applications: { create: { citizenId: deletedParticipant.entity.id } },
+    },
+  });
+  await prisma.eventPosition.create({
+    data: {
+      eventId: event.id,
+      name: "Schütze",
+      order: 1,
+      citizenId: deletedParticipant.entity.id,
+    },
+  });
+  /** The delete keeps the sign-up, the application and the assignment */
+  await prisma.citizen.update({
+    where: { id: deletedParticipant.entity.id },
+    data: { deletedAt: new Date(), userId: null },
+  });
+
+  await signIn(manager.user);
+  await page.goto(`/app/events/${event.id}/lineup`);
+
+  const pilotPicker = page.getByRole("combobox", { name: "Citizen für Pilot" });
+  await expect(
+    pilotPicker.locator("option", { hasText: "aktiver-teilnehmer" }),
+  ).toHaveCount(1, { timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(
+    pilotPicker.locator("option", { hasText: DELETED_CITIZEN_LABEL }),
+  ).toHaveCount(0);
+  await expect(
+    pilotPicker.locator("option", { hasText: "geloeschter-teilnehmer" }),
+  ).toHaveCount(0);
+
+  /**
+   * The position keeps its deleted citizen and shows the label, but the
+   * manager cannot choose it again
+   */
+  const gunnerPicker = page.getByRole("combobox", {
+    name: "Citizen für Schütze",
+  });
+  await expect(gunnerPicker).toHaveValue(deletedParticipant.entity.id);
+  const deletedOption = gunnerPicker.locator("option", {
+    hasText: DELETED_CITIZEN_LABEL,
+  });
+  await expect(deletedOption).toHaveCount(1);
+  await expect(deletedOption).toBeDisabled();
+  await expect(
+    gunnerPicker.locator("option", { hasText: "geloeschter-teilnehmer" }),
+  ).toHaveCount(0);
 });

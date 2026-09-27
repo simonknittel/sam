@@ -16,7 +16,9 @@ import styles from "./UpdateEventPositionCitizenId.module.css";
 
 interface Props {
   readonly className?: string;
-  readonly position: EventPosition;
+  readonly position: EventPosition & {
+    readonly citizen?: Pick<Citizen, "id" | "handle" | "deletedAt"> | null;
+  };
   readonly citizensSatisfyingRequirements: EventCitizenWithShips[];
   readonly citizensNotSatisfyingRequirements: EventCitizenWithShips[];
   readonly applicationsSatisfyingRequirements: (EventPositionApplication & {
@@ -36,6 +38,22 @@ export const UpdateEventPositionCitizenId = ({
   applicationsNotSatisfyingRequirements,
 }: Props) => {
   const [isPending, startTransition] = useTransition();
+
+  /**
+   * The choices are the participants that are not deleted. The position can
+   * still have a citizen outside of them, for example a deleted citizen.
+   * The select shows this citizen, but the manager cannot choose it again.
+   */
+  const choosableCitizenIds = new Set(
+    [
+      ...citizensSatisfyingRequirements,
+      ...citizensNotSatisfyingRequirements,
+    ].map((eventCitizen) => eventCitizen.citizen.id),
+  );
+  const assignedCitizenOutsideChoices =
+    position.citizen && !choosableCitizenIds.has(position.citizen.id)
+      ? position.citizen
+      : null;
 
   const handleChange: ChangeEventHandler<HTMLSelectElement> = (event) => {
     const formData = new FormData();
@@ -68,6 +86,12 @@ export const UpdateEventPositionCitizenId = ({
         defaultValue={position.citizenId || "-"}
       >
         <option value="-">-</option>
+
+        {assignedCitizenOutsideChoices && (
+          <option value={assignedCitizenOutsideChoices.id} disabled>
+            {getCitizenDisplayName(assignedCitizenOutsideChoices)}
+          </option>
+        )}
 
         <optgroup label="Interessenten - Voraussetzungen erfüllt">
           {applicationsSatisfyingRequirements

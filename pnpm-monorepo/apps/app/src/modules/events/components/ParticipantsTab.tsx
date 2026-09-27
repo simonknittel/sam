@@ -1,7 +1,6 @@
 import { requireAuthentication } from "@/modules/auth/server";
 import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
 import { RolesCell } from "@/modules/citizen/components/RolesCell";
-import { getCitizenByDiscordId } from "@/modules/citizen/queries/getCitizenByDiscordId";
 import { DELETED_CITIZEN_LABEL } from "@/modules/citizen/utils/citizenDisplayName";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { Link } from "@/modules/common/components/Link";
@@ -104,20 +103,10 @@ export const ParticipantsTab = async ({
     }
   });
 
-  const resolvedCreatorCitizen = isAppEvent
-    ? (event.createdBy ?? null)
-    : event.discordCreatorId
-      ? await getCitizenByDiscordId(event.discordCreatorId)
-      : null;
-
   return (
     <div className={clsx("flex flex-col gap-2", className)}>
       <Tile heading="Organisator">
-        {resolvedCreatorCitizen ? (
-          <CitizenLink citizen={resolvedCreatorCitizen} />
-        ) : (
-          "-"
-        )}
+        {event.createdBy ? <CitizenLink citizen={event.createdBy} /> : "-"}
       </Tile>
 
       <Tile
@@ -370,8 +359,7 @@ export const ParticipantsTab = async ({
                       <td className="min-h-8 flex items-center">
                         <RemoveEventParticipant
                           eventId={event.id}
-                          citizenId={resolvedParticipant.citizen.id}
-                          citizenHandle={resolvedParticipant.citizen.handle}
+                          citizen={resolvedParticipant.citizen}
                         />
                       </td>
                     )}

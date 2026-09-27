@@ -262,7 +262,10 @@ test("a removed citizen can sign up again", async ({
   await page.goto(`/app/events/${event.id}`);
   await waitForAppShellHydration(page);
 
-  await expect(page.getByText("Abgemeldet", { exact: true })).toBeVisible();
+  /** A hidden copy of the streamed participation state can match too */
+  await expect(
+    page.getByText("Abgemeldet", { exact: true }).filter({ visible: true }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Anmelden", exact: true }).click();
   await expect(page.getByText("Du bist angemeldet.")).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
@@ -307,7 +310,9 @@ test("a citizen who cancelled signs up again, but a second tab cannot sign up a 
   for (const tab of [firstTab, secondTab]) {
     await tab.goto(`/app/events/${event.id}`);
     await waitForAppShellHydration(tab);
-    await expect(tab.getByText("Abgemeldet", { exact: true })).toBeVisible();
+    await expect(
+      tab.getByText("Abgemeldet", { exact: true }).filter({ visible: true }),
+    ).toBeVisible();
   }
 
   await firstTab.getByRole("button", { name: "Anmelden", exact: true }).click();
