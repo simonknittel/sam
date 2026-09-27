@@ -1,6 +1,4 @@
-import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
-import { DELETED_CITIZEN_LABEL } from "@/modules/citizen/utils/citizenDisplayName";
-import { Link } from "@/modules/common/components/Link";
+import { CitizenCellLink } from "@/modules/common/components/CitizenCellLink";
 import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import type { Citizen, PenaltyEntry } from "@sam-monorepo/database/client";
@@ -53,22 +51,11 @@ export const PenaltyEntriesTable = ({
           <TRow key={entry.id}>
             {!hideCitizenColumn && (
               <td className="overflow-hidden">
-                {entry.citizen.deletedAt ? (
-                  <span className="flex items-center px-2 h-8 text-neutral-500 truncate">
-                    {DELETED_CITIZEN_LABEL}
-                  </span>
-                ) : (
-                  <CitizenPopover citizenId={entry.citizen.id}>
-                    <Link
-                      href={`/app/spynet/citizen/${entry.citizen.id}/penalty-points`}
-                      className="hover:bg-white/10 flex items-center rounded-secondary px-2 h-8 text-brand-red-500 truncate"
-                      prefetch={false}
-                      title={entry.citizen.handle || entry.citizen.id}
-                    >
-                      {entry.citizen.handle || entry.citizen.id}
-                    </Link>
-                  </CitizenPopover>
-                )}
+                <CitizenCellLink
+                  className="h-8"
+                  citizen={entry.citizen}
+                  page="/penalty-points"
+                />
               </td>
             )}
 
@@ -77,22 +64,7 @@ export const PenaltyEntriesTable = ({
             <td>{formatDate(entry.createdAt)}</td>
 
             <td className="overflow-hidden">
-              {entry.createdBy && !entry.createdBy.deletedAt ? (
-                <CitizenPopover citizenId={entry.createdBy.id}>
-                  <Link
-                    href={`/app/spynet/citizen/${entry.createdBy.id}`}
-                    className="hover:bg-white/10 flex items-center rounded-secondary px-2 h-8 text-brand-red-500 truncate"
-                    prefetch={false}
-                    title={entry.createdBy.handle || entry.createdBy.id}
-                  >
-                    {entry.createdBy.handle || entry.createdBy.id}
-                  </Link>
-                </CitizenPopover>
-              ) : (
-                <span className="flex items-center px-2 h-8 text-neutral-500 italic">
-                  {entry.createdBy ? DELETED_CITIZEN_LABEL : "Unbekannt"}
-                </span>
-              )}
+              <CitizenCellLink className="h-8" citizen={entry.createdBy} />
             </td>
 
             <td
