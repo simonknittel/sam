@@ -29,14 +29,14 @@ export const getPageDetails = protectedProcedure
         prisma.wikiPage.findUnique({
           where: { id: page.id },
           select: {
-            createdBy: { select: { id: true, handle: true } },
-            updatedBy: { select: { id: true, handle: true } },
+            createdBy: { select: { id: true, handle: true, deletedAt: true } },
+            updatedBy: { select: { id: true, handle: true, deletedAt: true } },
           },
         }),
         permissions.effectiveOwnerId
           ? prisma.citizen.findUnique({
               where: { id: permissions.effectiveOwnerId },
-              select: { id: true, handle: true },
+              select: { id: true, handle: true, deletedAt: true },
             })
           : Promise.resolve(null),
       ]);

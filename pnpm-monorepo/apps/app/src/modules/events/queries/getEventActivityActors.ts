@@ -23,6 +23,7 @@ export const getEventActivityActors = cache(
           select: {
             id: true,
             handle: true,
+            deletedAt: true,
           },
         },
       },

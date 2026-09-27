@@ -23,6 +23,7 @@ export const TASK_LIST_SELECT = {
         select: {
           id: true,
           handle: true,
+          deletedAt: true,
         },
       },
     },

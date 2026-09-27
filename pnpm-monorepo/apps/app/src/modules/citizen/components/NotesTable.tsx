@@ -1,4 +1,5 @@
 import type { CitizenLogTableRow } from "@/modules/citizen/queries/citizenLogTableSelect";
+import { DELETED_CITIZEN_LABEL } from "@/modules/citizen/utils/citizenDisplayName";
 import { Actions } from "@/modules/common/components/Actions";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
@@ -20,7 +21,7 @@ import { DeleteLog } from "./DeleteLog";
 import { UpdateNote } from "./notes/UpdateNote";
 
 export type Row = Readonly<{
-  entity: Pick<Citizen, "id" | "handle">;
+  entity: Pick<Citizen, "id" | "handle" | "deletedAt">;
   noteType: NoteType;
   classificationLevel: ClassificationLevel;
   confirmationState?: CitizenLogConfirmationState;
@@ -103,24 +104,30 @@ export const NotesTable = ({ rows, searchParams }: Props) => {
               className="grid items-center gap-4 h-14 rounded-secondary -mx-2 first:mt-2 grid-cols-[1fr_3fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_44px]"
             >
               <td>
-                <CitizenPopover citizenId={row.entity.id}>
-                  <Link
-                    href={`/app/spynet/citizen/${row.entity.id}/notes`}
-                    className="text-brand-red-500 hover:bg-neutral-800 block rounded-secondary px-2 h-full"
-                  >
-                    <span className="flex items-center h-14">
-                      <span className="overflow-hidden text-ellipsis">
-                        {row.entity.handle ? (
-                          <span title={row.entity.handle}>
-                            {row.entity.handle}
-                          </span>
-                        ) : (
-                          <span className="text-neutral-500 italic">-</span>
-                        )}
+                {row.entity.deletedAt ? (
+                  <span className="px-2 text-neutral-500">
+                    {DELETED_CITIZEN_LABEL}
+                  </span>
+                ) : (
+                  <CitizenPopover citizenId={row.entity.id}>
+                    <Link
+                      href={`/app/spynet/citizen/${row.entity.id}/notes`}
+                      className="text-brand-red-500 hover:bg-neutral-800 block rounded-secondary px-2 h-full"
+                    >
+                      <span className="flex items-center h-14">
+                        <span className="overflow-hidden text-ellipsis">
+                          {row.entity.handle ? (
+                            <span title={row.entity.handle}>
+                              {row.entity.handle}
+                            </span>
+                          ) : (
+                            <span className="text-neutral-500 italic">-</span>
+                          )}
+                        </span>
                       </span>
-                    </span>
-                  </Link>
-                </CitizenPopover>
+                    </Link>
+                  </CitizenPopover>
+                )}
               </td>
 
               <td

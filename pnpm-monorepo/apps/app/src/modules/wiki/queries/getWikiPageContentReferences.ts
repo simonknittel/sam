@@ -1,5 +1,6 @@
 import { prisma } from "@/db";
 import { authenticate } from "@/modules/auth/server";
+import { getCitizenDisplayName } from "@/modules/citizen/utils/citizenDisplayName";
 import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
 import {
   collectWikiMentionedCitizenIds,
@@ -36,10 +37,16 @@ export const getWikiMentionedCitizens = async (
     (canReadCitizens && mentionedCitizenIds.length > 0
       ? await prisma.citizen.findMany({
           where: { id: { in: mentionedCitizenIds } },
-          select: { id: true, handle: true },
+          select: { id: true, handle: true, deletedAt: true },
         })
       : []
-    ).map((citizen) => [citizen.id, { handle: citizen.handle }]),
+    ).map((citizen) => [
+      citizen.id,
+      {
+        handle: getCitizenDisplayName(citizen),
+        deleted: citizen.deletedAt !== null,
+      },
+    ]),
   );
 };
 

@@ -2,6 +2,7 @@ import { requireAuthentication } from "@/modules/auth/server";
 import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
 import { RolesCell } from "@/modules/citizen/components/RolesCell";
 import { getCitizenByDiscordId } from "@/modules/citizen/queries/getCitizenByDiscordId";
+import { DELETED_CITIZEN_LABEL } from "@/modules/citizen/utils/citizenDisplayName";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { Link } from "@/modules/common/components/Link";
 import { Tile } from "@/modules/common/components/Tile";
@@ -136,25 +137,31 @@ export const ParticipantsTab = async ({
                       key={manager.id}
                       className="rounded-secondary bg-neutral-700/50 flex"
                     >
-                      <CitizenPopover citizenId={manager.id}>
-                        <Link
-                          href={`/app/spynet/citizen/${manager.id}`}
-                          className={clsx(
-                            "hover:underline px-2 py-1 inline-block",
-                            {
-                              "text-green-500":
-                                manager.id ===
-                                authentication.session.entity!.id,
-                              "text-brand-red-500":
-                                manager.id !==
-                                authentication.session.entity!.id,
-                            },
-                          )}
-                          prefetch={false}
-                        >
-                          {manager.handle || manager.id}
-                        </Link>
-                      </CitizenPopover>
+                      {manager.deletedAt ? (
+                        <span className="px-2 py-1 text-neutral-500">
+                          {DELETED_CITIZEN_LABEL}
+                        </span>
+                      ) : (
+                        <CitizenPopover citizenId={manager.id}>
+                          <Link
+                            href={`/app/spynet/citizen/${manager.id}`}
+                            className={clsx(
+                              "hover:underline px-2 py-1 inline-block",
+                              {
+                                "text-green-500":
+                                  manager.id ===
+                                  authentication.session.entity!.id,
+                                "text-brand-red-500":
+                                  manager.id !==
+                                  authentication.session.entity!.id,
+                              },
+                            )}
+                            prefetch={false}
+                          >
+                            {manager.handle || manager.id}
+                          </Link>
+                        </CitizenPopover>
+                      )}
 
                       <DeleteManager
                         eventId={event.id}
@@ -277,35 +284,45 @@ export const ParticipantsTab = async ({
                     )}
                   >
                     <td>
-                      <CitizenPopover
-                        citizenId={resolvedParticipant.citizen.id}
-                      >
-                        <Link
-                          href={`/app/spynet/citizen/${resolvedParticipant.citizen.id}`}
-                          className={clsx(
-                            "hover:bg-white/10 rounded-secondary px-2 h-8 flex items-center",
-                            {
-                              "text-green-500":
-                                resolvedParticipant.citizen.id ===
-                                authentication.session.entity!.id,
-                              "text-brand-red-500":
-                                resolvedParticipant.citizen.id !==
-                                authentication.session.entity!.id,
-                            },
-                          )}
-                          prefetch={false}
+                      {resolvedParticipant.citizen.deletedAt ? (
+                        <span className="px-2 h-8 flex items-center text-neutral-500">
+                          {DELETED_CITIZEN_LABEL}
+                        </span>
+                      ) : (
+                        <CitizenPopover
+                          citizenId={resolvedParticipant.citizen.id}
                         >
-                          <span className="overflow-hidden text-ellipsis">
-                            {resolvedParticipant.citizen.handle ? (
-                              <span title={resolvedParticipant.citizen.handle}>
-                                {resolvedParticipant.citizen.handle}
-                              </span>
-                            ) : (
-                              <span className="text-neutral-500 italic">-</span>
+                          <Link
+                            href={`/app/spynet/citizen/${resolvedParticipant.citizen.id}`}
+                            className={clsx(
+                              "hover:bg-white/10 rounded-secondary px-2 h-8 flex items-center",
+                              {
+                                "text-green-500":
+                                  resolvedParticipant.citizen.id ===
+                                  authentication.session.entity!.id,
+                                "text-brand-red-500":
+                                  resolvedParticipant.citizen.id !==
+                                  authentication.session.entity!.id,
+                              },
                             )}
-                          </span>
-                        </Link>
-                      </CitizenPopover>
+                            prefetch={false}
+                          >
+                            <span className="overflow-hidden text-ellipsis">
+                              {resolvedParticipant.citizen.handle ? (
+                                <span
+                                  title={resolvedParticipant.citizen.handle}
+                                >
+                                  {resolvedParticipant.citizen.handle}
+                                </span>
+                              ) : (
+                                <span className="text-neutral-500 italic">
+                                  -
+                                </span>
+                              )}
+                            </span>
+                          </Link>
+                        </CitizenPopover>
+                      )}
                     </td>
 
                     <td className="h-8 flex items-center">

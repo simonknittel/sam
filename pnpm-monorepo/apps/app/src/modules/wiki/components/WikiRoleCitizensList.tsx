@@ -8,6 +8,7 @@ import type { CSSProperties } from "react";
 export interface WikiRoleCitizen {
   readonly id: string;
   readonly handle: string | null;
+  readonly deletedAt: Date | null;
 }
 
 interface Props {

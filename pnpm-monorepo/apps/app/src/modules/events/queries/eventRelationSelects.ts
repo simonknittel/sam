@@ -16,6 +16,7 @@ import type { Prisma, Ship } from "@sam-monorepo/database/client";
 const EVENT_CITIZEN_SELECT = {
   id: true,
   handle: true,
+  deletedAt: true,
 } as const satisfies Prisma.CitizenSelect;
 
 /** A cover image as `getPublicUploadUrl()` and `next/image` need it */

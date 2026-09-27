@@ -1,5 +1,6 @@
 import { prisma } from "@/db";
 import { authenticate } from "@/modules/auth/server";
+import { getCitizenDisplayName } from "@/modules/citizen/utils/citizenDisplayName";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { EditableInput } from "@/modules/common/components/form/EditableInput";
@@ -101,7 +102,7 @@ export const WikiPageContent = async ({
     permissions.effectiveOwnerId
       ? prisma.citizen.findUnique({
           where: { id: permissions.effectiveOwnerId },
-          select: { id: true, handle: true },
+          select: { id: true, handle: true, deletedAt: true },
         })
       : Promise.resolve(null),
     staticContent ?? getWikiPageStaticContent(context, page.id),
@@ -155,7 +156,9 @@ export const WikiPageContent = async ({
         permissionRoles,
         page.id,
         {
-          ownerHandle: effectiveOwner?.handle ?? null,
+          ownerHandle: effectiveOwner
+            ? getCitizenDisplayName(effectiveOwner)
+            : null,
           ownerInheritedFrom: sourceTitle(permissions.ownerSourceId),
           titleOf: (pageId) => context.pagesById.get(pageId)?.title,
         },
@@ -336,7 +339,9 @@ export const WikiPageContent = async ({
             imageUploadability: page.imageUploadability,
             attachmentUploadability: page.attachmentUploadability,
           }}
-          effectiveOwnerHandle={effectiveOwner?.handle ?? null}
+          effectiveOwnerHandle={
+            effectiveOwner ? getCitizenDisplayName(effectiveOwner) : null
+          }
           readRoleIds={grantingRoleIdsOf(WikiPageAccessType.READ)}
           editRoleIds={grantingRoleIdsOf(WikiPageAccessType.EDIT)}
           adminRoleIds={grantingRoleIdsOf(WikiPageAccessType.ADMIN)}

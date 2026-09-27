@@ -41,6 +41,7 @@ export interface ShipChangeRow {
   ship: Prisma.ShipGetPayload<{ select: typeof CHANGED_SHIP_SELECT }>;
   actorId?: string | null;
   actorHandle?: string | null;
+  actorDeletedAt?: Date | null;
 }
 
 export const getShipChanges = cache(
@@ -90,6 +91,7 @@ export const getShipChanges = cache(
                 createdBy: {
                   select: {
                     handle: true,
+                    deletedAt: true,
                   },
                 },
               },
@@ -109,6 +111,7 @@ export const getShipChanges = cache(
                 deletedBy: {
                   select: {
                     handle: true,
+                    deletedAt: true,
                   },
                 },
               },
@@ -122,6 +125,7 @@ export const getShipChanges = cache(
           ship,
           actorId: ship.createdById,
           actorHandle: ship.createdBy?.handle,
+          actorDeletedAt: ship.createdBy?.deletedAt,
         })),
         ...deletedShips.map((ship) => ({
           changeDate: ship.deletedAt!,
@@ -129,6 +133,7 @@ export const getShipChanges = cache(
           ship,
           actorId: ship.deletedById,
           actorHandle: ship.deletedBy?.handle,
+          actorDeletedAt: ship.deletedBy?.deletedAt,
         })),
       ];
 

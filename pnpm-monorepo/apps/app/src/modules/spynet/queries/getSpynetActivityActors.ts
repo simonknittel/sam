@@ -4,13 +4,14 @@ import { withTrace } from "@/modules/tracing/utils/withTrace";
 import type { Citizen } from "@sam-monorepo/database/client";
 import { cache } from "react";
 
-type Actor = Pick<Citizen, "id" | "handle">;
+type Actor = Pick<Citizen, "id" | "handle" | "deletedAt">;
 
 const ACTOR_SELECT = {
   createdBy: {
     select: {
       id: true,
       handle: true,
+      deletedAt: true,
     },
   },
 } as const;

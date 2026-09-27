@@ -22,13 +22,13 @@ const DETAIL_SELECT = {
   visibilityRoles: { select: { roleId: true } },
   roleAccess: { select: { roleId: true, type: true } },
   createdAt: true,
-  createdBy: { select: { id: true, handle: true } },
+  createdBy: { select: { id: true, handle: true, deletedAt: true } },
   updatedAt: true,
-  updatedBy: { select: { id: true, handle: true } },
+  updatedBy: { select: { id: true, handle: true, deletedAt: true } },
   ownedById: true,
-  ownedBy: { select: { id: true, handle: true } },
+  ownedBy: { select: { id: true, handle: true, deletedAt: true } },
   deletedAt: true,
-  deletedBy: { select: { id: true, handle: true } },
+  deletedBy: { select: { id: true, handle: true, deletedAt: true } },
 } satisfies Prisma.EventTemplateSelect;
 
 export type EventTemplateDetail = Prisma.EventTemplateGetPayload<{

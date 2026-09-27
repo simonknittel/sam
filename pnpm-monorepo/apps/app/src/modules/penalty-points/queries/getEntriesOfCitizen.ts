@@ -29,8 +29,8 @@ export const getEntriesOfCitizen = withTrace(
         createdAt: "desc",
       },
       include: {
-        citizen: { select: { id: true, handle: true } },
-        createdBy: { select: { id: true, handle: true } },
+        citizen: { select: { id: true, handle: true, deletedAt: true } },
+        createdBy: { select: { id: true, handle: true, deletedAt: true } },
       },
     });
   },

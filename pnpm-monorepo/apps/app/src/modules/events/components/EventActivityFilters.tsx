@@ -4,6 +4,7 @@ import {
   ACTIVITY_TO_PARAM,
   ACTIVITY_TYPE_PARAM,
 } from "@/modules/activity/utils/activityFilterParams";
+import { getCitizenDisplayName } from "@/modules/citizen/utils/citizenDisplayName";
 import { DateRangeFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/DateRangeFilter";
 import { MultiSelectComboboxFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/MultiSelectComboboxFilter";
 import type { Citizen } from "@sam-monorepo/database/client";
@@ -14,7 +15,7 @@ import {
 } from "../activity/eventActivityTypes";
 
 interface Props {
-  readonly actors: Pick<Citizen, "id" | "handle">[];
+  readonly actors: Pick<Citizen, "id" | "handle" | "deletedAt">[];
 }
 
 export const EventActivityFilters = ({ actors }: Props) => {
@@ -31,7 +32,7 @@ export const EventActivityFilters = ({ actors }: Props) => {
 
   const actorItems = actors.map((actor) => ({
     value: actor.id,
-    label: actor.handle || actor.id,
+    label: getCitizenDisplayName(actor),
   }));
 
   return (

@@ -37,7 +37,7 @@ export const CITIZEN_LOG_TABLE_SELECT = {
   type: true,
   content: true,
   createdAt: true,
-  citizen: { select: { id: true, handle: true } },
+  citizen: { select: { id: true, handle: true, deletedAt: true } },
   submittedBy: { select: { name: true } },
 } as const satisfies Prisma.CitizenLogSelect;
 

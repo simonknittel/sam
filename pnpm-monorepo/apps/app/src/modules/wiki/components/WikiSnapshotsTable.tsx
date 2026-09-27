@@ -41,7 +41,7 @@ export const WikiSnapshotsTable = async ({
       kind: true,
       name: true,
       createdAt: true,
-      createdBy: { select: { id: true, handle: true } },
+      createdBy: { select: { id: true, handle: true, deletedAt: true } },
     },
   });
 
@@ -107,6 +107,7 @@ interface SnapshotRowProps {
     readonly createdBy: {
       readonly id: string;
       readonly handle: string | null;
+      readonly deletedAt: Date | null;
     } | null;
   };
   readonly canRestore: boolean;

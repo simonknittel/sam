@@ -6,7 +6,7 @@ import type { Citizen, EventPosition } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 
 type Position = EventPosition & {
-  citizen?: Pick<Citizen, "id" | "handle"> | null;
+  citizen?: Pick<Citizen, "id" | "handle" | "deletedAt"> | null;
   childPositions?: Position[];
 };
 

@@ -4,6 +4,7 @@ import {
   ACTIVITY_TO_PARAM,
   ACTIVITY_TYPE_PARAM,
 } from "@/modules/activity/utils/activityFilterParams";
+import { getCitizenDisplayName } from "@/modules/citizen/utils/citizenDisplayName";
 import { DateRangeFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/DateRangeFilter";
 import { MultiSelectComboboxFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/MultiSelectComboboxFilter";
 import { ORGANIZATION_ACTIVITY_TYPE_LABELS } from "@/modules/organizations/activity/organizationActivityTypes";
@@ -14,7 +15,7 @@ const TYPE_GROUP_ORGANIZATIONS = "Organisationen";
 const TYPE_GROUP_ROLES = "Rollen";
 
 interface Props {
-  readonly actors: Pick<Citizen, "id" | "handle">[];
+  readonly actors: Pick<Citizen, "id" | "handle" | "deletedAt">[];
 }
 
 export const SpynetActivityFilters = ({ actors }: Props) => {
@@ -35,7 +36,7 @@ export const SpynetActivityFilters = ({ actors }: Props) => {
 
   const actorItems = actors.map((actor) => ({
     value: actor.id,
-    label: actor.handle || actor.id,
+    label: getCitizenDisplayName(actor),
   }));
 
   return (

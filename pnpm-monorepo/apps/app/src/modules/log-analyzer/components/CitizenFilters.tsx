@@ -1,5 +1,6 @@
 "use client";
 
+import { getCitizenDisplayName } from "@/modules/citizen/utils/citizenDisplayName";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
 import type { Citizen } from "@sam-monorepo/database/browser";
@@ -23,7 +24,10 @@ export const CitizenFilters = ({ className }: Props) => {
 
   /** The walk over all entries runs once per change, not once per render */
   const sortedCitizens = useMemo(() => {
-    const citizens = new Map<Citizen["id"], Pick<Citizen, "id" | "handle">>();
+    const citizens = new Map<
+      Citizen["id"],
+      Pick<Citizen, "id" | "handle" | "deletedAt">
+    >();
     for (const entry of entries.values()) {
       if (entry.isShared && entry.citizen)
         citizens.set(entry.citizen.id, entry.citizen);
@@ -49,8 +53,8 @@ export const CitizenFilters = ({ className }: Props) => {
       {sortedCitizens.length > 0 ? (
         sortedCitizens.map((citizen) => {
           const label = (
-            <span className="truncate" title={citizen.handle ?? citizen.id}>
-              {citizen.handle ?? citizen.id}
+            <span className="truncate" title={getCitizenDisplayName(citizen)}>
+              {getCitizenDisplayName(citizen)}
             </span>
           );
 

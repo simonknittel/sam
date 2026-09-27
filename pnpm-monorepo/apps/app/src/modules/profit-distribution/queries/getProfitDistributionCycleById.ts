@@ -41,6 +41,7 @@ export const getProfitDistributionCycleById = cache(
                 select: {
                   id: true,
                   handle: true,
+                  deletedAt: true,
                   silcBalance: true,
                 },
               },
@@ -48,6 +49,7 @@ export const getProfitDistributionCycleById = cache(
                 select: {
                   id: true,
                   handle: true,
+                  deletedAt: true,
                 },
               },
             },

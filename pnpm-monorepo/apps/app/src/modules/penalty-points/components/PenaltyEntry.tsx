@@ -1,4 +1,5 @@
 import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
+import { DELETED_CITIZEN_LABEL } from "@/modules/citizen/utils/citizenDisplayName";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import type {
@@ -38,7 +39,7 @@ export const PenaltyEntry = ({ className, entry, showDelete }: Props) => {
 
         <p>
           Von:{" "}
-          {entry.createdBy ? (
+          {entry.createdBy && !entry.createdBy.deletedAt ? (
             <CitizenPopover citizenId={entry.createdBy.id}>
               <Link
                 href={`/app/spynet/citizen/${entry.createdBy.id}`}
@@ -49,7 +50,9 @@ export const PenaltyEntry = ({ className, entry, showDelete }: Props) => {
               </Link>
             </CitizenPopover>
           ) : (
-            <span className="italic">Unbekannt</span>
+            <span className="italic">
+              {entry.createdBy ? DELETED_CITIZEN_LABEL : "Unbekannt"}
+            </span>
           )}
         </p>
 

@@ -77,7 +77,7 @@ export const getVariantShips = cache(
           ownerId: true,
           name: true,
           owner: {
-            select: { handle: true },
+            select: { handle: true, deletedAt: true },
           },
         },
       });

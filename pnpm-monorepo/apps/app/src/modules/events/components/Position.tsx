@@ -48,7 +48,7 @@ const hexToRgba = (hex: string, alpha: number): string => {
  */
 export type PositionType = EventPosition & {
   applications?: (EventPositionApplication & {
-    citizen: Pick<Citizen, "id" | "handle">;
+    citizen: Pick<Citizen, "id" | "handle" | "deletedAt">;
   })[];
   requiredVariants: (EventPositionRequiredVariant & {
     variant: Variant & {
@@ -59,7 +59,7 @@ export type PositionType = EventPosition & {
       };
     };
   })[];
-  citizen?: Pick<Citizen, "id" | "handle"> | null;
+  citizen?: Pick<Citizen, "id" | "handle" | "deletedAt"> | null;
   childPositions?: PositionType[];
 };
 

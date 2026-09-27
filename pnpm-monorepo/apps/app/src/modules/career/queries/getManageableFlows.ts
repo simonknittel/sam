@@ -13,9 +13,9 @@ const MANAGEABLE_FLOW_SELECT = {
   createdAt: true,
   updatedAt: true,
   deletedAt: true,
-  createdBy: { select: { id: true, handle: true } },
-  updatedBy: { select: { id: true, handle: true } },
-  deletedBy: { select: { id: true, handle: true } },
+  createdBy: { select: { id: true, handle: true, deletedAt: true } },
+  updatedBy: { select: { id: true, handle: true, deletedAt: true } },
+  deletedBy: { select: { id: true, handle: true, deletedAt: true } },
   roleAccess: { select: { roleId: true, type: true } },
   _count: { select: { nodes: true } },
 } satisfies Prisma.FlowSelect;

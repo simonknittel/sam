@@ -33,7 +33,7 @@ interface Props {
       | "bannedReason"
       | "role"
     > & {
-      readonly bannedBy: Pick<Citizen, "id" | "handle"> | null;
+      readonly bannedBy: Pick<Citizen, "id" | "handle" | "deletedAt"> | null;
     };
     readonly discordId: string | null;
     readonly entity?: Pick<Citizen, "id" | "handle" | "discordId">;

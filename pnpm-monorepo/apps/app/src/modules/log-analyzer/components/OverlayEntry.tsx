@@ -1,3 +1,4 @@
+import { getCitizenDisplayName } from "@/modules/citizen/utils/citizenDisplayName";
 import clsx from "clsx";
 import { PATTERNS, type IEntry } from "../utils/PATTERNS";
 import styles from "./Entry.module.css";
@@ -18,7 +19,9 @@ export const OverlayEntry = ({ entry }: Props) => {
         {/* The overlay lives in its own window, thus it uses plain text
             instead of the citizen link with its popover. */}
         {entry.isShared && entry.citizen && (
-          <span className="text-white/40">{entry.citizen.handle} </span>
+          <span className="text-white/40">
+            {getCitizenDisplayName(entry.citizen)}{" "}
+          </span>
         )}
         {entry.message}
       </div>

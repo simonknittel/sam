@@ -1,4 +1,5 @@
 import type { CitizenLogTableRow } from "@/modules/citizen/queries/citizenLogTableSelect";
+import { DELETED_CITIZEN_LABEL } from "@/modules/citizen/utils/citizenDisplayName";
 import { citizenLogTypeTranslations } from "@/modules/citizen/utils/citizenLogTypeTranslations";
 import { Actions } from "@/modules/common/components/Actions";
 import { Link } from "@/modules/common/components/Link";
@@ -14,7 +15,7 @@ import { ConfirmationState } from "./ConfirmationState";
 import { OtherTableDelete } from "./OtherTableDelete";
 
 export interface Row {
-  readonly entity: Pick<Citizen, "id" | "handle">;
+  readonly entity: Pick<Citizen, "id" | "handle" | "deletedAt">;
   readonly confirmationState?: CitizenLogConfirmationState;
   readonly confirmedAt?: Date;
   readonly confirmedBy?: Pick<User, "name"> | null;
@@ -93,22 +94,28 @@ export const OtherTable = ({ rows, searchParams }: Props) => {
               className="grid items-center gap-4 h-14 rounded-secondary -mx-2 first:mt-2 grid-cols-[1fr_1fr_2fr_1fr_1fr_1fr_1fr_1fr_44px]"
             >
               <td>
-                <Link
-                  href={`/app/spynet/citizen/${row.entity.id}`}
-                  className="text-brand-red-500 hover:bg-neutral-800 block rounded-secondary px-2 h-full"
-                >
-                  <span className="flex items-center h-14">
-                    <span className="overflow-hidden text-ellipsis">
-                      {row.entity.handle ? (
-                        <span title={row.entity.handle}>
-                          {row.entity.handle}
-                        </span>
-                      ) : (
-                        <span className="text-neutral-500 italic">-</span>
-                      )}
-                    </span>
+                {row.entity.deletedAt ? (
+                  <span className="px-2 text-neutral-500">
+                    {DELETED_CITIZEN_LABEL}
                   </span>
-                </Link>
+                ) : (
+                  <Link
+                    href={`/app/spynet/citizen/${row.entity.id}`}
+                    className="text-brand-red-500 hover:bg-neutral-800 block rounded-secondary px-2 h-full"
+                  >
+                    <span className="flex items-center h-14">
+                      <span className="overflow-hidden text-ellipsis">
+                        {row.entity.handle ? (
+                          <span title={row.entity.handle}>
+                            {row.entity.handle}
+                          </span>
+                        ) : (
+                          <span className="text-neutral-500 italic">-</span>
+                        )}
+                      </span>
+                    </span>
+                  </Link>
+                )}
               </td>
 
               <td

@@ -25,7 +25,7 @@ export const getEventById = cache(
       include: {
         ...EVENT_PAGE_RELATIONS_SELECT,
         visibilityRoles: { select: { roleId: true } },
-        createdBy: { select: { id: true, handle: true } },
+        createdBy: { select: { id: true, handle: true, deletedAt: true } },
       },
     });
     if (!event) return null;

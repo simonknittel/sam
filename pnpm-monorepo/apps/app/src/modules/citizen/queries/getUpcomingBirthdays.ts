@@ -47,6 +47,7 @@ export const getUpcomingBirthdays = cache(
         select: {
           id: true,
           handle: true,
+          deletedAt: true,
           birthdayDay: true,
           birthdayMonth: true,
         },
@@ -61,7 +62,11 @@ export const getUpcomingBirthdays = cache(
 
           return [
             {
-              citizen: { id: citizen.id, handle: citizen.handle },
+              citizen: {
+                id: citizen.id,
+                handle: citizen.handle,
+                deletedAt: citizen.deletedAt,
+              },
               ...getNextBirthday(
                 citizen.birthdayDay,
                 citizen.birthdayMonth,

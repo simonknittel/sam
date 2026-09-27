@@ -69,6 +69,7 @@ export const getSharedEntries = protectedProcedure
               select: {
                 id: true,
                 handle: true,
+                deletedAt: true,
               },
             },
           },
