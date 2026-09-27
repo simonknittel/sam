@@ -13,7 +13,6 @@ const schema = z.object({
   description: z.string().max(2048).nullish(),
   maxAgeDays: z.coerce.number().min(1).max(10_000).nullish(),
   assignAfterInactiveDays: z.coerce.number().min(1).max(10_000).nullish(),
-  // inactivityThreshold: z.coerce.number().min(1).max(10_000).nullish(),
   maxLevel: z.coerce.number().min(1).max(100).nullish(),
 });
 
@@ -56,7 +55,6 @@ export const updateRole = createAuthenticatedAction(
         description: data.description,
         maxAgeDays: data.maxAgeDays,
         assignAfterInactiveDays: data.assignAfterInactiveDays,
-        // inactivityThreshold: data.inactivityThreshold,
         maxLevel: data.maxLevel,
       },
     });
@@ -104,9 +102,6 @@ export const updateRole = createAuthenticatedAction(
       assignAfterInactiveDays: formData.get("assignAfterInactiveDays")
         ? Number(formData.get("assignAfterInactiveDays"))
         : null,
-      // inactivityThreshold: formData.get("inactivityThreshold")
-      //   ? Number(formData.get("inactivityThreshold"))
-      //   : null,
       maxLevel: formData.get("maxLevel")
         ? Number(formData.get("maxLevel"))
         : null,
