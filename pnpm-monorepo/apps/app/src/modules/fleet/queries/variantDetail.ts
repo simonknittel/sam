@@ -1,6 +1,7 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
+import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
 import { canViewVariantPages } from "../utils/canViewVariantPages";
@@ -40,6 +41,7 @@ export const getVariantDetail = cache(
               ships: {
                 where: {
                   deletedAt: null,
+                  owner: ACTIVE_CITIZEN_WHERE,
                 },
               },
             },

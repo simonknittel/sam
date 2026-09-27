@@ -210,7 +210,7 @@ test("my ships can be added, renamed and deleted with consistent org counts", as
   }
 });
 
-test("the ship count of a variant ignores deleted ships", async ({
+test("the ship count of a variant ignores deleted ships and the ships of deleted owners", async ({
   page,
   prisma,
   signIn,
@@ -220,6 +220,13 @@ test("the ship count of a variant ignores deleted ships", async ({
     permissionStrings: ["orgFleet;read"],
   });
   const owner = await createCitizen(prisma, { handle: "schiffs-besitzer" });
+  const deletedOwner = await createCitizen(prisma, {
+    handle: "geloeschter-besitzer",
+  });
+  await prisma.citizen.update({
+    where: { id: deletedOwner.entity.id },
+    data: { deletedAt: new Date(), userId: null },
+  });
   const { variant } = await createVariant(prisma, {
     manufacturerName: "Roberts Space Industries",
     seriesName: "Polaris",
@@ -235,6 +242,7 @@ test("the ship count of a variant ignores deleted ships", async ({
         variantId: variant.id,
         deletedAt: new Date(),
       },
+      { ownerId: deletedOwner.entity.id, variantId: variant.id },
     ],
   });
 
@@ -243,14 +251,15 @@ test("the ship count of a variant ignores deleted ships", async ({
 
   /**
    * The tile shows random digits before it shows the number. Thus a "2" can
-   * come from the animation, and only the absence of "3" (the count with the
-   * deleted ship) is a sure check.
+   * come from the animation, and only the absence of "3" and "4" (the counts
+   * with the deleted ship or the ship of the deleted owner) is a sure check.
    */
   const shipCountTile = statisticTile(page, "Einzelschiffe");
   await expect(shipCountTile).toContainText("2", {
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await expect(shipCountTile).not.toContainText("3");
+  await expect(shipCountTile).not.toContainText("4");
 });
 
 test("a variant tag records the creating citizen as its author", async ({
