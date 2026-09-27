@@ -64,7 +64,8 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
         <p>
           Die Kachel &bdquo;Neue Tasks&ldquo; auf dem Dashboard zeigt jetzt
           deine ungelesenen Tasks. In den Listen der Tasks und Events kannst du
-          nach dem Status &bdquo;Neu&ldquo; filtern.
+          nach dem Status &bdquo;Neu&ldquo; filtern. Im Apps-Menü zeigen Tasks
+          und Events einen Punkt, solange es dort etwas Neues für dich gibt.
         </p>
       </>
     ),
