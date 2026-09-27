@@ -1,16 +1,21 @@
 import type { Prisma } from "@sam-monorepo/database/client";
 
 /**
- * Every usage relation of the `Upload` model — the single list the nightly
- * cleanup and the upload manager both read.
+ * The rule of upload usage: an upload is in use while one of these
+ * relations of the `Upload` model references it. The nightly cleanup
+ * deletes each other upload (`UNUSED_UPLOAD_WHERE`), and the upload manager
+ * of the app shows one usage type for each relation (`UploadUsageType`).
  *
- * It used to be spelled out in three places, and a relation added to the
- * model but forgotten in one of them silently deleted uploads that were in
- * use (as happened to `eventCovers`). Adding a relation to the model means
- * adding it here, and the compiler then points at every consumer.
+ * The wiki relations are link tables that follow the content: the collab
+ * server replaces the links of a page at each store, and each new snapshot
+ * links the uploads of its content. Thus no check searches the content.
  *
  * `wikiReports` is the one deliberate omission: report evidence is meant to
  * expire with its upload, and the report keeps a `uploadFileName` snapshot.
+ *
+ * A relation that is in the model but not in this list silently deletes
+ * uploads that are in use (as happened to `eventCovers`). Thus add each new
+ * relation of the model here and to the usage types of the upload manager.
  */
 export const UPLOAD_USAGE_RELATIONS = [
   "roleIcons",

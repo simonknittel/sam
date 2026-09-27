@@ -22,28 +22,34 @@ import { resolveWikiRoleCitizens } from "../utils/resolveWikiRoleCitizens";
  * Current handles of the citizens mentioned in the content, so mentions
  * follow handle changes. Mentions inserted after this render fall back to
  * the handle stored in the document. Viewers without the citizen read
- * permission get these insertion-time handles instead of live ones.
+ * permission get these insertion-time handles instead of live ones. A
+ * deleted citizen shows the deleted label for each viewer, also instead of
+ * the stored handle.
  */
 export const getWikiMentionedCitizens = async (
   content: unknown,
 ): Promise<Record<string, WikiMentionedCitizen>> => {
+  const mentionedCitizenIds = collectWikiMentionedCitizenIds(content);
+  if (mentionedCitizenIds.length === 0) return {};
+
   const authentication = await authenticate();
   const canReadCitizens = Boolean(
     authentication && (await authentication.authorize("citizen", "read")),
   );
 
-  const mentionedCitizenIds = collectWikiMentionedCitizenIds(content);
+  const citizens = await prisma.citizen.findMany({
+    where: { id: { in: mentionedCitizenIds } },
+    select: { id: true, deletedAt: true, handle: canReadCitizens },
+  });
+
   return Object.fromEntries(
-    (canReadCitizens && mentionedCitizenIds.length > 0
-      ? await prisma.citizen.findMany({
-          where: { id: { in: mentionedCitizenIds } },
-          select: { id: true, handle: true, deletedAt: true },
-        })
-      : []
-    ).map((citizen) => [
+    citizens.map((citizen) => [
       citizen.id,
       {
-        handle: getCitizenDisplayName(citizen),
+        handle:
+          citizen.deletedAt || canReadCitizens
+            ? getCitizenDisplayName(citizen)
+            : null,
         deleted: citizen.deletedAt !== null,
       },
     ]),

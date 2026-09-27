@@ -29,9 +29,9 @@ export interface WikiCitizenMentionOptions {
 
 /**
  * An inline mention of a citizen (spynet entity), rendered as a link to the
- * citizen's spynet page. Stores the citizen id plus the handle at insertion
- * time — the id is the reference, the handle only a denormalized label
- * fallback (and the searchable text).
+ * citizen's spynet page (a deleted citizen gets no link). Stores the citizen
+ * id plus the handle at insertion time — the id is the reference, the handle
+ * only a denormalized label fallback (and the searchable text).
  */
 export const WikiCitizenMention = Node.create<WikiCitizenMentionOptions>({
   name: "wikiCitizenMention",
@@ -86,6 +86,13 @@ export const WikiCitizenMention = Node.create<WikiCitizenMentionOptions>({
         "span",
         mergeAttributes({ "data-unavailable": "" }, HTMLAttributes),
         "@Unbekannt",
+      ];
+
+    if (resolved.deleted)
+      return [
+        "span",
+        mergeAttributes({ "data-deleted": "" }, HTMLAttributes),
+        `@${resolved.label}`,
       ];
 
     return [

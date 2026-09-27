@@ -1,3 +1,4 @@
+import type { PrismaClient } from "@sam-monorepo/database/client";
 import {
   createCitizen,
   createWikiPage,
@@ -13,6 +14,18 @@ import {
   saveInlineEditor,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
+
+/** The transactions that wait for an advisory lock, for example the tree lock */
+const countWaitingAdvisoryLocks = async (prisma: PrismaClient) => {
+  const waitingLocks = await prisma.$queryRaw<{ count: number }[]>`
+    SELECT count(*)::int AS "count"
+    FROM pg_locks
+    WHERE "locktype" = 'advisory'
+      AND NOT "granted"
+      AND "database" = (SELECT "oid" FROM pg_database WHERE "datname" = current_database())
+  `;
+  return waitingLocks[0]?.count;
+};
 
 test("a page is renamed, which moves it to a new URL, and moved to a new parent", async ({
   page,
@@ -152,19 +165,9 @@ test("two moves at the same time cannot put a page below itself", async ({
   try {
     await moveDialog.getByRole("button", { name: "Verschieben" }).click();
     await expect
-      .poll(
-        async () => {
-          const waitingLocks = await prisma.$queryRaw<{ count: number }[]>`
-            SELECT count(*)::int AS "count"
-            FROM pg_locks
-            WHERE "locktype" = 'advisory'
-              AND NOT "granted"
-              AND "database" = (SELECT "oid" FROM pg_database WHERE "datname" = current_database())
-          `;
-          return waitingLocks[0]?.count;
-        },
-        { timeout: ACTION_FEEDBACK_TIMEOUT },
-      )
+      .poll(() => countWaitingAdvisoryLocks(prisma), {
+        timeout: ACTION_FEEDBACK_TIMEOUT,
+      })
       .toBe(1);
   } finally {
     commitParallelMove();
@@ -189,6 +192,97 @@ test("two moves at the same time cannot put a page below itself", async ({
     { id: first.id, parentId: null },
     { id: second.id, parentId: first.id },
   ]);
+});
+
+test("a move waits for the tree lock before it changes a row", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createCitizen(prisma, {
+    handle: "wiki-verwalter",
+    permissionStrings: ["wiki;manage"],
+  });
+  const target = await createWikiPage(prisma, {
+    title: "Zielbereich",
+    visibility: WikiPageVisibility.PUBLIC,
+  });
+  const first = await createWikiPage(prisma, {
+    title: "Erste Seite",
+    visibility: WikiPageVisibility.PUBLIC,
+  });
+  const second = await createWikiPage(prisma, {
+    title: "Zweite Seite",
+    visibility: WikiPageVisibility.PUBLIC,
+  });
+
+  await signIn(manager.user);
+  await page.goto(`/app/wiki/${first.id}/${first.slug}`);
+
+  const moveDialog = modal(page, "Seite verschieben");
+  /** exact — the sidebar tree's drag handles carry a longer variant */
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Seite verschieben", exact: true }),
+    moveDialog,
+  );
+  await moveDialog.locator('select[name="newParentId"]').selectOption({
+    value: target.id,
+  });
+
+  /**
+   * A different move holds the tree lock and then changes the row of the
+   * page in the dialog, as a new sort order of the siblings does. The move
+   * of the dialog takes the tree lock first, thus it has no row yet that the
+   * parallel move waits for. When the lock comes only from the trigger, the
+   * dialog holds the row of its page already, and the two moves deadlock.
+   */
+  let continueParallelMove = () => {};
+  const parallelMoveCanContinue = new Promise<void>((resolve) => {
+    continueParallelMove = resolve;
+  });
+  const parallelMove = prisma.$transaction(
+    async (transaction) => {
+      await transaction.wikiPage.update({
+        where: { id: second.id },
+        data: { parentId: target.id, visibility: WikiPageVisibility.INHERIT },
+      });
+      await parallelMoveCanContinue;
+      await transaction.wikiPage.update({
+        where: { id: first.id },
+        data: { sortOrder: 1 },
+      });
+    },
+    /** Longer than the click and the poll below, which wait for the lock */
+    { timeout: ACTION_FEEDBACK_TIMEOUT * 2 },
+  );
+
+  try {
+    await moveDialog.getByRole("button", { name: "Verschieben" }).click();
+    await expect
+      .poll(() => countWaitingAdvisoryLocks(prisma), {
+        timeout: ACTION_FEEDBACK_TIMEOUT,
+      })
+      .toBe(1);
+  } finally {
+    continueParallelMove();
+    await parallelMove;
+  }
+
+  /** Both moves are done */
+  await expect
+    .poll(
+      () =>
+        prisma.wikiPage.findMany({
+          where: { id: { in: [first.id, second.id] } },
+          select: { id: true, parentId: true },
+          orderBy: { title: "asc" },
+        }),
+      { timeout: ACTION_FEEDBACK_TIMEOUT },
+    )
+    .toEqual([
+      { id: first.id, parentId: target.id },
+      { id: second.id, parentId: target.id },
+    ]);
 });
 
 test("a favorited page shows up in the sidebar's favorites", async ({

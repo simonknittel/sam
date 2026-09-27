@@ -1,3 +1,4 @@
+import { getCitizenDisplayName } from "@/modules/citizen/utils/citizenDisplayName";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { Link } from "@/modules/common/components/Link";
 import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
@@ -43,7 +44,9 @@ export const WikiReportsTable = async ({ className, searchParams }: Props) => {
       const matchesFile = (report.uploadFileName ?? "")
         .toLowerCase()
         .includes(searchQuery);
-      const matchesReporter = (report.createdBy?.handle ?? "")
+      const matchesReporter = (
+        report.createdBy ? getCitizenDisplayName(report.createdBy) : ""
+      )
         .toLowerCase()
         .includes(searchQuery);
       if (!matchesPage && !matchesFile && !matchesReporter) return false;

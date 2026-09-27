@@ -6,6 +6,7 @@ import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import * as z from "zod";
 import { revalidateWikiScope } from "../queries/getWikiPageScopedContext";
 import { isEventWikiRootPage } from "../utils/isEventWikiRootPage";
+import { lockWikiPageTree } from "../utils/lockWikiPageTree";
 import {
   buildWikiPageReparentAuditEvents,
   buildWikiPageReparentReset,
@@ -65,6 +66,7 @@ export const moveWikiPage = createAuthenticatedAction(
 
     try {
       await prisma.$transaction([
+        lockWikiPageTree(),
         ...reset.statements,
         prisma.wikiPage.update({
           where: { id: page.id },
