@@ -65,7 +65,7 @@ const getBanStatusWhere = (banStatus: UserBanStatus): Prisma.UserWhereInput => {
 const getHandleWhere = async (
   handleQuery: string,
 ): Promise<Prisma.UserWhereInput> => {
-  const entities = await prisma.entity.findMany({
+  const entities = await prisma.citizen.findMany({
     where: {
       handle: { contains: handleQuery, mode: "insensitive" },
       discordId: { not: null },
@@ -156,7 +156,7 @@ export const getUsersWithEntities = withTrace(
     const pageRows = rows.slice(0, USERS_PAGE_SIZE);
 
     /** Matched to a user by Discord ID; the table links by citizen ID */
-    const entities = await prisma.entity.findMany({
+    const entities = await prisma.citizen.findMany({
       where: {
         discordId: {
           in: pageRows.flatMap(({ accounts }) =>

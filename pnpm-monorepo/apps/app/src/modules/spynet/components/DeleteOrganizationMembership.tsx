@@ -2,7 +2,10 @@
 
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
-import { type Entity, type Organization } from "@sam-monorepo/database/browser";
+import {
+  type Citizen,
+  type Organization,
+} from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -12,7 +15,7 @@ import { FaTrash } from "react-icons/fa";
 interface Props {
   readonly className?: string;
   readonly organizationId: Organization["id"];
-  readonly citizenId: Entity["id"];
+  readonly citizenId: Citizen["id"];
 }
 
 export const DeleteOrganizationMembership = ({

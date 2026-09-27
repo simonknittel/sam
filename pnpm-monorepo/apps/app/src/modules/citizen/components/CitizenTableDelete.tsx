@@ -3,12 +3,12 @@
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionButton";
-import { type Entity } from "@sam-monorepo/database/browser";
+import { type Citizen } from "@sam-monorepo/database/browser";
 import { useRouter } from "next/navigation";
 import { FaTrash } from "react-icons/fa";
 
 interface Props {
-  readonly entity: Pick<Entity, "id">;
+  readonly entity: Pick<Citizen, "id">;
 }
 
 export const CitizenTableDelete = ({ entity }: Props) => {

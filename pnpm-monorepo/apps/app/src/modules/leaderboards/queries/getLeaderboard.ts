@@ -73,7 +73,7 @@ export const getLeaderboard = (mode: "SB", season: string, pages: number) => {
           },
         },
       });
-      const entities = await prisma.entity.findMany({
+      const entities = await prisma.citizen.findMany({
         where: {
           discordId: {
             in: discordIds.flatMap(({ accounts }) =>

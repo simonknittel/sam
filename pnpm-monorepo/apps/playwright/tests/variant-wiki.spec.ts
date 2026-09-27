@@ -10,7 +10,7 @@ import {
   WikiPageAccessType,
   WikiPageVisibility,
   wikiParagraph,
-  type Citizen,
+  type TestCitizen,
 } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
@@ -29,7 +29,7 @@ import { expect, test } from "../fixtures/test";
  */
 const seedLinkedVariant = async (
   prisma: PrismaClient,
-  { owner }: { readonly owner?: Citizen } = {},
+  { owner }: { readonly owner?: TestCitizen } = {},
 ) => {
   const rootPage = await createWikiPage(prisma, {
     title: "Polaris Handbuch",

@@ -40,7 +40,7 @@ Options:
   --out <file>                 Output file (default: wiki-demo-content.json)
   --page-link-id <id>          WikiPage id the internal page link points at.
                                Renders "Nicht verfügbare Seite" until replaced.
-  --citizen-id <id>            Entity (citizen) id of the citizen mention.
+  --citizen-id <id>            Citizen (citizen) id of the citizen mention.
   --citizen-handle <handle>    Handle stored as the mention's label fallback.
   --image-src <url>            Image URL. Uploaded images live at
                                https://<S3_PUBLIC_URL>/<uploadId>.

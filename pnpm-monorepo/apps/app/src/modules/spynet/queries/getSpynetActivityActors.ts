@@ -1,10 +1,10 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import type { Entity } from "@sam-monorepo/database/client";
+import type { Citizen } from "@sam-monorepo/database/client";
 import { cache } from "react";
 
-type Actor = Pick<Entity, "id" | "handle">;
+type Actor = Pick<Citizen, "id" | "handle">;
 
 const ACTOR_SELECT = {
   createdBy: {

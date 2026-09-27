@@ -30,7 +30,7 @@ export const autoAssignInactiveRoles = async () => {
     const citizensWithDiscord = await captureAsyncFunc(
       "find citizens with discord accounts",
       () =>
-        prisma.entity.findMany({
+        prisma.citizen.findMany({
           where: {
             discordId: {
               not: null,

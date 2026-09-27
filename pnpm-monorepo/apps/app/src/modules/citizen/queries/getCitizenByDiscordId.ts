@@ -4,7 +4,7 @@ import { cache } from "react";
 
 export const getCitizenByDiscordId = cache(
   withTrace("getCitizenByDiscordId", async (discordId: string) => {
-    return prisma.entity.findUnique({
+    return prisma.citizen.findUnique({
       where: {
         discordId, // TODO: Respect history
       },

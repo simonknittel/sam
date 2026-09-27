@@ -24,7 +24,7 @@ database for each test case.
 - **Auth**: `signIn(user)` inserts a next-auth database session and sets the
   session cookie — no OAuth flow is involved. Users come from
   `createCitizen()`, which creates the User, the Discord account, the
-  Entity, the role and the permissions in the form that the session
+  Citizen, the role and the permissions in the form that the session
   callback expects.
 
 ## Run the tests

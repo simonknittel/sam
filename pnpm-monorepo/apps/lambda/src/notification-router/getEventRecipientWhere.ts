@@ -9,7 +9,7 @@ import { buildEventRecipientWhere } from "@sam-monorepo/domain";
  */
 export const getEventRecipientWhere = async (
   eventId: Event["id"],
-): Promise<Prisma.EntityWhereInput | null> => {
+): Promise<Prisma.CitizenWhereInput | null> => {
   const event = await prisma.event.findUnique({
     where: {
       id: eventId,

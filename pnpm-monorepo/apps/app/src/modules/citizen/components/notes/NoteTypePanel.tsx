@@ -1,10 +1,10 @@
 import { requireAuthentication } from "@/modules/auth/server";
-import type { CitizenNote } from "@/modules/citizen/queries/entityLogTableSelect";
+import type { CitizenNote } from "@/modules/citizen/queries/citizenLogTableSelect";
 import TabPanel from "@/modules/common/components/tabs/TabPanel";
 import { getCreatableClassificationLevelsDeduped } from "@/modules/spynet/utils/getAllClassificationLevels";
 import {
-  type Entity,
-  type EntityLog,
+  type Citizen,
+  type CitizenLog,
   type NoteType,
 } from "@sam-monorepo/database/client";
 import { AddNote } from "./AddNote";
@@ -13,8 +13,8 @@ import SingleNoteRedacted from "./SingleNoteRedacted";
 
 interface Props {
   readonly noteType: NoteType;
-  readonly notes: (CitizenNote | { id: EntityLog["id"]; redacted: true })[];
-  readonly entityId: Entity["id"];
+  readonly notes: (CitizenNote | { id: CitizenLog["id"]; redacted: true })[];
+  readonly entityId: Citizen["id"];
 }
 
 export const NoteTypePanel = async ({ noteType, notes, entityId }: Props) => {

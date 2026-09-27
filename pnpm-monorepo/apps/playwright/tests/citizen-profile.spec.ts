@@ -9,7 +9,7 @@ import {
   createVariant,
   futureEvent,
   ONE_DAY_MS,
-  type Citizen,
+  type TestCitizen,
 } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
@@ -75,8 +75,8 @@ const expectMetricLinks = async (scope: Locator, citizenId: string) => {
   }
 };
 
-const seedProfile = async (prisma: PrismaClient, citizen: Citizen) => {
-  await prisma.entity.update({
+const seedProfile = async (prisma: PrismaClient, citizen: TestCitizen) => {
+  await prisma.citizen.update({
     where: { id: citizen.entity.id },
     data: { timezone: "Europe/Berlin" },
   });
@@ -157,7 +157,7 @@ test("a citizen sets, keeps and clears their time zone and birthday", async ({
   });
 
   expect(
-    await prisma.entity.findUniqueOrThrow({
+    await prisma.citizen.findUniqueOrThrow({
       where: { id: citizen.entity.id },
       select: { timezone: true, birthdayDay: true, birthdayMonth: true },
     }),
@@ -200,7 +200,7 @@ test("a citizen sets, keeps and clears their time zone and birthday", async ({
   });
 
   expect(
-    await prisma.entity.findUniqueOrThrow({
+    await prisma.citizen.findUniqueOrThrow({
       where: { id: citizen.entity.id },
       select: { timezone: true, birthdayDay: true, birthdayMonth: true },
     }),
@@ -239,7 +239,7 @@ test("a birthday without a month is rejected", async ({
   await expect(daySelect(page)).toHaveValue("15");
 
   expect(
-    await prisma.entity.findUniqueOrThrow({
+    await prisma.citizen.findUniqueOrThrow({
       where: { id: citizen.entity.id },
       select: { birthdayDay: true, birthdayMonth: true },
     }),
@@ -425,7 +425,7 @@ const createCitizenWithBirthday = async (
 ) => {
   const citizen = await createCitizen(prisma, { handle, permissionStrings });
 
-  await prisma.entity.update({
+  await prisma.citizen.update({
     where: { id: citizen.entity.id },
     data: {
       timezone: BIRTHDAY_LIST_TIMEZONE,
@@ -470,7 +470,7 @@ test("the birthday list names every citizen once, sorted by the next birthday", 
    * A citizen without a role that grants the login permission never gets a
    * greeting either, thus the list leaves them out.
    */
-  const lockedOut = await prisma.entity.create({
+  const lockedOut = await prisma.citizen.create({
     data: {
       handle: "ohne-zugang",
       discordId: randomUUID(),

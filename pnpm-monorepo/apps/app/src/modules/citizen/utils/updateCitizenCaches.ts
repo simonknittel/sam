@@ -1,26 +1,34 @@
 import { prisma } from "@/db";
-import { type EntityLog } from "@sam-monorepo/database/client";
-import { camelCase } from "change-case";
+import { type Citizen, type CitizenLog } from "@sam-monorepo/database/client";
 
-export const updateEntityCaches = async (
-  entityLog: Pick<EntityLog, "entityId" | "type">,
+/**
+ * The column of `Citizen` that caches the latest confirmed value of each
+ * identity log type
+ */
+const CACHE_COLUMN_BY_LOG_TYPE = {
+  handle: "handle",
+  "discord-id": "discordId",
+  "teamspeak-id": "teamspeakId",
+  "spectrum-id": "spectrumId",
+  "citizen-id": "citizenRecord",
+  "community-moniker": "communityMoniker",
+} as const satisfies Record<string, keyof Citizen>;
+
+const isCachedLogType = (
+  type: string,
+): type is keyof typeof CACHE_COLUMN_BY_LOG_TYPE =>
+  Object.hasOwn(CACHE_COLUMN_BY_LOG_TYPE, type);
+
+export const updateCitizenCaches = async (
+  citizenLog: Pick<CitizenLog, "citizenId" | "type">,
 ) => {
-  if (
-    [
-      "handle",
-      "discord-id",
-      "teamspeak-id",
-      "spectrum-id",
-      "citizen-id",
-      "community-moniker",
-    ].includes(entityLog.type) === false
-  )
-    return;
+  const logType = citizenLog.type;
+  if (!isCachedLogType(logType)) return;
 
-  const latestConfirmed = await prisma.entityLog.findFirst({
+  const latestConfirmed = await prisma.citizenLog.findFirst({
     where: {
-      entityId: entityLog.entityId,
-      type: entityLog.type,
+      citizenId: citizenLog.citizenId,
+      type: citizenLog.type,
       attributes: {
         some: {
           key: "confirmed",
@@ -36,12 +44,12 @@ export const updateEntityCaches = async (
     },
   });
 
-  await prisma.entity.update({
+  await prisma.citizen.update({
     where: {
-      id: entityLog.entityId,
+      id: citizenLog.citizenId,
     },
     data: {
-      [camelCase(entityLog.type)]: latestConfirmed?.content || null,
+      [CACHE_COLUMN_BY_LOG_TYPE[logType]]: latestConfirmed?.content || null,
     },
     select: {
       id: true,

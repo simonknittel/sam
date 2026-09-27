@@ -5,7 +5,7 @@ import {
   getAssignedRoles,
 } from "@/modules/roles/utils/getRoles";
 import {
-  type Entity,
+  type Citizen,
   type RoleAssignment,
 } from "@sam-monorepo/database/client";
 import clsx from "clsx";
@@ -13,7 +13,7 @@ import { AddRoles } from "./AddRoles";
 
 interface Props {
   readonly className?: string;
-  readonly entity: Pick<Entity, "id"> & {
+  readonly entity: Pick<Citizen, "id"> & {
     readonly roleAssignments: readonly Pick<
       RoleAssignment,
       "roleId" | "currentLevel"

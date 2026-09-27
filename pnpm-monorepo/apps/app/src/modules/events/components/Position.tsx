@@ -6,7 +6,7 @@ import type { EventCitizenWithShips } from "@/modules/events/queries/eventRelati
 import { VariantWithLogo } from "@/modules/fleet/components/VariantWithLogo";
 import type { VariantCatalogManufacturer } from "@/modules/fleet/queries/getVariantCatalog";
 import {
-  type Entity,
+  type Citizen,
   type EventPosition,
   type EventPositionApplication,
   type EventPositionRequiredVariant,
@@ -48,7 +48,7 @@ const hexToRgba = (hex: string, alpha: number): string => {
  */
 export type PositionType = EventPosition & {
   applications?: (EventPositionApplication & {
-    citizen: Pick<Entity, "id" | "handle">;
+    citizen: Pick<Citizen, "id" | "handle">;
   })[];
   requiredVariants: (EventPositionRequiredVariant & {
     variant: Variant & {
@@ -59,7 +59,7 @@ export type PositionType = EventPosition & {
       };
     };
   })[];
-  citizen?: Pick<Entity, "id" | "handle"> | null;
+  citizen?: Pick<Citizen, "id" | "handle"> | null;
   childPositions?: PositionType[];
 };
 

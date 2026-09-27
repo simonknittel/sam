@@ -1,6 +1,6 @@
 import { prisma } from "@/db";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import type { Entity } from "@sam-monorepo/database/client";
+import type { Citizen } from "@sam-monorepo/database/client";
 import {
   buildEventRecipientWhere,
   NOTIFIABLE_CITIZEN_WHERE,
@@ -43,7 +43,7 @@ export const getAddableParticipantIds = withTrace(
   "getAddableParticipantIds",
   async (event: AddableParticipantsEvent, citizenIds?: readonly string[]) => {
     const [candidates, permissionStrings] = await Promise.all([
-      prisma.entity.findMany({
+      prisma.citizen.findMany({
         where: {
           AND: [
             buildEventRecipientWhere(event),
@@ -92,7 +92,7 @@ export const getAddableParticipantIds = withTrace(
     );
     const holds = (
       permissionString: (typeof REQUIRED_PERMISSION_STRINGS)[number],
-      roleIds: ReadonlySet<Entity["id"]>,
+      roleIds: ReadonlySet<Citizen["id"]>,
     ) => {
       const grantingRoleIds = roleIdsByPermission.get(permissionString)!;
       for (const roleId of roleIds)

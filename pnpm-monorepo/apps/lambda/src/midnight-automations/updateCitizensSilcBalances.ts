@@ -1,4 +1,4 @@
-import { prisma, type Entity } from "@sam-monorepo/database";
+import { prisma, type Citizen } from "@sam-monorepo/database";
 import {
   calculateSilcBalances,
   getSilcTransactionSumQueries,
@@ -7,7 +7,7 @@ import {
 import { captureAsyncFunc } from "../common/xray";
 
 const getSilcTransactionSumsWithoutAuthorization = async (
-  citizenIds: Entity["id"][],
+  citizenIds: Citizen["id"][],
 ) => {
   return captureAsyncFunc(
     "getSilcTransactionSumsWithoutAuthorization",
@@ -26,7 +26,7 @@ const getSilcTransactionSumsWithoutAuthorization = async (
 };
 
 export const updateCitizensSilcBalances = async (
-  citizenIds: Entity["id"][],
+  citizenIds: Citizen["id"][],
 ) => {
   return captureAsyncFunc("updateCitizensSilcBalances", async () => {
     if (citizenIds.length <= 0) return;
@@ -43,7 +43,7 @@ export const updateCitizensSilcBalances = async (
       receiverId,
       { balance, totalEarned },
     ] of silcBalancePerCitizen) {
-      await prisma.entity.update({
+      await prisma.citizen.update({
         where: {
           id: receiverId,
         },

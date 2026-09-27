@@ -3,14 +3,14 @@
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { useHasBirthdayToday } from "@/modules/citizen/components/BirthdayCitizensProvider";
 import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
-import type { Entity } from "@sam-monorepo/database/browser";
+import type { Citizen } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { BirthdayHat } from "./BirthdayHat";
 import { Link } from "./Link";
 
 interface Props {
   readonly className?: string;
-  readonly citizen?: Pick<Entity, "id" | "handle"> | null;
+  readonly citizen?: Pick<Citizen, "id" | "handle"> | null;
   readonly page?: string;
 }
 

@@ -2,7 +2,7 @@ import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import type {
-  Entity,
+  Citizen,
   PenaltyEntry as PenaltyEntryType,
 } from "@sam-monorepo/database/client";
 import clsx from "clsx";
@@ -12,7 +12,7 @@ interface Props {
   readonly className?: string;
   readonly entry: PenaltyEntryType & {
     /** NULL when the author was deleted */
-    createdBy: Entity | null;
+    createdBy: Citizen | null;
   };
   readonly showDelete?: boolean;
 }

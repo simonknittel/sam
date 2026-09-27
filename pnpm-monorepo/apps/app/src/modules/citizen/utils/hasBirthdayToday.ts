@@ -1,9 +1,9 @@
 import { log } from "@/modules/logging";
-import type { Entity } from "@sam-monorepo/database/client";
+import type { Citizen } from "@sam-monorepo/database/client";
 import { isBirthdayToday } from "@sam-monorepo/domain";
 
 type BirthdayCitizen = Pick<
-  Entity,
+  Citizen,
   "id" | "timezone" | "birthdayDay" | "birthdayMonth"
 >;
 

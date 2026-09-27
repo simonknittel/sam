@@ -75,16 +75,16 @@ export const searchSpynet = withTrace(
             'id', "id",
             'handle', "handle",
             'communityMoniker', "communityMoniker",
-            'citizenId', "citizenId",
+            'citizenRecord', "citizenRecord",
             'spectrumId', "spectrumId"
           ) AS "hit",
           GREATEST(
             ${scoreColumn(Prisma.sql`"handle"`, tolerateTypos)},
             ${scoreColumn(Prisma.sql`"communityMoniker"`, tolerateTypos)},
-            ${scoreColumn(Prisma.sql`"citizenId"`, false)},
+            ${scoreColumn(Prisma.sql`"citizenRecord"`, false)},
             ${scoreColumn(Prisma.sql`"spectrumId"`, false)}
           ) AS "score"
-        FROM "Entity", "query"
+        FROM "Citizen", "query"
       `);
 
     if (includeOrganizations)

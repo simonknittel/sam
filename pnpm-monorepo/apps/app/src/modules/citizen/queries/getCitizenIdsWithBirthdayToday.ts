@@ -44,7 +44,7 @@ export const getCitizenIdsWithBirthdayToday = cache(
 
     const now = new Date();
 
-    const candidates = await prisma.entity.findMany({
+    const candidates = await prisma.citizen.findMany({
       where: {
         AND: [{ OR: getCandidateDays(now) }, CAN_LOGIN_CITIZEN_WHERE],
       },

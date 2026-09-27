@@ -1,5 +1,5 @@
 import {
-  type Entity,
+  type Citizen,
   type Event,
   type EventActivityType,
   type Prisma,
@@ -66,7 +66,7 @@ export const createEventActivity = <Type extends EventActivityType>(
   client: Prisma.TransactionClient,
   input: {
     readonly eventId: Event["id"];
-    readonly citizenId: Entity["id"] | null;
+    readonly citizenId: Citizen["id"] | null;
     readonly type: Type;
     readonly payload: EventActivityPayloadByType[Type];
   },

@@ -3,12 +3,12 @@
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionButton";
-import { type EntityLog } from "@sam-monorepo/database/browser";
+import { type CitizenLog } from "@sam-monorepo/database/browser";
 import { useRouter } from "next/navigation";
 import { FaTrash } from "react-icons/fa";
 
 interface Props {
-  readonly log: Pick<EntityLog, "id" | "entityId">;
+  readonly log: Pick<CitizenLog, "id" | "citizenId">;
 }
 
 export const OtherTableDelete = ({ log }: Props) => {
@@ -16,7 +16,7 @@ export const OtherTableDelete = ({ log }: Props) => {
 
   const deleteLog = async (formData: FormData) => {
     const response = await fetch(
-      `/api/spynet/citizen/${log.entityId}/log/${log.id}`,
+      `/api/spynet/citizen/${log.citizenId}/log/${log.id}`,
       {
         method: "DELETE",
       },

@@ -44,7 +44,7 @@ export const transferEventTemplateOwnership = createAuthenticatedAction(
      * required, mirroring the wiki's tolerance for an owner who cannot reach
      * their own page.
      */
-    const newOwner = await prisma.entity.findUnique({
+    const newOwner = await prisma.citizen.findUnique({
       where: { id: data.newOwnerId },
       select: { id: true },
     });

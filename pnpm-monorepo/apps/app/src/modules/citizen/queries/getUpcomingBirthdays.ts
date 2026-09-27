@@ -26,7 +26,7 @@ export const getUpcomingBirthdays = cache(
       const authentication = await requireAuthentication();
       if (!(await authentication.authorize("citizen", "read"))) forbidden();
 
-      const citizens = await prisma.entity.findMany({
+      const citizens = await prisma.citizen.findMany({
         /** `AND` composes the imported fragment without a key collision */
         where: {
           AND: [

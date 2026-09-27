@@ -10,7 +10,7 @@ import { formatDate } from "@/modules/common/utils/formatDate";
 import { BanUser } from "@/modules/users/components/BanUser";
 import { UnbanUser } from "@/modules/users/components/UnbanUser";
 import { VerifyEmailButton } from "@/modules/users/components/VerifyEmailButton";
-import { type Entity, type User } from "@sam-monorepo/database/browser";
+import { type Citizen, type User } from "@sam-monorepo/database/browser";
 import { FaExternalLinkAlt } from "react-icons/fa";
 import { FaCircleXmark } from "react-icons/fa6";
 
@@ -33,10 +33,10 @@ interface Props {
       | "bannedReason"
       | "role"
     > & {
-      readonly bannedBy: Pick<Entity, "id" | "handle"> | null;
+      readonly bannedBy: Pick<Citizen, "id" | "handle"> | null;
     };
     readonly discordId: string | null;
-    readonly entity?: Pick<Entity, "id" | "handle" | "discordId">;
+    readonly entity?: Pick<Citizen, "id" | "handle" | "discordId">;
   }[];
   readonly showBanActions?: boolean;
   readonly ownUserId?: string;

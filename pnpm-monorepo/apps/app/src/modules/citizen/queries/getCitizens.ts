@@ -17,7 +17,7 @@ const requireCitizenRead = async () => {
 export const getCitizens = withTrace("getCitizens", async () => {
   await requireCitizenRead();
 
-  return prisma.entity.findMany({
+  return prisma.citizen.findMany({
     select: {
       id: true,
       handle: true,
@@ -34,7 +34,7 @@ export const getCitizensForTable = withTrace(
   async () => {
     await requireCitizenRead();
 
-    return prisma.entity.findMany({
+    return prisma.citizen.findMany({
       select: {
         id: true,
         handle: true,

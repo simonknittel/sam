@@ -30,7 +30,7 @@ export const expireAllSilc = createAuthenticatedAction(
     /**
      * Update citizens' balances
      */
-    const citizens = await prisma.entity.findMany({
+    const citizens = await prisma.citizen.findMany({
       select: { id: true, silcBalance: true },
       where: { silcBalance: { gt: 0 } },
     });

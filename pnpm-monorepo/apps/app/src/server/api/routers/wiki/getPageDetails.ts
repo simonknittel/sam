@@ -34,7 +34,7 @@ export const getPageDetails = protectedProcedure
           },
         }),
         permissions.effectiveOwnerId
-          ? prisma.entity.findUnique({
+          ? prisma.citizen.findUnique({
               where: { id: permissions.effectiveOwnerId },
               select: { id: true, handle: true },
             })

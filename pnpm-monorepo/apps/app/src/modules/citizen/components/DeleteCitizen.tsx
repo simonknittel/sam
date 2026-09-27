@@ -4,13 +4,13 @@ import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
 import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionButton";
 import { Tile, TileVariant } from "@/modules/common/components/Tile";
-import { type Entity } from "@sam-monorepo/database/browser";
+import { type Citizen } from "@sam-monorepo/database/browser";
 import { useRouter } from "next/navigation";
 import { FaTrash } from "react-icons/fa";
 
 interface Props {
   readonly className?: string;
-  readonly entity: Pick<Entity, "id" | "handle">;
+  readonly entity: Pick<Citizen, "id" | "handle">;
 }
 
 export const DeleteCitizen = ({ className, entity }: Props) => {

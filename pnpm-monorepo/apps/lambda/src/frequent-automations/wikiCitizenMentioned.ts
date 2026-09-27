@@ -156,7 +156,7 @@ export const wikiCitizenMentioned = async () => {
 
     const [grants, citizens, wikiPages, events] = await Promise.all([
       loadCitizenGrants(citizenIds),
-      prisma.entity.findMany({
+      prisma.citizen.findMany({
         where: { id: { in: citizenIds } },
         select: { id: true, discordId: true },
       }),

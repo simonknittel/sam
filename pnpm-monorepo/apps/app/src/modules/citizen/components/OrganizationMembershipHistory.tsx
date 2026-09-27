@@ -6,14 +6,14 @@ import {
 import { createCursorPaginationLoader } from "@/modules/common/CursorPagination/createCursorPaginationLoader";
 import { paginateMergedSources } from "@/modules/common/CursorPagination/mergedCursor";
 import { createOrganizationMembershipSource } from "@/modules/organizations/activity/organizationActivitySources";
-import type { Entity } from "@sam-monorepo/database/client";
+import type { Citizen } from "@sam-monorepo/database/client";
 import type { SearchParams } from "nuqs/server";
 
 const loadSearchParams = createCursorPaginationLoader({});
 
 interface Props {
   readonly className?: string;
-  readonly id: Entity["id"];
+  readonly id: Citizen["id"];
   readonly searchParams: Promise<SearchParams>;
 }
 

@@ -4,15 +4,15 @@ import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthentication } from "@/modules/auth/server";
 import getLatestNoteAttributes from "@/modules/citizen/utils/getLatestNoteAttributes";
 import type {
-  EntityLog,
-  EntityLogAttribute,
+  CitizenLog,
+  CitizenLogAttribute,
 } from "@sam-monorepo/database/client";
 import { syncCitizenIdentityAfterLogChange } from "./syncCitizenIdentityAfterLogChange";
 
 export const confirmLog = async (
-  log: Pick<EntityLog, "id" | "entityId" | "type"> & {
+  log: Pick<CitizenLog, "id" | "citizenId" | "type"> & {
     readonly attributes: readonly Pick<
-      EntityLogAttribute,
+      CitizenLogAttribute,
       "key" | "value" | "createdAt"
     >[];
   },
@@ -67,9 +67,9 @@ export const confirmLog = async (
       throw new Error("Bad request");
   }
 
-  const confirmedAttribute = await prisma.entityLogAttribute.create({
+  const confirmedAttribute = await prisma.citizenLogAttribute.create({
     data: {
-      entityLog: {
+      citizenLog: {
         connect: {
           id: log.id,
         },
@@ -88,7 +88,7 @@ export const confirmLog = async (
     {
       type: AuditEventType.ENTITY_LOG_CONFIRMED,
       data: {
-        entityId: log.entityId,
+        entityId: log.citizenId,
         logId: log.id,
         logType: log.type,
         confirmed: value,

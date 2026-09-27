@@ -3,7 +3,7 @@
 // imports below are erased, so they may use the full client entry.
 import { EventVisibility } from "@sam-monorepo/database/browser";
 import type {
-  Entity,
+  Citizen,
   Event,
   EventVisibilityRole,
   Prisma,
@@ -11,11 +11,11 @@ import type {
 
 export type EventRecipientInput = Pick<Event, "visibility" | "createdById"> & {
   readonly visibilityRoles: readonly Pick<EventVisibilityRole, "roleId">[];
-  readonly managers: readonly Pick<Entity, "id">[];
+  readonly managers: readonly Pick<Citizen, "id">[];
 };
 
 /**
- * Entity where-fragment excluding citizens who cannot see the event, to be
+ * Citizen where-fragment excluding citizens who cannot see the event, to be
  * ANDed into every per-citizen event query — notification recipients in the
  * Lambda, addable participants in the app. PUBLIC events restrict nothing.
  * For RESTRICTED events a citizen must hold one of the allowed roles
@@ -31,7 +31,7 @@ export type EventRecipientInput = Pick<Event, "visibility" | "createdById"> & {
  */
 export const buildEventRecipientWhere = (
   event: EventRecipientInput,
-): Prisma.EntityWhereInput => {
+): Prisma.CitizenWhereInput => {
   if (event.visibility === EventVisibility.PUBLIC) return {};
 
   const allowedRoleIds = event.visibilityRoles.map(
@@ -68,11 +68,11 @@ export const buildEventRecipientWhere = (
 };
 
 /**
- * Entity where-fragment for citizens who can open the app at all: they hold
+ * Citizen where-fragment for citizens who can open the app at all: they hold
  * `login;manage` through one of their roles. It is the minimum condition for
  * every notification — a citizen who cannot log in can read none of them.
  */
-export const CAN_LOGIN_CITIZEN_WHERE: Prisma.EntityWhereInput = {
+export const CAN_LOGIN_CITIZEN_WHERE: Prisma.CitizenWhereInput = {
   roleAssignments: {
     some: {
       role: {
@@ -83,13 +83,13 @@ export const CAN_LOGIN_CITIZEN_WHERE: Prisma.EntityWhereInput = {
 };
 
 /**
- * Entity where-fragment for citizens who can act on an event at all: they
+ * Citizen where-fragment for citizens who can act on an event at all: they
  * hold both `login;manage` and `event;read` through their roles. Combined
  * with `buildEventRecipientWhere()` this is the reachability rule for event
  * notifications, so nobody gets notified about — or manually added to — an
  * event they can't open.
  */
-export const NOTIFIABLE_CITIZEN_WHERE: Prisma.EntityWhereInput = {
+export const NOTIFIABLE_CITIZEN_WHERE: Prisma.CitizenWhereInput = {
   AND: [
     CAN_LOGIN_CITIZEN_WHERE,
     {

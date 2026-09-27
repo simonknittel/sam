@@ -12,8 +12,8 @@ import { ASSUMABLE_USER_WHERE } from "@/modules/users/queries/getAssumableUsers"
 import { getUserById } from "@/modules/users/queries/getUserById";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import type {
+  Citizen,
   User as DatabaseUser,
-  Entity,
   RoleAssignment,
 } from "@sam-monorepo/database/client";
 import { EFFECTIVE_ROLE_PERMISSIONS_SELECT } from "@sam-monorepo/domain";
@@ -60,7 +60,7 @@ declare module "next-auth" {
      * through `givenPermissionSets`, never through this.
      */
     entity:
-      | (Pick<Entity, "id" | "handle"> & {
+      | (Pick<Citizen, "id" | "handle"> & {
           /**
            * Whether the citizen has their birthday today, in their own time
            * zone. Only this answer travels; the day and the month of the
@@ -159,7 +159,7 @@ export const authOptions: NextAuthOptions = {
         },
       });
 
-      const entityWithRoleGraph = await prisma.entity.findUnique({
+      const entityWithRoleGraph = await prisma.citizen.findUnique({
         where: {
           discordId: discordAccount!.providerAccountId,
         },
@@ -364,8 +364,8 @@ export const authOptions: NextAuthOptions = {
         if (!("id" in profile) || !profile.id)
           throw new Error("profile.id is missing");
 
-        const latestConfirmedDiscordIdEntityLog =
-          await prisma.entityLog.findFirst({
+        const latestConfirmedDiscordIdCitizenLog =
+          await prisma.citizenLog.findFirst({
             where: {
               type: "discord-id",
               content: profile.id,
@@ -380,15 +380,15 @@ export const authOptions: NextAuthOptions = {
               createdAt: "desc",
             },
             select: {
-              entityId: true,
+              citizenId: true,
             },
           });
 
-        if (latestConfirmedDiscordIdEntityLog) {
-          const latestConfirmedHandleEntityLog =
-            await prisma.entityLog.findFirst({
+        if (latestConfirmedDiscordIdCitizenLog) {
+          const latestConfirmedHandleCitizenLog =
+            await prisma.citizenLog.findFirst({
               where: {
-                entityId: latestConfirmedDiscordIdEntityLog.entityId,
+                citizenId: latestConfirmedDiscordIdCitizenLog.citizenId,
                 type: "handle",
                 attributes: {
                   some: {
@@ -406,8 +406,8 @@ export const authOptions: NextAuthOptions = {
             });
 
           user.name =
-            latestConfirmedHandleEntityLog?.content ||
-            latestConfirmedDiscordIdEntityLog.entityId;
+            latestConfirmedHandleCitizenLog?.content ||
+            latestConfirmedDiscordIdCitizenLog.citizenId;
         }
       }
 

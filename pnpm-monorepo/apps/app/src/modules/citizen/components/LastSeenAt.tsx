@@ -1,9 +1,9 @@
 import { getLastSeenAt } from "@/modules/citizen/utils/getLastSeenAt";
 import { formatDate } from "@/modules/common/utils/formatDate";
-import { type Entity } from "@sam-monorepo/database/client";
+import { type Citizen } from "@sam-monorepo/database/client";
 
 interface Props {
-  entity: Pick<Entity, "discordId">;
+  entity: Pick<Citizen, "discordId">;
 }
 
 export const LastSeenAt = async ({ entity }: Readonly<Props>) => {

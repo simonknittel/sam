@@ -4,14 +4,14 @@ import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionButton";
 import { Textarea } from "@/modules/common/components/form/Textarea";
 import { api } from "@/trpc/react";
-import { type Entity, type Event } from "@sam-monorepo/database/browser";
+import { type Citizen, type Event } from "@sam-monorepo/database/browser";
 import { FaTrash } from "react-icons/fa";
 import { removeEventParticipant } from "../actions/removeEventParticipant";
 
 interface Props {
   readonly className?: string;
   readonly eventId: Event["id"];
-  readonly citizenId: Entity["id"];
+  readonly citizenId: Citizen["id"];
   readonly citizenHandle: string | null;
 }
 

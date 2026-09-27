@@ -37,7 +37,7 @@ export const endCollectionPhases = async () => {
        * away again below, so a later cycle in the same run must see the
        * balances as they are then, not as they were at the start.
        */
-      const allSilcBalances = await prisma.entity.findMany({
+      const allSilcBalances = await prisma.citizen.findMany({
         where: {
           silcBalance: {
             gt: 0,

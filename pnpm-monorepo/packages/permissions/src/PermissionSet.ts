@@ -1,9 +1,9 @@
-export type GenericEntityLogType =
+export type GenericCitizenLogType =
   "handle" | "discord-id" | "teamspeak-id" | "citizen-id" | "community-moniker";
 
 export interface PermissionSet {
   resource:
-    | GenericEntityLogType
+    | GenericCitizenLogType
     | "login"
     | "event"
     | "eventTemplateShare"

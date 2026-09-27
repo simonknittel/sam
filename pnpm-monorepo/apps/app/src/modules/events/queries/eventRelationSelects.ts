@@ -7,7 +7,7 @@ import type { Prisma, Ship } from "@sam-monorepo/database/client";
  * declare these. Deriving rather than restating them keeps a narrowed query
  * and the props it feeds from drifting apart.
  *
- * Event pages serialize these into the browser, so a full Entity or Upload
+ * Event pages serialize these into the browser, so a full Citizen or Upload
  * row here would ship a citizen's Discord id, Teamspeak id and SILC balances
  * with every event.
  */
@@ -16,7 +16,7 @@ import type { Prisma, Ship } from "@sam-monorepo/database/client";
 const EVENT_CITIZEN_SELECT = {
   id: true,
   handle: true,
-} as const satisfies Prisma.EntitySelect;
+} as const satisfies Prisma.CitizenSelect;
 
 /** A cover image as `getPublicUploadUrl()` and `next/image` need it */
 const EVENT_COVER_IMAGE_SELECT = {
@@ -57,7 +57,7 @@ export const EVENT_FREEZE_WINDOW_SELECT = {
   endTime: true,
 } as const satisfies Prisma.EventSelect;
 
-export type EventCitizenReference = Prisma.EntityGetPayload<{
+export type EventCitizenReference = Prisma.CitizenGetPayload<{
   select: typeof EVENT_CITIZEN_SELECT;
 }>;
 

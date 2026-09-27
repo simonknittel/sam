@@ -1,7 +1,7 @@
 import { prisma } from "@sam-monorepo/database";
 
 async function main() {
-  const entities = await prisma.entity.findMany({
+  const entities = await prisma.citizen.findMany({
     include: {
       logs: {
         where: {
@@ -29,7 +29,7 @@ async function main() {
       }
     }
 
-    await prisma.entity.update({
+    await prisma.citizen.update({
       where: {
         id: entity.id,
       },

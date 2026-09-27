@@ -1,6 +1,6 @@
 import { prisma } from "@/db";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import type { Entity } from "@sam-monorepo/database/client";
+import type { Citizen } from "@sam-monorepo/database/client";
 import {
   calculateSilcBalances,
   getSilcTransactionSumQueries,
@@ -10,7 +10,7 @@ import { revalidatePath } from "next/cache";
 
 const getSilcTransactionSumsWithoutAuthorization = withTrace(
   "getSilcTransactionSumsWithoutAuthorization",
-  async (citizenIds: Entity["id"][]) => {
+  async (citizenIds: Citizen["id"][]) => {
     const [positiveQuery, otherQuery] =
       getSilcTransactionSumQueries(citizenIds);
 
@@ -24,7 +24,7 @@ const getSilcTransactionSumsWithoutAuthorization = withTrace(
 );
 
 export const updateCitizensSilcBalances = async (
-  citizenIds: Entity["id"][],
+  citizenIds: Citizen["id"][],
 ) => {
   const transactionSums =
     await getSilcTransactionSumsWithoutAuthorization(citizenIds);
@@ -35,7 +35,7 @@ export const updateCitizensSilcBalances = async (
   );
 
   for (const [receiverId, { balance, totalEarned }] of silcBalancePerCitizen) {
-    await prisma.entity.update({
+    await prisma.citizen.update({
       where: {
         id: receiverId,
       },

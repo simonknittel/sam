@@ -1,10 +1,10 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
-import { type Entity } from "@sam-monorepo/database/client";
+import { type Citizen } from "@sam-monorepo/database/client";
 import { cache } from "react";
 
 export const getLastSeenAt = cache(
-  async (entity: Pick<Entity, "discordId">) => {
+  async (entity: Pick<Citizen, "discordId">) => {
     const authentication = await requireAuthentication();
 
     if (

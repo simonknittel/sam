@@ -1,15 +1,15 @@
-import type { EntityLogConfirmationState } from "@/types";
-import { type EntityLog } from "@sam-monorepo/database/client";
+import type { CitizenLogConfirmationState } from "@/types";
+import { type CitizenLog } from "@sam-monorepo/database/client";
 import { BsExclamationOctagonFill } from "react-icons/bs";
 import { FaCheckCircle, FaInfoCircle } from "react-icons/fa";
 import ConfirmLog from "./ConfirmLog";
 
 interface Props {
-  readonly confirmationState?: EntityLogConfirmationState;
-  readonly entityLog: Pick<EntityLog, "id" | "entityId" | "type">;
+  readonly confirmationState?: CitizenLogConfirmationState;
+  readonly citizenLog: Pick<CitizenLog, "id" | "citizenId" | "type">;
 }
 
-export const ConfirmationState = ({ confirmationState, entityLog }: Props) => {
+export const ConfirmationState = ({ confirmationState, citizenLog }: Props) => {
   switch (confirmationState) {
     case "confirmed":
       return (
@@ -33,7 +33,7 @@ export const ConfirmationState = ({ confirmationState, entityLog }: Props) => {
           <FaInfoCircle className="shrink-0" />
           <span className="overflow-hidden text-ellipsis">Unbestätigt</span>
           <span className="text-neutral-500 flex gap-1 mt-1">
-            <ConfirmLog log={entityLog} compact={true} />
+            <ConfirmLog log={citizenLog} compact={true} />
           </span>
         </div>
       );

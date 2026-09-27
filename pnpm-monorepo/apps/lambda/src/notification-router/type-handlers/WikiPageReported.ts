@@ -40,7 +40,7 @@ export const WikiPageReportedHandler = async (payload: Payload) => {
   });
   if (permissionStrings.length <= 0) return;
 
-  const recipients = await prisma.entity.findMany({
+  const recipients = await prisma.citizen.findMany({
     where: {
       roleAssignments: {
         some: {

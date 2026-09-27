@@ -1,13 +1,13 @@
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
-import { type Entity, type Ship } from "@sam-monorepo/database/client";
+import { type Citizen, type Ship } from "@sam-monorepo/database/client";
 
 interface VariantShipRow {
   id: Ship["id"];
   ownerId: Ship["ownerId"];
   name: Ship["name"];
   owner: {
-    handle: Entity["handle"];
+    handle: Citizen["handle"];
   };
 }
 

@@ -2,16 +2,16 @@
 
 import Button from "@/modules/common/components/Button";
 import Modal from "@/modules/common/components/Modal";
-import type { GenericEntityLogType } from "@/types";
-import { type Entity } from "@sam-monorepo/database/browser";
+import type { GenericCitizenLogType } from "@/types";
+import { type Citizen } from "@sam-monorepo/database/browser";
 import { useState } from "react";
 import { FaHistory } from "react-icons/fa";
 import { HistoryModalVariant } from "./HistoryModalVariant";
 import { ModalContent } from "./ModalContent";
 
 interface Props {
-  readonly type: GenericEntityLogType;
-  readonly entity: Pick<Entity, "id">;
+  readonly type: GenericCitizenLogType;
+  readonly entity: Pick<Citizen, "id">;
   readonly variant?: HistoryModalVariant;
   readonly showCreate?: boolean;
   readonly showDelete?: boolean;
@@ -22,7 +22,7 @@ interface Props {
  * A citizen carries one history per log type, and several of them sit next
  * to each other — so each names itself after what it is a history of.
  */
-const LOG_TYPE_LABELS: Record<GenericEntityLogType, string> = {
+const LOG_TYPE_LABELS: Record<GenericCitizenLogType, string> = {
   handle: "Handle",
   "discord-id": "Discord ID",
   "teamspeak-id": "TeamSpeak ID",

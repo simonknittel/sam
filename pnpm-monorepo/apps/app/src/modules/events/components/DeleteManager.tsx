@@ -2,14 +2,14 @@
 
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionButton";
-import { type Entity, type Event } from "@sam-monorepo/database/browser";
+import { type Citizen, type Event } from "@sam-monorepo/database/browser";
 import { FaTrash } from "react-icons/fa";
 import { deleteManager } from "../actions/deleteManager";
 
 interface Props {
   readonly className?: string;
   readonly eventId: Event["id"];
-  readonly managerId: Entity["id"];
+  readonly managerId: Citizen["id"];
 }
 
 export const DeleteManager = ({ className, eventId, managerId }: Props) => {

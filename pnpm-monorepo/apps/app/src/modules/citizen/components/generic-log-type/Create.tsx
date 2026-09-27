@@ -2,18 +2,18 @@
 
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
-import { type Entity } from "@sam-monorepo/database/browser";
+import { type Citizen } from "@sam-monorepo/database/browser";
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import toast from "react-hot-toast";
 import { FaSave } from "react-icons/fa";
 import { api } from "../../../../trpc/react";
-import { type GenericEntityLogType } from "../../../../types";
+import { type GenericCitizenLogType } from "../../../../types";
 
 interface Props {
-  type: GenericEntityLogType;
-  entity: Pick<Entity, "id">;
+  type: GenericCitizenLogType;
+  entity: Pick<Citizen, "id">;
 }
 
 interface FormValues {
@@ -40,9 +40,9 @@ export const Create = ({ type, entity }: Readonly<Props>) => {
       });
 
       if (response.ok) {
-        await utils.entityLog.getHistory.invalidate({
+        await utils.citizenLog.getHistory.invalidate({
           type: type,
-          entityId: entity.id,
+          citizenId: entity.id,
         });
         router.refresh();
         toast.success("Erfolgreich gespeichert");

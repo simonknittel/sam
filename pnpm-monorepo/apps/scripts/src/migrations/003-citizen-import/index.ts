@@ -66,7 +66,7 @@ type Row = [
 ];
 
 async function main() {
-  await prisma.entity.deleteMany();
+  await prisma.citizen.deleteMany();
 
   const rows: Row[] = [];
 
@@ -100,7 +100,7 @@ async function main() {
 
         if (row[0].trim()) {
           transactions.push(
-            prisma.entityLog.create({
+            prisma.citizenLog.create({
               data: {
                 entityId: entity.id,
                 type: "spectrum-id",
@@ -117,7 +117,7 @@ async function main() {
             }),
           );
         } else {
-          await prisma.entity.delete({ where: { id: entity.id } });
+          await prisma.citizen.delete({ where: { id: entity.id } });
 
           console.error(`Error importing ${JSON.stringify(row)}`);
           console.error("No Spectrum ID.");
@@ -126,7 +126,7 @@ async function main() {
 
         if (row[1].trim())
           transactions.push(
-            prisma.entityLog.create({
+            prisma.citizenLog.create({
               data: {
                 entityId: entity.id,
                 type: "citizen-id",
@@ -145,7 +145,7 @@ async function main() {
 
         if (row[2].trim())
           transactions.push(
-            prisma.entityLog.create({
+            prisma.citizenLog.create({
               data: {
                 entityId: entity.id,
                 type: "teamspeakId",
@@ -164,7 +164,7 @@ async function main() {
 
         if (row[3].trim())
           transactions.push(
-            prisma.entityLog.create({
+            prisma.citizenLog.create({
               data: {
                 entityId: entity.id,
                 type: "discordId",
@@ -183,7 +183,7 @@ async function main() {
 
         if (row[4].trim())
           transactions.push(
-            prisma.entityLog.create({
+            prisma.citizenLog.create({
               data: {
                 entityId: entity.id,
                 type: "handle",
@@ -202,7 +202,7 @@ async function main() {
 
         if (row[5].trim())
           transactions.push(
-            prisma.entityLog.create({
+            prisma.citizenLog.create({
               data: {
                 entityId: entity.id,
                 type: "communityMoniker",
@@ -224,7 +224,7 @@ async function main() {
             gesperrt = true;
           } else {
             transactions.push(
-              prisma.entityLog.create({
+              prisma.citizenLog.create({
                 data: {
                   entityId: entity.id,
                   type: "note",
@@ -262,7 +262,7 @@ async function main() {
             gesperrt = true;
           } else {
             transactions.push(
-              prisma.entityLog.create({
+              prisma.citizenLog.create({
                 data: {
                   entityId: entity.id,
                   type: "note",
@@ -300,7 +300,7 @@ async function main() {
             gesperrt = true;
           } else {
             transactions.push(
-              prisma.entityLog.create({
+              prisma.citizenLog.create({
                 data: {
                   entityId: entity.id,
                   type: "note",
@@ -338,7 +338,7 @@ async function main() {
             gesperrt = true;
           } else {
             transactions.push(
-              prisma.entityLog.create({
+              prisma.citizenLog.create({
                 data: {
                   entityId: entity.id,
                   type: "note",
@@ -376,7 +376,7 @@ async function main() {
             gesperrt = true;
           } else {
             transactions.push(
-              prisma.entityLog.create({
+              prisma.citizenLog.create({
                 data: {
                   entityId: entity.id,
                   type: "note",
@@ -414,7 +414,7 @@ async function main() {
             gesperrt = true;
           } else {
             transactions.push(
-              prisma.entityLog.create({
+              prisma.citizenLog.create({
                 data: {
                   entityId: entity.id,
                   type: "note",
@@ -452,7 +452,7 @@ async function main() {
             gesperrt = true;
           } else {
             transactions.push(
-              prisma.entityLog.create({
+              prisma.citizenLog.create({
                 data: {
                   entityId: entity.id,
                   type: "note",
@@ -490,7 +490,7 @@ async function main() {
             gesperrt = true;
           } else {
             transactions.push(
-              prisma.entityLog.create({
+              prisma.citizenLog.create({
                 data: {
                   entityId: entity.id,
                   type: "note",
@@ -528,7 +528,7 @@ async function main() {
             gesperrt = true;
           } else {
             transactions.push(
-              prisma.entityLog.create({
+              prisma.citizenLog.create({
                 data: {
                   entityId: entity.id,
                   type: "note",
@@ -566,7 +566,7 @@ async function main() {
             gesperrt = true;
           } else {
             transactions.push(
-              prisma.entityLog.create({
+              prisma.citizenLog.create({
                 data: {
                   entityId: entity.id,
                   type: "note",
@@ -604,7 +604,7 @@ async function main() {
             gesperrt = true;
           } else {
             transactions.push(
-              prisma.entityLog.create({
+              prisma.citizenLog.create({
                 data: {
                   entityId: entity.id,
                   type: "note",
@@ -639,7 +639,7 @@ async function main() {
 
         if (gesperrt) {
           transactions.push(
-            prisma.entityLog.create({
+            prisma.citizenLog.create({
               data: {
                 entityId: entity.id,
                 type: "role-added",

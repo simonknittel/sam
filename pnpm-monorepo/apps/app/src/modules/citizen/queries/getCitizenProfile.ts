@@ -5,7 +5,7 @@ import { sumPenaltyPointsOfCitizen } from "@/modules/penalty-points/queries/sumP
 import { getAssignableRoles } from "@/modules/roles/utils/getRoles";
 import { getMonthlySalaryOfRoles } from "@/modules/silc/queries/getMonthlySalaryOfRoles";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import type { Entity } from "@sam-monorepo/database/client";
+import type { Citizen } from "@sam-monorepo/database/client";
 import { cache } from "react";
 import { hasBirthdayToday } from "../utils/hasBirthdayToday";
 
@@ -13,7 +13,7 @@ import { hasBirthdayToday } from "../utils/hasBirthdayToday";
  * The avatar of a citizen is the Discord avatar of the user behind it, which
  * the app refreshes at every login.
  */
-const getAvatarUrl = async (discordId: Entity["discordId"]) => {
+const getAvatarUrl = async (discordId: Citizen["discordId"]) => {
   if (!discordId) return null;
 
   const account = await prisma.account.findFirst({
@@ -49,14 +49,14 @@ const getAvatarUrl = async (discordId: Entity["discordId"]) => {
  * follow is worse than no link.
  */
 export const getCitizenProfile = cache(
-  withTrace("getCitizenProfile", async (id: Entity["id"]) => {
+  withTrace("getCitizenProfile", async (id: Citizen["id"]) => {
     const authentication = await requireAuthentication();
 
     const isCurrentCitizen = authentication.session.entity?.id === id;
     const canOpenSpynet = await authentication.authorize("citizen", "read");
     if (!isCurrentCitizen && !canOpenSpynet) throw new Error("Forbidden");
 
-    const citizen = await prisma.entity.findUnique({
+    const citizen = await prisma.citizen.findUnique({
       where: {
         id,
       },

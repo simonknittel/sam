@@ -1,15 +1,15 @@
 "use client";
 
 import { api } from "@/trpc/react";
-import type { GenericEntityLogType } from "@/types";
-import { type Entity } from "@sam-monorepo/database/browser";
+import type { GenericCitizenLogType } from "@/types";
+import { type Citizen } from "@sam-monorepo/database/browser";
 import { Create } from "./Create";
 import { HistoryEntry } from "./HistoryEntry";
 import { HistoryEntrySkelton } from "./HistoryEntrySkeleton";
 
 interface Props {
-  type: GenericEntityLogType;
-  entity: Pick<Entity, "id">;
+  type: GenericCitizenLogType;
+  entity: Pick<Citizen, "id">;
   showCreate?: boolean;
   showDelete?: boolean;
   showConfirm?: boolean;
@@ -22,9 +22,9 @@ export const ModalContent = ({
   showDelete,
   showConfirm,
 }: Readonly<Props>) => {
-  const history = api.entityLog.getHistory.useQuery({
+  const history = api.citizenLog.getHistory.useQuery({
     type,
-    entityId: entity.id,
+    citizenId: entity.id,
   });
 
   let entries;

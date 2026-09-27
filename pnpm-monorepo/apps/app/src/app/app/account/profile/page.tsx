@@ -15,7 +15,7 @@ export default async function Page() {
   );
   if (!authentication.session.entity) notFound();
 
-  const citizen = await prisma.entity.findUniqueOrThrow({
+  const citizen = await prisma.citizen.findUniqueOrThrow({
     where: { id: authentication.session.entity.id },
     select: { timezone: true, birthdayDay: true, birthdayMonth: true },
   });

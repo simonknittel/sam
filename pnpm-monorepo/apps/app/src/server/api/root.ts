@@ -1,8 +1,8 @@
 import { getRoleNameSuggestions } from "./routers/ai/getRoleNameSuggestions";
+import { getHistory } from "./routers/citizenLog/getHistory";
 import { getAllCitizens } from "./routers/citizens/getAllCitizens";
 import { getCitizenById } from "./routers/citizens/getCitizenById";
 import { getCitizensGroupedByVisibleRoles } from "./routers/citizens/getCitizensGroupedByVisibleRoles";
-import { getHistory } from "./routers/entityLog/getHistory";
 import { getAddableParticipantIds } from "./routers/events/getAddableParticipantIds";
 import { getAllEvents } from "./routers/events/getAllEvents";
 import { getPublishableDiscordChannels } from "./routers/events/getPublishableDiscordChannels";
@@ -43,7 +43,7 @@ export const appRouter = createTRPCRouter({
     getCitizenById,
     getCitizensGroupedByVisibleRoles,
   }),
-  entityLog: createTRPCRouter({
+  citizenLog: createTRPCRouter({
     getHistory,
   }),
   events: createTRPCRouter({

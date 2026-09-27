@@ -10,7 +10,7 @@ export const getSilcBalanceOfAllCitizens = cache(
     if (!(await authentication.authorize("silcBalanceOfOtherCitizen", "read")))
       forbidden();
 
-    return await prisma.entity.findMany({
+    return await prisma.citizen.findMany({
       where: {
         totalEarnedSilc: {
           not: {

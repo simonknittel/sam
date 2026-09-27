@@ -12,14 +12,14 @@ import {
   ComboboxOption,
   ComboboxOptions,
 } from "@headlessui/react";
-import type { Entity } from "@sam-monorepo/database/browser";
+import type { Citizen } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import Fuse, { type FuseResult } from "fuse.js";
 import { useState } from "react";
 import { FaCheck, FaTrash, FaUsers } from "react-icons/fa";
 
 /** What the picker offers: `getCitizens()` returns exactly this */
-type CitizenOption = Pick<Entity, "id" | "handle">;
+type CitizenOption = Pick<Citizen, "id" | "handle">;
 
 interface BaseProps {
   readonly className?: string;
@@ -30,17 +30,17 @@ interface BaseProps {
    * Narrows the offered citizens to this set, including the role shortcuts.
    * Omit to offer every citizen.
    */
-  readonly selectableCitizenIds?: readonly Entity["id"][];
+  readonly selectableCitizenIds?: readonly Citizen["id"][];
 }
 
 interface SingleProps extends BaseProps {
   readonly multiple?: false;
-  readonly defaultValue?: Entity["id"];
+  readonly defaultValue?: Citizen["id"];
 }
 
 interface MultipleProps extends BaseProps {
   readonly multiple: true;
-  readonly defaultValue?: Entity["id"][];
+  readonly defaultValue?: Citizen["id"][];
 }
 
 type Props = SingleProps | MultipleProps;
@@ -221,7 +221,7 @@ type MultipleComponentProps = Readonly<{
   setQuery: (query: string) => void;
   filterResult: FuseResult<CitizenOption>[];
   defaultValue?: CitizenOption[];
-  selectableIds: ReadonlySet<Entity["id"]> | null;
+  selectableIds: ReadonlySet<Citizen["id"]> | null;
   autoFocus?: boolean;
 }>;
 

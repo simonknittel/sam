@@ -5,7 +5,7 @@ import Button from "@/modules/common/components/Button";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import Modal from "@/modules/common/components/Modal";
 import type { BadgeRole } from "@/modules/roles/queries/getRoles";
-import { type Entity, type Role } from "@sam-monorepo/database/browser";
+import { type Citizen, type Role } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import Fuse, { type FuseResult } from "fuse.js";
 
@@ -19,7 +19,7 @@ import { UpdateRolesForm } from "./UpdateRolesForm";
 
 interface Props {
   readonly className?: string;
-  readonly citizenId: Entity["id"];
+  readonly citizenId: Citizen["id"];
   readonly assignedRoleIds: Role["id"][];
   readonly iconOnly?: boolean;
   readonly onRequestClose?: () => void;

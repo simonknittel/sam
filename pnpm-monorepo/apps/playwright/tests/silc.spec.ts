@@ -79,7 +79,7 @@ test("a transaction created through the UI updates balances and the system log",
     value: 42,
     description: "Belohnung für den Testeinsatz",
   });
-  const receiverEntity = await prisma.entity.findUnique({
+  const receiverEntity = await prisma.citizen.findUnique({
     where: { id: receiver.entity.id },
   });
   expect(receiverEntity?.silcBalance).toBe(42);
@@ -166,7 +166,7 @@ test('"Speichern und weitere Transaktion erstellen" keeps the modal open with a 
       }),
     )
     .toBe(2);
-  const receiverEntity = await prisma.entity.findUnique({
+  const receiverEntity = await prisma.citizen.findUnique({
     where: { id: receiver.entity.id },
   });
   expect(receiverEntity?.silcBalance).toBe(11);
@@ -215,7 +215,7 @@ test("deleting a transaction soft deletes it and reverts the balance", async ({
     where: { id: transaction.id },
   });
   expect(deletedTransaction?.deletedAt).not.toBeNull();
-  const receiverEntity = await prisma.entity.findUnique({
+  const receiverEntity = await prisma.citizen.findUnique({
     where: { id: receiver.entity.id },
   });
   expect(receiverEntity?.silcBalance).toBe(0);

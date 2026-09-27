@@ -1,10 +1,10 @@
-import { prisma, type Entity } from "@sam-monorepo/database";
+import { prisma, type Citizen } from "@sam-monorepo/database";
 import { CAN_LOGIN_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import { BIRTHDAY_FALLBACK_WORDING } from "@sam-monorepo/notifications";
 import { publishNotifications } from "../publish";
 
 interface Payload {
-  citizenId: Entity["id"];
+  citizenId: Citizen["id"];
 }
 
 /**
@@ -105,7 +105,7 @@ const pickWording = () =>
  * carries the same text as the web push notification.
  */
 export const BirthdayGreetingHandler = async (payload: Payload) => {
-  const citizen = await prisma.entity.findFirst({
+  const citizen = await prisma.citizen.findFirst({
     where: {
       AND: [{ id: payload.citizenId }, CAN_LOGIN_CITIZEN_WHERE],
     },

@@ -31,7 +31,7 @@ export async function DELETE(request: Request, props: { params: Params }) {
     /**
      * Delete
      */
-    const deletedEntity = await prisma.entity.delete({
+    const deletedEntity = await prisma.citizen.delete({
       where: {
         id: paramsData,
       },

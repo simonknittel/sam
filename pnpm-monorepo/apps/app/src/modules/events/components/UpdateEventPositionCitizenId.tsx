@@ -3,7 +3,7 @@
 import { runAction } from "@/modules/actions/utils/runAction";
 import type { EventCitizenWithShips } from "@/modules/events/queries/eventRelationSelects";
 import type {
-  Entity,
+  Citizen,
   EventPosition,
   EventPositionApplication,
 } from "@sam-monorepo/database/browser";
@@ -19,10 +19,10 @@ interface Props {
   readonly citizensSatisfyingRequirements: EventCitizenWithShips[];
   readonly citizensNotSatisfyingRequirements: EventCitizenWithShips[];
   readonly applicationsSatisfyingRequirements: (EventPositionApplication & {
-    citizen: Pick<Entity, "id" | "handle">;
+    citizen: Pick<Citizen, "id" | "handle">;
   })[];
   readonly applicationsNotSatisfyingRequirements: (EventPositionApplication & {
-    citizen: Pick<Entity, "id" | "handle">;
+    citizen: Pick<Citizen, "id" | "handle">;
   })[];
 }
 

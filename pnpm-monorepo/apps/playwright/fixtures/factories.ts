@@ -1,5 +1,5 @@
 import type {
-  Entity,
+  Citizen,
   EventDiscordPublishTarget,
   Prisma,
   PrismaClient,
@@ -46,9 +46,9 @@ export const futureEvent = () => ({
  */
 export const LOGIN_PERMISSION = "login;manage";
 
-export interface Citizen {
+export interface TestCitizen {
   readonly user: User;
-  readonly entity: Entity;
+  readonly entity: Citizen;
   readonly role: Role;
 }
 
@@ -66,7 +66,7 @@ interface CreateCitizenOptions {
 }
 
 /**
- * A fully sign-in-able user: the session callback resolves the Entity via
+ * A fully sign-in-able user: the session callback resolves the Citizen via
  * the Discord account's providerAccountId and builds permissions from the
  * assigned roles.
  */
@@ -78,7 +78,7 @@ export const createCitizen = async (
     admin = false,
     emailVerified = new Date(),
   }: CreateCitizenOptions,
-): Promise<Citizen> => {
+): Promise<TestCitizen> => {
   const suffix = randomUUID().slice(0, 8);
   const discordId = randomUUID();
 
@@ -98,7 +98,7 @@ export const createCitizen = async (
     },
   });
 
-  const entity = await prisma.entity.create({
+  const entity = await prisma.citizen.create({
     data: {
       discordId,
       handle,
@@ -122,7 +122,7 @@ interface CreateUserWithoutCitizenOptions {
 }
 
 /**
- * A user whose Discord account matches no Entity, thus `session.entity` stays
+ * A user whose Discord account matches no Citizen, thus `session.entity` stays
  * null. Such a user gets no permissions from roles, so only an admin in admin
  * mode gets past the clearance gate — which is what makes the state testable
  * at all.
@@ -169,7 +169,7 @@ export const createRole = async (
 
 export const assignRole = (
   prisma: PrismaClient,
-  entity: Pick<Entity, "id">,
+  entity: Pick<Citizen, "id">,
   role: Pick<Role, "id">,
 ) =>
   prisma.roleAssignment.create({
@@ -403,7 +403,7 @@ interface CreateSilcTransactionOptions {
 
 /**
  * Creates a transaction and keeps the denormalized balance columns on
- * Entity in sync the way the app's updateCitizensSilcBalances does
+ * Citizen in sync the way the app's updateCitizensSilcBalances does
  * (totalEarnedSilc only counts positive values).
  */
 export const createSilcTransaction = async (
@@ -414,7 +414,7 @@ export const createSilcTransaction = async (
     data: { receiverId, value, description, createdById },
   });
 
-  await prisma.entity.update({
+  await prisma.citizen.update({
     where: { id: receiverId },
     data: {
       silcBalance: { increment: value },
@@ -465,7 +465,7 @@ export const createEvent = (
 
 interface CreateAppEventOptions {
   readonly name: string;
-  /** Entity id of the creating citizen — managing rights key off this. */
+  /** Citizen id of the creating citizen — managing rights key off this. */
   readonly createdById: string;
   readonly startTime: Date;
   readonly endTime: Date;
@@ -563,7 +563,7 @@ export const createEventBriefingPage = (
 
 interface CreateParticipantOptions {
   readonly eventId: string;
-  readonly citizen: Citizen;
+  readonly citizen: TestCitizen;
   /**
    * APP mirrors an in-app sign-up (identified by the citizen id), DISCORD an
    * RSVP mirrored from Discord (identified by the Discord user id, with the
@@ -576,7 +576,7 @@ interface CreateParticipantOptions {
    * history and gives up its `active…` claim on the event.
    */
   readonly cancelled?: boolean;
-  /** Entity id of whoever cancelled; defaults to the participant themselves. */
+  /** Citizen id of whoever cancelled; defaults to the participant themselves. */
   readonly cancelledById?: string;
   /**
    * Set to false for a Discord RSVP whose Discord account the app has not
@@ -627,7 +627,7 @@ export const createParticipant = (
 
 interface CreateProfitDistributionCycleOptions {
   readonly title: string;
-  /** Entity id of the creating manager */
+  /** Citizen id of the creating manager */
   readonly createdById: string;
   /** Defaults to two days out, i.e. the cycle is in its collection phase. */
   readonly collectionEndedAt?: Date;
@@ -712,7 +712,7 @@ export const ORG_ID = "cm4wm57sw0001opxo2c8oq0o0";
 
 export const addCitizenToOrganization = async (
   prisma: PrismaClient,
-  citizen: Citizen,
+  citizen: TestCitizen,
 ) => {
   await prisma.organization.upsert({
     where: { id: ORG_ID },
@@ -824,7 +824,7 @@ export const createFlow = async (
 
 interface CreateEventTemplateOptions {
   readonly name: string;
-  /** Entity id of the owner — every permission but `event;manage` keys off this */
+  /** Citizen id of the owner — every permission but `event;manage` keys off this */
   readonly ownedById: string;
   readonly description?: string;
   readonly visibility?: EventVisibility;
@@ -951,7 +951,7 @@ interface CreateLogAnalyzerEntryOptions {
   /** The full log line the pattern of the type matched */
   readonly rawLine: string;
   readonly eventAt: Date;
-  /** Entity id of the citizen who shared the entry */
+  /** Citizen id of the citizen who shared the entry */
   readonly createdById: string;
 }
 

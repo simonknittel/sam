@@ -1,18 +1,18 @@
 "use client";
 
 import { FilterCheckboxList } from "@/modules/common/components/FilterCheckboxList";
-import type { EntityLogType } from "@/types";
+import type { CitizenLogType } from "@/types";
 
 interface Props {
-  readonly entityLogTypes: Map<EntityLogType, string>;
+  readonly citizenLogTypes: Map<CitizenLogType, string>;
 }
 
-export const EntityLogTypeFilter = ({ entityLogTypes }: Props) => {
+export const CitizenLogTypeFilter = ({ citizenLogTypes }: Props) => {
   return (
     <FilterCheckboxList
       className="items-start"
       prefix="type"
-      items={Array.from(entityLogTypes)
+      items={Array.from(citizenLogTypes)
         .toSorted((firstEntry, secondEntry) =>
           firstEntry[1].localeCompare(secondEntry[1]),
         )

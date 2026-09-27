@@ -1,11 +1,11 @@
 import { prisma } from "@/db";
-import type { Entity, VariantTag } from "@sam-monorepo/database/client";
+import type { Citizen, VariantTag } from "@sam-monorepo/database/client";
 import { VARIANT_TAG_SELECT } from "../queries/shipQuery";
 
 export const createAndReturnTags = async (
   tagKeys: string[] | undefined,
   tagValues: string[] | undefined,
-  authorCitizenId: Entity["id"],
+  authorCitizenId: Citizen["id"],
 ) => {
   let tagsToConnect: VariantTag["id"][] = [];
 

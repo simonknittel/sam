@@ -11,7 +11,7 @@ import { withTrace } from "@/modules/tracing/utils/withTrace";
 import {
   RoleAssignmentChangeType,
   RoleAssignmentLevelChangeType,
-  type Entity,
+  type Citizen,
 } from "@sam-monorepo/database/client";
 import { SingleRoleBadge } from "../components/SingleRoleBadge";
 import { getVisibleRoles } from "../utils/getRoles";
@@ -19,7 +19,7 @@ import { RoleActivitySourceKey } from "./roleActivityTypes";
 
 interface Input {
   /** Restricts the source to one citizen's history. */
-  readonly citizenId?: Entity["id"];
+  readonly citizenId?: Citizen["id"];
   /** Whether the citizen the entry is about gets its own column. */
   readonly withTarget?: boolean;
   readonly filters?: ActivityFilters;

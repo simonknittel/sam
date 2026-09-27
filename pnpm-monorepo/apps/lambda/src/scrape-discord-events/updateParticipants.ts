@@ -103,7 +103,7 @@ export const updateParticipants = async (
    * time where possible.
    */
   if (added.length > 0) {
-    const citizens = await prisma.entity.findMany({
+    const citizens = await prisma.citizen.findMany({
       where: {
         discordId: {
           in: added,
@@ -142,7 +142,7 @@ export const updateParticipants = async (
       !removed.includes(participant.discordUserId),
   );
   if (unresolvedParticipants.length > 0) {
-    const citizens = await prisma.entity.findMany({
+    const citizens = await prisma.citizen.findMany({
       where: {
         discordId: {
           in: unresolvedParticipants.map(

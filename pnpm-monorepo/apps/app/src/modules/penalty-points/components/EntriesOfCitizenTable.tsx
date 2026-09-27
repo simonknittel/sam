@@ -1,6 +1,6 @@
 import { requireAuthentication } from "@/modules/auth/server";
 import { Tile } from "@/modules/common/components/Tile";
-import type { Entity } from "@sam-monorepo/database/client";
+import type { Citizen } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import {
   createLoader,
@@ -17,7 +17,7 @@ const loadSearchParams = createLoader({
 
 interface Props {
   readonly className?: string;
-  readonly citizenId: Entity["id"];
+  readonly citizenId: Citizen["id"];
   readonly searchParams: Promise<SearchParams>;
 }
 

@@ -1,5 +1,5 @@
 import { createId } from "@paralleldrive/cuid2";
-import { prisma, type Entity, type Role } from "@sam-monorepo/database";
+import { prisma, type Citizen, type Role } from "@sam-monorepo/database";
 import {
   AuditEventType,
   getLocalDate,
@@ -34,7 +34,7 @@ export const disburseRoleSalaries = async () => {
       );
     }
 
-    const allCitizens = await prisma.entity.findMany({
+    const allCitizens = await prisma.citizen.findMany({
       where: {
         roleAssignments: {
           some: {},
@@ -59,7 +59,7 @@ export const disburseRoleSalaries = async () => {
       string,
       {
         role: Pick<Role, "id" | "name">;
-        citizens: Pick<Entity, "id">[];
+        citizens: Pick<Citizen, "id">[];
       }
     >();
 

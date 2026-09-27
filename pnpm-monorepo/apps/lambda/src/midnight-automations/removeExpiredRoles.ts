@@ -8,7 +8,7 @@ export const removeExpiredRoles = async () => {
     const citizenWithRoles = await captureAsyncFunc(
       "find citizens with roles",
       () =>
-        prisma.entity.findMany({
+        prisma.citizen.findMany({
           where: {
             roleAssignments: {
               some: {},

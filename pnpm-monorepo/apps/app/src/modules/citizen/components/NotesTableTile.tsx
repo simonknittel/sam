@@ -1,9 +1,9 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import {
-  ENTITY_LOG_ATTRIBUTE_SELECT,
-  ENTITY_LOG_TABLE_SELECT,
-} from "@/modules/citizen/queries/entityLogTableSelect";
+  CITIZEN_LOG_ATTRIBUTE_SELECT,
+  CITIZEN_LOG_TABLE_SELECT,
+} from "@/modules/citizen/queries/citizenLogTableSelect";
 import getLatestNoteAttributes from "@/modules/citizen/utils/getLatestNoteAttributes";
 import Pagination from "@/modules/common/components/Pagination";
 import {
@@ -17,7 +17,7 @@ import {
 } from "@/modules/common/utils/sorting";
 import { getAllClassificationLevels } from "@/modules/spynet/queries/getAllClassificationLevels";
 import { getAllNoteTypes } from "@/modules/spynet/queries/getAllNoteTypes";
-import type { EntityLogConfirmationState } from "@/types";
+import type { CitizenLogConfirmationState } from "@/types";
 import clsx from "clsx";
 import isAllowedToRead from "../utils/isAllowedToRead";
 import { type Row, NotesTable } from "./NotesTable";
@@ -33,20 +33,20 @@ export const NotesTableTile = async ({ className, searchParams }: Props) => {
 
   const currentPage = getCurrentPageFromSearchParams(searchParams);
 
-  const [entityLogs, noteTypes, classificationLevels] = await Promise.all([
-    prisma.entityLog.findMany({
+  const [citizenLogs, noteTypes, classificationLevels] = await Promise.all([
+    prisma.citizenLog.findMany({
       where: {
         type: "note",
       },
       select: {
-        ...ENTITY_LOG_TABLE_SELECT,
+        ...CITIZEN_LOG_TABLE_SELECT,
         attributes: {
           where: {
             key: {
               in: ["noteTypeId", "classificationLevelId", "confirmed"],
             },
           },
-          select: ENTITY_LOG_ATTRIBUTE_SELECT,
+          select: CITIZEN_LOG_ATTRIBUTE_SELECT,
         },
       },
     }),
@@ -55,10 +55,10 @@ export const NotesTableTile = async ({ className, searchParams }: Props) => {
     getAllClassificationLevels(),
   ]);
 
-  const rows = entityLogs
-    .filter((entityLog) => {
+  const rows = citizenLogs
+    .filter((citizenLog) => {
       const { noteTypeId, classificationLevelId } =
-        getLatestNoteAttributes(entityLog);
+        getLatestNoteAttributes(citizenLog);
 
       if (!noteTypeId || !classificationLevelId) return false;
 
@@ -70,12 +70,12 @@ export const NotesTableTile = async ({ className, searchParams }: Props) => {
         )
       );
     })
-    .map((entityLog): Row => {
+    .map((citizenLog): Row => {
       const { noteTypeId, classificationLevelId, confirmed } =
-        getLatestNoteAttributes(entityLog);
+        getLatestNoteAttributes(citizenLog);
 
       return {
-        entity: entityLog.entity,
+        entity: citizenLog.citizen,
         noteType: noteTypes.find(
           (noteType) => noteType.id === noteTypeId!.value,
         )!,
@@ -83,10 +83,10 @@ export const NotesTableTile = async ({ className, searchParams }: Props) => {
           (classificationLevel) =>
             classificationLevel.id === classificationLevelId!.value,
         )!,
-        confirmationState: confirmed?.value as EntityLogConfirmationState,
+        confirmationState: confirmed?.value as CitizenLogConfirmationState,
         confirmedAt: confirmed?.createdAt,
         confirmedBy: confirmed?.createdBy,
-        entityLog,
+        citizenLog,
       };
     });
 
@@ -95,7 +95,7 @@ export const NotesTableTile = async ({ className, searchParams }: Props) => {
       rows.map(async (row) => {
         return {
           row,
-          include: await isAllowedToRead(row.entityLog, authentication),
+          include: await isAllowedToRead(row.citizenLog, authentication),
         };
       }),
     )
@@ -175,14 +175,14 @@ export const NotesTableTile = async ({ className, searchParams }: Props) => {
 
       case "created-at-asc":
         return sortAscWithAndNullLast(
-          a.entityLog.createdAt.getTime(),
-          b.entityLog.createdAt.getTime(),
+          a.citizenLog.createdAt.getTime(),
+          b.citizenLog.createdAt.getTime(),
         );
 
       default:
         return sortDescAndNullLast(
-          a.entityLog.createdAt.getTime(),
-          b.entityLog.createdAt.getTime(),
+          a.citizenLog.createdAt.getTime(),
+          b.citizenLog.createdAt.getTime(),
         );
     }
   });

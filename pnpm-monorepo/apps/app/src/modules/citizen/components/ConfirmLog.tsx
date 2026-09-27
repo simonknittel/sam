@@ -3,14 +3,14 @@
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { api } from "@/trpc/react";
-import { type EntityLog } from "@sam-monorepo/database/browser";
+import { type CitizenLog } from "@sam-monorepo/database/browser";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { FaCheck, FaTimes } from "react-icons/fa";
 
 interface Props {
-  readonly log: Pick<EntityLog, "id" | "entityId" | "type">;
+  readonly log: Pick<CitizenLog, "id" | "citizenId" | "type">;
   readonly compact?: boolean;
 }
 
@@ -24,7 +24,7 @@ const ConfirmLog = ({ log, compact }: Props) => {
 
     try {
       const response = await fetch(
-        `/api/spynet/citizen/${log.entityId}/log/${log.id}/confirm`,
+        `/api/spynet/citizen/${log.citizenId}/log/${log.id}/confirm`,
         {
           method: "PATCH",
           body: JSON.stringify({
@@ -34,8 +34,8 @@ const ConfirmLog = ({ log, compact }: Props) => {
       );
 
       if (response.ok) {
-        await utils.entityLog.getHistory.invalidate({
-          entityId: log.entityId,
+        await utils.citizenLog.getHistory.invalidate({
+          citizenId: log.citizenId,
           // @ts-expect-error Don't know how to improve this
           type: log.type,
         });

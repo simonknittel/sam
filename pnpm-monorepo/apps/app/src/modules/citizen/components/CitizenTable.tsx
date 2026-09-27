@@ -5,7 +5,7 @@ import {
   SortDirection,
   toggleSortParam,
 } from "@/modules/common/utils/toggleSortParam";
-import { type Entity } from "@sam-monorepo/database/client";
+import { type Citizen } from "@sam-monorepo/database/client";
 import { Suspense } from "react";
 import { FaExternalLinkAlt, FaSortDown, FaSortUp } from "react-icons/fa";
 import { CitizenTableDelete } from "./CitizenTableDelete";
@@ -14,7 +14,7 @@ import { HistoryModal } from "./generic-log-type/HistoryModal";
 
 type Row = Readonly<{
   entity: Pick<
-    Entity,
+    Citizen,
     "id" | "handle" | "spectrumId" | "discordId" | "teamspeakId" | "createdAt"
   >;
 }>;

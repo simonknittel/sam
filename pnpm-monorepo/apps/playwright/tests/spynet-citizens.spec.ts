@@ -50,12 +50,12 @@ test("a citizen is created from a Spectrum ID and deleted again", async ({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
 
-  const created = await prisma.entity.findFirstOrThrow({
+  const created = await prisma.citizen.findFirstOrThrow({
     where: { spectrumId: "NEWCOMER" },
   });
   expect(created.createdById).toBe(admin.user.id);
   /** The Spectrum ID is recorded as the citizen's first log entry */
-  const spectrumIdLog = await prisma.entityLog.findFirstOrThrow({
+  const spectrumIdLog = await prisma.citizenLog.findFirstOrThrow({
     where: { entityId: created.id, type: "spectrum-id" },
   });
   expect(spectrumIdLog.content).toBe("NEWCOMER");
@@ -77,10 +77,10 @@ test("a citizen is created from a Spectrum ID and deleted again", async ({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await expect
-    .poll(() => prisma.entity.count({ where: { id: created.id } }))
+    .poll(() => prisma.citizen.count({ where: { id: created.id } }))
     .toBe(0);
   expect(
-    await prisma.entityLog.count({ where: { entityId: created.id } }),
+    await prisma.citizenLog.count({ where: { citizenId: created.id } }),
   ).toBe(0);
 
   await expectAuditEvents(prisma, ["CITIZEN_CREATED", "CITIZEN_DELETED"]);
@@ -138,7 +138,7 @@ test("deleting a citizen keeps what they recorded about others", async ({
   });
 
   await expect
-    .poll(() => prisma.entity.count({ where: { id: recorder.entity.id } }))
+    .poll(() => prisma.citizen.count({ where: { id: recorder.entity.id } }))
     .toBe(0);
   expect(
     await prisma.organization.findUnique({ where: { id: organization.id } }),
@@ -215,16 +215,16 @@ test("a log entry is confirmed, and a second one marked a false report", async (
   await expect
     .poll(
       async () => {
-        const attributes = await prisma.entityLogAttribute.findMany({
+        const attributes = await prisma.citizenLogAttribute.findMany({
           where: {
             key: "confirmed",
-            entityLog: { entityId: target.entity.id },
+            citizenLog: { entityId: target.entity.id },
           },
-          select: { value: true, entityLog: { select: { content: true } } },
+          select: { value: true, citizenLog: { select: { content: true } } },
         });
         return Object.fromEntries(
           attributes.map((attribute) => [
-            attribute.entityLog.content,
+            attribute.citizenLog.content,
             attribute.value,
           ]),
         );
@@ -236,7 +236,7 @@ test("a log entry is confirmed, and a second one marked a false report", async (
   /** Only the confirmed one becomes the citizen's handle */
   await expect
     .poll(async () => {
-      const entity = await prisma.entity.findUniqueOrThrow({
+      const entity = await prisma.citizen.findUniqueOrThrow({
         where: { id: target.entity.id },
         select: { handle: true },
       });
@@ -259,7 +259,7 @@ test("the overview shows the confirmed value of every identity attribute", async
    * (see the test above), which is what the overview reads.
    */
   const target = await createCitizen(prisma, { handle: "beobachteter" });
-  await prisma.entity.update({
+  await prisma.citizen.update({
     where: { id: target.entity.id },
     data: {
       spectrumId: "BEOBACHTETER",

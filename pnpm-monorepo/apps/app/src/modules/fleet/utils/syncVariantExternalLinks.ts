@@ -1,6 +1,6 @@
 import { prisma } from "@/db";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import type { Entity } from "@sam-monorepo/database/client";
+import type { Citizen } from "@sam-monorepo/database/client";
 
 export interface IncomingLink {
   serviceName: string;
@@ -12,7 +12,7 @@ export const syncVariantExternalLinks = withTrace(
   async (
     variantId: string,
     incomingLinks: IncomingLink[] | undefined,
-    authorCitizenId: Entity["id"],
+    authorCitizenId: Citizen["id"],
   ) => {
     await prisma.$transaction(async (tx) => {
       if (!incomingLinks || incomingLinks.length === 0) {

@@ -29,7 +29,7 @@ const REQUIRED_VARIANTS_INCLUDE = {
 /**
  * Everything the lineup renders for one position, without its children.
  * Citizens appear as `CitizenLink`s, so they are joined as {id, handle}
- * rather than as full Entity rows with their Discord and Teamspeak ids and
+ * rather than as full Citizen rows with their Discord and Teamspeak ids and
  * SILC balances — the whole tree is serialized into client components.
  */
 const POSITION_INCLUDE = {

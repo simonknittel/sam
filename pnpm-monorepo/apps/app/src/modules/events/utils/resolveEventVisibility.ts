@@ -1,6 +1,6 @@
 import {
   EventVisibility,
-  type Entity,
+  type Citizen,
   type Event,
   type EventVisibilityRole,
 } from "@sam-monorepo/database/client";
@@ -16,7 +16,7 @@ export type EventVisibilityInput = Pick<
   "visibility" | "createdById" | "deletedAt"
 > & {
   readonly visibilityRoles: readonly Pick<EventVisibilityRole, "roleId">[];
-  readonly managers: readonly Pick<Entity, "id">[];
+  readonly managers: readonly Pick<Citizen, "id">[];
 };
 
 /**

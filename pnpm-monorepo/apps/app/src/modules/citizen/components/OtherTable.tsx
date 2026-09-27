@@ -1,5 +1,5 @@
-import type { EntityLogTableRow } from "@/modules/citizen/queries/entityLogTableSelect";
-import { entityLogTypeTranslations } from "@/modules/citizen/utils/entityLogTypeTranslations";
+import type { CitizenLogTableRow } from "@/modules/citizen/queries/citizenLogTableSelect";
+import { citizenLogTypeTranslations } from "@/modules/citizen/utils/citizenLogTypeTranslations";
 import { Actions } from "@/modules/common/components/Actions";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
@@ -7,18 +7,18 @@ import {
   SortDirection,
   toggleSortParam,
 } from "@/modules/common/utils/toggleSortParam";
-import type { EntityLogConfirmationState } from "@/types";
-import { type Entity, type User } from "@sam-monorepo/database/client";
+import type { CitizenLogConfirmationState } from "@/types";
+import { type Citizen, type User } from "@sam-monorepo/database/client";
 import { FaSortDown, FaSortUp } from "react-icons/fa";
 import { ConfirmationState } from "./ConfirmationState";
 import { OtherTableDelete } from "./OtherTableDelete";
 
 export interface Row {
-  readonly entity: Pick<Entity, "id" | "handle">;
-  readonly confirmationState?: EntityLogConfirmationState;
+  readonly entity: Pick<Citizen, "id" | "handle">;
+  readonly confirmationState?: CitizenLogConfirmationState;
   readonly confirmedAt?: Date;
   readonly confirmedBy?: Pick<User, "name"> | null;
-  readonly entityLog: EntityLogTableRow;
+  readonly citizenLog: CitizenLogTableRow;
 }
 
 interface Props {
@@ -89,7 +89,7 @@ export const OtherTable = ({ rows, searchParams }: Props) => {
         {rows.map((row) => {
           return (
             <tr
-              key={row.entityLog.id}
+              key={row.citizenLog.id}
               className="grid items-center gap-4 h-14 rounded-secondary -mx-2 first:mt-2 grid-cols-[1fr_1fr_2fr_1fr_1fr_1fr_1fr_1fr_44px]"
             >
               <td>
@@ -113,22 +113,22 @@ export const OtherTable = ({ rows, searchParams }: Props) => {
 
               <td
                 className="truncate"
-                title={entityLogTypeTranslations[row.entityLog.type]}
+                title={citizenLogTypeTranslations[row.citizenLog.type]}
               >
-                {entityLogTypeTranslations[row.entityLog.type]}
+                {citizenLogTypeTranslations[row.citizenLog.type]}
               </td>
 
               <td
                 className="truncate"
-                title={row.entityLog.content || undefined}
+                title={row.citizenLog.content || undefined}
               >
-                {row.entityLog.content}
+                {row.citizenLog.content}
               </td>
 
               <td>
                 <ConfirmationState
                   confirmationState={row.confirmationState}
-                  entityLog={row.entityLog}
+                  citizenLog={row.citizenLog}
                 />
               </td>
 
@@ -144,19 +144,19 @@ export const OtherTable = ({ rows, searchParams }: Props) => {
               </td>
 
               <td className="overflow-hidden text-ellipsis">
-                {formatDate(row.entityLog.createdAt)}
+                {formatDate(row.citizenLog.createdAt)}
               </td>
 
               <td
                 className="overflow-hidden text-ellipsis"
-                title={row.entityLog.submittedBy?.name || "Unbekannt"}
+                title={row.citizenLog.submittedBy?.name || "Unbekannt"}
               >
-                {row.entityLog.submittedBy?.name || "Unbekannt"}
+                {row.citizenLog.submittedBy?.name || "Unbekannt"}
               </td>
 
               <td>
                 <Actions>
-                  <OtherTableDelete log={row.entityLog} />
+                  <OtherTableDelete log={row.citizenLog} />
                 </Actions>
               </td>
             </tr>

@@ -1,19 +1,19 @@
 import { prisma } from "@/db";
-import type { EntityLog } from "@sam-monorepo/database/client";
-import { updateEntityCaches } from "./updateEntityCaches";
+import type { CitizenLog } from "@sam-monorepo/database/client";
+import { updateCitizenCaches } from "./updateCitizenCaches";
 
 /**
  * Updates all data that depends on the confirmed identity logs of a citizen,
  * after a user confirms or deletes one of these logs: the display name of
- * the linked user account and the cached attribute columns of the entity.
+ * the linked user account and the cached attribute columns of the citizen.
  */
 export const syncCitizenIdentityAfterLogChange = async (
-  log: Pick<EntityLog, "entityId" | "type">,
+  log: Pick<CitizenLog, "citizenId" | "type">,
 ) => {
   if (["handle", "discord-id"].includes(log.type)) {
-    const entityLogs = await prisma.entityLog.findMany({
+    const citizenLogs = await prisma.citizenLog.findMany({
       where: {
-        entityId: log.entityId,
+        citizenId: log.citizenId,
         type: {
           in: ["discord-id", "handle"],
         },
@@ -33,11 +33,11 @@ export const syncCitizenIdentityAfterLogChange = async (
       },
     });
 
-    const latestConfirmedHandleLog = entityLogs.find(
-      (entityLog) => entityLog.type === "handle",
+    const latestConfirmedHandleLog = citizenLogs.find(
+      (citizenLog) => citizenLog.type === "handle",
     );
-    const latestConfirmedDiscordIdLog = entityLogs.find(
-      (entityLog) => entityLog.type === "discord-id",
+    const latestConfirmedDiscordIdLog = citizenLogs.find(
+      (citizenLog) => citizenLog.type === "discord-id",
     );
 
     if (latestConfirmedDiscordIdLog) {
@@ -59,7 +59,7 @@ export const syncCitizenIdentityAfterLogChange = async (
             id: account.userId,
           },
           data: {
-            name: latestConfirmedHandleLog?.content || log.entityId,
+            name: latestConfirmedHandleLog?.content || log.citizenId,
           },
           select: {
             id: true,
@@ -69,5 +69,5 @@ export const syncCitizenIdentityAfterLogChange = async (
     }
   }
 
-  await updateEntityCaches(log);
+  await updateCitizenCaches(log);
 };
