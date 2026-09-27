@@ -23,8 +23,7 @@ import clsx from "clsx";
 import { forbidden } from "next/navigation";
 import { FaEye, FaInfoCircle } from "react-icons/fa";
 import { updateTaskExpiresAt } from "../actions/updateTaskExpiresAt";
-import { updateTaskRewardTypeNewSilcValue } from "../actions/updateTaskRewardTypeNewSilcValue";
-import { updateTaskRewardTypeSilcValue } from "../actions/updateTaskRewardTypeSilcValue";
+import { updateTaskRewardSilcValue } from "../actions/updateTaskRewardSilcValue";
 import { updateTaskRewardTypeTextValue } from "../actions/updateTaskRewardTypeTextValue";
 import { updateTaskTitle } from "../actions/updateTaskTitle";
 import { CancelTask } from "./CancelTask";
@@ -222,15 +221,15 @@ export const Overview = ({
               <EditableInput
                 type="number"
                 rowId={task.id}
-                columnName="rewardTypeSilcValue"
-                initialValue={task.rewardTypeSilcValue || 1}
-                action={updateTaskRewardTypeSilcValue}
+                columnName="rewardSilcValue"
+                initialValue={task.rewardSilcValue ?? 1}
+                action={updateTaskRewardSilcValue}
                 className="flex-initial"
               />
               <span className="flex-none">SILC (Tausch)</span>
             </div>
           ) : (
-            <span>{task.rewardTypeSilcValue} SILC (Tausch)</span>
+            <span>{task.rewardSilcValue} SILC (Tausch)</span>
           ))}
         {task.rewardType === TaskRewardType.NEW_SILC &&
           (isTaskUpdatable && isAllowedToManageTask ? (
@@ -238,15 +237,15 @@ export const Overview = ({
               <EditableInput
                 type="number"
                 rowId={task.id}
-                columnName="rewardTypeNewSilcValue"
-                initialValue={task.rewardTypeNewSilcValue || 1}
-                action={updateTaskRewardTypeNewSilcValue}
+                columnName="rewardSilcValue"
+                initialValue={task.rewardSilcValue ?? 1}
+                action={updateTaskRewardSilcValue}
                 className="flex-initial"
               />
               <span className="flex-none">SILC</span>
             </div>
           ) : (
-            <span>{task.rewardTypeNewSilcValue} SILC</span>
+            <span>{task.rewardSilcValue} SILC</span>
           ))}
       </Tile>
 

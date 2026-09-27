@@ -282,25 +282,14 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
           className="mt-2"
         />
 
-        {rewardType === TaskRewardType.SILC && (
+        {(rewardType === TaskRewardType.SILC ||
+          rewardType === TaskRewardType.NEW_SILC) && (
           <NumberInput
-            name="rewardTypeSilcValue"
+            name="rewardSilcValue"
             label="SILC (pro Citizen)"
-            defaultValue={getDefaultValueWithFallback("rewardTypeSilcValue", 1)}
+            defaultValue={getDefaultValueWithFallback("rewardSilcValue", 1)}
             required
-            labelClassName="mt-4"
-          />
-        )}
-
-        {rewardType === TaskRewardType.NEW_SILC && (
-          <NumberInput
-            name="rewardTypeNewSilcValue"
-            label="SILC (pro Citizen)"
-            defaultValue={getDefaultValueWithFallback(
-              "rewardTypeNewSilcValue",
-              1,
-            )}
-            required
+            min={1}
             labelClassName="mt-4"
           />
         )}

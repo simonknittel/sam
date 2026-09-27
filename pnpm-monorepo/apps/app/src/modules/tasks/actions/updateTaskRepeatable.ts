@@ -6,7 +6,7 @@ import { createTaskFieldUpdateAction } from "../utils/createTaskFieldUpdateActio
 
 const schema = z.object({
   id: z.union([z.cuid(), z.cuid2()]),
-  repeatable: z.coerce.number().min(1),
+  repeatable: z.coerce.number().int().min(1),
 });
 
 export const updateTaskRepeatable = createTaskFieldUpdateAction(

@@ -11,7 +11,7 @@ import { requireManageableTask } from "../utils/requireManageableTask";
 const schema = z.object({
   id: z.union([z.cuid(), z.cuid2()]),
   requiredRoles: z.array(z.cuid()).max(50), // Arbitrary (untested) limit to prevent DDoS
-  hiddenForOtherRoles: z.coerce.boolean(),
+  hiddenForOtherRoles: z.boolean(),
 });
 
 export const updateRequiredRoles = createAuthenticatedAction(
@@ -66,9 +66,7 @@ export const updateRequiredRoles = createAuthenticatedAction(
     parseFormData: (formData) => ({
       id: formData.get("id"),
       requiredRoles: formData.getAll("requiredRole[]"),
-      hiddenForOtherRoles: formData.get("hiddenForOtherRoles")
-        ? formData.get("hiddenForOtherRoles")
-        : false,
+      hiddenForOtherRoles: formData.has("hiddenForOtherRoles"),
     }),
   },
 );
