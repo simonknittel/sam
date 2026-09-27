@@ -1,4 +1,5 @@
 import { prisma, type PenaltyEntry } from "@sam-monorepo/database";
+import { findCitizenIdsWithPermissions } from "../../common/effectivePermissions";
 import { publishNotifications } from "../publish";
 
 interface Payload {
@@ -18,63 +19,18 @@ export const PenaltyEntryCreatedHandler = async (payload: Payload) => {
       points: true,
       reason: true,
       citizenId: true,
-      citizen: {
-        select: {
-          roleAssignments: {
-            select: {
-              roleId: true,
-            },
-          },
-        },
-      },
     },
   });
   if (!penaltyEntry) return;
 
-  const permissionStrings = await prisma.permissionString.findMany({
-    where: {
-      OR: [
-        {
-          permissionString: "login;manage",
-        },
-        {
-          permissionString: "ownPenaltyEntry;read",
-        },
-      ],
-    },
-    select: {
-      roleId: true,
-      permissionString: true,
-    },
-  });
-  if (permissionStrings.length <= 0) return;
-
-  const { rolesWithLoginManage, rolesWithOwnPenaltyEntryRead } = Object.groupBy(
-    permissionStrings,
-    (item) => {
-      if (item.permissionString === "login;manage")
-        return "rolesWithLoginManage";
-      if (item.permissionString === "ownPenaltyEntry;read")
-        return "rolesWithOwnPenaltyEntryRead";
-
-      return "unknown";
-    },
+  const recipientIds = await findCitizenIdsWithPermissions(
+    { id: penaltyEntry.citizenId },
+    [
+      { resource: "login", operation: "manage" },
+      { resource: "ownPenaltyEntry", operation: "read" },
+    ],
   );
-  if (!rolesWithLoginManage?.length) return;
-  if (!rolesWithOwnPenaltyEntryRead?.length) return;
-
-  if (!penaltyEntry.citizen.roleAssignments.length) return;
-  const roleIdsOfCitizen = penaltyEntry.citizen.roleAssignments.map(
-    (ra) => ra.roleId,
-  );
-  const hasCitizenLoginManage = rolesWithLoginManage.some((role) =>
-    roleIdsOfCitizen.includes(role.roleId),
-  );
-  const hasCitizenOtherRoleRead = rolesWithOwnPenaltyEntryRead.some((role) =>
-    roleIdsOfCitizen.includes(role.roleId),
-  );
-  if (!hasCitizenLoginManage) return;
-  if (!hasCitizenOtherRoleRead) return;
+  if (!recipientIds.has(penaltyEntry.citizenId)) return;
 
   /**
    * Publish notifications
