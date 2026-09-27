@@ -102,7 +102,7 @@ async function main() {
           transactions.push(
             prisma.citizenLog.create({
               data: {
-                entityId: entity.id,
+                citizenId: entity.id,
                 type: "spectrum-id",
                 content: row[0],
                 submittedById: USER_ID_ME,
@@ -128,7 +128,7 @@ async function main() {
           transactions.push(
             prisma.citizenLog.create({
               data: {
-                entityId: entity.id,
+                citizenId: entity.id,
                 type: "citizen-id",
                 content: row[1],
                 submittedById: USER_ID_ME,
@@ -147,7 +147,7 @@ async function main() {
           transactions.push(
             prisma.citizenLog.create({
               data: {
-                entityId: entity.id,
+                citizenId: entity.id,
                 type: "teamspeakId",
                 content: row[2],
                 submittedById: USER_ID_ME,
@@ -166,7 +166,7 @@ async function main() {
           transactions.push(
             prisma.citizenLog.create({
               data: {
-                entityId: entity.id,
+                citizenId: entity.id,
                 type: "discordId",
                 content: row[3],
                 submittedById: USER_ID_ME,
@@ -185,7 +185,7 @@ async function main() {
           transactions.push(
             prisma.citizenLog.create({
               data: {
-                entityId: entity.id,
+                citizenId: entity.id,
                 type: "handle",
                 content: row[4],
                 submittedById: USER_ID_ME,
@@ -204,7 +204,7 @@ async function main() {
           transactions.push(
             prisma.citizenLog.create({
               data: {
-                entityId: entity.id,
+                citizenId: entity.id,
                 type: "communityMoniker",
                 content: row[5],
                 submittedById: USER_ID_ME,
@@ -226,7 +226,7 @@ async function main() {
             transactions.push(
               prisma.citizenLog.create({
                 data: {
-                  entityId: entity.id,
+                  citizenId: entity.id,
                   type: "note",
                   content: row[6],
                   submittedById: USER_ID_ME,
@@ -264,7 +264,7 @@ async function main() {
             transactions.push(
               prisma.citizenLog.create({
                 data: {
-                  entityId: entity.id,
+                  citizenId: entity.id,
                   type: "note",
                   content: row[7],
                   submittedById: USER_ID_ME,
@@ -302,7 +302,7 @@ async function main() {
             transactions.push(
               prisma.citizenLog.create({
                 data: {
-                  entityId: entity.id,
+                  citizenId: entity.id,
                   type: "note",
                   content: row[8],
                   submittedById: USER_ID_ME,
@@ -340,7 +340,7 @@ async function main() {
             transactions.push(
               prisma.citizenLog.create({
                 data: {
-                  entityId: entity.id,
+                  citizenId: entity.id,
                   type: "note",
                   content: row[9],
                   submittedById: USER_ID_ME,
@@ -378,7 +378,7 @@ async function main() {
             transactions.push(
               prisma.citizenLog.create({
                 data: {
-                  entityId: entity.id,
+                  citizenId: entity.id,
                   type: "note",
                   content: row[10],
                   submittedById: USER_ID_ME,
@@ -416,7 +416,7 @@ async function main() {
             transactions.push(
               prisma.citizenLog.create({
                 data: {
-                  entityId: entity.id,
+                  citizenId: entity.id,
                   type: "note",
                   content: row[11],
                   submittedById: USER_ID_ME,
@@ -454,7 +454,7 @@ async function main() {
             transactions.push(
               prisma.citizenLog.create({
                 data: {
-                  entityId: entity.id,
+                  citizenId: entity.id,
                   type: "note",
                   content: row[12],
                   submittedById: USER_ID_ME,
@@ -492,7 +492,7 @@ async function main() {
             transactions.push(
               prisma.citizenLog.create({
                 data: {
-                  entityId: entity.id,
+                  citizenId: entity.id,
                   type: "note",
                   content: row[13],
                   submittedById: USER_ID_ME,
@@ -530,7 +530,7 @@ async function main() {
             transactions.push(
               prisma.citizenLog.create({
                 data: {
-                  entityId: entity.id,
+                  citizenId: entity.id,
                   type: "note",
                   content: row[14],
                   submittedById: USER_ID_ME,
@@ -568,7 +568,7 @@ async function main() {
             transactions.push(
               prisma.citizenLog.create({
                 data: {
-                  entityId: entity.id,
+                  citizenId: entity.id,
                   type: "note",
                   content: row[15],
                   submittedById: USER_ID_ME,
@@ -606,7 +606,7 @@ async function main() {
             transactions.push(
               prisma.citizenLog.create({
                 data: {
-                  entityId: entity.id,
+                  citizenId: entity.id,
                   type: "note",
                   content: row[16],
                   submittedById: USER_ID_ME,
@@ -641,7 +641,7 @@ async function main() {
           transactions.push(
             prisma.citizenLog.create({
               data: {
-                entityId: entity.id,
+                citizenId: entity.id,
                 type: "role-added",
                 content: ROLE_GESPERRT,
                 submittedById: USER_ID_ME,

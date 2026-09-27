@@ -77,10 +77,10 @@ async function main() {
       continue;
     }
 
-    if (!aggregatedLogsPerCitizen.has(log.entityId))
-      aggregatedLogsPerCitizen.set(log.entityId, new Map());
+    if (!aggregatedLogsPerCitizen.has(log.citizenId))
+      aggregatedLogsPerCitizen.set(log.citizenId, new Map());
 
-    const citizen = aggregatedLogsPerCitizen.get(log.entityId);
+    const citizen = aggregatedLogsPerCitizen.get(log.citizenId);
     const role = citizen!.get(log.content);
 
     if (!role && log.type === "role-added") {
@@ -119,7 +119,7 @@ async function main() {
           if (citizen && validCitizenIds.has(citizen)) createdById = citizen;
 
           return {
-            citizenId: log.entityId,
+            citizenId: log.citizenId,
             roleId: log.content!,
             type: log.type === "role-added" ? "ADD" : "REMOVE",
             createdAt: log.createdAt,

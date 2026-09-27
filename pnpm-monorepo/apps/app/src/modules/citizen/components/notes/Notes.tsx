@@ -29,7 +29,7 @@ export const Notes = async ({ className, entity }: Props) => {
   const [notes, allNoteTypes] = await prisma.$transaction([
     prisma.citizenLog.findMany({
       where: {
-        entityId: entity.id,
+        citizenId: entity.id,
         type: "note",
       },
       select: CITIZEN_NOTE_SELECT,
