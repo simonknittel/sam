@@ -3,7 +3,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
-import { updateActiveMembership } from "@/modules/organizations/utils/updateActiveMembership";
+import { changeMembershipHistory } from "@/modules/organizations/utils/changeMembershipHistory";
 import { ConfirmationStatus } from "@sam-monorepo/database/client";
 import { NextResponse } from "next/server";
 import * as z from "zod";
@@ -27,6 +27,7 @@ export async function PATCH(request: Request) {
     );
     if (!authentication.session.entity) throw new Error("Forbidden");
     await authentication.authorizeApi("organizationMembership", "confirm");
+    const entityId = authentication.session.entity.id;
 
     /**
      * Validate the request
@@ -47,22 +48,25 @@ export async function PATCH(request: Request) {
     if (!membership) throw new Error("Not found");
 
     /**
-     * Set new confirmation status
+     * Set the new confirmation status. The replay adds or removes the active
+     * membership.
      */
-    await prisma.organizationMembershipHistoryEntry.update({
-      where: {
-        id: membership.id,
-      },
-      data: {
-        confirmed: data.confirmed,
-        confirmedAt: new Date(),
-        confirmedBy: {
-          connect: {
-            id: authentication.session.entity.id,
+    await changeMembershipHistory(membership.citizenId, (transaction) =>
+      transaction.organizationMembershipHistoryEntry.update({
+        where: {
+          id: membership.id,
+        },
+        data: {
+          confirmed: data.confirmed,
+          confirmedAt: new Date(),
+          confirmedBy: {
+            connect: {
+              id: entityId,
+            },
           },
         },
-      },
-    });
+      }),
+    );
 
     await createAuditEvents([
       {
@@ -75,11 +79,6 @@ export async function PATCH(request: Request) {
         createdById: authentication.session.user.id,
       },
     ]);
-
-    /**
-     * Update ActiveOrganizationMembership
-     */
-    await updateActiveMembership(membership.citizenId);
 
     /**
      * Respond with the result

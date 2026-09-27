@@ -1,4 +1,8 @@
-import { ConfirmationStatus } from "@sam-monorepo/database/client";
+import {
+  ConfirmationStatus,
+  OrganizationMembershipType,
+  OrganizationMembershipVisibility,
+} from "@sam-monorepo/database/client";
 import { expectAuditEvents } from "../fixtures/audit";
 import { createCitizen } from "../fixtures/factories";
 import {
@@ -7,6 +11,7 @@ import {
   modal,
   SAVED_TEXT,
   sectionByHeading,
+  waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
@@ -126,15 +131,83 @@ test("an organization is created, staffed and cleared out again", async ({
       }),
     )
     .toBe(0);
+  /** LEFT ends the membership in the history only */
   expect(
-    await prisma.organizationMembershipHistoryEntry.count({
+    await prisma.organizationMembershipHistoryEntry.findMany({
       where: { organizationId: organization.id },
+      orderBy: { createdAt: "asc" },
+      select: { type: true, confirmed: true },
     }),
-  ).toBeGreaterThanOrEqual(1);
+  ).toEqual([
+    {
+      type: OrganizationMembershipType.MAIN,
+      confirmed: ConfirmationStatus.CONFIRMED,
+    },
+    {
+      type: OrganizationMembershipType.LEFT,
+      confirmed: ConfirmationStatus.CONFIRMED,
+    },
+  ]);
 
   await expectAuditEvents(prisma, [
     "ORGANIZATION_CREATED",
     "ORGANIZATION_MEMBERSHIP_CREATED",
     "ORGANIZATION_MEMBERSHIP_REMOVED",
   ]);
+});
+
+test("a reported membership becomes active with its confirmation", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "spynet-organisator",
+    permissionStrings: ORGANIZATION_ADMIN_PERMISSIONS,
+  });
+  const member = await createCitizen(prisma, { handle: "org-mitglied" });
+  const organization = await prisma.organization.create({
+    data: {
+      name: "Testorganisation",
+      spectrumId: "TESTORG",
+      createdById: admin.entity.id,
+      membershipHistoryEntries: {
+        create: {
+          citizenId: member.entity.id,
+          type: OrganizationMembershipType.AFFILIATE,
+          visibility: OrganizationMembershipVisibility.PUBLIC,
+          createdById: admin.entity.id,
+        },
+      },
+    },
+  });
+
+  await signIn(admin.user);
+  await page.goto(`/app/spynet/organization/${organization.id}`);
+  await expect(page.getByText("Keine Mitglieder")).toBeVisible();
+
+  /** A second click would confirm again, thus the page must hydrate first */
+  await waitForAppShellHydration(page);
+  await page
+    .getByRole("row")
+    .filter({ hasText: "Unbestätigt" })
+    .getByRole("button", { name: "Bestätigen" })
+    .click();
+
+  await expect(page.getByText("Mitglieder (1)")).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+  expect(
+    await prisma.activeOrganizationMembership.findMany({
+      where: { organizationId: organization.id },
+      select: { citizenId: true, type: true },
+    }),
+  ).toEqual([
+    {
+      citizenId: member.entity.id,
+      type: OrganizationMembershipType.AFFILIATE,
+    },
+  ]);
+
+  await expectAuditEvents(prisma, ["ORGANIZATION_MEMBERSHIP_CONFIRMED"]);
 });

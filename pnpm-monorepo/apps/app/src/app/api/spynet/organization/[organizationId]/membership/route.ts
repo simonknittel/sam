@@ -1,9 +1,8 @@
-import { prisma } from "@/db";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
-import { updateActiveMembership } from "@/modules/organizations/utils/updateActiveMembership";
+import { changeMembershipHistory } from "@/modules/organizations/utils/changeMembershipHistory";
 import {
   ConfirmationStatus,
   OrganizationMembershipType,
@@ -42,6 +41,7 @@ export async function POST(request: Request, props: { params: Params }) {
     );
     if (!authentication.session.entity) throw new Error("Forbidden");
     await authentication.authorizeApi("organizationMembership", "create");
+    const entityId = authentication.session.entity.id;
 
     /**
      * Validate the request
@@ -50,11 +50,6 @@ export async function POST(request: Request, props: { params: Params }) {
     const body: unknown = await request.json();
     const data = postBodySchema.parse(body);
 
-    /**
-     * Create the history entry. The active memberships are derived from the
-     * confirmed history entries via updateActiveMembership() instead of being
-     * written directly, so both stay consistent.
-     */
     const confirmable =
       data.confirmed === ConfirmationStatus.CONFIRMED &&
       (await authentication.authorize("organizationMembership", "confirm"));
@@ -64,7 +59,12 @@ export async function POST(request: Request, props: { params: Params }) {
         ? OrganizationMembershipVisibility.REDACTED
         : OrganizationMembershipVisibility.PUBLIC;
 
-    await prisma.organizationMembershipHistoryEntry.create({
+    /**
+     * Create the history entry. The active memberships come from the
+     * confirmed history entries, see changeMembershipHistory().
+     */
+    await changeMembershipHistory(data.citizenId, (transaction) =>
+      transaction.organizationMembershipHistoryEntry.create({
       data: {
         organization: {
           connect: {
@@ -80,7 +80,7 @@ export async function POST(request: Request, props: { params: Params }) {
         visibility,
         createdBy: {
           connect: {
-            id: authentication.session.entity.id,
+            id: entityId,
           },
         },
         ...(confirmable
@@ -89,15 +89,14 @@ export async function POST(request: Request, props: { params: Params }) {
               confirmedAt: new Date(),
               confirmedBy: {
                 connect: {
-                  id: authentication.session.entity.id,
+                  id: entityId,
                 },
               },
             }
           : {}),
       },
-    });
-
-    if (confirmable) await updateActiveMembership(data.citizenId);
+    }),
+    );
 
     await createAuditEvents([
       {

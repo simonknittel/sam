@@ -1,9 +1,8 @@
-import { prisma } from "@/db";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
-import { updateActiveMembership } from "@/modules/organizations/utils/updateActiveMembership";
+import { changeMembershipHistory } from "@/modules/organizations/utils/changeMembershipHistory";
 import {
   ConfirmationStatus,
   OrganizationMembershipType,
@@ -32,6 +31,7 @@ export async function DELETE(request: Request, props: { params: Params }) {
     );
     if (!authentication.session.entity) throw new Error("Forbidden");
     await authentication.authorizeApi("organizationMembership", "delete");
+    const entityId = authentication.session.entity.id;
 
     /**
      * Validate the request
@@ -39,52 +39,52 @@ export async function DELETE(request: Request, props: { params: Params }) {
     const paramsData = paramsSchema.parse(await props.params);
 
     /**
-     * Do the thing
+     * The history entry LEFT ends the membership. The replay removes it from
+     * the active memberships.
      */
-    const membership = await prisma.activeOrganizationMembership.findUnique({
-      where: {
-        organizationId_citizenId: {
-          organizationId: paramsData.organizationId,
-          citizenId: paramsData.citizenId,
-        },
-      },
-    });
-    if (!membership) throw new Error("Not Found");
+    await changeMembershipHistory(paramsData.citizenId, async (transaction) => {
+      const membership =
+        await transaction.activeOrganizationMembership.findUnique({
+          where: {
+            organizationId_citizenId: {
+              organizationId: paramsData.organizationId,
+              citizenId: paramsData.citizenId,
+            },
+          },
+          select: {
+            visibility: true,
+          },
+        });
+      if (!membership) throw new Error("Not found");
 
-    await prisma.organizationMembershipHistoryEntry.create({
-      data: {
-        organization: {
-          connect: {
-            id: paramsData.organizationId,
+      await transaction.organizationMembershipHistoryEntry.create({
+        data: {
+          organization: {
+            connect: {
+              id: paramsData.organizationId,
+            },
+          },
+          citizen: {
+            connect: {
+              id: paramsData.citizenId,
+            },
+          },
+          type: OrganizationMembershipType.LEFT,
+          visibility: membership.visibility,
+          createdBy: {
+            connect: {
+              id: entityId,
+            },
+          },
+          confirmed: ConfirmationStatus.CONFIRMED,
+          confirmedAt: new Date(),
+          confirmedBy: {
+            connect: {
+              id: entityId,
+            },
           },
         },
-        citizen: {
-          connect: {
-            id: paramsData.citizenId,
-          },
-        },
-        type: OrganizationMembershipType.LEFT,
-        visibility: membership.visibility,
-        createdBy: {
-          connect: {
-            /**
-             * We can use `!` here since at this point it's guaranteed that the user has an entity attached.
-             * This is because permissions are attached to the entity and above we check for permissions. If the
-             * user wouldn't have an entity, they also wouldn't have permissions and the request would have been
-             * rejected above.
-             * The only exception is with the `adminEnabled` cookie.
-             */
-            id: authentication.session.entity.id,
-          },
-        },
-        confirmed: ConfirmationStatus.CONFIRMED,
-        confirmedAt: new Date(),
-        confirmedBy: {
-          connect: {
-            id: authentication.session.entity.id,
-          },
-        },
-      },
+      });
     });
 
     await createAuditEvents([
@@ -97,11 +97,6 @@ export async function DELETE(request: Request, props: { params: Params }) {
         createdById: authentication.session.user.id,
       },
     ]);
-
-    /**
-     * Update ActiveOrganizationMembership
-     */
-    await updateActiveMembership(membership.citizenId);
 
     /**
      * Respond
