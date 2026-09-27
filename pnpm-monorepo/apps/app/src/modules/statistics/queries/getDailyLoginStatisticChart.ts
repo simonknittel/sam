@@ -45,9 +45,6 @@ export const getDailyLoginStatisticChart = cache(
     });
 
     const orderedLogins = rows.map((row) => ({
-      // `date` is a DATE column (midnight UTC) naming the counted day.
-      // Europe/Berlin is always ahead of UTC, so the chart buckets it under
-      // that same calendar day.
       createdAt: row.date,
       count: row.count,
     }));

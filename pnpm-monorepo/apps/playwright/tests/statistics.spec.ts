@@ -4,7 +4,6 @@ import {
   createCitizen,
   createVariant,
   ONE_DAY_MS,
-  ONE_HOUR_MS,
 } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
@@ -63,13 +62,12 @@ test("all nine statistics charts paint their canvases", async ({
   });
 
   /**
-   * The snapshot charts (Flotte, Rollen, Logins) only have data for days
-   * with seeded rows; the chart axis ends yesterday, and snapshot rows are
-   * shifted back 12 hours before bucketing — 30 hours ago is safely on a
-   * past axis day.
+   * The snapshot charts (Flotte gesamt, Flotte, Rollen, Logins) only have
+   * data for days with rows. The chart axis ends yesterday. A `@db.Date`
+   * column keeps the UTC date of the value, which is yesterday in UTC and
+   * yesterday or earlier in Europe/Berlin.
    */
-  const THIRTY_HOURS_MS = 30 * ONE_HOUR_MS;
-  const snapshotDate = new Date(Date.now() - THIRTY_HOURS_MS);
+  const snapshotDay = new Date(Date.now() - ONE_DAY_MS);
   const { variant } = await createVariant(prisma, {
     manufacturerName: "Roberts Space Industries",
     seriesName: "Polaris",
@@ -77,13 +75,13 @@ test("all nine statistics charts paint their canvases", async ({
     status: VariantStatus.FLIGHT_READY,
   });
   await prisma.variantShipCount.create({
-    data: { variantId: variant.id, count: 7, createdAt: snapshotDate },
+    data: { variantId: variant.id, count: 7, day: snapshotDay },
   });
   await prisma.roleCitizenCount.create({
-    data: { roleId: viewer.role.id, count: 3, createdAt: snapshotDate },
+    data: { roleId: viewer.role.id, count: 3, day: snapshotDay },
   });
   await prisma.dailyLoginCount.create({
-    data: { date: new Date(Date.now() - ONE_DAY_MS), count: 5 },
+    data: { date: snapshotDay, count: 5 },
   });
 
   await signIn(viewer.user);
