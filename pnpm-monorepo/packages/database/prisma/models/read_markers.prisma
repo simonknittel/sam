@@ -1,0 +1,30 @@
+/// Records that a citizen has read an item (a subject), e.g. a task or an
+/// event. An item without a marker of the citizen is unread; the app decides
+/// in the `read-markers` module whether an unread item shows as "new".
+///
+/// Each subject type has its own nullable foreign key column, thus the
+/// database keeps the integrity and deletes the markers together with their
+/// item. A hand-written CHECK constraint (see the migration
+/// `read_markers`) makes sure that exactly one of these columns is set.
+///
+/// To add a subject type: add a nullable column with its relation (named
+/// `readMarkers` on the subject model) and a unique constraint of the column
+/// together with `citizenId`, extend the CHECK constraint in a new migration, and add an
+/// entry to the registry of the `read-markers` module.
+model ReadMarker {
+  id        String   @id @default(cuid(2))
+  citizenId String
+  citizen   Entity   @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  readAt    DateTime @default(now())
+
+  taskId  String?
+  task    Task?   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  eventId String?
+  event   Event?  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  /// The subject column comes first, thus the same index also serves the
+  /// cascade delete of the subject.
+  @@unique([taskId, citizenId])
+  @@unique([eventId, citizenId])
+  @@index([citizenId])
+}

@@ -39,6 +39,7 @@ model Task {
   hiddenForOtherRoles    Boolean?
   assignments            TaskAssignment[]
   canSelfComplete        Boolean?
+  readMarkers            ReadMarker[]
 }
 
 model TaskAssignment {
