@@ -1,6 +1,5 @@
 import { requireAuthentication } from "@/modules/auth/server";
 import { getCitizensForTable } from "@/modules/citizen/queries/getCitizens";
-import { getLastSeenAt } from "@/modules/citizen/utils/getLastSeenAt";
 import Pagination from "@/modules/common/components/Pagination";
 import {
   getCurrentPageFromSearchParams,
@@ -26,17 +25,13 @@ export const CitizenTableTile = async ({ className, searchParams }: Props) => {
 
   const currentPage = getCurrentPageFromSearchParams(searchParams);
 
-  const entities = await getCitizensForTable();
+  const citizens = await getCitizensForTable();
 
   const filters = searchParams.get("filters")?.split(",");
 
   const rows = await Promise.all(
-    entities.map(async (entity) => ({
-      lastSeenAt: ["last-seen-at-asc", "last-seen-at-desc"].includes(
-        searchParams.get("sort") || "",
-      )
-        ? await getLastSeenAt(entity)
-        : undefined,
+    citizens.map(async ({ entity, lastSeenAt }) => ({
+      lastSeenAt,
       roles: filters?.some((filter) => filter.startsWith("role-"))
         ? await getAssignedRoles(entity)
         : undefined,

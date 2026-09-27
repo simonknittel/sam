@@ -6,10 +6,8 @@ import {
   toggleSortParam,
 } from "@/modules/common/utils/toggleSortParam";
 import { type Citizen } from "@sam-monorepo/database/client";
-import { Suspense } from "react";
 import { FaExternalLinkAlt, FaSortDown, FaSortUp } from "react-icons/fa";
 import { CitizenTableDelete } from "./CitizenTableDelete";
-import { LastSeenAt } from "./LastSeenAt";
 import { HistoryModal } from "./generic-log-type/HistoryModal";
 
 type Row = Readonly<{
@@ -17,6 +15,7 @@ type Row = Readonly<{
     Citizen,
     "id" | "handle" | "spectrumId" | "discordId" | "teamspeakId" | "createdAt"
   >;
+  lastSeenAt: Date | null;
 }>;
 
 interface Props {
@@ -185,13 +184,7 @@ export const CitizenTable = ({
 
               {showLastSeenAtColumn && (
                 <td className="overflow-hidden text-ellipsis">
-                  <Suspense
-                    fallback={
-                      <div className="bg-neutral-800 animate-pulse rounded-secondary h-6 w-20" />
-                    }
-                  >
-                    <LastSeenAt entity={row.entity} />
-                  </Suspense>
+                  {formatDate(row.lastSeenAt, "short") || "-"}
                 </td>
               )}
 

@@ -21,6 +21,7 @@ export const getCitizenById = cache(
         discordId: true,
         teamspeakId: true,
         citizenRecord: true,
+        userId: true,
         communityMoniker: true,
         timezone: true,
         birthdayDay: true,

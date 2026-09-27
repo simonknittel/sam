@@ -57,36 +57,12 @@ const getBanStatusWhere = (banStatus: UserBanStatus): Prisma.UserWhereInput => {
   }
 };
 
-/**
- * The handle belongs to the entity with the Discord ID of the user's
- * account. The two models have no relation, thus the search resolves the
- * Discord IDs of the matching entities first.
- */
-const getHandleWhere = async (
-  handleQuery: string,
-): Promise<Prisma.UserWhereInput> => {
-  const entities = await prisma.citizen.findMany({
-    where: {
-      handle: { contains: handleQuery, mode: "insensitive" },
-      discordId: { not: null },
-    },
-    select: {
-      discordId: true,
-    },
-  });
-
-  return {
-    accounts: {
-      some: {
-        providerAccountId: {
-          in: entities.flatMap(({ discordId }) =>
-            discordId ? [discordId] : [],
-          ),
-        },
-      },
-    },
-  };
-};
+/** The handle belongs to the citizen of the user */
+const getHandleWhere = (handleQuery: string): Prisma.UserWhereInput => ({
+  citizen: {
+    handle: { contains: handleQuery, mode: "insensitive" },
+  },
+});
 
 /**
  * The cursor of the user list is the offset of the first row of the page.
@@ -122,7 +98,7 @@ export const getUsersWithEntities = withTrace(
       where: {
         ...getBanStatusWhere(banStatus),
         ...(handleQuery
-          ? await getHandleWhere(handleQuery.slice(0, MAX_HANDLE_QUERY_LENGTH))
+          ? getHandleWhere(handleQuery.slice(0, MAX_HANDLE_QUERY_LENGTH))
           : {}),
       },
       orderBy: getOrderBy(sort),
@@ -149,40 +125,24 @@ export const getUsersWithEntities = withTrace(
           },
           take: 1,
         },
+        citizen: {
+          select: {
+            id: true,
+            handle: true,
+            discordId: true,
+          },
+        },
       },
     });
 
     const hasNextPage = rows.length > USERS_PAGE_SIZE;
     const pageRows = rows.slice(0, USERS_PAGE_SIZE);
 
-    /** Matched to a user by Discord ID; the table links by citizen ID */
-    const entities = await prisma.citizen.findMany({
-      where: {
-        discordId: {
-          in: pageRows.flatMap(({ accounts }) =>
-            accounts.map(({ providerAccountId }) => providerAccountId),
-          ),
-        },
-      },
-      select: {
-        id: true,
-        handle: true,
-        discordId: true,
-      },
-    });
-    const entityByDiscordId = new Map(
-      entities.map((entity) => [entity.discordId, entity]),
-    );
-
-    const users = pageRows.map(({ accounts, ...user }) => {
-      const discordId = accounts[0]?.providerAccountId ?? null;
-
-      return {
-        user,
-        discordId,
-        entity: discordId ? entityByDiscordId.get(discordId) : undefined,
-      };
-    });
+    const users = pageRows.map(({ accounts, citizen, ...user }) => ({
+      user,
+      discordId: accounts[0]?.providerAccountId ?? null,
+      entity: citizen ?? undefined,
+    }));
 
     return {
       users,

@@ -63,32 +63,19 @@ export const getLeaderboard = (mode: "SB", season: string, pages: number) => {
         ranks.push(...result.data.resultset);
       }
 
-      // Get entities from all org members
-      const discordIds = await prisma.user.findMany({
-        select: {
-          accounts: {
-            select: {
-              providerAccountId: true,
-            },
-          },
-        },
-      });
-      const entities = await prisma.citizen.findMany({
+      // The org members are the citizens with a login
+      const members = await prisma.citizen.findMany({
         where: {
-          discordId: {
-            in: discordIds.flatMap(({ accounts }) =>
-              accounts.map(({ providerAccountId }) => providerAccountId),
-            ),
-          },
+          userId: { not: null },
         },
         select: {
-          id: true,
           handle: true,
         },
       });
+      const memberHandles = new Set(members.map((member) => member.handle));
 
       const filteredRanks = ranks.filter((rank) =>
-        entities.some((entity) => entity.handle === rank.nickname),
+        memberHandles.has(rank.nickname),
       );
       const sortedRanks = filteredRanks.toSorted((a, b) => a.rank - b.rank);
       return sortedRanks;

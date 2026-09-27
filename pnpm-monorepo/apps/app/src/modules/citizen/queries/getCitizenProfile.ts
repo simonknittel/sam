@@ -10,30 +10,6 @@ import { cache } from "react";
 import { hasBirthdayToday } from "../utils/hasBirthdayToday";
 
 /**
- * The avatar of a citizen is the Discord avatar of the user behind it, which
- * the app refreshes at every login.
- */
-const getAvatarUrl = async (discordId: Citizen["discordId"]) => {
-  if (!discordId) return null;
-
-  const account = await prisma.account.findFirst({
-    where: {
-      provider: "discord",
-      providerAccountId: discordId,
-    },
-    select: {
-      user: {
-        select: {
-          image: true,
-        },
-      },
-    },
-  });
-
-  return account?.user.image ?? null;
-};
-
-/**
  * Everything both profile surfaces show: the citizen popover and the profile
  * tile of the dashboard. The metrics are per-metric optional — a metric the
  * viewer must not see is `null` instead of a number, so that the surfaces do
@@ -63,7 +39,6 @@ export const getCitizenProfile = cache(
       select: {
         id: true,
         handle: true,
-        discordId: true,
         silcBalance: true,
         timezone: true,
         /** Read for the party hat below; only the answer leaves the server */
@@ -73,6 +48,15 @@ export const getCitizenProfile = cache(
           select: {
             roleId: true,
             currentLevel: true,
+          },
+        },
+        /**
+         * The avatar of a citizen is the Discord avatar of its login, which
+         * the app refreshes at every sign-in
+         */
+        user: {
+          select: {
+            image: true,
           },
         },
       },
@@ -87,7 +71,6 @@ export const getCitizenProfile = cache(
       canOpenSilcPage,
       canOpenFleetPage,
       assignableRoles,
-      avatarUrl,
     ] = await Promise.all([
       authentication.authorize(
         isCurrentCitizen
@@ -112,7 +95,6 @@ export const getCitizenProfile = cache(
       /** The fleet page asks for `otherShips;read`, also for the own fleet */
       authentication.authorize("otherShips", "read"),
       getAssignableRoles(),
-      getAvatarUrl(citizen.discordId),
     ]);
 
     const [monthlySalary, penaltyPoints, fleetCount] = await Promise.all([
@@ -137,7 +119,7 @@ export const getCitizenProfile = cache(
         hasBirthdayToday: hasBirthdayToday(citizen, new Date()),
         roleAssignments: citizen.roleAssignments,
       },
-      avatarUrl,
+      avatarUrl: citizen.user?.image ?? null,
       isCurrentCitizen,
       spynetHref: canOpenSpynet ? spynetHref : null,
       canUpdateAnyRoleAssignment: assignableRoles.length > 0,

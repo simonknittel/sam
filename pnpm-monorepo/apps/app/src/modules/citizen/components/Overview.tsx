@@ -33,6 +33,7 @@ interface Props {
     | "timezone"
     | "birthdayDay"
     | "birthdayMonth"
+    | "userId"
   >;
 }
 
