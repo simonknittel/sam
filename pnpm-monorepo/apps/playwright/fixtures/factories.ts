@@ -67,8 +67,7 @@ interface CreateCitizenOptions {
 
 /**
  * A fully sign-in-able user: the session callback resolves the Citizen via
- * the Discord account's providerAccountId and builds permissions from the
- * assigned roles.
+ * its link to the user and builds permissions from the assigned roles.
  */
 export const createCitizen = async (
   prisma: PrismaClient,
@@ -103,6 +102,7 @@ export const createCitizen = async (
       discordId,
       handle,
       createdById: user.id,
+      userId: user.id,
     },
   });
 
@@ -122,7 +122,7 @@ interface CreateUserWithoutCitizenOptions {
 }
 
 /**
- * A user whose Discord account matches no Citizen, thus `session.entity` stays
+ * A user without a linked Citizen, thus `session.entity` stays
  * null. Such a user gets no permissions from roles, so only an admin in admin
  * mode gets past the clearance gate — which is what makes the state testable
  * at all.

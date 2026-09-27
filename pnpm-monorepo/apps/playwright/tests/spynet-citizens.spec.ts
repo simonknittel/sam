@@ -5,7 +5,7 @@ import {
   OrganizationMembershipVisibility,
 } from "@sam-monorepo/database/client";
 import { expectAuditEvents } from "../fixtures/audit";
-import { createCitizen } from "../fixtures/factories";
+import { createCitizen, createUserWithoutCitizen } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
@@ -56,7 +56,7 @@ test("a citizen is created from a Spectrum ID and deleted again", async ({
   expect(created.createdById).toBe(admin.user.id);
   /** The Spectrum ID is recorded as the citizen's first log entry */
   const spectrumIdLog = await prisma.citizenLog.findFirstOrThrow({
-    where: { entityId: created.id, type: "spectrum-id" },
+    where: { citizenId: created.id, type: "spectrum-id" },
   });
   expect(spectrumIdLog.content).toBe("NEWCOMER");
 
@@ -218,7 +218,7 @@ test("a log entry is confirmed, and a second one marked a false report", async (
         const attributes = await prisma.citizenLogAttribute.findMany({
           where: {
             key: "confirmed",
-            citizenLog: { entityId: target.entity.id },
+            citizenLog: { citizenId: target.entity.id },
           },
           select: { value: true, citizenLog: { select: { content: true } } },
         });
@@ -243,6 +243,58 @@ test("a log entry is confirmed, and a second one marked a false report", async (
       return entity.handle;
     })
     .toBe("zweiterhandle");
+});
+
+test("confirming a Discord ID links the citizen to the login with that ID", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "spynet-verknuepfer",
+    permissionStrings: [
+      "citizen;read",
+      "discord-id;create",
+      "discord-id;read",
+      "discord-id;confirm",
+    ],
+  });
+  const newcomer = await createUserWithoutCitizen(prisma, { name: "neuling" });
+  const { providerAccountId } = await prisma.account.findFirstOrThrow({
+    where: { userId: newcomer.id },
+  });
+  const target = await prisma.citizen.create({ data: { handle: "neuling" } });
+
+  await signIn(admin.user);
+  await page.goto(`/app/spynet/citizen/${target.id}`);
+
+  const historyDialog = modal(page, "Discord ID History");
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Discord ID History" }),
+    historyDialog,
+  );
+  await historyDialog
+    .getByPlaceholder("Neuer Eintrag ...")
+    .fill(providerAccountId);
+  await historyDialog.getByRole("button", { name: "Speichern" }).click();
+
+  const entry = historyDialog
+    .getByRole("listitem")
+    .filter({ hasText: providerAccountId });
+  await entry.getByRole("button", { name: "Bestätigen" }).click();
+
+  await expect
+    .poll(
+      async () =>
+        (
+          await prisma.citizen.findUniqueOrThrow({
+            where: { id: target.id },
+            select: { userId: true },
+          })
+        ).userId,
+      { timeout: ACTION_FEEDBACK_TIMEOUT },
+    )
+    .toBe(newcomer.id);
 });
 
 test("the overview shows the confirmed value of every identity attribute", async ({
