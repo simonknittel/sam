@@ -403,8 +403,8 @@ interface CreateSilcTransactionOptions {
 
 /**
  * Creates a transaction and keeps the denormalized balance columns on
- * Citizen in sync the way the app's updateCitizensSilcBalances does
- * (totalEarnedSilc only counts positive values).
+ * Citizen in sync with the same result as `updateSilcBalances()` of the
+ * domain package (totalEarnedSilc only counts positive values).
  */
 export const createSilcTransaction = async (
   prisma: PrismaClient,
@@ -629,8 +629,11 @@ interface CreateProfitDistributionCycleOptions {
   readonly title: string;
   /** Citizen id of the creating manager */
   readonly createdById: string;
-  /** Defaults to two days out, i.e. the cycle is in its collection phase. */
-  readonly collectionEndedAt?: Date;
+  /**
+   * The planned end of the collection phase, two days out by default. The
+   * cycle stays in its collection phase until something sets the actual end.
+   */
+  readonly collectionEndsAt?: Date;
 }
 
 export const createProfitDistributionCycle = (
@@ -638,11 +641,11 @@ export const createProfitDistributionCycle = (
   {
     title,
     createdById,
-    collectionEndedAt = new Date(Date.now() + 2 * ONE_DAY_MS),
+    collectionEndsAt = new Date(Date.now() + 2 * ONE_DAY_MS),
   }: CreateProfitDistributionCycleOptions,
 ) =>
   prisma.profitDistributionCycle.create({
-    data: { title, collectionEndedAt, createdById },
+    data: { title, collectionEndsAt, createdById },
   });
 
 interface CreateUploadOptions {
