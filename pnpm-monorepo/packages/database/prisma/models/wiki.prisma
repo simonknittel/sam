@@ -162,13 +162,13 @@ model WikiPage {
   ownerId String?
   owner   Citizen? @relation("owner", fields: [ownerId], references: [id], onDelete: SetNull)
 
-  createdAt   DateTime  @default(now())
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
   createdById String?
   createdBy   Citizen?  @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
-  updatedAt   DateTime  @updatedAt
+  updatedAt   DateTime  @updatedAt @db.Timestamptz(3)
   updatedById String?
   updatedBy   Citizen?  @relation("updatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
-  deletedAt   DateTime?
+  deletedAt   DateTime? @db.Timestamptz(3)
   deletedById String?
   deletedBy   Citizen?  @relation("deletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
 
@@ -222,7 +222,7 @@ model WikiPageSnapshot {
   name        String?
   /// Tiptap JSON at snapshot time
   content     Json
-  createdAt   DateTime                 @default(now())
+  createdAt   DateTime                 @default(now()) @db.Timestamptz(3)
   createdById String?
   createdBy   Citizen?                 @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
   uploads     WikiPageSnapshotUpload[]
@@ -246,7 +246,7 @@ model WikiPageUpload {
   uploadId  String
   upload    Upload             @relation(fields: [uploadId], references: [id], onDelete: Cascade)
   kind      WikiPageUploadKind
-  createdAt DateTime           @default(now())
+  createdAt DateTime           @default(now()) @db.Timestamptz(3)
 
   @@unique([pageId, uploadId, kind])
   @@index([uploadId])
@@ -260,7 +260,7 @@ model WikiPageSnapshotUpload {
   snapshot   WikiPageSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
   uploadId   String
   upload     Upload           @relation(fields: [uploadId], references: [id], onDelete: Cascade)
-  createdAt  DateTime         @default(now())
+  createdAt  DateTime         @default(now()) @db.Timestamptz(3)
 
   @@unique([snapshotId, uploadId])
   @@index([uploadId])
@@ -271,7 +271,7 @@ model WikiPageFavorite {
   citizen   Citizen  @relation(fields: [citizenId], references: [id], onDelete: Cascade)
   pageId    String
   page      WikiPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
 
   @@id([citizenId, pageId])
   @@index([pageId])
@@ -282,7 +282,7 @@ model WikiPageVisit {
   citizen       Citizen  @relation(fields: [citizenId], references: [id], onDelete: Cascade)
   pageId        String
   page          WikiPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
-  lastVisitedAt DateTime
+  lastVisitedAt DateTime @db.Timestamptz(3)
 
   @@id([citizenId, pageId])
   @@index([citizenId, lastVisitedAt])
@@ -301,10 +301,10 @@ model WikiPageReport {
   /// report stays meaningful after the upload was deleted.
   uploadFileName    String?
   message           String
-  createdAt         DateTime  @default(now())
+  createdAt         DateTime  @default(now()) @db.Timestamptz(3)
   createdById       String?
   createdBy         Citizen?  @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
-  resolvedAt        DateTime?
+  resolvedAt        DateTime? @db.Timestamptz(3)
   resolvedById      String?
   resolvedBy        Citizen?  @relation("resolvedBy", fields: [resolvedById], references: [id], onDelete: SetNull)
   resolutionComment String?
@@ -335,7 +335,7 @@ model WikiTag {
   templateId String?
   template   EventTemplate? @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
-  createdAt   DateTime @default(now())
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
   createdById String?
   createdBy   Citizen? @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
 
@@ -355,7 +355,7 @@ model WikiPageTag {
   tagId  String
   tag    WikiTag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
-  createdAt   DateTime @default(now())
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
   createdById String?
   createdBy   Citizen? @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
 
@@ -378,7 +378,7 @@ model WikiPageCitizenMention {
   citizenId String
   citizen   Citizen  @relation("citizen", fields: [citizenId], references: [id], onDelete: Cascade)
 
-  createdAt   DateTime @default(now())
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
   /// The editor whose save introduced the mention (the storing connection's
   /// editor, so best-effort within one debounced save). NULL for backfilled
   /// rows.
@@ -386,12 +386,12 @@ model WikiPageCitizenMention {
   createdBy   Citizen? @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
 
   /// Set when the notification for this mention was sent.
-  notifiedAt   DateTime?
+  notifiedAt   DateTime? @db.Timestamptz(3)
   /// Set when the row was consumed without sending a notification:
   /// programmatic /replace writes (snapshot restores, paste transplants,
   /// briefing seeding), self-mentions, the backfill of pre-existing
   /// mentions, and mentions failing the read-permission gate at send time.
-  suppressedAt DateTime?
+  suppressedAt DateTime? @db.Timestamptz(3)
 
   @@unique([pageId, citizenId])
   @@index([citizenId])
@@ -402,7 +402,7 @@ model WikiPageCitizenMention {
 model WikiSetting {
   key         String   @id
   value       Json
-  updatedAt   DateTime @updatedAt
+  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
   updatedById String?
   updatedBy   Citizen? @relation("updatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
 }

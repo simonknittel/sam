@@ -4,8 +4,8 @@ model GameVersion {
   version       String
   /// Example: LIVE
   channel       String
-  createdAt     DateTime @default(now())
-  dataUpdatedAt DateTime
+  createdAt     DateTime @default(now()) @db.Timestamptz(3)
+  dataUpdatedAt DateTime @db.Timestamptz(3)
   items         Item[]
 
   @@unique([channel, version])
@@ -41,5 +41,5 @@ model BlueprintUnlock {
   citizen     Citizen   @relation("citizen", fields: [citizenId], references: [id], onDelete: Cascade)
   blueprintId String
   blueprint   Blueprint @relation(fields: [blueprintId], references: [id], onDelete: Cascade)
-  createdAt   DateTime  @default(now())
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
 }

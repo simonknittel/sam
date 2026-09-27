@@ -5,5 +5,5 @@ datasource db {
 generator client {
   provider        = "prisma-client"
   output          = "../src/generated/prisma"
-  previewFeatures = ["partialIndexes"]
+  previewFeatures = ["partialIndexes", "relationJoins"]
 }

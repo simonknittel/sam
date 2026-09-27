@@ -1,16 +1,16 @@
 model PenaltyEntry {
   id          String    @id @default(cuid())
-  createdAt   DateTime  @default(now())
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
   createdBy   Citizen?  @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
   createdById String?
-  deletedAt   DateTime?
+  deletedAt   DateTime? @db.Timestamptz(3)
   deletedBy   Citizen?  @relation("deletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
   deletedById String?
   citizen     Citizen   @relation("citizen", fields: [citizenId], references: [id], onDelete: Cascade)
   citizenId   String
   points      Int
   reason      String?
-  expiresAt   DateTime?
+  expiresAt   DateTime? @db.Timestamptz(3)
 
   @@index([citizenId])
 }

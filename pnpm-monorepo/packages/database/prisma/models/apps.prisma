@@ -10,7 +10,7 @@ model CitizenAppFavorite {
   /// Keys that no longer resolve to an app are ignored when reading but kept,
   /// in case the app returns.
   appKey    String
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
 
   @@unique([citizenId, appKey])
 }

@@ -17,13 +17,13 @@ model Flow {
   /// role never needs a second row to express both.
   roleAccess FlowRoleAccess[]
 
-  createdAt   DateTime  @default(now())
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
   createdById String?
   createdBy   Citizen?  @relation("createdFlows", fields: [createdById], references: [id], onDelete: SetNull)
-  updatedAt   DateTime  @updatedAt
+  updatedAt   DateTime  @updatedAt @db.Timestamptz(3)
   updatedById String?
   updatedBy   Citizen?  @relation("updatedFlows", fields: [updatedById], references: [id], onDelete: SetNull)
-  deletedAt   DateTime?
+  deletedAt   DateTime? @db.Timestamptz(3)
   deletedById String?
   deletedBy   Citizen?  @relation("deletedFlows", fields: [deletedById], references: [id], onDelete: SetNull)
 

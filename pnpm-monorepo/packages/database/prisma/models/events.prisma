@@ -39,7 +39,7 @@ model Event {
   /// the app's own event as a duplicate DISCORD row. The sync skips these
   /// ids instead (see the scrape-discord-events Lambda).
   discordPublishedId   String?   @unique
-  discordPublishedAt   DateTime?
+  discordPublishedAt   DateTime? @db.Timestamptz(3)
   discordPublishedById String?
   discordPublishedBy   Citizen?  @relation("discordPublishedEvents", fields: [discordPublishedById], references: [id], onDelete: SetNull)
 
@@ -50,8 +50,8 @@ model Event {
   discordPublishedLocation  String?
 
   name        String
-  startTime   DateTime
-  endTime     DateTime?
+  startTime   DateTime  @db.Timestamptz(3)
+  endTime     DateTime? @db.Timestamptz(3)
   description String?
   location    String?
 
@@ -60,8 +60,8 @@ model Event {
   coverImageId String?
   coverImage   Upload? @relation("eventCoverImage", fields: [coverImageId], references: [id], onDelete: SetNull)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
   /// The creating citizen of app events; backfilled for Discord events
   /// whose Discord creator matches a citizen's Discord id.
@@ -70,7 +70,7 @@ model Event {
 
   /// Soft delete for app events. Discord events cancelled on Discord are
   /// hard-deleted by the sync, like before the unification.
-  deletedAt   DateTime?
+  deletedAt   DateTime? @db.Timestamptz(3)
   deletedById String?
   deletedBy   Citizen?  @relation("deletedEvents", fields: [deletedById], references: [id], onDelete: SetNull)
 
@@ -85,7 +85,7 @@ model Event {
 
   /// Set when the briefing root page's read scope first left MANAGERS.
   /// Guards the one-time "briefing published" notification.
-  briefingPublishedAt DateTime?
+  briefingPublishedAt DateTime?    @db.Timestamptz(3)
   wikiPages           WikiPage[]
   wikiTags            WikiTag[]
   readMarkers         ReadMarker[]
@@ -101,7 +101,7 @@ model EventVisibilityRole {
   event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   roleId    String
   role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
 
   @@unique([eventId, roleId])
   @@index([roleId])
@@ -124,8 +124,8 @@ model EventParticipant {
 
   comment String?
 
-  createdAt     DateTime  @default(now())
-  cancelledAt   DateTime?
+  createdAt     DateTime  @default(now()) @db.Timestamptz(3)
+  cancelledAt   DateTime? @db.Timestamptz(3)
   cancelledById String?
   cancelledBy   Citizen?  @relation("cancelledBy", fields: [cancelledById], references: [id], onDelete: SetNull)
 
@@ -167,7 +167,7 @@ model EventActivity {
   payload   Json?
   citizenId String?
   citizen   Citizen?          @relation("citizen", fields: [citizenId], references: [id], onDelete: SetNull)
-  createdAt DateTime          @default(now())
+  createdAt DateTime          @default(now()) @db.Timestamptz(3)
 
   @@index([eventId, createdAt])
 }
@@ -220,17 +220,17 @@ model EventTemplate {
   wikiPages WikiPage[]
   wikiTags  WikiTag[]
 
-  createdAt   DateTime  @default(now())
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
   createdById String?
   createdBy   Citizen?  @relation("createdEventTemplates", fields: [createdById], references: [id], onDelete: SetNull)
-  updatedAt   DateTime  @updatedAt
+  updatedAt   DateTime  @updatedAt @db.Timestamptz(3)
   updatedById String?
   updatedBy   Citizen?  @relation("updatedEventTemplates", fields: [updatedById], references: [id], onDelete: SetNull)
   /// The live owner. NULL only when the owning citizen was deleted, which
   /// leaves the template manageable by `event;manage` holders alone.
   ownedById   String?
   ownedBy     Citizen?  @relation("ownedEventTemplates", fields: [ownedById], references: [id], onDelete: SetNull)
-  deletedAt   DateTime?
+  deletedAt   DateTime? @db.Timestamptz(3)
   deletedById String?
   deletedBy   Citizen?  @relation("deletedEventTemplates", fields: [deletedById], references: [id], onDelete: SetNull)
 
@@ -246,7 +246,7 @@ model EventTemplateVisibilityRole {
   template   EventTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
   roleId     String
   role       Role          @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  createdAt  DateTime      @default(now())
+  createdAt  DateTime      @default(now()) @db.Timestamptz(3)
 
   @@unique([templateId, roleId])
   @@index([roleId])
@@ -325,7 +325,7 @@ model EventPositionApplication {
   position   EventPosition @relation("applications", fields: [positionId], references: [id], onDelete: Cascade)
   citizenId  String
   citizen    Citizen       @relation("citizen", fields: [citizenId], references: [id], onDelete: Cascade)
-  createdAt  DateTime      @default(now())
+  createdAt  DateTime      @default(now()) @db.Timestamptz(3)
 
   @@unique([positionId, citizenId])
 }

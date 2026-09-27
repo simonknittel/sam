@@ -12,8 +12,8 @@ model Account {
   id_token          String?   @db.Text
   session_state     String?
   user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt         DateTime? @default(now())
-  updatedAt         DateTime?
+  createdAt         DateTime? @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime? @db.Timestamptz(3)
 
   @@unique([provider, providerAccountId])
   @@index([userId])
@@ -23,12 +23,12 @@ model Session {
   id           String    @id @default(cuid())
   sessionToken String    @unique
   userId       String
-  expires      DateTime
+  expires      DateTime  @db.Timestamptz(3)
   user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   /// Deliberately without a database default: sessions created before this
   /// column existed must stay NULL rather than claim the timestamp of the
   /// migration. Set by the NextAuth adapter, the only writer.
-  createdAt    DateTime?
+  createdAt    DateTime? @db.Timestamptz(3)
   /// User agent of the browser the session was created from. NULL for
   /// sessions predating this column and for sign-ins without the header.
   userAgent    String?
@@ -40,20 +40,20 @@ model User {
   id                      String                   @id @default(cuid())
   name                    String?
   email                   String?                  @unique
-  emailVerified           DateTime?
+  emailVerified           DateTime?                @db.Timestamptz(3)
   image                   String?
   accounts                Account[]
   sessions                Session[]
   role                    UserRole?
-  createdAt               DateTime?                @default(now())
-  updatedAt               DateTime?
+  createdAt               DateTime?                @default(now()) @db.Timestamptz(3)
+  updatedAt               DateTime?                @db.Timestamptz(3)
   createdCitizens         Citizen[]                @relation("createdBy")
   submittedCitizenLogs    CitizenLog[]             @relation("submittedBy")
   confirmedCitizenLogs    CitizenLog[]             @relation("confirmedBy")
-  lastSeenAt              DateTime?
+  lastSeenAt              DateTime?                @db.Timestamptz(3)
   emailConfirmationTokens EmailConfirmationToken[]
   createdAuditEvents      AuditEvent[]             @relation("createdBy")
-  bannedAt                DateTime?
+  bannedAt                DateTime?                @db.Timestamptz(3)
   bannedReason            String?
   bannedById              String?
   bannedBy                Citizen?                 @relation("bannedBy", fields: [bannedById], references: [id])
@@ -68,7 +68,7 @@ enum UserRole {
 model VerificationToken {
   identifier String
   token      String   @unique
-  expires    DateTime
+  expires    DateTime @db.Timestamptz(3)
 
   @@unique([identifier, token])
 }
@@ -78,7 +78,7 @@ model EmailConfirmationToken {
   email   String
   userId  String
   user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expires DateTime
+  expires DateTime @db.Timestamptz(3)
 }
 
 model Role {

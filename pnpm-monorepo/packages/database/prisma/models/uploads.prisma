@@ -10,7 +10,7 @@ model Upload {
   width                 Int?
   /// Intrinsic image height in pixels, after EXIF orientation. See `width`.
   height                Int?
-  createdAt             DateTime                 @default(now())
+  createdAt             DateTime                 @default(now()) @db.Timestamptz(3)
   createdById           String?
   createdBy             Citizen?                 @relation(fields: [createdById], references: [id], onDelete: SetNull)
   roleIcons             Role[]                   @relation("icon")
