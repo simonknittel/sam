@@ -28,13 +28,14 @@ const createSilcTask = (
   creator: TestCitizen,
   worker: TestCitizen,
   title: string,
+  data: Partial<Prisma.TaskUncheckedCreateInput> = {},
 ) =>
   prisma.task.create({
     data: {
       title,
       visibility: TaskVisibility.PUBLIC,
       rewardType: TaskRewardType.SILC,
-      rewardTypeSilcValue: 50,
+      rewardSilcValue: 50,
       createdById: creator.entity.id,
       assignments: {
         create: {
@@ -42,6 +43,7 @@ const createSilcTask = (
           createdById: creator.entity.id,
         },
       },
+      ...data,
     },
   });
 
@@ -196,8 +198,7 @@ test("completing a task with a SILC reward pays the completionists", async ({
   });
   expect(completedTask?.completedAt).not.toBeNull();
 
-  // The second consumer of createSilcTransactions: the worker gets the
-  // reward, the creator funds it
+  // The worker gets the reward, the creator funds it
   const workerEntity = await prisma.citizen.findUnique({
     where: { id: worker.entity.id },
   });
@@ -220,6 +221,89 @@ test("completing a task with a SILC reward pays the completionists", async ({
     where: { type: "TASK_COMPLETED" },
   });
   expect(auditEvent).not.toBeNull();
+});
+
+test("two parallel completions of a SILC task pay the reward one time", async ({
+  context,
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createCitizen(prisma, {
+    handle: "task-verwalter",
+    permissionStrings: ["task;read", "citizen;read"],
+  });
+  const worker = await createCitizen(prisma, { handle: "silc-arbeiter" });
+  const task = await createSilcTask(prisma, manager, worker, "Konvoi sichern", {
+    repeatable: 2,
+  });
+
+  const completeModal = (tab: Page) => modal(tab, "Task abschließen");
+  const alreadyCompletedNote = (tab: Page) =>
+    completeModal(tab).getByText("Der Task ist bereits abgeschlossen.");
+
+  await signIn(manager.user);
+  const tabs = [page, await context.newPage()];
+  for (const tab of tabs) {
+    await tab.goto(`/app/tasks/${task.id}`);
+    await clickUntilVisible(
+      tab.getByRole("button", { name: "Abschließen" }),
+      completeModal(tab),
+    );
+    await expect(completeModal(tab).getByText("silc-arbeiter")).toBeVisible();
+  }
+
+  await Promise.all(
+    tabs.map((tab) =>
+      completeModal(tab).getByRole("button", { name: "Speichern" }).click(),
+    ),
+  );
+
+  /**
+   * One completion wins. The other one finds the task completed and keeps
+   * its modal open with the error.
+   */
+  await Promise.all(
+    tabs.map((tab) =>
+      expect(
+        tab
+          .getByText("Erfolgreich abgeschlossen.")
+          .or(alreadyCompletedNote(tab)),
+      ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT }),
+    ),
+  );
+  const alreadyCompletedCounts = await Promise.all(
+    tabs.map((tab) => alreadyCompletedNote(tab).count()),
+  );
+  expect(alreadyCompletedCounts.toSorted()).toEqual([0, 1]);
+
+  // The reward of the worker and the payment of the creator, one time each
+  expect(
+    await prisma.silcTransaction.count({ where: { taskId: task.id } }),
+  ).toBe(2);
+  const workerEntity = await prisma.citizen.findUniqueOrThrow({
+    where: { id: worker.entity.id },
+  });
+  expect(workerEntity.silcBalance).toBe(50);
+  const managerEntity = await prisma.citizen.findUniqueOrThrow({
+    where: { id: manager.entity.id },
+  });
+  expect(managerEntity.silcBalance).toBe(-50);
+
+  // One next repetition, and one completion in the system log
+  expect(
+    await prisma.task.findMany({
+      where: { title: "Konvoi sichern" },
+      select: { repeatable: true, completedAt: true },
+      orderBy: { repeatable: "desc" },
+    }),
+  ).toEqual([
+    { repeatable: 2, completedAt: expect.any(Date) },
+    { repeatable: 1, completedAt: null },
+  ]);
+  expect(
+    await prisma.auditEvent.count({ where: { type: "TASK_COMPLETED" } }),
+  ).toBe(1);
 });
 
 test("the dashboard shows its task tiles exactly to those with task permission", async ({
@@ -275,6 +359,7 @@ test("a citizen takes a task on, gives it up, and a manager cancels and deletes 
       title: "Frachter eskortieren",
       visibility: TaskVisibility.PUBLIC,
       rewardType: TaskRewardType.NEW_SILC,
+      rewardSilcValue: 100,
       createdById: manager.entity.id,
     },
   });
