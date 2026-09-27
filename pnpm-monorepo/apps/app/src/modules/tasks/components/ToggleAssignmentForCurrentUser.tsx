@@ -25,12 +25,14 @@ interface Props {
     readonly requiredRoles: readonly Pick<Role, "id">[];
   };
   readonly isCurrentUserAssigned?: boolean;
+  readonly hasCurrentUserRequiredRole: boolean;
 }
 
 export const ToggleAssignmentForCurrentUser = ({
   className,
   task,
   isCurrentUserAssigned,
+  hasCurrentUserRequiredRole,
 }: Props) => {
   const [isPending, startTransition] = useTransition();
   const formId = useId();
@@ -50,14 +52,6 @@ export const ToggleAssignmentForCurrentUser = ({
     });
   };
 
-  const doesCurrentUserSatisfyRequirements =
-    task.requiredRoles.length > 0
-      ? task.requiredRoles.some((role) =>
-          authentication.session.entity!.roleAssignments.some(
-            (assignment) => assignment.roleId === role.id,
-          ),
-        )
-      : true;
   const isAssignmentLimitReached =
     task.assignmentLimit && task.assignments.length >= task.assignmentLimit;
   const isPersonalizedOrGroupTask =
@@ -67,7 +61,7 @@ export const ToggleAssignmentForCurrentUser = ({
     (isCurrentUserAssigned && isPersonalizedOrGroupTask) ||
     (!isCurrentUserAssigned && isPersonalizedOrGroupTask) ||
     (!isCurrentUserAssigned && isAssignmentLimitReached) ||
-    (!isCurrentUserAssigned && !doesCurrentUserSatisfyRequirements);
+    (!isCurrentUserAssigned && !hasCurrentUserRequiredRole);
 
   const button = (
     <Button2 disabled={disabled}>
@@ -110,7 +104,7 @@ export const ToggleAssignmentForCurrentUser = ({
               </p>
             )}
 
-            {!isCurrentUserAssigned && !doesCurrentUserSatisfyRequirements && (
+            {!isCurrentUserAssigned && !hasCurrentUserRequiredRole && (
               <div className="flex flex-col gap-1">
                 <p>
                   Du kannst diesen Task nicht annehmen, da dir die folgenden
