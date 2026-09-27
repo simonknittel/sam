@@ -1,18 +1,32 @@
 import { prisma } from "@/db";
-import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import {
+  AuditEventType,
+  type AuditEventDataByType,
+} from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthentication } from "@/modules/auth/server";
-import type { CitizenLog } from "@sam-monorepo/database/client";
-import { toConfirmationStatus } from "./citizenLogConfirmation";
+import {
+  ConfirmationStatus,
+  type CitizenLog,
+} from "@sam-monorepo/database/client";
 import { getNoteClassificationAttributes } from "./notePermissionAttributes";
 import { syncCitizenIdentityAfterLogChange } from "./syncCitizenIdentityAfterLogChange";
+
+/** The payload of the system log keeps its texts, it is immutable */
+const AUDIT_CONFIRMATION_BY_STATUS = {
+  [ConfirmationStatus.CONFIRMED]: "confirmed",
+  [ConfirmationStatus.FALSE_REPORT]: "false-report",
+} as const satisfies Record<
+  ConfirmationStatus,
+  AuditEventDataByType[AuditEventType.ENTITY_LOG_CONFIRMED]["confirmed"]
+>;
 
 export const confirmLog = async (
   log: Pick<
     CitizenLog,
     "id" | "citizenId" | "type" | "noteTypeId" | "classificationLevelId"
   >,
-  value: "confirmed" | "false-report",
+  confirmed: ConfirmationStatus,
 ) => {
   const authentication = await requireAuthentication();
 
@@ -48,7 +62,7 @@ export const confirmLog = async (
     const updatedLog = await transaction.citizenLog.update({
       where: { id: log.id },
       data: {
-        confirmed: toConfirmationStatus(value),
+        confirmed,
         confirmedAt: new Date(),
         confirmedById: authentication.session.user.id,
       },
@@ -67,7 +81,7 @@ export const confirmLog = async (
         entityId: log.citizenId,
         logId: log.id,
         logType: log.type,
-        confirmed: value,
+        confirmed: AUDIT_CONFIRMATION_BY_STATUS[confirmed],
       },
       createdById: authentication.session.user.id,
     },

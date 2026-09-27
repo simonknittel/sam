@@ -1,29 +1,19 @@
 import type { CitizenLogTableRow } from "@/modules/citizen/queries/citizenLogTableSelect";
-import { DELETED_CITIZEN_LABEL } from "@/modules/citizen/utils/citizenDisplayName";
 import { citizenLogTypeTranslations } from "@/modules/citizen/utils/citizenLogTypeTranslations";
 import { Actions } from "@/modules/common/components/Actions";
+import { CitizenCellLink } from "@/modules/common/components/CitizenCellLink";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import {
   SortDirection,
   toggleSortParam,
 } from "@/modules/common/utils/toggleSortParam";
-import type { CitizenLogConfirmationState } from "@/types";
-import { type Citizen, type User } from "@sam-monorepo/database/client";
 import { FaSortDown, FaSortUp } from "react-icons/fa";
 import { ConfirmationState } from "./ConfirmationState";
 import { OtherTableDelete } from "./OtherTableDelete";
 
-export interface Row {
-  readonly entity: Pick<Citizen, "id" | "handle" | "deletedAt">;
-  readonly confirmationState?: CitizenLogConfirmationState;
-  readonly confirmedAt?: Date;
-  readonly confirmedBy?: Pick<User, "name"> | null;
-  readonly citizenLog: CitizenLogTableRow;
-}
-
 interface Props {
-  readonly rows: Row[];
+  readonly rows: readonly CitizenLogTableRow[];
   readonly searchParams: URLSearchParams;
 }
 
@@ -87,83 +77,59 @@ export const OtherTable = ({ rows, searchParams }: Props) => {
       </thead>
 
       <tbody>
-        {rows.map((row) => {
+        {rows.map((citizenLog) => {
           return (
             <tr
-              key={row.citizenLog.id}
+              key={citizenLog.id}
               className="grid items-center gap-4 h-14 rounded-secondary -mx-2 first:mt-2 grid-cols-[1fr_1fr_2fr_1fr_1fr_1fr_1fr_1fr_44px]"
             >
-              <td>
-                {row.entity.deletedAt ? (
-                  <span className="px-2 text-neutral-500">
-                    {DELETED_CITIZEN_LABEL}
-                  </span>
-                ) : (
-                  <Link
-                    href={`/app/spynet/citizen/${row.entity.id}`}
-                    className="text-brand-red-500 hover:bg-neutral-800 block rounded-secondary px-2 h-full"
-                  >
-                    <span className="flex items-center h-14">
-                      <span className="overflow-hidden text-ellipsis">
-                        {row.entity.handle ? (
-                          <span title={row.entity.handle}>
-                            {row.entity.handle}
-                          </span>
-                        ) : (
-                          <span className="text-neutral-500 italic">-</span>
-                        )}
-                      </span>
-                    </span>
-                  </Link>
-                )}
-              </td>
-
-              <td
-                className="truncate"
-                title={citizenLogTypeTranslations[row.citizenLog.type]}
-              >
-                {citizenLogTypeTranslations[row.citizenLog.type]}
-              </td>
-
-              <td
-                className="truncate"
-                title={row.citizenLog.content || undefined}
-              >
-                {row.citizenLog.content}
-              </td>
-
-              <td>
-                <ConfirmationState
-                  confirmationState={row.confirmationState}
-                  citizenLog={row.citizenLog}
+              <td className="overflow-hidden">
+                <CitizenCellLink
+                  className="h-14"
+                  citizen={citizenLog.citizen}
                 />
               </td>
 
+              <td
+                className="truncate"
+                title={citizenLogTypeTranslations[citizenLog.type]}
+              >
+                {citizenLogTypeTranslations[citizenLog.type]}
+              </td>
+
+              <td className="truncate" title={citizenLog.content || undefined}>
+                {citizenLog.content}
+              </td>
+
+              <td>
+                <ConfirmationState citizenLog={citizenLog} />
+              </td>
+
               <td className="overflow-hidden text-ellipsis">
-                {formatDate(row.confirmedAt)}
+                {formatDate(citizenLog.confirmedAt)}
               </td>
 
               <td
                 className="overflow-hidden text-ellipsis"
-                title={row.confirmedBy?.name || undefined}
+                title={citizenLog.confirmedBy?.name || undefined}
               >
-                {row.confirmedBy?.name}
+                {citizenLog.confirmedBy?.name}
               </td>
 
               <td className="overflow-hidden text-ellipsis">
-                {formatDate(row.citizenLog.createdAt)}
+                {formatDate(citizenLog.createdAt)}
               </td>
 
               <td
                 className="overflow-hidden text-ellipsis"
-                title={row.citizenLog.submittedBy?.name || "Unbekannt"}
+                title={citizenLog.submittedBy?.name || "Unbekannt"}
               >
-                {row.citizenLog.submittedBy?.name || "Unbekannt"}
+                {citizenLog.submittedBy?.name || "Unbekannt"}
               </td>
 
               <td>
                 <Actions>
-                  <OtherTableDelete log={row.citizenLog} />
+                  <OtherTableDelete log={citizenLog} />
                 </Actions>
               </td>
             </tr>

@@ -1,5 +1,6 @@
 "use client";
 
+import { ConfirmationValue } from "@/modules/citizen/utils/citizenLogConfirmation";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { api } from "@/trpc/react";
@@ -16,10 +17,12 @@ interface Props {
 
 const ConfirmLog = ({ log, compact }: Props) => {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState<string | false>(false);
+  const [isLoading, setIsLoading] = useState<ConfirmationValue | false>(false);
   const utils = api.useUtils();
 
-  const handleConfirm = async (confirmed: string) => {
+  const handleConfirm = async (
+    confirmed: ConfirmationValue.Confirmed | ConfirmationValue.FalseReport,
+  ) => {
     setIsLoading(confirmed);
 
     try {
@@ -58,21 +61,29 @@ const ConfirmLog = ({ log, compact }: Props) => {
         <Button
           variant="tertiary"
           className="h-auto"
-          onClick={() => void handleConfirm("confirmed")}
-          disabled={isLoading === "confirmed"}
+          onClick={() => void handleConfirm(ConfirmationValue.Confirmed)}
+          disabled={isLoading === ConfirmationValue.Confirmed}
           title="Bestätigen"
         >
-          {isLoading === "confirmed" ? <AsciiSpinner /> : <FaCheck />}
+          {isLoading === ConfirmationValue.Confirmed ? (
+            <AsciiSpinner />
+          ) : (
+            <FaCheck />
+          )}
         </Button>
         /
         <Button
           variant="tertiary"
           className="h-auto"
-          onClick={() => void handleConfirm("false-report")}
-          disabled={isLoading === "false-report"}
+          onClick={() => void handleConfirm(ConfirmationValue.FalseReport)}
+          disabled={isLoading === ConfirmationValue.FalseReport}
           title="Falschmeldung"
         >
-          {isLoading === "false-report" ? <AsciiSpinner /> : <FaTimes />}
+          {isLoading === ConfirmationValue.FalseReport ? (
+            <AsciiSpinner />
+          ) : (
+            <FaTimes />
+          )}
         </Button>
       </>
     );
@@ -83,20 +94,28 @@ const ConfirmLog = ({ log, compact }: Props) => {
       <Button
         variant="tertiary"
         className="h-auto"
-        onClick={() => void handleConfirm("confirmed")}
-        disabled={isLoading === "confirmed"}
+        onClick={() => void handleConfirm(ConfirmationValue.Confirmed)}
+        disabled={isLoading === ConfirmationValue.Confirmed}
       >
-        {isLoading === "confirmed" ? <AsciiSpinner /> : <FaCheck />}
+        {isLoading === ConfirmationValue.Confirmed ? (
+          <AsciiSpinner />
+        ) : (
+          <FaCheck />
+        )}
         Bestätigen
       </Button>
 
       <Button
         variant="tertiary"
         className="h-auto"
-        onClick={() => void handleConfirm("false-report")}
-        disabled={isLoading === "false-report"}
+        onClick={() => void handleConfirm(ConfirmationValue.FalseReport)}
+        disabled={isLoading === ConfirmationValue.FalseReport}
       >
-        {isLoading === "false-report" ? <AsciiSpinner /> : <FaTimes />}
+        {isLoading === ConfirmationValue.FalseReport ? (
+          <AsciiSpinner />
+        ) : (
+          <FaTimes />
+        )}
         Falschmeldung
       </Button>
     </>

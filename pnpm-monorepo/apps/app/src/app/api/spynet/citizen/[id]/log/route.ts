@@ -4,6 +4,7 @@ import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import { confirmLog } from "@/modules/citizen/utils/confirmLog";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
+import { ConfirmationStatus } from "@sam-monorepo/database/client";
 import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import { NextResponse } from "next/server";
 import * as z from "zod";
@@ -153,7 +154,7 @@ export async function POST(request: Request, props: { params: Params }) {
       },
     ]);
 
-    if (data.confirmed) await confirmLog(item, "confirmed");
+    if (data.confirmed) await confirmLog(item, ConfirmationStatus.CONFIRMED);
 
     /**
      * Respond with the result

@@ -8,12 +8,13 @@ declare module "react" {
   }
 }
 
-export type CitizenLogConfirmationState =
-  "confirmed" | "false-report" | undefined;
-
 export type { GenericCitizenLogType } from "@sam-monorepo/permissions";
 
-// TODO: Use ENUM (https://www.prisma.io/docs/concepts/components/prisma-schema/data-model#defining-enums)
+/**
+ * The values of `CitizenLog.type`. The column is text with a CHECK
+ * constraint and not a Prisma enum, because the permission resources, the
+ * URL filters and the texts use the same values.
+ */
 export type CitizenLogType =
   | GenericCitizenLogType
   | "spectrum-id" // TODO: Move to GenericCitizenLogType

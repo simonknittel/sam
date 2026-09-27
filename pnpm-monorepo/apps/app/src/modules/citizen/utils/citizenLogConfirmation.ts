@@ -1,31 +1,42 @@
-import type { CitizenLogConfirmationState } from "@/types";
 import { ConfirmationStatus } from "@sam-monorepo/database/browser";
 
-/** The confirmation of a log in the form that the UI and the API use */
-export const toConfirmationState = (
+/**
+ * The confirmation of a log as the URL filters ("confirmation-…"), the body
+ * of the confirm API and the system log write it. The UI and the database
+ * use `ConfirmationStatus`, with NULL for a log without a decision.
+ */
+export enum ConfirmationValue {
+  Unconfirmed = "unconfirmed",
+  Confirmed = "confirmed",
+  FalseReport = "false-report",
+}
+
+export const toConfirmationValue = (
   confirmed: ConfirmationStatus | null,
-): CitizenLogConfirmationState => {
+): ConfirmationValue => {
   switch (confirmed) {
     case ConfirmationStatus.CONFIRMED:
-      return "confirmed";
+      return ConfirmationValue.Confirmed;
     case ConfirmationStatus.FALSE_REPORT:
-      return "false-report";
+      return ConfirmationValue.FalseReport;
     case null:
-      return undefined;
+      return ConfirmationValue.Unconfirmed;
     default:
       throw new Error(`Unknown confirmation: ${confirmed satisfies never}`);
   }
 };
 
 export const toConfirmationStatus = (
-  state: NonNullable<CitizenLogConfirmationState>,
-): ConfirmationStatus => {
-  switch (state) {
-    case "confirmed":
+  value: ConfirmationValue,
+): ConfirmationStatus | null => {
+  switch (value) {
+    case ConfirmationValue.Unconfirmed:
+      return null;
+    case ConfirmationValue.Confirmed:
       return ConfirmationStatus.CONFIRMED;
-    case "false-report":
+    case ConfirmationValue.FalseReport:
       return ConfirmationStatus.FALSE_REPORT;
     default:
-      throw new Error(`Unknown confirmation: ${state satisfies never}`);
+      throw new Error(`Unknown confirmation: ${value satisfies never}`);
   }
 };

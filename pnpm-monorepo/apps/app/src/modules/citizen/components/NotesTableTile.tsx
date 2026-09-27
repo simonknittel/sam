@@ -6,14 +6,13 @@ import {
   getFilterValues,
   getReadableCitizenLogWhere,
 } from "@/modules/citizen/queries/getCitizenLogTablePage";
-import { toConfirmationState } from "@/modules/citizen/utils/citizenLogConfirmation";
 import Pagination from "@/modules/common/components/Pagination";
 import { getCurrentPageFromSearchParams } from "@/modules/common/utils/pagination";
 import { getAllClassificationLevels } from "@/modules/spynet/queries/getAllClassificationLevels";
 import { getAllNoteTypes } from "@/modules/spynet/queries/getAllNoteTypes";
 import type { Prisma } from "@sam-monorepo/database/client";
 import clsx from "clsx";
-import { type Row, NotesTable } from "./NotesTable";
+import { NotesTable } from "./NotesTable";
 import { NotesTableFilters } from "./NotesTableFilters";
 
 interface Props {
@@ -64,26 +63,12 @@ export const NotesTableTile = async ({ className, searchParams }: Props) => {
       getAllClassificationLevels(),
     ]);
 
-  const rows = logs.map((citizenLog): Row => ({
-    entity: citizenLog.citizen,
-    noteType: citizenLog.noteType!,
-    classificationLevel: citizenLog.classificationLevel!,
-    confirmationState: toConfirmationState(citizenLog.confirmed),
-    confirmedAt: citizenLog.confirmedAt ?? undefined,
-    confirmedBy: citizenLog.confirmedBy,
-    citizenLog,
-  }));
-
   const optionNoteTypeIds = new Set(options.map((option) => option.noteTypeId));
   const optionClassificationLevelIds = new Set(
     options.map((option) => option.classificationLevelId),
   );
   const confirmationStates = [
-    ...new Set(
-      options.map(
-        (option) => toConfirmationState(option.confirmed) ?? "unconfirmed",
-      ),
-    ),
+    ...new Set(options.map((option) => option.confirmed)),
   ];
 
   return (
@@ -106,7 +91,7 @@ export const NotesTableTile = async ({ className, searchParams }: Props) => {
         />
       </div>
 
-      <NotesTable rows={rows} searchParams={searchParams} />
+      <NotesTable rows={logs} searchParams={searchParams} />
 
       <div className="flex justify-center mt-6">
         <Pagination

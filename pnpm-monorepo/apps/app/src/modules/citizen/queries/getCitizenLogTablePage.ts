@@ -3,6 +3,10 @@ import type { requireAuthentication } from "@/modules/auth/server";
 import { PER_PAGE } from "@/modules/common/utils/pagination";
 import type { GenericCitizenLogType } from "@/types";
 import { ConfirmationStatus, type Prisma } from "@sam-monorepo/database/client";
+import {
+  ConfirmationValue,
+  toConfirmationStatus,
+} from "../utils/citizenLogConfirmation";
 import { CITIZEN_LOG_TABLE_SELECT } from "./citizenLogTableSelect";
 
 type Authentication = Awaited<ReturnType<typeof requireAuthentication>>;
@@ -22,7 +26,7 @@ const TYPES_WITH_READ_PERMISSION: readonly CitizenLogTableType[] = [
  */
 export const getReadableCitizenLogWhere = async (
   types: readonly CitizenLogTableType[],
-  authentication: Authentication,
+  authentication: Pick<Authentication, "authorize">,
 ): Promise<Prisma.CitizenLogWhereInput> => {
   const conditions = await Promise.all(
     types.map(async (type): Promise<Prisma.CitizenLogWhereInput | null> => {
@@ -44,6 +48,15 @@ export const getReadableCitizenLogWhere = async (
   };
 };
 
+/** The values of the filters with the given prefix, for example "type-" */
+export const getFilterValues = (filters: readonly string[], prefix: string) =>
+  filters
+    .filter((filter) => filter.startsWith(prefix))
+    .map((filter) => filter.slice(prefix.length));
+
+const isConfirmationValue = (value: string): value is ConfirmationValue =>
+  Object.values<string>(ConfirmationValue).includes(value);
+
 /**
  * The confirmation filters of the tables ("confirmation-confirmed", …) as a
  * condition. Undefined without such a filter.
@@ -51,24 +64,19 @@ export const getReadableCitizenLogWhere = async (
 export const getConfirmationFilterWhere = (
   filters: readonly string[],
 ): Prisma.CitizenLogWhereInput | undefined => {
-  const conditions: Prisma.CitizenLogWhereInput[] = [];
-  if (filters.includes("confirmation-unconfirmed"))
-    conditions.push({ confirmed: null });
-  if (filters.includes("confirmation-confirmed"))
-    conditions.push({ confirmed: ConfirmationStatus.CONFIRMED });
-  if (filters.includes("confirmation-false-report"))
-    conditions.push({ confirmed: ConfirmationStatus.FALSE_REPORT });
+  const values = getFilterValues(filters, "confirmation-");
+  if (values.length === 0) return undefined;
 
-  return filters.some((filter) => filter.startsWith("confirmation-"))
-    ? { OR: conditions }
-    : undefined;
+  /**
+   * An unknown value adds no condition, thus only unknown values give an
+   * empty OR, which matches no log
+   */
+  return {
+    OR: values
+      .filter(isConfirmationValue)
+      .map((value) => ({ confirmed: toConfirmationStatus(value) })),
+  };
 };
-
-/** The values of the filters with the given prefix, for example "type-" */
-export const getFilterValues = (filters: readonly string[], prefix: string) =>
-  filters
-    .filter((filter) => filter.startsWith(prefix))
-    .map((filter) => filter.slice(prefix.length));
 
 const getOrderBy = (
   sort: string | null,
