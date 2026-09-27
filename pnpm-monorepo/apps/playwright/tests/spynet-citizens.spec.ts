@@ -63,7 +63,7 @@ test("a citizen is created from a Spectrum ID and deleted again", async ({
   await expect(page.getByText("NEWCOMER").first()).toBeVisible();
 
   /**
-   * Delete — everything hanging off the citizen goes with them
+   * Delete — a soft delete: the citizen and its logs stay, hidden
    */
   const deleteDialog = page.getByRole("alertdialog");
   await clickUntilVisible(
@@ -77,11 +77,19 @@ test("a citizen is created from a Spectrum ID and deleted again", async ({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await expect
-    .poll(() => prisma.citizen.count({ where: { id: created.id } }))
-    .toBe(0);
+    .poll(
+      async () =>
+        (
+          await prisma.citizen.findUniqueOrThrow({
+            where: { id: created.id },
+            select: { deletedAt: true },
+          })
+        ).deletedAt,
+    )
+    .not.toBeNull();
   expect(
     await prisma.citizenLog.count({ where: { citizenId: created.id } }),
-  ).toBe(0);
+  ).toBe(1);
 
   await expectAuditEvents(prisma, ["CITIZEN_CREATED", "CITIZEN_DELETED"]);
 });
@@ -138,11 +146,19 @@ test("deleting a citizen keeps what they recorded about others", async ({
   });
 
   await expect
-    .poll(() => prisma.citizen.count({ where: { id: recorder.entity.id } }))
-    .toBe(0);
+    .poll(
+      async () =>
+        (
+          await prisma.citizen.findUniqueOrThrow({
+            where: { id: recorder.entity.id },
+            select: { deletedAt: true },
+          })
+        ).deletedAt,
+    )
+    .not.toBeNull();
   expect(
     await prisma.organization.findUnique({ where: { id: organization.id } }),
-  ).toMatchObject({ createdById: null });
+  ).toMatchObject({ createdById: recorder.entity.id });
   expect(
     await prisma.activeOrganizationMembership.count({
       where: { citizenId: member.entity.id },
@@ -152,7 +168,10 @@ test("deleting a citizen keeps what they recorded about others", async ({
     await prisma.organizationMembershipHistoryEntry.findFirst({
       where: { citizenId: member.entity.id },
     }),
-  ).toMatchObject({ createdById: null, confirmedById: null });
+  ).toMatchObject({
+    createdById: recorder.entity.id,
+    confirmedById: recorder.entity.id,
+  });
 });
 
 test("a log entry is confirmed, and a second one marked a false report", async ({
