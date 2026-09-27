@@ -1,7 +1,7 @@
 import { Tile } from "@/modules/common/components/Tile";
 import clsx from "clsx";
-import { getRoleSalaries } from "../queries/getRoleSalaries";
 import { getAuecConversionRate } from "../queries/getAuecConversionRate";
+import { getRoleSalaries } from "../queries/getRoleSalaries";
 import { RoleSalariesClient } from "./RoleSalariesClient";
 
 interface Props {

@@ -65,37 +65,37 @@ export async function POST(request: Request, props: { params: Params }) {
      */
     await changeMembershipHistory(data.citizenId, (transaction) =>
       transaction.organizationMembershipHistoryEntry.create({
-      data: {
-        organization: {
-          connect: {
-            id: paramsData.organizationId,
+        data: {
+          organization: {
+            connect: {
+              id: paramsData.organizationId,
+            },
           },
-        },
-        citizen: {
-          connect: {
-            id: data.citizenId,
+          citizen: {
+            connect: {
+              id: data.citizenId,
+            },
           },
-        },
-        type: data.type,
-        visibility,
-        createdBy: {
-          connect: {
-            id: entityId,
+          type: data.type,
+          visibility,
+          createdBy: {
+            connect: {
+              id: entityId,
+            },
           },
-        },
-        ...(confirmable
-          ? {
-              confirmed: ConfirmationStatus.CONFIRMED,
-              confirmedAt: new Date(),
-              confirmedBy: {
-                connect: {
-                  id: entityId,
+          ...(confirmable
+            ? {
+                confirmed: ConfirmationStatus.CONFIRMED,
+                confirmedAt: new Date(),
+                confirmedBy: {
+                  connect: {
+                    id: entityId,
+                  },
                 },
-              },
-            }
-          : {}),
-      },
-    }),
+              }
+            : {}),
+        },
+      }),
     );
 
     await createAuditEvents([

@@ -77,7 +77,10 @@ export const moveWikiPage = createAuthenticatedAction(
       ]);
     } catch (error) {
       if (isWikiPageReparentRefused(error))
-        return { error: WIKI_PAGE_TREE_CHANGED_ERROR, requestPayload: formData };
+        return {
+          error: WIKI_PAGE_TREE_CHANGED_ERROR,
+          requestPayload: formData,
+        };
       throw error;
     }
 

@@ -1,8 +1,8 @@
 import { ScrambleIn } from "@/modules/common/components/ScrambleIn";
 import { StatisticTile } from "@/modules/common/components/StatisticTile";
 import clsx from "clsx";
-import { getSilcBalanceOfAllCitizens } from "../queries/getSilcBalanceOfAllCitizens";
 import { getAuecConversionRate } from "../queries/getAuecConversionRate";
+import { getSilcBalanceOfAllCitizens } from "../queries/getSilcBalanceOfAllCitizens";
 
 interface Props {
   readonly className?: string;

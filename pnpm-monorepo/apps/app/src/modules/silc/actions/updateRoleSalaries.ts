@@ -7,15 +7,17 @@ import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import * as z from "zod";
 
-const schema = z.object({
-  roleIds: z.array(z.cuid()).max(250), // Arbitrary (untested) limit to prevent DDoS
-  values: z.array(z.coerce.number().int().min(1)).max(250), // Arbitrary (untested) limit to prevent DDoS
-  dayOfMonths: z.array(z.coerce.number().int().min(1).max(31)).max(250), // Arbitrary (untested) limit to prevent DDoS
-}).refine(
-  (data) =>
-    data.values.length === data.roleIds.length &&
-    data.dayOfMonths.length === data.roleIds.length,
-);
+const schema = z
+  .object({
+    roleIds: z.array(z.cuid()).max(250), // Arbitrary (untested) limit to prevent DDoS
+    values: z.array(z.coerce.number().int().min(1)).max(250), // Arbitrary (untested) limit to prevent DDoS
+    dayOfMonths: z.array(z.coerce.number().int().min(1).max(31)).max(250), // Arbitrary (untested) limit to prevent DDoS
+  })
+  .refine(
+    (data) =>
+      data.values.length === data.roleIds.length &&
+      data.dayOfMonths.length === data.roleIds.length,
+  );
 
 export const updateRoleSalaries = createAuthenticatedAction(
   "updateRoleSalaries",
