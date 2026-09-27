@@ -5,7 +5,6 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { log } from "@/modules/logging";
-import { WikiPageSnapshotKind } from "@sam-monorepo/database/client";
 import { getWikiEditorSchema } from "@sam-monorepo/wiki-editor";
 import { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { unstable_rethrow } from "next/navigation";
@@ -16,6 +15,7 @@ import {
   isWikiScopeFrozen,
   revalidateWikiScope,
 } from "../queries/getWikiPageScopedContext";
+import { createWikiPageSafetySnapshot } from "../utils/createWikiPageSafetySnapshot";
 import { replaceWikiPageContent } from "../utils/replaceWikiPageContent";
 
 const schema = z.object({
@@ -77,21 +77,11 @@ export const restoreWikiPageSnapshot = createAuthenticatedAction(
 
     const entityId = authentication.session.entity?.id ?? null;
 
-    const currentContent = await prisma.wikiPage.findUnique({
-      where: { id: page.id },
-      select: { content: true },
+    await createWikiPageSafetySnapshot({
+      pageId: page.id,
+      name: "Automatische Sicherung vor Wiederherstellung",
+      createdById: entityId,
     });
-    if (currentContent?.content) {
-      await prisma.wikiPageSnapshot.create({
-        data: {
-          pageId: page.id,
-          kind: WikiPageSnapshotKind.MANUAL,
-          name: "Automatische Sicherung vor Wiederherstellung",
-          content: currentContent.content,
-          createdById: entityId,
-        },
-      });
-    }
 
     try {
       await replaceWikiPageContent({

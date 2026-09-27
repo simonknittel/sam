@@ -172,9 +172,10 @@ export const remapBriefingScopePositions = (
  *
  * Content (including the Yjs document) is copied from the last persisted
  * state — unsaved changes of a live collab session are not included. Images
- * and attachments keep referencing the source pages' uploads; each copy is
- * linked to its source page's uploads (Upload.wikiPages) so attachment
- * downloads are permission-checked against the copy itself. Tags carry over
+ * and attachments keep referencing the source pages' uploads; each copy
+ * gets the upload links of its source page (WikiPage.uploads), which agree
+ * with the copied content, so attachment downloads are permission-checked
+ * against the copy itself and the upload cleanup keeps them. Tags carry over
  * by name: found or created in the target scope (see findOrCreateWikiTags),
  * which links the identical tag on a same-scope copy and recreates it on a
  * cross-scope one.
@@ -197,7 +198,7 @@ export const copyWikiPagesIntoContainer = async (
         eventReadScopePositionId: true,
         eventEditScope: true,
         eventEditScopePositionId: true,
-        attachments: { select: { id: true } },
+        uploads: { select: { uploadId: true, kind: true } },
       },
     }),
     transaction.wikiPageTag.findMany({
@@ -266,9 +267,9 @@ export const copyWikiPagesIntoContainer = async (
         searchText: content?.searchText ?? "",
         tagsText,
         ydoc: content?.ydoc ?? undefined,
-        attachments:
-          content && content.attachments.length > 0
-            ? { connect: content.attachments.map(({ id }) => ({ id })) }
+        uploads:
+          content && content.uploads.length > 0
+            ? { createMany: { data: content.uploads } }
             : undefined,
         tags:
           tagIds.length > 0

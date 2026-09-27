@@ -1,11 +1,9 @@
 "use server";
 
-import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { log } from "@/modules/logging";
-import { WikiPageSnapshotKind } from "@sam-monorepo/database/client";
 import {
   collectWikiIframeSrcs,
   getWikiEditorSchema,
@@ -21,6 +19,7 @@ import {
   revalidateWikiScope,
 } from "../queries/getWikiPageScopedContext";
 import { getWikiIframeAllowlist } from "../queries/getWikiSettings";
+import { createWikiPageSafetySnapshot } from "../utils/createWikiPageSafetySnapshot";
 import { replaceWikiPageContent } from "../utils/replaceWikiPageContent";
 import { WikiScope } from "../utils/wikiPageHref";
 
@@ -99,21 +98,11 @@ export const importWikiPageContent = createAuthenticatedAction(
 
     const entityId = authentication.session.entity?.id ?? null;
 
-    const currentContent = await prisma.wikiPage.findUnique({
-      where: { id: page.id },
-      select: { content: true },
+    await createWikiPageSafetySnapshot({
+      pageId: page.id,
+      name: "Automatische Sicherung vor Import",
+      createdById: entityId,
     });
-    if (currentContent?.content) {
-      await prisma.wikiPageSnapshot.create({
-        data: {
-          pageId: page.id,
-          kind: WikiPageSnapshotKind.MANUAL,
-          name: "Automatische Sicherung vor Import",
-          content: currentContent.content,
-          createdById: entityId,
-        },
-      });
-    }
 
     try {
       await replaceWikiPageContent({

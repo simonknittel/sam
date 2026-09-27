@@ -44,7 +44,10 @@ export const createWikiPageReport = createAuthenticatedAction(
     let upload: { id: string; fileName: string } | null = null;
     if (data.uploadId) {
       upload = await prisma.upload.findFirst({
-        where: { id: data.uploadId, wikiPages: { some: { id: page.id } } },
+        where: {
+          id: data.uploadId,
+          wikiPageLinks: { some: { pageId: page.id } },
+        },
         select: { id: true, fileName: true },
       });
       if (!upload)
