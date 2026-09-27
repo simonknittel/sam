@@ -49,6 +49,28 @@ import { FaCopy } from "react-icons/fa";
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    key: "2026-09-27-neue-tasks-und-events",
+    date: "2026-09-27",
+    title: "Tasks und Events: Neu-Markierung",
+    tags: ["Tasks", "Events", "Neu"],
+    body: () => (
+      <>
+        <p>
+          Neue Tasks und Events, die du noch nicht geöffnet hast, sind jetzt mit
+          &bdquo;Neu&ldquo; markiert. Die Markierung verschwindet, sobald du die
+          Details öffnest oder auf &bdquo;Neu&ldquo; klickst.
+        </p>
+
+        <p>
+          Die Kachel &bdquo;Neue Tasks&ldquo; auf dem Dashboard zeigt jetzt
+          deine ungelesenen Tasks. In den Listen der Tasks und Events kannst du
+          nach dem Status &bdquo;Neu&ldquo; filtern.
+        </p>
+      </>
+    ),
+  },
+
+  {
     key: "2026-09-17-log-analyzer-neue-events",
     date: "2026-09-17",
     title: "Log Analyzer: Neue Events",
