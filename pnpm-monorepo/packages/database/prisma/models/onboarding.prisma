@@ -22,7 +22,6 @@ model OnboardingTaskProgress {
   updatedAt        DateTime                       @updatedAt
 
   @@unique([citizenId, taskKey])
-  @@index([citizenId])
 }
 
 /// A completed step of an onboarding task. Step rows exist for the resume
@@ -41,5 +40,4 @@ model OnboardingStepProgress {
   updatedAt   DateTime @updatedAt
 
   @@unique([citizenId, taskKey, stepKey])
-  @@index([citizenId])
 }

@@ -77,6 +77,8 @@ enum WikiPageSidebarMode {
 model WikiPage {
   id        String            @id @default(cuid(2))
   namespace WikiPageNamespace @default(WIKI)
+  /// A trigger refuses a parent that makes a cycle or that is in another
+  /// namespace or container (see the migration database_rules_and_indexes)
   parentId  String?
   parent    WikiPage?         @relation("hierarchy", fields: [parentId], references: [id], onDelete: Restrict)
   children  WikiPage[]        @relation("hierarchy")
@@ -104,6 +106,7 @@ model WikiPage {
   /// tables. Kept in sync by updateWikiPageTags.
   tagsText   String @default("")
 
+  /// PUBLIC only on a top-level page (CHECK constraint)
   visibility  WikiPageVisibility   @default(INHERIT)
   editability WikiPageEditability  @default(INHERIT)
   /// Manage access has no enum: it is purely additive along the hierarchy.
@@ -283,12 +286,11 @@ model WikiPageReport {
 /// deletion.
 model WikiTag {
   id   String @id @default(cuid(2))
-  /// Display casing from first use. Uniqueness is per scope and effectively
-  /// case-insensitive: actions match existing names case-insensitively
-  /// (find-or-create) before creating. The partial unique indexes below give
+  /// Display casing from first use. The `citext` type makes the name unique
+  /// per scope without letter case. The partial unique indexes below give
   /// one index per scope, because a plain compound unique would treat every
   /// NULL container as distinct.
-  name String
+  name String @db.Citext
 
   /// The owning container, both NULL for the global wiki (mirrors
   /// WikiPage.eventId/templateId, and likewise at most one of the two).

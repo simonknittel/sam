@@ -42,8 +42,9 @@ model ActiveOrganizationMembership {
   type       OrganizationMembershipType
   visibility OrganizationMembershipVisibility
 
+  /// A CHECK constraint refuses the type LEFT, which only the history uses
   @@id([organizationId, citizenId])
-  @@index([organizationId])
+  @@index([citizenId])
 }
 
 enum OrganizationMembershipType {

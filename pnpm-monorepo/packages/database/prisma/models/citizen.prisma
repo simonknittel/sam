@@ -124,7 +124,8 @@ model Citizen {
   /// citizen sets it themselves. NULL if the citizen did not set it.
   timezone               String?
   /// Day of the birthday, 1 to 31. The year is not stored, thus the app
-  /// cannot show an age. Set together with `birthdayMonth`, or both are NULL.
+  /// cannot show an age. Set together with `birthdayMonth`, or both are NULL
+  /// (CHECK constraints, see the migration database_rules_and_indexes).
   birthdayDay            Int?
   /// Month of the birthday, 1 to 12. See `birthdayDay`.
   birthdayMonth          Int?
@@ -171,7 +172,7 @@ model CitizenLog {
   classificationLevelId String?
   classificationLevel   ClassificationLevel? @relation(fields: [classificationLevelId], references: [id], onDelete: SetNull)
 
-  @@index([type])
+  @@index([citizenId, type, createdAt(sort: Desc)])
 }
 
 /// Materialized/denormalized view of currently assigned roles to citizens.
@@ -196,6 +197,7 @@ model RoleAssignment {
   currentLevelUpdatedAt DateTime?
 
   @@unique([citizenId, roleId])
+  @@index([roleId])
 }
 
 enum RoleAssignmentChangeType {
@@ -215,7 +217,9 @@ model RoleAssignmentChange {
   createdById String?
   createdBy   Citizen?                 @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
 
-  @@index([citizenId])
+  /// The activity feeds page with a key of (createdAt, id)
+  @@index([citizenId, createdAt, id])
+  @@index([createdAt, id])
 }
 
 enum RoleAssignmentLevelChangeType {
@@ -235,7 +239,9 @@ model RoleAssignmentLevelChange {
   createdById String?
   createdBy   Citizen?                      @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
 
-  @@index([citizenId])
+  /// See `RoleAssignmentChange`
+  @@index([citizenId, createdAt, id])
+  @@index([createdAt, id])
 }
 
 /// Opt-out model for the seasonal themes: the existence of a row means the
@@ -251,5 +257,4 @@ model SeasonalThemeSetting {
   disabledAt DateTime @default(now())
 
   @@unique([citizenId, eventKey])
-  @@index([citizenId])
 }

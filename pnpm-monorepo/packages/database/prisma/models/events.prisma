@@ -104,6 +104,7 @@ model EventVisibilityRole {
   createdAt DateTime @default(now())
 
   @@unique([eventId, roleId])
+  @@index([roleId])
 }
 
 /// One participation of one person in one event, from either source:
@@ -128,16 +129,13 @@ model EventParticipant {
   cancelledById String?
   cancelledBy   Citizen?  @relation("cancelledBy", fields: [cancelledById], references: [id], onDelete: SetNull)
 
-  /// Mirror of citizenId/discordUserId while the row is active, NULL once
-  /// cancelled: Postgres treats NULLs as distinct, so the unique constraints
-  /// below enforce "at most one active row per person per event" while
-  /// keeping any number of cancelled rows. Cancellation must NULL these in
-  /// the same update that sets cancelledAt.
-  activeCitizenId     String?
-  activeDiscordUserId String?
-
-  @@unique([eventId, activeCitizenId])
-  @@unique([eventId, activeDiscordUserId])
+  /// At most one active sign-up for each person and event; cancelled rows
+  /// stay. A CHECK constraint requires the identity of the source: APP rows
+  /// have a citizen and no Discord user, DISCORD rows have a Discord user and
+  /// the matching citizen if one exists (see the migration
+  /// database_rules_and_indexes).
+  @@unique([eventId, citizenId], map: "EventParticipant_active_citizen_key", where: { cancelledAt: null })
+  @@unique([eventId, discordUserId], map: "EventParticipant_active_discordUser_key", where: { cancelledAt: null })
   @@index([citizenId])
   @@index([discordUserId])
 }
@@ -289,7 +287,6 @@ model EventPosition {
   name             String
   description      String?
   requiredVariants EventPositionRequiredVariant[]
-  requiredRoles    Role[]
   applications     EventPositionApplication[]     @relation("applications")
   citizenId        String?
   citizen          Citizen?                       @relation("citizen", fields: [citizenId], references: [id], onDelete: SetNull)
@@ -308,6 +305,7 @@ model EventPosition {
 
   @@index([eventId])
   @@index([templateId])
+  @@index([parentPositionId])
 }
 
 model EventPositionRequiredVariant {
@@ -316,7 +314,9 @@ model EventPositionRequiredVariant {
   position   EventPosition @relation(fields: [positionId], references: [id], onDelete: Cascade)
   variantId  String
   variant    Variant       @relation(fields: [variantId], references: [id], onDelete: Cascade)
-  order      Int           @default(99999)
+  order      Int
+
+  @@unique([positionId, variantId])
 }
 
 model EventPositionApplication {

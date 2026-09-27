@@ -6,5 +6,4 @@ model ChangelogEntrySeen {
   key       String
 
   @@unique([citizenId, key])
-  @@index([citizenId])
 }

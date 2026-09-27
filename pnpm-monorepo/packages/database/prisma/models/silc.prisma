@@ -29,7 +29,8 @@ model SilcTransaction {
 
   @@unique([receiverId, salaryRoleId, salaryDate], map: "SilcTransaction_salary_key", where: { deletedAt: null, salaryDate: { not: null } })
   @@unique([receiverId, profitDistributionCycleId], map: "SilcTransaction_profitDistributionCycle_key", where: { deletedAt: null, profitDistributionCycleId: { not: null } })
-  @@index([receiverId])
+  @@index([receiverId, createdAt])
+  @@index([createdAt])
 }
 
 model SilcSetting {

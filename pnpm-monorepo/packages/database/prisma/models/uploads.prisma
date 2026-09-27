@@ -26,4 +26,6 @@ model Upload {
   wikiPages           WikiPage[]       @relation("attachments")
   wikiPageIcons       WikiPage[]       @relation("icon")
   wikiReports         WikiPageReport[]
+
+  @@index([createdAt])
 }
