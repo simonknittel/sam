@@ -1,4 +1,3 @@
-import { prisma } from "@/db";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
@@ -8,6 +7,16 @@ import { ConfirmationStatus } from "@sam-monorepo/database/client";
 import { NextResponse } from "next/server";
 import * as z from "zod";
 
+type Params = Promise<{
+  organizationId: string;
+  citizenId: string;
+}>;
+
+const paramsSchema = z.object({
+  organizationId: z.cuid(),
+  citizenId: z.cuid(),
+});
+
 const bodySchema = z.object({
   id: z.cuid(),
   confirmed: z.enum([
@@ -16,7 +25,7 @@ const bodySchema = z.object({
   ]),
 });
 
-export async function PATCH(request: Request) {
+export async function PATCH(request: Request, props: { params: Params }) {
   try {
     /**
      * Authenticate and authorize the request
@@ -32,48 +41,53 @@ export async function PATCH(request: Request) {
     /**
      * Validate the request
      */
+    const paramsData = paramsSchema.parse(await props.params);
     const body: unknown = await request.json();
     const data = bodySchema.parse(body);
-
-    const membership =
-      await prisma.organizationMembershipHistoryEntry.findUnique({
-        where: {
-          id: data.id,
-        },
-        select: {
-          id: true,
-          citizenId: true,
-        },
-      });
-    if (!membership) throw new Error("Not found");
 
     /**
      * Set the new confirmation status. The replay adds or removes the active
      * membership.
      */
-    await changeMembershipHistory(membership.citizenId, (transaction) =>
-      transaction.organizationMembershipHistoryEntry.update({
-        where: {
-          id: membership.id,
-        },
-        data: {
-          confirmed: data.confirmed,
-          confirmedAt: new Date(),
-          confirmedBy: {
-            connect: {
-              id: entityId,
-            },
+    await changeMembershipHistory(paramsData.citizenId, async (transaction) => {
+      const entry =
+        await transaction.organizationMembershipHistoryEntry.findUnique({
+          where: {
+            id: data.id,
+            organizationId: paramsData.organizationId,
+            citizenId: paramsData.citizenId,
           },
-        },
-      }),
-    );
+          select: {
+            id: true,
+          },
+        });
+      if (!entry) throw new Error("Not found");
+
+      /**
+       * Only an entry without a confirmation changes. Thus a second
+       * confirmation changes nothing and writes no second audit event.
+       */
+      const { count } =
+        await transaction.organizationMembershipHistoryEntry.updateMany({
+          where: {
+            id: entry.id,
+            confirmedAt: null,
+          },
+          data: {
+            confirmed: data.confirmed,
+            confirmedAt: new Date(),
+            confirmedById: entityId,
+          },
+        });
+      if (count === 0) throw new Error("Duplicate");
+    });
 
     await createAuditEvents([
       {
         type: AuditEventType.ORGANIZATION_MEMBERSHIP_CONFIRMED,
         data: {
-          historyEntryId: membership.id,
-          citizenId: membership.citizenId,
+          historyEntryId: data.id,
+          citizenId: paramsData.citizenId,
           confirmed: data.confirmed,
         },
         createdById: authentication.session.user.id,
