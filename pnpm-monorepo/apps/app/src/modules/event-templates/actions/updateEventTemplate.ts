@@ -98,7 +98,8 @@ export const updateEventTemplate = createAuthenticatedAction(
       });
       const isOwnImageUpload =
         coverImage !== null &&
-        coverImage.createdById === authentication.session.user.id &&
+        citizenId !== null &&
+        coverImage.createdById === citizenId &&
         coverImage.mimeType.startsWith("image/");
       if (!isOwnImageUpload)
         return { error: "Ungültiges Titelbild", requestPayload: formData };

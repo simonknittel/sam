@@ -1,3 +1,4 @@
+import { getCitizenDisplayName } from "@/modules/citizen/utils/citizenDisplayName";
 import { TRow, TableRowAlignment } from "@/modules/common/components/Table";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
@@ -23,7 +24,7 @@ interface Props {
 export const UploadRow = ({ upload, canManage }: Props) => {
   const fileName = decodeUploadFileName(upload.fileName);
   const author = upload.createdBy
-    ? (upload.createdBy.name ?? upload.createdBy.id)
+    ? getCitizenDisplayName(upload.createdBy)
     : UNKNOWN;
   const usages = getUploadUsages(upload);
 

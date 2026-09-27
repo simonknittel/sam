@@ -2,7 +2,9 @@ import { expectAuditEvents } from "../fixtures/audit";
 import {
   createAppEvent,
   createCitizen,
+  createParticipant,
   createVariant,
+  EventSource,
   futureEvent,
   LINEUP_PERMISSIONS,
 } from "../fixtures/factories";
@@ -346,4 +348,118 @@ test("positions are reordered by dragging and copied into another lineup", async
     "EVENT_LINEUP_ORDER_CHANGED",
     "EVENT_POSITION_COPIED",
   ]);
+});
+
+/**
+ * The ships on one page of the fleet list. The requirement check read only
+ * the first page before.
+ */
+const FLEET_PAGE_SIZE = 100;
+
+test("the requirement check finds a ship after the first page of the fleet, but no deleted ship", async ({
+  page,
+  prisma,
+  signIn,
+  switchUser,
+}) => {
+  const organizer = await createCitizen(prisma, {
+    handle: "posten-leiter",
+    permissionStrings: LINEUP_PERMISSIONS,
+  });
+  const applicant = await createCitizen(prisma, {
+    handle: "posten-bewerber",
+    permissionStrings: LINEUP_PERMISSIONS,
+  });
+  const { variant: otherVariant } = await createVariant(prisma, {
+    manufacturerName: "Anvil Aerospace",
+    seriesName: "Arrow",
+    variantName: "Arrow",
+  });
+  const { variant: requiredVariant } = await createVariant(prisma, {
+    manufacturerName: "Aegis Dynamics",
+    seriesName: "Retaliator",
+    variantName: "Retaliator Bomber",
+  });
+  // The fleet list sorts by the variant name, thus the Arrows come first
+  await prisma.ship.createMany({
+    data: Array.from({ length: FLEET_PAGE_SIZE }, () => ({
+      ownerId: applicant.entity.id,
+      variantId: otherVariant.id,
+    })),
+  });
+  const requiredShip = await prisma.ship.create({
+    data: {
+      ownerId: applicant.entity.id,
+      variantId: requiredVariant.id,
+      deletedAt: new Date(),
+    },
+  });
+  const event = await createAppEvent(prisma, {
+    name: "Operation Voraussetzung",
+    createdById: organizer.entity.id,
+    lineupEnabled: true,
+    ...futureEvent(),
+  });
+  await createParticipant(prisma, {
+    eventId: event.id,
+    citizen: applicant,
+    source: EventSource.APP,
+  });
+  await prisma.eventPosition.create({
+    data: {
+      eventId: event.id,
+      name: "Bomberpilot",
+      requiredVariants: {
+        create: { variantId: requiredVariant.id, order: 0 },
+      },
+    },
+  });
+
+  const applyButton = page.getByRole("button", { name: "Interesse anmelden" });
+  const unmetRequirementHint = page
+    .getByText("Du erfüllst nicht die Voraussetzungen für diesen Posten.")
+    .first();
+  const participantOption = (optionGroupLabel: string) =>
+    page
+      .getByRole("combobox", { name: "Citizen für Bomberpilot" })
+      .locator(`optgroup[label="${optionGroupLabel}"]`)
+      .locator("option", { hasText: "posten-bewerber" });
+
+  /**
+   * A deleted ship does not meet the requirement. The hint opens on focus,
+   * which React renders at once, thus the later check without a hint is
+   * sure.
+   */
+  await signIn(applicant.user);
+  await page.goto(`/app/events/${event.id}/lineup`);
+  await clickUntilVisible(page.getByTitle("Details öffnen"), applyButton);
+  await applyButton.focus();
+  await expect(unmetRequirementHint).toBeVisible();
+
+  await switchUser(organizer.user);
+  await page.goto(`/app/events/${event.id}/lineup`);
+  await expect(
+    participantOption("Alle Teilnehmer - Voraussetzungen nicht erfüllt"),
+  ).toHaveCount(1, { timeout: ACTION_FEEDBACK_TIMEOUT });
+
+  // The ship after the first page of the fleet meets the requirement
+  await prisma.ship.update({
+    where: { id: requiredShip.id },
+    data: { deletedAt: null },
+  });
+
+  await page.goto(`/app/events/${event.id}/lineup`);
+  await expect(
+    participantOption("Alle Teilnehmer - Voraussetzungen erfüllt"),
+  ).toHaveCount(1, { timeout: ACTION_FEEDBACK_TIMEOUT });
+
+  /**
+   * The lineup keeps the open positions in the local storage of the
+   * browser, which the switch of the user keeps
+   */
+  await switchUser(applicant.user);
+  await page.goto(`/app/events/${event.id}/lineup`);
+  await expect(applyButton).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await applyButton.focus();
+  await expect(unmetRequirementHint).toHaveCount(0);
 });

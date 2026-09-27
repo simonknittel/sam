@@ -25,9 +25,10 @@ const PRESIGNED_GET_EXPIRY_SECONDS = 5 * 60;
  * see a page containing the upload — via a redirect to a short-lived
  * presigned URL.
  *
- * Uploads can be linked to multiple pages (Upload.wikiPages, e.g. after a
- * page duplication or a cross-page copy-paste); any readable linked page
- * grants the download.
+ * Uploads can be linked to multiple pages (Upload.wikiPageLinks, e.g. after
+ * a page duplication or a cross-page copy-paste); any readable linked page
+ * grants the download. A link of each kind counts, as with the former link
+ * table, which also held the images.
  */
 export async function GET(_request: Request, props: { params: Params }) {
   try {
@@ -41,7 +42,7 @@ export async function GET(_request: Request, props: { params: Params }) {
         id: true,
         fileName: true,
         mimeType: true,
-        wikiPages: { select: { id: true } },
+        wikiPageLinks: { select: { pageId: true }, distinct: ["pageId"] },
       },
     });
 
@@ -58,13 +59,13 @@ export async function GET(_request: Request, props: { params: Params }) {
      * rarely link more than one page.
      */
     let allowed = false;
-    for (const linked of upload.wikiPages) {
-      const scoped = await getWikiPageScopedContext(linked.id);
+    for (const { pageId } of upload.wikiPageLinks) {
+      const scoped = await getWikiPageScopedContext(pageId);
       if (
         scoped &&
         getAccessibleWikiPage<WikiSharedContextPage>(
           scoped.context,
-          linked.id,
+          pageId,
           "read",
         ) !== null
       ) {

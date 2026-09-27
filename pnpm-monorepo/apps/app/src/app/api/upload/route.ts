@@ -53,6 +53,9 @@ export async function POST(request: Request) {
       "/api/upload",
       "POST",
     );
+    /** The author of an upload is a citizen */
+    if (!authentication.session.entity)
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     /**
      * Validate the request body
@@ -70,7 +73,7 @@ export async function POST(request: Request) {
         size: data.size,
         createdBy: {
           connect: {
-            id: authentication.session.user.id,
+            id: authentication.session.entity.id,
           },
         },
       },

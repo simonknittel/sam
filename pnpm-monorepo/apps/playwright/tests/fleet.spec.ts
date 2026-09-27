@@ -210,6 +210,49 @@ test("my ships can be added, renamed and deleted with consistent org counts", as
   }
 });
 
+test("the ship count of a variant ignores deleted ships", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const viewer = await createCitizen(prisma, {
+    handle: "flotten-beobachter",
+    permissionStrings: ["orgFleet;read"],
+  });
+  const owner = await createCitizen(prisma, { handle: "schiffs-besitzer" });
+  const { variant } = await createVariant(prisma, {
+    manufacturerName: "Roberts Space Industries",
+    seriesName: "Polaris",
+    variantName: "Polaris",
+    status: VariantStatus.FLIGHT_READY,
+  });
+  await prisma.ship.createMany({
+    data: [
+      { ownerId: owner.entity.id, variantId: variant.id },
+      { ownerId: owner.entity.id, variantId: variant.id },
+      {
+        ownerId: owner.entity.id,
+        variantId: variant.id,
+        deletedAt: new Date(),
+      },
+    ],
+  });
+
+  await signIn(viewer.user);
+  await page.goto(`/app/fleet/variant/${variant.id}`);
+
+  /**
+   * The tile shows random digits before it shows the number. Thus a "2" can
+   * come from the animation, and only the absence of "3" (the count with the
+   * deleted ship) is a sure check.
+   */
+  const shipCountTile = statisticTile(page, "Einzelschiffe");
+  await expect(shipCountTile).toContainText("2", {
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+  await expect(shipCountTile).not.toContainText("3");
+});
+
 test("a variant tag records the creating citizen as its author", async ({
   page,
   prisma,

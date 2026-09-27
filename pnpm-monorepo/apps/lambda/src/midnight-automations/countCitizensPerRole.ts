@@ -1,21 +1,34 @@
 import { prisma } from "@sam-monorepo/database";
-import { ACTIVE_CITIZEN_WHERE, AuditEventType } from "@sam-monorepo/domain";
+import {
+  ACTIVE_CITIZEN_WHERE,
+  AuditEventType,
+  getLocalDate,
+  ORGANIZATION_TIMEZONE,
+  toDateColumnValue,
+} from "@sam-monorepo/domain";
 import { createAuditEvents } from "../common/audit";
 import { log } from "../common/logger";
 import { captureAsyncFunc } from "../common/xray";
 
 export const countCitizensPerRole = async () => {
   await captureAsyncFunc("countCitizensPerRole", async () => {
+    /**
+     * The job runs at midnight and counts the day that just ended. Day 0 of
+     * a month is the last day of the month before, see `toDateColumnValue()`.
+     */
+    const today = getLocalDate(new Date(), ORGANIZATION_TIMEZONE);
+    const countedDay = toDateColumnValue({ ...today, day: today.day - 1 });
+
     const [allRoles, roleCounts] = await captureAsyncFunc(
       "fetch roles and counts",
       () =>
-        prisma.$transaction(async (tx) => {
-          const roles = await tx.role.findMany({
+        prisma.$transaction(async (transaction) => {
+          const roles = await transaction.role.findMany({
             select: {
               id: true,
             },
           });
-          const counts = await tx.roleAssignment.groupBy({
+          const counts = await transaction.roleAssignment.groupBy({
             by: ["roleId"],
             where: { citizen: ACTIVE_CITIZEN_WHERE },
             _count: {
@@ -27,17 +40,28 @@ export const countCitizensPerRole = async () => {
     );
 
     const roleCountMap = new Map(
-      roleCounts.map((rc) => [rc.roleId, rc._count.citizenId]),
+      roleCounts.map((roleCount) => [
+        roleCount.roleId,
+        roleCount._count.citizenId,
+      ]),
     );
 
     const data = allRoles.map((role) => ({
       roleId: role.id,
+      day: countedDay,
       count: roleCountMap.get(role.id) ?? 0,
     }));
 
-    await captureAsyncFunc("save role citizen counts", () =>
+    /**
+     * A run that repeats in the same night (for example after an error in a
+     * later job) keeps the counts of the first run, see
+     * `RoleCitizenCount_roleId_day_key`. The first run is the nearest to the
+     * end of the counted day.
+     */
+    const created = await captureAsyncFunc("save role citizen counts", () =>
       prisma.roleCitizenCount.createMany({
         data,
+        skipDuplicates: true,
       }),
     );
 
@@ -48,6 +72,6 @@ export const countCitizensPerRole = async () => {
       },
     ]);
 
-    log.info("Saved citizens per role statistics", { count: data.length });
+    log.info("Saved citizens per role statistics", { count: created.count });
   });
 };

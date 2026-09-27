@@ -2,10 +2,14 @@ import { Server, type Document } from "@hocuspocus/server";
 import { prisma } from "@sam-monorepo/database";
 import { WikiPageSnapshotKind } from "@sam-monorepo/database/client";
 import {
+  createWikiPageSnapshotUploadLinks,
+  replaceWikiPageUploadLinks,
+} from "@sam-monorepo/domain";
+import {
   WIKI_EDITOR_FRAGMENT,
   WikiSaveState,
-  collectWikiAttachmentUploadIds,
   collectWikiMentionedCitizenIds,
+  collectWikiUploadReferences,
   extractWikiPageText,
   getWikiEditorSchema,
   parseWikiCollabReplaceTokenPayload,
@@ -80,6 +84,12 @@ const AUTO_SNAPSHOT_MIN_INTERVAL_MS = 5 * 60 * 1000;
 /** AUTO snapshots kept per page (MANUAL ones are kept forever) */
 const AUTO_SNAPSHOT_RETENTION = 50;
 
+/**
+ * The store writes the whole Yjs document in its transaction. The default
+ * of 5 seconds could fail the store of a large document on a slow database.
+ */
+const STORE_TRANSACTION_TIMEOUT_MS = 30_000;
+
 /** Generous cap over the app's 2M-character content limit */
 const REPLACE_MAX_BODY_BYTES = 4 * 1024 * 1024;
 
@@ -150,12 +160,17 @@ const maybeCreateAutoSnapshot = async (pageId: string) => {
       return;
   }
 
-  await prisma.wikiPageSnapshot.create({
-    data: {
-      pageId,
-      kind: WikiPageSnapshotKind.AUTO,
-      content: page.content,
-    },
+  const content = page.content;
+  await prisma.$transaction(async (transaction) => {
+    const snapshot = await transaction.wikiPageSnapshot.create({
+      data: { pageId, kind: WikiPageSnapshotKind.AUTO, content },
+      select: { id: true },
+    });
+    await createWikiPageSnapshotUploadLinks(
+      transaction,
+      snapshot.id,
+      collectWikiUploadReferences(content),
+    );
   });
 
   const excessSnapshots = await prisma.wikiPageSnapshot.findMany({
@@ -168,47 +183,6 @@ const maybeCreateAutoSnapshot = async (pageId: string) => {
     await prisma.wikiPageSnapshot.deleteMany({
       where: { id: { in: excessSnapshots.map((snapshot) => snapshot.id) } },
     });
-};
-
-/**
- * Connects the page to every attachment upload referenced in the persisted
- * content that isn't linked yet — e.g. attachments copy-pasted from another
- * page. Connect-only: stale links are dropped by the nightly upload
- * cleanup against the persisted content, so an unsaved editing session
- * can't cost an upload its links.
- *
- * Deliberately not gated by the per-page uploadability settings: those
- * gate NEW uploads (enforced by the app's assign route), while this
- * reconciles references to already-uploaded files, which any editor may
- * move or copy between pages.
- */
-const syncUploadLinks = async (pageId: string, content: unknown) => {
-  const uploadIds = collectWikiAttachmentUploadIds(content);
-  if (uploadIds.length === 0) return;
-
-  const page = await prisma.wikiPage.findUnique({
-    where: { id: pageId },
-    select: { attachments: { select: { id: true } } },
-  });
-  if (!page) return;
-
-  const linked = new Set(page.attachments.map((upload) => upload.id));
-  const missingIds = uploadIds.filter((uploadId) => !linked.has(uploadId));
-  if (missingIds.length === 0) return;
-
-  const existing = await prisma.upload.findMany({
-    where: { id: { in: missingIds } },
-    select: { id: true },
-  });
-  if (existing.length === 0) return;
-
-  await prisma.wikiPage.update({
-    where: { id: pageId },
-    data: {
-      attachments: { connect: existing.map(({ id }) => ({ id })) },
-    },
-    select: { id: true },
-  });
 };
 
 /**
@@ -522,19 +496,39 @@ const server = new Server<ConnectionContext>({
 
     try {
       /**
-       * `select` so Postgres does not echo the ydoc, content and searchText
-       * that were just written back on every debounced store.
+       * The upload links follow the content in the same transaction: the
+       * nightly upload cleanup and the permission check of attachment
+       * downloads read them. They are not gated by the upload settings of
+       * the page: these settings gate new uploads (the assign route of the
+       * app), but each editor may move or copy an uploaded file between
+       * pages.
        */
-      await prisma.wikiPage.update({
-        where: { id: data.documentName },
-        data: {
-          ydoc,
-          content,
-          searchText: extractWikiPageText(content).slice(0, 200_000),
-          ...(lastEditorEntityId ? { updatedById: lastEditorEntityId } : {}),
+      await prisma.$transaction(
+        async (transaction) => {
+          /**
+           * `select` so Postgres does not echo the ydoc, content and
+           * searchText that were just written back on every debounced store.
+           */
+          await transaction.wikiPage.update({
+            where: { id: data.documentName },
+            data: {
+              ydoc,
+              content,
+              searchText: extractWikiPageText(content).slice(0, 200_000),
+              ...(lastEditorEntityId
+                ? { updatedById: lastEditorEntityId }
+                : {}),
+            },
+            select: { id: true },
+          });
+          await replaceWikiPageUploadLinks(
+            transaction,
+            data.documentName,
+            collectWikiUploadReferences(content),
+          );
         },
-        select: { id: true },
-      });
+        { timeout: STORE_TRANSACTION_TIMEOUT_MS },
+      );
     } catch (error) {
       /**
        * The changes are still only in memory — back to dirty (Hocuspocus
@@ -545,14 +539,8 @@ const server = new Server<ConnectionContext>({
     }
 
     /**
-     * Never lets a failed link sync block the store itself.
+     * Never lets a failed mention sync block the store itself.
      */
-    try {
-      await syncUploadLinks(data.documentName, content);
-    } catch (error) {
-      console.error("[collab] Upload link sync failed", error);
-    }
-
     try {
       await syncCitizenMentionLinks(
         data.documentName,

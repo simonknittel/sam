@@ -7,10 +7,12 @@ WORKDIR /monorepo
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/collab/package.json apps/collab/
 COPY packages/database/package.json packages/database/
+COPY packages/domain/package.json packages/domain/
 COPY packages/wiki-editor/package.json packages/wiki-editor/
 RUN pnpm install --frozen-lockfile --filter "@sam-monorepo/collab..." --ignore-scripts
 
 COPY packages/database packages/database
+COPY packages/domain packages/domain
 COPY packages/wiki-editor packages/wiki-editor
 COPY apps/collab apps/collab
 RUN pnpm --filter "@sam-monorepo/collab..." run build

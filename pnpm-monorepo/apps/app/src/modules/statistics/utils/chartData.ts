@@ -64,6 +64,11 @@ interface ChartOptions {
 const DEFAULT_DAYS = 365;
 const MIN_AXIS_DATE = startOfDay(new Date("2025-12-02"));
 
+/**
+ * The chart day of a moment in Europe/Berlin. The value of a `@db.Date`
+ * column (midnight UTC) gets the key of its own day, because Europe/Berlin
+ * is always ahead of UTC.
+ */
 export const formatDateKey = (date: Date) =>
   formatInTimeZone(date, "Europe/Berlin", "yyyy-MM-dd");
 

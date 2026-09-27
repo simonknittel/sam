@@ -12,7 +12,8 @@ const emptyUpload: UploadUsageSource = {
   eventCovers: [],
   eventTemplateCovers: [],
   wikiPageIcons: [],
-  wikiPages: [],
+  wikiPageLinks: [],
+  wikiPageSnapshotLinks: [],
 };
 
 describe("get upload usages", () => {
@@ -73,20 +74,24 @@ describe("get upload usages", () => {
   test("lists every wiki page an upload is embedded in", () => {
     const usages = getUploadUsages({
       ...emptyUpload,
-      wikiPages: [
+      wikiPageLinks: [
         {
-          id: "page-1",
-          title: "Erste Seite",
-          slug: "erste-seite",
-          eventId: null,
-          templateId: null,
+          page: {
+            id: "page-1",
+            title: "Erste Seite",
+            slug: "erste-seite",
+            eventId: null,
+            templateId: null,
+          },
         },
         {
-          id: "page-2",
-          title: "Zweite Seite",
-          slug: "zweite-seite",
-          eventId: null,
-          templateId: null,
+          page: {
+            id: "page-2",
+            title: "Zweite Seite",
+            slug: "zweite-seite",
+            eventId: null,
+            templateId: null,
+          },
         },
       ],
     });
@@ -129,7 +134,7 @@ describe("get upload usages", () => {
     const usages = getUploadUsages({
       ...emptyUpload,
       wikiPageIcons: [page],
-      wikiPages: [page],
+      wikiPageLinks: [{ page }],
     });
 
     expect(usages.map((usage) => usage.type)).toEqual([
@@ -137,5 +142,36 @@ describe("get upload usages", () => {
       UploadUsageType.WikiPageAttachment,
     ]);
     expect(new Set(usages.map((usage) => usage.key)).size).toBe(2);
+  });
+
+  /**
+   * A snapshot is a restore point: the cleanup keeps its uploads, thus the
+   * upload manager must not show them as unused.
+   */
+  test("a wiki snapshot counts as a usage, one time for each page", () => {
+    const eventPage = {
+      id: "page-1",
+      title: "BRIEFING",
+      slug: "briefing",
+      eventId: "event-1",
+      templateId: null,
+    };
+
+    const usages = getUploadUsages({
+      ...emptyUpload,
+      wikiPageSnapshotLinks: [
+        { snapshot: { page: eventPage } },
+        { snapshot: { page: eventPage } },
+      ],
+    });
+
+    expect(usages).toEqual([
+      {
+        type: UploadUsageType.WikiPageSnapshot,
+        key: "wikiPageSnapshot:page-1",
+        label: "BRIEFING",
+        href: "/app/events/event-1/briefing/page-1/snapshots",
+      },
+    ]);
   });
 });

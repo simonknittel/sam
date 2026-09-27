@@ -1,5 +1,8 @@
 import type { Locator, Page } from "@playwright/test";
-import type { PrismaClient } from "@sam-monorepo/database/client";
+import {
+  ConfirmationStatus,
+  type PrismaClient,
+} from "@sam-monorepo/database/client";
 import { createCitizen } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
@@ -169,6 +172,51 @@ test("notes respect their classification level", async ({
   await expect(page.getByRole("heading", { name: "zielperson" })).toBeVisible();
   await expect(page.getByText(noteContent)).toHaveCount(0);
   await expect(page.getByRole("tab", { name: "Beobachtung" })).toHaveCount(0);
+});
+
+test("an organization mention in a note resolves without a citizen mention", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const noteType = await prisma.noteType.create({
+    data: { name: "Beobachtung" },
+  });
+  const classificationLevel = await prisma.classificationLevel.create({
+    data: { name: "Geheim" },
+  });
+  const reader = await createCitizen(prisma, {
+    handle: "notiz-leser",
+    permissionStrings: [
+      "citizen;read",
+      `note;read;noteTypeId=${noteType.id};classificationLevelId=${classificationLevel.id}`,
+    ],
+  });
+  const target = await createCitizen(prisma, { handle: "zielperson" });
+  const organization = await prisma.organization.create({
+    data: { name: "Testorganisation", spectrumId: "T3STORG" },
+  });
+  await prisma.citizenLog.create({
+    data: {
+      citizenId: target.entity.id,
+      type: "note",
+      content: "Fliegt für @org:T3STORG.",
+      noteTypeId: noteType.id,
+      classificationLevelId: classificationLevel.id,
+      confirmed: ConfirmationStatus.CONFIRMED,
+      confirmedAt: new Date(),
+    },
+  });
+
+  await signIn(reader.user);
+  await page.goto(`/app/spynet/citizen/${target.entity.id}/notes`);
+
+  await expect(
+    page.getByRole("link", { name: "Testorganisation" }),
+  ).toHaveAttribute("href", `/app/spynet/organization/${organization.id}`, {
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+  await expect(page.getByText("@org:T3STORG")).toHaveCount(0);
 });
 
 interface SettingsRecordScenario {

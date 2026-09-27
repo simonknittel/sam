@@ -31,7 +31,7 @@ test("a reader reports a page and its attachment, an admin resolves both", async
     visibility: WikiPageVisibility.PUBLIC,
     content: wikiDocument(wikiParagraph("Steht so nicht mehr im Handbuch.")),
   });
-  const attachment = await createUpload(prisma, reader.user, {
+  const attachment = await createUpload(prisma, reader.entity, {
     fileName: "Anhang.pdf",
     mimeType: "application/pdf",
     wikiPageId: wikiPage.id,

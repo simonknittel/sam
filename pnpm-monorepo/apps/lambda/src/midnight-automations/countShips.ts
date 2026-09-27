@@ -2,7 +2,10 @@ import { prisma, type Organization } from "@sam-monorepo/database";
 import {
   ACTIVE_CITIZEN_WHERE,
   AuditEventType,
+  getLocalDate,
   ORG_ID,
+  ORGANIZATION_TIMEZONE,
+  toDateColumnValue,
 } from "@sam-monorepo/domain";
 import { createAuditEvents } from "../common/audit";
 import { log } from "../common/logger";
@@ -60,6 +63,13 @@ const getAllVariants = async () => {
 
 export const countShips = async () => {
   await captureAsyncFunc("countShips", async () => {
+    /**
+     * The job runs at midnight and counts the day that just ended. Day 0 of
+     * a month is the last day of the month before, see `toDateColumnValue()`.
+     */
+    const today = getLocalDate(new Date(), ORGANIZATION_TIMEZONE);
+    const countedDay = toDateColumnValue({ ...today, day: today.day - 1 });
+
     const memberships = await getActiveOrganizationMemberships(ORG_ID);
     const citizenIds = memberships.map((membership) => membership.citizenId);
     if (citizenIds.length === 0) {
@@ -73,17 +83,26 @@ export const countShips = async () => {
     ]);
 
     const variantCountMap = new Map(
-      variantCounts.map((vc) => [vc.variantId, vc._count.id]),
+      variantCounts.map((variantCount) => [
+        variantCount.variantId,
+        variantCount._count.id,
+      ]),
     );
 
     const data = allVariants.map((variant) => ({
       variantId: variant.id,
+      day: countedDay,
       count: variantCountMap.get(variant.id) ?? 0,
     }));
 
-    await captureAsyncFunc("save variant ship counts", () =>
+    /**
+     * A run that repeats in the same night keeps the counts of the first run,
+     * see `countCitizensPerRole()`.
+     */
+    const created = await captureAsyncFunc("save variant ship counts", () =>
       prisma.variantShipCount.createMany({
         data,
+        skipDuplicates: true,
       }),
     );
 
@@ -94,6 +113,6 @@ export const countShips = async () => {
       },
     ]);
 
-    log.info("Saved ships per variant statistics", { count: data.length });
+    log.info("Saved ships per variant statistics", { count: created.count });
   });
 };

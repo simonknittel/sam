@@ -1,4 +1,4 @@
-import type { Prisma, Ship } from "@sam-monorepo/database/client";
+import type { Event, Prisma, Ship } from "@sam-monorepo/database/client";
 
 /*
  * The relation shapes the event detail query and the event list query share,
@@ -71,10 +71,30 @@ export type EventParticipantRow = Prisma.EventParticipantGetPayload<{
 }>;
 
 /**
+ * The ships that the requirement check of the lineup compares with the
+ * required variants: the ships that are not deleted, of a variant that a
+ * position of the event requires. The check of the signed-in citizen and the
+ * check of the participants use the same rule, thus they cannot disagree.
+ */
+export const buildRequiredVariantShipWhere = (eventId: Event["id"]) =>
+  ({
+    deletedAt: null,
+    variant: {
+      eventPositionRequiredVariants: {
+        some: {
+          position: {
+            eventId,
+          },
+        },
+      },
+    },
+  }) satisfies Prisma.ShipWhereInput;
+
+/**
  * One event participant with the ships the lineup matches against a
- * position's required variants
+ * position's required variants, see `buildRequiredVariantShipWhere()`
  */
 export interface EventCitizenWithShips {
   readonly citizen: EventCitizenReference;
-  readonly ships: Pick<Ship, "id" | "variantId">[];
+  readonly ships: Pick<Ship, "variantId">[];
 }

@@ -173,11 +173,7 @@ export const createEventTemplateFromEvent = createAuthenticatedAction(
          * never touches the other.
          */
         const coverImage = sourceCover
-          ? await copyUpload(
-              transaction,
-              sourceCover,
-              authentication.session.user.id,
-            )
+          ? await copyUpload(transaction, sourceCover, citizenId)
           : null;
 
         const created = await transaction.eventTemplate.create({

@@ -1,5 +1,11 @@
 import { getEventTemplatePath } from "@/modules/event-templates/utils/eventTemplateConstraints";
-import { getWikiPageRouteHref } from "@/modules/wiki/utils/wikiPageHref";
+import { getWikiPageContainer } from "@/modules/events/utils/eventContainer";
+import {
+  buildWikiPageSnapshotsHref,
+  createEventWikiHrefMode,
+  getWikiPageRouteHref,
+  GLOBAL_WIKI_HREF_MODE,
+} from "@/modules/wiki/utils/wikiPageHref";
 
 /**
  * Where an upload is referenced. `Unused` is not a usage but its absence —
@@ -8,7 +14,7 @@ import { getWikiPageRouteHref } from "@/modules/wiki/utils/wikiPageHref";
  *
  * The real kinds are exactly the usage relations of the `Upload` model,
  * and exactly the relations the nightly cleanup lambda checks before
- * deleting an upload (see `deleteUnusedUploads`). `wikiReports` is
+ * deleting an upload (see `UPLOAD_USAGE_RELATIONS`). `wikiReports` is
  * deliberately not among them: report evidence is meant to expire with the
  * upload. Adding a relation to the model means adding it in both places.
  */
@@ -20,6 +26,7 @@ export enum UploadUsageType {
   EventTemplateCover = "eventTemplateCover",
   WikiPageIcon = "wikiPageIcon",
   WikiPageAttachment = "wikiPageAttachment",
+  WikiPageSnapshot = "wikiPageSnapshot",
   Unused = "unused",
 }
 
@@ -31,6 +38,7 @@ export const UPLOAD_USAGE_TYPE_LABELS: Record<UploadUsageType, string> = {
   [UploadUsageType.EventTemplateCover]: "Vorlagen-Titelbild",
   [UploadUsageType.WikiPageIcon]: "Wiki-Icon",
   [UploadUsageType.WikiPageAttachment]: "Wiki-Bild/-Anhang",
+  [UploadUsageType.WikiPageSnapshot]: "Wiki-Snapshot",
   [UploadUsageType.Unused]: "Unbenutzt",
 };
 
@@ -65,8 +73,35 @@ export interface UploadUsageSource {
   readonly eventCovers: readonly NamedResource[];
   readonly eventTemplateCovers: readonly NamedResource[];
   readonly wikiPageIcons: readonly WikiPageReference[];
-  readonly wikiPages: readonly WikiPageReference[];
+  /** One link for each page, also when the page uses the upload two ways */
+  readonly wikiPageLinks: readonly { readonly page: WikiPageReference }[];
+  readonly wikiPageSnapshotLinks: readonly {
+    readonly snapshot: { readonly page: WikiPageReference };
+  }[];
 }
+
+/**
+ * The snapshots of a page commonly use the same upload many times. The
+ * usage is the page, one time.
+ */
+const getSnapshotPages = (
+  links: UploadUsageSource["wikiPageSnapshotLinks"],
+) => [
+  ...new Map(
+    links.map(({ snapshot }) => [snapshot.page.id, snapshot.page]),
+  ).values(),
+];
+
+const getWikiPageSnapshotsRouteHref = (page: WikiPageReference) => {
+  const container = getWikiPageContainer(page);
+
+  return buildWikiPageSnapshotsHref(
+    container
+      ? createEventWikiHrefMode(container, null)
+      : GLOBAL_WIKI_HREF_MODE,
+    page.id,
+  );
+};
 
 /**
  * Every place an upload is referenced, as links to the pages owning those
@@ -120,10 +155,17 @@ export const getUploadUsages = (upload: UploadUsageSource): UploadUsage[] => [
     href: getWikiPageRouteHref(page),
   })),
 
-  ...upload.wikiPages.map((page) => ({
+  ...upload.wikiPageLinks.map(({ page }) => ({
     type: UploadUsageType.WikiPageAttachment,
     key: `${UploadUsageType.WikiPageAttachment}:${page.id}`,
     label: page.title,
     href: getWikiPageRouteHref(page),
+  })),
+
+  ...getSnapshotPages(upload.wikiPageSnapshotLinks).map((page) => ({
+    type: UploadUsageType.WikiPageSnapshot,
+    key: `${UploadUsageType.WikiPageSnapshot}:${page.id}`,
+    label: page.title,
+    href: getWikiPageSnapshotsRouteHref(page),
   })),
 ];

@@ -43,11 +43,6 @@ interface WikiSearchResults {
 
 const EMPTY_RESULTS: WikiSearchResults = { tags: [], pages: [] };
 
-/**
- * More candidates than results are fetched because the permission filter
- * below may drop some of them.
- */
-const CANDIDATE_LIMIT = 50;
 const RESULT_LIMIT = 20;
 const TAG_RESULT_LIMIT = 5;
 
@@ -79,9 +74,9 @@ interface WikiSearchScopeFilters {
 }
 
 /**
- * Full-text search over one scope's pages and tags. Page candidates come
- * from Postgres FTS; the viewer's resolved permissions trim them down
- * server-side before anything is returned, so invisible pages never leak.
+ * Full-text search over one scope's pages and tags. The query gets the ids
+ * of the pages that the viewer may read and limits there, so invisible pages
+ * never leak and a viewer with narrow access still gets a full result list.
  * Tag results are deliberately not permission-filtered — tag names are
  * shared within their scope, like the autocomplete in getTags — and the
  * tag's list page permission-filters its content itself. Tags match
@@ -118,7 +113,12 @@ const runWikiSearch = async (
    * The tag name is cast to text: the driver adapter does not know the
    * array type of `citext` and returns such an array as one string.
    */
-  const candidates = await prisma.$queryRaw<
+  const readablePageIds = [...context.permissions]
+    .filter(([, permissions]) => permissions.canRead)
+    .map(([pageId]) => pageId);
+  if (readablePageIds.length === 0) return { tags, pages: [] };
+
+  const matches = await prisma.$queryRaw<
     { id: string; snippet: string; matchedTags: string[] }[]
   >`
     SELECT
@@ -135,16 +135,15 @@ const runWikiSearch = async (
     FROM "WikiPage"
     WHERE ${filters.pagesFilter}
       AND "deletedAt" IS NULL
+      AND "id" = ANY(${readablePageIds}::text[])
       AND to_tsvector('german', "title" || ' ' || "tagsText" || ' ' || "searchText") @@ ${tsquery}
     ORDER BY ts_rank(to_tsvector('german', "title" || ' ' || "tagsText" || ' ' || "searchText"), ${tsquery}) DESC
-    LIMIT ${CANDIDATE_LIMIT}
+    LIMIT ${RESULT_LIMIT}
   `;
 
-  const pages = candidates
-    .filter((candidate) => context.permissions.get(candidate.id)?.canRead)
-    .slice(0, RESULT_LIMIT)
-    .map((candidate) => {
-      const page = context.pagesById.get(candidate.id);
+  const pages = matches
+    .map((match) => {
+      const page = context.pagesById.get(match.id);
       if (!page) return null;
 
       return {
@@ -153,8 +152,8 @@ const runWikiSearch = async (
         slug: page.slug,
         iconId: page.iconId,
         breadcrumb: buildVisibleWikiBreadcrumb(context, page),
-        snippet: candidate.snippet,
-        matchedTags: candidate.matchedTags,
+        snippet: match.snippet,
+        matchedTags: match.matchedTags,
       };
     })
     .filter((result) => result !== null);

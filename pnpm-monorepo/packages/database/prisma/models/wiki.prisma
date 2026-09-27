@@ -178,9 +178,8 @@ model WikiPage {
   reports         WikiPageReport[]
   tags            WikiPageTag[]
   citizenMentions WikiPageCitizenMention[]
-  /// Uploads embedded in this page as images or attachments (see
-  /// Upload.wikiPages)
-  attachments     Upload[]                 @relation("attachments")
+  /// Uploads embedded in this page as images or attachments
+  uploads         WikiPageUpload[]
   /// Fleet variants embedding this page's subtree on their detail page (see
   /// Variant.wikiPageId)
   linkedVariants  Variant[]                @relation("variantWikiPage")
@@ -215,19 +214,56 @@ enum WikiPageSnapshotKind {
 }
 
 model WikiPageSnapshot {
-  id          String               @id @default(cuid(2))
+  id          String                   @id @default(cuid(2))
   pageId      String
-  page        WikiPage             @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  page        WikiPage                 @relation(fields: [pageId], references: [id], onDelete: Cascade)
   kind        WikiPageSnapshotKind
   /// Optional name for MANUAL snapshots
   name        String?
   /// Tiptap JSON at snapshot time
   content     Json
-  createdAt   DateTime             @default(now())
+  createdAt   DateTime                 @default(now())
   createdById String?
-  createdBy   Citizen?             @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdBy   Citizen?                 @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
+  uploads     WikiPageSnapshotUpload[]
 
   @@index([pageId, createdAt])
+}
+
+enum WikiPageUploadKind {
+  IMAGE
+  ATTACHMENT
+}
+
+/// An upload that the content of a wiki page uses. The collab server
+/// replaces the links of a page at each store, thus the links follow the
+/// content. The nightly upload cleanup and the permission check of
+/// attachment downloads read these links.
+model WikiPageUpload {
+  id        String             @id @default(cuid(2))
+  pageId    String
+  page      WikiPage           @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  uploadId  String
+  upload    Upload             @relation(fields: [uploadId], references: [id], onDelete: Cascade)
+  kind      WikiPageUploadKind
+  createdAt DateTime           @default(now())
+
+  @@unique([pageId, uploadId, kind])
+  @@index([uploadId])
+}
+
+/// An upload that the content of a wiki snapshot uses. Written with the
+/// snapshot, so that the cleanup keeps the uploads of each restore point.
+model WikiPageSnapshotUpload {
+  id         String           @id @default(cuid(2))
+  snapshotId String
+  snapshot   WikiPageSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+  uploadId   String
+  upload     Upload           @relation(fields: [uploadId], references: [id], onDelete: Cascade)
+  createdAt  DateTime         @default(now())
+
+  @@unique([snapshotId, uploadId])
+  @@index([uploadId])
 }
 
 model WikiPageFavorite {

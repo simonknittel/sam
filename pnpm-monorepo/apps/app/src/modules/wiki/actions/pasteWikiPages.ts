@@ -10,7 +10,6 @@ import {
   wikiContainerColumns,
 } from "@/modules/events/utils/eventContainer";
 import { log } from "@/modules/logging";
-import { WikiPageSnapshotKind } from "@sam-monorepo/database/client";
 import { cookies } from "next/headers";
 import { redirect, unstable_rethrow } from "next/navigation";
 import { serializeError } from "serialize-error";
@@ -29,6 +28,7 @@ import {
   copyWikiPageSubtree,
   type CopiedWikiPage,
 } from "../utils/copyWikiPageSubtree";
+import { createWikiPageSafetySnapshot } from "../utils/createWikiPageSafetySnapshot";
 import { findOrCreateWikiTags } from "../utils/findOrCreateWikiTags";
 import { getAccessibleWikiPage } from "../utils/getAccessibleWikiPage";
 import { replaceWikiPageContent } from "../utils/replaceWikiPageContent";
@@ -163,14 +163,10 @@ export const pasteWikiPages = createAuthenticatedAction(
       /** Placement above guarantees the page exists in the context */
       const targetPage = targetScoped.context.pagesById.get(targetPageId)!;
 
-      const [sourceRow, targetRow, sourceTagAssignments, targetTagAssignments] =
+      const [sourceRow, sourceTagAssignments, targetTagAssignments] =
         await Promise.all([
           prisma.wikiPage.findUniqueOrThrow({
             where: { id: sourcePage.id },
-            select: { content: true, attachments: { select: { id: true } } },
-          }),
-          prisma.wikiPage.findUniqueOrThrow({
-            where: { id: targetPageId },
             select: { content: true },
           }),
           prisma.wikiPageTag.findMany({
@@ -183,17 +179,11 @@ export const pasteWikiPages = createAuthenticatedAction(
           }),
         ]);
 
-      if (targetRow.content) {
-        await prisma.wikiPageSnapshot.create({
-          data: {
-            pageId: targetPageId,
-            kind: WikiPageSnapshotKind.MANUAL,
-            name: "Automatische Sicherung vor Ersetzen",
-            content: targetRow.content,
-            createdById: entity.id,
-          },
-        });
-      }
+      await createWikiPageSafetySnapshot({
+        pageId: targetPageId,
+        name: "Automatische Sicherung vor Ersetzen",
+        createdById: entity.id,
+      });
 
       try {
         await replaceWikiPageContent({
@@ -257,12 +247,6 @@ export const pasteWikiPages = createAuthenticatedAction(
               .map((tag) => tag.name)
               .toSorted((first, second) => first.localeCompare(second))
               .join(" "),
-            attachments:
-              sourceRow.attachments.length > 0
-                ? {
-                    connect: sourceRow.attachments.map(({ id }) => ({ id })),
-                  }
-                : undefined,
             updatedById: entity.id,
           },
         });

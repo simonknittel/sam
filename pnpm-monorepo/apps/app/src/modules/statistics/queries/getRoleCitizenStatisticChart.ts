@@ -1,7 +1,6 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import { subHours } from "date-fns";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
 import { buildChartData, normalizeOptions } from "../utils/chartData";
@@ -21,15 +20,13 @@ export const getRoleCitizenStatisticChart = cache(
 
     const rows = await prisma.roleCitizenCount.findMany({
       where: {
-        // The snapshot of a day is written after that day. Thus each
-        // snapshot of a chart day is younger than the start of the chart.
-        createdAt: {
+        day: {
           gte: options.fromDate,
         },
       },
       select: {
         roleId: true,
-        createdAt: true,
+        day: true,
         count: true,
         role: {
           select: {
@@ -38,17 +35,14 @@ export const getRoleCitizenStatisticChart = cache(
         },
       },
       orderBy: {
-        createdAt: "asc",
+        day: "asc",
       },
     });
 
     const records = rows.map((row) => ({
       id: row.roleId,
       name: row.role.name,
-      // The snapshot is written moments after midnight (Europe/Berlin) and
-      // describes the day that just ended. Stepping back half a day lands
-      // inside that day regardless of DST shifts.
-      createdAt: subHours(row.createdAt, 12),
+      createdAt: row.day,
       count: row.count,
     }));
 

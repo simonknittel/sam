@@ -1,3 +1,4 @@
+import { WikiPageUploadKind } from "@sam-monorepo/database/client";
 import path from "node:path";
 import {
   createAppEvent,
@@ -6,7 +7,9 @@ import {
   createUpload,
   createWikiPage,
   futureEvent,
+  wikiDocument,
   WikiPageVisibility,
+  wikiParagraph,
 } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
@@ -15,6 +18,12 @@ import {
   waitForAppShellHydration,
 } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
+import {
+  enterEditMode,
+  expectPersisted,
+  focusEditor,
+  seedEditablePage,
+} from "../fixtures/wiki-editor";
 import { readStackState, s3BucketName } from "../setup/stack";
 
 const imagePath = path.join(
@@ -40,10 +49,10 @@ const objectUrl = (uploadId: string) => {
  */
 const seedRoleIcon = async (
   prisma: Parameters<typeof createUpload>[0],
-  user: Parameters<typeof createUpload>[1],
+  author: Parameters<typeof createUpload>[1],
   roleId: string,
 ) => {
-  const upload = await createUpload(prisma, user, {
+  const upload = await createUpload(prisma, author, {
     fileName: "upload.png",
     mimeType: "image/png",
   });
@@ -64,7 +73,7 @@ test("a user's own uploads are listed with the place they are used", async ({
     permissionStrings: ["role;manage"],
   });
   const role = await createRole(prisma, { name: "Bildrolle" });
-  const upload = await seedRoleIcon(prisma, citizen.user, role.id);
+  const upload = await seedRoleIcon(prisma, citizen.entity, role.id);
   await signIn(citizen.user);
 
   await page.goto("/app/uploads");
@@ -109,7 +118,7 @@ test("an event cover shows up as a usage of its upload", async ({
     createdById: organizer.entity.id,
     ...futureEvent(),
   });
-  const cover = await createUpload(prisma, organizer.user, {
+  const cover = await createUpload(prisma, organizer.entity, {
     fileName: "Titelbild Pitchfork.png",
     mimeType: "image/png",
     size: 4096,
@@ -141,7 +150,7 @@ test("uploads of other users stay hidden without the permission", async ({
 }) => {
   const citizen = await createCitizen(prisma, { handle: "ohne-einblick" });
   const stranger = await createCitizen(prisma, { handle: "fremder-lader" });
-  await createUpload(prisma, stranger.user, {
+  await createUpload(prisma, stranger.entity, {
     fileName: "Fremdes Dokument.pdf",
     mimeType: "application/pdf",
     size: 2048,
@@ -171,13 +180,13 @@ test("a manager sees every upload with its author and can filter them", async ({
     title: "Fremdseite",
     visibility: WikiPageVisibility.PUBLIC,
   });
-  await createUpload(prisma, stranger.user, {
+  await createUpload(prisma, stranger.entity, {
     fileName: "Fremdes Dokument.pdf",
     mimeType: "application/pdf",
     size: 2048,
     wikiPageId: wikiPage.id,
   });
-  await createUpload(prisma, stranger.user, {
+  await createUpload(prisma, stranger.entity, {
     fileName: "Verwaiste Notiz.txt",
     mimeType: "text/plain",
     size: 64,
@@ -220,7 +229,92 @@ test("a manager sees every upload with its author and can filter them", async ({
   ).toHaveCount(0);
 
   // The author filter keeps only that author's uploads
-  await page.goto(`/app/uploads?createdById=${manager.user.id}`);
+  await page.goto(`/app/uploads?createdById=${manager.entity.id}`);
+  await expect(page.getByText("Keine Uploads für diese Filter.")).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+});
+
+/**
+ * The links of a page follow its stored content, and a snapshot keeps the
+ * uploads of its restore point. The nightly cleanup and the "unused" filter
+ * read the same links, thus the image stays until nothing uses it.
+ */
+test("an image removed from a page stays in use through the snapshot of the old content", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const editor = await createCitizen(prisma, { handle: "bild-entferner" });
+  const image = await createUpload(prisma, editor.entity, {
+    fileName: "Altes Bild.png",
+    mimeType: "image/png",
+  });
+  const wikiPage = await seedEditablePage(prisma, {
+    title: "Bilderseite",
+    content: wikiDocument(wikiParagraph("Einleitung."), {
+      type: "image",
+      attrs: { src: objectUrl(image.id) },
+    }),
+  });
+  /** The link that the assign route writes right after the upload */
+  await prisma.wikiPageUpload.create({
+    data: {
+      pageId: wikiPage.id,
+      uploadId: image.id,
+      kind: WikiPageUploadKind.IMAGE,
+    },
+  });
+  const getPageLinks = () =>
+    prisma.wikiPageUpload.findMany({
+      where: { pageId: wikiPage.id },
+      select: { uploadId: true, kind: true },
+    });
+
+  await signIn(editor.user);
+  await page.goto(`/app/wiki/${wikiPage.id}/${wikiPage.slug}`);
+  await enterEditMode(page);
+  await focusEditor(page);
+
+  // A store that keeps the image keeps its link
+  await page.keyboard.press("End");
+  await page.keyboard.type(" Neu.");
+  await expectPersisted(prisma, wikiPage.id, "searchText").toContain(
+    "Einleitung. Neu.",
+  );
+  expect(await getPageLinks()).toEqual([
+    { uploadId: image.id, kind: WikiPageUploadKind.IMAGE },
+  ]);
+
+  /**
+   * The store writes the content and the links in one transaction, thus
+   * the links agree as soon as the content is stored
+   */
+  await page.keyboard.press("ControlOrMeta+a");
+  await page.keyboard.type("Ohne Bild.");
+  await expectPersisted(prisma, wikiPage.id, "content").not.toContain(image.id);
+  expect(await getPageLinks()).toEqual([]);
+
+  // The automatic snapshot of the content before the first edit has the image
+  expect(
+    await prisma.wikiPageSnapshotUpload.count({
+      where: { uploadId: image.id, snapshot: { pageId: wikiPage.id } },
+    }),
+  ).toBe(1);
+
+  await page.goto("/app/uploads");
+  const row = page.getByRole("row").filter({ hasText: "Altes Bild.png" });
+  await expect(row.getByText("Wiki-Snapshot")).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+  await expect(row.getByRole("link", { name: "Bilderseite" })).toHaveAttribute(
+    "href",
+    `/app/wiki/${wikiPage.id}/snapshots`,
+  );
+  await expect(row.getByText("Wiki-Bild/-Anhang")).toHaveCount(0);
+  await expect(row.getByText("Unbenutzt", { exact: true })).toHaveCount(0);
+
+  await page.goto("/app/uploads?usage=unused");
   await expect(page.getByText("Keine Uploads für diese Filter.")).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
@@ -320,7 +414,7 @@ test("deleting is forbidden without the permission", async ({
     permissionStrings: ["role;manage"],
   });
   const role = await createRole(prisma, { name: "Bildrolle" });
-  const upload = await seedRoleIcon(prisma, citizen.user, role.id);
+  const upload = await seedRoleIcon(prisma, citizen.entity, role.id);
   await signIn(citizen.user);
 
   await page.goto("/app/uploads");

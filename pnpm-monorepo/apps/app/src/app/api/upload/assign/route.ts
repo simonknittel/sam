@@ -16,7 +16,7 @@ import {
   getWikiPageScopedContext,
   isWikiScopeFrozen,
 } from "@/modules/wiki/queries/getWikiPageScopedContext";
-import { EventSource } from "@sam-monorepo/database/client";
+import { EventSource, WikiPageUploadKind } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import * as z from "zod";
@@ -52,7 +52,7 @@ const bodySchema = z.discriminatedUnion("resourceType", [
      */
     z.object({
       resourceType: z.literal("wikiPage"),
-      resourceAttribute: z.literal("wikiPages"),
+      resourceAttribute: z.literal("uploads"),
       resourceId: z.cuid2(),
       uploadId: z.cuid(),
     }),
@@ -75,6 +75,10 @@ export async function PATCH(request: Request) {
       "/api/upload/assign",
       "PATCH",
     );
+    /** The author of an upload is a citizen, see the upload route */
+    const citizenId = authentication.session.entity?.id;
+    if (!citizenId)
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     const body: unknown = await request.json();
     const data = bodySchema.parse(body);
@@ -111,7 +115,7 @@ export async function PATCH(request: Request) {
       )
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       if (upload) {
-        if (upload.createdById !== authentication.session.user.id)
+        if (upload.createdById !== citizenId)
           return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         if (!upload.mimeType.startsWith("image/"))
           return NextResponse.json({ error: "Bad Request" }, { status: 400 });
@@ -171,7 +175,7 @@ export async function PATCH(request: Request) {
       if (!isEventUpdatable(event) || !(await isAllowedToManageEvent(event)))
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       if (upload) {
-        if (upload.createdById !== authentication.session.user.id)
+        if (upload.createdById !== citizenId)
           return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         if (!upload.mimeType.startsWith("image/"))
           return NextResponse.json({ error: "Bad Request" }, { status: 400 });
@@ -219,9 +223,10 @@ export async function PATCH(request: Request) {
        * page (image vs. attachment, derived from the stored mime type like
        * getWikiUploadKind does client-side). The upload must be the current
        * user's own and not linked to another page yet — this route only
-       * covers the initial link right after the upload; further pages get
-       * linked when their persisted content references the upload (see
-       * syncUploadLinks in the collab server).
+       * covers the initial link right after the upload, so that the file
+       * can be downloaded before the editor stores the content. After that
+       * the collab server makes the links of each page agree with its
+       * stored content (see replaceWikiPageUploadLinks).
        */
       const [scoped, upload] = await Promise.all([
         getWikiPageScopedContext(data.resourceId),
@@ -231,7 +236,7 @@ export async function PATCH(request: Request) {
             id: true,
             createdById: true,
             mimeType: true,
-            wikiPages: { select: { id: true } },
+            wikiPageLinks: { select: { pageId: true } },
           },
         }),
       ]);
@@ -242,23 +247,29 @@ export async function PATCH(request: Request) {
       if (!page || page.deletedAt || !upload)
         return NextResponse.json({ error: "Bad Request" }, { status: 400 });
       const permissions = scoped.context.permissions.get(page.id);
-      const canUpload = upload.mimeType.startsWith("image/")
+      const isImage = upload.mimeType.startsWith("image/");
+      const canUpload = isImage
         ? permissions?.canUploadImages
         : permissions?.canUploadAttachments;
       if (
         !canUpload ||
-        upload.createdById !== authentication.session.user.id ||
-        upload.wikiPages.some((linked) => linked.id !== page.id)
+        upload.createdById !== citizenId ||
+        upload.wikiPageLinks.some((link) => link.pageId !== page.id)
       )
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-      await prisma.upload.update({
-        where: { id: upload.id },
-        data: { wikiPages: { connect: { id: page.id } } },
+      await prisma.wikiPageUpload.createMany({
+        data: {
+          pageId: page.id,
+          uploadId: upload.id,
+          kind: isImage
+            ? WikiPageUploadKind.IMAGE
+            : WikiPageUploadKind.ATTACHMENT,
+        },
+        skipDuplicates: true,
       });
 
-      if (upload.mimeType.startsWith("image/"))
-        probeUploadImageDimensions(upload.id);
+      if (isImage) probeUploadImageDimensions(upload.id);
 
       /**
        * No RESOURCE_IMAGE_ASSIGNED event here: the upload itself is audited

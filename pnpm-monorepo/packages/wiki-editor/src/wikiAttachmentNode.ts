@@ -1,6 +1,5 @@
 import { mergeAttributes, Node } from "@tiptap/core";
 import { formatWikiAttachmentSize } from "./formatWikiAttachmentSize.js";
-import { walkWikiContent } from "./walkWikiContent.js";
 import {
   wikiAlignAttribute,
   wikiWidthPxAttribute,
@@ -19,26 +18,6 @@ declare module "@tiptap/core" {
     };
   }
 }
-
-/**
- * Collects the upload ids of all attachment cards in a Tiptap JSON
- * document. Used to keep the page ⇄ upload links in sync with the persisted
- * content (e.g. after an attachment was copy-pasted from another page).
- */
-export const collectWikiAttachmentUploadIds = (content: unknown): string[] => {
-  const uploadIds = new Set<string>();
-
-  walkWikiContent(content, (node) => {
-    if (
-      node.type === "wikiAttachment" &&
-      typeof node.attrs?.uploadId === "string" &&
-      node.attrs.uploadId.length > 0
-    )
-      uploadIds.add(node.attrs.uploadId);
-  });
-
-  return [...uploadIds];
-};
 
 /**
  * A non-image file attachment rendered as a downloadable card. The href

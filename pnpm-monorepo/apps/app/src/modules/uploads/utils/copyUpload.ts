@@ -1,7 +1,7 @@
 import { env } from "@/env";
 import { createS3Client } from "@/modules/common/utils/createS3Client";
 import { CopyObjectCommand } from "@aws-sdk/client-s3";
-import type { Prisma, Upload, User } from "@sam-monorepo/database/client";
+import type { Citizen, Prisma, Upload } from "@sam-monorepo/database/client";
 
 /** Same bound the dimension probe uses for its S3 requests */
 const S3_REQUEST_TIMEOUT_MS = 30_000;
@@ -23,7 +23,7 @@ export const COPYABLE_UPLOAD_SELECT = {
 } as const satisfies Prisma.UploadSelect;
 
 /**
- * Duplicates an upload: a new `Upload` row owned by the acting user plus a
+ * Duplicates an upload: a new `Upload` row owned by the acting citizen plus a
  * copy of the stored object under the new row's id, which is the S3 key.
  * The probed dimensions carry over — the bytes are identical, so re-probing
  * would only cost another round trip.
@@ -41,7 +41,7 @@ export const COPYABLE_UPLOAD_SELECT = {
 export const copyUpload = async (
   transaction: Prisma.TransactionClient,
   source: CopyableUpload,
-  createdById: User["id"],
+  createdById: Citizen["id"],
 ): Promise<Upload> => {
   const copy = await transaction.upload.create({
     data: {
