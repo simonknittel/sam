@@ -1,9 +1,7 @@
 import { prisma } from "@sam-monorepo/database";
 import {
   AuditEventType,
-  getLocalDate,
-  ORGANIZATION_TIMEZONE,
-  toDateColumnValue,
+  getYesterdayDateColumnValue,
 } from "@sam-monorepo/domain";
 import { createAuditEvents } from "../common/audit";
 import { log } from "../common/logger";
@@ -11,27 +9,19 @@ import { captureAsyncFunc } from "../common/xray";
 
 export const countUniqueLogins = async () => {
   await captureAsyncFunc("countUniqueLogins", async () => {
-    // Get the previous day (since this runs at midnight)
     const now = new Date();
-    const previousDay = new Date(now);
-    previousDay.setDate(previousDay.getDate() - 1);
-
-    // Set to start of the previous day (00:00:00)
-    const startOfDay = new Date(previousDay);
-    startOfDay.setHours(0, 0, 0, 0);
-
-    // Set to end of the previous day (23:59:59.999)
-    const endOfDay = new Date(previousDay);
-    endOfDay.setHours(23, 59, 59, 999);
+    const countedDay = getYesterdayDateColumnValue(now);
 
     /**
-     * The counted day as a calendar date. `startOfDay` itself is the local
-     * midnight, which is still the day before in UTC, thus the `@db.Date`
-     * column would store the wrong day.
+     * The first and the last moment of the counted day. The function runs in
+     * the time zone of the organization (`TZ`, see the Terraform module),
+     * thus the local time of a `Date` is the time of the organization.
      */
-    const countedDay = toDateColumnValue(
-      getLocalDate(startOfDay, ORGANIZATION_TIMEZONE),
-    );
+    const startOfDay = new Date(now);
+    startOfDay.setDate(startOfDay.getDate() - 1);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(startOfDay);
+    endOfDay.setHours(23, 59, 59, 999);
 
     const uniqueLoginCount = await captureAsyncFunc("count unique logins", () =>
       prisma.user.count({
@@ -44,20 +34,25 @@ export const countUniqueLogins = async () => {
       }),
     );
 
-    await captureAsyncFunc("save daily login count", () =>
-      prisma.dailyLoginCount.upsert({
-        where: {
-          date: countedDay,
-        },
-        update: {
-          count: uniqueLoginCount,
-        },
-        create: {
-          date: countedDay,
-          count: uniqueLoginCount,
-        },
+    /**
+     * A run that repeats later in the night (for example after an error in a
+     * later job) keeps the count of the first run, see
+     * `DailyLoginCount_date_key`. A user who visits again after midnight gets
+     * a new `lastSeenAt` and is then not in the counted day anymore, thus the
+     * first count is the most correct.
+     */
+    const created = await captureAsyncFunc("save daily login count", () =>
+      prisma.dailyLoginCount.createMany({
+        data: [{ date: countedDay, count: uniqueLoginCount }],
+        skipDuplicates: true,
       }),
     );
+    if (created.count <= 0) {
+      log.info("The unique logins of the previous day are counted already", {
+        date: startOfDay.toISOString(),
+      });
+      return;
+    }
 
     await createAuditEvents([
       {

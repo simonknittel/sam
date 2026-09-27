@@ -2,9 +2,7 @@ import { prisma } from "@sam-monorepo/database";
 import {
   ACTIVE_CITIZEN_WHERE,
   AuditEventType,
-  getLocalDate,
-  ORGANIZATION_TIMEZONE,
-  toDateColumnValue,
+  getYesterdayDateColumnValue,
 } from "@sam-monorepo/domain";
 import { createAuditEvents } from "../common/audit";
 import { log } from "../common/logger";
@@ -12,12 +10,7 @@ import { captureAsyncFunc } from "../common/xray";
 
 export const countCitizensPerRole = async () => {
   await captureAsyncFunc("countCitizensPerRole", async () => {
-    /**
-     * The job runs at midnight and counts the day that just ended. Day 0 of
-     * a month is the last day of the month before, see `toDateColumnValue()`.
-     */
-    const today = getLocalDate(new Date(), ORGANIZATION_TIMEZONE);
-    const countedDay = toDateColumnValue({ ...today, day: today.day - 1 });
+    const countedDay = getYesterdayDateColumnValue(new Date());
 
     const [allRoles, roleCounts] = await captureAsyncFunc(
       "fetch roles and counts",
