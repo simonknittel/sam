@@ -47,7 +47,7 @@ export const endCollectionPhase = createAuthenticatedAction(
     /**
      *
      */
-    const allSilcBalances = await prisma.entity.findMany({
+    const allSilcBalances = await prisma.citizen.findMany({
       where: {
         silcBalance: {
           gt: 0,

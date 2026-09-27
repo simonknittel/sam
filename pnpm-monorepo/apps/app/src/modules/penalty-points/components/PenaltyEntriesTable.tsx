@@ -2,14 +2,14 @@ import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
 import { Link } from "@/modules/common/components/Link";
 import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
 import { formatDate } from "@/modules/common/utils/formatDate";
-import type { Entity, PenaltyEntry } from "@sam-monorepo/database/client";
+import type { Citizen, PenaltyEntry } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import { DeletePenaltyEntry } from "./DeletePenaltyEntry";
 
 type Row = PenaltyEntry & {
-  citizen: Pick<Entity, "id" | "handle">;
+  citizen: Pick<Citizen, "id" | "handle">;
   /** NULL when the author was deleted */
-  createdBy: Pick<Entity, "id" | "handle"> | null;
+  createdBy: Pick<Citizen, "id" | "handle"> | null;
 };
 
 const COLUMNS_WITH_CITIZEN =

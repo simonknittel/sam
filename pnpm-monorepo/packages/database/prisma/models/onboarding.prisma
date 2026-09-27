@@ -14,7 +14,7 @@ enum OnboardingTaskCompletionMethod {
 model OnboardingTaskProgress {
   id               String                         @id @default(cuid(2))
   citizenId        String
-  citizen          Entity                         @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  citizen          Citizen                        @relation(fields: [citizenId], references: [id], onDelete: Cascade)
   taskKey          String
   completedAt      DateTime
   completionMethod OnboardingTaskCompletionMethod
@@ -33,7 +33,7 @@ model OnboardingTaskProgress {
 model OnboardingStepProgress {
   id          String   @id @default(cuid(2))
   citizenId   String
-  citizen     Entity   @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  citizen     Citizen  @relation(fields: [citizenId], references: [id], onDelete: Cascade)
   taskKey     String
   stepKey     String
   completedAt DateTime @default(now())

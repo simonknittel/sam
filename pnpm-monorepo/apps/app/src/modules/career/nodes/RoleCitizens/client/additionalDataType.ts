@@ -2,7 +2,7 @@ import type {
   getMyAssignedRolesWithInheritance,
   getVisibleRoles,
 } from "@/modules/roles/utils/getRoles";
-import type { Entity, Role } from "@sam-monorepo/database/browser";
+import type { Citizen, Role } from "@sam-monorepo/database/browser";
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 export type AdditionalDataType = {
@@ -15,6 +15,6 @@ export type AdditionalDataType = {
    */
   citizensGroupedByVisibleRoles: ReadonlyMap<
     Role["id"],
-    { readonly citizens: readonly Pick<Entity, "id" | "handle">[] }
+    { readonly citizens: readonly Pick<Citizen, "id" | "handle">[] }
   >;
 };

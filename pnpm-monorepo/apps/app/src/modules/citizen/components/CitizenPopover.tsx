@@ -3,7 +3,7 @@
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { PopoverBaseUI } from "@/modules/common/components/PopoverBaseUI";
 import { api } from "@/trpc/react";
-import type { Entity } from "@sam-monorepo/database/browser";
+import type { Citizen } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import dynamic from "next/dynamic";
 import { useCallback, useState, type ReactNode } from "react";
@@ -21,7 +21,7 @@ const ProfileContent = dynamic(
 
 interface Props {
   readonly children?: ReactNode;
-  readonly citizenId: Entity["id"];
+  readonly citizenId: Citizen["id"];
 }
 
 export const CitizenPopover = ({ children, citizenId }: Props) => {

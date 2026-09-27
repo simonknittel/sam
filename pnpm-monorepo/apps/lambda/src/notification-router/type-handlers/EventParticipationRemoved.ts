@@ -1,9 +1,9 @@
-import { prisma, type Entity, type Event } from "@sam-monorepo/database";
+import { prisma, type Citizen, type Event } from "@sam-monorepo/database";
 import { publishNotifications } from "../publish.js";
 
 type Payload = {
   eventId: Event["id"];
-  citizenId: Entity["id"];
+  citizenId: Citizen["id"];
   reason: string | null;
 };
 

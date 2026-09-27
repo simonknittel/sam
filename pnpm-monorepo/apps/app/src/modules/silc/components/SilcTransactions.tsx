@@ -1,13 +1,13 @@
 import { requireAuthentication } from "@/modules/auth/server";
 import { Tile } from "@/modules/common/components/Tile";
-import type { Entity } from "@sam-monorepo/database/client";
+import type { Citizen } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import { getSilcTransactionsOfCitizen } from "../queries/getSilcTransactionsOfCitizen";
 import { SilcTransactionsTable } from "./SilcTransactionsTable";
 
 interface Props {
   readonly className?: string;
-  readonly citizenId: Entity["id"];
+  readonly citizenId: Citizen["id"];
 }
 
 export const SilcTransactions = async ({ className, citizenId }: Props) => {

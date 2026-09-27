@@ -1,9 +1,9 @@
 import { requireAuthentication } from "@/modules/auth/server";
-import type { Entity, Event } from "@sam-monorepo/database/client";
+import type { Citizen, Event } from "@sam-monorepo/database/client";
 
 export const isAllowedToManagePositions = async (
   event: Pick<Event, "discordCreatorId" | "createdById"> & {
-    managers: Pick<Entity, "id">[];
+    managers: Pick<Citizen, "id">[];
   },
 ) => {
   const authentication = await requireAuthentication();

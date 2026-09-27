@@ -26,7 +26,7 @@ export const getParticipants = cache(
       }
     }
 
-    const citizens = await prisma.entity.findMany({
+    const citizens = await prisma.citizen.findMany({
       where: {
         OR: [
           { id: { in: Array.from(citizenIds) } },

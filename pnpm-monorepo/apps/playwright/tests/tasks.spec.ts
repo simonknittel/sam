@@ -6,7 +6,7 @@ import {
   assignRole,
   createCitizen,
   createRole,
-  type Citizen,
+  type TestCitizen,
 } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
@@ -25,8 +25,8 @@ const editButtons = (scope: Locator | Page) => inlineEditorTrigger(scope);
 
 const createSilcTask = (
   prisma: PrismaClient,
-  creator: Citizen,
-  worker: Citizen,
+  creator: TestCitizen,
+  worker: TestCitizen,
   title: string,
 ) =>
   prisma.task.create({
@@ -198,12 +198,12 @@ test("completing a task with a SILC reward pays the completionists", async ({
 
   // The second consumer of createSilcTransactions: the worker gets the
   // reward, the creator funds it
-  const workerEntity = await prisma.entity.findUnique({
+  const workerEntity = await prisma.citizen.findUnique({
     where: { id: worker.entity.id },
   });
   expect(workerEntity?.silcBalance).toBe(50);
   expect(workerEntity?.totalEarnedSilc).toBe(50);
-  const managerEntity = await prisma.entity.findUnique({
+  const managerEntity = await prisma.citizen.findUnique({
     where: { id: manager.entity.id },
   });
   expect(managerEntity?.silcBalance).toBe(-50);
@@ -365,7 +365,7 @@ test("a citizen takes a task on, gives it up, and a manager cancels and deletes 
 
 const createTextTask = (
   prisma: PrismaClient,
-  creator: Citizen,
+  creator: TestCitizen,
   title: string,
   data: Partial<Prisma.TaskUncheckedCreateInput> = {},
 ) =>

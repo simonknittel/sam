@@ -4,8 +4,8 @@ import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Select } from "@/modules/common/components/form/Select";
 import {
+  type Citizen,
   type ClassificationLevel,
-  type Entity,
   type NoteType,
 } from "@sam-monorepo/database/browser";
 import { useRouter } from "next/navigation";
@@ -16,7 +16,7 @@ import { FaSave } from "react-icons/fa";
 import { Formatting } from "./Formatting";
 
 interface Props {
-  readonly entityId: Entity["id"];
+  readonly entityId: Citizen["id"];
   readonly noteTypeId: NoteType["id"];
   readonly classificationLevels: ClassificationLevel[];
 }

@@ -1,9 +1,8 @@
-/// Citizen
-model Entity {
+model Citizen {
   id                                           String                               @id @default(cuid())
   createdAt                                    DateTime                             @default(now())
   updatedAt                                    DateTime                             @updatedAt
-  logs                                         EntityLog[]
+  logs                                         CitizenLog[]
   createdById                                  String?
   createdBy                                    User?                                @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
   activeOrganizationsMemberships               ActiveOrganizationMembership[]
@@ -91,12 +90,19 @@ model Entity {
   seasonalThemeSettings                        SeasonalThemeSetting[]
   readMarkers                                  ReadMarker[]
 
+  /// The login of the citizen: the user whose Discord account has the
+  /// Discord ID of the citizen. Set at each sign-in and when the Discord ID
+  /// of the citizen changes. NULL for citizens who never signed in.
+  userId String? @unique
+  user   User?   @relation("citizen", fields: [userId], references: [id], onDelete: SetNull)
+
   // Holds the latest confirmed values
   spectrumId                String?
   handle                    String?
   discordId                 String?                    @unique
   teamspeakId               String?
-  citizenId                 String?
+  /// Number of the UEE citizen record on the RSI website
+  citizenRecord             String?
   communityMoniker          String?
   createdPenaltyEntries     PenaltyEntry[]             @relation("createdBy")
   deletedPenaltyEntries     PenaltyEntry[]             @relation("deletedBy")
@@ -122,32 +128,32 @@ model Entity {
   newYearGreetingSentAt  DateTime?
 }
 
-model EntityLog {
-  id            String               @id @default(cuid())
-  entityId      String
-  entity        Entity               @relation(fields: [entityId], references: [id], onDelete: Cascade)
-  createdAt     DateTime             @default(now())
-  updatedAt     DateTime             @updatedAt
+model CitizenLog {
+  id            String                @id @default(cuid())
+  citizenId     String
+  citizen       Citizen               @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
   type          String // TODO: types.ts
-  content       String?              @db.Text
+  content       String?               @db.Text
   submittedById String?
-  submittedBy   User?                @relation("submittedBy", fields: [submittedById], references: [id], onDelete: SetNull)
-  attributes    EntityLogAttribute[]
+  submittedBy   User?                 @relation("submittedBy", fields: [submittedById], references: [id], onDelete: SetNull)
+  attributes    CitizenLogAttribute[]
 
-  @@index([type]) // `type: Hash` isn't supported on MySQL
+  @@index([type])
 }
 
-model EntityLogAttribute {
-  id          String    @id @default(cuid())
-  entityLogId String    @map("eneityLogId")
-  entityLog   EntityLog @relation(fields: [entityLogId], references: [id], onDelete: Cascade)
-  key         String // TODO: types.ts
-  value       String
-  createdAt   DateTime  @default(now())
-  createdById String?
-  createdBy   User?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
+model CitizenLogAttribute {
+  id           String     @id @default(cuid())
+  citizenLogId String
+  citizenLog   CitizenLog @relation(fields: [citizenLogId], references: [id], onDelete: Cascade)
+  key          String // TODO: types.ts
+  value        String
+  createdAt    DateTime   @default(now())
+  createdById  String?
+  createdBy    User?      @relation(fields: [createdById], references: [id], onDelete: SetNull)
 
-  @@index([key]) // `type: Hash` isn't supported on MySQL
+  @@index([key])
 }
 
 /// Materialized/denormalized view of currently assigned roles to citizens.
@@ -158,7 +164,7 @@ model EntityLogAttribute {
 model RoleAssignment {
   id                    String    @id @default(cuid(2))
   citizenId             String
-  citizen               Entity    @relation("citizen", fields: [citizenId], references: [id], onDelete: Cascade)
+  citizen               Citizen   @relation("citizen", fields: [citizenId], references: [id], onDelete: Cascade)
   roleId                String
   role                  Role      @relation("role", fields: [roleId], references: [id], onDelete: Cascade)
   createdAt             DateTime  @default(now())
@@ -183,13 +189,13 @@ enum RoleAssignmentChangeType {
 model RoleAssignmentChange {
   id          String                   @id @default(cuid(2))
   citizenId   String
-  citizen     Entity                   @relation("citizen", fields: [citizenId], references: [id], onDelete: Cascade)
+  citizen     Citizen                  @relation("citizen", fields: [citizenId], references: [id], onDelete: Cascade)
   roleId      String
   role        Role                     @relation("role", fields: [roleId], references: [id], onDelete: Cascade)
   type        RoleAssignmentChangeType
   createdAt   DateTime                 @default(now())
   createdById String?
-  createdBy   Entity?                  @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdBy   Citizen?                 @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
 
   @@index([citizenId])
 }
@@ -203,13 +209,13 @@ enum RoleAssignmentLevelChangeType {
 model RoleAssignmentLevelChange {
   id          String                        @id @default(cuid(2))
   citizenId   String
-  citizen     Entity                        @relation("citizen", fields: [citizenId], references: [id], onDelete: Cascade)
+  citizen     Citizen                       @relation("citizen", fields: [citizenId], references: [id], onDelete: Cascade)
   roleId      String
   role        Role                          @relation("role", fields: [roleId], references: [id], onDelete: Cascade)
   type        RoleAssignmentLevelChangeType
   createdAt   DateTime                      @default(now())
   createdById String?
-  createdBy   Entity?                       @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdBy   Citizen?                      @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
 
   @@index([citizenId])
 }
@@ -222,7 +228,7 @@ model RoleAssignmentLevelChange {
 model SeasonalThemeSetting {
   id         String   @id @default(cuid(2))
   citizenId  String
-  citizen    Entity   @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  citizen    Citizen  @relation(fields: [citizenId], references: [id], onDelete: Cascade)
   eventKey   String
   disabledAt DateTime @default(now())
 

@@ -7,7 +7,7 @@ import type { Prisma } from "@sam-monorepo/database/client";
  * `authorizeEventContainer()`, which already had it right.
  *
  * Actions that need more than the guard spread this and add their own
- * fields, so no guard call site has to fetch full manager Entity rows again.
+ * fields, so no guard call site has to fetch full manager Citizen rows again.
  */
 export const EVENT_MANAGE_GUARD_SELECT = {
   id: true,

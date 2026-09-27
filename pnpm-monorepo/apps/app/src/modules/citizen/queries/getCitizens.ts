@@ -17,7 +17,7 @@ const requireCitizenRead = async () => {
 export const getCitizens = withTrace("getCitizens", async () => {
   await requireCitizenRead();
 
-  return prisma.entity.findMany({
+  return prisma.citizen.findMany({
     select: {
       id: true,
       handle: true,
@@ -27,14 +27,21 @@ export const getCitizens = withTrace("getCitizens", async () => {
 
 /**
  * Every citizen with the columns the citizens table renders, filters and
- * sorts by.
+ * sorts by. The time of the last visit comes from the login of the citizen
+ * and only with the permission to read it.
  */
 export const getCitizensForTable = withTrace(
   "getCitizensForTable",
   async () => {
-    await requireCitizenRead();
+    const authentication = await requireAuthentication();
+    if (!(await authentication.authorize("citizen", "read")))
+      throw new Error("Forbidden");
+    const canReadLastSeenAt = await authentication.authorize(
+      "lastSeen",
+      "read",
+    );
 
-    return prisma.entity.findMany({
+    const citizens = await prisma.citizen.findMany({
       select: {
         id: true,
         handle: true,
@@ -48,7 +55,17 @@ export const getCitizensForTable = withTrace(
             currentLevel: true,
           },
         },
+        user: {
+          select: {
+            lastSeenAt: true,
+          },
+        },
       },
     });
+
+    return citizens.map(({ user, ...entity }) => ({
+      entity,
+      lastSeenAt: canReadLastSeenAt ? (user?.lastSeenAt ?? null) : null,
+    }));
   },
 );

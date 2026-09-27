@@ -28,7 +28,7 @@ model LogAnalyzerEntry {
   /// The uploading citizen. A deleted citizen leaves the entry in place
   /// without an uploader.
   createdById String?
-  createdBy   Entity? @relation("createdLogAnalyzerEntries", fields: [createdById], references: [id], onDelete: SetNull)
+  createdBy   Citizen? @relation("createdLogAnalyzerEntries", fields: [createdById], references: [id], onDelete: SetNull)
 
   @@unique([createdById, hash])
   /// Serves the initial load (window on `eventAt`) and the polling cursor

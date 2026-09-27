@@ -3,14 +3,14 @@ import { requireAuthentication } from "@/modules/auth/server";
 import {
   CITIZEN_NOTE_SELECT,
   type CitizenNote,
-} from "@/modules/citizen/queries/entityLogTableSelect";
+} from "@/modules/citizen/queries/citizenLogTableSelect";
 import getLatestNoteAttributes from "@/modules/citizen/utils/getLatestNoteAttributes";
 import Tab from "@/modules/common/components/tabs/Tab";
 import TabList from "@/modules/common/components/tabs/TabList";
 import { TabsProvider } from "@/modules/common/components/tabs/TabsContext";
 import {
-  type Entity,
-  type EntityLog,
+  type Citizen,
+  type CitizenLog,
   type NoteType,
 } from "@sam-monorepo/database/client";
 import clsx from "clsx";
@@ -20,16 +20,16 @@ import isAllowedToReadRedacted from "./lib/isAllowedToReadRedacted";
 
 interface Props {
   readonly className?: string;
-  readonly entity: Pick<Entity, "id">;
+  readonly entity: Pick<Citizen, "id">;
 }
 
 export const Notes = async ({ className, entity }: Props) => {
   const authentication = await requireAuthentication();
 
   const [notes, allNoteTypes] = await prisma.$transaction([
-    prisma.entityLog.findMany({
+    prisma.citizenLog.findMany({
       where: {
-        entityId: entity.id,
+        citizenId: entity.id,
         type: "note",
       },
       select: CITIZEN_NOTE_SELECT,
@@ -47,7 +47,7 @@ export const Notes = async ({ className, entity }: Props) => {
     (
       | CitizenNote
       | {
-          id: EntityLog["id"];
+          id: CitizenLog["id"];
           redacted: true;
         }
     )[]

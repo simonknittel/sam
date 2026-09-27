@@ -4,7 +4,7 @@ import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
 import { SortableTable } from "@/modules/common/components/SortableTable";
 import { formatDate } from "@/modules/common/utils/formatDate";
-import type { Entity } from "@sam-monorepo/database/browser";
+import type { Citizen } from "@sam-monorepo/database/browser";
 import {
   createColumnHelper,
   getCoreRowModel,
@@ -21,7 +21,7 @@ import { CitizenTableForm } from "./CitizenTableForm";
 
 interface Row {
   readonly id: string;
-  readonly citizen: Pick<Entity, "id" | "handle">;
+  readonly citizen: Pick<Citizen, "id" | "handle">;
   readonly handle: string;
   readonly silc: number;
   readonly auec: number | null;

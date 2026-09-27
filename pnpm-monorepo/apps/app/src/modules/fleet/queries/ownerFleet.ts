@@ -3,7 +3,7 @@ import {
   sortAscWithAndNullLast,
   sortDescAndNullLast,
 } from "@/modules/common/utils/sorting";
-import type { Entity } from "@sam-monorepo/database/client";
+import type { Citizen } from "@sam-monorepo/database/client";
 import {
   buildVariantFilterWhere,
   FLEET_PAGE_SIZE,
@@ -30,7 +30,7 @@ interface OwnerFleetOptions {
  * authorization and share everything else.
  */
 export const getOwnerFleet = async (
-  ownerId: Entity["id"],
+  ownerId: Citizen["id"],
   {
     flightReady = "all",
     variantTagIds = [],
@@ -87,7 +87,7 @@ export const getOwnerFleet = async (
 };
 
 /** How many ships the citizen owns. */
-export const countOwnerShips = (ownerId: Entity["id"]) =>
+export const countOwnerShips = (ownerId: Citizen["id"]) =>
   prisma.ship.count({
     where: {
       ownerId,
@@ -96,7 +96,7 @@ export const countOwnerShips = (ownerId: Entity["id"]) =>
   });
 
 /** The tags of every variant that the citizen owns a ship of. */
-export const getOwnerFleetVariantTags = (ownerId: Entity["id"]) =>
+export const getOwnerFleetVariantTags = (ownerId: Citizen["id"]) =>
   prisma.variantTag.findMany({
     where: {
       variants: {

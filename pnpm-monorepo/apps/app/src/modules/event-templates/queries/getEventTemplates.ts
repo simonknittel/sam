@@ -190,7 +190,7 @@ export const getEventTemplateOwners = cache(
     const viewer = await getEventTemplateViewer();
     if (!viewer?.hasEventManage) return [];
 
-    return await prisma.entity.findMany({
+    return await prisma.citizen.findMany({
       where: { ownedEventTemplates: { some: {} } },
       select: { id: true, handle: true },
       orderBy: { handle: "asc" },

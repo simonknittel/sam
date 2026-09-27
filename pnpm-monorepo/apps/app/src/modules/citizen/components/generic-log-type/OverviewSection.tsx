@@ -1,18 +1,18 @@
 import { requireAuthentication } from "@/modules/auth/server";
-import type { GenericEntityLogType } from "@/types";
-import { type Entity } from "@sam-monorepo/database/client";
+import type { GenericCitizenLogType } from "@/types";
+import { type Citizen } from "@sam-monorepo/database/client";
 import { type ReactNode } from "react";
 import { ProfileAttribute } from "../ProfileAttribute";
 import { HistoryModal } from "./HistoryModal";
 import { HistoryModalVariant } from "./HistoryModalVariant";
 
 interface Props {
-  readonly type: GenericEntityLogType;
+  readonly type: GenericCitizenLogType;
   readonly icon?: ReactNode;
   readonly name: string;
   /** The content of the latest confirmed log entry of this type */
   readonly value: string | null;
-  readonly entity: Pick<Entity, "id">;
+  readonly entity: Pick<Citizen, "id">;
 }
 
 export const OverviewSection = async ({

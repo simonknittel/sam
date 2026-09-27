@@ -2,7 +2,7 @@ import { prisma } from "@sam-monorepo/database";
 
 async function main() {
   await prisma.$transaction([
-    prisma.entityLog.updateMany({
+    prisma.citizenLog.updateMany({
       data: {
         type: "discord-id",
       },
@@ -10,7 +10,7 @@ async function main() {
         type: "discordId",
       },
     }),
-    prisma.entityLog.updateMany({
+    prisma.citizenLog.updateMany({
       data: {
         type: "teamspeak-id",
       },
@@ -18,7 +18,7 @@ async function main() {
         type: "teamspeakId",
       },
     }),
-    prisma.entityLog.updateMany({
+    prisma.citizenLog.updateMany({
       data: {
         type: "community-moniker",
       },
@@ -26,7 +26,7 @@ async function main() {
         type: "communityMoniker",
       },
     }),
-    prisma.entityLogAttribute.updateMany({
+    prisma.citizenLogAttribute.updateMany({
       data: {
         value: "false-report",
       },

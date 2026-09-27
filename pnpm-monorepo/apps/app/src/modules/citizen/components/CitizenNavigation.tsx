@@ -1,12 +1,12 @@
 import { requireAuthentication } from "@/modules/auth/server";
 import { SubNavigation } from "@/modules/common/components/SubNavigation";
-import type { Entity } from "@sam-monorepo/database/client";
+import type { Citizen } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import { forbidden } from "next/navigation";
 
 interface Props {
   readonly className?: string;
-  readonly citizenId: Entity["id"];
+  readonly citizenId: Citizen["id"];
 }
 
 export const CitizenNavigation = async ({ className, citizenId }: Props) => {

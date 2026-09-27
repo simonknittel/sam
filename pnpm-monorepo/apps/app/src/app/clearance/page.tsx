@@ -58,7 +58,7 @@ export default async function Page() {
                   <p className="flex-none w-28">ID:</p>
                   <p
                     className="flex-1 truncate"
-                    title={authentication.session.discordId}
+                    title={authentication.session.discordId ?? undefined}
                   >
                     {authentication.session.discordId}
                   </p>

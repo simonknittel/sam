@@ -13,7 +13,7 @@ import {
   ONE_DAY_MS,
   ONE_HOUR_MS,
   ONE_MINUTE_MS,
-  type Citizen,
+  type TestCitizen,
 } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
@@ -29,7 +29,7 @@ const LONG_AGO = new Date("2020-01-01T00:00:00.000Z");
 
 const createTask = (
   prisma: PrismaClient,
-  creator: Citizen,
+  creator: TestCitizen,
   title: string,
   data: Partial<Prisma.TaskUncheckedCreateInput> = {},
 ) =>

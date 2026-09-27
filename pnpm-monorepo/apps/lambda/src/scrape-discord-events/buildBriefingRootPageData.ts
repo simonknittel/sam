@@ -11,7 +11,7 @@ export const buildBriefingRootPageData = async (
   discordCreatorId: string | null,
 ) => {
   const organizer = discordCreatorId
-    ? await prisma.entity.findUnique({
+    ? await prisma.citizen.findUnique({
         where: {
           discordId: discordCreatorId,
         },

@@ -1,4 +1,4 @@
-import type { CitizenNote } from "@/modules/citizen/queries/entityLogTableSelect";
+import type { CitizenNote } from "@/modules/citizen/queries/citizenLogTableSelect";
 import getLatestNoteAttributes from "@/modules/citizen/utils/getLatestNoteAttributes";
 import { getAllNoteTypes } from "@/modules/spynet/queries/getAllNoteTypes";
 import { getCreatableClassificationLevelsDeduped } from "@/modules/spynet/utils/getAllClassificationLevels";

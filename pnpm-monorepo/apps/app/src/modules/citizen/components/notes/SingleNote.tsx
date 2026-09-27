@@ -1,11 +1,11 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
-import type { CitizenNote } from "@/modules/citizen/queries/entityLogTableSelect";
+import type { CitizenNote } from "@/modules/citizen/queries/citizenLogTableSelect";
 import getLatestNoteAttributes from "@/modules/citizen/utils/getLatestNoteAttributes";
 import styles from "@/modules/common/components/ConfirmationGradient.module.css";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
-import { type Entity, type Organization } from "@sam-monorepo/database/client";
+import { type Citizen, type Organization } from "@sam-monorepo/database/client";
 import { type PermissionSet } from "@sam-monorepo/permissions";
 import clsx from "clsx";
 import Image from "next/image";
@@ -55,7 +55,7 @@ export const SingleNote = async ({ note }: Props) => {
         .map((match) => match.slice(5)),
     );
 
-    let citizens: Pick<Entity, "handle" | "spectrumId" | "id">[] = [];
+    let citizens: Pick<Citizen, "handle" | "spectrumId" | "id">[] = [];
     let organizations: Pick<
       Organization,
       "name" | "spectrumId" | "id" | "logo"
@@ -63,7 +63,7 @@ export const SingleNote = async ({ note }: Props) => {
 
     if (uniqueCitizenSpectrumIds.size > 0) {
       const result = await prisma.$transaction([
-        prisma.entity.findMany({
+        prisma.citizen.findMany({
           where: {
             spectrumId: {
               in: Array.from(uniqueCitizenSpectrumIds),

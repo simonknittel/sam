@@ -3,8 +3,8 @@
 import styles from "@/modules/common/components/ConfirmationGradient.module.css";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import {
-  type EntityLog,
-  type EntityLogAttribute,
+  type CitizenLog,
+  type CitizenLogAttribute,
   type User,
 } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
@@ -15,8 +15,11 @@ import ConfirmLog from "../ConfirmLog";
 import { DeleteLog } from "../DeleteLog";
 
 interface Props {
-  log: Pick<EntityLog, "id" | "entityId" | "type" | "content" | "createdAt"> & {
-    attributes: (Pick<EntityLogAttribute, "id" | "key" | "value"> & {
+  log: Pick<
+    CitizenLog,
+    "id" | "citizenId" | "type" | "content" | "createdAt"
+  > & {
+    attributes: (Pick<CitizenLogAttribute, "id" | "key" | "value"> & {
       createdBy?: Pick<User, "name"> | null;
     })[];
     submittedBy?: Pick<User, "name"> | null;

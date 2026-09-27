@@ -195,7 +195,7 @@ test("an entry stays with an unknown author after the author is deleted", async 
       reason: "Autor gelöscht",
     },
   });
-  await prisma.entity.delete({ where: { id: author.entity.id } });
+  await prisma.citizen.delete({ where: { id: author.entity.id } });
 
   await signIn(keeper.user);
   await page.goto("/app/penalty-points");

@@ -14,7 +14,7 @@ import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import {
   TaskRewardType,
   TaskVisibility,
-  type Entity,
+  type Citizen,
   type Role,
   type Task,
   type TaskAssignment,
@@ -37,11 +37,11 @@ import { UpdateTaskDescription } from "./UpdateTaskDescription";
 import { UpdateTaskRepeatable } from "./UpdateTaskRepeatable";
 
 interface TaskWithIncludes extends Task {
-  createdBy: Pick<Entity, "id" | "handle"> | null;
+  createdBy: Pick<Citizen, "id" | "handle"> | null;
   assignments: (Pick<TaskAssignment, "id" | "citizenId"> & {
-    citizen: Pick<Entity, "id" | "handle">;
+    citizen: Pick<Citizen, "id" | "handle">;
   })[];
-  completionists?: Pick<Entity, "id" | "handle">[];
+  completionists?: Pick<Citizen, "id" | "handle">[];
   requiredRoles: Pick<Role, "id">[];
 }
 

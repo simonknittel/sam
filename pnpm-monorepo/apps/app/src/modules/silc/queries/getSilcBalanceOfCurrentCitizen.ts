@@ -13,7 +13,7 @@ export const getSilcBalanceOfCurrentCitizen = cache(
     )
       forbidden();
 
-    const entity = await prisma.entity.findUniqueOrThrow({
+    const entity = await prisma.citizen.findUniqueOrThrow({
       where: {
         id: authentication.session.entity.id,
       },

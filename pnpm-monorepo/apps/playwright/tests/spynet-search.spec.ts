@@ -1,6 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import type { PrismaClient } from "@sam-monorepo/database/client";
-import { createCitizen, type Citizen } from "../fixtures/factories";
+import { createCitizen, type TestCitizen } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
@@ -46,7 +46,7 @@ const requestSearch = (page: Page, query: string) =>
 
 const createOrganization = (
   prisma: PrismaClient,
-  creator: Citizen,
+  creator: TestCitizen,
   name: string,
   spectrumId: string,
 ) =>
@@ -207,7 +207,7 @@ test.describe("permissions", () => {
   /** A citizen and an organization which both match the same query */
   const createMatchingCitizenAndOrganization = async (
     prisma: PrismaClient,
-    creator: Citizen,
+    creator: TestCitizen,
   ) => ({
     citizen: await createCitizen(prisma, { handle: "merkurlotse" }),
     organization: await createOrganization(

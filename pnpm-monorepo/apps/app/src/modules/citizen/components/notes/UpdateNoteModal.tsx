@@ -1,6 +1,6 @@
 "use client";
 
-import type { CitizenNote } from "@/modules/citizen/queries/entityLogTableSelect";
+import type { CitizenNote } from "@/modules/citizen/queries/citizenLogTableSelect";
 import getLatestNoteAttributes from "@/modules/citizen/utils/getLatestNoteAttributes";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
@@ -54,7 +54,7 @@ export const UpdateNoteModal = ({
 
     try {
       const response = await fetch(
-        `/api/spynet/citizen/${note.entityId}/log/${note.id}`,
+        `/api/spynet/citizen/${note.citizenId}/log/${note.id}`,
         {
           method: "PATCH",
           body: JSON.stringify({

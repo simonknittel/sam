@@ -1,8 +1,8 @@
-import { entityLogTypeTranslations } from "@/modules/citizen/utils/entityLogTypeTranslations";
+import { citizenLogTypeTranslations } from "@/modules/citizen/utils/citizenLogTypeTranslations";
 import { Filter } from "@/modules/common/components/Filter";
-import type { EntityLogType } from "@/types";
+import type { CitizenLogType } from "@/types";
+import { CitizenLogTypeFilter } from "./CitizenLogTypeFilter";
 import { ConfirmationStateFilter } from "./ConfirmationStateFilter";
-import { EntityLogTypeFilter } from "./EntityLogTypeFilter";
 import { type Row } from "./OtherTable";
 
 interface Props {
@@ -11,7 +11,7 @@ interface Props {
 
 export const OtherFilters = ({ rows }: Props) => {
   const confirmationStates = new Set<string>();
-  const entityLogTypes = new Map<EntityLogType, string>();
+  const citizenLogTypes = new Map<CitizenLogType, string>();
 
   for (const row of rows) {
     if (row.confirmationState) {
@@ -20,10 +20,10 @@ export const OtherFilters = ({ rows }: Props) => {
       confirmationStates.add("unconfirmed");
     }
 
-    if (row.entityLog.type) {
-      entityLogTypes.set(
-        row.entityLog.type as EntityLogType,
-        entityLogTypeTranslations[row.entityLog.type],
+    if (row.citizenLog.type) {
+      citizenLogTypes.set(
+        row.citizenLog.type as CitizenLogType,
+        citizenLogTypeTranslations[row.citizenLog.type],
       );
     }
   }
@@ -37,9 +37,9 @@ export const OtherFilters = ({ rows }: Props) => {
         </Filter>
       )}
 
-      {entityLogTypes.size > 0 && (
+      {citizenLogTypes.size > 0 && (
         <Filter name="Merkmal">
-          <EntityLogTypeFilter entityLogTypes={entityLogTypes} />
+          <CitizenLogTypeFilter citizenLogTypes={citizenLogTypes} />
         </Filter>
       )}
     </div>

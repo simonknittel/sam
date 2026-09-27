@@ -2,11 +2,11 @@ import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import Note from "@/modules/common/components/Note";
 import type { EventCitizenWithShips } from "@/modules/events/queries/eventRelationSelects";
-import type { Entity, EventPosition } from "@sam-monorepo/database/client";
+import type { Citizen, EventPosition } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 
 type Position = EventPosition & {
-  citizen?: Pick<Entity, "id" | "handle"> | null;
+  citizen?: Pick<Citizen, "id" | "handle"> | null;
   childPositions?: Position[];
 };
 

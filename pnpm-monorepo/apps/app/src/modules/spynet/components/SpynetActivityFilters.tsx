@@ -8,13 +8,13 @@ import { DateRangeFilter } from "@/modules/common/components/layouts/SidebarLayo
 import { MultiSelectComboboxFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/MultiSelectComboboxFilter";
 import { ORGANIZATION_ACTIVITY_TYPE_LABELS } from "@/modules/organizations/activity/organizationActivityTypes";
 import { ROLE_ACTIVITY_TYPE_LABELS } from "@/modules/roles/activity/roleActivityTypes";
-import type { Entity } from "@sam-monorepo/database/client";
+import type { Citizen } from "@sam-monorepo/database/client";
 
 const TYPE_GROUP_ORGANIZATIONS = "Organisationen";
 const TYPE_GROUP_ROLES = "Rollen";
 
 interface Props {
-  readonly actors: Pick<Entity, "id" | "handle">[];
+  readonly actors: Pick<Citizen, "id" | "handle">[];
 }
 
 export const SpynetActivityFilters = ({ actors }: Props) => {

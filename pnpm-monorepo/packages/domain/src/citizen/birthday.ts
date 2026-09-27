@@ -1,6 +1,6 @@
 /**
  * A citizen's birthday is stored as a day and a month without a year, see
- * the `Entity` model. Both the greeting job of the Lambda and the surfaces
+ * the `Citizen` model. Both the greeting job of the Lambda and the surfaces
  * of the app must agree on the day a birthday falls on, thus the rule lives
  * here.
  */

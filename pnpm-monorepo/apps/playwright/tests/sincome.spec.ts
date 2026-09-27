@@ -135,7 +135,7 @@ test("ending the collection phase debits every participant", async ({
   expect(snapshotByCitizen.get(firstParticipant.entity.id)).toBe(100);
   expect(snapshotByCitizen.get(secondParticipant.entity.id)).toBe(40);
 
-  const balances = await prisma.entity.findMany({
+  const balances = await prisma.citizen.findMany({
     where: {
       id: { in: [firstParticipant.entity.id, secondParticipant.entity.id] },
     },

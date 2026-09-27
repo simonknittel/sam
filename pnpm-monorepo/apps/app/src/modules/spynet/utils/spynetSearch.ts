@@ -1,4 +1,4 @@
-import type { Entity, Organization } from "@sam-monorepo/database/browser";
+import type { Citizen, Organization } from "@sam-monorepo/database/browser";
 
 export const SPYNET_SEARCH_QUERY_MINIMUM_LENGTH = 2;
 
@@ -16,8 +16,8 @@ export enum SpynetSearchHitType {
 
 export type CitizenSearchHit = Readonly<
   Pick<
-    Entity,
-    "id" | "handle" | "communityMoniker" | "citizenId" | "spectrumId"
+    Citizen,
+    "id" | "handle" | "communityMoniker" | "citizenRecord" | "spectrumId"
   >
 > & { readonly type: SpynetSearchHitType.Citizen };
 

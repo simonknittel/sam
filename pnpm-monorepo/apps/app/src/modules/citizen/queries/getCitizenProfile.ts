@@ -5,33 +5,9 @@ import { sumPenaltyPointsOfCitizen } from "@/modules/penalty-points/queries/sumP
 import { getAssignableRoles } from "@/modules/roles/utils/getRoles";
 import { getMonthlySalaryOfRoles } from "@/modules/silc/queries/getMonthlySalaryOfRoles";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import type { Entity } from "@sam-monorepo/database/client";
+import type { Citizen } from "@sam-monorepo/database/client";
 import { cache } from "react";
 import { hasBirthdayToday } from "../utils/hasBirthdayToday";
-
-/**
- * The avatar of a citizen is the Discord avatar of the user behind it, which
- * the app refreshes at every login.
- */
-const getAvatarUrl = async (discordId: Entity["discordId"]) => {
-  if (!discordId) return null;
-
-  const account = await prisma.account.findFirst({
-    where: {
-      provider: "discord",
-      providerAccountId: discordId,
-    },
-    select: {
-      user: {
-        select: {
-          image: true,
-        },
-      },
-    },
-  });
-
-  return account?.user.image ?? null;
-};
 
 /**
  * Everything both profile surfaces show: the citizen popover and the profile
@@ -49,21 +25,20 @@ const getAvatarUrl = async (discordId: Entity["discordId"]) => {
  * follow is worse than no link.
  */
 export const getCitizenProfile = cache(
-  withTrace("getCitizenProfile", async (id: Entity["id"]) => {
+  withTrace("getCitizenProfile", async (id: Citizen["id"]) => {
     const authentication = await requireAuthentication();
 
     const isCurrentCitizen = authentication.session.entity?.id === id;
     const canOpenSpynet = await authentication.authorize("citizen", "read");
     if (!isCurrentCitizen && !canOpenSpynet) throw new Error("Forbidden");
 
-    const citizen = await prisma.entity.findUnique({
+    const citizen = await prisma.citizen.findUnique({
       where: {
         id,
       },
       select: {
         id: true,
         handle: true,
-        discordId: true,
         silcBalance: true,
         timezone: true,
         /** Read for the party hat below; only the answer leaves the server */
@@ -73,6 +48,15 @@ export const getCitizenProfile = cache(
           select: {
             roleId: true,
             currentLevel: true,
+          },
+        },
+        /**
+         * The avatar of a citizen is the Discord avatar of its login, which
+         * the app refreshes at every sign-in
+         */
+        user: {
+          select: {
+            image: true,
           },
         },
       },
@@ -87,7 +71,6 @@ export const getCitizenProfile = cache(
       canOpenSilcPage,
       canOpenFleetPage,
       assignableRoles,
-      avatarUrl,
     ] = await Promise.all([
       authentication.authorize(
         isCurrentCitizen
@@ -112,7 +95,6 @@ export const getCitizenProfile = cache(
       /** The fleet page asks for `otherShips;read`, also for the own fleet */
       authentication.authorize("otherShips", "read"),
       getAssignableRoles(),
-      getAvatarUrl(citizen.discordId),
     ]);
 
     const [monthlySalary, penaltyPoints, fleetCount] = await Promise.all([
@@ -137,7 +119,7 @@ export const getCitizenProfile = cache(
         hasBirthdayToday: hasBirthdayToday(citizen, new Date()),
         roleAssignments: citizen.roleAssignments,
       },
-      avatarUrl,
+      avatarUrl: citizen.user?.image ?? null,
       isCurrentCitizen,
       spynetHref: canOpenSpynet ? spynetHref : null,
       canUpdateAnyRoleAssignment: assignableRoles.length > 0,

@@ -48,8 +48,8 @@ const CitizenHitContent = ({ hit }: CitizenHitContentProps) => {
         {hit.spectrumId && (
           <HitDetail label="Spectrum ID" value={hit.spectrumId} />
         )}
-        {hit.citizenId && (
-          <HitDetail label="Citizen ID" value={hit.citizenId} />
+        {hit.citizenRecord && (
+          <HitDetail label="Citizen ID" value={hit.citizenRecord} />
         )}
         <HitDetail label="Internal ID" value={hit.id} />
       </span>

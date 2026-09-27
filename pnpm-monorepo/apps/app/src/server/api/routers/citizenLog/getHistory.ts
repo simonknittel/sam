@@ -11,14 +11,14 @@ export const getHistory = protectedProcedure
         z.literal("teamspeak-id"),
         z.literal("community-moniker"),
         z.literal("citizen-id"),
-      ]), // TODO: Infer from EntityLogType
-      entityId: z.string(),
+      ]), // TODO: Infer from CitizenLogType
+      citizenId: z.string(),
     }),
   )
   .query(async ({ ctx, input }) => {
-    const allLogs = await ctx.prisma.entityLog.findMany({
+    const allLogs = await ctx.prisma.citizenLog.findMany({
       where: {
-        entityId: input.entityId,
+        citizenId: input.citizenId,
         type: input.type,
       },
       orderBy: {
@@ -26,7 +26,7 @@ export const getHistory = protectedProcedure
       },
       select: {
         id: true,
-        entityId: true,
+        citizenId: true,
         type: true,
         content: true,
         createdAt: true,

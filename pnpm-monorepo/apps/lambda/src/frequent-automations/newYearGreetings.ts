@@ -31,7 +31,7 @@ const MAX_GREETINGS_PER_RUN = 500;
  */
 export const newYearGreetings = async () => {
   await captureAsyncFunc("newYearGreetings", async () => {
-    const candidates = await prisma.entity.findMany({
+    const candidates = await prisma.citizen.findMany({
       where: CAN_LOGIN_CITIZEN_WHERE,
       select: {
         id: true,
@@ -65,7 +65,7 @@ export const newYearGreetings = async () => {
 
     if (greetable.length === 0) return;
 
-    await prisma.entity.updateMany({
+    await prisma.citizen.updateMany({
       where: { id: { in: greetable.map((citizen) => citizen.id) } },
       data: { newYearGreetingSentAt: now },
     });

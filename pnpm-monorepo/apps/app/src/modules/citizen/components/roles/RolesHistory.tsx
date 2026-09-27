@@ -10,14 +10,14 @@ import {
   createRoleAssignmentSource,
 } from "@/modules/roles/activity/roleActivitySources";
 import { getVisibleRoles } from "@/modules/roles/utils/getRoles";
-import { type Entity } from "@sam-monorepo/database/client";
+import { type Citizen } from "@sam-monorepo/database/client";
 import type { SearchParams } from "nuqs/server";
 
 const loadSearchParams = createCursorPaginationLoader({});
 
 interface Props {
   readonly className?: string;
-  readonly entity: Pick<Entity, "id">;
+  readonly entity: Pick<Citizen, "id">;
   readonly searchParams: Promise<SearchParams>;
 }
 

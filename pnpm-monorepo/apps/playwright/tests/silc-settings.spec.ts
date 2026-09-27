@@ -127,7 +127,7 @@ test("expiring all SILC zeroes every balance, and the refresh recomputes them", 
   await expect
     .poll(
       () =>
-        prisma.entity.findUniqueOrThrow({
+        prisma.citizen.findUniqueOrThrow({
           where: { id: rich.entity.id },
           select: { silcBalance: true },
         }),
@@ -148,7 +148,7 @@ test("expiring all SILC zeroes every balance, and the refresh recomputes them", 
    * The refresh recomputes the denormalized balances from the transactions,
    * so a balance tampered with behind the app's back is corrected.
    */
-  await prisma.entity.update({
+  await prisma.citizen.update({
     where: { id: rich.entity.id },
     data: { silcBalance: 999 },
   });
@@ -161,7 +161,7 @@ test("expiring all SILC zeroes every balance, and the refresh recomputes them", 
   await expect
     .poll(
       () =>
-        prisma.entity.findUniqueOrThrow({
+        prisma.citizen.findUniqueOrThrow({
           where: { id: rich.entity.id },
           select: { silcBalance: true },
         }),

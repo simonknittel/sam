@@ -1,4 +1,4 @@
-import { type Entity } from "@sam-monorepo/database";
+import { type Citizen } from "@sam-monorepo/database";
 import { type ParsedOnSiteNotificationPayload } from "@sam-monorepo/notifications";
 
 /**
@@ -7,7 +7,7 @@ import { type ParsedOnSiteNotificationPayload } from "@sam-monorepo/notification
  * going through the publisher can be persisted as an on-site notification.
  */
 export type Notification = {
-  readonly receiverId: Entity["id"];
+  readonly receiverId: Citizen["id"];
   readonly title: string;
   readonly body: string;
   readonly url?: string;

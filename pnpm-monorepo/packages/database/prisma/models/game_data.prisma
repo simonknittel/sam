@@ -38,7 +38,7 @@ model Blueprint {
 model BlueprintUnlock {
   id          String    @id @default(cuid(2))
   citizenId   String
-  citizen     Entity    @relation("citizen", fields: [citizenId], references: [id], onDelete: Cascade)
+  citizen     Citizen   @relation("citizen", fields: [citizenId], references: [id], onDelete: Cascade)
   blueprintId String
   blueprint   Blueprint @relation(fields: [blueprintId], references: [id], onDelete: Cascade)
   createdAt   DateTime  @default(now())

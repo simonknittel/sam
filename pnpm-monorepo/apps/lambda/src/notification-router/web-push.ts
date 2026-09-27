@@ -49,7 +49,7 @@ export const publishWebPushNotifications = async (
   notifications: Notification[],
   options?: RequestOptions,
 ) => {
-  const citizens = await prisma.entity.findMany({
+  const citizens = await prisma.citizen.findMany({
     where: {
       id: {
         in: notifications.map((n) => n.receiverId),

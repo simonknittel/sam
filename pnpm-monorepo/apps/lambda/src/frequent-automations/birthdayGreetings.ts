@@ -23,7 +23,7 @@ const MAX_GREETINGS_PER_RUN = 100;
  */
 export const birthdayGreetings = async () => {
   await captureAsyncFunc("birthdayGreetings", async () => {
-    const candidates = await prisma.entity.findMany({
+    const candidates = await prisma.citizen.findMany({
       where: {
         AND: [
           { birthdayDay: { not: null } },
@@ -65,7 +65,7 @@ export const birthdayGreetings = async () => {
 
     if (greetable.length === 0) return;
 
-    await prisma.entity.updateMany({
+    await prisma.citizen.updateMany({
       where: { id: { in: greetable.map((citizen) => citizen.id) } },
       data: { birthdayGreetingSentAt: now },
     });

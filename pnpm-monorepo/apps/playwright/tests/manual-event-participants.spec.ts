@@ -10,7 +10,7 @@ import {
   EventSource,
   EventVisibility,
   futureEvent,
-  type Citizen,
+  type TestCitizen,
 } from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
@@ -58,7 +58,7 @@ const openAddModal = async (page: Page) => {
   return addModal;
 };
 
-const removeButtonOf = (page: Page, participant: Citizen) =>
+const removeButtonOf = (page: Page, participant: TestCitizen) =>
   page
     .getByRole("row")
     .filter({ hasText: participant.entity.handle! })

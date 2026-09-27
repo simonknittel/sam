@@ -34,7 +34,7 @@ export const getWikiMentionedCitizens = async (
   const mentionedCitizenIds = collectWikiMentionedCitizenIds(content);
   return Object.fromEntries(
     (canReadCitizens && mentionedCitizenIds.length > 0
-      ? await prisma.entity.findMany({
+      ? await prisma.citizen.findMany({
           where: { id: { in: mentionedCitizenIds } },
           select: { id: true, handle: true },
         })

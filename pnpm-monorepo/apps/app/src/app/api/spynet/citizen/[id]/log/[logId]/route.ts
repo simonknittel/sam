@@ -2,7 +2,7 @@ import { prisma } from "@/db";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
-import { ENTITY_LOG_GUARD_SELECT } from "@/modules/citizen/queries/entityLogTableSelect";
+import { CITIZEN_LOG_GUARD_SELECT } from "@/modules/citizen/queries/citizenLogTableSelect";
 import getLatestNoteAttributes from "@/modules/citizen/utils/getLatestNoteAttributes";
 import { syncCitizenIdentityAfterLogChange } from "@/modules/citizen/utils/syncCitizenIdentityAfterLogChange";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
@@ -44,19 +44,19 @@ export async function PATCH(request: Request, props: { params: Params }) {
     /**
      * Do the thing
      */
-    const entityLog = await prisma.entityLog.findUnique({
+    const citizenLog = await prisma.citizenLog.findUnique({
       where: {
         id: paramsData.logId,
       },
-      select: ENTITY_LOG_GUARD_SELECT,
+      select: CITIZEN_LOG_GUARD_SELECT,
     });
 
-    if (!entityLog) throw new Error("Not found");
+    if (!citizenLog) throw new Error("Not found");
 
-    if (entityLog.type !== "note") throw new Error("Bad request");
+    if (citizenLog.type !== "note") throw new Error("Bad request");
 
     const { noteTypeId, classificationLevelId } =
-      getLatestNoteAttributes(entityLog);
+      getLatestNoteAttributes(citizenLog);
 
     const authorizationAttributes = [];
 
@@ -91,16 +91,16 @@ export async function PATCH(request: Request, props: { params: Params }) {
       },
     ]);
 
-    const item = await prisma.entityLogAttribute.createMany({
+    const item = await prisma.citizenLogAttribute.createMany({
       data: [
         {
-          entityLogId: paramsData.logId,
+          citizenLogId: paramsData.logId,
           key: "noteTypeId",
           value: data.noteTypeId,
           createdById: authentication.session.user.id,
         },
         {
-          entityLogId: paramsData.logId,
+          citizenLogId: paramsData.logId,
           key: "classificationLevelId",
           value: data.classificationLevelId,
           createdById: authentication.session.user.id,
@@ -112,9 +112,9 @@ export async function PATCH(request: Request, props: { params: Params }) {
       {
         type: AuditEventType.ENTITY_LOG_UPDATED,
         data: {
-          entityId: entityLog.entityId,
-          logId: entityLog.id,
-          logType: entityLog.type,
+          entityId: citizenLog.citizenId,
+          logId: citizenLog.id,
+          logType: citizenLog.type,
         },
         createdById: authentication.session.user.id,
       },
@@ -150,27 +150,27 @@ export async function DELETE(request: Request, props: { params: Params }) {
     /**
      * Do the thing
      */
-    const entityLog = await prisma.entityLog.findFirst({
+    const citizenLog = await prisma.citizenLog.findFirst({
       where: {
         id: paramsData.logId,
       },
-      select: ENTITY_LOG_GUARD_SELECT,
+      select: CITIZEN_LOG_GUARD_SELECT,
     });
 
-    if (!entityLog) throw new Error("Not found");
+    if (!citizenLog) throw new Error("Not found");
 
-    switch (entityLog.type) {
+    switch (citizenLog.type) {
       case "handle":
       case "teamspeak-id":
       case "discord-id":
       case "citizen-id":
       case "community-moniker":
-        await authentication.authorizeApi(entityLog.type, "delete");
+        await authentication.authorizeApi(citizenLog.type, "delete");
         break;
 
       case "note":
         const { noteTypeId, classificationLevelId } =
-          getLatestNoteAttributes(entityLog);
+          getLatestNoteAttributes(citizenLog);
 
         const authorizationAttributes = [];
 
@@ -200,7 +200,7 @@ export async function DELETE(request: Request, props: { params: Params }) {
         throw new Error("Bad request");
     }
 
-    await prisma.entityLog.delete({
+    await prisma.citizenLog.delete({
       where: {
         id: paramsData.logId,
       },
@@ -210,15 +210,15 @@ export async function DELETE(request: Request, props: { params: Params }) {
       {
         type: AuditEventType.ENTITY_LOG_DELETED,
         data: {
-          entityId: entityLog.entityId,
-          logId: entityLog.id,
-          logType: entityLog.type,
+          entityId: citizenLog.citizenId,
+          logId: citizenLog.id,
+          logType: citizenLog.type,
         },
         createdById: authentication.session.user.id,
       },
     ]);
 
-    await syncCitizenIdentityAfterLogChange(entityLog);
+    await syncCitizenIdentityAfterLogChange(citizenLog);
 
     /**
      * Respond with the result

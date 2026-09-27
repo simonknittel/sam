@@ -31,20 +31,20 @@ export async function POST(request: Request) {
     /**
      * Do the thing
      */
-    const log = await prisma.entityLog.findFirst({
+    const log = await prisma.citizenLog.findFirst({
       where: {
         type: "spectrum-id",
         content: data.spectrumId,
       },
       select: {
-        entityId: true,
+        citizenId: true,
       },
     });
 
     /** The client parses the id alone, so the whole citizen never crosses */
-    if (log) return NextResponse.json({ id: log.entityId });
+    if (log) return NextResponse.json({ id: log.citizenId });
 
-    const item = await prisma.entityLog.create({
+    const item = await prisma.citizenLog.create({
       data: {
         type: "spectrum-id",
         content: data.spectrumId,
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
             id: authentication.session.user.id,
           },
         },
-        entity: {
+        citizen: {
           create: {
             createdBy: {
               connect: {
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
       select: {
         id: true,
         type: true,
-        entityId: true,
+        citizenId: true,
       },
     });
 
@@ -75,7 +75,7 @@ export async function POST(request: Request) {
       {
         type: AuditEventType.CITIZEN_CREATED,
         data: {
-          citizenId: item.entityId,
+          citizenId: item.citizenId,
           spectrumId: data.spectrumId,
         },
         createdById: authentication.session.user.id,
@@ -83,7 +83,7 @@ export async function POST(request: Request) {
       {
         type: AuditEventType.ENTITY_LOG_CREATED,
         data: {
-          entityId: item.entityId,
+          entityId: item.citizenId,
           logId: item.id,
           logType: item.type,
         },
@@ -94,7 +94,7 @@ export async function POST(request: Request) {
     /**
      * Respond with the result
      */
-    return NextResponse.json({ id: item.entityId });
+    return NextResponse.json({ id: item.citizenId });
   } catch (error) {
     /**
      * Respond with an error

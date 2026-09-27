@@ -4,12 +4,12 @@ import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import Button from "@/modules/common/components/Button";
 import { ConfirmActionButton } from "@/modules/common/components/ConfirmActionButton";
 import { api } from "@/trpc/react";
-import { type EntityLog } from "@sam-monorepo/database/browser";
+import { type CitizenLog } from "@sam-monorepo/database/browser";
 import { useRouter } from "next/navigation";
 import { FaTrash } from "react-icons/fa";
 
 interface Props {
-  readonly log: Pick<EntityLog, "id" | "entityId" | "type">;
+  readonly log: Pick<CitizenLog, "id" | "citizenId" | "type">;
 }
 
 export const DeleteLog = ({ log }: Props) => {
@@ -18,7 +18,7 @@ export const DeleteLog = ({ log }: Props) => {
 
   const deleteLog = async (formData: FormData) => {
     const response = await fetch(
-      `/api/spynet/citizen/${log.entityId}/log/${log.id}`,
+      `/api/spynet/citizen/${log.citizenId}/log/${log.id}`,
       {
         method: "DELETE",
       },
@@ -30,8 +30,8 @@ export const DeleteLog = ({ log }: Props) => {
         requestPayload: formData,
       };
 
-    await utils.entityLog.getHistory.invalidate({
-      entityId: log.entityId,
+    await utils.citizenLog.getHistory.invalidate({
+      citizenId: log.citizenId,
       // @ts-expect-error Don't know how to improve this
       type: log.type,
     });

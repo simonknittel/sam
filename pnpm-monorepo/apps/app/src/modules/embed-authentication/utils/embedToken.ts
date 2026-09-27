@@ -34,7 +34,7 @@ interface SignEmbedTokenParameters {
   readonly signingKey: EmbedSigningKey;
   readonly issuer: string;
   readonly audience: string;
-  /** `Entity.id`, the only stable identifier the embedded app should key on. */
+  /** `Citizen.id`, the only stable identifier the embedded app should key on. */
   readonly subject: string;
   /**
    * The Star Citizen handle, or null for an entity without a confirmed one.

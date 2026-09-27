@@ -10,7 +10,7 @@ const SALARY = 100;
 
 const createCitizenWithRole = async () => {
   const role = await prisma.role.create({ data: { name: "Pilot" } });
-  const citizen = await prisma.entity.create({
+  const citizen = await prisma.citizen.create({
     data: {
       handle: "citizen",
       roleAssignments: { create: { roleId: role.id } },
@@ -46,7 +46,7 @@ describe("disburseRoleSalaries", () => {
     expect(transactions).toHaveLength(1);
     expect(transactions[0]?.value).toBe(SALARY);
 
-    const { silcBalance } = await prisma.entity.findUniqueOrThrow({
+    const { silcBalance } = await prisma.citizen.findUniqueOrThrow({
       where: { id: citizen.id },
     });
     expect(silcBalance).toBe(SALARY);

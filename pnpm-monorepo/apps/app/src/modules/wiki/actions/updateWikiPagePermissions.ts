@@ -85,7 +85,7 @@ export const updateWikiPagePermissions = createAuthenticatedAction(
     if (data.ownerMode === "explicit") {
       if (!newOwnerId)
         return { error: t("Common.badRequest"), requestPayload: formData };
-      const owner = await prisma.entity.findUnique({
+      const owner = await prisma.citizen.findUnique({
         where: { id: newOwnerId },
         select: { id: true },
       });

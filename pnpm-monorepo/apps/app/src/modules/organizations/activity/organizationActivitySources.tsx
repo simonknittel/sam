@@ -13,7 +13,7 @@ import {
   ConfirmationStatus,
   OrganizationMembershipType,
   OrganizationMembershipVisibility,
-  type Entity,
+  type Citizen,
   type Organization,
 } from "@sam-monorepo/database/client";
 import { ConfirmMembership } from "../components/ConfirmMembership";
@@ -24,7 +24,7 @@ interface Input {
   /** Restricts the source to one organization's history. */
   readonly organizationId?: Organization["id"];
   /** Restricts the membership source to one citizen's history. */
-  readonly citizenId?: Entity["id"];
+  readonly citizenId?: Citizen["id"];
   /** Whether the entry's subject gets its own column. */
   readonly withTarget?: boolean;
   /**

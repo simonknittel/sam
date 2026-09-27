@@ -4,14 +4,14 @@ import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import type { BadgeRole } from "@/modules/roles/queries/getRoles";
 import { getAssignedRoles } from "@/modules/roles/utils/getRoles";
 import {
-  type Entity,
+  type Citizen,
   type RoleAssignment,
 } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 
 interface Props {
   readonly className?: string;
-  readonly entity: Pick<Entity, "id"> & {
+  readonly entity: Pick<Citizen, "id"> & {
     readonly roleAssignments: readonly Pick<
       RoleAssignment,
       "roleId" | "currentLevel"

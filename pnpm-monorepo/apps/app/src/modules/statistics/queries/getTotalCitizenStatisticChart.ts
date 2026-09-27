@@ -19,14 +19,14 @@ export const getTotalCitizenStatisticChart = cache(
     const options = normalizeOptions();
 
     const [baselineCount, citizens] = await Promise.all([
-      prisma.entity.count({
+      prisma.citizen.count({
         where: {
           createdAt: {
             lt: options.fromDate,
           },
         },
       }),
-      prisma.entity.findMany({
+      prisma.citizen.findMany({
         where: {
           createdAt: {
             gte: options.fromDate,

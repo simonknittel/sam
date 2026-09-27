@@ -1,73 +1,32 @@
 import { prisma } from "@/db";
-import type { EntityLog } from "@sam-monorepo/database/client";
-import { updateEntityCaches } from "./updateEntityCaches";
+import type { CitizenLog } from "@sam-monorepo/database/client";
+import { relinkCitizenUser } from "./citizenUserLink";
+import { updateCitizenCaches } from "./updateCitizenCaches";
 
 /**
  * Updates all data that depends on the confirmed identity logs of a citizen,
- * after a user confirms or deletes one of these logs: the display name of
- * the linked user account and the cached attribute columns of the entity.
+ * after a user confirms or deletes one of these logs: the cached attribute
+ * columns of the citizen, the link to the login and the display name of the
+ * login.
  */
 export const syncCitizenIdentityAfterLogChange = async (
-  log: Pick<EntityLog, "entityId" | "type">,
+  log: Pick<CitizenLog, "citizenId" | "type">,
 ) => {
-  if (["handle", "discord-id"].includes(log.type)) {
-    const entityLogs = await prisma.entityLog.findMany({
-      where: {
-        entityId: log.entityId,
-        type: {
-          in: ["discord-id", "handle"],
-        },
-        attributes: {
-          some: {
-            key: "confirmed",
-            value: "confirmed",
-          },
-        },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      select: {
-        type: true,
-        content: true,
-      },
+  await updateCitizenCaches(log);
+
+  if (log.type === "discord-id") await relinkCitizenUser(log.citizenId);
+
+  if (log.type === "handle" || log.type === "discord-id") {
+    const citizen = await prisma.citizen.findUniqueOrThrow({
+      where: { id: log.citizenId },
+      select: { handle: true, userId: true },
     });
 
-    const latestConfirmedHandleLog = entityLogs.find(
-      (entityLog) => entityLog.type === "handle",
-    );
-    const latestConfirmedDiscordIdLog = entityLogs.find(
-      (entityLog) => entityLog.type === "discord-id",
-    );
-
-    if (latestConfirmedDiscordIdLog) {
-      const account = await prisma.account.findUnique({
-        where: {
-          provider_providerAccountId: {
-            provider: "discord",
-            providerAccountId: latestConfirmedDiscordIdLog.content!,
-          },
-        },
-        select: {
-          userId: true,
-        },
+    if (citizen.userId)
+      await prisma.user.update({
+        where: { id: citizen.userId },
+        data: { name: citizen.handle || log.citizenId },
+        select: { id: true },
       });
-
-      if (account) {
-        await prisma.user.update({
-          where: {
-            id: account.userId,
-          },
-          data: {
-            name: latestConfirmedHandleLog?.content || log.entityId,
-          },
-          select: {
-            id: true,
-          },
-        });
-      }
-    }
   }
-
-  await updateEntityCaches(log);
 };

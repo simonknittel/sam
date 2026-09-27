@@ -22,7 +22,7 @@ export const resolveWikiRoleCitizens = withTrace(
      * Deliberately direct assignments only: a role inherited through
      * another one is not "assigned" to anybody.
      */
-    const citizens = await prisma.entity.findMany({
+    const citizens = await prisma.citizen.findMany({
       where: {
         roleAssignments: {
           some: {

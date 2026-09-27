@@ -1,4 +1,4 @@
-import type { Entity, EntityLog, Role } from "@sam-monorepo/database";
+import type { Citizen, CitizenLog, Role } from "@sam-monorepo/database";
 import { prisma } from "@sam-monorepo/database";
 
 async function main() {
@@ -9,7 +9,7 @@ async function main() {
       },
     }),
 
-    prisma.entity.findMany({
+    prisma.citizen.findMany({
       select: {
         id: true,
         discordId: true,
@@ -30,7 +30,7 @@ async function main() {
       },
     }),
 
-    prisma.entityLog.findMany({
+    prisma.citizenLog.findMany({
       where: {
         type: {
           in: ["role-added", "role-removed"],
@@ -63,8 +63,8 @@ async function main() {
 
   // Keep only the latest log per role assignment per citizen
   const aggregatedLogsPerCitizen = new Map<
-    Entity["id"],
-    Map<Role["id"], EntityLog>
+    Citizen["id"],
+    Map<Role["id"], CitizenLog>
   >();
   const logsWithMissingRole = new Map<Role["id"], number>();
   for (const log of logs) {
@@ -77,10 +77,10 @@ async function main() {
       continue;
     }
 
-    if (!aggregatedLogsPerCitizen.has(log.entityId))
-      aggregatedLogsPerCitizen.set(log.entityId, new Map());
+    if (!aggregatedLogsPerCitizen.has(log.citizenId))
+      aggregatedLogsPerCitizen.set(log.citizenId, new Map());
 
-    const citizen = aggregatedLogsPerCitizen.get(log.entityId);
+    const citizen = aggregatedLogsPerCitizen.get(log.citizenId);
     const role = citizen!.get(log.content);
 
     if (!role && log.type === "role-added") {
@@ -119,7 +119,7 @@ async function main() {
           if (citizen && validCitizenIds.has(citizen)) createdById = citizen;
 
           return {
-            citizenId: log.entityId,
+            citizenId: log.citizenId,
             roleId: log.content!,
             type: log.type === "role-added" ? "ADD" : "REMOVE",
             createdAt: log.createdAt,

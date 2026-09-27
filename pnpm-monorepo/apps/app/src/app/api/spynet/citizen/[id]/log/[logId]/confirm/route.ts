@@ -1,6 +1,6 @@
 import { prisma } from "@/db";
 import { requireAuthenticationApi } from "@/modules/auth/server";
-import { ENTITY_LOG_GUARD_SELECT } from "@/modules/citizen/queries/entityLogTableSelect";
+import { CITIZEN_LOG_GUARD_SELECT } from "@/modules/citizen/queries/citizenLogTableSelect";
 import { confirmLog } from "@/modules/citizen/utils/confirmLog";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
 import { NextResponse } from "next/server";
@@ -36,18 +36,18 @@ export async function PATCH(request: Request, props: { params: Params }) {
     const paramsData = paramsSchema.parse(await props.params);
     const body: unknown = await request.json();
     const data = patchBodySchema.parse(body);
-    const entityLog = await prisma.entityLog.findFirst({
+    const citizenLog = await prisma.citizenLog.findFirst({
       where: {
         id: paramsData.logId,
       },
-      select: ENTITY_LOG_GUARD_SELECT,
+      select: CITIZEN_LOG_GUARD_SELECT,
     });
-    if (!entityLog) throw new Error("Not found");
+    if (!citizenLog) throw new Error("Not found");
 
     /**
      * Confirm the log
      */
-    const confirmedAttribute = await confirmLog(entityLog, data.confirmed);
+    const confirmedAttribute = await confirmLog(citizenLog, data.confirmed);
 
     /**
      * Respond with the result

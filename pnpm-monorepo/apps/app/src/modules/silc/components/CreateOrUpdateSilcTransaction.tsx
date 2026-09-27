@@ -9,7 +9,7 @@ import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { NumberInput } from "@/modules/common/components/form/NumberInput";
 import { Textarea } from "@/modules/common/components/form/Textarea";
 import Modal from "@/modules/common/components/Modal";
-import type { Entity, SilcTransaction } from "@sam-monorepo/database/browser";
+import type { Citizen, SilcTransaction } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useState } from "react";
 import { FaPen, FaPlus, FaSave } from "react-icons/fa";
@@ -21,7 +21,7 @@ interface BaseProps {
 }
 
 interface CreateProps extends BaseProps {
-  initialReceiverIds?: Entity["id"][];
+  initialReceiverIds?: Citizen["id"][];
   initialDescription?: string;
 }
 

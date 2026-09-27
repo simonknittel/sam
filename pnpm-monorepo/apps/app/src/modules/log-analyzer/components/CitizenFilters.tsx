@@ -2,7 +2,7 @@
 
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
-import type { Entity } from "@sam-monorepo/database/browser";
+import type { Citizen } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useMemo } from "react";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
@@ -23,7 +23,7 @@ export const CitizenFilters = ({ className }: Props) => {
 
   /** The walk over all entries runs once per change, not once per render */
   const sortedCitizens = useMemo(() => {
-    const citizens = new Map<Entity["id"], Pick<Entity, "id" | "handle">>();
+    const citizens = new Map<Citizen["id"], Pick<Citizen, "id" | "handle">>();
     for (const entry of entries.values()) {
       if (entry.isShared && entry.citizen)
         citizens.set(entry.citizen.id, entry.citizen);
@@ -34,7 +34,7 @@ export const CitizenFilters = ({ className }: Props) => {
     );
   }, [entries]);
 
-  const handleChange = (citizenId: Entity["id"], isChecked: boolean) => {
+  const handleChange = (citizenId: Citizen["id"], isChecked: boolean) => {
     setHiddenCitizenIds((previous) =>
       isChecked
         ? previous.filter((id) => id !== citizenId)

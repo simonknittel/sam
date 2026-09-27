@@ -1,8 +1,8 @@
-import { prisma, type Entity, type Role } from "@sam-monorepo/database";
+import { prisma, type Citizen, type Role } from "@sam-monorepo/database";
 import { publishNotifications } from "../publish";
 
 interface Payload {
-  citizenId: Entity["id"];
+  citizenId: Citizen["id"];
   roleId: Role["id"];
 }
 
@@ -11,7 +11,7 @@ export const RoleAddedHandler = async (payload: Payload) => {
    * Calculate recipients
    */
   const [citizen, role] = await prisma.$transaction([
-    prisma.entity.findUnique({
+    prisma.citizen.findUnique({
       where: { id: payload.citizenId },
       select: {
         roleAssignments: {

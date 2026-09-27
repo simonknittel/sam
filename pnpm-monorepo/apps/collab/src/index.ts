@@ -256,7 +256,7 @@ const syncCitizenMentionLinks = async (
   /** Mentions of citizens that no longer exist must not create rows */
   const existingCitizens =
     newCitizenIds.length > 0
-      ? await prisma.entity.findMany({
+      ? await prisma.citizen.findMany({
           where: { id: { in: newCitizenIds } },
           select: { id: true },
         })

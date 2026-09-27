@@ -1,10 +1,10 @@
-import { prisma, type Entity } from "@sam-monorepo/database";
+import { prisma, type Citizen } from "@sam-monorepo/database";
 import { CAN_LOGIN_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import { publishNotifications } from "../publish";
 import { pickWording } from "./newYearWordings";
 
 interface Payload {
-  citizenId: Entity["id"];
+  citizenId: Citizen["id"];
   year: number;
 }
 
@@ -15,7 +15,7 @@ interface Payload {
  * handler, thus the permission is checked again here.
  */
 export const NewYearGreetingHandler = async (payload: Payload) => {
-  const citizen = await prisma.entity.findFirst({
+  const citizen = await prisma.citizen.findFirst({
     where: {
       AND: [{ id: payload.citizenId }, CAN_LOGIN_CITIZEN_WHERE],
     },

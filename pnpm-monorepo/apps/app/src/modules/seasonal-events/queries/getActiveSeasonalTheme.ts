@@ -41,7 +41,7 @@ const readViewerCitizen = async (
   citizenId: string,
 ): Promise<ViewerCitizen | null> => {
   try {
-    const citizen = await prisma.entity.findUnique({
+    const citizen = await prisma.citizen.findUnique({
       where: { id: citizenId },
       select: {
         timezone: true,

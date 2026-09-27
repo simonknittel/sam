@@ -2,7 +2,7 @@ import { requireAuthentication } from "@/modules/auth/server";
 import { CopyToClipboard } from "@/modules/common/components/CopyToClipboard";
 import { RSIButton } from "@/modules/common/components/RSIButton";
 import { Tile } from "@/modules/common/components/Tile";
-import { type Entity } from "@sam-monorepo/database/client";
+import { type Citizen } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import { Suspense } from "react";
 import {
@@ -22,17 +22,18 @@ import { OverviewSection } from "./generic-log-type/OverviewSection";
 interface Props {
   readonly className?: string;
   readonly entity: Pick<
-    Entity,
+    Citizen,
     | "id"
     | "handle"
     | "spectrumId"
     | "discordId"
     | "teamspeakId"
-    | "citizenId"
+    | "citizenRecord"
     | "communityMoniker"
     | "timezone"
     | "birthdayDay"
     | "birthdayMonth"
+    | "userId"
   >;
 }
 
@@ -79,7 +80,7 @@ export const Overview = async ({ className, entity }: Props) => {
           <OverviewSection
             type="citizen-id"
             name="Citizen ID"
-            value={entity.citizenId}
+            value={entity.citizenRecord}
             entity={entity}
           />
 

@@ -136,7 +136,7 @@ test("notes respect their classification level", async ({
   });
   await expect(page.getByText("Unbestätigt")).toBeVisible();
 
-  const noteLog = await prisma.entityLog.findFirst({
+  const noteLog = await prisma.citizenLog.findFirst({
     where: { type: "note" },
     include: { attributes: true },
   });
@@ -334,7 +334,7 @@ test("the citizen table paginates and filters", async ({
   const now = Date.now();
   const NAMED_CITIZENS = 51;
   const UNNAMED_CITIZENS = 3;
-  await prisma.entity.createMany({
+  await prisma.citizen.createMany({
     data: [
       ...Array.from({ length: NAMED_CITIZENS }, (unused, index) => ({
         handle: `bewohner-${String(index + 1).padStart(2, "0")}`,

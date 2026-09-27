@@ -56,7 +56,7 @@ export const SilcTransactionsCreatedHandler = async (payload: Payload) => {
   )
     return;
 
-  const citizensWithRoles = await prisma.entity.findMany({
+  const citizensWithRoles = await prisma.citizen.findMany({
     where: {
       id: {
         in: transactions.map((transaction) => transaction.receiverId),

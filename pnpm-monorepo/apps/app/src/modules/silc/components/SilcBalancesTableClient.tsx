@@ -2,7 +2,7 @@
 
 import { Link } from "@/modules/common/components/Link";
 import { SortableTable } from "@/modules/common/components/SortableTable";
-import type { Entity } from "@sam-monorepo/database/browser";
+import type { Citizen } from "@sam-monorepo/database/browser";
 import {
   createColumnHelper,
   getCoreRowModel,
@@ -13,7 +13,7 @@ import {
 import clsx from "clsx";
 import { useMemo, useState } from "react";
 
-type Row = Pick<Entity, "id" | "handle" | "silcBalance" | "totalEarnedSilc">;
+type Row = Pick<Citizen, "id" | "handle" | "silcBalance" | "totalEarnedSilc">;
 
 const columnHelper = createColumnHelper<Row>();
 

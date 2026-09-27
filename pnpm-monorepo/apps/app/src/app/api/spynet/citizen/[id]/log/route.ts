@@ -103,7 +103,7 @@ export async function POST(request: Request, props: { params: Params }) {
     /**
      * Do the thing
      */
-    const entity = await prisma.entity.findFirst({
+    const entity = await prisma.citizen.findFirst({
       where: {
         id: paramsData,
       },
@@ -114,7 +114,7 @@ export async function POST(request: Request, props: { params: Params }) {
 
     if (!entity) throw new Error("Not found");
 
-    const item = await prisma.entityLog.create({
+    const item = await prisma.citizenLog.create({
       data: {
         type: data.type,
         content: data.content,
@@ -123,7 +123,7 @@ export async function POST(request: Request, props: { params: Params }) {
             id: authentication.session.user.id,
           },
         },
-        entity: {
+        citizen: {
           connect: {
             id: entity.id,
           },
@@ -157,7 +157,7 @@ export async function POST(request: Request, props: { params: Params }) {
       {
         type: AuditEventType.ENTITY_LOG_CREATED,
         data: {
-          entityId: item.entityId,
+          entityId: item.citizenId,
           logId: item.id,
           logType: item.type,
         },

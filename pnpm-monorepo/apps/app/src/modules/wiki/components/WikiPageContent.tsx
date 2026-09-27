@@ -99,7 +99,7 @@ export const WikiPageContent = async ({
     permissionRoles,
   ] = await Promise.all([
     permissions.effectiveOwnerId
-      ? prisma.entity.findUnique({
+      ? prisma.citizen.findUnique({
           where: { id: permissions.effectiveOwnerId },
           select: { id: true, handle: true },
         })

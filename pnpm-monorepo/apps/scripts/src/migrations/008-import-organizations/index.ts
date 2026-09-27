@@ -3,7 +3,7 @@ import {
   OrganizationMembershipType,
   OrganizationMembershipVisibility,
   prisma,
-  type Entity,
+  type Citizen,
   type Organization,
   type OrganizationMembershipHistoryEntry,
 } from "@sam-monorepo/database";
@@ -58,7 +58,7 @@ async function main() {
 
     const { beitritt, verlassen } = parseDates(row);
 
-    const citizen = await prisma.entity.findFirst({
+    const citizen = await prisma.citizen.findFirst({
       where: {
         spectrumId,
       },
@@ -249,7 +249,7 @@ const getOrg = async (spectrumId: string) => {
   return existingOrg;
 };
 
-export const updateActiveMembership = async (citizenId: Entity["id"]) => {
+export const updateActiveMembership = async (citizenId: Citizen["id"]) => {
   /**
    * Figure out currently active memberships
    */

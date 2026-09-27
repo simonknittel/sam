@@ -17,7 +17,7 @@ import { formatDate } from "@/modules/common/utils/formatDate";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import {
   EventActivityType,
-  type Entity,
+  type Citizen,
   type Event,
   type Prisma,
 } from "@sam-monorepo/database/client";
@@ -132,7 +132,7 @@ export const createEventActivitySource = ({
     },
   );
 
-type CitizenById = ReadonlyMap<string, Pick<Entity, "id" | "handle">>;
+type CitizenById = ReadonlyMap<string, Pick<Citizen, "id" | "handle">>;
 
 const resolveAffectedCitizens = async (
   activities: readonly ActivityRow[],
@@ -142,7 +142,7 @@ const resolveAffectedCitizens = async (
     .filter((citizenId): citizenId is string => citizenId !== null);
   if (citizenIds.length <= 0) return new Map();
 
-  const citizens = await prisma.entity.findMany({
+  const citizens = await prisma.citizen.findMany({
     where: { id: { in: citizenIds } },
     select: { id: true, handle: true },
   });

@@ -1,12 +1,12 @@
 import { prisma } from "@/db";
 import { getVisibleRoles } from "@/modules/roles/utils/getRoles";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import type { Entity, Role } from "@sam-monorepo/database/client";
+import type { Citizen, Role } from "@sam-monorepo/database/client";
 import { cache } from "react";
 
 interface CitizensGroupedByVisibleRoles {
   /** Each citizen who has at least one of the visible roles, by handle */
-  readonly citizens: Pick<Entity, "id" | "handle">[];
+  readonly citizens: Pick<Citizen, "id" | "handle">[];
   /**
    * One group for each visible role that has citizens, in the order of the
    * visible roles (by name). The groups refer to the citizens by id, because
@@ -15,7 +15,7 @@ interface CitizensGroupedByVisibleRoles {
    */
   readonly roleGroups: {
     readonly roleId: Role["id"];
-    readonly citizenIds: Entity["id"][];
+    readonly citizenIds: Citizen["id"][];
   }[];
 }
 
@@ -26,7 +26,7 @@ export const getCitizensGroupedByVisibleRoles = cache(
       const visibleRoles = await getVisibleRoles();
       const visibleRoleIds = visibleRoles.map((role) => role.id);
 
-      const citizens = await prisma.entity.findMany({
+      const citizens = await prisma.citizen.findMany({
         where: {
           roleAssignments: {
             some: {
@@ -51,7 +51,7 @@ export const getCitizensGroupedByVisibleRoles = cache(
         },
       });
 
-      const citizenIdsByRoleId = new Map<Role["id"], Entity["id"][]>();
+      const citizenIdsByRoleId = new Map<Role["id"], Citizen["id"][]>();
       for (const citizen of citizens) {
         for (const { roleId } of citizen.roleAssignments) {
           const citizenIds = citizenIdsByRoleId.get(roleId);

@@ -2,12 +2,12 @@ import { prisma } from "@/db";
 import {
   ConfirmationStatus,
   OrganizationMembershipType,
-  type Entity,
+  type Citizen,
   type Organization,
   type OrganizationMembershipHistoryEntry,
 } from "@sam-monorepo/database/client";
 
-export const updateActiveMembership = async (citizenId: Entity["id"]) => {
+export const updateActiveMembership = async (citizenId: Citizen["id"]) => {
   /**
    * Figure out currently active memberships
    */

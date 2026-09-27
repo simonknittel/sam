@@ -5,56 +5,6 @@ import { captureAsyncFunc } from "../common/xray";
 
 export const removeExpiredRoles = async () => {
   await captureAsyncFunc("removeExpiredRoles", async () => {
-    const citizenWithRoles = await captureAsyncFunc(
-      "find citizens with roles",
-      () =>
-        prisma.entity.findMany({
-          where: {
-            roleAssignments: {
-              some: {},
-            },
-            discordId: {
-              not: null,
-            },
-          },
-          select: {
-            id: true,
-            handle: true,
-            discordId: true,
-            roleAssignments: {
-              select: {
-                roleId: true,
-              },
-            },
-          },
-        }),
-    );
-
-    if (citizenWithRoles.length <= 0) {
-      log.info("No citizens with roles found");
-      return;
-    }
-
-    const accounts = await captureAsyncFunc("find accounts for citizens", () =>
-      prisma.account.findMany({
-        where: {
-          provider: "discord",
-          providerAccountId: {
-            in: citizenWithRoles.map((citizen) => citizen.discordId!),
-          },
-        },
-        select: {
-          id: true,
-          providerAccountId: true,
-          user: {
-            select: {
-              lastSeenAt: true,
-            },
-          },
-        },
-      }),
-    );
-
     const rolesWithMaxAge = await captureAsyncFunc(
       "find roles with max age",
       () =>
@@ -68,6 +18,47 @@ export const removeExpiredRoles = async () => {
             id: true,
             name: true,
             maxAgeDays: true,
+          },
+        }),
+    );
+
+    if (rolesWithMaxAge.length <= 0) {
+      log.info("No roles with max age found");
+      return;
+    }
+
+    /**
+     * Only citizens with a login can be active, thus a citizen without one
+     * keeps the role.
+     */
+    const assignments = await captureAsyncFunc(
+      "find assignments of citizens with a login",
+      () =>
+        prisma.roleAssignment.findMany({
+          where: {
+            roleId: {
+              in: rolesWithMaxAge.map((role) => role.id),
+            },
+            citizen: {
+              userId: {
+                not: null,
+              },
+            },
+          },
+          select: {
+            roleId: true,
+            createdAt: true,
+            citizen: {
+              select: {
+                id: true,
+                handle: true,
+                user: {
+                  select: {
+                    lastSeenAt: true,
+                  },
+                },
+              },
+            },
           },
         }),
     );
@@ -87,28 +78,26 @@ export const removeExpiredRoles = async () => {
       roleId: string;
       roleName: string;
     }[] = [];
-    for (const citizenWithRole of citizenWithRoles) {
-      if (citizenWithRole.roleAssignments.length <= 0) continue;
+    for (const assignment of assignments) {
+      const roleExpirationDate = expirationMap.get(assignment.roleId)!;
 
-      const account = accounts.find(
-        (account) => account.providerAccountId === citizenWithRole.discordId,
-      );
+      /**
+       * A role assigned after the last visit counts as activity too,
+       * otherwise the next run would remove a role assigned yesterday.
+       */
+      const lastSeenAt = assignment.citizen.user?.lastSeenAt;
+      const lastActivityAt =
+        lastSeenAt && lastSeenAt > assignment.createdAt
+          ? lastSeenAt
+          : assignment.createdAt;
 
-      for (const roleAssignment of citizenWithRole.roleAssignments) {
-        const roleExpirationDate = expirationMap.get(roleAssignment.roleId);
-        if (!roleExpirationDate) continue;
-
-        if (
-          !account?.user?.lastSeenAt ||
-          account.user.lastSeenAt < roleExpirationDate
-        ) {
-          changes.push({
-            citizenId: citizenWithRole.id,
-            citizenHandle: citizenWithRole.handle,
-            roleId: roleAssignment.roleId,
-            roleName: roleNameMap.get(roleAssignment.roleId)!,
-          });
-        }
+      if (lastActivityAt < roleExpirationDate) {
+        changes.push({
+          citizenId: assignment.citizen.id,
+          citizenHandle: assignment.citizen.handle,
+          roleId: assignment.roleId,
+          roleName: roleNameMap.get(assignment.roleId)!,
+        });
       }
     }
 
@@ -127,16 +116,11 @@ export const removeExpiredRoles = async () => {
           })),
         }),
 
-        ...changes.map((change) =>
-          prisma.roleAssignment.delete({
-            where: {
-              citizenId_roleId: {
-                citizenId: change.citizenId,
-                roleId: change.roleId,
-              },
-            },
-          }),
-        ),
+        prisma.roleAssignment.deleteMany({
+          where: {
+            OR: changes.map(({ citizenId, roleId }) => ({ citizenId, roleId })),
+          },
+        }),
       ]),
     );
 

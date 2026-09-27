@@ -6,7 +6,7 @@ import {
 } from "@/modules/activity/utils/activityFilterParams";
 import { DateRangeFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/DateRangeFilter";
 import { MultiSelectComboboxFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/MultiSelectComboboxFilter";
-import type { Entity } from "@sam-monorepo/database/client";
+import type { Citizen } from "@sam-monorepo/database/client";
 import {
   EVENT_ACTIVITY_TYPE_LABELS,
   EVENT_SCHEDULE_TYPE_LABEL,
@@ -14,7 +14,7 @@ import {
 } from "../activity/eventActivityTypes";
 
 interface Props {
-  readonly actors: Pick<Entity, "id" | "handle">[];
+  readonly actors: Pick<Citizen, "id" | "handle">[];
 }
 
 export const EventActivityFilters = ({ actors }: Props) => {

@@ -1,5 +1,5 @@
 import type {
-  Entity,
+  Citizen,
   Event,
   EventParticipant,
   Prisma,
@@ -8,9 +8,9 @@ import type {
 interface Input {
   readonly participantId: EventParticipant["id"];
   readonly eventId: Event["id"];
-  readonly citizenId: Entity["id"];
+  readonly citizenId: Citizen["id"];
   /** The citizen themselves on a self-cancel, the manager on a removal */
-  readonly cancelledById: Entity["id"] | null;
+  readonly cancelledById: Citizen["id"] | null;
 }
 
 /**

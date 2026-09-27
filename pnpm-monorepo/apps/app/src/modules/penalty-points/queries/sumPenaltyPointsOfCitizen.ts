@@ -1,6 +1,6 @@
 import { prisma } from "@/db";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import { type Entity } from "@sam-monorepo/database/client";
+import { type Citizen } from "@sam-monorepo/database/client";
 import { buildActivePenaltyEntryWhere } from "../utils/penaltyEntryFilters";
 
 /**
@@ -10,7 +10,7 @@ import { buildActivePenaltyEntryWhere } from "../utils/penaltyEntryFilters";
  */
 export const sumPenaltyPointsOfCitizen = withTrace(
   "sumPenaltyPointsOfCitizen",
-  async (citizenId: Entity["id"]) => {
+  async (citizenId: Citizen["id"]) => {
     const aggregation = await prisma.penaltyEntry.aggregate({
       where: {
         citizenId,

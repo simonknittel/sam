@@ -76,7 +76,7 @@ export const updateMyProfile = createAuthenticatedAction(
      */
     const citizenId = authentication.session.entity.id;
 
-    const currentCitizen = await prisma.entity.findUniqueOrThrow({
+    const currentCitizen = await prisma.citizen.findUniqueOrThrow({
       where: { id: citizenId },
       select: { birthdayDay: true, birthdayMonth: true },
     });
@@ -89,7 +89,7 @@ export const updateMyProfile = createAuthenticatedAction(
       currentCitizen.birthdayDay !== birthdayDay ||
       currentCitizen.birthdayMonth !== birthdayMonth;
 
-    await prisma.entity.update({
+    await prisma.citizen.update({
       where: { id: citizenId },
       data: {
         timezone,

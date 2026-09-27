@@ -1,9 +1,9 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import {
-  ENTITY_LOG_ATTRIBUTE_SELECT,
-  ENTITY_LOG_TABLE_SELECT,
-} from "@/modules/citizen/queries/entityLogTableSelect";
+  CITIZEN_LOG_ATTRIBUTE_SELECT,
+  CITIZEN_LOG_TABLE_SELECT,
+} from "@/modules/citizen/queries/citizenLogTableSelect";
 import isAllowedToRead from "@/modules/citizen/utils/isAllowedToRead";
 import Pagination from "@/modules/common/components/Pagination";
 import {
@@ -15,7 +15,7 @@ import {
   sortAscWithAndNullLast,
   sortDescAndNullLast,
 } from "@/modules/common/utils/sorting";
-import type { EntityLogConfirmationState } from "@/types";
+import type { CitizenLogConfirmationState } from "@/types";
 import clsx from "clsx";
 import { OtherFilters } from "./OtherFilters";
 import { type Row, OtherTable } from "./OtherTable";
@@ -30,7 +30,7 @@ const OtherTableTile = async ({ className, searchParams }: Props) => {
 
   const currentPage = getCurrentPageFromSearchParams(searchParams);
 
-  const entityLogs = await prisma.entityLog.findMany({
+  const citizenLogs = await prisma.citizenLog.findMany({
     where: {
       type: {
         in: [
@@ -43,28 +43,28 @@ const OtherTableTile = async ({ className, searchParams }: Props) => {
       },
     },
     select: {
-      ...ENTITY_LOG_TABLE_SELECT,
+      ...CITIZEN_LOG_TABLE_SELECT,
       attributes: {
         where: {
           key: "confirmed",
         },
-        select: ENTITY_LOG_ATTRIBUTE_SELECT,
+        select: CITIZEN_LOG_ATTRIBUTE_SELECT,
       },
     },
   });
 
-  const rows = entityLogs.map((entityLog): Row => {
-    const confirmed = entityLog.attributes.find(
+  const rows = citizenLogs.map((citizenLog): Row => {
+    const confirmed = citizenLog.attributes.find(
       (attribute) => attribute.key === "confirmed",
     );
 
     return {
-      entity: entityLog.entity,
+      entity: citizenLog.citizen,
       confirmationState: confirmed?.value as
-        EntityLogConfirmationState | undefined,
+        CitizenLogConfirmationState | undefined,
       confirmedAt: confirmed?.createdAt,
       confirmedBy: confirmed?.createdBy,
-      entityLog,
+      citizenLog,
     };
   });
 
@@ -73,7 +73,7 @@ const OtherTableTile = async ({ className, searchParams }: Props) => {
       rows.map(async (row) => {
         return {
           row,
-          canRead: await isAllowedToRead(row.entityLog, authentication),
+          canRead: await isAllowedToRead(row.citizenLog, authentication),
         };
       }),
     )
@@ -105,7 +105,7 @@ const OtherTableTile = async ({ className, searchParams }: Props) => {
 
     let type;
     if (filters.some((filter) => filter.startsWith("type-"))) {
-      if (filters.includes(`type-${row.entityLog.type}`)) {
+      if (filters.includes(`type-${row.citizenLog.type}`)) {
         type = true;
       } else {
         type = false;
@@ -132,14 +132,14 @@ const OtherTableTile = async ({ className, searchParams }: Props) => {
 
       case "created-at-asc":
         return sortAscWithAndNullLast(
-          a.entityLog.createdAt.getTime(),
-          b.entityLog.createdAt.getTime(),
+          a.citizenLog.createdAt.getTime(),
+          b.citizenLog.createdAt.getTime(),
         );
 
       default:
         return sortDescAndNullLast(
-          a.entityLog.createdAt.getTime(),
-          b.entityLog.createdAt.getTime(),
+          a.citizenLog.createdAt.getTime(),
+          b.citizenLog.createdAt.getTime(),
         );
     }
   });

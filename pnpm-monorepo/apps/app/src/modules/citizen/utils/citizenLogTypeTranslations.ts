@@ -1,4 +1,4 @@
-export const entityLogTypeTranslations: Record<string, string> = {
+export const citizenLogTypeTranslations: Record<string, string> = {
   handle: "Handle",
   "discord-id": "Discord ID",
   "teamspeak-id": "Teamspeak ID",

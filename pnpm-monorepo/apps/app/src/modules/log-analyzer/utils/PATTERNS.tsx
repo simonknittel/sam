@@ -1,4 +1,4 @@
-import type { Entity } from "@sam-monorepo/database/browser";
+import type { Citizen } from "@sam-monorepo/database/browser";
 import type { ReactNode } from "react";
 import type { IconType } from "react-icons";
 import {
@@ -92,7 +92,7 @@ export interface IEntry {
    * The citizen the entry belongs to: the citizen who shared it, or the
    * current user for a local one. Null when the user has no linked citizen.
    */
-  readonly citizen: Pick<Entity, "id" | "handle"> | null;
+  readonly citizen: Pick<Citizen, "id" | "handle"> | null;
   /** True when another citizen shared the entry instead of the local parser. */
   readonly isShared: boolean;
   /**

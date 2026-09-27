@@ -41,7 +41,7 @@ model Event {
   discordPublishedId   String?   @unique
   discordPublishedAt   DateTime?
   discordPublishedById String?
-  discordPublishedBy   Entity?   @relation("discordPublishedEvents", fields: [discordPublishedById], references: [id], onDelete: SetNull)
+  discordPublishedBy   Citizen?  @relation("discordPublishedEvents", fields: [discordPublishedById], references: [id], onDelete: SetNull)
 
   /// The publish target. Exactly one is set while the event is published and
   /// both are NULL otherwise (enforced by a CHECK constraint, see migration
@@ -66,13 +66,13 @@ model Event {
   /// The creating citizen of app events; backfilled for Discord events
   /// whose Discord creator matches a citizen's Discord id.
   createdById String?
-  createdBy   Entity? @relation("createdEvents", fields: [createdById], references: [id], onDelete: SetNull)
+  createdBy   Citizen? @relation("createdEvents", fields: [createdById], references: [id], onDelete: SetNull)
 
   /// Soft delete for app events. Discord events cancelled on Discord are
   /// hard-deleted by the sync, like before the unification.
   deletedAt   DateTime?
   deletedById String?
-  deletedBy   Entity?   @relation("deletedEvents", fields: [deletedById], references: [id], onDelete: SetNull)
+  deletedBy   Citizen?  @relation("deletedEvents", fields: [deletedById], references: [id], onDelete: SetNull)
 
   visibility      EventVisibility       @default(PUBLIC)
   visibilityRoles EventVisibilityRole[]
@@ -80,7 +80,7 @@ model Event {
   participants  EventParticipant[]
   positions     EventPosition[]
   lineupEnabled Boolean            @default(false)
-  managers      Entity[]           @relation("eventManagers")
+  managers      Citizen[]          @relation("eventManagers")
   activities    EventActivity[]
 
   /// Set when the briefing root page's read scope first left MANAGERS.
@@ -118,7 +118,7 @@ model EventParticipant {
   source  EventSource
 
   citizenId     String?
-  citizen       Entity? @relation("citizen", fields: [citizenId], references: [id], onDelete: Cascade)
+  citizen       Citizen? @relation("citizen", fields: [citizenId], references: [id], onDelete: Cascade)
   discordUserId String?
 
   comment String?
@@ -126,7 +126,7 @@ model EventParticipant {
   createdAt     DateTime  @default(now())
   cancelledAt   DateTime?
   cancelledById String?
-  cancelledBy   Entity?   @relation("cancelledBy", fields: [cancelledById], references: [id], onDelete: SetNull)
+  cancelledBy   Citizen?  @relation("cancelledBy", fields: [cancelledById], references: [id], onDelete: SetNull)
 
   /// Mirror of citizenId/discordUserId while the row is active, NULL once
   /// cancelled: Postgres treats NULLs as distinct, so the unique constraints
@@ -168,7 +168,7 @@ model EventActivity {
   type      EventActivityType
   payload   Json?
   citizenId String?
-  citizen   Entity?           @relation("citizen", fields: [citizenId], references: [id], onDelete: SetNull)
+  citizen   Citizen?          @relation("citizen", fields: [citizenId], references: [id], onDelete: SetNull)
   createdAt DateTime          @default(now())
 
   @@index([eventId, createdAt])
@@ -224,17 +224,17 @@ model EventTemplate {
 
   createdAt   DateTime  @default(now())
   createdById String?
-  createdBy   Entity?   @relation("createdEventTemplates", fields: [createdById], references: [id], onDelete: SetNull)
+  createdBy   Citizen?  @relation("createdEventTemplates", fields: [createdById], references: [id], onDelete: SetNull)
   updatedAt   DateTime  @updatedAt
   updatedById String?
-  updatedBy   Entity?   @relation("updatedEventTemplates", fields: [updatedById], references: [id], onDelete: SetNull)
+  updatedBy   Citizen?  @relation("updatedEventTemplates", fields: [updatedById], references: [id], onDelete: SetNull)
   /// The live owner. NULL only when the owning citizen was deleted, which
   /// leaves the template manageable by `event;manage` holders alone.
   ownedById   String?
-  ownedBy     Entity?   @relation("ownedEventTemplates", fields: [ownedById], references: [id], onDelete: SetNull)
+  ownedBy     Citizen?  @relation("ownedEventTemplates", fields: [ownedById], references: [id], onDelete: SetNull)
   deletedAt   DateTime?
   deletedById String?
-  deletedBy   Entity?   @relation("deletedEventTemplates", fields: [deletedById], references: [id], onDelete: SetNull)
+  deletedBy   Citizen?  @relation("deletedEventTemplates", fields: [deletedById], references: [id], onDelete: SetNull)
 
   @@index([ownedById])
   @@index([deletedAt])
@@ -292,7 +292,7 @@ model EventPosition {
   requiredRoles    Role[]
   applications     EventPositionApplication[]     @relation("applications")
   citizenId        String?
-  citizen          Entity?                        @relation("citizen", fields: [citizenId], references: [id], onDelete: SetNull)
+  citizen          Citizen?                       @relation("citizen", fields: [citizenId], references: [id], onDelete: SetNull)
   parentPositionId String?
   parentPosition   EventPosition?                 @relation("parentPosition", fields: [parentPositionId], references: [id], onDelete: Cascade)
   childPositions   EventPosition[]                @relation("parentPosition")
@@ -324,7 +324,7 @@ model EventPositionApplication {
   positionId String
   position   EventPosition @relation("applications", fields: [positionId], references: [id], onDelete: Cascade)
   citizenId  String
-  citizen    Entity        @relation("citizen", fields: [citizenId], references: [id], onDelete: Cascade)
+  citizen    Citizen       @relation("citizen", fields: [citizenId], references: [id], onDelete: Cascade)
   createdAt  DateTime      @default(now())
 
   @@unique([positionId, citizenId])

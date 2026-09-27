@@ -21,7 +21,7 @@ export const getEventCitizens = cache(async (eventId: Event["id"]) => {
   const { citizenIds, discordUserIds } =
     collectParticipantOwners(databaseParticipants);
 
-  const citizens = await prisma.entity.findMany({
+  const citizens = await prisma.citizen.findMany({
     where: {
       OR: [{ id: { in: citizenIds } }, { discordId: { in: discordUserIds } }],
     },

@@ -49,7 +49,7 @@ const groupBy = ({ where }: GroupByArguments) => {
   }));
 };
 
-const { updateEntity } = vi.hoisted(() => ({ updateEntity: vi.fn() }));
+const { updateCitizen } = vi.hoisted(() => ({ updateCitizen: vi.fn() }));
 
 vi.mock("@/db", () => ({
   prisma: {
@@ -57,7 +57,7 @@ vi.mock("@/db", () => ({
       groupBy: (groupByArguments: GroupByArguments) =>
         groupBy(groupByArguments),
     },
-    entity: { update: updateEntity },
+    citizen: { update: updateCitizen },
   },
 }));
 
@@ -73,7 +73,7 @@ describe("update citizens SILC balances", () => {
       citizenIds,
       TRANSACTIONS.filter((transaction) => transaction.deletedAt === null),
     );
-    expect(updateEntity.mock.calls).toEqual(
+    expect(updateCitizen.mock.calls).toEqual(
       [...replayedBalances].map(([id, { balance, totalEarned }]) => [
         {
           where: { id },
@@ -81,7 +81,7 @@ describe("update citizens SILC balances", () => {
         },
       ]),
     );
-    expect(updateEntity).toHaveBeenCalledWith({
+    expect(updateCitizen).toHaveBeenCalledWith({
       where: { id: "alice" },
       data: { silcBalance: 120, totalEarnedSilc: 150 },
     });
