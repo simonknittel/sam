@@ -234,23 +234,21 @@ test("a log entry is confirmed, and a second one marked a false report", async (
   await expect
     .poll(
       async () => {
-        const attributes = await prisma.citizenLogAttribute.findMany({
+        const logs = await prisma.citizenLog.findMany({
           where: {
-            key: "confirmed",
-            citizenLog: { citizenId: target.entity.id },
+            citizenId: target.entity.id,
+            type: "handle",
+            confirmed: { not: null },
           },
-          select: { value: true, citizenLog: { select: { content: true } } },
+          select: { content: true, confirmed: true },
         });
         return Object.fromEntries(
-          attributes.map((attribute) => [
-            attribute.citizenLog.content,
-            attribute.value,
-          ]),
+          logs.map((log) => [log.content, log.confirmed]),
         );
       },
       { timeout: ACTION_FEEDBACK_TIMEOUT },
     )
-    .toEqual({ ersterhandle: "false-report", zweiterhandle: "confirmed" });
+    .toEqual({ ersterhandle: "FALSE_REPORT", zweiterhandle: "CONFIRMED" });
 
   /** Only the confirmed one becomes the citizen's handle */
   await expect
