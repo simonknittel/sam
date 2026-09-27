@@ -1,10 +1,12 @@
 import { prisma } from "@/db";
 import type { Event } from "@sam-monorepo/database/client";
 import { cache } from "react";
+import { buildRequiredVariantShipWhere } from "../queries/eventRelationSelects";
 import { collectParticipantOwners } from "./collectParticipantOwners";
 
 /**
- * The event's active participants as citizens with their ships.
+ * The event's active participants as citizens with their ships of the
+ * required variants.
  */
 export const getEventCitizens = cache(async (eventId: Event["id"]) => {
   const databaseParticipants = await prisma.eventParticipant.findMany({
@@ -30,11 +32,8 @@ export const getEventCitizens = cache(async (eventId: Event["id"]) => {
       handle: true,
       deletedAt: true,
       ships: {
-        where: {
-          deletedAt: null,
-        },
+        where: buildRequiredVariantShipWhere(eventId),
         select: {
-          id: true,
           variantId: true,
         },
       },
