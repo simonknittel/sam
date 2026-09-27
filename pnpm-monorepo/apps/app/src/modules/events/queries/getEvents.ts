@@ -6,6 +6,7 @@ import { EventSource, type Prisma } from "@sam-monorepo/database/client";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
 import { EVENT_PAGE_RELATIONS_SELECT } from "./eventRelationSelects";
+import { getOpenEventsWhere } from "./getOpenEventsWhere";
 
 const EVENTS_PAGE_SIZE = 10;
 
@@ -49,11 +50,6 @@ export type EventListItem = Prisma.EventGetPayload<{
   select: ReturnType<typeof eventListSelect>;
 }>;
 
-/** Events that have not ended yet — the filter behind the "open" status */
-const openEventsWhere = (now: Date): Prisma.EventWhereInput => ({
-  OR: [{ startTime: { gte: now } }, { endTime: { gte: now } }],
-});
-
 /**
  * How many open events there are in total — for the dashboard tile, which
  * only lists the next few of them.
@@ -65,7 +61,7 @@ export const getOpenEventCount = cache(
 
     return prisma.event.count({
       where: {
-        AND: [openEventsWhere(new Date()), await getVisibleEventsWhere()],
+        AND: [getOpenEventsWhere(new Date()), await getVisibleEventsWhere()],
       },
     });
   }),
@@ -116,7 +112,7 @@ export const getEvents = cache(
       if (status === "closed") {
         where = { startTime: { lt: now } };
       } else if (status === "open") {
-        where = openEventsWhere(now);
+        where = getOpenEventsWhere(now);
       } else {
         // "all" - no additional filtering needed
         where = {};

@@ -11,6 +11,7 @@ import { withTrace } from "@/modules/tracing/utils/withTrace";
 import type { Prisma } from "@sam-monorepo/database/client";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
+import { getOpenTasksWhere } from "./getOpenTasksWhere";
 import { getVisibleTasksWhere } from "./getVisibleTasksWhere";
 import { TASK_LIST_SELECT, type TaskListRow } from "./taskListSelect";
 
@@ -104,21 +105,7 @@ const getOpenTasks = async (filterWhere: Prisma.TaskWhereInput) => {
   return prisma.task.findMany({
     where: {
       AND: [
-        {
-          cancelledAt: null,
-          deletedAt: null,
-          completedAt: null,
-          OR: [
-            {
-              expiresAt: {
-                gte: new Date(),
-              },
-            },
-            {
-              expiresAt: null,
-            },
-          ],
-        },
+        getOpenTasksWhere(new Date()),
         filterWhere,
         await getVisibleTasksWhere(),
       ],

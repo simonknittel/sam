@@ -4,6 +4,7 @@ export {
 } from "@sam-monorepo/domain";
 import {
   AuditEventType,
+  ReadMarkerSubject,
   type AuditEventDataByType,
 } from "@sam-monorepo/domain";
 
@@ -28,6 +29,7 @@ export const HIGH_VOLUME_AUDIT_EVENT_TYPES: ReadonlySet<AuditEventType> =
     AuditEventType.ON_SITE_NOTIFICATION_UNARCHIVED,
     AuditEventType.CHANGELOG_ENTRIES_SEEN,
     AuditEventType.LOG_ANALYZER_ENTRIES_UPLOADED,
+    AuditEventType.READ_MARKER_CREATED,
   ]);
 
 interface AuditEventDefinition<Type extends AuditEventType> {
@@ -2310,5 +2312,15 @@ export const AuditEventDefinitions: {
     },
     message: (data) =>
       `Admin stopped to assume user ${data.assumedUserName ?? data.assumedUserId}`,
+  },
+
+  [AuditEventType.READ_MARKER_CREATED]: {
+    type: AuditEventType.READ_MARKER_CREATED,
+    data: {
+      citizenId: "string",
+      subject: ReadMarkerSubject.Task,
+      subjectId: "string",
+    },
+    message: (data) => `Marked ${data.subject} as read (${data.subjectId})`,
   },
 };
