@@ -1,4 +1,5 @@
 import { RadioFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/RadioFilter";
+import { TaskListStatus } from "../utils/TaskListStatus";
 
 export const Filters = () => {
   return (
@@ -7,8 +8,9 @@ export const Filters = () => {
         name="status"
         label="Status"
         items={[
-          { value: "open", label: "Offen", default: true },
-          { value: "closed", label: "Geschlossen" },
+          { value: TaskListStatus.Open, label: "Offen", default: true },
+          { value: TaskListStatus.New, label: "Neu" },
+          { value: TaskListStatus.Closed, label: "Geschlossen" },
         ]}
         resetCursorPagination
       />

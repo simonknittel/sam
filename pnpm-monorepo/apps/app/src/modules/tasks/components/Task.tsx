@@ -4,8 +4,12 @@ import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { AccordeonLink } from "@/modules/common/components/Accordeon";
 import { Badge } from "@/modules/common/components/Badge";
 import { Link } from "@/modules/common/components/Link";
+import { UnreadEdge } from "@/modules/common/components/UnreadEdge";
 import { formatDate } from "@/modules/common/utils/formatDate";
+import { NewMarkerButton } from "@/modules/read-markers/components/NewMarkerButton";
+import { useMarkAsRead } from "@/modules/read-markers/hooks/useMarkAsRead";
 import type { TaskListRow } from "@/modules/tasks/queries/taskListSelect";
+import { ReadMarkerSubject } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import type { ReactNode } from "react";
 import { BsExclamationOctagonFill } from "react-icons/bs";
@@ -16,11 +20,18 @@ import { TbRepeatOnce } from "react-icons/tb";
 interface Props {
   readonly className?: string;
   readonly task: TaskListRow;
+  readonly isNew: boolean;
 }
 
-export const Task = ({ className, task }: Props) => {
+export const Task = ({ className, task, isNew: isNewOnServer }: Props) => {
   const authentication = useAuthentication();
   if (!authentication) throw new Error("Unauthorized");
+
+  const { isNew, markAsRead } = useMarkAsRead(
+    ReadMarkerSubject.Task,
+    task.id,
+    isNewOnServer,
+  );
 
   const badges: ReactNode[] = [];
   if (task.expiresAt) {
@@ -111,25 +122,47 @@ export const Task = ({ className, task }: Props) => {
   );
 
   return (
-    <Link
-      href={`/app/tasks/${task.id}`}
-      title="Details öffnen"
+    <article
       className={clsx(
-        "flex bg-secondary overflow-hidden hover:bg-neutral-800 corners-secondary",
+        "relative flex bg-secondary overflow-hidden hover:bg-neutral-800 focus-within:bg-neutral-800 active:bg-neutral-700 corners-secondary has-[a:focus-visible]:outline-2 outline-offset-2 outline-interaction-700",
         className,
       )}
     >
+      {isNew && <UnreadEdge />}
+
       {isTaskAssignedToCurrentCitizen && (
-        <div
+        /* A second link above the covering link keeps the tooltip of the
+        strip. It has the same target as the title link, thus the keyboard and
+        assistive technology skip it. */
+        <Link
+          href={`/app/tasks/${task.id}`}
+          tabIndex={-1}
+          aria-hidden="true"
           title="Dieser Task ist mir zugewiesen"
-          className="bg-me flex items-center p-2"
+          className="relative bg-me flex items-center p-2"
         >
           <FaCheck className="text-sm" />
-        </div>
+        </Link>
       )}
 
       <div className="flex-1">
-        <h3 className="font-bold p-2">{task.title}</h3>
+        <div className="flex items-center gap-2 p-2">
+          <h3 className="font-bold">
+            {/* The link covers the whole row, thus the row opens the details
+            like before. The marker button sits above it. */}
+            <Link
+              href={`/app/tasks/${task.id}`}
+              title="Details öffnen"
+              className="outline-hidden after:absolute after:inset-0"
+            >
+              {task.title}
+            </Link>
+          </h3>
+
+          {isNew && (
+            <NewMarkerButton onClick={markAsRead} className="relative" />
+          )}
+        </div>
 
         {badges.length > 0 && (
           <div className="flex flex-wrap gap-1 px-2 pb-2">{badges}</div>
@@ -137,6 +170,6 @@ export const Task = ({ className, task }: Props) => {
       </div>
 
       <AccordeonLink />
-    </Link>
+    </article>
   );
 };

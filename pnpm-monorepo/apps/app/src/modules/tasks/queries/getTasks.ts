@@ -7,10 +7,14 @@ import {
   paginateMergedSources,
   type MergedCursorSourceInput,
 } from "@/modules/common/CursorPagination/mergedCursor";
+import { getNewIds } from "@/modules/read-markers/queries/getNewIds";
+import { getUnreadWhere } from "@/modules/read-markers/queries/getUnreadWhere";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import type { Prisma } from "@sam-monorepo/database/client";
+import { ReadMarkerSubject } from "@sam-monorepo/domain";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
+import { TaskListStatus } from "../utils/TaskListStatus";
 import { getOpenTasksWhere } from "./getOpenTasksWhere";
 import { getVisibleTasksWhere } from "./getVisibleTasksWhere";
 import { TASK_LIST_SELECT, type TaskListRow } from "./taskListSelect";
@@ -101,12 +105,12 @@ const getFilterWhere = (
   }),
 });
 
-const getOpenTasks = async (filterWhere: Prisma.TaskWhereInput) => {
+const getOpenTasks = async (where: Prisma.TaskWhereInput[]) => {
   return prisma.task.findMany({
     where: {
       AND: [
         getOpenTasksWhere(new Date()),
-        filterWhere,
+        ...where,
         await getVisibleTasksWhere(),
       ],
     },
@@ -150,6 +154,8 @@ const getClosedTasks = async (
 
 interface TasksPage {
   readonly tasks: TaskListRow[];
+  /** The listed tasks which are new for the viewer */
+  readonly newTaskIds: ReadonlySet<string>;
   readonly nextCursor: string | null;
   readonly prevCursor: string | null;
 }
@@ -158,7 +164,7 @@ export const getTasks = cache(
   withTrace(
     "getTasks",
     async (
-      status: string,
+      status: TaskListStatus,
       accepted: string,
       createdBy: string,
       cursor: string | null,
@@ -173,18 +179,52 @@ export const getTasks = cache(
         authentication.session.entity?.id,
       );
 
-      if (status === "closed")
-        return getClosedTasks(filterWhere, cursor, direction);
-
       /**
-       * Only the tasks which are open now, thus a small list without
-       * pages
+       * The open tasks are only the tasks which are open now, thus a small
+       * list without pages. The same applies to the new tasks, which are a
+       * part of them.
        */
-      return {
-        tasks: await getOpenTasks(filterWhere),
-        nextCursor: null,
-        prevCursor: null,
-      };
+      switch (status) {
+        case TaskListStatus.Open: {
+          const tasks = await getOpenTasks([filterWhere]);
+
+          return {
+            tasks,
+            newTaskIds: await getNewIds(
+              ReadMarkerSubject.Task,
+              tasks.map((task) => task.id),
+            ),
+            nextCursor: null,
+            prevCursor: null,
+          };
+        }
+
+        case TaskListStatus.New: {
+          const unreadWhere = await getUnreadWhere(ReadMarkerSubject.Task);
+          const tasks = unreadWhere
+            ? await getOpenTasks([filterWhere, unreadWhere])
+            : [];
+
+          return {
+            tasks,
+            newTaskIds: new Set(tasks.map((task) => task.id)),
+            nextCursor: null,
+            prevCursor: null,
+          };
+        }
+
+        case TaskListStatus.Closed:
+          return {
+            ...(await getClosedTasks(filterWhere, cursor, direction)),
+            // Only open tasks can be new
+            newTaskIds: new Set(),
+          };
+
+        default:
+          throw new Error(
+            `Unknown task list status: ${status satisfies never}`,
+          );
+      }
     },
   ),
 );

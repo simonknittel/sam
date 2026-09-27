@@ -1,16 +1,16 @@
 import { Link } from "@/modules/common/components/Link";
 import clsx from "clsx";
-import { getLatestVisibleTasks } from "../queries/getLatestVisibleTasks";
+import { getNewTasksForDashboard } from "../queries/getNewTasksForDashboard";
 import { Task } from "./Task";
 
 interface Props {
   readonly className?: string;
 }
 
-export const LatestTasksDashboardTile = async ({ className }: Props) => {
-  const latestTasks = await getLatestVisibleTasks();
+export const NewTasksDashboardTile = async ({ className }: Props) => {
+  const newTasks = await getNewTasksForDashboard();
 
-  if (latestTasks.length <= 0) return null;
+  if (newTasks.length <= 0) return null;
 
   return (
     <section className={clsx(className)}>
@@ -19,8 +19,8 @@ export const LatestTasksDashboardTile = async ({ className }: Props) => {
       </h2>
 
       <div className="mt-2 flex flex-col gap-px">
-        {latestTasks.map((task) => (
-          <Task key={task.id} task={task} />
+        {newTasks.map((task) => (
+          <Task key={task.id} task={task} isNew />
         ))}
       </div>
 

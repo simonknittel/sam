@@ -2,15 +2,18 @@ import { CursorPaginationControls } from "@/modules/common/CursorPagination/Curs
 import { createCursorPaginationLoader } from "@/modules/common/CursorPagination/createCursorPaginationLoader";
 import clsx from "clsx";
 import {
-  parseAsString,
+  parseAsStringEnum,
   parseAsStringLiteral,
   type SearchParams,
 } from "nuqs/server";
 import { getTasks } from "../queries/getTasks";
+import { TaskListStatus } from "../utils/TaskListStatus";
 import { Task } from "./Task";
 
 const loadSearchParams = createCursorPaginationLoader({
-  status: parseAsString.withDefault("open"),
+  status: parseAsStringEnum(Object.values(TaskListStatus)).withDefault(
+    TaskListStatus.Open,
+  ),
   accepted: parseAsStringLiteral(["all", "yes"]).withDefault("all"),
   created_by: parseAsStringLiteral(["others", "me"]).withDefault("others"),
 });
@@ -24,7 +27,7 @@ export const TasksTile = async ({ className, searchParams }: Props) => {
   const { status, accepted, created_by, cursor, direction } =
     await loadSearchParams(searchParams);
 
-  const { tasks, nextCursor, prevCursor } = await getTasks(
+  const { tasks, newTaskIds, nextCursor, prevCursor } = await getTasks(
     status,
     accepted,
     created_by,
@@ -44,7 +47,7 @@ export const TasksTile = async ({ className, searchParams }: Props) => {
   return (
     <section className={clsx("flex flex-col gap-px", className)}>
       {tasks.map((task) => (
-        <Task key={task.id} task={task} />
+        <Task key={task.id} task={task} isNew={newTaskIds.has(task.id)} />
       ))}
 
       <CursorPaginationControls
