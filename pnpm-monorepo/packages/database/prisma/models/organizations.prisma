@@ -9,7 +9,7 @@ model Organization {
   attributeHistoryEntries  OrganizationAttributeHistoryEntry[]
   createdAt                DateTime                             @default(now())
   createdById              String?
-  createdBy                Entity?                              @relation(name: "CreatedOrganizations", fields: [createdById], references: [id], onDelete: SetNull)
+  createdBy                Citizen?                             @relation(name: "CreatedOrganizations", fields: [createdById], references: [id], onDelete: SetNull)
 }
 
 model OrganizationAttributeHistoryEntry {
@@ -23,12 +23,12 @@ model OrganizationAttributeHistoryEntry {
 
   createdAt   DateTime @default(now())
   createdById String?
-  createdBy   Entity?  @relation(name: "CreatedOrganizationAttributeHistoryEntries", fields: [createdById], references: [id], onDelete: SetNull)
+  createdBy   Citizen? @relation(name: "CreatedOrganizationAttributeHistoryEntries", fields: [createdById], references: [id], onDelete: SetNull)
 
   confirmed     ConfirmationStatus?
   confirmedAt   DateTime?
   confirmedById String?
-  confirmedBy   Entity?             @relation(name: "ConfirmedOrganizationAttributeHistoryEntries", fields: [confirmedById], references: [id], onDelete: SetNull)
+  confirmedBy   Citizen?            @relation(name: "ConfirmedOrganizationAttributeHistoryEntries", fields: [confirmedById], references: [id], onDelete: SetNull)
 
   @@index([organizationId])
 }
@@ -37,7 +37,7 @@ model ActiveOrganizationMembership {
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   citizenId      String
-  citizen        Entity       @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  citizen        Citizen      @relation(fields: [citizenId], references: [id], onDelete: Cascade)
 
   type       OrganizationMembershipType
   visibility OrganizationMembershipVisibility
@@ -62,19 +62,19 @@ model OrganizationMembershipHistoryEntry {
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   citizenId      String
-  citizen        Entity       @relation(name: "OrganizationMembershipHistoryEntry", fields: [citizenId], references: [id], onDelete: Cascade)
+  citizen        Citizen      @relation(name: "OrganizationMembershipHistoryEntry", fields: [citizenId], references: [id], onDelete: Cascade)
 
   type       OrganizationMembershipType
   visibility OrganizationMembershipVisibility
 
   createdAt   DateTime @default(now())
   createdById String?
-  createdBy   Entity?  @relation(name: "CreatedOrganizationMemberHistoryEntries", fields: [createdById], references: [id], onDelete: SetNull)
+  createdBy   Citizen? @relation(name: "CreatedOrganizationMemberHistoryEntries", fields: [createdById], references: [id], onDelete: SetNull)
 
   confirmed     ConfirmationStatus?
   confirmedAt   DateTime?
   confirmedById String?
-  confirmedBy   Entity?             @relation(name: "ConfirmedOrganizationMemberHistoryEntries", fields: [confirmedById], references: [id], onDelete: SetNull)
+  confirmedBy   Citizen?            @relation(name: "ConfirmedOrganizationMemberHistoryEntries", fields: [confirmedById], references: [id], onDelete: SetNull)
 
   @@index([organizationId])
   @@index([citizenId])

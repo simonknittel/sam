@@ -157,17 +157,17 @@ model WikiPage {
   /// switches departments. `createdBy` is a pure audit fact without any
   /// permission implications.
   ownerId String?
-  owner   Entity? @relation("owner", fields: [ownerId], references: [id], onDelete: SetNull)
+  owner   Citizen? @relation("owner", fields: [ownerId], references: [id], onDelete: SetNull)
 
   createdAt   DateTime  @default(now())
   createdById String?
-  createdBy   Entity?   @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdBy   Citizen?  @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
   updatedAt   DateTime  @updatedAt
   updatedById String?
-  updatedBy   Entity?   @relation("updatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  updatedBy   Citizen?  @relation("updatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
   deletedAt   DateTime?
   deletedById String?
-  deletedBy   Entity?   @relation("deletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
+  deletedBy   Citizen?  @relation("deletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
 
   snapshots       WikiPageSnapshot[]
   favorites       WikiPageFavorite[]
@@ -222,14 +222,14 @@ model WikiPageSnapshot {
   content     Json
   createdAt   DateTime             @default(now())
   createdById String?
-  createdBy   Entity?              @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdBy   Citizen?             @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
 
   @@index([pageId, createdAt])
 }
 
 model WikiPageFavorite {
   citizenId String
-  citizen   Entity   @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  citizen   Citizen  @relation(fields: [citizenId], references: [id], onDelete: Cascade)
   pageId    String
   page      WikiPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
@@ -240,7 +240,7 @@ model WikiPageFavorite {
 
 model WikiPageVisit {
   citizenId     String
-  citizen       Entity   @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  citizen       Citizen  @relation(fields: [citizenId], references: [id], onDelete: Cascade)
   pageId        String
   page          WikiPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
   lastVisitedAt DateTime
@@ -264,10 +264,10 @@ model WikiPageReport {
   message           String
   createdAt         DateTime  @default(now())
   createdById       String?
-  createdBy         Entity?   @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdBy         Citizen?  @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
   resolvedAt        DateTime?
   resolvedById      String?
-  resolvedBy        Entity?   @relation("resolvedBy", fields: [resolvedById], references: [id], onDelete: SetNull)
+  resolvedBy        Citizen?  @relation("resolvedBy", fields: [resolvedById], references: [id], onDelete: SetNull)
   resolutionComment String?
 
   @@index([pageId])
@@ -299,7 +299,7 @@ model WikiTag {
 
   createdAt   DateTime @default(now())
   createdById String?
-  createdBy   Entity?  @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdBy   Citizen? @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
 
   pages WikiPageTag[]
 
@@ -319,7 +319,7 @@ model WikiPageTag {
 
   createdAt   DateTime @default(now())
   createdById String?
-  createdBy   Entity?  @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdBy   Citizen? @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
 
   @@unique([pageId, tagId])
   @@index([tagId])
@@ -338,14 +338,14 @@ model WikiPageCitizenMention {
   pageId    String
   page      WikiPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
   citizenId String
-  citizen   Entity   @relation("citizen", fields: [citizenId], references: [id], onDelete: Cascade)
+  citizen   Citizen  @relation("citizen", fields: [citizenId], references: [id], onDelete: Cascade)
 
   createdAt   DateTime @default(now())
   /// The editor whose save introduced the mention (the storing connection's
   /// editor, so best-effort within one debounced save). NULL for backfilled
   /// rows.
   createdById String?
-  createdBy   Entity?  @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdBy   Citizen? @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
 
   /// Set when the notification for this mention was sent.
   notifiedAt   DateTime?
@@ -366,5 +366,5 @@ model WikiSetting {
   value       Json
   updatedAt   DateTime @updatedAt
   updatedById String?
-  updatedBy   Entity?  @relation("updatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  updatedBy   Citizen? @relation("updatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
 }

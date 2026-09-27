@@ -15,7 +15,7 @@
 model ReadMarker {
   id        String   @id @default(cuid(2))
   citizenId String
-  citizen   Entity   @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  citizen   Citizen  @relation(fields: [citizenId], references: [id], onDelete: Cascade)
   readAt    DateTime @default(now())
 
   taskId  String?

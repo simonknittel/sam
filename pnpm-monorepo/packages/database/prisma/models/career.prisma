@@ -19,13 +19,13 @@ model Flow {
 
   createdAt   DateTime  @default(now())
   createdById String?
-  createdBy   Entity?   @relation("createdFlows", fields: [createdById], references: [id], onDelete: SetNull)
+  createdBy   Citizen?  @relation("createdFlows", fields: [createdById], references: [id], onDelete: SetNull)
   updatedAt   DateTime  @updatedAt
   updatedById String?
-  updatedBy   Entity?   @relation("updatedFlows", fields: [updatedById], references: [id], onDelete: SetNull)
+  updatedBy   Citizen?  @relation("updatedFlows", fields: [updatedById], references: [id], onDelete: SetNull)
   deletedAt   DateTime?
   deletedById String?
-  deletedBy   Entity?   @relation("deletedFlows", fields: [deletedById], references: [id], onDelete: SetNull)
+  deletedBy   Citizen?  @relation("deletedFlows", fields: [deletedById], references: [id], onDelete: SetNull)
 
   @@unique([slug], map: "Flow_active_slug_key", where: { deletedAt: null })
   @@index([deletedAt])

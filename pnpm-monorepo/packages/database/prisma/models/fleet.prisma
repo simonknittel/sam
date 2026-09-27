@@ -49,10 +49,10 @@ model VariantExternalLink {
 
   createdAt   DateTime @default(now())
   createdById String?
-  createdBy   Entity?  @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdBy   Citizen? @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
   updatedAt   DateTime @updatedAt
   updatedById String?
-  updatedBy   Entity?  @relation("updatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  updatedBy   Citizen? @relation("updatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
 
   @@unique([variantId, serviceName])
 }
@@ -65,10 +65,10 @@ model VariantTag {
 
   createdAt   DateTime @default(now())
   createdById String?
-  createdBy   Entity?  @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdBy   Citizen? @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
   updatedAt   DateTime @updatedAt
   updatedById String?
-  updatedBy   Entity?  @relation("updatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  updatedBy   Citizen? @relation("updatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
 
   @@unique([key, value])
 }
@@ -81,18 +81,18 @@ enum VariantStatus {
 model Ship {
   id        String  @id @default(cuid())
   ownerId   String
-  owner     Entity  @relation("owner", fields: [ownerId], references: [id], onDelete: Cascade)
+  owner     Citizen @relation("owner", fields: [ownerId], references: [id], onDelete: Cascade)
   variantId String
   variant   Variant @relation(fields: [variantId], references: [id], onDelete: Cascade)
   name      String?
 
   createdAt   DateTime? @default(now())
   createdById String?
-  createdBy   Entity?   @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdBy   Citizen?  @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
   updatedAt   DateTime? @updatedAt
   updatedById String?
-  updatedBy   Entity?   @relation("updatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  updatedBy   Citizen?  @relation("updatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
   deletedAt   DateTime?
   deletedById String?
-  deletedBy   Entity?   @relation("deletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
+  deletedBy   Citizen?  @relation("deletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
 }

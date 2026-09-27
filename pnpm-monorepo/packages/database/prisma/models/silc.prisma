@@ -1,18 +1,18 @@
 model SilcTransaction {
   id          String    @id @default(cuid())
   receiverId  String
-  receiver    Entity    @relation("receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  receiver    Citizen   @relation("receiver", fields: [receiverId], references: [id], onDelete: Cascade)
   value       Int
   description String?
   createdAt   DateTime  @default(now())
   createdById String?
-  createdBy   Entity?   @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdBy   Citizen?  @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
   updatedAt   DateTime?
   updatedById String?
-  updatedBy   Entity?   @relation("updatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  updatedBy   Citizen?  @relation("updatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
   deletedAt   DateTime?
   deletedById String?
-  deletedBy   Entity?   @relation("deletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
+  deletedBy   Citizen?  @relation("deletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
 
   /// The source of an automatic booking. NULL for manual bookings and for
   /// bookings created before these columns existed. The partial unique
@@ -36,7 +36,7 @@ model SilcSetting {
   key         SilcSettingKey @id
   value       String
   updatedAt   DateTime?      @updatedAt
-  updatedBy   Entity?        @relation("updatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  updatedBy   Citizen?       @relation("updatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
   updatedById String?
 }
 
