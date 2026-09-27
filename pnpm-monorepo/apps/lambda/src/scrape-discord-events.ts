@@ -1,4 +1,7 @@
-import { AuditEventType } from "@sam-monorepo/domain";
+import {
+  AuditEventType,
+  buildBriefingRootPageSeed,
+} from "@sam-monorepo/domain";
 import "./scrape-discord-events/setup"; // must be first
 
 import { prisma } from "@sam-monorepo/database";
@@ -8,9 +11,9 @@ import { shuffle } from "lodash";
 import { createAuditEvents } from "./common/audit";
 import { log } from "./common/logger";
 import { initializeRequestContext } from "./common/requestContext";
-import { buildBriefingRootPageData } from "./scrape-discord-events/buildBriefingRootPageData";
 import { deleteCancelledEvents } from "./scrape-discord-events/deleteCancelledEvents";
 import { getEvents } from "./scrape-discord-events/discord/utils/getEvents";
+import { findCitizenIdByDiscordId } from "./scrape-discord-events/findCitizenIdByDiscordId";
 import { triggerNotifications } from "./scrape-discord-events/notifications";
 import { excludeAppPublishedEvents } from "./scrape-discord-events/reconciliation";
 import { updateParticipants } from "./scrape-discord-events/updateParticipants";
@@ -78,6 +81,7 @@ export const handler: ScheduledHandler = async (event, context) => {
             location: true,
             discordImage: true,
             discordCreatorId: true,
+            createdById: true,
             wikiPages: {
               where: {
                 parentId: null,
@@ -169,12 +173,43 @@ export const handler: ScheduledHandler = async (event, context) => {
             ]);
           }
 
+          /**
+           * The citizen of the Discord creator can come after the import of
+           * the event. Thus look for it again on each run.
+           */
+          if (existingEventFromDatabase.createdById === null) {
+            const createdById = await findCitizenIdByDiscordId(
+              existingEventFromDatabase.discordCreatorId,
+            );
+
+            if (createdById) {
+              await prisma.event.update({
+                where: {
+                  id: existingEventFromDatabase.id,
+                },
+                data: {
+                  createdById,
+                },
+                select: {
+                  id: true,
+                },
+              });
+
+              void log.info("Linked event from Discord to its creator", {
+                eventId: existingEventFromDatabase.id,
+                discordEventId: futureEventFromDiscord.id,
+              });
+            }
+          }
+
           if (existingEventFromDatabase.wikiPages.length === 0) {
             await prisma.wikiPage.create({
               data: {
-                ...(await buildBriefingRootPageData(
-                  existingEventFromDatabase.discordCreatorId,
-                )),
+                ...buildBriefingRootPageSeed(
+                  await findCitizenIdByDiscordId(
+                    existingEventFromDatabase.discordCreatorId,
+                  ),
+                ),
                 eventId: existingEventFromDatabase.id,
               },
             });
@@ -185,11 +220,16 @@ export const handler: ScheduledHandler = async (event, context) => {
             });
           }
         } else {
+          const createdById = await findCitizenIdByDiscordId(
+            futureEventFromDiscord.creator_id,
+          );
+
           const newEvent = await prisma.event.create({
             data: {
               source: EventSource.DISCORD,
               discordId: futureEventFromDiscord.id,
               discordCreatorId: futureEventFromDiscord.creator_id,
+              createdById,
               name: futureEventFromDiscord.name,
               startTime: futureEventFromDiscord.scheduled_start_time,
               endTime: futureEventFromDiscord.scheduled_end_time,
@@ -198,9 +238,7 @@ export const handler: ScheduledHandler = async (event, context) => {
               discordImage: futureEventFromDiscord.image,
               discordGuildId: futureEventFromDiscord.guild_id,
               wikiPages: {
-                create: await buildBriefingRootPageData(
-                  futureEventFromDiscord.creator_id,
-                ),
+                create: buildBriefingRootPageSeed(createdById),
               },
             },
             select: {
