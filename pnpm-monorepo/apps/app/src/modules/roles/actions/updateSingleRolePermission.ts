@@ -31,11 +31,13 @@ export const updateSingleRolePermission = createAuthenticatedAction(
      * Update role
      */
     if (data.checked === true) {
-      await prisma.permissionString.create({
+      // A double click or a second admin must not create a duplicate
+      await prisma.permissionString.createMany({
         data: {
           roleId: data.roleId,
           permissionString: data.permissionString,
         },
+        skipDuplicates: true,
       });
     } else if (data.checked === false) {
       await prisma.permissionString.deleteMany({

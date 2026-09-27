@@ -4,6 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { deletePermissionStringsReferencing } from "@/modules/roles/utils/deletePermissionStringsReferencing";
 import { redirect } from "next/navigation";
 import * as z from "zod";
 
@@ -49,13 +50,7 @@ export const deleteRole = createAuthenticatedAction(
         },
       }),
 
-      prisma.permissionString.deleteMany({
-        where: {
-          permissionString: {
-            contains: data.id,
-          },
-        },
-      }),
+      deletePermissionStringsReferencing("roleId", data.id),
     ]);
 
     await createAuditEvents([

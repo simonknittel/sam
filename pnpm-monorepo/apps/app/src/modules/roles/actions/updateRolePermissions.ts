@@ -40,13 +40,12 @@ export const updateRolePermissions = createAuthenticatedAction(
         },
       }),
 
-      ...data.permissionStrings.map((permissionString) => {
-        return prisma.permissionString.create({
-          data: {
-            roleId: data.id,
-            permissionString,
-          },
-        });
+      prisma.permissionString.createMany({
+        data: data.permissionStrings.map((permissionString) => ({
+          roleId: data.id,
+          permissionString,
+        })),
+        skipDuplicates: true,
       }),
     ]);
 
