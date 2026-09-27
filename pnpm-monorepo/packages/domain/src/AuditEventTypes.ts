@@ -1,3 +1,5 @@
+import type { ReadMarkerSubject } from "./readMarkers/ReadMarkerSubject.js";
+
 /**
  * The audit-event vocabulary of the system log, shared between the Next.js
  * app (which writes most events and renders the log) and the Lambdas (whose
@@ -232,6 +234,7 @@ export enum AuditEventType {
   SEASONAL_THEME_SETTINGS_UPDATED = "SEASONAL_THEME_SETTINGS_UPDATED",
   ASSUME_USER_STARTED = "ASSUME_USER_STARTED",
   ASSUME_USER_ENDED = "ASSUME_USER_ENDED",
+  READ_MARKER_CREATED = "READ_MARKER_CREATED",
 }
 
 /**
@@ -1587,6 +1590,13 @@ export interface AuditEventDataByType {
   [AuditEventType.ASSUME_USER_ENDED]: {
     assumedUserId: string;
     assumedUserName: string | null;
+  };
+
+  /** Written only for the first read of an item, not for each visit */
+  [AuditEventType.READ_MARKER_CREATED]: {
+    citizenId: string;
+    subject: ReadMarkerSubject;
+    subjectId: string;
   };
 }
 

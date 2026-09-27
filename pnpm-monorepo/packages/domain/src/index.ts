@@ -29,6 +29,7 @@ export {
   EFFECTIVE_ROLE_IDS_SELECT,
   EFFECTIVE_ROLE_PERMISSIONS_SELECT,
 } from "./permissions/roleAssignmentSelects.js";
+export { ReadMarkerSubject } from "./readMarkers/ReadMarkerSubject.js";
 export { getInGameYear } from "./seasonal/inGameYear.js";
 export {
   SEASONAL_EVENT_DEFINITIONS,

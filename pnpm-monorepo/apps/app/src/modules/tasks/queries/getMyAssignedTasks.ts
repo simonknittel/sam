@@ -3,6 +3,7 @@ import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
+import { getOpenTasksWhere } from "./getOpenTasksWhere";
 import { TASK_LIST_SELECT } from "./taskListSelect";
 
 export const getMyAssignedTasks = cache(
@@ -14,23 +15,15 @@ export const getMyAssignedTasks = cache(
     // An assignee can always see the task (see getVisibleTasksWhere)
     return prisma.task.findMany({
       where: {
-        assignments: {
-          some: {
-            citizenId: authentication.session.entity.id,
-          },
-        },
-        cancelledAt: null,
-        deletedAt: null,
-        completedAt: null,
-        OR: [
+        AND: [
           {
-            expiresAt: {
-              gte: new Date(),
+            assignments: {
+              some: {
+                citizenId: authentication.session.entity.id,
+              },
             },
           },
-          {
-            expiresAt: null,
-          },
+          getOpenTasksWhere(new Date()),
         ],
       },
       select: TASK_LIST_SELECT,

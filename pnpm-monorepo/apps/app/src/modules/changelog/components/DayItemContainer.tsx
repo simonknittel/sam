@@ -1,6 +1,11 @@
 "use client";
 
+import { NewBadge } from "@/modules/common/components/NewBadge";
 import { SmallBadge } from "@/modules/common/components/SmallBadge";
+import {
+  UnreadEdge,
+  UnreadEdgeWidth,
+} from "@/modules/common/components/UnreadEdge";
 import clsx from "clsx";
 import type { ReactNode } from "react";
 import { useUnseenEntries } from "./UnseenEntriesProvider";
@@ -46,27 +51,12 @@ export const DayItemContainer = ({
         "border-l border-l-neutral-800/80": !isRedacted && !showsNewIndicator,
       })}
     >
-      {showsNewIndicator && (
-        <div
-          className="absolute left-0 top-0 bottom-0 w-px"
-          style={{
-            background: "linear-gradient(to bottom, #f59e0b, transparent)",
-          }}
-        />
-      )}
+      {showsNewIndicator && <UnreadEdge width={UnreadEdgeWidth.Thin} />}
 
       <div className="flex items-center gap-2">
         <strong className="block font-bold font-mono uppercase">{title}</strong>
 
-        {showsNewIndicator && (
-          /** Marks the indicator independently of the classes drawing it */
-          <div
-            data-new-changelog-entry=""
-            className="bg-amber-500 text-black font-mono uppercase text-xs px-1 py-0.5"
-          >
-            Neu
-          </div>
-        )}
+        {showsNewIndicator && <NewBadge />}
       </div>
 
       {tags && tags.length > 0 && (

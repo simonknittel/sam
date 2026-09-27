@@ -2,6 +2,7 @@
 
 import { Link } from "@/modules/common/components/Link";
 import { RelativeDate } from "@/modules/common/components/RelativeDate";
+import { UnreadEdge } from "@/modules/common/components/UnreadEdge";
 import type { ReadOnViewRef } from "@/modules/common/utils/useReadOnView";
 import type { ComponentType } from "react";
 import { FaArchive, FaEnvelope, FaUndo } from "react-icons/fa";
@@ -74,15 +75,7 @@ export const NotificationListItem = ({
     >
       {Decoration && <Decoration />}
 
-      {showsUnreadHighlight && (
-        <div
-          className="absolute left-0 top-0 bottom-0 w-0.5"
-          style={{
-            background: "linear-gradient(to bottom, #f59e0b, transparent)",
-          }}
-          title="Ungelesen"
-        />
-      )}
+      {showsUnreadHighlight && <UnreadEdge title="Ungelesen" />}
 
       <div className="flex items-center gap-2">
         {rendering.url ? (

@@ -1,5 +1,6 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
+import { MarkAsReadOnMount } from "@/modules/read-markers/components/MarkAsReadOnMount";
 import { Overview } from "@/modules/tasks/components/Overview";
 import { getTaskById } from "@/modules/tasks/queries/getTaskById";
 import {
@@ -7,6 +8,7 @@ import {
   isAllowedToManageTask,
 } from "@/modules/tasks/utils/isAllowedToTask";
 import { isTaskUpdatable } from "@/modules/tasks/utils/isTaskUpdatable";
+import { ReadMarkerSubject } from "@sam-monorepo/domain";
 import { notFound } from "next/navigation";
 
 type Params = Promise<{
@@ -32,11 +34,15 @@ export default async function Page({ params }: PageProps<"/app/tasks/[id]">) {
   if (!task) notFound();
 
   return (
-    <Overview
-      task={task}
-      isAllowedToManageTask={await isAllowedToManageTask(task)}
-      isAllowedToDeleteTask={await isAllowedToDeleteTask()}
-      isTaskUpdatable={isTaskUpdatable(task)}
-    />
+    <>
+      <Overview
+        task={task}
+        isAllowedToManageTask={await isAllowedToManageTask(task)}
+        isAllowedToDeleteTask={await isAllowedToDeleteTask()}
+        isTaskUpdatable={isTaskUpdatable(task)}
+      />
+
+      <MarkAsReadOnMount subject={ReadMarkerSubject.Task} subjectId={task.id} />
+    </>
   );
 }

@@ -1,4 +1,5 @@
 import { RadioFilter } from "@/modules/common/components/layouts/SidebarLayout/Filters/RadioFilter";
+import { EventListStatus } from "../utils/EventListStatus";
 
 export const EventFilters = () => {
   return (
@@ -7,8 +8,9 @@ export const EventFilters = () => {
         name="status"
         label="Status"
         items={[
-          { value: "open", label: "Offen", default: true },
-          { value: "closed", label: "Geschlossen" },
+          { value: EventListStatus.Open, label: "Offen", default: true },
+          { value: EventListStatus.New, label: "Neu" },
+          { value: EventListStatus.Closed, label: "Geschlossen" },
         ]}
         resetCursorPagination
       />

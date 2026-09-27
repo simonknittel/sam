@@ -5,16 +5,20 @@ import { Badge } from "@/modules/common/components/Badge";
 import { DiscordNavigationButton } from "@/modules/common/components/DiscordNavigationButton";
 import { Link } from "@/modules/common/components/Link";
 import { RelativeDate } from "@/modules/common/components/RelativeDate";
+import { UnreadEdge } from "@/modules/common/components/UnreadEdge";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { getPublicUploadUrl } from "@/modules/common/utils/getPublicUploadUrl";
 import type {
   EventCoverImage,
   EventParticipantRow,
 } from "@/modules/events/queries/eventRelationSelects";
+import { NewMarkerButton } from "@/modules/read-markers/components/NewMarkerButton";
+import { useMarkAsRead } from "@/modules/read-markers/hooks/useMarkAsRead";
 import {
   EventSource,
   type Event as PrismaEvent,
 } from "@sam-monorepo/database/browser";
+import { ReadMarkerSubject } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { useNow } from "next-intl";
 import Image from "next/image";
@@ -62,6 +66,7 @@ interface Props {
   readonly showLineupButton?: boolean;
   readonly showBriefingButton?: boolean;
   readonly hasCancelledParticipation?: boolean;
+  readonly isNew: boolean;
 }
 
 export const EventClient = ({
@@ -72,8 +77,14 @@ export const EventClient = ({
   showLineupButton,
   showBriefingButton,
   hasCancelledParticipation = false,
+  isNew: isNewOnServer,
 }: Props) => {
   const authentication = useAuthentication();
+  const { isNew, markAsRead, focusTargetRef } = useMarkAsRead(
+    ReadMarkerSubject.Event,
+    event.id,
+    isNewOnServer,
+  );
   /**
    * The coarse clock only decides how fast the actual clock has to tick:
    * every second right before the event starts, every 30 seconds otherwise.
@@ -132,7 +143,7 @@ export const EventClient = ({
 
       <div
         className={clsx(
-          "flex flex-col @4xl/events:flex-row bg-secondary rounded-bl-primary",
+          "relative flex flex-col @4xl/events:flex-row bg-secondary rounded-bl-primary",
           {
             "rounded-t-primary": !isHappeningNow && !isToday,
             "border-x border-green-500 [border-image:linear-gradient(to_bottom,var(--color-green-500),transparent)_1]":
@@ -167,12 +178,18 @@ export const EventClient = ({
         )}
 
         <div className="flex-1 flex flex-col gap-3 justify-center p-4 @4xl/events:overflow-hidden">
-          <h2
-            className="font-bold text-xl @4xl/events:text-ellipsis @4xl/events:whitespace-nowrap @4xl/events:overflow-hidden font-mono uppercase"
-            title={event.name}
-          >
-            {event.name}
-          </h2>
+          <div className="flex items-baseline gap-2">
+            <h2
+              className="min-w-0 break-words font-bold text-xl @4xl/events:text-ellipsis @4xl/events:whitespace-nowrap @4xl/events:overflow-hidden font-mono uppercase"
+              title={event.name}
+            >
+              {event.name}
+            </h2>
+
+            {isNew && (
+              <NewMarkerButton onClick={markAsRead} className="flex-none" />
+            )}
+          </div>
 
           <div className="flex flex-wrap gap-1">
             <Badge
@@ -200,6 +217,7 @@ export const EventClient = ({
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <div className="flex flex-wrap">
               <Link
+                ref={focusTargetRef}
                 href={`/app/events/${event.id}`}
                 className="first:rounded-l-secondary border border-interaction-700 last:rounded-r-secondary h-8 flex items-center justify-center px-3 gap-2 uppercase text-interaction-500 hover:text-interaction-300 hover:border-interaction-300 font-mono"
               >
@@ -244,6 +262,10 @@ export const EventClient = ({
             )}
           </div>
         </div>
+
+        {/* Last, thus it paints above the cover image. A running event or an
+        event of today already highlights the left side. */}
+        {isNew && !isHappeningNow && !isToday && <UnreadEdge />}
       </div>
     </article>
   );

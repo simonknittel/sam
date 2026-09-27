@@ -1,11 +1,16 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import { getVisibleEventsWhere } from "@/modules/events/utils/eventVisibility";
+import { getNewIds } from "@/modules/read-markers/queries/getNewIds";
+import { getUnreadWhere } from "@/modules/read-markers/queries/getUnreadWhere";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { EventSource, type Prisma } from "@sam-monorepo/database/client";
+import { ReadMarkerSubject } from "@sam-monorepo/domain";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
+import { EventListStatus } from "../utils/EventListStatus";
 import { EVENT_PAGE_RELATIONS_SELECT } from "./eventRelationSelects";
+import { getOpenEventsWhere } from "./getOpenEventsWhere";
 
 const EVENTS_PAGE_SIZE = 10;
 
@@ -49,11 +54,6 @@ export type EventListItem = Prisma.EventGetPayload<{
   select: ReturnType<typeof eventListSelect>;
 }>;
 
-/** Events that have not ended yet — the filter behind the "open" status */
-const openEventsWhere = (now: Date): Prisma.EventWhereInput => ({
-  OR: [{ startTime: { gte: now } }, { endTime: { gte: now } }],
-});
-
 /**
  * How many open events there are in total — for the dashboard tile, which
  * only lists the next few of them.
@@ -65,7 +65,7 @@ export const getOpenEventCount = cache(
 
     return prisma.event.count({
       where: {
-        AND: [openEventsWhere(new Date()), await getVisibleEventsWhere()],
+        AND: [getOpenEventsWhere(new Date()), await getVisibleEventsWhere()],
       },
     });
   }),
@@ -96,11 +96,41 @@ const getCancelledParticipationEventIds = async (
   return rows.map((row) => row.eventId);
 };
 
+/**
+ * The where fragment of the status filter. `null` when no event can match,
+ * because nothing can be new for the viewer.
+ */
+const getStatusWhere = async (
+  status: EventListStatus,
+  now: Date,
+): Promise<Prisma.EventWhereInput | null> => {
+  switch (status) {
+    case EventListStatus.Open:
+      return getOpenEventsWhere(now);
+
+    case EventListStatus.New: {
+      const unreadWhere = await getUnreadWhere(ReadMarkerSubject.Event);
+      if (!unreadWhere) return null;
+
+      return { AND: [getOpenEventsWhere(now), unreadWhere] };
+    }
+
+    case EventListStatus.Closed:
+      return { startTime: { lt: now } };
+
+    case EventListStatus.All:
+      return {};
+
+    default:
+      throw new Error(`Unknown event list status: ${status satisfies never}`);
+  }
+};
+
 export const getEvents = cache(
   withTrace(
     "getEvents",
     async (
-      status: "open" | "closed" | "all" = "open",
+      status: EventListStatus = EventListStatus.Open,
       participating: "me" | "all" = "all",
       type: "app" | "discord" | "all" = "all",
       cursor?: string | null,
@@ -111,16 +141,15 @@ export const getEvents = cache(
 
       const now = new Date();
 
-      let where: Prisma.EventWhereInput = {};
-
-      if (status === "closed") {
-        where = { startTime: { lt: now } };
-      } else if (status === "open") {
-        where = openEventsWhere(now);
-      } else {
-        // "all" - no additional filtering needed
-        where = {};
-      }
+      const where = await getStatusWhere(status, now);
+      if (!where)
+        return {
+          events: [],
+          cancelledParticipationEventIds: [],
+          newEventIds: new Set<string>(),
+          nextCursor: null,
+          prevCursor: null,
+        };
 
       if (type === "app") {
         where.source = EventSource.APP;
@@ -143,7 +172,10 @@ export const getEvents = cache(
         };
       }
 
-      const orderDirection: "asc" | "desc" = status === "open" ? "asc" : "desc";
+      const orderDirection: "asc" | "desc" =
+        status === EventListStatus.Open || status === EventListStatus.New
+          ? "asc"
+          : "desc";
       const orderBy: Prisma.EventOrderByWithRelationInput = {
         startTime: orderDirection,
       };
@@ -189,12 +221,18 @@ export const getEvents = cache(
       const hasNextPage = direction === "next" ? hasMore : !!cursor;
       const hasPrevPage = direction === "prev" ? hasMore : !!cursor;
 
+      const eventIds = events.map((event) => event.id);
+      const [cancelledParticipationEventIds, newEventIds] = await Promise.all([
+        getCancelledParticipationEventIds(eventIds, citizenId ?? null),
+        status === EventListStatus.New
+          ? new Set(eventIds)
+          : getNewIds(ReadMarkerSubject.Event, eventIds),
+      ]);
+
       return {
         events,
-        cancelledParticipationEventIds: await getCancelledParticipationEventIds(
-          events.map((event) => event.id),
-          authentication.session.entity?.id ?? null,
-        ),
+        cancelledParticipationEventIds,
+        newEventIds,
         nextCursor:
           hasNextPage && events.length > 0
             ? events[events.length - 1].id

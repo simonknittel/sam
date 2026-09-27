@@ -7,8 +7,7 @@ import { expect, test } from "../fixtures/test";
  * entries themselves come from the source (`entries.tsx`), so the cases below
  * compare counts instead of naming single entries.
  */
-const newEntryIndicators = (page: Page) =>
-  page.locator("[data-new-changelog-entry]");
+const newEntryIndicators = (page: Page) => page.locator("[data-new-badge]");
 
 /** Dwell time + flush debounce + server action, with headroom. */
 const READ_ON_VIEW_TIMEOUT = 15_000;

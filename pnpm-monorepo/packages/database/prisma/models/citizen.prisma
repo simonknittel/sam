@@ -89,6 +89,7 @@ model Entity {
   deletedFlows                                 Flow[]                               @relation("deletedFlows")
   createdLogAnalyzerEntries                    LogAnalyzerEntry[]                   @relation("createdLogAnalyzerEntries")
   seasonalThemeSettings                        SeasonalThemeSetting[]
+  readMarkers                                  ReadMarker[]
 
   // Holds the latest confirmed values
   spectrumId                String?

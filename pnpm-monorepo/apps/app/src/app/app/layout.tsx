@@ -1,5 +1,6 @@
 import { AdminToolbar } from "@/modules/admin-toolbar/components/AdminToolbar";
 import { AppsContextProvider } from "@/modules/apps/components/AppsContext";
+import { addCountsByAppSlug } from "@/modules/apps/utils/addCountsByAppSlug";
 import { getAppFavoriteKeys } from "@/modules/apps/utils/queries/getAppFavoriteKeys";
 import { getAppLinks } from "@/modules/apps/utils/queries/getAppLinks";
 import { SessionProviderContainer } from "@/modules/auth/components/SessionProviderContainer";
@@ -18,6 +19,7 @@ import { OnboardingProvider } from "@/modules/onboarding/components/OnboardingPr
 import { OnboardingTour } from "@/modules/onboarding/components/OnboardingTour";
 import { getOnboardingState } from "@/modules/onboarding/utils/queries/getOnboardingState";
 import { ChannelsProvider } from "@/modules/pusher/components/ChannelsContext";
+import { getNewItemCountsByAppSlug } from "@/modules/read-markers/queries/getNewItemCountsByAppSlug";
 import { RolesContextProvider } from "@/modules/roles/components/RolesContext";
 import { getVisibleRoles } from "@/modules/roles/utils/getRoles";
 import { SeasonalViewportLayer } from "@/modules/seasonal-events/components/SeasonalViewportLayer";
@@ -45,6 +47,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
     onboardingState,
     birthdayCitizenIds,
     seasonalTheme,
+    newItemCountsByAppSlug,
   ] = await Promise.all([
     requireAuthenticationPage(),
     getAppLinks(),
@@ -57,6 +60,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
     getOnboardingState(),
     getCitizenIdsWithBirthdayToday(),
     getActiveSeasonalTheme(),
+    getNewItemCountsByAppSlug(),
   ]);
 
   const seasonalThemeRootProps = getSeasonalThemeRootProps(
@@ -78,10 +82,13 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
 
                       <AppsContextProvider
                         apps={apps}
-                        appDotBadgeCounts={{
-                          [CHANGELOG_APP_SLUG]: changelogUnseenKeys.size,
-                          wiki: openWikiReportCount,
-                        }}
+                        appDotBadgeCounts={addCountsByAppSlug(
+                          {
+                            [CHANGELOG_APP_SLUG]: changelogUnseenKeys.size,
+                            wiki: openWikiReportCount,
+                          },
+                          newItemCountsByAppSlug,
+                        )}
                         favoriteAppKeys={[...favoriteAppKeys]}
                       >
                         <OnSiteNotificationsProvider

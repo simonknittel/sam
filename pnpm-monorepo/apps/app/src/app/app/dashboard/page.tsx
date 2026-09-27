@@ -7,7 +7,7 @@ import { SeasonalGreetingBanner } from "@/modules/seasonal-events/components/Sea
 import { SeasonalSpynetSearchTileSlot } from "@/modules/seasonal-events/components/SeasonalSpynetSearchTileSlot";
 import { SpynetSearchTile } from "@/modules/spynet/components/SpynetSearchTile/SpynetSearchTile";
 import { TasksDashboardTile } from "@/modules/tasks/components/DashboardTile";
-import { LatestTasksDashboardTile } from "@/modules/tasks/components/LatestTasksDashboardTile";
+import { NewTasksDashboardTile } from "@/modules/tasks/components/NewTasksDashboardTile";
 import { WikiDashboardPageTile } from "@/modules/wiki/components/WikiDashboardPageTile";
 import { Suspense } from "react";
 
@@ -48,7 +48,7 @@ export default async function Page() {
           {canTaskRead && (
             <>
               <TasksDashboardTile />
-              <LatestTasksDashboardTile />
+              <NewTasksDashboardTile />
             </>
           )}
 

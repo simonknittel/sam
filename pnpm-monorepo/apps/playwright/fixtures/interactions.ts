@@ -81,6 +81,12 @@ export const clickUntilVisible = (target: Locator, reaction: Locator) =>
  */
 export const hoverUntilVisible = (target: Locator, reaction: Locator) =>
   expect(async () => {
+    /**
+     * A hover of the point where the pointer already is fires no pointer
+     * events, thus a retry after a hover before the hydration would never
+     * reach the hydrated trigger. The pointer leaves the target first.
+     */
+    await target.page().mouse.move(0, 0);
     await target.hover({ timeout: REACTION_TIMEOUT });
     await expect(reaction).toBeVisible({ timeout: REACTION_TIMEOUT });
   }).toPass({ timeout: HYDRATION_TIMEOUT });
