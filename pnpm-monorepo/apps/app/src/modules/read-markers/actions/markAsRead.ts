@@ -5,9 +5,9 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { ReadMarkerSubject } from "@sam-monorepo/domain";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import * as z from "zod";
-import { getUnreadWhere } from "../queries/getUnreadWhere";
+import { getNewIds } from "../queries/getNewIds";
 import { READ_MARKER_SUBJECTS } from "../utils/readMarkerSubjects";
 
 /** The ids of all subjects (cuid and cuid2) are shorter than this */
@@ -43,11 +43,7 @@ export const markAsRead = createAuthenticatedAction(
     if (!(await definition.canRead(data.subjectId)))
       return { error: t("Common.notFound"), requestPayload: formData };
 
-    const unreadWhere = await getUnreadWhere(data.subject);
-    const wasNew =
-      unreadWhere !== null &&
-      (await definition.findNewIds([data.subjectId], unreadWhere, new Date()))
-        .length > 0;
+    const wasNew = (await getNewIds(data.subject, [data.subjectId])).size > 0;
 
     const { count } = await prisma.readMarker.createMany({
       data: [{ citizenId, ...definition.markerData(data.subjectId) }],
@@ -69,11 +65,13 @@ export const markAsRead = createAuthenticatedAction(
 
     /**
      * The "new" state shows in lists, tiles and the dot badges of the app
-     * layout. The revalidation also clears the client router cache, which
-     * would otherwise show the old state on a back navigation. Only a real
-     * change is worth the render.
+     * layout. The refresh renders them again for the viewer only, and it
+     * also clears the client router cache, which would otherwise show the
+     * old state on a back navigation. Unlike `revalidatePath()`, it keeps the
+     * server caches which other users share. Only a real change is worth the
+     * render.
      */
-    if (count > 0 && wasNew) revalidatePath("/app", "layout");
+    if (count > 0 && wasNew) refresh();
 
     return { success: "Als gelesen markiert" };
   },
