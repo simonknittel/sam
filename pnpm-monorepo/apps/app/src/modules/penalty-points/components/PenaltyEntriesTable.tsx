@@ -1,4 +1,5 @@
 import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
+import { DELETED_CITIZEN_LABEL } from "@/modules/citizen/utils/citizenDisplayName";
 import { Link } from "@/modules/common/components/Link";
 import { Table, TBody, THead, TRow } from "@/modules/common/components/Table";
 import { formatDate } from "@/modules/common/utils/formatDate";
@@ -7,9 +8,9 @@ import clsx from "clsx";
 import { DeletePenaltyEntry } from "./DeletePenaltyEntry";
 
 type Row = PenaltyEntry & {
-  citizen: Pick<Citizen, "id" | "handle">;
+  citizen: Pick<Citizen, "id" | "handle" | "deletedAt">;
   /** NULL when the author was deleted */
-  createdBy: Pick<Citizen, "id" | "handle"> | null;
+  createdBy: Pick<Citizen, "id" | "handle" | "deletedAt"> | null;
 };
 
 const COLUMNS_WITH_CITIZEN =
@@ -52,16 +53,22 @@ export const PenaltyEntriesTable = ({
           <TRow key={entry.id}>
             {!hideCitizenColumn && (
               <td className="overflow-hidden">
-                <CitizenPopover citizenId={entry.citizen.id}>
-                  <Link
-                    href={`/app/spynet/citizen/${entry.citizen.id}/penalty-points`}
-                    className="hover:bg-white/10 flex items-center rounded-secondary px-2 h-8 text-brand-red-500 truncate"
-                    prefetch={false}
-                    title={entry.citizen.handle || entry.citizen.id}
-                  >
-                    {entry.citizen.handle || entry.citizen.id}
-                  </Link>
-                </CitizenPopover>
+                {entry.citizen.deletedAt ? (
+                  <span className="flex items-center px-2 h-8 text-neutral-500 truncate">
+                    {DELETED_CITIZEN_LABEL}
+                  </span>
+                ) : (
+                  <CitizenPopover citizenId={entry.citizen.id}>
+                    <Link
+                      href={`/app/spynet/citizen/${entry.citizen.id}/penalty-points`}
+                      className="hover:bg-white/10 flex items-center rounded-secondary px-2 h-8 text-brand-red-500 truncate"
+                      prefetch={false}
+                      title={entry.citizen.handle || entry.citizen.id}
+                    >
+                      {entry.citizen.handle || entry.citizen.id}
+                    </Link>
+                  </CitizenPopover>
+                )}
               </td>
             )}
 
@@ -70,7 +77,7 @@ export const PenaltyEntriesTable = ({
             <td>{formatDate(entry.createdAt)}</td>
 
             <td className="overflow-hidden">
-              {entry.createdBy ? (
+              {entry.createdBy && !entry.createdBy.deletedAt ? (
                 <CitizenPopover citizenId={entry.createdBy.id}>
                   <Link
                     href={`/app/spynet/citizen/${entry.createdBy.id}`}
@@ -83,7 +90,7 @@ export const PenaltyEntriesTable = ({
                 </CitizenPopover>
               ) : (
                 <span className="flex items-center px-2 h-8 text-neutral-500 italic">
-                  Unbekannt
+                  {entry.createdBy ? DELETED_CITIZEN_LABEL : "Unbekannt"}
                 </span>
               )}
             </td>

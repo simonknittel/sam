@@ -5,6 +5,7 @@ import {
   OrganizationMembershipVisibility,
   type Organization,
 } from "@sam-monorepo/database/client";
+import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import { forbidden } from "next/navigation";
 
 export const getActiveOrganizationMemberships = withTrace(
@@ -29,6 +30,7 @@ export const getActiveOrganizationMemberships = withTrace(
     const memberships = await prisma.activeOrganizationMembership.findMany({
       where: {
         organizationId: id,
+        citizen: ACTIVE_CITIZEN_WHERE,
         visibility: {
           in: alsoVisibilityRedacted
             ? [
@@ -43,6 +45,7 @@ export const getActiveOrganizationMemberships = withTrace(
           select: {
             id: true,
             handle: true,
+            deletedAt: true,
           },
         },
       },

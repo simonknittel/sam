@@ -36,6 +36,7 @@ export const getParticipants = cache(
       select: {
         id: true,
         handle: true,
+        deletedAt: true,
         discordId: true,
         roleAssignments: { select: { roleId: true, currentLevel: true } },
       },

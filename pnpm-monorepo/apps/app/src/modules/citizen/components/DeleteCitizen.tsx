@@ -7,6 +7,7 @@ import { Tile, TileVariant } from "@/modules/common/components/Tile";
 import { type Citizen } from "@sam-monorepo/database/browser";
 import { useRouter } from "next/navigation";
 import { FaTrash } from "react-icons/fa";
+import { deleteCitizen } from "../actions/deleteCitizen";
 
 interface Props {
   readonly className?: string;
@@ -16,20 +17,6 @@ interface Props {
 export const DeleteCitizen = ({ className, entity }: Props) => {
   const router = useRouter();
 
-  const deleteCitizen = async (formData: FormData) => {
-    const response = await fetch(`/api/spynet/citizen/${entity.id}`, {
-      method: "DELETE",
-    });
-
-    if (!response.ok)
-      return {
-        error: "Beim Löschen ist ein Fehler aufgetreten.",
-        requestPayload: formData,
-      };
-
-    return { success: "Erfolgreich gelöscht" };
-  };
-
   return (
     <Tile
       heading="Danger Zone"
@@ -38,6 +25,7 @@ export const DeleteCitizen = ({ className, entity }: Props) => {
     >
       <ConfirmActionButton
         action={deleteCitizen}
+        hiddenFields={[{ name: "id", value: entity.id }]}
         trigger={(isPending) => (
           <Button2 disabled={isPending}>
             {isPending ? <AsciiSpinner /> : <FaTrash />}
@@ -49,8 +37,9 @@ export const DeleteCitizen = ({ className, entity }: Props) => {
           <>
             Willst du den Citizen{" "}
             <span className="font-bold">{entity.handle || entity.id}</span>{" "}
-            komplett löschen? Alle Einträge zu diesem Citizen gehen dabei
-            verloren.
+            löschen? Er verschwindet aus allen Listen, und Einträge zu ihm
+            zeigen nur noch „Gelöschter Citizen“. Das lässt sich nicht
+            rückgängig machen.
           </>
         }
         confirmLabel="Löschen"

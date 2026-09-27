@@ -4,6 +4,7 @@ import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import { confirmLog } from "@/modules/citizen/utils/confirmLog";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
+import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import { NextResponse } from "next/server";
 import * as z from "zod";
 
@@ -106,6 +107,7 @@ export async function POST(request: Request, props: { params: Params }) {
     const entity = await prisma.citizen.findFirst({
       where: {
         id: paramsData,
+        ...ACTIVE_CITIZEN_WHERE,
       },
       select: {
         id: true,
@@ -128,28 +130,14 @@ export async function POST(request: Request, props: { params: Params }) {
             id: entity.id,
           },
         },
-        attributes:
-          "noteTypeId" in data
-            ? {
-                createMany: {
-                  data: [
-                    {
-                      key: "noteTypeId",
-                      value: data.noteTypeId,
-                      createdById: authentication.session.user.id,
-                    },
-                    {
-                      key: "classificationLevelId",
-                      value: data.classificationLevelId,
-                      createdById: authentication.session.user.id,
-                    },
-                  ],
-                },
-              }
-            : undefined,
-      },
-      include: {
-        attributes: true,
+        ...("noteTypeId" in data
+          ? {
+              noteType: { connect: { id: data.noteTypeId } },
+              classificationLevel: {
+                connect: { id: data.classificationLevelId },
+              },
+            }
+          : {}),
       },
     });
 

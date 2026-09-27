@@ -22,7 +22,7 @@ const entry = (
   isoDate: new Date(second * 1000),
   message: null,
   collapseKey,
-  citizen: { id: citizenId, handle: citizenId },
+  citizen: { id: citizenId, handle: citizenId, deletedAt: null },
   isShared: false,
   isUploaded: false,
 });

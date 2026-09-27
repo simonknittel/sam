@@ -9,9 +9,9 @@ const wikiPageReportSelect = {
   uploadId: true,
   uploadFileName: true,
   createdAt: true,
-  createdBy: { select: { id: true, handle: true } },
+  createdBy: { select: { id: true, handle: true, deletedAt: true } },
   resolvedAt: true,
-  resolvedBy: { select: { id: true, handle: true } },
+  resolvedBy: { select: { id: true, handle: true, deletedAt: true } },
   resolutionComment: true,
   page: {
     select: {

@@ -1,5 +1,5 @@
 import { prisma } from "@sam-monorepo/database";
-import { AuditEventType } from "@sam-monorepo/domain";
+import { ACTIVE_CITIZEN_WHERE, AuditEventType } from "@sam-monorepo/domain";
 import { log } from "../common/logger";
 import { captureAsyncFunc } from "../common/xray";
 import { updateCitizensSilcBalances } from "./updateCitizensSilcBalances";
@@ -39,6 +39,7 @@ export const endCollectionPhases = async () => {
        */
       const allSilcBalances = await prisma.citizen.findMany({
         where: {
+          ...ACTIVE_CITIZEN_WHERE,
           silcBalance: {
             gt: 0,
           },

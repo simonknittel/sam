@@ -3,6 +3,7 @@
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { useHasBirthdayToday } from "@/modules/citizen/components/BirthdayCitizensProvider";
 import { CitizenPopover } from "@/modules/citizen/components/CitizenPopover";
+import { DELETED_CITIZEN_LABEL } from "@/modules/citizen/utils/citizenDisplayName";
 import type { Citizen } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { BirthdayHat } from "./BirthdayHat";
@@ -10,7 +11,8 @@ import { Link } from "./Link";
 
 interface Props {
   readonly className?: string;
-  readonly citizen?: Pick<Citizen, "id" | "handle"> | null;
+  /** A deleted citizen shows as "Deleted citizen", without a link */
+  readonly citizen?: Pick<Citizen, "id" | "handle" | "deletedAt"> | null;
   readonly page?: string;
 }
 
@@ -24,6 +26,9 @@ export const CitizenLink = ({ className, citizen, page = "" }: Props) => {
   const hasBirthdayToday = useHasBirthdayToday(citizen?.id);
 
   if (!citizen) return <span className="text-neutral-500">Unbekannt</span>;
+
+  if (citizen.deletedAt)
+    return <span className="text-neutral-500">{DELETED_CITIZEN_LABEL}</span>;
 
   return (
     <CitizenPopover citizenId={citizen.id}>

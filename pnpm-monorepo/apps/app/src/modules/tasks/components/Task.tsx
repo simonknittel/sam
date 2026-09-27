@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
+import { getCitizenDisplayName } from "@/modules/citizen/utils/citizenDisplayName";
 import { AccordeonLink } from "@/modules/common/components/Accordeon";
 import { Badge } from "@/modules/common/components/Badge";
 import { Link } from "@/modules/common/components/Link";
@@ -106,7 +107,7 @@ export const Task = ({ className, task, isNew: isNewOnServer }: Props) => {
       <Badge
         key="assignments"
         label="Angenommen von"
-        value={`${task.assignments[0].citizen.handle || task.assignments[0].citizen.id}${
+        value={`${getCitizenDisplayName(task.assignments[0].citizen)}${
           task.assignments.length > 1
             ? ` + ${task.assignments.length - 1} weitere`
             : ""

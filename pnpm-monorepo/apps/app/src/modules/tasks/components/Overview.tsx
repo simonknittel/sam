@@ -37,11 +37,11 @@ import { UpdateTaskDescription } from "./UpdateTaskDescription";
 import { UpdateTaskRepeatable } from "./UpdateTaskRepeatable";
 
 interface TaskWithIncludes extends Task {
-  createdBy: Pick<Citizen, "id" | "handle"> | null;
+  createdBy: Pick<Citizen, "id" | "handle" | "deletedAt"> | null;
   assignments: (Pick<TaskAssignment, "id" | "citizenId"> & {
-    citizen: Pick<Citizen, "id" | "handle">;
+    citizen: Pick<Citizen, "id" | "handle" | "deletedAt">;
   })[];
-  completionists?: Pick<Citizen, "id" | "handle">[];
+  completionists?: Pick<Citizen, "id" | "handle" | "deletedAt">[];
   requiredRoles: Pick<Role, "id">[];
 }
 

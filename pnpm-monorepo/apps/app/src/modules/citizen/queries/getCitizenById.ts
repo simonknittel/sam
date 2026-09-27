@@ -1,6 +1,7 @@
 import { prisma } from "@/db";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import type { Citizen } from "@sam-monorepo/database/client";
+import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import { cache } from "react";
 
 export const getCitizenById = cache(
@@ -10,9 +11,10 @@ export const getCitizenById = cache(
      * of their type. The overview shows them; their history stays behind the
      * history modal, which reads the logs with its own query.
      */
-    return prisma.citizen.findUnique({
+    return prisma.citizen.findFirst({
       where: {
         id,
+        ...ACTIVE_CITIZEN_WHERE,
       },
       select: {
         id: true,

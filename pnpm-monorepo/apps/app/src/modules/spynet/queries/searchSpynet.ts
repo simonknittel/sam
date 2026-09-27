@@ -85,6 +85,7 @@ export const searchSpynet = withTrace(
             ${scoreColumn(Prisma.sql`"spectrumId"`, false)}
           ) AS "score"
         FROM "Citizen", "query"
+        WHERE "Citizen"."deletedAt" IS NULL
       `);
 
     if (includeOrganizations)

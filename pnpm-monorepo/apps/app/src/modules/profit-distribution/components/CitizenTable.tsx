@@ -21,7 +21,7 @@ import { CitizenTableForm } from "./CitizenTableForm";
 
 interface Row {
   readonly id: string;
-  readonly citizen: Pick<Citizen, "id" | "handle">;
+  readonly citizen: Pick<Citizen, "id" | "handle" | "deletedAt">;
   readonly handle: string;
   readonly silc: number;
   readonly auec: number | null;

@@ -138,16 +138,13 @@ test("notes respect their classification level", async ({
 
   const noteLog = await prisma.citizenLog.findFirst({
     where: { type: "note" },
-    include: { attributes: true },
   });
-  expect(noteLog?.content).toBe(noteContent);
-  const attributesByKey = new Map(
-    noteLog!.attributes.map((attribute) => [attribute.key, attribute.value]),
-  );
-  expect(attributesByKey.get("noteTypeId")).toBe(noteType.id);
-  expect(attributesByKey.get("classificationLevelId")).toBe(
-    classificationLevel.id,
-  );
+  expect(noteLog).toMatchObject({
+    content: noteContent,
+    noteTypeId: noteType.id,
+    classificationLevelId: classificationLevel.id,
+    confirmed: null,
+  });
 
   // The note-type tabs are Base UI keep-mounted tabs: an unsaved draft
   // survives switching tabs

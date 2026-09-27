@@ -1,5 +1,10 @@
 import { prisma } from "@/db";
-import type { Citizen, User } from "@sam-monorepo/database/client";
+import {
+  type Citizen,
+  type Prisma,
+  type User,
+} from "@sam-monorepo/database/client";
+import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 
 /**
  * A citizen belongs to the user whose Discord account has the Discord ID of
@@ -7,35 +12,38 @@ import type { Citizen, User } from "@sam-monorepo/database/client";
  * it correct at the two moments when it can change.
  */
 
-const setCitizenUser = (citizenId: Citizen["id"], userId: User["id"] | null) =>
-  prisma.$transaction([
-    ...(userId
-      ? [
-          prisma.citizen.updateMany({
-            where: { userId, id: { not: citizenId } },
-            data: { userId: null },
-          }),
-        ]
-      : []),
-    prisma.citizen.update({
-      where: { id: citizenId },
-      data: { userId },
-      select: { id: true },
-    }),
-  ]);
+const setCitizenUser = async (
+  client: Prisma.TransactionClient,
+  citizenId: Citizen["id"],
+  userId: User["id"] | null,
+) => {
+  if (userId)
+    await client.citizen.updateMany({
+      where: { userId, id: { not: citizenId } },
+      data: { userId: null },
+    });
+
+  await client.citizen.update({
+    where: { id: citizenId },
+    data: { userId },
+    select: { id: true },
+  });
+};
 
 /** At each sign-in, links the user to the citizen of its Discord account */
 export const linkCitizenOfSignedInUser = async (
   userId: User["id"],
   discordId: string,
 ) => {
-  const citizen = await prisma.citizen.findUnique({
-    where: { discordId },
+  const citizen = await prisma.citizen.findFirst({
+    where: { discordId, ...ACTIVE_CITIZEN_WHERE },
     select: { id: true },
   });
 
   if (citizen) {
-    await setCitizenUser(citizen.id, userId);
+    await prisma.$transaction((transaction) =>
+      setCitizenUser(transaction, citizen.id, userId),
+    );
     return;
   }
 
@@ -46,23 +54,27 @@ export const linkCitizenOfSignedInUser = async (
 };
 
 /** After the Discord ID of a citizen changed, links the matching user */
-export const relinkCitizenUser = async (citizenId: Citizen["id"]) => {
-  const citizen = await prisma.citizen.findUniqueOrThrow({
+export const relinkCitizenUser = async (
+  citizenId: Citizen["id"],
+  client: Prisma.TransactionClient,
+) => {
+  const citizen = await client.citizen.findUniqueOrThrow({
     where: { id: citizenId },
-    select: { discordId: true },
+    select: { discordId: true, deletedAt: true },
   });
 
-  const account = citizen.discordId
-    ? await prisma.account.findUnique({
-        where: {
-          provider_providerAccountId: {
-            provider: "discord",
-            providerAccountId: citizen.discordId,
+  const account =
+    citizen.discordId && !citizen.deletedAt
+      ? await client.account.findUnique({
+          where: {
+            provider_providerAccountId: {
+              provider: "discord",
+              providerAccountId: citizen.discordId,
+            },
           },
-        },
-        select: { userId: true },
-      })
-    : null;
+          select: { userId: true },
+        })
+      : null;
 
-  await setCitizenUser(citizenId, account?.userId ?? null);
+  await setCitizenUser(client, citizenId, account?.userId ?? null);
 };

@@ -2,6 +2,14 @@ model Citizen {
   id                                           String                               @id @default(cuid())
   createdAt                                    DateTime                             @default(now())
   updatedAt                                    DateTime                             @updatedAt
+  /// Soft delete: a deleted citizen is hidden from all lists, pickers,
+  /// searches, statistics, notifications and payouts, and records that name
+  /// it show "Deleted citizen". Nothing is deleted and there is no restore.
+  /// The delete also removes the link to the login (`userId`).
+  deletedAt                                    DateTime?
+  deletedById                                  String?
+  deletedBy                                    Citizen?                             @relation("deletedCitizens", fields: [deletedById], references: [id], onDelete: SetNull)
+  deletedCitizens                              Citizen[]                            @relation("deletedCitizens")
   logs                                         CitizenLog[]
   createdById                                  String?
   createdBy                                    User?                                @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
@@ -99,7 +107,7 @@ model Citizen {
   // Holds the latest confirmed values
   spectrumId                String?
   handle                    String?
-  discordId                 String?                    @unique
+  discordId                 String?
   teamspeakId               String?
   /// Number of the UEE citizen record on the RSI website
   citizenRecord             String?
@@ -126,34 +134,44 @@ model Citizen {
   /// Time of the last New Year greeting. The greeting job uses it to send
   /// only one greeting for each year.
   newYearGreetingSentAt  DateTime?
+
+  /// A person whose citizen was deleted can be added again, thus the IDs are
+  /// unique only among the citizens that are not deleted
+  @@unique([discordId], map: "Citizen_discordId_key", where: { deletedAt: null })
+  @@unique([spectrumId], map: "Citizen_spectrumId_key", where: { deletedAt: null })
 }
 
+/// The history of the identity attributes of a citizen and the notes about
+/// it. The latest confirmed log of each identity type is cached on `Citizen`.
 model CitizenLog {
-  id            String                @id @default(cuid())
+  id            String   @id @default(cuid())
   citizenId     String
-  citizen       Citizen               @relation(fields: [citizenId], references: [id], onDelete: Cascade)
-  createdAt     DateTime              @default(now())
-  updatedAt     DateTime              @updatedAt
-  type          String // TODO: types.ts
-  content       String?               @db.Text
+  citizen       Citizen  @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  /// One of "handle", "discord-id", "teamspeak-id", "citizen-id",
+  /// "community-moniker", "spectrum-id" and "note" (a hand-written CHECK
+  /// constraint, see the migration citizen_log_columns). Permission resources
+  /// use the same texts, thus it is no Prisma enum.
+  type          String
+  content       String?  @db.Text
   submittedById String?
-  submittedBy   User?                 @relation("submittedBy", fields: [submittedById], references: [id], onDelete: SetNull)
-  attributes    CitizenLogAttribute[]
+  submittedBy   User?    @relation("submittedBy", fields: [submittedById], references: [id], onDelete: SetNull)
+
+  /// NULL while nobody decided about the log
+  confirmed     ConfirmationStatus?
+  confirmedAt   DateTime?
+  confirmedById String?
+  confirmedBy   User?               @relation("confirmedBy", fields: [confirmedById], references: [id], onDelete: SetNull)
+
+  /// Notes only. NULL after the note type or the classification level was
+  /// deleted.
+  noteTypeId            String?
+  noteType              NoteType?            @relation(fields: [noteTypeId], references: [id], onDelete: SetNull)
+  classificationLevelId String?
+  classificationLevel   ClassificationLevel? @relation(fields: [classificationLevelId], references: [id], onDelete: SetNull)
 
   @@index([type])
-}
-
-model CitizenLogAttribute {
-  id           String     @id @default(cuid())
-  citizenLogId String
-  citizenLog   CitizenLog @relation(fields: [citizenLogId], references: [id], onDelete: Cascade)
-  key          String // TODO: types.ts
-  value        String
-  createdAt    DateTime   @default(now())
-  createdById  String?
-  createdBy    User?      @relation(fields: [createdById], references: [id], onDelete: SetNull)
-
-  @@index([key])
 }
 
 /// Materialized/denormalized view of currently assigned roles to citizens.

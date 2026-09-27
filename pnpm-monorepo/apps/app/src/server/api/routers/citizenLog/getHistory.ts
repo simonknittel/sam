@@ -1,4 +1,5 @@
 import { authorize } from "@/modules/auth/server";
+import { ConfirmationStatus } from "@sam-monorepo/database/client";
 import * as z from "zod";
 import { protectedProcedure } from "../../trpc";
 
@@ -16,10 +17,14 @@ export const getHistory = protectedProcedure
     }),
   )
   .query(async ({ ctx, input }) => {
-    const allLogs = await ctx.prisma.citizenLog.findMany({
+    /** A log that is not confirmed needs the permission to confirm it */
+    const canConfirm = await authorize(ctx.session, input.type, "confirm");
+
+    return ctx.prisma.citizenLog.findMany({
       where: {
         citizenId: input.citizenId,
         type: input.type,
+        ...(canConfirm ? {} : { confirmed: ConfirmationStatus.CONFIRMED }),
       },
       orderBy: {
         createdAt: "desc",
@@ -30,43 +35,9 @@ export const getHistory = protectedProcedure
         type: true,
         content: true,
         createdAt: true,
-        attributes: {
-          orderBy: {
-            createdAt: "desc",
-          },
-          select: {
-            id: true,
-            key: true,
-            value: true,
-            createdAt: true,
-            createdBy: { select: { name: true } },
-          },
-        },
+        confirmed: true,
+        confirmedBy: { select: { name: true } },
         submittedBy: { select: { name: true } },
       },
     });
-
-    const filteredLogs = (
-      await Promise.all(
-        allLogs.map(async (log) => {
-          const confirmed = log.attributes.find(
-            (attribute) => attribute.key === "confirmed",
-          );
-
-          const include =
-            confirmed?.value === "confirmed"
-              ? true
-              : await authorize(ctx.session, input.type, "confirm");
-
-          return {
-            log,
-            include,
-          };
-        }),
-      )
-    )
-      .filter(({ include }) => include)
-      .map(({ log }) => log);
-
-    return filteredLogs;
   });

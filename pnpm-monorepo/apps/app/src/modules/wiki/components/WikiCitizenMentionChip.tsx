@@ -19,6 +19,13 @@ export const WikiCitizenMentionChip = ({ resolved }: Props) => {
       </span>
     );
 
+  if (resolved.deleted)
+    return (
+      <span data-wiki-citizen-mention="" data-deleted="">
+        @{resolved.label}
+      </span>
+    );
+
   return (
     <CitizenPopover citizenId={resolved.citizenId}>
       <a

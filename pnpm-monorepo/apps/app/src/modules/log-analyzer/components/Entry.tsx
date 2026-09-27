@@ -1,3 +1,4 @@
+import { getCitizenDisplayName } from "@/modules/citizen/utils/citizenDisplayName";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { RelativeDate } from "@/modules/common/components/RelativeDate";
 import { SmallBadge } from "@/modules/common/components/SmallBadge";
@@ -72,7 +73,7 @@ export const Entry = memo(function Entry({ entry }: Props) {
 
       <td
         className="truncate"
-        title={entry.citizen?.handle ?? entry.citizen?.id}
+        title={entry.citizen ? getCitizenDisplayName(entry.citizen) : undefined}
       >
         {entry.citizen ? (
           <CitizenLink citizen={entry.citizen} />

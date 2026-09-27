@@ -15,6 +15,11 @@ export type AdditionalDataType = {
    */
   citizensGroupedByVisibleRoles: ReadonlyMap<
     Role["id"],
-    { readonly citizens: readonly Pick<Citizen, "id" | "handle">[] }
+    {
+      readonly citizens: readonly Pick<
+        Citizen,
+        "id" | "handle" | "deletedAt"
+      >[];
+    }
   >;
 };

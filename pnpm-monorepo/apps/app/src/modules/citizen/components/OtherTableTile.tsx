@@ -1,24 +1,28 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import {
-  CITIZEN_LOG_ATTRIBUTE_SELECT,
-  CITIZEN_LOG_TABLE_SELECT,
-} from "@/modules/citizen/queries/citizenLogTableSelect";
-import isAllowedToRead from "@/modules/citizen/utils/isAllowedToRead";
+  type CitizenLogTableType,
+  getCitizenLogTablePage,
+  getConfirmationFilterWhere,
+  getFilterValues,
+  getReadableCitizenLogWhere,
+} from "@/modules/citizen/queries/getCitizenLogTablePage";
+import { toConfirmationState } from "@/modules/citizen/utils/citizenLogConfirmation";
 import Pagination from "@/modules/common/components/Pagination";
-import {
-  getCurrentPageFromSearchParams,
-  limitRows,
-  PER_PAGE,
-} from "@/modules/common/utils/pagination";
-import {
-  sortAscWithAndNullLast,
-  sortDescAndNullLast,
-} from "@/modules/common/utils/sorting";
-import type { CitizenLogConfirmationState } from "@/types";
+import { getCurrentPageFromSearchParams } from "@/modules/common/utils/pagination";
+import type { CitizenLogType } from "@/types";
+import type { Prisma } from "@sam-monorepo/database/client";
 import clsx from "clsx";
 import { OtherFilters } from "./OtherFilters";
 import { type Row, OtherTable } from "./OtherTable";
+
+const IDENTITY_LOG_TYPES: readonly CitizenLogTableType[] = [
+  "handle",
+  "discord-id",
+  "teamspeak-id",
+  "community-moniker",
+  "citizen-id",
+];
 
 interface Props {
   readonly className?: string;
@@ -28,123 +32,51 @@ interface Props {
 const OtherTableTile = async ({ className, searchParams }: Props) => {
   const authentication = await requireAuthentication();
 
-  const currentPage = getCurrentPageFromSearchParams(searchParams);
+  const visibleWhere = await getReadableCitizenLogWhere(
+    IDENTITY_LOG_TYPES,
+    authentication,
+  );
 
-  const citizenLogs = await prisma.citizenLog.findMany({
-    where: {
-      type: {
-        in: [
-          "handle",
-          "discord-id",
-          "teamspeak-id",
-          "community-moniker",
-          "citizen-id",
-        ],
-      },
-    },
-    select: {
-      ...CITIZEN_LOG_TABLE_SELECT,
-      attributes: {
-        where: {
-          key: "confirmed",
-        },
-        select: CITIZEN_LOG_ATTRIBUTE_SELECT,
-      },
-    },
-  });
+  const filters = searchParams.get("filters")?.split(",") ?? [];
+  const types = getFilterValues(filters, "type-");
+  const filteredWhere: Prisma.CitizenLogWhereInput = {
+    AND: [
+      visibleWhere,
+      getConfirmationFilterWhere(filters) ?? {},
+      types.length > 0 ? { type: { in: types } } : {},
+    ],
+  };
 
-  const rows = citizenLogs.map((citizenLog): Row => {
-    const confirmed = citizenLog.attributes.find(
-      (attribute) => attribute.key === "confirmed",
-    );
+  const [{ logs, totalPages }, options] = await Promise.all([
+    getCitizenLogTablePage(
+      filteredWhere,
+      searchParams.get("sort"),
+      getCurrentPageFromSearchParams(searchParams),
+    ),
+    prisma.citizenLog.groupBy({
+      by: ["type", "confirmed"],
+      where: visibleWhere,
+    }),
+  ]);
 
-    return {
-      entity: citizenLog.citizen,
-      confirmationState: confirmed?.value as
-        CitizenLogConfirmationState | undefined,
-      confirmedAt: confirmed?.createdAt,
-      confirmedBy: confirmed?.createdBy,
-      citizenLog,
-    };
-  });
+  const rows = logs.map((citizenLog): Row => ({
+    entity: citizenLog.citizen,
+    confirmationState: toConfirmationState(citizenLog.confirmed),
+    confirmedAt: citizenLog.confirmedAt ?? undefined,
+    confirmedBy: citizenLog.confirmedBy,
+    citizenLog,
+  }));
 
-  const authenticatedRows = (
-    await Promise.all(
-      rows.map(async (row) => {
-        return {
-          row,
-          canRead: await isAllowedToRead(row.citizenLog, authentication),
-        };
-      }),
-    )
-  )
-    .filter((rowWithAuthCheck) => rowWithAuthCheck.canRead)
-    .map((rowWithAuthCheck) => rowWithAuthCheck.row);
-
-  const filters = searchParams.get("filters")?.split(",");
-  const filteredRows = authenticatedRows.filter((row) => {
-    if (!filters) return true;
-
-    let confirmation;
-    if (filters.some((filter) => filter.startsWith("confirmation-"))) {
-      if (
-        (filters.includes("confirmation-unconfirmed") &&
-          !row.confirmationState) ||
-        (filters.includes("confirmation-confirmed") &&
-          row.confirmationState === "confirmed") ||
-        (filters.includes("confirmation-false-report") &&
-          row.confirmationState === "false-report")
-      ) {
-        confirmation = true;
-      } else {
-        confirmation = false;
-      }
-    } else {
-      confirmation = true;
-    }
-
-    let type;
-    if (filters.some((filter) => filter.startsWith("type-"))) {
-      if (filters.includes(`type-${row.citizenLog.type}`)) {
-        type = true;
-      } else {
-        type = false;
-      }
-    } else {
-      type = true;
-    }
-
-    return confirmation && type;
-  });
-
-  const sortedRows = filteredRows.toSorted((a, b) => {
-    switch (searchParams.get("sort")) {
-      case "confirmed-at-asc":
-        return sortAscWithAndNullLast(
-          a.confirmedAt?.getTime(),
-          b.confirmedAt?.getTime(),
-        );
-      case "confirmed-at-desc":
-        return sortDescAndNullLast(
-          a.confirmedAt?.getTime(),
-          b.confirmedAt?.getTime(),
-        );
-
-      case "created-at-asc":
-        return sortAscWithAndNullLast(
-          a.citizenLog.createdAt.getTime(),
-          b.citizenLog.createdAt.getTime(),
-        );
-
-      default:
-        return sortDescAndNullLast(
-          a.citizenLog.createdAt.getTime(),
-          b.citizenLog.createdAt.getTime(),
-        );
-    }
-  });
-
-  const limitedRows = limitRows(sortedRows, currentPage);
+  const confirmationStates = [
+    ...new Set(
+      options.map(
+        (option) => toConfirmationState(option.confirmed) ?? "unconfirmed",
+      ),
+    ),
+  ];
+  const optionTypes = [
+    ...new Set(options.map((option) => option.type as CitizenLogType)),
+  ];
 
   return (
     <section
@@ -154,15 +86,18 @@ const OtherTableTile = async ({ className, searchParams }: Props) => {
       )}
     >
       <div className="mb-6">
-        <OtherFilters rows={authenticatedRows} />
+        <OtherFilters
+          confirmationStates={confirmationStates}
+          types={optionTypes}
+        />
       </div>
 
-      <OtherTable rows={limitedRows} searchParams={searchParams} />
+      <OtherTable rows={rows} searchParams={searchParams} />
 
       <div className="flex justify-center mt-6">
         <Pagination
-          totalPages={Math.ceil(sortedRows.length / PER_PAGE)}
-          currentPage={currentPage}
+          totalPages={totalPages}
+          currentPage={getCurrentPageFromSearchParams(searchParams)}
           searchParams={searchParams}
         />
       </div>

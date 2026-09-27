@@ -117,6 +117,7 @@ export const getUsersWithEntities = withTrace(
           select: {
             id: true,
             handle: true,
+            deletedAt: true,
           },
         },
         accounts: {

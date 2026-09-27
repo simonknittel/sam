@@ -119,6 +119,7 @@ export const createEventActivitySource = ({
             select: {
               id: true,
               handle: true,
+              deletedAt: true,
             },
           },
         },
@@ -132,7 +133,10 @@ export const createEventActivitySource = ({
     },
   );
 
-type CitizenById = ReadonlyMap<string, Pick<Citizen, "id" | "handle">>;
+type CitizenById = ReadonlyMap<
+  string,
+  Pick<Citizen, "id" | "handle" | "deletedAt">
+>;
 
 const resolveAffectedCitizens = async (
   activities: readonly ActivityRow[],
@@ -144,7 +148,7 @@ const resolveAffectedCitizens = async (
 
   const citizens = await prisma.citizen.findMany({
     where: { id: { in: citizenIds } },
-    select: { id: true, handle: true },
+    select: { id: true, handle: true, deletedAt: true },
   });
 
   return new Map(citizens.map((citizen) => [citizen.id, citizen]));
@@ -216,7 +220,7 @@ const getSelectedStoredTypes = (filters?: ActivityFilters) => {
 };
 
 type ActivityRow = Prisma.EventActivityGetPayload<{
-  include: { citizen: { select: { id: true; handle: true } } };
+  include: { citizen: { select: { id: true; handle: true; deletedAt: true } } };
 }>;
 
 const buildActivityEntry = (

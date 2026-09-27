@@ -1,6 +1,7 @@
 "use client";
 
 import { runAction } from "@/modules/actions/utils/runAction";
+import { getCitizenDisplayName } from "@/modules/citizen/utils/citizenDisplayName";
 import type { EventCitizenWithShips } from "@/modules/events/queries/eventRelationSelects";
 import type {
   Citizen,
@@ -19,10 +20,10 @@ interface Props {
   readonly citizensSatisfyingRequirements: EventCitizenWithShips[];
   readonly citizensNotSatisfyingRequirements: EventCitizenWithShips[];
   readonly applicationsSatisfyingRequirements: (EventPositionApplication & {
-    citizen: Pick<Citizen, "id" | "handle">;
+    citizen: Pick<Citizen, "id" | "handle" | "deletedAt">;
   })[];
   readonly applicationsNotSatisfyingRequirements: (EventPositionApplication & {
-    citizen: Pick<Citizen, "id" | "handle">;
+    citizen: Pick<Citizen, "id" | "handle" | "deletedAt">;
   })[];
 }
 
@@ -71,13 +72,13 @@ export const UpdateEventPositionCitizenId = ({
         <optgroup label="Interessenten - Voraussetzungen erfüllt">
           {applicationsSatisfyingRequirements
             .sort((a, b) =>
-              (a.citizen.handle || a.citizen.id).localeCompare(
-                b.citizen.handle || b.citizen.id,
+              getCitizenDisplayName(a.citizen).localeCompare(
+                getCitizenDisplayName(b.citizen),
               ),
             )
             .map((application) => (
               <option key={application.citizenId} value={application.citizenId}>
-                {application.citizen.handle}
+                {getCitizenDisplayName(application.citizen)}
               </option>
             ))}
         </optgroup>
@@ -85,13 +86,13 @@ export const UpdateEventPositionCitizenId = ({
         <optgroup label="Interessenten - Voraussetzungen nicht erfüllt">
           {applicationsNotSatisfyingRequirements
             .sort((a, b) =>
-              (a.citizen.handle || a.citizen.id).localeCompare(
-                b.citizen.handle || b.citizen.id,
+              getCitizenDisplayName(a.citizen).localeCompare(
+                getCitizenDisplayName(b.citizen),
               ),
             )
             .map((application) => (
               <option key={application.citizenId} value={application.citizenId}>
-                {application.citizen.handle}
+                {getCitizenDisplayName(application.citizen)}
               </option>
             ))}
         </optgroup>
@@ -99,13 +100,13 @@ export const UpdateEventPositionCitizenId = ({
         <optgroup label="Alle Teilnehmer - Voraussetzungen erfüllt">
           {citizensSatisfyingRequirements
             .sort((a, b) =>
-              (a.citizen.handle || a.citizen.id).localeCompare(
-                b.citizen.handle || b.citizen.id,
+              getCitizenDisplayName(a.citizen).localeCompare(
+                getCitizenDisplayName(b.citizen),
               ),
             )
             .map((citizen) => (
               <option key={citizen.citizen.id} value={citizen.citizen.id}>
-                {citizen.citizen.handle}
+                {getCitizenDisplayName(citizen.citizen)}
               </option>
             ))}
         </optgroup>
@@ -113,13 +114,13 @@ export const UpdateEventPositionCitizenId = ({
         <optgroup label="Alle Teilnehmer - Voraussetzungen nicht erfüllt">
           {citizensNotSatisfyingRequirements
             .sort((a, b) =>
-              (a.citizen.handle || a.citizen.id).localeCompare(
-                b.citizen.handle || b.citizen.id,
+              getCitizenDisplayName(a.citizen).localeCompare(
+                getCitizenDisplayName(b.citizen),
               ),
             )
             .map((citizen) => (
               <option key={citizen.citizen.id} value={citizen.citizen.id}>
-                {citizen.citizen.handle}
+                {getCitizenDisplayName(citizen.citizen)}
               </option>
             ))}
         </optgroup>

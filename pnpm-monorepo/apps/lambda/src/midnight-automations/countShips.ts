@@ -1,5 +1,9 @@
 import { prisma, type Organization } from "@sam-monorepo/database";
-import { AuditEventType, ORG_ID } from "@sam-monorepo/domain";
+import {
+  ACTIVE_CITIZEN_WHERE,
+  AuditEventType,
+  ORG_ID,
+} from "@sam-monorepo/domain";
 import { createAuditEvents } from "../common/audit";
 import { log } from "../common/logger";
 import { captureAsyncFunc } from "../common/xray";
@@ -11,6 +15,7 @@ const getActiveOrganizationMemberships = async (id: Organization["id"]) => {
       const memberships = await prisma.activeOrganizationMembership.findMany({
         where: {
           organizationId: id,
+          citizen: ACTIVE_CITIZEN_WHERE,
         },
         select: {
           citizenId: true,

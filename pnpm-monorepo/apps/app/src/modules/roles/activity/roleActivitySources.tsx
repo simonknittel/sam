@@ -34,12 +34,14 @@ const CHANGE_SELECT = {
     select: {
       id: true,
       handle: true,
+      deletedAt: true,
     },
   },
   createdBy: {
     select: {
       id: true,
       handle: true,
+      deletedAt: true,
     },
   },
 } as const;

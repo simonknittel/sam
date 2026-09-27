@@ -95,6 +95,7 @@ export const createOrganizationCreatedSource = (
             select: {
               id: true,
               handle: true,
+              deletedAt: true,
             },
           },
           /** The name the organization was created under */
@@ -184,6 +185,7 @@ export const createOrganizationRenamedSource = (
             select: {
               id: true,
               handle: true,
+              deletedAt: true,
             },
           },
           organization: {
@@ -282,12 +284,14 @@ export const createOrganizationMembershipSource = (
             select: {
               id: true,
               handle: true,
+              deletedAt: true,
             },
           },
           createdBy: {
             select: {
               id: true,
               handle: true,
+              deletedAt: true,
             },
           },
         },

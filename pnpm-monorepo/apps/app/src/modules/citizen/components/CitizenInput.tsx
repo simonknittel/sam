@@ -19,7 +19,7 @@ import { useState } from "react";
 import { FaCheck, FaTrash, FaUsers } from "react-icons/fa";
 
 /** What the picker offers: `getCitizens()` returns exactly this */
-type CitizenOption = Pick<Citizen, "id" | "handle">;
+type CitizenOption = Pick<Citizen, "id" | "handle" | "deletedAt">;
 
 interface BaseProps {
   readonly className?: string;

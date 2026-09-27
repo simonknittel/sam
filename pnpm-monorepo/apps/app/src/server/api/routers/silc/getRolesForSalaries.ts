@@ -1,5 +1,6 @@
 import { prisma } from "@/db";
 import { log } from "@/modules/logging";
+import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import { TRPCError } from "@trpc/server";
 import { serializeError } from "serialize-error";
 import { protectedProcedure } from "../../trpc";
@@ -22,6 +23,7 @@ export const getRolesForSalaries = protectedProcedure.query(async () => {
 
       prisma.roleAssignment.groupBy({
         by: ["roleId"],
+        where: { citizen: ACTIVE_CITIZEN_WHERE },
         _count: true,
       }),
     ]);

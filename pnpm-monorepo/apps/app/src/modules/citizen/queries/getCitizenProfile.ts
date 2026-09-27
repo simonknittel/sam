@@ -6,6 +6,7 @@ import { getAssignableRoles } from "@/modules/roles/utils/getRoles";
 import { getMonthlySalaryOfRoles } from "@/modules/silc/queries/getMonthlySalaryOfRoles";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import type { Citizen } from "@sam-monorepo/database/client";
+import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import { cache } from "react";
 import { hasBirthdayToday } from "../utils/hasBirthdayToday";
 
@@ -32,9 +33,10 @@ export const getCitizenProfile = cache(
     const canOpenSpynet = await authentication.authorize("citizen", "read");
     if (!isCurrentCitizen && !canOpenSpynet) throw new Error("Forbidden");
 
-    const citizen = await prisma.citizen.findUnique({
+    const citizen = await prisma.citizen.findFirst({
       where: {
         id,
+        ...ACTIVE_CITIZEN_WHERE,
       },
       select: {
         id: true,

@@ -8,6 +8,7 @@ interface VariantShipRow {
   name: Ship["name"];
   owner: {
     handle: Citizen["handle"];
+    deletedAt: Citizen["deletedAt"];
   };
 }
 
@@ -31,7 +32,11 @@ export const VariantShipsTable = ({ className, ships }: Props) => {
           <TRow key={ship.id}>
             <td className="overflow-hidden">
               <CitizenLink
-                citizen={{ id: ship.ownerId, handle: ship.owner.handle }}
+                citizen={{
+                  id: ship.ownerId,
+                  handle: ship.owner.handle,
+                  deletedAt: ship.owner.deletedAt,
+                }}
                 className="hover:bg-white/10 focus-visible:bg-white/10 hover:no-underline! rounded-secondary p-2 block"
               />
             </td>

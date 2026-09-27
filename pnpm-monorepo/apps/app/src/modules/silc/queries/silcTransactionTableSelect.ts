@@ -13,9 +13,9 @@ export const SILC_TRANSACTION_TABLE_SELECT = {
   value: true,
   description: true,
   deletedAt: true,
-  receiver: { select: { id: true, handle: true } },
-  createdBy: { select: { id: true, handle: true } },
-  updatedBy: { select: { id: true, handle: true } },
+  receiver: { select: { id: true, handle: true, deletedAt: true } },
+  createdBy: { select: { id: true, handle: true, deletedAt: true } },
+  updatedBy: { select: { id: true, handle: true, deletedAt: true } },
 } as const satisfies Prisma.SilcTransactionSelect;
 
 export type SilcTransactionTableRow = Prisma.SilcTransactionGetPayload<{

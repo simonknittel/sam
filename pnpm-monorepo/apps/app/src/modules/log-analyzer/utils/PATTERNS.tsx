@@ -92,7 +92,7 @@ export interface IEntry {
    * The citizen the entry belongs to: the citizen who shared it, or the
    * current user for a local one. Null when the user has no linked citizen.
    */
-  readonly citizen: Pick<Citizen, "id" | "handle"> | null;
+  readonly citizen: Pick<Citizen, "id" | "handle" | "deletedAt"> | null;
   /** True when another citizen shared the entry instead of the local parser. */
   readonly isShared: boolean;
   /**

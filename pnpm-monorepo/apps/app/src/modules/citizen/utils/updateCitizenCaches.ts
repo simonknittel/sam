@@ -1,5 +1,9 @@
-import { prisma } from "@/db";
-import { type Citizen, type CitizenLog } from "@sam-monorepo/database/client";
+import {
+  ConfirmationStatus,
+  type Citizen,
+  type CitizenLog,
+  type Prisma,
+} from "@sam-monorepo/database/client";
 
 /**
  * The column of `Citizen` that caches the latest confirmed value of each
@@ -21,20 +25,16 @@ const isCachedLogType = (
 
 export const updateCitizenCaches = async (
   citizenLog: Pick<CitizenLog, "citizenId" | "type">,
+  client: Prisma.TransactionClient,
 ) => {
   const logType = citizenLog.type;
   if (!isCachedLogType(logType)) return;
 
-  const latestConfirmed = await prisma.citizenLog.findFirst({
+  const latestConfirmed = await client.citizenLog.findFirst({
     where: {
       citizenId: citizenLog.citizenId,
       type: citizenLog.type,
-      attributes: {
-        some: {
-          key: "confirmed",
-          value: "confirmed",
-        },
-      },
+      confirmed: ConfirmationStatus.CONFIRMED,
     },
     orderBy: {
       createdAt: "desc",
@@ -44,7 +44,7 @@ export const updateCitizenCaches = async (
     },
   });
 
-  await prisma.citizen.update({
+  await client.citizen.update({
     where: {
       id: citizenLog.citizenId,
     },

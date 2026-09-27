@@ -17,7 +17,11 @@ import type {
   User as DatabaseUser,
   RoleAssignment,
 } from "@sam-monorepo/database/client";
-import { EFFECTIVE_ROLE_PERMISSIONS_SELECT } from "@sam-monorepo/domain";
+import { ConfirmationStatus } from "@sam-monorepo/database/client";
+import {
+  ACTIVE_CITIZEN_WHERE,
+  EFFECTIVE_ROLE_PERMISSIONS_SELECT,
+} from "@sam-monorepo/domain";
 import {
   getPermissionSetsByRoles,
   resolveEffectiveRoles,
@@ -372,12 +376,8 @@ export const authOptions: NextAuthOptions = {
             where: {
               type: "discord-id",
               content: profile.id,
-              attributes: {
-                some: {
-                  key: "confirmed",
-                  value: "confirmed",
-                },
-              },
+              confirmed: ConfirmationStatus.CONFIRMED,
+              citizen: ACTIVE_CITIZEN_WHERE,
             },
             orderBy: {
               createdAt: "desc",
@@ -393,12 +393,7 @@ export const authOptions: NextAuthOptions = {
               where: {
                 citizenId: latestConfirmedDiscordIdCitizenLog.citizenId,
                 type: "handle",
-                attributes: {
-                  some: {
-                    key: "confirmed",
-                    value: "confirmed",
-                  },
-                },
+                confirmed: ConfirmationStatus.CONFIRMED,
               },
               orderBy: {
                 createdAt: "desc",

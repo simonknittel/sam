@@ -1,4 +1,5 @@
 import { prisma, type WikiPageReport } from "@sam-monorepo/database";
+import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import { publishNotifications } from "../publish";
 
 interface Payload {
@@ -42,6 +43,7 @@ export const WikiPageReportedHandler = async (payload: Payload) => {
 
   const recipients = await prisma.citizen.findMany({
     where: {
+      ...ACTIVE_CITIZEN_WHERE,
       roleAssignments: {
         some: {
           roleId: {

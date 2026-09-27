@@ -9,7 +9,13 @@ import { Button2 } from "@/modules/common/components/Button2";
 import { track } from "@plausible-analytics/tracker";
 import clsx from "clsx";
 import { get, set } from "idb-keyval";
-import { useCallback, useEffect, useRef, type MouseEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  type MouseEvent,
+} from "react";
 import { FaFileArrowUp } from "react-icons/fa6";
 import { useEntryUpload } from "../hooks/useEntryUpload";
 import { useLogParser } from "../hooks/useLogParser";
@@ -53,7 +59,12 @@ export const LogAnalyzer = ({ className }: Props) => {
   const uploadEntries = useEntryUpload();
   const refreshSharedEntries = useSharedEntries();
 
-  const ownCitizen = authentication ? authentication.session.entity : null;
+  const sessionCitizen = authentication ? authentication.session.entity : null;
+  /** The signed-in citizen is never a deleted one */
+  const ownCitizen = useMemo(
+    () => (sessionCitizen ? { ...sessionCitizen, deletedAt: null } : null),
+    [sessionCitizen],
+  );
 
   const parseLogFiles = useLogParser();
 

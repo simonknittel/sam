@@ -37,28 +37,28 @@ model Session {
 }
 
 model User {
-  id                          String                   @id @default(cuid())
-  name                        String?
-  email                       String?                  @unique
-  emailVerified               DateTime?
-  image                       String?
-  accounts                    Account[]
-  sessions                    Session[]
-  role                        String?
-  createdAt                   DateTime?                @default(now())
-  updatedAt                   DateTime?
-  createdCitizens             Citizen[]                @relation("createdBy")
-  submittedCitizenLogs        CitizenLog[]             @relation("submittedBy")
-  createdCitizenLogAttributes CitizenLogAttribute[]
-  lastSeenAt                  DateTime?
-  uploads                     Upload[]
-  emailConfirmationTokens     EmailConfirmationToken[]
-  createdAuditEvents          AuditEvent[]             @relation("createdBy")
-  bannedAt                    DateTime?
-  bannedReason                String?
-  bannedById                  String?
-  bannedBy                    Citizen?                 @relation("bannedBy", fields: [bannedById], references: [id])
-  citizen                     Citizen?                 @relation("citizen")
+  id                      String                   @id @default(cuid())
+  name                    String?
+  email                   String?                  @unique
+  emailVerified           DateTime?
+  image                   String?
+  accounts                Account[]
+  sessions                Session[]
+  role                    String?
+  createdAt               DateTime?                @default(now())
+  updatedAt               DateTime?
+  createdCitizens         Citizen[]                @relation("createdBy")
+  submittedCitizenLogs    CitizenLog[]             @relation("submittedBy")
+  confirmedCitizenLogs    CitizenLog[]             @relation("confirmedBy")
+  lastSeenAt              DateTime?
+  uploads                 Upload[]
+  emailConfirmationTokens EmailConfirmationToken[]
+  createdAuditEvents      AuditEvent[]             @relation("createdBy")
+  bannedAt                DateTime?
+  bannedReason            String?
+  bannedById              String?
+  bannedBy                Citizen?                 @relation("bannedBy", fields: [bannedById], references: [id])
+  citizen                 Citizen?                 @relation("citizen")
 }
 
 model VerificationToken {

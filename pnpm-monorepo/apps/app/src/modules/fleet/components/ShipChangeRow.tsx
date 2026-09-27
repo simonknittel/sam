@@ -40,6 +40,7 @@ export const ShipChangeRow = ({ change }: Props) => {
             citizen={{
               id: change.actorId,
               handle: change.actorHandle ?? null,
+              deletedAt: change.actorDeletedAt ?? null,
             }}
             className="hover:bg-white/10 focus-visible:bg-white/10 hover:no-underline! rounded-secondary p-2 block"
           />

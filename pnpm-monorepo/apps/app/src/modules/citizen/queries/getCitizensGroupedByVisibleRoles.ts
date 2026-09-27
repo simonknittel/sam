@@ -2,11 +2,12 @@ import { prisma } from "@/db";
 import { getVisibleRoles } from "@/modules/roles/utils/getRoles";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import type { Citizen, Role } from "@sam-monorepo/database/client";
+import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import { cache } from "react";
 
 interface CitizensGroupedByVisibleRoles {
   /** Each citizen who has at least one of the visible roles, by handle */
-  readonly citizens: Pick<Citizen, "id" | "handle">[];
+  readonly citizens: Pick<Citizen, "id" | "handle" | "deletedAt">[];
   /**
    * One group for each visible role that has citizens, in the order of the
    * visible roles (by name). The groups refer to the citizens by id, because
@@ -28,6 +29,7 @@ export const getCitizensGroupedByVisibleRoles = cache(
 
       const citizens = await prisma.citizen.findMany({
         where: {
+          ...ACTIVE_CITIZEN_WHERE,
           roleAssignments: {
             some: {
               roleId: { in: visibleRoleIds },
@@ -40,6 +42,7 @@ export const getCitizensGroupedByVisibleRoles = cache(
         select: {
           id: true,
           handle: true,
+          deletedAt: true,
           roleAssignments: {
             where: {
               roleId: { in: visibleRoleIds },
@@ -65,7 +68,11 @@ export const getCitizensGroupedByVisibleRoles = cache(
       }
 
       return {
-        citizens: citizens.map(({ id, handle }) => ({ id, handle })),
+        citizens: citizens.map(({ id, handle, deletedAt }) => ({
+          id,
+          handle,
+          deletedAt,
+        })),
         roleGroups: visibleRoles.flatMap((role) => {
           const citizenIds = citizenIdsByRoleId.get(role.id);
           return citizenIds ? [{ roleId: role.id, citizenIds }] : [];

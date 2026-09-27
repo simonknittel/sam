@@ -17,7 +17,7 @@ export const ACTIVITY_PAGE_SIZE = 50;
  */
 export interface ActivityEntry extends MergedCursorEntry {
   /** Who caused the entry. Left out where nothing recorded it. */
-  readonly actor?: Pick<Citizen, "id" | "handle"> | null;
+  readonly actor?: Pick<Citizen, "id" | "handle" | "deletedAt"> | null;
   /** Who or what the entry is about, in contexts that don't already imply it. */
   readonly target?: ReactNode;
   readonly message: ReactNode;

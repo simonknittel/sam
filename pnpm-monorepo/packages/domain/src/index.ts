@@ -11,6 +11,7 @@ export {
 } from "./AuditEventTypes.js";
 export { buildBriefingRootPageSeed } from "./buildBriefingRootPageSeed.js";
 export { toDateColumnValue } from "./calendarDate.js";
+export { ACTIVE_CITIZEN_WHERE } from "./citizen/activeCitizen.js";
 export {
   ORGANIZATION_TIMEZONE,
   getCelebrationDate,

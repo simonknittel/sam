@@ -28,6 +28,7 @@ export const getEventCitizens = cache(async (eventId: Event["id"]) => {
     select: {
       id: true,
       handle: true,
+      deletedAt: true,
       ships: {
         where: {
           deletedAt: null,

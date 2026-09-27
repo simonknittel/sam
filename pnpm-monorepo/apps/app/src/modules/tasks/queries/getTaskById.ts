@@ -20,12 +20,12 @@ export const getTaskById = cache(
           select: {
             id: true,
             citizenId: true,
-            citizen: { select: { id: true, handle: true } },
+            citizen: { select: { id: true, handle: true, deletedAt: true } },
           },
         },
         requiredRoles: { select: { id: true } },
-        completionists: { select: { id: true, handle: true } },
-        createdBy: { select: { id: true, handle: true } },
+        completionists: { select: { id: true, handle: true, deletedAt: true } },
+        createdBy: { select: { id: true, handle: true, deletedAt: true } },
       },
     });
   }),

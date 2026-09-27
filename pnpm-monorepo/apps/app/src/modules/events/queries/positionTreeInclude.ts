@@ -35,10 +35,10 @@ const REQUIRED_VARIANTS_INCLUDE = {
 const POSITION_INCLUDE = {
   applications: {
     include: {
-      citizen: { select: { id: true, handle: true } },
+      citizen: { select: { id: true, handle: true, deletedAt: true } },
     },
   },
-  citizen: { select: { id: true, handle: true } },
+  citizen: { select: { id: true, handle: true, deletedAt: true } },
   requiredVariants: REQUIRED_VARIANTS_INCLUDE,
 } satisfies Prisma.EventPositionInclude;
 
