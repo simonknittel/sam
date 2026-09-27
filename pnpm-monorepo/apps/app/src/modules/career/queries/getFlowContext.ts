@@ -1,10 +1,8 @@
 import { prisma } from "@/db";
-import { authenticate } from "@/modules/auth/server";
+import { authenticate, getEffectiveRoles } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import type { Flow, FlowRoleAccessType } from "@sam-monorepo/database/client";
-import { EFFECTIVE_ROLE_IDS_SELECT } from "@sam-monorepo/domain";
 import {
-  resolveEffectiveRoles,
   resolveFlowPermissions,
   type FlowViewer,
   type ResolvedFlowPermissions,
@@ -67,13 +65,8 @@ export const getFlowContext = cache(
 
     const citizenId = authentication.session.entity?.id ?? null;
 
-    const [roleAssignments, allFlows] = await Promise.all([
-      citizenId
-        ? prisma.roleAssignment.findMany({
-            where: { citizenId },
-            select: EFFECTIVE_ROLE_IDS_SELECT,
-          })
-        : Promise.resolve([]),
+    const [effectiveRoles, allFlows] = await Promise.all([
+      citizenId ? getEffectiveRoles(citizenId) : null,
       prisma.flow.findMany({
         select: {
           id: true,
@@ -92,16 +85,10 @@ export const getFlowContext = cache(
       }),
     ]);
 
-    /**
-     * Same semantics as the session callback and `getWikiContext()` — all
-     * three use `resolveEffectiveRoles()`: leveled roles only count once the
-     * max level is reached, and inherited roles are included.
-     */
-    const roleIds = new Set(
-      resolveEffectiveRoles(roleAssignments).map((role) => role.id),
-    );
-
-    const viewer: FlowViewer = { roleIds, hasCareerManage };
+    const viewer: FlowViewer = {
+      roleIds: effectiveRoles?.roleIds ?? new Set(),
+      hasCareerManage,
+    };
 
     const flows = allFlows.filter((flow) => flow.deletedAt === null);
 

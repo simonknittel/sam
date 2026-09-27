@@ -1,9 +1,6 @@
-import { prisma } from "@/db";
-import { EFFECTIVE_ROLE_PERMISSIONS_SELECT } from "@sam-monorepo/domain";
+import { getEffectiveRoles } from "@/modules/auth/server";
 import {
   comparePermissionSets,
-  getPermissionSetsByRoles,
-  resolveEffectiveRoles,
   type WikiPageViewer,
 } from "@sam-monorepo/permissions";
 
@@ -15,19 +12,14 @@ import {
 export const getWikiViewerForCitizen = async (
   citizenId: string,
 ): Promise<WikiPageViewer> => {
-  const roleAssignments = await prisma.roleAssignment.findMany({
-    where: { citizenId },
-    select: EFFECTIVE_ROLE_PERMISSIONS_SELECT,
-  });
-
-  const effectiveRoles = resolveEffectiveRoles(roleAssignments);
+  const { roleIds, permissionSets } = await getEffectiveRoles(citizenId);
 
   return {
     citizenId,
-    roleIds: new Set(effectiveRoles.map((role) => role.id)),
+    roleIds,
     hasWikiManage: comparePermissionSets(
       { resource: "wiki", operation: "manage" },
-      getPermissionSetsByRoles(effectiveRoles),
+      permissionSets,
     ),
   };
 };

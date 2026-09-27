@@ -1,11 +1,6 @@
-import { prisma } from "@/db";
-import { authenticate } from "@/modules/auth/server";
+import { authenticate, getEffectiveRoles } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import { EFFECTIVE_ROLE_IDS_SELECT } from "@sam-monorepo/domain";
-import {
-  resolveEffectiveRoles,
-  type EventTemplateViewer,
-} from "@sam-monorepo/permissions";
+import { type EventTemplateViewer } from "@sam-monorepo/permissions";
 import { cache } from "react";
 
 /**
@@ -25,28 +20,19 @@ export const getEventTemplateViewer = cache(
 
       const citizenId = authentication.session.entity?.id ?? null;
 
-      const [hasEventManage, hasTemplateShareManage, roleAssignments] =
+      const [hasEventManage, hasTemplateShareManage, effectiveRoles] =
         await Promise.all([
           authentication.authorize("event", "manage"),
           authentication.authorize("eventTemplateShare", "manage"),
-          citizenId
-            ? prisma.roleAssignment.findMany({
-                where: { citizenId },
-                select: EFFECTIVE_ROLE_IDS_SELECT,
-              })
-            : Promise.resolve([]),
+          citizenId ? getEffectiveRoles(citizenId) : null,
         ]);
 
-      /**
-       * Same semantics as the session callback, `getWikiContext()` and
-       * `getFlowContext()`: leveled roles only count once the max level is
-       * reached, and inherited roles are included.
-       */
-      const roleIds = new Set(
-        resolveEffectiveRoles(roleAssignments).map((role) => role.id),
-      );
-
-      return { citizenId, roleIds, hasEventManage, hasTemplateShareManage };
+      return {
+        citizenId,
+        roleIds: effectiveRoles?.roleIds ?? new Set(),
+        hasEventManage,
+        hasTemplateShareManage,
+      };
     },
   ),
 );

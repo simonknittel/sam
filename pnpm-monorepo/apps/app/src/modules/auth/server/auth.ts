@@ -17,17 +17,9 @@ import {
   UserRole,
   type Citizen,
   type User as DatabaseUser,
-  type RoleAssignment,
 } from "@sam-monorepo/database/client";
-import {
-  ACTIVE_CITIZEN_WHERE,
-  EFFECTIVE_ROLE_PERMISSIONS_SELECT,
-} from "@sam-monorepo/domain";
-import {
-  getPermissionSetsByRoles,
-  resolveEffectiveRoles,
-  type PermissionSet,
-} from "@sam-monorepo/permissions";
+import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
+import { type PermissionSet } from "@sam-monorepo/permissions";
 import {
   getServerSession,
   type DefaultSession,
@@ -41,6 +33,7 @@ import DiscordProvider, {
 import { cookies, headers } from "next/headers";
 import { serializeError } from "serialize-error";
 import { ASSUME_USER_COOKIE } from "../utils/adminCookies";
+import { getEffectiveRoles, type EffectiveRoles } from "./getEffectiveRoles";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -62,8 +55,9 @@ declare module "next-auth" {
      * Kept deliberately minimal: the session is serialized into the payload
      * of every page, so it carries only what its consumers read — the
      * citizen id, the handle (embed tokens) and the raw role assignments
-     * (career level progress, SILC salaries). Permission decisions go
-     * through `givenPermissionSets`, never through this.
+     * (career level progress, SILC salaries). Permission and role decisions
+     * use `givenPermissionSets` and `getEffectiveRoles()`, never these
+     * assignments: they ignore inheritance and the level gate.
      */
     entity:
       | (Pick<Citizen, "id" | "handle"> & {
@@ -74,7 +68,7 @@ declare module "next-auth" {
            * it belongs on the session and not into a query of its own.
            */
           hasBirthdayToday: boolean;
-          roleAssignments: Pick<RoleAssignment, "roleId" | "currentLevel">[];
+          roleAssignments: EffectiveRoles["roleAssignments"];
         })
       | null;
     /**
@@ -156,58 +150,41 @@ export const authOptions: NextAuthOptions = {
       const assumedUser = await getAssumedUser(user);
       const effectiveUser = assumedUser ?? user;
 
-      const { accounts, citizen: entityWithRoleGraph } =
-        await prisma.user.findUniqueOrThrow({
-          where: {
-            id: effectiveUser.id,
+      const { accounts, citizen } = await prisma.user.findUniqueOrThrow({
+        where: {
+          id: effectiveUser.id,
+        },
+        select: {
+          accounts: {
+            where: { provider: "discord" },
+            select: { providerAccountId: true },
+            take: 1,
           },
-          select: {
-            accounts: {
-              where: { provider: "discord" },
-              select: { providerAccountId: true },
-              take: 1,
-            },
-            citizen: {
-              select: {
-                id: true,
-                handle: true,
-                timezone: true,
-                birthdayDay: true,
-                birthdayMonth: true,
-                roleAssignments: {
-                  select: {
-                    roleId: true,
-                    ...EFFECTIVE_ROLE_PERMISSIONS_SELECT,
-                  },
-                },
-              },
+          citizen: {
+            select: {
+              id: true,
+              handle: true,
+              timezone: true,
+              birthdayDay: true,
+              birthdayMonth: true,
             },
           },
-        });
+        },
+      });
 
       let givenPermissionSets: PermissionSet[] = [];
-      if (entityWithRoleGraph) {
-        givenPermissionSets = getPermissionSetsByRoles(
-          resolveEffectiveRoles(entityWithRoleGraph.roleAssignments),
-        );
-      }
+      let entity: Session["entity"] = null;
+      if (citizen) {
+        const effectiveRoles = await getEffectiveRoles(citizen.id);
 
-      /**
-       * The role graph exists only to resolve `givenPermissionSets` above.
-       * Everything on the session is serialized into every page's payload,
-       * so the assignments are mapped down to what the session's consumers
-       * actually read.
-       */
-      const entity: Session["entity"] = entityWithRoleGraph
-        ? {
-            id: entityWithRoleGraph.id,
-            handle: entityWithRoleGraph.handle,
-            hasBirthdayToday: hasBirthdayToday(entityWithRoleGraph, new Date()),
-            roleAssignments: entityWithRoleGraph.roleAssignments.map(
-              ({ roleId, currentLevel }) => ({ roleId, currentLevel }),
-            ),
-          }
-        : null;
+        givenPermissionSets = effectiveRoles.permissionSets;
+        entity = {
+          id: citizen.id,
+          handle: citizen.handle,
+          hasBirthdayToday: hasBirthdayToday(citizen, new Date()),
+          roleAssignments: effectiveRoles.roleAssignments,
+        };
+      }
 
       // Only update lastSeenAt once a day. Skipped while assuming another
       // user so their presence data doesn't get falsified.
