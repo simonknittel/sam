@@ -20,11 +20,7 @@ export const getNewIds = withTrace(
     if (!unreadWhere) return new Set();
 
     return new Set(
-      await READ_MARKER_SUBJECTS[subject].findNewIds(
-        subjectIds,
-        unreadWhere,
-        new Date(),
-      ),
+      await READ_MARKER_SUBJECTS[subject].findNewIds(subjectIds, unreadWhere),
     );
   },
 );

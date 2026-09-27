@@ -12,7 +12,11 @@ import type { PermissionSet } from "@sam-monorepo/permissions";
  * `getUnreadWhere`). It fits the where input of each subject model, because
  * each of them has `createdAt`, `createdById` and a `readMarkers` relation.
  */
-export type UnreadWhere = Prisma.TaskWhereInput & Prisma.EventWhereInput;
+export interface UnreadWhere {
+  readonly createdAt: { readonly gt: Date };
+  readonly OR: ({ createdById: null } | { createdById: { not: string } })[];
+  readonly readMarkers: { readonly none: { readonly citizenId: string } };
+}
 
 interface ReadMarkerSubjectDefinition {
   /**
@@ -28,7 +32,10 @@ interface ReadMarkerSubjectDefinition {
   /** The marker column which points at the item */
   readonly markerData: (
     subjectId: string,
-  ) => Pick<Prisma.ReadMarkerUncheckedCreateInput, "taskId" | "eventId">;
+  ) => Omit<
+    Prisma.ReadMarkerUncheckedCreateInput,
+    "id" | "citizenId" | "readAt"
+  >;
   /** Whether the item exists and the viewer can see it */
   readonly canRead: (subjectId: string) => Promise<boolean>;
   /**
@@ -38,10 +45,9 @@ interface ReadMarkerSubjectDefinition {
   readonly findNewIds: (
     subjectIds: string[],
     unreadWhere: UnreadWhere,
-    now: Date,
   ) => Promise<string[]>;
   /** How many of the items which the viewer can see are new */
-  readonly countNew: (unreadWhere: UnreadWhere, now: Date) => Promise<number>;
+  readonly countNew: (unreadWhere: UnreadWhere) => Promise<number>;
 }
 
 /**
@@ -52,10 +58,20 @@ interface ReadMarkerSubjectDefinition {
 const TASKS_AND_EVENTS_TRACKED_SINCE = new Date("2026-09-27T00:00:00Z");
 
 /**
- * Everything the generic read markers need to know about a subject type.
- * Each subject model must have `createdAt`, `createdById` and a relation
- * `readMarkers`, thus `UnreadWhere` fits it. An item is new when it is
- * "open" in the sense of its subject and matches `UnreadWhere`.
+ * Everything the generic read markers need to know about a subject type. An
+ * item is new when it is "open" in the sense of its subject and matches
+ * `UnreadWhere`.
+ *
+ * To add a subject type:
+ * 1. In the database: see the comment of the `ReadMarker` model.
+ * 2. Add a value to the `ReadMarkerSubject` enum of the domain package.
+ * 3. Add an entry here. The subject model must have `createdAt`,
+ *    `createdById` and the relation `readMarkers`, thus `UnreadWhere` fits
+ *    it. Subjects of one app share its dot badge; the counts add up.
+ * 4. In the lists: get the new items of each page with `getNewIds()`, and
+ *    show them with `useMarkAsRead()`, `<UnreadEdge>` and
+ *    `<NewMarkerButton>`.
+ * 5. On the details: add `<MarkAsReadOnMount>`.
  */
 export const READ_MARKER_SUBJECTS: Record<
   ReadMarkerSubject,
@@ -73,12 +89,12 @@ export const READ_MARKER_SUBJECTS: Record<
           deletedAt: null,
         },
       })) > 0,
-    findNewIds: async (subjectIds, unreadWhere, now) => {
+    findNewIds: async (subjectIds, unreadWhere) => {
       const tasks = await prisma.task.findMany({
         where: {
           AND: [
             { id: { in: subjectIds } },
-            getOpenTasksWhere(now),
+            getOpenTasksWhere(new Date()),
             unreadWhere,
           ],
         },
@@ -86,12 +102,12 @@ export const READ_MARKER_SUBJECTS: Record<
       });
       return tasks.map((task) => task.id);
     },
-    countNew: async (unreadWhere, now) =>
+    countNew: async (unreadWhere) =>
       prisma.task.count({
         where: {
           AND: [
             await getVisibleTasksWhere(),
-            getOpenTasksWhere(now),
+            getOpenTasksWhere(new Date()),
             unreadWhere,
           ],
         },
@@ -107,12 +123,12 @@ export const READ_MARKER_SUBJECTS: Record<
       (await prisma.event.count({
         where: { AND: [{ id: subjectId }, await getVisibleEventsWhere()] },
       })) > 0,
-    findNewIds: async (subjectIds, unreadWhere, now) => {
+    findNewIds: async (subjectIds, unreadWhere) => {
       const events = await prisma.event.findMany({
         where: {
           AND: [
             { id: { in: subjectIds } },
-            getOpenEventsWhere(now),
+            getOpenEventsWhere(new Date()),
             unreadWhere,
           ],
         },
@@ -120,12 +136,12 @@ export const READ_MARKER_SUBJECTS: Record<
       });
       return events.map((event) => event.id);
     },
-    countNew: async (unreadWhere, now) =>
+    countNew: async (unreadWhere) =>
       prisma.event.count({
         where: {
           AND: [
             await getVisibleEventsWhere(),
-            getOpenEventsWhere(now),
+            getOpenEventsWhere(new Date()),
             unreadWhere,
           ],
         },

@@ -1,5 +1,6 @@
 import { AdminToolbar } from "@/modules/admin-toolbar/components/AdminToolbar";
 import { AppsContextProvider } from "@/modules/apps/components/AppsContext";
+import { addCountsByAppSlug } from "@/modules/apps/utils/addCountsByAppSlug";
 import { getAppFavoriteKeys } from "@/modules/apps/utils/queries/getAppFavoriteKeys";
 import { getAppLinks } from "@/modules/apps/utils/queries/getAppLinks";
 import { SessionProviderContainer } from "@/modules/auth/components/SessionProviderContainer";
@@ -81,11 +82,13 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
 
                       <AppsContextProvider
                         apps={apps}
-                        appDotBadgeCounts={{
-                          [CHANGELOG_APP_SLUG]: changelogUnseenKeys.size,
-                          wiki: openWikiReportCount,
-                          ...newItemCountsByAppSlug,
-                        }}
+                        appDotBadgeCounts={addCountsByAppSlug(
+                          {
+                            [CHANGELOG_APP_SLUG]: changelogUnseenKeys.size,
+                            wiki: openWikiReportCount,
+                          },
+                          newItemCountsByAppSlug,
+                        )}
                         favoriteAppKeys={[...favoriteAppKeys]}
                       >
                         <OnSiteNotificationsProvider

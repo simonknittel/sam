@@ -7,10 +7,11 @@
 /// item. A hand-written CHECK constraint (see the migration
 /// `read_markers`) makes sure that exactly one of these columns is set.
 ///
-/// To add a subject type: add a nullable column with its relation (named
-/// `readMarkers` on the subject model) and a unique constraint of the column
-/// together with `citizenId`, extend the CHECK constraint in a new migration, and add an
-/// entry to the registry of the `read-markers` module.
+/// To add a subject type in the database: add a nullable column with its
+/// relation (named `readMarkers` on the subject model) and a unique
+/// constraint of the column together with `citizenId`, and extend the CHECK
+/// constraint in a new migration. The steps in the app are documented at
+/// `READ_MARKER_SUBJECTS` in the `read-markers` module.
 model ReadMarker {
   id        String   @id @default(cuid(2))
   citizenId String

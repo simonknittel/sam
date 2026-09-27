@@ -1,3 +1,4 @@
+import { addCountsByAppSlug } from "@/modules/apps/utils/addCountsByAppSlug";
 import { authenticate } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { ReadMarkerSubject } from "@sam-monorepo/domain";
@@ -16,8 +17,6 @@ export const getNewItemCountsByAppSlug = cache(
       const authentication = await authenticate();
       if (!authentication) return {};
 
-      const now = new Date();
-
       const counts = await Promise.all(
         Object.values(ReadMarkerSubject).map(async (subject) => {
           const definition = READ_MARKER_SUBJECTS[subject];
@@ -25,19 +24,19 @@ export const getNewItemCountsByAppSlug = cache(
           if (
             !(await authentication.authorize(definition.readResource, "read"))
           )
-            return [definition.appSlug, 0] as const;
+            return { [definition.appSlug]: 0 };
 
           const unreadWhere = await getUnreadWhere(subject);
-          if (!unreadWhere) return [definition.appSlug, 0] as const;
+          if (!unreadWhere) return { [definition.appSlug]: 0 };
 
-          return [
-            definition.appSlug,
-            await definition.countNew(unreadWhere, now),
-          ] as const;
+          return {
+            [definition.appSlug]: await definition.countNew(unreadWhere),
+          };
         }),
       );
 
-      return Object.fromEntries(counts);
+      // Subjects of the same app share its dot badge
+      return addCountsByAppSlug(...counts);
     },
   ),
 );
