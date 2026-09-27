@@ -6,7 +6,7 @@ import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { revalidatePath } from "next/cache";
 import * as z from "zod";
-import { updateCitizensSilcBalances } from "../utils/updateCitizensSilcBalances";
+import { updateSilcBalances } from "@sam-monorepo/domain";
 
 const schema = z.object({});
 
@@ -30,7 +30,12 @@ export const refreshSilcBalances = createAuthenticatedAction(
         id: true,
       },
     });
-    await updateCitizensSilcBalances(citizens.map((citizen) => citizen.id));
+    await prisma.$transaction((transaction) =>
+      updateSilcBalances(
+        transaction,
+        citizens.map((citizen) => citizen.id),
+      ),
+    );
 
     await createAuditEvents([
       {

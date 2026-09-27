@@ -34,12 +34,7 @@ export const getVisibleTasksWhere =
         },
         {
           visibility: TaskVisibility.PUBLIC,
-          // Explicit, because SQL `NOT` does not match `NULL`
-          OR: [
-            { hiddenForOtherRoles: null },
-            { hiddenForOtherRoles: false },
-            { requiredRoles: { none: {} } },
-          ],
+          OR: [{ hiddenForOtherRoles: false }, { requiredRoles: { none: {} } }],
         },
       ],
     };

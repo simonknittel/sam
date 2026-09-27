@@ -2,12 +2,12 @@
 
 import { ScrambleIn } from "@/modules/common/components/ScrambleIn";
 import { StatisticTile } from "@/modules/common/components/StatisticTile";
-import { formatDate } from "@/modules/common/utils/formatDate";
+import { CyclePhase } from "@sam-monorepo/domain";
 import type { getProfitDistributionCycleById } from "../queries/getProfitDistributionCycleById";
-import { CyclePhase } from "../utils/getCurrentPhase";
 import { CitizenTable } from "./CitizenTable";
 import { EndCollectionPhaseButton } from "./EndCollectionPhaseButton";
 import { Phase } from "./Phase";
+import { PhaseEndDate } from "./PhaseEndDate";
 
 interface Props {
   readonly cycleData: NonNullable<
@@ -57,13 +57,11 @@ export const PhaseManagementCollection = ({ cycleData }: Props) => {
       </div>
 
       <div className="flex justify-center mt-4">
-        <div className="flex flex-col justify-center items-center text-sm">
-          <h3 className="text-neutral-500">Endet am</h3>
-
-          <p>{formatDate(cycleData.cycle.collectionEndedAt, "short")}</p>
-
-          {/* TODO: Implement edit button */}
-        </div>
+        <PhaseEndDate
+          plannedEnd={cycleData.cycle.collectionEndsAt}
+          actualEnd={cycleData.cycle.collectionEndedAt}
+        />
+        {/* TODO: Implement edit button */}
       </div>
 
       <div className="flex justify-center items-center gap-2 mt-2">

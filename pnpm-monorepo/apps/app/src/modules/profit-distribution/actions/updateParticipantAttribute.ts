@@ -5,9 +5,9 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
+import { CyclePhase, getCurrentPhase } from "@sam-monorepo/domain";
 import { revalidatePath } from "next/cache";
 import * as z from "zod";
-import { CyclePhase, getCurrentPhase } from "../utils/getCurrentPhase";
 
 export interface Change {
   citizenId: string;

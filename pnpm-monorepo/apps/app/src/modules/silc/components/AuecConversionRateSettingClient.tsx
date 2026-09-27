@@ -4,10 +4,7 @@ import { ActionErrorNote } from "@/modules/actions/components/ActionErrorNote";
 import { useAction } from "@/modules/actions/utils/useAction";
 import { AsciiSpinner } from "@/modules/common/components/AsciiSpinner";
 import { Button2 } from "@/modules/common/components/Button2";
-import {
-  SilcSettingKey,
-  type SilcSetting,
-} from "@sam-monorepo/database/browser";
+import { SilcSettingKey } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import { useId, useState } from "react";
 import { FaSave } from "react-icons/fa";
@@ -15,7 +12,7 @@ import { updateSilcSetting } from "../actions/updateSilcSetting";
 
 interface Props {
   readonly className?: string;
-  readonly conversionRate?: SilcSetting | null;
+  readonly conversionRate: number;
   readonly totalSilc: number;
 }
 
@@ -28,7 +25,7 @@ export const AuecConversionRateSettingClient = ({
     errorToast: false,
   });
   const inputId = useId();
-  const [value, setValue] = useState(conversionRate?.value || "");
+  const [value, setValue] = useState(String(conversionRate));
 
   return (
     <form action={formAction} className={clsx(className)}>

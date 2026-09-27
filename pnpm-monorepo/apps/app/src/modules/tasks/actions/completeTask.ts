@@ -4,11 +4,20 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
-import { createSilcTransactions } from "@/modules/silc/utils/createSilcTransactions";
-import { createId } from "@paralleldrive/cuid2";
-import { TaskRewardType, TaskVisibility } from "@sam-monorepo/database/client";
+import {
+  announceSilcTransactions,
+  createSilcTransactionsInTransaction,
+  type NewSilcTransaction,
+} from "@/modules/silc/utils/createSilcTransactions";
+import {
+  TaskRewardType,
+  TaskVisibility,
+  type Citizen,
+  type Prisma,
+} from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
 import * as z from "zod";
+import { getOpenTasksWhere } from "../queries/getOpenTasksWhere";
 import { getTaskById } from "../queries/getTaskById";
 import { isAllowedToManageTask } from "../utils/isAllowedToTask";
 import { isTaskUpdatable } from "../utils/isTaskUpdatable";
@@ -17,6 +26,163 @@ const schema = z.object({
   id: z.union([z.cuid(), z.cuid2()]),
   completionistIds: z.array(z.cuid()).max(250), // Arbitrary (untested) limit to prevent DDoS
 });
+
+const ALREADY_COMPLETED_ERROR = "Der Task ist bereits abgeschlossen.";
+
+/** The columns of the claimed task that the completion copies or pays */
+const CLAIMED_TASK_INCLUDE = {
+  assignments: {
+    select: {
+      citizenId: true,
+    },
+  },
+  requiredRoles: {
+    select: {
+      id: true,
+    },
+  },
+} as const satisfies Prisma.TaskInclude;
+
+type TaskToComplete = Prisma.TaskGetPayload<{
+  include: typeof CLAIMED_TASK_INCLUDE;
+}>;
+
+/**
+ * Each completionist gets the reward. With the reward type SILC, the creator
+ * of the task pays it. A reward of the type TEXT has no SILC transactions.
+ */
+const getRewardTransactions = (
+  task: TaskToComplete,
+  completionistIds: readonly Citizen["id"][],
+  createdById: Citizen["id"],
+): NewSilcTransaction[] => {
+  if (task.rewardType === TaskRewardType.TEXT) return [];
+
+  if (task.rewardSilcValue === null)
+    throw new Error(`The SILC reward of task ${task.id} has no value`);
+
+  const rewardSilcValue = task.rewardSilcValue;
+  const rewards = completionistIds.map((receiverId) => ({
+    receiverId,
+    value: rewardSilcValue,
+    description: `Task erfüllt: ${task.title}`,
+    createdById,
+    taskId: task.id,
+  }));
+
+  switch (task.rewardType) {
+    case TaskRewardType.NEW_SILC:
+      return rewards;
+
+    case TaskRewardType.SILC:
+      if (!task.createdById) return rewards;
+
+      return [
+        ...rewards,
+        {
+          receiverId: task.createdById,
+          value: -(rewardSilcValue * completionistIds.length),
+          description: `Task abgeschlossen: ${task.title}`,
+          createdById,
+          taskId: task.id,
+        },
+      ];
+
+    default:
+      throw new Error(
+        `Unknown task reward type: ${task.rewardType satisfies never}`,
+      );
+  }
+};
+
+/** Creates the next repetition of a task that can be completed again */
+const createRepetition = async (
+  transaction: Prisma.TransactionClient,
+  task: TaskToComplete,
+  completionistIds: readonly Citizen["id"][],
+  createdById: Citizen["id"],
+) => {
+  const columns = {
+    visibility: task.visibility,
+    assignmentLimit: task.assignmentLimit,
+    title: task.title,
+    description: task.description,
+    createdById,
+    expiresAt: task.expiresAt,
+    rewardType: task.rewardType,
+    rewardTypeTextValue: task.rewardTypeTextValue,
+    rewardSilcValue: task.rewardSilcValue,
+    repeatable: task.repeatable - 1,
+  } satisfies Prisma.TaskUncheckedCreateInput;
+
+  switch (task.visibility) {
+    case TaskVisibility.PUBLIC:
+      await transaction.task.create({
+        data: {
+          ...columns,
+          assignments: {
+            createMany: {
+              data: task.assignments
+                .filter(
+                  (assignment) =>
+                    !completionistIds.includes(assignment.citizenId),
+                )
+                .map((assignment) => ({
+                  citizenId: assignment.citizenId,
+                  createdById,
+                })),
+            },
+          },
+          requiredRoles: {
+            connect: task.requiredRoles.map((role) => ({
+              id: role.id,
+            })),
+          },
+          hiddenForOtherRoles: task.hiddenForOtherRoles,
+        },
+      });
+      break;
+
+    case TaskVisibility.GROUP:
+      await transaction.task.create({
+        data: {
+          ...columns,
+          assignments: {
+            createMany: {
+              data: task.assignments.map((assignment) => ({
+                citizenId: assignment.citizenId,
+                createdById,
+              })),
+            },
+          },
+          canSelfComplete: task.canSelfComplete,
+        },
+      });
+      break;
+
+    case TaskVisibility.PERSONALIZED:
+      for (const assignment of task.assignments) {
+        await transaction.task.create({
+          data: {
+            ...columns,
+            assignments: {
+              create: {
+                citizenId: assignment.citizenId,
+                createdById,
+              },
+            },
+            canSelfComplete: task.canSelfComplete,
+          },
+        });
+      }
+      break;
+
+    default:
+      throw new Error(
+        `Unknown task visibility: ${task.visibility satisfies never}`,
+      );
+  }
+};
 
 export const completeTask = createAuthenticatedAction(
   "completeTask",
@@ -36,7 +202,7 @@ export const completeTask = createAuthenticatedAction(
       return { error: "Task nicht gefunden", requestPayload: formData };
     if (!isTaskUpdatable(task))
       return {
-        error: "Der Task ist bereits abgeschlossen.",
+        error: ALREADY_COMPLETED_ERROR,
         requestPayload: formData,
       };
     const isAllowedToManage = await isAllowedToManageTask(task);
@@ -79,186 +245,77 @@ export const completeTask = createAuthenticatedAction(
       };
 
     /**
-     * Update
+     * Complete the task, pay the reward and create the next repetition in
+     * one transaction
      */
-    await prisma.task.update({
-      where: {
-        id: data.id,
-      },
-      data: {
-        completedAt: new Date(),
-        completedBy: {
-          connect: {
-            id: authentication.session.entity.id,
+    const completedById = authentication.session.entity.id;
+    const completedAt = new Date();
+
+    const silcTransactionIds = await prisma.$transaction(
+      async (transaction) => {
+        /**
+         * Only one completion can claim the task. A parallel completion
+         * waits for the lock of the row and then finds no open task.
+         */
+        const { count } = await transaction.task.updateMany({
+          where: {
+            AND: [{ id: task.id }, getOpenTasksWhere(completedAt)],
           },
-        },
-        completionists: {
-          connect: completionistIds.map((id) => ({
-            id,
-          })),
-        },
+          data: {
+            completedAt,
+            completedById,
+          },
+        });
+        if (count === 0) return null;
+
+        /**
+         * Read the task again after the claim: an edit that ran before the
+         * claim can have changed the reward or the assignments
+         */
+        const claimedTask = await transaction.task.update({
+          where: {
+            id: task.id,
+          },
+          data: {
+            completionists: {
+              connect: completionistIds.map((id) => ({
+                id,
+              })),
+            },
+          },
+          include: CLAIMED_TASK_INCLUDE,
+        });
+
+        if (claimedTask.repeatable > 1)
+          await createRepetition(
+            transaction,
+            claimedTask,
+            completionistIds,
+            completedById,
+          );
+
+        const rewardTransactions = getRewardTransactions(
+          claimedTask,
+          completionistIds,
+          completedById,
+        );
+        if (rewardTransactions.length === 0) return [];
+
+        return createSilcTransactionsInTransaction(
+          transaction,
+          rewardTransactions,
+        );
       },
-    });
+    );
+    if (!silcTransactionIds)
+      return {
+        error: ALREADY_COMPLETED_ERROR,
+        requestPayload: formData,
+      };
 
-    /**
-     * Create SILC transaction
-     */
-    if (
-      task.rewardType === TaskRewardType.SILC ||
-      task.rewardType === TaskRewardType.NEW_SILC
-    ) {
-      const rewardValue =
-        task.rewardType === TaskRewardType.SILC
-          ? task.rewardTypeSilcValue!
-          : task.rewardTypeNewSilcValue!;
-
-      await createSilcTransactions([
-        ...completionistIds.map((receiverId) => ({
-          receiverId,
-          value: rewardValue,
-          description: `Task erfüllt: ${task.title}`,
-          createdById: authentication.session.entity!.id,
-          taskId: task.id,
-        })),
-
-        // With the SILC reward type the task's creator funds the reward
-        ...(task.rewardType === TaskRewardType.SILC && task.createdById
-          ? [
-              {
-                receiverId: task.createdById,
-                value: -(task.rewardTypeSilcValue! * completionistIds.length),
-                description: `Task abgeschlossen: ${task.title}`,
-                createdById: authentication.session.entity.id,
-                taskId: task.id,
-              },
-            ]
-          : []),
-      ]);
-
-      /**
-       * Revalidate cache(s)
-       */
-      revalidatePath("/app/spynet/citizen/[id]/silc");
-    }
-
-    if (task.repeatable && task.repeatable > 1) {
-      /**
-       * Create task
-       */
-      switch (task.visibility) {
-        case TaskVisibility.PUBLIC:
-          await prisma.task.create({
-            data: {
-              visibility: task.visibility,
-              assignmentLimit: task.assignmentLimit,
-              title: task.title,
-              description: task.description,
-              createdBy: {
-                connect: {
-                  id: authentication.session.entity.id,
-                },
-              },
-              expiresAt: task.expiresAt,
-              rewardType: task.rewardType,
-              rewardTypeTextValue: task.rewardTypeTextValue,
-              rewardTypeSilcValue: task.rewardTypeSilcValue,
-              rewardTypeNewSilcValue: task.rewardTypeNewSilcValue,
-              assignments: {
-                createMany: {
-                  data: task.assignments
-                    .filter(
-                      (assignment) =>
-                        !completionistIds.includes(assignment.citizenId),
-                    )
-                    .map((assignment) => ({
-                      citizenId: assignment.citizenId,
-                      createdById: authentication.session.entity!.id,
-                    })),
-                },
-              },
-              repeatable: task.repeatable - 1,
-              requiredRoles: {
-                connect: task.requiredRoles.map((role) => ({
-                  id: role.id,
-                })),
-              },
-              hiddenForOtherRoles: task.hiddenForOtherRoles,
-            },
-          });
-          break;
-
-        case TaskVisibility.GROUP:
-          await prisma.task.create({
-            data: {
-              visibility: task.visibility,
-              assignmentLimit: task.assignmentLimit,
-              title: task.title,
-              description: task.description,
-              createdBy: {
-                connect: {
-                  id: authentication.session.entity.id,
-                },
-              },
-              expiresAt: task.expiresAt,
-              rewardType: task.rewardType,
-              rewardTypeTextValue: task.rewardTypeTextValue,
-              rewardTypeSilcValue: task.rewardTypeSilcValue,
-              rewardTypeNewSilcValue: task.rewardTypeNewSilcValue,
-              assignments: {
-                createMany: {
-                  data: task.assignments.map((assignment) => ({
-                    citizenId: assignment.citizenId,
-                    createdById: authentication.session.entity!.id,
-                  })),
-                },
-              },
-              repeatable: task.repeatable - 1,
-              canSelfComplete: task.canSelfComplete,
-            },
-          });
-          break;
-
-        case TaskVisibility.PERSONALIZED:
-          await prisma.$transaction([
-            ...task.assignments.flatMap((assignment) => {
-              const id = createId();
-              return [
-                prisma.task.create({
-                  data: {
-                    id,
-                    visibility: task.visibility,
-                    assignmentLimit: task.assignmentLimit,
-                    title: task.title,
-                    description: task.description,
-                    createdById: authentication.session.entity!.id,
-                    expiresAt: task.expiresAt,
-                    rewardType: task.rewardType,
-                    rewardTypeTextValue: task.rewardTypeTextValue,
-                    rewardTypeSilcValue: task.rewardTypeSilcValue,
-                    rewardTypeNewSilcValue: task.rewardTypeNewSilcValue,
-                    repeatable: task.repeatable - 1,
-                    canSelfComplete: task.canSelfComplete,
-                  },
-                }),
-
-                prisma.taskAssignment.create({
-                  data: {
-                    taskId: id,
-                    citizenId: assignment.citizenId,
-                    createdById: authentication.session.entity!.id,
-                  },
-                }),
-              ];
-            }),
-          ]);
-          break;
-
-        default:
-          return {
-            error: t("Common.badRequest"),
-            requestPayload: formData,
-          };
-      }
+    if (silcTransactionIds.length > 0) {
+      await announceSilcTransactions(silcTransactionIds);
+      revalidatePath("/app/spynet/citizen/[id]/silc", "page");
     }
 
     await createAuditEvents([

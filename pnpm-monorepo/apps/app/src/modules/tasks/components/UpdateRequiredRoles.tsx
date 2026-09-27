@@ -57,7 +57,7 @@ export const UpdateRequiredRoles = ({ className, task }: Props) => {
           </label>
           <YesNoCheckbox
             name="hiddenForOtherRoles"
-            defaultChecked={task.hiddenForOtherRoles || false}
+            defaultChecked={task.hiddenForOtherRoles}
           />
 
           <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">

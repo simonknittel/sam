@@ -7,7 +7,7 @@ import { PhaseCompleted } from "@/modules/profit-distribution/components/PhaseCo
 import { PhasePayout } from "@/modules/profit-distribution/components/PhasePayout";
 import { PhasePayoutPreparation } from "@/modules/profit-distribution/components/PhasePayoutPreparation";
 import { getProfitDistributionCycleById } from "@/modules/profit-distribution/queries/getProfitDistributionCycleById";
-import { CyclePhase } from "@/modules/profit-distribution/utils/getCurrentPhase";
+import { CyclePhase } from "@sam-monorepo/domain";
 import { notFound } from "next/navigation";
 import { FaCog } from "react-icons/fa";
 

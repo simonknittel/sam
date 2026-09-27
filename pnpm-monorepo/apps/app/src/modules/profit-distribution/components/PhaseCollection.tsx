@@ -3,10 +3,11 @@
 import { ScrambleIn } from "@/modules/common/components/ScrambleIn";
 import { StatisticTile } from "@/modules/common/components/StatisticTile";
 import { formatDate } from "@/modules/common/utils/formatDate";
+import { CyclePhase } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import type { getProfitDistributionCycleById } from "../queries/getProfitDistributionCycleById";
-import { CyclePhase } from "../utils/getCurrentPhase";
 import { Phase } from "./Phase";
+import { PhaseEndDate } from "./PhaseEndDate";
 import { ToggleMyCededButton } from "./ToggleMyCededButton";
 
 interface Props {
@@ -59,11 +60,10 @@ export const PhaseCollection = ({ cycleData }: Props) => {
       </div>
 
       <div className="flex flex-col justify-center gap-4 border-t border-white/5 mt-4 pt-4">
-        <div className="flex flex-col justify-center items-center text-sm">
-          <h3 className="text-neutral-500">Endet am</h3>
-
-          <p>{formatDate(cycleData.cycle.collectionEndedAt, "short")}</p>
-        </div>
+        <PhaseEndDate
+          plannedEnd={cycleData.cycle.collectionEndsAt}
+          actualEnd={cycleData.cycle.collectionEndedAt}
+        />
 
         <p className="text-center text-sm">
           Nach Ende der Sammelphase wird von Economics die Auszahlung

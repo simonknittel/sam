@@ -5,6 +5,7 @@ import { YesNoCheckbox } from "@/modules/common/components/form/YesNoCheckbox";
 import { SortableTable } from "@/modules/common/components/SortableTable";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import type { Citizen } from "@sam-monorepo/database/browser";
+import { CyclePhase } from "@sam-monorepo/domain";
 import {
   createColumnHelper,
   getCoreRowModel,
@@ -15,7 +16,6 @@ import {
 import clsx from "clsx";
 import { useMemo, useState } from "react";
 import type { getProfitDistributionCycleById } from "../queries/getProfitDistributionCycleById";
-import { CyclePhase } from "../utils/getCurrentPhase";
 import { getPayoutState, PayoutState } from "../utils/getMyPayoutStatus";
 import { CitizenTableForm } from "./CitizenTableForm";
 
@@ -187,9 +187,6 @@ export const CitizenTable = ({ className, cycleData }: Props) => {
 
             case PayoutState.PAYOUT_OVERDUE:
               return <span className="text-red-500">Überfällig</span>;
-
-            case PayoutState.UNKNOWN:
-              return <span className="text-red-500">Unbekannt</span>;
 
             default:
               throw new Error(

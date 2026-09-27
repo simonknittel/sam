@@ -114,10 +114,14 @@ test("ending the collection phase debits every participant", async ({
   expect(debitByReceiver.get(firstParticipant.entity.id)).toMatchObject({
     value: -100,
     description: "SINcome: Q3 Testzyklus",
+    createdById: admin.entity.id,
+    profitDistributionCycleId: cycle.id,
   });
   expect(debitByReceiver.get(secondParticipant.entity.id)).toMatchObject({
     value: -40,
     description: "SINcome: Q3 Testzyklus",
+    createdById: admin.entity.id,
+    profitDistributionCycleId: cycle.id,
   });
 
   const participants = await prisma.profitDistributionCycleParticipant.findMany(
@@ -143,10 +147,15 @@ test("ending the collection phase debits every participant", async ({
   });
   expect(balances.map(({ silcBalance }) => silcBalance)).toEqual([0, 0]);
 
-  const endedCycle = await prisma.profitDistributionCycle.findUnique({
+  // The actual end is set, the planned end stays
+  const endedCycle = await prisma.profitDistributionCycle.findUniqueOrThrow({
     where: { id: cycle.id },
   });
-  expect(endedCycle!.collectionEndedAt.getTime()).toBeLessThanOrEqual(
+  expect(endedCycle).toMatchObject({
+    collectionEndsAt: cycle.collectionEndsAt,
+    collectionEndedById: admin.entity.id,
+  });
+  expect(endedCycle.collectionEndedAt?.getTime()).toBeLessThanOrEqual(
     Date.now(),
   );
 
@@ -197,7 +206,9 @@ test("a manager runs a cycle from its creation to a closed payout", async ({
   expect(cycle).toMatchObject({
     title: "Q4 Zyklus",
     createdById: admin.entity.id,
+    collectionEndedAt: null,
     payoutStartedAt: null,
+    payoutEndsAt: null,
     payoutEndedAt: null,
   });
 
@@ -247,9 +258,14 @@ test("a manager runs a cycle from its creation to a closed payout", async ({
       return {
         auecProfit: Number(started.auecProfit),
         started: started.payoutStartedAt !== null,
+        hasPlannedEnd: started.payoutEndsAt !== null,
       };
     })
-    .toEqual({ auecProfit: 500_000, started: true });
+    .toEqual({ auecProfit: 500_000, started: true, hasPlannedEnd: true });
+  const { payoutEndsAt } =
+    await prisma.profitDistributionCycle.findUniqueOrThrow({
+      where: { id: cycle.id },
+    });
 
   /**
    * The member has to accept their payout themselves
@@ -333,18 +349,22 @@ test("a manager runs a cycle from its creation to a closed payout", async ({
   await expect(page.getByText("Auszahlung beenden?")).toBeVisible();
   await endPayoutDialog.getByRole("button", { name: "Beenden" }).click();
 
-  /** The end date moves from the planned one to now, closing the cycle */
+  /** The actual end is set, which closes the cycle. The planned end stays. */
   await expect
     .poll(
       async () => {
         const closed = await prisma.profitDistributionCycle.findUniqueOrThrow({
           where: { id: cycle.id },
         });
-        return (closed.payoutEndedAt?.getTime() ?? Infinity) <= Date.now();
+        return {
+          ended: (closed.payoutEndedAt?.getTime() ?? Infinity) <= Date.now(),
+          endedById: closed.payoutEndedById,
+          payoutEndsAt: closed.payoutEndsAt,
+        };
       },
       { timeout: ACTION_FEEDBACK_TIMEOUT },
     )
-    .toBe(true);
+    .toEqual({ ended: true, endedById: admin.entity.id, payoutEndsAt });
   await page.reload();
   await expect(page.getByText("Abgeschlossene Phase").first()).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,

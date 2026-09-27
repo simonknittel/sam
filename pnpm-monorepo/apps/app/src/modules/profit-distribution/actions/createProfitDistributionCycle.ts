@@ -10,7 +10,7 @@ import * as z from "zod";
 
 const schema = z.object({
   title: z.string().trim().max(128),
-  collectionEndedAt: z.coerce.date(),
+  collectionEndsAt: z.coerce.date(),
 });
 
 export const createProfitDistributionCycle = createAuthenticatedAction(
@@ -34,11 +34,11 @@ export const createProfitDistributionCycle = createAuthenticatedAction(
     /**
      * Validate request data
      */
-    const collectionEndedAt = new Date(data.collectionEndedAt);
-    collectionEndedAt.setHours(0, 0, 0, 0);
+    const collectionEndsAt = new Date(data.collectionEndsAt);
+    collectionEndsAt.setHours(0, 0, 0, 0);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    if (collectionEndedAt < today)
+    if (collectionEndsAt < today)
       return {
         error: "Das Ende des Sammelzeitraums muss in der Zukunft liegen.",
         requestPayload: formData,
@@ -50,7 +50,7 @@ export const createProfitDistributionCycle = createAuthenticatedAction(
     const created = await prisma.profitDistributionCycle.create({
       data: {
         title: data.title,
-        collectionEndedAt,
+        collectionEndsAt,
         createdById: authentication.session.entity.id,
       },
     });
@@ -61,7 +61,8 @@ export const createProfitDistributionCycle = createAuthenticatedAction(
         data: {
           cycleId: created.id,
           title: created.title,
-          collectionEndedAt: created.collectionEndedAt,
+          // The system log is immutable, thus the old key keeps the planned end
+          collectionEndedAt: created.collectionEndsAt,
         },
         createdById: authentication.session.user.id,
       },

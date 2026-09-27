@@ -1,8 +1,8 @@
 "use server";
 
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { CyclePhase } from "@sam-monorepo/domain";
 import { createToggleMyParticipationAction } from "../utils/createToggleMyParticipationAction";
-import { CyclePhase } from "../utils/getCurrentPhase";
 
 export const toggleMyCeded = createToggleMyParticipationAction(
   "toggleMyCeded",

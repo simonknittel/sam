@@ -11,7 +11,7 @@ import { requireManageableTask } from "../utils/requireManageableTask";
 
 const schema = z.object({
   id: z.union([z.cuid(), z.cuid2()]),
-  assignmentLimit: z.coerce.number().min(1).nullable(),
+  assignmentLimit: z.coerce.number().int().min(1).nullable(),
   assignedToIds: z.array(z.cuid()).max(250).optional(), // Arbitrary (untested) limit to prevent DDoS
 });
 

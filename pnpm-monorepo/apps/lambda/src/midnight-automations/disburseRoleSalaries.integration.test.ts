@@ -6,6 +6,7 @@ import { disburseRoleSalaries } from "./disburseRoleSalaries";
 /** A payout day in Europe/Berlin, the time zone of the function */
 const NOW = new Date("2026-09-15T10:00:00+02:00");
 const PAYOUT_DAY = 15;
+const LAST_DAY_OF_SEPTEMBER = new Date("2026-09-30T10:00:00+02:00");
 const SALARY = 100;
 
 const createCitizenWithRole = async () => {
@@ -52,12 +53,13 @@ describe("disburseRoleSalaries", () => {
     expect(silcBalance).toBe(SALARY);
   });
 
-  test("two salaries of one role on the same day are one booking", async () => {
+  test("the last day of a short month pays the salaries of the missing days in one booking", async () => {
+    vi.setSystemTime(LAST_DAY_OF_SEPTEMBER);
     const { role, citizen } = await createCitizenWithRole();
     await prisma.silcRoleSalary.createMany({
       data: [
-        { roleId: role.id, value: SALARY, dayOfMonth: PAYOUT_DAY },
-        { roleId: role.id, value: 2 * SALARY, dayOfMonth: PAYOUT_DAY },
+        { roleId: role.id, value: SALARY, dayOfMonth: 30 },
+        { roleId: role.id, value: 2 * SALARY, dayOfMonth: 31 },
       ],
     });
 
@@ -68,6 +70,20 @@ describe("disburseRoleSalaries", () => {
     });
     expect(transactions).toHaveLength(1);
     expect(transactions[0]?.value).toBe(3 * SALARY);
+  });
+
+  test("a salary on the 31st is not paid before the last day of a short month", async () => {
+    vi.setSystemTime(new Date("2026-09-29T10:00:00+02:00"));
+    const { role, citizen } = await createCitizenWithRole();
+    await prisma.silcRoleSalary.create({
+      data: { roleId: role.id, value: SALARY, dayOfMonth: 31 },
+    });
+
+    await disburseRoleSalaries();
+
+    expect(
+      await prisma.silcTransaction.count({ where: { receiverId: citizen.id } }),
+    ).toBe(0);
   });
 
   test("a deleted citizen gets no salary", async () => {

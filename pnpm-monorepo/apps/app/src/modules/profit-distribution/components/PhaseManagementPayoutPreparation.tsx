@@ -18,11 +18,10 @@ import { DateInput } from "@/modules/common/components/form/DateInput";
 import { NumberInputFormatted } from "@/modules/common/components/form/NumberInput";
 import { ScrambleIn } from "@/modules/common/components/ScrambleIn";
 import { StatisticTile } from "@/modules/common/components/StatisticTile";
-import { getAuecPerSilc } from "@sam-monorepo/domain";
+import { CyclePhase, getAuecPerSilc } from "@sam-monorepo/domain";
 import { useId, useState, type KeyboardEventHandler } from "react";
 import { startPayout } from "../actions/startPayout";
 import type { getProfitDistributionCycleById } from "../queries/getProfitDistributionCycleById";
-import { CyclePhase } from "../utils/getCurrentPhase";
 import { CitizenTable } from "./CitizenTable";
 import { Phase } from "./Phase";
 
@@ -82,11 +81,11 @@ export const PhaseManagementPayoutPreparation = ({ cycleData }: Props) => {
 
           <div className="w-full max-w-80 mx-auto text-center">
             <DateInput
-              name="payoutEndedAt"
+              name="payoutEndsAt"
               label="Auszahlungsphase endet am"
               disabled={cycleData.currentPhase !== CyclePhase.PayoutPreparation}
               defaultValue={
-                cycleData.cycle.payoutEndedAt?.toISOString().split("T")[0] || ""
+                cycleData.cycle.payoutEndsAt?.toISOString().split("T")[0] || ""
               }
               className="text-center"
             />

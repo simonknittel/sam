@@ -9,9 +9,13 @@ import * as z from "zod";
 
 const schema = z.object({
   roleIds: z.array(z.cuid()).max(250), // Arbitrary (untested) limit to prevent DDoS
-  values: z.array(z.coerce.number()).max(250), // Arbitrary (untested) limit to prevent DDoS
-  dayOfMonths: z.array(z.coerce.number().min(1).max(31)).max(250), // Arbitrary (untested) limit to prevent DDoS
-});
+  values: z.array(z.coerce.number().int().min(1)).max(250), // Arbitrary (untested) limit to prevent DDoS
+  dayOfMonths: z.array(z.coerce.number().int().min(1).max(31)).max(250), // Arbitrary (untested) limit to prevent DDoS
+}).refine(
+  (data) =>
+    data.values.length === data.roleIds.length &&
+    data.dayOfMonths.length === data.roleIds.length,
+);
 
 export const updateRoleSalaries = createAuthenticatedAction(
   "updateRoleSalaries",
@@ -25,6 +29,16 @@ export const updateRoleSalaries = createAuthenticatedAction(
     if (!authentication.session.entity)
       return {
         error: t("Common.forbidden"),
+        requestPayload: formData,
+      };
+
+    /** See `SilcRoleSalary_roleId_dayOfMonth_key` */
+    const salaryDays = data.roleIds.map(
+      (roleId, index) => `${roleId}:${data.dayOfMonths[index]}`,
+    );
+    if (new Set(salaryDays).size !== salaryDays.length)
+      return {
+        error: "Eine Rolle kann nur ein Gehalt pro Tag haben.",
         requestPayload: formData,
       };
 

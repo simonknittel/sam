@@ -31,6 +31,12 @@ export {
   EFFECTIVE_ROLE_IDS_SELECT,
   EFFECTIVE_ROLE_PERMISSIONS_SELECT,
 } from "./permissions/roleAssignmentSelects.js";
+export {
+  CYCLE_PHASE_WHERE,
+  CyclePhase,
+  getCurrentPhase,
+} from "./profitDistribution/cyclePhase.js";
+export { endCollectionPhaseInTransaction } from "./profitDistribution/endCollectionPhaseInTransaction.js";
 export { ReadMarkerSubject } from "./readMarkers/ReadMarkerSubject.js";
 export { getInGameYear } from "./seasonal/inGameYear.js";
 export {
@@ -42,13 +48,9 @@ export {
   getNextSeasonalThemeStart,
   isSeasonalGreetingDay,
 } from "./seasonal/seasonalCalendar.js";
-export { calculateSilcBalances } from "./silc/calculateSilcBalances.js";
 export { getAuecPerSilc } from "./silc/getAuecPerSilc.js";
 export { getTotalSilc } from "./silc/getTotalSilc.js";
-export {
-  getSilcTransactionSumQueries,
-  toSilcTransactionSums,
-} from "./silc/silcTransactionSumQueries.js";
+export { updateSilcBalances } from "./silc/updateSilcBalances.js";
 export {
   UNUSED_UPLOAD_WHERE,
   UPLOAD_USAGE_RELATIONS,

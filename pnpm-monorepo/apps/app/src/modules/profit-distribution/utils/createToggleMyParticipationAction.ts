@@ -2,9 +2,9 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { type AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { type CyclePhase, getCurrentPhase } from "@sam-monorepo/domain";
 import { revalidatePath } from "next/cache";
 import * as z from "zod";
-import { type CyclePhase, getCurrentPhase } from "./getCurrentPhase";
 
 const schema = z.object({
   id: z.cuid2(),

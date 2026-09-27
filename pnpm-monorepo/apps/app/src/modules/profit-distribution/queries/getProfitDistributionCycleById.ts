@@ -4,10 +4,14 @@ import { getSilcBalanceOfAllCitizens } from "@/modules/silc/queries/getSilcBalan
 import { getSilcBalanceOfCurrentCitizen } from "@/modules/silc/queries/getSilcBalanceOfCurrentCitizen";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import type { ProfitDistributionCycle } from "@sam-monorepo/database/client";
-import { getAuecPerSilc, getTotalSilc } from "@sam-monorepo/domain";
+import {
+  CyclePhase,
+  getAuecPerSilc,
+  getCurrentPhase,
+  getTotalSilc,
+} from "@sam-monorepo/domain";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
-import { CyclePhase, getCurrentPhase } from "../utils/getCurrentPhase";
 import { getPayoutState } from "../utils/getMyPayoutStatus";
 import { getMyShare } from "../utils/getMyShare";
 import { getOpenAuecPayout } from "../utils/getOpenAuecPayout";
