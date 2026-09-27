@@ -815,7 +815,6 @@ export const createFlow = async (
   await prisma.flowEdge.createMany({
     data: nodeIds.slice(1).map((targetId, index) => ({
       id: cuid2Like(),
-      type: "smoothstep",
       sourceId: nodeIds[index]!,
       sourceHandle: "bottom",
       targetId,

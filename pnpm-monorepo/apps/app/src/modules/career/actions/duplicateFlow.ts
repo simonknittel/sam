@@ -88,7 +88,6 @@ export const duplicateFlow = createAuthenticatedAction(
 
       return {
         id: createId(),
-        type: edge.type,
         sourceId,
         sourceHandle: edge.sourceHandle,
         targetId,

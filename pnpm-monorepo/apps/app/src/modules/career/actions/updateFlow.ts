@@ -20,11 +20,15 @@ const nodesSchema = z
   )
   .max(250); // Arbitrary (untested) limit to prevent DDoS
 
+/**
+ * The editor sends the React Flow edges, which also carry display fields
+ * such as `type` and `markerEnd`. The database stores only the connection,
+ * thus the object schema removes all other fields.
+ */
 const edgesSchema = z
   .array(
     z.object({
       id: z.string(),
-      type: z.string(),
       source: z.cuid2(),
       sourceHandle: z.string(),
       target: z.cuid2(),
@@ -108,7 +112,6 @@ export const updateFlow = createAuthenticatedAction(
       prisma.flowEdge.createMany({
         data: data.edges.map((edge) => ({
           id: edge.id,
-          type: edge.type,
           sourceId: edge.source,
           sourceHandle: edge.sourceHandle,
           targetId: edge.target,

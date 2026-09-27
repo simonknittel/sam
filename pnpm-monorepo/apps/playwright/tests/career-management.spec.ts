@@ -495,12 +495,20 @@ test("read access opens a flow without an edit affordance, edit access saves it"
   const member = await createCitizen(prisma, { handle: "mitglied" });
   await assignRole(prisma, member.entity, accessRole);
 
+  /** Two nodes, thus the save also writes the edge between them */
   const flow = await createFlow(prisma, {
     name: "Academy",
     slug: "academy",
     roleAccess: [{ roleId: accessRole.id, type: FlowRoleAccessType.READ }],
-    markdownNodes: ["Erster Knoten"],
+    markdownNodes: ["Erster Knoten", "Zweiter Knoten"],
   });
+  const savedEdges = () =>
+    prisma.flowEdge.findMany({
+      where: { source: { flowId: flow.id } },
+      select: { id: true, sourceId: true, targetId: true },
+    });
+  const edgesBeforeSave = await savedEdges();
+  expect(edgesBeforeSave).toHaveLength(1);
 
   await signIn(member.user);
   await page.goto("/app/career/academy");
@@ -532,6 +540,8 @@ test("read access opens a flow without an edit affordance, edit access saves it"
       timeout: ACTION_FEEDBACK_TIMEOUT,
     })
     .toMatchObject({ updatedById: member.entity.id });
+  /** The save writes all edges again, only with their connection */
+  expect(await savedEdges()).toEqual(edgesBeforeSave);
 
   /** Revoking hides the flow again, direct URL included */
   await prisma.flowRoleAccess.deleteMany({ where: { flowId: flow.id } });
