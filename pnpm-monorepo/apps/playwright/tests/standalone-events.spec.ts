@@ -347,7 +347,9 @@ test("a restricted event is invisible to non-eligible users", async ({
 
   await signIn(outsider.user);
   await page.goto("/app/events");
-  await expect(page.getByText("Keine Events gefunden")).toBeVisible({
+  await expect(
+    page.getByText("Keine Events gefunden").filter({ visible: true }),
+  ).toBeVisible({
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
   await page.goto(`/app/events/${event.id}`);
