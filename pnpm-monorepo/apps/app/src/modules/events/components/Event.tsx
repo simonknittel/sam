@@ -16,6 +16,7 @@ interface Props {
   readonly event: EventListItem;
   readonly index: number;
   readonly hasCancelledParticipation?: boolean;
+  readonly isNew: boolean;
 }
 
 export const Event = async ({
@@ -23,6 +24,7 @@ export const Event = async ({
   event,
   index,
   hasCancelledParticipation,
+  isNew,
 }: Props) => {
   const [showLineupButton, showBriefingButton] = await Promise.all([
     isLineupVisible(event),
@@ -55,6 +57,7 @@ export const Event = async ({
       showLineupButton={showLineupButton}
       showBriefingButton={showBriefingButton}
       hasCancelledParticipation={hasCancelledParticipation}
+      isNew={isNew}
     />
   );
 };

@@ -1,12 +1,19 @@
 import { CursorPaginationControls } from "@/modules/common/CursorPagination/CursorPaginationControls";
 import { createCursorPaginationLoader } from "@/modules/common/CursorPagination/createCursorPaginationLoader";
 import clsx from "clsx";
-import { parseAsStringLiteral, type SearchParams } from "nuqs/server";
+import {
+  parseAsStringEnum,
+  parseAsStringLiteral,
+  type SearchParams,
+} from "nuqs/server";
 import { getEvents } from "../queries/getEvents";
+import { EventListStatus } from "../utils/EventListStatus";
 import { Event } from "./Event";
 
 const loadSearchParams = createCursorPaginationLoader({
-  status: parseAsStringLiteral(["open", "closed", "all"]).withDefault("open"),
+  status: parseAsStringEnum(Object.values(EventListStatus)).withDefault(
+    EventListStatus.Open,
+  ),
   participating: parseAsStringLiteral(["all", "me"]).withDefault("all"),
   type: parseAsStringLiteral(["all", "app", "discord"]).withDefault("all"),
 });
@@ -20,8 +27,13 @@ export const EventsTile = async ({ className, searchParams }: Props) => {
   const { status, participating, type, cursor, direction } =
     await loadSearchParams(searchParams);
 
-  const { events, cancelledParticipationEventIds, nextCursor, prevCursor } =
-    await getEvents(status, participating, type, cursor, direction);
+  const {
+    events,
+    cancelledParticipationEventIds,
+    newEventIds,
+    nextCursor,
+    prevCursor,
+  } = await getEvents(status, participating, type, cursor, direction);
 
   if (events.length <= 0)
     return (
@@ -42,6 +54,7 @@ export const EventsTile = async ({ className, searchParams }: Props) => {
           hasCancelledParticipation={cancelledParticipationEventIds.includes(
             event.id,
           )}
+          isNew={newEventIds.has(event.id)}
         />
       ))}
 

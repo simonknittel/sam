@@ -5,6 +5,7 @@ import {
 } from "@/modules/events/queries/getEvents";
 import { OnboardingTargetId } from "@/modules/onboarding/utils/targets";
 import clsx from "clsx";
+import { EventListStatus } from "../utils/EventListStatus";
 import { Event } from "./Event";
 
 interface Props {
@@ -20,9 +21,9 @@ const MAX_EVENTS = 5;
 
 export const CalendarTile = async ({ className }: Props) => {
   const [
-    { events: allEvents, cancelledParticipationEventIds },
+    { events: allEvents, cancelledParticipationEventIds, newEventIds },
     openEventCount,
-  ] = await Promise.all([getEvents("open"), getOpenEventCount()]);
+  ] = await Promise.all([getEvents(EventListStatus.Open), getOpenEventCount()]);
   const events = allEvents.slice(0, MAX_EVENTS);
 
   return (
@@ -46,6 +47,7 @@ export const CalendarTile = async ({ className }: Props) => {
             hasCancelledParticipation={cancelledParticipationEventIds.includes(
               event.id,
             )}
+            isNew={newEventIds.has(event.id)}
           />
         ))
       ) : (

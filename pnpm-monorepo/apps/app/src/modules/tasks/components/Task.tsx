@@ -146,7 +146,7 @@ export const Task = ({ className, task, isNew: isNewOnServer }: Props) => {
       )}
 
       <div className="flex-1">
-        <div className="flex items-center gap-2 p-2">
+        <div className="flex items-baseline gap-2 p-2">
           <h3 className="font-bold">
             {/* The link covers the whole row, thus the row opens the details
             like before. The marker button sits above it. */}

@@ -1,6 +1,8 @@
 import { requireAuthenticationPage } from "@/modules/auth/server";
 import { Navigation } from "@/modules/events/components/Navigation";
 import { getEventById } from "@/modules/events/queries/getEventById";
+import { MarkAsReadOnMount } from "@/modules/read-markers/components/MarkAsReadOnMount";
+import { ReadMarkerSubject } from "@sam-monorepo/domain";
 import { notFound } from "next/navigation";
 
 export default async function Layout({
@@ -24,6 +26,12 @@ export default async function Layout({
       <Navigation event={event} className="my-4" />
 
       {children}
+
+      {/* In the layout, thus each page of the event marks it as read */}
+      <MarkAsReadOnMount
+        subject={ReadMarkerSubject.Event}
+        subjectId={event.id}
+      />
     </>
   );
 }
