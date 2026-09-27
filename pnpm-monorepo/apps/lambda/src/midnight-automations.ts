@@ -2,6 +2,7 @@ import "./midnight-automations/setup"; // must be first
 
 import type { ScheduledHandler } from "aws-lambda";
 import { initializeRequestContext } from "./common/requestContext";
+import { runJobsInIsolation } from "./common/runJobsInIsolation";
 import { archiveIrrelevantOnSiteNotifications } from "./midnight-automations/archiveIrrelevantOnSiteNotifications";
 import { autoAssignInactiveRoles } from "./midnight-automations/autoAssignInactiveRoles";
 import { countCitizensPerRole } from "./midnight-automations/countCitizensPerRole";
@@ -17,19 +18,21 @@ import { purgeTrashedWikiPages } from "./midnight-automations/purgeTrashedWikiPa
 import { removeExpiredRoles } from "./midnight-automations/removeExpiredRoles";
 
 export const handler: ScheduledHandler = async (event, context) => {
-  return initializeRequestContext(context.awsRequestId, async () => {
-    await endCollectionPhases();
-    await endPayoutPhases();
-    await removeExpiredRoles();
-    await autoAssignInactiveRoles();
-    await countCitizensPerRole();
-    await disburseRoleSalaries();
-    await countShips();
-    await countUniqueLogins();
-    await purgeTrashedWikiPages();
-    await purgeOrphanedWikiTags();
-    await archiveIrrelevantOnSiteNotifications();
-    await deleteUnusedUploads();
-    await purgeExpiredAuthenticationRecords();
-  });
+  return initializeRequestContext(context.awsRequestId, () =>
+    runJobsInIsolation({
+      endCollectionPhases,
+      endPayoutPhases,
+      removeExpiredRoles,
+      autoAssignInactiveRoles,
+      countCitizensPerRole,
+      disburseRoleSalaries,
+      countShips,
+      countUniqueLogins,
+      purgeTrashedWikiPages,
+      purgeOrphanedWikiTags,
+      archiveIrrelevantOnSiteNotifications,
+      deleteUnusedUploads,
+      purgeExpiredAuthenticationRecords,
+    }),
+  );
 };
