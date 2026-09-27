@@ -1,5 +1,6 @@
 "use client";
 
+import { getCitizenDisplayName } from "@/modules/citizen/utils/citizenDisplayName";
 import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
 import { Link } from "@/modules/common/components/Link";
@@ -71,7 +72,9 @@ export const FlowRow = ({
         {flow.deletedAt && (
           <span className="text-xs text-neutral-500">
             Gelöscht am {formatDate(flow.deletedAt)} von{" "}
-            {flow.deletedBy?.handle ?? "Unbekannt"}
+            {flow.deletedBy
+              ? getCitizenDisplayName(flow.deletedBy)
+              : "Unbekannt"}
           </span>
         )}
       </td>

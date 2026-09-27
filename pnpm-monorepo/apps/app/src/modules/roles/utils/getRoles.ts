@@ -60,15 +60,6 @@ export const getAssignedRoles = cache(
   },
 );
 
-export const getMyAssignedRoles = cache(
-  withTrace("getMyAssignedRoles", async () => {
-    const authentication = await requireAuthentication();
-    if (!authentication.session.entity) forbidden();
-
-    return getAssignedRoles(authentication.session.entity);
-  }),
-);
-
 /**
  * The viewer's assigned roles, each with the ids of the roles it inherits.
  * Only the career flow needs the inheritance, to mark a node unlocked when
@@ -78,7 +69,10 @@ export const getMyAssignedRoles = cache(
  */
 export const getMyAssignedRolesWithInheritance = cache(
   withTrace("getMyAssignedRolesWithInheritance", async () => {
-    const assignedRoles = await getMyAssignedRoles();
+    const authentication = await requireAuthentication();
+    if (!authentication.session.entity) forbidden();
+
+    const assignedRoles = await getAssignedRoles(authentication.session.entity);
 
     const inheritances = await prisma.role.findMany({
       where: { id: { in: assignedRoles.map((role) => role.id) } },

@@ -129,8 +129,6 @@ export const getUsersWithEntities = withTrace(
         citizen: {
           select: {
             id: true,
-            handle: true,
-            discordId: true,
           },
         },
       },
