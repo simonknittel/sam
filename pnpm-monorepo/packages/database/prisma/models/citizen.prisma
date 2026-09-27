@@ -2,6 +2,14 @@ model Citizen {
   id                                           String                               @id @default(cuid())
   createdAt                                    DateTime                             @default(now())
   updatedAt                                    DateTime                             @updatedAt
+  /// Soft delete: a deleted citizen is hidden from all lists, pickers,
+  /// searches, statistics, notifications and payouts, and records that name
+  /// it show "Deleted citizen". Nothing is deleted and there is no restore.
+  /// The delete also removes the link to the login (`userId`).
+  deletedAt                                    DateTime?
+  deletedById                                  String?
+  deletedBy                                    Citizen?                             @relation("deletedCitizens", fields: [deletedById], references: [id], onDelete: SetNull)
+  deletedCitizens                              Citizen[]                            @relation("deletedCitizens")
   logs                                         CitizenLog[]
   createdById                                  String?
   createdBy                                    User?                                @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
@@ -99,7 +107,7 @@ model Citizen {
   // Holds the latest confirmed values
   spectrumId                String?
   handle                    String?
-  discordId                 String?                    @unique
+  discordId                 String?
   teamspeakId               String?
   /// Number of the UEE citizen record on the RSI website
   citizenRecord             String?
@@ -126,6 +134,11 @@ model Citizen {
   /// Time of the last New Year greeting. The greeting job uses it to send
   /// only one greeting for each year.
   newYearGreetingSentAt  DateTime?
+
+  /// A person whose citizen was deleted can be added again, thus the IDs are
+  /// unique only among the citizens that are not deleted
+  @@unique([discordId], map: "Citizen_discordId_key", where: { deletedAt: null })
+  @@unique([spectrumId], map: "Citizen_spectrumId_key", where: { deletedAt: null })
 }
 
 model CitizenLog {
