@@ -14,7 +14,7 @@ export const NewBadge = ({ className }: Props) => {
       /** Marks the badge independently of the classes drawing it */
       data-new-badge=""
       className={clsx(
-        "bg-amber-500 text-black font-mono uppercase text-xs px-1 py-0.5",
+        "rounded-secondary bg-amber-500 text-black font-mono uppercase text-xs px-1 py-0.5",
         className,
       )}
     >
