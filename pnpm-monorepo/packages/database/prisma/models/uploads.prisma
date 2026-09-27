@@ -11,8 +11,8 @@ model Upload {
   /// Intrinsic image height in pixels, after EXIF orientation. See `width`.
   height              Int?
   createdAt           DateTime         @default(now())
-  createdById         String
-  createdBy           User             @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdById         String?
+  createdBy           User?            @relation(fields: [createdById], references: [id], onDelete: SetNull)
   roleIcons           Role[]           @relation("icon")
   roleThumbnails      Role[]           @relation("thumbnail")
   manufacturers       Manufacturer[]

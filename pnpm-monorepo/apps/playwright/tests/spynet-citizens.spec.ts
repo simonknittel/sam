@@ -1,4 +1,9 @@
 import type { Page } from "@playwright/test";
+import {
+  ConfirmationStatus,
+  OrganizationMembershipType,
+  OrganizationMembershipVisibility,
+} from "@sam-monorepo/database/client";
 import { expectAuditEvents } from "../fixtures/audit";
 import { createCitizen } from "../fixtures/factories";
 import {
@@ -79,6 +84,75 @@ test("a citizen is created from a Spectrum ID and deleted again", async ({
   ).toBe(0);
 
   await expectAuditEvents(prisma, ["CITIZEN_CREATED", "CITIZEN_DELETED"]);
+});
+
+test("deleting a citizen keeps what they recorded about others", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "spynet-admin",
+    permissionStrings: ["citizen;read", "citizen;delete"],
+  });
+  const recorder = await createCitizen(prisma, { handle: "chronist" });
+  const member = await createCitizen(prisma, { handle: "mitglied" });
+
+  const organization = await prisma.organization.create({
+    data: {
+      name: "Recorded Org",
+      spectrumId: "RECORDEDORG",
+      createdById: recorder.entity.id,
+      activeMemberships: {
+        create: {
+          citizenId: member.entity.id,
+          type: OrganizationMembershipType.MAIN,
+          visibility: OrganizationMembershipVisibility.PUBLIC,
+        },
+      },
+      membershipHistoryEntries: {
+        create: {
+          citizenId: member.entity.id,
+          type: OrganizationMembershipType.MAIN,
+          visibility: OrganizationMembershipVisibility.PUBLIC,
+          createdById: recorder.entity.id,
+          confirmed: ConfirmationStatus.CONFIRMED,
+          confirmedAt: new Date(),
+          confirmedById: recorder.entity.id,
+        },
+      },
+    },
+  });
+
+  await signIn(admin.user);
+  await page.goto(`/app/spynet/citizen/${recorder.entity.id}`);
+
+  const deleteDialog = page.getByRole("alertdialog");
+  await clickUntilVisible(
+    page.getByRole("button", { name: "Löschen" }),
+    deleteDialog,
+  );
+  await deleteDialog.getByRole("button", { name: "Löschen" }).click();
+  await expect(page.getByText(DELETED_TEXT)).toBeVisible({
+    timeout: ACTION_FEEDBACK_TIMEOUT,
+  });
+
+  await expect
+    .poll(() => prisma.entity.count({ where: { id: recorder.entity.id } }))
+    .toBe(0);
+  expect(
+    await prisma.organization.findUnique({ where: { id: organization.id } }),
+  ).toMatchObject({ createdById: null });
+  expect(
+    await prisma.activeOrganizationMembership.count({
+      where: { citizenId: member.entity.id },
+    }),
+  ).toBe(1);
+  expect(
+    await prisma.organizationMembershipHistoryEntry.findFirst({
+      where: { citizenId: member.entity.id },
+    }),
+  ).toMatchObject({ createdById: null, confirmedById: null });
 });
 
 test("a log entry is confirmed, and a second one marked a false report", async ({

@@ -29,11 +29,13 @@
     "zod": "4.6.5"
   },
   "devDependencies": {
+    "@testcontainers/postgresql": "12.1.0",
     "@types/aws-lambda": "8.10.163",
     "@types/lodash": "4.17.25",
     "@types/node": "24.13.6",
     "@types/web-push": "3.6.4",
     "esbuild": "0.28.2",
+    "testcontainers": "12.1.0",
     "typescript": "7.0.2",
     "vitest": "4.1.11"
   }

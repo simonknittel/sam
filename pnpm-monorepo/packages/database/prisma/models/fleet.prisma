@@ -48,11 +48,11 @@ model VariantExternalLink {
   url         String
 
   createdAt   DateTime @default(now())
-  createdById String
-  createdBy   Entity   @relation("createdBy", fields: [createdById], references: [id])
+  createdById String?
+  createdBy   Entity?  @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
   updatedAt   DateTime @updatedAt
-  updatedById String
-  updatedBy   Entity   @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById String?
+  updatedBy   Entity?  @relation("updatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
 
   @@unique([variantId, serviceName])
 }
@@ -64,11 +64,11 @@ model VariantTag {
   variants Variant[]
 
   createdAt   DateTime @default(now())
-  createdById String
-  createdBy   Entity   @relation("createdBy", fields: [createdById], references: [id])
+  createdById String?
+  createdBy   Entity?  @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
   updatedAt   DateTime @updatedAt
   updatedById String?
-  updatedBy   Entity?  @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedBy   Entity?  @relation("updatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
 
   @@unique([key, value])
 }
@@ -88,11 +88,11 @@ model Ship {
 
   createdAt   DateTime? @default(now())
   createdById String?
-  createdBy   Entity?   @relation("createdBy", fields: [createdById], references: [id])
+  createdBy   Entity?   @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)
   updatedAt   DateTime? @updatedAt
   updatedById String?
-  updatedBy   Entity?   @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedBy   Entity?   @relation("updatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
   deletedAt   DateTime?
   deletedById String?
-  deletedBy   Entity?   @relation("deletedBy", fields: [deletedById], references: [id])
+  deletedBy   Entity?   @relation("deletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
 }

@@ -11,7 +11,8 @@ import { DeletePenaltyEntry } from "./DeletePenaltyEntry";
 interface Props {
   readonly className?: string;
   readonly entry: PenaltyEntryType & {
-    createdBy: Entity;
+    /** NULL when the author was deleted */
+    createdBy: Entity | null;
   };
   readonly showDelete?: boolean;
 }
@@ -37,15 +38,19 @@ export const PenaltyEntry = ({ className, entry, showDelete }: Props) => {
 
         <p>
           Von:{" "}
-          <CitizenPopover citizenId={entry.createdById}>
-            <Link
-              href={`/app/spynet/citizen/${entry.createdById}`}
-              className="text-brand-red-500 hover:underline"
-              prefetch={false}
-            >
-              {entry.createdBy.handle}
-            </Link>
-          </CitizenPopover>
+          {entry.createdBy ? (
+            <CitizenPopover citizenId={entry.createdBy.id}>
+              <Link
+                href={`/app/spynet/citizen/${entry.createdBy.id}`}
+                className="text-brand-red-500 hover:underline"
+                prefetch={false}
+              >
+                {entry.createdBy.handle}
+              </Link>
+            </CitizenPopover>
+          ) : (
+            <span className="italic">Unbekannt</span>
+          )}
         </p>
 
         <span>&bull;</span>

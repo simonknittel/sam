@@ -1,6 +1,11 @@
 import { createId } from "@paralleldrive/cuid2";
 import { prisma, type Entity, type Role } from "@sam-monorepo/database";
-import { AuditEventType } from "@sam-monorepo/domain";
+import {
+  AuditEventType,
+  getLocalDate,
+  ORGANIZATION_TIMEZONE,
+  toDateColumnValue,
+} from "@sam-monorepo/domain";
 import { createAuditEvents } from "../common/audit";
 import { emitEvents } from "../common/eventbridge";
 import { log } from "../common/logger";
@@ -11,11 +16,23 @@ import { updateCitizensSilcBalances } from "./updateCitizensSilcBalances";
 export const disburseRoleSalaries = async () => {
   await captureAsyncFunc("disburseRoleSalaries", async () => {
     const salaries = await getRoleSalaries();
-    const now = new Date();
+    const today = getLocalDate(new Date(), ORGANIZATION_TIMEZONE);
+    const salaryDate = toDateColumnValue(today);
 
-    const todaysSalaries = salaries.filter(
-      (salary) => salary.dayOfMonth === now.getDate(),
-    );
+    /**
+     * One booking for each role and citizen and day: the unique index on the
+     * source columns allows no second one, thus several salaries of one role
+     * on the same day are added up.
+     */
+    const todaysValueByRoleId = new Map<string, number>();
+    for (const salary of salaries) {
+      if (salary.dayOfMonth !== today.day) continue;
+
+      todaysValueByRoleId.set(
+        salary.roleId,
+        (todaysValueByRoleId.get(salary.roleId) ?? 0) + salary.value,
+      );
+    }
 
     const allCitizens = await prisma.entity.findMany({
       where: {
@@ -76,38 +93,48 @@ export const disburseRoleSalaries = async () => {
     const disbursedRoleIds: string[] = [];
     let disbursedValue = 0;
 
-    for (const salary of todaysSalaries) {
-      const group = citizensGroupedByRole.get(salary.roleId);
+    const citizenIds = new Set<string>();
+
+    for (const [roleId, value] of todaysValueByRoleId) {
+      const group = citizensGroupedByRole.get(roleId);
       if (!group) continue;
 
-      disbursedRoleIds.push(salary.roleId);
-      disbursedValue += salary.value * group.citizens.length;
-
+      /**
+       * A run that repeats (for example after an error in a later job) skips
+       * the bookings that exist already, see `SilcTransaction_salary_key`.
+       */
       const createdTransactions =
         await prisma.silcTransaction.createManyAndReturn({
           data: group.citizens.map((citizen) => ({
             receiverId: citizen.id,
-            value: salary.value,
+            value,
             description: `Gehalt: ${group.role.name}`,
+            salaryRoleId: roleId,
+            salaryDate,
           })),
+          skipDuplicates: true,
           select: {
             id: true,
           },
         });
 
-      allTransactionIds.push(...createdTransactions.map((t) => t.id));
+      // Also after a skipped booking: an earlier run can have stopped
+      // between the booking and the balance update below.
+      for (const citizen of group.citizens) citizenIds.add(citizen.id);
+
+      if (createdTransactions.length === 0) continue;
+
+      disbursedRoleIds.push(roleId);
+      disbursedValue += value * createdTransactions.length;
+      allTransactionIds.push(
+        ...createdTransactions.map((transaction) => transaction.id),
+      );
     }
 
     /**
      * Update citizens' balances
      */
-    const citizenIds = todaysSalaries.flatMap(
-      (salary) =>
-        citizensGroupedByRole
-          .get(salary.roleId)
-          ?.citizens.map((citizen) => citizen.id) || [],
-    );
-    await updateCitizensSilcBalances(citizenIds);
+    await updateCitizensSilcBalances([...citizenIds]);
 
     if (allTransactionIds.length > 0) {
       await createAuditEvents([

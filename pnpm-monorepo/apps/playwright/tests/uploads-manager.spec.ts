@@ -305,7 +305,7 @@ test("a manager deletes an upload from the database and the bucket", async ({
     .toBe(404);
 
   const auditEvent = await prisma.auditEvent.findFirst({
-    where: { type: "UPLOAD_DELETED" },
+    where: { type: "UPLOAD_DELETED_V2" },
   });
   expect(auditEvent).not.toBeNull();
 });

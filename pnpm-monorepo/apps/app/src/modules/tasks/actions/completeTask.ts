@@ -118,6 +118,7 @@ export const completeTask = createAuthenticatedAction(
           value: rewardValue,
           description: `Task erfüllt: ${task.title}`,
           createdById: authentication.session.entity!.id,
+          taskId: task.id,
         })),
 
         // With the SILC reward type the task's creator funds the reward
@@ -128,6 +129,7 @@ export const completeTask = createAuthenticatedAction(
                 value: -(task.rewardTypeSilcValue! * completionistIds.length),
                 description: `Task abgeschlossen: ${task.title}`,
                 createdById: authentication.session.entity.id,
+                taskId: task.id,
               },
             ]
           : []),

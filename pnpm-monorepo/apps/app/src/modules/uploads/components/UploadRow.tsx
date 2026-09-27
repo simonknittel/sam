@@ -22,7 +22,9 @@ interface Props {
 
 export const UploadRow = ({ upload, canManage }: Props) => {
   const fileName = decodeUploadFileName(upload.fileName);
-  const author = upload.createdBy.name ?? upload.createdBy.id;
+  const author = upload.createdBy
+    ? (upload.createdBy.name ?? upload.createdBy.id)
+    : UNKNOWN;
   const usages = getUploadUsages(upload);
 
   return (

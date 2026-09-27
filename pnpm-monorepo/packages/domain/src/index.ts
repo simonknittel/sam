@@ -10,6 +10,7 @@ export {
   type AuditEventInput,
 } from "./AuditEventTypes.js";
 export { buildBriefingRootPageSeed } from "./buildBriefingRootPageSeed.js";
+export { toDateColumnValue } from "./calendarDate.js";
 export {
   ORGANIZATION_TIMEZONE,
   getCelebrationDate,

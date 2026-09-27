@@ -174,3 +174,33 @@ test("the status filter separates the active entries from the expired ones", asy
   await expect(expiredRow).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
   await expect(openRow).toHaveCount(0);
 });
+
+test("an entry stays with an unknown author after the author is deleted", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const keeper = await createCitizen(prisma, {
+    handle: "strafpunkt-verwalter",
+    permissionStrings: KEEPER_PERMISSIONS,
+  });
+  const author = await createCitizen(prisma, { handle: "ehemaliger" });
+  const offender = await createCitizen(prisma, { handle: "delinquent" });
+
+  await prisma.penaltyEntry.create({
+    data: {
+      citizenId: offender.entity.id,
+      createdById: author.entity.id,
+      points: 1,
+      reason: "Autor gelöscht",
+    },
+  });
+  await prisma.entity.delete({ where: { id: author.entity.id } });
+
+  await signIn(keeper.user);
+  await page.goto("/app/penalty-points");
+
+  const row = page.getByRole("row").filter({ hasText: "Autor gelöscht" });
+  await expect(row).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(row.getByText("Unbekannt")).toBeVisible();
+});

@@ -1,5 +1,10 @@
 import { prisma } from "@sam-monorepo/database";
-import { AuditEventType } from "@sam-monorepo/domain";
+import {
+  AuditEventType,
+  getLocalDate,
+  ORGANIZATION_TIMEZONE,
+  toDateColumnValue,
+} from "@sam-monorepo/domain";
 import { createAuditEvents } from "../common/audit";
 import { log } from "../common/logger";
 import { captureAsyncFunc } from "../common/xray";
@@ -19,6 +24,15 @@ export const countUniqueLogins = async () => {
     const endOfDay = new Date(previousDay);
     endOfDay.setHours(23, 59, 59, 999);
 
+    /**
+     * The counted day as a calendar date. `startOfDay` itself is the local
+     * midnight, which is still the day before in UTC, thus the `@db.Date`
+     * column would store the wrong day.
+     */
+    const countedDay = toDateColumnValue(
+      getLocalDate(startOfDay, ORGANIZATION_TIMEZONE),
+    );
+
     const uniqueLoginCount = await captureAsyncFunc("count unique logins", () =>
       prisma.user.count({
         where: {
@@ -33,13 +47,13 @@ export const countUniqueLogins = async () => {
     await captureAsyncFunc("save daily login count", () =>
       prisma.dailyLoginCount.upsert({
         where: {
-          date: startOfDay,
+          date: countedDay,
         },
         update: {
           count: uniqueLoginCount,
         },
         create: {
-          date: startOfDay,
+          date: countedDay,
           count: uniqueLoginCount,
         },
       }),

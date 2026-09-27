@@ -4,6 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { deletePermissionStringsReferencing } from "@/modules/roles/utils/deletePermissionStringsReferencing";
 import { revalidatePath } from "next/cache";
 import * as z from "zod";
 
@@ -21,9 +22,12 @@ export const deleteClassificationLevel = createAuthenticatedAction(
         requestPayload: formData,
       };
 
-    const classificationLevel = await prisma.classificationLevel.delete({
-      where: { id: data.id },
-    });
+    const [classificationLevel] = await prisma.$transaction([
+      prisma.classificationLevel.delete({
+        where: { id: data.id },
+      }),
+      deletePermissionStringsReferencing("classificationLevelId", data.id),
+    ]);
 
     await createAuditEvents([
       {

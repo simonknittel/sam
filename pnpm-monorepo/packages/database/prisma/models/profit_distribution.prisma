@@ -14,6 +14,7 @@ model ProfitDistributionCycle {
   payoutEndedByAutomation     DateTime?
   auecProfit                  BigInt?
   participants                ProfitDistributionCycleParticipant[]
+  silcTransactions            SilcTransaction[]
   createdAt                   DateTime                             @default(now())
   createdById                 String?
   createdBy                   Entity?                              @relation("createdBy", fields: [createdById], references: [id], onDelete: SetNull)

@@ -8,7 +8,8 @@ import { DeletePenaltyEntry } from "./DeletePenaltyEntry";
 
 type Row = PenaltyEntry & {
   citizen: Pick<Entity, "id" | "handle">;
-  createdBy: Pick<Entity, "id" | "handle">;
+  /** NULL when the author was deleted */
+  createdBy: Pick<Entity, "id" | "handle"> | null;
 };
 
 const COLUMNS_WITH_CITIZEN =
@@ -69,16 +70,22 @@ export const PenaltyEntriesTable = ({
             <td>{formatDate(entry.createdAt)}</td>
 
             <td className="overflow-hidden">
-              <CitizenPopover citizenId={entry.createdBy.id}>
-                <Link
-                  href={`/app/spynet/citizen/${entry.createdBy.id}`}
-                  className="hover:bg-white/10 flex items-center rounded-secondary px-2 h-8 text-brand-red-500 truncate"
-                  prefetch={false}
-                  title={entry.createdBy.handle || entry.createdBy.id}
-                >
-                  {entry.createdBy.handle || entry.createdBy.id}
-                </Link>
-              </CitizenPopover>
+              {entry.createdBy ? (
+                <CitizenPopover citizenId={entry.createdBy.id}>
+                  <Link
+                    href={`/app/spynet/citizen/${entry.createdBy.id}`}
+                    className="hover:bg-white/10 flex items-center rounded-secondary px-2 h-8 text-brand-red-500 truncate"
+                    prefetch={false}
+                    title={entry.createdBy.handle || entry.createdBy.id}
+                  >
+                    {entry.createdBy.handle || entry.createdBy.id}
+                  </Link>
+                </CitizenPopover>
+              ) : (
+                <span className="flex items-center px-2 h-8 text-neutral-500 italic">
+                  Unbekannt
+                </span>
+              )}
             </td>
 
             <td

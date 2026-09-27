@@ -259,6 +259,48 @@ test("the permission matrix grants a permission with a single checkbox", async (
   });
 });
 
+test("two tabs that grant the same permission create one row", async ({
+  context,
+  page,
+  prisma,
+  signIn,
+}) => {
+  const admin = await createCitizen(prisma, {
+    handle: "iam-admin",
+    permissionStrings: ["role;manage", "otherRole;read;roleId=*"],
+  });
+  const member = await createCitizen(prisma, { handle: "task-worker" });
+
+  await signIn(admin.user);
+  const secondPage = await context.newPage();
+  for (const tab of [page, secondPage]) {
+    await tab.goto("/app/iam/permission-matrix");
+    await waitForAppShellHydration(tab);
+  }
+
+  /** Both tabs still show the permission as not granted */
+  for (const tab of [page, secondPage]) {
+    const checkbox = tab.locator(`input[name="${member.role.id}_task;read"]`);
+    await toggleLabel(tab, checkbox).click();
+    await expect(checkbox).toBeChecked();
+  }
+
+  await expect
+    .poll(
+      () =>
+        prisma.auditEvent.count({
+          where: { type: "ROLE_PERMISSION_TOGGLED" },
+        }),
+      { timeout: ACTION_FEEDBACK_TIMEOUT },
+    )
+    .toBe(2);
+  expect(
+    await prisma.permissionString.count({
+      where: { roleId: member.role.id, permissionString: "task;read" },
+    }),
+  ).toBe(1);
+});
+
 test("the inheritance matrix wires two roles together with a single checkbox", async ({
   page,
   prisma,
