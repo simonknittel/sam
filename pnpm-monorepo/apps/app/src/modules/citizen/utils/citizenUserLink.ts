@@ -1,4 +1,5 @@
 import { prisma } from "@/db";
+import { log } from "@/modules/logging";
 import {
   type Citizen,
   type Prisma,
@@ -12,6 +13,11 @@ import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
  * it correct at the two moments when it can change.
  */
 
+/**
+ * A deleted citizen gets no link: the write skips it, and the result is
+ * false. The CHECK constraint `Citizen_deleted_login_check` refuses such a
+ * link also for a delete that runs at the same time.
+ */
 const setCitizenUser = async (
   client: Prisma.TransactionClient,
   citizenId: Citizen["id"],
@@ -23,11 +29,12 @@ const setCitizenUser = async (
       data: { userId: null },
     });
 
-  await client.citizen.update({
-    where: { id: citizenId },
+  const { count } = await client.citizen.updateMany({
+    where: { id: citizenId, ...ACTIVE_CITIZEN_WHERE },
     data: { userId },
-    select: { id: true },
   });
+
+  return count > 0;
 };
 
 /** At each sign-in, links the user to the citizen of its Discord account */
@@ -41,9 +48,17 @@ export const linkCitizenOfSignedInUser = async (
   });
 
   if (citizen) {
-    await prisma.$transaction((transaction) =>
+    const isLinked = await prisma.$transaction((transaction) =>
       setCitizenUser(transaction, citizen.id, userId),
     );
+    if (!isLinked)
+      log.info(
+        "The citizen of a signed-in user was deleted during the sign-in",
+        {
+          userId,
+          citizenId: citizen.id,
+        },
+      );
     return;
   }
 

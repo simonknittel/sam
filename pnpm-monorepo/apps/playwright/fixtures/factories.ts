@@ -103,7 +103,6 @@ export const createCitizen = async (
     data: {
       discordId,
       handle,
-      createdById: user.id,
       userId: user.id,
     },
   });

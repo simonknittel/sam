@@ -13,7 +13,6 @@ import { ASSUMABLE_USER_WHERE } from "@/modules/users/queries/getAssumableUsers"
 import { getUserById } from "@/modules/users/queries/getUserById";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import {
-  ConfirmationStatus,
   UserRole,
   type Citizen,
   type User as DatabaseUser,
@@ -55,9 +54,10 @@ declare module "next-auth" {
      * Kept deliberately minimal: the session is serialized into the payload
      * of every page, so it carries only what its consumers read — the
      * citizen id, the handle (embed tokens) and the raw role assignments
-     * (career level progress, SILC salaries). Permission and role decisions
-     * use `givenPermissionSets` and `getEffectiveRoles()`, never these
-     * assignments: they ignore inheritance and the level gate.
+     * (the level progress and the assigned roles of the career flows).
+     * Permission and role decisions use `givenPermissionSets` and
+     * `getEffectiveRoles()`, never these assignments: they ignore
+     * inheritance and the level gate.
      */
     entity:
       | (Pick<Citizen, "id" | "handle"> & {
@@ -239,7 +239,6 @@ export const authOptions: NextAuthOptions = {
         },
         discordId: accounts[0]?.providerAccountId ?? null,
         givenPermissionSets,
-        entityId: entity?.id,
         entity,
         assumedByAdminId: assumedUser ? user.id : null,
       };
@@ -348,42 +347,13 @@ export const authOptions: NextAuthOptions = {
         if (!("id" in profile) || !profile.id)
           throw new Error("profile.id is missing");
 
-        const latestConfirmedDiscordIdCitizenLog =
-          await prisma.citizenLog.findFirst({
-            where: {
-              type: "discord-id",
-              content: profile.id,
-              confirmed: ConfirmationStatus.CONFIRMED,
-              citizen: ACTIVE_CITIZEN_WHERE,
-            },
-            orderBy: {
-              createdAt: "desc",
-            },
-            select: {
-              citizenId: true,
-            },
-          });
+        /** The columns hold the latest confirmed Discord ID and handle */
+        const citizen = await prisma.citizen.findFirst({
+          where: { discordId: profile.id, ...ACTIVE_CITIZEN_WHERE },
+          select: { id: true, handle: true },
+        });
 
-        if (latestConfirmedDiscordIdCitizenLog) {
-          const latestConfirmedHandleCitizenLog =
-            await prisma.citizenLog.findFirst({
-              where: {
-                citizenId: latestConfirmedDiscordIdCitizenLog.citizenId,
-                type: "handle",
-                confirmed: ConfirmationStatus.CONFIRMED,
-              },
-              orderBy: {
-                createdAt: "desc",
-              },
-              select: {
-                content: true,
-              },
-            });
-
-          user.name =
-            latestConfirmedHandleCitizenLog?.content ||
-            latestConfirmedDiscordIdCitizenLog.citizenId;
-        }
+        if (citizen) user.name = citizen.handle || citizen.id;
       }
 
       return true;
