@@ -4,6 +4,7 @@ import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { requireAuthenticationApi } from "@/modules/auth/server";
 import { confirmLog } from "@/modules/citizen/utils/confirmLog";
 import apiErrorHandler from "@/modules/common/utils/apiErrorHandler";
+import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import { NextResponse } from "next/server";
 import * as z from "zod";
 
@@ -106,6 +107,7 @@ export async function POST(request: Request, props: { params: Params }) {
     const entity = await prisma.citizen.findFirst({
       where: {
         id: paramsData,
+        ...ACTIVE_CITIZEN_WHERE,
       },
       select: {
         id: true,

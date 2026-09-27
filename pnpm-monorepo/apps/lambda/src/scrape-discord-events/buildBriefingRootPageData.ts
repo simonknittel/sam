@@ -1,5 +1,8 @@
 import { prisma } from "@sam-monorepo/database";
-import { buildBriefingRootPageSeed } from "@sam-monorepo/domain";
+import {
+  ACTIVE_CITIZEN_WHERE,
+  buildBriefingRootPageSeed,
+} from "@sam-monorepo/domain";
 
 /**
  * Briefing root page data for a Discord-sourced event: the organizer becomes
@@ -11,9 +14,10 @@ export const buildBriefingRootPageData = async (
   discordCreatorId: string | null,
 ) => {
   const organizer = discordCreatorId
-    ? await prisma.citizen.findUnique({
+    ? await prisma.citizen.findFirst({
         where: {
           discordId: discordCreatorId,
+          ...ACTIVE_CITIZEN_WHERE,
         },
         select: {
           id: true,

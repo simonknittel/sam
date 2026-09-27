@@ -253,11 +253,14 @@ const syncCitizenMentionLinks = async (
 
   if (removedRowIds.length === 0 && newCitizenIds.length === 0) return;
 
-  /** Mentions of citizens that no longer exist must not create rows */
+  /**
+   * Mentions of citizens that no longer exist or are deleted must not create
+   * rows, thus they notify nobody
+   */
   const existingCitizens =
     newCitizenIds.length > 0
       ? await prisma.citizen.findMany({
-          where: { id: { in: newCitizenIds } },
+          where: { id: { in: newCitizenIds }, deletedAt: null },
           select: { id: true },
         })
       : [];

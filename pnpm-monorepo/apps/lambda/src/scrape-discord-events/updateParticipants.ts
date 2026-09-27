@@ -1,6 +1,6 @@
 import { prisma } from "@sam-monorepo/database";
 import { EventSource } from "@sam-monorepo/database/client";
-import { AuditEventType } from "@sam-monorepo/domain";
+import { ACTIVE_CITIZEN_WHERE, AuditEventType } from "@sam-monorepo/domain";
 import type * as z from "zod";
 import { createAuditEvents } from "../common/audit";
 import { getEventUsers } from "./discord/utils/getEventUsers";
@@ -108,6 +108,7 @@ export const updateParticipants = async (
         discordId: {
           in: added,
         },
+        ...ACTIVE_CITIZEN_WHERE,
       },
       select: {
         id: true,
@@ -149,6 +150,7 @@ export const updateParticipants = async (
             (participant) => participant.discordUserId!,
           ),
         },
+        ...ACTIVE_CITIZEN_WHERE,
       },
       select: {
         id: true,

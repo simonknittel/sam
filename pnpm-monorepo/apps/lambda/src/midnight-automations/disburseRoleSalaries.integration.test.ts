@@ -70,6 +70,23 @@ describe("disburseRoleSalaries", () => {
     expect(transactions[0]?.value).toBe(3 * SALARY);
   });
 
+  test("a deleted citizen gets no salary", async () => {
+    const { role, citizen } = await createCitizenWithRole();
+    await prisma.citizen.update({
+      where: { id: citizen.id },
+      data: { deletedAt: new Date() },
+    });
+    await prisma.silcRoleSalary.create({
+      data: { roleId: role.id, value: SALARY, dayOfMonth: PAYOUT_DAY },
+    });
+
+    await disburseRoleSalaries();
+
+    expect(
+      await prisma.silcTransaction.count({ where: { receiverId: citizen.id } }),
+    ).toBe(0);
+  });
+
   test("a salary on another day is not paid", async () => {
     const { role, citizen } = await createCitizenWithRole();
     await prisma.silcRoleSalary.create({

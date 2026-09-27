@@ -1,6 +1,7 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
+import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 
 const requireCitizenRead = async () => {
   const authentication = await requireAuthentication();
@@ -18,9 +19,11 @@ export const getCitizens = withTrace("getCitizens", async () => {
   await requireCitizenRead();
 
   return prisma.citizen.findMany({
+    where: ACTIVE_CITIZEN_WHERE,
     select: {
       id: true,
       handle: true,
+      deletedAt: true,
     },
   });
 });
@@ -42,6 +45,7 @@ export const getCitizensForTable = withTrace(
     );
 
     const citizens = await prisma.citizen.findMany({
+      where: ACTIVE_CITIZEN_WHERE,
       select: {
         id: true,
         handle: true,

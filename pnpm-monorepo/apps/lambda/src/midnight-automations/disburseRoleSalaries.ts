@@ -1,6 +1,7 @@
 import { createId } from "@paralleldrive/cuid2";
 import { prisma, type Citizen, type Role } from "@sam-monorepo/database";
 import {
+  ACTIVE_CITIZEN_WHERE,
   AuditEventType,
   getLocalDate,
   ORGANIZATION_TIMEZONE,
@@ -36,6 +37,7 @@ export const disburseRoleSalaries = async () => {
 
     const allCitizens = await prisma.citizen.findMany({
       where: {
+        ...ACTIVE_CITIZEN_WHERE,
         roleAssignments: {
           some: {},
         },

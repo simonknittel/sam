@@ -1,6 +1,7 @@
 import { prisma } from "@/db";
 import { getVisibleRoles } from "@/modules/roles/utils/getRoles";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
+import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import type { WikiRoleCitizen } from "../components/WikiRoleCitizensList";
 
 /**
@@ -24,6 +25,7 @@ export const resolveWikiRoleCitizens = withTrace(
      */
     const citizens = await prisma.citizen.findMany({
       where: {
+        ...ACTIVE_CITIZEN_WHERE,
         roleAssignments: {
           some: {
             roleId: role.id,
@@ -33,7 +35,7 @@ export const resolveWikiRoleCitizens = withTrace(
           },
         },
       },
-      select: { id: true, handle: true },
+      select: { id: true, handle: true, deletedAt: true },
     });
 
     /** Handle-less citizens sort last — CitizenLink falls back to their id */

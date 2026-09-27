@@ -1,6 +1,7 @@
 import { prisma } from "@/db";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import type { Prisma } from "@sam-monorepo/database/client";
+import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import {
   resolveEventTemplatePermissions,
   type ResolvedEventTemplatePermissions,
@@ -32,8 +33,8 @@ const LIST_SELECT = {
   updatedAt: true,
   deletedAt: true,
   ownedById: true,
-  ownedBy: { select: { id: true, handle: true } },
-  updatedBy: { select: { id: true, handle: true } },
+  ownedBy: { select: { id: true, handle: true, deletedAt: true } },
+  updatedBy: { select: { id: true, handle: true, deletedAt: true } },
   roleAccess: { select: { roleId: true, type: true } },
 } satisfies Prisma.EventTemplateSelect;
 
@@ -191,8 +192,8 @@ export const getEventTemplateOwners = cache(
     if (!viewer?.hasEventManage) return [];
 
     return await prisma.citizen.findMany({
-      where: { ownedEventTemplates: { some: {} } },
-      select: { id: true, handle: true },
+      where: { ...ACTIVE_CITIZEN_WHERE, ownedEventTemplates: { some: {} } },
+      select: { id: true, handle: true, deletedAt: true },
       orderBy: { handle: "asc" },
     });
   }),

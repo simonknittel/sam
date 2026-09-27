@@ -2,6 +2,7 @@ import { createId } from "@paralleldrive/cuid2";
 import { prisma } from "@sam-monorepo/database";
 import { WikiPageNamespace } from "@sam-monorepo/database/client";
 import {
+  ACTIVE_CITIZEN_WHERE,
   AuditEventType,
   EFFECTIVE_ROLE_PERMISSIONS_SELECT,
 } from "@sam-monorepo/domain";
@@ -157,7 +158,7 @@ export const wikiCitizenMentioned = async () => {
     const [grants, citizens, wikiPages, events] = await Promise.all([
       loadCitizenGrants(citizenIds),
       prisma.citizen.findMany({
-        where: { id: { in: citizenIds } },
+        where: { id: { in: citizenIds }, ...ACTIVE_CITIZEN_WHERE },
         select: { id: true, discordId: true },
       }),
       wikiPageIds.size > 0

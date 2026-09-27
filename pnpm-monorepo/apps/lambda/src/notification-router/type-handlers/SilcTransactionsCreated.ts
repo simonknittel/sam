@@ -1,4 +1,5 @@
 import { prisma, type SilcTransaction } from "@sam-monorepo/database";
+import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import { publishNotifications } from "../publish";
 
 interface Payload {
@@ -61,6 +62,7 @@ export const SilcTransactionsCreatedHandler = async (payload: Payload) => {
       id: {
         in: transactions.map((transaction) => transaction.receiverId),
       },
+      ...ACTIVE_CITIZEN_WHERE,
       roleAssignments: {
         some: {},
       },

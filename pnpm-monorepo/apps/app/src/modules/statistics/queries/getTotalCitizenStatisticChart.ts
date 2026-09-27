@@ -1,6 +1,7 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
+import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
 import {
@@ -21,6 +22,7 @@ export const getTotalCitizenStatisticChart = cache(
     const [baselineCount, citizens] = await Promise.all([
       prisma.citizen.count({
         where: {
+          ...ACTIVE_CITIZEN_WHERE,
           createdAt: {
             lt: options.fromDate,
           },
@@ -28,6 +30,7 @@ export const getTotalCitizenStatisticChart = cache(
       }),
       prisma.citizen.findMany({
         where: {
+          ...ACTIVE_CITIZEN_WHERE,
           createdAt: {
             gte: options.fromDate,
             lt: options.toDateExclusive,

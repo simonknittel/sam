@@ -5,6 +5,7 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { createSilcTransactions } from "@/modules/silc/utils/createSilcTransactions";
+import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import { revalidatePath } from "next/cache";
 import * as z from "zod";
 import { CyclePhase, getCurrentPhase } from "../utils/getCurrentPhase";
@@ -49,6 +50,7 @@ export const endCollectionPhase = createAuthenticatedAction(
      */
     const allSilcBalances = await prisma.citizen.findMany({
       where: {
+        ...ACTIVE_CITIZEN_WHERE,
         silcBalance: {
           gt: 0,
         },

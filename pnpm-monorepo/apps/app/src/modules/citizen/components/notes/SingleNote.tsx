@@ -6,6 +6,7 @@ import styles from "@/modules/common/components/ConfirmationGradient.module.css"
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { type Citizen, type Organization } from "@sam-monorepo/database/client";
+import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import { type PermissionSet } from "@sam-monorepo/permissions";
 import clsx from "clsx";
 import Image from "next/image";
@@ -68,6 +69,7 @@ export const SingleNote = async ({ note }: Props) => {
             spectrumId: {
               in: Array.from(uniqueCitizenSpectrumIds),
             },
+            ...ACTIVE_CITIZEN_WHERE,
           },
           select: {
             handle: true,

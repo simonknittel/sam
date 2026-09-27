@@ -1,6 +1,7 @@
 import { prisma } from "@/db";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
 import type { Prisma } from "@sam-monorepo/database/client";
+import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import { cache } from "react";
 
 /**
@@ -100,7 +101,12 @@ export const getRolesForTable = cache(
         maxAgeDays: true,
         assignAfterInactiveDays: true,
         icon: { select: { id: true, mimeType: true } },
-        _count: { select: { inherits: true, assignments: true } },
+        _count: {
+          select: {
+            inherits: true,
+            assignments: { where: { citizen: ACTIVE_CITIZEN_WHERE } },
+          },
+        },
       },
     }),
   ),
