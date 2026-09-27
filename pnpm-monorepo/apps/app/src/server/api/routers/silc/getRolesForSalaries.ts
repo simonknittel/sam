@@ -1,40 +1,43 @@
 import { prisma } from "@/db";
 import { log } from "@/modules/logging";
 import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
+import { hasReachedMaxLevel } from "@sam-monorepo/permissions";
 import { TRPCError } from "@trpc/server";
 import { serializeError } from "serialize-error";
 import { protectedProcedure } from "../../trpc";
 
 /**
- * Every role with the number of citizens holding it, for the salary
- * editor's "citizens × SILC" preview. The badge itself is rendered from the
- * roles context by id, so the role needs no more than its id and its name
- * for sorting.
+ * Every role with the number of citizens who get its salary, for the salary
+ * editor's "citizens × SILC" preview. The same rule as the salary job: only
+ * the direct assignments of citizens that are not deleted count, and a role
+ * with levels counts only at its maximum level. The badge itself is rendered
+ * from the roles context by id, so the role needs no more than its id and
+ * its name for sorting.
  */
 export const getRolesForSalaries = protectedProcedure.query(async () => {
   try {
-    const [allRoles, assignmentCounts] = await Promise.all([
-      prisma.role.findMany({
-        select: {
-          id: true,
-          name: true,
+    const roles = await prisma.role.findMany({
+      select: {
+        id: true,
+        name: true,
+        maxLevel: true,
+        assignments: {
+          where: { citizen: ACTIVE_CITIZEN_WHERE },
+          select: {
+            currentLevel: true,
+          },
         },
-      }),
+      },
+    });
 
-      prisma.roleAssignment.groupBy({
-        by: ["roleId"],
-        where: { citizen: ACTIVE_CITIZEN_WHERE },
-        _count: true,
-      }),
-    ]);
-
-    const citizenCountByRoleId = new Map(
-      assignmentCounts.map((group) => [group.roleId, group._count]),
-    );
-
-    return allRoles.map((role) => ({
-      role,
-      citizenCount: citizenCountByRoleId.get(role.id) ?? 0,
+    return roles.map(({ id, name, maxLevel, assignments }) => ({
+      role: { id, name },
+      citizenCount: assignments.filter((assignment) =>
+        hasReachedMaxLevel({
+          currentLevel: assignment.currentLevel,
+          role: { maxLevel },
+        }),
+      ).length,
     }));
   } catch (error) {
     log.error("Failed to fetch roles", {

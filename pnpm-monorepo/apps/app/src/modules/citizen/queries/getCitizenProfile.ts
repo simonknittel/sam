@@ -101,9 +101,7 @@ export const getCitizenProfile = cache(
 
     const [monthlySalary, penaltyPoints, fleetCount] = await Promise.all([
       canReadSilcBalance
-        ? getMonthlySalaryOfRoles(
-            citizen.roleAssignments.map((assignment) => assignment.roleId),
-          )
+        ? getMonthlySalaryOfRoles(citizen.roleAssignments)
         : null,
       canReadPenaltyPoints ? sumPenaltyPointsOfCitizen(citizen.id) : null,
       canReadShips ? countOwnerShips(citizen.id) : null,
