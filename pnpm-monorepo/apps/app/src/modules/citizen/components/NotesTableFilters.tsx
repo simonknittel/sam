@@ -3,56 +3,38 @@ import { type NoteType } from "@sam-monorepo/database/client";
 import { ClassificationLevelFilter } from "./ClassificationLevelFilter";
 import { ConfirmationStateFilter } from "./ConfirmationStateFilter";
 import { NoteTypeFilter } from "./NoteTypeFilter";
-import { type Row } from "./NotesTable";
 
 interface Props {
-  readonly rows: Row[];
+  readonly noteTypes: readonly NoteType[];
+  readonly classificationLevels: readonly NoteType[];
+  readonly confirmationStates: readonly string[];
 }
 
-export const NotesTableFilters = ({ rows }: Props) => {
-  const noteTypes = new Map<string, NoteType>();
-  const classificationLevels = new Map<string, NoteType>();
-  const confirmationStates = new Set<string>();
-
-  for (const row of rows) {
-    if (!noteTypes.has(row.noteType.id)) {
-      noteTypes.set(row.noteType.id, row.noteType);
-    }
-
-    if (!classificationLevels.has(row.classificationLevel.id)) {
-      classificationLevels.set(
-        row.classificationLevel.id,
-        row.classificationLevel,
-      );
-    }
-
-    if (row.confirmationState) {
-      confirmationStates.add(row.confirmationState);
-    } else {
-      confirmationStates.add("unconfirmed");
-    }
-  }
-
+export const NotesTableFilters = ({
+  noteTypes,
+  classificationLevels,
+  confirmationStates,
+}: Props) => {
   return (
     <div className="flex gap-2 items-center">
-      {noteTypes.size > 0 && (
+      {noteTypes.length > 0 && (
         <Filter name="Notizarten">
-          <NoteTypeFilter noteTypes={Array.from(noteTypes.values())} />
+          <NoteTypeFilter noteTypes={[...noteTypes]} />
         </Filter>
       )}
 
-      {classificationLevels.size > 0 && (
+      {classificationLevels.length > 0 && (
         <Filter name="Geheimhaltungsstufen">
           <ClassificationLevelFilter
-            classificationLevels={Array.from(classificationLevels.values())}
+            classificationLevels={[...classificationLevels]}
           />
         </Filter>
       )}
 
-      {confirmationStates.size > 0 && (
+      {confirmationStates.length > 0 && (
         <Filter name="Bestätigungsstatus">
           <ConfirmationStateFilter
-            confirmationStates={Array.from(confirmationStates)}
+            confirmationStates={[...confirmationStates]}
           />
         </Filter>
       )}
