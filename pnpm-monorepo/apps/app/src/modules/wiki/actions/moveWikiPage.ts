@@ -9,7 +9,9 @@ import { isEventWikiRootPage } from "../utils/isEventWikiRootPage";
 import {
   buildWikiPageReparentAuditEvents,
   buildWikiPageReparentReset,
+  isWikiPageReparentRefused,
   validateWikiPageReparent,
+  WIKI_PAGE_TREE_CHANGED_ERROR,
 } from "../utils/reparentWikiPage";
 import { requireAdminableWikiPage } from "../utils/requireAdminableWikiPage";
 
@@ -61,17 +63,23 @@ export const moveWikiPage = createAuthenticatedAction(
       authentication.session.entity?.id ?? null,
     );
 
-    await prisma.$transaction([
-      prisma.wikiPage.update({
-        where: { id: page.id },
-        data: {
-          parentId: newParentId,
-          sortOrder,
-          updatedById: authentication.session.entity?.id ?? null,
-        },
-      }),
-      ...reset.statements,
-    ]);
+    try {
+      await prisma.$transaction([
+        ...reset.statements,
+        prisma.wikiPage.update({
+          where: { id: page.id },
+          data: {
+            parentId: newParentId,
+            sortOrder,
+            updatedById: authentication.session.entity?.id ?? null,
+          },
+        }),
+      ]);
+    } catch (error) {
+      if (isWikiPageReparentRefused(error))
+        return { error: WIKI_PAGE_TREE_CHANGED_ERROR, requestPayload: formData };
+      throw error;
+    }
 
     await createAuditEvents(
       buildWikiPageReparentAuditEvents(
