@@ -27,53 +27,7 @@ export const autoAssignInactiveRoles = async () => {
       return;
     }
 
-    const citizensWithDiscord = await captureAsyncFunc(
-      "find citizens with discord accounts",
-      () =>
-        prisma.citizen.findMany({
-          where: {
-            discordId: {
-              not: null,
-            },
-          },
-          select: {
-            id: true,
-            handle: true,
-            discordId: true,
-            roleAssignments: {
-              select: {
-                roleId: true,
-              },
-            },
-          },
-        }),
-    );
-
-    if (citizensWithDiscord.length <= 0) {
-      log.info("No citizens with Discord accounts found");
-      return;
-    }
-
-    const accounts = await captureAsyncFunc("find accounts for citizens", () =>
-      prisma.account.findMany({
-        where: {
-          provider: "discord",
-          providerAccountId: {
-            in: citizensWithDiscord.map((citizen) => citizen.discordId!),
-          },
-        },
-        select: {
-          providerAccountId: true,
-          user: {
-            select: {
-              lastSeenAt: true,
-            },
-          },
-        },
-      }),
-    );
-
-    const assignmentsToCreate: {
+    const candidates: {
       citizenId: string;
       citizenHandle: string | null;
       roleId: string;
@@ -86,54 +40,89 @@ export const autoAssignInactiveRoles = async () => {
         inactiveThreshold.getDate() - role.assignAfterInactiveDays!,
       );
 
-      for (const citizen of citizensWithDiscord) {
-        const alreadyHasRole = citizen.roleAssignments.some(
-          (assignment) => assignment.roleId === role.id,
-        );
-        if (alreadyHasRole) continue;
+      /** A citizen without a login or without a known visit is skipped */
+      const inactiveCitizens = await captureAsyncFunc(
+        "find inactive citizens without the role",
+        () =>
+          prisma.citizen.findMany({
+            where: {
+              user: {
+                lastSeenAt: {
+                  lt: inactiveThreshold,
+                },
+              },
+              roleAssignments: {
+                none: {
+                  roleId: role.id,
+                },
+              },
+            },
+            select: {
+              id: true,
+              handle: true,
+            },
+          }),
+      );
 
-        const account = accounts.find(
-          (account) => account.providerAccountId === citizen.discordId,
-        );
-        if (!account?.user.lastSeenAt) continue;
-
-        const isInactive = account.user.lastSeenAt < inactiveThreshold;
-
-        if (isInactive) {
-          assignmentsToCreate.push({
-            citizenId: citizen.id,
-            citizenHandle: citizen.handle,
-            roleId: role.id,
-            roleName: role.name,
-          });
-        }
+      for (const citizen of inactiveCitizens) {
+        candidates.push({
+          citizenId: citizen.id,
+          citizenHandle: citizen.handle,
+          roleId: role.id,
+          roleName: role.name,
+        });
       }
     }
+
+    if (candidates.length <= 0) {
+      log.info("No citizens eligible for auto-assign");
+      return;
+    }
+
+    /**
+     * A manual assignment at the same time wins: the history gets rows only
+     * for the assignments that this run created.
+     */
+    const createdAssignments = await captureAsyncFunc(
+      "create role assignments",
+      () =>
+        prisma.$transaction(async (transaction) => {
+          const created = await transaction.roleAssignment.createManyAndReturn({
+            data: candidates.map(({ citizenId, roleId }) => ({
+              citizenId,
+              roleId,
+            })),
+            skipDuplicates: true,
+            select: {
+              citizenId: true,
+              roleId: true,
+            },
+          });
+
+          await transaction.roleAssignmentChange.createMany({
+            data: created.map(({ citizenId, roleId }) => ({
+              type: RoleAssignmentChangeType.ADD,
+              citizenId,
+              roleId,
+            })),
+          });
+
+          return created;
+        }),
+    );
+
+    const assignmentsToCreate = candidates.filter((candidate) =>
+      createdAssignments.some(
+        (created) =>
+          created.citizenId === candidate.citizenId &&
+          created.roleId === candidate.roleId,
+      ),
+    );
 
     if (assignmentsToCreate.length <= 0) {
       log.info("No citizens eligible for auto-assign");
       return;
     }
-
-    await captureAsyncFunc("create role assignments", () =>
-      prisma.$transaction([
-        prisma.roleAssignmentChange.createMany({
-          data: assignmentsToCreate.map((assignment) => ({
-            type: RoleAssignmentChangeType.ADD,
-            roleId: assignment.roleId,
-            citizenId: assignment.citizenId,
-          })),
-        }),
-
-        prisma.roleAssignment.createMany({
-          data: assignmentsToCreate.map((assignment) => ({
-            citizenId: assignment.citizenId,
-            roleId: assignment.roleId,
-          })),
-          skipDuplicates: true,
-        }),
-      ]),
-    );
 
     await captureAsyncFunc("create audit events", () =>
       prisma.auditEvent.createMany({
