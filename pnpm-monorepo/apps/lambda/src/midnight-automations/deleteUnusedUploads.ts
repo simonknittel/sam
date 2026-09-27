@@ -26,18 +26,15 @@ const DELETE_BATCH_SIZE = 1000;
  * foreign key and deleting a resource only nulls it, so the previous upload
  * would otherwise be left behind forever.
  *
- * Wiki page ⇄ upload links (Upload.wikiPages) are reconciled first: content
- * persists only ever add links (see syncWikiPageUploadLinks), so links
- * whose page content no longer references the upload are dropped here.
- *
  * An upload counts as used while any of the model's usage relations
- * references it (see UPLOAD_USAGE_RELATIONS). As a safety net, uploads whose
- * id still appears in some wiki page content or snapshot (e.g. an image
- * copy-pasted into another page) are kept as well.
+ * references it (see UPLOAD_USAGE_RELATIONS). The wiki relations are link
+ * tables that follow the content: the collab server replaces the links of a
+ * page at each store, and each new snapshot links the uploads of its
+ * content. Thus the check needs no search in the content.
  *
- * Afterwards the bucket is swept for objects without an Upload row: deleting
- * a user cascade-deletes their Upload rows without touching S3, so such
- * objects can't be found through the database at all. This also removes the
+ * Afterwards the bucket is swept for objects without an Upload row, which
+ * the database cannot find: for example the object of an upload whose
+ * deletion in the upload manager failed at the bucket. This also removes the
  * objects of the rows deleted above.
  */
 export const deleteUnusedUploads = async () => {
@@ -60,78 +57,21 @@ export const deleteUnusedUploads = async () => {
     cutoff.setHours(cutoff.getHours() - GRACE_PERIOD_HOURS);
 
     /**
-     * Drop page links whose page content no longer references the upload
-     * (destroyed pages already lose their links via the cascading foreign
-     * key). The grace period protects fresh uploads whose editing session
-     * hasn't persisted the content containing them yet.
+     * The usage relations live in one shared list so this query and the
+     * upload manager can no longer drift apart — a relation added to the
+     * model but missing here silently deletes uploads which are in use (as
+     * happened to `eventCovers`). See `UPLOAD_USAGE_RELATIONS`.
      */
-    await captureAsyncFunc(
-      "reconcile wiki page links",
+    const { count: databaseCount } = await captureAsyncFunc(
+      "delete unused uploads from the database",
       () =>
-        prisma.$executeRaw`
-        DELETE FROM "_attachments" AS "link"
-        USING "Upload" AS "upload"
-        WHERE "upload"."id" = "link"."A"
-          AND "upload"."createdAt" < ${cutoff}
-          AND NOT EXISTS (
-            SELECT 1 FROM "WikiPage" AS "page"
-            WHERE "page"."id" = "link"."B"
-              AND "page"."content"::text LIKE '%' || "link"."A" || '%'
-          )
-      `,
-    );
-
-    const unusedUploads = await captureAsyncFunc("find unused uploads", () =>
-      prisma.upload.findMany({
-        /**
-         * The usage relations live in one shared list so this query and
-         * the upload manager can no longer drift apart — a relation added
-         * to the model but missing here silently deletes uploads which
-         * are in use (as happened to `eventCovers`). See
-         * `UPLOAD_USAGE_RELATIONS`.
-         */
-        where: {
-          createdAt: { lt: cutoff },
-          ...UNUSED_UPLOAD_WHERE,
-        },
-        select: { id: true },
-      }),
-    );
-
-    let deletableIds = unusedUploads.map((upload) => upload.id);
-
-    if (deletableIds.length > 0) {
-      const referenced = await captureAsyncFunc(
-        "find candidates referenced in wiki content",
-        () =>
-          prisma.$queryRaw<{ id: string }[]>`
-            SELECT "id"
-            FROM "Upload"
-            WHERE "id" = ANY(${deletableIds})
-              AND (
-                EXISTS (
-                  SELECT 1 FROM "WikiPage"
-                  WHERE "content"::text LIKE '%' || "Upload"."id" || '%'
-                )
-                OR EXISTS (
-                  SELECT 1 FROM "WikiPageSnapshot"
-                  WHERE "content"::text LIKE '%' || "Upload"."id" || '%'
-                )
-              )
-          `,
-      );
-
-      const referencedIds = new Set(referenced.map((row) => row.id));
-      deletableIds = deletableIds.filter((id) => !referencedIds.has(id));
-    }
-
-    if (deletableIds.length > 0) {
-      await captureAsyncFunc("delete unused uploads from the database", () =>
         prisma.upload.deleteMany({
-          where: { id: { in: deletableIds } },
+          where: {
+            createdAt: { lt: cutoff },
+            ...UNUSED_UPLOAD_WHERE,
+          },
         }),
-      );
-    }
+    );
 
     const s3 = new S3Client({
       region: "auto",
@@ -207,9 +147,9 @@ export const deleteUnusedUploads = async () => {
       });
     }
 
-    if (deletableIds.length > 0 || orphanedKeys.length > 0) {
+    if (databaseCount > 0 || orphanedKeys.length > 0) {
       log.info("Deleted unused uploads", {
-        databaseCount: deletableIds.length,
+        databaseCount,
         bucketCount: orphanedKeys.length,
       });
 
@@ -217,7 +157,7 @@ export const deleteUnusedUploads = async () => {
         {
           type: AuditEventType.UNUSED_UPLOADS_DELETED,
           data: {
-            databaseCount: deletableIds.length,
+            databaseCount,
             bucketCount: orphanedKeys.length,
           },
         },
