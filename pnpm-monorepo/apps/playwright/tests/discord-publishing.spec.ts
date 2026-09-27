@@ -382,7 +382,7 @@ test("a cover image Discord cannot take is reported but does not stop publishing
     permissionStrings: ["event;read"],
   });
   // Discord's image data only accepts JPEG, PNG and GIF
-  const cover = await createUpload(prisma, creator.user, {
+  const cover = await createUpload(prisma, creator.entity, {
     fileName: "cover.webp",
     mimeType: "image/webp",
   });

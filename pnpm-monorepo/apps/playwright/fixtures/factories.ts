@@ -24,6 +24,7 @@ import {
   WikiPageNamespace,
   WikiPageSidebarMode,
   WikiPageUploadability,
+  WikiPageUploadKind,
   WikiPageVisibility,
 } from "@sam-monorepo/database/client";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
@@ -651,7 +652,12 @@ interface CreateUploadOptions {
   readonly fileName: string;
   readonly mimeType: string;
   readonly size?: number;
-  /** Links the upload as an attachment of that wiki page */
+  /**
+   * Links the upload to that wiki page, as an image or an attachment by its
+   * mime type like the assign route. The content of the page must use it
+   * too: the next store of the page removes a link that the content does
+   * not use.
+   */
   readonly wikiPageId?: string;
 }
 
@@ -659,11 +665,12 @@ interface CreateUploadOptions {
  * A row of the uploads table without an object in the bucket — enough for
  * everything that only lists or filters uploads. `Upload.fileName` is stored
  * URI-encoded, so seeded rows have to encode like the upload endpoints do;
- * the table decodes it for display again.
+ * the table decodes it for display again. The author of an upload is a
+ * citizen.
  */
 export const createUpload = (
   prisma: PrismaClient,
-  user: Pick<User, "id">,
+  author: Pick<Citizen, "id">,
   { fileName, mimeType, size = 1024, wikiPageId }: CreateUploadOptions,
 ) =>
   prisma.upload.create({
@@ -671,8 +678,19 @@ export const createUpload = (
       fileName: encodeURIComponent(fileName),
       mimeType,
       size,
-      createdById: user.id,
-      ...(wikiPageId ? { wikiPages: { connect: { id: wikiPageId } } } : {}),
+      createdById: author.id,
+      ...(wikiPageId
+        ? {
+            wikiPageLinks: {
+              create: {
+                pageId: wikiPageId,
+                kind: mimeType.startsWith("image/")
+                  ? WikiPageUploadKind.IMAGE
+                  : WikiPageUploadKind.ATTACHMENT,
+              },
+            },
+          }
+        : {}),
     },
   });
 

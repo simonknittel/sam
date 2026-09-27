@@ -1,5 +1,10 @@
+import { WikiPageUploadKind } from "@sam-monorepo/database/client";
 import path from "node:path";
-import { createCitizen, createRole } from "../fixtures/factories";
+import {
+  createCitizen,
+  createRole,
+  createUserWithoutCitizen,
+} from "../fixtures/factories";
 import {
   ACTION_FEEDBACK_TIMEOUT,
   waitForAppShellHydration,
@@ -115,10 +120,18 @@ test("an image uploaded to a wiki page is stored, displayed and persisted", asyn
     timeout: ACTION_FEEDBACK_TIMEOUT,
   });
 
+  // The author is the citizen, and the assign route links the page at once
   const upload = await prisma.upload.findFirstOrThrow({
-    select: { id: true, wikiPages: { select: { id: true } } },
+    select: {
+      id: true,
+      createdById: true,
+      wikiPageLinks: { select: { pageId: true, kind: true } },
+    },
   });
-  expect(upload.wikiPages.map(({ id }) => id)).toContain(wikiPage.id);
+  expect(upload.createdById).toBe(manager.entity.id);
+  expect(upload.wikiPageLinks).toEqual([
+    { pageId: wikiPage.id, kind: WikiPageUploadKind.IMAGE },
+  ]);
 
   // The editor loads the image straight from the bucket (anonymous read)
   const editorImage = page.locator(
@@ -164,4 +177,29 @@ test("an image uploaded to a wiki page is stored, displayed and persisted", asyn
       { timeout: ACTION_FEEDBACK_TIMEOUT },
     )
     .toBeGreaterThan(0);
+});
+
+/**
+ * The author of an upload is a citizen. Admin mode gives all permissions,
+ * thus only the missing citizen refuses the upload here.
+ */
+test("a user without a citizen cannot upload, also in admin mode", async ({
+  page,
+  prisma,
+  signIn,
+  enableAdminMode,
+}) => {
+  const user = await createUserWithoutCitizen(prisma, {
+    name: "ohne-citizen",
+    admin: true,
+  });
+  await signIn(user);
+  await enableAdminMode();
+
+  const response = await page.request.post("/api/upload", {
+    data: { fileName: "upload.png", mimeType: "image/png", size: 1024 },
+  });
+
+  expect(response.status()).toBe(403);
+  expect(await prisma.upload.count()).toBe(0);
 });
