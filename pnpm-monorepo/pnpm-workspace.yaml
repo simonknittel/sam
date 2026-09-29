@@ -30,7 +30,7 @@ overrides:
   # and apps/app/eslint.config.mjs register two different plugin objects under
   # the name `@typescript-eslint`. Keep this in sync with the version in
   # apps/app/package.json.
-  typescript-eslint: 8.70.0
+  typescript-eslint: 8.70.1
 
 preferFrozenLockfile: true
 saveExact: true
