@@ -6,10 +6,10 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "3.1132.0",
-    "@aws-sdk/client-eventbridge": "3.1132.0",
-    "@aws-sdk/client-s3": "3.1132.0",
-    "@aws-sdk/client-ssm": "3.1132.0",
+    "@aws-sdk/client-dynamodb": "3.1138.0",
+    "@aws-sdk/client-eventbridge": "3.1138.0",
+    "@aws-sdk/client-s3": "3.1138.0",
+    "@aws-sdk/client-ssm": "3.1138.0",
     "@paralleldrive/cuid2": "3.3.0",
     "@sam-monorepo/database": "workspace:*",
     "@sam-monorepo/domain": "workspace:*",
@@ -31,7 +31,7 @@
   "devDependencies": {
     "@types/aws-lambda": "8.10.163",
     "@types/lodash": "4.17.25",
-    "@types/node": "24.13.4",
+    "@types/node": "24.13.6",
     "@types/web-push": "3.6.4",
     "esbuild": "0.28.2",
     "typescript": "7.0.2",
