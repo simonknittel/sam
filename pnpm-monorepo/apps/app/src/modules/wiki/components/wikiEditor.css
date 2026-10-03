@@ -338,12 +338,6 @@
   background-color: var(--color-interaction-300);
 }
 
-.prose summary:focus-visible,
-.tiptap [data-type="details"] > button:focus-visible {
-  outline: 2px solid var(--color-interaction-500);
-  outline-offset: 2px;
-}
-
 .tiptap [data-type="details"] > div {
   min-width: 0;
 }
@@ -531,11 +525,6 @@
   height: auto;
 }
 
-.prose :is(a[data-wiki-image], a[data-wiki-float-image]):focus-visible {
-  outline: 2px solid var(--color-interaction-500);
-  outline-offset: 2px;
-}
-
 /* While editing, a click selects the image instead of opening it */
 .tiptap[contenteditable="true"]
   :is(a[data-wiki-image], a[data-wiki-float-image]) {
@@ -720,11 +709,6 @@
   background-color: var(--color-interaction-300);
 }
 
-.prose a[data-wiki-attachment]:focus-visible {
-  outline: 2px solid var(--color-interaction-500);
-  outline-offset: 2px;
-}
-
 .prose a[data-wiki-attachment]:active {
   background-color: var(--color-neutral-800);
 }
@@ -770,19 +754,21 @@
   translate: 0 -50%;
 }
 
-/* Internal page links */
-.prose a[data-wiki-page-link] {
+/* Internal page links, citizen mentions and links to fleet variants */
+.prose a[data-wiki-page-link],
+.prose a[data-wiki-citizen-mention],
+.prose a[data-wiki-variant-link] {
   font-weight: 600;
 }
 
-.prose a[data-wiki-page-link]:focus-visible {
-  outline: 2px solid var(--color-interaction-500);
-  outline-offset: 2px;
-  border-radius: 0.125rem;
+.prose span[data-wiki-page-link][data-unavailable],
+.prose span[data-wiki-citizen-mention][data-unavailable],
+.prose span[data-wiki-variant-link][data-unavailable] {
+  color: var(--color-neutral-500);
 }
 
-.prose span[data-wiki-page-link][data-unavailable] {
-  color: var(--color-neutral-500);
+.prose span[data-wiki-page-link][data-unavailable],
+.prose span[data-wiki-variant-link][data-unavailable] {
   text-decoration: line-through;
 }
 
@@ -795,37 +781,6 @@
   border-radius: 0.125rem;
   object-fit: cover;
   vertical-align: -0.125em;
-}
-
-/* Citizen mentions */
-.prose a[data-wiki-citizen-mention] {
-  font-weight: 600;
-}
-
-.prose a[data-wiki-citizen-mention]:focus-visible {
-  outline: 2px solid var(--color-interaction-500);
-  outline-offset: 2px;
-  border-radius: 0.125rem;
-}
-
-.prose span[data-wiki-citizen-mention][data-unavailable] {
-  color: var(--color-neutral-500);
-}
-
-/* Links to fleet variants */
-.prose a[data-wiki-variant-link] {
-  font-weight: 600;
-}
-
-.prose a[data-wiki-variant-link]:focus-visible {
-  outline: 2px solid var(--color-interaction-500);
-  outline-offset: 2px;
-  border-radius: 0.125rem;
-}
-
-.prose span[data-wiki-variant-link][data-unavailable] {
-  color: var(--color-neutral-500);
-  text-decoration: line-through;
 }
 
 /*
@@ -844,6 +799,24 @@
   object-fit: contain;
   object-position: center;
   vertical-align: -0.15em;
+}
+
+/* Focus ring of the interactive blocks and of the inline links */
+.prose summary:focus-visible,
+.tiptap [data-type="details"] > button:focus-visible,
+.prose :is(a[data-wiki-image], a[data-wiki-float-image]):focus-visible,
+.prose a[data-wiki-attachment]:focus-visible,
+.prose a[data-wiki-page-link]:focus-visible,
+.prose a[data-wiki-citizen-mention]:focus-visible,
+.prose a[data-wiki-variant-link]:focus-visible {
+  outline: 2px solid var(--color-interaction-500);
+  outline-offset: 2px;
+}
+
+.prose a[data-wiki-page-link]:focus-visible,
+.prose a[data-wiki-citizen-mention]:focus-visible,
+.prose a[data-wiki-variant-link]:focus-visible {
+  border-radius: 0.125rem;
 }
 
 /* Inline text highlights keep the surrounding text color */
@@ -907,33 +880,28 @@
 }
 
 /* Small text (wikiSmallText mark): side notes, captions and fine print.
+   Small text blocks (the `textSize` attribute of paragraphs and lists) use
+   the same factor, so both look alike.
    An explicit factor overrides the browser's `smaller` keyword, which
    shrinks by a varying amount depending on the surrounding font size and
-   would therefore be inconsistent between paragraphs and headings */
-.prose small {
-  font-size: 0.75em;
-}
-
-/* Small text blocks (the `textSize` attribute of paragraphs and lists).
+   would therefore be inconsistent between paragraphs and headings.
    Deliberately no line-height: the unitless value inherited from .prose
    scales the leading with the font size, which is the whole point of the
-   block variant — the mark above shrinks the glyphs but leaves the line
-   boxes at the block's strut height. The em-based paragraph margins
-   shrink along with it. Same factor as the mark, so both look alike. */
+   block variant — the mark shrinks the glyphs but leaves the line boxes at
+   the block's strut height. The em-based paragraph margins shrink along
+   with it. */
+.prose small,
 .prose [data-text-size="small"] {
   font-size: 0.75em;
 }
 
 /* `em` compounds, so a small block inside another small block (a small
-   paragraph in a small list, nested small lists) would shrink twice */
-.prose [data-text-size="small"] [data-text-size="small"] {
-  font-size: 1em;
-}
-
-/* Same for the mark inside a small block. WikiTextOnlyBlockGuard strips
+   paragraph in a small list, nested small lists) would shrink twice.
+   Same for the mark inside a small block. WikiTextOnlyBlockGuard strips
    that combination, but only in editable sessions — read-only editors and
    the static renderer never dispatch its fix-up, so content that acquired
    it elsewhere (import, an older app version) would compound here. */
+.prose [data-text-size="small"] [data-text-size="small"],
 .prose [data-text-size="small"] small {
   font-size: 1em;
 }
@@ -982,9 +950,11 @@
   white-space: nowrap;
 }
 
-/* ---------- Page index ("Seitenverzeichnis") ---------- */
+/* ---------- Page index ("Seitenverzeichnis") and role members ("Rollenmitglieder") ---------- */
 
-.prose [data-wiki-page-index] {
+/* The same card for both server-resolved list blocks */
+.prose [data-wiki-page-index],
+.prose [data-wiki-role-citizens] {
   border: 1px solid var(--color-neutral-700);
   border-radius: var(--radius-secondary);
   background-color: color-mix(
@@ -1017,19 +987,4 @@
   position: absolute;
   top: 0;
   width: 1px;
-}
-
-/* ---------- Role members ("Rollenmitglieder") ---------- */
-
-/* Same card as the page index — both are server-resolved list blocks */
-.prose [data-wiki-role-citizens] {
-  border: 1px solid var(--color-neutral-700);
-  border-radius: var(--radius-secondary);
-  background-color: color-mix(
-    in srgb,
-    var(--color-neutral-800) 40%,
-    transparent
-  );
-  padding: 1rem;
-  margin-block: 1.25em;
 }
