@@ -6,13 +6,10 @@ import {
   type Context,
   type SpanKind,
 } from "@opentelemetry/api";
-import { OTLPLogExporter } from "@opentelemetry/exporter-logs-otlp-http";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import { AwsInstrumentation } from "@opentelemetry/instrumentation-aws-sdk";
 import { HttpInstrumentation } from "@opentelemetry/instrumentation-http";
 import { UndiciInstrumentation } from "@opentelemetry/instrumentation-undici";
-import { resourceFromAttributes } from "@opentelemetry/resources";
-import { BatchLogRecordProcessor } from "@opentelemetry/sdk-logs";
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import {
   BatchSpanProcessor,
@@ -21,12 +18,8 @@ import {
   type Sampler,
   type SamplingResult,
 } from "@opentelemetry/sdk-trace-node";
-import {
-  ATTR_SERVICE_NAME,
-  ATTR_URL_PATH,
-} from "@opentelemetry/semantic-conventions";
+import { ATTR_URL_PATH } from "@opentelemetry/semantic-conventions";
 import { PrismaInstrumentation } from "@prisma/instrumentation";
-import { env } from "./env";
 import { FlushOnRootSpanEndProcessor } from "./modules/tracing/utils/FlushOnRootSpanEndProcessor";
 
 // API reference: https://open-telemetry.github.io/opentelemetry-js/
@@ -34,10 +27,6 @@ import { FlushOnRootSpanEndProcessor } from "./modules/tracing/utils/FlushOnRoot
 // The SDK reports a rejected export and a full queue only through this
 // channel. Without a logger, telemetry disappears without any evidence.
 diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.WARN);
-
-const resource = resourceFromAttributes({
-  [ATTR_SERVICE_NAME]: "sam",
-});
 
 /** Vercel requests this path to keep the function warm. */
 const PING_PATH = "/_vercel/ping";
@@ -68,28 +57,23 @@ class IgnorePingSampler implements Sampler {
 }
 
 const sdk = new NodeSDK({
-  resource,
+  serviceName: "sam",
+  // The span pipeline is explicit because of the flush wrapper. Its exporter
+  // always sends JSON. The SDK makes the log pipeline from the environment
+  // variables, thus OTEL_EXPORTER_OTLP_PROTOCOL sets the format of the logs.
+  // All exporters read the endpoint from OTEL_EXPORTER_OTLP_ENDPOINT.
   spanProcessors: [
     new FlushOnRootSpanEndProcessor(
       // One request creates hundreds of spans, and a per-span export discards
       // whichever span ends while 30 sends are already in flight.
       new BatchSpanProcessor(
-        new OTLPTraceExporter({
-          url: `${env.OTEL_EXPORTER_OTLP_ENDPOINT}/v1/traces`,
-        }),
+        new OTLPTraceExporter(),
         // Some spans of Next.js end after the root span, thus after the flush
         // of the request. The default of 5 seconds keeps them on hold long
         // enough for a freeze of the function to catch them.
         { scheduledDelayMillis: 1000 },
       ),
     ),
-  ],
-  logRecordProcessors: [
-    new BatchLogRecordProcessor({
-      exporter: new OTLPLogExporter({
-        url: `${env.OTEL_EXPORTER_OTLP_ENDPOINT}/v1/logs`,
-      }),
-    }),
   ],
   // Without this option, the SDK makes an OTLP metrics pipeline from the
   // environment variables. That pipeline sends to `/v1/metrics` of the
