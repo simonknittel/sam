@@ -81,14 +81,18 @@ describe("wallTimeToInstant", () => {
     );
   });
 
-  test.each(["gestern Abend", "2026-02-30T20:00", "2026-01-15T24:00"])(
-    "rejects the invalid wall time %s",
-    (wallTime) => {
-      expect(() => wallTimeToInstant(wallTime, ORGANIZATION_TIMEZONE)).toThrow(
-        "Invalid wall time",
-      );
-    },
-  );
+  test.each([
+    "gestern Abend",
+    "2026-02-30T20:00",
+    "2026-01-15T24:00",
+    "2026-01-15T20:00:30",
+    "2026-01-15T20:00Z",
+    "2026-01-15T20:00+05:00",
+  ])("rejects the invalid wall time %s", (wallTime) => {
+    expect(() => wallTimeToInstant(wallTime, ORGANIZATION_TIMEZONE)).toThrow(
+      "Invalid wall time",
+    );
+  });
 
   test("rejects an unknown time zone", () => {
     expect(() => wallTimeToInstant("2026-01-15T20:00", "Mars/Olympus")).toThrow(
