@@ -98,32 +98,12 @@ export const OverviewTile = ({ className, event, showCoverUpload }: Props) => {
           <dt className="font-mono text-xs text-neutral-500 uppercase">
             Start
           </dt>
-          <dd>
-            {event.startTime.toLocaleString("de-DE", {
-              timeZone: "Europe/Berlin",
-              weekday: "short",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </dd>
+          <dd>{formatDate(event.startTime, "long_with_year")}</dd>
 
           <dt className="mt-4 font-mono text-xs text-neutral-500 uppercase">
             Ende
           </dt>
-          <dd>
-            {event.endTime?.toLocaleString("de-DE", {
-              timeZone: "Europe/Berlin",
-              weekday: "short",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            }) || "-"}
-          </dd>
+          <dd>{formatDate(event.endTime, "long_with_year") || "-"}</dd>
 
           {event.source === EventSource.DISCORD && (
             <>

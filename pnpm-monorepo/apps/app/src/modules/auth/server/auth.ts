@@ -5,6 +5,7 @@ import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { DEVELOPMENT_SESSION_TOKEN_COOKIE } from "@/modules/auth/utils/sessionTokenCookie";
 import { linkCitizenOfSignedInUser } from "@/modules/citizen/utils/citizenUserLink";
 import { hasBirthdayToday } from "@/modules/citizen/utils/hasBirthdayToday";
+import { formatDate } from "@/modules/common/utils/formatDate";
 import { getDiscordAvatar } from "@/modules/discord/utils/getDiscordAvatar";
 import { getGuildMember } from "@/modules/discord/utils/getGuildMember";
 import { log } from "@/modules/logging";
@@ -190,12 +191,7 @@ export const authOptions: NextAuthOptions = {
       // user so their presence data doesn't get falsified.
       if (
         !assumedUser &&
-        user.lastSeenAt?.toLocaleDateString("de-DE", {
-          timeZone: "Europe/Berlin",
-        }) !==
-          new Date().toLocaleDateString("de-DE", {
-            timeZone: "Europe/Berlin",
-          })
+        formatDate(user.lastSeenAt, "short") !== formatDate(new Date(), "short")
       ) {
         try {
           await prisma.user.update({

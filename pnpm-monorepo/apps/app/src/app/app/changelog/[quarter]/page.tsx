@@ -47,7 +47,7 @@ export default async function Page({
           <Day
             key={date}
             heading={parsedDate.toLocaleDateString("de-DE", {
-              timeZone: "Europe/Berlin",
+              timeZone: "UTC",
               month: "long",
               day: "numeric",
             })}

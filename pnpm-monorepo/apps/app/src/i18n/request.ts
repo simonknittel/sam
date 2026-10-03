@@ -1,3 +1,4 @@
+import { ORGANIZATION_TIMEZONE } from "@sam-monorepo/domain";
 import { getRequestConfig } from "next-intl/server";
 import { cookies } from "next/headers";
 
@@ -10,6 +11,6 @@ export default getRequestConfig(async () => {
     locale,
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     messages: (await import(`../../messages/${locale}.json`)).default,
-    timeZone: "Europe/Berlin",
+    timeZone: ORGANIZATION_TIMEZONE,
   };
 });

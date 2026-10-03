@@ -97,8 +97,7 @@ export const EventClient = ({
   const isHappeningNow =
     event.startTime <= now && getEventEndTime(event) >= now;
   const isToday =
-    event.startTime.toISOString().split("T")[0] ===
-    now.toISOString().split("T")[0];
+    formatDate(event.startTime, "short") === formatDate(now, "short");
 
   const formattedStartTime = formatDate(event.startTime, "long");
 
