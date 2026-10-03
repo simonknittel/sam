@@ -2,9 +2,8 @@
 
 import { DateTimeInput } from "@/modules/common/components/form/DateTimeInput";
 import { Select } from "@/modules/common/components/form/Select";
+import { instantToWallTime, wallTimeToInstant } from "@sam-monorepo/domain";
 import clsx from "clsx";
-import { format } from "date-fns";
-import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import { parseAsIsoDateTime, parseAsStringLiteral, useQueryState } from "nuqs";
 import { useId, type ChangeEventHandler } from "react";
 import { getActiveTimeZoneName } from "../utils/getActiveTimeZoneName";
@@ -13,10 +12,6 @@ import { TimezoneCompact } from "./TimezoneCompact";
 interface Props {
   readonly className?: string;
 }
-
-/** Returns the wall-clock time in the given timezone formatted for datetime-local input */
-const toDateTimeLocalValue = (date: Date, timeZone: string): string =>
-  format(toZonedTime(date, timeZone), "yyyy-MM-dd'T'HH:mm");
 
 export const Calculator = ({ className }: Props) => {
   const [date, setDate] = useQueryState(
@@ -35,8 +30,11 @@ export const Calculator = ({ className }: Props) => {
   const timezoneSelectId = useId();
 
   const handleDateChange: ChangeEventHandler<HTMLInputElement> = (event) => {
-    const newDate = fromZonedTime(event.target.value, timeZone);
-    if (!isNaN(newDate.getTime())) void setDate(newDate);
+    try {
+      void setDate(wallTimeToInstant(event.target.value, timeZone));
+    } catch {
+      // The input is empty or not complete, thus the date stays
+    }
   };
 
   const handleTimeZoneChange: ChangeEventHandler<HTMLSelectElement> = (
@@ -44,9 +42,8 @@ export const Calculator = ({ className }: Props) => {
   ) => {
     const newTimeZone = event.target.value as typeof timeZone;
     // Keep the same wall-clock string but re-interpret it in the new timezone
-    const currentWallClock = toDateTimeLocalValue(date, timeZone);
-    const newDate = fromZonedTime(currentWallClock, newTimeZone);
-    void setDate(newDate);
+    const currentWallTime = instantToWallTime(date, timeZone);
+    void setDate(wallTimeToInstant(currentWallTime, newTimeZone));
     void setTimeZone(newTimeZone);
   };
 
@@ -62,7 +59,7 @@ export const Calculator = ({ className }: Props) => {
               <DateTimeInput
                 label="Datum und Uhrzeit"
                 type="datetime-local"
-                value={toDateTimeLocalValue(date, timeZone)}
+                value={instantToWallTime(date, timeZone)}
                 onChange={handleDateChange}
               />
             </div>
