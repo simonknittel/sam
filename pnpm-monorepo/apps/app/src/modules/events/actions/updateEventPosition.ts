@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import * as z from "zod";
 import { getLineupPath } from "../utils/eventContainer";
 import { buildPositionUpdatedAuditEvent } from "../utils/lineupAuditEvents";
+import { positionColorSchema } from "../utils/positionColorSchema";
 import { requireManageablePosition } from "../utils/requireManageablePosition";
 
 const schema = z.object({
@@ -15,8 +16,8 @@ const schema = z.object({
   description: z.string().trim().max(512).optional(),
   variantIds: z.array(z.cuid()).max(250), // Arbitrary (untested) limit to prevent DDoS
   fontSize: z.enum(["", "large"]).optional().nullable(),
-  backgroundColor: z.string().max(7).optional().nullable(),
-  textColor: z.string().max(7).optional().nullable(),
+  backgroundColor: positionColorSchema.optional().nullable(),
+  textColor: positionColorSchema.optional().nullable(),
 });
 
 export const updateEventPosition = createAuthenticatedAction(

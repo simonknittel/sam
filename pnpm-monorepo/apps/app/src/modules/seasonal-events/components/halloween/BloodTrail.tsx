@@ -31,7 +31,7 @@ import { SeasonalImage } from "../SeasonalImage";
  * out of that point, therefore it turns around its top edge.
  */
 export const BloodTrail = () => (
-  <div className="absolute top-full left-[47rem] h-12 w-32 xl:left-[calc(50%+272px)]">
+  <div className="absolute top-full left-188 h-12 w-32 xl:left-[calc(50%+272px)]">
     <SeasonalImage
       src={svgToStaticImageData(bloodTrail)}
       className="absolute inset-0 size-full"

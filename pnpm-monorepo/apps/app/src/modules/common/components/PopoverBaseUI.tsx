@@ -14,7 +14,6 @@ import {
   type ReactNode,
 } from "react";
 import { IoMdArrowDropup } from "react-icons/io";
-import styles from "./Popover.module.css";
 
 interface PopoverBaseUIContext {
   closePopover: () => void;
@@ -56,10 +55,13 @@ const PopoverChrome = ({
         <IoMdArrowDropup className="size-6 fill-neutral-700" />
       </Popover.Arrow>
 
+      {/* The pop-in is on this element, not on Popover.Popup: while the
+          popup mounts, Base UI sets "transition: none" on it, and the
+          transition from the starting style does not occur. Base UI
+          calculates the origin on the side of the anchor. */}
       <div
         className={clsx(
-          "rounded-secondary border border-white/20 bg-black p-4",
-          styles.popover,
+          "origin-(--transform-origin) rounded-secondary border border-white/20 bg-black p-4 transition duration-200 starting:scale-90 starting:opacity-0",
           childrenClassName,
         )}
       >

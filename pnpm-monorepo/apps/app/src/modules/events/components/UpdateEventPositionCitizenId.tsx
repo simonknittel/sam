@@ -12,7 +12,6 @@ import clsx from "clsx";
 import { useTransition, type ChangeEventHandler } from "react";
 import { resetEventPositionCitizenId } from "../actions/resetEventPositionCitizenId";
 import { updateEventPositionCitizenId } from "../actions/updateEventPositionCitizenId";
-import styles from "./UpdateEventPositionCitizenId.module.css";
 
 interface Props {
   readonly className?: string;
@@ -77,10 +76,7 @@ export const UpdateEventPositionCitizenId = ({
         name="citizenId"
         /** A lineup holds one of these per position, so it names its own */
         aria-label={`Citizen für ${position.name}`}
-        className={clsx(
-          "block w-full cursor-pointer rounded-secondary bg-white/10 p-2 text-neutral-100",
-          styles.select,
-        )}
+        className="block w-full cursor-pointer rounded-secondary bg-white/10 p-2 text-neutral-100"
         onChange={handleChange}
         disabled={isPending}
         defaultValue={position.citizenId || "-"}

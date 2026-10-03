@@ -1,12 +1,10 @@
 import clsx from "clsx";
-import type { Ref } from "react";
 import ReactMarkdown, { type Options } from "react-markdown";
 import { Link } from "./Link";
 
 interface Props {
   readonly className?: string;
   readonly children: string;
-  readonly ref?: Ref<HTMLDivElement>;
   readonly remarkPlugins: Options["remarkPlugins"];
 }
 
@@ -17,16 +15,11 @@ interface Props {
 export const MarkdownRenderer = ({
   className,
   children,
-  ref,
   remarkPlugins,
 }: Props) => {
   return (
     <div
-      ref={ref}
-      className={clsx("prose max-w-none prose-invert", className)}
-      style={{
-        overflowWrap: "anywhere",
-      }}
+      className={clsx("prose max-w-none wrap-anywhere prose-invert", className)}
     >
       <ReactMarkdown
         remarkPlugins={remarkPlugins}

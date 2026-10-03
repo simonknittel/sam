@@ -51,7 +51,7 @@ export default async function Page({
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center background-primary py-8">
       <main className="w-full max-w-3xl">
-        <h1 className="text-sinister-red mx-8 mb-4 text-center text-xl font-bold">
+        <h1 className="mx-8 mb-4 text-center text-xl font-bold text-brand-red-500">
           <RiInformationLine className="inline align-text-bottom text-2xl text-sky-500" />{" "}
           E-Mail-Adresse und Datenschutzerklärung bestätigen
         </h1>

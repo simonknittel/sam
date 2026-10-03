@@ -161,7 +161,7 @@ export const SingleRoleBadge = ({
     <PopoverBaseUI
       title="Rollendetails"
       trigger={badge}
-      childrenClassName="w-[400px]"
+      childrenClassName="w-100"
     >
       <div>
         <div className="inline-flex items-center gap-4 align-middle">

@@ -1,7 +1,6 @@
 "use client";
 
 import { ConfettiCanvas } from "@/modules/common/components/ConfettiCanvas";
-import { useMediaQuery } from "@base-ui/react/unstable-use-media-query";
 import type { Options } from "canvas-confetti";
 import clsx from "clsx";
 import type { ReactNode } from "react";
@@ -55,42 +54,34 @@ interface Props {
  * of the row — see the `isolate` of the list item.
  *
  * The surface carries no motion, thus every viewer sees it. A viewer who
- * prefers reduced motion gets a static mark instead of the confetti.
+ * prefers reduced motion gets a static mark instead of the confetti:
+ * `ConfettiCanvas` renders nothing for this viewer.
  */
 export const NotificationRowDecoration = ({
   surfaceClassName,
   shots,
   staticIcon,
-}: Props) => {
-  const prefersReducedMotion = useMediaQuery(
-    "(prefers-reduced-motion: reduce)",
-    { defaultMatches: false },
-  );
-
-  return (
-    <>
-      <span
-        aria-hidden="true"
-        className={clsx(
-          surfaceClassName,
-          "pointer-events-none absolute inset-0 -z-20",
-        )}
-      />
-
-      {prefersReducedMotion ? (
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 right-4 -z-10 flex items-center text-3xl text-amber-400/20"
-        >
-          {staticIcon}
-        </span>
-      ) : (
-        <ConfettiCanvas
-          shots={shots}
-          intervalMilliseconds={BURST_INTERVAL}
-          className="absolute inset-0 -z-10 size-full"
-        />
+}: Props) => (
+  <>
+    <span
+      aria-hidden="true"
+      className={clsx(
+        surfaceClassName,
+        "pointer-events-none absolute inset-0 -z-20",
       )}
-    </>
-  );
-};
+    />
+
+    <span
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-y-0 right-4 -z-10 flex items-center text-3xl text-amber-400/20 motion-safe:hidden"
+    >
+      {staticIcon}
+    </span>
+
+    <ConfettiCanvas
+      shots={shots}
+      intervalMilliseconds={BURST_INTERVAL}
+      className="absolute inset-0 -z-10 size-full"
+    />
+  </>
+);

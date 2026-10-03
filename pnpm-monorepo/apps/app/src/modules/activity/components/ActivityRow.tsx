@@ -1,5 +1,4 @@
 import { CitizenLink } from "@/modules/common/components/CitizenLink";
-import styles from "@/modules/common/components/ConfirmationGradient.module.css";
 import { TableRowAlignment, TRow } from "@/modules/common/components/Table";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import { ConfirmationStatus } from "@sam-monorepo/database/client";
@@ -29,15 +28,11 @@ export const ActivityRow = ({ entry, columns }: Props) => {
   return (
     <TRow
       alignment={TableRowAlignment.Top}
-      className={clsx(
-        "min-h-10",
-        {
-          "border-t-0 border-l-2 bg-blue-500/5": isUnconfirmed,
-          "border-t-0 border-l-2 bg-red-500/5": isFalseReport,
-        },
-        isUnconfirmed && styles.blueBorder,
-        isFalseReport && styles.redBorder,
-      )}
+      className={clsx("min-h-10", {
+        "border-t-0 border-l-2 bg-blue-500/5 border-fade-blue-500":
+          isUnconfirmed,
+        "border-t-0 border-l-2 bg-red-500/5 border-fade-red-500": isFalseReport,
+      })}
     >
       <td className={clsx(FIRST_LINE, "text-neutral-400")}>
         <time dateTime={entry.date.toISOString()}>
@@ -59,7 +54,7 @@ export const ActivityRow = ({ entry, columns }: Props) => {
         <div className={clsx(FIRST_LINE, "min-w-0")}>{entry.message}</div>
 
         {entry.comment && (
-          <p className="mt-1 border-l-2 border-neutral-700 pl-2 text-sm break-words whitespace-pre-wrap text-neutral-300">
+          <p className="mt-1 border-l-2 border-neutral-700 pl-2 text-sm wrap-break-word whitespace-pre-wrap text-neutral-300">
             {entry.comment}
           </p>
         )}

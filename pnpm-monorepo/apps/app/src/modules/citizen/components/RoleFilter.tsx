@@ -19,7 +19,7 @@ export const RoleFilter = ({ roles }: Props) => {
         label: (
           <>
             {role.icon && (
-              <div className="flex aspect-square h-6 w-6 items-center justify-center overflow-hidden rounded-secondary">
+              <div className="flex aspect-square size-6 items-center justify-center overflow-hidden rounded-secondary">
                 <Image
                   src={getPublicUploadUrl(role.icon.id)}
                   alt=""

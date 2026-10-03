@@ -37,7 +37,7 @@ export const WikiPageReadAudienceBadge = ({ label }: Props) => {
       onClick={openPermissions}
       className={clsx(
         BADGE_CLASSES,
-        "cursor-pointer outline-offset-2 outline-interaction-700 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-2 active:text-white/80 motion-reduce:transition-none",
+        "cursor-pointer outline-offset-2 outline-interaction-700 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-2 active:text-white/80",
       )}
     >
       {content}

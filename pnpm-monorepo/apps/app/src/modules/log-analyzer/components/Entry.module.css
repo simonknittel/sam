@@ -1,14 +1,20 @@
+/*
+ * The fade shows for one minute which entries are new. This is information,
+ * and a fade over 60 s is not motion. Thus the fade also stays for a viewer
+ * who prefers reduced motion: `!important` wins against the rule in
+ * `globals.css` which ends all transitions.
+ */
 .Row {
   border-width: 1px;
   border-style: solid;
   border-color: transparent;
   border-radius: 0.25rem;
-  transition: border-color 60s;
+  transition: border-color 60s !important;
 }
 
 .New {
   opacity: 0;
-  transition: opacity 60s;
+  transition: opacity 60s !important;
 }
 
 @starting-style {

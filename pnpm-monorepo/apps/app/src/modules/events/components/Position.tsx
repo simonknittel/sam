@@ -34,13 +34,6 @@ import { PositionVariants } from "./PositionVariants";
 import { ToggleEventPositionApplicationForCurrentUser } from "./ToggleEventPositionApplicationForCurrentUser";
 import { UpdateEventPositionCitizenId } from "./UpdateEventPositionCitizenId";
 
-const hexToRgba = (hex: string, alpha: number): string => {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-};
-
 /**
  * One rendered position. `applications` and `citizen` are optional because
  * a template blueprint's positions can never have either — its query omits
@@ -126,14 +119,6 @@ export const Position = ({
     (citizen) => citizen.citizen.id === authentication.session.entity?.id,
   );
 
-  const background = position.backgroundColor
-    ? `linear-gradient(180deg, ${hexToRgba(position.backgroundColor, 0.2)} 0%, rgba(38, 38, 38, 0.5) 200%)`
-    : "rgba(38, 38, 38, 0.5)";
-  const borderColor = position.backgroundColor || undefined;
-  const borderImage = borderColor
-    ? `linear-gradient(to bottom, ${borderColor}, transparent) 1`
-    : undefined;
-
   return (
     <div
       className={clsx(
@@ -155,13 +140,14 @@ export const Position = ({
 
       <div
         className={clsx("flex items-stretch gap-2", {
-          "border-x border-t": borderColor,
+          "tile-accent-surface": position.backgroundColor,
+          "bg-secondary": !position.backgroundColor,
         })}
-        style={{
-          background,
-          borderColor,
-          borderImage,
-        }}
+        style={
+          position.backgroundColor
+            ? { "--tile-accent-color": position.backgroundColor }
+            : undefined
+        }
       >
         {showManage && <DragHandle position={position} />}
 
@@ -279,12 +265,7 @@ export const Position = ({
       </div>
 
       {isOpen && (
-        <div
-          className="border-t border-white/10"
-          style={{
-            backgroundColor: "rgba(38, 38, 38, 0.5)",
-          }}
-        >
+        <div className="border-t border-white/10 bg-secondary">
           <div className="flex gap-2 p-4">
             <div className="flex flex-1 flex-col">
               <h3 className="font-mono text-xs text-white/40 uppercase">

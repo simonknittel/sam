@@ -47,7 +47,7 @@ const createSilcTask = (
     },
   });
 
-test("a task can be created and two of its fields edited through the shared factory", async ({
+test("a task can be created and three of its fields edited inline", async ({
   page,
   prisma,
   signIn,
@@ -107,14 +107,34 @@ test("a task can be created and two of its fields edited through the shared fact
   );
   await expect(descriptionInput).not.toBeVisible();
 
+  // … and the reward text, in a textarea that grows with its text
+  const rewardSection = sectionByHeading(page, "Belohnung");
+  const rewardInput = rewardSection.locator(
+    'textarea[name="rewardTypeTextValue"]',
+  );
+  await clickUntilVisible(editButtons(rewardSection), rewardInput);
+  await rewardInput.fill("");
+  /** An empty textarea keeps the width of the tile, not of its text */
+  const [rewardInputBox, rewardSectionBox] = await Promise.all([
+    rewardInput.boundingBox(),
+    rewardSection.boundingBox(),
+  ]);
+  expect(rewardInputBox!.width).toBeGreaterThan(rewardSectionBox!.width / 2);
+  await rewardInput.fill("Ruhm, Ehre und eine Kiste Titan");
+  await saveInlineEditor(page);
+  await expect(rewardSection).toContainText("Ruhm, Ehre und eine Kiste Titan");
+  await expect(rewardInput).not.toBeVisible();
+
   const task = await prisma.task.findFirst();
   expect(task).toMatchObject({
     title: "Titan-Erz eskortieren",
     description: "Begleitschutz von Lorville nach Everus Harbor.",
+    rewardTypeTextValue: "Ruhm, Ehre und eine Kiste Titan",
   });
   await expectAuditEvents(prisma, [
     "TASK_TITLE_UPDATED",
     "TASK_DESCRIPTION_UPDATED",
+    "TASK_REWARD_TEXT_UPDATED",
   ]);
 });
 

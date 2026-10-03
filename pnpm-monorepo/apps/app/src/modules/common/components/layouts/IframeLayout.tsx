@@ -9,9 +9,13 @@ interface Props {
 export const IframeLayout = ({ src, iframeProps }: Props) => {
   return (
     <div className="relative">
+      {/*
+       * `scheme-normal`: with the dark scheme of the app, the browser paints
+       * an embedded light page without a background on an opaque white canvas.
+       */}
       <iframe
         src={src}
-        className="relative z-10 h-[calc(100dvh-64px-48px)] w-full lg:h-[calc(100dvh-112px)]"
+        className="relative z-10 h-[calc(100dvh-64px-48px)] w-full scheme-normal lg:h-[calc(100dvh-112px)]"
         title="Formular für eine SILO-Anfrage"
         {...iframeProps}
       />

@@ -50,7 +50,7 @@ export const CitizenPopover = ({ children, citizenId }: Props) => {
       title="Citizen-Details"
       trigger={children}
       onOpenChange={handleOpenChange}
-      childrenClassName={clsx("w-[400px]", {
+      childrenClassName={clsx("w-100", {
         /** The whole popup celebrates with the citizen: the colour clouds
         of the surface, and an isolated box for the confetti behind the
         profile. */

@@ -101,7 +101,7 @@ test("a viewer without the confirm permission sees only the confirmed logs of th
 
   await expect(logContent(page, NEWEST_CONFIRMED_HANDLE)).toBeVisible();
   await expect(tableRows(page)).toHaveCount(PER_PAGE);
-  await expect(page.getByText("1 / 2")).toBeVisible();
+  await expect(page.getByText("1 / 2").filter({ visible: true })).toBeVisible();
   for (const content of [
     UNCONFIRMED_HANDLE,
     FALSE_REPORT_HANDLE,
@@ -110,7 +110,7 @@ test("a viewer without the confirm permission sees only the confirmed logs of th
     await expect(logContent(page, content)).toHaveCount(0);
 
   await page.goto("/app/spynet/other?page=2");
-  await expect(page.getByText("2 / 2")).toBeVisible();
+  await expect(page.getByText("2 / 2").filter({ visible: true })).toBeVisible();
   await expect(tableRows(page)).toHaveCount(1);
   await expect(logContent(page, OLDEST_CONFIRMED_HANDLE)).toBeVisible();
 });

@@ -50,7 +50,7 @@ const OnboardingStepScreenshot = ({
        * blow up the step card. max-w-full keeps wide screenshots inside the
        * card, the aspect ratio stays intact either way.
        */
-      className="mx-auto mt-3 h-auto max-h-64 w-auto max-w-full rounded-secondary border border-white/10"
+      className="mx-auto mt-3 size-auto max-h-64 max-w-full rounded-secondary border border-white/10"
     />
   );
 };

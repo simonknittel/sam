@@ -1,6 +1,5 @@
 "use client";
 
-import styles from "@/modules/common/components/ConfirmationGradient.module.css";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import {
   ConfirmationStatus,
@@ -40,8 +39,8 @@ export const HistoryEntry = ({
         className={clsx({
           "absolute h-20 w-full border-x-2 border-t-2 bg-linear-to-t from-neutral-800":
             isUnconfirmed || isFalseReport,
-          [`${styles.blueBorder} to-blue-500/10`]: isUnconfirmed,
-          [`${styles.redBorder} to-red-500/10`]: isFalseReport,
+          "to-blue-500/10 border-fade-blue-500": isUnconfirmed,
+          "to-red-500/10 border-fade-red-500": isFalseReport,
         })}
       />
 

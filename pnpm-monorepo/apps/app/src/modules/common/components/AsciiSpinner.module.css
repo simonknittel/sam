@@ -1,0 +1,15 @@
+/*
+ * Moves the column of the frames through the window of one line. 10 is the
+ * number of frames in AsciiSpinner.tsx, 800 ms gives each frame 80 ms. The
+ * spinner is a loading indicator, thus it keeps its motion also when the
+ * user prefers reduced motion.
+ */
+.frames {
+  animation: frames 800ms steps(10) infinite;
+}
+
+@keyframes frames {
+  to {
+    translate: 0 -10lh;
+  }
+}

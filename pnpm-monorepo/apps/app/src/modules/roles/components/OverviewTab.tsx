@@ -141,8 +141,8 @@ export const OverviewTab = ({ className, role }: Props) => {
                     !role.thumbnailId,
                 },
               )}
-              imageClassName="w-[228px] h-32"
-              pendingClassName="w-[228px] h-32"
+              imageClassName="w-57 h-32"
+              pendingClassName="w-57 h-32"
             />
 
             <p className="mt-1 text-sm text-neutral-500">

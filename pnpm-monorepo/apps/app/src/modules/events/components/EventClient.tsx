@@ -146,10 +146,9 @@ export const EventClient = ({
           "relative flex flex-col rounded-bl-primary bg-secondary @4xl/events:flex-row",
           {
             "rounded-t-primary": !isHappeningNow && !isToday,
-            "border-x border-green-500 [border-image:linear-gradient(to_bottom,var(--color-green-500),transparent)_1]":
-              isHappeningNow,
+            "border-x border-fade-green-500": isHappeningNow,
             [styles.happeningNow]: isHappeningNow,
-            "border-x border-blue-500 [background:linear-gradient(to_bottom,var(--color-blue-950),var(--background-color-secondary))] [border-image:linear-gradient(to_bottom,var(--color-blue-500),transparent)_1]":
+            "border-x [background:linear-gradient(to_bottom,var(--color-blue-950),var(--background-color-secondary))] border-fade-blue-500":
               isToday && !isHappeningNow,
           },
         )}
@@ -180,7 +179,7 @@ export const EventClient = ({
         <div className="flex flex-1 flex-col justify-center gap-3 p-4 @4xl/events:overflow-hidden">
           <div className="flex items-baseline gap-2">
             <h2
-              className="min-w-0 font-mono text-xl font-bold break-words uppercase @4xl/events:overflow-hidden @4xl/events:text-ellipsis @4xl/events:whitespace-nowrap"
+              className="min-w-0 font-mono text-xl font-bold wrap-break-word uppercase @4xl/events:truncate"
               title={event.name}
             >
               {event.name}

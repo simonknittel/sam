@@ -24,6 +24,7 @@ interface Props<Value> {
   readonly className?: string;
   readonly displayButtonClassName?: string;
   readonly saveButtonClassName?: string;
+  readonly formClassName?: string;
   readonly penClassName?: string;
   readonly rowId: string;
   readonly columnName: string;
@@ -40,7 +41,6 @@ interface Props<Value> {
   ) => Value;
   readonly renderInput: (context: RenderInputContext<Value>) => ReactNode;
   readonly renderDisplay: (value: Value) => ReactNode;
-  readonly onStartEditing?: () => void;
 }
 
 /**
@@ -52,6 +52,7 @@ export const EditableField = <Value,>({
   className,
   displayButtonClassName,
   saveButtonClassName,
+  formClassName,
   penClassName,
   rowId,
   columnName,
@@ -60,7 +61,6 @@ export const EditableField = <Value,>({
   parseSubmittedValue,
   renderInput,
   renderDisplay,
-  onStartEditing,
 }: Props<Value>) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -76,11 +76,6 @@ export const EditableField = <Value,>({
   const setInputElement = useCallback((element: HTMLElement | null) => {
     inputElementRef.current = element;
   }, []);
-
-  const handleStartEditing = () => {
-    onStartEditing?.();
-    setIsEditing(true);
-  };
 
   /**
    * `setTimeout()` is needed because `isPending` is used for the `disabled`
@@ -135,7 +130,7 @@ export const EditableField = <Value,>({
       {isEditing ? (
         <form
           action={formAction}
-          className="mx-1 flex items-center gap-2"
+          className={clsx("mx-1 flex items-center gap-2", formClassName)}
           ref={outsideClickRef}
         >
           <input type="hidden" name="id" value={rowId} />
@@ -162,7 +157,7 @@ export const EditableField = <Value,>({
       ) : (
         <button
           type="button"
-          onClick={handleStartEditing}
+          onClick={() => setIsEditing(true)}
           className={clsx(
             "group flex items-center gap-2 text-left",
             displayButtonClassName,

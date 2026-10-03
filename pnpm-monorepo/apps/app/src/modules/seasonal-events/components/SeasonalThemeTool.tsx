@@ -9,7 +9,7 @@ import type { SeasonalDatePreset } from "../queries/getSeasonalDatePresets";
 import type { SeasonalOverrideState } from "../queries/getSeasonalOverrideState";
 
 const FIELD_CLASS_NAME =
-  "rounded-secondary bg-neutral-900 py-1 px-2 text-sm [color-scheme:dark] hover:bg-neutral-800 focus:outline-hidden focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white/25 active:bg-neutral-800 disabled:opacity-50";
+  "rounded-secondary bg-neutral-900 py-1 px-2 text-sm hover:bg-neutral-800 focus:outline-hidden focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white/25 active:bg-neutral-800 disabled:opacity-50";
 
 interface Props {
   readonly presets: readonly SeasonalDatePreset[];

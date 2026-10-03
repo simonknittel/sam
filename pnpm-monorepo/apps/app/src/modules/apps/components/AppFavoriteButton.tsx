@@ -48,7 +48,7 @@ export const AppFavoriteButton = ({ className, appKey }: Props) => {
       title={label}
       aria-label={label}
       className={clsx(
-        "flex-none cursor-pointer transition enabled:active:scale-95 disabled:cursor-progress motion-reduce:transition-none",
+        "flex-none cursor-pointer transition enabled:active:scale-95 disabled:cursor-progress",
         {
           "text-amber-400 enabled:hover:text-amber-300 enabled:focus-visible:text-amber-300":
             isFavorite,

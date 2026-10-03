@@ -1,11 +1,8 @@
 "use client";
 
 import clsx from "clsx";
-import { useRef, useState } from "react";
 import { Markdown } from "../Markdown";
 import { EditableField } from "./EditableField";
-
-const DEFAULT_TEXTAREA_HEIGHT = 384;
 
 interface Props {
   readonly className?: string;
@@ -29,14 +26,17 @@ export const EditableTextarea = ({
   initialValue,
   action,
 }: Props) => {
-  const markdownRef = useRef<HTMLDivElement>(null);
-  const [textareaHeight, setTextareaHeight] = useState(DEFAULT_TEXTAREA_HEIGHT);
-
   return (
     <EditableField
       className={className}
       displayButtonClassName="w-full"
       saveButtonClassName="flex-none"
+      /**
+       * A definite width: `field-sizing-content` sizes the textarea also in
+       * the width, thus a form which only wraps its content would follow the
+       * length of the text.
+       */
+      formClassName="min-w-0 flex-1"
       rowId={rowId}
       columnName={columnName}
       initialValue={initialValue}
@@ -44,33 +44,24 @@ export const EditableTextarea = ({
       parseSubmittedValue={(submittedValue) =>
         typeof submittedValue === "string" ? submittedValue : ""
       }
-      onStartEditing={() => {
-        if (markdownRef.current)
-          setTextareaHeight(markdownRef.current.clientHeight);
-      }}
       renderInput={({ value, isPending, setInputElement }) => (
         <textarea
           name={columnName}
           defaultValue={value || ""}
           disabled={isPending}
           className={clsx(
-            "h-32 w-full rounded-secondary bg-neutral-700 px-1 align-middle",
+            "field-sizing-content min-h-32 w-full rounded-secondary bg-neutral-700 px-1 align-middle",
             {
               "animate-pulse": isPending,
             },
             classNameTextarea,
           )}
-          style={{
-            height: textareaHeight,
-          }}
           autoFocus
           ref={setInputElement}
         />
       )}
       renderDisplay={(value) => (
-        <Markdown ref={markdownRef} className="flex-1">
-          {value || "-"}
-        </Markdown>
+        <Markdown className="flex-1">{value || "-"}</Markdown>
       )}
     />
   );

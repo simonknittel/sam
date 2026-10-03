@@ -187,7 +187,8 @@ export const saveInlineEditor = (page: Page) =>
  * for the ones whose label holds nothing but the control — by the input
  * inside it. Clicking the label is what toggles such a control: the inputs
  * are `sr-only`, so a click on one is blocked by the styled span drawn in
- * front of it.
+ * front of it. Only the visible label: while a page streams, React keeps a
+ * hidden copy of the content next to the visible one.
  */
 export const toggleLabel = (
   scope: Page | Locator,
@@ -199,7 +200,8 @@ export const toggleLabel = (
       typeof labelOrInput === "string" || labelOrInput instanceof RegExp
         ? { hasText: labelOrInput }
         : { has: labelOrInput },
-    );
+    )
+    .filter({ visible: true });
 
 /**
  * Picks an entry from one of the app's search pickers (citizens, users).

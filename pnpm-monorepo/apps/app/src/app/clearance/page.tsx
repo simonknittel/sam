@@ -32,7 +32,7 @@ export default async function Page() {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center background-primary py-8">
       <main className="w-full max-w-lg">
-        <h1 className="text-sinister-red mx-8 mb-4 text-center font-mono text-xl font-bold uppercase">
+        <h1 className="mx-8 mb-4 text-center font-mono text-xl font-bold text-brand-red-500 uppercase">
           <FaRegCheckCircle className="relative -top-0.5 inline text-green-500" />{" "}
           <ScrambleIn text="Anmeldung erfolgreich" />
         </h1>

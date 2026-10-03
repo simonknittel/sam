@@ -6,18 +6,19 @@ import {
 import { SingleRoleBadge } from "@/modules/roles/components/SingleRoleBadge";
 import { api, type RouterOutputs } from "@/trpc/react";
 import type { Role } from "@sam-monorepo/database/client";
-import { useState, type CSSProperties } from "react";
+import clsx from "clsx";
+import { useState } from "react";
 import { FaPen, FaUsers } from "react-icons/fa";
 
 interface Props {
-  readonly style?: CSSProperties;
+  readonly className?: string;
   readonly defaultValue?: Role["id"] | null;
   readonly onChange?: (roleId: Role["id"] | null) => void;
 }
 
 type RolesForSalaries = RouterOutputs["silc"]["getRolesForSalaries"];
 
-export const RoleSelector = ({ style, defaultValue, onChange }: Props) => {
+export const RoleSelector = ({ className, defaultValue, onChange }: Props) => {
   const { isPending, data } = api.silc.getRolesForSalaries.useQuery(undefined);
 
   const [selectedRole, setSelectedRole] = useState<Role["id"] | null>(
@@ -59,16 +60,19 @@ export const RoleSelector = ({ style, defaultValue, onChange }: Props) => {
           data && selectedRole ? (
             <button
               type="button"
-              className="flex items-center justify-between gap-1 rounded-secondary bg-neutral-700/50 pr-3 hover:bg-neutral-600/50"
-              style={style}
+              className={clsx(
+                "flex items-center justify-between gap-1 rounded-secondary bg-neutral-700/50 pr-3 hover:bg-neutral-600/50",
+                className,
+              )}
             />
           ) : (
             <Button
               type="button"
               title="Rolle auswählen"
               variant="secondary"
-              className={data ? undefined : "flex-none animate-pulse"}
-              style={style}
+              className={clsx(className, {
+                "flex-none animate-pulse": !data,
+              })}
               disabled={isPending}
             />
           )

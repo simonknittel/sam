@@ -6,7 +6,6 @@ import {
   TableTile,
   type TableColumn,
 } from "@/modules/common/components/TableTile";
-import { useMediaQuery } from "@base-ui/react/unstable-use-media-query";
 import {
   DndContext,
   KeyboardSensor,
@@ -70,11 +69,6 @@ export const FlowsTableClient = ({
   canReorder,
   emptyMessage,
 }: Props) => {
-  const prefersReducedMotion = useMediaQuery(
-    "(prefers-reduced-motion: reduce)",
-    { defaultMatches: false },
-  );
-
   /**
    * Mirrors the server list so a drop can reorder before the action comes
    * back, and steps aside whenever the server sends a different list.
@@ -134,7 +128,6 @@ export const FlowsTableClient = ({
       key={flow.id}
       flow={flow}
       isSortable={canReorder}
-      prefersReducedMotion={prefersReducedMotion}
       onDuplicate={(source) =>
         setDuplicationSource({ id: source.id, name: source.name })
       }

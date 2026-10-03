@@ -92,7 +92,7 @@ export const PhaseManagementPayoutPreparation = ({ cycleData }: Props) => {
           </div>
         </div>
 
-        <div className="mt-4 flex gap-[2px]">
+        <div className="mt-4 flex gap-0.5">
           <StatisticTile
             label="aUEC pro SILC (kaufmännisch gerundet)"
             preLabel={

@@ -17,17 +17,10 @@ interface Props {
   readonly flow: ManageableFlow;
   /** Renders the drag handle and makes the row sortable */
   readonly isSortable: boolean;
-  /** Skips the drag transition for viewers who asked for reduced motion */
-  readonly prefersReducedMotion: boolean;
   readonly onDuplicate: (flow: ManageableFlow) => void;
 }
 
-export const FlowRow = ({
-  flow,
-  isSortable,
-  prefersReducedMotion,
-  onDuplicate,
-}: Props) => {
+export const FlowRow = ({ flow, isSortable, onDuplicate }: Props) => {
   const {
     attributes,
     listeners,
@@ -42,7 +35,7 @@ export const FlowRow = ({
       ref={setNodeRef}
       style={{
         transform: CSS.Transform.toString(transform),
-        transition: prefersReducedMotion ? undefined : transition,
+        transition,
       }}
       className={clsx("py-2", { "relative z-10 bg-neutral-800": isDragging })}
     >

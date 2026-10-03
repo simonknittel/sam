@@ -119,7 +119,7 @@ const PublishedState = ({
 
       <dl className="mt-4">
         <dt className="font-mono text-xs text-neutral-500 uppercase">Ort</dt>
-        <dd className="break-words">{location}</dd>
+        <dd className="wrap-break-word">{location}</dd>
       </dl>
 
       <div className="mt-4 flex flex-wrap gap-2">

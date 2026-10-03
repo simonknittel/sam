@@ -49,7 +49,7 @@ export const AppTile = ({
   const appKey = getAppKey(app);
 
   const containerClassName =
-    "relative group/app-tile bg-secondary rounded-primary outline outline-transparent outline-offset-4 transition-colors motion-reduce:transition-none hover:outline-interaction-700 focus-within:outline-interaction-700 active:outline-interaction-500";
+    "relative group/app-tile bg-secondary rounded-primary outline outline-transparent outline-offset-4 transition-colors hover:outline-interaction-700 focus-within:outline-interaction-700 active:outline-interaction-500";
 
   if (variant === "compact") {
     return (
@@ -88,7 +88,7 @@ export const AppTile = ({
             {aboutHref && (
               <Link
                 href={aboutHref}
-                className="flex-none text-neutral-500 transition-colors hover:text-interaction-500 focus-visible:text-interaction-500 motion-reduce:transition-none"
+                className="flex-none text-neutral-500 transition-colors hover:text-interaction-500 focus-visible:text-interaction-500"
                 title="Über diese App"
                 aria-label="Über diese App"
                 onClick={onClick}
@@ -113,7 +113,7 @@ export const AppTile = ({
             alt={`Screenshot der ${app.name} App`}
             sizes={APP_TILE_IMAGE_SIZES}
             loading={isAboveTheFold ? "eager" : "lazy"}
-            className="aspect-video flex-initial object-cover object-top grayscale transition group-focus-within/app-tile:grayscale-0 group-hover/app-tile:grayscale-0 motion-reduce:transition-none"
+            className="aspect-video flex-initial object-cover object-top grayscale transition group-focus-within/app-tile:grayscale-0 group-hover/app-tile:grayscale-0"
           />
         ) : (
           <div className="aspect-video bg-black" />
@@ -136,16 +136,16 @@ export const AppTile = ({
 
           <div className="relative ml-auto flex flex-none items-center gap-1.5 text-sm">
             {dotBadgeCount > 0 && (
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-interaction-700 opacity-75 motion-reduce:hidden" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-interaction-500" />
+              <span className="relative flex size-2">
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-interaction-700 opacity-75 motion-reduce:hidden" />
+                <span className="relative inline-flex size-2 rounded-full bg-interaction-500" />
               </span>
             )}
 
             {aboutHref && (
               <Link
                 href={aboutHref}
-                className="flex-none text-neutral-500 transition-colors hover:text-interaction-500 focus-visible:text-interaction-500 motion-reduce:transition-none"
+                className="flex-none text-neutral-500 transition-colors hover:text-interaction-500 focus-visible:text-interaction-500"
                 title="Über diese App"
                 aria-label="Über diese App"
               >

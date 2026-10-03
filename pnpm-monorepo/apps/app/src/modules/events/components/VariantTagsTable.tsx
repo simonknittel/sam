@@ -20,7 +20,7 @@ interface Row {
 
 const columnHelper = createColumnHelper<Row>();
 
-const TABLE_MIN_WIDTH = "min-w-[320px]";
+const TABLE_MIN_WIDTH = "min-w-80";
 const GRID_COLS = "grid-cols-[256px_56px]";
 
 interface Props {

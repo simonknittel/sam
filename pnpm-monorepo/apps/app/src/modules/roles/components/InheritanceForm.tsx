@@ -43,11 +43,11 @@ export const InheritanceForm = ({ className, currentRole, roles }: Props) => {
               )}
             />
 
-            <span className="relative block h-8 w-8 rounded-secondary bg-neutral-700 peer-checked:hidden">
+            <span className="relative block size-8 rounded-secondary bg-neutral-700 peer-checked:hidden">
               <span className="absolute inset-1 hidden rounded-secondary bg-green-500/50 group-hover:block" />
             </span>
 
-            <span className="relative hidden h-8 w-8 rounded-secondary bg-neutral-700 peer-checked:block">
+            <span className="relative hidden size-8 rounded-secondary bg-neutral-700 peer-checked:block">
               <span className="absolute inset-1 rounded-secondary bg-green-500" />
             </span>
 
