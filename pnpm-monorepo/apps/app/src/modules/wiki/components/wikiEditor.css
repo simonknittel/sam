@@ -595,6 +595,9 @@
   border: 0;
   border-radius: var(--radius-secondary);
   background-color: var(--color-neutral-900);
+  /* With the dark scheme of the app, the browser paints an embedded light
+     page without a background on an opaque white canvas. */
+  color-scheme: normal;
 }
 
 /*
