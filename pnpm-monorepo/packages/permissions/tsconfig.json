@@ -4,8 +4,11 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "noEmit": true,
-    /* The code of this package also runs in the browser. */
-    "types": []
+    /* The code of this package also runs in the browser: no Node.js globals,
+       and only features that are Baseline "widely available" (ES2025 is not
+       yet). */
+    "types": [],
+    "lib": ["es2024"]
   },
   "include": ["src/**/*.ts"]
 }

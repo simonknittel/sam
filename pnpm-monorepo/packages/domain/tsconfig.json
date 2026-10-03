@@ -3,7 +3,10 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "noEmit": true
+    "noEmit": true,
+    /* The code of this package also runs in the browser: only features that
+       are Baseline "widely available" (ES2025 is not yet). */
+    "lib": ["es2024"]
   },
   "include": ["src/**/*.ts"]
 }
