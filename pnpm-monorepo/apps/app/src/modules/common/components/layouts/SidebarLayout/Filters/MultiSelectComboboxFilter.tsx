@@ -19,6 +19,9 @@ interface Item {
   readonly group?: string;
 }
 
+const compareByLabel = (first: Item, second: Item) =>
+  first.label.localeCompare(second.label);
+
 interface Props {
   readonly name: string;
   readonly label: string;
@@ -51,12 +54,14 @@ export const MultiSelectComboboxFilter = ({
     startTransition,
   });
 
+  const sortedItems = useMemo(() => items.toSorted(compareByLabel), [items]);
+
   const selectedItems = useMemo(() => {
     if (selectedValues.length === 0) return [];
 
     const selected = new Set(selectedValues);
-    return items.filter((item) => selected.has(item.value));
-  }, [items, selectedValues]);
+    return sortedItems.filter((item) => selected.has(item.value));
+  }, [sortedItems, selectedValues]);
 
   const setValueAndResetPagination = useCallback(
     async (newItems: Item[]) => {
@@ -82,6 +87,10 @@ export const MultiSelectComboboxFilter = ({
 
   const hasGroups = items.some((item) => item.group !== undefined);
 
+  /**
+   * Each group keeps the order of `sortedItems`, thus the items of a group
+   * are sorted by their label.
+   */
   const groupedItems = useMemo(() => {
     if (!hasGroups) return null;
 
@@ -97,7 +106,7 @@ export const MultiSelectComboboxFilter = ({
       <p className="font-mono text-sm text-white/40 uppercase">{label}</p>
 
       <Combobox.Root
-        items={items.sort((a, b) => a.label.localeCompare(b.label))}
+        items={sortedItems}
         value={selectedItems}
         multiple
         onValueChange={setValueAndResetPagination}
@@ -109,21 +118,19 @@ export const MultiSelectComboboxFilter = ({
                 <Combobox.Value>
                   {(value: Item[]) => (
                     <>
-                      {value
-                        .sort((a, b) => a.label.localeCompare(b.label))
-                        .map((item) => (
-                          <Combobox.Chip
-                            key={item.value}
-                            className="flex max-w-50 items-center gap-1 rounded-secondary bg-brand-red-500 py-1 pr-1 pl-1.5 text-xs text-neutral-50"
-                            title={item.label}
-                          >
-                            <span className="truncate">{item.label}</span>
+                      {value.toSorted(compareByLabel).map((item) => (
+                        <Combobox.Chip
+                          key={item.value}
+                          className="flex max-w-50 items-center gap-1 rounded-secondary bg-brand-red-500 py-1 pr-1 pl-1.5 text-xs text-neutral-50"
+                          title={item.label}
+                        >
+                          <span className="truncate">{item.label}</span>
 
-                            <Combobox.ChipRemove className="inline-flex cursor-pointer items-center justify-center rounded p-1 text-inherit hover:bg-brand-red-700">
-                              <FaTimes className="size-2.5" />
-                            </Combobox.ChipRemove>
-                          </Combobox.Chip>
-                        ))}
+                          <Combobox.ChipRemove className="inline-flex cursor-pointer items-center justify-center rounded p-1 text-inherit hover:bg-brand-red-700">
+                            <FaTimes className="size-2.5" />
+                          </Combobox.ChipRemove>
+                        </Combobox.Chip>
+                      ))}
 
                       <Combobox.Input
                         id={id}
@@ -165,26 +172,24 @@ export const MultiSelectComboboxFilter = ({
                       {group}
                     </div>
 
-                    {groupItems
-                      .sort((a, b) => a.label.localeCompare(b.label))
-                      .map((item) => (
-                        <Combobox.Item
-                          key={item.value}
-                          value={item}
-                          className="grid cursor-pointer grid-cols-[0.75rem_1fr] items-center gap-2 py-1.5 pr-3 pl-8 text-sm outline-none data-highlighted:bg-neutral-800"
-                        >
-                          <Combobox.ItemIndicator className="col-start-1 text-brand-red-300">
-                            <FaCheck className="size-2.5" />
-                          </Combobox.ItemIndicator>
+                    {groupItems.map((item) => (
+                      <Combobox.Item
+                        key={item.value}
+                        value={item}
+                        className="grid cursor-pointer grid-cols-[0.75rem_1fr] items-center gap-2 py-1.5 pr-3 pl-8 text-sm outline-none data-highlighted:bg-neutral-800"
+                      >
+                        <Combobox.ItemIndicator className="col-start-1 text-brand-red-300">
+                          <FaCheck className="size-2.5" />
+                        </Combobox.ItemIndicator>
 
-                          <div
-                            title={item.label}
-                            className="col-start-2 truncate"
-                          >
-                            {item.label}
-                          </div>
-                        </Combobox.Item>
-                      ))}
+                        <div
+                          title={item.label}
+                          className="col-start-2 truncate"
+                        >
+                          {item.label}
+                        </div>
+                      </Combobox.Item>
+                    ))}
                   </div>
                 ))
               ) : (
