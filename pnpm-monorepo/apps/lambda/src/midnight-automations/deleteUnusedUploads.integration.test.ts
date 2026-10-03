@@ -127,8 +127,7 @@ test("deletes only the old upload that nothing uses, with its object", async () 
   const auditEvents = await prisma.auditEvent.findMany({
     where: { type: AuditEventType.UNUSED_UPLOADS_DELETED },
   });
-  /** The Lambdas write the payload as a JSON string, like the app */
-  expect(auditEvents.map(({ data }) => JSON.parse(String(data)))).toEqual([
+  expect(auditEvents.map(({ data }) => data)).toEqual([
     { databaseCount: 1, bucketCount: 1 },
   ]);
 });

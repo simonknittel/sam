@@ -243,10 +243,13 @@ export enum AuditEventType {
  * Wiki page audit payloads carry the owning event's id so event wiki rows
  * stay attributable after the event (and its pages) are cascade-deleted.
  * Absent for global wiki pages and on events from before the event wikis.
+ *
+ * A type alias, not an interface: Prisma accepts a payload as a JSON value
+ * only if its type has an implicit index signature, and an interface has none.
  */
-interface WikiPageAuditScope {
+type WikiPageAuditScope = {
   eventId?: string;
-}
+};
 
 export interface AuditEventDataByType {
   [AuditEventType.USER_LOGIN]: {

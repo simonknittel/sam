@@ -14,7 +14,7 @@ export const createAuditEvents = async (events: AuditEventInput[]) => {
   return await prisma.auditEvent.createMany({
     data: events.map((event) => ({
       type: event.type,
-      data: JSON.stringify(event.data),
+      data: event.data,
       createdById: event.createdById || null,
     })),
   });

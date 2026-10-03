@@ -62,6 +62,21 @@ test("removes the expired role of an inactive citizen with a login", async () =>
       where: { citizenId: citizen.id, type: "REMOVE" },
     }),
   ).toBe(1);
+  expect(
+    await prisma.auditEvent.findMany({
+      where: { type: AuditEventType.ROLE_AUTO_REMOVED },
+      select: { data: true },
+    }),
+  ).toEqual([
+    {
+      data: {
+        citizenId: citizen.id,
+        citizenHandle: "inactive",
+        roleId: expect.any(String),
+        roleName: "Expiring",
+      },
+    },
+  ]);
 });
 
 test("keeps the role of a citizen without a login", async () => {

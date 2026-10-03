@@ -21,7 +21,10 @@ test("the log renders its events and the filters narrow the table", async ({
 
   await prisma.auditEvent.createMany({
     data: [
-      // An older event by another user, to give the filters something to drop
+      /**
+       * An older event by another user, to give the filters something to
+       * drop. Old events hold their data as a JSON string.
+       */
       {
         type: "MANUFACTURER_CREATED",
         data: JSON.stringify({
@@ -31,9 +34,10 @@ test("the log renders its events and the filters narrow the table", async ({
         createdById: otherUser.user.id,
         createdAt: new Date(Date.now() - 10 * ONE_DAY_MS),
       },
+      // New events hold their data as an object
       {
         type: "ROLE_CREATED",
-        data: JSON.stringify({ roleId: role.role.id, name: "Aufklärer" }),
+        data: { roleId: role.role.id, name: "Aufklärer" },
         createdById: admin.user.id,
       },
     ],

@@ -23,7 +23,7 @@ const definitionsByType = AuditEventDefinitions as Record<
  * and taking the whole page down.
  */
 export const getAuditEventMessage = (type: string, data: unknown): string => {
-  /** `createAuditEvents` stores the payload JSON-encoded inside the column */
+  /** Releases before 2026-10 stored the payload JSON-encoded inside the column */
   const rawData = typeof data === "string" ? data : JSON.stringify(data);
 
   let parsedData: unknown;

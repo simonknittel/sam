@@ -128,12 +128,12 @@ export const autoAssignInactiveRoles = async () => {
       prisma.auditEvent.createMany({
         data: assignmentsToCreate.map((assignment) => ({
           type: AuditEventType.ROLE_AUTO_ASSIGNED,
-          data: JSON.stringify({
+          data: {
             citizenId: assignment.citizenId,
             citizenHandle: assignment.citizenHandle,
             roleId: assignment.roleId,
             roleName: assignment.roleName,
-          }),
+          },
         })),
       }),
     );

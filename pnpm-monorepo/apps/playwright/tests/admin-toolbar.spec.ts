@@ -155,12 +155,8 @@ test("assuming users switches the effective citizen and names the admin in the s
     { type: "ASSUME_USER_ENDED", data: secondUser },
   ].map((event) => ({ ...event, createdById: admin.user.id }));
 
-  const writtenEvents = events.map((event) => ({
-    ...event,
-    data: JSON.parse(String(event.data)),
-  }));
-  expect(writtenEvents).toHaveLength(expectedEvents.length);
-  expect(writtenEvents).toEqual(expect.arrayContaining(expectedEvents));
+  expect(events).toHaveLength(expectedEvents.length);
+  expect(events).toEqual(expect.arrayContaining(expectedEvents));
 });
 
 test("the seasonal theme tool sets and removes the date of the themes", async ({
