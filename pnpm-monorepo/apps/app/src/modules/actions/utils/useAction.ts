@@ -51,11 +51,14 @@ export const useAction = (
         return response;
       } catch (error) {
         unstable_rethrow(error);
-        if (options?.errorToast !== false)
-          toast.error(t("Common.internalServerError"));
+        // A toast and the state are plain text: the support link becomes text
+        const message = t.markup("Common.internalServerError", {
+          link: (chunks) => chunks,
+        });
+        if (options?.errorToast !== false) toast.error(message);
         console.error(error);
         return {
-          error: t("Common.internalServerError"),
+          error: message,
           requestPayload: formData,
         };
       }

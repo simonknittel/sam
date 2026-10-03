@@ -189,7 +189,10 @@ export const createAuthenticatedAction = <
       unstable_rethrow(error);
       log.error("Internal Server Error", { error });
       return {
-        error: t("Common.internalServerError"),
+        // The response is plain text, thus the support link becomes text
+        error: t.markup("Common.internalServerError", {
+          link: (chunks) => chunks,
+        }),
         requestPayload: formData,
       };
     }
