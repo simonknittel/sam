@@ -94,25 +94,23 @@ const STORE_TRANSACTION_TIMEOUT_MS = 30_000;
 /** Generous cap over the app's 2M-character content limit */
 const REPLACE_MAX_BODY_BYTES = 4 * 1024 * 1024;
 
-const readRequestBody = (
+/**
+ * Returns null when the body is larger than `maxBytes`. The return from the
+ * loop destroys the request, thus the server does not read the remaining
+ * body.
+ */
+const readRequestBody = async (
   request: IncomingMessage,
   maxBytes: number,
 ): Promise<string | null> => {
-  return new Promise((resolve, reject) => {
-    const chunks: Buffer[] = [];
-    let received = 0;
-    request.on("data", (chunk: Buffer) => {
-      received += chunk.length;
-      if (received > maxBytes) {
-        request.destroy();
-        resolve(null);
-        return;
-      }
-      chunks.push(chunk);
-    });
-    request.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
-    request.on("error", reject);
-  });
+  const chunks: Buffer[] = [];
+  let received = 0;
+  for await (const chunk of request as AsyncIterable<Buffer>) {
+    received += chunk.length;
+    if (received > maxBytes) return null;
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks).toString("utf8");
 };
 
 const respondJson = (
@@ -222,9 +220,7 @@ const syncCitizenMentionLinks = async (
     .map((row) => row.id);
 
   const existingCitizenIds = new Set(existingRows.map((row) => row.citizenId));
-  const newCitizenIds = [...mentionedCitizenIds].filter(
-    (citizenId) => !existingCitizenIds.has(citizenId),
-  );
+  const newCitizenIds = [...mentionedCitizenIds.difference(existingCitizenIds)];
 
   if (removedRowIds.length === 0 && newCitizenIds.length === 0) return;
 
@@ -586,7 +582,7 @@ const server = new Server<ConnectionContext>({
       await prisma.auditEvent.create({
         data: {
           type: "WIKI_PAGE_UPDATED",
-          data: JSON.stringify({ pageId: data.documentName }),
+          data: { pageId: data.documentName },
           createdById: data.context.userId,
         },
       });

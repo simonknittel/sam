@@ -3,6 +3,7 @@ import "server-only";
 import { env } from "@/env";
 import { log } from "@/modules/logging";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
+import { setTimeout } from "node:timers/promises";
 import type * as z from "zod";
 import { discordErrorResponseSchema } from "./schemas";
 
@@ -105,9 +106,6 @@ const getRetryAfterSeconds = (
   return Number.isFinite(seconds) ? seconds : null;
 };
 
-const sleep = (milliseconds: number) =>
-  new Promise((resolve) => setTimeout(resolve, milliseconds));
-
 /**
  * One authenticated call to Discord's REST API as the app's bot. Never
  * throws: every failure mode collapses into a `DiscordResult` so callers can
@@ -190,7 +188,7 @@ const sendRequest = async <Schema extends z.ZodType>({
 
       if (!willRetry) return { outcome: DiscordOutcome.Failed };
 
-      await sleep(Math.max(retryAfterSeconds, 0) * 1000);
+      await setTimeout(Math.max(retryAfterSeconds, 0) * 1000);
       continue;
     }
 
