@@ -1,5 +1,6 @@
 "use client";
 
+import { parseHttpUrl } from "@sam-monorepo/wiki-editor/helpers";
 import type { Editor } from "@tiptap/react";
 import toast from "react-hot-toast";
 import { FaExternalLinkAlt, FaUnlink } from "react-icons/fa";
@@ -17,11 +18,7 @@ interface Props {
 export const WikiLinkMenuActions = ({ editor, menu }: Props) => {
   const saveLink = (href: string) => {
     const trimmed = href.trim();
-    try {
-      const url = new URL(trimmed);
-      if (url.protocol !== "https:" && url.protocol !== "http:")
-        throw new Error("Unsupported protocol");
-    } catch {
+    if (!parseHttpUrl(trimmed)) {
       toast.error("Bitte eine gültige URL angeben (https://…).");
       return;
     }

@@ -1,4 +1,5 @@
 import { mergeAttributes, Node } from "@tiptap/core";
+import { parseHttpUrl } from "./parseHttpUrl.js";
 import { walkWikiContent } from "./walkWikiContent.js";
 import { renderWikiBlockedPlaceholder } from "./wikiBlockedPlaceholder.js";
 import {
@@ -89,16 +90,6 @@ const SPOTIFY_TYPES = [
   "artist",
 ];
 const GOOGLE_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
-
-const parseUrl = (input: string): URL | null => {
-  try {
-    const url = new URL(input);
-    if (url.protocol !== "https:" && url.protocol !== "http:") return null;
-    return url;
-  } catch {
-    return null;
-  }
-};
 
 /** YouTube's t/start parameter ("90", "90s", "1h2m30s") in seconds */
 const parseYoutubeStartSeconds = (url: URL): number => {
@@ -271,7 +262,7 @@ const normalizeGoogleUrl = (url: URL): string | null => {
 export const normalizeWikiEmbedUrl = (
   input: string,
 ): { provider: WikiEmbedProvider; src: string } | null => {
-  const url = parseUrl(input.trim());
+  const url = parseHttpUrl(input.trim());
   if (!url) return null;
 
   const youtube = normalizeYoutubeUrl(url);
@@ -299,13 +290,8 @@ export const isWikiIframeSrcAllowed = (
 ): boolean => {
   if (typeof src !== "string") return false;
 
-  let url: URL;
-  try {
-    url = new URL(src);
-  } catch {
-    return false;
-  }
-  if (url.protocol !== "https:") return false;
+  const url = parseHttpUrl(src);
+  if (url?.protocol !== "https:") return false;
 
   return allowlist.some((entry) => {
     const hostname = entry.trim().toLowerCase();
@@ -346,8 +332,8 @@ export const isAllowedWikiEmbedSrc = (
   iframeAllowlist: readonly string[],
 ): boolean => {
   if (typeof provider !== "string" || typeof src !== "string") return false;
-  const url = parseUrl(src);
-  if (!url || url.protocol !== "https:") return false;
+  const url = parseHttpUrl(src);
+  if (url?.protocol !== "https:") return false;
   const segments = url.pathname.split("/").filter(Boolean);
   const [first, second, third, fourth] = segments;
 

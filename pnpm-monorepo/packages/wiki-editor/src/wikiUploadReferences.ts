@@ -1,3 +1,4 @@
+import { parseHttpUrl } from "./parseHttpUrl.js";
 import { walkWikiContent } from "./walkWikiContent.js";
 
 /**
@@ -26,13 +27,8 @@ export interface WikiUploadReference {
 const getWikiImageSourceUploadId = (source: unknown): string | null => {
   if (typeof source !== "string") return null;
 
-  let url;
-  try {
-    url = new URL(source);
-  } catch {
-    return null;
-  }
-  if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+  const url = parseHttpUrl(source);
+  if (!url) return null;
 
   return url.pathname.split("/").at(-1) || null;
 };

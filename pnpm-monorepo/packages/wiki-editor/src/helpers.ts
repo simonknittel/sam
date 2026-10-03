@@ -5,6 +5,7 @@
  * for them. helpers.test.ts makes sure that no editor code gets in.
  */
 export { formatWikiAttachmentSize } from "./formatWikiAttachmentSize.js";
+export { parseHttpUrl } from "./parseHttpUrl.js";
 export {
   resolveWikiCitizenMention,
   type ResolvedWikiCitizenMention,

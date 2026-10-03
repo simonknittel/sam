@@ -6,16 +6,13 @@
  * rejected. A hostname allowlist is deliberately avoided to not break
  * lesser-known browsers. Enforced when storing a subscription and again
  * defensively before sending.
+ *
+ * `URL.parse()` is not yet Baseline "widely available", but only server code
+ * (the server action and the Lambda) calls this function.
  */
 export const isAllowedWebPushEndpointUrl = (value: string) => {
-  let url: URL;
-  try {
-    url = new URL(value);
-  } catch {
-    return false;
-  }
-
-  if (url.protocol !== "https:") return false;
+  const url = URL.parse(value);
+  if (url?.protocol !== "https:") return false;
 
   const hostname = url.hostname;
 
