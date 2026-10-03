@@ -1,11 +1,9 @@
 "use client";
 
 import { DateTimeInput } from "@/modules/common/components/form/DateTimeInput";
+import { ORGANIZATION_TIMEZONE, wallTimeToInstant } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { useState } from "react";
-import { berlinWallTimeToUtc } from "../utils/berlinWallTime";
-
-const BERLIN_TIME_ZONE = "Europe/Berlin";
 
 interface Props {
   readonly className?: string;
@@ -17,9 +15,10 @@ interface Props {
 }
 
 /**
- * datetime-local input interpreted as fixed Europe/Berlin wall time, with a
- * hint showing the equivalent in the viewer's local timezone for travelling
- * users. The hint disappears when the viewer already is on Berlin time.
+ * datetime-local input interpreted as wall time in the time zone of the
+ * organization, with a hint showing the equivalent in the viewer's local
+ * timezone for travelling users. The hint disappears when the viewer already
+ * is in the time zone of the organization.
  */
 export const EventDateTimeField = ({
   className,
@@ -35,9 +34,12 @@ export const EventDateTimeField = ({
   const browserTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   let localTimeHint: string | null = null;
-  if (value && browserTimeZone !== BERLIN_TIME_ZONE) {
+  if (value && browserTimeZone !== ORGANIZATION_TIMEZONE) {
     try {
-      localTimeHint = berlinWallTimeToUtc(value).toLocaleString("de-DE", {
+      localTimeHint = wallTimeToInstant(
+        value,
+        ORGANIZATION_TIMEZONE,
+      ).toLocaleString("de-DE", {
         weekday: "short",
         year: "numeric",
         month: "long",
@@ -60,7 +62,9 @@ export const EventDateTimeField = ({
         required={required}
       />
 
-      <p className="mt-1 text-xs text-white/40">Zeitzone: Europe/Berlin</p>
+      <p className="mt-1 text-xs text-white/40">
+        Zeitzone: {ORGANIZATION_TIMEZONE}
+      </p>
 
       {localTimeHint && (
         <p className="mt-1 text-xs text-white/40">

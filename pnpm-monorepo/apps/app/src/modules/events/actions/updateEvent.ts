@@ -12,10 +12,10 @@ import {
   EventVisibility,
 } from "@sam-monorepo/database/client";
 import type { AuditEventInput } from "@sam-monorepo/domain";
+import { ORGANIZATION_TIMEZONE, wallTimeToInstant } from "@sam-monorepo/domain";
 import { revalidatePath } from "next/cache";
 import * as z from "zod";
 import { EVENT_MANAGE_GUARD_SELECT } from "../queries/eventManageGuardSelect";
-import { berlinWallTimeToUtc } from "../utils/berlinWallTime";
 import { findDescriptionProblem } from "../utils/discordEventDescription";
 import {
   getDiscordSyncWarning,
@@ -94,8 +94,8 @@ export const updateEvent = createAuthenticatedAction(
     /**
      * Validate the request
      */
-    const startTime = berlinWallTimeToUtc(data.startTime);
-    const endTime = berlinWallTimeToUtc(data.endTime);
+    const startTime = wallTimeToInstant(data.startTime, ORGANIZATION_TIMEZONE);
+    const endTime = wallTimeToInstant(data.endTime, ORGANIZATION_TIMEZONE);
     if (endTime <= startTime)
       return {
         error: "Das Ende muss nach dem Start liegen.",

@@ -21,11 +21,14 @@ import {
   WikiPageEventScope,
 } from "@sam-monorepo/database/client";
 import type { AuditEventInput } from "@sam-monorepo/domain";
-import { buildBriefingRootPageSeed } from "@sam-monorepo/domain";
+import {
+  buildBriefingRootPageSeed,
+  ORGANIZATION_TIMEZONE,
+  wallTimeToInstant,
+} from "@sam-monorepo/domain";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import * as z from "zod";
-import { berlinWallTimeToUtc } from "../utils/berlinWallTime";
 import {
   CLONABLE_POSITION_SELECT,
   clonePositions,
@@ -114,8 +117,8 @@ export const createEvent = createAuthenticatedAction(
     /**
      * Validate the request
      */
-    const startTime = berlinWallTimeToUtc(data.startTime);
-    const endTime = berlinWallTimeToUtc(data.endTime);
+    const startTime = wallTimeToInstant(data.startTime, ORGANIZATION_TIMEZONE);
+    const endTime = wallTimeToInstant(data.endTime, ORGANIZATION_TIMEZONE);
     if (endTime <= startTime)
       return {
         error: "Das Ende muss nach dem Start liegen.",

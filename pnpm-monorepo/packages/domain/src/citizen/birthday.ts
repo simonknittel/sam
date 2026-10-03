@@ -5,17 +5,12 @@
  * here.
  */
 
+import { getLocalDate, ORGANIZATION_TIMEZONE } from "../timeZone.js";
+
 const FEBRUARY = 2;
 const LEAP_DAY = 29;
 const MARCH = 3;
 const FIRST_DAY_OF_MONTH = 1;
-
-/**
- * A citizen without a time zone is celebrated in the time zone of the
- * organization. The same zone carries the list of upcoming birthdays, which
- * is the same for every viewer.
- */
-export const ORGANIZATION_TIMEZONE = "Europe/Berlin";
 
 const isLeapYear = (year: number) =>
   (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
@@ -42,34 +37,6 @@ export const getCelebrationDate = (
     return { month: MARCH, day: FIRST_DAY_OF_MONTH };
 
   return { month: birthdayMonth, day: birthdayDay };
-};
-
-export interface LocalDate {
-  readonly year: number;
-  readonly month: number;
-  readonly day: number;
-}
-
-/**
- * The calendar date a moment falls on in the given IANA time zone. Throws
- * for a time zone the runtime does not know.
- */
-export const getLocalDate = (moment: Date, timezone: string): LocalDate => {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: timezone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(moment);
-
-  const readNumber = (type: Intl.DateTimeFormatPartTypes) =>
-    Number(parts.find((part) => part.type === type)?.value);
-
-  return {
-    year: readNumber("year"),
-    month: readNumber("month"),
-    day: readNumber("day"),
-  };
 };
 
 interface BirthdayCitizen {
