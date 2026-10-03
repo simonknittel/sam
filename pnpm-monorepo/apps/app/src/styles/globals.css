@@ -612,7 +612,7 @@
 /**
  * Surface tinted with the accent colour from `--tile-accent-color`, fading
  * top-to-bottom into the regular surface colour, framed by a 1px border that
- * fades out along with it — same treatment as the event lineup positions.
+ * fades out along with it. The event lineup positions use it too.
  */
 @utility tile-accent-surface {
   position: relative;
@@ -623,9 +623,9 @@
   );
 
   /**
-   * The positions get their border from `border-image`, which ignores
-   * `corner-shape` and would square off the beveled corner. Hence an overlay
-   * masked down to the outermost pixel, which follows the corners.
+   * A `border-image` ignores `corner-shape` and would square off the beveled
+   * corner. Hence an overlay masked down to the outermost pixel, which
+   * follows the corners.
    */
   &::before {
     content: "";
