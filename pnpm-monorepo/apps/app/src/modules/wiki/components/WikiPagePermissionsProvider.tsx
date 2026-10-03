@@ -132,6 +132,7 @@ export const WikiPagePermissionsProvider = ({
             <h3 className="font-mono text-lg font-bold uppercase">Lesen</h3>
 
             <RadioGroup
+              label="Lesen"
               name="visibility"
               className="mt-2"
               equalWidth
@@ -209,6 +210,7 @@ export const WikiPagePermissionsProvider = ({
             </h3>
 
             <RadioGroup
+              label="Bearbeiten"
               name="editability"
               className="mt-2"
               equalWidth
@@ -277,6 +279,7 @@ export const WikiPagePermissionsProvider = ({
             <h4 className="mt-4 font-bold">Bilder</h4>
 
             <RadioGroup
+              label="Bilder hochladen"
               name="imageUploadability"
               className="mt-2"
               equalWidth
@@ -320,6 +323,7 @@ export const WikiPagePermissionsProvider = ({
             <h4 className="mt-4 font-bold">Dateianhänge</h4>
 
             <RadioGroup
+              label="Dateianhänge hochladen"
               name="attachmentUploadability"
               className="mt-2"
               equalWidth
@@ -415,6 +419,7 @@ export const WikiPagePermissionsProvider = ({
               <input type="hidden" name="ownerMode" value="explicit" />
             ) : (
               <RadioGroup
+                label="Besitzer"
                 name="ownerMode"
                 className="mt-2"
                 equalWidth

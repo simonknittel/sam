@@ -75,7 +75,7 @@ export const CreateEventForm = ({
    * event published to Discord takes a confirmation), so unlike the other
    * prefilled fields they live here rather than in their own section. The
    * template switch resets them the way React documents it — adjusting
-   * state during render instead of an effect, like `RadioGroup` does.
+   * state during render instead of an effect.
    */
   const [visibility, setVisibility] = useState<string>(
     selectedTemplate?.visibility ?? EventVisibility.PUBLIC,
@@ -328,6 +328,7 @@ const VisibilityFields = ({
     <>
       <p className="mt-4">Sichtbarkeit</p>
       <RadioGroup
+        label="Sichtbarkeit"
         name="visibility"
         items={[
           {

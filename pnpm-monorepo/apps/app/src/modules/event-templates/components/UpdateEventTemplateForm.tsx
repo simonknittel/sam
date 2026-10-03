@@ -103,6 +103,7 @@ export const UpdateEventTemplateForm = ({
 
       <p className="mt-4">Sichtbarkeit des Events</p>
       <RadioGroup
+        label="Sichtbarkeit des Events"
         name="visibility"
         items={[
           {

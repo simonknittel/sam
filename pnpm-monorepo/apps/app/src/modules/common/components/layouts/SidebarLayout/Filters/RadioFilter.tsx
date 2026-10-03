@@ -64,6 +64,7 @@ export const RadioFilter = ({
       <p className="font-mono text-sm text-white/40 uppercase">{label}</p>
 
       <RadioGroup
+        label={label}
         name={name}
         items={items}
         value={value || defaultItem.value}

@@ -110,6 +110,7 @@ export const EventSettings = ({
 
           <p className="mt-4">Sichtbarkeit</p>
           <RadioGroup
+            label="Sichtbarkeit"
             name="visibility"
             items={[
               {

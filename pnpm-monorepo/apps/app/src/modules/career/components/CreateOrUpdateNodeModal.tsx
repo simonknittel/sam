@@ -39,6 +39,7 @@ export const CreateOrUpdateNodeModal = ({
     >
       <p>Typ</p>
       <RadioGroup
+        label="Typ"
         name="nodeType"
         items={[
           {

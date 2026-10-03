@@ -167,6 +167,7 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
       >
         <p className="mt-4">Typ</p>
         <RadioGroup
+          label="Typ der Zielgruppe"
           name="visibility"
           items={[
             {
@@ -248,6 +249,7 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
       >
         <p className="mt-4">Typ</p>
         <RadioGroup
+          label="Typ der Belohnung"
           name="rewardType"
           items={[
             {

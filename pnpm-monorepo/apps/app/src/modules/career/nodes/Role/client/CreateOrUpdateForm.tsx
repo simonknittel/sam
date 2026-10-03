@@ -133,6 +133,7 @@ export const CreateOrUpdateForm = ({ initialData, onUpdate }: Props) => {
 
       <p className="mt-6">Bild</p>
       <RadioGroup
+        label="Bild"
         name="roleImage"
         items={[
           {
@@ -176,6 +177,7 @@ export const CreateOrUpdateForm = ({ initialData, onUpdate }: Props) => {
 
       <p className="mt-6">Dauerhaft farbig anzeigen</p>
       <RadioGroup
+        label="Dauerhaft farbig anzeigen"
         name="showUnlocked"
         items={[
           {
