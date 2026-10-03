@@ -1,13 +1,10 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
+import { getLocalDateKey, ORGANIZATION_TIMEZONE } from "@sam-monorepo/domain";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
-import {
-  buildTotalAndDeltaChart,
-  formatDateKey,
-  normalizeOptions,
-} from "../utils/chartData";
+import { buildTotalAndDeltaChart, normalizeOptions } from "../utils/chartData";
 
 export const getRegisteredUserStatisticChart = cache(
   withTrace("getRegisteredUserStatisticChart", async () => {
@@ -30,7 +27,7 @@ export const getRegisteredUserStatisticChart = cache(
         where: {
           createdAt: {
             gte: options.fromDate,
-            lt: options.toDateExclusive,
+            lt: options.toDate,
           },
         },
         select: {
@@ -46,7 +43,10 @@ export const getRegisteredUserStatisticChart = cache(
     for (const registration of registrations) {
       if (!registration.createdAt) continue;
 
-      const dateKey = formatDateKey(registration.createdAt);
+      const dateKey = getLocalDateKey(
+        registration.createdAt,
+        ORGANIZATION_TIMEZONE,
+      );
       registrationsByDate.set(
         dateKey,
         (registrationsByDate.get(dateKey) ?? 0) + 1,
@@ -66,6 +66,7 @@ export const getRegisteredUserStatisticChart = cache(
 
     return buildTotalAndDeltaChart(
       orderedTotals,
+      options,
       "registered-users",
       "Registrierte Benutzer",
       configuration,

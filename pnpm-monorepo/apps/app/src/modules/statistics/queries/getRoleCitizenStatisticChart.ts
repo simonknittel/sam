@@ -47,7 +47,7 @@ export const getRoleCitizenStatisticChart = cache(
     }));
 
     return {
-      ...buildChartData(records, configuration),
+      ...buildChartData(records, options, configuration),
       configuration,
     };
   }),

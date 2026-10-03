@@ -47,7 +47,7 @@ export const getVariantShipStatisticChart = cache(
     }));
 
     return {
-      ...buildChartData(records, configuration),
+      ...buildChartData(records, options, configuration),
       configuration,
     };
   }),

@@ -52,6 +52,7 @@ export const getTotalShipStatisticChart = cache(
 
     return buildTotalAndDeltaChart(
       orderedTotals,
+      options,
       "total-ships",
       "Gesamt",
       configuration,

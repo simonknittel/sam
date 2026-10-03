@@ -51,6 +51,7 @@ export const getDailyLoginStatisticChart = cache(
 
     return buildTotalAndDeltaChart(
       orderedLogins,
+      options,
       "logins",
       "Logins",
       configuration,

@@ -1,6 +1,6 @@
 import {
   getLocalDate,
-  instantToWallTime,
+  getLocalDateKey,
   ORGANIZATION_TIMEZONE,
   toDateColumnValue,
   wallTimeToInstant,
@@ -18,6 +18,12 @@ interface ChartConfiguration {
 interface MultiLineRecord {
   id: string;
   name: string;
+  /**
+   * An instant or the value of a `@db.Date` column (midnight UTC). The record
+   * goes to the chart day of this value in the time zone of the organization.
+   * This zone is always ahead of UTC, thus a `@db.Date` value goes to its own
+   * day.
+   */
   createdAt: Date;
   count: number;
 }
@@ -37,10 +43,8 @@ interface NormalizedOptions {
   fromDate: Date;
   /** The `@db.Date` value of the first chart day */
   fromDateColumnValue: Date;
-  /** The start of today */
+  /** The start of today: the exclusive end of the last chart day */
   toDate: Date;
-  /** The start of tomorrow */
-  toDateExclusive: Date;
   axisPoints: AxisPoint[];
 }
 
@@ -65,7 +69,6 @@ export interface StatisticChartData {
   series: StatisticSeries[];
   dateRange: {
     from: Date;
-    to: Date;
   };
   hasData: boolean;
   configuration?: ChartConfiguration;
@@ -91,27 +94,22 @@ const FIRST_STATISTICS_DAY = toDateColumnValue({
   day: 2,
 });
 
-/**
- * The chart day of a moment in the time zone of the organization. The value
- * of a `@db.Date` column (midnight UTC) gets the key of its own day, because
- * the time zone of the organization is always ahead of UTC.
- */
-export const formatDateKey = (date: Date) =>
-  instantToWallTime(date, ORGANIZATION_TIMEZONE).slice(0, 10);
-
 const addDays = (day: Date, count: number) =>
   new Date(day.getTime() + count * MILLISECONDS_PER_DAY);
 
 /** The start of a chart day in the time zone of the organization */
 const getStartOfDay = (day: Date) =>
-  wallTimeToInstant(`${formatDateKey(day)}T00:00`, ORGANIZATION_TIMEZONE);
+  wallTimeToInstant(
+    `${getLocalDateKey(day, ORGANIZATION_TIMEZONE)}T00:00`,
+    ORGANIZATION_TIMEZONE,
+  );
 
 const buildAxisPoints = (fromDay: Date, toDay: Date) => {
   const points: AxisPoint[] = [];
 
   for (let day = fromDay; day < toDay; day = addDays(day, 1)) {
     points.push({
-      key: formatDateKey(day),
+      key: getLocalDateKey(day, ORGANIZATION_TIMEZONE),
       timestamp: day.getTime(),
     });
   }
@@ -135,7 +133,6 @@ export const normalizeOptions = (options?: ChartOptions): NormalizedOptions => {
     fromDate: getStartOfDay(fromDay),
     fromDateColumnValue: fromDay,
     toDate: getStartOfDay(today),
-    toDateExclusive: getStartOfDay(addDays(today, 1)),
     axisPoints: buildAxisPoints(fromDay, today),
   } satisfies NormalizedOptions;
 };
@@ -155,6 +152,7 @@ const DELTA_SERIES_NAME = "Veränderung zum Vortag";
  */
 export const buildTotalAndDeltaChart = (
   orderedTotals: TotalPoint[],
+  options: NormalizedOptions,
   seriesId: string,
   seriesName: string,
   configuration?: ChartConfiguration,
@@ -181,6 +179,7 @@ export const buildTotalAndDeltaChart = (
 
   const chartData = buildChartData(
     [...totalRecords, ...deltaRecords],
+    options,
     configuration,
   );
 
@@ -216,10 +215,9 @@ export const buildTotalAndDeltaChart = (
 
 export const buildChartData = (
   records: MultiLineRecord[],
+  options: NormalizedOptions,
   configuration?: ChartConfiguration,
 ): StatisticChartData => {
-  const options = normalizeOptions();
-
   const seriesMap = new Map<
     string,
     {
@@ -231,7 +229,7 @@ export const buildChartData = (
   >();
 
   for (const record of records) {
-    const dateKey = formatDateKey(record.createdAt);
+    const dateKey = getLocalDateKey(record.createdAt, ORGANIZATION_TIMEZONE);
     if (!seriesMap.has(record.id)) {
       seriesMap.set(record.id, {
         name: record.name,
@@ -285,7 +283,6 @@ export const buildChartData = (
     hasData,
     dateRange: {
       from: options.fromDate,
-      to: options.toDate,
     },
   } satisfies StatisticChartData;
 };

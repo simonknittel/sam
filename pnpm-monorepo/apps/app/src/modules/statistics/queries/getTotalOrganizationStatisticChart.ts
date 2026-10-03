@@ -1,13 +1,10 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
+import { getLocalDateKey, ORGANIZATION_TIMEZONE } from "@sam-monorepo/domain";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
-import {
-  buildTotalAndDeltaChart,
-  formatDateKey,
-  normalizeOptions,
-} from "../utils/chartData";
+import { buildTotalAndDeltaChart, normalizeOptions } from "../utils/chartData";
 
 export const getTotalOrganizationStatisticChart = cache(
   withTrace("getTotalOrganizationStatisticChart", async () => {
@@ -30,7 +27,7 @@ export const getTotalOrganizationStatisticChart = cache(
         where: {
           createdAt: {
             gte: options.fromDate,
-            lt: options.toDateExclusive,
+            lt: options.toDate,
           },
         },
         select: {
@@ -44,7 +41,10 @@ export const getTotalOrganizationStatisticChart = cache(
 
     const organizationsByDate = new Map<string, number>();
     for (const organization of organizations) {
-      const dateKey = formatDateKey(organization.createdAt);
+      const dateKey = getLocalDateKey(
+        organization.createdAt,
+        ORGANIZATION_TIMEZONE,
+      );
       organizationsByDate.set(
         dateKey,
         (organizationsByDate.get(dateKey) ?? 0) + 1,
@@ -64,6 +64,7 @@ export const getTotalOrganizationStatisticChart = cache(
 
     return buildTotalAndDeltaChart(
       orderedTotals,
+      options,
       "organizations",
       "Organisationen",
       configuration,

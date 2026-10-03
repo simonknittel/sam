@@ -6,7 +6,6 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   buildChartData,
   buildTotalAndDeltaChart,
-  formatDateKey,
   normalizeOptions,
 } from "./chartData";
 
@@ -37,17 +36,6 @@ afterEach(() => {
 const axisKeysOf = (options: ReturnType<typeof normalizeOptions>) =>
   options.axisPoints.map((point) => point.key);
 
-describe("formatDateKey", () => {
-  test.each([
-    { moment: "2027-06-14T21:59:59Z", key: "2027-06-14" },
-    { moment: "2027-06-14T22:00:00Z", key: "2027-06-15" },
-    { moment: "2027-01-14T22:59:59Z", key: "2027-01-14" },
-    { moment: "2027-01-14T23:00:00Z", key: "2027-01-15" },
-  ])("gives the day in Europe/Berlin of $moment", ({ moment, key }) => {
-    expect(formatDateKey(new Date(moment))).toBe(key);
-  });
-});
-
 describe("normalizeOptions", () => {
   test("uses the days of Europe/Berlin after midnight in Europe/Berlin", () => {
     // 00:30 on 2027-06-15 in Europe/Berlin, but still 2027-06-14 in UTC
@@ -62,9 +50,6 @@ describe("normalizeOptions", () => {
       "2026-06-16T00:00:00.000Z",
     );
     expect(options.toDate.toISOString()).toBe("2027-06-14T22:00:00.000Z");
-    expect(options.toDateExclusive.toISOString()).toBe(
-      "2027-06-15T22:00:00.000Z",
-    );
   });
 
   test("uses the days of Europe/Berlin before midnight in Europe/Berlin", () => {
@@ -75,9 +60,6 @@ describe("normalizeOptions", () => {
 
     expect(axisKeysOf(options).at(-1)).toBe("2027-01-13");
     expect(options.toDate.toISOString()).toBe("2027-01-13T23:00:00.000Z");
-    expect(options.toDateExclusive.toISOString()).toBe(
-      "2027-01-14T23:00:00.000Z",
-    );
   });
 
   test("has one axis point for each day across the changes of daylight saving time", () => {
@@ -111,7 +93,7 @@ describe("buildChartData", () => {
       record(`Variant ${index + 1}`, YESTERDAY, index + 1),
     );
 
-    const chart = buildChartData(records, { top: 15 });
+    const chart = buildChartData(records, normalizeOptions(), { top: 15 });
 
     expect(namesOf(chart)).toEqual(
       Array.from({ length: 15 }, (_, index) => `Variant ${20 - index}`),
@@ -123,7 +105,7 @@ describe("buildChartData", () => {
       record(`Variant ${index + 1}`, YESTERDAY, index + 1),
     );
 
-    expect(buildChartData(records).series).toHaveLength(20);
+    expect(buildChartData(records, normalizeOptions()).series).toHaveLength(20);
   });
 
   test("removes empty series before it applies the top limit", () => {
@@ -136,6 +118,7 @@ describe("buildChartData", () => {
         record("Medium", YESTERDAY, 20),
         record("Small", YESTERDAY, 10),
       ],
+      normalizeOptions(),
       { top: 2, filterEmpty: true },
     );
 
@@ -149,6 +132,7 @@ describe("buildChartData", () => {
         record("Aurora", YESTERDAY, 5),
         record("Buccaneer", YESTERDAY, 5),
       ],
+      normalizeOptions(),
       { top: 2 },
     );
 
@@ -156,11 +140,14 @@ describe("buildChartData", () => {
   });
 
   test("puts only the values of the chart days on the axis", () => {
-    const chart = buildChartData([
-      record("Polaris", BEFORE_CHART, 1),
-      record("Polaris", FIRST_CHART_DAY, 2),
-      record("Polaris", YESTERDAY, 3),
-    ]);
+    const chart = buildChartData(
+      [
+        record("Polaris", BEFORE_CHART, 1),
+        record("Polaris", FIRST_CHART_DAY, 2),
+        record("Polaris", YESTERDAY, 3),
+      ],
+      normalizeOptions(),
+    );
 
     expect(chart.dateRange.from.getTime()).toBeLessThan(
       FIRST_CHART_DAY.getTime(),
@@ -174,14 +161,14 @@ describe("buildChartData", () => {
   });
 
   test("keys the value of a `@db.Date` column under its own day", () => {
+    const options = normalizeOptions();
     /** A `@db.Date` column holds midnight UTC of its day */
-    const chart = buildChartData([
-      record("Polaris", new Date("2027-06-14T00:00:00Z"), 3),
-    ]);
-
-    const axisKeys = chart.axisTimestamps.map((timestamp) =>
-      formatDateKey(new Date(timestamp)),
+    const chart = buildChartData(
+      [record("Polaris", new Date("2027-06-14T00:00:00Z"), 3)],
+      options,
     );
+
+    const axisKeys = axisKeysOf(options);
     const [polaris] = chart.series;
     expect(polaris.data[axisKeys.indexOf("2027-06-14")]).toBe(3);
     expect(polaris.data.filter((value) => value !== null)).toEqual([3]);
@@ -203,9 +190,10 @@ describe("buildChartData", () => {
           record("Retired", BEFORE_CHART, 50),
           ...inWindow,
         ],
+        normalizeOptions(),
         configuration,
       ),
-    ).toEqual(buildChartData(inWindow, configuration));
+    ).toEqual(buildChartData(inWindow, normalizeOptions(), configuration));
   });
 });
 
@@ -216,6 +204,7 @@ describe("buildTotalAndDeltaChart", () => {
         { createdAt: BEFORE_CHART, count: 10 },
         { createdAt: FIRST_CHART_DAY, count: 12 },
       ],
+      normalizeOptions(),
       "total",
       "Gesamt",
     );
