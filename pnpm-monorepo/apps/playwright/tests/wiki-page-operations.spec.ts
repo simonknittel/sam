@@ -142,10 +142,8 @@ test("two moves at the same time cannot put a page below itself", async ({
    * checks of the app, waits for the lock and sees the parallel move only
    * after it.
    */
-  let commitParallelMove = () => {};
-  const parallelMoveCanCommit = new Promise<void>((resolve) => {
-    commitParallelMove = resolve;
-  });
+  const { promise: parallelMoveCanCommit, resolve: commitParallelMove } =
+    Promise.withResolvers<void>();
   const parallelMove = prisma.$transaction(
     async (transaction) => {
       await transaction.wikiPage.update({
@@ -228,10 +226,8 @@ test("a move waits for the tree lock before it changes a row", async ({
    * parallel move waits for. When the lock comes only from the trigger, the
    * dialog holds the row of its page already, and the two moves deadlock.
    */
-  let continueParallelMove = () => {};
-  const parallelMoveCanContinue = new Promise<void>((resolve) => {
-    continueParallelMove = resolve;
-  });
+  const { promise: parallelMoveCanContinue, resolve: continueParallelMove } =
+    Promise.withResolvers<void>();
   const parallelMove = prisma.$transaction(
     async (transaction) => {
       await transaction.wikiPage.update({

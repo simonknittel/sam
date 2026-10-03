@@ -245,14 +245,12 @@ test("a completion that waits for a parallel completion pays no reward", async (
    * the app, waits for the lock of the task row and sees the parallel
    * completion only after it.
    */
-  let commitParallelCompletion = () => {};
-  const parallelCompletionCanCommit = new Promise<void>((resolve) => {
-    commitParallelCompletion = resolve;
-  });
-  let signalClaim: (sessionId: number) => void = () => {};
-  const claim = new Promise<number>((resolve) => {
-    signalClaim = resolve;
-  });
+  const {
+    promise: parallelCompletionCanCommit,
+    resolve: commitParallelCompletion,
+  } = Promise.withResolvers<void>();
+  const { promise: claim, resolve: signalClaim } =
+    Promise.withResolvers<number>();
   const parallelCompletion = prisma.$transaction(
     async (transaction) => {
       const { count } = await transaction.task.updateMany({
