@@ -113,15 +113,11 @@ export const LogAnalyzer = ({ className }: Props) => {
           // Tracking failure should not affect log parsing
         }
 
-        const logFiles: LogFile[] = [];
-
-        for await (const logFile of getFilesRecursively(
-          directoryHandleRef.current,
-        )) {
-          if (!logFile) continue;
-          if (!logFile.file.name.endsWith(".log")) continue;
-          logFiles.push(logFile);
-        }
+        const logFiles = (
+          await Array.fromAsync(getFilesRecursively(directoryHandleRef.current))
+        ).filter((logFile): logFile is LogFile =>
+          Boolean(logFile?.file.name.endsWith(".log")),
+        );
 
         const windowStart = getWindowStart(daysToLoad);
         const windowEnd = new Date();

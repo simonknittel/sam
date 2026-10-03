@@ -73,7 +73,7 @@ export const getSilcTransactionsPaginated = cache(
         transactions,
         nextCursor:
           hasNextPage && transactions.length > 0
-            ? transactions[transactions.length - 1].id
+            ? transactions.at(-1)!.id
             : null,
         prevCursor:
           hasPrevPage && transactions.length > 0 ? transactions[0].id : null,

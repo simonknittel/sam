@@ -65,11 +65,7 @@ export const diffParticipants = (
   const reportedDiscordUserIds = new Set(discordUserIdsFromDiscord);
 
   return {
-    added: Array.from(reportedDiscordUserIds).filter(
-      (discordUserId) => !activeDiscordUserIds.has(discordUserId),
-    ),
-    removed: Array.from(activeDiscordUserIds).filter(
-      (discordUserId) => !reportedDiscordUserIds.has(discordUserId),
-    ),
+    added: [...reportedDiscordUserIds.difference(activeDiscordUserIds)],
+    removed: [...activeDiscordUserIds.difference(reportedDiscordUserIds)],
   };
 };

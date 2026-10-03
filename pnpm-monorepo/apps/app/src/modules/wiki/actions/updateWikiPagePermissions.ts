@@ -114,8 +114,10 @@ export const updateWikiPagePermissions = createAuthenticatedAction(
         page.parentId,
       );
       const rejected = [
-        ...new Set([...readRoles, ...editRoles, ...adminRoles]),
-      ].filter((roleId) => !allowedRoleIds.has(roleId));
+        ...new Set([...readRoles, ...editRoles, ...adminRoles]).difference(
+          allowedRoleIds,
+        ),
+      ];
       if (rejected.length > 0) {
         const names = rejected.map(
           (roleId) => roles.find((role) => role.id === roleId)?.name ?? roleId,

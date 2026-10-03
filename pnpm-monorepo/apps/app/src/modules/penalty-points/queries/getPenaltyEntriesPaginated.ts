@@ -76,9 +76,7 @@ export const getPenaltyEntriesPaginated = cache(
       return {
         entries,
         nextCursor:
-          hasNextPage && entries.length > 0
-            ? entries[entries.length - 1].id
-            : null,
+          hasNextPage && entries.length > 0 ? entries.at(-1)!.id : null,
         prevCursor: hasPrevPage && entries.length > 0 ? entries[0].id : null,
       };
     },

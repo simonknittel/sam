@@ -46,6 +46,6 @@ export const getUnseenChangelogEntryKeys = cache(
     });
 
     const seenKeys = new Set(seenEntries.map((seenEntry) => seenEntry.key));
-    return new Set(trackedKeys.filter((key) => !seenKeys.has(key)));
+    return new Set(trackedKeys).difference(seenKeys);
   }),
 );

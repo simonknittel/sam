@@ -15,7 +15,7 @@ export const CmdKDialog = () => {
     setPages((pages) => pages.slice(0, -1));
   };
 
-  const page = pages[pages.length - 1];
+  const page = pages.at(-1);
 
   return (
     <Command.Dialog

@@ -130,9 +130,7 @@ export const paginateByCursor = <Item>(
   return {
     items,
     nextCursor:
-      hasNextPage && items.length > 0
-        ? getCursor(items[items.length - 1])
-        : null,
+      hasNextPage && items.length > 0 ? getCursor(items.at(-1)!) : null,
     prevCursor: hasPrevPage && items.length > 0 ? getCursor(items[0]) : null,
   };
 };
