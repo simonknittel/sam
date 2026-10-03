@@ -166,7 +166,7 @@ test("a new task stays new until the viewer opens it, also after a back navigati
       new URL(response.url()).pathname === `/app/tasks/${task.id}`,
   );
   await page.goto(`/app/tasks/${task.id}`);
-  await secondMarkAsRead;
+  expect((await secondMarkAsRead).ok()).toBe(true);
   expect(await prisma.readMarker.count({ where: { taskId: task.id } })).toBe(1);
   expect(
     await prisma.auditEvent.count({ where: { type: "READ_MARKER_CREATED" } }),
