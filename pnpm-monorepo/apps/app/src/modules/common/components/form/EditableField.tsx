@@ -33,7 +33,7 @@ interface Props<Value> {
     | {
         success: string;
       }
-    | { error: string; errorDetails?: unknown }
+    | { error: string }
   >;
   /** Derives the new display value from the submitted form value */
   readonly parseSubmittedValue: (

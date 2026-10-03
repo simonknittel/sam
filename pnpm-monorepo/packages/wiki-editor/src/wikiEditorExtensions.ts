@@ -226,10 +226,8 @@ export const getWikiEditorExtensions = (
       },
       undoRedo: options?.collaboration ? false : undefined,
       dropcursor: {
-        // Line color; the glow gradient comes from the class (wikiEditor.css)
         color: "var(--color-green-500)",
         width: 2,
-        class: "wiki-drop-cursor",
       },
     }),
     WikiDocument,

@@ -13,7 +13,7 @@ interface Props {
     | {
         success: string;
       }
-    | { error: string; errorDetails?: unknown }
+    | { error: string }
   >;
   readonly type?: Exclude<ComponentProps<"input">["type"], "datetime-local">;
 }
