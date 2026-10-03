@@ -1,20 +1,16 @@
 import { markdownToPlainText } from "@/modules/common/utils/markdownToPlainText";
 import type { Event } from "@sam-monorepo/database/client";
-import { formatInTimeZone } from "date-fns-tz";
+
+/**
+ * The exact time in UTC, for example "2026-09-04T12:30:00Z". Outlook reads a
+ * value without "Z" in the time zone of the user.
+ */
+const formatOutlookDate = (date: Date) =>
+  date.toISOString().replace(/\.\d{3}/, "");
 
 export const getOutlookUrl = (event: Event) => {
-  const start = formatInTimeZone(
-    event.startTime,
-    "Europe/Berlin",
-    "yyyy-MM-dd'T'HH:mm:ss",
-  );
-
-  const endDate = new Date(event.endTime || event.startTime);
-  const end = formatInTimeZone(
-    endDate,
-    "Europe/Berlin",
-    "yyyy-MM-dd'T'HH:mm:ss",
-  );
+  const start = formatOutlookDate(event.startTime);
+  const end = formatOutlookDate(event.endTime ?? event.startTime);
 
   const url = new URL("https://outlook.live.com/calendar/deeplink/compose");
   url.searchParams.set("subject", event.name);
