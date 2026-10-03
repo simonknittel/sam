@@ -66,12 +66,10 @@ const getRecipients = async (payload: Payload) => {
        * Citizens assigned anywhere in the referenced position's subtree —
        * the same membership rule the app's permission resolver applies.
        */
-      const childrenByParent = new Map<string | null, string[]>();
-      for (const position of event.positions) {
-        const children = childrenByParent.get(position.parentPositionId) ?? [];
-        children.push(position.id);
-        childrenByParent.set(position.parentPositionId, children);
-      }
+      const childrenByParent = Map.groupBy(
+        event.positions,
+        (position) => position.parentPositionId,
+      );
 
       const subtreeIds = new Set<string>();
       const queue = [payload.readScopePositionId];
@@ -79,7 +77,9 @@ const getRecipients = async (payload: Payload) => {
         const currentId = queue.pop()!;
         if (subtreeIds.has(currentId)) continue;
         subtreeIds.add(currentId);
-        queue.push(...(childrenByParent.get(currentId) ?? []));
+        queue.push(
+          ...(childrenByParent.get(currentId) ?? []).map((child) => child.id),
+        );
       }
 
       const citizenIds = [

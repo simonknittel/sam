@@ -19,13 +19,7 @@ export const collectVisibleWikiSubtree = <
   rootId: string,
   canRead: (id: string) => boolean,
 ): VisibleWikiSubtreeEntry<T>[] => {
-  const childrenByParent = new Map<string, T[]>();
-  for (const page of pages) {
-    if (!page.parentId) continue;
-    const children = childrenByParent.get(page.parentId) ?? [];
-    children.push(page);
-    childrenByParent.set(page.parentId, children);
-  }
+  const childrenByParent = Map.groupBy(pages, (page) => page.parentId);
 
   const result: VisibleWikiSubtreeEntry<T>[] = [];
   const visited = new Set<string>([rootId]);

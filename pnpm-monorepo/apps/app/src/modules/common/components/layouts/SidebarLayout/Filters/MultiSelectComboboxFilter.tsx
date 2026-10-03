@@ -85,14 +85,12 @@ export const MultiSelectComboboxFilter = ({
   const groupedItems = useMemo(() => {
     if (!hasGroups) return null;
 
-    const groups = new Map<string, Item[]>();
-    for (const item of items) {
-      const group = item.group ?? "";
-      if (!groups.has(group)) groups.set(group, []);
-      groups.get(group)!.push(item);
-    }
-    return Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b));
-  }, [items, hasGroups]);
+    return Array.from(
+      Map.groupBy(sortedItems, (item) => item.group ?? ""),
+    ).sort(([firstGroup], [secondGroup]) =>
+      firstGroup.localeCompare(secondGroup),
+    );
+  }, [sortedItems, hasGroups]);
 
   return (
     <div className={clsx("corners-secondary bg-secondary p-2", className)}>

@@ -36,24 +36,20 @@ interface TimezoneOption {
   readonly label: string;
 }
 
-const groupTimezonesByArea = (timezones: readonly string[]) => {
-  const groups = new Map<string, TimezoneOption[]>();
+const toTimezoneOption = (name: string) => {
+  const separatorIndex = name.indexOf("/");
+  const [area, location] =
+    separatorIndex < 0
+      ? [OTHER_AREA, name]
+      : [name.slice(0, separatorIndex), name.slice(separatorIndex + 1)];
 
-  for (const name of timezones) {
-    const separatorIndex = name.indexOf("/");
-    const area =
-      separatorIndex < 0 ? OTHER_AREA : name.slice(0, separatorIndex);
-    const label = (
-      separatorIndex < 0 ? name : name.slice(separatorIndex + 1)
-    ).replaceAll("_", " ");
-
-    const options = groups.get(area);
-    if (options) options.push({ name, label });
-    else groups.set(area, [{ name, label }]);
-  }
-
-  return [...groups].map(([area, options]) => ({ area, options }));
+  return { area, name, label: location.replaceAll("_", " ") };
 };
+
+const groupTimezonesByArea = (timezones: readonly string[]) =>
+  [
+    ...Map.groupBy(timezones.map(toTimezoneOption), (option) => option.area),
+  ].map(([area, options]) => ({ area, options }));
 
 const MONTHS = Array.from(
   { length: BIRTHDAY_MONTH_MAX - BIRTHDAY_MONTH_MIN + 1 },

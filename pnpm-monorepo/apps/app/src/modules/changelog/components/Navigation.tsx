@@ -1,8 +1,5 @@
 import { getChangelogQuarters } from "@/modules/changelog/queries/getChangelogQuarters";
-import {
-  formatQuarterLabel,
-  type ChangelogQuarter,
-} from "@/modules/changelog/utils/quarter";
+import { formatQuarterLabel } from "@/modules/changelog/utils/quarter";
 import { Link } from "@/modules/common/components/Link";
 import clsx from "clsx";
 
@@ -14,15 +11,7 @@ interface Props {
 export const Navigation = async ({ className, activeQuarterSlug }: Props) => {
   const quarters = await getChangelogQuarters();
 
-  const quartersByYear = new Map<string, ChangelogQuarter[]>();
-  for (const quarter of quarters) {
-    const existing = quartersByYear.get(quarter.year);
-    if (existing) {
-      existing.push(quarter);
-    } else {
-      quartersByYear.set(quarter.year, [quarter]);
-    }
-  }
+  const quartersByYear = Map.groupBy(quarters, (quarter) => quarter.year);
 
   return (
     <nav

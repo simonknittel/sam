@@ -28,12 +28,7 @@ const BRIEFING_PERMISSIONS = {
 const orderDepthFirst = (
   pages: readonly EventWikiContextPage[],
 ): EventWikiContextPage[] => {
-  const childrenByParentId = new Map<string | null, EventWikiContextPage[]>();
-  for (const page of pages) {
-    const siblings = childrenByParentId.get(page.parentId) ?? [];
-    siblings.push(page);
-    childrenByParentId.set(page.parentId, siblings);
-  }
+  const childrenByParentId = Map.groupBy(pages, (page) => page.parentId);
 
   const ordered: EventWikiContextPage[] = [];
   const visit = (parentId: string | null) => {
