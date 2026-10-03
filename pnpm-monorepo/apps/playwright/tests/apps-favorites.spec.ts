@@ -89,3 +89,38 @@ test("favoriting an app adds it to the popover's favorites section and persists"
     )
     .toBe(0);
 });
+
+test.describe("mobile", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test("the mobile flyout marks the app of the current page", async ({
+    page,
+    prisma,
+    signIn,
+  }) => {
+    const citizen = await createCitizen(prisma, { handle: "mobile-apps" });
+    await signIn(citizen.user);
+
+    const actionBar = page.locator("nav");
+    const currentLinks = actionBar.locator("a[aria-current]");
+    const openFlyout = () =>
+      clickUntilVisible(
+        actionBar.getByRole("button", { name: "Apps" }),
+        actionBar.getByText("Featured", { exact: true }),
+      );
+
+    /** The start page of an app */
+    await page.goto("/app/dashboard");
+    await openFlyout();
+    await expect(currentLinks).toHaveCount(1);
+    await expect(currentLinks).toHaveAccessibleName("Dashboard");
+    await expect(currentLinks).toHaveAttribute("aria-current", "page");
+
+    /** A different page of the same app marks the app as the current section */
+    await page.goto("/app/account/profile");
+    await openFlyout();
+    await expect(currentLinks).toHaveCount(1);
+    await expect(currentLinks).toHaveAccessibleName("Account");
+    await expect(currentLinks).toHaveAttribute("aria-current", "true");
+  });
+});

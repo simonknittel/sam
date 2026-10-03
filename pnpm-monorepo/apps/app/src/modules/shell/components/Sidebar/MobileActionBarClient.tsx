@@ -5,6 +5,7 @@ import { groupByFeatured } from "@/modules/apps/utils/groupByFeatured";
 import type { App, RedactedApp } from "@/modules/apps/utils/types";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { Link } from "@/modules/common/components/Link";
+import clsx from "clsx";
 import { usePathname } from "next/navigation";
 import { FaHome } from "react-icons/fa";
 import { MdTaskAlt, MdWorkspaces } from "react-icons/md";
@@ -104,7 +105,11 @@ export const MobileActionBarClient = ({
                 <ul className="mt-1">
                   {featured.filter(isLinkedApp).map((app) => (
                     <li key={app.name}>
-                      <AppLink app={app} isCurrent={app === currentApp} />
+                      <AppLink
+                        app={app}
+                        isCurrent={app === currentApp}
+                        pathname={pathname}
+                      />
                     </li>
                   ))}
                 </ul>
@@ -118,7 +123,11 @@ export const MobileActionBarClient = ({
                 <ul className="mt-2">
                   {other.filter(isLinkedApp).map((app) => (
                     <li key={app.name}>
-                      <AppLink app={app} isCurrent={app === currentApp} />
+                      <AppLink
+                        app={app}
+                        isCurrent={app === currentApp}
+                        pathname={pathname}
+                      />
                     </li>
                   ))}
                 </ul>
@@ -154,14 +163,25 @@ const findCurrentApp = (apps: readonly LinkedApp[], pathname: string) =>
 interface AppLinkProps {
   readonly app: LinkedApp;
   readonly isCurrent: boolean;
+  readonly pathname: string;
 }
 
-const AppLink = ({ app, isCurrent }: AppLinkProps) => {
+const AppLink = ({ app, isCurrent, pathname }: AppLinkProps) => {
+  const href = getAppHref(app);
+  /**
+   * "page" only on the start page of the app. On a different page of the
+   * app, the link marks the current section of the navigation.
+   */
+  const ariaCurrent = pathname === href ? "page" : "true";
+
   return (
     <Link
-      href={getAppHref(app)}
-      aria-current={isCurrent ? "page" : undefined}
-      className="relative block rounded-secondary p-2 before:absolute before:inset-y-3 before:left-0 before:w-0.5 before:rounded-secondary active:bg-neutral-700 aria-[current=page]:before:bg-interaction-500"
+      href={href}
+      aria-current={isCurrent ? ariaCurrent : undefined}
+      className={clsx(
+        "relative block rounded-secondary p-2 before:absolute before:inset-y-3 before:left-0 before:w-0.5 before:rounded-secondary active:bg-neutral-700",
+        { "before:bg-interaction-500": isCurrent },
+      )}
     >
       {app.name}
     </Link>
