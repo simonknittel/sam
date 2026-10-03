@@ -29,7 +29,11 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const locale = await getLocale();
 
   return (
-    <html lang={locale} style={{ scrollPaddingTop: "122px" }}>
+    <html
+      lang={locale}
+      className="scheme-dark"
+      style={{ scrollPaddingTop: "122px" }}
+    >
       <body
         className={clsx("bg-neutral-800 text-text-primary", robotMono.variable)}
         {...{ [PUBLIC_UPLOAD_BASE_URL_ATTRIBUTE]: getPublicUploadBaseUrl() }}
