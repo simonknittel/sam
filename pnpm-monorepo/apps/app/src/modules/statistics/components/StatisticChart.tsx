@@ -3,6 +3,7 @@
 // @refresh reset
 
 import { formatDate } from "@/modules/common/utils/formatDate";
+import { useMediaQuery } from "@base-ui/react/unstable-use-media-query";
 import type { SetOptionOpts } from "echarts";
 import { LineChart } from "echarts/charts";
 import {
@@ -46,6 +47,14 @@ const PALETTE = [
 export const StatisticChart = ({ chart }: Props) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<EChartsType | null>(null);
+  /**
+   * Only the effect reads this value, thus the first render on the client
+   * can read the real preference without a hydration mismatch.
+   */
+  const prefersReducedMotion = useMediaQuery(
+    "(prefers-reduced-motion: reduce)",
+    { noSsr: true },
+  );
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -219,6 +228,7 @@ export const StatisticChart = ({ chart }: Props) => {
         symbolSize: 4,
         showSymbol: false,
       })),
+      animation: !prefersReducedMotion,
       animationDuration: 300,
     } satisfies EChartsCoreOption;
 
@@ -228,7 +238,7 @@ export const StatisticChart = ({ chart }: Props) => {
     };
 
     chartRef.current.setOption(option, replaceOptions);
-  }, [chart]);
+  }, [chart, prefersReducedMotion]);
 
   return <div ref={containerRef} style={{ height: 360 }} />;
 };
