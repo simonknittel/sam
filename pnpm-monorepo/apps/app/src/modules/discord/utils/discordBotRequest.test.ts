@@ -41,7 +41,6 @@ const jsonResponse = (status: number, body: unknown, headers?: HeadersInit) =>
   new Response(JSON.stringify(body), { status, headers });
 
 beforeEach(() => {
-  fetchMock.mockReset();
   vi.stubGlobal("fetch", fetchMock);
 });
 

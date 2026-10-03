@@ -8,7 +8,6 @@ vi.mock("../publish", () => ({ publishNotifications: vi.fn() }));
 
 beforeEach(async () => {
   await truncateAllTables();
-  vi.mocked(publishNotifications).mockClear();
 });
 
 describe("WikiCitizenMentionedHandler", () => {

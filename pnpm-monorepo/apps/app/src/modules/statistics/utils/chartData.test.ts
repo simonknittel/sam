@@ -26,7 +26,6 @@ const namesOf = (chart: ReturnType<typeof buildChartData>) =>
   chart.series.map((serie) => serie.name);
 
 beforeEach(() => {
-  vi.useFakeTimers();
   vi.setSystemTime(NOW);
 });
 

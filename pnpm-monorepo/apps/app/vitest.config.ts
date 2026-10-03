@@ -13,6 +13,7 @@ export default defineConfig({
     env: {
       SKIP_VALIDATION: "1",
     },
+    mockReset: true,
     coverage: {
       reporter: [
         "text", // For the terminal

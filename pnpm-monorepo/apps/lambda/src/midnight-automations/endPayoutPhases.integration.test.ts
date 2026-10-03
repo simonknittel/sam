@@ -37,7 +37,6 @@ const countAuditEvents = () =>
 
 beforeEach(async () => {
   await truncateAllTables();
-  vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(NOW);
 });
 

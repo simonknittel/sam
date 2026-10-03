@@ -23,7 +23,6 @@ const createCitizenWithRole = async () => {
 
 beforeEach(async () => {
   await truncateAllTables();
-  vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(NOW);
 });
 

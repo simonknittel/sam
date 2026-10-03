@@ -6,7 +6,6 @@ import { countUniqueLogins } from "./countUniqueLogins";
 
 beforeEach(async () => {
   await truncateAllTables();
-  vi.useFakeTimers({ toFake: ["Date"] });
 });
 
 afterEach(() => {

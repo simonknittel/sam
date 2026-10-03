@@ -23,6 +23,7 @@ export default defineConfig({
           setupFiles: ["./test/databaseUrl.ts"],
           fileParallelism: false,
           hookTimeout: 120_000,
+          mockReset: true,
           env: {
             // Same as the deployed functions (see the Terraform module)
             TZ: "Europe/Berlin",

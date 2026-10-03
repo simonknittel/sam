@@ -23,7 +23,6 @@ const createReport = () =>
 
 beforeEach(async () => {
   await truncateAllTables();
-  vi.mocked(publishNotifications).mockClear();
 });
 
 describe("WikiPageReportedHandler", () => {
