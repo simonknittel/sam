@@ -131,7 +131,7 @@ jobs:
         working-directory: pnpm-monorepo
 
       - name: Test packages
-        run: pnpm --filter @sam-monorepo/permissions --filter @sam-monorepo/wiki-editor run test
+        run: pnpm --filter @sam-monorepo/domain --filter @sam-monorepo/permissions --filter @sam-monorepo/wiki-editor run test
         working-directory: pnpm-monorepo
 
       - name: Test Lambda functions
