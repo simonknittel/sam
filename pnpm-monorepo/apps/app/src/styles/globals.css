@@ -474,12 +474,6 @@
 }
 
 /**
- * The surface of a birthday greeting: four wide colour clouds which overlap
- * each other. Every colour stays far below full brightness, thus the surface
- * reads as a dark surface with a colour cast and the text above it keeps its
- * contrast.
- */
-/**
  * The handle of a citizen who has their birthday today. The gradient
  * replaces the colour of the text, thus the underline of a link needs its
  * own colour.
@@ -496,98 +490,95 @@
   text-decoration-color: var(--color-pink-400);
 }
 
-@utility background-birthday {
-  background-image:
-    radial-gradient(
-      ellipse 70% 140% at 8% 115%,
-      hsl(275 70% 45% / 0.3),
-      transparent 68%
-    ),
-    radial-gradient(
-      ellipse 60% 150% at 36% -25%,
-      hsl(190 80% 45% / 0.24),
-      transparent 68%
-    ),
-    radial-gradient(
-      ellipse 65% 145% at 66% 120%,
-      hsl(330 75% 50% / 0.28),
-      transparent 68%
-    ),
-    radial-gradient(
-      ellipse 55% 135% at 95% -15%,
-      hsl(40 90% 50% / 0.22),
-      transparent 68%
-    );
-}
-
 /**
- * The surface of a New Year greeting: the same four colour clouds as
- * `background-birthday`, but in gold, orange and yellow only.
+ * A surface of four wide colour clouds which overlap each other: two at the
+ * lower edge (`--cloud-1` and `--cloud-3`) and two at the upper edge
+ * (`--cloud-2` and `--cloud-4`). The utility of an event sets the four
+ * colours. Every colour stays far below full brightness, thus the surface
+ * reads as a dark surface with a colour cast and the text above it keeps its
+ * contrast.
  *
  * `--seasonal-upper-clouds` sets the strength of the two clouds at the upper
  * edge, and `--seasonal-lower-clouds` the strength of the two clouds at the
  * lower edge: 1 (the default) shows a pair in full, 0 removes it. The
  * greeting banner draws each pair on a strip of its own and moves the two
  * strips against each other, see `SeasonalBannerClouds`. Every other surface
- * keeps all four clouds.
+ * keeps all four clouds. The mix with `transparent` multiplies the opacity
+ * of a colour by its strength.
  */
-@utility background-new-year {
+@utility cloud-surface {
   background-image:
     radial-gradient(
       ellipse 70% 140% at 8% 115%,
-      hsl(38 95% 50% / calc(0.3 * var(--seasonal-lower-clouds, 1))),
+      color-mix(
+        in srgb,
+        var(--cloud-1) calc(100% * var(--seasonal-lower-clouds, 1)),
+        transparent
+      ),
       transparent 68%
     ),
     radial-gradient(
       ellipse 60% 150% at 36% -25%,
-      hsl(52 95% 55% / calc(0.24 * var(--seasonal-upper-clouds, 1))),
+      color-mix(
+        in srgb,
+        var(--cloud-2) calc(100% * var(--seasonal-upper-clouds, 1)),
+        transparent
+      ),
       transparent 68%
     ),
     radial-gradient(
       ellipse 65% 145% at 66% 120%,
-      hsl(28 90% 50% / calc(0.28 * var(--seasonal-lower-clouds, 1))),
+      color-mix(
+        in srgb,
+        var(--cloud-3) calc(100% * var(--seasonal-lower-clouds, 1)),
+        transparent
+      ),
       transparent 68%
     ),
     radial-gradient(
       ellipse 55% 135% at 95% -15%,
-      hsl(45 90% 50% / calc(0.22 * var(--seasonal-upper-clouds, 1))),
+      color-mix(
+        in srgb,
+        var(--cloud-4) calc(100% * var(--seasonal-upper-clouds, 1)),
+        transparent
+      ),
       transparent 68%
     );
 }
 
+/** The surface of a birthday greeting */
+@utility background-birthday {
+  @apply cloud-surface;
+  --cloud-1: hsl(275 70% 45% / 0.3);
+  --cloud-2: hsl(190 80% 45% / 0.24);
+  --cloud-3: hsl(330 75% 50% / 0.28);
+  --cloud-4: hsl(40 90% 50% / 0.22);
+}
+
+/** The surface of a New Year greeting, in gold, orange and yellow only */
+@utility background-new-year {
+  @apply cloud-surface;
+  --cloud-1: hsl(38 95% 50% / 0.3);
+  --cloud-2: hsl(52 95% 55% / 0.24);
+  --cloud-3: hsl(28 90% 50% / 0.28);
+  --cloud-4: hsl(45 90% 50% / 0.22);
+}
+
 /**
- * The surface of the greeting banner on the Day of the Vara: the same four
- * colour clouds as `background-birthday`, but in orange, violet and green,
- * with the two strengths of `background-new-year`.
+ * The surface of the greeting banner on the Day of the Vara, in orange,
+ * violet and green
  */
 @utility background-halloween {
-  background-image:
-    radial-gradient(
-      ellipse 70% 140% at 8% 115%,
-      hsl(25 95% 48% / calc(0.3 * var(--seasonal-lower-clouds, 1))),
-      transparent 68%
-    ),
-    radial-gradient(
-      ellipse 60% 150% at 36% -25%,
-      hsl(278 70% 45% / calc(0.26 * var(--seasonal-upper-clouds, 1))),
-      transparent 68%
-    ),
-    radial-gradient(
-      ellipse 65% 145% at 66% 120%,
-      hsl(95 65% 38% / calc(0.22 * var(--seasonal-lower-clouds, 1))),
-      transparent 68%
-    ),
-    radial-gradient(
-      ellipse 55% 135% at 95% -15%,
-      hsl(35 95% 50% / calc(0.24 * var(--seasonal-upper-clouds, 1))),
-      transparent 68%
-    );
+  @apply cloud-surface;
+  --cloud-1: hsl(25 95% 48% / 0.3);
+  --cloud-2: hsl(278 70% 45% / 0.26);
+  --cloud-3: hsl(95 65% 38% / 0.22);
+  --cloud-4: hsl(35 95% 50% / 0.24);
 }
 
 /**
- * The surface of the greeting banner on the Luminalia days: the same four
- * colour clouds as `background-birthday`, but in red, green and gold, with
- * the two strengths of `background-new-year`.
+ * The surface of the greeting banner on the Luminalia days, in red, green
+ * and gold
  */
 @utility background-christmas {
   background-image:
