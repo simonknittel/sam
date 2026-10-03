@@ -13,6 +13,8 @@ on:
       - pnpm-monorepo/packages/**
       - pnpm-monorepo/pnpm-lock.yaml
       - pnpm-monorepo/pnpm-workspace.yaml
+      - pnpm-monorepo/package.json
+      - pnpm-monorepo/tsconfig.base.json
   push:
     branches:
       - main
@@ -25,6 +27,8 @@ on:
       - pnpm-monorepo/packages/**
       - pnpm-monorepo/pnpm-lock.yaml
       - pnpm-monorepo/pnpm-workspace.yaml
+      - pnpm-monorepo/package.json
+      - pnpm-monorepo/tsconfig.base.json
 
 # Only one run per branch at a time. A new run cancels the run that is still
 # in progress, because only the result for the latest commit matters.

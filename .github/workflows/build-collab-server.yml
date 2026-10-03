@@ -10,6 +10,7 @@ on:
       - pnpm-monorepo/packages/domain/**
       - pnpm-monorepo/packages/wiki-editor/**
       - pnpm-monorepo/pnpm-lock.yaml
+      - pnpm-monorepo/tsconfig.base.json
       - .github/workflows/build-collab-server.yml
   workflow_dispatch:
 
