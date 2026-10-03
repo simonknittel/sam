@@ -251,12 +251,7 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
 
   switchUser: async ({ context, signIn }, use) => {
     await use(async (user) => {
-      const preserved = (await context.cookies()).filter(
-        (cookie) => cookie.name !== SESSION_COOKIE_NAME,
-      );
-      await context.clearCookies();
-      if (preserved.length > 0) await context.addCookies(preserved);
-
+      await context.clearCookies({ name: SESSION_COOKIE_NAME });
       await signIn(user);
     });
   },

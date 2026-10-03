@@ -1,13 +1,8 @@
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
 import path from "node:path";
 
 export const monorepoRoot = path.resolve(__dirname, "..", "..", "..");
 export const appDirectory = path.join(monorepoRoot, "apps", "app");
-
-const stateFilePath = path.join(__dirname, "..", ".stack", "state.json");
-export const stateDirectory = path.dirname(stateFilePath);
-export { stateFilePath };
 
 /**
  * Same pinned image as compose.yml so tests run against the Postgres version
@@ -125,8 +120,25 @@ export interface StackState {
   readonly unleashPort: number;
 }
 
-export const readStackState = (): StackState =>
-  JSON.parse(readFileSync(stateFilePath, "utf8")) as StackState;
+/**
+ * Playwright starts the workers after the global setup, with a copy of its
+ * environment. Thus the global setup gives the state to the workers in this
+ * variable.
+ */
+const STACK_STATE_VARIABLE = "PLAYWRIGHT_STACK_STATE";
+
+export const writeStackState = (state: StackState) => {
+  process.env[STACK_STATE_VARIABLE] = JSON.stringify(state);
+};
+
+export const readStackState = (): StackState => {
+  const state = process.env[STACK_STATE_VARIABLE];
+  if (!state)
+    throw new Error(
+      `${STACK_STATE_VARIABLE} is not set — the global setup did not run`,
+    );
+  return JSON.parse(state) as StackState;
+};
 
 export const hostDatabaseUrl = (state: StackState, database: string) =>
   `postgresql://${postgresUser}:${postgresPassword}@${state.postgresHost}:${state.postgresPort}/${database}`;
