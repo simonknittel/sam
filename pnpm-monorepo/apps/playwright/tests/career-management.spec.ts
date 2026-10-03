@@ -598,35 +598,31 @@ test("saving access keeps every role's tier on its own row", async ({
   const rows = page.getByRole("listitem").filter({
     has: page.getByRole("combobox", { name: "Zugriff" }),
   });
-  const tierOf = async (roleName: string) =>
+  const tierOf = (roleName: string) =>
     rows
       .filter({ hasText: roleName })
-      .getByRole("combobox", { name: "Zugriff" })
-      .inputValue();
+      .getByRole("combobox", { name: "Zugriff" });
 
   await expect(rows).toHaveCount(3);
-  expect(await tierOf("alpha-bearbeitet")).toBe("update");
-  expect(await tierOf("beta-liest")).toBe("read");
-  expect(await tierOf("gamma-bearbeitet")).toBe("update");
+  await expect(tierOf("alpha-bearbeitet")).toHaveValue("update");
+  await expect(tierOf("beta-liest")).toHaveValue("read");
+  await expect(tierOf("gamma-bearbeitet")).toHaveValue("update");
 
   /** Flip one role, save, and confirm nothing else moved or changed */
-  await rows
-    .filter({ hasText: "beta-liest" })
-    .getByRole("combobox", { name: "Zugriff" })
-    .selectOption("update");
+  await tierOf("beta-liest").selectOption("update");
   await accessForm(page).getByRole("button", { name: "Speichern" }).click();
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   await expect(rows).toHaveCount(3);
-  expect(await tierOf("alpha-bearbeitet")).toBe("update");
-  expect(await tierOf("beta-liest")).toBe("update");
-  expect(await tierOf("gamma-bearbeitet")).toBe("update");
+  await expect(tierOf("alpha-bearbeitet")).toHaveValue("update");
+  await expect(tierOf("beta-liest")).toHaveValue("update");
+  await expect(tierOf("gamma-bearbeitet")).toHaveValue("update");
 
   /** And a reload agrees with what the editor showed */
   await page.reload();
-  expect(await tierOf("alpha-bearbeitet")).toBe("update");
-  expect(await tierOf("beta-liest")).toBe("update");
-  expect(await tierOf("gamma-bearbeitet")).toBe("update");
+  await expect(tierOf("alpha-bearbeitet")).toHaveValue("update");
+  await expect(tierOf("beta-liest")).toHaveValue("update");
+  await expect(tierOf("gamma-bearbeitet")).toHaveValue("update");
 });
 
 test("career;manage alone grants access to every flow, nothing grants none", async ({

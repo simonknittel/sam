@@ -1,4 +1,5 @@
 import { spawn, type ChildProcess } from "node:child_process";
+import { once } from "node:events";
 import net from "node:net";
 import { setTimeout as sleep } from "node:timers/promises";
 
@@ -9,27 +10,20 @@ interface RunCommandOptions {
 }
 
 /** Runs a command to completion, inheriting stdout/stderr for visibility. */
-export const runCommand = (
+export const runCommand = async (
   command: string,
   commandArguments: readonly string[],
   { cwd, env, label }: RunCommandOptions,
-) =>
-  new Promise<void>((resolve, reject) => {
-    const child = spawn(command, commandArguments, {
-      cwd,
-      env: { ...process.env, ...env },
-      stdio: "inherit",
-    });
-
-    child.on("error", reject);
-    child.on("exit", (code) => {
-      if (code === 0) {
-        resolve();
-      } else {
-        reject(new Error(`${label} exited with code ${code}`));
-      }
-    });
+) => {
+  const child = spawn(command, commandArguments, {
+    cwd,
+    env: { ...process.env, ...env },
+    stdio: "inherit",
   });
+
+  const [code] = await once(child, "exit");
+  if (code !== 0) throw new Error(`${label} exited with code ${code}`);
+};
 
 export const getFreePort = () =>
   new Promise<number>((resolve, reject) => {

@@ -263,23 +263,13 @@ test("positions are reordered by dragging and copied into another lineup", async
   /**
    * The lineup drags with the pointer only — its handles start the drag on
    * mousedown, and the drop bands exist only while one is running. The band
-   * above a row takes the dragged position in front of it.
+   * above a row takes the dragged position in front of it. dragTo() finds
+   * the band only after its mousedown.
    */
-  const handles = page.getByTitle("Posten verschieben");
-  const secondHandle = (await handles.nth(1).boundingBox())!;
-  await page.mouse.move(
-    secondHandle.x + secondHandle.width / 2,
-    secondHandle.y + secondHandle.height / 2,
-  );
-  await page.mouse.down();
-
-  const dropBefore = page.locator('[data-drop-target="before"]').first();
-  await expect(dropBefore).toBeVisible();
-  const band = (await dropBefore.boundingBox())!;
-  await page.mouse.move(band.x + band.width / 2, band.y + band.height / 2, {
-    steps: 10,
-  });
-  await page.mouse.up();
+  await page
+    .getByTitle("Posten verschieben")
+    .nth(1)
+    .dragTo(page.locator('[data-drop-target="before"]').first(), { steps: 10 });
 
   await expect
     .poll(() => lineupOf(event.id))

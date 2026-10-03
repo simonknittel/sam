@@ -3,7 +3,6 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient, type User } from "@sam-monorepo/database/client";
 import { spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { setTimeout as sleep } from "node:timers/promises";
 import { GenericContainer, Wait } from "testcontainers";
 import { getFreePort, stopProcess, waitForHttpOk } from "../setup/processes";
 import {
@@ -78,8 +77,6 @@ const createPrismaClient = (databaseUrl: string) =>
     adapter: new PrismaPg({ connectionString: databaseUrl }),
   });
 
-const CREATE_DATABASE_ATTEMPTS = 5;
-
 /**
  * Worker databases are cloned from the migrated template. Concurrent clones
  * of the same template can briefly conflict, hence the retry.
@@ -90,23 +87,15 @@ const createWorkerDatabase = async (
 ) => {
   const adminPrisma = createPrismaClient(adminDatabaseUrl);
   try {
-    for (let attempt = 1; ; attempt++) {
-      try {
-        await adminPrisma.$executeRawUnsafe(
-          `CREATE DATABASE "${databaseName}" TEMPLATE "${templateDatabase}"`,
-        );
-        return;
-      } catch (error) {
-        if (attempt === CREATE_DATABASE_ATTEMPTS) throw error;
-        await sleep(500 * attempt);
-      }
-    }
+    await expect(() =>
+      adminPrisma.$executeRawUnsafe(
+        `CREATE DATABASE "${databaseName}" TEMPLATE "${templateDatabase}"`,
+      ),
+    ).toPass({ intervals: [500, 1_000, 1_500, 2_000] });
   } finally {
     await adminPrisma.$disconnect();
   }
 };
-
-const TRUNCATE_ATTEMPTS = 3;
 
 const truncateAllTables = async (prisma: PrismaClient) => {
   const tables = await prisma.$queryRaw<{ tablename: string }[]>`
@@ -124,15 +113,9 @@ const truncateAllTables = async (prisma: PrismaClient) => {
    * can race this multi-table TRUNCATE into a deadlock; Postgres picks a
    * victim, which may be us — the standard remedy is to retry.
    */
-  for (let attempt = 1; ; attempt++) {
-    try {
-      await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${quotedNames} CASCADE`);
-      return;
-    } catch (error) {
-      if (attempt === TRUNCATE_ATTEMPTS) throw error;
-      await sleep(250 * attempt);
-    }
-  }
+  await expect(() =>
+    prisma.$executeRawUnsafe(`TRUNCATE TABLE ${quotedNames} CASCADE`),
+  ).toPass({ intervals: [250, 500] });
 };
 
 export const test = base.extend<Fixtures, WorkerFixtures>({
