@@ -15,6 +15,7 @@ import {
   type EventContainer,
 } from "../utils/eventContainer";
 import { buildPositionCreatedAuditEvent } from "../utils/lineupAuditEvents";
+import { positionColorSchema } from "../utils/positionColorSchema";
 
 const schema = z.object({
   containerKind: z.enum(EventContainerKind),
@@ -24,8 +25,8 @@ const schema = z.object({
   variantIds: z.array(z.cuid()).max(250), // Arbitrary (untested) limit to prevent DDoS
   parentPositionId: z.cuid().optional(),
   fontSize: z.enum(["", "large"]).optional().nullish(),
-  backgroundColor: z.string().max(7).optional().nullish(),
-  textColor: z.string().max(7).optional().nullish(),
+  backgroundColor: positionColorSchema.optional().nullish(),
+  textColor: positionColorSchema.optional().nullish(),
 });
 
 export const createEventPosition = createAuthenticatedAction(
