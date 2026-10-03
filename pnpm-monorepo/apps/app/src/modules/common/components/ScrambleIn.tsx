@@ -67,8 +67,17 @@ export const ScrambleIn = ({
   return (
     <>
       <span className="sr-only">{text}</span>
-      <span className="inline-block whitespace-pre-wrap" aria-hidden="true">
-        {prefersReducedMotion ? text : displayText}
+      {/*
+       * The invisible final text sets the size of the box. The scrambled text
+       * lies on top of it and cannot change the size: in a font that is not
+       * monospace (example: a seasonal hero font), each random character has a
+       * different width, and the layout around the box would move.
+       */}
+      <span className="inline-grid whitespace-pre-wrap" aria-hidden="true">
+        <span className="invisible col-start-1 row-start-1">{text}</span>
+        <span className="col-start-1 row-start-1 contain-size">
+          {prefersReducedMotion ? text : displayText}
+        </span>
       </span>
     </>
   );
