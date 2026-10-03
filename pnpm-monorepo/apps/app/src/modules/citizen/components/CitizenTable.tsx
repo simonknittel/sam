@@ -6,6 +6,7 @@ import {
   toggleSortParam,
 } from "@/modules/common/utils/toggleSortParam";
 import { type Citizen } from "@sam-monorepo/database/client";
+import type { CSSProperties } from "react";
 import { FaExternalLinkAlt, FaSortDown, FaSortUp } from "react-icons/fa";
 import { CitizenTableDelete } from "./CitizenTableDelete";
 import { HistoryModal } from "./generic-log-type/HistoryModal";
@@ -44,8 +45,7 @@ export const CitizenTable = ({
     initialDirection: SortDirection.Descending,
   });
 
-  // Tailwind CSS can't detect dynamic CSS classes. Therefore we are using an inline style here.
-  const gridTemplateColumns = [
+  const columns = [
     "1fr",
     "100px",
     showDiscordIdColumn && "200px",
@@ -58,14 +58,12 @@ export const CitizenTable = ({
     .join(" ");
 
   return (
-    <table className="w-full min-w-300">
+    <table
+      className="w-full min-w-300"
+      style={{ "--table-columns": columns } satisfies CSSProperties}
+    >
       <thead>
-        <tr
-          className="grid items-center gap-4 text-left text-neutral-500"
-          style={{
-            gridTemplateColumns,
-          }}
-        >
+        <tr className="grid grid-cols-(--table-columns) items-center gap-4 text-left text-neutral-500">
           <th>
             <Link
               href={`?${handleSearchParams.toString()}`}
@@ -125,10 +123,7 @@ export const CitizenTable = ({
           return (
             <tr
               key={row.entity.id}
-              className="-mx-2 grid h-14 items-center gap-4 rounded-secondary px-2 first:mt-2"
-              style={{
-                gridTemplateColumns,
-              }}
+              className="-mx-2 grid h-14 grid-cols-(--table-columns) items-center gap-4 rounded-secondary px-2 first:mt-2"
             >
               <td className="flex items-center justify-between gap-4 overflow-hidden">
                 <span className="overflow-hidden text-ellipsis">

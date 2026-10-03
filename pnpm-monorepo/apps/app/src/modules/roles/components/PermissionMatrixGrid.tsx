@@ -2,7 +2,7 @@
 
 import { runAction } from "@/modules/actions/utils/runAction";
 import type { Role, Upload } from "@sam-monorepo/database/browser";
-import type { ChangeEventHandler } from "react";
+import type { ChangeEventHandler, CSSProperties } from "react";
 import { updateSingleRolePermission } from "../actions/updateSingleRolePermission";
 import { STATIC_PERMISSIONS } from "../utils/STATIC_PERMISSIONS";
 import { MatrixCell } from "./MatrixCell";
@@ -23,7 +23,9 @@ const permissions = STATIC_PERMISSIONS.toSorted((first, second) =>
   first.section.localeCompare(second.section, "de"),
 );
 
-const gridTemplateColumns = `240px repeat(${permissions.length}, 32px)`;
+const tableStyle = {
+  "--table-columns": `240px repeat(${permissions.length}, 32px)`,
+} satisfies CSSProperties;
 
 interface Props {
   readonly roles: readonly MatrixRole[];
@@ -58,14 +60,9 @@ export const PermissionMatrixGrid = ({ roles }: Props) => {
 
   return (
     <form onChange={handleChange}>
-      <table>
+      <table style={tableStyle}>
         <thead>
-          <tr
-            className="-mx-2 grid h-64 gap-2 text-left text-sm text-neutral-500"
-            style={{
-              gridTemplateColumns,
-            }}
-          >
+          <tr className="-mx-2 grid h-64 grid-cols-(--table-columns) gap-2 text-left text-sm text-neutral-500">
             <th className="flex items-end justify-center font-normal whitespace-nowrap">
               <div className="w-0 -rotate-45">
                 <span>Rolle</span>
@@ -112,10 +109,7 @@ const MatrixRow = ({ role }: MatrixRowProps) => {
        * rows outside the viewport; the intrinsic height keeps the scrollbar
        * stable and must agree with the h-8 cells.
        */
-      className="-mx-2 grid items-center gap-2 [contain-intrinsic-height:2rem] [content-visibility:auto]"
-      style={{
-        gridTemplateColumns,
-      }}
+      className="-mx-2 grid grid-cols-(--table-columns) items-center gap-2 [contain-intrinsic-height:2rem] [content-visibility:auto]"
     >
       <MatrixRoleCell role={role} href={`/app/roles/${role.id}`} />
 

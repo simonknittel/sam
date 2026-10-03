@@ -2,7 +2,7 @@
 
 import { runAction } from "@/modules/actions/utils/runAction";
 import type { Role, Upload } from "@sam-monorepo/database/browser";
-import type { ChangeEventHandler } from "react";
+import type { ChangeEventHandler, CSSProperties } from "react";
 import { updateSingleRoleInheritance } from "../actions/updateSingleRoleInheritance";
 import { MatrixCell } from "./MatrixCell";
 import { MatrixRoleCell } from "./MatrixRoleCell";
@@ -29,7 +29,9 @@ interface Props {
  * the column.
  */
 export const InheritanceMatrixGrid = ({ roles }: Props) => {
-  const gridTemplateColumns = `240px repeat(${roles.length}, 32px)`;
+  const tableStyle = {
+    "--table-columns": `240px repeat(${roles.length}, 32px)`,
+  } satisfies CSSProperties;
 
   const handleChange: ChangeEventHandler<HTMLFormElement> = (event) => {
     const input = event.target as unknown as HTMLInputElement;
@@ -53,14 +55,9 @@ export const InheritanceMatrixGrid = ({ roles }: Props) => {
 
   return (
     <form onChange={handleChange}>
-      <table>
+      <table style={tableStyle}>
         <thead>
-          <tr
-            className="-mx-2 grid h-64 gap-2 text-left text-sm text-neutral-500"
-            style={{
-              gridTemplateColumns,
-            }}
-          >
+          <tr className="-mx-2 grid h-64 grid-cols-(--table-columns) gap-2 text-left text-sm text-neutral-500">
             <th className="flex items-end justify-center font-normal whitespace-nowrap">
               <div className="w-0 -rotate-45">
                 <span>Erbt …</span>
@@ -88,12 +85,7 @@ export const InheritanceMatrixGrid = ({ roles }: Props) => {
 
         <tbody className="flex flex-col gap-2">
           {roles.map((role) => (
-            <MatrixRow
-              key={role.id}
-              role={role}
-              roles={roles}
-              gridTemplateColumns={gridTemplateColumns}
-            />
+            <MatrixRow key={role.id} role={role} roles={roles} />
           ))}
         </tbody>
       </table>
@@ -104,10 +96,9 @@ export const InheritanceMatrixGrid = ({ roles }: Props) => {
 interface MatrixRowProps {
   readonly role: MatrixRole;
   readonly roles: readonly MatrixRole[];
-  readonly gridTemplateColumns: string;
 }
 
-const MatrixRow = ({ role, roles, gridTemplateColumns }: MatrixRowProps) => {
+const MatrixRow = ({ role, roles }: MatrixRowProps) => {
   const inheritedRoleIds = new Set(role.inheritedRoleIds);
 
   return (
@@ -117,10 +108,7 @@ const MatrixRow = ({ role, roles, gridTemplateColumns }: MatrixRowProps) => {
        * rows outside the viewport; the intrinsic height keeps the scrollbar
        * stable and must agree with the h-8 cells.
        */
-      className="-mx-2 grid items-center gap-2 [contain-intrinsic-height:2rem] [content-visibility:auto]"
-      style={{
-        gridTemplateColumns,
-      }}
+      className="-mx-2 grid grid-cols-(--table-columns) items-center gap-2 [contain-intrinsic-height:2rem] [content-visibility:auto]"
     >
       <MatrixRoleCell role={role} href={`/app/roles/${role.id}/inheritance`} />
 
