@@ -155,10 +155,18 @@ test("a new task stays new until the viewer opens it, also after a back navigati
     newBadge(taskRow(page, page, "Frachter eskortieren")),
   ).toHaveCount(0);
 
-  // A second visit writes neither a second marker nor a second audit event
+  /**
+   * A second visit writes neither a second marker nor a second audit event.
+   * The page shows no change, thus the test waits for the response of the
+   * server action which the page sends after it mounted.
+   */
+  const secondMarkAsRead = page.waitForResponse(
+    (response) =>
+      response.request().method() === "POST" &&
+      new URL(response.url()).pathname === `/app/tasks/${task.id}`,
+  );
   await page.goto(`/app/tasks/${task.id}`);
-  await waitForAppShellHydration(page);
-  await page.waitForLoadState("networkidle");
+  await secondMarkAsRead;
   expect(await prisma.readMarker.count({ where: { taskId: task.id } })).toBe(1);
   expect(
     await prisma.auditEvent.count({ where: { type: "READ_MARKER_CREATED" } }),
