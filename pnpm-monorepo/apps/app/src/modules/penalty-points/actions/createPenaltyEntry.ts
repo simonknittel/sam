@@ -4,6 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { wallTimeSchema } from "@/modules/common/utils/wallTimeSchema";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { revalidatePath } from "next/cache";
 import * as z from "zod";
@@ -12,7 +13,7 @@ const schema = z.object({
   citizenId: z.cuid(),
   points: z.coerce.number().int().min(1),
   reason: z.string().trim().max(512).optional(),
-  expiresAt: z.coerce.date().optional(),
+  expiresAt: wallTimeSchema.optional(),
 });
 
 export const createPenaltyEntry = createAuthenticatedAction(

@@ -1,14 +1,10 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import { startOfDay } from "date-fns";
+import { getLocalDateKey, ORGANIZATION_TIMEZONE } from "@sam-monorepo/domain";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
-import {
-  buildTotalAndDeltaChart,
-  formatDateKey,
-  normalizeOptions,
-} from "../utils/chartData";
+import { buildTotalAndDeltaChart, normalizeOptions } from "../utils/chartData";
 
 export const getEventsPerDayStatisticChart = cache(
   withTrace("getEventsPerDayStatisticChart", async () => {
@@ -23,7 +19,7 @@ export const getEventsPerDayStatisticChart = cache(
       where: {
         startTime: {
           gte: options.fromDate,
-          lt: options.toDateExclusive,
+          lt: options.toDate,
         },
       },
       select: {
@@ -33,8 +29,7 @@ export const getEventsPerDayStatisticChart = cache(
 
     const countsByDate = new Map<string, number>();
     for (const event of events) {
-      const dayStart = startOfDay(event.startTime);
-      const dateKey = formatDateKey(dayStart);
+      const dateKey = getLocalDateKey(event.startTime, ORGANIZATION_TIMEZONE);
       const existing = countsByDate.get(dateKey) ?? 0;
       countsByDate.set(dateKey, existing + 1);
     }
@@ -50,6 +45,7 @@ export const getEventsPerDayStatisticChart = cache(
 
     return buildTotalAndDeltaChart(
       orderedEvents,
+      options,
       "events",
       "Events",
       configuration,

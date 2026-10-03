@@ -17,7 +17,11 @@ import {
   type Citizen,
   type User as DatabaseUser,
 } from "@sam-monorepo/database/client";
-import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
+import {
+  ACTIVE_CITIZEN_WHERE,
+  getLocalDateKey,
+  ORGANIZATION_TIMEZONE,
+} from "@sam-monorepo/domain";
 import { type PermissionSet } from "@sam-monorepo/permissions";
 import {
   getServerSession,
@@ -190,12 +194,9 @@ export const authOptions: NextAuthOptions = {
       // user so their presence data doesn't get falsified.
       if (
         !assumedUser &&
-        user.lastSeenAt?.toLocaleDateString("de-DE", {
-          timeZone: "Europe/Berlin",
-        }) !==
-          new Date().toLocaleDateString("de-DE", {
-            timeZone: "Europe/Berlin",
-          })
+        (!user.lastSeenAt ||
+          getLocalDateKey(user.lastSeenAt, ORGANIZATION_TIMEZONE) !==
+            getLocalDateKey(new Date(), ORGANIZATION_TIMEZONE))
       ) {
         try {
           await prisma.user.update({

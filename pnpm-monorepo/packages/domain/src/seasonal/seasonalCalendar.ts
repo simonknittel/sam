@@ -7,7 +7,7 @@
  * Everything here is pure: the functions receive the local date of the
  * viewer and never read the clock.
  */
-import type { LocalDate } from "../citizen/birthday.js";
+import type { LocalDate } from "../timeZone.js";
 
 /**
  * The key of a seasonal event. The app stores this string as the event key

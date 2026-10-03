@@ -1,5 +1,10 @@
-import { addDays, startOfDay, subDays } from "date-fns";
-import { formatInTimeZone } from "date-fns-tz";
+import {
+  getLocalDate,
+  getLocalDateKey,
+  ORGANIZATION_TIMEZONE,
+  toDateColumnValue,
+  wallTimeToInstant,
+} from "@sam-monorepo/domain";
 
 interface ChartConfiguration {
   /**
@@ -13,19 +18,33 @@ interface ChartConfiguration {
 interface MultiLineRecord {
   id: string;
   name: string;
+  /**
+   * An instant or the value of a `@db.Date` column (midnight UTC). The record
+   * goes to the chart day of this value in the time zone of the organization.
+   * This zone is always ahead of UTC, thus a `@db.Date` value goes to its own
+   * day.
+   */
   createdAt: Date;
   count: number;
 }
 
 interface AxisPoint {
   key: string;
+  /** The `@db.Date` value of the chart day */
   timestamp: number;
 }
 
+/**
+ * The chart days are the days of the time zone of the organization. The
+ * chart ends with yesterday.
+ */
 interface NormalizedOptions {
+  /** The start of the first chart day */
   fromDate: Date;
+  /** The `@db.Date` value of the first chart day */
+  fromDateColumnValue: Date;
+  /** The start of today: the exclusive end of the last chart day */
   toDate: Date;
-  toDateExclusive: Date;
   axisPoints: AxisPoint[];
 }
 
@@ -50,7 +69,6 @@ export interface StatisticChartData {
   series: StatisticSeries[];
   dateRange: {
     from: Date;
-    to: Date;
   };
   hasData: boolean;
   configuration?: ChartConfiguration;
@@ -62,27 +80,38 @@ interface ChartOptions {
 }
 
 const DEFAULT_DAYS = 365;
-const MIN_AXIS_DATE = startOfDay(new Date("2025-12-02"));
 
 /**
- * The chart day of a moment in Europe/Berlin. The value of a `@db.Date`
- * column (midnight UTC) gets the key of its own day, because Europe/Berlin
- * is always ahead of UTC.
+ * A chart day is the `@db.Date` value of the day: midnight UTC. UTC has no
+ * daylight saving time, thus the next day is exactly 24 hours later.
  */
-export const formatDateKey = (date: Date) =>
-  formatInTimeZone(date, "Europe/Berlin", "yyyy-MM-dd");
+const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
-const buildAxisPoints = (fromDate: Date, toDate: Date) => {
+/** The first day with statistics. The charts show no day before it. */
+const FIRST_STATISTICS_DAY = toDateColumnValue({
+  year: 2025,
+  month: 12,
+  day: 2,
+});
+
+const addDays = (day: Date, count: number) =>
+  new Date(day.getTime() + count * MILLISECONDS_PER_DAY);
+
+/** The start of a chart day in the time zone of the organization */
+const getStartOfDay = (day: Date) =>
+  wallTimeToInstant(
+    `${getLocalDateKey(day, ORGANIZATION_TIMEZONE)}T00:00`,
+    ORGANIZATION_TIMEZONE,
+  );
+
+const buildAxisPoints = (fromDay: Date, toDay: Date) => {
   const points: AxisPoint[] = [];
-  let cursor = fromDate;
 
-  while (cursor < toDate) {
+  for (let day = fromDay; day < toDay; day = addDays(day, 1)) {
     points.push({
-      key: formatDateKey(cursor),
-      timestamp: cursor.getTime(),
+      key: getLocalDateKey(day, ORGANIZATION_TIMEZONE),
+      timestamp: day.getTime(),
     });
-
-    cursor = addDays(cursor, 1);
   }
 
   return points;
@@ -91,16 +120,20 @@ const buildAxisPoints = (fromDate: Date, toDate: Date) => {
 export const normalizeOptions = (options?: ChartOptions): NormalizedOptions => {
   const days = Math.max(options?.days ?? DEFAULT_DAYS, 7);
 
-  const toDate = startOfDay(new Date());
-  const requestedFromDate = subDays(toDate, days - 1);
-  const fromDate =
-    requestedFromDate < MIN_AXIS_DATE ? MIN_AXIS_DATE : requestedFromDate;
+  const today = toDateColumnValue(
+    getLocalDate(new Date(), ORGANIZATION_TIMEZONE),
+  );
+  const requestedFromDay = addDays(today, -(days - 1));
+  const fromDay =
+    requestedFromDay < FIRST_STATISTICS_DAY
+      ? FIRST_STATISTICS_DAY
+      : requestedFromDay;
 
   return {
-    fromDate,
-    toDate,
-    toDateExclusive: addDays(toDate, 1),
-    axisPoints: buildAxisPoints(fromDate, toDate),
+    fromDate: getStartOfDay(fromDay),
+    fromDateColumnValue: fromDay,
+    toDate: getStartOfDay(today),
+    axisPoints: buildAxisPoints(fromDay, today),
   } satisfies NormalizedOptions;
 };
 
@@ -119,6 +152,7 @@ const DELTA_SERIES_NAME = "Veränderung zum Vortag";
  */
 export const buildTotalAndDeltaChart = (
   orderedTotals: TotalPoint[],
+  options: NormalizedOptions,
   seriesId: string,
   seriesName: string,
   configuration?: ChartConfiguration,
@@ -145,6 +179,7 @@ export const buildTotalAndDeltaChart = (
 
   const chartData = buildChartData(
     [...totalRecords, ...deltaRecords],
+    options,
     configuration,
   );
 
@@ -180,10 +215,9 @@ export const buildTotalAndDeltaChart = (
 
 export const buildChartData = (
   records: MultiLineRecord[],
+  options: NormalizedOptions,
   configuration?: ChartConfiguration,
 ): StatisticChartData => {
-  const options = normalizeOptions();
-
   const seriesMap = new Map<
     string,
     {
@@ -195,7 +229,7 @@ export const buildChartData = (
   >();
 
   for (const record of records) {
-    const dateKey = formatDateKey(record.createdAt);
+    const dateKey = getLocalDateKey(record.createdAt, ORGANIZATION_TIMEZONE);
     if (!seriesMap.has(record.id)) {
       seriesMap.set(record.id, {
         name: record.name,
@@ -249,7 +283,6 @@ export const buildChartData = (
     hasData,
     dateRange: {
       from: options.fromDate,
-      to: options.toDate,
     },
   } satisfies StatisticChartData;
 };

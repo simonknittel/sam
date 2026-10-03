@@ -27,17 +27,8 @@ const FullSchedule = ({ schedule }: Readonly<Props>) => {
               "font-bold text-green-500": time === currentlyLive,
             })}
           >
-            {formatDate(time.start, "short")}{" "}
-            {time.start.toLocaleTimeString(undefined, {
-              timeStyle: "short",
-              timeZone: "Europe/Berlin",
-            })}{" "}
-            - {formatDate(time.end, "short")}{" "}
-            {time.end.toLocaleTimeString(undefined, {
-              timeStyle: "short",
-              timeZone: "Europe/Berlin",
-            })}{" "}
-            (region: {time.region})
+            {formatDate(time.start)} - {formatDate(time.end)} (region:{" "}
+            {time.region})
           </li>
         ))}
       </ul>

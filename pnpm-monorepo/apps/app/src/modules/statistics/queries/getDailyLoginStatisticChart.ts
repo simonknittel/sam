@@ -18,7 +18,7 @@ export const getDailyLoginStatisticChart = cache(
     const previousDay = await prisma.dailyLoginCount.findFirst({
       where: {
         date: {
-          lt: options.fromDate,
+          lt: options.fromDateColumnValue,
         },
       },
       orderBy: {
@@ -32,7 +32,7 @@ export const getDailyLoginStatisticChart = cache(
     const rows = await prisma.dailyLoginCount.findMany({
       where: {
         date: {
-          gte: previousDay?.date ?? options.fromDate,
+          gte: previousDay?.date ?? options.fromDateColumnValue,
         },
       },
       orderBy: {
@@ -51,6 +51,7 @@ export const getDailyLoginStatisticChart = cache(
 
     return buildTotalAndDeltaChart(
       orderedLogins,
+      options,
       "logins",
       "Logins",
       configuration,

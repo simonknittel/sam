@@ -1,6 +1,8 @@
 "use client";
 
 import { formatDate } from "@/modules/common/utils/formatDate";
+import { wallTimeSchema } from "@/modules/common/utils/wallTimeSchema";
+import { instantToWallTime, ORGANIZATION_TIMEZONE } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { EditableField } from "./EditableField";
 
@@ -18,6 +20,11 @@ interface Props {
   readonly required?: boolean;
 }
 
+/**
+ * The input shows and sends a wall time in the time zone of the
+ * organization. The action must read the value with `wallTimeSchema`. The
+ * display after a save uses the same schema.
+ */
 export const EditableDateTimeInput = ({
   className,
   rowId,
@@ -35,18 +42,16 @@ export const EditableDateTimeInput = ({
       initialValue={initialValue}
       action={action}
       parseSubmittedValue={(submittedValue) => {
-        const date = new Date(
-          typeof submittedValue === "string" ? submittedValue : "",
-        );
-        return isNaN(date.getTime()) ? null : date;
+        const result = wallTimeSchema.safeParse(submittedValue);
+        return result.success ? result.data : null;
       }}
       renderInput={({ value, isPending, setInputElement }) => (
         <input
           type="datetime-local"
           name={columnName}
-          defaultValue={value?.toLocaleString("sv-SE", {
-            timeZone: "Europe/Berlin",
-          })}
+          defaultValue={
+            value ? instantToWallTime(value, ORGANIZATION_TIMEZONE) : undefined
+          }
           disabled={isPending}
           className={clsx("w-full rounded-secondary bg-neutral-700 px-1", {
             "animate-pulse": isPending,

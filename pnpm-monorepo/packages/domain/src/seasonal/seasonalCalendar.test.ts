@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import type { LocalDate } from "../citizen/birthday.js";
+import type { LocalDate } from "../timeZone.js";
 import {
   findSeasonalEventOverlaps,
   getActiveSeasonalEvent,

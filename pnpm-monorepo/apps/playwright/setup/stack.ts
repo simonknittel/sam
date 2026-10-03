@@ -168,6 +168,12 @@ export const containerDatabaseUrl = (database: string) =>
  * off and no test sends a notification event to production.
  */
 export const appDummyEnvironment = {
+  /**
+   * The zone of the production server (Vercel). Without it, the app takes
+   * the zone of the machine, and a bug that reads a time in the server zone
+   * shows only in CI.
+   */
+  TZ: "UTC",
   AWS_ACCESS_KEY_ID: "",
   AWS_SECRET_ACCESS_KEY: "",
   AWS_EVENT_BUS_ARN: "",

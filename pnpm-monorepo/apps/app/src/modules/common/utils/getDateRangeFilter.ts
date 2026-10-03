@@ -1,7 +1,4 @@
-import { fromZonedTime } from "date-fns-tz";
-
-/** The zone every timestamp in the app is rendered in (see formatDate) */
-const DISPLAY_TIME_ZONE = "Europe/Berlin";
+import { ORGANIZATION_TIMEZONE, wallTimeToInstant } from "@sam-monorepo/domain";
 
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -17,10 +14,14 @@ const nextCalendarDay = (value: string) => {
     .slice(0, 10);
 };
 
-const startOfDayInDisplayZone = (value?: string | null) => {
+const startOfDayInOrganizationZone = (value?: string | null) => {
   if (!value || !ISO_DATE_PATTERN.test(value)) return undefined;
-  const date = fromZonedTime(`${value}T00:00:00`, DISPLAY_TIME_ZONE);
-  return Number.isNaN(date.getTime()) ? undefined : date;
+
+  try {
+    return wallTimeToInstant(`${value}T00:00`, ORGANIZATION_TIMEZONE);
+  } catch {
+    return undefined;
+  }
 };
 
 /**
@@ -36,11 +37,11 @@ export const getDateRangeFilter = (
   from?: string | null,
   to?: string | null,
 ) => {
-  const gte = startOfDayInDisplayZone(from);
+  const gte = startOfDayInOrganizationZone(from);
 
   const lt =
-    to && ISO_DATE_PATTERN.test(to)
-      ? startOfDayInDisplayZone(nextCalendarDay(to))
+    to && startOfDayInOrganizationZone(to)
+      ? startOfDayInOrganizationZone(nextCalendarDay(to))
       : undefined;
 
   return {

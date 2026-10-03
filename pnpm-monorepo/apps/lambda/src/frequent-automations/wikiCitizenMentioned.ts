@@ -1,7 +1,7 @@
 import { createId } from "@paralleldrive/cuid2";
 import { prisma } from "@sam-monorepo/database";
 import { WikiPageNamespace } from "@sam-monorepo/database/client";
-import { AuditEventType } from "@sam-monorepo/domain";
+import { AuditEventType, getEventEndTime } from "@sam-monorepo/domain";
 import {
   collectPositionScopeIdsForCitizen,
   comparePermissionSets,
@@ -71,21 +71,6 @@ const loadCitizenGrants = async (citizenIds: readonly string[]) => {
     });
   }
   return grants;
-};
-
-/** Mirrors the app's `isEventUpdatable`: an event without an explicit end
- * counts as over four hours after its start. */
-const isEventOver = (event: {
-  readonly startTime: Date;
-  readonly endTime: Date | null;
-}) => {
-  const now = new Date();
-  if (!event.endTime) {
-    const endTime = new Date(event.startTime);
-    endTime.setHours(endTime.getHours() + 4);
-    return endTime <= now;
-  }
-  return event.endTime <= now;
 };
 
 /**
@@ -236,7 +221,7 @@ export const wikiCitizenMentioned = async () => {
             citizenId,
           ),
         },
-        { frozen: isEventOver(event) },
+        { frozen: getEventEndTime(event) <= new Date() },
       );
       eventResolvers.set(key, resolver);
       return resolver;

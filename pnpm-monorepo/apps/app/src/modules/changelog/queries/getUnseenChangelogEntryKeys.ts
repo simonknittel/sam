@@ -1,12 +1,9 @@
 import { prisma } from "@/db";
 import { authenticate } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import { formatInTimeZone } from "date-fns-tz";
+import { getLocalDateKey, ORGANIZATION_TIMEZONE } from "@sam-monorepo/domain";
 import { cache } from "react";
 import { CHANGELOG_ENTRIES } from "../entries";
-
-/** The zone the changelog renders its dates in (see the quarter page) */
-const DISPLAY_TIME_ZONE = "Europe/Berlin";
 
 /**
  * Entries published before a citizen joined are not new to them, so only
@@ -16,7 +13,7 @@ const DISPLAY_TIME_ZONE = "Europe/Berlin";
  */
 const getTrackedKeysSince = (emailVerified: Date | null) => {
   const cutoffDate = emailVerified
-    ? formatInTimeZone(emailVerified, DISPLAY_TIME_ZONE, "yyyy-MM-dd")
+    ? getLocalDateKey(emailVerified, ORGANIZATION_TIMEZONE)
     : null;
 
   return CHANGELOG_ENTRIES.filter(

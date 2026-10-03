@@ -4,12 +4,18 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import {
+  getLocalDate,
+  ORGANIZATION_TIMEZONE,
+  toDateColumnValue,
+} from "@sam-monorepo/domain";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import * as z from "zod";
 
 const schema = z.object({
   title: z.string().trim().max(128),
+  /** A date input ("YYYY-MM-DD") gives the midnight UTC of the day */
   collectionEndsAt: z.coerce.date(),
 });
 
@@ -34,10 +40,10 @@ export const createProfitDistributionCycle = createAuthenticatedAction(
     /**
      * Validate request data
      */
-    const collectionEndsAt = new Date(data.collectionEndsAt);
-    collectionEndsAt.setHours(0, 0, 0, 0);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const collectionEndsAt = data.collectionEndsAt;
+    const today = toDateColumnValue(
+      getLocalDate(new Date(), ORGANIZATION_TIMEZONE),
+    );
     if (collectionEndsAt < today)
       return {
         error: "Das Ende des Sammelzeitraums muss in der Zukunft liegen.",

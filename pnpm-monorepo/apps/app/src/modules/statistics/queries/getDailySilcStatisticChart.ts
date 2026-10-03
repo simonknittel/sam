@@ -1,14 +1,10 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import { startOfDay } from "date-fns";
+import { getLocalDateKey, ORGANIZATION_TIMEZONE } from "@sam-monorepo/domain";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
-import {
-  buildTotalAndDeltaChart,
-  formatDateKey,
-  normalizeOptions,
-} from "../utils/chartData";
+import { buildTotalAndDeltaChart, normalizeOptions } from "../utils/chartData";
 
 export const getDailySilcStatisticChart = cache(
   withTrace("getDailySilcStatisticChart", async () => {
@@ -27,7 +23,7 @@ export const getDailySilcStatisticChart = cache(
         },
         createdAt: {
           gte: options.fromDate,
-          lt: options.toDateExclusive,
+          lt: options.toDate,
         },
       },
       select: {
@@ -42,8 +38,7 @@ export const getDailySilcStatisticChart = cache(
     const totalsByDate = new Map<string, number>();
 
     for (const transaction of transactions) {
-      const createdAt = startOfDay(transaction.createdAt);
-      const key = formatDateKey(createdAt);
+      const key = getLocalDateKey(transaction.createdAt, ORGANIZATION_TIMEZONE);
       const current = totalsByDate.get(key) ?? 0;
       totalsByDate.set(key, current + transaction.value);
     }
@@ -59,6 +54,7 @@ export const getDailySilcStatisticChart = cache(
 
     return buildTotalAndDeltaChart(
       orderedTotals,
+      options,
       "silc",
       "SILC",
       configuration,

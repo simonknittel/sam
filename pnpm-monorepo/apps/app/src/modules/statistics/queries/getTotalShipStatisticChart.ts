@@ -17,7 +17,7 @@ export const getTotalShipStatisticChart = cache(
     const previousDay = await prisma.variantShipCount.findFirst({
       where: {
         day: {
-          lt: options.fromDate,
+          lt: options.fromDateColumnValue,
         },
       },
       orderBy: {
@@ -32,7 +32,7 @@ export const getTotalShipStatisticChart = cache(
       by: ["day"],
       where: {
         day: {
-          gte: previousDay?.day ?? options.fromDate,
+          gte: previousDay?.day ?? options.fromDateColumnValue,
         },
       },
       _sum: {
@@ -52,6 +52,7 @@ export const getTotalShipStatisticChart = cache(
 
     return buildTotalAndDeltaChart(
       orderedTotals,
+      options,
       "total-ships",
       "Gesamt",
       configuration,

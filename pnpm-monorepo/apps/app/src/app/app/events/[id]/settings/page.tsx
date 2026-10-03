@@ -9,11 +9,11 @@ import { SaveEventAsTemplateButton } from "@/modules/event-templates/components/
 import { EventDiscordSettings } from "@/modules/events/components/EventDiscordSettings";
 import { EventSettings } from "@/modules/events/components/EventSettings";
 import { getEventById } from "@/modules/events/queries/getEventById";
-import { utcToBerlinWallTime } from "@/modules/events/utils/berlinWallTime";
 import { getDefaultExternalLocation } from "@/modules/events/utils/discordPublishing";
 import { isAllowedToManageEvent } from "@/modules/events/utils/isAllowedToManageEvent";
 import { isEventUpdatable } from "@/modules/events/utils/isEventUpdatable";
 import { EventSource } from "@sam-monorepo/database/client";
+import { instantToWallTime, ORGANIZATION_TIMEZONE } from "@sam-monorepo/domain";
 import { forbidden, notFound } from "next/navigation";
 
 type Params = Promise<{
@@ -76,10 +76,11 @@ export default async function Page({
           id: event.id,
           name: event.name,
           description: event.description,
-          startTime: utcToBerlinWallTime(event.startTime),
-          endTime: event.endTime
-            ? utcToBerlinWallTime(event.endTime)
-            : utcToBerlinWallTime(event.startTime),
+          startTime: instantToWallTime(event.startTime, ORGANIZATION_TIMEZONE),
+          endTime: instantToWallTime(
+            event.endTime ?? event.startTime,
+            ORGANIZATION_TIMEZONE,
+          ),
           visibility: event.visibility,
           visibilityRoleIds: event.visibilityRoles.map(
             (visibilityRole) => visibilityRole.roleId,

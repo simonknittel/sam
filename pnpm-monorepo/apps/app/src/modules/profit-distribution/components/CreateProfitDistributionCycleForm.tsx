@@ -5,6 +5,7 @@ import { DateInput } from "@/modules/common/components/form/DateInput";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import { Note } from "@/modules/common/components/Note";
 import { RichText } from "@/modules/common/components/RichText";
+import { getLocalDateKey, ORGANIZATION_TIMEZONE } from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { useState } from "react";
 import { FaChevronDown, FaSave } from "react-icons/fa";
@@ -24,8 +25,7 @@ export const CreateProfitDistributionCycleForm = ({
   const [end, setEnd] = useState("");
   const [showInstructions, setShowInstructions] = useState(false);
 
-  const today = new Date();
-  const min = today.toISOString().split("T")[0];
+  const min = getLocalDateKey(new Date(), ORGANIZATION_TIMEZONE);
 
   return (
     <form action={formAction} className={clsx(className)}>

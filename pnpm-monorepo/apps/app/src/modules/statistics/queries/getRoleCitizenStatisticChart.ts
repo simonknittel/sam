@@ -21,7 +21,7 @@ export const getRoleCitizenStatisticChart = cache(
     const rows = await prisma.roleCitizenCount.findMany({
       where: {
         day: {
-          gte: options.fromDate,
+          gte: options.fromDateColumnValue,
         },
       },
       select: {
@@ -47,7 +47,7 @@ export const getRoleCitizenStatisticChart = cache(
     }));
 
     return {
-      ...buildChartData(records, configuration),
+      ...buildChartData(records, options, configuration),
       configuration,
     };
   }),

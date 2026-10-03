@@ -2,7 +2,7 @@ import {
   getLocalDate,
   ORGANIZATION_TIMEZONE,
   type LocalDate,
-} from "./citizen/birthday.js";
+} from "./timeZone.js";
 
 /**
  * Prisma writes a `Date` into a `@db.Date` column as its UTC calendar day.

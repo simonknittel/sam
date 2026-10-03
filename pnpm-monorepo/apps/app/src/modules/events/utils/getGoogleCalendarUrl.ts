@@ -1,12 +1,16 @@
 import { markdownToPlainText } from "@/modules/common/utils/markdownToPlainText";
 import type { Event } from "@sam-monorepo/database/client";
-import { formatISO } from "date-fns/formatISO";
+
+/**
+ * The basic ISO 8601 format in UTC that Google Calendar reads, for example
+ * "20260904T123000Z"
+ */
+const formatGoogleCalendarDate = (date: Date) =>
+  date.toISOString().replace(/[-:]|\.\d{3}/g, "");
 
 export const getGoogleCalendarUrl = (event: Event) => {
-  const start = formatISO(event.startTime, { format: "basic" });
-
-  const endDate = new Date(event.endTime || event.startTime);
-  const end = formatISO(endDate, { format: "basic" });
+  const start = formatGoogleCalendarDate(event.startTime);
+  const end = formatGoogleCalendarDate(event.endTime ?? event.startTime);
 
   const url = new URL("https://calendar.google.com/calendar/render");
   url.searchParams.set("action", "TEMPLATE");

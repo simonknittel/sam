@@ -44,5 +44,6 @@ describe("get date range filter", () => {
     expect(getDateRangeFilter(null, null)).toEqual({});
     expect(getDateRangeFilter("not-a-date", "09.08.2026")).toEqual({});
     expect(getDateRangeFilter("2026-13-45", null)).toEqual({});
+    expect(getDateRangeFilter(null, "2026-02-30")).toEqual({});
   });
 });

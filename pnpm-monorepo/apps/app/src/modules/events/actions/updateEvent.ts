@@ -4,6 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { wallTimeSchema } from "@/modules/common/utils/wallTimeSchema";
 import { DISCORD_EVENT_DESCRIPTION_MAX_LENGTH } from "@/modules/discord/utils/guildScheduledEventPayload";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import {
@@ -15,7 +16,6 @@ import type { AuditEventInput } from "@sam-monorepo/domain";
 import { revalidatePath } from "next/cache";
 import * as z from "zod";
 import { EVENT_MANAGE_GUARD_SELECT } from "../queries/eventManageGuardSelect";
-import { berlinWallTimeToUtc } from "../utils/berlinWallTime";
 import { findDescriptionProblem } from "../utils/discordEventDescription";
 import {
   getDiscordSyncWarning,
@@ -28,10 +28,6 @@ import {
 } from "../utils/eventConstraints";
 import { isAllowedToManageEvent } from "../utils/isAllowedToManageEvent";
 import { isEventUpdatable } from "../utils/isEventUpdatable";
-
-const WALL_TIME_SCHEMA = z
-  .string()
-  .regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, "Ungültiges Datum");
 
 const schema = z.object({
   eventId: z.cuid(),
@@ -46,8 +42,8 @@ const schema = z.object({
     .trim()
     .max(DISCORD_EVENT_DESCRIPTION_MAX_LENGTH)
     .optional(),
-  startTime: WALL_TIME_SCHEMA,
-  endTime: WALL_TIME_SCHEMA,
+  startTime: wallTimeSchema,
+  endTime: wallTimeSchema,
   visibility: z.enum(EventVisibility),
   visibilityRoleIds: z
     .array(z.cuid())
@@ -94,8 +90,7 @@ export const updateEvent = createAuthenticatedAction(
     /**
      * Validate the request
      */
-    const startTime = berlinWallTimeToUtc(data.startTime);
-    const endTime = berlinWallTimeToUtc(data.endTime);
+    const { startTime, endTime } = data;
     if (endTime <= startTime)
       return {
         error: "Das Ende muss nach dem Start liegen.",

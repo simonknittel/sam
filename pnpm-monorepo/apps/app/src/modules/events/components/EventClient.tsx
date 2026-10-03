@@ -18,7 +18,12 @@ import {
   EventSource,
   type Event as PrismaEvent,
 } from "@sam-monorepo/database/browser";
-import { ReadMarkerSubject } from "@sam-monorepo/domain";
+import {
+  getEventEndTime,
+  getLocalDateKey,
+  ORGANIZATION_TIMEZONE,
+  ReadMarkerSubject,
+} from "@sam-monorepo/domain";
 import clsx from "clsx";
 import { useNow } from "next-intl";
 import Image from "next/image";
@@ -94,14 +99,11 @@ export const EventClient = ({
   const updateInterval = diff >= 0 && diff <= 120_000 ? 1_000 : 30_000;
   const now = useNow({ updateInterval });
 
-  const endTime = new Date(event.startTime);
-  endTime.setHours(endTime.getHours() + 4);
-
   const isHappeningNow =
-    event.startTime <= now && (event.endTime || endTime) >= now;
+    event.startTime <= now && getEventEndTime(event) >= now;
   const isToday =
-    event.startTime.toISOString().split("T")[0] ===
-    now.toISOString().split("T")[0];
+    getLocalDateKey(event.startTime, ORGANIZATION_TIMEZONE) ===
+    getLocalDateKey(now, ORGANIZATION_TIMEZONE);
 
   const formattedStartTime = formatDate(event.startTime, "long");
 

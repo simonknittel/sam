@@ -142,6 +142,15 @@ jobs:
         run: pnpm --filter @sam-monorepo/lambda run test
         working-directory: pnpm-monorepo
 
+      # The production server runs in UTC, thus a date rule that works only
+      # in UTC would pass the steps above. The date code must give the same
+      # result in each time zone.
+      - name: Test app and domain package in a different time zone
+        run: pnpm --filter @sam-monorepo/app --filter @sam-monorepo/domain run test
+        working-directory: pnpm-monorepo
+        env:
+          TZ: America/Los_Angeles
+
   typecheck:
     runs-on: ubuntu-24.04
 

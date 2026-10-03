@@ -1,12 +1,13 @@
 "use server";
 
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
+import { wallTimeSchema } from "@/modules/common/utils/wallTimeSchema";
 import * as z from "zod";
 import { createTaskFieldUpdateAction } from "../utils/createTaskFieldUpdateAction";
 
 const schema = z.object({
   id: z.union([z.cuid(), z.cuid2()]),
-  expiresAt: z.coerce.date().nullable(),
+  expiresAt: wallTimeSchema.nullable(),
 });
 
 export const updateTaskExpiresAt = createTaskFieldUpdateAction(

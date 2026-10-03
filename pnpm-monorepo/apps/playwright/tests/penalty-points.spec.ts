@@ -62,6 +62,7 @@ test("an entry is booked on a citizen, shows on their tab and is deleted again",
     createdById: keeper.entity.id,
     points: 3,
     reason: "Beschuss eines Members",
+    expiresAt: null,
     deletedAt: null,
   });
 
@@ -70,6 +71,10 @@ test("an entry is booked on a citizen, shows on their tab and is deleted again",
   await expect(entryRow).toContainText("Beschuss eines Members");
   await expect(
     entryRow.getByRole("cell", { name: "3", exact: true }),
+  ).toBeVisible();
+  /** An entry without an expiry time does not expire */
+  await expect(
+    entryRow.getByRole("cell", { name: "-", exact: true }),
   ).toBeVisible();
 
   /**
@@ -119,6 +124,64 @@ test("an entry is booked on a citizen, shows on their tab and is deleted again",
     "PENALTY_ENTRY_CREATED",
     "PENALTY_ENTRY_DELETED",
   ]);
+});
+
+test.describe("in a browser outside the time zone of the organization", () => {
+  /**
+   * The app reads and shows each wall time in the time zone of the
+   * organization (Europe/Berlin). A browser in a different zone makes sure
+   * that no code reads a wall time in the zone of the browser.
+   */
+  test.use({ timezoneId: "America/Los_Angeles" });
+
+  test("the expiry time of an entry keeps the entered wall time", async ({
+    page,
+    prisma,
+    signIn,
+  }) => {
+    const keeper = await createCitizen(prisma, {
+      handle: "strafpunkt-verwalter",
+      permissionStrings: KEEPER_PERMISSIONS,
+    });
+    const offender = await createCitizen(prisma, { handle: "delinquent" });
+
+    await signIn(keeper.user);
+    await page.goto("/app/penalty-points");
+
+    const createDialog = modal(page, "Neue Strafpunkte");
+    await clickUntilVisible(
+      page.getByRole("button", { name: "Neue Strafpunkte" }),
+      createDialog,
+    );
+    await pickFromSearch(
+      page,
+      createDialog.getByRole("combobox", { name: "Citizen" }),
+      "delinquent",
+    );
+    await createDialog.getByLabel("Strafpunkte").fill("1");
+    /**
+     * Summer time: Berlin is two hours ahead of UTC. The year is far in the
+     * future, thus the entry does not expire and stays in the active list.
+     */
+    await createDialog.getByLabel("Verfällt am").fill("2099-07-15T08:15");
+    await createDialog.getByRole("button", { name: "Speichern" }).click();
+    await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+
+    const entry = await prisma.penaltyEntry.findFirstOrThrow({
+      select: { expiresAt: true },
+    });
+    expect(entry.expiresAt?.toISOString()).toBe("2099-07-15T06:15:00.000Z");
+
+    const entryRow = page.getByRole("row").filter({ hasText: "delinquent" });
+    await expect(
+      entryRow.getByRole("cell", { name: "15.07.2099, 08:15", exact: true }),
+    ).toBeVisible();
+
+    await page.goto(`/app/spynet/citizen/${offender.entity.id}/penalty-points`);
+    await expect(sectionByHeading(page, "Strafpunkte")).toContainText(
+      "15.07.2099, 08:15",
+    );
+  });
 });
 
 test("the status filter separates the active entries from the expired ones", async ({

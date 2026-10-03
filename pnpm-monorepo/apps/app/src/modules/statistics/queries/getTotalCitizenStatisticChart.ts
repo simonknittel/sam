@@ -1,14 +1,14 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
+import {
+  ACTIVE_CITIZEN_WHERE,
+  getLocalDateKey,
+  ORGANIZATION_TIMEZONE,
+} from "@sam-monorepo/domain";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
-import {
-  buildTotalAndDeltaChart,
-  formatDateKey,
-  normalizeOptions,
-} from "../utils/chartData";
+import { buildTotalAndDeltaChart, normalizeOptions } from "../utils/chartData";
 
 export const getTotalCitizenStatisticChart = cache(
   withTrace("getTotalCitizenStatisticChart", async () => {
@@ -33,7 +33,7 @@ export const getTotalCitizenStatisticChart = cache(
           ...ACTIVE_CITIZEN_WHERE,
           createdAt: {
             gte: options.fromDate,
-            lt: options.toDateExclusive,
+            lt: options.toDate,
           },
         },
         select: {
@@ -47,7 +47,7 @@ export const getTotalCitizenStatisticChart = cache(
 
     const citizensByDate = new Map<string, number>();
     for (const citizen of citizens) {
-      const dateKey = formatDateKey(citizen.createdAt);
+      const dateKey = getLocalDateKey(citizen.createdAt, ORGANIZATION_TIMEZONE);
       citizensByDate.set(dateKey, (citizensByDate.get(dateKey) ?? 0) + 1);
     }
 
@@ -64,6 +64,7 @@ export const getTotalCitizenStatisticChart = cache(
 
     return buildTotalAndDeltaChart(
       orderedTotals,
+      options,
       "citizens",
       "Citizens",
       configuration,
