@@ -49,19 +49,19 @@ export const env = createEnv({
      */
     DISCORD_TOKEN: z.string(),
     /**
-     * Base URL of the Discord REST API, without a trailing slash. Only
-     * overridden by the Playwright stack, which points the app at its own
-     * mock server instead of talking to Discord. Plain HTTP is refused
-     * unless it points at the local machine: every request carries the bot
-     * token, and a misconfigured host would ship it in cleartext.
-     */
-    /**
      * Base URL of the Star Citizen website the organization logos are
      * scraped from, without a trailing slash. Only overridden by the
      * Playwright stack, which points it at a dead port so creating an
      * organization never leaves the machine.
      */
     RSI_BASE_URL: z._default(z.url(), "https://robertsspaceindustries.com"),
+    /**
+     * Base URL of the Discord REST API, without a trailing slash. Only
+     * overridden by the Playwright stack, which points the app at its own
+     * mock server instead of talking to Discord. Plain HTTP is refused
+     * unless it points at the local machine: every request carries the bot
+     * token, and a misconfigured host would ship it in cleartext.
+     */
     DISCORD_API_BASE_URL: z._default(
       z
         .url()
@@ -215,45 +215,13 @@ export const env = createEnv({
   },
 
   /*
-   * Due to how Next.js bundles environment variables on Edge and Client,
-   * we need to manually destructure them to make sure all are included in bundle.
-   *
-   * 💡 You'll get type errors if not all variables from `server` & `client` are included here.
+   * Next.js inlines only the client variables at build time, and only when
+   * the code reads them by their full name. The server variables come from
+   * process.env at runtime.
    */
-  runtimeEnv: {
-    DATABASE_URL: process.env.DATABASE_URL,
-    NODE_ENV: process.env.NODE_ENV,
-    NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
-    NEXTAUTH_URL: process.env.NEXTAUTH_URL,
-    DISCORD_CLIENT_ID: process.env.DISCORD_CLIENT_ID,
-    DISCORD_CLIENT_SECRET: process.env.DISCORD_CLIENT_SECRET,
-    DISCORD_GUILD_ID: process.env.DISCORD_GUILD_ID,
-    DISCORD_TOKEN: process.env.DISCORD_TOKEN,
-    RSI_BASE_URL: process.env.RSI_BASE_URL,
-    DISCORD_API_BASE_URL: process.env.DISCORD_API_BASE_URL,
-    S3_ACCOUNT_ID: process.env.S3_ACCOUNT_ID,
-    S3_ENDPOINT: process.env.S3_ENDPOINT,
-    S3_ACCESS_KEY_ID: process.env.S3_ACCESS_KEY_ID,
-    S3_SECRET_ACCESS_KEY: process.env.S3_SECRET_ACCESS_KEY,
-    S3_BUCKET_NAME: process.env.S3_BUCKET_NAME,
-    S3_PUBLIC_URL: process.env.S3_PUBLIC_URL,
-    UNLEASH_SERVER_API_URL: process.env.UNLEASH_SERVER_API_URL,
-    UNLEASH_SERVER_API_TOKEN: process.env.UNLEASH_SERVER_API_TOKEN,
-    UNLEASH_REVALIDATE_SECONDS: process.env.UNLEASH_REVALIDATE_SECONDS,
-    NEXT_PUBLIC_HOST: process.env.NEXT_PUBLIC_HOST,
-    COMMIT_SHA: process.env.COMMIT_SHA,
+  experimental__runtimeEnv: {
     NEXT_PUBLIC_CARE_BEAR_SHOOTER_BUILD_URL:
       process.env.NEXT_PUBLIC_CARE_BEAR_SHOOTER_BUILD_URL,
-    NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
-    AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
-    AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
-    AWS_EVENT_BUS_ARN: process.env.AWS_EVENT_BUS_ARN,
-    OPENAI_BASE_URL: process.env.OPENAI_BASE_URL,
-    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
-    OPENAI_EXTRA_API_KEY: process.env.OPENAI_EXTRA_API_KEY,
-    ENABLE_INSTRUMENTATION: process.env.ENABLE_INSTRUMENTATION,
-    OTEL_EXPORTER_OTLP_PROTOCOL: process.env.OTEL_EXPORTER_OTLP_PROTOCOL,
-    OTEL_EXPORTER_OTLP_ENDPOINT: process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
     NEXT_PUBLIC_DOWNLOADS_BASE_URL: process.env.NEXT_PUBLIC_DOWNLOADS_BASE_URL,
     NEXT_PUBLIC_DOWNLOADS_BASE_URL_2:
       process.env.NEXT_PUBLIC_DOWNLOADS_BASE_URL_2,
@@ -261,10 +229,6 @@ export const env = createEnv({
       process.env.NEXT_PUBLIC_PUSHER_CHANNELS_APP_ID,
     NEXT_PUBLIC_PUSHER_CHANNELS_APP_KEY:
       process.env.NEXT_PUBLIC_PUSHER_CHANNELS_APP_KEY,
-    PUSHER_CHANNELS_APP_SECRET: process.env.PUSHER_CHANNELS_APP_SECRET,
-    COLLAB_JWT_SECRET: process.env.COLLAB_JWT_SECRET,
-    COLLAB_URL: process.env.COLLAB_URL,
-    EMBED_JWT_PRIVATE_KEY: process.env.EMBED_JWT_PRIVATE_KEY,
     NEXT_PUBLIC_PUSHER_CHANNELS_HOST:
       process.env.NEXT_PUBLIC_PUSHER_CHANNELS_HOST,
     NEXT_PUBLIC_PUSHER_CHANNELS_PORT:
@@ -273,6 +237,8 @@ export const env = createEnv({
       process.env.NEXT_PUBLIC_PUSHER_CHANNELS_SECURE_PORT,
     NEXT_PUBLIC_VAPID_KEY: process.env.NEXT_PUBLIC_VAPID_KEY,
     NEXT_PUBLIC_PLAUSIBLE_ENDPOINT: process.env.NEXT_PUBLIC_PLAUSIBLE_ENDPOINT,
+    NEXT_PUBLIC_HOST: process.env.NEXT_PUBLIC_HOST,
+    NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
   },
 
   emptyStringAsUndefined: true,
