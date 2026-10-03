@@ -294,11 +294,17 @@ export const WikiResizeHandles = ({
       dragState.frame ??= window.requestAnimationFrame(writeDraggedValue);
     };
 
-    const handlePointerUp = () => {
+    /**
+     * Runs on pointerup and also on pointercancel (for example when the
+     * browser takes over the touch), so that the drag lock and the
+     * listeners cannot stay on.
+     */
+    const endDrag = () => {
       dragStateRef.current = null;
       setDragLock(false);
       window.removeEventListener("pointermove", handlePointerMove);
-      window.removeEventListener("pointerup", handlePointerUp);
+      window.removeEventListener("pointerup", endDrag);
+      window.removeEventListener("pointercancel", endDrag);
       if (dragState.frame !== null)
         window.cancelAnimationFrame(dragState.frame);
       /** Never moved: nothing was written, so there is nothing to commit */
@@ -324,7 +330,8 @@ export const WikiResizeHandles = ({
     };
 
     window.addEventListener("pointermove", handlePointerMove);
-    window.addEventListener("pointerup", handlePointerUp);
+    window.addEventListener("pointerup", endDrag);
+    window.addEventListener("pointercancel", endDrag);
   };
 
   if (!editor || !target) return null;
