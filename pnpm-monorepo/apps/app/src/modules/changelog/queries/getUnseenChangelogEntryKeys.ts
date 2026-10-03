@@ -1,7 +1,7 @@
 import { prisma } from "@/db";
 import { authenticate } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import { instantToWallTime, ORGANIZATION_TIMEZONE } from "@sam-monorepo/domain";
+import { getLocalDateKey, ORGANIZATION_TIMEZONE } from "@sam-monorepo/domain";
 import { cache } from "react";
 import { CHANGELOG_ENTRIES } from "../entries";
 
@@ -13,7 +13,7 @@ import { CHANGELOG_ENTRIES } from "../entries";
  */
 const getTrackedKeysSince = (emailVerified: Date | null) => {
   const cutoffDate = emailVerified
-    ? instantToWallTime(emailVerified, ORGANIZATION_TIMEZONE).slice(0, 10)
+    ? getLocalDateKey(emailVerified, ORGANIZATION_TIMEZONE)
     : null;
 
   return CHANGELOG_ENTRIES.filter(

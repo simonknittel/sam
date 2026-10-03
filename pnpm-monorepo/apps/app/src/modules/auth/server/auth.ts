@@ -5,7 +5,6 @@ import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { DEVELOPMENT_SESSION_TOKEN_COOKIE } from "@/modules/auth/utils/sessionTokenCookie";
 import { linkCitizenOfSignedInUser } from "@/modules/citizen/utils/citizenUserLink";
 import { hasBirthdayToday } from "@/modules/citizen/utils/hasBirthdayToday";
-import { formatDate } from "@/modules/common/utils/formatDate";
 import { getDiscordAvatar } from "@/modules/discord/utils/getDiscordAvatar";
 import { getGuildMember } from "@/modules/discord/utils/getGuildMember";
 import { log } from "@/modules/logging";
@@ -18,7 +17,11 @@ import {
   type Citizen,
   type User as DatabaseUser,
 } from "@sam-monorepo/database/client";
-import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
+import {
+  ACTIVE_CITIZEN_WHERE,
+  getLocalDateKey,
+  ORGANIZATION_TIMEZONE,
+} from "@sam-monorepo/domain";
 import { type PermissionSet } from "@sam-monorepo/permissions";
 import {
   getServerSession,
@@ -191,7 +194,9 @@ export const authOptions: NextAuthOptions = {
       // user so their presence data doesn't get falsified.
       if (
         !assumedUser &&
-        formatDate(user.lastSeenAt, "short") !== formatDate(new Date(), "short")
+        (!user.lastSeenAt ||
+          getLocalDateKey(user.lastSeenAt, ORGANIZATION_TIMEZONE) !==
+            getLocalDateKey(new Date(), ORGANIZATION_TIMEZONE))
       ) {
         try {
           await prisma.user.update({

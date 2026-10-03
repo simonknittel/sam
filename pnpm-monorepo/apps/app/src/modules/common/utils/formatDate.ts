@@ -41,8 +41,7 @@ const OPTIONS_BY_STYLE = {
 
 /**
  * Formats a moment as a German date in the time zone of the organization,
- * thus the server and the browser show the same value. The comparison of two
- * dates in the "short" style tells if they are on the same day.
+ * thus the server and the browser show the same value.
  */
 export const formatDate = (
   date?: Date | null,
