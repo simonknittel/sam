@@ -10,8 +10,10 @@ export interface LogEntry {
   level: LogLevel;
   message: string;
   host: string;
+  stack?: string;
   commitSha?: string;
-  [key: string]: string | number | boolean | undefined;
+  /** The other arguments of the log call, each `Error` serialized */
+  [key: string]: unknown;
 }
 
 export type LogOutput = (logEntry: LogEntry) => void | Promise<void>;

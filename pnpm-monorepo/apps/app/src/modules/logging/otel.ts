@@ -48,8 +48,11 @@ export const logToOTel: LogOutput = async (logEntry) => {
       severityNumber: getSeverityNumber(level),
       severityText: level,
       body: message,
-      // Should be nanoseconds according to the type comment, but it doesn't work when multiplying by 1_000_000
+      // A number is epoch milliseconds (see `timeInputToHrTime` of @opentelemetry/core)
       timestamp: new Date(timestamp).getTime(),
+      // The SDK keeps a plain object (for example a serialized error) as a
+      // nested map and drops a value that is not valid, for example a class
+      // instance.
       attributes: {
         host,
         ...(commitSha && { commitSha }),
