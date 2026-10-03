@@ -8,7 +8,6 @@ import { log } from "@/modules/logging";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { EventSource } from "@sam-monorepo/database/client";
 import { revalidatePath } from "next/cache";
-import { serializeError } from "serialize-error";
 import * as z from "zod";
 import { EVENT_MANAGE_GUARD_SELECT } from "../queries/eventManageGuardSelect";
 import {
@@ -65,7 +64,7 @@ export const deleteEvent = createAuthenticatedAction(
     }).catch((error: unknown) => {
       log.error("Failed to remove a deleted event from Discord", {
         eventId: event.id,
-        error: serializeError(error),
+        error,
       });
       return { outcome: DiscordSyncOutcome.Failed } as const;
     });

@@ -10,19 +10,29 @@ import { revalidatePath } from "next/cache";
 import * as z from "zod";
 
 const schema = z.object({
-  subscription: z.preprocess(
-    (str) => {
-      if (typeof str !== "string") return str;
-      return JSON.parse(str) as unknown;
-    },
-    z.object({
-      endpoint: z.string().max(2048).refine(isAllowedWebPushEndpointUrl),
-      keys: z.object({
-        p256dh: z.string().max(512),
-        auth: z.string().max(512),
+  subscription: z
+    .string()
+    .transform((value, context) => {
+      try {
+        return JSON.parse(value) as unknown;
+      } catch {
+        context.issues.push({
+          code: "custom",
+          message: "Invalid JSON",
+          input: value,
+        });
+        return z.NEVER;
+      }
+    })
+    .pipe(
+      z.object({
+        endpoint: z.string().max(2048).refine(isAllowedWebPushEndpointUrl),
+        keys: z.object({
+          p256dh: z.string().max(512),
+          auth: z.string().max(512),
+        }),
       }),
-    }),
-  ),
+    ),
 });
 
 export const subscribeWebPush = createAuthenticatedAction(

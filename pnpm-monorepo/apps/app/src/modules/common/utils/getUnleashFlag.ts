@@ -5,7 +5,6 @@ import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { evaluateFlags, flagsClient, getDefinitions } from "@unleash/nextjs";
 import { unstable_rethrow } from "next/navigation";
 import { cache } from "react";
-import { serializeError } from "serialize-error";
 import type { UNLEASH_FLAG } from "./UNLEASH_FLAG";
 
 export const getUnleashFlag = cache(
@@ -22,6 +21,7 @@ export const getUnleashFlag = cache(
 
       const definitions = await getDefinitions({
         fetchOptions: {
+          signal: AbortSignal.timeout(5000),
           next: { revalidate: env.UNLEASH_REVALIDATE_SECONDS },
         },
       });
@@ -36,7 +36,7 @@ export const getUnleashFlag = cache(
     } catch (error) {
       unstable_rethrow(error);
       log.error("Error fetching feature flag", {
-        error: serializeError(error),
+        error,
       });
       return false;
     }

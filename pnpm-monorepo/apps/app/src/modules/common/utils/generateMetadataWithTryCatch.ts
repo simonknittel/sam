@@ -1,7 +1,6 @@
 import { log } from "@/modules/logging";
 import type { Metadata } from "next";
 import { unstable_rethrow } from "next/navigation";
-import { serializeError } from "serialize-error";
 
 export const generateMetadataWithTryCatch = <T>(
   fn: (props: T) => Promise<Metadata>,
@@ -14,11 +13,11 @@ export const generateMetadataWithTryCatch = <T>(
 
       if (error instanceof Error && error.message === "Unauthorized") {
         log.info("Unauthorized while generating metadata", {
-          error: serializeError(error),
+          error,
         });
       } else {
         log.error("Error while generating metadata", {
-          error: serializeError(error),
+          error,
         });
       }
 

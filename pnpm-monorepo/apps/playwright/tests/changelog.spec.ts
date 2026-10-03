@@ -15,6 +15,17 @@ const READ_ON_VIEW_TIMEOUT = 15_000;
 /** Long before the first changelog entry, so every tracked entry is new */
 const BEFORE_THE_FIRST_ENTRY = new Date("2020-01-01T00:00:00.000Z");
 
+/**
+ * `/app/changelog` redirects to the page of the newest quarter while the page
+ * streams. A `goto` that waits for the load fails when this redirect
+ * interrupts it, thus it waits only for the response and then for the URL of
+ * the quarter.
+ */
+const openChangelog = async (page: Page) => {
+  await page.goto("/app/changelog", { waitUntil: "commit" });
+  await page.waitForURL(/\/app\/changelog\/\d{4}-q[1-4]$/);
+};
+
 test("entries are marked as seen in view and keep their indicator", async ({
   page,
   prisma,
@@ -26,7 +37,7 @@ test("entries are marked as seen in view and keep their indicator", async ({
   });
   await signIn(citizen.user);
 
-  await page.goto("/app/changelog");
+  await openChangelog(page);
   await expect(newEntryIndicators(page).first()).toBeVisible();
   const indicatorCount = await newEntryIndicators(page).count();
 
@@ -76,12 +87,12 @@ test("entries published before the email confirmation are not new", async ({
   });
 
   await signIn(newcomer.user);
-  await page.goto("/app/changelog");
+  await openChangelog(page);
   await expect(page.getByRole("heading", { name: "Changelog" })).toBeVisible();
   const newcomerIndicators = await newEntryIndicators(page).count();
 
   await signIn(veteran.user);
-  await page.goto("/app/changelog");
+  await openChangelog(page);
   await expect(newEntryIndicators(page).first()).toBeVisible();
   const veteranIndicators = await newEntryIndicators(page).count();
 

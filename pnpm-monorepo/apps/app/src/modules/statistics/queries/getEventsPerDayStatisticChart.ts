@@ -27,19 +27,16 @@ export const getEventsPerDayStatisticChart = cache(
       },
     });
 
-    const countsByDate = new Map<string, number>();
-    for (const event of events) {
-      const dateKey = getLocalDateKey(event.startTime, ORGANIZATION_TIMEZONE);
-      const existing = countsByDate.get(dateKey) ?? 0;
-      countsByDate.set(dateKey, existing + 1);
-    }
+    const eventsByDate = Map.groupBy(events, (event) =>
+      getLocalDateKey(event.startTime, ORGANIZATION_TIMEZONE),
+    );
 
     const orderedEvents = options.axisPoints.map(({ key, timestamp }) => {
       const createdAt = new Date(timestamp);
 
       return {
         createdAt,
-        count: countsByDate.get(key) ?? 0,
+        count: eventsByDate.get(key)?.length ?? 0,
       };
     });
 

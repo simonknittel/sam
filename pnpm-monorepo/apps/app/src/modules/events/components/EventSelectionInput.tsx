@@ -13,7 +13,7 @@ import {
 import type { Event } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
 import Fuse, { type FuseResult } from "fuse.js";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { FaCheck, FaTrash } from "react-icons/fa";
 
 interface BaseProps {
@@ -212,8 +212,6 @@ const Multiple = ({
 }: MultipleComponentProps) => {
   const [selected, setSelected] = useState<EventOption[]>(defaultValue || []);
 
-  const popoverPortalRef = useRef<HTMLDivElement | null>(null);
-
   return (
     <>
       <Combobox
@@ -242,8 +240,6 @@ const Multiple = ({
           ))}
         </ComboboxOptions>
       </Combobox>
-
-      <div ref={popoverPortalRef} className="z-10" />
 
       <p className="mt-1 text-xs text-gray-400">Mehrfachauswahl möglich</p>
 

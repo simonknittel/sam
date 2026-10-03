@@ -9,7 +9,6 @@ import { createS3Client } from "@/modules/common/utils/createS3Client";
 import { log } from "@/modules/logging";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { revalidatePath } from "next/cache";
-import { serializeError } from "serialize-error";
 import * as z from "zod";
 import { USAGE_SELECT } from "../queries/getUploads";
 import { decodeUploadFileName } from "../utils/decodeUploadFileName";
@@ -82,7 +81,7 @@ export const deleteUpload = createAuthenticatedAction(
     } catch (error) {
       log.warn("Failed to delete an upload's object from the bucket", {
         uploadId: upload.id,
-        error: serializeError(error),
+        error,
       });
     }
 

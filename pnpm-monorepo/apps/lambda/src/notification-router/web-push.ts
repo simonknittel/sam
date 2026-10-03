@@ -3,6 +3,7 @@ import {
   AuditEventType,
   isAllowedWebPushEndpointUrl,
 } from "@sam-monorepo/domain";
+import { setTimeout } from "node:timers/promises";
 import {
   sendNotification,
   setVapidDetails,
@@ -20,16 +21,12 @@ setVapidDetails(env.BASE_URL, env.PUBLIC_VAPID_KEY, env.PRIVATE_VAPID_KEY);
 const RATE_LIMIT_MAX_RETRIES = 3;
 const RATE_LIMIT_DEFAULT_DELAY_MS = 1_000;
 
-const sleep = (ms: number) =>
-  new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-
+/**
+ * web-push gives the headers of the Node.js response, and Node.js writes all
+ * header names in lowercase.
+ */
 const getRetryAfterDelayMs = (error: WebPushError) => {
-  const headerValue =
-    error.headers["retry-after"] ??
-    error.headers["Retry-After"] ??
-    error.headers["Retry-after"];
+  const headerValue = error.headers["retry-after"];
   if (!headerValue) return undefined;
 
   const numericDelaySeconds = Number(headerValue);
@@ -155,7 +152,7 @@ export const publishWebPushNotifications = async (
                 attempt: attempt + 1,
               },
             );
-            await sleep(retryDelayMs);
+            await setTimeout(retryDelayMs);
             continue;
           }
 

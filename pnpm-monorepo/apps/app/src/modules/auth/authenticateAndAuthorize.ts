@@ -1,6 +1,5 @@
 import { authOptions } from "@/modules/auth/server/auth";
 import {
-  requireConfirmedEmailForAction,
   requireConfirmedEmailForApi,
   requireConfirmedEmailForPage,
 } from "@/modules/auth/utils/emailConfirmation";
@@ -114,51 +113,6 @@ export async function requireAuthenticationApi(
         log.info("Forbidden request to API", {
           requestPath,
           requestMethod,
-          userId: authentication.session.user.id,
-          reason: "Insufficient permissions",
-        });
-
-        throw new Error("Forbidden");
-      }
-
-      return result;
-    },
-  };
-}
-
-export async function requireAuthenticationAction(actionName?: string) {
-  const authentication = await authenticate();
-
-  if (!authentication) {
-    log.info("Unauthorized request to action", {
-      actionName,
-      reason: "No session",
-    });
-
-    throw new Error("Unauthorized");
-  }
-
-  await requireConfirmedEmailForAction(authentication.session);
-
-  if (!(await authentication.authorize("login", "manage")))
-    throw new Error("Forbidden");
-
-  return {
-    ...authentication,
-    authorizeAction: async (
-      resource: PermissionSet["resource"],
-      operation: PermissionSet["operation"],
-      attributes?: PermissionSet["attributes"],
-    ) => {
-      const result = await authentication.authorize(
-        resource,
-        operation,
-        attributes,
-      );
-
-      if (!result) {
-        log.info("Unauthorized request to action", {
-          actionName,
           userId: authentication.session.user.id,
           reason: "Insufficient permissions",
         });

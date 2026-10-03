@@ -2,7 +2,6 @@ import { authorize } from "@/modules/auth/server";
 import { getPublishableGuildChannels } from "@/modules/discord/utils/getPublishableGuildChannels";
 import { log } from "@/modules/logging";
 import { TRPCError } from "@trpc/server";
-import { serializeError } from "serialize-error";
 import { protectedProcedure } from "../../trpc";
 
 /**
@@ -24,7 +23,7 @@ export const getPublishableDiscordChannels = protectedProcedure.query(
       return await getPublishableGuildChannels();
     } catch (error) {
       log.error("Failed to fetch publishable Discord channels", {
-        error: serializeError(error),
+        error,
       });
 
       return null;

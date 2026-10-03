@@ -34,7 +34,6 @@ import DiscordProvider, {
   type DiscordProfile,
 } from "next-auth/providers/discord";
 import { cookies, headers } from "next/headers";
-import { serializeError } from "serialize-error";
 import { ASSUME_USER_COOKIE } from "../utils/adminCookies";
 import { getEffectiveRoles, type EffectiveRoles } from "./getEffectiveRoles";
 
@@ -379,7 +378,7 @@ export const authOptions: NextAuthOptions = {
       } catch (error) {
         log.error("Failed to request email confirmation for created user", {
           userId: createdUser.id,
-          error: serializeError(error),
+          error,
         });
       }
 

@@ -340,7 +340,7 @@ export const List = () => {
     })
     .sort((a, b) => a.label.localeCompare(b.label, "de"));
 
-  const page = pages[pages.length - 1];
+  const page = pages.at(-1);
 
   const renderMenuItem = (item: MenuItem) => {
     switch (item.type) {

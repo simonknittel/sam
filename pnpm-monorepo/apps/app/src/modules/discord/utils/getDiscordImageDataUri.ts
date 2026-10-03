@@ -4,7 +4,6 @@ import { env } from "@/env";
 import { createS3Client } from "@/modules/common/utils/createS3Client";
 import { log } from "@/modules/logging";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
-import { serializeError } from "serialize-error";
 
 /**
  * Discord's image data only accepts these three.
@@ -92,7 +91,7 @@ export const getDiscordImageDataUri = async (
   } catch (error) {
     log.error("Failed to encode a Discord cover image", {
       uploadId: upload.id,
-      error: serializeError(error),
+      error,
     });
     return undefined;
   }

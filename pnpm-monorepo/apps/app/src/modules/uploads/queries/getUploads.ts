@@ -228,9 +228,7 @@ export const getUploads = cache(
         uploads,
         canManage,
         nextCursor:
-          hasNextPage && uploads.length > 0
-            ? uploads[uploads.length - 1].id
-            : null,
+          hasNextPage && uploads.length > 0 ? uploads.at(-1)!.id : null,
         prevCursor: hasPrevPage && uploads.length > 0 ? uploads[0].id : null,
       };
     },

@@ -37,15 +37,11 @@ export const buildVisibleWikiTree = (
   const pagesById = new Map(pages.map((page) => [page.id, page]));
   const canRead = (id: string) => permissions.get(id)?.canRead === true;
 
-  const childrenByParent = new Map<string | null, WikiTreePageInput[]>();
-  for (const page of pages) {
-    if (!canRead(page.id)) continue;
-    const parentId =
-      page.parentId && pagesById.has(page.parentId) ? page.parentId : null;
-    const siblings = childrenByParent.get(parentId) ?? [];
-    siblings.push(page);
-    childrenByParent.set(parentId, siblings);
-  }
+  const childrenByParent = Map.groupBy(
+    pages.filter((page) => canRead(page.id)),
+    (page) =>
+      page.parentId && pagesById.has(page.parentId) ? page.parentId : null,
+  );
 
   const toNodes = (
     parentId: string | null,

@@ -48,12 +48,11 @@ export const PermissionMatrixGrid = ({ roles }: Props) => {
     const separatorIndex = input.name.indexOf("_");
     const roleId = input.name.slice(0, separatorIndex);
     const permissionString = input.name.slice(separatorIndex + 1);
-    const checked = input.checked ? "true" : "";
 
     const formData = new FormData();
     formData.set("roleId", roleId);
     formData.set("permissionString", permissionString);
-    formData.set("checked", checked);
+    formData.set("checked", String(input.checked));
 
     void runAction(updateSingleRolePermission, formData);
   };

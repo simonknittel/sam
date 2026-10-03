@@ -198,9 +198,7 @@ export const getShipChanges = cache(
       return {
         changes: items,
         nextCursor:
-          hasNextPage && items.length > 0
-            ? cursorKey(items[items.length - 1])
-            : null,
+          hasNextPage && items.length > 0 ? cursorKey(items.at(-1)!) : null,
         prevCursor:
           hasPrevPage && items.length > 0 ? cursorKey(items[0]) : null,
       };

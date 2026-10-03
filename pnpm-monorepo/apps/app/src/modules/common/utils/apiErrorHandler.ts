@@ -1,7 +1,6 @@
 import { log } from "@/modules/logging";
 import { Prisma } from "@sam-monorepo/database/client";
 import { NextResponse } from "next/server";
-import { serializeError } from "serialize-error";
 import { ZodError } from "zod";
 
 export default function apiErrorHandler(
@@ -65,7 +64,7 @@ export default function apiErrorHandler(
   }
 
   log.error("errorHandler", {
-    error: serializeError(error),
+    error,
   });
 
   return NextResponse.json(

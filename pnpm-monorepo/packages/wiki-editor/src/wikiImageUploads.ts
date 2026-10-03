@@ -1,3 +1,4 @@
+import { parseHttpUrl } from "./parseHttpUrl.js";
 import { walkWikiContent } from "./walkWikiContent.js";
 
 /**
@@ -8,13 +9,9 @@ import { walkWikiContent } from "./walkWikiContent.js";
  */
 const parsePublicUrlBase = (publicUrl: string): URL | null => {
   if (publicUrl.length === 0) return null;
-  try {
-    return new URL(
-      publicUrl.includes("://") ? publicUrl : `https://${publicUrl}`,
-    );
-  } catch {
-    return null;
-  }
+  return parseHttpUrl(
+    publicUrl.includes("://") ? publicUrl : `https://${publicUrl}`,
+  );
 };
 
 /**
@@ -29,13 +26,9 @@ export const getWikiImageUploadId = (
 ): string | null => {
   const base = parsePublicUrlBase(publicUrl);
   if (base === null || typeof src !== "string") return null;
-  let url;
-  try {
-    url = new URL(src);
-  } catch {
+  const url = parseHttpUrl(src);
+  if (!url || url.protocol !== base.protocol || url.host !== base.host)
     return null;
-  }
-  if (url.protocol !== base.protocol || url.host !== base.host) return null;
   const basePath =
     base.pathname === "/" ? "" : base.pathname.replace(/\/+$/, "");
   if (!url.pathname.startsWith(`${basePath}/`)) return null;

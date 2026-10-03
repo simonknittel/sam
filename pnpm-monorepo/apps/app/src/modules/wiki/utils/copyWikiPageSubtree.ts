@@ -207,12 +207,10 @@ export const copyWikiPagesIntoContainer = async (
     }),
   ]);
   const contentById = new Map(contentRows.map((row) => [row.id, row]));
-  const tagNamesByPageId = new Map<string, string[]>();
-  for (const assignment of tagAssignments) {
-    const names = tagNamesByPageId.get(assignment.pageId) ?? [];
-    names.push(assignment.tag.name);
-    tagNamesByPageId.set(assignment.pageId, names);
-  }
+  const tagAssignmentsByPageId = Map.groupBy(
+    tagAssignments,
+    (assignment) => assignment.pageId,
+  );
 
   /** Copies land in the target's scope, wherever the source came from */
   const scopeColumns = params.targetContainer
@@ -229,7 +227,9 @@ export const copyWikiPagesIntoContainer = async (
   const tagsOf = async (sourcePageId: string) => {
     const tags = await findOrCreateWikiTags(
       transaction,
-      tagNamesByPageId.get(sourcePageId) ?? [],
+      (tagAssignmentsByPageId.get(sourcePageId) ?? []).map(
+        (assignment) => assignment.tag.name,
+      ),
       params.targetContainer,
       params.createdByEntityId,
     );

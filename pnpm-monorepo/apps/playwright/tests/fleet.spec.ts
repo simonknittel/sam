@@ -187,8 +187,7 @@ test("my ships can be added, renamed and deleted with consistent org counts", as
     "SHIP_DELETED_V2",
   ]);
   for (const auditEvent of auditEvents) {
-    // createAuditEvents stores the payload JSON-encoded inside the column
-    expect(JSON.parse(auditEvent.data as string)).toMatchObject({
+    expect(auditEvent.data).toMatchObject({
       shipId: ship!.id,
       ownerId: owner.entity.id,
     });
@@ -297,6 +296,53 @@ test("a variant tag records the creating citizen as its author", async ({
     .filter({ hasText: "Avenger Stalker" });
   await expect(stalkerRow.getByText("Class", { exact: true })).toBeVisible();
   await expect(stalkerRow.getByText("Light", { exact: true })).toBeVisible();
+});
+
+test("a variant link that is not an http or https URL is a bad request", async ({
+  page,
+  prisma,
+  signIn,
+}) => {
+  const manager = await createCitizen(prisma, {
+    handle: "varianten-manager",
+    permissionStrings: ["manufacturersSeriesAndVariants;manage"],
+  });
+  const { manufacturer, series } = await createVariant(prisma, {
+    manufacturerName: "Aegis Dynamics",
+    seriesName: "Avenger",
+    variantName: "Avenger Titan",
+  });
+
+  await signIn(manager.user);
+  await page.goto(
+    `/app/fleet/settings/manufacturer/${manufacturer.id}/series/${series.id}`,
+  );
+
+  const createModal = modal(page, "Variante anlegen");
+  await clickUntilVisible(
+    page.getByRole("main").getByRole("button", { name: "Anlegen" }),
+    createModal,
+  );
+  await createModal.getByLabel("Name", { exact: true }).fill("Avenger Stalker");
+
+  // The tag rows and the external-link rows share the "Hinzufügen" label
+  const linkUrlInput = createModal.getByPlaceholder("https://...");
+  await clickUntilVisible(
+    createModal.getByRole("button", { name: "Hinzufügen" }).last(),
+    linkUrlInput,
+  );
+  /**
+   * The browser accepts this URL in a URL input, thus only the server can
+   * refuse it
+   */
+  await linkUrlInput.fill("javascript:alert(1)");
+
+  await createModal.getByRole("button", { name: "Speichern" }).click();
+  await expect(page.getByText("Ungültige Anfrage")).toBeVisible();
+  await expect(createModal).toBeVisible();
+  expect(
+    await prisma.variant.count({ where: { name: "Avenger Stalker" } }),
+  ).toBe(0);
 });
 
 test("manufacturers and series can be managed through the REST-backed settings", async ({

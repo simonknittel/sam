@@ -12,9 +12,7 @@ import { requireConfirmedEmailForTrpc } from "@/modules/auth/utils/emailConfirma
 import { isAdminBehindSession } from "@/modules/auth/utils/isAdminBehindSession";
 import { log } from "@/modules/logging";
 import { initTRPC, TRPCError } from "@trpc/server";
-import { serializeError } from "serialize-error";
 import superjson from "superjson";
-import { ZodError } from "zod";
 
 /**
  * 1. CONTEXT
@@ -41,22 +39,10 @@ export const createTRPCContext = async (opts: { headers: Headers }) => {
 /**
  * 2. INITIALIZATION
  *
- * This is where the tRPC API is initialized, connecting the context and transformer. We also parse
- * ZodErrors so that you get typesafety on the frontend if your procedure fails due to validation
- * errors on the backend.
+ * This is where the tRPC API is initialized, connecting the context and transformer.
  */
-const t = initTRPC.context<typeof createTRPCContext>().create({
+const trpc = initTRPC.context<typeof createTRPCContext>().create({
   transformer: superjson,
-  errorFormatter({ shape, error }) {
-    return {
-      ...shape,
-      data: {
-        ...shape.data,
-        zodError:
-          error.cause instanceof ZodError ? error.cause.flatten() : null,
-      },
-    };
-  },
 });
 
 /**
@@ -64,7 +50,7 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
  *
  * @see https://trpc.io/docs/server/server-side-calls
  */
-export const createCallerFactory = t.createCallerFactory;
+export const createCallerFactory = trpc.createCallerFactory;
 
 /**
  * 3. ROUTER & PROCEDURE (THE IMPORTANT BIT)
@@ -78,7 +64,7 @@ export const createCallerFactory = t.createCallerFactory;
  *
  * @see https://trpc.io/docs/router
  */
-export const createTRPCRouter = t.router;
+export const createTRPCRouter = trpc.router;
 
 /**
  * Protected (authenticated) procedure
@@ -88,14 +74,14 @@ export const createTRPCRouter = t.router;
  *
  * @see https://trpc.io/docs/procedures
  */
-export const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
+export const protectedProcedure = trpc.procedure.use(async ({ ctx, next }) => {
   if (!ctx.session?.user) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
 
   await requireConfirmedEmailForTrpc(ctx.session);
 
-  // The same clearance gate as requireAuthenticationPage/Api/Action
+  // The same clearance gate as the pages, the API routes and the actions
   if (!(await authorize(ctx.session, "login", "manage")))
     throw new TRPCError({ code: "FORBIDDEN" });
 
@@ -114,7 +100,7 @@ export const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
  * the toolbar shows on the pages of these gates and an assumed user can be
  * without clearance.
  */
-export const adminProcedure = t.procedure.use(async ({ ctx, next }) => {
+export const adminProcedure = trpc.procedure.use(async ({ ctx, next }) => {
   if (!ctx.session?.user) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
@@ -139,7 +125,7 @@ export const toTrpcError = (error: unknown, message: string): TRPCError => {
   if (error instanceof TRPCError) return error;
 
   log.error(message, {
-    error: serializeError(error),
+    error,
   });
 
   return new TRPCError({

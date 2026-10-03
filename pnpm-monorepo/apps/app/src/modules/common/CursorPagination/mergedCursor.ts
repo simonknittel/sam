@@ -249,9 +249,7 @@ export const paginateMergedSources = async <Entry extends MergedCursorEntry>({
   return {
     entries,
     nextCursor:
-      hasNextPage && entries.length > 0
-        ? encodeCursor(entries[entries.length - 1])
-        : null,
+      hasNextPage && entries.length > 0 ? encodeCursor(entries.at(-1)!) : null,
     prevCursor:
       hasPrevPage && entries.length > 0 ? encodeCursor(entries[0]) : null,
   };

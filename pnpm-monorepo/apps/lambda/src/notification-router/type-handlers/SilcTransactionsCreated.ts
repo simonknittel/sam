@@ -49,7 +49,7 @@ export const SilcTransactionsCreatedHandler = async (payload: Payload) => {
           description: transaction.description,
         },
         title: "SILC-Transaktion erhalten",
-        body: `${transaction.value >= 0 ? "+" : "-"}${Math.abs(transaction.value).toLocaleString("de")} SILC - ${transaction.description}`,
+        body: `${transaction.value.toLocaleString("de", { signDisplay: "always" })} SILC - ${transaction.description}`,
       })),
   );
 };

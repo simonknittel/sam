@@ -277,8 +277,7 @@ export const handler: ScheduledHandler = async (event, context) => {
 
       void log.info("Finished scraping Discord events");
     } catch (error) {
-      // @ts-expect-error
-      void log.error("Failed to scrape Discord events", error);
+      void log.error("Failed to scrape Discord events", { error });
       throw error;
     }
   });

@@ -13,18 +13,28 @@ import { useTransition, type ChangeEventHandler } from "react";
 import { resetEventPositionCitizenId } from "../actions/resetEventPositionCitizenId";
 import { updateEventPositionCitizenId } from "../actions/updateEventPositionCitizenId";
 
+type DisplayedCitizen = Pick<Citizen, "id" | "handle" | "deletedAt">;
+
+const compareByCitizenDisplayName = (
+  first: { readonly citizen: DisplayedCitizen },
+  second: { readonly citizen: DisplayedCitizen },
+) =>
+  getCitizenDisplayName(first.citizen).localeCompare(
+    getCitizenDisplayName(second.citizen),
+  );
+
 interface Props {
   readonly className?: string;
   readonly position: EventPosition & {
-    readonly citizen?: Pick<Citizen, "id" | "handle" | "deletedAt"> | null;
+    readonly citizen?: DisplayedCitizen | null;
   };
   readonly citizensSatisfyingRequirements: EventCitizenWithShips[];
   readonly citizensNotSatisfyingRequirements: EventCitizenWithShips[];
   readonly applicationsSatisfyingRequirements: (EventPositionApplication & {
-    citizen: Pick<Citizen, "id" | "handle" | "deletedAt">;
+    citizen: DisplayedCitizen;
   })[];
   readonly applicationsNotSatisfyingRequirements: (EventPositionApplication & {
-    citizen: Pick<Citizen, "id" | "handle" | "deletedAt">;
+    citizen: DisplayedCitizen;
   })[];
 }
 
@@ -91,11 +101,7 @@ export const UpdateEventPositionCitizenId = ({
 
         <optgroup label="Interessenten - Voraussetzungen erfüllt">
           {applicationsSatisfyingRequirements
-            .sort((a, b) =>
-              getCitizenDisplayName(a.citizen).localeCompare(
-                getCitizenDisplayName(b.citizen),
-              ),
-            )
+            .toSorted(compareByCitizenDisplayName)
             .map((application) => (
               <option key={application.citizenId} value={application.citizenId}>
                 {getCitizenDisplayName(application.citizen)}
@@ -105,11 +111,7 @@ export const UpdateEventPositionCitizenId = ({
 
         <optgroup label="Interessenten - Voraussetzungen nicht erfüllt">
           {applicationsNotSatisfyingRequirements
-            .sort((a, b) =>
-              getCitizenDisplayName(a.citizen).localeCompare(
-                getCitizenDisplayName(b.citizen),
-              ),
-            )
+            .toSorted(compareByCitizenDisplayName)
             .map((application) => (
               <option key={application.citizenId} value={application.citizenId}>
                 {getCitizenDisplayName(application.citizen)}
@@ -119,11 +121,7 @@ export const UpdateEventPositionCitizenId = ({
 
         <optgroup label="Alle Teilnehmer - Voraussetzungen erfüllt">
           {citizensSatisfyingRequirements
-            .sort((a, b) =>
-              getCitizenDisplayName(a.citizen).localeCompare(
-                getCitizenDisplayName(b.citizen),
-              ),
-            )
+            .toSorted(compareByCitizenDisplayName)
             .map((citizen) => (
               <option key={citizen.citizen.id} value={citizen.citizen.id}>
                 {getCitizenDisplayName(citizen.citizen)}
@@ -133,11 +131,7 @@ export const UpdateEventPositionCitizenId = ({
 
         <optgroup label="Alle Teilnehmer - Voraussetzungen nicht erfüllt">
           {citizensNotSatisfyingRequirements
-            .sort((a, b) =>
-              getCitizenDisplayName(a.citizen).localeCompare(
-                getCitizenDisplayName(b.citizen),
-              ),
-            )
+            .toSorted(compareByCitizenDisplayName)
             .map((citizen) => (
               <option key={citizen.citizen.id} value={citizen.citizen.id}>
                 {getCitizenDisplayName(citizen.citizen)}

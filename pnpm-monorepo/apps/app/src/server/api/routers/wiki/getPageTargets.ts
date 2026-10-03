@@ -11,7 +11,6 @@ import {
   getReadableWikiPageTargets,
 } from "@/modules/wiki/utils/getWikiPageTargets";
 import { TRPCError } from "@trpc/server";
-import { serializeError } from "serialize-error";
 import * as z from "zod";
 import { protectedProcedure } from "../../trpc";
 
@@ -71,7 +70,7 @@ export const getPageTargets = protectedProcedure
         : getManageableWikiPageTargets(context, input?.excludeSubtreeOf);
     } catch (error) {
       log.error("Failed to fetch wiki page targets", {
-        error: serializeError(error),
+        error,
       });
 
       throw new TRPCError({

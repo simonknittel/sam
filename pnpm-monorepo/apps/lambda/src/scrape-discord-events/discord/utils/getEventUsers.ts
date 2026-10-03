@@ -14,6 +14,7 @@ export const getEventUsers = async (discordId: string) => {
         headers: new Headers({
           Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}`,
         }),
+        signal: AbortSignal.timeout(5000),
       },
     );
     if (response.status !== 429) break;

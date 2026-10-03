@@ -100,12 +100,12 @@ export const removeExpiredRoles = async () => {
       prisma.auditEvent.createMany({
         data: removedAssignments.map((assignment) => ({
           type: AuditEventType.ROLE_AUTO_REMOVED,
-          data: JSON.stringify({
+          data: {
             citizenId: assignment.citizenId,
             citizenHandle: assignment.citizenHandle,
             roleId: assignment.roleId,
             roleName: roleNameMap.get(assignment.roleId)!,
-          }),
+          },
         })),
       }),
     );

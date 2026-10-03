@@ -45,15 +45,13 @@ export const getTotalCitizenStatisticChart = cache(
       }),
     ]);
 
-    const citizensByDate = new Map<string, number>();
-    for (const citizen of citizens) {
-      const dateKey = getLocalDateKey(citizen.createdAt, ORGANIZATION_TIMEZONE);
-      citizensByDate.set(dateKey, (citizensByDate.get(dateKey) ?? 0) + 1);
-    }
+    const citizensByDate = Map.groupBy(citizens, (citizen) =>
+      getLocalDateKey(citizen.createdAt, ORGANIZATION_TIMEZONE),
+    );
 
     let runningTotal = baselineCount;
     const orderedTotals = options.axisPoints.map(({ key, timestamp }) => {
-      const delta = citizensByDate.get(key) ?? 0;
+      const delta = citizensByDate.get(key)?.length ?? 0;
       runningTotal += delta;
 
       return {

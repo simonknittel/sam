@@ -1,4 +1,5 @@
 import { mergeAttributes, Node } from "@tiptap/core";
+import { parseHttpUrl } from "./parseHttpUrl.js";
 import { walkWikiContent } from "./walkWikiContent.js";
 import { renderWikiBlockedPlaceholder } from "./wikiBlockedPlaceholder.js";
 import {
@@ -90,16 +91,6 @@ const SPOTIFY_TYPES = [
 ];
 const GOOGLE_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
 
-const parseUrl = (input: string): URL | null => {
-  try {
-    const url = new URL(input);
-    if (url.protocol !== "https:" && url.protocol !== "http:") return null;
-    return url;
-  } catch {
-    return null;
-  }
-};
-
 /** YouTube's t/start parameter ("90", "90s", "1h2m30s") in seconds */
 const parseYoutubeStartSeconds = (url: URL): number => {
   const raw = url.searchParams.get("t") ?? url.searchParams.get("start");
@@ -148,6 +139,22 @@ const normalizeYoutubeUrl = (url: URL): string | null => {
   return `https://www.youtube-nocookie.com/embed/${id}${start > 0 ? `?start=${start}` : ""}`;
 };
 
+const TWITCH_PLAYER_URL = "https://player.twitch.tv/";
+const TWITCH_CLIP_EMBED_URL = "https://clips.twitch.tv/embed";
+
+/** An embed URL of Twitch with the given parameters and without autoplay */
+const buildTwitchEmbedUrl = (
+  embedUrl: string,
+  parameters: Record<string, string>,
+): string => {
+  const url = new URL(embedUrl);
+  url.search = new URLSearchParams({
+    ...parameters,
+    autoplay: "false",
+  }).toString();
+  return url.toString();
+};
+
 const normalizeTwitchUrl = (url: URL): string | null => {
   const segments = url.pathname.split("/").filter(Boolean);
   const [first, second, third] = segments;
@@ -159,22 +166,20 @@ const normalizeTwitchUrl = (url: URL): string | null => {
   if (url.hostname === "player.twitch.tv") {
     const video = url.searchParams.get("video");
     if (video && /^\d+$/.test(video))
-      return `https://player.twitch.tv/?video=${video}&autoplay=false`;
+      return buildTwitchEmbedUrl(TWITCH_PLAYER_URL, { video });
     const channel = url.searchParams.get("channel");
     if (channel && TWITCH_CHANNEL_PATTERN.test(channel))
-      return `https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&autoplay=false`;
+      return buildTwitchEmbedUrl(TWITCH_PLAYER_URL, { channel });
     return null;
   }
 
   if (url.hostname === "clips.twitch.tv") {
     if (first === "embed") {
       const clip = url.searchParams.get("clip");
-      return clip
-        ? `https://clips.twitch.tv/embed?clip=${encodeURIComponent(clip)}&autoplay=false`
-        : null;
+      return clip ? buildTwitchEmbedUrl(TWITCH_CLIP_EMBED_URL, { clip }) : null;
     }
     if (segments.length === 1 && first)
-      return `https://clips.twitch.tv/embed?clip=${encodeURIComponent(first)}&autoplay=false`;
+      return buildTwitchEmbedUrl(TWITCH_CLIP_EMBED_URL, { clip: first });
     return null;
   }
 
@@ -187,7 +192,7 @@ const normalizeTwitchUrl = (url: URL): string | null => {
     second &&
     /^\d+$/.test(second)
   )
-    return `https://player.twitch.tv/?video=${second}&autoplay=false`;
+    return buildTwitchEmbedUrl(TWITCH_PLAYER_URL, { video: second });
 
   if (
     segments.length === 3 &&
@@ -196,7 +201,7 @@ const normalizeTwitchUrl = (url: URL): string | null => {
     third &&
     TWITCH_CHANNEL_PATTERN.test(first)
   )
-    return `https://clips.twitch.tv/embed?clip=${encodeURIComponent(third)}&autoplay=false`;
+    return buildTwitchEmbedUrl(TWITCH_CLIP_EMBED_URL, { clip: third });
 
   if (
     segments.length === 1 &&
@@ -204,7 +209,7 @@ const normalizeTwitchUrl = (url: URL): string | null => {
     TWITCH_CHANNEL_PATTERN.test(first) &&
     !TWITCH_RESERVED_PATHS.includes(first.toLowerCase())
   )
-    return `https://player.twitch.tv/?channel=${encodeURIComponent(first)}&autoplay=false`;
+    return buildTwitchEmbedUrl(TWITCH_PLAYER_URL, { channel: first });
 
   return null;
 };
@@ -271,7 +276,7 @@ const normalizeGoogleUrl = (url: URL): string | null => {
 export const normalizeWikiEmbedUrl = (
   input: string,
 ): { provider: WikiEmbedProvider; src: string } | null => {
-  const url = parseUrl(input.trim());
+  const url = parseHttpUrl(input.trim());
   if (!url) return null;
 
   const youtube = normalizeYoutubeUrl(url);
@@ -299,13 +304,8 @@ export const isWikiIframeSrcAllowed = (
 ): boolean => {
   if (typeof src !== "string") return false;
 
-  let url: URL;
-  try {
-    url = new URL(src);
-  } catch {
-    return false;
-  }
-  if (url.protocol !== "https:") return false;
+  const url = parseHttpUrl(src);
+  if (url?.protocol !== "https:") return false;
 
   return allowlist.some((entry) => {
     const hostname = entry.trim().toLowerCase();
@@ -346,8 +346,8 @@ export const isAllowedWikiEmbedSrc = (
   iframeAllowlist: readonly string[],
 ): boolean => {
   if (typeof provider !== "string" || typeof src !== "string") return false;
-  const url = parseUrl(src);
-  if (!url || url.protocol !== "https:") return false;
+  const url = parseHttpUrl(src);
+  if (url?.protocol !== "https:") return false;
   const segments = url.pathname.split("/").filter(Boolean);
   const [first, second, third, fourth] = segments;
 

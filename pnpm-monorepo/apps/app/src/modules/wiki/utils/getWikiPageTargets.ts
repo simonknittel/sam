@@ -1,7 +1,4 @@
-import type {
-  WikiSharedContext,
-  WikiSharedContextPage,
-} from "../queries/getWikiContext";
+import type { WikiSharedContext } from "../queries/getWikiContext";
 import { collectWikiPageDescendants } from "./collectWikiPageDescendants";
 import { compareWikiPagesByOrder } from "./compareWikiPagesByOrder";
 
@@ -37,12 +34,7 @@ const collectWikiPageTargets = (
       ])
     : new Set<string>();
 
-  const childrenByParent = new Map<string | null, WikiSharedContextPage[]>();
-  for (const page of context.pages) {
-    const children = childrenByParent.get(page.parentId) ?? [];
-    children.push(page);
-    childrenByParent.set(page.parentId, children);
-  }
+  const childrenByParent = Map.groupBy(context.pages, (page) => page.parentId);
 
   const result: WikiPageTargetOption[] = [];
   const visited = new Set<string>();

@@ -1,18 +1,19 @@
 import { authorize } from "@/modules/auth/server";
 import { getReadableCitizenLogWhere } from "@/modules/citizen/queries/getCitizenLogTablePage";
+import type { GenericCitizenLogType } from "@/types";
 import * as z from "zod";
 import { protectedProcedure } from "../../trpc";
 
 export const getHistory = protectedProcedure
   .input(
     z.object({
-      type: z.union([
-        z.literal("handle"),
-        z.literal("discord-id"),
-        z.literal("teamspeak-id"),
-        z.literal("community-moniker"),
-        z.literal("citizen-id"),
-      ]), // TODO: Infer from CitizenLogType
+      type: z.enum([
+        "handle",
+        "discord-id",
+        "teamspeak-id",
+        "community-moniker",
+        "citizen-id",
+      ] satisfies GenericCitizenLogType[]),
       citizenId: z.string(),
     }),
   )

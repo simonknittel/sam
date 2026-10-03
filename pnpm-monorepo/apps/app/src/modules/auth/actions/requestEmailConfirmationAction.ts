@@ -9,7 +9,6 @@ import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { log } from "@/modules/logging";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { redirect } from "next/navigation";
-import { serializeError } from "serialize-error";
 import * as z from "zod";
 
 const schema = z.object({});
@@ -44,7 +43,7 @@ export const requestEmailConfirmationAction = createAuthenticatedAction(
     } catch (error) {
       log.error("Error while requesting email confirmation", {
         path: "/email-confirmation",
-        error: serializeError(error),
+        error,
       });
     }
 

@@ -280,45 +280,37 @@ const RequiredVariants = ({
     });
 
   const handleCreate = () => {
-    setItems((prev) => [...prev, "-"]);
+    setItems((previous) => [...previous, "-"]);
   };
 
   const handleChange = (
     event: ChangeEvent<HTMLSelectElement>,
     index: number,
   ) => {
-    setItems((prev) => {
-      const newItems = [...prev];
-      newItems[index] = event.target.value;
-      return newItems;
-    });
+    setItems((previous) => previous.with(index, event.target.value));
   };
 
   const handleDelete = (index: number) => {
-    setItems((prev) => {
-      const newItems = [...prev];
-      newItems.splice(index, 1);
-      return newItems;
-    });
+    setItems((previous) => previous.toSpliced(index, 1));
   };
 
+  /**
+   * The first item cannot move up and the last item cannot move down (the
+   * buttons are disabled), thus the other index is always in the list.
+   */
   const handleMoveUp = (index: number) => {
-    setItems((prev) => {
-      const newItems = [...prev];
-      const temp = newItems[index];
-      newItems[index] = newItems[index - 1];
-      newItems[index - 1] = temp;
-      return newItems;
-    });
+    setItems((previous) =>
+      previous
+        .with(index, previous[index - 1])
+        .with(index - 1, previous[index]),
+    );
   };
   const handleMoveDown = (index: number) => {
-    setItems((prev) => {
-      const newItems = [...prev];
-      const temp = newItems[index];
-      newItems[index] = newItems[index + 1];
-      newItems[index + 1] = temp;
-      return newItems;
-    });
+    setItems((previous) =>
+      previous
+        .with(index, previous[index + 1])
+        .with(index + 1, previous[index]),
+    );
   };
 
   return (

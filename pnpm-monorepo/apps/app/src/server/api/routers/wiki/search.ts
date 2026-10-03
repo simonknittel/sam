@@ -6,7 +6,6 @@ import {
   searchWiki,
 } from "@/modules/wiki/queries/searchWiki";
 import { TRPCError } from "@trpc/server";
-import { serializeError } from "serialize-error";
 import * as z from "zod";
 import { protectedProcedure } from "../../trpc";
 
@@ -38,7 +37,7 @@ export const search = protectedProcedure
       return await searchWiki(input.query);
     } catch (error) {
       log.error("Failed to search the wiki", {
-        error: serializeError(error),
+        error,
       });
 
       throw new TRPCError({

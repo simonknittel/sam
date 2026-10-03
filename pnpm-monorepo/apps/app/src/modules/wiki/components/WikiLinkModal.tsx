@@ -4,7 +4,10 @@ import { Button2 } from "@/modules/common/components/Button2";
 import { TextInput } from "@/modules/common/components/form/TextInput";
 import Modal from "@/modules/common/components/Modal";
 import { api } from "@/trpc/react";
-import { getWikiSelectionRestrictions } from "@sam-monorepo/wiki-editor";
+import {
+  getWikiSelectionRestrictions,
+  parseHttpUrl,
+} from "@sam-monorepo/wiki-editor";
 import type { Editor } from "@tiptap/react";
 import { useState } from "react";
 import toast from "react-hot-toast";
@@ -96,11 +99,7 @@ export const WikiLinkModal = ({ editor, onRequestClose }: Props) => {
 
   const insertExternalLink = () => {
     const href = /^www\./i.test(trimmed) ? `https://${trimmed}` : trimmed;
-    try {
-      const parsed = new URL(href);
-      if (parsed.protocol !== "https:" && parsed.protocol !== "http:")
-        throw new Error("Unsupported protocol");
-    } catch {
+    if (!parseHttpUrl(href)) {
       toast.error("Bitte eine gültige URL angeben (https://…).");
       return;
     }

@@ -39,21 +39,13 @@ export const getTotalOrganizationStatisticChart = cache(
       }),
     ]);
 
-    const organizationsByDate = new Map<string, number>();
-    for (const organization of organizations) {
-      const dateKey = getLocalDateKey(
-        organization.createdAt,
-        ORGANIZATION_TIMEZONE,
-      );
-      organizationsByDate.set(
-        dateKey,
-        (organizationsByDate.get(dateKey) ?? 0) + 1,
-      );
-    }
+    const organizationsByDate = Map.groupBy(organizations, (organization) =>
+      getLocalDateKey(organization.createdAt, ORGANIZATION_TIMEZONE),
+    );
 
     let runningTotal = baselineCount;
     const orderedTotals = options.axisPoints.map(({ key, timestamp }) => {
-      const delta = organizationsByDate.get(key) ?? 0;
+      const delta = organizationsByDate.get(key)?.length ?? 0;
       runningTotal += delta;
 
       return {

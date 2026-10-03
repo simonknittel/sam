@@ -238,10 +238,7 @@ export const getEvents = cache(
         events,
         cancelledParticipationEventIds,
         newEventIds,
-        nextCursor:
-          hasNextPage && events.length > 0
-            ? events[events.length - 1].id
-            : null,
+        nextCursor: hasNextPage && events.length > 0 ? events.at(-1)!.id : null,
         prevCursor: hasPrevPage && events.length > 0 ? events[0].id : null,
       };
     },

@@ -11,7 +11,6 @@ import {
 } from "@sam-monorepo/wiki-editor";
 import { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { unstable_rethrow } from "next/navigation";
-import { serializeError } from "serialize-error";
 import * as z from "zod";
 import {
   getWikiPageScopedContext,
@@ -113,7 +112,7 @@ export const importWikiPageContent = createAuthenticatedAction(
     } catch (error) {
       unstable_rethrow(error);
       log.error("Wiki content import failed", {
-        error: serializeError(error),
+        error,
       });
       return {
         error:

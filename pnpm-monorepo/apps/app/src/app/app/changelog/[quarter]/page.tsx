@@ -6,19 +6,6 @@ import { getChangelogEntriesByQuarter } from "@/modules/changelog/queries/getCha
 import { getUnseenChangelogEntryKeys } from "@/modules/changelog/queries/getUnseenChangelogEntryKeys";
 import { notFound } from "next/navigation";
 
-function groupByDate<T extends { date: string }>(items: T[]): Map<string, T[]> {
-  const map = new Map<string, T[]>();
-  for (const item of items) {
-    const existing = map.get(item.date);
-    if (existing) {
-      existing.push(item);
-    } else {
-      map.set(item.date, [item]);
-    }
-  }
-  return map;
-}
-
 export default async function Page({
   params,
 }: PageProps<"/app/changelog/[quarter]">) {
@@ -31,7 +18,7 @@ export default async function Page({
 
   const unseenKeys = await getUnseenChangelogEntryKeys();
 
-  const grouped = groupByDate(quarterEntries);
+  const grouped = Map.groupBy(quarterEntries, (entry) => entry.date);
   const dates = [...grouped.keys()].toSorted(
     (a, b) => new Date(b).getTime() - new Date(a).getTime(),
   );

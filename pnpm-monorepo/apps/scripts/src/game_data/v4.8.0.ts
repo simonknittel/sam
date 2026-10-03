@@ -59,7 +59,7 @@ function extractKeys(
   rootTagName: string,
 ): { originalKey: string; itemKey: string } | null {
   const parts = rootTagName.split(".");
-  const lastPart = parts[parts.length - 1];
+  const lastPart = parts.at(-1);
 
   if (!lastPart?.startsWith("BP_CRAFT_")) return null;
 

@@ -229,7 +229,7 @@ const OnboardingStepCard = ({
     if (focusableElements.length === 0) return;
 
     const firstElement = focusableElements[0];
-    const lastElement = focusableElements[focusableElements.length - 1];
+    const lastElement = focusableElements.at(-1)!;
     /**
      * -1 means the focus sits on the card itself — the initial state of
      * every step. Treat it like the first element, so Shift+Tab wraps to

@@ -1,7 +1,6 @@
 import { log } from "@/modules/logging";
 import { getAssumableUsers as getAssumableUsersQuery } from "@/modules/users/queries/getAssumableUsers";
 import { TRPCError } from "@trpc/server";
-import { serializeError } from "serialize-error";
 import { adminProcedure } from "../../trpc";
 
 export const getAssumableUsers = adminProcedure.query(async ({ ctx }) => {
@@ -11,7 +10,7 @@ export const getAssumableUsers = adminProcedure.query(async ({ ctx }) => {
     );
   } catch (error) {
     log.error("Failed to fetch assumable users", {
-      error: serializeError(error),
+      error,
     });
 
     throw new TRPCError({

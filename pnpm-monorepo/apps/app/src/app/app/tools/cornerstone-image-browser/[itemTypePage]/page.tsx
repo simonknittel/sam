@@ -4,10 +4,9 @@ import Note from "@/modules/common/components/Note";
 import { generateMetadataWithTryCatch } from "@/modules/common/utils/generateMetadataWithTryCatch";
 import { cornerstoneImageBrowserItemTypes } from "@/modules/cornerstone-image-browser/utils/config";
 import { log } from "@/modules/logging";
+import { wikiPageLinkHref } from "@/modules/wiki/utils/wikiPageLinks";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { FaChevronLeft } from "react-icons/fa";
-import { serializeError } from "serialize-error";
 import * as z from "zod";
 
 const schema = z.array(
@@ -36,6 +35,41 @@ export const generateMetadata = generateMetadataWithTryCatch(
   },
 );
 
+/**
+ * Gets the items of one item type. Returns null if Cornerstone does not
+ * respond in time or sends data that is not valid.
+ */
+const getItems = async (dataUrl: string) => {
+  try {
+    const response = await fetch(dataUrl, {
+      next: {
+        revalidate: 86400, // 24 hours
+      },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!response.ok) {
+      log.error("Failed to load data from Cornerstone", {
+        status: response.status,
+        responseBody: await response.text(),
+      });
+      return null;
+    }
+
+    const parsedData = schema.safeParse(await response.json());
+    if (!parsedData.success) {
+      log.error("Failed to parse data from Cornerstone", {
+        error: parsedData.error,
+      });
+      return null;
+    }
+
+    return parsedData.data;
+  } catch (error) {
+    log.error("Failed to load data from Cornerstone", { error });
+    return null;
+  }
+};
+
 export default async function Page({
   params,
 }: PageProps<"/app/tools/cornerstone-image-browser/[itemTypePage]">) {
@@ -51,58 +85,7 @@ export default async function Page({
 
   const t = await getTranslations();
 
-  const response = await fetch(itemTypeConfig.dataUrl, {
-    next: {
-      revalidate: 86400, // 24 hours
-    },
-  });
-  if (!response.ok) {
-    log.error("Failed to load data from Cornerstone", {
-      status: response.status,
-      responseBody: await response.text(),
-    });
-    return (
-      <>
-        <Link
-          href="/app/tools"
-          className="inline-flex items-center gap-2 text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300"
-        >
-          <FaChevronLeft />
-          Alle Tools
-        </Link>
-
-        <h1 className="mt-2 text-xl leading-tight font-bold">
-          {itemTypeConfig.title} - Cornerstone Image Browser
-        </h1>
-
-        <Note
-          type="error"
-          className="mt-4"
-          message={t("Common.internalServerError")}
-        />
-      </>
-    );
-  }
-  const data = (await response.json()) as unknown;
-  const parsedData = schema.safeParse(data);
-  if (!parsedData.success) {
-    log.error("Failed to parse data from Cornerstone", {
-      error: serializeError(parsedData.error),
-    });
-    return (
-      <>
-        <h1 className="text-xl leading-tight font-bold">
-          {itemTypeConfig.title}
-        </h1>
-
-        <Note
-          type="error"
-          className="mt-4"
-          message={t("Common.internalServerError")}
-        />
-      </>
-    );
-  }
+  const items = await getItems(itemTypeConfig.dataUrl);
 
   return (
     <>
@@ -110,15 +93,9 @@ export default async function Page({
         {itemTypeConfig.title}
       </h1>
 
-      {!parsedData.success ? (
-        <Note
-          type="error"
-          className="mt-4"
-          message={t("Common.internalServerError")}
-        />
-      ) : (
+      {items ? (
         <div className="mt-4 grid grid-cols-2 gap-8 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-          {parsedData.data.map((item) => (
+          {items.map((item) => (
             <Link
               key={item.ItemId}
               href={`${itemTypeConfig.linkBase}/${item.ItemId}`}
@@ -151,6 +128,21 @@ export default async function Page({
             </Link>
           ))}
         </div>
+      ) : (
+        <Note
+          type="error"
+          className="mt-4"
+          message={t.rich("Common.internalServerError", {
+            link: (chunks) => (
+              <Link
+                href={wikiPageLinkHref("support")}
+                className="text-interaction-500 underline hover:text-interaction-300 focus-visible:text-interaction-300 active:text-interaction-300"
+              >
+                {chunks}
+              </Link>
+            ),
+          })}
+        />
       )}
     </>
   );

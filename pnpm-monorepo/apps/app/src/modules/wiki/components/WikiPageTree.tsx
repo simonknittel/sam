@@ -65,9 +65,7 @@ const RootList = ({ className, nodes, dimmedPageIds }: Props) => {
         />
       ))}
       {nodes.length > 0 && (
-        <WikiPageTreeEndDropTarget
-          lastRootPageId={nodes[nodes.length - 1].id}
-        />
+        <WikiPageTreeEndDropTarget lastRootPageId={nodes.at(-1)!.id} />
       )}
     </ul>
   );

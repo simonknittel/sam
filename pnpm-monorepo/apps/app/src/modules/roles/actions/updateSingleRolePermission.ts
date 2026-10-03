@@ -14,7 +14,7 @@ const schema = z.object({
     .trim()
     .min(1)
     .regex(/^[\w\-]+;[\w\-]+(?:;[\w\-]+=[\w\-\*]+)*$/),
-  checked: z.coerce.boolean().default(false),
+  checked: z.stringbool(),
 });
 
 export const updateSingleRolePermission = createAuthenticatedAction(

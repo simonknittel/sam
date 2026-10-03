@@ -3,6 +3,13 @@ import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { unstable_cache } from "next/cache";
 import * as z from "zod";
 
+/**
+ * One time limit for all requests of one list: a limit for each request adds
+ * up with the number of requests. The user waits for the full list, and one
+ * failed request discards the full list.
+ */
+const TOTAL_TIMEOUT_MILLISECONDS = 20_000;
+
 const schema = z.object({
   data: z.object({
     resultset: z.array(
@@ -38,6 +45,7 @@ export const getLeaderboard = (mode: "SB", season: string, pages: number) => {
   return unstable_cache(
     withTrace("getLeaderboard", async (mode: "SB", season: string) => {
       const ranks: z.infer<typeof schema>["data"]["resultset"] = [];
+      const signal = AbortSignal.timeout(TOTAL_TIMEOUT_MILLISECONDS);
 
       for (let page = 1; page <= pages; page++) {
         const response = await fetch(
@@ -55,6 +63,7 @@ export const getLeaderboard = (mode: "SB", season: string, pages: number) => {
             headers: {
               "Content-Type": "application/json",
             },
+            signal,
           },
         );
 

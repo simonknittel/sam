@@ -46,7 +46,7 @@ const getSilcTone = (balance: number) => {
 };
 
 const formatMonthlySalary = (monthlySalary: number) =>
-  `${monthlySalary > 0 ? "+" : ""}${monthlySalary.toLocaleString("de-de")} monatlich`;
+  `${monthlySalary.toLocaleString("de-de", { signDisplay: "exceptZero" })} monatlich`;
 
 interface Props {
   readonly profile: CitizenProfile;

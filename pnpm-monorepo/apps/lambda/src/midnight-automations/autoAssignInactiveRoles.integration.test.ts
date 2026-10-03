@@ -1,4 +1,5 @@
 import { prisma } from "@sam-monorepo/database";
+import { AuditEventType } from "@sam-monorepo/domain";
 import { beforeEach, expect, test } from "vitest";
 import { truncateAllTables } from "../../test/database";
 import { autoAssignInactiveRoles } from "./autoAssignInactiveRoles";
@@ -43,6 +44,21 @@ test("assigns the role to inactive citizens with a login only", async () => {
       where: { citizenId: { in: [active.id, withoutLogin.id] } },
     }),
   ).toBe(0);
+  expect(
+    await prisma.auditEvent.findMany({
+      where: { type: AuditEventType.ROLE_AUTO_ASSIGNED },
+      select: { data: true },
+    }),
+  ).toEqual([
+    {
+      data: {
+        citizenId: inactive.id,
+        citizenHandle: "inactive",
+        roleId: expect.any(String),
+        roleName: "Reserve",
+      },
+    },
+  ]);
 });
 
 test("a second run adds no second history row", async () => {

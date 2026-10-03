@@ -39,23 +39,15 @@ export const getRegisteredUserStatisticChart = cache(
       }),
     ]);
 
-    const registrationsByDate = new Map<string, number>();
-    for (const registration of registrations) {
-      if (!registration.createdAt) continue;
-
-      const dateKey = getLocalDateKey(
-        registration.createdAt,
-        ORGANIZATION_TIMEZONE,
-      );
-      registrationsByDate.set(
-        dateKey,
-        (registrationsByDate.get(dateKey) ?? 0) + 1,
-      );
-    }
+    const registrationsByDate = Map.groupBy(registrations, (registration) =>
+      registration.createdAt
+        ? getLocalDateKey(registration.createdAt, ORGANIZATION_TIMEZONE)
+        : null,
+    );
 
     let runningTotal = baselineCount;
     const orderedTotals = options.axisPoints.map(({ key, timestamp }) => {
-      const delta = registrationsByDate.get(key) ?? 0;
+      const delta = registrationsByDate.get(key)?.length ?? 0;
       runningTotal += delta;
 
       return {
