@@ -13,7 +13,6 @@ import { useState } from "react";
 import { FaPlus, FaSave, FaTrash } from "react-icons/fa";
 import { updateRoleSalaries } from "../../actions/updateRoleSalaries";
 import { RoleSelector } from "./RoleSelector";
-import styles from "./index.module.css";
 
 interface Props {
   readonly className?: string;
@@ -64,7 +63,10 @@ export const RoleSalariesClient = ({
         <>
           <div className="mt-4 flex flex-col gap-6">
             {salaries.map((salary) => (
-              <div key={salary.id} className={clsx("grid gap-2", styles.grid)}>
+              <div
+                key={salary.id}
+                className="grid grid-cols-[1fr_1fr_44px] grid-rows-3 gap-2 md:grid-cols-[300px_1fr_1fr_44px] md:grid-rows-2"
+              >
                 <RoleSelector
                   defaultValue={salary.roleId}
                   onChange={(roleId) => {
@@ -74,7 +76,7 @@ export const RoleSalariesClient = ({
                       ),
                     );
                   }}
-                  style={{ gridArea: "role" }}
+                  className="col-span-3 md:col-span-1"
                 />
 
                 <input
@@ -91,9 +93,6 @@ export const RoleSalariesClient = ({
                   }}
                   required
                   className="w-full rounded-secondary border border-neutral-800 bg-neutral-900 p-2"
-                  style={{
-                    gridArea: "value",
-                  }}
                 />
 
                 <input
@@ -110,9 +109,6 @@ export const RoleSalariesClient = ({
                   }}
                   required
                   className="w-full rounded-secondary border border-neutral-800 bg-neutral-900 p-2"
-                  style={{
-                    gridArea: "dayOfMonth",
-                  }}
                 />
 
                 <Button
@@ -121,17 +117,11 @@ export const RoleSalariesClient = ({
                   variant="secondary"
                   iconOnly
                   className="flex-none"
-                  style={{
-                    gridArea: "delete",
-                  }}
                 >
                   <FaTrash />
                 </Button>
 
-                <div
-                  className="flex items-center gap-4"
-                  style={{ gridArea: "summary" }}
-                >
+                <div className="col-span-full flex items-center gap-4">
                   <div className="flex flex-col gap-1">
                     <div className="text-sm text-gray-500">Citizen</div>
                     {data.find((role) => role.role.id === salary.roleId)
