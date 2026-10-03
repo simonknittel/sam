@@ -4,7 +4,6 @@ import { isOpenAIEnabled } from "@/modules/common/utils/isOpenAIEnabled";
 import { log } from "@/modules/logging";
 import { TRPCError } from "@trpc/server";
 import type { ChatCompletionMessageParam } from "openai/resources/index.mjs";
-import { serializeError } from "serialize-error";
 import * as z from "zod";
 import { protectedProcedure } from "../../trpc";
 
@@ -92,7 +91,7 @@ export const getRoleNameSuggestions = protectedProcedure.query(
       };
     } catch (error) {
       log.error("Failed to parse role names", {
-        error: serializeError(error),
+        error,
       });
 
       throw new TRPCError({

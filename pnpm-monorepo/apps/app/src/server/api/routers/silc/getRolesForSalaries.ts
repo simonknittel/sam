@@ -3,7 +3,6 @@ import { log } from "@/modules/logging";
 import { ACTIVE_CITIZEN_WHERE } from "@sam-monorepo/domain";
 import { hasReachedMaxLevel } from "@sam-monorepo/permissions";
 import { TRPCError } from "@trpc/server";
-import { serializeError } from "serialize-error";
 import { protectedProcedure } from "../../trpc";
 
 /**
@@ -41,7 +40,7 @@ export const getRolesForSalaries = protectedProcedure.query(async () => {
     }));
   } catch (error) {
     log.error("Failed to fetch roles", {
-      error: serializeError(error),
+      error,
     });
 
     throw new TRPCError({

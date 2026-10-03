@@ -12,7 +12,6 @@ import {
 import { log } from "@/modules/logging";
 import { cookies } from "next/headers";
 import { redirect, unstable_rethrow } from "next/navigation";
-import { serializeError } from "serialize-error";
 import * as z from "zod";
 import {
   getWikiContext,
@@ -194,7 +193,7 @@ export const pasteWikiPages = createAuthenticatedAction(
       } catch (error) {
         unstable_rethrow(error);
         log.error("Wiki paste-replace failed", {
-          error: serializeError(error),
+          error,
         });
         return {
           error:

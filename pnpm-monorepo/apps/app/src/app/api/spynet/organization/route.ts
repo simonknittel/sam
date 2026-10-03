@@ -8,7 +8,6 @@ import { getOrganizationBySpectrumId } from "@/modules/organizations/queries/get
 import { scrapeOrganizationLogo } from "@/modules/organizations/utils/scrapeOrganizationLogo";
 import { ConfirmationStatus } from "@sam-monorepo/database/client";
 import { NextResponse } from "next/server";
-import { serializeError } from "serialize-error";
 import * as z from "zod";
 
 const postBodySchema = z.object({
@@ -48,7 +47,7 @@ export async function POST(request: Request) {
     } catch (error) {
       log.error("Failed to scrape organization logo", {
         spectrumId: data.spectrumId,
-        error: serializeError(error),
+        error,
       });
     }
 

@@ -8,7 +8,6 @@ import { log } from "@/modules/logging";
 import { getWikiEditorSchema } from "@sam-monorepo/wiki-editor";
 import { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { unstable_rethrow } from "next/navigation";
-import { serializeError } from "serialize-error";
 import * as z from "zod";
 import {
   getWikiPageScopedContext,
@@ -92,7 +91,7 @@ export const restoreWikiPageSnapshot = createAuthenticatedAction(
     } catch (error) {
       unstable_rethrow(error);
       log.error("Wiki snapshot restore failed", {
-        error: serializeError(error),
+        error,
       });
       return {
         error:

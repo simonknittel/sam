@@ -12,7 +12,6 @@ import { requireConfirmedEmailForTrpc } from "@/modules/auth/utils/emailConfirma
 import { isAdminBehindSession } from "@/modules/auth/utils/isAdminBehindSession";
 import { log } from "@/modules/logging";
 import { initTRPC, TRPCError } from "@trpc/server";
-import { serializeError } from "serialize-error";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
@@ -139,7 +138,7 @@ export const toTrpcError = (error: unknown, message: string): TRPCError => {
   if (error instanceof TRPCError) return error;
 
   log.error(message, {
-    error: serializeError(error),
+    error,
   });
 
   return new TRPCError({

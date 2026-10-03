@@ -14,7 +14,6 @@ import {
 } from "@sam-monorepo/domain";
 import { unstable_rethrow } from "next/navigation";
 import { cache } from "react";
-import { serializeError } from "serialize-error";
 import { SEASONAL_THEMES } from "../utils/SEASONAL_THEMES";
 import type { SeasonalThemeResolution } from "../utils/types";
 import { getSeasonalDateOverride } from "./getSeasonalDateOverride";
@@ -66,7 +65,7 @@ const readViewerCitizen = async (
 
     log.warn("Failed to read the citizen of the seasonal theme", {
       citizenId,
-      error: serializeError(error),
+      error,
     });
 
     return null;
@@ -89,7 +88,7 @@ const getViewerLocalDate = (
 
     log.warn("Failed to resolve the local date for the seasonal theme", {
       citizenId,
-      error: serializeError(error),
+      error,
     });
 
     return null;

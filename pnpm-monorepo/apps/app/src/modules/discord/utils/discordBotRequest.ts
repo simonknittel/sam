@@ -3,7 +3,6 @@ import "server-only";
 import { env } from "@/env";
 import { log } from "@/modules/logging";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import { serializeError } from "serialize-error";
 import type * as z from "zod";
 import { discordErrorResponseSchema } from "./schemas";
 
@@ -146,7 +145,7 @@ const sendRequest = async <Schema extends z.ZodType>({
       log.error("Discord API request failed", {
         path,
         method,
-        error: serializeError(error),
+        error,
       });
       return { outcome: DiscordOutcome.Failed };
     }
@@ -215,7 +214,7 @@ const sendRequest = async <Schema extends z.ZodType>({
       log.error("Discord API returned an unexpected response body", {
         path,
         method,
-        error: serializeError(error),
+        error,
       });
       return { outcome: DiscordOutcome.Failed };
     }

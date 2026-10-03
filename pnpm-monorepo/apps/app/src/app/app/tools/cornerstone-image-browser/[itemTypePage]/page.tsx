@@ -7,7 +7,6 @@ import { log } from "@/modules/logging";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { FaChevronLeft } from "react-icons/fa";
-import { serializeError } from "serialize-error";
 import * as z from "zod";
 
 const schema = z.array(
@@ -87,7 +86,7 @@ export default async function Page({
   const parsedData = schema.safeParse(data);
   if (!parsedData.success) {
     log.error("Failed to parse data from Cornerstone", {
-      error: serializeError(parsedData.error),
+      error: parsedData.error,
     });
     return (
       <>

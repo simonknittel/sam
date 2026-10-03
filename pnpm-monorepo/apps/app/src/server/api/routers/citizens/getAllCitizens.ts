@@ -1,7 +1,6 @@
 import { getCitizens } from "@/modules/citizen/queries/getCitizens";
 import { log } from "@/modules/logging";
 import { TRPCError } from "@trpc/server";
-import { serializeError } from "serialize-error";
 import { protectedProcedure } from "../../trpc";
 
 export const getAllCitizens = protectedProcedure.query(async () => {
@@ -9,7 +8,7 @@ export const getAllCitizens = protectedProcedure.query(async () => {
     return await getCitizens();
   } catch (error) {
     log.error("Failed to fetch citizens", {
-      error: serializeError(error),
+      error,
     });
 
     throw new TRPCError({

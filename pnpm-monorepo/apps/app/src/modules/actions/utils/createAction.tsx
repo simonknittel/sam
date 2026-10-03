@@ -9,7 +9,6 @@ import { getTracer } from "@/modules/tracing/utils/getTracer";
 import { SpanStatusCode } from "@opentelemetry/api";
 import { getTranslations } from "next-intl/server";
 import { unstable_rethrow } from "next/navigation";
-import { serializeError } from "serialize-error";
 import type * as z from "zod";
 
 export type ActionResponse =
@@ -166,7 +165,7 @@ export const createAuthenticatedAction = <
           );
           if (!result.success) {
             log.warn("Invalid Zod schema", {
-              error: serializeError(result.error),
+              error: result.error,
             });
 
             return {
@@ -188,7 +187,7 @@ export const createAuthenticatedAction = <
       });
     } catch (error) {
       unstable_rethrow(error);
-      log.error("Internal Server Error", { error: serializeError(error) });
+      log.error("Internal Server Error", { error });
       return {
         error: t("Common.internalServerError"),
         requestPayload: formData,

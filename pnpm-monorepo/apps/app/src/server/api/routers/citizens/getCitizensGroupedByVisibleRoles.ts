@@ -1,7 +1,6 @@
 import { getCitizensGroupedByVisibleRoles as query } from "@/modules/citizen/queries/getCitizensGroupedByVisibleRoles";
 import { log } from "@/modules/logging";
 import { TRPCError } from "@trpc/server";
-import { serializeError } from "serialize-error";
 import { protectedProcedure } from "../../trpc";
 
 export const getCitizensGroupedByVisibleRoles = protectedProcedure.query(
@@ -10,7 +9,7 @@ export const getCitizensGroupedByVisibleRoles = protectedProcedure.query(
       return await query();
     } catch (error) {
       log.error("Failed to fetch citizens", {
-        error: serializeError(error),
+        error,
       });
 
       throw new TRPCError({

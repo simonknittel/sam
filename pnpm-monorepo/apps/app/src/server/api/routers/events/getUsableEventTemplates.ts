@@ -1,7 +1,6 @@
 import { getUsableEventTemplates as query } from "@/modules/event-templates/queries/getEventTemplates";
 import { log } from "@/modules/logging";
 import { TRPCError } from "@trpc/server";
-import { serializeError } from "serialize-error";
 import { protectedProcedure } from "../../trpc";
 
 /**
@@ -28,7 +27,7 @@ export const getUsableEventTemplates = protectedProcedure.query(async () => {
     }));
   } catch (error) {
     log.error("Failed to fetch usable event templates", {
-      error: serializeError(error),
+      error,
     });
 
     throw new TRPCError({

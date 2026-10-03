@@ -1,7 +1,6 @@
 import { log } from "@/modules/logging";
 import { getVisibleRoles as query } from "@/modules/roles/utils/getRoles";
 import { TRPCError } from "@trpc/server";
-import { serializeError } from "serialize-error";
 import { protectedProcedure } from "../../trpc";
 
 export const getVisibleRoles = protectedProcedure.query(async () => {
@@ -9,7 +8,7 @@ export const getVisibleRoles = protectedProcedure.query(async () => {
     return await query();
   } catch (error) {
     log.error("Failed to fetch visible roles", {
-      error: serializeError(error),
+      error,
     });
 
     throw new TRPCError({
