@@ -190,6 +190,7 @@ export const Position = ({
                 className={clsx("truncate font-bold", {
                   "text-2xl": position.fontSize === "large",
                 })}
+                title={position.name}
                 style={{
                   color: position.textColor || undefined,
                 }}

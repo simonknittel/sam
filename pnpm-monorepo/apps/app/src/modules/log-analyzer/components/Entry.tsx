@@ -88,7 +88,9 @@ export const Entry = memo(function Entry({ entry }: Props) {
 
       <td className="flex items-center gap-2 text-white/40">
         <Icon className="shrink-0" />
-        <span className="truncate">{title}</span>
+        <span className="truncate" title={title}>
+          {title}
+        </span>
       </td>
 
       <td className="truncate">{entry.message}</td>

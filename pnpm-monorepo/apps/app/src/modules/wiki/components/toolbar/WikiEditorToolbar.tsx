@@ -125,6 +125,7 @@ export const WikiEditorToolbar = ({
       <ToolbarButton
         title="Zitat"
         isActive={active?.blockquote ?? false}
+        isToggle
         // Inside a quote the toggle still unwraps it
         disabled={restricted.blocks && !active?.blockquote}
         onClick={() => editor?.chain().focus().toggleBlockquote().run()}
@@ -135,6 +136,7 @@ export const WikiEditorToolbar = ({
       <ToolbarButton
         title="Codeblock"
         isActive={active?.codeBlock ?? false}
+        isToggle
         // Inside a code block the toggle still converts it back to text
         disabled={restricted.blocks && !active?.codeBlock}
         onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
@@ -145,6 +147,7 @@ export const WikiEditorToolbar = ({
       <ToolbarButton
         title="Ausklappbarer Abschnitt"
         isActive={active?.details ?? false}
+        isToggle
         // From inside (incl. the title) the toggle still unwraps the section
         disabled={restricted.blocks && !active?.details}
         onClick={() => {

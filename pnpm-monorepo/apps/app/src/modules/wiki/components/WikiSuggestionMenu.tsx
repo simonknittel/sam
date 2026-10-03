@@ -175,7 +175,9 @@ export const WikiSuggestionMenu = <Item extends WikiSuggestionMenuItem>({
               </span>
             )}
             <span className="flex min-w-0 flex-1 flex-col items-start">
-              <span className="max-w-full truncate">{item.title}</span>
+              <span className="max-w-full truncate" title={item.title}>
+                {item.title}
+              </span>
               {item.subtitle !== undefined && (
                 <span className="text-xs text-neutral-500">
                   {item.subtitle}

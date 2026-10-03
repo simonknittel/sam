@@ -43,6 +43,7 @@ export const CalloutColorSwatches = ({
           key={color}
           type="button"
           title={COLOR_LABELS[color]}
+          aria-pressed={activeColor === color}
           onClick={() => onSelect(color)}
           className={clsx(
             "size-6 cursor-pointer rounded-secondary border",

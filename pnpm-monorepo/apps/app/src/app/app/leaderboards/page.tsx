@@ -47,7 +47,10 @@ export default async function Page() {
                   {citizen.rank}
                 </td>
 
-                <td className="flex h-14 items-center truncate px-2">
+                <td
+                  className="flex h-14 items-center truncate px-2"
+                  title={citizen.displayname}
+                >
                   {citizen.displayname}
                 </td>
               </tr>

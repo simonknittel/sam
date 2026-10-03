@@ -39,6 +39,7 @@ export const WikiImageFloatActions = ({
         key={side}
         title={title}
         isActive={floatSide === side}
+        isToggle
         onClick={() => floatWikiImage(editor, position, side)}
       >
         <Icon />

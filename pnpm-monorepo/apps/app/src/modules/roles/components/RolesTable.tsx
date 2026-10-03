@@ -143,7 +143,9 @@ export const RolesTable = async ({ className, searchParams }: Props) => {
                     <div className="size-6 flex-none" />
                   )}
 
-                  <p className="truncate font-bold">{role.name}</p>
+                  <p className="truncate font-bold" title={role.name}>
+                    {role.name}
+                  </p>
                 </Link>
               </td>
 

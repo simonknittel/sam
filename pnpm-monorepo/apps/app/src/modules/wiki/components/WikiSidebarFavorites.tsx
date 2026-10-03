@@ -38,7 +38,9 @@ export const WikiSidebarFavorites = ({ pages }: Props) => {
                 ) : (
                   <FaStar className="size-3 flex-none text-amber-400" />
                 )}
-                <span className="truncate">{page.title}</span>
+                <span className="truncate" title={page.title}>
+                  {page.title}
+                </span>
               </Link>
             </li>
           ))}

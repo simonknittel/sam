@@ -56,6 +56,7 @@ export const WikiBlockLayoutActions = ({
             key={title}
             title={title}
             isActive={widthPx === presetWidthPx}
+            isToggle
             onClick={() =>
               setAttribute("widthPx", presetWidthPx ?? WIKI_FULL_WIDTH)
             }
@@ -72,6 +73,7 @@ export const WikiBlockLayoutActions = ({
           key={value}
           title={title}
           isActive={align === value}
+          isToggle
           onClick={() =>
             setAttribute("align", value === "center" ? null : value)
           }

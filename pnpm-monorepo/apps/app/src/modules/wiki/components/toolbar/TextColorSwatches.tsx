@@ -36,6 +36,7 @@ export const TextColorSwatches = ({ activeColor = null, onSelect }: Props) => {
           key={color}
           type="button"
           title={WIKI_COLOR_LABELS[color]}
+          aria-pressed={activeColor === color}
           onClick={() => onSelect(color)}
           className={clsx(
             "flex size-6 cursor-pointer items-center justify-center rounded-secondary border text-sm font-bold",

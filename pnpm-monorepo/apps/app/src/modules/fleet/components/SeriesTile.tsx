@@ -40,6 +40,10 @@ export const SeriesTile = async ({ className, manufacturerId }: Props) => {
 
         <tbody>
           {series.map((row) => {
+            const variantNames = row.variants
+              .map((variant) => variant.name)
+              .join(", ");
+
             return (
               <tr
                 key={row.id}
@@ -58,8 +62,8 @@ export const SeriesTile = async ({ className, manufacturerId }: Props) => {
                   </Link>
                 </td>
 
-                <td className="line-clamp-2">
-                  {row.variants.map((variant) => variant.name).join(", ")}
+                <td className="line-clamp-2" title={variantNames}>
+                  {variantNames}
                 </td>
 
                 <td>

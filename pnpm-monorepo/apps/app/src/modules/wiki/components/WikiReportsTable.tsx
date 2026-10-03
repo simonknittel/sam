@@ -132,7 +132,9 @@ const ReportRow = ({ report }: ReportRowProps) => {
             title={report.page.title}
           >
             {report.page.iconId && <WikiPageIcon iconId={report.page.iconId} />}
-            <p className="truncate">{report.page.title}</p>
+            <p className="truncate" title={report.page.title}>
+              {report.page.title}
+            </p>
           </Link>
         ) : (
           <p

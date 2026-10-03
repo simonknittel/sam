@@ -73,6 +73,7 @@ export const WikiBlockMenuActions = ({ editor, menu }: Props) => {
           <ToolbarButton
             title="Inhalte vertikal zentrieren"
             isActive={menu.verticalAlign === "center"}
+            isToggle
             onClick={() => toggleGridVerticalAlign("center")}
           >
             <MdVerticalAlignCenter />
@@ -81,6 +82,7 @@ export const WikiBlockMenuActions = ({ editor, menu }: Props) => {
           <ToolbarButton
             title="Inhalte auf gleiche Höhe strecken"
             isActive={menu.verticalAlign === "stretch"}
+            isToggle
             onClick={() => toggleGridVerticalAlign("stretch")}
           >
             <MdHeight />
@@ -99,6 +101,7 @@ export const WikiBlockMenuActions = ({ editor, menu }: Props) => {
           <ToolbarButton
             title="Kleiner Text"
             isActive={menu.textSize === "small"}
+            isToggle
             onClick={toggleListTextSize}
           >
             <FaParagraph className="text-[0.6rem]" />
