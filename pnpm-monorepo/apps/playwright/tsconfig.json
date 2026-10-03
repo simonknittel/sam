@@ -1,28 +1,8 @@
-/* Reference: https://www.totaltypescript.com/tsconfig-cheat-sheet */
 {
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    /* Base Options: */
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "target": "es2024",
-    "allowJs": true,
-    "resolveJsonModule": true,
-    "moduleDetection": "force",
-    "isolatedModules": true,
-    "verbatimModuleSyntax": true,
-    /* Strictness */
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    /* If NOT transpiling with TypeScript: */
     "module": "preserve",
     "noEmit": true,
-    /* If your code runs in the DOM: */
-    "lib": ["es2024", "dom", "dom.iterable"],
-    /* Since TypeScript 6, packages from `node_modules/@types` are no longer
-       included automatically (the `types` default changed from `["*"]` to
-       `[]`). This makes the Node.js globals from `@types/node` (`process`,
-       etc.) available again. */
-    "types": ["node"]
+    "lib": ["es2025", "dom"]
   }
 }

@@ -11,6 +11,7 @@ COPY packages/domain/package.json packages/domain/
 COPY packages/wiki-editor/package.json packages/wiki-editor/
 RUN pnpm install --frozen-lockfile --filter "@sam-monorepo/collab..." --ignore-scripts
 
+COPY tsconfig.base.json ./
 COPY packages/database packages/database
 COPY packages/domain packages/domain
 COPY packages/wiki-editor packages/wiki-editor
