@@ -23,7 +23,6 @@ export type ActionResponse =
     }
   | {
       error: string;
-      errorDetails?: unknown;
       /**
        * Since Next.js resets a form after submission, we include the original
        * request payload in the response for the respective client component
@@ -170,7 +169,6 @@ export const createAuthenticatedAction = <
 
             return {
               error: t("Common.badRequest"),
-              errorDetails: result.error,
               requestPayload: formData,
             };
           }

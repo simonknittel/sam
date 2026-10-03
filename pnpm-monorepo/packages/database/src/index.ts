@@ -71,10 +71,3 @@ export type PrismaClientType = typeof prisma;
 if (env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 export * from "./generated/prisma/client.js";
-
-export {
-  PrismaClientKnownRequestError,
-  PrismaClientRustPanicError,
-  PrismaClientUnknownRequestError,
-  PrismaClientValidationError,
-} from "./generated/prisma/internal/prismaNamespace.js";

@@ -8,14 +8,12 @@
   --color-interaction-300: hsl(0, 69%, 60%);
   --color-interaction-500: hsl(0, 69%, 45%);
   --color-interaction-700: hsl(0, 69%, 30%);
-  --color-interaction-900: hsl(0, 69%, 10%);
 
   --color-me: hsl(142, 71%, 45%);
 
   --radius-primary: 0.5rem;
   --radius-secondary: 0.25rem;
 
-  --color-brand-red-900: hsl(0 69% 10% / 1);
   --color-brand-red-700: hsl(0 69% 30% / 1);
   --color-brand-red-500: hsl(0 69% 43% / 1);
   --color-brand-red-300: #cc4444;

@@ -47,7 +47,6 @@ export const developmentLogin = withTrace(
     if (!result.success)
       return {
         error: t("Common.badRequest"),
-        errorDetails: result.error,
         requestPayload: formData,
       };
 
