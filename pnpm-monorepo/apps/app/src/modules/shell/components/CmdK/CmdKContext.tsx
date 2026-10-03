@@ -1,7 +1,8 @@
 "use client";
 
 import type { Dispatch, ReactNode, SetStateAction } from "react";
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useMemo, useState } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 
 interface CmdKContext {
   readonly open: boolean;
@@ -30,17 +31,15 @@ export const CmdKProvider = ({ children, canReadCareer }: Props) => {
   const [search, setSearch] = useState("");
   const [pages, setPages] = useState<string[]>([]);
 
-  useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        setOpen((open) => !open);
-      }
-    };
-
-    document.addEventListener("keydown", down);
-    return () => document.removeEventListener("keydown", down);
-  }, [setOpen]);
+  /**
+   * The shortcut also works in form fields and in the wiki editor. Thus it
+   * also closes the menu from its own search field.
+   */
+  useHotkeys("mod+k", () => setOpen((isOpen) => !isOpen), {
+    preventDefault: true,
+    enableOnFormTags: true,
+    enableOnContentEditable: true,
+  });
 
   const value = useMemo(
     () => ({
