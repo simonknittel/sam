@@ -46,7 +46,7 @@ export const CmdKDialog = () => {
 
         {pages.length > 0 && (
           <button
-            className="absolute left-2 top-1/2 -translate-y-1/2 bg-neutral-700/50 hover:bg-neutral-500/50 focus-visible:bg-neutral-500/50 focus-visible:outline-hidden p-1 rounded-sm border border-neutral-700 text-xs"
+            className="absolute top-1/2 left-2 -translate-y-1/2 rounded-sm border border-neutral-700 bg-neutral-700/50 p-1 text-xs hover:bg-neutral-500/50 focus-visible:bg-neutral-500/50 focus-visible:outline-hidden"
             type="button"
             onClick={handleBack}
           >

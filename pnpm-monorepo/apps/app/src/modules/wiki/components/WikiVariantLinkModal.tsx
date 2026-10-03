@@ -188,7 +188,7 @@ export const WikiVariantLinkModal = ({
                     type="button"
                     onClick={() => pick(variant)}
                     className={clsx(
-                      "flex w-full items-center gap-2 rounded-secondary p-1 text-left cursor-pointer",
+                      "flex w-full cursor-pointer items-center gap-2 rounded-secondary p-1 text-left",
                       { "bg-neutral-700": index === activeIndex },
                     )}
                   >

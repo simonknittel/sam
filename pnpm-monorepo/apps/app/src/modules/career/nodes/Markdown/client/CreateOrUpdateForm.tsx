@@ -100,7 +100,7 @@ export const CreateOrUpdateForm = ({ initialData, onUpdate }: Props) => {
       <textarea
         id={markdownInputId}
         name="markdown"
-        className="mt-2 w-full h-64 p-2 rounded-l bg-neutral-900"
+        className="mt-2 h-64 w-full rounded-l bg-neutral-900 p-2"
         defaultValue={initialData?.markdown}
       ></textarea>
 
@@ -130,7 +130,7 @@ export const CreateOrUpdateForm = ({ initialData, onUpdate }: Props) => {
       <label htmlFor={backgroundColorInputId} className="mt-6 block">
         Hintergrundfarbe
       </label>
-      <div className="flex gap-4 items-center mt-2">
+      <div className="mt-2 flex items-center gap-4">
         <input
           type="color"
           name="backgroundColor"
@@ -138,7 +138,7 @@ export const CreateOrUpdateForm = ({ initialData, onUpdate }: Props) => {
           defaultValue={initialData?.backgroundColor || "#262626"}
         />
 
-        <div className="flex gap-1 items-baseline">
+        <div className="flex items-baseline gap-1">
           <Select
             name="backgroundTransparency"
             id={backgroundTransparencyInputId}
@@ -153,7 +153,7 @@ export const CreateOrUpdateForm = ({ initialData, onUpdate }: Props) => {
         </div>
       </div>
 
-      <div className="flex justify-end mt-8">
+      <div className="mt-8 flex justify-end">
         <Button2 type="submit">Speichern</Button2>
       </div>
     </form>

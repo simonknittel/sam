@@ -20,9 +20,9 @@ interface Props {
 export const PhasePayout = ({ cycleData }: Props) => {
   return (
     <Phase phase={CyclePhase.Payout} currentPhase={cycleData.currentPhase}>
-      <h2 className="font-bold text-center font-mono uppercase">Auszahlung</h2>
+      <h2 className="text-center font-mono font-bold uppercase">Auszahlung</h2>
 
-      <div className="flex gap-[2px] border-t border-white/5 mt-4 pt-4">
+      <div className="mt-4 flex gap-[2px] border-t border-white/5 pt-4">
         <StatisticTile label="Gesamter aUEC-Überschuss" className="flex-1">
           <ScrambleIn
             text={cycleData.cycle.auecProfit?.toLocaleString("de") ?? "-"}
@@ -38,7 +38,7 @@ export const PhasePayout = ({ cycleData }: Props) => {
         </StatisticTile>
       </div>
 
-      <p className="text-neutral-500 text-sm text-center pt-2">
+      <p className="pt-2 text-center text-sm text-neutral-500">
         Dein Anteil wird anhand deiner verdienten SILC und dem gesamten
         aUEC-Überschuss berechnet.
       </p>
@@ -68,7 +68,7 @@ export const PhasePayout = ({ cycleData }: Props) => {
       </StatisticTile>
 
       {cycleData.myPayoutState === PayoutState.DISBURSED && (
-        <p className="text-neutral-500 text-sm text-center pt-2">
+        <p className="pt-2 text-center text-sm text-neutral-500">
           Auszahlung geleistet durch{" "}
           <CitizenLink citizen={cycleData.myParticipant!.disbursedBy} /> am{" "}
           {formatDate(cycleData.myParticipant!.disbursedAt)}.
@@ -78,8 +78,8 @@ export const PhasePayout = ({ cycleData }: Props) => {
       {[PayoutState.NOT_PARTICIPATING, PayoutState.DISBURSED].includes(
         cycleData.myPayoutState,
       ) === false && (
-        <div className="flex flex-col justify-center items-center gap-2 border-t border-white/5 mt-4 pt-2">
-          <div className="text-sm text-center flex flex-col gap-2">
+        <div className="mt-4 flex flex-col items-center justify-center gap-2 border-t border-white/5 pt-2">
+          <div className="flex flex-col gap-2 text-center text-sm">
             <p>
               Um deinen Anteil ausgezahlt zu bekommen, musst du der Auszahlung
               zustimmen.
@@ -101,7 +101,7 @@ export const PhasePayout = ({ cycleData }: Props) => {
 
           {cycleData.myPayoutState === PayoutState.AWAITING_PAYOUT && (
             <>
-              <p className="text-green-500 text-sm">
+              <p className="text-sm text-green-500">
                 Du hast der Auszahlung am{" "}
                 {formatDate(cycleData.myParticipant!.acceptedAt)} zugestimmt.
               </p>
@@ -116,7 +116,7 @@ export const PhasePayout = ({ cycleData }: Props) => {
         </div>
       )}
 
-      <div className="flex flex-col justify-center gap-4 border-t border-white/5 mt-4 pt-4">
+      <div className="mt-4 flex flex-col justify-center gap-4 border-t border-white/5 pt-4">
         <PhaseEndDate
           plannedEnd={cycleData.cycle.payoutEndsAt}
           actualEnd={cycleData.cycle.payoutEndedAt}

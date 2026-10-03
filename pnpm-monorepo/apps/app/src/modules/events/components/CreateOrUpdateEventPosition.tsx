@@ -121,7 +121,7 @@ export const CreateOrUpdateEventPosition = (props: Props) => {
             <Button
               onClick={handleClick}
               variant="tertiary"
-              className={clsx("px-2 w-auto", props.className)}
+              className={clsx("w-auto px-2", props.className)}
               aria-label={ADD_LABEL}
               iconOnly
             >
@@ -140,7 +140,7 @@ export const CreateOrUpdateEventPosition = (props: Props) => {
             <Button
               onClick={handleClick}
               variant="tertiary"
-              className={clsx("px-2 w-auto", props.className)}
+              className={clsx("w-auto px-2", props.className)}
               aria-label={EDIT_LABEL}
               iconOnly
             >
@@ -225,7 +225,7 @@ export const CreateOrUpdateEventPosition = (props: Props) => {
             className="mt-4"
           />
 
-          <div className="flex flex-col gap-2 mt-8">
+          <div className="mt-8 flex flex-col gap-2">
             <Button2 type="submit" disabled={isPending}>
               {isPending ? <AsciiSpinner /> : <FaSave />}
               Speichern
@@ -323,7 +323,7 @@ const RequiredVariants = ({
 
   return (
     <>
-      <label className={clsx("flex gap-2 items-center", className)}>
+      <label className={clsx("flex items-center gap-2", className)}>
         Erforderliches Schiff (optional)
         <Tooltip triggerChildren={<FaInfoCircle />}>
           Für ein Multicrew-Schiff sollte das erforderliche Schiff nur bei einem
@@ -336,7 +336,7 @@ const RequiredVariants = ({
       </label>
 
       {items.map((item, index) => (
-        <div key={item} className="flex gap-2 mt-2">
+        <div key={item} className="mt-2 flex gap-2">
           <div className="flex flex-col justify-center">
             <Button
               variant="tertiary"
@@ -363,7 +363,7 @@ const RequiredVariants = ({
 
           <select
             aria-label="Benötigtes Schiff"
-            className="p-2 rounded-secondary bg-neutral-900 w-full"
+            className="w-full rounded-secondary bg-neutral-900 p-2"
             defaultValue={item}
             onChange={(e) => handleChange(e, index)}
           >
@@ -406,7 +406,7 @@ const RequiredVariants = ({
         type="button"
         variant={Button2Variant.Secondary}
         className={clsx("mt-2", {
-          "grayscale pointer-events-none": items.some((item) => item === "-"),
+          "pointer-events-none grayscale": items.some((item) => item === "-"),
         })}
         disabled={items.some((item) => item === "-")}
       >
@@ -445,15 +445,15 @@ const PositionFormatting = ({
 
   return (
     <div className={clsx("space-y-3", className)}>
-      <h3 className="text-gray-500 font-mono uppercase text-xs">
+      <h3 className="font-mono text-xs text-gray-500 uppercase">
         Formatierung
       </h3>
 
       <div>
-        <label className="block text-sm mb-1">Schriftgröße</label>
+        <label className="mb-1 block text-sm">Schriftgröße</label>
         <select
           name="fontSize"
-          className="p-2 rounded-secondary bg-neutral-900 w-full"
+          className="w-full rounded-secondary bg-neutral-900 p-2"
           defaultValue={defaultFontSize || ""}
         >
           <option value="">Standard</option>
@@ -463,17 +463,17 @@ const PositionFormatting = ({
 
       <div className="flex gap-4">
         <div className="flex-1">
-          <label className="block text-sm mb-1">Hintergrundfarbe</label>
-          <div className="flex gap-2 items-center">
+          <label className="mb-1 block text-sm">Hintergrundfarbe</label>
+          <div className="flex items-center gap-2">
             <input
               type="color"
-              className="w-10 h-10 rounded cursor-pointer bg-neutral-900 border border-white/10 p-0"
+              className="h-10 w-10 cursor-pointer rounded border border-white/10 bg-neutral-900 p-0"
               value={backgroundColor || "#262626"}
               onChange={(e) => setBackgroundColor(e.target.value)}
             />
             <button
               type="button"
-              className="p-2 rounded-secondary bg-neutral-900 flex-1 text-left font-mono text-sm text-neutral-400 hover:text-white"
+              className="flex-1 rounded-secondary bg-neutral-900 p-2 text-left font-mono text-sm text-neutral-400 hover:text-white"
               onClick={() =>
                 setBackgroundColor(backgroundColor ? null : "#262626")
               }
@@ -491,17 +491,17 @@ const PositionFormatting = ({
         </div>
 
         <div className="flex-1">
-          <label className="block text-sm mb-1">Textfarbe</label>
-          <div className="flex gap-2 items-center">
+          <label className="mb-1 block text-sm">Textfarbe</label>
+          <div className="flex items-center gap-2">
             <input
               type="color"
-              className="w-10 h-10 rounded cursor-pointer bg-neutral-900 border border-white/10 p-0"
+              className="h-10 w-10 cursor-pointer rounded border border-white/10 bg-neutral-900 p-0"
               value={textColor || "#e5e5e5"}
               onChange={(e) => setTextColor(e.target.value)}
             />
             <button
               type="button"
-              className="p-2 rounded-secondary bg-neutral-900 flex-1 text-left font-mono text-sm text-neutral-400 hover:text-white"
+              className="flex-1 rounded-secondary bg-neutral-900 p-2 text-left font-mono text-sm text-neutral-400 hover:text-white"
               onClick={() => setTextColor(textColor ? null : "#e5e5e5")}
             >
               {textColor || "Keine"}

@@ -59,8 +59,8 @@ export const DateRangeFilter = ({
   }, [loader, isLoading]);
 
   return (
-    <div className={clsx("bg-secondary p-2 corners-secondary", className)}>
-      <p className="text-sm text-white/40 font-mono uppercase">{label}</p>
+    <div className={clsx("corners-secondary bg-secondary p-2", className)}>
+      <p className="font-mono text-sm text-white/40 uppercase">{label}</p>
 
       <div className="mt-1 flex flex-col gap-2">
         <DateInput

@@ -50,7 +50,7 @@ export const Filters = ({
   );
 
   return (
-    <div className={clsx("flex flex-wrap gap-2 justify-center", className)}>
+    <div className={clsx("flex flex-wrap justify-center gap-2", className)}>
       {filters.map(({ key, label }) => (
         <Button2
           as={Link}

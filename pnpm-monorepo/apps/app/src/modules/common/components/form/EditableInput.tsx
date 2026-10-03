@@ -44,7 +44,7 @@ export const EditableInput = ({
           name={columnName}
           defaultValue={value}
           disabled={isPending}
-          className={clsx("rounded-secondary bg-neutral-700 px-1 w-full", {
+          className={clsx("w-full rounded-secondary bg-neutral-700 px-1", {
             "animate-pulse": isPending,
           })}
           autoFocus

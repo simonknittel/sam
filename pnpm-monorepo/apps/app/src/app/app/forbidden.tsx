@@ -11,12 +11,12 @@ export default async function Forbidden() {
   await requireAuthenticationPage("/app/forbidden");
 
   return (
-    <MainContent className="min-h-dvh flex flex-col justify-center items-center">
-      <div className="text-center mb-4">
-        <Hero text="Redacted" className="text-center mx-auto" withGlitch />
+    <MainContent className="flex min-h-dvh flex-col items-center justify-center">
+      <div className="mb-4 text-center">
+        <Hero text="Redacted" className="mx-auto text-center" withGlitch />
       </div>
 
-      <div className="flex flex-col gap-2 rounded-primary bg-neutral-800/50 p-8 mx-8 items-center">
+      <div className="mx-8 flex flex-col items-center gap-2 rounded-primary bg-neutral-800/50 p-8">
         <p>Du bist nicht berechtigt dies zu sehen.</p>
       </div>
     </MainContent>

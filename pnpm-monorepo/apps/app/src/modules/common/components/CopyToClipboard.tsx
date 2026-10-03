@@ -50,7 +50,7 @@ export const CopyToClipboard = ({ className, value }: Props) => {
           onClick={handleClick}
           title="Kopieren"
           className={clsx(
-            "text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300 text-sm enabled:cursor-pointer",
+            "text-sm text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300 enabled:cursor-pointer",
             className,
           )}
         >
@@ -58,8 +58,8 @@ export const CopyToClipboard = ({ className, value }: Props) => {
         </button>
       }
     >
-      <span className="flex items-center gap-1 font-mono uppercase text-xs">
-        <FaCheck className="text-green-500 text-sm" />
+      <span className="flex items-center gap-1 font-mono text-xs uppercase">
+        <FaCheck className="text-sm text-green-500" />
         Kopiert
       </span>
     </Tooltip>

@@ -24,7 +24,7 @@ export const BareBulb = () => (
       className="absolute inset-0 size-full"
     />
 
-    <div className="absolute inset-0 opacity-0 animate-seasonal-power-flicker">
+    <div className="absolute inset-0 animate-seasonal-power-flicker opacity-0">
       <SeasonalImage
         src={svgToStaticImageData(bareBulbOff)}
         className="size-full"

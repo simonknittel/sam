@@ -114,7 +114,7 @@ export const ParticipantsTab = async ({
         cta={isAllowedToManageEvent ? <CreateManagers event={event} /> : null}
       >
         {event.managers.length > 0 ? (
-          <div className="flex gap-x-3 gap-y-1 flex-wrap">
+          <div className="flex flex-wrap gap-x-3 gap-y-1">
             {event.managers
               .toSorted((a, b) =>
                 (a.handle || a.id).localeCompare(b.handle || b.id),
@@ -124,7 +124,7 @@ export const ParticipantsTab = async ({
                   return (
                     <div
                       key={manager.id}
-                      className="rounded-secondary bg-neutral-700/50 flex"
+                      className="flex rounded-secondary bg-neutral-700/50"
                     >
                       {manager.deletedAt ? (
                         <span className="px-2 py-1 text-neutral-500">
@@ -135,7 +135,7 @@ export const ParticipantsTab = async ({
                           <Link
                             href={`/app/spynet/citizen/${manager.id}`}
                             className={clsx(
-                              "hover:underline px-2 py-1 inline-block",
+                              "inline-block px-2 py-1 hover:underline",
                               {
                                 "text-green-500":
                                   manager.id ===
@@ -203,14 +203,14 @@ export const ParticipantsTab = async ({
             <thead>
               <tr
                 className={clsx(
-                  "grid items-center gap-4 text-left text-neutral-500 -mx-2",
+                  "-mx-2 grid items-center gap-4 text-left text-neutral-500",
                   gridCols,
                 )}
               >
                 <th className="px-2">
                   <Link
                     href={`?${citizenSearchParams.toString()}`}
-                    className="flex items-center gap-2 cursor-pointer select-none hover:text-neutral-300 whitespace-nowrap"
+                    className="flex cursor-pointer items-center gap-2 whitespace-nowrap select-none hover:text-neutral-300"
                   >
                     Citizen
                     {(!urlSearchParams.has("sort") ||
@@ -226,7 +226,7 @@ export const ParticipantsTab = async ({
                 <th className="flex items-center gap-2">
                   <Link
                     href={`?${joinedAtSearchParams.toString()}`}
-                    className="flex items-center gap-2 cursor-pointer select-none hover:text-neutral-300 whitespace-nowrap"
+                    className="flex cursor-pointer items-center gap-2 whitespace-nowrap select-none hover:text-neutral-300"
                   >
                     Zugesagt am
                     {urlSearchParams.get("sort") === "joined-at-asc" && (
@@ -262,19 +262,19 @@ export const ParticipantsTab = async ({
               </tr>
             </thead>
 
-            <tbody className="flex flex-col gap-4 mt-2">
+            <tbody className="mt-2 flex flex-col gap-4">
               {sortedResolvedParticipants.map((resolvedParticipant) => {
                 return (
                   <tr
                     key={resolvedParticipant.citizen.id}
                     className={clsx(
-                      "grid items-start gap-4 rounded-secondary -mx-2",
+                      "-mx-2 grid items-start gap-4 rounded-secondary",
                       gridCols,
                     )}
                   >
                     <td>
                       {resolvedParticipant.citizen.deletedAt ? (
-                        <span className="px-2 h-8 flex items-center text-neutral-500">
+                        <span className="flex h-8 items-center px-2 text-neutral-500">
                           {DELETED_CITIZEN_LABEL}
                         </span>
                       ) : (
@@ -284,7 +284,7 @@ export const ParticipantsTab = async ({
                           <Link
                             href={`/app/spynet/citizen/${resolvedParticipant.citizen.id}`}
                             className={clsx(
-                              "hover:bg-white/10 rounded-secondary px-2 h-8 flex items-center",
+                              "flex h-8 items-center rounded-secondary px-2 hover:bg-white/10",
                               {
                                 "text-green-500":
                                   resolvedParticipant.citizen.id ===
@@ -314,7 +314,7 @@ export const ParticipantsTab = async ({
                       )}
                     </td>
 
-                    <td className="h-8 flex items-center">
+                    <td className="flex h-8 items-center">
                       {resolvedParticipant.participant?.createdAt ? (
                         <time>
                           {formatDate(
@@ -327,10 +327,10 @@ export const ParticipantsTab = async ({
                     </td>
 
                     {isAppEvent && (
-                      <td className="min-h-8 flex items-center">
+                      <td className="flex min-h-8 items-center">
                         {resolvedParticipant.participant?.comment ? (
                           <span
-                            className="overflow-hidden text-ellipsis line-clamp-2"
+                            className="line-clamp-2 overflow-hidden text-ellipsis"
                             title={resolvedParticipant.participant.comment}
                           >
                             {resolvedParticipant.participant.comment}
@@ -341,10 +341,10 @@ export const ParticipantsTab = async ({
                       </td>
                     )}
 
-                    <td className="min-h-8 flex items-center">
+                    <td className="flex min-h-8 items-center">
                       <Suspense
                         fallback={
-                          <div className="bg-neutral-800 animate-pulse rounded-secondary h-8 w-20" />
+                          <div className="h-8 w-20 animate-pulse rounded-secondary bg-neutral-800" />
                         }
                       >
                         <RolesCell
@@ -356,7 +356,7 @@ export const ParticipantsTab = async ({
                     </td>
 
                     {canManageParticipants && (
-                      <td className="min-h-8 flex items-center">
+                      <td className="flex min-h-8 items-center">
                         <RemoveEventParticipant
                           eventId={event.id}
                           citizen={resolvedParticipant.citizen}

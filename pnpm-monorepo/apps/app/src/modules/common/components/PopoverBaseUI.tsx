@@ -53,12 +53,12 @@ const PopoverChrome = ({
       </Popover.Title>
 
       <Popover.Arrow className="data-[side=bottom]:-top-3.75 data-[side=left]:-right-3.25 data-[side=left]:rotate-90 data-[side=right]:-left-3.25 data-[side=right]:-rotate-90 data-[side=top]:-bottom-3.75 data-[side=top]:rotate-180">
-        <IoMdArrowDropup className="fill-neutral-700 size-6" />
+        <IoMdArrowDropup className="size-6 fill-neutral-700" />
       </Popover.Arrow>
 
       <div
         className={clsx(
-          "bg-black border border-white/20 p-4 rounded-secondary",
+          "rounded-secondary border border-white/20 bg-black p-4",
           styles.popover,
           childrenClassName,
         )}
@@ -68,8 +68,8 @@ const PopoverChrome = ({
 
       {hoverBridges && (
         <>
-          <div className="h-2 absolute left-0 right-0 bottom-full" />
-          <div className="h-2 absolute left-0 right-0 top-full" />
+          <div className="absolute right-0 bottom-full left-0 h-2" />
+          <div className="absolute top-full right-0 left-0 h-2" />
         </>
       )}
     </>

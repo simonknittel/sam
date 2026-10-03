@@ -18,7 +18,7 @@ import { SeasonalImage } from "../SeasonalImage";
  * trail.
  */
 export const HangingSpider = () => (
-  <div className="absolute top-full right-36 hidden xl:block w-8 h-16 origin-top animate-seasonal-sway">
+  <div className="absolute top-full right-36 hidden h-16 w-8 origin-top animate-seasonal-sway xl:block">
     <SeasonalImage
       src={svgToStaticImageData(hangingSpider)}
       className="size-full"

@@ -11,7 +11,7 @@ export const ClassificationLevel = async ({ className, note }: Props) => {
   const allClassificationLevels = await getAllClassificationLevels();
 
   return (
-    <p className={clsx(className, "flex gap-2 items-center")}>
+    <p className={clsx(className, "flex items-center gap-2")}>
       {allClassificationLevels.find(
         (classificationLevel) =>
           classificationLevel.id === note.classificationLevelId,

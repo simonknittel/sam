@@ -48,7 +48,7 @@ const RootList = ({ className, nodes, dimmedPageIds }: Props) => {
       className={clsx(
         "relative flex flex-col gap-4",
         {
-          "animate-pulse cursor-wait pointer-events-none": isPending,
+          "pointer-events-none animate-pulse cursor-wait": isPending,
         },
         className,
       )}
@@ -89,7 +89,7 @@ const ExpandButton = ({ pageId, subtreeId, isExpanded }: ExpandButtonProps) => {
       aria-expanded={isExpanded}
       aria-controls={isExpanded ? subtreeId : undefined}
       title={isExpanded ? "Unterseiten ausblenden" : "Unterseiten anzeigen"}
-      className="flex-none p-1 text-neutral-500 cursor-pointer hover:text-interaction-500 focus-visible:text-interaction-500 active:text-interaction-300"
+      className="flex-none cursor-pointer p-1 text-neutral-500 hover:text-interaction-500 focus-visible:text-interaction-500 active:text-interaction-300"
     >
       {isExpanded ? (
         <FaChevronDown className="size-3" />
@@ -127,9 +127,9 @@ const CreateSubpageButton = ({
           : "Unterseiten können nur Verwalter dieser Seite erstellen"
       }
       className={clsx("p-1", {
-        "text-neutral-500 cursor-pointer hover:text-interaction-500 focus-visible:text-interaction-500":
+        "cursor-pointer text-neutral-500 hover:text-interaction-500 focus-visible:text-interaction-500":
           canCreate,
-        "text-neutral-700 cursor-not-allowed": !canCreate,
+        "cursor-not-allowed text-neutral-700": !canCreate,
       })}
     >
       <FaPlus className="size-3" />

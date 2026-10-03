@@ -51,7 +51,7 @@ export const CitizenFleetTile = async ({
         />
       </StatisticTile>
 
-      <div className="rounded-primary bg-neutral-800/50 p-4 overflow-x-auto mt-0.5">
+      <div className="mt-0.5 overflow-x-auto rounded-primary bg-neutral-800/50 p-4">
         {ships.length === 0 ? (
           <div className="grid place-content-center">
             <p className="text-white/90">Keine Schiffe gefunden</p>

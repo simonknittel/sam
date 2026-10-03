@@ -116,7 +116,7 @@ export const ToggleAssignmentForCurrentUser = ({
                     <p className="text-sm text-gray-500">
                       Erforderliche Rollen
                     </p>
-                    <div className="flex flex-col items-start gap-1 mt-1">
+                    <div className="mt-1 flex flex-col items-start gap-1">
                       {task.requiredRoles.map((role) => (
                         <SingleRoleBadge key={role.id} roleId={role.id} />
                       ))}

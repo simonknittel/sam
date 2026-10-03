@@ -50,7 +50,7 @@ export const CreatePenaltyEntryForm = ({ className, onSuccess }: Props) => {
         defaultValue={getDefaultValueWithFallback("expiresAt", "")}
       />
 
-      <Button2 type="submit" disabled={isPending} className="ml-auto mt-4">
+      <Button2 type="submit" disabled={isPending} className="mt-4 ml-auto">
         {isPending ? <AsciiSpinner /> : <FaSave />}
         Speichern
       </Button2>

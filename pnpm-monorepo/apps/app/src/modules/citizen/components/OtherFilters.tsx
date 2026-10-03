@@ -16,7 +16,7 @@ export const OtherFilters = ({ confirmationStates, types }: Props) => {
   );
 
   return (
-    <div className="flex gap-2 items-center">
+    <div className="flex items-center gap-2">
       {confirmationStates.length > 0 && (
         <Filter name="Bestätigungsstatus">
           <ConfirmationStateFilter confirmationStates={confirmationStates} />

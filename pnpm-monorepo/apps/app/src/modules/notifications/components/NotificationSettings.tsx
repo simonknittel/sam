@@ -28,28 +28,28 @@ export const NotificationSettings = ({ className, settings }: Props) => {
     <NotificationSettingsForm
       className={clsx("flex flex-col gap-0.5", className)}
     >
-      <p className="text-sm text-neutral-500 px-4 max-w-prose">
+      <p className="max-w-prose px-4 text-sm text-neutral-500">
         Browser-Benachrichtigungen werden nur an Geräte zugestellt, auf denen du
         sie genehmigt hast.
       </p>
 
-      <div className="flex gap-2 text-neutral-500 px-4">
+      <div className="flex gap-2 px-4 text-neutral-500">
         <div className="flex-1" />
 
-        <div className="flex-none w-16 flex flex-col justify-center items-center text-center">
-          <span className="flex-1 w-full flex justify-center items-center gap-1">
+        <div className="flex w-16 flex-none flex-col items-center justify-center text-center">
+          <span className="flex w-full flex-1 items-center justify-center gap-1">
             <FaInfoCircle />
           </span>
 
-          <p className="w-full text-xs font-mono uppercase">On-site</p>
+          <p className="w-full font-mono text-xs uppercase">On-site</p>
         </div>
 
-        <div className="flex-none w-16 flex flex-col justify-center items-center text-center">
-          <span className="flex-1 w-full flex justify-center items-center gap-1">
+        <div className="flex w-16 flex-none flex-col items-center justify-center text-center">
+          <span className="flex w-full flex-1 items-center justify-center gap-1">
             <FaMobile /> / <FaDesktop />
           </span>
 
-          <p className="w-full text-xs font-mono uppercase">Browser</p>
+          <p className="w-full font-mono text-xs uppercase">Browser</p>
         </div>
       </div>
 
@@ -77,12 +77,12 @@ const AppSettings = ({
   settings,
 }: AppSettingsProp) => {
   return (
-    <article className="bg-secondary rounded-primary p-4">
-      <h2 className="text-xl font-bold border-b border-white/5 pb-2 font-mono uppercase">
+    <article className="rounded-primary bg-secondary p-4">
+      <h2 className="border-b border-white/5 pb-2 font-mono text-xl font-bold uppercase">
         {title}
       </h2>
 
-      <div className="flex flex-col gap-2 mt-4">
+      <div className="mt-4 flex flex-col gap-2">
         {notificationTypes.map((notification) => (
           <SingleNotificationSettings
             key={notification.id}
@@ -117,12 +117,12 @@ const SingleNotificationSettings = ({
       <div className="flex-1">
         <h3>{notificationType.title}</h3>
 
-        <p className="text-sm text-neutral-500 max-w-prose">
+        <p className="max-w-prose text-sm text-neutral-500">
           {notificationType.description || <>&nbsp;</>}
         </p>
       </div>
 
-      <div className="flex-none w-16 flex justify-center items-center">
+      <div className="flex w-16 flex-none items-center justify-center">
         <YesNoCheckbox
           key={`ONSITE_${notificationType.id}`}
           name={`ONSITE_${notificationType.id}`}
@@ -133,7 +133,7 @@ const SingleNotificationSettings = ({
         />
       </div>
 
-      <div className="flex-none w-16 flex justify-center items-center">
+      <div className="flex w-16 flex-none items-center justify-center">
         <YesNoCheckbox
           key={`${NotificationChannel.WEB_PUSH}_${notificationType.id}`}
           name={`${NotificationChannel.WEB_PUSH}_${notificationType.id}`}

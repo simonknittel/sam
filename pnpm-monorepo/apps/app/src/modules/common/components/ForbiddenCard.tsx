@@ -6,7 +6,7 @@ import { Hero } from "./Hero";
  */
 export const ForbiddenCard = () => {
   return (
-    <article className="bg-secondary rounded-primary p-8 flex flex-col items-center gap-4">
+    <article className="flex flex-col items-center gap-4 rounded-primary bg-secondary p-8">
       <Hero text="Redacted" size="md" withGlitch />
 
       <p>Du bist nicht berechtigt dies zu sehen.</p>

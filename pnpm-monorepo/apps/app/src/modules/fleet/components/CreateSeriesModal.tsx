@@ -73,11 +73,11 @@ export const CreateSeriesModal = ({
         </label>
 
         {manufacturers.isFetching ? (
-          <div className="p-2 rounded-secondary bg-neutral-900 w-full mt-2 animate-pulse h-10" />
+          <div className="mt-2 h-10 w-full animate-pulse rounded-secondary bg-neutral-900 p-2" />
         ) : (
           <select
             id="manufacturerId"
-            className="p-2 rounded-secondary bg-neutral-900 w-full mt-2"
+            className="mt-2 w-full rounded-secondary bg-neutral-900 p-2"
             {...register("manufacturerId", { required: true })}
             defaultValue={manufacturerId}
             autoFocus={!Boolean(manufacturerId)}
@@ -91,19 +91,19 @@ export const CreateSeriesModal = ({
           </select>
         )}
 
-        <label className="block mt-4" htmlFor="name">
+        <label className="mt-4 block" htmlFor="name">
           Name
         </label>
 
         <input
           id="name"
           type="text"
-          className="p-2 rounded-secondary bg-neutral-900 w-full mt-2"
+          className="mt-2 w-full rounded-secondary bg-neutral-900 p-2"
           {...register("name", { required: true })}
           autoFocus={Boolean(manufacturerId)}
         />
 
-        <div className="flex justify-end mt-4">
+        <div className="mt-4 flex justify-end">
           <Button
             type="submit"
             disabled={isLoading || manufacturers.isFetching}

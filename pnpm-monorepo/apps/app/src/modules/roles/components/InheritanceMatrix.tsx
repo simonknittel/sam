@@ -16,7 +16,7 @@ export const InheritanceMatrix = async () => {
   }));
 
   return (
-    <section className="p-4 lg:p-6 rounded-primary bg-secondary overflow-x-scroll">
+    <section className="overflow-x-scroll rounded-primary bg-secondary p-4 lg:p-6">
       <p className="max-w-prose">
         Eine markierte Zelle bedeutet: Die Rolle der Zeile erhält alle
         Berechtigungen der Rolle der Spalte. Verschachtelte Vererbungen werden

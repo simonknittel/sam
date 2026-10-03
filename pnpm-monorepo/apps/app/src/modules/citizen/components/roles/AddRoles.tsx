@@ -90,14 +90,14 @@ export const AddRoles = ({
         heading={<h2>Rollen hinzufügen oder entfernen</h2>}
       >
         {isPending && (
-          <p className="font-mono uppercase flex gap-2 justify-center items-center animate-pulse">
+          <p className="flex animate-pulse items-center justify-center gap-2 font-mono uppercase">
             <AsciiSpinner />
             Rollen werden geladen...
           </p>
         )}
 
         {error && (
-          <p className="font-mono uppercase flex gap-2 justify-center items-center text-red-500">
+          <p className="flex items-center justify-center gap-2 font-mono text-red-500 uppercase">
             <BsExclamationOctagonFill className="text-red-800" />
             Fehler beim Laden der Rollen
           </p>

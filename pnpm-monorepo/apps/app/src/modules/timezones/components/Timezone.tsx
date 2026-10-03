@@ -32,7 +32,7 @@ export const Timezone = ({
   return (
     <article
       className={clsx(
-        "text-center bg-secondary p-4 rounded-primary flex-1",
+        "flex-1 rounded-primary bg-secondary p-4 text-center",
         className,
       )}
     >
@@ -40,7 +40,7 @@ export const Timezone = ({
       {subheading && <h4 className="text-xs text-white/40">{subheading}</h4>}
 
       {/* Time */}
-      <p className="font-mono uppercase text-4xl font-bold mt-4">
+      <p className="mt-4 font-mono text-4xl font-bold uppercase">
         <ScrambleIn
           text={date.toLocaleString("de-DE", {
             timeZone,
@@ -53,7 +53,7 @@ export const Timezone = ({
       </p>
 
       {/* Date */}
-      <p className="font-mono uppercase text-white/40">
+      <p className="font-mono text-white/40 uppercase">
         <ScrambleIn
           text={date.toLocaleDateString("de-DE", {
             timeZone,
@@ -70,9 +70,9 @@ export const Timezone = ({
       {timeZoneName && timezonePopoverChildren && (
         <Popover
           trigger={
-            <span className="inline-flex items-center gap-2 mt-4 text-white/40 cursor-help text-xs">
+            <span className="mt-4 inline-flex cursor-help items-center gap-2 text-xs text-white/40">
               <span>{timeZoneName}</span>
-              <FaInfoCircle className="flex-none mt-0.5" />
+              <FaInfoCircle className="mt-0.5 flex-none" />
             </span>
           }
           enableHover
@@ -81,7 +81,7 @@ export const Timezone = ({
         </Popover>
       )}
       {timeZoneName && !timezonePopoverChildren && (
-        <span className="block mt-4 text-white/40 text-xs">{timeZoneName}</span>
+        <span className="mt-4 block text-xs text-white/40">{timeZoneName}</span>
       )}
     </article>
   );

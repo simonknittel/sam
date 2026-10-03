@@ -45,12 +45,12 @@ export default async function Page() {
 
   return (
     <>
-      <p className="text-right text-neutral-500 text-sm">
+      <p className="text-right text-sm text-neutral-500">
         <strong>Zeitraum:</strong>{" "}
         {formatDate(roleChart.dateRange.from, "short")} - jetzt
       </p>
 
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         <StatisticSection
           title="Flotte gesamt"
           description="Gesamtanzahl eingetragener Schiffe"

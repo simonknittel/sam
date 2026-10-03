@@ -61,13 +61,13 @@ export const PermissionMatrixGrid = ({ roles }: Props) => {
       <table>
         <thead>
           <tr
-            className="grid gap-2 text-left text-neutral-500 -mx-2 text-sm h-64"
+            className="-mx-2 grid h-64 gap-2 text-left text-sm text-neutral-500"
             style={{
               gridTemplateColumns,
             }}
           >
-            <th className="font-normal whitespace-nowrap flex justify-center items-end">
-              <div className="-rotate-45 w-0">
+            <th className="flex items-end justify-center font-normal whitespace-nowrap">
+              <div className="w-0 -rotate-45">
                 <span>Rolle</span>
               </div>
             </th>
@@ -75,9 +75,9 @@ export const PermissionMatrixGrid = ({ roles }: Props) => {
             {permissions.map((permission) => (
               <th
                 key={permission.string}
-                className="font-normal whitespace-nowrap flex justify-center items-end"
+                className="flex items-end justify-center font-normal whitespace-nowrap"
               >
-                <div className="-rotate-45 w-0">
+                <div className="w-0 -rotate-45">
                   <span className="text-neutral-700">
                     {permission.section} /{" "}
                   </span>
@@ -112,7 +112,7 @@ const MatrixRow = ({ role }: MatrixRowProps) => {
        * rows outside the viewport; the intrinsic height keeps the scrollbar
        * stable and must agree with the h-8 cells.
        */
-      className="grid items-center gap-2 -mx-2 [contain-intrinsic-height:2rem] [content-visibility:auto]"
+      className="-mx-2 grid items-center gap-2 [contain-intrinsic-height:2rem] [content-visibility:auto]"
       style={{
         gridTemplateColumns,
       }}

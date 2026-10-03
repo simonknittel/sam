@@ -58,19 +58,19 @@ export const RoleCheckbox = ({
     <label
       htmlFor={id}
       className={clsx(
-        "p-2 flex justify-between items-center break-inside-avoid-column cursor-pointer hover:bg-neutral-900 focus-within:bg-neutral-900 rounded-secondary",
+        "flex cursor-pointer break-inside-avoid-column items-center justify-between rounded-secondary p-2 focus-within:bg-neutral-900 hover:bg-neutral-900",
         !isVisible && "hidden",
       )}
     >
-      <span className="flex gap-2 items-center overflow-hidden">
+      <span className="flex items-center gap-2 overflow-hidden">
         {role.icon && (
-          <div className="flex-none aspect-square w-6 h-6 flex items-center justify-center rounded-secondary overflow-hidden">
+          <div className="flex aspect-square h-6 w-6 flex-none items-center justify-center overflow-hidden rounded-secondary">
             <Image
               src={getPublicUploadUrl(role.icon.id)}
               alt=""
               width={24}
               height={24}
-              className="max-w-full max-h-full"
+              className="max-h-full max-w-full"
               unoptimized={["image/svg+xml", "image/gif"].includes(
                 role.icon.mimeType,
               )}

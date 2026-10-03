@@ -98,7 +98,7 @@ export default async function Page({
 
   return (
     <SuspenseWithErrorBoundaryTile className="h-[calc(100dvh-64px-48px)] lg:h-[calc(100dvh-112px)]">
-      <div className="h-[calc(100dvh-64px-48px)] lg:h-[calc(100dvh-112px)] bg-neutral-800/50 rounded-primary overflow-hidden text-black relative">
+      <div className="relative h-[calc(100dvh-64px-48px)] overflow-hidden rounded-primary bg-neutral-800/50 text-black lg:h-[calc(100dvh-112px)]">
         <Flow
           flow={flow}
           canUpdate={canUpdate}

@@ -16,12 +16,12 @@ export const PhasePayoutPreparation = ({ cycleData }: Props) => {
       phase={CyclePhase.PayoutPreparation}
       currentPhase={cycleData.currentPhase}
     >
-      <h2 className="font-bold text-center font-mono uppercase">
+      <h2 className="text-center font-mono font-bold uppercase">
         Vorbereitung der Auszahlung
       </h2>
 
-      <div className="border-t border-white/5 mt-4 pt-8 pb-4">
-        <p className="text-center text-sm flex flex-col justify-center">
+      <div className="mt-4 border-t border-white/5 pt-8 pb-4">
+        <p className="flex flex-col justify-center text-center text-sm">
           Die Auszahlung wird durch Economics vorbereitet. Bitte schaue später
           nochmal vorbei.
         </p>

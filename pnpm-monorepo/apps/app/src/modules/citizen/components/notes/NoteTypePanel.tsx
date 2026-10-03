@@ -46,7 +46,7 @@ export const NoteTypePanel = async ({ noteType, notes, entityId }: Props) => {
       })}
 
       {notes.length <= 0 && (
-        <p className="text-neutral-500 italic mt-8">Keine Einträge vorhanden</p>
+        <p className="mt-8 text-neutral-500 italic">Keine Einträge vorhanden</p>
       )}
     </TabPanel>
   );

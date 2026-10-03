@@ -31,7 +31,7 @@ export const Navigation = async ({ className, activeQuarterSlug }: Props) => {
     >
       {[...quartersByYear].map(([year, quartersOfYear]) => (
         <div className="flex items-center gap-2" key={year}>
-          <span className="font-mono text-sm font-bold text-white/40 w-10">
+          <span className="w-10 font-mono text-sm font-bold text-white/40">
             {year}
           </span>
 
@@ -39,10 +39,10 @@ export const Navigation = async ({ className, activeQuarterSlug }: Props) => {
             <Link
               aria-label={`${formatQuarterLabel(quarter.quarter)} ${year}`}
               className={clsx(
-                "px-3 py-1.5 rounded-secondary font-mono text-sm font-bold transition-colors",
+                "rounded-secondary px-3 py-1.5 font-mono text-sm font-bold transition-colors",
                 activeQuarterSlug === quarter.slug
                   ? "bg-brand-red-500 text-white"
-                  : "bg-neutral-800/50 text-white/40 hover:text-white hover:bg-neutral-700 focus-visible:text-white focus-visible:bg-neutral-700 active:bg-neutral-600",
+                  : "bg-neutral-800/50 text-white/40 hover:bg-neutral-700 hover:text-white focus-visible:bg-neutral-700 focus-visible:text-white active:bg-neutral-600",
               )}
               href={`/app/changelog/${quarter.slug}`}
               key={quarter.slug}

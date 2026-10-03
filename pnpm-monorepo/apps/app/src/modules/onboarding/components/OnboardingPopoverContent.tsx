@@ -26,7 +26,7 @@ export const OnboardingPopoverContent = () => {
            * Same cap and scrolling as the notification center's list: the
            * popover keeps its height, the task list scrolls inside it.
            */
-          "max-h-96 overflow-y-auto -mx-4 divide-y divide-neutral-800 border-t border-neutral-800",
+          "-mx-4 max-h-96 divide-y divide-neutral-800 overflow-y-auto border-t border-neutral-800",
           { "border-b": openTaskCount > 0, "-mb-4": openTaskCount === 0 },
         )}
       >
@@ -50,7 +50,7 @@ const MarkAllTasksAsDoneButton = () => {
         <button
           type="button"
           onClick={() => setIsConfirming(true)}
-          className="text-interaction-500 hover:underline focus-visible:underline active:text-interaction-300 text-sm font-mono uppercase cursor-pointer"
+          className="cursor-pointer font-mono text-sm text-interaction-500 uppercase hover:underline focus-visible:underline active:text-interaction-300"
         >
           Alle als erledigt markieren
         </button>
@@ -68,7 +68,7 @@ const MarkAllTasksAsDoneButton = () => {
           markAllTasksAsDone();
           setIsConfirming(false);
         }}
-        className="text-interaction-500 hover:underline focus-visible:underline active:text-interaction-300 font-mono uppercase cursor-pointer"
+        className="cursor-pointer font-mono text-interaction-500 uppercase hover:underline focus-visible:underline active:text-interaction-300"
       >
         Ja
       </button>
@@ -76,7 +76,7 @@ const MarkAllTasksAsDoneButton = () => {
       <button
         type="button"
         onClick={() => setIsConfirming(false)}
-        className="text-neutral-500 hover:underline focus-visible:underline active:text-neutral-300 font-mono uppercase cursor-pointer"
+        className="cursor-pointer font-mono text-neutral-500 uppercase hover:underline focus-visible:underline active:text-neutral-300"
       >
         Abbrechen
       </button>

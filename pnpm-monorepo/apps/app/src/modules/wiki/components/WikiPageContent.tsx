@@ -184,10 +184,10 @@ export const WikiPageContent = async ({
   const collabUrl = getWikiCollabUrl();
 
   const article = (
-    <article className="bg-secondary rounded-primary p-4">
+    <article className="rounded-primary bg-secondary p-4">
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
         <div>
-          <h1 className="flex items-center gap-2 font-bold text-2xl">
+          <h1 className="flex items-center gap-2 text-2xl font-bold">
             <WikiPageIconButton
               pageId={page.id}
               iconId={page.iconId}
@@ -208,12 +208,12 @@ export const WikiPageContent = async ({
 
           <p className="mt-1 text-xs text-white/20">
             <WikiPageDetailsPopover pageId={page.id} />{" "}
-            <span className="uppercase font-mono">Aktualisiert:</span>{" "}
+            <span className="font-mono uppercase">Aktualisiert:</span>{" "}
             {formatDate(page.updatedAt)}
             {effectiveOwner && (
               <>
                 {" · "}
-                <span className="uppercase font-mono">Besitzer:</span>{" "}
+                <span className="font-mono uppercase">Besitzer:</span>{" "}
                 <CitizenLink citizen={effectiveOwner} />
               </>
             )}

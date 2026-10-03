@@ -40,7 +40,7 @@ export const NoteSection = ({
     <div className={clsx(className)}>
       <h4 className="font-bold">Notizen</h4>
 
-      <div className="border border-neutral-700 p-4 rounded-secondary mt-2">
+      <div className="mt-2 rounded-secondary border border-neutral-700 p-4">
         <div className="grid grid-cols-5 gap-2 font-bold">
           <span>Notizart</span>
           <span>Geheimhaltungsstufe</span>
@@ -59,7 +59,7 @@ export const NoteSection = ({
             />
           ))
         ) : (
-          <p className="text-neutral-500 italic mt-2">
+          <p className="mt-2 text-neutral-500 italic">
             Bisher gibt es keine Regeln.
           </p>
         )}
@@ -116,13 +116,13 @@ const Rule = ({
   if (alsoUnconfirmed) inputName += `;alsoUnconfirmed=true`;
 
   return (
-    <div className="grid grid-cols-5 gap-2 mt-2">
+    <div className="mt-2 grid grid-cols-5 gap-2">
       {operation && <input type="hidden" name={inputName} />}
 
       <select
         defaultValue={noteTypeId}
         required
-        className="bg-neutral-900 rounded-secondary px-4 h-11"
+        className="h-11 rounded-secondary bg-neutral-900 px-4"
         onChange={(event) => setNoteTypeId(event.target.value)}
       >
         <option disabled hidden value=""></option>
@@ -138,7 +138,7 @@ const Rule = ({
       <select
         defaultValue={classificationLevelId}
         required
-        className="bg-neutral-900 rounded-secondary px-4 h-11"
+        className="h-11 rounded-secondary bg-neutral-900 px-4"
         onChange={(event) => setClassificationLevelId(event.target.value)}
       >
         <option disabled hidden value=""></option>
@@ -160,7 +160,7 @@ const Rule = ({
 
       <select
         required
-        className="bg-neutral-900 rounded-secondary px-4 h-11"
+        className="h-11 rounded-secondary bg-neutral-900 px-4"
         defaultValue={operation}
         onChange={(event) => setOperation(event.target.value)}
       >

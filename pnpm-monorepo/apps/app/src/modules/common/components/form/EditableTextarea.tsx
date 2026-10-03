@@ -54,7 +54,7 @@ export const EditableTextarea = ({
           defaultValue={value || ""}
           disabled={isPending}
           className={clsx(
-            "rounded-secondary bg-neutral-700 px-1 w-full h-32 align-middle",
+            "h-32 w-full rounded-secondary bg-neutral-700 px-1 align-middle",
             {
               "animate-pulse": isPending,
             },

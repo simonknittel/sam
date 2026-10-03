@@ -8,7 +8,7 @@ interface Props {
 }
 
 const TabList = ({ children }: Readonly<Props>) => {
-  return <Tabs.List className="flex mb-4 flex-wrap">{children}</Tabs.List>;
+  return <Tabs.List className="mb-4 flex flex-wrap">{children}</Tabs.List>;
 };
 
 export default TabList;

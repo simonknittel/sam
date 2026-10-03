@@ -61,7 +61,7 @@ export const Create = ({ type, entity }: Readonly<Props>) => {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex">
       <input
-        className="p-2 rounded-l bg-neutral-900 flex-1"
+        className="flex-1 rounded-l bg-neutral-900 p-2"
         id={inputId}
         {...register("content", { required: true })}
         autoFocus

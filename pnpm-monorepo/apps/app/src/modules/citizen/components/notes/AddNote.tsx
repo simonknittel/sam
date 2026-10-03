@@ -78,17 +78,17 @@ export const AddNote = ({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <div className="flex justify-end mb-1">
+      <div className="mb-1 flex justify-end">
         <Formatting />
       </div>
 
       <textarea
-        className="p-2 rounded-l bg-neutral-800 w-full field-sizing-content min-h-32"
+        className="field-sizing-content min-h-32 w-full rounded-l bg-neutral-800 p-2"
         id={contentInputId}
         {...register("content", { required: true })}
       />
 
-      <div className="grid grid-cols-3 gap-1 mt-1">
+      <div className="mt-1 grid grid-cols-3 gap-1">
         {classificationLevels.length > 1 && (
           <Select
             id={classificationLevelSelectId}
@@ -115,7 +115,7 @@ export const AddNote = ({
           />
         )}
 
-        <div className="flex gap-4 items-center justify-end col-start-3">
+        <div className="col-start-3 flex items-center justify-end gap-4">
           <Button2
             type="submit"
             disabled={isLoading}

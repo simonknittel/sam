@@ -29,12 +29,12 @@ export const CalendarTile = async ({ className }: Props) => {
   return (
     <section
       className={clsx(
-        "flex flex-col gap-0.5 items-center @4xl/events:overflow-hidden",
+        "flex flex-col items-center gap-0.5 @4xl/events:overflow-hidden",
         className,
       )}
       data-onboarding-target={OnboardingTargetId.DashboardCalendar}
     >
-      <h2 className="font-thin text-2xl mb-2 w-full font-mono uppercase">
+      <h2 className="mb-2 w-full font-mono text-2xl font-thin uppercase">
         Events
       </h2>
 
@@ -51,14 +51,14 @@ export const CalendarTile = async ({ className }: Props) => {
           />
         ))
       ) : (
-        <div className="bg-secondary p-4 w-full corners-secondary">
+        <div className="w-full corners-secondary bg-secondary p-4">
           <p>Aktuell sind keine Events geplant.</p>
         </div>
       )}
 
       <Link
         href="/app/events"
-        className="text-interaction-500 hover:underline focus-visible:underline font-mono uppercase text-sm mt-2"
+        className="mt-2 font-mono text-sm text-interaction-500 uppercase hover:underline focus-visible:underline"
       >
         Alle Events ({openEventCount})
       </Link>

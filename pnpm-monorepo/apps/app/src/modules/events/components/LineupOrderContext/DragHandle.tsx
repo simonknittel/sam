@@ -15,7 +15,7 @@ export const DragHandle = ({ className, position }: Props) => {
     <button
       type="button"
       className={clsx(
-        "flex items-center justify-center border-r border-white/10 hover:bg-white/5 rounded-secondary px-2 cursor-grab",
+        "flex cursor-grab items-center justify-center rounded-secondary border-r border-white/10 px-2 hover:bg-white/5",
         className,
       )}
       title="Posten verschieben"

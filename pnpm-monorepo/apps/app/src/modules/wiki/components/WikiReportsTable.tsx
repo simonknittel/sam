@@ -75,7 +75,7 @@ export const WikiReportsTable = async ({ className, searchParams }: Props) => {
   });
 
   return (
-    <section className={clsx("p-4 bg-secondary rounded-primary", className)}>
+    <section className={clsx("rounded-primary bg-secondary p-4", className)}>
       <Table columns={COLUMNS} minWidth={920}>
         <THead>
           <th>Grund</th>
@@ -115,11 +115,11 @@ const ReportRow = ({ report }: ReportRowProps) => {
       <td className="overflow-hidden">
         <Link
           href={`/app/wiki/reports/${report.id}`}
-          className="flex items-center gap-2 hover:bg-white/10 px-2 rounded-secondary h-8"
+          className="flex h-8 items-center gap-2 rounded-secondary px-2 hover:bg-white/10"
           prefetch={false}
           title={report.message}
         >
-          <p className="font-bold truncate">{report.message}</p>
+          <p className="truncate font-bold">{report.message}</p>
         </Link>
       </td>
 
@@ -127,7 +127,7 @@ const ReportRow = ({ report }: ReportRowProps) => {
         {report.page.deletedAt === null ? (
           <Link
             href={getWikiPageRouteHref(report.page)}
-            className="flex items-center gap-2 hover:bg-white/10 px-2 rounded-secondary h-8"
+            className="flex h-8 items-center gap-2 rounded-secondary px-2 hover:bg-white/10"
             prefetch={false}
             title={report.page.title}
           >

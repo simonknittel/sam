@@ -45,13 +45,13 @@ export const MyFleetTile = async ({ className, searchParams }: Props) => {
 
   return (
     <section className={className}>
-      <div className="flex mb-1 items-center gap-4">
-        <p className="text-neutral-500 text-sm">Anzahl: {total}</p>
+      <div className="mb-1 flex items-center gap-4">
+        <p className="text-sm text-neutral-500">Anzahl: {total}</p>
 
         <AssignShip data={allVariants} />
       </div>
 
-      <div className="rounded-primary bg-neutral-800/50 p-4 overflow-x-auto mt-2">
+      <div className="mt-2 overflow-x-auto rounded-primary bg-neutral-800/50 p-4">
         {ships.length === 0 ? (
           <div className="grid place-content-center">
             <p className="text-white/90">Keine Schiffe gefunden</p>

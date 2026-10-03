@@ -13,7 +13,7 @@ interface Props {
 export const PhaseCompleted = ({ cycleData }: Props) => {
   return (
     <Phase phase={CyclePhase.Completed} currentPhase={cycleData.currentPhase}>
-      <p className="text-center text-sm flex flex-col justify-center h-full">
+      <p className="flex h-full flex-col justify-center text-center text-sm">
         Auszahlung abgeschlossen
       </p>
     </Phase>

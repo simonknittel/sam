@@ -10,7 +10,7 @@ interface Props {
 export const ClassificationLevelFilter = ({ classificationLevels }: Props) => {
   return (
     <FilterCheckboxList
-      className="items-start max-h-96 overflow-auto"
+      className="max-h-96 items-start overflow-auto"
       prefix="classification-level"
       items={classificationLevels.map((classificationLevel) => ({
         id: classificationLevel.id,

@@ -62,13 +62,13 @@ export const CreateCitizenForm = ({ className, onSuccess }: Props) => {
       </label>
 
       <input
-        className="p-2 rounded-secondary bg-neutral-900 w-full mt-2"
+        className="mt-2 w-full rounded-secondary bg-neutral-900 p-2"
         id={inputId}
         {...register("spectrumId", { required: true })}
         autoFocus
       />
 
-      <div className="flex justify-end mt-8">
+      <div className="mt-8 flex justify-end">
         <Button2 type="submit" disabled={isLoading}>
           {isLoading ? <AsciiSpinner /> : <FaSave />}
           Anlegen

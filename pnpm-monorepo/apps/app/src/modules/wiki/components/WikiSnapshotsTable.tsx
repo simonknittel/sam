@@ -46,9 +46,9 @@ export const WikiSnapshotsTable = async ({
   });
 
   return (
-    <section className={clsx("p-4 bg-secondary rounded-primary", className)}>
+    <section className={clsx("rounded-primary bg-secondary p-4", className)}>
       <div className="flex flex-wrap items-center gap-4">
-        <h1 className="font-bold text-2xl">Snapshots</h1>
+        <h1 className="text-2xl font-bold">Snapshots</h1>
 
         <Link
           href={pageHref ?? getWikiPageRouteHref(page)}

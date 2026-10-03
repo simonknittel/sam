@@ -351,15 +351,15 @@ export const AvatarCreatorClient = ({ className }: Props) => {
   return (
     <div
       className={clsx(
-        "flex flex-col items-center md:flex-row justify-center md:items-start gap-4",
+        "flex flex-col items-center justify-center gap-4 md:flex-row md:items-start",
         className,
       )}
       data-onboarding-target={OnboardingTargetId.AvatarCreator}
     >
-      <div className="w-80 bg-secondary rounded-primary p-4 flex flex-col gap-6">
+      <div className="flex w-80 flex-col gap-6 rounded-primary bg-secondary p-4">
         <div className="overflow-hidden">
           <label
-            className="block text-sm font-bold mb-2 font-mono uppercase"
+            className="mb-2 block font-mono text-sm font-bold uppercase"
             htmlFor="avatar-upload"
           >
             Dein Avatar
@@ -375,7 +375,7 @@ export const AvatarCreatorClient = ({ className }: Props) => {
         </div>
 
         <fieldset>
-          <legend className="text-sm font-bold mb-2 font-mono uppercase">
+          <legend className="mb-2 font-mono text-sm font-bold uppercase">
             Hintergrundfarbe
           </legend>
 
@@ -441,7 +441,7 @@ export const AvatarCreatorClient = ({ className }: Props) => {
         <div>
           <div className="flex items-center justify-between text-sm">
             <label
-              className="font-bold font-mono uppercase"
+              className="font-mono font-bold uppercase"
               htmlFor="avatar-scale"
             >
               Skalierung

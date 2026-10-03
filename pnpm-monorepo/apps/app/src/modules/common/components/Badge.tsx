@@ -21,7 +21,7 @@ export const Badge = ({
   return (
     <div
       className={clsx(
-        "rounded-secondary bg-neutral-700/50 px-2 py-1 inline-flex gap-2 items-center overflow-hidden",
+        "inline-flex items-center gap-2 overflow-hidden rounded-secondary bg-neutral-700/50 px-2 py-1",
         className,
       )}
       title={`${label}: ${value}`}
@@ -30,7 +30,7 @@ export const Badge = ({
 
       <div className="flex flex-col">
         <span
-          className={clsx("text-xs opacity-30 truncate font-mono uppercase", {
+          className={clsx("truncate font-mono text-xs uppercase opacity-30", {
             "sr-only": !showLabel,
           })}
         >

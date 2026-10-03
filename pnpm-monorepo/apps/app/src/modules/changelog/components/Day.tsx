@@ -8,13 +8,13 @@ interface Props {
 
 export const Day = ({ heading, children }: Props) => {
   return (
-    <article className="bg-neutral-800/50 p-4 lg:p-8 corners-primary">
-      <h2 className="font-thin text-2xl flex gap-3 items-center font-mono uppercase">
-        <FaCalendar className="text-neutral-500 text-base" />
+    <article className="corners-primary bg-neutral-800/50 p-4 lg:p-8">
+      <h2 className="flex items-center gap-3 font-mono text-2xl font-thin uppercase">
+        <FaCalendar className="text-base text-neutral-500" />
         {heading}
       </h2>
 
-      <ul className="flex flex-col gap-6 mt-4 pl-2">{children}</ul>
+      <ul className="mt-4 flex flex-col gap-6 pl-2">{children}</ul>
     </article>
   );
 };

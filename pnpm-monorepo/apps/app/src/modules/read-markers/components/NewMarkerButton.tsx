@@ -24,7 +24,7 @@ export const NewMarkerButton = ({ className, onClick }: Props) => {
       aria-label="Neu – als gelesen markieren"
       className={clsx(
         // The pseudo element enlarges the click target beyond the small badge
-        "group/new-marker relative flex rounded-secondary cursor-pointer before:absolute before:-inset-1 outline-offset-2 outline-interaction-700 focus-visible:outline-2 active:scale-95 transition-transform motion-reduce:transition-none",
+        "group/new-marker relative flex cursor-pointer rounded-secondary outline-offset-2 outline-interaction-700 transition-transform before:absolute before:-inset-1 focus-visible:outline-2 active:scale-95 motion-reduce:transition-none",
         className,
       )}
     >

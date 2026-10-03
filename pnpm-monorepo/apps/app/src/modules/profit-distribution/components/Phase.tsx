@@ -24,7 +24,7 @@ export const Phase = ({
     <>
       <section
         className={clsx(
-          "flex rounded-primary overflow-hidden",
+          "flex overflow-hidden rounded-primary",
           {
             "opacity-50": !isCurrentPhase,
           },
@@ -33,7 +33,7 @@ export const Phase = ({
       >
         <div
           className={clsx(
-            "flex-none w-8 text-xs whitespace-nowrap flex items-center justify-center py-2 font-mono uppercase",
+            "flex w-8 flex-none items-center justify-center py-2 font-mono text-xs whitespace-nowrap uppercase",
             {
               "bg-green-500 text-black": isCurrentPhase,
               "bg-neutral-700 text-white": !isCurrentPhase,
@@ -48,7 +48,7 @@ export const Phase = ({
           {phase > currentPhase && "Nächste Phase"}
         </div>
 
-        <div className={clsx("flex-1 p-4 bg-secondary", innerClassName)}>
+        <div className={clsx("flex-1 bg-secondary p-4", innerClassName)}>
           {children}
         </div>
       </section>

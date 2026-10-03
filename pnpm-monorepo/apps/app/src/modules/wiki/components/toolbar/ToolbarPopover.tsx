@@ -41,7 +41,7 @@ export const ToolbarPopover = ({
         </span>
       }
     >
-      <p className="mb-2 font-mono text-xs uppercase text-white/40">{title}</p>
+      <p className="mb-2 font-mono text-xs text-white/40 uppercase">{title}</p>
       {children}
     </PopoverBaseUI>
   );

@@ -11,10 +11,10 @@ export default function Page() {
   return (
     <div className="min-h-dvh background-primary">
       <div className="p-2 pt-4 lg:p-8">
-        <main className="flex items-center flex-col">
+        <main className="flex flex-col items-center">
           <h1 className="text-xl font-bold">Datenschutzerklärung</h1>
 
-          <RichText className="mt-4 w-full max-w-4xl p-4 lg:p-8 rounded-primary bg-neutral-800/50 ">
+          <RichText className="mt-4 w-full max-w-4xl rounded-primary bg-neutral-800/50 p-4 lg:p-8">
             <h2>1. Datenschutz auf einen Blick</h2>
 
             <h3>Allgemeine Hinweise</h3>

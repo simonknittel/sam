@@ -22,9 +22,9 @@ export const PhaseManagementPayout = ({ cycleData }: Props) => {
       currentPhase={cycleData.currentPhase}
       innerClassName="overflow-hidden"
     >
-      <h2 className="font-bold text-center font-mono uppercase">Auszahlung</h2>
+      <h2 className="text-center font-mono font-bold uppercase">Auszahlung</h2>
 
-      <div className="flex gap-[2px] border-t border-white/5 mt-4 pt-4">
+      <div className="mt-4 flex gap-[2px] border-t border-white/5 pt-4">
         <StatisticTile label="aUEC noch auszubezahlen" className="flex-1">
           <ScrambleIn
             text={cycleData.openAuecPayout?.toLocaleString("de") ?? "-"}
@@ -45,7 +45,7 @@ export const PhaseManagementPayout = ({ cycleData }: Props) => {
         </StatisticTile>
       </div>
 
-      <div className="flex justify-center mt-4">
+      <div className="mt-4 flex justify-center">
         <PhaseEndDate
           plannedEnd={cycleData.cycle.payoutEndsAt}
           actualEnd={cycleData.cycle.payoutEndedAt}
@@ -53,7 +53,7 @@ export const PhaseManagementPayout = ({ cycleData }: Props) => {
         {/* TODO: Implement edit button */}
       </div>
 
-      <div className="flex justify-center items-center gap-2 mt-2">
+      <div className="mt-2 flex items-center justify-center gap-2">
         <p className="text-center text-sm">
           Du kannst diese Phase sofort beenden.
         </p>
@@ -64,7 +64,7 @@ export const PhaseManagementPayout = ({ cycleData }: Props) => {
       {[CyclePhase.Payout, CyclePhase.Completed].includes(
         cycleData.currentPhase,
       ) && (
-        <div className="flex justify-center items-center gap-2 border-t border-white/5 pt-4 mt-4">
+        <div className="mt-4 flex items-center justify-center gap-2 border-t border-white/5 pt-4">
           <CitizenTable cycleData={cycleData} />
         </div>
       )}

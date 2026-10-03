@@ -19,7 +19,7 @@ export const DeleteSilcTransaction = ({ className, id }: Props) => {
       trigger={(isPending) => (
         <button
           disabled={isPending}
-          className="text-brand-red-500 hover:text-brand-red-300 hover:cursor-pointer flex items-center text-xs"
+          className="flex items-center text-xs text-brand-red-500 hover:cursor-pointer hover:text-brand-red-300"
           title="Löschen"
         >
           <FaTrash />

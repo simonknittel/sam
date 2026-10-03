@@ -50,10 +50,10 @@ export const CreateVariantModal = ({
       <form action={formAction}>
         <label className="block">Hersteller</label>
         {manufacturer.isFetching ? (
-          <div className="rounded-secondary bg-neutral-900 mt-2 animate-pulse h-10" />
+          <div className="mt-2 h-10 animate-pulse rounded-secondary bg-neutral-900" />
         ) : (
           <>
-            <p className="p-2 rounded-secondary bg-neutral-900 w-full mt-2 opacity-50">
+            <p className="mt-2 w-full rounded-secondary bg-neutral-900 p-2 opacity-50">
               {manufacturer.data?.name || "???"}
             </p>
             <input
@@ -64,12 +64,12 @@ export const CreateVariantModal = ({
           </>
         )}
 
-        <label className="block mt-4">Serie</label>
+        <label className="mt-4 block">Serie</label>
         {series.isFetching ? (
-          <div className="rounded-secondary bg-neutral-900 mt-2 animate-pulse h-10" />
+          <div className="mt-2 h-10 animate-pulse rounded-secondary bg-neutral-900" />
         ) : (
           <>
-            <p className="p-2 rounded-secondary bg-neutral-900 w-full mt-2 opacity-50">
+            <p className="mt-2 w-full rounded-secondary bg-neutral-900 p-2 opacity-50">
               {series.data?.find((series) => series.id === seriesId)?.name ||
                 "???"}
             </p>
@@ -81,11 +81,11 @@ export const CreateVariantModal = ({
           Name
         </label>
         {series.isFetching ? (
-          <div className="rounded-secondary bg-neutral-900 mt-2 animate-pulse h-10" />
+          <div className="mt-2 h-10 animate-pulse rounded-secondary bg-neutral-900" />
         ) : (
           <input
             autoFocus
-            className="p-2 rounded-secondary bg-neutral-900 w-full mt-2"
+            className="mt-2 w-full rounded-secondary bg-neutral-900 p-2"
             defaultValue={
               series.data?.find((singleSeries) => singleSeries.id === seriesId)
                 ?.name || ""
@@ -102,7 +102,7 @@ export const CreateVariantModal = ({
         </label>
         <select
           id="status"
-          className="p-2 rounded-secondary bg-neutral-900 w-full mt-2"
+          className="mt-2 w-full rounded-secondary bg-neutral-900 p-2"
           name="status"
         >
           <option value="FLIGHT_READY">Flight ready</option>
@@ -116,7 +116,7 @@ export const CreateVariantModal = ({
 
         <VariantWikiPageField />
 
-        <div className="flex justify-end mt-8">
+        <div className="mt-8 flex justify-end">
           <Button
             type="submit"
             disabled={isPending || manufacturer.isFetching || series.isFetching}

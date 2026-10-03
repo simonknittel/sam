@@ -155,7 +155,7 @@ export const WikiPageDragHandle = ({
       onMouseDown={(event) => handleDragStart(event, pageId)}
       onKeyDown={handleKeyDown}
       title="Seite verschieben (ziehen oder Pfeiltasten)"
-      className="p-1 text-neutral-500 cursor-grab hover:text-interaction-500 focus-visible:text-interaction-500 disabled:opacity-50"
+      className="cursor-grab p-1 text-neutral-500 hover:text-interaction-500 focus-visible:text-interaction-500 disabled:opacity-50"
     >
       <MdDragIndicator className="size-3" />
     </button>

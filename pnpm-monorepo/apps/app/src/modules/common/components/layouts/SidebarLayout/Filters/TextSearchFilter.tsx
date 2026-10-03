@@ -79,15 +79,15 @@ export const TextSearchFilter = ({
   };
 
   return (
-    <div className={clsx("bg-secondary p-2 corners-secondary", className)}>
-      <p className="text-sm text-white/40 font-mono uppercase flex gap-1 items-center">
+    <div className={clsx("corners-secondary bg-secondary p-2", className)}>
+      <p className="flex items-center gap-1 font-mono text-sm text-white/40 uppercase">
         {label}
         {isLoading && <AsciiSpinner className="text-xs" />}
       </p>
 
-      <div className="mt-1 relative">
-        <div className="p-1 rounded-secondary bg-neutral-900 border border-neutral-800 focus-within:outline-2 outline-interaction-700 outline-offset-4 flex items-center gap-1">
-          <FaSearch className="size-3 text-white/40 flex-none" />
+      <div className="relative mt-1">
+        <div className="flex items-center gap-1 rounded-secondary border border-neutral-800 bg-neutral-900 p-1 outline-offset-4 outline-interaction-700 focus-within:outline-2">
+          <FaSearch className="size-3 flex-none text-white/40" />
 
           <input
             ref={inputRef}
@@ -111,7 +111,7 @@ export const TextSearchFilter = ({
             <button
               type="button"
               onClick={handleClear}
-              className="inline-flex items-center justify-center rounded p-1 text-white/40 hover:text-neutral-300 cursor-pointer"
+              className="inline-flex cursor-pointer items-center justify-center rounded p-1 text-white/40 hover:text-neutral-300"
               aria-label="Suche löschen"
             >
               <FaTimes className="size-3" />

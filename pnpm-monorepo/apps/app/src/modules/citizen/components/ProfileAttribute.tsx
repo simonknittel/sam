@@ -14,13 +14,13 @@ interface Props {
  */
 export const ProfileAttribute = ({ icon, name, children }: Props) => {
   return (
-    <div className="flex gap-4 justify-between items-baseline min-w-0">
-      <dt className="flex-none flex gap-2 items-center text-white/40 font-mono uppercase text-xs">
+    <div className="flex min-w-0 items-baseline justify-between gap-4">
+      <dt className="flex flex-none items-center gap-2 font-mono text-xs text-white/40 uppercase">
         {icon}
         {name}
       </dt>
 
-      <dd className="flex gap-2 items-baseline min-w-0">{children}</dd>
+      <dd className="flex min-w-0 items-baseline gap-2">{children}</dd>
     </div>
   );
 };

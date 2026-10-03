@@ -15,9 +15,9 @@ export const OrganizationMembershipSection = ({ className }: Props) => {
     <div className={clsx(className)}>
       <h4 className="font-bold">Mitglieder</h4>
 
-      <div className="border border-neutral-700 p-4 rounded-secondary mt-2 grid grid-cols-3 grid-rows-2 gap-4">
+      <div className="mt-2 grid grid-cols-3 grid-rows-2 gap-4 rounded-secondary border border-neutral-700 p-4">
         <div>
-          <div className="flex items-center gap-2 mb-2">
+          <div className="mb-2 flex items-center gap-2">
             <h5 className="font-bold">Lesen</h5>
 
             <Tooltip triggerChildren={<FaInfoCircle />}>
@@ -31,7 +31,7 @@ export const OrganizationMembershipSection = ({ className }: Props) => {
         </div>
 
         <div>
-          <div className="flex items-center gap-2 mb-2">
+          <div className="mb-2 flex items-center gap-2">
             <h5 className="font-bold">Lesen (Redacted)</h5>
 
             <Tooltip triggerChildren={<FaInfoCircle />}>
@@ -49,7 +49,7 @@ export const OrganizationMembershipSection = ({ className }: Props) => {
         </div>
 
         <div>
-          <div className="flex items-center gap-2 mb-2">
+          <div className="mb-2 flex items-center gap-2">
             <h5 className="font-bold">Erstellen</h5>
 
             <Tooltip triggerChildren={<FaInfoCircle />}>
@@ -62,7 +62,7 @@ export const OrganizationMembershipSection = ({ className }: Props) => {
         </div>
 
         <div>
-          <div className="flex items-center gap-2 mb-2">
+          <div className="mb-2 flex items-center gap-2">
             <h5 className="font-bold">Löschen</h5>
 
             <Tooltip triggerChildren={<FaInfoCircle />}>
@@ -75,7 +75,7 @@ export const OrganizationMembershipSection = ({ className }: Props) => {
         </div>
 
         <div>
-          <div className="flex items-center gap-2 mb-2">
+          <div className="mb-2 flex items-center gap-2">
             <h5 className="font-bold">Bestätigen</h5>
 
             <Tooltip triggerChildren={<FaInfoCircle />}>

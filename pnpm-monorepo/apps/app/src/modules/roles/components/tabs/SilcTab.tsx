@@ -9,7 +9,7 @@ export const SilcTab = () => {
 
   return (
     <TabPanel id="silc">
-      <div className="py-2 flex justify-between items-center gap-2  mt-2">
+      <div className="mt-2 flex items-center justify-between gap-2 py-2">
         <div>
           <h4 className="font-bold">Eigenen Kontostand einsehen</h4>
           <p className="text-sm">
@@ -21,7 +21,7 @@ export const SilcTab = () => {
         <YesNoCheckbox {...register("silcBalanceOfCurrentCitizen;read")} />
       </div>
 
-      <div className="py-2 flex justify-between items-center gap-2 mt-2">
+      <div className="mt-2 flex items-center justify-between gap-2 py-2">
         <div>
           <h4 className="font-bold">Alle Kontostände einsehen</h4>
           <p className="text-sm">
@@ -33,7 +33,7 @@ export const SilcTab = () => {
         <YesNoCheckbox {...register("silcBalanceOfOtherCitizen;read")} />
       </div>
 
-      <div className="py-2 flex justify-between items-center gap-2 mt-2">
+      <div className="mt-2 flex items-center justify-between gap-2 py-2">
         <div>
           <h4 className="font-bold">SINcome einsehen</h4>
           <p className="text-sm">
@@ -44,7 +44,7 @@ export const SilcTab = () => {
         <YesNoCheckbox {...register("profitDistributionCycle;read")} />
       </div>
 
-      <div className="py-2 flex justify-between items-center gap-2 mt-2">
+      <div className="mt-2 flex items-center justify-between gap-2 py-2">
         <div>
           <h4 className="font-bold">SINcome verwalten</h4>
           <p className="text-sm">
@@ -55,7 +55,7 @@ export const SilcTab = () => {
         <YesNoCheckbox {...register("profitDistributionCycle;manage")} />
       </div>
 
-      <div className="py-2 flex justify-between items-center gap-2 mt-2">
+      <div className="mt-2 flex items-center justify-between gap-2 py-2">
         <div>
           <h4 className="font-bold">Eigene Transaktionen einsehen</h4>
           <p className="text-sm">
@@ -67,7 +67,7 @@ export const SilcTab = () => {
         <YesNoCheckbox {...register("silcTransactionOfCurrentCitizen;read")} />
       </div>
 
-      <div className="py-2 flex justify-between items-center gap-2 mt-2">
+      <div className="mt-2 flex items-center justify-between gap-2 py-2">
         <div>
           <h4 className="font-bold">Alle Transaktionen einsehen</h4>
           <p className="text-sm">
@@ -79,7 +79,7 @@ export const SilcTab = () => {
         <YesNoCheckbox {...register("silcTransactionOfOtherCitizen;read")} />
       </div>
 
-      <div className="py-2 flex justify-between items-center gap-2 mt-2">
+      <div className="mt-2 flex items-center justify-between gap-2 py-2">
         <div>
           <h4 className="font-bold">Transaktionen erstellen</h4>
           <p className="text-sm">
@@ -90,7 +90,7 @@ export const SilcTab = () => {
         <YesNoCheckbox {...register("silcTransactionOfOtherCitizen;create")} />
       </div>
 
-      <div className="py-2 flex justify-between items-center gap-2 mt-2">
+      <div className="mt-2 flex items-center justify-between gap-2 py-2">
         <div>
           <h4 className="font-bold">Transaktionen bearbeiten und löschen</h4>
           <p className="text-sm">
@@ -102,7 +102,7 @@ export const SilcTab = () => {
         <YesNoCheckbox {...register("silcTransactionOfOtherCitizen;manage")} />
       </div>
 
-      <div className="py-2 flex justify-between items-center gap-2 mt-2">
+      <div className="mt-2 flex items-center justify-between gap-2 py-2">
         <div>
           <h4 className="font-bold">Einstellungen bearbeiten</h4>
           <p className="text-sm">

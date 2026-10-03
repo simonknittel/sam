@@ -43,7 +43,7 @@ export const CreateProfitDistributionCycleForm = ({
       </Button2>
 
       {showInstructions && (
-        <RichText className="mt-2 p-2 bg-tertiary rounded-secondary text-sm">
+        <RichText className="mt-2 rounded-secondary bg-tertiary p-2 text-sm">
           <p>
             <strong>SINcome-Zeitraum:</strong> Besteht aus zwei Phasen:
             Sammelphase und Auszahlungsphase.

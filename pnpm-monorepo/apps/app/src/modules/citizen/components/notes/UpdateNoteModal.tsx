@@ -129,7 +129,7 @@ export const UpdateNoteModal = ({
             ))}
           </Select>
 
-          <div className="flex justify-end mt-8">
+          <div className="mt-8 flex justify-end">
             <Button2 type="submit" disabled={isLoading}>
               {isLoading ? <AsciiSpinner /> : <FaSave />}
               Speichern

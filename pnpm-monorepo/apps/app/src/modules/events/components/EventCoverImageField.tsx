@@ -61,7 +61,7 @@ export const EventCoverImageField = ({
   return (
     <div className={clsx(className)}>
       <p>Titelbild</p>
-      <p className="text-xs mt-1 text-white/40">
+      <p className="mt-1 text-xs text-white/40">
         optional, empfohlen 800x320 Pixel
       </p>
 
@@ -106,7 +106,7 @@ export const EventCoverImageField = ({
           <button
             type="button"
             onClick={removeUpload}
-            className="text-xs text-neutral-500 hover:text-neutral-300 cursor-pointer"
+            className="cursor-pointer text-xs text-neutral-500 hover:text-neutral-300"
           >
             Abbrechen
           </button>

@@ -383,7 +383,7 @@ const InsertBlockActions = ({
     <div className="flex w-64 flex-col gap-2">
       <label className="relative block">
         <span className="sr-only">Blocktypen filtern</span>
-        <FaSearch className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-neutral-500" />
+        <FaSearch className="absolute top-1/2 left-2 -translate-y-1/2 text-xs text-neutral-500" />
         <input
           type="text"
           ref={focusInput}
@@ -391,7 +391,7 @@ const InsertBlockActions = ({
           onChange={(event) => setQuery(event.target.value)}
           onKeyDown={handleInputKeyDown}
           placeholder="Filtern …"
-          className="w-full rounded-secondary border border-neutral-800 bg-neutral-900 py-1 pl-7 pr-2 text-sm outline-interaction-700 focus-visible:outline-2"
+          className="w-full rounded-secondary border border-neutral-800 bg-neutral-900 py-1 pr-2 pl-7 text-sm outline-interaction-700 focus-visible:outline-2"
         />
       </label>
 

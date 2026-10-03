@@ -33,14 +33,14 @@ export const WikiPageIndexList = ({
 }: Props) => {
   return (
     <div data-wiki-page-index="" style={style}>
-      <p className="text-xs text-white/40 font-mono uppercase my-0!">
+      <p className="my-0! font-mono text-xs text-white/40 uppercase">
         Seitenverzeichnis
       </p>
 
       {entries.length > 0 ? (
         <EntryList entries={entries} />
       ) : (
-        <p className="text-sm text-neutral-400 my-1">
+        <p className="my-1 text-sm text-neutral-400">
           {isLoading ? "Seiten werden geladen …" : "Keine Seiten"}
         </p>
       )}
@@ -59,11 +59,11 @@ const EntryList = ({ entries }: EntryListProps) => {
         <li key={entry.id} className="my-0">
           <Link
             href={entry.href ?? `/app/wiki/${entry.id}/${entry.slug}`}
-            className="inline-flex items-center gap-2 text-interaction-500 hover:text-interaction-300 no-underline hover:underline"
+            className="inline-flex items-center gap-2 text-interaction-500 no-underline hover:text-interaction-300 hover:underline"
             title={entry.title}
           >
             {entry.iconId && (
-              <WikiPageIcon iconId={entry.iconId} className="size-4 my-0!" />
+              <WikiPageIcon iconId={entry.iconId} className="my-0! size-4" />
             )}
             {entry.title}
           </Link>

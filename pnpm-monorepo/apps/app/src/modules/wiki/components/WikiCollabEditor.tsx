@@ -202,7 +202,7 @@ export const WikiCollabEditor = ({
           <WikiCollabStatusDot
             status={WebSocketStatus.Connecting}
             users={[]}
-            className="ml-auto mr-2"
+            className="mr-2 ml-auto"
           />
         }
         staticFallback={staticFallback}
@@ -429,7 +429,7 @@ const ConnectedEditor = ({
       editorProps: {
         attributes: {
           /** pl-12 is the gutter column (WikiGutter), editors only */
-          class: clsx("prose prose-invert max-w-none focus:outline-hidden", {
+          class: clsx("prose max-w-none prose-invert focus:outline-hidden", {
             "min-h-[50vh] pl-12": isEditing,
           }),
         },

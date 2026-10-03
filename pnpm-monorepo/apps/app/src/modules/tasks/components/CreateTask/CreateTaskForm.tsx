@@ -61,15 +61,15 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
 
   return (
     <form action={formAction} className={clsx(className)}>
-      <div className="flex flex-wrap justify-center -mt-2 mb-6">
+      <div className="-mt-2 mb-6 flex flex-wrap justify-center">
         <button
           type="button"
           onClick={() => setStep(Step.Description)}
           className={clsx(
-            "first:rounded-l border border-brand-red-700 last:rounded-r h-12 flex items-center justify-center px-3 gap-2 uppercase",
+            "flex h-12 items-center justify-center gap-2 border border-brand-red-700 px-3 uppercase first:rounded-l last:rounded-r",
             {
               "bg-brand-red-500 text-white": step === Step.Description,
-              "text-brand-red-500 hover:text-brand-red-300 hover:border-brand-red-300":
+              "text-brand-red-500 hover:border-brand-red-300 hover:text-brand-red-300":
                 step !== Step.Description,
             },
           )}
@@ -81,10 +81,10 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
           type="button"
           onClick={() => setStep(Step.Visibility)}
           className={clsx(
-            "first:rounded-l border border-brand-red-700 last:rounded-r h-12 flex items-center justify-center px-3 gap-2 uppercase",
+            "flex h-12 items-center justify-center gap-2 border border-brand-red-700 px-3 uppercase first:rounded-l last:rounded-r",
             {
               "bg-brand-red-500 text-white": step === Step.Visibility,
-              "text-brand-red-500 hover:text-brand-red-300 hover:border-brand-red-300":
+              "text-brand-red-500 hover:border-brand-red-300 hover:text-brand-red-300":
                 step !== Step.Visibility,
             },
           )}
@@ -96,10 +96,10 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
           type="button"
           onClick={() => setStep(Step.Reward)}
           className={clsx(
-            "first:rounded-l border border-brand-red-700 last:rounded-r h-12 flex items-center justify-center px-3 gap-2 uppercase",
+            "flex h-12 items-center justify-center gap-2 border border-brand-red-700 px-3 uppercase first:rounded-l last:rounded-r",
             {
               "bg-brand-red-500 text-white": step === Step.Reward,
-              "text-brand-red-500 hover:text-brand-red-300 hover:border-brand-red-300":
+              "text-brand-red-500 hover:border-brand-red-300 hover:text-brand-red-300":
                 step !== Step.Reward,
             },
           )}
@@ -111,10 +111,10 @@ export const CreateTaskForm = ({ className, onSuccess }: Props) => {
           type="button"
           onClick={() => setStep(Step.Other)}
           className={clsx(
-            "first:rounded-l border border-brand-red-700 last:rounded-r h-12 flex items-center justify-center px-3 gap-2 uppercase",
+            "flex h-12 items-center justify-center gap-2 border border-brand-red-700 px-3 uppercase first:rounded-l last:rounded-r",
             {
               "bg-brand-red-500 text-white": step === Step.Other,
-              "text-brand-red-500 hover:text-brand-red-300 hover:border-brand-red-300":
+              "text-brand-red-500 hover:border-brand-red-300 hover:text-brand-red-300":
                 step !== Step.Other,
             },
           )}

@@ -16,7 +16,7 @@ export default async function Layout({
 
   return (
     <>
-      <p className="font-bold text-xl font-mono uppercase">
+      <p className="font-mono text-xl font-bold uppercase">
         <span className="text-neutral-500">Event-Vorlage //</span>{" "}
         <span>{context.template.name}</span>
       </p>

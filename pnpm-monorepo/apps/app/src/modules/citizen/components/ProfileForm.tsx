@@ -151,7 +151,7 @@ export const ProfileForm = ({
         onSubmit={handleSubmit}
         data-onboarding-target={OnboardingTargetId.ProfileForm}
       >
-        <label htmlFor={timezoneInputId} className="block mb-2 text-white/90">
+        <label htmlFor={timezoneInputId} className="mb-2 block text-white/90">
           Zeitzone
         </label>
         <Select
@@ -175,7 +175,7 @@ export const ProfileForm = ({
 
         <div className="flex gap-4">
           <div className="flex-1">
-            <label htmlFor={dayInputId} className="block mb-2 text-white/40">
+            <label htmlFor={dayInputId} className="mb-2 block text-white/40">
               Tag
             </label>
             <Select
@@ -195,7 +195,7 @@ export const ProfileForm = ({
           </div>
 
           <div className="flex-1">
-            <label htmlFor={monthInputId} className="block mb-2 text-white/40">
+            <label htmlFor={monthInputId} className="mb-2 block text-white/40">
               Monat
             </label>
             <Select
@@ -221,7 +221,7 @@ export const ProfileForm = ({
 
         <ActionErrorNote className="mt-4" state={state} />
 
-        <div className="flex justify-end mt-4">
+        <div className="mt-4 flex justify-end">
           <Button2 type="submit" disabled={isPending}>
             {isPending ? <AsciiSpinner /> : <FaSave />}
             Speichern

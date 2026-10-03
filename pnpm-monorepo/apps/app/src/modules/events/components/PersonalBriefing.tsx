@@ -114,7 +114,7 @@ export const PersonalBriefing = async ({ className, event }: Props) => {
               </>
             )}
           </p>
-          <p className="mt-1 text-neutral-500 text-sm">
+          <p className="mt-1 text-sm text-neutral-500">
             Die Teilnahme wird über Discord verwaltet.
           </p>
         </>
@@ -132,7 +132,7 @@ export const PersonalBriefing = async ({ className, event }: Props) => {
 
       {assignedPositions.length > 0 && (
         <div className="mt-4">
-          <h3 className="text-neutral-500 font-mono uppercase text-xs">
+          <h3 className="font-mono text-xs text-neutral-500 uppercase">
             Meine Posten
           </h3>
 
@@ -146,7 +146,7 @@ export const PersonalBriefing = async ({ className, event }: Props) => {
               >
                 <div className="flex items-center gap-2">
                   <p
-                    className="flex-1 font-bold truncate"
+                    className="flex-1 truncate font-bold"
                     title={position.name}
                   >
                     {position.name}

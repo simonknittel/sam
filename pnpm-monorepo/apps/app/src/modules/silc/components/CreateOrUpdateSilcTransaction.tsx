@@ -54,7 +54,7 @@ export const CreateOrUpdateSilcTransaction = (props: Props) => {
         <Button
           onClick={() => setIsOpen(true)}
           variant="tertiary"
-          className={clsx("px-2 w-auto", props.className)}
+          className={clsx("w-auto px-2", props.className)}
           title="Transaktion bearbeiten"
           iconOnly
         >
@@ -139,7 +139,7 @@ export const CreateOrUpdateSilcTransaction = (props: Props) => {
             className="mt-4"
           />
 
-          <div className="flex flex-col gap-2 mt-4">
+          <div className="mt-4 flex flex-col gap-2">
             <Button2 type="submit" disabled={isPending}>
               {isPending ? <AsciiSpinner /> : <FaSave />}
               Speichern

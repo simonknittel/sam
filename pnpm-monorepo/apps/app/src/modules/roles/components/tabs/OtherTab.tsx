@@ -18,13 +18,13 @@ const OtherTab = ({ roles }: Readonly<Props>) => {
 
   return (
     <TabPanel id="other">
-      <div className="py-2 flex justify-between items-center">
+      <div className="flex items-center justify-between py-2">
         <h4 className="font-bold">Anmelden</h4>
 
         <YesNoCheckbox {...register("login;manage")} />
       </div>
 
-      <div className="py-2 flex justify-between items-center">
+      <div className="flex items-center justify-between py-2">
         <div>
           <h4 className="font-bold">Gesperrt</h4>
           <p className="text-sm">Negiert Anmelden anderer Rollen</p>
@@ -33,31 +33,31 @@ const OtherTab = ({ roles }: Readonly<Props>) => {
         <YesNoCheckbox {...register("login;negate")} />
       </div>
 
-      <div className="py-2 flex justify-between items-center">
+      <div className="flex items-center justify-between py-2">
         <h4 className="font-bold">Benutzer lesen</h4>
 
         <YesNoCheckbox {...register("user;read")} />
       </div>
 
-      <div className="py-2 flex justify-between items-center">
+      <div className="flex items-center justify-between py-2">
         <h4 className="font-bold">Datenschutzerklärung bestätigen</h4>
 
         <YesNoCheckbox {...register("user;manage")} />
       </div>
 
-      <div className="py-2 flex justify-between items-center">
+      <div className="flex items-center justify-between py-2">
         <h4 className="font-bold">Rollen inkl. Berechtigungen verwalten</h4>
 
         <YesNoCheckbox {...register("role;manage")} />
       </div>
 
-      <div className="py-2 flex justify-between items-center">
+      <div className="flex items-center justify-between py-2">
         <h4 className="font-bold">Log Analyzer</h4>
 
         <YesNoCheckbox {...register("logAnalyzer;read")} />
       </div>
 
-      <div className="py-2 flex justify-between items-center">
+      <div className="flex items-center justify-between py-2">
         <div>
           <h4 className="font-bold">System Log lesen</h4>
           <p className="text-sm text-yellow-500">
@@ -71,7 +71,7 @@ const OtherTab = ({ roles }: Readonly<Props>) => {
         <YesNoCheckbox {...register("systemLog;read")} />
       </div>
 
-      <div className="py-2 flex justify-between items-center">
+      <div className="flex items-center justify-between py-2">
         <div>
           <h4 className="font-bold">Globale Statistiken lesen</h4>
           <p className="text-sm">
@@ -84,7 +84,7 @@ const OtherTab = ({ roles }: Readonly<Props>) => {
         <YesNoCheckbox {...register("globalStatistics;read")} />
       </div>
 
-      <div className="py-2 flex justify-between items-center">
+      <div className="flex items-center justify-between py-2">
         <div>
           <h4 className="font-bold">Uploads verwalten</h4>
           <p className="text-sm">
@@ -96,7 +96,7 @@ const OtherTab = ({ roles }: Readonly<Props>) => {
         <YesNoCheckbox {...register("upload;manage")} />
       </div>
 
-      <div className="py-2 flex justify-between items-center">
+      <div className="flex items-center justify-between py-2">
         <div className="flex items-center gap-2">
           <h4 className="font-bold">Karrierebäume verwalten</h4>
 

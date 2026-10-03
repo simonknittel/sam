@@ -14,7 +14,7 @@ export const Introduction = ({ className }: Props) => {
 
   return (
     <section className={clsx(className)}>
-      <div className="bg-secondary rounded-primary p-4">
+      <div className="rounded-primary bg-secondary p-4">
         <RichText>
           <p>
             Der Log Analyzer wertet die Game Logs von Star Citizen aus, um
@@ -25,14 +25,14 @@ export const Introduction = ({ className }: Props) => {
         </RichText>
       </div>
 
-      <ul className="mt-0.5 grid grid-cols-2 md:grid-cols-4 gap-0.5">
+      <ul className="mt-0.5 grid grid-cols-2 gap-0.5 md:grid-cols-4">
         {SORTED_ENTRY_TYPES.map((type) => {
           const { title, icon: Icon } = PATTERNS[type];
 
           return (
             <li
               key={type}
-              className="flex items-center text-center justify-center gap-2 bg-tertiary rounded-secondary p-4 font-mono uppercase font-bold"
+              className="flex items-center justify-center gap-2 rounded-secondary bg-tertiary p-4 text-center font-mono font-bold uppercase"
             >
               <Icon className="shrink-0" />
               {title}
@@ -41,7 +41,7 @@ export const Introduction = ({ className }: Props) => {
         })}
       </ul>
 
-      <div className="bg-secondary rounded-primary p-4 mt-4">
+      <div className="mt-4 rounded-primary bg-secondary p-4">
         <RichText>
           <h3>Anleitung</h3>
           <p>
@@ -58,7 +58,7 @@ export const Introduction = ({ className }: Props) => {
 
           <p>
             Die Star Citizen-Installation darf nicht unter{" "}
-            <span className="italic font-mono">C:\Program Files</span> liegen.
+            <span className="font-mono italic">C:\Program Files</span> liegen.
           </p>
 
           <p>

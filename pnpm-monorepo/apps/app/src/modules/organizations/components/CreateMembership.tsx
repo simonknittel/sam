@@ -122,7 +122,7 @@ export const CreateMembership = ({
           </label>
 
           <input
-            className="p-2 rounded-secondary bg-neutral-900 w-full mt-2"
+            className="mt-2 w-full rounded-secondary bg-neutral-900 p-2"
             id={counterpartInputId}
             {...register("counterpartId", { required: true })}
             autoFocus
@@ -133,7 +133,7 @@ export const CreateMembership = ({
           </label>
 
           <select
-            className="p-2 rounded-secondary bg-neutral-900 w-full mt-2"
+            className="mt-2 w-full rounded-secondary bg-neutral-900 p-2"
             id={typeInputId}
             {...register("type", { required: true })}
           >
@@ -143,7 +143,7 @@ export const CreateMembership = ({
             </option>
           </select>
 
-          <div className="mt-6 flex justify-between items-center">
+          <div className="mt-6 flex items-center justify-between">
             <label htmlFor={visibilityInputId}>Redacted</label>
 
             <YesNoCheckbox
@@ -153,7 +153,7 @@ export const CreateMembership = ({
             />
           </div>
 
-          <div className="flex flex-row-reverse gap-4 items-center mt-8">
+          <div className="mt-8 flex flex-row-reverse items-center gap-4">
             <Button2 type="submit" disabled={isLoading}>
               {isLoading ? <AsciiSpinner /> : <FaSave />}
               Speichern

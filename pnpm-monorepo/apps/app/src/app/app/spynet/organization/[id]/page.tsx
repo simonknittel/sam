@@ -57,17 +57,17 @@ export default async function Page(props: Props) {
 
   return (
     <MaxWidthContent>
-      <div className="flex gap-2 font-bold text-xl">
+      <div className="flex gap-2 text-xl font-bold">
         <Link
           href="/app/spynet"
-          className="text-neutral-500 flex gap-1 items-center hover:text-neutral-300"
+          className="flex items-center gap-1 text-neutral-500 hover:text-neutral-300"
         >
           Spynet
         </Link>
 
         <span className="text-neutral-500">/</span>
 
-        <span className="text-neutral-500 flex gap-1 items-center">
+        <span className="flex items-center gap-1 text-neutral-500">
           Organisation
         </span>
 
@@ -76,15 +76,15 @@ export default async function Page(props: Props) {
         <h1 className="truncate">{organization.name}</h1>
       </div>
 
-      <div className="mt-4 flex flex-col 3xl:flex-row-reverse gap-8">
-        <div className="flex flex-col gap-4 md:flex-row 3xl:w-180">
-          <SuspenseWithErrorBoundaryTile className="md:w-1/2 3xl:self-start">
-            <OverviewTile className="md:w-1/2 3xl:self-start" id={params.id} />
+      <div className="mt-4 flex flex-col gap-8 3xl:flex-row-reverse">
+        <div className="flex flex-col gap-4 3xl:w-180 md:flex-row">
+          <SuspenseWithErrorBoundaryTile className="3xl:self-start md:w-1/2">
+            <OverviewTile className="3xl:self-start md:w-1/2" id={params.id} />
           </SuspenseWithErrorBoundaryTile>
 
-          <SuspenseWithErrorBoundaryTile className="md:w-1/2 3xl:self-start">
+          <SuspenseWithErrorBoundaryTile className="3xl:self-start md:w-1/2">
             <MembershipsTile
-              className="md:w-1/2 3xl:self-start"
+              className="3xl:self-start md:w-1/2"
               id={params.id}
             />
           </SuspenseWithErrorBoundaryTile>

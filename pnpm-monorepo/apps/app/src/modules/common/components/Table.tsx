@@ -54,7 +54,7 @@ export const THead = ({ className, children }: THeadProps) => {
     <thead>
       <tr
         className={clsx(
-          "border-b border-white/20 text-left grid grid-cols-(--table-columns) gap-2 uppercase font-mono [&>th]:font-normal text-white/40 whitespace-nowrap pb-2 items-center text-sm",
+          "grid grid-cols-(--table-columns) items-center gap-2 border-b border-white/20 pb-2 text-left font-mono text-sm whitespace-nowrap text-white/40 uppercase [&>th]:font-normal",
           className,
         )}
       >

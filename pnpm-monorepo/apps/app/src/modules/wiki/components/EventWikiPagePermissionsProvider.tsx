@@ -229,12 +229,12 @@ export const EventWikiPagePermissionsProvider = ({
           />
 
           <section className="mt-8">
-            <h3 className="font-bold text-lg font-mono uppercase">Hochladen</h3>
+            <h3 className="font-mono text-lg font-bold uppercase">Hochladen</h3>
             <p className="text-sm text-neutral-400">
               Wer darf beim Bearbeiten Bilder bzw. Dateianhänge hochladen?
             </p>
 
-            <h4 className="font-bold mt-4">Bilder</h4>
+            <h4 className="mt-4 font-bold">Bilder</h4>
             <UploadabilityRadioGroup
               name="imageUploadability"
               value={imageUploadability}
@@ -243,7 +243,7 @@ export const EventWikiPagePermissionsProvider = ({
               inheritedFrom={inheritedFrom.imageUploadability}
             />
 
-            <h4 className="font-bold mt-4">Dateianhänge</h4>
+            <h4 className="mt-4 font-bold">Dateianhänge</h4>
             <UploadabilityRadioGroup
               name="attachmentUploadability"
               value={attachmentUploadability}
@@ -254,7 +254,7 @@ export const EventWikiPagePermissionsProvider = ({
           </section>
 
           <section className="mt-8">
-            <h3 className="font-bold text-lg font-mono uppercase">Manager</h3>
+            <h3 className="font-mono text-lg font-bold uppercase">Manager</h3>
             <p className="text-sm text-neutral-400">
               Der Event-Organisator, die Event-Manager und Rollen mit der
               &quot;Events verwalten&quot;-Berechtigung haben immer vollen
@@ -348,7 +348,7 @@ const ScopeSection = ({
 
   return (
     <section className="mt-8">
-      <h3 className="font-bold text-lg font-mono uppercase">{legend}</h3>
+      <h3 className="font-mono text-lg font-bold uppercase">{legend}</h3>
 
       <RadioGroup
         name={name}

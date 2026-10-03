@@ -25,14 +25,14 @@ export default async function Page(
 
   return (
     <div>
-      <div className="flex items-center gap-2 font-bold text-xl">
+      <div className="flex items-center gap-2 text-xl font-bold">
         <span className="text-neutral-500">Meldung /</span>
         {report.page.iconId && <WikiPageIcon iconId={report.page.iconId} />}
         <p>{report.page.title}</p>
       </div>
 
       <div className="mt-4 flex flex-col gap-4">
-        <section className="bg-secondary rounded-primary p-4 lg:p-8">
+        <section className="rounded-primary bg-secondary p-4 lg:p-8">
           <dl className="grid gap-x-8 gap-y-2 sm:grid-cols-[max-content_1fr]">
             <dt className="text-sm text-neutral-500">Seite</dt>
             <dd>
@@ -102,13 +102,13 @@ export default async function Page(
         </section>
 
         {report.resolvedAt === null ? (
-          <section className="bg-secondary rounded-primary p-4 lg:p-8">
-            <h2 className="font-bold text-xl">Meldung bearbeiten</h2>
+          <section className="rounded-primary bg-secondary p-4 lg:p-8">
+            <h2 className="text-xl font-bold">Meldung bearbeiten</h2>
             <ResolveWikiPageReportForm reportId={report.id} className="mt-4" />
           </section>
         ) : (
-          <section className="bg-secondary rounded-primary p-4 lg:p-8">
-            <h2 className="font-bold text-xl">Bearbeitung</h2>
+          <section className="rounded-primary bg-secondary p-4 lg:p-8">
+            <h2 className="text-xl font-bold">Bearbeitung</h2>
             <dl className="mt-4 grid gap-x-8 gap-y-2 sm:grid-cols-[max-content_1fr]">
               <dt className="text-sm text-neutral-500">Bearbeitet von</dt>
               <dd>

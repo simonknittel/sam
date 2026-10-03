@@ -44,7 +44,7 @@ export const SilcTransactionsTable = ({
             <TRow key={transaction.id}>
               <td>{formatDate(transaction.createdAt)}</td>
 
-              <td className="overflow-hidden flex items-center h-8">
+              <td className="flex h-8 items-center overflow-hidden">
                 <CitizenCellLink
                   citizen={transaction.receiver}
                   page="/silc"
@@ -68,14 +68,14 @@ export const SilcTransactionsTable = ({
                 {transaction.description}
               </td>
 
-              <td className="overflow-hidden flex items-center h-8">
+              <td className="flex h-8 items-center overflow-hidden">
                 {citizen && (
                   <CitizenCellLink citizen={citizen} className="h-full" />
                 )}
               </td>
 
-              <td className="overflow-hidden flex items-center h-8">
-                <span className="flex items-center gap-1 h-full">
+              <td className="flex h-8 items-center overflow-hidden">
+                <span className="flex h-full items-center gap-1">
                   {showEdit && !transaction.deletedAt && (
                     <CreateOrUpdateSilcTransaction
                       transaction={transaction}

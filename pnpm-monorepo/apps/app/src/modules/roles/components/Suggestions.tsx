@@ -21,7 +21,7 @@ export const Suggestions = ({ className, onClick }: Props) => {
   return (
     <>
       <div className={clsx(className, "flex items-center gap-2")}>
-        <p className="flex items-center font-bold gap-2">
+        <p className="flex items-center gap-2 font-bold">
           <RiBardFill /> Vorschläge
         </p>
 
@@ -50,14 +50,14 @@ export const Suggestions = ({ className, onClick }: Props) => {
         )}
       </div>
 
-      <div className="flex gap-2 flex-wrap mt-2">
+      <div className="mt-2 flex flex-wrap gap-2">
         {suggestions.data ? (
           <>
             {suggestions.data.roleNames.map((roleName) => (
               <button
                 key={roleName}
                 className={clsx(
-                  "px-2 py-1 rounded-secondary bg-neutral-700 flex gap-2 items-center whitespace-nowrap enabled:hover:bg-neutral-600 transition-colors",
+                  "flex items-center gap-2 rounded-secondary bg-neutral-700 px-2 py-1 whitespace-nowrap transition-colors enabled:hover:bg-neutral-600",
                   {
                     "animate-pulse": suggestions.isFetching,
                   },
@@ -84,11 +84,11 @@ export const Suggestions = ({ className, onClick }: Props) => {
           </>
         ) : (
           <>
-            <div className="w-32 h-8 rounded-secondary bg-neutral-700 animate-pulse" />
-            <div className="w-48 h-8 rounded-secondary bg-neutral-700 animate-pulse" />
-            <div className="w-24 h-8 rounded-secondary bg-neutral-700 animate-pulse" />
-            <div className="w-24 h-8 rounded-secondary bg-neutral-700 animate-pulse" />
-            <div className="w-32 h-8 rounded-secondary bg-neutral-700 animate-pulse" />
+            <div className="h-8 w-32 animate-pulse rounded-secondary bg-neutral-700" />
+            <div className="h-8 w-48 animate-pulse rounded-secondary bg-neutral-700" />
+            <div className="h-8 w-24 animate-pulse rounded-secondary bg-neutral-700" />
+            <div className="h-8 w-24 animate-pulse rounded-secondary bg-neutral-700" />
+            <div className="h-8 w-32 animate-pulse rounded-secondary bg-neutral-700" />
           </>
         )}
       </div>

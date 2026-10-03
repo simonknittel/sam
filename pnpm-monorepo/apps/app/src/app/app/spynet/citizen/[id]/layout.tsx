@@ -19,17 +19,17 @@ export default async function Layout({
 
   return (
     <MaxWidthContent>
-      <div className="flex gap-2 font-bold text-xl">
+      <div className="flex gap-2 text-xl font-bold">
         <Link
           href="/app/spynet"
-          className="text-neutral-500 flex gap-1 items-center hover:text-neutral-300"
+          className="flex items-center gap-1 text-neutral-500 hover:text-neutral-300"
         >
           &lt; Spynet
         </Link>
 
         <span className="text-neutral-500">/</span>
 
-        <span className="text-neutral-500 flex gap-1 items-center">
+        <span className="flex items-center gap-1 text-neutral-500">
           Citizen
         </span>
 

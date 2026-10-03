@@ -155,7 +155,7 @@ export const CreateOrUpdateForm = ({ initialData, onUpdate }: Props) => {
           alt=""
           width={128}
           height={128}
-          className="mt-2 size-32 border border-neutral-700 rounded-secondary object-contain object-center"
+          className="mt-2 size-32 rounded-secondary border border-neutral-700 object-contain object-center"
           unoptimized={["image/svg+xml", "image/gif"].includes(
             role.icon.mimeType,
           )}
@@ -167,7 +167,7 @@ export const CreateOrUpdateForm = ({ initialData, onUpdate }: Props) => {
           alt=""
           width={228}
           height={128}
-          className="mt-2 w-57 h-32 border border-neutral-700 rounded-secondary object-contain object-center"
+          className="mt-2 h-32 w-57 rounded-secondary border border-neutral-700 object-contain object-center"
           unoptimized={["image/svg+xml", "image/gif"].includes(
             role.thumbnail.mimeType,
           )}
@@ -195,7 +195,7 @@ export const CreateOrUpdateForm = ({ initialData, onUpdate }: Props) => {
       <label htmlFor={backgroundColorInputId} className="mt-6 block">
         Hintergrundfarbe
       </label>
-      <div className="flex gap-4 items-center mt-2">
+      <div className="mt-2 flex items-center gap-4">
         <input
           type="color"
           name="backgroundColor"
@@ -203,7 +203,7 @@ export const CreateOrUpdateForm = ({ initialData, onUpdate }: Props) => {
           defaultValue={initialData?.backgroundColor || "#262626"}
         />
 
-        <div className="flex gap-1 items-baseline">
+        <div className="flex items-baseline gap-1">
           <Select
             name="backgroundTransparency"
             id={backgroundTransparencyInputId}
@@ -218,7 +218,7 @@ export const CreateOrUpdateForm = ({ initialData, onUpdate }: Props) => {
         </div>
       </div>
 
-      <div className="flex justify-end mt-8">
+      <div className="mt-8 flex justify-end">
         <Button2 type="submit">Speichern</Button2>
       </div>
     </form>

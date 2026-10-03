@@ -118,7 +118,7 @@ const PublishedState = ({
       />
 
       <dl className="mt-4">
-        <dt className="text-neutral-500 font-mono uppercase text-xs">Ort</dt>
+        <dt className="font-mono text-xs text-neutral-500 uppercase">Ort</dt>
         <dd className="break-words">{location}</dd>
       </dl>
 
@@ -179,7 +179,7 @@ const UnpublishedState = ({
       <form action={formAction} id={formId}>
         <input type="hidden" name="eventId" value={event.id} />
 
-        <p className="text-neutral-500 text-sm">
+        <p className="text-sm text-neutral-500">
           Veröffentliche das Event als Termin auf dem Discord-Server. Titel,
           Beschreibung, Zeitraum und Titelbild werden danach automatisch
           aktualisiert; Anmeldungen werden nicht übertragen.

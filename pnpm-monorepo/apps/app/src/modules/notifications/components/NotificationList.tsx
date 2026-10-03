@@ -104,7 +104,7 @@ export const NotificationList = ({
       <p
         className={clsx(
           statusMessageClassName,
-          "font-mono text-sm animate-pulse",
+          "animate-pulse font-mono text-sm",
         )}
       >
         <AsciiSpinner />
@@ -127,7 +127,7 @@ export const NotificationList = ({
 
   if (notifications.length <= 0)
     return (
-      <p className={clsx(statusMessageClassName, "text-neutral-500 text-sm")}>
+      <p className={clsx(statusMessageClassName, "text-sm text-neutral-500")}>
         {tab === NotificationCenterTab.Inbox
           ? "Keine Benachrichtigungen"
           : "Keine archivierten Benachrichtigungen"}
@@ -137,7 +137,7 @@ export const NotificationList = ({
   return (
     <ul
       ref={scrollContainerRef}
-      className="max-h-96 overflow-y-auto -mx-4 -mb-4 divide-y divide-neutral-800 border-t border-neutral-800"
+      className="-mx-4 -mb-4 max-h-96 divide-y divide-neutral-800 overflow-y-auto border-t border-neutral-800"
     >
       {notifications.map((notification) => (
         <NotificationListItem
@@ -161,7 +161,7 @@ export const NotificationList = ({
             type="button"
             onClick={() => void fetchNextPage()}
             disabled={isFetchingNextPage}
-            className="w-full text-center text-interaction-500 hover:underline focus-visible:underline active:scale-95 text-sm p-3 font-mono uppercase enabled:cursor-pointer disabled:opacity-50"
+            className="w-full p-3 text-center font-mono text-sm text-interaction-500 uppercase hover:underline focus-visible:underline active:scale-95 enabled:cursor-pointer disabled:opacity-50"
           >
             {isFetchingNextPage ? "Wird geladen..." : "Mehr laden"}
           </button>

@@ -22,7 +22,7 @@ export const DeleteShip = ({ className, ship }: Props) => {
       trigger={(isPending) => (
         <button
           disabled={isPending}
-          className="px-2 py-2 text-neutral-500 hover:text-neutral-50 hover:cursor-pointer"
+          className="px-2 py-2 text-neutral-500 hover:cursor-pointer hover:text-neutral-50"
           title="Löschen"
         >
           {isPending ? <AsciiSpinner /> : <FaTrash />}

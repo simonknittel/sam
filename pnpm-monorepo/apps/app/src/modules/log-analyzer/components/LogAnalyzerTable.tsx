@@ -38,7 +38,7 @@ export const LogAnalyzerTable = ({ className }: Props) => {
   const hiddenRowCount = sortedFilteredEntries.length - visibleEntries.length;
 
   return (
-    <div className={clsx("p-4 bg-secondary rounded-primary", className)}>
+    <div className={clsx("rounded-primary bg-secondary p-4", className)}>
       <Table columns={COLUMNS} minWidth={950}>
         <THead>
           <th>Datum</th>
@@ -58,7 +58,7 @@ export const LogAnalyzerTable = ({ className }: Props) => {
       </Table>
 
       {hiddenRowCount > 0 && (
-        <div className="flex justify-center mt-4">
+        <div className="mt-4 flex justify-center">
           <Button2
             type="button"
             variant={Button2Variant.Secondary}

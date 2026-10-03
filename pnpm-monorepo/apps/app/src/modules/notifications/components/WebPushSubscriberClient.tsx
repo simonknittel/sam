@@ -134,17 +134,17 @@ export const WebPushSubscriberClient = ({
           Genehmigung anfordern
         </Button2>
 
-        <p className="text-neutral-500 text-sm mt-2">
+        <p className="mt-2 text-sm text-neutral-500">
           Auf iOS-Geräten musst du das SAM zuerst zu deinem Home-Bildschirm
           hinzufügen, bevor du die Genehmigung anfordern kannst.
         </p>
 
-        <p className="text-neutral-500 text-sm mt-2">
+        <p className="mt-2 text-sm text-neutral-500">
           Die Genehmigung muss pro Browser und Gerät angefordert werden.
         </p>
 
         {hasSubscriptions && (
-          <div className="border-t border-white/5 mt-4 pt-4">
+          <div className="mt-4 border-t border-white/5 pt-4">
             <p>
               Browser-Benachrichtigungen sind auf mindestens einem Gerät
               aktiviert.
@@ -161,7 +161,7 @@ export const WebPushSubscriberClient = ({
               Auf allen Geräten deaktivieren
             </Button2>
 
-            <p className="text-neutral-500 text-sm mt-2">
+            <p className="mt-2 text-sm text-neutral-500">
               Dabei werden alle Geräte abgemeldet. Zum erneuten Aktivieren muss
               die Genehmigung pro Gerät erneut angefordert werden. Die
               Genehmigung im Browser bleibt bestehen und kann nur über dessen

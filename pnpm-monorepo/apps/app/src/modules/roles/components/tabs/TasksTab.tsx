@@ -10,9 +10,9 @@ export const TasksTab = () => {
 
   return (
     <TabPanel id="tasks">
-      <div className="border rounded-secondary border-neutral-700 p-4">
-        <h4 className="font-bold text-xl">Task lesen</h4>
-        <div className="py-2 flex justify-between items-center gap-2 mt-2">
+      <div className="rounded-secondary border border-neutral-700 p-4">
+        <h4 className="text-xl font-bold">Task lesen</h4>
+        <div className="mt-2 flex items-center justify-between gap-2 py-2">
           <div>
             <h4 className="font-bold">
               Öffentlich, personalisiert oder Gruppe
@@ -27,7 +27,7 @@ export const TasksTab = () => {
           <YesNoCheckbox {...register("task;read")} />
         </div>
 
-        <div className="py-2 flex justify-between items-center gap-2 mt-2">
+        <div className="mt-2 flex items-center justify-between gap-2 py-2">
           <div>
             <h4 className="font-bold">Gelöscht</h4>
             <p className="text-sm text-neutral-400">
@@ -39,10 +39,10 @@ export const TasksTab = () => {
         </div>
       </div>
 
-      <div className="border rounded-secondary border-neutral-700 p-4 mt-4">
-        <h4 className="font-bold text-xl">Task erstellen</h4>
+      <div className="mt-4 rounded-secondary border border-neutral-700 p-4">
+        <h4 className="text-xl font-bold">Task erstellen</h4>
 
-        <div className="py-2 flex justify-between items-center gap-2 mt-2">
+        <div className="mt-2 flex items-center justify-between gap-2 py-2">
           <div>
             <h4 className="font-bold">Öffentlich</h4>
             <p className="text-sm text-neutral-400">
@@ -55,7 +55,7 @@ export const TasksTab = () => {
           <YesNoCheckbox {...register("task;create")} />
         </div>
 
-        <div className="py-2 flex justify-between items-center gap-2 mt-2">
+        <div className="mt-2 flex items-center justify-between gap-2 py-2">
           <div>
             <h4 className="font-bold">Personalisiert oder Gruppe</h4>
             <p className="text-sm text-neutral-400">
@@ -71,7 +71,7 @@ export const TasksTab = () => {
           />
         </div>
 
-        <div className="py-2 flex justify-between items-center gap-2 mt-2">
+        <div className="mt-2 flex items-center justify-between gap-2 py-2">
           <div>
             <h4 className="font-bold">Mit neuen SILC</h4>
             <p className="text-sm text-neutral-400">
@@ -88,7 +88,7 @@ export const TasksTab = () => {
         </div>
       </div>
 
-      <div className="py-2 flex justify-between items-center gap-2 mt-2">
+      <div className="mt-2 flex items-center justify-between gap-2 py-2">
         <div>
           <h4 className="font-bold">Tasks verwalten</h4>
           <p className="text-sm text-neutral-400">

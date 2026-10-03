@@ -45,7 +45,7 @@ export const ModalContent = ({
     );
   } else {
     entries = (
-      <p className="text-neutral-500 italic mt-8">Keine Einträge vorhanden</p>
+      <p className="mt-8 text-neutral-500 italic">Keine Einträge vorhanden</p>
     );
   }
 

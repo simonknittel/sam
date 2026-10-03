@@ -51,9 +51,9 @@ export default async function Page(props: Props) {
   if (!series || !manufacturer) notFound();
 
   return (
-    <div className="flex gap-8 items-start flex-col xl:flex-row">
-      <section className="p-8 bg-neutral-800/50 rounded-primary w-full xl:w-100">
-        <p className="font-bold mb-4">Serie</p>
+    <div className="flex flex-col items-start gap-8 xl:flex-row">
+      <section className="w-full rounded-primary bg-neutral-800/50 p-8 xl:w-100">
+        <p className="mb-4 font-bold">Serie</p>
 
         <dl>
           <dt className="text-neutral-500">Name</dt>

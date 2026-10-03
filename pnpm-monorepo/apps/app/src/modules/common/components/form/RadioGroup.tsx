@@ -67,7 +67,7 @@ export const RadioGroup = ({
             <label
               htmlFor={`${idPrefix}_${item.value}`}
               className={clsx(
-                "border border-brand-red-500 min-h-8 py-1 px-2 flex items-center justify-center gap-2 cursor-pointer text-brand-red-500 hover:text-brand-red-300 hover:border-brand-red-300 peer-focus-visible:outline-solid peer-focus-visible:outline-1 peer-focus-visible:outline-offset-1 peer-aria-checked:bg-brand-red-500! peer-aria-checked:text-white! peer-aria-checked:border-brand-red-500! text-sm",
+                "flex min-h-8 cursor-pointer items-center justify-center gap-2 border border-brand-red-500 px-2 py-1 text-sm text-brand-red-500 peer-focus-visible:outline-1 peer-focus-visible:outline-offset-1 peer-focus-visible:outline-solid peer-aria-checked:border-brand-red-500! peer-aria-checked:bg-brand-red-500! peer-aria-checked:text-white! hover:border-brand-red-300 hover:text-brand-red-300",
                 {
                   "rounded-l": index === 0,
                   "rounded-r": index === items.length - 1,
@@ -82,7 +82,7 @@ export const RadioGroup = ({
         ))}
       </RadixRadioGroup.Root>
 
-      {hint && <p className="text-xs mt-1 text-white/40">{hint}</p>}
+      {hint && <p className="mt-1 text-xs text-white/40">{hint}</p>}
     </>
   );
 };

@@ -51,13 +51,13 @@ export const UpdateVariantModal = ({ onRequestClose, variant }: Props) => {
           Name
         </label>
         {_variant.isFetching ? (
-          <div className="rounded-secondary bg-neutral-900 mt-2 h-10 animate-pulse " />
+          <div className="mt-2 h-10 animate-pulse rounded-secondary bg-neutral-900" />
         ) : (
           <input
             id={nameId}
             name="name"
             type="text"
-            className="p-2 rounded-secondary bg-neutral-900 w-full mt-2"
+            className="mt-2 w-full rounded-secondary bg-neutral-900 p-2"
             required
             autoFocus
             defaultValue={_variant.data?.name}
@@ -68,12 +68,12 @@ export const UpdateVariantModal = ({ onRequestClose, variant }: Props) => {
           Status
         </label>
         {_variant.isFetching ? (
-          <div className="rounded-secondary bg-neutral-900 mt-2 h-10 animate-pulse " />
+          <div className="mt-2 h-10 animate-pulse rounded-secondary bg-neutral-900" />
         ) : (
           <select
             id={statusId}
             name="status"
-            className="p-2 rounded-secondary bg-neutral-900 w-full mt-2"
+            className="mt-2 w-full rounded-secondary bg-neutral-900 p-2"
             defaultValue={_variant.data?.status || "FLIGHT_READY"}
             required
           >
@@ -104,7 +104,7 @@ export const UpdateVariantModal = ({ onRequestClose, variant }: Props) => {
           loading={_variant.isFetching}
         />
 
-        <div className="flex justify-end mt-8">
+        <div className="mt-8 flex justify-end">
           <Button2 disabled={isPending || _variant.isFetching} type="submit">
             {isPending ? <AsciiSpinner /> : <FaSave />}
             Speichern

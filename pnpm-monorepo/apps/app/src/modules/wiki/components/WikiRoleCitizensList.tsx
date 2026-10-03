@@ -42,11 +42,11 @@ export const WikiRoleCitizensList = ({
   if (!role)
     return (
       <div data-wiki-role-citizens="" style={style}>
-        <p className="text-xs text-white/40 font-mono uppercase my-0!">
+        <p className="my-0! font-mono text-xs text-white/40 uppercase">
           Rollenmitglieder
         </p>
 
-        <p className="text-sm text-neutral-400 my-1">
+        <p className="my-1 text-sm text-neutral-400">
           {roleId ? "Rolle nicht verfügbar" : "Keine Rolle ausgewählt"}
         </p>
       </div>
@@ -57,7 +57,7 @@ export const WikiRoleCitizensList = ({
       <SingleRoleBadge roleId={role.id} />
 
       {citizens.length > 0 ? (
-        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
           {citizens.map((citizen) => (
             /* Same link treatment as the page index, not prose's underline */
             <CitizenLink
@@ -68,7 +68,7 @@ export const WikiRoleCitizensList = ({
           ))}
         </div>
       ) : (
-        <p className="text-sm text-neutral-400 my-1">
+        <p className="my-1 text-sm text-neutral-400">
           {isLoading ? "Citizens werden geladen …" : "Keine Citizens"}
         </p>
       )}

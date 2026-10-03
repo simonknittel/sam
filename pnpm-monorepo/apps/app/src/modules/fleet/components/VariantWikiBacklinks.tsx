@@ -42,7 +42,7 @@ export const VariantWikiBacklinks = async ({ pageId }: Props) => {
 
   return (
     <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-white/40">
-      <span className="uppercase font-mono">Eingebunden bei:</span>
+      <span className="font-mono uppercase">Eingebunden bei:</span>
       {variants.map((variant) => (
         <VariantWithLogo
           key={variant.id}

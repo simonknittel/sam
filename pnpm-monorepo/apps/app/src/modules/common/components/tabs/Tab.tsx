@@ -15,10 +15,10 @@ const Tab = ({ children, id }: Readonly<Props>) => {
       value={id}
       className={(state) =>
         clsx(
-          "first:rounded-l border border-brand-red-700 last:rounded-r h-8 flex items-center justify-center px-3 gap-2 font-mono uppercase enabled:cursor-pointer",
+          "flex h-8 items-center justify-center gap-2 border border-brand-red-700 px-3 font-mono uppercase first:rounded-l last:rounded-r enabled:cursor-pointer",
           {
             "bg-brand-red-500 text-white": state.active,
-            "text-brand-red-500 hover:text-brand-red-300 hover:border-brand-red-300":
+            "text-brand-red-500 hover:border-brand-red-300 hover:text-brand-red-300":
               !state.active,
           },
         )

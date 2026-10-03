@@ -37,7 +37,7 @@ export const RemoveEventParticipant = ({
       trigger={(isPending) => (
         <button
           disabled={isPending}
-          className="text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300 active:text-brand-red-400 flex items-center justify-center rounded-secondary size-8 enabled:cursor-pointer disabled:opacity-50"
+          className="active:text-brand-red-400 flex size-8 items-center justify-center rounded-secondary text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300 enabled:cursor-pointer disabled:opacity-50"
           title="Teilnehmer entfernen"
         >
           {isPending ? <AsciiSpinner /> : <FaTrash />}

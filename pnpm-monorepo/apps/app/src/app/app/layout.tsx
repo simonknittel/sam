@@ -101,7 +101,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
                                 <MobileActionBarLoader />
                               </CmdKProvider>
 
-                              <div className="pt-12 lg:pt-28 pb-16 lg:pb-0 min-h-dvh">
+                              <div className="min-h-dvh pt-12 pb-16 lg:pt-28 lg:pb-0">
                                 {children}
                               </div>
 

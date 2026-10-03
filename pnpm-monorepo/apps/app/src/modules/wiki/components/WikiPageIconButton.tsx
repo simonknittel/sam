@@ -88,9 +88,9 @@ export const WikiPageIconButton = ({ pageId, iconId, canAdmin }: Props) => {
           width={128}
           height={128}
           className={clsx(
-            "size-32 border border-neutral-700 hover:border-neutral-500 text-neutral-500 hover:text-neutral-300 transition-colors rounded-secondary",
+            "size-32 rounded-secondary border border-neutral-700 text-neutral-500 transition-colors hover:border-neutral-500 hover:text-neutral-300",
             {
-              "after:content-['Bild_hochladen'] flex items-center justify-center":
+              "flex items-center justify-center after:content-['Bild_hochladen']":
                 !iconId,
             },
           )}

@@ -31,11 +31,11 @@ export const VariantExternalLinkFields = ({ initialLinks }: Props) => {
       <p className="mt-6">
         Externe Links <small className="text-white/40">optional</small>
       </p>
-      <div className="flex flex-col gap-2 mt-2">
+      <div className="mt-2 flex flex-col gap-2">
         {externalLinks.map((link) => (
-          <div key={link.id} className="flex gap-1 items-stretch">
+          <div key={link.id} className="flex items-stretch gap-1">
             <select
-              className="p-2 rounded-secondary bg-neutral-900 flex-none min-w-0"
+              className="min-w-0 flex-none rounded-secondary bg-neutral-900 p-2"
               name="linkServiceNames[]"
               defaultValue={link.serviceName}
             >
@@ -49,7 +49,7 @@ export const VariantExternalLinkFields = ({ initialLinks }: Props) => {
             </select>
             <input
               type="url"
-              className="p-2 rounded-secondary bg-neutral-900 flex-1 min-w-0"
+              className="min-w-0 flex-1 rounded-secondary bg-neutral-900 p-2"
               name="linkUrls[]"
               placeholder="https://..."
               defaultValue={link.url}
@@ -64,7 +64,7 @@ export const VariantExternalLinkFields = ({ initialLinks }: Props) => {
               variant="tertiary"
               title="Löschen"
               iconOnly
-              className="h-auto flex-none w-6"
+              className="h-auto w-6 flex-none"
             >
               <FaTrash />
             </Button>

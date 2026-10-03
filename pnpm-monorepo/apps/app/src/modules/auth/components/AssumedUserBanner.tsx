@@ -16,14 +16,14 @@ export const AssumedUserBanner = ({ assumedUserLabel }: Props) => {
   };
 
   return (
-    <div className="flex min-w-0 items-center gap-4 backdrop-blur-sm px-2 py-1 rounded-secondary bg-red-500/50 text-xs font-mono uppercase">
+    <div className="flex min-w-0 items-center gap-4 rounded-secondary bg-red-500/50 px-2 py-1 font-mono text-xs uppercase backdrop-blur-sm">
       <p className="min-w-0 truncate" title={assumedUserLabel}>
         Assuming {assumedUserLabel}
       </p>
 
       <button
         type="button"
-        className="whitespace-nowrap enabled:hover:underline enabled:focus-visible:underline enabled:active:underline enabled:cursor-pointer disabled:opacity-50"
+        className="whitespace-nowrap enabled:cursor-pointer enabled:hover:underline enabled:focus-visible:underline enabled:active:underline disabled:opacity-50"
         onClick={handleExit}
         disabled={isPending}
       >

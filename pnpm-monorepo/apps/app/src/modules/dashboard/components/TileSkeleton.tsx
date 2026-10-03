@@ -6,12 +6,12 @@ interface Props {
 
 export const TileSkeleton = ({ className }: Props) => {
   return (
-    <section className={clsx(className, "flex flex-col gap-4 items-center")}>
-      <h2 className="font-thin text-2xl self-start font-mono uppercase">
+    <section className={clsx(className, "flex flex-col items-center gap-4")}>
+      <h2 className="self-start font-mono text-2xl font-thin uppercase">
         Events
       </h2>
 
-      <div className="rounded-primary bg-neutral-800/50 h-[160px] animate-pulse w-full" />
+      <div className="h-[160px] w-full animate-pulse rounded-primary bg-neutral-800/50" />
     </section>
   );
 };

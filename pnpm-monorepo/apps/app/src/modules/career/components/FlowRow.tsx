@@ -50,7 +50,7 @@ export const FlowRow = ({
         <td>
           <button
             type="button"
-            className="flex size-8 cursor-grab items-center justify-center rounded-secondary text-neutral-500 hover:text-interaction-500 focus-visible:text-interaction-500 focus-visible:outline-2 outline-interaction-700 active:cursor-grabbing"
+            className="flex size-8 cursor-grab items-center justify-center rounded-secondary text-neutral-500 outline-interaction-700 hover:text-interaction-500 focus-visible:text-interaction-500 focus-visible:outline-2 active:cursor-grabbing"
             aria-label={`${flow.name} verschieben`}
             {...attributes}
             {...listeners}

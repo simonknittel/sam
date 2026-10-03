@@ -69,7 +69,7 @@ export const CitizenTable = ({
           <th>
             <Link
               href={`?${handleSearchParams.toString()}`}
-              className="flex items-center gap-2 cursor-pointer select-none hover:text-neutral-300"
+              className="flex cursor-pointer items-center gap-2 select-none hover:text-neutral-300"
             >
               Handle
               {searchParams.get("sort") === "handle-asc" && <FaSortUp />}
@@ -90,7 +90,7 @@ export const CitizenTable = ({
           <th>
             <Link
               href={`?${createdAtSearchParams.toString()}`}
-              className="flex items-center gap-2 cursor-pointer select-none hover:text-neutral-300 whitespace-nowrap"
+              className="flex cursor-pointer items-center gap-2 whitespace-nowrap select-none hover:text-neutral-300"
             >
               Erstellt am
               {(!searchParams.has("sort") ||
@@ -105,7 +105,7 @@ export const CitizenTable = ({
             <th>
               <Link
                 href={`?${lastSeenAtSearchParams.toString()}`}
-                className="flex items-center gap-2 cursor-pointer select-none hover:text-neutral-300 whitespace-nowrap"
+                className="flex cursor-pointer items-center gap-2 whitespace-nowrap select-none hover:text-neutral-300"
               >
                 Zuletzt gesehen
                 {searchParams.get("sort") === "last-seen-at-asc" && (
@@ -125,12 +125,12 @@ export const CitizenTable = ({
           return (
             <tr
               key={row.entity.id}
-              className="grid items-center gap-4 px-2 h-14 rounded-secondary -mx-2 first:mt-2"
+              className="-mx-2 grid h-14 items-center gap-4 rounded-secondary px-2 first:mt-2"
               style={{
                 gridTemplateColumns,
               }}
             >
-              <td className="overflow-hidden flex gap-4 items-center justify-between">
+              <td className="flex items-center justify-between gap-4 overflow-hidden">
                 <span className="overflow-hidden text-ellipsis">
                   {row.entity.handle ? (
                     <span title={row.entity.handle}>{row.entity.handle}</span>
@@ -149,7 +149,7 @@ export const CitizenTable = ({
               </td>
 
               {showDiscordIdColumn && (
-                <td className="flex gap-4 items-center overflow-hidden justify-between">
+                <td className="flex items-center justify-between gap-4 overflow-hidden">
                   <span className="overflow-hidden text-ellipsis">
                     {row.entity.discordId ? (
                       <span title={row.entity.discordId}>
@@ -164,7 +164,7 @@ export const CitizenTable = ({
               )}
 
               {showTeamspeakIdColumn && (
-                <td className="overflow-hidden flex gap-4 items-center justify-between">
+                <td className="flex items-center justify-between gap-4 overflow-hidden">
                   <span className="overflow-hidden text-ellipsis">
                     {row.entity.teamspeakId ? (
                       <span title={row.entity.teamspeakId}>
@@ -192,7 +192,7 @@ export const CitizenTable = ({
                 <Actions>
                   <Link
                     href={`/app/spynet/citizen/${row.entity.id}`}
-                    className="text-brand-red-500 hover:text-brand-red-300 flex gap-2 items-center text-sm whitespace-nowrap h-8"
+                    className="flex h-8 items-center gap-2 text-sm whitespace-nowrap text-brand-red-500 hover:text-brand-red-300"
                   >
                     <FaExternalLinkAlt />
                     Vollständiger Eintrag

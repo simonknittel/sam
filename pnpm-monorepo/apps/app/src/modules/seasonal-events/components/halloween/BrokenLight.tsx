@@ -144,9 +144,9 @@ export const BrokenLight = () => {
 
       <div
         className={clsx(
-          "absolute inset-0 opacity-0 animate-seasonal-power-flicker",
+          "absolute inset-0 animate-seasonal-power-flicker opacity-0",
           {
-            "bg-(image:--broken-light-sheet) contrast-more:bg-none contrast-more:bg-(color:--broken-light-flat-sheet)":
+            "bg-(image:--broken-light-sheet) contrast-more:bg-(color:--broken-light-flat-sheet) contrast-more:bg-none":
               isLitPage,
             "bg-(color:--broken-light-flat-sheet)": !isLitPage,
           },

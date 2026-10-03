@@ -19,7 +19,7 @@ export const NotesTableFilters = ({
   confirmationStates,
 }: Props) => {
   return (
-    <div className="flex gap-2 items-center">
+    <div className="flex items-center gap-2">
       {noteTypes.length > 0 && (
         <Filter name="Notizarten">
           <NoteTypeFilter noteTypes={[...noteTypes]} />

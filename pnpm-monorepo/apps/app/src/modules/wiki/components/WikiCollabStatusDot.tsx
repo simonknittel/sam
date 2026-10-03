@@ -87,7 +87,7 @@ export const WikiCollabStatusDot = ({ className, status, users }: Props) => {
             >
               <span
                 className={clsx(
-                  "absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping motion-reduce:hidden",
+                  "absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 motion-reduce:hidden",
                   config.pingClassName,
                 )}
               />
@@ -105,7 +105,7 @@ export const WikiCollabStatusDot = ({ className, status, users }: Props) => {
           </span>
         }
       >
-        <p className="text-sm uppercase font-mono font-bold">{config.label}</p>
+        <p className="font-mono text-sm font-bold uppercase">{config.label}</p>
 
         {config.description && (
           <p className="mt-2 max-w-64 text-sm text-neutral-300">
@@ -139,7 +139,7 @@ const UserSection = ({ label, users }: UserSectionProps) => {
 
   return (
     <div>
-      <p className="text-xs uppercase font-mono text-neutral-400">{label}</p>
+      <p className="font-mono text-xs text-neutral-400 uppercase">{label}</p>
 
       <ul className="mt-1 flex flex-col gap-1 text-sm">
         {users.map((user) => (

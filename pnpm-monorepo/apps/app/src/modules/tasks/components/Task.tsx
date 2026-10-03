@@ -130,14 +130,14 @@ export const Task = ({ className, task, isNew: isNewOnServer }: Props) => {
   return (
     <article
       className={clsx(
-        "relative flex bg-secondary overflow-hidden hover:bg-neutral-800 focus-within:bg-neutral-800 has-[a:active]:bg-neutral-700 corners-secondary has-[a:focus-visible]:outline-2 outline-offset-2 outline-interaction-700",
+        "relative flex overflow-hidden corners-secondary bg-secondary outline-offset-2 outline-interaction-700 focus-within:bg-neutral-800 hover:bg-neutral-800 has-[a:active]:bg-neutral-700 has-[a:focus-visible]:outline-2",
         className,
       )}
     >
       {/* The strip of an assigned task already highlights the left side */}
       {isNew && !isTaskAssignedToCurrentCitizen && <UnreadEdge />}
 
-      <div className="flex-1 min-w-0">
+      <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2 p-2">
           <h3 className="min-w-0 font-bold break-words">
             <Link
@@ -172,7 +172,7 @@ export const Task = ({ className, task, isNew: isNewOnServer }: Props) => {
           tabIndex={-1}
           aria-hidden="true"
           title="Dieser Task ist mir zugewiesen"
-          className="relative order-first bg-me flex items-center p-2"
+          className="relative order-first flex items-center bg-me p-2"
         >
           <FaCheck className="text-sm" />
         </Link>

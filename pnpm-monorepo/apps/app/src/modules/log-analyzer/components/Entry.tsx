@@ -62,7 +62,7 @@ export const Entry = memo(function Entry({ entry }: Props) {
         {entry.isNew && (
           <div
             className={clsx(
-              "absolute left-0 top-0 bg-amber-500 text-black uppercase text-xs px-1 rounded-br-secondary",
+              "absolute top-0 left-0 rounded-br-secondary bg-amber-500 px-1 text-xs text-black uppercase",
               styles.New,
             )}
           >

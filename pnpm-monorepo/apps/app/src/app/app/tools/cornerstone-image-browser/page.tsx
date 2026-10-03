@@ -10,7 +10,7 @@ export default async function Page() {
 
   return (
     <MaxWidthContent maxWidth="prose">
-      <RichText className="bg-secondary rounded-primary p-4">
+      <RichText className="rounded-primary bg-secondary p-4">
         <p>
           Du bist auf der Suche nach einem bestimmten Rüstungsteil, weißt aber
           nicht den Namen? Cornerstone bietet eine umfangreiche Datenbank mit
@@ -34,7 +34,7 @@ export default async function Page() {
               <Link
                 key={item.page}
                 href={`/app/tools/cornerstone-image-browser/${item.page}`}
-                className="text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300 hover:underline focus-visible:underline"
+                className="text-brand-red-500 hover:text-brand-red-300 hover:underline focus-visible:text-brand-red-300 focus-visible:underline"
                 prefetch={false}
               >
                 {item.title}
@@ -51,7 +51,7 @@ export default async function Page() {
               <Link
                 key={item.page}
                 href={`/app/tools/cornerstone-image-browser/${item.page}`}
-                className="text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300 hover:underline focus-visible:underline"
+                className="text-brand-red-500 hover:text-brand-red-300 hover:underline focus-visible:text-brand-red-300 focus-visible:underline"
                 prefetch={false}
               >
                 {item.title}
@@ -68,7 +68,7 @@ export default async function Page() {
               <Link
                 key={item.page}
                 href={`/app/tools/cornerstone-image-browser/${item.page}`}
-                className="text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300 hover:underline focus-visible:underline"
+                className="text-brand-red-500 hover:text-brand-red-300 hover:underline focus-visible:text-brand-red-300 focus-visible:underline"
                 prefetch={false}
               >
                 {item.title}

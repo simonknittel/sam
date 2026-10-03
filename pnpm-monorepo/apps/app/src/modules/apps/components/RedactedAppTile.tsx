@@ -35,14 +35,14 @@ export const RedactedAppTile = ({
     return (
       <li
         className={clsx(
-          "bg-secondary rounded-primary overflow-hidden relative p-2 text-xs",
+          "relative overflow-hidden rounded-primary bg-secondary p-2 text-xs",
           className,
         )}
       >
         Redacted
         <div className="absolute inset-0 flex items-center justify-center backdrop-blur-sm">
           <p
-            className="text-brand-red-700 border border-brand-red-700 rounded-secondary px-2 py-1 text-xs relative"
+            className="relative rounded-secondary border border-brand-red-700 px-2 py-1 text-xs text-brand-red-700"
             style={{
               transform: `rotate(${getRotationInDegrees(name, 8)}deg)`,
             }}
@@ -57,13 +57,13 @@ export const RedactedAppTile = ({
   return (
     <li
       className={clsx(
-        "bg-secondary rounded-primary overflow-hidden",
+        "overflow-hidden rounded-primary bg-secondary",
         className,
       )}
     >
       <div className="aspect-video bg-black" />
 
-      <div className="p-2 sm:p-4 relative flex flex-col gap-2">
+      <div className="relative flex flex-col gap-2 p-2 sm:p-4">
         <h2 className="font-bold">Redacted</h2>
 
         <p className="text-xs text-neutral-400">
@@ -72,7 +72,7 @@ export const RedactedAppTile = ({
 
         <div className="absolute inset-0 flex items-center justify-center backdrop-blur-sm">
           <p
-            className="text-brand-red-500 font-bold border-2 border-brand-red-500 rounded-secondary px-2 py-1 text-lg relative"
+            className="relative rounded-secondary border-2 border-brand-red-500 px-2 py-1 text-lg font-bold text-brand-red-500"
             style={{
               transform: `rotate(${getRotationInDegrees(name, 15)}deg)`,
             }}

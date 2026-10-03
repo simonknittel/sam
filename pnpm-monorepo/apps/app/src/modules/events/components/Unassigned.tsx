@@ -55,11 +55,11 @@ export const Unassigned = ({
       type="info"
       message={
         <div className="flex flex-col">
-          <p className="font-bold font-mono uppercase">
+          <p className="font-mono font-bold uppercase">
             Keinem Posten zugeordnet
           </p>
 
-          <ul className="mt-1 flex gap-x-3 gap-y-1 flex-wrap">
+          <ul className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
             {unassignedCitizen.map((citizen) => (
               <li key={citizen.citizen.id}>
                 <CitizenLink citizen={citizen.citizen} />

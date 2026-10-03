@@ -28,7 +28,7 @@ export const EventWikiSidebar = async ({ container }: Props) => {
       hrefMode={hrefMode}
       footer={
         context.viewer.isEventManager && (
-          <div className="bg-secondary px-2 py-2 corners-secondary">
+          <div className="corners-secondary bg-secondary px-2 py-2">
             <Link
               href={`${hrefMode.basePath}/trash`}
               prefetch={false}

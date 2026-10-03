@@ -17,9 +17,9 @@ import { SeasonalImage } from "../SeasonalImage";
  * passes.
  */
 export const Ghost = () => (
-  <div className="absolute -left-28 top-0 animate-seasonal-drift-height">
+  <div className="absolute top-0 -left-28 animate-seasonal-drift-height">
     <div className="animate-seasonal-drift">
-      <div className="w-28 h-32 origin-top animate-seasonal-sway">
+      <div className="h-32 w-28 origin-top animate-seasonal-sway">
         <SeasonalImage
           src={svgToStaticImageData(ghost)}
           className="size-full"

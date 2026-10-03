@@ -16,8 +16,8 @@ interface Props {
  */
 export const WikiFeaturedPages = ({ pages }: Props) => {
   return (
-    <section className="bg-secondary rounded-primary p-4">
-      <h2 className="font-mono uppercase font-bold text-xl">Featured</h2>
+    <section className="rounded-primary bg-secondary p-4">
+      <h2 className="font-mono text-xl font-bold uppercase">Featured</h2>
 
       <ul className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {pages.map((page) => (
@@ -37,7 +37,7 @@ const WikiFeaturedPageCard = ({ page }: CardProps) => {
     <li>
       <Link
         href={`/app/wiki/${page.id}/${page.slug}`}
-        className="group flex h-full flex-col gap-2 rounded-secondary border border-neutral-800 p-4 hover:border-neutral-600 hover:bg-neutral-800 focus-visible:outline-2 outline-offset-2 outline-interaction-700 active:bg-neutral-700"
+        className="group flex h-full flex-col gap-2 rounded-secondary border border-neutral-800 p-4 outline-offset-2 outline-interaction-700 hover:border-neutral-600 hover:bg-neutral-800 focus-visible:outline-2 active:bg-neutral-700"
       >
         {page.iconId && (
           <WikiPageIcon
@@ -55,7 +55,7 @@ const WikiFeaturedPageCard = ({ page }: CardProps) => {
         </span>
 
         <span className="mt-auto text-xs text-neutral-500">
-          <span className="uppercase font-mono">Aktualisiert:</span>{" "}
+          <span className="font-mono uppercase">Aktualisiert:</span>{" "}
           {formatDate(page.updatedAt)}
         </span>
       </Link>

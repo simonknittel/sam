@@ -32,13 +32,13 @@ interface CitizenHitContentProps {
 
 const CitizenHitContent = ({ hit }: CitizenHitContentProps) => {
   return (
-    <span className="flex flex-col w-full min-w-0">
+    <span className="flex w-full min-w-0 flex-col">
       {hit.handle ? (
         <span className="truncate" title={hit.handle}>
           {hit.handle}
         </span>
       ) : (
-        <span className="italic text-neutral-500">Unbekannt</span>
+        <span className="text-neutral-500 italic">Unbekannt</span>
       )}
 
       <span className="text-sm text-neutral-500">
@@ -63,7 +63,7 @@ interface OrganizationHitContentProps {
 
 const OrganizationHitContent = ({ hit }: OrganizationHitContentProps) => {
   return (
-    <span className="flex flex-col w-full min-w-0">
+    <span className="flex w-full min-w-0 flex-col">
       <span className="truncate" title={hit.name}>
         {hit.name}
       </span>

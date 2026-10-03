@@ -94,7 +94,7 @@ export const AssignShip = ({ className, data = [] }: Props) => {
             hint="optional"
           />
 
-          <div className="flex justify-end mt-8">
+          <div className="mt-8 flex justify-end">
             <Button2 type="submit" disabled={isPending}>
               {isPending ? <AsciiSpinner /> : <FaSave />}
               Hinzufügen

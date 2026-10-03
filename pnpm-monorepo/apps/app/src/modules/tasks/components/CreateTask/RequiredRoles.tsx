@@ -72,13 +72,13 @@ export const RequiredRoles = ({ className, defaultValue }: Props) => {
         </div>
       </PopoverBaseUI>
 
-      <p className="text-xs mt-1 text-gray-400">
+      <p className="mt-1 text-xs text-gray-400">
         Dieser Task kann nur von den ausgewählten Rollen angenommen werden.
         optional
       </p>
 
       {data && selectedRoles.length > 0 && (
-        <div className="flex gap-1 flex-wrap mt-2">
+        <div className="mt-2 flex flex-wrap gap-1">
           {selectedRoles
             .map((selectedRoleId) =>
               data.find((role) => role.id === selectedRoleId),
@@ -93,14 +93,14 @@ export const RequiredRoles = ({ className, defaultValue }: Props) => {
                       prev.filter((id) => id !== role!.id),
                     )
                   }
-                  className="flex items-center gap-1 bg-neutral-700/50 pr-2 rounded-secondary"
+                  className="flex items-center gap-1 rounded-secondary bg-neutral-700/50 pr-2"
                 >
                   <SingleRoleBadge
                     className="bg-transparent"
                     roleId={role!.id}
                     showPlaceholder
                   />
-                  <FaTrash className="text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300 flex-none" />
+                  <FaTrash className="flex-none text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300" />
                 </button>
 
                 <input type="hidden" name="requiredRole[]" value={role!.id} />

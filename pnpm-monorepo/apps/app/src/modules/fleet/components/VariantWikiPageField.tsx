@@ -44,7 +44,7 @@ export const VariantWikiPageField = ({ currentWikiPageId, loading }: Props) => {
         Wiki-Seite
       </label>
       {loading || targets.isFetching ? (
-        <div className="rounded-secondary bg-neutral-900 mt-2 h-10 animate-pulse" />
+        <div className="mt-2 h-10 animate-pulse rounded-secondary bg-neutral-900" />
       ) : (
         <WikiPageSelect
           id={selectId}

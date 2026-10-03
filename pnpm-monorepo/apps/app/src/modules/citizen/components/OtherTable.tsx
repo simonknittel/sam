@@ -33,7 +33,7 @@ export const OtherTable = ({ rows, searchParams }: Props) => {
   return (
     <table className="w-full min-w-400">
       <thead>
-        <tr className="grid items-center gap-4 text-left text-neutral-500 grid-cols-[1fr_1fr_2fr_1fr_1fr_1fr_1fr_1fr_44px] -mx-2">
+        <tr className="-mx-2 grid grid-cols-[1fr_1fr_2fr_1fr_1fr_1fr_1fr_1fr_44px] items-center gap-4 text-left text-neutral-500">
           <th className="px-2">Citizen</th>
 
           <th>Merkmal</th>
@@ -45,7 +45,7 @@ export const OtherTable = ({ rows, searchParams }: Props) => {
           <th>
             <Link
               href={`?${confirmedAtSearchParams.toString()}`}
-              className="flex items-center gap-2 cursor-pointer select-none hover:text-neutral-300 whitespace-nowrap"
+              className="flex cursor-pointer items-center gap-2 whitespace-nowrap select-none hover:text-neutral-300"
             >
               Bestätigt am
               {(!searchParams.has("sort") ||
@@ -61,7 +61,7 @@ export const OtherTable = ({ rows, searchParams }: Props) => {
           <th>
             <Link
               href={`?${createdAtSearchParams.toString()}`}
-              className="flex items-center gap-2 cursor-pointer select-none hover:text-neutral-300 whitespace-nowrap"
+              className="flex cursor-pointer items-center gap-2 whitespace-nowrap select-none hover:text-neutral-300"
             >
               Eingereicht am
               {(!searchParams.has("sort") ||
@@ -81,7 +81,7 @@ export const OtherTable = ({ rows, searchParams }: Props) => {
           return (
             <tr
               key={citizenLog.id}
-              className="grid items-center gap-4 h-14 rounded-secondary -mx-2 first:mt-2 grid-cols-[1fr_1fr_2fr_1fr_1fr_1fr_1fr_1fr_44px]"
+              className="-mx-2 grid h-14 grid-cols-[1fr_1fr_2fr_1fr_1fr_1fr_1fr_1fr_44px] items-center gap-4 rounded-secondary first:mt-2"
             >
               <td className="overflow-hidden">
                 <CitizenCellLink

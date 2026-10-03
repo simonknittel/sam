@@ -34,7 +34,7 @@ export const Apps = ({ className }: Props) => {
         <>
           <AiFillAppstore className="text-xl" />
 
-          <span className="text-xs font-mono uppercase relative top-px leading-px">
+          <span className="relative top-px font-mono text-xs leading-px uppercase">
             Apps
           </span>
 
@@ -42,7 +42,7 @@ export const Apps = ({ className }: Props) => {
         </>
       }
       triggerClassName={clsx(
-        "border-r border-neutral-700 rounded-l-primary hover:bg-tertiary cursor-pointer focus-visible:bg-tertiary px-6 inline-flex items-center gap-1 h-full text-neutral-500",
+        "inline-flex h-full cursor-pointer items-center gap-1 rounded-l-primary border-r border-neutral-700 px-6 text-neutral-500 hover:bg-tertiary focus-visible:bg-tertiary",
         className,
       )}
       /**
@@ -97,7 +97,7 @@ const PopoverChildren = () => {
       <div className="flex justify-center">
         <Link
           href="/app/apps"
-          className="text-interaction-500 hover:underline focus-visible:underline text-sm p-4 -mb-4 font-mono uppercase"
+          className="-mb-4 p-4 font-mono text-sm text-interaction-500 uppercase hover:underline focus-visible:underline"
           onClick={closePopover}
         >
           Alle Apps
@@ -124,7 +124,7 @@ const AppsSection = ({
 }: AppsSectionProps) => {
   return (
     <div className={className}>
-      <p className="font-bold text-sm text-center font-mono uppercase">
+      <p className="text-center font-mono text-sm font-bold uppercase">
         {title}
       </p>
 

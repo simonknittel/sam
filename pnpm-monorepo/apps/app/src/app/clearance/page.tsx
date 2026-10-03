@@ -30,14 +30,14 @@ export default async function Page() {
   if (await authentication.authorize("login", "manage")) redirect("/app");
 
   return (
-    <div className="min-h-dvh flex justify-center items-center flex-col py-8 background-primary">
+    <div className="flex min-h-dvh flex-col items-center justify-center background-primary py-8">
       <main className="w-full max-w-lg">
-        <h1 className="mb-4 text-center text-xl text-sinister-red font-bold mx-8 font-mono uppercase">
-          <FaRegCheckCircle className="text-green-500 inline relative -top-0.5" />{" "}
+        <h1 className="text-sinister-red mx-8 mb-4 text-center font-mono text-xl font-bold uppercase">
+          <FaRegCheckCircle className="relative -top-0.5 inline text-green-500" />{" "}
           <ScrambleIn text="Anmeldung erfolgreich" />
         </h1>
 
-        <div className="flex flex-col gap-2 bg-neutral-800/50 p-4 mx-4 corners-secondary">
+        <div className="mx-4 flex flex-col gap-2 corners-secondary bg-neutral-800/50 p-4">
           <p>
             Bitte melde dich bei Human Resources oder der Leitung um deinen
             Account freischalten zu lassen.
@@ -45,17 +45,17 @@ export default async function Page() {
         </div>
 
         <details>
-          <summary className="mt-4 text-center text-neutral-500 text-xs hover:text-interaction-500 focus-visible:text-interaction-500 active:text-interaction-300 hover:underline focus-visible:underline active:underline cursor-pointer">
+          <summary className="mt-4 cursor-pointer text-center text-xs text-neutral-500 hover:text-interaction-500 hover:underline focus-visible:text-interaction-500 focus-visible:underline active:text-interaction-300 active:underline">
             Benutzerdetails anzeigen
           </summary>
 
-          <div className="mt-4 flex flex-col gap-4 items-center px-4">
-            <section className="flex flex-col gap-2 text-neutral-500 text-xs max-w-full">
+          <div className="mt-4 flex flex-col items-center gap-4 px-4">
+            <section className="flex max-w-full flex-col gap-2 text-xs text-neutral-500">
               <div>
-                <p className="font-bold mb-1">Discord</p>
+                <p className="mb-1 font-bold">Discord</p>
 
                 <div className="flex gap-1">
-                  <p className="flex-none w-28">ID:</p>
+                  <p className="w-28 flex-none">ID:</p>
                   <p
                     className="flex-1 truncate"
                     title={authentication.session.discordId ?? undefined}
@@ -66,10 +66,10 @@ export default async function Page() {
               </div>
 
               <div>
-                <p className="font-bold mb-1">Benutzer</p>
+                <p className="mb-1 font-bold">Benutzer</p>
 
                 <div className="flex gap-1">
-                  <p className="flex-none w-28">User ID:</p>
+                  <p className="w-28 flex-none">User ID:</p>
 
                   <p
                     className="flex-1 truncate"
@@ -80,7 +80,7 @@ export default async function Page() {
                 </div>
 
                 <div className="flex gap-1">
-                  <p className="flex-none w-28">E-Mail-Adresse:</p>
+                  <p className="w-28 flex-none">E-Mail-Adresse:</p>
                   <p
                     className="flex-1 truncate"
                     title={authentication.session.user.email || undefined}
@@ -91,11 +91,11 @@ export default async function Page() {
               </div>
 
               <div>
-                <p className="font-bold mb-1">Citizen</p>
+                <p className="mb-1 font-bold">Citizen</p>
 
                 {authentication.session.entity ? (
                   <div className="flex gap-1">
-                    <p className="flex-none w-28">Internal ID:</p>
+                    <p className="w-28 flex-none">Internal ID:</p>
                     <p
                       className="flex-1 truncate"
                       title={authentication.session.entity.id}
@@ -114,7 +114,7 @@ export default async function Page() {
         </details>
       </main>
 
-      <div className="h-px bg-neutral-700 mt-4 w-2" />
+      <div className="mt-4 h-px w-2 bg-neutral-700" />
 
       <Footer className="mt-4" />
 

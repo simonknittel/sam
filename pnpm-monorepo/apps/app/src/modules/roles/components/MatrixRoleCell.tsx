@@ -19,20 +19,20 @@ interface Props {
  */
 export const MatrixRoleCell = ({ role, href }: Props) => {
   return (
-    <td className="h-8 overflow-hidden sticky -left-2 z-10 bg-secondary rounded-secondary">
+    <td className="sticky -left-2 z-10 h-8 overflow-hidden rounded-secondary bg-secondary">
       <Link
         href={href}
-        className="flex items-center gap-2 px-2 rounded-secondary h-full hover:bg-neutral-800 focus-visible:bg-neutral-800 active:bg-neutral-600"
+        className="flex h-full items-center gap-2 rounded-secondary px-2 hover:bg-neutral-800 focus-visible:bg-neutral-800 active:bg-neutral-600"
         prefetch={false}
       >
         {role.icon ? (
-          <div className="aspect-square size-4 flex items-center justify-center rounded-secondary overflow-hidden flex-none">
+          <div className="flex aspect-square size-4 flex-none items-center justify-center overflow-hidden rounded-secondary">
             <Image
               src={getPublicUploadUrl(role.icon.id)}
               alt=""
               width={16}
               height={16}
-              className="max-w-full max-h-full"
+              className="max-h-full max-w-full"
               unoptimized={["image/svg+xml", "image/gif"].includes(
                 role.icon.mimeType,
               )}

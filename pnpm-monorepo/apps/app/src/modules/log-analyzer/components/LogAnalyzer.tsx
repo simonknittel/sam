@@ -310,7 +310,7 @@ export const LogAnalyzer = ({ className }: Props) => {
 
   return (
     <div className={clsx(className)}>
-      <div className="flex flex-col lg:flex-row gap-4 lg:gap-0 items-baseline justify-end">
+      <div className="flex flex-col items-baseline justify-end gap-4 lg:flex-row lg:gap-0">
         <div>
           <Button2
             type="button"

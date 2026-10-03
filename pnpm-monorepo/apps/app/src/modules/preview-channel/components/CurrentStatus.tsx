@@ -13,13 +13,13 @@ const CurrentStatus = ({ schedule }: Readonly<Props>) => {
   const { currentlyLive, nextLive } = useSchedule(schedule);
 
   return (
-    <section className="mt-4 w-full max-w-xl p-4 lg:p-8 rounded-primary bg-neutral-800/50 ">
-      <h2 className="font-bold text-xl mb-4">Current status</h2>
+    <section className="mt-4 w-full max-w-xl rounded-primary bg-neutral-800/50 p-4 lg:p-8">
+      <h2 className="mb-4 text-xl font-bold">Current status</h2>
 
       <div className="flex items-baseline gap-2">
         {currentlyLive ? (
           <>
-            <FaRegCheckCircle className="text-green-500 relative top-[2px]" />
+            <FaRegCheckCircle className="relative top-[2px] text-green-500" />
 
             <div>
               <p>
@@ -35,7 +35,7 @@ const CurrentStatus = ({ schedule }: Readonly<Props>) => {
               </p>
 
               {nextLive ? (
-                <p className="text-neutral-500 mt-4">
+                <p className="mt-4 text-neutral-500">
                   Re-opens in{" "}
                   <strong>
                     <Countdown date={nextLive.start} />
@@ -43,7 +43,7 @@ const CurrentStatus = ({ schedule }: Readonly<Props>) => {
                   (region: <strong>{nextLive.region})</strong>
                 </p>
               ) : (
-                <p className="text-neutral-500 mt-4">
+                <p className="mt-4 text-neutral-500">
                   No further schedule known.
                 </p>
               )}
@@ -51,7 +51,7 @@ const CurrentStatus = ({ schedule }: Readonly<Props>) => {
           </>
         ) : (
           <>
-            <FaRegTimesCircle className="text-brand-red-500 relative top-[2px]" />
+            <FaRegTimesCircle className="relative top-[2px] text-brand-red-500" />
 
             <div>
               <p>The preview channel is currently not active.</p>

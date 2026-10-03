@@ -16,33 +16,33 @@ export const Note = ({ className, message, type = "info", error }: Props) => {
     <div
       className={clsx(
         className,
-        "rounded-primary border-t-2 px-4 py-3 flex gap-2 items-start",
+        "flex items-start gap-2 rounded-primary border-t-2 px-4 py-3",
         {
-          "bg-blue-500/10 border-blue-500": type === "info",
-          "bg-green-500/10 border-green-500": type === "success",
-          "bg-brand-red-500/10 border-brand-red-500": type === "error",
-          "bg-yellow-500/10 border-yellow-500": type === "warning",
+          "border-blue-500 bg-blue-500/10": type === "info",
+          "border-green-500 bg-green-500/10": type === "success",
+          "border-brand-red-500 bg-brand-red-500/10": type === "error",
+          "border-yellow-500 bg-yellow-500/10": type === "warning",
         },
       )}
     >
       {type === "info" && (
-        <FaInfoCircle className="text-blue-500 shrink-0 mt-1" />
+        <FaInfoCircle className="mt-1 shrink-0 text-blue-500" />
       )}
       {type === "success" && (
-        <FaCheckSquare className="text-green-500 shrink-0 mt-1" />
+        <FaCheckSquare className="mt-1 shrink-0 text-green-500" />
       )}
       {type === "error" && (
-        <BsExclamationOctagonFill className="text-brand-red-500 shrink-0 mt-1" />
+        <BsExclamationOctagonFill className="mt-1 shrink-0 text-brand-red-500" />
       )}
       {type === "warning" && (
-        <IoIosWarning className="text-yellow-500 shrink-0 mt-1" />
+        <IoIosWarning className="mt-1 shrink-0 text-yellow-500" />
       )}
 
       <div className="grow">
-        <div className="flex gap-2 items-center">{message}</div>
+        <div className="flex items-center gap-2">{message}</div>
 
         {error && (
-          <div className="text-neutral-500 mt-4">
+          <div className="mt-4 text-neutral-500">
             {"digest" in error ? (
               // @ts-expect-error TypeScript doesn't narrow Error by the 'digest' in check
               <pre>Error digest: {error.digest}</pre>

@@ -122,7 +122,7 @@ export const Overview = async ({ className, entity }: Props) => {
             <ProfileAttribute icon={<RiTimeLine />} name="Zuletzt gesehen">
               <Suspense
                 fallback={
-                  <div className="bg-neutral-800 animate-pulse rounded-secondary h-5 w-20" />
+                  <div className="h-5 w-20 animate-pulse rounded-secondary bg-neutral-800" />
                 }
               >
                 <LastSeenAt entity={entity} />

@@ -21,7 +21,7 @@ export const SeasonalSpynetSearchTileSlot = async () => {
   return (
     <div
       aria-hidden
-      className="hidden lg:block absolute inset-0 pointer-events-none"
+      className="pointer-events-none absolute inset-0 hidden lg:block"
     >
       <SpynetSearchTileDecoration />
     </div>

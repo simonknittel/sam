@@ -10,7 +10,7 @@ interface Props {
 export const NoteTypeFilter = ({ noteTypes }: Props) => {
   return (
     <FilterCheckboxList
-      className="items-start max-h-96 overflow-auto"
+      className="max-h-96 items-start overflow-auto"
       prefix="note-type"
       items={noteTypes.map((noteType) => ({
         id: noteType.id,

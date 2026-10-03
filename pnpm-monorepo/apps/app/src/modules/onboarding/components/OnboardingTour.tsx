@@ -116,7 +116,7 @@ const OnboardingTourView = ({ tour }: OnboardingTourViewProps) => {
 /** Dims the page while a navigation or the target lookup is in flight */
 const TourWaitingOverlay = () => {
   return (
-    <div className="fixed inset-0 z-70 bg-neutral-800/50 backdrop-blur-sm flex items-center justify-center">
+    <div className="fixed inset-0 z-70 flex items-center justify-center bg-neutral-800/50 backdrop-blur-sm">
       <AsciiSpinner />
     </div>
   );
@@ -255,7 +255,7 @@ const OnboardingStepCard = ({
     <div className="fixed inset-0 z-70">
       {targetElement && targetRect ? (
         <div
-          className="absolute rounded-secondary shadow-[0_0_0_9999px_rgba(23,23,23,0.7)] ring-2 ring-amber-500/80 pointer-events-none"
+          className="pointer-events-none absolute rounded-secondary shadow-[0_0_0_9999px_rgba(23,23,23,0.7)] ring-2 ring-amber-500/80"
           style={{
             top: targetRect.top - CUTOUT_PADDING_PIXELS,
             left: targetRect.left - CUTOUT_PADDING_PIXELS,
@@ -274,18 +274,18 @@ const OnboardingStepCard = ({
         }}
         style={isFloating ? floatingStyles : undefined}
         className={clsx(
-          "bg-black border border-white/20 rounded-secondary p-4 outline-hidden",
+          "rounded-secondary border border-white/20 bg-black p-4 outline-hidden",
           {
             "w-96 max-w-[calc(100dvw-1rem)]": isFloating,
             /**
              * Wider than the anchored card: centered steps carry
              * screenshots, which need the room to stay readable.
              */
-            "absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[36rem] max-w-[calc(100dvw-1rem)] max-h-[calc(100dvh-1rem)] overflow-y-auto":
+            "absolute top-1/2 left-1/2 max-h-[calc(100dvh-1rem)] w-[36rem] max-w-[calc(100dvw-1rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto":
               !targetElement && isLargeViewport,
-            "fixed bottom-2 left-1/2 -translate-x-1/2 w-96 max-w-[calc(100dvw-1rem)]":
+            "fixed bottom-2 left-1/2 w-96 max-w-[calc(100dvw-1rem)] -translate-x-1/2":
               Boolean(targetElement) && isLargeViewport && isOversizedTarget,
-            "fixed left-2 right-2 bottom-2 max-h-[calc(100dvh-1rem)] overflow-y-auto":
+            "fixed right-2 bottom-2 left-2 max-h-[calc(100dvh-1rem)] overflow-y-auto":
               !isLargeViewport,
           },
         )}
@@ -296,7 +296,7 @@ const OnboardingStepCard = ({
         onKeyDown={handleKeyDown}
       >
         <div className="flex items-start justify-between gap-4">
-          <p className="font-bold font-mono uppercase text-balance">
+          <p className="font-mono font-bold text-balance uppercase">
             {step.title}
           </p>
 
@@ -304,7 +304,7 @@ const OnboardingStepCard = ({
             type="button"
             title="Tour beenden"
             onClick={onExit}
-            className="text-xl text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300 active:text-brand-red-300 cursor-pointer"
+            className="cursor-pointer text-xl text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300 active:text-brand-red-300"
           >
             <FaRegTimesCircle />
           </button>
@@ -335,7 +335,7 @@ const TourStepControls = ({
   const isLastStep = stepNumber >= stepCount;
 
   return (
-    <div className="flex items-center justify-between gap-4 mt-6">
+    <div className="mt-6 flex items-center justify-between gap-4">
       <span className="text-sm text-neutral-500">
         Schritt {stepNumber} von {stepCount}
       </span>

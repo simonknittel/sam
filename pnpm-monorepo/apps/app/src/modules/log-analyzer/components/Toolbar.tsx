@@ -26,7 +26,7 @@ export const Toolbar = ({ className, onRefresh }: Props) => {
   return (
     <div
       className={clsx(
-        "bg-secondary rounded-primary p-2 flex flex-wrap items-center gap-4",
+        "flex flex-wrap items-center gap-4 rounded-primary bg-secondary p-2",
         className,
       )}
     >

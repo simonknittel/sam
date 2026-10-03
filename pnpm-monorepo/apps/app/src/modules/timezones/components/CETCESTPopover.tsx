@@ -6,7 +6,7 @@ interface Props {
 
 export const CETCESTPopover = ({ className }: Props) => {
   return (
-    <div className={clsx("prose prose-invert text-xs", className)}>
+    <div className={clsx("prose text-xs prose-invert", className)}>
       <p>
         <strong>Central European Time (CET)</strong>
       </p>

@@ -60,10 +60,10 @@ export const EventDateTimeField = ({
         required={required}
       />
 
-      <p className="text-xs mt-1 text-white/40">Zeitzone: Europe/Berlin</p>
+      <p className="mt-1 text-xs text-white/40">Zeitzone: Europe/Berlin</p>
 
       {localTimeHint && (
-        <p className="text-xs mt-1 text-white/40">
+        <p className="mt-1 text-xs text-white/40">
           In deiner Zeitzone ({browserTimeZone}): {localTimeHint}
         </p>
       )}

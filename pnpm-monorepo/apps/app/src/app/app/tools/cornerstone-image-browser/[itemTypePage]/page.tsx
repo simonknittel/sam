@@ -65,13 +65,13 @@ export default async function Page({
       <>
         <Link
           href="/app/tools"
-          className="text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300 inline-flex items-center gap-2"
+          className="inline-flex items-center gap-2 text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300"
         >
           <FaChevronLeft />
           Alle Tools
         </Link>
 
-        <h1 className="text-xl font-bold mt-2 leading-tight">
+        <h1 className="mt-2 text-xl leading-tight font-bold">
           {itemTypeConfig.title} - Cornerstone Image Browser
         </h1>
 
@@ -91,7 +91,7 @@ export default async function Page({
     });
     return (
       <>
-        <h1 className="text-xl font-bold leading-tight">
+        <h1 className="text-xl leading-tight font-bold">
           {itemTypeConfig.title}
         </h1>
 
@@ -106,7 +106,7 @@ export default async function Page({
 
   return (
     <>
-      <h1 className="text-xl font-bold leading-tight">
+      <h1 className="text-xl leading-tight font-bold">
         {itemTypeConfig.title}
       </h1>
 
@@ -117,31 +117,31 @@ export default async function Page({
           message={t("Common.internalServerError")}
         />
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-8 mt-4">
+        <div className="mt-4 grid grid-cols-2 gap-8 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
           {parsedData.data.map((item) => (
             <Link
               key={item.ItemId}
               href={`${itemTypeConfig.linkBase}/${item.ItemId}`}
-              className="h-full group rounded-secondary overflow-hidden flex flex-col"
+              className="group flex h-full flex-col overflow-hidden rounded-secondary"
               target="_blank"
               rel="noreferrer"
             >
-              <div className="flex-1 bg-secondary group-hover:bg-tertiary relative flex flex-col justify-center">
+              <div className="relative flex flex-1 flex-col justify-center bg-secondary group-hover:bg-tertiary">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={`https://cstone.space/uifimages/${item.ItemId}.png`}
                   alt=""
-                  className="w-full h-auto object-contain relative z-10 aspect-square"
+                  className="relative z-10 aspect-square h-auto w-full object-contain"
                   loading="lazy"
                 />
-                <p className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-neutral-500 text-sm text-center">
+                <p className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-sm text-neutral-500">
                   Bild nicht
                   <br />
                   verfügbar
                 </p>
               </div>
 
-              <div className="p-2 group-hover:bg-tertiary flex-1 flex flex-col gap-1 justify-end leading-tight">
+              <div className="flex flex-1 flex-col justify-end gap-1 p-2 leading-tight group-hover:bg-tertiary">
                 {item.Manu && (
                   <p className="text-xs text-gray-500">{item.Manu}</p>
                 )}

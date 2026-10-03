@@ -21,7 +21,7 @@ import { SeasonalImage } from "../SeasonalImage";
  * flames fully lit.
  */
 export const HalloweenSpynetSearchTileDecoration = () => (
-  <div className="absolute -top-14 right-0 w-16 h-26">
+  <div className="absolute -top-14 right-0 h-26 w-16">
     <SeasonalImage
       src={svgToStaticImageData(candles)}
       className="absolute inset-0 size-full"

@@ -173,7 +173,7 @@ export const CitizenTable = ({ className, cycleData }: Props) => {
               return (
                 <span className="flex flex-col">
                   <span className="text-blue-500">Auszahlung ausstehend</span>{" "}
-                  <span className="text-neutral-500 text-xs">
+                  <span className="text-xs text-neutral-500">
                     (zugestimmt am {formatDate(row.row.original.acceptedAt)})
                   </span>
                 </span>

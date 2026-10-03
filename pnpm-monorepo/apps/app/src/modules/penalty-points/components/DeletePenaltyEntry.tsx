@@ -20,7 +20,7 @@ export const DeletePenaltyEntry = ({ className, entry }: Props) => {
       trigger={(isPending) => (
         <button
           disabled={isPending}
-          className="text-brand-red-500 hover:text-brand-red-300 flex items-center hover:cursor-pointer"
+          className="flex items-center text-brand-red-500 hover:cursor-pointer hover:text-brand-red-300"
           title="Löschen"
         >
           {isPending ? <AsciiSpinner /> : <FaTrash />}

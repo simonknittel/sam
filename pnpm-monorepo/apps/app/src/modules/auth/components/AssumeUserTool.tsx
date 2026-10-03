@@ -63,7 +63,7 @@ const AssumeUserCombobox = () => {
         aria-label="User"
         placeholder={isLoading ? "Loading users…" : "Search user"}
         onChange={(event) => setQuery(event.target.value)}
-        className="w-full rounded-secondary bg-neutral-900 py-1 px-2 text-sm data-hover:bg-neutral-800 active:bg-neutral-800 focus:outline-hidden data-focus:outline-2 data-focus:-outline-offset-2 data-focus:outline-white/25 data-disabled:opacity-50"
+        className="w-full rounded-secondary bg-neutral-900 px-2 py-1 text-sm focus:outline-hidden active:bg-neutral-800 data-disabled:opacity-50 data-focus:outline-2 data-focus:-outline-offset-2 data-focus:outline-white/25 data-hover:bg-neutral-800"
       />
 
       {/* The list opens inside the panel, thus the other tools of the panel
@@ -90,14 +90,14 @@ const AssumableUserOption = ({ user }: AssumableUserOptionProps) => {
   return (
     <ComboboxOption
       value={user}
-      className="flex flex-col cursor-pointer rounded-secondary py-1 px-2 select-none data-focus:bg-white/20 active:bg-white/30"
+      className="flex cursor-pointer flex-col rounded-secondary px-2 py-1 select-none active:bg-white/30 data-focus:bg-white/20"
     >
-      <span className="text-white text-sm truncate" title={label}>
+      <span className="truncate text-sm text-white" title={label}>
         {label}
       </span>
 
       {user.name && user.email && (
-        <span className="text-xs text-neutral-500 truncate" title={user.email}>
+        <span className="truncate text-xs text-neutral-500" title={user.email}>
           {user.email}
         </span>
       )}

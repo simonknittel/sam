@@ -52,7 +52,7 @@ export const EntrySettings = ({ className }: Props) => {
         className="w-200"
       >
         {isSharingAvailable && (
-          <p className="text-sm text-white/60 mb-4">
+          <p className="mb-4 text-sm text-white/60">
             {hasLinkedCitizen
               ? "Die Einträge der Typen mit aktiviertem Teilen werden auf den Server hochgeladen und sind für andere sichtbar."
               : "Zum Teilen muss dein Account mit einem Spynet-Citizen verknüpft sein."}
@@ -75,7 +75,7 @@ export const EntrySettings = ({ className }: Props) => {
             {Object.values(EntryCategory).map((category) => (
               <Fragment key={category}>
                 <TRow className="hover:bg-transparent">
-                  <td className="col-span-full pt-2 font-mono uppercase text-xs text-white/40">
+                  <td className="col-span-full pt-2 font-mono text-xs text-white/40 uppercase">
                     {ENTRY_CATEGORY_TITLES[category]}
                   </td>
                 </TRow>

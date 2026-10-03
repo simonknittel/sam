@@ -28,7 +28,7 @@ export const SidebarLayout = ({
   sidebarClassName,
 }: Props) => {
   return (
-    <div className={clsx("flex flex-col md:flex-row gap-4", className)}>
+    <div className={clsx("flex flex-col gap-4 md:flex-row", className)}>
       <SidebarContainer
         className={clsx(
           "md:flex-none",
@@ -41,7 +41,7 @@ export const SidebarLayout = ({
         {sidebar}
       </SidebarContainer>
 
-      <div className={clsx("md:flex-1 md:min-w-0", childrenContainerClassName)}>
+      <div className={clsx("md:min-w-0 md:flex-1", childrenContainerClassName)}>
         {children}
       </div>
     </div>

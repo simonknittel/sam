@@ -26,7 +26,7 @@ export const WikiEffectivePermissionList = ({
     <span className="text-neutral-400">{heading}</span>
 
     {entries.length > 0 ? (
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1">
+      <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
         {entries.map((entry) => (
           <div
             key={entry.roleId ?? entry.label}
@@ -39,7 +39,7 @@ export const WikiEffectivePermissionList = ({
                 className="bg-neutral-700/50"
               />
             ) : (
-              <span className="bg-neutral-700/50 rounded-secondary px-2 py-1">
+              <span className="rounded-secondary bg-neutral-700/50 px-2 py-1">
                 {entry.label}
               </span>
             )}
@@ -51,7 +51,7 @@ export const WikiEffectivePermissionList = ({
         ))}
       </div>
     ) : (
-      <p className="text-xs text-neutral-400 mt-1">{emptyLabel}</p>
+      <p className="mt-1 text-xs text-neutral-400">{emptyLabel}</p>
     )}
   </div>
 );

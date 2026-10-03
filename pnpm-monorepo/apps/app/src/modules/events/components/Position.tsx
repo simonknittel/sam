@@ -155,7 +155,7 @@ export const Position = ({
 
       <div
         className={clsx("flex items-stretch gap-2", {
-          "border-t border-x": borderColor,
+          "border-x border-t": borderColor,
         })}
         style={{
           background,
@@ -167,7 +167,7 @@ export const Position = ({
 
         <div
           className={clsx(
-            "flex-1 flex flex-col @3xl:grid gap-2",
+            "flex flex-1 flex-col gap-2 @3xl:grid",
             supportsStaffing
               ? "@3xl:grid-cols-[1fr_256px_256px]"
               : "@3xl:grid-cols-[1fr_256px]",
@@ -175,7 +175,7 @@ export const Position = ({
         >
           <div className="flex flex-col justify-center overflow-hidden pl-2">
             <h3
-              className={clsx("text-white/40 font-mono uppercase text-xs", {
+              className={clsx("font-mono text-xs text-white/40 uppercase", {
                 "sr-only": !isOpen,
               })}
             >
@@ -215,7 +215,7 @@ export const Position = ({
 
           <div className="flex flex-col justify-center py-1">
             <h3
-              className={clsx("text-white/40 font-mono uppercase text-xs", {
+              className={clsx("font-mono text-xs text-white/40 uppercase", {
                 "sr-only": !isOpen,
               })}
             >
@@ -242,7 +242,7 @@ export const Position = ({
           {supportsStaffing && (
             <div className="flex flex-col justify-center py-1">
               <h3
-                className={clsx("text-white/40 font-mono uppercase text-xs", {
+                className={clsx("font-mono text-xs text-white/40 uppercase", {
                   "sr-only": !isOpen,
                 })}
               >
@@ -285,9 +285,9 @@ export const Position = ({
             backgroundColor: "rgba(38, 38, 38, 0.5)",
           }}
         >
-          <div className="p-4 flex gap-2">
-            <div className="flex-1 flex flex-col">
-              <h3 className="text-white/40 font-mono uppercase text-xs">
+          <div className="flex gap-2 p-4">
+            <div className="flex flex-1 flex-col">
+              <h3 className="font-mono text-xs text-white/40 uppercase">
                 Beschreibung
               </h3>
               {position.description ? (
@@ -364,7 +364,7 @@ export const Position = ({
       )}
 
       {position.childPositions && position.childPositions.length > 0 && (
-        <div className="flex flex-col gap-px pl-4 lg:pl-8 mt-px">
+        <div className="mt-px flex flex-col gap-px pl-4 lg:pl-8">
           {position.childPositions.map((position) => (
             <Position
               key={position.id}

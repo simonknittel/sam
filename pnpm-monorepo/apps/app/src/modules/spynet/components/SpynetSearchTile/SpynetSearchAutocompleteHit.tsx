@@ -20,7 +20,7 @@ export const SpynetSearchAutocompleteHit = ({ hit }: Props) => {
     <Autocomplete.Item
       value={hit}
       render={<Link href={getSpynetSearchHitHref(hit)} />}
-      className="flex p-2 text-white cursor-pointer hover:bg-neutral-700 data-highlighted:bg-neutral-700 active:bg-neutral-600"
+      className="flex cursor-pointer p-2 text-white hover:bg-neutral-700 active:bg-neutral-600 data-highlighted:bg-neutral-700"
     >
       <SpynetSearchHitContent hit={hit} />
     </Autocomplete.Item>

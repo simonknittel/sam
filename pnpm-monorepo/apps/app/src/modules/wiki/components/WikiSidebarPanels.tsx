@@ -71,15 +71,15 @@ export const WikiSidebarPanels = async ({
 
   return (
     <>
-      <div className="bg-secondary p-4 corners-secondary flex flex-col gap-4">
+      <div className="flex flex-col gap-4 corners-secondary bg-secondary p-4">
         <WikiSearch compact />
       </div>
 
-      <div className="bg-secondary px-2 py-4 corners-secondary flex flex-col gap-4">
+      <div className="flex flex-col gap-4 corners-secondary bg-secondary px-2 py-4">
         <WikiSidebarFavorites pages={favorites} />
       </div>
 
-      <div className="bg-secondary px-2 py-4 corners-secondary flex flex-col gap-4">
+      <div className="flex flex-col gap-4 corners-secondary bg-secondary px-2 py-4">
         <WikiSidebarTree
           tree={tree}
           hiddenPageIds={sidebarHiddenPageIds}

@@ -61,7 +61,7 @@ export const ChristmasViewportDecoration = () => (
 
     <ChristmasSnowman className="bottom-0 left-0 h-32 w-24 text-white/90" />
 
-    <ChristmasTree className="bottom-1 right-0 h-32 w-24 text-emerald-700" />
+    <ChristmasTree className="right-0 bottom-1 h-32 w-24 text-emerald-700" />
 
     {GIFT_CLASS_NAMES.map((className) => (
       <ChristmasGift key={className} className={className} />

@@ -41,7 +41,7 @@ export const ManufacturersTile = async () => {
               <tr
                 key={row.id}
                 className={clsx(
-                  "grid items-center gap-4 px-2 h-14 rounded-secondary -mx-2 first:mt-2",
+                  "-mx-2 grid h-14 items-center gap-4 rounded-secondary px-2 first:mt-2",
                   GRID_COLS,
                 )}
               >

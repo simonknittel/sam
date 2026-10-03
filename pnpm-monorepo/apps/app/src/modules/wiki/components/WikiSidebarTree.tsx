@@ -72,7 +72,7 @@ export const WikiSidebarTree = ({
       cookieValue={expandedPagesCookie}
     >
       <div className="flex items-center justify-between px-2">
-        <p className="text-sm text-white/40 font-mono uppercase">
+        <p className="font-mono text-sm text-white/40 uppercase">
           Inhaltsverzeichnis
         </p>
 

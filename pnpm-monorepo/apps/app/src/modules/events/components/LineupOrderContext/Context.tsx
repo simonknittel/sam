@@ -212,7 +212,7 @@ export const LineupOrderProvider = ({
       <div
         className={clsx(
           {
-            "animate-pulse cursor-wait pointer-events-none": isPending,
+            "pointer-events-none animate-pulse cursor-wait": isPending,
           },
           className,
         )}

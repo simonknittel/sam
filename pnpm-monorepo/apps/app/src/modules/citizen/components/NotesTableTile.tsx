@@ -74,7 +74,7 @@ export const NotesTableTile = async ({ className, searchParams }: Props) => {
   return (
     <section
       className={clsx(
-        "p-6 bg-neutral-800/50 rounded-primary overflow-auto",
+        "overflow-auto rounded-primary bg-neutral-800/50 p-6",
         className,
       )}
     >
@@ -93,7 +93,7 @@ export const NotesTableTile = async ({ className, searchParams }: Props) => {
 
       <NotesTable rows={logs} searchParams={searchParams} />
 
-      <div className="flex justify-center mt-6">
+      <div className="mt-6 flex justify-center">
         <Pagination
           totalPages={totalPages}
           currentPage={getCurrentPageFromSearchParams(searchParams)}

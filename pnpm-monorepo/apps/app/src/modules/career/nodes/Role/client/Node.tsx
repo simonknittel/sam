@@ -195,7 +195,7 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
             onClick={onEdit}
             type="button"
             title="Bearbeiten"
-            className="bg-neutral-800 rounded-secondary p-2 text-brand-red-500 hover:bg-neutral-700"
+            className="rounded-secondary bg-neutral-800 p-2 text-brand-red-500 hover:bg-neutral-700"
           >
             <FaPen />
           </button>
@@ -220,7 +220,7 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
             onClick={onDelete}
             type="button"
             title="Löschen"
-            className="bg-neutral-800 rounded-secondary p-2 text-brand-red-500 hover:bg-neutral-700"
+            className="rounded-secondary bg-neutral-800 p-2 text-brand-red-500 hover:bg-neutral-700"
           >
             <FaTrash />
           </button>
@@ -231,9 +231,9 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
 
       <div
         className={clsx(
-          "bg-neutral-800 rounded-secondary h-full p-4 flex justify-center items-center relative",
+          "relative flex h-full items-center justify-center rounded-secondary bg-neutral-800 p-4",
           {
-            "grayscale opacity-40 hover:grayscale-0 hover:opacity-100":
+            "opacity-40 grayscale hover:opacity-100 hover:grayscale-0":
               !unlocked,
             "opacity-40 grayscale-0": "redacted" in props.data,
           },
@@ -249,14 +249,14 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
             sideOffset={20}
             contentClassName={styles.TooltipContent}
             triggerChildren={
-              <button type="button" className="cursor-help w-full h-full pb-1">
+              <button type="button" className="h-full w-full cursor-help pb-1">
                 <Image
                   src={getPublicUploadUrl(image?.id ?? "")}
                   alt={role.name}
                   title={role.name}
                   width={100}
                   height={100}
-                  className="object-contain object-center w-full h-full"
+                  className="h-full w-full object-contain object-center"
                   unoptimized={
                     (image &&
                       ["image/svg+xml", "image/gif"].includes(
@@ -268,7 +268,7 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
                 />
 
                 {showLevelProgress ? (
-                  <span className="block absolute left-0 bottom-0 right-0 h-1 bg-white/30 rounded-b-secondary">
+                  <span className="absolute right-0 bottom-0 left-0 block h-1 rounded-b-secondary bg-white/30">
                     <span
                       className="block h-full bg-me"
                       style={{
@@ -285,7 +285,7 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
         )}
 
         {"redacted" in props.data && (
-          <p className="text-brand-red-500 font-bold border border-brand-red-500 rounded-secondary px-2 py-1 inline-block text-xs">
+          <p className="inline-block rounded-secondary border border-brand-red-500 px-2 py-1 text-xs font-bold text-brand-red-500">
             Redacted
           </p>
         )}

@@ -74,7 +74,7 @@ export const AddEventParticipants = ({ className, eventId }: Props) => {
           {isPending || !addableCitizenIds ? (
             /** Mirrors CitizenInput's own pending state, label included */
             <div>
-              <span className="block mb-1">Citizen (Handle)</span>
+              <span className="mb-1 block">Citizen (Handle)</span>
               <div className="h-10 animate-pulse rounded-secondary bg-neutral-900" />
             </div>
           ) : (
@@ -95,7 +95,7 @@ export const AddEventParticipants = ({ className, eventId }: Props) => {
             classNameTextarea="h-20"
           />
 
-          <div className="flex flex-col gap-2 mt-4">
+          <div className="mt-4 flex flex-col gap-2">
             <Button2 type="submit" disabled={submitIsPending}>
               {submitIsPending ? <AsciiSpinner /> : <FaSave />}
               Speichern
