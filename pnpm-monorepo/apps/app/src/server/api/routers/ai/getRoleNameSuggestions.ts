@@ -3,7 +3,6 @@ import { authorize } from "@/modules/auth/server";
 import { isOpenAIEnabled } from "@/modules/common/utils/isOpenAIEnabled";
 import { log } from "@/modules/logging";
 import { TRPCError } from "@trpc/server";
-import { zodResponseFormat } from "openai/helpers/zod";
 import type { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 import * as z from "zod";
 import { protectedProcedure, toTrpcError } from "../../trpc";
@@ -13,6 +12,14 @@ import { protectedProcedure, toTrpcError } from "../../trpc";
  * gives some more, but stops a response with an unlimited list.
  */
 const MAXIMUM_ROLE_NAMES = 10;
+
+/**
+ * A user waits for the suggestions, and a response usually arrives within
+ * a few seconds. The default of the SDK is 10 minutes.
+ */
+const REQUEST_TIMEOUT_MILLISECONDS = 30_000;
+
+const FAILURE_MESSAGE = "Failed to generate role names";
 
 const responseSchema = z.object({
   roleNames: z.array(z.string()).max(MAXIMUM_ROLE_NAMES),
@@ -44,13 +51,20 @@ export const getRoleNameSuggestions = protectedProcedure.query(
      * Loaded on demand: the tRPC route bundles all routers, and only this
      * rarely used procedure needs the large SDK
      */
-    const { default: OpenAI } = await import("openai");
+    const [{ default: OpenAI }, { zodResponseFormat }] = await Promise.all([
+      import("openai"),
+      import("openai/helpers/zod"),
+    ]);
     const openai = new OpenAI({
       baseURL: env.OPENAI_BASE_URL,
       apiKey: env.OPENAI_API_KEY,
       defaultHeaders: {
         ...Object.fromEntries(defaultHeaders.entries()),
       },
+      timeout: REQUEST_TIMEOUT_MILLISECONDS,
+      // The query of the client already retries a failed request (see
+      // `Suggestions.tsx`). Retries of the SDK would multiply the wait.
+      maxRetries: 0,
     });
 
     const messages = [
@@ -75,8 +89,19 @@ export const getRoleNameSuggestions = protectedProcedure.query(
         usage: chatCompletion.usage,
       });
 
-      const roleNames = chatCompletion.choices[0]?.message.parsed?.roleNames;
-      if (!roleNames) throw new Error("The response contains no role names");
+      const choice = chatCompletion.choices[0];
+      const roleNames = choice?.message.parsed?.roleNames;
+      if (!roleNames) {
+        log.error(FAILURE_MESSAGE, {
+          reason: "The response contains no role names",
+          refusal: choice?.message.refusal,
+          finishReason: choice?.finish_reason,
+        });
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: FAILURE_MESSAGE,
+        });
+      }
 
       return {
         prompt: {
@@ -86,7 +111,7 @@ export const getRoleNameSuggestions = protectedProcedure.query(
         roleNames,
       };
     } catch (error) {
-      throw toTrpcError(error, "Failed to generate role names");
+      throw toTrpcError(error, FAILURE_MESSAGE);
     }
   },
 );
