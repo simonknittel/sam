@@ -131,7 +131,7 @@ export const createAuthenticatedAction = <
     const t = await getTranslations();
 
     try {
-      return getTracer().startActiveSpan(name, async (span) => {
+      return await getTracer().startActiveSpan(name, async (span) => {
         try {
           /**
            * Authenticate the request
