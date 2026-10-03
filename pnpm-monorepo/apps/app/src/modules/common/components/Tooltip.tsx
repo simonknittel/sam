@@ -71,7 +71,7 @@ export const Tooltip = ({
 
       <RadixUiTooltip.Content
         className={clsx(
-          "max-w-[320px] rounded-secondary bg-neutral-600 p-2 text-sm leading-tight font-normal text-white select-none",
+          "max-w-80 rounded-secondary bg-neutral-600 p-2 text-sm leading-tight font-normal text-white select-none",
           contentClassName,
         )}
         side={side}
