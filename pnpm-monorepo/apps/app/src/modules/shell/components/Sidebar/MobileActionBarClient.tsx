@@ -5,13 +5,15 @@ import { groupByFeatured } from "@/modules/apps/utils/groupByFeatured";
 import type { App, RedactedApp } from "@/modules/apps/utils/types";
 import { useAuthentication } from "@/modules/auth/hooks/useAuthentication";
 import { Link } from "@/modules/common/components/Link";
+import { usePathname } from "next/navigation";
 import { FaHome } from "react-icons/fa";
 import { MdTaskAlt, MdWorkspaces } from "react-icons/md";
 import { TbMilitaryRank } from "react-icons/tb";
 import { Footer } from "../Footer";
 import { Account } from "./Account";
 import { MobileActionBarFlyout } from "./MobileActionBarFlyout";
-import { RedBar } from "./RedBar";
+
+type LinkedApp = Exclude<App, RedactedApp>;
 
 interface Props {
   readonly supportHref: string | null;
@@ -27,8 +29,10 @@ export const MobileActionBarClient = ({
   if (!authentication) throw new Error("Unauthorized");
 
   const { apps } = useAppsContext();
+  const pathname = usePathname();
   if (!apps) return null;
   const { featured, other } = groupByFeatured(apps);
+  const currentApp = findCurrentApp(apps.filter(isLinkedApp), pathname);
 
   const [canTasksRead, canFleetRead, canShipManage] = [
     authentication.authorize("task", "read"),
@@ -92,32 +96,17 @@ export const MobileActionBarClient = ({
         <MobileActionBarFlyout>
           <Account supportHref={supportHref} />
 
-          <div className="relative p-4" data-red-bar-container>
+          <div className="p-4">
             {featured && (
               <div>
                 <p className="pl-2 text-neutral-500">Featured</p>
 
                 <ul className="mt-1">
-                  {featured
-                    .filter(
-                      (app): app is Exclude<App, RedactedApp> =>
-                        !("redacted" in app) || !app.redacted,
-                    )
-                    .map((app) => {
-                      const href =
-                        "href" in app ? app.href : `/app/external/${app.slug}`;
-
-                      return (
-                        <li key={app.name}>
-                          <Link
-                            href={href}
-                            className="block rounded-secondary p-2 active:bg-neutral-700"
-                          >
-                            {app.name}
-                          </Link>
-                        </li>
-                      );
-                    })}
+                  {featured.filter(isLinkedApp).map((app) => (
+                    <li key={app.name}>
+                      <AppLink app={app} isCurrent={app === currentApp} />
+                    </li>
+                  ))}
                 </ul>
               </div>
             )}
@@ -127,36 +116,54 @@ export const MobileActionBarClient = ({
                 <p className="pl-2 text-neutral-500">Sonstige</p>
 
                 <ul className="mt-2">
-                  {other
-                    .filter(
-                      (app): app is Exclude<App, RedactedApp> =>
-                        !("redacted" in app) || !app.redacted,
-                    )
-                    .map((app) => {
-                      const href =
-                        "href" in app ? app.href : `/app/external/${app.slug}`;
-
-                      return (
-                        <li key={app.name}>
-                          <Link
-                            href={href}
-                            className="block rounded-secondary p-2 active:bg-neutral-700"
-                          >
-                            {app.name}
-                          </Link>
-                        </li>
-                      );
-                    })}
+                  {other.filter(isLinkedApp).map((app) => (
+                    <li key={app.name}>
+                      <AppLink app={app} isCurrent={app === currentApp} />
+                    </li>
+                  ))}
                 </ul>
               </div>
             )}
-
-            <RedBar />
           </div>
 
           <Footer className="px-8 pt-0 pb-4" />
         </MobileActionBarFlyout>
       </li>
     </ul>
+  );
+};
+
+const isLinkedApp = (app: App): app is LinkedApp =>
+  !("redacted" in app) || !app.redacted;
+
+const getAppHref = (app: LinkedApp) =>
+  "href" in app ? app.href : `/app/external/${app.slug}`;
+
+/**
+ * The current app has the longest address that is a prefix of the pathname,
+ * thus a subpage also marks its app.
+ */
+const findCurrentApp = (apps: readonly LinkedApp[], pathname: string) =>
+  apps
+    .filter((app) => pathname.startsWith(getAppHref(app)))
+    .toSorted(
+      (first, second) => getAppHref(second).length - getAppHref(first).length,
+    )
+    .at(0);
+
+interface AppLinkProps {
+  readonly app: LinkedApp;
+  readonly isCurrent: boolean;
+}
+
+const AppLink = ({ app, isCurrent }: AppLinkProps) => {
+  return (
+    <Link
+      href={getAppHref(app)}
+      aria-current={isCurrent ? "page" : undefined}
+      className="relative block rounded-secondary p-2 before:absolute before:inset-y-3 before:left-0 before:w-0.5 before:rounded-secondary active:bg-neutral-700 aria-[current=page]:before:bg-interaction-500"
+    >
+      {app.name}
+    </Link>
   );
 };
