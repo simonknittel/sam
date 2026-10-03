@@ -56,6 +56,7 @@ export { updateSilcBalances } from "./silc/updateSilcBalances.js";
 export {
   ORGANIZATION_TIMEZONE,
   getLocalDate,
+  getLocalDateKey,
   instantToWallTime,
   wallTimeToInstant,
   type LocalDate,

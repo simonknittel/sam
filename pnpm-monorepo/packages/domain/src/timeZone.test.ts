@@ -6,6 +6,7 @@
 import { describe, expect, test } from "vitest";
 import {
   getLocalDate,
+  getLocalDateKey,
   instantToWallTime,
   ORGANIZATION_TIMEZONE,
   wallTimeToInstant,
@@ -75,6 +76,37 @@ describe("wallTimeToInstant", () => {
     },
   );
 
+  test.each([
+    [
+      "America/Santiago",
+      "a wall time in the gap at midnight, moved forward by one hour",
+      "2026-09-06T00:30",
+      "2026-09-06T04:30:00.000Z",
+    ],
+    [
+      "America/Santiago",
+      "a wall time in the overlap before midnight, the later instant",
+      "2026-04-04T23:30",
+      "2026-04-05T03:30:00.000Z",
+    ],
+    [
+      "Australia/Lord_Howe",
+      "a wall time in the gap of 30 minutes, moved forward by 30 minutes",
+      "2026-10-04T02:15",
+      "2026-10-03T15:45:00.000Z",
+    ],
+    [
+      "Asia/Beirut",
+      "a wall time in the gap at midnight, moved forward by one hour",
+      "2026-03-29T00:30",
+      "2026-03-28T22:30:00.000Z",
+    ],
+  ])("%s: %s (%s)", (timeZone, _description, wallTime, expectedInstant) => {
+    expect(wallTimeToInstant(wallTime, timeZone).toISOString()).toBe(
+      expectedInstant,
+    );
+  });
+
   test("a zone without daylight saving time", () => {
     expect(wallTimeToInstant("2026-08-16T20:00", TOKYO).toISOString()).toBe(
       "2026-08-16T11:00:00.000Z",
@@ -88,6 +120,7 @@ describe("wallTimeToInstant", () => {
     "2026-01-15T20:00:30",
     "2026-01-15T20:00Z",
     "2026-01-15T20:00+05:00",
+    "0050-01-15T20:00",
   ])("rejects the invalid wall time %s", (wallTime) => {
     expect(() => wallTimeToInstant(wallTime, ORGANIZATION_TIMEZONE)).toThrow(
       "Invalid wall time",
@@ -157,5 +190,17 @@ describe("getLocalDate", () => {
       month: 8,
       day: 15,
     });
+  });
+});
+
+describe("getLocalDateKey", () => {
+  test.each([
+    [ORGANIZATION_TIMEZONE, "2026-08-15T21:59:59.999Z", "2026-08-15"],
+    [ORGANIZATION_TIMEZONE, "2026-08-15T22:00:00.000Z", "2026-08-16"],
+    ["UTC", "2026-08-15T22:00:00.000Z", "2026-08-15"],
+    [LOS_ANGELES, "2026-01-01T07:59:59.999Z", "2025-12-31"],
+    [TOKYO, "2026-12-31T15:00:00.000Z", "2027-01-01"],
+  ])("%s: the day of %s is %s", (timeZone, instant, expectedKey) => {
+    expect(getLocalDateKey(new Date(instant), timeZone)).toBe(expectedKey);
   });
 });

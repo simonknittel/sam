@@ -30,6 +30,11 @@ interface ZonedDateTimeParts {
 /**
  * The construction of an `Intl.DateTimeFormat` is slow, thus each zone gets
  * one formatter. An unknown zone throws before it gets into the map.
+ *
+ * The key is the zone as the caller gives it. `Intl` accepts many spellings
+ * of one zone (for example a different case), and each spelling gets its own
+ * formatter. Thus a caller must give a zone from a fixed list or an
+ * allowlist, never an unchecked value from a request.
  */
 const formatterByTimeZone = new Map<string, Intl.DateTimeFormat>();
 
@@ -92,20 +97,34 @@ export interface LocalDate {
   readonly day: number;
 }
 
+const formatLocalDateKey = ({ year, month, day }: LocalDate) =>
+  `${padNumber(year, 4)}-${padNumber(month, 2)}-${padNumber(day, 2)}`;
+
 /**
  * The calendar date a moment falls on in the given IANA time zone. Throws
  * for a time zone the runtime does not know.
  */
-export const getLocalDate = (moment: Date, timezone: string): LocalDate => {
-  const { year, month, day } = getZonedDateTimeParts(moment, timezone);
+export const getLocalDate = (moment: Date, timeZone: string): LocalDate => {
+  const { year, month, day } = getZonedDateTimeParts(moment, timeZone);
 
   return { year, month, day };
 };
 
 /**
+ * The calendar date ("YYYY-MM-DD") of an instant in the given IANA time zone.
+ * Two instants are on the same day in the zone if their keys are equal, and
+ * the order of the keys is the order of the days. Throws for a time zone the
+ * runtime does not know.
+ */
+export const getLocalDateKey = (instant: Date, timeZone: string): string =>
+  formatLocalDateKey(getZonedDateTimeParts(instant, timeZone));
+
+/**
  * Reads a `datetime-local` value ("YYYY-MM-DDTHH:mm") as a wall time in the
  * given IANA time zone and returns the instant. Throws for a value that is
  * not a valid date and time, and for a time zone the runtime does not know.
+ * Also throws for the years 0000 to 0099, because `Date.UTC` reads them as
+ * the years 1900 to 1999.
  *
  * Daylight saving time gives a deterministic result, independent of the
  * time zone of the system:
@@ -160,10 +179,7 @@ export const wallTimeToInstant = (wallTime: string, timeZone: string): Date => {
  * `wallTimeToInstant`, for example to fill in an edit form.
  */
 export const instantToWallTime = (instant: Date, timeZone: string): string => {
-  const { year, month, day, hour, minute } = getZonedDateTimeParts(
-    instant,
-    timeZone,
-  );
+  const parts = getZonedDateTimeParts(instant, timeZone);
 
-  return `${padNumber(year, 4)}-${padNumber(month, 2)}-${padNumber(day, 2)}T${padNumber(hour, 2)}:${padNumber(minute, 2)}`;
+  return `${formatLocalDateKey(parts)}T${padNumber(parts.hour, 2)}:${padNumber(parts.minute, 2)}`;
 };
