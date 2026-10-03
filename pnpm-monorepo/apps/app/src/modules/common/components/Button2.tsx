@@ -52,16 +52,16 @@ export const Button2 = <E extends ElementType = "button">({
         {
           "min-w-8 [&>svg]:text-sm": variant === Button2Variant.IconOnly,
           "px-2 py-1 [&>svg]:text-xs": variant !== Button2Variant.IconOnly,
-          "bg-transparent text-neutral-500 transition-colors enabled:hover:text-interaction-500 enabled:focus-visible:text-interaction-500 enabled:active:scale-95 [[href]]:hover:text-interaction-500 [[href]]:focus-visible:text-interaction-500 [[href]]:active:scale-95":
+          "bg-transparent text-neutral-500 transition-colors not-disabled:hover:text-interaction-500 not-disabled:focus-visible:text-interaction-500 not-disabled:active:scale-95":
             variant === Button2Variant.IconOnly &&
             colorSchema === Button2ColorSchema.Interaction,
-          "bg-interaction-500 text-neutral-50 outline-offset-4 outline-interaction-700 transition-colors enabled:hover:bg-interaction-300 enabled:focus-visible:outline-2 enabled:active:scale-95 [[href]]:hover:bg-interaction-300 [[href]]:focus-visible:outline-2 [[href]]:active:scale-95":
+          "bg-interaction-500 text-neutral-50 outline-offset-4 outline-interaction-700 transition-colors not-disabled:hover:bg-interaction-300 not-disabled:focus-visible:outline-2 not-disabled:active:scale-95":
             variant === Button2Variant.Primary &&
             colorSchema === Button2ColorSchema.Interaction,
-          "border border-solid border-interaction-500 bg-transparent text-interaction-500 outline-offset-4 outline-interaction-700 transition-colors enabled:hover:border-interaction-300 enabled:hover:text-interaction-300 enabled:focus-visible:outline-2 enabled:active:scale-95 [[href]]:hover:border-interaction-300 [[href]]:hover:text-interaction-300 [[href]]:focus-visible:outline-2 [[href]]:active:scale-95":
+          "border border-solid border-interaction-500 bg-transparent text-interaction-500 outline-offset-4 outline-interaction-700 transition-colors not-disabled:hover:border-interaction-300 not-disabled:hover:text-interaction-300 not-disabled:focus-visible:outline-2 not-disabled:active:scale-95":
             variant === Button2Variant.Secondary &&
             colorSchema === Button2ColorSchema.Interaction,
-          "border border-solid border-neutral-500 bg-transparent text-neutral-500 outline-offset-4 outline-interaction-700 transition-colors enabled:hover:border-interaction-300 enabled:hover:text-interaction-300 enabled:focus-visible:outline-2 enabled:active:scale-95":
+          "border border-solid border-neutral-500 bg-transparent text-neutral-500 outline-offset-4 outline-interaction-700 transition-colors not-disabled:hover:border-interaction-300 not-disabled:hover:text-interaction-300 not-disabled:focus-visible:outline-2 not-disabled:active:scale-95":
             variant === Button2Variant.Secondary &&
             colorSchema === Button2ColorSchema.InteractionMuted,
           "border border-solid border-neutral-500 bg-transparent text-neutral-500 outline-offset-4 outline-neutral-700 transition-colors hover:border-neutral-300 hover:text-neutral-300 focus-visible:outline-2 active:scale-95":

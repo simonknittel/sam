@@ -20,13 +20,13 @@ export const UnreadEdge = ({
 }: Props) => {
   return (
     <div
-      className={clsx("absolute top-0 bottom-0 left-0", {
-        "w-px": width === UnreadEdgeWidth.Thin,
-        "w-0.5": width === UnreadEdgeWidth.Regular,
-      })}
-      style={{
-        background: "linear-gradient(to bottom, #f59e0b, transparent)",
-      }}
+      className={clsx(
+        "absolute top-0 bottom-0 left-0 bg-linear-to-b from-amber-500",
+        {
+          "w-px": width === UnreadEdgeWidth.Thin,
+          "w-0.5": width === UnreadEdgeWidth.Regular,
+        },
+      )}
       title={title}
     />
   );

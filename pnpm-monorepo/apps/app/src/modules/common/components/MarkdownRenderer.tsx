@@ -23,10 +23,7 @@ export const MarkdownRenderer = ({
   return (
     <div
       ref={ref}
-      className={clsx("prose max-w-none prose-invert", className)}
-      style={{
-        overflowWrap: "anywhere",
-      }}
+      className={clsx("prose max-w-none wrap-anywhere prose-invert", className)}
     >
       <ReactMarkdown
         remarkPlugins={remarkPlugins}
