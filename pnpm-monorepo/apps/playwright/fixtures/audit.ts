@@ -6,17 +6,21 @@ import type { PrismaClient } from "@sam-monorepo/database/client";
  * query filters by type instead of reading the whole table, so a test that
  * produces a lot of unrelated events stays cheap — and a failure names
  * exactly which expected type is missing.
+ *
+ * The assertion polls: an action writes its audit event after its change,
+ * thus a test that waited for the change can be faster than the event.
  */
 export const expectAuditEvents = async (
   prisma: PrismaClient,
   types: readonly string[],
 ) => {
-  const written = await prisma.auditEvent.findMany({
-    where: { type: { in: [...types] } },
-    select: { type: true },
-  });
-
-  expect([...new Set(written.map((event) => event.type))].toSorted()).toEqual(
-    [...types].toSorted(),
-  );
+  await expect
+    .poll(async () => {
+      const written = await prisma.auditEvent.findMany({
+        where: { type: { in: [...types] } },
+        select: { type: true },
+      });
+      return [...new Set(written.map((event) => event.type))].toSorted();
+    })
+    .toEqual([...types].toSorted());
 };
