@@ -179,7 +179,7 @@ export const EventClient = ({
         <div className="flex flex-1 flex-col justify-center gap-3 p-4 @4xl/events:overflow-hidden">
           <div className="flex items-baseline gap-2">
             <h2
-              className="min-w-0 font-mono text-xl font-bold break-words uppercase @4xl/events:overflow-hidden @4xl/events:text-ellipsis @4xl/events:whitespace-nowrap"
+              className="min-w-0 font-mono text-xl font-bold wrap-break-word uppercase @4xl/events:truncate"
               title={event.name}
             >
               {event.name}

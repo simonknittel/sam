@@ -25,7 +25,7 @@ export const ChristmasLightBulb = ({ className }: Props) => (
     aria-hidden
     viewBox="0 0 10 12"
     className={clsx(
-      "absolute -top-[5px] h-3 w-2.5 -translate-x-1/2 animate-seasonal-twinkle",
+      "absolute -top-1.25 h-3 w-2.5 -translate-x-1/2 animate-seasonal-twinkle",
       className,
     )}
     fill="currentColor"

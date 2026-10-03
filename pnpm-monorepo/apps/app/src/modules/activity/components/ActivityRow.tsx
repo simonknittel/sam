@@ -54,7 +54,7 @@ export const ActivityRow = ({ entry, columns }: Props) => {
         <div className={clsx(FIRST_LINE, "min-w-0")}>{entry.message}</div>
 
         {entry.comment && (
-          <p className="mt-1 border-l-2 border-neutral-700 pl-2 text-sm break-words whitespace-pre-wrap text-neutral-300">
+          <p className="mt-1 border-l-2 border-neutral-700 pl-2 text-sm wrap-break-word whitespace-pre-wrap text-neutral-300">
             {entry.comment}
           </p>
         )}

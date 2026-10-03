@@ -49,7 +49,7 @@ export const Apps = ({ className }: Props) => {
        * The max height is a safety net for short viewports only — at normal
        * sizes the popover is shorter than the space Base UI reports.
        */
-      childrenClassName="w-[30rem] max-h-[var(--available-height)] overflow-y-auto"
+      childrenClassName="max-h-(--available-height) w-120 overflow-y-auto"
     >
       <PopoverChildren />
     </PopoverBaseUI>

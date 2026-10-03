@@ -37,7 +37,7 @@ export const SpynetSearchAutocomplete = () => {
         <Autocomplete.Input
           aria-label="Spynet durchsuchen"
           placeholder="Suche"
-          className="h-full w-full min-w-0 flex-1 bg-transparent text-white outline-hidden placeholder:text-neutral-500"
+          className="size-full min-w-0 flex-1 bg-transparent text-white outline-hidden placeholder:text-neutral-500"
           autoCorrect="off"
           spellCheck="false"
           autoCapitalize="off"

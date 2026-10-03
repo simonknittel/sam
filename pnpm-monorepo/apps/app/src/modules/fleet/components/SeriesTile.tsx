@@ -24,7 +24,7 @@ export const SeriesTile = async ({ className, manufacturerId }: Props) => {
       className={clsx(className)}
       childrenClassName="overflow-auto"
     >
-      <table className="w-full min-w-[320px]">
+      <table className="w-full min-w-80">
         <thead>
           <tr
             className={clsx(

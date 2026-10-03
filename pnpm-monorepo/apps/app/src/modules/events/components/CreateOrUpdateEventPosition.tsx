@@ -467,7 +467,7 @@ const PositionFormatting = ({
           <div className="flex items-center gap-2">
             <input
               type="color"
-              className="h-10 w-10 cursor-pointer rounded border border-white/10 bg-neutral-900 p-0"
+              className="size-10 cursor-pointer rounded border border-white/10 bg-neutral-900 p-0"
               value={backgroundColor || "#262626"}
               onChange={(e) => setBackgroundColor(e.target.value)}
             />
@@ -495,7 +495,7 @@ const PositionFormatting = ({
           <div className="flex items-center gap-2">
             <input
               type="color"
-              className="h-10 w-10 cursor-pointer rounded border border-white/10 bg-neutral-900 p-0"
+              className="size-10 cursor-pointer rounded border border-white/10 bg-neutral-900 p-0"
               value={textColor || "#e5e5e5"}
               onChange={(e) => setTextColor(e.target.value)}
             />

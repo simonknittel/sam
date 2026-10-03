@@ -19,7 +19,7 @@ export const ManufacturersTile = async () => {
       cta={<CreateManufacturereButton />}
       childrenClassName="overflow-auto"
     >
-      <table className="w-full min-w-[320px]">
+      <table className="w-full min-w-80">
         <thead>
           <tr
             className={clsx(

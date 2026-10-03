@@ -102,7 +102,7 @@ export const NotificationListItem = ({
       </div>
 
       {rendering.body && (
-        <p className="mt-0.5 text-sm break-words text-neutral-300">
+        <p className="mt-0.5 text-sm wrap-break-word text-neutral-300">
           {rendering.body}
         </p>
       )}

@@ -29,7 +29,7 @@ export const Suggestions = ({ className, onClick }: Props) => {
           <div className="relative z-10 flex items-center">
             <Tooltip
               triggerChildren={<FaInfoCircle />}
-              contentClassName="max-w-[640px]"
+              contentClassName="max-w-160"
             >
               <p>
                 Diese Vorschläge wurden mit Hilfe von GPT-4 basierend auf

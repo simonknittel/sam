@@ -64,7 +64,7 @@ export const RoleCheckbox = ({
     >
       <span className="flex items-center gap-2 overflow-hidden">
         {role.icon && (
-          <div className="flex aspect-square h-6 w-6 flex-none items-center justify-center overflow-hidden rounded-secondary">
+          <div className="flex aspect-square size-6 flex-none items-center justify-center overflow-hidden rounded-secondary">
             <Image
               src={getPublicUploadUrl(role.icon.id)}
               alt=""

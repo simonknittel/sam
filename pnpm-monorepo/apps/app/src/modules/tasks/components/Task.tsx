@@ -139,7 +139,7 @@ export const Task = ({ className, task, isNew: isNewOnServer }: Props) => {
 
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2 p-2">
-          <h3 className="min-w-0 font-bold break-words">
+          <h3 className="min-w-0 font-bold wrap-break-word">
             <Link
               ref={focusTargetRef}
               href={`/app/tasks/${task.id}`}

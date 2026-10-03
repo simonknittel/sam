@@ -13,7 +13,7 @@ export default async function Page() {
   await authentication.authorizePage("silcBalanceOfOtherCitizen", "read");
 
   return (
-    <div className="flex flex-col gap-[2px]">
+    <div className="flex flex-col gap-0.5">
       <SuspenseWithErrorBoundaryTile>
         <SilcStatistics />
       </SuspenseWithErrorBoundaryTile>

@@ -87,7 +87,7 @@ export const WikiCollabStatusDot = ({ className, status, users }: Props) => {
             >
               <span
                 className={clsx(
-                  "absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 motion-reduce:hidden",
+                  "absolute inline-flex size-full animate-ping rounded-full opacity-75 motion-reduce:hidden",
                   config.pingClassName,
                 )}
               />

@@ -281,7 +281,7 @@ const OnboardingStepCard = ({
              * Wider than the anchored card: centered steps carry
              * screenshots, which need the room to stay readable.
              */
-            "absolute top-1/2 left-1/2 max-h-[calc(100dvh-1rem)] w-[36rem] max-w-[calc(100dvw-1rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto":
+            "absolute top-1/2 left-1/2 max-h-[calc(100dvh-1rem)] w-xl max-w-[calc(100dvw-1rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto":
               !targetElement && isLargeViewport,
             "fixed bottom-2 left-1/2 w-96 max-w-[calc(100dvw-1rem)] -translate-x-1/2":
               Boolean(targetElement) && isLargeViewport && isOversizedTarget,

@@ -30,7 +30,7 @@ export const CmdKLoader = ({ className }: Props) => {
     <>
       <div className={clsx("p-2", className)}>
         <button
-          className="group flex h-full w-full cursor-pointer justify-between rounded-secondary border border-neutral-700 bg-neutral-800 px-2 py-1 text-center text-sm text-neutral-600 hover:text-neutral-400 focus-visible:text-neutral-400 active:text-neutral-300"
+          className="group flex size-full cursor-pointer justify-between rounded-secondary border border-neutral-700 bg-neutral-800 px-2 py-1 text-center text-sm text-neutral-600 hover:text-neutral-400 focus-visible:text-neutral-400 active:text-neutral-300"
           type="button"
           onClick={() => setOpen(true)}
         >

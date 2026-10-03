@@ -20,7 +20,7 @@ const DetailRow = ({ label, children }: DetailRowProps) => {
   return (
     <>
       <dt className="font-mono text-xs text-white/40 uppercase">{label}</dt>
-      <dd className="text-sm break-words">{children}</dd>
+      <dd className="text-sm wrap-break-word">{children}</dd>
     </>
   );
 };
@@ -59,7 +59,7 @@ export const WikiPageDetailsPopover = ({ pageId }: Props) => {
         </span>
       }
       onOpenChange={handleOpenChange}
-      childrenClassName="w-[400px]"
+      childrenClassName="w-100"
       side="bottom"
       align="start"
     >

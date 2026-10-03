@@ -248,14 +248,14 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
             sideOffset={20}
             contentClassName="transition-[opacity,translate] duration-600 ease-[cubic-bezier(0.16,1,0.3,1)] starting:translate-y-2.5 starting:opacity-0"
             triggerChildren={
-              <button type="button" className="h-full w-full cursor-help pb-1">
+              <button type="button" className="size-full cursor-help pb-1">
                 <Image
                   src={getPublicUploadUrl(image?.id ?? "")}
                   alt={role.name}
                   title={role.name}
                   width={100}
                   height={100}
-                  className="h-full w-full object-contain object-center"
+                  className="size-full object-contain object-center"
                   unoptimized={
                     (image &&
                       ["image/svg+xml", "image/gif"].includes(

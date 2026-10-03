@@ -19,7 +19,7 @@ export const PhaseManagementCompleted = ({ cycleData }: Props) => {
         Auszahlung abgeschlossen
       </h2>
 
-      <div className="mt-4 flex gap-[2px] border-t border-white/5 pt-4">
+      <div className="mt-4 flex gap-0.5 border-t border-white/5 pt-4">
         <StatisticTile label="aUEC ausgezahlt" className="flex-1">
           <ScrambleIn
             text={cycleData.paidAuec?.toLocaleString("de") ?? "-"}

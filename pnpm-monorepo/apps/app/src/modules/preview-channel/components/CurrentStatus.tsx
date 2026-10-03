@@ -19,7 +19,7 @@ const CurrentStatus = ({ schedule }: Readonly<Props>) => {
       <div className="flex items-baseline gap-2">
         {currentlyLive ? (
           <>
-            <FaRegCheckCircle className="relative top-[2px] text-green-500" />
+            <FaRegCheckCircle className="relative top-0.5 text-green-500" />
 
             <div>
               <p>
@@ -51,7 +51,7 @@ const CurrentStatus = ({ schedule }: Readonly<Props>) => {
           </>
         ) : (
           <>
-            <FaRegTimesCircle className="relative top-[2px] text-brand-red-500" />
+            <FaRegTimesCircle className="relative top-0.5 text-brand-red-500" />
 
             <div>
               <p>The preview channel is currently not active.</p>

@@ -264,10 +264,7 @@ const WikiFeaturedPageRow = ({
         <MdDragIndicator />
       </button>
 
-      <span
-        className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap"
-        title={page.title}
-      >
+      <span className="flex-1 truncate" title={page.title}>
         {page.title}
       </span>
 

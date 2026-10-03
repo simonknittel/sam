@@ -43,7 +43,7 @@ const Game = () => {
         width={960}
         height={600}
         tabIndex={-1}
-        className="absolute inset-0 hidden h-full w-full xl:block"
+        className="absolute inset-0 hidden size-full xl:block"
       />
 
       <Script src={`${buildUrl}/Build.loader.js`} onLoad={handleLoad} />

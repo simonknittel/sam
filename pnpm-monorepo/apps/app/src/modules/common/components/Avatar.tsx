@@ -108,7 +108,7 @@ const Avatar = ({ className, name, image, size, decoration }: Props) => {
       </span>
 
       {decoration === AvatarDecoration.BirthdayHat && (
-        <BirthdayHat className="pointer-events-none absolute -top-[16%] -right-[8%] size-[45%] rotate-[20deg]" />
+        <BirthdayHat className="pointer-events-none absolute top-[-16%] right-[-8%] size-[45%] rotate-20" />
       )}
     </span>
   );

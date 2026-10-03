@@ -83,10 +83,7 @@ export const UsersTable = ({
                   className="shrink-0"
                 />
                 {discordId ? (
-                  <span
-                    title={discordId}
-                    className="overflow-hidden text-ellipsis whitespace-nowrap"
-                  >
+                  <span title={discordId} className="truncate">
                     {discordId}
                   </span>
                 ) : (
@@ -96,10 +93,7 @@ export const UsersTable = ({
             </td>
 
             <td className="overflow-hidden">
-              <span
-                title={user.id}
-                className="block overflow-hidden text-ellipsis whitespace-nowrap"
-              >
+              <span title={user.id} className="block truncate">
                 {user.id}
               </span>
             </td>
@@ -107,7 +101,7 @@ export const UsersTable = ({
             <td className="overflow-hidden">
               <span
                 title={formatDate(user.createdAt) || undefined}
-                className="block overflow-hidden text-ellipsis whitespace-nowrap"
+                className="block truncate"
               >
                 {formatDate(user.createdAt)}
               </span>
@@ -117,7 +111,7 @@ export const UsersTable = ({
               {user.emailVerified ? (
                 <span
                   title={formatDate(user.emailVerified) || undefined}
-                  className="block overflow-hidden text-ellipsis whitespace-nowrap"
+                  className="block truncate"
                 >
                   {formatDate(user.emailVerified)}
                 </span>
@@ -128,10 +122,7 @@ export const UsersTable = ({
 
             <td className="overflow-hidden">
               {user.name ? (
-                <span
-                  title={user.name || undefined}
-                  className="block overflow-hidden text-ellipsis whitespace-nowrap"
-                >
+                <span title={user.name || undefined} className="block truncate">
                   {user.name}
                 </span>
               ) : (

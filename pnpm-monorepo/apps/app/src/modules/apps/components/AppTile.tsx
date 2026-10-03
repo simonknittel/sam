@@ -136,9 +136,9 @@ export const AppTile = ({
 
           <div className="relative ml-auto flex flex-none items-center gap-1.5 text-sm">
             {dotBadgeCount > 0 && (
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-interaction-700 opacity-75 motion-reduce:hidden" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-interaction-500" />
+              <span className="relative flex size-2">
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-interaction-700 opacity-75 motion-reduce:hidden" />
+                <span className="relative inline-flex size-2 rounded-full bg-interaction-500" />
               </span>
             )}
 

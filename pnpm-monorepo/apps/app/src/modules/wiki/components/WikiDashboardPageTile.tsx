@@ -15,7 +15,7 @@ import { WikiPageStaticContent } from "./WikiPageStaticContent";
  * cannot be known while rendering on the server, so nothing about the
  * panel's layout depends on it (see wikiDashboardPageTile.css).
  */
-const MAX_CONTENT_HEIGHT = "max-h-[30rem] sm:max-h-[40rem]";
+const MAX_CONTENT_HEIGHT = "max-h-120 sm:max-h-160";
 
 /**
  * Read-only render of the wiki page the wiki admins put on the dashboard

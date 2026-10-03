@@ -11,7 +11,7 @@ export const TileSkeleton = ({ className }: Props) => {
         Events
       </h2>
 
-      <div className="h-[160px] w-full animate-pulse rounded-primary bg-neutral-800/50" />
+      <div className="h-40 w-full animate-pulse rounded-primary bg-neutral-800/50" />
     </section>
   );
 };
