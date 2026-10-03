@@ -581,27 +581,20 @@
  * and gold
  */
 @utility background-christmas {
-  background-image:
-    radial-gradient(
-      ellipse 70% 140% at 8% 115%,
-      hsl(0 75% 45% / calc(0.3 * var(--seasonal-lower-clouds, 1))),
-      transparent 68%
-    ),
-    radial-gradient(
-      ellipse 60% 150% at 36% -25%,
-      hsl(145 60% 35% / calc(0.26 * var(--seasonal-upper-clouds, 1))),
-      transparent 68%
-    ),
-    radial-gradient(
-      ellipse 65% 145% at 66% 120%,
-      hsl(45 90% 50% / calc(0.22 * var(--seasonal-lower-clouds, 1))),
-      transparent 68%
-    ),
-    radial-gradient(
-      ellipse 55% 135% at 95% -15%,
-      hsl(355 70% 45% / calc(0.24 * var(--seasonal-upper-clouds, 1))),
-      transparent 68%
-    );
+  @apply cloud-surface;
+  --cloud-1: hsl(0 75% 45% / 0.3);
+  --cloud-2: hsl(145 60% 35% / 0.26);
+  --cloud-3: hsl(45 90% 50% / 0.22);
+  --cloud-4: hsl(355 70% 45% / 0.24);
+}
+
+/**
+ * A border which fades out from the top to the bottom, in a colour of the
+ * theme, for example `border-fade-blue-500`. The element sets the width of
+ * the border. `border-image` ignores the border radius.
+ */
+@utility border-fade-* {
+  border-image: linear-gradient(to bottom, --value(--color-*), transparent) 1;
 }
 
 @utility corners-primary {

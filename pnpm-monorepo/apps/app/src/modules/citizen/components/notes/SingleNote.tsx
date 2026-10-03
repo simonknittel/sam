@@ -2,7 +2,6 @@ import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import type { CitizenNote } from "@/modules/citizen/queries/citizenLogTableSelect";
 import { getNotePermissionAttributes } from "@/modules/citizen/utils/notePermissionAttributes";
-import styles from "@/modules/common/components/ConfirmationGradient.module.css";
 import { Link } from "@/modules/common/components/Link";
 import { formatDate } from "@/modules/common/utils/formatDate";
 import {
@@ -170,8 +169,8 @@ export const SingleNote = async ({ note }: Props) => {
         className={clsx({
           "absolute h-24 w-full border-x-2 border-t-2 bg-linear-to-t from-neutral-900/0":
             isUnconfirmed || isFalseReport,
-          [`${styles.blueBorder} to-blue-500/10`]: isUnconfirmed,
-          [`${styles.redBorder} to-red-500/10`]: isFalseReport,
+          "to-blue-500/10 border-fade-blue-500": isUnconfirmed,
+          "to-red-500/10 border-fade-red-500": isFalseReport,
         })}
       />
 

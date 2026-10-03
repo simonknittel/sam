@@ -146,10 +146,9 @@ export const EventClient = ({
           "relative flex flex-col rounded-bl-primary bg-secondary @4xl/events:flex-row",
           {
             "rounded-t-primary": !isHappeningNow && !isToday,
-            "border-x border-green-500 [border-image:linear-gradient(to_bottom,var(--color-green-500),transparent)_1]":
-              isHappeningNow,
+            "border-x border-fade-green-500": isHappeningNow,
             [styles.happeningNow]: isHappeningNow,
-            "border-x border-blue-500 [background:linear-gradient(to_bottom,var(--color-blue-950),var(--background-color-secondary))] [border-image:linear-gradient(to_bottom,var(--color-blue-500),transparent)_1]":
+            "border-x [background:linear-gradient(to_bottom,var(--color-blue-950),var(--background-color-secondary))] border-fade-blue-500":
               isToday && !isHappeningNow,
           },
         )}
