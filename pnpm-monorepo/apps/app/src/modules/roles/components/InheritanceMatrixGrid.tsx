@@ -43,12 +43,11 @@ export const InheritanceMatrixGrid = ({ roles }: Props) => {
     const separatorIndex = input.name.indexOf("_");
     const roleId = input.name.slice(0, separatorIndex);
     const inheritedRoleId = input.name.slice(separatorIndex + 1);
-    const checked = input.checked ? "true" : "";
 
     const formData = new FormData();
     formData.set("roleId", roleId);
     formData.set("inheritedRoleId", inheritedRoleId);
-    formData.set("checked", checked);
+    formData.set("checked", String(input.checked));
 
     void runAction(updateSingleRoleInheritance, formData);
   };

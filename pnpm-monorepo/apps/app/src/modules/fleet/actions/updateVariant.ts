@@ -34,7 +34,7 @@ const schema = z.object({
     )
     .max(50)
     .nullish(),
-  linkUrls: z.array(z.string().url()).max(50).nullish(),
+  linkUrls: z.array(z.httpUrl()).max(50).nullish(),
   wikiPageId: z.union([z.cuid2(), z.literal("")]).optional(),
 });
 

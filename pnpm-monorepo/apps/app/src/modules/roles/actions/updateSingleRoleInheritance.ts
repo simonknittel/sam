@@ -11,7 +11,7 @@ const schema = z
   .object({
     roleId: z.cuid(),
     inheritedRoleId: z.cuid(),
-    checked: z.coerce.boolean().default(false),
+    checked: z.stringbool(),
   })
   /**
    * A role that inherits itself adds nothing. The matrix leaves the diagonal

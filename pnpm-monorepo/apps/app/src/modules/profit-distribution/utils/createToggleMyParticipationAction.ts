@@ -8,10 +8,7 @@ import * as z from "zod";
 
 const schema = z.object({
   id: z.cuid2(),
-  value: z.preprocess(
-    (value) => (value === "true" ? true : value === "false" ? false : value),
-    z.boolean(),
-  ),
+  value: z.stringbool(),
 });
 
 interface Configuration {
