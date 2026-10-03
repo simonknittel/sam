@@ -16,12 +16,11 @@
 // measurement.
 
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempDisposableSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
 
-const CHECKOUT = resolve(fileURLToPath(import.meta.url), "../..");
+const CHECKOUT = resolve(import.meta.dirname, "..");
 const MAXIMUM_LISTED_ENTRIES = 15;
 const SHORTENED_IDENTIFIER_LENGTH = 12;
 
@@ -160,26 +159,24 @@ const reportLogRecords = (logsPath) => {
     console.log(`  … and ${logRecords.length - MAXIMUM_LISTED_ENTRIES} more`);
 };
 
-const temporaryDirectory = mkdtempSync(join(tmpdir(), "sam-telemetry-"));
+using temporaryDirectory = mkdtempDisposableSync(
+  join(tmpdir(), "sam-telemetry-"),
+);
 
-try {
-  const tracesPath = copyFromContainer("traces.jsonl", temporaryDirectory);
+const tracesPath = copyFromContainer("traces.jsonl", temporaryDirectory.path);
 
-  const spans = tracesPath ? collectSpans(readJsonLines(tracesPath)) : [];
+const spans = tracesPath ? collectSpans(readJsonLines(tracesPath)) : [];
 
-  if (spans.length === 0) {
-    console.error(
-      "The collector received no spans. Is the container running, and does the app send spans (see docs/setup-local-machine.md)?",
-    );
-    process.exitCode = 1;
-  } else {
-    const orphans = reportSpans(spans);
+if (spans.length === 0) {
+  console.error(
+    "The collector received no spans. Is the container running, and does the app send spans (see docs/setup-local-machine.md)?",
+  );
+  process.exitCode = 1;
+} else {
+  const orphans = reportSpans(spans);
 
-    const logsPath = copyFromContainer("logs.jsonl", temporaryDirectory);
-    if (logsPath) reportLogRecords(logsPath);
+  const logsPath = copyFromContainer("logs.jsonl", temporaryDirectory.path);
+  if (logsPath) reportLogRecords(logsPath);
 
-    process.exitCode = reportVerdict(orphans);
-  }
-} finally {
-  rmSync(temporaryDirectory, { recursive: true, force: true });
+  process.exitCode = reportVerdict(orphans);
 }
