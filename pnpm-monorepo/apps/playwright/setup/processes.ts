@@ -74,9 +74,7 @@ export const waitForHttpOk = async (url: string, child: ChildProcess) => {
 export const stopProcess = async (child: ChildProcess) => {
   if (child.exitCode !== null || child.signalCode !== null) return;
 
-  const exited = new Promise<void>((resolve) => {
-    child.once("exit", () => resolve());
-  });
+  const exited = once(child, "exit");
 
   child.kill("SIGTERM");
   const result = await Promise.race([

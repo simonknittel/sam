@@ -1,5 +1,6 @@
 import { PostgreSqlContainer } from "@testcontainers/postgresql";
 import { spawn } from "node:child_process";
+import { once } from "node:events";
 import { fileURLToPath } from "node:url";
 import type { TestProject } from "vitest/node";
 
@@ -15,31 +16,28 @@ declare module "vitest" {
   }
 }
 
-const applyMigrations = (databaseUrl: string) =>
-  new Promise<void>((resolve, reject) => {
-    const child = spawn(
-      "pnpm",
-      [
-        "--filter",
-        "@sam-monorepo/database",
-        "exec",
-        "prisma",
-        "migrate",
-        "deploy",
-      ],
-      {
-        cwd: monorepoRoot,
-        env: { ...process.env, DATABASE_URL: databaseUrl },
-        stdio: "inherit",
-      },
-    );
+const applyMigrations = async (databaseUrl: string) => {
+  const child = spawn(
+    "pnpm",
+    [
+      "--filter",
+      "@sam-monorepo/database",
+      "exec",
+      "prisma",
+      "migrate",
+      "deploy",
+    ],
+    {
+      cwd: monorepoRoot,
+      env: { ...process.env, DATABASE_URL: databaseUrl },
+      stdio: "inherit",
+    },
+  );
 
-    child.on("error", reject);
-    child.on("exit", (code) => {
-      if (code === 0) resolve();
-      else reject(new Error(`prisma migrate deploy exited with code ${code}`));
-    });
-  });
+  const [code] = await once(child, "exit");
+  if (code !== 0)
+    throw new Error(`prisma migrate deploy exited with code ${code}`);
+};
 
 /**
  * Starts one PostgreSQL container for the integration tests and applies all
