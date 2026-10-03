@@ -57,7 +57,7 @@ export const CreateManagers = (props: Props) => {
 
           <CitizenInput name="managerId" multiple autoFocus />
 
-          <div className="flex flex-col gap-2 mt-4">
+          <div className="mt-4 flex flex-col gap-2">
             <Button2 type="submit" disabled={submitIsPending}>
               {submitIsPending ? <AsciiSpinner /> : <FaSave />}
               Speichern

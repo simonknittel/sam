@@ -10,7 +10,6 @@ import {
   ONE_MINUTE_MS,
 } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
   clickUntilUrl,
   dateParam,
   fillUntilUrl,
@@ -76,9 +75,7 @@ test("the spynet activity table paginates and filters", async ({
   await signIn(viewer.user);
   await page.goto("/app/spynet/activity");
 
-  await expect(page.locator("tbody tr")).toHaveCount(ACTIVITY_PAGE_SIZE, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.locator("tbody tr")).toHaveCount(ACTIVITY_PAGE_SIZE);
   await expect(page.locator("tbody tr").first()).toContainText("Rolle");
   await expect(page.getByRole("button", { name: "Zurück" })).toBeDisabled();
 
@@ -90,7 +87,6 @@ test("the spynet activity table paginates and filters", async ({
   );
   await expect(page.locator("tbody tr")).toHaveCount(
     MEMBERSHIP_ENTRIES + 2 - ACTIVITY_PAGE_SIZE,
-    { timeout: ACTION_FEEDBACK_TIMEOUT },
   );
   await expect(page.getByText("Erstellt unter dem Namen")).toBeVisible();
 
@@ -100,23 +96,19 @@ test("the spynet activity table paginates and filters", async ({
     page.getByRole("button", { name: "Zurück" }),
     /direction=prev/,
   );
-  await expect(page.locator("tbody tr")).toHaveCount(ACTIVITY_PAGE_SIZE, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.locator("tbody tr")).toHaveCount(ACTIVITY_PAGE_SIZE);
   await expect(page.getByText("Erstellt unter dem Namen")).toHaveCount(0);
 
   // The type filter queries only the source it names
   await page.goto("/app/spynet/activity?type=role-assignment");
-  await expect(page.locator("tbody tr")).toHaveCount(1, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.locator("tbody tr")).toHaveCount(1);
   await expect(page.locator("tbody tr").first()).toContainText("Rolle");
 
   // The actor filter keeps only that actor's entries
   await page.goto(`/app/spynet/activity?actor=${target.entity.id}`);
-  await expect(page.getByText("Keine Aktivität für diese Filter.")).toBeVisible(
-    { timeout: ACTION_FEEDBACK_TIMEOUT },
-  );
+  await expect(
+    page.getByText("Keine Aktivität für diese Filter."),
+  ).toBeVisible();
 
   // The date range drops everything recorded before it
   await page.goto("/app/spynet/activity");
@@ -127,9 +119,7 @@ test("the spynet activity table paginates and filters", async ({
     fromDate,
     new RegExp(`from=${fromDate}`),
   );
-  await expect(page.getByText("Erstellt unter dem Namen")).toHaveCount(0, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Erstellt unter dem Namen")).toHaveCount(0);
   await expect(page.locator("tbody tr").first()).toContainText("Rolle");
 });
 
@@ -161,15 +151,11 @@ test("the citizen's role history only shows for readable roles", async ({
 
   await signIn(reader.user);
   await page.goto(`/app/spynet/citizen/${target.entity.id}/roles`);
-  await expect(page.getByRole("heading", { name: "Verlauf" })).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByRole("heading", { name: "Verlauf" })).toBeVisible();
   await expect(page.locator("tbody tr")).toHaveCount(1);
 
   await switchUser(outsider.user);
   await page.goto(`/app/spynet/citizen/${target.entity.id}/roles`);
-  await expect(page.getByRole("heading", { name: "Rollen" })).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByRole("heading", { name: "Rollen" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Verlauf" })).toHaveCount(0);
 });

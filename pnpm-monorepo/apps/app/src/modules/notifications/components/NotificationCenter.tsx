@@ -104,7 +104,7 @@ const HeaderActions = ({
             disabled={unreadCount <= 0}
             title="Alle als gelesen markieren"
             aria-label="Alle als gelesen markieren"
-            className="p-2 text-neutral-500 enabled:hover:text-interaction-500 enabled:focus-visible:text-interaction-500 enabled:active:scale-95 disabled:opacity-50 enabled:cursor-pointer transition-colors"
+            className="p-2 text-neutral-500 transition-colors enabled:cursor-pointer enabled:hover:text-interaction-500 enabled:focus-visible:text-interaction-500 enabled:active:scale-95 disabled:opacity-50"
           >
             <FaCheckDouble />
           </button>
@@ -114,7 +114,7 @@ const HeaderActions = ({
             onClick={() => void archiveAllRead()}
             title="Gelesene archivieren"
             aria-label="Gelesene archivieren"
-            className="p-2 text-neutral-500 hover:text-interaction-500 focus-visible:text-interaction-500 active:scale-95 cursor-pointer transition-colors"
+            className="cursor-pointer p-2 text-neutral-500 transition-colors hover:text-interaction-500 focus-visible:text-interaction-500 active:scale-95"
           >
             <FaArchive />
           </button>
@@ -126,7 +126,7 @@ const HeaderActions = ({
         onClick={onNavigate}
         title="Einstellungen"
         aria-label="Einstellungen"
-        className="p-2 text-neutral-500 hover:text-interaction-500 focus-visible:text-interaction-500 active:scale-95 transition-colors"
+        className="p-2 text-neutral-500 transition-colors hover:text-interaction-500 focus-visible:text-interaction-500 active:scale-95"
       >
         <FaCog />
       </Link>

@@ -56,15 +56,15 @@ export const PhaseManagementPayoutPreparation = ({ cycleData }: Props) => {
       <form action={formAction} id={id}>
         <input type="hidden" name="id" value={cycleData.cycle.id} />
 
-        <h2 className="text-center font-bold font-mono uppercase">
+        <h2 className="text-center font-mono font-bold uppercase">
           Vorbereitung der Auszahlung
         </h2>
 
         <div
-          className="flex border-t border-white/5 mt-4 pt-4"
+          className="mt-4 flex border-t border-white/5 pt-4"
           onKeyDown={handleKeyDown}
         >
-          <div className="w-full max-w-80 mx-auto text-center">
+          <div className="mx-auto w-full max-w-80 text-center">
             <NumberInputFormatted
               label="Gesamter aUEC-Überschuss"
               disabled={cycleData.currentPhase !== CyclePhase.PayoutPreparation}
@@ -79,7 +79,7 @@ export const PhaseManagementPayoutPreparation = ({ cycleData }: Props) => {
             <input type="hidden" name="auecProfit" value={auecProfit} />
           </div>
 
-          <div className="w-full max-w-80 mx-auto text-center">
+          <div className="mx-auto w-full max-w-80 text-center">
             <DateInput
               name="payoutEndsAt"
               label="Auszahlungsphase endet am"
@@ -92,7 +92,7 @@ export const PhaseManagementPayoutPreparation = ({ cycleData }: Props) => {
           </div>
         </div>
 
-        <div className="flex gap-[2px] mt-4">
+        <div className="mt-4 flex gap-[2px]">
           <StatisticTile
             label="aUEC pro SILC (kaufmännisch gerundet)"
             preLabel={
@@ -163,7 +163,7 @@ export const PhaseManagementPayoutPreparation = ({ cycleData }: Props) => {
       </form>
 
       {cycleData.currentPhase === CyclePhase.PayoutPreparation && (
-        <div className="flex justify-center items-center gap-2 border-t border-white/5 pt-4 mt-4">
+        <div className="mt-4 flex items-center justify-center gap-2 border-t border-white/5 pt-4">
           <CitizenTable cycleData={cycleData} />
         </div>
       )}

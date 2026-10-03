@@ -75,9 +75,7 @@ test("a task can be created and two of its fields edited through the shared fact
   await createModal.getByRole("button", { name: "Weiter" }).click();
   await createModal.getByRole("button", { name: "Speichern" }).click();
 
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
   await expect(createModal).not.toBeVisible();
   await expect(
     page.getByRole("link", { name: /Erztransport eskortieren/ }),
@@ -91,7 +89,6 @@ test("a task can be created and two of its fields edited through the shared fact
   await saveInlineEditor(page);
   await expect(editButtons(page).first()).toContainText(
     "Titan-Erz eskortieren",
-    { timeout: ACTION_FEEDBACK_TIMEOUT },
   );
 
   // … and description, which is edited through its own toggled textarea
@@ -107,7 +104,6 @@ test("a task can be created and two of its fields edited through the shared fact
   await descriptionSection.getByRole("button", { name: "Speichern" }).click();
   await expect(descriptionSection).toContainText(
     "Begleitschutz von Lorville nach Everus Harbor.",
-    { timeout: ACTION_FEEDBACK_TIMEOUT },
   );
   await expect(descriptionInput).not.toBeVisible();
 
@@ -186,12 +182,8 @@ test("completing a task with a SILC reward pays the completionists", async ({
   await expect(completeModal.getByText("silc-arbeiter")).toBeVisible();
   await completeModal.getByRole("button", { name: "Speichern" }).click();
 
-  await expect(page.getByText("Erfolgreich abgeschlossen.")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
-  await expect(page.getByText("Erfüllt")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Erfolgreich abgeschlossen.")).toBeVisible();
+  await expect(page.getByText("Erfüllt")).toBeVisible();
 
   const completedTask = await prisma.task.findUnique({
     where: { id: task.id },
@@ -253,14 +245,12 @@ test("a completion that waits for a parallel completion pays no reward", async (
    * the app, waits for the lock of the task row and sees the parallel
    * completion only after it.
    */
-  let commitParallelCompletion = () => {};
-  const parallelCompletionCanCommit = new Promise<void>((resolve) => {
-    commitParallelCompletion = resolve;
-  });
-  let signalClaim: (sessionId: number) => void = () => {};
-  const claim = new Promise<number>((resolve) => {
-    signalClaim = resolve;
-  });
+  const {
+    promise: parallelCompletionCanCommit,
+    resolve: commitParallelCompletion,
+  } = Promise.withResolvers<void>();
+  const { promise: claim, resolve: signalClaim } =
+    Promise.withResolvers<number>();
   const parallelCompletion = prisma.$transaction(
     async (transaction) => {
       const { count } = await transaction.task.updateMany({
@@ -290,18 +280,15 @@ test("a completion that waits for a parallel completion pays no reward", async (
 
     await completeModal.getByRole("button", { name: "Speichern" }).click();
     await expect
-      .poll(
-        async () => {
-          const waitingLocks = await prisma.$queryRaw<{ count: number }[]>`
+      .poll(async () => {
+        const waitingLocks = await prisma.$queryRaw<{ count: number }[]>`
             SELECT count(*)::int AS "count"
             FROM pg_locks
             WHERE NOT "granted"
               AND ${parallelSessionId}::int = ANY(pg_blocking_pids("pid"))
           `;
-          return waitingLocks[0]?.count;
-        },
-        { timeout: ACTION_FEEDBACK_TIMEOUT },
-      )
+        return waitingLocks[0]?.count;
+      })
       .toBe(1);
   } finally {
     commitParallelCompletion();
@@ -310,7 +297,7 @@ test("a completion that waits for a parallel completion pays no reward", async (
 
   await expect(
     completeModal.getByText("Der Task ist bereits abgeschlossen."),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
 
   // The waiting completion paid no reward and created no repetition
   expect(
@@ -350,9 +337,7 @@ test("the dashboard shows its task tiles exactly to those with task permission",
 
   // Regression test for the ungated tiles that called forbidden(): the page
   // must render with the task tiles hidden instead of being redacted
-  await expect(page.getByRole("heading", { name: "Spynet" })).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByRole("heading", { name: "Spynet" })).toBeVisible();
   await expect(page.getByText(FORBIDDEN_TEXT)).not.toBeVisible();
   await expect(page.getByText("Meine Tasks")).toHaveCount(0);
   await expect(page.getByText("Neue Tasks")).toHaveCount(0);
@@ -361,7 +346,7 @@ test("the dashboard shows its task tiles exactly to those with task permission",
   await page.goto("/app/dashboard");
 
   const myTasksTile = sectionByHeading(page, "Meine Tasks");
-  await expect(myTasksTile).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(myTasksTile).toBeVisible();
   await expect(myTasksTile).toContainText("Patrouille fliegen");
 });
 
@@ -408,9 +393,7 @@ test("a citizen takes a task on, gives it up, and a manager cancels and deletes 
     .toBe(1);
 
   await page.getByRole("button", { name: "Aufgeben" }).click();
-  await expect(page.getByRole("button", { name: "Annehmen" })).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByRole("button", { name: "Annehmen" })).toBeVisible();
   await expect
     .poll(() => prisma.taskAssignment.count({ where: { taskId: task.id } }))
     .toBe(0);
@@ -429,19 +412,15 @@ test("a citizen takes a task on, gives it up, and a manager cancels and deletes 
   await cancelDialog.getByRole("button", { name: "Speichern" }).click();
 
   await expect
-    .poll(() => prisma.task.findUniqueOrThrow({ where: { id: task.id } }), {
-      timeout: ACTION_FEEDBACK_TIMEOUT,
-    })
+    .poll(() => prisma.task.findUniqueOrThrow({ where: { id: task.id } }))
     .toMatchObject({ cancelledAt: expect.any(Date) });
 
   await page.goto("/app/tasks");
-  await expect(page.getByText("Keine Tasks gefunden")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Keine Tasks gefunden")).toBeVisible();
   await page.goto("/app/tasks?status=closed");
   await expect(
     page.getByRole("link", { name: /Frachter eskortieren/ }),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
 
   /**
    * Deleting takes it out of both
@@ -455,15 +434,11 @@ test("a citizen takes a task on, gives it up, and a manager cancels and deletes 
   await deleteDialog.getByRole("button", { name: "Löschen" }).click();
 
   await expect
-    .poll(() => prisma.task.findUniqueOrThrow({ where: { id: task.id } }), {
-      timeout: ACTION_FEEDBACK_TIMEOUT,
-    })
+    .poll(() => prisma.task.findUniqueOrThrow({ where: { id: task.id } }))
     .toMatchObject({ deletedAt: expect.any(Date) });
 
   await page.goto("/app/tasks?status=closed");
-  await expect(page.getByText("Keine Tasks gefunden")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Keine Tasks gefunden")).toBeVisible();
 
   await expectAuditEvents(prisma, [
     "TASK_SELF_ASSIGNMENT_CREATED",
@@ -575,7 +550,7 @@ test("a citizen sees exactly the tasks they may see, in each list and on the tas
   ])
     await expect(
       page.getByRole("link", { name: new RegExp(title) }),
-    ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+    ).toBeVisible();
   await expect(
     page.getByRole("link", { name: /Geheime Aufklaerung|Verdeckter Auftrag/ }),
   ).toHaveCount(0);
@@ -583,14 +558,14 @@ test("a citizen sees exactly the tasks they may see, in each list and on the tas
   await page.goto("/app/tasks?status=closed");
   await expect(
     page.getByRole("link", { name: /Erledigter Transport/ }),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
   await expect(
     page.getByRole("link", { name: /Erledigte Fremdbergung/ }),
   ).toHaveCount(0);
 
   await page.goto("/app/dashboard");
   const newTasksTile = sectionByHeading(page, "Neue Tasks");
-  await expect(newTasksTile).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(newTasksTile).toBeVisible();
   for (const title of visibleTitles)
     await expect(newTasksTile).toContainText(title);
   await expect(newTasksTile).not.toContainText("Verdeckter Auftrag");
@@ -630,7 +605,7 @@ test("a task that requires a role is visible and can be taken on through an inhe
   await page.goto("/app/tasks");
   await expect(
     page.getByRole("link", { name: /Veteranen-Eskorte/ }),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
 
   await page.goto(`/app/tasks/${task.id}`);
   await clickUntilVisible(
@@ -687,7 +662,7 @@ test("a task that requires a role with levels is hidden and cannot be taken on b
   await page.goto("/app/tasks");
   await expect(
     page.getByRole("link", { name: /Offener Testflug/ }),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
   await expect(
     page.getByRole("link", { name: /Piloten-Pruefung/ }),
   ).toHaveCount(0);

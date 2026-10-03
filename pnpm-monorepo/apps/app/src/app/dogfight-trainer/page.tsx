@@ -21,7 +21,7 @@ export default async function Page() {
   }
 
   return (
-    <main className="min-h-dvh background-primary flex items-center justify-center relative">
+    <main className="relative flex min-h-dvh items-center justify-center background-primary">
       <Suspense fallback={<>Loading ...</>}>
         <GameLoader />
       </Suspense>

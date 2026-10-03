@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "build": "./scripts/build.sh",
-    "test": "vitest run"
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "3.1138.0",

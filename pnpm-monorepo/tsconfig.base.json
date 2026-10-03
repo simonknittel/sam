@@ -1,0 +1,21 @@
+/* The shared base of all tsconfig files, except the one of apps/app (Next.js
+   writes its own options into that file). TypeScript 6 and later enable
+   "strict" and "esModuleInterop" by default. */
+{
+  "compilerOptions": {
+    "target": "es2024",
+    "lib": ["es2025"],
+    "module": "nodenext",
+    /* With "module": "preserve", TypeScript does not treat each file as a
+       module by default. */
+    "moduleDetection": "force",
+    /* Since TypeScript 6, the default of "types" is []: TypeScript does not
+       include the packages from node_modules/@types automatically. This makes
+       the Node.js globals from @types/node (process and others) available. */
+    "types": ["node"],
+    "skipLibCheck": true,
+    "verbatimModuleSyntax": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true
+  }
+}

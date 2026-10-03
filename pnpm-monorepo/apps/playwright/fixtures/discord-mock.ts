@@ -1,5 +1,6 @@
 import { createServer, type IncomingMessage, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
+import { text } from "node:stream/consumers";
 
 /**
  * A stand-in for Discord's REST API, one per Playwright worker. The app is
@@ -56,15 +57,11 @@ export interface DiscordMock {
 const readJsonBody = async (
   request: IncomingMessage,
 ): Promise<Record<string, unknown> | null> => {
-  const chunks: Buffer[] = [];
-  for await (const chunk of request) chunks.push(chunk as Buffer);
-  if (chunks.length === 0) return null;
+  const body = await text(request);
+  if (body === "") return null;
 
   try {
-    return JSON.parse(Buffer.concat(chunks).toString("utf8")) as Record<
-      string,
-      unknown
-    >;
+    return JSON.parse(body) as Record<string, unknown>;
   } catch {
     return null;
   }

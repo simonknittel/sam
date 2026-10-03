@@ -23,7 +23,6 @@
   },
   "devDependencies": {
     "@types/node": "24.13.6",
-    "dotenv": "17.4.2",
     "prisma": "7.10.0",
     "typescript": "7.0.2"
   }

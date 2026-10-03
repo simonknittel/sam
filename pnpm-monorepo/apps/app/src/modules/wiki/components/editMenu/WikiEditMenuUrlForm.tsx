@@ -24,7 +24,7 @@ export const WikiEditMenuUrlForm = ({ defaultValue, onSave }: Props) => (
       required
       defaultValue={defaultValue}
       placeholder="https://…"
-      className="w-56 rounded-secondary border border-neutral-700 bg-neutral-950 px-2 py-1 text-sm focus-visible:outline-2 outline-interaction-700"
+      className="w-56 rounded-secondary border border-neutral-700 bg-neutral-950 px-2 py-1 text-sm outline-interaction-700 focus-visible:outline-2"
     />
     <ToolbarButton title="Übernehmen" isActive={false} type="submit">
       <FaCheck />

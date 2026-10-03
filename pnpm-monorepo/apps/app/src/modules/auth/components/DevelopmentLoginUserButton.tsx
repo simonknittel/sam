@@ -15,7 +15,7 @@ export const DevelopmentLoginUserButton = ({ user, disabled }: Props) => {
       value={user.id}
       disabled={disabled}
       title={label}
-      className="truncate rounded-secondary px-2 py-1 text-left text-sm hover:bg-neutral-800 focus-visible:bg-neutral-800 active:bg-neutral-700 transition-colors motion-reduce:transition-none cursor-pointer disabled:cursor-wait disabled:opacity-50"
+      className="cursor-pointer truncate rounded-secondary px-2 py-1 text-left text-sm transition-colors hover:bg-neutral-800 focus-visible:bg-neutral-800 active:bg-neutral-700 disabled:cursor-wait disabled:opacity-50 motion-reduce:transition-none"
     >
       {label}
     </button>

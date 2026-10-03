@@ -283,7 +283,7 @@ const DiscordPublishFields = ({
       <label htmlFor={checkboxId} className="mt-4 block">
         Auf Discord veröffentlichen
       </label>
-      <p className="text-xs mt-1 text-white/40">
+      <p className="mt-1 text-xs text-white/40">
         Legt das Event zusätzlich als Termin auf dem Discord-Server an.
         Anmeldungen werden nicht übertragen.
       </p>

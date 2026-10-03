@@ -42,7 +42,7 @@ export const ShipChangeRow = ({ change }: Props) => {
               handle: change.actorHandle ?? null,
               deletedAt: change.actorDeletedAt ?? null,
             }}
-            className="hover:bg-white/10 focus-visible:bg-white/10 hover:no-underline! rounded-secondary p-2 block"
+            className="block rounded-secondary p-2 hover:bg-white/10 hover:no-underline! focus-visible:bg-white/10"
           />
         )}
       </td>

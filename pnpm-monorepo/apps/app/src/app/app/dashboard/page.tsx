@@ -31,8 +31,8 @@ export default async function Page() {
 
       {/* The tiles keep their own container, thus the banner above them
       cannot change their layout. */}
-      <div className="flex gap-6 flex-row flex-wrap justify-center @container/main">
-        <div className="flex flex-col gap-6 flex-none @7xl/main:flex-1 w-100 @7xl/main:max-w-none">
+      <div className="@container/main flex flex-row flex-wrap justify-center gap-6">
+        <div className="flex w-100 flex-none flex-col gap-6 @7xl/main:max-w-none @7xl/main:flex-1">
           {showCalendar && (
             <Suspense fallback={<TileSkeleton />}>
               <CalendarTile className="@container/events" />
@@ -44,7 +44,7 @@ export default async function Page() {
           </SuspenseWithErrorBoundaryTile>
         </div>
 
-        <div className="flex flex-col gap-6 w-100 flex-none">
+        <div className="flex w-100 flex-none flex-col gap-6">
           {canTaskRead && (
             <>
               <TasksDashboardTile />
@@ -52,8 +52,8 @@ export default async function Page() {
             </>
           )}
 
-          <section className="flex flex-col gap-0.5 flex-none">
-            <h2 className="font-thin text-2xl self-start mb-2 font-mono uppercase">
+          <section className="flex flex-none flex-col gap-0.5">
+            <h2 className="mb-2 self-start font-mono text-2xl font-thin uppercase">
               Spynet
             </h2>
 

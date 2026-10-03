@@ -40,7 +40,7 @@ export default async function Page({ params }: PageProps<"/app/sincome/[id]">) {
       <div className="flex">
         <div className="w-9 flex-initial" />
 
-        <h1 className="flex-1 text-2xl font-bold text-center font-mono uppercase">
+        <h1 className="flex-1 text-center font-mono text-2xl font-bold uppercase">
           {cycleData.cycle.title}
         </h1>
         {/* TODO: Implement edit button */}
@@ -56,7 +56,7 @@ export default async function Page({ params }: PageProps<"/app/sincome/[id]">) {
         </Button2>
       </div>
 
-      <p className="text-neutral-500 text-sm text-center">Verwaltung</p>
+      <p className="text-center text-sm text-neutral-500">Verwaltung</p>
 
       {cycleData.currentPhase >= CyclePhase.Completed && (
         <PhaseManagementCompleted cycleData={cycleData} />

@@ -19,13 +19,13 @@ export const RoleFilter = ({ roles }: Props) => {
         label: (
           <>
             {role.icon && (
-              <div className="aspect-square w-6 h-6 flex items-center justify-center rounded-secondary overflow-hidden">
+              <div className="flex aspect-square h-6 w-6 items-center justify-center overflow-hidden rounded-secondary">
                 <Image
                   src={getPublicUploadUrl(role.icon.id)}
                   alt=""
                   width={24}
                   height={24}
-                  className="max-w-full max-h-full"
+                  className="max-h-full max-w-full"
                   unoptimized={["image/svg+xml", "image/gif"].includes(
                     role.icon.mimeType,
                   )}

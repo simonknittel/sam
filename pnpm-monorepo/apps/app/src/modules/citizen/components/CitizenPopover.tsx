@@ -54,14 +54,14 @@ export const CitizenPopover = ({ children, citizenId }: Props) => {
         /** The whole popup celebrates with the citizen: the colour clouds
         of the surface, and an isolated box for the confetti behind the
         profile. */
-        "background-birthday relative isolate": data?.citizen.hasBirthdayToday,
+        "relative isolate background-birthday": data?.citizen.hasBirthdayToday,
       })}
       hoverOnly
     >
       {isPending && <ProfileLoading />}
 
       {error && (
-        <p className="font-mono uppercase flex gap-2 justify-center items-center text-red-500">
+        <p className="flex items-center justify-center gap-2 font-mono text-red-500 uppercase">
           <BsExclamationOctagonFill className="text-red-800" />
           Fehler beim Laden des Citizens
         </p>
@@ -79,7 +79,7 @@ export const CitizenPopover = ({ children, citizenId }: Props) => {
 
 const ProfileLoading = () => {
   return (
-    <p className="font-mono uppercase flex gap-2 justify-center items-center animate-pulse">
+    <p className="flex animate-pulse items-center justify-center gap-2 font-mono uppercase">
       <AsciiSpinner />
       Citizen wird geladen...
     </p>

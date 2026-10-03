@@ -17,7 +17,7 @@ export const FleetTab = async ({ className, event }: Props) => {
   return (
     <section
       className={clsx(
-        "rounded-primary bg-neutral-800/50 p-4 overflow-auto",
+        "overflow-auto rounded-primary bg-neutral-800/50 p-4",
         className,
       )}
       style={{

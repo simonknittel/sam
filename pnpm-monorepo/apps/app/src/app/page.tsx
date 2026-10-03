@@ -62,10 +62,10 @@ export default async function Page({ searchParams }: PageProps<"/">) {
 
       <DevelopmentLogin redirectTo={redirectTo} />
 
-      <main className="w-full max-w-md py-8 flex flex-col justify-center items-center gap-4 flex-1">
+      <main className="flex w-full max-w-md flex-1 flex-col items-center justify-center gap-4 py-8">
         {uwu ? <UwuHero /> : <Hero text="SAM" withGlitch />}
 
-        <div className="flex flex-col gap-2 max-w-xs">
+        <div className="flex max-w-xs flex-col gap-2">
           <LoginButtons
             activeProviders={activeProviders}
             redirectTo={redirectTo}

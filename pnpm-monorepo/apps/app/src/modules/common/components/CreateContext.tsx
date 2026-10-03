@@ -213,7 +213,7 @@ const ModalWithFormComponent = ({
     >
       <Suspense
         fallback={
-          <div className="flex justify-center items-center p-8">
+          <div className="flex items-center justify-center p-8">
             <AsciiSpinner className="text-5xl text-neutral-500" />
           </div>
         }

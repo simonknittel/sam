@@ -19,7 +19,7 @@ export const DeleteTask = ({ className, task }: Props) => {
       trigger={(isPending) => (
         <button
           disabled={isPending}
-          className="text-brand-red-500 hover:text-brand-red-300 flex items-center px-2 h-full enabled:cursor-pointer"
+          className="flex h-full items-center px-2 text-brand-red-500 hover:text-brand-red-300 enabled:cursor-pointer"
           title="Task löschen"
         >
           <FaTrash />

@@ -7,7 +7,6 @@ import {
   wikiParagraph,
 } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
   SAVED_TEXT,
   sectionByHeading,
   waitForAppShellHydration,
@@ -72,15 +71,12 @@ test("the settings curate the featured pages, the dashboard page and the support
    * stack — so what they stored is what gets asserted, not the toasts.
    */
   await expect
-    .poll(
-      async () => {
-        const settings = await prisma.wikiSetting.findMany();
-        return Object.fromEntries(
-          settings.map((setting) => [setting.key, setting.value]),
-        );
-      },
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
-    )
+    .poll(async () => {
+      const settings = await prisma.wikiSetting.findMany();
+      return Object.fromEntries(
+        settings.map((setting) => [setting.key, setting.value]),
+      );
+    })
     .toEqual({
       featuredPages: [featured.id],
       dashboardPage: dashboard.id,
@@ -93,17 +89,13 @@ test("the settings curate the featured pages, the dashboard page and the support
     sectionByHeading(page, "Featured").getByRole("link", {
       name: /Einsteigerguide/,
     }),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
 
   await page.goto("/app/dashboard");
-  await expect(page.getByText("Wichtige Neuigkeiten.")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Wichtige Neuigkeiten.")).toBeVisible();
 
   await page.goto("/app/wiki/link/support");
-  await expect(page).toHaveURL(`/app/wiki/${support.id}/${support.slug}`, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page).toHaveURL(`/app/wiki/${support.id}/${support.slug}`);
 
   /** An unconfigured link key falls back to the wiki's home */
   await prisma.wikiSetting.delete({ where: { key: "pageLink:support" } });
@@ -145,9 +137,7 @@ test("the iframe allowlist decides which domains a page may embed", async ({
   await expect(allowlistTile.getByText(ALLOWED_DOMAIN)).toBeVisible();
 
   await allowlistTile.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   await expect
     .poll(() =>
@@ -188,9 +178,7 @@ test("the iframe allowlist decides which domains a page may embed", async ({
     .getByRole("button", { name: `"${ALLOWED_DOMAIN}" entfernen` })
     .click();
   await allowlistTile.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   await expect
     .poll(() =>

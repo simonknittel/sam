@@ -28,12 +28,12 @@ export const VariantTagFields = ({ initialTags }: Props) => {
       <p className="mt-6">
         Tags <small className="text-white/40">optional</small>
       </p>
-      <div className="flex flex-col gap-2 mt-2">
+      <div className="mt-2 flex flex-col gap-2">
         {tags.map((tag) => (
-          <div key={tag.id} className="flex gap-1 items-stretch">
+          <div key={tag.id} className="flex items-stretch gap-1">
             <input
               type="text"
-              className="p-2 rounded-secondary bg-neutral-900 flex-1 min-w-0"
+              className="min-w-0 flex-1 rounded-secondary bg-neutral-900 p-2"
               name="tagKeys[]"
               placeholder="Key"
               defaultValue={tag.key}
@@ -41,7 +41,7 @@ export const VariantTagFields = ({ initialTags }: Props) => {
             />
             <input
               type="text"
-              className="p-2 rounded-secondary bg-neutral-900 flex-1 min-w-0"
+              className="min-w-0 flex-1 rounded-secondary bg-neutral-900 p-2"
               name="tagValues[]"
               placeholder="Value"
               defaultValue={tag.value}
@@ -54,7 +54,7 @@ export const VariantTagFields = ({ initialTags }: Props) => {
               variant="tertiary"
               title="Löschen"
               iconOnly
-              className="h-auto flex-none w-6"
+              className="h-auto w-6 flex-none"
             >
               <FaTrash />
             </Button>

@@ -56,13 +56,13 @@ export const InheritanceMatrixGrid = ({ roles }: Props) => {
       <table>
         <thead>
           <tr
-            className="grid gap-2 text-left text-neutral-500 -mx-2 text-sm h-64"
+            className="-mx-2 grid h-64 gap-2 text-left text-sm text-neutral-500"
             style={{
               gridTemplateColumns,
             }}
           >
-            <th className="font-normal whitespace-nowrap flex justify-center items-end">
-              <div className="-rotate-45 w-0">
+            <th className="flex items-end justify-center font-normal whitespace-nowrap">
+              <div className="w-0 -rotate-45">
                 <span>Erbt …</span>
               </div>
             </th>
@@ -70,10 +70,10 @@ export const InheritanceMatrixGrid = ({ roles }: Props) => {
             {roles.map((role) => (
               <th
                 key={role.id}
-                className="font-normal whitespace-nowrap flex justify-center items-end"
+                className="flex items-end justify-center font-normal whitespace-nowrap"
                 title={role.name}
               >
-                <div className="-rotate-45 w-0">
+                <div className="w-0 -rotate-45">
                   {/* The zero-width parent anchors the rotation, so the name
                       is bounded on the span instead — a long role name would
                       otherwise reach past the top of the header row. */}
@@ -117,7 +117,7 @@ const MatrixRow = ({ role, roles, gridTemplateColumns }: MatrixRowProps) => {
        * rows outside the viewport; the intrinsic height keeps the scrollbar
        * stable and must agree with the h-8 cells.
        */
-      className="grid items-center gap-2 -mx-2 [contain-intrinsic-height:2rem] [content-visibility:auto]"
+      className="-mx-2 grid items-center gap-2 [contain-intrinsic-height:2rem] [content-visibility:auto]"
       style={{
         gridTemplateColumns,
       }}

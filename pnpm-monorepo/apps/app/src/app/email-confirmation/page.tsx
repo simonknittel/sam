@@ -49,14 +49,14 @@ export default async function Page({
   };
 
   return (
-    <div className="min-h-dvh flex justify-center items-center flex-col py-8 background-primary">
+    <div className="flex min-h-dvh flex-col items-center justify-center background-primary py-8">
       <main className="w-full max-w-3xl">
-        <h1 className="mb-4 text-center text-xl text-sinister-red font-bold mx-8">
-          <RiInformationLine className="text-sky-500 text-2xl inline align-text-bottom" />{" "}
+        <h1 className="text-sinister-red mx-8 mb-4 text-center text-xl font-bold">
+          <RiInformationLine className="inline align-text-bottom text-2xl text-sky-500" />{" "}
           E-Mail-Adresse und Datenschutzerklärung bestätigen
         </h1>
 
-        <div className="flex flex-col gap-2 rounded-primary bg-neutral-800/50  p-8 mx-8">
+        <div className="mx-8 flex flex-col gap-2 rounded-primary bg-neutral-800/50 p-8">
           <p>
             Um fortfahren zu können musst du deine E-Mail-Adresse (
             <i>{authentication.session.user.email}</i>) und die{" "}
@@ -72,7 +72,7 @@ export default async function Page({
                 Zur Bestätigung haben wir dir eine E-Mail geschickt.
               </p>
             ) : (
-              <div className="flex justify-center mt-2 mb-3">
+              <div className="mt-2 mb-3 flex justify-center">
                 <RequestConfirmationEmailButton>
                   Bestätigungs-E-Mail verschicken
                 </RequestConfirmationEmailButton>

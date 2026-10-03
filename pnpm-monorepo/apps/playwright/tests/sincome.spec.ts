@@ -6,7 +6,6 @@ import {
   ONE_DAY_MS,
 } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
   dateParam,
   modal,
@@ -67,15 +66,10 @@ test("ending the collection phase debits every participant", async ({
   // A citizen cedes their share during the collection phase
   await signIn(firstParticipant.user);
   await page.goto(`/app/sincome/${cycle.id}`);
-  // Often the worker's first page load — warm-up can exceed the default 5s
-  await expect(page.getByText("Sammelphase").first()).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Sammelphase").first()).toBeVisible();
   await waitForAppShellHydration(page);
   await page.getByRole("button", { name: "Anteil abtreten" }).click();
-  await expect(page.getByRole("button", { name: "Widerrufen" })).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByRole("button", { name: "Widerrufen" })).toBeVisible();
   const participantRow =
     await prisma.profitDistributionCycleParticipant.findUnique({
       where: {
@@ -99,9 +93,7 @@ test("ending the collection phase debits every participant", async ({
     .getByRole("alertdialog")
     .getByRole("button", { name: "Beenden" })
     .click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   // Every citizen with a positive balance got debited down to zero
   const debits = await prisma.silcTransaction.findMany({
@@ -199,9 +191,7 @@ test("a manager runs a cycle from its creation to a closed payout", async ({
     .fill(dateParam(new Date(Date.now() + ONE_DAY_MS)));
   await createDialog.getByRole("button", { name: "Speichern" }).click();
 
-  await expect(page).toHaveURL(/\/app\/sincome\/[a-z0-9]+$/, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page).toHaveURL(/\/app\/sincome\/[a-z0-9]+$/);
   const cycle = await prisma.profitDistributionCycle.findFirstOrThrow();
   expect(cycle).toMatchObject({
     title: "Q4 Zyklus",
@@ -224,9 +214,7 @@ test("a manager runs a cycle from its creation to a closed payout", async ({
     .getByRole("alertdialog")
     .getByRole("button", { name: "Beenden" })
     .click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   /**
    * Payout preparation: the surplus is entered and the phase started
@@ -246,9 +234,7 @@ test("a manager runs a cycle from its creation to a closed payout", async ({
     .getByRole("alertdialog")
     .getByRole("button", { name: "Starten" })
     .click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   await expect
     .poll(async () => {
@@ -277,27 +263,22 @@ test("a manager runs a cycle from its creation to a closed payout", async ({
   await page.getByRole("button", { name: "Auszahlung zustimmen" }).click();
 
   await expect
-    .poll(
-      async () => {
-        const row =
-          await prisma.profitDistributionCycleParticipant.findUniqueOrThrow({
-            where: {
-              cycleId_citizenId: {
-                cycleId: cycle.id,
-                citizenId: participant.entity.id,
-              },
+    .poll(async () => {
+      const row =
+        await prisma.profitDistributionCycleParticipant.findUniqueOrThrow({
+          where: {
+            cycleId_citizenId: {
+              cycleId: cycle.id,
+              citizenId: participant.entity.id,
             },
-          });
-        return row.acceptedAt !== null;
-      },
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
-    )
+          },
+        });
+      return row.acceptedAt !== null;
+    })
     .toBe(true);
 
   await page.reload();
-  await expect(page.getByText("Auszahlung ausstehend")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Auszahlung ausstehend")).toBeVisible();
 
   /**
    * The manager records the payout and closes the cycle
@@ -316,21 +297,18 @@ test("a manager runs a cycle from its creation to a closed payout", async ({
   await toggleLabel(page, disbursedCheckbox).click();
   await expect(disbursedCheckbox).toBeChecked();
   await expect
-    .poll(
-      async () => {
-        const row =
-          await prisma.profitDistributionCycleParticipant.findUniqueOrThrow({
-            where: {
-              cycleId_citizenId: {
-                cycleId: cycle.id,
-                citizenId: participant.entity.id,
-              },
+    .poll(async () => {
+      const row =
+        await prisma.profitDistributionCycleParticipant.findUniqueOrThrow({
+          where: {
+            cycleId_citizenId: {
+              cycleId: cycle.id,
+              citizenId: participant.entity.id,
             },
-          });
-        return row.disbursedAt !== null;
-      },
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
-    )
+          },
+        });
+      return row.disbursedAt !== null;
+    })
     .toBe(true);
 
   /**
@@ -351,24 +329,19 @@ test("a manager runs a cycle from its creation to a closed payout", async ({
 
   /** The actual end is set, which closes the cycle. The planned end stays. */
   await expect
-    .poll(
-      async () => {
-        const closed = await prisma.profitDistributionCycle.findUniqueOrThrow({
-          where: { id: cycle.id },
-        });
-        return {
-          ended: (closed.payoutEndedAt?.getTime() ?? Infinity) <= Date.now(),
-          endedById: closed.payoutEndedById,
-          payoutEndsAt: closed.payoutEndsAt,
-        };
-      },
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
-    )
+    .poll(async () => {
+      const closed = await prisma.profitDistributionCycle.findUniqueOrThrow({
+        where: { id: cycle.id },
+      });
+      return {
+        ended: (closed.payoutEndedAt?.getTime() ?? Infinity) <= Date.now(),
+        endedById: closed.payoutEndedById,
+        payoutEndsAt: closed.payoutEndsAt,
+      };
+    })
     .toEqual({ ended: true, endedById: admin.entity.id, payoutEndsAt });
   await page.reload();
-  await expect(page.getByText("Abgeschlossene Phase").first()).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Abgeschlossene Phase").first()).toBeVisible();
 
   await expectAuditEvents(prisma, [
     "PROFIT_CYCLE_CREATED",

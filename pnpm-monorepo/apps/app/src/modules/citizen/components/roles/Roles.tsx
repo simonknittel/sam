@@ -33,7 +33,7 @@ export const Roles = async ({ className, entity }: Props) => {
   return (
     <Tile heading="Rollen" className={clsx(className)}>
       {assignedAndVisibleRoles.length > 0 ? (
-        <div className="flex gap-1 flex-wrap">
+        <div className="flex flex-wrap gap-1">
           {assignedAndVisibleRoles.map((role) => (
             <SingleRoleBadge
               key={role.id}
@@ -48,7 +48,7 @@ export const Roles = async ({ className, entity }: Props) => {
       )}
 
       {canUpdateAnyRoleAssignment && (
-        <div className="flex gap-4 mt-2">
+        <div className="mt-2 flex gap-4">
           <AddRoles
             citizenId={entity.id}
             assignedRoleIds={assignedAndVisibleRoleIds}

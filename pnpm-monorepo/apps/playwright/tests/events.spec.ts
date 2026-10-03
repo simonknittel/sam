@@ -8,11 +8,7 @@ import {
   LINEUP_PERMISSIONS,
   ONE_DAY_MS,
 } from "../fixtures/factories";
-import {
-  ACTION_FEEDBACK_TIMEOUT,
-  clickUntilVisible,
-  SAVED_TEXT,
-} from "../fixtures/interactions";
+import { clickUntilVisible, SAVED_TEXT } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 test("the fleet tab counts the ships of both participation kinds", async ({
@@ -75,7 +71,7 @@ test("the fleet tab counts the ships of both participation kinds", async ({
   await page.goto(`/app/events/${event.id}/fleet`);
 
   const polarisRow = page.getByRole("row").filter({ hasText: "Polaris" });
-  await expect(polarisRow).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(polarisRow).toBeVisible();
   await expect(
     polarisRow.getByRole("cell", { name: "2", exact: true }),
   ).toBeVisible();
@@ -114,9 +110,7 @@ test("a position application travels from the participant to the manager's assig
 
   // The positions list renders client-side only — once the accordion toggle
   // is there, the page is interactive
-  await expect(page.getByText("Navigator")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Navigator")).toBeVisible();
   await clickUntilVisible(
     page.getByTitle("Details öffnen"),
     page.getByRole("button", { name: "Interesse anmelden" }),
@@ -127,10 +121,8 @@ test("a position application travels from the participant to the manager's assig
     page.getByText(
       "Erfolgreich gespeichert. Die Anmeldung muss vom Organisator des Events bestätigt werden.",
     ),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
-  await expect(page.getByRole("button", { name: "Abmelden" })).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Abmelden" })).toBeVisible();
   await expect
     .poll(() =>
       prisma.eventPositionApplication.count({
@@ -143,7 +135,7 @@ test("a position application travels from the participant to the manager's assig
   await page.getByRole("button", { name: "Abmelden" }).click();
   await expect(
     page.getByRole("button", { name: "Interesse anmelden" }),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
   await expect
     .poll(() =>
       prisma.eventPositionApplication.count({
@@ -165,9 +157,7 @@ test("a position application travels from the participant to the manager's assig
   await switchUser(manager.user);
   await page.goto(`/app/events/${event.id}/lineup`);
 
-  await expect(page.getByText("Navigator")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Navigator")).toBeVisible();
   const assignmentSelect = page.getByRole("combobox", {
     name: "Citizen für Navigator",
   });
@@ -180,9 +170,7 @@ test("a position application travels from the participant to the manager's assig
   ).toHaveCount(1);
 
   await assignmentSelect.selectOption({ label: "bewerber" });
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   await expect
     .poll(async () => {

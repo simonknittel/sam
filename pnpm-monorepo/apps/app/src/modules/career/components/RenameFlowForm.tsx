@@ -66,7 +66,7 @@ export const RenameFlowForm = ({ flowId, name, slug }: Props) => {
 
       <ActionErrorNote className="mt-4" state={state} />
 
-      <div className="flex justify-end mt-4">
+      <div className="mt-4 flex justify-end">
         <Button2 type="submit" disabled={isPending}>
           {isPending ? <AsciiSpinner /> : <FaSave />}
           Speichern

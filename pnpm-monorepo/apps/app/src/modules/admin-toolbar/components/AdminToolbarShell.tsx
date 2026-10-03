@@ -26,7 +26,7 @@ export const AdminToolbarShell = ({ activeOverrides, children }: Props) => {
         </span>
       }
       triggerClassName={clsx(
-        "min-w-0 backdrop-blur-sm px-2 py-1 rounded-secondary transition-colors motion-reduce:transition-none text-xs font-mono uppercase cursor-pointer",
+        "min-w-0 cursor-pointer rounded-secondary px-2 py-1 font-mono text-xs uppercase backdrop-blur-sm transition-colors motion-reduce:transition-none",
         {
           "bg-neutral-500/50 hover:bg-neutral-500 focus-visible:bg-neutral-500 active:bg-neutral-400":
             activeOverrides.length === 0,

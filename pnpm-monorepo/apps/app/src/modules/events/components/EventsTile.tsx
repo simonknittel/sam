@@ -38,7 +38,7 @@ export const EventsTile = async ({ className, searchParams }: Props) => {
   if (events.length <= 0)
     return (
       <section className={clsx(className)}>
-        <div className="rounded-primary bg-neutral-800/50 p-4 flex flex-col items-center gap-4">
+        <div className="flex flex-col items-center gap-4 rounded-primary bg-neutral-800/50 p-4">
           <p>Keine Events gefunden</p>
         </div>
       </section>

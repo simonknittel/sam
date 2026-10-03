@@ -26,7 +26,7 @@ export const UsersTile = async ({ className, searchParams }: Props) => {
   });
 
   return (
-    <section className={clsx("p-4 bg-secondary rounded-primary", className)}>
+    <section className={clsx("rounded-primary bg-secondary p-4", className)}>
       <UsersTable
         users={users}
         showBanActions={showBanActions}

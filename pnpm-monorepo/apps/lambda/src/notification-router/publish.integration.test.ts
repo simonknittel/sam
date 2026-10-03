@@ -19,8 +19,6 @@ const createNotification = (receiverId: string): Notification => ({
 
 beforeEach(async () => {
   await truncateAllTables();
-  vi.mocked(publishOnSiteNotificationEvents).mockClear();
-  vi.mocked(publishWebPushNotifications).mockClear();
 });
 
 describe("publishNotifications", () => {

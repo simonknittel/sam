@@ -129,7 +129,7 @@ export const Node: ComponentType<NodeProps<Markdown>> = (props) => {
             onClick={onEdit}
             type="button"
             title="Bearbeiten"
-            className="bg-neutral-800 rounded-secondary p-2 text-brand-red-500 hover:bg-neutral-700"
+            className="rounded-secondary bg-neutral-800 p-2 text-brand-red-500 hover:bg-neutral-700"
           >
             <FaPen />
           </button>
@@ -153,7 +153,7 @@ export const Node: ComponentType<NodeProps<Markdown>> = (props) => {
             onClick={onDelete}
             type="button"
             title="Löschen"
-            className="bg-neutral-800 rounded-secondary p-2 text-brand-red-500 hover:bg-neutral-700"
+            className="rounded-secondary bg-neutral-800 p-2 text-brand-red-500 hover:bg-neutral-700"
           >
             <FaTrash />
           </button>
@@ -164,7 +164,7 @@ export const Node: ComponentType<NodeProps<Markdown>> = (props) => {
 
       <div
         className={clsx(
-          "rounded-secondary h-full p-4 prose prose-invert prose-sm overflow-hidden flex flex-col justify-center",
+          "prose prose-sm flex h-full flex-col justify-center overflow-hidden rounded-secondary p-4 prose-invert",
           {
             "text-left":
               props.data.markdownPosition === FlowNodeMarkdownPosition.LEFT ||

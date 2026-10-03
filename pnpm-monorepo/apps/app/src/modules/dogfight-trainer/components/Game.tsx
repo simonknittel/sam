@@ -34,8 +34,8 @@ const Game = () => {
 
   return (
     <>
-      <p className="hidden xl:block text-center">Loading ...</p>
-      <p className="block xl:hidden text-center">Not available on mobile.</p>
+      <p className="hidden text-center xl:block">Loading ...</p>
+      <p className="block text-center xl:hidden">Not available on mobile.</p>
 
       <canvas
         id={canvasId}
@@ -43,7 +43,7 @@ const Game = () => {
         width={960}
         height={600}
         tabIndex={-1}
-        className="hidden xl:block absolute inset-0 w-full h-full"
+        className="absolute inset-0 hidden h-full w-full xl:block"
       />
 
       <Script src={`${buildUrl}/Build.loader.js`} onLoad={handleLoad} />

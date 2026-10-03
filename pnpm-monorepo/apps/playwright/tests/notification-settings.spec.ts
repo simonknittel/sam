@@ -2,7 +2,6 @@ import type { Page } from "@playwright/test";
 import { NotificationChannel } from "@sam-monorepo/database/client";
 import { createCitizen } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
   SAVED_TEXT,
   toggleLabel,
   waitForAppShellHydration,
@@ -80,9 +79,7 @@ test("toggling a browser notification off and on again is a round trip", async (
   await expect(browserCheckbox(page, "event_created")).toBeChecked();
   await browserCheckboxLabel(page, "event_created").click();
   await expect(browserCheckbox(page, "event_created")).not.toBeChecked();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   const settings = await prisma.notificationSetting.findMany({
     where: { citizenId: citizen.entity.id },
@@ -152,7 +149,7 @@ test("disabling web push entirely removes all subscriptions", async ({
     page.getByText(
       "Die Benachrichtigungen wurden auf allen Geräten deaktiviert.",
     ),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
 
   await expect
     .poll(() =>

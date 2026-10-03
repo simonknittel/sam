@@ -31,7 +31,7 @@ export const RoleSection = ({ className, roles }: Props) => {
     <div className={clsx(className)}>
       <h4 className="font-bold">Diese Rolle kann folgende Rollen ...</h4>
 
-      <div className="border border-neutral-700 p-4 rounded-secondary mt-2">
+      <div className="mt-2 rounded-secondary border border-neutral-700 p-4">
         <div className="grid grid-cols-3 gap-2 font-bold">
           <span>Rolle</span>
           <span>Aktion</span>
@@ -47,7 +47,7 @@ export const RoleSection = ({ className, roles }: Props) => {
             />
           ))
         ) : (
-          <p className="text-neutral-500 italic mt-2">
+          <p className="mt-2 text-neutral-500 italic">
             Bisher gibt es keine Regeln.
           </p>
         )}
@@ -86,13 +86,13 @@ const Rule = ({ ruleString, roles, handleDelete }: RuleProps) => {
   if (roleId) inputName += `;roleId=${roleId}`;
 
   return (
-    <div className="grid grid-cols-3 gap-2 mt-2">
+    <div className="mt-2 grid grid-cols-3 gap-2">
       {operation && <input type="hidden" name={inputName} />}
 
       <select
         defaultValue={roleId}
         required
-        className="bg-neutral-900 rounded-secondary px-4 h-11"
+        className="h-11 rounded-secondary bg-neutral-900 px-4"
         onChange={(event) => setRoleId(event.target.value)}
       >
         <option disabled hidden value=""></option>
@@ -109,7 +109,7 @@ const Rule = ({ ruleString, roles, handleDelete }: RuleProps) => {
 
       <select
         required
-        className="bg-neutral-900 rounded-secondary px-4 h-11"
+        className="h-11 rounded-secondary bg-neutral-900 px-4"
         defaultValue={operation}
         onChange={(event) => setOperation(event.target.value)}
       >

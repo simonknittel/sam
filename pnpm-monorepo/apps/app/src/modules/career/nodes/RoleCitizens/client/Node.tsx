@@ -163,7 +163,7 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
             onClick={onEdit}
             type="button"
             title="Bearbeiten"
-            className="bg-neutral-800 rounded-secondary p-2 text-brand-red-500 hover:bg-neutral-700"
+            className="rounded-secondary bg-neutral-800 p-2 text-brand-red-500 hover:bg-neutral-700"
           >
             <FaPen />
           </button>
@@ -189,7 +189,7 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
             onClick={onDelete}
             type="button"
             title="Löschen"
-            className="bg-neutral-800 rounded-secondary p-2 text-brand-red-500 hover:bg-neutral-700"
+            className="rounded-secondary bg-neutral-800 p-2 text-brand-red-500 hover:bg-neutral-700"
           >
             <FaTrash />
           </button>
@@ -199,9 +199,9 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
       {props.selected && <NodeResizer minWidth={1} minHeight={1} />}
 
       <div
-        className={clsx("bg-neutral-800 rounded-secondary h-full p-4", {
-          "grayscale opacity-40 hover:grayscale-0 hover:opacity-100": !unlocked,
-          "opacity-40 grayscale-0 flex justify-center items-center":
+        className={clsx("h-full rounded-secondary bg-neutral-800 p-4", {
+          "opacity-40 grayscale hover:opacity-100 hover:grayscale-0": !unlocked,
+          "flex items-center justify-center opacity-40 grayscale-0":
             "redacted" in props.data,
           "flex justify-center":
             !("redacted" in props.data) &&
@@ -233,7 +233,7 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
             {!props.data.roleCitizensHideRole && (
               <SingleRoleBadge
                 roleId={props.data.role.id}
-                className="text-white flex-none"
+                className="flex-none text-white"
               />
             )}
 
@@ -269,7 +269,7 @@ export const Node: ComponentType<NodeProps<RoleNode>> = (props) => {
         )}
 
         {"redacted" in props.data && (
-          <p className="text-brand-red-500 font-bold border border-brand-red-500 rounded-secondary px-2 py-1 inline-block text-xs">
+          <p className="inline-block rounded-secondary border border-brand-red-500 px-2 py-1 text-xs font-bold text-brand-red-500">
             Redacted
           </p>
         )}

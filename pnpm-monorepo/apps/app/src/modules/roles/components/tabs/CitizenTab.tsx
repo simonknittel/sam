@@ -26,13 +26,13 @@ export const CitizenTab = ({ noteTypes, classificationLevels }: Props) => {
 
   return (
     <TabPanel id="citizen">
-      <div className="py-2 flex justify-between items-center">
+      <div className="flex items-center justify-between py-2">
         <h4 className="font-bold">Notizarten verwalten</h4>
 
         <YesNoCheckbox {...register("noteType;manage")} />
       </div>
 
-      <div className="py-2 flex justify-between items-center">
+      <div className="flex items-center justify-between py-2">
         <h4 className="font-bold">Geheimhaltungsstufen verwalten</h4>
 
         <YesNoCheckbox {...register("classificationLevel;manage")} />

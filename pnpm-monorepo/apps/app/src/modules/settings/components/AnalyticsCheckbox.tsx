@@ -19,7 +19,7 @@ export const AnalyticsCheckbox = () => {
 
   return (
     <>
-      <div className="flex gap-2 items-center">
+      <div className="flex items-center gap-2">
         <input
           type="checkbox"
           id="plausible-ignore"

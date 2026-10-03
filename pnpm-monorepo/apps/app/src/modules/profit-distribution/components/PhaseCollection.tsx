@@ -19,9 +19,9 @@ interface Props {
 export const PhaseCollection = ({ cycleData }: Props) => {
   return (
     <Phase phase={CyclePhase.Collection} currentPhase={cycleData.currentPhase}>
-      <h2 className="font-bold text-center font-mono uppercase">Sammelphase</h2>
+      <h2 className="text-center font-mono font-bold uppercase">Sammelphase</h2>
 
-      <div className="border-t border-white/5 mt-4 pt-4">
+      <div className="mt-4 border-t border-white/5 pt-4">
         <StatisticTile label="Bisher von dir verdiente SILC">
           <span
             className={clsx({
@@ -39,7 +39,7 @@ export const PhaseCollection = ({ cycleData }: Props) => {
         </StatisticTile>
       </div>
 
-      <div className="flex flex-col justify-center items-center gap-2 mt-4">
+      <div className="mt-4 flex flex-col items-center justify-center gap-2">
         <p className="text-center text-sm">
           Du kannst deinen Anteil für diesen Zeitraum freiwillig abtreten.
           Dieser wird dann auf die anderen Member verteilt.
@@ -59,7 +59,7 @@ export const PhaseCollection = ({ cycleData }: Props) => {
         )}
       </div>
 
-      <div className="flex flex-col justify-center gap-4 border-t border-white/5 mt-4 pt-4">
+      <div className="mt-4 flex flex-col justify-center gap-4 border-t border-white/5 pt-4">
         <PhaseEndDate
           plannedEnd={cycleData.cycle.collectionEndsAt}
           actualEnd={cycleData.cycle.collectionEndedAt}

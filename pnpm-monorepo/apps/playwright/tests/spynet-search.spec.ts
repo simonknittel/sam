@@ -2,7 +2,6 @@ import type { Locator, Page } from "@playwright/test";
 import type { PrismaClient } from "@sam-monorepo/database/client";
 import { createCitizen, type TestCitizen } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
   fillUntilVisible,
   modal,
@@ -72,9 +71,9 @@ test("the tile finds a citizen by a part of the handle and opens the citizen", a
 
   await hitOf(page, target.entity.id).click();
 
-  await expect(page.getByRole("heading", { name: "wanderfalke" })).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(
+    page.getByRole("heading", { name: "wanderfalke" }),
+  ).toBeVisible();
   await expect(page).toHaveURL(`/app/spynet/citizen/${target.entity.id}`);
 });
 
@@ -148,7 +147,7 @@ test("the arrow keys and Enter open an organization from the tile", async ({
   /** The Algolia tile opened the citizen page with the organization ID */
   await expect(
     page.getByRole("heading", { name: "Sirius Kartell" }),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
   await expect(page).toHaveURL(`/app/spynet/organization/${organization.id}`);
 });
 
@@ -180,18 +179,16 @@ test("the search finds the latest confirmed handle without an index sync", async
   for (const content of ["galileo", "tychobrahe"]) {
     await historyDialog.getByPlaceholder("Neuer Eintrag ...").fill(content);
     await historyDialog.getByRole("button", { name: "Speichern" }).click();
-    await expect(historyDialog.getByText(content, { exact: true })).toBeVisible(
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
-    );
+    await expect(
+      historyDialog.getByText(content, { exact: true }),
+    ).toBeVisible();
   }
 
   const confirmedEntry = historyDialog
     .getByRole("listitem")
     .filter({ hasText: "galileo" });
   await confirmedEntry.getByRole("button", { name: "Bestätigen" }).click();
-  await expect(confirmedEntry.getByText("Unbestätigt")).toHaveCount(0, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(confirmedEntry.getByText("Unbestätigt")).toHaveCount(0);
 
   await searchInTile(page, "galileo", hitOf(page, target.entity.id));
   await expect(tileHits(page)).toHaveCount(1);
@@ -329,7 +326,7 @@ test("the Cmd+K search opens a citizen", async ({ page, prisma, signIn }) => {
 
   const dialog = page.getByRole("dialog", { name: "Navigation" });
   await page.keyboard.press("ControlOrMeta+k");
-  await expect(dialog).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(dialog).toBeVisible();
 
   await dialog.getByRole("option", { name: "Spynet", exact: true }).click();
   await dialog.getByRole("option", { name: /^Profil suchen/ }).click();
@@ -347,8 +344,8 @@ test("the Cmd+K search opens a citizen", async ({ page, prisma, signIn }) => {
   );
   await page.keyboard.press("Enter");
 
-  await expect(page.getByRole("heading", { name: "wanderfalke" })).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(
+    page.getByRole("heading", { name: "wanderfalke" }),
+  ).toBeVisible();
   await expect(page).toHaveURL(`/app/spynet/citizen/${target.entity.id}`);
 });

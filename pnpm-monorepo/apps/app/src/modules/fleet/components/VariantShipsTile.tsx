@@ -27,7 +27,7 @@ export const VariantShipsTile = async ({
   return (
     <Tile heading="Einzelschiffe" className={className}>
       {ships.length === 0 ? (
-        <p className="text-white/90 text-center">Keine Schiffe gefunden</p>
+        <p className="text-center text-white/90">Keine Schiffe gefunden</p>
       ) : (
         <>
           <VariantShipsTable ships={ships} />

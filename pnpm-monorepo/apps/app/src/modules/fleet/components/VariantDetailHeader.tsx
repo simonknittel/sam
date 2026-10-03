@@ -24,8 +24,8 @@ interface Props {
 export const VariantDetailHeader = ({ variant }: Props) => {
   return (
     <>
-      <div className="flex flex-col md:flex-row gap-0.5">
-        <div className="bg-secondary rounded-primary p-4 flex gap-8 flex-1">
+      <div className="flex flex-col gap-0.5 md:flex-row">
+        <div className="flex flex-1 gap-8 rounded-primary bg-secondary p-4">
           <VariantWithLogo
             variant={variant}
             manufacturer={variant.series.manufacturer}
@@ -34,7 +34,7 @@ export const VariantDetailHeader = ({ variant }: Props) => {
             disableLink
           />
 
-          <div className="border-l border-white/10 pl-8 flex flex-col gap-2">
+          <div className="flex flex-col gap-2 border-l border-white/10 pl-8">
             <div className="flex items-center gap-1">
               {variant.status === VariantStatus.FLIGHT_READY && (
                 <>
@@ -56,7 +56,7 @@ export const VariantDetailHeader = ({ variant }: Props) => {
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300 flex items-center gap-1 text-sm"
+                  className="flex items-center gap-1 text-sm text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300"
                   title={link.url}
                 >
                   {link.serviceName}
@@ -75,7 +75,7 @@ export const VariantDetailHeader = ({ variant }: Props) => {
         </StatisticTile>
       </div>
 
-      <div className="flex flex-wrap gap-1 bg-secondary rounded-primary p-4">
+      <div className="flex flex-wrap gap-1 rounded-primary bg-secondary p-4">
         {variant.tags
           .toSorted((a, b) => a.key.localeCompare(b.key))
           .map((tag) => (

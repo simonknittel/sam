@@ -129,7 +129,7 @@ export const WikiPagePermissionsProvider = ({
           />
 
           <section className="mt-8">
-            <h3 className="font-bold text-lg font-mono uppercase">Lesen</h3>
+            <h3 className="font-mono text-lg font-bold uppercase">Lesen</h3>
 
             <RadioGroup
               name="visibility"
@@ -204,7 +204,7 @@ export const WikiPagePermissionsProvider = ({
           </section>
 
           <section className="mt-8">
-            <h3 className="font-bold text-lg font-mono uppercase">
+            <h3 className="font-mono text-lg font-bold uppercase">
               Bearbeiten
             </h3>
 
@@ -269,12 +269,12 @@ export const WikiPagePermissionsProvider = ({
           </section>
 
           <section className="mt-8">
-            <h3 className="font-bold text-lg font-mono uppercase">Hochladen</h3>
+            <h3 className="font-mono text-lg font-bold uppercase">Hochladen</h3>
             <p className="text-sm text-neutral-400">
               Wer darf beim Bearbeiten Bilder bzw. Dateianhänge hochladen?
             </p>
 
-            <h4 className="font-bold mt-4">Bilder</h4>
+            <h4 className="mt-4 font-bold">Bilder</h4>
 
             <RadioGroup
               name="imageUploadability"
@@ -317,7 +317,7 @@ export const WikiPagePermissionsProvider = ({
               </div>
             )}
 
-            <h4 className="font-bold mt-4">Dateianhänge</h4>
+            <h4 className="mt-4 font-bold">Dateianhänge</h4>
 
             <RadioGroup
               name="attachmentUploadability"
@@ -367,7 +367,7 @@ export const WikiPagePermissionsProvider = ({
           </section>
 
           <section className="mt-8">
-            <h3 className="font-bold text-lg font-mono uppercase">Manager</h3>
+            <h3 className="font-mono text-lg font-bold uppercase">Manager</h3>
             <p className="text-sm text-neutral-400">
               Manager können Berechtigungen ändern sowie Seiten umbenennen,
               verschieben und löschen. Wer eine Seite verwaltet, verwaltet immer
@@ -403,7 +403,7 @@ export const WikiPagePermissionsProvider = ({
           </section>
 
           <section className="mt-8">
-            <h3 className="font-bold text-lg font-mono uppercase">Besitzer</h3>
+            <h3 className="font-mono text-lg font-bold uppercase">Besitzer</h3>
             <p className="text-sm text-neutral-400">
               Aktueller Besitzer:{" "}
               {effectiveOwnerHandle ?? "kein Besitzer (nur Wiki-Manager)"}

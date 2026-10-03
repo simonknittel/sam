@@ -70,7 +70,7 @@ export const NotificationListItem = ({
       /* `isolate` keeps the decoration between the row's background and its
       text. Without it, the negative z-index of the decoration would put it
       behind the background of the popover. */
-      className="relative isolate group/notification px-4 py-2 hover:bg-neutral-800/50 focus-within:bg-neutral-800/50"
+      className="group/notification relative isolate px-4 py-2 focus-within:bg-neutral-800/50 hover:bg-neutral-800/50"
       data-read-on-view-id={trackReadOnView ? notification.id : undefined}
     >
       {Decoration && <Decoration />}
@@ -82,13 +82,13 @@ export const NotificationListItem = ({
           <Link
             href={rendering.url}
             onClick={() => onNavigateToTarget(notification.id, isUnread)}
-            className="font-bold text-sm truncate hover:underline focus-visible:underline after:absolute after:inset-0"
+            className="truncate text-sm font-bold after:absolute after:inset-0 hover:underline focus-visible:underline"
             title={rendering.title}
           >
             {rendering.title}
           </Link>
         ) : (
-          <span className="font-bold text-sm truncate" title={rendering.title}>
+          <span className="truncate text-sm font-bold" title={rendering.title}>
             {rendering.title}
           </span>
         )}
@@ -102,17 +102,17 @@ export const NotificationListItem = ({
       </div>
 
       {rendering.body && (
-        <p className="text-sm text-neutral-300 break-words mt-0.5">
+        <p className="mt-0.5 text-sm break-words text-neutral-300">
           {rendering.body}
         </p>
       )}
 
-      <div className="flex items-center justify-between gap-2 mt-0.5 min-h-6">
-        <span className="text-xs text-neutral-500 font-mono uppercase truncate">
+      <div className="mt-0.5 flex min-h-6 items-center justify-between gap-2">
+        <span className="truncate font-mono text-xs text-neutral-500 uppercase">
           {rendering.appTitle}
         </span>
 
-        <div className="relative flex gap-1 opacity-0 group-hover/notification:opacity-100 group-focus-within/notification:opacity-100">
+        <div className="relative flex gap-1 opacity-0 group-focus-within/notification:opacity-100 group-hover/notification:opacity-100">
           {tab === NotificationCenterTab.Inbox && (
             <>
               {!isUnread && (
@@ -121,7 +121,7 @@ export const NotificationListItem = ({
                   onClick={() => onMarkUnread(notification)}
                   title="Als ungelesen markieren"
                   aria-label="Als ungelesen markieren"
-                  className="p-1 text-neutral-500 hover:text-interaction-500 focus-visible:text-interaction-500 active:scale-95 cursor-pointer transition-colors"
+                  className="cursor-pointer p-1 text-neutral-500 transition-colors hover:text-interaction-500 focus-visible:text-interaction-500 active:scale-95"
                 >
                   <FaEnvelope />
                 </button>
@@ -132,7 +132,7 @@ export const NotificationListItem = ({
                 onClick={() => onArchive(notification)}
                 title="Archivieren"
                 aria-label="Archivieren"
-                className="p-1 text-neutral-500 hover:text-interaction-500 focus-visible:text-interaction-500 active:scale-95 cursor-pointer transition-colors"
+                className="cursor-pointer p-1 text-neutral-500 transition-colors hover:text-interaction-500 focus-visible:text-interaction-500 active:scale-95"
               >
                 <FaArchive />
               </button>
@@ -145,7 +145,7 @@ export const NotificationListItem = ({
               onClick={() => onUnarchive(notification)}
               title="Wiederherstellen"
               aria-label="Wiederherstellen"
-              className="p-1 text-neutral-500 hover:text-interaction-500 focus-visible:text-interaction-500 active:scale-95 cursor-pointer transition-colors"
+              className="cursor-pointer p-1 text-neutral-500 transition-colors hover:text-interaction-500 focus-visible:text-interaction-500 active:scale-95"
             >
               <FaUndo />
             </button>

@@ -28,7 +28,7 @@ export const Textarea = (props: Props) => {
 
       <textarea
         className={clsx(
-          "p-2 rounded-secondary bg-neutral-900 border border-neutral-800 w-full mt-2 align-middle focus-visible:outline-2 outline-interaction-700 outline-offset-4",
+          "mt-2 w-full rounded-secondary border border-neutral-800 bg-neutral-900 p-2 align-middle outline-offset-4 outline-interaction-700 focus-visible:outline-2",
           sizeToContent ? "field-sizing-content" : "h-32",
           classNameTextarea,
         )}
@@ -36,7 +36,7 @@ export const Textarea = (props: Props) => {
         {...rest}
       />
 
-      {hint && <p className="text-xs mt-1 text-white/40">{hint}</p>}
+      {hint && <p className="mt-1 text-xs text-white/40">{hint}</p>}
     </>
   );
 };

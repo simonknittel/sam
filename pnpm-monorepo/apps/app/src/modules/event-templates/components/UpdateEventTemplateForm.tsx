@@ -134,7 +134,7 @@ export const UpdateEventTemplateForm = ({
       <label htmlFor={discordCheckboxId} className="mt-4 block">
         Auf Discord veröffentlichen
       </label>
-      <p className="text-xs mt-1 text-white/40">
+      <p className="mt-1 text-xs text-white/40">
         Events aus dieser Vorlage werden zusätzlich als Termin auf dem
         Discord-Server angelegt.
       </p>

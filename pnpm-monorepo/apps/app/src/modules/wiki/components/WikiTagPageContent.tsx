@@ -21,14 +21,14 @@ interface Props {
  */
 export const WikiTagPageContent = ({ tagName, pages }: Props) => {
   return (
-    <section className="bg-secondary rounded-primary p-4">
-      <h1 className="flex items-center gap-3 font-bold text-2xl">
+    <section className="rounded-primary bg-secondary p-4">
+      <h1 className="flex items-center gap-3 text-2xl font-bold">
         <FaTag className="flex-none text-neutral-500" />
         {tagName}
       </h1>
 
       <p className="mt-1 text-xs text-white/20">
-        <span className="uppercase font-mono">Seiten mit diesem Tag:</span>{" "}
+        <span className="font-mono uppercase">Seiten mit diesem Tag:</span>{" "}
         {pages.length}
       </p>
 
@@ -56,7 +56,7 @@ const TagPageListItem = ({ page }: TagPageListItemProps) => {
     <li>
       {page.breadcrumb.length > 0 && (
         <p
-          className="text-xs text-neutral-500 truncate"
+          className="truncate text-xs text-neutral-500"
           title={page.breadcrumb.join(" / ")}
         >
           {page.breadcrumb.join(" / ")}

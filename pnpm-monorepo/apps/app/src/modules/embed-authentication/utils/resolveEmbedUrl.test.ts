@@ -3,7 +3,7 @@ import type { PermissionSet } from "@sam-monorepo/permissions";
 import { createLocalJWKSet, jwtVerify } from "jose";
 import type { Session } from "next-auth";
 import { generateKeyPairSync } from "node:crypto";
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import {
   createEmbedJsonWebKeySet,
   createEmbedSigningKey,
@@ -65,10 +65,6 @@ const importResolveEmbedUrl = async (base64EncodedPrivateKeyPem?: string) => {
 
   return (await import("./resolveEmbedUrl")).resolveEmbedUrl;
 };
-
-beforeEach(() => {
-  logWarn.mockClear();
-});
 
 describe("resolve embed URL", () => {
   test("appends a token an embedded app can verify", async () => {

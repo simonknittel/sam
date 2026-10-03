@@ -59,7 +59,7 @@ export const OrgFleetTile = async ({ className, searchParams }: Props) => {
       className={className}
       data-onboarding-target={OnboardingTargetId.OrgFleet}
     >
-      <section className="flex flex-wrap gap-0.5 mb-0.5">
+      <section className="mb-0.5 flex flex-wrap gap-0.5">
         <StatisticTile label="Schiffe" className="flex-1">
           <ScrambleIn
             text={totalShips.toLocaleString("de-de")}
@@ -75,7 +75,7 @@ export const OrgFleetTile = async ({ className, searchParams }: Props) => {
         </StatisticTile>
       </section>
 
-      <div className="rounded-primary bg-neutral-800/50 p-4 overflow-x-auto">
+      <div className="overflow-x-auto rounded-primary bg-neutral-800/50 p-4">
         {fleet.length === 0 ? (
           <div className="grid place-content-center">
             <p className="text-white/90">Keine Schiffe gefunden</p>

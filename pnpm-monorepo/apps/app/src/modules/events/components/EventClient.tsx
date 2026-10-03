@@ -120,12 +120,12 @@ export const EventClient = ({
   return (
     <article
       className={clsx(
-        "overflow-hidden w-100 @4xl/events:w-full corners-primary",
+        "w-100 overflow-hidden corners-primary @4xl/events:w-full",
         className,
       )}
     >
       {isHappeningNow && (
-        <div className="bg-green-500/20 border-t border-x border-green-500 text-text-primary text-center p-2 font-mono uppercase text-xs rounded-t-primary">
+        <div className="rounded-t-primary border-x border-t border-green-500 bg-green-500/20 p-2 text-center font-mono text-xs text-text-primary uppercase">
           <span className="motion-safe:animate-pulse">
             <span className="opacity-25">{"//"}</span> Event läuft{" "}
             <span className="opacity-25">{"//"}</span>
@@ -134,7 +134,7 @@ export const EventClient = ({
       )}
 
       {isToday && !isHappeningNow && (
-        <div className="bg-blue-500/20 border-t border-x border-blue-500 text-text-primary text-center p-2 font-mono uppercase text-xs rounded-t-primary">
+        <div className="rounded-t-primary border-x border-t border-blue-500 bg-blue-500/20 p-2 text-center font-mono text-xs text-text-primary uppercase">
           <span className="opacity-25">{"//"}</span>{" "}
           <RelativeDate date={event.startTime} now={now} />{" "}
           <span className="opacity-25">{"//"}</span>
@@ -143,19 +143,19 @@ export const EventClient = ({
 
       <div
         className={clsx(
-          "relative flex flex-col @4xl/events:flex-row bg-secondary rounded-bl-primary",
+          "relative flex flex-col rounded-bl-primary bg-secondary @4xl/events:flex-row",
           {
             "rounded-t-primary": !isHappeningNow && !isToday,
             "border-x border-green-500 [border-image:linear-gradient(to_bottom,var(--color-green-500),transparent)_1]":
               isHappeningNow,
             [styles.happeningNow]: isHappeningNow,
-            "border-x border-blue-500 [border-image:linear-gradient(to_bottom,var(--color-blue-500),transparent)_1] [background:linear-gradient(to_bottom,var(--color-blue-950),var(--background-color-secondary))]":
+            "border-x border-blue-500 [background:linear-gradient(to_bottom,var(--color-blue-950),var(--background-color-secondary))] [border-image:linear-gradient(to_bottom,var(--color-blue-500),transparent)_1]":
               isToday && !isHappeningNow,
           },
         )}
       >
         {(event.coverImage || event.discordImage) && (
-          <div className="@4xl/events:grow-0 @4xl/events:shrink-0 @4xl/events:basis-100 max-h-40 flex justify-center rounded-r-primary rounded-b-primary overflow-hidden">
+          <div className="flex max-h-40 justify-center overflow-hidden rounded-r-primary rounded-b-primary @4xl/events:shrink-0 @4xl/events:grow-0 @4xl/events:basis-100">
             <Image
               src={
                 event.coverImage
@@ -177,10 +177,10 @@ export const EventClient = ({
           </div>
         )}
 
-        <div className="flex-1 flex flex-col gap-3 justify-center p-4 @4xl/events:overflow-hidden">
+        <div className="flex flex-1 flex-col justify-center gap-3 p-4 @4xl/events:overflow-hidden">
           <div className="flex items-baseline gap-2">
             <h2
-              className="min-w-0 break-words font-bold text-xl @4xl/events:text-ellipsis @4xl/events:whitespace-nowrap @4xl/events:overflow-hidden font-mono uppercase"
+              className="min-w-0 font-mono text-xl font-bold break-words uppercase @4xl/events:overflow-hidden @4xl/events:text-ellipsis @4xl/events:whitespace-nowrap"
               title={event.name}
             >
               {event.name}
@@ -219,7 +219,7 @@ export const EventClient = ({
               <Link
                 ref={focusTargetRef}
                 href={`/app/events/${event.id}`}
-                className="first:rounded-l-secondary border border-interaction-700 last:rounded-r-secondary h-8 flex items-center justify-center px-3 gap-2 uppercase text-interaction-500 hover:text-interaction-300 hover:border-interaction-300 font-mono"
+                className="flex h-8 items-center justify-center gap-2 border border-interaction-700 px-3 font-mono text-interaction-500 uppercase first:rounded-l-secondary last:rounded-r-secondary hover:border-interaction-300 hover:text-interaction-300"
               >
                 Details
               </Link>
@@ -227,7 +227,7 @@ export const EventClient = ({
               {showBriefingButton && (
                 <Link
                   href={`/app/events/${event.id}/briefing`}
-                  className="first:rounded-l-secondary border border-interaction-700 last:rounded-r-secondary h-8 flex items-center justify-center px-3 gap-2 uppercase text-interaction-500 hover:text-interaction-300 hover:border-interaction-300 font-mono"
+                  className="flex h-8 items-center justify-center gap-2 border border-interaction-700 px-3 font-mono text-interaction-500 uppercase first:rounded-l-secondary last:rounded-r-secondary hover:border-interaction-300 hover:text-interaction-300"
                 >
                   <FaBook />
                   Briefing
@@ -237,7 +237,7 @@ export const EventClient = ({
               {showLineupButton && (
                 <Link
                   href={`/app/events/${event.id}/lineup`}
-                  className="first:rounded-l-secondary border border-interaction-700 last:rounded-r-secondary h-8 flex items-center justify-center px-3 gap-2 uppercase text-interaction-500 hover:text-interaction-300 hover:border-interaction-300 font-mono"
+                  className="flex h-8 items-center justify-center gap-2 border border-interaction-700 px-3 font-mono text-interaction-500 uppercase first:rounded-l-secondary last:rounded-r-secondary hover:border-interaction-300 hover:text-interaction-300"
                 >
                   <MdWorkspaces />
                   Aufstellung

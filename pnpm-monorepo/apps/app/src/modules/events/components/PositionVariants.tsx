@@ -16,7 +16,7 @@ export const PositionVariants = ({ className, position }: Props) => {
         <button
           type="button"
           className={clsx(
-            "cursor-default hover:bg-neutral-700 rounded-secondary flex gap-2 items-center",
+            "flex cursor-default items-center gap-2 rounded-secondary hover:bg-neutral-700",
             className,
           )}
         >
@@ -30,7 +30,7 @@ export const PositionVariants = ({ className, position }: Props) => {
             disableLink
           />
 
-          <span className="rounded-full bg-neutral-900 size-6 flex items-center justify-center text-xs border border-brand-red-500">
+          <span className="flex size-6 items-center justify-center rounded-full border border-brand-red-500 bg-neutral-900 text-xs">
             +{position.requiredVariants.length - 1}
           </span>
         </button>

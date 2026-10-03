@@ -74,24 +74,6 @@ function extractKeys(
   return { originalKey, itemKey };
 }
 
-function findXmlFiles(directory: string): string[] {
-  const files: string[] = [];
-
-  const entries = fs.readdirSync(directory, { withFileTypes: true });
-
-  for (const entry of entries) {
-    const fullPath = path.join(directory, entry.name);
-
-    if (entry.isDirectory()) {
-      files.push(...findXmlFiles(fullPath));
-    } else if (entry.isFile() && entry.name.endsWith(".xml")) {
-      files.push(fullPath);
-    }
-  }
-
-  return files;
-}
-
 async function main() {
   const { version, channel, dataFolder } = parseArgs();
 
@@ -129,7 +111,11 @@ async function main() {
   const translations = parseTranslations(translationsFile);
 
   console.info("Finding blueprint XML files...");
-  const xmlFiles = findXmlFiles(blueprintsDir);
+  // Use "cwd": the path of the data folder can contain glob characters, for
+  // example "(x86)".
+  const xmlFiles = fs
+    .globSync("**/*.xml", { cwd: blueprintsDir })
+    .map((file) => path.join(blueprintsDir, file));
   console.info(`Found ${xmlFiles.length} XML files`);
 
   const parser = new XMLParser({

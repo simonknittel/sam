@@ -9,7 +9,7 @@ export const WikiTab = () => {
 
   return (
     <TabPanel id="wiki">
-      <div className="py-2 flex justify-between items-center gap-2">
+      <div className="flex items-center justify-between gap-2 py-2">
         <div>
           <h4 className="font-bold">Seiten auf oberster Ebene erstellen</h4>
           <p className="text-sm text-neutral-400">
@@ -22,7 +22,7 @@ export const WikiTab = () => {
         <YesNoCheckbox {...register("wiki;create")} />
       </div>
 
-      <div className="py-2 flex justify-between items-center gap-2 mt-2">
+      <div className="mt-2 flex items-center justify-between gap-2 py-2">
         <div>
           <h4 className="font-bold">Verwalten</h4>
           <p className="text-sm text-neutral-400">

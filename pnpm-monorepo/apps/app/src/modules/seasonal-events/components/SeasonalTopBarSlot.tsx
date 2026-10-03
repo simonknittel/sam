@@ -20,7 +20,7 @@ export const SeasonalTopBarSlot = async () => {
       aria-hidden
       // `ViewportCornerWeb` reads this attribute to hide the web of the layer
       data-seasonal-top-bar
-      className="absolute inset-0 pointer-events-none"
+      className="pointer-events-none absolute inset-0"
     >
       <TopBarDecoration />
     </div>

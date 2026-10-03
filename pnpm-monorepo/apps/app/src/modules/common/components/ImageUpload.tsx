@@ -125,7 +125,7 @@ export const ImageUpload = ({
         onChange={changeHandler}
         accept="image/*"
         disabled={isPending}
-        className="absolute inset-0 cursor-pointer opacity-0 text-[0]"
+        className="absolute inset-0 cursor-pointer text-[0] opacity-0"
       />
     </div>
   );

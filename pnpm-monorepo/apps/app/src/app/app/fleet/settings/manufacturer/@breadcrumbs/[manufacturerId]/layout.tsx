@@ -7,7 +7,7 @@ export default function Layout({
     <>
       <Link
         href="/app/fleet/settings/manufacturer"
-        className="text-brand-red-500 hover:text-brand-red-300 transition-colors"
+        className="text-brand-red-500 transition-colors hover:text-brand-red-300"
       >
         Alle Hersteller
       </Link>

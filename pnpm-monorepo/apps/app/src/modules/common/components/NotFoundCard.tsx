@@ -7,7 +7,7 @@ import { Hero } from "./Hero";
  */
 export const NotFoundCard = () => {
   return (
-    <article className="bg-secondary rounded-primary p-8 flex flex-col items-center gap-4">
+    <article className="flex flex-col items-center gap-4 rounded-primary bg-secondary p-8">
       <Hero text="404" size="md" withGlitch />
 
       <p>Page not found</p>

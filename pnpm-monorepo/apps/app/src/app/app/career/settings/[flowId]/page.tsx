@@ -144,7 +144,7 @@ interface MetadataRowProps {
 
 const MetadataRow = ({ label, children }: MetadataRowProps) => (
   <div className="flex flex-wrap items-baseline gap-2">
-    <dt className="w-40 flex-none font-mono uppercase text-white/40">
+    <dt className="w-40 flex-none font-mono text-white/40 uppercase">
       {label}
     </dt>
     <dd className="flex items-baseline gap-1">{children}</dd>

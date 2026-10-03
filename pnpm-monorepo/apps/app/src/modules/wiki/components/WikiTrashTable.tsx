@@ -81,7 +81,7 @@ export const WikiTrashTable = async ({
   });
 
   return (
-    <section className={clsx("p-4 bg-secondary rounded-primary", className)}>
+    <section className={clsx("rounded-primary bg-secondary p-4", className)}>
       <p className="mb-4 text-sm text-neutral-400">
         Gelöschte Seiten werden nach 30 Tagen endgültig entfernt.
       </p>

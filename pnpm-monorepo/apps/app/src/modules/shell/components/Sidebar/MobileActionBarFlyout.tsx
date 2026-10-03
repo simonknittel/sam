@@ -39,7 +39,7 @@ export const MobileActionBarFlyout = ({ children }: Props) => {
       <button
         onClick={() => setIsVisible((value) => !value)}
         type="button"
-        className="flex flex-col items-center justify-center px-4 h-full active:bg-neutral-700 rounded-secondary"
+        className="flex h-full flex-col items-center justify-center rounded-secondary px-4 active:bg-neutral-700"
       >
         <span className="relative">
           {isVisible ? <FaTimes /> : <AiFillAppstore />}
@@ -52,7 +52,7 @@ export const MobileActionBarFlyout = ({ children }: Props) => {
 
       <div
         className={clsx(
-          "fixed left-0 top-0 bottom-0 w-96 max-w-[90dvw] z-50 flex flex-col bg-neutral-800/90 backdrop-blur-sm shadow-sm overflow-auto transition-transform",
+          "fixed top-0 bottom-0 left-0 z-50 flex w-96 max-w-[90dvw] flex-col overflow-auto bg-neutral-800/90 shadow-sm backdrop-blur-sm transition-transform",
           {
             "-translate-x-full": isVisible === false,
             "translate-x-0": isVisible === true,

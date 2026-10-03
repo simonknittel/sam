@@ -46,8 +46,8 @@ export default async function Page(props: Props) {
   if (!manufacturer) notFound();
 
   return (
-    <div className="flex gap-8 items-start flex-col xl:flex-row">
-      <section className="rounded-primary overflow-hidden w-full xl:w-100">
+    <div className="flex flex-col items-start gap-8 xl:flex-row">
+      <section className="w-full overflow-hidden rounded-primary xl:w-100">
         <ImageUpload
           resourceType="manufacturer"
           resourceId={manufacturer.id}
@@ -57,9 +57,9 @@ export default async function Page(props: Props) {
           width={400}
           height={128}
           className={clsx(
-            "bg-black p-2 text-neutral-500 hover:text-neutral-300 transition-colors",
+            "bg-black p-2 text-neutral-500 transition-colors hover:text-neutral-300",
             {
-              "h-32 after:content-['Logo_hochladen'] flex items-center justify-center":
+              "flex h-32 items-center justify-center after:content-['Logo_hochladen']":
                 !manufacturer.imageId,
             },
           )}
@@ -67,8 +67,8 @@ export default async function Page(props: Props) {
           pendingClassName="w-full h-32"
         />
 
-        <div className="p-8 bg-neutral-800/50">
-          <p className="font-bold mb-4">Hersteller</p>
+        <div className="bg-neutral-800/50 p-8">
+          <p className="mb-4 font-bold">Hersteller</p>
 
           <dl className="mt-4">
             <dt className="text-neutral-500">Name</dt>

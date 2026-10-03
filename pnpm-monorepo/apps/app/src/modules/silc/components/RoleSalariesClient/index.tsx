@@ -54,7 +54,7 @@ export const RoleSalariesClient = ({
 
   return (
     <form action={formAction} className={clsx(className)}>
-      <div className="grid-cols-[300px_1fr_1fr_44px] gap-2 border-b border-white/5 font-bold pb-2 hidden md:grid">
+      <div className="hidden grid-cols-[300px_1fr_1fr_44px] gap-2 border-b border-white/5 pb-2 font-bold md:grid">
         <div>Rolle</div>
         <div>SILC</div>
         <div>Tag im Monat</div>
@@ -62,7 +62,7 @@ export const RoleSalariesClient = ({
 
       {!isPendingRolesForSalaries && data ? (
         <>
-          <div className="flex flex-col gap-6 mt-4">
+          <div className="mt-4 flex flex-col gap-6">
             {salaries.map((salary) => (
               <div key={salary.id} className={clsx("grid gap-2", styles.grid)}>
                 <RoleSelector
@@ -90,7 +90,7 @@ export const RoleSalariesClient = ({
                     );
                   }}
                   required
-                  className="p-2 rounded-secondary bg-neutral-900 border border-neutral-800 w-full"
+                  className="w-full rounded-secondary border border-neutral-800 bg-neutral-900 p-2"
                   style={{
                     gridArea: "value",
                   }}
@@ -109,7 +109,7 @@ export const RoleSalariesClient = ({
                     );
                   }}
                   required
-                  className="p-2 rounded-secondary bg-neutral-900 border border-neutral-800 w-full"
+                  className="w-full rounded-secondary border border-neutral-800 bg-neutral-900 p-2"
                   style={{
                     gridArea: "dayOfMonth",
                   }}
@@ -178,7 +178,7 @@ export const RoleSalariesClient = ({
           </Button2>
         </>
       ) : (
-        <div className="flex items-center gap-2 justify-center text-brand-red-500 mt-2">
+        <div className="mt-2 flex items-center justify-center gap-2 text-brand-red-500">
           <AsciiSpinner />
           Lädt...
         </div>

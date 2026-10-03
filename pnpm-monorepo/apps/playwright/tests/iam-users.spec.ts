@@ -1,10 +1,6 @@
 import { expectAuditEvents } from "../fixtures/audit";
 import { createCitizen } from "../fixtures/factories";
-import {
-  ACTION_FEEDBACK_TIMEOUT,
-  clickUntilVisible,
-  SAVED_TEXT,
-} from "../fixtures/interactions";
+import { clickUntilVisible, SAVED_TEXT } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 const USER_ADMIN_PERMISSIONS = ["user;read", "user;ban", "user;manage"];
@@ -31,13 +27,13 @@ test("banning a user revokes their sessions, unbanning lets them back in", async
   await page.goto("/app/dashboard");
   await expect(
     page.getByRole("heading", { name: "zu-sperrender" }),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
 
   await switchUser(admin.user);
   await page.goto("/app/iam/users");
 
   const targetRow = page.getByRole("row").filter({ hasText: target.user.id });
-  await expect(targetRow).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(targetRow).toBeVisible();
 
   const banDialog = page.getByRole("alertdialog");
   await clickUntilVisible(
@@ -46,9 +42,7 @@ test("banning a user revokes their sessions, unbanning lets them back in", async
   );
   await banDialog.getByLabel("Grund (optional)").fill("Regelverstoß");
   await banDialog.getByRole("button", { name: "Sperren" }).click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   await expect
     .poll(async () => {
@@ -82,7 +76,7 @@ test("banning a user revokes their sessions, unbanning lets them back in", async
    * itself sends them to the login — which is why the deep link is not
    * preserved here.
    */
-  await expect(page).toHaveURL("/", { timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(page).toHaveURL("/");
   await expect(page.getByRole("button", { name: "Login" })).toBeVisible();
 
   /**
@@ -99,9 +93,7 @@ test("banning a user revokes their sessions, unbanning lets them back in", async
     unbanDialog,
   );
   await unbanDialog.getByRole("button", { name: "Entsperren" }).click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   await expect
     .poll(async () => {
@@ -139,7 +131,7 @@ test("an admin confirms the privacy policy on behalf of a user", async ({
   await page.goto("/app/iam/users");
 
   const targetRow = page.getByRole("row").filter({ hasText: target.user.id });
-  await expect(targetRow).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(targetRow).toBeVisible();
 
   const confirmDialog = page.getByRole("alertdialog");
   await clickUntilVisible(
@@ -147,9 +139,7 @@ test("an admin confirms the privacy policy on behalf of a user", async ({
     confirmDialog,
   );
   await confirmDialog.getByRole("button", { name: "Bestätigen" }).click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   await expect
     .poll(async () => {

@@ -48,7 +48,7 @@ export const EditableDateTimeInput = ({
             timeZone: "Europe/Berlin",
           })}
           disabled={isPending}
-          className={clsx("rounded-secondary bg-neutral-700 px-1 w-full", {
+          className={clsx("w-full rounded-secondary bg-neutral-700 px-1", {
             "animate-pulse": isPending,
           })}
           autoFocus

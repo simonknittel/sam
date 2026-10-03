@@ -20,7 +20,7 @@ export const UnreadEdge = ({
 }: Props) => {
   return (
     <div
-      className={clsx("absolute left-0 top-0 bottom-0", {
+      className={clsx("absolute top-0 bottom-0 left-0", {
         "w-px": width === UnreadEdgeWidth.Thin,
         "w-0.5": width === UnreadEdgeWidth.Regular,
       })}

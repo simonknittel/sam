@@ -103,7 +103,7 @@ export const EventParticipationControls = ({
             <p className="mt-1 text-sm text-neutral-300">{comment}</p>
           )}
 
-          <p className="mt-1 text-neutral-500 text-sm">
+          <p className="mt-1 text-sm text-neutral-500">
             Die Anmeldung ist geschlossen.
           </p>
         </>

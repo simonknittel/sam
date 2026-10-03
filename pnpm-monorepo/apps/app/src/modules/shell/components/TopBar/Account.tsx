@@ -29,7 +29,7 @@ export const Account = async ({ className }: Props) => {
         <Avatar name={name} image={image} size={32} decoration={decoration} />
       }
       triggerClassName={clsx(
-        "p-2 rounded-r-primary cursor-pointer hover:bg-tertiary focus-visible:bg-tertiary",
+        "cursor-pointer rounded-r-primary p-2 hover:bg-tertiary focus-visible:bg-tertiary",
         className,
       )}
       triggerTitle="Account"
@@ -45,14 +45,14 @@ export const Account = async ({ className }: Props) => {
 
       {authentication.session.entity?.id && (
         <SpynetProfileLink
-          className="w-full mt-4"
+          className="mt-4 w-full"
           entityId={authentication.session.entity.id}
         />
       )}
 
-      <AccountSettings className="w-full mt-2" />
+      <AccountSettings className="mt-2 w-full" />
 
-      <Logout className="w-full mt-2" />
+      <Logout className="mt-2 w-full" />
     </PopoverBaseUI>
   );
 };

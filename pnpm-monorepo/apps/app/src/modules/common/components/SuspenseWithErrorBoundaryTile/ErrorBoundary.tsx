@@ -49,13 +49,13 @@ const Fallback = ({ className, error }: FallbackProps) => {
   return (
     <section
       className={clsx(
-        "rounded-primary bg-neutral-800/50 border border-red-500",
+        "rounded-primary border border-red-500 bg-neutral-800/50",
         className,
       )}
     >
       <div className="flex items-center gap-2 border-b border-white/5 px-4 py-2">
         <BsExclamationOctagonFill className="text-red-800" />
-        <h2 className="font-thin text-xl text-red-500">Fehler</h2>
+        <h2 className="text-xl font-thin text-red-500">Fehler</h2>
       </div>
 
       <div className="p-4 lg:p-4">
@@ -64,7 +64,7 @@ const Fallback = ({ className, error }: FallbackProps) => {
             link: (chunks) => (
               <Link
                 href={wikiPageLinkHref("support")}
-                className="underline text-interaction-500 hover:text-interaction-300 focus-visible:text-interaction-300"
+                className="text-interaction-500 underline hover:text-interaction-300 focus-visible:text-interaction-300"
               >
                 {chunks}
               </Link>
@@ -72,7 +72,7 @@ const Fallback = ({ className, error }: FallbackProps) => {
           })}
         </div>
 
-        <p className="text-neutral-500 text-sm mt-2">
+        <p className="mt-2 text-sm text-neutral-500">
           Digest: {error.digest ? error.digest : "unknown"}
         </p>
       </div>

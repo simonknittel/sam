@@ -23,7 +23,7 @@ export default async function Page() {
         <Hero text="Leaderboards" withGlitch size="md" />
       </div>
 
-      <section className="bg-neutral-800/50 rounded-primary p-4 lg:p-6 mt-6 overflow-hidden">
+      <section className="mt-6 overflow-hidden rounded-primary bg-neutral-800/50 p-4 lg:p-6">
         <table className="w-full">
           <thead>
             <tr
@@ -43,11 +43,11 @@ export default async function Page() {
                 key={citizen.nickname}
                 className={clsx("grid items-center gap-4", GRID_COLS)}
               >
-                <td className="h-14 flex items-center justify-center">
+                <td className="flex h-14 items-center justify-center">
                   {citizen.rank}
                 </td>
 
-                <td className="h-14 flex items-center px-2 truncate">
+                <td className="flex h-14 items-center truncate px-2">
                   {citizen.displayname}
                 </td>
               </tr>

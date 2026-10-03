@@ -129,7 +129,7 @@ export const SingleNote = async ({ note }: Props) => {
               key={index}
             >
               {organization.logo && (
-                <span className="inline-block rounded-secondary bg-black mr-1 align-bottom">
+                <span className="mr-1 inline-block rounded-secondary bg-black align-bottom">
                   <Image
                     src={`https://robertsspaceindustries.com${organization.logo}`}
                     alt=""
@@ -165,10 +165,10 @@ export const SingleNote = async ({ note }: Props) => {
   );
 
   return (
-    <article className="mt-4 lg:mt-8 relative rounded-secondary overflow-hidden">
+    <article className="relative mt-4 overflow-hidden rounded-secondary lg:mt-8">
       <div
         className={clsx({
-          "absolute w-full h-24 border-t-2 border-x-2 bg-linear-to-t from-neutral-900/0":
+          "absolute h-24 w-full border-x-2 border-t-2 bg-linear-to-t from-neutral-900/0":
             isUnconfirmed || isFalseReport,
           [`${styles.blueBorder} to-blue-500/10`]: isUnconfirmed,
           [`${styles.redBorder} to-red-500/10`]: isFalseReport,
@@ -176,10 +176,10 @@ export const SingleNote = async ({ note }: Props) => {
       />
 
       {isUnconfirmed && (
-        <div className="px-4 pt-4 flex gap-2 relative z-10 items-start">
-          <FaInfoCircle className="text-blue-500 shrink-0 mt-0.5" />
-          <div className="flex gap-2 lg:gap-4 flex-wrap">
-            <p className="font-bold text-sm">Unbestätigt</p>
+        <div className="relative z-10 flex items-start gap-2 px-4 pt-4">
+          <FaInfoCircle className="mt-0.5 shrink-0 text-blue-500" />
+          <div className="flex flex-wrap gap-2 lg:gap-4">
+            <p className="text-sm font-bold">Unbestätigt</p>
 
             {showConfirm && <ConfirmLog log={note} />}
           </div>
@@ -187,24 +187,24 @@ export const SingleNote = async ({ note }: Props) => {
       )}
 
       {isFalseReport && (
-        <div className="px-4 pt-4 flex items-start gap-2 relative z-10">
-          <BsExclamationOctagonFill className="text-red-500 shrink-0 mt-1" />
+        <div className="relative z-10 flex items-start gap-2 px-4 pt-4">
+          <BsExclamationOctagonFill className="mt-1 shrink-0 text-red-500" />
           <p className="font-bold">Falschmeldung</p>
         </div>
       )}
 
       <div
-        className={clsx("flex gap-2 relative z-10", {
-          "px-4 pt-4 opacity-20 hover:opacity-100 transition-opacity":
+        className={clsx("relative z-10 flex gap-2", {
+          "px-4 pt-4 opacity-20 transition-opacity hover:opacity-100":
             isUnconfirmed || isFalseReport,
         })}
       >
-        <div className="h-5 flex items-center">
+        <div className="flex h-5 items-center">
           <TbCircleDot />
         </div>
 
         <div className="flex-1">
-          <div className="text-sm flex gap-2 border-b pb-2 items-center border-neutral-800/50 flex-wrap text-neutral-500">
+          <div className="flex flex-wrap items-center gap-2 border-b border-neutral-800/50 pb-2 text-sm text-neutral-500">
             <p>
               <time dateTime={note.createdAt.toISOString()}>
                 {formatDate(note.createdAt)}

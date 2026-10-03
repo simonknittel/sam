@@ -1945,7 +1945,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
         <p>
           Klick dazu einfach bei deiner Event-Aufstellung neben den Button
           &ldquo;Hinzufügen&rdquo; auf das{" "}
-          <FaCopy className="text-interaction-500 inline" />
+          <FaCopy className="inline text-interaction-500" />
           -Symbol und wähle das Event aus von welchem du die Aufstellung
           kopieren möchtest.
         </p>
@@ -2360,7 +2360,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
 
         <p>
           Diese Übersicht ist in der Hauptnavigation hinter dem Icon{" "}
-          <AiFillAppstore className="inline-block text-brand-red-500 align-middle" />{" "}
+          <AiFillAppstore className="inline-block align-middle text-brand-red-500" />{" "}
           zu finden.
         </p>
 
@@ -2430,7 +2430,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
           Platz angepasst.
         </p>
 
-        <div className="flex justify-between items-start gap-2">
+        <div className="flex items-start justify-between gap-2">
           <div className="w-2/3">
             <ChangelogImage src={image20250609Uncollapsed} alt="" />
           </div>

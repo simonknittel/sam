@@ -13,7 +13,6 @@ import {
   type TestCitizen,
 } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
   clickUntilUrl,
   clickUntilVisible,
   fillUntilVisible,
@@ -358,10 +357,7 @@ test("the update variant modal links a wiki page", async ({
   await expect(updateModal).toHaveCount(0);
 
   await expect
-    .poll(
-      () => prisma.variant.findUniqueOrThrow({ where: { id: variant.id } }),
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
-    )
+    .poll(() => prisma.variant.findUniqueOrThrow({ where: { id: variant.id } }))
     .toMatchObject({ wikiPageId: rootPage.id });
 
   await page.goto(`/app/fleet/variant/${variant.id}`);

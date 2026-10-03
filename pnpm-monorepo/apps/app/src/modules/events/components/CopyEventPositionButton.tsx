@@ -45,7 +45,7 @@ export const CopyEventPositionButton = ({ className, position }: Props) => {
           type="button"
           onClick={handleClick}
           variant="tertiary"
-          className={clsx("px-2 w-auto", className)}
+          className={clsx("w-auto px-2", className)}
           aria-label={LABEL}
           iconOnly
         >

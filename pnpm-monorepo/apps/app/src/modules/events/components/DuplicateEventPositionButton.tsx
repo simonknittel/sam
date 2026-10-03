@@ -38,7 +38,7 @@ export const DuplicateEventPositionButton = ({
             type="submit"
             disabled={isPending}
             variant="tertiary"
-            className="px-2 w-auto"
+            className="w-auto px-2"
             aria-label={LABEL}
             iconOnly
           >

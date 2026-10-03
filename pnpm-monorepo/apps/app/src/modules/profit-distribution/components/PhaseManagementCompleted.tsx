@@ -15,11 +15,11 @@ interface Props {
 export const PhaseManagementCompleted = ({ cycleData }: Props) => {
   return (
     <Phase phase={CyclePhase.Completed} currentPhase={cycleData.currentPhase}>
-      <h2 className="font-bold text-center font-mono uppercase">
+      <h2 className="text-center font-mono font-bold uppercase">
         Auszahlung abgeschlossen
       </h2>
 
-      <div className="flex gap-[2px] border-t border-white/5 mt-4 pt-4">
+      <div className="mt-4 flex gap-[2px] border-t border-white/5 pt-4">
         <StatisticTile label="aUEC ausgezahlt" className="flex-1">
           <ScrambleIn
             text={cycleData.paidAuec?.toLocaleString("de") ?? "-"}

@@ -63,12 +63,12 @@ export const CreateManufacturerModal = ({ onRequestClose }: Props) => {
         <input
           id="name"
           type="text"
-          className="p-2 rounded-secondary bg-neutral-900 w-full mt-2"
+          className="mt-2 w-full rounded-secondary bg-neutral-900 p-2"
           {...register("name", { required: true })}
           autoFocus
         />
 
-        <div className="flex justify-end mt-8">
+        <div className="mt-8 flex justify-end">
           <Button2 type="submit" disabled={isLoading}>
             {isLoading ? <AsciiSpinner /> : <FaSave />}
             Speichern

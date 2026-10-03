@@ -63,7 +63,7 @@ export const VariantsTile = async ({
               <tr
                 key={row.id}
                 className={clsx(
-                  "grid items-center gap-4 px-2 h-14 rounded-secondary -mx-2 first:mt-2",
+                  "-mx-2 grid h-14 items-center gap-4 rounded-secondary px-2 first:mt-2",
                   GRID_COLS,
                 )}
               >
@@ -71,7 +71,7 @@ export const VariantsTile = async ({
                   {row.name}
                 </td>
 
-                <td className="overflow-hidden flex gap-1">
+                <td className="flex gap-1 overflow-hidden">
                   {row.tags
                     .toSorted((a, b) => a.key.localeCompare(b.key))
                     .map((tag) => (

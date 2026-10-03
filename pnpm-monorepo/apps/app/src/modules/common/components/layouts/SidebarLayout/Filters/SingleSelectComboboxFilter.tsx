@@ -72,8 +72,8 @@ export const SingleSelectComboboxFilter = ({
   }, [loader, isLoading]);
 
   return (
-    <div className={clsx("bg-secondary p-2 corners-secondary", className)}>
-      <p className="text-sm text-white/40 font-mono uppercase">{label}</p>
+    <div className={clsx("corners-secondary bg-secondary p-2", className)}>
+      <p className="font-mono text-sm text-white/40 uppercase">{label}</p>
 
       <Combobox.Root
         items={items}
@@ -81,7 +81,7 @@ export const SingleSelectComboboxFilter = ({
         onValueChange={setValueAndResetPagination}
       >
         <div className="mt-1">
-          <div className="p-1 rounded-secondary bg-neutral-900 border border-neutral-800 focus-visible:outline-2 outline-interaction-700 outline-offset-4 relative">
+          <div className="relative rounded-secondary border border-neutral-800 bg-neutral-900 p-1 outline-offset-4 outline-interaction-700 focus-visible:outline-2">
             <Combobox.InputGroup>
               <Combobox.Input
                 id={id}
@@ -96,7 +96,7 @@ export const SingleSelectComboboxFilter = ({
                 data-lpignore="true"
               />
 
-              <Combobox.Trigger className="absolute right-0 top-0 inline-flex h-8 w-6 items-center justify-center rounded text-brand-red-500 hover:text-brand-red-300 cursor-pointer">
+              <Combobox.Trigger className="absolute top-0 right-0 inline-flex h-8 w-6 cursor-pointer items-center justify-center rounded text-brand-red-500 hover:text-brand-red-300">
                 <FaChevronDown className="size-3" />
               </Combobox.Trigger>
             </Combobox.InputGroup>
@@ -105,7 +105,7 @@ export const SingleSelectComboboxFilter = ({
 
         <Combobox.Portal>
           <Combobox.Positioner sideOffset={4} className="z-30 outline-none">
-            <Combobox.Popup className="z-30 w-(--anchor-width) max-h-[min(20rem,var(--available-height))] overflow-y-auto rounded-secondary bg-neutral-950 border border-neutral-700 py-1 shadow-xl shadow-black/30 data-starting-style:scale-95 data-starting-style:opacity-0 data-ending-style:scale-95 data-ending-style:opacity-0">
+            <Combobox.Popup className="z-30 max-h-[min(20rem,var(--available-height))] w-(--anchor-width) overflow-y-auto rounded-secondary border border-neutral-700 bg-neutral-950 py-1 shadow-xl shadow-black/30 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0">
               <Combobox.Empty>
                 <div className="px-3 py-2 text-sm text-neutral-500">
                   Keine Treffer
@@ -117,7 +117,7 @@ export const SingleSelectComboboxFilter = ({
                   <Combobox.Item
                     key={item.value}
                     value={item}
-                    className="grid grid-cols-[0.75rem_1fr] items-center gap-2 px-3 py-1.5 text-sm outline-none data-highlighted:bg-neutral-800 cursor-pointer"
+                    className="grid cursor-pointer grid-cols-[0.75rem_1fr] items-center gap-2 px-3 py-1.5 text-sm outline-none data-highlighted:bg-neutral-800"
                   >
                     <Combobox.ItemIndicator className="col-start-1 text-brand-red-300">
                       <FaCheck className="size-2.5" />

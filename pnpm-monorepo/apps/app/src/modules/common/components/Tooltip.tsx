@@ -61,7 +61,7 @@ export const Tooltip = ({
           asChild
             ? className
             : clsx(
-                "text-brand-red-500 hover:underline focus-visible:underline font-mono uppercase cursor-help",
+                "cursor-help font-mono text-brand-red-500 uppercase hover:underline focus-visible:underline",
                 className,
               )
         }
@@ -71,7 +71,7 @@ export const Tooltip = ({
 
       <RadixUiTooltip.Content
         className={clsx(
-          "p-2 text-sm leading-tight max-w-[320px] select-none rounded-secondary bg-neutral-600 text-white font-normal",
+          "max-w-[320px] rounded-secondary bg-neutral-600 p-2 text-sm leading-tight font-normal text-white select-none",
           contentClassName,
         )}
         side={side}

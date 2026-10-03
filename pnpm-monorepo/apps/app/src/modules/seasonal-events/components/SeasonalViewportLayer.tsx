@@ -20,7 +20,7 @@ export const SeasonalViewportLayer = async () => {
   return (
     <div
       aria-hidden
-      className="hidden lg:block fixed inset-0 z-20 overflow-hidden pointer-events-none"
+      className="pointer-events-none fixed inset-0 z-20 hidden overflow-hidden lg:block"
     >
       <ViewportDecoration />
     </div>

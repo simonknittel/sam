@@ -34,7 +34,7 @@ export const OverviewTile = ({ className, event, showCoverUpload }: Props) => {
   return (
     <section
       className={clsx(
-        "rounded-primary bg-neutral-800/50 overflow-auto",
+        "overflow-auto rounded-primary bg-neutral-800/50",
         className,
       )}
       style={{
@@ -51,9 +51,9 @@ export const OverviewTile = ({ className, event, showCoverUpload }: Props) => {
           width={800}
           height={320}
           className={clsx(
-            "bg-black text-neutral-500 hover:text-neutral-300 transition-colors",
+            "bg-black text-neutral-500 transition-colors hover:text-neutral-300",
             {
-              "h-40 after:content-['Titelbild_hochladen'] flex items-center justify-center":
+              "flex h-40 items-center justify-center after:content-['Titelbild_hochladen']":
                 !event.coverImage,
             },
           )}
@@ -73,7 +73,7 @@ export const OverviewTile = ({ className, event, showCoverUpload }: Props) => {
           // Discord recommends 800x320px; app covers follow the same ratio
           width={800}
           height={320}
-          className="flex-initial w-full"
+          className="w-full flex-initial"
           priority
           unoptimized={
             event.coverImage
@@ -86,7 +86,7 @@ export const OverviewTile = ({ className, event, showCoverUpload }: Props) => {
       )}
 
       <div className="p-4">
-        <h1 className="font-bold font-mono uppercase">{event.name}</h1>
+        <h1 className="font-mono font-bold uppercase">{event.name}</h1>
 
         {event.description && (
           <DiscordMarkdown className="mt-4">
@@ -95,7 +95,7 @@ export const OverviewTile = ({ className, event, showCoverUpload }: Props) => {
         )}
 
         <dl className="mt-4">
-          <dt className="text-neutral-500 font-mono uppercase text-xs">
+          <dt className="font-mono text-xs text-neutral-500 uppercase">
             Start
           </dt>
           <dd>
@@ -110,7 +110,7 @@ export const OverviewTile = ({ className, event, showCoverUpload }: Props) => {
             })}
           </dd>
 
-          <dt className="text-neutral-500 font-mono uppercase text-xs mt-4">
+          <dt className="mt-4 font-mono text-xs text-neutral-500 uppercase">
             Ende
           </dt>
           <dd>
@@ -127,7 +127,7 @@ export const OverviewTile = ({ className, event, showCoverUpload }: Props) => {
 
           {event.source === EventSource.DISCORD && (
             <>
-              <dt className="text-neutral-500 font-mono uppercase text-xs mt-4">
+              <dt className="mt-4 font-mono text-xs text-neutral-500 uppercase">
                 Ort
               </dt>
               <dd>{event.location || "-"}</dd>
@@ -136,7 +136,7 @@ export const OverviewTile = ({ className, event, showCoverUpload }: Props) => {
 
           {event.source === EventSource.APP && (
             <>
-              <dt className="text-neutral-500 font-mono uppercase text-xs mt-4">
+              <dt className="mt-4 font-mono text-xs text-neutral-500 uppercase">
                 Erstellt von
               </dt>
               <dd>
@@ -145,14 +145,14 @@ export const OverviewTile = ({ className, event, showCoverUpload }: Props) => {
             </>
           )}
 
-          <dt className="text-neutral-500 font-mono uppercase text-xs mt-4">
+          <dt className="mt-4 font-mono text-xs text-neutral-500 uppercase">
             Erstellt am
           </dt>
           <dd>{formatDate(event.createdAt) || "-"}</dd>
         </dl>
 
         {showActions && (
-          <div className="flex flex-col gap-2 mt-4">
+          <div className="mt-4 flex flex-col gap-2">
             <DownloadEventButton event={event} />
 
             {event.discordGuildId && event.discordId && (

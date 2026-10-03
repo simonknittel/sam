@@ -22,9 +22,9 @@ export const PhaseManagementCollection = ({ cycleData }: Props) => {
       currentPhase={cycleData.currentPhase}
       innerClassName="overflow-hidden"
     >
-      <h2 className="text-center font-bold font-mono uppercase">Sammelphase</h2>
+      <h2 className="text-center font-mono font-bold uppercase">Sammelphase</h2>
 
-      <div className="flex gap-0.5 border-t border-white/5 mt-4 pt-4">
+      <div className="mt-4 flex gap-0.5 border-t border-white/5 pt-4">
         <StatisticTile label="Anzahl Teilnehmer bisher" className="flex-1">
           <ScrambleIn
             text={
@@ -56,7 +56,7 @@ export const PhaseManagementCollection = ({ cycleData }: Props) => {
         </StatisticTile>
       </div>
 
-      <div className="flex justify-center mt-4">
+      <div className="mt-4 flex justify-center">
         <PhaseEndDate
           plannedEnd={cycleData.cycle.collectionEndsAt}
           actualEnd={cycleData.cycle.collectionEndedAt}
@@ -64,7 +64,7 @@ export const PhaseManagementCollection = ({ cycleData }: Props) => {
         {/* TODO: Implement edit button */}
       </div>
 
-      <div className="flex justify-center items-center gap-2 mt-2">
+      <div className="mt-2 flex items-center justify-center gap-2">
         <p className="text-center text-sm">
           Du kannst diese Phase sofort beenden.
         </p>
@@ -73,7 +73,7 @@ export const PhaseManagementCollection = ({ cycleData }: Props) => {
       </div>
 
       {cycleData.currentPhase === CyclePhase.Collection && (
-        <div className="flex justify-center items-center gap-2 border-t border-white/5 pt-4 mt-4">
+        <div className="mt-4 flex items-center justify-center gap-2 border-t border-white/5 pt-4">
           <CitizenTable cycleData={cycleData} />
         </div>
       )}

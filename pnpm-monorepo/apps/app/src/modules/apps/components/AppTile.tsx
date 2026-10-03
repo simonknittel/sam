@@ -77,18 +77,18 @@ export const AppTile = ({
 
         <div className="relative flex flex-none items-center gap-1.5 text-sm">
           {isExternal && (
-            <FaExternalLinkAlt className="flex-none text-neutral-500 text-xs" />
+            <FaExternalLinkAlt className="flex-none text-xs text-neutral-500" />
           )}
 
           {/* Both controls appear together, and only on hover or focus —
           including the star of an already favorited app, so the rows stay
           quiet. They keep their space in the layout and in the accessibility
           tree, so nothing shifts and both stay keyboard reachable. */}
-          <div className="flex flex-none items-center gap-1.5 opacity-0 group-hover/app-tile:opacity-100 group-focus-within/app-tile:opacity-100">
+          <div className="flex flex-none items-center gap-1.5 opacity-0 group-focus-within/app-tile:opacity-100 group-hover/app-tile:opacity-100">
             {aboutHref && (
               <Link
                 href={aboutHref}
-                className="flex-none text-neutral-500 hover:text-interaction-500 focus-visible:text-interaction-500 transition-colors motion-reduce:transition-none"
+                className="flex-none text-neutral-500 transition-colors hover:text-interaction-500 focus-visible:text-interaction-500 motion-reduce:transition-none"
                 title="Über diese App"
                 aria-label="Über diese App"
                 onClick={onClick}
@@ -113,18 +113,18 @@ export const AppTile = ({
             alt={`Screenshot der ${app.name} App`}
             sizes={APP_TILE_IMAGE_SIZES}
             loading={isAboveTheFold ? "eager" : "lazy"}
-            className="aspect-video object-cover object-top grayscale group-hover/app-tile:grayscale-0 group-focus-within/app-tile:grayscale-0 transition motion-reduce:transition-none flex-initial"
+            className="aspect-video flex-initial object-cover object-top grayscale transition group-focus-within/app-tile:grayscale-0 group-hover/app-tile:grayscale-0 motion-reduce:transition-none"
           />
         ) : (
           <div className="aspect-video bg-black" />
         )}
       </div>
 
-      <div className="p-2 sm:p-4 flex flex-col gap-2 flex-1">
-        <div className="flex gap-2 items-center">
+      <div className="flex flex-1 flex-col gap-2 p-2 sm:p-4">
+        <div className="flex items-center gap-2">
           <h2
             title={app.name}
-            className="font-bold truncate font-mono uppercase"
+            className="truncate font-mono font-bold uppercase"
           >
             <Link
               href={href}
@@ -134,18 +134,18 @@ export const AppTile = ({
             </Link>
           </h2>
 
-          <div className="relative flex flex-none items-center gap-1.5 ml-auto text-sm">
+          <div className="relative ml-auto flex flex-none items-center gap-1.5 text-sm">
             {dotBadgeCount > 0 && (
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping motion-reduce:hidden absolute inline-flex h-full w-full rounded-full bg-interaction-700 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-interaction-500" />
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-interaction-700 opacity-75 motion-reduce:hidden" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-interaction-500" />
               </span>
             )}
 
             {aboutHref && (
               <Link
                 href={aboutHref}
-                className="flex-none text-neutral-500 hover:text-interaction-500 focus-visible:text-interaction-500 transition-colors motion-reduce:transition-none"
+                className="flex-none text-neutral-500 transition-colors hover:text-interaction-500 focus-visible:text-interaction-500 motion-reduce:transition-none"
                 title="Über diese App"
                 aria-label="Über diese App"
               >
@@ -162,7 +162,7 @@ export const AppTile = ({
         </div>
 
         {"description" in app && app.description && (
-          <p className="text-xs text-neutral-400 flex-1">{app.description}</p>
+          <p className="flex-1 text-xs text-neutral-400">{app.description}</p>
         )}
 
         {app.tags?.length && (

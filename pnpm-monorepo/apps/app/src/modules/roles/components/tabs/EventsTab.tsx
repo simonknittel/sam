@@ -9,13 +9,13 @@ const EventsTab = () => {
 
   return (
     <TabPanel id="events">
-      <div className="py-2 flex justify-between items-center">
+      <div className="flex items-center justify-between py-2">
         <h4 className="font-bold">Events lesen</h4>
 
         <YesNoCheckbox {...register("event;read")} />
       </div>
 
-      <div className="py-2 flex justify-between items-center gap-2">
+      <div className="flex items-center justify-between gap-2 py-2">
         <div>
           <h4 className="font-bold">Events erstellen</h4>
           <p className="text-sm">
@@ -27,13 +27,13 @@ const EventsTab = () => {
         <YesNoCheckbox {...register("event;create")} />
       </div>
 
-      <div className="py-2 flex justify-between items-center">
+      <div className="flex items-center justify-between py-2">
         <h4 className="font-bold">Events verwalten</h4>
 
         <YesNoCheckbox {...register("event;manage")} />
       </div>
 
-      <div className="py-2 flex justify-between items-center gap-2">
+      <div className="flex items-center justify-between gap-2 py-2">
         <div>
           <h4 className="font-bold">Event-Vorlagen teilen</h4>
           <p className="text-sm">
@@ -45,13 +45,13 @@ const EventsTab = () => {
         <YesNoCheckbox {...register("eventTemplateShare;manage")} />
       </div>
 
-      <div className="py-2 flex justify-between items-center">
+      <div className="flex items-center justify-between py-2">
         <h4 className="font-bold">Event-Flotte lesen</h4>
 
         <YesNoCheckbox {...register("eventFleet;read")} />
       </div>
 
-      <div className="py-2 flex justify-between items-center gap-2">
+      <div className="flex items-center justify-between gap-2 py-2">
         <div>
           <h4 className="font-bold">Aufstellung - Posten verwalten</h4>
           <p className="text-sm">

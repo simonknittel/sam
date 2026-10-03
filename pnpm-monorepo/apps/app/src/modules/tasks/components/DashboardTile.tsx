@@ -21,7 +21,7 @@ export const TasksDashboardTile = async ({ className }: Props) => {
 
   return (
     <section className={clsx(className)}>
-      <h2 className="font-thin text-2xl self-start font-mono uppercase">
+      <h2 className="self-start font-mono text-2xl font-thin uppercase">
         Meine Tasks
       </h2>
 
@@ -31,10 +31,10 @@ export const TasksDashboardTile = async ({ className }: Props) => {
         ))}
       </div>
 
-      <div className="flex justify-center mt-2">
+      <div className="mt-2 flex justify-center">
         <Link
           href="/app/tasks"
-          className="text-interaction-500 hover:underline focus-visible:underline font-mono uppercase text-sm"
+          className="font-mono text-sm text-interaction-500 uppercase hover:underline focus-visible:underline"
         >
           Alle Tasks
         </Link>

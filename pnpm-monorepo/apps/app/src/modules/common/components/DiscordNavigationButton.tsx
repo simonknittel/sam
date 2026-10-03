@@ -15,7 +15,7 @@ export const DiscordNavigationButton = ({ className, path }: Props) => {
       href={href}
       className={clsx(
         className,
-        "first:rounded-l-secondary border last:rounded-r-secondary h-8 flex items-center justify-center px-3 gap-2 uppercase border-neutral-500 text-neutral-500 hover:border-neutral-300 active:border-neutral-300 hover:text-neutral-300 active:text-neutral-300 font-mono",
+        "flex h-8 items-center justify-center gap-2 border border-neutral-500 px-3 font-mono text-neutral-500 uppercase first:rounded-l-secondary last:rounded-r-secondary hover:border-neutral-300 hover:text-neutral-300 active:border-neutral-300 active:text-neutral-300",
       )}
       rel="noreferrer"
     >

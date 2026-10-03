@@ -62,13 +62,11 @@ test("a page is renamed, which moves it to a new URL, and moved to a new parent"
   await saveInlineEditor(page);
 
   await expect
-    .poll(
-      () =>
-        prisma.wikiPage.findUniqueOrThrow({
-          where: { id: wikiPage.id },
-          select: { title: true, slug: true },
-        }),
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
+    .poll(() =>
+      prisma.wikiPage.findUniqueOrThrow({
+        where: { id: wikiPage.id },
+        select: { title: true, slug: true },
+      }),
     )
     .toEqual({ title: "Neuer Titel", slug: "neuer-titel" });
 
@@ -92,13 +90,11 @@ test("a page is renamed, which moves it to a new URL, and moved to a new parent"
 
   /** A public page gives up PUBLIC below a parent, see WikiPage.visibility */
   await expect
-    .poll(
-      () =>
-        prisma.wikiPage.findUniqueOrThrow({
-          where: { id: wikiPage.id },
-          select: { parentId: true, visibility: true },
-        }),
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
+    .poll(() =>
+      prisma.wikiPage.findUniqueOrThrow({
+        where: { id: wikiPage.id },
+        select: { parentId: true, visibility: true },
+      }),
     )
     .toEqual({ parentId: target.id, visibility: WikiPageVisibility.INHERIT });
 
@@ -146,10 +142,8 @@ test("two moves at the same time cannot put a page below itself", async ({
    * checks of the app, waits for the lock and sees the parallel move only
    * after it.
    */
-  let commitParallelMove = () => {};
-  const parallelMoveCanCommit = new Promise<void>((resolve) => {
-    commitParallelMove = resolve;
-  });
+  const { promise: parallelMoveCanCommit, resolve: commitParallelMove } =
+    Promise.withResolvers<void>();
   const parallelMove = prisma.$transaction(
     async (transaction) => {
       await transaction.wikiPage.update({
@@ -164,11 +158,7 @@ test("two moves at the same time cannot put a page below itself", async ({
 
   try {
     await moveDialog.getByRole("button", { name: "Verschieben" }).click();
-    await expect
-      .poll(() => countWaitingAdvisoryLocks(prisma), {
-        timeout: ACTION_FEEDBACK_TIMEOUT,
-      })
-      .toBe(1);
+    await expect.poll(() => countWaitingAdvisoryLocks(prisma)).toBe(1);
   } finally {
     commitParallelMove();
     await parallelMove;
@@ -179,7 +169,7 @@ test("two moves at the same time cannot put a page below itself", async ({
       "Die Seite kann nicht dorthin verschoben werden, weil sich die Seitenstruktur in der Zwischenzeit geändert hat.",
       { exact: false },
     ),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
 
   /** Only the parallel move is done: the tree has no cycle */
   expect(
@@ -236,10 +226,8 @@ test("a move waits for the tree lock before it changes a row", async ({
    * parallel move waits for. When the lock comes only from the trigger, the
    * dialog holds the row of its page already, and the two moves deadlock.
    */
-  let continueParallelMove = () => {};
-  const parallelMoveCanContinue = new Promise<void>((resolve) => {
-    continueParallelMove = resolve;
-  });
+  const { promise: parallelMoveCanContinue, resolve: continueParallelMove } =
+    Promise.withResolvers<void>();
   const parallelMove = prisma.$transaction(
     async (transaction) => {
       await transaction.wikiPage.update({
@@ -258,11 +246,7 @@ test("a move waits for the tree lock before it changes a row", async ({
 
   try {
     await moveDialog.getByRole("button", { name: "Verschieben" }).click();
-    await expect
-      .poll(() => countWaitingAdvisoryLocks(prisma), {
-        timeout: ACTION_FEEDBACK_TIMEOUT,
-      })
-      .toBe(1);
+    await expect.poll(() => countWaitingAdvisoryLocks(prisma)).toBe(1);
   } finally {
     continueParallelMove();
     await parallelMove;
@@ -270,14 +254,12 @@ test("a move waits for the tree lock before it changes a row", async ({
 
   /** Both moves are done */
   await expect
-    .poll(
-      () =>
-        prisma.wikiPage.findMany({
-          where: { id: { in: [first.id, second.id] } },
-          select: { id: true, parentId: true },
-          orderBy: { title: "asc" },
-        }),
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
+    .poll(() =>
+      prisma.wikiPage.findMany({
+        where: { id: { in: [first.id, second.id] } },
+        select: { id: true, parentId: true },
+        orderBy: { title: "asc" },
+      }),
     )
     .toEqual([
       { id: first.id, parentId: target.id },
@@ -298,9 +280,7 @@ test("a favorited page shows up in the sidebar's favorites", async ({
 
   await signIn(citizen.user);
   await page.goto(`/app/wiki/${wikiPage.id}/${wikiPage.slug}`);
-  await expect(page.getByText("Du hast bisher keine Favoriten.")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Du hast bisher keine Favoriten.")).toBeVisible();
 
   await clickUntilVisible(
     page.getByRole("button", { name: "Als Favorit speichern" }),
@@ -326,9 +306,7 @@ test("a favorited page shows up in the sidebar's favorites", async ({
 
   /** Un-favoriting empties the panel again */
   await page.getByRole("button", { name: "Favorit entfernen" }).click();
-  await expect(page.getByText("Du hast bisher keine Favoriten.")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Du hast bisher keine Favoriten.")).toBeVisible();
   await expect
     .poll(() =>
       prisma.wikiPageFavorite.count({ where: { pageId: wikiPage.id } }),

@@ -27,7 +27,7 @@ export const ChristmasSnowflake = ({ className }: Props) => (
     aria-hidden
     viewBox="0 0 24 24"
     className={clsx(
-      "absolute top-0 opacity-0 animate-seasonal-snowfall",
+      "absolute top-0 animate-seasonal-snowfall opacity-0",
       className,
     )}
     fill="none"

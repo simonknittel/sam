@@ -6,7 +6,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { PostgreSqlContainer } from "@testcontainers/postgresql";
 import { execFile } from "node:child_process";
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import path from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { promisify } from "node:util";
@@ -29,15 +29,13 @@ import {
   s3CorsConfiguration,
   s3Environment,
   s3SecretAccessKey,
-  stateDirectory,
-  stateFilePath,
   templateDatabase,
   unleashAdminToken,
   unleashBackendToken,
   unleashContainerPort,
   unleashDatabase,
   unleashImage,
-  type StackState,
+  writeStackState,
 } from "./stack";
 
 const execFileAsync = promisify(execFile);
@@ -232,15 +230,13 @@ const globalSetup = async () => {
 
   const [unleash] = await Promise.all([unleashStart, ...builds]);
 
-  const state: StackState = {
+  writeStackState({
     postgresHost: postgres.getHost(),
     postgresPort: postgres.getMappedPort(5432),
     networkName: network.getName(),
     s3Port,
     unleashPort: unleash.getMappedPort(unleashContainerPort),
-  };
-  mkdirSync(stateDirectory, { recursive: true });
-  writeFileSync(stateFilePath, JSON.stringify(state, null, 2));
+  });
 
   console.log("[stack] Ready");
 

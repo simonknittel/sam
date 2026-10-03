@@ -106,7 +106,7 @@ export const ToggleEventPositionApplicationForCurrentUser = ({
 
               {position.requiredVariants.length > 0 && (
                 <>
-                  <p className="text-sm text-gray-500 mt-4">
+                  <p className="mt-4 text-sm text-gray-500">
                     Erforderliches Schiff
                   </p>
                   {position.requiredVariants.map((requiredVariant) => (

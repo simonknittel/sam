@@ -117,14 +117,14 @@ export const ToggleAll = ({ className }: ToggleAllProps) => {
     <div className={clsx("flex gap-2", className)}>
       <button
         onClick={openAll}
-        className="text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300 hover:underline focus-visible:underline"
+        className="text-brand-red-500 hover:text-brand-red-300 hover:underline focus-visible:text-brand-red-300 focus-visible:underline"
       >
         Alle öffnen
       </button>
       /
       <button
         onClick={closeAll}
-        className="text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300 hover:underline focus-visible:underline"
+        className="text-brand-red-500 hover:text-brand-red-300 hover:underline focus-visible:text-brand-red-300 focus-visible:underline"
       >
         schließen
       </button>

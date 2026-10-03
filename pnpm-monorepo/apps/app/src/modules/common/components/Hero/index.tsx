@@ -19,7 +19,7 @@ export const Hero = ({
     <h1
       className={clsx(
         className,
-        "inline-block uppercase font-extrabold bg-clip-text text-transparent bg-brand-text-gradient relative z-1 whitespace-nowrap font-hero",
+        "relative z-1 inline-block bg-brand-text-gradient bg-clip-text font-hero font-extrabold whitespace-nowrap text-transparent uppercase",
         {
           "text-5xl lg:text-6xl": size === "lg",
           [styles.layers]: withGlitch,

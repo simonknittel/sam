@@ -15,7 +15,6 @@ import {
   wikiParagraph,
 } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
   fillUntilValue,
   modal,
@@ -103,9 +102,7 @@ test("copy'n'paste inserts a page with its readable children under another page"
   await expect(page.getByText("„Handbuch“ + 1 Unterseiten")).toBeVisible();
   await page.getByRole("button", { name: "Einfügen", exact: true }).click();
 
-  await expect(page).toHaveURL(/handbuch-kopie$/, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page).toHaveURL(/handbuch-kopie$/);
   await expect(page.getByText("Grundlagen des Bergbaus.")).toBeVisible();
 
   const rootCopy = await prisma.wikiPage.findFirstOrThrow({
@@ -163,9 +160,7 @@ test("a new page can start as a copy of an existing page", async ({
     .selectOption({ label: "Vorlage" });
   await page.getByRole("button", { name: "Erstellen", exact: true }).click();
 
-  await expect(page.getByText("Struktur der Vorlage.")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Struktur der Vorlage.")).toBeVisible();
 
   const created = await prisma.wikiPage.findFirstOrThrow({
     where: { title: "Neu aus Vorlage" },
@@ -216,9 +211,7 @@ test("replace mode transplants the copy onto an existing page", async ({
   await page.getByRole("button", { name: "Einfügen", exact: true }).click();
 
   // The page keeps its identity; only its content is transplanted
-  await expect(page).toHaveURL(new RegExp(`/app/wiki/${target.id}/`), {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page).toHaveURL(new RegExp(`/app/wiki/${target.id}/`));
   await expect(page.getByText("Muster-Inhalt.")).toBeVisible();
 
   const targetRow = await prisma.wikiPage.findUniqueOrThrow({
@@ -251,12 +244,10 @@ test("replace mode transplants the copy onto an existing page", async ({
    * this also orders the "no (Kopie) page" check below after the action.
    */
   await expect
-    .poll(
-      () =>
-        prisma.wikiPage.count({
-          where: { title: "Muster-Kind", parentId: target.id },
-        }),
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
+    .poll(() =>
+      prisma.wikiPage.count({
+        where: { title: "Muster-Kind", parentId: target.id },
+      }),
     )
     .toBe(1);
   // No "(Kopie)" page was created — the target itself was replaced
@@ -320,9 +311,7 @@ test("a pasted copy keeps an image in use after the source removes it", async ({
   await page.goto(`/app/wiki/${target.id}/${target.slug}`);
   await openCreatePageModal(page);
   await page.getByRole("button", { name: "Einfügen", exact: true }).click();
-  await expect(page).toHaveURL(/bildvorlage-kopie$/, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page).toHaveURL(/bildvorlage-kopie$/);
 
   const copy = await prisma.wikiPage.findFirstOrThrow({
     where: { title: "Bildvorlage (Kopie)" },
@@ -355,15 +344,11 @@ test("a pasted copy keeps an image in use after the source removes it", async ({
   const row = page.getByRole("row").filter({ hasText: "Kopiertes Bild.png" });
   await expect(
     row.getByRole("link", { name: "Bildvorlage (Kopie)" }),
-  ).toHaveAttribute("href", `/app/wiki/${copy.id}/${copy.slug}`, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  ).toHaveAttribute("href", `/app/wiki/${copy.id}/${copy.slug}`);
   await expect(row.getByText("Wiki-Bild/-Anhang")).toBeVisible();
 
   await page.goto("/app/uploads?usage=unused");
-  await expect(page.getByText("Keine Uploads für diese Filter.")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Keine Uploads für diese Filter.")).toBeVisible();
 });
 
 test("an event created from a template links the uploads of its briefing copy", async ({
@@ -401,9 +386,7 @@ test("an event created from a template links the uploads of its briefing copy", 
   await fillUntilValue(createDialog.getByLabel("Start"), "2999-01-01T18:00");
   await fillUntilValue(createDialog.getByLabel("Ende"), "2999-01-01T20:00");
   await createDialog.getByRole("button", { name: "Speichern" }).click();
-  await expect(page).toHaveURL(/\/app\/events\/[^/]+$/, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page).toHaveURL(/\/app\/events\/[^/]+$/);
 
   const briefingCopy = await prisma.wikiPage.findFirstOrThrow({
     where: { title: "Anflugkarte", eventId: { not: null } },

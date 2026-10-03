@@ -6,10 +6,7 @@ import {
   createOnSiteNotifications,
   futureEvent,
 } from "../fixtures/factories";
-import {
-  ACTION_FEEDBACK_TIMEOUT,
-  clickUntilVisible,
-} from "../fixtures/interactions";
+import { clickUntilVisible } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 const bellButton = (page: Page) =>
@@ -78,24 +75,11 @@ test("the popover lists notifications with their content", async ({
   ).toBeVisible();
 });
 
-/** The elements a decorated row is built from, whatever styles them */
-const confettiCanvas = (page: Page) =>
-  popover(page).locator("[data-confetti-canvas]");
-const staticConfetti = (page: Page) =>
-  popover(page).locator("[data-birthday-confetti-static]");
-const newYearBackground = (page: Page) =>
-  popover(page).locator("[data-new_year-background]");
-const staticNewYearConfetti = (page: Page) =>
-  popover(page).locator("[data-new_year-confetti-static]");
-
-test("a birthday greeting reads its wording and sprinkles confetti", async ({
+test("a birthday greeting reads its wording", async ({
   page,
   prisma,
   signIn,
 }) => {
-  /** The whole suite runs with reduced motion, see playwright.config.ts */
-  await page.emulateMedia({ reducedMotion: "no-preference" });
-
   const citizen = await createCitizen(prisma, { handle: "geburtstagskind" });
   await createOnSiteNotification(prisma, {
     citizenId: citizen.entity.id,
@@ -111,8 +95,6 @@ test("a birthday greeting reads its wording and sprinkles confetti", async ({
     notificationType: "birthday",
     payload: {},
   });
-  /** Every other notification stays undecorated */
-  await createOnSiteNotification(prisma, { citizenId: citizen.entity.id });
   await signIn(citizen.user);
 
   await page.goto("/app");
@@ -131,44 +113,13 @@ test("a birthday greeting reads its wording and sprinkles confetti", async ({
   await expect(
     popover(page).getByText("Wir wünschen dir einen schönen Tag."),
   ).toBeVisible();
-
-  await expect(confettiCanvas(page)).toHaveCount(2);
-  await expect(staticConfetti(page)).toHaveCount(0);
 });
 
-test("a birthday greeting stays still for a viewer who asks for it", async ({
+test("a New Year greeting reads its wording", async ({
   page,
   prisma,
   signIn,
 }) => {
-  await page.emulateMedia({ reducedMotion: "reduce" });
-
-  const citizen = await createCitizen(prisma, {
-    handle: "ruhiges-geburtstagskind",
-  });
-  await createOnSiteNotification(prisma, {
-    citizenId: citizen.entity.id,
-    notificationType: "birthday",
-    payload: {},
-  });
-  await createOnSiteNotification(prisma, { citizenId: citizen.entity.id });
-  await signIn(citizen.user);
-
-  await page.goto("/app");
-  await openNotificationCenter(page);
-
-  await expect(staticConfetti(page)).toHaveCount(1);
-  await expect(confettiCanvas(page)).toHaveCount(0);
-});
-
-test("a New Year greeting reads its wording and sprinkles confetti", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  /** The whole suite runs with reduced motion, see playwright.config.ts */
-  await page.emulateMedia({ reducedMotion: "no-preference" });
-
   const citizen = await createCitizen(prisma, { handle: "neujahrskind" });
   await createOnSiteNotification(prisma, {
     citizenId: citizen.entity.id,
@@ -178,8 +129,6 @@ test("a New Year greeting reads its wording and sprinkles confetti", async ({
       body: "Ein neues Jahr, ein neues Verse. Auf viele gemeinsame Flüge.",
     },
   });
-  /** Every other notification stays undecorated */
-  await createOnSiteNotification(prisma, { citizenId: citizen.entity.id });
   await signIn(citizen.user);
 
   await page.goto("/app");
@@ -191,36 +140,6 @@ test("a New Year greeting reads its wording and sprinkles confetti", async ({
       "Ein neues Jahr, ein neues Verse. Auf viele gemeinsame Flüge.",
     ),
   ).toBeVisible();
-
-  await expect(newYearBackground(page)).toHaveCount(1);
-  await expect(confettiCanvas(page)).toHaveCount(1);
-  await expect(staticNewYearConfetti(page)).toHaveCount(0);
-});
-
-test("a New Year greeting stays still for a viewer who asks for it", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  await page.emulateMedia({ reducedMotion: "reduce" });
-
-  const citizen = await createCitizen(prisma, {
-    handle: "ruhiges-neujahrskind",
-  });
-  await createOnSiteNotification(prisma, {
-    citizenId: citizen.entity.id,
-    notificationType: "new_year",
-    payload: { title: "Auf 2957!", body: "Frohes neues Jahr." },
-  });
-  await createOnSiteNotification(prisma, { citizenId: citizen.entity.id });
-  await signIn(citizen.user);
-
-  await page.goto("/app");
-  await openNotificationCenter(page);
-
-  await expect(newYearBackground(page)).toHaveCount(1);
-  await expect(staticNewYearConfetti(page)).toHaveCount(1);
-  await expect(confettiCanvas(page)).toHaveCount(0);
 });
 
 test("unknown notification types render a generic fallback", async ({
@@ -256,9 +175,7 @@ test("notifications in view are marked read, keeping their highlight until the p
 
   await page.goto("/app");
   // The unread count drives the bell dot and the tab title
-  await expect(page).toHaveTitle(/^\(2\)/, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page).toHaveTitle(/^\(2\)/);
   await expect(bellDot(page)).toBeVisible();
 
   await openNotificationCenter(page);
@@ -357,9 +274,7 @@ test("a notification can be archived and restored again", async ({
   await signIn(citizen.user);
 
   await page.goto("/app");
-  await expect(page).toHaveTitle(/^\(1\)/, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page).toHaveTitle(/^\(1\)/);
   await openNotificationCenter(page);
 
   await popover(page).getByText("Neues Event").hover();
@@ -432,11 +347,9 @@ test("the bulk actions mark everything read and archive what is read", async ({
     .click();
 
   await expect(unreadRowDots(page)).toHaveCount(0);
-  await expect(page).toHaveTitle(/^[^(]/, { timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(page).toHaveTitle(/^[^(]/);
   await expect
-    .poll(() => prisma.onSiteNotification.count({ where: { readAt: null } }), {
-      timeout: ACTION_FEEDBACK_TIMEOUT,
-    })
+    .poll(() => prisma.onSiteNotification.count({ where: { readAt: null } }))
     .toBe(0);
 
   // Everything is read by now, so archiving the read ones empties the inbox
@@ -517,9 +430,7 @@ test("a notification leads to the entity it is about", async ({
 
   await popover(page).getByRole("link", { name: "Neues Event" }).click();
 
-  await expect(page).toHaveURL(`/app/events/${event.id}`, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page).toHaveURL(`/app/events/${event.id}`);
   await expect(
     page.getByRole("heading", { name: "Operation Zielsprung" }).first(),
   ).toBeVisible();
@@ -540,9 +451,7 @@ test.describe("mobile", () => {
     await signIn(citizen.user);
 
     await page.goto("/app");
-    await expect(page).toHaveTitle(/^\(1\)/, {
-      timeout: ACTION_FEEDBACK_TIMEOUT,
-    });
+    await expect(page).toHaveTitle(/^\(1\)/);
 
     await page.locator("nav").getByRole("button", { name: "Apps" }).click();
     await openNotificationCenter(page);

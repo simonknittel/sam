@@ -41,11 +41,11 @@ export const MobileActionBarClient = ({
   const showCareer = canReadCareer;
 
   return (
-    <ul className="h-full flex justify-evenly">
+    <ul className="flex h-full justify-evenly">
       <li className="h-full py-1">
         <Link
           href="/app"
-          className="flex flex-col items-center justify-center px-4 h-full active:bg-neutral-700 rounded-secondary"
+          className="flex h-full flex-col items-center justify-center rounded-secondary px-4 active:bg-neutral-700"
         >
           <FaHome className="text-xl text-neutral-500" />
           <span className="text-xs">Dashboard</span>
@@ -56,7 +56,7 @@ export const MobileActionBarClient = ({
         <li className="h-full py-1">
           <Link
             href="/app/tasks"
-            className="flex flex-col items-center justify-center px-4 h-full active:bg-neutral-700 rounded-secondary"
+            className="flex h-full flex-col items-center justify-center rounded-secondary px-4 active:bg-neutral-700"
           >
             <MdTaskAlt className="text-xl text-neutral-500" />
             <span className="text-xs">Tasks</span>
@@ -68,7 +68,7 @@ export const MobileActionBarClient = ({
         <li className="h-full py-1">
           <Link
             href="/app/fleet"
-            className="flex flex-col items-center justify-center px-4 h-full active:bg-neutral-700 rounded-secondary"
+            className="flex h-full flex-col items-center justify-center rounded-secondary px-4 active:bg-neutral-700"
           >
             <MdWorkspaces className="text-xl text-neutral-500" />
             <span className="text-xs">Flotte</span>
@@ -80,7 +80,7 @@ export const MobileActionBarClient = ({
         <li className="h-full py-1">
           <Link
             href="/app/career"
-            className="flex flex-col items-center justify-center px-4 h-full active:bg-neutral-700 rounded-secondary"
+            className="flex h-full flex-col items-center justify-center rounded-secondary px-4 active:bg-neutral-700"
           >
             <TbMilitaryRank className="text-xl text-neutral-500" />
             <span className="text-xs">Karriere</span>
@@ -92,7 +92,7 @@ export const MobileActionBarClient = ({
         <MobileActionBarFlyout>
           <Account supportHref={supportHref} />
 
-          <div className="p-4 relative" data-red-bar-container>
+          <div className="relative p-4" data-red-bar-container>
             {featured && (
               <div>
                 <p className="pl-2 text-neutral-500">Featured</p>
@@ -111,7 +111,7 @@ export const MobileActionBarClient = ({
                         <li key={app.name}>
                           <Link
                             href={href}
-                            className="block p-2 active:bg-neutral-700 rounded-secondary"
+                            className="block rounded-secondary p-2 active:bg-neutral-700"
                           >
                             {app.name}
                           </Link>
@@ -140,7 +140,7 @@ export const MobileActionBarClient = ({
                         <li key={app.name}>
                           <Link
                             href={href}
-                            className="block p-2 active:bg-neutral-700 rounded-secondary"
+                            className="block rounded-secondary p-2 active:bg-neutral-700"
                           >
                             {app.name}
                           </Link>
@@ -154,7 +154,7 @@ export const MobileActionBarClient = ({
             <RedBar />
           </div>
 
-          <Footer className="px-8 pb-4 pt-0" />
+          <Footer className="px-8 pt-0 pb-4" />
         </MobileActionBarFlyout>
       </li>
     </ul>

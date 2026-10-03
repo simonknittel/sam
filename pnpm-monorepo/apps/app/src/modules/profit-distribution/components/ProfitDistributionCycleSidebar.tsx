@@ -12,7 +12,7 @@ export const ProfitDistributionCycleSidebar = () => {
         ]}
       />
 
-      <div className="bg-secondary p-2 corners-secondary">
+      <div className="corners-secondary bg-secondary p-2">
         <p className="text-sm text-neutral-500">Sortierung</p>
 
         <p className="text-sm">Ende der Sammelphase (absteigend)</p>

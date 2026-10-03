@@ -59,7 +59,7 @@ export const ActivityRow = ({ entry, columns }: Props) => {
         <div className={clsx(FIRST_LINE, "min-w-0")}>{entry.message}</div>
 
         {entry.comment && (
-          <p className="text-sm text-neutral-300 border-l-2 border-neutral-700 pl-2 mt-1 whitespace-pre-wrap break-words">
+          <p className="mt-1 border-l-2 border-neutral-700 pl-2 text-sm break-words whitespace-pre-wrap text-neutral-300">
             {entry.comment}
           </p>
         )}
@@ -69,7 +69,7 @@ export const ActivityRow = ({ entry, columns }: Props) => {
         <td className={clsx(FIRST_LINE, "gap-2 text-sm")}>
           {isUnconfirmed && (
             <>
-              <FaInfoCircle className="text-blue-500 shrink-0" />
+              <FaInfoCircle className="shrink-0 text-blue-500" />
               <span className="font-bold">Unbestätigt</span>
               {entry.confirmAction}
             </>
@@ -77,7 +77,7 @@ export const ActivityRow = ({ entry, columns }: Props) => {
 
           {isFalseReport && (
             <>
-              <BsExclamationOctagonFill className="text-red-500 shrink-0" />
+              <BsExclamationOctagonFill className="shrink-0 text-red-500" />
               <span className="font-bold">Falschmeldung</span>
             </>
           )}

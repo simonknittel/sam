@@ -75,7 +75,7 @@ export const UsersTable = ({
         {users.map(({ user, discordId, entity }) => (
           <TRow key={user.id} className="h-14">
             <td className="overflow-hidden">
-              <div className="flex gap-2 items-center">
+              <div className="flex items-center gap-2">
                 <Avatar
                   name={discordId}
                   image={user.image}
@@ -85,12 +85,12 @@ export const UsersTable = ({
                 {discordId ? (
                   <span
                     title={discordId}
-                    className="text-ellipsis overflow-hidden whitespace-nowrap"
+                    className="overflow-hidden text-ellipsis whitespace-nowrap"
                   >
                     {discordId}
                   </span>
                 ) : (
-                  <span className="italic text-neutral-500">-</span>
+                  <span className="text-neutral-500 italic">-</span>
                 )}
               </div>
             </td>
@@ -98,7 +98,7 @@ export const UsersTable = ({
             <td className="overflow-hidden">
               <span
                 title={user.id}
-                className="text-ellipsis block overflow-hidden whitespace-nowrap"
+                className="block overflow-hidden text-ellipsis whitespace-nowrap"
               >
                 {user.id}
               </span>
@@ -107,7 +107,7 @@ export const UsersTable = ({
             <td className="overflow-hidden">
               <span
                 title={formatDate(user.createdAt) || undefined}
-                className="text-ellipsis block overflow-hidden whitespace-nowrap"
+                className="block overflow-hidden text-ellipsis whitespace-nowrap"
               >
                 {formatDate(user.createdAt)}
               </span>
@@ -117,7 +117,7 @@ export const UsersTable = ({
               {user.emailVerified ? (
                 <span
                   title={formatDate(user.emailVerified) || undefined}
-                  className="text-ellipsis block overflow-hidden whitespace-nowrap"
+                  className="block overflow-hidden text-ellipsis whitespace-nowrap"
                 >
                   {formatDate(user.emailVerified)}
                 </span>
@@ -130,21 +130,21 @@ export const UsersTable = ({
               {user.name ? (
                 <span
                   title={user.name || undefined}
-                  className="block text-ellipsis overflow-hidden whitespace-nowrap"
+                  className="block overflow-hidden text-ellipsis whitespace-nowrap"
                 >
                   {user.name}
                 </span>
               ) : (
-                <span className="italic text-neutral-500">-</span>
+                <span className="text-neutral-500 italic">-</span>
               )}
             </td>
 
-            <td className="overflow-hidden flex items-center gap-2">
+            <td className="flex items-center gap-2 overflow-hidden">
               {user.bannedAt && (
                 <PopoverBaseUI
                   title="Details zur Sperre"
                   trigger={
-                    <span className="flex items-center gap-1 ml-2">
+                    <span className="ml-2 flex items-center gap-1">
                       <FaCircleXmark className="text-red-500" /> Gesperrt
                     </span>
                   }
@@ -179,7 +179,7 @@ export const UsersTable = ({
                 <CitizenPopover citizenId={entity.id}>
                   <Link
                     href={`/app/spynet/citizen/${entity.id}`}
-                    className="text-brand-red-500 hover:text-brand-red-300 flex gap-2 items-center"
+                    className="flex items-center gap-2 text-brand-red-500 hover:text-brand-red-300"
                   >
                     <span className="hidden sm:inline">Spynet</span>{" "}
                     <FaExternalLinkAlt />

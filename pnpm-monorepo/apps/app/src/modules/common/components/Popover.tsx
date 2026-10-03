@@ -94,7 +94,7 @@ export const Popover = ({
           >
             <div
               className={clsx(
-                "bg-neutral-950 border border-neutral-700 p-4 rounded-secondary",
+                "rounded-secondary border border-neutral-700 bg-neutral-950 p-4",
                 styles.popover,
                 {
                   relative: enableHover,
@@ -107,8 +107,8 @@ export const Popover = ({
 
             {enableHover && (
               <>
-                <div className="h-2 absolute left-0 right-0 bottom-full" />
-                <div className="h-2 absolute left-0 right-0 top-full" />
+                <div className="absolute right-0 bottom-full left-0 h-2" />
+                <div className="absolute top-full right-0 left-0 h-2" />
               </>
             )}
 

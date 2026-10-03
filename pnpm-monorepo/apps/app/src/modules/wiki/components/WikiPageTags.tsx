@@ -54,7 +54,7 @@ export const WikiPageTags = ({ className, pageId, tags, canEdit }: Props) => {
         <Link
           key={tag.id}
           href={buildWikiTagHref(hrefMode, tag.id)}
-          className="flex items-center gap-1 rounded-secondary bg-neutral-700/50 py-1 px-2 text-sm text-neutral-300 hover:bg-neutral-700 hover:text-interaction-500 focus-visible:text-interaction-500"
+          className="flex items-center gap-1 rounded-secondary bg-neutral-700/50 px-2 py-1 text-sm text-neutral-300 hover:bg-neutral-700 hover:text-interaction-500 focus-visible:text-interaction-500"
           title={`Alle Seiten mit dem Tag "${tag.name}" anzeigen`}
         >
           <FaTag className="size-3 flex-none text-neutral-500" />
@@ -180,7 +180,7 @@ const TagsModal = ({
           maxLength={MAX_TAG_NAME_LENGTH}
           disabled={limitReached}
           placeholder="z.B. Datenbank"
-          className="w-full rounded-secondary border border-neutral-700 bg-transparent px-3 h-9 text-sm focus-visible:border-neutral-500 focus-visible:outline-none disabled:opacity-50"
+          className="h-9 w-full rounded-secondary border border-neutral-700 bg-transparent px-3 text-sm focus-visible:border-neutral-500 focus-visible:outline-none disabled:opacity-50"
         />
 
         {(suggestions.length > 0 ||
@@ -192,7 +192,7 @@ const TagsModal = ({
                 type="button"
                 onClick={() => addTag(tag.name)}
                 disabled={limitReached}
-                className="flex items-center gap-1 rounded-secondary bg-neutral-700/50 py-1 px-2 text-sm text-neutral-300 hover:bg-neutral-700 focus-visible:bg-neutral-700 disabled:opacity-50 cursor-pointer"
+                className="flex cursor-pointer items-center gap-1 rounded-secondary bg-neutral-700/50 px-2 py-1 text-sm text-neutral-300 hover:bg-neutral-700 focus-visible:bg-neutral-700 disabled:opacity-50"
               >
                 <FaTag className="size-3 flex-none text-neutral-500" />
                 {tag.name}
@@ -210,7 +210,7 @@ const TagsModal = ({
                   type="button"
                   onClick={() => addTag(normalizedQuery)}
                   disabled={limitReached}
-                  className="flex items-center gap-1 rounded-secondary border border-dashed border-neutral-600 py-1 px-2 text-sm text-neutral-400 hover:border-neutral-400 hover:text-neutral-200 focus-visible:border-neutral-400 focus-visible:text-neutral-200 disabled:opacity-50 cursor-pointer"
+                  className="flex cursor-pointer items-center gap-1 rounded-secondary border border-dashed border-neutral-600 px-2 py-1 text-sm text-neutral-400 hover:border-neutral-400 hover:text-neutral-200 focus-visible:border-neutral-400 focus-visible:text-neutral-200 disabled:opacity-50"
                 >
                   &quot;{normalizedQuery}&quot; neu anlegen
                 </button>
@@ -240,7 +240,7 @@ const TagsModal = ({
                     )
                   }
                   title={`Tag "${name}" entfernen`}
-                  className="flex items-center gap-2 rounded-secondary bg-neutral-700/50 py-1 px-2 text-sm hover:bg-neutral-700 focus-visible:bg-neutral-700 cursor-pointer"
+                  className="flex cursor-pointer items-center gap-2 rounded-secondary bg-neutral-700/50 px-2 py-1 text-sm hover:bg-neutral-700 focus-visible:bg-neutral-700"
                 >
                   <FaTag className="size-3 flex-none text-neutral-500" />
                   {name}

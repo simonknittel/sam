@@ -10,10 +10,10 @@ export default function Page() {
   return (
     <div className="min-h-dvh background-primary">
       <div className="p-2 pt-4 lg:p-8">
-        <main className="flex items-center flex-col">
+        <main className="flex flex-col items-center">
           <h1 className="text-xl font-bold">Impressum</h1>
 
-          <div className="mt-4 w-full max-w-xl p-4 lg:p-8 rounded-primary bg-neutral-800/50 ">
+          <div className="mt-4 w-full max-w-xl rounded-primary bg-neutral-800/50 p-4 lg:p-8">
             <Wip />
           </div>
         </main>

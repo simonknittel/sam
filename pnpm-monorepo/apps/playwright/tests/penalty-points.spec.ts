@@ -1,7 +1,6 @@
 import { expectAuditEvents } from "../fixtures/audit";
 import { createCitizen, ONE_DAY_MS } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
   DELETED_TEXT,
   modal,
@@ -34,9 +33,7 @@ test("an entry is booked on a citizen, shows on their tab and is deleted again",
 
   await signIn(keeper.user);
   await page.goto("/app/penalty-points");
-  await expect(page.getByText("Keine Strafpunkte gefunden.")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Keine Strafpunkte gefunden.")).toBeVisible();
 
   /**
    * Create
@@ -57,9 +54,7 @@ test("an entry is booked on a citizen, shows on their tab and is deleted again",
   await createDialog.getByLabel("Begründung").fill("Beschuss eines Members");
   await createDialog.getByRole("button", { name: "Speichern" }).click();
 
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   const entry = await prisma.penaltyEntry.findFirstOrThrow();
   expect(entry).toMatchObject({
@@ -71,7 +66,7 @@ test("an entry is booked on a citizen, shows on their tab and is deleted again",
   });
 
   const entryRow = page.getByRole("row").filter({ hasText: "delinquent" });
-  await expect(entryRow).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(entryRow).toBeVisible();
   await expect(entryRow).toContainText("Beschuss eines Members");
   await expect(
     entryRow.getByRole("cell", { name: "3", exact: true }),
@@ -82,9 +77,7 @@ test("an entry is booked on a citizen, shows on their tab and is deleted again",
    */
   await page.goto(`/app/spynet/citizen/${offender.entity.id}/penalty-points`);
   const citizenTile = sectionByHeading(page, "Strafpunkte");
-  await expect(citizenTile).toContainText("Beschuss eines Members", {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(citizenTile).toContainText("Beschuss eines Members");
   await expect(
     citizenTile.getByRole("columnheader", { name: "Citizen" }),
   ).toHaveCount(0);
@@ -100,9 +93,7 @@ test("an entry is booked on a citizen, shows on their tab and is deleted again",
   );
   await expect(page.getByText("Strafpunkte löschen?")).toBeVisible();
   await deleteDialog.getByRole("button", { name: "Löschen" }).click();
-  await expect(page.getByText(DELETED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(DELETED_TEXT)).toBeVisible();
 
   await expect
     .poll(async () => {
@@ -117,14 +108,12 @@ test("an entry is booked on a citizen, shows on their tab and is deleted again",
     })
     .toEqual({ deleted: true, deletedById: keeper.entity.id });
 
-  await expect(page.getByText("Keine Strafpunkte gefunden.")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Keine Strafpunkte gefunden.")).toBeVisible();
 
   await page.goto("/app/penalty-points?status=deleted");
   await expect(
     page.getByRole("row").filter({ hasText: "delinquent" }),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
 
   await expectAuditEvents(prisma, [
     "PENALTY_ENTRY_CREATED",
@@ -169,11 +158,11 @@ test("the status filter separates the active entries from the expired ones", asy
   const expiredRow = page
     .getByRole("row")
     .filter({ hasText: "Schon verfallen" });
-  await expect(openRow).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(openRow).toBeVisible();
   await expect(expiredRow).toHaveCount(0);
 
   await page.getByText("Inaktiv", { exact: true }).click();
-  await expect(expiredRow).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(expiredRow).toBeVisible();
   await expect(openRow).toHaveCount(0);
 });
 
@@ -207,7 +196,7 @@ test("an entry names a deleted author as deleted, without a link", async ({
   await page.goto("/app/penalty-points");
 
   const row = page.getByRole("row").filter({ hasText: "Autor gelöscht" });
-  await expect(row).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(row).toBeVisible();
   /** The penalized citizen is active, thus a link */
   await expect(row.getByRole("link", { name: "delinquent" })).toBeVisible();
   await expect(row.getByText(DELETED_CITIZEN_LABEL)).toBeVisible();

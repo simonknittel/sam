@@ -8,7 +8,7 @@ export const PositionSkeleton = ({ className }: Props) => {
   return (
     <div
       className={clsx(
-        "rounded-secondary bg-neutral-800/50 h-14 animate-pulse",
+        "h-14 animate-pulse rounded-secondary bg-neutral-800/50",
         className,
       )}
     />

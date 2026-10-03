@@ -1,26 +1,19 @@
 import { fixupPluginRules } from "@eslint/compat";
 import tanstackQuery from "@tanstack/eslint-plugin-query";
 import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
-import nextTypescript from "eslint-config-next/typescript";
 import prettier from "eslint-config-prettier/flat";
-import reactCompiler from "eslint-plugin-react-compiler";
 import reactYouMightNotNeedAnEffect from "eslint-plugin-react-you-might-not-need-an-effect";
 import { defineConfig, globalIgnores } from "eslint/config";
-import { dirname } from "path";
 import tseslint from "typescript-eslint";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 // The Next.js preset bundles eslint-plugin-react, eslint-plugin-jsx-a11y and
 // eslint-plugin-import, which don't support ESLint 10 yet (they still call
 // rule-context APIs removed in v10). fixupPluginRules bridges exactly these
 // three until upstream catches up. The preset's other plugins (including
-// @typescript-eslint, which is also registered directly below) must stay
-// unwrapped, or ESLint rejects the config as a plugin redefinition. Both sides
-// must also resolve to the same copy of @typescript-eslint, which the
-// `typescript-eslint` override in pnpm-workspace.yaml takes care of.
+// @typescript-eslint, which the typescript-eslint presets below also register)
+// must stay unwrapped, or ESLint rejects the config as a plugin redefinition.
+// Both sides must also resolve to the same copy of @typescript-eslint, which
+// the `typescript-eslint` override in pnpm-workspace.yaml takes care of.
 const pluginsWithoutEslint10Support = ["react", "jsx-a11y", "import"];
 const nextCoreWebVitalsFixedUp = nextCoreWebVitals.map((configEntry) => {
   if (!configEntry.plugins) return configEntry;
@@ -39,13 +32,11 @@ const nextCoreWebVitalsFixedUp = nextCoreWebVitals.map((configEntry) => {
 
 const eslintConfig = defineConfig([
   ...nextCoreWebVitalsFixedUp,
-  ...nextTypescript,
   ...tseslint.configs.recommendedTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,
   ...tanstackQuery.configs["flat/recommended"],
   reactYouMightNotNeedAnEffect.configs.recommended,
   prettier,
-  reactCompiler.configs.recommended,
 
   globalIgnores([
     ".next/**",
@@ -63,13 +54,10 @@ const eslintConfig = defineConfig([
 
   {
     name: "custom-rules",
-    plugins: {
-      "@typescript-eslint": tseslint.plugin,
-    },
     languageOptions: {
       parserOptions: {
         project: true,
-        tsconfigRootDir: __dirname,
+        tsconfigRootDir: import.meta.dirname,
       },
     },
     rules: {
@@ -80,8 +68,6 @@ const eslintConfig = defineConfig([
           fixStyle: "inline-type-imports",
         },
       ],
-
-      "react-compiler/react-compiler": "error",
 
       "@typescript-eslint/prefer-nullish-coalescing": "off",
 

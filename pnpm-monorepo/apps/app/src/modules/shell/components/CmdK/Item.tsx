@@ -53,7 +53,7 @@ export const LinkItem = ({
 
       {label}
 
-      {section && <span className="text-neutral-500 text-xs">{section}</span>}
+      {section && <span className="text-xs text-neutral-500">{section}</span>}
     </Command.Item>
   );
 };
@@ -91,7 +91,7 @@ export const PageItem = ({
 
       {label}
 
-      {section && <span className="text-neutral-500 text-xs">{section}</span>}
+      {section && <span className="text-xs text-neutral-500">{section}</span>}
     </Command.Item>
   );
 };
@@ -121,7 +121,7 @@ export const CommandItem = ({
 
       {label}
 
-      {section && <span className="text-neutral-500 text-xs">{section}</span>}
+      {section && <span className="text-xs text-neutral-500">{section}</span>}
     </Command.Item>
   );
 };

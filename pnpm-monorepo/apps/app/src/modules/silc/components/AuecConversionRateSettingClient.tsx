@@ -39,7 +39,7 @@ export const AuecConversionRateSettingClient = ({
         Wie viel aUEC entspricht ein SILC?
       </label>
       <input
-        className="p-2 rounded-secondary bg-neutral-900 border border-neutral-800 w-full mt-2 disabled:opacity-50"
+        className="mt-2 w-full rounded-secondary border border-neutral-800 bg-neutral-900 p-2 disabled:opacity-50"
         name="value"
         required
         type="number"
@@ -50,7 +50,7 @@ export const AuecConversionRateSettingClient = ({
         min={1}
       />
 
-      <div className="flex items-center gap-4 mt-2">
+      <div className="mt-2 flex items-center gap-4">
         <div className="flex flex-col gap-1">
           <div className="text-sm text-gray-500">aUEC</div>
           {Number.parseInt(value).toLocaleString("de-de")}

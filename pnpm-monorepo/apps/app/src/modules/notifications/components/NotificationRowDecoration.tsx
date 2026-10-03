@@ -5,7 +5,6 @@ import { useMediaQuery } from "@base-ui/react/unstable-use-media-query";
 import type { Options } from "canvas-confetti";
 import clsx from "clsx";
 import type { ReactNode } from "react";
-import type { NotificationDecoration } from "../utils/renderOnSiteNotification";
 
 /**
  * Milliseconds between two bursts while the row is in view. The particles
@@ -43,11 +42,6 @@ export const buildConfettiShots = (
 ];
 
 interface Props {
-  /**
-   * Names the two marks the end-to-end suite selects the decoration by:
-   * `data-<decoration>-background` and `data-<decoration>-confetti-static`.
-   */
-  readonly decoration: NotificationDecoration;
   /** The utility which paints the colour clouds of the surface */
   readonly surfaceClassName: string;
   readonly shots: readonly Options[];
@@ -64,7 +58,6 @@ interface Props {
  * prefers reduced motion gets a static mark instead of the confetti.
  */
 export const NotificationRowDecoration = ({
-  decoration,
   surfaceClassName,
   shots,
   staticIcon,
@@ -77,7 +70,6 @@ export const NotificationRowDecoration = ({
   return (
     <>
       <span
-        {...{ [`data-${decoration}-background`]: true }}
         aria-hidden="true"
         className={clsx(
           surfaceClassName,
@@ -87,7 +79,6 @@ export const NotificationRowDecoration = ({
 
       {prefersReducedMotion ? (
         <span
-          {...{ [`data-${decoration}-confetti-static`]: true }}
           aria-hidden="true"
           className="pointer-events-none absolute inset-y-0 right-4 -z-10 flex items-center text-3xl text-amber-400/20"
         >

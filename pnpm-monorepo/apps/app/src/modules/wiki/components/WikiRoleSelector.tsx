@@ -64,7 +64,7 @@ export const WikiRoleSelector = ({
         trigger={
           <span
             className={clsx(
-              "flex items-center gap-2 rounded-secondary border border-neutral-700 px-3 h-9 text-sm hover:bg-neutral-800",
+              "flex h-9 items-center gap-2 rounded-secondary border border-neutral-700 px-3 text-sm hover:bg-neutral-800",
               { "opacity-50": isPending },
             )}
           >
@@ -98,7 +98,7 @@ export const WikiRoleSelector = ({
       </PopoverBaseUI>
 
       {selectedRoles.length > 0 && (
-        <div className="flex gap-1 flex-wrap mt-2">
+        <div className="mt-2 flex flex-wrap gap-1">
           {selectedRoles.map((selectedRoleId) => (
             <SelectedRole
               key={selectedRoleId}
@@ -138,7 +138,7 @@ const SelectedRole = ({ roleId, inputName, onRemove }: SelectedRoleProps) => {
       <button
         type="button"
         onClick={onRemove}
-        className="flex items-center gap-1 bg-neutral-700/50 pr-2 rounded-secondary"
+        className="flex items-center gap-1 rounded-secondary bg-neutral-700/50 pr-2"
       >
         {isNameable ? (
           <SingleRoleBadge
@@ -149,14 +149,14 @@ const SelectedRole = ({ roleId, inputName, onRemove }: SelectedRoleProps) => {
           />
         ) : (
           <span
-            className="px-2 h-8 inline-flex items-center text-neutral-500"
+            className="inline-flex h-8 items-center px-2 text-neutral-500"
             title="Diese Rolle ist ausgewählt, du darfst sie aber nicht sehen."
           >
             Verborgene Rolle
           </span>
         )}
 
-        <FaTrash className="text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300 flex-none" />
+        <FaTrash className="flex-none text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300" />
       </button>
 
       <input type="hidden" name={inputName} value={roleId} />

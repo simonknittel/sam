@@ -9,13 +9,13 @@ export const metadata: Metadata = {
 
 export default function NotFound() {
   return (
-    <div className="min-h-dvh flex justify-center items-center flex-col py-8 background-primary">
+    <div className="flex min-h-dvh flex-col items-center justify-center background-primary py-8">
       <MainContent className="w-full max-w-lg">
-        <div className="text-center mb-4">
-          <Hero text="404" className="text-center mx-auto" withGlitch />
+        <div className="mb-4 text-center">
+          <Hero text="404" className="mx-auto text-center" withGlitch />
         </div>
 
-        <div className="flex flex-col gap-2 rounded-primary bg-secondary p-8 mx-8 items-center">
+        <div className="mx-8 flex flex-col items-center gap-2 rounded-primary bg-secondary p-8">
           <p>Page not found</p>
         </div>
       </MainContent>

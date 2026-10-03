@@ -115,7 +115,7 @@ export const SingleRoleBadge = ({
   const badge = (
     <span
       className={clsx(
-        "px-2 h-8 rounded-secondary bg-neutral-700/50 inline-flex align-middle gap-2 items-center overflow-hidden relative",
+        "relative inline-flex h-8 items-center gap-2 overflow-hidden rounded-secondary bg-neutral-700/50 px-2 align-middle",
         {
           "pb-0.5 opacity-50": showLevelProgress,
         },
@@ -123,13 +123,13 @@ export const SingleRoleBadge = ({
       )}
     >
       {role.icon && (
-        <span className="aspect-square size-6 flex items-center justify-center">
+        <span className="flex aspect-square size-6 items-center justify-center">
           <Image
             src={getPublicUploadUrl(role.icon.id)}
             alt=""
             width={24}
             height={24}
-            className="max-w-full max-h-full"
+            className="max-h-full max-w-full"
             unoptimized={["image/svg+xml", "image/gif"].includes(
               role.icon.mimeType,
             )}
@@ -143,7 +143,7 @@ export const SingleRoleBadge = ({
       <span className="truncate font-mono text-sm">{role.name}</span>
 
       {showLevelProgress && (
-        <span className="block absolute left-0 bottom-0 right-0 h-px bg-white/30">
+        <span className="absolute right-0 bottom-0 left-0 block h-px bg-white/30">
           <span
             className="block h-full bg-me"
             style={{
@@ -164,15 +164,15 @@ export const SingleRoleBadge = ({
       childrenClassName="w-[400px]"
     >
       <div>
-        <div className="inline-flex align-middle gap-4 items-center">
+        <div className="inline-flex items-center gap-4 align-middle">
           {role.icon ? (
-            <span className="aspect-square size-12 flex items-center justify-center">
+            <span className="flex aspect-square size-12 items-center justify-center">
               <Image
                 src={getPublicUploadUrl(role.icon.id)}
                 alt=""
                 width={48}
                 height={48}
-                className="max-w-full max-h-full"
+                className="max-h-full max-w-full"
                 unoptimized={["image/svg+xml", "image/gif"].includes(
                   role.icon.mimeType,
                 )}
@@ -180,14 +180,14 @@ export const SingleRoleBadge = ({
               />
             </span>
           ) : (
-            <span className="size-12 border border-white/10 rounded-secondary" />
+            <span className="size-12 rounded-secondary border border-white/10" />
           )}
 
           <div>
-            <p className="text-white/40 font-mono uppercase text-xs">Rolle</p>
+            <p className="font-mono text-xs text-white/40 uppercase">Rolle</p>
 
-            <div className="flex gap-2 items-center">
-              <p className="text-lg font-bold font-mono uppercase">
+            <div className="flex items-center gap-2">
+              <p className="font-mono text-lg font-bold uppercase">
                 {role.name}
               </p>
 
@@ -205,17 +205,17 @@ export const SingleRoleBadge = ({
         </div>
 
         {role.description && (
-          <div className="border-t border-white/10 mt-4 pt-4 max-h-60 overflow-y-auto">
+          <div className="mt-4 max-h-60 overflow-y-auto border-t border-white/10 pt-4">
             <Markdown>{role.description}</Markdown>
           </div>
         )}
 
         {citizenId && role.maxLevel && (
-          <div className="border-t border-white/10 mt-4 pt-4 flex gap-4 items-center">
+          <div className="mt-4 flex items-center gap-4 border-t border-white/10 pt-4">
             <p className="text-white/40">Level</p>
 
             <div
-              className="flex gap-px h-4 flex-1"
+              className="flex h-4 flex-1 gap-px"
               title={`${citizenLevel ?? 0} von ${role.maxLevel} Level erreicht`}
             >
               {Array.from({ length: role.maxLevel }, (_, idx) => {
@@ -275,7 +275,7 @@ export const SingleRoleBadge = ({
         )}
 
         {citizenId && canDismiss && (
-          <div className="border-t border-white/10 mt-4 pt-4">
+          <div className="mt-4 border-t border-white/10 pt-4">
             <form
               action={deleteRoleAssignmentFormAction}
               id={deleteRoleAssignmentFormId}

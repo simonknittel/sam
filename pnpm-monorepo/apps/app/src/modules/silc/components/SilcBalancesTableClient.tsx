@@ -41,7 +41,7 @@ export const SilcBalancesTableClient = ({ className, rows }: Props) => {
           return (
             <Link
               href={`/app/spynet/citizen/${id}/silc`}
-              className="hover:bg-neutral-800 flex items-center rounded-secondary px-2 h-8 text-brand-red-500 overflow-hidden text-ellipsis"
+              className="flex h-8 items-center overflow-hidden rounded-secondary px-2 text-ellipsis text-brand-red-500 hover:bg-neutral-800"
               prefetch={false}
               title={handle || id}
             >
@@ -57,7 +57,7 @@ export const SilcBalancesTableClient = ({ className, rows }: Props) => {
         sortDescFirst: true,
         cell: (row) => (
           <span
-            className={clsx("flex items-center h-8 font-bold", {
+            className={clsx("flex h-8 items-center font-bold", {
               "text-green-500": row.getValue() > 0,
               "text-red-500": row.getValue() < 0,
             })}
@@ -72,7 +72,7 @@ export const SilcBalancesTableClient = ({ className, rows }: Props) => {
         id: "totalEarnedSilc",
         sortDescFirst: true,
         cell: (row) => (
-          <span className="flex items-center h-8 font-bold">
+          <span className="flex h-8 items-center font-bold">
             {row.getValue()}
           </span>
         ),

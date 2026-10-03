@@ -19,7 +19,7 @@ export const CitizenTableFilters = async ({ className }: Props) => {
   const visibleRoles = await getVisibleRoles();
 
   return (
-    <div className={clsx("flex gap-2 items-center", className)}>
+    <div className={clsx("flex items-center gap-2", className)}>
       <Filter name="Unbekannt">
         <UnknownsFilter
           showDiscordId={showDiscordId}

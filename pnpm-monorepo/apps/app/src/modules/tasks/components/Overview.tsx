@@ -128,8 +128,8 @@ export const Overview = ({
 
           {task.visibility === TaskVisibility.PUBLIC && (
             <div className="flex flex-col items-start">
-              <span className="text-neutral-400 text-sm">Teilnehmerlimit</span>
-              <div className="flex gap-2 items-center">
+              <span className="text-sm text-neutral-400">Teilnehmerlimit</span>
+              <div className="flex items-center gap-2">
                 {task.assignmentLimit ? task.assignmentLimit : "-"}
                 {isTaskUpdatable && isAllowedToManageTask && (
                   <UpdateTaskAssignments task={task} className="flex-none" />
@@ -140,13 +140,13 @@ export const Overview = ({
 
           {task.visibility === TaskVisibility.PUBLIC && (
             <div className="flex flex-col items-start">
-              <span className="text-neutral-400 text-sm">
+              <span className="text-sm text-neutral-400">
                 Erforderliche Rolle(n)
               </span>
 
-              <div className="flex gap-2 items-center">
+              <div className="flex items-center gap-2">
                 {task.requiredRoles.length > 0 ? (
-                  <div className="flex flex-wrap gap-1 mt-1">
+                  <div className="mt-1 flex flex-wrap gap-1">
                     {task.requiredRoles.map((role) => (
                       <SingleRoleBadge
                         key={role.id}
@@ -167,8 +167,8 @@ export const Overview = ({
           )}
 
           <div className="flex flex-col items-start">
-            <span className="text-neutral-400 text-sm">Angenommen von</span>
-            <div className="flex gap-2 items-center">
+            <span className="text-sm text-neutral-400">Angenommen von</span>
+            <div className="flex items-center gap-2">
               {task.assignments.length > 0 ? (
                 <div className="flex flex-wrap gap-x-3 gap-y-1">
                   {task.assignments.map((assignment) => (
@@ -192,11 +192,11 @@ export const Overview = ({
           {(task.visibility === TaskVisibility.PERSONALIZED ||
             task.visibility === TaskVisibility.GROUP) && (
             <div className="flex flex-col items-start">
-              <span className="text-neutral-400 text-sm">
+              <span className="text-sm text-neutral-400">
                 Kann selbstständig abgeschlossen werden
               </span>
 
-              <div className="flex gap-2 items-center">
+              <div className="flex items-center gap-2">
                 {task.canSelfComplete ? "Ja" : "Nein"}
               </div>
             </div>
@@ -254,13 +254,13 @@ export const Overview = ({
         <div className="flex flex-col gap-4">
           <div className="flex gap-2">
             <div className="flex flex-col items-start">
-              <span className="text-neutral-400 text-sm flex items-center gap-1">
+              <span className="flex items-center gap-1 text-sm text-neutral-400">
                 Wiederholungen
                 <Tooltip triggerChildren={<FaInfoCircle />}>
                   Wie häufig kann dieser Task abgeschlossen werden?
                 </Tooltip>
               </span>
-              <div className="flex gap-2 items-center">
+              <div className="flex items-center gap-2">
                 {task.repeatable}x
                 {isTaskUpdatable && isAllowedToManageTask && (
                   <UpdateTaskRepeatable task={task} />
@@ -271,17 +271,17 @@ export const Overview = ({
 
           <div className="flex gap-2">
             <div className="flex flex-col items-start">
-              <span className="text-neutral-400 text-sm">Erstellt von</span>
+              <span className="text-sm text-neutral-400">Erstellt von</span>
               {task.createdBy && <CitizenLink citizen={task.createdBy} />}
             </div>
 
             <div className="flex flex-col">
-              <span className="text-neutral-400 text-sm">Erstellt am</span>
+              <span className="text-sm text-neutral-400">Erstellt am</span>
               {formatDate(task.createdAt)}
             </div>
 
             <div className="flex flex-col">
-              <span className="text-neutral-400 text-sm">Ablaufdatum</span>
+              <span className="text-sm text-neutral-400">Ablaufdatum</span>
               {isTaskUpdatable && isAllowedToManageTask ? (
                 <EditableDateTimeInput
                   rowId={task.id}
@@ -298,7 +298,7 @@ export const Overview = ({
           {task.completionists && task.completionists.length > 0 && (
             <div className="flex gap-2">
               <div className="flex flex-col items-start">
-                <span className="text-neutral-400 text-sm">Erfüllt durch</span>
+                <span className="text-sm text-neutral-400">Erfüllt durch</span>
 
                 <div className="flex flex-wrap gap-x-3 gap-y-1">
                   {task.completionists.map((completionist) => (

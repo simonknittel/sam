@@ -23,29 +23,29 @@ const Pagination = ({
       {currentPage > 1 ? (
         <Link
           href={`?${prevSearchParams.toString()}`}
-          className="rounded-l border border-brand-red-500 hover:border-brand-red-300 text-brand-red-500 hover:text-brand-red-300 flex items-center w-11 justify-center"
+          className="flex w-11 items-center justify-center rounded-l border border-brand-red-500 text-brand-red-500 hover:border-brand-red-300 hover:text-brand-red-300"
         >
           <FaChevronLeft />
         </Link>
       ) : (
-        <span className="rounded-l border border-neutral-500 text-neutral-500 flex items-center w-11 justify-center">
+        <span className="flex w-11 items-center justify-center rounded-l border border-neutral-500 text-neutral-500">
           <FaChevronLeft />
         </span>
       )}
 
-      <span className="border-y w-20 flex items-center justify-center border-neutral-500">
+      <span className="flex w-20 items-center justify-center border-y border-neutral-500">
         {currentPage} / {totalPages}
       </span>
 
       {currentPage + 1 <= totalPages ? (
         <Link
           href={`?${nextSearchparams.toString()}`}
-          className="rounded-r border border-brand-red-500 hover:border-brand-red-300 text-brand-red-500 hover:text-brand-red-300 flex items-center w-11 justify-center"
+          className="flex w-11 items-center justify-center rounded-r border border-brand-red-500 text-brand-red-500 hover:border-brand-red-300 hover:text-brand-red-300"
         >
           <FaChevronRight />
         </Link>
       ) : (
-        <span className="rounded-r border border-neutral-500 text-neutral-500 flex items-center w-11 justify-center">
+        <span className="flex w-11 items-center justify-center rounded-r border border-neutral-500 text-neutral-500">
           <FaChevronRight />
         </span>
       )}

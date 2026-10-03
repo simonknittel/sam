@@ -24,7 +24,7 @@ export const TimezonesClientContainer = ({ className }: Props) => {
           timeZone={localTimeZone}
         />
 
-        <div className="flex flex-col md:flex-row gap-0.5 mt-0.5">
+        <div className="mt-0.5 flex flex-col gap-0.5 md:flex-row">
           <Timezone
             heading="CIG Los Angeles"
             subheading="Vereinigte Staaten von Amerika"

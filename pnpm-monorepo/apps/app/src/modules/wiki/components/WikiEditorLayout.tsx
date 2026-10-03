@@ -53,7 +53,7 @@ export const WikiEditorLayout = ({
         /* data-wiki-editor-chrome: clicks here keep the focused block */
         <div
           data-wiki-editor-chrome
-          className="flex flex-wrap items-center gap-1 border border-neutral-800 rounded-secondary p-1 sticky top-0 z-10 bg-neutral-900"
+          className="sticky top-0 z-10 flex flex-wrap items-center gap-1 rounded-secondary border border-neutral-800 bg-neutral-900 p-1"
         >
           <WikiEditorToolbar
             editor={editor}

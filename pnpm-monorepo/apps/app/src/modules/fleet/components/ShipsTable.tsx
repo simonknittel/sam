@@ -68,7 +68,7 @@ export const ShipsTable = ({ className, ships, editable = false }: Props) => {
             )}
 
             <td className="overflow-hidden">
-              <div className="overflow-hidden flex flex-wrap gap-1">
+              <div className="flex flex-wrap gap-1 overflow-hidden">
                 {ship.variant.tags
                   .toSorted((a, b) => a.key.localeCompare(b.key))
                   .map((tag) => (
@@ -77,7 +77,7 @@ export const ShipsTable = ({ className, ships, editable = false }: Props) => {
               </div>
             </td>
 
-            <td className="overflow-hidden flex justify-center">
+            <td className="flex justify-center overflow-hidden">
               {ship.variant.status === VariantStatus.FLIGHT_READY && (
                 <FaRegCheckCircle title="Flight ready" />
               )}
@@ -90,7 +90,7 @@ export const ShipsTable = ({ className, ships, editable = false }: Props) => {
             </td>
 
             {editable && (
-              <td className="overflow-hidden flex justify-center">
+              <td className="flex justify-center overflow-hidden">
                 {!ship.deletedAt && (
                   <DeleteShip
                     ship={{

@@ -24,7 +24,7 @@ export const DeleteManager = ({ className, eventId, managerId }: Props) => {
       trigger={(isPending) => (
         <button
           disabled={isPending}
-          className="text-brand-red-500 hover:text-brand-red-300 flex items-center px-2 h-full"
+          className="flex h-full items-center px-2 text-brand-red-500 hover:text-brand-red-300"
           title="Manager entfernen"
         >
           {isPending ? <AsciiSpinner /> : <FaTrash />}

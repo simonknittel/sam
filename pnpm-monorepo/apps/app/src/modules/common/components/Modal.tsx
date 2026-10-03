@@ -39,7 +39,7 @@ export default function Modal({
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-30 bg-neutral-800/50 backdrop-blur-sm" />
 
-        <div className="fixed inset-0 z-30 flex cursor-pointer items-start lg:items-center justify-center px-4 pt-4 pb-20 lg:pb-4">
+        <div className="fixed inset-0 z-30 flex cursor-pointer items-start justify-center px-4 pt-4 pb-20 lg:items-center lg:pb-4">
           <Dialog.Popup
             className={clsx(
               "max-h-full max-w-full cursor-auto overflow-auto rounded-primary bg-neutral-800 text-neutral-50 outline-hidden",
@@ -47,17 +47,17 @@ export default function Modal({
               className,
             )}
           >
-            <div className="px-4 py-4 lg:py-4 border-b border-white/5 flex justify-between items-center">
+            <div className="flex items-center justify-between border-b border-white/5 px-4 py-4 lg:py-4">
               <Dialog.Title
                 render={<span />}
-                className="text-xl font-bold text-balance font-mono uppercase"
+                className="font-mono text-xl font-bold text-balance uppercase"
               >
                 {heading}
               </Dialog.Title>
 
               <Dialog.Close
                 title="Schließen"
-                className="px-2 text-2xl text-brand-red-500 hover:text-brand-red-300 active:text-brand-red-300 flex-initial self-baseline relative top-1 enabled:cursor-pointer"
+                className="relative top-1 flex-initial self-baseline px-2 text-2xl text-brand-red-500 hover:text-brand-red-300 active:text-brand-red-300 enabled:cursor-pointer"
               >
                 <FaRegTimesCircle />
               </Dialog.Close>

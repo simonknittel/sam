@@ -37,7 +37,7 @@ export const OverviewTab = async ({ className, event }: Props) => {
   return (
     <div
       className={clsx(
-        "flex flex-col items-center 2xl:flex-row 2xl:items-start gap-4",
+        "flex flex-col items-center gap-4 2xl:flex-row 2xl:items-start",
         className,
       )}
     >
@@ -47,22 +47,22 @@ export const OverviewTab = async ({ className, event }: Props) => {
         className="w-full max-w-120 flex-none"
       />
 
-      <div className="flex-1 w-full flex-col md:flex-row lg:flex-col xl:flex-row 2xl:flex-col 3xl:flex-row flex gap-2">
+      <div className="flex w-full flex-1 flex-col gap-2 3xl:flex-row md:flex-row lg:flex-col xl:flex-row 2xl:flex-col">
         <PersonalBriefing
           event={event}
-          className="flex-initial w-full md:w-1/2 lg:w-full xl:w-1/2 2xl:w-full 3xl:w-1/2"
+          className="w-full flex-initial 3xl:w-1/2 md:w-1/2 lg:w-full xl:w-1/2 2xl:w-full"
         />
 
         {showFleetSummary && (
           <FleetSummary
             event={event}
-            className="flex-initial w-full md:w-1/2 lg:w-full xl:w-1/2 2xl:w-full 3xl:w-1/2"
+            className="w-full flex-initial 3xl:w-1/2 md:w-1/2 lg:w-full xl:w-1/2 2xl:w-full"
           />
         )}
 
         <ParticipantsSummary
           event={event}
-          className="flex-initial w-full md:w-1/2 lg:w-full xl:w-1/2 2xl:w-full 3xl:w-1/2"
+          className="w-full flex-initial 3xl:w-1/2 md:w-1/2 lg:w-full xl:w-1/2 2xl:w-full"
         />
       </div>
     </div>
@@ -106,7 +106,7 @@ const FleetSummary = async ({ className, event }: FleetSummaryProps) => {
       subheading="Summe aller Tags. Nur flight ready."
       className={clsx(className)}
     >
-      <div className="flex gap-2 flex-wrap overflow-x-auto">
+      <div className="flex flex-wrap gap-2 overflow-x-auto">
         <VariantTagsTable rows={Array.from(countedTags.values())} />
       </div>
     </Tile>
@@ -158,7 +158,7 @@ const ParticipantsSummary = async ({
       subheading="Summe aller Rollen/Zertifikate"
       className={clsx(className)}
     >
-      <div className="flex gap-2 flex-wrap overflow-x-auto">
+      <div className="flex flex-wrap gap-2 overflow-x-auto">
         <RolesTable rows={Array.from(countedRoles.values())} />
       </div>
     </Tile>

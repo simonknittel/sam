@@ -135,7 +135,7 @@ export const EditableField = <Value,>({
       {isEditing ? (
         <form
           action={formAction}
-          className="flex gap-2 items-center mx-1"
+          className="mx-1 flex items-center gap-2"
           ref={outsideClickRef}
         >
           <input type="hidden" name="id" value={rowId} />
@@ -164,7 +164,7 @@ export const EditableField = <Value,>({
           type="button"
           onClick={handleStartEditing}
           className={clsx(
-            "flex gap-2 items-center group text-left",
+            "group flex items-center gap-2 text-left",
             displayButtonClassName,
           )}
           title="Klicken, um zu bearbeiten"
@@ -172,7 +172,7 @@ export const EditableField = <Value,>({
           {renderDisplay(value)}
           <FaPen
             className={clsx(
-              "text-brand-red-500 group-hover:text-brand-red-300 text-sm",
+              "text-sm text-brand-red-500 group-hover:text-brand-red-300",
               penClassName ?? "flex-none",
             )}
           />

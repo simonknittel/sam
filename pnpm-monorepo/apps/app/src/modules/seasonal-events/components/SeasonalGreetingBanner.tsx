@@ -60,7 +60,7 @@ export const SeasonalGreetingBanner = async () => {
       <div className="relative flex flex-col gap-1 py-6 pr-6 pl-36">
         <h2
           id={TITLE_ELEMENT_ID}
-          className="font-thin text-2xl font-mono uppercase"
+          className="font-mono text-2xl font-thin uppercase"
         >
           {title}
         </h2>

@@ -74,8 +74,6 @@ const getRemainingUploadIds = async () =>
 
 beforeEach(async () => {
   await truncateAllTables();
-  sendMock.mockReset();
-  vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(NOW);
 });
 

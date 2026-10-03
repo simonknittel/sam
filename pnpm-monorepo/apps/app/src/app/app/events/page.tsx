@@ -13,7 +13,7 @@ export default async function Page({ searchParams }: PageProps<"/app/events">) {
       sidebar={<EventFilters />}
       childrenContainerClassName="@container/main"
     >
-      <div className="@4xl/main:flex-1 max-w-100 @4xl/main:max-w-none @container/events">
+      <div className="@container/events max-w-100 @4xl/main:max-w-none @4xl/main:flex-1">
         <SuspenseWithErrorBoundaryTile>
           <EventsTile searchParams={searchParams} />
         </SuspenseWithErrorBoundaryTile>

@@ -40,11 +40,11 @@ export const UpcomingBirthdaysTile = async ({
           : "Kein Citizen hat bisher einen Geburtstag angegeben."
       }
       footer={
-        <p className="text-xs text-neutral-500 px-4">
+        <p className="px-4 text-xs text-neutral-500">
           Du kannst deinen Geburtstag unter{" "}
           <Link
             href="/app/account/profile"
-            className="text-interaction-500 hover:underline focus-visible:underline font-mono uppercase"
+            className="font-mono text-interaction-500 uppercase hover:underline focus-visible:underline"
           >
             Account &gt; Profil
           </Link>{" "}

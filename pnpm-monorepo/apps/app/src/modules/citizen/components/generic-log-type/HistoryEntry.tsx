@@ -35,10 +35,10 @@ export const HistoryEntry = ({
   const isFalseReport = log.confirmed === ConfirmationStatus.FALSE_REPORT;
 
   return (
-    <li className="relative rounded-secondary overflow-hidden">
+    <li className="relative overflow-hidden rounded-secondary">
       <div
         className={clsx({
-          "absolute w-full h-20 border-t-2 border-x-2 bg-linear-to-t from-neutral-800":
+          "absolute h-20 w-full border-x-2 border-t-2 bg-linear-to-t from-neutral-800":
             isUnconfirmed || isFalseReport,
           [`${styles.blueBorder} to-blue-500/10`]: isUnconfirmed,
           [`${styles.redBorder} to-red-500/10`]: isFalseReport,
@@ -46,8 +46,8 @@ export const HistoryEntry = ({
       />
 
       {isUnconfirmed && (
-        <div className="px-4 pt-4 flex items-start gap-2 relative z-10">
-          <FaInfoCircle className="text-blue-500 shrink-0 mt-1" />
+        <div className="relative z-10 flex items-start gap-2 px-4 pt-4">
+          <FaInfoCircle className="mt-1 shrink-0 text-blue-500" />
           <div className="flex gap-4">
             <p className="font-bold">Unbestätigt</p>
 
@@ -57,24 +57,24 @@ export const HistoryEntry = ({
       )}
 
       {isFalseReport && (
-        <div className="px-4 pt-4 flex items-start gap-2 relative z-10">
-          <BsExclamationOctagonFill className="text-red-500 shrink-0 mt-1" />
+        <div className="relative z-10 flex items-start gap-2 px-4 pt-4">
+          <BsExclamationOctagonFill className="mt-1 shrink-0 text-red-500" />
           <p className="font-bold">Falschmeldung</p>
         </div>
       )}
 
       <div
-        className={clsx("flex gap-2 relative z-10", {
-          "px-4 pt-2 pb-2 opacity-20 hover:opacity-100 transition-opacity":
+        className={clsx("relative z-10 flex gap-2", {
+          "px-4 pt-2 pb-2 opacity-20 transition-opacity hover:opacity-100":
             isUnconfirmed || isFalseReport,
         })}
       >
-        <div className="h-5 flex items-center">
+        <div className="flex h-5 items-center">
           <TbCircleDot />
         </div>
 
         <div className="flex-1">
-          <div className="text-sm flex gap-2 border-b pb-1 items-baseline border-neutral-700">
+          <div className="flex items-baseline gap-2 border-b border-neutral-700 pb-1 text-sm">
             <p>
               <time dateTime={log.createdAt.toISOString()}>
                 {formatDate(log.createdAt)}

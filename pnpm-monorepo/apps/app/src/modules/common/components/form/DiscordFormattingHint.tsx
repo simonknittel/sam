@@ -15,7 +15,7 @@ export const DiscordFormattingHint = () => {
         href={DISCORD_FORMATTING_HELP_URL}
         target="_blank"
         rel="noreferrer"
-        className="text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300 active:text-brand-red-700 hover:underline focus-visible:underline"
+        className="text-brand-red-500 hover:text-brand-red-300 hover:underline focus-visible:text-brand-red-300 focus-visible:underline active:text-brand-red-700"
       >
         Hilfe von Discord
       </a>

@@ -13,11 +13,11 @@ export const ProfileTile = async () => {
 
   return (
     <section
-      className={clsx("p-4 bg-secondary w-full corners-primary", {
+      className={clsx("w-full corners-primary bg-secondary p-4", {
         /** The whole tile celebrates with the citizen: the colour clouds of
         the surface, and an isolated box for the confetti behind the
         profile. */
-        "background-birthday relative isolate":
+        "relative isolate background-birthday":
           profile.citizen.hasBirthdayToday,
       })}
     >

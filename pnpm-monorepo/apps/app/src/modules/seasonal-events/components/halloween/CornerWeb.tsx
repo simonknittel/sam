@@ -17,7 +17,7 @@ import { SeasonalImage } from "../SeasonalImage";
  * below the faint outer rows of the web.
  */
 export const TopBarCornerWeb = () => (
-  <div className="absolute -left-2 -top-2 w-25 h-27">
+  <div className="absolute -top-2 -left-2 h-27 w-25">
     <SeasonalImage
       src={svgToStaticImageData(cornerWeb)}
       className="size-full"
@@ -36,7 +36,7 @@ export const TopBarCornerWeb = () => (
  * the browser does not download a lazy image in a hidden box.
  */
 export const ViewportCornerWeb = () => (
-  <div className="absolute left-0 top-0 w-44 h-50 [:root:has([data-seasonal-top-bar])_&]:hidden">
+  <div className="absolute top-0 left-0 h-50 w-44 [:root:has([data-seasonal-top-bar])_&]:hidden">
     <SeasonalImage
       src={svgToStaticImageData(cornerWebLarge)}
       className="size-full"

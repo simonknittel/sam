@@ -16,7 +16,7 @@ export const OrganizationLink = ({ className, organization }: Props) => {
     <Link
       href={`/app/spynet/organization/${organization.id}`}
       className={clsx(
-        "inline-flex gap-1 items-center align-bottom text-interaction-500 hover:text-interaction-300 hover:underline",
+        "inline-flex items-center gap-1 align-bottom text-interaction-500 hover:text-interaction-300 hover:underline",
         className,
       )}
       prefetch={false}

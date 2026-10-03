@@ -18,7 +18,7 @@ export const PermissionMatrix = async () => {
   }));
 
   return (
-    <section className="p-4 lg:p-6 rounded-primary bg-secondary overflow-x-scroll">
+    <section className="overflow-x-scroll rounded-primary bg-secondary p-4 lg:p-6">
       <PermissionMatrixGrid roles={matrixRoles} />
     </section>
   );

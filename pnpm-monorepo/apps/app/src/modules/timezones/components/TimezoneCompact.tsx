@@ -21,13 +21,13 @@ export const TimezoneCompact = ({
   return (
     <article
       className={clsx(
-        "p-1 flex gap-1 items-center justify-between border-b last:border-b-0 border-white/5",
+        "flex items-center justify-between gap-1 border-b border-white/5 p-1 last:border-b-0",
         className,
       )}
     >
       {timeZoneName && (
         <h3
-          className={clsx("text-xs truncate", {
+          className={clsx("truncate text-xs", {
             "font-bold": isLocalTimeZone,
             "text-white/40": !isLocalTimeZone,
           })}
@@ -37,8 +37,8 @@ export const TimezoneCompact = ({
       )}
 
       <p
-        className={clsx("font-mono uppercase whitespace-nowrap", {
-          "text-me font-bold": isLocalTimeZone,
+        className={clsx("font-mono whitespace-nowrap uppercase", {
+          "font-bold text-me": isLocalTimeZone,
         })}
       >
         {date.toLocaleDateString("de-DE", {

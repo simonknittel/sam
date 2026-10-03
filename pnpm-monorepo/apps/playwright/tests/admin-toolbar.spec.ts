@@ -1,7 +1,6 @@
 import type { Page } from "@playwright/test";
 import { createCitizen, createUserWithoutCitizen } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
   FORBIDDEN_TEXT,
   pickFromSearch,
@@ -44,9 +43,7 @@ test("an admin's pages stay redacted until admin mode is enabled", async ({
   await page.goto("/app/statistics");
 
   // Without the cookie the admin is an ordinary user
-  await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible();
 
   // Only the exact value counts — a truthy-looking one changes nothing
   await page
@@ -55,9 +52,7 @@ test("an admin's pages stay redacted until admin mode is enabled", async ({
       { name: "enable_admin", value: "true", domain: "localhost", path: "/" },
     ]);
   await page.reload();
-  await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible();
 
   // The tool fully reloads the page so the forbidden() boundary re-renders
   // with the new cookie
@@ -65,9 +60,7 @@ test("an admin's pages stay redacted until admin mode is enabled", async ({
   await toolbarPanel(page)
     .getByRole("button", { name: "Enable admin" })
     .click();
-  await expect(page.getByText("Zeitraum:")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Zeitraum:")).toBeVisible();
   await expect(page.getByText(FORBIDDEN_TEXT)).not.toBeVisible();
   await expect(toolbarButton(page)).toContainText("Admin mode");
 
@@ -76,9 +69,7 @@ test("an admin's pages stay redacted until admin mode is enabled", async ({
   await toolbarPanel(page)
     .getByRole("button", { name: "Disable admin" })
     .click();
-  await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible();
   await expect(toolbarButton(page)).not.toContainText("Admin mode");
 });
 
@@ -108,19 +99,13 @@ test("assuming users switches the effective citizen and names the admin in the s
     "zielnutzer",
   );
 
-  await expect(page.getByText("Assuming zielnutzer")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Assuming zielnutzer")).toBeVisible();
   // The dashboard profile now belongs to the assumed citizen
-  await expect(page.getByRole("heading", { name: "zielnutzer" })).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByRole("heading", { name: "zielnutzer" })).toBeVisible();
 
   // Assuming clears admin mode, so the assumed user's permissions rule
   await page.goto("/app/statistics");
-  await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible();
   await expect(toolbarButton(page)).not.toContainText("Admin mode");
 
   // A switch to a user without clearance: the list still loads, and the
@@ -131,9 +116,7 @@ test("assuming users switches the effective citizen and names the admin in the s
     toolbarPanel(page).getByRole("combobox", { name: "User" }),
     "ohnefreigabe",
   );
-  await expect(page.getByText("Assuming ohnefreigabe")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Assuming ohnefreigabe")).toBeVisible();
   await expect(
     page.getByText("Bitte melde dich bei Human Resources"),
   ).toBeVisible();
@@ -144,9 +127,7 @@ test("assuming users switches the effective citizen and names the admin in the s
   await openToolbar(page);
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "Exit" }).click();
-  await expect(page.getByText("Assuming ohnefreigabe")).not.toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Assuming ohnefreigabe")).not.toBeVisible();
   await openToolbar(page);
   await expect(
     toolbarPanel(page).getByRole("button", { name: "Enable admin" }),
@@ -205,7 +186,6 @@ test("the seasonal theme tool sets and removes the date of the themes", async ({
   await expect(themeRoot(page)).toHaveAttribute(
     "data-seasonal-event",
     "halloween",
-    { timeout: ACTION_FEEDBACK_TIMEOUT },
   );
   await expect(toolbarButton(page)).toContainText("Halloween");
 
@@ -215,15 +195,12 @@ test("the seasonal theme tool sets and removes the date of the themes", async ({
   await expect(themeRoot(page)).toHaveAttribute(
     "data-seasonal-event",
     "christmas",
-    { timeout: ACTION_FEEDBACK_TIMEOUT },
   );
   await expect(toolbarButton(page)).toContainText("Weihnachten 2026-12-24");
 
   await openToolbar(page);
   await applySeasonalPreset(page, "No theme");
-  await expect(themeRoot(page)).toHaveCount(0, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(themeRoot(page)).toHaveCount(0);
   await expect(toolbarButton(page)).toContainText("No theme");
 
   // What "Auto" shows depends on the real date, thus the test checks only
@@ -232,9 +209,7 @@ test("the seasonal theme tool sets and removes the date of the themes", async ({
   await toolbarPanel(page)
     .getByRole("button", { name: "Auto", exact: true })
     .click();
-  await expect(toolbarButton(page)).not.toContainText("No theme", {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(toolbarButton(page)).not.toContainText("No theme");
   const cookies = await context.cookies();
   expect(cookies.map((cookie) => cookie.name)).not.toContain("seasonal-date");
 });
@@ -284,7 +259,6 @@ test("the seasonal theme tool works while the admin assumes a user who switched 
   await expect(themeRoot(page)).toHaveAttribute(
     "data-seasonal-event",
     "christmas",
-    { timeout: ACTION_FEEDBACK_TIMEOUT },
   );
   await expect(page.getByText("Assuming themenmuffel")).toBeVisible();
 });
@@ -305,9 +279,7 @@ test("the toolbar works on the clearance page", async ({
   await page.goto("/app");
   await expect(
     page.getByText("Bitte melde dich bei Human Resources"),
-  ).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  ).toBeVisible();
   await expect(page).toHaveURL("/clearance");
 
   await openToolbar(page);
@@ -315,14 +287,10 @@ test("the toolbar works on the clearance page", async ({
 
   // The list of users loads without clearance
   await panel.getByRole("combobox", { name: "User" }).fill("zielnutzer");
-  await expect(page.getByRole("option", { name: "zielnutzer" })).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByRole("option", { name: "zielnutzer" })).toBeVisible();
 
   await panel.getByRole("button", { name: "Enable admin" }).click();
-  await expect(toolbarButton(page)).toContainText("Admin mode", {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(toolbarButton(page)).toContainText("Admin mode");
   await expect(page).toHaveURL("/app/dashboard");
 });
 

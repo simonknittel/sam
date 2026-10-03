@@ -25,7 +25,7 @@ export const WikiPageReadAudienceBadge = ({ label }: Props) => {
 
   const content = (
     <>
-      <span className="uppercase font-mono">Sichtbar für:</span> {label}
+      <span className="font-mono uppercase">Sichtbar für:</span> {label}
     </>
   );
 
@@ -37,7 +37,7 @@ export const WikiPageReadAudienceBadge = ({ label }: Props) => {
       onClick={openPermissions}
       className={clsx(
         BADGE_CLASSES,
-        "cursor-pointer transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-2 outline-offset-2 outline-interaction-700 active:text-white/80 motion-reduce:transition-none",
+        "cursor-pointer outline-offset-2 outline-interaction-700 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-2 active:text-white/80 motion-reduce:transition-none",
       )}
     >
       {content}

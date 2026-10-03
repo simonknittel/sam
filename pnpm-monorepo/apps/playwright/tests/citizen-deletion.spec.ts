@@ -9,7 +9,6 @@ import {
   futureEvent,
 } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
   DELETED_TEXT,
   fillUntilVisible,
@@ -97,9 +96,7 @@ test("a deleted citizen leaves the lists and its records name it as deleted", as
     deleteDialog,
   );
   await deleteDialog.getByRole("button", { name: "Löschen" }).click();
-  await expect(page.getByText(DELETED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(DELETED_TEXT)).toBeVisible();
 
   /** Nothing is deleted: the citizen stays, without its login */
   await expect
@@ -126,9 +123,7 @@ test("a deleted citizen leaves the lists and its records name it as deleted", as
 
   await page.goto("/app/spynet/citizen");
   const rows = page.getByRole("row");
-  await expect(rows.filter({ hasText: "spynet-admin" })).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(rows.filter({ hasText: "spynet-admin" })).toBeVisible();
   await expect(rows.filter({ hasText: "verschwinder" })).toHaveCount(0);
 
   await page.goto(`/app/spynet/citizen/${target.entity.id}`);
@@ -137,16 +132,14 @@ test("a deleted citizen leaves the lists and its records name it as deleted", as
   await searchInTile(page, "verschwinder", page.getByText("Keine Ergebnisse"));
 
   await page.goto(`/app/events/${event.id}/participants`);
-  await expect(page.getByText(DELETED_CITIZEN_LABEL)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(DELETED_CITIZEN_LABEL)).toBeVisible();
   await expect(page.getByText("verschwinder")).toHaveCount(0);
 
   await page.goto("/app/penalty-points");
   const penaltyRow = page
     .getByRole("row")
     .filter({ hasText: "Strafe für Drängeln" });
-  await expect(penaltyRow).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(penaltyRow).toBeVisible();
   /** The penalized citizen is active, thus a link */
   await expect(
     penaltyRow.getByRole("link", { name: "spynet-admin" }),
@@ -161,9 +154,7 @@ test("a deleted citizen leaves the lists and its records name it as deleted", as
   const transactionRow = page
     .getByRole("row")
     .filter({ hasText: "Sold für den Probeflug" });
-  await expect(transactionRow).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(transactionRow).toBeVisible();
   /** The author is active, thus a link */
   await expect(
     transactionRow.getByRole("link", { name: "spynet-admin" }),
@@ -177,9 +168,7 @@ test("a deleted citizen leaves the lists and its records name it as deleted", as
   /** The login of the deleted citizen continues as a login without a citizen */
   await switchUser(target.user);
   await page.goto("/app/dashboard");
-  await expect(page).toHaveURL("/clearance", {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page).toHaveURL("/clearance");
 });
 
 test("a citizen can be added again with the Spectrum ID of a deleted one", async ({
@@ -210,9 +199,7 @@ test("a citizen can be added again with the Spectrum ID of a deleted one", async
   await createDialog.getByLabel("Spectrum ID").fill("RUECKKEHRER");
   await createDialog.getByRole("button", { name: "Anlegen" }).click();
 
-  await expect(page).toHaveURL(/\/app\/spynet\/citizen\/[a-z0-9]+$/, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page).toHaveURL(/\/app\/spynet\/citizen\/[a-z0-9]+$/);
   expect(page.url()).not.toContain(deleted.id);
   await expect(page.getByText(NOT_FOUND_TEXT)).toHaveCount(0);
   expect(

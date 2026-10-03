@@ -39,7 +39,7 @@ export const RequestConfirmationEmailLink = ({
   return (
     <button
       className={clsx(className, "underline", {
-        "opacity-50 cursor-not-allowed": pending,
+        "cursor-not-allowed opacity-50": pending,
       })}
       disabled={pending}
       type="submit"

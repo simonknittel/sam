@@ -17,7 +17,7 @@ interface Props {
 export const WikiSidebarFavorites = ({ pages }: Props) => {
   return (
     <div>
-      <p className="px-2 text-sm text-white/40 font-mono uppercase">
+      <p className="px-2 font-mono text-sm text-white/40 uppercase">
         Favoriten
       </p>
 
@@ -44,7 +44,7 @@ export const WikiSidebarFavorites = ({ pages }: Props) => {
           ))}
         </ul>
       ) : (
-        <p className="text-xs text-white/20 px-2 mt-1 italic">
+        <p className="mt-1 px-2 text-xs text-white/20 italic">
           Du hast bisher keine Favoriten.
         </p>
       )}

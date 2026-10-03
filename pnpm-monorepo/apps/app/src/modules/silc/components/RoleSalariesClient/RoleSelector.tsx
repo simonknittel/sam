@@ -47,7 +47,7 @@ export const RoleSelector = ({ style, defaultValue, onChange }: Props) => {
                 }
                 showPlaceholder
               />
-              <FaPen className="text-brand-red-500 flex-none" />
+              <FaPen className="flex-none text-brand-red-500" />
             </span>
           ) : (
             <>
@@ -59,7 +59,7 @@ export const RoleSelector = ({ style, defaultValue, onChange }: Props) => {
           data && selectedRole ? (
             <button
               type="button"
-              className="flex items-center justify-between gap-1 bg-neutral-700/50 hover:bg-neutral-600/50 pr-3 rounded-secondary"
+              className="flex items-center justify-between gap-1 rounded-secondary bg-neutral-700/50 pr-3 hover:bg-neutral-600/50"
               style={style}
             />
           ) : (

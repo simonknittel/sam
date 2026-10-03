@@ -21,7 +21,7 @@ const AlertDialogOverlay = ({
 }: AlertDialogOverlayProps) => (
   <AlertDialogPrimitive.Overlay
     className={clsx(
-      "fixed inset-0 z-50 bg-neutral-800/50 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-neutral-800/50 backdrop-blur-sm",
       className,
     )}
     {...props}
@@ -40,7 +40,7 @@ export const AlertDialogContent = ({
     <AlertDialogOverlay />
     <AlertDialogPrimitive.Content
       className={clsx(
-        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg gap-4 p-4 duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] rounded-primary bg-neutral-800 text-neutral-50",
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] fixed top-[50%] left-[50%] z-50 grid w-full max-w-lg gap-4 rounded-primary bg-neutral-800 p-4 text-neutral-50 duration-200",
         styles.dialog,
         className,
       )}
@@ -117,11 +117,11 @@ export const AlertDialogAction = (props: AlertDialogActionProps) => {
   return (
     <AlertDialogPrimitive.Action
       className={clsx(
-        "flex items-center justify-center rounded-secondary uppercase gap-4 min-h-11 py-2 text-base font-bold bg-brand-red-500 text-neutral-50 px-6 enabled:cursor-pointer",
+        "flex min-h-11 items-center justify-center gap-4 rounded-secondary bg-brand-red-500 px-6 py-2 text-base font-bold text-neutral-50 uppercase enabled:cursor-pointer",
         {
           "enabled:hover:bg-brand-red-300 enabled:active:bg-brand-red-300":
             !disabled,
-          "opacity-50 cursor-not-allowed pointer-events-none": disabled,
+          "pointer-events-none cursor-not-allowed opacity-50": disabled,
         },
         className,
       )}
@@ -159,7 +159,7 @@ export const AlertDialogCancel = ({
 }: AlertDialogCancelProps) => (
   <AlertDialogPrimitive.Cancel
     className={clsx(
-      "flex items-center justify-center rounded-secondary uppercase gap-4 min-h-11 py-2 border text-base border-brand-red-500 text-brand-red-500 enabled:hover:border-brand-red-300 enabled:active:border-brand-red-300 enabled:hover:text-brand-red-300 enabled:active:text-brand-red-300 px-6 mt-2 sm:mt-0 enabled:cursor-pointer",
+      "mt-2 flex min-h-11 items-center justify-center gap-4 rounded-secondary border border-brand-red-500 px-6 py-2 text-base text-brand-red-500 uppercase enabled:cursor-pointer enabled:hover:border-brand-red-300 enabled:hover:text-brand-red-300 enabled:active:border-brand-red-300 enabled:active:text-brand-red-300 sm:mt-0",
       className,
     )}
     {...props}

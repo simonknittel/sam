@@ -62,12 +62,12 @@ export default async function Layout({
 
   return (
     <>
-      <div className="flex gap-2 font-bold text-xl">
+      <div className="flex gap-2 text-xl font-bold">
         <span className="text-neutral-500">Rolle /</span>
         <p>{role?.name}</p>
       </div>
 
-      <SubNavigation pages={pages} className="flex flex-wrap my-4" />
+      <SubNavigation pages={pages} className="my-4 flex flex-wrap" />
 
       {children}
     </>

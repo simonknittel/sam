@@ -62,7 +62,7 @@ export const CitizenInput = ({
   if (isPending || !dataAllCitizens)
     return (
       <div className={clsx(className)}>
-        <label className="block mb-1">Citizen (Handle)</label>
+        <label className="mb-1 block">Citizen (Handle)</label>
         <div className="h-10 animate-pulse rounded-secondary bg-neutral-900" />
       </div>
     );
@@ -91,7 +91,7 @@ export const CitizenInput = ({
 
   return (
     <div className={clsx(className)}>
-      <label className="block mb-1">Citizen (Handle)</label>
+      <label className="mb-1 block">Citizen (Handle)</label>
 
       {multiple ? (
         <Multiple
@@ -141,11 +141,11 @@ const ComboboxOptionItem = ({ result }: ComboboxOptionProps) => {
   return (
     <ComboboxOption
       value={citizen}
-      className="group flex cursor-pointer items-center gap-2 rounded-secondary py-1 px-2 select-none data-focus:bg-white/20"
+      className="group flex cursor-pointer items-center gap-2 rounded-secondary px-2 py-1 select-none data-focus:bg-white/20"
     >
-      <FaCheck className="invisible group-data-selected:visible text-sm text-brand-red-500" />
+      <FaCheck className="invisible text-sm text-brand-red-500 group-data-selected:visible" />
 
-      <div className="text-white text-sm">
+      <div className="text-sm text-white">
         {underlineCharacters(citizen.handle!, matches?.[0].indices)}
       </div>
 
@@ -189,7 +189,7 @@ const Single = ({
           aria-label="Citizen"
           displayValue={(citizen: CitizenOption) => citizen?.handle || ""}
           onChange={(event) => setQuery(event.target.value)}
-          className="w-full rounded-secondary bg-neutral-900 py-2 pr-8 pl-2 focus:outline-hidden data-focus:outline-2 data-focus:-outline-offset-2 data-focus:outline-white/25 disabled:opacity-50"
+          className="w-full rounded-secondary bg-neutral-900 py-2 pr-8 pl-2 focus:outline-hidden disabled:opacity-50 data-focus:outline-2 data-focus:-outline-offset-2 data-focus:outline-white/25"
           disabled={disabled}
         />
 
@@ -200,7 +200,7 @@ const Single = ({
           // mode the popup stays open after selecting, leaving the other
           // form fields unreachable
           modal={false}
-          className="w-(--input-width) rounded-b border border-brand-red-500 bg-black p-1 [--anchor-gap:var(--spacing-1)] empty:invisible transition duration-100 ease-in data-leave:data-closed:opacity-0 z-50"
+          className="z-50 w-(--input-width) rounded-b border border-brand-red-500 bg-black p-1 transition duration-100 ease-in [--anchor-gap:var(--spacing-1)] empty:invisible data-leave:data-closed:opacity-0"
         >
           {filterResult.map((result) => (
             <ComboboxOptionItem key={result.item.id} result={result} />
@@ -282,7 +282,7 @@ const Multiple = ({
             anchor="bottom"
             // See the single-mode options above
             modal={false}
-            className="w-(--input-width) rounded-b border border-brand-red-500 bg-black p-1 [--anchor-gap:var(--spacing-1)] empty:invisible transition duration-100 ease-in data-leave:data-closed:opacity-0 z-50"
+            className="z-50 w-(--input-width) rounded-b border border-brand-red-500 bg-black p-1 transition duration-100 ease-in [--anchor-gap:var(--spacing-1)] empty:invisible data-leave:data-closed:opacity-0"
           >
             {filterResult.map((result) => (
               <ComboboxOptionItem key={result.item.id} result={result} />
@@ -326,10 +326,10 @@ const Multiple = ({
         </PopoverBaseUI>
       </div>
 
-      <p className="text-xs mt-1 text-gray-400">Mehrfachauswahl möglich</p>
+      <p className="mt-1 text-xs text-gray-400">Mehrfachauswahl möglich</p>
 
       {selectedCitizens.length > 0 && (
-        <ul className="mt-2 flex gap-x-3 gap-y-1 flex-wrap">
+        <ul className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
           {selectedCitizens.map((citizen) => (
             <li key={citizen.id} className="flex items-baseline gap-1">
               <CitizenLink citizen={citizen} />

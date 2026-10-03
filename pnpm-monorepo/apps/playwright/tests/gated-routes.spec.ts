@@ -1,9 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import { createCitizen } from "../fixtures/factories";
-import {
-  ACTION_FEEDBACK_TIMEOUT,
-  FORBIDDEN_TEXT,
-} from "../fixtures/interactions";
+import { FORBIDDEN_TEXT } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 /**
@@ -90,17 +87,12 @@ test("permission-gated routes are closed to a citizen without permissions", asyn
 
   for (const route of GATED_ROUTES) {
     await page.goto(route);
-    await expect(forbidden, `${route} must be forbidden`).toBeVisible({
-      // The first navigation warms the worker's app up
-      timeout: ACTION_FEEDBACK_TIMEOUT,
-    });
+    await expect(forbidden, `${route} must be forbidden`).toBeVisible();
   }
 
   for (const [route, marker] of OPEN_ROUTES) {
     await page.goto(route);
-    await expect(marker(page), `${route} must stay open`).toBeVisible({
-      timeout: ACTION_FEEDBACK_TIMEOUT,
-    });
+    await expect(marker(page), `${route} must stay open`).toBeVisible();
     await expect(forbidden, `${route} must stay open`).toHaveCount(0);
   }
 });
@@ -120,9 +112,7 @@ test("the spynet settings send an unauthorized citizen away", async ({
 
   await page.goto("/app/spynet/settings");
 
-  await expect(page).toHaveURL("/app/dashboard", {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page).toHaveURL("/app/dashboard");
   await expect(page.getByText(FORBIDDEN_TEXT)).toHaveCount(0);
 });
 

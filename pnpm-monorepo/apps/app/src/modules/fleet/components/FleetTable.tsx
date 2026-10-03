@@ -39,7 +39,7 @@ export const FleetTable = ({ className, fleet }: Props) => {
             </td>
 
             <td className="overflow-hidden">
-              <div className="overflow-hidden flex flex-wrap gap-1">
+              <div className="flex flex-wrap gap-1 overflow-hidden">
                 {row.variant.tags
                   .toSorted((a, b) => a.key.localeCompare(b.key))
                   .map((tag) => (
@@ -48,7 +48,7 @@ export const FleetTable = ({ className, fleet }: Props) => {
               </div>
             </td>
 
-            <td className="overflow-hidden flex justify-center">
+            <td className="flex justify-center overflow-hidden">
               {row.variant.status === VariantStatus.FLIGHT_READY && (
                 <FaRegCheckCircle title="Flight ready" />
               )}

@@ -19,7 +19,7 @@ interface DetailRowProps {
 const DetailRow = ({ label, children }: DetailRowProps) => {
   return (
     <>
-      <dt className="font-mono uppercase text-xs text-white/40">{label}</dt>
+      <dt className="font-mono text-xs text-white/40 uppercase">{label}</dt>
       <dd className="text-sm break-words">{children}</dd>
     </>
   );
@@ -64,21 +64,21 @@ export const WikiPageDetailsPopover = ({ pageId }: Props) => {
       align="start"
     >
       {isPending && (
-        <p className="font-mono uppercase flex gap-2 justify-center items-center animate-pulse">
+        <p className="flex animate-pulse items-center justify-center gap-2 font-mono uppercase">
           <AsciiSpinner />
           Details werden geladen...
         </p>
       )}
 
       {error && (
-        <p className="font-mono uppercase flex gap-2 justify-center items-center text-red-500">
+        <p className="flex items-center justify-center gap-2 font-mono text-red-500 uppercase">
           <BsExclamationOctagonFill className="text-red-800" />
           Fehler beim Laden der Details
         </p>
       )}
 
       {data && (
-        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 items-baseline">
+        <dl className="grid grid-cols-[auto_1fr] items-baseline gap-x-4 gap-y-2">
           <DetailRow label="Titel">{data.title}</DetailRow>
 
           {data.owner && (

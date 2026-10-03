@@ -31,23 +31,23 @@ export const InheritanceForm = ({ className, currentRole, roles }: Props) => {
         {roles.map((role) => (
           <label
             key={role.id}
-            className="group flex gap-2 items-center cursor-pointer"
+            className="group flex cursor-pointer items-center gap-2"
           >
             <input
               type="checkbox"
               name="roles"
               value={role.id}
-              className="hidden peer"
+              className="peer hidden"
               defaultChecked={currentRole.inherits.some(
                 (r) => r.id === role.id,
               )}
             />
 
-            <span className="w-8 h-8 bg-neutral-700 rounded-secondary block relative peer-checked:hidden">
-              <span className="absolute inset-1 rounded-secondary bg-green-500/50 hidden group-hover:block" />
+            <span className="relative block h-8 w-8 rounded-secondary bg-neutral-700 peer-checked:hidden">
+              <span className="absolute inset-1 hidden rounded-secondary bg-green-500/50 group-hover:block" />
             </span>
 
-            <span className="w-8 h-8 bg-neutral-700 rounded-secondary hidden relative peer-checked:block">
+            <span className="relative hidden h-8 w-8 rounded-secondary bg-neutral-700 peer-checked:block">
               <span className="absolute inset-1 rounded-secondary bg-green-500" />
             </span>
 

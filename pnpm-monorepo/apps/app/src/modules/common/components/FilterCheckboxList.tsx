@@ -57,10 +57,10 @@ export const FilterCheckboxList = ({ className, prefix, items }: Props) => {
       {items.map((item) => (
         <div
           key={item.id}
-          className="flex justify-between items-center w-full gap-4"
+          className="flex w-full items-center justify-between gap-4"
         >
           <label
-            className="flex gap-2 items-center whitespace-nowrap cursor-pointer"
+            className="flex cursor-pointer items-center gap-2 whitespace-nowrap"
             htmlFor={`${prefix}-${item.id}`}
           >
             {item.label}

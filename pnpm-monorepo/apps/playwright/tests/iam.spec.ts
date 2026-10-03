@@ -1,7 +1,6 @@
 import { expectAuditEvents } from "../fixtures/audit";
 import { createCitizen, createRole } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
   clickUntilUrl,
   clickUntilVisible,
   FORBIDDEN_TEXT,
@@ -33,10 +32,7 @@ test("a role created and assigned through the UI grants its permission", async (
   // Without the permission the tasks page is off limits for the member
   await signIn(member.user);
   await page.goto("/app/tasks");
-  // Often the worker's first page load — warm-up can exceed the default 5s
-  await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible();
 
   // The admin creates a new role through the IAM UI
   await switchUser(admin.user);
@@ -49,9 +45,7 @@ test("a role created and assigned through the UI grants its permission", async (
   await modal(page, "Neue Rolle")
     .getByRole("button", { name: "Speichern" })
     .click();
-  await expect(page.getByText("Erfolgreich hinzugefügt")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Erfolgreich hinzugefügt")).toBeVisible();
 
   // ... and grants it the task-read permission
   await clickUntilUrl(
@@ -74,9 +68,7 @@ test("a role created and assigned through the UI grants its permission", async (
   );
   await taskReadLabel.click();
   await page.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   const role = await prisma.role.findFirst({
     where: { name: "Aufgabenleser" },
@@ -96,9 +88,7 @@ test("a role created and assigned through the UI grants its permission", async (
     .getByText("Aufgabenleser")
     .click();
   // The role checkboxes save through a debounced form (1s)
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
   await page.getByRole("button", { name: "Schließen" }).click();
   await expect(
     modal(page, "Rollen hinzufügen oder entfernen"),
@@ -130,9 +120,7 @@ test("deleting a role takes its permissions away from its members", async ({
 
   await signIn(member.user);
   await page.goto("/app/tasks");
-  await expect(page.getByText("Keine Tasks gefunden")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Keine Tasks gefunden")).toBeVisible();
 
   /** The role the factory gave them is the one carrying `task;read` */
   await switchUser(admin.user);
@@ -149,17 +137,13 @@ test("deleting a role takes its permissions away from its members", async ({
   await deleteDialog.getByRole("button", { name: "Löschen" }).click();
 
   await expect
-    .poll(() => prisma.role.count({ where: { id: member.role.id } }), {
-      timeout: ACTION_FEEDBACK_TIMEOUT,
-    })
+    .poll(() => prisma.role.count({ where: { id: member.role.id } }))
     .toBe(0);
 
   /** Losing their only role costs them the login permission as well */
   await switchUser(member.user);
   await page.goto("/app/tasks");
-  await expect(page).toHaveURL("/clearance", {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page).toHaveURL("/clearance");
 
   await expectAuditEvents(prisma, ["ROLE_DELETED"]);
 });
@@ -182,9 +166,7 @@ test("an inherited role hands its permissions down to the inheriting one", async
 
   await signIn(member.user);
   await page.goto("/app/tasks");
-  await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible();
 
   /**
    * The member's own role inherits from the task role instead of the role
@@ -197,9 +179,7 @@ test("an inherited role hands its permissions down to the inheriting one", async
     page.locator(`input[value="${taskRole.id}"]`),
   ).click();
   await page.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   const inheriting = await prisma.role.findUniqueOrThrow({
     where: { id: member.role.id },
@@ -209,9 +189,7 @@ test("an inherited role hands its permissions down to the inheriting one", async
 
   await switchUser(member.user);
   await page.goto("/app/tasks");
-  await expect(page.getByText("Keine Tasks gefunden")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Keine Tasks gefunden")).toBeVisible();
 
   await expectAuditEvents(prisma, ["ROLE_INHERITANCE_UPDATED"]);
 });
@@ -243,20 +221,16 @@ test("the permission matrix grants a permission with a single checkbox", async (
   await expect(taskReadCheckbox).toBeChecked();
 
   await expect
-    .poll(
-      () =>
-        prisma.permissionString.count({
-          where: { roleId: member.role.id, permissionString: "task;read" },
-        }),
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
+    .poll(() =>
+      prisma.permissionString.count({
+        where: { roleId: member.role.id, permissionString: "task;read" },
+      }),
     )
     .toBe(1);
 
   await switchUser(member.user);
   await page.goto("/app/tasks");
-  await expect(page.getByText("Keine Tasks gefunden")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Keine Tasks gefunden")).toBeVisible();
 });
 
 test("two tabs that grant the same permission create one row", async ({
@@ -286,12 +260,10 @@ test("two tabs that grant the same permission create one row", async ({
   }
 
   await expect
-    .poll(
-      () =>
-        prisma.auditEvent.count({
-          where: { type: "ROLE_PERMISSION_TOGGLED" },
-        }),
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
+    .poll(() =>
+      prisma.auditEvent.count({
+        where: { type: "ROLE_PERMISSION_TOGGLED" },
+      }),
     )
     .toBe(2);
   expect(
@@ -336,9 +308,7 @@ test("the inheritance matrix wires two roles together with a single checkbox", a
       })
       .then(({ inherits }) => inherits.map(({ id }) => id));
 
-  await expect
-    .poll(inheritedRoleIds, { timeout: ACTION_FEEDBACK_TIMEOUT })
-    .toEqual([taskRole.id]);
+  await expect.poll(inheritedRoleIds).toEqual([taskRole.id]);
 
   /** The per-role tab is the second edit surface and must agree */
   await page.goto(`/app/roles/${member.role.id}/inheritance`);
@@ -349,9 +319,7 @@ test("the inheritance matrix wires two roles together with a single checkbox", a
   await waitForAppShellHydration(page);
   await toggleLabel(page, cell).click();
   await expect(cell).not.toBeChecked();
-  await expect
-    .poll(inheritedRoleIds, { timeout: ACTION_FEEDBACK_TIMEOUT })
-    .toEqual([]);
+  await expect.poll(inheritedRoleIds).toEqual([]);
 
   /** A role cannot inherit itself, thus the diagonal carries no control */
   await expect(

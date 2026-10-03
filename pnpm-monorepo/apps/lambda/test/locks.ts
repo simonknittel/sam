@@ -39,14 +39,10 @@ export const runAgainstLockHolder = async <LockHolderResult, ContenderResult>(
   ) => Promise<LockHolderResult>,
   contender: () => Promise<ContenderResult>,
 ) => {
-  let commitLockHolder = () => {};
-  const lockHolderMayCommit = new Promise<void>((resolve) => {
-    commitLockHolder = resolve;
-  });
-  let signalLocksTaken = () => {};
-  const locksTaken = new Promise<void>((resolve) => {
-    signalLocksTaken = resolve;
-  });
+  const { promise: lockHolderMayCommit, resolve: commitLockHolder } =
+    Promise.withResolvers<void>();
+  const { promise: locksTaken, resolve: signalLocksTaken } =
+    Promise.withResolvers<void>();
 
   const lockHolderRun = prisma.$transaction(async (transaction) => {
     const result = await lockHolder(transaction);

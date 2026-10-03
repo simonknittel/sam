@@ -127,11 +127,11 @@ export const WikiSearch = ({ className, compact }: Props) => {
     >
       <div className="relative">
         {compact ? (
-          <span className="font-mono uppercase text-white/40 text-sm">
+          <span className="font-mono text-sm text-white/40 uppercase">
             Seiten durchsuchen
           </span>
         ) : (
-          <h2 className="font-mono uppercase font-bold text-xl text-center">
+          <h2 className="text-center font-mono text-xl font-bold uppercase">
             Seiten durchsuchen
           </h2>
         )}
@@ -143,7 +143,7 @@ export const WikiSearch = ({ className, compact }: Props) => {
           })}
         >
           <span className="sr-only">Seiten durchsuchen</span>
-          <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
+          <FaSearch className="absolute top-1/2 left-3 -translate-y-1/2 text-neutral-500" />
           <input
             type="search"
             role="combobox"
@@ -160,12 +160,12 @@ export const WikiSearch = ({ className, compact }: Props) => {
               setIsOpen(true);
             }}
             onKeyDown={handleInputKeyDown}
-            className="w-full rounded-secondary border border-neutral-800 bg-neutral-900 py-2 pl-9 pr-3 focus-visible:outline-2 outline-interaction-700"
+            className="w-full rounded-secondary border border-neutral-800 bg-neutral-900 py-2 pr-3 pl-9 outline-interaction-700 focus-visible:outline-2"
           />
         </label>
 
         {isOpen && enabled && (
-          <div className="absolute left-0 right-0 top-full z-30 mt-2 max-h-96 overflow-y-auto rounded-secondary border border-neutral-800 bg-neutral-900 p-1 shadow-lg">
+          <div className="absolute top-full right-0 left-0 z-30 mt-2 max-h-96 overflow-y-auto rounded-secondary border border-neutral-800 bg-neutral-900 p-1 shadow-lg">
             {isFetching && !data && (
               <div className="flex justify-center p-4">
                 <AsciiSpinner className="text-2xl text-neutral-500" />
@@ -238,14 +238,14 @@ const TagResult = ({
         onClick={onSelect}
         title={`Alle Seiten mit dem Tag "${tag.name}" anzeigen`}
         className={clsx(
-          "flex items-center gap-2 rounded-secondary p-2 focus-visible:outline-2 outline-interaction-700",
+          "flex items-center gap-2 rounded-secondary p-2 outline-interaction-700 focus-visible:outline-2",
           {
             "bg-neutral-800": isActive,
           },
         )}
       >
         <FaTag className="size-3 flex-none text-neutral-500" />
-        <span className="font-bold text-sm text-interaction-500">
+        <span className="text-sm font-bold text-interaction-500">
           {tag.name}
         </span>
         <span className="text-xs text-neutral-500">Tag</span>
@@ -279,7 +279,7 @@ const PageResult = ({
         href={href}
         onClick={onSelect}
         className={clsx(
-          "block rounded-secondary p-2 focus-visible:outline-2 outline-interaction-700",
+          "block rounded-secondary p-2 outline-interaction-700 focus-visible:outline-2",
           {
             "bg-neutral-800": isActive,
           },
@@ -294,7 +294,7 @@ const PageResult = ({
           </span>
         )}
 
-        <span className="flex items-center gap-2 font-bold text-sm text-interaction-500">
+        <span className="flex items-center gap-2 text-sm font-bold text-interaction-500">
           {page.iconId && <WikiPageIcon iconId={page.iconId} />}
           {page.title}
         </span>
@@ -323,7 +323,7 @@ const PageResult = ({
             {page.matchedTags.map((name) => (
               <span
                 key={name}
-                className="flex items-center gap-1 rounded-secondary bg-neutral-700/50 py-0.5 px-1.5 text-xs text-neutral-300"
+                className="flex items-center gap-1 rounded-secondary bg-neutral-700/50 px-1.5 py-0.5 text-xs text-neutral-300"
               >
                 <FaTag className="size-2.5 flex-none text-neutral-500" />
                 {name}

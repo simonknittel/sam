@@ -26,10 +26,10 @@ export const Item = ({ page }: Props) => {
       key={page.path}
       href={page.path}
       className={clsx(
-        "first:rounded-l border border-brand-red-700 last:rounded-r h-8 flex items-center justify-center px-3 gap-2 font-mono uppercase",
+        "flex h-8 items-center justify-center gap-2 border border-brand-red-700 px-3 font-mono uppercase first:rounded-l last:rounded-r",
         {
           "bg-brand-red-500 text-white": isActive,
-          "text-brand-red-500 hover:text-brand-red-300 hover:border-brand-red-300":
+          "text-brand-red-500 hover:border-brand-red-300 hover:text-brand-red-300":
             !isActive,
         },
       )}

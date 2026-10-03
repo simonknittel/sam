@@ -23,7 +23,6 @@ const createTransaction = (receiverId: string) =>
 
 beforeEach(async () => {
   await truncateAllTables();
-  vi.mocked(publishNotifications).mockClear();
 });
 
 describe("SilcTransactionsCreatedHandler", () => {

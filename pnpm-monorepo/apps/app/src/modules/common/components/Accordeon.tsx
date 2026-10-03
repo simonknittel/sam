@@ -14,7 +14,7 @@ export const AccordeonToggle = (props: AccordeonToggleProps) => {
       type="button"
       title={isOpen ? "Details schließen" : "Details öffnen"}
       className={clsx(
-        "flex-none p-3 flex items-center justify-center border-l border-white/10 hover:bg-white/5 focus-visible:bg-white/5 active:bg-white/10 hover:cursor-pointer rounded-secondary",
+        "flex flex-none items-center justify-center rounded-secondary border-l border-white/10 p-3 hover:cursor-pointer hover:bg-white/5 focus-visible:bg-white/5 active:bg-white/10",
         className,
       )}
       {...rest}
@@ -43,7 +43,7 @@ export const AccordeonLink = (props: AccordeonLinkProps) => {
     <div
       aria-hidden="true"
       className={clsx(
-        "flex-none p-3 flex items-center justify-center border-l border-white/10",
+        "flex flex-none items-center justify-center border-l border-white/10 p-3",
         className,
       )}
       {...rest}

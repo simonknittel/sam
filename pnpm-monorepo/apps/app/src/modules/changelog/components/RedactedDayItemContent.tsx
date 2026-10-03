@@ -13,7 +13,7 @@ export const RedactedDayItemContent = () => {
 
       <div className="absolute inset-0 flex items-center justify-center backdrop-blur-sm">
         <p
-          className="text-brand-red-500 font-bold border-2 border-brand-red-500 rounded-secondary px-2 py-1 text-lg relative"
+          className="relative rounded-secondary border-2 border-brand-red-500 px-2 py-1 text-lg font-bold text-brand-red-500"
           style={{
             transform: `rotate(${random(-15, 15)}deg)`,
             left: `${random(-100, 100)}px`,

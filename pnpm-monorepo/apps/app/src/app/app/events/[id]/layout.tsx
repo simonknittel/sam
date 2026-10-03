@@ -18,7 +18,7 @@ export default async function Layout({
 
   return (
     <>
-      <p className="font-bold text-xl font-mono uppercase">
+      <p className="font-mono text-xl font-bold uppercase">
         <span className="text-neutral-500">Event //</span>{" "}
         <span>{event.name}</span>
       </p>

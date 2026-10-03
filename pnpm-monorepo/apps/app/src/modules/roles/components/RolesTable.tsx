@@ -90,7 +90,7 @@ export const RolesTable = async ({ className, searchParams }: Props) => {
   });
 
   return (
-    <section className={clsx("p-4 bg-secondary rounded-primary", className)}>
+    <section className={clsx("rounded-primary bg-secondary p-4", className)}>
       <Table columns={COLUMNS} minWidth={840}>
         <THead>
           <th>Rolle</th>
@@ -122,17 +122,17 @@ export const RolesTable = async ({ className, searchParams }: Props) => {
               <td className="overflow-hidden">
                 <Link
                   href={`/app/roles/${role.id}`}
-                  className="flex items-center gap-2 hover:bg-white/10 px-2 rounded-secondary h-8"
+                  className="flex h-8 items-center gap-2 rounded-secondary px-2 hover:bg-white/10"
                   prefetch={false}
                 >
                   {role.icon ? (
-                    <div className="aspect-square size-6 flex items-center justify-center rounded-secondary overflow-hidden flex-none">
+                    <div className="flex aspect-square size-6 flex-none items-center justify-center overflow-hidden rounded-secondary">
                       <Image
                         src={getPublicUploadUrl(role.icon.id)}
                         alt=""
                         width={24}
                         height={24}
-                        className="max-w-full max-h-full"
+                        className="max-h-full max-w-full"
                         unoptimized={["image/svg+xml", "image/gif"].includes(
                           role.icon.mimeType,
                         )}
@@ -143,13 +143,13 @@ export const RolesTable = async ({ className, searchParams }: Props) => {
                     <div className="size-6 flex-none" />
                   )}
 
-                  <p className="font-bold truncate">{role.name}</p>
+                  <p className="truncate font-bold">{role.name}</p>
                 </Link>
               </td>
 
               <td
                 title={role.description || ""}
-                className="text-sm truncate text-white/40"
+                className="truncate text-sm text-white/40"
               >
                 {role.description || null}
               </td>
@@ -157,7 +157,7 @@ export const RolesTable = async ({ className, searchParams }: Props) => {
               <td>
                 <Link
                   href={`/app/roles/${role.id}/inheritance`}
-                  className="flex items-center justify-center gap-2 hover:bg-white/10 px-2 rounded-secondary h-8"
+                  className="flex h-8 items-center justify-center gap-2 rounded-secondary px-2 hover:bg-white/10"
                   prefetch={false}
                 >
                   {role._count.inherits > 0 ? role._count.inherits : null}
@@ -173,7 +173,7 @@ export const RolesTable = async ({ className, searchParams }: Props) => {
               <td>
                 <Link
                   href={`/app/spynet/citizen?filters=role-${role.id}`}
-                  className="flex items-center justify-center gap-2 hover:bg-white/10 px-2 rounded-secondary h-8"
+                  className="flex h-8 items-center justify-center gap-2 rounded-secondary px-2 hover:bg-white/10"
                   prefetch={false}
                 >
                   {role._count.assignments > 0 ? role._count.assignments : null}

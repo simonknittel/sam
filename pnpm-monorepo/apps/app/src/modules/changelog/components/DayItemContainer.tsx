@@ -45,7 +45,7 @@ export const DayItemContainer = ({
     <li
       ref={isUnseen ? observeEntry : undefined}
       data-read-on-view-id={isUnseen ? entryKey : undefined}
-      className={clsx("pl-5 relative", {
+      className={clsx("relative pl-5", {
         "border-l-2 border-neutral-800/80 py-3 pr-3": isRedacted,
         "border-l border-l-transparent": !isRedacted && showsNewIndicator,
         "border-l border-l-neutral-800/80": !isRedacted && !showsNewIndicator,
@@ -54,13 +54,13 @@ export const DayItemContainer = ({
       {showsNewIndicator && <UnreadEdge width={UnreadEdgeWidth.Thin} />}
 
       <div className="flex items-center gap-2">
-        <strong className="block font-bold font-mono uppercase">{title}</strong>
+        <strong className="block font-mono font-bold uppercase">{title}</strong>
 
         {showsNewIndicator && <NewBadge />}
       </div>
 
       {tags && tags.length > 0 && (
-        <div className="flex flex-wrap gap-1 mt-1">
+        <div className="mt-1 flex flex-wrap gap-1">
           {tags.map((tag) => (
             <SmallBadge key={tag} value={tag} />
           ))}

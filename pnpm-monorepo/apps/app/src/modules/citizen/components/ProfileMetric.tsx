@@ -38,7 +38,7 @@ export const ProfileMetric = ({
   const content = (
     <>
       <span
-        className={clsx("font-black text-2xl", {
+        className={clsx("text-2xl font-black", {
           "text-green-500": tone === ProfileMetricTone.Positive,
           "text-red-500": tone === ProfileMetricTone.Negative,
         })}
@@ -49,9 +49,9 @@ export const ProfileMetric = ({
         />
       </span>
 
-      {hint && <span className="text-neutral-500 text-xs">{hint}</span>}
+      {hint && <span className="text-xs text-neutral-500">{hint}</span>}
 
-      <span className="text-neutral-500 text-xs flex gap-1 items-center">
+      <span className="flex items-center gap-1 text-xs text-neutral-500">
         {icon}
         {label}
       </span>

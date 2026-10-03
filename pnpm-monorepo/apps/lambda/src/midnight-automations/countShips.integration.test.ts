@@ -59,7 +59,6 @@ const readCounts = async () => {
 
 beforeEach(async () => {
   await truncateAllTables();
-  vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(MIDNIGHT);
   await prisma.organization.create({
     data: { id: ORG_ID, name: "Organization", spectrumId: "ORGANIZATION" },

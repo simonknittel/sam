@@ -132,7 +132,7 @@ export const EventDescriptionField = ({
           {/* Focusable: the box scrolls, and only a pointer can scroll it otherwise */}
           <div
             tabIndex={0}
-            className="mt-2 max-h-96 overflow-y-auto rounded-secondary border border-neutral-800 bg-neutral-900 p-2 outline-interaction-700 outline-offset-4 focus-visible:outline-2 @3xl:min-h-40"
+            className="mt-2 max-h-96 overflow-y-auto rounded-secondary border border-neutral-800 bg-neutral-900 p-2 outline-offset-4 outline-interaction-700 focus-visible:outline-2 @3xl:min-h-40"
           >
             {description.trim() ? (
               <DiscordMarkdown>{description}</DiscordMarkdown>
@@ -141,11 +141,11 @@ export const EventDescriptionField = ({
             )}
 
             <div className="mt-4 border-t border-dashed border-neutral-700 pt-2">
-              <p className="font-mono text-xs uppercase text-neutral-500">
+              <p className="font-mono text-xs text-neutral-500 uppercase">
                 Wird auf Discord automatisch angehängt
               </p>
 
-              <p className="mt-1 whitespace-pre-line wrap-anywhere text-white/60">
+              <p className="mt-1 wrap-anywhere whitespace-pre-line text-white/60">
                 {getDiscordEventDescriptionFooter(
                   eventId ? getEventUrl(eventId) : PLACEHOLDER_EVENT_URL,
                 )}

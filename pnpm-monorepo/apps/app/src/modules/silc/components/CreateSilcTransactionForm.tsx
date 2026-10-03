@@ -47,7 +47,7 @@ export const CreateSilcTransactionForm = ({ onSuccess }: Props) => {
         className="mt-4"
       />
 
-      <div className="flex flex-col gap-2 mt-4">
+      <div className="mt-4 flex flex-col gap-2">
         <Button2 type="submit" disabled={isPending}>
           {isPending ? <AsciiSpinner /> : <FaSave />}
           Speichern

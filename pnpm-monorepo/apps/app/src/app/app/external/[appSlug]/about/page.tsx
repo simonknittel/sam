@@ -38,7 +38,7 @@ export default async function Page({
 
   return (
     <MaxWidthContent maxWidth="prose">
-      <section className="bg-secondary rounded-primary p-4">
+      <section className="rounded-primary bg-secondary p-4">
         <h1 className="sr-only">Über diese App</h1>
 
         <RichText>

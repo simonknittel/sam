@@ -44,7 +44,7 @@ export const PasteEventPositionButton = ({
         <Button
           type="button"
           variant="tertiary"
-          className={clsx("px-2 w-auto", className)}
+          className={clsx("w-auto px-2", className)}
           aria-label={label}
           iconOnly
         >
@@ -107,15 +107,15 @@ const PasteMenu = ({ clipboard, position, groupLevel }: PasteMenuProps) => {
       />
       <input type="hidden" name="targetPositionId" value={position.id} />
 
-      <h3 className="text-white/40 font-mono uppercase text-xs">
+      <h3 className="font-mono text-xs text-white/40 uppercase">
         Zwischenablage
       </h3>
 
-      <p className="font-bold truncate" title={clipboard.positionName}>
+      <p className="truncate font-bold" title={clipboard.positionName}>
         {clipboard.positionName}
       </p>
 
-      <p className="text-neutral-500 text-sm">
+      <p className="text-sm text-neutral-500">
         {getOriginHint(clipboard.container, container)}
         Zugewiesene Citizen und Bewerbungen werden nicht mitkopiert.
       </p>
@@ -156,7 +156,7 @@ const PasteMenu = ({ clipboard, position, groupLevel }: PasteMenuProps) => {
       <button
         type="button"
         onClick={handleClear}
-        className="text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300 hover:underline focus-visible:underline hover:cursor-pointer text-sm self-start mt-2"
+        className="mt-2 self-start text-sm text-brand-red-500 hover:cursor-pointer hover:text-brand-red-300 hover:underline focus-visible:text-brand-red-300 focus-visible:underline"
       >
         Zwischenablage leeren
       </button>

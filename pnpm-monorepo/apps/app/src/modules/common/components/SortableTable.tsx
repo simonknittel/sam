@@ -34,12 +34,12 @@ export const SortableTable = <Row,>({
             className={clsx("grid items-center gap-4 pb-2", gridColsClassName)}
           >
             {headerGroup.headers.map((header) => (
-              <th key={header.id} className="text-left text-neutral-500 p-0">
+              <th key={header.id} className="p-0 text-left text-neutral-500">
                 {header.isPlaceholder ? null : (
                   <div
                     className={
                       header.column.getCanSort()
-                        ? "cursor-pointer select-none flex items-center gap-2 hover:text-neutral-300"
+                        ? "flex cursor-pointer items-center gap-2 select-none hover:text-neutral-300"
                         : ""
                     }
                     onClick={header.column.getToggleSortingHandler()}

@@ -160,7 +160,7 @@ export const WikiPageIndexConfigModal = ({
               value={maxDepth}
               onChange={(event) => setMaxDepth(event.target.value)}
               placeholder="Alle"
-              className="w-full rounded-secondary border border-neutral-700 bg-transparent px-3 h-9 text-sm focus-visible:border-neutral-500 focus-visible:outline-none"
+              className="h-9 w-full rounded-secondary border border-neutral-700 bg-transparent px-3 text-sm focus-visible:border-neutral-500 focus-visible:outline-none"
             />
           </>
         )}
@@ -178,8 +178,8 @@ export const WikiPageIndexConfigModal = ({
                     aria-pressed={tagIds.includes(tag.id)}
                     className={
                       tagIds.includes(tag.id)
-                        ? "flex items-center gap-1 rounded-secondary bg-interaction-700 py-1 px-2 text-sm text-white hover:bg-interaction-500 focus-visible:bg-interaction-500"
-                        : "flex items-center gap-1 rounded-secondary bg-neutral-700/50 py-1 px-2 text-sm text-neutral-300 hover:bg-neutral-700 focus-visible:bg-neutral-700"
+                        ? "flex items-center gap-1 rounded-secondary bg-interaction-700 px-2 py-1 text-sm text-white hover:bg-interaction-500 focus-visible:bg-interaction-500"
+                        : "flex items-center gap-1 rounded-secondary bg-neutral-700/50 px-2 py-1 text-sm text-neutral-300 hover:bg-neutral-700 focus-visible:bg-neutral-700"
                     }
                   >
                     <FaTag className="size-3 flex-none" />

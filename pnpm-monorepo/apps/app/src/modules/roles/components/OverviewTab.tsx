@@ -87,7 +87,7 @@ export const OverviewTab = ({ className, role }: Props) => {
           <Button2
             type="submit"
             disabled={updateIsPending}
-            className="ml-auto mt-4"
+            className="mt-4 ml-auto"
           >
             {updateIsPending ? <AsciiSpinner /> : <FaSave />}
             Speichern
@@ -98,7 +98,7 @@ export const OverviewTab = ({ className, role }: Props) => {
       </Tile>
 
       <Tile heading="Bilder">
-        <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex flex-col gap-4 md:flex-row">
           <div>
             <label className="block font-bold">Icon</label>
 
@@ -111,9 +111,9 @@ export const OverviewTab = ({ className, role }: Props) => {
               width={128}
               height={128}
               className={clsx(
-                "mt-2 size-32 border border-neutral-700 hover:border-neutral-500 text-neutral-500 hover:text-neutral-300 transition-colors group rounded-secondary",
+                "group mt-2 size-32 rounded-secondary border border-neutral-700 text-neutral-500 transition-colors hover:border-neutral-500 hover:text-neutral-300",
                 {
-                  "after:content-['Bild_hochladen'] flex items-center justify-center":
+                  "flex items-center justify-center after:content-['Bild_hochladen']":
                     !role.iconId,
                 },
               )}
@@ -135,9 +135,9 @@ export const OverviewTab = ({ className, role }: Props) => {
               width={228}
               height={128}
               className={clsx(
-                "mt-2 w-57 h-32 border border-neutral-700 hover:border-neutral-500 text-neutral-500 hover:text-neutral-300 transition-colors group rounded-secondary",
+                "group mt-2 h-32 w-57 rounded-secondary border border-neutral-700 text-neutral-500 transition-colors hover:border-neutral-500 hover:text-neutral-300",
                 {
-                  "after:content-['Bild_hochladen'] flex items-center justify-center":
+                  "flex items-center justify-center after:content-['Bild_hochladen']":
                     !role.thumbnailId,
                 },
               )}

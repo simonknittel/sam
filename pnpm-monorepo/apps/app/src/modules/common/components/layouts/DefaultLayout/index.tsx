@@ -15,17 +15,17 @@ interface Props {
 export const DefaultLayout = ({ title, pages, cta, children, slug }: Props) => {
   return (
     <>
-      <div className="fixed left-0 right-0 top-0 lg:top-14 z-20 bg-black p-2 flex gap-2 justify-between lg:justify-start border-b border-neutral-800">
+      <div className="fixed top-0 right-0 left-0 z-20 flex justify-between gap-2 border-b border-neutral-800 bg-black p-2 lg:top-14 lg:justify-start">
         <Link href={`/app/${slug}`} className="flex self-center">
           <Hero
             text={title}
             withGlitch
             size="sm"
-            className="lg:px-6 overflow-hidden flex-initial"
+            className="flex-initial overflow-hidden lg:px-6"
           />
         </Link>
 
-        <div className="flex-1 flex flex-row-reverse lg:flex-row gap-1 lg:justify-between">
+        <div className="flex flex-1 flex-row-reverse gap-1 lg:flex-row lg:justify-between">
           {pages && <Navigation pages={pages} />}
           {cta}
         </div>

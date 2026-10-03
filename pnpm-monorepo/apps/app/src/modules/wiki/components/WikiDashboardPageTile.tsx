@@ -46,7 +46,7 @@ export const WikiDashboardPageTile = async () => {
     <section className="flex flex-col items-center gap-0.5">
       {/* The overflow keeps the indicator overlay inside the beveled corners */}
       <div
-        className="relative w-full overflow-hidden bg-secondary corners-primary"
+        className="relative w-full overflow-hidden corners-primary bg-secondary"
         data-wiki-dashboard-content=""
       >
         {/*
@@ -73,7 +73,7 @@ export const WikiDashboardPageTile = async () => {
 
       <Link
         href={`/app/wiki/${page.id}/${page.slug}`}
-        className="text-interaction-500 hover:underline focus-visible:underline font-mono uppercase text-sm mt-2"
+        className="mt-2 font-mono text-sm text-interaction-500 uppercase hover:underline focus-visible:underline"
       >
         Ganze Seite öffnen
       </Link>

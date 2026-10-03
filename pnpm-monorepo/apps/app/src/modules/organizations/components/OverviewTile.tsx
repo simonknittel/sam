@@ -13,9 +13,9 @@ export const OverviewTile = async ({ className, id }: Props) => {
   if (!organization) throw new Error("Organization not found");
 
   return (
-    <section className={clsx(className, "rounded-primary overflow-hidden")}>
+    <section className={clsx(className, "overflow-hidden rounded-primary")}>
       {organization.logo && (
-        <div className="bg-black flex items-center justify-center p-2">
+        <div className="flex items-center justify-center bg-black p-2">
           <Image
             src={`https://robertsspaceindustries.com${organization.logo}`}
             alt=""
@@ -25,17 +25,17 @@ export const OverviewTile = async ({ className, id }: Props) => {
         </div>
       )}
 
-      <div className={clsx("p-4 bg-secondary")}>
+      <div className={clsx("bg-secondary p-4")}>
         <h2 className="font-bold">Übersicht</h2>
 
         <dl className="mt-4">
           <dt className="text-neutral-500">Name</dt>
           <dd>{organization.name}</dd>
 
-          <dt className="text-neutral-500 mt-4">Spectrum ID</dt>
+          <dt className="mt-4 text-neutral-500">Spectrum ID</dt>
           <dd>{organization.spectrumId}</dd>
 
-          <dt className="text-neutral-500 mt-4">Internal ID</dt>
+          <dt className="mt-4 text-neutral-500">Internal ID</dt>
           <dd>{organization.id}</dd>
         </dl>
 

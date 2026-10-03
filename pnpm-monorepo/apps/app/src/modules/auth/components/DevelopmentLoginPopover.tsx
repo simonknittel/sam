@@ -15,7 +15,7 @@ export const DevelopmentLoginPopover = ({ users, redirectTo }: Props) => {
   const { formAction, isPending } = useAction(developmentLogin);
 
   return (
-    <div className="fixed top-2 left-1/2 -translate-x-1/2 z-50">
+    <div className="fixed top-2 left-1/2 z-50 -translate-x-1/2">
       <PopoverBaseUI
         title="Dev login"
         trigger="Dev login"

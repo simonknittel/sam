@@ -5,7 +5,6 @@ import {
 } from "@sam-monorepo/database/client";
 import { createCitizen, ONE_MINUTE_MS } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
   clickUntilUrl,
   clickUntilVisible,
   toggleLabel,
@@ -100,9 +99,7 @@ test("a viewer without the confirm permission sees only the confirmed logs of th
   await signIn(viewer.user);
   await page.goto("/app/spynet/other");
 
-  await expect(logContent(page, NEWEST_CONFIRMED_HANDLE)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(logContent(page, NEWEST_CONFIRMED_HANDLE)).toBeVisible();
   await expect(tableRows(page)).toHaveCount(PER_PAGE);
   await expect(page.getByText("1 / 2")).toBeVisible();
   for (const content of [
@@ -113,9 +110,7 @@ test("a viewer without the confirm permission sees only the confirmed logs of th
     await expect(logContent(page, content)).toHaveCount(0);
 
   await page.goto("/app/spynet/other?page=2");
-  await expect(page.getByText("2 / 2")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("2 / 2")).toBeVisible();
   await expect(tableRows(page)).toHaveCount(1);
   await expect(logContent(page, OLDEST_CONFIRMED_HANDLE)).toBeVisible();
 });
@@ -145,9 +140,7 @@ test("a viewer with the confirm and read permissions sees all logs of these type
     CONFIRMED_DISCORD_ID,
     NEWEST_CONFIRMED_HANDLE,
   ])
-    await expect(logContent(page, content)).toBeVisible({
-      timeout: ACTION_FEEDBACK_TIMEOUT,
-    });
+    await expect(logContent(page, content)).toBeVisible();
 
   const confirmationFilter = page.getByRole("dialog", {
     name: "Bestätigungsstatus",
@@ -162,8 +155,6 @@ test("a viewer with the confirm and read permissions sees all logs of these type
     /filters=confirmation-false-report/,
   );
 
-  await expect(tableRows(page)).toHaveCount(1, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(tableRows(page)).toHaveCount(1);
   await expect(logContent(page, FALSE_REPORT_HANDLE)).toBeVisible();
 });

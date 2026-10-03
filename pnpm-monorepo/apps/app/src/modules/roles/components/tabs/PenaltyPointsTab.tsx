@@ -9,7 +9,7 @@ export const PenaltyPointsTab = () => {
 
   return (
     <TabPanel id="penalty_points">
-      <div className="py-2 flex justify-between items-center gap-2  mt-2">
+      <div className="mt-2 flex items-center justify-between gap-2 py-2">
         <div>
           <h4 className="font-bold">Lesen</h4>
           <p className="text-sm">
@@ -21,7 +21,7 @@ export const PenaltyPointsTab = () => {
         <YesNoCheckbox {...register("penaltyEntry;read")} />
       </div>
 
-      <div className="py-2 flex justify-between items-center gap-2  mt-2">
+      <div className="mt-2 flex items-center justify-between gap-2 py-2">
         <div>
           <h4 className="font-bold">Eintragen</h4>
           <p className="text-sm">
@@ -33,7 +33,7 @@ export const PenaltyPointsTab = () => {
         <YesNoCheckbox {...register("penaltyEntry;create")} />
       </div>
 
-      <div className="py-2 flex justify-between items-center gap-2 mt-2">
+      <div className="mt-2 flex items-center justify-between gap-2 py-2">
         <div>
           <h4 className="font-bold">Löschen</h4>
           <p className="text-sm">
@@ -47,7 +47,7 @@ export const PenaltyPointsTab = () => {
         <YesNoCheckbox {...register("penaltyEntry;delete")} />
       </div>
 
-      <div className="py-2 flex justify-between items-center gap-2 mt-2">
+      <div className="mt-2 flex items-center justify-between gap-2 py-2">
         <div>
           <h4 className="font-bold">Eigene Strafpunkte lesen</h4>
           <p className="text-sm">

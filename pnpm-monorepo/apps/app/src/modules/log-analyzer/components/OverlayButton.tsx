@@ -66,13 +66,13 @@ export const OverlayButton = ({ className }: Props) => {
 
       {pipWindow && (
         <OverlayWindow pipWindow={pipWindow}>
-          <section className="min-h-dvh background-primary text-text-primary p-2 flex flex-col gap-1">
+          <section className="flex min-h-dvh flex-col gap-1 background-primary p-2 text-text-primary">
             {newEntries.length > 0 ? (
               newEntries.map((entry) => (
                 <OverlayEntry key={entry.key} entry={entry} />
               ))
             ) : (
-              <div className="text-center text-neutral-500 p-2 text-sm">
+              <div className="p-2 text-center text-sm text-neutral-500">
                 Neue Logs aus der aktuellen Session werden hier angezeigt.
               </div>
             )}

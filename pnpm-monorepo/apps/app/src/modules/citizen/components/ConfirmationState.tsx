@@ -33,10 +33,10 @@ export const ConfirmationState = ({ citizenLog }: Props) => {
 
     case null:
       return (
-        <div className="flex items-center gap-2 text-blue-500 overflow-hidden">
+        <div className="flex items-center gap-2 overflow-hidden text-blue-500">
           <FaInfoCircle className="shrink-0" />
           <span className="overflow-hidden text-ellipsis">Unbestätigt</span>
-          <span className="text-neutral-500 flex gap-1 mt-1">
+          <span className="mt-1 flex gap-1 text-neutral-500">
             <ConfirmLog log={citizenLog} compact={true} />
           </span>
         </div>

@@ -85,14 +85,14 @@ export const ProfileContent = ({
             className="absolute inset-0 -z-10 size-full rounded-[inherit]"
           />
 
-          <p className="flex items-center justify-center gap-2 rounded-secondary border border-amber-400/30 bg-amber-400/10 px-3 py-1.5 mb-2 font-mono text-sm uppercase text-amber-300">
+          <p className="mb-2 flex items-center justify-center gap-2 rounded-secondary border border-amber-400/30 bg-amber-400/10 px-3 py-1.5 font-mono text-sm text-amber-300 uppercase">
             Happy Birthday
             <BirthdayHat className="size-4 flex-none" />
           </p>
         </>
       )}
 
-      <div className="flex gap-4 items-center pb-2">
+      <div className="flex items-center gap-4 pb-2">
         <Avatar
           name={name}
           image={profile.avatarUrl}
@@ -104,9 +104,9 @@ export const ProfileContent = ({
         />
 
         <div className="min-w-0">
-          <p className="opacity-50 font-mono uppercase text-xs">Citizen</p>
+          <p className="font-mono text-xs uppercase opacity-50">Citizen</p>
 
-          <h2 className="font-mono uppercase text-lg font-bold flex items-center gap-2 min-w-0">
+          <h2 className="flex min-w-0 items-center gap-2 font-mono text-lg font-bold uppercase">
             <span
               className={clsx("truncate", {
                 "text-birthday": citizen.hasBirthdayToday,
@@ -128,7 +128,7 @@ export const ProfileContent = ({
           {profile.spynetHref && (
             <Link
               href={profile.spynetHref}
-              className="text-interaction-500 hover:underline focus-visible:underline font-mono uppercase text-xs"
+              className="font-mono text-xs text-interaction-500 uppercase hover:underline focus-visible:underline"
               prefetch={false}
             >
               Spynet öffnen
@@ -163,7 +163,7 @@ export const ProfileContent = ({
       </div>
 
       {hasMetrics && (
-        <div className="border-t border-neutral-700 pt-2 mt-2 flex gap-1">
+        <div className="mt-2 flex gap-1 border-t border-neutral-700 pt-2">
           {metrics.silc && (
             <ProfileMetric
               label="SILC"
@@ -205,7 +205,7 @@ export const ProfileContent = ({
       )}
 
       {citizen.timezone && (
-        <dl className="border-t border-neutral-700 pt-2 mt-2 flex flex-col gap-1 text-sm">
+        <dl className="mt-2 flex flex-col gap-1 border-t border-neutral-700 pt-2 text-sm">
           <ProfileAttribute name="Zeitzone">
             <span className="truncate" title={citizen.timezone}>
               {citizen.timezone}

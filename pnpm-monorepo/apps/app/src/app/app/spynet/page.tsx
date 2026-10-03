@@ -17,11 +17,11 @@ export default async function Page() {
 
   return (
     <MaxWidthContent>
-      <div className="max-w-100 mx-auto">
+      <div className="mx-auto max-w-100">
         {(citizenRead || organizationRead) && <SpynetSearchTile />}
 
         {(citizenCreate || organisationCreate) && (
-          <div className="flex gap-2 justify-center mt-4">
+          <div className="mt-4 flex justify-center gap-2">
             {citizenCreate && <CreateCitizenButton />}
             {organisationCreate && <CreateOrganizationButton />}
           </div>

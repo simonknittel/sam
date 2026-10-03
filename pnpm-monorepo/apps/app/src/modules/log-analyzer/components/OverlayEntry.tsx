@@ -28,7 +28,7 @@ export const OverlayEntry = ({ entry }: Props) => {
 
       <div
         className={clsx(
-          "absolute left-0 top-0 bg-amber-500 text-black font-mono uppercase text-xs px-1 rounded-br-secondary",
+          "absolute top-0 left-0 rounded-br-secondary bg-amber-500 px-1 font-mono text-xs text-black uppercase",
           styles.New,
         )}
       >

@@ -26,7 +26,7 @@ export const FireworkBurst = ({ className }: Props) => (
     viewBox="0 0 100 100"
     aria-hidden
     className={clsx(
-      "absolute origin-center opacity-0 animate-seasonal-burst",
+      "absolute origin-center animate-seasonal-burst opacity-0",
       className,
     )}
   >

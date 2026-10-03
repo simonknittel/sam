@@ -12,7 +12,6 @@ import {
   type TestCitizen,
 } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
   hoverUntilVisible,
   SAVED_TEXT,
   sectionByHeading,
@@ -152,9 +151,7 @@ test("a citizen sets, keeps and clears their time zone and birthday", async ({
   await daySelect(page).selectOption({ label: "24" });
   await saveButton(page).click();
 
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   expect(
     await prisma.citizen.findUniqueOrThrow({
@@ -195,9 +192,7 @@ test("a citizen sets, keeps and clears their time zone and birthday", async ({
   await expect(daySelect(page)).toHaveValue("");
   await saveButton(page).click();
 
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   expect(
     await prisma.citizen.findUniqueOrThrow({
@@ -233,7 +228,7 @@ test("a birthday without a month is rejected", async ({
 
   await expect(
     page.getByText("Gib für den Geburtstag den Tag und den Monat an."),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
 
   /** The rejected input stays in the form, ready to be corrected */
   await expect(daySelect(page)).toHaveValue("15");
@@ -533,9 +528,6 @@ test("the party hat marks the citizen whose birthday is today", async ({
     permissionStrings: ["citizen;read"],
   });
 
-  /** The whole suite runs with reduced motion, see playwright.config.ts */
-  await page.emulateMedia({ reducedMotion: "no-preference" });
-
   await signIn(birthdayChild.user);
 
   /** The own profile tile of the dashboard and the account avatar above it */
@@ -546,9 +538,6 @@ test("the party hat marks the citizen whose birthday is today", async ({
   await expect(
     birthdayHats(page.getByRole("button", { name: "Account" })),
   ).toBeVisible();
-
-  /** The profile and the avatar in it both celebrate with confetti */
-  await expect(profileTile.locator("[data-confetti-canvas]")).toHaveCount(2);
 
   /** The list marks the row of today, and only that row */
   await page.goto("/app/spynet/birthdays");

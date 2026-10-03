@@ -19,7 +19,7 @@ export const NumberInput = (props: Props) => {
     <>
       {label && (
         <label
-          className={clsx("block mb-2 text-white/90", labelClassName)}
+          className={clsx("mb-2 block text-white/90", labelClassName)}
           htmlFor={id}
         >
           {label}
@@ -29,14 +29,14 @@ export const NumberInput = (props: Props) => {
       <input
         type="number"
         className={clsx(
-          "p-2 rounded-secondary bg-neutral-900 border border-neutral-800 w-full focus-visible:outline-2 outline-interaction-700 outline-offset-4",
+          "w-full rounded-secondary border border-neutral-800 bg-neutral-900 p-2 outline-offset-4 outline-interaction-700 focus-visible:outline-2",
           className,
         )}
         id={id}
         {...rest}
       />
 
-      {hint && <p className="text-xs mt-1 text-white/40">{hint}</p>}
+      {hint && <p className="mt-1 text-xs text-white/40">{hint}</p>}
     </>
   );
 };
@@ -58,7 +58,7 @@ export const NumberInputFormatted = (props: PropsFormatted) => {
     <>
       {label && (
         <label
-          className={clsx("block mb-2 text-white/50", labelClassName)}
+          className={clsx("mb-2 block text-white/50", labelClassName)}
           htmlFor={id}
         >
           {label}
@@ -67,7 +67,7 @@ export const NumberInputFormatted = (props: PropsFormatted) => {
 
       <NumericFormat
         className={clsx(
-          "p-2 rounded-secondary bg-neutral-900 border border-neutral-800 w-full focus-visible:outline-2 outline-interaction-700 outline-offset-4",
+          "w-full rounded-secondary border border-neutral-800 bg-neutral-900 p-2 outline-offset-4 outline-interaction-700 focus-visible:outline-2",
           className,
         )}
         id={id}
@@ -77,7 +77,7 @@ export const NumberInputFormatted = (props: PropsFormatted) => {
         {...rest}
       />
 
-      {hint && <p className="text-xs mt-1 text-white/40">{hint}</p>}
+      {hint && <p className="mt-1 text-xs text-white/40">{hint}</p>}
     </>
   );
 };

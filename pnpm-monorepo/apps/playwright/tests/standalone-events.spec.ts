@@ -13,7 +13,6 @@ import {
   ONE_HOUR_MS,
 } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
   fillUntilValue,
   NOT_FOUND_TEXT,
@@ -56,9 +55,7 @@ test("an authorized user creates a public event via the modal", async ({
   await page.getByRole("button", { name: "Speichern" }).click();
 
   // Creating redirects straight to the new event's overview
-  await expect(page).toHaveURL(/\/app\/events\/[a-z0-9]+$/, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page).toHaveURL(/\/app\/events\/[a-z0-9]+$/);
   await expect(
     page.getByRole("heading", { name: "Operation Nachtwache" }).first(),
   ).toBeVisible();
@@ -151,7 +148,7 @@ test("a user without event;create sees no create button and cannot open foreign 
   await page.goto("/app/events");
   await expect(
     page.getByRole("heading", { name: "Operation Fremdes Event" }),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Event erstellen" }),
   ).toHaveCount(0);
@@ -193,9 +190,7 @@ test("a dead briefing link keeps the event chrome, an unknown event does not", a
   await signIn(creator.user);
   await page.goto(`/app/events/${event.id}/briefing/gibt-es-nicht`);
 
-  await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
   // Both layers of chrome survive: the event tabs and the briefing sidebar
   await expect(page.getByRole("link", { name: "Übersicht" })).toBeVisible();
   await expect(
@@ -236,9 +231,7 @@ test("the organizer edits the event via the settings tab", async ({
   await page.getByLabel("Start").fill("2027-07-10T18:30");
   await page.getByLabel("Ende").fill("2027-07-10T21:30");
   await page.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   await page.goto(`/app/events/${event.id}`);
   await expect(
@@ -299,9 +292,7 @@ test("deleting an event hides it everywhere", async ({
     .getByRole("button", { name: "Löschen" })
     .click();
 
-  await expect(page).toHaveURL("/app/events", {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page).toHaveURL("/app/events");
   await expect(page.getByText("Keine Events gefunden")).toBeVisible();
 
   const deletedEvent = await prisma.event.findUnique({
@@ -349,9 +340,7 @@ test("a restricted event is invisible to non-eligible users", async ({
   await page.goto("/app/events");
   await expect(
     page.getByText("Keine Events gefunden").filter({ visible: true }),
-  ).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  ).toBeVisible();
   await page.goto(`/app/events/${event.id}`);
   await expect(page.getByText(NOT_FOUND_TEXT)).toBeVisible();
 
@@ -396,9 +385,7 @@ test("the sign-up lifecycle: sign up with comment, edit, cancel, re-sign-up", as
   await expect(participationState("Nicht angemeldet")).toBeVisible();
   await page.getByLabel("Kommentar").fill("Bringe Snacks mit");
   await page.getByRole("button", { name: "Anmelden", exact: true }).click();
-  await expect(page.getByText("Du bist angemeldet.")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Du bist angemeldet.")).toBeVisible();
   await expect(participationState("Zugesagt")).toBeVisible();
 
   await page.goto(`/app/events/${event.id}/participants`);
@@ -424,9 +411,7 @@ test("the sign-up lifecycle: sign up with comment, edit, cancel, re-sign-up", as
     "Bringe doch keine Snacks mit",
   );
   await page.getByRole("button", { name: "Kommentar speichern" }).click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   // A manager assigns the participant to a position; cancelling must clear it
   const position = await prisma.eventPosition.create({
@@ -446,9 +431,7 @@ test("the sign-up lifecycle: sign up with comment, edit, cancel, re-sign-up", as
     .getByRole("alertdialog")
     .getByRole("button", { name: "Abmelden" })
     .click();
-  await expect(page.getByText("Du hast dich abgemeldet.")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Du hast dich abgemeldet.")).toBeVisible();
   await expect(participationState("Abgemeldet")).toBeVisible();
 
   const clearedPosition = await prisma.eventPosition.findUnique({
@@ -458,9 +441,7 @@ test("the sign-up lifecycle: sign up with comment, edit, cancel, re-sign-up", as
 
   // Re-sign-up creates a fresh row; the cancelled row stays as history
   await page.getByRole("button", { name: "Anmelden", exact: true }).click();
-  await expect(page.getByText("Du bist angemeldet.")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Du bist angemeldet.")).toBeVisible();
 
   const rows = await prisma.eventParticipant.findMany({
     where: { eventId: event.id, citizenId: participant.entity.id },
@@ -569,7 +550,7 @@ test("the type filter narrows the list to app or Discord events", async ({
   await page.goto("/app/events");
   await expect(
     page.getByRole("heading", { name: "Operation App-Event" }),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Operation Discord-Event" }),
   ).toBeVisible();
@@ -577,7 +558,7 @@ test("the type filter narrows the list to app or Discord events", async ({
   await toggleLabel(page, /^App$/).click();
   await expect(
     page.getByRole("heading", { name: "Operation Discord-Event" }),
-  ).toHaveCount(0, { timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: "Operation App-Event" }),
   ).toBeVisible();
@@ -585,7 +566,7 @@ test("the type filter narrows the list to app or Discord events", async ({
   await toggleLabel(page, /^Discord$/).click();
   await expect(
     page.getByRole("heading", { name: "Operation App-Event" }),
-  ).toHaveCount(0, { timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: "Operation Discord-Event" }),
   ).toBeVisible();
@@ -680,9 +661,7 @@ test("the description renders the formats of Discord and exports plain text", as
   await page.getByLabel("Ende").fill("2027-04-08T22:00");
   await page.getByRole("button", { name: "Speichern" }).click();
 
-  await expect(page).toHaveURL(/\/app\/events\/[a-z0-9]+$/, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page).toHaveURL(/\/app\/events\/[a-z0-9]+$/);
 
   // Bold text and the list become elements, not characters
   await expect(
@@ -766,9 +745,7 @@ test("the events list preview manages participation without leaving the list", a
   await expect(dialog.getByText("Nicht angemeldet")).toBeVisible();
   await fillUntilValue(dialog.getByLabel("Kommentar"), "Bin dabei");
   await dialog.getByRole("button", { name: "Anmelden", exact: true }).click();
-  await expect(page.getByText("Du bist angemeldet.")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Du bist angemeldet.")).toBeVisible();
 
   // The modal stays open and re-renders into the signed-up state
   await expect(dialog.getByText("Zugesagt")).toBeVisible();
@@ -779,9 +756,7 @@ test("the events list preview manages participation without leaving the list", a
     .getByRole("alertdialog")
     .getByRole("button", { name: "Abmelden" })
     .click();
-  await expect(page.getByText("Du hast dich abgemeldet.")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Du hast dich abgemeldet.")).toBeVisible();
   // The batched cancelled-participation query reaches the preview
   await expect(dialog.getByText("Abgemeldet", { exact: true })).toBeVisible();
 

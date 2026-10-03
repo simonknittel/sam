@@ -45,7 +45,7 @@ export const Tile = ({
     >
       {(heading || cta) && (
         <div
-          className={clsx("flex justify-between items-center border-b", {
+          className={clsx("flex items-center justify-between border-b", {
             "border-white/5": variant === TileVariant.Default,
             "border-red-500/30": variant === TileVariant.Danger,
             "border-me/30": variant === TileVariant.Me,
@@ -54,7 +54,7 @@ export const Tile = ({
           <div className="flex-1 p-4">
             {heading && (
               <h2
-                className={clsx("font-bold text-lg font-mono uppercase", {
+                className={clsx("font-mono text-lg font-bold uppercase", {
                   "text-red-500": variant === TileVariant.Danger,
                   "text-me": variant === TileVariant.Me,
                 })}
@@ -64,11 +64,11 @@ export const Tile = ({
             )}
 
             {subheading && (
-              <p className="mt-1 text-neutral-500 text-sm">{subheading}</p>
+              <p className="mt-1 text-sm text-neutral-500">{subheading}</p>
             )}
           </div>
 
-          {cta && <div className="pr-4 flex-initial">{cta}</div>}
+          {cta && <div className="flex-initial pr-4">{cta}</div>}
         </div>
       )}
 

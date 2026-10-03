@@ -28,16 +28,16 @@ export const SpynetSearchAutocomplete = () => {
       openOnInputClick
     >
       {/* The seasonal decorations of the tile are drawn for this height */}
-      <Autocomplete.InputGroup className="flex items-center w-full h-11.5 rounded-secondary bg-neutral-800 border border-transparent hover:border-neutral-600 focus-within:border-white focus-within:hover:border-white">
+      <Autocomplete.InputGroup className="flex h-11.5 w-full items-center rounded-secondary border border-transparent bg-neutral-800 focus-within:border-white hover:border-neutral-600 focus-within:hover:border-white">
         <FaSearch
           aria-hidden
-          className="flex-none size-4 ml-3 mr-2 text-brand-red-500"
+          className="mr-2 ml-3 size-4 flex-none text-brand-red-500"
         />
 
         <Autocomplete.Input
           aria-label="Spynet durchsuchen"
           placeholder="Suche"
-          className="h-full w-full min-w-0 flex-1 bg-transparent text-white placeholder:text-neutral-500 outline-hidden"
+          className="h-full w-full min-w-0 flex-1 bg-transparent text-white outline-hidden placeholder:text-neutral-500"
           autoCorrect="off"
           spellCheck="false"
           autoCapitalize="off"
@@ -48,7 +48,7 @@ export const SpynetSearchAutocomplete = () => {
 
         <Autocomplete.Clear
           aria-label="Suche löschen"
-          className="flex-none flex items-center h-full px-3 text-neutral-500 cursor-pointer outline-hidden hover:text-brand-red-500 focus-visible:text-brand-red-500 active:text-brand-red-700"
+          className="flex h-full flex-none cursor-pointer items-center px-3 text-neutral-500 outline-hidden hover:text-brand-red-500 focus-visible:text-brand-red-500 active:text-brand-red-700"
         >
           <FaTimes className="size-4" />
         </Autocomplete.Clear>
@@ -60,7 +60,7 @@ export const SpynetSearchAutocomplete = () => {
           align="start"
           className="z-30 outline-hidden"
         >
-          <Autocomplete.Popup className="w-(--anchor-width) max-w-(--available-width) max-h-[min(var(--available-height),40rem)] overflow-y-auto overscroll-contain rounded-secondary bg-neutral-800 shadow-lg shadow-black/50">
+          <Autocomplete.Popup className="max-h-[min(var(--available-height),40rem)] w-(--anchor-width) max-w-(--available-width) overflow-y-auto overscroll-contain rounded-secondary bg-neutral-800 shadow-lg shadow-black/50">
             <Autocomplete.Status>
               <StatusMessage status={status} hasHits={hits.length > 0} />
             </Autocomplete.Status>

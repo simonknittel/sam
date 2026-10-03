@@ -15,11 +15,11 @@ export const UnreadDot = ({ className }: Props) => {
       /** Marks the dot independently of the classes drawing it */
       data-unread-dot=""
       className={clsx(
-        "inline-block rounded-full size-2 bg-amber-500 relative",
+        "relative inline-block size-2 rounded-full bg-amber-500",
         className,
       )}
     >
-      <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 inline-block rounded-full size-3 bg-amber-500 animate-ping motion-reduce:hidden" />
+      <span className="absolute top-1/2 left-1/2 inline-block size-3 -translate-x-1/2 -translate-y-1/2 animate-ping rounded-full bg-amber-500 motion-reduce:hidden" />
     </span>
   );
 };

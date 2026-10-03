@@ -95,8 +95,8 @@ export const MultiSelectComboboxFilter = ({
   }, [items, hasGroups]);
 
   return (
-    <div className={clsx("bg-secondary p-2 corners-secondary", className)}>
-      <p className="text-sm text-white/40 font-mono uppercase">{label}</p>
+    <div className={clsx("corners-secondary bg-secondary p-2", className)}>
+      <p className="font-mono text-sm text-white/40 uppercase">{label}</p>
 
       <Combobox.Root
         items={items.sort((a, b) => a.label.localeCompare(b.label))}
@@ -105,7 +105,7 @@ export const MultiSelectComboboxFilter = ({
         onValueChange={setValueAndResetPagination}
       >
         <div className="mt-1">
-          <div className="p-1 rounded-secondary bg-neutral-900 border border-neutral-800 focus-visible:outline-2 outline-interaction-700 outline-offset-4 relative">
+          <div className="relative rounded-secondary border border-neutral-800 bg-neutral-900 p-1 outline-offset-4 outline-interaction-700 focus-visible:outline-2">
             <Combobox.InputGroup>
               <Combobox.Chips className="flex w-full flex-wrap items-center gap-1 pr-6">
                 <Combobox.Value>
@@ -116,12 +116,12 @@ export const MultiSelectComboboxFilter = ({
                         .map((item) => (
                           <Combobox.Chip
                             key={item.value}
-                            className="flex items-center gap-1 rounded-secondary bg-brand-red-500 py-1 pl-1.5 pr-1 text-xs text-neutral-50 max-w-50"
+                            className="flex max-w-50 items-center gap-1 rounded-secondary bg-brand-red-500 py-1 pr-1 pl-1.5 text-xs text-neutral-50"
                             title={item.label}
                           >
                             <span className="truncate">{item.label}</span>
 
-                            <Combobox.ChipRemove className="inline-flex items-center justify-center rounded p-1 text-inherit hover:bg-brand-red-700 cursor-pointer">
+                            <Combobox.ChipRemove className="inline-flex cursor-pointer items-center justify-center rounded p-1 text-inherit hover:bg-brand-red-700">
                               <FaTimes className="size-2.5" />
                             </Combobox.ChipRemove>
                           </Combobox.Chip>
@@ -140,7 +140,7 @@ export const MultiSelectComboboxFilter = ({
                         data-lpignore="true"
                       />
 
-                      <Combobox.Trigger className="absolute right-0 top-0 inline-flex h-8 w-6 items-center justify-center rounded text-brand-red-500 hover:text-brand-red-300 cursor-pointer">
+                      <Combobox.Trigger className="absolute top-0 right-0 inline-flex h-8 w-6 cursor-pointer items-center justify-center rounded text-brand-red-500 hover:text-brand-red-300">
                         <FaChevronDown className="size-3" />
                       </Combobox.Trigger>
                     </>
@@ -153,7 +153,7 @@ export const MultiSelectComboboxFilter = ({
 
         <Combobox.Portal>
           <Combobox.Positioner sideOffset={4} className="z-30 outline-none">
-            <Combobox.Popup className="z-30 w-(--anchor-width) max-h-[min(20rem,var(--available-height))] overflow-y-auto rounded-secondary bg-neutral-950 border border-neutral-700 py-1 shadow-xl shadow-black/30 data-starting-style:scale-95 data-starting-style:opacity-0 data-ending-style:scale-95 data-ending-style:opacity-0">
+            <Combobox.Popup className="z-30 max-h-[min(20rem,var(--available-height))] w-(--anchor-width) overflow-y-auto rounded-secondary border border-neutral-700 bg-neutral-950 py-1 shadow-xl shadow-black/30 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0">
               <Combobox.Empty>
                 <div className="px-3 py-2 text-sm text-neutral-500">
                   Keine Treffer
@@ -163,7 +163,7 @@ export const MultiSelectComboboxFilter = ({
               {hasGroups && groupedItems ? (
                 groupedItems.map(([group, groupItems]) => (
                   <div key={group}>
-                    <div className="px-3 py-1 text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                    <div className="px-3 py-1 text-xs font-medium tracking-wider text-neutral-500 uppercase">
                       {group}
                     </div>
 
@@ -173,7 +173,7 @@ export const MultiSelectComboboxFilter = ({
                         <Combobox.Item
                           key={item.value}
                           value={item}
-                          className="grid grid-cols-[0.75rem_1fr] items-center gap-2 pl-8 pr-3 py-1.5 text-sm outline-none data-highlighted:bg-neutral-800 cursor-pointer"
+                          className="grid cursor-pointer grid-cols-[0.75rem_1fr] items-center gap-2 py-1.5 pr-3 pl-8 text-sm outline-none data-highlighted:bg-neutral-800"
                         >
                           <Combobox.ItemIndicator className="col-start-1 text-brand-red-300">
                             <FaCheck className="size-2.5" />
@@ -195,7 +195,7 @@ export const MultiSelectComboboxFilter = ({
                     <Combobox.Item
                       key={item.value}
                       value={item}
-                      className="grid grid-cols-[0.75rem_1fr] items-center gap-2 px-3 py-1.5 text-sm outline-none data-highlighted:bg-neutral-800 cursor-pointer"
+                      className="grid cursor-pointer grid-cols-[0.75rem_1fr] items-center gap-2 px-3 py-1.5 text-sm outline-none data-highlighted:bg-neutral-800"
                     >
                       <Combobox.ItemIndicator className="col-start-1 text-brand-red-300">
                         <FaCheck className="size-2.5" />

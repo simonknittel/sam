@@ -45,7 +45,7 @@ export const OnboardingTaskListItem = ({ task }: Props) => {
       <p className="font-bold text-balance">{taskConfig.title}</p>
       <p className="text-sm text-neutral-500">{taskConfig.description}</p>
 
-      <div className="flex items-center justify-between gap-2 mt-2">
+      <div className="mt-2 flex items-center justify-between gap-2">
         {isDone ? (
           <span className="flex items-center gap-1 text-xs text-neutral-500">
             <FaCheckCircle className="text-green-500" />

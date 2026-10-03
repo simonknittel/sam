@@ -25,7 +25,7 @@ export const SpynetSearchPage = ({ search, onSelect }: Props) => {
       heading={
         <div className="flex items-baseline gap-2">
           Profil suchen
-          <span className="text-neutral-700 text-xs">Spynet</span>
+          <span className="text-xs text-neutral-700">Spynet</span>
         </div>
       }
     >
@@ -51,7 +51,7 @@ const SearchResults = ({ status, hits, onSelect }: SearchResultsProps) => {
 
     case SpynetSearchStatus.Loading:
       return (
-        <div className="motion-safe:animate-pulse rounded-secondary bg-neutral-800 h-24 mx-2" />
+        <div className="mx-2 h-24 rounded-secondary bg-neutral-800 motion-safe:animate-pulse" />
       );
 
     case SpynetSearchStatus.Error:

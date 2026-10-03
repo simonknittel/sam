@@ -73,7 +73,7 @@ export const UpdateTaskDescription = ({ className, task }: Props) => {
         classNameTextarea="min-h-32"
       />
 
-      <div className="flex flex-wrap gap-2 mt-4">
+      <div className="mt-4 flex flex-wrap gap-2">
         <Button2 type="submit" disabled={isPending}>
           {isPending ? <AsciiSpinner /> : <FaSave />}
           Speichern

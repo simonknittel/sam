@@ -279,7 +279,7 @@ export const WikiPageStaticContent = ({
   // Covers docs emptied in the editor too (one empty paragraph, not null)
   if (!content || isWikiPageContentEmpty(content))
     return (
-      <div className={clsx("prose prose-invert max-w-none", className)}>
+      <div className={clsx("prose max-w-none prose-invert", className)}>
         {/* Same box as the editor's empty paragraph + Placeholder, so the
             swap to the connected editor doesn't shift the page */}
         <p className="text-center text-neutral-500">
@@ -303,7 +303,7 @@ export const WikiPageStaticContent = ({
   return (
     // The data attribute scopes the static-only geometry fixes (wikiEditor.css)
     <div
-      className={clsx("prose prose-invert max-w-none", className)}
+      className={clsx("prose max-w-none prose-invert", className)}
       data-wiki-static-content=""
     >
       {rendered}

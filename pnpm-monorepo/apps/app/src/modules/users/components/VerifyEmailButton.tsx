@@ -20,7 +20,7 @@ export const VerifyEmailButton = ({ className, userId }: Props) => {
       trigger={(isPending) => (
         <button
           disabled={isPending}
-          className="py-2 text-brand-red-500 hover:underline flex gap-2 items-center"
+          className="flex items-center gap-2 py-2 text-brand-red-500 hover:underline"
           title="Datenschutzerklärung bestätigen"
         >
           {isPending && <AsciiSpinner />}

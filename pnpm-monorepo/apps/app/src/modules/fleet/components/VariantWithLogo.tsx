@@ -121,7 +121,7 @@ export const VariantWithLogo = ({
         isInline
           ? className
           : clsx(
-              "flex items-center gap-2 hover:bg-white/10 focus-visible:bg-white/10 rounded-secondary p-1",
+              "flex items-center gap-2 rounded-secondary p-1 hover:bg-white/10 focus-visible:bg-white/10",
               className,
             )
       }

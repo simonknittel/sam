@@ -78,7 +78,7 @@ export const UpdateEventPositionCitizenId = ({
         /** A lineup holds one of these per position, so it names its own */
         aria-label={`Citizen für ${position.name}`}
         className={clsx(
-          "block w-full p-2 bg-white/10 text-neutral-100 rounded-secondary cursor-pointer",
+          "block w-full cursor-pointer rounded-secondary bg-white/10 p-2 text-neutral-100",
           styles.select,
         )}
         onChange={handleChange}

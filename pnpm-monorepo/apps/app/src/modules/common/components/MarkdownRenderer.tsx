@@ -23,7 +23,7 @@ export const MarkdownRenderer = ({
   return (
     <div
       ref={ref}
-      className={clsx("prose prose-invert max-w-none", className)}
+      className={clsx("prose max-w-none prose-invert", className)}
       style={{
         overflowWrap: "anywhere",
       }}

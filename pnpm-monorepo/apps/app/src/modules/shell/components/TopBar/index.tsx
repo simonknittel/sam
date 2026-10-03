@@ -14,21 +14,21 @@ interface Props {
 
 export const TopBar = ({ className }: Props) => {
   return (
-    <div className="bg-black hidden lg:block fixed left-0 right-0 top-0 z-30 px-2 pt-2">
+    <div className="fixed top-0 right-0 left-0 z-30 hidden bg-black px-2 pt-2 lg:block">
       <div
         className={clsx(
-          "flex bg-secondary-opaque rounded-primary h-12 relative",
+          "relative flex h-12 rounded-primary bg-secondary-opaque",
           className,
         )}
       >
-        <div className="flex-1 flex items-center">
+        <div className="flex flex-1 items-center">
           <Apps />
           <Create />
         </div>
 
-        <CmdKLoader className="flex-initial w-96" />
+        <CmdKLoader className="w-96 flex-initial" />
 
-        <div className="flex-1 flex justify-end">
+        <div className="flex flex-1 justify-end">
           <Support />
           <Onboarding />
           <Notifications />

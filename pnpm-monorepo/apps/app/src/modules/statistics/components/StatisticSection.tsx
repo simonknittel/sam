@@ -19,14 +19,14 @@ export const StatisticSection = ({
   return (
     <Tile heading={title} className={clsx(className)}>
       <div className="flex flex-col gap-4">
-        <p className="text-sm text-neutral-300 leading-relaxed">
+        <p className="text-sm leading-relaxed text-neutral-300">
           {description}
         </p>
 
         {chart.hasData ? (
           <StatisticChart chart={chart} />
         ) : (
-          <div className="border border-dashed border-white/10 rounded-primary p-8 text-center text-sm text-neutral-500">
+          <div className="rounded-primary border border-dashed border-white/10 p-8 text-center text-sm text-neutral-500">
             Keine Daten für den ausgewählten Zeitraum vorhanden.
           </div>
         )}

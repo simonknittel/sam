@@ -51,13 +51,13 @@ export const Calculator = ({ className }: Props) => {
   };
 
   return (
-    <section className={clsx("bg-secondary p-4 rounded-primary", className)}>
+    <section className={clsx("rounded-primary bg-secondary p-4", className)}>
       <div>
-        <h3 className="font-mono uppercase text-xl text-center">Rechner</h3>
+        <h3 className="text-center font-mono text-xl uppercase">Rechner</h3>
 
-        <div className="flex flex-col md:flex-row mt-2">
+        <div className="mt-2 flex flex-col md:flex-row">
           {/* Input */}
-          <div className="flex-1 flex flex-col gap-4 pb-4 md:pb-0 md:pr-4">
+          <div className="flex flex-1 flex-col gap-4 pb-4 md:pr-4 md:pb-0">
             <div>
               <DateTimeInput
                 label="Datum und Uhrzeit"
@@ -95,7 +95,7 @@ export const Calculator = ({ className }: Props) => {
           </div>
 
           {/* Output */}
-          <div className="flex-1 border-t md:border-t-0 md:border-l border-white/10 pt-4 md:pt-0 md:pl-4 flex flex-col gap-2">
+          <div className="flex flex-1 flex-col gap-2 border-t border-white/10 pt-4 md:border-t-0 md:border-l md:pt-0 md:pl-4">
             <TimezoneCompact
               date={date}
               timeZone={Intl.DateTimeFormat().resolvedOptions().timeZone}

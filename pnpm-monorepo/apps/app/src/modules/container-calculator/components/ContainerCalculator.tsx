@@ -65,7 +65,7 @@ export const ContainerCalculator = ({ className }: Props) => {
           onChange={handleChangeContainer}
           className="flex flex-col gap-4"
         >
-          <h3 className="text-xl font-semibold text-brand-red-500 text-center">
+          <h3 className="text-center text-xl font-semibold text-brand-red-500">
             Angaben
           </h3>
 
@@ -73,7 +73,7 @@ export const ContainerCalculator = ({ className }: Props) => {
             <input
               type="number"
               name="totalScu"
-              className="p-2 rounded-secondary bg-neutral-900 border border-solid border-neutral-800 text-3xl w-44 text-center font-black"
+              className="w-44 rounded-secondary border border-solid border-neutral-800 bg-neutral-900 p-2 text-center text-3xl font-black"
               placeholder="0"
               autoFocus
               required
@@ -81,13 +81,13 @@ export const ContainerCalculator = ({ className }: Props) => {
             <label>Gesamt SCU</label>
           </div>
 
-          <div className="flex flex-wrap gap-4 justify-center">
+          <div className="flex flex-wrap justify-center gap-4">
             {CONTAINER_SIZES.map((size) => (
               <div key={size} className="flex flex-col items-center gap-1">
                 <input
                   type="number"
                   name={`exact${size}`}
-                  className="p-2 rounded-secondary bg-neutral-900 border border-solid border-neutral-800 text-3xl w-32 text-center font-black"
+                  className="w-32 rounded-secondary border border-solid border-neutral-800 bg-neutral-900 p-2 text-center text-3xl font-black"
                 />
                 <label>{size} SCU</label>
               </div>
@@ -98,16 +98,16 @@ export const ContainerCalculator = ({ className }: Props) => {
         <hr className="border-neutral-800" />
 
         <div className="flex flex-col gap-4">
-          <h3 className="text-xl font-semibold text-brand-red-500 text-center">
+          <h3 className="text-center text-xl font-semibold text-brand-red-500">
             Ergebnis
           </h3>
 
           {containerResult ? (
-            <ul className="flex flex-wrap gap-4 justify-center">
+            <ul className="flex flex-wrap justify-center gap-4">
               {CONTAINER_SIZES.map((size) => (
                 <li
                   key={size}
-                  className="flex flex-col items-center gap-1 w-32"
+                  className="flex w-32 flex-col items-center gap-1"
                 >
                   <p className="text-3xl font-black">{containerResult[size]}</p>
 
@@ -115,7 +115,7 @@ export const ContainerCalculator = ({ className }: Props) => {
                 </li>
               ))}
 
-              <li className="flex flex-col items-center gap-1 w-32">
+              <li className="flex w-32 flex-col items-center gap-1">
                 <p className="text-3xl font-black">
                   {containerResult.leftover}
                 </p>

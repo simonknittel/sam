@@ -53,7 +53,7 @@ export const UpdateSettingsRecord = ({ className, action, record }: Props) => {
           </label>
 
           <input
-            className="p-2 rounded-secondary bg-neutral-900 w-full mt-2"
+            className="mt-2 w-full rounded-secondary bg-neutral-900 p-2"
             id={inputId}
             name="name"
             defaultValue={getDefaultValueWithFallback("name", record.name)}
@@ -61,7 +61,7 @@ export const UpdateSettingsRecord = ({ className, action, record }: Props) => {
             autoFocus
           />
 
-          <div className="flex justify-end mt-8">
+          <div className="mt-8 flex justify-end">
             <Button2 type="submit" disabled={isPending}>
               {isPending ? <AsciiSpinner /> : <FaSave />}
               Speichern

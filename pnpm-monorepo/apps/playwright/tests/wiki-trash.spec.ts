@@ -7,7 +7,6 @@ import {
   wikiParagraph,
 } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
   modal,
   NOT_FOUND_TEXT,
@@ -48,9 +47,7 @@ test("a page travels to the trash, back out of it and finally out of existence",
   await expect(deleteDialog.getByText("1 Unterseite(n)")).toBeVisible();
   await deleteDialog.getByRole("button", { name: "Löschen" }).click();
 
-  await expect(page).toHaveURL("/app/wiki", {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page).toHaveURL("/app/wiki");
 
   const deletedSubtree = await prisma.wikiPage.findMany({
     where: { id: { in: [parent.id, child.id] } },
@@ -70,7 +67,7 @@ test("a page travels to the trash, back out of it and finally out of existence",
    */
   await page.goto("/app/wiki/trash");
   const trashRow = page.getByRole("row").filter({ hasText: "Handbuch" });
-  await expect(trashRow).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(trashRow).toBeVisible();
   await expect(
     page.getByRole("row").filter({ hasText: "Kapitel" }),
   ).toHaveCount(0);
@@ -79,9 +76,7 @@ test("a page travels to the trash, back out of it and finally out of existence",
    * Restore
    */
   await trashRow.getByRole("button", { name: "Wiederherstellen" }).click();
-  await expect(page.getByText("Erfolgreich wiederhergestellt.")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Erfolgreich wiederhergestellt.")).toBeVisible();
   await expect
     .poll(() =>
       prisma.wikiPage.count({
@@ -101,9 +96,7 @@ test("a page travels to the trash, back out of it and finally out of existence",
     deleteDialog,
   );
   await deleteDialog.getByRole("button", { name: "Löschen" }).click();
-  await expect(page).toHaveURL("/app/wiki", {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page).toHaveURL("/app/wiki");
 
   await page.goto("/app/wiki/trash");
   const destroyDialog = modal(page, "Endgültig löschen");
@@ -115,9 +108,7 @@ test("a page travels to the trash, back out of it and finally out of existence",
     .getByRole("button", { name: "Endgültig löschen" })
     .click();
 
-  await expect(page.getByText("Endgültig gelöscht.")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Endgültig gelöscht.")).toBeVisible();
   await expect(page.getByText("Der Papierkorb ist leer")).toBeVisible();
 
   // The subtree is gone from the database, children included
