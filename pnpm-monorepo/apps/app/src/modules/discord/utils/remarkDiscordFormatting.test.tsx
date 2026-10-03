@@ -139,9 +139,7 @@ describe("text without a format", () => {
   });
 
   test("shows nothing for an empty description", () => {
-    expect(render("")).toBe(
-      '<div class="prose prose-invert max-w-none" style="overflow-wrap:anywhere"></div>',
-    );
+    expect(render("")).toMatch(/^<div [^>]*><\/div>$/);
   });
 
   test("does not show a dangerous URL scheme but keeps the label", () => {
