@@ -67,7 +67,7 @@ export const WikiDashboardPageTile = async () => {
           data-wiki-dashboard-scroll-indicator=""
         >
           {/* The chevron still points the way once the bounce is gone */}
-          <FaChevronDown className="animate-bounce motion-reduce:animate-none" />
+          <FaChevronDown className="animate-bounce" />
         </div>
       </div>
 

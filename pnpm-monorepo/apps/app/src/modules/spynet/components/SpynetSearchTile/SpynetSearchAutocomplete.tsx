@@ -90,7 +90,7 @@ const StatusMessage = ({ status, hasHits }: StatusMessageProps) => {
     case SpynetSearchStatus.Loading:
       return (
         <StatusRow>
-          <AsciiSpinner className="motion-reduce:hidden" />
+          <AsciiSpinner />
           Suche läuft …
         </StatusRow>
       );

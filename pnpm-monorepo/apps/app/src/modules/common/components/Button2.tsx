@@ -48,7 +48,7 @@ export const Button2 = <E extends ElementType = "button">({
   const button = (
     <Component
       className={clsx(
-        "flex min-h-8 items-center justify-center gap-1 rounded-secondary font-mono text-sm font-normal uppercase enabled:cursor-pointer disabled:opacity-50 disabled:grayscale motion-reduce:transition-none",
+        "flex min-h-8 items-center justify-center gap-1 rounded-secondary font-mono text-sm font-normal uppercase not-disabled:cursor-pointer disabled:opacity-50 disabled:grayscale",
         {
           "min-w-8 [&>svg]:text-sm": variant === Button2Variant.IconOnly,
           "px-2 py-1 [&>svg]:text-xs": variant !== Button2Variant.IconOnly,

@@ -408,14 +408,29 @@
 }
 
 /**
- * Every decoration of a birthday and of a seasonal event stops for a viewer
- * who prefers reduced motion. The animations are switched off here, at their
- * own definition, thus no place which draws a decoration can forget it. The
- * confetti has no CSS animation: `ConfettiCanvas` reads the same preference
- * and renders no canvas at all.
+ * For a viewer who prefers reduced motion, all animations and transitions
+ * stop. Only the loading indicators continue (`animate-spin`,
+ * `animate-pulse` and the ASCII spinner), because they show that the app
+ * works.
+ *
+ * - An animation stops at its token, thus no element which uses the token
+ *   can forget it. A CSS file with its own keyframes stops its animation
+ *   itself. Do not stop all animations with one rule: such a rule also
+ *   stops the scroll-driven indicator of the wiki dashboard, which does not
+ *   move over time.
+ * - A transition ends at once. The duration is 0.01 ms and not 0 s, thus
+ *   the browser still sends `transitionend`: Base UI and Headless UI wait
+ *   for this event before they remove a closed popup. A rule which must
+ *   keep its transition needs `!important` and a reason, see
+ *   `Entry.module.css` of the log analyzer.
+ * - The confetti and `ScrambleIn` have no CSS animation: they read the same
+ *   preference in JavaScript.
  */
 @media (prefers-reduced-motion: reduce) {
   :root {
+    --animate-ping: none;
+    --animate-bounce: none;
+
     --animate-birthday-hat-wiggle: none;
 
     --animate-seasonal-sway: none;
@@ -429,6 +444,13 @@
     --animate-seasonal-power-flicker: none;
     --animate-seasonal-swirl: none;
     --animate-seasonal-flow: none;
+  }
+
+  *,
+  ::before,
+  ::after,
+  ::backdrop {
+    transition-duration: 0.01ms !important;
   }
 }
 

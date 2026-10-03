@@ -51,7 +51,7 @@ const SearchResults = ({ status, hits, onSelect }: SearchResultsProps) => {
 
     case SpynetSearchStatus.Loading:
       return (
-        <div className="mx-2 h-24 rounded-secondary bg-neutral-800 motion-safe:animate-pulse" />
+        <div className="mx-2 h-24 animate-pulse rounded-secondary bg-neutral-800" />
       );
 
     case SpynetSearchStatus.Error:

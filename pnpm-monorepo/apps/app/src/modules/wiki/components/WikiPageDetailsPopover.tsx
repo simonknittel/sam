@@ -53,7 +53,7 @@ export const WikiPageDetailsPopover = ({ pageId }: Props) => {
       trigger={
         <span
           aria-label="Details anzeigen"
-          className="cursor-pointer text-white/20 transition-colors hover:text-white/60 active:text-white/80 motion-reduce:transition-none"
+          className="cursor-pointer text-white/20 transition-colors hover:text-white/60 active:text-white/80"
         >
           <FaInfoCircle className="align-[-0.125em]" />
         </span>

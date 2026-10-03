@@ -19,7 +19,7 @@ export const DevelopmentLoginPopover = ({ users, redirectTo }: Props) => {
       <PopoverBaseUI
         title="Dev login"
         trigger="Dev login"
-        triggerClassName="backdrop-blur-sm px-2 py-1 rounded-secondary bg-amber-500/50 hover:bg-amber-500 focus-visible:bg-amber-500 active:bg-amber-400 transition-colors motion-reduce:transition-none whitespace-nowrap text-xs font-mono uppercase cursor-pointer"
+        triggerClassName="backdrop-blur-sm px-2 py-1 rounded-secondary bg-amber-500/50 hover:bg-amber-500 focus-visible:bg-amber-500 active:bg-amber-400 transition-colors whitespace-nowrap text-xs font-mono uppercase cursor-pointer"
         side="bottom"
         openOnHover={false}
         positionerClassName="z-50"
