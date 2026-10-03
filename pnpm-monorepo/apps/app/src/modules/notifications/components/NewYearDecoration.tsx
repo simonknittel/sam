@@ -1,7 +1,6 @@
 "use client";
 
 import { TbSparkles } from "react-icons/tb";
-import { NotificationDecoration } from "../utils/renderOnSiteNotification";
 import {
   buildConfettiShots,
   NotificationRowDecoration,
@@ -16,7 +15,6 @@ const SHOTS = buildConfettiShots({
 /** The row of a New Year greeting, see `NotificationRowDecoration` */
 export const NewYearDecoration = () => (
   <NotificationRowDecoration
-    decoration={NotificationDecoration.NewYear}
     surfaceClassName="background-new-year"
     shots={SHOTS}
     staticIcon={<TbSparkles />}

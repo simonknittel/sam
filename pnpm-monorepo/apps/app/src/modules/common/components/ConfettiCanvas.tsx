@@ -128,7 +128,6 @@ export const ConfettiCanvas = ({
   return (
     <canvas
       ref={canvasRef}
-      data-confetti-canvas
       aria-hidden="true"
       className={clsx(className, "pointer-events-none")}
     />

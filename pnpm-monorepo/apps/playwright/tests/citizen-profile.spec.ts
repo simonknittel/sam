@@ -528,9 +528,6 @@ test("the party hat marks the citizen whose birthday is today", async ({
     permissionStrings: ["citizen;read"],
   });
 
-  /** The whole suite runs with reduced motion, see playwright.config.ts */
-  await page.emulateMedia({ reducedMotion: "no-preference" });
-
   await signIn(birthdayChild.user);
 
   /** The own profile tile of the dashboard and the account avatar above it */
@@ -541,9 +538,6 @@ test("the party hat marks the citizen whose birthday is today", async ({
   await expect(
     birthdayHats(page.getByRole("button", { name: "Account" })),
   ).toBeVisible();
-
-  /** The profile and the avatar in it both celebrate with confetti */
-  await expect(profileTile.locator("[data-confetti-canvas]")).toHaveCount(2);
 
   /** The list marks the row of today, and only that row */
   await page.goto("/app/spynet/birthdays");

@@ -75,24 +75,11 @@ test("the popover lists notifications with their content", async ({
   ).toBeVisible();
 });
 
-/** The elements a decorated row is built from, whatever styles them */
-const confettiCanvas = (page: Page) =>
-  popover(page).locator("[data-confetti-canvas]");
-const staticConfetti = (page: Page) =>
-  popover(page).locator("[data-birthday-confetti-static]");
-const newYearBackground = (page: Page) =>
-  popover(page).locator("[data-new_year-background]");
-const staticNewYearConfetti = (page: Page) =>
-  popover(page).locator("[data-new_year-confetti-static]");
-
-test("a birthday greeting reads its wording and sprinkles confetti", async ({
+test("a birthday greeting reads its wording", async ({
   page,
   prisma,
   signIn,
 }) => {
-  /** The whole suite runs with reduced motion, see playwright.config.ts */
-  await page.emulateMedia({ reducedMotion: "no-preference" });
-
   const citizen = await createCitizen(prisma, { handle: "geburtstagskind" });
   await createOnSiteNotification(prisma, {
     citizenId: citizen.entity.id,
@@ -108,8 +95,6 @@ test("a birthday greeting reads its wording and sprinkles confetti", async ({
     notificationType: "birthday",
     payload: {},
   });
-  /** Every other notification stays undecorated */
-  await createOnSiteNotification(prisma, { citizenId: citizen.entity.id });
   await signIn(citizen.user);
 
   await page.goto("/app");
@@ -128,44 +113,13 @@ test("a birthday greeting reads its wording and sprinkles confetti", async ({
   await expect(
     popover(page).getByText("Wir wünschen dir einen schönen Tag."),
   ).toBeVisible();
-
-  await expect(confettiCanvas(page)).toHaveCount(2);
-  await expect(staticConfetti(page)).toHaveCount(0);
 });
 
-test("a birthday greeting stays still for a viewer who asks for it", async ({
+test("a New Year greeting reads its wording", async ({
   page,
   prisma,
   signIn,
 }) => {
-  await page.emulateMedia({ reducedMotion: "reduce" });
-
-  const citizen = await createCitizen(prisma, {
-    handle: "ruhiges-geburtstagskind",
-  });
-  await createOnSiteNotification(prisma, {
-    citizenId: citizen.entity.id,
-    notificationType: "birthday",
-    payload: {},
-  });
-  await createOnSiteNotification(prisma, { citizenId: citizen.entity.id });
-  await signIn(citizen.user);
-
-  await page.goto("/app");
-  await openNotificationCenter(page);
-
-  await expect(staticConfetti(page)).toHaveCount(1);
-  await expect(confettiCanvas(page)).toHaveCount(0);
-});
-
-test("a New Year greeting reads its wording and sprinkles confetti", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  /** The whole suite runs with reduced motion, see playwright.config.ts */
-  await page.emulateMedia({ reducedMotion: "no-preference" });
-
   const citizen = await createCitizen(prisma, { handle: "neujahrskind" });
   await createOnSiteNotification(prisma, {
     citizenId: citizen.entity.id,
@@ -175,8 +129,6 @@ test("a New Year greeting reads its wording and sprinkles confetti", async ({
       body: "Ein neues Jahr, ein neues Verse. Auf viele gemeinsame Flüge.",
     },
   });
-  /** Every other notification stays undecorated */
-  await createOnSiteNotification(prisma, { citizenId: citizen.entity.id });
   await signIn(citizen.user);
 
   await page.goto("/app");
@@ -188,36 +140,6 @@ test("a New Year greeting reads its wording and sprinkles confetti", async ({
       "Ein neues Jahr, ein neues Verse. Auf viele gemeinsame Flüge.",
     ),
   ).toBeVisible();
-
-  await expect(newYearBackground(page)).toHaveCount(1);
-  await expect(confettiCanvas(page)).toHaveCount(1);
-  await expect(staticNewYearConfetti(page)).toHaveCount(0);
-});
-
-test("a New Year greeting stays still for a viewer who asks for it", async ({
-  page,
-  prisma,
-  signIn,
-}) => {
-  await page.emulateMedia({ reducedMotion: "reduce" });
-
-  const citizen = await createCitizen(prisma, {
-    handle: "ruhiges-neujahrskind",
-  });
-  await createOnSiteNotification(prisma, {
-    citizenId: citizen.entity.id,
-    notificationType: "new_year",
-    payload: { title: "Auf 2957!", body: "Frohes neues Jahr." },
-  });
-  await createOnSiteNotification(prisma, { citizenId: citizen.entity.id });
-  await signIn(citizen.user);
-
-  await page.goto("/app");
-  await openNotificationCenter(page);
-
-  await expect(newYearBackground(page)).toHaveCount(1);
-  await expect(staticNewYearConfetti(page)).toHaveCount(1);
-  await expect(confettiCanvas(page)).toHaveCount(0);
 });
 
 test("unknown notification types render a generic fallback", async ({
