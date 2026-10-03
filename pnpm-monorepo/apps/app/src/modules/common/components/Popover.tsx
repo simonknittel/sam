@@ -93,7 +93,7 @@ export const Popover = ({
           >
             <div
               className={clsx(
-                "origin-top rounded-secondary border border-neutral-700 bg-neutral-950 p-4 transition duration-200 starting:scale-90 starting:opacity-0",
+                "origin-(--radix-popover-content-transform-origin) rounded-secondary border border-neutral-700 bg-neutral-950 p-4 transition duration-200 starting:scale-90 starting:opacity-0",
                 {
                   relative: enableHover,
                 },
