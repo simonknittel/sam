@@ -418,9 +418,11 @@
  *   itself. Do not stop all animations with one rule: such a rule also
  *   stops the scroll-driven indicator of the wiki dashboard, which does not
  *   move over time.
- * - A transition ends at once. The duration is 0.01 ms and not 0 s, thus
- *   the browser still sends `transitionend`: Base UI and Headless UI wait
- *   for this event before they remove a closed popup. A rule which must
+ * - A transition ends at once. The duration is 0 s and not a very short
+ *   time: `transition-property` is `all` by default, thus a short duration
+ *   gives each element a transition of each change, and JavaScript reads old
+ *   sizes until it ends. Base UI and Headless UI do not need the
+ *   `transitionend` event: they read `getAnimations()`. A rule which must
  *   keep its transition needs `!important` and a reason, see
  *   `Entry.module.css` of the log analyzer.
  * - The confetti and `ScrambleIn` have no CSS animation: they read the same
@@ -450,7 +452,8 @@
   ::before,
   ::after,
   ::backdrop {
-    transition-duration: 0.01ms !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
   }
 }
 
