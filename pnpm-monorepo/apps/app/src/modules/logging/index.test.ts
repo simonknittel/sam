@@ -27,9 +27,6 @@ vi.mock("@/env", () => ({
   env: {
     NODE_ENV: "production",
     NEXT_PUBLIC_HOST: "sam.example.com",
-    ENABLE_INSTRUMENTATION: "true",
-    OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf",
-    OTEL_EXPORTER_OTLP_ENDPOINT: "https://otel.example.com",
   },
 }));
 
