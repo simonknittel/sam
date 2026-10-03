@@ -18,6 +18,11 @@ overrides:
   bn.js@<4.12.3: ">=4.12.3"
   fast-xml-parser@>=5.0.0 <5.3.8: ">=5.3.8"
   jws@=4.0.0: ">=4.0.1"
+  # The email preview (@react-email/ui, also its latest version 6.11.0) pins
+  # next@16.3.3, which has a critical remote code execution advisory
+  # (GHSA-vcvr-r3jv-pc5j). Use the patched version of apps/app. Remove this
+  # override when @react-email/ui depends on a patched version.
+  "@react-email/ui>next": 16.3.6
   # Migrated from apps/app's former npm `overrides`.
   "@auth/core": 0.41.3
   "@types/react": 19.3.0
