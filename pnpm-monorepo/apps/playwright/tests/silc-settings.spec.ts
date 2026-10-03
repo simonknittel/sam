@@ -6,7 +6,6 @@ import {
   createSilcTransaction,
 } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
   SAVED_TEXT,
   sectionByHeading,
@@ -47,17 +46,13 @@ test("the aUEC conversion rate and the role salaries are edited through the sett
   const rateTile = sectionByHeading(page, "aUEC Umrechnungskurs");
   await rateTile.getByLabel("Wie viel aUEC entspricht ein SILC?").fill("2500");
   await rateTile.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   await expect
-    .poll(
-      () =>
-        prisma.silcSetting.findUnique({
-          where: { key: "AUEC_CONVERSION_RATE" },
-        }),
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
+    .poll(() =>
+      prisma.silcSetting.findUnique({
+        where: { key: "AUEC_CONVERSION_RATE" },
+      }),
     )
     .toMatchObject({ value: "2500" });
 
@@ -67,7 +62,7 @@ test("the aUEC conversion rate and the role salaries are edited through the sett
   const salaryTile = sectionByHeading(page, "Gehälter");
   /** The rows only render once the roles came back through tRPC */
   const addSalaryRow = salaryTile.getByRole("button", { name: "Neu" });
-  await expect(addSalaryRow).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(addSalaryRow).toBeVisible();
   await addSalaryRow.click();
 
   const rolePicker = page.getByRole("dialog", { name: "Rolle auswählen" });
@@ -83,9 +78,7 @@ test("the aUEC conversion rate and the role salaries are edited through the sett
 
   /** The rate above already left a success toast, so the row is the proof */
   await expect
-    .poll(() => prisma.silcRoleSalary.findFirst(), {
-      timeout: ACTION_FEEDBACK_TIMEOUT,
-    })
+    .poll(() => prisma.silcRoleSalary.findFirst())
     .toMatchObject({ roleId: paidRole.id, value: 40, dayOfMonth: 15 });
 
   await expectAuditEvents(prisma, [
@@ -119,19 +112,15 @@ test("expiring all SILC zeroes every balance, and the refresh recomputes them", 
 
   const otherTile = sectionByHeading(page, "Other");
   await otherTile.getByRole("button", { name: "Expire all SILC" }).click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   // Every positive balance is booked away, the untouched one stays as it is
   await expect
-    .poll(
-      () =>
-        prisma.citizen.findUniqueOrThrow({
-          where: { id: rich.entity.id },
-          select: { silcBalance: true },
-        }),
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
+    .poll(() =>
+      prisma.citizen.findUniqueOrThrow({
+        where: { id: rich.entity.id },
+        select: { silcBalance: true },
+      }),
     )
     .toMatchObject({ silcBalance: 0 });
   const expiry = await prisma.silcTransaction.findFirstOrThrow({
@@ -159,20 +148,18 @@ test("expiring all SILC zeroes every balance, and the refresh recomputes them", 
 
   /** The expiry above already left a success toast, so the balance is it */
   await expect
-    .poll(
-      () =>
-        prisma.citizen.findUniqueOrThrow({
-          where: { id: rich.entity.id },
-          select: { silcBalance: true },
-        }),
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
+    .poll(() =>
+      prisma.citizen.findUniqueOrThrow({
+        where: { id: rich.entity.id },
+        select: { silcBalance: true },
+      }),
     )
     .toMatchObject({ silcBalance: 0 });
 
   await page.goto("/app/silc/transactions");
   await expect(
     page.getByRole("row").filter({ hasText: "Verfallen" }),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
 
   await expectAuditEvents(prisma, [
     "SILC_ALL_EXPIRED",

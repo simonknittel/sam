@@ -6,7 +6,6 @@ import {
 import { expectAuditEvents } from "../fixtures/audit";
 import { createCitizen } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
   modal,
   SAVED_TEXT,
@@ -53,9 +52,7 @@ test("an organization is created, staffed and cleared out again", async ({
   await createDialog.getByLabel("Name").fill("Testorganisation");
   await createDialog.getByRole("button", { name: "Anlegen" }).click();
 
-  await expect(page).toHaveURL(/\/app\/spynet\/organization\/[a-z0-9]+$/, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page).toHaveURL(/\/app\/spynet\/organization\/[a-z0-9]+$/);
   const organization = await prisma.organization.findFirstOrThrow();
   expect(organization).toMatchObject({
     spectrumId: "TESTORG",
@@ -84,12 +81,8 @@ test("an organization is created, staffed and cleared out again", async ({
     .getByRole("button", { name: "Speichern und bestätigen" })
     .click();
 
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
-  await expect(page.getByText("Mitglieder (1)")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+  await expect(page.getByText("Mitglieder (1)")).toBeVisible();
   await expect(
     page.getByRole("link", { name: "org-mitglied" }).first(),
   ).toBeVisible();
@@ -118,12 +111,8 @@ test("an organization is created, staffed and cleared out again", async ({
     .getByRole("button", { name: "Citizen aus der Organisation entfernen" })
     .click();
 
-  await expect(page.getByText("Erfolgreich entfernt")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
-  await expect(page.getByText("Keine Mitglieder")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Erfolgreich entfernt")).toBeVisible();
+  await expect(page.getByText("Keine Mitglieder")).toBeVisible();
   await expect
     .poll(() =>
       prisma.activeOrganizationMembership.count({
@@ -194,9 +183,7 @@ test("a reported membership becomes active with its confirmation", async ({
     .getByRole("button", { name: "Bestätigen" })
     .click();
 
-  await expect(page.getByText("Mitglieder (1)")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Mitglieder (1)")).toBeVisible();
   expect(
     await prisma.activeOrganizationMembership.findMany({
       where: { organizationId: organization.id },

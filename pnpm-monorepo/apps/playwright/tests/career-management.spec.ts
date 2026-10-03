@@ -9,7 +9,6 @@ import {
   FlowRoleAccessType,
 } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
   FORBIDDEN_TEXT,
   modal,
@@ -84,9 +83,7 @@ test("a manager creates a flow, renames it, deletes it and restores it", async (
   );
   await createDialog.getByRole("button", { name: "Speichern" }).click();
 
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
   await expect(
     page.getByRole("link", { name: "Flotten-Übersicht" }).first(),
   ).toBeVisible();
@@ -110,9 +107,7 @@ test("a manager creates a flow, renames it, deletes it and restores it", async (
     page.getByText("/app/career/flotten-uebersicht funktionieren nicht"),
   ).toBeVisible();
   await renameForm(page).getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   await page.goto("/app/career/flotte");
   await expect(
@@ -137,9 +132,7 @@ test("a manager creates a flow, renames it, deletes it and restores it", async (
   );
   await deleteDialog.getByRole("button", { name: "Löschen" }).click();
 
-  await expect(page).toHaveURL(/\/app\/career\/settings$/, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page).toHaveURL(/\/app\/career\/settings$/);
   await expect(page.getByRole("link", { name: "Flotte" })).toHaveCount(0);
 
   await page.goto("/app/career/flotte");
@@ -159,9 +152,7 @@ test("a manager creates a flow, renames it, deletes it and restores it", async (
   await expect(restoreDialog.getByLabel("Slug")).toHaveValue("flotte");
   await restoreDialog.getByRole("button", { name: "Wiederherstellen" }).click();
 
-  await expect(page.getByText("wiederhergestellt")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("wiederhergestellt")).toBeVisible();
 
   await page.goto("/app/career/flotte");
   await expect(
@@ -201,9 +192,7 @@ test("the top bar's Neu menu creates a flow for managers only", async ({
   await expect(dialog.getByLabel("Slug")).toHaveValue("aus-der-kopfleiste");
   await dialog.getByRole("button", { name: "Speichern" }).click();
 
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
   await expect
     .poll(() => prisma.flow.count({ where: { slug: "aus-der-kopfleiste" } }))
     .toBe(1);
@@ -290,21 +279,15 @@ test("a taken, reserved or malformed slug is rejected with a readable error", as
   await dialog.getByLabel("Name").fill("Zweite Academy");
   await dialog.getByLabel("Slug").fill("academy");
   await dialog.getByRole("button", { name: "Speichern" }).click();
-  await expect(dialog.getByText("wird bereits")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(dialog.getByText("wird bereits")).toBeVisible();
 
   await dialog.getByLabel("Slug").fill("settings");
   await dialog.getByRole("button", { name: "Speichern" }).click();
-  await expect(dialog.getByText("reserviert")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(dialog.getByText("reserviert")).toBeVisible();
 
   await dialog.getByLabel("Slug").fill("Nicht Erlaubt!");
   await dialog.getByRole("button", { name: "Speichern" }).click();
-  await expect(dialog.getByText("nur Kleinbuchstaben")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(dialog.getByText("nur Kleinbuchstaben")).toBeVisible();
 
   expect(await prisma.flow.count()).toBe(1);
 });
@@ -338,9 +321,7 @@ test("duplicating copies the diagram but grants nobody access", async ({
   await expect(dialog.getByLabel("Name")).toHaveValue("Academy (Kopie)");
   await expect(dialog.getByLabel("Slug")).toHaveValue("academy-kopie");
   await dialog.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   /** The copy sits directly after its source */
   const flows = await prisma.flow.findMany({
@@ -458,16 +439,13 @@ for (const { name, drag } of REORDER_GESTURES) {
     await drag(page);
 
     await expect
-      .poll(
-        async () => {
-          const flows = await prisma.flow.findMany({
-            orderBy: { position: "asc" },
-            select: { slug: true },
-          });
-          return flows.map((flow) => flow.slug);
-        },
-        { timeout: ACTION_FEEDBACK_TIMEOUT },
-      )
+      .poll(async () => {
+        const flows = await prisma.flow.findMany({
+          orderBy: { position: "asc" },
+          select: { slug: true },
+        });
+        return flows.map((flow) => flow.slug);
+      })
       .toEqual(["zweiter", "erster"]);
 
     /** The new order survives a reload of the settings page … */
@@ -531,14 +509,10 @@ test("read access opens a flow without an edit affordance, edit access saves it"
     page.getByRole("button", { name: "Speichern" }),
   );
   await page.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
   /** The write went through as the member, not just as a toast */
   await expect
-    .poll(() => prisma.flow.findUniqueOrThrow({ where: { id: flow.id } }), {
-      timeout: ACTION_FEEDBACK_TIMEOUT,
-    })
+    .poll(() => prisma.flow.findUniqueOrThrow({ where: { id: flow.id } }))
     .toMatchObject({ updatedById: member.entity.id });
   /** The save writes all edges again, only with their connection */
   expect(await savedEdges()).toEqual(edgesBeforeSave);
@@ -579,9 +553,7 @@ test("granting access in the management UI lets a role read the flow", async ({
 
   await page.getByRole("combobox", { name: "Zugriff" }).selectOption("read");
   await accessForm(page).getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   await switchUser(member.user);
   await page.goto("/app/career/academy");
@@ -643,9 +615,7 @@ test("saving access keeps every role's tier on its own row", async ({
     .getByRole("combobox", { name: "Zugriff" })
     .selectOption("update");
   await accessForm(page).getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   await expect(rows).toHaveCount(3);
   expect(await tierOf("alpha-bearbeitet")).toBe("update");

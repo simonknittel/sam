@@ -5,7 +5,6 @@ import {
 } from "@sam-monorepo/database/client";
 import { createCitizen } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
   clickUntilUrl,
   clickUntilVisible,
   DELETED_TEXT,
@@ -38,9 +37,7 @@ test("the citizen detail tabs render for a fully permitted viewer", async ({
   await signIn(viewer.user);
   await page.goto(`/app/spynet/citizen/${target.entity.id}`);
 
-  await expect(page.getByRole("heading", { name: "zielperson" })).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByRole("heading", { name: "zielperson" })).toBeVisible();
 
   const tabs = [
     { label: "Übersicht", path: "" },
@@ -67,7 +64,7 @@ test("the citizen detail tabs render for a fully permitted viewer", async ({
      */
     await expect(
       page.getByRole("heading", { name: target.entity.handle! }),
-    ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+    ).toBeVisible();
     await expect(page.getByText(FORBIDDEN_TEXT)).toHaveCount(0);
   }
 });
@@ -131,12 +128,8 @@ test("notes respect their classification level", async ({
   await notePanel("Beobachtung")
     .getByRole("button", { name: "Speichern" })
     .click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
-  await expect(page.getByText(noteContent)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+  await expect(page.getByText(noteContent)).toBeVisible();
   await expect(page.getByText("Unbestätigt")).toBeVisible();
 
   const noteLog = await prisma.citizenLog.findFirst({
@@ -213,9 +206,7 @@ test("an organization mention in a note resolves without a citizen mention", asy
 
   await expect(
     page.getByRole("link", { name: "Testorganisation" }),
-  ).toHaveAttribute("href", `/app/spynet/organization/${organization.id}`, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  ).toHaveAttribute("href", `/app/spynet/organization/${organization.id}`);
   await expect(page.getByText("@org:T3STORG")).toHaveCount(0);
 });
 
@@ -238,7 +229,7 @@ const exerciseSettingsRecordCrud = async (
   scenario: SettingsRecordScenario,
 ) => {
   const tile = sectionByHeading(page, scenario.tileHeading);
-  await expect(tile).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(tile).toBeVisible();
 
   // Create
   const createModal = modal(page, "Hinzufügen");
@@ -248,12 +239,8 @@ const exerciseSettingsRecordCrud = async (
   );
   await createModal.getByLabel("Name").fill(scenario.createdName);
   await createModal.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText("Erfolgreich hinzugefügt")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
-  await expect(tile.getByText(scenario.createdName)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Erfolgreich hinzugefügt")).toBeVisible();
+  await expect(tile.getByText(scenario.createdName)).toBeVisible();
 
   const actionsTrigger = (record: string) =>
     tile
@@ -276,7 +263,7 @@ const exerciseSettingsRecordCrud = async (
 
     await clickUntilVisible(actionsTrigger(record), actionButton);
     await actionButton.click();
-    await expect(reaction).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+    await expect(reaction).toBeVisible();
   };
 
   // Update
@@ -284,12 +271,8 @@ const exerciseSettingsRecordCrud = async (
   await openRowAction(scenario.createdName, "Bearbeiten", updateModal);
   await updateModal.getByLabel("Name").fill(scenario.updatedName);
   await updateModal.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText("Erfolgreich bearbeitet")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
-  await expect(tile.getByText(scenario.updatedName)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Erfolgreich bearbeitet")).toBeVisible();
+  await expect(tile.getByText(scenario.updatedName)).toBeVisible();
 
   // Delete
   await openRowAction(
@@ -302,12 +285,8 @@ const exerciseSettingsRecordCrud = async (
     .getByRole("alertdialog")
     .getByRole("button", { name: "Löschen" })
     .click();
-  await expect(page.getByText(DELETED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
-  await expect(tile.getByText(scenario.updatedName)).toHaveCount(0, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(DELETED_TEXT)).toBeVisible();
+  await expect(tile.getByText(scenario.updatedName)).toHaveCount(0);
 
   expect(await scenario.countRecords(prisma)).toBe(0);
   const auditEvent = await prisma.auditEvent.findFirst({
@@ -397,9 +376,7 @@ test("the citizen table paginates and filters", async ({
   await page.goto("/app/spynet/citizen");
 
   // 55 citizens (incl. the viewer) at 50 per page
-  await expect(page.getByText("1 / 2")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("1 / 2")).toBeVisible();
   await expect(page.locator("tbody tr")).toHaveCount(50);
 
   await page.goto("/app/spynet/citizen?page=2");
@@ -417,7 +394,5 @@ test("the citizen table paginates and filters", async ({
     toggleLabel(page, "Handles"),
     /filters=unknown-handle/,
   );
-  await expect(page.locator("tbody tr")).toHaveCount(UNNAMED_CITIZENS, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.locator("tbody tr")).toHaveCount(UNNAMED_CITIZENS);
 });

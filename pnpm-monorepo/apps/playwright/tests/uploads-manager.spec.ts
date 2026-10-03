@@ -12,7 +12,6 @@ import {
   wikiParagraph,
 } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
   DELETED_TEXT,
   waitForAppShellHydration,
@@ -79,7 +78,7 @@ test("a user's own uploads are listed with the place they are used", async ({
   await page.goto("/app/uploads");
 
   const row = page.getByRole("row").filter({ hasText: "upload.png" });
-  await expect(row).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(row).toBeVisible();
   await expect(row.getByText("Rollen-Icon")).toBeVisible();
 
   // The file name opens the object in the bucket
@@ -134,9 +133,7 @@ test("an event cover shows up as a usage of its upload", async ({
   const row = page
     .getByRole("row")
     .filter({ hasText: "Titelbild Pitchfork.png" });
-  await expect(row.getByText("Event-Titelbild")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(row.getByText("Event-Titelbild")).toBeVisible();
   await expect(
     row.getByRole("link", { name: "Operation Pitchfork" }),
   ).toHaveAttribute("href", `/app/events/${event.id}`);
@@ -161,7 +158,7 @@ test("uploads of other users stay hidden without the permission", async ({
 
   await expect(
     page.getByText("Du hast bisher keine Dateien hochgeladen."),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
   await expect(page.getByText("Fremdes Dokument.pdf")).toHaveCount(0);
 });
 
@@ -199,7 +196,7 @@ test("a manager sees every upload with its author and can filter them", async ({
   const usedRow = page
     .getByRole("row")
     .filter({ hasText: "Fremdes Dokument.pdf" });
-  await expect(usedRow).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(usedRow).toBeVisible();
   await expect(usedRow.getByText("fremder-lader")).toBeVisible();
   await expect(
     usedRow.getByRole("link", { name: "Fremdseite" }),
@@ -214,7 +211,7 @@ test("a manager sees every upload with its author and can filter them", async ({
   await page.goto("/app/uploads?usage=unused");
   await expect(
     page.getByRole("row").filter({ hasText: "Verwaiste Notiz.txt" }),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
   await expect(
     page.getByRole("row").filter({ hasText: "Fremdes Dokument.pdf" }),
   ).toHaveCount(0);
@@ -223,16 +220,14 @@ test("a manager sees every upload with its author and can filter them", async ({
   await page.goto("/app/uploads?q=Fremdes+Dokument");
   await expect(
     page.getByRole("row").filter({ hasText: "Fremdes Dokument.pdf" }),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
   await expect(
     page.getByRole("row").filter({ hasText: "Verwaiste Notiz.txt" }),
   ).toHaveCount(0);
 
   // The author filter keeps only that author's uploads
   await page.goto(`/app/uploads?createdById=${manager.entity.id}`);
-  await expect(page.getByText("Keine Uploads für diese Filter.")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Keine Uploads für diese Filter.")).toBeVisible();
 });
 
 /**
@@ -304,9 +299,7 @@ test("an image removed from a page stays in use through the snapshot of the old 
 
   await page.goto("/app/uploads");
   const row = page.getByRole("row").filter({ hasText: "Altes Bild.png" });
-  await expect(row.getByText("Wiki-Snapshot")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(row.getByText("Wiki-Snapshot")).toBeVisible();
   await expect(row.getByRole("link", { name: "Bilderseite" })).toHaveAttribute(
     "href",
     `/app/wiki/${wikiPage.id}/snapshots`,
@@ -315,9 +308,7 @@ test("an image removed from a page stays in use through the snapshot of the old 
   await expect(row.getByText("Unbenutzt", { exact: true })).toHaveCount(0);
 
   await page.goto("/app/uploads?usage=unused");
-  await expect(page.getByText("Keine Uploads für diese Filter.")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Keine Uploads für diese Filter.")).toBeVisible();
 });
 
 test("a manager deletes an upload from the database and the bucket", async ({
@@ -335,9 +326,7 @@ test("a manager deletes an upload from the database and the bucket", async ({
   await page.goto(`/app/roles/${role.id}`);
   await waitForAppShellHydration(page);
   await page.locator('input[type="file"]').first().setInputFiles(imagePath);
-  await expect(page.getByText("Erfolgreich hochgeladen")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Erfolgreich hochgeladen")).toBeVisible();
 
   const upload = await prisma.upload.findFirstOrThrow();
   await expect
@@ -368,9 +357,7 @@ test("a manager deletes an upload from the database and the bucket", async ({
   await expect(dialog.getByText("Bildrolle")).toBeVisible();
 
   await dialog.getByRole("button", { name: "Löschen" }).click();
-  await expect(page.getByText(DELETED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(DELETED_TEXT)).toBeVisible();
   await expect(row).toHaveCount(0);
 
   await expect
@@ -420,7 +407,7 @@ test("deleting is forbidden without the permission", async ({
   await page.goto("/app/uploads");
   await expect(
     page.getByRole("row").filter({ hasText: "upload.png" }),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
 
   // No actions column is rendered at all — the row survives regardless
   await expect(page.getByRole("button", { name: "Löschen" })).toHaveCount(0);

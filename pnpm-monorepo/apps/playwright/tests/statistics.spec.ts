@@ -5,10 +5,7 @@ import {
   createVariant,
   ONE_DAY_MS,
 } from "../fixtures/factories";
-import {
-  ACTION_FEEDBACK_TIMEOUT,
-  sectionByHeading,
-} from "../fixtures/interactions";
+import { sectionByHeading } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 const CHART_TITLES = [
@@ -87,9 +84,7 @@ test("all nine statistics charts paint their canvases", async ({
   await signIn(viewer.user);
   await page.goto("/app/statistics");
 
-  await expect(page.getByText("Zeitraum:")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Zeitraum:")).toBeVisible();
   for (const title of CHART_TITLES) {
     await expect(
       page.getByRole("heading", { name: title, exact: true }),
@@ -102,10 +97,9 @@ test("all nine statistics charts paint their canvases", async ({
   for (const title of CHART_TITLES) {
     await expect(
       sectionByHeading(page, title).locator("canvas").first(),
-    ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+    ).toBeVisible();
     await expect
       .poll(() => countPaintedPixels(page, title), {
-        timeout: ACTION_FEEDBACK_TIMEOUT,
         message: `chart "${title}" should paint pixels`,
       })
       .toBeGreaterThan(MIN_PAINTED_PIXELS);

@@ -5,11 +5,7 @@ import {
   createUserWithoutCitizen,
   LogAnalyzerEntryType,
 } from "../fixtures/factories";
-import {
-  ACTION_FEEDBACK_TIMEOUT,
-  clickUntilVisible,
-  toggleLabel,
-} from "../fixtures/interactions";
+import { clickUntilVisible, toggleLabel } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 const LOG_ANALYZER_PERMISSIONS = ["logAnalyzer;read"];
@@ -210,9 +206,7 @@ test("shared entries mix into the table with a citizen column and a citizen filt
   await page.goto(PAGE_PATH);
 
   /** Without the viewer setting the page stays exactly as it was before */
-  await expect(page.getByRole("heading", { name: "Anleitung" })).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByRole("heading", { name: "Anleitung" })).toBeVisible();
   await expect(tableRows(page)).toHaveCount(0);
 
   /** Every type of the others starts hidden; a checked box shows it */
@@ -222,9 +216,7 @@ test("shared entries mix into the table with a citizen column and a citizen filt
   await closeSettings(page);
 
   /** No folder was ever chosen: the shared entries stand on their own */
-  await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 3, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 3);
 
   await expect(
     rowOf(page, "Blueprint erhalten").getByRole("link", {
@@ -320,7 +312,7 @@ test("sharing uploads the matched entries of the selected types exactly once", a
       .then((entries) => entries.map((entry) => entry.type));
 
   await expect
-    .poll(sharedTypes, { timeout: ACTION_FEEDBACK_TIMEOUT })
+    .poll(sharedTypes)
     .toEqual([
       LogAnalyzerEntryType.BlueprintReceivedNotification,
       LogAnalyzerEntryType.Disconnection,
@@ -332,7 +324,7 @@ test("sharing uploads the matched entries of the selected types exactly once", a
 
   await refresh(page);
   await expect
-    .poll(sharedTypes, { timeout: ACTION_FEEDBACK_TIMEOUT })
+    .poll(sharedTypes)
     .toEqual([
       LogAnalyzerEntryType.BlueprintReceivedNotification,
       LogAnalyzerEntryType.Disconnection,
@@ -351,9 +343,7 @@ test("sharing uploads the matched entries of the selected types exactly once", a
     LogAnalyzerEntryType.BlueprintReceivedNotification,
     LogAnalyzerEntryType.Disconnection,
   ];
-  await expect
-    .poll(sharedTypes, { timeout: ACTION_FEEDBACK_TIMEOUT })
-    .toEqual(allThreeTypes);
+  await expect.poll(sharedTypes).toEqual(allThreeTypes);
 
   /**
    * A reload empties the set of sent entries, but the upload asks the server
@@ -364,15 +354,11 @@ test("sharing uploads the matched entries of the selected types exactly once", a
   const reloadUploads = recordUploads(page);
   await selectFolder(page);
 
-  await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 3, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 3);
   await expect(
     rowOf(page, "Shard-Beitritt").getByText("Hochgeladen"),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
-  await expect
-    .poll(sharedTypes, { timeout: ACTION_FEEDBACK_TIMEOUT })
-    .toEqual(allThreeTypes);
+  ).toBeVisible();
+  await expect.poll(sharedTypes).toEqual(allThreeTypes);
   expect(reloadUploads).toEqual([]);
 });
 
@@ -422,9 +408,7 @@ test("a user without a linked citizen cannot share", async ({
 
   await selectFolder(page);
 
-  await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 2, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(tableRows(page)).toHaveCount(HEADER_ROWS + 2);
   /** Own entries without a citizen carry a dash in the citizen column */
   await expect(rowOf(page, "Shard-Beitritt")).toContainText("-");
   expect(await prisma.logAnalyzerEntry.count()).toBe(0);

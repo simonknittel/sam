@@ -4,11 +4,7 @@ import {
   wikiDocument,
   wikiParagraph,
 } from "../fixtures/factories";
-import {
-  ACTION_FEEDBACK_TIMEOUT,
-  clickUntilVisible,
-  modal,
-} from "../fixtures/interactions";
+import { clickUntilVisible, modal } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 import {
   enterEditMode,
@@ -50,7 +46,7 @@ test("editing a page snapshots its previous state, which can be restored again",
   const snapshotRow = page
     .getByRole("row")
     .filter({ hasText: "Automatischer Snapshot" });
-  await expect(snapshotRow).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(snapshotRow).toBeVisible();
   await expect(snapshotRow).toContainText("Automatisch");
 
   /**
@@ -64,9 +60,7 @@ test("editing a page snapshots its previous state, which can be restored again",
   );
   await restoreDialog.getByRole("button", { name: "Wiederherstellen" }).click();
 
-  await expect(page.getByText("Snapshot wiederhergestellt.")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Snapshot wiederhergestellt.")).toBeVisible();
 
   await expectPersisted(prisma, wikiPage.id, "searchText").not.toContain(
     "Zweite Fassung.",

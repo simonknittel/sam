@@ -13,7 +13,6 @@ import {
   type TestCitizen,
 } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
   fillUntilValue,
   modal,
@@ -54,7 +53,7 @@ const openAddModal = async (page: Page) => {
   await clickUntilVisible(page.getByTitle("Teilnehmer hinzufügen"), addModal);
   await expect(
     addModal.getByRole("combobox", { name: "Citizens" }),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
   return addModal;
 };
 
@@ -98,15 +97,11 @@ test("a manager adds citizens with a shared comment", async ({
   );
   await addModal.getByRole("button", { name: "Speichern" }).click();
 
-  await expect(page.getByText("2 Teilnehmer hinzugefügt.")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
-  await expect(page.getByText("Teilnehmer (2)")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
-  await expect(page.getByText("Vom Manager nachgetragen").first()).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("2 Teilnehmer hinzugefügt.")).toBeVisible();
+  await expect(page.getByText("Teilnehmer (2)")).toBeVisible();
+  await expect(
+    page.getByText("Vom Manager nachgetragen").first(),
+  ).toBeVisible();
 
   const rows = await prisma.eventParticipant.findMany({
     where: { eventId: event.id },
@@ -191,12 +186,8 @@ test("a manager removes a participant with a reason and clears their lineup", as
     .fill("Doch nicht dabei gewesen");
   await confirmDialog.getByRole("button", { name: "Entfernen" }).click();
 
-  await expect(page.getByText("Teilnehmer entfernt.")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
-  await expect(page.getByText("Teilnehmer (0)")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Teilnehmer entfernt.")).toBeVisible();
+  await expect(page.getByText("Teilnehmer (0)")).toBeVisible();
 
   const row = await prisma.eventParticipant.findFirstOrThrow({
     where: { eventId: event.id, citizenId: participant.entity.id },
@@ -267,9 +258,7 @@ test("a removed citizen can sign up again", async ({
     page.getByText("Abgemeldet", { exact: true }).filter({ visible: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Anmelden", exact: true }).click();
-  await expect(page.getByText("Du bist angemeldet.")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Du bist angemeldet.")).toBeVisible();
 
   const rows = await prisma.eventParticipant.findMany({
     where: { eventId: event.id, citizenId: participant.entity.id },
@@ -316,16 +305,14 @@ test("a citizen who cancelled signs up again, but a second tab cannot sign up a 
   }
 
   await firstTab.getByRole("button", { name: "Anmelden", exact: true }).click();
-  await expect(firstTab.getByText("Du bist angemeldet.")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(firstTab.getByText("Du bist angemeldet.")).toBeVisible();
 
   await secondTab
     .getByRole("button", { name: "Anmelden", exact: true })
     .click();
-  await expect(secondTab.getByText("Du bist bereits angemeldet.")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(
+    secondTab.getByText("Du bist bereits angemeldet."),
+  ).toBeVisible();
 
   const rows = await prisma.eventParticipant.findMany({
     where: { eventId: event.id, citizenId: participant.entity.id },
@@ -375,7 +362,7 @@ test("adding an already signed-up citizen neither duplicates nor fails the batch
   await citizenSearch.fill("angemeldet");
   await expect(
     page.getByRole("option", { name: "noch-nicht-angemeldet" }),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
   await expect(
     page.getByRole("option", { name: "schon-angemeldet" }),
   ).toHaveCount(0);
@@ -383,12 +370,8 @@ test("adding an already signed-up citizen neither duplicates nor fails the batch
   await pickCitizen(addModal, page, "noch-nicht-angemeldet");
   await addModal.getByRole("button", { name: "Speichern" }).click();
 
-  await expect(page.getByText("1 Teilnehmer hinzugefügt.")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
-  await expect(page.getByText("Teilnehmer (2)")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("1 Teilnehmer hinzugefügt.")).toBeVisible();
+  await expect(page.getByText("Teilnehmer (2)")).toBeVisible();
 
   /** The existing sign-up keeps its own comment and its single row */
   const rows = await prisma.eventParticipant.findMany({
@@ -483,9 +466,7 @@ test("a citizen below their role's max level is not addable to a restricted even
   await pickCitizen(atMaxModal, page, "aufsteiger");
   await atMaxModal.getByRole("button", { name: "Speichern" }).click();
 
-  await expect(page.getByText("1 Teilnehmer hinzugefügt.")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("1 Teilnehmer hinzugefügt.")).toBeVisible();
 });
 
 test("a Discord event keeps its participant list read-only", async ({

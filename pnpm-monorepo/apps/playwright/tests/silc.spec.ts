@@ -1,6 +1,5 @@
 import { createCitizen, createSilcTransaction } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
   clickUntilUrl,
   clickUntilVisible,
   DELETED_TEXT,
@@ -60,16 +59,14 @@ test("a transaction created through the UI updates balances and the system log",
     .getByRole("button", { name: "Speichern", exact: true })
     .click();
 
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
   await expect(createModal).not.toBeVisible();
 
   // The citizen shows up in the balances overview with the new balance
   const balanceRow = page
     .getByRole("row")
     .filter({ hasText: "silc-empfaenger" });
-  await expect(balanceRow).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(balanceRow).toBeVisible();
   await expect(balanceRow).toContainText("42");
 
   const transaction = await prisma.silcTransaction.findFirst({
@@ -142,9 +139,7 @@ test('"Speichern und weitere Transaktion erstellen" keeps the modal open with a 
     })
     .click();
 
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
   // The modal must stay open with a reset form (this rides on onSuccess
   // receiving the submitted FormData)
   await expect(createModal).toBeVisible();
@@ -155,9 +150,7 @@ test('"Speichern und weitere Transaktion erstellen" keeps the modal open with a 
   await createModal
     .getByRole("button", { name: "Speichern", exact: true })
     .click();
-  await expect(createModal).not.toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(createModal).not.toBeVisible();
 
   await expect
     .poll(() =>
@@ -206,9 +199,7 @@ test("deleting a transaction soft deletes it and reverts the balance", async ({
     .getByRole("button", { name: "Löschen" })
     .click();
 
-  await expect(page.getByText(DELETED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(DELETED_TEXT)).toBeVisible();
   await expect(transactionRow).not.toBeVisible();
 
   const deletedTransaction = await prisma.silcTransaction.findUnique({
@@ -232,5 +223,5 @@ test("deleting a transaction soft deletes it and reverts the balance", async ({
   );
   await expect(
     page.getByRole("row").filter({ hasText: "Fehlbuchung" }),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
 });

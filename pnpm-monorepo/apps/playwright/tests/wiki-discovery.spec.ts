@@ -13,7 +13,6 @@ import {
   wikiParagraph,
 } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
   clickUntilUrl,
   clickUntilVisible,
   fillUntilVisible,
@@ -160,9 +159,9 @@ test("a tag name in other letter case uses the existing tag", async ({
     tagsDialog,
   );
   /** The dialog suggests the tags that existed when it opened */
-  await expect(tagsDialog.getByRole("button", { name: "Bergbau" })).toBeVisible(
-    { timeout: ACTION_FEEDBACK_TIMEOUT },
-  );
+  await expect(
+    tagsDialog.getByRole("button", { name: "Bergbau" }),
+  ).toBeVisible();
 
   /**
    * A different editor creates the tag after the dialog loaded the tags.
@@ -184,7 +183,7 @@ test("a tag name in other letter case uses the existing tag", async ({
   /** The letter case of the existing tag wins */
   await expect(
     page.getByRole("link", { name: "Wirtschaft", exact: true }),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
   expect(
     await prisma.wikiPageTag.findMany({
       where: { pageId: wikiPage.id },
@@ -258,9 +257,8 @@ test("recently visited counts opened pages, not prefetched ones", async ({
   await page.goto(`/app/wiki/${openedPage.id}/${openedPage.slug}`);
   // The visit is reported from the client after the page mounted
   await expect
-    .poll(
-      () => prisma.wikiPageVisit.count({ where: { pageId: openedPage.id } }),
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
+    .poll(() =>
+      prisma.wikiPageVisit.count({ where: { pageId: openedPage.id } }),
     )
     .toBe(1);
 
@@ -309,10 +307,8 @@ test("recently visited counts opened pages, not prefetched ones", async ({
     `/app/wiki/${prefetchedPage.id}/${prefetchedPage.slug}`,
   );
   await expect
-    .poll(
-      () =>
-        prisma.wikiPageVisit.count({ where: { pageId: prefetchedPage.id } }),
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
+    .poll(() =>
+      prisma.wikiPageVisit.count({ where: { pageId: prefetchedPage.id } }),
     )
     .toBe(1);
 });

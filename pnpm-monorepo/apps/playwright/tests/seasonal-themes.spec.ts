@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test";
 import { createCitizen } from "../fixtures/factories";
-import { ACTION_FEEDBACK_TIMEOUT, themeRoot } from "../fixtures/interactions";
+import { themeRoot } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 /**
@@ -70,8 +70,6 @@ for (const seasonalEvent of SEASONAL_EVENTS) {
     await expect(themeRoot(page)).toHaveAttribute(
       "data-seasonal-event",
       seasonalEvent.event,
-      // The first navigation warms the worker's app up
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
     );
 
     for (const neighbour of [seasonalEvent.dayBefore, seasonalEvent.dayAfter]) {
@@ -111,10 +109,7 @@ for (const seasonalEvent of SEASONAL_EVENTS) {
 
     await setSeasonalDate(seasonalEvent.greetingDate);
     await page.goto("/app/dashboard");
-    await expect(banner).toBeVisible({
-      // The first navigation warms the worker's app up
-      timeout: ACTION_FEEDBACK_TIMEOUT,
-    });
+    await expect(banner).toBeVisible();
 
     await setSeasonalDate(seasonalEvent.insideDate);
     await page.goto("/app/dashboard");
@@ -139,7 +134,6 @@ test("the login page wears the theme of the day", async ({
     await expect(themeRoot(page)).toHaveAttribute(
       "data-seasonal-event",
       seasonalEvent.event,
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
     );
   }
 });
@@ -175,10 +169,7 @@ test("a date override which names no day behaves like no override", async ({
    * override works; this one proves that an unusable value is no override.
    */
   await page.goto("/app/dashboard");
-  await expect(dashboardHeading).toBeVisible({
-    // The first navigation warms the worker's app up
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(dashboardHeading).toBeVisible();
   const eventWithoutOverride = await readSeasonalEvent(page);
 
   for (const date of UNUSABLE_DATES) {

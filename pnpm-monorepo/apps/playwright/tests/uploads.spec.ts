@@ -5,10 +5,7 @@ import {
   createRole,
   createUserWithoutCitizen,
 } from "../fixtures/factories";
-import {
-  ACTION_FEEDBACK_TIMEOUT,
-  waitForAppShellHydration,
-} from "../fixtures/interactions";
+import { waitForAppShellHydration } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 import {
   enterEditMode,
@@ -52,9 +49,7 @@ test("a role icon uploaded through the UI is stored and displayed", async ({
   // The icon upload is the first of the two hidden file inputs (icon,
   // thumbnail) in the "Bilder" section
   await page.locator('input[type="file"]').first().setInputFiles(imagePath);
-  await expect(page.getByText("Erfolgreich hochgeladen")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Erfolgreich hochgeladen")).toBeVisible();
 
   // The upload lands in the bucket and the probe reads it back from there
   await expect
@@ -80,16 +75,9 @@ test("a role icon uploaded through the UI is stored and displayed", async ({
   // The refreshed page renders the icon from the bucket (via the image
   // optimizer, which fetches it server-side)
   const iconImage = page.locator(`img[src*="${icon!.id}"]`).first();
-  await expect(iconImage).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
-  await expect
-    .poll(
-      () =>
-        iconImage.evaluate(
-          (element) => (element as HTMLImageElement).naturalWidth,
-        ),
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
-    )
-    .toBeGreaterThan(0);
+  await expect(iconImage).toBeVisible();
+  // The natural width stays 0 until the browser has loaded the image
+  await expect(iconImage).not.toHaveJSProperty("naturalWidth", 0);
 });
 
 test("an image uploaded to a wiki page is stored, displayed and persisted", async ({
@@ -116,9 +104,7 @@ test("an image uploaded to a wiki page is stored, displayed and persisted", asyn
   const fileChooser = await fileChooserPromise;
   await fileChooser.setFiles(imagePath);
 
-  await expect(page.getByText('"upload.png" wurde eingefügt.')).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText('"upload.png" wurde eingefügt.')).toBeVisible();
 
   // The author is the citizen, and the assign route links the page at once
   const upload = await prisma.upload.findFirstOrThrow({
@@ -138,15 +124,7 @@ test("an image uploaded to a wiki page is stored, displayed and persisted", asyn
     `.tiptap[contenteditable="true"] img[src*="${upload.id}"]`,
   );
   await expect(editorImage).toBeVisible();
-  await expect
-    .poll(
-      () =>
-        editorImage.evaluate(
-          (element) => (element as HTMLImageElement).naturalWidth,
-        ),
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
-    )
-    .toBeGreaterThan(0);
+  await expect(editorImage).not.toHaveJSProperty("naturalWidth", 0);
 
   // The probe persists the dimensions read back from the bucket
   await expect
@@ -168,15 +146,7 @@ test("an image uploaded to a wiki page is stored, displayed and persisted", asyn
   await page.reload();
   const readViewImage = page.locator(`article img[src*="${upload.id}"]`);
   await expect(readViewImage).toBeVisible();
-  await expect
-    .poll(
-      () =>
-        readViewImage.evaluate(
-          (element) => (element as HTMLImageElement).naturalWidth,
-        ),
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
-    )
-    .toBeGreaterThan(0);
+  await expect(readViewImage).not.toHaveJSProperty("naturalWidth", 0);
 });
 
 /**

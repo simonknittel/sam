@@ -1,9 +1,5 @@
 import { createCitizen, ONE_DAY_MS } from "../fixtures/factories";
-import {
-  ACTION_FEEDBACK_TIMEOUT,
-  dateParam,
-  fillUntilUrl,
-} from "../fixtures/interactions";
+import { dateParam, fillUntilUrl } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 /**
@@ -47,9 +43,7 @@ test("the log renders its events and the filters narrow the table", async ({
   await page.goto("/app/system-log");
 
   // Both events render with their type and their human-readable message
-  await expect(page.getByText('Role created: "Aufklärer"')).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText('Role created: "Aufklärer"')).toBeVisible();
   await expect(
     page.getByText("Manufacturer Drake created (hersteller-1)"),
   ).toBeVisible();
@@ -65,20 +59,20 @@ test("the log renders its events and the filters narrow the table", async ({
   );
   await expect(
     page.getByText("Manufacturer Drake created (hersteller-1)"),
-  ).not.toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).not.toBeVisible();
   await expect(page.getByText('Role created: "Aufklärer"')).toBeVisible();
 
   // The type filter keeps only the selected type
   await page.goto("/app/system-log?type=MANUFACTURER_CREATED");
   await expect(
     page.getByText("Manufacturer Drake created (hersteller-1)"),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
   await expect(page.getByText('Role created: "Aufklärer"')).toHaveCount(0);
 
   // The user filter keeps only the selected creator's events
   await page.goto(`/app/system-log?createdById=${otherUser.user.id}`);
   await expect(
     page.getByText("Manufacturer Drake created (hersteller-1)"),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
   await expect(page.getByText('Role created: "Aufklärer"')).toHaveCount(0);
 });

@@ -20,7 +20,6 @@ import {
   ONE_HOUR_MS,
 } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
   DELETED_TEXT,
   fillUntilValue,
@@ -86,14 +85,10 @@ test("an owner creates a template, edits it, deletes it and restores it", async 
    */
   await page.getByLabel("Name").fill("Patrouille");
   await page.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
   await expect
-    .poll(
-      () =>
-        prisma.eventTemplate.findUniqueOrThrow({ where: { id: template.id } }),
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
+    .poll(() =>
+      prisma.eventTemplate.findUniqueOrThrow({ where: { id: template.id } }),
     )
     .toMatchObject({ name: "Patrouille" });
 
@@ -108,15 +103,13 @@ test("an owner creates a template, edits it, deletes it and restores it", async 
     deleteDialog,
   );
   await deleteDialog.getByRole("button", { name: "Löschen" }).click();
-  await expect(page.getByText(DELETED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(DELETED_TEXT)).toBeVisible();
 
   await page.goto("/app/events/templates");
   /** The empty state proves the list rendered before its absence is judged */
-  await expect(page.getByText("Es gibt noch keine Event-Vorlage")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(
+    page.getByText("Es gibt noch keine Event-Vorlage"),
+  ).toBeVisible();
   await expect(page.getByRole("link", { name: "Patrouille" })).toBeHidden();
 
   await page.goto("/app/events/templates?status=deleted");
@@ -130,9 +123,7 @@ test("an owner creates a template, edits it, deletes it and restores it", async 
     restoreDialog,
   );
   await restoreDialog.getByRole("button", { name: "Wiederherstellen" }).click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   await page.goto("/app/events/templates");
   await expect(page.getByRole("link", { name: "Patrouille" })).toBeVisible();
@@ -184,9 +175,7 @@ const expectSharingAndDeletingStayWithTheOwner = async (
 ) => {
   await page.goto(`/app/events/templates/${templateId}`);
   /** Every tier gets this tab, so it anchors the two that are absent */
-  await expect(page.getByRole("link", { name: "Aufstellung" })).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByRole("link", { name: "Aufstellung" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Freigabe" })).toBeHidden();
   await expect(page.getByRole("heading", { name: "Danger Zone" })).toBeHidden();
 
@@ -248,14 +237,10 @@ test("a share lets a role use the template, and only an edit share change it", a
 
   await fillUntilValue(page.getByLabel("Name"), "Von der Redaktion");
   await page.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
   await expect
-    .poll(
-      () =>
-        prisma.eventTemplate.findUniqueOrThrow({ where: { id: template.id } }),
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
+    .poll(() =>
+      prisma.eventTemplate.findUniqueOrThrow({ where: { id: template.id } }),
     )
     .toMatchObject({ name: "Von der Redaktion" });
 
@@ -298,10 +283,8 @@ test("transferring a template keeps its shares and drops the previous owner", as
   await transferDialog.getByRole("button", { name: "Übertragen" }).click();
 
   await expect
-    .poll(
-      () =>
-        prisma.eventTemplate.findUniqueOrThrow({ where: { id: template.id } }),
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
+    .poll(() =>
+      prisma.eventTemplate.findUniqueOrThrow({ where: { id: template.id } }),
     )
     .toMatchObject({ ownedById: successor.entity.id });
 
@@ -777,7 +760,7 @@ test("a template drops the source event's own URL from its Discord prefill", asy
       .click();
     await expect(
       page.getByText("Das Event wurde auf Discord veröffentlicht."),
-    ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+    ).toBeVisible();
 
     await clickUntilVisible(
       page.getByRole("button", { name: "Als Vorlage speichern" }),

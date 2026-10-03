@@ -5,7 +5,6 @@ import {
   createVariant,
 } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
   clickUntilUrl,
   clickUntilVisible,
   DELETED_TEXT,
@@ -70,9 +69,7 @@ test("the org fleet filters narrow the server-rendered table", async ({
 
   // The name filter feeds the nuqs URL contract (?q=…)
   await fillUntilUrl(page, page.getByLabel("Name"), "Polaris", /q=Polaris/);
-  await expect(carrackRow).not.toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(carrackRow).not.toBeVisible();
   await expect(polarisRow).toBeVisible();
 
   // The flight-ready flag filter drops the not-flight-ready variant
@@ -83,9 +80,7 @@ test("the org fleet filters narrow the server-rendered table", async ({
     toggleLabel(page, "Flight ready"),
     /flight_ready=flight_ready/,
   );
-  await expect(carrackRow).not.toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(carrackRow).not.toBeVisible();
   await expect(polarisRow).toBeVisible();
 
   // Sorting by name flips the order
@@ -116,9 +111,7 @@ test("my ships can be added, renamed and deleted with consistent org counts", as
 
   await signIn(owner.user);
   await page.goto("/app/fleet/my-ships");
-  await expect(page.getByText("Keine Schiffe gefunden")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Keine Schiffe gefunden")).toBeVisible();
 
   // Add
   const addModal = modal(page, "Schiff hinzufügen");
@@ -131,9 +124,7 @@ test("my ships can be added, renamed and deleted with consistent org counts", as
   });
   await addModal.getByLabel("Schiffsname").fill("Sternenfaust");
   await addModal.getByRole("button", { name: "Hinzufügen" }).click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
   await expect(addModal).not.toBeVisible();
 
   const shipRow = page.getByRole("row").filter({ hasText: "Polaris" });
@@ -157,9 +148,7 @@ test("my ships can be added, renamed and deleted with consistent org counts", as
   await clickUntilVisible(inlineEditorTrigger(shipRow), nameInput);
   await nameInput.fill("Sternenhammer");
   await saveInlineEditor(page);
-  await expect(shipRow).toContainText("Sternenhammer", {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(shipRow).toContainText("Sternenhammer");
   const ship = await prisma.ship.findFirst();
   expect(ship?.name).toBe("Sternenhammer");
   expect(ship?.ownerId).toBe(owner.entity.id);
@@ -174,12 +163,8 @@ test("my ships can be added, renamed and deleted with consistent org counts", as
     .getByRole("alertdialog")
     .getByRole("button", { name: "Löschen" })
     .click();
-  await expect(page.getByText(DELETED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
-  await expect(page.getByText("Keine Schiffe gefunden")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(DELETED_TEXT)).toBeVisible();
+  await expect(page.getByText("Keine Schiffe gefunden")).toBeVisible();
   await expect
     .poll(async () => (await prisma.ship.findFirst())?.deletedAt)
     .not.toBeNull();
@@ -255,9 +240,7 @@ test("the ship count of a variant ignores deleted ships and the ships of deleted
    * with the deleted ship or the ship of the deleted owner) is a sure check.
    */
   const shipCountTile = statisticTile(page, "Einzelschiffe");
-  await expect(shipCountTile).toContainText("2", {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(shipCountTile).toContainText("2");
   await expect(shipCountTile).not.toContainText("3");
   await expect(shipCountTile).not.toContainText("4");
 });
@@ -301,9 +284,7 @@ test("a variant tag records the creating citizen as its author", async ({
   await expect(createModal).toHaveCount(0);
 
   await expect
-    .poll(() => prisma.variantTag.findFirst(), {
-      timeout: ACTION_FEEDBACK_TIMEOUT,
-    })
+    .poll(() => prisma.variantTag.findFirst())
     .toMatchObject({
       key: "Class",
       value: "Light",
@@ -314,9 +295,7 @@ test("a variant tag records the creating citizen as its author", async ({
   const stalkerRow = page
     .getByRole("row")
     .filter({ hasText: "Avenger Stalker" });
-  await expect(stalkerRow.getByText("Class", { exact: true })).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(stalkerRow.getByText("Class", { exact: true })).toBeVisible();
   await expect(stalkerRow.getByText("Light", { exact: true })).toBeVisible();
 });
 
@@ -342,12 +321,10 @@ test("manufacturers and series can be managed through the REST-backed settings",
   );
   await manufacturerModal.getByLabel("Name").fill("Aegis Dynamics");
   await manufacturerModal.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText("Erfolgreich erstellt")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
-  await expect(page.getByRole("link", { name: "Aegis Dynamics" })).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Erfolgreich erstellt")).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Aegis Dynamics" }),
+  ).toBeVisible();
   const manufacturer = await prisma.manufacturer.findFirst();
   expect(manufacturer?.name).toBe("Aegis Dynamics");
 
@@ -360,9 +337,7 @@ test("manufacturers and series can be managed through the REST-backed settings",
   await clickUntilVisible(inlineEditorTrigger(page), nameInput);
   await nameInput.fill("Aegis Dynamics GmbH");
   await saveInlineEditor(page);
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
   await expect
     .poll(async () => (await prisma.manufacturer.findFirst())?.name)
     .toBe("Aegis Dynamics GmbH");
@@ -379,12 +354,8 @@ test("manufacturers and series can be managed through the REST-backed settings",
   });
   await expect(saveSeriesButton).toBeEnabled();
   await saveSeriesButton.click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
-  await expect(page.getByRole("link", { name: "Avenger" })).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+  await expect(page.getByRole("link", { name: "Avenger" })).toBeVisible();
   const series = await prisma.series.findFirst();
   expect(series).toMatchObject({
     name: "Avenger",

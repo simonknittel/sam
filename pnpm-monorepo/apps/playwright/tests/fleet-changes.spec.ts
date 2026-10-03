@@ -4,10 +4,7 @@ import {
   createVariant,
   ONE_DAY_MS,
 } from "../fixtures/factories";
-import {
-  ACTION_FEEDBACK_TIMEOUT,
-  clickUntilVisible,
-} from "../fixtures/interactions";
+import { clickUntilVisible } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 test("the ship change log lists creations and deletions and filters between them", async ({
@@ -62,9 +59,7 @@ test("the ship change log lists creations and deletions and filters between them
    */
   const createdRows = page.getByRole("row").filter({ hasText: "Erstellt" });
   const deletedRows = page.getByRole("row").filter({ hasText: "Gelöscht" });
-  await expect(createdRows).toHaveCount(1, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(createdRows).toHaveCount(1);
   await expect(deletedRows).toHaveCount(1);
   await expect(
     page.getByRole("row").filter({ hasText: "Sternenfaust" }),
@@ -74,18 +69,14 @@ test("the ship change log lists creations and deletions and filters between them
   ).toHaveCount(0);
 
   await page.goto("/app/fleet/changes?changeType=deletion");
-  await expect(deletedRows).toHaveCount(1, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(deletedRows).toHaveCount(1);
   await expect(createdRows).toHaveCount(0);
   await expect(
     page.getByRole("row").filter({ hasText: "Sternenfaust" }),
   ).toHaveCount(0);
 
   await page.goto("/app/fleet/changes?changeType=creation");
-  await expect(createdRows).toHaveCount(1, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(createdRows).toHaveCount(1);
   await expect(deletedRows).toHaveCount(0);
   await expect(
     page.getByRole("row").filter({ hasText: "Sternenfaust" }),
@@ -139,25 +130,19 @@ test("a variant, its series and its manufacturer are deleted through the setting
   );
   await deleteThroughRowActions(variant.name, "Variante löschen?");
   await expect
-    .poll(() => prisma.variant.count({ where: { id: variant.id } }), {
-      timeout: ACTION_FEEDBACK_TIMEOUT,
-    })
+    .poll(() => prisma.variant.count({ where: { id: variant.id } }))
     .toBe(0);
 
   await page.goto(`/app/fleet/settings/manufacturer/${manufacturer.id}`);
   await deleteThroughRowActions(series.name, "Serie löschen?");
   await expect
-    .poll(() => prisma.series.count({ where: { id: series.id } }), {
-      timeout: ACTION_FEEDBACK_TIMEOUT,
-    })
+    .poll(() => prisma.series.count({ where: { id: series.id } }))
     .toBe(0);
 
   await page.goto("/app/fleet/settings/manufacturer");
   await deleteThroughRowActions(manufacturer.name, "Hersteller löschen?");
   await expect
-    .poll(() => prisma.manufacturer.count({ where: { id: manufacturer.id } }), {
-      timeout: ACTION_FEEDBACK_TIMEOUT,
-    })
+    .poll(() => prisma.manufacturer.count({ where: { id: manufacturer.id } }))
     .toBe(0);
 
   await expectAuditEvents(prisma, [

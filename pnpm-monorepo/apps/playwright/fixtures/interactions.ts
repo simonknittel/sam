@@ -1,8 +1,10 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 /**
- * Mutations run as server actions against a worker stack under full-suite
- * load — their success feedback regularly needs more than the 5s default.
+ * The assertion timeout of the suite (`expect.timeout` in
+ * playwright.config.ts). Mutations run as server actions against a worker
+ * stack under full-suite load, thus their success feedback frequently needs
+ * more than the 5s default.
  */
 export const ACTION_FEEDBACK_TIMEOUT = 15_000;
 
@@ -211,11 +213,11 @@ export const pickFromSearch = async (
   handle: string,
 ) => {
   /** The list loads through tRPC before the picker becomes searchable */
-  await expect(combobox).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(combobox).toBeVisible();
   await combobox.fill(handle);
 
   const option = page.getByRole("option", { name: handle });
-  await expect(option).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(option).toBeVisible();
   await option.click();
 };
 

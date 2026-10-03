@@ -12,7 +12,6 @@ import {
   type TestCitizen,
 } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
   hoverUntilVisible,
   SAVED_TEXT,
   sectionByHeading,
@@ -152,9 +151,7 @@ test("a citizen sets, keeps and clears their time zone and birthday", async ({
   await daySelect(page).selectOption({ label: "24" });
   await saveButton(page).click();
 
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   expect(
     await prisma.citizen.findUniqueOrThrow({
@@ -195,9 +192,7 @@ test("a citizen sets, keeps and clears their time zone and birthday", async ({
   await expect(daySelect(page)).toHaveValue("");
   await saveButton(page).click();
 
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   expect(
     await prisma.citizen.findUniqueOrThrow({
@@ -233,7 +228,7 @@ test("a birthday without a month is rejected", async ({
 
   await expect(
     page.getByText("Gib für den Geburtstag den Tag und den Monat an."),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
 
   /** The rejected input stays in the form, ready to be corrected */
   await expect(daySelect(page)).toHaveValue("15");

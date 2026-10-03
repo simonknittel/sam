@@ -1,4 +1,5 @@
 import { defineConfig } from "@playwright/test";
+import { ACTION_FEEDBACK_TIMEOUT } from "./fixtures/interactions";
 
 export default defineConfig({
   testDir: "./tests",
@@ -11,6 +12,8 @@ export default defineConfig({
   reporter: "html",
 
   globalSetup: "./setup/global-setup.ts",
+
+  expect: { timeout: ACTION_FEEDBACK_TIMEOUT },
 
   build: {
     /**

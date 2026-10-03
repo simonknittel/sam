@@ -6,7 +6,6 @@ import {
   futureEvent,
 } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
   clickUntilUrl,
   clickUntilVisible,
   DELETED_TEXT,
@@ -98,9 +97,7 @@ test("adding managers writes one feed entry for each of them", async ({
   await pickCitizen(page, addModal, citizenSearch, "neuer-manager-zwei");
   await addModal.getByRole("button", { name: "Speichern" }).click();
 
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   const stored = await prisma.event.findUniqueOrThrow({
     where: { id: event.id },
@@ -127,7 +124,7 @@ test("adding managers writes one feed entry for each of them", async ({
   const addedRow = activityRows(page, "Manager hinzugefügt").filter({
     hasText: "neuer-manager-eins",
   });
-  await expect(addedRow).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(addedRow).toBeVisible();
   await expect(addedRow).toContainText("manager-orga");
   await expect(activityRows(page, "Manager hinzugefügt")).toHaveCount(2);
 
@@ -141,9 +138,9 @@ test("adding managers writes one feed entry for each of them", async ({
   await page.goto(
     `/app/events/${event.id}/activity?type=${EventActivityType.MANAGER_REMOVED}`,
   );
-  await expect(page.getByText("Keine Aktivität für diese Filter.")).toBeVisible(
-    { timeout: ACTION_FEEDBACK_TIMEOUT },
-  );
+  await expect(
+    page.getByText("Keine Aktivität für diese Filter."),
+  ).toBeVisible();
 });
 
 test("removing a manager writes a feed entry", async ({
@@ -185,9 +182,7 @@ test("removing a manager writes a feed entry", async ({
   );
   await confirmDialog.getByRole("button", { name: "Entfernen" }).click();
 
-  await expect(page.getByText(DELETED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(DELETED_TEXT)).toBeVisible();
 
   const stored = await prisma.event.findUniqueOrThrow({
     where: { id: event.id },
@@ -203,9 +198,7 @@ test("removing a manager writes a feed entry", async ({
 
   await openActivityTab(page, event.id);
   const removedRow = activityRows(page, "Manager entfernt");
-  await expect(removedRow).toContainText("alter-manager", {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(removedRow).toContainText("alter-manager");
   await expect(removedRow).toContainText("abberufungs-orga");
 
   /** The actor of the entry is the acting manager, not the removed one */
@@ -219,8 +212,6 @@ test("removing a manager writes a feed entry", async ({
   await page.goto(
     `/app/events/${event.id}/activity?actor=${manager.entity.id}`,
   );
-  await expect(activityRows(page, "Angemeldet")).toHaveCount(1, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(activityRows(page, "Angemeldet")).toHaveCount(1);
   await expect(activityRows(page, "Manager entfernt")).toHaveCount(0);
 });

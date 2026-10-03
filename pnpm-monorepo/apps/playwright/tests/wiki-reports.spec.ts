@@ -7,11 +7,7 @@ import {
   WikiPageVisibility,
   wikiParagraph,
 } from "../fixtures/factories";
-import {
-  ACTION_FEEDBACK_TIMEOUT,
-  clickUntilVisible,
-  modal,
-} from "../fixtures/interactions";
+import { clickUntilVisible, modal } from "../fixtures/interactions";
 import { expect, test } from "../fixtures/test";
 
 test("a reader reports a page and its attachment, an admin resolves both", async ({
@@ -69,9 +65,7 @@ test("a reader reports a page and its attachment, an admin resolves both", async
   );
   await pageReportDialog.getByLabel("Grund").fill("Inhalt ist veraltet");
   await pageReportDialog.getByRole("button", { name: "Melden" }).click();
-  await expect(pageReportDialog).toHaveCount(0, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(pageReportDialog).toHaveCount(0);
 
   /**
    * … and its attachment, which carries its own report button
@@ -85,9 +79,7 @@ test("a reader reports a page and its attachment, an admin resolves both", async
     .getByLabel("Grund")
     .fill("Datei gehört hier nicht hin");
   await attachmentReportDialog.getByRole("button", { name: "Melden" }).click();
-  await expect(attachmentReportDialog).toHaveCount(0, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(attachmentReportDialog).toHaveCount(0);
 
   const reports = await prisma.wikiPageReport.findMany({
     where: { pageId: wikiPage.id },
@@ -116,7 +108,7 @@ test("a reader reports a page and its attachment, an admin resolves both", async
   for (const report of reports) {
     await expect(
       page.getByRole("row").filter({ hasText: report.message }),
-    ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+    ).toBeVisible();
   }
 
   for (const report of reports) {
@@ -130,9 +122,7 @@ test("a reader reports a page and its attachment, an admin resolves both", async
       .getByRole("button", { name: "Als bearbeitet markieren" })
       .click();
 
-    await expect(page.getByText("Bearbeitet", { exact: true })).toBeVisible({
-      timeout: ACTION_FEEDBACK_TIMEOUT,
-    });
+    await expect(page.getByText("Bearbeitet", { exact: true })).toBeVisible();
   }
 
   const resolved = await prisma.wikiPageReport.findMany({
@@ -147,13 +137,11 @@ test("a reader reports a page and its attachment, an admin resolves both", async
 
   // The open queue is empty, the resolved filter still finds them
   await page.goto("/app/wiki/reports");
-  await expect(page.getByText("Keine Meldungen vorhanden")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Keine Meldungen vorhanden")).toBeVisible();
   await page.goto("/app/wiki/reports?status=resolved");
   await expect(
     page.getByRole("row").filter({ hasText: "Inhalt ist veraltet" }),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
 
   await expectAuditEvents(prisma, [
     "WIKI_PAGE_REPORTED",

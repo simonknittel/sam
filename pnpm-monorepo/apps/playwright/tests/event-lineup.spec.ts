@@ -9,7 +9,6 @@ import {
   LINEUP_PERMISSIONS,
 } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
   FORBIDDEN_TEXT,
   inlineEditorTrigger,
@@ -50,9 +49,7 @@ test("a manager builds a lineup: create, rename, require a ship, duplicate, dele
    * The lineup starts switched off — the organizer publishes it once it is
    * staffed, so managing it has to work before that.
    */
-  await expect(page.getByText("Keine Posten vorhanden.")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Keine Posten vorhanden.")).toBeVisible();
 
   /**
    * Create a position, with the ship it requires right away
@@ -77,9 +74,7 @@ test("a manager builds a lineup: create, rename, require a ship, duplicate, dele
     .click();
 
   await expect
-    .poll(() => prisma.eventPosition.count({ where: { eventId: event.id } }), {
-      timeout: ACTION_FEEDBACK_TIMEOUT,
-    })
+    .poll(() => prisma.eventPosition.count({ where: { eventId: event.id } }))
     .toBe(1);
 
   const pilot = await prisma.eventPosition.findFirstOrThrow({
@@ -95,7 +90,7 @@ test("a manager builds a lineup: create, rename, require a ship, duplicate, dele
   ]);
   await expect(
     page.getByRole("link", { name: "Retaliator Bomber" }),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
 
   /**
    * Rename it through the row's inline editor — the only one on the page
@@ -106,9 +101,8 @@ test("a manager builds a lineup: create, rename, require a ship, duplicate, dele
   await nameInput.fill("Chefpilot");
   await saveInlineEditor(page);
   await expect
-    .poll(
-      () => prisma.eventPosition.findUniqueOrThrow({ where: { id: pilot.id } }),
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
+    .poll(() =>
+      prisma.eventPosition.findUniqueOrThrow({ where: { id: pilot.id } }),
     )
     .toMatchObject({ name: "Chefpilot" });
 
@@ -123,9 +117,7 @@ test("a manager builds a lineup: create, rename, require a ship, duplicate, dele
   await page.getByRole("button", { name: "Posten duplizieren" }).click();
 
   await expect
-    .poll(() => prisma.eventPosition.count({ where: { eventId: event.id } }), {
-      timeout: ACTION_FEEDBACK_TIMEOUT,
-    })
+    .poll(() => prisma.eventPosition.count({ where: { eventId: event.id } }))
     .toBe(2);
   const positions = await prisma.eventPosition.findMany({
     where: { eventId: event.id },
@@ -154,16 +146,13 @@ test("a manager builds a lineup: create, rename, require a ship, duplicate, dele
   await deleteDialog.getByRole("button", { name: "Löschen" }).click();
 
   await expect
-    .poll(
-      async () => {
-        const remaining = await prisma.eventPosition.findMany({
-          where: { eventId: event.id },
-          select: { id: true },
-        });
-        return remaining.map(({ id }) => id);
-      },
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
-    )
+    .poll(async () => {
+      const remaining = await prisma.eventPosition.findMany({
+        where: { eventId: event.id },
+        select: { id: true },
+      });
+      return remaining.map(({ id }) => id);
+    })
     .toEqual([positions[1]!.id]);
 
   await expectAuditEvents(prisma, [
@@ -200,9 +189,7 @@ test("the lineup toggle publishes the aufstellung to the participants", async ({
   /** Without the toggle the tab does not exist for anybody but its managers */
   await signIn(viewer.user);
   await page.goto(`/app/events/${event.id}`);
-  await expect(page.getByRole("link", { name: "Übersicht" })).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByRole("link", { name: "Übersicht" })).toBeVisible();
   await expect(
     page.getByRole("link", { name: "Aufstellung", exact: true }),
   ).toHaveCount(0);
@@ -218,16 +205,14 @@ test("the lineup toggle publishes the aufstellung to the participants", async ({
   await toggleLabel(page, "Deaktiviert").click();
 
   await expect
-    .poll(() => prisma.event.findUniqueOrThrow({ where: { id: event.id } }), {
-      timeout: ACTION_FEEDBACK_TIMEOUT,
-    })
+    .poll(() => prisma.event.findUniqueOrThrow({ where: { id: event.id } }))
     .toMatchObject({ lineupEnabled: true });
 
   await switchUser(viewer.user);
   await page.goto(`/app/events/${event.id}`);
   await expect(
     page.getByRole("link", { name: "Aufstellung", exact: true }),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
 });
 
 test("positions are reordered by dragging and copied into another lineup", async ({
@@ -273,9 +258,7 @@ test("positions are reordered by dragging and copied into another lineup", async
   await signIn(manager.user);
   await page.goto(`/app/events/${event.id}/lineup`);
   await waitForAppShellHydration(page);
-  await expect(page.getByText("Erster Posten")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Erster Posten")).toBeVisible();
 
   /**
    * The lineup drags with the pointer only — its handles start the drag on
@@ -299,7 +282,7 @@ test("positions are reordered by dragging and copied into another lineup", async
   await page.mouse.up();
 
   await expect
-    .poll(() => lineupOf(event.id), { timeout: ACTION_FEEDBACK_TIMEOUT })
+    .poll(() => lineupOf(event.id))
     .toEqual(["Zweiter Posten", "Erster Posten"]);
   await expect(page.getByTitle("Posten verschieben").first()).toBeVisible();
 
@@ -314,9 +297,7 @@ test("positions are reordered by dragging and copied into another lineup", async
     page.getByRole("button", { name: "Posten kopieren" }),
   );
   await page.getByRole("button", { name: "Posten kopieren" }).click();
-  await expect(page.getByText("„Zweiter Posten“ kopiert.")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("„Zweiter Posten“ kopiert.")).toBeVisible();
 
   await page.goto(`/app/events/${target.id}/lineup`);
   await waitForAppShellHydration(page);
@@ -337,7 +318,7 @@ test("positions are reordered by dragging and copied into another lineup", async
   await page.getByRole("button", { name: "In diese Gruppe einfügen" }).click();
 
   await expect
-    .poll(() => lineupOf(target.id), { timeout: ACTION_FEEDBACK_TIMEOUT })
+    .poll(() => lineupOf(target.id))
     .toEqual(["Gastgeber", "Zweiter Posten (untergeordnet)"]);
   const pasted = await prisma.eventPosition.findFirstOrThrow({
     where: { eventId: target.id, parentPositionId: host.id },
@@ -442,7 +423,7 @@ test("the requirement check finds a ship after the first page of the fleet, but 
   await page.goto(`/app/events/${event.id}/lineup`);
   await expect(
     participantOption("Alle Teilnehmer - Voraussetzungen nicht erfüllt"),
-  ).toHaveCount(1, { timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toHaveCount(1);
 
   // The ship after the first page of the fleet meets the requirement
   await prisma.ship.update({
@@ -453,7 +434,7 @@ test("the requirement check finds a ship after the first page of the fleet, but 
   await page.goto(`/app/events/${event.id}/lineup`);
   await expect(
     participantOption("Alle Teilnehmer - Voraussetzungen erfüllt"),
-  ).toHaveCount(1, { timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toHaveCount(1);
 
   /**
    * The lineup keeps the open positions in the local storage of the
@@ -461,7 +442,7 @@ test("the requirement check finds a ship after the first page of the fleet, but 
    */
   await switchUser(applicant.user);
   await page.goto(`/app/events/${event.id}/lineup`);
-  await expect(applyButton).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  await expect(applyButton).toBeVisible();
   await applyButton.focus();
   await expect(unmetRequirementHint).toHaveCount(0);
 });
@@ -521,7 +502,7 @@ test("a deleted participant is not a choice in the position picker", async ({
   const pilotPicker = page.getByRole("combobox", { name: "Citizen für Pilot" });
   await expect(
     pilotPicker.locator("option", { hasText: "aktiver-teilnehmer" }),
-  ).toHaveCount(1, { timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toHaveCount(1);
   await expect(
     pilotPicker.locator("option", { hasText: DELETED_CITIZEN_LABEL }),
   ).toHaveCount(0);

@@ -2,7 +2,6 @@ import type { Page } from "@playwright/test";
 import { expectAuditEvents } from "../fixtures/audit";
 import { createCitizen, createUserWithoutCitizen } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
   clickUntilUrl,
   NOT_FOUND_TEXT,
   SAVED_TEXT,
@@ -58,10 +57,7 @@ test("the appearance page offers a switch for every seasonal event", async ({
 
   await page.goto("/app/account");
   const appearanceLink = page.getByRole("link", { name: "Darstellung" });
-  await expect(appearanceLink).toBeVisible({
-    // The first navigation warms the worker's app up
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(appearanceLink).toBeVisible();
   await clickUntilUrl(page, appearanceLink, APPEARANCE_PAGE);
 
   const tile = sectionByHeading(page, "Saisonale Events");
@@ -94,8 +90,6 @@ test("switching the active event off strips its theme and switching it on restor
   await expect(themeRoot(page)).toHaveAttribute(
     "data-seasonal-event",
     "halloween",
-    // The first navigation warms the worker's app up
-    { timeout: ACTION_FEEDBACK_TIMEOUT },
   );
   /**
    * Each toggle saves once, thus the page has to be hydrated before the
@@ -105,9 +99,7 @@ test("switching the active event off strips its theme and switching it on restor
 
   // Another event's switch leaves the theme of the day alone
   await toggleEvent(page, "christmas");
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
   await expect(eventCheckbox(page, "christmas")).not.toBeChecked();
   await expect(themeRoot(page)).toHaveAttribute(
     "data-seasonal-event",
@@ -121,16 +113,13 @@ test("switching the active event off strips its theme and switching it on restor
    * not tell a revalidated layout from a fresh request.
    */
   await toggleEvent(page, "halloween");
-  await expect(themeRoot(page)).toHaveCount(0, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(themeRoot(page)).toHaveCount(0);
   await expect(eventCheckbox(page, "halloween")).not.toBeChecked();
 
   await toggleEvent(page, "halloween");
   await expect(themeRoot(page)).toHaveAttribute(
     "data-seasonal-event",
     "halloween",
-    { timeout: ACTION_FEEDBACK_TIMEOUT },
   );
   await expect(eventCheckbox(page, "halloween")).toBeChecked();
 
@@ -169,16 +158,12 @@ test("the login page keeps its theme although the citizen switched it off", asyn
   await expect(themeRoot(page)).toHaveAttribute(
     "data-seasonal-event",
     "halloween",
-    // The first navigation warms the worker's app up
-    { timeout: ACTION_FEEDBACK_TIMEOUT },
   );
   // One save, thus the page has to be hydrated first
   await waitForAppShellHydration(page);
 
   await toggleEvent(page, "halloween");
-  await expect(themeRoot(page)).toHaveCount(0, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(themeRoot(page)).toHaveCount(0);
 
   /**
    * The login page cannot know its viewer and is therefore always themed.
@@ -221,10 +206,7 @@ test("a viewer without a citizen has no appearance page", async ({
    * navigation of the account renders there, thus the missing entry shows.
    */
   await page.goto("/app/account/sessions");
-  await expect(page.getByRole("link", { name: "Sitzungen" })).toBeVisible({
-    // The first navigation warms the worker's app up
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByRole("link", { name: "Sitzungen" })).toBeVisible();
   // The opt-outs belong to a citizen, thus the entry stays away
   await expect(page.getByRole("link", { name: "Darstellung" })).toHaveCount(0);
 

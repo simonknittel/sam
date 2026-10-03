@@ -7,7 +7,6 @@ import {
 import { expectAuditEvents } from "../fixtures/audit";
 import { createCitizen, createUserWithoutCitizen } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
   DELETED_TEXT,
   modal,
@@ -46,9 +45,7 @@ test("a citizen is created from a Spectrum ID and deleted again", async ({
   await createDialog.getByLabel("Spectrum ID").fill("NEWCOMER");
   await createDialog.getByRole("button", { name: "Anlegen" }).click();
 
-  await expect(page).toHaveURL(/\/app\/spynet\/citizen\/[a-z0-9]+$/, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page).toHaveURL(/\/app\/spynet\/citizen\/[a-z0-9]+$/);
 
   const created = await prisma.citizen.findFirstOrThrow({
     where: { spectrumId: "NEWCOMER" },
@@ -74,9 +71,7 @@ test("a citizen is created from a Spectrum ID and deleted again", async ({
   await expect(page.getByText("Citizen löschen?")).toBeVisible();
   await deleteDialog.getByRole("button", { name: "Löschen" }).click();
 
-  await expect(page.getByText(DELETED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(DELETED_TEXT)).toBeVisible();
   await expect
     .poll(
       async () =>
@@ -128,9 +123,7 @@ test("a deleted member leaves the member list of its organization", async ({
 
   await signIn(admin.user);
   await page.goto(`/app/spynet/organization/${organization.id}`);
-  await expect(page.getByText("Mitglieder (1)")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Mitglieder (1)")).toBeVisible();
   await expect(page.getByRole("link", { name: "mitglied" })).toBeVisible();
 
   await page.goto(`/app/spynet/citizen/${member.entity.id}`);
@@ -140,9 +133,7 @@ test("a deleted member leaves the member list of its organization", async ({
     deleteDialog,
   );
   await deleteDialog.getByRole("button", { name: "Löschen" }).click();
-  await expect(page.getByText(DELETED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(DELETED_TEXT)).toBeVisible();
 
   /** The membership stays in the database, only the list hides it */
   expect(
@@ -152,9 +143,7 @@ test("a deleted member leaves the member list of its organization", async ({
   ).toBe(1);
 
   await page.goto(`/app/spynet/organization/${organization.id}`);
-  await expect(page.getByText("Keine Mitglieder")).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText("Keine Mitglieder")).toBeVisible();
   await expect(page.getByText("Mitglieder (0)")).toBeVisible();
 });
 
@@ -189,9 +178,9 @@ test("a log entry is confirmed, and a second one marked a false report", async (
   for (const content of ["ersterhandle", "zweiterhandle"]) {
     await historyDialog.getByPlaceholder("Neuer Eintrag ...").fill(content);
     await historyDialog.getByRole("button", { name: "Speichern" }).click();
-    await expect(historyDialog.getByText(content, { exact: true })).toBeVisible(
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
-    );
+    await expect(
+      historyDialog.getByText(content, { exact: true }),
+    ).toBeVisible();
   }
 
   const entryOf = (content: string) =>
@@ -204,7 +193,6 @@ test("a log entry is confirmed, and a second one marked a false report", async (
     .click();
   await expect(entryOf("zweiterhandle").getByText("Unbestätigt")).toHaveCount(
     0,
-    { timeout: ACTION_FEEDBACK_TIMEOUT },
   );
 
   /** Deciding removes the entry's own decision buttons */
@@ -213,25 +201,22 @@ test("a log entry is confirmed, and a second one marked a false report", async (
     .click();
   await expect(
     entryOf("ersterhandle").getByRole("button", { name: "Falschmeldung" }),
-  ).toHaveCount(0, { timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toHaveCount(0);
 
   await expect
-    .poll(
-      async () => {
-        const logs = await prisma.citizenLog.findMany({
-          where: {
-            citizenId: target.entity.id,
-            type: "handle",
-            confirmed: { not: null },
-          },
-          select: { content: true, confirmed: true },
-        });
-        return Object.fromEntries(
-          logs.map((log) => [log.content, log.confirmed]),
-        );
-      },
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
-    )
+    .poll(async () => {
+      const logs = await prisma.citizenLog.findMany({
+        where: {
+          citizenId: target.entity.id,
+          type: "handle",
+          confirmed: { not: null },
+        },
+        select: { content: true, confirmed: true },
+      });
+      return Object.fromEntries(
+        logs.map((log) => [log.content, log.confirmed]),
+      );
+    })
     .toEqual({ ersterhandle: "FALSE_REPORT", zweiterhandle: "CONFIRMED" });
 
   /** Only the confirmed one becomes the citizen's handle */
@@ -293,7 +278,6 @@ test("confirming a Discord ID links the citizen to the login with that ID", asyn
             select: { userId: true },
           })
         ).userId,
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
     )
     .toBe(newcomer.id);
 });
@@ -341,9 +325,7 @@ test("a false report of the confirmed Discord ID removes the link to the login",
 
   await switchUser(target.user);
   await page.goto("/app/dashboard");
-  await expect(page).toHaveURL("/clearance", {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page).toHaveURL("/clearance");
 });
 
 test("a new citizen gets the confirmed Discord ID of a deleted citizen and its login", async ({
@@ -387,13 +369,11 @@ test("a new citizen gets the confirmed Discord ID of a deleted citizen and its l
   await entry.getByRole("button", { name: "Bestätigen" }).click();
 
   await expect
-    .poll(
-      () =>
-        prisma.citizen.findUniqueOrThrow({
-          where: { id: successor.id },
-          select: { discordId: true, userId: true },
-        }),
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
+    .poll(() =>
+      prisma.citizen.findUniqueOrThrow({
+        where: { id: successor.id },
+        select: { discordId: true, userId: true },
+      }),
     )
     .toEqual({ discordId, userId: former.user.id });
   /** The deleted citizen keeps its Discord ID, but not the login */

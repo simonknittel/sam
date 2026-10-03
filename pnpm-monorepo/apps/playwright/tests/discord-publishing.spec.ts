@@ -16,7 +16,6 @@ import {
   futureEvent,
 } from "../fixtures/factories";
 import {
-  ACTION_FEEDBACK_TIMEOUT,
   clickUntilVisible,
   fillUntilValue,
   NOT_FOUND_TEXT,
@@ -92,7 +91,7 @@ for (const { channel, entityType } of CHANNEL_KINDS) {
       .click();
     await expect(
       page.getByText("Das Event wurde auf Discord veröffentlicht."),
-    ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+    ).toBeVisible();
 
     const published = await prisma.event.findUnique({
       where: { id: event.id },
@@ -141,7 +140,7 @@ for (const { channel, entityType } of CHANNEL_KINDS) {
       .click();
     await expect(
       page.getByText("Das Event wurde von Discord entfernt."),
-    ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+    ).toBeVisible();
 
     expect(discordMock.scheduledEvents.size).toBe(0);
     const unpublished = await prisma.event.findUnique({
@@ -183,7 +182,7 @@ test("publishing to an external location defaults to the event's own URL", async
     .click();
   await expect(
     page.getByText("Das Event wurde auf Discord veröffentlicht."),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
 
   const published = await prisma.event.findUnique({ where: { id: event.id } });
   expect(published!.discordPublishedChannelId).toBeNull();
@@ -231,7 +230,7 @@ test("editing a published event updates it on Discord, deleting it removes it", 
     .click();
   await expect(
     page.getByText("Das Event wurde auf Discord veröffentlicht."),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
 
   const published = await prisma.event.findUnique({ where: { id: event.id } });
   const scheduledEventId = published!.discordPublishedId!;
@@ -246,9 +245,7 @@ test("editing a published event updates it on Discord, deleting it removes it", 
   await page.getByLabel("Titel").fill("Operation Zweitfassung");
   await page.getByLabel("Beschreibung").fill("Jetzt mit Beschreibung.");
   await page.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   expect(discordMock.scheduledEvents.get(scheduledEventId)).toMatchObject({
     name: "Operation Zweitfassung",
@@ -268,9 +265,7 @@ test("editing a published event updates it on Discord, deleting it removes it", 
     .getByRole("alertdialog")
     .getByRole("button", { name: "Löschen" })
     .click();
-  await expect(page).toHaveURL("/app/events", {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page).toHaveURL("/app/events");
 
   expect(discordMock.scheduledEvents.has(scheduledEventId)).toBe(false);
 });
@@ -299,7 +294,7 @@ test("an event deleted on Discord's side is marked as unpublished again", async 
     .click();
   await expect(
     page.getByText("Das Event wurde auf Discord veröffentlicht."),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
 
   const published = await prisma.event.findUnique({ where: { id: event.id } });
   discordMock.forgetScheduledEvent(published!.discordPublishedId!);
@@ -308,9 +303,7 @@ test("an event deleted on Discord's side is marked as unpublished again", async 
   await waitForAppShellHydration(page);
   await page.getByLabel("Titel").fill("Operation Abdrift II");
   await page.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
   await expect(
     page.getByText(
       "Das Event existiert auf Discord nicht mehr und gilt hier wieder als nicht veröffentlicht.",
@@ -362,7 +355,7 @@ test("a legacy description longer than Discord allows blocks publishing", async 
     page.getByText(
       /Die Kurzbeschreibung ist länger als die [\d.]+ Zeichen, die zusammen mit dem Hinweis zur Anmeldung auf Discord passen/,
     ),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
 
   expect(discordMock.scheduledEvents.size).toBe(0);
   const stillUnpublished = await prisma.event.findUnique({
@@ -405,7 +398,7 @@ test("a cover image Discord cannot take is reported but does not stop publishing
 
   await expect(
     page.getByText("Das Event wurde auf Discord veröffentlicht."),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
   await expect(
     page.getByText("Das Titelbild konnte nicht an Discord übertragen werden."),
   ).toBeVisible();
@@ -463,7 +456,7 @@ test("publishing a restricted event needs an explicit confirmation", async ({
     .click();
   await expect(
     page.getByText("Das Event wurde auf Discord veröffentlicht."),
-  ).toBeVisible({ timeout: ACTION_FEEDBACK_TIMEOUT });
+  ).toBeVisible();
 
   expect(discordMock.scheduledEvents.size).toBe(1);
 });
@@ -506,9 +499,7 @@ test("a template's publish preference prefills the create form and publishes the
   await fillUntilValue(page.getByLabel("Ende"), "2027-05-05T22:00");
   await page.getByRole("button", { name: "Speichern" }).click();
 
-  await expect(page).toHaveURL(/\/app\/events\/[a-z0-9]+$/, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page).toHaveURL(/\/app\/events\/[a-z0-9]+$/);
 
   const created = await prisma.event.findFirst({
     where: { name: "Patrouille Alpha" },
@@ -553,15 +544,11 @@ test("the owner switches a template's publishing on and picks its channel", asyn
     .selectOption({ label: MOCK_STAGE_CHANNEL.name });
 
   await page.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   await expect
-    .poll(
-      () =>
-        prisma.eventTemplate.findUniqueOrThrow({ where: { id: template.id } }),
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
+    .poll(() =>
+      prisma.eventTemplate.findUniqueOrThrow({ where: { id: template.id } }),
     )
     .toMatchObject({
       discordPublishTarget: EventDiscordPublishTarget.CHANNEL,
@@ -620,15 +607,11 @@ test("a template's saved publish preference is edited, switched and cleared", as
   /** An edit that does not touch publishing leaves the preference alone */
   await fillUntilValue(page.getByLabel("Name"), "Patrouille Bravo");
   await page.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+  await expect.poll(readTemplate).toMatchObject({
+    name: "Patrouille Bravo",
+    discordPublishTarget: EventDiscordPublishTarget.EXTERNAL,
   });
-  await expect
-    .poll(readTemplate, { timeout: ACTION_FEEDBACK_TIMEOUT })
-    .toMatchObject({
-      name: "Patrouille Bravo",
-      discordPublishTarget: EventDiscordPublishTarget.EXTERNAL,
-    });
 
   /** Switching the target to a channel */
   await toggleLabel(page, /^Sprachkanal$/).click();
@@ -636,26 +619,22 @@ test("a template's saved publish preference is edited, switched and cleared", as
     .getByLabel("Kanal", { exact: true })
     .selectOption({ label: MOCK_VOICE_CHANNEL.name });
   await page.getByRole("button", { name: "Speichern" }).click();
-  await expect
-    .poll(readTemplate, { timeout: ACTION_FEEDBACK_TIMEOUT })
-    .toMatchObject({
-      discordPublishTarget: EventDiscordPublishTarget.CHANNEL,
-      discordPublishChannelId: MOCK_VOICE_CHANNEL.id,
-      discordPublishLocation: null,
-    });
+  await expect.poll(readTemplate).toMatchObject({
+    discordPublishTarget: EventDiscordPublishTarget.CHANNEL,
+    discordPublishChannelId: MOCK_VOICE_CHANNEL.id,
+    discordPublishLocation: null,
+  });
 
   /** Switching publishing off clears all three columns */
   await page.reload();
   await waitForAppShellHydration(page);
   await toggleLabel(page, /^Auf Discord veröffentlichen$/).click();
   await page.getByRole("button", { name: "Speichern" }).click();
-  await expect
-    .poll(readTemplate, { timeout: ACTION_FEEDBACK_TIMEOUT })
-    .toMatchObject({
-      discordPublishTarget: null,
-      discordPublishChannelId: null,
-      discordPublishLocation: null,
-    });
+  await expect.poll(readTemplate).toMatchObject({
+    discordPublishTarget: null,
+    discordPublishChannelId: null,
+    discordPublishLocation: null,
+  });
 });
 
 /**
@@ -687,18 +666,14 @@ test("a restricted template keeps its roles while publishing is switched on", as
 
   await toggleLabel(page, /^Auf Discord veröffentlichen$/).click();
   await page.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText(SAVED_TEXT)).toBeVisible({
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
   await expect
-    .poll(
-      () =>
-        prisma.eventTemplate.findUniqueOrThrow({
-          where: { id: template.id },
-          include: { visibilityRoles: { select: { roleId: true } } },
-        }),
-      { timeout: ACTION_FEEDBACK_TIMEOUT },
+    .poll(() =>
+      prisma.eventTemplate.findUniqueOrThrow({
+        where: { id: template.id },
+        include: { visibilityRoles: { select: { roleId: true } } },
+      }),
     )
     .toMatchObject({
       discordPublishTarget: EventDiscordPublishTarget.EXTERNAL,
@@ -755,9 +730,7 @@ test("creating a restricted event with publishing needs the same confirmation", 
   await toggleLabel(page, /^Öffentlich$/).click();
   await page.getByRole("button", { name: "Speichern" }).click();
 
-  await expect(page).toHaveURL(/\/app\/events\/[a-z0-9]+$/, {
-    timeout: ACTION_FEEDBACK_TIMEOUT,
-  });
+  await expect(page).toHaveURL(/\/app\/events\/[a-z0-9]+$/);
   expect(discordMock.scheduledEvents.size).toBe(1);
 });
 
