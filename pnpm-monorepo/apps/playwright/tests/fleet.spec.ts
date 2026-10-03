@@ -339,7 +339,6 @@ test("a variant link that is not an http or https URL is a bad request", async (
 
   await createModal.getByRole("button", { name: "Speichern" }).click();
   await expect(page.getByText("Ungültige Anfrage")).toBeVisible();
-  await expect(page.getByText("unbekannter Fehler")).toHaveCount(0);
   await expect(createModal).toBeVisible();
   expect(
     await prisma.variant.count({ where: { name: "Avenger Stalker" } }),

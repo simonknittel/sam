@@ -5,8 +5,7 @@ import {
 import { requireConfirmedEmailForAction } from "@/modules/auth/utils/emailConfirmation";
 import { isAdminBehindSession } from "@/modules/auth/utils/isAdminBehindSession";
 import { log } from "@/modules/logging";
-import { getTracer } from "@/modules/tracing/utils/getTracer";
-import { SpanStatusCode } from "@opentelemetry/api";
+import { withTrace } from "@/modules/tracing/utils/withTrace";
 import { getTranslations } from "next-intl/server";
 import { unstable_rethrow } from "next/navigation";
 import type * as z from "zod";
@@ -36,6 +35,8 @@ type Authentication = Exclude<
   Awaited<ReturnType<typeof requireAuthentication>>,
   false
 >;
+
+type Translations = Awaited<ReturnType<typeof getTranslations>>;
 
 /** The check an action runs on the session before it validates the request */
 export enum ActionGate {
@@ -113,7 +114,7 @@ export const createAuthenticatedAction = <
     formData: FormData,
     authentication: Authentication,
     data: z.infer<T>,
-    t: Awaited<ReturnType<typeof getTranslations>>,
+    t: Translations,
   ) => Promise<ActionResponse | NoInfer<Response>>,
   options?: {
     /**
@@ -126,66 +127,79 @@ export const createAuthenticatedAction = <
     gate?: ActionGate;
   },
 ): ((formData: FormData) => Promise<ActionResponse | Response>) => {
+  const parseFormData =
+    options?.parseFormData ??
+    ((formData: FormData) => Object.fromEntries(formData.entries()));
+
+  const tracedAction = withTrace(
+    name,
+    async (
+      formData: FormData,
+      t: Translations,
+    ): Promise<ActionResponse | Response> => {
+      /**
+       * Authenticate the request
+       */
+      const authentication = await authenticate();
+      if (!authentication)
+        return {
+          error: t("Common.forbidden"),
+          requestPayload: formData,
+        };
+
+      if (
+        !(await passesGate(
+          options?.gate ?? ActionGate.Clearance,
+          authentication,
+          name,
+        ))
+      )
+        return {
+          error: t("Common.forbidden"),
+          requestPayload: formData,
+        };
+
+      /**
+       * Validate the request
+       */
+      let input: unknown;
+      try {
+        input = parseFormData(formData);
+      } catch (error) {
+        // For example `JSON.parse()` of a field that is not valid JSON
+        log.warn("Invalid form data", { actionName: name, error });
+
+        return {
+          error: t("Common.badRequest"),
+          requestPayload: formData,
+        };
+      }
+
+      const result = zodSchema.safeParse(input);
+      if (!result.success) {
+        log.warn("Invalid Zod schema", {
+          actionName: name,
+          error: result.error,
+        });
+
+        return {
+          error: t("Common.badRequest"),
+          requestPayload: formData,
+        };
+      }
+
+      return action(formData, authentication, result.data, t);
+    },
+  );
+
   return async (formData: FormData) => {
     const t = await getTranslations();
 
     try {
-      return await getTracer().startActiveSpan(name, async (span) => {
-        try {
-          /**
-           * Authenticate the request
-           */
-          const authentication = await authenticate();
-          if (!authentication)
-            return {
-              error: t("Common.forbidden"),
-              requestPayload: formData,
-            };
-
-          if (
-            !(await passesGate(
-              options?.gate ?? ActionGate.Clearance,
-              authentication,
-              name,
-            ))
-          )
-            return {
-              error: t("Common.forbidden"),
-              requestPayload: formData,
-            };
-
-          /**
-           * Validate the request
-           */
-          const result = zodSchema.safeParse(
-            options?.parseFormData
-              ? options.parseFormData(formData)
-              : Object.fromEntries(formData.entries()),
-          );
-          if (!result.success) {
-            log.warn("Invalid Zod schema", {
-              error: result.error,
-            });
-
-            return {
-              error: t("Common.badRequest"),
-              requestPayload: formData,
-            };
-          }
-
-          return await action(formData, authentication, result.data, t);
-        } catch (error) {
-          span.setStatus({
-            code: SpanStatusCode.ERROR,
-          });
-          throw error;
-        } finally {
-          span.end();
-        }
-      });
+      return await tracedAction(formData, t);
     } catch (error) {
       unstable_rethrow(error);
-      log.error("Internal Server Error", { error });
+      log.error("Internal Server Error", { actionName: name, error });
       return {
         // The response is plain text, thus the support link becomes text
         error: t.markup("Common.internalServerError", {

@@ -157,8 +157,8 @@ export const updateFlow = createAuthenticatedAction(
   {
     parseFormData: (formData) => ({
       flowId: formData.get("flowId"),
-      nodes: JSON.parse((formData.get("nodes") as string) || "null") as unknown,
-      edges: JSON.parse((formData.get("edges") as string) || "null") as unknown,
+      nodes: JSON.parse(formData.get("nodes") as string) as unknown,
+      edges: JSON.parse(formData.get("edges") as string) as unknown,
     }),
   },
 );
