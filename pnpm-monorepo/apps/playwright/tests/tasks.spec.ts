@@ -138,6 +138,91 @@ test("a task can be created and three of its fields edited inline", async ({
   ]);
 });
 
+test.describe("in a browser outside the time zone of the organization", () => {
+  /**
+   * The app reads and shows each wall time in the time zone of the
+   * organization (Europe/Berlin). A browser in a different zone makes sure
+   * that no code reads a wall time in the zone of the browser.
+   */
+  test.use({ timezoneId: "America/Los_Angeles" });
+
+  test("the expiry time of a task keeps the entered wall time, also through inline edits", async ({
+    page,
+    prisma,
+    signIn,
+  }) => {
+    const manager = await createCitizen(prisma, {
+      handle: "task-verwalter",
+      permissionStrings: ["task;read", "task;create"],
+    });
+
+    await signIn(manager.user);
+    await page.goto("/app/tasks");
+
+    const createModal = modal(page, "Neuer Task");
+    await clickUntilVisible(
+      page.getByRole("button", { name: "Neuer Task" }),
+      createModal,
+    );
+    await createModal.getByLabel("Titel").fill("Frist einhalten");
+    await createModal.getByRole("button", { name: "Weiter" }).click();
+    await createModal.getByRole("button", { name: "Weiter" }).click();
+    await createModal.getByLabel("Text", { exact: true }).fill("Ruhm und Ehre");
+    await createModal.getByRole("button", { name: "Weiter" }).click();
+    /** Winter time: Berlin is one hour ahead of UTC */
+    await createModal.getByLabel("Ablaufdatum").fill("2030-01-15T20:30");
+    await createModal.getByRole("button", { name: "Speichern" }).click();
+    await expect(page.getByText(SAVED_TEXT)).toBeVisible();
+
+    const readStoredExpiresAt = async () => {
+      const task = await prisma.task.findFirstOrThrow({
+        select: { expiresAt: true },
+      });
+      return task.expiresAt?.toISOString();
+    };
+    expect(await readStoredExpiresAt()).toBe("2030-01-15T19:30:00.000Z");
+
+    await page.getByRole("link", { name: /Frist einhalten/ }).click();
+    const expiresAtInput = page.locator('input[name="expiresAt"]');
+    const expiresAtEditButton = (shownValue: string) =>
+      editButtons(page).filter({ hasText: shownValue });
+
+    /**
+     * A save of the unchanged value keeps the time
+     */
+    await clickUntilVisible(
+      expiresAtEditButton("15.01.2030, 20:30"),
+      expiresAtInput,
+    );
+    await expect(expiresAtInput).toHaveValue("2030-01-15T20:30");
+    await saveInlineEditor(page);
+    await expect(expiresAtInput).not.toBeVisible();
+    await expect(expiresAtEditButton("15.01.2030, 20:30")).toBeVisible();
+    expect(await readStoredExpiresAt()).toBe("2030-01-15T19:30:00.000Z");
+
+    /**
+     * A new value keeps the entered time. Summer time: Berlin is two hours
+     * ahead of UTC.
+     */
+    await clickUntilVisible(
+      expiresAtEditButton("15.01.2030, 20:30"),
+      expiresAtInput,
+    );
+    await expiresAtInput.fill("2030-07-15T08:15");
+    await saveInlineEditor(page);
+    await expect(expiresAtInput).not.toBeVisible();
+    await expect(expiresAtEditButton("15.07.2030, 08:15")).toBeVisible();
+    expect(await readStoredExpiresAt()).toBe("2030-07-15T06:15:00.000Z");
+
+    await page.reload();
+    await clickUntilVisible(
+      expiresAtEditButton("15.07.2030, 08:15"),
+      expiresAtInput,
+    );
+    await expect(expiresAtInput).toHaveValue("2030-07-15T08:15");
+  });
+});
+
 test("a citizen without management permission cannot edit a task", async ({
   page,
   prisma,

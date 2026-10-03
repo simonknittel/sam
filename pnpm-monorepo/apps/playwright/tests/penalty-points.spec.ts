@@ -20,6 +20,13 @@ const KEEPER_PERMISSIONS = [
   "citizen;read",
 ];
 
+/**
+ * The app reads and shows each wall time in the time zone of the
+ * organization (Europe/Berlin). A browser in a different zone makes sure that
+ * no code reads a wall time in the zone of the browser.
+ */
+test.use({ timezoneId: "America/Los_Angeles" });
+
 test("an entry is booked on a citizen, shows on their tab and is deleted again", async ({
   page,
   prisma,
@@ -52,6 +59,8 @@ test("an entry is booked on a citizen, shows on their tab and is deleted again",
 
   await createDialog.getByLabel("Strafpunkte").fill("3");
   await createDialog.getByLabel("Begründung").fill("Beschuss eines Members");
+  /** Summer time: Berlin is two hours ahead of UTC */
+  await createDialog.getByLabel("Verfällt am").fill("2030-07-15T08:15");
   await createDialog.getByRole("button", { name: "Speichern" }).click();
 
   await expect(page.getByText(SAVED_TEXT)).toBeVisible();
@@ -62,6 +71,7 @@ test("an entry is booked on a citizen, shows on their tab and is deleted again",
     createdById: keeper.entity.id,
     points: 3,
     reason: "Beschuss eines Members",
+    expiresAt: new Date("2030-07-15T06:15:00.000Z"),
     deletedAt: null,
   });
 
@@ -71,6 +81,9 @@ test("an entry is booked on a citizen, shows on their tab and is deleted again",
   await expect(
     entryRow.getByRole("cell", { name: "3", exact: true }),
   ).toBeVisible();
+  await expect(
+    entryRow.getByRole("cell", { name: "15.07.2030, 08:15", exact: true }),
+  ).toBeVisible();
 
   /**
    * The citizen's own tab lists it without repeating their name
@@ -78,6 +91,7 @@ test("an entry is booked on a citizen, shows on their tab and is deleted again",
   await page.goto(`/app/spynet/citizen/${offender.entity.id}/penalty-points`);
   const citizenTile = sectionByHeading(page, "Strafpunkte");
   await expect(citizenTile).toContainText("Beschuss eines Members");
+  await expect(citizenTile).toContainText("15.07.2030, 08:15");
   await expect(
     citizenTile.getByRole("columnheader", { name: "Citizen" }),
   ).toHaveCount(0);

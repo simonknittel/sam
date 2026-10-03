@@ -5,6 +5,7 @@ import { createAuthenticatedAction } from "@/modules/actions/utils/createAction"
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
 import { probeUploadImageDimensions } from "@/modules/common/utils/probeUploadImageDimensions";
+import { wallTimeSchema } from "@/modules/common/utils/wallTimeSchema";
 import { DISCORD_EVENT_DESCRIPTION_MAX_LENGTH } from "@/modules/discord/utils/guildScheduledEventPayload";
 import { getEventTemplateById } from "@/modules/event-templates/queries/getEventTemplateById";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
@@ -21,11 +22,7 @@ import {
   WikiPageEventScope,
 } from "@sam-monorepo/database/client";
 import type { AuditEventInput } from "@sam-monorepo/domain";
-import {
-  buildBriefingRootPageSeed,
-  ORGANIZATION_TIMEZONE,
-  wallTimeToInstant,
-} from "@sam-monorepo/domain";
+import { buildBriefingRootPageSeed } from "@sam-monorepo/domain";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import * as z from "zod";
@@ -57,10 +54,6 @@ import {
 } from "../utils/eventContainer";
 import { buildPositionTree } from "../utils/positionTree";
 
-const WALL_TIME_SCHEMA = z
-  .string()
-  .regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, "Ungültiges Datum");
-
 /** The briefing copy dominates the runtime — same bound the wiki copy uses */
 const TRANSACTION_TIMEOUT_MS = 30_000;
 
@@ -72,8 +65,8 @@ const schema = z.object({
     .trim()
     .max(DISCORD_EVENT_DESCRIPTION_MAX_LENGTH)
     .optional(),
-  startTime: WALL_TIME_SCHEMA,
-  endTime: WALL_TIME_SCHEMA,
+  startTime: wallTimeSchema,
+  endTime: wallTimeSchema,
   visibility: z.enum(EventVisibility),
   visibilityRoleIds: z
     .array(z.cuid())
@@ -117,8 +110,7 @@ export const createEvent = createAuthenticatedAction(
     /**
      * Validate the request
      */
-    const startTime = wallTimeToInstant(data.startTime, ORGANIZATION_TIMEZONE);
-    const endTime = wallTimeToInstant(data.endTime, ORGANIZATION_TIMEZONE);
+    const { startTime, endTime } = data;
     if (endTime <= startTime)
       return {
         error: "Das Ende muss nach dem Start liegen.",

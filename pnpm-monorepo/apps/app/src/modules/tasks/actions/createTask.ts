@@ -4,6 +4,7 @@ import { prisma } from "@/db";
 import { createAuthenticatedAction } from "@/modules/actions/utils/createAction";
 import { AuditEventType } from "@/modules/audit/utils/AuditEventTypes";
 import { createAuditEvents } from "@/modules/audit/utils/createAuditEvent";
+import { wallTimeSchema } from "@/modules/common/utils/wallTimeSchema";
 import { triggerNotifications } from "@/modules/notifications/utils/triggerNotification";
 import { MAX_SILC_VALUE } from "@/modules/silc/utils/silcValueLimit";
 import {
@@ -22,7 +23,7 @@ const baseSchema = z.object({
   assignedToIds: z.array(z.cuid()).max(250), // Arbitrary (untested) limit to prevent DDoS
   title: z.string().trim().max(64),
   description: z.string().trim().max(TASK_DESCRIPTION_MAX_LENGTH).optional(),
-  expiresAt: z.coerce.date().optional(),
+  expiresAt: wallTimeSchema.optional(),
   repeatable: z.coerce.number().int().min(1),
   requiredRoles: z.array(z.cuid()).max(50), // Arbitrary (untested) limit to prevent DDoS
   hiddenForOtherRoles: z.boolean(),
