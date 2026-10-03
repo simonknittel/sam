@@ -187,8 +187,7 @@ test("my ships can be added, renamed and deleted with consistent org counts", as
     "SHIP_DELETED_V2",
   ]);
   for (const auditEvent of auditEvents) {
-    // createAuditEvents stores the payload JSON-encoded inside the column
-    expect(JSON.parse(auditEvent.data as string)).toMatchObject({
+    expect(auditEvent.data).toMatchObject({
       shipId: ship!.id,
       ownerId: owner.entity.id,
     });
