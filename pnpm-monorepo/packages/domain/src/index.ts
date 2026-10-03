@@ -21,6 +21,7 @@ export {
   DELETED_CITIZEN_LABEL,
   getCitizenDisplayName,
 } from "./citizen/citizenDisplayName.js";
+export { getEventEndTime } from "./events/eventEndTime.js";
 export {
   CAN_LOGIN_CITIZEN_WHERE,
   NOTIFIABLE_CITIZEN_WHERE,
