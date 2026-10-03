@@ -31,6 +31,12 @@ export const EditableTextarea = ({
       className={className}
       displayButtonClassName="w-full"
       saveButtonClassName="flex-none"
+      /**
+       * A definite width: `field-sizing-content` sizes the textarea also in
+       * the width, thus a form which only wraps its content would follow the
+       * length of the text.
+       */
+      formClassName="min-w-0 flex-1"
       rowId={rowId}
       columnName={columnName}
       initialValue={initialValue}

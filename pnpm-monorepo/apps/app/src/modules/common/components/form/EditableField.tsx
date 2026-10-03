@@ -24,6 +24,7 @@ interface Props<Value> {
   readonly className?: string;
   readonly displayButtonClassName?: string;
   readonly saveButtonClassName?: string;
+  readonly formClassName?: string;
   readonly penClassName?: string;
   readonly rowId: string;
   readonly columnName: string;
@@ -51,6 +52,7 @@ export const EditableField = <Value,>({
   className,
   displayButtonClassName,
   saveButtonClassName,
+  formClassName,
   penClassName,
   rowId,
   columnName,
@@ -128,7 +130,7 @@ export const EditableField = <Value,>({
       {isEditing ? (
         <form
           action={formAction}
-          className="mx-1 flex items-center gap-2"
+          className={clsx("mx-1 flex items-center gap-2", formClassName)}
           ref={outsideClickRef}
         >
           <input type="hidden" name="id" value={rowId} />
