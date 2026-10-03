@@ -4,7 +4,7 @@ import clsx from "clsx";
  * The two strips of clouds. The upper clouds flow to the left and the lower
  * clouds flow to the right, thus the colours swirl like a slow current. Each
  * strip switches off the pair of clouds of the other strip, see the two
- * strengths of `background-new-year` in `globals.css`.
+ * strengths of `cloud-surface` in `globals.css`.
  */
 const STRIP_CLASS_NAMES = [
   "[--seasonal-lower-clouds:0]",
