@@ -40,7 +40,6 @@ interface Props<Value> {
   ) => Value;
   readonly renderInput: (context: RenderInputContext<Value>) => ReactNode;
   readonly renderDisplay: (value: Value) => ReactNode;
-  readonly onStartEditing?: () => void;
 }
 
 /**
@@ -60,7 +59,6 @@ export const EditableField = <Value,>({
   parseSubmittedValue,
   renderInput,
   renderDisplay,
-  onStartEditing,
 }: Props<Value>) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -76,11 +74,6 @@ export const EditableField = <Value,>({
   const setInputElement = useCallback((element: HTMLElement | null) => {
     inputElementRef.current = element;
   }, []);
-
-  const handleStartEditing = () => {
-    onStartEditing?.();
-    setIsEditing(true);
-  };
 
   /**
    * `setTimeout()` is needed because `isPending` is used for the `disabled`
@@ -162,7 +155,7 @@ export const EditableField = <Value,>({
       ) : (
         <button
           type="button"
-          onClick={handleStartEditing}
+          onClick={() => setIsEditing(true)}
           className={clsx(
             "group flex items-center gap-2 text-left",
             displayButtonClassName,
