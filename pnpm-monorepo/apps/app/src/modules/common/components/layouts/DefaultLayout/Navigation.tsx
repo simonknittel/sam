@@ -4,7 +4,7 @@ import { Button2, Button2Variant } from "@/modules/common/components/Button2";
 import { Link } from "@/modules/common/components/Link";
 import clsx from "clsx";
 import { usePathname } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
 import { FaBars, FaExternalLinkAlt } from "react-icons/fa";
 
 export interface Page {
@@ -20,21 +20,36 @@ interface Props {
 
 export const Navigation = ({ pages }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
+  const navigationId = useId();
+
+  /**
+   * The navigation lives in a layout and survives navigations. Thus the
+   * mobile navigation must close itself after a link was followed.
+   */
+  const pathname = usePathname();
+  const [closedForPathname, setClosedForPathname] = useState(pathname);
+  if (pathname !== closedForPathname) {
+    setClosedForPathname(pathname);
+    setIsOpen(false);
+  }
 
   return (
     <>
       <div className="lg:hidden">
         <Button2
           type="button"
-          onClick={() => setIsOpen((prev) => !prev)}
+          onClick={() => setIsOpen((previousIsOpen) => !previousIsOpen)}
           variant={Button2Variant.Secondary}
+          aria-expanded={isOpen}
+          aria-controls={navigationId}
         >
           <FaBars />
-          <span className="hidden sm:inline">Navigation</span>
+          <span className="sr-only sm:not-sr-only">Navigation</span>
         </Button2>
       </div>
 
       <nav
+        id={navigationId}
         className={clsx(
           "flex-col gap-0.5 border-b border-neutral-800 bg-black px-2 pb-2 lg:flex-row lg:border-b-0 lg:bg-transparent lg:px-0 lg:pb-0",
           {

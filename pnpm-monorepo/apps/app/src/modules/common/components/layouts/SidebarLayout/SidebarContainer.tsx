@@ -2,7 +2,7 @@
 
 import clsx from "clsx";
 import { usePathname } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
 import { FaFilter } from "react-icons/fa";
 import { Button2, Button2Variant } from "../../Button2";
 
@@ -22,6 +22,7 @@ export const SidebarContainer = ({
   mobileToggleIcon = <FaFilter />,
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
+  const contentId = useId();
 
   /**
    * When the container lives in a layout it survives navigations, so the
@@ -39,15 +40,18 @@ export const SidebarContainer = ({
     <div className={clsx("flex flex-col gap-0.5", className)}>
       <Button2
         type="button"
-        onClick={() => setIsOpen((prev) => !prev)}
+        onClick={() => setIsOpen((previousIsOpen) => !previousIsOpen)}
         variant={Button2Variant.Secondary}
         className="w-full md:hidden"
+        aria-expanded={isOpen}
+        aria-controls={contentId}
       >
         {mobileToggleIcon}
         {mobileToggleLabel}
       </Button2>
 
       <div
+        id={contentId}
         className={clsx("flex flex-col gap-0.5", {
           "hidden md:flex": !isOpen,
         })}
