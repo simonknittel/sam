@@ -11,6 +11,7 @@ export const getEvents = async () => {
       headers: new Headers({
         Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`,
       }),
+      signal: AbortSignal.timeout(5000),
     },
   );
 

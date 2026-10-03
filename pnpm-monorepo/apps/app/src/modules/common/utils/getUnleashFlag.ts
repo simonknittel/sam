@@ -21,6 +21,7 @@ export const getUnleashFlag = cache(
 
       const definitions = await getDefinitions({
         fetchOptions: {
+          signal: AbortSignal.timeout(5000),
           next: { revalidate: env.UNLEASH_REVALIDATE_SECONDS },
         },
       });

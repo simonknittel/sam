@@ -55,6 +55,7 @@ export const getLeaderboard = (mode: "SB", season: string, pages: number) => {
             headers: {
               "Content-Type": "application/json",
             },
+            signal: AbortSignal.timeout(5000),
           },
         );
 

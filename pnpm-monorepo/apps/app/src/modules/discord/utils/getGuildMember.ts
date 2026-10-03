@@ -9,6 +9,7 @@ export const getGuildMember = async (access_token: string) => {
     `${env.DISCORD_API_BASE_URL}/users/@me/guilds/${env.DISCORD_GUILD_ID}/member`,
     {
       headers,
+      signal: AbortSignal.timeout(5000),
       next: {
         revalidate: 0,
       },
