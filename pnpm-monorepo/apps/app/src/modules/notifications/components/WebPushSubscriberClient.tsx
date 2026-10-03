@@ -54,11 +54,14 @@ export const WebPushSubscriberClient = ({
       /**
        * Subscribe to push notifications
        */
-      let registration;
       let subscription;
       try {
-        registration =
-          await navigator.serviceWorker.register("/service-worker.js");
+        await navigator.serviceWorker.register("/service-worker.js");
+        /**
+         * A new registration has no active worker yet, but subscribe() needs
+         * one. ready waits for it.
+         */
+        const registration = await navigator.serviceWorker.ready;
 
         subscription = await registration.pushManager.getSubscription();
         await subscription?.unsubscribe();
