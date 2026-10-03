@@ -91,7 +91,7 @@ const createWorkerDatabase = async (
       adminPrisma.$executeRawUnsafe(
         `CREATE DATABASE "${databaseName}" TEMPLATE "${templateDatabase}"`,
       ),
-    ).toPass({ intervals: [500, 1_000, 1_500, 2_000] });
+    ).toPass({ intervals: [500, 1_000, 1_500, 2_000], timeout: 10_000 });
   } finally {
     await adminPrisma.$disconnect();
   }
@@ -115,7 +115,7 @@ const truncateAllTables = async (prisma: PrismaClient) => {
    */
   await expect(() =>
     prisma.$executeRawUnsafe(`TRUNCATE TABLE ${quotedNames} CASCADE`),
-  ).toPass({ intervals: [250, 500] });
+  ).toPass({ intervals: [250, 500], timeout: 5_000 });
 };
 
 export const test = base.extend<Fixtures, WorkerFixtures>({
