@@ -194,7 +194,7 @@ test("an inherited role hands its permissions down to the inheriting one", async
   await expectAuditEvents(prisma, ["ROLE_INHERITANCE_UPDATED"]);
 });
 
-test("the permission matrix grants a permission with a single checkbox", async ({
+test("the permission matrix grants and revokes a permission with a single checkbox", async ({
   page,
   prisma,
   signIn,
@@ -220,17 +220,27 @@ test("the permission matrix grants a permission with a single checkbox", async (
   await toggleLabel(page, taskReadCheckbox).click();
   await expect(taskReadCheckbox).toBeChecked();
 
-  await expect
-    .poll(() =>
-      prisma.permissionString.count({
-        where: { roleId: member.role.id, permissionString: "task;read" },
-      }),
-    )
-    .toBe(1);
+  const countTaskReadPermissions = () =>
+    prisma.permissionString.count({
+      where: { roleId: member.role.id, permissionString: "task;read" },
+    });
+  await expect.poll(countTaskReadPermissions).toBe(1);
 
   await switchUser(member.user);
   await page.goto("/app/tasks");
   await expect(page.getByText("Keine Tasks gefunden")).toBeVisible();
+
+  await switchUser(admin.user);
+  await page.goto("/app/iam/permission-matrix");
+  await waitForAppShellHydration(page);
+  await expect(taskReadCheckbox).toBeChecked();
+  await toggleLabel(page, taskReadCheckbox).click();
+  await expect(taskReadCheckbox).not.toBeChecked();
+  await expect.poll(countTaskReadPermissions).toBe(0);
+
+  await switchUser(member.user);
+  await page.goto("/app/tasks");
+  await expect(page.getByText(FORBIDDEN_TEXT)).toBeVisible();
 });
 
 test("two tabs that grant the same permission create one row", async ({
