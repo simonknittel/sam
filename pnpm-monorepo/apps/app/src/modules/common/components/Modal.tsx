@@ -5,7 +5,6 @@ import clsx from "clsx";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { FaRegTimesCircle } from "react-icons/fa";
-import styles from "./Modal.module.css";
 
 interface Props {
   readonly className?: string;
@@ -42,8 +41,7 @@ export default function Modal({
         <div className="fixed inset-0 z-30 flex cursor-pointer items-start justify-center px-4 pt-4 pb-20 lg:items-center lg:pb-4">
           <Dialog.Popup
             className={clsx(
-              "max-h-full max-w-full cursor-auto overflow-auto rounded-primary bg-neutral-800 text-neutral-50 outline-hidden",
-              styles.modal,
+              "max-h-full max-w-full cursor-auto overflow-auto rounded-primary bg-neutral-800 text-neutral-50 outline-hidden transition duration-200 starting:scale-90 starting:opacity-0",
               className,
             )}
           >
