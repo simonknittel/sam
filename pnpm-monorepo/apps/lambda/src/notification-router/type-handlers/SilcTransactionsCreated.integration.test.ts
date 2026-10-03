@@ -39,6 +39,7 @@ describe("SilcTransactionsCreatedHandler", () => {
       expect.objectContaining({
         receiverId: citizen.id,
         notificationType: "silc_transaction_created",
+        body: "+100 SILC - Test",
       }),
     ]);
   });

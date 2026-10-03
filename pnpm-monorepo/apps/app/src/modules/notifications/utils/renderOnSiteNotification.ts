@@ -144,7 +144,7 @@ export const renderOnSiteNotification = (
     case "silc_transaction_created":
       return {
         title: "SILC-Transaktion erhalten",
-        body: `${parsed.payload.value >= 0 ? "+" : "-"}${Math.abs(parsed.payload.value).toLocaleString("de")} SILC${parsed.payload.description ? ` - ${parsed.payload.description}` : ""}`,
+        body: `${parsed.payload.value.toLocaleString("de", { signDisplay: "always" })} SILC${parsed.payload.description ? ` - ${parsed.payload.description}` : ""}`,
         url: null,
         appTitle,
         decoration: null,
