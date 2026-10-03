@@ -169,8 +169,11 @@ test.describe("in a browser outside the time zone of the organization", () => {
     await createModal.getByRole("button", { name: "Weiter" }).click();
     await createModal.getByLabel("Text", { exact: true }).fill("Ruhm und Ehre");
     await createModal.getByRole("button", { name: "Weiter" }).click();
-    /** Winter time: Berlin is one hour ahead of UTC */
-    await createModal.getByLabel("Ablaufdatum").fill("2030-01-15T20:30");
+    /**
+     * Winter time: Berlin is one hour ahead of UTC. The year is far in the
+     * future, thus the task does not expire and stays open and editable.
+     */
+    await createModal.getByLabel("Ablaufdatum").fill("2099-01-15T20:30");
     await createModal.getByRole("button", { name: "Speichern" }).click();
     await expect(page.getByText(SAVED_TEXT)).toBeVisible();
 
@@ -180,7 +183,7 @@ test.describe("in a browser outside the time zone of the organization", () => {
       });
       return task.expiresAt?.toISOString();
     };
-    expect(await readStoredExpiresAt()).toBe("2030-01-15T19:30:00.000Z");
+    expect(await readStoredExpiresAt()).toBe("2099-01-15T19:30:00.000Z");
 
     await page.getByRole("link", { name: /Frist einhalten/ }).click();
     const expiresAtInput = page.locator('input[name="expiresAt"]');
@@ -191,35 +194,35 @@ test.describe("in a browser outside the time zone of the organization", () => {
      * A save of the unchanged value keeps the time
      */
     await clickUntilVisible(
-      expiresAtEditButton("15.01.2030, 20:30"),
+      expiresAtEditButton("15.01.2099, 20:30"),
       expiresAtInput,
     );
-    await expect(expiresAtInput).toHaveValue("2030-01-15T20:30");
+    await expect(expiresAtInput).toHaveValue("2099-01-15T20:30");
     await saveInlineEditor(page);
     await expect(expiresAtInput).not.toBeVisible();
-    await expect(expiresAtEditButton("15.01.2030, 20:30")).toBeVisible();
-    expect(await readStoredExpiresAt()).toBe("2030-01-15T19:30:00.000Z");
+    await expect(expiresAtEditButton("15.01.2099, 20:30")).toBeVisible();
+    expect(await readStoredExpiresAt()).toBe("2099-01-15T19:30:00.000Z");
 
     /**
      * A new value keeps the entered time. Summer time: Berlin is two hours
      * ahead of UTC.
      */
     await clickUntilVisible(
-      expiresAtEditButton("15.01.2030, 20:30"),
+      expiresAtEditButton("15.01.2099, 20:30"),
       expiresAtInput,
     );
-    await expiresAtInput.fill("2030-07-15T08:15");
+    await expiresAtInput.fill("2099-07-15T08:15");
     await saveInlineEditor(page);
     await expect(expiresAtInput).not.toBeVisible();
-    await expect(expiresAtEditButton("15.07.2030, 08:15")).toBeVisible();
-    expect(await readStoredExpiresAt()).toBe("2030-07-15T06:15:00.000Z");
+    await expect(expiresAtEditButton("15.07.2099, 08:15")).toBeVisible();
+    expect(await readStoredExpiresAt()).toBe("2099-07-15T06:15:00.000Z");
 
     await page.reload();
     await clickUntilVisible(
-      expiresAtEditButton("15.07.2030, 08:15"),
+      expiresAtEditButton("15.07.2099, 08:15"),
       expiresAtInput,
     );
-    await expect(expiresAtInput).toHaveValue("2030-07-15T08:15");
+    await expect(expiresAtInput).toHaveValue("2099-07-15T08:15");
   });
 });
 
