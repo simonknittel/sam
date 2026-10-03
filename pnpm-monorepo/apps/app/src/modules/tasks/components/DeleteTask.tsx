@@ -16,8 +16,10 @@ export const DeleteTask = ({ className, task }: Props) => {
       className={className}
       action={deleteTask}
       hiddenFields={[{ name: "id", value: task.id }]}
-      trigger={(isPending) => (
+      trigger={({ isPending, openDialog }) => (
         <button
+          type="button"
+          onClick={openDialog}
           disabled={isPending}
           className="flex h-full items-center px-2 text-brand-red-500 hover:text-brand-red-300 enabled:cursor-pointer"
           title="Task löschen"

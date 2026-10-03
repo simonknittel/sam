@@ -22,15 +22,16 @@ export const RestoreEventTemplateButton = ({
     <ConfirmActionButton
       action={restoreEventTemplate}
       hiddenFields={[{ name: "templateId", value: templateId }]}
-      trigger={(isPending) =>
+      trigger={({ isPending, openDialog }) =>
         withLabel ? (
-          <Button2 type="button" disabled={isPending}>
+          <Button2 type="button" onClick={openDialog} disabled={isPending}>
             {isPending ? <AsciiSpinner /> : <FaTrashRestore />}
             Wiederherstellen
           </Button2>
         ) : (
           <Button2
             type="button"
+            onClick={openDialog}
             variant={Button2Variant.IconOnly}
             tooltip="Wiederherstellen"
             disabled={isPending}

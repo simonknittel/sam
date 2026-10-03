@@ -24,8 +24,10 @@ export const EndPayoutButton = ({ className, cycleData }: Props) => {
       className={className}
       action={endPayout}
       hiddenFields={[{ name: "id", value: cycleData.cycle.id }]}
-      trigger={(isPending) => (
+      trigger={({ isPending, openDialog }) => (
         <Button2
+          type="button"
+          onClick={openDialog}
           disabled={cycleData.currentPhase !== CyclePhase.Payout || isPending}
           variant={Button2Variant.Secondary}
         >

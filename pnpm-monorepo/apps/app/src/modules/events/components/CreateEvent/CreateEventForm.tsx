@@ -47,7 +47,6 @@ export const CreateEventForm = ({
       onSuccess,
     });
   const templateSelectId = useId();
-  const formId = useId();
   const [selectedTemplateId, setSelectedTemplateId] = useState(
     templateId ?? NO_TEMPLATE,
   );
@@ -95,7 +94,7 @@ export const CreateEventForm = ({
     visibility === EventVisibility.RESTRICTED && isPublishing;
 
   return (
-    <form action={formAction} id={formId} className={clsx(className)}>
+    <form action={formAction} className={clsx(className)}>
       {templates && templates.length > 0 && (
         <div className="mb-4">
           <label htmlFor={templateSelectId} className="mb-1 block">
@@ -183,17 +182,17 @@ export const CreateEventForm = ({
 
       {needsRestrictedConfirmation ? (
         <RestrictedDiscordPublishDialog
-          formId={formId}
-          trigger={
+          trigger={(openDialog) => (
             <Button2
               type="button"
+              onClick={openDialog}
               disabled={isPending}
               className="mt-4 ml-auto"
             >
               {isPending ? <AsciiSpinner /> : <FaSave />}
               Speichern
             </Button2>
-          }
+          )}
           description="Das Event ist in dieser App nur für ausgewählte Rollen sichtbar. Auf Discord sehen es alle Mitglieder des Servers — inklusive Titel, Beschreibung und Zeitraum."
           confirmLabel="Erstellen und veröffentlichen"
         />

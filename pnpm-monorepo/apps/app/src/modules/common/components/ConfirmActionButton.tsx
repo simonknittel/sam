@@ -2,23 +2,17 @@
 
 import type { ActionResponse } from "@/modules/actions/utils/createAction";
 import { useAction } from "@/modules/actions/utils/useAction";
-import { useId, type ReactElement, type ReactNode } from "react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "./AlertDialog";
-import { AsciiSpinner } from "./AsciiSpinner";
+import { useState, type ReactElement, type ReactNode } from "react";
+import { AlertDialog } from "./AlertDialog";
 
 interface HiddenField {
   readonly name: string;
   readonly value: string;
+}
+
+interface TriggerRenderProps {
+  readonly isPending: boolean;
+  readonly openDialog: () => void;
 }
 
 interface Props {
@@ -30,21 +24,17 @@ interface Props {
   readonly action: (formData: FormData) => Promise<ActionResponse | void>;
   readonly hiddenFields?: readonly HiddenField[];
   /**
-   * Renders the button opening the dialog. Receives the pending state so it
-   * can disable itself and show a spinner while the action runs. Rendered
-   * via `asChild`, so it must be a single button-like element.
+   * Renders the button that opens the dialog. The button must have
+   * `type="button"` and `onClick={openDialog}`. While the action runs,
+   * `isPending` is true: the button can disable itself and show a spinner.
    */
-  readonly trigger: (isPending: boolean) => ReactElement;
+  readonly trigger: (renderProps: TriggerRenderProps) => ReactElement;
   readonly title: string;
   readonly description: ReactNode;
   readonly confirmLabel: string;
   readonly confirmDisabled?: boolean;
-  /**
-   * Extra dialog content between description and footer, e.g. additional
-   * form fields. The dialog renders in a portal outside the form element,
-   * so form fields must reference the form via the provided id.
-   */
-  readonly children?: ReactNode | ((formId: string) => ReactNode);
+  /** Dialog content between description and buttons, for example fields */
+  readonly children?: ReactNode;
   readonly onSuccess?: () => void;
 }
 
@@ -67,10 +57,10 @@ export const ConfirmActionButton = ({
   const { formAction, isPending } = useAction(action, {
     onSuccess: onSuccess ? () => onSuccess() : undefined,
   });
-  const formId = useId();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   return (
-    <form action={formAction} id={formId} className={className}>
+    <form action={formAction} className={className}>
       {hiddenFields?.map((field) => (
         <input
           key={field.name}
@@ -80,30 +70,17 @@ export const ConfirmActionButton = ({
         />
       ))}
 
-      <AlertDialog>
-        <AlertDialogTrigger asChild>{trigger(isPending)}</AlertDialogTrigger>
+      {trigger({ isPending, openDialog: () => setIsDialogOpen(true) })}
 
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{title}</AlertDialogTitle>
-            <AlertDialogDescription>{description}</AlertDialogDescription>
-          </AlertDialogHeader>
-
-          {typeof children === "function" ? children(formId) : children}
-
-          <AlertDialogFooter>
-            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-
-            <AlertDialogAction
-              type="submit"
-              form={formId}
-              disabled={confirmDisabled}
-            >
-              {isPending && <AsciiSpinner />}
-              {confirmLabel}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
+      <AlertDialog
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        title={title}
+        description={description}
+        confirmLabel={confirmLabel}
+        confirmDisabled={confirmDisabled}
+      >
+        {children}
       </AlertDialog>
     </form>
   );

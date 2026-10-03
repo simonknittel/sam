@@ -17,8 +17,13 @@ export const DeleteSettingsRecord = ({ action, record }: Props) => {
     <ConfirmActionButton
       action={action}
       hiddenFields={[{ name: "id", value: record.id }]}
-      trigger={(isPending) => (
-        <Button disabled={isPending} variant="tertiary">
+      trigger={({ isPending, openDialog }) => (
+        <Button
+          type="button"
+          onClick={openDialog}
+          disabled={isPending}
+          variant="tertiary"
+        >
           {isPending ? <AsciiSpinner /> : <FaTrash />} Löschen
         </Button>
       )}

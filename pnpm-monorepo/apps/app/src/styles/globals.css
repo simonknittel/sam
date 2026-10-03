@@ -455,6 +455,14 @@
   }
 }
 
+/**
+ * An open confirmation dialog (see `AlertDialog`) makes the page inert, but
+ * the page still scrolls below the backdrop. This stops the scroll.
+ */
+:root:has(dialog[role="alertdialog"]:modal) {
+  overflow: hidden;
+}
+
 /* Dark scrollbars to match the theme (thin thumb on a transparent track). */
 * {
   scrollbar-width: thin;

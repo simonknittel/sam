@@ -34,12 +34,13 @@ export const OtherTableDelete = ({ log }: Props) => {
   return (
     <ConfirmActionButton
       action={deleteLog}
-      trigger={(isPending) => (
+      trigger={({ isPending, openDialog }) => (
         <Button
           title="Eintrag löschen"
           disabled={isPending}
           variant="tertiary"
           type="button"
+          onClick={openDialog}
         >
           {isPending ? <AsciiSpinner /> : <FaTrash />} Löschen
         </Button>

@@ -21,8 +21,13 @@ export const DeleteManufacturerButton = ({
       className={className}
       action={deleteManufacturer}
       hiddenFields={[{ name: "id", value: manufacturer.id }]}
-      trigger={(isPending) => (
-        <Button variant="tertiary" disabled={isPending}>
+      trigger={({ isPending, openDialog }) => (
+        <Button
+          type="button"
+          onClick={openDialog}
+          variant="tertiary"
+          disabled={isPending}
+        >
           {isPending ? <AsciiSpinner /> : <FaTrash />} Löschen
         </Button>
       )}

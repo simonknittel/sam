@@ -15,7 +15,6 @@ import {
 } from "@/modules/discord/utils/guildScheduledEventPayload";
 import { EventVisibility } from "@sam-monorepo/database/browser";
 import clsx from "clsx";
-import { useId } from "react";
 import { FaDiscord, FaTrash } from "react-icons/fa";
 import { publishEventToDiscord } from "../actions/publishEventToDiscord";
 import { unpublishEventFromDiscord } from "../actions/unpublishEventFromDiscord";
@@ -130,9 +129,10 @@ const PublishedState = ({
         <ConfirmActionButton
           action={unpublishEventFromDiscord}
           hiddenFields={[{ name: "eventId", value: event.id }]}
-          trigger={(isPending) => (
+          trigger={({ isPending, openDialog }) => (
             <Button2
               type="button"
+              onClick={openDialog}
               variant={Button2Variant.Secondary}
               disabled={isPending}
             >
@@ -171,12 +171,11 @@ const UnpublishedState = ({
   const { state, formAction, isPending } = useAction(publishEventToDiscord, {
     errorToast: false,
   });
-  const formId = useId();
   const isRestricted = event.visibility === EventVisibility.RESTRICTED;
 
   return (
     <Tile heading="Discord" className={clsx(className)}>
-      <form action={formAction} id={formId}>
+      <form action={formAction}>
         <input type="hidden" name="eventId" value={event.id} />
 
         <p className="text-sm text-neutral-500">
@@ -193,17 +192,17 @@ const UnpublishedState = ({
 
         {isRestricted ? (
           <RestrictedDiscordPublishDialog
-            formId={formId}
-            trigger={
+            trigger={(openDialog) => (
               <Button2
                 type="button"
+                onClick={openDialog}
                 disabled={isPending}
                 className="mt-4 ml-auto"
               >
                 {isPending ? <AsciiSpinner /> : <FaDiscord />}
                 Auf Discord veröffentlichen
               </Button2>
-            }
+            )}
             description={
               <>
                 Das Event <span className="font-bold">{event.name}</span> ist in

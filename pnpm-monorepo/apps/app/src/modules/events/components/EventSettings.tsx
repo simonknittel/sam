@@ -155,8 +155,12 @@ export const EventSettings = ({
         <ConfirmActionButton
           action={deleteEvent}
           hiddenFields={[{ name: "eventId", value: event.id }]}
-          trigger={(isDeletePending) => (
-            <Button2 type="button" disabled={isDeletePending}>
+          trigger={({ isPending: isDeletePending, openDialog }) => (
+            <Button2
+              type="button"
+              onClick={openDialog}
+              disabled={isDeletePending}
+            >
               {isDeletePending ? <AsciiSpinner /> : <FaTrash />}
               Event löschen
             </Button2>

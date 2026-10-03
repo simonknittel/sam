@@ -15,8 +15,10 @@ export const UnbanUser = ({ userId }: Props) => {
     <ConfirmActionButton
       action={unbanUserAction}
       hiddenFields={[{ name: "userId", value: userId }]}
-      trigger={(isPending) => (
+      trigger={({ isPending, openDialog }) => (
         <Button2
+          type="button"
+          onClick={openDialog}
           variant={Button2Variant.IconOnly}
           disabled={isPending}
           tooltip="Benutzer entsperren"

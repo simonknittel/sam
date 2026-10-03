@@ -18,8 +18,13 @@ export const DeleteSeriesButton = ({ className, series }: Props) => {
       className={className}
       action={deleteSeries}
       hiddenFields={[{ name: "id", value: series.id }]}
-      trigger={(isPending) => (
-        <Button variant="tertiary" disabled={isPending}>
+      trigger={({ isPending, openDialog }) => (
+        <Button
+          type="button"
+          onClick={openDialog}
+          variant="tertiary"
+          disabled={isPending}
+        >
           {isPending ? <AsciiSpinner /> : <FaTrash />} Löschen
         </Button>
       )}

@@ -34,8 +34,10 @@ export const RemoveEventParticipant = ({
         { name: "eventId", value: eventId },
         { name: "citizenId", value: citizen.id },
       ]}
-      trigger={(isPending) => (
+      trigger={({ isPending, openDialog }) => (
         <button
+          type="button"
+          onClick={openDialog}
           disabled={isPending}
           className="flex size-8 items-center justify-center rounded-secondary text-brand-red-500 hover:text-brand-red-300 focus-visible:text-brand-red-300 active:text-brand-red-300 enabled:cursor-pointer disabled:opacity-50"
           title="Teilnehmer entfernen"
@@ -48,19 +50,15 @@ export const RemoveEventParticipant = ({
       description={`${getCitizenDisplayName(citizen)} wird vom Event abgemeldet und benachrichtigt.`}
       confirmLabel="Entfernen"
     >
-      {(formId) => (
-        <div>
-          <Textarea
-            label="Grund (optional)"
-            hint="max. 500 Zeichen"
-            name="reason"
-            maxLength={500}
-            classNameTextarea="h-20"
-            form={formId}
-            autoFocus
-          />
-        </div>
-      )}
+      <div>
+        <Textarea
+          label="Grund (optional)"
+          hint="max. 500 Zeichen"
+          name="reason"
+          maxLength={500}
+          classNameTextarea="h-20"
+        />
+      </div>
     </ConfirmActionButton>
   );
 };

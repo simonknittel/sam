@@ -34,9 +34,10 @@ export const DeleteUploadButton = ({
       className={className}
       action={deleteUpload}
       hiddenFields={[{ name: "id", value: uploadId }]}
-      trigger={(isPending) => (
+      trigger={({ isPending, openDialog }) => (
         <Button
           type="button"
+          onClick={openDialog}
           variant="tertiary"
           disabled={isPending}
           aria-label={`"${fileName}" löschen`}

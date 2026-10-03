@@ -19,11 +19,13 @@ export const DeleteEventPosition = ({ className, position }: Props) => {
       className={className}
       action={deleteEventPosition}
       hiddenFields={[{ name: "id", value: position.id }]}
-      trigger={(isPending) => (
+      trigger={({ isPending, openDialog }) => (
         <Tooltip
           asChild
           triggerChildren={
             <button
+              type="button"
+              onClick={openDialog}
               disabled={isPending}
               className="flex items-center px-2 text-brand-red-500 hover:cursor-pointer hover:text-brand-red-300"
               aria-label={LABEL}

@@ -16,8 +16,8 @@ export const DeleteEventTemplateButton = ({ templateId, name }: Props) => {
     <ConfirmActionButton
       action={deleteEventTemplate}
       hiddenFields={[{ name: "templateId", value: templateId }]}
-      trigger={(isPending) => (
-        <Button2 type="button" disabled={isPending}>
+      trigger={({ isPending, openDialog }) => (
+        <Button2 type="button" onClick={openDialog} disabled={isPending}>
           {isPending ? <AsciiSpinner /> : <FaTrash />}
           Löschen
         </Button2>

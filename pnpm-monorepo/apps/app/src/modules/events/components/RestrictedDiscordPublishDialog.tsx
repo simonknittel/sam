@@ -1,23 +1,14 @@
 "use client";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/modules/common/components/AlertDialog";
-import type { ReactElement, ReactNode } from "react";
+import { AlertDialog } from "@/modules/common/components/AlertDialog";
+import { useState, type ReactNode } from "react";
 
 interface Props {
-  /** Rendered via `asChild`, so it must be a single button-like element */
-  readonly trigger: ReactElement;
-  /** The form the confirmation submits, by id */
-  readonly formId: string;
+  /**
+   * Renders the button that opens the dialog. The button must have
+   * `type="button"` and `onClick={openDialog}`.
+   */
+  readonly trigger: (openDialog: () => void) => ReactNode;
   readonly description: ReactNode;
   readonly confirmLabel: string;
 }
@@ -26,31 +17,27 @@ interface Props {
  * A restricted event is visible to selected roles in the app but to the
  * whole guild on Discord, so publishing one is never a single click. Shared
  * by the settings card and the create form — both publish, and both would
- * otherwise widen the audience without saying so.
+ * otherwise widen the audience without saying so. Render it inside the form
+ * that it submits.
  */
 export const RestrictedDiscordPublishDialog = ({
   trigger,
-  formId,
   description,
   confirmLabel,
-}: Props) => (
-  <AlertDialog>
-    <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
+}: Props) => {
+  const [isOpen, setIsOpen] = useState(false);
 
-    <AlertDialogContent>
-      <AlertDialogHeader>
-        <AlertDialogTitle>
-          Eingeschränktes Event auf Discord veröffentlichen?
-        </AlertDialogTitle>
-        <AlertDialogDescription>{description}</AlertDialogDescription>
-      </AlertDialogHeader>
+  return (
+    <>
+      {trigger(() => setIsOpen(true))}
 
-      <AlertDialogFooter>
-        <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-        <AlertDialogAction type="submit" form={formId}>
-          {confirmLabel}
-        </AlertDialogAction>
-      </AlertDialogFooter>
-    </AlertDialogContent>
-  </AlertDialog>
-);
+      <AlertDialog
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        title="Eingeschränktes Event auf Discord veröffentlichen?"
+        description={description}
+        confirmLabel={confirmLabel}
+      />
+    </>
+  );
+};

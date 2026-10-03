@@ -19,8 +19,13 @@ export const CitizenTableDelete = ({ entity }: Props) => {
     <ConfirmActionButton
       action={deleteCitizen}
       hiddenFields={[{ name: "id", value: entity.id }]}
-      trigger={(isPending) => (
-        <Button disabled={isPending} variant="tertiary">
+      trigger={({ isPending, openDialog }) => (
+        <Button
+          type="button"
+          onClick={openDialog}
+          disabled={isPending}
+          variant="tertiary"
+        >
           {isPending ? <AsciiSpinner /> : <FaTrash />} Löschen
         </Button>
       )}

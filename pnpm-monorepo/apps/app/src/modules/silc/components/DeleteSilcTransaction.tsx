@@ -16,8 +16,10 @@ export const DeleteSilcTransaction = ({ className, id }: Props) => {
       className={className}
       action={deleteSilcTransaction}
       hiddenFields={[{ name: "id", value: id }]}
-      trigger={(isPending) => (
+      trigger={({ isPending, openDialog }) => (
         <button
+          type="button"
+          onClick={openDialog}
           disabled={isPending}
           className="flex items-center text-xs text-brand-red-500 hover:cursor-pointer hover:text-brand-red-300"
           title="Löschen"
