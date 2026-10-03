@@ -3,9 +3,20 @@ import { authorize } from "@/modules/auth/server";
 import { isOpenAIEnabled } from "@/modules/common/utils/isOpenAIEnabled";
 import { log } from "@/modules/logging";
 import { TRPCError } from "@trpc/server";
+import { zodResponseFormat } from "openai/helpers/zod";
 import type { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 import * as z from "zod";
-import { protectedProcedure } from "../../trpc";
+import { protectedProcedure, toTrpcError } from "../../trpc";
+
+/**
+ * The prompt asks for five names. The limit leaves room for a model that
+ * gives some more, but stops a response with an unlimited list.
+ */
+const MAXIMUM_ROLE_NAMES = 10;
+
+const responseSchema = z.object({
+  roleNames: z.array(z.string()).max(MAXIMUM_ROLE_NAMES),
+});
 
 export const getRoleNameSuggestions = protectedProcedure.query(
   async ({ ctx }) => {
@@ -51,53 +62,31 @@ export const getRoleNameSuggestions = protectedProcedure.query(
       { role: "user", content: existingRoleNames.join(", ") },
     ] satisfies ChatCompletionMessageParam[];
 
-    const chatCompletion = await openai.chat.completions.create({
-      messages,
-      model: "openai/gpt-5.4-mini",
-      max_tokens: 1024,
-      response_format: {
-        type: "json_object",
-      },
-    });
-
-    log.info("Role name suggestions", {
-      messages,
-      usage: chatCompletion.usage,
-    });
-
     try {
-      if (!chatCompletion.choices[0]?.message.content)
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to generate role names",
-        });
+      const chatCompletion = await openai.chat.completions.parse({
+        messages,
+        model: "openai/gpt-5.4-mini",
+        max_tokens: 1024,
+        response_format: zodResponseFormat(responseSchema, "role_names"),
+      });
 
-      const parsedJson: unknown = JSON.parse(
-        chatCompletion.choices[0].message.content,
-      );
+      log.info("Role name suggestions", {
+        messages,
+        usage: chatCompletion.usage,
+      });
 
-      const response = z
-        .object({
-          roleNames: z.array(z.string()),
-        })
-        .parse(parsedJson);
+      const roleNames = chatCompletion.choices[0]?.message.parsed?.roleNames;
+      if (!roleNames) throw new Error("The response contains no role names");
 
       return {
         prompt: {
           system: messages[0].content,
           user: messages[1].content,
         },
-        roleNames: response.roleNames,
+        roleNames,
       };
     } catch (error) {
-      log.error("Failed to parse role names", {
-        error,
-      });
-
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to generate role names",
-      });
+      throw toTrpcError(error, "Failed to generate role names");
     }
   },
 );
