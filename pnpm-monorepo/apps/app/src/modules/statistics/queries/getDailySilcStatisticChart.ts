@@ -1,7 +1,6 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import { startOfDay } from "date-fns";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
 import {
@@ -42,8 +41,7 @@ export const getDailySilcStatisticChart = cache(
     const totalsByDate = new Map<string, number>();
 
     for (const transaction of transactions) {
-      const createdAt = startOfDay(transaction.createdAt);
-      const key = formatDateKey(createdAt);
+      const key = formatDateKey(transaction.createdAt);
       const current = totalsByDate.get(key) ?? 0;
       totalsByDate.set(key, current + transaction.value);
     }

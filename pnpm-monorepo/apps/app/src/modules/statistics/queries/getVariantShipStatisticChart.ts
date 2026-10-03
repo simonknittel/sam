@@ -21,7 +21,7 @@ export const getVariantShipStatisticChart = cache(
     const rows = await prisma.variantShipCount.findMany({
       where: {
         day: {
-          gte: options.fromDate,
+          gte: options.fromDateColumnValue,
         },
       },
       select: {

@@ -1,5 +1,10 @@
-import { addDays, startOfDay, subDays } from "date-fns";
-import { formatInTimeZone } from "date-fns-tz";
+import {
+  getLocalDate,
+  instantToWallTime,
+  ORGANIZATION_TIMEZONE,
+  toDateColumnValue,
+  wallTimeToInstant,
+} from "@sam-monorepo/domain";
 
 interface ChartConfiguration {
   /**
@@ -19,12 +24,22 @@ interface MultiLineRecord {
 
 interface AxisPoint {
   key: string;
+  /** The `@db.Date` value of the chart day */
   timestamp: number;
 }
 
+/**
+ * The chart days are the days of the time zone of the organization. The
+ * chart ends with yesterday.
+ */
 interface NormalizedOptions {
+  /** The start of the first chart day */
   fromDate: Date;
+  /** The `@db.Date` value of the first chart day */
+  fromDateColumnValue: Date;
+  /** The start of today */
   toDate: Date;
+  /** The start of tomorrow */
   toDateExclusive: Date;
   axisPoints: AxisPoint[];
 }
@@ -62,27 +77,43 @@ interface ChartOptions {
 }
 
 const DEFAULT_DAYS = 365;
-const MIN_AXIS_DATE = startOfDay(new Date("2025-12-02"));
 
 /**
- * The chart day of a moment in Europe/Berlin. The value of a `@db.Date`
- * column (midnight UTC) gets the key of its own day, because Europe/Berlin
- * is always ahead of UTC.
+ * A chart day is the `@db.Date` value of the day: midnight UTC. UTC has no
+ * daylight saving time, thus the next day is exactly 24 hours later.
+ */
+const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+
+/** The first day with statistics. The charts show no day before it. */
+const FIRST_STATISTICS_DAY = toDateColumnValue({
+  year: 2025,
+  month: 12,
+  day: 2,
+});
+
+/**
+ * The chart day of a moment in the time zone of the organization. The value
+ * of a `@db.Date` column (midnight UTC) gets the key of its own day, because
+ * the time zone of the organization is always ahead of UTC.
  */
 export const formatDateKey = (date: Date) =>
-  formatInTimeZone(date, "Europe/Berlin", "yyyy-MM-dd");
+  instantToWallTime(date, ORGANIZATION_TIMEZONE).slice(0, 10);
 
-const buildAxisPoints = (fromDate: Date, toDate: Date) => {
+const addDays = (day: Date, count: number) =>
+  new Date(day.getTime() + count * MILLISECONDS_PER_DAY);
+
+/** The start of a chart day in the time zone of the organization */
+const getStartOfDay = (day: Date) =>
+  wallTimeToInstant(`${formatDateKey(day)}T00:00`, ORGANIZATION_TIMEZONE);
+
+const buildAxisPoints = (fromDay: Date, toDay: Date) => {
   const points: AxisPoint[] = [];
-  let cursor = fromDate;
 
-  while (cursor < toDate) {
+  for (let day = fromDay; day < toDay; day = addDays(day, 1)) {
     points.push({
-      key: formatDateKey(cursor),
-      timestamp: cursor.getTime(),
+      key: formatDateKey(day),
+      timestamp: day.getTime(),
     });
-
-    cursor = addDays(cursor, 1);
   }
 
   return points;
@@ -91,16 +122,21 @@ const buildAxisPoints = (fromDate: Date, toDate: Date) => {
 export const normalizeOptions = (options?: ChartOptions): NormalizedOptions => {
   const days = Math.max(options?.days ?? DEFAULT_DAYS, 7);
 
-  const toDate = startOfDay(new Date());
-  const requestedFromDate = subDays(toDate, days - 1);
-  const fromDate =
-    requestedFromDate < MIN_AXIS_DATE ? MIN_AXIS_DATE : requestedFromDate;
+  const today = toDateColumnValue(
+    getLocalDate(new Date(), ORGANIZATION_TIMEZONE),
+  );
+  const requestedFromDay = addDays(today, -(days - 1));
+  const fromDay =
+    requestedFromDay < FIRST_STATISTICS_DAY
+      ? FIRST_STATISTICS_DAY
+      : requestedFromDay;
 
   return {
-    fromDate,
-    toDate,
-    toDateExclusive: addDays(toDate, 1),
-    axisPoints: buildAxisPoints(fromDate, toDate),
+    fromDate: getStartOfDay(fromDay),
+    fromDateColumnValue: fromDay,
+    toDate: getStartOfDay(today),
+    toDateExclusive: getStartOfDay(addDays(today, 1)),
+    axisPoints: buildAxisPoints(fromDay, today),
   } satisfies NormalizedOptions;
 };
 

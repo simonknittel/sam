@@ -1,15 +1,16 @@
+/**
+ * The results must not depend on the time zone of the system. Run this
+ * suite with the environment variable TZ set to different zones.
+ */
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   buildChartData,
   buildTotalAndDeltaChart,
   formatDateKey,
+  normalizeOptions,
 } from "./chartData";
 
-/**
- * Noon UTC is the same calendar day in UTC and in Europe/Berlin, thus the
- * chart window does not depend on the time zone of the test run. The chart
- * ends yesterday and starts 364 days before today.
- */
+/** The chart ends yesterday and starts 364 days before today. */
 const NOW = new Date("2027-06-15T12:00:00Z");
 const YESTERDAY = new Date("2027-06-14T12:00:00Z");
 const FIRST_CHART_DAY = new Date("2026-06-16T12:00:00Z");
@@ -31,6 +32,77 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers();
+});
+
+const axisKeysOf = (options: ReturnType<typeof normalizeOptions>) =>
+  options.axisPoints.map((point) => point.key);
+
+describe("formatDateKey", () => {
+  test.each([
+    { moment: "2027-06-14T21:59:59Z", key: "2027-06-14" },
+    { moment: "2027-06-14T22:00:00Z", key: "2027-06-15" },
+    { moment: "2027-01-14T22:59:59Z", key: "2027-01-14" },
+    { moment: "2027-01-14T23:00:00Z", key: "2027-01-15" },
+  ])("gives the day in Europe/Berlin of $moment", ({ moment, key }) => {
+    expect(formatDateKey(new Date(moment))).toBe(key);
+  });
+});
+
+describe("normalizeOptions", () => {
+  test("uses the days of Europe/Berlin after midnight in Europe/Berlin", () => {
+    // 00:30 on 2027-06-15 in Europe/Berlin, but still 2027-06-14 in UTC
+    vi.setSystemTime(new Date("2027-06-14T22:30:00Z"));
+
+    const options = normalizeOptions();
+
+    expect(axisKeysOf(options).at(0)).toBe("2026-06-16");
+    expect(axisKeysOf(options).at(-1)).toBe("2027-06-14");
+    expect(options.fromDate.toISOString()).toBe("2026-06-15T22:00:00.000Z");
+    expect(options.fromDateColumnValue.toISOString()).toBe(
+      "2026-06-16T00:00:00.000Z",
+    );
+    expect(options.toDate.toISOString()).toBe("2027-06-14T22:00:00.000Z");
+    expect(options.toDateExclusive.toISOString()).toBe(
+      "2027-06-15T22:00:00.000Z",
+    );
+  });
+
+  test("uses the days of Europe/Berlin before midnight in Europe/Berlin", () => {
+    // 23:30 on 2027-01-14 in Europe/Berlin
+    vi.setSystemTime(new Date("2027-01-14T22:30:00Z"));
+
+    const options = normalizeOptions();
+
+    expect(axisKeysOf(options).at(-1)).toBe("2027-01-13");
+    expect(options.toDate.toISOString()).toBe("2027-01-13T23:00:00.000Z");
+    expect(options.toDateExclusive.toISOString()).toBe(
+      "2027-01-14T23:00:00.000Z",
+    );
+  });
+
+  test("has one axis point for each day across the changes of daylight saving time", () => {
+    const keys = axisKeysOf(normalizeOptions());
+
+    expect(keys).toHaveLength(364);
+    expect(new Set(keys).size).toBe(keys.length);
+    expect(keys).toEqual(
+      expect.arrayContaining([
+        "2026-10-24",
+        "2026-10-25",
+        "2026-10-26",
+        "2027-03-27",
+        "2027-03-28",
+        "2027-03-29",
+      ]),
+    );
+    expect(keys.indexOf("2027-03-29") - keys.indexOf("2026-10-24")).toBe(156);
+  });
+
+  test("starts the chart not before the first day with statistics", () => {
+    vi.setSystemTime(new Date("2026-01-01T12:00:00Z"));
+
+    expect(axisKeysOf(normalizeOptions()).at(0)).toBe("2025-12-02");
+  });
 });
 
 describe("buildChartData", () => {

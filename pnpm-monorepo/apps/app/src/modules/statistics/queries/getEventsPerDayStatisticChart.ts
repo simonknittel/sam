@@ -1,7 +1,6 @@
 import { prisma } from "@/db";
 import { requireAuthentication } from "@/modules/auth/server";
 import { withTrace } from "@/modules/tracing/utils/withTrace";
-import { startOfDay } from "date-fns";
 import { forbidden } from "next/navigation";
 import { cache } from "react";
 import {
@@ -33,8 +32,7 @@ export const getEventsPerDayStatisticChart = cache(
 
     const countsByDate = new Map<string, number>();
     for (const event of events) {
-      const dayStart = startOfDay(event.startTime);
-      const dateKey = formatDateKey(dayStart);
+      const dateKey = formatDateKey(event.startTime);
       const existing = countsByDate.get(dateKey) ?? 0;
       countsByDate.set(dateKey, existing + 1);
     }
